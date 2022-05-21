@@ -30,7 +30,7 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
-static char g_lock;
+static int g_lock;
 hidden struct SymbolTable *__symtab;  // for kprintf
 
 /**

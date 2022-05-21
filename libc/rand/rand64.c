@@ -31,7 +31,7 @@
 
 static int thepid;
 static uint128_t thepool;
-_Alignas(64) static char rand64_lock;
+_Alignas(64) static int rand64_lock;
 
 /**
  * Returns nondeterministic random data.

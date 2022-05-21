@@ -23,9 +23,9 @@ void __install_tls(char[hasatleast 64]);
 static noasan inline char *__get_tls(void) {
   char *tib, *lin = (char *)0x30;
   if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
-    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin));
+    asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   } else {
-    asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin));
+    asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
     if (IsWindows()) {
       tib = *(char **)(tib + 0x1480 + __tls_index * 8);
     }

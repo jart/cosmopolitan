@@ -16,41 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/nexgen32e/rdtsc.h"
-#include "libc/time/clockstonanos.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/macros.internal.h"
 
-void _spinlock_debug_1(void *lockptr, const char *lockname, const char *file,
-                       int line, const char *func) {
-  unsigned i;
-  uint64_t ts1, ts2;
-  int me, owner, *lock = lockptr;
-  me = gettid();
-  owner = 0;
-  if (!_lockcmpxchgp(lock, &owner, me)) {
-    if (owner == me) {
-      kprintf("%s:%d: warning: possible re-entry on lock %s in %s()\n", file,
-              line, lockname, func);
-    }
-    i = 0;
-    ts1 = rdtsc();
-    for (;;) {
-      owner = 0;
-      if (_lockcmpxchgp(lock, &owner, me)) break;
-      ts2 = rdtsc();
-      if (ClocksToNanos(ts1, ts2) > 1000000000ul) {
-        ts1 = ts2;
-        kprintf("%s:%d: warning: slow lock on %s in %s()\n", file, line,
-                lockname, func);
-      }
-      if (++i & 7) {
-        __builtin_ia32_pause();
-      } else {
-        sched_yield();
-      }
-    }
+void __releasefd_unlocked(int fd) {
+  if (0 <= fd && fd < g_fds.n) {
+    g_fds.p[fd].kind = 0;
+    g_fds.f = MIN(fd, g_fds.f);
   }
 }

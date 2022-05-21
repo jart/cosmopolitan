@@ -75,7 +75,7 @@ struct Zipos *__zipos_get(void) {
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  _Alignas(64) static char lock;
+  _Alignas(64) static int lock;
   _spinlock(&lock);
   if (!once) {
     sigfillset(&neu);

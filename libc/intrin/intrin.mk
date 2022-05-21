@@ -74,10 +74,23 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
+# we can't use compiler magic because:
+#   spinlocks are called very early in initialization
+#   e.g. __cxa_atexit()
+o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
+o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector
+
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
-o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/getenv.greg.o			\
 o/$(MODE)/libc/intrin/assertfail.greg.o			\
 o/$(MODE)/libc/intrin/describeiov.greg.o		\

@@ -49,9 +49,11 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   } else {
     mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
   }
-  if ((hin = CreateNamedPipe(
-           pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped, mode, 1,
-           PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable)) != -1) {
+  _spunlock(&__fds_lock);
+  hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
+                        mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
+  _spinlock(&__fds_lock);
+  if (hin != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
                            kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;

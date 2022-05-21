@@ -25,6 +25,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
@@ -126,11 +127,14 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
   if (h->mem) {
     if ((fd = IsWindows() ? __reservefd(-1) : dup(2)) != -1) {
       if (__ensurefds(fd) != -1) {
+        _spinlock(&__fds_lock);
         h->handle = g_fds.p[fd].handle;
         g_fds.p[fd].kind = kFdZip;
         g_fds.p[fd].handle = (intptr_t)h;
         g_fds.p[fd].flags = flags | O_CLOEXEC;
         g_fds.p[fd].mode = mode;
+        g_fds.p[fd].extra = 0;
+        _spunlock(&__fds_lock);
         return fd;
       }
       close(fd);

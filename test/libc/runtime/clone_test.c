@@ -36,7 +36,8 @@
 #include "libc/time/time.h"
 
 char *stack, *tls;
-int x, me, tid, thechilde, childetid;
+int x, me, tid, *childetid;
+_Atomic(int) thechilde;
 
 void SetUp(void) {
   x = 0;
@@ -44,6 +45,7 @@ void SetUp(void) {
   tls = calloc(1, 64);
   __initialize_tls(tls);
   *(int *)(tls + 0x3c) = 31337;
+  childetid = (int *)(tls + 0x0038);
   ASSERT_NE(MAP_FAILED, (stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                                       MAP_STACK | MAP_ANONYMOUS, -1, 0)));
 }
@@ -77,26 +79,25 @@ int CloneTest1(void *arg) {
     ASSERT_EQ(31337, errno);
   }
   ASSERT_EQ(23, (intptr_t)arg);
-  thechilde = gettid();
   ASSERT_NE(gettid(), getpid());
-  ASSERT_EQ(gettid(), childetid);  // CLONE_CHILD_SETTID
+  ASSERT_EQ(gettid(), *childetid);  // CLONE_CHILD_SETTID
   return 0;
 }
 
 TEST(clone, test1) {
   int ptid = 0;
-  _seizelock(&childetid);
+  *childetid = -1;
+  _seizelock(childetid);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                                  CLONE_SIGHAND | CLONE_PARENT_SETTID |
                                  CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID |
                                  CLONE_SETTLS,
-                             (void *)23, &ptid, tls, 64, &childetid)));
-  _spinlock(&childetid);  // CLONE_CHILD_CLEARTID
+                             (void *)23, &ptid, tls, 64, childetid)));
+  _spinlock(childetid);  // CLONE_CHILD_CLEARTID
   ASSERT_EQ(tid, ptid);
   ASSERT_EQ(42, x);
   ASSERT_NE(me, tid);
-  ASSERT_EQ(tid, thechilde);
   ASSERT_EQ(0, errno);
   errno = 31337;
   ASSERT_EQ(31337, errno);
@@ -115,13 +116,13 @@ int CloneTestSys(void *arg) {
 TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
   ASSERT_EQ(0, errno);
   ASSERT_EQ(31337, *(int *)(tls + 0x3c));
-  _seizelock(&childetid);
+  _seizelock(childetid);
   ASSERT_NE(-1, (tid = clone(CloneTestSys, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                                  CLONE_SIGHAND | CLONE_CHILD_SETTID |
                                  CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                             (void *)23, 0, tls, 64, &childetid)));
-  _spinlock(&childetid);  // CLONE_CHILD_CLEARTID
+                             (void *)23, 0, tls, 64, childetid)));
+  _spinlock(childetid);  // CLONE_CHILD_CLEARTID
   ASSERT_EQ(0, errno);
   ASSERT_EQ(EFAULT, *(int *)(tls + 0x3c));
 }

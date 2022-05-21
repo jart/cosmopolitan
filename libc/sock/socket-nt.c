@@ -44,7 +44,8 @@ textwindows int sys_socket_nt(int family, int type, int protocol) {
   int64_t h;
   struct SockFd *sockfd;
   int fd, oflags, truetype;
-  if ((fd = __reservefd(-1)) == -1) return -1;
+  fd = __reservefd(-1);
+  if (fd == -1) return -1;
   truetype = type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK);
   if ((h = WSASocket(family, truetype, protocol, NULL, 0,
                      kNtWsaFlagOverlapped)) != -1) {

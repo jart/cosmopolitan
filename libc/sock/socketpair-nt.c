@@ -30,10 +30,10 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
-  int64_t hpipe, h1, h2;
-  int reader, writer, oflags;
-  char16_t pipename[64];
   uint32_t mode;
+  char16_t pipename[64];
+  int64_t hpipe, h1, h2;
+  int rc, reader, writer, oflags;
 
   // Supports only AF_UNIX
   if (family != AF_UNIX) {
@@ -53,9 +53,13 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   }
 
   CreatePipeName(pipename);
-  if ((reader = __reservefd(-1)) == -1) return -1;
-  if ((writer = __reservefd(-1)) == -1) {
-    __releasefd(reader);
+  _spinlock(&__fds_lock);
+  reader = __reservefd_unlocked(-1);
+  writer = __reservefd_unlocked(-1);
+  _spunlock(&__fds_lock);
+  if (reader == -1 || writer == -1) {
+    if (reader != -1) __releasefd(reader);
+    if (writer != -1) __releasefd(writer);
     return -1;
   }
   if ((hpipe = CreateNamedPipe(
@@ -68,28 +72,33 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
 
   h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
                   &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
-  if (h1 == -1) {
-    CloseHandle(hpipe);
-    __releasefd(writer);
-    __releasefd(reader);
-    return -1;
-  }
 
   _spinlock(&__fds_lock);
 
-  g_fds.p[reader].kind = kFdFile;
-  g_fds.p[reader].flags = oflags;
-  g_fds.p[reader].mode = 0140444;
-  g_fds.p[reader].handle = hpipe;
+  if (h1 != -1) {
 
-  g_fds.p[writer].kind = kFdFile;
-  g_fds.p[writer].flags = oflags;
-  g_fds.p[writer].mode = 0140222;
-  g_fds.p[writer].handle = h1;
+    g_fds.p[reader].kind = kFdFile;
+    g_fds.p[reader].flags = oflags;
+    g_fds.p[reader].mode = 0140444;
+    g_fds.p[reader].handle = hpipe;
+
+    g_fds.p[writer].kind = kFdFile;
+    g_fds.p[writer].flags = oflags;
+    g_fds.p[writer].mode = 0140222;
+    g_fds.p[writer].handle = h1;
+
+    sv[0] = reader;
+    sv[1] = writer;
+
+    rc = 0;
+  } else {
+    CloseHandle(hpipe);
+    __releasefd_unlocked(writer);
+    __releasefd_unlocked(reader);
+    rc = -1;
+  }
 
   _spunlock(&__fds_lock);
 
-  sv[0] = reader;
-  sv[1] = writer;
-  return 0;
+  return rc;
 }

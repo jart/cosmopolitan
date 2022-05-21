@@ -66,7 +66,7 @@ struct Fd {
 };
 
 struct Fds {
-  size_t f; /* lowest free slot */
+  int f;    /* lowest free slot */
   size_t n; /* monotonic capacity */
   struct Fd *p;
   struct Fd __init_p[OPEN_MAX];

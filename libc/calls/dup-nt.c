@@ -48,26 +48,33 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   }
 
   // allocate a new file descriptor
-  if (newfd == -1) {
-    if ((newfd = __reservefd_unlocked(start)) == -1) {
-      _spunlock(&__fds_lock);
-      return -1;
+  for (;;) {
+    if (newfd == -1) {
+      if ((newfd = __reservefd_unlocked(start)) == -1) {
+        _spunlock(&__fds_lock);
+        return -1;
+      }
+      break;
+    } else {
+      if (__ensurefds_unlocked(newfd) == -1) {
+        _spunlock(&__fds_lock);
+        return -1;
+      }
+      if (g_fds.p[newfd].kind) {
+        _spunlock(&__fds_lock);
+        close(newfd);
+        _spinlock(&__fds_lock);
+      }
+      if (!g_fds.p[newfd].kind) {
+        g_fds.p[newfd].kind = kFdReserved;
+        break;
+      }
     }
-  } else {
-    if (__ensurefds_unlocked(newfd) == -1) {
-      _spunlock(&__fds_lock);
-      return -1;
-    }
-    if (g_fds.p[newfd].kind) {
-      _spunlock(&__fds_lock);
-      close(newfd);
-      _spinlock(&__fds_lock);
-    }
-    g_fds.p[newfd].kind = kFdReserved;
   }
 
   handle = g_fds.p[oldfd].handle;
   proc = GetCurrentProcess();
+
   if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, true,
                       kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
@@ -82,7 +89,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     }
     rc = newfd;
   } else {
-    __releasefd(newfd);
+    __releasefd_unlocked(newfd);
     rc = __winerr();
   }
 

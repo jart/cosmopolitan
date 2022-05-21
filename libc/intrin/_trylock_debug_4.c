@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,40 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/bits/weaken.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/log/log.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 
-//	Asks kernel to let other threads be scheduled.
-//
-//	@return	0 on success, or -1 w/ errno
-sched_yield:
-	push	%rbp
-	mov	%rsp,%rbp
-	testb	IsWindows()
-	jnz	1f
-
-//	UNIX Support
-	mov	__NR_sched_yield,%eax
-	syscall
-	jmp	2f
-
-//	Windows Support
-//
-//	A value of zero, together with the bAlertable parameter set to
-//	FALSE, causes the thread to relinquish the remainder of its time
-//	slice to any other thread that is ready to run, if there are no
-//	pending user APCs on the calling thread. If there are no other
-//	threads ready to run and no user APCs are queued, the function
-//	returns immediately, and the thread continues execution.
-//	                                  ──Quoth MSDN
-1:	xor	%ecx,%ecx
-	xor	%edx,%edx
-	ntcall	__imp_SleepEx
-	xor	%eax,%eax
-
-2:	pop	%rbp
-	ret
-	.endfn	sched_yield,globl
-	.previous
+privileged int _trylock_debug_4(int *lock, const char *lockname,
+                                const char *file, int line, const char *func) {
+  int owner = 0;
+  int me = gettid();
+  if (_lockcmpxchgp(lock, &owner, me)) {
+    return 0;
+  } else if (owner != me) {
+    return owner;
+  } else {
+    kprintf("%s:%d: error: lock re-entry on %s in %s()\n", file, line, lockname,
+            func);
+    if (weaken(__die)) weaken(__die)();
+    __restorewintty();
+    _Exit(1);
+  }
+}

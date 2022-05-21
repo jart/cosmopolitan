@@ -20,6 +20,10 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
+#include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/internal.h"
+
+__msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
 /**
  * Returns current thread id.
@@ -38,7 +42,7 @@ privileged int gettid(void) {
   }
 
   if (IsWindows()) {
-    return GetCurrentThreadId();
+    return __imp_GetCurrentThreadId();
   }
 
   if (IsLinux()) {
@@ -83,5 +87,5 @@ privileged int gettid(void) {
     return wut;  // narrowing intentional
   }
 
-  return getpid();
+  return __pid;
 }

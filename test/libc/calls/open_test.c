@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -87,4 +89,27 @@ TEST(open, testOpenExistingForAppendWriteOnly_seeksToEnd) {
   EXPECT_SYS(0, 5, read(3, buf, 7));
   EXPECT_STREQ("hello", buf);
   EXPECT_SYS(0, 0, close(3));
+}
+
+int CountFds(void) {
+  int i, count;
+  for (count = i = 0; i < g_fds.n; ++i) {
+    if (g_fds.p[i].kind) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+TEST(open, lotsOfFds) {
+  if (!IsWindows()) return;
+  int i, n = 200;
+  ASSERT_SYS(0, 0, xbarf("hello.txt", "hello", -1));
+  for (i = 3; i < n; ++i) {
+    EXPECT_EQ(i, CountFds());
+    EXPECT_SYS(0, i, open("hello.txt", O_RDONLY));
+  }
+  for (i = 3; i < n; ++i) {
+    EXPECT_SYS(0, 0, close(i));
+  }
 }

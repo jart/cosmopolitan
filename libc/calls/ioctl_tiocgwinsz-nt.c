@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/startf.h"
@@ -31,13 +32,15 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
-  int i, e;
+  int i, e, rc;
   uint32_t mode;
   struct Fd *fds[3];
   struct NtStartupInfo startinfo;
   struct NtConsoleScreenBufferInfoEx sbinfo;
+  rc = -1;
   e = errno;
   if (ws) {
+    _spinlock(&__fds_lock);
     fds[0] = fd, fds[1] = g_fds.p + 1, fds[2] = g_fds.p + 0;
     GetStartupInfo(&startinfo);
     for (i = 0; i < ARRAYLEN(fds); ++i) {
@@ -51,14 +54,16 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
             ws->ws_xpixel = 0;
             ws->ws_ypixel = 0;
             errno = e;
-            return 0;
+            rc = 0;
+            break;
           } else if (startinfo.dwFlags & kNtStartfUsecountchars) {
             ws->ws_col = startinfo.dwXCountChars;
             ws->ws_row = startinfo.dwYCountChars;
             ws->ws_xpixel = 0;
             ws->ws_ypixel = 0;
             errno = e;
-            return 0;
+            rc = 0;
+            break;
           } else {
             __winerr();
           }
@@ -69,8 +74,9 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
         ebadf();
       }
     }
+    _spunlock(&__fds_lock);
   } else {
     efault();
   }
-  return -1;
+  return rc;
 }

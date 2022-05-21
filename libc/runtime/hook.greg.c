@@ -59,6 +59,7 @@ privileged noinstrument noasan int __hook(void *ifunc,
   intptr_t kMcount = (intptr_t)&mcount;
   intptr_t kProgramCodeStart = (intptr_t)_ereal;
   intptr_t kPrivilegedStart = (intptr_t)__privileged_addr;
+  if (!symbols) return -1;
   __morph_begin();
   for (i = 0; i < symbols->count; ++i) {
     if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {

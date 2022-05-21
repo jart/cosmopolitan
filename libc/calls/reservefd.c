@@ -29,33 +29,38 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+// XXX: until we can add read locks to all the code that uses g_fds.p
+//      (right now we only have write locks) we need to keep old copies
+//      of g_fds.p around after it's been extended, so that threads
+//      which are using an fd they de facto own can continue reading
+static void FreeOldFdsArray(void *p) {
+  weaken(free)(p);
+}
+
 /**
  * Grows file descriptor array memory if needed.
  */
 int __ensurefds_unlocked(int fd) {
   size_t n1, n2;
   struct Fd *p1, *p2;
+  if (fd < g_fds.n) return fd;
+  STRACE("__ensurefds(%d) extending", fd);
+  if (!weaken(malloc)) return emfile();
+  p1 = g_fds.p;
   n1 = g_fds.n;
-  if (fd >= n1) {
-    STRACE("__ensurefds(%d) extending", fd);
-    if (weaken(malloc)) {
-      // TODO(jart): we need a semaphore for this
-      p1 = g_fds.p;
-      n2 = fd + (fd >> 1);
-      if ((p2 = weaken(malloc)(n2 * sizeof(*p1)))) {
-        memcpy(p2, p1, n1 * sizeof(*p1));
-        g_fds.p = p2;
-        g_fds.n = n2;
-        if (p1 != g_fds.__init_p) {
-          __cxa_atexit(free, p1, 0);
-        }
-      } else {
-        fd = enomem();
-      }
-    } else {
-      fd = emfile();
-    }
+  if (p1 == g_fds.__init_p) {
+    if (!(p2 = weaken(malloc)(sizeof(g_fds.__init_p)))) return -1;
+    memcpy(p2, p1, sizeof(g_fds.__init_p));
+    g_fds.p = p1 = p2;
   }
+  n2 = n1;
+  while (n2 <= fd) n2 *= 2;
+  if (!(p2 = weaken(malloc)(n2 * sizeof(*p1)))) return -1;
+  __cxa_atexit(FreeOldFdsArray, p1, 0);
+  memcpy(p2, p1, n1 * sizeof(*p1));
+  bzero(p2 + n1, (p2 + n2) - (p2 + n1));
+  g_fds.p = p2;
+  g_fds.n = n2;
   return fd;
 }
 
@@ -74,7 +79,7 @@ int __ensurefds(int fd) {
  */
 int __reservefd_unlocked(int start) {
   int fd;
-  for (fd = g_fds.f; fd < g_fds.n; ++fd) {
+  for (fd = MAX(start, g_fds.f); fd < g_fds.n; ++fd) {
     if (!g_fds.p[fd].kind) {
       break;
     }
@@ -100,10 +105,10 @@ int __reservefd(int start) {
  * Closes non-stdio file descriptors to free dynamic memory.
  */
 static void FreeFds(void) {
-  int i;
-  NTTRACE("FreeFds()");
+  int i, keep = 3;
+  STRACE("FreeFds()");
   _spinlock(&__fds_lock);
-  for (i = 3; i < g_fds.n; ++i) {
+  for (i = keep; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind) {
       _spunlock(&__fds_lock);
       close(i);
@@ -111,8 +116,11 @@ static void FreeFds(void) {
     }
   }
   if (g_fds.p != g_fds.__init_p) {
-    memcpy(g_fds.__init_p, g_fds.p, sizeof(*g_fds.p) * 3);
-    weaken(free)(g_fds.p);
+    bzero(g_fds.__init_p, sizeof(g_fds.__init_p));
+    memcpy(g_fds.__init_p, g_fds.p, sizeof(*g_fds.p) * keep);
+    if (weaken(free)) {
+      weaken(free)(g_fds.p);
+    }
     g_fds.p = g_fds.__init_p;
     g_fds.n = ARRAYLEN(g_fds.__init_p);
   }
