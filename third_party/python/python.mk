@@ -4215,6 +4215,7 @@ o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: QUOTA = -C1000000
 o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -C32 -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: QUOTA = -L180
+o/$(MODE)/third_party/python/Lib/test/test_tracemalloc.py.runs: QUOTA = -L300
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
