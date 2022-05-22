@@ -4198,7 +4198,7 @@ $(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): PYFLAGS += -t -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o): PYFLAGS += -t -P.python -C3
 o/$(MODE)/third_party/python/Lib/test/pystone.o: PYFLAGS += -m -O2 -P.python -C4
 
-o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C64
+o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C64 -L180
 o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: QUOTA = -C64
 o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: QUOTA = -M512m
