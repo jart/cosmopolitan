@@ -28,5 +28,6 @@
 //
 //	@param	rdi is allocation address, which may be NULL
 //	@see	dlfree()
+//	@threadsafe
 free:	jmp	*hook_free(%rip)
 	.endfn	free,globl

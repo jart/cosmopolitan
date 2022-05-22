@@ -51,6 +51,7 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/https/https.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
@@ -112,6 +113,7 @@ static const struct addrinfo kResolvHints = {.ai_family = AF_INET,
 
 int g_sock;
 char *g_prog;
+long g_backoff;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
@@ -308,7 +310,7 @@ TryAgain:
   freeaddrinfo(ai);
 }
 
-static void Send(const void *output, size_t outputsize) {
+static bool Send(const void *output, size_t outputsize) {
   int rc, have;
   static bool once;
   static z_stream zs;
@@ -326,11 +328,17 @@ static void Send(const void *output, size_t outputsize) {
     rc = deflate(&zs, Z_SYNC_FLUSH);
     CHECK_NE(Z_STREAM_ERROR, rc);
     have = sizeof(zbuf) - zs.avail_out;
-    CHECK_EQ(have, mbedtls_ssl_write(&ezssl, zbuf, have));
+    rc = mbedtls_ssl_write(&ezssl, zbuf, have);
+    if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      usleep((g_backoff = (g_backoff + 1000) * 2));
+      return false;
+    }
+    CHECK_EQ(have, rc);
   } while (!zs.avail_out);
+  return true;
 }
 
-void SendRequest(void) {
+int SendRequest(void) {
   int fd;
   char *p;
   size_t i;
@@ -357,22 +365,30 @@ void SendRequest(void) {
   q = mempcpy(q, name, namesize);
   assert(hdrsize == q - hdr);
   DEBUGF("running %s on %s", g_prog, g_hostname);
-  Send(hdr, hdrsize);
-  Send(p, progsize);
-  CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
+  if (Send(hdr, hdrsize) && Send(p, progsize)) {
+    if (!(rc = EzTlsFlush(&ezbio, 0, 0))) {
+      rc = 0;
+    } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      rc = -1;
+    } else {
+      CHECK_EQ(0, rc);
+    }
+  } else {
+    rc = -1;
+  }
   CHECK_NE(-1, munmap(p, st.st_size));
   CHECK_NE(-1, close(fd));
+  return rc;
 }
 
 bool Recv(unsigned char *p, size_t n) {
   size_t i, rc;
-  static long backoff;
   for (i = 0; i < n; i += rc) {
     do {
       rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
     } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
     if (!rc || rc == MBEDTLS_ERR_NET_CONN_RESET) {
-      usleep((backoff = (backoff + 1000) * 2));
+      usleep((g_backoff = (g_backoff + 1000) * 2));
       return false;
     } else if (rc < 0) {
       TlsDie("read response failed", rc);
@@ -442,8 +458,7 @@ int RunOnHost(char *spec) {
       WARNF("warning: got connection reset in handshake");
       close(g_sock);
     }
-    SendRequest();
-  } while ((rc = ReadResponse()) == -1);
+  } while ((rc = SendRequest()) == -1 || (rc = ReadResponse()) == -1);
   return rc;
 }
 

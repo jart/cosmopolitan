@@ -23,6 +23,7 @@
 //	@param	rdi has file stream object pointer
 //	@return	wide character or -1 on EOF or error
 //	@see	fgetwc_unlocked()
+//	@threadsafe
 getwc:	mov	%rdi,%r11
 	ezlea	fgetwc_unlocked,ax
 	jmp	stdio_unlock

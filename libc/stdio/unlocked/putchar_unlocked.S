@@ -23,6 +23,7 @@
 //	@param	rdi has character
 //	@return c (as unsigned char) if written or -1 w/ errno
 //	@see	fputc_unlocked()
+//	@threadsafe
 putchar:
 	mov	stdout(%rip),%rsi
 	mov	%rsi,%r11

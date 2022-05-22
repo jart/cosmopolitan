@@ -28,15 +28,18 @@
 
 _Alignas(64) static int rlock;
 
-static privileged inline bool AcquireInterruptPollLock(void) {
+// return 0 on success, or tid of other owner
+static privileged inline int AcquireInterruptPollLock(void) {
   // any thread can poll for interrupts
   // but it's wasteful to have every single thread doing it
-  int me, owner, tries;
-  if (!__threaded) return true;
-  me = gettid();
-  owner = 0;
-  if (_lockcmpxchgp(&rlock, &owner, me)) return true;
-  return owner == me;
+  int me, owner = 0;
+  if (__threaded) {
+    me = gettid();
+    if (!_lockcmpxchgp(&rlock, &owner, me) && owner == me) {
+      owner = 0;
+    }
+  }
+  return owner;
 }
 
 static textwindows inline void ReleaseInterruptPollLock(void) {
@@ -47,7 +50,7 @@ static textwindows inline void ReleaseInterruptPollLock(void) {
 textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
   bool res;
   if (__time_critical) return false;
-  if (!AcquireInterruptPollLock()) return false;
+  if (AcquireInterruptPollLock()) return false;
   if (weaken(_check_sigalrm)) weaken(_check_sigalrm)();
   if (weaken(_check_sigchld)) weaken(_check_sigchld)();
   if (fd && weaken(_check_sigwinch)) weaken(_check_sigwinch)(fd);

@@ -117,30 +117,6 @@ int wscanf(const wchar_t *, ...);
 int fwide(FILE *, int);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define getc(f)     fgetc(f)
-#define getwc(f)    fgetwc(f)
-#define putc(c, f)  fputc(c, f)
-#define putwc(c, f) fputwc(c, f)
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
-#define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
-#define fprintf(F, FMT, ...) (fprintf)(F, PFLINK(FMT), ##__VA_ARGS__)
-#define vfprintf(F, FMT, VA) (vfprintf)(F, PFLINK(FMT), VA)
-#define vscanf(FMT, VA)      (vscanf)(SFLINK(FMT), VA)
-#define scanf(FMT, ...)      (scanf)(SFLINK(FMT), ##__VA_ARGS__)
-#define fscanf(F, FMT, ...)  (fscanf)(F, SFLINK(FMT), ##__VA_ARGS__)
-#define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
-#endif
-
-#define stdin  SYMBOLIC(stdin)
-#define stdout SYMBOLIC(stdout)
-#define stderr SYMBOLIC(stderr)
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
@@ -172,11 +148,44 @@ wchar_t *fgetws_unlocked(wchar_t *, int, FILE *);
 int fputws_unlocked(const wchar_t *, FILE *);
 wint_t ungetwc_unlocked(wint_t, FILE *) paramsnonnull();
 int ungetc_unlocked(int, FILE *) paramsnonnull();
+int fseeko_unlocked(FILE *, int64_t, int) paramsnonnull();
+int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
+    paramsnonnull((1, 2)) dontthrow nocallback;
+int vfprintf_unlocked(FILE *, const char *, va_list)
+    paramsnonnull() dontthrow nocallback;
 
 #define getc_unlocked(f)     fgetc_unlocked(f)
 #define getwc_unlocked(f)    fgetwc_unlocked(f)
 #define putc_unlocked(c, f)  fputc_unlocked(c, f)
 #define putwc_unlocked(c, f) fputwc_unlocked(c, f)
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define getc(f)     fgetc(f)
+#define getwc(f)    fgetwc(f)
+#define putc(c, f)  fputc(c, f)
+#define putwc(c, f) fputwc(c, f)
+
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+/* clang-format off */
+#define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
+#define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
+#define fprintf(F, FMT, ...) (fprintf)(F, PFLINK(FMT), ##__VA_ARGS__)
+#define vfprintf(F, FMT, VA) (vfprintf)(F, PFLINK(FMT),  VA)
+#define fprintf_unlocked(F, FMT, ...) (fprintf_unlocked)(F, PFLINK(FMT), ##__VA_ARGS__)
+#define vfprintf_unlocked(F, FMT, VA) (vfprintf_unlocked)(F, PFLINK(FMT), VA)
+#define vscanf(FMT, VA)      (vscanf)(SFLINK(FMT), VA)
+#define scanf(FMT, ...)      (scanf)(SFLINK(FMT), ##__VA_ARGS__)
+#define fscanf(F, FMT, ...)  (fscanf)(F, SFLINK(FMT), ##__VA_ARGS__)
+#define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
+/* clang-format on */
+#endif
+
+#define stdin  SYMBOLIC(stdin)
+#define stdout SYMBOLIC(stdout)
+#define stderr SYMBOLIC(stderr)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

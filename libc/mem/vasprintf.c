@@ -23,6 +23,7 @@
 /**
  * Formats string w/ dynamic memory allocation.
  * @see xasprintf() for a better API
+ * @threadsafe
  */
 int(vasprintf)(char **strp, const char *fmt, va_list va) {
   va_list vb;

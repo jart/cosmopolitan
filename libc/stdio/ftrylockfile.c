@@ -16,13 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/spinlock.h"
+#include "libc/calls/calls.h"
+#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 
 /**
- * Tries to acquire stdio object lock.
- * @return 0 for success or non-zero if someone else has the lock
+ * Tries to acquire reentrant stdio object lock.
+ *
+ * @return 0 on success, or non-zero if another thread owns the lock
  */
 int ftrylockfile(FILE *f) {
-  return _trylock(&f->lock);
+  int me, owner = 0;
+  if (__threaded) {
+    me = gettid();
+    if (!_lockcmpxchgp(&f->lock, &owner, me) && owner == me) {
+      owner = 0;
+    }
+  }
+  return owner;
 }

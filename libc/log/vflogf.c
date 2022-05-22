@@ -41,24 +41,25 @@
 #define kNontrivialSize (8 * 1000 * 1000)
 
 static struct timespec vflogf_ts;
-_Alignas(64) static int vflogf_lock;
 
 /**
  * Takes corrective action if logging is on the fritz.
  */
-void vflogf_onfail(FILE *f) {
+static void vflogf_onfail(FILE *f) {
   errno_t err;
   int64_t size;
   if (IsTiny()) return;
-  err = ferror(f);
-  if (fileno(f) != -1 && (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
-      ((size = getfiledescriptorsize(fileno(f))) == -1 ||
+  err = ferror_unlocked(f);
+  if (fileno_unlocked(f) != -1 &&
+      (err == ENOSPC || err == EDQUOT || err == EFBIG) &&
+      ((size = getfiledescriptorsize(fileno_unlocked(f))) == -1 ||
        size > kNontrivialSize)) {
-    ftruncate(fileno(f), 0);
-    fseek(f, SEEK_SET, 0);
+    ftruncate(fileno_unlocked(f), 0);
+    fseeko_unlocked(f, SEEK_SET, 0);
     f->beg = f->end = 0;
-    clearerr(f);
-    (fprintf)(f, "performed emergency log truncation: %s\n", strerror(err));
+    clearerr_unlocked(f);
+    (fprintf_unlocked)(f, "performed emergency log truncation: %s\n",
+                       strerror(err));
   }
 }
 
@@ -88,8 +89,8 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   int64_t secs, nsec, dots;
   if (!f) f = __log_file;
   if (!f) return;
-  _spinlock(&vflogf_lock);
-  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+  flockfile(f);
+  --__strace;
 
   t2 = nowl();
   secs = t2;
@@ -105,16 +106,17 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
 
-  if ((fprintf)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ", "FEWIVDNT"[level & 7], buf32,
-                rem1000000int64(div1000int64(dots)), file, line,
-                strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
+  if ((fprintf_unlocked)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ",
+                         "FEWIVDNT"[level & 7], buf32,
+                         rem1000000int64(div1000int64(dots)), file, line,
+                         strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }
-  (vfprintf)(f, fmt, va);
-  fprintf(f, "\n");
+  (vfprintf_unlocked)(f, fmt, va);
+  fputc_unlocked('\n', f);
   if (bufmode == _IOLBF) {
     f->bufmode = _IOLBF;
-    fflush(f);
+    fflush_unlocked(f);
   }
 
   if (level == kLogFatal) {
@@ -122,11 +124,10 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     strcpy(buf32, "unknown");
     gethostname(buf32, sizeof(buf32));
     (dprintf)(STDERR_FILENO, "fatality %s pid %d\n", buf32, getpid());
-    _spunlock(&vflogf_lock);
     __die();
     unreachable;
   }
 
-  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
-  _spunlock(&vflogf_lock);
+  ++__strace;
+  funlockfile(f);
 }

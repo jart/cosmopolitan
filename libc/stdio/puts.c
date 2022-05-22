@@ -18,21 +18,32 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
-/**
- * Writes string w/ trailing newline to stdout.
- */
-int puts(const char *s) {
-  FILE *f;
+static int PutsImpl(const char *s, FILE *f) {
   size_t n, r;
-  f = stdout;
   if ((n = strlen(s))) {
-    r = fwrite(s, 1, n, f);
+    r = fwrite_unlocked(s, 1, n, f);
     if (!r) return -1;
     if (r < n) return r;
   }
-  if (fputc('\n', f) == -1) {
-    if (feof(f)) return n;
+  if (fputc_unlocked('\n', f) == -1) {
+    if (feof_unlocked(f)) return n;
     return -1;
   }
   return n + 1;
+}
+
+/**
+ * Writes string w/ trailing newline to stdout.
+ *
+ * @return non-negative number on success, or `EOF` on error with
+ *     `errno` set and the `ferror(stdout)` state is updated
+ */
+int puts(const char *s) {
+  FILE *f;
+  int bytes;
+  f = stdout;
+  flockfile(f);
+  bytes = PutsImpl(s, f);
+  funlockfile(f);
+  return bytes;
 }

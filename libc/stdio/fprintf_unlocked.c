@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,16 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
+#include "libc/stdio/stdio.h"
 
-//	Allocates n * itemsize bytes, initialized to zero.
-//
-//	@param	rdi is number of items (n)
-//	@param	rsi is size of each item (itemsize)
-//	@return	rax is memory address, or NULL w/ errno
-//	@note	overreliance on memalign is a sure way to fragment space
-//	@see	dlcalloc()
-//	@threadsafe
-calloc:	jmp	*hook_calloc(%rip)
-	.endfn	calloc,globl
+/**
+ * Formats and writes text to stream.
+ * @see printf() for further documentation
+ */
+int(fprintf_unlocked)(FILE *f, const char *fmt, ...) {
+  int rc;
+  va_list va;
+  va_start(va, fmt);
+  rc = (vfprintf_unlocked)(f, fmt, va);
+  va_end(va);
+  return rc;
+}

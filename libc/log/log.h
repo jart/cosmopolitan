@@ -7,6 +7,7 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -89,7 +90,8 @@ extern unsigned __log_level; /* log level for runtime check */
     --__ftrace;                                                     \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     if (weaken(__die)) weaken(__die)();                             \
-    exit(1);                                                        \
+    __restorewintty();                                              \
+    _Exit(1);                                                       \
     unreachable;                                                    \
   } while (0)
 

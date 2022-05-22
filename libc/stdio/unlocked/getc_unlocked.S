@@ -23,6 +23,7 @@
 //	@param	rdi has file stream object pointer
 //	@return	byte in range 0..255, or -1 w/ errno
 //	@see	fgetc_unlocked()
+//	@threadsafe
 getc:	mov	%rdi,%r11
 	ezlea	fgetwc_unlocked,ax
 	jmp	stdio_unlock

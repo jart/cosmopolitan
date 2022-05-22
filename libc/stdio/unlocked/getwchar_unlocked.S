@@ -22,6 +22,7 @@
 //
 //	@return	wide character or -1 on EOF or error
 //	@see	fgetwc_unlocked()
+//	@threadsafe
 getwchar:
 	mov	stdin(%rip),%rdi
 	mov	%rdi,%r11

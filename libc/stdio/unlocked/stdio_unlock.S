@@ -18,53 +18,54 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-#define LOCK 0x2c /* see struct file in stdio.h */
-
 //	Wrapper for applying locking to stdio functions.
 //
 //	This function is intended to be called by thunks.
 //
-//	@param	rax has the delegate function pointer
+//	@param	rax is stdio function pointer
 //	@param	rdi is passed along as an arg
 //	@param	rsi is passed along as an arg
 //	@param	rdx is passed along as an arg
 //	@param	rcx is passed along as an arg
-//	@param	r8  is passed along as an arg
-//	@param	r9  is passed along as an arg
-//	@param	r10 is passed along as an arg
 //	@param	r11 has the FILE* obj pointer
 //	@return	rax is passed along as result
 //	@return	rdx is passed along as result
+//	@threadsafe
 stdio_unlock:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 
 //	acquires mutex
-	push	%rcx
+	push	%rax
+	push	%rdi
+	push	%rsi
 	push	%rdx
-	mov	$1,%cl
-0:	mov	LOCK(%r11),%dl			# optimistic
-	test	%dl,%dl
-	je	2f
-1:	pause					# hyperyield
-	jmp	0b
-2:	mov	%ecx,%edx
-	xchg	LOCK(%r11),%dl			# locks bus!
-	test	%dl,%dl
-	jne	1b
-	pop	%rdx
+	push	%rcx
+	push	%r11
+	mov	%r11,%rdi
+	call	flockfile
+	pop	%r11
 	pop	%rcx
+	pop	%rdx
+	pop	%rsi
+	pop	%rdi
+	pop	%rax
 
 //	calls delegate
-	push	%rsi
 	push	%r11
+	push	%rsi			# align stack
 	call	*%rax
-	pop	%r11
 	pop	%rsi
+	pop	%r11
 
 //	releases mutex
-	movb	$0,LOCK(%r11)
+	push	%rax
+	push	%rdx
+	mov	%r11,%rdi
+	call	funlockfile
+	pop	%rdx
+	pop	%rax
 
 	pop	%rbp
 	ret

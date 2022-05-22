@@ -24,6 +24,7 @@
 //	@param	rsi has stream object pointer
 //	@return c as unsigned char if written or -1 w/ errno
 //	@see	fputc_unlocked()
+//	@threadsafe
 fputc:	mov	%rsi,%r11
 	ezlea	fputc_unlocked,ax
 	jmp	stdio_unlock

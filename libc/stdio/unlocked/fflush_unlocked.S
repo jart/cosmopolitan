@@ -20,10 +20,14 @@
 
 //	Blocks until data from stream buffer is written out.
 //
-//	@param	rdi is the stream handle
+//	@param	rdi is the stream handle, or 0 for all streams
 //	@return	0 on success or -1 w/ errno
 //	@see	fflush_unlocked()
-fflush:	mov	%rdi,%r11
-	ezlea	fflush_unlocked,ax
+//	@threadsafe
+fflush:	ezlea	fflush_unlocked,ax
+	test	%rdi,%rdi
+	jz	1f
+	mov	%rdi,%r11
 	jmp	stdio_unlock
+1:	jmp	*%rax
 	.endfn	fflush,globl

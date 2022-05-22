@@ -30,6 +30,7 @@
  * @return 0 on success or -1 on error
  */
 int setvbuf(FILE *f, char *buf, int mode, size_t size) {
+  flockfile(f);
   if (buf) {
     if (!size) size = BUFSIZ;
     if (!f->nofree && f->buf != buf) free_s(&f->buf);
@@ -38,5 +39,6 @@ int setvbuf(FILE *f, char *buf, int mode, size_t size) {
     f->nofree = true;
   }
   f->bufmode = mode;
+  funlockfile(f);
   return 0;
 }

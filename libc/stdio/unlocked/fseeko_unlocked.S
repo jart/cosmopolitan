@@ -17,15 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-#include "libc/notice.inc"
 
-//	Allocates n * itemsize bytes, initialized to zero.
+//	Repositions open file stream.
 //
-//	@param	rdi is number of items (n)
-//	@param	rsi is size of each item (itemsize)
-//	@return	rax is memory address, or NULL w/ errno
-//	@note	overreliance on memalign is a sure way to fragment space
-//	@see	dlcalloc()
+//	This function flushes the buffer (unless it's currently in the EOF
+//	state) and then calls lseek() on the underlying file. If the stream
+//	is in the EOF state, this function can be used to restore it without
+//	needing to reopen the file.
+//
+//	@param	rdi is stream handle
+//	@param	rsi is offset is the byte delta
+//	@param	rdx is whence and can be SEET_SET, SEEK_CUR, or SEEK_END
+//	@return	0 on success or -1 w/ errno
+//	@see	fflush_unlocked()
 //	@threadsafe
-calloc:	jmp	*hook_calloc(%rip)
-	.endfn	calloc,globl
+fseeko:	mov	%rdi,%r11
+	ezlea	fseeko_unlocked,ax
+	jmp	stdio_unlock
+	.endfn	fseeko,globl

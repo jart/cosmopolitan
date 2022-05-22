@@ -28,6 +28,7 @@
 //	@param	rsi is size of rdi buffer
 //	@param	rsi is file stream object pointer
 //	@see	fgetws_unlocked()
+//	@threadsafe
 fgetws:	mov	%rdx,%r11
 	ezlea	fgetws_unlocked,ax
 	jmp	stdio_unlock

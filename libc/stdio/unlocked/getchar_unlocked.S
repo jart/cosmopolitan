@@ -22,6 +22,7 @@
 //
 //	@return	byte in range 0..255, or -1 w/ errno
 //	@see	fgetc_unlocked()
+//	@threadsafe
 getchar:
 	mov	stdin(%rip),%rdi
 	mov	%rdi,%r11

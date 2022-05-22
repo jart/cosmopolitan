@@ -52,6 +52,7 @@
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 
 #define OPTS "BIqksvzX:H:C:m:"

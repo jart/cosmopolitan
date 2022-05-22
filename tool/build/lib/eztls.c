@@ -29,6 +29,7 @@
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/error.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/ssl.h"
 #include "tool/build/lib/eztls.h"

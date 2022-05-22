@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -87,8 +86,8 @@ static ssize_t getdelim_unlocked(char **s, size_t *n, int delim, FILE *f) {
  */
 ssize_t getdelim(char **s, size_t *n, int delim, FILE *f) {
   ssize_t rc;
-  _spinlock(&f->lock);
+  flockfile(f);
   rc = getdelim_unlocked(s, n, delim, f);
-  _spunlock(&f->lock);
+  funlockfile(f);
   return rc;
 }

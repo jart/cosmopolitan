@@ -24,6 +24,7 @@
 //	@param	rds has stream object pointer
 //	@return rax has rdi on success or -1 w/ errno
 //	@see	ungetwc_unlocked()
+//	@threadsafe
 ungetwc:
 	mov	%rsi,%r11
 	ezlea	ungetwc_unlocked,ax

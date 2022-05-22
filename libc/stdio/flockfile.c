@@ -16,12 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/spinlock.h"
+#include "libc/calls/calls.h"
+#include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 
 /**
- * Acquires lock on stdio object, blocking if needed.
+ * Acquires reentrant lock on stdio object, blocking if needed.
  */
 void flockfile(FILE *f) {
-  _spinlock(&f->lock);
+  int me, owner;
+  unsigned tries;
+  if (!__threaded) return;
+  for (tries = 0, me = gettid();;) {
+    owner = 0;
+    if (_lockcmpxchgp(&f->lock, &owner, me) || owner == me) {
+      return;
+    }
+    if (++tries & 7) {
+      __builtin_ia32_pause();
+    } else {
+      sched_yield();
+    }
+  }
 }

@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,16 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/notice.inc"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/limits.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/errfuns.h"
 
-//	Allocates n * itemsize bytes, initialized to zero.
-//
-//	@param	rdi is number of items (n)
-//	@param	rsi is size of each item (itemsize)
-//	@return	rax is memory address, or NULL w/ errno
-//	@note	overreliance on memalign is a sure way to fragment space
-//	@see	dlcalloc()
-//	@threadsafe
-calloc:	jmp	*hook_calloc(%rip)
-	.endfn	calloc,globl
+struct state {
+  FILE *f;
+  int n;
+};
+
+static int vfprintfputchar(const char *s, struct state *t, size_t n) {
+  int rc;
+  if (n) {
+    if (n == 1 && *s != '\n' && t->f->beg < t->f->size &&
+        t->f->bufmode != _IONBF) {
+      t->f->buf[t->f->beg++] = *s;
+      t->n += n;
+      rc = 0;
+    } else if (!fwrite_unlocked(s, 1, n, t->f)) {
+      rc = -1;
+    } else {
+      t->n += n;
+      rc = 0;
+    }
+  } else {
+    rc = 0;
+  }
+  return 0;
+}
+
+/**
+ * Formats and writes text to stream.
+ * @see printf() for further documentation
+ */
+int(vfprintf_unlocked)(FILE *f, const char *fmt, va_list va) {
+  int rc;
+  struct state st[1] = {{f, 0}};
+  if ((rc = __fmt(vfprintfputchar, st, fmt, va)) != -1) {
+    rc = st->n;
+  }
+  return rc;
+}

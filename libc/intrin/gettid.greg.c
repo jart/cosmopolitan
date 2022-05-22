@@ -27,6 +27,12 @@ __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
 /**
  * Returns current thread id.
+ *
+ * On Linux, and Linux only, this is guaranteed to be equal to getpid()
+ * if this is the main thread. On NetBSD, gettid() for the main thread
+ * is always 1.
+ *
+ * @return thread id greater than zero or -1 w/ errno
  * @asyncsignalsafe
  */
 privileged int gettid(void) {

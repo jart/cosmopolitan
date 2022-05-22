@@ -23,6 +23,7 @@
 //	@param	rdi has file stream object pointer
 //	@note	EOF doesn't count
 //	@see	feof_unlocked()
+//	@threadsafe
 feof:	mov	%rdi,%r11
 	ezlea	feof_unlocked,ax
 	jmp	stdio_unlock

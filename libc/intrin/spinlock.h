@@ -64,7 +64,7 @@
   do {                                               \
     autotype(lock) __lock = (lock);                  \
     typeof(*__lock) __x;                             \
-    int __tries = 0;                                 \
+    unsigned __tries = 0;                            \
     for (;;) {                                       \
       __atomic_load(__lock, &__x, __ATOMIC_RELAXED); \
       if (!__x && !_trylock_inline(__lock)) {        \

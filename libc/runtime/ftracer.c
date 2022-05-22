@@ -70,7 +70,8 @@ static privileged inline void ReleaseFtraceLock(void) {
 }
 
 static privileged inline bool AcquireFtraceLock(void) {
-  int me, owner, tries;
+  int me, owner;
+  unsigned tries;
   if (!__threaded) {
     return _cmpxchg(&ftrace_lock, 0, -1);
   } else {

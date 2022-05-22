@@ -33,7 +33,7 @@
 /**
  * Blocks until data from stream buffer is written out.
  *
- * @param f is the stream handle
+ * @param f is the stream handle, or 0 for all streams
  * @return is 0 on success or -1 on error
  */
 int fflush_unlocked(FILE *f) {

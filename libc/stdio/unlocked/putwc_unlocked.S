@@ -24,6 +24,7 @@
 //	@param	rsi has file object
 //	@return wc if written or -1 w/ errno
 //	@see	putwc_unlocked()
+//	@threadsafe
 putwc:	mov	%rsi,%r11
 	ezlea	fputwc_unlocked,ax
 	jmp	stdio_unlock

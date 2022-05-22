@@ -108,6 +108,7 @@
        "protip"
        "nxbitsafe"
        "vforksafe"
+       "threadsafe"
        "preinitsafe"
        "asyncsignalsafe"
        "notasyncsignalsafe"

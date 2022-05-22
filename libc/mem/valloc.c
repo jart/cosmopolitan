@@ -24,6 +24,7 @@
  * @param n number of bytes needed
  * @return memory address, or NULL w/ errno
  * @see pvalloc()
+ * @threadsafe
  */
 void *valloc(size_t n) {
   return memalign(PAGESIZE, n);

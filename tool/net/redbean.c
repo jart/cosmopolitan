@@ -146,6 +146,7 @@
 #include "third_party/mbedtls/iana.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/oid.h"
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/rsa.h"
