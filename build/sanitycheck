@@ -27,28 +27,38 @@ EOF
   exit 1
 fi
 
-build/sanitycheck2
-if [ $? -ne 123 ]; then
+if [ ! -f /proc/sys/fs/binfmt_misc/status ]; then
+  exit 0
+fi
+
+STATUS="$(build/bootstrap/apetest.com)"
+if [ x"$STATUS" != xsuccess ]; then
   cat <<'EOF' >&2
 
 ERROR
 
-  Thompson Shell Backwards Compatibility Issue Detected
+  APE Execution error.
 
 DETAILS
 
-  Your system has likely been configured to use binfmt_misc and wine.
-  You need to run the command below which will install a /usr/bin/ape
-  program and then register it with binfmt_misc. See ape/loader.c for
-  source code and technical details.
+  Your system has probably been configured to use binfmt_misc. You need
+  to run the command below to install /usr/bin/ape and register it with
+  binfmt_misc. See ape/loader.c for source code, and technical details.
 
 WORKAROUND
 
   ape/apeinstall.sh
 
+NOTES
+
+  If it still doesn't work, possibly due to an overly aggressive WINE
+  or WSL registration, or possibly due to the ordering of definitions,
+  then one troubleshooting step is to just unregister everything using
+  sudo sh -c 'echo -1 >/proc/sys/fs/binfmt_misc/status' and try again.
+
 SEE ALSO
 
-  https://justine.storage.googleapis.com/ape.html
+  https://justine.lol/ape.html
 
 EOF
   kill $1

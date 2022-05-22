@@ -323,7 +323,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
 
   clashes = OverlapsImageSpace(p, size) || OverlapsExistingMapping(p, size);
 
-  if ((flags & MAP_FIXED_NOREPLACE) && clashes) {
+  if ((flags & MAP_FIXED_NOREPLACE) == MAP_FIXED_NOREPLACE && clashes) {
     STRACE("noreplace overlaps existing");
     return VIP(eexist());
   }
@@ -464,14 +464,21 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
  *       compile-time checks to ensure some char[8192] vars will not
  *       create an undetectable overflow into another thread's stack
  *     Your `flags` may optionally bitwise or any of the following:
- *     - `MAP_FIXED` in which case `addr` becomes more than a hint
- *     - `MAP_FIXED_NOREPLACE` to protect existing maps (Linux-only)
  *     - `MAP_ANONYMOUS` in which case `fd == -1` should be the case
+ *     - `MAP_FIXED` in which case `addr` becomes more than a hint
+ *     - `MAP_FIXED_NOREPLACE` to protect existing mappings; this is
+ *       always polyfilled by mmap() which tracks its own memory and
+ *       removed before passing to the kernel, in order to support
+ *       old versions; if you believe mappings exist which only the
+ *       kernel knows, then this flag may be passed to sys_mmap() on
+ *       Linux 4.17+ and FreeBSD (where it has multiple bits)
  *     - `MAP_CONCEAL` is FreeBSD/NetBSD/OpenBSD-only
  *     - `MAP_NORESERVE` is Linux/XNU/NetBSD-only
- *     - `MAP_LOCKED` is Linux-only
- *     - `MAP_POPULATE` is Linux-only
+ *     - `MAP_POPULATE` is Linux/FreeBSD-only
  *     - `MAP_NONBLOCK` is Linux-only
+ *     - `MAP_NOSYNC` is FreeBSD-only
+ *     - `MAP_INHERIT` is NetBSD-only
+ *     - `MAP_LOCKED` is Linux-only
  * @param fd is an open()'d file descriptor, whose contents shall be
  *     made available w/ automatic reading at the chosen address and
  *     must be -1 if MAP_ANONYMOUS is specified

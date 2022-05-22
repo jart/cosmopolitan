@@ -7305,7 +7305,6 @@ void RedBean(int argc, char *argv[]) {
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
-  __print_maps();
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(HEARTBEAT);
   } else if (IsWindows()) {

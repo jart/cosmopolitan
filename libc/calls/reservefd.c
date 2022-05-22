@@ -58,7 +58,7 @@ int __ensurefds_unlocked(int fd) {
   if (!(p2 = weaken(malloc)(n2 * sizeof(*p1)))) return -1;
   __cxa_atexit(FreeOldFdsArray, p1, 0);
   memcpy(p2, p1, n1 * sizeof(*p1));
-  bzero(p2 + n1, (p2 + n2) - (p2 + n1));
+  bzero(p2 + n1, (n2 - n1) * sizeof(*p1));
   g_fds.p = p2;
   g_fds.n = n2;
   return fd;

@@ -550,25 +550,25 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	"t=\"${TMPDIR:-/tmp}/ape\"\n"
-	.ascii	"if [ ! -x \"$t\" ]; then\n"
-	.ascii	  "if [ ! -d /Applications ]; then\n"
-	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
-	.shstub	      ape_loader_dd_skip,2
-	.ascii	      "\" count=\""
-	.shstub	      ape_loader_dd_count,2
-	.ascii	      "\" bs=64\n"
-#if SupportsXnu() && defined(APE_LOADER_MACHO)
-	.ascii	  "else\n"
-	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
-	.shstub	      ape_loader_macho_dd_skip,2
-	.ascii	      "\" count=\""
-	.shstub	      ape_loader_macho_dd_count,2
-	.ascii	      "\" bs=64\n"
-#endif /* APE_LOADER_MACHO */
-	.ascii	  "fi 2>/dev/null &&\n"
-	.ascii	  "chmod 755 \"$t.$$\" &&\n"
-	.ascii	  "mv \"$t.$$\" \"$t\"\n"
-	.ascii	"fi\n"
+	.ascii	"[ -x \"$t\" ] || {\n"
+	.ascii	  "dd if=\"$o\" of=\"$t.$$\" skip=\""
+	.shstub	    ape_loader_dd_skip,2
+	.ascii	    "\" count=\""
+	.shstub	    ape_loader_dd_count,2
+	.ascii	    "\" bs=64 2>/dev/null\n"
+#if SupportsXnu()
+	.ascii	  "[ -d /Applications ] && "
+	.ascii	    "dd if=\"$t.$$\""
+	.ascii	      " of=\"$t.$$\""
+	.ascii	      " skip=6"
+	.ascii	      " count=10"
+	.ascii	      " bs=64"
+	.ascii	      " conv=notrunc"
+	.ascii	      " 2>/dev/null\n"
+#endif /* SupportsXnu() */
+	.ascii	  "chmod 755 \"$t.$$\"\n"
+	.ascii	  "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	"}\n"
 	.ascii	"exec \"$t\" \"$o\" \"$@\"\n"
 #endif /* APE_LOADER */
 #ifndef APE_NO_MODIFY_SELF
@@ -589,15 +589,40 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	then permission clashes can happen between system users,
 //	since only root is able to set the sticky bit, which can
 //	be addressed simply by overriding the TMPDIR environment
-	.ascii	"o=\"${TMPDIR:-/tmp}/$0\"\n"
-	.ascii	"if [ ! -e \"$o\" ]; then\n"
-	.ascii	  "d=\"$o\"\n"
-	.ascii	  "o=\"$o.$$\"\n"
-	.ascii	  "mkdir -p \"${o%/*}\" 2>/dev/null\n"
-	.ascii	  "cp -f \"$0\" \"$o\" || exit 120\n"
+	.ascii	"t=\"${TMPDIR:-/tmp}/$0\"\n"
+	.ascii	"[ -e \"$t\" ] || {\n"
+	.ascii	  "mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	  "cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	  "mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	  "o=\"$t\"\n"
 #endif /* APE_NO_MODIFY_SELF */
+	.ascii	"exec 7<> \"$o\" || exit 121\n"
+	.ascii	"printf '"
+	.ascii	  "\\177ELF"			# 0x0: ⌂ELF
+	.ascii	  "\\2"				#   4: long mode
+	.ascii	  "\\1"				#   5: little endian
+	.ascii	  "\\1"				#   6: elf v1.o
+	.ascii	  "\\011"			#   7: FreeBSD
+	.ascii	  "\\0"				#   8: os/abi ver.
+	.ascii	  "\\0\\0\\0"			#   9: padding 3/7
+	.ascii	  "\\0\\0\\0\\0"		#      padding 4/7
+	.ascii	  "\\2\\0"			#  10: εxεcµταblε
+	.ascii	  "\\076\\0"			#  12: NexGen32e
+	.ascii	  "\\1\\0\\0\\0"		#  14: elf v1.o
+	.shstub	  ape_elf_entry,8		#  18: e_entry
+	.shstub	  ape_elf_phoff,8		#  20: e_phoff
+	.shstub	  ape_elf_shoff,8		#  28: e_shoff
+	.ascii	  "\\0\\0\\0\\0"		#  30: e_flags
+	.ascii	  "\\100\\0"			#  34: e_ehsize
+	.ascii	  "\\070\\0"			#  36: e_phentsize
+	.shstub	  ape_elf_phnum,2		#  38: e_phnum
+	.ascii	  "\\0\\0"			#  3a: e_shentsize
+	.shstub	  ape_elf_shnum,2		#  3c: e_shnum
+	.shstub	  ape_elf_shstrndx,2		#  3e: e_shstrndx
+	.ascii	  "' >&7\n"
+	.ascii	"exec 7<&-\n"
 #if SupportsXnu()
-	.ascii	"if [ -d /Applications ]; then\n"
+	.ascii	"[ -d /Applications ] && "
 	.ascii	  "dd if=\"$o\""
 	.ascii	    " of=\"$o\""
 	.ascii	    " bs=8"
@@ -606,54 +631,20 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "\" count=\""
 	.shstub	    ape_macho_dd_count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
-	.ascii	"el"
 #endif /* XNU */
-	.ascii	"if exec 7<> \"$o\"; then\n"
-	.ascii	  "printf '"
-	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
-	.ascii	    "\\2"			#   4: long mode
-	.ascii	    "\\1"			#   5: little endian
-	.ascii	    "\\1"			#   6: elf v1.o
-	.ascii	    "\\011"			#   7: FreeBSD
-	.ascii	    "\\0"			#   8: os/abi ver.
-	.ascii	    "\\0\\0\\0"			#   9: padding 3/7
-	.ascii	    "\\0\\0\\0\\0"		#      padding 4/7
-	.ascii	    "\\2\\0"			#  10: εxεcµταblε
-	.ascii	    "\\076\\0"			#  12: NexGen32e
-	.ascii	    "\\1\\0\\0\\0"		#  14: elf v1.o
-	.shstub	    ape_elf_entry,8		#  18: e_entry
-	.shstub	    ape_elf_phoff,8		#  20: e_phoff
-	.shstub	    ape_elf_shoff,8		#  28: e_shoff
-	.ascii	    "\\0\\0\\0\\0"		#  30: e_flags
-	.ascii	    "\\100\\0"			#  34: e_ehsize
-	.ascii	    "\\070\\0"			#  36: e_phentsize
-	.shstub	    ape_elf_phnum,2		#  38: e_phnum
-	.ascii	    "\\0\\0"			#  3a: e_shentsize
-	.shstub	    ape_elf_shnum,2		#  3c: e_shnum
-	.shstub	    ape_elf_shstrndx,2		#  3e: e_shstrndx
-	.ascii	    "' >&7\n"
-	.ascii	  "exec 7<&-\n"
-	.ascii	"else\n"
-	.ascii	  "exit 121\n"
-	.ascii	"fi\n"
 #ifndef APE_NO_MODIFY_SELF
-	.ascii	"exec \"$0\" \"$@\"\n"		# optimistic execution
+	.ascii	"exec \"$0\" \"$@\"\n"		# try to preserve argv[0]
 #else
-	.ascii	  "mv -f \"$o\" \"$d\" 2>/dev/null\n"
-	.ascii	  "o=\"$d\"\n"
-	.ascii	"fi\n"
+	.ascii	"}\n"
+	.ascii	"o=\"$t\"\n"
 	.ascii	"exec \"$o\" \"$@\"\n"
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	"R=$?\n"
-	.ascii	"\n"
-	.ascii	"if [ $R -eq 126 ] && [ \"$(uname -m)\" != x86_64 ]; then\n"
-	.ascii	  "if Q=\"$(command -v qemu-x86_64)\"; then\n"
+	.ascii	"if [ \"$(uname -m)\" != x86_64 ]; then\n"
+	.ascii	  "Q=\"$(command -v qemu-x86_64)\" &&\n"
 	.ascii	    "exec \"$Q\" \"$o\" \"$@\"\n"
-	.ascii	  "else\n"
-	.ascii	    "echo error: need qemu-x86_64 >&2\n"
-	.ascii	  "fi\n"
 #ifndef APE_NO_MODIFY_SELF
-	.ascii	"elif [ $R -eq 127 ]; then\n"	# means argv[0] was wrong
+	.ascii	"else\n"			# means argv[0] was wrong
 	.ascii	"  exec \"$o\" \"$@\"\n"	# so do a path resolution
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	"fi\n"
@@ -661,14 +652,16 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.endobj	apesh
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
+	.align	64
+ape_loader:
         .incbin APE_LOADER
+	.endobj	ape_loader,globl
+	.align	64
+ape_loader_end:
+	nop
+	.endobj	ape_loader_end,globl
         .previous
 #endif /* APE_LOADER */
-#if SupportsXnu() && defined(APE_LOADER_MACHO)
-        .section .ape.loader-macho,"a",@progbits
-        .incbin APE_LOADER_MACHO
-        .previous
-#endif /* APE_LOADER_MACHO */
 #endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
 #if SupportsSystemv() || SupportsMetal()
@@ -1521,12 +1514,9 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
-	.weak	__hostos
-	ezlea	__hostos,ax
-	test	%rax,%rax
-	jz	1f
-	movb	$METAL,(%rax)
-1:	push	$0
+	push	$METAL				# sets __hostos in crt.S
+	pop	%rcx
+	push	$0
 	mov	%rsp,%rbp
 	mov	.Lenv0(%rip),%rax
 	mov	%rax,(%rbp)			# envp[0][0]
@@ -1542,7 +1532,6 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	push	$1				# argc
 	xor	%ebp,%ebp
 	xor	%eax,%eax
-	xor	%ecx,%ecx
 	xor	%edx,%edx
 	xor	%edi,%edi
 	xor	%esi,%esi

@@ -17,6 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/def.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/macho.internal.h"
+#include "libc/dce.h"
 #include "libc/macros.internal.h"
 
 //	APE Loader Executable Structure
@@ -44,48 +47,6 @@ ehdr:	.ascii	"\177ELF"
 	.word	0			# e_shstrndx
 	.endobj	ehdr,globl
 
-//	Ape Loader Entrpoint
-//
-//	This is normally called by the operating system. However it may
-//	be called by the Actually Portable Executables themselves, when
-//	re-executing a program. Just do this:
-//
-//	    memcpy(0x200000, loader)
-//	    xor %eax,%eax
-//	    inc %eax
-//	    jmp 0x200000
-//
-//	@see	APE_LOADER_ENTRY
-jg47h:	.org	0x47
-	.endobj	jg47h
-_start:	mov	%rsp,%rsi
-	jmp	ApeLoader
-	.endfn	_start,globl
-
-//	System Call Entrpoint
-//
-//	This function is used by the APE loader to make system calls.
-//	We also pass a reference to this function to the APE binary's
-//	_start() function. It's needed because on OpenBSD, msyscall()
-//	restricts which pages can issue system calls, and it can only
-//	be called once. Therefore if we want to be load and re-load a
-//	binary multiple times without calling the system execve(), we
-//	need to be able to handover the SYSCALL function. We hardcode
-//	this to a fixed address, but that shouldn't be used, since we
-//	would ideally want to move it to a random page in the future.
-//
-//	@see	APE_LOADER_SYSCALL
-sc50h:	.org	0x50
-	.endobj	sc50h
-__syscall_loader:
-	clc
-	syscall
-	jc	1f
-	ret
-1:	neg	%rax
-	ret
-	.endfn	__syscall_loader,globl
-
 	.align	8
 phdrs:	.long	PT_LOAD			# p_type
 	.long	PF_R|PF_X		# p_flags
@@ -94,7 +55,7 @@ phdrs:	.long	PT_LOAD			# p_type
 	.quad	ehdr			# p_paddr
 	.quad	filesz			# p_filesz
 	.quad	filesz			# p_memsz
-	.quad	PAGESIZE		# p_align
+	.quad	64			# p_align
 
 	.long	PT_LOAD			# p_type
 	.long	PF_R|PF_W		# p_flags
@@ -103,7 +64,7 @@ phdrs:	.long	PT_LOAD			# p_type
 	.quad	bss			# p_paddr
 	.quad	0			# p_filesz
 	.quad	bsssize			# p_memsz
-	.quad	PAGESIZE		# p_align
+	.quad	64			# p_align
 
 	.long	PT_GNU_STACK		# p_type
 	.long	PF_R|PF_W		# p_flags
@@ -138,3 +99,140 @@ note:	.long	2f-1f
 3:	.long	901000000
 4:	.endobj	note
 	notesize = . - note
+
+	.align	64,0				# for ape.S dd
+	.org	0x180				# for ape.S dd
+
+//	APE Loader XNU Header
+//
+//	This header is dd'd backwards by the APE shell script when
+//	running on Mac OS X.
+//
+//	@see	ape/ape.S
+macho:	.long	0xFEEDFACE+1
+	.long	MAC_CPU_NEXGEN32E
+	.long	MAC_CPU_NEXGEN32E_ALL
+	.long	MAC_EXECUTE
+	.long	5				# number of load commands
+	.long	60f-10f				# size of all load commands
+	.long	MAC_NOUNDEFS			# flags
+	.long	0				# reserved
+10:	.long	MAC_LC_SEGMENT_64
+	.long	20f-10b				# unmaps first page dir
+	.ascin	"__PAGEZERO",16			# consistent with linux
+	.quad	0,0x200000,0,0			# which forbids mem <2m
+	.long	0,0,0,0
+20:	.long	MAC_LC_SEGMENT_64
+	.long	30f-20b
+	.ascin	"__TEXT",16
+	.quad	ehdr				# vaddr
+	.quad	4096				# memsz
+	.quad	0				# file offset
+	.quad	filesz				# file size
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
+	.long	PROT_EXEC|PROT_READ		# initprot
+	.long	1				# segment section count
+	.long	0				# flags
+210:	.ascin	"__text",16			# section name (.text)
+	.ascin	"__TEXT",16
+	.quad	_start				# vaddr
+	.quad	textsz				# memsz
+	.long	textoff				# offset
+	.long	6				# align 2**6 = 64
+	.long	0				# reloc table offset
+	.long	0				# relocation count
+	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	# section type & attributes
+	.long	0,0,0				# reserved
+30:	.long	MAC_LC_SEGMENT_64
+	.long	40f-30b
+	.ascin	"__DATA",16
+	.quad	bss				# vaddr
+	.quad	bsssize				# memsz
+	.quad	0				# offset
+	.quad	0				# file size
+	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
+	.long	PROT_READ|PROT_WRITE		# initprot
+	.long	1				# segment section count
+	.long	0				# flags
+310:	.ascin	"__bss",16			# section name (.bss)
+	.ascin	"__DATA",16
+	.quad	bss				# vaddr
+	.quad	bsssize				# memsz
+	.long	0				# offset
+	.long	12				# align 2**12 = 4096
+	.long	0				# reloc table offset
+	.long	0				# relocation count
+	.long	MAC_S_ZEROFILL			# section type & attributes
+	.long	0,0,0				# reserved
+40:	.long	MAC_LC_UUID
+	.long	50f-40b
+	.quad	0x3fb29ee4ac6c87aa		# uuid1
+	.quad	0xdd2c9bb866d9eef8		# uuid2
+50:	.long	MAC_LC_UNIXTHREAD
+	.long	60f-50b				# cmdsize
+	.long	MAC_THREAD_NEXGEN32E		# flavaflav
+	.long	(520f-510f)/4			# count
+510:	.quad	0				# rax
+	.quad	0				# rbx
+	.quad	0				# rcx
+	.quad	XNU				# rdx
+	.quad	0				# rdi
+	.quad	0				# rsi
+	.quad	0				# rbp
+	.quad	0				# rsp
+	.quad	0				# r8
+	.quad	0				# r9
+	.quad	0				# r10
+	.quad	0				# r11
+	.quad	0				# r12
+	.quad	0				# r13
+	.quad	0				# r14
+	.quad	0				# r15
+	.quad	_start				# rip
+	.quad	0				# rflags
+	.quad	0				# cs
+	.quad	0				# fs
+	.quad	0				# gs
+520:
+60:
+	.endobj	macho
+
+	.align	64,0				# for ape.S dd
+	.org	0x400				# for ape.S dd
+
+//	Ape Loader Entrpoint
+//
+//	This is normally called by the operating system. However it may
+//	be called by the Actually Portable Executables themselves, when
+//	re-executing a program. Just do this:
+//
+//	    memcpy(0x200000, loader)
+//	    lea handoff(%rip),%rcx
+//	    lea argblock(%rip),%rsp
+//	    jmp 0x200400
+//
+//	@see	APE_LOADER_ENTRY
+//	@see	ape/loader.h
+_start:	mov	%rsp,%rsi
+	jmp	ApeLoader
+	.endfn	_start,globl
+
+//	System Call Entrpoint
+//
+//	This function is used by the APE loader to make system calls.
+//	We also pass a reference to this function to the APE binary's
+//	_start() function. It's needed because on OpenBSD, msyscall()
+//	restricts which pages can issue system calls, and it can only
+//	be called once. Therefore if we want to be load and re-load a
+//	binary multiple times without calling the system execve(), we
+//	need to be able to handover the SYSCALL function. We hardcode
+//	this to a fixed address, but that shouldn't be used, since we
+//	would ideally want to move it to a random page in the future.
+__syscall_loader:
+	clc
+	syscall
+	jc	1f
+	ret
+1:	neg	%rax
+	ret
+	.endfn	__syscall_loader,globl

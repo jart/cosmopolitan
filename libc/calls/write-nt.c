@@ -16,10 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -37,12 +42,18 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     //   return ebadf(); /* handled by consts.sh */
     // case kNtErrorNotEnoughQuota:
     //   return edquot(); /* handled by consts.sh */
-    case kNtErrorBrokenPipe:            // broken pipe
-    case kNtErrorNoData:                // closing named pipe
-      __sig_raise(SIGPIPE, SI_KERNEL);  //
-      return epipe();                   //
-    case kNtErrorAccessDenied:          // write doesn't return EACCESS
-      return ebadf();                   //
+    case kNtErrorBrokenPipe:  // broken pipe
+    case kNtErrorNoData:      // closing named pipe
+      if (weaken(__sig_raise)) {
+        weaken(__sig_raise)(SIGPIPE, SI_KERNEL);
+        return epipe();
+      } else {
+        STRACE("broken pipe");
+        __restorewintty();
+        _Exit(128 + EPIPE);
+      }
+    case kNtErrorAccessDenied:  // write doesn't return EACCESS
+      return ebadf();           //
     default:
       return __winerr();
   }

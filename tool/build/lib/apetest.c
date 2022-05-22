@@ -1,7 +1,7 @@
-/*-*- mode: ld-script; indent-tabs-mode: nil; tab-width: 2; coding: utf-8   -*-│
-│vi: set et sts=2 tw=2 fenc=utf-8                                           :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-ENTRY(_start)
+#include "libc/calls/calls.h"
 
-SECTIONS {
-  . = 0x200000;
-  .text : {
-    *(.text)
-    *(.rodata .rodata.*)
-    . = ALIGN(4096);
-  }
-  filesz = . - macho;
-  textsz = . - _start;
-  .bss ALIGN(4096) : {
-    bss = .;
-    *(.bss)
-    . = ALIGN(4096);
-  }
-  memsz = . - macho;
-  /DISCARD/ : {
-    *(.*)
-  }
+int main(int argc, char *argv[]) {
+  write(1, "success\n", 8);
 }
-
-bsssize = SIZEOF(.bss);
-textoff = _start - macho;

@@ -96,7 +96,13 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromElf(void) {
-  return OpenSymbolTable(FindDebugBinary());
+  int e;
+  const char *s;
+  if ((s = FindDebugBinary())) {
+    return OpenSymbolTable(s);
+  } else {
+    return 0;
+  }
 }
 
 /**
@@ -117,7 +123,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  * Function tracing is disabled throughout the duration of this call.
  * Backtraces and other core runtime functionality depend on this.
  *
- * @return symbol table, or NULL w/ errno on first call
+ * @return symbol table, or NULL if not found
  */
 struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;

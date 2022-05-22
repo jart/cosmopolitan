@@ -41,6 +41,8 @@ TEST_LIBC_RUNTIME_DIRECTDEPS =					\
 	LIBC_TINYMATH						\
 	LIBC_UNICODE						\
 	LIBC_X							\
+	LIBC_ZIPOS						\
+	TOOL_BUILD_LIB						\
 	THIRD_PARTY_XED
 
 TEST_LIBC_RUNTIME_DEPS :=					\
@@ -59,6 +61,15 @@ o/$(MODE)/test/libc/runtime/%.com.dbg:				\
 		$(APE)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/runtime/ape_test.com.dbg:			\
+		$(TEST_LIBC_RUNTIME_DEPS)			\
+		o/$(MODE)/test/libc/runtime/ape_test.o		\
+		o/$(MODE)/test/libc/runtime/runtime.pkg		\
+		$(LIBC_TESTMAIN)				\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
 $(TEST_LIBC_RUNTIME_OBJS):					\
 	DEFAULT_CCFLAGS +=					\
 		-fno-builtin
@@ -67,7 +78,6 @@ o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 		o/$(MODE)/test/libc/runtime/getenv_test.com
 	@HELLO=THERE build/runit $@ $<
 
-o/$(MODE)/test/libc/runtime/fun_test.o				\
 o/$(MODE)/test/libc/runtime/itsatrap_test.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-fno-sanitize=all			\

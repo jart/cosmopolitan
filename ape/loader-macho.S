@@ -41,7 +41,7 @@ macho:	.long	0xFEEDFACE+1
 	.long	30f-20b
 	.ascin	"__TEXT",16
 	.quad	macho				# vaddr
-	.quad	filesz				# memsz
+	.quad	4096				# memsz
 	.quad	0				# file offset
 	.quad	filesz				# file size
 	.long	PROT_EXEC|PROT_READ|PROT_WRITE	# maxprot
@@ -53,7 +53,7 @@ macho:	.long	0xFEEDFACE+1
 	.quad	_start				# vaddr
 	.quad	textsz				# memsz
 	.long	textoff				# offset
-	.long	3				# align 2**3 = 8
+	.long	6				# align 2**3 = 64
 	.long	0				# reloc table offset
 	.long	0				# relocation count
 	.long	MAC_S_ATTR_SOME_INSTRUCTIONS	# section type & attributes
@@ -112,7 +112,7 @@ macho:	.long	0xFEEDFACE+1
 60:
 	.endobj	macho,globl
 
-	.align	8
+	.align	64
 _start:	mov	%rsp,%rsi
 	jmp	ApeLoader
 	.endfn	_start,globl

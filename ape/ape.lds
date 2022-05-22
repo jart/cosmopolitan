@@ -243,10 +243,12 @@ SECTIONS {
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
+    /* Code we want earlier in the binary w/o modifications */
+    KEEP(*(.ape.loader))
     HIDDEN(_ereal = .);
-    . += 1;
-
 /*END: realmode addressability guarantee */
+/*BEGIN: morphable code */
+    . += 1;
 
     /* Normal Code */
     *(.start)
@@ -283,6 +285,7 @@ SECTIONS {
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
     . += . > 0 ? 1 : 0;
+/*END: morphable code */
     HIDDEN(__privileged_start = .);
     . += . > 0 ? 1 : 0;
     *(.privileged)
@@ -390,21 +393,6 @@ SECTIONS {
   } :Ram
 
 /*END:   file content that's loaded by o/s */
-/*BEGIN: payload (for now, only the APE loader) */
-  .payload ALIGN(64) : {
-    /* Loader */
-    HIDDEN(ape_loader = .);
-    KEEP(*(.ape.loader))
-    . = ALIGN(64);
-    HIDDEN(ape_loader_end = .);
-#if SupportsXnu()
-    HIDDEN(ape_loader_macho = .);
-    KEEP(*(.ape.loader-macho))
-    . = ALIGN(64);
-    HIDDEN(ape_loader_macho_end = .);
-#endif
-  }
-/*END: payload */
 /*BEGIN: bss memory void */
 
   .zip . : {
@@ -552,13 +540,14 @@ HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
 HIDDEN(ape_bss_align = PAGESIZE);
 
-SHSTUB2(ape_loader_dd_skip, RVA(ape_loader) / 64);
-SHSTUB2(ape_loader_dd_count, (ape_loader_end - ape_loader) / 64);
-
-#if SupportsXnu()
-SHSTUB2(ape_loader_macho_dd_skip, RVA(ape_loader_macho) / 64);
-SHSTUB2(ape_loader_macho_dd_count, (ape_loader_macho_end - ape_loader_macho) / 64);
-#endif
+/* we roundup here because xnu wants the file load segments page-aligned */
+/* but we don't want to add the nop padding to the ape program, so we'll */
+/* let ape.S dd read past the end of the file into the wrapping binaries */
+SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
+SHSTUB2(ape_loader_dd_count,
+        DEFINED(ape_loader_end)
+            ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
+            : 0);
 
 #if SupportsXnu()
 SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);

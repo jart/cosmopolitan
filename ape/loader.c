@@ -22,7 +22,7 @@
 #define TROUBLESHOOT_OS LINUX
 
 /**
- * @fileoverview APE Loader for GNU/Systemd and FreeBSD/NetBSD/OpenBSD
+ * @fileoverview APE Loader for GNU/Systemd/XNU/FreeBSD/NetBSD/OpenBSD
  *
  * We recommend using the normal APE design, where binaries assimilate
  * themselves once by self-modifying the first 64 bytes. If that can't
@@ -30,7 +30,7 @@
  *
  *     m=tiny
  *     make -j8 MODE=$m o/$m/ape o/$m/examples/printargs.com
- *     o/$m/ape/ape o/$m/examples/printargs.com
+ *     o/$m/ape/ape.elf o/$m/examples/printargs.com
  *
  * This is an embeddable Actually Portable Executable interpreter. The
  * `ape/ape.S` bootloader embeds this binary inside each binary that's
@@ -45,8 +45,12 @@
  * so your APE loader may be installed to your system as follows:
  *
  *     m=tiny
- *     make -j8 MODE=$m o/$m/ape/ape
- *     sudo cp o/$m/ape/ape /usr/bin/ape
+ *     make -j8 MODE=$m o/$m/ape/ape.elf
+ *     sudo cp o/$m/ape/ape.elf /usr/bin/ape
+ *
+ * For Mac OS X systems you should install the `ape.macho` executable:
+ *
+ *     sudo cp o/$m/ape/ape.macho /usr/bin/ape
  *
  * Your APE loader may be used as a shebang interpreter by doing this:
  *
@@ -57,7 +61,7 @@
  * However you won't need to do that, if your APE Loader is registered
  * as a binfmt_misc interpreter. You can do that as follows with root:
  *
- *     sudo cp -f o/$m/ape/ape /usr/bin
+ *     sudo cp -f o/$m/ape/ape.elf /usr/bin
  *     f=/proc/sys/fs/binfmt_misc/register
  *     sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >$f"
  *
@@ -78,12 +82,22 @@
  */
 
 #define LINUX   1
-#define METAL   2
-#define WINDOWS 4
 #define XNU     8
 #define OPENBSD 16
 #define FREEBSD 32
 #define NETBSD  64
+
+#define SupportsLinux()   (SUPPORT_VECTOR & LINUX)
+#define SupportsXnu()     (SUPPORT_VECTOR & XNU)
+#define SupportsFreebsd() (SUPPORT_VECTOR & FREEBSD)
+#define SupportsOpenbsd() (SUPPORT_VECTOR & OPENBSD)
+#define SupportsNetbsd()  (SUPPORT_VECTOR & NETBSD)
+
+#define IsLinux()   (SupportsLinux() && os == LINUX)
+#define IsXnu()     (SupportsXnu() && os == XNU)
+#define IsFreebsd() (SupportsFreebsd() && os == FREEBSD)
+#define IsOpenbsd() (SupportsOpenbsd() && os == OPENBSD)
+#define IsNetbsd()  (SupportsNetbsd() && os == NETBSD)
 
 #define O_RDONLY         0
 #define PROT_READ        1
@@ -92,7 +106,7 @@
 #define MAP_SHARED       1
 #define MAP_PRIVATE      2
 #define MAP_FIXED        16
-#define MAP_ANONYMOUS    (os == LINUX ? 32 : 4096)
+#define MAP_ANONYMOUS    (IsLinux() ? 32 : 4096)
 #define AT_EXECFN_LINUX  31
 #define AT_EXECFN_NETBSD 2014
 #define ELFCLASS64       2
@@ -235,15 +249,15 @@ static char *Itoa(char p[21], long x) {
 
 #if TROUBLESHOOT
 const char *DescribeOs(int os) {
-  if (os == LINUX) {
+  if (IsLinux()) {
     return "GNU/SYSTEMD";
-  } else if (os == XNU) {
+  } else if (IsXnu()) {
     return "XNU";
-  } else if (os == FREEBSD) {
+  } else if (IsFreebsd()) {
     return "FREEBSD";
-  } else if (os == OPENBSD) {
+  } else if (IsOpenbsd()) {
     return "OPENBSD";
-  } else if (os == NETBSD) {
+  } else if (IsNetbsd()) {
     return "NETBSD";
   } else {
     return "WUT";
@@ -251,40 +265,42 @@ const char *DescribeOs(int os) {
 }
 #endif
 
-__attribute__((__noreturn__)) static void Exit(long rc, int os) {
+__attribute__((__noreturn__)) static void Exit(int rc, int os) {
   asm volatile("call\t*%2"
                : /* no outputs */
-               : "a"((os == LINUX ? 60 : 1) | (os == XNU ? 0x2000000 : 0)),
-                 "D"(rc), "m"(syscall)
+               : "a"((IsLinux() ? 60 : 1) | (IsXnu() ? 0x2000000 : 0)), "D"(rc),
+                 "rm"(syscall)
                : "memory");
   __builtin_unreachable();
 }
 
-static void Close(long fd, int os) {
-  long ax, di;
+static void Close(int fd, int os) {
+  int ax, di;
   asm volatile("call\t*%4"
                : "=a"(ax), "=D"(di)
-               : "0"((os == LINUX ? 3 : 6) | (os == XNU ? 0x2000000 : 0)),
-                 "1"(fd), "m"(syscall)
+               : "0"((IsLinux() ? 3 : 6) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
+                 "rm"(syscall)
                : "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
-static long Read(long fd, void *data, unsigned long size, int os) {
-  long ax, di, si, dx;
+static int Read(int fd, void *data, int size, int os) {
+  long si;
+  int ax, di, dx;
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"((os == LINUX ? 0 : 3) | (os == XNU ? 0x2000000 : 0)),
-                 "1"(fd), "2"(data), "3"(size), "m"(syscall)
+               : "0"((IsLinux() ? 0 : 3) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
+                 "2"(data), "3"(size), "rm"(syscall)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   return ax;
 }
 
-static void Write(long fd, const void *data, unsigned long size, int os) {
-  long ax, di, si, dx;
+static void Write(int fd, const void *data, int size, int os) {
+  long si;
+  int ax, di, dx;
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"((os == LINUX ? 1 : 4) | (os == XNU ? 0x2000000 : 0)),
-                 "1"(fd), "2"(data), "3"(size), "m"(syscall)
+               : "0"((IsLinux() ? 1 : 4) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
+                 "2"(data), "3"(size), "rm"(syscall)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
@@ -292,58 +308,68 @@ static void Execve(const char *prog, char **argv, char **envp, int os) {
   long ax, di, si, dx;
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"((59) | (os == XNU ? 0x2000000 : 0)), "1"(prog), "2"(argv),
-                 "3"(envp), "m"(syscall)
+               : "0"(59 | (IsXnu() ? 0x2000000 : 0)), "1"(prog), "2"(argv),
+                 "3"(envp), "rm"(syscall)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
-static long Access(const char *path, int mode, int os) {
-  long ax, dx, di, si;
+static int Access(const char *path, int mode, int os) {
+  int ax, si;
+  long dx, di;
   asm volatile("call\t*%7"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"((os == LINUX ? 21 : 33) | (os == XNU ? 0x2000000 : 0)),
-                 "1"(path), "2"(mode), "m"(syscall)
+               : "0"((IsLinux() ? 21 : 33) | (IsXnu() ? 0x2000000 : 0)),
+                 "1"(path), "2"(mode), "rm"(syscall)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
 }
 
-static void Msyscall(long p, long n, int os) {
-  long ax, di, si;
-  if (os == OPENBSD) {
+static int Msyscall(long p, long n, int os) {
+  int ax;
+  long di, si;
+  if (!IsOpenbsd()) {
+    return 0;
+  } else {
     asm volatile("call\t*%6"
                  : "=a"(ax), "=D"(di), "=S"(si)
-                 : "0"(37), "1"(p), "2"(n), "m"(syscall)
+                 : "0"(37), "1"(p), "2"(n), "rm"(syscall)
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
+    return ax;
   }
 }
 
-static long Open(const char *path, long flags, long mode, int os) {
-  long ax, di, si, dx;
+static int Open(const char *path, int flags, int mode, int os) {
+  long di;
+  int ax, dx, si;
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
-               : "0"((os == LINUX ? 2 : 5) | (os == XNU ? 0x2000000 : 0)),
-                 "1"(path), "2"(flags), "3"(mode), "m"(syscall)
-               : "rcx", "r8", "r9", "r10", "r11", "memory");
+               : "0"((IsLinux() ? 2 : 5) | (IsXnu() ? 0x2000000 : 0)),
+                 "1"(path), "2"(flags), "3"(mode), "rm"(syscall)
+               : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
 }
 
-__attribute__((__noinline__)) long Mmap(long addr, long size, long prot,
-                                        long flags, long fd, long off, int os) {
-  long ax;
-  register long flags_ asm("r10") = flags;
-  register long fd_ asm("r8") = fd;
+__attribute__((__noinline__)) static long Mmap(long addr, long size, int prot,
+                                               int flags, int fd, long off,
+                                               int os) {
+  long ax, di, si, dx;
+  register int flags_ asm("r10") = flags;
+  register int fd_ asm("r8") = fd;
   register long off_ asm("r9") = off;
   asm volatile("push\t%%r9\n\t"
-               "call\t*%8\n\t"
+               "push\t%%r9\n\t"
+               "call\t*%7\n\t"
+               "pop\t%%r9\n\t"
                "pop\t%%r9"
-               : "=a"(ax)
-               : "0"((os == LINUX     ? 9
-                      : os == FREEBSD ? 477
-                                      : 197) |
-                     (os == XNU ? 0x2000000 : 0)),
-                 "D"(addr), "S"(size), "d"(prot), "r"(flags_), "r"(fd_),
-                 "r"(off_), "m"(syscall)
-               : "rcx", "r11", "memory");
+               : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx), "+r"(flags_),
+                 "+r"(fd_), "+r"(off_)
+               : "rm"(syscall),
+                 "0"((IsLinux()     ? 9
+                      : IsFreebsd() ? 477
+                                    : 197) |
+                     (IsXnu() ? 0x2000000 : 0)),
+                 "1"(addr), "2"(size), "3"(prot)
+               : "rcx", "r11", "memory", "cc");
   return ax;
 }
 
@@ -514,20 +540,33 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
     Pexit(os, exe, 0, "ELF needs PT_LOAD phdr w/ PF_X");
   }
   Close(fd, os);
-  Msyscall(code, codesize, os);
+
+  // authorize only the loaded program to issue system calls. if this
+  // fails, then we pass a link to our syscall function to the program
+  // since it probably means a userspace program executed this loader
+  // and passed us a custom syscall function earlier.
+  if (Msyscall(code, codesize, os) != -1) {
+    syscall = 0;
+  }
+
 #if TROUBLESHOOT
   Emit(TROUBLESHOOT_OS, "preparing to jump\n");
 #endif
-  register long r8 asm("r8") = syscall;
+
+  // we clear all the general registers we can to have some wiggle room
+  // to extend the behavior of this loader in the future. we don't need
+  // to clear the xmm registers since the ape loader should be compiled
+  // with the -mgeneral-regs-only flag.
+  register void *r8 asm("r8") = syscall;
   asm volatile("xor\t%%eax,%%eax\n\t"
-               "xor\t%%ebx,%%ebx\n\t"
                "xor\t%%r9d,%%r9d\n\t"
                "xor\t%%r10d,%%r10d\n\t"
                "xor\t%%r11d,%%r11d\n\t"
-               "xor\t%%r12d,%%r12d\n\t"
-               "xor\t%%r13d,%%r13d\n\t"
-               "xor\t%%r14d,%%r14d\n\t"
-               "xor\t%%r15d,%%r15d\n\t"
+               "xor\t%%ebx,%%ebx\n\t"    // netbsd dosen't clear this
+               "xor\t%%r12d,%%r12d\n\t"  // netbsd dosen't clear this
+               "xor\t%%r13d,%%r13d\n\t"  // netbsd dosen't clear this
+               "xor\t%%r14d,%%r14d\n\t"  // netbsd dosen't clear this
+               "xor\t%%r15d,%%r15d\n\t"  // netbsd dosen't clear this
                "mov\t%%rdx,%%rsp\n\t"
                "xor\t%%edx,%%edx\n\t"
                "push\t%%rsi\n\t"
@@ -535,7 +574,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
                "xor\t%%ebp,%%ebp\n\t"
                "ret"
                : /* no outputs */
-               : "D"(os == FREEBSD ? sp : 0), "S"(e->e_entry), "d"(sp), "c"(os),
+               : "D"(IsFreebsd() ? sp : 0), "S"(e->e_entry), "d"(sp), "c"(os),
                  "r"(r8)
                : "memory");
   __builtin_unreachable();
@@ -543,7 +582,8 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
 
 __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
                                              struct ApeLoader *handoff) {
-  long rc, *auxv;
+  int rc;
+  long *auxv;
   struct ElfEhdr *ehdr;
   int c, i, fd, os, argc;
   char *p, *exe, *prog, **argv, **envp, *page;
@@ -553,13 +593,15 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
   } u;
 
   // detect freebsd
-  if (di) {
+  if (handoff) {
+    os = handoff->os;
+  } else if (SupportsFreebsd() && di) {
     os = FREEBSD;
     sp = (long *)di;
-  } else if (dl == XNU) {
+  } else if (SupportsXnu() && dl == XNU) {
     os = XNU;
   } else {
-    os = LINUX;
+    os = 0;
   }
 
   // extract arguments
@@ -586,25 +628,29 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
     // no path searching is needed
     exe = handoff->prog;
     fd = handoff->fd;
-    os = handoff->os;
     exe = handoff->prog;
     page = handoff->page;
     ehdr = (struct ElfEhdr *)handoff->page;
   } else {
 
     // detect openbsd
-    if (!auxv[0]) {
+    if (SupportsOpenbsd() && !os && !auxv[0]) {
       os = OPENBSD;
     }
 
     // detect netbsd
-    if (os == LINUX) {
+    if (SupportsNetbsd() && !os) {
       for (; auxv[0]; auxv += 2) {
         if (auxv[0] == AT_EXECFN_NETBSD) {
           os = NETBSD;
           break;
         }
       }
+    }
+
+    // default operating system
+    if (!os) {
+      os = LINUX;
     }
 
     // we can load via shell, shebang, or binfmt_misc
@@ -654,11 +700,13 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
   }
 #endif
 
-  if (Read32(page) == Read32("\177ELF") || Read32(page) == 0xFEEDFACE + 1) {
+  if ((IsXnu() && Read32(page) == 0xFEEDFACE + 1) ||
+      (!IsXnu() && Read32(page) == Read32("\177ELF"))) {
     Close(fd, os);
     Execve(exe, argv, envp, os);
   }
 
+  // TODO(jart): Parse Mach-O for old APE binary support on XNU.
   for (p = page; p < page + sizeof(u.p); ++p) {
     if (Read64(p) != Read64("printf '")) continue;
     for (i = 0, p += 8; p + 3 < page + sizeof(u.p) && (c = *p++) != '\'';) {

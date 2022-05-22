@@ -20,55 +20,43 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/macros.internal.h"
 #include "libc/mem/io.h"
-#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
 STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("plinko.com");
-STATIC_YOINK("library.lisp");
-STATIC_YOINK("library_test.lisp");
-STATIC_YOINK("binarytrees.lisp");
-STATIC_YOINK("algebra.lisp");
-STATIC_YOINK("algebra_test.lisp");
-STATIC_YOINK("infix.lisp");
-STATIC_YOINK("ok.lisp");
-
-static const char *const kSauces[] = {
-    "/zip/library.lisp",       //
-    "/zip/library_test.lisp",  //
-    "/zip/binarytrees.lisp",   //
-    "/zip/algebra.lisp",       //
-    "/zip/algebra_test.lisp",  //
-    "/zip/infix.lisp",         //
-    "/zip/ok.lisp",            //
-};
+STATIC_YOINK("apetest.com");
+STATIC_YOINK("apetest2.com");
 
 char testlib_enable_tmp_setup_teardown_once;
 
-void SetUpOnce(void) {
-  int fdin, fdout;
-  ASSERT_NE(-1, mkdir("bin", 0755));
-  ASSERT_NE(-1, (fdin = open("/zip/plinko.com", O_RDONLY)));
-  ASSERT_NE(-1, (fdout = creat("bin/plinko.com", 0755)));
-  ASSERT_NE(-1, _copyfd(fdin, fdout, -1));
-  EXPECT_EQ(0, close(fdout));
-  EXPECT_EQ(0, close(fdin));
+void Extract(const char *from, const char *to, int mode) {
+  ASSERT_SYS(0, 3, open(from, O_RDONLY));
+  ASSERT_SYS(0, 4, creat(to, mode));
+  ASSERT_NE(-1, _copyfd(3, 4, -1));
+  EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
 }
 
-TEST(plinko, worksOrPrintsNiceError) {
+void SetUpOnce(void) {
+  ASSERT_SYS(0, 0, mkdir("bin", 0755));
+  Extract("/zip/apetest.com", "bin/apetest.com", 0755);
+  Extract("/zip/apetest2.com", "bin/apetest2.com", 0755);
+
+  // force the extraction of ape payload
+  // if system does not have binfmt_misc
+  ASSERT_SYS(0, 0, mkdir("tmp", 0755));
+  setenv("TMPDIR", "tmp", true);
+}
+
+void RunApeTest(const char *path) {
   size_t n;
   ssize_t rc, got;
-  char buf[1024], drain[64];
+  char buf[512] = {0};
   sigset_t chldmask, savemask;
-  int i, pid, fdin, wstatus, pfds[2][2];
+  int i, pid, fdin, wstatus, pfds[2];
   struct sigaction ignore, saveint, savequit, savepipe;
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
@@ -79,50 +67,41 @@ TEST(plinko, worksOrPrintsNiceError) {
   sigemptyset(&chldmask);
   sigaddset(&chldmask, SIGCHLD);
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  ASSERT_NE(-1, pipe2(pfds[0], O_CLOEXEC));
-  ASSERT_NE(-1, pipe2(pfds[1], O_CLOEXEC));
+  ASSERT_SYS(0, 0, pipe2(pfds, O_CLOEXEC));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     __strace = 0;
     __ftrace = 0;
-    close(0), dup(pfds[0][0]);
-    close(1), dup(pfds[1][1]);
-    close(2), dup(pfds[1][1]);
+    close(1);
+    dup(pfds[1]);
     sigaction(SIGINT, &saveint, 0);
     sigaction(SIGQUIT, &savequit, 0);
     sigaction(SIGPIPE, &savepipe, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    execve("bin/plinko.com", (char *const[]){"bin/plinko.com", 0},
-           (char *const[]){0});
-    _exit(127);
+    execv(path, (char *const[]){path, 0});
+    _Exit(127);
   }
-  close(pfds[0][0]);
-  close(pfds[1][1]);
-  for (i = 0; i < ARRAYLEN(kSauces); ++i) {
-    EXPECT_NE(-1, (fdin = open(kSauces[i], O_RDONLY)));
-    rc = _copyfd(fdin, pfds[0][1], -1);
-    if (rc == -1) EXPECT_EQ(EPIPE, errno);
-    EXPECT_NE(-1, close(fdin));
-  }
-  EXPECT_NE(-1, close(pfds[0][1]));
-  bzero(buf, sizeof(buf));
-  ASSERT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
-  EXPECT_NE(0, got);
-  while (read(pfds[1][0], drain, sizeof(drain)) > 0) donothing;
-  EXPECT_NE(-1, close(pfds[1][0]));
-  EXPECT_NE(-1, waitpid(pid, &wstatus, 0));
+  close(pfds[1]);
+  EXPECT_SYS(0, 8, read(pfds[0], buf, sizeof(buf)));
+  EXPECT_STREQ("success\n", buf);
+  close(pfds[0]);
+  EXPECT_NE(-1, wait(&wstatus));
   EXPECT_TRUE(WIFEXITED(wstatus));
-  if (!startswith(buf, "error: ")) {
-    EXPECT_STREQ("OKCOMPUTER\n", buf);
-    EXPECT_EQ(0, WEXITSTATUS(wstatus));
-  } else {
-    EXPECT_EQ(1, WEXITSTATUS(wstatus));
-  }
+  EXPECT_EQ(0, WEXITSTATUS(wstatus));
   sigaction(SIGINT, &saveint, 0);
   sigaction(SIGQUIT, &savequit, 0);
   sigaction(SIGPIPE, &savepipe, 0);
   sigprocmask(SIG_SETMASK, &savemask, 0);
-  if (g_testlib_failed) {
-    kprintf("note: got the following in pipe: %s%n", buf);
-  }
+  EXPECT_SYS(0, 3, open(path, O_RDONLY));
+  EXPECT_SYS(0, 6, read(3, buf, 6));
+  EXPECT_SYS(0, 0, close(3));
+  EXPECT_STREQN("MZqFpD", buf, 6);
+}
+
+TEST(apeNoModifySelf, runsWithoutModifyingSelf) {
+  RunApeTest("bin/apetest.com");
+}
+
+TEST(apeCopySelf, runsWithoutModifyingSelf) {
+  RunApeTest("bin/apetest2.com");
 }

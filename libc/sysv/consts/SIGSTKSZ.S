@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon ss,SIGSTKSZ,0x2000,0x020000,0x8800,0x7000,0x7000,0x2000
+.syscon ss,SIGSTKSZ,8192,131072,34816,28672,28672,8192

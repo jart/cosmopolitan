@@ -9,19 +9,19 @@ fi
 if [ -f o/depend ]; then
   # mkdeps.com build was successfully run so assume we can build
   echo >&2
-  echo running: make -j8 o//ape/ape >&2
-  make -j8 o//ape/ape || exit
+  echo running: make -j8 o//ape/ape.elf >&2
+  make -j8 o//ape/ape.elf || exit
   echo done >&2
 else
   # no evidence we can build, use prebuilt one
   mkdir -p o//ape || exit
-  cp -af build/bootstrap/ape o//ape/ape
+  cp -af build/bootstrap/ape.elf o//ape/ape.elf
 fi
 
 echo >&2
-echo installing o//ape/ape to /usr/bin/ape >&2
-echo sudo mv -f o//ape/ape /usr/bin/ape >&2
-sudo mv -f o//ape/ape /usr/bin/ape || exit
+echo installing o//ape/ape.elf to /usr/bin/ape >&2
+echo sudo mv -f o//ape/ape.elf /usr/bin/ape >&2
+sudo mv -f o//ape/ape.elf /usr/bin/ape || exit
 echo done >&2
 
 if [ -e /proc/sys/fs/binfmt_misc/APE ]; then

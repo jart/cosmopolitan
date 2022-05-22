@@ -27,7 +27,7 @@
 	.long	\systemv - kDos2Errno
 	.endm
 
-	.section .rodata
+	.section .rodata,"a",@progbits
 	.underrun
 kDos2Errno:
 //	.e	kNtErrorInvalidFunction,ENOSYS		# in consts.sh

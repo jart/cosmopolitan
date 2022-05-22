@@ -224,22 +224,25 @@ syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
 syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x00004010		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
 syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
 syscon	mmap	MAP_GROWSDOWN				0x00000100		0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
-syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_LOCKED				0x00002000		0			0			0			0			0
 syscon	mmap	MAP_NORESERVE				0x00004000		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
-syscon	mmap	MAP_POPULATE				0x00008000		0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
+syscon	mmap	MAP_POPULATE				0x00008000		0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0			0			0			0			0
 syscon	mmap	MAP_HUGETLB				0x00040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
+syscon	mmap	MAP_HASSEMAPHORE			0			0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
+syscon	mmap	MAP_NOSYNC				0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
+syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0			0
-syscon	compat	MAP_NOCORE				0			0			0x0020000		0x8000			0x8000			0			# use MAP_CONCEAL
-syscon	compat	MAP_ANON				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			0			# ignored
-syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0			0
-syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
+syscon	compat	MAP_NOCORE				0			0			0x00020000		0x00008000		0x00008000		0			# use MAP_CONCEAL
+syscon	compat	MAP_ANON				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
+syscon	compat	MAP_EXECUTABLE				0x00001000		0			0			0			0			0			# ignored
+syscon	compat	MAP_DENYWRITE				0x00000800		0			0			0			0			0
+syscon	compat	MAP_32BIT				0x00000040		0			0x00080000		0			0			0			# iffy
 
 #	madvise() flags
 #
@@ -336,36 +339,6 @@ syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0			#
 syscon	waitid	WEXITED					4			4			0x10			0			32			0
 syscon	waitid	WSTOPPED				2			8			2			0			2			0
 syscon	waitid	WNOWAIT					0x01000000		0x20			8			0			0x10000			0
-
-#	stat::st_mode constants
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	stat	S_IFREG					0100000			0100000			0100000			0100000			0100000			0100000			# regular file     (unix consensus; faked nt)
-syscon	stat	S_IFBLK					0060000			0060000			0060000			0060000			0060000			0060000			# block device     (unix consensus; faked nt)
-syscon	stat	S_IFCHR					0020000			0020000			0020000			0020000			0020000			0020000			# character device (unix consensus; faked nt)
-syscon	stat	S_IFDIR					0040000			0040000			0040000			0040000			0040000			0040000			# directory        (unix consensus; faked nt)
-syscon	stat	S_IFIFO					0010000			0010000			0010000			0010000			0010000			0010000			# pipe             (unix consensus; faked nt)
-syscon	stat	S_IFLNK					0120000			0120000			0120000			0120000			0120000			0120000			# symbolic link    (unix consensus; faked nt)
-syscon	stat	S_IFSOCK				0140000			0140000			0140000			0140000			0140000			0140000			# socket           (unix consensus; faked nt)
-syscon	stat	S_IFMT					0170000			0170000			0170000			0170000			0170000			0170000			# FILE TYPE MASK   (unix consensus; faked nt)
-syscon	stat	S_ISVTX					0001000			0001000			0001000			0001000			0001000			0001000			# THE STICKY BIT   (unix consensus; faked nt)
-syscon	stat	S_ISGID					0002000			0002000			0002000			0002000			0002000			0002000			# the setgid bit   (unix consensus; faked nt)
-syscon	stat	S_ISUID					0004000			0004000			0004000			0004000			0004000			0004000			# the setuid bit   (unix consensus; faked nt)
-syscon	stat	S_IEXEC					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWRITE				0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IREAD					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXUSR					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWUSR					0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRUSR					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXU					0000700			0000700			0000700			0000700			0000700			0000700			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXGRP					0000010			0000010			0000010			0000010			0000010			0000010			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWGRP					0000020			0000020			0000020			0000020			0000020			0000020			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRGRP					0000040			0000040			0000040			0000040			0000040			0000040			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXG					0000070			0000070			0000070			0000070			0000070			0000070			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXOTH					0000001			0000001			0000001			0000001			0000001			0000001			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWOTH					0000002			0000002			0000002			0000002			0000002			0000002			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IROTH					0000004			0000004			0000004			0000004			0000004			0000004			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXO					0000007			0000007			0000007			0000007			0000007			0000007			# just use octal   (unix consensus; faked nt)
 
 #	fcntl()
 #
@@ -605,7 +578,8 @@ syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall
 #	sigaltstack() values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ss	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x7000			0x2000
+syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlayed with STACKSIZE; you need to #undef SIGSTKSZ to access this symbol
+syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlayed with 32768; you need to #undef MINSIGSTKSZ to access this symbol
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 
@@ -3131,7 +3105,6 @@ syscon	misc	CSTATUS					0			20			20			255			255			0
 syscon	misc	DEAD_PROCESS				8			8			7			0			0			0
 syscon	misc	FNM_NOSYS				-1			-1			-1			2			2			0
 syscon	misc	INIT_PROCESS				5			5			5			0			0			0
-syscon	misc	MINSIGSTKSZ				0x0800			0x8000			0x0800			0x3000			0x2000			0
 syscon	misc	MQ_PRIO_MAX				0x8000			0			0x40			0			0			0
 syscon	misc	MTERASE					13			0			12			9			9			0
 syscon	misc	MTLOAD					30			0			19			0			0			0
