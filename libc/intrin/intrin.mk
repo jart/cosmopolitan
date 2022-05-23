@@ -48,12 +48,9 @@ $(LIBC_INTRIN_A_OBJS):					\
 
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
-# we need -ffreestanding because:
-#   we don't want __builtin_memcpy() calling memcpy()
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
