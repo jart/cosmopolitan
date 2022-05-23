@@ -21,6 +21,7 @@
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/syscall_fd.internal.h"
 
 /**
  * Closes socket on Windows.

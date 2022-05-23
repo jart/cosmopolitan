@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/sysv/consts/at.h"
 
 textwindows int sys_utimes_nt(const char *path, const struct timeval tv[2]) {

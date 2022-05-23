@@ -16,20 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/kntprioritycombos.internal.h"
-#include "libc/fmt/conv.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nexgen32e/ffs.h"
-#include "libc/nt/enum/processcreationflags.h"
-#include "libc/nt/enum/threadpriority.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/prio.h"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_getpriority_nt(int ignored) {
   size_t i;

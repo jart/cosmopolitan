@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nt/accounting.h"

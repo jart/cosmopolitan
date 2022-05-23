@@ -21,6 +21,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sockdebug.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**

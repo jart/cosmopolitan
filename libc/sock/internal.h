@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_INTERNAL_H_
-#include "libc/calls/internal.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
@@ -114,14 +113,6 @@ int32_t sys_epoll_wait(int32_t, void *, int32_t, int32_t) hidden;
 int sys_poll_metal(struct pollfd *, size_t, unsigned);
 
 int sys_poll_nt(struct pollfd *, uint64_t, uint64_t *) hidden;
-int sys_getsockopt_nt(struct Fd *, int, int, void *, uint32_t *) hidden;
-int sys_getsockname_nt(struct Fd *, void *, uint32_t *) hidden;
-int sys_getpeername_nt(struct Fd *, void *, uint32_t *) hidden;
-int sys_listen_nt(struct Fd *, int) hidden;
-int sys_connect_nt(struct Fd *, const void *, uint32_t) hidden;
-int sys_bind_nt(struct Fd *, const void *, uint32_t);
-int sys_accept_nt(struct Fd *, void *, uint32_t *, int) hidden;
-int sys_closesocket_nt(struct Fd *) hidden;
 int sys_socket_nt(int, int, int) hidden;
 /*
 int sys_socketpair_nt_stream(int, int, int, int[2]) hidden;
@@ -129,18 +120,13 @@ int sys_socketpair_nt_dgram(int, int, int, int[2]) hidden;
 */
 int sys_socketpair_nt(int, int, int, int[2]) hidden;
 int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
-int sys_shutdown_nt(struct Fd *, int) hidden;
-int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 
 bool __asan_is_valid_msghdr(const struct msghdr *);
 ssize_t sys_send_nt(int, const struct iovec *, size_t, uint32_t) hidden;
-ssize_t sys_recv_nt(struct Fd *, const struct iovec *, size_t, uint32_t) hidden;
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                   size_t) hidden;
 ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, void *,
                       uint32_t) hidden;
-ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
-                        void *, uint32_t *) hidden;
 
 void WinSockInit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;

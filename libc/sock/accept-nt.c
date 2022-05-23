@@ -18,21 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/calls/state.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
-#include "libc/nt/files.h"
-#include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/fio.h"
-#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,

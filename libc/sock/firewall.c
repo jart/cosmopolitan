@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/sock/internal.h"

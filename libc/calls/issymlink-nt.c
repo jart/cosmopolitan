@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"

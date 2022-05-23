@@ -25,6 +25,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/errfuns.h"
 

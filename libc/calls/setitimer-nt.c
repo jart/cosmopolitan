@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"

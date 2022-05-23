@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"

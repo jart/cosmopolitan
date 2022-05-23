@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
+#include "libc/str/str.h"
 
 static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
   int e;

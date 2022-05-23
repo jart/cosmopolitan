@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/filter.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
@@ -238,20 +238,20 @@ static const struct Pledges {
   const size_t len;
 } kPledgeLinux[] = {
     {"default", PLEDGELEN(kPledgeLinuxDefault)},  //
-    {"stdio",   PLEDGELEN(kPledgeLinuxStdio)},    //
-    {"rpath",   PLEDGELEN(kPledgeLinuxRpath)},    //
-    {"wpath",   PLEDGELEN(kPledgeLinuxWpath)},    //
-    {"cpath",   PLEDGELEN(kPledgeLinuxCpath)},    //
-    {"dpath",   PLEDGELEN(kPledgeLinuxDpath)},    //
+    {"stdio", PLEDGELEN(kPledgeLinuxStdio)},      //
+    {"rpath", PLEDGELEN(kPledgeLinuxRpath)},      //
+    {"wpath", PLEDGELEN(kPledgeLinuxWpath)},      //
+    {"cpath", PLEDGELEN(kPledgeLinuxCpath)},      //
+    {"dpath", PLEDGELEN(kPledgeLinuxDpath)},      //
     {"tmppath", PLEDGELEN(kPledgeLinuxTmppath)},  //
-    {"inet",    PLEDGELEN(kPledgeLinuxInet)},     //
-    {"fattr",   PLEDGELEN(kPledgeLinuxFattr)},    //
-    {"unix",    PLEDGELEN(kPledgeLinuxUnix)},     //
-    {"dns",     PLEDGELEN(kPledgeLinuxDns)},      //
-    {"proc",    PLEDGELEN(kPledgeLinuxProc)},     //
-    {"exec",    PLEDGELEN(kPledgeLinuxExec)},     //
-    {"id",      PLEDGELEN(kPledgeLinuxId)},       //
-    {0},                               //
+    {"inet", PLEDGELEN(kPledgeLinuxInet)},        //
+    {"fattr", PLEDGELEN(kPledgeLinuxFattr)},      //
+    {"unix", PLEDGELEN(kPledgeLinuxUnix)},        //
+    {"dns", PLEDGELEN(kPledgeLinuxDns)},          //
+    {"proc", PLEDGELEN(kPledgeLinuxProc)},        //
+    {"exec", PLEDGELEN(kPledgeLinuxExec)},        //
+    {"id", PLEDGELEN(kPledgeLinuxId)},            //
+    {0},                                          //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -290,7 +290,8 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
   return true;
 }
 
-static const uint16_t *FindPledge(const struct Pledges *p, const char *name, size_t *len) {
+static const uint16_t *FindPledge(const struct Pledges *p, const char *name,
+                                  size_t *len) {
   int i;
   for (i = 0; p[i].name; ++i) {
     if (!strcasecmp(name, p[i].name)) {

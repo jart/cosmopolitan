@@ -1,7 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_INTERNAL_H_
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/metastat.internal.h"
@@ -72,16 +71,8 @@ struct Fds {
   struct Fd __init_p[OPEN_MAX];
 };
 
-extern const struct Fd kEmptyFd;
-
-hidden extern int __vforked;
-hidden extern int __fds_lock;
-hidden extern int __sig_lock;
-hidden extern bool __time_critical;
-hidden extern unsigned __sighandrvas[NSIG];
-hidden extern unsigned __sighandflags[NSIG];
 hidden extern struct Fds g_fds;
-hidden extern const struct NtSecurityAttributes kNtIsInheritable;
+hidden extern const struct Fd kEmptyFd;
 
 int __reservefd(int) hidden;
 int __reservefd_unlocked(int) hidden;
@@ -121,254 +112,78 @@ forceinline size_t _clampio(size_t size) {
 │ cosmopolitan § syscalls » system five » synthetic jump slots             ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-axdx_t __sys_pipe(i32[hasatleast 2], i32) hidden;
-axdx_t sys_fork(void) hidden;
-axdx_t sys_getpid(void) hidden;
 axdx_t sys_gettimeofday(struct timeval *, struct timezone *, void *) hidden;
-char *sys_getcwd(char *, u64) hidden;
-char *sys_getcwd_xnu(char *, u64) hidden;
-i32 __sys_dup3(i32, i32, i32) hidden;
-i32 __sys_execve(const char *, char *const[], char *const[]) hidden;
-i32 __sys_fcntl(i32, i32, ...) hidden;
-i32 __sys_fstat(i32, void *) hidden;
-i32 __sys_fstatat(i32, const char *, void *, i32) hidden;
 i32 __sys_getrusage(i32, struct rusage *) hidden;
-i32 __sys_munmap(void *, u64) hidden;
-i32 __sys_openat(i32, const char *, i32, u32) hidden;
-i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 __sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 __sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
-i32 sys_arch_prctl(i32, i64) hidden;
-i32 sys_chdir(const char *) hidden;
-i32 sys_chroot(const char *) hidden;
 i32 sys_clock_gettime(i32, struct timespec *) hidden;
-i32 sys_close(i32) hidden;
-i32 sys_dup(i32) hidden;
-i32 sys_dup2(i32, i32) hidden;
-i32 sys_dup3(i32, i32, i32) hidden;
-i32 sys_execve(const char *, char *const[], char *const[]) hidden;
-i32 sys_faccessat(i32, const char *, i32, u32) hidden;
-i32 sys_fadvise(i32, i64, i64, i32) hidden;
-i32 sys_fchdir(i32) hidden;
-i32 sys_fchmod(i32, u32) hidden;
-i32 sys_fchmodat(i32, const char *, u32, u32) hidden;
-i32 sys_fchown(i64, u32, u32) hidden;
-i32 sys_fchownat(i32, const char *, u32, u32, u32) hidden;
-i32 sys_fcntl(i32, i32, u64) hidden;
-i32 sys_fdatasync(i32) hidden;
-i32 sys_flock(i32, i32) hidden;
 i32 sys_fstat(i32, struct stat *) hidden;
 i32 sys_fstatat(i32, const char *, struct stat *, i32) hidden;
-i32 sys_fsync(i32) hidden;
-i32 sys_ftruncate(i32, i64, i64) hidden;
 i32 sys_futimes(i32, const struct timeval *) hidden;
 i32 sys_futimesat(i32, const char *, const struct timeval *) hidden;
-i32 sys_getcontext(void *) hidden;
 i32 sys_getitimer(i32, struct itimerval *) hidden;
-i32 sys_getpgid(i32) hidden;
-i32 sys_getpgrp(void) hidden;
-i32 sys_getppid(void) hidden;
-i32 sys_getpriority(i32, u32) hidden;
-i32 sys_getresgid(u32 *, u32 *, u32 *);
-i32 sys_getresuid(u32 *, u32 *, u32 *);
 i32 sys_getrlimit(i32, struct rlimit *) hidden;
 i32 sys_getrusage(i32, struct rusage *) hidden;
-i32 sys_getsid(int) hidden;
-i32 sys_ioctl(i32, u64, ...) hidden;
-i32 sys_kill(i32, i32, i32) hidden;
-i32 sys_linkat(i32, const char *, i32, const char *, i32) hidden;
-i32 sys_lseek(i32, i64, i64, i64) hidden;
 i32 sys_lutimes(const char *, const struct timeval *) hidden;
-i32 sys_madvise(void *, size_t, i32) hidden;
-i32 sys_memfd_create(const char *, u32) hidden;
-i32 sys_mincore(void *, u64, unsigned char *) hidden;
-i32 sys_mkdirat(i32, const char *, u32) hidden;
-i32 sys_mkfifo(const char *, u32) hidden;
-i32 sys_mknod(const char *, u32, u64) hidden;
-i32 sys_mprotect(void *, u64, i32) hidden;
-i32 sys_msync(void *, u64, i32) hidden;
-i32 sys_munmap(void *, u64) hidden;
 i32 sys_nanosleep(const struct timespec *, struct timespec *) hidden;
-i32 sys_openat(i32, const char *, i32, u32) hidden;
-i32 sys_pause(void) hidden;
-i32 sys_pipe(i32[hasatleast 2]) hidden;
-i32 sys_pipe2(i32[hasatleast 2], u32) hidden;
-i32 sys_pledge(const char *, const char *) hidden;
-i32 sys_posix_openpt(i32) hidden;
-i32 sys_renameat(i32, const char *, i32, const char *) hidden;
-i32 sys_sched_setaffinity(i32, u64, const void *) hidden;
-i32 sys_sched_yield(void) hidden;
-i32 sys_setgid(i32) hidden;
 i32 sys_setitimer(i32, const struct itimerval *, struct itimerval *) hidden;
-i32 sys_setpgid(i32, i32) hidden;
-i32 sys_setpriority(i32, u32, i32) hidden;
-i32 sys_setregid(u32, u32) hidden;
-i32 sys_setresgid(u32, u32, u32) hidden;
-i32 sys_setresuid(u32, u32, u32) hidden;
-i32 sys_setreuid(u32, u32) hidden;
 i32 sys_setrlimit(i32, const struct rlimit *) hidden;
-i32 sys_setsid(void) hidden;
-i32 sys_setuid(i32) hidden;
-i32 sys_sigaction(i32, const void *, void *, i64, i64) hidden;
-i32 sys_sigaltstack(const void *, void *) hidden;
 i32 sys_sigprocmask(i32, const sigset *, sigset *) hidden;
 i32 sys_sigqueue(i32, i32, const union sigval) hidden;
 i32 sys_sigqueueinfo(i32, const siginfo_t *) hidden;
 i32 sys_sigsuspend(const sigset *, u64) hidden;
-i32 sys_symlinkat(const char *, i32, const char *) hidden;
-i32 sys_sync(void) hidden;
-i32 sys_sync_file_range(i32, i64, i64, u32) hidden;
 i32 sys_sysinfo(struct sysinfo *) hidden;
-i32 sys_tgkill(i32, i32, i32) hidden;
-i32 sys_tkill(i32, i32, void *) hidden;
-i32 sys_truncate(const char *, u64, u64) hidden;
-i32 sys_uname(char *) hidden;
-i32 sys_unlinkat(i32, const char *, i32) hidden;
 i32 sys_utime(const char *, const struct utimbuf *) hidden;
 i32 sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 sys_utimes(const char *, const struct timeval *) hidden;
 i32 sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
-i64 sys_copy_file_range(i32, long *, i32, long *, u64, u32) hidden;
-i64 sys_getrandom(void *, u64, u32) hidden;
-i64 sys_pread(i32, void *, u64, i64, i64) hidden;
 i64 sys_preadv(i32, struct iovec *, i32, i64, i64) hidden;
-i64 sys_ptrace(int, i32, void *, void *) hidden;
-i64 sys_pwrite(i32, const void *, u64, i64, i64) hidden;
 i64 sys_pwritev(i32, const struct iovec *, i32, i64, i64) hidden;
-i64 sys_read(i32, void *, u64) hidden;
-i64 sys_readlink(const char *, char *, u64) hidden;
-i64 sys_readlinkat(int, const char *, char *, u64) hidden;
-i64 sys_sched_getaffinity(i32, u64, void *) hidden;
-i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
-i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_vmsplice(i32, const struct iovec *, i64, u32) hidden;
-i64 sys_write(i32, const void *, u64) hidden;
-u32 sys_getegid(void) hidden;
-u32 sys_geteuid(void) hidden;
-u32 sys_getgid(void) hidden;
-u32 sys_gettid(void) hidden;
-u32 sys_getuid(void) hidden;
-u32 sys_umask(u32) hidden;
-void *__sys_mmap(void *, u64, u32, u32, i64, i64, i64) hidden;
-void *sys_mremap(void *, u64, u64, i32, void *) hidden;
-void sys_exit(int) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » system five » support                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-void __onfork(void) hidden;
-void *__vdsofunc(const char *) hidden;
-void *__get_clock_gettime(void) hidden;
-i32 __fixupnewfd(i32, i32) hidden;
-void __restore_rt() hidden;
-int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
 int sys_nanosleep_xnu(const struct timespec *, struct timespec *) hidden;
-void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
-void __restore_rt_netbsd(void) hidden;
+int sys_utimensat_xnu(int, const char *, const struct timespec *, int) hidden;
+size_t __iovec_size(const struct iovec *, size_t) hidden;
+ssize_t WritevUninterruptible(int, struct iovec *, int);
+void __rusage2linux(struct rusage *) hidden;
 void __sigenter_xnu(void *, i32, i32, struct siginfo_xnu *,
                     struct __darwin_ucontext *) hidden;
-int gethostname_linux(char *, size_t) hidden;
-int gethostname_bsd(char *, size_t) hidden;
-int gethostname_nt(char *, size_t, int) hidden;
-size_t __iovec_size(const struct iovec *, size_t) hidden;
-void __rusage2linux(struct rusage *) hidden;
-int __notziposat(int, const char *);
-ssize_t WritevUninterruptible(int, struct iovec *, int);
-void flock2cosmo(uintptr_t);
-void cosmo2flock(uintptr_t);
-
-int sys_sendfile_xnu(int32_t infd, int32_t outfd, int64_t offset,
-                     int64_t *out_opt_sbytes, const void *opt_hdtr,
-                     int32_t flags) asm("sys_sendfile") hidden;
-int sys_sendfile_freebsd(int32_t infd, int32_t outfd, int64_t offset,
-                         size_t nbytes, const void *opt_hdtr,
-                         int64_t *out_opt_sbytes,
-                         int32_t flags) asm("sys_sendfile") hidden;
+void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-bool32 sys_isatty_nt(int) hidden;
-char *sys_getcwd_nt(char *, size_t) hidden;
-i64 sys_lseek_nt(int, i64, int) hidden;
-int sys_chdir_nt(const char *) hidden;
-int sys_close_epoll_nt(int) hidden;
+int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 int sys_close_nt(struct Fd *) hidden;
-int sys_dup_nt(int, int, int, int) hidden;
-int sys_execve_nt(const char *, char *const[], char *const[]) hidden;
-int sys_faccessat_nt(int, const char *, int, uint32_t) hidden;
-int sys_fadvise_nt(int, u64, u64, int) hidden;
-int sys_fchdir_nt(int) hidden;
-int sys_fchmodat_nt(int, const char *, uint32_t, int) hidden;
-int sys_fcntl_nt(int, int, uintptr_t) hidden;
-int sys_fdatasync_nt(int) hidden;
-int sys_flock_nt(int, int) hidden;
-int sys_fork_nt(void) hidden;
 int sys_fstat_nt(i64, struct stat *) hidden;
 int sys_fstatat_nt(int, const char *, struct stat *, int) hidden;
-int sys_ftruncate_nt(i64, u64) hidden;
-int sys_getppid_nt(void) hidden;
-int sys_getpriority_nt(int) hidden;
 int sys_getrusage_nt(int, struct rusage *) hidden;
 int sys_gettimeofday_nt(struct timeval *, struct timezone *) hidden;
-int sys_kill_nt(int, int) hidden;
-int sys_linkat_nt(int, const char *, int, const char *) hidden;
 int sys_lstat_nt(const char *, struct stat *) hidden;
-int sys_madvise_nt(void *, size_t, int) hidden;
-int sys_mkdirat_nt(int, const char *, uint32_t) hidden;
-int sys_msync_nt(char *, size_t, int) hidden;
 int sys_nanosleep_nt(const struct timespec *, struct timespec *) hidden;
-int sys_pipe_nt(int[hasatleast 2], unsigned) hidden;
-int sys_renameat_nt(int, const char *, int, const char *) hidden;
-int sys_sched_yield_nt(void) hidden;
 int sys_setitimer_nt(int, const struct itimerval *, struct itimerval *) hidden;
-int sys_setpriority_nt(int) hidden;
-int sys_symlinkat_nt(const char *, int, const char *) hidden;
-int sys_sync_nt(void) hidden;
-int sys_sysinfo_nt(struct sysinfo *) hidden;
-int sys_truncate_nt(const char *, u64) hidden;
-int sys_unlinkat_nt(int, const char *, int) hidden;
 int sys_setrlimit_nt(int, const struct rlimit *) hidden;
+int sys_sysinfo_nt(struct sysinfo *) hidden;
 int sys_utimensat_nt(int, const char *, const struct timespec *, int) hidden;
 int sys_utimes_nt(const char *, const struct timeval[2]) hidden;
-ssize_t sys_open_nt(int, const char *, u32, i32) dontdiscard hidden;
 ssize_t sys_read_nt(struct Fd *, const struct iovec *, size_t, ssize_t) hidden;
-ssize_t sys_readlinkat_nt(int, const char *, char *, size_t) hidden;
 ssize_t sys_write_nt(int, const struct iovec *, size_t, ssize_t) hidden;
-int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » support                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-bool __is_linux_2_6_23(void) hidden;
-int64_t __fix_enotdir(int64_t, char16_t *) hidden;
-int64_t __fix_enotdir3(int64_t, char16_t *, char16_t *) hidden;
 bool _check_interrupts(bool, struct Fd *) hidden;
-void _check_sigchld(void) hidden;
-void _check_sigalrm(void) hidden;
-int __sample_pids(int[hasatleast 64], int64_t[hasatleast 64], bool) hidden;
-bool isdirectory_nt(const char *) hidden;
-bool isregularfile_nt(const char *) hidden;
-bool issymlink_nt(const char *) hidden;
-bool32 ntsetprivilege(i64, const char16_t *, u32) hidden;
-char16_t *CreatePipeName(char16_t *) hidden;
-int __mkntpath(const char *, char16_t[hasatleast PATH_MAX]) hidden;
-int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX], int) hidden;
-int __mkntpathat(int, const char *, int, char16_t[hasatleast PATH_MAX]) hidden;
 int sys_clock_gettime_nt(int, struct timespec *) hidden;
-int ntaccesscheck(const char16_t *, u32) paramsnonnull() hidden;
-int sys_getsetpriority_nt(int, int, int, int (*)(int));
-int64_t __winerr(void) nocallback privileged;
-int64_t ntreturn(uint32_t);
 ssize_t sys_readv_nt(struct Fd *, const struct iovec *, int) hidden;
 ssize_t sys_writev_nt(int, const struct iovec *, int) hidden;
 unsigned __wincrash_nt(struct NtExceptionPointers *);
-void *GetProcAddressModule(const char *, const char *) hidden;
-void WinMainForked(void) hidden;
 void _ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
 void _ntlinux2context(struct NtContext *, const ucontext_t *) hidden;
 struct NtOverlapped *_offset2overlap(int64_t, int64_t,

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"

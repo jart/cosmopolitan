@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 
 size_t __iovec_size(const struct iovec *v, size_t n) {
   size_t i, sum;

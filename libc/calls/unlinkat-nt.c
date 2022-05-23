@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -30,6 +30,7 @@
 #include "libc/nt/struct/win32fileattributedata.h"
 #include "libc/nt/struct/win32finddata.h"
 #include "libc/nt/synchronization.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 
 /**

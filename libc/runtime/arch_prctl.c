@@ -19,7 +19,7 @@
 #include "libc/bits/asmflag.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"

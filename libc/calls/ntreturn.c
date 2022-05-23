@@ -19,7 +19,6 @@
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/ntdll.h"
-#include "libc/calls/internal.h"
 
 /**
  * Exitpoint for Windows NT system calls.

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/pc.internal.h"
 
