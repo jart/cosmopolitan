@@ -23,6 +23,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -38,6 +39,14 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
+
+int StackOverflow(int f(), int n) {
+  if (n < INT_MAX) {
+    return f(f, n + 1) - 1;
+  } else {
+    return INT_MAX;
+  }
+}
 
 static bool OutputHasSymbol(const char *output, const char *s) {
   return strstr(output, s) || (!FindDebugBinary() && strstr(output, "NULL"));
@@ -103,6 +112,7 @@ int (*pRodataOverrunCrash)(int) = RodataOverrunCrash;
 char *(*pStackOverrunCrash)(int) = StackOverrunCrash;
 char *(*pMemoryLeakCrash)(void) = MemoryLeakCrash;
 int (*pNpeCrash)(char *) = NpeCrash;
+int (*pStackOverflow)(int (*)(), int) = StackOverflow;
 
 void SetUp(void) {
   ShowCrashReports();
@@ -130,6 +140,8 @@ void SetUp(void) {
       case 8:
         __cxa_finalize(0);
         exit(pNpeCrash(0));
+      case 9:
+        exit(pStackOverflow(pStackOverflow, 0));
       default:
         printf("preventing fork recursion: %s\n", __argv[1]);
         exit(1);
@@ -421,6 +433,79 @@ TEST(ShowCrashReports, testDivideByZero) {
     }
     if (!strstr(output, "3133731337")) {
       fprintf(stderr, "ERROR: crash report didn't have general register\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+  }
+  free(output);
+}
+
+TEST(ShowCrashReports, testStackOverflow) {
+  if (IsXnu()) return;      // TODO(jart): fix me
+  if (IsWindows()) return;  // TODO(jart): fix me
+  if (IsFreebsd()) return;  // TODO(jart): fix me
+  if (IsOpenbsd()) return;  // TODO(jart): fix me
+  size_t got;
+  ssize_t rc;
+  int ws, pid, fds[2];
+  char *output, buf[512];
+  ASSERT_NE(-1, pipe2(fds, O_CLOEXEC));
+  ASSERT_NE(-1, (pid = vfork()));
+  if (!pid) {
+    dup2(fds[1], 1);
+    dup2(fds[1], 2);
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "9", "--strace", 0});
+    _exit(127);
+  }
+  close(fds[1]);
+  output = 0;
+  appends(&output, "");
+  for (;;) {
+    rc = read(fds[0], buf, sizeof(buf));
+    if (rc == -1) {
+      ASSERT_EQ(EINTR, errno);
+      continue;
+    }
+    if ((got = rc)) {
+      appendd(&output, buf, got);
+    } else {
+      break;
+    }
+  }
+  close(fds[0]);
+  ASSERT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  // kprintf("exit status %d\n", WEXITSTATUS(ws));
+  assert(128 + SIGSEGV == WEXITSTATUS(ws) || 77 == WEXITSTATUS(ws));
+  /* NULL is stopgap until we can copy symbol tablces into binary */
+#ifdef __FNO_OMIT_FRAME_POINTER__
+  if (!OutputHasSymbol(output, "StackOverflow")) {
+    fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
+            gc(IndentLines(output, -1, 0, 4)));
+    __die();
+  }
+#endif
+  // ShowCrashReports() handled it
+  if (!strstr(output, gc(xasprintf("%d", pid)))) {
+    fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
+            gc(IndentLines(output, -1, 0, 4)));
+    __die();
+  }
+  if (!strstr(output, "SIGSEGV")) {
+    fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
+            gc(IndentLines(output, -1, 0, 4)));
+    __die();
+  }
+  if (!IsTiny()) {
+    if (!strstr(output, "Stack Overflow")) {
+      fprintf(stderr, "ERROR: crash report didn't have 'Stack Overflow'\n%s\n",
+              gc(IndentLines(output, -1, 0, 4)));
+      __die();
+    }
+  } else {
+    if (!strstr(output, "SEGV_MAPERR")) {
+      fprintf(stderr, "ERROR: crash report didn't have 'SEGV_MAPERR'\n%s\n",
               gc(IndentLines(output, -1, 0, 4)));
       __die();
     }

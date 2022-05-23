@@ -92,6 +92,7 @@ static void FreeSigAltStack(void *p) {
  * @see callexitontermination()
  */
 void ShowCrashReports(void) {
+  char *sp;
   struct sigaltstack ss;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
@@ -105,11 +106,12 @@ void ShowCrashReports(void) {
   if (!IsWindows()) {
     bzero(&ss, sizeof(ss));
     ss.ss_flags = 0;
-    ss.ss_size = SIGSTKSZ;
+    ss.ss_size = GetStackSize();
     // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
     // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
-    if ((ss.ss_sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))) {
+    if ((sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+      ss.ss_sp = sp;
       if (!sigaltstack(&ss, &g_oldsigaltstack)) {
         __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);
       } else {

@@ -63,8 +63,11 @@ static ssize_t EzWritevAll(int fd, struct iovec *iov, int iovlen) {
           wrote = 0;
         }
       } while (wrote);
-    } else if (errno != EINTR) {
-      return total ? total : -1;
+    } else {
+      WARNF("writev() failed %m");
+      if (errno != EINTR) {
+        return total ? total : -1;
+      }
     }
   } while (i < iovlen);
   return total;
@@ -121,6 +124,7 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
   v[1].iov_base = bio->t;
   v[1].iov_len = sizeof(bio->t);
   while ((r = readv(bio->fd, v, 2)) == -1) {
+    WARNF("tls read() error %s", strerror(errno));
     if (errno == EINTR) {
       return MBEDTLS_ERR_SSL_WANT_READ;
     } else if (errno == EAGAIN) {
@@ -128,7 +132,6 @@ static int EzTlsRecvImpl(void *ctx, unsigned char *p, size_t n, uint32_t o) {
     } else if (errno == EPIPE || errno == ECONNRESET || errno == ENETRESET) {
       return MBEDTLS_ERR_NET_CONN_RESET;
     } else {
-      WARNF("tls read() error %s", strerror(errno));
       return MBEDTLS_ERR_NET_RECV_FAILED;
     }
   }
