@@ -18,13 +18,35 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
+/**
+ * Retrieves line from stream, e.g.
+ *
+ *     char *line;
+ *     while ((line = _chomp(fgetln(stdin, 0)))) {
+ *       printf("%s\n", line);
+ *     }
+ *
+ * The returned memory is owned by the stream. It'll be reused when
+ * fgetln() is called again. It's free()'d upon fclose() / fflush()
+ *
+ * @param stream specifies non-null open input stream
+ * @param len optionally receives byte length of line
+ * @return nul-terminated line string, including the `\n` character
+ *     unless a line happened before EOF without `\n`, otherwise it
+ *     returns `NULL` and feof() and ferror() can examine the state
+ * @see getdelim()
+ */
 char *fgetln(FILE *stream, size_t *len) {
+  char *res;
   ssize_t rc;
   size_t n = 0;
-  if ((rc = getdelim(&stream->getln, &n, '\n', stream)) > 0) {
-    *len = rc;
-    return stream->getln;
+  flockfile(stream);
+  if ((rc = getdelim_unlocked(&stream->getln, &n, '\n', stream)) > 0) {
+    if (len) *len = rc;
+    res = stream->getln;
   } else {
-    return 0;
+    res = 0;
   }
+  funlockfile(stream);
+  return res;
 }

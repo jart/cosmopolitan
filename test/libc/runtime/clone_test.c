@@ -45,7 +45,7 @@ void SetUp(void) {
   tls = calloc(1, 64);
   __initialize_tls(tls);
   *(int *)(tls + 0x3c) = 31337;
-  childetid = (int *)(tls + 0x0038);
+  childetid = (int *)(tls + 0x38);
   ASSERT_NE(MAP_FAILED, (stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                                       MAP_STACK | MAP_ANONYMOUS, -1, 0)));
 }
@@ -95,6 +95,7 @@ TEST(clone, test1) {
                                  CLONE_SETTLS,
                              (void *)23, &ptid, tls, 64, childetid)));
   _spinlock(childetid);  // CLONE_CHILD_CLEARTID
+  ASSERT_NE(gettid(), tid);
   ASSERT_EQ(tid, ptid);
   ASSERT_EQ(42, x);
   ASSERT_NE(me, tid);
@@ -130,6 +131,6 @@ TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
 BENCH(clone, bench) {
   errno_t *volatile ep;
   char *volatile tp;
-  EZBENCH2("__errno_location", donothing, (ep = (__errno_location())));
+  EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
 }

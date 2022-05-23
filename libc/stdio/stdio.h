@@ -25,7 +25,8 @@ typedef struct FILE {
   uint32_t nofree; /* 0x24 */
   int pid;         /* 0x28 */
   int lock;        /* 0x2c */
-  char *getln;     /* 0x30 */
+  int reent;       /* 0x30 */
+  char *getln;     /* 0x38 */
 } FILE;
 
 extern FILE *stdin;
@@ -39,6 +40,7 @@ int getc(FILE *) paramsnonnull();
 int putc(int, FILE *) paramsnonnull();
 int fflush(FILE *);
 int fgetc(FILE *) paramsnonnull();
+char *fgetln(FILE *, size_t *) paramsnonnull((1));
 int ungetc(int, FILE *) paramsnonnull();
 int fileno(FILE *) paramsnonnull() nosideeffect;
 int fputc(int, FILE *) paramsnonnull();
@@ -120,9 +122,9 @@ int fwide(FILE *, int);
 │ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-void flockfile(FILE *);
-void funlockfile(FILE *);
-int ftrylockfile(FILE *);
+void flockfile(FILE *) paramsnonnull();
+void funlockfile(FILE *) paramsnonnull();
+int ftrylockfile(FILE *) paramsnonnull();
 int getc_unlocked(FILE *) paramsnonnull();
 int getchar_unlocked(void);
 int putc_unlocked(int, FILE *) paramsnonnull();
@@ -149,6 +151,7 @@ int fputws_unlocked(const wchar_t *, FILE *);
 wint_t ungetwc_unlocked(wint_t, FILE *) paramsnonnull();
 int ungetc_unlocked(int, FILE *) paramsnonnull();
 int fseeko_unlocked(FILE *, int64_t, int) paramsnonnull();
+ssize_t getdelim_unlocked(char **, size_t *, int, FILE *) paramsnonnull();
 int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
     paramsnonnull((1, 2)) dontthrow nocallback;
 int vfprintf_unlocked(FILE *, const char *, va_list)

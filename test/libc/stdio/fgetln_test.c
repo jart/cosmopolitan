@@ -16,22 +16,72 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/runtime.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-static char tib[64];
+TEST(fgetln, test) {
+  FILE *f;
+  f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
+  EXPECT_STREQ("The fall of Hyperion - a Dream\n", fgetln(f, 0));
+  EXPECT_STREQ("John Keats\n", fgetln(f, 0));
+  EXPECT_STREQ("\n", fgetln(f, 0));
+  fclose(f);
+}
 
-TEST(tls, test) {
-  errno = 31337;
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(&__errno, __errno_location());
-  __initialize_tls(tib);
-  *(int *)((char *)tib + 0x38) = gettid();
-  *(int *)((char *)tib + 0x3c) = __errno;
-  __install_tls(tib);
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(tib, __get_tls());
-  EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
+TEST(fgetln, testGoodLastLine) {
+  FILE *f;
+  size_t n;
+  f = fmemopen("foo\nbar\n", 8, "r");
+  EXPECT_STREQ("foo\n", fgetln(f, &n));
+  EXPECT_EQ(4, n);
+  EXPECT_STREQ("bar\n", fgetln(f, &n));
+  EXPECT_EQ(4, n);
+  EXPECT_EQ(NULL, fgetln(f, 0));
+  EXPECT_FALSE(ferror(f));
+  EXPECT_TRUE(feof(f));
+  fclose(f);
+}
+
+TEST(fgetln, testEvilLastLine) {
+  FILE *f;
+  f = fmemopen("foo\nbar", 7, "r");
+  EXPECT_STREQ("foo\n", fgetln(f, 0));
+  EXPECT_STREQ("bar", fgetln(f, 0));
+  EXPECT_EQ(NULL, fgetln(f, 0));
+  EXPECT_FALSE(ferror(f));
+  EXPECT_TRUE(feof(f));
+  fclose(f);
+}
+
+TEST(fgetln, testReadingFromStdin_doesntLeakMemory) {
+  FILE *f;
+  int oldstdin, pfds[2];
+  oldstdin = dup(0);
+  EXPECT_SYS(0, 0, pipe(pfds));
+  EXPECT_SYS(0, 8, write(pfds[1], "foo\nbar\n", 8));
+  EXPECT_SYS(0, 0, close(pfds[1]));
+  EXPECT_SYS(0, 0, close(0));
+  EXPECT_SYS(0, 0, dup(pfds[0]));
+  EXPECT_SYS(0, 0, close(pfds[0]));
+  EXPECT_STREQ("foo\n", fgetln(stdin, 0));
+  EXPECT_STREQ("bar\n", fgetln(stdin, 0));
+  EXPECT_EQ(NULL, fgetln(stdin, 0));
+  EXPECT_FALSE(ferror(stdin));
+  EXPECT_TRUE(feof(stdin));
+  EXPECT_SYS(0, 0, close(0));
+  EXPECT_SYS(0, 0, dup(oldstdin));
+  clearerr(stdin);
+}
+
+BENCH(fgetln, bench) {
+  FILE *f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
+  EZBENCH2("fgetln", donothing, fgetln(f, 0));
+  EZBENCH2("xgetline", donothing, free(xgetline(f)));
+  fclose(f);
 }

@@ -80,8 +80,6 @@ noinstrument int clock_gettime(int clockid, struct timespec *ts) {
  * Returns fast system clock_gettime() if it exists.
  */
 void *__get_clock_gettime(void) {
-  // TODO(jart): Re-enable this.
-  return 0;
   void *vdso;
   static bool once;
   static void *result;

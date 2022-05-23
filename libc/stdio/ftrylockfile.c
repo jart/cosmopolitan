@@ -34,5 +34,8 @@ int ftrylockfile(FILE *f) {
       owner = 0;
     }
   }
+  if (!owner) {
+    ++f->reent;
+  }
   return owner;
 }

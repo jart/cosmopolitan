@@ -2791,6 +2791,9 @@ UNIX MODULE
         unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
         unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
+    `intns` needs to be on the interval `[0,1000000000)`
+    `valuens` needs to be on the interval `[0,1000000000)`
+
   unix.strsignal(sig:int) → str
 
     Turns platform-specific `sig` code into its symbolic name.

@@ -55,6 +55,18 @@ TEST(open, enametoolong) {
   ASSERT_SYS(ENAMETOOLONG, -1, creat(s, 0644));
 }
 
+TEST(open, testSpaceInFilename) {
+  char buf[8] = {0};
+  ASSERT_SYS(0, 0, xbarf("hello txt", "hello", -1));
+  ASSERT_SYS(0, 3, open("hello txt", O_WRONLY));
+  EXPECT_SYS(0, 1, write(3, "H", 1));
+  EXPECT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, open("hello txt", O_RDONLY));
+  EXPECT_SYS(0, 5, read(3, buf, 7));
+  EXPECT_STREQ("Hello", buf);
+  EXPECT_SYS(0, 0, close(3));
+}
+
 TEST(open, testOpenExistingForWriteOnly_seeksToStart) {
   char buf[8] = {0};
   ASSERT_SYS(0, 0, xbarf("hello.txt", "hello", -1));

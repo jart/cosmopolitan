@@ -25,16 +25,8 @@
 //
 //	@return	0 on success, or -1 w/ errno
 sched_yield:
-	push	%rbp
-	mov	%rsp,%rbp
-	testb	IsWindows()
-	jnz	1f
 
-//	UNIX Support
-	mov	__NR_sched_yield,%eax
-	syscall
-	jmp	2f
-
+#if SupportsWindows()
 //	Windows Support
 //
 //	A value of zero, together with the bAlertable parameter set to
@@ -44,12 +36,34 @@ sched_yield:
 //	threads ready to run and no user APCs are queued, the function
 //	returns immediately, and the thread continues execution.
 //	                                  ──Quoth MSDN
-1:	xor	%ecx,%ecx
+	testb	IsWindows()
+	jz	1f
+	push	%rbp
+	mov	%rsp,%rbp
+	xor	%ecx,%ecx
 	xor	%edx,%edx
 	ntcall	__imp_SleepEx
 	xor	%eax,%eax
-
-2:	pop	%rbp
+	pop	%rbp
 	ret
+#endif
+
+#if SupportsSystemv()
+//	UNIX Support
+1:	mov	__NR_sched_yield,%eax
+#if SupportsBsd() && SupportsLinux()
+	clc
+#endif
+	syscall
+#if SupportsBsd()
+	jc	systemfive_errno
+#endif
+#if SupportsLinux()
+	cmp	$-4095,%rax
+	jae	systemfive_error
+#endif
+#endif
+
+2:	ret
 	.endfn	sched_yield,globl
 	.previous

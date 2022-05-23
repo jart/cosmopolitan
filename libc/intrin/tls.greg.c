@@ -44,23 +44,28 @@
  *     0x003c 0x04 errno
  *
  */
-privileged void *__initialize_tls(char tib[hasatleast 64]) {
-  *(intptr_t *)tib = (intptr_t)tib;
-  *(intptr_t *)(tib + 0x08) = 0;
-  *(int *)(tib + 0x10) = -1;  // exit code
-  *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
-  *(int *)(tib + 0x38) = -1;  // tid
-  *(int *)(tib + 0x3c) = __errno;
+privileged void *__initialize_tls(char tib[64]) {
+  if (tib) {
+    *(intptr_t *)tib = (intptr_t)tib;
+    *(intptr_t *)(tib + 0x08) = 0;
+    *(int *)(tib + 0x10) = -1;  // exit code
+    *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
+    *(int *)(tib + 0x38) = -1;  // tid
+    *(int *)(tib + 0x3c) = 0;
+  }
   return tib;
 }
 
 /**
  * Installs thread information block on main process.
  */
-privileged void __install_tls(char tib[hasatleast 64]) {
+privileged void __install_tls(char tib[64]) {
   int ax, dx;
   uint64_t magic;
   unsigned char *p;
+  assert(tib);
+  assert(!__tls_enabled);
+  assert(*(int *)(tib + 0x38) != -1);
   if (IsWindows()) {
     if (!__tls_index) {
       __tls_index = TlsAlloc();

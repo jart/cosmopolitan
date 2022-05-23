@@ -16,12 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/spinlock.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 
 /**
  * Releases lock on stdio object.
  */
 void funlockfile(FILE *f) {
-  _spunlock(&f->lock);
+  int owner;
+  bool shouldunlock;
+  assert(f->reent > 0);
+  shouldunlock = --f->reent <= 0;
+  if (__threaded) {
+    assert(f->lock == gettid());
+    if (shouldunlock) {
+      owner = 0;
+      __atomic_store(&f->lock, &owner, __ATOMIC_RELAXED);
+    }
+  }
 }

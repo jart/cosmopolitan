@@ -419,40 +419,8 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
 ////////////////////////////////////////////////////////////////////////////////
 // GNU/SYSTEMD
 
-int CloneLinux(int (*func)(void *), char *stk, size_t stksz, int flags,
-               void *arg, int *ptid, void *tls, size_t tlssz, int *ctid) {
-#ifdef __chibicc__
-  return -1;  // TODO
-#else
-  int ax;
-  intptr_t *stack = (intptr_t *)(stk + stksz);
-  *--stack = (intptr_t)arg;
-  // %rax = syscall(%rax = __NR_clone,
-  //                %rdi = flags,
-  //                %rsi = child_stack,
-  //                %rdx = parent_tidptr,
-  //                %r10 = child_tidptr,
-  //                %r8  = new_tls);
-  asm volatile("mov\t%4,%%r10\n\t"  // ctid
-               "mov\t%5,%%r8\n\t"   // tls
-               "mov\t%6,%%r9\n\t"   // func
-               "syscall\n\t"
-               "test\t%0,%0\n\t"
-               "jnz\t1f\n\t"
-               "xor\t%%ebp,%%ebp\n\t"
-               "pop\t%%rdi\n\t"   // arg
-               "call\t*%%r9\n\t"  // func
-               "xchg\t%%eax,%%edi\n\t"
-               "mov\t$0x3c,%%eax\n\t"
-               "syscall\n1:"
-               : "=a"(ax)
-               : "0"(__NR_clone_linux), "D"(flags), "S"(stack), "g"(ctid),
-                 "g"(tls), "g"(func), "d"(ptid)
-               : "rcx", "r8", "r9", "r10", "r11", "memory");
-  if (ax > -4096u) errno = -ax, ax = -1;
-  return ax;
-#endif
-}
+int sys_clone_linux(int flags, char *stk, int *ptid, int *ctid, void *tls,
+                    int (*func)(void *), void *arg);
 
 ////////////////////////////////////////////////////////////////////////////////
 // COSMOPOLITAN
@@ -542,13 +510,23 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
   int rc;
   struct CloneArgs *wt;
 
-  if (flags & CLONE_THREAD) {
-    __threaded = true;
-  }
-
+  // transition program to threaded state
   if ((flags & CLONE_SETTLS) && !__tls_enabled) {
+    if (~flags & CLONE_THREAD) {
+      STRACE("clone() tls w/o thread");
+      return einval();
+    }
+    if (__threaded) {
+      STRACE("clone() tls/non-tls mixed order");
+      return einval();
+    }
     __initialize_tls(tibdefault);
+    *(int *)((char *)tibdefault + 0x38) = gettid();
+    *(int *)((char *)tibdefault + 0x3c) = __errno;
     __install_tls(tibdefault);
+    __threaded = true;
+  } else if (flags & CLONE_THREAD) {
+    __threaded = true;
   }
 
   if (IsAsan() &&
@@ -566,7 +544,8 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
               ((flags & CLONE_SETTLS) && (tlssz < 64 || (tlssz & 7))))) {
     rc = einval();
   } else if (IsLinux()) {
-    rc = CloneLinux(func, stk, stksz, flags, arg, ptid, tls, tlssz, ctid);
+    rc =
+        sys_clone_linux(flags, (char *)stk + stksz, ptid, ctid, tls, func, arg);
   } else if (!IsTiny() &&
              (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
                         CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID)) !=

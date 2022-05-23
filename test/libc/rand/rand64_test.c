@@ -80,10 +80,10 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
 }
 
 TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
-  char *tls[THREADS];
+  int i, j, rc, ws;
   sigset_t ss, oldss;
+  char *tls[THREADS];
   void *stacks[THREADS];
-  int i, j, rc, ws, tid[THREADS];
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
@@ -92,19 +92,20 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
   ready = false;
-  memset(tid, -1, sizeof(tid));
   for (i = 0; i < THREADS; ++i) {
     tls[i] = __initialize_tls(calloc(1, 64));
     stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                      MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    ASSERT_NE(-1, clone(Thrasher, stacks[i], GetStackSize(),
-                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                            CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_CLEARTID,
-                        (void *)(intptr_t)i, 0, tls[i], 64, tid + i));
+    ASSERT_NE(
+        -1,
+        clone(Thrasher, stacks[i], GetStackSize(),
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              (void *)(intptr_t)i, 0, tls[i], 64, (int *)(tls[i] + 0x38)));
   }
   ready = true;
   for (i = 0; i < THREADS; ++i) {
-    _spinlock(tid + i);
+    _spinlock((int *)(tls[i] + 0x38));
     EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
     free(tls[i]);
   }

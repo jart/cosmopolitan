@@ -8,16 +8,14 @@ bool IsAtLeastWindows10(void) pureconst;
 bool32 GetVersionEx(struct NtOsVersionInfo *lpVersionInformation);
 
 #if defined(__GCC_ASM_FLAG_OUTPUTS__) && !defined(__STRICT_ANSI__)
-#define IsAtLeastWindows10()            \
-  ({                                    \
-    long ReG;                           \
-    bool NoTbelow;                      \
-    asm("mov\t%%gs:96,%1\r\n"           \
-        "cmpb\t%2,280(%1)"              \
-        : "=@ccnb"(NoTbelow), "=l"(ReG) \
-        : "i"(10));                     \
-    NoTbelow;                           \
-  })
+#define IsAtLeastWindows10() (GetNtMajorVersion() >= 10)
+static pureconst inline unsigned char GetNtMajorVersion(void) {
+  uintptr_t _x;
+  asm("mov\t%%gs:96,%q0\r\n"
+      "mov\t280(%q0),%b0"
+      : "=q"(_x));
+  return _x;
+}
 #endif
 
 COSMOPOLITAN_C_END_

@@ -23,6 +23,7 @@ const char *DescribeMapFlags(int);
 const char *DescribeProtFlags(int);
 const char *DescribeRemapFlags(int);
 const char *DescribeRlimitName(int);
+const char *DescribePersonalityFlags(int);
 const char *DescribeSeccompOperationFlags(int);
 const char *DescribePollFlags(char *, size_t, int);
 const char *DescribeStat(int, const struct stat *);

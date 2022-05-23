@@ -32,8 +32,25 @@ __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
  * if this is the main thread. On NetBSD, gettid() for the main thread
  * is always 1.
  *
+ * This function issues a system call. That stops being the case as soon
+ * as __install_tls() is called.  That'll happen automatically, when you
+ * call clone() and provide the TLS parameter. We assume that when a TLS
+ * block exists, then
+ *
+ *     *(int *)(__get_tls() + 0x38)
+ *
+ * will contain the thread id. Therefore when issuing clone() calls, the
+ * `CLONE_CHILD_SETTID` and `CLONE_CHILD_CLEARTID` flags should use that
+ * index as its `ctid` memory.
+ *
+ *     gettid (single threaded) l:       126𝑐        41𝑛𝑠
+ *     gettid (tls enabled)     l:         2𝑐         1𝑛𝑠
+ *
+ * The TLS convention is important for reentrant lock performance.
+ *
  * @return thread id greater than zero or -1 w/ errno
  * @asyncsignalsafe
+ * @threadsafe
  */
 privileged int gettid(void) {
   int rc;
@@ -42,9 +59,7 @@ privileged int gettid(void) {
 
   if (__tls_enabled) {
     rc = *(int *)(__get_tls() + 0x38);
-    if (rc && rc != -1) {
-      return rc;
-    }
+    return rc;
   }
 
   if (IsWindows()) {

@@ -4,8 +4,7 @@
 #include "libc/bits/midpoint.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/enum/version.h"
-#include "libc/runtime/runtime.h"
+#include "libc/nt/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -29,7 +28,7 @@ COSMOPOLITAN_C_START_
   ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
           FRAMESIZE)
 #define _kMem(NORMAL, WIN7) \
-  (!(IsWindows() && NtGetVersion() < kNtVersionWindows10) ? NORMAL : WIN7)
+  (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
 
 struct MemoryInterval {
   int x;

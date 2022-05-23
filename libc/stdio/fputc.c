@@ -29,7 +29,7 @@ int fputc_unlocked(int c, FILE *f) {
   unsigned char b;
   if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
     f->buf[f->beg++] = c;
-    return c & 0xff;
+    return c & 255;
   } else {
     b = c;
     if (!fwrite_unlocked(&b, 1, 1, f)) return -1;

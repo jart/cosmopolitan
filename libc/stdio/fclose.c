@@ -39,6 +39,7 @@ int fclose(FILE *f) {
   if (!f) return 0;
   __fflush_unregister(f);
   fflush(f);
+  free_s(&f->getln);
   if (!f->nofree) {
     free_s(&f->buf);
   }

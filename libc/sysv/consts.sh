@@ -1573,18 +1573,6 @@ syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x20000000		
 syscon	sock	SOCK_DCCP				6			0			0			0			0			0			# what is it?
 syscon	sock	SOCK_PACKET				10			0			0			0			0			0			# what is it?
 
-syscon	prsnlty	ADDR_COMPAT_LAYOUT			0x0200000		0			0			0			0			0			# linux only
-syscon	prsnlty	READ_IMPLIES_EXEC			0x0400000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_3GB				0x8000000		0			0			0			0			0			# linux only
-syscon	prsnlty	FDPIC_FUNCPTRS				0x0080000		0			0			0			0			0			# linux only
-syscon	prsnlty	STICKY_TIMEOUTS				0x4000000		0			0			0			0			0			# linux only
-syscon	prsnlty	MMAP_PAGE_ZERO				0x0100000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_32BIT			0x0800000		0			0			0			0			0			# linux only
-syscon	prsnlty	WHOLE_SECONDS				0x2000000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_NO_RANDOMIZE			0x0040000		0			0			0			0			0			# linux only
-syscon	prsnlty	SHORT_INODE				0x1000000		0			0			0			0			0			# linux only
-syscon	prsnlty	UNAME26					0x0020000		0			0			0			0			0			# linux only
-
 syscon	misc	TH_FIN					1			1			1			1			1			1			# consensus
 syscon	misc	TH_SYN					2			2			2			2			2			2			# consensus
 syscon	misc	TH_RST					4			4			4			4			4			4			# consensus

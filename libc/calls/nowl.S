@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,22 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/macros.internal.h"
 
-static char tib[64];
+	.initbss 201,_init_nowl
+nowl:	.quad	0
+	.endobj	nowl,globl
+	.previous
 
-TEST(tls, test) {
-  errno = 31337;
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(&__errno, __errno_location());
-  __initialize_tls(tib);
-  *(int *)((char *)tib + 0x38) = gettid();
-  *(int *)((char *)tib + 0x3c) = __errno;
-  __install_tls(tib);
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(tib, __get_tls());
-  EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
-}
+	.init.start 201,_init_nowl
+	ezlea	nowl_setup,ax
+	stosq
+	.init.end 201,_init_nowl

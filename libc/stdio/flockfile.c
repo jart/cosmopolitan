@@ -28,16 +28,18 @@
 void flockfile(FILE *f) {
   int me, owner;
   unsigned tries;
-  if (!__threaded) return;
-  for (tries = 0, me = gettid();;) {
-    owner = 0;
-    if (_lockcmpxchgp(&f->lock, &owner, me) || owner == me) {
-      return;
-    }
-    if (++tries & 7) {
-      __builtin_ia32_pause();
-    } else {
-      sched_yield();
+  if (__threaded) {
+    for (tries = 0, me = gettid();;) {
+      owner = 0;
+      if (_lockcmpxchgp(&f->lock, &owner, me) || owner == me) {
+        break;
+      }
+      if (++tries & 7) {
+        __builtin_ia32_pause();
+      } else {
+        sched_yield();
+      }
     }
   }
+  ++f->reent;
 }

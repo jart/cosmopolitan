@@ -22,9 +22,9 @@
 /**
  * Returns New Technology version, e.g.
  *
- *     if (IsWindows() && NtGetVersion() >=k NtVersionWindows10) {...}
- *
  * This can only be called on Windows.
+ *
+ * @see IsAtLeastWindows10()
  */
 textwindows noasan int NtGetVersion(void) {
   return (NtGetPeb()->OSMajorVersion & 0xff) << 8 | NtGetPeb()->OSMinorVersion;

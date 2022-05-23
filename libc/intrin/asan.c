@@ -199,7 +199,7 @@ static char *__asan_utf8cpy(char *p, unsigned c) {
   return p;
 }
 
-static void *__asan_memset(void *p, char c, size_t n) {
+static void __asan_memset(void *p, char c, size_t n) {
   char *b;
   size_t i;
   uint64_t x;
@@ -207,29 +207,29 @@ static void *__asan_memset(void *p, char c, size_t n) {
   x = 0x0101010101010101ul * (c & 255);
   switch (n) {
     case 0:
-      return p;
+      break;
     case 1:
       __builtin_memcpy(b, &x, 1);
-      return p;
+      break;
     case 2:
       __builtin_memcpy(b, &x, 2);
-      return p;
+      break;
     case 3:
       __builtin_memcpy(b, &x, 2);
       __builtin_memcpy(b + 1, &x, 2);
-      return p;
+      break;
     case 4:
       __builtin_memcpy(b, &x, 4);
-      return p;
+      break;
     case 5:
     case 6:
     case 7:
       __builtin_memcpy(b, &x, 4);
       __builtin_memcpy(b + n - 4, &x, 4);
-      return p;
+      break;
     case 8:
       __builtin_memcpy(b, &x, 8);
-      return p;
+      break;
     case 9:
     case 10:
     case 11:
@@ -240,7 +240,7 @@ static void *__asan_memset(void *p, char c, size_t n) {
     case 16:
       __builtin_memcpy(b, &x, 8);
       __builtin_memcpy(b + n - 8, &x, 8);
-      return p;
+      break;
     default:
       if (n <= 64) {
         i = 0;
@@ -253,81 +253,8 @@ static void *__asan_memset(void *p, char c, size_t n) {
       } else {
         __repstosb(p, c, n);
       }
-      return p;
+      break;
   }
-}
-
-static void *__asan_mempcpy(void *dst, const void *src, size_t n) {
-  size_t i;
-  char *d;
-  const char *s;
-  uint64_t a, b;
-  d = dst;
-  s = src;
-  switch (n) {
-    case 0:
-      return d;
-    case 1:
-      *d = *s;
-      return d + 1;
-    case 2:
-      __builtin_memcpy(&a, s, 2);
-      __builtin_memcpy(d, &a, 2);
-      return d + 2;
-    case 3:
-      __builtin_memcpy(&a, s, 2);
-      __builtin_memcpy(&b, s + 1, 2);
-      __builtin_memcpy(d, &a, 2);
-      __builtin_memcpy(d + 1, &b, 2);
-      return d + 3;
-    case 4:
-      __builtin_memcpy(&a, s, 4);
-      __builtin_memcpy(d, &a, 4);
-      return d + 4;
-    case 5:
-    case 6:
-    case 7:
-      __builtin_memcpy(&a, s, 4);
-      __builtin_memcpy(&b, s + n - 4, 4);
-      __builtin_memcpy(d, &a, 4);
-      __builtin_memcpy(d + n - 4, &b, 4);
-      return d + n;
-    case 8:
-      __builtin_memcpy(&a, s, 8);
-      __builtin_memcpy(d, &a, 8);
-      return d + 8;
-    case 9:
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-    case 16:
-      __builtin_memcpy(&a, s, 8);
-      __builtin_memcpy(&b, s + n - 8, 8);
-      __builtin_memcpy(d, &a, 8);
-      __builtin_memcpy(d + n - 8, &b, 8);
-      return d + n;
-    default:
-      if (n <= 64) {
-        i = 0;
-        do {
-          __builtin_memcpy(&a, s + i, 8);
-          asm volatile("" ::: "memory");
-          __builtin_memcpy(d + i, &a, 8);
-        } while ((i += 8) + 8 <= n);
-        for (; i < n; ++i) d[i] = s[i];
-        return d + i;
-      } else {
-        return __repmovsb(d, s, n);
-      }
-  }
-}
-
-static void *__asan_memcpy(void *dst, const void *src, size_t n) {
-  __asan_mempcpy(dst, src, n);
-  return dst;
 }
 
 static char *__asan_hexcpy(char *p, uint64_t x, uint8_t k) {
@@ -736,7 +663,7 @@ static void __asan_report_memory_origin(const unsigned char *addr, int size,
   if (_base <= addr && addr < _end) {
     __asan_report_memory_origin_image((intptr_t)addr, size);
   } else if (IsAutoFrame((intptr_t)addr >> 16)) {
-    /* __asan_report_memory_origin_heap(addr, size); */
+    __asan_report_memory_origin_heap(addr, size);
   }
 }
 
@@ -946,8 +873,8 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
 
 #define __asan_trace __asan_rawtrace
 
-static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
-                             struct AsanTrace *bt) {
+void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
+                      struct AsanTrace *bt) {
   char *p;
   size_t c;
   struct AsanExtra *e;
@@ -960,7 +887,7 @@ static void *__asan_allocate(size_t a, size_t n, int underrun, int overrun,
     __asan_poison(p + n, c - n, overrun);
     __asan_memset(p, 0xF9, n);
     __asan_write48(&e->size, n);
-    __asan_memcpy(&e->bt, bt, sizeof(*bt));
+    __builtin_memcpy(&e->bt, bt, sizeof(*bt));
   }
   return p;
 }
@@ -1082,7 +1009,7 @@ static void *__asan_realloc_grow(void *p, size_t n, size_t m,
                                  struct AsanTrace *bt) {
   char *q;
   if ((q = __asan_allocate(16, n, kAsanHeapUnderrun, kAsanHeapOverrun, bt))) {
-    __asan_memcpy(q, p, m);
+    __builtin_memcpy(q, p, m);
     __asan_deallocate(p, kAsanHeapRelocated);
   }
   return q;

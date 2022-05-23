@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,16 +18,38 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Blocks until data from stream buffer is written out.
+//	Invokes clone() system call on GNU/Systemd.
 //
-//	@param	rdi is the stream handle, or 0 for all streams
-//	@return	0 on success or -1 w/ errno
-//	@see	fflush_unlocked()
-//	@threadsafe
-fflush:	ezlea	fflush_unlocked,ax
-	test	%rdi,%rdi
-	jz	1f
-	mov	%rdi,%r11
-	jmp	stdio_unlock
-1:	jmp	*%rax
-	.endfn	fflush,globl
+//	@param	rdi is flags
+//	@param	rsi is top of stack
+//	@param	rdx is ptid
+//	@param	rcx is ctid
+//	@param	r8 is tls
+//	@param	r9 is func
+//	@param	8(rsp) is arg
+//	@return	tid of child on success, or -1 w/ errno
+sys_clone_linux:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+	push	%rbx
+	mov	%rcx,%r10
+	mov	16(%rbp),%rbx
+	mov	$56,%eax		# __NR_clone
+	syscall
+	test	%rax,%rax
+	jz	2f
+	cmp	$-4095,%rax
+	jae	1f
+0:	pop	%rbx
+	pop	%rbp
+	ret
+1:	call	systemfive_error
+	jmp	0b
+2:	xor	%ebp,%ebp		# child thread
+	mov	%rbx,%rdi		# arg
+	call	*%r9			# func(arg)
+	xchg	%eax,%edi		# func(arg) → exitcode
+	mov	$60,%eax		# __NR_exit(exitcode)
+	syscall
+	.endfn	sys_clone_linux,globl,hidden

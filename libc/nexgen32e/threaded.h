@@ -8,8 +8,8 @@ extern bool __threaded;
 extern bool __tls_enabled;
 extern unsigned __tls_index;
 
-void *__initialize_tls(char[hasatleast 64]);
-void __install_tls(char[hasatleast 64]);
+void *__initialize_tls(char[64]);
+void __install_tls(char[64]);
 
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 /**

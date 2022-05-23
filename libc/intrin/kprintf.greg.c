@@ -857,7 +857,6 @@ privileged void kvprintf(const char *fmt, va_list v) {
  *
  * Specifiers:
  *
- * - `P` pid
  * - `c` char
  * - `o` octal
  * - `b` binary
@@ -873,6 +872,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `X` uppercase
  * - `T` timestamp
  * - `x` hexadecimal
+ * - `P` pid (or tid if threaded)
  *
  * Types:
  *

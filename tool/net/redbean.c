@@ -16,151 +16,92 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/bits/atomic.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/popcnt.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/calls/ttydefaults.h"
-#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
-#include "libc/mem/fmt.h"
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/rdtscp.h"
 #include "libc/nexgen32e/threaded.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
-#include "libc/nt/version.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/runtime/symbols.internal.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
-#include "libc/str/str.h"
 #include "libc/str/undeflate.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/audit.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/lock.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/msync.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
-#include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
-#include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
-#include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lrepl.h"
-#include "third_party/lua/ltests.h"
-#include "third_party/lua/lua.h"
-#include "third_party/lua/luaconf.h"
 #include "third_party/lua/lualib.h"
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/asn1write.h"
-#include "third_party/mbedtls/cipher.h"
-#include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/ecp.h"
-#include "third_party/mbedtls/entropy.h"
-#include "third_party/mbedtls/entropy_poll.h"
-#include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/iana.h"
-#include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/pk.h"
-#include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/san.h"
-#include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
-#include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/args/args.h"
 #include "tool/build/lib/case.h"
-#include "tool/build/lib/psk.h"
 #include "tool/net/lfuncs.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
@@ -441,12 +382,14 @@ static int mainpid;
 static int sandboxed;
 static int changeuid;
 static int changegid;
-static int monitortid;
 static int isyielding;
 static int statuscode;
 static int shutdownsig;
 static int sslpskindex;
 static int oldloglevel;
+static int *monitortid;
+static char *monitortls;
+static char *monitorstack;
 static int maxpayloadsize;
 static int messageshandled;
 static int sslticketlifetime;
@@ -6393,7 +6336,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&monitortid);
+    _spinlock(monitortid);
   }
   _Exit(0);
 }
@@ -6649,19 +6592,23 @@ static int MemoryMonitor(void *arg) {
 }
 
 static void MonitorMemory(void) {
-  char *tls;
-  monitortid = -1;
-  tls = __initialize_tls(malloc(64));
-  __cxa_atexit(free, tls, 0);
-  if (clone(MemoryMonitor,
-            mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                 MAP_STACK | MAP_ANONYMOUS, -1, 0),
-            GetStackSize(),
-            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-            0, 0, tls, 64, &monitortid) == -1) {
-    monitortid = 0;
+  if ((monitortls = __initialize_tls(malloc(64)))) {
+    if ((monitorstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                             MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+      monitortid = (int *)(monitortls + 0x38);
+      if ((*monitortid =
+               clone(MemoryMonitor, monitorstack, GetStackSize(),
+                     CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
+                         CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_CLEARTID,
+                     0, 0, monitortls, 64, monitortid)) != -1) {
+        return;
+      }
+      munmap(monitorstack, GetStackSize());
+    }
+    free(monitortls);
   }
+  WARNF("(memv) failed to start memory monitor %m");
+  monitortty = 0;
 }
 
 static int HandleConnection(size_t i) {
@@ -7327,7 +7274,9 @@ void RedBean(int argc, char *argv[]) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&monitortid);
+    _spinlock(monitortid);
+    munmap(monitorstack, GetStackSize());
+    free(monitortls);
   }
   INFOF("(srvr) shutdown complete");
 }

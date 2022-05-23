@@ -18,6 +18,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -96,11 +97,12 @@
   "Referrer-Policy: origin\r\n"   \
   "Cache-Control: private; max-age=0\r\n"
 
-int workers;
-int messages;
-int connections;
-const char *status;
+_Atomic(int) workers;
+_Atomic(int) messages;
+_Atomic(int) listening;
+_Atomic(int) connections;
 _Atomic(int) closingtime;
+const char *volatile status;
 
 int Worker(void *id) {
   int server, yes = 1;
@@ -132,6 +134,7 @@ int Worker(void *id) {
   listen(server, 1);
 
   // connection loop
+  ++listening;
   while (!closingtime) {
     struct tm tm;
     int64_t unixts;
@@ -167,7 +170,7 @@ int Worker(void *id) {
       continue;
     }
 
-    asm volatile("lock incl\t%0" : "+m"(connections));
+    ++connections;
 
     // message loop
     do {
@@ -177,12 +180,12 @@ int Worker(void *id) {
       if ((got = read(client, inbuf, sizeof(inbuf))) <= 0) break;
       // check that client message wasn't fragmented into more reads
       if (!(inmsglen = ParseHttpMessage(&msg, inbuf, got))) break;
-      asm volatile("lock incl\t%0" : "+m"(messages));
+      ++messages;
 
 #if LOGGING
       // log the incoming http message
       clientip = ntohl(clientaddr.sin_addr.s_addr);
-      kprintf("#%.4x get some %d.%d.%d.%d:%d %#.*s\n", (intptr_t)id,
+      kprintf("%6P get some %d.%d.%d.%d:%d %#.*s\n",
               (clientip & 0xff000000) >> 030, (clientip & 0x00ff0000) >> 020,
               (clientip & 0x0000ff00) >> 010, (clientip & 0x000000ff) >> 000,
               ntohs(clientaddr.sin_port), msg.uri.b - msg.uri.a,
@@ -200,7 +203,7 @@ int Worker(void *id) {
         p = stpcpy(outbuf, "HTTP/1.1 200 OK\r\n" STANDARD_RESPONSE_HEADERS
                            "Content-Type: text/html; charset=utf-8\r\n"
                            "Date: ");
-        clock_gettime(CLOCK_REALTIME, &ts), unixts = ts.tv_sec;
+        clock_gettime(0, &ts), unixts = ts.tv_sec;
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
@@ -218,7 +221,7 @@ int Worker(void *id) {
                    "HTTP/1.1 404 Not Found\r\n" STANDARD_RESPONSE_HEADERS
                    "Content-Type: text/html; charset=utf-8\r\n"
                    "Date: ");
-        clock_gettime(CLOCK_REALTIME, &ts), unixts = ts.tv_sec;
+        clock_gettime(0, &ts), unixts = ts.tv_sec;
         p = FormatHttpDateTime(p, gmtime_r(&unixts, &tm));
         p = stpcpy(p, "\r\nContent-Length: ");
         p = FormatInt32(p, strlen(q));
@@ -238,13 +241,14 @@ int Worker(void *id) {
              (msg.method == kHttpGet || msg.method == kHttpHead));
     DestroyHttpMessage(&msg);
     close(client);
-    asm volatile("lock decl\t%0" : "+m"(connections));
+    --connections;
   }
+  --listening;
 
   // inform the parent that this clone has finished
 WorkerFinished:
   close(server);
-  asm volatile("lock decl\t%0" : "+m"(workers));
+  --workers;
   return 0;
 }
 
@@ -253,35 +257,85 @@ void OnCtrlC(int sig) {
   status = " shutting down...";
 }
 
+void PrintStatus(void) {
+  kprintf("\r\e[K\e[32mgreenbean\e[0m "
+          "workers=%d "
+          "listening=%d "
+          "connections=%d "
+          "messages=%d%s ",
+          workers, listening, connections, messages, status);
+}
+
 int main(int argc, char *argv[]) {
+  char **tls;
+  char **stack;
   int i, threads;
   uint32_t *hostips;
   // ShowCrashReports();
-  sigaction(SIGINT, &(struct sigaction){.sa_handler = OnCtrlC}, 0);
+
+  // listen for ctrl-c, hangup, and kill which shut down greenbean
+  status = "";
+  struct sigaction sa = {.sa_handler = OnCtrlC};
+  sigaction(SIGHUP, &sa, 0);
+  sigaction(SIGINT, &sa, 0);
+  sigaction(SIGTERM, &sa, 0);
+
+  // print all the ips that 0.0.0.0 will bind
   for (hostips = GetHostIps(), i = 0; hostips[i]; ++i) {
     kprintf("listening on http://%d.%d.%d.%d:%d\n",
             (hostips[i] & 0xff000000) >> 030, (hostips[i] & 0x00ff0000) >> 020,
             (hostips[i] & 0x0000ff00) >> 010, (hostips[i] & 0x000000ff) >> 000,
             PORT);
   }
-  threads = argc > 1 ? atoi(argv[1]) : 0;
-  if (!threads) threads = GetCpuCount();
-  workers = threads;
-  for (i = 0; i < threads; ++i) {
-    char *tls = __initialize_tls(malloc(64));
-    void *stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                       MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    CHECK_NE(-1, clone(Worker, stack, GetStackSize(),
-                       CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                           CLONE_SIGHAND | CLONE_SETTLS,
-                       (void *)(intptr_t)i, 0, tls, 64, 0));
+
+  // spawn over 9,000 worker threads
+  tls = 0;
+  stack = 0;
+  threads = argc > 1 ? atoi(argv[1]) : GetCpuCount();
+  if ((1 <= threads && threads <= INT_MAX) &&
+      (tls = malloc(threads * sizeof(*tls))) &&
+      (stack = malloc(threads * sizeof(*stack)))) {
+    if (!threads) threads = GetCpuCount();
+    for (i = 0; i < threads; ++i) {
+      if ((tls[i] = __initialize_tls(malloc(64))) &&
+          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                           MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+        ++workers;
+        if (clone(Worker, stack[i], GetStackSize(),
+                  CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                      CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_SETTID |
+                      CLONE_CHILD_CLEARTID,
+                  (void *)(intptr_t)i, 0, tls[i], 64,
+                  (int *)(tls[i] + 0x38)) == -1) {
+          --workers;
+          kprintf("error: clone(%d) failed %m\n", i);
+        }
+      } else {
+        kprintf("error: mmap(%d) failed %m\n", i);
+      }
+      if (!(i % 500)) {
+        PrintStatus();
+      }
+    }
+  } else {
+    kprintf("error: invalid number of threads\n");
   }
-  status = "";
+
+  // wait for workers to terminate
   while (workers) {
-    kprintf(
-        "\r\e[K\e[32mgreenbean\e[0m workers=%d connections=%d messages=%d%s ",
-        workers, connections, messages, status);
+    PrintStatus();
     usleep(HEARTBEAT * 1000);
   }
+
+  // clean up terminal line
   kprintf("\r\e[K");
+
+  // clean up memory
+  for (i = 0; i < threads; ++i) {
+    if (stack) munmap(stack[i], GetStackSize());
+    if (tls) free(tls[i]);
+  }
+  free(hostips);
+  free(stack);
+  free(tls);
 }

@@ -41,6 +41,12 @@ void Extract(const char *from, const char *to, int mode) {
 }
 
 void SetUpOnce(void) {
+
+  // nothing to do if we're using elf
+  if (~SUPPORT_VECTOR & (WINDOWS | XNU)) {
+    exit(0);
+  }
+
   ASSERT_SYS(0, 0, mkdir("bin", 0755));
   Extract("/zip/apetest.com", "bin/apetest.com", 0755);
   Extract("/zip/apetest2.com", "bin/apetest2.com", 0755);

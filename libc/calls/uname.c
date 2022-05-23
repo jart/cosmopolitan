@@ -48,7 +48,7 @@ static inline textwindows noasan int NtGetBuildNumber(void) {
  * @return 0 on success, or -1 w/ errno
  */
 int uname(struct utsname *lool) {
-  int rc, v;
+  int rc;
   char *out, *p;
   size_t i, j, len;
   char tmp[sizeof(struct utsname)];
@@ -87,7 +87,6 @@ int uname(struct utsname *lool) {
         rc = enosys();
       }
     } else {
-      v = NtGetVersion();
       p = lool->release;
       p = FormatUint32(p, NtGetMajorVersion()), *p++ = '.';
       p = FormatUint32(p, NtGetMinorVersion()), *p++ = '-';

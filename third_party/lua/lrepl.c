@@ -234,9 +234,9 @@ static ssize_t pushline (lua_State *L, int firstline) {
   ssize_t rc;
   char *prmt;
   globalL = L;
+  prmt = strdup(get_prompt(L, firstline));
+  lua_pop(L, 1);  /* remove prompt */
   if (lua_repl_isterminal) {
-    prmt = strdup(get_prompt(L, firstline));
-    lua_pop(L, 1);  /* remove prompt */
     LUA_REPL_UNLOCK;
     rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
     free(prmt);
@@ -250,9 +250,17 @@ static ssize_t pushline (lua_State *L, int firstline) {
     LUA_REPL_LOCK;
   } else {
     LUA_REPL_UNLOCK;
+    fputs(prmt, stdout);
+    fflush(stdout);
     b = linenoiseGetLine(stdin);
+    if (b) {
+      rc = 1;
+    } else if (ferror(stdin)) {
+      rc = -1;
+    } else {
+      rc = 0;
+    }
     LUA_REPL_LOCK;
-    rc = b ? 1 : -1;
   }
   if (!(rc == -1 && errno == EAGAIN)) {
     write(1, "\n", 1);

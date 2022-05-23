@@ -97,7 +97,8 @@ static long double nowl_vdso(void) {
 
 long double nowl_setup(void) {
   uint64_t ticks;
-  if ((g_now.clock_gettime = __get_clock_gettime())) {
+  if (0 && (g_now.clock_gettime = __get_clock_gettime())) {
+    // TODO(jart): Re-enable this.
     nowl = nowl_vdso;
   } else if (X86_HAVE(INVTSC)) {
     RefreshTime();
@@ -107,5 +108,3 @@ long double nowl_setup(void) {
   }
   return nowl();
 }
-
-long double (*nowl)(void) = nowl_setup;

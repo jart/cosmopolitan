@@ -46,7 +46,6 @@ relegated wontreturn void __assert_fail(const char *expr, const char *file,
   } else {
     rc = 24;
   }
-  if (weaken(__die)) weaken(__die)();
   __restorewintty();
   _Exit(rc);
 }

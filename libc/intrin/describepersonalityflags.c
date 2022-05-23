@@ -16,22 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/filesharemode.h"
+#include "libc/sysv/consts/personality.h"
 
-static char tib[64];
+static const struct DescribeFlags kPersonalityFlags[] = {
+    {ADDR_COMPAT_LAYOUT, "ADDR_COMPAT_LAYOUT"},  //
+    {READ_IMPLIES_EXEC, "READ_IMPLIES_EXEC"},    //
+    {ADDR_LIMIT_3GB, "ADDR_LIMIT_3GB"},          //
+    {FDPIC_FUNCPTRS, "FDPIC_FUNCPTRS"},          //
+    {STICKY_TIMEOUTS, "STICKY_TIMEOUTS"},        //
+    {MMAP_PAGE_ZERO, "MMAP_PAGE_ZERO"},          //
+    {ADDR_LIMIT_32BIT, "ADDR_LIMIT_32BIT"},      //
+    {WHOLE_SECONDS, "WHOLE_SECONDS"},            //
+    {ADDR_NO_RANDOMIZE, "ADDR_NO_RANDOMIZE"},    //
+    {SHORT_INODE, "SHORT_INODE"},                //
+    {UNAME26, "UNAME26"},                        //
+};
 
-TEST(tls, test) {
-  errno = 31337;
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(&__errno, __errno_location());
-  __initialize_tls(tib);
-  *(int *)((char *)tib + 0x38) = gettid();
-  *(int *)((char *)tib + 0x3c) = __errno;
-  __install_tls(tib);
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(tib, __get_tls());
-  EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
+const char *DescribePersonalityFlags(int x) {
+  _Alignas(char) static char personalityflags[128];
+  return DescribeFlags(personalityflags, sizeof(personalityflags),
+                       kPersonalityFlags, ARRAYLEN(kPersonalityFlags), "", x);
 }
