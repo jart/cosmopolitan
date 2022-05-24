@@ -28,21 +28,57 @@ printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
-  -include cosmopolitan.h crt.o ape.o cosmopolitan.a
+  -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
 ```
 
-You now have a portable program. Please note that your APE binary will
-assimilate itself as a conventional resident of your platform after the
-first run, so it can be fast and efficient for subsequent executions.
+You now have a portable program.
 
 ```sh
 ./hello.com
-bash -c './hello.com'  # zsh/fish workaround (we upstreamed patches)
+bash -c './hello.com'  # zsh/fish workaround (we patched them in 2021)
 ```
 
-So if you intend to copy the binary to Windows or Mac then please do
-that before you run it, not after.
+Since we used the `ape-no-modify-self.o` bootloader (rather than
+`ape.o`) your executable will not modify itself when it's run. What
+it'll instead do, is extract a 4kb program to `${TMPDIR:-/tmp}` that
+maps your program into memory without needing to copy it. It's possible
+to install the APE loader systemwide as follows.
+
+```sh
+# (1) linux systems that want binfmt_misc
+ape/apeinstall.sh
+
+# (2) for linux/freebsd/netbsd/openbsd systems
+cp build/bootstrap/ape.elf /usr/bin/ape
+
+# (3) for mac os x systems
+cp build/bootstrap/ape.macho /usr/bin/ape
+```
+
+If you followed steps (2) and (3) then there's going to be a slight
+constant-time startup latency each time you run an APE binary. Your
+system might also prevent your APE program from being installed to a
+system directory as a setuid binary or a script interpreter. To solve
+that, you can use the following flag to turn your binary into the
+platform local format (ELF or Mach-O):
+
+```sh
+./hello.com --assimilate
+```
+
+There's also some other useful flags that get baked into your binary by
+default:
+
+```sh
+./hello.com --strace
+./hello.com --ftrace
+```
+
+If you want your `hello.com` program to be much tinier, more on the
+order of 16kb rather than 60kb, then all you have to do is use
+<https://justine.lol/cosmopolitan/cosmopolitan-tiny.zip> instead. See
+<https://justine.lol/cosmopolitan/download.html>.
 
 ### MacOS
 

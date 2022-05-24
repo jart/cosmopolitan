@@ -112,6 +112,14 @@ o/$(MODE)/examples/nomodifyself.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/examples/greenbean.com.dbg:						\
+		$(EXAMPLES_DEPS)						\
+		o/$(MODE)/examples/greenbean.o					\
+		o/$(MODE)/examples/examples.pkg					\
+		$(CRT)								\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/examples/hellolua.com.dbg:						\
 		$(EXAMPLES_DEPS)						\
 		o/$(MODE)/examples/hellolua.o					\
@@ -162,4 +170,5 @@ usr/share/dict/words: usr/share/dict/words.gz
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:								\
 		o/$(MODE)/examples/package					\
+		o/$(MODE)/examples/pyapp					\
 		$(EXAMPLES_BINS)

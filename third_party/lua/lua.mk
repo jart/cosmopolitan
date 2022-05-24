@@ -59,7 +59,7 @@ o/$(MODE)/third_party/lua/lua.com.dbg:						\
 		$(THIRD_PARTY_LUA_A).pkg					\
 		o/$(MODE)/third_party/lua/lua.main.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/lua/luac.com.dbg:						\
@@ -68,7 +68,7 @@ o/$(MODE)/third_party/lua/luac.com.dbg:						\
 		$(THIRD_PARTY_LUA_A).pkg					\
 		o/$(MODE)/third_party/lua/luac.main.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/lua/lua.com:						\

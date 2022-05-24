@@ -27,6 +27,7 @@ textwindows int sys_clock_gettime_nt(int clockid, struct timespec *ts) {
   struct timespec res;
   struct NtFileTime ft;
   static struct timespec mono;
+  if (!ts) return efault();
   if (clockid == CLOCK_REALTIME) {
     GetSystemTimeAsFileTime(&ft);
     *ts = FileTimeToTimeSpec(ft);

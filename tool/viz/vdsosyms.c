@@ -16,13 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
-#include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/elf/struct/verdaux.h"
 #include "libc/elf/struct/verdef.h"
@@ -30,31 +28,22 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
-static inline int CompareStrings(const char *l, const char *r) {
-  size_t i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
-  return (l[i] & 255) - (r[i] & 255);
-}
-
-static inline int CheckDsoSymbolVersion(Elf64_Verdef *vd, int sym,
-                                        const char *name, char *strtab) {
+static inline void PrintDsoSymbolVersions(Elf64_Verdef *vd, int sym,
+                                          char *strtab) {
   Elf64_Verdaux *aux;
   for (;; vd = (Elf64_Verdef *)((char *)vd + vd->vd_next)) {
     if (!(vd->vd_flags & VER_FLG_BASE) &&
         (vd->vd_ndx & 0x7fff) == (sym & 0x7fff)) {
       aux = (Elf64_Verdaux *)((char *)vd + vd->vd_aux);
-      return !CompareStrings(name, strtab + aux->vda_name);
+      kprintf(" %s", strtab + aux->vda_name);
     }
     if (!vd->vd_next) {
-      return 0;
+      break;
     }
   }
 }
 
-/**
- * Returns address of vDSO function.
- */
-void *__vdsosym(const char *version, const char *name) {
+int PrintVdsoSymbols(void) {
   void *p;
   size_t i;
   Elf64_Ehdr *ehdr;
@@ -66,6 +55,7 @@ void *__vdsosym(const char *version, const char *name) {
   uint16_t *versym = 0;
   Elf_Symndx *hashtab = 0;
   Elf64_Verdef *verdef = 0;
+  const char *typename, *bindname;
 
   for (ehdr = 0, ap = __auxv; ap[0]; ap += 2) {
     if (ap[0] == AT_SYSINFO_EHDR) {
@@ -73,9 +63,9 @@ void *__vdsosym(const char *version, const char *name) {
       break;
     }
   }
-  if (!ehdr || READ32LE(ehdr->e_ident) != READ32LE("\177ELF")) {
-    KERNTRACE("__vdsosym() → AT_SYSINFO_EHDR ELF not found");
-    return 0;
+  if (!ehdr) {
+    kprintf("error: AT_SYSINFO_EHDR not found\n");
+    return 1;
   }
 
   phdr = (void *)((char *)ehdr + ehdr->e_phoff);
@@ -95,8 +85,8 @@ void *__vdsosym(const char *version, const char *name) {
     }
   }
   if (!dyn || base == -1) {
-    KERNTRACE("__vdsosym() → missing program headers");
-    return 0;
+    kprintf("error: missing program headers\n");
+    return 2;
   }
 
   for (i = 0; dyn[i]; i += 2) {
@@ -119,35 +109,58 @@ void *__vdsosym(const char *version, const char *name) {
         break;
     }
   }
-  if (!strtab || !symtab || !hashtab) {
-    KERNTRACE("__vdsosym() → tables not found");
-    return 0;
-  }
   if (!verdef) {
     versym = 0;
   }
 
+  if (!strtab || !symtab || !hashtab) {
+    kprintf("error: strtab/symtab/hashtab not found\n");
+    return 3;
+  }
+
   for (i = 0; i < hashtab[1]; i++) {
-    if (ELF64_ST_TYPE(symtab[i].st_info) != STT_FUNC &&
-        ELF64_ST_TYPE(symtab[i].st_info) != STT_OBJECT &&
-        ELF64_ST_TYPE(symtab[i].st_info) != STT_NOTYPE) {
-      continue;
-    }
-    if (ELF64_ST_BIND(symtab[i].st_info) != STB_GLOBAL) {
-      continue;
-    }
     if (!symtab[i].st_shndx) {
       continue;
     }
-    if (CompareStrings(name, strtab + symtab[i].st_name)) {
-      continue;
+
+    switch (ELF64_ST_BIND(symtab[i].st_info)) {
+      case STB_LOCAL:
+        bindname = "locl";
+        break;
+      case STB_GLOBAL:
+        bindname = "glob";
+        break;
+      case STB_WEAK:
+        bindname = "weak";
+        break;
+      default:
+        bindname = "????";
+        break;
     }
-    if (versym && !CheckDsoSymbolVersion(verdef, versym[i], version, strtab)) {
-      continue;
+
+    switch (ELF64_ST_TYPE(symtab[i].st_info)) {
+      case STT_FUNC:
+        typename = "func";
+        break;
+      case STT_OBJECT:
+        typename = " obj";
+        break;
+      case STT_NOTYPE:
+        typename = "none";
+        break;
+      default:
+        typename = "????";
+        break;
     }
-    return (void *)(base + symtab[i].st_value);
+
+    kprintf("%s %s %-40s", bindname, typename, strtab + symtab[i].st_name);
+    PrintDsoSymbolVersions(verdef, versym[i], strtab);
+    kprintf("\n");
   }
 
-  KERNTRACE("__vdsosym() → symbol not found");
   return 0;
+}
+
+int main(int argc, char *argv[]) {
+  return PrintVdsoSymbols();
 }

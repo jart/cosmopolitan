@@ -59,7 +59,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
 
 static textstartup void __gettimeofday_init(void) {
   void *vdso;
-  if ((vdso = __vdsofunc("__vdso_gettimeofday"))) {
+  if ((vdso = __vdsosym("LINUX_2.6", "__vdso_gettimeofday"))) {
     __gettimeofday = vdso;
   }
 }

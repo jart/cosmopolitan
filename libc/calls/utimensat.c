@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
@@ -39,7 +40,8 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
   int rc;
   char buf[12];
   if (IsAsan() && (!__asan_is_valid(path, 1) ||
-                   (ts && !__asan_is_valid(ts, sizeof(struct timespec) * 2)))) {
+                   (ts && (!__asan_is_valid_timespec(ts + 0) ||
+                           !__asan_is_valid_timespec(ts + 1))))) {
     rc = efault();
   } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
     STRACE("zipos mkdirat not supported yet");

@@ -145,7 +145,7 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		o/$(MODE)/third_party/quickjs/repl.o				\
 		o/$(MODE)/third_party/quickjs/qjscalc.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/qjs.com:						\

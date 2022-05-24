@@ -56,7 +56,7 @@ o/$(MODE)/third_party/lz4cli/lz4cli.com.dbg:		\
 		$(THIRD_PARTY_LZ4CLI_DEPS)		\
 		$(THIRD_PARTY_LZ4CLI_OBJS)		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_LZ4CLI_OBJS):				\

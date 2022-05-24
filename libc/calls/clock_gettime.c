@@ -17,6 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/asmflag.h"
+#include "libc/bits/bits.h"
+#include "libc/calls/asan.internal.h"
+#include "libc/calls/clock_gettime.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -26,10 +30,9 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
-
-static typeof(sys_clock_gettime) *__clock_gettime = sys_clock_gettime;
 
 /**
  * Returns nanosecond time.
@@ -37,6 +40,13 @@ static typeof(sys_clock_gettime) *__clock_gettime = sys_clock_gettime;
  * This is a high-precision timer that supports multiple definitions of
  * time. Among the more popular is CLOCK_MONOTONIC. This function has a
  * zero syscall implementation of that on modern x86.
+ *
+ *     nowl                l:        45𝑐        15𝑛𝑠
+ *     rdtsc               l:        13𝑐         4𝑛𝑠
+ *     gettimeofday        l:        44𝑐        14𝑛𝑠
+ *     clock_gettime       l:        40𝑐        13𝑛𝑠
+ *     __clock_gettime     l:        35𝑐        11𝑛𝑠
+ *     sys_clock_gettime   l:       220𝑐        71𝑛𝑠
  *
  * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc.
  * @param ts is where the result is stored
@@ -46,54 +56,49 @@ static typeof(sys_clock_gettime) *__clock_gettime = sys_clock_gettime;
  * @asyncsignalsafe
  */
 noinstrument int clock_gettime(int clockid, struct timespec *ts) {
-  int rc, e;
-  axdx_t ad;
-  char buf[45];
-  if (!ts) {
+  int rc;
+  char *buf;
+  if (IsAsan() && !__asan_is_valid_timespec(ts)) {
     rc = efault();
-  } else if (IsAsan() && !__asan_is_valid(ts, sizeof(*ts))) {
-    rc = efault();
-  } else if (clockid == -1) {
-    rc = einval();
-  } else if (!IsWindows()) {
-    e = errno;
-    if ((rc = __clock_gettime(clockid, ts))) {
-      errno = e;
-      ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
-      assert(ad.ax != -1);
-      if (SupportsXnu() && ad.ax) {
-        ts->tv_sec = ad.ax;
-        ts->tv_nsec = ad.dx;
-      }
-      ts->tv_nsec *= 1000;
-      rc = 0;
-    }
   } else {
-    rc = sys_clock_gettime_nt(clockid, ts);
+    rc = __clock_gettime(clockid, ts);
   }
+#if SYSDEBUG
   if (!__time_critical) {
+    buf = alloca(45);
     STRACE("clock_gettime(%d, [%s]) → %d% m", clockid,
-           DescribeTimespec(buf, sizeof(buf), rc, ts), rc);
+           DescribeTimespec(buf, 45, rc, ts), rc);
   }
+#endif
   return rc;
 }
 
 /**
- * Returns fast system clock_gettime() if it exists.
+ * Returns pointer to fastest clock_gettime().
  */
-void *__get_clock_gettime(void) {
-  void *vdso;
-  static bool once;
-  static void *result;
-  if (!once) {
-    if ((vdso = __vdsofunc("__vdso_clock_gettime"))) {
-      __clock_gettime = result = vdso;
-    }
-    once = true;
+clock_gettime_f *__get_clock_gettime(bool *opt_out_isfast) {
+  bool isfast;
+  clock_gettime_f *res;
+  if (IsLinux() && (res = __vdsosym("LINUX_2.6", "__vdso_clock_gettime"))) {
+    isfast = true;
+  } else if (IsXnu()) {
+    isfast = false;
+    res = sys_clock_gettime_xnu;
+  } else if (IsWindows()) {
+    isfast = true;
+    res = sys_clock_gettime_nt;
+  } else {
+    isfast = false;
+    res = sys_clock_gettime;
   }
-  return result;
+  if (opt_out_isfast) {
+    *opt_out_isfast = isfast;
+  }
+  return res;
 }
 
-const void *const __clock_gettime_ctor[] initarray = {
-    __get_clock_gettime,
-};
+hidden int __clock_gettime_init(int clockid, struct timespec *ts) {
+  clock_gettime_f *gettime;
+  __clock_gettime = gettime = __get_clock_gettime(0);
+  return gettime(clockid, ts);
+}

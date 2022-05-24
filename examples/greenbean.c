@@ -70,20 +70,20 @@
  * Like redbean, greenbean has superior performance too, with an
  * advantage on benchmarks biased towards high connection counts
  *
- *     $ sudo wrk -c 300 -t 32 --latency http://10.10.10.124:8080/
+ *     $ wrk -c 300 -t 32 --latency http://10.10.10.124:8080/
  *     Running 10s test @ http://10.10.10.124:8080/
  *       32 threads and 300 connections
  *         Thread Stats   Avg      Stdev     Max   +/- Stdev
- *         Latency     1.07ms    8.27ms 138.55ms   98.58%
- *         Req/Sec    37.98k    12.61k  117.65k    80.11%
+ *         Latency   661.06us    5.11ms  96.22ms   98.85%
+ *         Req/Sec    42.38k     8.90k   90.47k    84.65%
  *       Latency Distribution
- *          50%  200.00us
- *          75%  227.00us
- *          90%  303.00us
- *          99%   32.46ms
- *       10033090 requests in 8.31s, 2.96GB read
- *     Requests/sec: 1207983.58
- *     Transfer/sec:    365.19MB
+ *          50%  184.00us
+ *          75%  201.00us
+ *          90%  224.00us
+ *          99%   11.99ms
+ *       10221978 requests in 7.60s, 3.02GB read
+ *     Requests/sec: 1345015.69
+ *     Transfer/sec:    406.62MB
  *
  */
 
@@ -97,6 +97,7 @@
   "Referrer-Policy: origin\r\n"   \
   "Cache-Control: private; max-age=0\r\n"
 
+int threads;
 _Atomic(int) workers;
 _Atomic(int) messages;
 _Atomic(int) listening;
@@ -114,7 +115,9 @@ int Worker(void *id) {
 
   server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (server == -1) {
-    if (LOGGING) kprintf("%s() failed %m\n", "socket");
+    kprintf("socket() failed %m\n"
+            "  try running: sudo prlimit --pid=$$ --nofile=%d\n",
+            threads * 2);
     goto WorkerFinished;
   }
 
@@ -127,8 +130,8 @@ int Worker(void *id) {
   errno = 0;
 
   if (bind(server, &addr, sizeof(addr)) == -1) {
-    if (LOGGING) kprintf("%s() failed %m\n", "socket");
-    goto WorkerFinished;
+    kprintf("%s() failed %m\n", "socket");
+    goto CloseWorker;
   }
 
   listen(server, 1);
@@ -246,8 +249,9 @@ int Worker(void *id) {
   --listening;
 
   // inform the parent that this clone has finished
-WorkerFinished:
+CloseWorker:
   close(server);
+WorkerFinished:
   --workers;
   return 0;
 }
@@ -267,9 +271,9 @@ void PrintStatus(void) {
 }
 
 int main(int argc, char *argv[]) {
+  int i;
   char **tls;
   char **stack;
-  int i, threads;
   uint32_t *hostips;
   // ShowCrashReports();
 
@@ -295,7 +299,6 @@ int main(int argc, char *argv[]) {
   if ((1 <= threads && threads <= INT_MAX) &&
       (tls = malloc(threads * sizeof(*tls))) &&
       (stack = malloc(threads * sizeof(*stack)))) {
-    if (!threads) threads = GetCpuCount();
     for (i = 0; i < threads; ++i) {
       if ((tls[i] = __initialize_tls(malloc(64))) &&
           (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,

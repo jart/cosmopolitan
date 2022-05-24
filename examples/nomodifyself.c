@@ -21,7 +21,7 @@
 int main(int argc, char *argv[]) {
   if (_base[0] == 'M' && _base[1] == 'Z') {
     printf("success: %s spawned without needing to modify its "
-           "executable header, thanks to APE loader\n",
+           "executable header",
            argv[0]);
     if (!IsWindows()) {
       printf(", thanks to APE loader!\n");

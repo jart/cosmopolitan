@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -31,7 +32,8 @@
 noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
   int rc;
   char buf[2][45];
-  if (!req) {
+  if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
+                            (rem && !__asan_is_valid_timespec(rem))))) {
     rc = efault();
   } else if (req->tv_sec < 0 ||
              !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {

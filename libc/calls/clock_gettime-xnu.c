@@ -17,35 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/log/check.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/calls/internal.h"
 
-void SetUp(void) {
-  if (getenv("_WEIRDENV")) {
-    for (char **e = environ; *e; ++e) {
-      if (!strcmp(*e, "WEIRD")) {
-        exit(0);
-      }
+int sys_clock_gettime_xnu(int clockid, struct timespec *ts) {
+  axdx_t ad;
+  ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
+  if (ad.ax != -1) {
+    if (ad.ax) {
+      ts->tv_sec = ad.ax;
+      ts->tv_nsec = ad.dx;
     }
-    exit(7);
+    ts->tv_nsec *= 1000;
+    return 0;
+  } else {
+    return -1;
   }
-}
-
-TEST(execve, testWeirdEnvironmentVariable) {
-  char *prog;
-  int pid, ws;
-  if (IsWindows()) return;
-  if (IsOpenbsd()) return;
-  prog = GetProgramExecutableName();
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    execve(prog, (char *const[]){prog, 0},
-           (char *const[]){"_WEIRDENV=1", "WEIRD", 0});
-    _Exit(127);
-  }
-  ASSERT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFEXITED(ws));
-  EXPECT_EQ(0, WEXITSTATUS(ws));
 }

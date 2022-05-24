@@ -51,7 +51,7 @@ o/$(MODE)/third_party/bzip2/bzip2.com.dbg:			\
 		o/$(MODE)/third_party/bzip2/bzip2.o		\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
@@ -59,7 +59,7 @@ o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
 		o/$(MODE)/third_party/bzip2/bzip2recover.o	\
 		o/$(MODE)/third_party/bzip2/bzip2.a.pkg		\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_BZIP2_A_OBJS):					\

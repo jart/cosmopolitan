@@ -118,6 +118,7 @@ i32 __sys_sigprocmask(i32, const sigset *, sigset *, u64) hidden;
 i32 __sys_utimensat(i32, const char *, const struct timespec *, i32) hidden;
 i32 __sys_wait4(i32, i32 *, i32, struct rusage *) hidden;
 i32 sys_clock_gettime(i32, struct timespec *) hidden;
+i32 sys_clock_gettime_xnu(i32, struct timespec *) hidden;
 i32 sys_fstat(i32, struct stat *) hidden;
 i32 sys_fstatat(i32, const char *, struct stat *, i32) hidden;
 i32 sys_futimes(i32, const struct timeval *) hidden;

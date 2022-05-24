@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,24 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/nexgen32e/rdtscp.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
+#include "libc/macros.internal.h"
 
-TEST(nowl, testIsMonotonic) {
-  long double a = nowl();
-  long double b = nowl();
-  EXPECT_TRUE(b > a);
-}
+	.initbss 201,_init___clock_gettime
+__clock_gettime:
+	.quad	0
+	.endobj	__clock_gettime,globl,hidden
+	.previous
 
-BENCH(nowl, bench) {
-  volatile int64_t c;
-  volatile long double x;
-  volatile struct timespec ts;
-  EZBENCH2("rdtsc", donothing, c = rdtsc());
-  EZBENCH2("nowl", donothing, x = nowl());
-  EZBENCH2("clock_gettime", donothing, clock_gettime(CLOCK_MONOTONIC, &ts));
-}
+	.init.start 201,_init___clock_gettime
+	ezlea	__clock_gettime_init,ax
+	stosq
+	.init.end 201,_init___clock_gettime

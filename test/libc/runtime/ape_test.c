@@ -20,6 +20,7 @@
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/io.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"

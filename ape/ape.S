@@ -542,34 +542,37 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	present two choices.
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 //	Try to use a system-wide APE loader.
-	.ascii	"type ape >/dev/null 2>&1 && "
-	.ascii	"exec ape \"$o\" \"$@\"\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] && "
+	.ascii	  "type ape >/dev/null 2>&1 && "
+	.ascii	    "exec ape \"$o\" \"$@\"\n"
 #ifdef APE_LOADER
 //	There is no system-wide APE loader, but there is one
 //	embedded inside the APE. So if the system is not MacOs,
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
-	.ascii	"t=\"${TMPDIR:-/tmp}/ape\"\n"
-	.ascii	"[ -x \"$t\" ] || {\n"
-	.ascii	  "dd if=\"$o\" of=\"$t.$$\" skip=\""
-	.shstub	    ape_loader_dd_skip,2
-	.ascii	    "\" count=\""
-	.shstub	    ape_loader_dd_count,2
-	.ascii	    "\" bs=64 2>/dev/null\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	  "t=\"${TMPDIR:-/tmp}/ape\"\n"
+	.ascii	  "[ -x \"$t\" ] || {\n"
+	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
+	.shstub	      ape_loader_dd_skip,2
+	.ascii	      "\" count=\""
+	.shstub	      ape_loader_dd_count,2
+	.ascii	      "\" bs=64 2>/dev/null\n"
 #if SupportsXnu()
-	.ascii	  "[ -d /Applications ] && "
-	.ascii	    "dd if=\"$t.$$\""
-	.ascii	      " of=\"$t.$$\""
-	.ascii	      " skip=6"
-	.ascii	      " count=10"
-	.ascii	      " bs=64"
-	.ascii	      " conv=notrunc"
-	.ascii	      " 2>/dev/null\n"
+	.ascii	    "[ -d /Applications ] && "
+	.ascii	      "dd if=\"$t.$$\""
+	.ascii	        " of=\"$t.$$\""
+	.ascii	        " skip=6"
+	.ascii	        " count=10"
+	.ascii	        " bs=64"
+	.ascii	        " conv=notrunc"
+	.ascii	        " 2>/dev/null\n"
 #endif /* SupportsXnu() */
-	.ascii	  "chmod 755 \"$t.$$\"\n"
-	.ascii	  "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	    "chmod 755 \"$t.$$\"\n"
+	.ascii	    "mv -f \"$t.$$\" \"$t\"\n"
+	.ascii	  "}\n"
+	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
 	.ascii	"}\n"
-	.ascii	"exec \"$t\" \"$o\" \"$@\"\n"
 #endif /* APE_LOADER */
 #ifndef APE_NO_MODIFY_SELF
 //	The default behavior is: to overwrite the header in place.
@@ -590,11 +593,13 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	since only root is able to set the sticky bit, which can
 //	be addressed simply by overriding the TMPDIR environment
 	.ascii	"t=\"${TMPDIR:-/tmp}/$0\"\n"
-	.ascii	"[ -e \"$t\" ] || {\n"
-	.ascii	  "mkdir -p \"${t%/*}\" 2>/dev/null\n"
-	.ascii	  "cp -f \"$o\" \"$t.$$\" &&\n"
-	.ascii	  "mv -f \"$t.$$\" \"$t\" || exit 120\n"
-	.ascii	  "o=\"$t\"\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
+	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	    "mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	    "cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	    "mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	    "o=\"$t\"\n"
+	.ascii	  "}\n"
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	"exec 7<> \"$o\" || exit 121\n"
 	.ascii	"printf '"
@@ -632,6 +637,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.shstub	    ape_macho_dd_count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
 #endif /* XNU */
+	.ascii	"[ x\"$1\" = x--assimilate ] && exit 0\n"
 #ifndef APE_NO_MODIFY_SELF
 	.ascii	"exec \"$0\" \"$@\"\n"		# try to preserve argv[0]
 #else

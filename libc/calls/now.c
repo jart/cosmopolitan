@@ -20,6 +20,7 @@
 #include "libc/bits/initializer.internal.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/clock_gettime.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -32,10 +33,11 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 
+static clock_gettime_f *__gettime;
+
 static struct Now {
   uint64_t k0;
   long double r0, cpn;
-  typeof(sys_clock_gettime) *clock_gettime;
 } g_now;
 
 static long double GetTimeSample(void) {
@@ -90,7 +92,7 @@ static long double nowl_art(void) {
 static long double nowl_vdso(void) {
   long double secs;
   struct timespec tv;
-  g_now.clock_gettime(CLOCK_REALTIME, &tv);
+  __gettime(CLOCK_REALTIME, &tv);
   secs = tv.tv_nsec;
   secs *= 1 / 1e9L;
   secs += tv.tv_sec;
@@ -98,9 +100,10 @@ static long double nowl_vdso(void) {
 }
 
 long double nowl_setup(void) {
+  bool isfast;
   uint64_t ticks;
-  if (0 && (g_now.clock_gettime = __get_clock_gettime())) {
-    // TODO(jart): Re-enable this.
+  __gettime = __get_clock_gettime(&isfast);
+  if (isfast) {
     nowl = nowl_vdso;
   } else if (X86_HAVE(INVTSC)) {
     RefreshTime();

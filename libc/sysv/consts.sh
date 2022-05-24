@@ -1323,7 +1323,6 @@ syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x800474
 syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
 syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
-syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
 syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
@@ -1508,6 +1507,8 @@ syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
 #	Pseudoteletypewriter Control
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	pty	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
+syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			0			# boop
 syscon	pty	TIOCPKT					0x5420			0x80047470		0x80047470		0x80047470		0x80047470		-1			# boop
 syscon	pty	TIOCPKT_DATA				0			0			0			0			0			0			# consensus
 syscon	pty	TIOCPKT_FLUSHREAD			1			1			1			1			1			1			# unix consensus
@@ -1517,7 +1518,6 @@ syscon	pty	TIOCPKT_START				8			8			8			8			8			8			# unix consensus
 syscon	pty	TIOCPKT_NOSTOP				16			16			16			16			16			16			# unix consensus
 syscon	pty	TIOCPKT_DOSTOP				32			32			32			32			32			32			# unix consensus
 syscon	pty	TIOCPKT_IOCTL				64			64			64			64			64			64			# unix consensus
-syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			-1			# boop
 syscon	pty	PTMGET					0			0			0			0x40287401		0x40287401		-1			# for /dev/ptm
 
 #	Modem Control

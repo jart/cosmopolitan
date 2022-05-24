@@ -157,7 +157,8 @@ static void printelfsectionheader(int i, char *shstrtab) {
 
 static void printelfsectionheaders(void) {
   Elf64_Half i;
-  char *shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
+  char *shstrtab;
+  shstrtab = GetElfSectionNameStringTable(elf, st->st_size);
   if (shstrtab) {
     printf("\n");
     printf("\t.org\t%#x\n", elf->e_shoff);
@@ -341,7 +342,6 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "error: not an elf executable: %'s\n", path);
     exit(1);
   }
-  elf = (Elf64_Ehdr *)getauxval(AT_SYSINFO_EHDR);
   startfile();
   printelfehdr();
   printelfsegmentheaders();
