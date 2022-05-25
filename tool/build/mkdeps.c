@@ -28,6 +28,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -225,7 +226,7 @@ wontreturn void OnMissingFile(const char *list, const char *src) {
    * automatically restart itself.
    */
   if (list) {
-    fprintf(stderr, "%s %s...\n", "Refreshing", list);
+    kprintf("%s %s...\n", "Refreshing", list);
     unlink(list);
   }
   exit(1);
@@ -249,7 +250,9 @@ void LoadRelationships(int argc, char *argv[]) {
   while ((src = getargs_next(&ga))) {
     if (ShouldSkipSource(src)) continue;
     srcid = GetSourceId(src, strlen(src));
-    if ((fd = open(src, O_RDONLY)) == -1) OnMissingFile(ga.path, src);
+    if ((fd = open(src, O_RDONLY)) == -1) {
+      OnMissingFile(ga.path, src);
+    }
     CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
     close(fd);
     size = rc;
@@ -282,13 +285,13 @@ void GetOpts(int argc, char *argv[]) {
         buildroot = optarg;
         break;
       default:
-        fprintf(stderr, "%s: %s [-r %s] [-o %s] [%s...]\n", "Usage", argv[0],
+        kprintf("%s: %s [-r %s] [-o %s] [%s...]\n", "Usage", argv[0],
                 "BUILDROOT", "OUTPUT", "PATHSFILE");
         exit(1);
     }
   }
-  if (isempty(out)) fprintf(stderr, "need -o FILE"), exit(1);
-  if (isempty(buildroot)) fprintf(stderr, "need -r o/$(MODE)"), exit(1);
+  if (isempty(out)) kprintf("need -o FILE"), exit(1);
+  if (isempty(buildroot)) kprintf("need -r o/$(MODE)"), exit(1);
 }
 
 const char *StripExt(const char *s) {
@@ -352,7 +355,7 @@ bool HasSameContent(void) {
   s = GetFileSizeOrZero(out);
   if (s == appendz(bout).i) {
     if (s) {
-      CHECK_NE(-1, (fd = open(out, O_RDONLY)));
+      CHECK_NE(-1, (fd = open(out, O_RDONLY)), "open(%#s)", out);
       CHECK_NE(MAP_FAILED, (m = mmap(0, s, PROT_READ, MAP_SHARED, fd, 0)));
       r = !bcmp(bout, m, s);
       munmap(m, s);
@@ -394,7 +397,7 @@ int main(int argc, char *argv[]) {
     appendw(&bout, '\n');
   }
   /* if (!fileexists(out) || !HasSameContent()) { */
-  CHECK_NE(-1, (fd = open(out, O_CREAT | O_WRONLY, 0644)));
+  CHECK_NE(-1, (fd = open(out, O_CREAT | O_WRONLY, 0644)), "open(%#s)", out);
   CHECK_NE(-1, ftruncate(fd, appendz(bout).i));
   CHECK_NE(-1, xwrite(fd, bout, appendz(bout).i));
   CHECK_NE(-1, close(fd));

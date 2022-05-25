@@ -73,6 +73,7 @@ char *xdirname(const char *) paramsnonnull() _XMAL;
 char *xjoinpaths(const char *, const char *) paramsnonnull() _XMAL;
 char *xreadlink(const char *) paramsnonnull() _XMAL;
 char *xreadlinkat(int, const char *) paramsnonnull() _XMAL;
+void xfixpath(void);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § eXtended apis » time                                      ─╬─│┼

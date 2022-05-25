@@ -58,10 +58,9 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
         p = (char16_t *)((char *)rdb->SymbolicLinkReparseBuffer.PathBuffer +
                          rdb->SymbolicLinkReparseBuffer.PrintNameOffset);
         if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
-          buf[j++] = '/';
-          buf[j++] = '/';
-          buf[j++] = '?';
-          buf[j++] = '/';
+          p[1] = p[0];
+          p[0] = '/';
+          p[2] = '/';
         }
         while (i < n) {
           x = p[i++] & 0xffff;

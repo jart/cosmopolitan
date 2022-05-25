@@ -38,7 +38,7 @@ o/$(MODE)/test/net/https/%.com.dbg:				\
 		o/$(MODE)/test/net/https/%.o			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/net/https

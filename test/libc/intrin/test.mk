@@ -54,7 +54,7 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		o/$(MODE)/test/libc/intrin/intrin.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_INTRIN_OBJS):				\

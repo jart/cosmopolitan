@@ -278,6 +278,11 @@ TEST(fmt, p) {
                gc(xasprintf("% 10p", 0xffff800000031337)));
 }
 
+TEST(fmt, quoted) {
+  ASSERT_STREQ("   \"hello\"", gc(xasprintf("%`*.*s", 10, 5, "hello")));
+  ASSERT_STREQ("\"hello\"   ", gc(xasprintf("%-`*.*s", 10, 5, "hello")));
+}
+
 TEST(fmt, regress) {
   char buf[512];
   const char *meth = "GET";

@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.internal.h"
+#include "libc/bits/bits.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
@@ -31,15 +33,85 @@
 
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-static int CompareStrings(const char *l, const char *r) {
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+static inline char *StrChr(char *s, int c) {
+  for (;; ++s) {
+    if ((*s & 255) == (c & 255)) return s;
+    if (!*s) return 0;
+  }
+}
+
+static textwindows inline int CompareStrings(const char *l, const char *r) {
   int a, b;
   size_t i = 0;
   while ((a = ToUpper(l[i] & 255)) == (b = ToUpper(r[i] & 255)) && r[i]) ++i;
   return a - b;
 }
 
-static void InsertString(char **a, size_t i, char *s) {
-  size_t j;
+static textwindows void FixPath(char *path) {
+  char *p;
+  size_t i;
+
+  // skip over variable name
+  while (*path++) {
+    if (path[-1] == '=') {
+      break;
+    }
+  }
+
+  // turn colon into semicolon
+  // unless it already looks like a dos path
+  for (p = path; *p; ++p) {
+    if (p[0] == ':' && p[1] != '\\') {
+      p[0] = ';';
+    }
+  }
+
+  // turn \c\... into c:\...
+  p = path;
+  if (p[0] == '/' && IsAlpha(p[1]) && p[2] == '/') {
+    p[0] = p[1];
+    p[1] = ':';
+  }
+  for (; *p; ++p) {
+    if (p[0] == ';' && p[1] == '/' && IsAlpha(p[2]) && p[3] == '/') {
+      p[1] = p[2];
+      p[2] = ':';
+    }
+  }
+
+  // turn slash into backslash
+  for (p = path; *p; ++p) {
+    if (*p == '/') {
+      *p = '\\';
+    }
+  }
+}
+
+static textwindows void InsertString(char **a, size_t i, char *s,
+                                     char buf[ARG_MAX], size_t *bufi) {
+  char *v;
+  size_t j, k;
+
+  // apply fixups to var=/c/...
+  if ((v = StrChr(s, '=')) && v[1] == '/' && IsAlpha(v[2]) && v[3] == '/') {
+    v = buf + *bufi;
+    for (k = 0; s[k]; ++k) {
+      if (*bufi + 1 < ARG_MAX) {
+        buf[(*bufi)++] = s[k];
+      }
+    }
+    if (*bufi < ARG_MAX) {
+      buf[(*bufi)++] = 0;
+      FixPath(v);
+      s = v;
+    }
+  }
+
+  // append to sorted list
   for (j = i; j > 0 && CompareStrings(s, a[j - 1]) < 0; --j) {
     a[j] = a[j - 1];
   }
@@ -58,18 +130,18 @@ static void InsertString(char **a, size_t i, char *s) {
  * @error E2BIG if total number of shorts exceeded ARG_MAX/2 (32767)
  */
 textwindows int mkntenvblock(char16_t envvars[ARG_MAX / 2], char *const envp[],
-                             const char *extravar) {
+                             const char *extravar, char buf[ARG_MAX]) {
   bool v;
   char *t;
   axdx_t rc;
   uint64_t w;
   char **vars;
   wint_t x, y;
-  size_t i, j, k, n, m;
+  size_t i, j, k, n, m, bufi = 0;
   for (n = 0; envp[n];) n++;
   vars = alloca((n + 1) * sizeof(char *));
-  for (i = 0; i < n; ++i) InsertString(vars, i, envp[i]);
-  if (extravar) InsertString(vars, n++, extravar);
+  for (i = 0; i < n; ++i) InsertString(vars, i, envp[i], buf, &bufi);
+  if (extravar) InsertString(vars, n++, extravar, buf, &bufi);
   for (k = i = 0; i < n; ++i) {
     j = 0;
     v = false;

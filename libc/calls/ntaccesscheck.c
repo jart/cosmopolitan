@@ -94,15 +94,15 @@ TryAgain:
           }
         } else {
           rc = __winerr();
-          STRACE("%s failed: %m", "AccessCheck");
+          STRACE("%s(%#hs) failed: %m", "AccessCheck", pathname);
         }
       } else {
         rc = __winerr();
-        STRACE("%s failed: %m", "DuplicateToken");
+        STRACE("%s(%#hs) failed: %m", "DuplicateToken", pathname);
       }
     } else {
       rc = __winerr();
-      STRACE("%s failed: %m", "OpenProcessToken");
+      STRACE("%s(%#hs) failed: %m", "OpenProcessToken", pathname);
     }
   } else {
     e = GetLastError();
@@ -112,9 +112,11 @@ TryAgain:
         goto TryAgain;
       } else {
         rc = enomem();
+        STRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
       }
     } else {
       errno = e;
+      STRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
       rc = -1;
     }
   }

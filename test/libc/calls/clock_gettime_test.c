@@ -35,7 +35,7 @@ TEST(clock_gettime, test) {
   ASSERT_NE(0, ts.tv_sec);
   ASSERT_NE(0, ts.tv_nsec);
   if (__is_linux_2_6_23()) {
-    ASSERT_GT((intptr_t)__get_clock_gettime(&isfast),
+    ASSERT_GT((intptr_t)__clock_gettime_get(&isfast),
               getauxval(AT_SYSINFO_EHDR));
     ASSERT_TRUE(isfast);
   }

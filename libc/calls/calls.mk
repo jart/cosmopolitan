@@ -112,6 +112,7 @@ o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/execve-sysv.o			\
+o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/mkntenvblock.o:			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED

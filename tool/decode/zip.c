@@ -57,7 +57,6 @@ dontdiscard char *FormatDosTime(uint16_t dostime) {
 }
 
 void AdvancePosition(uint8_t *map, size_t *pos, size_t off) {
-  CHECK_GE(off, *pos);
   if (off > *pos) {
     printf("\n/\t<%s>\n", "LIMBO");
     disassemblehex(&map[*pos], off - *pos, stdout);

@@ -32,14 +32,21 @@ textwindows char *sys_getcwd_nt(char *buf, size_t size) {
   if ((n = GetCurrentDirectory(ARRAYLEN(p), p))) {
     if (4 + n + 1 <= size && 4 + n + 1 <= ARRAYLEN(p)) {
       tprecode16to8(buf, size, p);
+      i = 0;
       j = 0;
       if (n >= 3 && isalpha(p[0]) && p[1] == ':' && p[2] == '\\') {
+        // turn c:\... into \c\...
+        p[1] = p[0];
+        p[0] = '\\';
+      } else if (n >= 7 && p[0] == '\\' && p[1] == '\\' && p[2] == '?' &&
+                 p[3] == '\\' && isalpha(p[4]) && p[5] == ':' && p[6] == '\\') {
+        // turn \\?\c:\... into \c\...
         buf[j++] = '/';
+        buf[j++] = p[4];
         buf[j++] = '/';
-        buf[j++] = '?';
-        buf[j++] = '/';
+        i += 7;
       }
-      for (i = 0; i < n;) {
+      while (i < n) {
         x = p[i++] & 0xffff;
         if (!IsUcs2(x)) {
           if (i < n) {

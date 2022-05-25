@@ -50,15 +50,42 @@ ARFLAGS = rcsD
 ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000
 DOT ?= dot
-GZ ?= gzip
 CLANG = clang
 FC = gfortran  #/opt/cross9f/bin/x86_64-linux-musl-gfortran
+TMPDIR = o/tmp
 
-# see build/compile, etc. which run third_party/gcc/unbundle.sh
 AR = build/bootstrap/ar.com
+CP = build/bootstrap/cp.com
+RM = build/bootstrap/rm.com -f
+ECHO = build/bootstrap/echo.com
+TOUCH = build/bootstrap/touch.com
 PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com
 ZIPOBJ = build/bootstrap/zipobj.com
+MKDIR = build/bootstrap/mkdir.com -p
+COMPILE = build/bootstrap/compile.com -V9 $(QUOTA)
+
+COMMA := ,
+PWD := $(shell build/bootstrap/pwd.com)
+IMAGE_BASE_VIRTUAL ?= 0x400000
+
+IGNORE := $(shell $(ECHO) -2 ♥cosmo)
+IGNORE := $(shell $(MKDIR) o/tmp)
+
+ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-as.exe)","")
+AS = o/third_party/gcc/bin/x86_64-pc-linux-gnu-as.exe
+CC = o/third_party/gcc/bin/x86_64-pc-linux-gnu-gcc.exe
+CXX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-g++.exe
+CXXFILT = o/third_party/gcc/bin/x86_64-pc-linux-gnu-c++filt.exe
+LD = o/third_party/gcc/bin/x86_64-pc-linux-gnu-ld.bfd.exe
+NM = o/third_party/gcc/bin/x86_64-pc-linux-gnu-nm.exe
+GCC = o/third_party/gcc/bin/x86_64-pc-linux-gnu-gcc.exe
+STRIP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-strip.exe
+OBJCOPY = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objcopy.exe
+OBJDUMP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objdump.exe
+ADDR2LINE = $(shell build/bootstrap/pwd.com)/o/third_party/gcc/bin/x86_64-pc-linux-gnu-addr2line.exe
+else
+IGNORE := $(shell build/bootstrap/unbundle.com)
 AS = o/third_party/gcc/bin/x86_64-linux-musl-as
 CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
@@ -69,18 +96,12 @@ GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
 OBJCOPY = o/third_party/gcc/bin/x86_64-linux-musl-objcopy
 OBJDUMP = o/third_party/gcc/bin/x86_64-linux-musl-objdump
-ADDR2LINE = $(shell pwd)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
-
-COMMA := ,
-PWD := $(shell pwd)
-IMAGE_BASE_VIRTUAL ?= 0x400000
-HELLO := $(shell build/hello)
-TMPDIR := $(shell build/findtmp)
-SPAWNER := $(shell build/getcompile) -V$(shell build/getccversion $(CC))
-COMPILE = $(SPAWNER) $(HARNESSFLAGS) $(QUOTA)
+ADDR2LINE = $(shell build/bootstrap/pwd.com)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
+endif
 
 export ADDR2LINE
 export LC_ALL
+export MKDIR
 export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
@@ -115,7 +136,7 @@ TRADITIONAL =								\
 DEFAULT_CCFLAGS =							\
 	-Wall								\
 	-Werror								\
-	-fdebug-prefix-map="$(PWD)"=					\
+	-fdebug-prefix-map='$(PWD)'=					\
 	-frecord-gcc-switches
 
 DEFAULT_OFLAGS =							\
@@ -180,7 +201,7 @@ PYFLAGS =								\
 ASONLYFLAGS =								\
 	-c								\
 	-g								\
-	--debug-prefix-map="$(PWD)"=
+	--debug-prefix-map='$(PWD)'=
 
 DEFAULT_LDLIBS =
 

@@ -7,7 +7,8 @@
 COSMOPOLITAN_C_START_
 
 int mkntcmdline(char16_t[ARG_MAX / 2], const char *, char *const[]) hidden;
-int mkntenvblock(char16_t[ARG_MAX / 2], char *const[], const char *) hidden;
+int mkntenvblock(char16_t[ARG_MAX / 2], char *const[], const char *,
+                 char[ARG_MAX]) hidden;
 int ntspawn(const char *, char *const[], char *const[], const char *,
             struct NtSecurityAttributes *, struct NtSecurityAttributes *,
             bool32, uint32_t, const char16_t *, const struct NtStartupInfo *,

@@ -102,7 +102,7 @@ static long double nowl_vdso(void) {
 long double nowl_setup(void) {
   bool isfast;
   uint64_t ticks;
-  __gettime = __get_clock_gettime(&isfast);
+  __gettime = __clock_gettime_get(&isfast);
   if (isfast) {
     nowl = nowl_vdso;
   } else if (X86_HAVE(INVTSC)) {

@@ -31,6 +31,10 @@ static inline bool IsSlash(char c) {
   return c == '/' || c == '\\';
 }
 
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
 textwindows static const char *FixNtMagicPath(const char *path,
                                               unsigned flags) {
   const struct NtMagicPaths *mp = &kNtMagicPaths;
@@ -78,18 +82,51 @@ textwindows int __mkntpath2(const char *path,
    */
   char16_t *p;
   const char *q;
-  size_t i, n, m, z;
+  bool isdospath;
+  size_t i, n, m, x, z;
   if (!path) return efault();
   path = FixNtMagicPath(path, flags);
   p = path16;
   q = path;
-  if (IsSlash(path[0]) && IsSlash(path[1]) && path[2] == '?' &&
-      IsSlash(path[3])) {
+
+  if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
     z = MIN(32767, PATH_MAX);
+    // turn "\c\foo" into "\\?\c:\foo"
+    p[0] = '\\';
+    p[1] = '\\';
+    p[2] = '?';
+    p[3] = '\\';
+    p[4] = q[1];
+    p[5] = ':';
+    p[6] = '\\';
+    p += 7;
+    q += 3;
+    z -= 7;
+    x = 7;
+  } else if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
+    z = MIN(32767, PATH_MAX);
+    // turn "c:\foo" into "\\?\c:\foo"
+    p[0] = '\\';
+    p[1] = '\\';
+    p[2] = '?';
+    p[3] = '\\';
+    p[4] = q[0];
+    p[5] = ':';
+    p[6] = '\\';
+    p += 7;
+    q += 3;
+    z -= 7;
+    x = 7;
+  } else if (IsSlash(q[0]) && IsSlash(q[1]) && q[2] == '?' && IsSlash(q[3])) {
+    z = MIN(32767, PATH_MAX);
+    x = 0;
   } else {
     z = MIN(260, PATH_MAX);
+    x = 0;
   }
-  if (IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
+
+  // turn /tmp into GetTempPath()
+  if (!x && IsSlash(q[0]) && q[1] == 't' && q[2] == 'm' && q[3] == 'p' &&
       (IsSlash(q[4]) || !q[4])) {
     m = GetTempPath(z, p);
     if (!q[4]) return m;
@@ -99,15 +136,20 @@ textwindows int __mkntpath2(const char *path,
   } else {
     m = 0;
   }
+
+  // turn utf-8 into utf-16
   n = tprecode8to16(p, z, q).ax;
   if (n >= z - 1) {
     STRACE("path too long for windows: %#s", path);
     return enametoolong();
   }
+
+  // turn slash into backslash
   for (i = 0; i < n; ++i) {
     if (p[i] == '/') {
       p[i] = '\\';
     }
   }
-  return m + n;
+
+  return x + m + n;
 }

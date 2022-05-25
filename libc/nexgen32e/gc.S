@@ -22,6 +22,8 @@
 
 #define INITIAL_CAPACITY 4
 
+	nop
+
 //	Invokes deferred function calls.
 //
 //	This offers behavior similar to std::unique_ptr. Functions
@@ -32,8 +34,6 @@
 //
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
-	nop	# backtrace workaround
-//	<LIMBO>
 __gc:	decq	__garbage(%rip)
 	mov	__garbage(%rip),%r8
 	mov	__garbage+16(%rip),%r9
@@ -43,17 +43,16 @@ __gc:	decq	__garbage(%rip)
 	mov	8(%r8),%r9
 	mov	16(%r8),%rdi
 	push	24(%r8)
-//	</LIMBO>
 	push	%rbp
 	mov	%rsp,%rbp
-	sub	$16,%rsp
-	push	%rax
-	push	%rdx
-	movdqa	%xmm0,-16(%rbp)
+	sub	$32,%rsp
+	mov	%rax,-8(%rbp)
+	mov	%rdx,-16(%rbp)
+	movdqa	%xmm0,-32(%rbp)
 	call	*%r9
-	movdqa	-16(%rbp),%xmm0
-	pop	%rdx
-	pop	%rax
+	movdqa	-32(%rbp),%xmm0
+	mov	-16(%rbp),%rdx
+	mov	-8(%rbp),%rax
 	leave
 	ret
 9:	hlt

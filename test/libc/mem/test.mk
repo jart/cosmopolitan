@@ -58,7 +58,7 @@ o/$(MODE)/test/libc/mem/%.com.dbg:				\
 		o/$(MODE)/test/libc/mem/mem.pkg			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_MEM_OBJS):						\

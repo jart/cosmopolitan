@@ -61,7 +61,7 @@ o/$(MODE)/test/libc/calls/%.com.dbg:			\
 		o/$(MODE)/test/libc/calls/calls.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/libc/calls

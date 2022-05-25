@@ -26,6 +26,7 @@
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
@@ -40,113 +41,28 @@
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 
-int StackOverflow(int f(), int n) {
-  if (n < INT_MAX) {
-    return f(f, n + 1) - 1;
-  } else {
-    return INT_MAX;
-  }
+STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("backtrace.com");
+STATIC_YOINK("backtrace.com.dbg");
+
+char testlib_enable_tmp_setup_teardown_once;
+
+void Extract(const char *from, const char *to, int mode) {
+  ASSERT_SYS(0, 3, open(from, O_RDONLY));
+  ASSERT_SYS(0, 4, creat(to, mode));
+  ASSERT_NE(-1, _copyfd(3, 4, -1));
+  EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+void SetUpOnce(void) {
+  ASSERT_NE(-1, mkdir("bin", 0755));
+  Extract("/zip/backtrace.com", "bin/backtrace.com", 0755);
+  Extract("/zip/backtrace.com.dbg", "bin/backtrace.com.dbg", 0755);
 }
 
 static bool OutputHasSymbol(const char *output, const char *s) {
   return strstr(output, s) || (!FindDebugBinary() && strstr(output, "NULL"));
-}
-
-void FpuCrash(void) {
-  typedef char xmm_t __attribute__((__vector_size__(16)));
-  xmm_t v = {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
-             0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf};
-  volatile int x = 0;
-  asm volatile("fldpi");
-  asm volatile("mov\t%0,%%r15" : /* no outputs */ : "g"(0x3133731337));
-  asm volatile("movaps\t%0,%%xmm15" : /* no outputs */ : "x"(v));
-  fputc(7 / x, stdout);
-}
-
-char bss[10];
-void BssOverrunCrash(int n) {
-  int i;
-  for (i = 0; i < n; ++i) {
-    bss[i] = i;
-  }
-}
-
-char data[10] = "abcdeabcde";
-void DataOverrunCrash(int n) {
-  int i;
-  for (i = 0; i < n; ++i) {
-    data[i] = i;
-  }
-}
-
-const char rodata[10] = "abcdeabcde";
-int RodataOverrunCrash(int i) {
-  return rodata[i];
-}
-
-char *StackOverrunCrash(int n) {
-  int i;
-  char stack[10];
-  bzero(stack, sizeof(stack));
-  for (i = 0; i < n; ++i) {
-    stack[i] = i;
-  }
-  return strdup(stack);
-}
-
-char *MemoryLeakCrash(void) {
-  char *p = strdup("doge");
-  CheckForMemoryLeaks();
-  return p;
-}
-
-int NpeCrash(char *p) {
-  asm("nop");  // xxx: due to backtrace addr-1 thing
-  return *p;
-}
-
-void (*pFpuCrash)(void) = FpuCrash;
-void (*pBssOverrunCrash)(int) = BssOverrunCrash;
-void (*pDataOverrunCrash)(int) = DataOverrunCrash;
-int (*pRodataOverrunCrash)(int) = RodataOverrunCrash;
-char *(*pStackOverrunCrash)(int) = StackOverrunCrash;
-char *(*pMemoryLeakCrash)(void) = MemoryLeakCrash;
-int (*pNpeCrash)(char *) = NpeCrash;
-int (*pStackOverflow)(int (*)(), int) = StackOverflow;
-
-void SetUp(void) {
-  ShowCrashReports();
-  if (__argc == 2) {
-    switch (atoi(__argv[1])) {
-      case 0:
-        break;
-      case 1:
-        pFpuCrash();
-        exit(0);
-      case 2:
-        pBssOverrunCrash(10 + 1);
-        exit(0);
-      case 3:
-        exit(pRodataOverrunCrash(10 + 1));
-      case 4:
-        pDataOverrunCrash(10 + 1);
-        exit(0);
-      case 5:
-        exit((intptr_t)pStackOverrunCrash(10 + 1));
-      case 6:
-        exit((intptr_t)pMemoryLeakCrash());
-      case 7:
-        exit(pNpeCrash(0));
-      case 8:
-        __cxa_finalize(0);
-        exit(pNpeCrash(0));
-      case 9:
-        exit(pStackOverflow(pStackOverflow, 0));
-      default:
-        printf("preventing fork recursion: %s\n", __argv[1]);
-        exit(1);
-    }
-  }
 }
 
 // UNFREED MEMORY
@@ -189,9 +105,8 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "6", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "6", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -267,9 +182,8 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "5", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "5", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -376,9 +290,8 @@ TEST(ShowCrashReports, testDivideByZero) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "1", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "1", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -454,9 +367,8 @@ TEST(ShowCrashReports, testStackOverflow) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "9", "--strace", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "9", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -571,9 +483,8 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "2", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "2", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -650,9 +561,8 @@ TEST(ShowCrashReports, testNpeCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "7", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "7", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -710,9 +620,8 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "4", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "4", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;
@@ -765,9 +674,8 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   if (!pid) {
     dup2(fds[1], 1);
     dup2(fds[1], 2);
-    execv(GetProgramExecutableName(),
-          (char *const[]){GetProgramExecutableName(), "8", 0});
-    _exit(127);
+    execv("bin/backtrace.com", (char *const[]){"bin/backtrace.com", "8", 0});
+    _Exit(127);
   }
   close(fds[1]);
   output = 0;

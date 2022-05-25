@@ -3,6 +3,12 @@
 
 PKGS += EXAMPLES
 
+ifeq ($(MODE),tiny)
+EXAMPLES_BOOTLOADER = $(CRT) $(APE)
+else
+EXAMPLES_BOOTLOADER = $(CRT) $(APE_NO_MODIFY_SELF)
+endif
+
 EXAMPLES_FILES := $(wildcard examples/*)
 EXAMPLES_MAINS_S = $(filter %.S,$(EXAMPLES_FILES))
 EXAMPLES_MAINS_C = $(filter %.c,$(EXAMPLES_FILES))
@@ -100,8 +106,7 @@ o/$(MODE)/examples/%.com.dbg:							\
 		$(EXAMPLES_DEPS)						\
 		o/$(MODE)/examples/%.o						\
 		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE)
+		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
 o/$(MODE)/examples/nomodifyself.com.dbg:					\
@@ -112,21 +117,12 @@ o/$(MODE)/examples/nomodifyself.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/examples/greenbean.com.dbg:						\
-		$(EXAMPLES_DEPS)						\
-		o/$(MODE)/examples/greenbean.o					\
-		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 o/$(MODE)/examples/hellolua.com.dbg:						\
 		$(EXAMPLES_DEPS)						\
 		o/$(MODE)/examples/hellolua.o					\
 		o/$(MODE)/examples/hellolua.lua.zip.o				\
 		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE)
+		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
 o/$(MODE)/examples/ispell.com.dbg:						\
@@ -134,8 +130,7 @@ o/$(MODE)/examples/ispell.com.dbg:						\
 		o/$(MODE)/examples/ispell.o					\
 		o/$(MODE)/usr/share/dict/words.zip.o				\
 		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE)
+		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
 o/$(MODE)/examples/nesemu1.com.dbg:						\
@@ -145,8 +140,7 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 		o/$(MODE)/usr/share/rom/zelda.nes.zip.o				\
 		o/$(MODE)/usr/share/rom/tetris.nes.zip.o			\
 		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE)
+		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
 o/$(MODE)/examples/nesemu1.com:							\
@@ -160,12 +154,15 @@ o/$(MODE)/examples/nesemu1.com:							\
 		o/$(MODE)/examples/.nesemu1/.symtab
 
 o/$(MODE)/examples/nesemu1.o: QUOTA += -M512m
+o/$(MODE)/usr/share/dict/words.zip.o: ZIPOBJ_FLAGS += -C2
 
 $(EXAMPLES_OBJS): examples/examples.mk
 
-usr/share/dict/words: usr/share/dict/words.gz
-	@mkdir -p $(@D)
-	@$(GZ) $(ZFLAGS) -d <$< >$@
+o/$(MODE)/usr/share/dict/words:							\
+		usr/share/dict/words.gz						\
+		o/$(MODE)/tool/build/gzip.com
+	@$(MKDIR) $(@D)
+	@o/$(MODE)/tool/build/gzip.com $(ZFLAGS) -cd <$< >$@
 
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:								\

@@ -6735,31 +6735,24 @@ static int HandleConnection(size_t i) {
   return rc;
 }
 
-static void RestoreApe(void) {
+static void MakeExecutableModifiable(void) {
   int ft;
-  char *p;
   size_t n;
-  struct Asset *a;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
   if (!(SUPPORT_VECTOR & (METAL | WINDOWS | XNU))) return;
   if (IsWindows()) return;  // TODO
   if (IsOpenbsd()) return;  // TODO
   if (IsNetbsd()) return;   // TODO
   if (endswith(zpath, ".com.dbg")) return;
-  if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
-    close(zfd);
-    ft = __ftrace;
-    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1) {
-      WARNF("(srvr) can't restore .ape");
-    }
-    if (ft > 0) {
-      __ftrace = 0;
-      ftrace_install();
-      __ftrace = ft;
-    }
-    free(p);
-  } else {
-    DEBUGF("(srvr) /.ape not found");
+  close(zfd);
+  ft = __ftrace;
+  if ((zfd = OpenExecutable()) == -1) {
+    WARNF("(srvr) can't restore .ape");
+  }
+  if (ft > 0) {
+    __ftrace = 0;
+    ftrace_install();
+    __ftrace = ft;
   }
 }
 
@@ -7209,7 +7202,7 @@ void RedBean(int argc, char *argv[]) {
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
-  RestoreApe();
+  MakeExecutableModifiable();
   SetDefaults();
   LuaStart();
   GetOpts(argc, argv);

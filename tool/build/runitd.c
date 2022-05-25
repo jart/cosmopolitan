@@ -305,6 +305,7 @@ void Recv(void *output, size_t outputsize) {
     // pass along eof condition to zlib
     INFOF("mbedtls_ssl_read");
     received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
+    if (!received) TlsDie("got unexpected eof", received);
     if (received < 0) TlsDie("read failed", received);
     // decompress packet completely
     // into a dynamical size buffer

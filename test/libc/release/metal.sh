@@ -10,7 +10,7 @@ if [ "$MODE" = opt ] || [ "$MODE" = optlinux ]; then
   exit
 fi
 
-mkdir -p o/$MODE/test/libc/release/
+$MKDIR o/$MODE/test/libc/release/
 
 # smoke test booting on bare metal and printing data to serial uart
 CMD="o/$MODE/tool/build/blinkenlights.com.dbg -r o/$MODE/examples/hello.com"

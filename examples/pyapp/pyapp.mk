@@ -95,7 +95,7 @@ o/$(MODE)/examples/pyapp/pyapp.com.dbg: \
 		o/$(MODE)/examples/pyapp/pyapp.pkg \
 		o/$(MODE)/examples/pyapp/pyapp.o \
 		$(CRT) \
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	$(LINK) $(LINKARGS) -o $@
 
 # # Unwrap the APE .COM binary, that's embedded within the linked file

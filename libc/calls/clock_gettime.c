@@ -76,7 +76,7 @@ noinstrument int clock_gettime(int clockid, struct timespec *ts) {
 /**
  * Returns pointer to fastest clock_gettime().
  */
-clock_gettime_f *__get_clock_gettime(bool *opt_out_isfast) {
+clock_gettime_f *__clock_gettime_get(bool *opt_out_isfast) {
   bool isfast;
   clock_gettime_f *res;
   if (IsLinux() && (res = __vdsosym("LINUX_2.6", "__vdso_clock_gettime"))) {
@@ -99,6 +99,6 @@ clock_gettime_f *__get_clock_gettime(bool *opt_out_isfast) {
 
 hidden int __clock_gettime_init(int clockid, struct timespec *ts) {
   clock_gettime_f *gettime;
-  __clock_gettime = gettime = __get_clock_gettime(0);
+  __clock_gettime = gettime = __clock_gettime_get(0);
   return gettime(clockid, ts);
 }

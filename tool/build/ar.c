@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.internal.h"
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
@@ -26,12 +27,16 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
+#include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -53,6 +58,8 @@
  * This tool also adds a feature: it ignores directory parameters. This
  * is important because good Makefiles on Linux will generally have the
  * directory be a .a prerequisite so archives rebuild on file deletion.
+ *
+ * @see https://www.unix.com/man-page/opensolaris/3head/ar.h/
  */
 
 struct Args {
@@ -80,29 +87,68 @@ struct Header {
   char fmag[2];
 };
 
+static void *Realloc(void *p, size_t n) {
+  void *q;
+  if (!(q = realloc(p, n))) {
+    fputs("error: ar: out of memory\n", stderr);
+    exit(1);
+  }
+  return q;
+}
+
+static void *Malloc(size_t n) {
+  return Realloc(0, n);
+}
+
+static void NewArgs(struct Args *l, size_t n) {
+  l->i = 0;
+  l->n = MAX(2, n);
+  l->p = Malloc(l->n * sizeof(*l->p));
+  l->p[0] = 0;
+}
+
 static void NewInts(struct Ints *l, size_t n) {
   l->i = 0;
-  l->n = n;
-  l->p = xmalloc(n * sizeof(int));
+  l->n = MAX(2, n);
+  l->p = Malloc(l->n * sizeof(*l->p));
+  l->p[0] = 0;
 }
 
 static void NewString(struct String *s, size_t n) {
   s->i = 0;
-  s->n = n;
-  s->p = xmalloc(n);
+  s->n = MAX(2, n);
+  s->p = Malloc(s->n * sizeof(*s->p));
+  s->p[0] = 0;
 }
 
 static void AppendInt(struct Ints *l, int i) {
-  APPEND(&l->p, &l->i, &l->n, &i);
+  assert(l->n > 1);
+  if (l->i + 1 >= l->n) {
+    do {
+      l->n += l->n >> 1;
+    } while (l->i + 1 >= l->n);
+    l->p = Realloc(l->p, l->n * sizeof(*l->p));
+  }
+  l->p[l->i++] = i;
+  l->p[l->i] = 0;
 }
 
 static void AppendArg(struct Args *l, char *s) {
-  APPEND(&l->p, &l->i, &l->n, &s);
+  assert(l->n > 1);
+  if (l->i + 1 >= l->n) {
+    do {
+      l->n += l->n >> 1;
+    } while (l->i + 1 >= l->n);
+    l->p = Realloc(l->p, l->n * sizeof(*l->p));
+  }
+  l->p[l->i++] = s;
+  l->p[l->i] = 0;
 }
 
 static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
                        int size) {
   size_t n;
+  char ibuf[13], *p;
   memset(h, ' ', sizeof(*h));
   n = strlen(name);
   memcpy(h->name, name, n);
@@ -113,11 +159,15 @@ static void MakeHeader(struct Header *h, const char *name, int ref, int mode,
     h->date[0] = '0';
     h->uid[0] = '0';
     h->gid[0] = '0';
-    FormatOctal32(h->mode, mode & 0777, false);
+    p = FormatOctal32(ibuf, mode & 0777, false);
+    CHECK_LE(p - ibuf, sizeof(h->mode));
+    memcpy(h->mode, ibuf, p - ibuf);
   }
   h->fmag[0] = '`';
   h->fmag[1] = '\n';
-  FormatUint32(h->size, size);
+  p = FormatUint32(ibuf, size);
+  CHECK_LE(p - ibuf, sizeof(h->size));
+  memcpy(h->size, ibuf, p - ibuf);
 }
 
 int main(int argc, char *argv[]) {
@@ -151,15 +201,24 @@ int main(int argc, char *argv[]) {
   struct Header *header1, *header2;
   int i, j, fd, err, name, outfd, tablebufsize;
 
-  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
+  // TODO(jart): Delete this.
+  if (argc == 2 && !strcmp(argv[1], "-n")) {
+    exit(0);
+  }
+
+  // we only support one mode of operation, which is creating a new
+  // deterministic archive. this tool is so fast that we don't need
+  // database-like tools when editing static archives
   if (!(argc > 2 && strcmp(argv[1], "rcsD") == 0)) {
-    fprintf(stderr, "%s%s%s\n", "Usage: ", argv[0], " rcsD ARCHIVE FILE...");
-    return 1;
+    fputs("usage: ", stderr);
+    if (argc > 0) fputs(argv[0], stderr);
+    fputs(" rcsD ARCHIVE FILE...", stderr);
+    exit(EX_USAGE);
   }
 
   outpath = argv[2];
-  bzero(&args, sizeof(args));
-  st = xmalloc(sizeof(struct stat));
+  NewArgs(&args, 4);
+  st = Malloc(sizeof(struct stat));
   NewInts(&modes, 128);
   NewInts(&names, 128);
   NewInts(&sizes, 128);
@@ -206,10 +265,10 @@ int main(int argc, char *argv[]) {
   // compute length of output archive
   outsize = 0;
   tablebufsize = 4 + symnames.i * 4;
-  tablebuf = xmalloc(tablebufsize);
-  offsets = xmalloc(args.i * 4);
-  header1 = xmalloc(sizeof(struct Header));
-  header2 = xmalloc(sizeof(struct Header));
+  tablebuf = Malloc(tablebufsize);
+  offsets = Malloc(args.i * 4);
+  header1 = Malloc(sizeof(struct Header));
+  header2 = Malloc(sizeof(struct Header));
   iov[0].iov_base = "!<arch>\n";
   outsize += (iov[0].iov_len = 8);
   iov[1].iov_base = header1;

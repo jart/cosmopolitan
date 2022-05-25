@@ -64,15 +64,19 @@ that, you can use the following flag to turn your binary into the
 platform local format (ELF or Mach-O):
 
 ```sh
+$ file hello.com
+hello.com: DOS/MBR boot sector
 ./hello.com --assimilate
+$ file hello.com
+hello.com: ELF 64-bit LSB executable
 ```
 
 There's also some other useful flags that get baked into your binary by
 default:
 
 ```sh
-./hello.com --strace
-./hello.com --ftrace
+./hello.com --strace   # log system calls to stderr
+./hello.com --ftrace   # log function calls to stderr
 ```
 
 If you want your `hello.com` program to be much tinier, more on the
@@ -100,21 +104,84 @@ Windows](https://justine.lol/cosmopolitan/windows-compiling.html)
 tutorial. It's needed because the ELF object format is what makes
 universal binaries possible.
 
+Cosmopolitan officially only builds on Linux. However, one highly
+experimental (and currently broken) thing you could try, is building the
+entire cosmo repository from source using the cross9 toolchain.
+
+```
+mkdir -p o/third_party
+rm -rf o/third_party/gcc
+wget https://justine.lol/linux-compiler-on-windows/cross9.zip
+unzip cross9.zip
+mv cross9 o/third_party/gcc
+build/bootstrap/make.com
+```
+
 ## Source Builds
 
-Cosmopolitan can be compiled from source on any Linux distro. GNU make
-needs to be installed beforehand. This is a freestanding hermetic
-repository that bootstraps using a vendored static gcc9 executable.
-No further dependencies are required.
+Cosmopolitan can be compiled from source on any Linux distro. First, you
+need to download or clone the repository.
 
 ```sh
 wget https://justine.lol/cosmopolitan/cosmopolitan.tar.gz
 tar xf cosmopolitan.tar.gz  # see releases page
 cd cosmopolitan
-make -j16
+```
+
+This will build the entire repository and run all the tests:
+
+```sh
+build/bootstrap/make.com -j16
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
 ```
+
+If you get an error running make.com then it's probably because you have
+WINE installed to `binfmt_misc`. You can fix that by installing the the
+APE loader as an interpreter. It'll improve build performance too!
+
+```sh
+ape/apeinstall.sh
+```
+
+Since the Cosmopolitan repository is very large, you might only want to
+build a particular thing. Cosmopolitan's build config does a good job at
+having minimal deterministic builds. For example, if you wanted to build
+only hello.com then you could do that as follows:
+
+```sh
+build/bootstrap/make.com -j16 o//examples/hello.com
+```
+
+Sometimes it's desirable to build a subset of targets, without having to
+list out each individual one. You can do that by asking make to build a
+directory name. For example, if you wanted to build only the targets and
+subtargets of the chibicc package including its tests, you would say:
+
+```sh
+build/bootstrap/make.com -j16 o//third_party/chibicc
+o//third_party/chibicc/chibicc.com --help
+```
+
+Cosmopolitan provides a variety of build modes. For example, if you want
+really tiny binaries (as small as 12kb in size) then you'd say:
+
+```sh
+build/bootstrap/make.com -j16 MODE=tiny
+```
+
+Here's some other build modes you can try:
+
+```sh
+build/bootstrap/make.com -j16 MODE=dbg       # asan + ubsan + debug
+build/bootstrap/make.com -j16 MODE=asan      # production memory safety
+build/bootstrap/make.com -j16 MODE=opt       # -march=native optimizations
+build/bootstrap/make.com -j16 MODE=rel       # traditional release binaries
+build/bootstrap/make.com -j16 MODE=optlinux  # optimal linux-only performance
+build/bootstrap/make.com -j16 MODE=tinylinux # tiniest linux-only 4kb binaries
+```
+
+For further details, see [//build/config.mk](build/config.mk).
 
 ## GDB
 
@@ -159,4 +226,3 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | FreeBSD         | 12          | 2018  |
 | OpenBSD         | 6.4         | 2018  |
 | NetBSD          | 9.1         | 2020  |
-| GNU Make        | 4.0         | 2015  |

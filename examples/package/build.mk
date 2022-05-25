@@ -60,7 +60,7 @@ o/$(MODE)/examples/package/%.com.dbg:			\
 		$(EXAMPLES_PACKAGE_DEPS)		\
 		o/$(MODE)/examples/package/%.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 # Invalidates objects in package when makefile is edited.

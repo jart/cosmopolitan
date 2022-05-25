@@ -32,11 +32,11 @@
 #include "third_party/linenoise/linenoise.h"
 
 /**
- * @fileoverview Shell that works on Windows.
+ * @fileoverview Cosmopolitan Shell
  *
  * This doesn't have script language features like UNBOURNE.COM but it
- * works on Windows and, unlike CMD.EXE, actually has CTRL-P and CTRL-R
- * which alone make it so much better.
+ * works on Windows and, unlike CMD.EXE, has CTRL-P, CTRL-R, and other
+ * GNU Emacs / Readline keyboard shortcuts.
  *
  * One day we'll have UNBOURNE.COM working on Windows but the code isn't
  * very maintainable sadly.
@@ -184,8 +184,8 @@ int main(int argc, char *argv[]) {
         args = xrealloc(args, (++n + 1) * sizeof(*args));
         args[n - 1] = arg;
         args[n - 0] = 0;
-        start = 0;
       }
+      start = 0;
     }
     if (n > 0) {
       if ((prog = commandv(args[0], path, sizeof(path)))) {

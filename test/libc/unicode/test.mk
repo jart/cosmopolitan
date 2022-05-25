@@ -47,7 +47,7 @@ o/$(MODE)/test/libc/unicode/%.com.dbg:			\
 		o/$(MODE)/test/libc/unicode/unicode.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/libc/unicode

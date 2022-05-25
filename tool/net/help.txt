@@ -225,10 +225,16 @@ USAGE
 
   Your redbean is an actually portable executable, that's able to
   run on six different operating systems. To do that, it needs to
-  overwrite its own MZ header at startup, with ELF or Mach-O, and
-  then puts the original back once the program loads. If you want
-  your redbean to follow the platform-local executable convention
-  then delete the /.ape file from zip.
+  extract a 4kb loader program to ${TMPDIR:-/tmp}/ape that'll map
+  your redbean into memory. It does however check to see if `ape`
+  is on the system path beforehand. You can also "assimilate" any
+  redbean into the platform-local executable format by running:
+
+      $ file redbean.com
+      redbean.com: DOS/MBR boot sector
+      $ ./redbean.com --assimilate
+      $ file redbean.com
+      redbean.com: ELF 64-bit LSB executable
 
   redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
   which makes it a permissively licensed gift to anyone who might
@@ -331,18 +337,22 @@ REPL
       #!/usr/bin/redbean -i
       print('hello world')
 
-  However operating systems like Linux usually require that script
-  interperters be in the local executable format. You can "assimilate"
-  and install your redbean using the following commands:
+  However UNIX operating systems usually require that interperters be
+  encoded in its preferred executable format. You can assimilate your
+  redbean into the local format using the following commands:
 
-      zip -d redbean.com .ape      # remove the ape header
-      ./redbean.com -h >/dev/null  # assimilate the binary
-      sudo cp redbean.com /usr/bin/redbean
+      $ file redbean.com
+      redbean.com: DOS/MBR boot sector
+      $ ./redbean.com --assimilate
+      $ file redbean.com
+      redbean.com: ELF 64-bit LSB executable
+      $ sudo cp redbean.com /usr/bin/redbean
 
   By following the above steps, redbean can be installed systemwide for
   multiple user accounts. It's also possible to chmod the binary to have
-  setuid privileges, provided it's configured to drop privileges in the
-  most appropriate manner; see the UNIX section for further details.
+  setuid privileges. Please note that, if you do this, the UNIX section
+  provides further details on APIs like `unix.setuid` that will help you
+  remove root privileges from the process in the appropriate manner.
 
 
 ────────────────────────────────────────────────────────────────────────────────

@@ -21,7 +21,6 @@ TOOL_NET_COMS =									\
 	o/$(MODE)/tool/net/redbean-static.com					\
 	o/$(MODE)/tool/net/redbean-unsecure.com					\
 	o/$(MODE)/tool/net/redbean-original.com					\
-	o/$(MODE)/tool/net/redbean-assimilate.com				\
 	o/$(MODE)/tool/net/wb.com
 
 TOOL_NET_CHECKS =								\
@@ -82,7 +81,7 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 		o/$(MODE)/tool/net/%.o						\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 # REDBEAN.COM
@@ -100,7 +99,7 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 ifneq ($(MODE),tiny)
@@ -115,13 +114,11 @@ o/$(MODE)/tool/net/redbean.com:							\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/net/.redbean/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
 		o/$(MODE)/tool/net/.redbean/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
-		o/$(MODE)/tool/net/.redbean/.ape				\
 		tool/net/help.txt						\
 		tool/net/.init.lua						\
 		tool/net/favicon.ico						\
@@ -138,10 +135,8 @@ o/tiny/tool/net/redbean.com:							\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tiny/tool/net/.redbean
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tiny/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tiny/tool/net/.redbean
 	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/zip/zip.com -9qj $@		\
-		o/tiny/tool/net/.redbean/.ape					\
 		tool/net/tiny/help.txt						\
 		tool/net/.init.lua						\
 		tool/net/favicon.ico						\
@@ -156,10 +151,8 @@ o/tinylinux/tool/net/redbean.com:						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tinylinux/tool/net/.redbean
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tinylinux/tool/net/.redbean/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tinylinux/tool/net/.redbean
 	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/zip/zip.com -9qj $@ 	\
-		o/tinylinux/tool/net/.redbean/.ape				\
 		tool/net/tiny/help.txt						\
 		tool/net/.init.lua						\
 		tool/net/favicon.ico						\
@@ -255,7 +248,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/.reload.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.init.lua.zip.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-demo.com:						\
@@ -264,14 +257,12 @@ o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/third_party/zip/zip.com				\
 		tool/net/help.txt
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-demo
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-demo/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-demo
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-demo/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/tool/net/.redbean-demo/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-demo/.ape				\
 		tool/net/help.txt
 
 # REDBEAN-STATIC.COM
@@ -287,14 +278,12 @@ o/$(MODE)/tool/net/redbean-static.com:						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-static
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-static/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-static
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-static/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/tool/net/.redbean-static/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-static/.ape				\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -304,7 +293,7 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		o/$(MODE)/tool/net/redbean-static.o				\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-static.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
@@ -324,14 +313,12 @@ o/$(MODE)/tool/net/redbean-unsecure.com:					\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-unsecure
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-unsecure/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-unsecure
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-unsecure/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/tool/net/.redbean-unsecure/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-unsecure/.ape			\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -346,7 +333,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-unsecure.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
@@ -368,14 +355,12 @@ o/$(MODE)/tool/net/redbean-original.com:					\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-original
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/$(MODE)/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-original
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/net/.redbean-original/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/tool/net/.redbean-original/.symtab
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-original/.ape			\
 		tool/net/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -389,10 +374,8 @@ o/tiny/tool/net/redbean-original.com:						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tiny/tool/net/.redbean-original
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tiny/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tiny/tool/net/.redbean-original
 	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/zip/zip.com -9qj $@		\
-		o/tiny/tool/net/.redbean-original/.ape				\
 		tool/net/tiny/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -404,10 +387,8 @@ o/tinylinux/tool/net/redbean-original.com:					\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/tinylinux/tool/net/.redbean-original
-	@$(COMPILE) -ADD -T$@ dd if=$@ of=o/tinylinux/tool/net/.redbean-original/.ape bs=64 count=11 conv=notrunc 2>/dev/null
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tinylinux/tool/net/.redbean-original
 	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/zip/zip.com -9qj $@	\
-		o/tinylinux/tool/net/.redbean-original/.ape			\
 		tool/net/tiny/help.txt						\
 		tool/net/favicon.ico						\
 		tool/net/redbean.png
@@ -417,7 +398,7 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		o/$(MODE)/tool/net/redbean-original.o				\
 		o/$(MODE)/tool/net/net.pkg					\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
@@ -425,35 +406,6 @@ o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/red
 
 o/$(MODE)/tool/net/redbean-original.s: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
 	@$(COMPILE) -AOBJECTIFY.c $(COMPILE.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
-
-# REDBEAN-ASSIMILATE.COM
-#
-# Same as REDBEAN.COM except without no-modify-self behavior.
-
-o/$(MODE)/tool/net/redbean-assimilate.com.dbg:					\
-		o/$(MODE)/tool/net/redbean.com.dbg
-	@cp -f $< $@
-
-o/$(MODE)/tool/net/redbean-assimilate.com:					\
-		o/$(MODE)/tool/net/redbean-assimilate.com.dbg			\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com					\
-		tool/net/net.mk							\
-		tool/net/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/net/.redbean-assimilate
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/net/.redbean-assimilate/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
-		o/$(MODE)/tool/net/.redbean-assimilate/.symtab
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
-		o/$(MODE)/tool/net/.redbean-assimilate/.symtab			\
-		tool/net/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:								\

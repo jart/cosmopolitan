@@ -20,17 +20,18 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
+char tmp[ARG_MAX];
 char16_t envvars[ARG_MAX / 2];
 
 TEST(mkntenvblock, emptyList_onlyOutputsDoubleNulStringTerminator) {
   char *envp[] = {NULL};
-  ASSERT_NE(-1, mkntenvblock(envvars, envp, NULL));
+  ASSERT_NE(-1, mkntenvblock(envvars, envp, NULL, tmp));
   ASSERT_BINEQ(u"  ", envvars);
 }
 
 TEST(mkntenvblock, envp_becomesSortedDoubleNulTerminatedUtf16String) {
   char *envp[] = {"u=b", "c=d", "韩=非", "uh=d", "hduc=d", NULL};
-  ASSERT_NE(-1, mkntenvblock(envvars, envp, NULL));
+  ASSERT_NE(-1, mkntenvblock(envvars, envp, NULL, tmp));
   ASSERT_BINEQ(u"C = d   "
                u"H D U C = d   "
                u"U = b   "
@@ -42,13 +43,21 @@ TEST(mkntenvblock, envp_becomesSortedDoubleNulTerminatedUtf16String) {
 
 TEST(mkntenvblock, extraVar_getsAdded) {
   char *envp[] = {"u=b", "c=d", "韩=非", "uh=d", "hduc=d", NULL};
-  ASSERT_NE(-1, mkntenvblock(envvars, envp, "a=a"));
+  ASSERT_NE(-1, mkntenvblock(envvars, envp, "a=a", tmp));
   ASSERT_BINEQ(u"A = a   "
                u"C = d   "
                u"H D U C = d   "
                u"U = b   "
                u"U H = d   "
                u"Θù= ^ù  "
+               u"  ",
+               envvars);
+}
+
+TEST(mkntenvblock, pathvars_getUpdated) {
+  char *envp[] = {"PATH=/c/foo:/d/bar", NULL};
+  ASSERT_NE(-1, mkntenvblock(envvars, envp, 0, tmp));
+  ASSERT_BINEQ(u"P A T H = c : \\ f o o ; d : \\ b a r   "
                u"  ",
                envvars);
 }

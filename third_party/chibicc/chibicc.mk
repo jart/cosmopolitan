@@ -93,7 +93,7 @@ $(THIRD_PARTY_CHIBICC2_A).pkg:						\
 o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
-		$(APE)							\
+		$(APE_NO_MODIFY_SELF)					\
 		$(CRT)							\
 		o/$(MODE)/third_party/chibicc/help.txt.zip.o		\
 		o/$(MODE)/third_party/chibicc/chibicc.main.o		\
@@ -102,7 +102,7 @@ o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 o/$(MODE)/third_party/chibicc/chibicc2.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC2_A)				\
-		$(APE)							\
+		$(APE_NO_MODIFY_SELF)					\
 		$(CRT)							\
 		o/$(MODE)/third_party/chibicc/help.txt.zip.o		\
 		o/$(MODE)/third_party/chibicc/chibicc.main.chibicc.o	\
@@ -122,7 +122,7 @@ o/$(MODE)/third_party/chibicc/chibicc.com:					\
 o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\
-		$(APE)							\
+		$(APE_NO_MODIFY_SELF)					\
 		$(CRT)							\
 		o/$(MODE)/third_party/chibicc/as.main.o			\
 		$(THIRD_PARTY_CHIBICC_A).pkg

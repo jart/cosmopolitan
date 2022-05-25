@@ -64,6 +64,7 @@ i32 sys_mknod(const char *, u32, u64) hidden;
 i32 sys_mprotect(void *, u64, i32) hidden;
 i32 sys_msync(void *, u64, i32) hidden;
 i32 sys_munmap(void *, u64) hidden;
+i32 sys_open(const char *, i32, u32) hidden;
 i32 sys_openat(i32, const char *, i32, u32) hidden;
 i32 sys_pause(void) hidden;
 i32 sys_pipe(i32[hasatleast 2]) hidden;

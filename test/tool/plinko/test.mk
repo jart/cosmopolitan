@@ -74,7 +74,7 @@ o/$(MODE)/test/tool/plinko/%.com.dbg:				\
 		$(TEST_TOOL_PLINKO_A).pkg			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/test/tool/plinko/plinko_test.com.runs:		\

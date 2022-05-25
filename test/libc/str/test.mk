@@ -72,7 +72,7 @@ o/$(MODE)/test/libc/str/%.com.dbg:					\
 		o/$(MODE)/test/libc/str/str.pkg				\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/test/libc/str/blake2.com.dbg:					\
@@ -82,7 +82,7 @@ o/$(MODE)/test/libc/str/blake2.com.dbg:					\
 		o/$(MODE)/test/libc/str/str.pkg				\
 		$(LIBC_TESTMAIN)					\
 		$(CRT)							\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_STR_OBJS):							\

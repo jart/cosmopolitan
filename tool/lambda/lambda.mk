@@ -44,7 +44,7 @@ o/$(MODE)/tool/lambda/%.com.dbg:				\
 		o/$(MODE)/tool/lambda/%.o			\
 		o/$(MODE)/tool/lambda/lambda.pkg		\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/lambda/tromp.o:					\

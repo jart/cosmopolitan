@@ -68,7 +68,7 @@ o/$(MODE)/test/tool/net/%.com.dbg:			\
 		$(TEST_TOOL_NET_A).pkg			\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/tool/net

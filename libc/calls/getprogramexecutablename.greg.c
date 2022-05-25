@@ -34,6 +34,10 @@
 
 char program_executable_name[PATH_MAX];
 
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
 static inline char *StrCat(char buf[PATH_MAX], const char *a, const char *b) {
   char *p, *e;
   p = buf;
@@ -56,16 +60,16 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   if (IsWindows()) {
     n = GetModuleFileName(0, u.path16, ARRAYLEN(u.path16));
     for (i = 0; i < n; ++i) {
+      // turn c:\foo\bar into c:/foo/bar
       if (u.path16[i] == '\\') {
         u.path16[i] = '/';
       }
     }
-    if (isalpha(u.path16[0]) && u.path16[1] == ':' && u.path16[2] == '/') {
-      p[0] = '/';
-      p[1] = '/';
-      p[2] = '?';
-      p[3] = '/';
-      p += 4;
+    if (IsAlpha(u.path16[0]) && u.path16[1] == ':' && u.path16[2] == '/') {
+      // turn c:/... into /c/...
+      u.path16[1] = u.path16[0];
+      u.path16[0] = '/';
+      u.path16[2] = '/';
     }
     tprecode16to8(p, e - p, u.path16);
     return;

@@ -58,7 +58,7 @@ o/$(MODE)/test/libc/runtime/%.com.dbg:				\
 		o/$(MODE)/test/libc/runtime/runtime.pkg		\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/test/libc/runtime/ape_test.com.dbg:			\
@@ -67,7 +67,7 @@ o/$(MODE)/test/libc/runtime/ape_test.com.dbg:			\
 		o/$(MODE)/test/libc/runtime/runtime.pkg		\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_RUNTIME_OBJS):					\

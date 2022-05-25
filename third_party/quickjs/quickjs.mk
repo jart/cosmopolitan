@@ -174,7 +174,7 @@ o/$(MODE)/third_party/quickjs/run-test262.com.dbg:				\
 		$(THIRD_PARTY_QUICKJS_A).pkg					\
 		o/$(MODE)/third_party/quickjs/run-test262.o			\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
@@ -183,7 +183,7 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 		$(THIRD_PARTY_QUICKJS_A).pkg					\
 		o/$(MODE)/third_party/quickjs/unicode_gen.o			\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_QUICKJS_OBJS):							\
