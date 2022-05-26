@@ -19,35 +19,78 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/nt/enum/wait.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/files.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sendfile.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+// sendfile() isn't specified as raising eintr
+static textwindows int SendfileBlock(int64_t handle,
+                                     struct NtOverlapped *overlapped) {
+  uint32_t i, got, flags = 0;
+  if (WSAGetLastError() != kNtErrorIoPending) {
+    NTTRACE("TransmitFile failed %lm");
+    return __winsockerr();
+  }
+  for (;;) {
+    i = WSAWaitForMultipleEvents(1, &overlapped->hEvent, true,
+                                 __SIG_POLLING_INTERVAL_MS, true);
+    if (i == kNtWaitFailed) {
+      NTTRACE("WSAWaitForMultipleEvents failed %lm");
+      return __winsockerr();
+    } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
+      _check_interrupts(true, g_fds.p);
+#if _NTTRACE
+      POLLTRACE("WSAWaitForMultipleEvents...");
+#endif
+    } else {
+      break;
+    }
+  }
+  if (!WSAGetOverlappedResult(handle, overlapped, &got, false, &flags)) {
+    NTTRACE("WSAGetOverlappedResult failed %lm");
+    return __winsockerr();
+  }
+  return got;
+}
+
 static textwindows ssize_t sendfile_linux2nt(int outfd, int infd,
                                              int64_t *inout_opt_inoffset,
                                              size_t uptobytes) {
-  struct NtOverlapped Overlapped;
-  struct NtOverlapped *lpOverlapped;
-  if (!__isfdkind(outfd, kFdSocket) || !__isfdkind(outfd, kFdFile))
-    return ebadf();
+  ssize_t rc;
+  int64_t offset;
+  struct NtOverlapped overlapped;
+  if (!__isfdkind(outfd, kFdSocket)) return ebadf();
+  if (!__isfdkind(infd, kFdFile)) return ebadf();
   if (inout_opt_inoffset) {
-    bzero(&Overlapped, sizeof(Overlapped));
-    Overlapped.Pointer = (void *)(intptr_t)(*inout_opt_inoffset);
-    lpOverlapped = &Overlapped;
-  } else {
-    lpOverlapped = NULL;
+    offset = *inout_opt_inoffset;
+  } else if (!SetFilePointerEx(g_fds.p[infd].handle, 0, &offset, SEEK_CUR)) {
+    return __winerr();
   }
-  /* TODO(jart): Fetch this on a per-socket basis via GUID. */
+  bzero(&overlapped, sizeof(overlapped));
+  overlapped.Pointer = (void *)(intptr_t)offset;
+  overlapped.hEvent = WSACreateEvent();
   if (TransmitFile(g_fds.p[outfd].handle, g_fds.p[infd].handle, uptobytes, 0,
-                   lpOverlapped, NULL, 0)) {
-    return uptobytes;
+                   &overlapped, 0, 0)) {
+    rc = uptobytes;
   } else {
-    return __winsockerr();
+    rc = SendfileBlock(g_fds.p[outfd].handle, &overlapped);
   }
+  if (rc != -1 && inout_opt_inoffset) {
+    *inout_opt_inoffset = offset + rc;
+  }
+  WSACloseEvent(overlapped.hEvent);
+  return rc;
 }
 
 static ssize_t sendfile_linux2bsd(int outfd, int infd,
@@ -90,7 +133,6 @@ ssize_t sendfile(int outfd, int infd, int64_t *inout_opt_inoffset,
                  size_t uptobytes) {
   if (!uptobytes) return einval();
   if (uptobytes > 0x7ffffffe /* Microsoft's off-by-one */) return eoverflow();
-  if (IsModeDbg() && uptobytes > 1) uptobytes >>= 1;
   if (IsLinux()) {
     return sys_sendfile(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsFreebsd() || IsXnu()) {

@@ -61,8 +61,6 @@ privileged void *__initialize_tls(char tib[64]) {
  */
 privileged void __install_tls(char tib[64]) {
   int ax, dx;
-  uint64_t magic;
-  unsigned char *p;
   assert(tib);
   assert(!__tls_enabled);
   assert(*(int *)(tib + 0x38) != -1);
