@@ -105,6 +105,20 @@ void RunApeTest(const char *path) {
   EXPECT_STREQN("MZqFpD", buf, 6);
 }
 
+TEST(ape, noAccidentalQuotesInMasterBootRecord) {
+  int i, quotes = 0;
+  char buf[512] = {0};
+  EXPECT_SYS(0, 3, open("bin/apetest.com", O_RDONLY));
+  EXPECT_SYS(0, 512, read(3, buf, 512));
+  EXPECT_SYS(0, 0, close(3));
+  for (i = 0; i < 512; ++i) {
+    if (buf[i] == '\'') {
+      ++quotes;
+    }
+  }
+  EXPECT_EQ(1, quotes);
+}
+
 TEST(apeNoModifySelf, runsWithoutModifyingSelf) {
   RunApeTest("bin/apetest.com");
 }

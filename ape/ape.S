@@ -553,6 +553,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	"[ x\"$1\" != x--assimilate ] && {\n"
 	.ascii	  "t=\"${TMPDIR:-/tmp}/ape\"\n"
 	.ascii	  "[ -x \"$t\" ] || {\n"
+	.ascii	    "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
 	.shstub	      ape_loader_dd_skip,2
 	.ascii	      "\" count=\""
@@ -1169,47 +1170,6 @@ gdt:	.short	2f-1f		# table byte length
 2:	.endobj	gdt,global,hidden
 
 /*─────────────────────────────────────────────────────────────────────────────╗
-│ αcτµαlly pδrταblε εxεcµταblε § multiboot stub                                │
-╚──────────────────────────────────────────────────────────────────────────────╝
-	boot modernized for the nineties */
-
-#define GRUB_MAGIC 0x1BADB002
-#define GRUB_EAX 0x2BADB002
-#define GRUB_AOUT (1 << 16)
-#define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
-
-//	Grub Header.
-	.align	4
-ape_grub:
-	.long	GRUB_MAGIC			# Magic
-	.long	GRUB_AOUT			# Flags
-	.long	GRUB_CHECKSUM(GRUB_AOUT)	# Checksum
-	.long	RVA(ape_grub)			# HeaderPhysicalAddress
-	.long	IMAGE_BASE_PHYSICAL		# TextPhysicalAddress
-	.long	PHYSICAL(_edata)		# LoadEndPhysicalAddress
-	.long	PHYSICAL(_end)			# BssEndPhysicalAddress
-	.long	RVA(ape_grub_entry)		# EntryPhysicalAddress
-	.endobj	ape_grub,globl
-
-//	Grub Entrypoint.
-//	Takes CPU out of legacy mode and jumps to normal entrypoint.
-//	@noreturn
-	.align	4
-ape_grub_entry:
-	.code32
-//	cmp	$GRUB_EAX,%eax
-//	jne	triplf
-	push	$0
-	popf
-	mov	$0x40,%dl
-	mov	%cr0,%eax
-	and	$~CR0_PE,%eax
-	mov	%eax,%cr0
-	ljmpw	$0,$REAL(pc)
-	.code16
-	.endfn	ape_grub_entry
-
-/*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
 ╚──────────────────────────────────────────────────────────────────────────────╝
 	the default mode of operation on modern cpus */
@@ -1484,6 +1444,47 @@ long:	push	$GDT_LONG_DATA
 	movabs	$kernel,%rax
 	jmp	*%rax
 	.endfn	long
+
+/*─────────────────────────────────────────────────────────────────────────────╗
+│ αcτµαlly pδrταblε εxεcµταblε § multiboot stub                                │
+╚──────────────────────────────────────────────────────────────────────────────╝
+	boot modernized for the nineties */
+
+#define GRUB_MAGIC 0x1BADB002
+#define GRUB_EAX 0x2BADB002
+#define GRUB_AOUT (1 << 16)
+#define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
+
+//	Grub Header.
+	.align	4
+ape_grub:
+	.long	GRUB_MAGIC			# Magic
+	.long	GRUB_AOUT			# Flags
+	.long	GRUB_CHECKSUM(GRUB_AOUT)	# Checksum
+	.long	RVA(ape_grub)			# HeaderPhysicalAddress
+	.long	IMAGE_BASE_PHYSICAL		# TextPhysicalAddress
+	.long	PHYSICAL(_edata)		# LoadEndPhysicalAddress
+	.long	PHYSICAL(_end)			# BssEndPhysicalAddress
+	.long	RVA(ape_grub_entry)		# EntryPhysicalAddress
+	.endobj	ape_grub,globl
+
+//	Grub Entrypoint.
+//	Takes CPU out of legacy mode and jumps to normal entrypoint.
+//	@noreturn
+	.align	4
+ape_grub_entry:
+	.code32
+//	cmp	$GRUB_EAX,%eax
+//	jne	triplf
+	push	$0
+	popf
+	mov	$0x40,%dl
+	mov	%cr0,%eax
+	and	$~CR0_PE,%eax
+	mov	%eax,%cr0
+	ljmpw	$0,$REAL(pc)
+	.code64
+	.endfn	ape_grub_entry
 
 /*  ▄▄▒▀▀▀▀▒▒▄
 █████▓▓▄░░░░  ▒▒▄

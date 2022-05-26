@@ -10,8 +10,8 @@
 #   This makefile compiles and runs each test twice. The first with
 #   GCC-built chibicc, and a second time with chibicc-built chibicc
 
-CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com.dbg
-CHIBICC2 = o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
+CHIBICC = o/$(MODE)/third_party/chibicc/chibicc.com
+CHIBICC2 = o/$(MODE)/third_party/chibicc/chibicc2.com
 CHIBICC_FLAGS =								\
 	-fno-common							\
 	-include libc/integral/normalize.inc				\
@@ -134,11 +134,11 @@ o/$(MODE)/third_party/chibicc/chibicc.o:				\
 o/$(MODE)/third_party/chibicc/chibicc.chibicc.o:			\
 		CHIBICC_FLAGS += $(THIRD_PARTY_CHIBICC_DEFINES)
 
-o/$(MODE)/%.chibicc.o: %.s o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+o/$(MODE)/%.chibicc.o: %.s $(CHIBICC)
 	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
-o/$(MODE)/%.chibicc.o: %.c o/$(MODE)/third_party/chibicc/chibicc.com.dbg
+o/$(MODE)/%.chibicc.o: %.c $(CHIBICC)
 	@$(COMPILE) -ACHIBICC -T$@ $(CHIBICC) $(CHIBICC_FLAGS) -c -o $@ $<
-o/$(MODE)/%.chibicc2.o: %.c o/$(MODE)/third_party/chibicc/chibicc2.com.dbg
+o/$(MODE)/%.chibicc2.o: %.c $(CHIBICC2)
 	@$(COMPILE) -ACHIBICC2 -T$@ $(CHIBICC2) $(CHIBICC_FLAGS) -c -o $@ $<
 
 THIRD_PARTY_CHIBICC_LIBS = $(foreach x,$(THIRD_PARTY_CHIBICC_ARTIFACTS),$($(x)))
