@@ -4,11 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
- * @fileoverview join a thread
- */
-
-int cthread_join(cthread_t, int*);
+int cthread_join(cthread_t, void **);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

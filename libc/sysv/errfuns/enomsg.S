@@ -1,13 +1,8 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-.section .privileged,"ax",@progbits
-
 enomsg:	.leafprologue
+	.profilable
 	mov	ENOMSG(%rip),%ecx
-	.errno
-	mov	%ecx,(%rax)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	jmp	__errfun
 	.endfn	enomsg,globl,hidden

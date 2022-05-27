@@ -303,9 +303,9 @@ int main(int argc, char *argv[]) {
         }
         MakePrompt(p);
 
+        sigprocmask(SIG_SETMASK, &savemask, 0);
         sigaction(SIGINT, &saveint, 0);
         sigaction(SIGQUIT, &savequit, 0);
-        sigprocmask(SIG_SETMASK, &savemask, 0);
       } else {
         fprintf(stderr, "%s: %s: command not found\n", argv[0], args[0]);
       }

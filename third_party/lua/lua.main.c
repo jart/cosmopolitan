@@ -397,7 +397,6 @@ int main (int argc, char **argv) {
   if (IsModeDbg()) {
     ShowCrashReports();
   }
-  /* if (IsModeDbg()) ShowCrashReports(); */
   L = luaL_newstate();  /* create state */
   if (L == NULL) {
     lua_l_message(argv[0], "cannot create state: not enough memory");

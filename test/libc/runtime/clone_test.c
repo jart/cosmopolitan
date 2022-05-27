@@ -25,10 +25,12 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
@@ -55,10 +57,8 @@ void TearDown(void) {
   free(tls);
 }
 
-int DoNothing(void *arg) {
-  CheckStackIsAligned();
-  return 0;
-}
+////////////////////////////////////////////////////////////////////////////////
+// TEST THREADS WORK
 
 int CloneTest1(void *arg) {
   intptr_t rsp, top, bot;
@@ -105,32 +105,90 @@ TEST(clone, test1) {
   errno = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TEST THREADS CAN ISSUE SYSTEM CALLS WITH INDEPENDENT ERRNOS
+
+_Atomic(int) sysbarrier;
+
 int CloneTestSys(void *arg) {
+  int i, id = (intptr_t)arg;
   CheckStackIsAligned();
-  thechilde = gettid();
-  ASSERT_EQ(31337, errno);
-  open(0, 0);
-  ASSERT_EQ(EFAULT, errno);
+  while (!sysbarrier) asm("pause");
+  for (i = 0; i < 20; ++i) {
+    switch (id % 3) {
+      case 0:
+        errno = 123;
+        open(0, 0);
+        asm("pause");
+        ASSERT_EQ(EFAULT, errno);
+        break;
+      case 1:
+        errno = 123;
+        dup(-1);
+        asm("pause");
+        ASSERT_EQ(EBADF, errno);
+        break;
+      case 2:
+        errno = 123;
+        dup3(0, 0, 0);
+        asm("pause");
+        ASSERT_EQ(EINVAL, errno);
+        break;
+      default:
+        unreachable;
+    }
+  }
   return 0;
 }
 
 TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
+  int i;
+  char *tls[8], *stack[8];
   ASSERT_EQ(0, errno);
-  ASSERT_EQ(31337, *(int *)(tls + 0x3c));
-  _seizelock(childetid);
-  ASSERT_NE(-1, (tid = clone(CloneTestSys, stack, GetStackSize(),
-                             CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                                 CLONE_SIGHAND | CLONE_CHILD_SETTID |
-                                 CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                             (void *)23, 0, tls, 64, childetid)));
-  _spinlock(childetid);  // CLONE_CHILD_CLEARTID
+  for (i = 0; i < 8; ++i) {
+    tls[i] = __initialize_tls(malloc(64));
+    stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                    MAP_STACK | MAP_ANONYMOUS, -1, 0);
+    ASSERT_NE(
+        -1,
+        (tid = clone(
+             CloneTestSys, stack[i], GetStackSize(),
+             CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                 CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+             (void *)(intptr_t)i, 0, tls[i], 64, (int *)(tls[i] + 0x38))));
+  }
+  sysbarrier = 1;
+  for (i = 0; i < 8; ++i) {
+    _spinlock((int *)(tls[i] + 0x38));
+    free(tls[i]);
+    munmap(stack[i], GetStackSize());
+  }
   ASSERT_EQ(0, errno);
-  ASSERT_EQ(EFAULT, *(int *)(tls + 0x3c));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// BENCHMARK
+
+int DoNothing(void *arg) {
+  return 0;
+}
+
+void LaunchThread(void) {
+  char *tls, *stack;
+  tls = __initialize_tls(malloc(64));
+  __cxa_atexit(free, tls, 0);
+  stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+               MAP_STACK | MAP_ANONYMOUS, -1, 0);
+  clone(DoNothing, stack, GetStackSize(),
+        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+            CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+        0, 0, tls, 64, (int *)(tls + 0x38));
 }
 
 BENCH(clone, bench) {
-  errno_t *volatile ep;
   char *volatile tp;
+  errno_t *volatile ep;
   EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
+  EZBENCH2("clone()", donothing, LaunchThread());
 }

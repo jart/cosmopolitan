@@ -49,9 +49,9 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
       !GetProcessIoCounters(me, &iocount)) {
     return __winerr();
   }
-  _spinlock(&__sig_lock);
+  __sig_lock();
   nsignals = __sig_count;
-  _spunlock(&__sig_lock);
+  __sig_unlock();
   *usage = (struct rusage){
       .ru_utime = WindowsDurationToTimeVal(ReadFileTime(ftUser)),
       .ru_stime = WindowsDurationToTimeVal(ReadFileTime(ftKernel)),

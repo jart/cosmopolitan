@@ -60,14 +60,6 @@ original implementaiton.
 @release 3.0.1
 */
 
-#ifndef LUA_51
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-#define LUA_51 1
-#else
-#define LUA_51 0
-#endif
-#endif
-
 
 /***
 Argon2 hashing variants. Those fields are `userdatums`, read-only values that
@@ -350,12 +342,7 @@ largon2_hash_encoded(lua_State *L)
     encoded_len = argon2_encodedlen(t_cost, m_cost, parallelism, saltlen,
                                     hash_len, variant);
 
-#if LUA_51
-    luaL_buffinit(L, &buf);
-    encoded = luaL_prepbuffer(&buf);
-#else
     encoded = luaL_buffinitsize(L, &buf, encoded_len);
-#endif
 
     if (variant == Argon2_d) {
         ret_code =
@@ -373,12 +360,7 @@ largon2_hash_encoded(lua_State *L)
                                salt, saltlen, hash_len, encoded, encoded_len);
     }
 
-#if LUA_51
-    luaL_addsize(&buf, encoded_len);
-    luaL_pushresult(&buf);
-#else
-    luaL_pushresultsize(&buf, encoded_len);
-#endif
+    luaL_pushresultsize(&buf, encoded_len - 1);
 
     if (ret_code != ARGON2_OK) {
         err_msg = (char *) argon2_error_message(ret_code);
@@ -484,30 +466,6 @@ largon2_push_argon2_variants_table(lua_State *L)
 }
 
 
-#if LUA_51
-/* Compatibility for Lua 5.1.
- *
- * luaL_setfuncs() is used to create a module table where the functions have
- * largon2_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
-static void
-compat_luaL_setfuncs(lua_State *l, const luaL_Reg *reg, int nup)
-{
-    int i;
-
-    luaL_checkstack(l, nup, "too many upvalues");
-    for (; reg->name != NULL; reg++) { /* fill the table with given functions */
-        for (i = 0; i < nup; i++)      /* copy upvalues to the top */
-            lua_pushvalue(l, -nup);
-        lua_pushcclosure(l, reg->func, nup); /* closure with those upvalues */
-        lua_setfield(l, -(nup + 2), reg->name);
-    }
-    lua_pop(l, nup); /* remove upvalues */
-}
-#else
-#define compat_luaL_setfuncs(L, l, nup) luaL_setfuncs(L, l, nup)
-#endif
-
-
 static const luaL_Reg largon2[] = { { "verify", largon2_verify },
                                     { "hash_encoded", largon2_hash_encoded },
                                     { "t_cost", largon2_cfg_t_cost },
@@ -524,7 +482,7 @@ luaopen_argon2(lua_State *L)
     lua_newtable(L);
 
     largon2_create_config(L);
-    compat_luaL_setfuncs(L, largon2, 1);
+    luaL_setfuncs(L, largon2, 1);
 
     /* push argon2.variants table */
 

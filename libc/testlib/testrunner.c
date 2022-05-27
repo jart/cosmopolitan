@@ -33,6 +33,7 @@
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/process.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sock/sock.h"
@@ -59,7 +60,8 @@ void testlib_finish(void) {
 
 wontreturn void testlib_abort(void) {
   testlib_finish();
-  exit(MIN(255, g_testlib_failed));
+  __restorewintty();
+  _Exit(MIN(255, g_testlib_failed));
   unreachable;
 }
 

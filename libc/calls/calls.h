@@ -248,6 +248,7 @@ void sync(void);
 
 int clone(int (*)(void *), void *, size_t, int, void *, int *, void *, size_t,
           int *);
+int futex(uint32_t *, int, int, const struct timespec *, uint32_t *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § system calls » formatting                                 ─╬─│┼

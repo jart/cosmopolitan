@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -448,9 +449,9 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
-    _spinlock(&__sig_lock);
+    __sig_lock();
     rc = __sigaction(sig, act, oldact);
-    _spunlock(&__sig_lock);
+    __sig_unlock();
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
          DescribeSigaction(buf[0], sizeof(buf[0]), 0, act),

@@ -17,27 +17,47 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Duplicates file descriptor, granting it specific number.
+ *
+ * The `O_CLOEXEC` flag shall be cleared from the resulting file
+ * descriptor; see dup3() to preserve it.
+ *
+ * Unlike dup3(), the dup2() function permits oldfd and newfd to be the
+ * same, in which case the only thing this function does is test if
+ * oldfd is open.
  *
  * @param oldfd isn't closed afterwards
  * @param newfd if already assigned, is silently closed beforehand;
  *     unless it's equal to oldfd, in which case dup2() is a no-op
  * @return new file descriptor, or -1 w/ errno
+ * @raise EBADF is oldfd isn't open
+ * @raise EBADF is newfd negative or too big
+ * @raise EINTR if a signal handler was called
  * @asyncsignalsafe
  * @vforksafe
  */
 int dup2(int oldfd, int newfd) {
   int rc;
-  if (oldfd == newfd) {
-    rc = newfd;
+  if (__isfdkind(oldfd, kFdZip)) {
+    rc = eopnotsupp();
   } else if (!IsWindows()) {
-    rc = sys_dup3(oldfd, newfd, 0);
+    rc = sys_dup2(oldfd, newfd);
+  } else if (newfd < 0) {
+    rc = ebadf();
+  } else if (oldfd == newfd) {
+    if (__isfdopen(oldfd)) {
+      rc = newfd;
+    } else {
+      rc = ebadf();
+    }
   } else {
     rc = sys_dup_nt(oldfd, newfd, 0, -1);
   }

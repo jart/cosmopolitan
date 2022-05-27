@@ -22,6 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
@@ -37,7 +38,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   int64_t rc, proc, handle;
 
   // validate the api usage
-  if (oldfd < 0) return einval();
+  if (oldfd < 0) return ebadf();
   if (flags & ~O_CLOEXEC) return einval();
 
   _spinlock(&__fds_lock);

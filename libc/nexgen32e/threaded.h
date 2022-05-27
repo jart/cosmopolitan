@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern bool __threaded;
+extern int __threaded;
 extern bool __tls_enabled;
 extern unsigned __tls_index;
 

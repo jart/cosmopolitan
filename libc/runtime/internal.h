@@ -18,6 +18,13 @@ extern const char v_ntsubsystem[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_end[] __attribute__((__weak__));
 extern const uintptr_t __fini_array_start[] __attribute__((__weak__));
 
+extern unsigned char _tdata_start[];
+extern unsigned char _tdata_end[];
+extern unsigned char _tdata_size[];
+extern unsigned char _tbss_start[];
+extern unsigned char _tbss_end[];
+extern unsigned char _tls_size[];
+
 void _init(void) hidden;
 void __restorewintty(void) hidden;
 void *__cxa_finalize(void *) hidden;

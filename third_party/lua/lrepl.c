@@ -317,9 +317,8 @@ static int multiline (lua_State *L) {
     ssize_t rc;
     const char *line = lua_tolstring(L, 1, &len);  /* get what it has */
     int status = luaL_loadbuffer(L, line, len, "=stdin");  /* try it */
-    if (!incomplete(L, status) || pushline(L, 0) != 1) {
+    if (!incomplete(L, status) || pushline(L, 0) != 1)
       return status;  /* cannot or should not try to add continuation line */
-    }
     lua_pushliteral(L, "\n");  /* add newline... */
     lua_insert(L, -2);  /* ...between the two lines */
     lua_concat(L, 3);  /* join them */
@@ -379,7 +378,7 @@ int lua_loadline (lua_State *L) {
     LUA_REPL_UNLOCK;
     return rc - 1;  /* eof or error */
   }
-  if ((status = addreturn(L)) != LUA_OK)  /* 'return ...' did not work? */
+  if ((status = addreturn(L)) != LUA_OK) /* 'return ...' did not work? */
     status = multiline(L);  /* try as command, maybe with continuation lines */
   lua_remove(L, 1);  /* remove line from the stack */
   lua_assert(lua_gettop(L) == 1);

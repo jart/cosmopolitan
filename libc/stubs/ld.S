@@ -44,10 +44,12 @@
 
 //	Thread local boundaries defined by linker script
 //	@see	ape/ape.lds
-	_tbss_start = 0
-	_tbss_end = 0
 	_tdata_start = 0
 	_tdata_end = 0
+	_tdata_size = 0
+	_tbss_start = 0
+	_tbss_end = 0
+	_tls_size = 0
 
 	.globl	_base
 	.globl	ape_xlm
@@ -63,10 +65,12 @@
 	.globl	_end
 	.globl	_ereal
 	.globl	_etext
-	.globl	_tbss_start
-	.globl	_tbss_end
 	.globl	_tdata_start
 	.globl	_tdata_end
+	.globl	_tdata_size
+	.globl	_tbss_start
+	.globl	_tbss_end
+	.globl	_tls_size
 	.globl	__data_start
 	.globl	__data_end
 	.globl	__bss_start
@@ -86,10 +90,12 @@
 	.weak	_end
 	.weak	_ereal
 	.weak	_etext
-	.weak	_tbss_start
-	.weak	_tbss_end
 	.weak	_tdata_start
 	.weak	_tdata_end
+	.weak	_tdata_size
+	.weak	_tbss_start
+	.weak	_tbss_end
+	.weak	_tls_size
 	.weak	__data_start
 	.weak	__data_end
 	.weak	__bss_start

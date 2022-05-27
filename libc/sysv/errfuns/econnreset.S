@@ -1,14 +1,9 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-.section .privileged,"ax",@progbits
-
 econnreset:
 	.leafprologue
+	.profilable
 	mov	ECONNRESET(%rip),%ecx
-	.errno
-	mov	%ecx,(%rax)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	jmp	__errfun
 	.endfn	econnreset,globl,hidden

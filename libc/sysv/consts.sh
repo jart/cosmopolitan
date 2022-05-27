@@ -1285,6 +1285,14 @@ syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable
 syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
 syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 
+#	fast userspace mutexes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	futex	FUTEX_WAIT				0			0			0			1			0			0
+syscon	futex	FUTEX_WAKE				1			0			0			2			0			0
+syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
+syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			0			0
+
 #	Teletypewriter Control, e.g.
 #
 #		  TCSETS   → About 70,800 results (0.31 seconds)
@@ -1817,14 +1825,6 @@ syscon	misc	DAY_5					0x02000b		11			11			10			10			0
 syscon	misc	DAY_6					0x02000c		12			12			11			11			0
 syscon	misc	DAY_7					0x02000d		13			13			12			12			0
 
-syscon	misc	FUTEX_PRIVATE_FLAG			128			0			0			0x80			0x80			0
-syscon	misc	FUTEX_REQUEUE				3			0			0			3			3			0
-syscon	misc	FUTEX_REQUEUE_PRIVATE			131			0			0			131			131			0
-syscon	misc	FUTEX_WAIT				0			0			0			1			1			0
-syscon	misc	FUTEX_WAIT_PRIVATE			128			0			0			129			129			0
-syscon	misc	FUTEX_WAKE				1			0			0			2			2			0
-syscon	misc	FUTEX_WAKE_PRIVATE			129			0			0			130			130			0
-
 syscon	misc	HOST_NOT_FOUND				1			1			1			1			1			0x2af9			# unix consensus
 syscon	misc	HOST_NAME_MAX				0x40			0			0			255			255			0
 
@@ -1880,7 +1880,7 @@ syscon	misc	FALLOC_FL_UNSHARE_RANGE			0x40			-1			-1			-1			-1			-1			# bsd cons
 #	System Call Numbers.
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology
-syscon	nr	__NR_exit				0x003c			0x2000169		0x01af			0x012e			0x136			0xfff			# __bsdthread_terminate() on XNU, thr_exit() on FreeBSD, sys___threxit() on OpenBSD, __lwp_exit() on NetBSD
+syscon	nr	__NR_exit				0x003c			0x2000169		0x01af			0x012e			0x136			0xfff			# __bsdthread_terminate() on XNU, thr_exit() on FreeBSD, __threxit() on OpenBSD, __lwp_exit() on NetBSD
 syscon	nr	__NR_exit_group				0x00e7			0x2000001		0x0001			0x0001			0x001			0xfff
 syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			0xfff
 syscon	nr	__NR_write				0x0001			0x2000004		0x0004			0x0004			0x004			0xfff

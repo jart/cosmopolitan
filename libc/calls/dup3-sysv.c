@@ -19,11 +19,18 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/errfuns.h"
+
+#define F_DUP2FD         10
+#define F_DUP2FD_CLOEXEC 18
 
 int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
-  static bool once, demodernize;
-  int olderr, fd;
+  static bool once;
+  static bool demodernize;
+  int olderr, how, fd;
   if (!once) {
     olderr = errno;
     fd = __sys_dup3(oldfd, newfd, flags);
@@ -39,5 +46,12 @@ int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
   } else if (!demodernize) {
     return __sys_dup3(oldfd, newfd, flags);
   }
-  return __fixupnewfd(sys_dup2(oldfd, newfd), flags);
+  if (oldfd == newfd) return einval();
+  if (flags & ~O_CLOEXEC) return einval();
+  if (IsFreebsd()) {
+    how = flags & O_CLOEXEC ? F_DUP2FD_CLOEXEC : F_DUP2FD;
+    return __sys_fcntl(oldfd, how, newfd);
+  } else {
+    return __fixupnewfd(sys_dup2(oldfd, newfd), flags);
+  }
 }

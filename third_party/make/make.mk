@@ -24,7 +24,6 @@ THIRD_PARTY_MAKE_SRCS_LIB =				\
 	third_party/make/basename-lgpl.c		\
 	third_party/make/concat-filename.c		\
 	third_party/make/dirname-lgpl.c			\
-	third_party/make/dup2.c				\
 	third_party/make/error.c			\
 	third_party/make/exitfail.c			\
 	third_party/make/fcntl.c			\

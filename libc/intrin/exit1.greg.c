@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/setjmp.internal.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
@@ -36,10 +34,6 @@ privileged wontreturn void _Exit1(int rc) {
   jmp_buf *jb;
   struct WinThread *wt;
   STRACE("_Exit1(%d)", rc);
-  if (__tls_enabled) {
-    jb = (jmp_buf *)(__get_tls() + 0x08);
-    longjmp(*jb, rc);
-  }
   if (!IsWindows() && !IsMetal()) {
     asm volatile("xor\t%%r10d,%%r10d\n\t"
                  "syscall"

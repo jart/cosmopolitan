@@ -19,6 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/thread/yield.h"
 
+/**
+ * Asks operating system to handoff remaining time slice.
+ */
 int cthread_yield(void) {
   return sched_yield();
 }

@@ -9,8 +9,8 @@ COSMOPOLITAN_C_START_
  * @fileoverview Create a cosmopolitan thread
  */
 
-int cthread_create(cthread_t* restrict, const cthread_attr_t* restrict,
-                   int (*)(void*), void* restrict);
+int cthread_create(cthread_t *restrict, const cthread_attr_t *restrict,
+                   void *(*)(void *), void *restrict);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

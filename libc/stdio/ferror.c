@@ -21,9 +21,16 @@
 /**
  * Returns nonzero if stream is in error state.
  *
+ * @param f is file stream pointer
+ * @return non-zero if and only if it's an error state
+ * @see ferror_unlocked(), feof()
  * @note EOF doesn't count
- * @see feof()
+ * @threadsafe
  */
-errno_t ferror_unlocked(FILE *f) {
-  return f->state > 0 ? f->state : 0;
+errno_t ferror(FILE *f) {
+  int rc;
+  flockfile(f);
+  rc = ferror_unlocked(f);
+  funlockfile(f);
+  return rc;
 }

@@ -23,13 +23,16 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/limits.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clone.h"
+#include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
@@ -121,7 +124,7 @@ static textwindows int CloneWindows(int (*func)(void *), char *stk,
   wt->func = func;
   wt->arg = arg;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  if ((h = CreateThread(0, 0, (void *)WinThreadEntry, wt, 0, &wt->utid))) {
+  if ((h = CreateThread(0, 4096, (void *)WinThreadEntry, wt, 0, &wt->utid))) {
     CloseHandle(h);
     return wt->tid;
   } else {
@@ -134,8 +137,7 @@ static textwindows int CloneWindows(int (*func)(void *), char *stk,
 
 void XnuThreadThunk(void *pthread, int machport, void *(*func)(void *),
                     void *arg, intptr_t *stack, unsigned xnuflags);
-asm(".local\tXnuThreadThunk\n"
-    "XnuThreadThunk:\n\t"
+asm("XnuThreadThunk:\n\t"
     "xor\t%ebp,%ebp\n\t"
     "mov\t%r8,%rsp\n\t"
     "and\t$-16,%rsp\n\t"
@@ -168,7 +170,7 @@ XnuThreadMain(void *pthread, int tid, int (*func)(void *arg), void *arg,
   //                                %r10 = uint32_t sem);
   asm volatile("movl\t$0,%0\n\t"         // *wt->ztid = 0
                "xor\t%%r10d,%%r10d\n\t"  // sem = 0
-               "syscall\n\t"             // _Exit1()
+               "syscall\n\t"             // __bsdthread_terminate()
                "ud2"
                : "=m"(*wt->ztid)
                : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0)
@@ -218,7 +220,7 @@ static wontreturn void FreebsdThreadMain(void *p) {
   // we no longer use the stack after this point
   // void thr_exit(%rdi = long *state);
   asm volatile("movl\t$0,%0\n\t"  // *wt->ztid = 0
-               "syscall"          // _Exit1()
+               "syscall"          // thr_exit()
                : "=m"(*wt->ztid)
                : "a"(431), "D"(0)
                : "rcx", "r11", "memory");
@@ -294,11 +296,14 @@ OpenbsdThreadMain(struct CloneArgs *wt) {
   // although ideally there should be a better solution.
   //
   // void __threxit(%rdi = int32_t *notdead);
-  asm volatile("mov\t%3,%%rsp\n\t"
-               "movl\t$0,%0\n\t"  // *wt->ztid = 0
-               "syscall"          // _Exit1()
+  asm volatile("mov\t%2,%%rsp\n\t"
+               "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0
+               "syscall\n\t"           // futex()
+               "mov\t$302,%%eax\n\t"   // __threxit()
+               "syscall"
                : "=m"(*wt->ztid)
-               : "a"(302), "D"(0), "r"(wt->pstack)
+               : "a"(83), "m"(wt->pstack), "D"(wt->ztid), "S"(FUTEX_WAKE),
+                 "d"(INT_MAX)
                : "rcx", "r11", "memory");
   unreachable;
 }
@@ -337,7 +342,7 @@ static wontreturn void NetbsdThreadMain(void *arg, int (*func)(void *arg),
   // we no longer use the stack after this point
   // %eax = int __lwp_exit(void);
   asm volatile("movl\t$0,%2\n\t"  // *wt->ztid = 0
-               "syscall\n\t"      // _Exit1()
+               "syscall\n\t"      // __lwp_exit()
                "ud2"
                : "=a"(ax), "=d"(dx), "=m"(*ztid)
                : "0"(310)
@@ -504,7 +509,7 @@ int sys_clone_linux(int flags, char *stk, int *ptid, int *ctid, void *tls,
  */
 int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
           int *ptid, void *tls, size_t tlssz, int *ctid) {
-  int rc;
+  int rc, maintid;
   struct CloneArgs *wt;
 
   // transition program to threaded state
@@ -517,13 +522,14 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
       STRACE("clone() tls/non-tls mixed order");
       return einval();
     }
+    maintid = gettid();
     __initialize_tls(tibdefault);
-    *(int *)((char *)tibdefault + 0x38) = gettid();
+    *(int *)((char *)tibdefault + 0x38) = maintid;
     *(int *)((char *)tibdefault + 0x3c) = __errno;
     __install_tls(tibdefault);
-    __threaded = true;
+    __threaded = maintid;
   } else if (flags & CLONE_THREAD) {
-    __threaded = true;
+    __threaded = gettid();
   }
 
   if (IsAsan() &&

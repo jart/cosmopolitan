@@ -25,7 +25,12 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/sysv/consts/nrlinux.h"
 
-#define __NR_sysarch                      0x000000a5
+#define __NR_sysarch     0x000000a5  // freebsd+netbsd
+#define AMD64_SET_GSBASE 131         // freebsd
+#define AMD64_SET_FSBASE 129         // freebsd
+#define X86_SET_GSBASE   16          // netbsd
+#define X86_SET_FSBASE   17          // netbsd
+
 #define __NR___set_tcb                    0x00000149
 #define __NR__lwp_setprivate              0x0000013d
 #define __NR_thread_fast_set_cthread_self 0x03000003
@@ -37,8 +42,6 @@
  *
  *     offset size description
  *     0x0000 0x08 linear address pointer
- *     0x0008 0x08 jmp_buf *exiter
- *     0x0010 0x04 exit code
  *     0x0030 0x08 linear address pointer
  *     0x0038 0x04 tid
  *     0x003c 0x04 errno
@@ -47,8 +50,6 @@
 privileged void *__initialize_tls(char tib[64]) {
   if (tib) {
     *(intptr_t *)tib = (intptr_t)tib;
-    *(intptr_t *)(tib + 0x08) = 0;
-    *(int *)(tib + 0x10) = -1;  // exit code
     *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
     *(int *)(tib + 0x38) = -1;  // tid
     *(int *)(tib + 0x3c) = 0;
@@ -72,7 +73,12 @@ privileged void __install_tls(char tib[64]) {
   } else if (IsFreebsd()) {
     asm volatile("syscall"
                  : "=a"(ax)
-                 : "0"(__NR_sysarch), "D"(129), "S"(tib)
+                 : "0"(__NR_sysarch), "D"(AMD64_SET_FSBASE), "S"(tib)
+                 : "rcx", "r11", "memory", "cc");
+  } else if (IsNetbsd()) {
+    asm volatile("syscall"
+                 : "=a"(ax), "=d"(dx)
+                 : "0"(__NR_sysarch), "D"(X86_SET_FSBASE), "S"(tib)
                  : "rcx", "r11", "memory", "cc");
   } else if (IsXnu()) {
     asm volatile("syscall"
@@ -84,11 +90,6 @@ privileged void __install_tls(char tib[64]) {
     asm volatile("syscall"
                  : "=a"(ax)
                  : "0"(__NR___set_tcb), "D"(tib)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsNetbsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR__lwp_setprivate), "D"(tib)
                  : "rcx", "r11", "memory", "cc");
   } else {
     asm volatile("syscall"

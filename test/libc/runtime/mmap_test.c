@@ -196,12 +196,6 @@ TEST(mmap, twoPowerSize_automapsAddressWithThatAlignment) {
   // verify it's aligned
   ASSERT_EQ(0, (intptr_t)p & 0x0007ffff);
   EXPECT_SYS(0, 0, munmap(p, 0x00080000));
-  // now try again with a big size that isn't a two power
-  ASSERT_NE(MAP_FAILED, (p = mmap(NULL, 0x00070000, PROT_READ | PROT_WRITE,
-                                  MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
-  // automap doesn't bother aligning it
-  ASSERT_NE(0, (intptr_t)p & 0x0007ffff);
-  EXPECT_SYS(0, 0, munmap(q, 0x00010000));
 }
 
 TEST(isheap, nullPtr) {

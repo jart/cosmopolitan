@@ -16,19 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/runtime.h"
+#include "libc/bits/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/str/str.h"
 #include "libc/thread/descriptor.h"
 #include "libc/thread/detach.h"
 
+/**
+ * Detaches thread.
+ *
+ * Calling this function will cause the thread to free its own memory
+ * once it exits. Using this function is mutually exclusive from the
+ * chtread_join() API.
+ *
+ * @return 0 on success or errno number on failure
+ * @raises EINVAL if thread isn't joinable
+ * @raises ESRCH if no such thread exists
+ * @threadsafe
+ */
 int cthread_detach(cthread_t td) {
-  int state;
-  asm volatile("lock xadd\t%1, %0"
-               : "+m"(td->state), "=r"(state)
-               : "1"(cthread_detached)
-               : "cc");
-  if ((state & cthread_finished)) {
-    size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
-    munmap(td->alloc.bottom, size);
+  int rc, tid;
+  if (!td || (IsAsan() && !__asan_is_valid(td, sizeof(*td)))) {
+    rc = ESRCH;
+    tid = -1;
+  } else if ((tid = td->tid) == gettid()) {
+    rc = EDEADLK;
+  } else if (atomic_load(&td->state) & (cthread_detached | cthread_joining)) {
+    rc = EINVAL;
+  } else if (!atomic_fetch_add(&td->state, cthread_detached) &
+             cthread_finished) {
+    rc = 0;
+  } else if (!munmap(td->alloc.bottom, td->alloc.top - td->alloc.bottom)) {
+    rc = 0;
+  } else {
+    rc = errno;
   }
-  return 0;
+  STRACE("cthread_detached(%d) → %s", tid, !rc ? "0" : strerrno(rc));
+  return rc;
 }

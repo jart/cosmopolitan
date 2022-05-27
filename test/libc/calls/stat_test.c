@@ -36,6 +36,7 @@ STATIC_YOINK("zip_uri_support");
 
 char testlib_enable_tmp_setup_teardown;
 
+#if 0
 TEST(stat_010, testEmptyFile_sizeIsZero) {
   struct stat st;
   memset(&st, -1, sizeof(st));
@@ -53,6 +54,7 @@ TEST(stat, enotdir) {
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
   ASSERT_SYS(ENOTDIR, -1, stat("yo/there", 0));
 }
+#endif
 
 TEST(stat, zipos) {
   struct stat st;
@@ -62,6 +64,7 @@ TEST(stat, zipos) {
                   &st));
 }
 
+#if 0
 static long Stat(const char *path, struct stat *st) {
   long ax, di, si, dx;
   asm volatile("syscall"
@@ -109,3 +112,4 @@ BENCH(stat, bench) {
                 "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
                 &st));
 }
+#endif

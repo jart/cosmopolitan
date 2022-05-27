@@ -17,14 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+.privileged
 
-//	Clears error state on stream.
+//	Loads previously saved processor state.
 //
-//	@param	rdi has stream pointer
-//	@see	clearerr_unlocked()
-//	@threadsafe
-clearerr:
-	mov	%rdi,%r11
-	ezlea	clearerr_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	clearerr,globl
+//	@param	rdi points to the jmp_buf
+//	@param	rsi is returned by setlongerjmp() invocation
+//	@noreturn
+longerjmp:
+	mov	$1,%eax
+	mov	%rsi,%rdx
+	mov	(%rdi),%rsp
+	mov	8(%rdi),%rbx
+	mov	16(%rdi),%rbp
+	mov	24(%rdi),%r12
+	mov	32(%rdi),%r13
+	mov	40(%rdi),%r14
+	mov	48(%rdi),%r15
+	jmp	*56(%rdi)
+	.endfn	longerjmp,globl

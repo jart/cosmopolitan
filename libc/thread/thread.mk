@@ -11,43 +11,43 @@ LIBC_THREAD_A_HDRS = $(filter %.h,$(LIBC_THREAD_A_FILES))
 LIBC_THREAD_A_SRCS_S = $(filter %.S,$(LIBC_THREAD_A_FILES))
 LIBC_THREAD_A_SRCS_C = $(filter %.c,$(LIBC_THREAD_A_FILES))
 
-LIBC_THREAD_A_SRCS =				\
-	$(LIBC_THREAD_A_SRCS_S)			\
+LIBC_THREAD_A_SRCS =					\
+	$(LIBC_THREAD_A_SRCS_S)				\
 	$(LIBC_THREAD_A_SRCS_C)
 
-LIBC_THREAD_A_OBJS =				\
+LIBC_THREAD_A_OBJS =					\
 	$(LIBC_THREAD_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
 	$(LIBC_THREAD_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
-LIBC_THREAD_A_CHECKS =				\
-	$(LIBC_THREAD_A).pkg			\
+LIBC_THREAD_A_CHECKS =					\
+	$(LIBC_THREAD_A).pkg				\
 	$(LIBC_THREAD_A_HDRS:%=o/$(MODE)/%.ok)
 
-LIBC_THREAD_A_DIRECTDEPS =			\
-	LIBC_STUBS				\
-	LIBC_CALLS				\
-	LIBC_INTRIN				\
-	LIBC_BITS				\
-	LIBC_MEM				\
-	LIBC_RUNTIME				\
-	LIBC_SYSV				\
-	LIBC_SYSV_CALLS				\
+LIBC_THREAD_A_DIRECTDEPS =				\
+	LIBC_STUBS					\
+	LIBC_CALLS					\
+	LIBC_INTRIN					\
+	LIBC_BITS					\
+	LIBC_MEM					\
+	LIBC_RUNTIME					\
+	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E
 
-LIBC_THREAD_A_DEPS :=				\
+LIBC_THREAD_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_THREAD_A_DIRECTDEPS),$($(x))))
 
-$(LIBC_THREAD_A):				\
-		libc/thread/			\
-		$(LIBC_THREAD_A).pkg		\
+$(LIBC_THREAD_A):					\
+		libc/thread/				\
+		$(LIBC_THREAD_A).pkg			\
 		$(LIBC_THREAD_A_OBJS)
 
-$(LIBC_THREAD_A).pkg:				\
-		$(LIBC_THREAD_A_OBJS)		\
+$(LIBC_THREAD_A).pkg:					\
+		$(LIBC_THREAD_A_OBJS)			\
 		$(foreach x,$(LIBC_THREAD_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/tinylinux/libc/thread/clone.o:		\
-		OVERRIDE_CFLAGS +=		\
+o/tinylinux/libc/thread/clone.o:			\
+		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections
 
 LIBC_THREAD_LIBS = $(foreach x,$(LIBC_THREAD_ARTIFACTS),$($(x)))

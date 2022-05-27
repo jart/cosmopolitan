@@ -17,15 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/runtime/stack.h"
 #include "libc/thread/attr.h"
 
-#define MIN_STACKSIZE (8 * PAGESIZE)
+#define MIN_STACKSIZE (8 * PAGESIZE)  // includes guard, rounds up to FRAMESIZE
 #define MIN_GUARDSIZE PAGESIZE
 
 // CTOR/DTOR
 int cthread_attr_init(cthread_attr_t* attr) {
-  attr->stacksize = 1024 * PAGESIZE;  // 4 MiB
-  attr->guardsize = 16 * PAGESIZE;    // 64 KiB
+  attr->stacksize = GetStackSize();
+  attr->guardsize = PAGESIZE;
   attr->mode = CTHREAD_CREATE_JOINABLE;
   return 0;
 }

@@ -1,14 +1,9 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-.section .privileged,"ax",@progbits
-
 econnrefused:
 	.leafprologue
+	.profilable
 	mov	ECONNREFUSED(%rip),%ecx
-	.errno
-	mov	%ecx,(%rax)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	jmp	__errfun
 	.endfn	econnrefused,globl,hidden

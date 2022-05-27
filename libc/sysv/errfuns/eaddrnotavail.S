@@ -1,14 +1,9 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-.section .privileged,"ax",@progbits
-
 eaddrnotavail:
 	.leafprologue
+	.profilable
 	mov	EADDRNOTAVAIL(%rip),%ecx
-	.errno
-	mov	%ecx,(%rax)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	jmp	__errfun
 	.endfn	eaddrnotavail,globl,hidden

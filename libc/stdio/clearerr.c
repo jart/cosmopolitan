@@ -18,6 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
-void clearerr_unlocked(FILE *f) {
-  f->state = 0;
+/**
+ * Clears error state on stream.
+ *
+ * @param f is file object stream pointer
+ * @see	clearerr_unlocked()
+ * @threadsafe
+ */
+void clearerr(FILE *f) {
+  flockfile(f);
+  clearerr_unlocked(f);
+  funlockfile(f);
 }

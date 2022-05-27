@@ -17,6 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-_Alignas(64) int __sig_lock;
 unsigned __sighandrvas[NSIG];
 unsigned __sighandflags[NSIG];
+_Alignas(64) int __sig_lock_obj;

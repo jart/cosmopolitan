@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -31,24 +30,13 @@
  * @param f is non-null file oject stream pointer
  * @return s on success, NULL on error, or NULL if EOF happens when
  *     zero characters have been read
+ * @see fgets_unlocked()
+ * @threadsafe
  */
-char *fgets_unlocked(char *s, int size, FILE *f) {
-  int c;
-  char *p;
-  p = s;
-  if (size > 0) {
-    while (--size > 0) {
-      if ((c = fgetc_unlocked(f)) == -1) {
-        if (ferror_unlocked(f) == EINTR) {
-          continue;
-        } else {
-          break;
-        }
-      }
-      *p++ = c & 255;
-      if (c == '\n') break;
-    }
-    *p = '\0';
-  }
-  return p > s ? s : NULL;
+char *fgets(char *s, int size, FILE *f) {
+  char *res;
+  flockfile(f);
+  res = fgets_unlocked(s, size, f);
+  funlockfile(f);
+  return res;
 }

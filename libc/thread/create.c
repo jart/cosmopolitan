@@ -16,108 +16,117 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
-#include "libc/linux/clone.h"
+#include "libc/intrin/setjmp.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/attr.h"
 #include "libc/thread/create.h"
+#include "libc/thread/descriptor.h"
+#include "libc/thread/zombie.h"
 
 STATIC_YOINK("_main_thread_ctor");
 
-// TLS boundaries
-extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
-
-static cthread_t _thread_allocate(const cthread_attr_t* attr) {
-  size_t stacksize = attr->stacksize;
-  size_t guardsize = attr->guardsize;
-  size_t tbsssize = &_tbss_end - &_tbss_start;
-  size_t tdatasize = &_tdata_end - &_tdata_start;
-  size_t tlssize = tbsssize + tdatasize;
-
-  size_t totalsize =
-      3 * guardsize + stacksize + tlssize + sizeof(struct cthread_descriptor_t);
-  totalsize = (totalsize + PAGESIZE - 1) & -PAGESIZE;
-
-  uintptr_t mem = (uintptr_t)mmap(NULL, totalsize, PROT_NONE,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (mem == -1) return NULL;
-
-  void* alloc_bottom = (void*)mem;
-  void* stack_bottom = (void*)(mem + guardsize);
-  void* stack_top = (void*)(mem + guardsize + stacksize);
-  void* tls_bottom = (void*)(mem + guardsize + stacksize + guardsize);
-  void* tls_top = (void*)(mem + totalsize - guardsize);
-  void* alloc_top = (void*)(mem + totalsize);
-
-  if (mprotect(stack_bottom, (uintptr_t)stack_top - (uintptr_t)stack_bottom,
-               PROT_READ | PROT_WRITE) != 0 ||
-      mprotect(tls_bottom, (uintptr_t)tls_top - (uintptr_t)tls_bottom,
-               PROT_READ | PROT_WRITE) != 0) {
-    munmap(alloc_bottom, totalsize);
-    return NULL;
+static cthread_t cthread_allocate(const cthread_attr_t *attr) {
+  char *mem;
+  size_t size;
+  cthread_t td;
+  size = ROUNDUP(
+      attr->stacksize +
+          ROUNDUP((uintptr_t)_tls_size + sizeof(struct cthread_descriptor_t),
+                  PAGESIZE),
+      FRAMESIZE);
+  mem = mmap(0, size, PROT_READ | PROT_WRITE, MAP_STACK | MAP_ANONYMOUS, -1, 0);
+  if (mem == MAP_FAILED) return 0;
+  if (attr->guardsize > PAGESIZE) {
+    mprotect(mem, attr->guardsize, PROT_NONE);
   }
-
-  cthread_t td = (cthread_t)tls_top - 1;
+  td = (cthread_t)(mem + size - sizeof(struct cthread_descriptor_t));
   td->self = td;
-  td->stack.top = stack_top;
-  td->stack.bottom = stack_bottom;
-  td->tls.top = tls_top;
-  td->tls.bottom = tls_bottom;
-  td->alloc.top = alloc_top;
-  td->alloc.bottom = alloc_bottom;
-  td->state = (attr->mode & CTHREAD_CREATE_DETACHED) ? cthread_detached
-                                                     : cthread_started;
+  td->self2 = td;
+  td->err = errno;
+  td->tid = -1;
+  td->stack.bottom = mem;
+  td->stack.top = mem + attr->stacksize;
+  td->alloc.bottom = mem;
+  td->alloc.top = mem + size;
+  if (attr->mode & CTHREAD_CREATE_DETACHED) {
+    td->state = cthread_detached;
+  } else {
+    td->state = cthread_started;
+  }
   // Initialize TLS with content of .tdata section
-  memmove((void*)((uintptr_t)td - tlssize), &_tdata_start, tdatasize);
-
+  memmove((void *)((intptr_t)td - (intptr_t)_tls_size), _tdata_start,
+          (intptr_t)_tdata_size);
   return td;
 }
 
-int cthread_create(cthread_t* restrict p, const cthread_attr_t* restrict attr,
-                   int (*func)(void*), void* restrict arg) {
-  extern wontreturn void _thread_run(int (*func)(void*), void* arg);
-
-  cthread_attr_t default_attr;
-  cthread_attr_init(&default_attr);
-  cthread_t td = _thread_allocate(attr ? attr : &default_attr);
-  cthread_attr_destroy(&default_attr);
-  if (!td) return errno;
-
-  *p = td;
-
-  register cthread_t td_ asm("r8") = td;
-  register int* ptid_ asm("rdx") = &td->tid;
-  register int* ctid_ asm("r10") = &td->tid;
-  register int (*func_)(void*) asm("r12") = func;
-  register void* arg_ asm("r13") = arg;
-
-  long flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-               CLONE_PARENT | CLONE_THREAD | /*CLONE_IO |*/ CLONE_SETTLS |
-               CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
-  int rc;
-  // asm ensures the (empty) stack of the child thread is not used
-  asm volatile("syscall\n\t"                    // clone
-               "test\t%0, %0\n\t"               // if not child
-               "jne\t.L.cthread_create.%=\n\t"  // jump to `parent` label
-               "xor\t%%rbp, %%rbp\n\t"          // reset stack frame pointer
-               "mov\t%2, %%rdi\n\t"
-               "call\t*%1\n\t"  // call `func(arg)`
-               "mov\t%%rax, %%rdi\n\t"
-               "jmp\tcthread_exit\n"  // exit thread
-               ".L.cthread_create.%=:"
-               : "=a"(rc)
-               : "r"(func_), "r"(arg_), "0"(__NR_clone), "D"(flags),
-                 "S"(td->stack.top), "r"(ptid_), "r"(ctid_), "r"(td_)
-               : "rcx", "r11", "cc", "memory");
-  if (__builtin_expect(rc < 0, 0)) {
-    // `clone` has failed. The thread must be deallocated.
-    size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
-    munmap(td->alloc.bottom, size);
-    return -rc;
+static int cthread_start(void *arg) {
+  axdx_t rc;
+  void *exitcode;
+  cthread_t td = arg;
+  if (!(rc = setlongerjmp(td->exiter)).ax) {
+    exitcode = td->func(td->arg);
+  } else {
+    exitcode = (void *)rc.dx;
   }
+  td->exitcode = exitcode;
+  if (atomic_load(&td->state) & cthread_detached) {
+    // we're still using the stack
+    // thus we can't munmap it yet
+    // kick the can down the road!
+    cthread_zombies_add(td);
+  }
+  atomic_fetch_add(&td->state, cthread_finished);
   return 0;
+}
+
+/**
+ * Creates thread.
+ *
+ * @param ptd will receive pointer to new thread descriptor
+ * @param attr contains special configuration if non-null
+ * @param func is thread callback function
+ * @param arg is argument supplied to `func`
+ * @return 0 on success, or error number on failure
+ * @threadsafe
+ */
+int cthread_create(cthread_t *restrict ptd, const cthread_attr_t *restrict attr,
+                   void *(*func)(void *), void *restrict arg) {
+  int rc, tid;
+  cthread_t td;
+  cthread_attr_t default_attr;
+  cthread_zombies_reap();
+  cthread_attr_init(&default_attr);
+  if ((td = cthread_allocate(attr ? attr : &default_attr))) {
+    td->func = func;
+    td->arg = arg;
+    cthread_attr_destroy(&default_attr);
+    tid =
+        clone(cthread_start, td->stack.bottom, td->stack.top - td->stack.bottom,
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              td, 0, td, sizeof(struct cthread_descriptor_t), &td->tid);
+    if (tid != -1) {
+      *ptd = td;
+      rc = 0;
+    } else {
+      rc = errno;
+      munmap(td->alloc.bottom, td->alloc.top - td->alloc.bottom);
+    }
+  } else {
+    rc = errno;
+    tid = -1;
+  }
+  STRACE("cthread_create([%d], %p, %p, %p) → %s", tid, attr, func, arg,
+         !rc ? "0" : strerrno(rc));
+  return rc;
 }

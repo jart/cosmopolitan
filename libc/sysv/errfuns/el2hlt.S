@@ -1,13 +1,8 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
-.section .privileged,"ax",@progbits
-
 el2hlt:	.leafprologue
+	.profilable
 	mov	EL2HLT(%rip),%ecx
-	.errno
-	mov	%ecx,(%rax)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	jmp	__errfun
 	.endfn	el2hlt,globl,hidden

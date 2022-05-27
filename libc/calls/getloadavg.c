@@ -17,24 +17,60 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/errfuns.h"
 
+#define CTL_VM     2
+#define VM_LOADAVG 2
+
+struct loadavg {
+  uint32_t ldavg[3];
+  int64_t fscale;
+};
+
 /**
  * Returns system load average.
- * @note work in progress
+ *
+ * @param a should be array of 3 doubles
+ * @param n should be 3
+ * @return number of items placed in `a` or -1 w/ errno
+ * @raise ENOSYS on metal
  */
 int getloadavg(double *a, int n) {
   /* cat /proc/loadavg  */
-  int i;
-  struct sysinfo si;
-  if (!n) return 0;
-  if (n < 0) return einval();
-  if (sysinfo(&si) == -1) return -1;
+  int i, rc;
   if (n > 3) n = 3;
-  for (i = 0; i < n; i++) {
-    a[i] = 1. / 65536 * si.loads[i];
+  if (!n) {
+    rc = 0;
+  } else if (n < 0) {
+    rc = einval();
+  } else if (IsWindows()) {
+    return sys_getloadavg_nt(a, n);
+  } else if (IsLinux()) {
+    struct sysinfo si;
+    if ((rc = sysinfo(&si)) != -1) {
+      for (i = 0; i < n; i++) {
+        a[i] = 1. / 65536 * si.loads[i];
+      }
+      rc = n;
+    }
+  } else if (IsFreebsd() || IsNetbsd() || IsOpenbsd() || IsXnu()) {
+    size_t size;
+    struct loadavg loadinfo;
+    int mib[2] = {CTL_VM, VM_LOADAVG};
+    size = sizeof(loadinfo);
+    if ((rc = sysctl(mib, 2, &loadinfo, &size, 0, 0)) != -1) {
+      for (i = 0; i < n; i++) {
+        a[i] = (double)loadinfo.ldavg[i] / loadinfo.fscale;
+      }
+      rc = n;
+    }
+  } else {
+    rc = enosys();
   }
-  return n;
+  STRACE("getloadavg(%p, %d) → %d% m", a, n, rc);
+  return rc;
 }

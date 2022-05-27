@@ -664,7 +664,7 @@ imp	'GetSystemTime'						GetSystemTime						kernel32	0	1
 imp	'GetSystemTimeAdjustment'				GetSystemTimeAdjustment					kernel32	0	3
 imp	'GetSystemTimeAsFileTime'				GetSystemTimeAsFileTime					kernel32	0	1
 imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel32	0	1
-imp	'GetSystemTimes'					GetSystemTimes						kernel32	0
+imp	'GetSystemTimes'					GetSystemTimes						kernel32	0	3
 imp	'GetSystemWindowsDirectory'				GetSystemWindowsDirectoryW				kernel32	0
 imp	'GetSystemWindowsDirectoryA'				GetSystemWindowsDirectoryA				kernel32	0
 imp	'GetSystemWow64Directory'				GetSystemWow64DirectoryW				kernel32	0

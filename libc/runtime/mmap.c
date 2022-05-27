@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -84,6 +86,7 @@ static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
 }
 
 static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
+  // TODO: improve performance
   int i, start, end;
   assert(align > 0);
   if (_mmi.i) {
@@ -327,15 +330,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  // if size is a two power then automap will use it as alignment
-  if (IS2POW(size)) {
-    a = size >> 16;
-    if (!a) {
-      a = 1;
-    }
-  } else {
-    a = 1;
-  }
+  a = max(1, rounddown2pow(size) >> 16);
 
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {

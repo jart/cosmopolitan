@@ -17,26 +17,35 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Duplicates file descriptor/handle.
+ * Duplicates file descriptor.
+ *
+ * The `O_CLOEXEC` flag shall be cleared from the resulting file
+ * descriptor; see dup3() to preserve it.
  *
  * @param fd remains open afterwards
  * @return some arbitrary new number for fd
+ * @raise EOPNOTSUPP if zipos file
+ * @raise EBADF if fd isn't open
  * @asyncsignalsafe
  * @vforksafe
  */
 int dup(int fd) {
-  int fd2;
-  if (!IsWindows()) {
-    fd2 = sys_dup(fd);
+  int rc;
+  if (__isfdkind(fd, kFdZip)) {
+    rc = eopnotsupp();
+  } else if (!IsWindows()) {
+    rc = sys_dup(fd);
   } else {
-    fd2 = sys_dup_nt(fd, -1, 0, -1);
+    rc = sys_dup_nt(fd, -1, 0, -1);
   }
-  STRACE("%s(%d) → %d% m", "dup", fd, fd2);
-  return fd2;
+  STRACE("%s(%d) → %d% m", "dup", fd, rc);
+  return rc;
 }

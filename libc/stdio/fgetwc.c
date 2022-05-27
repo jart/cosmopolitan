@@ -17,35 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
-#include "libc/str/thompike.h"
-#include "libc/str/tpdecodecb.internal.h"
 
 /**
  * Reads UTF-8 character from stream.
+ *
+ * @param f is non-null file object stream pointer
  * @return wide character or -1 on EOF or error
+ * @see fgetwc_unlocked()
+ * @threadsafe
  */
-wint_t fgetwc_unlocked(FILE *f) {
-  int c, n;
-  wint_t b, x, y;
-  if (f->beg < f->end) {
-    b = f->buf[f->beg++] & 0xff;
-  } else if ((c = fgetc_unlocked(f)) != -1) {
-    b = c;
-  } else {
-    return -1;
-  }
-  if (b < 0300) return b;
-  n = ThomPikeLen(b);
-  x = ThomPikeByte(b);
-  while (--n) {
-    if ((c = fgetc_unlocked(f)) == -1) return -1;
-    y = c;
-    if (ThomPikeCont(y)) {
-      x = ThomPikeMerge(x, y);
-    } else {
-      ungetc_unlocked(y, f);
-      return b;
-    }
-  }
-  return x;
+wint_t fgetwc(FILE *f) {
+  wint_t wc;
+  flockfile(f);
+  wc = fgetwc_unlocked(f);
+  funlockfile(f);
+  return wc;
 }

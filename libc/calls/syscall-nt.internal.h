@@ -18,6 +18,7 @@ int sys_fdatasync_nt(int) hidden;
 int sys_flock_nt(int, int) hidden;
 int sys_fork_nt(void) hidden;
 int sys_ftruncate_nt(int64_t, uint64_t) hidden;
+int sys_getloadavg_nt(double *, int) hidden;
 int sys_getppid_nt(void) hidden;
 int sys_getpriority_nt(int) hidden;
 int sys_getsetpriority_nt(int, int, int, int (*)(int));

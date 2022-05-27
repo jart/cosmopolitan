@@ -185,10 +185,12 @@
 ENTRY(_start)
 
 PHDRS {
-  Head PT_LOAD FLAGS(5);
-  Rom PT_LOAD FLAGS(5);
-  Ram PT_LOAD FLAGS(6);
-  stack PT_GNU_STACK FLAGS(6);
+  Head PT_LOAD FLAGS(PF_X|PF_R);
+  Rom PT_LOAD FLAGS(PF_X|PF_R);
+  Ram PT_LOAD FLAGS(PF_W|PF_R);
+  Tls PT_TLS FLAGS(PF_W|PF_R);
+  Bss PT_LOAD FLAGS(PF_W|PF_R);
+  stack PT_GNU_STACK FLAGS(PF_W|PF_R);
 }
 
 SECTIONS {
@@ -348,20 +350,7 @@ SECTIONS {
 /*END: Read Only Data */
   } :Rom
 
-  .tdata . : {
-    _tdata_start = .;
-    *(SORT_BY_ALIGNMENT(.tdata))
-    *(SORT_BY_ALIGNMENT(.tdata.*))
-    _tdata_end = .;
-  }
-  .tbss . : {
-    _tbss_start = .;
-    *(SORT_BY_ALIGNMENT(.tbss))
-    *(SORT_BY_ALIGNMENT(.tbss.*))
-    _tbss_end = .;
-  }
-
-  .data . : {
+  .data ALIGN(PAGESIZE) : {
 /*BEGIN: Read/Write Data */
     KEEP(*(SORT_BY_NAME(.piro.data.sort.iat.*)))
 /*BEGIN: NT FORK COPYING */
@@ -387,18 +376,29 @@ SECTIONS {
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
 /*END: NT FORK COPYING */
-    . = ALIGN(PAGESIZE);
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
+    KEEP(*(SORT_BY_NAME(.zip.*)))
+    HIDDEN(_ezip = .);
   } :Ram
+
+  .tdata . : {
+    _tdata_start = .;
+    *(SORT_BY_ALIGNMENT(.tdata))
+    *(SORT_BY_ALIGNMENT(.tdata.*))
+    _tdata_end = .;
+    . = ALIGN(PAGESIZE);
+  } :Tls
 
 /*END:   file content that's loaded by o/s */
 /*BEGIN: bss memory void */
 
-  .zip . : {
-    KEEP(*(SORT_BY_NAME(.zip.*)))
-    HIDDEN(_ezip = .);
-  }
+  .tbss . : {
+    _tbss_start = .;
+    *(SORT_BY_ALIGNMENT(.tbss))
+    *(SORT_BY_ALIGNMENT(.tbss.*))
+    _tbss_end = .;
+  } :Tls
 
 /*END:   file content */
 /*BEGIN: bss memory that's addressable */
@@ -425,7 +425,7 @@ SECTIONS {
     . = ALIGN(FRAMESIZE); /* for brk()/sbrk() allocation */
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
-  }
+  } :Bss
 
 /*END: nt addressability guarantee */
 /*END: bsd addressability guarantee */
@@ -481,6 +481,9 @@ PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
 PFSTUB4(ape_elf_shnum, 0);
 PFSTUB4(ape_elf_shstrndx, 0);
 
+HIDDEN(_tdata_size = _tdata_end - _tdata_start);
+HIDDEN(_tls_size = _tbss_end - _tdata_start);
+
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -
                             ROUNDDOWN(__privileged_start, PAGESIZE)));
@@ -496,7 +499,7 @@ HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
 HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = SIZEOF(.data));
+HIDDEN(ape_ram_filesz = SIZEOF(.data) + SIZEOF(.tdata));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));

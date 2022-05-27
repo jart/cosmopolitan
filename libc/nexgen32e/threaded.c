@@ -18,6 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/threaded.h"
 
-bool __threaded;
+/**
+ * Contains TID of main thread or 0 if threading isn't enabled.
+ */
+int __threaded;
+
 bool __tls_enabled;
+
 unsigned __tls_index;

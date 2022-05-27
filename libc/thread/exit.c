@@ -17,30 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/intrin/lockxadd.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/descriptor.h"
 #include "libc/thread/exit.h"
 #include "libc/thread/self.h"
 
 /**
  * Exits cosmopolitan thread.
  *
- * @param rc is exit code
- * @see _Exit1() for the raw system call
+ * @param exitcode is passed along to cthread_join()
  * @threadsafe
  * @noreturn
  */
-wontreturn void cthread_exit(int rc) {
-  cthread_t td;
-  STRACE("cthread_exit(%d)", rc);
-  td = cthread_self();
-  td->rc = rc;
-  _lockxadd(&td->state, cthread_finished);
-  if (~td->state & cthread_detached) {
-    sys_munmap(td->alloc.bottom,
-               (intptr_t)td->alloc.top - (intptr_t)td->alloc.bottom);
-  }
-  _Exit1(rc);
+wontreturn void cthread_exit(void *exitcode) {
+  STRACE("cthread_exit(%p)", exitcode);
+  longerjmp(cthread_self()->exiter, (intptr_t)exitcode);
 }

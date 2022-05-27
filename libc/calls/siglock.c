@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/intrin/spinlock.h"
 
-//	Reads byte from stream.
-//
-//	@param	rdi has stream object pointer
-//	@return byte in range 0..255, or -1 w/ errno
-//	@see	fgetc_unlocked()
-//	@threadsafe
-fgetc:	mov	%rdi,%r11
-	ezlea	fgetc_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fgetc,globl
+void __sig_lock(void) {
+  _spinlock(&__sig_lock_obj);
+}
+
+void __sig_unlock(void) {
+  _spunlock(&__sig_lock_obj);
+}

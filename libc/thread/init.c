@@ -16,59 +16,59 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/descriptor.h"
-
-// TLS boundaries
-extern char _tbss_start, _tbss_end, _tdata_start, _tdata_end;
+#include "libc/thread/self.h"
 
 static textstartup void _main_thread_init(void) {
-  if (!IsLinux()) return; /* TODO */
-  size_t tbsssize = &_tbss_end - &_tbss_start;
-  size_t tdatasize = &_tdata_end - &_tdata_start;
-  size_t tlssize = tbsssize + tdatasize;
-  size_t totalsize = tlssize + sizeof(struct cthread_descriptor_t);
-  totalsize = (totalsize + PAGESIZE - 1) & -PAGESIZE;
+  _Static_assert(offsetof(struct cthread_descriptor_t, self) == 0x00, "");
+  _Static_assert(offsetof(struct cthread_descriptor_t, self2) == 0x30, "");
+  _Static_assert(offsetof(struct cthread_descriptor_t, tid) == 0x38, "");
+  _Static_assert(offsetof(struct cthread_descriptor_t, err) == 0x3c, "");
+  cthread_t td;
+  size_t totalsize;
+  char *mem, *bottom, *top;
 
-  uintptr_t mem = (uintptr_t)mmap(NULL, totalsize, PROT_READ | PROT_WRITE,
-                                  MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-  if (mem == -1) {
-    abort();
-  }
+  totalsize = ROUNDUP(
+      (uintptr_t)_tls_size + sizeof(struct cthread_descriptor_t), FRAMESIZE);
 
-  void* bottom = (void*)mem;
-  void* top = (void*)(mem + totalsize);
+  mem = mmap(0, totalsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
+             -1, 0);
+  assert(mem != MAP_FAILED);
 
-  cthread_t td = (cthread_t)top - 1;
+  bottom = mem;
+  top = mem + totalsize;
+
+  td = (cthread_t)(top - sizeof(struct cthread_descriptor_t));
   td->self = td;
-  td->stack.top = NULL;
-  td->stack.bottom = NULL;
-  td->tls.top = top;
-  td->tls.bottom = bottom;
-  td->alloc.top = top;
+  td->self2 = td;
+  td->err = errno;
+  td->tid = gettid();
   td->alloc.bottom = bottom;
+  td->alloc.top = top;
+  td->stack.bottom = GetStackAddr(0);
+  td->stack.top = td->stack.bottom + GetStackSize();
   td->state = cthread_main;
 
   // Initialize TLS with content of .tdata section
-  memmove((void*)((uintptr_t)td - tlssize), &_tdata_start, tdatasize);
-
-  // Get TID of main thread
-  int gettid = __NR_gettid;
-  if (gettid == 0xfff) gettid = __NR_getpid;
-  td->tid = syscall(gettid);
+  memmove((void *)((uintptr_t)td - (uintptr_t)_tls_size), _tdata_start,
+          (uintptr_t)_tdata_size);
 
   // Set FS
-  if (arch_prctl(ARCH_SET_FS, td) != 0) {
-    abort();
-  }
+  __install_tls((char *)td);
+  assert(cthread_self()->tid == gettid());
 }
 
-const void* const _main_thread_ctor[] initarray = {
+const void *const _main_thread_ctor[] initarray = {
     _main_thread_init,
 };

@@ -3,11 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
- * @fileoverview exit the current thread
- */
-
-wontreturn void cthread_exit(int);
+wontreturn void cthread_exit(void *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

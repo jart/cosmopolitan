@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -33,13 +34,26 @@
  * @param oldfd isn't closed afterwards
  * @param newfd if already assigned, is silently closed beforehand;
  *     unless it's equal to oldfd, in which case dup2() is a no-op
- * @param flags can have O_CLOEXEC
+ * @param flags may have O_CLOEXEC which is needed to preserve the
+ *     close-on-execve() state after file descriptor duplication
+ * @return newfd on success, or -1 w/ errno
+ * @raise EINVAL if flags has unsupported bits
+ * @raise EINVAL if newfd equals oldfd
+ * @raise EBADF is oldfd isn't open
+ * @raise EBADF is newfd negative or too big
+ * @raise EINTR if a signal handler was called
  * @see dup(), dup2()
  */
 int dup3(int oldfd, int newfd, int flags) {
   int rc;
-  if (!IsWindows()) {
+  if (__isfdkind(oldfd, kFdZip)) {
+    rc = eopnotsupp();
+  } else if (oldfd == newfd) {
+    rc = einval();
+  } else if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, flags);
+  } else if (newfd < 0) {
+    rc = ebadf();
   } else {
     rc = sys_dup_nt(oldfd, newfd, flags, -1);
   }
