@@ -33,5 +33,6 @@
 //
 //	@param	rdi is number of bytes needed, coerced to 1+
 //	@return	new memory, or NULL w/ errno
+//	@threadsafe
 malloc:	jmp	*hook_malloc(%rip)
 	.endfn	malloc,globl

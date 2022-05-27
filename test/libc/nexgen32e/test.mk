@@ -55,7 +55,7 @@ o/$(MODE)/test/libc/nexgen32e/%.com.dbg:			\
 		o/$(MODE)/test/libc/nexgen32e/nexgen32e.pkg	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_NEXGEN32E_OBJS):					\

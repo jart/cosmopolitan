@@ -25,12 +25,12 @@ int cthread_memory_wait32(uint32_t* addr, uint32_t val,
   if (__NR_futex != 0xfff) {
     int flags = FUTEX_WAIT;
     int rc;
-    register struct timespec* timeout_ asm("r10") = timeout;
-    asm volatile("syscall"
+    asm volatile("mov\t%5,%%r10\n\t"  // timeout
+                 "syscall"
                  : "=a"(rc)
                  : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(val),
-                   "r"(timeout_)
-                 : "rcx", "r11", "cc", "memory");
+                   "g"(timeout)
+                 : "rcx", "r10", "r11", "cc", "memory");
     return rc;
   }
   return -1;

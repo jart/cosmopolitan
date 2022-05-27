@@ -14,10 +14,12 @@ extern char **__argv;                               /* CRT */
 extern char **__envp;                               /* CRT */
 extern unsigned long *__auxv;                       /* CRT */
 extern intptr_t __oldstack;                         /* CRT */
+extern uint64_t __nosync;                           /* SYS */
+extern _Atomic(int) __ftrace;                       /* SYS */
+extern _Atomic(int) __strace;                       /* SYS */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
-extern int g_ftrace;                                /* CRT */
-extern uint64_t g_syscount;                         /* RII */
+extern uint64_t __syscount;                         /* RII */
 extern const uint64_t kStartTsc;                    /* RII */
 extern const char kTmpPath[];                       /* RII */
 extern const char kNtSystemDirectory[];             /* RII */
@@ -28,15 +30,16 @@ extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
 extern unsigned char _ezip[];                       /* αpε */
 extern unsigned char _end[] forcealign(FRAMESIZE);  /* αpε */
-extern unsigned char _ereal;                        /* αpε */
-extern unsigned char __privileged_start;            /* αpε */
-extern unsigned char __test_start;                  /* αpε */
-extern unsigned char __ro;                          /* αpε */
+extern unsigned char _ereal[];                      /* αpε */
+extern unsigned char __privileged_start[];          /* αpε */
+extern unsigned char __privileged_addr[];           /* αpε */
+extern unsigned char __privileged_size[];           /* αpε */
+extern unsigned char __test_start[];                /* αpε */
+extern unsigned char __ro[];                        /* αpε */
 extern unsigned char *__relo_start[];               /* αpε */
 extern unsigned char *__relo_end[];                 /* αpε */
 extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
-extern bool ftrace_enabled;
 extern size_t __virtualmax;
 extern bool __isworker;
 
@@ -105,6 +108,11 @@ char *GetInterpreterExecutableName(char *, size_t);
 void __printargs(const char *);
 void __paginate(int, const char *);
 int __arg_max(void);
+void __morph_begin(void);
+void __morph_end(void);
+unsigned char *GetFirstInstruction(void);
+unsigned char *GetInstructionLengths(void);
+void __print_maps(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

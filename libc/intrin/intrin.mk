@@ -46,6 +46,8 @@ $(LIBC_INTRIN_A_OBJS):					\
 		OVERRIDE_CFLAGS +=			\
 			-foptimize-sibling-calls
 
+# we can't use asan and ubsan because:
+#   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
@@ -58,67 +60,92 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
+# we can't use compiler magic because:
+#   kprintf() is mission critical to error reporting
+o/$(MODE)/libc/intrin/getmagnumstr.greg.o		\
+o/$(MODE)/libc/intrin/strerrno.greg.o			\
+o/$(MODE)/libc/intrin/strerrdoc.greg.o			\
+o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
 o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie				\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
 			-ffreestanding			\
-			$(NO_MAGIC)
+			-fno-sanitize=all		\
+			-fno-stack-protector
+
+# we can't use compiler magic because:
+#   spinlocks are called very early in initialization
+#   e.g. __cxa_atexit()
+o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
+o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector
 
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
-o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/getenv.greg.o			\
-o/$(MODE)/libc/intrin/createfile.greg.o			\
 o/$(MODE)/libc/intrin/assertfail.greg.o			\
-o/$(MODE)/libc/intrin/reopenfile.greg.o			\
-o/$(MODE)/libc/intrin/deletefile.greg.o			\
-o/$(MODE)/libc/intrin/createpipe.greg.o			\
-o/$(MODE)/libc/intrin/closehandle.greg.o		\
 o/$(MODE)/libc/intrin/describeiov.greg.o		\
-o/$(MODE)/libc/intrin/openprocess.greg.o		\
-o/$(MODE)/libc/intrin/createthread.greg.o		\
 o/$(MODE)/libc/intrin/describestat.greg.o		\
-o/$(MODE)/libc/intrin/findnextfile.greg.o		\
-o/$(MODE)/libc/intrin/createprocess.greg.o		\
-o/$(MODE)/libc/intrin/findfirstfile.greg.o		\
 o/$(MODE)/libc/intrin/describeflags.greg.o		\
 o/$(MODE)/libc/intrin/describerlimit.greg.o		\
-o/$(MODE)/libc/intrin/removedirectory.greg.o		\
-o/$(MODE)/libc/intrin/createnamedpipe.greg.o		\
-o/$(MODE)/libc/intrin/unmapviewoffile.greg.o		\
-o/$(MODE)/libc/intrin/flushviewoffile.greg.o		\
 o/$(MODE)/libc/intrin/deviceiocontrol.greg.o		\
-o/$(MODE)/libc/intrin/createdirectory.greg.o		\
-o/$(MODE)/libc/intrin/flushfilebuffers.greg.o		\
-o/$(MODE)/libc/intrin/terminateprocess.greg.o		\
 o/$(MODE)/libc/intrin/describemapflags.greg.o		\
 o/$(MODE)/libc/intrin/describetimespec.greg.o		\
-o/$(MODE)/libc/intrin/getfileattributes.greg.o		\
-o/$(MODE)/libc/intrin/getexitcodeprocess.greg.o		\
-o/$(MODE)/libc/intrin/waitforsingleobject.greg.o	\
-o/$(MODE)/libc/intrin/setcurrentdirectory.greg.o	\
-o/$(MODE)/libc/intrin/mapviewoffileexnuma.greg.o	\
-o/$(MODE)/libc/intrin/createfilemappingnuma.greg.o	\
-o/$(MODE)/libc/intrin/waitformultipleobjects.greg.o	\
-o/$(MODE)/libc/intrin/generateconsolectrlevent.greg.o	\
+o/$(MODE)/libc/intrin/createfile.o			\
+o/$(MODE)/libc/intrin/reopenfile.o			\
+o/$(MODE)/libc/intrin/deletefile.o			\
+o/$(MODE)/libc/intrin/createpipe.o			\
+o/$(MODE)/libc/intrin/closehandle.o			\
+o/$(MODE)/libc/intrin/openprocess.o			\
+o/$(MODE)/libc/intrin/createthread.o			\
+o/$(MODE)/libc/intrin/findclose.o			\
+o/$(MODE)/libc/intrin/findnextfile.o			\
+o/$(MODE)/libc/intrin/createprocess.o			\
+o/$(MODE)/libc/intrin/findfirstfile.o			\
+o/$(MODE)/libc/intrin/removedirectory.o			\
+o/$(MODE)/libc/intrin/createsymboliclink.o		\
+o/$(MODE)/libc/intrin/createnamedpipe.o			\
+o/$(MODE)/libc/intrin/unmapviewoffile.o			\
+o/$(MODE)/libc/intrin/virtualprotect.o			\
+o/$(MODE)/libc/intrin/flushviewoffile.o			\
+o/$(MODE)/libc/intrin/createdirectory.o			\
+o/$(MODE)/libc/intrin/flushfilebuffers.o		\
+o/$(MODE)/libc/intrin/terminateprocess.o		\
+o/$(MODE)/libc/intrin/getfileattributes.o		\
+o/$(MODE)/libc/intrin/getexitcodeprocess.o		\
+o/$(MODE)/libc/intrin/waitforsingleobject.o		\
+o/$(MODE)/libc/intrin/setcurrentdirectory.o		\
+o/$(MODE)/libc/intrin/mapviewoffileex.o			\
+o/$(MODE)/libc/intrin/movefileex.o			\
+o/$(MODE)/libc/intrin/mapviewoffileexnuma.o		\
+o/$(MODE)/libc/intrin/createfilemapping.o		\
+o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
+o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
+o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\
 o/$(MODE)/libc/intrin/nomultics.o			\
 o/$(MODE)/libc/intrin/ntconsolemode.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
+			-fwrapv				\
 			-ffreestanding			\
-			$(NO_MAGIC)
+			-fno-stack-protector		\
+			-fno-sanitize=all
 
 o/$(MODE)/libc/intrin/describeopenflags.greg.o:		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
-
-o/$(MODE)/libc/intrin/asan.o				\
-o/$(MODE)/libc/intrin/ubsan.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-fno-sanitize=all		\
-			-fno-stack-protector
 
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -58,7 +59,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
 
 static textstartup void __gettimeofday_init(void) {
   void *vdso;
-  if ((vdso = __vdsofunc("__vdso_gettimeofday"))) {
+  if ((vdso = __vdsosym("LINUX_2.6", "__vdso_gettimeofday"))) {
     __gettimeofday = vdso;
   }
 }

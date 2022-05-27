@@ -119,7 +119,7 @@ int _Py_CheckRecursiveCall(const char *);
         rc = _Py_CheckRecursiveCall(where);                             \
       } else {                                                          \
         rsp = (intptr_t)__builtin_frame_address(0);                     \
-        bot = GetStackAddr(32768);                                      \
+        bot = (intptr_t)GetStackAddr(32768);                            \
         if (UNLIKELY(rsp < bot)) {                                      \
           PyErr_Format(PyExc_MemoryError, "Stack overflow%s", where);   \
           rc = -1;                                                      \

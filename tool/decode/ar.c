@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -50,7 +51,7 @@ static void PrintString(uint8_t *p, long n, const char *name) {
   s = xmalloc(n + 1);
   s[n] = '\0';
   memcpy(s, p, n);
-  printf("\t.ascii\t%`'.*s\t\t\t# %s\n", n, s, name);
+  printf("\t.ascii\t%-`'*.*s# %s\n", 35, n, s, name);
   free(s);
 }
 
@@ -94,8 +95,8 @@ static void PrintHeader(uint8_t *p) {
 
 static void Print(void) {
   int arsize;
-  uint8_t *b, *p;
   uint64_t offset;
+  uint8_t *b, *p, *e;
   uint32_t i, n, o, table, entries, symbols, symbolslen;
   arsize = atoi((char *)(data + 8 + 48));
   CHECK_LE(4, arsize);
@@ -107,18 +108,19 @@ static void Print(void) {
   PrintHeader(data + 8);
 
   printf("\n");
-  printf("\t.long\t%u\t\t\t# %s\n", entries, "symbol table entries");
+  printf("\t.long\t%-*.u# %s\n", 35, entries, "symbol table entries");
   table = 8 + 60 + 4;
   for (i = 0; i < entries; ++i) {
-    printf("\t.long\t%#x\t\t\t\t# %u\n", READ32BE(data + table + i * 4), i);
+    printf("\t.long\t%#-*.x# %u\n", 35, READ32BE(data + table + i * 4), i);
   }
   symbols = table + entries * 4;
-  symbolslen = arsize - (4 + entries * 4);
+  symbolslen = arsize - (entries + 1) * 4;
   for (i = o = 0; o < symbolslen; ++i, o += n + 1) {
     b = data + symbols + o;
-    CHECK_NOTNULL((p = memchr(b, '\0', symbolslen - (symbols + o))));
+    CHECK_NOTNULL((p = memchr(b, '\0', symbolslen - o)), "%p %p %p %p %`.s", b,
+                  data, symbols, o, b);
     n = p - b;
-    printf("\t.asciz\t%#`'.*s\t\t\t# %u\n", n, b, i);
+    printf("\t.asciz\t%#-`'*.*s# %u\n", 35, n, b, i);
   }
 
   offset = 8 + 60 + arsize;

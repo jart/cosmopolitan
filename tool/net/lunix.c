@@ -96,14 +96,14 @@
  */
 
 struct UnixErrno {
-  int errno;
+  int errno_;
   int winerr;
   const char *call;
 };
 
 static lua_State *GL;
 
-static void *LuaUnixRealloc(lua_State *L, void *p, size_t n) {
+void *LuaRealloc(lua_State *L, void *p, size_t n) {
   void *p2;
   if ((p2 = realloc(p, n))) {
     return p2;
@@ -116,16 +116,8 @@ static void *LuaUnixRealloc(lua_State *L, void *p, size_t n) {
   return p2;
 }
 
-static void *LuaUnixAllocRaw(lua_State *L, size_t n) {
-  return LuaUnixRealloc(L, 0, n);
-}
-
-static void *LuaUnixAlloc(lua_State *L, size_t n) {
-  void *p;
-  if ((p = LuaUnixAllocRaw(L, n))) {
-    bzero(p, n);
-  }
-  return p;
+void *LuaAlloc(lua_State *L, size_t n) {
+  return LuaRealloc(L, 0, n);
 }
 
 static lua_Integer FixLimit(long x) {
@@ -185,7 +177,7 @@ static int SysretErrno(lua_State *L, const char *call, int olderr) {
   lua_pushnil(L);
   ep = lua_newuserdatauv(L, sizeof(*ep), 1);
   luaL_setmetatable(L, "unix.Errno");
-  ep->errno = unixerr;
+  ep->errno_ = unixerr;
   ep->winerr = winerr;
   ep->call = call;
   errno = olderr;
@@ -241,7 +233,7 @@ static char **ConvertLuaArrayToStringList(lua_State *L, int i) {
   lua_len(L, i);
   n = lua_tointeger(L, -1);
   lua_pop(L, 1);
-  if ((p = LuaUnixAllocRaw(L, (n + 1) * sizeof(*p)))) {
+  if ((p = LuaAlloc(L, (n + 1) * sizeof(*p)))) {
     for (j = 1; j <= n; ++j) {
       lua_geti(L, i, j);
       s = strdup(lua_tostring(L, -1));
@@ -442,7 +434,7 @@ static int LuaUnixReadlink(lua_State *L) {
   size_t got, bufsiz = 8192;
   path = luaL_checkstring(L, 1);
   dirfd = luaL_optinteger(L, 2, AT_FDCWD);
-  if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
+  if ((buf = LuaAlloc(L, bufsiz))) {
     if ((rc = readlinkat(dirfd, path, buf, bufsiz)) != -1) {
       got = rc;
       if (got < bufsiz) {
@@ -543,7 +535,7 @@ static int LuaUnixCommandv(lua_State *L) {
   char *pathbuf, *resolved;
   olderr = errno;
   prog = luaL_checkstring(L, 1);
-  if ((pathbuf = LuaUnixAllocRaw(L, PATH_MAX))) {
+  if ((pathbuf = LuaAlloc(L, PATH_MAX))) {
     if ((resolved = commandv(prog, pathbuf, PATH_MAX))) {
       lua_pushstring(L, resolved);
       free(pathbuf);
@@ -913,7 +905,7 @@ static int LuaUnixRead(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, BUFSIZ);
   offset = luaL_optinteger(L, 3, -1);
   bufsiz = MIN(bufsiz, 0x7ffff000);
-  if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
+  if ((buf = LuaAlloc(L, bufsiz))) {
     if (offset == -1) {
       rc = read(fd, buf, bufsiz);
     } else {
@@ -1246,7 +1238,7 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   struct ifreq *ifr;
   struct ifconf conf;
   olderr = errno;
-  if (!(data = LuaUnixAllocRaw(L, (n = 4096)))) {
+  if (!(data = LuaAlloc(L, (n = 4096)))) {
     return SysretErrno(L, "siocgifconf", olderr);
   }
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) {
@@ -1345,7 +1337,7 @@ static int LuaUnixPoll(lua_State *L) {
   lua_pushnil(L);
   for (fds = 0, nfds = 0; lua_next(L, 1);) {
     if (lua_isinteger(L, -2)) {
-      if ((fds2 = LuaUnixRealloc(L, fds, (nfds + 1) * sizeof(*fds)))) {
+      if ((fds2 = LuaRealloc(L, fds, (nfds + 1) * sizeof(*fds)))) {
         fds2[nfds].fd = lua_tointeger(L, -2);
         fds2[nfds].events = lua_tointeger(L, -1);
         fds = fds2;
@@ -1392,7 +1384,7 @@ static int LuaUnixRecvfrom(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, 1500);
   bufsiz = MIN(bufsiz, 0x7ffff000);
   flags = luaL_optinteger(L, 3, 0);
-  if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
+  if ((buf = LuaAlloc(L, bufsiz))) {
     rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
     if (rc != -1) {
       got = rc;
@@ -1423,7 +1415,7 @@ static int LuaUnixRecv(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, 1500);
   bufsiz = MIN(bufsiz, 0x7ffff000);
   flags = luaL_optinteger(L, 3, 0);
-  if ((buf = LuaUnixAllocRaw(L, bufsiz))) {
+  if ((buf = LuaAlloc(L, bufsiz))) {
     rc = recv(fd, buf, bufsiz, flags);
     if (rc != -1) {
       got = rc;
@@ -2047,7 +2039,7 @@ static struct UnixErrno *GetUnixErrno(lua_State *L) {
 // unix.Errno:errno()
 //     └─→ errno:int
 static int LuaUnixErrnoErrno(lua_State *L) {
-  return ReturnInteger(L, GetUnixErrno(L)->errno);
+  return ReturnInteger(L, GetUnixErrno(L)->errno_);
 }
 
 static int LuaUnixErrnoWinerr(lua_State *L) {
@@ -2055,11 +2047,11 @@ static int LuaUnixErrnoWinerr(lua_State *L) {
 }
 
 static int LuaUnixErrnoName(lua_State *L) {
-  return ReturnString(L, strerrno(GetUnixErrno(L)->errno));
+  return ReturnString(L, strerrno(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoDoc(lua_State *L) {
-  return ReturnString(L, strerdoc(GetUnixErrno(L)->errno));
+  return ReturnString(L, strerdoc(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoCall(lua_State *L) {
@@ -2071,10 +2063,10 @@ static int LuaUnixErrnoToString(lua_State *L) {
   struct UnixErrno *e;
   e = GetUnixErrno(L);
   if (e->call) {
-    strerror_wr(e->errno, e->winerr, msg, sizeof(msg));
+    strerror_wr(e->errno_, e->winerr, msg, sizeof(msg));
     lua_pushfstring(L, "%s() failed: %s", e->call, msg);
   } else {
-    lua_pushstring(L, strerrno(e->errno));
+    lua_pushstring(L, strerrno(e->errno_));
   }
   return 1;
 }

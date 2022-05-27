@@ -26,6 +26,7 @@
 //	@param	rcx has file object stream pointer
 //	@return	count on success, [0,count) on EOF, 0 on error or count==0
 //	@see	fwrite_unlocked()
+//	@threadsafe
 fwrite:	mov	%rcx,%r11
 	ezlea	fwrite_unlocked,ax
 	jmp	stdio_unlock

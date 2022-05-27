@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/enum/filemovemethod.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"

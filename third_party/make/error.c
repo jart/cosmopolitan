@@ -57,48 +57,9 @@ void (*error_print_progname) (void);
 /* This variable is incremented each time 'error' is called.  */
 unsigned int error_message_count;
 
-#ifdef _LIBC
-/* In the GNU C library, there is a predefined variable for this.  */
-
-# define program_name program_invocation_name
-
-/* In GNU libc we want do not want to use the common name 'error' directly.
-   Instead make it a weak alias.  */
-extern void __error (int status, int errnum, const char *message, ...)
-     __attribute__ ((__format__ (__printf__, 3, 4)));
-extern void __error_at_line (int status, int errnum, const char *file_name,
-                             unsigned int line_number, const char *message,
-                             ...)
-     __attribute__ ((__format__ (__printf__, 5, 6)));
-# define error __error
-# define error_at_line __error_at_line
-
-# define fflush(s) _IO_fflush (s)
-# undef putc
-# define putc(c, fp) _IO_putc (c, fp)
-
-
-#else /* not _LIBC */
-
-# if defined _WIN32 && ! defined __CYGWIN__
-/* Get declarations of the native Windows API functions.  */
-#  define WIN32_LEAN_AND_MEAN
-/* Get _get_osfhandle.  */
-#  if GNULIB_MSVC_NOTHROW
-#   include "msvc-nothrow.h"
-#  else
-#  endif
-# endif
-
-/* The gnulib override of fcntl is not needed in this file.  */
-# undef fcntl
-
-# define program_name getprogname ()
-
-# if GNULIB_STRERROR_R_POSIX || HAVE_STRERROR_R || defined strerror_r
-#  define __strerror_r strerror_r
-# endif /* GNULIB_STRERROR_R_POSIX || HAVE_STRERROR_R || defined strerror_r */
-#endif  /* not _LIBC */
+#undef fcntl
+#define program_name getprogname ()
+#define __strerror_r strerror_r
 
 /* Return non-zero if FD is open.  */
 static int

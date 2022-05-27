@@ -30,6 +30,7 @@
 //	@return	rax has rdi on success, NULL on error or
 //		NULL if EOF happens with zero chars read
 //	@see	fgets_unlocked()
+//	@threadsafe
 fgets:	mov	%rdx,%r11
 	ezlea	fgets_unlocked,ax
 	jmp	stdio_unlock

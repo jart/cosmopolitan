@@ -32,7 +32,7 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
-static noasan relegated uint64_t CountMappedBytes(void) {
+static noasan noubsan relegated uint64_t CountMappedBytes(void) {
   size_t i;
   uint64_t x, y;
   for (x = i = 0; i < _mmi.i; ++i) {
@@ -77,7 +77,7 @@ relegated void __oom_hook(size_t request) {
     kprintf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
   }
   kprintf("\n");
-  PrintMemoryIntervals(2, &_mmi);
+  __print_maps();
   kprintf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   PrintSystemMappings(2);

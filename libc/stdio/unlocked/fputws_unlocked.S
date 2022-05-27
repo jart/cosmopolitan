@@ -28,6 +28,7 @@
 //	@param	rsi is file object stream pointer
 //	@return	strlen(rdi) on success or -1 w/ errno
 //	@see	fputws_unlocked()
+//	@threadsafe
 fputws:	mov	%rsi,%r11
 	ezlea	fputws_unlocked,ax
 	jmp	stdio_unlock

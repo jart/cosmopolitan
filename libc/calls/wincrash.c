@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
@@ -30,11 +31,12 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
-textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
+privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   int64_t rip;
   int sig, code;
   ucontext_t ctx;
   STRACE("__wincrash");
+
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
       code = TRAP_BRKPT;

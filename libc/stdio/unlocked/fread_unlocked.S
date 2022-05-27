@@ -26,6 +26,7 @@
 //	@param	rcx has file object stream pointer
 //	@return	count on success, [0,count) on EOF, 0 on error or count==0
 //	@see	fread_unlocked()
+//	@threadsafe
 fread:	mov	%rcx,%r11
 	ezlea	fread_unlocked,ax
 	jmp	stdio_unlock

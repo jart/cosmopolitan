@@ -47,14 +47,15 @@ errfun() {
   ERRNO="$2"
   {
     printf '#include "libc/macros.internal.h"\n.text.unlikely\n\n'
+    printf '.section .privileged,"ax",@progbits\n\n'
     printf '%s:' "$NAME"
     if [ "${#NAME}" -gt 6 ]; then
       printf '\n'
     fi
     printf '	.leafprologue
-	.profilable
-	mov	%s(%%rip),%%eax
-	mov	%%eax,errno(%%rip)
+	mov	%s(%%rip),%%ecx
+	.errno
+	mov	%%ecx,(%%rax)
 	push	$-1
 	pop	%%rax
 	.leafepilogue

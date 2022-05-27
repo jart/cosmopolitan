@@ -59,9 +59,9 @@
 #
 #   build/config.mk
 
-SHELL   = /bin/sh
+SHELL   = build/bootstrap/cocmd.com
 HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
-SANITY := $(shell build/sanitycheck $$PPID)
+#SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
@@ -229,7 +229,7 @@ depend:	o/$(MODE)/depend
 tags:	TAGS HTAGS
 
 o/$(MODE)/.x:
-	@mkdir -p $(@D) && touch $@
+	@$(COMPILE) -AMKDIR -tT$@ $(MKDIR) $(@D)
 
 o/$(MODE)/srcs.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS),$(dir $(x))))
 	$(file >$@,$(SRCS))
@@ -246,11 +246,11 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
 TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
-	@rm -f $@
+	@$(RM) $@
 	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
 
 HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
-	@rm -f $@
+	@$(RM) $@
 	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
 
 loc: o/$(MODE)/tool/build/summy.com
@@ -258,6 +258,7 @@ loc: o/$(MODE)/tool/build/summy.com
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
 COSMOPOLITAN_OBJECTS =		\
+	NET_HTTP		\
 	LIBC_DNS		\
 	LIBC_SOCK		\
 	LIBC_NT_WS2_32		\
@@ -331,6 +332,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_UNICODE		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
+	NET_HTTP		\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_GDTOA	\
 	THIRD_PARTY_GETOPT	\
@@ -352,9 +354,10 @@ o/cosmopolitan.h:				\
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+	$(file >$@.args,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\
-		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+		@$@.args
 
 $(SRCS):					\
 	libc/integral/normalize.inc		\
@@ -388,9 +391,9 @@ $(SRCS):
 $(HDRS):
 $(INCS):
 .DEFAULT:
-	@echo >&2
-	@echo NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2
-	@echo >&2
-	rm -f o/$(MODE)/depend
+	@$(ECHO) >&2
+	@$(ECHO) NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2
+	@$(ECHO) >&2
+	$(RM) o/$(MODE)/depend
 
 -include o/$(MODE)/depend

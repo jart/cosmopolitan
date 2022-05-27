@@ -35,7 +35,7 @@
 textstartup int ftrace_init(void) {
   if (__intercept_flag(&__argc, __argv, "--ftrace")) {
     ftrace_install();
-    ++g_ftrace;
+    ++__ftrace;
   }
   return __argc;
 }

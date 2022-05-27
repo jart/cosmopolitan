@@ -22,6 +22,7 @@
 //
 //	@param	rdi has stream pointer
 //	@see	clearerr_unlocked()
+//	@threadsafe
 clearerr:
 	mov	%rdi,%r11
 	ezlea	clearerr_unlocked,ax

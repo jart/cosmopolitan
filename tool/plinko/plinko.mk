@@ -43,7 +43,7 @@ o/$(MODE)/tool/plinko/%.com.dbg:				\
 		o/$(MODE)/tool/plinko/plinko.pkg		\
 		o/$(MODE)/tool/plinko/lib/library.lisp.zip.o	\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PRECIOUS: o/$(MODE)/tool/plinko/plinko.com
@@ -53,7 +53,7 @@ o/$(MODE)/tool/plinko/plinko.com:				\
 		o/$(MODE)/tool/build/symtab.com			\
 		tool/plinko/plinko.mk
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ mkdir -p o/$(MODE)/tool/plinko/.redbean
+	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/plinko/.redbean
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/plinko/.plinko/.symtab $<
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
 		o/$(MODE)/tool/plinko/.plinko/.symtab

@@ -42,6 +42,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
@@ -51,6 +52,7 @@
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/mbedtls/ssl.h"
+#include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
@@ -109,7 +111,12 @@ void OnInterrupt(int sig) {
 
 void OnChildTerminated(int sig) {
   int ws, pid;
+  sigset_t ss, oldss;
+  sigfillset(&ss);
+  sigdelset(&ss, SIGTERM);
+  sigprocmask(SIG_BLOCK, &ss, &oldss);
   for (;;) {
+    INFOF("waitpid");
     if ((pid = waitpid(-1, &ws, WNOHANG)) != -1) {
       if (pid) {
         if (WIFEXITED(ws)) {
@@ -126,6 +133,7 @@ void OnChildTerminated(int sig) {
       FATALF("waitpid failed in sigchld");
     }
   }
+  sigprocmask(SIG_SETMASK, &oldss, 0);
 }
 
 wontreturn void ShowUsage(FILE *f, int rc) {
@@ -228,6 +236,7 @@ void SendExitMessage(int rc) {
   msg[0 + 3] = (RUNITD_MAGIC & 0x000000ff) >> 000;
   msg[4] = kRunitExit;
   msg[5] = rc;
+  INFOF("mbedtls_ssl_write");
   CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
   CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
@@ -246,6 +255,7 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
   msg[5 + 1] = (size & 0x00ff0000) >> 020;
   msg[5 + 2] = (size & 0x0000ff00) >> 010;
   msg[5 + 3] = (size & 0x000000ff) >> 000;
+  INFOF("mbedtls_ssl_write");
   CHECK_EQ(sizeof(msg), mbedtls_ssl_write(&ezssl, msg, sizeof(msg)));
   while (size) {
     CHECK_NE(-1, (rc = mbedtls_ssl_write(&ezssl, buf, size)));
@@ -256,16 +266,80 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
   CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
 }
 
-void Recv(void *p, size_t n) {
-  size_t i, rc;
-  for (i = 0; i < n; i += rc) {
-    do {
-      rc = mbedtls_ssl_read(&ezssl, (char *)p + i, n - i);
-      DEBUGF("read(%ld)", rc);
-    } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
-    if (rc <= 0) TlsDie("read failed", rc);
+void Recv(void *output, size_t outputsize) {
+  int rc;
+  ssize_t tx, chunk, received;
+  static bool once;
+  static int zstatus;
+  static char buf[4096];
+  static z_stream zs;
+  static struct {
+    size_t off;
+    size_t len;
+    size_t cap;
+    char *data;
+  } rbuf;
+  if (!once) {
+    CHECK_EQ(Z_OK, inflateInit(&zs));
+    once = true;
   }
-  DEBUGF("Recv(%ld)", n);
+  for (;;) {
+    if (rbuf.len >= outputsize) {
+      tx = MIN(outputsize, rbuf.len);
+      memcpy(output, rbuf.data + rbuf.off, outputsize);
+      rbuf.len -= outputsize;
+      rbuf.off += outputsize;
+      // trim dymanic buffer once it empties
+      if (!rbuf.len) {
+        rbuf.off = 0;
+        rbuf.cap = 4096;
+        rbuf.data = realloc(rbuf.data, rbuf.cap);
+      }
+      return;
+    }
+    if (zstatus == Z_STREAM_END) {
+      FATALF("recv zlib unexpected eof");
+    }
+    // get another fixed-size data packet from network
+    // pass along error conditions to caller
+    // pass along eof condition to zlib
+    INFOF("mbedtls_ssl_read");
+    received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
+    if (!received) TlsDie("got unexpected eof", received);
+    if (received < 0) TlsDie("read failed", received);
+    // decompress packet completely
+    // into a dynamical size buffer
+    zs.avail_in = received;
+    zs.next_in = (unsigned char *)buf;
+    CHECK_EQ(Z_OK, zstatus);
+    do {
+      // make sure we have a reasonable capacity for zlib output
+      if (rbuf.cap - (rbuf.off + rbuf.len) < sizeof(buf)) {
+        rbuf.cap += sizeof(buf);
+        rbuf.data = realloc(rbuf.data, rbuf.cap);
+      }
+      // inflate packet, which naturally can be much larger
+      // permit zlib no delay flushes that come from sender
+      zs.next_out = (unsigned char *)rbuf.data + (rbuf.off + rbuf.len);
+      zs.avail_out = chunk = rbuf.cap - (rbuf.off + rbuf.len);
+      zstatus = inflate(&zs, Z_SYNC_FLUSH);
+      CHECK_NE(Z_STREAM_ERROR, zstatus);
+      switch (zstatus) {
+        case Z_NEED_DICT:
+          zstatus = Z_DATA_ERROR;  // make negative
+          // fallthrough
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+          FATALF("tls recv zlib hard error %d", zstatus);
+        case Z_BUF_ERROR:
+          zstatus = Z_OK;  // harmless? nothing for inflate to do
+          break;           // it probably just our wraparound eof
+        default:
+          rbuf.len += chunk - zs.avail_out;
+          break;
+      }
+    } while (!zs.avail_out);
+  }
 }
 
 void HandleClient(void) {
@@ -284,15 +358,18 @@ void HandleClient(void) {
 
   /* read request to run program */
   addrsize = sizeof(addr);
+  INFOF("accept");
   CHECK_NE(-1, (g_clifd = accept4(g_servfd, &addr, &addrsize, SOCK_CLOEXEC)));
   if (fork()) {
     close(g_clifd);
     return;
   }
   EzFd(g_clifd);
+  INFOF("EzHandshake");
   EzHandshake();
   addrstr = gc(DescribeAddress(&addr));
   DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
+
   Recv(msg, sizeof(msg));
   CHECK_EQ(RUNITD_MAGIC, READ32BE(msg));
   CHECK_EQ(kRunitExecute, msg[4]);
@@ -312,6 +389,7 @@ void HandleClient(void) {
   }
   CHECK_NE(-1, (g_exefd = creat(g_exepath, 0700)));
   LOGIFNEG1(ftruncate(g_exefd, filesize));
+  INFOF("xwrite");
   CHECK_NE(-1, xwrite(g_exefd, exe, filesize));
   LOGIFNEG1(close(g_exefd));
 
@@ -361,6 +439,7 @@ void HandleClient(void) {
     fds[0].events = POLLIN;
     fds[1].fd = pipefds[0];
     fds[1].events = POLLIN;
+    INFOF("poll");
     events = poll(fds, ARRAYLEN(fds), (deadline - now) * 1000);
     CHECK_NE(-1, events);  // EINTR shouldn't be possible
     if (fds[0].revents) {
@@ -368,7 +447,7 @@ void HandleClient(void) {
         WARNF("%s got unexpected input event from client %#x", exename,
               fds[0].revents);
       }
-      WARNF("%s client disconnected so killing worker", exename);
+      WARNF("%s client disconnected so killing worker %d", exename, child);
       LOGIFNEG1(kill(child, 9));
       LOGIFNEG1(waitpid(child, 0, 0));
       LOGIFNEG1(close(g_clifd));
@@ -376,6 +455,7 @@ void HandleClient(void) {
       LOGIFNEG1(unlink(g_exepath));
       _exit(1);
     }
+    INFOF("read");
     got = read(pipefds[0], g_buf, sizeof(g_buf));
     CHECK_NE(-1, got);  // EINTR shouldn't be possible
     if (!got) {
@@ -385,6 +465,7 @@ void HandleClient(void) {
     fwrite(g_buf, got, 1, stderr);
     SendOutputFragmentMessage(kRunitStderr, g_buf, got);
   }
+  INFOF("waitpid");
   CHECK_NE(-1, waitpid(child, &wstatus, 0));  // EINTR shouldn't be possible
   if (WIFEXITED(wstatus)) {
     if (WEXITSTATUS(wstatus)) {
@@ -399,6 +480,7 @@ void HandleClient(void) {
   }
   LOGIFNEG1(unlink(g_exepath));
   SendExitMessage(exitcode);
+  INFOF("mbedtls_ssl_close_notify");
   mbedtls_ssl_close_notify(&ezssl);
   LOGIFNEG1(close(g_clifd));
   _exit(0);
@@ -459,9 +541,8 @@ void Daemonize(void) {
 
 int main(int argc, char *argv[]) {
   int i;
-  ShowCrashReports();
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
-  /* __log_level = kLogDebug; */
+  __log_level = kLogInfo;
   GetOpts(argc, argv);
   for (i = 3; i < 16; ++i) close(i);
   errno = 0;

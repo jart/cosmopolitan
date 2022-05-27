@@ -32,6 +32,8 @@
 __nt2sysv:
 	push	%rbp
 	mov	%rsp,%rbp
+//	TODO(jart): We should probably find some way to use our own
+//	            stack when Windows delivers signals ;_;
 	.profilable
 	sub	$0x100,%rsp
 	push	%rbx

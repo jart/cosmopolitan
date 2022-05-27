@@ -2,11 +2,11 @@
 .imp	kernel32,__imp_TlsSetValue,TlsSetValue,0
 
 	.text.windows
-__TlsSetValue:
+TlsSetValue:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_TlsSetValue(%rip),%rax
 	jmp	__sysv2nt
-	.endfn	__TlsSetValue,globl
+	.endfn	TlsSetValue,globl
 	.previous

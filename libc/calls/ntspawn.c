@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/pushpop.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -36,8 +36,9 @@ struct SpawnBlock {
     struct {
       char16_t cmdline[ARG_MAX / 2];
       char16_t envvars[ARG_MAX / 2];
+      char buf[ARG_MAX];
     };
-    char __pad[ROUNDUP(ARG_MAX / 2 * 2 * sizeof(char16_t), FRAMESIZE)];
+    char __pad[ROUNDUP(ARG_MAX / 2 * 3 * sizeof(char16_t), FRAMESIZE)];
   };
 };
 
@@ -83,7 +84,7 @@ textwindows int ntspawn(
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
                                sizeof(*block), 0)) &&
       mkntcmdline(block->cmdline, prog, argv) != -1 &&
-      mkntenvblock(block->envvars, envp, extravar) != -1 &&
+      mkntenvblock(block->envvars, envp, extravar, block->buf) != -1 &&
       CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                     opt_lpThreadAttributes, bInheritHandles,
                     dwCreationFlags | kNtCreateUnicodeEnvironment,

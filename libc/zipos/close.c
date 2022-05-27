@@ -18,6 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/zip.h"

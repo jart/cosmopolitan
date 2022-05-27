@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"

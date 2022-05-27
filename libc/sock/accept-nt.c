@@ -18,20 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/calls/state.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
-#include "libc/nt/files.h"
-#include "libc/nt/struct/pollfd.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/fio.h"
-#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
-#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
@@ -44,7 +40,9 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
   for (;;) {
     if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1,
                  __SIG_POLLING_INTERVAL_MS)) {
-      if (_check_interrupts(true, g_fds.p)) return eintr();
+      if (_check_interrupts(true, g_fds.p)) {
+        return eintr();
+      }
       continue;
     }
     if ((h = WSAAccept(fd->handle, addr, (int32_t *)addrsize, 0, 0)) != -1) {
@@ -54,7 +52,8 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
       if ((!(flags & SOCK_NONBLOCK) ||
            __sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[]){1}) != -1) &&
           (sockfd2 = calloc(1, sizeof(struct SockFd)))) {
-        if ((client = __reservefd(-1)) != -1) {
+        _spinlock(&__fds_lock);
+        if ((client = __reservefd_unlocked(-1)) != -1) {
           sockfd2->family = sockfd->family;
           sockfd2->type = sockfd->type;
           sockfd2->protocol = sockfd->protocol;
@@ -63,8 +62,10 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
           g_fds.p[client].mode = 0140666;
           g_fds.p[client].handle = h;
           g_fds.p[client].extra = (uintptr_t)sockfd2;
+          _spunlock(&__fds_lock);
           return client;
         }
+        _spunlock(&__fds_lock);
         free(sockfd2);
       }
       __sys_closesocket_nt(h);

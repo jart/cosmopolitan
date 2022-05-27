@@ -22,6 +22,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -38,13 +39,12 @@
 #include "libc/nt/synchronization.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-_Alignas(64) static char poll_lock;
+_Alignas(64) static int poll_lock;
 
 /**
  * Polls on the New Technology.

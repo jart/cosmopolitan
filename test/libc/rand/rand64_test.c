@@ -22,8 +22,10 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -36,25 +38,29 @@
 #include "libc/time/time.h"
 
 #define THREADS 8
-#define ENTRIES 256
+#define ENTRIES 1024
 
-char locks[THREADS];
-volatile bool ready;
+_Atomic(bool) ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
 void OnChld(int sig) {
   // do nothing
 }
 
+dontinline void Pause(void) {
+  // when ftrace is enabled
+}
+
+dontinline void Generate(int i) {
+  A[i] = rand64();
+}
+
 int Thrasher(void *arg) {
   int i, id = (intptr_t)arg;
-  while (!ready) {
-    __builtin_ia32_pause();
-  }
+  while (!ready) Pause();
   for (i = 0; i < ENTRIES; ++i) {
-    A[id * ENTRIES + i] = rand64();
+    Generate(id * ENTRIES + i);
   }
-  _spunlock(locks + id);
   return 0;
 }
 
@@ -74,9 +80,10 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
 }
 
 TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
+  int i, j, rc, ws;
   sigset_t ss, oldss;
+  char *tls[THREADS];
   void *stacks[THREADS];
-  int i, j, rc, ws, tid[THREADS];
   struct sigaction oldsa;
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
@@ -84,22 +91,23 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
-  for (i = 0; i < THREADS; ++i) {
-    locks[i] = 1;
-  }
   ready = false;
   for (i = 0; i < THREADS; ++i) {
+    tls[i] = __initialize_tls(calloc(1, 64));
     stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                      MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    tid[i] =
+    ASSERT_NE(
+        -1,
         clone(Thrasher, stacks[i], GetStackSize(),
-              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-              (void *)(intptr_t)i, 0, 0, 0, 0);
-    ASSERT_NE(-1, tid[i]);
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              (void *)(intptr_t)i, 0, tls[i], 64, (int *)(tls[i] + 0x38)));
   }
   ready = true;
   for (i = 0; i < THREADS; ++i) {
-    _spinlock(locks + i);
+    _spinlock((int *)(tls[i] + 0x38));
+    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
+    free(tls[i]);
   }
   sigaction(SIGCHLD, &oldsa, 0);
   sigprocmask(SIG_BLOCK, &oldss, 0);
@@ -109,8 +117,5 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
       if (i == j) continue;
       EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
     }
-  }
-  for (i = 0; i < THREADS; ++i) {
-    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
   }
 }

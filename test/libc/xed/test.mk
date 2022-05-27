@@ -93,7 +93,7 @@ o/$(MODE)/test/libc/xed/%.com.dbg:				\
 		o/$(MODE)/test/libc/xed/xed.pkg			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 #───────────────────────────────────────────────────────────────────────────────

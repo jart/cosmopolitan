@@ -16,6 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/runtime/runtime.h"
 
-int __strace;
+/**
+ * System call logging enabled state.
+ *
+ * If Cosmopolitan was compiled with the `SYSDEBUG` macro (this is the
+ * default behavior, except in tiny and release modes) then `__strace`
+ * shall control whether or not system calls are logged to fd 2. If it's
+ * greater than zero, syscalls are logged. Otherwise, they're aren't.
+ *
+ * By convention, functions wishing to disable syscall tracing for a
+ * short time period should say:
+ *
+ *     void foo() {
+ *       --__strace;
+ *       bar();
+ *       ++__strace;
+ *     }
+ *
+ * This way you still have some flexibility to force syscall tracing, by
+ * setting `__strace` to a higher number like `2` or `200`. Even though
+ * under normal circumstances, `__strace` should only be either zero or
+ * one.
+ */
+_Atomic(int) __strace;

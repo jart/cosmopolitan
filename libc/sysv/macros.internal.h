@@ -16,6 +16,7 @@
  */
 
 .macro	.scall	name:req num:req kw1 kw2
+	.section .privileged,"ax",@progbits
   .ifnb	\kw2
 	.align	16
 \name:	movabs	$\num,%rax

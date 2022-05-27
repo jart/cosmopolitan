@@ -19,8 +19,11 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -38,7 +41,10 @@ void _check_sigchld(void) {
   int pids[64];
   uint32_t i, n;
   int64_t handles[64];
-  if (!(n = __sample_pids(pids, handles, true))) return;
+  _spinlock(&__fds_lock);
+  n = __sample_pids(pids, handles, true);
+  _spunlock(&__fds_lock);
+  if (!n) return;
   i = WaitForMultipleObjects(n, handles, false, 0);
   if (i == kNtWaitTimeout) return;
   if (i == kNtWaitFailed) {
@@ -55,6 +61,8 @@ void _check_sigchld(void) {
     CloseHandle(handles[i]);
     __releasefd(pids[i]);
   }
+  _spinlock(&__fds_lock);
   g_fds.p[pids[i]].zombie = true;
+  _spunlock(&__fds_lock);
   __sig_add(SIGCHLD, CLD_EXITED);
 }

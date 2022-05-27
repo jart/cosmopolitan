@@ -57,7 +57,7 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:			\
 		o/$(MODE)/test/libc/stdio/stdio.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_STDIO_OBJS):				\

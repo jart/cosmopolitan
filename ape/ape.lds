@@ -243,10 +243,12 @@ SECTIONS {
     /* Code that needs to be addressable in Real Mode */
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
+    /* Code we want earlier in the binary w/o modifications */
+    KEEP(*(.ape.loader))
     HIDDEN(_ereal = .);
-    . += 1;
-
 /*END: realmode addressability guarantee */
+/*BEGIN: morphable code */
+    . += 1;
 
     /* Normal Code */
     *(.start)
@@ -283,6 +285,7 @@ SECTIONS {
     /* Privileged code invulnerable to magic */
     KEEP(*(.ape.pad.privileged));
     . += . > 0 ? 1 : 0;
+/*END: morphable code */
     HIDDEN(__privileged_start = .);
     . += . > 0 ? 1 : 0;
     *(.privileged)
@@ -390,15 +393,6 @@ SECTIONS {
   } :Ram
 
 /*END:   file content that's loaded by o/s */
-/*BEGIN: payload (for now, only the APE loader) */
-  .payload ALIGN(64) : {
-    /* Loader */
-    HIDDEN(ape_loader = .);
-    KEEP(*(.ape.loader))
-    . = ALIGN(64);
-    HIDDEN(ape_loader_end = .);
-  }
-/*END: payload */
 /*BEGIN: bss memory void */
 
   .zip . : {
@@ -510,7 +504,7 @@ HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
 HIDDEN(ape_stack_pf = DEFINED(ape_stack_pf) ? ape_stack_pf : PF_R | PF_W);
 HIDDEN(ape_stack_prot = _PF2PROT(ape_stack_pf));
 HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
-HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000 - STACKSIZE);
+HIDDEN(ape_stack_vaddr = DEFINED(ape_stack_vaddr) ? ape_stack_vaddr : 0x700000000000);
 HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
 HIDDEN(ape_stack_filesz = 0);
 HIDDEN(ape_stack_memsz = DEFINED(ape_stack_memsz) ? ape_stack_memsz : STACKSIZE);
@@ -546,8 +540,14 @@ HIDDEN(ape_bss_filesz = 0);
 HIDDEN(ape_bss_memsz = SIZEOF(.bss));
 HIDDEN(ape_bss_align = PAGESIZE);
 
-SHSTUB2(ape_loader_dd_skip, RVA(ape_loader) / 64);
-SHSTUB2(ape_loader_dd_count, (ape_loader_end - ape_loader) / 64);
+/* we roundup here because xnu wants the file load segments page-aligned */
+/* but we don't want to add the nop padding to the ape program, so we'll */
+/* let ape.S dd read past the end of the file into the wrapping binaries */
+SHSTUB2(ape_loader_dd_skip, DEFINED(ape_loader) ? RVA(ape_loader) / 64 : 0);
+SHSTUB2(ape_loader_dd_count,
+        DEFINED(ape_loader_end)
+            ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
+            : 0);
 
 #if SupportsXnu()
 SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
@@ -696,6 +696,12 @@ ASSERT(DEFINED(_start) || DEFINED(_start16),
 
 ASSERT(!DEFINED(_start16) || REAL(_end) < 65536,
        "ape won't support non-tiny real mode programs");
+
+ASSERT(IS2POW(ape_stack_memsz),
+       "ape_stack_memsz must be a two power");
+
+ASSERT(!(ape_stack_vaddr & (ape_stack_memsz - 1)),
+       "ape_stack_vaddr must have ape_stack_memsz alignment; try using STATIC_STACK_ADDR(0x700000000000 - ape_stack_memsz);");
 
 /* Let's not be like Knight Capital. */
 /* NOCROSSREFS_TO(.test .text) */

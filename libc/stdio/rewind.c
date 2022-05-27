@@ -26,6 +26,9 @@
  * EOF state, without reopening it.
  */
 void rewind(FILE *f) {
-  fseek(f, 0, SEEK_SET);
-  f->state = 0;
+  flockfile(f);
+  if (!fseeko_unlocked(f, 0, SEEK_SET)) {
+    f->state = 0;
+  }
+  funlockfile(f);
 }

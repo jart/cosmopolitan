@@ -17,18 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/nt/struct/linger.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/yoink.inc"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
                                   void *out_opt_optval,

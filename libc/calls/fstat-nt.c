@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"

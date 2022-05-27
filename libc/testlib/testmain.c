@@ -20,12 +20,12 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -67,6 +67,7 @@ Flags:\n\
 STATIC_YOINK("__die");
 STATIC_YOINK("__get_symbol_by_addr");
 STATIC_YOINK("testlib_quota_handlers");
+STATIC_YOINK("stack_usage_logging");
 
 static bool runbenchmarks_;
 
@@ -153,6 +154,7 @@ noasan int main(int argc, char *argv[]) {
   __log_level = kLogInfo;
   GetOpts(argc, argv);
   setenv("GDB", "", true);
+  GetSymbolTable();
 
   // normalize this process
   FixIrregularFds();

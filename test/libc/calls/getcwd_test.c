@@ -30,14 +30,14 @@ char testlib_enable_tmp_setup_teardown;
 
 TEST(getcwd, test) {
   char buf[PATH_MAX];
-  EXPECT_NE(-1, mkdir("subdir", 0755));
-  EXPECT_NE(-1, chdir("subdir"));
+  EXPECT_SYS(0, 0, mkdir("subdir", 0755));
+  EXPECT_SYS(0, 0, chdir("subdir"));
   EXPECT_STREQ("subdir", basename(getcwd(buf, ARRAYLEN(buf))));
 }
 
 TEST(getcwd, testNullBuf_allocatesResult) {
-  EXPECT_NE(-1, mkdir("subdir", 0755));
-  EXPECT_NE(-1, chdir("subdir"));
+  EXPECT_SYS(0, 0, mkdir("subdir", 0755));
+  EXPECT_SYS(0, 0, chdir("subdir"));
   EXPECT_STREQ("subdir", basename(gc(getcwd(0, 0))));
 }
 
@@ -45,5 +45,5 @@ TEST(getcwd, testWindows_addsFunnyPrefix) {
   if (!IsWindows()) return;
   char path[PATH_MAX];
   ASSERT_NE(0, getcwd(path, sizeof(path)));
-  EXPECT_STARTSWITH("//?/", path);
+  EXPECT_STARTSWITH("/C/", path);
 }

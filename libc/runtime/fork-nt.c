@@ -19,7 +19,9 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
@@ -45,7 +47,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -222,7 +223,6 @@ textwindows void WinMainForked(void) {
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
-  if (weaken(ForkNtStdinWorker)) weaken(ForkNtStdinWorker)();
   struct Fds *fds = VEIL("r", &g_fds);
   fds->p[0].handle = fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);
   fds->p[1].handle = fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);

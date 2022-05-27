@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/magnumstrs.internal.h"
 
-char *GetMagnumStr(const struct MagnumStr *ms, int x) {
+privileged char *GetMagnumStr(const struct MagnumStr *ms, int x) {
   int i;
   for (i = 0; ms[i].x != MAGNUM_TERMINATOR; ++i) {
     if (x == MAGNUM_NUMBER(ms, i)) {

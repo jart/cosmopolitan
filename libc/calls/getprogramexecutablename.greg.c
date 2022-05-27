@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
@@ -34,34 +34,52 @@
 
 char program_executable_name[PATH_MAX];
 
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+static inline char *StrCat(char buf[PATH_MAX], const char *a, const char *b) {
+  char *p, *e;
+  p = buf;
+  e = buf + PATH_MAX;
+  while (*a && p < e) *p++ = *a++;
+  while (*b && p < e) *p++ = *b++;
+  return buf;
+}
+
 static inline void GetProgramExecutableNameImpl(char *p, char *e) {
   char *q;
   ssize_t rc;
   size_t i, n;
   union {
     int cmd[4];
+    char path[PATH_MAX];
     char16_t path16[PATH_MAX];
   } u;
 
   if (IsWindows()) {
     n = GetModuleFileName(0, u.path16, ARRAYLEN(u.path16));
     for (i = 0; i < n; ++i) {
+      // turn c:\foo\bar into c:/foo/bar
       if (u.path16[i] == '\\') {
         u.path16[i] = '/';
       }
     }
-    if (isalpha(u.path16[0]) && u.path16[1] == ':' && u.path16[2] == '/') {
-      p[0] = '/';
-      p[1] = '/';
-      p[2] = '?';
-      p[3] = '/';
-      p += 4;
+    if (IsAlpha(u.path16[0]) && u.path16[1] == ':' && u.path16[2] == '/') {
+      // turn c:/... into /c/...
+      u.path16[1] = u.path16[0];
+      u.path16[0] = '/';
+      u.path16[2] = '/';
     }
     tprecode16to8(p, e - p, u.path16);
     return;
   }
 
-  if (__argc && (q = __argv[0]) && !sys_faccessat(AT_FDCWD, q, F_OK, 0)) {
+  // if argv[0] exists then turn it into an absolute path. we also try
+  // adding a .com suffix since the ape auto-appends it when resolving
+  if (__argc && (((q = __argv[0]) && !sys_faccessat(AT_FDCWD, q, F_OK, 0)) ||
+                 ((q = StrCat(u.path, __argv[0], ".com")) &&
+                  !sys_faccessat(AT_FDCWD, q, F_OK, 0)))) {
     if (*q != '/') {
       if (q[0] == '.' && q[1] == '/') {
         q += 2;
@@ -78,12 +96,12 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
     return;
   }
 
+  // if argv[0] doesn't exist, then fallback to interpreter name
   if ((rc = sys_readlinkat(AT_FDCWD, "/proc/self/exe", p, e - p - 1)) > 0 ||
       (rc = sys_readlinkat(AT_FDCWD, "/proc/curproc/file", p, e - p - 1)) > 0) {
     p[rc] = 0;
     return;
   }
-
   if (IsFreebsd() || IsNetbsd()) {
     u.cmd[0] = CTL_KERN;
     u.cmd[1] = KERN_PROC;
@@ -101,7 +119,7 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
 }
 
 /**
- * Returns absolute path of executable.
+ * Returns absolute path of program.
  */
 char *GetProgramExecutableName(void) {
   int e;

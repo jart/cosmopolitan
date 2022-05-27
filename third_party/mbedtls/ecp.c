@@ -512,6 +512,7 @@ int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
  *     SECP384R1  192       IANA, NIST, FRANCE, GERMANY, NSA
  *     X25519     112-128   IANA
  *     X448       224       IANA
+ *     SECP256K1  128       BITCOIN
  *     BP384R1              GERMANY
  *     SECP521R1            FRANCE
  *     GC512A               RUSSIA

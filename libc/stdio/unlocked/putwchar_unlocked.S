@@ -23,8 +23,9 @@
 //	@param	rdi has wide character
 //	@return wc if written or -1 w/ errno
 //	@see	fputwc_unlocked()
+//	@threadsafe
 putwchar:
-	lea	stdout(%rip),%rsi
+	mov	stdout(%rip),%rsi
 	mov	%rsi,%r11
 	ezlea	fputwc_unlocked,ax
 	jmp	stdio_unlock

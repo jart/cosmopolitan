@@ -28,6 +28,7 @@ extern linenoiseCompletionCallback *lua_repl_completions_callback;
 void lua_freerepl(void);
 int lua_loadline(lua_State *);
 void lua_l_print(lua_State *);
+void lua_sigint(lua_State *, int);
 void lua_initrepl(lua_State *, const char *);
 int lua_report(lua_State *, int);
 int lua_runchunk(lua_State *, int, int);

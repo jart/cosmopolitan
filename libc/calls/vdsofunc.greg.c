@@ -18,77 +18,136 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/elf/scalar.h"
 #include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/phdr.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/elf/struct/verdaux.h"
+#include "libc/elf/struct/verdef.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
-#define LAZY_RHEL7_RELOCATION 0xfffff
-
-#define GetStr(tab, rva)     ((char *)(tab) + (rva))
-#define GetSection(e, s)     ((void *)((intptr_t)(e) + (size_t)(s)->sh_offset))
-#define GetShstrtab(e)       GetSection(e, GetShdr(e, (e)->e_shstrndx))
-#define GetSectionName(e, s) GetStr(GetShstrtab(e), (s)->sh_name)
-#define GetPhdr(e, i)                            \
-  ((Elf64_Phdr *)((intptr_t)(e) + (e)->e_phoff + \
-                  (size_t)(e)->e_phentsize * (i)))
-#define GetShdr(e, i)                            \
-  ((Elf64_Shdr *)((intptr_t)(e) + (e)->e_shoff + \
-                  (size_t)(e)->e_shentsize * (i)))
-
-static char *GetDynamicStringTable(Elf64_Ehdr *e, size_t *n) {
-  char *name;
-  Elf64_Half i;
-  Elf64_Shdr *shdr;
-  for (i = 0; i < e->e_shnum; ++i) {
-    shdr = GetShdr(e, i);
-    name = GetSectionName(e, GetShdr(e, i));
-    if (shdr->sh_type == SHT_STRTAB) {
-      name = GetSectionName(e, GetShdr(e, i));
-      if (name && READ64LE(name) == READ64LE(".dynstr")) {
-        if (n) *n = shdr->sh_size;
-        return GetSection(e, shdr);
-      }
-    }
-  }
-  return 0;
+static inline int CompareStrings(const char *l, const char *r) {
+  size_t i = 0;
+  while (l[i] == r[i] && r[i]) ++i;
+  return (l[i] & 255) - (r[i] & 255);
 }
 
-static Elf64_Sym *GetDynamicSymbolTable(Elf64_Ehdr *e, Elf64_Xword *n) {
-  Elf64_Half i;
-  Elf64_Shdr *shdr;
-  for (i = e->e_shnum; i > 0; --i) {
-    shdr = GetShdr(e, i - 1);
-    if (shdr->sh_type == SHT_DYNSYM) {
-      if (shdr->sh_entsize != sizeof(Elf64_Sym)) continue;
-      if (n) *n = shdr->sh_size / shdr->sh_entsize;
-      return GetSection(e, shdr);
+static inline int CheckDsoSymbolVersion(Elf64_Verdef *vd, int sym,
+                                        const char *name, char *strtab) {
+  Elf64_Verdaux *aux;
+  for (;; vd = (Elf64_Verdef *)((char *)vd + vd->vd_next)) {
+    if (!(vd->vd_flags & VER_FLG_BASE) &&
+        (vd->vd_ndx & 0x7fff) == (sym & 0x7fff)) {
+      aux = (Elf64_Verdaux *)((char *)vd + vd->vd_aux);
+      return !CompareStrings(name, strtab + aux->vda_name);
+    }
+    if (!vd->vd_next) {
+      return 0;
     }
   }
-  return 0;
 }
 
 /**
- * Returns Linux Kernel Virtual Dynamic Shared Object function address.
+ * Returns address of vDSO function.
  */
-void *__vdsofunc(const char *name) {
-  size_t m;
-  char *names;
+void *__vdsosym(const char *version, const char *name) {
+  void *p;
+  size_t i;
   Elf64_Ehdr *ehdr;
-  Elf64_Xword i, n;
-  Elf64_Sym *symtab, *sym;
-  if ((ehdr = (Elf64_Ehdr *)getauxval(AT_SYSINFO_EHDR)) &&
-      (names = GetDynamicStringTable(ehdr, &m)) &&
-      (symtab = GetDynamicSymbolTable(ehdr, &n))) {
-    for (i = 0; i < n; ++i) {
-      if (!__strcmp(names + symtab[i].st_name, name)) {
-        return (char *)ehdr + (symtab[i].st_value & LAZY_RHEL7_RELOCATION);
-      }
+  Elf64_Phdr *phdr;
+  char *strtab = 0;
+  size_t *dyn, base;
+  unsigned long *ap;
+  Elf64_Sym *symtab = 0;
+  uint16_t *versym = 0;
+  Elf_Symndx *hashtab = 0;
+  Elf64_Verdef *verdef = 0;
+
+  for (ehdr = 0, ap = __auxv; ap[0]; ap += 2) {
+    if (ap[0] == AT_SYSINFO_EHDR) {
+      ehdr = (void *)ap[1];
+      break;
     }
   }
+  if (!ehdr || READ32LE(ehdr->e_ident) != READ32LE("\177ELF")) {
+    KERNTRACE("__vdsosym() → AT_SYSINFO_EHDR ELF not found");
+    return 0;
+  }
+
+  phdr = (void *)((char *)ehdr + ehdr->e_phoff);
+  for (base = -1, dyn = 0, i = 0; i < ehdr->e_phnum;
+       i++, phdr = (void *)((char *)phdr + ehdr->e_phentsize)) {
+    switch (phdr->p_type) {
+      case PT_LOAD:
+        // modern linux uses the base address zero, but elders
+        // e.g. rhel7 uses the base address 0xffffffffff700000
+        base = (size_t)ehdr + phdr->p_offset - phdr->p_vaddr;
+        break;
+      case PT_DYNAMIC:
+        dyn = (void *)((char *)ehdr + phdr->p_offset);
+        break;
+      default:
+        break;
+    }
+  }
+  if (!dyn || base == -1) {
+    KERNTRACE("__vdsosym() → missing program headers");
+    return 0;
+  }
+
+  for (i = 0; dyn[i]; i += 2) {
+    p = (void *)(base + dyn[i + 1]);
+    switch (dyn[i]) {
+      case DT_STRTAB:
+        strtab = p;
+        break;
+      case DT_SYMTAB:
+        symtab = p;
+        break;
+      case DT_HASH:
+        hashtab = p;
+        break;
+      case DT_VERSYM:
+        versym = p;
+        break;
+      case DT_VERDEF:
+        verdef = p;
+        break;
+    }
+  }
+  if (!strtab || !symtab || !hashtab) {
+    KERNTRACE("__vdsosym() → tables not found");
+    return 0;
+  }
+  if (!verdef) {
+    versym = 0;
+  }
+
+  for (i = 0; i < hashtab[1]; i++) {
+    if (ELF64_ST_TYPE(symtab[i].st_info) != STT_FUNC &&
+        ELF64_ST_TYPE(symtab[i].st_info) != STT_OBJECT &&
+        ELF64_ST_TYPE(symtab[i].st_info) != STT_NOTYPE) {
+      continue;
+    }
+    if (ELF64_ST_BIND(symtab[i].st_info) != STB_GLOBAL) {
+      continue;
+    }
+    if (!symtab[i].st_shndx) {
+      continue;
+    }
+    if (CompareStrings(name, strtab + symtab[i].st_name)) {
+      continue;
+    }
+    if (versym && !CheckDsoSymbolVersion(verdef, versym[i], version, strtab)) {
+      continue;
+    }
+    return (void *)(base + symtab[i].st_value);
+  }
+
+  KERNTRACE("__vdsosym() → symbol not found");
   return 0;
 }

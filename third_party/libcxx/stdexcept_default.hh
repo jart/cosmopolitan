@@ -9,12 +9,6 @@
 #include "third_party/libcxx/refstring.hh"
 #include "third_party/libcxx/string"
 
-/* For _LIBCPPABI_VERSION */
-#if !defined(_LIBCPP_BUILDING_HAS_NO_ABI_LIBRARY) &&                           \
-    (defined(LIBCXX_BUILDING_LIBCXXABI) || defined(LIBCXXRT))
-#include "third_party/libcxx/cxxabi.h"
-#endif
-
 static_assert(sizeof(std::__libcpp_refstring) == sizeof(const char*), "");
 
 namespace std // purposefully not using versioning namespace

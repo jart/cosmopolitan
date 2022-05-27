@@ -34,30 +34,31 @@ void SetUp(void) {
 }
 
 TEST(mkdir, testNothingExists_ENOENT) {
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(ENOENT, errno);
+  EXPECT_SYS(ENOENT, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testDirectoryComponentIsFile_ENOTDIR) {
-  EXPECT_NE(-1, touch("yo", 0644));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(ENOTDIR, errno);
+  EXPECT_SYS(0, 0, touch("yo", 0644));
+  EXPECT_SYS(ENOTDIR, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testPathIsFile_EEXIST) {
-  EXPECT_NE(-1, mkdir("yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo", 0755));
-  EXPECT_NE(-1, touch("yo/yo/yo", 0644));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(EEXIST, errno);
+  EXPECT_SYS(0, 0, mkdir("yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
+  EXPECT_SYS(0, 0, touch("yo/yo/yo", 0644));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testPathIsDirectory_EEXIST) {
-  EXPECT_NE(-1, mkdir("yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(EEXIST, errno);
+  EXPECT_SYS(0, 0, mkdir("yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo/yo", 0755));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
+}
+
+TEST(makedirs, pathExists_isSuccess) {
+  EXPECT_SYS(0, 0, makedirs("foo/bar", 0755));
+  EXPECT_SYS(0, 0, makedirs("foo/bar", 0755));
 }
 
 TEST(mkdir, enametoolong) {
@@ -69,19 +70,17 @@ TEST(mkdir, enametoolong) {
   EXPECT_SYS(ENAMETOOLONG, -1, mkdir(s, 0644));
 }
 
-TEST(makedirs, testEmptyString_EEXIST) {
-  EXPECT_EQ(-1, mkdir("", 0755));
-  EXPECT_EQ(ENOENT, errno);
+TEST(makedirs, testEmptyString_ENOENT) {
+  EXPECT_SYS(ENOENT, -1, mkdir("", 0755));
 }
 
 TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {
   int dirfd;
-  ASSERT_NE(-1, mkdir("foo", 0755));
-  ASSERT_NE(-1, (dirfd = open("foo", O_RDONLY | O_DIRECTORY)));
-  EXPECT_NE(-1, mkdirat(dirfd, "bar", 0755));
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 3, (dirfd = open("foo", O_RDONLY | O_DIRECTORY)));
+  EXPECT_SYS(0, 0, mkdirat(dirfd, "bar", 0755));
   EXPECT_TRUE(isdirectory("foo/bar"));
-  EXPECT_EQ(-1, makedirs("", 0755));
-  EXPECT_NE(-1, close(dirfd));
+  EXPECT_SYS(0, 0, close(dirfd));
 }
 
 TEST(mkdir, longname) {

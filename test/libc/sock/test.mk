@@ -51,7 +51,7 @@ o/$(MODE)/test/libc/sock/%.com.dbg:				\
 		o/$(MODE)/test/libc/sock/sock.pkg		\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk

@@ -29,7 +29,7 @@ class ModuleTests(unittest.TestCase):
             self.fail("__name__ = %s" % repr(s))
         except AttributeError:
             pass
-        if cosmo.MODE != 'tiny':
+        if 'tiny' not in cosmo.MODE:
             self.assertEqual(foo.__doc__, ModuleType.__doc__)
 
     def test_uninitialized_missing_getattr(self):

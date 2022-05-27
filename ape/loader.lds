@@ -17,16 +17,26 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 ENTRY(_start)
-OUTPUT_FORMAT(binary)
 
 SECTIONS {
   . = 0x200000;
   .text : {
     *(.text)
     *(.rodata .rodata.*)
+    . = ALIGN(64);
   }
   filesz = . - ehdr;
+  textsz = . - _start;
+  .bss ALIGN(4096) : {
+    bss = .;
+    *(.bss)
+    . = ALIGN(4096);
+  }
+  memsz = . - ehdr;
   /DISCARD/ : {
     *(.*)
   }
 }
+
+bsssize = SIZEOF(.bss);
+textoff = _start - ehdr;

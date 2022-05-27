@@ -17,12 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/runtime/internal.h"
 
 /**
  * Returns process id.
+ *
+ * This function does not need to issue a system call. The PID is
+ * tracked by a global variable which is updated atfork(). The only
+ * exception is when the process is vfork()'d in which case a system
+ * call shall be issued.
+ *
+ * On Linux, and only Linux, the process id is guaranteed to be the same
+ * as gettid() for the main thread.
+ *
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  */
 int getpid(void) {

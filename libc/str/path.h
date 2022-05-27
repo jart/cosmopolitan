@@ -1,12 +1,12 @@
 #ifndef COSMOPOLITAN_LIBC_STR_PATH_H_
 #define COSMOPOLITAN_LIBC_STR_PATH_H_
 
-#define _PATH_ABS  1
-#define _PATH_DEV  2
-#define _PATH_ROOT 4
-#define _PATH_DOS  8
-#define _PATH_WIN  16
-#define _PATH_NT   32
+#define _kPathAbs  1
+#define _kPathDev  2
+#define _kPathRoot 4
+#define _kPathDos  8
+#define _kPathWin  16
+#define _kPathNt   32
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

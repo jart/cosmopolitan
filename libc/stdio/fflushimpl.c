@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 #include "libc/sysv/consts/o.h"
 
 int __fflush_impl(FILE *f) {
   size_t i;
   ssize_t rc;
+  free_s(&f->getln);
   if (f->beg && !f->end && (f->iomode & O_ACCMODE) != O_RDONLY) {
     for (i = 0; i < f->beg; i += rc) {
       if ((rc = write(f->fd, f->buf + i, f->beg - i)) == -1) {

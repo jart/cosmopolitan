@@ -20,11 +20,13 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/ntstdin.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -32,39 +34,49 @@
  * Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
  */
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
-  int64_t proc, handle;
+  int64_t rc, proc, handle;
 
   // validate the api usage
   if (oldfd < 0) return einval();
   if (flags & ~O_CLOEXEC) return einval();
+
+  _spinlock(&__fds_lock);
+
   if (oldfd >= g_fds.n ||
       (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
        g_fds.p[oldfd].kind != kFdConsole)) {
+    _spunlock(&__fds_lock);
     return ebadf();
   }
 
   // allocate a new file descriptor
-  if (newfd == -1) {
-    if ((newfd = __reservefd(start)) == -1) {
-      return -1;
+  for (;;) {
+    if (newfd == -1) {
+      if ((newfd = __reservefd_unlocked(start)) == -1) {
+        _spunlock(&__fds_lock);
+        return -1;
+      }
+      break;
+    } else {
+      if (__ensurefds_unlocked(newfd) == -1) {
+        _spunlock(&__fds_lock);
+        return -1;
+      }
+      if (g_fds.p[newfd].kind) {
+        _spunlock(&__fds_lock);
+        close(newfd);
+        _spinlock(&__fds_lock);
+      }
+      if (!g_fds.p[newfd].kind) {
+        g_fds.p[newfd].kind = kFdReserved;
+        break;
+      }
     }
-  } else {
-    if (__ensurefds(newfd) == -1) return -1;
-    if (g_fds.p[newfd].kind) close(newfd);
-    g_fds.p[newfd].kind = kFdReserved;
   }
 
-  // if this file descriptor is wrapped in a named pipe worker thread
-  // then we should clone the original authentic handle rather than the
-  // stdin worker's named pipe. we won't clone the worker, since that
-  // can always be recreated again on demand.
-  if (g_fds.p[oldfd].worker) {
-    handle = g_fds.p[oldfd].worker->reader;
-  } else {
-    handle = g_fds.p[oldfd].handle;
-  }
-
+  handle = g_fds.p[oldfd].handle;
   proc = GetCurrentProcess();
+
   if (DuplicateHandle(proc, handle, proc, &g_fds.p[newfd].handle, 0, true,
                       kNtDuplicateSameAccess)) {
     g_fds.p[newfd].kind = g_fds.p[oldfd].kind;
@@ -77,12 +89,12 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     } else {
       g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
     }
-    if (g_fds.p[oldfd].worker) {
-      g_fds.p[newfd].worker = weaken(RefNtStdinWorker)(g_fds.p[oldfd].worker);
-    }
-    return newfd;
+    rc = newfd;
   } else {
-    __releasefd(newfd);
-    return __winerr();
+    __releasefd_unlocked(newfd);
+    rc = __winerr();
   }
+
+  _spunlock(&__fds_lock);
+  return rc;
 }

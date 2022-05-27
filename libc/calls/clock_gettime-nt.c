@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/synchronization.h"
@@ -28,6 +27,7 @@ textwindows int sys_clock_gettime_nt(int clockid, struct timespec *ts) {
   struct timespec res;
   struct NtFileTime ft;
   static struct timespec mono;
+  if (!ts) return efault();
   if (clockid == CLOCK_REALTIME) {
     GetSystemTimeAsFileTime(&ft);
     *ts = FileTimeToTimeSpec(ft);

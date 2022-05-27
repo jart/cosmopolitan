@@ -36,7 +36,7 @@
  * @param x is number
  * @return p + i
  */
-char *uleb64(char *p, uint64_t x) {
+char *uleb64(char p[hasatleast 10], uint64_t x) {
   int c;
   for (;;) {
     c = x & 127;

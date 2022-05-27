@@ -86,6 +86,14 @@ o/$(MODE)/libc/str/windowstimetotimespec.o:			\
 		OVERRIDE_CFLAGS +=				\
 			-O2
 
+# we can't use compiler magic because:
+#   kprintf() depends on these functions
+o/$(MODE)/libc/fmt/strsignal.greg.o:		\
+		OVERRIDE_CFLAGS +=		\
+			-fpie			\
+			-ffreestanding		\
+			$(NO_MAGIC)
+
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))
 LIBC_STR_SRCS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_SRCS))
 LIBC_STR_HDRS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)_HDRS))

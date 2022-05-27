@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
+#include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
@@ -31,11 +32,11 @@
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/threaded.internal.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
@@ -51,6 +52,8 @@
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/time/clockstonanos.internal.h"
+
+extern hidden struct SymbolTable *__symtab;
 
 struct Timestamps {
   unsigned long long birth;
@@ -262,6 +265,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           continue;
 
         case '#':
+        case '`':
           hash = '0';
           continue;
 
@@ -514,13 +518,19 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           }
 
         case 't': {
+          // %t will print the &symbol associated with an address. this
+          // requires that some other code linked GetSymbolTable() and
+          // called it beforehand to ensure the symbol table is loaded.
+          // if the symbol table isn't linked or available, then this
+          // routine will display &hexaddr so objdump -dS foo.com.dbg
+          // can be manually consulted to look up the faulting code.
           int idx;
           x = va_arg(va, intptr_t);
-          if (weaken(__get_symbol) &&
+          if (weaken(__symtab) && *weaken(__symtab) &&
               (idx = weaken(__get_symbol)(0, x)) != -1) {
             if (p + 1 <= e) *p++ = '&';
-            s = weaken(GetSymbolTable)()->name_base +
-                weaken(GetSymbolTable)()->names[idx];
+            s = (*weaken(__symtab))->name_base +
+                (*weaken(__symtab))->names[idx];
             goto FormatString;
           }
           base = 4;
@@ -698,9 +708,14 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
             if (p < e) *p = hash;
             ++p;
           }
-          for (; cols > i; --cols) {
-            if (p < e) {
+          while (cols > i) {
+            if (p + 8 < e && cols - i > 8) {
+              WRITE64LE(p, 0x2020202020202020);
+              cols -= 8;
+              p += 8;
+            } else if (p < e) {
               *p++ = ' ';
+              --cols;
             } else {
               p = kadvance(p, e, cols - i);
               break;
@@ -842,7 +857,6 @@ privileged void kvprintf(const char *fmt, va_list v) {
  *
  * Specifiers:
  *
- * - `P` pid
  * - `c` char
  * - `o` octal
  * - `b` binary
@@ -858,6 +872,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `X` uppercase
  * - `T` timestamp
  * - `x` hexadecimal
+ * - `P` pid (or tid if threaded)
  *
  * Types:
  *

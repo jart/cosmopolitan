@@ -20,6 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/console.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"

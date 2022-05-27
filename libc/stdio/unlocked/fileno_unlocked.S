@@ -22,6 +22,7 @@
 //
 //	@param	rdi has file stream object pointer
 //	@see	fileno_unlocked()
+//	@threadsafe
 fileno:	mov	%rdi,%r11
 	ezlea	fileno_unlocked,ax
 	jmp	stdio_unlock

@@ -19,8 +19,9 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/pushpop.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/pf2prot.internal.h"
 #include "libc/errno.h"
@@ -121,6 +122,16 @@ forceinline void MakeLongDoubleLongAgain(void) {
   asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
 }
 
+// https://nullprogram.com/blog/2022/02/18/
+static inline char16_t *MyCommandLine(void) {
+  void *cmd;
+  asm("mov\t%%gs:(0x60),%0\n"
+      "mov\t0x20(%0),%0\n"
+      "mov\t0x78(%0),%0\n"
+      : "=r"(cmd));
+  return cmd;
+}
+
 static inline size_t StrLen16(const char16_t *s) {
   size_t n;
   for (n = 0;; ++n) {
@@ -188,7 +199,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
   argsize = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
-  stackaddr = GetStaticStackAddr(0);
+  stackaddr = (intptr_t)GetStaticStackAddr(0);
   stacksize = GetStackSize();
   allocsize = argsize + stacksize;
   allocaddr = stackaddr - argsize;
@@ -206,7 +217,7 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   _mmi.p[0].x = allocaddr >> 16;
   _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
   _mmi.p[0].prot = prot;
-  _mmi.p[0].flags = MAP_PRIVATE | MAP_ANONYMOUS;
+  _mmi.p[0].flags = 0x00000026;  // stack+anonymous
   _mmi.p[0].size = allocsize;
   _mmi.i = 1;
   wa = (struct WinArgs *)allocaddr;
@@ -271,7 +282,7 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
 #if !IsTiny()
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);
 #endif
-  cmdline = GetCommandLine();
+  cmdline = MyCommandLine();
 #ifdef SYSDEBUG
   /* sloppy flag-only check for early initialization */
   if (__strstr16(cmdline, u"--strace")) ++__strace;

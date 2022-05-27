@@ -25,6 +25,7 @@
  * @param s is a NUL-terminated byte string
  * @return new string or NULL w/ errno
  * @error ENOMEM
+ * @threadsafe
  */
 char *strdup(const char *s) {
   size_t len = strlen(s);

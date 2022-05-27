@@ -36,11 +36,11 @@
  * inclusive of DOS drive paths, DOS rooted paths, in addition to the
  * New Technology UNC paths, then you may do the following:
  *
- *     if (_classifypath(str) & _PATH_ABS) { ... }
+ *     if (_classifypath(str) & _kPathAbs) { ... }
  *
  * To check if path is a relative path:
  *
- *     if (~_classifypath(str) & _PATH_ABS) { ... }
+ *     if (~_classifypath(str) & _kPathAbs) { ... }
  *
  * Please note the above check includes rooted paths such as `\foo`
  * which is considered absolute by MSDN and we consider it absolute
@@ -52,14 +52,14 @@
  *
  * @return integer value that's one of following:
  *     - `0` if non-weird relative path e.g. `c`
- *     - `_PATH_ABS` if absolute (or rooted dos) path e.g. `/⋯`
- *     - `_PATH_DOS` if `c:`, `d:foo` i.e. drive-relative path
- *     - `_PATH_ABS|_PATH_DOS` if proper dos path e.g. `c:/foo`
- *     - `_PATH_DOS|_PATH_DEV` if dos device path e.g. `nul`, `conin$`
- *     - `_PATH_ABS|_PATH_WIN` if `//c`, `//?c`, etc.
- *     - `_PATH_ABS|_PATH_WIN|_PATH_DEV` if `//./⋯`, `//?/⋯`
- *     - `_PATH_ABS|_PATH_WIN|_PATH_DEV|_PATH_ROOT` if `//.` or `//?`
- *     - `_PATH_ABS|_PATH_NT` e.g. `\??\\⋯` (undoc. strict backslash)
+ *     - `_kPathAbs` if absolute (or rooted dos) path e.g. `/⋯`
+ *     - `_kPathDos` if `c:`, `d:foo` i.e. drive-relative path
+ *     - `_kPathAbs|_kPathDos` if proper dos path e.g. `c:/foo`
+ *     - `_kPathDos|_kPathDev` if dos device path e.g. `nul`, `conin$`
+ *     - `_kPathAbs|_kPathWin` if `//c`, `//?c`, etc.
+ *     - `_kPathAbs|_kPathWin|_kPathDev` if `//./⋯`, `//?/⋯`
+ *     - `_kPathAbs|_kPathWin|_kPathDev|_kPathRoot` if `//.` or `//?`
+ *     - `_kPathAbs|_kPathNt` e.g. `\??\\⋯` (undoc. strict backslash)
  * @see "The Definitive Guide on Win32 to NT Path Conversion", James
  *     Forshaw, Google Project Zero Blog, 2016-02-29
  * @see "Naming Files, Paths, and Namespaces", MSDN 01/04/2021
@@ -94,17 +94,17 @@ int _classifypath(const char *s) {
                (s[2] == 'm' || s[2] == 'M'))) &&  //
              ('1' <= s[3] && s[3] <= '9') &&      //
              !s[4])) {
-          return _PATH_DOS | _PATH_DEV;
+          return _kPathDos | _kPathDev;
         }
         switch (s[1]) {
           case ':':
             switch (s[2]) {
               case 0:   // c:
               default:  // c:wut⋯
-                return _PATH_DOS;
+                return _kPathDos;
               case '/':   // c:/⋯
               case '\\':  // c:\⋯
-                return _PATH_ABS | _PATH_DOS;
+                return _kPathAbs | _kPathDos;
             }
           default:
             return 0;
@@ -113,37 +113,37 @@ int _classifypath(const char *s) {
         if (SupportsWindows()) {
           if (s[1] == '?' && s[2] == '?') {
             if (!s[3]) {
-              return _PATH_ABS | _PATH_NT | _PATH_ROOT;  // \??\⋯
+              return _kPathAbs | _kPathNt | _kPathRoot;  // \??\⋯
             } else if (s[3] == '\\') {
-              return _PATH_ABS | _PATH_NT;  // \??\⋯
+              return _kPathAbs | _kPathNt;  // \??\⋯
             }
           }
         }
         // fallthrough
       case '/':
         if (!SupportsWindows()) {
-          return _PATH_ABS;
+          return _kPathAbs;
         }
         switch (s[1]) {
           case 0:   // /
           default:  // /⋯
-            return _PATH_ABS;
+            return _kPathAbs;
           case '/':
           case '\\':
             switch (s[2]) {
               case 0:   // //
               default:  // //⋯
-                return _PATH_ABS | _PATH_WIN;
+                return _kPathAbs | _kPathWin;
               case '.':
               case '?':
                 switch (s[3]) {
                   case 0:  // //? or //.
-                    return _PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT;
+                    return _kPathAbs | _kPathWin | _kPathDev | _kPathRoot;
                   default:  // //?⋯ or //.⋯
-                    return _PATH_ABS | _PATH_WIN;
+                    return _kPathAbs | _kPathWin;
                   case '/':
                   case '\\':  // //?/⋯ or //./⋯
-                    return _PATH_ABS | _PATH_WIN | _PATH_DEV;
+                    return _kPathAbs | _kPathWin | _kPathDev;
                 }
             }
         }

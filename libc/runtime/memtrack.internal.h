@@ -1,10 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "libc/assert.h"
+#include "libc/bits/midpoint.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/enum/version.h"
-#include "libc/runtime/runtime.h"
+#include "libc/nt/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -28,16 +28,16 @@ COSMOPOLITAN_C_START_
   ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
           FRAMESIZE)
 #define _kMem(NORMAL, WIN7) \
-  (!(IsWindows() && NtGetVersion() < kNtVersionWindows10) ? NORMAL : WIN7)
+  (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
 
 struct MemoryInterval {
   int x;
   int y;
   long h;
+  long size;
   int prot;
   int flags;
   long offset;
-  long size;
   bool iscow;
   bool readonlyfile;
 };
@@ -46,7 +46,7 @@ struct MemoryIntervals {
   size_t i, n;
   struct MemoryInterval *p;
   struct MemoryInterval s[OPEN_MAX];
-  _Alignas(64) char lock;
+  _Alignas(64) int lock;
 };
 
 extern hidden struct MemoryIntervals _mmi;
@@ -90,25 +90,27 @@ forceinline pureconst bool IsShadowFrame(int x) {
 }
 
 forceinline pureconst bool IsKernelFrame(int x) {
-  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
-                    16);
+  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStaticStackFrame(int x) {
-  return (int)(GetStaticStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStaticStackAddr(0) + (GetStackSize() - FRAMESIZE)) >>
-                    16);
+  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStackFrame(int x) {
-  return (int)(GetStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStackAddr(0) + (GetStackSize() - FRAMESIZE)) >> 16);
+  intptr_t stack = (intptr_t)GetStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsSigAltStackFrame(int x) {
-  return (int)(GetStackAddr(0) >> 16) <= x &&
-         x <= (int)((GetStackAddr(0) + (SIGSTKSZ - FRAMESIZE)) >> 16);
+  intptr_t stack = (intptr_t)GetStackAddr(0);
+  return (int)(stack >> 16) <= x &&
+         x <= (int)((stack + (SIGSTKSZ - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsOldStackFrame(int x) {
@@ -166,7 +168,7 @@ forceinline unsigned FindMemoryInterval(const struct MemoryIntervals *mm,
   l = 0;
   r = mm->i;
   while (l < r) {
-    m = (l + r) >> 1;
+    m = _midpoint(l, r);
     if (mm->p[m].y < x) {
       l = m + 1;
     } else {

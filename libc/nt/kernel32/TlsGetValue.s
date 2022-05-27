@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_TlsGetValue,TlsGetValue,0
 
 	.text.windows
-__TlsGetValue:
+TlsGetValue:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ __TlsGetValue:
 	call	*__imp_TlsGetValue(%rip)
 	leave
 	ret
-	.endfn	__TlsGetValue,globl
+	.endfn	TlsGetValue,globl
 	.previous

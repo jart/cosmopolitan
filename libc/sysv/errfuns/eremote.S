@@ -1,11 +1,13 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+.section .privileged,"ax",@progbits
+
 eremote:
 	.leafprologue
-	.profilable
-	mov	EREMOTE(%rip),%eax
-	mov	%eax,errno(%rip)
+	mov	EREMOTE(%rip),%ecx
+	.errno
+	mov	%ecx,(%rax)
 	push	$-1
 	pop	%rax
 	.leafepilogue

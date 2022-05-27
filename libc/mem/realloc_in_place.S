@@ -32,6 +32,7 @@
 //	@param	rsi (newsize) is number of bytes needed
 //	@return	rax is result, or NULL w/ errno
 //	@see	dlrealloc_in_place()
+//	@threadsafe
 realloc_in_place:
 	jmp	*hook_realloc_in_place(%rip)
 	.endfn	realloc_in_place,globl

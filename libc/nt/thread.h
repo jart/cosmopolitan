@@ -57,6 +57,11 @@ bool32 CancelSynchronousIo(int64_t hThread);
 bool32 CancelIo(int64_t hFile);
 bool32 CancelIoEx(int64_t hFile, struct NtOverlapped *opt_lpOverlapped);
 
+uint32_t TlsAlloc(void);
+bool32 TlsFree(uint32_t);
+bool32 TlsSetValue(uint32_t, void *);
+void *TlsGetValue(uint32_t);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/thread.inc"
 #endif /* ShouldUseMsabiAttribute() */

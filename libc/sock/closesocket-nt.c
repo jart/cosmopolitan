@@ -16,8 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/syscall_fd.internal.h"
 
 /**
  * Closes socket on Windows.

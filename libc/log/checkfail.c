@@ -45,8 +45,8 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   size_t i;
   va_list va;
   char hostname[32];
-  __strace = 0;
-  g_ftrace = 0;
+  --__strace;
+  --__ftrace;
   e = errno;
   __start_fatal(file, line);
   __stpcpy(hostname, "unknown");
@@ -68,7 +68,7 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   }
   kprintf("%s\n", RESET);
   if (!IsTiny() && e == ENOMEM) {
-    PrintMemoryIntervals(2, &_mmi);
+    __print_maps();
   }
   __die();
   unreachable;

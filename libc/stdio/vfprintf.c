@@ -16,45 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/limits.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/errfuns.h"
 
-struct state {
-  FILE *f;
-  int n;
-};
-
-static int vfprintfputchar(const char *s, struct state *t, size_t n) {
-  int rc;
-  if (n) {
-    _spinlock(&t->f->lock);
-    if (n == 1 && *s != '\n' && t->f->beg < t->f->size &&
-        t->f->bufmode != _IONBF) {
-      t->f->buf[t->f->beg++] = *s;
-      t->n += n;
-      rc = 0;
-    } else if (!fwrite_unlocked(s, 1, n, t->f)) {
-      rc = -1;
-    } else {
-      t->n += n;
-      rc = 0;
-    }
-    _spunlock(&t->f->lock);
-  } else {
-    rc = 0;
-  }
-  return 0;
-}
-
+/**
+ * Formats and writes text to stream.
+ * @see printf() for further documentation
+ */
 int(vfprintf)(FILE *f, const char *fmt, va_list va) {
-  struct state st[1] = {{f, 0}};
-  if (__fmt(vfprintfputchar, st, fmt, va) != -1) {
-    return st->n;
-  } else {
-    return -1;
-  }
+  int rc;
+  flockfile(f);
+  rc = (vfprintf_unlocked)(f, fmt, va);
+  funlockfile(f);
+  return rc;
 }

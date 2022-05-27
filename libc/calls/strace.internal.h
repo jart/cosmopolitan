@@ -4,13 +4,14 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/runtime/runtime.h"
 
 #define _KERNTRACE 0 /* not configurable w/ flag yet */
 #define _POLLTRACE 0 /* not configurable w/ flag yet */
 #define _DATATRACE 1 /* not configurable w/ flag yet */
 #define _NTTRACE   0 /* not configurable w/ flag yet */
 
-#define STRACE_PROLOGUE "%rSYS %5P %'18T "
+#define STRACE_PROLOGUE "%rSYS %6P %'18T "
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -49,8 +50,6 @@ COSMOPOLITAN_C_START_
 #else
 #define NTTRACE(FMT, ...) (void)0
 #endif
-
-extern int __strace;
 
 void __stracef(const char *, ...);
 

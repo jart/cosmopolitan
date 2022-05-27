@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/iphlpapi.h"

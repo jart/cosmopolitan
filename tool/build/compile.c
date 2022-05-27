@@ -32,6 +32,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
@@ -170,9 +171,7 @@ char *output;
 char *outpath;
 char *command;
 char *shortened;
-char *cachedcmd;
 char *colorflag;
-char *originalcmd;
 char ccpath[PATH_MAX];
 
 struct stat st;
@@ -582,7 +581,7 @@ int Launch(void) {
     timer.it_interval.tv_sec = timeout;
     setitimer(ITIMER_REAL, &timer, 0);
   }
-  pid = fork();
+  pid = vfork();
 
 #if 0
   int fd;
@@ -665,6 +664,8 @@ int Launch(void) {
         kill(pid, SIGKILL);
         gotalrm = 1;
       }
+    } else if (errno == ECHILD) {
+      break;
     } else {
       /* this should never happen */
       PrintRed();
@@ -1041,44 +1042,6 @@ int main(int argc, char *argv[]) {
   }
 
   /*
-   * help error reporting code find symbol table
-   */
-  if (startswith(cmd, "o/")) {
-    if (endswith(cmd, ".com")) {
-      s = xstrcat(cmd, ".dbg");
-    } else {
-      s = xstrcat(cmd, ".com.dbg");
-    }
-    if (fileexists(s)) {
-      AddEnv(xstrcat("COMDBG=", getcwd(0, 0), '/', s));
-    }
-  }
-
-  /*
-   * create assimilated atomic copies of ape binaries
-   */
-  if (!IsWindows() && endswith(cmd, ".com")) {
-    if (!startswith(cmd, "o/")) {
-      cachedcmd = xstrcat("o/", cmd);
-    } else {
-      cachedcmd = xstrcat(xstripext(cmd), ".elf");
-    }
-    if (FileExistsAndIsNewerThan(cachedcmd, cmd)) {
-      cmd = cachedcmd;
-    } else {
-      originalcmd = cmd;
-      FormatInt64(buf, getpid());
-      cmd = xstrcat(originalcmd, ".tmp.", buf);
-      if (copyfile(originalcmd, cmd, COPYFILE_PRESERVE_TIMESTAMPS) == -1) {
-        fputs("error: compile.com failed to copy ape executable\n", stderr);
-        unlink(cmd);
-        exit(97);
-      }
-    }
-    args.p[0] = cmd;
-  }
-
-  /*
    * make sense of standard i/o file descriptors
    * we want to permit pipelines but prevent talking to terminal
    */
@@ -1117,26 +1080,6 @@ int main(int argc, char *argv[]) {
    * run command
    */
   ws = Launch();
-  if (ws != -1 && WIFEXITED(ws) && WEXITSTATUS(ws) == 127) {
-    if (startswith(cmd, "o/third_party/gcc") &&
-        fileexists("third_party/gcc/unbundle.sh")) {
-      system("third_party/gcc/unbundle.sh");
-      ws = Launch();
-    }
-  }
-
-  /*
-   * cleanup temporary copy of ape executable
-   */
-  if (originalcmd) {
-    if (cachedcmd && WIFEXITED(ws) && !WEXITSTATUS(ws) &&
-        IsNativeExecutable(cmd)) {
-      makedirs(xdirname(cachedcmd), 0755);
-      rename(cmd, cachedcmd);
-    } else {
-      unlink(cmd);
-    }
-  }
 
   /*
    * propagate exit

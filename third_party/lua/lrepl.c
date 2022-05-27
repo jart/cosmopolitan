@@ -234,9 +234,9 @@ static ssize_t pushline (lua_State *L, int firstline) {
   ssize_t rc;
   char *prmt;
   globalL = L;
+  prmt = strdup(get_prompt(L, firstline));
+  lua_pop(L, 1);  /* remove prompt */
   if (lua_repl_isterminal) {
-    prmt = strdup(get_prompt(L, firstline));
-    lua_pop(L, 1);  /* remove prompt */
     LUA_REPL_UNLOCK;
     rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
     free(prmt);
@@ -250,12 +250,20 @@ static ssize_t pushline (lua_State *L, int firstline) {
     LUA_REPL_LOCK;
   } else {
     LUA_REPL_UNLOCK;
+    fputs(prmt, stdout);
+    fflush(stdout);
     b = linenoiseGetLine(stdin);
+    if (b) {
+      rc = 1;
+    } else if (ferror(stdin)) {
+      rc = -1;
+    } else {
+      rc = 0;
+    }
     LUA_REPL_LOCK;
-    rc = b ? 1 : -1;
   }
   if (!(rc == -1 && errno == EAGAIN)) {
-  write(1, "\n", 1);
+    write(1, "\n", 1);
   }
   if (rc == -1 || (!rc && !b)) {
     return rc;
@@ -380,6 +388,13 @@ int lua_loadline (lua_State *L) {
 }
 
 
+void lua_sigint (lua_State *L, int sig) {
+  int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
+  lua_sethook(L, lstop, flag, 1);
+}
+
+
+
 /*
 ** Function to be called at a C signal. Because a C signal cannot
 ** just change a Lua state (as there is no proper synchronization),
@@ -387,6 +402,7 @@ int lua_loadline (lua_State *L) {
 ** interpreter.
 */
 static void laction (int i) {
+  lua_sigint(globalL, i);
   int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
   lua_sethook(globalL, lstop, flag, 1);
 }

@@ -16,12 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+
+forceinline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
+forceinline char *MemChr(const char *s, unsigned char c, unsigned long n) {
+  for (; n; --n, ++s) {
+    if ((*s & 255) == c) {
+      return s;
+    }
+  }
+  return 0;
+}
 
 static textwindows noasan noinstrument axdx_t Recode16to8(char *dst,
                                                           size_t dstsize,
@@ -45,11 +59,49 @@ static textwindows noasan noinstrument axdx_t Recode16to8(char *dst,
     }
     w = tpenc(x);
     do {
-      if (r.ax + 1 >= dstsize) break;
-      dst[r.ax++] = w;
+      if (r.ax + 1 < dstsize) {
+        dst[r.ax++] = w;
+      } else {
+        break;
+      }
     } while ((w >>= 8));
   }
+  if (r.ax < dstsize) {
+    dst[r.ax] = 0;
+  }
   return r;
+}
+
+textwindows noinstrument noasan void FixPath(char *path) {
+  char *p;
+  size_t i;
+
+  // turn backslash into slash
+  for (p = path; *p; ++p) {
+    if (*p == '\\') {
+      *p = '/';
+    }
+  }
+
+  // turn c:/... into /c/...
+  p = path;
+  if (IsAlpha(p[0]) && p[1] == ':' && p[2] == '/') {
+    p[1] = p[0];
+    p[0] = '/';
+  }
+  for (; *p; ++p) {
+    if (p[0] == ';' && IsAlpha(p[1]) && p[2] == ':' && p[3] == '/') {
+      p[2] = p[1];
+      p[1] = '/';
+    }
+  }
+
+  // turn semicolon into colon
+  for (p = path; *p; ++p) {
+    if (*p == ';') {
+      *p = ':';
+    }
+  }
 }
 
 /**
@@ -66,12 +118,17 @@ textwindows noasan noinstrument int GetDosEnviron(const char16_t *env,
                                                   char *buf, size_t size,
                                                   char **envp, size_t max) {
   int i;
+  char *p;
   axdx_t r;
   i = 0;
   --size;
   while (*env) {
     if (i + 1 < max) envp[i++] = buf;
     r = Recode16to8(buf, size, env);
+    if ((p = memchr(buf, '=', r.ax)) && IsAlpha(p[1]) && p[2] == ':' &&
+        (p[3] == '\\' || p[3] == '/')) {
+      FixPath(p + 1);
+    }
     size -= r.ax + 1;
     buf += r.ax + 1;
     env += r.dx;

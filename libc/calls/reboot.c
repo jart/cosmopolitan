@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/framebuffervirtualscreeninfo.h"
 #include "libc/dce.h"
 #include "libc/nt/enum/version.h"

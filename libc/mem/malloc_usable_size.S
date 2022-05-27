@@ -35,6 +35,7 @@
 //	@param	rdi is address of allocation
 //	@return	rax is total number of bytes
 //	@see	dlmalloc_usable_size()
+//	@threadsafe
 malloc_usable_size:
 	jmp	*hook_malloc_usable_size(%rip)
 	.endfn	malloc_usable_size,globl

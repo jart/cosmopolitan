@@ -20,10 +20,12 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 

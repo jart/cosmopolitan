@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -51,6 +51,9 @@ char *GetInterpreterExecutableName(char *p, size_t n) {
   if (n < 2) {
     errno = ENAMETOOLONG;
   } else if (IsWindows() || IsXnu()) {
+    // TODO(jart): Does XNU guarantee argv[0] is legit?
+    //             Otherwise we should return NULL.
+    //             What about OpenBSD?
     if (strlen(GetProgramExecutableName()) < n) {
       strcpy(p, GetProgramExecutableName());
       return p;

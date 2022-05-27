@@ -1,5 +1,9 @@
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/str/str.h"
 #include "third_party/zlib/gz/gzguts.inc"
+#include "third_party/zlib/zlib.h"
 // clang-format off
 
 /* gzread.c -- zlib functions for reading gzip files

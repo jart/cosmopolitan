@@ -50,72 +50,72 @@ TEST(_classifypath, test) {
   if (!SupportsWindows()) return;
   EXPECT_EQ(0, _classifypath(""));
   EXPECT_EQ(0, _classifypath("xyz"));
-  EXPECT_EQ(_PATH_DOS | _PATH_DEV, _classifypath("CON"));
-  EXPECT_EQ(_PATH_DOS | _PATH_DEV, _classifypath("NUL"));
+  EXPECT_EQ(_kPathDos | _kPathDev, _classifypath("CON"));
+  EXPECT_EQ(_kPathDos | _kPathDev, _classifypath("NUL"));
   EXPECT_EQ(0, _classifypath(":"));
-  EXPECT_EQ(_PATH_DOS, _classifypath("::"));
-  EXPECT_EQ(_PATH_DOS, _classifypath(":::"));
-  EXPECT_EQ(_PATH_DOS, _classifypath("::::"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("::\\"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\:"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\C:"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\C:\\"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("/"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("/:"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("/C:"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("/C:/"));
+  EXPECT_EQ(_kPathDos, _classifypath("::"));
+  EXPECT_EQ(_kPathDos, _classifypath(":::"));
+  EXPECT_EQ(_kPathDos, _classifypath("::::"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("::\\"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\:"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\C:"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\C:\\"));
+  EXPECT_EQ(_kPathAbs, _classifypath("/"));
+  EXPECT_EQ(_kPathAbs, _classifypath("/:"));
+  EXPECT_EQ(_kPathAbs, _classifypath("/C:"));
+  EXPECT_EQ(_kPathAbs, _classifypath("/C:/"));
   EXPECT_EQ(0, _classifypath("C"));
-  EXPECT_EQ(_PATH_DOS, _classifypath("C:"));
-  EXPECT_EQ(_PATH_DOS, _classifypath("C:a"));
-  EXPECT_EQ(_PATH_DOS, _classifypath("C:a\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("C:\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("C:/"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("C:\\a"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("C:/a"));
-  EXPECT_EQ(_PATH_ABS | _PATH_DOS, _classifypath("C:\\\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\;"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\f\\b\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\f\\b"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\f\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\f"));
-  EXPECT_EQ(_PATH_ABS | _PATH_NT, _classifypath("\\??\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_NT, _classifypath("\\??\\UNC"));
-  EXPECT_EQ(_PATH_ABS | _PATH_NT, _classifypath("\\??\\UNC\\"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\?"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\?\\"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\?\\UNC"));
-  EXPECT_EQ(_PATH_ABS, _classifypath("\\?\\UNC\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV, _classifypath("\\\\?\\UNC\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathDos, _classifypath("C:"));
+  EXPECT_EQ(_kPathDos, _classifypath("C:a"));
+  EXPECT_EQ(_kPathDos, _classifypath("C:a\\"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("C:\\"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("C:/"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("C:\\a"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("C:/a"));
+  EXPECT_EQ(_kPathAbs | _kPathDos, _classifypath("C:\\\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\;"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\f\\b\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\f\\b"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\f\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\f"));
+  EXPECT_EQ(_kPathAbs | _kPathNt, _classifypath("\\??\\"));
+  EXPECT_EQ(_kPathAbs | _kPathNt, _classifypath("\\??\\UNC"));
+  EXPECT_EQ(_kPathAbs | _kPathNt, _classifypath("\\??\\UNC\\"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\?"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\?\\"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\?\\UNC"));
+  EXPECT_EQ(_kPathAbs, _classifypath("\\?\\UNC\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev, _classifypath("\\\\?\\UNC\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("\\\\?"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\??"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\??\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\\\??\\C:\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\??"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\??\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\\\??\\C:\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("\\\\."));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV, _classifypath("\\\\.\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV, _classifypath("\\\\.\\C:\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("\\/"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("/\\"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("//"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("///"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("//;"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev, _classifypath("\\\\.\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev, _classifypath("\\\\.\\C:\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("\\/"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("/\\"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("//"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("///"));
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("//;"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("//?"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("/\\?"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("\\/?"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN, _classifypath("//??"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin, _classifypath("//??"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("//."));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("\\/."));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV | _PATH_ROOT,
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev | _kPathRoot,
             _classifypath("/\\."));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV, _classifypath("//./"));
-  EXPECT_EQ(_PATH_ABS | _PATH_WIN | _PATH_DEV, _classifypath("//./C:/"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev, _classifypath("//./"));
+  EXPECT_EQ(_kPathAbs | _kPathWin | _kPathDev, _classifypath("//./C:/"));
 }

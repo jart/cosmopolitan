@@ -66,7 +66,7 @@ o/$(MODE)/test/tool/args/%.com.dbg:		\
 		$(TEST_TOOL_ARGS_A).pkg		\
 		$(LIBC_TESTMAIN)		\
 		$(CRT)				\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/tool/args

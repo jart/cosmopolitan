@@ -24,6 +24,7 @@
 //	@param	rsi has file object stream pointer
 //	@return	rax is wide character if written or -1 w/ errno
 //	@see	fputwc_unlocked()
+//	@threadsafe
 fputwc:	mov	%rsi,%r11
 	ezlea	fputwc_unlocked,ax
 	jmp	stdio_unlock

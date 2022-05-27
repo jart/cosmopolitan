@@ -59,7 +59,7 @@ o/$(MODE)/third_party/lua/lua.com.dbg:						\
 		$(THIRD_PARTY_LUA_A).pkg					\
 		o/$(MODE)/third_party/lua/lua.main.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/lua/luac.com.dbg:						\
@@ -68,7 +68,7 @@ o/$(MODE)/third_party/lua/luac.com.dbg:						\
 		$(THIRD_PARTY_LUA_A).pkg					\
 		o/$(MODE)/third_party/lua/luac.main.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/lua/lua.com:						\
@@ -81,6 +81,7 @@ o/$(MODE)/third_party/lua/lua.com:						\
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
 		o/$(MODE)/third_party/lua/.lua/.symtab
 
+o/$(MODE)/third_party/lua/lmathlib.o						\
 o//third_party/lua/lgc.o:							\
 		OVERRIDE_CFLAGS +=						\
 			-O2

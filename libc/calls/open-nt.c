@@ -16,28 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ntmagicpaths.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/creationdisposition.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/filetype.h"
-#include "libc/nt/enum/fsctl.h"
-#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
 
-static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
-                                            uint32_t flags, int32_t mode) {
+static textwindows int sys_open_nt_impl(int dirfd, const char *path,
+                                        uint32_t flags, int32_t mode) {
   char16_t path16[PATH_MAX];
   uint32_t perm, share, disp, attr;
   if (__mkntpathat(dirfd, path, flags, path16) == -1) return -1;
@@ -47,10 +39,10 @@ static textwindows int64_t sys_open_nt_impl(int dirfd, const char *path,
       path16);
 }
 
-static textwindows ssize_t sys_open_nt_console(int dirfd,
-                                               const struct NtMagicPaths *mp,
-                                               uint32_t flags, int32_t mode,
-                                               size_t fd) {
+static textwindows int sys_open_nt_console(int dirfd,
+                                           const struct NtMagicPaths *mp,
+                                           uint32_t flags, int32_t mode,
+                                           size_t fd) {
   if (GetFileType(g_fds.p[STDIN_FILENO].handle) == kNtFileTypeChar &&
       GetFileType(g_fds.p[STDOUT_FILENO].handle) == kNtFileTypeChar) {
     g_fds.p[fd].handle = g_fds.p[STDIN_FILENO].handle;
@@ -70,9 +62,9 @@ static textwindows ssize_t sys_open_nt_console(int dirfd,
   return fd;
 }
 
-static textwindows ssize_t sys_open_nt_file(int dirfd, const char *file,
-                                            uint32_t flags, int32_t mode,
-                                            size_t fd) {
+static textwindows int sys_open_nt_file(int dirfd, const char *file,
+                                        uint32_t flags, int32_t mode,
+                                        size_t fd) {
   if ((g_fds.p[fd].handle = sys_open_nt_impl(dirfd, file, flags, mode)) != -1) {
     g_fds.p[fd].kind = kFdFile;
     g_fds.p[fd].flags = flags;
@@ -83,18 +75,21 @@ static textwindows ssize_t sys_open_nt_file(int dirfd, const char *file,
   }
 }
 
-textwindows ssize_t sys_open_nt(int dirfd, const char *file, uint32_t flags,
-                                int32_t mode) {
+textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
+                            int32_t mode) {
   int fd;
   ssize_t rc;
-  if ((fd = __reservefd(-1)) == -1) return -1;
-  if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
-    rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
-  } else {
-    rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
-  }
-  if (rc == -1) {
-    __releasefd(fd);
+  _spinlock(&__fds_lock);
+  if ((rc = fd = __reservefd_unlocked(-1)) != -1) {
+    if ((flags & O_ACCMODE) == O_RDWR && !strcmp(file, kNtMagicPaths.devtty)) {
+      rc = sys_open_nt_console(dirfd, &kNtMagicPaths, flags, mode, fd);
+    } else {
+      rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
+    }
+    if (rc == -1) {
+      __releasefd_unlocked(fd);
+    }
+    _spunlock(&__fds_lock);
   }
   return rc;
 }

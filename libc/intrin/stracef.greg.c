@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 
 privileged void __stracef(const char *fmt, ...) {
   va_list v;

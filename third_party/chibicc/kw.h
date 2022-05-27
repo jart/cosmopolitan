@@ -112,6 +112,9 @@
 #define KW___BUILTIN_IA32_MOVNTDQ       128
 #define KW___ATOMIC_FETCH_ADD           129
 #define KW___ATOMIC_SUB_FETCH           130
+#define KW___ATOMIC_TEST_AND_SET        131
+#define KW___ATOMIC_CLEAR               132
+#define KW___ATOMIC_STORE               133
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

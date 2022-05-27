@@ -307,7 +307,8 @@ static void doREPL (lua_State *L) {
   progname = NULL;  /* no 'progname' on errors in interactive mode */
   lua_initrepl(L, LUA_PROGNAME);
   for (;;) {
-    linenoiseEnableRawMode(0);
+    if (lua_repl_isterminal)
+      linenoiseEnableRawMode(0);
  TryAgain:
     status = lua_loadline(L);
     if (status == -2 && errno == EAGAIN) {
@@ -315,7 +316,8 @@ static void doREPL (lua_State *L) {
       poll(&(struct pollfd){0, POLLIN}, 1, -1);
       goto TryAgain;
     }
-    linenoiseDisableRawMode();
+    if (lua_repl_isterminal)
+      linenoiseDisableRawMode();
     if (status == -1) {
       break;
     } else if (status == -2) {

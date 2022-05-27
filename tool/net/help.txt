@@ -54,6 +54,7 @@ FLAGS
   -Z        log worker system calls
   -f        log worker function calls
   -B        only use stronger cryptography
+  -X        disable ssl server and client support
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
@@ -224,10 +225,16 @@ USAGE
 
   Your redbean is an actually portable executable, that's able to
   run on six different operating systems. To do that, it needs to
-  overwrite its own MZ header at startup, with ELF or Mach-O, and
-  then puts the original back once the program loads. If you want
-  your redbean to follow the platform-local executable convention
-  then delete the /.ape file from zip.
+  extract a 4kb loader program to ${TMPDIR:-/tmp}/ape that'll map
+  your redbean into memory. It does however check to see if `ape`
+  is on the system path beforehand. You can also "assimilate" any
+  redbean into the platform-local executable format by running:
+
+      $ file redbean.com
+      redbean.com: DOS/MBR boot sector
+      $ ./redbean.com --assimilate
+      $ file redbean.com
+      redbean.com: ELF 64-bit LSB executable
 
   redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
   which makes it a permissively licensed gift to anyone who might
@@ -330,18 +337,22 @@ REPL
       #!/usr/bin/redbean -i
       print('hello world')
 
-  However operating systems like Linux usually require that script
-  interperters be in the local executable format. You can "assimilate"
-  and install your redbean using the following commands:
+  However UNIX operating systems usually require that interperters be
+  encoded in its preferred executable format. You can assimilate your
+  redbean into the local format using the following commands:
 
-      zip -d redbean.com .ape      # remove the ape header
-      ./redbean.com -h >/dev/null  # assimilate the binary
-      sudo cp redbean.com /usr/bin/redbean
+      $ file redbean.com
+      redbean.com: DOS/MBR boot sector
+      $ ./redbean.com --assimilate
+      $ file redbean.com
+      redbean.com: ELF 64-bit LSB executable
+      $ sudo cp redbean.com /usr/bin/redbean
 
   By following the above steps, redbean can be installed systemwide for
   multiple user accounts. It's also possible to chmod the binary to have
-  setuid privileges, provided it's configured to drop privileges in the
-  most appropriate manner; see the UNIX section for further details.
+  setuid privileges. Please note that, if you do this, the UNIX section
+  provides further details on APIs like `unix.setuid` that will help you
+  remove root privileges from the process in the appropriate manner.
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -1308,6 +1319,57 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
+  Compress(uncompdata:str[, level:int[, raw:bool]]) → compdata:str
+
+          Compresses data using DEFLATE algorithm. The compression
+          format here is defined to be quick and handy for things like
+          database fields. For example:
+
+              >: Compress('hello')
+              "\x05\x86\xa6\x106x\x9c\xcbH\xcd\xc9\xc9\x07\x00\x06,\x02\x15"
+              >: Uncompress(Compress('hello'))
+              "hello"
+
+          The binary wire format is defined as follows:
+
+              1. uleb64 uncompressed byte size (1 to 10 bytes)
+              2. uint32_t crc32 (4 bytes; zlib polynomial)
+              3. data (created by zlib compress function)
+
+          `level` is the compression level, which defaults to 7. The max
+          is 10. Lower numbers go faster. Higher numbers go slower, but
+          have better compression ratios.
+
+          `raw` may be set to true if you only want `data` (3) to be
+          returned. In this case, it's assumed the caller will take
+          responsibility for storing the length (and optionall crc)
+          separately. See the redbean Crc32() API.
+
+              >: a = 'hello'
+              >: b = Compress(a, 9, true)
+              >: Uncompress(b, #a)
+              "hello"
+
+  Uncompress(compdata:str[, uncomplen:int]) → uncompdata:str
+
+          Uncompresses data using DEFLATE algorithm. This applies the
+          inverse transform of the Compress() function. See its docs for
+          further details on usage and encoding.
+
+          This function throws exceptions in the event that the value
+          couldn't be decoded. There's a crc32 check to make our check
+          of validity iron-clad. It's implemented using Intel CLMUL so
+          it has ludicrous speed performance as well.
+
+          If you used the `raw` parameter when calling Compress() i.e.
+          `compdata` doesn't have the redbean header described above,
+          then the `uncomplen` parameter may be supplied. IN that case
+          your data is handed over directly to zlib `uncompress()`. In
+          this case an exception will be raised if the value couldn't be
+          decoded, or if the resulting length differed from the supplied
+          length. It's recommended that Crc32() check still be performed
+          manually after using this method.
+
   Benchmark(func[, count[, maxattempts]])
       └─→ nanos:real, ticks:int, overhead-ticks:int, tries:int
 
@@ -1726,7 +1788,7 @@ UNIX MODULE
 
     Creates fifo which enables communication between processes.
 
-    `flags` can have any of
+    `flags` may have any combination (using bitwise OR) of:
 
     - `O_CLOEXEC`: Automatically close file descriptor upon execve()
 
@@ -1929,12 +1991,14 @@ UNIX MODULE
 
     Makes directories.
 
+    Unlike mkdir() this convenience wrapper will automatically create
+    parent parent directories as needed. If the directory already exists
+    then, unlike mkdir() which returns EEXIST, the makedirs() function
+    will return success.
+
     `path` is the path of the directory you wish to create.
 
     `mode` is octal permission bits, e.g. `0755`.
-
-    Unlike mkdir() this convenience wrapper will automatically create
-    parent parent directories as needed.
 
   unix.chdir(path:str)
       ├─→ true
@@ -2328,7 +2392,7 @@ UNIX MODULE
     - `SOCK_RDM`
     - `SOCK_SEQPACKET`
 
-    You may bitwise or any of the following into `type`:
+    You may bitwise OR any of the following into `type`:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2355,7 +2419,7 @@ UNIX MODULE
     - `SOCK_DGRAM`
     - `SOCK_SEQPACKET`
 
-    You may bitwise or any of the following into `type`:
+    You may bitwise OR any of the following into `type`:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2484,7 +2548,7 @@ UNIX MODULE
 
     Returns `EINVAL` if settings other than the above are used.
 
-    Returns `ENOSYS` if setting isn't supported by the host o/s.
+    Returns `ENOSYS` if setting isn't supported by the host OS.
 
   unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
       ├─→ {[fd:int]=revents:int, ...}
@@ -2519,7 +2583,7 @@ UNIX MODULE
 
     Accepts new client socket descriptor for a listening tcp socket.
 
-    `flags` can have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
@@ -2550,7 +2614,7 @@ UNIX MODULE
       ├─→ data:str
       └─→ nil, unix.Errno
 
-    `flags` can have:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_WAITALL`
     - `MSG_DONTROUTE`
@@ -2561,7 +2625,7 @@ UNIX MODULE
       ├─→ data:str, ip:uint32, port:uint16
       └─→ nil, unix.Errno
 
-    `flags` can have:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_WAITALL`
     - `MSG_DONTROUTE`
@@ -2575,7 +2639,7 @@ UNIX MODULE
     This is the same as `write` except it has a `flags` argument
     that's intended for sockets.
 
-    `flags` may have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_OOB`
     - `MSG_DONTROUTE`
@@ -2588,7 +2652,7 @@ UNIX MODULE
     This is useful for sending messages over UDP sockets to specific
     addresses.
 
-    `flags` may have any of:
+    `flags` may have any combination (using bitwise OR) of:
 
     - `MSG_OOB`
     - `MSG_DONTROUTE`
@@ -2617,7 +2681,7 @@ UNIX MODULE
 
     `how` can be one of:
 
-    - `SIG_BLOCK`: bitwise ors `mask` into set of blocked signals
+    - `SIG_BLOCK`: applies `mask` to set of blocked signals using bitwise OR
     - `SIG_UNBLOCK`: removes bits in `mask` from set of blocked signals
     - `SIG_SETMASK`: replaces process signal mask with `mask`
 
@@ -2737,6 +2801,9 @@ UNIX MODULE
         unix.sigaction(unix.SIGALRM, MyOnSigAlrm, unix.SA_RESETHAND)
         unix.setitimer(unix.ITIMER_REAL, 0, 0, 1, 0)
 
+    `intns` needs to be on the interval `[0,1000000000)`
+    `valuens` needs to be on the interval `[0,1000000000)`
+
   unix.strsignal(sig:int) → str
 
     Turns platform-specific `sig` code into its symbolic name.
@@ -2766,11 +2833,11 @@ UNIX MODULE
     - `RLIMIT_CPU` causes `SIGXCPU` to be sent to the process when the
       soft limit on CPU time is exceeded, and the process is destroyed
       when the hard limit is exceeded. It works everywhere but Windows
-      where it should be possible to poll getrusage() with setitimer()
+      where it should be possible to poll getrusage() with setitimer().
 
     - `RLIMIT_FSIZE` causes `SIGXFSZ` to sent to the process when the
       soft limit on file size is exceeded and the process is destroyed
-      when the hard limit is exceeded. It works everywhere but Windows
+      when the hard limit is exceeded. It works everywhere but Windows.
 
     - `RLIMIT_NPROC` limits the number of simultaneous processes and it
       should work on all platforms except Windows. Please be advised it
@@ -2778,7 +2845,7 @@ UNIX MODULE
       as a whole.
 
     - `RLIMIT_NOFILE` limits the number of open file descriptors and it
-      should work on all platforms except Windows (TODO)
+      should work on all platforms except Windows (TODO).
 
     If a limit isn't supported by the host platform, it'll be set to
     127. On most platforms these limits are enforced by the kernel and

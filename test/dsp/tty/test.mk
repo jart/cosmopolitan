@@ -45,7 +45,7 @@ o/$(MODE)/test/dsp/tty/%.com.dbg:			\
 		o/$(MODE)/test/dsp/tty/tty.pkg		\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/dsp/tty

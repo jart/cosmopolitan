@@ -213,6 +213,15 @@
                "scp $f $f.dbg win10:"
                "ssh win10 ./%s.com"))
             mode name (file-name-nondirectory name)))
+          ((eq kind 'run-xnu)
+           (format
+            (cosmo-join
+             " && "
+             `("m=%s; f=o/$m/%s.com"
+               ,(concat "make -j12 -O $f MODE=$m")
+               "scp $f $f.dbg xnu:"
+               "ssh xnu ./%s.com"))
+            mode name (file-name-nondirectory name)))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
            (format "m=%s; make -j12 -O MODE=$m %s"

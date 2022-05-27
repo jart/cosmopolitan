@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction-linux.internal.h"
@@ -29,6 +30,8 @@
 #include "libc/calls/struct/sigaction-openbsd.internal.h"
 #include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
@@ -223,7 +226,6 @@ static int __sigaction(int sig, const struct sigaction *act,
     rc = 0;
   }
   if (rc != -1 && !__vforked) {
-    _spinlock(&__sig_lock);
     if (oldact) {
       oldrva = __sighandrvas[sig];
       oldact->sa_sigaction = (sigaction_f)(
@@ -233,7 +235,6 @@ static int __sigaction(int sig, const struct sigaction *act,
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
     }
-    _spunlock(&__sig_lock);
   }
   return rc;
 }
@@ -447,7 +448,9 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
+    _spinlock(&__sig_lock);
     rc = __sigaction(sig, act, oldact);
+    _spunlock(&__sig_lock);
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
          DescribeSigaction(buf[0], sizeof(buf[0]), 0, act),

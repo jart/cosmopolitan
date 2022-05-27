@@ -135,6 +135,16 @@ cosmo:	push	%rbp
 	.init.end 306,_init_ftrace
 #endif
 
+#if IsAsan()
+	.init.start 306,_init_symbols
+	push	%rdi
+	push	%rsi
+	call	__init_symbols
+	pop	%rsi
+	pop	%rdi
+	.init.end 306,_init_symbols
+#endif
+
 #if IsModeDbg()
 #ifdef SYSDEBUG
 	.init.start 307,_init_printargs

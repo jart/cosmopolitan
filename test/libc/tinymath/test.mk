@@ -53,7 +53,7 @@ o/$(MODE)/test/libc/tinymath/%.com.dbg:				\
 		o/$(MODE)/test/libc/tinymath/tinymath.pkg	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_TINYMATH_OBJS):					\

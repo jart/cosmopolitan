@@ -154,11 +154,14 @@ intptr_t erfkill(void) relegated;
 intptr_t ehwpoison(void) relegated;
 
 #if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define __ERRFUN(FUNC)                              \
-  ({                                                \
-    intptr_t NegOne;                                \
-    asm("call\t" FUNC : "=a"(NegOne), "=m"(errno)); \
-    NegOne;                                         \
+#define __ERRFUN(FUNC)               \
+  ({                                 \
+    intptr_t NegOne;                 \
+    asm volatile("call\t" FUNC       \
+                 : "=a"(NegOne)      \
+                 : /* no outputs */  \
+                 : "rcx", "memory"); \
+    NegOne;                          \
   })
 #define einval()          __ERRFUN("einval")
 #define eperm()           __ERRFUN("eperm")

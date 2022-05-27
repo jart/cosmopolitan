@@ -19,7 +19,7 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Formats and writes string to stdout.
+ * Formats and writes text to stdout.
  *
  * Cosmopolitan supports most of the standard formatting behaviors
  * described by `man 3 printf`, in addition to the following

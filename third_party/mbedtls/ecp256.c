@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/gc.internal.h"
@@ -26,6 +27,7 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/math.h"
 #include "third_party/mbedtls/profile.h"
+#include "third_party/mbedtls/select.h"
 /* clang-format off */
 
 static bool
@@ -53,17 +55,23 @@ static int
 mbedtls_p256_cmp( const uint64_t a[5],
                   const uint64_t b[5] )
 {
-    if ( (int64_t)a[4] < (int64_t)b[4] ) return -1;
-    if ( (int64_t)a[4] > (int64_t)b[4] ) return +1;
-    if ( a[3] < b[3] ) return -1;
-    if ( a[3] > b[3] ) return +1;
-    if ( a[2] < b[2] ) return -1;
-    if ( a[2] > b[2] ) return +1;
-    if ( a[1] < b[1] ) return -1;
-    if ( a[1] > b[1] ) return +1;
-    if ( a[0] < b[0] ) return -1;
-    if ( a[0] > b[0] ) return +1;
-    return 0;
+    int i, x, y, done = 0;
+    // return -1 if a[4] < b[4]
+    x = -((int64_t)a[4] < (int64_t)b[4]);
+    done = x;
+    // return +1 if a[4] > b[4]
+    y = (int64_t)a[4] > (int64_t)b[4];
+    x = Select(x, y, done);
+    done |= -y;
+    for (i = 4; i--;) {
+        y = -(a[i] < b[i]);
+        x = Select(x, y, done);
+        done |= y;
+        y = a[i] > b[i];
+        x = Select(x, y, done);
+        done |= -y;
+    }
+    return x;
 }
 
 static void

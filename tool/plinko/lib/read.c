@@ -280,10 +280,10 @@ static int Read1(int fd) {
 
 int Read(int fd) {
   int r;
-  --g_ftrace;
+  --__ftrace;
   --__strace;
   r = Read1(fd);
-  ++g_ftrace;
+  ++__ftrace;
   ++__strace;
   return r;
 }

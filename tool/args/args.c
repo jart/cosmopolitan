@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -28,7 +29,7 @@
 STATIC_YOINK("zip_uri_support");
 
 static struct ZipArgs {
-  bool registered;
+  bool initialized;
   bool loaded;
   int oldargc;
   char *data;
@@ -75,15 +76,15 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
       start = 0;
     }
     if (founddots || *argc <= 1) {
-      if (!g_zipargs.registered) {
+      if (!g_zipargs.initialized) {
         atexit(FreeZipArgs);
-        g_zipargs.registered = true;
+        g_zipargs.oldargc = __argc;
+        g_zipargs.oldargv = __argv;
+        g_zipargs.initialized = true;
       }
       g_zipargs.loaded = true;
       g_zipargs.data = data;
       g_zipargs.args = args;
-      g_zipargs.oldargc = *argc;
-      g_zipargs.oldargv = *argv;
       *argc = n;
       *argv = args;
       __argc = n;
@@ -107,8 +108,16 @@ int LoadZipArgsImpl(int *argc, char ***argv, char *data) {
  * If the special argument `...` *is* encountered, then it'll be
  * replaced with whatever CLI args were specified by the user.
  *
- * @return 0 on success, or -1 w/ errno
+ * @return 0 on success, or -1 if not found w/o errno clobber
  */
 int LoadZipArgs(int *argc, char ***argv) {
-  return LoadZipArgsImpl(argc, argv, xslurp("/zip/.args", 0));
+  int e;
+  char *p;
+  e = errno;
+  if ((p = xslurp("/zip/.args", 0))) {
+    return LoadZipArgsImpl(argc, argv, p);
+  } else {
+    errno = e;
+    return -1;
+  }
 }

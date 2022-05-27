@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
@@ -35,6 +35,7 @@
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -57,7 +58,6 @@ static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
 int kCrashSigs[7];
-struct sigaction g_oldcrashacts[7];
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;
@@ -206,8 +206,9 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           "  %m\n"
           "  %s %s %s %s\n",
           !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-          (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-                   ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
+          (ctx &&
+           (ctx->uc_mcontext.rsp >= (intptr_t)GetStaticStackAddr(0) &&
+            ctx->uc_mcontext.rsp <= (intptr_t)GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
           host, getpid(), gettid(), program_invocation_name, names.sysname,
@@ -219,7 +220,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     ShowSseRegisters(ctx);
   }
   kprintf("\n");
-  PrintMemoryIntervals(2, &_mmi);
+  __print_maps();
   /* PrintSystemMappings(2); */
   if (__argv) {
     for (i = 0; i < __argc; ++i) {
@@ -229,16 +230,6 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     }
   }
   kprintf("\n");
-}
-
-relegated static void RestoreDefaultCrashSignalHandlers(void) {
-  size_t i;
-  sigset_t ss;
-  sigemptyset(&ss);
-  sigprocmask(SIG_SETMASK, &ss, NULL);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
-  }
 }
 
 static wontreturn relegated noinstrument void __minicrash(int sig,
@@ -277,8 +268,9 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   intptr_t rip;
   int gdbpid, err;
   static bool noreentry, notpossible;
-  __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED);
+  STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
+  --__ftrace;
+  --__strace;
   if (_lockcmpxchg(&noreentry, false, true)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
@@ -316,6 +308,6 @@ relegated noinstrument void __oncrash(int sig, struct siginfo *si,
   }
   noreentry = false;
 ItsATrap:
-  __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED);
-  __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED);
+  ++__strace;
+  ++__ftrace;
 }

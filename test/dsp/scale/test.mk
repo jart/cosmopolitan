@@ -50,7 +50,7 @@ o/$(MODE)/test/dsp/scale/%.com.dbg:			\
 		o/$(MODE)/test/dsp/scale/scale.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/dsp/scale

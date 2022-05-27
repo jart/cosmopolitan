@@ -108,7 +108,7 @@ noasan void CheckForMemoryLeaks(void) {
     }
     malloc_inspect_all(OnMemory, 0);
     kprintf("\n");
-    PrintMemoryIntervals(2, &_mmi);
+    __print_maps();
     /* PrintSystemMappings(2); */
     /* PrintGarbage(); */
     __restorewintty();

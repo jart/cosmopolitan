@@ -35,7 +35,9 @@ static char g_strsignal[12];
  * @return pointer to static memory that mutates on subsequent calls
  * @see sigaction()
  */
-noasan noinstrument char *strsignal(int sig) {
+privileged char *strsignal(int sig) {
+  // we need privileged because:
+  //   kprintf is privileged and it depends on this
   char *p;
   const char *s;
   p = g_strsignal;

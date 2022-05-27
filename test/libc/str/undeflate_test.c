@@ -53,20 +53,20 @@ TEST(undeflate, testStatCentralDirectory_notFound_noSysCalls) {
   uint64_t c;
   struct stat st;
   stat("/zip/doge.txt", &st); /* warmup */
-  c = g_syscount;
+  c = __syscount;
   ASSERT_EQ(-1, stat("/zip/doge.txt", &st));
-  ASSERT_EQ(0, g_syscount - c);
+  ASSERT_EQ(0, __syscount - c);
   ASSERT_EQ(ENOENT, errno);
 }
 
 TEST(undeflate, testStatCentralDirectory_isFound_noSysCalls) {
   uint64_t c;
   struct stat st = {0};
-  c = g_syscount;
+  c = __syscount;
   ASSERT_NE(-1, stat("/zip/libc/testlib/hyperion.txt", &st));
   ASSERT_TRUE(S_ISREG(st.st_mode));
   ASSERT_EQ(kHyperionSize, st.st_size);
-  ASSERT_EQ(0, g_syscount - c);
+  ASSERT_EQ(0, __syscount - c);
 }
 
 TEST(undeflate, testOpenReadCloseEmbeddedZip) {

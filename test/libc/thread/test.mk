@@ -48,7 +48,7 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 		o/$(MODE)/test/libc/thread/thread.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_THREAD_OBJS):				\

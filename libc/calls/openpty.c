@@ -17,33 +17,44 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
 #include "libc/calls/termios.h"
+#include "libc/fmt/itoa.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pty.h"
+#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Opens new pseudo teletypewriter.
  *
- * @param ilduce receives controlling tty rw fd on success
- * @param aworker receives subordinate tty rw fd on success
- * @param termp may be passed to tune a century of legacy behaviors
- * @param winp may be passed to set terminal display dimensions
+ * @param mfd receives controlling tty rw fd on success
+ * @param sfd receives subordinate tty rw fd on success
+ * @param tio may be passed to tune a century of legacy behaviors
+ * @param wsz may be passed to set terminal display dimensions
  * @params flags is usually O_RDWR|O_NOCTTY
- * @return file descriptor, or -1 w/ errno
+ * @return 0 on success, or -1 w/ errno
  */
-int openpty(int *ilduce, int *aworker, char *name, const struct termios *termp,
-            const struct winsize *winp) {
-  return enosys();
-  /* TODO(jart) */
-  /* int fd, flags; */
-  /* flags = O_RDWR | O_NOCTTY; */
-  /* if ((fd = posix_openpt(flags)) != -1) { */
-  /*   if (ioctl(m, TIOCSPTLCK, &n) || ioctl(m, TIOCGPTN, &n)) { */
-  /*   } else { */
-  /*     close(fd); */
-  /*   } */
-  /* } else { */
-  /*   return -1; */
-  /* } */
+int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
+            const struct winsize *wsz) {
+  int m, s, n;
+  char buf[20];
+  if ((m = open("/dev/ptmx", O_RDWR | O_NOCTTY)) != -1) {
+    n = 0;
+    if (!ioctl(m, TIOCSPTLCK, &n) || !ioctl(m, TIOCGPTN, &n)) {
+      if (!name) name = buf;
+      name[0] = '/', name[1] = 'd', name[2] = 'e', name[3] = 'v';
+      name[4] = '/', name[5] = 'p', name[6] = 't', name[7] = 's';
+      name[8] = '/', FormatInt32(name + 9, n);
+      if ((s = open(name, O_RDWR | O_NOCTTY)) != -1) {
+        if (tio) ioctl(s, TCSETS, tio);
+        if (wsz) ioctl(s, TIOCSWINSZ, wsz);
+        *mfd = m;
+        *sfd = s;
+        return 0;
+      }
+    }
+    close(m);
+  }
+  return -1;
 }

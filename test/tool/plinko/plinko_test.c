@@ -70,33 +70,34 @@ TEST(plinko, worksOrPrintsNiceError) {
   sigset_t chldmask, savemask;
   int i, pid, fdin, wstatus, pfds[2][2];
   struct sigaction ignore, saveint, savequit, savepipe;
-  bzero(buf, sizeof(buf));
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
-  EXPECT_EQ(0, sigemptyset(&ignore.sa_mask));
-  EXPECT_EQ(0, sigaction(SIGINT, &ignore, &saveint));
-  EXPECT_EQ(0, sigaction(SIGQUIT, &ignore, &savequit));
-  EXPECT_EQ(0, sigaction(SIGPIPE, &ignore, &savepipe));
-  EXPECT_EQ(0, sigemptyset(&chldmask));
-  EXPECT_EQ(0, sigaddset(&chldmask, SIGCHLD));
-  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  sigemptyset(&ignore.sa_mask);
+  sigaction(SIGINT, &ignore, &saveint);
+  sigaction(SIGQUIT, &ignore, &savequit);
+  sigaction(SIGPIPE, &ignore, &savepipe);
+  sigemptyset(&chldmask);
+  sigaddset(&chldmask, SIGCHLD);
+  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   ASSERT_NE(-1, pipe2(pfds[0], O_CLOEXEC));
   ASSERT_NE(-1, pipe2(pfds[1], O_CLOEXEC));
-  ASSERT_NE(-1, (pid = vfork()));
+  ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    __strace = 0;
+    __ftrace = 0;
     close(0), dup(pfds[0][0]);
     close(1), dup(pfds[1][1]);
     close(2), dup(pfds[1][1]);
     sigaction(SIGINT, &saveint, 0);
     sigaction(SIGQUIT, &savequit, 0);
-    sigaction(SIGQUIT, &savepipe, 0);
+    sigaction(SIGPIPE, &savepipe, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     execve("bin/plinko.com", (char *const[]){"bin/plinko.com", 0},
            (char *const[]){0});
     _exit(127);
   }
-  EXPECT_NE(-1, close(pfds[0][0]));
-  EXPECT_NE(-1, close(pfds[1][1]));
+  close(pfds[0][0]);
+  close(pfds[1][1]);
   for (i = 0; i < ARRAYLEN(kSauces); ++i) {
     EXPECT_NE(-1, (fdin = open(kSauces[i], O_RDONLY)));
     rc = _copyfd(fdin, pfds[0][1], -1);
@@ -104,7 +105,8 @@ TEST(plinko, worksOrPrintsNiceError) {
     EXPECT_NE(-1, close(fdin));
   }
   EXPECT_NE(-1, close(pfds[0][1]));
-  EXPECT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
+  bzero(buf, sizeof(buf));
+  ASSERT_NE(-1, (got = read(pfds[1][0], buf, sizeof(buf) - 1)));
   EXPECT_NE(0, got);
   while (read(pfds[1][0], drain, sizeof(drain)) > 0) donothing;
   EXPECT_NE(-1, close(pfds[1][0]));
@@ -116,10 +118,10 @@ TEST(plinko, worksOrPrintsNiceError) {
   } else {
     EXPECT_EQ(1, WEXITSTATUS(wstatus));
   }
-  EXPECT_EQ(0, sigaction(SIGINT, &saveint, 0));
-  EXPECT_EQ(0, sigaction(SIGQUIT, &savequit, 0));
-  EXPECT_EQ(0, sigaction(SIGPIPE, &savepipe, 0));
-  EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &savemask, 0));
+  sigaction(SIGINT, &saveint, 0);
+  sigaction(SIGQUIT, &savequit, 0);
+  sigaction(SIGPIPE, &savepipe, 0);
+  sigprocmask(SIG_SETMASK, &savemask, 0);
   if (g_testlib_failed) {
     kprintf("note: got the following in pipe: %s%n", buf);
   }

@@ -1,11 +1,13 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+.section .privileged,"ax",@progbits
+
 emultihop:
 	.leafprologue
-	.profilable
-	mov	EMULTIHOP(%rip),%eax
-	mov	%eax,errno(%rip)
+	mov	EMULTIHOP(%rip),%ecx
+	.errno
+	mov	%ecx,(%rax)
 	push	$-1
 	pop	%rax
 	.leafepilogue

@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
@@ -81,7 +80,13 @@ textwindows void _check_sigalrm(void) {
 textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
                                  struct itimerval *out_opt_oldvalue) {
   long double elapsed, untilnext;
-  if (which != ITIMER_REAL) return einval();
+  if (which != ITIMER_REAL ||
+      (newvalue && (!(0 <= newvalue->it_value.tv_usec &&
+                      newvalue->it_value.tv_usec < 1000000) ||
+                    !(0 <= newvalue->it_interval.tv_usec &&
+                      newvalue->it_interval.tv_usec < 1000000)))) {
+    return einval();
+  }
   if (out_opt_oldvalue) {
     if (__hastimer) {
       elapsed = nowl() - __lastalrm;

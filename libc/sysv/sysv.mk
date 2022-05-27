@@ -33,10 +33,12 @@ LIBC_SYSV_A_DIRECTDEPS =				\
 LIBC_SYSV_A_FILES :=					\
 	libc/sysv/macros.internal.h			\
 	libc/sysv/errfuns.h				\
-	libc/sysv/g_syscount.S				\
+	libc/sysv/syscount.S				\
 	libc/sysv/restorert.S				\
 	libc/sysv/syscall.S				\
 	libc/sysv/systemfive.S				\
+	libc/sysv/errno_location.greg.c			\
+	libc/sysv/errno.c				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\

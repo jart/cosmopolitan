@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

@@ -21,6 +21,7 @@
 
 /**
  * Allocates copy of wide string.
+ * @threadsafe
  */
 wchar_t *wcsdup(const wchar_t *s) {
   size_t len = wcslen(s);

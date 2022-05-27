@@ -20,8 +20,7 @@
 #include "libc/calls/internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
-#include "libc/sysv/errfuns.h"
+#include "libc/sock/syscall_fd.internal.h"
 
 textwindows int sys_listen_nt(struct Fd *fd, int backlog) {
   assert(fd->kind == kFdSocket);

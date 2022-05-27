@@ -6,7 +6,6 @@
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

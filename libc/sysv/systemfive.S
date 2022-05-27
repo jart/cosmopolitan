@@ -126,7 +126,9 @@ systemfive_error:
 	.endfn	systemfive_error,globl,hidden
 #endif
 systemfive_errno:
-	mov	%eax,errno(%rip)	# normalize to c library convention
+	xchg	%eax,%ecx
+	.errno
+	mov	%ecx,(%rax)		# normalize to c library convention
 	push	$-1			# negative one is only error result
 	pop	%rax			# the push pop is to save code size
 	ret

@@ -52,7 +52,7 @@ o/$(MODE)/test/libc/rand/%.com.dbg:			\
 		o/$(MODE)/test/libc/rand/rand.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_RAND_OBJS): test/libc/rand/test.mk

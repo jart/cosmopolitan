@@ -80,7 +80,7 @@ static void chibicc_usage(int status) {
   char *p;
   size_t n;
   p = xslurp("/zip/third_party/chibicc/help.txt", &n);
-  xwrite(1, p, n);
+  __paginate(1, p);
   _Exit(status);
 }
 
@@ -447,7 +447,8 @@ static bool run_subprocess(char **argv) {
     _Exit(1);
   }
   // Wait for the child process to finish.
-  do rc = wait(&ws);
+  do
+    rc = wait(&ws);
   while (rc == -1 && errno == EINTR);
   return WIFEXITED(ws) && WEXITSTATUS(ws) == 0;
 }

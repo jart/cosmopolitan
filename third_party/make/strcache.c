@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* clang-format off */
-#include "third_party/make/makeint.h"
+#include "third_party/make/makeint.inc"
 #include "third_party/make/hash.h"
 
 /* A string cached here will never be freed, so we don't need to worry about

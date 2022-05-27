@@ -30,6 +30,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -50,7 +51,9 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/https/https.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
+#include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
 #include "tool/build/lib/psk.h"
 #include "tool/build/runit.h"
@@ -110,6 +113,7 @@ static const struct addrinfo kResolvHints = {.ai_family = AF_INET,
 
 int g_sock;
 char *g_prog;
+long g_backoff;
 char *g_runitd;
 jmp_buf g_jmpbuf;
 uint16_t g_sshport;
@@ -306,7 +310,35 @@ TryAgain:
   freeaddrinfo(ai);
 }
 
-void SendRequest(void) {
+static bool Send(const void *output, size_t outputsize) {
+  int rc, have;
+  static bool once;
+  static z_stream zs;
+  static char zbuf[4096];
+  if (!once) {
+    CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
+                                Z_DEFAULT_STRATEGY));
+    once = true;
+  }
+  zs.next_in = output;
+  zs.avail_in = outputsize;
+  do {
+    zs.avail_out = sizeof(zbuf);
+    zs.next_out = (unsigned char *)zbuf;
+    rc = deflate(&zs, Z_SYNC_FLUSH);
+    CHECK_NE(Z_STREAM_ERROR, rc);
+    have = sizeof(zbuf) - zs.avail_out;
+    rc = mbedtls_ssl_write(&ezssl, zbuf, have);
+    if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      usleep((g_backoff = (g_backoff + 1000) * 2));
+      return false;
+    }
+    CHECK_EQ(have, rc);
+  } while (!zs.avail_out);
+  return true;
+}
+
+int SendRequest(void) {
   int fd;
   char *p;
   size_t i;
@@ -316,7 +348,7 @@ void SendRequest(void) {
   const char *name;
   unsigned char *hdr, *q;
   size_t progsize, namesize, hdrsize;
-  DEBUGF("running %s on %s", g_prog, g_hostname);
+  unsigned have;
   CHECK_NE(-1, (fd = open(g_prog, O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
@@ -332,24 +364,31 @@ void SendRequest(void) {
   q = WRITE32BE(q, crc);
   q = mempcpy(q, name, namesize);
   assert(hdrsize == q - hdr);
-  CHECK_EQ(hdrsize, mbedtls_ssl_write(&ezssl, hdr, hdrsize));
-  for (i = 0; i < progsize; i += rc) {
-    CHECK_GT((rc = mbedtls_ssl_write(&ezssl, p + i, progsize - i)), 0);
+  DEBUGF("running %s on %s", g_prog, g_hostname);
+  if (Send(hdr, hdrsize) && Send(p, progsize)) {
+    if (!(rc = EzTlsFlush(&ezbio, 0, 0))) {
+      rc = 0;
+    } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+      rc = -1;
+    } else {
+      CHECK_EQ(0, rc);
+    }
+  } else {
+    rc = -1;
   }
-  CHECK_EQ(0, EzTlsFlush(&ezbio, 0, 0));
   CHECK_NE(-1, munmap(p, st.st_size));
   CHECK_NE(-1, close(fd));
+  return rc;
 }
 
 bool Recv(unsigned char *p, size_t n) {
   size_t i, rc;
-  static long backoff;
   for (i = 0; i < n; i += rc) {
     do {
       rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
     } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
     if (!rc || rc == MBEDTLS_ERR_NET_CONN_RESET) {
-      usleep((backoff = (backoff + 1000) * 2));
+      usleep((g_backoff = (g_backoff + 1000) * 2));
       return false;
     } else if (rc < 0) {
       TlsDie("read response failed", rc);
@@ -419,8 +458,7 @@ int RunOnHost(char *spec) {
       WARNF("warning: got connection reset in handshake");
       close(g_sock);
     }
-    SendRequest();
-  } while ((rc = ReadResponse()) == -1);
+  } while ((rc = SendRequest()) == -1 || (rc = ReadResponse()) == -1);
   return rc;
 }
 

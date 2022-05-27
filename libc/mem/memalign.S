@@ -30,6 +30,7 @@
 //	@param	rsi is number of bytes needed, coerced to 1+
 //	@return	rax is memory address, or NULL w/ errno
 //	@see	valloc(), pvalloc()
+//	@threadsafe
 memalign:
 	jmp	*hook_memalign(%rip)
 	.endfn	memalign,globl

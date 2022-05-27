@@ -20,6 +20,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -51,8 +52,8 @@ const char *path_prefix_;
 struct timespec timestamp;
 size_t kZipCdirHdrLinkableSizeBootstrap;
 
-wontreturn void PrintUsage(int rc, FILE *f) {
-  fprintf(f, "%s%s%s\n", "Usage: ", program_invocation_name,
+wontreturn void PrintUsage(int rc) {
+  kprintf("%s%s%s\n", "Usage: ", program_invocation_name,
           " [-n] [-B] [-C INT] [-P PREFIX] [-o FILE] [-s SYMBOL] [-y YOINK] "
           "[FILE...]");
   exit(rc);
@@ -99,9 +100,9 @@ void GetOpts(int *argc, char ***argv) {
         break;
       case '?':
       case 'h':
-        PrintUsage(EXIT_SUCCESS, stdout);
+        PrintUsage(EXIT_SUCCESS);
       default:
-        PrintUsage(EX_USAGE, stderr);
+        PrintUsage(EX_USAGE);
     }
   }
   *argc -= optind;
@@ -137,7 +138,7 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
   if (S_ISDIR(st.st_mode)) {
     st.st_size = 0;
     if (!endswith(name, "/")) {
-      name = gc(xasprintf("%s/", name));
+      name = gc(xstrcat(name, '/'));
     }
   }
   elfwriter_zip(elf, name, name, strlen(name), map, st.st_size, st.st_mode,

@@ -50,7 +50,7 @@ o/$(MODE)/test/libc/alg/%.com.dbg:			\
 		o/$(MODE)/test/libc/alg/alg.pkg		\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_ALG_OBJS): test/libc/alg/test.mk

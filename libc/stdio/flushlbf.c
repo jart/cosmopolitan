@@ -31,11 +31,11 @@ void _flushlbf(void) {
   _spinlock(&__fflush.lock);
   for (i = 0; i < __fflush.handles.i; ++i) {
     if ((f = __fflush.handles.p[i])) {
-      _spinlock(&f->lock);
+      flockfile(f);
       if (f->bufmode == _IOLBF) {
         fflush_unlocked(f);
       }
-      _spunlock(&f->lock);
+      funlockfile(f);
     }
   }
   _spunlock(&__fflush.lock);

@@ -17,8 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -63,11 +64,6 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
       kprintf("})\n");
     }
 #endif
-    for (i = 3; i < g_fds.n; ++i) {
-      if (g_fds.p[i].kind != kFdEmpty && (g_fds.p[i].flags & O_CLOEXEC)) {
-        close(i);
-      }
-    }
     if (!IsWindows()) {
       rc = sys_execve(prog, argv, envp);
     } else {

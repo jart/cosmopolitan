@@ -35,23 +35,24 @@ const char *FindDebugBinary(void) {
   char *p;
   size_t n;
   if (!once) {
-    if (!(res = getenv("COMDBG"))) {
-      p = GetProgramExecutableName();
-      n = strlen(p);
-      if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
-        res = p;
-      } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
-                 n + 4 < ARRAYLEN(buf)) {
-        mempcpy(mempcpy(buf, p, n), ".dbg", 5);
-        if (fileexists(buf)) {
-          res = buf;
-        }
-      } else if (n + 8 < ARRAYLEN(buf)) {
-        mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
-        if (fileexists(buf)) {
-          res = buf;
-        }
+    p = GetProgramExecutableName();
+    n = strlen(p);
+    if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
+      res = p;
+    } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
+               n + 4 < ARRAYLEN(buf)) {
+      mempcpy(mempcpy(buf, p, n), ".dbg", 5);
+      if (fileexists(buf)) {
+        res = buf;
       }
+    } else if (n + 8 < ARRAYLEN(buf)) {
+      mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
+      if (fileexists(buf)) {
+        res = buf;
+      }
+    }
+    if (!res) {
+      res = getenv("COMDBG");
     }
     once = true;
   }

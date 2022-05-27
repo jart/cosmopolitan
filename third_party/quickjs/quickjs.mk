@@ -145,7 +145,7 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		o/$(MODE)/third_party/quickjs/repl.o				\
 		o/$(MODE)/third_party/quickjs/qjscalc.o				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/qjs.com:						\
@@ -174,7 +174,7 @@ o/$(MODE)/third_party/quickjs/run-test262.com.dbg:				\
 		$(THIRD_PARTY_QUICKJS_A).pkg					\
 		o/$(MODE)/third_party/quickjs/run-test262.o			\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
@@ -183,7 +183,7 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 		$(THIRD_PARTY_QUICKJS_A).pkg					\
 		o/$(MODE)/third_party/quickjs/unicode_gen.o			\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(THIRD_PARTY_QUICKJS_OBJS):							\
@@ -205,8 +205,8 @@ o/$(MODE)/third_party/quickjs/quickjs.o:					\
 		OVERRIDE_CPPFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C32
-o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C32
+o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C32 -L180
+o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C32 -L180
 
 .PHONY: o/$(MODE)/third_party/quickjs
 o/$(MODE)/third_party/quickjs:							\

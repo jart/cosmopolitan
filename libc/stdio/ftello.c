@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
@@ -49,8 +48,8 @@ static int64_t ftello_unlocked(FILE *f) {
  */
 int64_t ftello(FILE *f) {
   int64_t rc;
-  _spinlock(&f->lock);
+  flockfile(f);
   rc = ftello_unlocked(f);
-  _spunlock(&f->lock);
+  funlockfile(f);
   return rc;
 }

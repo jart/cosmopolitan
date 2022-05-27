@@ -22,6 +22,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -68,57 +69,83 @@ static wontreturn void OnUnrecoverableMmapError(const char *s) {
   _Exit(199);
 }
 
-noasan static bool IsMapped(char *p, size_t n) {
-  return OverlapsImageSpace(p, n) || IsMemtracked(FRAME(p), FRAME(p + (n - 1)));
+static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
+  int a, b, i;
+  assert(n > 0);
+  a = FRAME(p);
+  b = FRAME(p + (n - 1));
+  i = FindMemoryInterval(&_mmi, a);
+  if (i < _mmi.i) {
+    if (a <= _mmi.p[i].x && _mmi.p[i].x <= b) return true;
+    if (a <= _mmi.p[i].y && _mmi.p[i].y <= b) return true;
+    if (_mmi.p[i].x <= a && b <= _mmi.p[i].y) return true;
+  }
+  return false;
 }
 
-noasan static bool NeedAutomap(char *p, size_t n) {
-  return !p || OverlapsArenaSpace(p, n) || OverlapsShadowSpace(p, n) ||
-         IsMapped(p, n);
-}
-
-noasan static bool ChooseMemoryInterval(int x, int n, int *res) {
-  int i;
+static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
+  int i, start, end;
+  assert(align > 0);
   if (_mmi.i) {
+
+    // find the start of the automap memory region
     i = FindMemoryInterval(&_mmi, x);
     if (i < _mmi.i) {
-      if (x + n < _mmi.p[i].x) {
-        *res = x;
-        return true;
+
+      // check to see if there's space available before the first entry
+      if (!__builtin_add_overflow(x, align - 1, &start)) {
+        start &= -align;
+        if (!__builtin_add_overflow(start, n - 1, &end)) {
+          if (end < _mmi.p[i].x) {
+            *res = start;
+            return true;
+          }
+        }
       }
+
+      // check to see if there's space available between two entries
       while (++i < _mmi.i) {
-        if (_mmi.p[i].x - _mmi.p[i - 1].y > n) {
-          *res = _mmi.p[i - 1].y + 1;
-          return true;
+        if (!__builtin_add_overflow(_mmi.p[i - 1].y, 1, &start) &&
+            !__builtin_add_overflow(start, align - 1, &start)) {
+          start &= -align;
+          if (!__builtin_add_overflow(start, n - 1, &end)) {
+            if (end < _mmi.p[i].x) {
+              *res = start;
+              return true;
+            }
+          }
         }
       }
     }
-    if (INT_MAX - _mmi.p[i - 1].y >= n) {
-      *res = _mmi.p[i - 1].y + 1;
-      return true;
+
+    // otherwise append after the last entry if space is available
+    if (!__builtin_add_overflow(_mmi.p[i - 1].y, 1, &start) &&
+        !__builtin_add_overflow(start, align - 1, &start)) {
+      start &= -align;
+      if (!__builtin_add_overflow(start, n - 1, &end)) {
+        *res = start;
+        return true;
+      }
     }
-    return false;
+
   } else {
-    *res = x;
-    return true;
+    // if memtrack is empty, then just assign the requested address
+    // assuming it doesn't overflow
+    if (!__builtin_add_overflow(x, align - 1, &start)) {
+      start &= -align;
+      if (!__builtin_add_overflow(start, n - 1, &end)) {
+        *res = start;
+        return true;
+      }
+    }
   }
+
+  return false;
 }
 
-noasan static bool Automap(int n, int *res) {
-  *res = -1;
-  if (ChooseMemoryInterval(FRAME(kAutomapStart), n, res)) {
-    assert(*res >= FRAME(kAutomapStart));
-    if (*res + n <= FRAME(kAutomapStart + (kAutomapStart - 1))) {
-      return true;
-    } else {
-      STRACE("mmap(%.12p, %p) ENOMEM (automap interval exhausted)", ADDR(*res),
-             ADDR(n + 1));
-      return false;
-    }
-  } else {
-    STRACE("mmap(%.12p, %p) ENOMEM (automap failed)", ADDR(*res), ADDR(n + 1));
-    return false;
-  }
+noasan static bool Automap(int count, int align, int *res) {
+  return ChooseMemoryInterval(FRAME(kAutomapStart), count, align, res) &&
+         *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
 noasan static size_t GetMemtrackSize(struct MemoryIntervals *mm) {
@@ -221,18 +248,13 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
   }
 #endif
   char *p = addr;
-  bool needguard;
   struct DirectMap dm;
-  size_t virtualused, virtualneed;
   int a, b, i, f, m, n, x;
+  bool needguard, clashes;
+  size_t virtualused, virtualneed;
 
   if (UNLIKELY(!size)) {
     STRACE("size=0");
-    return VIP(einval());
-  }
-
-  if (UNLIKELY(!IsLegalSize(size))) {
-    STRACE("size isn't 48-bit");
     return VIP(einval());
   }
 
@@ -266,29 +288,28 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  if (UNLIKELY(INT64_MAX - size < off)) {
-    STRACE("too large");
-    return VIP(einval());
-  }
-
   if (UNLIKELY(!ALIGNED(off))) {
     STRACE("p isn't 64kb aligned");
     return VIP(einval());
   }
 
-  if ((flags & MAP_FIXED_NOREPLACE) && IsMapped(p, size)) {
-#ifdef SYSDEBUG
-    if (OverlapsImageSpace(p, size)) {
-      STRACE("overlaps image");
-    } else {
-      STRACE("overlaps existing");
+  if (fd == -1) {
+    size = ROUNDUP(size, FRAMESIZE);
+    if (IsWindows()) {
+      prot |= PROT_WRITE; /* kludge */
     }
-#endif
-    return VIP(efault());
+  } else if (__isfdkind(fd, kFdZip)) {
+    STRACE("fd is zipos handle");
+    return VIP(einval());
   }
 
-  if (__isfdkind(fd, kFdZip)) {
-    STRACE("fd is zipos handle");
+  if (UNLIKELY(!IsLegalSize(size))) {
+    STRACE("size isn't 48-bit");
+    return VIP(einval());
+  }
+
+  if (UNLIKELY(INT64_MAX - size < off)) {
+    STRACE("too large");
     return VIP(einval());
   }
 
@@ -301,15 +322,29 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(enomem());
   }
 
-  if (fd == -1) {
-    size = ROUNDUP(size, FRAMESIZE);
-    if (IsWindows()) {
-      prot |= PROT_WRITE; /* kludge */
-    }
+  clashes = OverlapsImageSpace(p, size) || OverlapsExistingMapping(p, size);
+
+  if ((flags & MAP_FIXED_NOREPLACE) == MAP_FIXED_NOREPLACE && clashes) {
+    STRACE("noreplace overlaps existing");
+    return VIP(eexist());
   }
 
-  n = (int)(size >> 16) + !!(size & (FRAMESIZE - 1));
-  assert(n > 0);
+  if (__builtin_add_overflow((int)(size >> 16), (int)!!(size & (FRAMESIZE - 1)),
+                             &n)) {
+    STRACE("memory range overflows");
+    return VIP(einval());
+  }
+
+  // if size is a two power then automap will use it as alignment
+  if (IS2POW(size)) {
+    a = size >> 16;
+    if (!a) {
+      a = 1;
+    }
+  } else {
+    a = 1;
+  }
+
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {
     x = FRAME(p);
@@ -318,10 +353,11 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
         OnUnrecoverableMmapError("FIXED UNTRACK FAILED");
       }
     }
-  } else if (!NeedAutomap(p, size)) {
+  } else if (p && !clashes && !OverlapsArenaSpace(p, size) &&
+             !OverlapsShadowSpace(p, size)) {
     x = FRAME(p);
-  } else if (!Automap(n, &x)) {
-    STRACE("AUTOMAP OUT OF MEMORY D:");
+  } else if (!Automap(n, a, &x)) {
+    STRACE("automap has no room for %d frames with %d alignment", n, a);
     return VIP(enomem());
   }
 
@@ -429,14 +465,21 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
  *       compile-time checks to ensure some char[8192] vars will not
  *       create an undetectable overflow into another thread's stack
  *     Your `flags` may optionally bitwise or any of the following:
- *     - `MAP_FIXED` in which case `addr` becomes more than a hint
- *     - `MAP_FIXED_NOREPLACE` to protect existing maps (Linux-only)
  *     - `MAP_ANONYMOUS` in which case `fd == -1` should be the case
+ *     - `MAP_FIXED` in which case `addr` becomes more than a hint
+ *     - `MAP_FIXED_NOREPLACE` to protect existing mappings; this is
+ *       always polyfilled by mmap() which tracks its own memory and
+ *       removed before passing to the kernel, in order to support
+ *       old versions; if you believe mappings exist which only the
+ *       kernel knows, then this flag may be passed to sys_mmap() on
+ *       Linux 4.17+ and FreeBSD (where it has multiple bits)
  *     - `MAP_CONCEAL` is FreeBSD/NetBSD/OpenBSD-only
  *     - `MAP_NORESERVE` is Linux/XNU/NetBSD-only
- *     - `MAP_LOCKED` is Linux-only
- *     - `MAP_POPULATE` is Linux-only
+ *     - `MAP_POPULATE` is Linux/FreeBSD-only
  *     - `MAP_NONBLOCK` is Linux-only
+ *     - `MAP_NOSYNC` is FreeBSD-only
+ *     - `MAP_INHERIT` is NetBSD-only
+ *     - `MAP_LOCKED` is Linux-only
  * @param fd is an open()'d file descriptor, whose contents shall be
  *     made available w/ automatic reading at the chosen address and
  *     must be -1 if MAP_ANONYMOUS is specified

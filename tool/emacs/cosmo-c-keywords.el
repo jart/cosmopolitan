@@ -99,7 +99,8 @@
            "_Vector_size"))
 
         (gnu
-         '("__inline"
+         '("__extension__"
+           "__inline"
            "__thread"
            "__alignof"
            "__typeof"

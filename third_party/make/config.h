@@ -620,7 +620,7 @@
 /* #undef HAVE__SET_INVALID_PARAMETER_HANDLER */
 
 /* Build host information. */
-#define MAKE_HOST "x86_64-pc-linux-gnu"
+#define MAKE_HOST "x86_64-pc-cosmopolitan"
 
 /* Define to 1 to enable job server support in GNU make. */
 /* TODO(jart): make it work */

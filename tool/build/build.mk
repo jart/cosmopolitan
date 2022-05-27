@@ -56,9 +56,11 @@ TOOL_BUILD_DIRECTDEPS =					\
 	THIRD_PARTY_GDTOA				\
 	THIRD_PARTY_GETOPT				\
 	THIRD_PARTY_MBEDTLS				\
+	THIRD_PARTY_MUSL				\
 	THIRD_PARTY_STB					\
 	THIRD_PARTY_XED					\
 	THIRD_PARTY_ZLIB				\
+	THIRD_PARTY_ZLIB_GZ				\
 	TOOL_BUILD_LIB
 
 TOOL_BUILD_DEPS :=					\
@@ -78,7 +80,7 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/%.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/blinkenlights.com.dbg:		\
@@ -105,7 +107,7 @@ o/$(MODE)/tool/build/ar.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/ar.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/package.com.dbg:			\
@@ -113,7 +115,7 @@ o/$(MODE)/tool/build/package.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/package.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/mkdeps.com.dbg:			\
@@ -121,7 +123,7 @@ o/$(MODE)/tool/build/mkdeps.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/mkdeps.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/compile.com.dbg:			\
@@ -129,7 +131,7 @@ o/$(MODE)/tool/build/compile.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/compile.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/zipobj.com.dbg:			\
@@ -137,7 +139,7 @@ o/$(MODE)/tool/build/zipobj.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/zipobj.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/emulator.o:			\

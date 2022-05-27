@@ -31,7 +31,7 @@
 
 static int thepid;
 static uint128_t thepool;
-_Alignas(64) static char rand64_lock;
+_Alignas(64) static int rand64_lock;
 
 /**
  * Returns nondeterministic random data.
@@ -47,7 +47,6 @@ _Alignas(64) static char rand64_lock;
  * @note this function is not intended for cryptography
  * @note this function passes bigcrush and practrand
  * @note this function takes at minimum 15 cycles
- * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
  */

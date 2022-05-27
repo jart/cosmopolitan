@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_SMALLZ4_SMALLZ4_H_
 #define COSMOPOLITAN_THIRD_PARTY_SMALLZ4_SMALLZ4_H_
+#include "libc/bits/bits.h"
 #include "third_party/libcxx/vector"
 
 /**
@@ -138,7 +139,7 @@ class smallz4 {
 
   /// return true, if the four bytes at *a and *b match
   inline static bool match4(const void* const a, const void* const b) {
-    return *(const uint32_t*)a == *(const uint32_t*)b;
+    return READ32LE(a) == READ32LE(b);
   }
 
   /// simple hash function, input: 32 bits, output: HashBits bits (by default:
@@ -636,7 +637,7 @@ class smallz4 {
         }
 
         // read next four bytes
-        const uint32_t four = *(uint32_t*)(dataBlock + i);
+        const uint32_t four = READ32LE(dataBlock + i);
         // convert to a shorter hash
         const uint32_t hash = getHash32(four);
 
@@ -674,10 +675,9 @@ class smallz4 {
         // check the hash chain
         while (true) {
           // read four bytes
-          currentFour =
-              *(uint32_t*)(&data[lastHashMatch -
-                                 dataZero]);  // match may be found in the
-                                              // previous block, too
+          currentFour = READ32LE(
+              &data[lastHashMatch - dataZero]);  // match may be found in the
+                                                 // previous block, too
           // match chain found, first 4 bytes are identical
           if (currentFour == four) break;
 

@@ -69,7 +69,7 @@ o/$(MODE)/tool/viz/%.com.dbg:			\
 		o/$(MODE)/tool/viz/%.o		\
 		o/$(MODE)/tool/viz/viz.pkg	\
 		$(CRT)				\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/viz/printimage.com.dbg:		\

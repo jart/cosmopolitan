@@ -29,11 +29,13 @@
 static int MakeDirs(const char *path, unsigned mode, int e) {
   int rc;
   char *dir;
-  if (mkdir(path, mode) != -1) {
+  if (mkdir(path, mode) != -1 || errno == EEXIST) {
     errno = e;
     return 0;
   }
-  if (errno != ENOENT) return -1;
+  if (errno != ENOENT) {
+    return -1;
+  }
   dir = xdirname(path);
   if (strcmp(dir, path)) {
     rc = MakeDirs(dir, mode, e);
@@ -48,6 +50,8 @@ static int MakeDirs(const char *path, unsigned mode, int e) {
 
 /**
  * Recursively creates directory a.k.a. folder.
+ *
+ * This function won't fail if the directory already exists.
  *
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
  * @param mode can be, for example, 0755

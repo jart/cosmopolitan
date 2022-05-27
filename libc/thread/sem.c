@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
-#include "libc/intrin/atomic_load.h"
 #include "libc/thread/sem.h"
 #include "libc/thread/wait.h"
 #include "libc/thread/yield.h"
@@ -74,7 +73,7 @@ int cthread_sem_wait_futex(cthread_sem_t* sem, const struct timespec* timeout) {
     while ((uint32_t)count > 0) {
       // without spin, we could miss a futex wake
       if (atomic_compare_exchange_weak(
-              &sem->linux.count, count,
+              &sem->linux.count, &count,
               count - 1 - ((uint64_t)1 << CTHREAD_THREAD_VAL_BITS))) {
         return 0;
       }
@@ -97,7 +96,7 @@ int cthread_sem_wait_spin(cthread_sem_t* sem, uint64_t count, int spin,
     while ((uint32_t)count > 0) {
       // spin is useful if multiple waiters can acquire the semaphore at the
       // same time
-      if (atomic_compare_exchange_weak(&sem->linux.count, count, count - 1)) {
+      if (atomic_compare_exchange_weak(&sem->linux.count, &count, count - 1)) {
         return 0;
       }
     }
@@ -115,7 +114,7 @@ int cthread_sem_wait(cthread_sem_t* sem, int spin,
   while ((uint32_t)count > 0) {
     // spin is useful if multiple waiters can acquire the semaphore at the same
     // time
-    if (atomic_compare_exchange_weak(&sem->linux.count, count, count - 1)) {
+    if (atomic_compare_exchange_weak(&sem->linux.count, &count, count - 1)) {
       return 0;
     }
   }

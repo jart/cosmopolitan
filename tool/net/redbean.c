@@ -16,146 +16,92 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/popcnt.h"
+#include "libc/bits/atomic.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/math.h"
 #include "libc/calls/sigbits.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/calls/ttydefaults.h"
-#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
-#include "libc/mem/fmt.h"
-#include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/rdtscp.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
-#include "libc/nt/version.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/clktck.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/runtime/symbols.internal.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
-#include "libc/str/str.h"
 #include "libc/str/undeflate.h"
 #include "libc/sysv/consts/af.h"
-#include "libc/sysv/consts/audit.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
-#include "libc/sysv/consts/lock.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/msync.h"
-#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/shut.h"
+#include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
-#include "libc/sysv/consts/sol.h"
-#include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
-#include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
-#include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lrepl.h"
-#include "third_party/lua/ltests.h"
-#include "third_party/lua/lua.h"
-#include "third_party/lua/luaconf.h"
 #include "third_party/lua/lualib.h"
-#include "third_party/mbedtls/asn1.h"
-#include "third_party/mbedtls/asn1write.h"
-#include "third_party/mbedtls/cipher.h"
-#include "third_party/mbedtls/config.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
-#include "third_party/mbedtls/ecp.h"
-#include "third_party/mbedtls/entropy.h"
-#include "third_party/mbedtls/entropy_poll.h"
-#include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/iana.h"
-#include "third_party/mbedtls/md.h"
-#include "third_party/mbedtls/md5.h"
+#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/oid.h"
-#include "third_party/mbedtls/pk.h"
-#include "third_party/mbedtls/rsa.h"
 #include "third_party/mbedtls/san.h"
-#include "third_party/mbedtls/sha1.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_ticket.h"
 #include "third_party/mbedtls/x509.h"
 #include "third_party/mbedtls/x509_crt.h"
-#include "third_party/regex/regex.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/args/args.h"
 #include "tool/build/lib/case.h"
-#include "tool/build/lib/psk.h"
 #include "tool/net/lfuncs.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
@@ -202,34 +148,26 @@ STATIC_YOINK("zip_uri_support");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-#define TRACE_BEGIN                                         \
-  do {                                                      \
-    if (!IsTiny()) {                                        \
-      if (funtrace) {                                       \
-        __atomic_fetch_add(&g_ftrace, 1, __ATOMIC_RELAXED); \
-      }                                                     \
-      if (systrace) {                                       \
-        __atomic_fetch_add(&__strace, 1, __ATOMIC_RELAXED); \
-      }                                                     \
-    }                                                       \
+#define TRACE_BEGIN             \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) ++__ftrace; \
+      if (systrace) ++__strace; \
+    }                           \
   } while (0)
 
-#define TRACE_END                                           \
-  do {                                                      \
-    if (!IsTiny()) {                                        \
-      if (funtrace) {                                       \
-        __atomic_fetch_sub(&g_ftrace, 1, __ATOMIC_RELAXED); \
-      }                                                     \
-      if (systrace) {                                       \
-        __atomic_fetch_sub(&__strace, 1, __ATOMIC_RELAXED); \
-      }                                                     \
-    }                                                       \
+#define TRACE_END               \
+  do {                          \
+    if (!IsTiny()) {            \
+      if (funtrace) --__ftrace; \
+      if (systrace) --__strace; \
+    }                           \
   } while (0)
 
-// letters not used: EIJNOQXYnoqwxy
+// letters not used: EIJNOQYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "BSVZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
+#define GETOPTS "BSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
 
 extern unsigned long long __kbirth;
 
@@ -401,6 +339,7 @@ static bool branded;
 static bool funtrace;
 static bool systrace;
 static bool meltdown;
+static bool unsecure;
 static bool printport;
 static bool daemonize;
 static bool logrusage;
@@ -410,7 +349,6 @@ static bool sslcliused;
 static bool loglatency;
 static bool terminated;
 static bool uniprocess;
-static bool memmonalive;
 static bool invalidated;
 static bool logmessages;
 static bool isinitialized;
@@ -423,7 +361,6 @@ static bool sslclientverify;
 static bool connectionclose;
 static bool hasonworkerstop;
 static bool isexitingworker;
-static bool terminatemonitor;
 static bool hasonworkerstart;
 static bool leakcrashreports;
 static bool hasonhttprequest;
@@ -435,6 +372,7 @@ static bool loggednetworkorigin;
 static bool ishandlingconnection;
 static bool hasonclientconnection;
 static bool evadedragnetsurveillance;
+_Atomic(bool) static terminatemonitor;
 
 static int zfd;
 static int frags;
@@ -449,6 +387,9 @@ static int statuscode;
 static int shutdownsig;
 static int sslpskindex;
 static int oldloglevel;
+static int *monitortid;
+static char *monitortls;
+static char *monitorstack;
 static int maxpayloadsize;
 static int messageshandled;
 static int sslticketlifetime;
@@ -1211,7 +1152,7 @@ static void CallSimpleHookIfDefined(const char *s) {
 
 static void ReportWorkerExit(int pid, int ws) {
   int workers;
-  workers = __atomic_sub_fetch(&shared->workers, 1, __ATOMIC_SEQ_CST);
+  workers = atomic_fetch_sub(&shared->workers, 1) - 1;
   if (WIFEXITED(ws)) {
     if (WEXITSTATUS(ws)) {
       LockInc(&shared->c.failedchildren);
@@ -1464,6 +1405,21 @@ static ssize_t SslRead(int fd, void *buf, size_t size) {
       errno = EINTR;
       rc = -1;
       errno = 0;
+    } else if (rc == MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "fatal alert message");
+      errno = EIO;
+      rc = -1;
+    } else if (rc == MBEDTLS_ERR_SSL_INVALID_RECORD) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "invalid record");
+      errno = EIO;
+      rc = -1;
+    } else if (rc == MBEDTLS_ERR_SSL_INVALID_MAC) {
+      WARNF("(ssl) %s SslRead error -0x%04x (%s)", DescribeClient(), -rc,
+            "hmac verification failed");
+      errno = EIO;
+      rc = -1;
     } else {
       WARNF("(ssl) %s SslRead error -0x%04x", DescribeClient(), -rc);
       errno = EIO;
@@ -1485,6 +1441,12 @@ static ssize_t SslWrite(int fd, struct iovec *iov, int iovlen) {
       if ((rc = mbedtls_ssl_write(&ssl, p, n)) > 0) {
         p += rc;
         n -= rc;
+      } else if (rc == MBEDTLS_ERR_NET_CONN_RESET) {
+        errno = ECONNRESET;
+        return -1;
+      } else if (rc == MBEDTLS_ERR_SSL_TIMEOUT) {
+        errno = ETIMEDOUT;
+        return -1;
       } else {
         WARNF("(ssl) %s SslWrite error -0x%04x", DescribeClient(), -rc);
         errno = EIO;
@@ -2465,13 +2427,28 @@ static ssize_t YieldGenerator(struct iovec v[3]) {
   return contentlength;
 }
 
+static void OnLuaServerPageCtrlc(int i) {
+  lua_sigint(GL, i);
+}
+
 static int LuaCallWithYield(lua_State *L) {
   int status;
   // since yield may happen in OnHttpRequest and in ServeLua,
   // need to fully restart the yield generator;
   // the second set of headers is not going to be sent
+  struct sigaction sa, saold;
   lua_State *co = lua_newthread(L);
-  if ((status = LuaCallWithTrace(L, 0, 0, co)) == LUA_YIELD) {
+  if (__replmode) {
+    sa.sa_flags = SA_RESETHAND;
+    sa.sa_handler = OnLuaServerPageCtrlc;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, &saold);
+  }
+  status = LuaCallWithTrace(L, 0, 0, co);
+  if (__replmode) {
+    sigaction(SIGINT, &saold, 0);
+  }
+  if (status == LUA_YIELD) {
     CHECK_GT(lua_gettop(L), 0);  // make sure that coroutine is anchored
     YL = co;
     generator = YieldGenerator;
@@ -3658,6 +3635,7 @@ static int LuaStoreAsset(lua_State *L) {
 
 static void ReseedRng(mbedtls_ctr_drbg_context *r, const char *s) {
 #ifndef UNSECURE
+  if (unsecure) return;
   CHECK_EQ(0, mbedtls_ctr_drbg_reseed(r, (void *)s, strlen(s)));
 #endif
 }
@@ -3810,7 +3788,8 @@ static int LuaFetch(lua_State *L) {
   usessl = false;
   if (url.scheme.n) {
 #ifndef UNSECURE
-    if (url.scheme.n == 5 && !memcasecmp(url.scheme.p, "https", 5)) {
+    if (!unsecure && url.scheme.n == 5 &&
+        !memcasecmp(url.scheme.p, "https", 5)) {
       usessl = true;
     } else
 #endif
@@ -3820,14 +3799,20 @@ static int LuaFetch(lua_State *L) {
     }
   }
 
+#ifndef UNSECURE
   if (usessl && !sslinitialized) TlsInit();
+#endif
 
   if (url.host.n) {
     host = gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
       port = gc(strndup(url.port.p, url.port.n));
+#ifndef UNSECURE
+    } else if (usessl) {
+      port = "443";
+#endif
     } else {
-      port = usessl ? "443" : "80";
+      port = "80";
     }
   } else {
     ip = servers.n ? ntohl(servers.p[0].addr.sin_addr.s_addr) : INADDR_LOOPBACK;
@@ -3894,6 +3879,7 @@ static int LuaFetch(lua_State *L) {
     unreachable;
   }
 
+#ifndef UNSECURE
   if (usessl) {
     if (sslcliused) {
       mbedtls_ssl_session_reset(&sslcli);
@@ -3928,11 +3914,13 @@ static int LuaFetch(lua_State *L) {
              mbedtls_ssl_get_ciphersuite(&sslcli),
              mbedtls_ssl_get_version(&sslcli));
   }
+#endif /* UNSECURE */
 
   /*
    * Send HTTP Message.
    */
   DEBUGF("(ftch) client sending %s request", method);
+#ifndef UNSECURE
   if (usessl) {
     ret = mbedtls_ssl_write(&sslcli, request, requestlen);
     if (ret != requestlen) {
@@ -3941,7 +3929,9 @@ static int LuaFetch(lua_State *L) {
       LuaThrowTlsError(L, "write", ret);
       unreachable;
     }
-  } else if (WRITE(sock, request, requestlen) != requestlen) {
+  } else
+#endif
+      if (WRITE(sock, request, requestlen) != requestlen) {
     close(sock);
     luaL_error(L, "write error: %s", strerror(errno));
     unreachable;
@@ -3962,6 +3952,7 @@ static int LuaFetch(lua_State *L) {
       inbuf.p = realloc(inbuf.p, inbuf.c);
     }
     NOISEF("(ftch) client reading");
+#ifndef UNSECURE
     if (usessl) {
       if ((rc = mbedtls_ssl_read(&sslcli, inbuf.p + inbuf.n,
                                  inbuf.c - inbuf.n)) < 0) {
@@ -3975,7 +3966,9 @@ static int LuaFetch(lua_State *L) {
           unreachable;
         }
       }
-    } else if ((rc = READ(sock, inbuf.p + inbuf.n, inbuf.c - inbuf.n)) == -1) {
+    } else
+#endif
+        if ((rc = READ(sock, inbuf.p + inbuf.n, inbuf.c - inbuf.n)) == -1) {
       close(sock);
       free(inbuf.p);
       DestroyHttpMessage(&msg);
@@ -4125,6 +4118,7 @@ TransportError:
   close(sock);
   luaL_error(L, "transport error");
   unreachable;
+#ifndef UNSECURE
 VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
   close(sock);
@@ -4132,6 +4126,7 @@ VerifyFailed:
       L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
       ret);
   unreachable;
+#endif
 #undef ssl
 }
 
@@ -4790,8 +4785,11 @@ static int LuaEvadeDragnetSurveillance(lua_State *L) {
 
 static int LuaProgramSslCompression(lua_State *L) {
 #ifndef UNSECURE
-  OnlyCallFromInitLua(L, "ProgramSslCompression");
-  conf.disable_compression = confcli.disable_compression = !lua_toboolean(L, 1);
+  if (!unsecure) {
+    OnlyCallFromInitLua(L, "ProgramSslCompression");
+    conf.disable_compression = confcli.disable_compression =
+        !lua_toboolean(L, 1);
+  }
 #endif
   return 0;
 }
@@ -4924,10 +4922,10 @@ static int LuaLaunchBrowser(lua_State *L) {
 }
 
 static bool LuaRunAsset(const char *path, bool mandatory) {
+  int status;
   struct Asset *a;
   const char *code;
   size_t pathlen, codelen;
-  int status;
   pathlen = strlen(path);
   if ((a = GetAsset(path, pathlen))) {
     if ((code = FreeLater(LoadAsset(a, &codelen)))) {
@@ -5012,6 +5010,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Bsf", LuaBsf},                                      //
     {"Bsr", LuaBsr},                                      //
     {"CategorizeIp", LuaCategorizeIp},                    //
+    {"Compress", LuaCompress},                            //
     {"Crc32", LuaCrc32},                                  //
     {"Crc32c", LuaCrc32c},                                //
     {"Decimate", LuaDecimate},                            //
@@ -5032,6 +5031,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"EscapePath", LuaEscapePath},                        //
     {"EscapeSegment", LuaEscapeSegment},                  //
     {"EscapeUser", LuaEscapeUser},                        //
+    {"Fetch", LuaFetch},                                  //
     {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
     {"FormatIp", LuaFormatIp},                            //
     {"GetAssetComment", LuaGetAssetComment},              //
@@ -5147,6 +5147,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sleep", LuaSleep},                                  //
     {"Slurp", LuaSlurp},                                  //
     {"StoreAsset", LuaStoreAsset},                        //
+    {"Uncompress", LuaUncompress},                        //
     {"Underlong", LuaUnderlong},                          //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
     {"Write", LuaWrite},                                  //
@@ -5154,7 +5155,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"hex", LuaHex},                                      //
     {"oct", LuaOct},                                      //
 #ifndef UNSECURE
-    {"Fetch", LuaFetch},                                        //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
@@ -5310,7 +5310,7 @@ static void LuaInterpreter(lua_State *L) {
       if (status == -2) {
         if (errno == EINTR) {
           if ((sig = linenoiseGetInterrupt())) {
-            raise(sig);
+            kill(0, sig);
           }
         }
         fprintf(stderr, "i/o error: %m\n");
@@ -5387,7 +5387,7 @@ static void LogClose(const char *reason) {
     INFOF("(stat) %s %s with %,ld unprocessed and %,d handled (%,d workers)",
           DescribeClient(), reason, amtread, messageshandled, shared->workers);
   } else {
-    DEBUGF("(stat) %s %s with %,d requests handled", DescribeClient(), reason,
+    DEBUGF("(stat) %s %s with %,d messages handled", DescribeClient(), reason,
            messageshandled);
   }
 }
@@ -5498,6 +5498,11 @@ static char *HandleMapFailed(struct Asset *a, int fd) {
   WARNF("(srvr) mmap(%`'s) error: %m", a->file->path);
   close(fd);
   return ServeError(500, "Internal Server Error");
+}
+
+static void LogAcceptError(const char *s) {
+  LockInc(&shared->c.accepterrors);
+  WARNF("(srvr) %s accept error: %s", DescribeServer(), s);
 }
 
 static char *HandleOpenFail(struct Asset *a) {
@@ -6158,8 +6163,6 @@ static bool HandleMessageActual(void) {
     p = stpcpy(p, referrerpolicy);
     p = stpcpy(p, "\r\n");
   }
-  LockInc(&shared->c.messageshandled);
-  ++messageshandled;
   if (loglatency || LOGGABLE(kLogDebug)) {
     now = nowl();
     LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
@@ -6228,14 +6231,16 @@ static void HandleMessages(void) {
 #ifndef UNSECURE
           if (!once) {
             once = true;
-            if (IsSsl(inbuf.p[0])) {
-              if (TlsSetup()) {
-                continue;
+            if (!unsecure) {
+              if (IsSsl(inbuf.p[0])) {
+                if (TlsSetup()) {
+                  continue;
+                } else {
+                  return;
+                }
               } else {
-                return;
+                WipeServingKeys();
               }
-            } else {
-              WipeServingKeys();
             }
           }
 #endif
@@ -6258,15 +6263,15 @@ static void HandleMessages(void) {
         LockInc(&shared->c.readtimeouts);
         if (amtread) SendTimeout();
         NotifyClose();
-        LogClose("timeout");
+        LogClose("readtimeout");
         return;
       } else if (errno == ECONNRESET) {
         LockInc(&shared->c.readresets);
-        LogClose("reset");
+        LogClose("readreset");
         return;
       } else {
         LockInc(&shared->c.readerrors);
-        WARNF("(clnt) %s read error: %m", DescribeClient());
+        WARNF("(clnt) %s readerror: %m", DescribeClient());
         return;
       }
       if (killed || (terminated && !amtread) ||
@@ -6297,7 +6302,7 @@ static void HandleMessages(void) {
     } else {
       CHECK_LT(msgsize, amtread);
       LockInc(&shared->c.pipelinedrequests);
-      DEBUGF("(stat) %,ld pipelined bytes", amtread - msgsize);
+      DEBUGF("(stat) %,ld pipelinedrequest bytes", amtread - msgsize);
       memmove(inbuf.p, inbuf.p + msgsize, amtread - msgsize);
       amtread -= msgsize;
       if (killed) {
@@ -6331,7 +6336,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&memmonalive);
+    _spinlock(monitortid);
   }
   _Exit(0);
 }
@@ -6445,8 +6450,7 @@ static int MemoryMonitor(void *arg) {
   struct MemoryInterval *mi, *mi2;
   long i, j, k, n, x, y, pi, gen, pages;
   int rc, id, color, color2, workers;
-  _spinlock(&memmonalive);
-  __atomic_load(&shared->workers, &id, __ATOMIC_SEQ_CST);
+  id = atomic_load_explicit(&shared->workers, memory_order_relaxed);
   DEBUGF("(memv) started for pid %d on tid %d", getpid(), gettid());
 
   sigemptyset(&ss);
@@ -6478,10 +6482,8 @@ static int MemoryMonitor(void *arg) {
   _spunlock(&shared->montermlock);
 
   if (tty != -1) {
-    for (gen = 0, mi = 0, b = 0;;) {
-      __atomic_load(&terminatemonitor, &done, __ATOMIC_SEQ_CST);
-      if (done) break;
-      __atomic_load(&shared->workers, &workers, __ATOMIC_SEQ_CST);
+    for (gen = 0, mi = 0, b = 0; !terminatemonitor;) {
+      workers = atomic_load_explicit(&shared->workers, memory_order_relaxed);
       if (id) id = MAX(1, MIN(id, workers));
       if (!id && workers) {
         usleep(50000);
@@ -6489,15 +6491,18 @@ static int MemoryMonitor(void *arg) {
       }
 
       ++gen;
-      __atomic_load(&_mmi.i, &intervals, __ATOMIC_SEQ_CST);
+      intervals = atomic_load_explicit(&_mmi.i, memory_order_relaxed);
       if ((mi2 = realloc(mi, (intervals += 3) * sizeof(*mi)))) {
         mi = mi2;
         mi[0].x = (intptr_t)_base >> 16;
         mi[0].size = _etext - _base;
+        mi[0].flags = 0;
         mi[1].x = (intptr_t)_etext >> 16;
         mi[1].size = _edata - _etext;
+        mi[1].flags = 0;
         mi[2].x = (intptr_t)_edata >> 16;
         mi[2].size = _end - _edata;
+        mi[2].flags = 0;
         _spinlock(&_mmi.lock);
         if (_mmi.i == intervals - 3) {
           memcpy(mi + 3, _mmi.p, _mmi.i * sizeof(*mi));
@@ -6507,7 +6512,7 @@ static int MemoryMonitor(void *arg) {
         }
         _spunlock(&_mmi.lock);
         if (!ok) {
-          WARNF("(memv) retrying due to contention on mmap table");
+          VERBOSEF("(memv) retrying due to contention on mmap table");
           continue;
         }
 
@@ -6527,7 +6532,11 @@ static int MemoryMonitor(void *arg) {
             rc = mincore(addr + j * PAGESIZE, PAGESIZE, &rez);
             if (!rc) {
               if (rez & 1) {
-                color2 = 42;
+                if (mi[i].flags & MAP_SHARED) {
+                  color2 = 105;
+                } else {
+                  color2 = 42;
+                }
               } else {
                 color2 = 41;
               }
@@ -6539,7 +6548,11 @@ static int MemoryMonitor(void *arg) {
               color = color2;
               appendf(&b, "\e[%dm", color);
             }
-            appendw(&b, ' ');
+            if (mi[i].flags & MAP_ANONYMOUS) {
+              appendw(&b, ' ');
+            } else {
+              appendw(&b, '/');
+            }
           }
         }
 
@@ -6573,18 +6586,29 @@ static int MemoryMonitor(void *arg) {
     free(mi);
     free(b);
   }
-  _spunlock(&memmonalive);
+
   DEBUGF("(memv) done");
   return 0;
 }
 
-static int MonitorMemory(void) {
-  return clone(MemoryMonitor,
-               mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-                    MAP_STACK | MAP_ANONYMOUS, -1, 0),
-               FRAMESIZE,
-               CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND,
-               0, 0, 0, 0, 0);
+static void MonitorMemory(void) {
+  if ((monitortls = __initialize_tls(malloc(64)))) {
+    if ((monitorstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                             MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+      monitortid = (int *)(monitortls + 0x38);
+      if ((*monitortid =
+               clone(MemoryMonitor, monitorstack, GetStackSize(),
+                     CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
+                         CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_CLEARTID,
+                     0, 0, monitortls, 64, monitortid)) != -1) {
+        return;
+      }
+      munmap(monitorstack, GetStackSize());
+    }
+    free(monitortls);
+  }
+  WARNF("(memv) failed to start memory monitor %m");
+  monitortty = 0;
 }
 
 static int HandleConnection(size_t i) {
@@ -6606,7 +6630,6 @@ static int HandleConnection(size_t i) {
       switch ((pid = fork())) {
         case 0:
           if (monitortty) {
-            memmonalive = false;
             MonitorMemory();
           }
           meltdown = false;
@@ -6671,35 +6694,39 @@ static int HandleConnection(size_t i) {
       LockInc(&shared->c.acceptinterrupts);
     } else if (errno == ENFILE) {
       LockInc(&shared->c.enfiles);
-      WARNF("(srvr) too many open files");
+      LogAcceptError("enfile: too many open files");
       meltdown = true;
     } else if (errno == EMFILE) {
       LockInc(&shared->c.emfiles);
-      WARNF("(srvr) ran out of open file quota");
+      LogAcceptError("emfile: ran out of open file quota");
       meltdown = true;
     } else if (errno == ENOMEM) {
       LockInc(&shared->c.enomems);
-      WARNF("(srvr) ran out of memory");
+      LogAcceptError("enomem: ran out of memory");
       meltdown = true;
     } else if (errno == ENOBUFS) {
       LockInc(&shared->c.enobufs);
-      WARNF("(srvr) ran out of buffer");
+      LogAcceptError("enobuf: ran out of buffer");
       meltdown = true;
     } else if (errno == ENONET) {
       LockInc(&shared->c.enonets);
-      WARNF("(srvr) %s network gone", DescribeServer());
+      LogAcceptError("enonet: network gone");
       polls[i].fd = -polls[i].fd;
     } else if (errno == ENETDOWN) {
       LockInc(&shared->c.enetdowns);
-      WARNF("(srvr) %s network down", DescribeServer());
+      LogAcceptError("enetdown: network down");
       polls[i].fd = -polls[i].fd;
     } else if (errno == ECONNABORTED) {
+      LockInc(&shared->c.accepterrors);
       LockInc(&shared->c.acceptresets);
-      WARNF("(srvr) %s connection reset before accept");
+      WARNF("(srvr) %S accept error: %s", DescribeServer(),
+            "acceptreset: connection reset before accept");
     } else if (errno == ENETUNREACH || errno == EHOSTUNREACH ||
                errno == EOPNOTSUPP || errno == ENOPROTOOPT || errno == EPROTO) {
       LockInc(&shared->c.accepterrors);
-      WARNF("(srvr) %s ephemeral accept error: %m", DescribeServer());
+      LockInc(&shared->c.acceptflakes);
+      WARNF("(srvr) accept error: %s ephemeral accept error: %m",
+            DescribeServer());
     } else {
       DIEF("(srvr) %s accept error: %m", DescribeServer());
     }
@@ -6708,24 +6735,24 @@ static int HandleConnection(size_t i) {
   return rc;
 }
 
-static void RestoreApe(void) {
-  char *p;
+static void MakeExecutableModifiable(void) {
+  int ft;
   size_t n;
-  struct Asset *a;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
   if (!(SUPPORT_VECTOR & (METAL | WINDOWS | XNU))) return;
   if (IsWindows()) return;  // TODO
   if (IsOpenbsd()) return;  // TODO
   if (IsNetbsd()) return;   // TODO
   if (endswith(zpath, ".com.dbg")) return;
-  if ((a = GetAssetZip("/.ape", 5)) && (p = LoadAsset(a, &n))) {
-    close(zfd);
-    if ((zfd = OpenExecutable()) == -1 || WRITE(zfd, p, n) == -1) {
-      WARNF("(srvr) can't restore .ape");
-    }
-    free(p);
-  } else {
-    DEBUGF("(srvr) /.ape not found");
+  close(zfd);
+  ft = __ftrace;
+  if ((zfd = OpenExecutable()) == -1) {
+    WARNF("(srvr) can't restore .ape");
+  }
+  if (ft > 0) {
+    __ftrace = 0;
+    ftrace_install();
+    __ftrace = ft;
   }
 }
 
@@ -6742,13 +6769,17 @@ static int HandleReadline(void) {
       } else if (errno == EINTR) {
         errno = 0;
         VERBOSEF("(repl) interrupt");
+        shutdownsig = SIGINT;
+        OnInt(SIGINT);
+        kill(0, SIGINT);
         return -1;
       } else if (errno == EAGAIN) {
         errno = 0;
         return 0;
       } else {
-        OnTerm(SIGIO);  // error
-        return -1;
+        WARNF("unexpected terminal error %d% m", status);
+        errno = 0;
+        return 0;
       }
     }
     linenoiseDisableRawMode();
@@ -6812,7 +6843,7 @@ static int HandlePoll(int ms) {
       LockInc(&shared->c.pollinterrupts);
     } else if (errno == ENOMEM) {
       LockInc(&shared->c.enomems);
-      WARNF("(srvr) %s ran out of memory");
+      WARNF("(srvr) poll error: ran out of memory");
       meltdown = true;
     } else {
       DIEF("(srvr) poll error: %m");
@@ -6989,6 +7020,11 @@ static void SigInit(void) {
 static void TlsInit(void) {
 #ifndef UNSECURE
   int suite;
+  if (unsecure) return;
+
+  if (suiteb && !X86_HAVE(AES)) {
+    WARNF("you're using suite b crypto but don't have aes-ni");
+  }
 
   if (!sslinitialized) {
     InitializeRng(&rng);
@@ -7048,6 +7084,7 @@ static void TlsInit(void) {
 
 static void TlsDestroy(void) {
 #ifndef UNSECURE
+  if (unsecure) return;
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_free(&sslcli);
   mbedtls_ctr_drbg_free(&rng);
@@ -7092,6 +7129,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('S', ++sandboxed);
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
+      CASE('X', unsecure = true);
       CASE('Z', systrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
@@ -7164,7 +7202,7 @@ void RedBean(int argc, char *argv[]) {
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
-  RestoreApe();
+  MakeExecutableModifiable();
   SetDefaults();
   LuaStart();
   GetOpts(argc, argv);
@@ -7229,7 +7267,9 @@ void RedBean(int argc, char *argv[]) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(&memmonalive);
+    _spinlock(monitortid);
+    munmap(monitorstack, GetStackSize());
+    free(monitortls);
   }
   INFOF("(srvr) shutdown complete");
 }

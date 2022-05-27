@@ -22,8 +22,9 @@
 //
 //	@return	wide character or -1 on EOF or error
 //	@see	fgetwc_unlocked()
+//	@threadsafe
 getwchar:
-	lea	stdin(%rip),%rdi
+	mov	stdin(%rip),%rdi
 	mov	%rdi,%r11
 	ezlea	fgetwc_unlocked,ax
 	jmp	stdio_unlock

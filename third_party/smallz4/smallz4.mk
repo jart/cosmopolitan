@@ -60,14 +60,14 @@ o/$(MODE)/third_party/smallz4/smallz4.com.dbg:			\
 		$(THIRD_PARTY_SMALLZ4)				\
 		o/$(MODE)/third_party/smallz4/smallz4.o		\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/smallz4/smallz4cat.com.dbg:		\
 		$(THIRD_PARTY_SMALLZ4)				\
 		o/$(MODE)/third_party/smallz4/smallz4cat.o	\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 THIRD_PARTY_SMALLZ4_COMS =					\

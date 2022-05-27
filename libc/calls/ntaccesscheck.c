@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
@@ -94,15 +94,15 @@ TryAgain:
           }
         } else {
           rc = __winerr();
-          STRACE("%s failed: %m", "AccessCheck");
+          STRACE("%s(%#hs) failed: %m", "AccessCheck", pathname);
         }
       } else {
         rc = __winerr();
-        STRACE("%s failed: %m", "DuplicateToken");
+        STRACE("%s(%#hs) failed: %m", "DuplicateToken", pathname);
       }
     } else {
       rc = __winerr();
-      STRACE("%s failed: %m", "OpenProcessToken");
+      STRACE("%s(%#hs) failed: %m", "OpenProcessToken", pathname);
     }
   } else {
     e = GetLastError();
@@ -112,9 +112,11 @@ TryAgain:
         goto TryAgain;
       } else {
         rc = enomem();
+        STRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
       }
     } else {
       errno = e;
+      STRACE("%s(%#hs) failed: %m", "GetFileSecurity", pathname);
       rc = -1;
     }
   }

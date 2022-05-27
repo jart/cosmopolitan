@@ -31,6 +31,8 @@
 	_ehead = 0
 	_ereal = 0
 	__privileged_start = 0
+	__privileged_addr = 0
+	__privileged_size = 0
 	__test_start = 0
 	__ro = 0
 	__relo_start = 0
@@ -51,6 +53,8 @@
 	.globl	ape_xlm
 	.globl	__relo_start
 	.globl	__relo_end
+	.globl	__privileged_size
+	.globl	__privileged_addr
 	.globl	__privileged_start
 	.globl	__ro
 	.globl	__test_start
@@ -72,6 +76,8 @@
 	.weak	ape_xlm
 	.weak	__relo_start
 	.weak	__relo_end
+	.weak	__privileged_size
+	.weak	__privileged_addr
 	.weak	__privileged_start
 	.weak	__ro
 	.weak	__test_start

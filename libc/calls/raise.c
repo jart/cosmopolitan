@@ -18,9 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/getconsolectrlevent.internal.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/console.h"
 #include "libc/nt/errors.h"

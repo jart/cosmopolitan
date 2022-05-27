@@ -17,14 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 
 void __releasefd(int fd) {
   _spinlock(&__fds_lock);
-  if (0 <= fd && fd < g_fds.n) {
-    g_fds.p[fd].kind = 0;
-    g_fds.f = MIN(fd, g_fds.f);
-  }
+  __releasefd_unlocked(fd);
   _spunlock(&__fds_lock);
 }

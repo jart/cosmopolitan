@@ -1,11 +1,13 @@
 #include "libc/macros.internal.h"
 .text.unlikely
 
+.section .privileged,"ax",@progbits
+
 ehostunreach:
 	.leafprologue
-	.profilable
-	mov	EHOSTUNREACH(%rip),%eax
-	mov	%eax,errno(%rip)
+	mov	EHOSTUNREACH(%rip),%ecx
+	.errno
+	mov	%ecx,(%rax)
 	push	$-1
 	pop	%rax
 	.leafepilogue

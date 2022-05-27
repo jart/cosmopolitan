@@ -17,11 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/sock/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -46,6 +48,7 @@
  */
 int close(int fd) {
   int rc;
+  _spinlock(&__fds_lock);
   if (fd == -1) {
     rc = 0;
   } else if (fd < 0) {
@@ -74,9 +77,10 @@ int close(int fd) {
       }
     }
     if (!__vforked) {
-      __releasefd(fd);
+      __releasefd_unlocked(fd);
     }
   }
+  _spunlock(&__fds_lock);
   STRACE("%s(%d) → %d% m", "close", fd, rc);
   return rc;
 }

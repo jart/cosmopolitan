@@ -22,6 +22,7 @@
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/seccomp.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

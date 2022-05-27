@@ -26,8 +26,8 @@ const char *DescribeMapFlags(int x) {
   _Alignas(char) static char mapflags[256];
   const struct DescribeFlags kMapFlags[] = {
       {MAP_STACK, "STACK"},                      // order matters
-      {MAP_ANONYMOUS, "ANONYMOUS"},              //
       {MAP_PRIVATE, "PRIVATE"},                  //
+      {MAP_ANONYMOUS, "ANONYMOUS"},              //
       {MAP_SHARED, "SHARED"},                    //
       {MAP_FIXED, "FIXED"},                      //
       {MAP_FIXED_NOREPLACE, "FIXED_NOREPLACE"},  //

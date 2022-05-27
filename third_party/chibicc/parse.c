@@ -559,6 +559,7 @@ static Token *thing_attributes(Token *tok, void *arg) {
       consume_attribute(&tok, tok, "warn_unused_result") ||
       consume_attribute(&tok, tok, "flatten") ||
       consume_attribute(&tok, tok, "leaf") ||
+      consume_attribute(&tok, tok, "no_reorder") ||
       consume_attribute(&tok, tok, "dontthrow") ||
       consume_attribute(&tok, tok, "optnone") ||
       consume_attribute(&tok, tok, "returns_twice") ||
@@ -3259,7 +3260,42 @@ static Node *primary(Token **rest, Token *tok) {
       tok = skip(tok, ',');
       node->rhs = assign(&tok, tok);
       tok = skip(tok, ',');
-      const_expr(&tok, tok);
+      node->memorder = const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___ATOMIC_STORE) {
+      Node *node = new_node(ND_STORE, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      tok = skip(tok, ',');
+      node->memorder = const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___ATOMIC_TEST_AND_SET) {
+      Node *node = new_node(ND_TESTANDSETA, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->memorder = const_expr(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___ATOMIC_CLEAR) {
+      Node *node = new_node(ND_CLEAR, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->memorder = const_expr(&tok, tok);
       *rest = skip(tok, ')');
       return node;
     }

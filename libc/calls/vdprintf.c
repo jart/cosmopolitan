@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"

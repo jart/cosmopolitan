@@ -22,8 +22,9 @@
 //
 //	@return	byte in range 0..255, or -1 w/ errno
 //	@see	fgetc_unlocked()
+//	@threadsafe
 getchar:
-	lea	stdin(%rip),%rdi
+	mov	stdin(%rip),%rdi
 	mov	%rdi,%r11
 	ezlea	fgetc_unlocked,ax
 	jmp	stdio_unlock

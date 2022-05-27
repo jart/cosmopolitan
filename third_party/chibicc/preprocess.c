@@ -1174,6 +1174,14 @@ __INT_FAST32_TYPE__\000\
 int\000\
 __UINT_FAST32_TYPE__\000\
 unsigned\000\
+__INT_FAST8_MAX__\000\
+0x7f\000\
+__INT_FAST16_MAX__\000\
+0x7fffffff\000\
+__INT_FAST32_MAX__\000\
+0x7fffffff\000\
+__INT_FAST64_MAX__\000\
+0x7fffffffffffffffl\000\
 __INT_FAST64_TYPE__\000\
 long\000\
 __UINT_FAST64_TYPE__\000\

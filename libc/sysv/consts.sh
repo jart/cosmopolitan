@@ -224,22 +224,25 @@ syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
 syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x08000000		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x00004010		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
 syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
 syscon	mmap	MAP_GROWSDOWN				0x00000100		0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
-syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_LOCKED				0x00002000		0			0			0			0			0
 syscon	mmap	MAP_NORESERVE				0x00004000		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
-syscon	mmap	MAP_POPULATE				0x00008000		0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
+syscon	mmap	MAP_POPULATE				0x00008000		0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0			0			0			0			0
 syscon	mmap	MAP_HUGETLB				0x00040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
+syscon	mmap	MAP_HASSEMAPHORE			0			0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
+syscon	mmap	MAP_NOSYNC				0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
+syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0			0
-syscon	compat	MAP_NOCORE				0			0			0x0020000		0x8000			0x8000			0			# use MAP_CONCEAL
-syscon	compat	MAP_ANON				0x20			0x1000			0x0001000		0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			0			# ignored
-syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0			0
-syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
+syscon	compat	MAP_NOCORE				0			0			0x00020000		0x00008000		0x00008000		0			# use MAP_CONCEAL
+syscon	compat	MAP_ANON				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
+syscon	compat	MAP_EXECUTABLE				0x00001000		0			0			0			0			0			# ignored
+syscon	compat	MAP_DENYWRITE				0x00000800		0			0			0			0			0
+syscon	compat	MAP_32BIT				0x00000040		0			0x00080000		0			0			0			# iffy
 
 #	madvise() flags
 #
@@ -336,36 +339,6 @@ syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0			#
 syscon	waitid	WEXITED					4			4			0x10			0			32			0
 syscon	waitid	WSTOPPED				2			8			2			0			2			0
 syscon	waitid	WNOWAIT					0x01000000		0x20			8			0			0x10000			0
-
-#	stat::st_mode constants
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	stat	S_IFREG					0100000			0100000			0100000			0100000			0100000			0100000			# regular file     (unix consensus; faked nt)
-syscon	stat	S_IFBLK					0060000			0060000			0060000			0060000			0060000			0060000			# block device     (unix consensus; faked nt)
-syscon	stat	S_IFCHR					0020000			0020000			0020000			0020000			0020000			0020000			# character device (unix consensus; faked nt)
-syscon	stat	S_IFDIR					0040000			0040000			0040000			0040000			0040000			0040000			# directory        (unix consensus; faked nt)
-syscon	stat	S_IFIFO					0010000			0010000			0010000			0010000			0010000			0010000			# pipe             (unix consensus; faked nt)
-syscon	stat	S_IFLNK					0120000			0120000			0120000			0120000			0120000			0120000			# symbolic link    (unix consensus; faked nt)
-syscon	stat	S_IFSOCK				0140000			0140000			0140000			0140000			0140000			0140000			# socket           (unix consensus; faked nt)
-syscon	stat	S_IFMT					0170000			0170000			0170000			0170000			0170000			0170000			# FILE TYPE MASK   (unix consensus; faked nt)
-syscon	stat	S_ISVTX					0001000			0001000			0001000			0001000			0001000			0001000			# THE STICKY BIT   (unix consensus; faked nt)
-syscon	stat	S_ISGID					0002000			0002000			0002000			0002000			0002000			0002000			# the setgid bit   (unix consensus; faked nt)
-syscon	stat	S_ISUID					0004000			0004000			0004000			0004000			0004000			0004000			# the setuid bit   (unix consensus; faked nt)
-syscon	stat	S_IEXEC					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWRITE				0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IREAD					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXUSR					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWUSR					0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRUSR					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXU					0000700			0000700			0000700			0000700			0000700			0000700			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXGRP					0000010			0000010			0000010			0000010			0000010			0000010			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWGRP					0000020			0000020			0000020			0000020			0000020			0000020			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRGRP					0000040			0000040			0000040			0000040			0000040			0000040			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXG					0000070			0000070			0000070			0000070			0000070			0000070			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXOTH					0000001			0000001			0000001			0000001			0000001			0000001			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWOTH					0000002			0000002			0000002			0000002			0000002			0000002			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IROTH					0000004			0000004			0000004			0000004			0000004			0000004			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXO					0000007			0000007			0000007			0000007			0000007			0000007			# just use octal   (unix consensus; faked nt)
 
 #	fcntl()
 #
@@ -605,7 +578,8 @@ syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall
 #	sigaltstack() values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ss	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x7000			0x2000
+syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlayed with STACKSIZE; you need to #undef SIGSTKSZ to access this symbol
+syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlayed with 32768; you need to #undef MINSIGSTKSZ to access this symbol
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 
@@ -1158,18 +1132,18 @@ syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 #	statvfs() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
 syscon	statvfs	ST_RDONLY				1			1			1			1			1			0			# unix consensus
+syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
+syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
+syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_SYNCHRONOUS				16			0			0			0			2			0
 syscon	statvfs	ST_APPEND				0x0100			0			0			0			0			0
 syscon	statvfs	ST_IMMUTABLE				0x0200			0			0			0			0			0
-syscon	statvfs	ST_MANDLOCK				0x40			0			0			0			0			0
+syscon	statvfs	ST_MANDLOCK				0x0040			0			0			0			0			0
 syscon	statvfs	ST_NOATIME				0x0400			0			0			0x04000000		0			0
-syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
 syscon	statvfs	ST_NODIRATIME				0x0800			0			0			0			0			0
-syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_WRITE				0x0080			0			0			0			0			0
 syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0
-syscon	statvfs	ST_SYNCHRONOUS				0x10			0			0			0			2			0
-syscon	statvfs	ST_WRITE				0x80			0			0			0			0			0
 
 #	sendfile() flags
 #
@@ -1349,7 +1323,6 @@ syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x800474
 syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
 syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
-syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
 syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
@@ -1442,7 +1415,7 @@ syscon	termios	IUTF8					0b0100000000000000	0b0100000000000000	0			0			0			0b010
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic, e.g. MULTICS newlines
-syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output
+syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output (SHOUTING)
 syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR map \n → \r\n output (MULTICS newline) and requires OPOST
 syscon	termios	OCRNL					0b0000000000001000	0b000000000000010000	0b000000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000001000	# termios.c_oflag|=OCRNL maps \r → \n output
 syscon	termios	ONOCR					0b0000000000010000	0b000000000000100000	0b000000000000100000	0b0000000001000000	0b0000000001000000	0b0000000000010000	# termios.c_oflag|=ONOCR maps \r → ∅ output iff column 0
@@ -1478,14 +1451,14 @@ syscon	termios	  FF1					0b1000000000000000	0b000100000000000000	0b0001000000000
 #	Teletypewriter Special Control Character Assignments
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
+syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
 syscon	termios	NCCS					20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
 syscon	termios	VINTR					0+1			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
 syscon	termios	VQUIT					1+1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
 syscon	termios	VERASE					2+1			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
 syscon	termios	VKILL					3+1			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
 syscon	termios	VEOF					4+1			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
 syscon	termios	VSWTC					7+1			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
 syscon	termios	VSTART					8+1			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
 syscon	termios	VSTOP					9+1			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥
@@ -1534,6 +1507,8 @@ syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
 #	Pseudoteletypewriter Control
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	pty	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
+syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			0			# boop
 syscon	pty	TIOCPKT					0x5420			0x80047470		0x80047470		0x80047470		0x80047470		-1			# boop
 syscon	pty	TIOCPKT_DATA				0			0			0			0			0			0			# consensus
 syscon	pty	TIOCPKT_FLUSHREAD			1			1			1			1			1			1			# unix consensus
@@ -1543,7 +1518,6 @@ syscon	pty	TIOCPKT_START				8			8			8			8			8			8			# unix consensus
 syscon	pty	TIOCPKT_NOSTOP				16			16			16			16			16			16			# unix consensus
 syscon	pty	TIOCPKT_DOSTOP				32			32			32			32			32			32			# unix consensus
 syscon	pty	TIOCPKT_IOCTL				64			64			64			64			64			64			# unix consensus
-syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			-1			# boop
 syscon	pty	PTMGET					0			0			0			0x40287401		0x40287401		-1			# for /dev/ptm
 
 #	Modem Control
@@ -1598,18 +1572,6 @@ syscon	sock	SOCK_CLOEXEC				0x080000		0x080000		0x10000000		0x8000			0x10000000	
 syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x20000000		0x00000800		# faked xnu & faked nt to be same as O_NONBLOC and socket() will ioctl(FIONBIO=1)
 syscon	sock	SOCK_DCCP				6			0			0			0			0			0			# what is it?
 syscon	sock	SOCK_PACKET				10			0			0			0			0			0			# what is it?
-
-syscon	prsnlty	ADDR_COMPAT_LAYOUT			0x0200000		0			0			0			0			0			# linux only
-syscon	prsnlty	READ_IMPLIES_EXEC			0x0400000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_3GB				0x8000000		0			0			0			0			0			# linux only
-syscon	prsnlty	FDPIC_FUNCPTRS				0x0080000		0			0			0			0			0			# linux only
-syscon	prsnlty	STICKY_TIMEOUTS				0x4000000		0			0			0			0			0			# linux only
-syscon	prsnlty	MMAP_PAGE_ZERO				0x0100000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_32BIT			0x0800000		0			0			0			0			0			# linux only
-syscon	prsnlty	WHOLE_SECONDS				0x2000000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_NO_RANDOMIZE			0x0040000		0			0			0			0			0			# linux only
-syscon	prsnlty	SHORT_INODE				0x1000000		0			0			0			0			0			# linux only
-syscon	prsnlty	UNAME26					0x0020000		0			0			0			0			0			# linux only
 
 syscon	misc	TH_FIN					1			1			1			1			1			1			# consensus
 syscon	misc	TH_SYN					2			2			2			2			2			2			# consensus
@@ -3131,7 +3093,6 @@ syscon	misc	CSTATUS					0			20			20			255			255			0
 syscon	misc	DEAD_PROCESS				8			8			7			0			0			0
 syscon	misc	FNM_NOSYS				-1			-1			-1			2			2			0
 syscon	misc	INIT_PROCESS				5			5			5			0			0			0
-syscon	misc	MINSIGSTKSZ				0x0800			0x8000			0x0800			0x3000			0x2000			0
 syscon	misc	MQ_PRIO_MAX				0x8000			0			0x40			0			0			0
 syscon	misc	MTERASE					13			0			12			9			9			0
 syscon	misc	MTLOAD					30			0			19			0			0			0

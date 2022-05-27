@@ -10,7 +10,7 @@ struct StdioFlushHandles {
 };
 
 struct StdioFlush {
-  char lock;
+  int lock;
   struct StdioFlushHandles handles;
   FILE *handles_initmem[8];
 };

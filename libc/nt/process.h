@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #define COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #include "libc/nt/startupinfo.h"
+#include "libc/nt/struct/processentry32.h"
 #include "libc/nt/struct/processinformation.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/struct/securityattributes.h"
@@ -72,6 +73,10 @@ bool32 GetProcessPriorityBoost(int64_t hProcess, bool32 *pDisablePriorityBoost);
 bool32 GetProcessMemoryInfo(
     int64_t hProcess, struct NtProcessMemoryCountersEx *out_ppsmemCounters,
     uint32_t cb);
+
+int64_t CreateToolhelp32Snapshot(uint32_t dwFlags, uint32_t th32ProcessID);
+bool32 Process32First(int64_t hSnapshot, struct NtProcessEntry32 *in_out_lppe);
+bool32 Process32Next(int64_t hSnapshot, struct NtProcessEntry32 *out_lppe);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/process.inc"

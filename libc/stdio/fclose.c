@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -40,6 +39,7 @@ int fclose(FILE *f) {
   if (!f) return 0;
   __fflush_unregister(f);
   fflush(f);
+  free_s(&f->getln);
   if (!f->nofree) {
     free_s(&f->buf);
   }

@@ -24,6 +24,7 @@
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
+#include "libc/nt/version.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
@@ -57,7 +58,7 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
       if (tio->c_lflag & (IEXTEN | ISIG)) {
         inmode |= kNtEnableProcessedInput;
       }
-      if (NtGetVersion() >= kNtVersionWindows10) {
+      if (IsAtLeastWindows10()) {
         inmode |= kNtEnableVirtualTerminalInput;
       }
       ok = SetConsoleMode(in, inmode);
@@ -71,7 +72,7 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
       if (!(tio->c_oflag & ONLCR)) {
         outmode |= kNtDisableNewlineAutoReturn;
       }
-      if (NtGetVersion() >= kNtVersionWindows10) {
+      if (IsAtLeastWindows10()) {
         outmode |= kNtEnableVirtualTerminalProcessing;
       }
       ok = SetConsoleMode(out, outmode);
