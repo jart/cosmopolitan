@@ -667,7 +667,7 @@ class SysModuleTest(unittest.TestCase):
         stdout = p.communicate()[0]
         executable = stdout.strip().decode("ASCII")
         p.wait()
-        self.assertIn(executable, ["b''", repr(sys.executable.replace("//", "/").encode("ascii", "backslashreplace"))])
+        self.assertIn(executable, ['', repr(sys.executable.replace("//", "/").encode("ascii", "backslashreplace"))])
 
     def check_fsencoding(self, fs_encoding, expected=None):
         self.assertIsNotNone(fs_encoding)
