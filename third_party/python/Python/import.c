@@ -4,9 +4,19 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/fmt/conv.h"
+#include "libc/runtime/gc.h"
+#include "libc/x/x.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/python/Include/Python-ast.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
+#include "third_party/python/Include/bltinmodule.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/code.h"
 #include "third_party/python/Include/dictobject.h"
@@ -18,12 +28,16 @@
 #include "third_party/python/Include/listobject.h"
 #include "third_party/python/Include/longobject.h"
 #include "third_party/python/Include/marshal.h"
+#include "third_party/python/Include/memoryobject.h"
 #include "third_party/python/Include/modsupport.h"
+#include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/osdefs.h"
+#include "third_party/python/Include/osmodule.h"
 #include "third_party/python/Include/pgenheaders.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
+#include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pylifecycle.h"
 #include "third_party/python/Include/pymacro.h"
 #include "third_party/python/Include/pythonrun.h"
@@ -56,6 +70,10 @@ PYTHON_PROVIDE("_imp.is_frozen");
 PYTHON_PROVIDE("_imp.is_frozen_package");
 PYTHON_PROVIDE("_imp.lock_held");
 PYTHON_PROVIDE("_imp.release_lock");
+PYTHON_PROVIDE("_imp._path_is_mode_type");
+PYTHON_PROVIDE("_imp._path_isfile");
+PYTHON_PROVIDE("_imp._path_isdir");
+PYTHON_PROVIDE("_imp._calc_mode");
 
 #define CACHEDIR "__pycache__"
 
@@ -64,6 +82,9 @@ static PyObject *extensions = NULL;
 
 static PyObject *initstr = NULL;
 
+static struct stat stinfo;
+_Py_IDENTIFIER(__builtins__);
+_Py_IDENTIFIER(_load_module_shim);
 /*[clinic input]
 module _imp
 [clinic start generated code]*/
@@ -526,7 +547,10 @@ PyImport_Cleanup(void)
 long
 PyImport_GetMagicNumber(void)
 {
-    long res;
+    static char raw_magic_number[4] = {0, 0, '\r', '\n'};
+    WRITE16LE(raw_magic_number, 3390);
+    /* so many indirections for a single constant */
+    /*
     PyInterpreterState *interp = PyThreadState_Get()->interp;
     PyObject *external, *pyc_magic;
 
@@ -539,7 +563,8 @@ PyImport_GetMagicNumber(void)
         return -1;
     res = PyLong_AsLong(pyc_magic);
     Py_DECREF(pyc_magic);
-    return res;
+    */
+    return (long)READ32LE(raw_magic_number);
 }
 
 
@@ -803,21 +828,14 @@ PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co,
             goto error;
     }
     else if (cpathobj != NULL) {
-        PyInterpreterState *interp = PyThreadState_GET()->interp;
-        _Py_IDENTIFIER(_get_sourcefile);
-
-        if (interp == NULL) {
-            Py_FatalError("PyImport_ExecCodeModuleWithPathnames: "
-                          "no interpreter!");
-        }
-
-        external= PyObject_GetAttrString(interp->importlib,
-                                         "_bootstrap_external");
-        if (external != NULL) {
-            pathobj = _PyObject_CallMethodIdObjArgs(external,
-                                                    &PyId__get_sourcefile, cpathobj,
-                                                    NULL);
-            Py_DECREF(external);
+        // cpathobj != NULL means cpathname != NULL
+        size_t cpathlen = strlen(cpathname);
+        char *pathname2 = _gc(strdup(cpathname));
+        if (endswith(pathname2, ".pyc"))
+        {
+            pathname2[cpathlen-2] = '\0'; // so now ends with .py
+            if(!stat(pathname2, &stinfo) && (stinfo.st_mode & S_IFMT) == S_IFREG)
+                pathobj = PyUnicode_FromStringAndSize(pathname2, cpathlen);
         }
         if (pathobj == NULL)
             PyErr_Clear();
@@ -1570,40 +1588,7 @@ PyImport_ImportModuleLevelObject(PyObject *name, PyObject *globals,
 
     mod = PyDict_GetItem(interp->modules, abs_name);
     if (mod != NULL && mod != Py_None) {
-        _Py_IDENTIFIER(__spec__);
-        _Py_IDENTIFIER(_initializing);
-        _Py_IDENTIFIER(_lock_unlock_module);
-        PyObject *value = NULL;
-        PyObject *spec;
-        int initializing = 0;
-
         Py_INCREF(mod);
-        /* Optimization: only call _bootstrap._lock_unlock_module() if
-           __spec__._initializing is true.
-           NOTE: because of this, initializing must be set *before*
-           stuffing the new module in sys.modules.
-         */
-        spec = _PyObject_GetAttrId(mod, &PyId___spec__);
-        if (spec != NULL) {
-            value = _PyObject_GetAttrId(spec, &PyId__initializing);
-            Py_DECREF(spec);
-        }
-        if (value == NULL)
-            PyErr_Clear();
-        else {
-            initializing = PyObject_IsTrue(value);
-            Py_DECREF(value);
-            if (initializing == -1)
-                PyErr_Clear();
-            if (initializing > 0) {
-                value = _PyObject_CallMethodIdObjArgs(interp->importlib,
-                                                &PyId__lock_unlock_module, abs_name,
-                                                NULL);
-                if (value == NULL)
-                    goto error;
-                Py_DECREF(value);
-            }
-        }
     }
     else {
         mod = _PyObject_CallMethodIdObjArgs(interp->importlib,
@@ -2071,6 +2056,561 @@ dump buffer
 [clinic start generated code]*/
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=524ce2e021e4eba6]*/
 
+static PyObject *_check_path_mode(const char *path, uint32_t mode) {
+  if (stat(path, &stinfo)) Py_RETURN_FALSE;
+  if ((stinfo.st_mode & S_IFMT) == mode) Py_RETURN_TRUE;
+  Py_RETURN_FALSE;
+}
+
+static PyObject *_imp_path_is_mode_type(PyObject *module, PyObject **args,
+                                        Py_ssize_t nargs) {
+  Py_ssize_t n;
+  const char *path;
+  uint32_t mode;
+  if (!_PyArg_ParseStack(args, nargs, "s#I:_path_is_mode_type", &path, &n,
+                         &mode))
+    return 0;
+  return _check_path_mode(path, mode);
+}
+PyDoc_STRVAR(_imp_path_is_mode_type_doc, "check if path is mode type");
+
+static PyObject *_imp_path_isfile(PyObject *module, PyObject *arg) {
+  Py_ssize_t n;
+  const char *path;
+  if (!PyArg_Parse(arg, "s#:_path_isfile", &path, &n)) return 0;
+  return _check_path_mode(path, S_IFREG);
+}
+PyDoc_STRVAR(_imp_path_isfile_doc, "check if path is file");
+
+static PyObject *_imp_path_isdir(PyObject *module, PyObject *arg) {
+  Py_ssize_t n;
+  const char *path;
+  if (!PyArg_Parse(arg, "z#:_path_isdir", &path, &n)) return 0;
+  if (path == NULL) path = _gc(getcwd(NULL, 0));
+  return _check_path_mode(path, S_IFDIR);
+}
+PyDoc_STRVAR(_imp_path_isdir_doc, "check if path is dir");
+
+static PyObject *_imp_calc_mode(PyObject *module, PyObject *arg) {
+  Py_ssize_t n;
+  const char *path;
+  if (!PyArg_Parse(arg, "s#:_calc_mode", &path, &n)) return 0;
+  if (stat(path, &stinfo)) return PyLong_FromUnsignedLong((unsigned long)0666);
+  return PyLong_FromUnsignedLong((unsigned long)stinfo.st_mode | 0200);
+}
+PyDoc_STRVAR(_imp_calc_mode_doc, "return stat.st_mode of path");
+
+static PyObject *_imp_calc_mtime_and_size(PyObject *module, PyObject *arg) {
+  Py_ssize_t n;
+  const char *path;
+  if (!PyArg_Parse(arg, "z#:_calc_mtime_and_size", &path, &n)) return 0;
+  if (path == NULL) path = _gc(getcwd(NULL, 0));
+  if (stat(path, &stinfo))
+    return PyTuple_Pack(2, PyLong_FromLong((long)-1), PyLong_FromLong((long)0));
+  return PyTuple_Pack(2, PyLong_FromLong((long)stinfo.st_mtime),
+                      PyLong_FromLong((long)stinfo.st_size));
+}
+PyDoc_STRVAR(_imp_calc_mtime_and_size_doc,
+             "return stat.st_mtime and stat.st_size of path in tuple");
+
+static PyObject *_imp_w_long(PyObject *module, PyObject *arg) {
+  int32_t value;
+  if (!PyArg_Parse(arg, "i:_w_long", &value)) return 0;
+  return PyBytes_FromStringAndSize((const char *)(&value), 4);
+}
+PyDoc_STRVAR(_imp_w_long_doc, "convert 32-bit int to 4 bytes");
+
+static PyObject *_imp_r_long(PyObject *module, PyObject *arg) {
+  char b[4] = {0};
+  const char *path;
+  Py_ssize_t i, n;
+  if (!PyArg_Parse(arg, "y#:_r_long", &path, &n)) return 0;
+  if (n > 4) n = 4;
+  for (i = 0; i < n; i++) b[i] = path[i];
+  return PyLong_FromLong(READ32LE(b));
+}
+PyDoc_STRVAR(_imp_r_long_doc, "convert 4 bytes to 32bit int");
+
+static PyObject *_imp_relax_case(PyObject *module,
+                                 PyObject *Py_UNUSED(ignored)) {
+  // TODO: check if this affects case-insensitive system imports.
+  // if yes, then have an IsWindows() check along w/ PYTHONCASEOK
+  Py_RETURN_FALSE;
+}
+
+static PyObject *_imp_write_atomic(PyObject *module, PyObject **args,
+                                   Py_ssize_t nargs) {
+  const char *path;
+  Py_ssize_t n;
+  Py_buffer data = {NULL, NULL};
+  uint32_t mode = 0666;
+  int fd;
+  if (!_PyArg_ParseStack(args, nargs, "s#y*|I:_write_atomic", &path, &n, &data,
+                         &mode))
+    return 0;
+  mode &= 0666;
+  if ((fd = open(path, O_EXCL | O_CREAT | O_WRONLY, mode)) == -1 ||
+      write(fd, data.buf, data.len) == -1) {
+    PyErr_Format(PyExc_OSError, "");
+    if (data.obj) PyBuffer_Release(&data);
+    return 0;
+  }
+  if (data.obj) PyBuffer_Release(&data);
+  Py_RETURN_NONE;
+}
+PyDoc_STRVAR(_imp_write_atomic_doc, "atomic write to a file");
+
+static PyObject *_imp_compile_bytecode(PyObject *module, PyObject **args,
+                                       Py_ssize_t nargs, PyObject *kwargs) {
+  static const char * const _keywords[] = {"data", "name", "bytecode_path", "source_path",
+                              NULL};
+  static _PyArg_Parser _parser = {"|y*zzz*", _keywords, 0};
+  Py_buffer data = {NULL, NULL};
+  const char *name = NULL;
+  const char *bpath = NULL;
+  Py_buffer spath = {NULL, NULL};
+  PyObject *code = NULL;
+
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &data,
+                                   &name, &bpath, &spath)) {
+    goto exit;
+  }
+  if (!(code = PyMarshal_ReadObjectFromString(data.buf, data.len))) goto exit;
+  if (!PyCode_Check(code)) {
+    PyErr_Format(PyExc_ImportError, "non-code object in %s\n", bpath);
+    goto exit;
+  } else {
+    if (Py_VerboseFlag) PySys_FormatStderr("# code object from '%s'\n", bpath);
+    if (spath.buf != NULL)
+      update_compiled_module((PyCodeObject *)code,
+                             PyUnicode_FromStringAndSize(spath.buf, spath.len));
+  }
+
+exit:
+  if (data.obj) PyBuffer_Release(&data);
+  if (spath.obj) PyBuffer_Release(&spath);
+  return code;
+}
+PyDoc_STRVAR(_imp_compile_bytecode_doc, "compile bytecode to a code object");
+
+static PyObject *_imp_validate_bytecode_header(PyObject *module, PyObject **args,
+                                               Py_ssize_t nargs, PyObject *kwargs) {
+  static const char * const _keywords[] = {"data", "source_stats", "name", "path", NULL};
+  static _PyArg_Parser _parser = {"|y*Ozz", _keywords, 0};
+  static const char defname[] = "<bytecode>";
+  static const char defpath[] = "";
+
+  Py_buffer data = {NULL, NULL};
+  PyObject *source_stats = NULL;
+  PyObject *result = NULL;
+  const char *name = defname;
+  const char *path = defpath;
+
+  long magic = 0;
+  int64_t raw_timestamp = 0;
+  int64_t raw_size = 0;
+
+  PyObject *tmp = NULL;
+  int64_t source_size = 0;
+  int64_t source_mtime = 0;
+
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &data,
+                                   &source_stats, &name, &path)) {
+    goto exit;
+  }
+
+  char *buf = data.buf;
+
+  if (data.len < 4 || (magic = READ16LE(buf)) != 3390 || buf[2] != '\r' ||
+      buf[3] != '\n') {
+    PyErr_Format(PyExc_ImportError, "bad magic number in %s: %d\n", name,
+                 magic);
+    goto exit;
+  }
+  if (data.len < 8) {
+    PyErr_Format(PyExc_ImportError,
+                 "reached EOF while reading timestamp in %s\n", name);
+    goto exit;
+  }
+  raw_timestamp = (int64_t)(READ32LE(&(buf[4])));
+  if (data.len < 12) {
+    PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
+                 name);
+    goto exit;
+  }
+  raw_size = (int64_t)(READ32LE(&(buf[8])));
+
+  if (source_stats && PyDict_Check(source_stats)) {
+    if ((tmp = PyDict_GetItemString(source_stats, "mtime")) &&
+        PyLong_Check(tmp)) {
+      source_mtime = PyLong_AsLong(tmp);
+      if (source_mtime != raw_timestamp)
+        PyErr_Format(PyExc_ImportError, "bytecode is stale for %s\n", name);
+    }
+    Py_XDECREF(tmp);
+    if ((tmp = PyDict_GetItemString(source_stats, "size")) &&
+        PyLong_Check(tmp)) {
+      source_size = PyLong_AsLong(tmp) & 0xFFFFFFFF;
+      if (source_size != raw_size)
+        PyErr_Format(PyExc_ImportError, "bytecode is stale for %s\n", name);
+    }
+    Py_XDECREF(tmp);
+  }
+  // shift buffer pointer to prevent copying
+  data.buf = &(buf[12]);
+  data.len -= 12;
+  result = PyMemoryView_FromBuffer(&data);
+  // TODO: figure out how refcounts are managed between data and result
+  // if there is a memory fault, use the below line which copies
+  // result = PyBytes_FromStringAndSize(&(buf[12]), data.len-12);
+exit:
+  if (!result && data.obj) PyBuffer_Release(&data);
+  // if (data.obj) PyBuffer_Release(&data);
+  return result;
+}
+PyDoc_STRVAR(_imp_validate_bytecode_header_doc,
+             "validate first 12 bytes and stat info of bytecode");
+
+static PyObject *_imp_cache_from_source(PyObject *module, PyObject **args, Py_ssize_t nargs,
+                                        PyObject *kwargs) {
+  static const char * const _keywords[] = {"path", "debug_override", "optimization", NULL};
+  static struct _PyArg_Parser _parser = {"|OO$O:cache_from_source", _keywords, 0};
+  PyObject *path = NULL;
+  PyObject *debug_override = NULL;
+  PyObject *optimization = NULL;
+  PyObject *res = NULL;
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser,
+                                   &path, &debug_override,
+                                   &optimization)) {
+    return NULL;
+  }
+  res = PyUnicode_FromFormat("%Sc", PyOS_FSPath(path));
+  return res;
+}
+PyDoc_STRVAR(_imp_cache_from_source_doc, "given a .py filename, return .pyc");
+
+static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
+  char *path = NULL;
+  Py_ssize_t pathlen = 0;
+  if (!PyArg_Parse(PyOS_FSPath(arg), "z#:source_from_cache", &path, &pathlen))
+    return NULL;
+  if (!path || !endswith(path, ".pyc")) {
+    PyErr_Format(PyExc_ValueError, "%s does not end in .pyc", path);
+    return NULL;
+  }
+  path[pathlen - 1] = '\0';
+  if (stat(path, &stinfo)) {
+    path[pathlen - 1] = 'c';
+    Py_INCREF(arg);
+    return arg;
+  }
+  return PyUnicode_FromStringAndSize(path, pathlen - 1);
+}
+PyDoc_STRVAR(_imp_source_from_cache_doc, "given a .pyc filename, return .py");
+
+typedef struct {
+  PyObject_HEAD char *name;
+  char *path;
+  Py_ssize_t namelen;
+  Py_ssize_t pathlen;
+} SourcelessFileLoader;
+
+static PyTypeObject SourcelessFileLoaderType;
+#define SourcelessFileLoaderCheck(o) (Py_TYPE(o) == &SourcelessFileLoaderType)
+
+static SourcelessFileLoader *SFLObject_new(PyObject *cls, PyObject *args,
+                                           PyObject *kwargs) {
+  SourcelessFileLoader *obj =
+      PyObject_New(SourcelessFileLoader, &SourcelessFileLoaderType);
+  if (obj == NULL) return NULL;
+  obj->name = NULL;
+  obj->path = NULL;
+  obj->namelen = 0;
+  obj->pathlen = 0;
+  return obj;
+}
+
+static void SFLObject_dealloc(SourcelessFileLoader *self) {
+  if (self->name) {
+    free(self->name);
+    self->name = NULL;
+    self->namelen = 0;
+  }
+  if (self->path) {
+    free(self->path);
+    self->path = NULL;
+    self->pathlen = 0;
+  }
+  PyObject_Del(self);
+}
+
+static int SFLObject_init(SourcelessFileLoader *self, PyObject *args,
+                          PyObject *kwargs) {
+  static char *_keywords[] = {"fullname", "path", NULL};
+  char *name = NULL;
+  char *path = NULL;
+  Py_ssize_t namelen = 0;
+  Py_ssize_t pathlen = 0;
+
+  int result = 0;
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#z#", _keywords,
+                                   &name, &namelen,
+                                   &path, &pathlen)) {
+    result = -1;
+  }
+  if (result == 0) {
+      if (self->name) free(self->name);
+      if (self->path) free(self->name);
+      self->namelen = namelen;
+      self->pathlen = pathlen;
+      // TODO: should this be via PyMem_RawMalloc?
+      self->name = strndup(name, namelen);
+      self->path = strndup(path, pathlen);
+  }
+  return result;
+}
+
+static Py_hash_t SFLObject_hash(SourcelessFileLoader *self) {
+  return _Py_HashBytes(self->name, self->namelen) ^
+         _Py_HashBytes(self->path, self->pathlen);
+}
+
+static PyObject *SFLObject_richcompare(PyObject *self, PyObject *other,
+                                       int op) {
+  if (op != Py_EQ || !SourcelessFileLoaderCheck(self) ||
+      !SourcelessFileLoaderCheck(other)) {
+    // this is equivalent to comparing self.__class__
+    Py_RETURN_NOTIMPLEMENTED;
+  }
+  if (strncmp(((SourcelessFileLoader *)self)->name,
+              ((SourcelessFileLoader *)other)->name,
+              ((SourcelessFileLoader *)self)->namelen)) {
+    Py_RETURN_FALSE;
+  }
+  if (strncmp(((SourcelessFileLoader *)self)->path,
+              ((SourcelessFileLoader *)other)->path,
+              ((SourcelessFileLoader *)self)->pathlen)) {
+    Py_RETURN_FALSE;
+  }
+  Py_RETURN_TRUE;
+}
+
+static PyObject *SFLObject_get_source(SourcelessFileLoader *self,
+                                      PyObject *arg) {
+  Py_RETURN_NONE;
+}
+
+static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
+  char bytecode_header[12] = {0};
+  int32_t magic = 0;
+  size_t headerlen;
+
+  char *name = NULL;
+  FILE *fp = NULL;
+  PyObject *res = NULL;
+  char *rawbuf = NULL;
+  size_t rawlen = 0;
+
+  if (!PyArg_Parse(arg, "z:get_code", &name)) return 0;
+  if (!name) name = self->name;
+
+  // path = self.get_filename(fullname)
+  if (strncmp(name, self->name, self->namelen)) {
+    PyErr_Format(PyExc_ImportError, "loader for %s cannot handle %s\n",
+                 self->name, name);
+    goto exit;
+  }
+  if (stat(self->path, &stinfo) || !(fp = fopen(self->path, "rb"))) {
+    PyErr_Format(PyExc_ImportError, "%s does not exist\n", self->path);
+    goto exit;
+  }
+
+  // data = self.get_data(path)
+  // bytes_data = _validate_bytecode_header(data, name=fullname, path=path)
+  headerlen = fread(bytecode_header, sizeof(char), sizeof(bytecode_header), fp);
+
+  if (headerlen < 4 || (magic = READ32LE(bytecode_header)) != PyImport_GetMagicNumber()) {
+    PyErr_Format(PyExc_ImportError, "bad magic number in %s: %d\n", name,
+                 magic);
+    goto exit;
+  }
+  if (headerlen < 8) {
+    PyErr_Format(PyExc_ImportError,
+                 "reached EOF while reading timestamp in %s\n", name);
+    goto exit;
+  }
+  if (headerlen < 12 || stinfo.st_size <= headerlen) {
+    PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
+                 name);
+    goto exit;
+  }
+  // return _compile_bytecode(bytes_data, name=fullname, bytecode_path=path)
+  rawlen = stinfo.st_size - headerlen;
+  rawbuf = PyMem_RawMalloc(rawlen);
+  if (rawlen != fread(rawbuf, sizeof(char), rawlen, fp)) {
+    PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
+                 name);
+    goto exit;
+  }
+  if (!(res = PyMarshal_ReadObjectFromString(rawbuf, rawlen))) goto exit;
+exit:
+  if (rawbuf) PyMem_RawFree(rawbuf);
+  if (fp) fclose(fp);
+  return res;
+}
+
+static PyObject *SFLObject_get_data(SourcelessFileLoader *self, PyObject *arg) {
+  char *name = NULL;
+  char *data = NULL;
+  size_t datalen = 0;
+  PyObject *res = NULL;
+
+  if (!PyArg_Parse(arg, "z:get_data", &name)) return 0;
+  if (name == NULL || stat(name, &stinfo)) {
+    PyErr_SetString(PyExc_ImportError, "invalid file for get_data\n");
+    return res;
+  }
+  // TODO: these two allocations can be combined into one
+  data = xslurp(name, &datalen);
+  res = PyBytes_FromStringAndSize(data, (Py_ssize_t)stinfo.st_size);
+  return res;
+}
+
+static PyObject *SFLObject_get_filename(SourcelessFileLoader *self,
+                                        PyObject *arg) {
+  char *name = NULL;
+  if (!PyArg_Parse(arg, "z:get_filename", &name)) return 0;
+  if (!name) name = self->name;
+  if (strncmp(name, self->name, self->namelen)) {
+    PyErr_Format(PyExc_ImportError, "loader for %s cannot handle %s\n",
+                 self->name, name);
+    return NULL;
+  }
+  return PyUnicode_FromStringAndSize(self->path, self->pathlen);
+}
+
+static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
+                                       PyObject **args, Py_ssize_t nargs) {
+  char *name = NULL;
+  PyObject *bootstrap = NULL;
+  PyObject *fullname = NULL;
+  PyObject *res = NULL;
+  PyInterpreterState *interp = PyThreadState_GET()->interp;
+
+  if (!_PyArg_ParseStack(args, nargs, "|z:load_module", &name)) goto exit;
+  if (!name) name = self->name;
+  if (strncmp(name, self->name, self->namelen)) {
+    PyErr_Format(PyExc_ImportError, "loader for %s cannot handle %s\n",
+                 self->name, name);
+    goto exit;
+  } else {
+    // name == self->name
+    fullname = PyUnicode_FromStringAndSize(self->name, self->namelen);
+  }
+
+  res = _PyObject_CallMethodIdObjArgs(
+      interp->importlib, &PyId__load_module_shim, self, fullname, NULL);
+  Py_XDECREF(bootstrap);
+exit:
+  Py_XDECREF(fullname);
+  return res;
+}
+
+static PyObject *SFLObject_create_module(SourcelessFileLoader *self,
+                                         PyObject *arg) {
+  Py_RETURN_NONE;
+}
+
+static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
+                                       PyObject *arg) {
+  PyObject *module = NULL;
+  PyObject *name = NULL;
+  PyObject *code = NULL;
+  PyObject *globals = NULL;
+  PyObject *v = NULL;
+
+  if (!PyArg_Parse(arg, "O:exec_module", &module)) goto exit;
+
+  name = PyObject_GetAttrString(module, "__name__");
+  code = SFLObject_get_code(self, name);
+  if (code == NULL || code == Py_None) {
+    if (code == Py_None) {
+      PyErr_Format(PyExc_ImportError,
+                   "cannot load module %U when get_code() returns None", name);
+    }
+    goto exit;
+  }
+  globals = PyModule_GetDict(module);
+  if (_PyDict_GetItemId(globals, &PyId___builtins__) == NULL) {
+    if (_PyDict_SetItemId(globals, &PyId___builtins__,
+                          PyEval_GetBuiltins()) != 0)
+        goto exit;
+  }
+  v = _PyEval_EvalCodeWithName(code, globals, globals,
+          (PyObject**)NULL, 0, // args, argcount
+          (PyObject**)NULL, 0, // kwnames, kwargs,
+          0, 2, // kwcount, kwstep
+          (PyObject**)NULL, 0, // defs, defcount
+          NULL, NULL, // kwdefs, closure
+          NULL, NULL  // name, qualname
+  );
+  if(v != NULL) {
+      Py_DECREF(v);
+      Py_RETURN_NONE;
+  }
+
+exit:
+  Py_XDECREF(name);
+  Py_XDECREF(code);
+  return NULL;
+}
+
+static PyObject *SFLObject_is_package(SourcelessFileLoader *self,
+                                      PyObject *arg) {
+  char *name = NULL;
+  if (!PyArg_Parse(arg, "z:is_package", &name)) return 0;
+  if (!name) name = self->name;
+
+  // path = self.get_filename(fullname)
+  if (strncmp(name, self->name, self->namelen)) {
+    PyErr_Format(PyExc_ImportError, "loader for %s cannot handle %s\n",
+                 self->name, name);
+    return NULL;
+  }
+  if (startswith(basename(self->path), "__init__")) {
+    Py_RETURN_TRUE;
+  }
+  Py_RETURN_FALSE;
+}
+
+static PyMethodDef SFLObject_methods[] = {
+    {"is_package", (PyCFunction)SFLObject_is_package, METH_O, PyDoc_STR("")},
+    {"create_module", (PyCFunction)SFLObject_create_module, METH_O,
+     PyDoc_STR("")},
+    {"load_module", (PyCFunction)SFLObject_load_module, METH_FASTCALL, PyDoc_STR("")},
+    {"exec_module", (PyCFunction)SFLObject_exec_module, METH_O, PyDoc_STR("")},
+    {"get_filename", (PyCFunction)SFLObject_get_filename, METH_O,
+     PyDoc_STR("")},
+    {"get_data", (PyCFunction)SFLObject_get_data, METH_O, PyDoc_STR("")},
+    {"get_code", (PyCFunction)SFLObject_get_code, METH_O, PyDoc_STR("")},
+    {"get_source", (PyCFunction)SFLObject_get_source, METH_O, PyDoc_STR("")},
+    {NULL, NULL}  // sentinel
+};
+
+static PyTypeObject SourcelessFileLoaderType = {
+    /* The ob_type field must be initialized in the module init function
+     * to be portable to Windows without using C++. */
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        "_imp.SourcelessFileLoader",                      /*tp_name*/
+    .tp_basicsize = sizeof(SourcelessFileLoader),         /*tp_basicsize*/
+    .tp_dealloc = (destructor)SFLObject_dealloc,          /*tp_dealloc*/
+    .tp_hash = (hashfunc)SFLObject_hash,                  /*tp_hash*/
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    .tp_richcompare = (richcmpfunc)SFLObject_richcompare, /*tp_richcompare*/
+    .tp_methods = SFLObject_methods,                      /*tp_methods*/
+    .tp_init = (initproc)SFLObject_init,                  /*tp_init*/
+    .tp_new = (newfunc)SFLObject_new,                     /*tp_new*/
+};
 
 PyDoc_STRVAR(doc_imp,
 "(Extremely) low-level import machinery bits as used by importlib and imp.");
@@ -2090,6 +2630,19 @@ static PyMethodDef imp_methods[] = {
     _IMP_EXEC_DYNAMIC_METHODDEF
     _IMP_EXEC_BUILTIN_METHODDEF
     _IMP__FIX_CO_FILENAME_METHODDEF
+    {"_path_is_mode_type", (PyCFunction)_imp_path_is_mode_type, METH_FASTCALL, _imp_path_is_mode_type_doc},
+    {"_path_isfile", _imp_path_isfile, METH_O, _imp_path_isfile_doc},
+    {"_path_isdir", _imp_path_isdir, METH_O, _imp_path_isdir_doc},
+    {"_calc_mode", _imp_calc_mode, METH_O, _imp_calc_mode_doc},
+    {"_calc_mtime_and_size", _imp_calc_mtime_and_size, METH_O, _imp_calc_mtime_and_size_doc},
+    {"_w_long", _imp_w_long, METH_O, _imp_w_long_doc},
+    {"_r_long", _imp_r_long, METH_O, _imp_r_long_doc},
+    {"_relax_case", _imp_relax_case, METH_NOARGS, NULL},
+    {"_write_atomic", (PyCFunction)_imp_write_atomic, METH_FASTCALL, _imp_write_atomic_doc},
+    {"_compile_bytecode", (PyCFunction)_imp_compile_bytecode, METH_FASTCALL | METH_KEYWORDS , _imp_compile_bytecode_doc},
+    {"_validate_bytecode_header", (PyCFunction)_imp_validate_bytecode_header, METH_FASTCALL | METH_KEYWORDS , _imp_validate_bytecode_header_doc},
+    {"cache_from_source", (PyCFunction)_imp_cache_from_source, METH_FASTCALL | METH_KEYWORDS , _imp_cache_from_source_doc},
+    {"source_from_cache", (PyCFunction)_imp_source_from_cache, METH_O , _imp_source_from_cache_doc},
     {NULL, NULL}  /* sentinel */
 };
 
@@ -2117,6 +2670,10 @@ PyInit_imp(void)
     d = PyModule_GetDict(m);
     if (d == NULL)
         goto failure;
+
+    if (PyType_Ready(&SourcelessFileLoaderType) < 0)
+        goto failure;
+    PyModule_AddObject(m, "SourcelessFileLoader", (PyObject*)&SourcelessFileLoaderType);
 
     return m;
   failure:

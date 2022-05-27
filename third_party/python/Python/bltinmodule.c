@@ -1186,6 +1186,10 @@ builtin_exec_impl(PyObject *module, PyObject *source, PyObject *globals,
     Py_RETURN_NONE;
 }
 
+PyObject * PyBuiltin_Exec(PyObject *module, PyObject *source, PyObject *globals,
+                  PyObject *locals) {
+    return builtin_exec_impl(module, source, globals, locals);
+}
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *

@@ -27,6 +27,12 @@ _CASE_INSENSITIVE_PLATFORMS =  (_CASE_INSENSITIVE_PLATFORMS_BYTES_KEY
                                 + _CASE_INSENSITIVE_PLATFORMS_STR_KEY)
 
 
+def _wrap(new, old):
+    for replace in ['__module__', '__name__', '__qualname__', '__doc__']:
+        if hasattr(old, replace):
+            setattr(new, replace, getattr(old, replace))
+    new.__dict__.update(old.__dict__)
+
 def _make_relax_case():
     if sys.platform.startswith(_CASE_INSENSITIVE_PLATFORMS):
         if sys.platform.startswith(_CASE_INSENSITIVE_PLATFORMS_STR_KEY):
@@ -397,11 +403,6 @@ def _check_name(method):
             raise ImportError('loader for %s cannot handle %s' %
                                 (self.name, name), name=name)
         return method(self, name, *args, **kwargs)
-    def _wrap(new, old):
-        for replace in ['__module__', '__name__', '__qualname__', '__doc__']:
-            if hasattr(old, replace):
-                setattr(new, replace, getattr(old, replace))
-        new.__dict__.update(old.__dict__)
     _wrap(_check_name_wrapper, method)
     return _check_name_wrapper
 
@@ -622,11 +623,7 @@ class WindowsRegistryFinder:
     @classmethod
     def find_spec(cls, fullname, path=None, target=None):
         filepath = cls._search_registry(fullname)
-        if filepath is None:
-            return None
-        try:
-            _path_stat(filepath)
-        except OSError:
+        if filepath is None or not _path_isfile(filepath):
             return None
         for loader, suffixes in _get_supported_file_loaders():
             if filepath.endswith(tuple(suffixes)):
@@ -835,8 +832,8 @@ class SourceFileLoader(FileLoader, SourceLoader):
 
     def path_stats(self, path):
         """Return the metadata for the path."""
-        st = _path_stat(path)
-        return {'mtime': st.st_mtime, 'size': st.st_size}
+        st = _calc_mtime_and_size(path)
+        return {'mtime': st[0], 'size': st[1]}
 
     def _cache_bytecode(self, source_path, bytecode_path, data):
         # Adapt between the two APIs
@@ -1232,10 +1229,7 @@ class FileFinder:
         """
         is_namespace = False
         tail_module = fullname.rpartition('.')[2]
-        try:
-            mtime = _path_stat(self.path or _os.getcwd()).st_mtime
-        except OSError:
-            mtime = -1
+        mtime = _calc_mtime_and_size(self.path)[0]
         if mtime != self._path_mtime:
             self._fill_cache()
             self._path_mtime = mtime
@@ -1357,7 +1351,6 @@ def _get_supported_file_loaders():
     bytecode = SourcelessFileLoader, BYTECODE_SUFFIXES
     return [bytecode, extensions, source]
 
-
 def _setup(_bootstrap_module):
     """Setup the path-based importers for importlib by importing needed
     built-in modules and injecting them into the global namespace.
@@ -1372,21 +1365,45 @@ def _setup(_bootstrap_module):
 
     builtin_from_name = _bootstrap._builtin_from_name
     # Directly load built-in modules needed during bootstrap.
-    self_module = sys.modules[__name__]
-    for builtin_name in ('_io', '_warnings', 'builtins', 'marshal', 'posix', '_weakref'):
-        setattr(self_module, builtin_name, sys.modules.get(builtin_name, builtin_from_name(builtin_name)))
+    self_mod_dict = sys.modules[__name__].__dict__
+    _imp_dict = _imp.__dict__
+    for port in (
+        "_path_is_mode_type",
+        "_path_isfile",
+        "_path_isdir",
+        "_calc_mode",
+        "_calc_mtime_and_size",
+        "_r_long",
+        "_w_long",
+        "_relax_case",
+        "_write_atomic",
+        "_compile_bytecode",
+        "_validate_bytecode_header",
+        "SourcelessFileLoader",
+    ):
+        self_mod_dict[port] = _imp_dict[port]
+    for name in (
+        "_io",
+        "_warnings",
+        "builtins",
+        "marshal",
+        "posix",
+        "_weakref",
+    ):
+        self_mod_dict[name] = sys.modules.get(
+            name, builtin_from_name(name)
+        )
 
     # Directly load the os module (needed during bootstrap).
-    os_details = ('posix', ['/']), ('nt', ['\\', '/'])
+    os_details = ("posix", ["/"]), ("nt", ["\\", "/"])
     builtin_os, path_separators = os_details[0]
-    setattr(self_module, '_os', sys.modules.get(builtin_os, builtin_from_name(builtin_os)))
-    setattr(self_module, 'path_sep', path_separators[0])
-    setattr(self_module, 'path_separators', ''.join(path_separators))
-    setattr(self_module, '_thread', None)
-
+    self_mod_dict["_os"] = sys.modules.get(builtin_os, builtin_from_name(builtin_os))
+    self_mod_dict["path_sep"] =  path_separators[0]
+    self_mod_dict["path_separators"] = "".join(path_separators)
+    self_mod_dict["_thread"] = None
     # Constants
-    setattr(self_module, '_relax_case', _make_relax_case())
     EXTENSION_SUFFIXES.extend(_imp.extension_suffixes())
+
 
 def _install(_bootstrap_module):
     """Install the path-based import components."""
