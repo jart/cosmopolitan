@@ -13,11 +13,36 @@
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/getopt/getopt.h"
 #include "third_party/zlib/zlib.h"
 
 #define CHUNK 32768
+
+#define USAGE \
+  " <STDIN >STDOUT\n\
+\n\
+SYNOPSIS\n\
+\n\
+  Zlib Compressor\n\
+\n\
+FLAGS\n\
+\n\
+  -?\n\
+  -h    help\n\
+  -0    disable compression\n\
+  -1    fastest compression\n\
+  -4    coolest compression\n\
+  -9    maximum compression\n\
+  -F    fixed strategy (advanced)\n\
+  -L    filtered strategy (advanced)\n\
+  -R    run length strategy (advanced)\n\
+  -H    huffman only strategy (advanced)\n\
+\n"
 
 // clang-format off
 // make -j8 o//examples && dd if=/dev/urandom count=100 | tee a | o//examples/compress.com | o//examples/decompress.com >b && sha1sum a b
@@ -35,18 +60,67 @@
 # level 9 75016 compress 5.4 MB/s decompress 344 MB/s
 m=
 make -j8 MODE=$m o/$m/examples || exit
-for level in $(seq 0 9); do
-  o/$m/examples/compress.com $level <o/dbg/third_party/python/python.com | dd count=10000 2>/tmp/info >/tmp/comp
+for level in $(seq 1 9); do
+for strategy in F L R H; do
+  o/$m/examples/compress.com -$strategy$level <o/dbg/third_party/python/python.com | dd count=10000 2>/tmp/info >/tmp/comp
   compspeed=$(grep -Po '[.\d]+ \w+/s' /tmp/info)
-  o/$m/examples/decompress.com $level </tmp/comp | dd count=10000 2>/tmp/info >/dev/null
+  o/$m/examples/decompress.com </tmp/comp | dd count=10000 2>/tmp/info >/dev/null
   decompspeed=$(grep -Po '[.\d]+ \w+/s' /tmp/info)
-  size=$(o/$m/examples/compress.com $level <o/$m/examples/compress.com | wc -c)
-  echo "level $level $size compress $compspeed decompress $decompspeed"
+  size=$(o/$m/examples/compress.com -$strategy$level <o/$m/examples/compress.com | wc -c)
+  echo "level $strategy $level $size compress $compspeed decompress $decompspeed"
+done
 done
 */
 // clang-format on
 
-int compressor(int infd, int outfd, int level) {
+int level;
+int strategy;
+
+wontreturn void PrintUsage(int rc, FILE *f) {
+  fputs("usage: ", f);
+  fputs(program_invocation_name, f);
+  fputs(USAGE, f);
+  exit(rc);
+}
+
+void GetOpts(int argc, char *argv[]) {
+  int opt;
+  while ((opt = getopt(argc, argv, "?hFLRH0123456789")) != -1) {
+    switch (opt) {
+      case 'F':
+        strategy = Z_FIXED;
+        break;
+      case 'L':
+        strategy = Z_FILTERED;
+        break;
+      case 'R':
+        strategy = Z_RLE;
+        break;
+      case 'H':
+        strategy = Z_HUFFMAN_ONLY;
+        break;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        level = opt - '0';
+        break;
+      case 'h':
+      case '?':
+        PrintUsage(EXIT_SUCCESS, stdout);
+      default:
+        PrintUsage(EX_USAGE, stderr);
+    }
+  }
+}
+
+int compressor(int infd, int outfd) {
   z_stream zs;
   int rc, flush;
   unsigned have;
@@ -57,8 +131,7 @@ int compressor(int infd, int outfd, int level) {
   zs.zalloc = 0;
   zs.zfree = 0;
   zs.opaque = 0;
-  rc = deflateInit2(&zs, level, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
-                    Z_DEFAULT_STRATEGY);
+  rc = deflateInit2(&zs, level, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL, strategy);
   if (rc != Z_OK) return rc;
   do {
     rc = read(infd, inbuf, CHUNK);
@@ -105,13 +178,11 @@ const char *zerr(int rc) {
 }
 
 int main(int argc, char *argv[]) {
-  int rc, level;
-  if (argc > 1) {
-    level = atoi(argv[1]);
-  } else {
-    level = Z_DEFAULT_COMPRESSION;
-  }
-  rc = compressor(0, 1, level);
+  int rc;
+  level = Z_DEFAULT_COMPRESSION;
+  strategy = Z_DEFAULT_STRATEGY;
+  GetOpts(argc, argv);
+  rc = compressor(0, 1);
   if (rc == Z_OK) {
     return 0;
   } else {

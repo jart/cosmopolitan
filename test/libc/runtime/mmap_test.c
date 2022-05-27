@@ -357,12 +357,7 @@ int count;
 void *ptrs[N];
 
 void BenchUnmap(void) {
-  int i;
-  for (i = 0; i < count; ++i) {
-    if (ptrs[i]) {
-      ASSERT_EQ(0, munmap(ptrs[i], FRAMESIZE));
-    }
-  }
+  ASSERT_EQ(0, munmap(ptrs[count++], FRAMESIZE));
 }
 
 void BenchMmapPrivate(void) {
@@ -375,16 +370,11 @@ void BenchMmapPrivate(void) {
 
 BENCH(mmap, bench) {
   EZBENCH2("mmap", donothing, BenchMmapPrivate());
-  BenchUnmap();
+  EZBENCH2("munmap", donothing, BenchUnmap());
 }
 
 void BenchUnmapLinux(void) {
-  int i;
-  for (i = 0; i < count; ++i) {
-    if (ptrs[i]) {
-      ASSERT_EQ(0, LinuxMunmap(ptrs[i], FRAMESIZE));
-    }
-  }
+  ASSERT_EQ(0, LinuxMunmap(ptrs[count++], FRAMESIZE));
 }
 
 void BenchMmapPrivateLinux(void) {
@@ -399,5 +389,5 @@ BENCH(mmap, benchLinux) {
   void *p;
   if (!IsLinux()) return;
   EZBENCH2("mmap (linux)", donothing, BenchMmapPrivateLinux());
-  BenchUnmapLinux();
+  EZBENCH2("munmap (linux)", donothing, BenchUnmapLinux());
 }

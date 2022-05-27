@@ -236,12 +236,6 @@ USAGE
       $ file redbean.com
       redbean.com: ELF 64-bit LSB executable
 
-  redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
-  which makes it a permissively licensed gift to anyone who might
-  find it useful. The transitive closure of legalese can be found
-  inside the binary. redbean also respects your privacy and won't
-  phone home because your computer is its home.
-
 ────────────────────────────────────────────────────────────────────────────────
 
 SECURITY
@@ -1088,7 +1082,7 @@ FUNCTIONS
   ProgramPrivateKey(pem:str)
           Same as the -K flag if called from .init.lua, e.g.
           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
-          ProgramPrivateKey(Slurp("/etc/letsencrypt/fullchain.pem")) for
+          ProgramPrivateKey(Slurp("/etc/letsencrypt/privkey.pem")) for
           local file system only.
 
   ProgramRedirect(code:int,src:str,location:str)
@@ -4146,6 +4140,19 @@ UNIX MODULE
     The limit for unix.Sigset is 128 to support FreeBSD, but most
     operating systems define this much lower, like 32. This constant
     reflects the value chosen by the underlying operating system.
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+LEGAL
+
+  redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
+  which makes it a permissively licensed gift to anyone who might
+  find it useful. The transitive closure of legalese can be found
+  inside the binary structure, because notice licenses require we
+  distribute the license along with any software that uses it. By
+  putting them in the binary, compliance in automated and no need
+  for further action on the part of the user who is distributing.
 
 
 ────────────────────────────────────────────────────────────────────────────────

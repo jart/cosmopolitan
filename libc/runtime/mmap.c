@@ -148,14 +148,6 @@ noasan static bool Automap(int count, int align, int *res) {
          *res + count <= FRAME(kAutomapStart + (kAutomapSize - 1));
 }
 
-noasan static size_t GetMemtrackSize(struct MemoryIntervals *mm) {
-  size_t i, n;
-  for (n = i = 0; i < mm->i; ++i) {
-    n += ((size_t)(mm->p[i].y - mm->p[i].x) + 1) << 16;
-  }
-  return n;
-}
-
 static noasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
                                  int fd, int64_t off, int f, int x, int n,
                                  struct DirectMap dm) {
@@ -491,10 +483,15 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
 noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
                   int64_t off) {
   void *res;
+  size_t toto;
   _spinlock(&_mmi.lock);
   res = Mmap(addr, size, prot, flags, fd, off);
+#if SYSDEBUG
+  toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
+#endif
   _spunlock(&_mmi.lock);
-  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m", addr, size,
-         DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res);
+  STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m (%'zu bytes total)", addr,
+         size, DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res,
+         toto);
   return res;
 }

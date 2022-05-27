@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/setjmp.internal.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/runtime/memtrack.internal.h"
 
-/**
- * Terminates thread with raw system call.
- *
- * @param rc only works on Linux and Windows
- * @see cthread_exit()
- * @threadsafe
- * @noreturn
- */
-privileged wontreturn void _Exit1(int rc) {
-  jmp_buf *jb;
-  struct WinThread *wt;
-  STRACE("_Exit1(%d)", rc);
-  if (__tls_enabled) {
-    jb = (jmp_buf *)(__get_tls() + 0x08);
-    longjmp(*jb, rc);
+noasan size_t GetMemtrackSize(struct MemoryIntervals *mm) {
+  size_t i, n;
+  for (n = i = 0; i < mm->i; ++i) {
+    n += ((size_t)(mm->p[i].y - mm->p[i].x) + 1) << 16;
   }
-  if (!IsWindows() && !IsMetal()) {
-    asm volatile("xor\t%%r10d,%%r10d\n\t"
-                 "syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
-                 : "rcx", "r10", "r11", "memory");
-  } else if (IsWindows()) {
-    ExitThread(rc);
-  }
-  for (;;) {
-    asm("ud2");
-  }
+  return n;
 }

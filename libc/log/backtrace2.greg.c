@@ -32,7 +32,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/color.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/gc.internal.h"
@@ -150,11 +149,11 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        __write(p1, p2 - p1);
+        write(2, p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        __write(p1, got);
+        write(2, p1, got);
         break;
       }
     }

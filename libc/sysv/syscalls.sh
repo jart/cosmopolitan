@@ -219,7 +219,7 @@ scall	iopl			0xfffffffffffff0ac	globl
 scall	ioperm			0xfffffffffffff0ad	globl
 scall	init_module		0xfffffffffffff0af	globl
 scall	delete_module		0xfffffffffffff0b0	globl
-scall	sys_gettid		0xfffffffff211e0ba	globl hidden
+scall	__sys_gettid		0x13712b1b0101b0ba	globl hidden # thread_self_trap (or gettid? on xnu), _lwp_self on netbsd, thr_self on freebsd, getthrid on openbsd
 scall	readahead		0xfffffffffffff0bb	globl # consider fadvise() / madvise()
 scall	setxattr		0x177ffffff20ec0bc	globl
 scall	fsetxattr		0x179ffffff20ed0be	globl
@@ -618,10 +618,10 @@ scall	workq_open		0xfffffffff216ffff	globl
 scall	write_nocancel		0xfffffffff218dfff	globl
 scall	writev_nocancel		0xfffffffff219cfff	globl
 #──────────────────────────FREEBSD───────────────────────────
+scall	_umtx_op		0xffffff1c6fffffff	globl
 scall	abort2			0xffffff1cffffffff	globl
 scall	afs3_syscall		0xffffff179fffffff	globl
 scall	bindat			0xffffff21afffffff	globl
-scall	break			0xffffff011fffffff	globl
 scall	cap_enter		0xffffff204fffffff	globl
 scall	cap_fcntls_get		0xffffff219fffffff	globl
 scall	cap_fcntls_limit	0xffffff218fffffff	globl
@@ -816,7 +816,6 @@ scall	__acl_aclcheck_link	0xffffff1acfffffff	globl
 scall	__mac_syscall		0xfffffffff217dfff	globl
 scall	__acl_set_file		0xffffff15cfffffff	globl
 scall	__acl_delete_file	0xffffff15ffffffff	globl
-scall	_umtx_op		0xffffff1c6fffffff	globl
 scall	__semwait_signal_nocancel	0xfffffffff21a7fff	globl
 scall	__old_semwait_signal_nocancel	0xfffffffff2173fff	globl
 scall	sctp_peeloff			0xffffff1d7fffffff	globl

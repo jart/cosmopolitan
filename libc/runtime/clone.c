@@ -199,10 +199,11 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  _seizelock(&wt->lock);  // TODO: How can we get the tid without locking?
+  wt->lock = 1;
   if ((rc = bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
     _spinlock(&wt->lock);
     rc = wt->tid;
+    _spunlock(&wt->lock);
   }
   return rc;
 }
@@ -263,9 +264,7 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
 // OPEN BESIYATA DISHMAYA
 
 int __tfork(struct __tfork *params, size_t psize, struct CloneArgs *wt);
-asm(".section\t.privileged,\"ax\",@progbits\n\t"
-    ".local\t__tfork\n"
-    "__tfork:\n\t"
+asm("__tfork:\n\t"
     "push\t$8\n\t"
     "pop\t%rax\n\t"
     "mov\t%rdx,%r8\n\t"
@@ -282,11 +281,10 @@ asm(".section\t.privileged,\"ax\",@progbits\n\t"
     "and\t$-16,%rsp\n\t"
     "push\t%rax\n\t"
     "jmp\tOpenbsdThreadMain\n\t"
-    ".size\t__tfork,.-__tfork\n\t"
-    ".previous");
+    ".size\t__tfork,.-__tfork\n\t");
 __attribute__((__used__, __no_reorder__))
 
-static privileged wontreturn void
+static wontreturn void
 OpenbsdThreadMain(struct CloneArgs *wt) {
   wt->func(wt->arg);
   // we no longer use the stack after this point. however openbsd

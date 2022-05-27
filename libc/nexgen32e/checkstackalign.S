@@ -25,11 +25,11 @@ CheckStackIsAligned:
 	push	%rbp
 	mov	%rsp,%rbp
 
-/	allocate sixteen bytes
+//	allocate sixteen bytes
 	push	%rax
 	push	%rax
 
-/	put a value in it
+//	put a value in it
 	xorps	%xmm0,%xmm0
 	movaps	%xmm0,-16(%rbp)
 

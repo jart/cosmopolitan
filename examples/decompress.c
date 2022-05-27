@@ -33,12 +33,14 @@
 m=
 make -j8 MODE=$m o/$m/examples || exit
 for level in $(seq 0 9); do
-  o/$m/examples/compress.com $level <o/dbg/third_party/python/python.com | dd count=10000 2>/tmp/info >/tmp/comp
+for strategy in F L R H; do
+  o/$m/examples/compress.com -$strategy$level <o/dbg/third_party/python/python.com | dd count=10000 2>/tmp/info >/tmp/comp
   compspeed=$(grep -Po '[.\d]+ \w+/s' /tmp/info)
-  o/$m/examples/decompress.com $level </tmp/comp | dd count=10000 2>/tmp/info >/dev/null
+  o/$m/examples/decompress.com </tmp/comp | dd count=10000 2>/tmp/info >/dev/null
   decompspeed=$(grep -Po '[.\d]+ \w+/s' /tmp/info)
-  size=$(o/$m/examples/compress.com $level <o/$m/examples/compress.com | wc -c)
-  echo "level $level $size compress $compspeed decompress $decompspeed"
+  size=$(o/$m/examples/compress.com -$strategy$level <o/$m/examples/compress.com | wc -c)
+  echo "level $strategy $level $size compress $compspeed decompress $decompspeed"
+done
 done
 */
 // clang-format on

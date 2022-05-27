@@ -53,8 +53,8 @@ noasan bool MemoryExists(char *p) {
   sigaction(SIGSEGV, &sa, old + 0);
   sigaction(SIGBUS, &sa, old + 1);
   c = atomic_load(p);
-  sigaction(SIGSEGV, old + 0, 0);
   sigaction(SIGBUS, old + 1, 0);
+  sigaction(SIGSEGV, old + 0, 0);
   return !gotsignal;
 }
 

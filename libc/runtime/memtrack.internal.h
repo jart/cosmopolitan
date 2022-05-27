@@ -63,6 +63,7 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
                            void (*)(struct MemoryIntervals *, int, int)) hidden;
 void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
 int UntrackMemoryIntervals(void *, size_t) hidden;
+size_t GetMemtrackSize(struct MemoryIntervals *);
 
 #define IsLegalPointer(p) \
   (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)
