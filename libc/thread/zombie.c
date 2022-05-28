@@ -19,7 +19,7 @@
 #include "libc/bits/atomic.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/zombie.h"
+#include "libc/thread/thread.h"
 
 static struct Zombie {
   struct Zombie *next;

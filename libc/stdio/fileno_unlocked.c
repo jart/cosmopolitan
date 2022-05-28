@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,39 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/struct/teb.h"
-#include "libc/sysv/consts/o.h"
-
-#define kBufSize 1024
-#define kPid     "TracerPid:\t"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Determines if gdb, strace, windbg, etc. is controlling process.
- * @return non-zero if attached, otherwise 0
+ * Returns file descriptor associated with stream.
+ *
+ * @param f is file stream object pointer
+ * @return fd on success or -1 w/ errno;
  */
-noasan noubsan int IsDebuggerPresent(bool force) {
-  /* asan runtime depends on this function */
-  int fd, res;
-  ssize_t got;
-  char *p, buf[1024];
-  if (!force && IsGenuineCosmo()) return 0;
-  if (!force && getenv("HEISENDEBUG")) return 0;
-  if (IsWindows()) return NtGetPeb()->BeingDebugged; /* needs noasan */
-  if (__isworker) return false;
-  res = 0;
-  if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
-    if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
-      buf[got] = '\0';
-      if ((p = __strstr(buf, kPid))) {
-        p += sizeof(kPid) - 1;
-        res = __atoul(p);
-      }
-    }
-    __sysv_close(fd);
+int fileno_unlocked(FILE *f) {
+  if (f->fd != -1) {
+    return f->fd;
+  } else {
+    return ebadf();
   }
-  return res;
 }

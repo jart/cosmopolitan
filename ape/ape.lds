@@ -389,6 +389,7 @@ SECTIONS {
     _tdata_end = .;
     . = ALIGN(PAGESIZE);
   } :Tls
+  . = ALIGN(PAGESIZE);
 
 /*END:   file content that's loaded by o/s */
 /*BEGIN: bss memory void */
@@ -531,8 +532,8 @@ HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
 HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
 HIDDEN(ape_data_paddr = LOADADDR(.data));
 HIDDEN(ape_data_vaddr = ADDR(.data));
-HIDDEN(ape_data_filesz = SIZEOF(.data));
-HIDDEN(ape_data_memsz = SIZEOF(.data));
+HIDDEN(ape_data_filesz = SIZEOF(.data) + SIZEOF(.tdata));
+HIDDEN(ape_data_memsz = SIZEOF(.data) + SIZEOF(.tdata));
 HIDDEN(ape_data_align = PAGESIZE);
 HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
 

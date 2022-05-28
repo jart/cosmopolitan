@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,14 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/stdio/stdio.h"
 
-//	Returns file descriptor associated with stream.
-//
-//	@param	rdi has file stream object pointer
-//	@see	fileno_unlocked()
-//	@threadsafe
-fileno:	mov	%rdi,%r11
-	ezlea	fileno_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fileno,globl
+/**
+ * Writes byte to stream.
+ *
+ * @param c is byte to buffer or write, which is masked
+ * @return c as unsigned char if written or -1 w/ errno
+ */
+int fputc_unlocked(int c, FILE *f) {
+  unsigned char b;
+  if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
+    f->buf[f->beg++] = c;
+    return c & 255;
+  } else {
+    b = c;
+    if (!fwrite_unlocked(&b, 1, 1, f)) return -1;
+    return b;
+  }
+}

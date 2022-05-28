@@ -27,7 +27,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
-#include "libc/thread/create.h"
 
 static int thepid;
 static uint128_t thepool;

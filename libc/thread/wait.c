@@ -19,12 +19,33 @@
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/futex.h"
+#include "libc/thread/freebsd.internal.h"
+#include "libc/thread/thread.h"
 
 int cthread_memory_wait32(uint32_t* addr, uint32_t val,
                           const struct timespec* timeout) {
+  size_t size;
+  struct _umtx_time *put, ut;
   if (IsLinux() || IsOpenbsd()) {
     return futex(addr, FUTEX_WAIT, val, timeout, 0);
+
+#if 0
+  } else if (IsFreebsd()) {
+    if (!timeout) {
+      put = 0;
+      size = 0;
+    } else {
+      ut._flags = 0;
+      ut._clockid = CLOCK_REALTIME;
+      ut._timeout = *timeout;
+      put = &ut;
+      size = sizeof(ut);
+    }
+    return _umtx_op(addr, UMTX_OP_MUTEX_WAIT, 0, &size, put);
+#endif
+
   } else {
     unsigned tries;
     for (tries = 1; atomic_load(addr) == val; ++tries) {
@@ -41,6 +62,10 @@ int cthread_memory_wait32(uint32_t* addr, uint32_t val,
 int cthread_memory_wake32(uint32_t* addr, int n) {
   if (IsLinux() || IsOpenbsd()) {
     return futex(addr, FUTEX_WAKE, n, 0, 0);
+#if 0
+  } else if (IsFreebsd()) {
+    return _umtx_op(addr, UMTX_OP_MUTEX_WAKE, n, 0, 0);
+#endif
   }
   return -1;
 }

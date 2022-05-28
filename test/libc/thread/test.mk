@@ -33,6 +33,7 @@ TEST_LIBC_THREAD_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
 	LIBC_THREAD					\
+	LIBC_TIME					\
 	LIBC_TESTLIB
 
 TEST_LIBC_THREAD_DEPS :=				\
@@ -50,20 +51,6 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-$(TEST_LIBC_THREAD_OBJS):				\
-	DEFAULT_CCFLAGS +=				\
-		-fno-builtin
-
-o/$(MODE)/test/libc/thread/getenv_test.com.runs:	\
-		o/$(MODE)/test/libc/thread/getenv_test.com
-	@HELLO=THERE build/runit $@ $<
-
-o/$(MODE)/test/libc/thread/fun_test.o			\
-o/$(MODE)/test/libc/thread/itsatrap_test.o:		\
-		OVERRIDE_CFLAGS +=			\
-			-fno-sanitize=all		\
-			-ftrapv
 
 .PHONY: o/$(MODE)/test/libc/thread
 o/$(MODE)/test/libc/thread:				\

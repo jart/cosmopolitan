@@ -22,8 +22,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
-#include "libc/thread/descriptor.h"
-#include "libc/thread/detach.h"
+#include "libc/thread/thread.h"
 
 /**
  * Detaches thread.

@@ -57,6 +57,21 @@ void TearDown(void) {
   free(tls);
 }
 
+int DoNothing(void *arg) {
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// TEST ERROR NUMBERS
+
+TEST(clone, testNullFunc_raisesEinval) {
+  EXPECT_SYS(EINVAL, -1,
+             clone(0, stack, GetStackSize(),
+                   CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
+                       CLONE_SIGHAND | CLONE_SETTLS,
+                   0, 0, tls, 64, 0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // TEST THREADS WORK
 
@@ -169,10 +184,6 @@ TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
 ////////////////////////////////////////////////////////////////////////////////
 // BENCHMARK
 
-int DoNothing(void *arg) {
-  return 0;
-}
-
 void LaunchThread(void) {
   char *tls, *stack;
   tls = __initialize_tls(malloc(64));
@@ -189,6 +200,7 @@ BENCH(clone, bench) {
   char *volatile tp;
   errno_t *volatile ep;
   EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
+  EZBENCH2("__get_tls_inline", donothing, (tp = __get_tls_inline()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
   EZBENCH2("clone()", donothing, LaunchThread());
 }

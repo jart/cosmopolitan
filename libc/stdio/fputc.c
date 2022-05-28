@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -24,15 +23,12 @@
  *
  * @param c is byte to buffer or write, which is masked
  * @return c as unsigned char if written or -1 w/ errno
+ * @threadsafe
  */
-int fputc_unlocked(int c, FILE *f) {
-  unsigned char b;
-  if (c != '\n' && f->beg < f->size && f->bufmode != _IONBF) {
-    f->buf[f->beg++] = c;
-    return c & 255;
-  } else {
-    b = c;
-    if (!fwrite_unlocked(&b, 1, 1, f)) return -1;
-    return b;
-  }
+int fputc(int c, FILE *f) {
+  int rc;
+  flockfile(f);
+  rc = fputc_unlocked(c, f);
+  funlockfile(f);
+  return rc;
 }

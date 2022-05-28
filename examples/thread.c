@@ -8,15 +8,12 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/thread/create.h"
-#include "libc/thread/detach.h"
-#include "libc/thread/join.h"
-#include "libc/thread/self.h"
-#include "libc/thread/sem.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 
 cthread_sem_t semaphore;
@@ -39,6 +36,14 @@ int main() {
   int rc, tid;
   void *exitcode;
   cthread_t self, thread;
+
+  if (IsWindows() || IsXnu()) {
+    fprintf(stderr,
+            "error: can't run example\n"
+            "_Thread_local only works on Linux/FreeBSD/NetBSD/OpenBSD\n");
+    return 1;
+  }
+
   self = cthread_self();
   tid = self->tid;
   printf("[%p] %d -> %#x\n", self, tid, test_tls);

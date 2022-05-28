@@ -28,10 +28,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/thread/attr.h"
-#include "libc/thread/create.h"
-#include "libc/thread/descriptor.h"
-#include "libc/thread/zombie.h"
+#include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
 
@@ -99,8 +96,8 @@ static int cthread_start(void *arg) {
  * @return 0 on success, or error number on failure
  * @threadsafe
  */
-int cthread_create(cthread_t *restrict ptd, const cthread_attr_t *restrict attr,
-                   void *(*func)(void *), void *restrict arg) {
+int cthread_create(cthread_t *ptd, const cthread_attr_t *attr,
+                   void *(*func)(void *), void *arg) {
   int rc, tid;
   cthread_t td;
   cthread_attr_t default_attr;

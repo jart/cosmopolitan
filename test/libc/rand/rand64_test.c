@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
@@ -24,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
@@ -35,20 +37,17 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/time/time.h"
 
 #define THREADS 8
 #define ENTRIES 1024
 
-_Atomic(bool) ready;
+uint32_t ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
 void OnChld(int sig) {
   // do nothing
-}
-
-dontinline void Pause(void) {
-  // when ftrace is enabled
 }
 
 dontinline void Generate(int i) {
@@ -57,7 +56,9 @@ dontinline void Generate(int i) {
 
 int Thrasher(void *arg) {
   int i, id = (intptr_t)arg;
-  while (!ready) Pause();
+  while (!atomic_load(&ready)) {
+    cthread_memory_wait32(&ready, 0, 0);
+  }
   for (i = 0; i < ENTRIES; ++i) {
     Generate(id * ENTRIES + i);
   }
@@ -103,9 +104,13 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
                   CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
               (void *)(intptr_t)i, 0, tls[i], 64, (int *)(tls[i] + 0x38)));
   }
-  ready = true;
+  atomic_store(&ready, 1);
+  cthread_memory_wake32(&ready, INT_MAX);
   for (i = 0; i < THREADS; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    while ((j = atomic_load((uint32_t *)(tls[i] + 0x38)))) {
+      // FUTEX_WAIT_PRIVATE makes it hang
+      cthread_memory_wait32((uint32_t *)(tls[i] + 0x38), j, 0);
+    }
     EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
     free(tls[i]);
   }

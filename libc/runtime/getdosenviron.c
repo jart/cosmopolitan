@@ -125,7 +125,7 @@ textwindows noasan noinstrument int GetDosEnviron(const char16_t *env,
   while (*env) {
     if (i + 1 < max) envp[i++] = buf;
     r = Recode16to8(buf, size, env);
-    if ((p = memchr(buf, '=', r.ax)) && IsAlpha(p[1]) && p[2] == ':' &&
+    if ((p = MemChr(buf, '=', r.ax)) && IsAlpha(p[1]) && p[2] == ':' &&
         (p[3] == '\\' || p[3] == '/')) {
       FixPath(p + 1);
     }

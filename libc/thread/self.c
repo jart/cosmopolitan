@@ -16,7 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/self.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
 
@@ -24,5 +25,5 @@ STATIC_YOINK("_main_thread_ctor");
  * Returns thread descriptor of the current thread.
  */
 cthread_t(cthread_self)(void) {
-  return cthread_self();
+  return (cthread_t)__get_tls_inline();
 }

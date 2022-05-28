@@ -16,62 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/metatermios.internal.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/lockcmpxchg.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/runtime/runtime.h"
+#include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
+#include "libc/log/libfatal.internal.h"
+#include "libc/runtime/internal.h"
+#include "libc/sysv/consts/termios.h"
 
-typedef void *pthread_t;
-typedef int pthread_once_t;
-typedef int pthread_mutex_t;
+/**
+ * @fileoverview Terminal Restoration Helper for System Five.
+ *
+ * This is used by the crash reporting functions, e.g. __die(), to help
+ * ensure the terminal is in an unborked state after a crash happens.
+ */
 
-int pthread_once(pthread_once_t *once, void init(void)) {
-  int x;
-  unsigned tries;
-  switch ((x = atomic_load(once))) {
-    case 0:
-      if (atomic_compare_exchange_strong(once, &x, 1)) {
-        init();
-        atomic_store(once, 2);
-        break;
-      }
-      // fallthrough
-    case 1:
-      tries = 0;
-      do {
-        if (++tries & 7) {
-          __builtin_ia32_pause();
-        } else {
-          sched_yield();
-        }
-      } while (atomic_load(once) == 1);
-      break;
-    default:
-      break;
+#define RESET_COLOR   "\e[0m"
+#define SHOW_CURSOR   "\e[?25h"
+#define DISABLE_MOUSE "\e[?1000;1002;1015;1006l"
+#define ANSI_RESTORE  RESET_COLOR SHOW_CURSOR DISABLE_MOUSE
+
+static bool __isrestorable;
+static union metatermios __oldtermios;
+
+static textstartup void __oldtermios_init() {
+  int e;
+  e = errno;
+  if (sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
+    __isrestorable = true;
   }
-  return 0;
+  errno = e;
 }
 
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  _spinlock(mutex);
-  return 0;
-}
+const void *const __oldtermios_ctor[] initarray = {
+    __oldtermios_init,
+};
 
-int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  return _trylock(mutex);
-}
-
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  _spunlock(mutex);
-  return 0;
-}
-
-int pthread_cancel(pthread_t thread) {
-  return ESRCH;
-}
-
-void *__tls_get_addr(size_t v[2]) {
-  return NULL;
+void __restore_tty(void) {
+  int e;
+  if (__isrestorable && !__isworker && !__nocolor) {
+    e = errno;
+    sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
+    sys_ioctl(0, TCSETSF, &__oldtermios);
+    errno = e;
+  }
 }

@@ -28,18 +28,28 @@
 #define XNU_F_GETPATH  50
 #define XNU_MAXPATHLEN 1024
 
+static inline bool CopyString(char *d, const char *s, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (!(d[i] = s[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 char *sys_getcwd_xnu(char *res, size_t size) {
   int fd;
   union metastat st[2];
   char buf[XNU_MAXPATHLEN], *ret = NULL;
   if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
     if (__sys_fstat(fd, &st[0]) != -1) {
-      if (METASTAT(st[0], st_dev) && METASTAT(st[0], st_ino)) {
+      if (st[0].xnu.st_dev && st[0].xnu.st_ino) {
         if (__sys_fcntl(fd, XNU_F_GETPATH, (uintptr_t)buf) != -1) {
           if (__sys_fstatat(AT_FDCWD, buf, &st[1], 0) != -1) {
-            if (METASTAT(st[0], st_dev) == METASTAT(st[1], st_dev) &&
-                METASTAT(st[0], st_ino) == METASTAT(st[1], st_ino)) {
-              if (memccpy(res, buf, '\0', size)) {
+            if (st[0].xnu.st_dev == st[1].xnu.st_dev &&
+                st[0].xnu.st_ino == st[1].xnu.st_ino) {
+              if (CopyString(res, buf, size)) {
                 ret = res;
               } else {
                 erange();

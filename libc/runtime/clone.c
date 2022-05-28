@@ -468,7 +468,8 @@ int sys_clone_linux(int flags, char *stk, int *ptid, int *ctid, void *tls,
  * effectively work around libc features like atfork(), so that means
  * other calls like getpid() may return incorrect values.
  *
- * @param func is your callback function
+ * @param func is your callback function, which this wrapper requires
+ *     not be null, otherwise EINVAL is raised
  * @param stk points to the bottom of a caller allocated stack, which
  *     must be allocated via mmap() using the MAP_STACK flag, or else
  *     you won't get optimal performance and it won't work on OpenBSD
@@ -532,20 +533,22 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
     __threaded = gettid();
   }
 
-  if (IsAsan() &&
-      ((stksz > PAGESIZE &&
-        !__asan_is_valid((char *)stk + PAGESIZE, stksz - PAGESIZE)) ||
-       ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, tlssz)) ||
-       ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, sizeof(long))) ||
-       ((flags & CLONE_PARENT_SETTID) &&
-        !__asan_is_valid(ptid, sizeof(*ptid))) ||
-       ((flags & CLONE_CHILD_SETTID) &&
-        !__asan_is_valid(ctid, sizeof(*ctid))))) {
-    rc = efault();
+  if (!func) {
+    rc = einval();
   } else if (!IsTiny() &&
              (((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15))) ||
               ((flags & CLONE_SETTLS) && (tlssz < 64 || (tlssz & 7))))) {
     rc = einval();
+  } else if (IsAsan() &&
+             ((stksz > PAGESIZE &&
+               !__asan_is_valid((char *)stk + PAGESIZE, stksz - PAGESIZE)) ||
+              ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, tlssz)) ||
+              ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, sizeof(long))) ||
+              ((flags & CLONE_PARENT_SETTID) &&
+               !__asan_is_valid(ptid, sizeof(*ptid))) ||
+              ((flags & CLONE_CHILD_SETTID) &&
+               !__asan_is_valid(ctid, sizeof(*ctid))))) {
+    rc = efault();
   } else if (IsLinux()) {
     rc =
         sys_clone_linux(flags, (char *)stk + stksz, ptid, ctid, tls, func, arg);

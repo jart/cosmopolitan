@@ -18,8 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/exit.h"
-#include "libc/thread/self.h"
+#include "libc/thread/thread.h"
 
 /**
  * Exits cosmopolitan thread.

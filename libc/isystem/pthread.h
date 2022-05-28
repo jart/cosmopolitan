@@ -1,6 +1,5 @@
 #ifndef LIBC_ISYSTEM_PTHREAD_H_
 #define LIBC_ISYSTEM_PTHREAD_H_
-
 #include "libc/calls/calls.h"
 
 #define PTHREAD_ONCE_INIT 0

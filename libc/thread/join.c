@@ -27,8 +27,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
-#include "libc/thread/descriptor.h"
-#include "libc/thread/join.h"
+#include "libc/thread/thread.h"
 
 /**
  * Waits for thread to terminate and frees its memory.
@@ -43,7 +42,7 @@
  * @threadsafe
  */
 int cthread_join(cthread_t td, void **exitcode) {
-  int rc, tid;
+  int x, rc, tid;
   // otherwise, tid could be set to 0 even though `state` is not
   // finished mark thread as joining
   if (!td || (IsAsan() && !__asan_is_valid(td, sizeof(*td)))) {
@@ -55,11 +54,10 @@ int cthread_join(cthread_t td, void **exitcode) {
     rc = EINVAL;
   } else {
     if (~atomic_fetch_add(&td->state, cthread_joining) & cthread_finished) {
-      if (IsLinux() || IsOpenbsd()) {
+      while ((x = atomic_load(&td->tid))) {
         // FUTEX_WAIT_PRIVATE makes it hang
-        futex((uint32_t *)&td->tid, FUTEX_WAIT, tid, 0, 0);
+        cthread_memory_wait32((uint32_t *)&td->tid, x, 0);
       }
-      _spinlock(&td->tid);
     }
     if (exitcode) {
       *exitcode = td->exitcode;

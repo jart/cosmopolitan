@@ -33,5 +33,6 @@ TEST(tls, test) {
   __install_tls(tib);
   EXPECT_EQ(31337, errno);
   EXPECT_EQ(tib, __get_tls());
+  EXPECT_EQ(tib, __get_tls_inline());
   EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
 }

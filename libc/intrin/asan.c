@@ -753,7 +753,7 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
   p = __fatalbuf;
   kprintf("\n\e[J\e[1;31masan error\e[0m: %s %d-byte %s at %p shadow %p\n",
           __asan_describe_access_poison(kind), size, message, addr,
-          SHADOW(addr), __argv[0]);
+          SHADOW(addr));
   if (0 < size && size < 80) {
     base = (char *)addr - ((80 >> 1) - (size >> 1));
     for (i = 0; i < 80; ++i) {

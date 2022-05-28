@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/thread/yield.h"
+#include "libc/thread/thread.h"
 
 /**
  * Asks operating system to handoff remaining time slice.

@@ -17,9 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
-#include "libc/thread/sem.h"
-#include "libc/thread/wait.h"
-#include "libc/thread/yield.h"
+#include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
 

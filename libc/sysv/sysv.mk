@@ -39,6 +39,7 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/systemfive.S				\
 	libc/sysv/errno_location.greg.c			\
 	libc/sysv/errno.c				\
+	libc/sysv/gettls.greg.c				\
 	libc/sysv/errfun.S				\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\

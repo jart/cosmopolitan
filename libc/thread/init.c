@@ -27,8 +27,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/thread/descriptor.h"
-#include "libc/thread/self.h"
+#include "libc/thread/thread.h"
 
 static textstartup void _main_thread_init(void) {
   _Static_assert(offsetof(struct cthread_descriptor_t, self) == 0x00, "");
@@ -67,6 +66,7 @@ static textstartup void _main_thread_init(void) {
   // Set FS
   __install_tls((char *)td);
   assert(cthread_self()->tid == gettid());
+  __threaded = true;
 }
 
 const void *const _main_thread_ctor[] initarray = {

@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sigbits.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -206,6 +207,10 @@ void StartTcpServer(void) {
   CHECK_NE(-1, (g_servfd =
                     socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP)));
 
+  struct timeval timeo = {30};
+  setsockopt(g_servfd, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
+  setsockopt(g_servfd, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
+
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
     if (g_servaddr.sin_port != 0) {
@@ -271,7 +276,7 @@ void Recv(void *output, size_t outputsize) {
   ssize_t tx, chunk, received;
   static bool once;
   static int zstatus;
-  static char buf[4096];
+  static char buf[32768];
   static z_stream zs;
   static struct {
     size_t off;
@@ -298,12 +303,12 @@ void Recv(void *output, size_t outputsize) {
       return;
     }
     if (zstatus == Z_STREAM_END) {
+      close(g_clifd);
       FATALF("recv zlib unexpected eof");
     }
     // get another fixed-size data packet from network
     // pass along error conditions to caller
     // pass along eof condition to zlib
-    INFOF("mbedtls_ssl_read");
     received = mbedtls_ssl_read(&ezssl, buf, sizeof(buf));
     if (!received) TlsDie("got unexpected eof", received);
     if (received < 0) TlsDie("read failed", received);
@@ -330,6 +335,7 @@ void Recv(void *output, size_t outputsize) {
           // fallthrough
         case Z_DATA_ERROR:
         case Z_MEM_ERROR:
+          close(g_clifd);
           FATALF("tls recv zlib hard error %d", zstatus);
         case Z_BUF_ERROR:
           zstatus = Z_OK;  // harmless? nothing for inflate to do
@@ -359,7 +365,10 @@ void HandleClient(void) {
   /* read request to run program */
   addrsize = sizeof(addr);
   INFOF("accept");
-  CHECK_NE(-1, (g_clifd = accept4(g_servfd, &addr, &addrsize, SOCK_CLOEXEC)));
+  do {
+    g_clifd = accept4(g_servfd, &addr, &addrsize, SOCK_CLOEXEC);
+  } while (g_clifd == -1 && errno == EAGAIN);
+  CHECK_NE(-1, g_clifd);
   if (fork()) {
     close(g_clifd);
     return;

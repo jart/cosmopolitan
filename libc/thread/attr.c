@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/runtime/stack.h"
-#include "libc/thread/attr.h"
+#include "libc/thread/thread.h"
 
 #define MIN_STACKSIZE (8 * PAGESIZE)  // includes guard, rounds up to FRAMESIZE
 #define MIN_GUARDSIZE PAGESIZE

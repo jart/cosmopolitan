@@ -58,7 +58,7 @@ privileged int gettid(void) {
   struct WinThread *wt;
 
   if (__tls_enabled) {
-    rc = *(int *)(__get_tls() + 0x38);
+    rc = *(int *)(__get_tls_inline() + 0x38);
     return rc;
   }
 

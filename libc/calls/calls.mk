@@ -164,6 +164,14 @@ o//libc/calls/fcntl.o:					\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+# we always want -Os because:
+#   it's early runtime mandatory and quite huge without it
+o//libc/calls/getcwd.greg.o				\
+o//libc/calls/getcwd-nt.greg.o				\
+o//libc/calls/getcwd-xnu.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os
+
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))
