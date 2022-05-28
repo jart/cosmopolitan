@@ -9,6 +9,9 @@ from textwrap import dedent
 from test.support import cpython_only, SuppressCrashReport
 from test.support.script_helper import kill_python
 
+if __name__ == "PYOBJ.COM":
+    import _testcapi
+
 def spawn_repl(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kw):
     """Run the Python REPL with the given arguments.
 
@@ -22,7 +25,7 @@ def spawn_repl(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kw):
     # executable for the Popen() call to python to succeed as the directory
     # path may be used by Py_GetPath() to build the default module search
     # path.
-    stdin_fname = os.path.join(os.path.dirname(sys.executable), "<stdin>")
+    stdin_fname = sys.executable
     cmd_line = [stdin_fname, '-E', '-i']
     cmd_line.extend(args)
 
