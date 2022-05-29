@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,29 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "net/http/escape.h"
+#include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "third_party/zlib/puff.h"
+#include "third_party/zlib/zlib.h"
 
-// url path dispatch
-// - 0 is -.~_@:!$&'()*+,;=0-9A-Za-z/
-// - 1 is everything else which needs uppercase hex %XX
-// note that '& can break html
-// note that '() can break css urls
-// note that unicode can still be wild
-const char kEscapePath[256] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x10
-    1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x20
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1,  // 0x30
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,  // 0x50
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x60
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,  // 0x70
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x80
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x90
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xa0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xb0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xc0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xd0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xe0
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0xf0
-};
+/**
+ * Decompresses raw deflate data.
+ *
+ * This uses puff by default since it has a 2kb footprint. If zlib
+ * proper is linked, then we favor that instead, since it's faster.
+ *
+ * @param outsize needs to be known ahead of time by some other means
+ * @return 0 on success or nonzero on failure
+ */
+int __inflate(void *out, size_t outsize, const void *in, size_t insize) {
+  int rc;
+  z_stream zs;
+  if (weaken(inflateInit2) && weaken(inflate) && weaken(inflateEnd)) {
+    zs.next_in = in;
+    zs.avail_in = insize;
+    zs.total_in = insize;
+    zs.next_out = out;
+    zs.avail_out = outsize;
+    zs.total_out = outsize;
+    zs.zalloc = Z_NULL;
+    zs.zfree = Z_NULL;
+    if ((rc = weaken(inflateInit2)(&zs, -MAX_WBITS)) == Z_OK &&
+        (rc = weaken(inflate)(&zs, Z_FINISH)) == Z_STREAM_END &&
+        (rc = weaken(inflateEnd)(&zs)) == Z_OK) {
+      rc = 0;
+    } else if (rc == Z_OK) {
+      rc = Z_STREAM_END;  // coerce to nonzero
+    } else {
+      rc = rc;
+    }
+  } else {
+    rc = puff(out, &outsize, in, &insize);
+  }
+  STRACE("inflate([%#.*hhs%s], %'zu, %#.*hhs%s, %'zu) → %d", MIN(40, outsize),
+         out, outsize > 40 ? "..." : "", outsize, MIN(40, insize), in,
+         insize > 40 ? "..." : "", insize, rc);
+  return rc;
+}

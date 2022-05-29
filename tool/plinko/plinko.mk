@@ -54,8 +54,9 @@ o/$(MODE)/tool/plinko/plinko.com:				\
 		tool/plinko/plinko.mk
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/plinko/.redbean
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o o/$(MODE)/tool/plinko/.plinko/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@ 	\
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com	\
+		-o o/$(MODE)/tool/plinko/.plinko/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
 		o/$(MODE)/tool/plinko/.plinko/.symtab
 
 $(TOOL_PLINKO_OBJS):						\

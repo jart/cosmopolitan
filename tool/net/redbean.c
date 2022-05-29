@@ -34,9 +34,11 @@
 #include "libc/dos.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
 #include "libc/nexgen32e/bsr.h"
@@ -51,13 +53,13 @@
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
 #include "libc/str/slice.h"
-#include "libc/str/undeflate.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
@@ -66,6 +68,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
@@ -164,12 +167,10 @@ STATIC_YOINK("zip_uri_support");
     }                           \
   } while (0)
 
-// letters not used: EIJNOQYnoqwxy
+// letters not used: EINOQYnoqwxy
 // digits not used:  0123456789
-// puncts not used:  !"#$%&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "BSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
-
-extern unsigned long long __kbirth;
+// puncts not used:  !"#$&'()*+,-./;<=>@[\]^_`{|}~
+#define GETOPTS "%BJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -329,21 +330,23 @@ static const char kCounterNames[] =
 typedef ssize_t (*reader_f)(int, void *, size_t);
 typedef ssize_t (*writer_f)(int, struct iovec *, int);
 
-static bool usessl;
 static bool suiteb;
 static bool killed;
 static bool istext;
 static bool zombied;
 static bool gzipped;
 static bool branded;
+static bool usingssl;
 static bool funtrace;
 static bool systrace;
 static bool meltdown;
 static bool unsecure;
+static bool norsagen;
 static bool printport;
 static bool daemonize;
 static bool logrusage;
 static bool logbodies;
+static bool requiressl;
 static bool isterminal;
 static bool sslcliused;
 static bool loglatency;
@@ -1459,7 +1462,7 @@ static ssize_t SslWrite(int fd, struct iovec *iov, int iovlen) {
 
 static void NotifyClose(void) {
 #ifndef UNSECURE
-  if (usessl) {
+  if (usingssl) {
     DEBUGF("(ssl) SSL notifying close");
     mbedtls_ssl_close_notify(&ssl);
   }
@@ -1615,7 +1618,7 @@ static bool TlsSetup(void) {
     if (!(r = mbedtls_ssl_handshake(&ssl)) && TlsFlush(&g_bio, 0, 0) != -1) {
       LockInc(&shared->c.sslhandshakes);
       g_bio.c = -1;
-      usessl = true;
+      usingssl = true;
       reader = SslRead;
       writer = SslWrite;
       WipeServingKeys();
@@ -1855,14 +1858,20 @@ static void LoadCertificates(void) {
 #ifdef MBEDTLS_ECP_C
     ecp = GenerateEcpCertificate(ksk.key ? &ksk : 0);
     if (!havecert) UseCertificate(&conf, &ecp, "server");
-    if (!haveclientcert && ksk.key) UseCertificate(&confcli, &ecp, "client");
+    if (!haveclientcert && ksk.key) {
+      UseCertificate(&confcli, &ecp, "client");
+    }
     AppendCert(ecp.cert, ecp.key);
 #endif
 #ifdef MBEDTLS_RSA_C
-    rsa = GenerateRsaCertificate(ksk.key ? &ksk : 0);
-    if (!havecert) UseCertificate(&conf, &rsa, "server");
-    if (!haveclientcert && ksk.key) UseCertificate(&confcli, &rsa, "client");
-    AppendCert(rsa.cert, rsa.key);
+    if (!norsagen) {
+      rsa = GenerateRsaCertificate(ksk.key ? &ksk : 0);
+      if (!havecert) UseCertificate(&conf, &rsa, "server");
+      if (!haveclientcert && ksk.key) {
+        UseCertificate(&confcli, &rsa, "client");
+      }
+      AppendCert(rsa.cert, rsa.key);
+    }
 #endif
   }
   WipeSigningKeys();
@@ -2138,43 +2147,8 @@ static char *AppendContentRange(char *p, long a, long b, long c) {
 }
 
 static bool Inflate(void *dp, size_t dn, const void *sp, size_t sn) {
-  int rc;
-  z_stream zs;
-  struct DeflateState ds;
   LockInc(&shared->c.inflates);
-  if (IsTiny()) {
-    return undeflate(dp, dn, sp, sn, &ds) != -1;
-  } else {
-    zs.zfree = 0;
-    zs.zalloc = 0;
-    zs.next_in = sp;
-    zs.avail_in = sn;
-    zs.total_in = sn;
-    zs.next_out = dp;
-    zs.avail_out = dn;
-    zs.total_out = dn;
-    CHECK_EQ(Z_OK, inflateInit2(&zs, -MAX_WBITS));
-    switch ((rc = inflate(&zs, Z_NO_FLUSH))) {
-      case Z_STREAM_END:
-        CHECK_EQ(Z_OK, inflateEnd(&zs));
-        return true;
-      case Z_DATA_ERROR:
-        inflateEnd(&zs);
-        WARNF("(zip) Z_DATA_ERROR: %s", zs.msg);
-        return false;
-      case Z_NEED_DICT:
-        inflateEnd(&zs);
-        WARNF("(zip) Z_NEED_DICT");
-        return false;
-      case Z_MEM_ERROR:
-        DIEF("(zip) Z_MEM_ERROR");
-      default:
-        DIEF("(zip) inflate()→%d dn=%ld sn=%ld "
-             "next_in=%ld avail_in=%ld next_out=%ld avail_out=%ld",
-             rc, dn, sn, (char *)zs.next_in - (char *)sp, zs.avail_in,
-             (char *)zs.next_out - (char *)dp, zs.avail_out);
-    }
-  }
+  return !__inflate(dp, dn, sp, sn);
 }
 
 static bool Verify(void *data, size_t size, uint32_t crc) {
@@ -2288,7 +2262,7 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
 }
 
 static bool IsSslCompressed(void) {
-  return usessl && ssl.session->compression;
+  return usingssl && ssl.session->compression;
 }
 
 static char *CommitOutput(char *p) {
@@ -2525,7 +2499,7 @@ static char *ServeAssetCompressed(struct Asset *a) {
   dg.t = 0;
   dg.i = 0;
   dg.c = 0;
-  if (usessl) {
+  if (usingssl) {
     dg.z = 512 + (rand64() & 1023);
   } else {
     dg.z = 65536;
@@ -3333,7 +3307,7 @@ static int LuaGetStatus(lua_State *L) {
 static int LuaGetSslIdentity(lua_State *L) {
   const mbedtls_x509_crt *cert;
   OnlyCallDuringRequest(L, "GetSslIdentity");
-  if (!usessl) {
+  if (!usingssl) {
     lua_pushnil(L);
   } else {
     if (sslpskindex) {
@@ -3684,7 +3658,7 @@ static int LuaFetch(lua_State *L) {
 #define ssl nope  // TODO(jart): make this file less huge
   char *p;
   ssize_t rc;
-  bool usessl;
+  bool usingssl;
   uint32_t ip;
   struct Url url;
   int t, ret, sock, methodidx, hdridx;
@@ -3785,12 +3759,12 @@ static int LuaFetch(lua_State *L) {
    */
   gc(ParseUrl(urlarg, urlarglen, &url));
   gc(url.params.p);
-  usessl = false;
+  usingssl = false;
   if (url.scheme.n) {
 #ifndef UNSECURE
     if (!unsecure && url.scheme.n == 5 &&
         !memcasecmp(url.scheme.p, "https", 5)) {
-      usessl = true;
+      usingssl = true;
     } else
 #endif
         if (!(url.scheme.n == 4 && !memcasecmp(url.scheme.p, "http", 4))) {
@@ -3800,7 +3774,7 @@ static int LuaFetch(lua_State *L) {
   }
 
 #ifndef UNSECURE
-  if (usessl && !sslinitialized) TlsInit();
+  if (usingssl && !sslinitialized) TlsInit();
 #endif
 
   if (url.host.n) {
@@ -3808,7 +3782,7 @@ static int LuaFetch(lua_State *L) {
     if (url.port.n) {
       port = gc(strndup(url.port.p, url.port.n));
 #ifndef UNSECURE
-    } else if (usessl) {
+    } else if (usingssl) {
       port = "443";
 #endif
     } else {
@@ -3880,7 +3854,7 @@ static int LuaFetch(lua_State *L) {
   }
 
 #ifndef UNSECURE
-  if (usessl) {
+  if (usingssl) {
     if (sslcliused) {
       mbedtls_ssl_session_reset(&sslcli);
     } else {
@@ -3921,7 +3895,7 @@ static int LuaFetch(lua_State *L) {
    */
   DEBUGF("(ftch) client sending %s request", method);
 #ifndef UNSECURE
-  if (usessl) {
+  if (usingssl) {
     ret = mbedtls_ssl_write(&sslcli, request, requestlen);
     if (ret != requestlen) {
       if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
@@ -3953,7 +3927,7 @@ static int LuaFetch(lua_State *L) {
     }
     NOISEF("(ftch) client reading");
 #ifndef UNSECURE
-    if (usessl) {
+    if (usingssl) {
       if ((rc = mbedtls_ssl_read(&sslcli, inbuf.p + inbuf.n,
                                  inbuf.c - inbuf.n)) < 0) {
         if (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
@@ -4457,7 +4431,7 @@ static int LuaSetCookie(lua_State *L) {
   issecurepref =
       keylen > strlen(securepref) &&
       SlicesEqual(key, strlen(securepref), securepref, strlen(securepref));
-  if ((ishostpref || issecurepref) && !usessl) {
+  if ((ishostpref || issecurepref) && !usingssl) {
     luaL_argerror(
         L, 1,
         gc(xasprintf("%s and %s prefixes require SSL", hostpref, securepref)));
@@ -4625,7 +4599,7 @@ static int LuaGetClientFd(lua_State *L) {
 
 static int LuaIsClientUsingSsl(lua_State *L) {
   OnlyCallDuringConnection(L, "IsClientUsingSsl");
-  lua_pushboolean(L, usessl);
+  lua_pushboolean(L, usingssl);
   return 1;
 }
 
@@ -4758,6 +4732,11 @@ static dontinline int LuaProgramBool(lua_State *L, bool *b) {
 static int LuaProgramSslClientVerify(lua_State *L) {
   OnlyCallFromInitLua(L, "ProgramSslClientVerify");
   return LuaProgramBool(L, &sslclientverify);
+}
+
+static int LuaProgramSslRequired(lua_State *L) {
+  OnlyCallFromInitLua(L, "ProgramSslRequired");
+  return LuaProgramBool(L, &requiressl);
 }
 
 static int LuaProgramSslFetchVerify(lua_State *L) {
@@ -4984,6 +4963,7 @@ static const char *const kDontAutoComplete[] = {
     "ProgramPrivateKey",         // TODO
     "ProgramSslCiphersuite",     // TODO
     "ProgramSslClientVerify",    // TODO
+    "LuaProgramSslRequired",     // TODO
     "ProgramSslCompression",     //
     "ProgramSslTicketLifetime",  //
     "ProgramTimeout",            // TODO
@@ -5108,7 +5088,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramAddr", LuaProgramAddr},                      //
     {"ProgramBrand", LuaProgramBrand},                    //
     {"ProgramCache", LuaProgramCache},                    //
-    {"ProgramCertificate", LuaProgramCertificate},        //
     {"ProgramDirectory", LuaProgramDirectory},            //
     {"ProgramGid", LuaProgramGid},                        //
     {"ProgramHeader", LuaProgramHeader},                  //
@@ -5117,7 +5096,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramLogPath", LuaProgramLogPath},                //
     {"ProgramPidPath", LuaProgramPidPath},                //
     {"ProgramPort", LuaProgramPort},                      //
-    {"ProgramPrivateKey", LuaProgramPrivateKey},          //
     {"ProgramRedirect", LuaProgramRedirect},              //
     {"ProgramTimeout", LuaProgramTimeout},                //
     {"ProgramUid", LuaProgramUid},                        //
@@ -5157,12 +5135,15 @@ static const luaL_Reg kLuaFuncs[] = {
 #ifndef UNSECURE
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
+    {"ProgramCertificate", LuaProgramCertificate},              //
+    {"ProgramPrivateKey", LuaProgramPrivateKey},                //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
     {"ProgramSslCompression", LuaProgramSslCompression},        //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
+    {"ProgramSslRequired", LuaProgramSslRequired},              //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
 #endif
 };
@@ -5172,9 +5153,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"unix", LuaUnix},               //
     {"maxmind", LuaMaxmind},         //
     {"lsqlite3", luaopen_lsqlite3},  //
-#ifndef UNSECURE
-    {"argon2", luaopen_argon2},  //
-#endif
+    {"argon2", luaopen_argon2},      //
 };
 
 static void LuaSetArgv(lua_State *L) {
@@ -5742,7 +5721,7 @@ static void ParseRequestParameters(void) {
     url.path.n = 1;
   }
   if (!url.scheme.n) {
-    if (usessl) {
+    if (usingssl) {
       url.scheme.p = "https";
       url.scheme.n = 5;
     } else {
@@ -6212,6 +6191,7 @@ static bool IsSsl(unsigned char c) {
 }
 
 static void HandleMessages(void) {
+  char *p;
   bool once;
   ssize_t rc;
   size_t got;
@@ -6238,6 +6218,9 @@ static void HandleMessages(void) {
                 } else {
                   return;
                 }
+              } else if (requiressl) {
+                INFOF("(clnt) %s didn't send an ssl hello", DescribeClient());
+                return;
               } else {
                 WipeServingKeys();
               }
@@ -6629,7 +6612,7 @@ static int HandleConnection(size_t i) {
     } else {
       switch ((pid = fork())) {
         case 0:
-          if (monitortty) {
+          if (!IsTiny() && monitortty) {
             MonitorMemory();
           }
           meltdown = false;
@@ -6680,8 +6663,8 @@ static int HandleConnection(size_t i) {
         inbuf.c = 0;
       }
 #ifndef UNSECURE
-      if (usessl) {
-        usessl = false;
+      if (usingssl) {
+        usingssl = false;
         reader = read;
         writer = WritevAll;
         mbedtls_ssl_session_reset(&ssl);
@@ -7023,7 +7006,7 @@ static void TlsInit(void) {
   if (unsecure) return;
 
   if (suiteb && !X86_HAVE(AES)) {
-    WARNF("you're using suite b crypto but don't have aes-ni");
+    WARNF("you're using suite b crypto but you don't have aes-ni");
   }
 
   if (!sslinitialized) {
@@ -7130,15 +7113,16 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('v', ++__log_level);
       CASE('s', --__log_level);
       CASE('X', unsecure = true);
+      CASE('%', norsagen = true);
       CASE('Z', systrace = true);
       CASE('b', logbodies = true);
       CASE('z', printport = true);
       CASE('d', daemonize = true);
       CASE('a', logrusage = true);
+      CASE('J', requiressl = true);
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
-      CASE('W', monitortty = optarg);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -7153,6 +7137,9 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('t', ProgramTimeout(ParseInt(optarg)));
       CASE('h', PrintUsage(1, EXIT_SUCCESS));
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
+#if !IsTiny()
+      CASE('W', monitortty = optarg);
+#endif
 #ifndef STATIC
       CASE('e', LuaEvalCode(optarg));
       CASE('F', LuaEvalFile(optarg));
@@ -7235,11 +7222,13 @@ void RedBean(int argc, char *argv[]) {
   inbuf = inbuf_actual;
   isinitialized = true;
   CallSimpleHookIfDefined("OnServerStart");
-  if (monitortty && (daemonize || uniprocess)) {
-    monitortty = 0;
-  }
-  if (monitortty) {
-    MonitorMemory();
+  if (!IsTiny()) {
+    if (monitortty && (daemonize || uniprocess)) {
+      monitortty = 0;
+    }
+    if (monitortty) {
+      MonitorMemory();
+    }
   }
 #ifdef STATIC
   EventLoop(HEARTBEAT);
@@ -7265,11 +7254,13 @@ void RedBean(int argc, char *argv[]) {
     TlsDestroy();
     MemDestroy();
   }
-  if (monitortty) {
-    terminatemonitor = true;
-    _spinlock(monitortid);
-    munmap(monitorstack, GetStackSize());
-    free(monitortls);
+  if (!IsTiny()) {
+    if (monitortty) {
+      terminatemonitor = true;
+      _spinlock(monitortid);
+      munmap(monitorstack, GetStackSize());
+      free(monitortls);
+    }
   }
   INFOF("(srvr) shutdown complete");
 }

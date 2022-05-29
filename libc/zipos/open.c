@@ -30,10 +30,10 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/undeflate.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -43,47 +43,8 @@
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/zlib/zlib.h"
 
-static int __zipos_inflate_fast(struct ZiposHandle *h, uint8_t *data,
-                                size_t size) {
-  int rc;
-  z_stream zs;
-  zs.opaque = &h;
-  zs.next_in = data;
-  zs.avail_in = size;
-  zs.total_in = size;
-  zs.next_out = h->freeme;
-  zs.avail_out = h->size;
-  zs.total_out = h->size;
-  zs.zfree = Z_NULL;
-  zs.zalloc = Z_NULL;
-  if (inflateInit2(&zs, -MAX_WBITS) == Z_OK) {
-    switch (inflate(&zs, Z_NO_FLUSH)) {
-      case Z_STREAM_END:
-        rc = 0;
-        break;
-      case Z_MEM_ERROR:
-        rc = enomem();
-        break;
-      case Z_DATA_ERROR:
-        rc = eio();
-        break;
-      case Z_NEED_DICT:
-        rc = enotsup(); /* TODO(jart): Z_NEED_DICT */
-        break;
-      default:
-        abort();
-    }
-    inflateEnd(&zs);
-  } else {
-    rc = enomem();
-  }
-  return rc;
-}
-
-static int __zipos_inflate_tiny(struct ZiposHandle *h, uint8_t *data,
-                                size_t size) {
-  struct DeflateState ds;
-  return undeflate(h->freeme, h->size, data, size, &ds) != -1 ? 0 : eio();
+static int __zipos_inflate(struct ZiposHandle *h, uint8_t *data, size_t size) {
+  return !__inflate(h->freeme, h->size, data, size) ? 0 : eio();
 }
 
 static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
@@ -108,12 +69,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
     if ((h->freeme = malloc(h->size))) {
       data = ZIP_LFILE_CONTENT(zipos->map + lf);
       size = GetZipLfileCompressedSize(zipos->map + lf);
-      if (IsTiny()) {
-        rc = __zipos_inflate_tiny(h, data, size);
-      } else {
-        rc = __zipos_inflate_fast(h, data, size);
-      }
-      if (rc != -1) {
+      if ((rc = __zipos_inflate(h, data, size)) != -1) {
         h->mem = h->freeme;
       }
     }

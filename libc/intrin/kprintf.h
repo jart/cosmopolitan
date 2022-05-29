@@ -3,6 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern unsigned long long __kbirth;
+
 void kprintf(const char *, ...);
 size_t ksnprintf(char *, size_t, const char *, ...);
 size_t kusnprintf(char *, size_t, const char *, ...);

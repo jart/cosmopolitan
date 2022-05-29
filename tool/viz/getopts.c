@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
   }
 
   // usage report
-  fprintf(stderr, "options used: ");
+  fprintf(stderr, "// options used: ");
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (letters_used[i]) {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
   }
   if (!j) fprintf(stderr, "none");
   fprintf(stderr, "\n");
-  fprintf(stderr, "letters not used: ");
+  fprintf(stderr, "// letters not used: ");
   for (j = i = 0; i < 128; ++i) {
     if (!isalpha(i)) continue;
     if (!letters_used[i]) {
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   }
   if (!j) fprintf(stderr, "none");
   fprintf(stderr, "\n");
-  fprintf(stderr, "digits not used: ");
+  fprintf(stderr, "// digits not used: ");
   for (j = i = 0; i < 128; ++i) {
     if (!isdigit(i)) continue;
     if (!letters_used[i]) {
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
   }
   if (!j) fprintf(stderr, "none");
   fprintf(stderr, "\n");
-  fprintf(stderr, "puncts not used: ");
+  fprintf(stderr, "// puncts not used: ");
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (isalnum(i)) continue;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   }
   if (!j) fprintf(stderr, "none");
   fprintf(stderr, "\n");
-  fprintf(stderr, "letters duplicated: ");
+  fprintf(stderr, "// letters duplicated: ");
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (letters_used[i] > 1) {
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
   // generated code
   hasargless = false;
-  printf("\n#define GETOPTS \"");
+  printf("#define GETOPTS \"");
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (letters_used[i] && !letters_with_args[i]) {
@@ -131,13 +131,13 @@ int main(int argc, char *argv[]) {
   printf(" ARGS...\\n\\\n");
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
-    if (letters_used[i]) {
+    if (letters_used[i] && !letters_with_args[i]) {
       printf("  -%c          the %c option\\n\\\n", i, i);
     }
   }
   for (j = i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
-    if (letters_used[i]) {
+    if (letters_with_args[i]) {
       printf("  -%c VAL      the %c option\\n\\\n", i, i);
     }
   }
@@ -146,24 +146,30 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (letters_used[i]) {
-      if (isalpha(i) || i == '_') {
-        printf("int %cflag;\n", i);
+      if (letters_with_args[i]) {
+        printf("const char *");
+      } else {
+        printf("int ");
+      }
+      if (isalnum(i) || i == '_') {
+        printf("g_%cflag;\n", i);
       }
     }
   }
 
   printf("\n\
 static void GetOpts(int argc, char *argv[]) {\n\
+  int opt;\n\
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {\n\
     switch (opt) {\n");
   for (i = 0; i < 128; ++i) {
     if (!IsLegal(i)) continue;
     if (letters_used[i]) {
       printf("      case '%c':\n", i);
-      if (isalpha(i) || i == '_') {
-        printf("        %cflag", i);
+      if (isalnum(i) || i == '_') {
+        printf("        g_%cflag", i);
       } else {
-        printf("        XXXflag", i);
+        printf("        g_XXXflag", i);
       }
       if (letters_with_args[i]) {
         printf(" = optarg;\n");
@@ -175,13 +181,18 @@ static void GetOpts(int argc, char *argv[]) {\n\
   }
 
   printf("      case '?':\n");
-  printf("        write(1, USAGE, strlen(USAGE));\n");
+  printf("        write(1, USAGE, sizeof(USAGE) - 1);\n");
   printf("        exit(0);\n");
   printf("      default:\n");
-  printf("        write(2, USAGE, strlen(USAGE));\n");
+  printf("        write(2, USAGE, sizeof(USAGE) - 1);\n");
   printf("        exit(64);\n");
   printf("    }\n");
   printf("  }\n");
+  printf("}\n");
+  printf("\n");
+
+  printf("int main(int argc, char *argv[]) {\n");
+  printf("  GetOpts(argc, argv);\n");
   printf("}\n");
 
   return 0;

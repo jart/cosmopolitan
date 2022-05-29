@@ -71,7 +71,7 @@ TEST(gcctls, size) {
   size = GetFileSize(GetProgramExecutableName());
   if (IsTiny()) {
     ASSERT_LT(size, 200 * 1024);
-  } else if (IsModeDbg()) {
+  } else if (IsModeDbg() || IsAsan()) {
     ASSERT_LT(size, 4 * 1024 * 1024);
   } else {
     ASSERT_LT(size, 500 * 1024);

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
@@ -82,7 +83,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   }
 
 #if defined(SYSDEBUG) && _POLLTRACE
-  if (__strace > 0) {
+  if (UNLIKELY(__strace > 0)) {
     kprintf(STRACE_PROLOGUE "poll(");
     if ((!IsAsan() && kisdangerous(fds)) ||
         (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd)))) {

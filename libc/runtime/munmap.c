@@ -127,23 +127,23 @@ static noasan int Munmap(char *p, size_t n) {
   intptr_t a, b, x, y;
   assert(!__vforked);
   if (UNLIKELY(!n)) {
-    STRACE("munmap(%.12p, %'zu) EINVAL (n=0)", p, n);
+    STRACE("n=0");
     return einval();
   }
   if (UNLIKELY(!IsLegalSize(n))) {
-    STRACE("munmap(%.12p, %'zu) EINVAL (n isn't 48-bit)", p, n);
+    STRACE("n isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p))) {
-    STRACE("munmap(%.12p, %'zu) EINVAL (p isn't 48-bit)", p, n);
+    STRACE("p isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!IsLegalPointer(p + (n - 1)))) {
-    STRACE("munmap(%.12p, %'zu) EINVAL (p+(n-1) isn't 48-bit)", p, n);
+    STRACE("p+(n-1) isn't 48-bit");
     return einval();
   }
   if (UNLIKELY(!ALIGNED(p))) {
-    STRACE("munmap(%.12p, %'zu) EINVAL (p isn't 64kb aligned)", p, n);
+    STRACE("p isn't 64kb aligned");
     return einval();
   }
   MunmapImpl(p, n);

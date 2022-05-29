@@ -22,13 +22,14 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/undeflate.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
+#include "third_party/zlib/puff.h"
 
 static int g_lock;
 hidden struct SymbolTable *__symtab;  // for kprintf
@@ -56,9 +57,8 @@ static ssize_t FindSymtabInZip(struct Zipos *zipos) {
  * @note This code can't depend on dlmalloc()
  */
 static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
-  ssize_t rc, cf, lf;
   size_t size, size2;
-  struct DeflateState ds;
+  ssize_t rc, cf, lf;
   struct SymbolTable *res = 0;
   if ((cf = FindSymtabInZip(zipos)) != -1) {
     lf = GetZipCfileOffset(zipos->map + cf);
@@ -69,17 +69,14 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
         case kZipCompressionNone:
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);
           break;
-#if 0
-        // TODO(jart): fix me
         case kZipCompressionDeflate:
-          rc = undeflate(res, size, (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
-                         GetZipLfileCompressedSize(zipos->map + lf), &ds);
-          if (rc == -1) {
+          if (__inflate((void *)res, size,
+                        (void *)ZIP_LFILE_CONTENT(zipos->map + lf),
+                        GetZipLfileCompressedSize(zipos->map + lf))) {
             munmap(res, size2);
             res = 0;
           }
           break;
-#endif
         default:
           munmap(res, size2);
           res = 0;

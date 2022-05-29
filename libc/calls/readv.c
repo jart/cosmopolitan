@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -68,7 +69,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     rc = einval();
   }
 #if defined(SYSDEBUG) && _DATATRACE
-  if (__strace > 0) {
+  if (UNLIKELY(__strace > 0)) {
     if (rc == -1 && errno == EFAULT) {
       STRACE("readv(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
     } else {

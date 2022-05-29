@@ -40,6 +40,7 @@
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
+#include "third_party/zlib/puff.h"
 #include "third_party/zlib/zlib.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -133,12 +134,18 @@ void Inflate(void) {
   stream.avail_out = bufsize_;
   stream.total_out = bufsize_;
   CHECK_EQ(Z_OK, inflateInit2(&stream, -MAX_WBITS));
-  CHECK_NE(Z_BUF_ERROR, inflate(&stream, Z_NO_FLUSH));
+  CHECK_EQ(Z_STREAM_END, inflate(&stream, Z_FINISH));
   CHECK_EQ(Z_OK, inflateEnd(&stream));
 }
 
 void Undeflate(void) {
   undeflate(buf_, uncompressedsize_, data_, compressedsize_, &ds_);
+}
+
+void Puff(void) {
+  size_t insize = compressedsize_;
+  size_t outsize = uncompressedsize_;
+  CHECK_EQ(0, puff(buf_, &outsize, data_, &insize));
 }
 
 BENCH(undeflate, bench) {
@@ -155,6 +162,7 @@ BENCH(undeflate, bench) {
   uncompressedsize_ = ZIP_LFILE_UNCOMPRESSEDSIZE(zipos->map + lf);
   bufsize_ = ROUNDUP(uncompressedsize_, FRAMESIZE / 2);
   buf_ = gc(malloc(bufsize_));
+  EZBENCH(donothing, Puff());
   EZBENCH(donothing, Inflate());
   EZBENCH(donothing, Undeflate());
 }

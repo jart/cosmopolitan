@@ -55,6 +55,8 @@ FLAGS
   -f        log worker function calls
   -B        only use stronger cryptography
   -X        disable ssl server and client support
+  -J        disable non-ssl server and client support
+  -%        hasten startup by not generating an rsa key
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
@@ -1096,27 +1098,51 @@ FUNCTIONS
           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
           SSL tickets. It's a good idea to use these since it increases
           handshake performance 10x and eliminates a network round trip.
+          This function is not available in unsecure mode.
 
   EvadeDragnetSurveillance(bool)
           If this option is programmed then redbean will not transmit a
           Server Name Indicator (SNI) when performing Fetch() requests.
+          This function is not available in unsecure mode.
 
   ProgramSslPresharedKey(key:str,identity:str)
-          This function can be used to enable the PSK ciphersuites
-          which simplify SSL and enhance its performance in controlled
+          This function can be used to enable the PSK ciphersuites which
+          simplify SSL and enhance its performance in controlled
           environments. `key` may contain 1..32 bytes of random binary
           data and identity is usually a short plaintext string. The
-          first time this function is called, the preshared key will
-          be added to both the client and the server SSL configs. If
-          it's called multiple times, then the remaining keys will be
-          added to the server, which is useful if you want to assign
-          separate keys to each client, each of which needs a separate
-          identity too. If this function is called multiple times with
-          the same identity string, then the latter call will overwrite
-          the prior. If a preshared key is supplied and no certificates
-          or key-signing-keys are programmed, then redbean won't bother
+          first time this function is called, the preshared key will be
+          added to both the client and the server SSL configs. If it's
+          called multiple times, then the remaining keys will be added
+          to the server, which is useful if you want to assign separate
+          keys to each client, each of which needs a separate identity
+          too. If this function is called multiple times with the same
+          identity string, then the latter call will overwrite the
+          prior. If a preshared key is supplied and no certificates or
+          key-signing-keys are programmed, then redbean won't bother
           auto-generating any serving certificates and will instead use
-          only PSK ciphersuites.
+          only PSK ciphersuites. This function is not available in
+          unsecure mode.
+
+  ProgramSslFetchVerify(enabled:str)
+          May be used to disable the the verification of certificates
+          for remote hosts when using the Fetch() API. This function is
+          not available in unsecure mode.
+
+  ProgramSslClientVerify(enabled:str)
+          Enables the verification of certificates supplied by the HTTP
+          clients that connect to your redbean. This has the same effect
+          as the `-j` flag. Tuning this option alone does not preclude
+          the possibility of unsecured HTTP clients, which can be
+          disabled using ProgramSslRequired(). This function can only be
+          called from `.init.lua`. This function is not available in
+          unsecure mode.
+
+  ProgramSslRequired(mandatory:str)
+          Enables the blocking of HTTP so that all inbound clients and
+          must use the TLS transport layer. This has the same effect as
+          the `-J` flag. Fetch() is still allowed to make outbound HTTP
+          requests. This function can only be called from `.init.lua`.
+          This function is not available in unsecure mode.
 
   ProgramSslCiphersuite(name:str)
           See https://redbean.dev/ for further details.

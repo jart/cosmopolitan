@@ -84,7 +84,7 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com:					\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab
 
 $(THIRD_PARTY_SQLITE3_A):						\

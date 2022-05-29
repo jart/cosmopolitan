@@ -54,7 +54,6 @@
 STATIC_YOINK("_check_sigchld");
 
 extern int64_t __wincrashearly;
-extern unsigned long long __kbirth;
 extern unsigned char __data_start[]; /* αpε */
 extern unsigned char __data_end[];   /* αpε */
 extern unsigned char __bss_start[];  /* αpε */

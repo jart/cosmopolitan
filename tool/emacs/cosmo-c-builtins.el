@@ -134,6 +134,7 @@
            "__builtin_complex"
            "__builtin_is_constant_evaluated"
            "__builtin_expect"
+           "__builtin_expect_with_probability"
            "__builtin_trap"
            "__builtin_unreachable"
            "__builtin_assume"

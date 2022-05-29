@@ -8,9 +8,13 @@ NET_HTTP = $(NET_HTTP_A_DEPS) $(NET_HTTP_A)
 NET_HTTP_A = o/$(MODE)/net/http/http.a
 NET_HTTP_A_FILES := $(wildcard net/http/*)
 NET_HTTP_A_HDRS = $(filter %.h,$(NET_HTTP_A_FILES))
-NET_HTTP_A_SRCS = $(filter %.c,$(NET_HTTP_A_FILES))
 NET_HTTP_A_INCS := $(filter %.inc,$(NET_HTTP_A_FILES))
-NET_HTTP_A_OBJS = $(NET_HTTP_A_SRCS:%.c=o/$(MODE)/%.o)
+NET_HTTP_A_SRCS_C = $(filter %.c,$(NET_HTTP_A_FILES))
+NET_HTTP_A_SRCS_S = $(filter %.S,$(NET_HTTP_A_FILES))
+NET_HTTP_A_SRCS = $(NET_HTTP_A_SRCS_S) $(NET_HTTP_A_SRCS_C)
+NET_HTTP_A_OBJS_C = $(NET_HTTP_A_SRCS_C:%.c=o/$(MODE)/%.o)
+NET_HTTP_A_OBJS_S = $(NET_HTTP_A_SRCS_S:%.S=o/$(MODE)/%.o)
+NET_HTTP_A_OBJS = $(NET_HTTP_A_OBJS_S) $(NET_HTTP_A_OBJS_C)
 
 NET_HTTP_A_CHECKS =				\
 	$(NET_HTTP_A).pkg			\

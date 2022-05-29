@@ -176,14 +176,14 @@ static noasan void *MapMemory(void *addr, size_t size, int prot, int flags,
                               int fd, int64_t off, int f, int x, int n) {
   struct DirectMap dm;
   dm = sys_mmap(addr, size, prot, f, fd, off);
-  if (UNLIKELY(dm.addr == MAP_FAILED)) {
+  if (VERY_UNLIKELY(dm.addr == MAP_FAILED)) {
     if (IsWindows() && (flags & MAP_FIXED)) {
       OnUnrecoverableMmapError(
           "can't recover from MAP_FIXED errors on Windows");
     }
     return MAP_FAILED;
   }
-  if (UNLIKELY(dm.addr != addr)) {
+  if (VERY_UNLIKELY(dm.addr != addr)) {
     OnUnrecoverableMmapError("KERNEL DIDN'T RESPECT MAP_FIXED");
   }
   return FinishMemory(addr, size, prot, flags, fd, off, f, x, n, dm);
@@ -248,42 +248,42 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
   bool needguard, clashes;
   size_t virtualused, virtualneed;
 
-  if (UNLIKELY(!size)) {
+  if (VERY_UNLIKELY(!size)) {
     STRACE("size=0");
     return VIP(einval());
   }
 
-  if (UNLIKELY(!IsLegalPointer(p))) {
+  if (VERY_UNLIKELY(!IsLegalPointer(p))) {
     STRACE("p isn't 48-bit");
     return VIP(einval());
   }
 
-  if (UNLIKELY(!ALIGNED(p))) {
+  if (VERY_UNLIKELY(!ALIGNED(p))) {
     STRACE("p isn't 64kb aligned");
     return VIP(einval());
   }
 
-  if (UNLIKELY(fd < -1)) {
+  if (VERY_UNLIKELY(fd < -1)) {
     STRACE("mmap(%.12p, %'zu, fd=%d) EBADF", p, size, fd);
     return VIP(ebadf());
   }
 
-  if (UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
+  if (VERY_UNLIKELY(!((fd != -1) ^ !!(flags & MAP_ANONYMOUS)))) {
     STRACE("fd anonymous mismatch");
     return VIP(einval());
   }
 
-  if (UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
+  if (VERY_UNLIKELY(!(!!(flags & MAP_PRIVATE) ^ !!(flags & MAP_SHARED)))) {
     STRACE("MAP_SHARED ^ MAP_PRIVATE");
     return VIP(einval());
   }
 
-  if (UNLIKELY(off < 0)) {
+  if (VERY_UNLIKELY(off < 0)) {
     STRACE("neg off");
     return VIP(einval());
   }
 
-  if (UNLIKELY(!ALIGNED(off))) {
+  if (VERY_UNLIKELY(!ALIGNED(off))) {
     STRACE("p isn't 64kb aligned");
     return VIP(einval());
   }
@@ -298,12 +298,12 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  if (UNLIKELY(!IsLegalSize(size))) {
+  if (VERY_UNLIKELY(!IsLegalSize(size))) {
     STRACE("size isn't 48-bit");
     return VIP(einval());
   }
 
-  if (UNLIKELY(INT64_MAX - size < off)) {
+  if (VERY_UNLIKELY(INT64_MAX - size < off)) {
     STRACE("too large");
     return VIP(einval());
   }

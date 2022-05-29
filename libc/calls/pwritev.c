@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -119,7 +120,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
   rc = Pwritev(fd, iov, iovlen, off);
 #if defined(SYSDEBUG) && _DATATRACE
-  if (__strace > 0) {
+  if (UNLIKELY(__strace > 0)) {
     kprintf(STRACE_PROLOGUE "pwritev(%d, ", fd);
     DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
     kprintf(", %d, %'ld) → %'ld% m\n", iovlen, off, rc);

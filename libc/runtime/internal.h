@@ -38,6 +38,7 @@ Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) hidden;
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
 int sys_mprotect_nt(void *, size_t, int) hidden;
+int __inflate(void *, size_t, const void *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

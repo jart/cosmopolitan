@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
@@ -570,9 +571,9 @@ cleanup:
         mbedtls_rsa_free( ctx );
         if( ( -ret & ~0x7f ) == 0 )
             ret = MBEDTLS_ERR_RSA_KEY_GEN_FAILED + ret;
-        return( ret );
     }
-    return( 0 );
+    STRACE("%s() → %d", "mbedtls_rsa_gen_key", ret);
+    return( ret );
 }
 
 #endif /* MBEDTLS_GENPRIME */

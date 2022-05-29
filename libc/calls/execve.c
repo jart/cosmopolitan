@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -50,7 +51,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
     rc = efault();
   } else {
 #ifdef SYSDEBUG
-    if (__strace > 0) {
+    if (UNLIKELY(__strace > 0)) {
       kprintf(STRACE_PROLOGUE "execve(%#s, {", prog);
       for (i = 0; argv[i]; ++i) {
         if (i) kprintf(", ");

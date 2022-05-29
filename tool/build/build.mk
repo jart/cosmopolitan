@@ -99,7 +99,7 @@ o/$(MODE)/tool/build/blinkenlights.com:						\
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
 		-o o/$(MODE)/tool/build/.blinkenlights/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -0qj $@	\
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/build/.blinkenlights/.symtab
 
 o/$(MODE)/tool/build/ar.com.dbg:			\

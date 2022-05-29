@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
+#include "libc/bits/likely.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
@@ -19,7 +20,7 @@ COSMOPOLITAN_C_START_
 #ifdef SYSDEBUG
 #define STRACE(FMT, ...)                                  \
   do {                                                    \
-    if (__strace > 0) {                                   \
+    if (UNLIKELY(__strace > 0)) {                         \
       __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__); \
     }                                                     \
   } while (0)

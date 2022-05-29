@@ -120,6 +120,16 @@ void *LuaAlloc(lua_State *L, size_t n) {
   return LuaRealloc(L, 0, n);
 }
 
+void *LuaAllocOrDie(lua_State *L, size_t n) {
+  void *p;
+  if ((p = LuaAlloc(L, n))) {
+    return p;
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
+}
+
 static lua_Integer FixLimit(long x) {
   if (0 <= x && x < RLIM_INFINITY) {
     return x;
@@ -434,19 +444,18 @@ static int LuaUnixReadlink(lua_State *L) {
   size_t got, bufsiz = 8192;
   path = luaL_checkstring(L, 1);
   dirfd = luaL_optinteger(L, 2, AT_FDCWD);
-  if ((buf = LuaAlloc(L, bufsiz))) {
-    if ((rc = readlinkat(dirfd, path, buf, bufsiz)) != -1) {
-      got = rc;
-      if (got < bufsiz) {
-        lua_pushlstring(L, buf, got);
-        free(buf);
-        return 1;
-      } else {
-        enametoolong();
-      }
+  buf = LuaAllocOrDie(L, bufsiz);
+  if ((rc = readlinkat(dirfd, path, buf, bufsiz)) != -1) {
+    got = rc;
+    if (got < bufsiz) {
+      lua_pushlstring(L, buf, got);
+      free(buf);
+      return 1;
+    } else {
+      enametoolong();
     }
-    free(buf);
   }
+  free(buf);
   return SysretErrno(L, "readlink", olderr);
 }
 
@@ -535,16 +544,13 @@ static int LuaUnixCommandv(lua_State *L) {
   char *pathbuf, *resolved;
   olderr = errno;
   prog = luaL_checkstring(L, 1);
-  if ((pathbuf = LuaAlloc(L, PATH_MAX))) {
-    if ((resolved = commandv(prog, pathbuf, PATH_MAX))) {
-      lua_pushstring(L, resolved);
-      free(pathbuf);
-      return 1;
-    } else {
-      free(pathbuf);
-      return SysretErrno(L, "commandv", olderr);
-    }
+  pathbuf = LuaAllocOrDie(L, PATH_MAX);
+  if ((resolved = commandv(prog, pathbuf, PATH_MAX))) {
+    lua_pushstring(L, resolved);
+    free(pathbuf);
+    return 1;
   } else {
+    free(pathbuf);
     return SysretErrno(L, "commandv", olderr);
   }
 }
@@ -905,22 +911,19 @@ static int LuaUnixRead(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, BUFSIZ);
   offset = luaL_optinteger(L, 3, -1);
   bufsiz = MIN(bufsiz, 0x7ffff000);
-  if ((buf = LuaAlloc(L, bufsiz))) {
-    if (offset == -1) {
-      rc = read(fd, buf, bufsiz);
-    } else {
-      rc = pread(fd, buf, bufsiz, offset);
-    }
-    if (rc != -1) {
-      got = rc;
-      lua_pushlstring(L, buf, got);
-      free(buf);
-      return 1;
-    } else {
-      free(buf);
-      return SysretErrno(L, "read", olderr);
-    }
+  buf = LuaAllocOrDie(L, bufsiz);
+  if (offset == -1) {
+    rc = read(fd, buf, bufsiz);
   } else {
+    rc = pread(fd, buf, bufsiz, offset);
+  }
+  if (rc != -1) {
+    got = rc;
+    lua_pushlstring(L, buf, got);
+    free(buf);
+    return 1;
+  } else {
+    free(buf);
     return SysretErrno(L, "read", olderr);
   }
 }
@@ -1238,9 +1241,7 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   struct ifreq *ifr;
   struct ifconf conf;
   olderr = errno;
-  if (!(data = LuaAlloc(L, (n = 4096)))) {
-    return SysretErrno(L, "siocgifconf", olderr);
-  }
+  data = LuaAllocOrDie(L, (n = 4096));
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) {
     free(data);
     return SysretErrno(L, "siocgifconf", olderr);
@@ -1384,20 +1385,17 @@ static int LuaUnixRecvfrom(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, 1500);
   bufsiz = MIN(bufsiz, 0x7ffff000);
   flags = luaL_optinteger(L, 3, 0);
-  if ((buf = LuaAlloc(L, bufsiz))) {
-    rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
-    if (rc != -1) {
-      got = rc;
-      lua_pushlstring(L, buf, got);
-      lua_pushinteger(L, ntohl(sa.sin_addr.s_addr));
-      lua_pushinteger(L, ntohs(sa.sin_port));
-      free(buf);
-      return 3;
-    } else {
-      free(buf);
-      return SysretErrno(L, "recvfrom", olderr);
-    }
+  buf = LuaAllocOrDie(L, bufsiz);
+  rc = recvfrom(fd, buf, bufsiz, flags, &sa, &addrsize);
+  if (rc != -1) {
+    got = rc;
+    lua_pushlstring(L, buf, got);
+    lua_pushinteger(L, ntohl(sa.sin_addr.s_addr));
+    lua_pushinteger(L, ntohs(sa.sin_port));
+    free(buf);
+    return 3;
   } else {
+    free(buf);
     return SysretErrno(L, "recvfrom", olderr);
   }
 }
@@ -1415,18 +1413,15 @@ static int LuaUnixRecv(lua_State *L) {
   bufsiz = luaL_optinteger(L, 2, 1500);
   bufsiz = MIN(bufsiz, 0x7ffff000);
   flags = luaL_optinteger(L, 3, 0);
-  if ((buf = LuaAlloc(L, bufsiz))) {
-    rc = recv(fd, buf, bufsiz, flags);
-    if (rc != -1) {
-      got = rc;
-      lua_pushlstring(L, buf, got);
-      free(buf);
-      return 1;
-    } else {
-      free(buf);
-      return SysretErrno(L, "recv", olderr);
-    }
+  buf = LuaAllocOrDie(L, bufsiz);
+  rc = recv(fd, buf, bufsiz, flags);
+  if (rc != -1) {
+    got = rc;
+    lua_pushlstring(L, buf, got);
+    free(buf);
+    return 1;
   } else {
+    free(buf);
     return SysretErrno(L, "recv", olderr);
   }
 }

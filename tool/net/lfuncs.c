@@ -158,7 +158,7 @@ int LuaDecimate(lua_State *L) {
   unsigned char *p;
   s = luaL_checklstring(L, 1, &n);
   m = ROUNDUP(n, 16);
-  CHECK_NOTNULL((p = LuaAlloc(L, m)));
+  p = LuaAllocOrDie(L, m);
   bzero(p + n, m - n);
   cDecimate2xUint8x8(m, p, (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
   lua_pushlstring(L, (char *)p, (n + 1) >> 1);
@@ -408,7 +408,7 @@ int LuaGetRandomBytes(lua_State *L) {
     luaL_argerror(L, 1, "not in range 1..256");
     unreachable;
   }
-  CHECK_NOTNULL((p = LuaAlloc(L, n)));
+  p = LuaAllocOrDie(L, n);
   CHECK_EQ(n, getrandom(p, n, 0));
   lua_pushlstring(L, p, n);
   free(p);
@@ -648,7 +648,8 @@ int LuaBenchmark(lua_State *L) {
     if (TSC_AUX_CORE(Rdpid()) == core && GetInterrupts() == interrupts) {
       break;
     } else if (attempts >= maxattempts) {
-      return luaL_error(L, "system is under too much load to run benchmark");
+      luaL_error(L, "system is under too much load to run benchmark");
+      unreachable;
     }
   }
   overhead = avgticks;
@@ -669,7 +670,8 @@ int LuaBenchmark(lua_State *L) {
     if (TSC_AUX_CORE(Rdpid()) == core && GetInterrupts() == interrupts) {
       break;
     } else if (attempts >= maxattempts) {
-      return luaL_error(L, "system is under too much load to run benchmark");
+      luaL_error(L, "system is under too much load to run benchmark");
+      unreachable;
     }
   }
   avgticks = MAX(avgticks - overhead, 0);
@@ -682,7 +684,24 @@ int LuaBenchmark(lua_State *L) {
   return 4;
 }
 
+static void LuaCompress2(lua_State *L, void *dest, size_t *destLen,
+                         const void *source, size_t sourceLen, int level) {
+  switch (compress2(dest, destLen, source, sourceLen, level)) {
+    case Z_OK:
+      break;
+    case Z_BUF_ERROR:
+      luaL_error(L, "out of memory");
+      unreachable;
+    case Z_STREAM_ERROR:
+      luaL_error(L, "invalid level");
+      unreachable;
+    default:
+      unreachable;
+  }
+}
+
 int LuaCompress(lua_State *L) {
+  int rc;
   bool raw;
   size_t n, m;
   char *q, *e;
@@ -694,19 +713,17 @@ int LuaCompress(lua_State *L) {
   m = compressBound(n);
   if (lua_toboolean(L, 3)) {
     // raw mode
-    CHECK_NOTNULL((q = LuaAlloc(L, m)));
-    CHECK_EQ(Z_OK,
-             compress2((unsigned char *)q, &m, (unsigned char *)p, n, level));
+    q = LuaAllocOrDie(L, m);
+    LuaCompress2(L, q, &m, p, n, level);
     lua_pushlstring(L, q, m);
   } else {
     // easy mode
-    CHECK_NOTNULL((q = LuaAlloc(L, 10 + 4 + m)));
+    q = LuaAllocOrDie(L, 10 + 4 + m);
     crc = crc32_z(0, p, n);
     e = uleb64(q, n);
     e = WRITE32LE(e, crc);
     hdrlen = e - q;
-    CHECK_EQ(Z_OK, compress2((unsigned char *)(q + hdrlen), &m,
-                             (unsigned char *)p, n, level));
+    LuaCompress2(L, q + hdrlen, &m, p, n, level);
     lua_pushlstring(L, q, hdrlen + m);
   }
   free(q);
@@ -727,7 +744,7 @@ int LuaUncompress(lua_State *L) {
     }
     len = m;
     crc = READ32LE(p + rc);
-    CHECK_NOTNULL((q = LuaAlloc(L, m)));
+    q = LuaAllocOrDie(L, m);
     if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
         m != len || crc32_z(0, q, m) != crc) {
       free(q);
@@ -736,7 +753,7 @@ int LuaUncompress(lua_State *L) {
     }
   } else {
     len = m = luaL_checkinteger(L, 2);
-    CHECK_NOTNULL((q = LuaAlloc(L, m)));
+    q = LuaAllocOrDie(L, m);
     if (uncompress((void *)q, &m, (void *)p, n) != Z_OK || m != len) {
       free(q);
       luaL_error(L, "compressed value is corrupted");
