@@ -7,14 +7,11 @@ function main()
    else
       cmd = 'ls'
    end
-   syscall = 'commandv'
    ls = assert(unix.commandv(cmd))
-   syscall = 'pipe'
    reader, writer = assert(unix.pipe(unix.O_CLOEXEC))
    oldint = assert(unix.sigaction(unix.SIGINT, unix.SIG_IGN))
    oldquit = assert(unix.sigaction(unix.SIGQUIT, unix.SIG_IGN))
    oldmask = assert(unix.sigprocmask(unix.SIG_BLOCK, unix.Sigset(unix.SIGCHLD)))
-   syscall = 'fork'
    child = assert(unix.fork())
    if child == 0 then
       unix.close(0)

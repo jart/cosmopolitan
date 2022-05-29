@@ -153,16 +153,17 @@ int LuaRdseed(lua_State *L) {
 }
 
 int LuaDecimate(lua_State *L) {
+  char *p;
   size_t n, m;
   const char *s;
-  unsigned char *p;
+  luaL_Buffer buf;
   s = luaL_checklstring(L, 1, &n);
   m = ROUNDUP(n, 16);
-  p = LuaAllocOrDie(L, m);
+  p = luaL_buffinitsize(L, &buf, m);
   bzero(p + n, m - n);
-  cDecimate2xUint8x8(m, p, (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
-  lua_pushlstring(L, (char *)p, (n + 1) >> 1);
-  free(p);
+  cDecimate2xUint8x8(m, (unsigned char *)p,
+                     (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
+  luaL_pushresultsize(&buf, (n + 1) >> 1);
   return 1;
 }
 
@@ -259,11 +260,15 @@ int LuaParseParams(lua_State *L) {
   struct UrlParams h;
   data = luaL_checklstring(L, 1, &size);
   bzero(&h, sizeof(h));
-  m = ParseParams(data, size, &h);
-  LuaPushUrlParams(L, &h);
-  free(h.p);
-  free(m);
-  return 1;
+  if ((m = ParseParams(data, size, &h))) {
+    LuaPushUrlParams(L, &h);
+    free(h.p);
+    free(m);
+    return 1;
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
 }
 
 int LuaParseHost(lua_State *L) {
@@ -273,12 +278,16 @@ int LuaParseHost(lua_State *L) {
   const char *p;
   bzero(&h, sizeof(h));
   p = luaL_checklstring(L, 1, &n);
-  m = ParseHost(p, n, &h);
-  lua_newtable(L);
-  LuaPushUrlView(L, &h.host);
-  LuaPushUrlView(L, &h.port);
-  free(m);
-  return 1;
+  if ((m = ParseHost(p, n, &h))) {
+    lua_newtable(L);
+    LuaPushUrlView(L, &h.host);
+    LuaPushUrlView(L, &h.port);
+    free(m);
+    return 1;
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
 }
 
 int LuaPopcnt(lua_State *L) {
@@ -395,23 +404,26 @@ int LuaEncodeLatin1(lua_State *L) {
   size_t n;
   p = luaL_checklstring(L, 1, &n);
   f = LuaCheckControlFlags(L, 2);
-  p = EncodeLatin1(p, n, &n, f);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
+  if ((p = EncodeLatin1(p, n, &n, f))) {
+    lua_pushlstring(L, p, n);
+    free(p);
+    return 1;
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
 }
 
 int LuaGetRandomBytes(lua_State *L) {
-  char *p;
-  size_t n = luaL_optinteger(L, 1, 16);
+  size_t n;
+  luaL_Buffer buf;
+  n = luaL_optinteger(L, 1, 16);
   if (!(n > 0 && n <= 256)) {
     luaL_argerror(L, 1, "not in range 1..256");
     unreachable;
   }
-  p = LuaAllocOrDie(L, n);
-  CHECK_EQ(n, getrandom(p, n, 0));
-  lua_pushlstring(L, p, n);
-  free(p);
+  CHECK_EQ(n, getrandom(luaL_buffinitsize(L, &buf, n), n, 0));
+  luaL_pushresult(&buf);
   return 1;
 }
 
@@ -701,32 +713,30 @@ static void LuaCompress2(lua_State *L, void *dest, size_t *destLen,
 }
 
 int LuaCompress(lua_State *L) {
-  int rc;
-  bool raw;
   size_t n, m;
   char *q, *e;
   uint32_t crc;
   const char *p;
+  luaL_Buffer buf;
   int level, hdrlen;
   p = luaL_checklstring(L, 1, &n);
   level = luaL_optinteger(L, 2, Z_DEFAULT_COMPRESSION);
   m = compressBound(n);
   if (lua_toboolean(L, 3)) {
     // raw mode
-    q = LuaAllocOrDie(L, m);
+    q = luaL_buffinitsize(L, &buf, m);
     LuaCompress2(L, q, &m, p, n, level);
-    lua_pushlstring(L, q, m);
   } else {
     // easy mode
-    q = LuaAllocOrDie(L, 10 + 4 + m);
+    q = luaL_buffinitsize(L, &buf, 10 + 4 + m);
     crc = crc32_z(0, p, n);
     e = uleb64(q, n);
     e = WRITE32LE(e, crc);
     hdrlen = e - q;
     LuaCompress2(L, q + hdrlen, &m, p, n, level);
-    lua_pushlstring(L, q, hdrlen + m);
+    m += hdrlen;
   }
-  free(q);
+  luaL_pushresultsize(&buf, m);
   return 1;
 }
 
@@ -735,6 +745,7 @@ int LuaUncompress(lua_State *L) {
   uint32_t crc;
   int rc, level;
   const char *p;
+  luaL_Buffer buf;
   size_t n, m, len;
   p = luaL_checklstring(L, 1, &n);
   if (lua_isnoneornil(L, 2)) {
@@ -744,23 +755,20 @@ int LuaUncompress(lua_State *L) {
     }
     len = m;
     crc = READ32LE(p + rc);
-    q = LuaAllocOrDie(L, m);
+    q = luaL_buffinitsize(L, &buf, m);
     if (uncompress((void *)q, &m, (unsigned char *)p + rc + 4, n) != Z_OK ||
         m != len || crc32_z(0, q, m) != crc) {
-      free(q);
       luaL_error(L, "compressed value is corrupted");
       unreachable;
     }
   } else {
     len = m = luaL_checkinteger(L, 2);
-    q = LuaAllocOrDie(L, m);
+    q = luaL_buffinitsize(L, &buf, m);
     if (uncompress((void *)q, &m, (void *)p, n) != Z_OK || m != len) {
-      free(q);
       luaL_error(L, "compressed value is corrupted");
       unreachable;
     }
   }
-  lua_pushlstring(L, q, m);
-  free(q);
+  luaL_pushresultsize(&buf, m);
   return 1;
 }

@@ -103,7 +103,7 @@ struct UnixErrno {
 
 static lua_State *GL;
 
-void *LuaRealloc(lua_State *L, void *p, size_t n) {
+static void *LuaRealloc(lua_State *L, void *p, size_t n) {
   void *p2;
   if ((p2 = realloc(p, n))) {
     return p2;
@@ -116,11 +116,11 @@ void *LuaRealloc(lua_State *L, void *p, size_t n) {
   return p2;
 }
 
-void *LuaAlloc(lua_State *L, size_t n) {
+static void *LuaAlloc(lua_State *L, size_t n) {
   return LuaRealloc(L, 0, n);
 }
 
-void *LuaAllocOrDie(lua_State *L, size_t n) {
+static void *LuaAllocOrDie(lua_State *L, size_t n) {
   void *p;
   if ((p = LuaAlloc(L, n))) {
     return p;

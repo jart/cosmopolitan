@@ -115,15 +115,13 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   unsigned u;
   char ibuf[21];
   bool longdouble;
-  long double ldbl;
   unsigned long lu;
   wchar_t charbuf[1];
-  const char *alphabet;
-  int (*out)(const char *, void *, size_t);
-  unsigned char signbit, log2base;
   char *s, *q, qchar;
-  int d, w, n;
-  int sign, prec, flags, width, lasterr;
+  const char *alphabet;
+  unsigned char signbit, log2base;
+  int (*out)(const char *, void *, size_t);
+  int d, w, n, sign, prec, flags, width, lasterr;
 
   lasterr = errno;
   out = fn ? fn : (void *)missingno;
@@ -139,44 +137,44 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
     }
 
     if (!IsTiny()) {
-      if (format[1] == 's') { /* FAST PATH: PLAIN STRING */
+      if (format[1] == 's') {  // FAST PATH: PLAIN STRING
         s = va_arg(va, char *);
         if (!s) s = "(null)";
         if (out(s, arg, strlen(s)) == -1) return -1;
         format += 2;
         continue;
-      } else if (format[1] == 'd') { /* FAST PATH: PLAIN INTEGER */
+      } else if (format[1] == 'd') {  // FAST PATH: PLAIN INTEGER
         d = va_arg(va, int);
-        if (out(ibuf, arg, FormatInt64(ibuf, d) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatInt32(ibuf, d) - ibuf) == -1) return -1;
         format += 2;
         continue;
-      } else if (format[1] == 'u') { /* FAST PATH: PLAIN UNSIGNED */
+      } else if (format[1] == 'u') {  // FAST PATH: PLAIN UNSIGNED
         u = va_arg(va, unsigned);
-        if (out(ibuf, arg, FormatUint64(ibuf, u) - ibuf) == -1) return -1;
+        if (out(ibuf, arg, FormatUint32(ibuf, u) - ibuf) == -1) return -1;
         format += 2;
         continue;
-      } else if (format[1] == 'x') { /* FAST PATH: PLAIN HEX */
+      } else if (format[1] == 'x') {  // FAST PATH: PLAIN HEX
         u = va_arg(va, unsigned);
         if (out(ibuf, arg, uint64toarray_radix16(u, ibuf)) == -1) return -1;
         format += 2;
         continue;
       } else if (format[1] == 'l' && format[2] == 'x') {
-        lu = va_arg(va, unsigned long); /* FAST PATH: PLAIN LONG HEX */
+        lu = va_arg(va, unsigned long);  // FAST PATH: PLAIN LONG HEX
         if (out(ibuf, arg, uint64toarray_radix16(lu, ibuf)) == -1) return -1;
         format += 3;
         continue;
       } else if (format[1] == 'l' && format[2] == 'd') {
-        ld = va_arg(va, long); /* FAST PATH: PLAIN LONG */
+        ld = va_arg(va, long);  // FAST PATH: PLAIN LONG
         if (out(ibuf, arg, FormatInt64(ibuf, ld) - ibuf) == -1) return -1;
         format += 3;
         continue;
       } else if (format[1] == 'l' && format[2] == 'u') {
-        lu = va_arg(va, unsigned long); /* FAST PATH: PLAIN UNSIGNED LONG */
+        lu = va_arg(va, unsigned long);  // FAST PATH: PLAIN UNSIGNED LONG
         if (out(ibuf, arg, FormatUint64(ibuf, lu) - ibuf) == -1) return -1;
         format += 3;
         continue;
       } else if (format[1] == '.' && format[2] == '*' && format[3] == 's') {
-        n = va_arg(va, unsigned); /* FAST PATH: PRECISION STRING */
+        n = va_arg(va, unsigned);  // FAST PATH: PRECISION STRING
         s = va_arg(va, const char *);
         if (s) {
           n = strnlen(s, n);
@@ -190,7 +188,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       }
     }
 
-    /* GENERAL PATH */
+    // GENERAL PATH
     format++;
     sign = 0;
     flags = 0;
@@ -218,7 +216,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         goto getflag;
       case '`':
         flags |= FLAGS_REPR;
-        /* fallthrough */
+        // fallthrough
       case '\'':
         flags |= FLAGS_QUOTE;
         goto getflag;
@@ -227,14 +225,14 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         break;
     }
 
-    /* evaluate width field */
+    // evaluate width field
     width = 0;
     if (isdigit(*format)) {
       width = __fmt_atoi(&format);
     } else if (*format == '*') {
       w = va_arg(va, int);
       if (w < 0) {
-        flags |= FLAGS_LEFT; /* reverse padding */
+        flags |= FLAGS_LEFT;  // reverse padding
         width = -w;
         sign = '-';
       } else {
@@ -243,7 +241,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       format++;
     }
 
-    /* evaluate prec field */
+    // evaluate prec field
     prec = 0;
     if (*format == '.') {
       flags |= FLAGS_PRECISION;
@@ -259,11 +257,11 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       prec = 0;
     }
 
-    /* evaluate length field */
+    // evaluate length field
     signbit = 31;
     longdouble = false;
     switch (*format) {
-      case 'j': /* intmax_t */
+      case 'j':  // intmax_t
         format++;
         signbit = sizeof(intmax_t) * 8 - 1;
         if (*format == 'j') {
@@ -277,14 +275,14 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           break;
         }
         if (format[1] == 'l') format++;
-        /* fallthrough */
-      case 't': /* ptrdiff_t */
-      case 'z': /* size_t */
-      case 'Z': /* size_t */
+        // fallthrough
+      case 't':  // ptrdiff_t
+      case 'z':  // size_t
+      case 'Z':  // size_t
         format++;
         signbit = 63;
         break;
-      case 'L': /* long double */
+      case 'L':  // long double
         format++;
         longdouble = true;
         break;
@@ -301,7 +299,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         break;
     }
 
-    /* evaluate specifier */
+    // evaluate specifier
     qchar = '"';
     log2base = 0;
     alphabet = "0123456789abcdefpx";
@@ -313,7 +311,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         goto FormatNumber;
       case 'X':
         alphabet = "0123456789ABCDEFPX";
-        /* fallthrough */
+        // fallthrough
       case 'x':
         log2base = 4;
         goto FormatNumber;
@@ -326,9 +324,9 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       case 'd':
       case 'i':
         flags |= FLAGS_ISSIGNED;
-        /* fallthrough */
+        // fallthrough
       case 'u': {
-        flags &= ~FLAGS_HASH; /* no hash for dec format */
+        flags &= ~FLAGS_HASH;  // no hash for dec format
       FormatNumber:
         if (__fmt_ntoa(out, arg, va, signbit, log2base, prec, width, flags,
                        alphabet) == -1) {
@@ -359,7 +357,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         }
       case 'q':
         flags |= FLAGS_QUOTE;
-        /* fallthrough */
+        // fallthrough
       case 's':
         p = va_arg(va, void *);
       FormatString:

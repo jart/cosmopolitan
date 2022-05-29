@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,72 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/dns.h"
-#include "libc/str/str.h"
-#include "net/http/http.h"
+#include "libc/fmt/itoa.h"
+#include "libc/limits.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
 
-extern const char kHostChars[256];  // -_0-9A-Za-z
+TEST(FormatInt32, test) {
+  char b[12];
+  EXPECT_STREQ("", FormatInt32(b, 0));
+  EXPECT_STREQ("0", b);
+  EXPECT_STREQ("", FormatInt32(b, INT32_MAX));
+  EXPECT_STREQ("2147483647", b);
+  EXPECT_STREQ("", FormatInt32(b, INT32_MIN));
+  EXPECT_STREQ("-2147483648", b);
+}
 
-/**
- * Returns true if host seems legit.
- *
- * This function may be called after ParseUrl() or ParseHost() has
- * already handled things like percent encoding. There's currently
- * no support for IPv6 and IPv7.
- *
- * Here's examples of permitted inputs:
- *
- * - ""
- * - 1.2.3.4
- * - 1.2.3.4.arpa
- * - localservice
- * - hello.example
- * - _hello.example
- * - -hello.example
- * - hi-there.example
- *
- * Here's some examples of forbidden inputs:
- *
- * - ::1
- * - 1.2.3
- * - 1.2.3.4.5
- * - .hi.example
- * - hi..example
- *
- * @param n if -1 implies strlen
- */
-bool IsAcceptableHost(const char *s, size_t n) {
-  size_t i;
-  int c, b, j;
-  if (n == -1) n = s ? strlen(s) : 0;
-  if (!n) return true;
-  if (n > DNS_NAME_MAX) return false;
-  for (b = j = i = 0; i < n; ++i) {
-    c = s[i] & 255;
-    if (isdigit(c)) {
-      b *= 10;
-      b += c - '0';
-      if (b > 255) {
-        return false;
-      }
-    } else if (c == '.') {
-      if (!i || s[i - 1] == '.') return false;
-      b = 0;
-      ++j;
-    } else {
-      for (;;) {
-        if (!kHostChars[c] && (c != '.' || (!i || s[i - 1] == '.'))) {
-          return false;
-        }
-        if (++i < n) {
-          c = s[i] & 255;
-        } else {
-          return true;
-        }
-      }
-    }
-  }
-  if (j != 3) return false;
-  if (i && s[i - 1] == '.') return false;
-  return true;
+TEST(FormatInt64, test) {
+  char b[21];
+  EXPECT_STREQ("", FormatInt64(b, 0));
+  EXPECT_STREQ("0", b);
+  EXPECT_STREQ("", FormatInt64(b, INT64_MAX));
+  EXPECT_STREQ("9223372036854775807", b);
+  EXPECT_STREQ("", FormatInt64(b, INT64_MIN));
+  EXPECT_STREQ("-9223372036854775808", b);
+}
+
+BENCH(FormatInt, bench) {
+  char b[21];
+  EZBENCH2("FormatUint32 max32", donothing, FormatUint32(b, INT_MAX));
+  EZBENCH2("FormatUint64 max32", donothing, FormatUint64(b, INT_MAX));
+  EZBENCH2("FormatInt32 min32", donothing, FormatInt32(b, INT_MIN));
+  EZBENCH2("FormatInt64 min32", donothing, FormatInt64(b, INT_MIN));
+  EZBENCH2("FormatInt32 max32", donothing, FormatInt32(b, INT_MAX));
+  EZBENCH2("FormatInt64 max32", donothing, FormatInt64(b, INT_MAX));
 }

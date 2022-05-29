@@ -11,10 +11,6 @@ int LuaUnix(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
 
-void *LuaRealloc(lua_State *, void *, size_t);
-void *LuaAlloc(lua_State *, size_t);
-void *LuaAllocOrDie(lua_State *, size_t);
-
 int LuaBenchmark(lua_State *);
 int LuaBin(lua_State *);
 int LuaBsf(lua_State *);
