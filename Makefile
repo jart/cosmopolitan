@@ -138,6 +138,7 @@ include net/http/http.mk			# │
 include third_party/mbedtls/mbedtls.mk		# │
 include net/https/https.mk			# │
 include third_party/regex/regex.mk		#─┘
+include third_party/tidy/tidy.mk
 include third_party/third_party.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
