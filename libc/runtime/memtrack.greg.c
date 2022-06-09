@@ -95,7 +95,9 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
     if (!dm.addr) return false;
     mm->n = (size + gran) / sizeof(*mm->p);
   }
+#if IsModeDbg()
   assert(AreMemoryIntervalsOk(mm));
+#endif
   return true;
 }
 
@@ -123,8 +125,10 @@ static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
 int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
                            void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
+#if IsModeDbg()
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
+#endif
   if (!mm->i) return 0;
 
   // binary search for the lefthand side
@@ -194,8 +198,10 @@ int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
                         long offset, long size) {
   // asan runtime depends on this function
   unsigned i;
+#if IsModeDbg()
   assert(y >= x);
   assert(AreMemoryIntervalsOk(mm));
+#endif
 
   i = FindMemoryInterval(mm, x);
 

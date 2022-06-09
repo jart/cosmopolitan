@@ -80,13 +80,13 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     return -1;
   }
 
+  // backtrace_test.com failing on windows for some reason via runitd
   if (IsWindows()) {
-    // TODO: We need a way to *not* pass //?/C:/... paths to mingw
     return -1;
   }
 
+  // doesn't work on rhel5
   if (IsLinux() && !__is_linux_2_6_23()) {
-    // we need the `addr2line -a` option
     return -1;
   }
 

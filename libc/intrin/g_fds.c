@@ -32,10 +32,6 @@ void __fds_lock(void) {
   _spinlock(&__fds_lock_obj);
 }
 
-void __fds_unlock(void) {
-  _spunlock(&__fds_lock_obj);
-}
-
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
