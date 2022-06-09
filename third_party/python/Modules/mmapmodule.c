@@ -12,6 +12,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/ceval.h"

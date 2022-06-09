@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/log/internal.h"

@@ -24,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
+#include "libc/sysv/consts/s.h"
 
 /**
  * Returns true if file descriptor is backed by character i/o.

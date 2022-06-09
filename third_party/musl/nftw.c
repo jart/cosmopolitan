@@ -31,6 +31,7 @@
 #include "libc/errno.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/musl/ftw.h"
 
 asm(".ident\t\"\\n\\n\

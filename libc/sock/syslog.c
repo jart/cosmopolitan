@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -229,7 +230,9 @@ void vsyslog(int priority, const char *message, va_list ap) {
       ++log_id;
     }
 
-    if (log_opt & LOG_PERROR) dprintf(2, "%.*s", l - hlen, buf + hlen);
+    if (log_opt & LOG_PERROR) {
+      dprintf(2, "%.*s", l - hlen, buf + hlen);
+    }
   }
 }
 

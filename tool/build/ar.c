@@ -41,6 +41,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/getargs.h"
 

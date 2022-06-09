@@ -7,5 +7,7 @@ union sigval {
   void *sival_ptr;
 };
 
+int sigqueue(int, int, const union sigval);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGVAL_H_ */

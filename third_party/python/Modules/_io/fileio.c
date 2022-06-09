@@ -8,6 +8,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"

@@ -19,6 +19,7 @@
 #include "dsp/scale/scale.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

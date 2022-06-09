@@ -16,13 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_close_nt(struct Fd *fd) {
   int e;

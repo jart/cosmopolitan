@@ -32,6 +32,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 #include "third_party/chibicc/file.h"
 #include "third_party/gdtoa/gdtoa.h"

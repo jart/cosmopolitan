@@ -22,5 +22,10 @@ struct stat {              /* cosmo abi */
   uint64_t st_gen; /* xnu/bsd only */
 };
 
+int stat(const char *, struct stat *);
+int lstat(const char *, struct stat *);
+int fstat(int, struct stat *);
+int fstatat(int, const char *, struct stat *, int);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STAT_H_ */

@@ -16,16 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nt/thread.h"
-#include "libc/rand/rand.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 
 static int thepid;

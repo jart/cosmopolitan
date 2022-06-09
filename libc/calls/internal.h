@@ -11,6 +11,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigval.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"

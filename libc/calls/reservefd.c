@@ -69,9 +69,9 @@ int __ensurefds_unlocked(int fd) {
  * Grows file descriptor array memory if needed.
  */
 int __ensurefds(int fd) {
-  _spinlock(&__fds_lock);
+  __fds_lock();
   fd = __ensurefds_unlocked(fd);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   return fd;
 }
 
@@ -96,9 +96,9 @@ int __reservefd_unlocked(int start) {
  */
 int __reservefd(int start) {
   int fd;
-  _spinlock(&__fds_lock);
+  __fds_lock();
   fd = __reservefd_unlocked(start);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   return fd;
 }
 
@@ -108,12 +108,12 @@ int __reservefd(int start) {
 static void FreeFds(void) {
   int i, keep = 3;
   STRACE("FreeFds()");
-  _spinlock(&__fds_lock);
+  __fds_lock();
   for (i = keep; i < g_fds.n; ++i) {
     if (g_fds.p[i].kind) {
-      _spunlock(&__fds_lock);
+      __fds_unlock();
       close(i);
-      _spinlock(&__fds_lock);
+      __fds_lock();
     }
   }
   if (g_fds.p != g_fds.__init_p) {
@@ -125,7 +125,7 @@ static void FreeFds(void) {
     g_fds.p = g_fds.__init_p;
     g_fds.n = ARRAYLEN(g_fds.__init_p);
   }
-  _spunlock(&__fds_lock);
+  __fds_unlock();
 }
 
 static textstartup void FreeFdsInit(void) {

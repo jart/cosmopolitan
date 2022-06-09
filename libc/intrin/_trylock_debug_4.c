@@ -27,7 +27,7 @@
 privileged int _trylock_debug_4(int *lock, const char *lockname,
                                 const char *file, int line, const char *func) {
   int owner = 0;
-  int me = gettid();
+  int me = _spinlock_gettid();
   if (_lockcmpxchgp(lock, &owner, me)) {
     return 0;
   } else if (owner != me) {

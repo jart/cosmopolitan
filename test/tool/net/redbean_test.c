@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/fmt/conv.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"

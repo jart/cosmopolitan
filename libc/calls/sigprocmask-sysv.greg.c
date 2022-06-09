@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/str/str.h"
 
 int sys_sigprocmask(int how, const sigset_t *opt_set,
                     sigset_t *opt_out_oldset) {

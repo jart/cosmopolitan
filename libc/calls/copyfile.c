@@ -30,6 +30,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/filetime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"

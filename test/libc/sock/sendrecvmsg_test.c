@@ -17,13 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/x/x.h"
 
 TEST(sendrecvmsg, testPingPong) {
@@ -32,7 +33,7 @@ TEST(sendrecvmsg, testPingPong) {
   const char world[] = "WORLD";
   struct msghdr msg;
   struct iovec data[2];
-  const uint32_t hwLen = strlen(hello)+strlen(world);
+  const uint32_t hwLen = strlen(hello) + strlen(world);
 
   memset(&msg, 0, sizeof(msg));
   memset(&data[0], 0, sizeof(data));
@@ -40,14 +41,14 @@ TEST(sendrecvmsg, testPingPong) {
   data[0].iov_base = hello;
   data[0].iov_len = strlen(hello);
   data[1].iov_base = world;
-  data[1].iov_len = strlen(world);    /* Don't send the '\0' */
+  data[1].iov_len = strlen(world); /* Don't send the '\0' */
 
   msg.msg_iov = &data[0];
   msg.msg_iovlen = 2;
 
   ASSERT_NE(-1, socketpair(AF_UNIX, SOCK_STREAM, 0, fd));
   ASSERT_EQ(hwLen, sendmsg(fd[0], &msg, 0));
-  
+
   data[0].iov_base = gc(xcalloc(20, 1));
   data[0].iov_len = 20;
   msg.msg_iovlen = 1;
@@ -58,5 +59,3 @@ TEST(sendrecvmsg, testPingPong) {
   ASSERT_NE(-1, close(fd[0]));
   ASSERT_NE(-1, close(fd[1]));
 }
-
-

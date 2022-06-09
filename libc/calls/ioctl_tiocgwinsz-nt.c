@@ -42,7 +42,7 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
   rc = -1;
   e = errno;
   if (ws) {
-    _spinlock(&__fds_lock);
+    __fds_lock();
     fds[0] = fd, fds[1] = g_fds.p + 1, fds[2] = g_fds.p + 0;
     GetStartupInfo(&startinfo);
     for (i = 0; i < ARRAYLEN(fds); ++i) {
@@ -76,7 +76,7 @@ textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
         ebadf();
       }
     }
-    _spunlock(&__fds_lock);
+    __fds_unlock();
   } else {
     efault();
   }

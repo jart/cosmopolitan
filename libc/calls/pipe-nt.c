@@ -36,14 +36,14 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   int reader, writer;
   char16_t pipename[64];
   CreatePipeName(pipename);
-  _spinlock(&__fds_lock);
+  __fds_lock();
   if ((reader = __reservefd_unlocked(-1)) == -1) {
-    _spunlock(&__fds_lock);
+    __fds_unlock();
     return -1;
   }
   if ((writer = __reservefd_unlocked(-1)) == -1) {
     __releasefd_unlocked(reader);
-    _spunlock(&__fds_lock);
+    __fds_unlock();
     return -1;
   }
   if (~flags & O_DIRECT) {
@@ -51,10 +51,10 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   } else {
     mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
   }
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
                         mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
-  _spinlock(&__fds_lock);
+  __fds_lock();
   if (hin != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
                            kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
@@ -68,7 +68,7 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;
       pipefd[1] = writer;
-      _spunlock(&__fds_lock);
+      __fds_unlock();
       return 0;
     } else {
       CloseHandle(hin);
@@ -76,6 +76,6 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
   }
   __releasefd_unlocked(writer);
   __releasefd_unlocked(reader);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   return -1;
 }

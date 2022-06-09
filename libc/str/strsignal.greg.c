@@ -16,13 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
 static char g_strsignal[12];
+
+static inline char *StpCpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
 
 /**
  * Returns string describing signal code.
@@ -47,7 +53,7 @@ privileged char *strsignal(int sig) {
   p[3] = 0;
   if (sig) {
     if ((s = GetMagnumStr(kSignalNames, sig))) {
-      __stpcpy(p + 3, s);
+      StpCpy(p + 3, s);
       return p;
     }
   }

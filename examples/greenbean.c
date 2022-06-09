@@ -10,7 +10,7 @@
 #include "libc/assert.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"

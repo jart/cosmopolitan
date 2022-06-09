@@ -28,6 +28,8 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/tms.h"
+#include "libc/calls/struct/utsname.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"

@@ -19,13 +19,22 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
 STATIC_YOINK("_init_g_fds");
 
 struct Fds g_fds;
-_Alignas(64) int __fds_lock;
+_Alignas(64) int __fds_lock_obj;
+
+void __fds_lock(void) {
+  _spinlock(&__fds_lock_obj);
+}
+
+void __fds_unlock(void) {
+  _spunlock(&__fds_lock_obj);
+}
 
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;

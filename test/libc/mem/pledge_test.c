@@ -24,6 +24,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
 void SetUp(void) {

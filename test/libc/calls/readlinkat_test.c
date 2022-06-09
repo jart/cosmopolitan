@@ -26,6 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -83,8 +84,10 @@ TEST(readlinkat, frootloop) {
   ASSERT_SYS(0, 0, symlink("froot", "froot"));
   ASSERT_SYS(ELOOP, -1, readlink("froot/loop", buf, sizeof(buf)));
   if (O_NOFOLLOW) {
-    ASSERT_SYS(IsFreebsd() ? EMLINK : IsNetbsd() ? EFTYPE : ELOOP, -1,
-               open("froot", O_RDONLY | O_NOFOLLOW));
+    ASSERT_SYS(IsFreebsd()  ? EMLINK
+               : IsNetbsd() ? EFTYPE
+                            : ELOOP,
+               -1, open("froot", O_RDONLY | O_NOFOLLOW));
     if (0 && O_PATH) { /* need rhel5 test */
       ASSERT_NE(-1, (fd = open("froot", O_RDONLY | O_NOFOLLOW | O_PATH)));
       ASSERT_NE(-1, close(fd));

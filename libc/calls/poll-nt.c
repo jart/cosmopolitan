@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -69,7 +68,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   // we need to read static variables
   // we might need to spawn threads and open pipes
   _spinlock(&poll_lock);
-  _spinlock(&__fds_lock);
+  __fds_lock();
   for (gotinvals = failed = sn = pn = i = 0; i < nfds; ++i) {
     if (fds[i].fd < 0) continue;
     if (__isfdopen(fds[i].fd)) {
@@ -115,7 +114,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
       ++gotinvals;
     }
   }
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   _spunlock(&poll_lock);
   if (failed) {
     // failed to create a polling solution

@@ -22,7 +22,7 @@
 #include "libc/macros.internal.h"
 
 void __releasefd(int fd) {
-  _spinlock(&__fds_lock);
+  __fds_lock();
   __releasefd_unlocked(fd);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
 }

@@ -27,7 +27,6 @@
 #include "dsp/scale/scale.h"
 #include "libc/bits/xmmintrin.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"

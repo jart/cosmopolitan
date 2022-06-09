@@ -28,7 +28,7 @@
 #define lua_c
 #include "libc/alg/alg.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/log/check.h"

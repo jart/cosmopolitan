@@ -17,18 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
-#include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/status.h"
 #include "libc/nt/files.h"
-#include "libc/nt/nt/file.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/struct/fileaccessinformation.h"
-#include "libc/nt/struct/filebasicinformation.h"
-#include "libc/nt/struct/iostatusblock.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -36,7 +30,7 @@
 textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
                                int advice) {
   int64_t h1, h2;
-  int flags, mode;
+  int rc, flags, mode;
   uint32_t perm, share, attr;
   if (!__isfdkind(fd, kFdFile)) return ebadf();
   h1 = g_fds.p[fd].handle;
@@ -49,6 +43,7 @@ textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
     case MADV_RANDOM:
       flags |= O_RANDOM;
       break;
+    case MADV_WILLNEED:
     case MADV_SEQUENTIAL:
       flags |= O_SEQUENTIAL;
       break;
@@ -56,14 +51,19 @@ textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
       return einval();
   }
   if (GetNtOpenFlags(flags, mode, &perm, &share, 0, &attr) == -1) return -1;
+
+  __fds_lock();
   if ((h2 = ReOpenFile(h1, perm, share, attr)) != -1) {
     if (h2 != h1) {
       CloseHandle(h1);
       g_fds.p[fd].handle = h2;
     }
     g_fds.p[fd].flags = flags;
-    return 0;
+    rc = 0;
   } else {
-    return __winerr();
+    rc = __winerr();
   }
+  __fds_unlock();
+
+  return rc;
 }

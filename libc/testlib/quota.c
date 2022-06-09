@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"

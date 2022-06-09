@@ -21,25 +21,16 @@
 #include "dsp/scale/scale.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
-#include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/math.h"
-#include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
@@ -48,7 +39,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image.h"
 #include "tool/viz/lib/graphic.h"
@@ -378,7 +368,7 @@ void WithImageFile(const char *path,
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
   CHECK_LE(st.st_size, INT_MAX);
-  fadvise(fd, 0, 0, MADV_WILLNEED | MADV_SEQUENTIAL);
+  fadvise(fd, 0, st.st_size, MADV_WILLNEED | MADV_SEQUENTIAL);
   CHECK_NE(MAP_FAILED,
            (map = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_NOTNULL(

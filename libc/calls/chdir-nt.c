@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"

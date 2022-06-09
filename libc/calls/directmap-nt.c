@@ -19,18 +19,15 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processmemorycounters.h"
+#include "libc/nt/struct/securityattributes.h"
 #include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/prot.h"
 
 textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
                                          int flags, int fd, int64_t off) {

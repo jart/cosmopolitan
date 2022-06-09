@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"

@@ -20,7 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
@@ -60,7 +59,7 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
   struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
   if (_check_interrupts(true, g_fds.p)) return eintr();
-  _spinlock(&__fds_lock);
+  __fds_lock();
   if (pid != -1 && pid != 0) {
     if (pid < 0) {
       /* XXX: this is sloppy */
@@ -76,12 +75,12 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
           g_fds.p[pid].handle = handle;
           g_fds.p[pid].flags = O_CLOEXEC;
         } else {
-          _spunlock(&__fds_lock);
+          __fds_unlock();
           CloseHandle(handle);
           return echild();
         }
       } else {
-        _spunlock(&__fds_lock);
+        __fds_unlock();
         return echild();
       }
     }
@@ -91,11 +90,11 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
   } else {
     count = __sample_pids(pids, handles, false);
     if (!count) {
-      _spunlock(&__fds_lock);
+      __fds_unlock();
       return echild();
     }
   }
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   for (;;) {
     if (_check_interrupts(true, 0)) return eintr();
     dwExitCode = kNtStillActive;

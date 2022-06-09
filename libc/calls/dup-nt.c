@@ -16,15 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/mem/mem.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
@@ -41,12 +37,12 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   if (oldfd < 0) return ebadf();
   if (flags & ~O_CLOEXEC) return einval();
 
-  _spinlock(&__fds_lock);
+  __fds_lock();
 
   if (oldfd >= g_fds.n ||
       (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
        g_fds.p[oldfd].kind != kFdConsole)) {
-    _spunlock(&__fds_lock);
+    __fds_unlock();
     return ebadf();
   }
 
@@ -54,19 +50,19 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   for (;;) {
     if (newfd == -1) {
       if ((newfd = __reservefd_unlocked(start)) == -1) {
-        _spunlock(&__fds_lock);
+        __fds_unlock();
         return -1;
       }
       break;
     } else {
       if (__ensurefds_unlocked(newfd) == -1) {
-        _spunlock(&__fds_lock);
+        __fds_unlock();
         return -1;
       }
       if (g_fds.p[newfd].kind) {
-        _spunlock(&__fds_lock);
+        __fds_unlock();
         close(newfd);
-        _spinlock(&__fds_lock);
+        __fds_lock();
       }
       if (!g_fds.p[newfd].kind) {
         g_fds.p[newfd].kind = kFdReserved;
@@ -96,6 +92,6 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     rc = __winerr();
   }
 
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   return rc;
 }

@@ -17,8 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.h"

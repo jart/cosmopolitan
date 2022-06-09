@@ -20,6 +20,7 @@
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 

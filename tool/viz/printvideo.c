@@ -32,7 +32,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/framebufferfixedscreeninfo.h"
 #include "libc/calls/struct/framebuffervirtualscreeninfo.h"
 #include "libc/calls/struct/iovec.h"

@@ -7,6 +7,7 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "third_party/python/Include/abstract.h"

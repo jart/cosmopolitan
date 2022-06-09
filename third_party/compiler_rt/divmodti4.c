@@ -7,7 +7,6 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
 #include "third_party/compiler_rt/int_lib.h"
 
 /**

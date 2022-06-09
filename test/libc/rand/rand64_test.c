@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
@@ -27,6 +26,7 @@
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/stack.h"

@@ -18,5 +18,7 @@ struct sysinfo {
   uint32_t mem_unit;  /* ram stuff above is multiples of this */
 };
 
+int sysinfo(struct sysinfo *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SYSINFO_H_ */

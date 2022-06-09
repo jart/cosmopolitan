@@ -19,7 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 

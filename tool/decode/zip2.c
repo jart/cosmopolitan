@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

@@ -16,6 +16,7 @@
 #include "libc/time/time.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/calls.h"
+#include "third_party/zip/osdep.h"
 #include "libc/sysv/consts/dt.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */

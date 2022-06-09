@@ -52,7 +52,7 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
       if ((!(flags & SOCK_NONBLOCK) ||
            __sys_ioctlsocket_nt(h, FIONBIO, (uint32_t[]){1}) != -1) &&
           (sockfd2 = calloc(1, sizeof(struct SockFd)))) {
-        _spinlock(&__fds_lock);
+        __fds_lock();
         if ((client = __reservefd_unlocked(-1)) != -1) {
           sockfd2->family = sockfd->family;
           sockfd2->type = sockfd->type;
@@ -62,10 +62,10 @@ textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
           g_fds.p[client].mode = 0140666;
           g_fds.p[client].handle = h;
           g_fds.p[client].extra = (uintptr_t)sockfd2;
-          _spunlock(&__fds_lock);
+          __fds_unlock();
           return client;
         }
-        _spunlock(&__fds_lock);
+        __fds_unlock();
         free(sockfd2);
       }
       __sys_closesocket_nt(h);

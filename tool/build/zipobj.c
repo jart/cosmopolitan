@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/scheduler.h"
-#include "libc/calls/sigbits.h"
 #include "libc/stdio/spawn.h"
 #include "libc/stdio/spawna.internal.h"
 

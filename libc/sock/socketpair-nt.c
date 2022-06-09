@@ -56,10 +56,10 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   }
 
   CreatePipeName(pipename);
-  _spinlock(&__fds_lock);
+  __fds_lock();
   reader = __reservefd_unlocked(-1);
   writer = __reservefd_unlocked(-1);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   if (reader == -1 || writer == -1) {
     if (reader != -1) __releasefd(reader);
     if (writer != -1) __releasefd(writer);
@@ -76,7 +76,7 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
                   &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
 
-  _spinlock(&__fds_lock);
+  __fds_lock();
 
   if (h1 != -1) {
 
@@ -101,7 +101,7 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     rc = -1;
   }
 
-  _spunlock(&__fds_lock);
+  __fds_unlock();
 
   return rc;
 }

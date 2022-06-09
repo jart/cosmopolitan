@@ -1,6 +1,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/gz/gzguts.inc"
 #include "third_party/zlib/zlib.h"

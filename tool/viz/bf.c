@@ -26,6 +26,7 @@
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/s.h"
 
 /**
  * @fileoverview BingFold - A Hexdump Tool

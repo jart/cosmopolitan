@@ -23,6 +23,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ok.h"
 

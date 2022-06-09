@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
 TEST(strsignal, test) {

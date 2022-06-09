@@ -31,6 +31,7 @@
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"

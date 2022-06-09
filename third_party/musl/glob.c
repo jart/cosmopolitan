@@ -33,6 +33,7 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/musl/fnmatch.h"
 #include "third_party/musl/glob.h"
 

@@ -14,5 +14,7 @@ struct utsname {
   char domainname[SYS_NMLN];
 };
 
+int uname(struct utsname *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_UTSNAME_H_ */

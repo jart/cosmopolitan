@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/utsname.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"

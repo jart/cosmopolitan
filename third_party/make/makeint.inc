@@ -18,7 +18,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/makedev.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"

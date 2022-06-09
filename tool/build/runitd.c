@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"

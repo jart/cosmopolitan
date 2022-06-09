@@ -8,6 +8,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/unicode/locale.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"

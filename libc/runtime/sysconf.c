@@ -16,14 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/rlimit.h"
-#include "libc/limits.h"
-#include "libc/macros.internal.h"
 #include "libc/runtime/clktck.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 
 /**

@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

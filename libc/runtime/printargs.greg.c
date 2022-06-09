@@ -20,6 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/utsname.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"

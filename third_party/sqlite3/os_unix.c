@@ -46,6 +46,8 @@
 */
 #include "libc/rand/rand.h"
 #include "libc/sysv/consts/lock.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
 

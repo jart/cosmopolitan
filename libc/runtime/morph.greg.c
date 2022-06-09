@@ -19,7 +19,6 @@
 #define ShouldUseMsabiAttribute() 1
 #include "libc/bits/asmflag.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"

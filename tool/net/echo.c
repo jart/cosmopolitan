@@ -23,6 +23,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"

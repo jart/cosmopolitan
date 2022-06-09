@@ -41,9 +41,9 @@ void _check_sigchld(void) {
   int pids[64];
   uint32_t i, n;
   int64_t handles[64];
-  _spinlock(&__fds_lock);
+  __fds_lock();
   n = __sample_pids(pids, handles, true);
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   if (!n) return;
   i = WaitForMultipleObjects(n, handles, false, 0);
   if (i == kNtWaitTimeout) return;
@@ -61,8 +61,8 @@ void _check_sigchld(void) {
     CloseHandle(handles[i]);
     __releasefd(pids[i]);
   }
-  _spinlock(&__fds_lock);
+  __fds_lock();
   g_fds.p[pids[i]].zombie = true;
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   __sig_add(SIGCHLD, CLD_EXITED);
 }

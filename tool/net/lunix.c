@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"

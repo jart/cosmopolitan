@@ -16,6 +16,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/makeint.inc"
 /**/
+#include "libc/calls/struct/dirent.h"
 #include "third_party/make/dep.h"
 #include "third_party/make/filedef.h"
 #include "third_party/make/hash.h"

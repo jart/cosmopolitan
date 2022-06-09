@@ -1342,12 +1342,12 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
     __releasefd(fd);
     return -1;
   }
-  _spinlock(&__fds_lock);
+  __fds_lock();
   g_fds.p[fd].kind = kFdEpoll;
   g_fds.p[fd].handle = ephnd;
   g_fds.p[fd].flags = flags;
   g_fds.p[fd].mode = 0140666;
-  _spunlock(&__fds_lock);
+  __fds_unlock();
   return fd;
 }
 

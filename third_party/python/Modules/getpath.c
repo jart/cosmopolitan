@@ -15,6 +15,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/osdefs.h"

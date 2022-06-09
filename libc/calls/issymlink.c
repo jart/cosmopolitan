@@ -28,6 +28,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 

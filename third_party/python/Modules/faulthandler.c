@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/rlimit.h"

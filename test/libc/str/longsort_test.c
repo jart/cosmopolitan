@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
+#include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

@@ -94,6 +94,10 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "tool/args/args.h"
 #include "tool/args/args.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/sqlite3/sqlite3.h"
 
 typedef sqlite3_int64 i64;
@@ -105,7 +109,6 @@ typedef unsigned char u8;
 #include "libc/str/str.h"
 
 #if !defined(_WIN32) && !defined(WIN32)
-#include "libc/calls/sigbits.h"
 #if !defined(__RTP__) && !defined(_WRS_KERNEL)
 #include "third_party/musl/passwd.h"
 #endif
@@ -1795,7 +1798,6 @@ SQLITE_EXTENSION_INIT1
 #include "libc/calls/weirdtypes.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/calls/sigbits.h"
 #include "libc/isystem/unistd.h"
 #include "libc/time/time.h"
 #include "libc/errno.h"

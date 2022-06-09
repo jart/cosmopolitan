@@ -23,6 +23,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;

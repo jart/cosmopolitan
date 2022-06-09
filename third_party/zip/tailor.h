@@ -37,6 +37,7 @@
 #endif
 
 #include "libc/str/str.h"
+#include "libc/calls/struct/stat.h"
 #include "third_party/zip/osdep.h"
 
 
