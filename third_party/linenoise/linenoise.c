@@ -1090,7 +1090,8 @@ static int linenoiseMirror(struct linenoiseState *l, unsigned res[2]) {
   return rc;
 }
 
-static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force) {
+static void linenoiseRefreshLineImpl(struct linenoiseState *l, int force,
+                                     const char *prefix) {
   char *hint;
   char flipit;
   char hasflip;
@@ -1184,6 +1185,10 @@ StartOver:
   cx = -1;
   rows = 1;
   abInit(&ab);
+  if (prefix) {
+    // to prevent flicker with ctrl+l
+    abAppends(&ab, prefix);
+  }
   abAppendw(&ab, '\r'); /* start of line */
   if (l->rows - l->oldpos - 1 > 0) {
     abAppends(&ab, "\e[");
@@ -1278,13 +1283,13 @@ StartOver:
 
 void linenoiseRefreshLine(struct linenoiseState *l) {
   --__strace;
-  linenoiseRefreshLineImpl(l, 0);
+  linenoiseRefreshLineImpl(l, 0, 0);
   ++__strace;
 }
 
 static void linenoiseRefreshLineForce(struct linenoiseState *l) {
   --__strace;
-  linenoiseRefreshLineImpl(l, 1);
+  linenoiseRefreshLineImpl(l, 1, 0);
   ++__strace;
 }
 
@@ -1327,8 +1332,11 @@ static void linenoiseEditEof(struct linenoiseState *l) {
 }
 
 static void linenoiseEditRefresh(struct linenoiseState *l) {
-  linenoiseClearScreen(l->ofd);
-  linenoiseRefreshLine(l);
+  --__strace;
+  linenoiseRefreshLineImpl(l, 1,
+                           "\e[H"     // move cursor to top left corner
+                           "\e[2J");  // erase display
+  ++__strace;
 }
 
 static size_t ForwardWord(struct linenoiseState *l, size_t pos) {
