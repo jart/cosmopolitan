@@ -80,6 +80,7 @@ const char *DescribeStat(int rc, const struct stat *st) {
   }
 
   buf[i++] = '}';
+  buf[i] = 0;
 
   return buf;
 }
