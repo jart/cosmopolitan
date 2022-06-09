@@ -41,6 +41,10 @@ static bool NeedsQuotes(const char *s) {
   return false;
 }
 
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+
 /**
  * Converts System V argv to Windows-style command line.
  *
@@ -86,8 +90,27 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
         }
       }
       if (!x) break;
-      if (!i && x == '/') {
-        x = '\\';
+      if (x == '/' || x == '\\') {
+        if (!i) {
+          // turn / into \ for first arg
+          x = '\\';
+          // turn \c\... into c:\ for first arg
+          if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
+            cmdline[0] = cmdline[1];
+            cmdline[1] = ':';
+          }
+        } else {
+          // turn stuff like `less /c/...`
+          //            into `less c:/...`
+          // turn stuff like `more <\\\"/c/...\\\"`
+          //            into `more <\\\"c:/...\\\"`
+          if (k > 3 && IsAlpha(cmdline[k - 1]) &&
+              (cmdline[k - 2] == '/' || cmdline[k - 2] == '\\') &&
+              (cmdline[k - 3] == '"' || cmdline[k - 3] == ' ')) {
+            cmdline[k - 2] = cmdline[k - 1];
+            cmdline[k - 1] = ':';
+          }
+        }
       }
       if (x == '\\') {
         ++slashes;

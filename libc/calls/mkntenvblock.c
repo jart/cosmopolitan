@@ -72,12 +72,14 @@ static textwindows void FixPath(char *path) {
 
   // turn \c\... into c:\...
   p = path;
-  if (p[0] == '/' && IsAlpha(p[1]) && p[2] == '/') {
+  if ((p[0] == '/' | p[0] == '\\') && IsAlpha(p[1]) &&
+      (p[2] == '/' || p[2] == '\\')) {
     p[0] = p[1];
     p[1] = ':';
   }
   for (; *p; ++p) {
-    if (p[0] == ';' && p[1] == '/' && IsAlpha(p[2]) && p[3] == '/') {
+    if (p[0] == ';' && (p[1] == '/' || p[1] == '\\') && IsAlpha(p[2]) &&
+        (p[3] == '/' || p[3] == '\\')) {
       p[1] = p[2];
       p[2] = ':';
     }

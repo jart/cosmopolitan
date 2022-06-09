@@ -79,8 +79,10 @@ const char *DescribeStat(int rc, const struct stat *st) {
     i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "blksize", st->st_blksize);
   }
 
-  buf[i++] = '}';
-  buf[i] = 0;
+  if (n - i >= 2) {
+    buf[i + 0] = '}';
+    buf[i + 1] = 0;
+  }
 
   return buf;
 }
