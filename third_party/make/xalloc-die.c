@@ -17,6 +17,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#include "libc/runtime/runtime.h"
 #include "third_party/make/config.h"
 
 #include "third_party/make/xalloc.h"

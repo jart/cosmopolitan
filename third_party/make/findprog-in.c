@@ -18,6 +18,8 @@
 
 
 #include "libc/errno.h"
+#include "libc/str/str.h"
+#include "libc/mem/mem.h"
 #include "third_party/make/config.h"
 
 /* Specification.  */

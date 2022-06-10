@@ -18,6 +18,7 @@
 
 #ifndef _LIBGETTEXT_H
 #define _LIBGETTEXT_H 1
+#include "libc/str/str.h"
 
 /* NLS can be disabled through the configure --disable-nls option
    or through "#define ENABLE NLS 0" before including this file.  */
