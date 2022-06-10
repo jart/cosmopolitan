@@ -756,6 +756,7 @@ import * as os from "os";
         "\x12":     alert,                  /* ^R - reverse-search */
         "\x13":     alert,                  /* ^S - search */
         "\x14":     transpose_chars,        /* ^T - transpose */
+        "\x15":     backward_kill_line,     /* ^U - clear backwards */
         "\x18":     reset,                  /* ^X - cancel */
         "\x19":     yank,                   /* ^Y - yank */
         "\x1bOA":   previous_history,       /* ^[OA - up */
