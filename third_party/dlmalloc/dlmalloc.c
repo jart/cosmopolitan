@@ -1,4 +1,5 @@
 #include "libc/assert.h"
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -22,7 +23,7 @@
 #define HAVE_MMAP 1
 #define HAVE_MREMAP 0
 #define HAVE_MORECORE 0
-#define USE_LOCKS 1
+#define USE_SPIN_LOCKS 1
 #define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
 
@@ -820,12 +821,7 @@ void dlfree(void* mem) {
 void* dlcalloc(size_t n_elements, size_t elem_size) {
   void* mem;
   size_t req = 0;
-  if (n_elements != 0) {
-    req = n_elements * elem_size;
-    if (((n_elements | elem_size) & ~(size_t)0xffff) &&
-        (req / n_elements != elem_size))
-      req = MAX_SIZE_T; /* force downstream failure on overflow */
-  }
+  if (__builtin_mul_overflow(n_elements, elem_size, &req)) req = -1;
   mem = dlmalloc(req);
   if (mem != 0 && calloc_must_clear(mem2chunk(mem)))
     bzero(mem, req);
@@ -1216,7 +1212,7 @@ void* dlrealloc(void* oldmem, size_t bytes) {
   if (oldmem == 0) {
     mem = dlmalloc(bytes);
   }
-  else if (bytes >= MAX_REQUEST) {
+  else if (UNLIKELY(bytes >= MAX_REQUEST)) {
     MALLOC_FAILURE_ACTION;
   }
 #ifdef REALLOC_ZERO_BYTES_FREES

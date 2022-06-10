@@ -20,6 +20,7 @@
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 #include "third_party/zlib/zlib.h"
@@ -47,16 +48,7 @@ void *xloadzd(bool *o, void **t, const void *p, size_t n, size_t m, size_t c,
   int64_t x, y;
   assert(z == 2 || z == 4);
   b = q = malloc(m);
-  zs.zfree = 0;
-  zs.zalloc = 0;
-  zs.next_in = p;
-  zs.avail_in = n;
-  zs.total_in = n;
-  zs.avail_out = m;
-  zs.total_out = m;
-  zs.next_out = (void *)q;
-  inflateInit2(&zs, -MAX_WBITS);
-  inflate(&zs, Z_NO_FLUSH);
+  __inflate(q, m, p, n);
   r = memalign(z, c * z);
   for (x = i = 0; i < c; ++i) {
     b += unzleb64(b, 10, &y);
