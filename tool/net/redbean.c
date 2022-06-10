@@ -4592,6 +4592,11 @@ static int LuaProgramGid(lua_State *L) {
   return LuaProgramInt(L, ProgramGid);
 }
 
+static int LuaProgramMaxPayloadSize(lua_State *L) {
+  OnlyCallFromInitLua(L, "ProgramMaxPayloadSize");
+  return LuaProgramInt(L, ProgramMaxPayloadSize);
+}
+
 static int LuaGetClientFd(lua_State *L) {
   OnlyCallDuringConnection(L, "GetClientFd");
   lua_pushinteger(L, client);
@@ -4954,17 +4959,18 @@ static const char *const kDontAutoComplete[] = {
     "HasParam",                  //
     "IsClientUsingSsl",          //
     "LaunchBrowser",             //
+    "LuaProgramSslRequired",     // TODO
     "ProgramAddr",               // TODO
     "ProgramBrand",              //
     "ProgramCertificate",        // TODO
     "ProgramGid",                //
     "ProgramLogPath",            // TODO
+    "ProgramMaxPayloadSize",     // TODO
     "ProgramPidPath",            // TODO
     "ProgramPort",               // TODO
     "ProgramPrivateKey",         // TODO
     "ProgramSslCiphersuite",     // TODO
     "ProgramSslClientVerify",    // TODO
-    "LuaProgramSslRequired",     // TODO
     "ProgramSslCompression",     //
     "ProgramSslTicketLifetime",  //
     "ProgramTimeout",            // TODO
@@ -5095,6 +5101,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramLogBodies", LuaProgramLogBodies},            //
     {"ProgramLogMessages", LuaProgramLogMessages},        //
     {"ProgramLogPath", LuaProgramLogPath},                //
+    {"ProgramMaxPayloadSize", LuaProgramMaxPayloadSize},  //
     {"ProgramPidPath", LuaProgramPidPath},                //
     {"ProgramPort", LuaProgramPort},                      //
     {"ProgramRedirect", LuaProgramRedirect},              //
