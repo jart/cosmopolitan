@@ -19,21 +19,31 @@
 #include "tool/plinko/lib/plinko.h"
 
 /**
- * Compares LISP data structures.
+ * Compares LISP data structures
  *
- *     (cmp 𝑥 𝑥) ⟹ eq                  everything's equal to itself
- *     (≡ 𝑥 𝑦) ⟶ (≡ (cmp 𝑥 𝑦) 'eq)     (eq) and (cmp) agree if (eq) returns t
- *     (≡ (cmp 𝑥 𝑦) 'eq) ⟺ (equal 𝑥 𝑦) (cmp) returns eq iff (equal) returns t
- *     (cmp (ℶ x 𝑦) (ℶ x 𝑦)) ⟹ eq      i.e. this does deep comparisons
- *     (cmp ⊥ 𝑥) ⟹ lt                  nil is less than everything non-nil
- *     (cmp 𝑥 ⊥) ⟹ t                   comparisons are always symmetric
- *     (cmp 𝑖 𝑗) ⟹ lt                  atom vs. atom compares unicodes
- *     (cmp 𝑖𝑗 𝑘𝑙) ⟺ (cmp (𝑖 𝑗) (𝑘 𝑙)) atom characters treated like lists
- *     (cmp 𝑖 (x . 𝑦)) ⟹ lt            atom vs. cons is always less than
- *     (cmp (x . 𝑦) (x . 𝑦)) ⟹ eq      cons vs. cons just recurses
- *     (cmp (𝑥) (⊥ 𝑦)) ⟹ t             e.g. cmp returns gt because 𝑥 > ⊥
- *     (cmp (𝑥) (𝑧 𝑦)) ⟹ lt            e.g. cmp returns lt because ⊥ < (𝑦)
- *     (cmp (x . 𝑦) (x 𝑦)) ⟹ lt        e.g. cmp returns lt because 𝑦 < (𝑦)
+ *     (≷ 𝑥 𝑦) ⟹ (⊥) | ⊥ | ⊤
+ *
+ * Where
+ *
+ *     (⊥) means less than       a.k.a. -1
+ *      ⊥  means equal           a.k.a.  0
+ *      ⊤  means greater than    a.k.a. +1
+ *
+ * The comparison is performed as follows:
+ *
+ *     (≷ 𝑥 𝑥) ⟹ ⊥                   everything's equal to itself
+ *     (≡ 𝑥 𝑦) ⟶ (≡ (≷ 𝑥 𝑦) ⊥)       (eq) and (cmp) agree if (eq) returns t
+ *     (≡ (≷ 𝑥 𝑦) ⊥) ⟺ (equal 𝑥 𝑦)   (cmp) returns eq iff (equal) returns t
+ *     (≷ (ℶ x 𝑦) (ℶ x 𝑦)) ⟹ ⊥       i.e. this does deep comparisons
+ *     (≷ ⊥ 𝑥) ⟹ (⊥)                 nil is less than everything non-nil
+ *     (≷ 𝑥 ⊥) ⟹ ⊤                   comparisons are always symmetric
+ *     (≷ 𝑖 𝑗) ⟹ (⊥)                 atom vs. atom compares unicodes
+ *     (≷ 𝑖𝑗 𝑘𝑙) ⟺ (≷ (𝑖 𝑗) (𝑘 𝑙))   atom characters treated like lists
+ *     (≷ 𝑖 (x . 𝑦)) ⟹ (⊥)           atom vs. cons is always less than
+ *     (≷ (x . 𝑦) (x . 𝑦)) ⟹ ⊥       cons vs. cons just recurses
+ *     (≷ (𝑥) (⊥ 𝑦)) ⟹ ⊤             e.g. cmp returns gt because 𝑥 > ⊥
+ *     (≷ (𝑥) (𝑧 𝑦)) ⟹ (⊥)           e.g. cmp returns lt because ⊥ < (𝑦)
+ *     (≷ (x . 𝑦) (x 𝑦)) ⟹ (⊥)       e.g. cmp returns lt because 𝑦 < (𝑦)
  *
  * @return -1, 0, +1
  */
