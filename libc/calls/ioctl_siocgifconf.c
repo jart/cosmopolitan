@@ -22,6 +22,7 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"

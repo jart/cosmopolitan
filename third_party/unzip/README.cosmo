@@ -1,0 +1,27 @@
+DESCRIPTION
+
+  The UNIX unzip command, courtesy of the Info-ZIP project.
+
+PROVENANCE
+
+  unzip610b.zip (circa 2010)
+  https://sourceforge.net/projects/infozip/files/unreleased%20Betas/UnZip%20betas/
+
+LICENSE
+
+  BSD-like with Apache-like requirement that changes be documented.
+
+LOCAL CHANGES
+
+  The only way this software differs from the normal InfoZIP sources is
+  that we're linking the Cosmopolitan C Library, which enables it to be
+  built as an Actually Portable Executable.
+
+  Minor changes include:
+
+  - Normalization of header / build config for platform / repository
+    sed -i -e '/# *include  *<.*/d'  *.*
+    sed -i -e 's!# *include  *"!#include "third_party/unzip/!' *.*
+    sed -i -e '1 i\// clang-format off' *.c *.h
+
+  - Fixed a lot of static analysis buffer overflow warnings.

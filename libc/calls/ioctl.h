@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
 #define COSMOPOLITAN_LIBC_CALLS_IOCTL_H_
-#include "libc/macros.internal.h"
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/termios.h"

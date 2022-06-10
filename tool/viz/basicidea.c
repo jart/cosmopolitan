@@ -22,6 +22,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"

@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Post installation script (simply inform installer about PATH etc)
+#
+echo " "
+echo " "
+echo "Installation is complete.  Now, you should add the following"
+echo "(or equivalnet) commands to the appropriate initial user shell"
+echo "scripts (such as .profile, .login, etc) -- "
+echo " "
+echo " For korn or bourne shell:"
+echo "   PATH=\${PATH}:${BASEDIR}/${PKG}/bin"
+echo "   MANPATH=\${MANPATH}:${BASEDIR}/${PKG}/man"
+echo "   export PATH MANPATH"
+echo " "
+echo " For C shell:"
+echo "   set path=(\$path ${BASEDIR}/${PKG}/bin)"
+echo "   setenv MANPATH \$MANPATH:${BASEDIR}/${PKG}/man"
+echo " "
+echo " See the files under ${BASEDIR}/${PKG}/doc for more information."
+echo " "
+exit 0
