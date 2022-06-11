@@ -3071,7 +3071,7 @@ static void show_options(__G)
     char gr[4];
     char sh[7];
     char lo[80];
-    char val_type[5];
+    char val_type[8];
     char neg[2];
 
 #if 0
