@@ -595,6 +595,7 @@ int main(int argc, char *argv[]) {
     /* hosts list empty */
     return 0;
   } else if (argc == 4) {
+    /* TODO(jart): this is broken */
     /* single host */
     SetupPresharedKeySsl(MBEDTLS_SSL_IS_CLIENT, GetRunitPsk());
     g_sshport = 22;

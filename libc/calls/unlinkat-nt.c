@@ -96,6 +96,7 @@ static textwindows bool IsDirectorySymlink(const char16_t *path) {
 
 static textwindows int sys_rmdir_nt(const char16_t *path) {
   int e, ms;
+  e = errno;
   for (ms = 1;; ms *= 2) {
     if (RemoveDirectory(path)) {
       return 0;
@@ -108,6 +109,7 @@ static textwindows int sys_rmdir_nt(const char16_t *path) {
      * Never could have imagined it'd be this bad.
      */
     if (GetLastError() == kNtErrorDirNotEmpty && ms <= 2048) {
+      errno = e;
       Sleep(ms);
       continue;
     } else {

@@ -223,6 +223,6 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | New Technology  | Vista       | 2006  |
 | GNU/Systemd     | 2.6.18      | 2007  |
 | XNU's Not UNIX! | 15.6        | 2018  |
-| FreeBSD         | 12          | 2018  |
+| FreeBSD         | 13          | 2020  |
 | OpenBSD         | 6.4         | 2018  |
-| NetBSD          | 9.1         | 2020  |
+| NetBSD          | 9.2         | 2021  |

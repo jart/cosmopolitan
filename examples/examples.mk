@@ -164,8 +164,34 @@ o/$(MODE)/usr/share/dict/words:							\
 	@$(MKDIR) $(@D)
 	@o/$(MODE)/tool/build/gzip.com $(ZFLAGS) -cd <$< >$@
 
+################################################################################
+# binaries for execve_test.com
+
+o/$(MODE)/examples/life-nomod.com.zip.o: ZIPOBJ_FLAGS += -B
+o/$(MODE)/examples/life-classic.com.zip.o: ZIPOBJ_FLAGS += -B
+o/$(MODE)/examples/pylife/pylife.com.zip.o: ZIPOBJ_FLAGS += -B
+
+o/$(MODE)/examples/life-classic.com.dbg:					\
+		$(EXAMPLES_DEPS)						\
+		o/$(MODE)/examples/life.o					\
+		o/$(MODE)/examples/examples.pkg					\
+		$(CRT)								\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/examples/life-nomod.com.dbg:						\
+		$(EXAMPLES_DEPS)						\
+		o/$(MODE)/examples/life.o					\
+		o/$(MODE)/examples/examples.pkg					\
+		$(CRT)								\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+################################################################################
+
 .PHONY: o/$(MODE)/examples
 o/$(MODE)/examples:								\
 		o/$(MODE)/examples/package					\
+		o/$(MODE)/examples/pylife					\
 		o/$(MODE)/examples/pyapp					\
 		$(EXAMPLES_BINS)

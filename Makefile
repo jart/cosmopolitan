@@ -165,6 +165,7 @@ include tool/build/emubin/emubin.mk
 include tool/build/build.mk
 include examples/examples.mk
 include examples/pyapp/pyapp.mk
+include examples/pylife/pylife.mk
 include tool/decode/lib/decodelib.mk
 include tool/decode/decode.mk
 include tool/lambda/lib/lib.mk

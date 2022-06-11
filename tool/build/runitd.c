@@ -557,7 +557,7 @@ void Daemonize(void) {
 int main(int argc, char *argv[]) {
   int i;
   SetupPresharedKeySsl(MBEDTLS_SSL_IS_SERVER, GetRunitPsk());
-  __log_level = kLogInfo;
+  __log_level = kLogWarn;
   GetOpts(argc, argv);
   for (i = 3; i < 16; ++i) close(i);
   errno = 0;
