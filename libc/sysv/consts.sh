@@ -587,7 +587,9 @@ syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
+syscon	clock	CLOCK_REALTIME_FAST			0			0			10			0			0			0			#
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
+syscon	clock	CLOCK_MONOTONIC_FAST			1			1			12			3			3			1			#
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1			#
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		-1			#
 syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
@@ -598,6 +600,12 @@ syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			-1			-1			#
 syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
 syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_UPTIME				-1			-1			5			5			-1			-1			#
+syscon	clock	CLOCK_UPTIME_PRECISE			-1			-1			7			-1			-1			-1			#
+syscon	clock	CLOCK_UPTIME_FAST			-1			-1			8			-1			-1			-1			#
+syscon	clock	CLOCK_REALTIME_PRECISE			-1			-1			9			-1			-1			-1			#
+syscon	clock	CLOCK_MONOTONIC_PRECISE			-1			-1			11			-1			-1			-1			#
+syscon	clock	CLOCK_SECOND				-1			-1			13			-1			-1			-1			#
 
 #	poll()
 #

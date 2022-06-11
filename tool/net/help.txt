@@ -2407,7 +2407,9 @@ UNIX MODULE
     `clock` can be any one of of:
 
     - `CLOCK_REALTIME`: universally supported
+    - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
     - `CLOCK_MONOTONIC`: universally supported
+    - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
     - `CLOCK_MONOTONIC_RAW`: nearly universally supported
     - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
     - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd

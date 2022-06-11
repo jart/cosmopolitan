@@ -44,10 +44,10 @@ static long double GetTimeSample(void) {
   uint64_t tick1, tick2;
   long double time1, time2;
   sched_yield();
-  time1 = dtime(CLOCK_REALTIME);
+  time1 = dtime(CLOCK_MONOTONIC_FAST);
   tick1 = rdtsc();
   nanosleep(&(struct timespec){0, 1000000}, NULL);
-  time2 = dtime(CLOCK_REALTIME);
+  time2 = dtime(CLOCK_MONOTONIC_FAST);
   tick2 = rdtsc();
   return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }

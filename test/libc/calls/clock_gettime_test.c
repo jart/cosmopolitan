@@ -25,6 +25,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
@@ -50,19 +51,23 @@ BENCH(clock_gettime, bench) {
   EZBENCH2("nowl", donothing, nowl());
   EZBENCH2("rdtsc", donothing, rdtsc());
   EZBENCH2("gettimeofday", donothing, gettimeofday(&tv, 0));
-  EZBENCH2("clock_gettime 0", donothing, clock_gettime(0, &ts));
-  EZBENCH2("clock_gettime 1", donothing, clock_gettime(1, &ts));
-  EZBENCH2("clock_gettime 4", donothing, clock_gettime(4, &ts));
-  EZBENCH2("__clock_gettime 0", donothing, __clock_gettime(0, &ts));
-  EZBENCH2("__clock_gettime 1", donothing, __clock_gettime(1, &ts));
-  EZBENCH2("__clock_gettime 4", donothing, __clock_gettime(4, &ts));
+  EZBENCH2("clock_gettime 0", donothing,
+           clock_gettime(CLOCK_REALTIME_FAST, &ts));
+  EZBENCH2("clock_gettime 1", donothing,
+           clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
+  EZBENCH2("__clock_gettime 0", donothing,
+           __clock_gettime(CLOCK_REALTIME_FAST, &ts));
+  EZBENCH2("__clock_gettime 1", donothing,
+           __clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
   if (IsWindows()) {
-    EZBENCH2("sys_clock_gettime 0", donothing, sys_clock_gettime_nt(0, &ts));
-    EZBENCH2("sys_clock_gettime 1", donothing, sys_clock_gettime_nt(1, &ts));
-    EZBENCH2("sys_clock_gettime 4", donothing, sys_clock_gettime_nt(4, &ts));
+    EZBENCH2("sys_clock_gettime 0", donothing,
+             sys_clock_gettime_nt(CLOCK_REALTIME_FAST, &ts));
+    EZBENCH2("sys_clock_gettime 1", donothing,
+             sys_clock_gettime_nt(CLOCK_MONOTONIC_FAST, &ts));
   } else {
-    EZBENCH2("sys_clock_gettime 0", donothing, sys_clock_gettime(0, &ts));
-    EZBENCH2("sys_clock_gettime 1", donothing, sys_clock_gettime(1, &ts));
-    EZBENCH2("sys_clock_gettime 4", donothing, sys_clock_gettime(4, &ts));
+    EZBENCH2("sys_clock_gettime 0", donothing,
+             sys_clock_gettime(CLOCK_REALTIME_FAST, &ts));
+    EZBENCH2("sys_clock_gettime 1", donothing,
+             sys_clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
   }
 }
