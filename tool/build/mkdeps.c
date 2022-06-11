@@ -29,21 +29,28 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/getargs.h"
@@ -113,14 +120,21 @@ struct Edges {
 };
 
 char *out;
-char *bout;
+char **tls;
+int threads;
+char **bouts;
+char **stack;
 unsigned counter;
-uint32_t *visited;
+struct GetArgs ga;
 struct Edges edges;
 struct Sauce *sauces;
 struct Strings strings;
 struct Sources sources;
 const char *buildroot;
+_Alignas(64) int galock;
+_Alignas(64) int readlock;
+_Alignas(64) int writelock;
+_Alignas(64) int reportlock;
 
 unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
@@ -232,25 +246,33 @@ wontreturn void OnMissingFile(const char *list, const char *src) {
   exit(1);
 }
 
-void LoadRelationships(int argc, char *argv[]) {
+int LoadRelationshipsWorker(void *arg) {
   int fd;
-  char *buf;
   ssize_t rc;
   bool skipme;
   struct Edge edge;
-  struct GetArgs ga;
+  char *buf, *freeme;
+  char srcbuf[PATH_MAX];
+  size_t i, n, inclen, size;
   unsigned srcid, dependency;
-  size_t i, inclen, size;
   const char *p, *pe, *src, *path, *pathend;
   inclen = strlen(kIncludePrefix);
-  buf = gc(xmemalign(PAGESIZE, PAGESIZE + MAX_READ + 16));
+  freeme = buf = memalign(PAGESIZE, PAGESIZE + MAX_READ + 16);
   buf += PAGESIZE;
   buf[-1] = '\n';
-  getargs_init(&ga, argv + optind);
-  while ((src = getargs_next(&ga))) {
+  for (;;) {
+    _spinlock(&galock);
+    if ((src = getargs_next(&ga))) strcpy(srcbuf, src);
+    _spunlock(&galock);
+    if (!src) break;
+    src = srcbuf;
     if (ShouldSkipSource(src)) continue;
-    srcid = GetSourceId(src, strlen(src));
+    n = strlen(src);
+    _spinlock(&readlock);
+    srcid = GetSourceId(src, n);
+    _spunlock(&readlock);
     if ((fd = open(src, O_RDONLY)) == -1) {
+      _spinlock(&reportlock);
       OnMissingFile(ga.path, src);
     }
     CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
@@ -263,13 +285,38 @@ void LoadRelationships(int argc, char *argv[]) {
       path = p + inclen;
       pathend = memchr(path, '"', pe - path);
       if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
+        _spinlock(&readlock);
         dependency = GetSourceId(path, pathend - path);
+        _spunlock(&readlock);
         edge.from = srcid;
         edge.to = dependency;
+        _spinlock(&writelock);
         append(&edges, &edge);
+        _spunlock(&writelock);
         p = pathend;
       }
     }
+  }
+  free(freeme);
+  return 0;
+}
+
+void LoadRelationships(int argc, char *argv[]) {
+  int i;
+  getargs_init(&ga, argv + optind);
+  for (i = 0; i < threads; ++i) {
+    if (clone(LoadRelationshipsWorker, stack[i], GetStackSize(),
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
+              (int *)(tls[i] + 0x38)) == -1) {
+      _spinlock(&reportlock);
+      kprintf("error: clone(%d) failed %m\n", i);
+      exit(1);
+    }
+  }
+  for (i = 0; i < threads; ++i) {
+    _spinlock((int *)(tls[i] + 0x38));
   }
   getargs_destroy(&ga);
 }
@@ -294,19 +341,12 @@ void GetOpts(int argc, char *argv[]) {
   if (isempty(buildroot)) kprintf("need -r o/$(MODE)"), exit(1);
 }
 
-const char *StripExt(const char *s) {
-  static bool once;
-  static size_t i, n;
-  static char *p, *dot;
-  if (!once) {
-    once = true;
-    __cxa_atexit(free_s, &p, NULL);
-  }
-  i = 0;
-  CONCAT(&p, &i, &n, s, strlen(s) + 1);
-  dot = strrchr(p, '.');
+const char *StripExt(char pathbuf[PATH_MAX], const char *s) {
+  static char *dot;
+  strcpy(pathbuf, s);
+  dot = strrchr(pathbuf, '.');
   if (dot) *dot = '\0';
-  return p;
+  return pathbuf;
 }
 
 bool IsObjectSource(const char *name) {
@@ -329,16 +369,6 @@ forceinline bool Bts(uint32_t *p, size_t i) {
   return false;
 }
 
-void Dive(unsigned id) {
-  int i;
-  for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
-    if (Bts(visited, edges.p[i].to)) continue;
-    appendw(&bout, READ32LE(" \\\n\t"));
-    appends(&bout, strings.p + sauces[edges.p[i].to].name);
-    Dive(edges.p[i].to);
-  }
-}
-
 size_t GetFileSizeOrZero(const char *path) {
   struct stat st;
   st.st_size = 0;
@@ -346,66 +376,100 @@ size_t GetFileSizeOrZero(const char *path) {
   return st.st_size;
 }
 
-/* prevents gnu make from restarting unless necessary */
-bool HasSameContent(void) {
-  bool r;
-  int fd;
-  char *m;
-  size_t s;
-  s = GetFileSizeOrZero(out);
-  if (s == appendz(bout).i) {
-    if (s) {
-      CHECK_NE(-1, (fd = open(out, O_RDONLY)), "open(%#s)", out);
-      CHECK_NE(MAP_FAILED, (m = mmap(0, s, PROT_READ, MAP_SHARED, fd, 0)));
-      r = !bcmp(bout, m, s);
-      munmap(m, s);
-      close(fd);
-    } else {
-      r = true;
-    }
-  } else {
-    r = false;
+void Dive(char **bout, uint32_t *visited, unsigned id) {
+  int i;
+  for (i = FindFirstFromEdge(id); i < edges.i && edges.p[i].from == id; ++i) {
+    if (Bts(visited, edges.p[i].to)) continue;
+    appendw(bout, READ32LE(" \\\n\t"));
+    appends(bout, strings.p + sauces[edges.p[i].to].name);
+    Dive(bout, visited, edges.p[i].to);
   }
-  return r;
 }
 
-int main(int argc, char *argv[]) {
-  int fd;
+int Diver(void *arg) {
+  char *bout = 0;
   const char *path;
+  uint32_t *visited;
   size_t i, visilen;
-  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-  out = "/dev/stdout";
-  GetOpts(argc, argv);
-  LoadRelationships(argc, argv);
-  Crunch();
+  char pathbuf[PATH_MAX];
+  int tid = (intptr_t)arg;
   visilen = (sources.i + sizeof(*visited) * CHAR_BIT - 1) /
             (sizeof(*visited) * CHAR_BIT);
   visited = malloc(visilen * sizeof(*visited));
-  for (i = 0; i < sources.i; ++i) {
+  for (i = tid; i < sources.i; i += threads) {
     path = strings.p + sauces[i].name;
     if (!IsObjectSource(path)) continue;
     appendw(&bout, '\n');
     if (!startswith(path, "o/")) {
       appends(&bout, buildroot);
     }
-    appends(&bout, StripExt(path));
+    appends(&bout, StripExt(pathbuf, path));
     appendw(&bout, READ64LE(".o: \\\n\t"));
     appends(&bout, path);
     bzero(visited, visilen * sizeof(*visited));
     Bts(visited, i);
-    Dive(i);
+    Dive(&bout, visited, i);
     appendw(&bout, '\n');
   }
-  /* if (!fileexists(out) || !HasSameContent()) { */
+  free(visited);
+  appendw(&bout, '\n');
+  bouts[tid] = bout;
+  return 0;
+}
+
+void Explore(void) {
+  int i;
+  for (i = 0; i < threads; ++i) {
+    if (clone(Diver, stack[i], GetStackSize(),
+              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
+              (int *)(tls[i] + 0x38)) == -1) {
+      _spinlock(&reportlock);
+      kprintf("error: clone(%d) failed %m\n", i);
+      exit(1);
+    }
+  }
+  for (i = 0; i < threads; ++i) {
+    _spinlock((int *)(tls[i] + 0x38));
+  }
+}
+
+int main(int argc, char *argv[]) {
+  int i, fd;
+  if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
+  out = "/dev/stdout";
+  GetOpts(argc, argv);
+  threads = GetCpuCount();
+  tls = calloc(threads, sizeof(*tls));
+  stack = calloc(threads, sizeof(*stack));
+  bouts = calloc(threads, sizeof(*bouts));
+  for (i = 0; i < threads; ++i) {
+    if (!(tls[i] = malloc(64)) ||
+        (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                         MAP_STACK | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED) {
+      kprintf("error: mmap(%d) failed %m\n", i);
+      exit(1);
+    }
+  }
+  LoadRelationships(argc, argv);
+  Crunch();
+  Explore();
   CHECK_NE(-1, (fd = open(out, O_CREAT | O_WRONLY, 0644)), "open(%#s)", out);
-  CHECK_NE(-1, ftruncate(fd, appendz(bout).i));
-  CHECK_NE(-1, xwrite(fd, bout, appendz(bout).i));
+  for (i = 0; i < threads; ++i) {
+    CHECK_NE(-1, xwrite(fd, bouts[i], appendz(bouts[i]).i));
+  }
   CHECK_NE(-1, close(fd));
-  /* } */
+  for (i = 0; i < threads; ++i) {
+    munmap(stack[i], GetStackSize());
+    free(bouts[i]);
+    free(tls[i]);
+  }
   free(strings.p);
   free(edges.p);
-  free(visited);
   free(sauces);
-  free(bout);
+  free(stack);
+  free(bouts);
+  free(tls);
   return 0;
 }

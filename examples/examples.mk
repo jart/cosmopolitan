@@ -36,7 +36,8 @@ EXAMPLES_COMS =									\
 
 EXAMPLES_BINS =									\
 	$(EXAMPLES_COMS)							\
-	$(EXAMPLES_COMS:%=%.dbg)
+	$(EXAMPLES_COMS:%=%.dbg)						\
+	o/$(MODE)/examples/life-nomod.com
 
 EXAMPLES_DIRECTDEPS =								\
 	DSP_CORE								\

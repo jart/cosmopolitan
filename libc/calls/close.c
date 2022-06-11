@@ -49,7 +49,6 @@
  */
 int close(int fd) {
   int rc;
-  __fds_lock();
   if (fd == -1) {
     rc = 0;
   } else if (fd < 0) {
@@ -78,10 +77,9 @@ int close(int fd) {
       }
     }
     if (!__vforked) {
-      __releasefd_unlocked(fd);
+      __releasefd(fd);
     }
   }
-  __fds_unlock();
   STRACE("%s(%d) → %d% m", "close", fd, rc);
   return rc;
 }

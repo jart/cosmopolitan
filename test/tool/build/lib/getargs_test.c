@@ -44,6 +44,7 @@ TEST(getargs, test) {
   EXPECT_STREQ("dawg", getargs_next(&ga));
   EXPECT_STREQ("fun", getargs_next(&ga));
   EXPECT_EQ(NULL, getargs_next(&ga));
+  EXPECT_EQ(NULL, getargs_next(&ga));
   getargs_destroy(&ga);
 }
 
