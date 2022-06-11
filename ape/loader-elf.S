@@ -55,7 +55,7 @@ phdrs:	.long	PT_LOAD			# p_type
 	.quad	ehdr			# p_paddr
 	.quad	filesz			# p_filesz
 	.quad	filesz			# p_memsz
-	.quad	64			# p_align
+	.quad	PAGESIZE		# p_align
 
 	.long	PT_LOAD			# p_type
 	.long	PF_R|PF_W		# p_flags
@@ -64,7 +64,7 @@ phdrs:	.long	PT_LOAD			# p_type
 	.quad	bss			# p_paddr
 	.quad	0			# p_filesz
 	.quad	bsssize			# p_memsz
-	.quad	64			# p_align
+	.quad	PAGESIZE		# p_align
 
 	.long	PT_GNU_STACK		# p_type
 	.long	PF_R|PF_W		# p_flags
