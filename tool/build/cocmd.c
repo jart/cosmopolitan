@@ -133,7 +133,6 @@ int main(int argc, char *argv[]) {
   unsupported['~'] = true;
   unsupported['`'] = true;
   unsupported['#'] = true;
-  unsupported['$'] = true;
   unsupported['*'] = true;
   unsupported['('] = true;
   unsupported[')'] = true;
@@ -172,18 +171,17 @@ int main(int argc, char *argv[]) {
   q = argbuf;
   while ((arg = Tokenize())) {
     if (n + 1 < ARRAYLEN(args)) {
-      if (!strcmp(arg, "2>&1")) {
-        close(1);
-        dup(2);
-      } else if (!strcmp(arg, ">&2")) {
-        close(2);
-        dup(1);
-      } else if (arg[0] == '2' && arg[1] == '>' && arg[2] == '>') {
-        Open(arg + 3, 2, O_WRONLY | O_CREAT | O_APPEND);
+      if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '&' &&
+          isdigit(arg[3])) {
+        dup2(arg[3] - '0', arg[0] - '0');
+      } else if (arg[0] == '>' && arg[1] == '&' && isdigit(arg[2])) {
+        dup2(arg[2] - '0', 1);
+      } else if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '>') {
+        Open(arg + 3, arg[0] - '0', O_WRONLY | O_CREAT | O_APPEND);
       } else if (arg[0] == '>' && arg[1] == '>') {
         Open(arg + 2, 1, O_WRONLY | O_CREAT | O_APPEND);
-      } else if (arg[0] == '2' && arg[1] == '>') {
-        Open(arg + 2, 2, O_WRONLY | O_CREAT | O_TRUNC);
+      } else if (isdigit(arg[0]) && arg[1] == '>') {
+        Open(arg + 2, arg[0] - '0', O_WRONLY | O_CREAT | O_TRUNC);
       } else if (arg[0] == '>') {
         Open(arg + 1, 1, O_WRONLY | O_CREAT | O_TRUNC);
       } else if (arg[0] == '<') {
