@@ -1732,9 +1732,11 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
           }
         }
         if (!isduplicate) {
-          san = realloc(san, ++nsan * sizeof(*san));
+          san = realloc(san, (nsan += 2) * sizeof(*san));
+          san[nsan - 2].tag = MBEDTLS_X509_SAN_DNS_NAME;
+          san[nsan - 2].val = s;
           san[nsan - 1].tag = MBEDTLS_X509_SAN_DNS_NAME;
-          san[nsan - 1].val = s;
+          san[nsan - 1].val = gc(xasprintf("*.%s", s));
         }
       }
     }
@@ -7270,7 +7272,9 @@ void RedBean(int argc, char *argv[]) {
       free(monitortls);
     }
   }
-  INFOF("(srvr) shutdown complete");
+  if (!isexitingworker) {
+    INFOF("(srvr) shutdown complete");
+  }
 }
 
 int main(int argc, char *argv[]) {
