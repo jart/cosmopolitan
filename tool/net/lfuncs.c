@@ -642,6 +642,7 @@ int LuaBenchmark(lua_State *L) {
   luaL_checktype(L, 1, LUA_TFUNCTION);
   count = luaL_optinteger(L, 2, 100);
   maxattempts = luaL_optinteger(L, 3, 10);
+  __warn_if_powersave();
   lua_gc(L, LUA_GCSTOP);
 
   for (attempts = 0;;) {
