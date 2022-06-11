@@ -16,7 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pthread.h"
 
 unsigned __sighandrvas[NSIG];
 unsigned __sighandflags[NSIG];
-_Alignas(64) int __sig_lock_obj;
+pthread_mutex_t __sig_lock_obj;

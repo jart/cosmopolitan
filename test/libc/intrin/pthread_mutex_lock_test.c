@@ -16,48 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/spinlock.h"
-#include "libc/nt/memory.h"
-#include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/intrin/pthread.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
+static void *DoNothing(void *arg) {
+  return 0;
+}
 
-textwindows int sys_mprotect_nt(void *addr, size_t size, int prot) {
-  int rc = 0;
-  unsigned i;
-  uint32_t op;
-  char *a, *b, *x, *y, *p;
-  __mmi_lock();
-  p = addr;
-  i = FindMemoryInterval(&_mmi, (intptr_t)p >> 16);
-  if (i == _mmi.i || (!i && p + size <= ADDR(_mmi.p[0].x))) {
-    // memory isn't in memtrack
-    // let's just trust the user then
-    // it's probably part of the executable
-    if (!VirtualProtect(addr, size, __prot2nt(prot, false), &op)) {
-      rc = -1;
-    }
-  } else {
-    // memory is in memtrack, so use memtrack, to do dimensioning
-    // we unfortunately must do something similar to this for cow
-    for (; i < _mmi.i; ++i) {
-      x = ADDR(_mmi.p[i].x);
-      y = x + _mmi.p[i].size;
-      if ((x <= p && p < y) || (x < p + size && p + size <= y) ||
-          (p < x && y < p + size)) {
-        a = MIN(MAX(p, x), y);
-        b = MAX(MIN(p + size, y), x);
-        if (!VirtualProtect(a, b - a, __prot2nt(prot, _mmi.p[i].iscow), &op)) {
-          rc = -1;
-          break;
-        }
-      } else {
-        break;
-      }
-    }
-  }
-  __mmi_unlock();
-  return rc;
+static void MakeSureThreadingModeIsEnabled(void) {
+  void *exitcode;
+  cthread_t thread;
+  ASSERT_EQ(0, cthread_create(&thread, 0, DoNothing, 0));
+  ASSERT_EQ(0, cthread_join(thread, 0));
+}
+
+void SetUp(void) {
+  MakeSureThreadingModeIsEnabled();
+}
+
+BENCH(pthread_mutex_lock, bench) {
+  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+  EZBENCH2("pthread_mutex_lock", donothing,
+           (pthread_mutex_lock(&lock), pthread_mutex_unlock(&lock)));
 }

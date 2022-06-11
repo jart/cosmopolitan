@@ -31,6 +31,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
@@ -169,7 +170,7 @@ struct ReportOriginHeap {
 };
 
 static int __asan_noreentry;
-_Alignas(64) static int __asan_lock;
+static pthread_mutex_t __asan_lock;
 static struct AsanMorgue __asan_morgue;
 
 #define __asan_unreachable()   \
@@ -852,25 +853,25 @@ dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
 void *__asan_morgue_add(void *p) {
   int i;
   void *r;
-  _spinlock_cooperative(&__asan_lock);
+  pthread_mutex_lock(&__asan_lock);
   i = __asan_morgue.i++ & (ARRAYLEN(__asan_morgue.p) - 1);
   r = __asan_morgue.p[i];
   __asan_morgue.p[i] = p;
-  _spunlock(&__asan_lock);
+  pthread_mutex_unlock(&__asan_lock);
   return r;
 }
 
 static void __asan_morgue_flush(void) {
   int i;
   void *p;
-  _spinlock_cooperative(&__asan_lock);
+  pthread_mutex_lock(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     if (__asan_morgue.p[i] && weaken(dlfree)) {
       weaken(dlfree)(__asan_morgue.p[i]);
     }
     __asan_morgue.p[i] = 0;
   }
-  _spunlock(&__asan_lock);
+  pthread_mutex_unlock(&__asan_lock);
 }
 
 static size_t __asan_user_size(size_t n) {

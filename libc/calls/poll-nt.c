@@ -43,8 +43,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-_Alignas(64) static int poll_lock;
-
 /**
  * Polls on the New Technology.
  *
@@ -67,7 +65,6 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   // do the planning
   // we need to read static variables
   // we might need to spawn threads and open pipes
-  _spinlock(&poll_lock);
   __fds_lock();
   for (gotinvals = failed = sn = pn = i = 0; i < nfds; ++i) {
     if (fds[i].fd < 0) continue;
@@ -115,7 +112,6 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
     }
   }
   __fds_unlock();
-  _spunlock(&poll_lock);
   if (failed) {
     // failed to create a polling solution
     return failed;

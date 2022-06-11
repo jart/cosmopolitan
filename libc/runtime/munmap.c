@@ -164,12 +164,12 @@ static noasan int Munmap(char *p, size_t n) {
 noasan int munmap(void *p, size_t n) {
   int rc;
   size_t toto;
-  _spinlock(&_mmi.lock);
+  __mmi_lock();
   rc = Munmap(p, n);
 #if SYSDEBUG
   toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
 #endif
-  _spunlock(&_mmi.lock);
+  __mmi_unlock();
   STRACE("munmap(%.12p, %'zu) → %d% m (%'zu bytes total)", p, n, rc, toto);
   return rc;
 }

@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/intrin/lockcmpxchgp.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -27,15 +24,5 @@
  * @return 0 on success, or non-zero if another thread owns the lock
  */
 int ftrylockfile(FILE *f) {
-  int me, owner = 0;
-  if (__threaded) {
-    me = gettid();
-    if (!_lockcmpxchgp(&f->lock, &owner, me) && owner == me) {
-      owner = 0;
-    }
-  }
-  if (!owner) {
-    ++f->reent;
-  }
-  return owner;
+  return pthread_mutex_trylock(&f->lock);
 }

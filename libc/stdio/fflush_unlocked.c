@@ -21,6 +21,7 @@
 #include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -40,7 +41,7 @@ int fflush_unlocked(FILE *f) {
   int rc = 0;
   size_t i;
   if (!f) {
-    _spinlock(&__fflush.lock);
+    pthread_mutex_lock(&__fflush.lock);
     for (i = __fflush.handles.i; i; --i) {
       if ((f = __fflush.handles.p[i - 1])) {
         if (fflush(f) == -1) {
@@ -48,7 +49,7 @@ int fflush_unlocked(FILE *f) {
         }
       }
     }
-    _spunlock(&__fflush.lock);
+    pthread_mutex_unlock(&__fflush.lock);
   } else if (f->fd != -1) {
     if (__fflush_impl(f) == -1) {
       rc = -1;
@@ -63,7 +64,7 @@ textstartup int __fflush_register(FILE *f) {
   int rc;
   size_t i;
   struct StdioFlush *sf;
-  _spinlock(&__fflush.lock);
+  pthread_mutex_lock(&__fflush.lock);
   sf = &__fflush;
   if (!sf->handles.p) {
     sf->handles.p = sf->handles_initmem;
@@ -73,19 +74,19 @@ textstartup int __fflush_register(FILE *f) {
   for (i = sf->handles.i; i; --i) {
     if (!sf->handles.p[i - 1]) {
       sf->handles.p[i - 1] = f;
-      _spunlock(&__fflush.lock);
+      pthread_mutex_unlock(&__fflush.lock);
       return 0;
     }
   }
   rc = append(&sf->handles, &f);
-  _spunlock(&__fflush.lock);
+  pthread_mutex_unlock(&__fflush.lock);
   return rc;
 }
 
 void __fflush_unregister(FILE *f) {
   size_t i;
   struct StdioFlush *sf;
-  _spinlock(&__fflush.lock);
+  pthread_mutex_lock(&__fflush.lock);
   sf = &__fflush;
   sf = pushpop(sf);
   for (i = sf->handles.i; i; --i) {
@@ -94,5 +95,5 @@ void __fflush_unregister(FILE *f) {
       break;
     }
   }
-  _spunlock(&__fflush.lock);
+  pthread_mutex_unlock(&__fflush.lock);
 }

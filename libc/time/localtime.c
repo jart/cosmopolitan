@@ -4,6 +4,7 @@
 #define LOCALTIME_IMPLEMENTATION
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
@@ -42,15 +43,15 @@ STATIC_YOINK("usr/share/zoneinfo/UTC");
 ** POSIX-style TZ environment variable handling from Guy Harris.
 */
 
-_Alignas(64) static int locallock;
+static pthread_mutex_t locallock;
 
 static int lock(void) {
-	_spinlock(&locallock);
+	pthread_mutex_lock(&locallock);
 	return 0;
 }
 
 static void unlock(void) {
-	_spunlock(&locallock);
+	pthread_mutex_unlock(&locallock);
 }
 
 #ifndef TZ_ABBR_MAX_LEN

@@ -24,7 +24,7 @@
  * Prints memory mappings to stderr.
  */
 void __print_maps(void) {
-  _spinlock(&_mmi.lock);
+  __mmi_lock();
   PrintMemoryIntervals(2, &_mmi);
-  _spunlock(&_mmi.lock);
+  __mmi_unlock();
 }

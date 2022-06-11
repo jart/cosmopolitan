@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/stdio.h"
@@ -28,7 +29,7 @@
 void _flushlbf(void) {
   int i;
   FILE *f;
-  _spinlock(&__fflush.lock);
+  pthread_mutex_lock(&__fflush.lock);
   for (i = 0; i < __fflush.handles.i; ++i) {
     if ((f = __fflush.handles.p[i])) {
       flockfile(f);
@@ -38,5 +39,5 @@ void _flushlbf(void) {
       funlockfile(f);
     }
   }
-  _spunlock(&__fflush.lock);
+  pthread_mutex_unlock(&__fflush.lock);
 }

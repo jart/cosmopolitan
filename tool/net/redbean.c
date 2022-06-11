@@ -6496,14 +6496,14 @@ static int MemoryMonitor(void *arg) {
         mi[2].x = (intptr_t)_edata >> 16;
         mi[2].size = _end - _edata;
         mi[2].flags = 0;
-        _spinlock(&_mmi.lock);
+        __mmi_lock();
         if (_mmi.i == intervals - 3) {
           memcpy(mi + 3, _mmi.p, _mmi.i * sizeof(*mi));
           ok = true;
         } else {
           ok = false;
         }
-        _spunlock(&_mmi.lock);
+        __mmi_unlock();
         if (!ok) {
           VERBOSEF("(memv) retrying due to contention on mmap table");
           continue;

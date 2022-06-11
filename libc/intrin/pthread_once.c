@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,14 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/intrin/lockcmpxchg.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/runtime/runtime.h"
-
-typedef void *pthread_t;
-typedef int pthread_once_t;
-typedef int pthread_mutex_t;
+#include "libc/intrin/pthread.h"
 
 int pthread_once(pthread_once_t *once, void init(void)) {
   int x;
@@ -52,26 +45,4 @@ int pthread_once(pthread_once_t *once, void init(void)) {
       break;
   }
   return 0;
-}
-
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  _spinlock(mutex);
-  return 0;
-}
-
-int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  return _trylock(mutex);
-}
-
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  _spunlock(mutex);
-  return 0;
-}
-
-int pthread_cancel(pthread_t thread) {
-  return ESRCH;
-}
-
-void *__tls_get_addr(size_t v[2]) {
-  return NULL;
 }

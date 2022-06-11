@@ -31,7 +31,7 @@
 noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
   int i, rc = 0;
   char *a, *b, *x, *y;
-  _spinlock(&_mmi.lock);
+  __mmi_lock();
   for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
     x = ADDR(_mmi.p[i].x);
     y = x + _mmi.p[i].size;
@@ -48,6 +48,6 @@ noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
       break;
     }
   }
-  _spunlock(&_mmi.lock);
+  __mmi_unlock();
   return rc;
 }

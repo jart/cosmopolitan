@@ -31,6 +31,7 @@
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -404,13 +405,11 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
 
   if (p != MAP_FAILED) {
     if (needguard) {
-      if (IsWindows()) _spunlock(&_mmi.lock);
       mprotect(p, PAGESIZE, PROT_NONE);
       if (IsAsan()) {
         __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
                    kAsanStackOverflow, PAGESIZE / 8);
       }
-      if (IsWindows()) _spinlock(&_mmi.lock);
     }
   }
 
@@ -479,12 +478,12 @@ noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
                   int64_t off) {
   void *res;
   size_t toto;
-  _spinlock(&_mmi.lock);
+  __mmi_lock();
   res = Mmap(addr, size, prot, flags, fd, off);
 #if SYSDEBUG
   toto = __strace > 0 ? GetMemtrackSize(&_mmi) : 0;
 #endif
-  _spunlock(&_mmi.lock);
+  __mmi_unlock();
   STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → %p% m (%'zu bytes total)", addr,
          size, DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, res,
          toto);

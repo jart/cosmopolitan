@@ -3,6 +3,7 @@
 #include "libc/assert.h"
 #include "libc/bits/midpoint.h"
 #include "libc/dce.h"
+#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/stack.h"
@@ -30,6 +31,9 @@ COSMOPOLITAN_C_START_
 #define _kMem(NORMAL, WIN7) \
   (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
 
+#define __mmi_lock()   pthread_mutex_lock(&_mmi.lock)
+#define __mmi_unlock() pthread_mutex_unlock(&_mmi.lock)
+
 struct MemoryInterval {
   int x;
   int y;
@@ -46,7 +50,7 @@ struct MemoryIntervals {
   size_t i, n;
   struct MemoryInterval *p;
   struct MemoryInterval s[OPEN_MAX];
-  _Alignas(64) int lock;
+  pthread_mutex_t lock;
 };
 
 extern hidden struct MemoryIntervals _mmi;

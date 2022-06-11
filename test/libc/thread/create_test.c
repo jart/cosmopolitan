@@ -37,7 +37,6 @@ TEST(cthread_create, testJoinDeadlock) {
 }
 
 TEST(cthread_create, testCreateReturnJoin) {
-  if (IsOpenbsd()) return;  // TODO(jart): we've getting flakes
   void *exitcode;
   cthread_t thread;
   ASSERT_EQ(0, cthread_create(&thread, 0, ReturnArg, ReturnArg));
@@ -50,7 +49,6 @@ static void *ExitArg(void *arg) {
 }
 
 TEST(cthread_create, testCreateExitJoin) {
-  if (IsOpenbsd()) return;  // TODO(jart): we've getting flakes
   void *exitcode;
   cthread_t thread;
   ASSERT_EQ(0, cthread_create(&thread, 0, ExitArg, (void *)-31337));
@@ -61,7 +59,6 @@ TEST(cthread_create, testCreateExitJoin) {
 TEST(gcctls, size) {
   if (IsXnu()) return;      // TODO(jart): codemorph
   if (IsWindows()) return;  // TODO(jart): codemorph
-  if (IsOpenbsd()) return;  // TODO(jart): we've getting flakes
   // schlep in .zip section too
   // make sure executable isn't too huge
   size_t size;
@@ -87,7 +84,6 @@ static void *TlsWorker(void *arg) {
 TEST(gcctls, worksAndIsNonInheritable) {
   if (IsXnu()) return;      // TODO(jart): codemorph
   if (IsWindows()) return;  // TODO(jart): codemorph
-  if (IsOpenbsd()) return;  // TODO(jart): we've getting flakes
   void *exitcode;
   cthread_t thread;
   ASSERT_EQ(tdata, 31337);

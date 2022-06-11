@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
+#include "libc/intrin/pthread.h"
 #include "libc/runtime/symbolic.h"
 
 #define FILENAME_MAX PATH_MAX
@@ -24,9 +25,8 @@ typedef struct FILE {
   uint32_t size;   /* 0x20 */
   uint32_t nofree; /* 0x24 */
   int pid;         /* 0x28 */
-  int lock;        /* 0x2c */
-  int reent;       /* 0x30 */
-  char *getln;     /* 0x38 */
+  char *getln;
+  pthread_mutex_t lock;
 } FILE;
 
 extern FILE *stdin;

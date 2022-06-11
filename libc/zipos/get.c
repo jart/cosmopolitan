@@ -23,7 +23,9 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -74,13 +76,10 @@ struct Zipos *__zipos_get(void) {
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  _Alignas(64) static int lock;
-  _spinlock(&lock);
-  if (!once) {
+  static pthread_mutex_t lock;
+  pthread_mutex_lock(&lock);
+  if (_cmpxchg(&once, false, true)) {
     sigfillset(&neu);
-    if (!IsWindows()) {
-      sys_sigprocmask(SIG_BLOCK, &neu, &old);
-    }
     progpath = GetProgramExecutableName();
     if ((fd = open(progpath, O_RDONLY)) != -1) {
       if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
@@ -104,16 +103,12 @@ struct Zipos *__zipos_get(void) {
     } else {
       STRACE("__zipos_get(%#s) → open failed %m", progpath);
     }
-    if (!IsWindows()) {
-      sigprocmask(SIG_SETMASK, &old, 0);
-    }
-    once = true;
   }
   if (zipos.cdir) {
     res = &zipos;
   } else {
     res = 0;
   }
-  _spunlock(&lock);
+  pthread_mutex_unlock(&lock);
   return res;
 }

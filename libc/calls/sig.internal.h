@@ -23,11 +23,9 @@ struct Signals {
   struct Signal mem[__SIG_QUEUE_LENGTH];
 };
 
-extern struct Signals __sig;  // TODO(jart): Need TLS
 extern long __sig_count;
+extern struct Signals __sig;
 
-void __sig_lock(void) hidden;
-void __sig_unlock(void) hidden;
 bool __sig_check(bool) hidden;
 bool __sig_handle(bool, int, int, ucontext_t *) hidden;
 int __sig_add(int, int) hidden;

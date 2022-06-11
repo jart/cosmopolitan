@@ -223,7 +223,6 @@ TEST(mmap, cow) {
   char *p;
   char path[PATH_MAX];
   sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
-  kprintf("path = %#s\n", path);
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
