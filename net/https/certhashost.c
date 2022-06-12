@@ -25,15 +25,18 @@ bool CertHasHost(const mbedtls_x509_crt *cert, const void *s, size_t n) {
     if ((cur->buf.tag & MBEDTLS_ASN1_TAG_VALUE_MASK) ==
         MBEDTLS_X509_SAN_DNS_NAME) {
       if (cur->buf.len > 2 && cur->buf.p[0] == '*' && cur->buf.p[1] == '.') {
-        // handle subject alt name like *.foo.com (matching foo.com)
-        if (SlicesEqualCase(s, n, cur->buf.p + 2, cur->buf.len - 2)) {
-          return true;
-        }
-        // handle subject alt name like *.foo.com (matching bar.foo.com)
+        // handle subject alt name like *.foo.com
+        // - match examples
+        //   - bar.foo.com
+        //   - zoo.foo.com
+        // - does not match
+        //   - foo.com
+        //   - zoo.bar.foo.com
         if (n > cur->buf.len - 1 &&
             SlicesEqualCase((char *)s + n - (cur->buf.len - 1),
                             cur->buf.len - 1, cur->buf.p + 1,
-                            cur->buf.len - 1)) {
+                            cur->buf.len - 1) &&
+            !memchr(s, '.', n - (cur->buf.len - 1))) {
           return true;
         }
       } else {
