@@ -27,7 +27,7 @@
 /**
  * Releases mutex.
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+noasan noubsan int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int owner;
   bool shouldunlock;
   assert(mutex->reent > 0);

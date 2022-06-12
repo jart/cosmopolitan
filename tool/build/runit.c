@@ -20,41 +20,31 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/flock.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
-#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ex.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/limits.h"
-#include "libc/sysv/consts/lock.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/eztls.h"
@@ -131,10 +121,6 @@ static void OnAlarm(int sig) {
   alarmed = true;
 }
 
-forceinline pureconst size_t GreatestTwoDivisor(size_t x) {
-  return x & (~x + 1);
-}
-
 wontreturn void ShowUsage(FILE *f, int rc) {
   fprintf(f, "Usage: %s RUNITD PROGRAM HOSTNAME[:RUNITDPORT[:SSHPORT]]...\n",
           program_invocation_name);
@@ -148,99 +134,6 @@ void CheckExists(const char *path) {
     ShowUsage(stderr, EX_USAGE);
     unreachable;
   }
-}
-
-dontdiscard char *MakeDeployScript(struct addrinfo *remotenic,
-                                   size_t combytes) {
-  const char *ip4 = (const char *)&remotenic->ai_addr4->sin_addr;
-  return xasprintf("mkdir -p o/ && "
-                   "dd bs=%zu count=%zu of=o/runitd.$$.com 2>/dev/null && "
-                   "chmod +x o/runitd.$$.com && "
-                   "o/runitd.$$.com -rdl%hhu.%hhu.%hhu.%hhu -p %hu && "
-                   "rm -f o/runitd.$$.com",
-                   GreatestTwoDivisor(combytes),
-                   combytes ? combytes / GreatestTwoDivisor(combytes) : 0,
-                   ip4[0], ip4[1], ip4[2], ip4[3], g_runitdport);
-}
-
-void Upload(int pipe, int fd, struct stat *st) {
-  int64_t i;
-  for (i = 0; i < st->st_size;) {
-    CHECK_GT(splice(fd, &i, pipe, NULL, st->st_size - i, 0), 0);
-  }
-  CHECK_NE(-1, close(fd));
-}
-
-void DeployEphemeralRunItDaemonRemotelyViaSsh(struct addrinfo *ai) {
-  int lock;
-  size_t got;
-  char *args[7];
-  struct stat st;
-  char linebuf[32];
-  sigset_t chldmask, savemask;
-  int sshpid, wstatus, binfd, pipefds[2][2];
-  struct sigaction ignore, saveint, savequit;
-  ignore.sa_flags = 0;
-  ignore.sa_handler = SIG_IGN;
-  sigemptyset(&ignore.sa_mask);
-  sigaction(SIGINT, &ignore, &saveint);
-  sigaction(SIGQUIT, &ignore, &savequit);
-  mkdir("o", 0755);
-  CHECK_NE(-1, (lock = open(gc(xasprintf("o/lock.%s", g_hostname)),
-                            O_RDWR | O_CREAT, 0644)));
-  CHECK_NE(-1, fcntl(lock, F_SETLKW, &(struct flock){F_WRLCK}));
-  DEBUGF("ssh %s:%hu to spawn %s", g_hostname, g_runitdport, g_runitd);
-  CHECK_NE(-1, (binfd = open(g_runitd, O_RDONLY | O_CLOEXEC)));
-  CHECK_NE(-1, fstat(binfd, &st));
-  args[0] = "ssh";
-  args[1] = "-C";
-  args[2] = "-p";
-  args[3] = gc(xasprintf("%hu", g_sshport));
-  args[4] = g_hostname;
-  args[5] = gc(MakeDeployScript(ai, st.st_size));
-  args[6] = NULL;
-  sigemptyset(&chldmask);
-  sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  CHECK_NE(-1, pipe2(pipefds[0], O_CLOEXEC));
-  CHECK_NE(-1, pipe2(pipefds[1], O_CLOEXEC));
-  CHECK_NE(-1, (sshpid = fork()));
-  if (!sshpid) {
-    sigaction(SIGINT, &(struct sigaction){0}, 0);
-    sigaction(SIGQUIT, &(struct sigaction){0}, 0);
-    sigprocmask(SIG_SETMASK, &savemask, 0);
-    dup2(pipefds[0][0], 0);
-    dup2(pipefds[1][1], 1);
-    execv(g_ssh, args);
-    _exit(127);
-  }
-  close(pipefds[0][0]);
-  close(pipefds[1][1]);
-  Upload(pipefds[0][1], binfd, &st);
-  LOGIFNEG1(close(pipefds[0][1]));
-  CHECK_NE(-1, (got = read(pipefds[1][0], linebuf, sizeof(linebuf))));
-  CHECK_GT(got, 0, "on host %s", g_hostname);
-  linebuf[sizeof(linebuf) - 1] = '\0';
-  if (strncmp(linebuf, "ready ", 6) != 0) {
-    FATALF("expected ready response but got %`'.*s", got, linebuf);
-  } else {
-    DEBUGF("got ready response");
-  }
-  g_runitdport = (uint16_t)atoi(&linebuf[6]);
-  LOGIFNEG1(close(pipefds[1][0]));
-  CHECK_NE(-1, waitpid(sshpid, &wstatus, 0));
-  LOGIFNEG1(sigprocmask(SIG_SETMASK, &savemask, NULL));
-  if (WIFEXITED(wstatus)) {
-    DEBUGF("ssh %s exited with %d", g_hostname, WEXITSTATUS(wstatus));
-  } else {
-    DEBUGF("ssh %s terminated with %s", g_hostname,
-           strsignal(WTERMSIG(wstatus)));
-  }
-  CHECK(WIFEXITED(wstatus) && !WEXITSTATUS(wstatus), "wstatus=%#x", wstatus);
-  LOGIFNEG1(fcntl(lock, F_SETLK, &(struct flock){F_UNLCK}));
-  sigaction(SIGINT, &saveint, 0);
-  sigaction(SIGQUIT, &savequit, 0);
-  close(lock);
 }
 
 void Connect(void) {
@@ -267,7 +160,6 @@ void Connect(void) {
   expo = INITIAL_CONNECT_TIMEOUT;
   t1 = nowl();
   LOGIFNEG1(sigaction(SIGALRM, &(struct sigaction){.sa_handler = OnAlarm}, 0));
-Reconnect:
   DEBUGF("connecting to %s (%hhu.%hhu.%hhu.%hhu) to run %s", g_hostname, ip4[0],
          ip4[1], ip4[2], ip4[3], g_prog);
 TryAgain:
@@ -289,23 +181,8 @@ TryAgain:
       }
       goto TryAgain;
     }
-    if (err == ECONNREFUSED || err == EHOSTUNREACH || err == ECONNRESET) {
-      DEBUGF("got %s from %s (%hhu.%hhu.%hhu.%hhu)", strerror(err), g_hostname,
-             ip4[0], ip4[1], ip4[2], ip4[3]);
-      setitimer(ITIMER_REAL, &(const struct itimerval){0}, 0);
-      DeployEphemeralRunItDaemonRemotelyViaSsh(ai);
-      if (t2 > t1 + MAX_WAIT_CONNECT_SECONDS) {
-        FATALF("timeout connecting to %s (%hhu.%hhu.%hhu.%hhu:%d)", g_hostname,
-               ip4[0], ip4[1], ip4[2], ip4[3], ntohs(ai->ai_addr4->sin_port));
-        unreachable;
-      }
-      usleep((expo *= 2));
-      goto Reconnect;
-    } else {
-      FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
-             strerror(err));
-      unreachable;
-    }
+    FATALF("%s(%s:%hu): %s", "connect", g_hostname, g_runitdport,
+           strerror(err));
   } else {
     DEBUGF("connected to %s", g_hostname);
   }

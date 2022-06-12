@@ -55,36 +55,6 @@
 
 extern hidden struct SymbolTable *__symtab;
 
-struct Timestamps {
-  unsigned long long birth;
-  unsigned long long start;
-};
-
-unsigned long long __kbirth;  // see fork-nt.c
-
-privileged static struct Timestamps kenter(void) {
-  struct Timestamps ts;
-  ts.start = rdtsc();
-  ts.birth = __kbirth;
-  if (!ts.birth) {
-    ts.birth = kStartTsc;
-    if (!ts.birth) ts.birth = 1;
-    _lockcmpxchg(&__kbirth, 0, ts.birth);
-  }
-  return ts;
-}
-
-privileged static void kleave(struct Timestamps ts) {
-  uint64_t finish, elapse, adjust;
-  finish = rdtsc();
-  elapse = unsignedsubtract(finish, ts.start);
-  adjust = ts.birth + elapse;
-  if (!adjust) adjust = 1;
-  if (__kbirth == ts.birth) {
-    _lockcmpxchg(&__kbirth, ts.birth, adjust);  // ignore overlapping intervals
-  }
-}
-
 privileged static inline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;
   if (__builtin_add_overflow(t, n, &t)) t = (intptr_t)e;
@@ -213,8 +183,8 @@ privileged static void klog(const char *b, size_t n) {
   }
 }
 
-privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
-                                 struct Timestamps ts) {
+privileged static size_t kformat(char *b, size_t n, const char *fmt,
+                                 va_list va) {
   int si;
   wint_t t, u;
   const char *abet;
@@ -333,7 +303,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
           continue;
 
         case 'T':
-          x = ClocksToNanos(ts.start, ts.birth) % 86400000000000;
+          x = ClocksToNanos(rdtsc(), kStartTsc) % 86400000000000;
           goto FormatUnsigned;
 
         case 'P':
@@ -766,37 +736,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt, va_list va,
 privileged size_t ksnprintf(char *b, size_t n, const char *fmt, ...) {
   size_t m;
   va_list v;
-  struct Timestamps t;
-  t = kenter();
   va_start(v, fmt);
-  m = kformat(b, n, fmt, v, t);
-  va_end(v);
-  kleave(t);
-  return m;
-}
-
-/**
- * Privileged snprintf() w/o timestamp feature.
- *
- * This provides a marginal performance boost, but it means %T can no
- * longer be used.
- *
- *     snprintf(".")       l:        25𝑐         8𝑛𝑠
- *     kusnprintf(".")     l:        22𝑐         7𝑛𝑠
- *     ksnprintf(".")      l:        54𝑐        17𝑛𝑠
- *
- * @param b is buffer, and guaranteed a NUL-terminator if `n>0`
- * @param n is number of bytes available in buffer
- * @return length of output excluding NUL, which may exceed `n`
- * @see kprintf() for documentation
- * @asyncsignalsafe
- * @vforksafe
- */
-privileged size_t kusnprintf(char *b, size_t n, const char *fmt, ...) {
-  size_t m;
-  va_list v;
-  va_start(v, fmt);
-  m = kformat(b, n, fmt, v, (struct Timestamps){0});
+  m = kformat(b, n, fmt, v);
   va_end(v);
   return m;
 }
@@ -812,12 +753,7 @@ privileged size_t kusnprintf(char *b, size_t n, const char *fmt, ...) {
  * @vforksafe
  */
 privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
-  size_t m;
-  struct Timestamps t;
-  t = kenter();
-  m = kformat(b, n, fmt, v, t);
-  kleave(t);
-  return m;
+  return kformat(b, n, fmt, v);
 }
 
 /**
@@ -830,12 +766,9 @@ privileged size_t kvsnprintf(char *b, size_t n, const char *fmt, va_list v) {
 privileged void kvprintf(const char *fmt, va_list v) {
   size_t n;
   char b[4000];
-  struct Timestamps t;
   if (!v) return;
-  t = kenter();
-  n = kformat(b, sizeof(b), fmt, v, t);
+  n = kformat(b, sizeof(b), fmt, v);
   klog(b, MIN(n, sizeof(b) - 1));
-  kleave(t);
 }
 
 /**

@@ -26,7 +26,7 @@
 /**
  * Acquires mutex.
  */
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
+noasan noubsan int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int me, owner;
   unsigned tries;
   if (__threaded) {

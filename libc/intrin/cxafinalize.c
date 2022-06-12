@@ -34,9 +34,12 @@
  * @param pred can be null to match all
  */
 void __cxa_finalize(void *pred) {
+  void *fp, *arg;
   unsigned i, mask;
   struct CxaAtexitBlock *b, *b2;
 StartOver:
+  __cxa_lock();
+StartOverLocked:
   if ((b = __cxa_blocks.p)) {
     for (;;) {
       mask = b->mask;
@@ -45,9 +48,11 @@ StartOver:
         mask &= ~(1u << i);
         if (!pred || pred == b->p[i].pred) {
           b->mask &= ~(1u << i);
-          if (b->p[i].fp) {
-            STRACE("__cxa_finalize(%t, %p)", b->p[i].fp, b->p[i].arg);
-            ((void (*)(void *))b->p[i].fp)(b->p[i].arg);
+          if ((fp = b->p[i].fp)) {
+            arg = b->p[i].arg;
+            __cxa_unlock();
+            STRACE("__cxa_finalize(%t, %p)", fp, arg);
+            ((void (*)(void *))fp)(arg);
             goto StartOver;
           }
         }
@@ -61,7 +66,7 @@ StartOver:
           }
         }
         __cxa_blocks.p = b2;
-        goto StartOver;
+        goto StartOverLocked;
       } else {
         if (b->next) {
           b = b->next;
@@ -71,4 +76,5 @@ StartOver:
       }
     }
   }
+  __cxa_unlock();
 }

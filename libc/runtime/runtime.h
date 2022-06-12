@@ -20,7 +20,7 @@ extern _Atomic(int) __strace;                       /* SYS */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern uint64_t __syscount;                         /* RII */
-extern const uint64_t kStartTsc;                    /* RII */
+extern uint64_t kStartTsc;                          /* RII */
 extern const char kTmpPath[];                       /* RII */
 extern const char kNtSystemDirectory[];             /* RII */
 extern const char kNtWindowsDirectory[];            /* RII */

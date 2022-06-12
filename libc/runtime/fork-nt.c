@@ -139,12 +139,11 @@ textwindows void WinMainForked(void) {
   char *addr, *shad;
   struct DirectMap dm;
   uint64_t size, upsize;
+  int64_t oncrash, savetsc;
   struct MemoryInterval *maps;
   char16_t fvar[21 + 1 + 21 + 1];
-  int64_t oncrash, savetsc, savebir;
   uint32_t i, varlen, oldprot, savepid;
   long mapcount, mapcapacity, specialz;
-  extern uint64_t ts asm("kStartTsc");
 
   // check to see if the process was actually forked
   // this variable should have the pipe handle numba
@@ -198,13 +197,11 @@ textwindows void WinMainForked(void) {
 
   // read the .data and .bss program image sections
   savepid = __pid;
-  savebir = __kbirth;
-  savetsc = ts;
+  savetsc = kStartTsc;
   ReadOrDie(reader, __data_start, __data_end - __data_start);
   ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
   __pid = savepid;
-  __kbirth = savebir;
-  ts = savetsc;
+  kStartTsc = savetsc;
 
   // apply fixups and reapply memory protections
   _mmi.p = maps;

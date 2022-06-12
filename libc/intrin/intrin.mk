@@ -42,10 +42,6 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_INTRIN_A_OBJS):					\
-		OVERRIDE_CFLAGS +=			\
-			-foptimize-sibling-calls
-
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
@@ -69,20 +65,6 @@ o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
 o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie				\
-			-fwrapv				\
-			-x-no-pg			\
-			-mno-fentry			\
-			-ffreestanding			\
-			-fno-sanitize=all		\
-			-fno-stack-protector
-
-# we can't use compiler magic because:
-#   spinlocks are called very early in initialization
-#   e.g. __cxa_atexit()
-o/$(MODE)/libc/intrin/gettid.greg.o			\
-o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
-o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
-		OVERRIDE_CFLAGS +=			\
 			-fwrapv				\
 			-x-no-pg			\
 			-mno-fentry			\

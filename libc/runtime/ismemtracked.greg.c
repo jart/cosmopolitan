@@ -31,6 +31,7 @@ static inline bool IsMemtrackedImpl(int x, int y) {
 }
 
 bool IsMemtracked(int x, int y) {
+  /* assumes __mmi_lock() is held */
   bool res;
   res = IsMemtrackedImpl(x, y);
   return res;

@@ -200,7 +200,7 @@ unsigned GetSourceId(const char *name, size_t len) {
     do {
       i = (hash + step * (step + 1) / 2) & (sources.n - 1);
       if (sources.p[i].hash == hash &&
-          !timingsafe_bcmp(name, &strings.p[sources.p[i].name], len)) {
+          !memcmp(name, &strings.p[sources.p[i].name], len)) {
         return sources.p[i].id;
       }
       step++;
@@ -437,8 +437,8 @@ void Explore(void) {
 
 int main(int argc, char *argv[]) {
   int i, fd;
+  char path[PATH_MAX];
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
-  out = "/dev/stdout";
   GetOpts(argc, argv);
   threads = GetCpuCount();
   tls = calloc(threads, sizeof(*tls));
@@ -455,11 +455,14 @@ int main(int argc, char *argv[]) {
   LoadRelationships(argc, argv);
   Crunch();
   Explore();
-  CHECK_NE(-1, (fd = open(out, O_CREAT | O_WRONLY, 0644)), "open(%#s)", out);
+  ksnprintf(path, sizeof(path), "%s.%d", out, getpid());
+  CHECK_NE(-1, (fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)),
+           "open(%#s)", path);
   for (i = 0; i < threads; ++i) {
     CHECK_NE(-1, xwrite(fd, bouts[i], appendz(bouts[i]).i));
   }
   CHECK_NE(-1, close(fd));
+  CHECK_NE(-1, rename(path, out));
   for (i = 0; i < threads; ++i) {
     munmap(stack[i], GetStackSize());
     free(bouts[i]);

@@ -275,9 +275,8 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
                                     const char *lpCmdLine, int64_t nCmdShow) {
   const char16_t *cmdline;
   extern char os asm("__hostos");
-  extern uint64_t ts asm("kStartTsc");
   os = WINDOWS; /* madness https://news.ycombinator.com/item?id=21019722 */
-  ts = rdtsc();
+  kStartTsc = rdtsc();
   __pid = GetCurrentProcessId();
 #if !IsTiny()
   __wincrashearly = AddVectoredExceptionHandler(1, (void *)OnEarlyWinCrash);

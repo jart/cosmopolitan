@@ -6629,7 +6629,7 @@ static int HandleConnection(size_t i) {
           __isworker = true;
           connectionclose = false;
           if (!IsTiny() && systrace) {
-            __kbirth = rdtsc();
+            kStartTsc = rdtsc();
           }
           TRACE_BEGIN;
           if (sandboxed) {
