@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,20 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/errno.h"
+#include "libc/stdio/stdio.h"
 
-//	Reads UTF-8 content from stream into UTF-32 buffer.
-//
-//	This function is similar to getline() except it'll truncate lines
-//	exceeding size. The line ending marker is included and may be removed
-//	using _chomp().
-//
-//	@param	rdi is nul-terminated string that's non-null
-//	@param	rsi is size of rdi buffer
-//	@param	rsi is file stream object pointer
-//	@see	fgetws_unlocked()
-//	@threadsafe
-fgetws:	mov	%rdx,%r11
-	ezlea	fgetws_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fgetws,globl
+/**
+ * Writes wide character string to stream.
+ *
+ * Writing stops at the NUL-terminator, which isn't included in output.
+ * This function blocks until the full string is written, unless an
+ * unrecoverable error happens.
+ *
+ * @param s is a NUL-terminated string that's non-NULL
+ * @param f is an open stream
+ * @return strlen(s) or -1 w/ errno on error
+ */
+int fputws_unlocked(const wchar_t *s, FILE *f) {
+  int res = 0;
+  while (*s) {
+    if (fputwc_unlocked(*s++, f) == -1) {
+      if (ferror_unlocked(f) == EINTR) {
+        continue;
+      }
+      if (feof_unlocked(f)) {
+        errno = f->state = EPIPE;
+      }
+      return -1;
+    }
+    ++res;
+  }
+  return ++res;
+}

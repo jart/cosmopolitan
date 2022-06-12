@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 
 /**
@@ -29,20 +28,12 @@
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
  * @return strlen(s) or -1 w/ errno on error
+ * @threadsafe
  */
-int fputws_unlocked(const wchar_t *s, FILE *f) {
-  int res = 0;
-  while (*s) {
-    if (fputwc_unlocked(*s++, f) == -1) {
-      if (ferror_unlocked(f) == EINTR) {
-        continue;
-      }
-      if (feof_unlocked(f)) {
-        errno = f->state = EPIPE;
-      }
-      return -1;
-    }
-    ++res;
-  }
-  return ++res;
+int fputws(const wchar_t *s, FILE *f) {
+  int rc;
+  flockfile(f);
+  rc = fputws_unlocked(s, f);
+  funlockfile(f);
+  return rc;
 }

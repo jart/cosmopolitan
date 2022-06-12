@@ -17,24 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
-#include "libc/str/tpenc.h"
 
 /**
  * Writes wide character to stream.
  *
- * @return wc if written or -1 w/ errno
+ * @param wc has wide character
+ * @param f is file object stream pointer
+ * @return wide character if written or -1 w/ errno
+ * @threadsafe
  */
-wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
-  uint64_t w;
-  if (wc != -1) {
-    w = tpenc(wc);
-    do {
-      if (fputc_unlocked(w, f) == -1) {
-        return -1;
-      }
-    } while ((w >>= 8));
-    return wc;
-  } else {
-    return -1;
-  }
+wint_t fputwc(wchar_t wc, FILE *f) {
+  wint_t rc;
+  flockfile(f);
+  rc = fputwc_unlocked(wc, f);
+  funlockfile(f);
+  return rc;
 }

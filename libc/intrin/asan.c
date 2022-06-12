@@ -858,25 +858,25 @@ dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
 void *__asan_morgue_add(void *p) {
   int i;
   void *r;
-  pthread_mutex_lock(&__asan_lock);
+  if (__threaded) pthread_mutex_lock(&__asan_lock);
   i = __asan_morgue.i++ & (ARRAYLEN(__asan_morgue.p) - 1);
   r = __asan_morgue.p[i];
   __asan_morgue.p[i] = p;
-  pthread_mutex_unlock(&__asan_lock);
+  if (__threaded) pthread_mutex_unlock(&__asan_lock);
   return r;
 }
 
 static void __asan_morgue_flush(void) {
   int i;
   void *p;
-  pthread_mutex_lock(&__asan_lock);
+  if (__threaded) pthread_mutex_lock(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     if (__asan_morgue.p[i] && weaken(dlfree)) {
       weaken(dlfree)(__asan_morgue.p[i]);
     }
     __asan_morgue.p[i] = 0;
   }
-  pthread_mutex_unlock(&__asan_lock);
+  if (__threaded) pthread_mutex_unlock(&__asan_lock);
 }
 
 static size_t __asan_user_size(size_t n) {

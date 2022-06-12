@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,15 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
 
-//	Reads character from stream.
-//
-//	@param	rdi has file stream object pointer
-//	@return	byte in range 0..255, or -1 w/ errno
-//	@see	fgetc_unlocked()
-//	@threadsafe
-getc:	mov	%rdi,%r11
-	ezlea	fgetwc_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	getc,globl
+/**
+ * Writes byte to stream.
+ *
+ * @param c is byte to buffer or write, which is masked
+ * @return c as unsigned char if written or -1 w/ errno
+ */
+int(putc_unlocked)(int c, FILE *f) {
+  return fputc_unlocked(c, f);
+}

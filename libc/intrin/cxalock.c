@@ -16,6 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pthread.h"
 #include "libc/runtime/cxaatexit.internal.h"
 
-pthread_mutex_t __cxa_lock_obj;
+static pthread_mutex_t __cxa_lock_obj;
+
+void(__cxa_lock)(void) {
+  pthread_mutex_lock(&__cxa_lock_obj);
+}
+
+void(__cxa_unlock)(void) {
+  pthread_mutex_unlock(&__cxa_lock_obj);
+}

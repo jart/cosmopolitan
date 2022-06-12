@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,18 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
-//	Writes data to stream.
-//
-//	@param	rdi has pointer to data to write
-//	@param	rsi stride specifies the size of individual items
-//	@param	rdx count is the number of strides to write
-//	@param	rcx has file object stream pointer
-//	@return	count on success, [0,count) on EOF, 0 on error or count==0
-//	@see	fwrite_unlocked()
-//	@threadsafe
-fwrite:	mov	%rcx,%r11
-	ezlea	fwrite_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fwrite,globl
+/**
+ * Pushes byte back to stream.
+ */
+int ungetc_unlocked(int c, FILE *f) {
+  if (c == -1) return -1;
+  if (f->beg) {
+    f->buf[--f->beg] = c;
+  } else if (f->end < f->size) {
+    memmove(f->buf + 1, f->buf, f->end++);
+    f->buf[0] = c;
+  } else {
+    return -1;
+  }
+  return c & 255;
+}

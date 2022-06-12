@@ -23,6 +23,6 @@
  *
  * @return 0 on success, or non-zero if another thread owns the lock
  */
-int ftrylockfile(FILE *f) {
+int(ftrylockfile)(FILE *f) {
   return pthread_mutex_trylock(&f->lock);
 }

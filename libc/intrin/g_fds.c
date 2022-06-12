@@ -27,7 +27,15 @@
 STATIC_YOINK("_init_g_fds");
 
 struct Fds g_fds;
-pthread_mutex_t __fds_lock_obj;
+static pthread_mutex_t __fds_lock_obj;
+
+void(__fds_lock)(void) {
+  pthread_mutex_lock(&__fds_lock_obj);
+}
+
+void(__fds_unlock)(void) {
+  pthread_mutex_unlock(&__fds_lock_obj);
+}
 
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;

@@ -31,7 +31,6 @@
 sys_clone_linux:
 	push	%rbp
 	mov	%rsp,%rbp
-	.profilable
 	push	%rbx
 	mov	%rcx,%r10
 	mov	16(%rbp),%rbx

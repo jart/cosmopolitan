@@ -7,6 +7,7 @@
 COSMOPOLITAN_C_START_
 
 forceinline pureconst bool IsValidStackFramePointer(struct StackFrame *x) {
+  /* assumes __mmi_lock() is held */
   return IsLegalPointer(x) && !((uintptr_t)x & 15) &&
          (IsStaticStackFrame((uintptr_t)x >> 16) ||
           IsSigAltStackFrame((uintptr_t)x >> 16) ||

@@ -53,6 +53,7 @@ static void ShowHint(const char *s) {
 }
 
 static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
+  bool ok;
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
@@ -99,7 +100,10 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
-    if (!IsValidStackFramePointer(frame)) {
+    __mmi_lock();
+    ok = IsValidStackFramePointer(frame);
+    __mmi_unlock();
+    if (!ok) {
       return -1;
     }
     addr = frame->addr;

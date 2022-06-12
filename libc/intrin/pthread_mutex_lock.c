@@ -18,7 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/sysv/consts/futex.h"
@@ -26,25 +27,24 @@
 /**
  * Acquires mutex.
  */
-noasan noubsan int pthread_mutex_lock(pthread_mutex_t *mutex) {
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int me, owner;
   unsigned tries;
-  if (__threaded) {
-    for (tries = 0, me = gettid();;) {
-      owner = 0;
-      if (_lockcmpxchgp(&mutex->owner, &owner, me) || owner == me) {
-        break;
-      }
-      atomic_fetch_add(&mutex->waits, +1);
-      if (!IsLinux() || futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {
-        if (++tries & 7) {
-          __builtin_ia32_pause();
-        } else {
-          sched_yield();
-        }
-      }
-      atomic_fetch_add(&mutex->waits, -1);
+  for (tries = 0, me = gettid();;) {
+    owner = 0;
+    if (atomic_compare_exchange_weak(&mutex->owner, &owner, me) ||
+        owner == me) {
+      break;
     }
+    atomic_fetch_add(&mutex->waits, +1);
+    if (!IsLinux() || futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {
+      if (++tries & 7) {
+        __builtin_ia32_pause();
+      } else {
+        sched_yield();
+      }
+    }
+    atomic_fetch_add(&mutex->waits, -1);
   }
   ++mutex->reent;
   return 0;

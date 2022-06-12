@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
 #include "libc/intrin/pthread.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/symbolic.h"
 
 #define FILENAME_MAX PATH_MAX
@@ -157,19 +158,23 @@ int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
 int vfprintf_unlocked(FILE *, const char *, va_list)
     paramsnonnull() dontthrow nocallback;
 
-#define getc_unlocked(f)     fgetc_unlocked(f)
-#define getwc_unlocked(f)    fgetwc_unlocked(f)
-#define putc_unlocked(c, f)  fputc_unlocked(c, f)
-#define putwc_unlocked(c, f) fputwc_unlocked(c, f)
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define flockfile(f)    (__threaded ? flockfile(f) : 0)
+#define funlockfile(f)  (__threaded ? funlockfile(f) : 0)
+#define ftrylockfile(f) (__threaded ? ftrylockfile(f) : 0)
 
 #define getc(f)     fgetc(f)
 #define getwc(f)    fgetwc(f)
 #define putc(c, f)  fputc(c, f)
 #define putwc(c, f) fputwc(c, f)
+
+#define getc_unlocked(f)     fgetc_unlocked(f)
+#define getwc_unlocked(f)    fgetwc_unlocked(f)
+#define putc_unlocked(c, f)  fputc_unlocked(c, f)
+#define putwc_unlocked(c, f) fputwc_unlocked(c, f)
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 /* clang-format off */

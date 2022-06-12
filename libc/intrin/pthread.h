@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #include "libc/calls/struct/timespec.h"
+#include "libc/intrin/kprintf.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -23,9 +24,9 @@ typedef unsigned long *pthread_t;
 typedef int pthread_once_t;
 
 typedef struct {
+  _Atomic(int) owner;
+  _Atomic(int) waits;
   int reent;
-  int owner;
-  int waits;
 } pthread_mutex_t;
 
 typedef struct {

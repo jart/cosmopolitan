@@ -20,7 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/lockcmpxchg.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/threaded.h"
@@ -39,12 +39,11 @@
 
 void ftrace_hook(void);
 
-_Alignas(64) int ftrace_lock;
-
 static struct Ftrace {
   int skew;
   int stackdigs;
   int64_t lastaddr;
+  volatile bool busy;
 } g_ftrace;
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
@@ -65,37 +64,14 @@ static privileged inline int GetNestingLevel(struct StackFrame *frame) {
 }
 
 static privileged inline void ReleaseFtraceLock(void) {
-  int zero = 0;
-  __atomic_store(&ftrace_lock, &zero, __ATOMIC_RELAXED);
+  g_ftrace.busy = false;
 }
 
 static privileged inline bool AcquireFtraceLock(void) {
-  int me, owner;
-  unsigned tries;
   if (!__threaded) {
-    return _cmpxchg(&ftrace_lock, 0, -1);
+    return _cmpxchg(&g_ftrace.busy, false, true);
   } else {
-    for (tries = 0, me = gettid();;) {
-      owner = 0;
-      if (_lockcmpxchgp(&ftrace_lock, &owner, me)) {
-        return true;
-      }
-      if (owner == -1) {
-        // avoid things getting weird after first clone() call transition
-        return false;
-      }
-      if (owner == me) {
-        // we ignore re-entry into ftrace. while the code and build config
-        // is written to make re-entry highly unlikely, it's impossible to
-        // guarantee. there's also the possibility of asynchronous signals
-        return false;
-      }
-      if (++tries & 7) {
-        __builtin_ia32_pause();
-      } else {
-        sched_yield();
-      }
-    }
+    return _lockcmpxchg(&g_ftrace.busy, false, true);
   }
 }
 

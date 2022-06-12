@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,16 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/stdio/stdio.h"
 
-//	Writes character to stream.
-//
-//	@param	rdi c is byte to buffer or write, which is masked
-//	@param	rsi has stream object pointer
-//	@return c as unsigned char if written or -1 w/ errno
-//	@see	fputc_unlocked()
-//	@threadsafe
-putc:	mov	%rsi,%r11
-	ezlea	fputc_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	putc,globl
+/**
+ * Reads UTF-8 content from stream into UTF-32 buffer.
+ *
+ * This function is similar to getline() except it'll truncate lines
+ * exceeding size. The line ending marker is included and may be removed
+ * using _chomp().
+ *
+ * @param s is is nul-terminated string that's non-null
+ * @param size is byte length of `s`
+ * @param f is file stream object pointer
+ * @see fgetws()
+ */
+wchar_t *fgetws_unlocked(wchar_t *s, int size, FILE *f) {
+  wint_t c;
+  wchar_t *p = s;
+  if (size > 0) {
+    while (--size > 0) {
+      if ((c = fgetwc_unlocked(f)) == -1) {
+        if (ferror_unlocked(f) == EINTR) continue;
+        break;
+      }
+      *p++ = c;
+      if (c == '\n') break;
+    }
+    *p = '\0';
+  }
+  return (intptr_t)p > (intptr_t)s ? s : NULL;
+}

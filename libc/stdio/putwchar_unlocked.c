@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,18 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
 
-//	Reads data from stream.
-//
-//	@param	rdi has pointer to data to read
-//	@param	rsi stride specifies the size of individual items
-//	@param	rdx count is the number of strides to read
-//	@param	rcx has file object stream pointer
-//	@return	count on success, [0,count) on EOF, 0 on error or count==0
-//	@see	fread_unlocked()
-//	@threadsafe
-fread:	mov	%rcx,%r11
-	ezlea	fread_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fread,globl
+/**
+ * Writes wide character to stdout.
+ * @return wc if written or -1 w/ errno
+ */
+wint_t putwchar_unlocked(wchar_t wc) {
+  return fputwc_unlocked(wc, stdout);
+}

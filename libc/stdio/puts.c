@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
-static int PutsImpl(const char *s, FILE *f) {
+static inline int PutsImpl(const char *s, FILE *f) {
   size_t n, r;
   if ((n = strlen(s))) {
     r = fwrite_unlocked(s, 1, n, f);

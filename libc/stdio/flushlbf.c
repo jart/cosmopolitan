@@ -29,7 +29,7 @@
 void _flushlbf(void) {
   int i;
   FILE *f;
-  pthread_mutex_lock(&__fflush.lock);
+  __fflush_lock();
   for (i = 0; i < __fflush.handles.i; ++i) {
     if ((f = __fflush.handles.p[i])) {
       flockfile(f);
@@ -39,5 +39,5 @@ void _flushlbf(void) {
       funlockfile(f);
     }
   }
-  pthread_mutex_unlock(&__fflush.lock);
+  __fflush_unlock();
 }

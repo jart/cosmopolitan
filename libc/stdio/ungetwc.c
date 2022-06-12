@@ -17,31 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 
 /**
  * Pushes wide character back to stream.
+ * @threadsafe
  */
-wint_t ungetwc_unlocked(wint_t c, FILE *f) {
-  char b[6];
-  unsigned n;
-  uint64_t w;
-  if (c == -1) return -1;
-  n = 0;
-  w = tpenc(c);
-  do {
-    b[n++] = w;
-  } while ((w >>= 8));
-  if (f->beg >= n) {
-    f->beg -= n;
-    memcpy(f->buf + f->beg, b, n);
-  } else if (f->beg + f->end + n <= f->size) {
-    memmove(f->buf + f->beg + n, f->buf + f->beg, f->end - f->beg);
-    memcpy(f->buf + f->beg, b, n);
-    f->end += n;
-  } else {
-    return -1;
-  }
-  return c;
+wint_t ungetwc(wint_t c, FILE *f) {
+  wint_t rc;
+  flockfile(f);
+  rc = ungetwc_unlocked(c, f);
+  funlockfile(f);
+  return rc;
 }

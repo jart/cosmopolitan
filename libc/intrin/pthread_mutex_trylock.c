@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/threaded.h"
 
@@ -26,18 +26,15 @@
  * Tries to acquire mutex.
  */
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int rc, me, owner = 0;
-  if (__threaded) {
-    me = gettid();
-    if (!_lockcmpxchgp(&mutex->owner, &owner, me) && owner == me) {
-      rc = 0;
-      ++mutex->reent;
-    } else {
-      rc = EBUSY;
-    }
-  } else {
+  int rc, me, owner;
+  me = gettid();
+  owner = 0;
+  if (!atomic_compare_exchange_strong(&mutex->owner, &owner, me) &&
+      owner == me) {
     rc = 0;
     ++mutex->reent;
+  } else {
+    rc = EBUSY;
   }
   return rc;
 }

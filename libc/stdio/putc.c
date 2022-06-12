@@ -23,7 +23,8 @@
  *
  * @param c is byte to buffer or write, which is masked
  * @return c as unsigned char if written or -1 w/ errno
+ * @threadsafe
  */
-int(putc_unlocked)(int c, FILE *f) {
-  return fputc_unlocked(c, f);
+int(putc)(int c, FILE *f) {
+  return fputc(c, f);
 }

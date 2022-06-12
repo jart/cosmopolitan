@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,16 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
 
-//	Writes wide character to stream.
-//
-//	@param	rdi has wide character
-//	@param	rsi has file object stream pointer
-//	@return	rax is wide character if written or -1 w/ errno
-//	@see	fputwc_unlocked()
-//	@threadsafe
-fputwc:	mov	%rsi,%r11
-	ezlea	fputwc_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fputwc,globl
+/**
+ * Reads UTF-8 character from stream.
+ * @return wide character or -1 on EOF or error
+ */
+wint_t getwchar_unlocked(void) {
+  return fgetwc_unlocked(stdin);
+}

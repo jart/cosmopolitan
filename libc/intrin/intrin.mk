@@ -72,6 +72,21 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
+# synchronization primitives are intended to be magic free
+o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
+o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
+o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-fno-stack-protector
+
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\

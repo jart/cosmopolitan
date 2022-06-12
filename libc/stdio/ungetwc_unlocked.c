@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,15 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/str/tpenc.h"
 
-//	Reads UTF-8 character from stream.
-//
-//	@param	rdi has file stream object pointer
-//	@return	wide character or -1 on EOF or error
-//	@see	fgetwc_unlocked()
-//	@threadsafe
-getwc:	mov	%rdi,%r11
-	ezlea	fgetwc_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	getwc,globl
+/**
+ * Pushes wide character back to stream.
+ */
+wint_t ungetwc_unlocked(wint_t c, FILE *f) {
+  char b[6];
+  unsigned n;
+  uint64_t w;
+  if (c == -1) return -1;
+  n = 0;
+  w = tpenc(c);
+  do {
+    b[n++] = w;
+  } while ((w >>= 8));
+  if (f->beg >= n) {
+    f->beg -= n;
+    memcpy(f->buf + f->beg, b, n);
+  } else if (f->beg + f->end + n <= f->size) {
+    memmove(f->buf + f->beg + n, f->buf + f->beg, f->end - f->beg);
+    memcpy(f->buf + f->beg, b, n);
+    f->end += n;
+  } else {
+    return -1;
+  }
+  return c;
+}

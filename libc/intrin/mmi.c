@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,57 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/intrin/pthread.h"
+#include "libc/runtime/memtrack.internal.h"
 
-//	Wrapper for applying locking to stdio functions.
-//
-//	This function is intended to be called by thunks.
-//
-//	@param	rax is stdio function pointer
-//	@param	rdi is passed along as an arg
-//	@param	rsi is passed along as an arg
-//	@param	rdx is passed along as an arg
-//	@param	rcx is passed along as an arg
-//	@param	r11 has the FILE* obj pointer
-//	@return	rax is passed along as result
-//	@return	rdx is passed along as result
-//	@threadsafe
-stdio_unlock:
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
+STATIC_YOINK("_init__mmi");
 
-//	acquires mutex
-	push	%rax
-	push	%rdi
-	push	%rsi
-	push	%rdx
-	push	%rcx
-	push	%r11
-	mov	%r11,%rdi
-	call	flockfile
-	pop	%r11
-	pop	%rcx
-	pop	%rdx
-	pop	%rsi
-	pop	%rdi
-	pop	%rax
+struct MemoryIntervals _mmi;
+static pthread_mutex_t __mmi_lock_obj;
 
-//	calls delegate
-	push	%r11
-	push	%rsi			# align stack
-	call	*%rax
-	pop	%rsi
-	pop	%r11
+void(__mmi_lock)(void) {
+  pthread_mutex_lock(&__mmi_lock_obj);
+}
 
-//	releases mutex
-	push	%rax
-	push	%rdx
-	mov	%r11,%rdi
-	call	funlockfile
-	pop	%rdx
-	pop	%rax
-
-	pop	%rbp
-	ret
-	.endfn	stdio_unlock,globl
+void(__mmi_unlock)(void) {
+  pthread_mutex_unlock(&__mmi_lock_obj);
+}

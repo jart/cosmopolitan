@@ -16,94 +16,89 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.internal.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/fflush.internal.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-
-static pthread_mutex_t __fflush_lock_obj;
-
-void(__fflush_lock)(void) {
-  pthread_mutex_lock(&__fflush_lock_obj);
-}
-
-void(__fflush_unlock)(void) {
-  pthread_mutex_unlock(&__fflush_lock_obj);
-}
+#include "libc/sysv/errfuns.h"
 
 /**
- * Blocks until data from stream buffer is written out.
+ * Reads data from stream.
  *
- * @param f is the stream handle, or 0 for all streams
- * @return is 0 on success or -1 on error
+ * @param stride specifies the size of individual items
+ * @param count is the number of strides to fetch
+ * @return count on success, [0,count) on eof, or 0 on error or count==0
  */
-int fflush_unlocked(FILE *f) {
-  int rc = 0;
-  size_t i;
-  if (!f) {
-    __fflush_lock();
-    for (i = __fflush.handles.i; i; --i) {
-      if ((f = __fflush.handles.p[i - 1])) {
-        if (fflush(f) == -1) {
-          rc = -1;
-        }
-      }
-    }
-    __fflush_unlock();
-  } else if (f->fd != -1) {
-    if (__fflush_impl(f) == -1) {
-      rc = -1;
-    }
-  } else if (f->beg && f->beg < f->size) {
-    f->buf[f->beg] = 0;
+size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
+  char *p;
+  ssize_t rc;
+  size_t n, m;
+  struct iovec iov[2];
+  if ((f->iomode & O_ACCMODE) == O_WRONLY) {
+    f->state = errno = EBADF;
+    return 0;
   }
-  return rc;
-}
-
-textstartup int __fflush_register(FILE *f) {
-  int rc;
-  size_t i;
-  struct StdioFlush *sf;
-  __fflush_lock();
-  sf = &__fflush;
-  if (!sf->handles.p) {
-    sf->handles.p = sf->handles_initmem;
-    pushmov(&sf->handles.n, ARRAYLEN(sf->handles_initmem));
-    __cxa_atexit(fflush_unlocked, 0, 0);
+  if (f->beg > f->end) {
+    f->state = errno = EINVAL;
+    return 0;
   }
-  for (i = sf->handles.i; i; --i) {
-    if (!sf->handles.p[i - 1]) {
-      sf->handles.p[i - 1] = f;
-      __fflush_unlock();
-      return 0;
+  if (__builtin_mul_overflow(stride, count, &n)) {
+    f->state = errno = EOVERFLOW;
+    return 0;
+  }
+  p = buf;
+  m = f->end - f->beg;
+  if (MIN(n, m)) {
+    memcpy(p, f->buf + f->beg, MIN(n, m));
+  }
+  if (n < m) {
+    f->beg += n;
+    return count;
+  }
+  if (n == m) {
+    f->beg = f->end = 0;
+    return count;
+  }
+  if (f->fd == -1) {
+    f->beg = 0;
+    f->end = 0;
+    f->state = -1;
+    return m / stride;
+  }
+  iov[0].iov_base = p + m;
+  iov[0].iov_len = n - m;
+  if (f->bufmode != _IONBF && n < f->size) {
+    iov[1].iov_base = f->buf;
+    if (f->size > PUSHBACK) {
+      iov[1].iov_len = f->size - PUSHBACK;
+    } else {
+      iov[1].iov_len = f->size;
     }
+  } else {
+    iov[1].iov_base = NULL;
+    iov[1].iov_len = 0;
   }
-  rc = append(&sf->handles, &f);
-  __fflush_unlock();
-  return rc;
-}
-
-void __fflush_unregister(FILE *f) {
-  size_t i;
-  struct StdioFlush *sf;
-  __fflush_lock();
-  sf = &__fflush;
-  sf = pushpop(sf);
-  for (i = sf->handles.i; i; --i) {
-    if (sf->handles.p[i - 1] == f) {
-      pushmov(&sf->handles.p[i - 1], 0);
-      break;
-    }
+  if ((rc = readv(f->fd, iov, 2)) == -1) {
+    f->state = errno;
+    return 0;
   }
-  __fflush_unlock();
+  n = rc;
+  f->beg = 0;
+  f->end = 0;
+  if (n > iov[0].iov_len) {
+    f->end += n - iov[0].iov_len;
+    return count;
+  } else {
+    n = (m + n) / stride;
+    if (n < count) f->state = -1;
+    return n;
+  }
 }

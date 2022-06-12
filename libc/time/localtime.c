@@ -7,6 +7,7 @@
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -45,14 +46,17 @@ STATIC_YOINK("usr/share/zoneinfo/UTC");
 
 static pthread_mutex_t locallock;
 
-static int lock(void) {
+static int localtime_lock(void) {
 	pthread_mutex_lock(&locallock);
 	return 0;
 }
 
-static void unlock(void) {
+static void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
+
+#define localtime_lock()   (__threaded ? localtime_lock() : 0)
+#define localtime_unlock() (__threaded ? localtime_unlock() : 0)
 
 #ifndef TZ_ABBR_MAX_LEN
 #define TZ_ABBR_MAX_LEN	16
@@ -1407,10 +1411,10 @@ localtime_tzset_unlocked(void)
 void
 tzset(void)
 {
-	if (lock() != 0)
+	if (localtime_lock() != 0)
 		return;
 	localtime_tzset_unlocked();
-	unlock();
+	localtime_unlock();
 }
 
 static void
@@ -1422,7 +1426,7 @@ static void
 localtime_gmtcheck(void)
 {
 	static bool gmt_is_set;
-	if (lock() != 0)
+	if (localtime_lock() != 0)
 		return;
 	if (! gmt_is_set) {
 		gmtptr = malloc(sizeof *gmtptr);
@@ -1431,7 +1435,7 @@ localtime_gmtcheck(void)
 			gmtload(gmtptr);
 		gmt_is_set = true;
 	}
-	unlock();
+	localtime_unlock();
 }
 
 /*
@@ -1535,7 +1539,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 static struct tm *
 localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
 {
-	int err = lock();
+	int err = localtime_lock();
 	if (err) {
 		errno = err;
 		return NULL;
@@ -1543,7 +1547,7 @@ localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
 	if (setname || !lcl_is_set)
 		localtime_tzset_unlocked();
 	tmp = localsub(lclptr, timep, setname, tmp);
-	unlock();
+	localtime_unlock();
 	return tmp;
 }
 
@@ -2150,14 +2154,14 @@ time_t
 mktime(struct tm *tmp)
 {
 	time_t t;
-	int err = lock();
+	int err = localtime_lock();
 	if (err) {
 		errno = err;
 		return -1;
 	}
 	localtime_tzset_unlocked();
 	t = mktime_tzname(lclptr, tmp, true);
-	unlock();
+	localtime_unlock();
 	return t;
 }
 

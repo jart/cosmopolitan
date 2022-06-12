@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"

@@ -27,6 +27,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
@@ -46,6 +47,7 @@
 noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
                                                    const struct StackFrame *bp,
                                                    struct SymbolTable *st) {
+  bool ok;
   size_t gi;
   intptr_t addr;
   int i, symbol, addend;
@@ -55,7 +57,10 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
-    if (!IsValidStackFramePointer(frame)) {
+    __mmi_lock();
+    ok = IsValidStackFramePointer(frame);
+    __mmi_unlock();
+    if (!ok) {
       kprintf("%p corrupt frame pointer\n", frame);
       break;
     }

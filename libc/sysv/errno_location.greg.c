@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 
 /**

@@ -131,7 +131,7 @@ struct state {
  *   buffer, using shift right, and new bytes are appended to the top of the
  *   bit buffer, using shift left.
  */
-static int bits(struct state *s, int need) {
+static noinstrument int bits(struct state *s, int need) {
   long val; /* bit accumulator (can use up to 20 bits) */
 
   /* load at least need bits into val */

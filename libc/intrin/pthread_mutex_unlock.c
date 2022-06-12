@@ -20,6 +20,7 @@
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/sysv/consts/futex.h"
@@ -27,19 +28,17 @@
 /**
  * Releases mutex.
  */
-noasan noubsan int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int owner;
   bool shouldunlock;
   assert(mutex->reent > 0);
   shouldunlock = --mutex->reent <= 0;
-  if (__threaded) {
-    assert(mutex->owner == gettid());
-    if (shouldunlock) {
-      atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
-      if (IsLinux() &&
-          atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-        futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
-      }
+  assert(mutex->owner == gettid());
+  if (shouldunlock) {
+    atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
+    if (IsLinux() &&
+        atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
+      futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
     }
   }
   return 0;

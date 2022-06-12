@@ -1607,6 +1607,9 @@ ape_pad_text:
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
+#if !IsTiny()
+	.align	4096
+#endif
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits

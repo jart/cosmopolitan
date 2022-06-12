@@ -101,7 +101,7 @@ static dontinline int spin_acquire_lock(int *sl) {
 
 #define MLOCK_T               int
 #define TRY_LOCK(sl)          !CAS_LOCK(sl)
-#define RELEASE_LOCK(sl)      if (__threaded) CLEAR_LOCK(sl)
+#define RELEASE_LOCK(sl)      (__threaded && (CLEAR_LOCK(sl), 0))
 #define ACQUIRE_LOCK(sl)      (__threaded && CAS_LOCK(sl) ? spin_acquire_lock(sl) : 0)
 #define INITIAL_LOCK(sl)      (*sl = 0)
 #define DESTROY_LOCK(sl)      (0)

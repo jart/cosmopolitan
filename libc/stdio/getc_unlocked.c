@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=8 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,20 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
 
-//	Writes wide character string to stream.
-//
-//	Writing stops at the NUL-terminator, which isn't included in output.
-//	This function blocks until the full string is written, unless an
-//	unrecoverable error happens.
-//
-//	@param	rdi is nul-terminated string that's non-null
-//	@param	rsi is file object stream pointer
-//	@return	strlen(rdi) on success or -1 w/ errno
-//	@see	fputws_unlocked()
-//	@threadsafe
-fputws:	mov	%rsi,%r11
-	ezlea	fputws_unlocked,ax
-	jmp	stdio_unlock
-	.endfn	fputws,globl
+/**
+ * Reads byte from stream.
+ * @return byte in range 0..255, or -1 w/ errno
+ */
+int(getc_unlocked)(FILE *f) {
+  return fgetc_unlocked(f);
+}

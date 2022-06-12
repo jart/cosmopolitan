@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_CXAATEXIT_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_CXAATEXIT_H_
-#include "libc/intrin/pthread.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -17,13 +17,14 @@ struct CxaAtexitBlocks {
   } * p, root;
 };
 
-extern pthread_mutex_t __cxa_lock_obj;
 extern struct CxaAtexitBlocks __cxa_blocks;
 
+void __cxa_lock(void);
+void __cxa_unlock(void);
 void __cxa_printexits(FILE *, void *);
 
-#define __cxa_lock()   pthread_mutex_lock(&__cxa_lock_obj)
-#define __cxa_unlock() pthread_mutex_unlock(&__cxa_lock_obj)
+#define __cxa_lock()   (__threaded ? __cxa_lock() : 0)
+#define __cxa_unlock() (__threaded ? __cxa_unlock() : 0)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

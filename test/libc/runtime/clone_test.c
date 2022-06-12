@@ -23,6 +23,7 @@
 #include "libc/intrin/spinlock.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"

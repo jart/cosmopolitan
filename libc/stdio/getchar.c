@@ -21,7 +21,8 @@
 /**
  * Reads byte from stdin.
  * @return byte in range 0..255, or -1 w/ errno
+ * @htreadsafe
  */
-int getchar_unlocked(void) {
-  return fgetc_unlocked(stdin);
+int getchar(void) {
+  return fgetc(stdin);
 }
