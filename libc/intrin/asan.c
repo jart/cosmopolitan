@@ -390,10 +390,14 @@ void __asan_unpoison(void *p, long n) {
 static bool __asan_is_mapped(int x) {
   // xxx: we can't lock because no reentrant locks yet
   int i;
+  bool res;
   struct MemoryIntervals *m;
+  __mmi_lock();
   m = weaken(_mmi);
   i = FindMemoryInterval(m, x);
-  return i < m->i && x >= m->p[i].x;
+  res = i < m->i && x >= m->p[i].x;
+  __mmi_unlock();
+  return res;
 }
 
 static bool __asan_is_image(const unsigned char *p) {
@@ -812,7 +816,7 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
   p = __asan_format_section(p, _base, _etext, ".text", addr);
   p = __asan_format_section(p, _etext, _edata, ".data", addr);
   p = __asan_format_section(p, _end, _edata, ".bss", addr);
-  // xxx: we can't lock because no reentrant locks yet
+  __mmi_lock();
   for (m = weaken(_mmi), i = 0; i < m->i; ++i) {
     x = m->p[i].x;
     y = m->p[i].y;
@@ -823,6 +827,7 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
     if (x <= z && z <= y) p = __stpcpy(p, " ←shadow");
     *p++ = '\n';
   }
+  __mmi_unlock();
   *p = 0;
   kprintf("%s", __fatalbuf);
   __asan_report_memory_origin(addr, size, kind);

@@ -213,13 +213,7 @@ void StartTcpServer(void) {
 
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
   if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
-    if (g_servaddr.sin_port != 0) {
-      g_servaddr.sin_port = 0;
-      StartTcpServer();
-      return;
-    } else {
-      FATALF("bind failed %m");
-    }
+    FATALF("bind failed %m");
   }
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
@@ -507,7 +501,7 @@ int Poll(void) {
 TryAgain:
   if (g_interrupted) return 0;
   fds[0].fd = g_servfd;
-  fds[0].events = POLLIN;
+  fds[0].events = POLLIN | POLLERR | POLLHUP;
   wait = MIN(1000, g_timeout);
   evcount = poll(fds, ARRAYLEN(fds), wait);
   if (!evcount) g_timeout -= wait;

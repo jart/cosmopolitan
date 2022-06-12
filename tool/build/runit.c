@@ -413,6 +413,7 @@ bool Recv(unsigned char *p, size_t n) {
     do {
       rc = mbedtls_ssl_read(&ezssl, p + i, n - i);
     } while (rc == MBEDTLS_ERR_SSL_WANT_READ);
+    if (!rc) return false;
     if (rc < 0) {
       TlsDie("read response failed", rc);
     }

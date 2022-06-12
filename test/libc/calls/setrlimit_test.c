@@ -62,6 +62,7 @@ TEST(setrlimit, testCpuLimit) {
   struct rlimit rlim;
   double matrices[3][3][3];
   if (IsWindows()) return; /* of course it doesn't work on windows */
+  if (IsOpenbsd()) return; /* TODO(jart): fix flake */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     CHECK_EQ(0, xsigaction(SIGXCPU, OnSigxcpu, 0, 0, 0));

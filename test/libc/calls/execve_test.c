@@ -236,19 +236,19 @@ void SystemElf(void) {
 }
 
 void ForkElf(void) {
-  if (!fork()) {
+  if (!(pid = fork())) {
     execl("bin/tiny64.elf", "bin/tiny64.elf", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 void VforkElf(void) {
-  if (!vfork()) {
+  if (!(pid = vfork())) {
     execl("bin/tiny64.elf", "bin/tiny64.elf", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,19 +258,19 @@ void SystemNoMod(void) {
 }
 
 void ForkNoMod(void) {
-  if (!fork()) {
+  if (!(pid = fork())) {
     execl("bin/life-nomod.com", "bin/life-nomod.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 void VforkNoMod(void) {
-  if (!vfork()) {
+  if (!(pid = vfork())) {
     execl("bin/life-nomod.com", "bin/life-nomod.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -280,19 +280,19 @@ void SystemClassic(void) {
 }
 
 void ForkClassic(void) {
-  if (!fork()) {
+  if (!(pid = fork())) {
     execl("bin/life-classic.com", "bin/life-classic.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 void VforkClassic(void) {
-  if (!vfork()) {
+  if (!(pid = vfork())) {
     execl("bin/life-classic.com", "bin/life-classic.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,19 +302,19 @@ void SystemNoMod3mb(void) {
 }
 
 void ForkNoMod3mb(void) {
-  if (!fork()) {
+  if (!(pid = fork())) {
     execl("bin/life-nomod.com", "bin/life-nomod.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 void VforkNoMod3mb(void) {
-  if (!vfork()) {
+  if (!(pid = vfork())) {
     execl("bin/life-nomod.com", "bin/life-nomod.com", 0);
     _Exit(127);
   }
-  wait(0);
+  waitpid(pid, 0, 0);
 }
 
 BENCH(execve, bench1) {
