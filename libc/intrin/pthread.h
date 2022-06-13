@@ -7,15 +7,15 @@ COSMOPOLITAN_C_START_
 
 #define PTHREAD_ONCE_INIT 0
 
+#define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_RECURSIVE
 #define PTHREAD_MUTEX_NORMAL     0
-#define PTHREAD_MUTEX_DEFAULT    0
 #define PTHREAD_MUTEX_RECURSIVE  1
 #define PTHREAD_MUTEX_ERRORCHECK 2
 #define PTHREAD_MUTEX_STALLED    0
 #define PTHREAD_MUTEX_ROBUST     1
 
 /* clang-format off */
-#define PTHREAD_MUTEX_INITIALIZER {0}
+#define PTHREAD_MUTEX_INITIALIZER {PTHREAD_MUTEX_DEFAULT}
 #define PTHREAD_RWLOCK_INITIALIZER {{{0}}}
 #define PTHREAD_COND_INITIALIZER {{{0}}}
 /* clang-format on */
@@ -24,21 +24,22 @@ typedef unsigned long *pthread_t;
 typedef int pthread_once_t;
 
 typedef struct {
+  int attr;
+  int reent;
   _Atomic(int) owner;
   _Atomic(int) waits;
-  int reent;
 } pthread_mutex_t;
 
 typedef struct {
-  unsigned __attr;
+  int attr;
 } pthread_mutexattr_t;
 
 typedef struct {
-  unsigned __attr;
+  int attr;
 } pthread_condattr_t;
 
 typedef struct {
-  unsigned __attr[2];
+  int attr[2];
 } pthread_rwlockattr_t;
 
 typedef struct {
@@ -69,6 +70,7 @@ wontreturn void pthread_exit(void *);
 pureconst pthread_t pthread_self(void);
 int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);
+int pthread_yield(void);
 int pthread_detach(pthread_t);
 int pthread_join(pthread_t, void **);
 int pthread_equal(pthread_t, pthread_t);
@@ -80,6 +82,10 @@ int pthread_mutex_trylock(pthread_mutex_t *);
 int pthread_mutex_timedlock(pthread_mutex_t *, const struct timespec *);
 int pthread_mutex_destroy(pthread_mutex_t *);
 int pthread_mutex_consistent(pthread_mutex_t *);
+int pthread_mutexattr_init(pthread_mutexattr_t *);
+int pthread_mutexattr_destroy(pthread_mutexattr_t *);
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *, int *);
+int pthread_mutexattr_settype(pthread_mutexattr_t *, int);
 int pthread_cond_init(pthread_cond_t *, const pthread_condattr_t *);
 int pthread_cond_destroy(pthread_cond_t *);
 int pthread_cond_wait(pthread_cond_t *, pthread_mutex_t *);

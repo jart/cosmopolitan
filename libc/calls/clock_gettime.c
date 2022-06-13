@@ -55,7 +55,7 @@
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
-noinstrument int clock_gettime(int clockid, struct timespec *ts) {
+int clock_gettime(int clockid, struct timespec *ts) {
   int rc;
   char *buf;
   if (IsAsan() && !__asan_is_valid_timespec(ts)) {

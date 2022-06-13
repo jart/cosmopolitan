@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
+#include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/symbolic.h"
@@ -162,10 +163,6 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 │ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define flockfile(f)    (__threaded ? flockfile(f) : 0)
-#define funlockfile(f)  (__threaded ? funlockfile(f) : 0)
-#define ftrylockfile(f) (__threaded ? ftrylockfile(f) : 0)
-
 #define getc(f)     fgetc(f)
 #define getwc(f)    fgetwc(f)
 #define putc(c, f)  fputc(c, f)
@@ -175,6 +172,16 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 #define getwc_unlocked(f)    fgetwc_unlocked(f)
 #define putc_unlocked(c, f)  fputc_unlocked(c, f)
 #define putwc_unlocked(c, f) fputwc_unlocked(c, f)
+
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#define flockfile(f)    _NOPL1("__threadcalls", flockfile, f)
+#define funlockfile(f)  _NOPL1("__threadcalls", funlockfile, f)
+#define ftrylockfile(f) _NOPL1("__threadcalls", ftrylockfile, f)
+#else
+#define flockfile(f)    (__threaded ? flockfile(f) : 0)
+#define funlockfile(f)  (__threaded ? funlockfile(f) : 0)
+#define ftrylockfile(f) (__threaded ? ftrylockfile(f) : 0)
+#endif
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 /* clang-format off */

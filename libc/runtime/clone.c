@@ -72,13 +72,33 @@ struct CloneArgs {
   void *arg;
 };
 
-struct __tfork {
-  void *tf_tcb;
-  int32_t *tf_tid;
-  void *tf_stack;
-};
+////////////////////////////////////////////////////////////////////////////////
+// THREADING RUNTIME
 
 static char tibdefault[64];
+extern int __threadcalls_end[];
+extern int __threadcalls_start[];
+
+static privileged dontinline void FixupThreadCalls(void) {
+  /*
+   * _NOPL("__threadcalls", func)
+   *
+   * we have this
+   *
+   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
+   *
+   * we're going to turn it into this
+   *
+   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
+   */
+  __morph_begin();
+  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
+    _base[*p + 0] = 0x67;
+    _base[*p + 1] = 0x67;
+    _base[*p + 2] = 0xe8;
+  }
+  __morph_end();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // THE NEW TECHNOLOGY
@@ -162,7 +182,9 @@ XnuThreadMain(void *pthread, int tid, int (*func)(void *arg), void *arg,
                  : "0"(__NR_thread_fast_set_cthread_self), "D"(wt->tls - 0x30)
                  : "rcx", "r11", "memory", "cc");
   }
-  *wt->ctid = tid;
+  if (wt->ctid) {
+    *wt->ctid = tid;
+  }
   func(arg);
   // we no longer use the stack after this point
   // %rax = int bsdthread_terminate(%rdi = void *stackaddr,
@@ -265,6 +287,12 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
 
 ////////////////////////////////////////////////////////////////////////////////
 // OPEN BESIYATA DISHMAYA
+
+struct __tfork {
+  void *tf_tcb;
+  int32_t *tf_tid;
+  void *tf_stack;
+};
 
 int __tfork(struct __tfork *params, size_t psize, struct CloneArgs *wt);
 asm("__tfork:\n\t"
@@ -515,6 +543,9 @@ int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
   struct CloneArgs *wt;
 
   // transition program to threaded state
+  if (!__threaded && (flags & CLONE_THREAD)) {
+    FixupThreadCalls();
+  }
   if ((flags & CLONE_SETTLS) && !__tls_enabled) {
     if (~flags & CLONE_THREAD) {
       STRACE("clone() tls w/o thread");

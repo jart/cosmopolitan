@@ -16,27 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/log/log.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
-privileged int _trylock_debug_4(int *lock, const char *lockname,
-                                const char *file, int line, const char *func) {
-  int owner = 0;
-  int me = _spinlock_gettid();
-  if (_lockcmpxchgp(lock, &owner, me)) {
-    return 0;
-  } else if (owner != me) {
-    return owner;
-  } else {
-    kprintf("%s:%d: error: lock re-entry on %s in %s()\n", file, line, lockname,
-            func);
-    if (weaken(__die)) weaken(__die)();
-    __restorewintty();
-    _Exit(1);
-  }
+/**
+ * Initializes mutex.
+ * @param attr may be NULL
+ * @return 0 on success, or error number on failure
+ */
+int pthread_mutex_init(pthread_mutex_t *mutex,
+                       const pthread_mutexattr_t *attr) {
+  bzero(mutex, sizeof(*mutex));
+  mutex->attr = attr ? attr->attr : PTHREAD_MUTEX_DEFAULT;
+  return 0;
 }

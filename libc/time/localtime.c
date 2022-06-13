@@ -4,6 +4,7 @@
 #define LOCALTIME_IMPLEMENTATION
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
@@ -46,17 +47,22 @@ STATIC_YOINK("usr/share/zoneinfo/UTC");
 
 static pthread_mutex_t locallock;
 
-static int localtime_lock(void) {
+int localtime_lock(void) {
 	pthread_mutex_lock(&locallock);
 	return 0;
 }
 
-static void localtime_unlock(void) {
+void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
 
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#define localtime_lock()   _NOPL0("__threadcalls", localtime_lock)
+#define localtime_unlock() _NOPL0("__threadcalls", localtime_unlock)
+#else
 #define localtime_lock()   (__threaded ? localtime_lock() : 0)
 #define localtime_unlock() (__threaded ? localtime_unlock() : 0)
+#endif
 
 #ifndef TZ_ABBR_MAX_LEN
 #define TZ_ABBR_MAX_LEN	16
@@ -1743,7 +1749,7 @@ localtime_timesub(const time_t *timep, int_fast32_t offset,
 ** Normalize logic courtesy Paul Eggert.
 */
 
-static inline bool
+forceinline bool
 increment_overflow(int *ip, int j)
 {
 #if defined(__GNUC__) && __GNUC__ >= 6
@@ -1766,7 +1772,7 @@ increment_overflow(int *ip, int j)
 #endif
 }
 
-static inline bool
+forceinline bool
 increment_overflow32(int_fast32_t *const lp, int const m)
 {
 #if defined(__GNUC__) && __GNUC__ >= 6
@@ -1783,7 +1789,7 @@ increment_overflow32(int_fast32_t *const lp, int const m)
 #endif
 }
 
-static inline bool
+forceinline bool
 increment_overflow_time(time_t *tp, int_fast32_t j)
 {
 #if defined(__GNUC__) && __GNUC__ >= 6

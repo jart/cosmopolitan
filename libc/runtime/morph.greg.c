@@ -57,9 +57,8 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
  * @return 0 on success, or -1 w/ errno
  */
 privileged void __morph_begin(void) {
-  sigset_t ss;
+  sigset_t ss = {{-1, -1}};
   if (!IsWindows()) {
-    sigfillset(&ss);
     sys_sigprocmask(SIG_BLOCK, &ss, &oldss);
   }
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_WRITE,

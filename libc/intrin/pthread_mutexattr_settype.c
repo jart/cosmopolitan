@@ -16,30 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/sysv/consts/futex.h"
 
 /**
- * Releases mutex.
- * @return 0 on success or error number on failure
- * @raises EPERM if in error check mode and not owned by caller
+ * Sets mutex type.
+ *
+ * @param type can be one of
+ *     - `PTHREAD_MUTEX_NORMAL`
+ *     - `PTHREAD_MUTEX_DEFAULT`
+ *     - `PTHREAD_MUTEX_RECURSIVE`
+ *     - `PTHREAD_MUTEX_ERRORCHECK`
+ * @return 0 on success, or error on failure
+ * @raises EINVAL if `type` is invalid
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int owner;
-  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->owner != gettid()) {
-    return EPERM;
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
+  switch (type) {
+    case PTHREAD_MUTEX_NORMAL:
+    case PTHREAD_MUTEX_RECURSIVE:
+    case PTHREAD_MUTEX_ERRORCHECK:
+      attr->attr = type;
+      return 0;
+    default:
+      return EINVAL;
   }
-  if (!--mutex->reent) {
-    atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
-    if (IsLinux() &&
-        atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
-    }
-  }
-  return 0;
 }

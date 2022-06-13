@@ -25,7 +25,6 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/nexgen32e.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -103,7 +102,7 @@ int CloneTest1(void *arg) {
 TEST(clone, test1) {
   int ptid = 0;
   *childetid = -1;
-  _seizelock(childetid);
+  _seizelock(childetid, -1);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                                  CLONE_SIGHAND | CLONE_PARENT_SETTID |

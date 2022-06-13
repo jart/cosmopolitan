@@ -85,6 +85,7 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
 			-mno-fentry			\
 			-ffreestanding			\
 			-fno-sanitize=all		\
+			-mgeneral-regs-only		\
 			-fno-stack-protector
 
 o/$(MODE)/libc/intrin/tls.greg.o			\

@@ -16,48 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
-#include "libc/intrin/spinlock.h"
-#include "libc/log/log.h"
-#include "libc/nexgen32e/rdtsc.h"
-#include "libc/runtime/internal.h"
-#include "libc/time/clockstonanos.internal.h"
+#include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
-privileged void _spinlock_debug_4(int *lock, const char *lockname,
-                                  const char *file, int line,
-                                  const char *func) {
-  unsigned i;
-  int me, owner;
-  uint64_t ts1, ts2;
-  me = gettid();
-  owner = 0;
-  if (!_lockcmpxchgp(lock, &owner, me)) {
-    if (owner == me) {
-      kprintf("%s:%d: error: lock re-entry on %s in %s()\n", file, line,
-              lockname, func);
-      if (weaken(__die)) weaken(__die)();
-      __restorewintty();
-      _Exit(1);
-    }
-    i = 0;
-    ts1 = rdtsc();
-    for (;;) {
-      owner = 0;
-      if (_lockcmpxchgp(lock, &owner, me)) break;
-      ts2 = rdtsc();
-      if (ClocksToNanos(ts1, ts2) > 1000000000ul) {
-        ts1 = ts2;
-        kprintf("%s:%d: warning: slow lock on %s in %s()\n", file, line,
-                lockname, func);
-      }
-      if (++i & 7) {
-        __builtin_ia32_pause();
-      } else {
-        sched_yield();
-      }
-    }
-  }
+/**
+ * Destroys mutex.
+ * @return 0 on success, or error number on failure
+ */
+int pthread_mutex_destroy(pthread_mutex_t *mutex) {
+  bzero(mutex, sizeof(*mutex));
+  return 0;
 }

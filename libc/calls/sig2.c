@@ -92,8 +92,8 @@ static textwindows struct Signal *__sig_remove(void) {
  * @note called from main thread
  * @return true if EINTR should be returned by caller
  */
-static privileged bool __sig_deliver(bool restartable, int sig, int si_code,
-                                     ucontext_t *ctx) {
+static bool __sig_deliver(bool restartable, int sig, int si_code,
+                          ucontext_t *ctx) {
   unsigned rva, flags;
   siginfo_t info, *infop;
   STRACE("delivering %G", sig);
@@ -162,8 +162,7 @@ static textwindows bool __sig_isfatal(int sig) {
  * @param restartable can be used to suppress true return if SA_RESTART
  * @return true if signal was delivered
  */
-privileged bool __sig_handle(bool restartable, int sig, int si_code,
-                             ucontext_t *ctx) {
+bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
   bool delivered;
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:

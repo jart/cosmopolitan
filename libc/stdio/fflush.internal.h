@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_FFLUSH_H_
 #define COSMOPOLITAN_LIBC_STDIO_FFLUSH_H_
+#include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
 #include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -19,8 +20,14 @@ hidden extern struct StdioFlush __fflush;
 
 void __fflush_lock(void);
 void __fflush_unlock(void);
+
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#define __fflush_lock()   _NOPL0("__threadcalls", __fflush_lock)
+#define __fflush_unlock() _NOPL0("__threadcalls", __fflush_unlock)
+#else
 #define __fflush_lock()   (__threaded ? __fflush_lock() : 0)
 #define __fflush_unlock() (__threaded ? __fflush_unlock() : 0)
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

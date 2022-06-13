@@ -16,30 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/sysv/consts/futex.h"
+#include "libc/nt/console.h"
+#include "libc/nt/process.h"
+#include "libc/nt/runtime.h"
+#include "libc/runtime/internal.h"
+
+uint32_t __winmainpid;
+
+const char kConsoleHandles[3] = {
+    kNtStdInputHandle,
+    kNtStdOutputHandle,
+    kNtStdErrorHandle,
+};
 
 /**
- * Releases mutex.
- * @return 0 on success or error number on failure
- * @raises EPERM if in error check mode and not owned by caller
+ * Puts cmd.exe gui back the way it was.
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int owner;
-  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->owner != gettid()) {
-    return EPERM;
-  }
-  if (!--mutex->reent) {
-    atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
-    if (IsLinux() &&
-        atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
+void __restorewintty(void) {
+  int i;
+  if (!IsWindows()) return;
+  NTTRACE("__restorewintty()");
+  if (GetCurrentProcessId() == __winmainpid) {
+    for (i = 0; i < 3; ++i) {
+      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
     }
+    __winmainpid = 0;
   }
-  return 0;
 }

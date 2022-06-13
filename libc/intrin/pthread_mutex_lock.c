@@ -19,22 +19,29 @@
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/sysv/consts/futex.h"
 
 /**
- * Acquires mutex.
+ * Locks mutex.
+ * @return 0 on success, or error number on failure
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int me, owner;
   unsigned tries;
   for (tries = 0, me = gettid();;) {
     owner = 0;
-    if (atomic_compare_exchange_weak(&mutex->owner, &owner, me) ||
-        owner == me) {
+    if (atomic_compare_exchange_strong(&mutex->owner, &owner, me)) {
       break;
+    } else if (owner == me) {
+      if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
+        break;
+      } else {
+        return EDEADLK;
+      }
     }
     atomic_fetch_add(&mutex->waits, +1);
     if (!IsLinux() || futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {

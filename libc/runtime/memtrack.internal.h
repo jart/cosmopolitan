@@ -3,6 +3,7 @@
 #include "libc/assert.h"
 #include "libc/bits/midpoint.h"
 #include "libc/dce.h"
+#include "libc/intrin/nopl.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/version.h"
@@ -67,8 +68,13 @@ void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
 int UntrackMemoryIntervals(void *, size_t) hidden;
 size_t GetMemtrackSize(struct MemoryIntervals *);
 
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#define __mmi_lock()   _NOPL0("__threadcalls", __mmi_lock)
+#define __mmi_unlock() _NOPL0("__threadcalls", __mmi_unlock)
+#else
 #define __mmi_lock()   (__threaded ? __mmi_lock() : 0)
 #define __mmi_unlock() (__threaded ? __mmi_unlock() : 0)
+#endif
 
 #define IsLegalPointer(p) \
   (-0x800000000000 <= (intptr_t)(p) && (intptr_t)(p) <= 0x7fffffffffff)

@@ -16,32 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/nt/console.h"
-#include "libc/nt/process.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/internal.h"
-
-uint32_t __winmainpid;
-
-const char kConsoleHandles[3] = {
-    kNtStdInputHandle,
-    kNtStdOutputHandle,
-    kNtStdErrorHandle,
-};
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/pthread.h"
 
 /**
- * Puts cmd.exe gui back the way it was.
+ * Yields current thread's remaining timeslice to operating system.
+ * @return 0 on success, or error number on failure
  */
-noasan void __restorewintty(void) {
-  int i;
-  if (!IsWindows()) return;
-  NTTRACE("__restorewintty()");
-  if (GetCurrentProcessId() == __winmainpid) {
-    for (i = 0; i < 3; ++i) {
-      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
-    }
-    __winmainpid = 0;
+int pthread_yield(void) {
+  if (sched_yield() != -1) {
+    return 0;
+  } else {
+    return errno;
   }
 }

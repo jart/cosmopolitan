@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,40 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#define ShouldUseMsabiAttribute() 1
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/runtime.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
- * Terminates process, ignoring destructors and atexit() handlers.
- *
- * When running on bare metal, this function will reboot your computer
- * by hosing the interrupt descriptors and triple faulting the system.
- *
- * @param exitcode is masked with 255
- * @asyncsignalsafe
- * @threadsafe
- * @vforksafe
- * @noreturn
+ * Destroys mutex attr.
+ * @return 0 on success, or error number on failure
  */
-privileged wontreturn void _Exit(int exitcode) {
-  int i;
-  STRACE("_Exit(%d)", exitcode);
-  if (!IsWindows() && !IsMetal()) {
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit_group), "D"(exitcode)
-                 : "rcx", "r11", "memory");
-  } else if (IsWindows()) {
-    __imp_ExitProcess(exitcode & 0xff);
-  }
-  asm("push\t$0\n\t"
-      "push\t$0\n\t"
-      "cli\n\t"
-      "lidt\t(%rsp)");
-  for (;;) asm("ud2");
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr) {
+  bzero(attr, sizeof(*attr));
+  return 0;
 }

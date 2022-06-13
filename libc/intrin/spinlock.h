@@ -3,67 +3,40 @@
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § spinlocks                                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
-  privileged unsophisticated locking subroutines */
+  fast tiny inline synchronization routines */
 
-#if defined(MODE_DBG) && !defined(_SPINLOCK_DEBUG)
-#define _SPINLOCK_DEBUG
-#endif
-
-#if defined(_SPINLOCK_DEBUG)
-#define _spinlock(lock)        _spinlock_ndebug(lock)
-#define _spinlock_ndebug(lock) _spinlock_cooperative(lock)
-#define _trylock(lock)         _trylock_debug(lock)
-#define _seizelock(lock)       _seizelock_impl(lock, _spinlock_gettid())
-#elif defined(TINY)
-#define _spinlock(lock)        _spinlock_tiny(lock)
-#define _spinlock_ndebug(lock) _spinlock_tiny(lock)
-#define _trylock(lock)         _trylock_inline(lock)
-#define _seizelock(lock)       _seizelock_impl(lock, 1)
+#ifdef TINY
+#define _spinlock(lock) _spinlock_tiny(lock)
 #else
-#define _spinlock(lock)        _spinlock_cooperative(lock)
-#define _spinlock_ndebug(lock) _spinlock_cooperative(lock)
-#define _trylock(lock)         _trylock_inline(lock)
-#define _seizelock(lock)       _seizelock_impl(lock, 1)
+#define _spinlock(lock) _spinlock_cooperative(lock)
 #endif
 
-#define _trylock_inline(lock) __atomic_test_and_set(lock, __ATOMIC_SEQ_CST)
+#define _spunlock(lock) __atomic_store_n(lock, 0, __ATOMIC_RELAXED)
 
-#define _trylock_debug(lock) \
-  _trylock_debug_4(lock, #lock, __FILE__, __LINE__, __FUNCTION__)
-
-#define _spinlock_debug(lock) \
-  _spinlock_debug_4(lock, #lock, __FILE__, __LINE__, __FUNCTION__)
-
-#define _spunlock(lock)                             \
-  do {                                              \
-    autotype(lock) __lock = (lock);                 \
-    typeof(*__lock) __x = 0;                        \
-    __atomic_store(__lock, &__x, __ATOMIC_RELAXED); \
-  } while (0)
-
-#define _seizelock_impl(lock, value)                \
-  do {                                              \
+#define _seizelock(lock, value)                     \
+  ({                                                \
     autotype(lock) __lock = (lock);                 \
     typeof(*__lock) __x = (value);                  \
     __atomic_store(__lock, &__x, __ATOMIC_RELEASE); \
-  } while (0)
+  })
 
-#define _spinlock_tiny(lock)          \
-  do {                                \
-    autotype(lock) __lock = (lock);   \
-    while (_trylock_inline(__lock)) { \
-      __builtin_ia32_pause();         \
-    }                                 \
-  } while (0)
+#define _spinlock_tiny(lock)        \
+  ({                                \
+    autotype(lock) __lock = (lock); \
+    while (_trylock(__lock)) {      \
+      __builtin_ia32_pause();       \
+    }                               \
+    0;                              \
+  })
 
 #define _spinlock_cooperative(lock)                  \
-  do {                                               \
+  ({                                                 \
     autotype(lock) __lock = (lock);                  \
     typeof(*__lock) __x;                             \
     unsigned __tries = 0;                            \
     for (;;) {                                       \
       __atomic_load(__lock, &__x, __ATOMIC_RELAXED); \
-      if (!__x && !_trylock_inline(__lock)) {        \
+      if (!__x && !_trylock(__lock)) {               \
         break;                                       \
       } else if (++__tries & 7) {                    \
         __builtin_ia32_pause();                      \
@@ -71,11 +44,11 @@
         _spinlock_yield();                           \
       }                                              \
     }                                                \
-  } while (0)
+    0;                                               \
+  })
 
-int _spinlock_gettid(void);
-int _trylock_debug_4(int *, const char *, const char *, int, const char *);
-void _spinlock_debug_4(int *, const char *, const char *, int, const char *);
+#define _trylock(lock) __atomic_test_and_set(lock, __ATOMIC_SEQ_CST)
+
 void _spinlock_yield(void);
 
 #endif /* COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_ */

@@ -59,6 +59,20 @@ privileged void *__initialize_tls(char tib[64]) {
 
 /**
  * Installs thread information block on main process.
+ *
+ * For example, to set up TLS correctly for the main thread, without
+ * creating any threads using `clone` (which does this automatically),
+ * it is sufficient to say:
+ *
+ *     __attribute__((__constructor__)) static void InitTls(void) {
+ *       static char tls[64];
+ *       __initialize_tls(tls);
+ *       __threaded = *(int *)(tls + 0x38) = gettid();
+ *       *(int *)(tls + 0x3c) = __errno;
+ *       __install_tls(tls);
+ *     }
+ *
+ * Since that'll ensure it happens exactly once.
  */
 privileged void __install_tls(char tib[64]) {
   int ax, dx;

@@ -16,30 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/sysv/consts/futex.h"
+#include "libc/str/str.h"
 
 /**
- * Releases mutex.
- * @return 0 on success or error number on failure
- * @raises EPERM if in error check mode and not owned by caller
+ * Initializes mutex attr.
+ * @return 0 on success, or error number on failure
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int owner;
-  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->owner != gettid()) {
-    return EPERM;
-  }
-  if (!--mutex->reent) {
-    atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
-    if (IsLinux() &&
-        atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
-    }
-  }
+int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
+  bzero(attr, sizeof(*attr));
+  attr->attr = PTHREAD_MUTEX_DEFAULT;
   return 0;
 }
