@@ -335,12 +335,16 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
         break;
       }
       case 'c':
-        prec = 1;
-        flags |= FLAGS_PRECISION;
-        qchar = '\'';
-        p = charbuf;
-        charbuf[0] = va_arg(va, int);
-        goto FormatString;
+        if ((charbuf[0] = va_arg(va, int))) {
+          p = charbuf;
+          qchar = '\'';
+          flags |= FLAGS_PRECISION;
+          prec = 1;
+          goto FormatString;
+        } else {
+          __FMT_PUT('\0');
+          break;
+        }
       case 'm':
         p = weaken(strerror) ? weaken(strerror)(lasterr) : "?";
         signbit = 0;

@@ -283,6 +283,15 @@ TEST(fmt, quoted) {
   ASSERT_STREQ("\"hello\"   ", gc(xasprintf("%-`*.*s", 10, 5, "hello")));
 }
 
+TEST(fmt, nulCharacter) {
+  char b[3] = {1, 1, 1};
+  ASSERT_EQ(1, snprintf(0, 0, "%c", 0));
+  ASSERT_EQ(1, snprintf(b, 3, "%c", 0));
+  ASSERT_EQ(0, b[0]);
+  ASSERT_EQ(0, b[1]);
+  ASSERT_EQ(1, b[2]);
+}
+
 TEST(fmt, regress) {
   char buf[512];
   const char *meth = "GET";
