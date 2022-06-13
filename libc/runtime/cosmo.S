@@ -124,6 +124,16 @@ cosmo:	push	%rbp
 	.weak	ape_stack_align
 #endif
 
+#if IsAsan()
+	.init.start 305,_init_symbols
+	push	%rdi
+	push	%rsi
+	call	__init_symbols
+	pop	%rsi
+	pop	%rdi
+	.init.end 305,_init_symbols
+#endif
+
 #ifdef __PG__
 	.init.start 306,_init_ftrace
 	push	%rdi
@@ -133,16 +143,6 @@ cosmo:	push	%rbp
 	pop	%rsi
 	pop	%rdi
 	.init.end 306,_init_ftrace
-#endif
-
-#if IsAsan()
-	.init.start 306,_init_symbols
-	push	%rdi
-	push	%rsi
-	call	__init_symbols
-	pop	%rsi
-	pop	%rdi
-	.init.end 306,_init_symbols
 #endif
 
 #if IsModeDbg()

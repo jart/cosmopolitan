@@ -127,10 +127,6 @@
 //	Loads address of errno into %rcx
 .macro	.errno
 	call	__errno_location
-//	cs
-//	cs
-//	cs
-//	mov	$__errno,%eax
 .endm
 
 //	Post-Initialization Read-Only (PIRO) BSS section.

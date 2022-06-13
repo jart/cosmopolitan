@@ -41,6 +41,7 @@
  * @param res receives a pointer that must be freed with freeaddrinfo(),
  *     and won't be modified if -1 is returned
  * @return 0 on success or EAI_xxx value
+ * @threadsafe
  */
 int getaddrinfo(const char *name, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res) {

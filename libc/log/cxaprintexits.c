@@ -37,6 +37,7 @@ void __cxa_printexits(FILE *f, void *pred) {
   fprintf(f, "                       GLOBAL DESTRUCTORS                   \n");
   fprintf(f, "      callback                arg                pred       \n");
   fprintf(f, "---------------------- ------------------ ------------------\n");
+  __cxa_lock();
   if ((b = __cxa_blocks.p)) {
     do {
       mask = b->mask;
@@ -56,5 +57,6 @@ void __cxa_printexits(FILE *f, void *pred) {
       }
     } while ((b = b->next));
   }
+  __cxa_unlock();
   fprintf(f, "\n");
 }

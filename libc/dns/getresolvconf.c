@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -28,17 +29,20 @@
 static struct ResolvConf *g_resolvconf;
 static struct ResolvConfInitialStaticMemory {
   struct ResolvConf rv;
+  pthread_mutex_t lock;
   struct sockaddr_in nameservers[3];
 } g_resolvconf_init;
 
 /**
  * Returns singleton with DNS server address.
+ * @threadsafe
  */
 const struct ResolvConf *GetResolvConf(void) {
   int rc;
   FILE *f;
   struct ResolvConfInitialStaticMemory *init;
   init = &g_resolvconf_init;
+  pthread_mutex_lock(&init->lock);
   if (!g_resolvconf) {
     g_resolvconf = &init->rv;
     pushmov(&init->rv.nameservers.n, ARRAYLEN(init->nameservers));
@@ -58,5 +62,6 @@ const struct ResolvConf *GetResolvConf(void) {
       /* TODO(jart): Elevate robustness. */
     }
   }
+  pthread_mutex_unlock(&init->lock);
   return g_resolvconf;
 }

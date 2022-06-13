@@ -21,6 +21,7 @@
 
 /**
  * Frees addresses returned by getaddrinfo().
+ * @threadsafe
  */
 int freeaddrinfo(struct addrinfo *ai) {
   struct addrinfo *next;
