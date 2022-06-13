@@ -56,7 +56,7 @@ int cthread_join(cthread_t td, void **exitcode) {
     if (~atomic_fetch_add(&td->state, cthread_joining) & cthread_finished) {
       while ((x = atomic_load(&td->tid))) {
         // FUTEX_WAIT_PRIVATE makes it hang
-        cthread_memory_wait32((uint32_t *)&td->tid, x, 0);
+        cthread_memory_wait32(&td->tid, x, 0);
       }
     }
     if (exitcode) {

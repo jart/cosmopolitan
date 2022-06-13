@@ -44,7 +44,8 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
       }
     }
     atomic_fetch_add(&mutex->waits, +1);
-    if (!IsLinux() || futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {
+    if (!IsLinux() ||
+        sys_futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {
       if (++tries & 7) {
         __builtin_ia32_pause();
       } else {

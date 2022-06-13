@@ -70,8 +70,8 @@ int cthread_sem_init(cthread_sem_t *, int);
 int cthread_sem_destroy(cthread_sem_t *);
 int cthread_sem_wait(cthread_sem_t *, int, const struct timespec *);
 int cthread_sem_signal(cthread_sem_t *);
-int cthread_memory_wait32(uint32_t *, uint32_t, const struct timespec *);
-int cthread_memory_wake32(uint32_t *, int);
+int cthread_memory_wait32(int *, int, const struct timespec *);
+int cthread_memory_wake32(int *, int);
 void cthread_zombies_add(cthread_t);
 void cthread_zombies_reap(void);
 

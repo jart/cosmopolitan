@@ -38,7 +38,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
     if (IsLinux() &&
         atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
+      sys_futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
     }
   }
   return 0;

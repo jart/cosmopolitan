@@ -19,6 +19,7 @@
 #include "libc/bits/bits.h"
 #include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
 #define BASENAME(x) basename(gc(strdup(x)))

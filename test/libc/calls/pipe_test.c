@@ -20,6 +20,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/testlib.h"
 

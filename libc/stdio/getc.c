@@ -24,5 +24,5 @@
  * @threadsafe
  */
 int(getc)(FILE *f) {
-  return getc(f);
+  return fgetc(f);
 }

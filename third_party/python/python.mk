@@ -293,7 +293,7 @@ THIRD_PARTY_PYTHON_INCS =						\
 THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Modules/_tracemalloc.c			\
 	third_party/python/Modules/faulthandler.c			\
-    third_party/python/Objects/abstract.c				\
+	third_party/python/Objects/abstract.c				\
 	third_party/python/Modules/fspath.c				\
 	third_party/python/Modules/gcmodule.c				\
 	third_party/python/Modules/getbuildinfo.c			\
@@ -305,7 +305,7 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 	third_party/python/Objects/bytes_methods.c			\
 	third_party/python/Objects/bytesobject.c			\
 	third_party/python/Objects/capsule.c				\
-	third_party/python/Objects/call.c					\
+	third_party/python/Objects/call.c				\
 	third_party/python/Objects/cellobject.c				\
 	third_party/python/Objects/classobject.c			\
 	third_party/python/Objects/codeobject.c				\

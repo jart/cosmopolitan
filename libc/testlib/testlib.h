@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
 #include "libc/bits/weaken.h"
 #include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -318,8 +317,8 @@ extern char g_fixturename[256];
 extern char g_testlib_olddir[PATH_MAX];
 extern char g_testlib_tmpdir[PATH_MAX];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
-extern unsigned g_testlib_ran;              /* set by wrappers */
-extern unsigned g_testlib_failed;           /* set by wrappers */
+extern _Atomic(unsigned) g_testlib_ran;     /* set by wrappers */
+extern _Atomic(unsigned) g_testlib_failed;  /* set by wrappers */
 extern const char *testlib_showerror_errno; /* set by macros */
 extern const char *testlib_showerror_file;  /* set by macros */
 extern const char *testlib_showerror_func;  /* set by macros */

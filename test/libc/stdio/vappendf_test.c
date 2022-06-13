@@ -177,6 +177,7 @@ BENCH(vappendf, bench) {
   const char t[] = {0};
   char *b = 0;
   EZBENCH2("appendf", donothing, appendf(&b, "hello"));
+  EZBENCH2("kappendf", donothing, kappendf(&b, "hello"));
   free(b), b = 0;
   EZBENCH2("appends", donothing, appends(&b, "hello"));
   free(b), b = 0;

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,55 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/sysv/consts/clock.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/nt/enum/consolemodeflags.h"
 #include "libc/sysv/consts/futex.h"
-#include "libc/thread/freebsd.internal.h"
-#include "libc/thread/thread.h"
 
-int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
-  size_t size;
-  struct _umtx_time *put, ut;
-  if (IsLinux() || IsOpenbsd()) {
-    return sys_futex(addr, FUTEX_WAIT, val, timeout, 0);
-
-#if 0
-  } else if (IsFreebsd()) {
-    if (!timeout) {
-      put = 0;
-      size = 0;
-    } else {
-      ut._flags = 0;
-      ut._clockid = CLOCK_REALTIME;
-      ut._timeout = *timeout;
-      put = &ut;
-      size = sizeof(ut);
-    }
-    return _umtx_op(addr, UMTX_OP_MUTEX_WAIT, 0, &size, put);
-#endif
-
-  } else {
-    unsigned tries;
-    for (tries = 1; atomic_load(addr) == val; ++tries) {
-      if (tries & 7) {
-        __builtin_ia32_pause();
-      } else {
-        sched_yield();
-      }
-    }
-    return 0;
-  }
-}
-
-int cthread_memory_wake32(int* addr, int n) {
-  if (IsLinux() || IsOpenbsd()) {
-    return sys_futex(addr, FUTEX_WAKE, n, 0, 0);
-#if 0
-  } else if (IsFreebsd()) {
-    return _umtx_op(addr, UMTX_OP_MUTEX_WAKE, n, 0, 0);
-#endif
-  }
-  return -1;
+const char *DescribeNtFutexOp(int x) {
+  const struct DescribeFlags kFutexOp[] = {
+      {FUTEX_WAIT_PRIVATE, "WAIT_PRIVATE"},        //
+      {FUTEX_WAKE_PRIVATE, "WAKE_PRIVATE"},        //
+      {FUTEX_REQUEUE_PRIVATE, "REQUEUE_PRIVATE"},  //
+      {FUTEX_PRIVATE_FLAG, "PRIVATE_FLAG"},        //
+      {FUTEX_REQUEUE, "REQUEUE"},                  //
+      {FUTEX_WAIT, "WAIT"},                        //
+      {FUTEX_WAKE, "WAKE"},                        //
+  };
+  _Alignas(char) static char futexop[32];
+  return DescribeFlags(futexop, sizeof(futexop), kFutexOp, ARRAYLEN(kFutexOp),
+                       "FUTEX_", x);
 }

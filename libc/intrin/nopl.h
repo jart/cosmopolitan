@@ -44,7 +44,8 @@
                  "nopl\t%a0"                                                   \
                  : /* no inputs */                                             \
                  : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
-                 : "rax", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "memory");   \
+                 : "rax", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10",       \
+                   "r11", "memory", "cc");                                     \
     0;                                                                         \
   })
 
@@ -60,7 +61,8 @@
                  "nopl\t%a1"                                                   \
                  : "+D"(__arg)                                                 \
                  : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
-                 : "rax", "rsi", "rdx", "rcx", "r8", "r9", "memory");          \
+                 : "rax", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11",       \
+                   "memory", "cc");                                            \
     0;                                                                         \
   })
 

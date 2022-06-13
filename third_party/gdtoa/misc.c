@@ -33,6 +33,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
+#include "third_party/gdtoa/lock.h"
 /* clang-format off */
 
 static ThInfo TI0;
@@ -46,68 +47,62 @@ __gdtoa_Brelease(Bigint *rv)
 }
 
 static void
-Bclear(void)
+__gdtoa_Bclear(void)
 {
 	int i;
+	__gdtoa_lock();
 	for (i = 0; i < ARRAYLEN(TI0.Freelist); ++i)
 		__gdtoa_Brelease(TI0.Freelist[i]);
-	bzero(&TI0.Freelist, sizeof(TI0.Freelist));
+	__gdtoa_Brelease(TI0.P5s);
+	bzero(&TI0, sizeof(TI0));
+	__gdtoa_unlock();
+}
+
+__attribute__((__constructor__)) static void
+__gdtoa_Binit(void)
+{
+	atexit(__gdtoa_Bclear);
+	TI0.P5s = __gdtoa_i2b(625);
+	TI0.P5s->next = 0;
 }
 
 Bigint *
 __gdtoa_Balloc(int k)
 {
-#if 0
 	int x;
 	Bigint *rv;
-	x = 1 << k;
-	rv = (Bigint *)malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
-	rv->k = k;
-	rv->maxwds = x;
-	rv->sign = 0;
-	rv->wds = 0;
-	return rv;
-#else
-	int x;
-	Bigint *rv;
-	static char once;
-	if (!once) {
-		atexit(Bclear);
-		once = 1;
-	}
+	__gdtoa_lock();
 	if (k <= Kmax && (rv = TI0.Freelist[k]) != 0) {
 		TI0.Freelist[k] = rv->next;
 	} else {
 		x = 1 << k;
-		rv = (Bigint *)malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
+		rv = malloc(sizeof(Bigint) + (x-1)*sizeof(ULong));
 		rv->k = k;
 		rv->maxwds = x;
 	}
 	rv->sign = 0;
 	rv->wds = 0;
+	__gdtoa_unlock();
 	return rv;
-#endif
 }
 
 void
 __gdtoa_Bfree(Bigint *v)
 {
-#if 0
-	free(v);
-#else
 	if (v) {
 		if (v->k > Kmax) {
-			free((void*)v);
+			free(v);
 		} else {
+			__gdtoa_lock();
 			v->next = TI0.Freelist[v->k];
 			TI0.Freelist[v->k] = v;
+			__gdtoa_unlock();
 		}
 	}
-#endif
 }
 
-Bigint *
-__gdtoa_multadd(Bigint *b, int m, int a)	/* multiply by m and add a */
+Bigint * /* multiply by m and add a */
+__gdtoa_multadd(Bigint *b, int m, int a)
 {
 	int i, wds;
 	ULong *x;
@@ -192,27 +187,18 @@ __gdtoa_mult(Bigint *a, Bigint *b)
 	return c;
 }
 
-static void
-__gdtoa_pow5mult_destroy(void) {
-	__gdtoa_Brelease(TI0.P5s);
-	TI0.P5s = 0;
-}
-
 Bigint *
 __gdtoa_pow5mult(Bigint *b, int k)
 {
-	Bigint *b1, *p5, *p51;
 	int i;
+	Bigint *b1, *p5, *p51;
 	static const int p05[3] = { 5, 25, 125 };
 	if ((i = k & 3))
 		b = __gdtoa_multadd(b, p05[i-1], 0);
 	if (!(k >>= 2))
 		return b;
-	if (!(p5 = TI0.P5s)) {
-		p5 = TI0.P5s = __gdtoa_i2b(625);
-		p5->next = 0;
-		atexit(__gdtoa_pow5mult_destroy);
-	}
+	__gdtoa_lock();
+	p5 = TI0.P5s;
 	for(;;) {
 		if (k & 1) {
 			b1 = __gdtoa_mult(b, p5);
@@ -227,6 +213,7 @@ __gdtoa_pow5mult(Bigint *b, int k)
 		}
 		p5 = p51;
 	}
+	__gdtoa_unlock();
 	return b;
 }
 

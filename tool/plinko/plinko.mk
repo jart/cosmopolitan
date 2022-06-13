@@ -63,7 +63,6 @@ $(TOOL_PLINKO_OBJS):						\
 		$(BUILD_FILES)					\
 		tool/plinko/plinko.mk
 
-o/$(MODE)/tool/plinko/plinko.com.zip.o				\
 o/$(MODE)/tool/plinko/lib/library.lisp.zip.o			\
 o/$(MODE)/tool/plinko/lib/binarytrees.lisp.zip.o		\
 o/$(MODE)/tool/plinko/lib/algebra.lisp.zip.o			\
@@ -71,6 +70,10 @@ o/$(MODE)/tool/plinko/lib/infix.lisp.zip.o			\
 o/$(MODE)/tool/plinko/lib/ok.lisp.zip.o:			\
 		ZIPOBJ_FLAGS +=					\
 			-B
+
+o/$(MODE)/tool/plinko/plinko.com.zip.o:				\
+		o/$(MODE)/tool/plinko/plinko.com
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/tool/plinko
 o/$(MODE)/tool/plinko: $(TOOL_PLINKO_BINS) $(TOOL_PLINKO_CHECKS)

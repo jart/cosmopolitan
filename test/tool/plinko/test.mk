@@ -80,10 +80,8 @@ o/$(MODE)/test/tool/plinko/%.com.dbg:				\
 o/$(MODE)/test/tool/plinko/plinko_test.com.runs:		\
 		QUOTA =	-M100g
 
-o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o		\
-o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o:		\
-		ZIPOBJ_FLAGS +=					\
-			-B
+o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o: ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o: ZIPOBJ_FLAGS += -B
 
 .PHONY: o/$(MODE)/test/tool/plinko
 o/$(MODE)/test/tool/plinko:					\

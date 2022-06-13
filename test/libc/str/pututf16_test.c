@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"

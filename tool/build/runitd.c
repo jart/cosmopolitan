@@ -267,7 +267,7 @@ void SendOutputFragmentMessage(enum RunitCommand kind, unsigned char *buf,
 
 void Recv(void *output, size_t outputsize) {
   int rc;
-  ssize_t tx, chunk, received;
+  ssize_t tx, chunk, received, totalgot;
   static bool once;
   static int zstatus;
   static char buf[32768];
@@ -282,6 +282,7 @@ void Recv(void *output, size_t outputsize) {
     CHECK_EQ(Z_OK, inflateInit(&zs));
     once = true;
   }
+  totalgot = 0;
   for (;;) {
     if (rbuf.len >= outputsize) {
       tx = MIN(outputsize, rbuf.len);
@@ -312,6 +313,7 @@ void Recv(void *output, size_t outputsize) {
       close(g_clifd);
       TlsDie("read failed", received);
     }
+    totalgot += received;
     // decompress packet completely
     // into a dynamical size buffer
     zs.avail_in = received;
@@ -331,12 +333,14 @@ void Recv(void *output, size_t outputsize) {
       CHECK_NE(Z_STREAM_ERROR, zstatus);
       switch (zstatus) {
         case Z_NEED_DICT:
-          zstatus = Z_DATA_ERROR;  // make negative
-          // fallthrough
+          WARNF("tls recv Z_NEED_DICT %ld total %ld", received, totalgot);
+          exit(1);
         case Z_DATA_ERROR:
+          WARNF("tls recv Z_DATA_ERROR %ld total %ld", received, totalgot);
+          exit(1);
         case Z_MEM_ERROR:
-          close(g_clifd);
-          FATALF("tls recv zlib hard error %d", zstatus);
+          WARNF("tls recv Z_MEM_ERROR %ld total %ld", received, totalgot);
+          exit(1);
         case Z_BUF_ERROR:
           zstatus = Z_OK;  // harmless? nothing for inflate to do
           break;           // it probably just our wraparound eof

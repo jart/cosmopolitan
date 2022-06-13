@@ -43,7 +43,7 @@
 #define THREADS 8
 #define ENTRIES 1024
 
-uint32_t ready;
+int ready;
 volatile uint64_t A[THREADS * ENTRIES];
 
 void OnChld(int sig) {
@@ -109,7 +109,7 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   for (i = 0; i < THREADS; ++i) {
     while ((j = atomic_load((uint32_t *)(tls[i] + 0x38)))) {
       // FUTEX_WAIT_PRIVATE makes it hang
-      cthread_memory_wait32((uint32_t *)(tls[i] + 0x38), j, 0);
+      cthread_memory_wait32((int *)(tls[i] + 0x38), j, 0);
     }
     EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
     free(tls[i]);

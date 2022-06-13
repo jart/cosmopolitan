@@ -19,6 +19,7 @@
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
 void SetUp(void) {

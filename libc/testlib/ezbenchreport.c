@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"

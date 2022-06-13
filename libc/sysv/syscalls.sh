@@ -100,7 +100,7 @@ scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0xffffff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
 scall	sys_tkill		0x13e0771b121690c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; bsdthread_terminate() on XNU which only has 1 arg
-scall	futex			0xfff053fffffff0ca	globl
+scall	sys_futex		0xfff053fffffff0ca	globl hidden
 scall	set_robust_list		0xfffffffffffff111	globl
 scall	get_robust_list		0xfffffffffffff112	globl
 scall	sys_uname		0xffffff0a4ffff03f	globl hidden

@@ -190,12 +190,15 @@ TryAgain:
   freeaddrinfo(ai);
 }
 
-bool Send(int *pipes, int pipescount, const void *output, size_t outputsize) {
-  bool okall;
-  int rc, i, have;
+bool Send(int tmpfd, const void *output, size_t outputsize) {
+  bool ok;
+  char *zbuf;
+  size_t zsize;
+  int rc, have;
   static bool once;
   static z_stream zs;
-  char *zbuf = gc(malloc(PIPE_BUF));
+  zsize = 32768;
+  zbuf = gc(malloc(zsize));
   if (!once) {
     CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
                                 Z_DEFAULT_STRATEGY));
@@ -203,25 +206,24 @@ bool Send(int *pipes, int pipescount, const void *output, size_t outputsize) {
   }
   zs.next_in = output;
   zs.avail_in = outputsize;
-  okall = true;
+  ok = true;
   do {
-    zs.avail_out = PIPE_BUF;
+    zs.avail_out = zsize;
     zs.next_out = (unsigned char *)zbuf;
     rc = deflate(&zs, Z_SYNC_FLUSH);
     CHECK_NE(Z_STREAM_ERROR, rc);
-    have = PIPE_BUF - zs.avail_out;
-    for (i = 0; i < pipescount; ++i) {
-      rc = write(pipes[i * 2 + 1], zbuf, have);
-      if (rc != have) {
-        DEBUGF("write(%d, %d) → %d", pipes[i * 2 + 1], have, rc);
-        okall = false;
-      }
+    have = zsize - zs.avail_out;
+    rc = write(tmpfd, zbuf, have);
+    if (rc != have) {
+      DEBUGF("write(%d, %d) → %d", tmpfd, have, rc);
+      ok = false;
+      break;
     }
   } while (!zs.avail_out);
-  return okall;
+  return ok;
 }
 
-bool SendRequest(int *pipes, int pipescount) {
+bool SendRequest(int tmpfd) {
   int fd;
   char *p;
   size_t i;
@@ -249,17 +251,14 @@ bool SendRequest(int *pipes, int pipescount) {
   q = mempcpy(q, name, namesize);
   assert(hdrsize == q - hdr);
   okall = true;
-  okall &= Send(pipes, pipescount, hdr, hdrsize);
-  okall &= Send(pipes, pipescount, p, progsize);
+  okall &= Send(tmpfd, hdr, hdrsize);
+  okall &= Send(tmpfd, p, progsize);
   CHECK_NE(-1, munmap(p, st.st_size));
   CHECK_NE(-1, close(fd));
-  for (i = 0; i < pipescount; ++i) {
-    okall &= !close(pipes[i * 2 + 1]);
-  }
   return okall;
 }
 
-bool RelayRequest(void) {
+void RelayRequest(void) {
   int i, rc, have, transferred;
   char *buf = gc(malloc(PIPE_BUF));
   for (transferred = 0;;) {
@@ -281,7 +280,6 @@ bool RelayRequest(void) {
     TlsDie("relay request failed to flush", rc);
   }
   close(13);
-  return true;
 }
 
 bool Recv(unsigned char *p, size_t n) {
@@ -351,16 +349,17 @@ int RunOnHost(char *spec) {
            1);
   if (!strchr(g_hostname, '.')) strcat(g_hostname, ".test.");
   DEBUGF("connecting to %s port %d", g_hostname, g_runitdport);
-  do {
-    for (;;) {
-      Connect();
-      EzFd(g_sock);
-      if (!EzHandshake2()) break;
-      WARNF("warning: got connection reset in handshake");
-      close(g_sock);
+  for (;;) {
+    Connect();
+    EzFd(g_sock);
+    if (!(rc = EzHandshake2())) {
+      break;
     }
-  } while ((rc = RelayRequest()) == -1 || (rc = ReadResponse()) == -1);
-  return rc;
+    WARNF("got reset in handshake -0x%04x", rc);
+    close(g_sock);
+  }
+  RelayRequest();
+  return ReadResponse();
 }
 
 bool IsParallelBuild(void) {
@@ -373,12 +372,20 @@ bool ShouldRunInParralel(void) {
 }
 
 int SpawnSubprocesses(int argc, char *argv[]) {
+  const char *tpath;
   sigset_t chldmask, savemask;
+  int i, rc, ws, pid, tmpfd, *pids, exitcode;
   struct sigaction ignore, saveint, savequit;
-  int i, rc, ws, pid, *pids, *pipes, exitcode;
   char *args[5] = {argv[0], argv[1], argv[2]};
-  argc -= 3;
-  argv += 3;
+
+  // create compressed network request ahead of time
+  CHECK_NE(-1, (tmpfd = open(
+                    (tpath = gc(xasprintf(
+                         "%s/runit.%d", firstnonnull(getenv("TMPDIR"), "/tmp"),
+                         getpid()))),
+                    O_WRONLY | O_CREAT | O_TRUNC, 0755)));
+  CHECK(SendRequest(tmpfd));
+  CHECK_NE(-1, close(tmpfd));
 
   // fork off 𝑛 subprocesses for each host on which we run binary.
   // what's important here is htop in tree mode will report like:
@@ -389,8 +396,10 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   //     └─runit.com netbsd
   //
   // That way when one hangs, it's easy to know what o/s it is.
+  argc -= 3;
+  argv += 3;
+  exitcode = 0;
   pids = calloc(argc, sizeof(int));
-  pipes = calloc(argc, sizeof(int) * 2);
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   sigemptyset(&ignore.sa_mask);
@@ -401,26 +410,18 @@ int SpawnSubprocesses(int argc, char *argv[]) {
   sigprocmask(SIG_BLOCK, &chldmask, &savemask);
   for (i = 0; i < argc; ++i) {
     args[3] = argv[i];
-    CHECK_NE(-1, pipe2(pipes + i * 2, O_CLOEXEC));
     CHECK_NE(-1, (pids[i] = vfork()));
     if (!pids[i]) {
-      dup2(pipes[i * 2], 13);
+      dup2(open(tpath, O_RDONLY | O_CLOEXEC), 13);
       sigaction(SIGINT, &(struct sigaction){0}, 0);
       sigaction(SIGQUIT, &(struct sigaction){0}, 0);
       sigprocmask(SIG_SETMASK, &savemask, 0);
       execve(args[0], args, environ);  // for htop
       _Exit(127);
     }
-    close(pipes[i * 2]);  // close reader
   }
 
-  // the smart part is we only do the expensive deflate operation from
-  // the main process we assume file descriptor 13 is safely inherited
-  static z_stream zs;
-  sigaction(SIGPIPE, &ignore, 0);
-  exitcode = SendRequest(pipes, argc) ? 0 : 150;
-
-  // now wait for the children to terminate
+  // wait for children to terminate
   for (;;) {
     if ((pid = wait(&ws)) == -1) {
       if (errno == EINTR) continue;
@@ -443,10 +444,10 @@ int SpawnSubprocesses(int argc, char *argv[]) {
       break;
     }
   }
+  CHECK_NE(-1, unlink(tpath));
   sigprocmask(SIG_SETMASK, &savemask, 0);
   sigaction(SIGQUIT, &savequit, 0);
   sigaction(SIGINT, &saveint, 0);
-  free(pipes);
   free(pids);
   return exitcode;
 }

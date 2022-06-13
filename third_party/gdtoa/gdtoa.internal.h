@@ -348,9 +348,8 @@ typedef struct ThInfo {
 #define Bcopy(x, y) \
   memcpy(&x->sign, &y->sign, y->wds * sizeof(ULong) + 2 * sizeof(int))
 
-hidden extern char *__gdtoa_dtoa_result;
-hidden extern const double __gdtoa_bigtens[];
 hidden extern const double __gdtoa_tens[];
+hidden extern const double __gdtoa_bigtens[];
 hidden extern const double __gdtoa_tinytens[];
 hidden extern const unsigned char __gdtoa_hexdig[];
 hidden extern const char *const __gdtoa_InfName[6];

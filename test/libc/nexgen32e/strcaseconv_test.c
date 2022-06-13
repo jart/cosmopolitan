@@ -19,6 +19,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
