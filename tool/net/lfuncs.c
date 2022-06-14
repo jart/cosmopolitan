@@ -163,7 +163,9 @@ int LuaDecimate(lua_State *L) {
   bzero(p + n, m - n);
   cDecimate2xUint8x8(m, (unsigned char *)p,
                      (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
-  luaL_pushresultsize(&buf, (n + 1) >> 1);
+  n = (n + 1) >> 1;
+  luaL_addsize(&buf, n);
+  luaL_pushresultsize(&buf, n);
   return 1;
 }
 
@@ -423,6 +425,7 @@ int LuaGetRandomBytes(lua_State *L) {
     unreachable;
   }
   CHECK_EQ(n, getrandom(luaL_buffinitsize(L, &buf, n), n, 0));
+  luaL_addsize(&buf, n);  // register added string with the buffer
   luaL_pushresult(&buf);
   return 1;
 }
@@ -737,6 +740,7 @@ int LuaCompress(lua_State *L) {
     LuaCompress2(L, q + hdrlen, &m, p, n, level);
     m += hdrlen;
   }
+  luaL_addsize(&buf, m);
   luaL_pushresultsize(&buf, m);
   return 1;
 }
@@ -770,6 +774,7 @@ int LuaUncompress(lua_State *L) {
       unreachable;
     }
   }
+  luaL_addsize(&buf, m);
   luaL_pushresultsize(&buf, m);
   return 1;
 }
