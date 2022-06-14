@@ -654,6 +654,7 @@ typedef struct {
 
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
+#pragma GCC diagnostic ignored "-Wundef" /* complaints about __ASSEMBLER__/__LINKER__  */
 #pragma GCC diagnostic ignored "-Wsign-compare" /* lint needs to change  */
 #pragma GCC diagnostic ignored "-Wtype-limits" /* makes macros unsafe  */
 #pragma GCC diagnostic ignored "-Woverflow" /* also breaks macros  */
@@ -670,6 +671,7 @@ typedef struct {
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations" /* libcxx */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
+#pragma GCC diagnostic ignored "-Wc++-compat"
 #endif /* C++ */
 #endif /* GCC || LLVM */
 #if defined(__GNUC__) && !defined(__llvm__)
