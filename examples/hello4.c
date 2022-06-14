@@ -11,7 +11,8 @@
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {
-  volatile double x = 123;
-  printf("cos(%g) is %g\n", x, cos(x));
+  volatile long double x = -.5;
+  volatile long double y = 1.5;
+  printf("atan2l(%.19Lg, %.19Lg) is %.19Lg\n", x, y, atan2l(x, y));
   return 0;
 }

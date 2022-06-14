@@ -3,6 +3,26 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/**
+ * Configures g_*fmt()
+ *
+ * @param ic
+ * 	0 ==> Infinity or NaN
+ * 	1 ==> infinity or nan
+ * 	2 ==> INFINITY or NAN
+ * 	3 ==> Inf or NaN
+ * 	4 ==> inf or nan
+ * 	5 ==> INF or NAN
+ * @param ic determines if NaNs are rendered as NaN(...)
+ * 	0 ==> no
+ * 	1 ==> yes
+ * 	2 ==> no for default NaN values; yes otherwise
+ * @param ns determines sign of NaN values reported
+ * 	0 ==> distinguish NaN and -NaN
+ * 	1 ==> report both as NaN
+ */
+#define NIK(ic, nb, ns) (ic + 6 * (nb + 3 * ns))
+
 enum {
   /* return values from strtodg */
   STRTOG_Zero = 0,
