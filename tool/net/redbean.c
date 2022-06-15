@@ -360,6 +360,7 @@ static bool checkedmethod;
 static bool sslinitialized;
 static bool sslfetchverify;
 static bool hascontenttype;
+static bool gotcachecontrol;
 static bool interpretermode;
 static bool sslclientverify;
 static bool connectionclose;
@@ -375,8 +376,9 @@ static bool hasonprocessdestroy;
 static bool loggednetworkorigin;
 static bool ishandlingconnection;
 static bool hasonclientconnection;
+static bool gotxcontenttypeoptions;
 static bool evadedragnetsurveillance;
-_Atomic(bool) static terminatemonitor;
+static _Atomic(bool) terminatemonitor;
 
 static int zfd;
 static int frags;
@@ -2896,7 +2898,9 @@ td { padding-right: 3em; }\r\n\
   appends(&outbuf, "</footer>\r\n");
   p = SetStatus(200, "OK");
   p = AppendContentType(p, "text/html");
-  p = AppendCache(p, 0);
+  if (msg.version >= 11) {
+    p = stpcpy(p, "Cache-Control: no-store\r\n");
+  }
   return CommitOutput(p);
 }
 
@@ -2969,7 +2973,9 @@ static char *ServeStatusz(void) {
   AppendRusage("children", &shared->children);
   p = SetStatus(200, "OK");
   p = AppendContentType(p, "text/plain");
-  p = AppendCache(p, 0);
+  if (msg.version >= 11) {
+    p = stpcpy(p, "Cache-Control: no-store\r\n");
+  }
   return CommitOutput(p);
 }
 
@@ -4373,12 +4379,21 @@ static int LuaSetHeader(lua_State *L) {
     case kHttpContentType:
       p = AppendContentType(p, eval);
       break;
+    case kHttpReferrerPolicy:
+      referrerpolicy = FreeLater(strdup(eval));
+      break;
     case kHttpServer:
       branded = true;
       p = AppendHeader(p, "Server", eval);
       break;
-    case kHttpReferrerPolicy:
-      referrerpolicy = FreeLater(strdup(eval));
+    case kHttpExpires:
+    case kHttpCacheControl:
+      gotcachecontrol = true;
+      p = AppendHeader(p, key, eval);
+      break;
+    case kHttpXContentTypeOptions:
+      gotxcontenttypeoptions = true;
+      p = AppendHeader(p, key, eval);
       break;
     default:
       p = AppendHeader(p, key, eval);
@@ -5570,6 +5585,7 @@ static void HandleHeartbeat(void) {
   }
 }
 
+// returns 0 on success or response on error
 static char *OpenAsset(struct Asset *a) {
   int fd;
   void *data;
@@ -5905,13 +5921,17 @@ static inline bool IsLua(struct Asset *a) {
 }
 
 static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
+  char *p;
 #ifndef STATIC
   if (IsLua(a)) return ServeLua(a, path, pathlen);
 #endif
   if (msg.method == kHttpGet || msg.method == kHttpHead) {
     LockInc(&shared->c.staticrequests);
-    return stpcpy(ServeAsset(a, path, pathlen),
-                  "X-Content-Type-Options: nosniff\r\n");
+    p = ServeAsset(a, path, pathlen);
+    if (!gotxcontenttypeoptions) {
+      p = stpcpy(p, "X-Content-Type-Options: nosniff\r\n");
+    }
+    return p;
   } else {
     return BadMethod();
   }
@@ -5981,7 +6001,9 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
   p = stpcpy(p, "Vary: Accept-Encoding\r\n");
   p = AppendHeader(p, "Last-Modified", a->lastmodifiedstr);
   if (msg.version >= 11) {
-    p = AppendCache(p, cacheseconds);
+    if (!gotcachecontrol) {
+      p = AppendCache(p, cacheseconds);
+    }
     if (!IsCompressed(a)) {
       p = stpcpy(p, "Accept-Ranges: bytes\r\n");
     }
@@ -6187,8 +6209,10 @@ static void InitRequest(void) {
   luaheaderp = 0;
   isyielding = 0;
   contentlength = 0;
-  hascontenttype = istext = false;
   referrerpolicy = 0;
+  gotcachecontrol = 0;
+  gotxcontenttypeoptions = 0;
+  hascontenttype = istext = false;
   InitHttpMessage(&msg, kHttpRequest);
 }
 
