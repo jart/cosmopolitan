@@ -4,6 +4,7 @@
 COSMOPOLITAN_C_START_
 
 extern long kHalfCache3;
+extern const uint64_t kTens[20];
 
 void imapxlatab(void *);
 void insertionsort(int32_t *, size_t);

@@ -967,7 +967,7 @@ DLLEXE = DLLSTD
 //	   ││││││││        │       │┌6:Contains Initialized Data
 //	   ││││││││ o      │       ││┌5:Contains Code
 //	   ││││││││┌┴─┐rrrr│  ooror│││rorrr
-PETEXT = 0b01110000000000000000000001100000
+PETEXT = 0b01100000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
 

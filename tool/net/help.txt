@@ -2551,7 +2551,6 @@ UNIX MODULE
         ip, port = assert(unix.getsockname(sock))
         print("listening on ip", FormatIp(ip), "port", port)
         assert(unix.listen(sock))
-        assert(unix.accept(sock))
         while true do
            client, clientip, clientport = assert(unix.accept(sock))
            print("got client ip", FormatIp(clientip), "port", clientport)
