@@ -169,10 +169,10 @@ static int klibc_fcntl(int fd, int action, /* arg */...);
    FD_CLOEXEC is portable, but other flags may be present); otherwise
    return -1 and set errno.  */
 
-int fcntl(int fd, int action, /* arg */...)
+int fcntl_(int fd, int action, /* arg */...)
 #undef fcntl
 #ifdef __KLIBC__
-#define fcntl klibc_fcntl
+#define fcntl_ klibc_fcntl
 #endif
 {
   va_list arg;

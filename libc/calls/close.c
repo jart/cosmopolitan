@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -39,11 +40,9 @@
  * that doesn't mean the error should be ignored.
  *
  * @return 0 on success, or -1 w/ errno
- * @error EINTR means a signal was received while closing (possibly
- *     because linger is enabled) in which case close() does not need to
- *     be called again, since the fd will close in the background, and
- *     chances are that on linux, the fd is already closed, even if the
- *     underlying resource isn't closed yet
+ * @error EINTR means a signal was received while closing in which case
+ *     close() does not need to be called again, since the fd will close
+ *     in the background
  * @asyncsignalsafe
  * @vforksafe
  */
@@ -54,6 +53,11 @@ int close(int fd) {
   } else if (fd < 0) {
     rc = einval();
   } else {
+    // for performance reasons we want to avoid holding __fds_lock()
+    // while sys_close() is happening. this leaves the kernel / libc
+    // having a temporarily inconsistent state. routines that obtain
+    // file descriptors the way __zipos_open() does need to retry if
+    // there's indication this race condition happened.
     if (__isfdkind(fd, kFdZip)) {
       rc = weaken(__zipos_close)(fd);
     } else {
@@ -71,8 +75,7 @@ int close(int fd) {
                    __isfdkind(fd, kFdProcess)) {  //
           rc = sys_close_nt(g_fds.p + fd);
         } else {
-          STRACE("close(%d) unknown kind", fd);
-          rc = ebadf();
+          rc = eio();
         }
       }
     }

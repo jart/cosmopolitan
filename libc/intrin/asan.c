@@ -1210,38 +1210,26 @@ void __asan_unregister_globals(struct AsanGlobal g[], int n) {
   }
 }
 
-void __asan_evil(uint8_t *addr, int size, const char *s1, const char *s2) {
+void __asan_evil(uint8_t *addr, int size, const char *s) {
   struct AsanTrace tr;
   __asan_rawtrace(&tr, __builtin_frame_address(0));
-  kprintf(
-      "WARNING: ASAN %s %s bad %d byte %s at %x bt %x %x %x\n",
-      __asan_noreentry == gettid() ? "error during" : "multi-threaded crash",
-      s1, size, s2, addr, tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
+  kprintf("WARNING: ASAN bad %d byte %s at %x bt %x %x %x\n", size, s, addr,
+          tr.p[0], tr.p[1], tr.p[2], tr.p[3]);
 }
 
 void __asan_report_load(uint8_t *addr, int size) {
-  if (_lockcmpxchg(&__asan_noreentry, 0, gettid())) {
-    if (!__vforked) {
-      __asan_report_memory_fault(addr, size, "load")();
-      __asan_unreachable();
-    } else {
-      __asan_evil(addr, size, "vfork()", "load");
-    }
-  } else {
-    __asan_evil(addr, size, "ASAN Reporting", "load");
+  __asan_evil(addr, size, "load");
+  if (!__vforked && _lockcmpxchg(&__asan_noreentry, 0, 1)) {
+    __asan_report_memory_fault(addr, size, "load")();
+    __asan_unreachable();
   }
 }
 
 void __asan_report_store(uint8_t *addr, int size) {
-  if (_lockcmpxchg(&__asan_noreentry, 0, gettid())) {
-    if (!__vforked) {
-      __asan_report_memory_fault(addr, size, "store")();
-      __asan_unreachable();
-    } else {
-      __asan_evil(addr, size, "vfork()", "store");
-    }
-  } else {
-    __asan_evil(addr, size, "ASAN reporting", "store");
+  __asan_evil(addr, size, "store");
+  if (!__vforked && _lockcmpxchg(&__asan_noreentry, 0, 1)) {
+    __asan_report_memory_fault(addr, size, "store")();
+    __asan_unreachable();
   }
 }
 

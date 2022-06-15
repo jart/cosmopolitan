@@ -26,6 +26,10 @@ COSMOPOLITAN_C_START_
 #define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
 #define kFixedmapSize \
   _kMem(0x400000000000 - 0x300000000000, 0x000070000000 - 0x000040000000)
+#define kMemtrackFdsStart   _kMem(0x6fe000000000, 0x80000000)
+#define kMemtrackFdsSize    _kMem(0x001000000000, 0x04000000)
+#define kMemtrackZiposStart _kMem(0x6fd000000000, 0x84000000)
+#define kMemtrackZiposSize  _kMem(0x001000000000, 0x20000000)
 #define _kMmi(VSPACE)                                                   \
   ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
           FRAMESIZE)

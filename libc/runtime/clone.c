@@ -30,6 +30,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
@@ -71,34 +72,6 @@ struct CloneArgs {
   int (*func)(void *);
   void *arg;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-// THREADING RUNTIME
-
-static char tibdefault[64];
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-
-static privileged dontinline void FixupThreadCalls(void) {
-  /*
-   * _NOPL("__threadcalls", func)
-   *
-   * we have this
-   *
-   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
-   *
-   * we're going to turn it into this
-   *
-   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
-   */
-  __morph_begin();
-  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
-  }
-  __morph_end();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // THE NEW TECHNOLOGY
@@ -522,12 +495,11 @@ int sys_clone_linux(int flags, char *stk, int *ptid, int *ctid, void *tls,
  *       value from the thread by calling __get_tls(). There are a few
  *       layout expectations imposed by your C library. Those are all
  *       documented by __initialize_tls() which initializes the parts of
- *       the first 64 bytes of tls memory that libc cares about. Also
- *       note that if you decide to use tls once then you must use it
- *       for everything, since this flag also flips a runtime state that
- *       enables it for the main thread and functions such as
- *       __errno_location() will begin assuming they can safely access
- *       the tls segment register.
+ *       the first 64 bytes of tls memory that libc cares about. This
+ *       flag will transition the C runtime to the `__tls_enabled` state
+ *       automatically. If it's used for one thread, then it must be
+ *       used for all threads. The first time it's used, it must be used
+ *       from the main thread.
  * @param arg will be passed to your callback
  * @param tls may be used to set the thread local storage segment;
  *     this parameter is ignored if `CLONE_SETTLS` is not set
@@ -539,30 +511,15 @@ int sys_clone_linux(int flags, char *stk, int *ptid, int *ctid, void *tls,
  */
 int clone(int (*func)(void *), void *stk, size_t stksz, int flags, void *arg,
           int *ptid, void *tls, size_t tlssz, int *ctid) {
-  int rc, maintid;
+  int rc;
   struct CloneArgs *wt;
 
-  // transition program to threaded state
-  if (!__threaded && (flags & CLONE_THREAD)) {
-    FixupThreadCalls();
-  }
   if ((flags & CLONE_SETTLS) && !__tls_enabled) {
-    if (~flags & CLONE_THREAD) {
-      STRACE("clone() tls w/o thread");
-      return einval();
-    }
-    if (__threaded) {
-      STRACE("clone() tls/non-tls mixed order");
-      return einval();
-    }
-    maintid = gettid();
-    __initialize_tls(tibdefault);
-    *(int *)((char *)tibdefault + 0x38) = maintid;
-    *(int *)((char *)tibdefault + 0x3c) = __errno;
-    __install_tls(tibdefault);
-    __threaded = maintid;
-  } else if (flags & CLONE_THREAD) {
-    __threaded = gettid();
+    __enable_tls();
+  }
+
+  if ((flags & CLONE_THREAD) && !__threaded) {
+    __enable_threads();
   }
 
   if (!func) {

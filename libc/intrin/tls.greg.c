@@ -61,18 +61,30 @@ privileged void *__initialize_tls(char tib[64]) {
  * Installs thread information block on main process.
  *
  * For example, to set up TLS correctly for the main thread, without
- * creating any threads using `clone` (which does this automatically),
- * it is sufficient to say:
+ * creating any threads, then it's sufficient to say:
  *
  *     __attribute__((__constructor__)) static void InitTls(void) {
  *       static char tls[64];
  *       __initialize_tls(tls);
- *       __threaded = *(int *)(tls + 0x38) = gettid();
+ *       *(int *)(tls + 0x38) = gettid();
  *       *(int *)(tls + 0x3c) = __errno;
  *       __install_tls(tls);
  *     }
  *
- * Since that'll ensure it happens exactly once.
+ * We use a constructor here to make sure it only happens once. Please
+ * note that calling `clone` will do this automatically.
+ *
+ * Installing TLS causes the `__tls_enabled` variable to be set. This
+ * causes C library features such as `errno` and `gettid()` to use TLS.
+ * This can help things like recursive mutexes go significantly faster.
+ *
+ * To access your TLS storage, you can call `__get_tls()` or
+ * __get_tls_inline()` which return the address of the `tib`.
+ *
+ * @param tib is your thread information block, which must have at least
+ *     64 bytes on the righthand side of the tib pointer since those are
+ *     the values your C library reserves for itself. memory on the left
+ *     side of the pointer is reserved by the linker for _Thread_local.
  */
 privileged void __install_tls(char tib[64]) {
   int ax, dx;

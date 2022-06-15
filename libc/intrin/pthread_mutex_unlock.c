@@ -21,8 +21,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/sysv/consts/futex.h"
 
 /**
  * Releases mutex.
@@ -38,7 +38,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
     if (IsLinux() &&
         atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      sys_futex((void *)&mutex->owner, FUTEX_WAKE, 1, 0, 0);
+      LinuxFutexWake(&mutex->owner, 1);
     }
   }
   return 0;

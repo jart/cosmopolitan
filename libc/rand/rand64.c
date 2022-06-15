@@ -16,42 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 
-static int thepid;
-static uint128_t thepool;
-_Alignas(64) static int rand64_lock;
+static struct {
+  int thepid;
+  uint128_t thepool;
+  pthread_mutex_t lock;
+} g_rand64;
 
 /**
  * Returns nondeterministic random data.
  *
- * This function is similar to lemur64() except that it's intended to be
- * unpredictable. This PRNG automatically seeds itself on startup using
- * a much stronger and faster random source than `srand(time(0))`. This
- * function will automatically reseed itself when new processes and
- * threads are spawned. This function is thread safe in the sense that a
- * race condition can't happen where two threads return the same result.
+ * This function is similar to lemur64() except that it doesn't produce
+ * the same sequences of numbers each time your program is run. This is
+ * the case even across forks and threads, whose sequences will differ.
  *
  * @see rdseed(), rdrand(), rand(), random(), rngset()
+ * @note this function takes 5 cycles (30 if `__threaded`)
  * @note this function is not intended for cryptography
  * @note this function passes bigcrush and practrand
- * @note this function takes at minimum 15 cycles
+ * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
  */
 uint64_t rand64(void) {
   void *p;
   uint128_t s;
-  _spinlock(&rand64_lock);
-  if (__pid == thepid) {
-    s = thepool;  // normal path
+  if (__threaded) pthread_mutex_lock(&g_rand64.lock);
+  if (__pid == g_rand64.thepid) {
+    s = g_rand64.thepool;  // normal path
   } else {
-    if (!thepid) {
+    if (!g_rand64.thepid) {
       if (AT_RANDOM && (p = (void *)getauxval(AT_RANDOM))) {
         // linux / freebsd kernel supplied entropy
         memcpy(&s, p, 16);
@@ -61,13 +63,13 @@ uint64_t rand64(void) {
       }
     } else {
       // blend another timestamp on fork contention
-      s = thepool ^ rdtsc();
+      s = g_rand64.thepool ^ rdtsc();
     }
     // blend the pid on startup and fork contention
     s ^= __pid;
-    thepid = __pid;
+    g_rand64.thepid = __pid;
   }
-  thepool = (s *= 15750249268501108917ull);  // lemur64
-  _spunlock(&rand64_lock);
+  g_rand64.thepool = (s *= 15750249268501108917ull);  // lemur64
+  if (__threaded) pthread_mutex_unlock(&g_rand64.lock);
   return s >> 64;
 }

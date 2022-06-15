@@ -6018,6 +6018,10 @@ static char *SetStatus(unsigned code, const char *reason) {
   }
   statuscode = code;
   hascontenttype = istext = false;  // reset, as the headers are reset
+  gotxcontenttypeoptions = 0;
+  gotcachecontrol = 0;
+  referrerpolicy = 0;
+  branded = 0;
   stpcpy(hdrbuf.p, "HTTP/1.0 000 ");
   hdrbuf.p[7] += msg.version & 1;
   hdrbuf.p[9] += code / 100;

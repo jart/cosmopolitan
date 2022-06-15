@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "third_party/python/Include/yoink.h"
 #include "third_party/python/runpythonmodule.h"

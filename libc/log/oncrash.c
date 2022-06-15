@@ -263,8 +263,7 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  *
  * This function never returns, except for traps w/ human supervision.
  */
-relegated noinstrument void __oncrash(int sig, struct siginfo *si,
-                                      ucontext_t *ctx) {
+relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   intptr_t rip;
   int gdbpid, err;
   static bool noreentry, notpossible;

@@ -55,6 +55,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
@@ -80,14 +81,6 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
  * TODO: Why can't we allocate addresses above 4GB on Windows 7 x64?
  * TODO: How can we ensure we never overlap with KERNEL32.DLL?
  */
-
-struct WinArgs {
-  char *argv[4096];
-  char *envp[4092];
-  intptr_t auxv[2][2];
-  char argblock[ARG_MAX / 2];
-  char envblock[ARG_MAX / 2];
-};
 
 extern uint32_t __winmainpid;
 extern int64_t __wincrashearly;

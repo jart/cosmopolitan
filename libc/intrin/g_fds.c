@@ -41,6 +41,7 @@ textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
+  fds->f = 3;
   fds->p = fds->__init_p;
   if (IsMetal()) {
     pushmov(&fds->f, 3ull);

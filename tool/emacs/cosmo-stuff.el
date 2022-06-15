@@ -691,6 +691,7 @@
   (define-key lua-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key python-mode-map (kbd "C-c C-r") 'cosmo-run)
   (define-key c-mode-map (kbd "C-c C-s") 'cosmo-run-test)
+  (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win7)
   (define-key c-mode-map (kbd "C-c C-_") 'cosmo-run-win10))
 
 

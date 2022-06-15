@@ -21,9 +21,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/gettls.h"
+#include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/sysv/consts/futex.h"
 
 /**
  * Locks mutex.
@@ -43,16 +42,15 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
         return EDEADLK;
       }
     }
-    atomic_fetch_add(&mutex->waits, +1);
-    if (!IsLinux() ||
-        sys_futex((void *)&mutex->owner, FUTEX_WAIT, owner, 0, 0)) {
+    atomic_fetch_add(&mutex->waits, 1);
+    if (!IsLinux() || LinuxFutexWait((void *)&mutex->owner, owner, 0)) {
       if (++tries & 7) {
         __builtin_ia32_pause();
       } else {
         sched_yield();
       }
     }
-    atomic_fetch_add(&mutex->waits, -1);
+    atomic_fetch_sub(&mutex->waits, 1);
   }
   ++mutex->reent;
   return 0;

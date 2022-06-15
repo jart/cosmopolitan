@@ -16,13 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/macros.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/str/str.h"
+#include "libc/zipos/zipos.internal.h"
 
-void __releasefd_unlocked(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    g_fds.f = MIN(fd, g_fds.f);
+/**
+ * Frees ZipOS handle.
+ * @asyncsignalsafe
+ * @threadsafe
+ */
+void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
+  if (IsAsan()) {
+    __asan_poison((char *)h + sizeof(struct ZiposHandle),
+                  h->mapsize - sizeof(struct ZiposHandle), kAsanHeapFree);
   }
+  __zipos_lock();
+  do h->next = z->freelist;
+  while (!_cmpxchg(&z->freelist, h->next, h));
+  __zipos_unlock();
 }

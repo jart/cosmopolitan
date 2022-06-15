@@ -16,13 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 
-void __releasefd_unlocked(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    g_fds.f = MIN(fd, g_fds.f);
+static char tibdefault[64];
+extern int __threadcalls_end[];
+extern int __threadcalls_start[];
+
+void __enable_tls(void) {
+  __initialize_tls(tibdefault);
+  *(int *)((char *)tibdefault + 0x38) = gettid();
+  *(int *)((char *)tibdefault + 0x3c) = __errno;
+  __install_tls(tibdefault);
+}
+
+privileged void __enable_threads(void) {
+  __threaded = gettid();
+  /*
+   * _NOPL("__threadcalls", func)
+   *
+   * we have this
+   *
+   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
+   *
+   * we're going to turn it into this
+   *
+   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
+   */
+  __morph_begin();
+  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
+    _base[*p + 0] = 0x67;
+    _base[*p + 1] = 0x67;
+    _base[*p + 2] = 0xe8;
   }
+  __morph_end();
 }

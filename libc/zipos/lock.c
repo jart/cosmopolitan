@@ -16,13 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
+#include "libc/intrin/pthread.h"
+#include "libc/zipos/zipos.internal.h"
 
-void __releasefd_unlocked(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    g_fds.f = MIN(fd, g_fds.f);
-  }
+static pthread_mutex_t __zipos_lock_obj;
+
+void(__zipos_lock)(void) {
+  pthread_mutex_lock(&__zipos_lock_obj);
+}
+
+void(__zipos_unlock)(void) {
+  pthread_mutex_unlock(&__zipos_lock_obj);
 }

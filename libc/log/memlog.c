@@ -20,7 +20,6 @@
 #include "libc/bits/atomic.h"
 #include "libc/bits/weaken.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -71,14 +70,14 @@ static struct Memlog {
   long usage;
 } __memlog;
 
-_Alignas(64) static int __memlog_lock_obj;
+static pthread_mutex_t __memlog_lock_obj;
 
 static void __memlog_lock(void) {
-  _spinlock(&__memlog_lock_obj);
+  pthread_mutex_lock(&__memlog_lock_obj);
 }
 
 static void __memlog_unlock(void) {
-  _spunlock(&__memlog_lock_obj);
+  pthread_mutex_unlock(&__memlog_lock_obj);
 }
 
 static long __memlog_size(void *p) {

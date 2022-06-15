@@ -1,16 +1,13 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #include "libc/calls/calls.h"
+#include "libc/intrin/nopl.h"
+#include "libc/nexgen32e/threaded.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct stat;
 struct iovec;
-
-struct Zipos {
-  uint8_t *map;
-  uint8_t *cdir;
-};
 
 struct ZiposUri {
   const char *path;
@@ -18,16 +15,26 @@ struct ZiposUri {
 };
 
 struct ZiposHandle {
-  uint8_t *mem;   /* uncompressed file memory */
-  size_t size;    /* byte length of file memory */
+  struct ZiposHandle *next;
+  size_t size;    /* byte length of `mem` */
+  size_t mapsize; /* total size of this struct */
   size_t pos;     /* read/write byte offset state */
   uint32_t cfile; /* central directory entry rva */
-  int64_t handle;
-  uint8_t *freeme;
+  uint8_t *mem;   /* points to inflated data or uncompressed image */
+  uint8_t data[]; /* uncompressed file memory */
 };
 
+struct Zipos {
+  uint8_t *map;
+  uint8_t *cdir;
+  struct ZiposHandle *freelist;
+};
+
+void __zipos_lock(void) hidden;
+void __zipos_unlock(void) hidden;
 int __zipos_close(int) hidden;
 struct Zipos *__zipos_get(void) pureconst hidden;
+void __zipos_free(struct Zipos *, struct ZiposHandle *) hidden;
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *) hidden;
 ssize_t __zipos_find(struct Zipos *, const struct ZiposUri *);
 int __zipos_open(const struct ZiposUri *, unsigned, int) hidden;
@@ -41,6 +48,14 @@ ssize_t __zipos_write(struct ZiposHandle *, const struct iovec *, size_t,
 int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned) hidden;
 int __zipos_fcntl(int, int, uintptr_t) hidden;
 int __zipos_notat(int, const char *) hidden;
+
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#define __zipos_lock()   _NOPL0("__threadcalls", __zipos_lock)
+#define __zipos_unlock() _NOPL0("__threadcalls", __zipos_unlock)
+#else
+#define __zipos_lock()   (__threaded ? __zipos_lock() : 0)
+#define __zipos_unlock() (__threaded ? __zipos_unlock() : 0)
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

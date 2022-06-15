@@ -21,7 +21,9 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -82,6 +84,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
 
   // backtrace_test.com failing on windows for some reason via runitd
+  // don't want to pull in the high-level syscalls here anyway
   if (IsWindows()) {
     return -1;
   }
@@ -118,17 +121,17 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     j += uint64toarray_radix16(addr - 1, buf + j) + 1;
   }
   argv[i++] = NULL;
-  pipe(pipefds);
+  if (sys_pipe(pipefds) == -1) return -1;
   if (!(pid = vfork())) {
-    dup2(pipefds[1], 1);
-    if (pipefds[0] != 1) close(pipefds[0]);
-    if (pipefds[1] != 1) close(pipefds[1]);
-    execve(addr2line, argv, environ);
-    _exit(127);
+    sys_dup2(pipefds[1], 1);
+    if (pipefds[0] != 1) sys_close(pipefds[0]);
+    if (pipefds[1] != 1) sys_close(pipefds[1]);
+    sys_execve(addr2line, argv, environ);
+    _Exit(127);
   }
-  close(pipefds[1]);
+  sys_close(pipefds[1]);
   for (;;) {
-    got = read(pipefds[0], buf, kBacktraceBufSize);
+    got = sys_read(pipefds[0], buf, kBacktraceBufSize);
     if (!got) break;
     if (got == -1 && errno == EINTR) {
       errno = 0;
@@ -161,8 +164,8 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
       }
     }
   }
-  close(pipefds[0]);
-  while (waitpid(pid, &ws, 0) == -1) {
+  sys_close(pipefds[0]);
+  while (sys_wait4(pid, &ws, 0, 0) == -1) {
     if (errno == EINTR) continue;
     return -1;
   }

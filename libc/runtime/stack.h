@@ -100,7 +100,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
               : "=r"(vAddr)                     \
               : "i"(ADDEND));                   \
     } else {                                    \
-      vAddr = 0x10000000;                       \
+      vAddr = 0x100000000 - GetStackSize();     \
     }                                           \
     (void *)vAddr;                              \
   })

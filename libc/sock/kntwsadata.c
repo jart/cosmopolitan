@@ -40,7 +40,6 @@ hidden struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
   int i, rc;
-  NTTRACE("WinSockCleanup()");
   rc = WSACleanup();
   NTTRACE("WSACleanup() → %d% lm", rc);
 }

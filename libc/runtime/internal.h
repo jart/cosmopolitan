@@ -26,6 +26,8 @@ extern unsigned char _tbss_end[];
 extern unsigned char _tls_size[];
 
 void _init(void) hidden;
+void __enable_tls(void) hidden;
+void __enable_threads(void) hidden;
 void __restorewintty(void) hidden;
 void *__cxa_finalize(void *) hidden;
 void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;

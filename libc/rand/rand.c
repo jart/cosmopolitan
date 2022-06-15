@@ -30,6 +30,9 @@
  * called, then it'll return the same sequence each time your program
  * runs. Faster and more modern alternatives exist to this function.
  *
+ * This function is not thread safe in the sense that multiple threads
+ * might simultaneously generate the same random values.
+ *
  * @note this function does well on bigcrush and practrand
  * @note this function is not intended for cryptography
  * @see lemur64(), rand64(), rdrand()

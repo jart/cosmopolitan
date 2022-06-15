@@ -16,13 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
-#include "libc/str/str.h"
 
-void __releasefd_unlocked(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    g_fds.f = MIN(fd, g_fds.f);
+static const struct {
+  char suffix;
+  uint64_t size;
+} kUnits[] = {
+    {'e', 1024ULL * 1024 * 1024 * 1024 * 1024 * 1024},
+    {'p', 1024ULL * 1024 * 1024 * 1024 * 1024},
+    {'t', 1024ULL * 1024 * 1024 * 1024},
+    {'g', 1024ULL * 1024 * 1024},
+    {'m', 1024ULL * 1024},
+    {'k', 1024ULL},
+};
+
+/**
+ * Represents size of memory readably.
+ *
+ * @param p is output buffer
+ * @return pointer to nul byte
+ */
+char *FormatMemorySize(char *p, uint64_t x) {
+  int i, suffix;
+  for (suffix = i = 0; i < ARRAYLEN(kUnits); ++i) {
+    if (x >= kUnits[i].size * 9) {
+      x = (x + kUnits[i].size / 2) / kUnits[i].size;
+      suffix = kUnits[i].suffix;
+      break;
+    }
   }
+  p = FormatUint64(p, x);
+  if (suffix) *p++ = suffix;
+  *p++ = 'b';
+  *p = 0;
+  return p;
 }
