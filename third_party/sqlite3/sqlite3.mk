@@ -187,11 +187,11 @@ o/$(MODE)/third_party/sqlite3/parse.o:					\
 o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16
+o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16 -L180
 o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16
+o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16 -L180
 
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))
