@@ -4190,8 +4190,8 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): PYFLAGS += -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 
-o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C64 -M1024m
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C64 -M1024m -L180
+o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C64 -M1024m -L300
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C64 -M1024m -L300
 
 o/$(MODE)/third_party/python/Parser/asdl_c.o: PYFLAGS += -m
 $(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): PYFLAGS += -t -P.python -C3
@@ -4208,14 +4208,19 @@ o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: QUOTA = -M1400m -L30
 o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: QUOTA = -C64 -L300
 o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: QUOTA = -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: QUOTA = -L120 -C64
+o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: QUOTA = -L300 -C64
 o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: QUOTA = -L120
 o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
 o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: QUOTA = -C1000000
 o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -C32 -M1024m
 o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: QUOTA = -L180
-o/$(MODE)/third_party/python/Lib/test/test_tracemalloc.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_bytes.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_urlparse.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o: QUOTA = -L180
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
