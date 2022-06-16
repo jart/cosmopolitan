@@ -7,9 +7,9 @@ COSMOPOLITAN_C_START_
 
 #define PTHREAD_ONCE_INIT 0
 
-#define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_RECURSIVE
-#define PTHREAD_MUTEX_NORMAL     0
-#define PTHREAD_MUTEX_RECURSIVE  1
+#define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_NORMAL
+#define PTHREAD_MUTEX_RECURSIVE  0
+#define PTHREAD_MUTEX_NORMAL     1
 #define PTHREAD_MUTEX_ERRORCHECK 2
 #define PTHREAD_MUTEX_STALLED    0
 #define PTHREAD_MUTEX_ROBUST     1
@@ -26,7 +26,7 @@ typedef int pthread_once_t;
 typedef struct {
   int attr;
   int reent;
-  _Atomic(int) owner;
+  _Atomic(int) lock;
   _Atomic(int) waits;
 } pthread_mutex_t;
 

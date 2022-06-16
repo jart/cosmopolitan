@@ -29,11 +29,12 @@
  * @return 0 on success, or error number on failure
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  int me, owner;
-  unsigned tries;
+  int i, me, owner, tries;
   for (tries = 0, me = gettid();;) {
-    owner = 0;
-    if (atomic_compare_exchange_strong(&mutex->owner, &owner, me)) {
+    owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+    if (!owner && atomic_compare_exchange_weak_explicit(
+                      &mutex->lock, &owner, me, memory_order_acquire,
+                      memory_order_relaxed)) {
       break;
     } else if (owner == me) {
       if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
@@ -42,15 +43,17 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
         return EDEADLK;
       }
     }
-    atomic_fetch_add(&mutex->waits, 1);
-    if (!IsLinux() || LinuxFutexWait((void *)&mutex->owner, owner, 0)) {
-      if (++tries & 7) {
-        __builtin_ia32_pause();
-      } else {
-        sched_yield();
+    if (tries < 7) {
+      for (i = 0; i != 1 << tries; i++) {
       }
+      tries++;
+    } else if (IsLinux()) {
+      atomic_fetch_add(&mutex->waits, 1);
+      LinuxFutexWait(&mutex->lock, owner, 0);
+      atomic_fetch_sub(&mutex->waits, 1);
+    } else {
+      sched_yield();
     }
-    atomic_fetch_sub(&mutex->waits, 1);
   }
   ++mutex->reent;
   return 0;

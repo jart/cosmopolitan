@@ -30,6 +30,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -131,10 +132,10 @@ struct Sauce *sauces;
 struct Strings strings;
 struct Sources sources;
 const char *buildroot;
-_Alignas(64) int galock;
-_Alignas(64) int readlock;
-_Alignas(64) int writelock;
-_Alignas(64) int reportlock;
+_Alignas(64) char galock;
+_Alignas(64) char readlock;
+_Alignas(64) char writelock;
+_Alignas(64) char reportlock;
 
 unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
@@ -316,7 +317,7 @@ void LoadRelationships(int argc, char *argv[]) {
     }
   }
   for (i = 0; i < threads; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
   }
   getargs_destroy(&ga);
 }
@@ -431,7 +432,7 @@ void Explore(void) {
     }
   }
   for (i = 0; i < threads; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
   }
 }
 

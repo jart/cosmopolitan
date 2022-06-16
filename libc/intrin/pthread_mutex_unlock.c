@@ -31,14 +31,14 @@
  */
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int owner;
-  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->owner != gettid()) {
+  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->lock != gettid()) {
     return EPERM;
   }
   if (!--mutex->reent) {
-    atomic_store_explicit(&mutex->owner, 0, memory_order_relaxed);
+    atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
     if (IsLinux() &&
         atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      LinuxFutexWake(&mutex->owner, 1);
+      LinuxFutexWake(&mutex->lock, 1);
     }
   }
   return 0;

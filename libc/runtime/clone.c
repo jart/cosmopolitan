@@ -63,7 +63,7 @@ struct CloneArgs {
     int64_t tid64;
   };
   union {
-    int lock;
+    char lock;
     void *pstack;
   };
   int *ctid;

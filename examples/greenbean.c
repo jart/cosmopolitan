@@ -18,6 +18,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -333,11 +334,17 @@ int main(int argc, char *argv[]) {
   // clean up terminal line
   kprintf("\r\e[K");
 
-  // clean up memory
-  for (i = 0; i < threads; ++i) {
-    if (stack) munmap(stack[i], GetStackSize());
-    if (tls) free(tls[i]);
+  // join the workers
+  // this is how we guarantee stacks are safe to free
+  if (tls && stack) {
+    for (i = 0; i < threads; ++i) {
+      _wait0((int *)(tls[i] + 0x38));
+      munmap(stack[i], GetStackSize());
+      free(tls[i]);
+    }
   }
+
+  // clean up memory
   free(hostips);
   free(stack);
   free(tls);

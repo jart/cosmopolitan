@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gettls.h"
@@ -102,14 +103,13 @@ int CloneTest1(void *arg) {
 TEST(clone, test1) {
   int ptid = 0;
   *childetid = -1;
-  _seizelock(childetid, -1);
   ASSERT_NE(-1, (tid = clone(CloneTest1, stack, GetStackSize(),
                              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
                                  CLONE_SIGHAND | CLONE_PARENT_SETTID |
                                  CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID |
                                  CLONE_SETTLS,
                              (void *)23, &ptid, tls, 64, childetid)));
-  _spinlock(childetid);  // CLONE_CHILD_CLEARTID
+  _wait0(childetid);  // CLONE_CHILD_CLEARTID
   ASSERT_NE(gettid(), tid);
   ASSERT_EQ(tid, ptid);
   ASSERT_EQ(42, x);
@@ -174,7 +174,7 @@ TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
   }
   sysbarrier = 1;
   for (i = 0; i < 8; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
     free(tls[i]);
     munmap(stack[i], GetStackSize());
   }

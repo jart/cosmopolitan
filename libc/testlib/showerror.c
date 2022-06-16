@@ -32,7 +32,7 @@ const char *testlib_showerror_func;
 const char *testlib_showerror_isfatal;
 const char *testlib_showerror_macro;
 const char *testlib_showerror_symbol;
-_Alignas(64) static int testlib_showerror_lock;
+_Alignas(64) static char testlib_showerror_lock;
 
 testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *method, const char *symbol,

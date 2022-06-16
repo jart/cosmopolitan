@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/math.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
@@ -71,7 +72,7 @@ TEST(dtoa, test) {
           (int *)(tls[i] + 0x38));
   }
   for (i = 0; i < THREADS; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
   }
 }
 
