@@ -2816,7 +2816,10 @@ PyInit_imp(void)
         goto failure;
     if (PyModule_AddObject(m, "CosmoImporter", (PyObject*)&CosmoImporterType) < 0)
         goto failure;
-
+    /* test_atexit segfaults without the below incref, but
+     * I'm not supposed to Py_INCREF a static PyTypeObject, so
+     * what's going on? */
+    Py_INCREF(&CosmoImporterType);
     return m;
   failure:
     Py_XDECREF(m);
