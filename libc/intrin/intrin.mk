@@ -88,6 +88,13 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
 			-mgeneral-regs-only		\
 			-fno-stack-protector
 
+# we can't use asan because:
+#   global gone could be raised
+o/$(MODE)/libc/intrin/exit.o				\
+o/$(MODE)/libc/intrin/restorewintty.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=all
+
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\

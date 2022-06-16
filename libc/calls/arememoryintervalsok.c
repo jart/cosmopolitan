@@ -23,15 +23,18 @@
 noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {
   /* asan runtime depends on this function */
   int i;
+  size_t wantsize;
   for (i = 0; i < mm->i; ++i) {
     if (mm->p[i].y < mm->p[i].x) {
       STRACE("AreMemoryIntervalsOk() y should be >= x!");
       return false;
     }
-    if (!(mm->p[i].size <=
-              (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE + FRAMESIZE &&
-          mm->p[i].size > (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE)) {
-      STRACE("AreMemoryIntervalsOk() size is wrong!");
+    wantsize = (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE;
+    if (!(wantsize < mm->p[i].size && mm->p[i].size <= wantsize + FRAMESIZE)) {
+      STRACE("AreMemoryIntervalsOk(%p) size is wrong!"
+             " %'zu not within %'zu .. %'zu",
+             (uintptr_t)mm->p[i].x << 16, mm->p[i].size, wantsize,
+             wantsize + FRAMESIZE);
       return false;
     }
     if (i) {

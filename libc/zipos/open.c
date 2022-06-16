@@ -47,14 +47,15 @@
 static volatile size_t maptotal;
 
 static pureconst size_t __zipos_granularity(void) {
-  return (IsWindows() ? FRAMESIZE : PAGESIZE) * (IsAsan() ? 8 : 1);
+  return FRAMESIZE * (IsAsan() ? 8 : 1);
 }
 
 static void *__zipos_mmap(size_t mapsize) {
   size_t offset;
-  int prot, flags;
   struct DirectMap dm;
-  uint64_t addr, addr2;
+  int rc, prot, flags;
+  uint64_t addr, addr2, addr3;
+  assert(mapsize);
   do offset = maptotal;
   while (!_cmpxchg(&maptotal, offset, maptotal + mapsize));
   if (offset + mapsize <= kMemtrackZiposSize) {
@@ -63,14 +64,21 @@ static void *__zipos_mmap(size_t mapsize) {
     addr = kMemtrackZiposStart + offset;
     if ((dm = sys_mmap((void *)addr, mapsize, prot, flags, -1, 0)).addr !=
         MAP_FAILED) {
-      TrackMemoryInterval(&_mmi, addr >> 16, (addr + mapsize - 1) >> 16,
-                          dm.maphandle, prot, flags, false, false, 0, mapsize);
+      rc = TrackMemoryInterval(&_mmi, addr >> 16, (addr + mapsize - 1) >> 16,
+                               dm.maphandle, prot, flags, false, false, 0,
+                               mapsize);
+      assert(!rc);
       if (IsAsan()) {
         addr2 = (addr >> 3) + 0x7fff8000;
+        addr3 = ((addr + mapsize) >> 3) + 0x7fff8000;
+        assert(!(addr2 & (FRAMESIZE - 1)));
+        assert(!(addr3 & (FRAMESIZE - 1)));
         dm = sys_mmap((void *)addr2, mapsize >> 3, prot, flags, -1, 0);
-        TrackMemoryInterval(&_mmi, addr2 >> 16,
-                            (addr2 + (mapsize >> 3) - 1) >> 16, dm.maphandle,
-                            prot, flags, false, false, 0, mapsize >> 3);
+        assert(dm.addr != MAP_FAILED);
+        rc = TrackMemoryInterval(&_mmi, addr2 >> 16, (addr3 >> 16) - 1,
+                                 dm.maphandle, prot, flags, false, false, 0,
+                                 mapsize >> 3);
+        assert(!rc);
       }
       return (void *)addr;
     }

@@ -96,6 +96,13 @@ o/$(MODE)/libc/calls/mkntenvblock.o:			\
 			-ffreestanding			\
 			-fno-sanitize=address
 
+# we can't use sanitizers because:
+#   windows owns the data structure
+o/$(MODE)/libc/calls/wincrash.o				\
+o/$(MODE)/libc/calls/ntcontext2linux.o:			\
+		OVERRIDE_COPTS +=			\
+			-fno-sanitize=all
+
 # we always want -O3 because:
 #   it makes the code size smaller too
 o/$(MODE)/libc/calls/sigenter-freebsd.o			\
