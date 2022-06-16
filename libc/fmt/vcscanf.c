@@ -177,9 +177,11 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
       DecodeNumber:
         if (c != -1) {
           number = 0;
+          width = !width ? bits : width;
           do {
             diglet = kBase36[(unsigned char)c];
             if (1 <= diglet && diglet <= base) {
+              width -= 1;
               number *= base;
               number += diglet - 1;
             } else if (thousands && diglet == ',') {
@@ -187,7 +189,7 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
             } else {
               break;
             }
-          } while ((c = callback(arg)) != -1);
+          } while ((c = callback(arg)) != -1 && width > 0);
           if (!discard) {
             uint128_t bane = (uint128_t)1 << (bits - 1);
             if (!(number & ~((bane - 1) | (issigned ? 0 : bane))) ||
