@@ -29,7 +29,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   int rc, me, owner;
   me = gettid();
   owner = 0;
-  if (!atomic_compare_exchange_strong(&mutex->owner, &owner, me) &&
+  if (!atomic_compare_exchange_strong(&mutex->lock, &owner, me) &&
       owner == me) {
     rc = 0;
     ++mutex->reent;

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
@@ -71,7 +72,7 @@ int main(int argc, char *argv[]) {
     usleep(1000);
   }
   for (i = 0; i < n; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
     free(tls[i]);
   }
 }

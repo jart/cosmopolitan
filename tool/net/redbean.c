@@ -36,6 +36,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -6357,7 +6358,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _spinlock(monitortid);
+    _wait0(monitortid);
   }
   _Exit(0);
 }
@@ -7295,7 +7296,7 @@ void RedBean(int argc, char *argv[]) {
   if (!IsTiny()) {
     if (monitortty) {
       terminatemonitor = true;
-      _spinlock(monitortid);
+      _wait0(monitortid);
       munmap(monitorstack, GetStackSize());
       free(monitortls);
     }

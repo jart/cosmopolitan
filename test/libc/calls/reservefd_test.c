@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
@@ -128,7 +129,7 @@ TEST(reservefd, tortureTest) {
           (int *)(tls[i] + 0x38));
   }
   for (i = 0; i < THREADS; ++i) {
-    _spinlock((int *)(tls[i] + 0x38));
+    _wait0((int *)(tls[i] + 0x38));
   }
   // EXPECT_SYS(0, 0, sigaction(SIGALRM, &oldsa, 0));
   // EXPECT_SYS(0, 0, setitimer(ITIMER_REAL, &oldit, 0));

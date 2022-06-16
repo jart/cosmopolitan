@@ -20,26 +20,46 @@
     __atomic_store(__lock, &__x, __ATOMIC_RELEASE); \
   })
 
-#define _spinlock_tiny(lock)        \
-  ({                                \
-    autotype(lock) __lock = (lock); \
-    while (_trylock(__lock)) {      \
-      __builtin_ia32_pause();       \
-    }                               \
-    0;                              \
+#define _spinlock_tiny(lock)  \
+  ({                          \
+    while (_trylock(lock)) {  \
+      __builtin_ia32_pause(); \
+    }                         \
+    0;                        \
   })
 
 #define _spinlock_cooperative(lock)                  \
   ({                                                 \
-    autotype(lock) __lock = (lock);                  \
-    typeof(*__lock) __x;                             \
+    char __x;                                        \
     unsigned __tries = 0;                            \
+    char *__lock = (lock);                           \
     for (;;) {                                       \
       __atomic_load(__lock, &__x, __ATOMIC_RELAXED); \
       if (!__x && !_trylock(__lock)) {               \
         break;                                       \
       } else if (++__tries & 7) {                    \
         __builtin_ia32_pause();                      \
+      } else {                                       \
+        _spinlock_yield();                           \
+      }                                              \
+    }                                                \
+    0;                                               \
+  })
+
+#define _spinlock_cooperative_(lock)                 \
+  ({                                                 \
+    char __x;                                        \
+    volatile int __i;                                \
+    unsigned __tries = 0;                            \
+    char *__lock = (lock);                           \
+    for (;;) {                                       \
+      __atomic_load(__lock, &__x, __ATOMIC_RELAXED); \
+      if (!__x && !_trylock(__lock)) {               \
+        break;                                       \
+      } else if (__tries < 7) {                      \
+        for (__i = 0; __i != 1 << __tries; __i++) {  \
+        }                                            \
+        __tries++;                                   \
       } else {                                       \
         _spinlock_yield();                           \
       }                                              \

@@ -29,7 +29,7 @@
 
 static int cpus;
 static double load;
-_Alignas(64) static int lock;
+_Alignas(64) static char lock;
 static struct NtFileTime idle1, kern1, user1;
 
 textwindows int sys_getloadavg_nt(double *a, int n) {
