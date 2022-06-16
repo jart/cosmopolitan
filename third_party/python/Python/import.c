@@ -2295,7 +2295,7 @@ static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
   if (!PyArg_Parse(PyOS_FSPath(arg), "z#:source_from_cache", &path, &pathlen))
     return NULL;
   if (!path || !endswith(path, ".pyc")) {
-    PyErr_Format(PyExc_ValueError, "%s does not end in .pyc", path);
+    
     return NULL;
   }
   path[pathlen - 1] = '\0';
@@ -2309,10 +2309,12 @@ static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
 PyDoc_STRVAR(_imp_source_from_cache_doc, "given a .pyc filename, return .py");
 
 typedef struct {
-  PyObject_HEAD char *name;
+  PyObject_HEAD
+  char *name;
   char *path;
   Py_ssize_t namelen;
   Py_ssize_t pathlen;
+  Py_ssize_t present;
 } SourcelessFileLoader;
 
 static PyTypeObject SourcelessFileLoaderType;
@@ -2327,6 +2329,7 @@ static SourcelessFileLoader *SFLObject_new(PyObject *cls, PyObject *args,
   obj->path = NULL;
   obj->namelen = 0;
   obj->pathlen = 0;
+  obj->present = 0;
   return obj;
 }
 
@@ -2366,6 +2369,7 @@ static int SFLObject_init(SourcelessFileLoader *self, PyObject *args,
       // TODO: should this be via PyMem_RawMalloc?
       self->name = strndup(name, namelen);
       self->path = strndup(path, pathlen);
+      self->present = 0;
   }
   return result;
 }
@@ -2420,7 +2424,8 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
                  self->name, name);
     goto exit;
   }
-  if (stat(self->path, &stinfo) || !(fp = fopen(self->path, "rb"))) {
+  self->present = self->present || !stat(self->path, &stinfo);
+  if (!self->present || !(fp = fopen(self->path, "rb"))) {
     PyErr_Format(PyExc_ImportError, "%s does not exist\n", self->path);
     goto exit;
   }
@@ -2598,10 +2603,8 @@ static PyMethodDef SFLObject_methods[] = {
 };
 
 static PyTypeObject SourcelessFileLoaderType = {
-    /* The ob_type field must be initialized in the module init function
-     * to be portable to Windows without using C++. */
-    PyVarObject_HEAD_INIT(NULL, 0).tp_name =
-        "_imp.SourcelessFileLoader",                      /*tp_name*/
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    .tp_name = "_imp.SourcelessFileLoader",               /*tp_name*/
     .tp_basicsize = sizeof(SourcelessFileLoader),         /*tp_basicsize*/
     .tp_dealloc = (destructor)SFLObject_dealloc,          /*tp_dealloc*/
     .tp_hash = (hashfunc)SFLObject_hash,                  /*tp_hash*/
@@ -2610,6 +2613,140 @@ static PyTypeObject SourcelessFileLoaderType = {
     .tp_methods = SFLObject_methods,                      /*tp_methods*/
     .tp_init = (initproc)SFLObject_init,                  /*tp_init*/
     .tp_new = (newfunc)SFLObject_new,                     /*tp_new*/
+};
+
+typedef struct {
+  PyObject_HEAD
+} CosmoImporter;
+
+static PyTypeObject CosmoImporterType;
+#define CosmoImporterCheck(o) (Py_TYPE(o) == &CosmoImporterType)
+
+static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
+                                         Py_ssize_t nargs, PyObject *kwargs) {
+  static const char *const _keywords[] = {"fullname", "path", "target", NULL};
+  static _PyArg_Parser _parser = {"U|OO", _keywords, 0};
+  _Py_IDENTIFIER(_get_builtin_spec);
+  _Py_IDENTIFIER(_get_frozen_spec);
+  _Py_IDENTIFIER(_get_zipstore_spec);
+
+  PyObject *fullname = NULL;
+  PyObject *path = NULL;
+  /* path is a LIST! it contains strings similar to those in sys.path,
+   * ie folders that are likely to contain a particular file.
+   * during startup the expected scenario is checking the ZIP store
+   * of the APE, so we ignore path and let these slower cases to
+   * handled by the importer objects already provided by Python. */
+  PyObject *target = NULL;
+  PyInterpreterState *interp = PyThreadState_GET()->interp;
+
+  const struct _frozen *p = NULL;
+
+  static const char basepath[] = "/zip/.python/";
+  const char *cname = NULL;
+  Py_ssize_t cnamelen = 0;
+
+  char *newpath = NULL;
+  Py_ssize_t newpathsize = 0;
+  Py_ssize_t newpathlen = 0;
+  Py_ssize_t i = 0;
+
+  SourcelessFileLoader *loader = NULL;
+  PyObject *origin = NULL;
+  long is_package = 0;
+
+  if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &fullname,
+                                    &path, &target)) {
+    return NULL;
+  }
+
+  if (fullname == NULL) {
+    PyErr_SetString(PyExc_ImportError, "fullname not provided\n");
+    return NULL;
+  }
+
+  if ((!path || path == Py_None)) {
+    /* we do some of BuiltinImporter's work */
+    if (is_builtin(fullname) == 1) {
+      return _PyObject_CallMethodIdObjArgs(
+          interp->importlib, &PyId__get_builtin_spec, fullname, NULL);
+    }
+    /* we do some of FrozenImporter's work */
+    else if ((p = find_frozen(fullname)) != NULL) {
+      return _PyObject_CallMethodIdObjArgs(interp->importlib,
+                                           &PyId__get_frozen_spec, fullname,
+                                           PyBool_FromLong(p->size < 0), NULL);
+    }
+  }
+
+  if (!PyArg_Parse(fullname, "z#:find_spec", &cname, &cnamelen)) return 0;
+  /* before checking within the zip store,
+   * we can check cname here to skip any values
+   * of cname that we know for sure won't be there,
+   * because worst case is two failed stat calls here
+   */
+
+  newpathsize = sizeof(basepath) + cnamelen + sizeof("/__init__.pyc") + 1;
+  newpath = _gc(malloc(newpathsize));
+  bzero(newpath, newpathsize);
+  /* performing a memccpy sequence equivalent to:
+   * snprintf(newpath, newpathsize, "/zip/.python/%s.pyc", cname); */
+  memccpy(newpath, basepath, '\0', newpathsize);
+  memccpy(newpath + sizeof(basepath) - 1, cname, '\0',
+          newpathsize - sizeof(basepath));
+  memccpy(newpath + sizeof(basepath) + cnamelen - 1, ".pyc", '\0',
+          newpathsize - (sizeof(basepath) + cnamelen));
+
+  /* if cname part of newpath has '.' (e.g. encodings.utf_8) convert them to '/'
+   */
+  for (i = sizeof(basepath); i < sizeof(basepath) + cnamelen - 1; i++) {
+    if (newpath[i] == '.') newpath[i] = '/';
+  }
+
+  if (stat(newpath, &stinfo)) {
+    memccpy(newpath + sizeof(basepath) + cnamelen - 1, "/__init__.pyc", '\0',
+            newpathsize);
+    is_package = 1;
+  }
+
+  /* if is_package is 0, that means the above stat call succeeded */
+  if (!is_package || !stat(newpath, &stinfo)) {
+    newpathlen = strlen(newpath);
+    loader = SFLObject_new(NULL, NULL, NULL);
+    origin = PyUnicode_FromStringAndSize(newpath, newpathlen);
+    if (loader == NULL || origin == NULL) {
+      return NULL;
+    }
+    loader->name = strdup(cname);
+    loader->namelen = cnamelen;
+    loader->path = strdup(newpath);
+    loader->pathlen = newpathlen;
+    loader->present = 1; /* this means we avoid atleast one stat call (the one
+                            in SFLObject_get_code) */
+    return _PyObject_CallMethodIdObjArgs(interp->importlib,
+                                         &PyId__get_zipstore_spec, fullname,
+                                         (PyObject *)loader, (PyObject *)origin,
+                                         PyBool_FromLong(is_package), NULL);
+  }
+
+  Py_RETURN_NONE;
+}
+
+static PyMethodDef CosmoImporter_methods[] = {
+    {"find_spec", (PyCFunction)CosmoImporter_find_spec,
+     METH_FASTCALL | METH_KEYWORDS | METH_CLASS, PyDoc_STR("")},
+    {NULL, NULL}  // sentinel
+};
+
+static PyTypeObject CosmoImporterType = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    .tp_name = "_imp.CosmoImporter", /* tp_name */
+    .tp_dealloc = 0,
+    .tp_basicsize = sizeof(CosmoImporter),                /* tp_basicsize */
+    .tp_flags = Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    .tp_methods = CosmoImporter_methods,                  /* tp_methods */
+    .tp_init = 0,
+    .tp_new = 0,
 };
 
 PyDoc_STRVAR(doc_imp,
@@ -2673,7 +2810,12 @@ PyInit_imp(void)
 
     if (PyType_Ready(&SourcelessFileLoaderType) < 0)
         goto failure;
-    PyModule_AddObject(m, "SourcelessFileLoader", (PyObject*)&SourcelessFileLoaderType);
+    if (PyModule_AddObject(m, "SourcelessFileLoader", (PyObject*)&SourcelessFileLoaderType) < 0)
+        goto failure;
+    if (PyType_Ready(&CosmoImporterType) < 0)
+        goto failure;
+    if (PyModule_AddObject(m, "CosmoImporter", (PyObject*)&CosmoImporterType) < 0)
+        goto failure;
 
     return m;
   failure:

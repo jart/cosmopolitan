@@ -1033,6 +1033,21 @@ def _builtin_from_name(name):
         raise ImportError('no built-in module named ' + name)
     return _load_unlocked(spec)
 
+def _get_builtin_spec(name):
+    # called from CosmoImporter in import.c
+    return ModuleSpec(name, BuiltinImporter, origin="built-in", is_package=False)
+
+def _get_frozen_spec(name, is_package):
+    # called from CosmoImporter in import.c
+    return ModuleSpec(name, FrozenImporter, origin="frozen", is_package=is_package)
+
+def _get_zipstore_spec(name, loader, origin, is_package):
+    # called from CosmoImporter in import.c
+    spec = ModuleSpec(name, loader, origin=origin, is_package=is_package)
+    spec.has_location = True
+    if is_package:
+        spec.submodule_search_locations = [origin.rpartition("/")[0]]
+    return spec
 
 def _setup(sys_module, _imp_module):
     """Setup importlib by importing needed built-in modules and injecting them
@@ -1072,6 +1087,7 @@ def _install(sys_module, _imp_module):
     """Install importlib as the implementation of import."""
     _setup(sys_module, _imp_module)
 
+    sys.meta_path.append(_imp_module.CosmoImporter)
     sys.meta_path.append(BuiltinImporter)
     sys.meta_path.append(FrozenImporter)
 
