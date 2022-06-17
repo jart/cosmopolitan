@@ -1,37 +1,40 @@
-/* clang-format off */
-/************************************************************************
-* lsqlite3                                                              *
-* Copyright (C) 2002-2016 Tiago Dionizio, Doug Currie                   *
-* All rights reserved.                                                  *
-* Author    : Tiago Dionizio <tiago.dionizio@ist.utl.pt>                *
-* Author    : Doug Currie <doug.currie@alum.mit.edu>                    *
-* Library   : lsqlite3 - an SQLite 3 database binding for Lua 5         *
-*                                                                       *
-* Permission is hereby granted, free of charge, to any person obtaining *
-* a copy of this software and associated documentation files (the       *
-* "Software"), to deal in the Software without restriction, including   *
-* without limitation the rights to use, copy, modify, merge, publish,   *
-* distribute, sublicense, and/or sell copies of the Software, and to    *
-* permit persons to whom the Software is furnished to do so, subject to *
-* the following conditions:                                             *
-*                                                                       *
-* The above copyright notice and this permission notice shall be        *
-* included in all copies or substantial portions of the Software.       *
-*                                                                       *
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    *
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  *
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  *
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     *
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
-************************************************************************/
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ lsqlite3                                                                     │
+│ Copyright (C) 2002-2016 Tiago Dionizio, Doug Currie                          │
+│ All rights reserved.                                                         │
+│ Author    : Tiago Dionizio <tiago.dionizio@ist.utl.pt>                       │
+│ Author    : Doug Currie <doug.currie@alum.mit.edu>                           │
+│ Library   : lsqlite3 - an SQLite 3 database binding for Lua 5                │
+│                                                                              │
+│ Permission is hereby granted, free of charge, to any person obtaining        │
+│ a copy of this software and associated documentation files (the              │
+│ "Software"), to deal in the Software without restriction, including          │
+│ without limitation the rights to use, copy, modify, merge, publish,          │
+│ distribute, sublicense, and/or sell copies of the Software, and to           │
+│ permit persons to whom the Software is furnished to do so, subject to        │
+│ the following conditions:                                                    │
+│                                                                              │
+│ The above copyright notice and this permission notice shall be               │
+│ included in all copies or substantial portions of the Software.              │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,              │
+│ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF           │
+│ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.       │
+│ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY         │
+│ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,         │
+│ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE            │
+│ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3.h"
+// clang-format off
 
 asm(".ident\t\"\\n\\n\
 lsqlite3 (MIT License)\\n\
@@ -1696,6 +1699,7 @@ static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
         /* database handle already in the stack - return it */
+        sqlite3_zipfile_init(db->db, 0, 0);
         return 1;
     }
 

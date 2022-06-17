@@ -127,7 +127,8 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DSQLITE_OMIT_AUTOINIT						\
 	-DSQLITE_OMIT_GET_TABLE						\
 	-DSQLITE_HAVE_C99_MATH_FUNCS					\
-	-DSQLITE_ENABLE_MATH_FUNCTIONS
+	-DSQLITE_ENABLE_MATH_FUNCTIONS					\
+	-DSQLITE_ENABLE_JSON1						\
 
 $(THIRD_PARTY_SQLITE3_A_OBJS):						\
 		OVERRIDE_CFLAGS +=					\
@@ -157,12 +158,7 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 			-DSQLITE_ENABLE_FTS5				\
 			-DSQLITE_ENABLE_RTREE				\
 			-DSQLITE_ENABLE_GEOPOLY				\
-			-DSQLITE_ENABLE_JSON1				\
 			-DHAVE_LINENOISE
-
-o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
-		OVERRIDE_CFLAGS +=					\
-			-DSTACK_FRAME_UNLIMITED
 
 o//third_party/sqlite3/parse.o						\
 o//third_party/sqlite3/select.o						\
@@ -170,6 +166,10 @@ o//third_party/sqlite3/pragma.o						\
 o//third_party/sqlite3/vdbe.o:						\
 		OVERRIDE_CFLAGS +=					\
 			-Os
+
+o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
+		OVERRIDE_CFLAGS +=					\
+			-DSTACK_FRAME_UNLIMITED
 
 $(THIRD_PARTY_SQLITE3_A_OBJS)						\
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
