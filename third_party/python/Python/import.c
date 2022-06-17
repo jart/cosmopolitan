@@ -154,8 +154,6 @@ static int cmp_initentry(const void *_x, const void *_y) {
 void
 _PyImport_Init(void)
 {
-    size_t i, n;
-
     PyInterpreterState *interp = PyThreadState_Get()->interp;
     initstr = PyUnicode_InternFromString("__init__");
     if (initstr == NULL)
@@ -163,25 +161,42 @@ _PyImport_Init(void)
     interp->builtins_copy = PyDict_Copy(interp->builtins);
     if (interp->builtins_copy == NULL)
         Py_FatalError("Can't backup builtins dict");
+}
 
-    for(n=0; PyImport_Inittab[n].name; n++);
-    Builtins_Lookup.n = n;
-    Builtins_Lookup.entries = malloc(sizeof(initentry) * n);
-    for(i=0; i < n; i++) {
-        Builtins_Lookup.entries[i].name = PyImport_Inittab[i].name;
-        Builtins_Lookup.entries[i].tab = &(PyImport_Inittab[i]);
+void _PyImportLookupTables_Init(void) {
+    size_t i, n;
+    if (Builtins_Lookup.entries == NULL) {
+        for(n=0; PyImport_Inittab[n].name; n++);
+        Builtins_Lookup.n = n;
+        Builtins_Lookup.entries = malloc(sizeof(initentry) * n);
+        for(i=0; i < n; i++) {
+            Builtins_Lookup.entries[i].name = PyImport_Inittab[i].name;
+            Builtins_Lookup.entries[i].tab = &(PyImport_Inittab[i]);
+        }
+        qsort(Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
     }
-    qsort(Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
-
-    for(n=0; PyImport_FrozenModules[n].name; n++);
-    Frozens_Lookup.n = n;
-    Frozens_Lookup.entries = malloc(sizeof(initentry) * n);
-    for(i=0; i<n; i++) {
-        Frozens_Lookup.entries[i].name = PyImport_FrozenModules[i].name;
-        Frozens_Lookup.entries[i].frz = &(PyImport_FrozenModules[i]);
+    if (Frozens_Lookup.entries == NULL) {
+        for(n=0; PyImport_FrozenModules[n].name; n++);
+        Frozens_Lookup.n = n;
+        Frozens_Lookup.entries = malloc(sizeof(initentry) * n);
+        for(i=0; i<n; i++) {
+            Frozens_Lookup.entries[i].name = PyImport_FrozenModules[i].name;
+            Frozens_Lookup.entries[i].frz = &(PyImport_FrozenModules[i]);
+        }
+        qsort(Frozens_Lookup.entries, Frozens_Lookup.n, sizeof(initentry), cmp_initentry);
     }
-    qsort(Frozens_Lookup.entries, Frozens_Lookup.n, sizeof(initentry), cmp_initentry);
     qsort(ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
+}
+
+void _PyImportLookupTables_Cleanup(void) {
+    if (Builtins_Lookup.entries != NULL) {
+        free(Builtins_Lookup.entries);
+        Builtins_Lookup.entries = NULL;
+    }
+    if (Frozens_Lookup.entries != NULL) {
+        free(Frozens_Lookup.entries);
+        Frozens_Lookup.entries = NULL;
+    }
 }
 
 void
@@ -473,15 +488,6 @@ PyImport_Cleanup(void)
     PyObject *weaklist = NULL;
     const char * const *p;
 
-    if (Builtins_Lookup.entries != NULL) {
-        free(Builtins_Lookup.entries);
-        Builtins_Lookup.entries = NULL;
-    }
-    if (Frozens_Lookup.entries != NULL) {
-        free(Frozens_Lookup.entries);
-        Frozens_Lookup.entries = NULL;
-    }
-
     if (modules == NULL)
         return; /* Already done */
 
@@ -623,7 +629,6 @@ PyImport_Cleanup(void)
 
     /* Once more */
     _PyGC_CollectNoFail();
-
 #undef CLEAR_MODULE
 #undef STORE_MODULE_WEAKREF
 }
@@ -1085,11 +1090,11 @@ static const struct _frozen * find_frozen(PyObject *);
 static int
 is_builtin(PyObject *name)
 {
-    static initentry key;
+    initentry key;
     initentry *res;
     key.name = PyUnicode_AsUTF8(name);
     key.tab = NULL;
-    if(!key.name)
+    if(!name || !key.name)
         return 0;
     res = bsearch(&key, Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
     if (res) {
@@ -1196,14 +1201,12 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
         return NULL;
     }
 
-    /* all builtins are static */
-    /*
     mod = _PyImport_FindExtensionObject(name, name);
     if (mod || PyErr_Occurred()) {
         Py_DECREF(name);
         Py_XINCREF(mod);
         return mod;
-    } */
+    }
 
     namestr = PyUnicode_AsUTF8(name);
     if (namestr == NULL) {

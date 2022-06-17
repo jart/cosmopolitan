@@ -73,6 +73,8 @@ PyObject * PyImport_GetImporter(PyObject *path);
 PyObject * PyImport_Import(PyObject *name);
 PyObject * PyImport_ReloadModule(PyObject *m);
 void PyImport_Cleanup(void);
+void _PyImportLookupTables_Init(void);
+void _PyImportLookupTables_Cleanup(void);
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03030000
 int PyImport_ImportFrozenModuleObject(
     PyObject *name

@@ -248,6 +248,7 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     PySys_SetObject("__stderr__", pstderr);
     Py_DECREF(pstderr);
 
+    _PyImportLookupTables_Init();
     _PyImport_Init();
 
     _PyImportHooks_Init();
