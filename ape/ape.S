@@ -551,7 +551,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
 	.ascii	"[ x\"$1\" != x--assimilate ] && {\n"
-	.ascii	  "t=\"${TMPDIR:-/tmp}/ape\"\n"
+	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
 	.ascii	  "[ -x \"$t\" ] || {\n"
 	.ascii	    "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
@@ -580,20 +580,10 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	We prefer this because it's a tiny constant one time cost.
 //	We simply printf a 64-byte header and call execve() again.
 #else
-//	The alternative behavior is to copy to $TMPDIR and edit.
-//	This imposes a variety of caveats of its own that should
-//	be considered by the user beforehand, such as whether or
-//	not /tmp is considered trustworthy on a given system, or
-//	if the administrator chose to mount it with noexec. It's
-//	up to the user to decide what's best in those situations
-//	and also note that argv[0] and getauxval(AT_EXECFN) will
-//	change as a result of this, and lastly note we don't try
-//	to cleanup the tmp copies for the sake of efficiency. It
-//	should also be noted that if $0 has directory components
-//	then permission clashes can happen between system users,
-//	since only root is able to set the sticky bit, which can
-//	be addressed simply by overriding the TMPDIR environment
-	.ascii	"t=\"${TMPDIR:-/tmp}/$0\"\n"
+//	The alternative behavior is to copy to $TMPDIR or $HOME or
+//	the current directory. We like TMPDIR because it's part of
+//	the IEEE POSIX standard whereas alternatives (XDG) aren't.
+	.ascii	"t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
 	.ascii	"[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
 	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
 	.ascii	    "mkdir -p \"${t%/*}\" 2>/dev/null\n"
