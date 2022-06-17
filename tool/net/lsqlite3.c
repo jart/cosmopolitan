@@ -33,6 +33,7 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3.h"
 // clang-format off
 
@@ -2365,9 +2366,7 @@ static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
         /* database handle already in the stack - return it */
-        sqlite3_fileio_init(db->db, 0, 0);
         sqlite3_zipfile_init(db->db, 0, 0);
-        sqlite3_sqlar_init(db->db, 0, 0);
         return 1;
     }
 

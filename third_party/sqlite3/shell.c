@@ -117,7 +117,17 @@ typedef unsigned short int u16;
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "tool/args/args.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/s.h"
+#include "third_party/sqlite3/extensions.h"
+#include "third_party/sqlite3/sqlite3expert.h"
+#include "third_party/zlib/zlib.h"
 #include "third_party/sqlite3/sqlite3.h"
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
