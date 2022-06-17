@@ -2123,10 +2123,10 @@ static char *AppendCache(char *p, int64_t seconds) {
   if (seconds < 0) return p;
   p = stpcpy(p, "Cache-Control: max-age=");
   p = FormatUint64(p, seconds);
-  if (seconds) {
-    p = stpcpy(p, ", public");
-  } else {
+  if (!seconds) {
     p = stpcpy(p, ", no-store");
+  } else {
+    p = stpcpy(p, ", must-revalidate");
   }
   p = AppendCrlf(p);
   return AppendExpires(p, (int64_t)shared->nowish + seconds);
