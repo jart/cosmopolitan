@@ -227,8 +227,8 @@ USAGE
 
   Your redbean is an actually portable executable, that's able to
   run on six different operating systems. To do that, it needs to
-  extract a 4kb loader program to ${TMPDIR:-/tmp}/ape that'll map
-  your redbean into memory. It does however check to see if `ape`
+  extract a 4kb loader program to ${TMPDIR:-${HOME:-.}}/.ape that'll
+  map your redbean into memory. It does however check to see if `ape`
   is on the system path beforehand. You can also "assimilate" any
   redbean into the platform-local executable format by running:
 
