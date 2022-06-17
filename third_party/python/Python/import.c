@@ -4,11 +4,13 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/fmt/conv.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/gc.h"
 #include "libc/x/x.h"
 #include "libc/sysv/consts/o.h"
@@ -93,10 +95,70 @@ module _imp
 #include "third_party/python/Python/clinic/import.inc"
 
 /* Initialize things */
+typedef struct {
+  const char *name;
+  union {
+    struct _inittab *tab;
+    struct _frozen *frz;
+    struct {
+      int inside_zip; /* if true, this module is in ZIP store */
+      int is_package; /* if true, this module is loaded via __init__.pyc */
+      /* these are single-bit values, so we can have some more
+       * caching-related values here to avoid syscalls
+       */
+    };
+  };
+} initentry;
+
+typedef struct {
+  size_t n;
+  initentry *entries;
+} Lookup;
+
+static Lookup Builtins_Lookup = {.n = 0, .entries = NULL};
+static Lookup Frozens_Lookup = {.n = 0, .entries = NULL};
+static initentry ZipEntries[] = {
+        /* the below imports are attempted during startup */
+        {"_bootlocale", {.inside_zip = 1, .is_package = 0}},
+        {"_collections_abc", {.inside_zip = 1, .is_package = 0}},
+        {"_sitebuiltins", {.inside_zip = 1, .is_package = 0}},
+        {"_weakrefset", {.inside_zip = 1, .is_package = 0}},
+        {"abc", {.inside_zip = 1, .is_package = 0}},
+        {"codecs", {.inside_zip = 1, .is_package = 0}},
+        {"encodings", {.inside_zip = 1, .is_package = 1}},
+        {"encodings.aliases", {.inside_zip = 1, .is_package = 0}},
+        {"encodings.latin_1", {.inside_zip = 1, .is_package = 0}},
+        {"encodings.utf_8", {.inside_zip = 1, .is_package = 0}},
+        {"genericpath", {.inside_zip = 1, .is_package = 0}},
+        {"io", {.inside_zip = 1, .is_package = 0}},
+        {"io._WindowsConsoleIO", {.inside_zip = 0, .is_package = 0}},
+        {"ntpath", {.inside_zip = 1, .is_package = 0}},
+        {"os", {.inside_zip = 1, .is_package = 0}},
+        {"posix._getfullpathname", {.inside_zip = 0, .is_package = 0}},
+        {"posix._isdir", {.inside_zip = 0, .is_package = 0}},
+        {"posixpath", {.inside_zip = 1, .is_package = 0}},
+        {"readline", {.inside_zip = 0, .is_package = 0}},
+        {"site", {.inside_zip = 1, .is_package = 0}},
+        {"sitecustomize", {.inside_zip = 0, .is_package = 0}},
+        {"stat", {.inside_zip = 1, .is_package = 0}},
+        {"usercustomize", {.inside_zip = 0, .is_package = 0}},
+};
+static Lookup ZipCdir_Lookup = {
+    .n = ARRAYLEN(ZipEntries),
+    .entries = ZipEntries,
+};
+
+static int cmp_initentry(const void *_x, const void *_y) {
+    const initentry *x = _x;
+    const initentry *y = _y;
+    return strcmp(x->name, y->name);
+}
 
 void
 _PyImport_Init(void)
 {
+    size_t i, n;
+
     PyInterpreterState *interp = PyThreadState_Get()->interp;
     initstr = PyUnicode_InternFromString("__init__");
     if (initstr == NULL)
@@ -104,6 +166,25 @@ _PyImport_Init(void)
     interp->builtins_copy = PyDict_Copy(interp->builtins);
     if (interp->builtins_copy == NULL)
         Py_FatalError("Can't backup builtins dict");
+
+    for(n=0; PyImport_Inittab[n].name; n++);
+    Builtins_Lookup.n = n;
+    Builtins_Lookup.entries = malloc(sizeof(initentry) * n);
+    for(i=0; i < n; i++) {
+        Builtins_Lookup.entries[i].name = PyImport_Inittab[i].name;
+        Builtins_Lookup.entries[i].tab = &(PyImport_Inittab[i]);
+    }
+    qsort(Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
+
+    for(n=0; PyImport_FrozenModules[n].name; n++);
+    Frozens_Lookup.n = n;
+    Frozens_Lookup.entries = malloc(sizeof(initentry) * n);
+    for(i=0; i<n; i++) {
+        Frozens_Lookup.entries[i].name = PyImport_FrozenModules[i].name;
+        Frozens_Lookup.entries[i].frz = &(PyImport_FrozenModules[i]);
+    }
+    qsort(Frozens_Lookup.entries, Frozens_Lookup.n, sizeof(initentry), cmp_initentry);
+    qsort(ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
 }
 
 void
@@ -394,6 +475,15 @@ PyImport_Cleanup(void)
     PyObject *modules = interp->modules;
     PyObject *weaklist = NULL;
     const char * const *p;
+
+    if (Builtins_Lookup.entries != NULL) {
+        free(Builtins_Lookup.entries);
+        Builtins_Lookup.entries = NULL;
+    }
+    if (Frozens_Lookup.entries != NULL) {
+        free(Frozens_Lookup.entries);
+        Frozens_Lookup.entries = NULL;
+    }
 
     if (modules == NULL)
         return; /* Already done */
@@ -997,14 +1087,16 @@ static const struct _frozen * find_frozen(PyObject *);
 static int
 is_builtin(PyObject *name)
 {
-    int i;
-    for (i = 0; PyImport_Inittab[i].name != NULL; i++) {
-        if (_PyUnicode_EqualToASCIIString(name, PyImport_Inittab[i].name)) {
-            if (PyImport_Inittab[i].initfunc == NULL)
-                return -1;
-            else
-                return 1;
-        }
+    static initentry key;
+    initentry *res;
+    key.name = PyUnicode_AsUTF8(name);
+    key.tab = NULL;
+    if(!key.name)
+        return 0;
+    res = bsearch(&key, Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
+    if (res) {
+        if (res->tab->initfunc == NULL) return -1;
+        return 1;
     }
     return 0;
 }
@@ -1095,6 +1187,8 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
 /*[clinic end generated code: output=ace7ff22271e6f39 input=37f966f890384e47]*/
 {
     struct _inittab *p;
+    initentry key;
+    initentry *res;
     PyObject *name;
     char *namestr;
     PyObject *mod;
@@ -1104,12 +1198,14 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
         return NULL;
     }
 
+    /* all builtins are static */
+    /*
     mod = _PyImport_FindExtensionObject(name, name);
     if (mod || PyErr_Occurred()) {
         Py_DECREF(name);
         Py_XINCREF(mod);
         return mod;
-    }
+    } */
 
     namestr = PyUnicode_AsUTF8(name);
     if (namestr == NULL) {
@@ -1117,7 +1213,12 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
         return NULL;
     }
 
-    for (p = PyImport_Inittab; p->name != NULL; p++) {
+    key.name = namestr;
+    key.tab = NULL;
+    res = bsearch(&key, Builtins_Lookup.entries, Builtins_Lookup.n, sizeof(initentry), cmp_initentry);
+
+    if (res != NULL) {
+        p = res->tab;
         PyModuleDef *def;
         if (_PyUnicode_EqualToASCIIString(name, p->name)) {
             if (p->initfunc == NULL) {
@@ -1161,18 +1262,20 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
 static const struct _frozen *
 find_frozen(PyObject *name)
 {
-    const struct _frozen *p;
+    initentry key;
+    initentry *res;
 
     if (name == NULL)
         return NULL;
 
-    for (p = PyImport_FrozenModules; ; p++) {
-        if (p->name == NULL)
-            return NULL;
-        if (_PyUnicode_EqualToASCIIString(name, p->name))
-            break;
+    key.name = PyUnicode_AsUTF8(name);
+    key.frz = NULL;
+
+    res = bsearch(&key, Frozens_Lookup.entries, Frozens_Lookup.n, sizeof(initentry), cmp_initentry);
+    if (res && res->frz->name != NULL) {
+        return res->frz;
     }
-    return p;
+    return NULL;
 }
 
 static PyObject *
@@ -2295,7 +2398,7 @@ static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
   if (!PyArg_Parse(PyOS_FSPath(arg), "z#:source_from_cache", &path, &pathlen))
     return NULL;
   if (!path || !endswith(path, ".pyc")) {
-    
+    PyErr_Format(PyExc_ValueError, "%s does not end in .pyc", path);
     return NULL;
   }
   path[pathlen - 1] = '\0';
@@ -2444,20 +2547,24 @@ static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
                  "reached EOF while reading timestamp in %s\n", name);
     goto exit;
   }
-  if (headerlen < 12 || stinfo.st_size <= headerlen) {
+  if (headerlen < 12) {
     PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
                  name);
     goto exit;
   }
   // return _compile_bytecode(bytes_data, name=fullname, bytecode_path=path)
+  /* since we don't have the stat call sometimes, we need
+   * a different way to load the remaining bytes into file
+   */
+  /*
   rawlen = stinfo.st_size - headerlen;
   rawbuf = PyMem_RawMalloc(rawlen);
   if (rawlen != fread(rawbuf, sizeof(char), rawlen, fp)) {
     PyErr_Format(PyExc_ImportError, "reached EOF while size of source in %s\n",
                  name);
     goto exit;
-  }
-  if (!(res = PyMarshal_ReadObjectFromString(rawbuf, rawlen))) goto exit;
+  }*/
+  if (!(res = PyMarshal_ReadObjectFromFile(fp))) goto exit;
 exit:
   if (rawbuf) PyMem_RawFree(rawbuf);
   if (fp) fclose(fp);
@@ -2603,7 +2710,7 @@ static PyMethodDef SFLObject_methods[] = {
 };
 
 static PyTypeObject SourcelessFileLoaderType = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_imp.SourcelessFileLoader",               /*tp_name*/
     .tp_basicsize = sizeof(SourcelessFileLoader),         /*tp_basicsize*/
     .tp_dealloc = (destructor)SFLObject_dealloc,          /*tp_dealloc*/
@@ -2653,7 +2760,12 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
 
   SourcelessFileLoader *loader = NULL;
   PyObject *origin = NULL;
-  long is_package = 0;
+  int inside_zip = 0;
+  int is_package = 0;
+  int is_available = 0;
+
+  initentry key;
+  initentry *res;
 
   if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &fullname,
                                     &path, &target)) {
@@ -2685,6 +2797,15 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
    * of cname that we know for sure won't be there,
    * because worst case is two failed stat calls here
    */
+  key.name = cname;
+  key.tab = NULL;
+  res = bsearch(&key, ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
+  if (res) {
+      if (!res->inside_zip)
+          Py_RETURN_NONE;
+      inside_zip = res->inside_zip;
+      is_package = res->is_package;
+  }
 
   newpathsize = sizeof(basepath) + cnamelen + sizeof("/__init__.pyc") + 1;
   newpath = _gc(malloc(newpathsize));
@@ -2703,14 +2824,15 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
     if (newpath[i] == '.') newpath[i] = '/';
   }
 
-  if (stat(newpath, &stinfo)) {
+  is_available = inside_zip || !stat(newpath, &stinfo);
+  if (is_package || !is_available) {
     memccpy(newpath + sizeof(basepath) + cnamelen - 1, "/__init__.pyc", '\0',
             newpathsize);
     is_package = 1;
   }
 
-  /* if is_package is 0, that means the above stat call succeeded */
-  if (!is_package || !stat(newpath, &stinfo)) {
+  is_available = is_available || !stat(newpath, &stinfo);
+  if (is_available) {
     newpathlen = strlen(newpath);
     loader = SFLObject_new(NULL, NULL, NULL);
     origin = PyUnicode_FromStringAndSize(newpath, newpathlen);
@@ -2739,7 +2861,7 @@ static PyMethodDef CosmoImporter_methods[] = {
 };
 
 static PyTypeObject CosmoImporterType = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_imp.CosmoImporter", /* tp_name */
     .tp_dealloc = 0,
     .tp_basicsize = sizeof(CosmoImporter),                /* tp_basicsize */
