@@ -29,7 +29,8 @@
  * @return 0 on success, or error number on failure
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  int i, me, owner, tries;
+  volatile int i;
+  int me, owner, tries;
   for (tries = 0, me = gettid();;) {
     owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
     if (!owner && atomic_compare_exchange_weak_explicit(
