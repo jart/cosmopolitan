@@ -84,9 +84,6 @@ static PyObject *extensions = NULL;
 
 static PyObject *initstr = NULL;
 
-static struct stat stinfo;
-_Py_IDENTIFIER(__builtins__);
-_Py_IDENTIFIER(_load_module_shim);
 /*[clinic input]
 module _imp
 [clinic start generated code]*/
@@ -897,6 +894,7 @@ PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co,
                                      const char *pathname,
                                      const char *cpathname)
 {
+    struct stat stinfo;
     PyObject *m = NULL;
     PyObject *nameobj, *pathobj = NULL, *cpathobj = NULL, *external= NULL;
 
@@ -2160,6 +2158,7 @@ dump buffer
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=524ce2e021e4eba6]*/
 
 static PyObject *_check_path_mode(const char *path, uint32_t mode) {
+  struct stat stinfo;
   if (stat(path, &stinfo)) Py_RETURN_FALSE;
   if ((stinfo.st_mode & S_IFMT) == mode) Py_RETURN_TRUE;
   Py_RETURN_FALSE;
@@ -2195,6 +2194,7 @@ static PyObject *_imp_path_isdir(PyObject *module, PyObject *arg) {
 PyDoc_STRVAR(_imp_path_isdir_doc, "check if path is dir");
 
 static PyObject *_imp_calc_mode(PyObject *module, PyObject *arg) {
+  struct stat stinfo;
   Py_ssize_t n;
   const char *path;
   if (!PyArg_Parse(arg, "s#:_calc_mode", &path, &n)) return 0;
@@ -2204,6 +2204,7 @@ static PyObject *_imp_calc_mode(PyObject *module, PyObject *arg) {
 PyDoc_STRVAR(_imp_calc_mode_doc, "return stat.st_mode of path");
 
 static PyObject *_imp_calc_mtime_and_size(PyObject *module, PyObject *arg) {
+  struct stat stinfo;
   Py_ssize_t n;
   const char *path;
   if (!PyArg_Parse(arg, "z#:_calc_mtime_and_size", &path, &n)) return 0;
@@ -2393,6 +2394,7 @@ static PyObject *_imp_cache_from_source(PyObject *module, PyObject **args, Py_ss
 PyDoc_STRVAR(_imp_cache_from_source_doc, "given a .py filename, return .pyc");
 
 static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
+  struct stat stinfo;
   char *path = NULL;
   Py_ssize_t pathlen = 0;
   if (!PyArg_Parse(PyOS_FSPath(arg), "z#:source_from_cache", &path, &pathlen))
@@ -2508,6 +2510,7 @@ static PyObject *SFLObject_get_source(SourcelessFileLoader *self,
 }
 
 static PyObject *SFLObject_get_code(SourcelessFileLoader *self, PyObject *arg) {
+  struct stat stinfo;
   char bytecode_header[12] = {0};
   int32_t magic = 0;
   size_t headerlen;
@@ -2572,6 +2575,7 @@ exit:
 }
 
 static PyObject *SFLObject_get_data(SourcelessFileLoader *self, PyObject *arg) {
+  struct stat stinfo;
   char *name = NULL;
   char *data = NULL;
   size_t datalen = 0;
@@ -2603,6 +2607,7 @@ static PyObject *SFLObject_get_filename(SourcelessFileLoader *self,
 
 static PyObject *SFLObject_load_module(SourcelessFileLoader *self,
                                        PyObject **args, Py_ssize_t nargs) {
+  _Py_IDENTIFIER(_load_module_shim);
   char *name = NULL;
   PyObject *bootstrap = NULL;
   PyObject *fullname = NULL;
@@ -2635,6 +2640,7 @@ static PyObject *SFLObject_create_module(SourcelessFileLoader *self,
 
 static PyObject *SFLObject_exec_module(SourcelessFileLoader *self,
                                        PyObject *arg) {
+  _Py_IDENTIFIER(__builtins__);
   PyObject *module = NULL;
   PyObject *name = NULL;
   PyObject *code = NULL;
@@ -2766,6 +2772,7 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
 
   initentry key;
   initentry *res;
+  struct stat stinfo;
 
   if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &fullname,
                                     &path, &target)) {
