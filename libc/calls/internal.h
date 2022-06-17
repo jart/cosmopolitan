@@ -123,6 +123,7 @@ i32 sys_clock_gettime_xnu(i32, struct timespec *) hidden;
 i32 sys_fstat(i32, struct stat *) hidden;
 i32 sys_fstatat(i32, const char *, struct stat *, i32) hidden;
 i32 sys_futimes(i32, const struct timeval *) hidden;
+i32 sys_futimens(i32, const struct timespec *) hidden;
 i32 sys_futimesat(i32, const char *, const struct timeval *) hidden;
 i32 sys_getitimer(i32, struct itimerval *) hidden;
 i32 sys_getrlimit(i32, struct rlimit *) hidden;

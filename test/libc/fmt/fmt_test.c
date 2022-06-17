@@ -317,8 +317,3 @@ TEST(fmt, regress) {
       "User-Agent: hurl/1.o (https://github.com/jart/cosmopolitan)\r\n",
       buf);
 }
-
-/* TEST(fmt, funchar) { */
-/*   /\* TODO(jart): fix this *\/ */
-/*   ASSERT_STREQ("'\\200'", gc(xasprintf("%`'c", 0200))); */
-/* } */

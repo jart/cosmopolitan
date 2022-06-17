@@ -21,10 +21,11 @@
 /**
  * Sets atime/mtime on file descriptor.
  *
+ * This function is the same as `utimensat(fd, 0, ts, 0)`.
+ *
  * @param ts is atime/mtime, or null for current time
- * @note better than microsecond precision on most platforms
- * @see fstat() for reading timestamps
+ * @raise ENOSYS on RHEL5
  */
-int futimens(int fd, const struct timespec ts[hasatleast 2]) {
-  return utimensat(fd, NULL, ts, 0);
+int futimens(int fd, const struct timespec ts[2]) {
+  return utimensat(fd, 0, ts, 0);
 }
