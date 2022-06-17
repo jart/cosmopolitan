@@ -226,7 +226,7 @@ def _verbose_message(message, *args, verbosity=1):
 def _requires_builtin(fxn):
     """Decorator to verify the named module is built-in."""
     def _requires_builtin_wrapper(self, fullname):
-        if fullname not in BUILTIN_MODULE_NAMES:
+        if not _imp.is_builtin(fullname):
             raise ImportError('{!r} is not a built-in module'.format(fullname),
                               name=fullname)
         return fxn(self, fullname)
@@ -631,7 +631,7 @@ class BuiltinImporter:
     def find_spec(cls, fullname, path=None, target=None):
         if path is not None:
             return None
-        if fullname in BUILTIN_MODULE_NAMES:
+        if _imp.is_builtin(fullname):
             return spec_from_loader(fullname, cls, origin='built-in')
         else:
             return None
@@ -651,7 +651,7 @@ class BuiltinImporter:
     @classmethod
     def create_module(self, spec):
         """Create a built-in module"""
-        if spec.name not in BUILTIN_MODULE_NAMES:
+        if not _imp.is_builtin(spec.name):
             raise ImportError('{!r} is not a built-in module'.format(spec.name),
                               name=spec.name)
         return _call_with_frames_removed(_imp.create_builtin, spec)
@@ -871,7 +871,7 @@ def _find_and_load_unlocked(name, import_):
             msg = (_ERR_MSG + '; {!r} is not a package').format(name, parent)
             raise ModuleNotFoundError(msg, name=name) from None
     spec = _find_spec(name, path)
-    if spec is None and name in BUILTIN_MODULE_NAMES:
+    if spec is None and _imp.is_builtin(name):
         # If this module is a C extension, the interpreter
         # expects it to be a shared object located in path,
         # and returns spec is None because it was not found.
@@ -1057,16 +1057,15 @@ def _setup(sys_module, _imp_module):
     modules, those two modules must be explicitly passed in.
 
     """
-    global _imp, sys, BUILTIN_MODULE_NAMES
+    global _imp, sys
     _imp = _imp_module
     sys = sys_module
-    BUILTIN_MODULE_NAMES = frozenset(sys.builtin_module_names)
 
     # Set up the spec for existing builtin/frozen modules.
     module_type = type(sys)
     for name, module in sys.modules.items():
         if isinstance(module, module_type):
-            if name in BUILTIN_MODULE_NAMES:
+            if _imp.is_builtin(name):
                 loader = BuiltinImporter
             elif _imp.is_frozen(name):
                 loader = FrozenImporter
