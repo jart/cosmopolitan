@@ -26,6 +26,13 @@
 //	@return	0 on success, or -1 w/ errno
 sched_yield:
 
+#if SupportsXnu()
+	testb	IsXnu()
+	jz	1f
+	pause
+	ret
+#endif
+
 #if SupportsWindows()
 //	Windows Support
 //

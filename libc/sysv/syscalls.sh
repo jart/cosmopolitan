@@ -60,7 +60,7 @@ scall	__sys_pipe		0x02a10721e202a016	globl hidden # NOTE: pipe2() on FreeBSD; XN
 scall	sys_select		0x1a104705d205d017	globl hidden
 scall	pselect			0x1b406e20a218afff	globl
 scall	pselect6		0xfffffffffffff10e	globl
-scall	sys_sched_yield		0x15e12a14b103c018	globl hidden # swtch() on xnu
+scall	sys_sched_yield		0x15e12a14bffff018	globl hidden # swtch on xnu? possibly removed in 12.4
 scall	__sys_mremap		0x19bffffffffff019	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	globl hidden
 scall	sys_madvise		0x04b04b04b204b01c	globl hidden
