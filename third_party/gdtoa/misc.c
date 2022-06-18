@@ -71,6 +71,7 @@ __gdtoa_Balloc(int k)
 {
 	int x;
 	Bigint *rv;
+	assert(k >= 0);
 	__gdtoa_lock();
 	if (k <= Kmax && (rv = TI0.Freelist[k]) != 0) {
 		TI0.Freelist[k] = rv->next;
@@ -93,6 +94,7 @@ __gdtoa_Bfree(Bigint *v)
 		if (v->k > Kmax) {
 			free(v);
 		} else {
+			assert(v->k >= 0);
 			__gdtoa_lock();
 			v->next = TI0.Freelist[v->k];
 			TI0.Freelist[v->k] = v;

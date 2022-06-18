@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/utime.h"
@@ -26,21 +27,33 @@
 int sys_utimensat_xnu(int dirfd, const char *path, const struct timespec ts[2],
                       int flags) {
   int i;
+  struct stat st;
   struct timeval now, tv[2];
   if (flags) return einval();
   if (!ts || ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
     gettimeofday(&now, NULL);
   }
+  if (ts && (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW)) {
+    if (fstatat(dirfd, path, &st, flags) == -1) return -1;
+  }
   if (ts) {
-    for (i = 0; i < 2; ++i) {
-      if (ts[i].tv_nsec == UTIME_NOW) {
-        tv[i] = now;
-      } else if (ts[i].tv_nsec == UTIME_OMIT) {
-        return einval();
-      } else {
-        tv[i].tv_sec = ts[i].tv_sec;
-        tv[i].tv_usec = div1000int64(ts[i].tv_nsec);
-      }
+    if (ts[0].tv_nsec == UTIME_NOW) {
+      tv[0] = now;
+    } else if (ts[0].tv_nsec == UTIME_OMIT) {
+      tv[0].tv_sec = st.st_atim.tv_sec;
+      tv[0].tv_usec = div1000int64(st.st_atim.tv_nsec);
+    } else {
+      tv[0].tv_sec = ts[0].tv_sec;
+      tv[0].tv_usec = div1000int64(ts[0].tv_nsec);
+    }
+    if (ts[1].tv_nsec == UTIME_NOW) {
+      tv[1] = now;
+    } else if (ts[1].tv_nsec == UTIME_OMIT) {
+      tv[1].tv_sec = st.st_mtim.tv_sec;
+      tv[1].tv_usec = div1000int64(st.st_mtim.tv_nsec);
+    } else {
+      tv[1].tv_sec = ts[1].tv_sec;
+      tv[1].tv_usec = div1000int64(ts[1].tv_nsec);
     }
   } else {
     tv[0] = now;

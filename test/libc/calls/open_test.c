@@ -49,6 +49,14 @@ TEST(open, eexist) {
   ASSERT_SYS(EEXIST, -1, open("exists", O_WRONLY | O_CREAT | O_EXCL));
 }
 
+TEST(open, doubleSlash_worksAndGetsNormalizedOnWindows) {
+  ASSERT_SYS(0, 0, mkdir("o", 0755));
+  ASSERT_SYS(0, 3,
+             open(gc(xjoinpaths(gc(getcwd(0, 0)), "o//deleteme")),
+                  O_WRONLY | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 0, close(3));
+}
+
 TEST(open, enametoolong) {
   size_t n = 260;
   char *s = gc(xcalloc(1, n + 1));

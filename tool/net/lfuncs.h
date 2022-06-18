@@ -7,7 +7,6 @@ COSMOPOLITAN_C_START_
 
 int LuaMaxmind(lua_State *);
 int LuaRe(lua_State *);
-int LuaUnix(lua_State *);
 int luaopen_argon2(lua_State *);
 int luaopen_lsqlite3(lua_State *);
 

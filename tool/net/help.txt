@@ -2170,6 +2170,68 @@ UNIX MODULE
     Returns absolute path of filename, with `.` and `..` components
     removed, and symlinks will be resolved.
 
+  unix.utimensat(path[, asecs, ananos, msecs, mnanos[, dirfd[, flags]]])
+      ├─→ 0
+      └─→ nil, unix.Errno
+
+    Changes access and/or modified timestamps on file.
+
+    `path` is a string with the name of the file.
+
+    The `asecs` and `ananos` parameters set the access time. If they're
+    none or nil, the current time will be used.
+
+    The `msecs` and `mnanos` parameters set the modified time. If
+    they're none or nil, the current time will be used.
+
+    The nanosecond parameters (`ananos` and `mnanos`) must be on the
+    interval [0,1000000000) or `unix.EINVAL` is raised. On XNU this is
+    truncated to microsecond precision. On Windows NT, it's truncated to
+    hectonanosecond precision. These nanosecond parameters may also be
+    set to one of the following special values:
+
+    - `unix.UTIME_NOW`: Fill this timestamp with current time. This
+      feature is not available on old versions of Linux, e.g. RHEL5.
+
+    - `unix.UTIME_OMIT`: Do not alter this timestamp. This feature is
+      not available on old versions of Linux, e.g. RHEL5.
+
+    `dirfd` is a file descriptor integer opened with `O_DIRECTORY`
+    that's used for relative path names. It defaults to `unix.AT_FDCWD`.
+
+    `flags` may have have any of the following flags bitwise or'd
+
+    - `AT_SYMLINK_NOFOLLOW`: Do not follow symbolic links. This makes it
+      possible to edit the timestamps on the symbolic link itself,
+      rather than the file it points to.
+
+  unix.futimens(fd:int[, asecs, ananos, msecs, mnanos])
+      ├─→ 0
+      └─→ nil, unix.Errno
+
+    Changes access and/or modified timestamps on file descriptor.
+
+    `fd` is the file descriptor of a file opened with `unix.open`.
+
+    The `asecs` and `ananos` parameters set the access time. If they're
+    none or nil, the current time will be used.
+
+    The `msecs` and `mnanos` parameters set the modified time. If
+    they're none or nil, the current time will be used.
+
+    The nanosecond parameters (`ananos` and `mnanos`) must be on the
+    interval [0,1000000000) or `unix.EINVAL` is raised. On XNU this is
+    truncated to microsecond precision. On Windows NT, it's truncated to
+    hectonanosecond precision. These nanosecond parameters may also be
+    set to one of the following special values:
+
+    - `unix.UTIME_NOW`: Fill this timestamp with current time.
+
+    - `unix.UTIME_OMIT`: Do not alter this timestamp.
+
+    This system call is currently not available on very old versions of
+    Linux, e.g. RHEL5.
+
   unix.chown(path:str, uid:int, gid:int[, flags:int[, dirfd:int]])
       ├─→ true
       └─→ nil, unix.Errno

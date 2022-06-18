@@ -94,6 +94,7 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lualib.h"
+#include "third_party/lua/lunix.h"
 #include "third_party/mbedtls/ctr_drbg.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/iana.h"
@@ -5176,7 +5177,6 @@ static const luaL_Reg kLuaFuncs[] = {
 
 static const luaL_Reg kLuaLibs[] = {
     {"re", LuaRe},                   //
-    {"unix", LuaUnix},               //
     {"maxmind", LuaMaxmind},         //
     {"lsqlite3", luaopen_lsqlite3},  //
     {"argon2", luaopen_argon2},      //

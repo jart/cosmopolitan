@@ -23,6 +23,7 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/utime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
@@ -58,4 +59,21 @@ TEST(futimens, test) {
   EXPECT_SYS(0, 0, close(3));
   EXPECT_EQ(1655455857, st.st_atim.tv_sec);
   EXPECT_EQ(827727928, st.st_mtim.tv_sec);
+}
+
+TEST(utimensat, testOmit) {
+  if (IsLinux() && !__is_linux_2_6_23()) {
+    // TODO(jart): Ugh.
+    return;
+  }
+  struct stat st;
+  struct timespec ts[2] = {
+      {123, UTIME_OMIT},
+      {123, UTIME_OMIT},
+  };
+  EXPECT_SYS(0, 0, touch("boop", 0644));
+  EXPECT_SYS(0, 0, utimensat(AT_FDCWD, "boop", ts, 0));
+  EXPECT_SYS(0, 0, stat("boop", &st));
+  EXPECT_NE(123, st.st_atim.tv_sec);
+  EXPECT_NE(123, st.st_mtim.tv_sec);
 }

@@ -43,3 +43,10 @@ TEST(mkntpath, testUnicode) {
   EXPECT_EQ(20, __mkntpath("C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p));
   EXPECT_STREQ(u"C:\\𐌰𐌱𐌲𐌳\\𐌴𐌵𐌶𐌷", p);
 }
+
+TEST(mkntpath, testRemoveDoubleSlash) {
+  EXPECT_EQ(21, __mkntpath("C:\\Users\\jart\\\\.config", p));
+  EXPECT_STREQ(u"C:\\Users\\jart\\.config", p);
+  EXPECT_EQ(8, __mkntpath("\\\\?\\doge", p));
+  EXPECT_STREQ(u"\\\\?\\doge", p);
+}

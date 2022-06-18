@@ -80,10 +80,10 @@ textwindows int __mkntpath2(const char *path,
    * 5. Need ≥13 for mkdir() i.e. 1+8+3+1, e.g. "\\ffffffff.xxx\0"
    *    which is an "8.3 filename" from the DOS days
    */
-  char16_t *p;
   const char *q;
   bool isdospath;
-  size_t i, n, m, x, z;
+  char16_t c, *p;
+  size_t i, j, n, m, x, z;
   if (!path) return efault();
   path = FixNtMagicPath(path, flags);
   p = path16;
@@ -144,12 +144,20 @@ textwindows int __mkntpath2(const char *path,
     return enametoolong();
   }
 
-  // turn slash into backslash
-  for (i = 0; i < n; ++i) {
-    if (p[i] == '/') {
-      p[i] = '\\';
+  // 1. turn `/` into `\`
+  // 2. turn `\\` into `\` if not at beginning
+  for (j = i = 0; i < n; ++i) {
+    c = p[i];
+    if (c == '/') {
+      c = '\\';
     }
+    if (j > 1 && c == '\\' && p[j - 1] == '\\') {
+      continue;
+    }
+    p[j++] = c;
   }
+  p[j] = 0;
+  n = j;
 
   return x + m + n;
 }

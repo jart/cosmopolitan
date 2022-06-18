@@ -27,8 +27,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldo_c
 #define LUA_CORE
+#include "libc/bits/weaken.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"
@@ -149,7 +152,9 @@ l_noret luaD_throw (lua_State *L, int errcode) {
         lua_unlock(L);
         g->panic(L);  /* call panic function (last chance to jump out) */
       }
-      __die();
+      if (weaken(__die)) weaken(__die)();
+      __restorewintty();
+      _Exit(41);
     }
   }
 }

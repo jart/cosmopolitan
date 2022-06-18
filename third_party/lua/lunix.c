@@ -77,6 +77,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/sysv/consts/utime.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/struct/tm.h"
@@ -794,6 +795,38 @@ static int LuaUnixSetresgid(lua_State *L) {
   return LuaUnixSetresid(L, "setresgid", setresgid);
 }
 
+// unix.utimensat(path[, asecs, ananos, msecs, mnanos[, dirfd[, flags]]])
+//     ├─→ 0
+//     └─→ nil, unix.Errno
+static int LuaUnixUtimensat(lua_State *L) {
+  struct timespec ts;
+  int olderr = errno;
+  return SysretInteger(
+      L, "utimensat", olderr,
+      utimensat(
+          luaL_optinteger(L, 6, AT_FDCWD), luaL_checkstring(L, 1),
+          (struct timespec[2]){
+              {luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, UTIME_NOW)},
+              {luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, UTIME_NOW)},
+          },
+          luaL_optinteger(L, 7, 0)));
+}
+
+// unix.futimens(fd:int[, asecs, ananos, msecs, mnanos])
+//     ├─→ 0
+//     └─→ nil, unix.Errno
+static int LuaUnixFutimens(lua_State *L) {
+  struct timespec ts;
+  int olderr = errno;
+  return SysretInteger(
+      L, "futimens", olderr,
+      futimens(luaL_checkinteger(L, 1),
+               (struct timespec[2]){
+                   {luaL_optinteger(L, 2, 0), luaL_optinteger(L, 3, UTIME_NOW)},
+                   {luaL_optinteger(L, 4, 0), luaL_optinteger(L, 5, UTIME_NOW)},
+               }));
+}
+
 // unix.clock_gettime([clock:int])
 //     ├─→ seconds:int, nanos:int
 //     └─→ nil, unix.Errno
@@ -1485,7 +1518,6 @@ static int LuaUnixSigprocmask(lua_State *L) {
 static void LuaUnixOnSignal(int sig, siginfo_t *si, ucontext_t *ctx) {
   int type;
   lua_State *L = GL;
-  struct sigset ss, os;
   STRACE("LuaUnixOnSignal(%G)", sig);
   lua_getglobal(L, "__signal_handlers");
   type = lua_rawgeti(L, -1, sig);
@@ -1493,10 +1525,7 @@ static void LuaUnixOnSignal(int sig, siginfo_t *si, ucontext_t *ctx) {
   if (type == LUA_TFUNCTION) {
     lua_pushinteger(L, sig);
     if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
-      sigfillset(&ss);
-      sigprocmask(SIG_BLOCK, &ss, &os);
       ERRORF("(lua) %s failed: %s", strsignal(sig), lua_tostring(L, -1));
-      sigprocmask(SIG_SETMASK, &os, 0);
       lua_pop(L, 1);  // pop error
     }
   } else {
@@ -2353,101 +2382,103 @@ static void LuaUnixDirObj(lua_State *L) {
 
 static const luaL_Reg kLuaUnix[] = {
     {"Sigset", LuaUnixSigset},            // creates signal bitmask
-    {"exit", LuaUnixExit},                // exit w/o atexit
-    {"stat", LuaUnixStat},                // get file info from path
-    {"fstat", LuaUnixFstat},              // get file info from fd
-    {"open", LuaUnixOpen},                // open file fd at lowest slot
-    {"close", LuaUnixClose},              // close file or socket
-    {"lseek", LuaUnixLseek},              // seek in file
-    {"read", LuaUnixRead},                // read from file or socket
-    {"write", LuaUnixWrite},              // write to file or socket
+    {"WEXITSTATUS", LuaUnixWexitstatus},  // gets exit status from wait status
+    {"WIFEXITED", LuaUnixWifexited},      // gets exit code from wait status
+    {"WIFSIGNALED", LuaUnixWifsignaled},  // determines if died due to signal
+    {"WTERMSIG", LuaUnixWtermsig},        // gets the signal code
+    {"accept", LuaUnixAccept},            // create client fd for client
     {"access", LuaUnixAccess},            // check my file authorization
-    {"fcntl", LuaUnixFcntl},              // manipulate file descriptor
+    {"bind", LuaUnixBind},                // reserve network interface address
     {"chdir", LuaUnixChdir},              // change directory
-    {"chown", LuaUnixChown},              // change owner of file
     {"chmod", LuaUnixChmod},              // change mode of file
-    {"readlink", LuaUnixReadlink},        // reads symbolic link
-    {"getcwd", LuaUnixGetcwd},            // get current directory
-    {"fork", LuaUnixFork},                // make child process via mitosis
-    {"execve", LuaUnixExecve},            // replace process with program
-    {"environ", LuaUnixEnviron},          // get environment variables
-    {"commandv", LuaUnixCommandv},        // resolve program on $PATH
-    {"realpath", LuaUnixRealpath},        // abspath without dots/symlinks
-    {"syslog", LuaUnixSyslog},            // logs to system log
-    {"kill", LuaUnixKill},                // signal child process
-    {"raise", LuaUnixRaise},              // signal this process
-    {"wait", LuaUnixWait},                // wait for child to change status
-    {"pipe", LuaUnixPipe},                // create two anon fifo fds
-    {"dup", LuaUnixDup},                  // copy fd to lowest empty slot
-    {"mkdir", LuaUnixMkdir},              // make directory
-    {"makedirs", LuaUnixMakedirs},        // make directory and parents too
-    {"rmdir", LuaUnixRmdir},              // remove empty directory
-    {"opendir", LuaUnixOpendir},          // read directory entry list
-    {"fdopendir", LuaUnixFdopendir},      // read directory entry list
-    {"rename", LuaUnixRename},            // rename file or directory
-    {"link", LuaUnixLink},                // create hard link
-    {"unlink", LuaUnixUnlink},            // remove file
-    {"symlink", LuaUnixSymlink},          // create symbolic link
-    {"sync", LuaUnixSync},                // flushes files and disks
-    {"fsync", LuaUnixFsync},              // flush open file
-    {"fdatasync", LuaUnixFdatasync},      // flush open file w/o metadata
-    {"truncate", LuaUnixTruncate},        // shrink or extend file medium
-    {"ftruncate", LuaUnixFtruncate},      // shrink or extend file medium
-    {"umask", LuaUnixUmask},              // set default file mask
+    {"chown", LuaUnixChown},              // change owner of file
     {"chroot", LuaUnixChroot},            // change root directory
-    {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
+    {"clock_gettime", LuaUnixGettime},    // get timestamp w/ nano precision
+    {"close", LuaUnixClose},              // close file or socket
+    {"commandv", LuaUnixCommandv},        // resolve program on $PATH
+    {"connect", LuaUnixConnect},          // connect to remote address
+    {"dup", LuaUnixDup},                  // copy fd to lowest empty slot
+    {"environ", LuaUnixEnviron},          // get environment variables
+    {"execve", LuaUnixExecve},            // replace process with program
+    {"exit", LuaUnixExit},                // exit w/o atexit
+    {"fcntl", LuaUnixFcntl},              // manipulate file descriptor
+    {"fdatasync", LuaUnixFdatasync},      // flush open file w/o metadata
+    {"fdopendir", LuaUnixFdopendir},      // read directory entry list
+    {"fork", LuaUnixFork},                // make child process via mitosis
+    {"fstat", LuaUnixFstat},              // get file info from fd
+    {"fsync", LuaUnixFsync},              // flush open file
+    {"ftruncate", LuaUnixFtruncate},      // shrink or extend file medium
+    {"futimens", LuaUnixFutimens},        // change access/modified time
+    {"getcwd", LuaUnixGetcwd},            // get current directory
+    {"getegid", LuaUnixGetegid},          // get effective group id of process
+    {"geteuid", LuaUnixGeteuid},          // get effective user id of process
+    {"getgid", LuaUnixGetgid},            // get real group id of process
+    {"gethostname", LuaUnixGethostname},  // get hostname of this machine
+    {"getpeername", LuaUnixGetpeername},  // get address of remote end
+    {"getpgid", LuaUnixGetpgid},          // get process group id of pid
+    {"getpgrp", LuaUnixGetpgrp},          // get process group id
+    {"getpid", LuaUnixGetpid},            // get id of this process
+    {"getppid", LuaUnixGetppid},          // get parent process id
     {"getrlimit", LuaUnixGetrlimit},      // query resource limits
     {"getrusage", LuaUnixGetrusage},      // query resource usages
-    {"getppid", LuaUnixGetppid},          // get parent process id
-    {"getpgrp", LuaUnixGetpgrp},          // get process group id
-    {"getpgid", LuaUnixGetpgid},          // get process group id of pid
-    {"setpgid", LuaUnixSetpgid},          // set process group id for pid
-    {"setpgrp", LuaUnixSetpgrp},          // sets process group id
     {"getsid", LuaUnixGetsid},            // get session id of pid
-    {"setsid", LuaUnixSetsid},            // create a new session id
-    {"getpid", LuaUnixGetpid},            // get id of this process
-    {"getuid", LuaUnixGetuid},            // get real user id of process
-    {"geteuid", LuaUnixGeteuid},          // get effective user id of process
-    {"setuid", LuaUnixSetuid},            // set real user id of process
-    {"setresuid", LuaUnixSetresuid},      // sets real/effective/saved uids
-    {"getgid", LuaUnixGetgid},            // get real group id of process
-    {"getegid", LuaUnixGetegid},          // get effective group id of process
-    {"setgid", LuaUnixSetgid},            // set real group id of process
-    {"setresgid", LuaUnixSetresgid},      // sets real/effective/saved gids
-    {"gethostname", LuaUnixGethostname},  // get hostname of this machine
-    {"clock_gettime", LuaUnixGettime},    // get timestamp w/ nano precision
-    {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
-    {"socket", LuaUnixSocket},            // create network communication fd
-    {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
-    {"setsockopt", LuaUnixSetsockopt},    // tune socket options
+    {"getsockname", LuaUnixGetsockname},  // get address of local end
     {"getsockopt", LuaUnixGetsockopt},    // get socket tunings
-    {"poll", LuaUnixPoll},                // waits for file descriptor events
-    {"bind", LuaUnixBind},                // reserve network interface address
+    {"getuid", LuaUnixGetuid},            // get real user id of process
+    {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
+    {"kill", LuaUnixKill},                // signal child process
+    {"link", LuaUnixLink},                // create hard link
     {"listen", LuaUnixListen},            // begin listening for clients
-    {"accept", LuaUnixAccept},            // create client fd for client
-    {"connect", LuaUnixConnect},          // connect to remote address
+    {"localtime", LuaUnixLocaltime},      // localize unix timestamp
+    {"lseek", LuaUnixLseek},              // seek in file
+    {"major", LuaUnixMajor},              // extract device info
+    {"makedirs", LuaUnixMakedirs},        // make directory and parents too
+    {"minor", LuaUnixMinor},              // extract device info
+    {"mkdir", LuaUnixMkdir},              // make directory
+    {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
+    {"open", LuaUnixOpen},                // open file fd at lowest slot
+    {"opendir", LuaUnixOpendir},          // read directory entry list
+    {"pipe", LuaUnixPipe},                // create two anon fifo fds
+    {"pledge", LuaUnixPledge},            // enables syscall sandbox
+    {"poll", LuaUnixPoll},                // waits for file descriptor events
+    {"raise", LuaUnixRaise},              // signal this process
+    {"read", LuaUnixRead},                // read from file or socket
+    {"readlink", LuaUnixReadlink},        // reads symbolic link
+    {"realpath", LuaUnixRealpath},        // abspath without dots/symlinks
     {"recv", LuaUnixRecv},                // receive tcp from some address
     {"recvfrom", LuaUnixRecvfrom},        // receive udp from some address
+    {"rename", LuaUnixRename},            // rename file or directory
+    {"rmdir", LuaUnixRmdir},              // remove empty directory
     {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
+    {"setgid", LuaUnixSetgid},            // set real group id of process
+    {"setitimer", LuaUnixSetitimer},      // set alarm clock
+    {"setpgid", LuaUnixSetpgid},          // set process group id for pid
+    {"setpgrp", LuaUnixSetpgrp},          // sets process group id
+    {"setresgid", LuaUnixSetresgid},      // sets real/effective/saved gids
+    {"setresuid", LuaUnixSetresuid},      // sets real/effective/saved uids
+    {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
+    {"setsid", LuaUnixSetsid},            // create a new session id
+    {"setsockopt", LuaUnixSetsockopt},    // tune socket options
+    {"setuid", LuaUnixSetuid},            // set real user id of process
     {"shutdown", LuaUnixShutdown},        // make socket half empty or full
-    {"getpeername", LuaUnixGetpeername},  // get address of remote end
-    {"getsockname", LuaUnixGetsockname},  // get address of local end
-    {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
     {"sigaction", LuaUnixSigaction},      // install signal handler
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
-    {"setitimer", LuaUnixSetitimer},      // set alarm clock
-    {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
-    {"pledge", LuaUnixPledge},            // enables syscall sandbox
-    {"localtime", LuaUnixLocaltime},      // localize unix timestamp
-    {"major", LuaUnixMajor},              // extract device info
-    {"minor", LuaUnixMinor},              // extract device info
+    {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
+    {"socket", LuaUnixSocket},            // create network communication fd
+    {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
+    {"stat", LuaUnixStat},                // get file info from path
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
-    {"WIFEXITED", LuaUnixWifexited},      // gets exit code from wait status
-    {"WEXITSTATUS", LuaUnixWexitstatus},  // gets exit status from wait status
-    {"WIFSIGNALED", LuaUnixWifsignaled},  // determines if died due to signal
-    {"WTERMSIG", LuaUnixWtermsig},        // gets the signal code
+    {"symlink", LuaUnixSymlink},          // create symbolic link
+    {"sync", LuaUnixSync},                // flushes files and disks
+    {"syslog", LuaUnixSyslog},            // logs to system log
+    {"truncate", LuaUnixTruncate},        // shrink or extend file medium
+    {"umask", LuaUnixUmask},              // set default file mask
+    {"unlink", LuaUnixUnlink},            // remove file
+    {"utimensat", LuaUnixUtimensat},      // change access/modified time
+    {"wait", LuaUnixWait},                // wait for child to change status
+    {"write", LuaUnixWrite},              // write to file or socket
     {0},                                  //
 };
 
@@ -2583,6 +2614,10 @@ int LuaUnix(lua_State *L) {
   // sigaction() handlers
   LuaSetIntField(L, "SIG_DFL", (intptr_t)SIG_DFL);
   LuaSetIntField(L, "SIG_IGN", (intptr_t)SIG_IGN);
+
+  // utimensat() magnums
+  LuaSetIntField(L, "UTIME_NOW", UTIME_NOW);
+  LuaSetIntField(L, "UTIME_OMIT", UTIME_OMIT);
 
   // setitimer() which
   LuaSetIntField(L, "ITIMER_REAL", ITIMER_REAL);  // portable

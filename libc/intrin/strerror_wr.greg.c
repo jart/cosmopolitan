@@ -34,16 +34,18 @@
 privileged int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
   /* kprintf() weakly depends on this function */
   int c, n;
+  bool wanting;
   char16_t winmsg[256];
   const char *sym, *msg;
-  sym = firstnonnull(strerrno(err), "EUNKNOWN");
-  msg = firstnonnull(strerdoc(err), "No error information");
+  wanting = false;
+  sym = firstnonnull(strerrno(err), (wanting = true, "EUNKNOWN"));
+  msg = firstnonnull(strerdoc(err), (wanting = true, "No error information"));
   if (IsTiny()) {
     if (!sym) sym = "EUNKNOWN";
     for (; (c = *sym++); --size)
       if (size > 1) *buf++ = c;
     if (size) *buf = 0;
-  } else if (!IsWindows() || err == winerr || !winerr) {
+  } else if (!IsWindows() || ((err == winerr || !winerr) && !wanting)) {
     ksnprintf(buf, size, "%s/%d/%s", sym, err, msg);
   } else {
     if ((n = FormatMessage(

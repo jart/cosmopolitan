@@ -2289,16 +2289,18 @@ int linenoiseHistorySave(const char *filename) {
   int j;
   FILE *fp;
   mode_t old_umask;
-  old_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
-  fp = fopen(filename, "w");
-  umask(old_umask);
-  if (!fp) return -1;
-  chmod(filename, S_IRUSR | S_IWUSR);
-  for (j = 0; j < historylen; j++) {
-    fputs(history[j], fp);
-    fputc('\n', fp);
+  if (filename) {
+    old_umask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
+    fp = fopen(filename, "w");
+    umask(old_umask);
+    if (!fp) return -1;
+    chmod(filename, S_IRUSR | S_IWUSR);
+    for (j = 0; j < historylen; j++) {
+      fputs(history[j], fp);
+      fputc('\n', fp);
+    }
+    fclose(fp);
   }
-  fclose(fp);
   return 0;
 }
 
@@ -2378,7 +2380,9 @@ char *linenoiseGetHistoryPath(const char *prog) {
   if (*a) {
     abAppends(&path, a);
     abAppends(&path, b);
-    abAppendw(&path, '/');
+    if (!endswith(path.b, "/") && !endswith(path.b, "\\")) {
+      abAppendw(&path, '/');
+    }
   }
   abAppendw(&path, '.');
   abAppends(&path, prog);

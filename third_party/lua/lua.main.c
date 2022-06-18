@@ -30,7 +30,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/stack.h"
@@ -47,6 +46,7 @@
 #include "third_party/lua/lrepl.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/lualib.h"
+#include "third_party/lua/lunix.h"
 #include "tool/args/args.h"
 // clang-format off
 
@@ -364,6 +364,8 @@ static int pmain (lua_State *L) {
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   }
   luaL_openlibs(L);  /* open standard libraries */
+  luaL_requiref(L, "unix", LuaUnix, 1);
+  lua_pop(L, 1);
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* GC in generational mode */
   if (!(args & has_E)) {  /* no option '-E'? */
