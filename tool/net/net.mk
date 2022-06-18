@@ -60,6 +60,7 @@ TOOL_NET_DIRECTDEPS =								\
 	THIRD_PARTY_GETOPT							\
 	THIRD_PARTY_LINENOISE							\
 	THIRD_PARTY_LUA								\
+	THIRD_PARTY_LUA_UNIX							\
 	THIRD_PARTY_MAXMIND							\
 	THIRD_PARTY_MBEDTLS							\
 	THIRD_PARTY_REGEX							\
@@ -93,7 +94,6 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
@@ -210,7 +210,6 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
@@ -325,7 +324,6 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
 		o/$(MODE)/tool/net/lfuncs.o					\
 		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/lunix.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
