@@ -128,11 +128,8 @@ static initentry ZipEntries[] = {
         {"encodings.utf_8", {.inside_zip = 1, .is_package = 0}},
         {"genericpath", {.inside_zip = 1, .is_package = 0}},
         {"io", {.inside_zip = 1, .is_package = 0}},
-        {"io._WindowsConsoleIO", {.inside_zip = 0, .is_package = 0}},
         {"ntpath", {.inside_zip = 1, .is_package = 0}},
         {"os", {.inside_zip = 1, .is_package = 0}},
-        {"posix._getfullpathname", {.inside_zip = 0, .is_package = 0}},
-        {"posix._isdir", {.inside_zip = 0, .is_package = 0}},
         {"posixpath", {.inside_zip = 1, .is_package = 0}},
         {"readline", {.inside_zip = 0, .is_package = 0}},
         {"site", {.inside_zip = 1, .is_package = 0}},
@@ -2811,8 +2808,9 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
   key.tab = NULL;
   res = bsearch(&key, ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
   if (res) {
-      if (!res->inside_zip)
+      if (!res->inside_zip) {
           Py_RETURN_NONE;
+      }
       inside_zip = res->inside_zip;
       is_package = res->is_package;
   }
