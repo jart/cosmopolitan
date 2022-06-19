@@ -25,9 +25,9 @@
 	.init.start 400,_init_stdin
 	ezlea	__stdin,ax
 	mov	O_RDONLY,%edx
-	mov	%edx,4(%rax)			#→ f.iomode
+	mov	%edx,4(%rax)				#→ f.iomode
 	ezlea	__stdin_buf,cx
-	mov	%rcx,24(%rax)			#→ f.buf
-	movl	$BUFSIZ,32(%rax)		#→ f.size
+	mov	%rcx,0x18(%rax)				#→ f.buf
+	movl	$BUFSIZ,0x20(%rax)			#→ f.size
 	mov	%rax,stdin(%rip)
 	.init.end 400,_init_stdin,globl,hidden

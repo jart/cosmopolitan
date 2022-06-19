@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -32,18 +34,30 @@
  */
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
-  int rc;
-  static bool once;
-  if (_lockcmpxchg(&once, false, true)) {
+  int me, owner;
+  static int sync;
+  owner = 0;
+  me = gettid();
+  if (_lockcmpxchgp(&sync, &owner, me)) {
     __restore_tty();
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }
-    ShowBacktrace(2, NULL);
-    rc = 77;
+    if (weaken(ShowBacktrace)) {
+      weaken(ShowBacktrace)(2, __builtin_frame_address(0));
+    } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+      weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
+                                         weaken(GetSymbolTable)());
+    } else {
+      kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
+    }
+    __restorewintty();
+    _Exit(77);
+  } else if (owner == me) {
+    kprintf("die failed while dying\n");
+    __restorewintty();
+    _Exit(78);
   } else {
-    rc = 78;
+    _Exit1(79);
   }
-  __restorewintty();
-  _Exit(rc);
 }

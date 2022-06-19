@@ -39,14 +39,15 @@ strtoIdd(const char *s, char **sp, double *f0, double *f1)
 	Long exp[2];
 	Bigint *B[2];
 	int k, rv[2];
-	B[0] = __gdtoa_Balloc(2);
+	ThInfo *TI = 0;
+	B[0] = __gdtoa_Balloc(2, &TI);
 	B[0]->wds = 4;
 	k = __gdtoa_strtoIg(s, sp, &fpi, exp, B, rv);
 	__gdtoa_ULtodd((ULong*)f0, B[0]->x, exp[0], rv[0]);
-	__gdtoa_Bfree(B[0]);
+	__gdtoa_Bfree(B[0], &TI);
 	if (B[1]) {
 		__gdtoa_ULtodd((ULong*)f1, B[1]->x, exp[1], rv[1]);
-		__gdtoa_Bfree(B[1]);
+		__gdtoa_Bfree(B[1], &TI);
 	}
 	else {
 		((ULong*)f1)[0] = ((ULong*)f0)[0];

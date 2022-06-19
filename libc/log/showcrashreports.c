@@ -30,9 +30,12 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-STATIC_YOINK("__die");                /* for backtracing */
-STATIC_YOINK("malloc_inspect_all");   /* for asan memory origin */
-STATIC_YOINK("__get_symbol_by_addr"); /* for asan memory origin */
+STATIC_YOINK("__die");                       // for backtracing
+STATIC_YOINK("ShowBacktrace");               // for backtracing
+STATIC_YOINK("GetSymbolTable");              // for backtracing
+STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
+STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
+STATIC_YOINK("__get_symbol_by_addr");        // for asan memory origin
 
 extern const unsigned char __oncrash_thunks[8][11];
 static struct sigaltstack g_oldsigaltstack;

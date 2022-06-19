@@ -34,10 +34,12 @@
 static pthread_mutex_t __fflush_lock_obj;
 
 void(__fflush_lock)(void) {
+  __fflush_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&__fflush_lock_obj);
 }
 
 void(__fflush_unlock)(void) {
+  __fflush_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&__fflush_lock_obj);
 }
 

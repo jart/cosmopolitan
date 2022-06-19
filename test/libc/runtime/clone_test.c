@@ -79,6 +79,7 @@ TEST(clone, testNullFunc_raisesEinval) {
 int CloneTest1(void *arg) {
   intptr_t rsp, top, bot;
   CheckStackIsAligned();
+  PrintBacktraceUsingSymbols(2, __builtin_frame_address(0), GetSymbolTable());
   rsp = (intptr_t)__builtin_frame_address(0);
   bot = (intptr_t)stack;
   top = bot + GetStackSize();

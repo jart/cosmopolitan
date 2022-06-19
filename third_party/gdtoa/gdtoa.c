@@ -33,7 +33,7 @@
 /* clang-format off */
 
 static Bigint *
-bitstob(ULong *bits, int nbits, int *bbits)
+bitstob(ULong *bits, int nbits, int *bbits, ThInfo **PTI)
 {
 	int i, k;
 	Bigint *b;
@@ -44,7 +44,7 @@ bitstob(ULong *bits, int nbits, int *bbits)
 		i <<= 1;
 		k++;
 	}
-	b = __gdtoa_Balloc(k);
+	b = __gdtoa_Balloc(k, PTI);
 	be = bits + ((nbits - 1) >> kshift);
 	x = x0 = b->x;
 	do {
@@ -135,6 +135,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		to hold the suppressed trailing zeros.
 	*/
 
+	ThInfo *TI = 0;
 	int bbits, b2, b5, be0, dig, i, ieps, ilim, ilim0, ilim1, inex;
 	int j, j1, k, k0, k_check, kind, leftright, m2, m5, nbits;
 	int rdir, s2, s5, spec_case, try_quick;
@@ -153,14 +154,14 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		break;
 	case STRTOG_Infinite:
 		*decpt = -32768;
-		return __gdtoa_nrv_alloc("Infinity", rve, 8);
+		return __gdtoa_nrv_alloc("Infinity", rve, 8, &TI);
 	case STRTOG_NaN:
 		*decpt = -32768;
-		return __gdtoa_nrv_alloc("NaN", rve, 3);
+		return __gdtoa_nrv_alloc("NaN", rve, 3, &TI);
 	default:
 		return 0;
 	}
-	b = bitstob(bits, nbits = fpi->nbits, &bbits);
+	b = bitstob(bits, nbits = fpi->nbits, &bbits, &TI);
 	be0 = be;
 	if ( (i = __gdtoa_trailz(b)) !=0) {
 		__gdtoa_rshift(b, i);
@@ -168,10 +169,10 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		bbits -= i;
 	}
 	if (!b->wds) {
-		__gdtoa_Bfree(b);
+		__gdtoa_Bfree(b, &TI);
 	ret_zero:
 		*decpt = 1;
-		return __gdtoa_nrv_alloc("0", rve, 1);
+		return __gdtoa_nrv_alloc("0", rve, 1, &TI);
 	}
 	dval(&d) = __gdtoa_b2d(b, &i);
 	i = be + bbits - 1;
@@ -285,7 +286,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		if (i <= 0)
 			i = 1;
 	}
-	s = s0 = __gdtoa_rv_alloc(i);
+	s = s0 = __gdtoa_rv_alloc(i, &TI);
 	if (mode <= 1)
 		rdir = 0;
 	else if ( (rdir = fpi->rounding - 1) !=0) {
@@ -471,7 +472,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 		}
 		b2 += i;
 		s2 += i;
-		mhi = __gdtoa_i2b(1);
+		mhi = __gdtoa_i2b(1, &TI);
 	}
 	if (m2 > 0 && s2 > 0) {
 		i = m2 < s2 ? m2 : s2;
@@ -482,20 +483,20 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	if (b5 > 0) {
 		if (leftright) {
 			if (m5 > 0) {
-				mhi = __gdtoa_pow5mult(mhi, m5);
-				b1 = __gdtoa_mult(mhi, b);
-				__gdtoa_Bfree(b);
+				mhi = __gdtoa_pow5mult(mhi, m5, &TI);
+				b1 = __gdtoa_mult(mhi, b, &TI);
+				__gdtoa_Bfree(b, &TI);
 				b = b1;
 			}
 			if ( (j = b5 - m5) !=0)
-				b = __gdtoa_pow5mult(b, j);
+				b = __gdtoa_pow5mult(b, j, &TI);
 		}
 		else
-			b = __gdtoa_pow5mult(b, b5);
+			b = __gdtoa_pow5mult(b, b5, &TI);
 	}
-	S = __gdtoa_i2b(1);
+	S = __gdtoa_i2b(1, &TI);
 	if (s5 > 0)
-		S = __gdtoa_pow5mult(S, s5);
+		S = __gdtoa_pow5mult(S, s5, &TI);
 	/* Check for special case that d is a normalized power of 2. */
 	spec_case = 0;
 	if (mode < 2) {
@@ -516,20 +517,20 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	i = ((s5 ? hi0bits(S->x[S->wds-1]) : ULbits - 1) - s2 - 4) & kmask;
 	m2 += i;
 	if ((b2 += i) > 0)
-		b = __gdtoa_lshift(b, b2);
+		b = __gdtoa_lshift(b, b2, &TI);
 	if ((s2 += i) > 0)
-		S = __gdtoa_lshift(S, s2);
+		S = __gdtoa_lshift(S, s2, &TI);
 	if (k_check) {
 		if (__gdtoa_cmp(b,S) < 0) {
 			k--;
-			b = __gdtoa_multadd(b, 10, 0);	/* we botched the k estimate */
+			b = __gdtoa_multadd(b, 10, 0, &TI);	/* we botched the k estimate */
 			if (leftright)
-				mhi = __gdtoa_multadd(mhi, 10, 0);
+				mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			ilim = ilim1;
 		}
 	}
 	if (ilim <= 0 && mode > 2) {
-		if (ilim < 0 || __gdtoa_cmp(b,S = __gdtoa_multadd(S,5,0)) <= 0) {
+		if (ilim < 0 || __gdtoa_cmp(b,S = __gdtoa_multadd(S,5,0,&TI)) <= 0) {
 			/* no digits, fcvt style */
 		no_digits:
 			k = -1 - ndigits;
@@ -544,15 +545,15 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 	}
 	if (leftright) {
 		if (m2 > 0)
-			mhi = __gdtoa_lshift(mhi, m2);
+			mhi = __gdtoa_lshift(mhi, m2, &TI);
 		/* Compute mlo -- check for special case
 		 * that d is a normalized power of 2.
 		 */
 		mlo = mhi;
 		if (spec_case) {
-			mhi = __gdtoa_Balloc(mhi->k);
+			mhi = __gdtoa_Balloc(mhi->k, &TI);
 			Bcopy(mhi, mlo);
-			mhi = __gdtoa_lshift(mhi, 1);
+			mhi = __gdtoa_lshift(mhi, 1, &TI);
 		}
 		for(i = 1;;i++) {
 			dig = __gdtoa_quorem(b,S) + '0';
@@ -560,9 +561,9 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			 * that will round to d?
 			 */
 			j = __gdtoa_cmp(b, mlo);
-			delta = __gdtoa_diff(S, mhi);
+			delta = __gdtoa_diff(S, mhi, &TI);
 			j1 = delta->sign ? 1 : __gdtoa_cmp(b, delta);
-			__gdtoa_Bfree(delta);
+			__gdtoa_Bfree(delta, &TI);
 			if (j1 == 0 && !mode && !(bits[0] & 1) && !rdir) {
 				if (dig == '9')
 					goto round_9_up;
@@ -585,11 +586,11 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 					}
 					while (__gdtoa_cmp(S,mhi) > 0) {
 						*s++ = dig;
-						mhi1 = __gdtoa_multadd(mhi, 10, 0);
+						mhi1 = __gdtoa_multadd(mhi, 10, 0, &TI);
 						if (mlo == mhi)
 							mlo = mhi1;
 						mhi = mhi1;
-						b = __gdtoa_multadd(b, 10, 0);
+						b = __gdtoa_multadd(b, 10, 0, &TI);
 						dig = __gdtoa_quorem(b,S) + '0';
 					}
 					if (dig++ == '9')
@@ -598,7 +599,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 					goto accept;
 				}
 				if (j1 > 0) {
-					b = __gdtoa_lshift(b, 1);
+					b = __gdtoa_lshift(b, 1, &TI);
 					j1 = __gdtoa_cmp(b, S);
 					if ((j1 > 0 || (j1 == 0 && dig & 1)) && dig++ == '9')
 						goto round_9_up;
@@ -624,12 +625,12 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			*s++ = dig;
 			if (i == ilim)
 				break;
-			b = __gdtoa_multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0, &TI);
 			if (mlo == mhi)
-				mlo = mhi = __gdtoa_multadd(mhi, 10, 0);
+				mlo = mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			else {
-				mlo = __gdtoa_multadd(mlo, 10, 0);
-				mhi = __gdtoa_multadd(mhi, 10, 0);
+				mlo = __gdtoa_multadd(mlo, 10, 0, &TI);
+				mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			}
 		}
 	}
@@ -638,7 +639,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			*s++ = dig = __gdtoa_quorem(b,S) + '0';
 			if (i >= ilim)
 				break;
-			b = __gdtoa_multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0, &TI);
 		}
 	/* Round off last digit */
 	if (rdir) {
@@ -646,7 +647,7 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			goto chopzeros;
 		goto roundoff;
 	}
-	b = __gdtoa_lshift(b, 1);
+	b = __gdtoa_lshift(b, 1, &TI);
 	j = __gdtoa_cmp(b, S);
 	if (j > 0 || (j == 0 && dig & 1))
 	{
@@ -666,16 +667,16 @@ gdtoa(const FPI *fpi, int be, ULong *bits, int *kindp, int mode, int ndigits, in
 			inex = STRTOG_Inexlo;
 	}
 ret:
-	__gdtoa_Bfree(S);
+	__gdtoa_Bfree(S, &TI);
 	if (mhi) {
 		if (mlo && mlo != mhi)
-			__gdtoa_Bfree(mlo);
-		__gdtoa_Bfree(mhi);
+			__gdtoa_Bfree(mlo, &TI);
+		__gdtoa_Bfree(mhi, &TI);
 	}
 ret1:
 	while(s > s0 && s[-1] == '0')
 		--s;
-	__gdtoa_Bfree(b);
+	__gdtoa_Bfree(b, &TI);
 	*s = 0;
 	*decpt = k + 1;
 	if (rve)

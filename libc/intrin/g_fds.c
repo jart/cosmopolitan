@@ -30,10 +30,12 @@ struct Fds g_fds;
 static pthread_mutex_t __fds_lock_obj;
 
 void(__fds_lock)(void) {
+  __fds_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&__fds_lock_obj);
 }
 
 void(__fds_unlock)(void) {
+  __fds_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&__fds_lock_obj);
 }
 

@@ -22,5 +22,6 @@
  * Acquires reentrant lock on stdio object, blocking if needed.
  */
 void(flockfile)(FILE *f) {
+  f->lock.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&f->lock);
 }

@@ -36,9 +36,7 @@ EXAMPLES_COMS =									\
 
 EXAMPLES_BINS =									\
 	$(EXAMPLES_COMS)							\
-	$(EXAMPLES_COMS:%=%.dbg)						\
-	o/$(MODE)/examples/life-nomod.com					\
-	o/$(MODE)/examples/life-classic.com
+	$(EXAMPLES_COMS:%=%.dbg)
 
 EXAMPLES_DIRECTDEPS =								\
 	DSP_CORE								\
@@ -165,34 +163,6 @@ o/$(MODE)/usr/share/dict/words:							\
 		o/$(MODE)/tool/build/gzip.com
 	@$(MKDIR) $(@D)
 	@o/$(MODE)/tool/build/gzip.com $(ZFLAGS) -cd <$< >$@
-
-################################################################################
-# binaries for execve_test.com
-
-o/$(MODE)/examples/life-nomod.com.zip.o: o/$(MODE)/examples/life-nomod.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/examples/life-classic.com.zip.o: o/$(MODE)/examples/life-classic.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/examples/pylife/pylife.com.zip.o: o/$(MODE)/examples/pylife/pylife.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/examples/life-classic.com.dbg:					\
-		$(EXAMPLES_DEPS)						\
-		o/$(MODE)/examples/life.o					\
-		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE)
-	@$(APELINK)
-
-o/$(MODE)/examples/life-nomod.com.dbg:						\
-		$(EXAMPLES_DEPS)						\
-		o/$(MODE)/examples/life.o					\
-		o/$(MODE)/examples/examples.pkg					\
-		$(CRT)								\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
 
 ################################################################################
 

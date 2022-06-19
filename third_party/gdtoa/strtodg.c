@@ -39,7 +39,7 @@ fivesbits[] = {	  0,  3,  5,  7, 10, 12, 14, 17, 19, 21,
 	         47, 49, 52 };
 
 Bigint *
-__gdtoa_increment(Bigint *b)
+__gdtoa_increment(Bigint *b, ThInfo **PTI)
 {
 	ULong *x, *xe;
 	Bigint *b1;
@@ -54,9 +54,9 @@ __gdtoa_increment(Bigint *b)
 	} while(x < xe);
 	{
 		if (b->wds >= b->maxwds) {
-			b1 = __gdtoa_Balloc(b->k+1);
+			b1 = __gdtoa_Balloc(b->k+1, PTI);
 			Bcopy(b1,b);
-			__gdtoa_Bfree(b);
+			__gdtoa_Bfree(b, PTI);
 			b = b1;
 		}
 		b->x[b->wds++] = 1;
@@ -95,14 +95,14 @@ all_on(Bigint *b, int n)
 }
 
 Bigint *
-__gdtoa_set_ones(Bigint *b, int n)
+__gdtoa_set_ones(Bigint *b, int n, ThInfo **PTI)
 {
 	int k;
 	ULong *x, *xe;
 	k = (n + ((1 << kshift) - 1)) >> kshift;
 	if (b->k < k) {
-		__gdtoa_Bfree(b);
-		b = __gdtoa_Balloc(k);
+		__gdtoa_Bfree(b, PTI);
+		b = __gdtoa_Balloc(k, PTI);
 	}
 	k = n >> kshift;
 	if (n &= kmask)
@@ -118,13 +118,13 @@ __gdtoa_set_ones(Bigint *b, int n)
 }
 
 static int
-rvOK(U *d, const FPI *fpi, Long *exp, ULong *bits, int exact, int rd, int *irv)
+rvOK(U *d, const FPI *fpi, Long *exp, ULong *bits, int exact, int rd, int *irv, ThInfo **PTI)
 {
 	Bigint *b;
 	ULong carry, inex, lostbits;
 	int bdif, e, j, k, k1, nb, rv;
 	carry = rv = 0;
-	b = __gdtoa_d2b(dval(d), &e, &bdif);
+	b = __gdtoa_d2b(dval(d), &e, &bdif, PTI);
 	bdif -= nb = fpi->nbits;
 	e += bdif;
 	if (bdif <= 0) {
@@ -166,7 +166,7 @@ trunc:
 		__gdtoa_rshift(b, bdif);
 		if (carry) {
 			inex = STRTOG_Inexhi;
-			b = __gdtoa_increment(b);
+			b = __gdtoa_increment(b, PTI);
 			if ( (j = nb & kmask) !=0)
 				j = ULbits - j;
 			if (hi0bits(b->x[b->wds - 1]) != j) {
@@ -178,7 +178,7 @@ trunc:
 		}
 	}
 	else if (bdif < 0)
-		b = __gdtoa_lshift(b, -bdif);
+		b = __gdtoa_lshift(b, -bdif, PTI);
 	if (e < fpi->emin) {
 		k = fpi->emin - e;
 		e = fpi->emin;
@@ -197,7 +197,7 @@ trunc:
 			__gdtoa_rshift(b, k);
 			*irv = STRTOG_Denormal;
 			if (carry) {
-				b = __gdtoa_increment(b);
+				b = __gdtoa_increment(b, PTI);
 				inex = STRTOG_Inexhi | STRTOG_Underflow;
 			}
 			else if (lostbits)
@@ -215,7 +215,7 @@ trunc:
 	*irv |= inex;
 	rv = 1;
 ret:
-	__gdtoa_Bfree(b);
+	__gdtoa_Bfree(b, PTI);
 	return rv;
 }
 
@@ -243,6 +243,7 @@ strtodg(const char *s00, char **se, const FPI *fpi, Long *exp, ULong *bits)
 	U adj, rv;
 	ULong *b, *be, y, z;
 	Bigint *ab, *bb, *bb1, *bd, *bd0, *bs, *delta, *rvb, *rvb0;
+	ThInfo *TI = 0;
 	irv = STRTOG_Zero;
 	denorm = sign = nz0 = nz = 0;
 	dval(&rv) = 0.;
@@ -276,7 +277,7 @@ break2:
 		switch(s[1]) {
 		case 'x':
 		case 'X':
-			irv = __gdtoa_gethex(&s, fpi, exp, &rvb, sign);
+			irv = __gdtoa_gethex(&s, fpi, exp, &rvb, sign, &TI);
 			if (irv == STRTOG_NoNumber) {
 				s = s00;
 				sign = 0;
@@ -425,14 +426,14 @@ dig_done:
 	bd0 = 0;
 	if (nbits <= P && nd <= DBL_DIG) {
 		if (!e) {
-			if (rvOK(&rv, fpi, exp, bits, 1, rd, &irv))
+			if (rvOK(&rv, fpi, exp, bits, 1, rd, &irv, &TI))
 				goto ret;
 		}
 		else if (e > 0) {
 			if (e <= Ten_pmax) {
 				i = fivesbits[e] + mantbits(&rv) <= P;
 				/* rv = */ rounded_product(dval(&rv), __gdtoa_tens[e]);
-				if (rvOK(&rv, fpi, exp, bits, i, rd, &irv))
+				if (rvOK(&rv, fpi, exp, bits, i, rd, &irv, &TI))
 					goto ret;
 				e1 -= e;
 				goto rv_notOK;
@@ -446,14 +447,14 @@ dig_done:
 				e1 -= i;
 				dval(&rv) *= __gdtoa_tens[i];
 				/* rv = */ rounded_product(dval(&rv), __gdtoa_tens[e2]);
-				if (rvOK(&rv, fpi, exp, bits, 0, rd, &irv))
+				if (rvOK(&rv, fpi, exp, bits, 0, rd, &irv, &TI))
 					goto ret;
 				e1 -= e2;
 			}
 		}
 		else if (e >= -Ten_pmax) {
 			/* rv = */ rounded_quotient(dval(&rv), __gdtoa_tens[-e]);
-			if (rvOK(&rv, fpi, exp, bits, 0, rd, &irv))
+			if (rvOK(&rv, fpi, exp, bits, 0, rd, &irv, &TI))
 				goto ret;
 			e1 -= e;
 		}
@@ -505,7 +506,7 @@ rv_notOK:
 					dval(&rv) *= __gdtoa_tinytens[j];
 		}
 	}
-	rvb = __gdtoa_d2b(dval(&rv), &rve, &rvbits);	/* rv = rvb * 2^rve */
+	rvb = __gdtoa_d2b(dval(&rv), &rve, &rvbits, &TI);	/* rv = rvb * 2^rve */
 	rve += e2;
 	if ((j = rvbits - nbits) > 0) {
 		__gdtoa_rshift(rvb, j);
@@ -521,7 +522,7 @@ rv_notOK:
 		denorm = 1;
 		j = rve - emin;
 		if (j > 0) {
-			rvb = __gdtoa_lshift(rvb, j);
+			rvb = __gdtoa_lshift(rvb, j, &TI);
 			rvbits += j;
 		}
 		else if (j < 0) {
@@ -557,15 +558,15 @@ rv_notOK:
 	}
 	/* Now the hard part -- adjusting rv to the correct value.*/
 	/* Put digits into bd: true value = bd * 10^e */
-	bd0 = __gdtoa_s2b(s0, nd0, nd, y, 1);
+	bd0 = __gdtoa_s2b(s0, nd0, nd, y, 1, &TI);
 	for(;;) {
-		bd = __gdtoa_Balloc(bd0->k);
+		bd = __gdtoa_Balloc(bd0->k, &TI);
 		Bcopy(bd, bd0);
-		bb = __gdtoa_Balloc(rvb->k);
+		bb = __gdtoa_Balloc(rvb->k, &TI);
 		Bcopy(bb, rvb);
 		bbbits = rvbits - bb0;
 		bbe = rve + bb0;
-		bs = __gdtoa_i2b(1);
+		bs = __gdtoa_i2b(1, &TI);
 		if (e >= 0) {
 			bb2 = bb5 = 0;
 			bd2 = bd5 = e;
@@ -594,25 +595,25 @@ rv_notOK:
 			bs2 -= i;
 		}
 		if (bb5 > 0) {
-			bs = __gdtoa_pow5mult(bs, bb5);
-			bb1 = __gdtoa_mult(bs, bb);
-			__gdtoa_Bfree(bb);
+			bs = __gdtoa_pow5mult(bs, bb5, &TI);
+			bb1 = __gdtoa_mult(bs, bb, &TI);
+			__gdtoa_Bfree(bb, &TI);
 			bb = bb1;
 		}
 		bb2 -= bb0;
 		if (bb2 > 0)
-			bb = __gdtoa_lshift(bb, bb2);
+			bb = __gdtoa_lshift(bb, bb2, &TI);
 		else if (bb2 < 0)
 			__gdtoa_rshift(bb, -bb2);
 		if (bd5 > 0)
-			bd = __gdtoa_pow5mult(bd, bd5);
+			bd = __gdtoa_pow5mult(bd, bd5, &TI);
 		if (bd2 > 0)
-			bd = __gdtoa_lshift(bd, bd2);
+			bd = __gdtoa_lshift(bd, bd2, &TI);
 		if (bs2 > 0)
-			bs = __gdtoa_lshift(bs, bs2);
+			bs = __gdtoa_lshift(bs, bs2, &TI);
 		asub = 1;
 		inex = STRTOG_Inexhi;
-		delta = __gdtoa_diff(bb, bd);
+		delta = __gdtoa_diff(bb, bd, &TI);
 		if (delta->wds <= 1 && !delta->x[0])
 			break;
 		dsign = delta->sign;
@@ -637,7 +638,7 @@ rv_notOK:
 				if (j > 1 && lo0bits(rvb->x + i) < j - 1)
 					goto adj1;
 				rve = rve1 - 1;
-				rvb = __gdtoa_set_ones(rvb, rvbits = nbits);
+				rvb = __gdtoa_set_ones(rvb, rvbits = nbits, &TI);
 				break;
 			}
 			irv |= dsign ? STRTOG_Inexlo : STRTOG_Inexhi;
@@ -652,7 +653,7 @@ rv_notOK:
 				: STRTOG_Normal | STRTOG_Inexhi;
 			if (dsign || bbbits > 1 || denorm || rve1 == emin)
 				break;
-			delta = __gdtoa_lshift(delta,1);
+			delta = __gdtoa_lshift(delta,1,&TI);
 			if (__gdtoa_cmp(delta, bs) > 0) {
 				irv = STRTOG_Normal | STRTOG_Inexlo;
 				goto drop_down;
@@ -684,7 +685,7 @@ rv_notOK:
 					break;
 				}
 				rve -= nbits;
-				rvb = __gdtoa_set_ones(rvb, rvbits = nbits);
+				rvb = __gdtoa_set_ones(rvb, rvbits = nbits, &TI);
 				break;
 			}
 			else
@@ -692,7 +693,7 @@ rv_notOK:
 			if ((bbbits < nbits && !denorm) || !(rvb->x[0] & 1))
 				break;
 			if (dsign) {
-				rvb = __gdtoa_increment(rvb);
+				rvb = __gdtoa_increment(rvb, &TI);
 				j = kmask & (ULbits - (rvbits & kmask));
 				if (hi0bits(rvb->x[rvb->wds - 1]) != j)
 					rvbits++;
@@ -759,20 +760,20 @@ rv_notOK:
 		/* adj *= __gdtoa_ulp(dval(&rv)); */
 		/* if (asub) rv -= adj; else rv += adj; */
 		if (!denorm && rvbits < nbits) {
-			rvb = __gdtoa_lshift(rvb, j = nbits - rvbits);
+			rvb = __gdtoa_lshift(rvb, j = nbits - rvbits, &TI);
 			rve -= j;
 			rvbits = nbits;
 		}
-		ab = __gdtoa_d2b(dval(&adj), &abe, &abits);
+		ab = __gdtoa_d2b(dval(&adj), &abe, &abits, &TI);
 		if (abe < 0)
 			__gdtoa_rshift(ab, -abe);
 		else if (abe > 0)
-			ab = __gdtoa_lshift(ab, abe);
+			ab = __gdtoa_lshift(ab, abe, &TI);
 		rvb0 = rvb;
 		if (asub) {
 			/* rv -= adj; */
 			j = hi0bits(rvb->x[rvb->wds-1]);
-			rvb = __gdtoa_diff(rvb, ab);
+			rvb = __gdtoa_diff(rvb, ab, &TI);
 			k = rvb0->wds - 1;
 			if (denorm)
 				/* do nothing */;
@@ -785,7 +786,7 @@ rv_notOK:
 					denorm = 1;
 				}
 				else {
-					rvb = __gdtoa_lshift(rvb, 1);
+					rvb = __gdtoa_lshift(rvb, 1, &TI);
 					--rve;
 					--rve1;
 					L = finished = 0;
@@ -793,7 +794,7 @@ rv_notOK:
 			}
 		}
 		else {
-			rvb = __gdtoa_sum(rvb, ab);
+			rvb = __gdtoa_sum(rvb, ab, &TI);
 			k = rvb->wds - 1;
 			if (k >= rvb0->wds
 			    || hi0bits(rvb->x[k]) < hi0bits(rvb0->x[k])) {
@@ -809,8 +810,8 @@ rv_notOK:
 				}
 			}
 		}
-		__gdtoa_Bfree(ab);
-		__gdtoa_Bfree(rvb0);
+		__gdtoa_Bfree(ab, &TI);
+		__gdtoa_Bfree(rvb0, &TI);
 		if (finished)
 			break;
 		z = rve + rvbits;
@@ -830,27 +831,27 @@ rv_notOK:
 			}
 		}
 		bb0 = denorm ? 0 : __gdtoa_trailz(rvb);
-		__gdtoa_Bfree(bb);
-		__gdtoa_Bfree(bd);
-		__gdtoa_Bfree(bs);
-		__gdtoa_Bfree(delta);
+		__gdtoa_Bfree(bb, &TI);
+		__gdtoa_Bfree(bd, &TI);
+		__gdtoa_Bfree(bs, &TI);
+		__gdtoa_Bfree(delta, &TI);
 	}
 	if (!denorm && (j = nbits - rvbits)) {
 		if (j > 0)
-			rvb = __gdtoa_lshift(rvb, j);
+			rvb = __gdtoa_lshift(rvb, j, &TI);
 		else
 			__gdtoa_rshift(rvb, -j);
 		rve -= j;
 	}
 	*exp = rve;
-	__gdtoa_Bfree(bb);
-	__gdtoa_Bfree(bd);
-	__gdtoa_Bfree(bs);
-	__gdtoa_Bfree(bd0);
-	__gdtoa_Bfree(delta);
+	__gdtoa_Bfree(bb, &TI);
+	__gdtoa_Bfree(bd, &TI);
+	__gdtoa_Bfree(bs, &TI);
+	__gdtoa_Bfree(bd0, &TI);
+	__gdtoa_Bfree(delta, &TI);
 	if (rve > fpi->emax) {
 	huge:
-		__gdtoa_Bfree(rvb);
+		__gdtoa_Bfree(rvb, &TI);
 		rvb = 0;
 		errno = ERANGE;
 		switch(fpi->rounding & 3) {
@@ -904,7 +905,7 @@ ret:
 		irv |= STRTOG_Neg;
 	if (rvb) {
 		__gdtoa_copybits(bits, nbits, rvb);
-		__gdtoa_Bfree(rvb);
+		__gdtoa_Bfree(rvb, &TI);
 	}
 	return irv;
 }

@@ -51,6 +51,7 @@ TEST(pthread_mutex_lock, normal) {
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_init(&lock, 0));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
@@ -65,6 +66,7 @@ TEST(pthread_mutex_lock, recursive) {
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
@@ -72,7 +74,6 @@ TEST(pthread_mutex_lock, recursive) {
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
-  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
 }
 
 TEST(pthread_mutex_lock, errorcheck) {
@@ -81,13 +82,13 @@ TEST(pthread_mutex_lock, errorcheck) {
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
+  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
-  ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
 }
 
 int count;
@@ -107,6 +108,11 @@ int MutexWorker(void *p) {
 
 TEST(pthread_mutex_lock, contention) {
   int i;
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutex_init(&lock, &attr);
+  pthread_mutexattr_destroy(&attr);
   count = 0;
   for (i = 0; i < THREADS; ++i) {
     clone(MutexWorker,
@@ -125,6 +131,63 @@ TEST(pthread_mutex_lock, contention) {
   for (i = 0; i < THREADS; ++i) {
     munmap(stack[i], GetStackSize());
   }
+  pthread_mutex_destroy(&lock);
+}
+
+TEST(pthread_mutex_lock, rcontention) {
+  int i;
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&lock, &attr);
+  pthread_mutexattr_destroy(&attr);
+  count = 0;
+  for (i = 0; i < THREADS; ++i) {
+    clone(MutexWorker,
+          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                           MAP_STACK | MAP_ANONYMOUS, -1, 0)),
+          GetStackSize(),
+          CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+              CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+          0, 0, __initialize_tls(tls[i]), sizeof(tls[i]),
+          (int *)(tls[i] + 0x38));
+  }
+  for (i = 0; i < THREADS; ++i) {
+    _wait0((int *)(tls[i] + 0x38));
+  }
+  ASSERT_EQ(THREADS * ITERATIONS, count);
+  for (i = 0; i < THREADS; ++i) {
+    munmap(stack[i], GetStackSize());
+  }
+  pthread_mutex_destroy(&lock);
+}
+
+TEST(pthread_mutex_lock, econtention) {
+  int i;
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+  pthread_mutex_init(&lock, &attr);
+  pthread_mutexattr_destroy(&attr);
+  count = 0;
+  for (i = 0; i < THREADS; ++i) {
+    clone(MutexWorker,
+          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                           MAP_STACK | MAP_ANONYMOUS, -1, 0)),
+          GetStackSize(),
+          CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+              CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+          0, 0, __initialize_tls(tls[i]), sizeof(tls[i]),
+          (int *)(tls[i] + 0x38));
+  }
+  for (i = 0; i < THREADS; ++i) {
+    _wait0((int *)(tls[i] + 0x38));
+  }
+  ASSERT_EQ(THREADS * ITERATIONS, count);
+  for (i = 0; i < THREADS; ++i) {
+    munmap(stack[i], GetStackSize());
+  }
+  pthread_mutex_destroy(&lock);
 }
 
 int SpinlockWorker(void *p) {
@@ -165,14 +228,8 @@ TEST(_spinlock, contention) {
 BENCH(pthread_mutex_lock, bench) {
   char schar = 0;
   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-  EZBENCH2("pthread_mutex_lock", donothing,
-           (pthread_mutex_lock(&lock), pthread_mutex_unlock(&lock)));
-  EZBENCH2("__fds_lock", donothing, (__fds_lock(), __fds_unlock()));
-  EZBENCH2("_spinlock", donothing, (_spinlock(&schar), _spunlock(&schar)));
-  EZBENCH2("_spinlock_tiny", donothing,
-           (_spinlock_tiny(&schar), _spunlock(&schar)));
-  EZBENCH2("_spinlock_coop", donothing,
-           (_spinlock_cooperative(&schar), _spunlock(&schar)));
-  EZBENCH2("content mut", donothing, pthread_mutex_lock_contention());
-  EZBENCH2("content spin", donothing, _spinlock_contention());
+  EZBENCH2("_spinlock", donothing, _spinlock_contention());
+  EZBENCH2("normal", donothing, pthread_mutex_lock_contention());
+  EZBENCH2("recursive", donothing, pthread_mutex_lock_rcontention());
+  EZBENCH2("errorcheck", donothing, pthread_mutex_lock_econtention());
 }

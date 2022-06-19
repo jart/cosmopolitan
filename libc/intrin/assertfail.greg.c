@@ -18,34 +18,44 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/intrin/cmpxchg.h"
+#include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchg.h"
-#include "libc/log/log.h"
+#include "libc/intrin/lockcmpxchgp.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/log/internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 
 /**
  * Handles failure of assert() macro.
  */
 relegated wontreturn void __assert_fail(const char *expr, const char *file,
                                         int line) {
-  int rc;
-  static bool noreentry;
+  int me, owner;
+  static int sync;
   --__strace;
   --__ftrace;
-  kprintf("%s:%d: assert(%s) failed\n", file, line, expr);
-  if (_lockcmpxchg(&noreentry, false, true)) {
-    if (weaken(__die)) {
-      weaken(__die)();
+  owner = 0;
+  me = gettid();
+  kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
+  if (_lockcmpxchgp(&sync, &owner, me)) {
+    __restore_tty();
+    if (weaken(ShowBacktrace)) {
+      weaken(ShowBacktrace)(2, __builtin_frame_address(0));
+    } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+      weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
+                                         weaken(GetSymbolTable)());
     } else {
-      kprintf("can't backtrace b/c `__die` not linked\n");
+      kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
     }
-    rc = 23;
+    __restorewintty();
+    _Exit(23);
+  } else if (owner == me) {
+    kprintf("assert failed while failing\n");
+    __restorewintty();
+    _Exit(24);
   } else {
-    rc = 24;
+    _Exit1(25);
   }
-  __restorewintty();
-  _Exit(rc);
 }

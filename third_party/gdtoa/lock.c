@@ -20,6 +20,7 @@
 #include "third_party/gdtoa/lock.h"
 
 static pthread_mutex_t __gdtoa_lock_obj;
+static pthread_mutex_t __gdtoa_lock1_obj;
 
 int(__gdtoa_lock)(void) {
   return pthread_mutex_lock(&__gdtoa_lock_obj);
@@ -27,4 +28,12 @@ int(__gdtoa_lock)(void) {
 
 int(__gdtoa_unlock)(void) {
   return pthread_mutex_unlock(&__gdtoa_lock_obj);
+}
+
+int(__gdtoa_lock1)(void) {
+  return pthread_mutex_lock(&__gdtoa_lock1_obj);
+}
+
+int(__gdtoa_unlock1)(void) {
+  return pthread_mutex_unlock(&__gdtoa_lock1_obj);
 }

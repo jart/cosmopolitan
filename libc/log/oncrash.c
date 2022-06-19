@@ -26,6 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
@@ -262,15 +263,22 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  * simply print addresses which may be cross-referenced using objdump.
  *
  * This function never returns, except for traps w/ human supervision.
+ *
+ * @threadsafe
+ * @vforksafe
  */
 relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   intptr_t rip;
+  int me, owner;
   int gdbpid, err;
-  static bool noreentry, notpossible;
+  static int sync;
+  static bool notpossible;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   --__ftrace;
   --__strace;
-  if (_lockcmpxchg(&noreentry, false, true)) {
+  owner = 0;
+  me = gettid();
+  if (_lockcmpxchgp(&sync, &owner, me)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
       err = errno;
@@ -292,20 +300,30 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
         __restorewintty();
         _Exit(128 + sig);
       }
+      sync = 0;
     } else {
+      sync = 0;
       __minicrash(sig, si, ctx, "WHILE VFORKED");
     }
   } else if (sig == SIGTRAP) {
-    /* chances are IsDebuggerPresent() confused strace w/ gdb */
+    // chances are IsDebuggerPresent() confused strace w/ gdb
     goto ItsATrap;
-  } else if (_lockcmpxchg(&notpossible, false, true)) {
-    __minicrash(sig, si, ctx, "WHILE CRASHING");
-  } else {
-    for (;;) {
-      asm("ud2");
+  } else if (owner == me) {
+    // we crashed while generating a crash report
+    if (_lockcmpxchg(&notpossible, false, true)) {
+      __minicrash(sig, si, ctx, "WHILE CRASHING");
+    } else {
+      // somehow __minicrash() crashed not possible
+      for (;;) {
+        asm("ud2");
+      }
     }
+  } else {
+    // multiple threads have crashed
+    // kill current thread assuming process dies soon
+    // TODO(jart): It'd be nice to report on all threads.
+    _Exit1(8);
   }
-  noreentry = false;
 ItsATrap:
   ++__strace;
   ++__ftrace;

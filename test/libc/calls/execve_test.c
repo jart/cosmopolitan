@@ -56,7 +56,7 @@ void SetUp(void) {
   ASSERT_SYS(0, 0, mkdir("tmp", 0755));
   ASSERT_SYS(0, 0, mkdir("bin", 0755));
   Extract("/zip/tiny64.elf", "bin/tiny64.elf", 0755);
-  Extract("/zip/pylife.com", "bin/pylife.com", 0755);
+  // Extract("/zip/pylife.com", "bin/pylife.com", 0755);
   Extract("/zip/life-nomod.com", "bin/life-nomod.com", 0755);
   Extract("/zip/life-classic.com", "bin/life-classic.com", 0755);
   setenv("TMPDIR", "tmp", true);
@@ -190,6 +190,7 @@ TEST(execve, vfork_apeClassic) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#if 0  // not worth depending on THIRD_PARTY_PYTHON for this test
 
 TEST(execve, system_apeNoMod3mb) {
   if (IsWindows()) return;  // todo(jart): wut
@@ -229,6 +230,7 @@ TEST(execve, vfork_apeNoMod3mb) {
   }
 }
 
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 void SystemElf(void) {

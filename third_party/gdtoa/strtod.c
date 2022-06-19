@@ -45,7 +45,7 @@ static const double tiny__gdtoa_tens[] = {
 };
 
 static double
-s__gdtoa_ulp(U *x, int scale)
+__gdtoa_sulp(U *x, int scale)
 {
 	U u;
 	int i;
@@ -61,6 +61,7 @@ s__gdtoa_ulp(U *x, int scale)
 double
 strtod(const char *s00, char **se)
 {
+	ThInfo *TI = 0;
 	int scale;
 	int bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, decpt, dsign,
 		e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
@@ -107,7 +108,7 @@ break2:
 			{
 				FPI fpi1 = fpi;
 				fpi1.rounding = Rounding;
-				switch((i = __gdtoa_gethex(&s, &fpi1, &exp, &bb, sign)) & STRTOG_Retmask) {
+				switch((i = __gdtoa_gethex(&s, &fpi1, &exp, &bb, sign, &TI)) & STRTOG_Retmask) {
 				case STRTOG_NoNumber:
 					s = s00;
 					sign = 0;
@@ -116,7 +117,7 @@ break2:
 				default:
 					if (bb) {
 						__gdtoa_copybits(bits, fpi.nbits, bb);
-						__gdtoa_Bfree(bb);
+						__gdtoa_Bfree(bb, &TI);
 					}
 					__gdtoa_ULtod(((U*)&rv)->L, bits, exp, i);
 				}}
@@ -328,11 +329,11 @@ dig_done:
 				}
 			range_err:
 				if (bd0) {
-					__gdtoa_Bfree(bb);
-					__gdtoa_Bfree(bd);
-					__gdtoa_Bfree(bs);
-					__gdtoa_Bfree(bd0);
-					__gdtoa_Bfree(delta);
+					__gdtoa_Bfree(bb, &TI);
+					__gdtoa_Bfree(bd, &TI);
+					__gdtoa_Bfree(bs, &TI);
+					__gdtoa_Bfree(bd0, &TI);
+					__gdtoa_Bfree(delta, &TI);
 				}
 				errno = ERANGE;
 				goto ret;
@@ -393,12 +394,12 @@ dig_done:
 	}
 	/* Now the hard part -- adjusting rv to the correct value.*/
 	/* Put digits into bd: true value = bd * 10^e */
-	bd0 = __gdtoa_s2b(s0, nd0, nd, y, dplen);
+	bd0 = __gdtoa_s2b(s0, nd0, nd, y, dplen, &TI);
 	for(;;) {
-		bd = __gdtoa_Balloc(bd0->k);
+		bd = __gdtoa_Balloc(bd0->k, &TI);
 		Bcopy(bd, bd0);
-		bb = __gdtoa_d2b(dval(&rv), &bbe, &bbbits);	/* rv = bb * 2^bbe */
-		bs = __gdtoa_i2b(1);
+		bb = __gdtoa_d2b(dval(&rv), &bbe, &bbbits, &TI);	/* rv = bb * 2^bbe */
+		bs = __gdtoa_i2b(1, &TI);
 		if (e >= 0) {
 			bb2 = bb5 = 0;
 			bd2 = bd5 = e;
@@ -439,20 +440,20 @@ dig_done:
 			bs2 -= i;
 		}
 		if (bb5 > 0) {
-			bs = __gdtoa_pow5mult(bs, bb5);
-			bb1 = __gdtoa_mult(bs, bb);
-			__gdtoa_Bfree(bb);
+			bs = __gdtoa_pow5mult(bs, bb5, &TI);
+			bb1 = __gdtoa_mult(bs, bb, &TI);
+			__gdtoa_Bfree(bb, &TI);
 			bb = bb1;
 		}
 		if (bb2 > 0)
-			bb = __gdtoa_lshift(bb, bb2);
+			bb = __gdtoa_lshift(bb, bb2, &TI);
 		if (bd5 > 0)
-			bd = __gdtoa_pow5mult(bd, bd5);
+			bd = __gdtoa_pow5mult(bd, bd5, &TI);
 		if (bd2 > 0)
-			bd = __gdtoa_lshift(bd, bd2);
+			bd = __gdtoa_lshift(bd, bd2, &TI);
 		if (bs2 > 0)
-			bs = __gdtoa_lshift(bs, bs2);
-		delta = __gdtoa_diff(bb, bd);
+			bs = __gdtoa_lshift(bs, bs2, &TI);
+		delta = __gdtoa_diff(bb, bd, &TI);
 		dsign = delta->sign;
 		delta->sign = 0;
 		i = __gdtoa_cmp(delta, bs);
@@ -476,7 +477,7 @@ dig_done:
 						y = word0(&rv) & Exp_mask;
 						if (!scale || y > 2*P*Exp_msk1)
 						{
-							delta = __gdtoa_lshift(delta,Log2P);
+							delta = __gdtoa_lshift(delta,Log2P,&TI);
 							if (__gdtoa_cmp(delta, bs) <= 0)
 								dval(&adj) = -0.5;
 						}
@@ -525,7 +526,7 @@ dig_done:
 				/* exact result */
 				break;
 			}
-			delta = __gdtoa_lshift(delta,Log2P);
+			delta = __gdtoa_lshift(delta,Log2P,&TI);
 			if (__gdtoa_cmp(delta, bs) > 0)
 				goto drop_down;
 			break;
@@ -575,9 +576,9 @@ dig_done:
 			else if (!(word1(&rv) & Lsb))
 				break;
 			if (dsign)
-				dval(&rv) += s__gdtoa_ulp(&rv, scale);
+				dval(&rv) += __gdtoa_sulp(&rv, scale);
 			else {
-				dval(&rv) -= s__gdtoa_ulp(&rv, scale);
+				dval(&rv) -= __gdtoa_sulp(&rv, scale);
 				if (!dval(&rv))
 					goto undfl;
 			}
@@ -661,16 +662,16 @@ dig_done:
 					break;
 			}
 	cont:
-		__gdtoa_Bfree(bb);
-		__gdtoa_Bfree(bd);
-		__gdtoa_Bfree(bs);
-		__gdtoa_Bfree(delta);
+		__gdtoa_Bfree(bb, &TI);
+		__gdtoa_Bfree(bd, &TI);
+		__gdtoa_Bfree(bs, &TI);
+		__gdtoa_Bfree(delta, &TI);
 	}
-	__gdtoa_Bfree(bb);
-	__gdtoa_Bfree(bd);
-	__gdtoa_Bfree(bs);
-	__gdtoa_Bfree(bd0);
-	__gdtoa_Bfree(delta);
+	__gdtoa_Bfree(bb, &TI);
+	__gdtoa_Bfree(bd, &TI);
+	__gdtoa_Bfree(bs, &TI);
+	__gdtoa_Bfree(bd0, &TI);
+	__gdtoa_Bfree(delta, &TI);
 	if (scale) {
 		word0(&rv0) = Exp_1 - 2*P*Exp_msk1;
 		word1(&rv0) = 0;

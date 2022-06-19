@@ -22,7 +22,7 @@
 STATIC_YOINK("_init__mmi");
 
 struct MemoryIntervals _mmi;
-static pthread_mutex_t __mmi_lock_obj;
+pthread_mutex_t __mmi_lock_obj;  // recursive :'(
 
 void(__mmi_lock)(void) {
   pthread_mutex_lock(&__mmi_lock_obj);

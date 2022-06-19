@@ -17,14 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
-#include "libc/str/str.h"
 
 /**
  * Initializes mutex attr.
  * @return 0 on success, or error number on failure
  */
-int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
-  bzero(attr, sizeof(*attr));
+int(pthread_mutexattr_init)(pthread_mutexattr_t *attr) {
   attr->attr = PTHREAD_MUTEX_DEFAULT;
   return 0;
 }

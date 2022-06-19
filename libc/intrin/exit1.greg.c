@@ -31,7 +31,6 @@
  * @noreturn
  */
 privileged wontreturn void _Exit1(int rc) {
-  jmp_buf *jb;
   struct WinThread *wt;
   STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {

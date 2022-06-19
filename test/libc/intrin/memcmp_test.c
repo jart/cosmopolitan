@@ -91,6 +91,7 @@ TEST(memcmp, fuzz) {
 int buncmp(const void *, const void *, size_t) asm("bcmp");
 int funcmp(const void *, const void *, size_t) asm("memcmp");
 
+#if 0
 BENCH(bcmp, bench) {
   volatile int v;
   const char *volatile a;
@@ -135,7 +136,9 @@ BENCH(bcmp, bench) {
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("bcmp", 131072, v = buncmp(a, b, 131072));
 }
+#endif
 
+#if 0
 BENCH(memcmp, bench) {
   volatile int v;
   const char *volatile a;
@@ -180,7 +183,9 @@ BENCH(memcmp, bench) {
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("memcmp", 131072, v = funcmp(a, b, 131072));
 }
+#endif
 
+#if 0
 BENCH(timingsafe_memcmp, bench) {
   volatile int v;
   const char *volatile a;
@@ -225,7 +230,9 @@ BENCH(timingsafe_memcmp, bench) {
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("timingsafe_memcmp", 131072, v = timingsafe_memcmp(a, b, 131072));
 }
+#endif
 
+#if 0
 BENCH(timingsafe_bcmp, bench) {
   volatile int v;
   const char *volatile a;
@@ -270,7 +277,9 @@ BENCH(timingsafe_bcmp, bench) {
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("timingsafe_bcmp", 131072, v = timingsafe_bcmp(a, b, 131072));
 }
+#endif
 
+#if 0
 BENCH(memcasecmp, bench) {
   volatile int v;
   const char *volatile a;
@@ -315,7 +324,9 @@ BENCH(memcasecmp, bench) {
   memcpy(b, a, 128 * 1024);
   EZBENCH_N("memcasecmp", 131072, v = memcasecmp(a, b, 131072));
 }
+#endif
 
+#if 0
 BENCH(timingsafe_memcmp, demonstration) {
   int bcmp_(const void *, const void *, size_t) asm("bcmp");
   int memcmp_(const void *, const void *, size_t) asm("memcmp");
@@ -339,3 +350,4 @@ BENCH(timingsafe_memcmp, demonstration) {
   a[0] = b[0];
   EZBENCH_N("timingsafe_memcmp eq", 256, timingsafe_memcmp(a, b, 256));
 }
+#endif

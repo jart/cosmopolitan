@@ -1,5 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
 #define COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § spinlocks                                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
@@ -11,7 +13,7 @@
 #define _spinlock(lock) _spinlock_cooperative(lock)
 #endif
 
-#define _spunlock(lock) __atomic_store_n(lock, 0, __ATOMIC_RELAXED)
+#define _spunlock(lock) (__atomic_store_n(lock, 0, __ATOMIC_RELAXED), 0)
 
 #define _seizelock(lock, value)                     \
   ({                                                \
@@ -69,6 +71,8 @@
 
 #define _trylock(lock) __atomic_test_and_set(lock, __ATOMIC_SEQ_CST)
 
-void _spinlock_yield(void);
+int _spinlock_yield(void);
 
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_ */

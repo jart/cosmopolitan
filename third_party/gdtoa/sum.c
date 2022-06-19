@@ -33,7 +33,7 @@
 /* clang-format off */
 
 Bigint *
-__gdtoa_sum(Bigint *a, Bigint *b)
+__gdtoa_sum(Bigint *a, Bigint *b, ThInfo **PTI)
 {
 	Bigint *c;
 	ULong carry, *xc, *xa, *xb, *xe, y;
@@ -41,7 +41,7 @@ __gdtoa_sum(Bigint *a, Bigint *b)
 	if (a->wds < b->wds) {
 		c = b; b = a; a = c;
 	}
-	c = __gdtoa_Balloc(a->k);
+	c = __gdtoa_Balloc(a->k, PTI);
 	c->wds = a->wds;
 	carry = 0;
 	xa = a->x;
@@ -66,9 +66,9 @@ __gdtoa_sum(Bigint *a, Bigint *b)
 	}
 	if (carry) {
 		if (c->wds == c->maxwds) {
-			b = __gdtoa_Balloc(c->k + 1);
+			b = __gdtoa_Balloc(c->k + 1, PTI);
 			Bcopy(b, c);
-			__gdtoa_Bfree(c);
+			__gdtoa_Bfree(c, PTI);
 			c = b;
 		}
 		c->x[c->wds++] = 1;

@@ -21,41 +21,68 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
 
+static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int tries) {
+  volatile int i;
+  if (tries < 7) {
+    for (i = 0; i != 1 << tries; i++) {
+    }
+    tries++;
+  } else if (IsLinux()) {
+    atomic_fetch_add(&mutex->waits, 1);
+    LinuxFutexWait(&mutex->lock, 1, 0);
+    atomic_fetch_sub(&mutex->waits, 1);
+  } else {
+    sched_yield();
+  }
+  return tries;
+}
+
 /**
  * Locks mutex.
+ *
+ *     _spinlock()         l:   181,570c    58,646ns
+ *     mutex normal        l:   297,965c    96,241ns
+ *     mutex recursive     l: 1,112,166c   359,223ns
+ *     mutex errorcheck    l: 1,449,723c   468,252ns
+ *
  * @return 0 on success, or error number on failure
  */
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  volatile int i;
+int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   int me, owner, tries;
-  for (tries = 0, me = gettid();;) {
-    owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
-    if (!owner && atomic_compare_exchange_weak_explicit(
-                      &mutex->lock, &owner, me, memory_order_acquire,
-                      memory_order_relaxed)) {
-      break;
-    } else if (owner == me) {
-      if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
-        break;
-      } else {
-        return EDEADLK;
+  switch (mutex->attr) {
+    case PTHREAD_MUTEX_NORMAL:
+      for (tries = 0;;) {
+        if (!atomic_load_explicit(&mutex->lock, memory_order_relaxed) &&
+            !atomic_exchange_explicit(&mutex->lock, 1, memory_order_acquire)) {
+          break;
+        }
+        tries = pthread_mutex_lock_spin(mutex, tries);
       }
-    }
-    if (tries < 7) {
-      for (i = 0; i != 1 << tries; i++) {
+      return 0;
+    case PTHREAD_MUTEX_RECURSIVE:
+    case PTHREAD_MUTEX_ERRORCHECK:
+      for (tries = 0, me = gettid();;) {
+        owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+        if (!owner && atomic_compare_exchange_weak_explicit(
+                          &mutex->lock, &owner, me, memory_order_acquire,
+                          memory_order_relaxed)) {
+          break;
+        } else if (owner == me) {
+          if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
+            break;
+          } else {
+            return EDEADLK;
+          }
+        }
+        tries = pthread_mutex_lock_spin(mutex, tries);
       }
-      tries++;
-    } else if (IsLinux()) {
-      atomic_fetch_add(&mutex->waits, 1);
-      LinuxFutexWait(&mutex->lock, owner, 0);
-      atomic_fetch_sub(&mutex->waits, 1);
-    } else {
-      sched_yield();
-    }
+      ++mutex->reent;
+      return 0;
+    default:
+      return EINVAL;
   }
-  ++mutex->reent;
-  return 0;
 }

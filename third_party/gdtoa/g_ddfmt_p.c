@@ -45,6 +45,7 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 	int bx, by, decpt, ex, ey, i, j, mode;
 	Bigint *x, *y, *z;
 	U *dd, ddx[2];
+	ThInfo *TI = 0;
 	if (bufsize < 10 || bufsize < (size_t)(ndig + 8))
 		return 0;
 	dd = (U*)dd0;
@@ -105,31 +106,31 @@ g_ddfmt_p(char *buf, double *dd0, int ndig, size_t bufsize, int nik)
 		dd = ddx;
 		L = dd->L;
 	}
-	z = __gdtoa_d2b(dval(&dd[0]), &ex, &bx);
+	z = __gdtoa_d2b(dval(&dd[0]), &ex, &bx, &TI);
 	if (dval(&dd[1]) == 0.)
 		goto no_y;
 	x = z;
-	y = __gdtoa_d2b(dval(&dd[1]), &ey, &by);
+	y = __gdtoa_d2b(dval(&dd[1]), &ey, &by, &TI);
 	if ( (i = ex - ey) !=0) {
 		if (i > 0) {
-			x = __gdtoa_lshift(x, i);
+			x = __gdtoa_lshift(x, i, &TI);
 			ex = ey;
 		}
 		else
-			y = __gdtoa_lshift(y, -i);
+			y = __gdtoa_lshift(y, -i, &TI);
 	}
 	if ((L[1] ^ L[2+1]) & 0x80000000L) {
-		z = __gdtoa_diff(x, y);
+		z = __gdtoa_diff(x, y, &TI);
 		if (L[1] & 0x80000000L)
 			z->sign = 1 - z->sign;
 	}
 	else {
-		z = __gdtoa_sum(x, y);
+		z = __gdtoa_sum(x, y, &TI);
 		if (L[1] & 0x80000000L)
 			z->sign = 1;
 	}
-	__gdtoa_Bfree(x);
-	__gdtoa_Bfree(y);
+	__gdtoa_Bfree(x, &TI);
+	__gdtoa_Bfree(y, &TI);
 no_y:
 	bits = zx = z->x;
 	for(i = 0; !*zx; zx++)
@@ -153,7 +154,7 @@ no_y:
 	mode = 2;
 	if (ndig <= 0) {
 		if (bufsize < (size_t)(fpi.nbits * .301029995664) + 10) {
-			__gdtoa_Bfree(z);
+			__gdtoa_Bfree(z, &TI);
 			return 0;
 		}
 		mode = 0;
@@ -166,6 +167,6 @@ no_y:
 	i = STRTOG_Normal;
 	s = gdtoa(&fpi, ex, bits, &i, mode, ndig, &decpt, &se);
 	b = __gdtoa_g__fmt(buf, s, se, decpt, z->sign, bufsize);
-	__gdtoa_Bfree(z);
+	__gdtoa_Bfree(z, &TI);
 	return b;
 }

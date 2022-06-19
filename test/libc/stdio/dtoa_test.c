@@ -30,7 +30,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-#define THREADS 16
+#define THREADS 32
 
 #define DUB(i) (union Dub){i}.x
 
@@ -61,10 +61,6 @@ int Worker(void *p) {
 }
 
 TEST(dtoa, test) {
-  if (IsNetbsd()) {
-    // TODO(jart): Why does this flake on NetBSD?!
-    return;
-  }
   int i;
   for (i = 0; i < THREADS; ++i) {
     clone(Worker,

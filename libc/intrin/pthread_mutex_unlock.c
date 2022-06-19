@@ -18,28 +18,34 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
-#include "libc/linux/futex.h"
-#include "libc/nexgen32e/threaded.h"
 
 /**
  * Releases mutex.
  * @return 0 on success or error number on failure
  * @raises EPERM if in error check mode and not owned by caller
  */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  int owner;
-  if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK && mutex->lock != gettid()) {
-    return EPERM;
+int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
+  int me, owner;
+  switch (mutex->attr) {
+    case PTHREAD_MUTEX_ERRORCHECK:
+      me = gettid();
+      owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+      if (owner != me) return EPERM;
+      // fallthrough
+    case PTHREAD_MUTEX_RECURSIVE:
+      if (--mutex->reent) return 0;
+      // fallthrough
+    case PTHREAD_MUTEX_NORMAL:
+      atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
+      if (IsLinux() &&
+          atomic_load_explicit(&mutex->waits, memory_order_relaxed)) {
+        _pthread_mutex_wake(mutex);
+      }
+      return 0;
+    default:
+      return EINVAL;
   }
-  if (!--mutex->reent) {
-    atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
-    if (IsLinux() &&
-        atomic_load_explicit(&mutex->waits, memory_order_acquire)) {
-      LinuxFutexWake(&mutex->lock, 1);
-    }
-  }
-  return 0;
 }

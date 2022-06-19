@@ -224,6 +224,7 @@ THIRD_PARTY_LUA_LUA_DIRECTDEPS =					\
 	LIBC_INTRIN							\
 	LIBC_NEXGEN32E							\
 	LIBC_STDIO							\
+	LIBC_LOG							\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	THIRD_PARTY_LINENOISE						\

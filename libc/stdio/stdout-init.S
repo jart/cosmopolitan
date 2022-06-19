@@ -25,11 +25,11 @@
 	.init.start 400,_init_stdout
 	ezlea	__stdout,ax
 	push	STDOUT_FILENO
-	pop	12(%rax)			#→ f.fd
+	pop	0x0c(%rax)				#→ f.fd
 	mov	O_WRONLY,%edx
-	mov	%edx,4(%rax)			#→ f.iomode
+	mov	%edx,4(%rax)				#→ f.iomode
 	ezlea	__stdout_buf,cx
-	mov	%rcx,24(%rax)			#→ f.buf
-	movl	$BUFSIZ,32(%rax)		#→ f.size
+	mov	%rcx,0x18(%rax)				#→ f.buf
+	movl	$BUFSIZ,0x20(%rax)			#→ f.size
 	mov	%rax,stdout(%rip)
 	.init.end 400,_init_stdout,globl,hidden

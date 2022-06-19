@@ -355,16 +355,15 @@ static wontreturn void NetbsdThreadMain(void *arg, int (*func)(void *arg),
 static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                        void *arg, void *tls, size_t tlssz, int *ctid) {
   // NetBSD has its own clone() and it works, but it's technically a
-  // second-class API, intended to help Linux folks migrate to this!
-  // We put it on the thread's stack, to avoid locking this function
-  // so its stack doesn't scope. The ucontext struct needs 784 bytes
+  // second-class API, intended to help Linux folks migrate to this.
   bool failed;
   int ax, *tid;
   intptr_t dx, sp;
   static bool once;
   static int broken;
-  struct ucontext_netbsd ctx;
+  struct ucontext_netbsd *ctx;
   static struct ucontext_netbsd netbsd_clone_template;
+  _Static_assert(sizeof(struct ucontext_netbsd) == 784, "fix assembly");
 
   // memoize arbitrary valid processor state structure
   if (!once) {
@@ -382,35 +381,48 @@ static int CloneNetbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
     return -1;
   }
   sp = (intptr_t)(stk + stksz);
+
+  // allocate memory for child tid
   sp -= sizeof(int);
   sp = sp & -alignof(int);
   tid = (int *)sp;
+
+  // align the stack
   sp = sp & -16;
+
+  // simulate call to misalign stack and ensure backtrace looks good
   sp -= 8;
+  *(intptr_t *)sp = (intptr_t)CloneNetbsd + 1;
+
+  // place the giant 784 byte ucontext structure in the red zone!
+  // it only has to live long enough for the thread to come alive
+  ctx = (struct ucontext_netbsd *)((sp - sizeof(struct ucontext_netbsd)) &
+                                   -alignof(struct ucontext_netbsd));
+
   // pass parameters in process state
-  memcpy(&ctx, &netbsd_clone_template, sizeof(ctx));
-  ctx.uc_link = 0;
-  ctx.uc_mcontext.rbp = 0;
-  ctx.uc_mcontext.rsp = sp;
-  ctx.uc_mcontext.rip = (intptr_t)NetbsdThreadMain;
-  ctx.uc_mcontext.rdi = (intptr_t)arg;
-  ctx.uc_mcontext.rsi = (intptr_t)func;
-  ctx.uc_mcontext.rdx = (intptr_t)tid;
-  ctx.uc_mcontext.rcx = (intptr_t)(flags & CLONE_CHILD_SETTID ? ctid : tid);
-  ctx.uc_mcontext.r8 = (intptr_t)(flags & CLONE_CHILD_CLEARTID ? ctid : tid);
-  ctx.uc_flags |= _UC_STACK;
-  ctx.uc_stack.ss_sp = stk;
-  ctx.uc_stack.ss_size = stksz;
-  ctx.uc_stack.ss_flags = 0;
+  memcpy(ctx, &netbsd_clone_template, sizeof(*ctx));
+  ctx->uc_link = 0;
+  ctx->uc_mcontext.rbp = 0;
+  ctx->uc_mcontext.rsp = sp;
+  ctx->uc_mcontext.rip = (intptr_t)NetbsdThreadMain;
+  ctx->uc_mcontext.rdi = (intptr_t)arg;
+  ctx->uc_mcontext.rsi = (intptr_t)func;
+  ctx->uc_mcontext.rdx = (intptr_t)tid;
+  ctx->uc_mcontext.rcx = (intptr_t)(flags & CLONE_CHILD_SETTID ? ctid : tid);
+  ctx->uc_mcontext.r8 = (intptr_t)(flags & CLONE_CHILD_CLEARTID ? ctid : tid);
+  ctx->uc_flags |= _UC_STACK;
+  ctx->uc_stack.ss_sp = stk;
+  ctx->uc_stack.ss_size = stksz;
+  ctx->uc_stack.ss_flags = 0;
   if (flags & CLONE_SETTLS) {
-    ctx.uc_flags |= _UC_TLSBASE;
-    ctx.uc_mcontext._mc_tlsbase = (intptr_t)tls;
+    ctx->uc_flags |= _UC_TLSBASE;
+    ctx->uc_mcontext._mc_tlsbase = (intptr_t)tls;
   }
 
   // perform the system call
   asm volatile(CFLAG_ASM("syscall")
                : CFLAG_CONSTRAINT(failed), "=a"(ax), "=d"(dx)
-               : "1"(__NR__lwp_create), "D"(&ctx), "S"(LWP_DETACHED), "2"(tid)
+               : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(tid)
                : "rcx", "r11", "memory");
   if (!failed) {
     return *tid;

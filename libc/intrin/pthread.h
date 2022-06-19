@@ -1,18 +1,20 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
+#include "libc/bits/atomic.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/intrin/kprintf.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
+#include "libc/dce.h"
 
 #define PTHREAD_ONCE_INIT 0
 
 #define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_NORMAL
-#define PTHREAD_MUTEX_RECURSIVE  0
-#define PTHREAD_MUTEX_NORMAL     1
+#define PTHREAD_MUTEX_NORMAL     0
+#define PTHREAD_MUTEX_RECURSIVE  1
 #define PTHREAD_MUTEX_ERRORCHECK 2
 #define PTHREAD_MUTEX_STALLED    0
 #define PTHREAD_MUTEX_ROBUST     1
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 /* clang-format off */
 #define PTHREAD_MUTEX_INITIALIZER {PTHREAD_MUTEX_DEFAULT}
@@ -66,8 +68,8 @@ typedef struct {
   } __u;
 } pthread_rwlock_t;
 
-wontreturn void pthread_exit(void *);
-pureconst pthread_t pthread_self(void);
+void pthread_exit(void *) wontreturn;
+pthread_t pthread_self(void) pureconst;
 int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);
 int pthread_yield(void);
@@ -103,6 +105,30 @@ int pthread_rwlock_wrlock(pthread_rwlock_t *);
 int pthread_rwlock_trywrlock(pthread_rwlock_t *);
 int pthread_rwlock_timedwrlock(pthread_rwlock_t *, const struct timespec *);
 int pthread_rwlock_unlock(pthread_rwlock_t *);
+
+#define pthread_mutexattr_init(pAttr)           ((pAttr)->attr = PTHREAD_MUTEX_DEFAULT, 0)
+#define pthread_mutexattr_destroy(pAttr)        ((pAttr)->attr = 0)
+#define pthread_mutexattr_gettype(pAttr, pType) (*(pType) = (pAttr)->attr, 0)
+#define pthread_mutexattr_settype(pAttr, type)  ((pAttr)->attr = type, 0)
+
+#ifdef __GNUC__
+#define pthread_mutex_lock(mutex)                                  \
+  (((mutex)->attr == PTHREAD_MUTEX_NORMAL &&                       \
+    !atomic_load_explicit(&(mutex)->lock, memory_order_relaxed) && \
+    !atomic_exchange(&(mutex)->lock, 1))                           \
+       ? 0                                                         \
+       : pthread_mutex_lock(mutex))
+#define pthread_mutex_unlock(mutex)                                       \
+  ((mutex)->attr == PTHREAD_MUTEX_NORMAL                                  \
+       ? (atomic_store_explicit(&(mutex)->lock, 0, memory_order_relaxed), \
+          (IsLinux() &&                                                   \
+           atomic_load_explicit(&(mutex)->waits, memory_order_relaxed) && \
+           _pthread_mutex_wake(mutex)),                                   \
+          0)                                                              \
+       : pthread_mutex_unlock(mutex))
+#endif
+
+int _pthread_mutex_wake(pthread_mutex_t *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
