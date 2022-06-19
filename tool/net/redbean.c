@@ -5176,10 +5176,11 @@ static const luaL_Reg kLuaFuncs[] = {
 };
 
 static const luaL_Reg kLuaLibs[] = {
-    {"re", LuaRe},                   //
-    {"maxmind", LuaMaxmind},         //
-    {"lsqlite3", luaopen_lsqlite3},  //
     {"argon2", luaopen_argon2},      //
+    {"lsqlite3", luaopen_lsqlite3},  //
+    {"maxmind", LuaMaxmind},         //
+    {"re", LuaRe},                   //
+    {"unix", LuaUnix},               //
 };
 
 static void LuaSetArgv(lua_State *L) {
