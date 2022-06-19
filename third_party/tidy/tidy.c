@@ -2590,6 +2590,5 @@ int main( int argc, char** argv )
  * mode: c
  * indent-tabs-mode: nil
  * c-basic-offset: 4
- * eval: (c-set-offset 'substatement-open 0)
  * end:
  */

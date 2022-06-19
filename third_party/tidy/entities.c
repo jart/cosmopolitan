@@ -2192,6 +2192,5 @@ ctmbstr TY_(EntityName)( uint ch, uint versions )
  * mode: c
  * indent-tabs-mode: nil
  * c-basic-offset: 4
- * eval: (c-set-offset 'substatement-open 0)
  * end:
  */

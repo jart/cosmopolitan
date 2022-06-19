@@ -125,6 +125,5 @@ TidyAllocator TY_(g_default_allocator) = {
  * mode: c
  * indent-tabs-mode: nil
  * c-basic-offset: 4
- * eval: (c-set-offset 'substatement-open 0)
  * end:
  */

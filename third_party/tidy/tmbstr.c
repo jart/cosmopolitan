@@ -284,6 +284,5 @@ void TY_(strrep)(tmbstr buffer, ctmbstr str, ctmbstr rep)
  * mode: c
  * indent-tabs-mode: nil
  * c-basic-offset: 4
- * eval: (c-set-offset 'substatement-open 0)
  * end:
  */

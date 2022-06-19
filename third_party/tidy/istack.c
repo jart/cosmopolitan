@@ -373,6 +373,5 @@ Bool TY_(InlineDup1)( TidyDocImpl* doc, Node* node, Node* element )
  * mode: c
  * indent-tabs-mode: nil
  * c-basic-offset: 4
- * eval: (c-set-offset 'substatement-open 0)
  * end:
  */
