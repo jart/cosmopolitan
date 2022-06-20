@@ -19,6 +19,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: support ape bins
+        run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+
       - name: make everything
         run: make -j8
+
 
