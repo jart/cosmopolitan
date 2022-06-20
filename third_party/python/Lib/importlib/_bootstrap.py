@@ -1087,8 +1087,8 @@ def _install(sys_module, _imp_module):
     _setup(sys_module, _imp_module)
 
     sys.meta_path.append(_imp_module.CosmoImporter)
-    sys.meta_path.append(BuiltinImporter)
-    sys.meta_path.append(FrozenImporter)
+    # sys.meta_path.append(BuiltinImporter)
+    # sys.meta_path.append(FrozenImporter)
 
     global _bootstrap_external
     import _frozen_importlib_external
