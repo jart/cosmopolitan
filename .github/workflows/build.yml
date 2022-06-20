@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "issues-431-gh-actions" ]
   pull_request:
     branches: [ "master" ]
 
