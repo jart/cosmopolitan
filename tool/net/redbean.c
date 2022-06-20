@@ -833,11 +833,11 @@ static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
   char *p;
   const char *s;
   p = buf;
-  p = FormatUint64(p, (addr & 0xFF000000) >> 030), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x00FF0000) >> 020), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x0000FF00) >> 010), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x000000FF) >> 000), *p++ = ':';
-  p = FormatUint64(p, port);
+  p = FormatUint32(p, (addr & 0xFF000000) >> 030), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x00FF0000) >> 020), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x0000FF00) >> 010), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x000000FF) >> 000), *p++ = ':';
+  p = FormatUint32(p, port);
   *p = '\0';
   assert(p - buf < 40);
 }

@@ -164,9 +164,7 @@ struct ElfWriter *elfwriter_open(const char *path, int mode) {
   struct ElfWriter *elf;
   CHECK_NOTNULL((elf = calloc(1, sizeof(struct ElfWriter))));
   CHECK_NOTNULL((elf->path = strdup(path)));
-  CHECK_NE(-1, asprintf(&elf->tmppath, "%s.%d", elf->path, getpid()));
-  CHECK_NE(-1, (elf->fd = open(elf->tmppath,
-                               O_CREAT | O_TRUNC | O_RDWR | O_EXCL, mode)));
+  CHECK_NE(-1, (elf->fd = open(elf->path, O_CREAT | O_TRUNC | O_RDWR, mode)));
   CHECK_NE(-1, ftruncate(elf->fd, (elf->mapsize = FRAMESIZE)));
   CHECK_NE(MAP_FAILED, (elf->map = mmap((void *)(intptr_t)kFixedmapStart,
                                         elf->mapsize, PROT_READ | PROT_WRITE,
@@ -187,7 +185,6 @@ void elfwriter_close(struct ElfWriter *elf) {
   CHECK_NE(-1, munmap(elf->map, elf->mapsize));
   CHECK_NE(-1, ftruncate(elf->fd, elf->wrote));
   CHECK_NE(-1, close(elf->fd));
-  CHECK_NE(-1, rename(elf->tmppath, elf->path));
   freeinterner(elf->shstrtab);
   freeinterner(elf->strtab);
   free(elf->shdrs->p);

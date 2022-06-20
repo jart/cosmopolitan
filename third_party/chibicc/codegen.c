@@ -262,6 +262,20 @@ static char *reg_ax(int sz) {
   UNREACHABLE();
 }
 
+static char *reg_r8(int sz) {
+  switch (sz) {
+    case 1:
+      return "%r8b";
+    case 2:
+      return "%r8w";
+    case 4:
+      return "%r8d";
+    case 8:
+      return "%r8";
+  }
+  UNREACHABLE();
+}
+
 static char *reg_di(int sz) {
   switch (sz) {
     case 1:
@@ -272,6 +286,20 @@ static char *reg_di(int sz) {
       return "%edi";
     case 8:
       return "%rdi";
+  }
+  UNREACHABLE();
+}
+
+static char *reg_si(int sz) {
+  switch (sz) {
+    case 1:
+      return "%sil";
+    case 2:
+      return "%si";
+    case 4:
+      return "%esi";
+    case 8:
+      return "%rsi";
   }
   UNREACHABLE();
 }
@@ -1136,6 +1164,21 @@ static void HandleOverflow(const char *ax) {
   emitlin("\tmovzbl\t%al,%eax");
 }
 
+static void HandleAtomicArithmetic(Node *node, const char *op) {
+  gen_expr(node->lhs);
+  push();
+  gen_expr(node->rhs);
+  pop("%r9");
+  println("\tmov\t%s,%s", reg_ax(node->ty->size), reg_si(node->ty->size));
+  println("\tmov\t(%%r9),%s", reg_ax(node->ty->size));
+  println("1:\tmov\t%s,%s", reg_ax(node->ty->size), reg_dx(node->ty->size));
+  println("\tmov\t%s,%s", reg_ax(node->ty->size), reg_di(node->ty->size));
+  println("\t%s\t%s,%s", op, reg_si(node->ty->size), reg_dx(node->ty->size));
+  println("\tlock cmpxchg\t%s,(%%r9)", reg_dx(node->ty->size));
+  println("\tjnz\t1b");
+  println("\tmov\t%s,%s", reg_di(node->ty->size), reg_ax(node->ty->size));
+}
+
 // Generate code for a given node.
 void gen_expr(Node *node) {
   char fbuf[32];
@@ -1520,7 +1563,7 @@ void gen_expr(Node *node) {
         println("\tmov\t$%s,%%eax", node->unique_label);
       }
       return;
-    case ND_CAS: {
+    case ND_CAS:
       gen_expr(node->cas_addr);
       push();
       gen_expr(node->cas_new);
@@ -1531,14 +1574,11 @@ void gen_expr(Node *node) {
       pop("%rdx");  // new
       pop("%rdi");  // addr
       println("\tlock cmpxchg %s,(%%rdi)", reg_dx(node->ty->size));
-      emitlin("\tsete\t%cl");
-      emitlin("\tje\t1f");
       println("\tmov\t%s,(%%r8)", reg_ax(node->ty->size));
-      emitlin("1:");
-      emitlin("\tmovzbl\t%cl,%eax");
+      emitlin("\tsetz\t%al");
+      emitlin("\tmovzbl\t%al,%eax");
       return;
-    }
-    case ND_EXCH:
+    case ND_EXCH_N:
     case ND_TESTANDSET: {
       gen_expr(node->lhs);
       push();
@@ -1564,6 +1604,11 @@ void gen_expr(Node *node) {
       println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
     }
+    case ND_LOAD_N: {
+      gen_expr(node->lhs);
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      return;
+    }
     case ND_STORE: {
       gen_expr(node->lhs);
       push();
@@ -1576,7 +1621,17 @@ void gen_expr(Node *node) {
       }
       return;
     }
-    case ND_CLEAR: {
+    case ND_STORE_N:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
+      return;
+    case ND_CLEAR:
       gen_expr(node->lhs);
       println("\tmov\t%%rax,%%rdi");
       println("\txor\t%%eax,%%eax");
@@ -1585,16 +1640,31 @@ void gen_expr(Node *node) {
         println("\tmfence");
       }
       return;
-    }
-    case ND_FETCHADD: {
+    case ND_FETCHADD:
       gen_expr(node->lhs);
       push();
       gen_expr(node->rhs);
       pop("%rdi");
       println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
-    }
-    case ND_SUBFETCH: {
+    case ND_FETCHSUB:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tneg\t%s", reg_ax(node->ty->size));
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    case ND_FETCHXOR:
+      HandleAtomicArithmetic(node, "xor");
+      return;
+    case ND_FETCHAND:
+      HandleAtomicArithmetic(node, "and");
+      return;
+    case ND_FETCHOR:
+      HandleAtomicArithmetic(node, "or");
+      return;
+    case ND_SUBFETCH:
       gen_expr(node->lhs);
       push();
       gen_expr(node->rhs);
@@ -1605,15 +1675,13 @@ void gen_expr(Node *node) {
       pop("%rdi");
       println("\tsub\t%s,%s", reg_di(node->ty->size), reg_ax(node->ty->size));
       return;
-    }
-    case ND_RELEASE: {
+    case ND_RELEASE:
       gen_expr(node->lhs);
       push();
       pop("%rdi");
       println("\txor\t%%eax,%%eax");
       println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
-    }
     case ND_FPCLASSIFY:
       gen_fpclassify(node->fpc);
       return;

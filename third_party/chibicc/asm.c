@@ -232,7 +232,9 @@ static int PickAsmOperandType(Asm *a, AsmOperand *op) {
     op->type &= ~kAsmImm;
     if (!IsLvalue(op)) error_tok(op->tok, "lvalue required");
   }
-  if ((op->type & kAsmImm) && is_const_expr(op->node)) {
+  if ((op->type & kAsmImm) && (is_const_expr(op->node) ||
+                               // TODO(jart): confirm this is what we want
+                               op->node->ty->kind == TY_FUNC)) {
     op->val = eval2(op->node, &op->label);
     return kAsmImm;
   }
@@ -277,13 +279,13 @@ static Token *ParseAsmOperands(Asm *a, Token *tok) {
   return tok;
 }
 
-static void CouldNotAllocateRegister(AsmOperand *op) {
-  error_tok(op->tok, "could not allocate register");
+static void CouldNotAllocateRegister(AsmOperand *op, const char *kind) {
+  error_tok(op->tok, "could not allocate %s register", kind);
 }
 
 static void PickAsmRegisters(Asm *a) {
-  int i, j, m, regset, xmmset, x87sts;
-  regset = 0b0000111111000111;  // exclude bx,sp,bp,r12-r15
+  int i, j, m, pick, regset, xmmset, x87sts;
+  regset = 0b1111111111000111;  // exclude bx,sp,bp
   xmmset = 0b1111111111111111;
   x87sts = 0b0000000011111111;
   regset ^= regset & a->regclob;  // don't allocate from clobber list
@@ -296,20 +298,22 @@ static void PickAsmRegisters(Asm *a) {
         case kAsmReg:
           if (!(m = a->ops[i].regmask)) break;
           if (popcnt(m) != j) break;
-          if (!(m &= regset)) CouldNotAllocateRegister(&a->ops[i]);
-          regset &= ~(1 << (a->ops[i].reg = bsf(m)));
+          if (!(m &= regset)) CouldNotAllocateRegister(&a->ops[i], "rm");
+          pick = 1 << (a->ops[i].reg = bsf(m));
+          if (pick & PRECIOUS) a->regclob |= pick;
+          regset &= ~pick;
           a->ops[i].regmask = 0;
           break;
         case kAsmXmm:
           if (!(m = a->ops[i].regmask)) break;
-          if (!(m &= xmmset)) CouldNotAllocateRegister(&a->ops[i]);
+          if (!(m &= xmmset)) CouldNotAllocateRegister(&a->ops[i], "xmm");
           xmmset &= ~(1 << (a->ops[i].reg = bsf(m)));
           a->ops[i].regmask = 0;
           break;
         case kAsmFpu:
           if (!(m = a->ops[i].x87mask)) break;
           if (popcnt(m) != j) break;
-          if (!(m &= x87sts)) CouldNotAllocateRegister(&a->ops[i]);
+          if (!(m &= x87sts)) CouldNotAllocateRegister(&a->ops[i], "fpu");
           x87sts &= ~(1 << (a->ops[i].reg = bsf(m)));
           a->ops[i].x87mask = 0;
           break;

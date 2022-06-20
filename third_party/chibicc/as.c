@@ -2356,6 +2356,14 @@ static void OnTest(struct As *a, struct Slice s) {
   }
 }
 
+static void OnCmpxchg(struct As *a, struct Slice s) {
+  int reg, modrm, disp;
+  reg = GetRegisterReg(a);
+  ConsumeComma(a);
+  modrm = ParseModrm(a, &disp);
+  EmitRexOpModrm(a, 0x0FB0, reg, modrm, disp, 1);
+}
+
 static void OnImul(struct As *a, struct Slice s) {
   int reg, modrm, imm, disp;
   if (IsPunct(a, a->i, '$')) {
@@ -3074,6 +3082,7 @@ static void OnSeto(struct As *a, struct Slice s) { OpSetcc(a, 0); }
 static void OnSetp(struct As *a, struct Slice s) { OpSetcc(a, 10); }
 static void OnSets(struct As *a, struct Slice s) { OpSetcc(a, 8); }
 static void OnSetz(struct As *a, struct Slice s) { OpSetcc(a, 4); }
+static void OnSfence(struct As *a, struct Slice s) { EmitVarword(a, 0x0faef8); }
 static void OnShl(struct As *a, struct Slice s) { OpBsu(a, s, 4); }
 static void OnShr(struct As *a, struct Slice s) { OpBsu(a, s, 5); }
 static void OnShufpd(struct As *a, struct Slice s) { OpSseIb(a, 0x660FC6); }
@@ -3094,6 +3103,7 @@ static void OnSubpd(struct As *a, struct Slice s) { OpSse(a, 0x660F5C); }
 static void OnSubps(struct As *a, struct Slice s) { OpSse(a, 0x0F5C); }
 static void OnSubsd(struct As *a, struct Slice s) { OpSse(a, 0xF20F5C); }
 static void OnSubss(struct As *a, struct Slice s) { OpSse(a, 0xF30F5C); }
+static void OnSyscall(struct As *a, struct Slice s) { EmitVarword(a, 0x0F05); }
 static void OnUcomisd(struct As *a, struct Slice s) { OpSse(a, 0x660F2E); }
 static void OnUcomiss(struct As *a, struct Slice s) { OpSse(a, 0x0F2E); }
 static void OnUd2(struct As *a, struct Slice s) { EmitVarword(a, 0x0F0B); }
@@ -3229,6 +3239,7 @@ static const struct Directive8 {
     {"cmpsd", OnCmpsd},        //
     {"cmpss", OnCmpss},        //
     {"cmpw", OnCmp},           //
+    {"cmpxchg", OnCmpxchg},    //
     {"comisd", OnComisd},      //
     {"comiss", OnComiss},      //
     {"cqo", OnCqto},           //
@@ -3604,6 +3615,7 @@ static const struct Directive8 {
     {"setpo", OnSetnp},        //
     {"sets", OnSets},          //
     {"setz", OnSetz},          //
+    {"sfence", OnSfence},      //
     {"shl", OnShl},            //
     {"shlb", OnShl},           //
     {"shld", OnShld},          //
@@ -3638,6 +3650,7 @@ static const struct Directive8 {
     {"subsd", OnSubsd},        //
     {"subss", OnSubss},        //
     {"subw", OnSub},           //
+    {"syscall", OnSyscall},    //
     {"test", OnTest},          //
     {"testb", OnTest},         //
     {"testl", OnTest},         //

@@ -1,16 +1,16 @@
 #ifndef COSMOPOLITAN_LIBC_LINUX_FUTEX_H_
 #define COSMOPOLITAN_LIBC_LINUX_FUTEX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
 #include "libc/calls/struct/timespec.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 forceinline int LinuxFutexWait(void *addr, int expect,
                                struct timespec *timeout) {
   int ax;
-  register void *r10 asm("r10") = timeout;
-  asm volatile("syscall"
+  asm volatile("mov\t%5,%%r10\n\t"
+               "syscall"
                : "=a"(ax)
-               : "0"(202), "D"(addr), "S"(0), "d"(expect), "r"(r10)
-               : "rcx", "r11", "memory");
+               : "0"(202), "D"(addr), "S"(0), "d"(expect), "g"(timeout)
+               : "rcx", "r10", "r11", "memory");
   return ax;
 }
 

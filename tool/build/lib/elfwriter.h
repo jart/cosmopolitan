@@ -34,7 +34,6 @@ struct ElfWriterRela {
 
 struct ElfWriter {
   char *path;
-  char *tmppath;
   int fd;
   void *map;
   size_t mapsize;
