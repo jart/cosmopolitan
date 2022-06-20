@@ -9,16 +9,35 @@ HidePath('/usr/share/ssl/')
 -- LaunchBrowser('/tool/net/demo/index.html')
 
 -- sql database (see sql.lua)
-db = sqlite3.open_memory()
-db:exec[[
-  CREATE TABLE test (
-    id INTEGER PRIMARY KEY,
-    content TEXT
-  );
-  INSERT INTO test (content) VALUES ('Hello World');
-  INSERT INTO test (content) VALUES ('Hello Lua');
-  INSERT INTO test (content) VALUES ('Hello Sqlite3');
-]]
+function StoreSqlite(database, path)
+   local buffer = database:serialize()
+   return StoreAsset(path, buffer)
+end
+
+function LoadSqlite(path)
+   local database = sqlite3.open_memory()
+   local buffer = LoadAsset(path)
+   database:deserialize(buffer)
+   return database
+end
+
+database = "database.sqlite3"
+-- Check if there is already a database
+if GetAssetSize(database) ~= nil then
+   db = LoadSqlite(database)
+   db:exec[[
+      INSERT INTO test (content) VALUES ('World');
+   ]]
+else
+   db = sqlite3.open_memory()
+   db:exec[[
+      CREATE TABLE test (
+         id INTEGER PRIMARY KEY,
+         content TEXT
+      );
+      INSERT INTO test (content) VALUES ('Hello');
+   ]]
+end
 
 -- this intercepts all requests if it's defined
 function OnHttpRequest()
@@ -33,6 +52,11 @@ function OnHttpRequest()
       Route() -- this asks redbean to do the default thing
    end
    SetHeader('Server', 'redbean!')
+end
+
+function OnServerStop()
+   -- make sure we store the database on exit
+   StoreSqlite(db, database)
 end
 
 function Adder(x, y)
