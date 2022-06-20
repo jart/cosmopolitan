@@ -23,7 +23,10 @@ jobs:
       - name: support ape bins
         run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
 
+      - name: temporary, log cpu count for make -j
+        run: lscpu
+
       - name: make everything
-        run: make -j8
+        run: make --silent -j16
 
 
