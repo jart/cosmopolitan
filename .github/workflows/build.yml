@@ -23,10 +23,8 @@ jobs:
       - name: support ape bins
         run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
 
-      - name: temporary, log cpu count for make -j
-        run: lscpu
-
+        # gh-action runners have 2 cpus with 1 thread each
       - name: make everything
-        run: make --silent -j2
+        run: make -j2
 
 
