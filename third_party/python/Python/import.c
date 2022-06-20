@@ -97,13 +97,6 @@ typedef struct {
   union {
     struct _inittab *tab;
     struct _frozen *frz;
-    struct {
-      int inside_zip; /* if true, this module is in ZIP store */
-      int is_package; /* if true, this module is loaded via __init__.pyc */
-      /* these are single-bit values, so we can have some more
-       * caching-related values here to avoid syscalls
-       */
-    };
   };
 } initentry;
 
@@ -114,33 +107,6 @@ typedef struct {
 
 static Lookup Builtins_Lookup = {.n = 0, .entries = NULL};
 static Lookup Frozens_Lookup = {.n = 0, .entries = NULL};
-static initentry ZipEntries[] = {
-        /* the below imports are attempted during startup */
-        {"_bootlocale", {.inside_zip = 1, .is_package = 0}},
-        {"_collections_abc", {.inside_zip = 1, .is_package = 0}},
-        {"_sitebuiltins", {.inside_zip = 1, .is_package = 0}},
-        {"_weakrefset", {.inside_zip = 1, .is_package = 0}},
-        {"abc", {.inside_zip = 1, .is_package = 0}},
-        {"codecs", {.inside_zip = 1, .is_package = 0}},
-        {"encodings", {.inside_zip = 1, .is_package = 1}},
-        {"encodings.aliases", {.inside_zip = 1, .is_package = 0}},
-        {"encodings.latin_1", {.inside_zip = 1, .is_package = 0}},
-        {"encodings.utf_8", {.inside_zip = 1, .is_package = 0}},
-        {"genericpath", {.inside_zip = 1, .is_package = 0}},
-        {"io", {.inside_zip = 1, .is_package = 0}},
-        {"ntpath", {.inside_zip = 1, .is_package = 0}},
-        {"os", {.inside_zip = 1, .is_package = 0}},
-        {"posixpath", {.inside_zip = 1, .is_package = 0}},
-        {"readline", {.inside_zip = 0, .is_package = 0}},
-        {"site", {.inside_zip = 1, .is_package = 0}},
-        {"sitecustomize", {.inside_zip = 0, .is_package = 0}},
-        {"stat", {.inside_zip = 1, .is_package = 0}},
-        {"usercustomize", {.inside_zip = 0, .is_package = 0}},
-};
-static Lookup ZipCdir_Lookup = {
-    .n = ARRAYLEN(ZipEntries),
-    .entries = ZipEntries,
-};
 
 static int cmp_initentry(const void *_x, const void *_y) {
     const initentry *x = _x;
@@ -182,7 +148,6 @@ void _PyImportLookupTables_Init(void) {
         }
         qsort(Frozens_Lookup.entries, Frozens_Lookup.n, sizeof(initentry), cmp_initentry);
     }
-    qsort(ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
 }
 
 void _PyImportLookupTables_Cleanup(void) {
@@ -2770,8 +2735,6 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
   int is_package = 0;
   int is_available = 0;
 
-  initentry key;
-  initentry *res;
   struct stat stinfo;
 
   if (!_PyArg_ParseStackAndKeywords(args, nargs, kwargs, &_parser, &fullname,
@@ -2804,16 +2767,6 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
    * of cname that we know for sure won't be there,
    * because worst case is two failed stat calls here
    */
-  key.name = cname;
-  key.tab = NULL;
-  res = bsearch(&key, ZipCdir_Lookup.entries, ZipCdir_Lookup.n, sizeof(initentry), cmp_initentry);
-  if (res) {
-      if (!res->inside_zip) {
-          Py_RETURN_NONE;
-      }
-      inside_zip = res->inside_zip;
-      is_package = res->is_package;
-  }
 
   newpathsize = sizeof(basepath) + cnamelen + sizeof("/__init__.pyc") + 1;
   newpath = _gc(malloc(newpathsize));
@@ -2836,10 +2789,10 @@ static PyObject *CosmoImporter_find_spec(PyObject *cls, PyObject **args,
   if (is_package || !is_available) {
     memccpy(newpath + sizeof(basepath) + cnamelen - 1, "/__init__.pyc", '\0',
             newpathsize);
+    is_available = is_available || !stat(newpath, &stinfo);
     is_package = 1;
   }
 
-  is_available = is_available || !stat(newpath, &stinfo);
   if (is_available) {
     newpathlen = strlen(newpath);
     loader = SFLObject_new(NULL, NULL, NULL);
