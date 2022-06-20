@@ -27,6 +27,6 @@ jobs:
         run: lscpu
 
       - name: make everything
-        run: make --silent -j16
+        run: make --silent -j2
 
 
