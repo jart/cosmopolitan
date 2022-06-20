@@ -139,7 +139,7 @@ STATIC_YOINK("zip_uri_support");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020003
+#define VERSION          0x020004
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
