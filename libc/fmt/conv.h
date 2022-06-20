@@ -50,14 +50,18 @@ int64_t TimeValToWindowsTime(struct timeval) libcesque nosideeffect;
 struct timeval WindowsDurationToTimeVal(int64_t) libcesque nosideeffect;
 struct timespec WindowsDurationToTimeSpec(int64_t) libcesque nosideeffect;
 
-static inline struct NtFileTime MakeFileTime(int64_t x) {
-  return (struct NtFileTime){(uint32_t)x, (uint32_t)(x >> 32)};
-}
+#define MakeFileTime(x)                                        \
+  ({                                                           \
+    int64_t __x = x;                                           \
+    (struct NtFileTime){(uint32_t)__x, (uint32_t)(__x >> 32)}; \
+  })
 
-static inline int64_t ReadFileTime(struct NtFileTime t) {
-  uint64_t x = t.dwHighDateTime;
-  return x << 32 | t.dwLowDateTime;
-}
+#define ReadFileTime(t)                     \
+  ({                                        \
+    struct NtFileTime __t = t;              \
+    uint64_t x = __t.dwHighDateTime;        \
+    (int64_t)(x << 32 | __t.dwLowDateTime); \
+  })
 
 #define FileTimeToTimeSpec(x) WindowsTimeToTimeSpec(ReadFileTime(x))
 #define FileTimeToTimeVal(x)  WindowsTimeToTimeVal(ReadFileTime(x))

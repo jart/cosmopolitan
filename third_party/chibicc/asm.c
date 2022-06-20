@@ -285,7 +285,7 @@ static void CouldNotAllocateRegister(AsmOperand *op, const char *kind) {
 
 static void PickAsmRegisters(Asm *a) {
   int i, j, m, pick, regset, xmmset, x87sts;
-  regset = 0b1111111111000111;  // exclude bx,sp,bp
+  regset = 0b1111111111001111;  // exclude bx,sp,bp
   xmmset = 0b1111111111111111;
   x87sts = 0b0000000011111111;
   regset ^= regset & a->regclob;  // don't allocate from clobber list

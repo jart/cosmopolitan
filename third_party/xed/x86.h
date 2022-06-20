@@ -202,31 +202,33 @@ struct XedDecodedInst {
   struct XedOperands op;
 };
 
-forceinline void xed_operands_set_mode(struct XedOperands *p, int mmode) {
-  p->realmode = false;
-  switch (mmode) {
-    default:
-    case XED_MACHINE_MODE_LONG_64:
-      p->mode = XED_MODE_LONG;
-      return;
-    case XED_MACHINE_MODE_LEGACY_32:
-    case XED_MACHINE_MODE_LONG_COMPAT_32:
-      p->mode = XED_MODE_LEGACY;
-      break;
-    case XED_MACHINE_MODE_REAL:
-      p->realmode = true;
-      p->mode = XED_MODE_REAL;
-      break;
-    case XED_MACHINE_MODE_UNREAL:
-      p->realmode = true;
-      p->mode = XED_MODE_LEGACY;
-      break;
-    case XED_MACHINE_MODE_LEGACY_16:
-    case XED_MACHINE_MODE_LONG_COMPAT_16:
-      p->mode = XED_MODE_REAL;
-      break;
-  }
-}
+#define xed_operands_set_mode(p, machine_mode) \
+  do {                                         \
+    struct XedOperands *__p = p;               \
+    __p->realmode = false;                     \
+    switch (machine_mode) {                    \
+      default:                                 \
+      case XED_MACHINE_MODE_LONG_64:           \
+        __p->mode = XED_MODE_LONG;             \
+        break;                                 \
+      case XED_MACHINE_MODE_LEGACY_32:         \
+      case XED_MACHINE_MODE_LONG_COMPAT_32:    \
+        __p->mode = XED_MODE_LEGACY;           \
+        break;                                 \
+      case XED_MACHINE_MODE_REAL:              \
+        __p->realmode = true;                  \
+        __p->mode = XED_MODE_REAL;             \
+        break;                                 \
+      case XED_MACHINE_MODE_UNREAL:            \
+        __p->realmode = true;                  \
+        __p->mode = XED_MODE_LEGACY;           \
+        break;                                 \
+      case XED_MACHINE_MODE_LEGACY_16:         \
+      case XED_MACHINE_MODE_LONG_COMPAT_16:    \
+        __p->mode = XED_MODE_REAL;             \
+        break;                                 \
+    }                                          \
+  } while (0)
 
 extern const char kXedErrorNames[];
 extern const uint8_t kXedEamode[2][3];

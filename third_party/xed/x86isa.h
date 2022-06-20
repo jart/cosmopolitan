@@ -211,42 +211,44 @@ struct XedChipFeatures {
   uint64_t f[3];
 };
 
-forceinline void xed_set_chip_modes(struct XedDecodedInst *d, int chip) {
-  switch (chip) {
-    case XED_CHIP_INVALID:
-      break;
-    case XED_CHIP_I86:
-    case XED_CHIP_I86FP:
-    case XED_CHIP_I186:
-    case XED_CHIP_I186FP:
-    case XED_CHIP_I286REAL:
-    case XED_CHIP_I286:
-    case XED_CHIP_I2186FP:
-    case XED_CHIP_I386REAL:
-    case XED_CHIP_I386:
-    case XED_CHIP_I386FP:
-    case XED_CHIP_I486REAL:
-    case XED_CHIP_I486:
-    case XED_CHIP_QUARK:
-    case XED_CHIP_PENTIUM:
-    case XED_CHIP_PENTIUMREAL:
-    case XED_CHIP_PENTIUMMMX:
-    case XED_CHIP_PENTIUMMMXREAL:
-      d->op.mode_first_prefix = 1;
-      break;
-    default:
-      break;
-  }
-  switch (chip) {
-    case XED_CHIP_INVALID:
-    case XED_CHIP_ALL:
-    case XED_CHIP_AMD:
-      break;
-    default:
-      d->op.is_intel_specific = 1;
-      break;
-  }
-}
+#define xed_set_chip_modes(d, chip)    \
+  do {                                 \
+    struct XedDecodedInst *__d = d;    \
+    switch (chip) {                    \
+      case XED_CHIP_INVALID:           \
+        break;                         \
+      case XED_CHIP_I86:               \
+      case XED_CHIP_I86FP:             \
+      case XED_CHIP_I186:              \
+      case XED_CHIP_I186FP:            \
+      case XED_CHIP_I286REAL:          \
+      case XED_CHIP_I286:              \
+      case XED_CHIP_I2186FP:           \
+      case XED_CHIP_I386REAL:          \
+      case XED_CHIP_I386:              \
+      case XED_CHIP_I386FP:            \
+      case XED_CHIP_I486REAL:          \
+      case XED_CHIP_I486:              \
+      case XED_CHIP_QUARK:             \
+      case XED_CHIP_PENTIUM:           \
+      case XED_CHIP_PENTIUMREAL:       \
+      case XED_CHIP_PENTIUMMMX:        \
+      case XED_CHIP_PENTIUMMMXREAL:    \
+        __d->op.mode_first_prefix = 1; \
+        break;                         \
+      default:                         \
+        break;                         \
+    }                                  \
+    switch (chip) {                    \
+      case XED_CHIP_INVALID:           \
+      case XED_CHIP_ALL:               \
+      case XED_CHIP_AMD:               \
+        break;                         \
+      default:                         \
+        __d->op.is_intel_specific = 1; \
+        break;                         \
+    }                                  \
+  } while (0)
 
 extern const uint64_t kXedChipFeatures[XED_CHIP_LAST][3];
 
