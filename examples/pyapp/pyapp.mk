@@ -96,7 +96,7 @@ o/$(MODE)/examples/pyapp/pyapp.com.dbg: \
 		o/$(MODE)/examples/pyapp/pyapp.o \
 		$(CRT) \
 		$(APE_NO_MODIFY_SELF)
-	$(LINK) $(LINKARGS) -o $@
+	@$(COMPILE) -ALINK.ape $(LINK) $(LINKARGS) -o $@
 
 # # Unwrap the APE .COM binary, that's embedded within the linked file
 # # NOTE: This line can be commented out, since it's in build/rules.mk
