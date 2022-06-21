@@ -1179,7 +1179,6 @@ int main(int argc, char *argv[]) {
       } else {
         appendd(&output, command, n);
       }
-      appendw(&output, '\n');
     } else {
       n = 0;
       if (verbose >= 3) {

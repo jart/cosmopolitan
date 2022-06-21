@@ -25,6 +25,6 @@ jobs:
 
         # gh-action runners have 2 cpus with 1 thread each
       - name: make everything
-        run: make -j2
+        run: V=0 make -j2
 
 
