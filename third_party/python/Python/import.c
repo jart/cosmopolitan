@@ -2214,17 +2214,24 @@ static PyObject *_imp_write_atomic(PyObject *module, PyObject **args,
   Py_buffer data = {NULL, NULL};
   uint32_t mode = 0666;
   int fd;
+  int failure = 0;
   if (!_PyArg_ParseStack(args, nargs, "s#y*|I:_write_atomic", &path, &n, &data,
                          &mode))
-    return 0;
+    goto end;
   mode &= 0666;
-  if ((fd = open(path, O_EXCL | O_CREAT | O_WRONLY, mode)) == -1 ||
-      write(fd, data.buf, data.len) == -1) {
-    PyErr_Format(PyExc_OSError, "");
-    if (data.obj) PyBuffer_Release(&data);
-    return 0;
+  if ((fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, mode)) == -1) {
+    failure = 1;
+    PyErr_Format(PyExc_OSError, "failed to create file: %s\n", path);
+    goto end;
   }
+  if (write(fd, data.buf, data.len) == -1) {
+    failure = 1;
+    PyErr_Format(PyExc_OSError, "failed to write to file: %s\n", path);
+    goto end;
+  }
+end:
   if (data.obj) PyBuffer_Release(&data);
+  if (failure) return 0;
   Py_RETURN_NONE;
 }
 PyDoc_STRVAR(_imp_write_atomic_doc, "atomic write to a file");
