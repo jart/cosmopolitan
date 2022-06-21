@@ -95,8 +95,8 @@ module _imp
 typedef struct {
   const char *name;
   union {
-    struct _inittab *tab;
-    struct _frozen *frz;
+    const struct _inittab *tab;
+    const struct _frozen *frz;
   };
 } initentry;
 
@@ -1183,36 +1183,34 @@ _imp_create_builtin(PyObject *module, PyObject *spec)
     if (res != NULL) {
         p = res->tab;
         PyModuleDef *def;
-        if (_PyUnicode_EqualToASCIIString(name, p->name)) {
-            if (p->initfunc == NULL) {
-                /* Cannot re-init internal module ("sys" or "builtins") */
-                mod = PyImport_AddModule(namestr);
-                Py_DECREF(name);
-                return mod;
-            }
-            mod = (*p->initfunc)();
-            if (mod == NULL) {
+        if (p->initfunc == NULL) {
+            /* Cannot re-init internal module ("sys" or "builtins") */
+            mod = PyImport_AddModule(namestr);
+            Py_DECREF(name);
+            return mod;
+        }
+        mod = (*p->initfunc)();
+        if (mod == NULL) {
+            Py_DECREF(name);
+            return NULL;
+        }
+        if (PyObject_TypeCheck(mod, &PyModuleDef_Type)) {
+            Py_DECREF(name);
+            return PyModule_FromDefAndSpec((PyModuleDef*)mod, spec);
+        } else {
+            /* Remember pointer to module init function. */
+            def = PyModule_GetDef(mod);
+            if (def == NULL) {
                 Py_DECREF(name);
                 return NULL;
             }
-            if (PyObject_TypeCheck(mod, &PyModuleDef_Type)) {
+            def->m_base.m_init = p->initfunc;
+            if (_PyImport_FixupExtensionObject(mod, name, name) < 0) {
                 Py_DECREF(name);
-                return PyModule_FromDefAndSpec((PyModuleDef*)mod, spec);
-            } else {
-                /* Remember pointer to module init function. */
-                def = PyModule_GetDef(mod);
-                if (def == NULL) {
-                    Py_DECREF(name);
-                    return NULL;
-                }
-                def->m_base.m_init = p->initfunc;
-                if (_PyImport_FixupExtensionObject(mod, name, name) < 0) {
-                    Py_DECREF(name);
-                    return NULL;
-                }
-                Py_DECREF(name);
-                return mod;
+                return NULL;
             }
+            Py_DECREF(name);
+            return mod;
         }
     }
     Py_DECREF(name);
