@@ -73,7 +73,7 @@ o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.in
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
-# o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
+o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
 o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
