@@ -1349,7 +1349,7 @@ def _get_supported_file_loaders():
     # extensions = ExtensionFileLoader, _imp.extension_suffixes()
     source = SourceFileLoader, SOURCE_SUFFIXES
     bytecode = SourcelessFileLoader, BYTECODE_SUFFIXES
-    return [bytecode, source] #, extensions]
+    return [source, bytecode] #, extensions]
 
 def _setup(_bootstrap_module):
     """Setup the path-based importers for importlib by importing needed
