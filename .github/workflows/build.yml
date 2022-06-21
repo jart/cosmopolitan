@@ -27,4 +27,6 @@ jobs:
       - name: make everything
         run: V=0 make -j2
 
+      - name: printargs.com
+        run: ./o/examples/printargs.com
 
