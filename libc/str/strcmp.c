@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/str/str.h"
 
 static inline noasan uint64_t UncheckedAlignedRead64(const char *p) {
@@ -39,7 +40,7 @@ int strcmp(const char *a, const char *b) {
   uint64_t v, w, d;
   if (a == b) return 0;
   if ((c = (*a & 255) - (*b & 255))) return c;
-  if (((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
+  if (!IsTiny() && ((uintptr_t)a & 7) == ((uintptr_t)b & 7)) {
     for (; (uintptr_t)(a + i) & 7; ++i) {
       if (a[i] != b[i] || !b[i]) {
         return (a[i] & 255) - (b[i] & 255);
