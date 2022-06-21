@@ -2610,9 +2610,9 @@ o/$(MODE)/third_party/python/Lib/test/test_pyexpat.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pyexpat $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_ioctl.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_ioctl $(PYTESTARGS)
+#o/$(MODE)/third_party/python/Lib/test/test_ioctl.py.runs: \
+#		o/$(MODE)/third_party/python/pythontester.com
+#	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_ioctl $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_getopt.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
