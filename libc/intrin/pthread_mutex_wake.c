@@ -16,11 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/dce.h"
+#include "libc/bits/asmflag.h"
 #include "libc/intrin/pthread.h"
-#include "libc/linux/futex.h"
+#include "libc/sysv/consts/futex.h"
+#include "libc/sysv/consts/nr.h"
+
+static inline int FutexWake(void *addr, int count) {
+  int ax;
+  bool cf;
+  asm volatile(CFLAG_ASM("clc\n\t"
+                         "syscall")
+               : CFLAG_CONSTRAINT(cf), "=a"(ax)
+               : "1"(__NR_futex), "D"(addr), "S"(FUTEX_WAKE), "d"(count)
+               : "rcx", "r11", "memory");
+  if (cf) ax = -ax;
+  return ax;
+}
 
 int _pthread_mutex_wake(pthread_mutex_t *mutex) {
-  return LinuxFutexWake(&mutex->lock, 1);
+  return FutexWake(&mutex->lock, 1);
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/asmflag.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -24,16 +25,41 @@
 #include "libc/intrin/spinlock.h"
 #include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
+#include "libc/sysv/consts/futex.h"
+#include "libc/sysv/consts/nr.h"
+
+static inline int FutexWait(void *addr, int expect, struct timespec *timeout) {
+  int ax;
+  bool cf;
+  asm volatile(CFLAG_ASM("mov\t%6,%%r10\n\t"
+                         "clc\n\t"
+                         "syscall")
+               : CFLAG_CONSTRAINT(cf), "=a"(ax)
+               : "1"(__NR_futex), "D"(addr), "S"(FUTEX_WAIT), "d"(expect),
+                 "g"(timeout)
+               : "rcx", "r10", "r11", "memory");
+  if (cf) ax = -ax;
+  return ax;
+}
 
 static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int tries) {
   volatile int i;
+  struct timespec ts;
   if (tries < 7) {
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux()) {
+  } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&mutex->waits, 1);
-    LinuxFutexWait(&mutex->lock, 1, 0);
+    if (tries < 28) {
+      ts.tv_sec = 0;
+      ts.tv_nsec = 4 << tries;
+      tries++;
+    } else {
+      ts.tv_sec = 1;
+      ts.tv_nsec = 0;
+    }
+    FutexWait(&mutex->lock, 1, &ts);
     atomic_fetch_sub(&mutex->waits, 1);
   } else {
     sched_yield();

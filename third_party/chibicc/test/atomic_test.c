@@ -37,5 +37,18 @@ main() {
   ASSERT(4, x);
   ASSERT(4, lock);
 
+  // CAS success #3
+  x = 4;
+  ASSERT(1, __atomic_compare_exchange_n(&lock, &x, 31337, 0, __ATOMIC_SEQ_CST,
+                                        __ATOMIC_SEQ_CST));
+  ASSERT(4, x);
+  ASSERT(31337, lock);
+
+  // xadd
+  ASSERT(31337, __atomic_fetch_add(&lock, 31337, __ATOMIC_SEQ_CST));
+  ASSERT(62674, lock);
+  ASSERT(62674, __atomic_fetch_sub(&lock, 31337, __ATOMIC_SEQ_CST));
+  ASSERT(31337, lock);
+
   //
 }

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/utsname.h"
@@ -49,6 +50,7 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "tool/decode/lib/idname.h"
@@ -140,6 +142,7 @@ textstartup void __printargs(const char *prologue) {
   unsigned i, n;
   int e, x, flags;
   uintptr_t *auxp;
+  struct rlimit rlim;
   struct utsname uts;
   struct termios termios;
   struct AuxiliaryValue *auxinfo;
@@ -274,6 +277,17 @@ textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("SIGNALS");
     PRINT("  error: sigprocmask() failed %m");
+  }
+
+  PRINT("");
+  PRINT("RESOURCE LIMITS");
+  for (i = 0; i < RLIM_NLIMITS; ++i) {
+    if (!getrlimit(i, &rlim)) {
+      if (rlim.rlim_cur == RLIM_INFINITY) rlim.rlim_cur = -1;
+      if (rlim.rlim_max == RLIM_INFINITY) rlim.rlim_max = -1;
+      PRINT(" ☼ %-20s %,16ld %,16ld", DescribeRlimitName(i), rlim.rlim_cur,
+            rlim.rlim_max);
+    }
   }
 
   PRINT("");
