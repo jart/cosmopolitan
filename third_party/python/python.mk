@@ -2838,9 +2838,9 @@ o/$(MODE)/third_party/python/Lib/test/test_normalization.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_normalization $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_os.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_os $(PYTESTARGS)
+#o/$(MODE)/third_party/python/Lib/test/test_os.py.runs: \
+#		o/$(MODE)/third_party/python/pythontester.com
+#	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_os $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
