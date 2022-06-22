@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/thread/thread.h"
 
-int sys_accept(int server, void *addr, uint32_t *addrsize) {
-  int client;
-  uint32_t size;
-  union sockaddr_storage_bsd bsd;
-  if (!IsBsd()) {
-    client = __sys_accept(server, addr, addrsize, 0);
+STATIC_YOINK("_main_thread_ctor");
+
+/**
+ * Gets value of TLS slot for current thread.
+ */
+void *pthread_getspecific(pthread_key_t key) {
+  if (key < PTHREAD_KEYS_MAX) {
+    return ((cthread_t)__get_tls_inline())->key[key];
   } else {
-    size = sizeof(bsd);
-    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
-      sockaddr2linux(&bsd, size, addr, addrsize);
-    }
+    return 0;
   }
-  return client;
 }

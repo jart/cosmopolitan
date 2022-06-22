@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/setjmp.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -101,6 +102,7 @@ int cthread_create(cthread_t *ptd, const cthread_attr_t *attr,
   int rc, tid;
   cthread_t td;
   cthread_attr_t default_attr;
+  __threaded = true;
   cthread_zombies_reap();
   cthread_attr_init(&default_attr);
   if ((td = cthread_allocate(attr ? attr : &default_attr))) {

@@ -93,12 +93,21 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   return rc;
 }
 
+forceinline void Sockaddr2linux(void *saddr) {
+  char *p;
+  if (saddr) {
+    p = saddr;
+    p[0] = p[1];
+    p[1] = 0;
+  }
+}
+
 /* Used for all the ioctl that returns sockaddr structure that
  * requires adjustment between Linux and XNU
  */
 static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
   if (sys_ioctl(fd, op, ifr) == -1) return -1;
-  if (IsBsd()) sockaddr2linux(&ifr->ifr_addr);
+  if (IsBsd()) Sockaddr2linux(&ifr->ifr_addr);
   return 0;
 }
 

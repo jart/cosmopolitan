@@ -21,27 +21,26 @@
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 
-#define __NR_accept4_linux 0x0120 /* rhel5:enosysevil */
-
 int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
-  static bool once, demodernize;
+  if (!flags) return sys_accept(server, addr, addrsize);
   int olderr, client;
-  if (!flags || demodernize) goto TriedAndTrue;
+  union sockaddr_storage_bsd bsd;
+  uint32_t size = sizeof(bsd);
+  void *out_addr = !IsBsd() ? addr : &bsd;
+  uint32_t *out_addrsize = !IsBsd() ? addrsize : &size;
+  static bool demodernize;
+  if (demodernize) goto TriedAndTrue;
   olderr = errno;
-  client = __sys_accept4(server, addr, addrsize, flags);
+  client = __sys_accept4(server, out_addr, out_addrsize, flags);
   if (client == -1 && errno == ENOSYS) {
     errno = olderr;
+    demodernize = true;
   TriedAndTrue:
-    client = __fixupnewsockfd(__sys_accept(server, addr, addrsize, 0), flags);
-  } else if (SupportsLinux() && !once) {
-    once = true;
-    if (client == __NR_accept4_linux) {
-      demodernize = true;
-      goto TriedAndTrue;
-    }
+    client = __fixupnewsockfd(__sys_accept(server, out_addr, out_addrsize, 0),
+                              flags);
   }
   if (client != -1 && IsBsd()) {
-    sockaddr2linux(addr);
+    sockaddr2linux(&bsd, size, addr, addrsize);
   }
   return client;
 }

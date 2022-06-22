@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
+#include "libc/errno.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/thread/internal.h"
+#include "libc/thread/thread.h"
 
-int sys_accept(int server, void *addr, uint32_t *addrsize) {
-  int client;
-  uint32_t size;
-  union sockaddr_storage_bsd bsd;
-  if (!IsBsd()) {
-    client = __sys_accept(server, addr, addrsize, 0);
-  } else {
-    size = sizeof(bsd);
-    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
-      sockaddr2linux(&bsd, size, addr, addrsize);
+STATIC_YOINK("_main_thread_ctor");
+
+/**
+ * Allocates TLS slot.
+ */
+int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
+  int i, j;
+  for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
+    if (~_pthread_key_usage[i]) {
+      j = bsrl(~_pthread_key_usage[i]);
+      _pthread_key_usage[i] |= 1ul << j;
+      _pthread_key_dtor[i * 64 + j] = dtor;
+      *key = i * 64 + j;
+      return 0;
     }
   }
-  return client;
+  return EAGAIN;
+}
+
+static textexit void _pthread_key_atexit(void) {
+  _pthread_key_destruct(((cthread_t)__get_tls())->key);
+}
+
+__attribute__((__constructor__)) static textstartup void _pthread_key_init() {
+  atexit(_pthread_key_atexit);
 }

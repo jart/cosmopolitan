@@ -2546,8 +2546,10 @@ UNIX MODULE
 
     `family` defaults to `AF_INET` and can be:
 
-    - `AF_UNIX`
-    - `AF_INET`
+    - `AF_INET`: Creates Internet Protocol Version 4 (IPv4) socket.
+
+    - `AF_UNIX`: Creates local UNIX domain socket. On the New Technology
+      this requires Windows 10 and only works with `SOCK_STREAM`.
 
     `type` defaults to `SOCK_STREAM` and can be:
 
@@ -2562,7 +2564,8 @@ UNIX MODULE
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
 
-    `protocol` defaults to `IPPROTO_TCP` and can be:
+    `protocol` defaults to `IPPROTO_TCP` for AF_INET` and `0` for
+    `AF_UNIX`. It can also be:
 
     - `IPPROTO_IP`
     - `IPPROTO_ICMP`
@@ -2592,6 +2595,7 @@ UNIX MODULE
     `protocol` defaults to `0`.
 
   unix.bind(fd:int[, ip:uint32, port:uint16])
+  unix.bind(fd:int[, unixpath:str])
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -2743,6 +2747,7 @@ UNIX MODULE
 
   unix.accept(serverfd:int[, flags:int])
       ├─→ clientfd:int, ip:uint32, port:uint16
+      ├─→ clientfd:int, unixpath:str
       └─→ nil, unix.Errno
 
     Accepts new client socket descriptor for a listening tcp socket.
@@ -2753,6 +2758,7 @@ UNIX MODULE
     - `SOCK_NONBLOCK`
 
   unix.connect(fd:int, ip:uint32, port:uint16)
+  unix.connect(fd:int, unixpath:str)
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -2764,15 +2770,20 @@ UNIX MODULE
 
   unix.getsockname(fd:int)
       ├─→ ip:uint32, port:uint16
+      ├─→ unixpath:str
       └─→ nil, unix.Errno
 
     Retrieves the local address of a socket.
 
   unix.getpeername(fd:int)
       ├─→ ip:uint32, port:uint16
+      ├─→ unixpath:str
       └─→ nil, unix.Errno
 
     Retrieves the remote address of a socket.
+
+    This operation will either fail on `AF_UNIX` sockets or return an
+    empty string.
 
   unix.recv(fd:int[, bufsiz:int[, flags:int]])
       ├─→ data:str
@@ -2787,6 +2798,7 @@ UNIX MODULE
 
   unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
       ├─→ data:str, ip:uint32, port:uint16
+      ├─→ data:str, unixpath:str
       └─→ nil, unix.Errno
 
     `flags` may have any combination (using bitwise OR) of:
@@ -2810,6 +2822,7 @@ UNIX MODULE
     - `MSG_NOSIGNAL`
 
   unix.sendto(fd:int, data:str, ip:uint32, port:uint16[, flags:int])
+  unix.sendto(fd:int, data:str, unixpath:str[, flags:int])
       ├─→ sent:int
       └─→ nil, unix.Errno
 

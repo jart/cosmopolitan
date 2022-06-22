@@ -44,27 +44,22 @@
  */
 ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   int64_t rc;
-  char addr2[128];
   struct msghdr msg2;
+  union sockaddr_storage_bsd bsd;
 
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (!IsWindows()) {
     if (IsBsd() && msg->msg_name) {
-      /* An optional address is provided, convert it to the BSD form */
-      if (msg->msg_namelen <= sizeof(addr2)) {
-        memcpy(&addr2[0], msg->msg_name, msg->msg_namelen);
-        sockaddr2bsd(&addr2[0]);
-        /* Copy all of msg (except for msg_name) into the new ephemeral local */
-        memcpy(&msg2, msg, sizeof(msg2));
-        msg2.msg_name = &addr2[0];
+      memcpy(&msg2, msg, sizeof(msg2));
+      if (!(rc = sockaddr2bsd(msg->msg_name, msg->msg_namelen, &bsd,
+                              &msg2.msg_namelen))) {
+        msg2.msg_name = &bsd.sa;
         rc = sys_sendmsg(fd, &msg2, flags);
-      } else {
-        rc = einval();
       }
+    } else {
+      rc = sys_sendmsg(fd, msg, flags);
     }
-    /* else do the syscall */
-    rc = sys_sendmsg(fd, msg, flags);
   } else if (__isfdopen(fd)) {
     if (msg->msg_control) {
       rc = einval(); /* control msg not supported */

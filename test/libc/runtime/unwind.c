@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
+#include "test/libc/runtime/unwind.h"
 
-int sys_accept(int server, void *addr, uint32_t *addrsize) {
-  int client;
-  uint32_t size;
-  union sockaddr_storage_bsd bsd;
-  if (!IsBsd()) {
-    client = __sys_accept(server, addr, addrsize, 0);
-  } else {
-    size = sizeof(bsd);
-    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
-      sockaddr2linux(&bsd, size, addr, addrsize);
-    }
-  }
-  return client;
+// temporary stubs for libunwind
+
+uintptr_t _Unwind_GetCFA(struct _Unwind_Context *ctx) {
+  return 0;
+}
+
+uintptr_t _Unwind_GetIP(struct _Unwind_Context *ctx) {
+  return 0;
+}
+
+_Unwind_Reason_Code _Unwind_Backtrace(_Unwind_Trace_Fn fn, void *arg) {
+  return _URC_NORMAL_STOP;
+}
+
+void *_Unwind_FindEnclosingFunction(void *arg) {
+  return NULL;
 }

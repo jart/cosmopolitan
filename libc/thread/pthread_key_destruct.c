@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,20 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/sock/internal.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/thread/internal.h"
+#include "libc/thread/thread.h"
 
-int sys_accept(int server, void *addr, uint32_t *addrsize) {
-  int client;
-  uint32_t size;
-  union sockaddr_storage_bsd bsd;
-  if (!IsBsd()) {
-    client = __sys_accept(server, addr, addrsize, 0);
-  } else {
-    size = sizeof(bsd);
-    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
-      sockaddr2linux(&bsd, size, addr, addrsize);
+void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
+  int i, j;
+  uint64_t x;
+  void *value;
+  pthread_key_dtor dtor;
+StartOver:
+  for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
+    x = _pthread_key_usage[i];
+    while (x) {
+      j = bsrl(x);
+      if ((dtor = _pthread_key_dtor[i * 64 + j]) && (value = key[i * 64 + j])) {
+        key[i * 64 + j] = 0;
+        dtor(value);
+        goto StartOver;
+      }
+      x &= ~(1ul << j);
     }
   }
-  return client;
 }
