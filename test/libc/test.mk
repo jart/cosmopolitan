@@ -1,14 +1,14 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
-	
+
 .PHONY:		o/$(MODE)/test/libc
 o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/alg			\
 		o/$(MODE)/test/libc/bits		\
+		o/$(MODE)/test/libc/calls		\
 		o/$(MODE)/test/libc/dns			\
 		o/$(MODE)/test/libc/fmt			\
 		o/$(MODE)/test/libc/intrin		\
-		o/$(MODE)/test/libc/calls		\
 		o/$(MODE)/test/libc/log			\
 		o/$(MODE)/test/libc/mem			\
 		o/$(MODE)/test/libc/nexgen32e		\
