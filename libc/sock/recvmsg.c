@@ -41,15 +41,24 @@
  */
 ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   ssize_t rc, got;
+  struct msghdr msg2;
+  union sockaddr_storage_bsd bsd;
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (!IsWindows()) {
-    got = sys_recvmsg(fd, msg, flags);
-    // An address was provided, convert from BSD form
-    if (msg->msg_name && IsBsd() && got != -1) {
-      sockaddr2linux(msg->msg_name);
+    if (IsBsd() && msg->msg_name) {
+      memcpy(&msg2, msg, sizeof(msg2));
+      if (!(rc = sockaddr2bsd(msg->msg_name, msg->msg_namelen, &bsd,
+                              &msg2.msg_namelen))) {
+        msg2.msg_name = &bsd.sa;
+        if ((rc = sys_recvmsg(fd, &msg2, flags)) != -1) {
+          sockaddr2linux(msg2.msg_name, msg2.msg_namelen, msg->msg_name,
+                         &msg->msg_namelen);
+        }
+      }
+    } else {
+      rc = sys_recvmsg(fd, msg, flags);
     }
-    rc = got;
   } else if (__isfdopen(fd)) {
     if (!msg->msg_control) {
       if (__isfdkind(fd, kFdSocket)) {

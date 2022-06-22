@@ -52,7 +52,8 @@
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
                const void *opt_addr, uint32_t addrsize) {
   ssize_t rc;
-  char addr2[sizeof(struct sockaddr_un_bsd)];
+  uint32_t bsdaddrsize;
+  union sockaddr_storage_bsd bsd;
   if (IsAsan() && (!__asan_is_valid(buf, size) ||
                    (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
     rc = efault();
@@ -61,12 +62,8 @@ ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
     if (!IsWindows()) {
       if (!IsBsd() || !opt_addr) {
         rc = sys_sendto(fd, buf, size, flags, opt_addr, addrsize);
-      } else if (addrsize > sizeof(addr2)) {
-        rc = einval();
-      } else {
-        memcpy(&addr2, opt_addr, addrsize);
-        sockaddr2bsd(&addr2[0]);
-        rc = sys_sendto(fd, buf, size, flags, &addr2[0], addrsize);
+      } else if (!(rc = sockaddr2bsd(opt_addr, addrsize, &bsd, &bsdaddrsize))) {
+        rc = sys_sendto(fd, buf, size, flags, &bsd, bsdaddrsize);
       }
     } else if (__isfdopen(fd)) {
       if (__isfdkind(fd, kFdSocket)) {

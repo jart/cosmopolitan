@@ -20,9 +20,16 @@
 #include "libc/sock/internal.h"
 
 int sys_getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
-  int rc = __sys_getsockname(fd, out_addr, out_addrsize);
-  if (rc != -1 && IsBsd()) {
-    sockaddr2linux(out_addr);
+  int rc;
+  uint32_t size;
+  union sockaddr_storage_bsd bsd;
+  if (!IsBsd()) {
+    rc = __sys_getsockname(fd, out_addr, out_addrsize);
+  } else {
+    size = sizeof(bsd);
+    if ((rc = __sys_getsockname(fd, &bsd, &size)) != -1) {
+      sockaddr2linux(&bsd, size, out_addr, out_addrsize);
+    }
   }
   return rc;
 }

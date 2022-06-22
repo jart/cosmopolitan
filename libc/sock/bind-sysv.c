@@ -19,17 +19,13 @@
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 
-int sys_accept(int server, void *addr, uint32_t *addrsize) {
-  int client;
-  uint32_t size;
+int sys_bind(int fd, const void *addr, uint32_t addrsize) {
   union sockaddr_storage_bsd bsd;
   if (!IsBsd()) {
-    client = __sys_accept(server, addr, addrsize, 0);
+    return __sys_bind(fd, addr, addrsize);
+  } else if (!sockaddr2bsd(addr, addrsize, &bsd, &addrsize)) {
+    return __sys_bind(fd, &bsd.sa, addrsize);
   } else {
-    size = sizeof(bsd);
-    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
-      sockaddr2linux(&bsd, size, addr, addrsize);
-    }
+    return -1;
   }
-  return client;
 }

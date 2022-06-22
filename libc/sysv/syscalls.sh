@@ -84,7 +84,7 @@ scall	sys_recvfrom		0x01d01d01d201d02d	globl hidden
 scall	sys_sendmsg		0x01c01c01c201c02e	globl hidden
 scall	sys_recvmsg		0x01b01b01b201b02f	globl hidden
 scall	sys_shutdown		0x0860860862086030	globl hidden
-scall	sys_bind		0x0680680682068031	globl hidden
+scall	__sys_bind		0x0680680682068031	globl hidden
 scall	sys_listen		0x06a06a06a206a032	globl hidden
 scall	__sys_getsockname	0x0200200202020033	globl hidden
 scall	__sys_getpeername	0x01f01f08d201f034	globl hidden
