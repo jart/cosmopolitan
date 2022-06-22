@@ -4,6 +4,8 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 
+#define PTHREAD_KEYS_MAX 64
+
 #define PTHREAD_ONCE_INIT 0
 
 #define PTHREAD_MUTEX_DEFAULT    PTHREAD_MUTEX_NORMAL
@@ -24,6 +26,8 @@ COSMOPOLITAN_C_START_
 
 typedef unsigned long *pthread_t;
 typedef int pthread_once_t;
+typedef unsigned pthread_key_t;
+typedef void (*pthread_key_dtor)(void *);
 
 typedef struct {
   int attr;
@@ -105,6 +109,10 @@ int pthread_rwlock_wrlock(pthread_rwlock_t *);
 int pthread_rwlock_trywrlock(pthread_rwlock_t *);
 int pthread_rwlock_timedwrlock(pthread_rwlock_t *, const struct timespec *);
 int pthread_rwlock_unlock(pthread_rwlock_t *);
+int pthread_key_create(pthread_key_t *, pthread_key_dtor);
+int pthread_key_delete(pthread_key_t);
+int pthread_setspecific(pthread_key_t, void *);
+void *pthread_getspecific(pthread_key_t);
 
 #define pthread_mutexattr_init(pAttr)           ((pAttr)->attr = PTHREAD_MUTEX_DEFAULT, 0)
 #define pthread_mutexattr_destroy(pAttr)        ((pAttr)->attr = 0)

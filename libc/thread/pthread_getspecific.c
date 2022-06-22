@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,53 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/macros.internal.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/thread/thread.h"
 
-textstartup void _main_thread_init(void) {
-  _Static_assert(offsetof(struct cthread_descriptor_t, self) == 0x00, "");
-  _Static_assert(offsetof(struct cthread_descriptor_t, self2) == 0x30, "");
-  _Static_assert(offsetof(struct cthread_descriptor_t, tid) == 0x38, "");
-  _Static_assert(offsetof(struct cthread_descriptor_t, err) == 0x3c, "");
-  cthread_t td;
-  size_t totalsize;
-  char *mem, *bottom, *top;
+STATIC_YOINK("_main_thread_ctor");
 
-  totalsize = ROUNDUP(
-      (uintptr_t)_tls_size + sizeof(struct cthread_descriptor_t), FRAMESIZE);
-
-  mem = mmap(0, totalsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE,
-             -1, 0);
-  assert(mem != MAP_FAILED);
-
-  bottom = mem;
-  top = mem + totalsize;
-
-  td = (cthread_t)(top - sizeof(struct cthread_descriptor_t));
-  td->self = td;
-  td->self2 = td;
-  td->err = errno;
-  td->tid = gettid();
-  td->alloc.bottom = bottom;
-  td->alloc.top = top;
-  td->stack.bottom = GetStackAddr(0);
-  td->stack.top = td->stack.bottom + GetStackSize();
-  td->state = cthread_main;
-
-  // Initialize TLS with content of .tdata section
-  memmove((void *)((uintptr_t)td - (uintptr_t)_tls_size), _tdata_start,
-          (uintptr_t)_tdata_size);
-
-  // Set FS
-  __install_tls((char *)td);
+/**
+ * Gets value of TLS slot for current thread.
+ */
+void *pthread_getspecific(pthread_key_t key) {
+  if (key < PTHREAD_KEYS_MAX) {
+    return ((cthread_t)__get_tls_inline())->key[key];
+  } else {
+    return 0;
+  }
 }

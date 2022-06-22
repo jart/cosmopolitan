@@ -266,6 +266,7 @@ char *strerrno(int) nosideeffect libcesque;
 char *strerdoc(int) nosideeffect libcesque;
 int strerror_r(int, char *, size_t) dontthrow nocallback;
 int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
+int __xpg_strerror_r(int, char *, size_t) dontthrow nocallback;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
