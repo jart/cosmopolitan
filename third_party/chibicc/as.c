@@ -2328,6 +2328,14 @@ static dontinline void OpBsu(struct As *a, struct Slice opname, int op) {
   OpBsuImpl(a, opname, op);
 }
 
+static dontinline void OpXadd(struct As *a) {
+  int reg, modrm, disp;
+  reg = GetRegisterReg(a);
+  ConsumeComma(a);
+  modrm = ParseModrm(a, &disp);
+  EmitRexOpModrm(a, 0x0FC0, reg, modrm, disp, 1);
+}
+
 static dontinline int OpF6Impl(struct As *a, struct Slice s, int reg) {
   int modrm, imm, disp;
   modrm = ParseModrm(a, &disp);
@@ -3109,6 +3117,7 @@ static void OnUcomiss(struct As *a, struct Slice s) { OpSse(a, 0x0F2E); }
 static void OnUd2(struct As *a, struct Slice s) { EmitVarword(a, 0x0F0B); }
 static void OnUnpckhpd(struct As *a, struct Slice s) { OpSse(a, 0x660F15); }
 static void OnUnpcklpd(struct As *a, struct Slice s) { OpSse(a, 0x660F14); }
+static void OnXadd(struct As *a, struct Slice s) { OpXadd(a); }
 static void OnXor(struct As *a, struct Slice s) { OpAlu(a, s, 6); }
 static void OnXorpd(struct As *a, struct Slice s) { OpSse(a, 0x660F57); }
 static void OnXorps(struct As *a, struct Slice s) { OpSse(a, 0x0F57); }
@@ -3662,6 +3671,7 @@ static const struct Directive8 {
     {"unpckhpd", OnUnpckhpd},  //
     {"unpcklpd", OnUnpcklpd},  //
     {"wait", OnFwait},         //
+    {"xadd", OnXadd},          //
     {"xchg", OnXchg},          //
     {"xor", OnXor},            //
     {"xorb", OnXor},           //

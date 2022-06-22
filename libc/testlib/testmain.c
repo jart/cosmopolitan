@@ -103,8 +103,9 @@ static void EmptySignalMask(void) {
 }
 
 static void FixIrregularFds(void) {
-  int i, fd;
-  struct pollfd pfds[64];
+  int i, fd, maxfds;
+  struct rlimit rlim;
+  struct pollfd *pfds;
   for (i = 0; i < 3; ++i) {
     if (fcntl(i, F_GETFL) == -1) {
       errno = 0;
@@ -115,7 +116,16 @@ static void FixIrregularFds(void) {
       }
     }
   }
-  for (i = 0; i < ARRAYLEN(pfds); ++i) {
+  if (IsWindows()) {
+    maxfds = 64;
+  } else {
+    maxfds = 256;
+    if (!getrlimit(RLIMIT_NOFILE, &rlim)) {
+      maxfds = MIN(maxfds, (uint64_t)rlim.rlim_cur);
+    }
+  }
+  pfds = malloc(maxfds * sizeof(struct pollfd));
+  for (i = 0; i < maxfds; ++i) {
     pfds[i].fd = i + 3;
     pfds[i].events = POLLIN;
   }
@@ -123,12 +133,13 @@ static void FixIrregularFds(void) {
     // TODO(jart): Fix Blinkenlights poll() / close()
     return;
   }
-  if (poll(pfds, ARRAYLEN(pfds), 0) != -1) {
-    for (i = 0; i < ARRAYLEN(pfds); ++i) {
+  if (poll(pfds, maxfds, 0) != -1) {
+    for (i = 0; i < maxfds; ++i) {
       if (pfds[i].revents & POLLNVAL) continue;
       CHECK_EQ(0, close(pfds[i].fd));
     }
   }
+  free(pfds);
 }
 
 static void SetLimit(int resource, uint64_t soft, uint64_t hard) {

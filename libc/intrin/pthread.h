@@ -121,7 +121,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t *);
 #define pthread_mutex_unlock(mutex)                                       \
   ((mutex)->attr == PTHREAD_MUTEX_NORMAL                                  \
        ? (atomic_store_explicit(&(mutex)->lock, 0, memory_order_relaxed), \
-          (IsLinux() &&                                                   \
+          ((IsLinux() || IsOpenbsd()) &&                                  \
            atomic_load_explicit(&(mutex)->waits, memory_order_relaxed) && \
            _pthread_mutex_wake(mutex)),                                   \
           0)                                                              \
