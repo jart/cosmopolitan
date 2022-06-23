@@ -118,18 +118,19 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
   EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_READ | PROT_WRITE));
 }
 
-TEST(mprotect, testExecOnly_impliesReadFlag) {
-  volatile char *p;
-  p = gc(memalign(PAGESIZE, PAGESIZE));
-  p[0] = 1;
-  EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_EXEC));
-  missingno(p[0]);
-  EXPECT_FALSE(gotsegv);
-  EXPECT_FALSE(gotbusted);
-  p[0] = 2;
-  EXPECT_TRUE(gotsegv | gotbusted);
-  EXPECT_EQ(1, p[0]);
-  EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_READ | PROT_WRITE));
+TEST(mprotect, testExecOnly_canExecute) {
+  char *p = mapanon(FRAMESIZE);
+  void (*f)(void) = (void *)p;
+  p[0] = 0xC3;  // RET
+  ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC | PROT_READ));
+  f();
+  // On all supported platforms, PROT_EXEC implies PROT_READ. There is
+  // one exception to this rule: Chromebook's fork of the Linux kernel
+  // which has been reported, to have the ability to prevent a program
+  // from reading its own code.
+  ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC));
+  f();
+  munmap(p, FRAMESIZE);
 }
 
 TEST(mprotect, testProtNone_cantEvenRead) {
