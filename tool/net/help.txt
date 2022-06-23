@@ -838,7 +838,7 @@ FUNCTIONS
           request message is not preserved. Whether or not the same key can
           repeat depends on whether or not it's a standard header, and if
           so, if it's one of the ones that the RFCs define as repeatable.
-v          See khttprepeatable.c. Those headers will not be folded. Standard
+          See khttprepeatable.c. Those headers will not be folded. Standard
           headers which aren't on that list, will be overwritten with the
           last-occurring one during parsing. Extended headers are always
           passed through exactly as they're received. Please consider using
