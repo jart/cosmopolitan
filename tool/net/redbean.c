@@ -4948,6 +4948,7 @@ static const char *const kDontAutoComplete[] = {
     "GetBody",                   //
     "GetClientAddr",             //
     "GetClientFd",               //
+    "GetComment",                // deprecated
     "GetCookie",                 //
     "GetEffectivePath",          //
     "GetFragment",               //
@@ -4955,11 +4956,13 @@ static const char *const kDontAutoComplete[] = {
     "GetHeaders",                //
     "GetHost",                   //
     "GetHttpVersion",            //
+    "GetLastModifiedTime",       // deprecated
     "GetMethod",                 //
     "GetParam",                  //
     "GetParams",                 //
     "GetPass",                   //
     "GetPath",                   //
+    "GetPayload",                // deprecated
     "GetPort",                   //
     "GetRemoteAddr",             //
     "GetScheme",                 //
@@ -4968,8 +4971,10 @@ static const char *const kDontAutoComplete[] = {
     "GetStatus",                 //
     "GetUrl",                    //
     "GetUser",                   //
+    "GetVersion",                // deprecated
     "HasParam",                  //
     "IsClientUsingSsl",          //
+    "IsCompressed",              // deprecated
     "LaunchBrowser",             //
     "LuaProgramSslRequired",     // TODO
     "ProgramAddr",               // TODO
