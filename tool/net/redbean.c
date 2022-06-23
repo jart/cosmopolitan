@@ -4841,7 +4841,7 @@ static int LuaGetAssetMode(lua_State *L) {
   return 1;
 }
 
-static int LuaGetLastModifiedTime(lua_State *L) {
+static int LuaGetAssetLastModifiedTime(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -4879,7 +4879,7 @@ static int LuaGetAssetSize(lua_State *L) {
   return 1;
 }
 
-static int LuaIsCompressed(lua_State *L) {
+static int LuaIsAssetCompressed(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -5033,6 +5033,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
     {"FormatIp", LuaFormatIp},                            //
     {"GetAssetComment", LuaGetAssetComment},              //
+    {"GetAssetLastModifiedTime", LuaGetAssetLastModifiedTime},  //
     {"GetAssetMode", LuaGetAssetMode},                    //
     {"GetAssetSize", LuaGetAssetSize},                    //
     {"GetBody", LuaGetBody},                              //
@@ -5052,7 +5053,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHostOs", LuaGetHostOs},                          //
     {"GetHttpReason", LuaGetHttpReason},                  //
     {"GetHttpVersion", LuaGetHttpVersion},                //
-    {"GetLastModifiedTime", LuaGetLastModifiedTime},      //
     {"GetLogLevel", LuaGetLogLevel},                      //
     {"GetMethod", LuaGetMethod},                          //
     {"GetMonospaceWidth", LuaGetMonospaceWidth},          //
@@ -5079,7 +5079,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsAcceptablePath", LuaIsAcceptablePath},            //
     {"IsAcceptablePort", LuaIsAcceptablePort},            //
     {"IsClientUsingSsl", LuaIsClientUsingSsl},            //
-    {"IsCompressed", LuaIsCompressed},                    //
+    {"IsAssetCompressed", LuaIsAssetCompressed},          //
     {"IsDaemon", LuaIsDaemon},                            //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
     {"IsHiddenPath", LuaIsHiddenPath},                    //
@@ -5166,7 +5166,8 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetPayload", LuaGetBody},                           //
     {"GetComment", LuaGetAssetComment},                   //
     {"GetVersion", LuaGetHttpVersion},                    //
-
+    {"IsCompressed", LuaIsAssetCompressed},               //
+    {"GetLastModifiedTime", LuaGetAssetLastModifiedTime}, //
 };
 
 static const luaL_Reg kLuaLibs[] = {

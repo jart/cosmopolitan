@@ -317,7 +317,7 @@ local function main()
          if not IsAcceptablePath(paths[i]) then
             Write(' <small>[BLOCKED]</small>')
          end
-         if not IsCompressed(paths[i]) then
+         if not IsAssetCompressed(paths[i]) then
             Write(' <small>[UNCOMPRESSED]</small>')
          end
          if (GetAssetMode(paths[i]) & 0xF000) == 0x4000 then
@@ -325,7 +325,7 @@ local function main()
          end
          Write('<br>\r\n')
          Write('Modified: ')
-         Write(FormatHttpDateTime(GetLastModifiedTime(paths[i])))
+         Write(FormatHttpDateTime(GetAssetLastModifiedTime(paths[i])))
          Write('<br>\r\n')
          Write('Mode: ')
          Write("0%o" % {GetAssetMode(paths[i])})

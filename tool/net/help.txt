@@ -769,13 +769,21 @@ FUNCTIONS
           directory.
           Also available as GetComment (deprecated).
 
+  GetAssetLastModifiedTime(path:str) → seconds:number
+          Returns UNIX timestamp for modification time of a ZIP asset (or
+          local file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
+          Also available as GetLastModifiedTime (deprecated).
+
   GetAssetMode(path:str) → int
           Returns UNIX-style octal mode for ZIP asset (or local file if the
-          -D flag is used)
+          -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetAssetSize(path:str) → int
           Returns byte size of uncompressed contents of ZIP asset (or local
-          file if the -D flag is used)
+          file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetBody() → str
           Returns the request message body if present or an empty string.
@@ -971,9 +979,10 @@ v          See khttprepeatable.c. Those headers will not be folded. Standard
           Returns true if IP address is part of the localhost network
           (127.0.0.0/8).
 
-  IsCompressed(path:str) → bool
+  IsAssetCompressed(path:str) → bool
           Returns true if ZIP artifact at path is stored on disk using
           DEFLATE compression.
+          Also available as IsCompressed (deprecated).
 
   IndentLines(str[,int]) → str
           Adds spaces to beginnings of multiline string. If the int
