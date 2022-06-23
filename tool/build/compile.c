@@ -102,7 +102,7 @@ FLAGS\n\
   -V NUMBER    specifies compiler version\n\
   -C SECS      set cpu limit [default 16]\n\
   -L SECS      set lat limit [default 90]\n\
-  -P PROCS     set pro limit [default 1024]\n\
+  -P PROCS     set pro limit [default 2048]\n\
   -M BYTES     set mem limit [default 512m]\n\
   -F BYTES     set fsz limit [default 256m]\n\
   -O BYTES     set out limit [default 1m]\n\
@@ -744,7 +744,7 @@ int main(int argc, char *argv[]) {
   verbose = 4;
   timeout = 90;                 /* secs */
   cpuquota = 16;                /* secs */
-  proquota = 1024;              /* procs */
+  proquota = 2048;              /* procs */
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
