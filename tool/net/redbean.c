@@ -4791,17 +4791,6 @@ static int LuaEvadeDragnetSurveillance(lua_State *L) {
   return LuaProgramBool(L, &evadedragnetsurveillance);
 }
 
-static int LuaProgramSslCompression(lua_State *L) {
-#ifndef UNSECURE
-  if (!unsecure) {
-    OnlyCallFromInitLua(L, "ProgramSslCompression");
-    conf.disable_compression = confcli.disable_compression =
-        !lua_toboolean(L, 1);
-  }
-#endif
-  return 0;
-}
-
 static int LuaHidePath(lua_State *L) {
   size_t pathlen;
   const char *path;
@@ -4994,7 +4983,6 @@ static const char *const kDontAutoComplete[] = {
     "ProgramPrivateKey",         // TODO
     "ProgramSslCiphersuite",     // TODO
     "ProgramSslClientVerify",    // TODO
-    "ProgramSslCompression",     //
     "ProgramSslTicketLifetime",  //
     "ProgramTimeout",            // TODO
     "ProgramUid",                //
@@ -5171,7 +5159,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPrivateKey", LuaProgramPrivateKey},                //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
-    {"ProgramSslCompression", LuaProgramSslCompression},        //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
