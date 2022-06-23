@@ -88,6 +88,7 @@
 #include "third_party/lua/lgc.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "libc/sysv/consts/s.h"
 #include "tool/net/luacheck.h"
 
 /**
@@ -1756,6 +1757,55 @@ static int LuaUnixMinor(lua_State *L) {
   return ReturnInteger(L, minor(luaL_checkinteger(L, 1)));
 }
 
+// unix.S_ISDIR(mode:int)
+//     └─→ bool
+static int LuaUnixSisdir(lua_State *L) {
+  lua_pushboolean(L, S_ISDIR(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISCHR(mode:int)
+//     └─→ bool
+static int LuaUnixSischr(lua_State *L) {
+  lua_pushboolean(L, S_ISCHR(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISBLK(mode:int)
+//     └─→ bool
+static int LuaUnixSisblk(lua_State *L) {
+  lua_pushboolean(L, S_ISBLK(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISREG(mode:int)
+//     └─→ bool
+static int LuaUnixSisreg(lua_State *L) {
+  lua_pushboolean(L, S_ISREG(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISFIFO(mode:int)
+//     └─→ bool
+static int LuaUnixSisfifo(lua_State *L) {
+  lua_pushboolean(L, S_ISFIFO(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISLNK(mode:int)
+//     └─→ bool
+static int LuaUnixSislnk(lua_State *L) {
+  lua_pushboolean(L, S_ISLNK(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+// unix.S_ISSOCK(mode:int)
+//     └─→ bool
+static int LuaUnixSissock(lua_State *L) {
+  lua_pushboolean(L, S_ISSOCK(luaL_checkinteger(L, 1)));
+  return 1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Stat object
 
@@ -2408,6 +2458,13 @@ static void LuaUnixDirObj(lua_State *L) {
 // UNIX module
 
 static const luaL_Reg kLuaUnix[] = {
+    {"S_ISBLK", LuaUnixSisblk},           // is st:mode() a block device?
+    {"S_ISCHR", LuaUnixSischr},           // is st:mode() a character device?
+    {"S_ISDIR", LuaUnixSisdir},           // is st:mode() a directory?
+    {"S_ISFIFO", LuaUnixSisfifo},         // is st:mode() a fifo?
+    {"S_ISLNK", LuaUnixSislnk},           // is st:mode() a symbolic link?
+    {"S_ISREG", LuaUnixSisreg},           // is st:mode() a regular file?
+    {"S_ISSOCK", LuaUnixSissock},         // is st:mode() a socket?
     {"Sigset", LuaUnixSigset},            // creates signal bitmask
     {"WEXITSTATUS", LuaUnixWexitstatus},  // gets exit status from wait status
     {"WIFEXITED", LuaUnixWifexited},      // gets exit code from wait status

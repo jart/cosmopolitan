@@ -838,7 +838,7 @@ FUNCTIONS
           request message is not preserved. Whether or not the same key can
           repeat depends on whether or not it's a standard header, and if
           so, if it's one of the ones that the RFCs define as repeatable.
-          See khttprepeatable.c. Those headers will not be folded. Standard
+v          See khttprepeatable.c. Those headers will not be folded. Standard
           headers which aren't on that list, will be overwritten with the
           last-occurring one during parsing. Extended headers are always
           passed through exactly as they're received. Please consider using
@@ -3527,13 +3527,13 @@ UNIX MODULE
 
    To determine the file type:
 
-     - `(st:mode() & 0170000) == 0010000` means fifo or pipe
-     - `(st:mode() & 0170000) == 0020000` means character device
-     - `(st:mode() & 0170000) == 0040000` means directory
-     - `(st:mode() & 0170000) == 0060000` means block device
-     - `(st:mode() & 0170000) == 0100000` means regular file
-     - `(st:mode() & 0170000) == 0120000` means symbolic link
-     - `(st:mode() & 0170000) == 0140000` means socket
+     - `unix.S_ISREG(st:mode())` means regular file
+     - `unix.S_ISDIR(st:mode())` means directory
+     - `unix.S_ISLNK(st:mode())` means symbolic link
+     - `unix.S_ISCHR(st:mode())` means character device
+     - `unix.S_ISBLK(st:mode())` means block device
+     - `unix.S_ISFIFO(st:mode())` means fifo or pipe
+     - `unix.S_ISSOCK(st:mode())` means socket
 
   unix.Stat:uid()
       └─→ uid:int
