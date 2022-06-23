@@ -44,6 +44,10 @@ vfork:
 	testb	IsWindows()
 	jnz	sys_fork_nt		# and we're lucky to have that
 #endif
+#if SupportsXnu()
+	testb	IsXnu()
+	jnz	fork
+#endif
 #if SupportsOpenbsd()
 	testb	IsOpenbsd()
 	jnz	fork			# fake vfork plus msyscall issues
