@@ -131,7 +131,7 @@ TEST(pthread_mutex_lock, contention) {
   for (i = 0; i < THREADS; ++i) {
     munmap(stack[i], GetStackSize());
   }
-  pthread_mutex_destroy(&lock);
+  EXPECT_EQ(0, pthread_mutex_destroy(&lock));
 }
 
 TEST(pthread_mutex_lock, rcontention) {
@@ -159,7 +159,7 @@ TEST(pthread_mutex_lock, rcontention) {
   for (i = 0; i < THREADS; ++i) {
     munmap(stack[i], GetStackSize());
   }
-  pthread_mutex_destroy(&lock);
+  EXPECT_EQ(0, pthread_mutex_destroy(&lock));
 }
 
 TEST(pthread_mutex_lock, econtention) {
@@ -187,7 +187,7 @@ TEST(pthread_mutex_lock, econtention) {
   for (i = 0; i < THREADS; ++i) {
     munmap(stack[i], GetStackSize());
   }
-  pthread_mutex_destroy(&lock);
+  EXPECT_EQ(0, pthread_mutex_destroy(&lock));
 }
 
 int SpinlockWorker(void *p) {

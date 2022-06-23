@@ -68,9 +68,7 @@ noasan static inline const unsigned char *memrchr_sse(const unsigned char *s,
 void *memrchr(const void *s, int c, size_t n) {
   const void *r;
   if (!IsTiny() && X86_HAVE(SSE)) {
-    if (IsAsan()) {
-      __asan_verify(s, n);
-    }
+    if (IsAsan()) __asan_verify(s, n);
     r = memrchr_sse(s, c, n);
   } else {
     r = memrchr_pure(s, c, n);

@@ -19,6 +19,7 @@
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/linux/futex.h"
 
@@ -34,8 +35,8 @@ void _wait0(int *ptid) {
   for (;;) {
     if (!(x = atomic_load_explicit(ptid, memory_order_relaxed))) {
       break;
-    } else if (IsLinux()) {
-      LinuxFutexWait(ptid, x, 0);
+    } else if (IsLinux() || IsOpenbsd()) {
+      _futex_wait(ptid, x, &(struct timespec){2});
     } else {
       sched_yield();
     }

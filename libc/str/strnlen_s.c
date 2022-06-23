@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,53 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-/* clang-format off */
+#include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/str/str.h"
 
-//	Searches for substring.
-//
-//	@param	rdi is NUL-terminated haystack string
-//	@param	rsi is NUL-terminated needle string (16-byte aligned)
-//	@return	rax is pointer to substring or NULL
-//	@todo	10x faster than naïve but could be 100x faster
-.macro	.strstr	mode:req
-	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	sub	$32,%rsp
-	mov	%rdi,%rax
-	xor	%ecx,%ecx
-0:	mov	$-16,%rdx
-1:	add	$16,%rdx
-	movaps	(%rsi,%rdx),%xmm0
-2:	add	%rcx,%rax
-	lea	(%rax,%rdx),%rdi
-	test	$15,%edi
-	jnz	6f
-	pcmpistri $\mode,(%rdi),%xmm0
-3:	ja	2b	# !CF (no match) && !ZF (need NUL-term)
-	jnc	4f	# !CF (no match) && ZF (NUL-terminator)
-	jno	0b	# !OF ← CF && CX!=0 (matched at offset)
-	jns	1b	# !SF ← NUL ∉ XMM1 (need to match more)
-	jmp	5f	# youtu.be/nVk1DjMtLWs
-4:	xor	%eax,%eax
-5:	leave
-	ret
-6:	mov	%rdi,%r9			# same w/ pointer realign
-	and	$15,%r9d
-	mov	%edi,%r8d
-	and	$0xfff,%r8d
-	cmp	$0xff0,%r8d
-	ja	8f
-7:	pcmpistri $\mode,(%rdi),%xmm0
-	cmova	%r9d,%ecx
-	jmp	3b
-8:	pcmpeqd	%xmm2,%xmm2			# handle danger memory
-	mov	%rdi,%r8
-	and	$-16,%r8
-	movaps	(%r8),%xmm1
-	movaps	%xmm1,-32(%rbp)
-	movaps	%xmm2,-16(%rbp)
-	pcmpistri $\mode,-32(%rbp,%r9),%xmm2
-	jz	4b
-	jmp	7b
-.endm
+static noasan size_t strnlen_s_x64(const char *s, size_t n, size_t i) {
+  uint64_t w;
+  for (; i + 8 < n; i += 8) {
+    w = *(uint64_t *)(s + i);
+    if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
+      i += (unsigned)__builtin_ctzll(w) >> 3;
+      break;
+    }
+  }
+  return i;
+}
+
+/**
+ * Returns length of NUL-terminated string... securely.
+ *
+ * This is like strnlen() except it'll return 0 if `s` is null. We also
+ * make the assumption for the purposes of ASAN that `n` is the size of
+ * the buffer if `s` is non-null.
+ *
+ * @param s is string
+ * @param n is max length
+ * @return byte length
+ * @asyncsignalsafe
+ */
+noasan size_t strnlen_s(const char *s, size_t n) {
+  size_t i;
+  if (!s) return 0;
+  if (IsAsan()) __asan_verify(s, n);
+  for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
+    if (i == n || !s[i]) return i;
+  }
+  i = strnlen_s_x64(s, n, i);
+  for (;; ++i) {
+    if (i == n || !s[i]) break;
+  }
+  assert(i == n || (i < n && !s[i]));
+  return i;
+}

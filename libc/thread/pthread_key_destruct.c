@@ -30,7 +30,7 @@ StartOver:
     x = _pthread_key_usage[i];
     while (x) {
       j = bsrl(x);
-      if ((dtor = _pthread_key_dtor[i * 64 + j]) && (value = key[i * 64 + j])) {
+      if ((value = key[i * 64 + j]) && (dtor = _pthread_key_dtor[i * 64 + j])) {
         key[i * 64 + j] = 0;
         dtor(value);
         goto StartOver;

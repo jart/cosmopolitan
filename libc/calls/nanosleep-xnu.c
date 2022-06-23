@@ -24,7 +24,7 @@
 
 int sys_nanosleep_xnu(const struct timespec *req, struct timespec *rem) {
   long millis;
-  millis = div1000int64(req->tv_nsec);
+  millis = req->tv_nsec / 1000;
   millis = MAX(1, millis);
   return sys_select(0, 0, 0, 0, &(struct timeval){req->tv_sec, millis});
 }

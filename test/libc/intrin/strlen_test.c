@@ -106,9 +106,9 @@ TEST(strnlen, nulNotFound_ReturnsSize) {
   }
 }
 
-TEST(strnlen_s, nulNotFound_ReturnsZero) {
+TEST(strnlen_s, nulNotFound) {
   char buf[3] = {1, 2, 3};
-  ASSERT_EQ(0, strnlen_s(buf, 3));
+  ASSERT_EQ(3, strnlen_s(buf, 3));
 }
 
 TEST(strlen, fuzz) {

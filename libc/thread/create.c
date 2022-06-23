@@ -29,6 +29,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/internal.h"
 #include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
@@ -77,6 +78,7 @@ static int cthread_start(void *arg) {
     exitcode = (void *)rc.dx;
   }
   td->exitcode = exitcode;
+  _pthread_key_destruct(td->key);
   if (atomic_load(&td->state) & cthread_detached) {
     // we're still using the stack
     // thus we can't munmap it yet

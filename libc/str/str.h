@@ -88,7 +88,6 @@ void *memmove(void *, const void *, size_t) memcpyesque;
 void *memcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *mempcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *memccpy(void *restrict, const void *restrict, int, size_t) memcpyesque;
-void *memeqmask(void *, const void *, const void *, size_t) memcpyesque;
 void bcopy(const void *, void *, size_t) memcpyesque;
 void explicit_bzero(void *, size_t);
 
@@ -173,7 +172,6 @@ wchar_t *wcsncat(wchar_t *, const wchar_t *, size_t) memcpyesque;
 char *strncpy(char *, const char *, size_t) memcpyesque;
 char *strtok(char *, const char *) paramsnonnull((2)) libcesque;
 char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
-uint16_t *strcpyzbw(uint16_t *, const char *) memcpyesque;
 wchar_t *wcstok(wchar_t *, const wchar_t *, wchar_t **) paramsnonnull((2, 3));
 char *wstrtrunc(uint16_t *) memcpyesque;
 char *wstrntrunc(uint16_t *, size_t) memcpyesque;

@@ -33,8 +33,23 @@
 #include "libc/testlib/testlib.h"
 #include "tool/net/sandbox.h"
 
+// It's been reported that Chromebooks return EINVAL here.
+bool CanUseSeccomp(void) {
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    if (seccomp(SECCOMP_SET_MODE_STRICT, 0, 0) != -1) {
+      _Exit1(0);
+    } else {
+      _Exit1(1);
+    }
+  }
+  EXPECT_NE(-1, wait(&ws));
+  return WIFEXITED(ws) && !WEXITSTATUS(ws);
+}
+
 void SetUp(void) {
-  if (!__is_linux_2_6_23()) {
+  if (!__is_linux_2_6_23() || !CanUseSeccomp()) {
     exit(0);
   }
 }

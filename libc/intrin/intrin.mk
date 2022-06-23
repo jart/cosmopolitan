@@ -73,6 +73,8 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 			-fno-stack-protector
 
 # synchronization primitives are intended to be magic free
+o/$(MODE)/libc/intrin/futex_wait.o			\
+o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\

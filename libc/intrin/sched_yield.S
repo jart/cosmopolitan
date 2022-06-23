@@ -30,6 +30,7 @@ sched_yield:
 	testb	IsXnu()
 	jz	1f
 	pause
+	xor	%eax,%eax
 	ret
 #endif
 

@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,23 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/str/str.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
 
-//	Returns 𝑥 % 1,000,000.
-//
-//	@param	rdi int64 𝑥
-//	@return	rax has remainder
-rem1000000int64:
-	movabs	$0x431bde82d7b634db,%rdx
-	mov	%rdi,%rax
-	imul	%rdx
-	mov	%rdx,%rax
-	sar	$0x12,%rax
-	mov	%rdi,%rdx
-	sar	$0x3f,%rdx
-	sub	%rdx,%rax
-	imul	$0xf4240,%rax,%rax
-	sub	%rax,%rdi
-	mov	%rdi,%rax
-	ret
-	.endfn	rem1000000int64,globl
+TEST(memrchr16, test) {
+  EXPECT_EQ(NULL, memrchr16(u"yo.hi.thereeuhcruhrceeuhcre", '-', 27));
+  EXPECT_STREQ(u".there", memrchr16(u"yo.hi.there", '.', 11));
+  EXPECT_STREQ(u".thereeuhcruhrceeuhcre",
+               memrchr16(u"yo.hi.thereeuhcruhrceeuhcre", '.', 27));
+}
+
+BENCH(memrchr16, bench) {
+  EZBENCH2("memrchr16", donothing,
+           EXPROPRIATE(memrchr16(u"yo.hi.there", '.', 11)));
+  EZBENCH2("memrchr16 hyperion", donothing,
+           EXPROPRIATE(memrchr16(kHyperion, '.', kHyperionSize / 2)));
+}
