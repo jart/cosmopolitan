@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
+
+  # run workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: support ape bins
+        run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+
+        # gh-action runners have 2 cpus with 1 thread each
+      - name: make everything
+        run: V=0 make -j2
+
+      - name: printargs.com
+        run: ./o/examples/printargs.com
