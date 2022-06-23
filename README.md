@@ -1,6 +1,6 @@
 ![Cosmopolitan Honeybadger](usr/share/img/honeybadger.png)
 
-[![build](https://github.com/thetanil/cosmopolitan/actions/workflows/build.yml/badge.svg)](https://github.com/thetanil/cosmopolitan/actions/workflows/build.yml)
+[![build](https://github.com/jart/cosmopolitan/actions/workflows/build.yml/badge.svg)](https://github.com/jart/cosmopolitan/actions/workflows/build.yml)
 # Cosmopolitan
 
 [Cosmopolitan Libc](https://justine.lol/cosmopolitan/index.html) makes C
