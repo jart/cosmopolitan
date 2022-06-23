@@ -375,6 +375,7 @@ scall	io_uring_register	0xfffffffffffff1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
 scall	sys_pledge		0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
 scall	msyscall		0xfff025ffffffffff	globl
+scall	sys_bogus		0x5005005002500500	globl
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya

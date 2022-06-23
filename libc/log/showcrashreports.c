@@ -39,7 +39,7 @@ STATIC_YOINK("__get_symbol_by_addr");        // for asan memory origin
 
 extern const unsigned char __oncrash_thunks[8][11];
 static struct sigaltstack g_oldsigaltstack;
-static struct sigaction g_oldcrashacts[7];
+static struct sigaction g_oldcrashacts[8];
 
 static void InstallCrashHandlers(int extraflags) {
   size_t i;
@@ -104,6 +104,7 @@ void ShowCrashReports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
+  kCrashSigs[7] = SIGSYS;  /* bad system call */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   if (!IsWindows()) {
     bzero(&ss, sizeof(ss));

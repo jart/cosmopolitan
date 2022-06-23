@@ -1,7 +1,7 @@
 /*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
 │vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,86 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	These function names make it a bit more obvious which signal
-//	caused the crash, particularly in the GDB GUI. They're coded
-//	into an array to pinch pennies on code size registering them.
+//	Normally we call ShowCrashReports() from main, but if
+//	there's a crash in a constructor, this will help with
+//	troubleshooting it. You need to add:
+//
+//	    STATIC_YOINK("ShowCrashReportsEarly");
+//
+//	To the top of your main module to use this.
 
-__oncrash_thunks:
-
-//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
-
-	.org	11*0
-__oncrash_sigquit:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigquit,globl
-
-	.org	11*1
-__oncrash_sigfpe:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigfpe,globl
-
-	.org	11*2
-__oncrash_sigill:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigill,globl
-
-	.org	11*3
-__oncrash_sigsegv:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigsegv,globl
-
-	.org	11*4
-__oncrash_sigtrap:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigtrap,globl
-
-	.org	11*5
-__oncrash_sigabrt:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigabrt,globl
-
-	.org	11*6
-__oncrash_sigbus:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigbus,globl
-
-	.org	11*7
-__oncrash_sigsys:
-	push	%rbp
-	mov	%rsp,%rbp
-	call	__oncrash
-	pop	%rbp
-	ret
-	.endfn	__oncrash_sigsys,globl
-
-//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
-
-	.endobj	__oncrash_thunks,globl
+	.init.start 400,ShowCrashReportsEarly
+	push	%rdi
+	push	%rsi
+	call	ShowCrashReports
+	pop	%rsi
+	pop	%rdi
+	.init.end 400,ShowCrashReportsEarly

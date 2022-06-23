@@ -12,6 +12,7 @@ int __notziposat(int, const char *);
 int gethostname_bsd(char *, size_t) hidden;
 int gethostname_linux(char *, size_t) hidden;
 int gethostname_nt(char *, size_t, int) hidden;
+long sys_bogus(void);
 void *__vdsosym(const char *, const char *) hidden;
 void __onfork(void) hidden;
 void __restore_rt() hidden;

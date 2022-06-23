@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/itoa.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
@@ -29,13 +30,17 @@ static bool IsSiUser(int si_code) {
   }
 }
 
+static void NameIt(char p[17], const char *s, int si_code) {
+  p = stpcpy(p, s);
+  FormatInt32(p, si_code);
+}
+
 /**
  * Returns symbolic name for siginfo::si_code value.
  */
 const char *GetSiCodeName(int sig, int si_code) {
-  static char b[16];
-  bzero(b, sizeof(b));
-  strcpy(b, "SI_???");
+  static char b[17];
+  NameIt(b, "SI_", si_code);
   if (si_code == SI_QUEUE) {
     strcpy(b + 3, "QUEUE"); /* sent by sigqueue(2) */
   } else if (si_code == SI_TIMER) {
@@ -55,7 +60,7 @@ const char *GetSiCodeName(int sig, int si_code) {
   } else if (IsSiUser(si_code)) {
     strcpy(b + 3, "USER"); /* sent by kill(2) i.e. from userspace */
   } else if (sig == SIGCHLD) {
-    strcpy(b, "CLD_???");
+    NameIt(b, "CLD_", si_code);
     if (si_code == CLD_EXITED) {
       strcpy(b + 4, "EXITED"); /* child exited */
     } else if (si_code == CLD_KILLED) {
@@ -70,14 +75,14 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 4, "CONTINUED"); /* stopped child continued */
     }
   } else if (sig == SIGTRAP) {
-    strcpy(b, "TRAP_???");
+    NameIt(b, "TRAP_", si_code);
     if (si_code == TRAP_BRKPT) {
       strcpy(b + 5, "BRKPT"); /* process breakpoint */
     } else if (si_code == TRAP_TRACE) {
       strcpy(b + 5, "TRACE"); /* process trace trap */
     }
   } else if (sig == SIGSEGV) {
-    strcpy(b, "SEGV_???");
+    NameIt(b, "SEGV_", si_code);
     if (si_code == SEGV_MAPERR) {
       strcpy(b + 5, "MAPERR"); /* address not mapped to object */
     } else if (si_code == SEGV_ACCERR) {
@@ -86,7 +91,7 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 5, "PKUERR"); /* FreeBSD: x86: PKU violation */
     }
   } else if (sig == SIGFPE) {
-    strcpy(b, "FPE_???");
+    NameIt(b, "FPE_???", si_code);
     if (si_code == FPE_INTDIV) {
       strcpy(b + 4, "INTDIV"); /* integer divide by zero */
     } else if (si_code == FPE_INTOVF) {
@@ -105,7 +110,7 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 4, "FLTSUB"); /* subscript out of range */
     }
   } else if (sig == SIGILL) {
-    strcpy(b, "ILL_???");
+    NameIt(b, "ILL_", si_code);
     if (si_code == ILL_ILLOPC) {
       strcpy(b + 4, "ILLOPC"); /* illegal opcode */
     } else if (si_code == ILL_ILLOPN) {
@@ -124,7 +129,7 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 4, "BADSTK"); /* internal stack error */
     }
   } else if (sig == SIGBUS) {
-    strcpy(b, "BUS_???");
+    NameIt(b, "BUS_", si_code);
     if (si_code == BUS_ADRALN) {
       strcpy(b + 4, "ADRALN"); /* invalid address alignment */
     } else if (si_code == BUS_ADRERR) {
@@ -139,7 +144,7 @@ const char *GetSiCodeName(int sig, int si_code) {
       strcpy(b + 4, "MCEERR_AO"); /* Linux 2.6.32+ */
     }
   } else if (sig == SIGIO) {
-    strcpy(b, "POLL_???");
+    NameIt(b, "POLL_", si_code);
     if (si_code == POLL_IN) {
       strcpy(b + 5, "IN"); /* data input available */
     } else if (si_code == POLL_OUT) {

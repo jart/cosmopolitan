@@ -29,6 +29,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
@@ -114,6 +115,9 @@
 
 STATIC_STACK_SIZE(0x40000);
 STATIC_YOINK("zip_uri_support");
+#if !IsTiny()
+STATIC_YOINK("ShowCrashReportsEarly");
+#endif
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -7310,9 +7314,6 @@ void RedBean(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   LoadZipArgs(&argc, &argv);
-  if (!IsTiny()) {
-    ShowCrashReports();
-  }
   RedBean(argc, argv);
   if (IsModeDbg()) {
     CheckForMemoryLeaks();
