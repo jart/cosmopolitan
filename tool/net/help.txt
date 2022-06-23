@@ -766,7 +766,8 @@ FUNCTIONS
 
   GetAssetComment(path:str) → str
           Returns comment text associated with asset in the ZIP central
-          directory. Also available as GetComment (deprecated).
+          directory.
+          Also available as GetComment (deprecated).
 
   GetAssetMode(path:str) → int
           Returns UNIX-style octal mode for ZIP asset (or local file if the
@@ -932,8 +933,8 @@ v          See khttprepeatable.c. Those headers will not be folded. Standard
 
   GetHttpVersion() → int
           Returns the request HTTP protocol version, which can be 9 for
-          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
-          as GetVersion (deprecated).
+          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
+          Also available as GetVersion (deprecated).
 
   GetRandomBytes([length:int]) → str
           Returns string with the specified number of random bytes (1..256).

@@ -5038,7 +5038,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetBody", LuaGetBody},                              //
     {"GetClientAddr", LuaGetClientAddr},                  //
     {"GetClientFd", LuaGetClientFd},                      //
-    {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
     {"GetCpuCore", LuaGetCpuCore},                        //
     {"GetCpuCount", LuaGetCpuCount},                      //
@@ -5061,7 +5060,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                          //
     {"GetPass", LuaGetPass},                              //
     {"GetPath", LuaGetPath},                              //
-    {"GetPayload", LuaGetBody},                           //
     {"GetPort", LuaGetPort},                              //
     {"GetRandomBytes", LuaGetRandomBytes},                //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},          //
@@ -5072,7 +5070,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetTime", LuaGetTime},                              //
     {"GetUrl", LuaGetUrl},                                //
     {"GetUser", LuaGetUser},                              //
-    {"GetVersion", LuaGetHttpVersion},                    //
     {"GetZipPaths", LuaGetZipPaths},                      //
     {"HasControlCodes", LuaHasControlCodes},              //
     {"HasParam", LuaHasParam},                            //
@@ -5165,6 +5162,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslRequired", LuaProgramSslRequired},              //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
 #endif
+    // deprecated
+    {"GetPayload", LuaGetBody},                           //
+    {"GetComment", LuaGetAssetComment},                   //
+    {"GetVersion", LuaGetHttpVersion},                    //
+
 };
 
 static const luaL_Reg kLuaLibs[] = {
