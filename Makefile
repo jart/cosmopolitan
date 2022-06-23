@@ -148,6 +148,7 @@ include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
 include third_party/lua/lua.mk
 include third_party/make/make.mk
+include third_party/finger/finger.mk
 include third_party/argon2/argon2.mk
 include third_party/smallz4/smallz4.mk
 include third_party/sqlite3/sqlite3.mk

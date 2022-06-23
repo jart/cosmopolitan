@@ -1449,6 +1449,28 @@ FUNCTIONS
     value will be the `"0b"`-prefixed binary str. The result is
     currently modulo 2^64. Negative numbers are converted to unsigned.
 
+  ResolveIp(hostname:str)
+      ├─→ ip:uint32
+      └─→ nil, error:str
+
+    Gets IP address associated with hostname.
+
+    This function first checks if hostname is already an IP address, in
+    which case it returns the result of `ParseIp`. Otherwise, it checks
+    HOSTS.TXT on the local system and returns the first IPv4 address
+    associated with hostname. If no such entry is found, a DNS lookup is
+    performed using the system configured (e.g. /etc/resolv.conf) DNS
+    resolution service. If the service returns multiple IN A records
+    then only the first one is reutrned.
+
+    The returned address is word-encoded in host endian order. For
+    example, 1.2.3.4 is encoded as 0x01020304. The `FormatIp` function
+    may be used to turn this value back into a string.
+
+    If no IP address could be found, then nil is returned alongside a
+    string of unspecified format describing the error. Calls to this
+    function may be wrapped in assert() if an exception is desired.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 

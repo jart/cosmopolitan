@@ -21,6 +21,7 @@
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/dns/dns.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/kprintf.h"
@@ -41,7 +42,9 @@
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"
@@ -375,6 +378,27 @@ int LuaSlurp(lua_State *L) {
   } else {
     lua_pushnil(L);
     lua_pushstring(L, gc(xasprintf("Can't slurp file %`'s: %m", f)));
+    return 2;
+  }
+}
+
+int LuaResolveIp(lua_State *L) {
+  ssize_t rc;
+  int64_t ip;
+  const char *host;
+  struct addrinfo *ai = NULL;
+  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
+  host = luaL_checkstring(L, 1);
+  if ((ip = ParseIp(host, -1)) != -1) {
+    lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));
+    return 1;
+  } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == EAI_SUCCESS) {
+    lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));
+    freeaddrinfo(ai);
+    return 1;
+  } else {
+    lua_pushnil(L);
+    lua_pushfstring(L, "%s: DNS lookup failed: EAI_%s", host, gai_strerror(rc));
     return 2;
   }
 }

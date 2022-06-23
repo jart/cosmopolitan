@@ -5131,6 +5131,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Rdrand", LuaRdrand},                                //
     {"Rdseed", LuaRdseed},                                //
     {"Rdtsc", LuaRdtsc},                                  //
+    {"ResolveIp", LuaResolveIp},                          //
     {"Route", LuaRoute},                                  //
     {"RouteHost", LuaRouteHost},                          //
     {"RoutePath", LuaRoutePath},                          //

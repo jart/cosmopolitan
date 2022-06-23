@@ -89,6 +89,7 @@ void *memcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *mempcpy(void *restrict, const void *restrict, size_t) memcpyesque;
 void *memccpy(void *restrict, const void *restrict, int, size_t) memcpyesque;
 void *memeqmask(void *, const void *, const void *, size_t) memcpyesque;
+void bcopy(const void *, void *, size_t) memcpyesque;
 void explicit_bzero(void *, size_t);
 
 int bcmp(const void *, const void *, size_t) strlenesque;

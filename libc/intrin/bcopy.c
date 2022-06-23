@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,42 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
-#include "libc/sock/syscall_fd.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/str/str.h"
 
 /**
- * Connects socket to remote end.
+ * Moves memory the BSD way.
  *
- * ProTip: Connectionless sockets, e.g. UDP, can be connected too. The
- * benefit is not needing to specify the remote address on each send. It
- * also means getsockname() can be called to retrieve routing details.
- *
- * @return 0 on success or -1 w/ errno
- * @asyncsignalsafe
- * @restartable (unless SO_RCVTIMEO)
+ * Please use memmove() instead. Note the order of arguments.
  */
-int connect(int fd, const void *addr, uint32_t addrsize) {
-  int rc;
-  if (addr && !(IsAsan() && !__asan_is_valid(addr, addrsize))) {
-    _firewall(addr, addrsize);
-    if (!IsWindows()) {
-      rc = sys_connect(fd, addr, addrsize);
-    } else if (__isfdkind(fd, kFdSocket)) {
-      rc = sys_connect_nt(&g_fds.p[fd], addr, addrsize);
-    } else {
-      rc = ebadf();
-    }
-  } else {
-    rc = efault();
-  }
-  STRACE("connect(%d, %s) -> %d% lm", fd, __describe_sockaddr(addr, addrsize),
-         rc);
-  return rc;
+void bcopy(const void *src, void *dest, size_t n) {
+  memmove(dest, src, n);
 }
