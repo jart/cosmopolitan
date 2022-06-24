@@ -52,9 +52,10 @@ namespace double_conversion {
 namespace {
 
 inline char ToLower(char ch) {
-  static const std::ctype<char>& cType =
+  /* static const std::ctype<char>& cType =
       std::use_facet<std::ctype<char> >(std::locale::classic());
-  return cType.tolower(ch);
+  return cType.tolower(ch); */
+  return tolower(ch);
 }
 
 inline char Pass(char ch) {
