@@ -1,0 +1,158 @@
+2022-01-10:
+  Fix quiet NANs on MIPS* and PA-RISC architectures.
+  Update version number.
+
+2021-12-22:
+  Add support of Synopsys ARC64 architecture.
+  Reintroduce macros, if DOUBLE_CONVERSION_NON_PREFIXED_MACROS is set.
+
+2021-12-04:
+  Update version number.
+
+2021-10-04:
+  Consistently use semicolons after DOUBLE_CONVERSION_ASSERT.
+
+2021-07-16:
+  Fix spelling.
+
+2021-05-19:
+  Loongarch is a RISC-style command system architecture.
+  Add support for loongarch architecture.
+
+2020-02-16:
+  Add support for quiet and signaling NaNs to ieee header.
+
+2019-10-31:
+  Add support for xtensa architecture.
+  Add support for nios2 architecture.
+
+2019-10-12:
+  Really add support for microblaze. A previous commit was lacking
+	the necessary line.
+
+2019-09-02:
+  Add support for e2k architecture. Thanks to Michael Shigorin.
+
+2019-08-01:
+  Add min exponent width option in double-to-string conversion.
+
+2019-06-22:
+  Remove redundant parenthesis.
+
+2019-06-11:
+  Changed all macros to use DOUBLE_CONVERSION_ as prefix.
+  Renamed ALLOW_CASE_INSENSIBILITY to ALLOW_CASE_INSENSITIVITY,
+    the old name is still available but officially deprecated.
+  Created and exposed new intermediate function StrtodTrimmed().
+
+2019-05-25:
+  Fix `0x` for string->double conversion when Hex Floats are allowed.
+  Avoid integer overflow when exponents for hex floats were too big.
+  Update version number.
+
+2019-04-22:
+  Fixed warning in gcc4.9. Thanks to Scott McCaskill
+    (https://github.com/usefulcat) for the patch.
+
+2019-04-16:
+  Merged changes to install libraries in the correct place when
+  using 64-bit libraries.
+  Contributed by Jason Zaman <jasonzaman@gmail.com> and (independently)
+    Dan Church (https://github.com/h3xx)
+
+2019-03-11:
+  Use relative includes in the library. This shouldn't have any visible effect
+  for consumers of the library.
+
+  Update version number.
+
+2019-03-06:
+  Fix typo in test.
+  Update version number.
+
+2019-03-03:
+  Fix separator characters when they they don't fit into 8 bits.
+  Update version number.
+
+2019-02-16:
+  Check correctly for _MSC_VER.
+  Patch by Ben Boeckel
+
+2019-01-17:
+  Allow the library to be compiled for Emscripten.
+  Patch by Tim Paine.
+
+2018-09-15:
+  Update version numbers. This also updates the shared-library version number.
+
+2018-09-09:
+  Fix bug where large hex literals would lose their minus sign.
+  Added support for separator characters (which adds a new optional
+  argument). Thus increasing the version number to 3.1.0
+  Added support for hexadecimal float literals.
+  Support for more architectures.
+
+2017-12-06:
+  Renamed `DISALLOW_COPY_AND_ASSIGN` and `DISALLOW_IMPLICIT_CONSTRUCTORS`
+  macros to `DC_DISALLOW_COPY_AND_ASSIGN` and
+  `DC_DISALLOW_IMPLICIT_CONSTRUCTORS` to make it easier to integrate the
+  library with other libraries that have similar macros.
+
+2017-08-05:
+  Tagged v3.0.0.
+  Due to the directory rename switching to a new version number.
+  The API for the library itself hasn't changed.
+
+2017-03-04:
+  Avoid negative shift. Fixes #41.
+
+2016-11-17:
+  Support RISC-V.
+
+
+2016-09-10:
+  Add fPIC flag on x86_64 if the compiler supports it. Fixes #34.
+
+2015 and 2016:
+  Lots of improvements to the build system.
+
+2015:
+  Warning fixes.
+
+2015-05-19:
+  Rename 'src' directory to 'double-conversion'.
+
+2014-03-08:
+  Update version number for cmake.
+  Support shared libraries with cmake.
+  Add build instructions to the README.
+
+2014-01-12:
+  Tagged v2.0.1.
+  Fix compilation for ARMv8 64bit (used wrong define).
+  Improved SConstruct file. Thanks to Milan Bouchet-Valat and Elan Ruusamäe.
+  Fixed lots of warnings (especially on Windows). Thanks to Greg Smith.
+
+2013-11-09:
+  Tagged v2.0.0.
+  String-to-Double|Float: ALLOW_LEADING_SPACES and similar flags now include
+  new-lines, tabs and all Unicode whitespace characters.
+
+2013-11-09:
+  Tagged v1.1.2.
+  Add support for ARM 64 and OsX ppc.
+  Rewrite tests so they pass under Visual Studio.
+  Add CMake build system support.
+  Fix warnings.
+
+2012-06-10:
+  Tagged v1.1.1.
+  Null terminate exponent buffer (only an issue when asserts are enabled).
+  Support more architectures.
+
+2012-02-05:
+  Merged in Single-branch with single-precision support.
+  Tagged v1.1 (based on b28450f33e1db493948a535d8f84e88fa211bd10).
+
+2012-02-05:
+  Tagged v1.0 (based on eda0196e9ac8fcdf59e92cb62885ee0af5391969).
