@@ -28,9 +28,9 @@
 #ifndef V8_CHECKS_H_
 #define V8_CHECKS_H_
 
-#include <string.h>
+#include "libc/isystem/string.h"
 
-#include "flags.h"
+#include "third_party/double-conversion/test/flags.h"
 
 extern "C" void V8_Fatal(const char* file, int line, const char* format, ...);
 void API_Fatal(const char* location, const char* format, ...);

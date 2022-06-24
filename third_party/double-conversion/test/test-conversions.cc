@@ -25,12 +25,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <string.h>
+#include "libc/isystem/string.h"
 
-#include "cctest.h"
-#include "double-conversion/double-conversion.h"
-#include "double-conversion/ieee.h"
-#include "double-conversion/utils.h"
+#include "third_party/double-conversion/test/cctest.h"
+#include "third_party/double-conversion/double-conversion.h"
+#include "third_party/double-conversion/ieee.h"
+#include "third_party/double-conversion/utils.h"
 
 // DoubleToString is already tested in test-dtoa.cc.
 

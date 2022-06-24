@@ -25,11 +25,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <algorithm>
-#include <cstring>
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/cstring"
 
-#include "bignum.h"
-#include "utils.h"
+#include "third_party/double-conversion/bignum.h"
+#include "third_party/double-conversion/utils.h"
 
 namespace double_conversion {
 

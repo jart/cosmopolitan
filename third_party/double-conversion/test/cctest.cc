@@ -25,10 +25,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "cctest.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "third_party/double-conversion/test/cctest.h"
+#include "libc/isystem/stdio.h"
+#include "libc/isystem/stdlib.h"
+#include "libc/isystem/string.h"
 
 
 CcTest* CcTest::last_ = NULL;

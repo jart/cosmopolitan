@@ -28,9 +28,9 @@
 // This file contains 100.000 decimal representations of random singles. They
 // have been generated using Gay's gdtoa to produce the shortest representation.
 
-#include "double-conversion/utils.h"
+#include "third_party/double-conversion/utils.h"
 
-#include "gay-shortest-single.h"
+#include "third_party/double-conversion/test/gay-shortest-single.h"
 
 namespace double_conversion {
 

@@ -25,16 +25,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdlib.h>
+#include "libc/isystem/stdlib.h"
 
-#include "double-conversion/double-conversion.h"
+#include "third_party/double-conversion/double-conversion.h"
 
-#include "cctest.h"
-#include "gay-fixed.h"
-#include "gay-precision.h"
-#include "gay-shortest.h"
-#include "gay-shortest-single.h"
-#include "double-conversion/ieee.h"
+#include "third_party/double-conversion/test/cctest.h"
+#include "third_party/double-conversion/test/gay-fixed.h"
+#include "third_party/double-conversion/test/gay-precision.h"
+#include "third_party/double-conversion/test/gay-shortest.h"
+#include "third_party/double-conversion/test/gay-shortest-single.h"
+#include "third_party/double-conversion/ieee.h"
 
 
 using namespace double_conversion;

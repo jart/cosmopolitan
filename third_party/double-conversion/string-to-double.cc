@@ -25,15 +25,15 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <climits>
-#include <locale>
-#include <cmath>
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/locale"
+#include "third_party/libcxx/cmath"
 
-#include "string-to-double.h"
+#include "third_party/double-conversion/string-to-double.h"
 
-#include "ieee.h"
-#include "strtod.h"
-#include "utils.h"
+#include "third_party/double-conversion/ieee.h"
+#include "third_party/double-conversion/strtod.h"
+#include "third_party/double-conversion/utils.h"
 
 #ifdef _MSC_VER
 #  if _MSC_VER >= 1900

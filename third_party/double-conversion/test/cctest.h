@@ -28,10 +28,10 @@
 #ifndef CCTEST_H_
 #define CCTEST_H_
 
-#include <stdio.h>
-#include <string.h>
+#include "libc/isystem/stdio.h"
+#include "libc/isystem/string.h"
 
-#include "double-conversion/utils.h"
+#include "third_party/double-conversion/utils.h"
 
 #ifndef TEST
 #define TEST(Name)                                                       \

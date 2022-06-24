@@ -25,13 +25,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdlib.h>
-#include <limits>
+#include "libc/isystem/stdlib.h"
+#include "libc/isystem/limits"
 
-#include "cctest.h"
-#include "double-conversion/diy-fp.h"
-#include "double-conversion/utils.h"
-#include "double-conversion/ieee.h"
+#include "third_party/double-conversion/test/cctest.h"
+#include "third_party/double-conversion/diy-fp.h"
+#include "third_party/double-conversion/utils.h"
+#include "third_party/double-conversion/ieee.h"
 
 
 using namespace double_conversion;

@@ -25,13 +25,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <climits>
-#include <cstdarg>
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/cstdarg"
 
-#include "bignum.h"
-#include "cached-powers.h"
-#include "ieee.h"
-#include "strtod.h"
+#include "third_party/double-conversion/bignum.h"
+#include "third_party/double-conversion/cached-powers.h"
+#include "third_party/double-conversion/ieee.h"
+#include "third_party/double-conversion/strtod.h"
 
 namespace double_conversion {
 
