@@ -167,6 +167,8 @@ o/tinylinux/tool/net/redbean.com:						\
 o/$(MODE)/tool/net/demo/.init.lua.zip.o						\
 o/$(MODE)/tool/net/demo/.reload.lua.zip.o					\
 o/$(MODE)/tool/net/demo/sql.lua.zip.o						\
+o/$(MODE)/tool/net/demo/sql-backup.lua.zip.o				\
+o/$(MODE)/tool/net/demo/sql-backupstore.lua.zip.o			\
 o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-webserver.lua.zip.o				\
@@ -215,6 +217,8 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
+		o/$(MODE)/tool/net/demo/sql-backup.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/sql-backupstore.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-webserver.lua.zip.o		\
