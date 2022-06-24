@@ -111,9 +111,9 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
 
   if ((fprintf_unlocked)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ",
-                         "FEWIVDNT"[level & 7], buf32,
-                         rem1000000int64(div1000int64(dots)), file, line,
-                         strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
+                         "FEWIVDNT"[level & 7], buf32, dots / 1000 % 1000000,
+                         file, line, strchrnul(prog, '.') - prog, prog,
+                         getpid()) <= 0) {
     vflogf_onfail(f);
   }
   (vfprintf_unlocked)(f, fmt, va);

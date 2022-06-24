@@ -1,6 +1,0 @@
-virt: lxd
-os: linux
-language: c
-script: make -j4 V=0
-notifications:
-  email: false

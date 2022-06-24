@@ -9,9 +9,12 @@
  * @return (𝑥 mod 𝑦) ∈ [0.,𝑦)
  * @see fmodl()
  */
-static inline long double emodl(long double x, long double y) {
-  return x - fabsl(y) * floorl(x / fabsl(y));
-}
+#define emodl(x, y)                              \
+  ({                                             \
+    long double __x = x;                         \
+    long double __y = y;                         \
+    __x - fabsl(__y) * floorl(__x / fabsl(__y)); \
+  })
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_EMODL_H_ */

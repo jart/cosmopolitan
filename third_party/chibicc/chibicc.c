@@ -1,6 +1,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
@@ -264,9 +265,9 @@ static void parse_args(int argc, char **argv) {
     } else if (!strncmp(argv[i], "-x", 2)) {
       opt_x = parse_opt_x(argv[i] + 2);
     } else if (startswith(argv[i], "-Wa")) {
-      strarray_push_comma(&as_extra_args, argv[i]);
+      strarray_push_comma(&as_extra_args, argv[i] + 3);
     } else if (startswith(argv[i], "-Wl")) {
-      strarray_push_comma(&ld_extra_args, argv[i]);
+      strarray_push_comma(&ld_extra_args, argv[i] + 3);
     } else if (!strcmp(argv[i], "-Xassembler")) {
       strarray_push(&as_extra_args, argv[++i]);
     } else if (!strcmp(argv[i], "-Xlinker")) {
@@ -447,8 +448,7 @@ static bool run_subprocess(char **argv) {
     _Exit(1);
   }
   // Wait for the child process to finish.
-  do
-    rc = wait(&ws);
+  do rc = wait(&ws);
   while (rc == -1 && errno == EINTR);
   return WIFEXITED(ws) && WEXITSTATUS(ws) == 0;
 }
@@ -657,27 +657,28 @@ static void run_linker(StringArray *inputs, char *output) {
   if (!ld || !*ld) ld = "ld";
   StringArray arr = {0};
   strarray_push(&arr, ld);
-  strarray_push(&arr, "-o");
-  strarray_push(&arr, output);
   strarray_push(&arr, "-m");
   strarray_push(&arr, "elf_x86_64");
   strarray_push(&arr, "-z");
   strarray_push(&arr, "max-page-size=0x1000");
+  strarray_push(&arr, "-static");
   strarray_push(&arr, "-nostdlib");
   strarray_push(&arr, "--gc-sections");
   strarray_push(&arr, "--build-id=none");
   strarray_push(&arr, "--no-dynamic-linker");
   strarray_push(&arr, xasprintf("-Ttext-segment=%#x", IMAGE_BASE_VIRTUAL));
-  strarray_push(&arr, "-T");
-  strarray_push(&arr, LDS);
-  strarray_push(&arr, APE);
-  strarray_push(&arr, CRT);
+  /* strarray_push(&arr, "-T"); */
+  /* strarray_push(&arr, LDS); */
+  /* strarray_push(&arr, APE); */
+  /* strarray_push(&arr, CRT); */
   for (int i = 0; i < ld_extra_args.len; i++) {
     strarray_push(&arr, ld_extra_args.data[i]);
   }
   for (int i = 0; i < inputs->len; i++) {
     strarray_push(&arr, inputs->data[i]);
   }
+  strarray_push(&arr, "-o");
+  strarray_push(&arr, output);
   handle_exit(run_subprocess(arr.data));
 }
 

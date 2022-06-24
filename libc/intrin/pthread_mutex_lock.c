@@ -16,14 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/asmflag.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
+#include "libc/sysv/consts/futex.h"
+#include "libc/sysv/consts/nr.h"
 
 static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int tries) {
   volatile int i;
@@ -31,9 +35,9 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int tries) {
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux()) {
+  } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&mutex->waits, 1);
-    LinuxFutexWait(&mutex->lock, 1, 0);
+    _futex_wait(&mutex->lock, 1, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);
   } else {
     sched_yield();

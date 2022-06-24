@@ -82,6 +82,9 @@ struct ucontext {
 
 typedef struct ucontext ucontext_t;
 
+int getcontext(ucontext_t *);
+int setcontext(const ucontext_t *);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_UCONTEXT_H_ */

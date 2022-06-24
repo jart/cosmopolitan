@@ -19,6 +19,8 @@
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
@@ -37,6 +39,7 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 static bool have_getrandom;
@@ -123,10 +126,20 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
 static textstartup void getrandom_init(void) {
   int e, rc;
   e = errno;
+  struct sigaction sa, oldsa;
+  if (IsBsd()) {
+    sa.sa_flags = 0;
+    sa.sa_handler = SIG_IGN;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSYS, &sa, &oldsa);
+  }
   if (!(rc = sys_getrandom(0, 0, 0))) {
     have_getrandom = true;
   }
-  KERNTRACE("sys_getrandom(0,0,0) → %d% m");
+  STRACE("sys_getrandom(0,0,0) → %d% m", rc);
+  if (IsBsd()) {
+    sigaction(SIGSYS, &oldsa, 0);
+  }
   errno = e;
 }
 

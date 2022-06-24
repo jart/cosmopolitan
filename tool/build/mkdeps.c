@@ -29,6 +29,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
@@ -132,10 +133,10 @@ struct Sauce *sauces;
 struct Strings strings;
 struct Sources sources;
 const char *buildroot;
-_Alignas(64) char galock;
-_Alignas(64) char readlock;
-_Alignas(64) char writelock;
-_Alignas(64) char reportlock;
+pthread_mutex_t galock;
+pthread_mutex_t readlock;
+pthread_mutex_t writelock;
+pthread_mutex_t reportlock;
 
 unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
@@ -262,18 +263,18 @@ int LoadRelationshipsWorker(void *arg) {
   buf += PAGESIZE;
   buf[-1] = '\n';
   for (;;) {
-    _spinlock(&galock);
+    pthread_mutex_lock(&galock);
     if ((src = getargs_next(&ga))) strcpy(srcbuf, src);
-    _spunlock(&galock);
+    pthread_mutex_unlock(&galock);
     if (!src) break;
     src = srcbuf;
     if (ShouldSkipSource(src)) continue;
     n = strlen(src);
-    _spinlock(&readlock);
+    pthread_mutex_lock(&readlock);
     srcid = GetSourceId(src, n);
-    _spunlock(&readlock);
+    pthread_mutex_unlock(&readlock);
     if ((fd = open(src, O_RDONLY)) == -1) {
-      _spinlock(&reportlock);
+      pthread_mutex_lock(&reportlock);
       OnMissingFile(ga.path, src);
     }
     CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
@@ -286,14 +287,14 @@ int LoadRelationshipsWorker(void *arg) {
       path = p + inclen;
       pathend = memchr(path, '"', pe - path);
       if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
-        _spinlock(&readlock);
+        pthread_mutex_lock(&readlock);
         dependency = GetSourceId(path, pathend - path);
-        _spunlock(&readlock);
+        pthread_mutex_unlock(&readlock);
         edge.from = srcid;
         edge.to = dependency;
-        _spinlock(&writelock);
+        pthread_mutex_lock(&writelock);
         append(&edges, &edge);
-        _spunlock(&writelock);
+        pthread_mutex_unlock(&writelock);
         p = pathend;
       }
     }
@@ -311,7 +312,7 @@ void LoadRelationships(int argc, char *argv[]) {
                   CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
               (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
               (int *)(tls[i] + 0x38)) == -1) {
-      _spinlock(&reportlock);
+      pthread_mutex_lock(&reportlock);
       kprintf("error: clone(%d) failed %m\n", i);
       exit(1);
     }
@@ -426,7 +427,7 @@ void Explore(void) {
                   CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
               (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
               (int *)(tls[i] + 0x38)) == -1) {
-      _spinlock(&reportlock);
+      pthread_mutex_lock(&reportlock);
       kprintf("error: clone(%d) failed %m\n", i);
       exit(1);
     }

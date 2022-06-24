@@ -21,8 +21,15 @@
 
 int sys_accept(int server, void *addr, uint32_t *addrsize) {
   int client;
-  if ((client = __sys_accept(server, addr, addrsize, 0)) != -1 && IsBsd()) {
-    sockaddr2linux(addr);
+  uint32_t size;
+  union sockaddr_storage_bsd bsd;
+  if (!IsBsd()) {
+    client = __sys_accept(server, addr, addrsize, 0);
+  } else {
+    size = sizeof(bsd);
+    if ((client = __sys_accept(server, &bsd, &size, 0)) != -1) {
+      sockaddr2linux(&bsd, size, addr, addrsize);
+    }
   }
   return client;
 }

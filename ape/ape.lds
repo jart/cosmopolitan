@@ -553,32 +553,6 @@ SHSTUB2(ape_loader_dd_count,
             ? ROUNDUP(ape_loader_end - ape_loader, PAGESIZE) / 64
             : 0);
 
-#if SupportsXnu()
-SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
-SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
-#endif
-
-#if SupportsWindows() || SupportsMetal()
-#define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
-PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
-HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
-HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
-HIDDEN(ape_pe_base = IMAGE_BASE_VIRTUAL);
-HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0);
-HIDDEN(ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0);
-HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0);
-HIDDEN(ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0);
-HIDDEN(v_ntversion = LINK_WINDOWS ? 6 : 1);
-HIDDEN(v_ntdllchar = LINK_WINDOWS ? 288 : 0);
-HIDDEN(v_ntsubversion = LINK_WINDOWS ? 6 : 5);
-HIDDEN(v_ntsubsystem = (LINK_WINDOWS
-                        ? (DEFINED(GetMessage)
-                           ? kNtImageSubsystemWindowsGui
-                           : kNtImageSubsystemWindowsCui)
-                        : kNtImageSubsystemEfiApplication));
-HIDDEN(ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain);
-#endif
-
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =
            MIN(0x70000 - IMAGE_BASE_REAL,
@@ -684,6 +658,32 @@ CHURN(ape_phdrs_end);
 CHURN(WinMain);
 #endif /* SupportsWindows() */
 #endif /* SupportsXnu() */
+
+#if SupportsWindows() || SupportsMetal()
+#define LINK_WINDOWS (SupportsWindows() && !DEFINED(EfiMain))
+PFSTUB4(ape_pe_offset, ape_pe - ape_mz);
+HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
+HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
+HIDDEN(ape_pe_base = IMAGE_BASE_VIRTUAL);
+HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_iat) : 0);
+HIDDEN(ape_idata_iatsize = LINK_WINDOWS ? ape_idata_iatend - ape_idata_iat : 0);
+HIDDEN(ape_idata = LINK_WINDOWS ? RVA(ape_idata_idt) : 0);
+HIDDEN(ape_idata_idtsize = LINK_WINDOWS ? ape_idata_idtend - ape_idata_idt : 0);
+HIDDEN(v_ntversion = LINK_WINDOWS ? 6 : 1);
+HIDDEN(v_ntdllchar = LINK_WINDOWS ? 288 : 0);
+HIDDEN(v_ntsubversion = LINK_WINDOWS ? 6 : 5);
+HIDDEN(v_ntsubsystem = (LINK_WINDOWS
+                        ? (DEFINED(GetMessage)
+                           ? kNtImageSubsystemWindowsGui
+                           : kNtImageSubsystemWindowsCui)
+                        : kNtImageSubsystemEfiApplication));
+HIDDEN(ape_pe_entry = LINK_WINDOWS ? WinMain : EfiMain);
+#endif
+
+#if SupportsXnu()
+SHSTUB2(ape_macho_dd_skip, RVA(ape_macho) / 8);
+SHSTUB2(ape_macho_dd_count, (ape_macho_end - ape_macho) / 8);
+#endif
 
 ASSERT(DEFINED(ape_mz) ? ape_mz == IMAGE_BASE_VIRTUAL : 1, "linker panic");
 ASSERT((DEFINED(__init_bss_end) ? __init_bss_end : 0) % __SIZEOF_POINTER__ == 0,

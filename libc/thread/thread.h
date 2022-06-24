@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 #define COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 #include "libc/calls/struct/timespec.h"
+#include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
 
 #define CTHREAD_CREATE_DETACHED 1
@@ -33,6 +34,7 @@ struct cthread_descriptor_t {
     char *top, *bottom;
   } stack, alloc;
   jmp_buf exiter;
+  void *key[PTHREAD_KEYS_MAX];
 };
 
 typedef struct cthread_descriptor_t *cthread_t;

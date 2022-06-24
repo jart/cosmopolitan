@@ -3121,6 +3121,33 @@ static Node *generic_selection(Token **rest, Token *tok) {
   return ret;
 }
 
+static Node *ParseAtomic2(NodeKind kind, Token *tok, Token **rest) {
+  Node *node = new_node(kind, tok);
+  tok = skip(tok->next, '(');
+  node->lhs = assign(&tok, tok);
+  add_type(node->lhs);
+  node->ty = node->lhs->ty->base;
+  tok = skip(tok, ',');
+  node->memorder = const_expr(&tok, tok);
+  *rest = skip(tok, ')');
+  return node;
+}
+
+static Node *ParseAtomic3(NodeKind kind, Token *tok, Token **rest) {
+  Node *node = new_node(kind, tok);
+  tok = skip(tok->next, '(');
+  node->lhs = assign(&tok, tok);
+  add_type(node->lhs);
+  node->ty = node->lhs->ty->base;
+  tok = skip(tok, ',');
+  node->rhs = assign(&tok, tok);
+  add_type(node->rhs);
+  tok = skip(tok, ',');
+  node->memorder = const_expr(&tok, tok);
+  *rest = skip(tok, ')');
+  return node;
+}
+
 // primary = "(" "{" stmt+ "}" ")"
 //         | "(" expr ")"
 //         | "sizeof" "(" type-name ")"
@@ -3228,104 +3255,65 @@ static Node *primary(Token **rest, Token *tok) {
       if (is_flonum(ty)) return new_int(1, start);
       return new_int(2, start);
     }
-    if (kw == KW___BUILTIN_COMPARE_AND_SWAP) {
+    if (kw == KW___ATOMIC_COMPARE_EXCHANGE_N) {
       Node *node = new_node(ND_CAS, tok);
       tok = skip(tok->next, '(');
       node->cas_addr = assign(&tok, tok);
+      add_type(node->cas_addr);
       tok = skip(tok, ',');
       node->cas_old = assign(&tok, tok);
+      add_type(node->cas_old);
       tok = skip(tok, ',');
       node->cas_new = assign(&tok, tok);
+      add_type(node->cas_new);
+      tok = skip(tok, ',');
+      /* weak = */ const_expr(&tok, tok);
+      tok = skip(tok, ',');
+      node->memorder = const_expr(&tok, tok);
+      tok = skip(tok, ',');
+      /* memorder_failure = */ const_expr(&tok, tok);
       *rest = skip(tok, ')');
       node->ty = node->cas_addr->ty->base;
       return node;
     }
-    if (kw == KW___ATOMIC_EXCHANGE) {
-      Node *node = new_node(ND_EXCH, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->rhs = assign(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+    if (kw == KW___ATOMIC_EXCHANGE_N) {
+      return ParseAtomic3(ND_EXCH_N, tok, rest);
     }
     if (kw == KW___ATOMIC_LOAD) {
-      Node *node = new_node(ND_LOAD, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->rhs = assign(&tok, tok);
-      tok = skip(tok, ',');
-      node->memorder = const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+      return ParseAtomic3(ND_LOAD, tok, rest);
     }
     if (kw == KW___ATOMIC_STORE) {
-      Node *node = new_node(ND_STORE, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->rhs = assign(&tok, tok);
-      tok = skip(tok, ',');
-      node->memorder = const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+      return ParseAtomic3(ND_STORE, tok, rest);
     }
-    if (kw == KW___ATOMIC_TEST_AND_SET) {
-      Node *node = new_node(ND_TESTANDSETA, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->memorder = const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+    if (kw == KW___ATOMIC_LOAD_N) {
+      return ParseAtomic2(ND_LOAD_N, tok, rest);
     }
-    if (kw == KW___ATOMIC_CLEAR) {
-      Node *node = new_node(ND_CLEAR, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->memorder = const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+    if (kw == KW___ATOMIC_STORE_N) {
+      return ParseAtomic3(ND_STORE_N, tok, rest);
     }
     if (kw == KW___ATOMIC_FETCH_ADD) {
-      Node *node = new_node(ND_FETCHADD, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->rhs = assign(&tok, tok);
-      tok = skip(tok, ',');
-      const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+      return ParseAtomic3(ND_FETCHADD, tok, rest);
     }
-    if (kw == KW___ATOMIC_SUB_FETCH) {
-      Node *node = new_node(ND_SUBFETCH, tok);
-      tok = skip(tok->next, '(');
-      node->lhs = assign(&tok, tok);
-      add_type(node->lhs);
-      node->ty = node->lhs->ty->base;
-      tok = skip(tok, ',');
-      node->rhs = assign(&tok, tok);
-      tok = skip(tok, ',');
-      const_expr(&tok, tok);
-      *rest = skip(tok, ')');
-      return node;
+    if (kw == KW___ATOMIC_FETCH_SUB) {
+      return ParseAtomic3(ND_FETCHSUB, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_XOR) {
+      return ParseAtomic3(ND_FETCHXOR, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_AND) {
+      return ParseAtomic3(ND_FETCHAND, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_OR) {
+      return ParseAtomic3(ND_FETCHOR, tok, rest);
+    }
+    if (kw == KW___ATOMIC_TEST_AND_SET) {
+      return ParseAtomic2(ND_TESTANDSETA, tok, rest);
+    }
+    if (kw == KW___ATOMIC_CLEAR) {
+      return ParseAtomic2(ND_CLEAR, tok, rest);
     }
     if (kw == KW___SYNC_LOCK_TEST_AND_SET) {
+      // TODO(jart): delete me
       Node *node = new_node(ND_TESTANDSET, tok);
       tok = skip(tok->next, '(');
       node->lhs = assign(&tok, tok);
@@ -3337,6 +3325,7 @@ static Node *primary(Token **rest, Token *tok) {
       return node;
     }
     if (kw == KW___SYNC_LOCK_RELEASE) {
+      // TODO(jart): delete me
       Node *node = new_node(ND_RELEASE, tok);
       tok = skip(tok->next, '(');
       node->lhs = assign(&tok, tok);

@@ -1,0 +1,194 @@
+.\" Copyright (c) 1989, 1990 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	from: @(#)finger.1	6.14 (Berkeley) 7/27/91
+.\"	$Id: finger.1,v 1.18 2000/07/30 23:56:57 dholland Exp $
+.\"
+.Dd August 15, 1999
+.Dt FINGER 1
+.Os "Linux NetKit (0.17)"
+.Sh NAME
+.Nm finger
+.Nd user information lookup program
+.Sh SYNOPSIS
+.Nm finger
+.Op Fl lmsp
+.Op Ar user ...
+.Op Ar user@host ...
+.Sh DESCRIPTION
+The
+.Nm finger
+displays information about the system users.
+.Pp
+Options are:
+.Bl -tag -width flag
+.It Fl s
+.Nm Finger
+displays the user's login name, real name, terminal name and write
+status (as a ``*'' after the terminal name if write permission is
+denied), idle time, login time, office location and office phone
+number.
+.Pp
+Login time is displayed as month, day, hours and minutes, unless
+more than six months ago, in which case the year is displayed rather
+than the hours and minutes.
+.Pp
+Unknown devices as well as nonexistent idle and login times are
+displayed as single asterisks.
+.Pp
+.It Fl l
+Produces a multi-line format displaying all of the information
+described for the
+.Fl s
+option as well as the user's home directory, home phone number, login
+shell, mail status, and the contents of the files
+.Dq Pa .plan ,
+.Dq Pa .project ,
+.Dq Pa .pgpkey
+and
+.Dq Pa .forward
+from the user's home directory.
+.Pp
+Phone numbers specified as eleven digits are printed as ``+N-NNN-NNN-NNNN''.
+Numbers specified as ten or seven digits are printed as the appropriate
+subset of that string.
+Numbers specified as five digits are printed as ``xN-NNNN''.
+Numbers specified as four digits are printed as ``xNNNN''.
+.Pp
+If write permission is denied to the device, the phrase ``(messages off)''
+is appended to the line containing the device name.
+One entry per user is displayed with the
+.Fl l
+option; if a user is logged on multiple times, terminal information
+is repeated once per login.
+.Pp
+Mail status is shown as ``No Mail.'' if there is no mail at all,
+``Mail last read DDD MMM ## HH:MM YYYY (TZ)'' if the person has looked
+at their mailbox since new mail arriving, or ``New mail received ...'',
+``  Unread since ...'' if they have new mail.
+.Pp
+.It Fl p
+Prevents
+the
+.Fl l
+option of
+.Nm finger
+from displaying the contents of the
+.Dq Pa .plan ,
+.Dq Pa .project
+and
+.Dq Pa .pgpkey
+files.
+.It Fl m
+Prevent matching of
+.Ar user
+names.
+.Ar User
+is usually a login name; however, matching will also be done on the
+users' real names, unless the
+.Fl m
+option is supplied.
+All name matching performed by
+.Nm finger
+is case insensitive.
+.El
+.Pp
+If no options are specified,
+.Nm finger
+defaults to the
+.Fl l
+style output if operands are provided, otherwise to the
+.Fl s
+style.
+Note that some fields may be missing, in either format, if information
+is not available for them.
+.Pp
+If no arguments are specified,
+.Nm finger
+will print an entry for each user currently logged into the system.
+.Pp
+.Nm Finger
+may be used to look up users on a remote machine.
+The format is to specify a
+.Ar user
+as
+.Dq Li user@host ,
+or
+.Dq Li @host ,
+where the default output
+format for the former is the
+.Fl l
+style, and the default output format for the latter is the
+.Fl s
+style.
+The
+.Fl l
+option is the only option that may be passed to a remote machine.
+.Pp
+If standard output is a socket, 
+.Nm finger
+will emit a carriage return (^M) before every linefeed (^J). This is
+for processing remote finger requests when invoked by
+.Xr fingerd 8 .
+.Sh FILES
+.Bl -tag -width mmmmmmmmmmmmmmm
+.It Pa ~/.nofinger
+If finger finds this file in a user's home directory, it will, for
+finger requests originating outside the local host, firmly deny the
+existence of that user.  For this to work, the finger program, as
+started by
+.Xr fingerd 8 ,
+must be able to see the
+.Pa .nofinger
+file. This generally means that the home directory containing the file
+must have the other-users-execute bit set (o+w). See
+.Xr chmod 1 .
+If you use this feature for privacy, please test it with ``finger
+@localhost'' before relying on it, just in case.
+.It ~/.plan
+.It ~/.project
+.It ~/.pgp
+These files are printed as part of a long-format request. The
+.Pa .project
+file is limited to one line; the
+.Pa .plan
+file may be arbitrarily long.
+.El
+.Sh SEE ALSO
+.Xr chfn 1 ,
+.Xr passwd 1 ,
+.Xr w 1 ,
+.Xr who 1
+.Sh HISTORY
+The
+.Nm finger
+command appeared in
+.Bx 3.0 .

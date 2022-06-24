@@ -35,6 +35,7 @@ static dontinline uint64_t rdrand_failover(void) {
       if (r == -1 && errno == EINTR) {
         r = 0;
       } else if (r == -1 && errno == EAGAIN) {
+        r = 0;
         f = 0;
       } else {
         return rand64();

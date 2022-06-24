@@ -164,8 +164,17 @@ systemfive_bsdscrub:
 systemfive_bsd:
 	cmp	$0xfff,%ax
 	je	systemfive_enosys
-	mov	%rcx,%r10		# note: we do not create a stack frame
+	mov	%rcx,%r10
+	push	%rbx
+	push	32(%rsp)
+	push	24(%rsp)
+	push	16(%rsp)
+	mov	%rax,%rbx		# save ordinal for SIGSYS crash report
 	syscall				# bsd will need arg on stack sometimes
+	pop	%rbx
+	pop	%rbx
+	pop	%rbx
+	pop	%rbx
 	jc	systemfive_errno	# bsd sets carry flag if %rax is errno
 	ret
 	.endfn	systemfive_bsd

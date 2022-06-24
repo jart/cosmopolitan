@@ -22,12 +22,14 @@
 #include "libc/errno.h"
 #include "libc/intrin/setjmp.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/internal.h"
 #include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
@@ -76,6 +78,7 @@ static int cthread_start(void *arg) {
     exitcode = (void *)rc.dx;
   }
   td->exitcode = exitcode;
+  _pthread_key_destruct(td->key);
   if (atomic_load(&td->state) & cthread_detached) {
     // we're still using the stack
     // thus we can't munmap it yet
@@ -101,6 +104,7 @@ int cthread_create(cthread_t *ptd, const cthread_attr_t *attr,
   int rc, tid;
   cthread_t td;
   cthread_attr_t default_attr;
+  __threaded = true;
   cthread_zombies_reap();
   cthread_attr_init(&default_attr);
   if ((td = cthread_allocate(attr ? attr : &default_attr))) {

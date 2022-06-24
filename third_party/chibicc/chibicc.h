@@ -344,14 +344,20 @@ typedef enum {
   ND_MEMZERO,      // Zero-clear a stack variable
   ND_ASM,          // "asm"
   ND_CAS,          // Atomic compare-and-swap
-  ND_EXCH,         // Atomic exchange
-  ND_LOAD,         // Atomic load
-  ND_STORE,        // Atomic store
+  ND_EXCH_N,       // Atomic exchange with value
+  ND_LOAD,         // Atomic load to pointer
+  ND_LOAD_N,       // Atomic load to result
+  ND_STORE,        // Atomic store to pointer
+  ND_STORE_N,      // Atomic store to result
   ND_TESTANDSET,   // Sync lock test and set
   ND_TESTANDSETA,  // Atomic lock test and set
   ND_CLEAR,        // Atomic clear
   ND_RELEASE,      // Atomic lock release
   ND_FETCHADD,     // Atomic fetch and add
+  ND_FETCHSUB,     // Atomic fetch and sub
+  ND_FETCHXOR,     // Atomic fetch and xor
+  ND_FETCHAND,     // Atomic fetch and and
+  ND_FETCHOR,      // Atomic fetch and or
   ND_SUBFETCH,     // Atomic sub and fetch
   ND_FPCLASSIFY,   // floating point classify
   ND_MOVNTDQ,      // Intel MOVNTDQ

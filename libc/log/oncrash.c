@@ -58,7 +58,7 @@ static const char kGregNames[17][4] forcealign(1) = {
 static const char kCpuFlags[12] forcealign(1) = "CVPRAKZSTIDO";
 static const char kFpuExceptions[6] forcealign(1) = "IDZOUP";
 
-int kCrashSigs[7];
+int kCrashSigs[8];
 
 relegated static void ShowFunctionCalls(ucontext_t *ctx) {
   struct StackFrame *bp;

@@ -29,6 +29,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
@@ -114,6 +115,9 @@
 
 STATIC_STACK_SIZE(0x40000);
 STATIC_YOINK("zip_uri_support");
+#if !IsTiny()
+STATIC_YOINK("ShowCrashReportsEarly");
+#endif
 
 /**
  * @fileoverview redbean - single-file distributable web server
@@ -139,7 +143,7 @@ STATIC_YOINK("zip_uri_support");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020003
+#define VERSION          0x020007
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
@@ -760,25 +764,22 @@ static void ProgramSslTicketLifetime(long x) {
   sslticketlifetime = x;
 }
 
-static uint32_t ResolveIp(const char *addr) {
-  ssize_t rc;
-  uint32_t ip;
-  struct addrinfo *ai = NULL;
-  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
-  if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
-    DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
-  }
-  ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
-  freeaddrinfo(ai);
-  return ip;
-}
-
 static void ProgramAddr(const char *addr) {
-  uint32_t ip;
-  if (IsTiny()) {
-    ip = ParseIp(addr, -1);
-  } else {
-    ip = ResolveIp(addr);
+  ssize_t rc;
+  int64_t ip;
+  if ((ip = ParseIp(addr, -1)) == -1) {
+    if (!IsTiny()) {
+      struct addrinfo *ai = NULL;
+      struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM,
+                              IPPROTO_TCP};
+      if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
+        DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
+      }
+      ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
+      freeaddrinfo(ai);
+    } else {
+      DIEF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
+    }
   }
   ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
   ips.p[ips.n - 1] = ip;
@@ -833,11 +834,11 @@ static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
   char *p;
   const char *s;
   p = buf;
-  p = FormatUint64(p, (addr & 0xFF000000) >> 030), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x00FF0000) >> 020), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x0000FF00) >> 010), *p++ = '.';
-  p = FormatUint64(p, (addr & 0x000000FF) >> 000), *p++ = ':';
-  p = FormatUint64(p, port);
+  p = FormatUint32(p, (addr & 0xFF000000) >> 030), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x00FF0000) >> 020), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x0000FF00) >> 010), *p++ = '.';
+  p = FormatUint32(p, (addr & 0x000000FF) >> 000), *p++ = ':';
+  p = FormatUint32(p, port);
   *p = '\0';
   assert(p - buf < 40);
 }
@@ -4643,14 +4644,22 @@ static int LuaProgramUniprocess(lua_State *L) {
   return 1;
 }
 
-static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
-  P(luaL_checkstring(L, 1));
+static int LuaProgramAddr(lua_State *L) {
+  uint32_t ip;
+  OnlyCallFromInitLua(L, "ProgramAddr");
+  if (lua_isinteger(L, 1)) {
+    ip = luaL_checkinteger(L, 1);
+    ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
+    ips.p[ips.n - 1] = ip;
+  } else {
+    ProgramAddr(luaL_checkstring(L, 1));
+  }
   return 0;
 }
 
-static int LuaProgramAddr(lua_State *L) {
-  OnlyCallFromInitLua(L, "ProgramAddr");
-  return LuaProgramString(L, ProgramAddr);
+static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
+  P(luaL_checkstring(L, 1));
+  return 0;
 }
 
 static int LuaProgramBrand(lua_State *L) {
@@ -4787,17 +4796,6 @@ static int LuaEvadeDragnetSurveillance(lua_State *L) {
   return LuaProgramBool(L, &evadedragnetsurveillance);
 }
 
-static int LuaProgramSslCompression(lua_State *L) {
-#ifndef UNSECURE
-  if (!unsecure) {
-    OnlyCallFromInitLua(L, "ProgramSslCompression");
-    conf.disable_compression = confcli.disable_compression =
-        !lua_toboolean(L, 1);
-  }
-#endif
-  return 0;
-}
-
 static int LuaHidePath(lua_State *L) {
   size_t pathlen;
   const char *path;
@@ -4848,7 +4846,7 @@ static int LuaGetAssetMode(lua_State *L) {
   return 1;
 }
 
-static int LuaGetLastModifiedTime(lua_State *L) {
+static int LuaGetAssetLastModifiedTime(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -4886,7 +4884,7 @@ static int LuaGetAssetSize(lua_State *L) {
   return 1;
 }
 
-static int LuaIsCompressed(lua_State *L) {
+static int LuaIsAssetCompressed(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -4955,6 +4953,7 @@ static const char *const kDontAutoComplete[] = {
     "GetBody",                   //
     "GetClientAddr",             //
     "GetClientFd",               //
+    "GetComment",                // deprecated
     "GetCookie",                 //
     "GetEffectivePath",          //
     "GetFragment",               //
@@ -4962,11 +4961,13 @@ static const char *const kDontAutoComplete[] = {
     "GetHeaders",                //
     "GetHost",                   //
     "GetHttpVersion",            //
+    "GetLastModifiedTime",       // deprecated
     "GetMethod",                 //
     "GetParam",                  //
     "GetParams",                 //
     "GetPass",                   //
     "GetPath",                   //
+    "GetPayload",                // deprecated
     "GetPort",                   //
     "GetRemoteAddr",             //
     "GetScheme",                 //
@@ -4975,8 +4976,10 @@ static const char *const kDontAutoComplete[] = {
     "GetStatus",                 //
     "GetUrl",                    //
     "GetUser",                   //
+    "GetVersion",                // deprecated
     "HasParam",                  //
     "IsClientUsingSsl",          //
+    "IsCompressed",              // deprecated
     "LaunchBrowser",             //
     "LuaProgramSslRequired",     // TODO
     "ProgramAddr",               // TODO
@@ -4990,7 +4993,6 @@ static const char *const kDontAutoComplete[] = {
     "ProgramPrivateKey",         // TODO
     "ProgramSslCiphersuite",     // TODO
     "ProgramSslClientVerify",    // TODO
-    "ProgramSslCompression",     //
     "ProgramSslTicketLifetime",  //
     "ProgramTimeout",            // TODO
     "ProgramUid",                //
@@ -5041,12 +5043,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
     {"FormatIp", LuaFormatIp},                            //
     {"GetAssetComment", LuaGetAssetComment},              //
+    {"GetAssetLastModifiedTime", LuaGetAssetLastModifiedTime},  //
     {"GetAssetMode", LuaGetAssetMode},                    //
     {"GetAssetSize", LuaGetAssetSize},                    //
     {"GetBody", LuaGetBody},                              //
     {"GetClientAddr", LuaGetClientAddr},                  //
     {"GetClientFd", LuaGetClientFd},                      //
-    {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
     {"GetCpuCore", LuaGetCpuCore},                        //
     {"GetCpuCount", LuaGetCpuCount},                      //
@@ -5061,7 +5063,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHostOs", LuaGetHostOs},                          //
     {"GetHttpReason", LuaGetHttpReason},                  //
     {"GetHttpVersion", LuaGetHttpVersion},                //
-    {"GetLastModifiedTime", LuaGetLastModifiedTime},      //
     {"GetLogLevel", LuaGetLogLevel},                      //
     {"GetMethod", LuaGetMethod},                          //
     {"GetMonospaceWidth", LuaGetMonospaceWidth},          //
@@ -5069,7 +5070,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                          //
     {"GetPass", LuaGetPass},                              //
     {"GetPath", LuaGetPath},                              //
-    {"GetPayload", LuaGetBody},                           //
     {"GetPort", LuaGetPort},                              //
     {"GetRandomBytes", LuaGetRandomBytes},                //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},          //
@@ -5080,7 +5080,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetTime", LuaGetTime},                              //
     {"GetUrl", LuaGetUrl},                                //
     {"GetUser", LuaGetUser},                              //
-    {"GetVersion", LuaGetHttpVersion},                    //
     {"GetZipPaths", LuaGetZipPaths},                      //
     {"HasControlCodes", LuaHasControlCodes},              //
     {"HasParam", LuaHasParam},                            //
@@ -5090,7 +5089,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsAcceptablePath", LuaIsAcceptablePath},            //
     {"IsAcceptablePort", LuaIsAcceptablePort},            //
     {"IsClientUsingSsl", LuaIsClientUsingSsl},            //
-    {"IsCompressed", LuaIsCompressed},                    //
+    {"IsAssetCompressed", LuaIsAssetCompressed},          //
     {"IsDaemon", LuaIsDaemon},                            //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
     {"IsHiddenPath", LuaIsHiddenPath},                    //
@@ -5131,6 +5130,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Rdrand", LuaRdrand},                                //
     {"Rdseed", LuaRdseed},                                //
     {"Rdtsc", LuaRdtsc},                                  //
+    {"ResolveIp", LuaResolveIp},                          //
     {"Route", LuaRoute},                                  //
     {"RouteHost", LuaRouteHost},                          //
     {"RoutePath", LuaRoutePath},                          //
@@ -5166,13 +5166,18 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPrivateKey", LuaProgramPrivateKey},                //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
-    {"ProgramSslCompression", LuaProgramSslCompression},        //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslRequired", LuaProgramSslRequired},              //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
 #endif
+    // deprecated
+    {"GetPayload", LuaGetBody},                           //
+    {"GetComment", LuaGetAssetComment},                   //
+    {"GetVersion", LuaGetHttpVersion},                    //
+    {"IsCompressed", LuaIsAssetCompressed},               //
+    {"GetLastModifiedTime", LuaGetAssetLastModifiedTime}, //
 };
 
 static const luaL_Reg kLuaLibs[] = {
@@ -7309,9 +7314,6 @@ void RedBean(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   LoadZipArgs(&argc, &argv);
-  if (!IsTiny()) {
-    ShowCrashReports();
-  }
   RedBean(argc, argv);
   if (IsModeDbg()) {
     CheckForMemoryLeaks();

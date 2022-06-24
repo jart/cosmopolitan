@@ -52,6 +52,18 @@ struct sockaddr_un_bsd {
   char sun_path[108];
 };
 
+union sockaddr_storage_bsd {
+  struct sockaddr_bsd sa;
+  struct sockaddr_in_bsd sin;
+  struct sockaddr_un_bsd sun;
+};
+
+union sockaddr_storage_linux {
+  struct sockaddr sa;
+  struct sockaddr_in sin;
+  struct sockaddr_un sun;
+};
+
 /* ------------------------------------------------------------------------------------*/
 
 #define SOCKFD_OVERLAP_BUFSIZ 128
@@ -79,10 +91,11 @@ void _firewall(const void *, uint32_t) hidden;
 
 int32_t __sys_accept(int32_t, void *, uint32_t *, int) dontdiscard hidden;
 int32_t __sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard hidden;
+int32_t __sys_bind(int32_t, const void *, uint32_t) hidden;
 int32_t __sys_connect(int32_t, const void *, uint32_t) hidden;
-int32_t __sys_socket(int32_t, int32_t, int32_t) hidden;
-int32_t __sys_getsockname(int32_t, void *, uint32_t *) hidden;
 int32_t __sys_getpeername(int32_t, void *, uint32_t *) hidden;
+int32_t __sys_getsockname(int32_t, void *, uint32_t *) hidden;
+int32_t __sys_socket(int32_t, int32_t, int32_t) hidden;
 int32_t __sys_socketpair(int32_t, int32_t, int32_t, int32_t[2]) hidden;
 
 int32_t sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard hidden;
@@ -137,29 +150,10 @@ struct SockFd *_dupsockfd(struct SockFd *) hidden;
 int64_t GetNtBaseSocket(int64_t) hidden;
 int sys_close_epoll(int) hidden;
 
-/**
- * Converts sockaddr (Linux/Windows) → sockaddr_bsd (XNU/BSD).
- */
-forceinline void sockaddr2bsd(void *saddr) {
-  char *p;
-  if (saddr) {
-    p = saddr;
-    p[1] = p[0];
-    p[0] = sizeof(struct sockaddr_in_bsd);
-  }
-}
-
-/**
- * Converts sockaddr_in_bsd (XNU/BSD) → sockaddr (Linux/Windows).
- */
-forceinline void sockaddr2linux(void *saddr) {
-  char *p;
-  if (saddr) {
-    p = saddr;
-    p[0] = p[1];
-    p[1] = 0;
-  }
-}
+int sockaddr2bsd(const void *, uint32_t, union sockaddr_storage_bsd *,
+                 uint32_t *);
+void sockaddr2linux(const union sockaddr_storage_bsd *, uint32_t,
+                    union sockaddr_storage_linux *, uint32_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -71,8 +71,8 @@
  * Like redbean, greenbean has superior performance too, with an
  * advantage on benchmarks biased towards high connection counts
  *
- *     $ wrk -c 300 -t 32 --latency http://10.10.10.124:8080/
- *     Running 10s test @ http://10.10.10.124:8080/
+ *     $ wrk -c 300 -t 32 --latency http://127.0.0.1:8080/
+ *     Running 10s test @ http://127.0.0.1:8080/
  *       32 threads and 300 connections
  *         Thread Stats   Avg      Stdev     Max   +/- Stdev
  *         Latency   661.06us    5.11ms  96.22ms   98.85%

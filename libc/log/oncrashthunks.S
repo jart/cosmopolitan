@@ -24,7 +24,7 @@
 
 __oncrash_thunks:
 
-//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
+//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
 
 	.org	11*0
 __oncrash_sigquit:
@@ -89,6 +89,15 @@ __oncrash_sigbus:
 	ret
 	.endfn	__oncrash_sigbus,globl
 
-//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
+	.org	11*7
+__oncrash_sigsys:
+	push	%rbp
+	mov	%rsp,%rbp
+	call	__oncrash
+	pop	%rbp
+	ret
+	.endfn	__oncrash_sigsys,globl
+
+//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
 
 	.endobj	__oncrash_thunks,globl

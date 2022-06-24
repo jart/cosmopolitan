@@ -14,6 +14,9 @@ if __name__ == 'PYOBJ.COM':
 try:
     tty = open("/dev/tty", "rb")
 except OSError:
+    # todo: gh-runners fail on skiptest cosmo issue #431
+    import sys
+    sys.exit()
     raise unittest.SkipTest("Unable to open /dev/tty")
 else:
     # Skip if another process is in foreground

@@ -39,7 +39,7 @@
  * @param service is the port number as a string
  * @param hints may be passed to specialize behavior (optional)
  * @param res receives a pointer that must be freed with freeaddrinfo(),
- *     and won't be modified if -1 is returned
+ *     and won't be modified if non-zero is returned
  * @return 0 on success or EAI_xxx value
  * @threadsafe
  */

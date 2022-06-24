@@ -16,11 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/dce.h"
+#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
-#include "libc/linux/futex.h"
 
 int _pthread_mutex_wake(pthread_mutex_t *mutex) {
-  return LinuxFutexWake(&mutex->lock, 1);
+  return _futex_wake(&mutex->lock, 1);
 }

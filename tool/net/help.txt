@@ -725,6 +725,11 @@ FUNCTIONS
   EscapeUser(str) → str
           Escapes URL username. See kescapeauthority.c.
 
+  EvadeDragnetSurveillance(bool)
+          If this option is programmed then redbean will not transmit a
+          Server Name Indicator (SNI) when performing Fetch() requests.
+          This function is not available in unsecure mode.
+
   Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
       → status:int,{header:str=value:str,...},body:str
           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
@@ -761,15 +766,24 @@ FUNCTIONS
 
   GetAssetComment(path:str) → str
           Returns comment text associated with asset in the ZIP central
-          directory. Also available as GetComment (deprecated).
+          directory.
+          Also available as GetComment (deprecated).
+
+  GetAssetLastModifiedTime(path:str) → seconds:number
+          Returns UNIX timestamp for modification time of a ZIP asset (or
+          local file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
+          Also available as GetLastModifiedTime (deprecated).
 
   GetAssetMode(path:str) → int
           Returns UNIX-style octal mode for ZIP asset (or local file if the
-          -D flag is used)
+          -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetAssetSize(path:str) → int
           Returns byte size of uncompressed contents of ZIP asset (or local
-          file if the -D flag is used)
+          file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetBody() → str
           Returns the request message body if present or an empty string.
@@ -927,8 +941,8 @@ FUNCTIONS
 
   GetHttpVersion() → int
           Returns the request HTTP protocol version, which can be 9 for
-          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
-          as GetVersion (deprecated).
+          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
+          Also available as GetVersion (deprecated).
 
   GetRandomBytes([length:int]) → str
           Returns string with the specified number of random bytes (1..256).
@@ -965,9 +979,10 @@ FUNCTIONS
           Returns true if IP address is part of the localhost network
           (127.0.0.0/8).
 
-  IsCompressed(path:str) → bool
+  IsAssetCompressed(path:str) → bool
           Returns true if ZIP artifact at path is stored on disk using
           DEFLATE compression.
+          Also available as IsCompressed (deprecated).
 
   IndentLines(str[,int]) → str
           Adds spaces to beginnings of multiline string. If the int
@@ -1038,9 +1053,17 @@ FUNCTIONS
           0x01020304, or returns -1 for invalid inputs. See also FormatIp
           for the inverse operation.
 
-  ProgramAddr(str)
-          Configures the address on which to listen. Can be used multiple
-          times to set more than one address.
+  ProgramAddr(ip:int)
+  ProgramAddr(host:str)
+          Configures the address on which to listen. This can be called
+          multiple times to set more than one address. If an integer is
+          provided then it should be a word-encoded IPv4 address, such
+          as the ones returned by ResolveIp(). If a string is provided,
+          it will first be passed to ParseIp() to see if it's an IPv4
+          address. If it isn't, then a HOSTS.TXT lookup is performed,
+          with fallback to the system-configured DNS resolution service.
+          Please note that in MODE=tiny the HOSTS.TXT and DNS resolution
+          isn't included, and therefore an IP must be provided.
 
   ProgramBrand(str)
           Changes HTTP Server header, as well as the <h1> title on the /
@@ -1112,11 +1135,6 @@ FUNCTIONS
           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
           SSL tickets. It's a good idea to use these since it increases
           handshake performance 10x and eliminates a network round trip.
-          This function is not available in unsecure mode.
-
-  EvadeDragnetSurveillance(bool)
-          If this option is programmed then redbean will not transmit a
-          Server Name Indicator (SNI) when performing Fetch() requests.
           This function is not available in unsecure mode.
 
   ProgramSslPresharedKey(key:str,identity:str)
@@ -1448,6 +1466,28 @@ FUNCTIONS
     value is zero, the result will be `"0"`. Otherwise the resulting
     value will be the `"0b"`-prefixed binary str. The result is
     currently modulo 2^64. Negative numbers are converted to unsigned.
+
+  ResolveIp(hostname:str)
+      ├─→ ip:uint32
+      └─→ nil, error:str
+
+    Gets IP address associated with hostname.
+
+    This function first checks if hostname is already an IP address, in
+    which case it returns the result of `ParseIp`. Otherwise, it checks
+    HOSTS.TXT on the local system and returns the first IPv4 address
+    associated with hostname. If no such entry is found, a DNS lookup is
+    performed using the system configured (e.g. /etc/resolv.conf) DNS
+    resolution service. If the service returns multiple IN A records
+    then only the first one is reutrned.
+
+    The returned address is word-encoded in host endian order. For
+    example, 1.2.3.4 is encoded as 0x01020304. The `FormatIp` function
+    may be used to turn this value back into a string.
+
+    If no IP address could be found, then nil is returned alongside a
+    string of unspecified format describing the error. Calls to this
+    function may be wrapped in assert() if an exception is desired.
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -2546,8 +2586,10 @@ UNIX MODULE
 
     `family` defaults to `AF_INET` and can be:
 
-    - `AF_UNIX`
-    - `AF_INET`
+    - `AF_INET`: Creates Internet Protocol Version 4 (IPv4) socket.
+
+    - `AF_UNIX`: Creates local UNIX domain socket. On the New Technology
+      this requires Windows 10 and only works with `SOCK_STREAM`.
 
     `type` defaults to `SOCK_STREAM` and can be:
 
@@ -2562,7 +2604,8 @@ UNIX MODULE
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
 
-    `protocol` defaults to `IPPROTO_TCP` and can be:
+    `protocol` defaults to `IPPROTO_TCP` for AF_INET` and `0` for
+    `AF_UNIX`. It can also be:
 
     - `IPPROTO_IP`
     - `IPPROTO_ICMP`
@@ -2592,6 +2635,7 @@ UNIX MODULE
     `protocol` defaults to `0`.
 
   unix.bind(fd:int[, ip:uint32, port:uint16])
+  unix.bind(fd:int[, unixpath:str])
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -2633,8 +2677,8 @@ UNIX MODULE
 
     Tunes networking parameters.
 
-    `level` and `optname` may be one of the following. The ellipses type
-    signature above changes depending on which options are used.
+    `level` and `optname` may be one of the following pairs. The ellipses
+    type signature above changes depending on which options are used.
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ value:int
@@ -2643,20 +2687,20 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_TYPE`
-    - `SOL_SOCKET` + `SO_DEBUG`
-    - `SOL_SOCKET` + `SO_ACCEPTCONN`
-    - `SOL_SOCKET` + `SO_BROADCAST`
-    - `SOL_SOCKET` + `SO_REUSEADDR`
-    - `SOL_SOCKET` + `SO_REUSEPORT`
-    - `SOL_SOCKET` + `SO_KEEPALIVE`
-    - `SOL_SOCKET` + `SO_DONTROUTE`
-    - `SOL_TCP` + `TCP_NODELAY`
-    - `SOL_TCP` + `TCP_CORK`
-    - `SOL_TCP` + `TCP_QUICKACK`
-    - `SOL_TCP` + `TCP_FASTOPEN_CONNECT`
-    - `SOL_TCP` + `TCP_DEFER_ACCEPT`
-    - `SOL_IP` + `IP_HDRINCL`
+    - `SOL_SOCKET`, `SO_TYPE`
+    - `SOL_SOCKET`, `SO_DEBUG`
+    - `SOL_SOCKET`, `SO_ACCEPTCONN`
+    - `SOL_SOCKET`, `SO_BROADCAST`
+    - `SOL_SOCKET`, `SO_REUSEADDR`
+    - `SOL_SOCKET`, `SO_REUSEPORT`
+    - `SOL_SOCKET`, `SO_KEEPALIVE`
+    - `SOL_SOCKET`, `SO_DONTROUTE`
+    - `SOL_TCP`, `TCP_NODELAY`
+    - `SOL_TCP`, `TCP_CORK`
+    - `SOL_TCP`, `TCP_QUICKACK`
+    - `SOL_TCP`, `TCP_FASTOPEN_CONNECT`
+    - `SOL_TCP`, `TCP_DEFER_ACCEPT`
+    - `SOL_IP`, `IP_HDRINCL`
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ value:int
@@ -2665,21 +2709,21 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_SNDBUF`
-    - `SOL_SOCKET` + `SO_RCVBUF`
-    - `SOL_SOCKET` + `SO_RCVLOWAT`
-    - `SOL_SOCKET` + `SO_SNDLOWAT`
-    - `SOL_TCP` + `TCP_KEEPIDLE`
-    - `SOL_TCP` + `TCP_KEEPINTVL`
-    - `SOL_TCP` + `TCP_FASTOPEN`
-    - `SOL_TCP` + `TCP_KEEPCNT`
-    - `SOL_TCP` + `TCP_MAXSEG`
-    - `SOL_TCP` + `TCP_SYNCNT`
-    - `SOL_TCP` + `TCP_NOTSENT_LOWAT`
-    - `SOL_TCP` + `TCP_WINDOW_CLAMP`
-    - `SOL_IP` + `IP_TOS`
-    - `SOL_IP` + `IP_MTU`
-    - `SOL_IP` + `IP_TTL`
+    - `SOL_SOCKET`, `SO_SNDBUF`
+    - `SOL_SOCKET`, `SO_RCVBUF`
+    - `SOL_SOCKET`, `SO_RCVLOWAT`
+    - `SOL_SOCKET`, `SO_SNDLOWAT`
+    - `SOL_TCP`, `TCP_KEEPIDLE`
+    - `SOL_TCP`, `TCP_KEEPINTVL`
+    - `SOL_TCP`, `TCP_FASTOPEN`
+    - `SOL_TCP`, `TCP_KEEPCNT`
+    - `SOL_TCP`, `TCP_MAXSEG`
+    - `SOL_TCP`, `TCP_SYNCNT`
+    - `SOL_TCP`, `TCP_NOTSENT_LOWAT`
+    - `SOL_TCP`, `TCP_WINDOW_CLAMP`
+    - `SOL_IP`, `IP_TOS`
+    - `SOL_IP`, `IP_MTU`
+    - `SOL_IP`, `IP_TTL`
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ secs:int, nsecs:int
@@ -2688,14 +2732,14 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_RCVTIMEO`: If this option is specified then
+    - `SOL_SOCKET`, `SO_RCVTIMEO`: If this option is specified then
       your stream socket will have a read() / recv() timeout. If the
       specified interval elapses without receiving data, then EAGAIN
       shall be returned by read. If this option is used on listening
       sockets, it'll be inherited by accepted sockets. Your redbean
       already does this for GetClientFd() based on the `-t` flag.
 
-    - `SOL_SOCKET` + `SO_SNDTIMEO`: This is the same as `SO_RCVTIMEO`
+    - `SOL_SOCKET`, `SO_SNDTIMEO`: This is the same as `SO_RCVTIMEO`
       but it applies to the write() / send() functions.
 
     unix.getsockopt(fd:int, unix.SOL_SOCKET, unix.SO_LINGER)
@@ -2743,6 +2787,7 @@ UNIX MODULE
 
   unix.accept(serverfd:int[, flags:int])
       ├─→ clientfd:int, ip:uint32, port:uint16
+      ├─→ clientfd:int, unixpath:str
       └─→ nil, unix.Errno
 
     Accepts new client socket descriptor for a listening tcp socket.
@@ -2753,6 +2798,7 @@ UNIX MODULE
     - `SOCK_NONBLOCK`
 
   unix.connect(fd:int, ip:uint32, port:uint16)
+  unix.connect(fd:int, unixpath:str)
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -2764,15 +2810,20 @@ UNIX MODULE
 
   unix.getsockname(fd:int)
       ├─→ ip:uint32, port:uint16
+      ├─→ unixpath:str
       └─→ nil, unix.Errno
 
     Retrieves the local address of a socket.
 
   unix.getpeername(fd:int)
       ├─→ ip:uint32, port:uint16
+      ├─→ unixpath:str
       └─→ nil, unix.Errno
 
     Retrieves the remote address of a socket.
+
+    This operation will either fail on `AF_UNIX` sockets or return an
+    empty string.
 
   unix.recv(fd:int[, bufsiz:int[, flags:int]])
       ├─→ data:str
@@ -2787,6 +2838,7 @@ UNIX MODULE
 
   unix.recvfrom(fd:int[, bufsiz:int[, flags:int]])
       ├─→ data:str, ip:uint32, port:uint16
+      ├─→ data:str, unixpath:str
       └─→ nil, unix.Errno
 
     `flags` may have any combination (using bitwise OR) of:
@@ -2810,6 +2862,7 @@ UNIX MODULE
     - `MSG_NOSIGNAL`
 
   unix.sendto(fd:int, data:str, ip:uint32, port:uint16[, flags:int])
+  unix.sendto(fd:int, data:str, unixpath:str[, flags:int])
       ├─→ sent:int
       └─→ nil, unix.Errno
 
@@ -3492,13 +3545,13 @@ UNIX MODULE
 
    To determine the file type:
 
-     - `(st:mode() & 0170000) == 0010000` means fifo or pipe
-     - `(st:mode() & 0170000) == 0020000` means character device
-     - `(st:mode() & 0170000) == 0040000` means directory
-     - `(st:mode() & 0170000) == 0060000` means block device
-     - `(st:mode() & 0170000) == 0100000` means regular file
-     - `(st:mode() & 0170000) == 0120000` means symbolic link
-     - `(st:mode() & 0170000) == 0140000` means socket
+     - `unix.S_ISREG(st:mode())` means regular file
+     - `unix.S_ISDIR(st:mode())` means directory
+     - `unix.S_ISLNK(st:mode())` means symbolic link
+     - `unix.S_ISCHR(st:mode())` means character device
+     - `unix.S_ISBLK(st:mode())` means block device
+     - `unix.S_ISFIFO(st:mode())` means fifo or pipe
+     - `unix.S_ISSOCK(st:mode())` means socket
 
   unix.Stat:uid()
       └─→ uid:int

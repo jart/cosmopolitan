@@ -1,5 +1,6 @@
 ![Cosmopolitan Honeybadger](usr/share/img/honeybadger.png)
 
+[![build](https://github.com/jart/cosmopolitan/actions/workflows/build.yml/badge.svg)](https://github.com/jart/cosmopolitan/actions/workflows/build.yml)
 # Cosmopolitan
 
 [Cosmopolitan Libc](https://justine.lol/cosmopolitan/index.html) makes C
@@ -226,3 +227,15 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | FreeBSD         | 13          | 2020  |
 | OpenBSD         | 6.4         | 2018  |
 | NetBSD          | 9.2         | 2021  |
+
+## Special Thanks
+
+Funding for this project is crowdsourced using
+[GitHub Sponsors](https://github.com/sponsors/jart) and
+[Patreon](https://www.patreon.com/jart). Your support is what makes this
+project possible. Thank you! We'd also like to give special thanks to
+the following individuals:
+
+- [Joe Drumgoole](https://github.com/jdrumgoole)
+
+For publicly sponsoring our work at the highest tier.

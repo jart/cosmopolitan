@@ -41,6 +41,7 @@ void cthread_zombies_add(cthread_t td) {
 
 void cthread_zombies_reap(void) {
   struct Zombie *z;
+  // TODO(jart): Is this right? Update to not use malloc/free?
   while ((z = atomic_load(&cthread_zombies)) && !atomic_load(&z->td->tid)) {
     if (atomic_compare_exchange_weak(&cthread_zombies, &z, z->next)) {
       munmap(z->td->alloc.bottom, z->td->alloc.top - z->td->alloc.bottom);

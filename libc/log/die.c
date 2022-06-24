@@ -43,14 +43,7 @@ relegated wontreturn void __die(void) {
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }
-    if (weaken(ShowBacktrace)) {
-      weaken(ShowBacktrace)(2, __builtin_frame_address(0));
-    } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
-      weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
-                                         weaken(GetSymbolTable)());
-    } else {
-      kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
-    }
+    ShowBacktrace(2, __builtin_frame_address(0));
     __restorewintty();
     _Exit(77);
   } else if (owner == me) {

@@ -169,11 +169,13 @@ o/$(MODE)/tool/net/demo/.reload.lua.zip.o					\
 o/$(MODE)/tool/net/demo/sql.lua.zip.o						\
 o/$(MODE)/tool/net/demo/sql-backup.lua.zip.o				\
 o/$(MODE)/tool/net/demo/sql-backupstore.lua.zip.o			\
+o/$(MODE)/tool/net/demo/unix-unix.lua.zip.o					\
 o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-webserver.lua.zip.o				\
 o/$(MODE)/tool/net/demo/unix-dir.lua.zip.o					\
 o/$(MODE)/tool/net/demo/unix-info.lua.zip.o					\
+o/$(MODE)/tool/net/demo/unix-finger.lua.zip.o					\
 o/$(MODE)/tool/net/demo/fetch.lua.zip.o						\
 o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o				\
 o/$(MODE)/tool/net/demo/store-asset.lua.zip.o					\
@@ -219,11 +221,13 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/sql-backup.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/sql-backupstore.lua.zip.o		\
+		o/$(MODE)/tool/net/demo/unix-unix.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/unix-rawsocket.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-subprocess.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-webserver.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/unix-dir.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/unix-info.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/unix-finger.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/store-asset.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o		\

@@ -20,7 +20,7 @@
 #include "libc/bits/asmflag.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/asan.internal.h"
-#include "libc/calls/clock_gettime.h"
+#include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
