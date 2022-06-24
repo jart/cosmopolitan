@@ -390,7 +390,7 @@ int LuaResolveIp(lua_State *L) {
   struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
   host = luaL_checkstring(L, 1);
   if ((ip = ParseIp(host, -1)) != -1) {
-    lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));
+    lua_pushinteger(L, ip);
     return 1;
   } else if ((rc = getaddrinfo(host, "0", &hint, &ai)) == EAI_SUCCESS) {
     lua_pushinteger(L, ntohl(ai->ai_addr4->sin_addr.s_addr));

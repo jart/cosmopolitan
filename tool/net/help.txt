@@ -1038,9 +1038,17 @@ FUNCTIONS
           0x01020304, or returns -1 for invalid inputs. See also FormatIp
           for the inverse operation.
 
-  ProgramAddr(str)
-          Configures the address on which to listen. Can be used multiple
-          times to set more than one address.
+  ProgramAddr(ip:int)
+  ProgramAddr(host:str)
+          Configures the address on which to listen. This can be called
+          multiple times to set more than one address. If an integer is
+          provided then it should be a word-encoded IPv4 address, such
+          as the ones returned by ResolveIp(). If a string is provided,
+          it will first be passed to ParseIp() to see if it's an IPv4
+          address. If it isn't, then a HOSTS.TXT lookup is performed,
+          with fallback to the system-configured DNS resolution service.
+          Please note that in MODE=tiny the HOSTS.TXT and DNS resolution
+          isn't included, and therefore an IP must be provided.
 
   ProgramBrand(str)
           Changes HTTP Server header, as well as the <h1> title on the /

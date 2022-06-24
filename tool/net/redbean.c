@@ -143,7 +143,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020006
+#define VERSION          0x020007
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
@@ -764,25 +764,22 @@ static void ProgramSslTicketLifetime(long x) {
   sslticketlifetime = x;
 }
 
-static uint32_t ResolveIp(const char *addr) {
-  ssize_t rc;
-  uint32_t ip;
-  struct addrinfo *ai = NULL;
-  struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM, IPPROTO_TCP};
-  if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
-    DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
-  }
-  ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
-  freeaddrinfo(ai);
-  return ip;
-}
-
 static void ProgramAddr(const char *addr) {
-  uint32_t ip;
-  if (IsTiny()) {
-    ip = ParseIp(addr, -1);
-  } else {
-    ip = ResolveIp(addr);
+  ssize_t rc;
+  int64_t ip;
+  if ((ip = ParseIp(addr, -1)) == -1) {
+    if (!IsTiny()) {
+      struct addrinfo *ai = NULL;
+      struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM,
+                              IPPROTO_TCP};
+      if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
+        DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
+      }
+      ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
+      freeaddrinfo(ai);
+    } else {
+      DIEF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
+    }
   }
   ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
   ips.p[ips.n - 1] = ip;
@@ -4647,14 +4644,22 @@ static int LuaProgramUniprocess(lua_State *L) {
   return 1;
 }
 
-static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
-  P(luaL_checkstring(L, 1));
+static int LuaProgramAddr(lua_State *L) {
+  uint32_t ip;
+  OnlyCallFromInitLua(L, "ProgramAddr");
+  if (lua_isinteger(L, 1)) {
+    ip = luaL_checkinteger(L, 1);
+    ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
+    ips.p[ips.n - 1] = ip;
+  } else {
+    ProgramAddr(luaL_checkstring(L, 1));
+  }
   return 0;
 }
 
-static int LuaProgramAddr(lua_State *L) {
-  OnlyCallFromInitLua(L, "ProgramAddr");
-  return LuaProgramString(L, ProgramAddr);
+static dontinline int LuaProgramString(lua_State *L, void P(const char *)) {
+  P(luaL_checkstring(L, 1));
+  return 0;
 }
 
 static int LuaProgramBrand(lua_State *L) {
