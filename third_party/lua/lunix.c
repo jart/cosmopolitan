@@ -36,7 +36,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/fmt.h"
@@ -69,6 +68,7 @@
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/shut.h"
 #include "libc/sysv/consts/sig.h"
@@ -88,7 +88,6 @@
 #include "third_party/lua/lgc.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
-#include "libc/sysv/consts/s.h"
 #include "tool/net/luacheck.h"
 
 /**
@@ -231,7 +230,6 @@ static int MakeSockaddr(lua_State *L, int i, struct sockaddr_storage *ss,
       unreachable;
     }
     *salen = sizeof(struct sockaddr_un);
-    kprintf("shit %d\n", ((struct sockaddr_in *)ss)->sin_family);
     return i + 1;
   } else {
     ((struct sockaddr_in *)ss)->sin_family = AF_INET;
@@ -239,7 +237,6 @@ static int MakeSockaddr(lua_State *L, int i, struct sockaddr_storage *ss,
         htonl(luaL_optinteger(L, i, 0));
     ((struct sockaddr_in *)ss)->sin_port = htons(luaL_optinteger(L, i + 1, 0));
     *salen = sizeof(struct sockaddr_in);
-    kprintf("wut %d\n", ((struct sockaddr_in *)ss)->sin_family);
     return i + 2;
   }
 }

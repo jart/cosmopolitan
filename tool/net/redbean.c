@@ -143,7 +143,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020005
+#define VERSION          0x020006
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
