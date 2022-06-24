@@ -4796,17 +4796,6 @@ static int LuaEvadeDragnetSurveillance(lua_State *L) {
   return LuaProgramBool(L, &evadedragnetsurveillance);
 }
 
-static int LuaProgramSslCompression(lua_State *L) {
-#ifndef UNSECURE
-  if (!unsecure) {
-    OnlyCallFromInitLua(L, "ProgramSslCompression");
-    conf.disable_compression = confcli.disable_compression =
-        !lua_toboolean(L, 1);
-  }
-#endif
-  return 0;
-}
-
 static int LuaHidePath(lua_State *L) {
   size_t pathlen;
   const char *path;
@@ -4857,7 +4846,7 @@ static int LuaGetAssetMode(lua_State *L) {
   return 1;
 }
 
-static int LuaGetLastModifiedTime(lua_State *L) {
+static int LuaGetAssetLastModifiedTime(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -4895,7 +4884,7 @@ static int LuaGetAssetSize(lua_State *L) {
   return 1;
 }
 
-static int LuaIsCompressed(lua_State *L) {
+static int LuaIsAssetCompressed(lua_State *L) {
   size_t pathlen;
   struct Asset *a;
   const char *path;
@@ -4964,6 +4953,7 @@ static const char *const kDontAutoComplete[] = {
     "GetBody",                   //
     "GetClientAddr",             //
     "GetClientFd",               //
+    "GetComment",                // deprecated
     "GetCookie",                 //
     "GetEffectivePath",          //
     "GetFragment",               //
@@ -4971,11 +4961,13 @@ static const char *const kDontAutoComplete[] = {
     "GetHeaders",                //
     "GetHost",                   //
     "GetHttpVersion",            //
+    "GetLastModifiedTime",       // deprecated
     "GetMethod",                 //
     "GetParam",                  //
     "GetParams",                 //
     "GetPass",                   //
     "GetPath",                   //
+    "GetPayload",                // deprecated
     "GetPort",                   //
     "GetRemoteAddr",             //
     "GetScheme",                 //
@@ -4984,8 +4976,10 @@ static const char *const kDontAutoComplete[] = {
     "GetStatus",                 //
     "GetUrl",                    //
     "GetUser",                   //
+    "GetVersion",                // deprecated
     "HasParam",                  //
     "IsClientUsingSsl",          //
+    "IsCompressed",              // deprecated
     "LaunchBrowser",             //
     "LuaProgramSslRequired",     // TODO
     "ProgramAddr",               // TODO
@@ -4999,7 +4993,6 @@ static const char *const kDontAutoComplete[] = {
     "ProgramPrivateKey",         // TODO
     "ProgramSslCiphersuite",     // TODO
     "ProgramSslClientVerify",    // TODO
-    "ProgramSslCompression",     //
     "ProgramSslTicketLifetime",  //
     "ProgramTimeout",            // TODO
     "ProgramUid",                //
@@ -5050,12 +5043,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
     {"FormatIp", LuaFormatIp},                            //
     {"GetAssetComment", LuaGetAssetComment},              //
+    {"GetAssetLastModifiedTime", LuaGetAssetLastModifiedTime},  //
     {"GetAssetMode", LuaGetAssetMode},                    //
     {"GetAssetSize", LuaGetAssetSize},                    //
     {"GetBody", LuaGetBody},                              //
     {"GetClientAddr", LuaGetClientAddr},                  //
     {"GetClientFd", LuaGetClientFd},                      //
-    {"GetComment", LuaGetAssetComment},                   //
     {"GetCookie", LuaGetCookie},                          //
     {"GetCpuCore", LuaGetCpuCore},                        //
     {"GetCpuCount", LuaGetCpuCount},                      //
@@ -5070,7 +5063,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetHostOs", LuaGetHostOs},                          //
     {"GetHttpReason", LuaGetHttpReason},                  //
     {"GetHttpVersion", LuaGetHttpVersion},                //
-    {"GetLastModifiedTime", LuaGetLastModifiedTime},      //
     {"GetLogLevel", LuaGetLogLevel},                      //
     {"GetMethod", LuaGetMethod},                          //
     {"GetMonospaceWidth", LuaGetMonospaceWidth},          //
@@ -5078,7 +5070,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetParams", LuaGetParams},                          //
     {"GetPass", LuaGetPass},                              //
     {"GetPath", LuaGetPath},                              //
-    {"GetPayload", LuaGetBody},                           //
     {"GetPort", LuaGetPort},                              //
     {"GetRandomBytes", LuaGetRandomBytes},                //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},          //
@@ -5089,7 +5080,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetTime", LuaGetTime},                              //
     {"GetUrl", LuaGetUrl},                                //
     {"GetUser", LuaGetUser},                              //
-    {"GetVersion", LuaGetHttpVersion},                    //
     {"GetZipPaths", LuaGetZipPaths},                      //
     {"HasControlCodes", LuaHasControlCodes},              //
     {"HasParam", LuaHasParam},                            //
@@ -5099,7 +5089,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsAcceptablePath", LuaIsAcceptablePath},            //
     {"IsAcceptablePort", LuaIsAcceptablePort},            //
     {"IsClientUsingSsl", LuaIsClientUsingSsl},            //
-    {"IsCompressed", LuaIsCompressed},                    //
+    {"IsAssetCompressed", LuaIsAssetCompressed},          //
     {"IsDaemon", LuaIsDaemon},                            //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
     {"IsHiddenPath", LuaIsHiddenPath},                    //
@@ -5176,13 +5166,18 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPrivateKey", LuaProgramPrivateKey},                //
     {"ProgramSslCiphersuite", LuaProgramSslCiphersuite},        //
     {"ProgramSslClientVerify", LuaProgramSslClientVerify},      //
-    {"ProgramSslCompression", LuaProgramSslCompression},        //
     {"ProgramSslFetchVerify", LuaProgramSslFetchVerify},        //
     {"ProgramSslInit", LuaProgramSslInit},                      //
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslRequired", LuaProgramSslRequired},              //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
 #endif
+    // deprecated
+    {"GetPayload", LuaGetBody},                           //
+    {"GetComment", LuaGetAssetComment},                   //
+    {"GetVersion", LuaGetHttpVersion},                    //
+    {"IsCompressed", LuaIsAssetCompressed},               //
+    {"GetLastModifiedTime", LuaGetAssetLastModifiedTime}, //
 };
 
 static const luaL_Reg kLuaLibs[] = {

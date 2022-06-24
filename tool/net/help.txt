@@ -725,6 +725,11 @@ FUNCTIONS
   EscapeUser(str) → str
           Escapes URL username. See kescapeauthority.c.
 
+  EvadeDragnetSurveillance(bool)
+          If this option is programmed then redbean will not transmit a
+          Server Name Indicator (SNI) when performing Fetch() requests.
+          This function is not available in unsecure mode.
+
   Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
       → status:int,{header:str=value:str,...},body:str
           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
@@ -761,15 +766,24 @@ FUNCTIONS
 
   GetAssetComment(path:str) → str
           Returns comment text associated with asset in the ZIP central
-          directory. Also available as GetComment (deprecated).
+          directory.
+          Also available as GetComment (deprecated).
+
+  GetAssetLastModifiedTime(path:str) → seconds:number
+          Returns UNIX timestamp for modification time of a ZIP asset (or
+          local file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
+          Also available as GetLastModifiedTime (deprecated).
 
   GetAssetMode(path:str) → int
           Returns UNIX-style octal mode for ZIP asset (or local file if the
-          -D flag is used)
+          -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetAssetSize(path:str) → int
           Returns byte size of uncompressed contents of ZIP asset (or local
-          file if the -D flag is used)
+          file if the -D flag is used).
+          If both a file and a ZIP asset are present, then the file is used.
 
   GetBody() → str
           Returns the request message body if present or an empty string.
@@ -927,8 +941,8 @@ FUNCTIONS
 
   GetHttpVersion() → int
           Returns the request HTTP protocol version, which can be 9 for
-          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1. Also available
-          as GetVersion (deprecated).
+          HTTP/0.9, 10 for HTTP/1.0, or 11 for HTTP/1.1.
+          Also available as GetVersion (deprecated).
 
   GetRandomBytes([length:int]) → str
           Returns string with the specified number of random bytes (1..256).
@@ -965,9 +979,10 @@ FUNCTIONS
           Returns true if IP address is part of the localhost network
           (127.0.0.0/8).
 
-  IsCompressed(path:str) → bool
+  IsAssetCompressed(path:str) → bool
           Returns true if ZIP artifact at path is stored on disk using
           DEFLATE compression.
+          Also available as IsCompressed (deprecated).
 
   IndentLines(str[,int]) → str
           Adds spaces to beginnings of multiline string. If the int
@@ -1120,11 +1135,6 @@ FUNCTIONS
           Defaults to 86400 (24 hours). This may be set to ≤0 to disable
           SSL tickets. It's a good idea to use these since it increases
           handshake performance 10x and eliminates a network round trip.
-          This function is not available in unsecure mode.
-
-  EvadeDragnetSurveillance(bool)
-          If this option is programmed then redbean will not transmit a
-          Server Name Indicator (SNI) when performing Fetch() requests.
           This function is not available in unsecure mode.
 
   ProgramSslPresharedKey(key:str,identity:str)
@@ -2667,8 +2677,8 @@ UNIX MODULE
 
     Tunes networking parameters.
 
-    `level` and `optname` may be one of the following. The ellipses type
-    signature above changes depending on which options are used.
+    `level` and `optname` may be one of the following pairs. The ellipses
+    type signature above changes depending on which options are used.
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ value:int
@@ -2677,20 +2687,20 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_TYPE`
-    - `SOL_SOCKET` + `SO_DEBUG`
-    - `SOL_SOCKET` + `SO_ACCEPTCONN`
-    - `SOL_SOCKET` + `SO_BROADCAST`
-    - `SOL_SOCKET` + `SO_REUSEADDR`
-    - `SOL_SOCKET` + `SO_REUSEPORT`
-    - `SOL_SOCKET` + `SO_KEEPALIVE`
-    - `SOL_SOCKET` + `SO_DONTROUTE`
-    - `SOL_TCP` + `TCP_NODELAY`
-    - `SOL_TCP` + `TCP_CORK`
-    - `SOL_TCP` + `TCP_QUICKACK`
-    - `SOL_TCP` + `TCP_FASTOPEN_CONNECT`
-    - `SOL_TCP` + `TCP_DEFER_ACCEPT`
-    - `SOL_IP` + `IP_HDRINCL`
+    - `SOL_SOCKET`, `SO_TYPE`
+    - `SOL_SOCKET`, `SO_DEBUG`
+    - `SOL_SOCKET`, `SO_ACCEPTCONN`
+    - `SOL_SOCKET`, `SO_BROADCAST`
+    - `SOL_SOCKET`, `SO_REUSEADDR`
+    - `SOL_SOCKET`, `SO_REUSEPORT`
+    - `SOL_SOCKET`, `SO_KEEPALIVE`
+    - `SOL_SOCKET`, `SO_DONTROUTE`
+    - `SOL_TCP`, `TCP_NODELAY`
+    - `SOL_TCP`, `TCP_CORK`
+    - `SOL_TCP`, `TCP_QUICKACK`
+    - `SOL_TCP`, `TCP_FASTOPEN_CONNECT`
+    - `SOL_TCP`, `TCP_DEFER_ACCEPT`
+    - `SOL_IP`, `IP_HDRINCL`
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ value:int
@@ -2699,21 +2709,21 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_SNDBUF`
-    - `SOL_SOCKET` + `SO_RCVBUF`
-    - `SOL_SOCKET` + `SO_RCVLOWAT`
-    - `SOL_SOCKET` + `SO_SNDLOWAT`
-    - `SOL_TCP` + `TCP_KEEPIDLE`
-    - `SOL_TCP` + `TCP_KEEPINTVL`
-    - `SOL_TCP` + `TCP_FASTOPEN`
-    - `SOL_TCP` + `TCP_KEEPCNT`
-    - `SOL_TCP` + `TCP_MAXSEG`
-    - `SOL_TCP` + `TCP_SYNCNT`
-    - `SOL_TCP` + `TCP_NOTSENT_LOWAT`
-    - `SOL_TCP` + `TCP_WINDOW_CLAMP`
-    - `SOL_IP` + `IP_TOS`
-    - `SOL_IP` + `IP_MTU`
-    - `SOL_IP` + `IP_TTL`
+    - `SOL_SOCKET`, `SO_SNDBUF`
+    - `SOL_SOCKET`, `SO_RCVBUF`
+    - `SOL_SOCKET`, `SO_RCVLOWAT`
+    - `SOL_SOCKET`, `SO_SNDLOWAT`
+    - `SOL_TCP`, `TCP_KEEPIDLE`
+    - `SOL_TCP`, `TCP_KEEPINTVL`
+    - `SOL_TCP`, `TCP_FASTOPEN`
+    - `SOL_TCP`, `TCP_KEEPCNT`
+    - `SOL_TCP`, `TCP_MAXSEG`
+    - `SOL_TCP`, `TCP_SYNCNT`
+    - `SOL_TCP`, `TCP_NOTSENT_LOWAT`
+    - `SOL_TCP`, `TCP_WINDOW_CLAMP`
+    - `SOL_IP`, `IP_TOS`
+    - `SOL_IP`, `IP_MTU`
+    - `SOL_IP`, `IP_TTL`
 
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ secs:int, nsecs:int
@@ -2722,14 +2732,14 @@ UNIX MODULE
         ├─→ true
         └─→ nil, unix.Errno
 
-    - `SOL_SOCKET` + `SO_RCVTIMEO`: If this option is specified then
+    - `SOL_SOCKET`, `SO_RCVTIMEO`: If this option is specified then
       your stream socket will have a read() / recv() timeout. If the
       specified interval elapses without receiving data, then EAGAIN
       shall be returned by read. If this option is used on listening
       sockets, it'll be inherited by accepted sockets. Your redbean
       already does this for GetClientFd() based on the `-t` flag.
 
-    - `SOL_SOCKET` + `SO_SNDTIMEO`: This is the same as `SO_RCVTIMEO`
+    - `SOL_SOCKET`, `SO_SNDTIMEO`: This is the same as `SO_RCVTIMEO`
       but it applies to the write() / send() functions.
 
     unix.getsockopt(fd:int, unix.SOL_SOCKET, unix.SO_LINGER)
