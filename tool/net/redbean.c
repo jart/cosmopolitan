@@ -4946,8 +4946,8 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("(lua) LuaRunAsset(%`'s)", path);
-      status =
-          luaL_loadbuffer(L, code, codelen, FreeLater(xasprintf("@%s", path)));
+      status = luaL_loadbuffer(L, code, codelen,
+          FreeLater(xasprintf("@%s%s", a->file ? "" : "/zip", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
         LogLuaError("lua code", lua_tostring(L, -1));
         lua_pop(L, 1);  // pop error
