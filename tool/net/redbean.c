@@ -3429,7 +3429,11 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
     }
   }
   //////////////////////////////////////////////////////////////////////////////
-  CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
+  if (-1 == fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK})) {
+    WARNF("can't place write lock on file descriptor %d: %s",
+        zfd, strerror(errno));
+    return;
+  }
   OpenZip(false);
   now = nowl();
   a = GetAssetZip(path, pathlen);
@@ -6798,7 +6802,7 @@ static void MakeExecutableModifiable(void) {
   close(zfd);
   ft = __ftrace;
   if ((zfd = OpenExecutable()) == -1) {
-    WARNF("(srvr) can't restore .ape");
+    WARNF("(srvr) can't open executable for modification: %m");
   }
   if (ft > 0) {
     __ftrace = 0;
