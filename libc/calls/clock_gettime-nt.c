@@ -16,15 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/time/clockstonanos.internal.h"
 
 textwindows int sys_clock_gettime_nt(int clockid, struct timespec *ts) {
-  int64_t ms;
+  uint64_t nanos;
+  static bool once;
+  static char lock;
   struct timespec res;
+  static uint64_t base;
   struct NtFileTime ft;
   static struct timespec mono;
   if (!ts) return efault();
@@ -32,21 +44,21 @@ textwindows int sys_clock_gettime_nt(int clockid, struct timespec *ts) {
     GetSystemTimeAsFileTime(&ft);
     *ts = FileTimeToTimeSpec(ft);
     return 0;
-  } else if (clockid == CLOCK_MONOTONIC || clockid == CLOCK_MONOTONIC_RAW) {
-    ms = GetTickCount64();
-    res.tv_sec = ms / 1000;
-    res.tv_nsec = ms % 1000 * 1000000;
-    res.tv_nsec += rdtsc() / 3 % 1000000000;
-    if (res.tv_nsec > 1000000000) {
-      res.tv_nsec -= 1000000000;
-      res.tv_sec += 1;
+  } else if ((clockid == CLOCK_MONOTONIC || clockid == CLOCK_MONOTONIC_RAW) &&
+             X86_HAVE(INVTSC)) {
+    // this routine stops being monotonic after 194 years of uptime
+    if (__threaded) _spinlock(&lock);
+    if (UNLIKELY(!once)) {
+      GetSystemTimeAsFileTime(&ft);
+      mono = FileTimeToTimeSpec(ft);
+      base = rdtsc();
+      once = true;
     }
-    if (res.tv_sec > mono.tv_sec ||
-        (res.tv_sec == mono.tv_sec && res.tv_nsec > mono.tv_nsec)) {
-      mono = res;
-    } else {
-      res = mono;
-    }
+    nanos = ClocksToNanos(rdtsc(), base);
+    res = mono;
+    res.tv_sec += nanos / 1000000000;
+    res.tv_nsec += nanos % 1000000000;
+    _spunlock(&lock);
     *ts = res;
     return 0;
   } else {

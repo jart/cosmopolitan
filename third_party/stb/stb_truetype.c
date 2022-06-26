@@ -405,6 +405,7 @@ static wontreturn void stbtt__assert_fail(const char *x, int line) {
       longjmp(stbtt_jmpbuf, line);
    } else {
       __assert_fail(x, __FILE__, line);
+      abort();
    }
 }
 

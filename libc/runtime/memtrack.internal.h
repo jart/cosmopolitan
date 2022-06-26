@@ -62,8 +62,6 @@ void __mmi_lock(void) hidden;
 void __mmi_unlock(void) hidden;
 bool IsMemtracked(int, int) hidden;
 void PrintSystemMappings(int) hidden;
-const char *DescribeFrame(int) hidden;
-char *DescribeMapping(int, int, char[hasatleast 8]) hidden;
 bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
 void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
 int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int,

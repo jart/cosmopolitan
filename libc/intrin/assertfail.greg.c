@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchgp.h"
 #include "libc/log/backtrace.internal.h"
@@ -30,32 +31,33 @@
 /**
  * Handles failure of assert() macro.
  */
-relegated wontreturn void __assert_fail(const char *expr, const char *file,
-                                        int line) {
+relegated void __assert_fail(const char *expr, const char *file, int line) {
   int me, owner;
   static int sync;
-  --__strace;
-  --__ftrace;
-  owner = 0;
-  me = gettid();
-  kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
-  if (_lockcmpxchgp(&sync, &owner, me)) {
-    __restore_tty();
-    if (weaken(ShowBacktrace)) {
-      weaken(ShowBacktrace)(2, __builtin_frame_address(0));
-    } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
-      weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
-                                         weaken(GetSymbolTable)());
+  if (!__assert_disable) {
+    --__strace;
+    --__ftrace;
+    owner = 0;
+    me = sys_gettid();
+    kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
+    if (_lockcmpxchgp(&sync, &owner, me)) {
+      __restore_tty();
+      if (weaken(ShowBacktrace)) {
+        weaken(ShowBacktrace)(2, __builtin_frame_address(0));
+      } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
+        weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
+                                           weaken(GetSymbolTable)());
+      } else {
+        kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
+      }
+      __restorewintty();
+      _Exit(23);
+    } else if (owner == me) {
+      kprintf("assert failed while failing\n");
+      __restorewintty();
+      _Exit(24);
     } else {
-      kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
+      _Exit1(25);
     }
-    __restorewintty();
-    _Exit(23);
-  } else if (owner == me) {
-    kprintf("assert failed while failing\n");
-    __restorewintty();
-    _Exit(24);
-  } else {
-    _Exit1(25);
   }
 }

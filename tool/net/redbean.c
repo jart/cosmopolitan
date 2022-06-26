@@ -43,6 +43,7 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alloca.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nt2sysv.h"
@@ -56,6 +57,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
@@ -158,20 +160,28 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-#define TRACE_BEGIN             \
-  do {                          \
-    if (!IsTiny()) {            \
-      if (funtrace) ++__ftrace; \
-      if (systrace) ++__strace; \
-    }                           \
+#define TRACE_BEGIN                                                    \
+  do {                                                                 \
+    if (!IsTiny()) {                                                   \
+      if (funtrace) {                                                  \
+        atomic_fetch_add_explicit(&__ftrace, 1, memory_order_relaxed); \
+      }                                                                \
+      if (systrace) {                                                  \
+        atomic_fetch_add_explicit(&__strace, 1, memory_order_relaxed); \
+      }                                                                \
+    }                                                                  \
   } while (0)
 
-#define TRACE_END               \
-  do {                          \
-    if (!IsTiny()) {            \
-      if (funtrace) --__ftrace; \
-      if (systrace) --__strace; \
-    }                           \
+#define TRACE_END                                                      \
+  do {                                                                 \
+    if (!IsTiny()) {                                                   \
+      if (funtrace) {                                                  \
+        atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed); \
+      }                                                                \
+      if (systrace) {                                                  \
+        atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed); \
+      }                                                                \
+    }                                                                  \
   } while (0)
 
 // letters not used: EINOQYnoqwxy
@@ -399,9 +409,6 @@ static int statuscode;
 static int shutdownsig;
 static int sslpskindex;
 static int oldloglevel;
-static int *monitortid;
-static char *monitortls;
-static char *monitorstack;
 static int maxpayloadsize;
 static int messageshandled;
 static int sslticketlifetime;
@@ -413,17 +420,21 @@ static lua_State *GL;
 static lua_State *YL;
 static char *content;
 static uint8_t *zmap;
+static char *repltls;
 static uint8_t *zbase;
 static uint8_t *zcdir;
 static size_t hdrsize;
 static size_t msgsize;
 static size_t amtread;
+static char *replstack;
 static reader_f reader;
 static writer_f writer;
 static char *extrahdrs;
+static char *monitortls;
 static char *luaheaderp;
 static const char *zpath;
 static const char *brand;
+static char *monitorstack;
 static char gzip_footer[8];
 static const char *pidpath;
 static const char *logpath;
@@ -5014,151 +5025,151 @@ static const char *const kDontAutoComplete[] = {
 // </SORTED>
 
 static const luaL_Reg kLuaFuncs[] = {
-    {"Benchmark", LuaBenchmark},                          //
-    {"Bsf", LuaBsf},                                      //
-    {"Bsr", LuaBsr},                                      //
-    {"CategorizeIp", LuaCategorizeIp},                    //
-    {"Compress", LuaCompress},                            //
-    {"Crc32", LuaCrc32},                                  //
-    {"Crc32c", LuaCrc32c},                                //
-    {"Decimate", LuaDecimate},                            //
-    {"DecodeBase64", LuaDecodeBase64},                    //
-    {"DecodeLatin1", LuaDecodeLatin1},                    //
-    {"EncodeBase64", LuaEncodeBase64},                    //
-    {"EncodeJson", LuaEncodeJson},                        //
-    {"EncodeLatin1", LuaEncodeLatin1},                    //
-    {"EncodeLua", LuaEncodeLua},                          //
-    {"EncodeUrl", LuaEncodeUrl},                          //
-    {"EscapeFragment", LuaEscapeFragment},                //
-    {"EscapeHost", LuaEscapeHost},                        //
-    {"EscapeHtml", LuaEscapeHtml},                        //
-    {"EscapeIp", LuaEscapeIp},                            //
-    {"EscapeLiteral", LuaEscapeLiteral},                  //
-    {"EscapeParam", LuaEscapeParam},                      //
-    {"EscapePass", LuaEscapePass},                        //
-    {"EscapePath", LuaEscapePath},                        //
-    {"EscapeSegment", LuaEscapeSegment},                  //
-    {"EscapeUser", LuaEscapeUser},                        //
-    {"Fetch", LuaFetch},                                  //
-    {"FormatHttpDateTime", LuaFormatHttpDateTime},        //
-    {"FormatIp", LuaFormatIp},                            //
-    {"GetAssetComment", LuaGetAssetComment},              //
+    {"Benchmark", LuaBenchmark},                                //
+    {"Bsf", LuaBsf},                                            //
+    {"Bsr", LuaBsr},                                            //
+    {"CategorizeIp", LuaCategorizeIp},                          //
+    {"Compress", LuaCompress},                                  //
+    {"Crc32", LuaCrc32},                                        //
+    {"Crc32c", LuaCrc32c},                                      //
+    {"Decimate", LuaDecimate},                                  //
+    {"DecodeBase64", LuaDecodeBase64},                          //
+    {"DecodeLatin1", LuaDecodeLatin1},                          //
+    {"EncodeBase64", LuaEncodeBase64},                          //
+    {"EncodeJson", LuaEncodeJson},                              //
+    {"EncodeLatin1", LuaEncodeLatin1},                          //
+    {"EncodeLua", LuaEncodeLua},                                //
+    {"EncodeUrl", LuaEncodeUrl},                                //
+    {"EscapeFragment", LuaEscapeFragment},                      //
+    {"EscapeHost", LuaEscapeHost},                              //
+    {"EscapeHtml", LuaEscapeHtml},                              //
+    {"EscapeIp", LuaEscapeIp},                                  //
+    {"EscapeLiteral", LuaEscapeLiteral},                        //
+    {"EscapeParam", LuaEscapeParam},                            //
+    {"EscapePass", LuaEscapePass},                              //
+    {"EscapePath", LuaEscapePath},                              //
+    {"EscapeSegment", LuaEscapeSegment},                        //
+    {"EscapeUser", LuaEscapeUser},                              //
+    {"Fetch", LuaFetch},                                        //
+    {"FormatHttpDateTime", LuaFormatHttpDateTime},              //
+    {"FormatIp", LuaFormatIp},                                  //
+    {"GetAssetComment", LuaGetAssetComment},                    //
     {"GetAssetLastModifiedTime", LuaGetAssetLastModifiedTime},  //
-    {"GetAssetMode", LuaGetAssetMode},                    //
-    {"GetAssetSize", LuaGetAssetSize},                    //
-    {"GetBody", LuaGetBody},                              //
-    {"GetClientAddr", LuaGetClientAddr},                  //
-    {"GetClientFd", LuaGetClientFd},                      //
-    {"GetCookie", LuaGetCookie},                          //
-    {"GetCpuCore", LuaGetCpuCore},                        //
-    {"GetCpuCount", LuaGetCpuCount},                      //
-    {"GetCpuNode", LuaGetCpuNode},                        //
-    {"GetCryptoHash", LuaGetCryptoHash},                  //
-    {"GetDate", LuaGetDate},                              //
-    {"GetEffectivePath", LuaGetEffectivePath},            //
-    {"GetFragment", LuaGetFragment},                      //
-    {"GetHeader", LuaGetHeader},                          //
-    {"GetHeaders", LuaGetHeaders},                        //
-    {"GetHost", LuaGetHost},                              //
-    {"GetHostOs", LuaGetHostOs},                          //
-    {"GetHttpReason", LuaGetHttpReason},                  //
-    {"GetHttpVersion", LuaGetHttpVersion},                //
-    {"GetLogLevel", LuaGetLogLevel},                      //
-    {"GetMethod", LuaGetMethod},                          //
-    {"GetMonospaceWidth", LuaGetMonospaceWidth},          //
-    {"GetParam", LuaGetParam},                            //
-    {"GetParams", LuaGetParams},                          //
-    {"GetPass", LuaGetPass},                              //
-    {"GetPath", LuaGetPath},                              //
-    {"GetPort", LuaGetPort},                              //
-    {"GetRandomBytes", LuaGetRandomBytes},                //
-    {"GetRedbeanVersion", LuaGetRedbeanVersion},          //
-    {"GetRemoteAddr", LuaGetRemoteAddr},                  //
-    {"GetScheme", LuaGetScheme},                          //
-    {"GetServerAddr", LuaGetServerAddr},                  //
-    {"GetStatus", LuaGetStatus},                          //
-    {"GetTime", LuaGetTime},                              //
-    {"GetUrl", LuaGetUrl},                                //
-    {"GetUser", LuaGetUser},                              //
-    {"GetZipPaths", LuaGetZipPaths},                      //
-    {"HasControlCodes", LuaHasControlCodes},              //
-    {"HasParam", LuaHasParam},                            //
-    {"HidePath", LuaHidePath},                            //
-    {"IndentLines", LuaIndentLines},                      //
-    {"IsAcceptableHost", LuaIsAcceptableHost},            //
-    {"IsAcceptablePath", LuaIsAcceptablePath},            //
-    {"IsAcceptablePort", LuaIsAcceptablePort},            //
-    {"IsClientUsingSsl", LuaIsClientUsingSsl},            //
-    {"IsAssetCompressed", LuaIsAssetCompressed},          //
-    {"IsDaemon", LuaIsDaemon},                            //
-    {"IsHeaderRepeatable", LuaIsHeaderRepeatable},        //
-    {"IsHiddenPath", LuaIsHiddenPath},                    //
-    {"IsLoopbackIp", LuaIsLoopbackIp},                    //
-    {"IsPrivateIp", LuaIsPrivateIp},                      //
-    {"IsPublicIp", LuaIsPublicIp},                        //
-    {"IsReasonablePath", LuaIsReasonablePath},            //
-    {"IsValidHttpToken", LuaIsValidHttpToken},            //
-    {"LaunchBrowser", LuaLaunchBrowser},                  //
-    {"Lemur64", LuaLemur64},                              //
-    {"LoadAsset", LuaLoadAsset},                          //
-    {"Log", LuaLog},                                      //
-    {"Md5", LuaMd5},                                      //
-    {"MeasureEntropy", LuaMeasureEntropy},                //
-    {"ParseHost", LuaParseHost},                          //
-    {"ParseHttpDateTime", LuaParseHttpDateTime},          //
-    {"ParseIp", LuaParseIp},                              //
-    {"ParseParams", LuaParseParams},                      //
-    {"ParseUrl", LuaParseUrl},                            //
-    {"Popcnt", LuaPopcnt},                                //
-    {"ProgramAddr", LuaProgramAddr},                      //
-    {"ProgramBrand", LuaProgramBrand},                    //
-    {"ProgramCache", LuaProgramCache},                    //
-    {"ProgramDirectory", LuaProgramDirectory},            //
-    {"ProgramGid", LuaProgramGid},                        //
-    {"ProgramHeader", LuaProgramHeader},                  //
-    {"ProgramLogBodies", LuaProgramLogBodies},            //
-    {"ProgramLogMessages", LuaProgramLogMessages},        //
-    {"ProgramLogPath", LuaProgramLogPath},                //
-    {"ProgramMaxPayloadSize", LuaProgramMaxPayloadSize},  //
-    {"ProgramPidPath", LuaProgramPidPath},                //
-    {"ProgramPort", LuaProgramPort},                      //
-    {"ProgramRedirect", LuaProgramRedirect},              //
-    {"ProgramTimeout", LuaProgramTimeout},                //
-    {"ProgramUid", LuaProgramUid},                        //
-    {"ProgramUniprocess", LuaProgramUniprocess},          //
-    {"Rand64", LuaRand64},                                //
-    {"Rdrand", LuaRdrand},                                //
-    {"Rdseed", LuaRdseed},                                //
-    {"Rdtsc", LuaRdtsc},                                  //
-    {"ResolveIp", LuaResolveIp},                          //
-    {"Route", LuaRoute},                                  //
-    {"RouteHost", LuaRouteHost},                          //
-    {"RoutePath", LuaRoutePath},                          //
-    {"ServeAsset", LuaServeAsset},                        //
-    {"ServeError", LuaServeError},                        //
-    {"ServeIndex", LuaServeIndex},                        //
-    {"ServeListing", LuaServeListing},                    //
-    {"ServeRedirect", LuaServeRedirect},                  //
-    {"ServeStatusz", LuaServeStatusz},                    //
-    {"SetCookie", LuaSetCookie},                          //
-    {"SetHeader", LuaSetHeader},                          //
-    {"SetLogLevel", LuaSetLogLevel},                      //
-    {"SetStatus", LuaSetStatus},                          //
-    {"Sha1", LuaSha1},                                    //
-    {"Sha224", LuaSha224},                                //
-    {"Sha256", LuaSha256},                                //
-    {"Sha384", LuaSha384},                                //
-    {"Sha512", LuaSha512},                                //
-    {"Sleep", LuaSleep},                                  //
-    {"Slurp", LuaSlurp},                                  //
-    {"StoreAsset", LuaStoreAsset},                        //
-    {"Uncompress", LuaUncompress},                        //
-    {"Underlong", LuaUnderlong},                          //
-    {"VisualizeControlCodes", LuaVisualizeControlCodes},  //
-    {"Write", LuaWrite},                                  //
-    {"bin", LuaBin},                                      //
-    {"hex", LuaHex},                                      //
-    {"oct", LuaOct},                                      //
+    {"GetAssetMode", LuaGetAssetMode},                          //
+    {"GetAssetSize", LuaGetAssetSize},                          //
+    {"GetBody", LuaGetBody},                                    //
+    {"GetClientAddr", LuaGetClientAddr},                        //
+    {"GetClientFd", LuaGetClientFd},                            //
+    {"GetCookie", LuaGetCookie},                                //
+    {"GetCpuCore", LuaGetCpuCore},                              //
+    {"GetCpuCount", LuaGetCpuCount},                            //
+    {"GetCpuNode", LuaGetCpuNode},                              //
+    {"GetCryptoHash", LuaGetCryptoHash},                        //
+    {"GetDate", LuaGetDate},                                    //
+    {"GetEffectivePath", LuaGetEffectivePath},                  //
+    {"GetFragment", LuaGetFragment},                            //
+    {"GetHeader", LuaGetHeader},                                //
+    {"GetHeaders", LuaGetHeaders},                              //
+    {"GetHost", LuaGetHost},                                    //
+    {"GetHostOs", LuaGetHostOs},                                //
+    {"GetHttpReason", LuaGetHttpReason},                        //
+    {"GetHttpVersion", LuaGetHttpVersion},                      //
+    {"GetLogLevel", LuaGetLogLevel},                            //
+    {"GetMethod", LuaGetMethod},                                //
+    {"GetMonospaceWidth", LuaGetMonospaceWidth},                //
+    {"GetParam", LuaGetParam},                                  //
+    {"GetParams", LuaGetParams},                                //
+    {"GetPass", LuaGetPass},                                    //
+    {"GetPath", LuaGetPath},                                    //
+    {"GetPort", LuaGetPort},                                    //
+    {"GetRandomBytes", LuaGetRandomBytes},                      //
+    {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
+    {"GetRemoteAddr", LuaGetRemoteAddr},                        //
+    {"GetScheme", LuaGetScheme},                                //
+    {"GetServerAddr", LuaGetServerAddr},                        //
+    {"GetStatus", LuaGetStatus},                                //
+    {"GetTime", LuaGetTime},                                    //
+    {"GetUrl", LuaGetUrl},                                      //
+    {"GetUser", LuaGetUser},                                    //
+    {"GetZipPaths", LuaGetZipPaths},                            //
+    {"HasControlCodes", LuaHasControlCodes},                    //
+    {"HasParam", LuaHasParam},                                  //
+    {"HidePath", LuaHidePath},                                  //
+    {"IndentLines", LuaIndentLines},                            //
+    {"IsAcceptableHost", LuaIsAcceptableHost},                  //
+    {"IsAcceptablePath", LuaIsAcceptablePath},                  //
+    {"IsAcceptablePort", LuaIsAcceptablePort},                  //
+    {"IsClientUsingSsl", LuaIsClientUsingSsl},                  //
+    {"IsAssetCompressed", LuaIsAssetCompressed},                //
+    {"IsDaemon", LuaIsDaemon},                                  //
+    {"IsHeaderRepeatable", LuaIsHeaderRepeatable},              //
+    {"IsHiddenPath", LuaIsHiddenPath},                          //
+    {"IsLoopbackIp", LuaIsLoopbackIp},                          //
+    {"IsPrivateIp", LuaIsPrivateIp},                            //
+    {"IsPublicIp", LuaIsPublicIp},                              //
+    {"IsReasonablePath", LuaIsReasonablePath},                  //
+    {"IsValidHttpToken", LuaIsValidHttpToken},                  //
+    {"LaunchBrowser", LuaLaunchBrowser},                        //
+    {"Lemur64", LuaLemur64},                                    //
+    {"LoadAsset", LuaLoadAsset},                                //
+    {"Log", LuaLog},                                            //
+    {"Md5", LuaMd5},                                            //
+    {"MeasureEntropy", LuaMeasureEntropy},                      //
+    {"ParseHost", LuaParseHost},                                //
+    {"ParseHttpDateTime", LuaParseHttpDateTime},                //
+    {"ParseIp", LuaParseIp},                                    //
+    {"ParseParams", LuaParseParams},                            //
+    {"ParseUrl", LuaParseUrl},                                  //
+    {"Popcnt", LuaPopcnt},                                      //
+    {"ProgramAddr", LuaProgramAddr},                            //
+    {"ProgramBrand", LuaProgramBrand},                          //
+    {"ProgramCache", LuaProgramCache},                          //
+    {"ProgramDirectory", LuaProgramDirectory},                  //
+    {"ProgramGid", LuaProgramGid},                              //
+    {"ProgramHeader", LuaProgramHeader},                        //
+    {"ProgramLogBodies", LuaProgramLogBodies},                  //
+    {"ProgramLogMessages", LuaProgramLogMessages},              //
+    {"ProgramLogPath", LuaProgramLogPath},                      //
+    {"ProgramMaxPayloadSize", LuaProgramMaxPayloadSize},        //
+    {"ProgramPidPath", LuaProgramPidPath},                      //
+    {"ProgramPort", LuaProgramPort},                            //
+    {"ProgramRedirect", LuaProgramRedirect},                    //
+    {"ProgramTimeout", LuaProgramTimeout},                      //
+    {"ProgramUid", LuaProgramUid},                              //
+    {"ProgramUniprocess", LuaProgramUniprocess},                //
+    {"Rand64", LuaRand64},                                      //
+    {"Rdrand", LuaRdrand},                                      //
+    {"Rdseed", LuaRdseed},                                      //
+    {"Rdtsc", LuaRdtsc},                                        //
+    {"ResolveIp", LuaResolveIp},                                //
+    {"Route", LuaRoute},                                        //
+    {"RouteHost", LuaRouteHost},                                //
+    {"RoutePath", LuaRoutePath},                                //
+    {"ServeAsset", LuaServeAsset},                              //
+    {"ServeError", LuaServeError},                              //
+    {"ServeIndex", LuaServeIndex},                              //
+    {"ServeListing", LuaServeListing},                          //
+    {"ServeRedirect", LuaServeRedirect},                        //
+    {"ServeStatusz", LuaServeStatusz},                          //
+    {"SetCookie", LuaSetCookie},                                //
+    {"SetHeader", LuaSetHeader},                                //
+    {"SetLogLevel", LuaSetLogLevel},                            //
+    {"SetStatus", LuaSetStatus},                                //
+    {"Sha1", LuaSha1},                                          //
+    {"Sha224", LuaSha224},                                      //
+    {"Sha256", LuaSha256},                                      //
+    {"Sha384", LuaSha384},                                      //
+    {"Sha512", LuaSha512},                                      //
+    {"Sleep", LuaSleep},                                        //
+    {"Slurp", LuaSlurp},                                        //
+    {"StoreAsset", LuaStoreAsset},                              //
+    {"Uncompress", LuaUncompress},                              //
+    {"Underlong", LuaUnderlong},                                //
+    {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
+    {"Write", LuaWrite},                                        //
+    {"bin", LuaBin},                                            //
+    {"hex", LuaHex},                                            //
+    {"oct", LuaOct},                                            //
 #ifndef UNSECURE
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
@@ -5173,11 +5184,11 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
 #endif
     // deprecated
-    {"GetPayload", LuaGetBody},                           //
-    {"GetComment", LuaGetAssetComment},                   //
-    {"GetVersion", LuaGetHttpVersion},                    //
-    {"IsCompressed", LuaIsAssetCompressed},               //
-    {"GetLastModifiedTime", LuaGetAssetLastModifiedTime}, //
+    {"GetPayload", LuaGetBody},                            //
+    {"GetComment", LuaGetAssetComment},                    //
+    {"GetVersion", LuaGetHttpVersion},                     //
+    {"IsCompressed", LuaIsAssetCompressed},                //
+    {"GetLastModifiedTime", LuaGetAssetLastModifiedTime},  //
 };
 
 static const luaL_Reg kLuaLibs[] = {
@@ -5291,6 +5302,20 @@ static void LuaPrint(lua_State *L) {
   }
 }
 
+static void EnableRawMode(void) {
+  if (lua_repl_isterminal) {
+    --__strace;
+    linenoiseEnableRawMode(0);
+    ++__strace;
+  }
+}
+
+static void DisableRawMode(void) {
+  --__strace;
+  linenoiseDisableRawMode();
+  ++__strace;
+}
+
 static void LuaInterpreter(lua_State *L) {
   int i, n, sig, status;
   const char *script;
@@ -5312,9 +5337,7 @@ static void LuaInterpreter(lua_State *L) {
     lua_repl_blocking = true;
     lua_repl_completions_callback = HandleCompletions;
     lua_initrepl(GL, "redbean");
-    if (lua_repl_isterminal) {
-      linenoiseEnableRawMode(0);
-    }
+    EnableRawMode();
     for (;;) {
       status = lua_loadline(L);
       if (status == -1) break;  // eof
@@ -5338,7 +5361,7 @@ static void LuaInterpreter(lua_State *L) {
         lua_report(GL, status);
       }
     }
-    linenoiseDisableRawMode();
+    DisableRawMode();
     lua_freerepl();
     lua_settop(GL, 0);  // clear stack
     if ((sig = linenoiseGetInterrupt())) {
@@ -5552,7 +5575,7 @@ static void HandleForkFailure(void) {
   EnterMeltdownMode();
   SendServiceUnavailable();
   close(client);
-  DIEF("(srvr) too many processes: %m");
+  WARNF("(srvr) too many processes: %m");
 }
 
 static void HandleFrag(size_t got) {
@@ -6364,7 +6387,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _wait0(monitortid);
+    _wait0((int *)(monitortls + 0x38));
   }
   _Exit(0);
 }
@@ -6620,15 +6643,15 @@ static int MemoryMonitor(void *arg) {
 }
 
 static void MonitorMemory(void) {
-  if ((monitortls = __initialize_tls(malloc(64)))) {
+  if ((monitortls = malloc(64))) {
     if ((monitorstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
                              MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
-      monitortid = (int *)(monitortls + 0x38);
-      if ((*monitortid =
-               clone(MemoryMonitor, monitorstack, GetStackSize(),
-                     CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
-                         CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_CLEARTID,
-                     0, 0, monitortls, 64, monitortid)) != -1) {
+      if (clone(MemoryMonitor, monitorstack, GetStackSize(),
+                CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
+                    CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_SETTID |
+                    CLONE_CHILD_CLEARTID,
+                0, 0, __initialize_tls(monitortls), 64,
+                (int *)(monitortls + 0x38)) != -1) {
         return;
       }
       munmap(monitorstack, GetStackSize());
@@ -6810,7 +6833,7 @@ static int HandleReadline(void) {
         return 0;
       }
     }
-    linenoiseDisableRawMode();
+    DisableRawMode();
     LUA_REPL_LOCK;
     if (status == LUA_OK) {
       status = lua_runchunk(L, 0, LUA_MULTRET);
@@ -6821,9 +6844,7 @@ static int HandleReadline(void) {
       lua_report(L, status);
     }
     LUA_REPL_UNLOCK;
-    if (lua_repl_isterminal) {
-      linenoiseEnableRawMode(0);
-    }
+    EnableRawMode();
   }
 }
 
@@ -6862,7 +6883,9 @@ static int HandlePoll(int ms) {
         rc = HandleReadline();
         if (rc < 0) return rc;
       } else {
+        --__strace;
         linenoiseRefreshLine(lua_repl_linenoise);
+        ++__strace;
       }
 #endif
     }
@@ -6993,32 +7016,28 @@ static void ReplEventLoop(void) {
   polls[0].fd = 0;
   lua_repl_completions_callback = HandleCompletions;
   lua_initrepl(L, "redbean");
-  if (lua_repl_isterminal) {
-    linenoiseEnableRawMode(0);
-  }
+  EnableRawMode();
   EventLoop(100);
-  linenoiseDisableRawMode();
+  DisableRawMode();
   lua_freerepl();
   lua_settop(L, 0);  // clear stack
   polls[0].fd = -1;
 }
 
-static uint32_t WindowsReplThread(void *arg) {
+static int WindowsReplThread(void *arg) {
   int sig;
   lua_State *L = GL;
   DEBUGF("(repl) started windows thread");
   lua_repl_blocking = true;
   lua_repl_completions_callback = HandleCompletions;
   lua_initrepl(L, "redbean");
-  if (lua_repl_isterminal) {
-    linenoiseEnableRawMode(0);
-  }
-  for (;;) {
+  EnableRawMode();
+  while (!terminated) {
     if (HandleReadline() == -1) {
       break;
     }
   }
-  linenoiseDisableRawMode();
+  DisableRawMode();
   lua_freerepl();
   LUA_REPL_LOCK;
   lua_settop(L, 0);  // clear stack
@@ -7283,8 +7302,16 @@ void RedBean(int argc, char *argv[]) {
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(HEARTBEAT);
   } else if (IsWindows()) {
-    uint32_t tid;
-    CreateThread(0, 0, NT2SYSV(WindowsReplThread), 0, 0, &tid);
+    CHECK_NE(MAP_FAILED, (repltls = malloc(64)));
+    CHECK_NE(MAP_FAILED,
+             (replstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
+    CHECK_NE(
+        -1,
+        clone(WindowsReplThread, replstack, GetStackSize(),
+              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+              0, 0, __initialize_tls(repltls), 64, (int *)(repltls + 0x38)));
     EventLoop(100);
   } else {
     ReplEventLoop();
@@ -7299,13 +7326,22 @@ void RedBean(int argc, char *argv[]) {
     TlsDestroy();
     MemDestroy();
   }
-  if (!IsTiny()) {
-    if (monitortty) {
-      terminatemonitor = true;
-      _wait0(monitortid);
-      munmap(monitorstack, GetStackSize());
-      free(monitortls);
+  if (!isexitingworker) {
+    if (!IsTiny()) {
+      if (monitortty) {
+        terminatemonitor = true;
+        _wait0((int *)(monitortls + 0x38));
+        munmap(monitorstack, GetStackSize());
+        free(monitortls);
+      }
     }
+#ifndef STATIC
+    if (repltls) {
+      _wait0((int *)(repltls + 0x38));
+      munmap(replstack, GetStackSize());
+      free(repltls);
+    }
+#endif
   }
   if (!isexitingworker) {
     INFOF("(srvr) shutdown complete");

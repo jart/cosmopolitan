@@ -42,9 +42,9 @@ bash -c './hello.com'  # zsh/fish workaround (we patched them in 2021)
 
 Since we used the `ape-no-modify-self.o` bootloader (rather than
 `ape.o`) your executable will not modify itself when it's run. What
-it'll instead do, is extract a 4kb program to `${TMPDIR:-/tmp}` that
-maps your program into memory without needing to copy it. It's possible
-to install the APE loader systemwide as follows.
+it'll instead do, is extract a 4kb program to `${TMPDIR:-${HOME:-.}}`
+that maps your program into memory without needing to copy it. It's
+possible to install the APE loader systemwide as follows.
 
 ```sh
 # (1) linux systems that want binfmt_misc

@@ -3,7 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void __assert_fail(const char *, const char *, int) hidden wontreturn relegated;
+extern bool __assert_disable;
+void __assert_fail(const char *, const char *, int) hidden relegated;
 
 #ifdef NDEBUG
 #define assert(EXPR) ((void)0)

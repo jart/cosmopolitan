@@ -2586,7 +2586,7 @@ int LuaUnix(lua_State *L) {
 
   LoadMagnums(L, kErrnoNames, "");
   LoadMagnums(L, kOpenFlags, "O_");
-  LoadMagnums(L, kSignalNames, "SIG");
+  LoadMagnums(L, kSignalNames, "");
   LoadMagnums(L, kIpOptnames, "IP_");
   LoadMagnums(L, kTcpOptnames, "TCP_");
   LoadMagnums(L, kSockOptnames, "SO_");

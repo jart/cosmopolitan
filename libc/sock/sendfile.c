@@ -38,7 +38,8 @@
 static textwindows int SendfileBlock(int64_t handle,
                                      struct NtOverlapped *overlapped) {
   uint32_t i, got, flags = 0;
-  if (WSAGetLastError() != kNtErrorIoPending) {
+  if (WSAGetLastError() != kNtErrorIoPending &&
+      WSAGetLastError() != WSAEINPROGRESS) {
     NTTRACE("TransmitFile failed %lm");
     return __winsockerr();
   }

@@ -3,6 +3,10 @@
 #include "libc/bits/bswap.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/sock/struct/linger.h"
+#include "libc/sock/struct/msghdr.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/sockaddr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -25,60 +29,9 @@ COSMOPOLITAN_C_START_
 #define htonl(u32) bswap_32(u32)
 #define ntohl(u32) bswap_32(u32)
 
-struct in_addr { /* ARPA ABI */
-  /* e.g. 127|0<<8|0<<16|1<<24 or inet_pton(AF_INET, "127.0.0.1", &s_addr) */
-  uint32_t s_addr;
-};
-
-struct sockaddr {     /* Linux+NT ABI */
-  uint16_t sa_family; /* AF_XXX */
-  char sa_data[14];
-};
-
-struct sockaddr_in {   /* Linux+NT ABI */
-  uint16_t sin_family; /* AF_XXX */
-  uint16_t sin_port;   /* htons(XXX) i.e. big endian */
-  struct in_addr sin_addr;
-  uint8_t sin_zero[8];
-};
-
-struct sockaddr_un {
-  uint16_t sun_family; /* AF_UNIX */
-  char sun_path[108];  /* path */
-};
-
-struct sockaddr_storage {
-  union {
-    uint16_t ss_family;
-    intptr_t __ss_align;
-    char __ss_storage[128];
-  };
-};
-
 struct ip_mreq {
   struct in_addr imr_multiaddr; /* IP multicast address of group */
   struct in_addr imr_interface; /* local IP address of interface */
-};
-
-struct linger {     /* Linux+XNU+BSD ABI */
-  int32_t l_onoff;  /* on/off */
-  int32_t l_linger; /* seconds */
-};
-
-struct pollfd {
-  int32_t fd;
-  int16_t events;
-  int16_t revents;
-};
-
-struct msghdr {            /* Linux+NT ABI */
-  void *msg_name;          /* optional address */
-  uint32_t msg_namelen;    /* size of msg_name */
-  struct iovec *msg_iov;   /* scatter/gather array */
-  uint64_t msg_iovlen;     /* iovec count */
-  void *msg_control;       /* credentials and stuff */
-  uint64_t msg_controllen; /* size of msg_control */
-  uint32_t msg_flags;      /* MSG_XXX */
 };
 
 /*

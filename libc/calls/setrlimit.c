@@ -66,7 +66,6 @@
  */
 int setrlimit(int resource, const struct rlimit *rlim) {
   int rc;
-  char buf[64];
   if (resource == 127) {
     rc = einval();
   } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
@@ -84,6 +83,6 @@ int setrlimit(int resource, const struct rlimit *rlim) {
     rc = einval();
   }
   STRACE("setrlimit(%s, %s) → %d% m", DescribeRlimitName(resource),
-         DescribeRlimit(buf, sizeof(buf), 0, rlim), rc);
+         DescribeRlimit(0, rlim), rc);
   return rc;
 }

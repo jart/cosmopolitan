@@ -19,9 +19,9 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -44,6 +44,6 @@ int getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
     rc = ebadf();
   }
   STRACE("getsockname(%d, [%s]) -> %d% lm", fd,
-         __describe_sockaddr(out_addr, out_addrsize ? *out_addrsize : 0), rc);
+         DescribeSockaddr(out_addr, out_addrsize ? *out_addrsize : 0), rc);
   return rc;
 }

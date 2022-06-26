@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
 #include "libc/str/str.h"
@@ -29,6 +30,7 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex) {
   if (!mutex->lock && !mutex->waits) {
     rc = 0;
   } else {
+    assert(!"dead lock");
     rc = EDEADLK;
   }
   bzero(mutex, sizeof(*mutex));

@@ -24,7 +24,6 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/log/log.h"
@@ -52,7 +51,6 @@
 int openat(int dirfd, const char *file, int flags, ...) {
   int rc;
   va_list va;
-  char buf[12];
   unsigned mode;
   struct ZiposUri zipname;
   va_start(va, flags);
@@ -80,7 +78,7 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(buf, dirfd), file,
+  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), file,
          DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
          rc);
   return rc;

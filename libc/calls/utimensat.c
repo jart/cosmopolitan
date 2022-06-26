@@ -54,7 +54,6 @@
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
   int rc;
-  char buf[12];
   if (IsAsan() && ((dirfd == AT_FDCWD && !__asan_is_valid(path, 1)) ||
                    (ts && (!__asan_is_valid_timespec(ts + 0) ||
                            !__asan_is_valid_timespec(ts + 1))))) {
@@ -72,11 +71,11 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
   }
   if (ts) {
     STRACE("utimensat(%s, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
-           DescribeDirfd(buf, dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
+           DescribeDirfd(dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
            ts[1].tv_sec, ts[1].tv_nsec, flags, rc);
   } else {
-    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", DescribeDirfd(buf, dirfd),
-           path, flags, rc);
+    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", DescribeDirfd(dirfd), path,
+           flags, rc);
   }
   return rc;
 }

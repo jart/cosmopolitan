@@ -25,8 +25,11 @@
 
 textwindows int sys_connect_nt(struct Fd *fd, const void *addr,
                                uint32_t addrsize) {
+  struct SockFd *sockfd;
+  sockfd = (struct SockFd *)fd->extra;
   assert(fd->kind == kFdSocket);
   return __winsockblock(
       fd->handle, FD_CONNECT_BIT,
-      WSAConnect(fd->handle, addr, addrsize, NULL, NULL, NULL, NULL));
+      WSAConnect(fd->handle, addr, addrsize, NULL, NULL, NULL, NULL),
+      sockfd->rcvtimeo);
 }

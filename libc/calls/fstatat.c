@@ -28,13 +28,13 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/mem/alloca.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-static inline const char *__strace_fstatat_flags(int flags) {
-  static char buf[12];
+static inline const char *__strace_fstatat_flags(char buf[12], int flags) {
   if (flags == AT_SYMLINK_NOFOLLOW) return "AT_SYMLINK_NOFOLLOW";
   FormatInt32(buf, flags);
   return buf;
@@ -55,7 +55,6 @@ static inline const char *__strace_fstatat_flags(int flags) {
 int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   /* execve() depends on this */
   int rc;
-  char buf[12];
   struct ZiposUri zipname;
   if (__isfdkind(dirfd, kFdZip)) {
     STRACE("zipos dirfd not supported yet");
@@ -72,7 +71,7 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   } else {
     rc = sys_fstatat_nt(dirfd, path, st, flags);
   }
-  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", DescribeDirfd(buf, dirfd), path,
-         DescribeStat(rc, st), __strace_fstatat_flags(flags), rc);
+  STRACE("fstatat(%s, %#s, [%s], %s) → %d% m", DescribeDirfd(dirfd), path,
+         DescribeStat(rc, st), __strace_fstatat_flags(alloca(12), flags), rc);
   return rc;
 }

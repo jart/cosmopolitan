@@ -33,6 +33,7 @@ textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
   ssize_t rc;
   uint32_t sent = 0;
+  struct SockFd *sockfd;
   struct NtIovec iovnt[16];
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
   if (_check_interrupts(true, g_fds.p)) return eintr();
@@ -40,7 +41,9 @@ textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                flags, &overlapped, NULL)) {
     rc = sent;
   } else {
-    rc = __wsablock(g_fds.p[fd].handle, &overlapped, &flags, true);
+    sockfd = (struct SockFd *)g_fds.p[fd].extra;
+    rc = __wsablock(g_fds.p[fd].handle, &overlapped, &flags, true,
+                    sockfd->sndtimeo);
   }
   WSACloseEvent(overlapped.hEvent);
   return rc;

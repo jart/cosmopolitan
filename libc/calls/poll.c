@@ -89,13 +89,11 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
         (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd)))) {
       kprintf("%p", fds);
     } else {
-      char flagbuf[2][64];
       kprintf("[{");
       for (i = 0; i < MIN(5, nfds); ++i) {
-        kprintf(
-            "%s{%d, %s, %s}", i ? ", " : "", fds[i].fd,
-            DescribePollFlags(flagbuf[0], sizeof(flagbuf[0]), fds[i].events),
-            DescribePollFlags(flagbuf[1], sizeof(flagbuf[1]), fds[i].revents));
+        kprintf("%s{%d, %s, %s}", i ? ", " : "", fds[i].fd,
+                DescribePollFlags(fds[i].events),
+                DescribePollFlags(fds[i].revents));
       }
       kprintf("%s}]", i == 5 ? "..." : "");
     }

@@ -163,6 +163,8 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   int64_t h, hand;
   uint32_t oldprot;
   struct WinArgs *wa;
+  char inflagsbuf[256];
+  char outflagsbuf[128];
   const char16_t *env16;
   int i, prot, count, version;
   intptr_t stackaddr, allocaddr;
@@ -179,13 +181,13 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
       hand = GetStdHandle(kConsoleHandles[i]);
       rc = GetConsoleMode(hand, __ntconsolemode + i);
       NTTRACE("GetConsoleMode(%p, [%s]) → %hhhd", hand,
-              i ? DescribeNtConsoleModeOutputFlags(__ntconsolemode[i])
-                : DescribeNtConsoleModeInputFlags(__ntconsolemode[i]),
+              i ? (DescribeNtConsoleOutFlags)(outflagsbuf, __ntconsolemode[i])
+                : (DescribeNtConsoleInFlags)(inflagsbuf, __ntconsolemode[i]),
               rc);
       rc = SetConsoleMode(hand, kConsoleModes[i]);
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", hand,
-              i ? DescribeNtConsoleModeOutputFlags(kConsoleModes[i])
-                : DescribeNtConsoleModeInputFlags(kConsoleModes[i]),
+              i ? (DescribeNtConsoleOutFlags)(outflagsbuf, kConsoleModes[i])
+                : (DescribeNtConsoleInFlags)(inflagsbuf, kConsoleModes[i]),
               rc);
     }
   }

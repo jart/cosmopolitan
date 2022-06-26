@@ -26,19 +26,39 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
                                   void *out_opt_optval,
                                   uint32_t *inout_optlen) {
   uint64_t ms;
   uint32_t in_optlen;
+  struct SockFd *sockfd;
   struct linger_nt linger;
   assert(fd->kind == kFdSocket);
+  sockfd = (struct SockFd *)fd->extra;
 
   if (out_opt_optval && inout_optlen) {
     in_optlen = *inout_optlen;
   } else {
     in_optlen = 0;
+  }
+
+  if (level == SOL_SOCKET &&
+      (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
+    if (in_optlen >= sizeof(struct timeval)) {
+      if (optname == SO_RCVTIMEO) {
+        ms = sockfd->rcvtimeo;
+      } else {
+        ms = sockfd->sndtimeo;
+      }
+      ((struct timeval *)out_opt_optval)->tv_sec = ms / 1000;
+      ((struct timeval *)out_opt_optval)->tv_usec = ms % 1000 * 1000;
+      *inout_optlen = sizeof(struct timeval);
+      return 0;
+    } else {
+      return einval();
+    }
   }
 
   // TODO(jart): Use WSAIoctl?
@@ -48,14 +68,7 @@ textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
   }
 
   if (level == SOL_SOCKET) {
-    if ((optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) &&
-        in_optlen == sizeof(struct timeval) &&
-        *inout_optlen == sizeof(uint32_t)) {
-      ms = *(uint32_t *)out_opt_optval;
-      ((struct timeval *)out_opt_optval)->tv_sec = ms / 1000;
-      ((struct timeval *)out_opt_optval)->tv_usec = ms % 1000 * 1000;
-      *inout_optlen = sizeof(struct timeval);
-    } else if (optname == SO_LINGER && in_optlen == sizeof(struct linger)) {
+    if (optname == SO_LINGER && in_optlen == sizeof(struct linger)) {
       linger = *(struct linger_nt *)out_opt_optval;
       ((struct linger *)out_opt_optval)->l_onoff = !!linger.l_onoff;
       ((struct linger *)out_opt_optval)->l_linger = linger.l_linger;

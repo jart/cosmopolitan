@@ -3799,9 +3799,7 @@ imp	'WSANSPIoctl'						WSANSPIoctl						ws2_32		85	8
 imp	'WSAPoll'						WSAPoll							ws2_32		88	3
 imp	'WSAProviderCompleteAsyncCall'				WSAProviderCompleteAsyncCall				ws2_32		89
 imp	'WSAProviderConfigChange'				WSAProviderConfigChange					ws2_32		90	3
-imp	'WSARecv'						WSARecv							ws2_32		91	7
 imp	'WSARecvDisconnect'					WSARecvDisconnect					ws2_32		92	2
-imp	'WSARecvFrom'						WSARecvFrom						ws2_32		93	9
 imp	'WSARemoveServiceClass'					WSARemoveServiceClass					ws2_32		94	1
 imp	'WSAResetEvent'						WSAResetEvent						ws2_32		95	1
 imp	'WSASend'						WSASend							ws2_32		96	7
@@ -3817,7 +3815,6 @@ imp	'WSAStartup'						WSAStartup						ws2_32		115	2
 imp	'WSAStringToAddress'					WSAStringToAddressW					ws2_32		122
 imp	'WSAUnadvertiseProvider'				WSAUnadvertiseProvider					ws2_32		123
 imp	'WSAUnhookBlockingHook'					WSAUnhookBlockingHook					ws2_32		110
-imp	'WSAWaitForMultipleEvents'				WSAWaitForMultipleEvents				ws2_32		124	5
 imp	'WSApSetPostRoutine'					WSApSetPostRoutine					ws2_32		24
 imp	'WSCDeinstallProvider'					WSCDeinstallProvider					ws2_32		125
 imp	'WSCDeinstallProvider32'				WSCDeinstallProvider32					ws2_32		126
@@ -3884,6 +3881,9 @@ imp	'sys_getprotobyname_nt'					getprotobyname						ws2_32		53
 imp	'sys_getprotobynumber_nt'				getprotobynumber					ws2_32		54
 imp	'sys_getservbyname_nt'					getservbyname						ws2_32		55
 imp	'sys_getservbyport_nt'					getservbyport						ws2_32		56
+imp	'__WSARecv'						WSARecv							ws2_32		91	7
+imp	'__WSARecvFrom'						WSARecvFrom						ws2_32		93	9
+imp	'__WSAWaitForMultipleEvents'				WSAWaitForMultipleEvents				ws2_32		124	5
 imp	'__sys_recv_nt'						recv							ws2_32		16	4	# we're using WSARecvFrom()
 imp	'__sys_send_nt'						send							ws2_32		19	4	# we're using WSASendTo()
 

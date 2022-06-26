@@ -57,7 +57,6 @@
  */
 int clock_gettime(int clockid, struct timespec *ts) {
   int rc;
-  char *buf;
   if (IsAsan() && !__asan_is_valid_timespec(ts)) {
     rc = efault();
   } else {
@@ -65,9 +64,8 @@ int clock_gettime(int clockid, struct timespec *ts) {
   }
 #if SYSDEBUG
   if (!__time_critical) {
-    buf = alloca(45);
-    STRACE("clock_gettime(%d, [%s]) → %d% m", clockid,
-           DescribeTimespec(buf, 45, rc, ts), rc);
+    STRACE("clock_gettime(%d, [%s]) → %d% m", clockid, DescribeTimespec(rc, ts),
+           rc);
   }
 #endif
   return rc;

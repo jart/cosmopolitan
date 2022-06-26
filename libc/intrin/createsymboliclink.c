@@ -34,6 +34,6 @@ bool32 CreateSymbolicLink(const char16_t *lpSymlinkFileName,
   ok = __imp_CreateSymbolicLinkW(lpSymlinkFileName, lpTargetPathName, dwFlags);
   if (!ok) __winerr();
   NTTRACE("CreateSymbolicLink(%#hs, %#hs, %s) → %hhhd% m", lpSymlinkFileName,
-          lpTargetPathName, DescribeNtSymbolicLinkFlags(dwFlags), ok);
+          lpTargetPathName, DescribeNtSymlinkFlags(dwFlags), ok);
   return ok;
 }

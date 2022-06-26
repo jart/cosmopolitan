@@ -26,10 +26,11 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
-                           uint32_t *flags, bool restartable) {
+                           uint32_t *flags, bool restartable,
+                           uint32_t timeout) {
   uint32_t i, got;
   if (WSAGetLastError() != kNtErrorIoPending) {
-    NTTRACE("WSARecv failed %lm");
+    NTTRACE("sock i/o failed %lm");
     return __winsockerr();
   }
   for (;;) {
@@ -39,10 +40,15 @@ textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
       NTTRACE("WSAWaitForMultipleEvents failed %lm");
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
-      if (_check_interrupts(restartable, g_fds.p)) return eintr();
-#if _NTTRACE
-      POLLTRACE("WSAWaitForMultipleEvents...");
-#endif
+      if (_check_interrupts(restartable, g_fds.p)) {
+        return eintr();
+      }
+      if (timeout) {
+        if (timeout <= __SIG_POLLING_INTERVAL_MS) {
+          return eagain();
+        }
+        timeout -= __SIG_POLLING_INTERVAL_MS;
+      }
     } else {
       break;
     }

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 

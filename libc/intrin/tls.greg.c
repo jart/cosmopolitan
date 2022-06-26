@@ -49,7 +49,7 @@
  */
 privileged void *__initialize_tls(char tib[64]) {
   if (tib) {
-    *(intptr_t *)tib = (intptr_t)tib;
+    *(intptr_t *)(tib + 0x00) = (intptr_t)tib;
     *(intptr_t *)(tib + 0x30) = (intptr_t)tib;
     *(int *)(tib + 0x38) = -1;  // tid
     *(int *)(tib + 0x3c) = 0;

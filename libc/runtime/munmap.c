@@ -161,7 +161,7 @@ static noasan int Munmap(char *p, size_t n) {
  * @raises EINVAL if `p+(n-1)` isn't 48-bit
  * @raises EINVAL if `p` isn't 65536-byte aligned
  */
-noasan int munmap(void *p, size_t n) {
+int munmap(void *p, size_t n) {
   int rc;
   size_t toto;
   __mmi_lock();

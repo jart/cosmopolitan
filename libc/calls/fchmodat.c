@@ -43,7 +43,6 @@
  */
 int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
   int rc;
-  char buf[12];
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
@@ -53,7 +52,7 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
   } else {
     rc = sys_fchmodat_nt(dirfd, path, mode, flags);
   }
-  STRACE("fchmodat(%s, %#s, %#o, %d) → %d% m", DescribeDirfd(buf, dirfd), path,
-         mode, flags, rc);
+  STRACE("fchmodat(%s, %#s, %#o, %d) → %d% m", DescribeDirfd(dirfd), path, mode,
+         flags, rc);
   return rc;
 }

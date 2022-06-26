@@ -19,9 +19,9 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -51,7 +51,6 @@ int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
     rc = ebadf();
   }
   STRACE("accept4(%d, [%s]) -> %d% lm", fd,
-         __describe_sockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0),
-         rc);
+         DescribeSockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0), rc);
   return rc;
 }

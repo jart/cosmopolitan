@@ -45,7 +45,7 @@ textwindows int64_t CreateFile(
           DescribeNtFileShareFlags(dwShareMode),
           DescribeNtSecurityAttributes(opt_lpSecurityAttributes),
           DescribeNtCreationDisposition(dwCreationDisposition),
-          DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes),
-          opt_hTemplateFile, hHandle);
+          DescribeNtFileFlagAttr(dwFlagsAndAttributes), opt_hTemplateFile,
+          hHandle);
   return hHandle;
 }

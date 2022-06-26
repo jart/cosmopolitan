@@ -42,7 +42,6 @@
  */
 int mkdirat(int dirfd, const char *path, unsigned mode) {
   int rc;
-  char buf[12];
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
@@ -52,7 +51,6 @@ int mkdirat(int dirfd, const char *path, unsigned mode) {
   } else {
     rc = sys_mkdirat_nt(dirfd, path, mode);
   }
-  STRACE("mkdirat(%s, %#s, %#o) → %d% m", DescribeDirfd(buf, dirfd), path, mode,
-         rc);
+  STRACE("mkdirat(%s, %#s, %#o) → %d% m", DescribeDirfd(dirfd), path, mode, rc);
   return rc;
 }

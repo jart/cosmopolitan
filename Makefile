@@ -61,7 +61,6 @@
 
 SHELL   = build/bootstrap/cocmd.com
 HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
-#SANITY := $(shell build/sanitycheck $$PPID)
 
 .SUFFIXES:
 .DELETE_ON_ERROR:

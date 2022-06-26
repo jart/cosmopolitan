@@ -41,7 +41,6 @@
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
   int rc;
-  char buf[12];
   if (IsAsan() &&
       (!__asan_is_valid(target, 1) || !__asan_is_valid(linkpath, 1))) {
     rc = efault();
@@ -51,7 +50,7 @@ int symlinkat(const char *target, int newdirfd, const char *linkpath) {
   } else {
     rc = sys_symlinkat_nt(target, newdirfd, linkpath);
   }
-  STRACE("symlinkat(%#s, %s, %#s) → %d% m", target,
-         DescribeDirfd(buf, newdirfd), linkpath);
+  STRACE("symlinkat(%#s, %s, %#s) → %d% m", target, DescribeDirfd(newdirfd),
+         linkpath);
   return rc;
 }

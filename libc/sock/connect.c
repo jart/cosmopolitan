@@ -19,10 +19,10 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
@@ -51,7 +51,6 @@ int connect(int fd, const void *addr, uint32_t addrsize) {
   } else {
     rc = efault();
   }
-  STRACE("connect(%d, %s) -> %d% lm", fd, __describe_sockaddr(addr, addrsize),
-         rc);
+  STRACE("connect(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
   return rc;
 }

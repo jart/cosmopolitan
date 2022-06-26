@@ -237,12 +237,6 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
 
 static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
                                 int fd, int64_t off) {
-#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
-  if (IsWindows()) {
-    STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
-           DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
-  }
-#endif
   char *p = addr;
   struct DirectMap dm;
   int a, b, i, f, m, n, x;
@@ -405,7 +399,10 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
 
   if (p != MAP_FAILED) {
     if (needguard) {
-      mprotect(p, PAGESIZE, PROT_NONE);
+      if (!IsWindows()) {
+        // make windows fork() code simpler
+        mprotect(p, PAGESIZE, PROT_NONE);
+      }
       if (IsAsan()) {
         __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
                    kAsanStackOverflow, PAGESIZE / 8);
@@ -474,10 +471,15 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
  *     to be 64kb aligned too
  * @return virtual base address of new mapping, or MAP_FAILED w/ errno
  */
-noasan void *mmap(void *addr, size_t size, int prot, int flags, int fd,
-                  int64_t off) {
+void *mmap(void *addr, size_t size, int prot, int flags, int fd, int64_t off) {
   void *res;
   size_t toto;
+#if defined(SYSDEBUG) && (_KERNTRACE || _NTTRACE)
+  if (IsWindows()) {
+    STRACE("mmap(%p, %'zu, %s, %s, %d, %'ld) → ...", addr, size,
+           DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off);
+  }
+#endif
   __mmi_lock();
   res = Mmap(addr, size, prot, flags, fd, off);
 #if SYSDEBUG

@@ -19,31 +19,27 @@
 #include "libc/bits/asmflag.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
 
-static const char *FormatFutexWakeResult(char buf[12], int ax) {
-  if (ax >= 0) {
+static const char *DescribeFutexWakeResult(char buf[12], int ax) {
+  const char *s;
+  if (ax < 0 && (s = strerrno(ax))) {
+    return s;
+  } else {
     FormatInt32(buf, ax);
     return buf;
-  } else {
-    return strerrno(-ax);
   }
 }
 
-privileged int _futex_wake(void *addr, int count) {
+int _futex_wake(void *addr, int count) {
   int ax;
-  bool cf;
-  char buf[12];
-  asm volatile(CFLAG_ASM("clc\n\t"
-                         "syscall")
-               : CFLAG_CONSTRAINT(cf), "=a"(ax)
-               : "1"(__NR_futex), "D"(addr), "S"(FUTEX_WAKE), "d"(count)
-               : "rcx", "r11", "memory");
-  if (cf) ax = -ax;
-  STRACE("futex(%p, FUTEX_WAKE, %d) → %s", addr, count,
-         FormatFutexWakeResult(buf, ax));
+  ax = _futex(addr, FUTEX_WAKE, count, 0, 0);
+  STRACE("futex(%t[%p], FUTEX_WAKE, %d) → %s", addr, addr, count,
+         DescribeFutexWakeResult(alloca(12), ax));
   return ax;
 }

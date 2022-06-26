@@ -16,29 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/asmflag.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/mem/alloca.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
 
-privileged int _futex_wait(void *addr, int expect, struct timespec *timeout) {
+static const char *DescribeFutexWaitResult(char buf[12], int ax) {
+  const char *s;
+  if (ax && ((s = strerrno(ax)) || (s = strerrno(-ax)))) {
+    return s;
+  } else {
+    FormatInt32(buf, ax);
+    return buf;
+  }
+}
+
+int _futex_wait(void *addr, int expect, struct timespec *timeout) {
   int ax;
-  bool cf;
-  char buf[45];
-  asm volatile(CFLAG_ASM("mov\t%6,%%r10\n\t"
-                         "clc\n\t"
-                         "syscall")
-               : CFLAG_CONSTRAINT(cf), "=a"(ax)
-               : "1"(__NR_futex), "D"(addr), "S"(FUTEX_WAIT), "d"(expect),
-                 "g"(timeout)
-               : "rcx", "r10", "r11", "memory");
-  if (cf) ax = -ax;
-  STRACE("futex(%p, FUTEX_WAIT, %d, %s) → %s", addr, expect,
-         DescribeTimespec(buf, sizeof(buf), 0, timeout),
-         ax ? strerrno(-ax) : "0");
+  ax = _futex(addr, FUTEX_WAIT, expect, timeout, 0);
+  STRACE("futex(%t[%p], FUTEX_WAIT, %d, %s) → %s", addr, addr, expect,
+         DescribeTimespec(0, timeout), DescribeFutexWaitResult(alloca(12), ax));
   return ax;
 }

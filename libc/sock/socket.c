@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
 #include "libc/sysv/consts/af.h"
 
 /**
@@ -46,8 +46,7 @@ int socket(int family, int type, int protocol) {
   } else {
     rc = sys_socket_nt(family, type, protocol);
   }
-  STRACE("socket(%s, %s, %s) → %d% lm", __describe_socket_family(family),
-         __describe_socket_type(type), __describe_socket_protocol(protocol),
-         rc);
+  STRACE("socket(%s, %s, %s) → %d% lm", DescribeSocketFamily(family),
+         DescribeSocketType(type), DescribeSocketProtocol(protocol), rc);
   return rc;
 }

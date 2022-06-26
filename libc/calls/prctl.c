@@ -19,21 +19,9 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/errfuns.h"
-
-static const char *DescribePrctlOperation(int x) {
-  switch (x) {
-    case PR_SET_NO_NEW_PRIVS:
-      return "PR_SET_NO_NEW_PRIVS";
-    case PR_SET_SECCOMP:
-      return "PR_SET_SECCOMP";
-    case PR_GET_SECCOMP:
-      return "PR_GET_SECCOMP";
-    default:
-      return "PRCTL_???";
-  }
-}
 
 /**
  * Tunes process on Linux.

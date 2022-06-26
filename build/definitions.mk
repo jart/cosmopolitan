@@ -63,7 +63,7 @@ PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com
 ZIPOBJ = build/bootstrap/zipobj.com
 MKDIR = build/bootstrap/mkdir.com -p
-COMPILE = build/bootstrap/compile.com -V9 $(QUOTA)
+COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
 
 COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)

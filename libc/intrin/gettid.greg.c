@@ -16,15 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/nt/thread.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/internal.h"
-
-__msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
 
 /**
  * Returns current thread id.
@@ -54,60 +51,10 @@ __msabi extern typeof(GetCurrentThreadId) *const __imp_GetCurrentThreadId;
  * @threadsafe
  */
 privileged int gettid(void) {
-  int rc;
-  int64_t wut;
-  struct WinThread *wt;
-
+  int tid;
   if (__tls_enabled) {
-    rc = *(int *)(__get_tls_inline() + 0x38);
-    return rc;
+    tid = *(int *)(__get_tls_inline() + 0x38);
+    if (tid > 0) return tid;
   }
-
-  if (IsWindows()) {
-    return __imp_GetCurrentThreadId();
-  }
-
-  if (IsLinux()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(186)  // __NR_gettid
-        : "rcx", "r11", "memory");
-    return rc;
-  }
-
-  if (IsXnu()) {
-    asm("syscall"              // xnu/osfmk/kern/ipc_tt.c
-        : "=a"(rc)             // assume success
-        : "0"(0x1000000 | 27)  // Mach thread_self_trap()
-        : "rcx", "r11", "memory", "cc");
-    return rc;
-  }
-
-  if (IsOpenbsd()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(299)  // getthrid()
-        : "rcx", "r11", "memory", "cc");
-    return rc;
-  }
-
-  if (IsNetbsd()) {
-    asm("syscall"
-        : "=a"(rc)  // man says always succeeds
-        : "0"(311)  // _lwp_self()
-        : "rcx", "rdx", "r11", "memory", "cc");
-    return rc;
-  }
-
-  if (IsFreebsd()) {
-    asm("syscall"
-        : "=a"(rc),  // only fails w/ EFAULT, which isn't possible
-          "=m"(wut)  // must be 64-bit
-        : "0"(432),  // thr_self()
-          "D"(&wut)  // but not actually 64-bit
-        : "rcx", "r11", "memory", "cc");
-    return wut;  // narrowing intentional
-  }
-
-  return __pid;
+  return sys_gettid();
 }

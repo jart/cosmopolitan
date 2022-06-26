@@ -22,6 +22,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/utsname.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -277,7 +278,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   --__ftrace;
   --__strace;
   owner = 0;
-  me = gettid();
+  me = sys_gettid();
   if (_lockcmpxchgp(&sync, &owner, me)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;

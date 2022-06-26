@@ -25,11 +25,7 @@ hidden extern const struct MagnumStr kSignalNames[];
 hidden extern const struct MagnumStr kSockOptnames[];
 hidden extern const struct MagnumStr kTcpOptnames[];
 
-char *DescribeClockName(int) hidden;
-char *DescribeOpenFlags(int) hidden;
-char *DescribeSockLevel(int) hidden;
-char *DescribeSockOptname(int, int) hidden;
-char *GetMagnumStr(const struct MagnumStr *, int) hidden;
+char *GetMagnumStr(const struct MagnumStr *, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

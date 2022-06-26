@@ -63,7 +63,7 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
       }
       ok = SetConsoleMode(in, inmode);
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", in,
-              DescribeNtConsoleModeInputFlags(inmode), ok);
+              DescribeNtConsoleInFlags(inmode), ok);
     }
 
     if (outok) {
@@ -77,7 +77,7 @@ textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
       }
       ok = SetConsoleMode(out, outmode);
       NTTRACE("SetConsoleMode(%p, %s) → %hhhd", out,
-              DescribeNtConsoleModeOutputFlags(outmode), ok);
+              DescribeNtConsoleOutFlags(outmode), ok);
     }
 
     return 0;

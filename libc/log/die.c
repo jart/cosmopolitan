@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchgp.h"
@@ -37,7 +38,7 @@ relegated wontreturn void __die(void) {
   int me, owner;
   static int sync;
   owner = 0;
-  me = gettid();
+  me = sys_gettid();
   if (_lockcmpxchgp(&sync, &owner, me)) {
     __restore_tty();
     if (IsDebuggerPresent(false)) {

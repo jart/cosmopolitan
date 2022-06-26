@@ -19,6 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/rand/lcg.internal.h"
 
 /**
@@ -33,9 +35,12 @@
 textwindows int __sample_pids(int pids[hasatleast 64],
                               int64_t handles[hasatleast 64],
                               bool exploratory) {
+  static char lock;
   static uint64_t rando = 1;
   uint32_t i, j, base, count;
+  if (__threaded) _spinlock(&lock);
   base = KnuthLinearCongruentialGenerator(&rando) >> 32;
+  _spunlock(&lock);
   for (count = i = 0; i < g_fds.n; ++i) {
     j = (base + i) % g_fds.n;
     if (g_fds.p[j].kind == kFdProcess && (!exploratory || !g_fds.p[j].zombie)) {

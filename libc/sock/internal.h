@@ -72,6 +72,8 @@ struct SockFd {
   int family;
   int type;
   int protocol;
+  uint32_t rcvtimeo;
+  uint32_t sndtimeo;
   bool32 (*__msabi ConnectEx)(int64_t s, const struct sockaddr *name,
                               int namelen, const void *opt_lpSendBuffer,
                               uint32_t dwSendDataLength,
@@ -144,8 +146,9 @@ ssize_t sys_sendto_nt(int, const struct iovec *, size_t, uint32_t, void *,
 void WinSockInit(void) hidden;
 int64_t __winsockerr(void) nocallback hidden;
 int __fixupnewsockfd(int, int) hidden;
-int __wsablock(int64_t, struct NtOverlapped *, uint32_t *, bool) hidden;
-int64_t __winsockblock(int64_t, unsigned, int64_t) hidden;
+int __wsablock(int64_t, struct NtOverlapped *, uint32_t *, bool,
+               uint32_t) hidden;
+int64_t __winsockblock(int64_t, unsigned, int64_t, uint32_t) hidden;
 struct SockFd *_dupsockfd(struct SockFd *) hidden;
 int64_t GetNtBaseSocket(int64_t) hidden;
 int sys_close_epoll(int) hidden;

@@ -62,7 +62,6 @@ THIRD_PARTY_MAKE_SRCS_BASE =				\
 	third_party/make/remake.c			\
 	third_party/make/remote-stub.c			\
 	third_party/make/rule.c				\
-	third_party/make/signame.c			\
 	third_party/make/strcache.c			\
 	third_party/make/variable.c			\
 	third_party/make/version.c			\

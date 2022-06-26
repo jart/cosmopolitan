@@ -42,7 +42,6 @@
 int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
              int flags) {
   int rc;
-  char sb[12];
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
@@ -50,7 +49,7 @@ int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
   } else {
     rc = sys_fchownat(dirfd, path, uid, gid, flags);
   }
-  STRACE("fchownat(%s, %#s, %d, %d, %#b) → %d% m", DescribeDirfd(sb, dirfd),
-         path, uid, gid, flags, rc);
+  STRACE("fchownat(%s, %#s, %d, %d, %#b) → %d% m", DescribeDirfd(dirfd), path,
+         uid, gid, flags, rc);
   return rc;
 }

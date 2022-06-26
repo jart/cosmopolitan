@@ -32,14 +32,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-static const char *DescribeHow(char buf[12], int how) {
-  if (how == SIG_BLOCK) return "SIG_BLOCK";
-  if (how == SIG_UNBLOCK) return "SIG_UNBLOCK";
-  if (how == SIG_SETMASK) return "SIG_SETMASK";
-  FormatInt32(buf, how);
-  return buf;
-}
-
 /**
  * Changes signal blocking state of calling thread, e.g.:
  *
@@ -58,8 +50,6 @@ static const char *DescribeHow(char buf[12], int how) {
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   sigset_t old;
-  char howbuf[12];
-  char buf[2][41];
   int res, rc, arg1;
   const sigset_t *arg2;
   sigemptyset(&old);
@@ -77,8 +67,7 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
   if (rc != -1 && opt_out_oldset) {
     *opt_out_oldset = old;
   }
-  STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(howbuf, how),
-         DescribeSigset(buf[0], sizeof(buf[0]), 0, opt_set),
-         DescribeSigset(buf[1], sizeof(buf[1]), rc, opt_out_oldset), rc);
+  STRACE("sigprocmask(%s, %s, [%s]) → %d% m", DescribeHow(how),
+         DescribeSigset(0, opt_set), DescribeSigset(rc, opt_out_oldset), rc);
   return rc;
 }

@@ -82,7 +82,7 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
   uint32_t x;
   for (i = 0; i < n; i += x) {
     if (!f(h, p + i, n - i, &x, NULL)) {
-      return -1;
+      return __winerr();
     }
   }
   return i;
@@ -91,7 +91,7 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
 static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                            bool32 (*fn)(), const char *sf) {
   ssize_t rc = ForkIo(h, buf, n, fn);
-  NTTRACE("%s(%ld, %'zu) → %'zd% m", sf, h, n, rc);
+  NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
   return rc != -1;
 }
 
@@ -202,6 +202,9 @@ textwindows void WinMainForked(void) {
   ReadOrDie(reader, __bss_start, __bss_end - __bss_start);
   __pid = savepid;
   kStartTsc = savetsc;
+  __threaded = false;
+  __tls_index = 0;
+  __tls_enabled = false;
 
   // apply fixups and reapply memory protections
   _mmi.p = maps;
@@ -255,6 +258,7 @@ textwindows void WinMainForked(void) {
 textwindows int sys_fork_nt(void) {
   bool ok;
   jmp_buf jb;
+  uint32_t oldprot;
   char **args, **args2;
   char16_t pipename[64];
   int64_t reader, writer;

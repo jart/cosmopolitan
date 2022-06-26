@@ -1308,13 +1308,13 @@ void __asan_map_shadow(uintptr_t p, size_t n) {
     size = (size_t)i << 16;
     addr = (void *)(intptr_t)((int64_t)((uint64_t)a << 32) >> 16);
     prot = PROT_READ | PROT_WRITE;
-    flag = MAP_PRIVATE | MAP_FIXED | *weaken(MAP_ANONYMOUS);
+    flag = MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS;
     sm = weaken(sys_mmap)(addr, size, prot, flag, -1, 0);
     if (sm.addr == MAP_FAILED ||
-        weaken(TrackMemoryInterval)(
-            m, a, a + i - 1, sm.maphandle, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE | *weaken(MAP_ANONYMOUS) | MAP_FIXED, false, false, 0,
-            size) == -1) {
+        weaken(TrackMemoryInterval)(m, a, a + i - 1, sm.maphandle,
+                                    PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
+                                    false, false, 0, size) == -1) {
       kprintf("error: could not map asan shadow memory\n");
       __asan_die()();
       __asan_unreachable();
@@ -1379,7 +1379,6 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   }
   REQUIRE(_mmi);
   REQUIRE(sys_mmap);
-  REQUIRE(MAP_ANONYMOUS);
   REQUIRE(TrackMemoryInterval);
   if (weaken(hook_malloc) || weaken(hook_calloc) || weaken(hook_realloc) ||
       weaken(hook_realloc_in_place) || weaken(hook_free) ||

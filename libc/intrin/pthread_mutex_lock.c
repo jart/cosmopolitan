@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/asmflag.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
@@ -29,15 +30,16 @@
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
 
-static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int tries) {
+static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
+                                   int tries) {
   volatile int i;
   if (tries < 7) {
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux() || IsOpenbsd()) {
+  } else if (IsLinux() /* || IsOpenbsd() */) {
     atomic_fetch_add(&mutex->waits, 1);
-    _futex_wait(&mutex->lock, 1, &(struct timespec){1});
+    _futex_wait(&mutex->lock, expect, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);
   } else {
     sched_yield();
@@ -64,7 +66,7 @@ int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
             !atomic_exchange_explicit(&mutex->lock, 1, memory_order_acquire)) {
           break;
         }
-        tries = pthread_mutex_lock_spin(mutex, tries);
+        tries = pthread_mutex_lock_spin(mutex, 1, tries);
       }
       return 0;
     case PTHREAD_MUTEX_RECURSIVE:
@@ -79,14 +81,16 @@ int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
           if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
             break;
           } else {
+            assert(!"dead lock");
             return EDEADLK;
           }
         }
-        tries = pthread_mutex_lock_spin(mutex, tries);
+        tries = pthread_mutex_lock_spin(mutex, owner, tries);
       }
       ++mutex->reent;
       return 0;
     default:
+      assert(!"inva lock");
       return EINVAL;
   }
 }

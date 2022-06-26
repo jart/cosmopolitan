@@ -20,14 +20,18 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/sock/sockdebug.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
- * Assigns local address and port number to socket.
+ * Assigns local address and port number to socket, e.g.
+ *
+ *     struct sockaddr_in in = {AF_INET, htons(12345), {htonl(0x7f000001)}};
+ *     int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+ *     bind(fd, &in, sizeof(in));
  *
  * @param fd is the file descriptor returned by socket()
  * @param addr is usually the binary-encoded ip:port on which to listen
@@ -51,6 +55,6 @@ int bind(int fd, const void *addr, uint32_t addrsize) {
   } else {
     rc = einval();
   }
-  STRACE("bind(%d, %s) -> %d% lm", fd, __describe_sockaddr(addr, addrsize), rc);
+  STRACE("bind(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
   return rc;
 }

@@ -80,7 +80,6 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;
   void *b;
   const void *a;
-  char buf[2][128];
   struct sigaltstack_bsd bsd;
   if (IsAsan() && ((old && __asan_check(old, sizeof(*old)).kind) ||
                    (neu && (__asan_check(neu, sizeof(*neu)).kind ||
@@ -114,8 +113,7 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   } else {
     rc = enosys();
   }
-  STRACE("sigaltstack(%s, [%s]) → %d% m",
-         DescribeSigaltstk(buf[0], sizeof(buf[0]), 0, neu),
-         DescribeSigaltstk(buf[0], sizeof(buf[0]), 0, old), rc);
+  STRACE("sigaltstack(%s, [%s]) → %d% m", DescribeSigaltstk(0, neu),
+         DescribeSigaltstk(0, old), rc);
   return rc;
 }

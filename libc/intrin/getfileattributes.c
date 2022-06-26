@@ -36,6 +36,6 @@ textwindows uint32_t GetFileAttributes(const char16_t *lpPathName) {
   flags = __imp_GetFileAttributesW(lpPathName);
   if (flags == -1u) __winerr();
   NTTRACE("GetFileAttributes(%#hs) → %s% m", lpPathName,
-          DescribeNtFileFlagsAndAttributes(flags));
+          DescribeNtFileFlagAttr(flags));
   return flags;
 }

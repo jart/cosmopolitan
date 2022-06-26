@@ -25,21 +25,6 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/errfuns.h"
 
-static const char *DescribeSeccompOperation(int x) {
-  switch (x) {
-    case SECCOMP_SET_MODE_STRICT:
-      return "SECCOMP_SET_MODE_STRICT";
-    case SECCOMP_SET_MODE_FILTER:
-      return "SECCOMP_SET_MODE_FILTER";
-    case SECCOMP_GET_ACTION_AVAIL:
-      return "SECCOMP_GET_ACTION_AVAIL";
-    case SECCOMP_GET_NOTIF_SIZES:
-      return "SECCOMP_GET_NOTIF_SIZES";
-    default:
-      return "SECCOMP_???";
-  }
-}
-
 /**
  * Tunes Linux security policy.
  *

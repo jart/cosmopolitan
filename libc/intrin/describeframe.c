@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -25,12 +26,11 @@
 #define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
 #define FRAME(x)    ((int)((x) >> 16))
 
-noasan const char *DescribeFrame(int x) {
+const char *(DescribeFrame)(char buf[32], int x) {
   /* asan runtime depends on this function */
   char *p;
-  static char buf[32];
   if (IsShadowFrame(x)) {
-    ksnprintf(buf, sizeof(buf), " shadow=%.8x", FRAME(UNSHADOW(ADDR(x))));
+    ksnprintf(buf, 32, " shadow=%.8x", FRAME(UNSHADOW(ADDR(x))));
     return buf;
     return " shadow ";
   } else if (IsAutoFrame(x)) {

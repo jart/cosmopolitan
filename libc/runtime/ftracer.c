@@ -90,7 +90,7 @@ privileged void ftracer(void) {
     frame = frame->next;
     if (frame->addr != g_ftrace.lastaddr) {
       stackuse = (intptr_t)GetStackAddr(0) + GetStackSize() - (intptr_t)frame;
-      kprintf("%rFUN %5P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
+      kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
               GetNestingLevel(frame) * 2, "", frame->addr);
       g_ftrace.lastaddr = frame->addr;
     }

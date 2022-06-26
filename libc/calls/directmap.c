@@ -16,10 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -38,7 +41,6 @@
  */
 struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
                           int64_t off) {
-  /* asan runtime depends on this function */
   struct DirectMap d;
   if (!IsWindows() && !IsMetal()) {
     d.addr = __sys_mmap(addr, size, prot, flags, fd, off, off);

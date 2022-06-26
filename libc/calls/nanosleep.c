@@ -31,7 +31,6 @@
  */
 noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
   int rc;
-  char buf[2][45];
   if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
                             (rem && !__asan_is_valid_timespec(rem))))) {
     rc = efault();
@@ -48,9 +47,8 @@ noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
     rc = sys_nanosleep_nt(req, rem);
   }
   if (!__time_critical) {
-    POLLTRACE("nanosleep(%s, [%s]) → %d% m",
-              DescribeTimespec(buf[0], sizeof(buf[0]), rc, req),
-              DescribeTimespec(buf[1], sizeof(buf[1]), rc, rem), rc);
+    POLLTRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
+              DescribeTimespec(rc, rem), rc);
   }
   return rc;
 }

@@ -39,6 +39,6 @@ int64_t ReOpenFile(int64_t hOriginalFile, uint32_t dwDesiredAccess,
   NTTRACE("ReOpenFile(%ld, %s, %s, %s) → %ld% m", hOriginalFile,
           DescribeNtFileAccessFlags(dwDesiredAccess),
           DescribeNtFileShareFlags(dwShareMode),
-          DescribeNtFileFlagsAndAttributes(dwFlagsAndAttributes), hHandle);
+          DescribeNtFileFlagAttr(dwFlagsAndAttributes), hHandle);
   return hHandle;
 }

@@ -28,9 +28,10 @@
 
 textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                                   const void *optval, uint32_t optlen) {
-  int64_t ms;
+  int64_t ms, micros;
   struct timeval *tv;
   struct linger *linger;
+  struct SockFd *sockfd;
   union {
     uint32_t millis;
     struct linger_nt linger;
@@ -47,7 +48,8 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
                optlen == sizeof(struct timeval)) {
       tv = optval;
       if (__builtin_mul_overflow(tv->tv_sec, 1000, &ms) ||
-          __builtin_add_overflow(ms, tv->tv_usec / 1000, &ms) ||
+          __builtin_add_overflow(tv->tv_usec, 999, &micros) ||
+          __builtin_add_overflow(ms, micros / 1000, &ms) ||
           (ms < 0 || ms > 0xffffffff)) {
         u.millis = 0xffffffff;
       } else {
@@ -55,6 +57,14 @@ textwindows int sys_setsockopt_nt(struct Fd *fd, int level, int optname,
       }
       optval = &u.millis;
       optlen = sizeof(u.millis);
+      sockfd = (struct SockFd *)fd->extra;
+      if (optname == SO_RCVTIMEO) {
+        sockfd->rcvtimeo = u.millis;
+      }
+      if (optname == SO_SNDTIMEO) {
+        sockfd->sndtimeo = u.millis;
+      }
+      return 0;
     }
   }
 

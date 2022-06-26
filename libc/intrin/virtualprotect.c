@@ -24,11 +24,6 @@
 
 __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
 
-static const char *DescribeVpFlags(uint32_t *x) {
-  if (!x) return "n/a";
-  return DescribeNtPageFlags(*x);
-}
-
 /**
  * Protects memory on the New Technology.
  * @note this wrapper takes care of ABI, STRACE(), and __winerr()
@@ -42,6 +37,6 @@ textwindows bool32 VirtualProtect(void *lpAddress, uint64_t dwSize,
   if (!bOk) __winerr();
   NTTRACE("VirtualProtect(%p, %'zu, %s, [%s]) → %hhhd% m", lpAddress, dwSize,
           DescribeNtPageFlags(flNewProtect),
-          DescribeVpFlags(bOk ? lpflOldProtect : 0), bOk);
+          DescribeNtPageFlags(*lpflOldProtect), bOk);
   return bOk;
 }

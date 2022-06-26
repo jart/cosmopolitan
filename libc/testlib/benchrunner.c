@@ -54,7 +54,6 @@ void testlib_benchwarmup(void) {
 void testlib_runallbenchmarks(void) {
   int e;
   e = errno;
-  _peekall();
   if (!IsWindows()) {
     mlockall(MCL_CURRENT);
     nice(-1);

@@ -28,7 +28,8 @@ LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_SYSV					\
 	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E					\
-	LIBC_NT_KERNEL32
+	LIBC_NT_KERNEL32				\
+	LIBC_NT_WS2_32
 
 LIBC_INTRIN_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x))))
@@ -76,6 +77,7 @@ o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 o/$(MODE)/libc/intrin/futex_wait.o			\
 o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
 o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
@@ -97,18 +99,21 @@ o/$(MODE)/libc/intrin/restorewintty.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
+# we can't use asan because:
+#   sys_mmap() calls these which sets up shadow memory
+o/$(MODE)/libc/intrin/describeflags.o			\
+o/$(MODE)/libc/intrin/describeframe.o			\
+o/$(MODE)/libc/intrin/describemapflags.o		\
+o/$(MODE)/libc/intrin/describeprotflags.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=address
+
 o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/getenv.greg.o			\
-o/$(MODE)/libc/intrin/assertfail.greg.o			\
-o/$(MODE)/libc/intrin/describeiov.greg.o		\
-o/$(MODE)/libc/intrin/describestat.greg.o		\
-o/$(MODE)/libc/intrin/describeflags.greg.o		\
-o/$(MODE)/libc/intrin/describerlimit.greg.o		\
-o/$(MODE)/libc/intrin/deviceiocontrol.greg.o		\
-o/$(MODE)/libc/intrin/describemapflags.greg.o		\
-o/$(MODE)/libc/intrin/describetimespec.greg.o		\
+o/$(MODE)/libc/intrin/wsarecv.o				\
+o/$(MODE)/libc/intrin/wsarecvfrom.o			\
 o/$(MODE)/libc/intrin/createfile.o			\
 o/$(MODE)/libc/intrin/reopenfile.o			\
 o/$(MODE)/libc/intrin/deletefile.o			\
@@ -140,6 +145,7 @@ o/$(MODE)/libc/intrin/createfilemapping.o		\
 o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
 o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
+o/$(MODE)/libc/intrin/wsawaitformultipleevents.o	\
 o/$(MODE)/libc/intrin/kstarttsc.o			\
 o/$(MODE)/libc/intrin/nomultics.o			\
 o/$(MODE)/libc/intrin/ntconsolemode.o:			\
@@ -149,10 +155,6 @@ o/$(MODE)/libc/intrin/ntconsolemode.o:			\
 			-ffreestanding			\
 			-fno-stack-protector		\
 			-fno-sanitize=all
-
-o/$(MODE)/libc/intrin/describeopenflags.greg.o:		\
-		OVERRIDE_CPPFLAGS +=			\
-			-DSTACK_FRAME_UNLIMITED
 
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\

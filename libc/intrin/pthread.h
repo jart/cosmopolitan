@@ -126,16 +126,15 @@ void *pthread_getspecific(pthread_key_t);
     !atomic_exchange(&(mutex)->lock, 1))                           \
        ? 0                                                         \
        : pthread_mutex_lock(mutex))
-/*
+
 #define pthread_mutex_unlock(mutex)                                       \
   ((mutex)->attr == PTHREAD_MUTEX_NORMAL                                  \
        ? (atomic_store_explicit(&(mutex)->lock, 0, memory_order_relaxed), \
-          ((IsLinux() || IsOpenbsd()) &&                                  \
+          ((IsLinux() /* || IsOpenbsd() */) &&                            \
            atomic_load_explicit(&(mutex)->waits, memory_order_relaxed) && \
            _pthread_mutex_wake(mutex)),                                   \
           0)                                                              \
        : pthread_mutex_unlock(mutex))
-*/
 #endif
 
 int _pthread_mutex_wake(pthread_mutex_t *) hidden;

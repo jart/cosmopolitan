@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
@@ -28,7 +29,7 @@ extern int __threadcalls_start[];
 
 void __enable_tls(void) {
   __initialize_tls(tibdefault);
-  *(int *)((char *)tibdefault + 0x38) = gettid();
+  *(int *)((char *)tibdefault + 0x38) = sys_gettid();
   *(int *)((char *)tibdefault + 0x3c) = __errno;
   __install_tls(tibdefault);
 }

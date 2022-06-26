@@ -35,7 +35,6 @@
  */
 int getrlimit(int resource, struct rlimit *rlim) {
   int rc;
-  char buf[64];
   if (resource == 127) {
     rc = einval();
   } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
@@ -50,6 +49,6 @@ int getrlimit(int resource, struct rlimit *rlim) {
     rc = einval();
   }
   STRACE("getrlimit(%s, [%s]) → %d% m", DescribeRlimitName(resource),
-         DescribeRlimit(buf, sizeof(buf), rc, rlim), rc);
+         DescribeRlimit(rc, rlim), rc);
   return rc;
 }

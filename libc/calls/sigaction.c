@@ -444,7 +444,6 @@ static int __sigaction(int sig, const struct sigaction *act,
  */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   int rc;
-  char buf[2][128];
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
@@ -452,8 +451,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
     rc = __sigaction(sig, act, oldact);
     __sig_unlock();
   }
-  STRACE("sigaction(%G, %s, [%s]) → %d% m", sig,
-         DescribeSigaction(buf[0], sizeof(buf[0]), 0, act),
-         DescribeSigaction(buf[1], sizeof(buf[1]), rc, oldact), rc);
+  STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
+         DescribeSigaction(rc, oldact), rc);
   return rc;
 }

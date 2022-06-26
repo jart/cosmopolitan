@@ -20,12 +20,15 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
+#include "libc/macros.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
@@ -39,6 +42,7 @@
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
+#include "libc/thread/openbsd.internal.h"
 #include "libc/thread/xnu.internal.h"
 
 STATIC_YOINK("gettid");  // for kprintf()
@@ -261,35 +265,8 @@ static int CloneFreebsd(int (*func)(void *), char *stk, size_t stksz, int flags,
 ////////////////////////////////////////////////////////////////////////////////
 // OPEN BESIYATA DISHMAYA
 
-struct __tfork {
-  void *tf_tcb;
-  int32_t *tf_tid;
-  void *tf_stack;
-};
-
-int __tfork(struct __tfork *params, size_t psize, struct CloneArgs *wt);
-asm("__tfork:\n\t"
-    "push\t$8\n\t"
-    "pop\t%rax\n\t"
-    "mov\t%rdx,%r8\n\t"
-    "syscall\n\t"
-    "jc\t1f\n\t"
-    "test\t%eax,%eax\n\t"
-    "jz\t2f\n\t"
-    "ret\n1:\t"
-    "neg\t%eax\n\t"
-    "ret\n2:\t"
-    "xor\t%ebp,%ebp\n\t"
-    "mov\t%r8,%rsp\n\t"
-    "mov\t%r8,%rdi\n\t"
-    "and\t$-16,%rsp\n\t"
-    "push\t%rax\n\t"
-    "jmp\tOpenbsdThreadMain\n\t"
-    ".size\t__tfork,.-__tfork\n\t");
-__attribute__((__used__, __no_reorder__))
-
-static wontreturn void
-OpenbsdThreadMain(struct CloneArgs *wt) {
+static wontreturn void OpenbsdThreadMain(void *p) {
+  struct CloneArgs *wt = p;
   wt->func(wt->arg);
   // we no longer use the stack after this point. however openbsd
   // validates the rsp register too so a race condition can still
@@ -298,14 +275,11 @@ OpenbsdThreadMain(struct CloneArgs *wt) {
   // although ideally there should be a better solution.
   //
   // void __threxit(%rdi = int32_t *notdead);
-  asm volatile("mov\t%2,%%rsp\n\t"
+  asm volatile("mov\t%2,%%rsp\n\t"     // set stack
                "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0
-               "syscall\n\t"           // futex()
-               "mov\t$302,%%eax\n\t"   // __threxit()
-               "syscall"
+               "syscall"               // __threxit()
                : "=m"(*wt->ztid)
-               : "a"(83), "m"(wt->pstack), "D"(wt->ztid), "S"(FUTEX_WAKE),
-                 "d"(INT_MAX)
+               : "a"(302), "m"(wt->pstack), "D"(wt->ztid)
                : "rcx", "r11", "memory");
   unreachable;
 }
@@ -313,20 +287,24 @@ OpenbsdThreadMain(struct CloneArgs *wt) {
 static int CloneOpenbsd(int (*func)(void *), char *stk, size_t stksz, int flags,
                         void *arg, void *tls, size_t tlssz, int *ctid) {
   int tid;
+  intptr_t sp;
+  struct __tfork *tf;
   struct CloneArgs *wt;
-  struct __tfork params;
-  wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
-                             sizeof(struct CloneArgs)) &
-                            -alignof(struct CloneArgs));
-  wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
+  sp = (intptr_t)stk + stksz;
+  sp -= sizeof(struct __tfork);
+  sp &= -alignof(struct __tfork);
+  tf = (struct __tfork *)sp;
+  sp -= sizeof(struct CloneArgs);
+  sp &= -MAX(16, alignof(struct CloneArgs));
+  wt = (struct CloneArgs *)sp;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->pstack = __builtin_frame_address(0);
-  wt->func = func;
   wt->arg = arg;
-  params.tf_stack = wt;
-  params.tf_tcb = flags & CLONE_SETTLS ? tls : 0;
-  params.tf_tid = flags & CLONE_CHILD_SETTID ? ctid : 0;
-  if ((tid = __tfork(&params, sizeof(params), wt)) < 0) {
+  wt->func = func;
+  tf->tf_stack = (char *)wt - 8;
+  tf->tf_tcb = flags & CLONE_SETTLS ? tls : 0;
+  tf->tf_tid = flags & CLONE_CHILD_SETTID ? ctid : 0;
+  if ((tid = __tfork_thread(tf, sizeof(*tf), OpenbsdThreadMain, wt)) < 0) {
     errno = -tid;
     tid = -1;
   }

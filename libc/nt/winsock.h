@@ -1,8 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_NT_WINSOCK_H_
 #define COSMOPOLITAN_LIBC_NT_WINSOCK_H_
+#include "libc/nt/struct/fdset.h"
 #include "libc/nt/struct/guid.h"
+#include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/struct/pollfd.h"
+#include "libc/nt/struct/timeval.h"
 #include "libc/sock/sock.h"
 /* ░▓█████████████████████████████████████████████▓▒
    ░█▓░░░░░░░░░▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▒░
@@ -68,16 +71,6 @@
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-struct NtTimeval {
-  int32_t tv_sec; /* [sic] */
-  int32_t tv_usec;
-};
-
-struct NtIovec {
-  uint32_t len;
-  char *buf;
-};
 
 struct NtMsgHdr {
   struct sockaddr *name;
@@ -280,11 +273,6 @@ struct NtWsaCompletion {
   } Parameters;
 };
 
-struct NtFdSet {
-  uint32_t fd_count;
-  int64_t fd_array[64];
-};
-
 struct NtInterfaceInfo {
   uint64_t iiFlags;
   struct sockaddr_in iiAddress;
@@ -377,17 +365,17 @@ int WSASendTo(uint64_t s, const struct NtIovec *lpBuffers,
 int WSAPoll(struct sys_pollfd_nt *inout_fdArray, uint32_t nfds,
             signed timeout_ms) paramsnonnull();
 
-int WSARecv(uint64_t s, const struct NtIovec *out_lpBuffers,
+int WSARecv(uint64_t s, const struct NtIovec *inout_lpBuffers,
             uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesRecvd,
             uint32_t *inout_lpFlags,
             struct NtOverlapped *opt_inout_lpOverlapped,
             const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2, 5));
 
-int WSARecvFrom(uint64_t s, const struct NtIovec *out_lpBuffers,
+int WSARecvFrom(uint64_t s, const struct NtIovec *inout_lpBuffers,
                 uint32_t dwBufferCount, uint32_t *opt_out_lpNumberOfBytesRecvd,
                 uint32_t *inout_lpFlags, void *out_fromsockaddr,
-                uint32_t *inout_fromsockaddrlen,
+                uint32_t *opt_inout_fromsockaddrlen,
                 struct NtOverlapped *opt_inout_lpOverlapped,
                 const NtWsaOverlappedCompletionRoutine opt_lpCompletionRoutine)
     paramsnonnull((2, 5));

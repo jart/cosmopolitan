@@ -44,10 +44,9 @@
  */
 int sigsuspend(const sigset_t *ignore) {
   int rc;
-  char buf[41];
   long ms, totoms;
   sigset_t save, mask, *arg;
-  STRACE("sigsuspend(%s) → ...", DescribeSigset(buf, sizeof(buf), 0, ignore));
+  STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {

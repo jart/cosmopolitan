@@ -35,15 +35,14 @@ textwindows int64_t FindFirstFile(const char16_t *lpFileName,
   int64_t hFindFile;
   hFindFile = __imp_FindFirstFileW(lpFileName, out_lpFindFileData);
   if (hFindFile != -1) {
-    NTTRACE(
-        "FindFirstFile(%#hs, [{"
-        ".cFileName=%#hs, "
-        ".dwFileAttributes=%s, "
-        ".dwFileType=%s"
-        "}]) → %ld% m",
-        lpFileName, out_lpFindFileData->cFileName,
-        DescribeNtFileFlagsAndAttributes(out_lpFindFileData->dwFileAttributes),
-        DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), hFindFile);
+    NTTRACE("FindFirstFile(%#hs, [{"
+            ".cFileName=%#hs, "
+            ".dwFileAttributes=%s, "
+            ".dwFileType=%s"
+            "}]) → %ld% m",
+            lpFileName, out_lpFindFileData->cFileName,
+            DescribeNtFileFlagAttr(out_lpFindFileData->dwFileAttributes),
+            DescribeNtFiletypeFlags(out_lpFindFileData->dwFileType), hFindFile);
   } else {
     __winerr();
     NTTRACE("FindFirstFile(%#hs, [n/a]) → %ld% m", lpFileName, hFindFile);

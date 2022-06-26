@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
@@ -30,12 +31,12 @@
  * by the clone() system call when a thread terminates. The purpose of
  * this operation is to know when it's safe to munmap() a thread stack.
  */
-void _wait0(int *ptid) {
+void _wait0(const int *ptid) {
   int x;
   for (;;) {
-    if (!(x = atomic_load_explicit(ptid, memory_order_relaxed))) {
+    if (!(x = atomic_load_explicit(ptid, memory_order_acquire))) {
       break;
-    } else if (IsLinux() || IsOpenbsd()) {
+    } else if (IsLinux() /* || IsOpenbsd() */) {
       _futex_wait(ptid, x, &(struct timespec){2});
     } else {
       sched_yield();
