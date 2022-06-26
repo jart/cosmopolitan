@@ -870,7 +870,7 @@ static inline void GetRemoteAddr(uint32_t *ip, uint16_t *port) {
       (IsPrivateIp(*ip) || IsLoopbackIp(*ip))) {
     if (ParseForwarded(HeaderData(kHttpXForwardedFor),
                        HeaderLength(kHttpXForwardedFor), ip, port) == -1)
-      WARNF("invalid X-Forwarded-For value: %`'.*s",
+      WARNF("(srvr) invalid X-Forwarded-For value: %`'.*s",
             HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor));
   }
 }
@@ -1024,13 +1024,13 @@ static bool IsServerFd(int fd) {
 static void ChangeUser(void) {
   if (changegid) {
     if (setgid(changegid)) {
-      FATALF("setgid() failed: %m");
+      FATALF("(cfg) setgid() failed: %m");
     }
   }
   // order matters
   if (changeuid) {
     if (setuid(changeuid)) {
-      FATALF("setuid() failed: %m");
+      FATALF("(cfg) setuid() failed: %m");
     }
   }
 }
@@ -1235,7 +1235,7 @@ static void WaitAll(void) {
         if (killed) {
           killed = false;
           terminated = false;
-          WARNF("(srvr) redbean shall terminate harder");
+          WARNF("(srvr) server shall terminate harder");
           KillGroup();
         }
         errno = 0;
@@ -3403,7 +3403,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
     DIEF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
   }
-  INFOF("Storing asset %`'s", path);
+  INFOF("(srvr) storing asset %`'s", path);
   disk = gflags = iattrs = 0;
   if (_isutf8(path, pathlen)) gflags |= kZipGflagUtf8;
   if (_istext(data, datalen)) iattrs |= kZipIattrText;
@@ -5472,7 +5472,7 @@ Content-Length: 0\r\n\
 
 static void EnterMeltdownMode(void) {
   if (shared->lastmeltdown && nowl() - shared->lastmeltdown < 1) return;
-  WARNF("(srvr) redbean is melting down (%,d workers)", shared->workers);
+  WARNF("(srvr) server is melting down (%,d workers)", shared->workers);
   LOGIFNEG1(kill(0, SIGUSR2));
   shared->lastmeltdown = nowl();
   ++shared->c.meltdowns;
@@ -6832,7 +6832,7 @@ static int HandleReadline(void) {
         errno = 0;
         return 0;
       } else {
-        WARNF("unexpected terminal error %d% m", status);
+        WARNF("(srvr) unexpected terminal error %d% m", status);
         errno = 0;
         return 0;
       }
@@ -7074,7 +7074,7 @@ static void TlsInit(void) {
   if (unsecure) return;
 
   if (suiteb && !X86_HAVE(AES)) {
-    WARNF("you're using suite b crypto but you don't have aes-ni");
+    WARNF("(srvr) requested suite b crypto, but aes-ni is not present");
   }
 
   if (!sslinitialized) {
@@ -7227,7 +7227,7 @@ static void GetOpts(int argc, char *argv[]) {
       case 'f':
         funtrace = true;
         if (ftrace_install() == -1) {
-          WARNF("ftrace failed to install %m");
+          WARNF("(srvr) ftrace failed to install %m");
         }
         break;
       default:
