@@ -116,22 +116,24 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   a = p;
   b = strpbrk(a, ".:");
   while (b) {
-    component = strndup(a, b - a);
     found = false;
-    lua_pushnil(L);  // search key
-    while (lua_next(L, -2)) {
-      if (lua_type(L, -2) == LUA_TSTRING) {
-        name = lua_tostring(L, -2);
-        if (!strcmp(name, component)) {
-          lua_remove(L, -3);  // remove table
-          lua_remove(L, -2);  // remove key
-          found = true;
-          break;
+    if (lua_istable(L, -1)) {
+      component = strndup(a, b - a);
+      lua_pushnil(L);  // search key
+      while (lua_next(L, -2)) {
+        if (lua_type(L, -2) == LUA_TSTRING) {
+          name = lua_tostring(L, -2);
+          if (!strcmp(name, component)) {
+            lua_remove(L, -3);  // remove table
+            lua_remove(L, -2);  // remove key
+            found = true;
+            break;
+          }
         }
+        lua_pop(L, 1);  // pop value
       }
-      lua_pop(L, 1);  // pop value
+      free(component);
     }
-    free(component);
     if (!found) {
       lua_pop(L, 1);  // pop table
       return;
