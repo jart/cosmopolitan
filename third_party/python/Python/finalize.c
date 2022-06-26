@@ -96,6 +96,7 @@ Py_FinalizeEx(void)
 #endif
     /* Destroy all modules */
     PyImport_Cleanup();
+    _PyImportLookupTables_Cleanup();
 
     /* Flush sys.stdout and sys.stderr (again, in case more was printed) */
     if (_Py_FlushStdFiles() < 0) {

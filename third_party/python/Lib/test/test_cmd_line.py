@@ -483,6 +483,10 @@ class CmdLineTest(unittest.TestCase):
             with open(fake, "w") as f:
                 f.write("raise RuntimeError('isolated mode test')\n")
             with open(main, "w") as f:
+                f.write("import sys\n")
+                f.write("import _imp\n")
+                f.write("if sys.meta_path[0] == _imp.CosmoImporter:\n")
+                f.write("\tsys.meta_path.pop(0)\n")
                 f.write("import uuid\n")
                 f.write("print('ok')\n")
             self.assertRaises(subprocess.CalledProcessError,
