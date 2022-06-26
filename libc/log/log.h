@@ -84,18 +84,17 @@ extern unsigned __log_level; /* log level for runtime check */
     ++__ftrace;                                                 \
   } while (0)
 
-// die with an error message without backtrace and debugger invocation
-#define DIEF(FMT, ...)                                              \
+// report an error without backtrace and debugger invocation
+#define FATALF(FMT, ...)                                            \
   do {                                                              \
     --__ftrace;                                                     \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    if (weaken(__die)) weaken(__die)();                             \
     __restorewintty();                                              \
     _Exit(1);                                                       \
     unreachable;                                                    \
   } while (0)
 
-#define FATALF(FMT, ...)                                              \
+#define DIEF(FMT, ...)                                                \
   do {                                                                \
     --__ftrace;                                                       \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
@@ -104,29 +103,17 @@ extern unsigned __log_level; /* log level for runtime check */
 
 #define ERRORF(FMT, ...)                                              \
   do {                                                                \
-    if (LOGGABLE(kLogError)) {                                        \
-      --__ftrace;                                                     \
-      flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                     \
-    }                                                                 \
+    if (LOGGABLE(kLogError)) { LOGF(kLogError, FMT, ##__VA_ARGS__); } \
   } while (0)
 
 #define WARNF(FMT, ...)                                              \
   do {                                                               \
-    if (LOGGABLE(kLogWarn)) {                                        \
-      --__ftrace;                                                    \
-      flogf(kLogWarn, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                    \
-    }                                                                \
+    if (LOGGABLE(kLogWarn)) { LOGF(kLogWarn, FMT, ##__VA_ARGS__); }  \
   } while (0)
 
 #define INFOF(FMT, ...)                                              \
   do {                                                               \
-    if (LOGGABLE(kLogInfo)) {                                        \
-      --__ftrace;                                                    \
-      flogf(kLogInfo, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                    \
-    }                                                                \
+    if (LOGGABLE(kLogInfo)) { LOGF(kLogInfo, FMT, ##__VA_ARGS__); }  \
   } while (0)
 
 #define VERBOSEF(FMT, ...)                                                  \
@@ -177,7 +164,9 @@ extern unsigned __log_level; /* log level for runtime check */
 #define FFATALF(F, FMT, ...)                                       \
   do {                                                             \
     --__ftrace;                                                    \
-    ffatalf(kLogFatal, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
+    flogf(kLogError, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__);   \
+    __restorewintty();                                             \
+    _Exit(1);                                                      \
     unreachable;                                                   \
   } while (0)
 
