@@ -196,18 +196,6 @@ __asan_version_mismatch_check_v8:
 	pop	%rdi
 	.init.end 303,_init_asan
 
-__asan_before_dynamic_init:
-	push	%rbp
-	mov	%rsp,%rbp
-	ud2
-	.endfn	__asan_before_dynamic_init,globl
-
-__asan_after_dynamic_init:
-	push	%rbp
-	mov	%rsp,%rbp
-	ud2
-	.endfn	__asan_after_dynamic_init,globl
-
 __asan_load1:
 	push	%rbp
 	mov	%rsp,%rbp

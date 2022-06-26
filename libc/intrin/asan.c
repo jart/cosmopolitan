@@ -1277,6 +1277,12 @@ void __sanitizer_annotate_contiguous_container(char *beg, char *end,
   __asan_poison(new_mid, end - new_mid, kAsanHeapOverrun);
 }
 
+void __asan_before_dynamic_init(const char *module_name) {
+}
+
+void __asan_after_dynamic_init(void) {
+}
+
 void __asan_install_malloc_hooks(void) {
   HOOK(hook_free, __asan_free);
   HOOK(hook_malloc, __asan_malloc);

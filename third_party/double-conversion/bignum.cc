@@ -24,12 +24,16 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/cstring"
-
 #include "third_party/double-conversion/bignum.h"
 #include "third_party/double-conversion/utils.h"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/cstring"
+// clang-format off
+
+asm(".ident\t\"\\n\\n\
+double-conversion (BSD-3 License)\\n\
+Copyright 2006-2012 the V8 project authors\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 namespace double_conversion {
 

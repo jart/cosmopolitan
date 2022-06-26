@@ -24,18 +24,16 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #include "libc/isystem/stdlib.h"
-
 #include "third_party/double-conversion/bignum-dtoa.h"
-
+#include "third_party/double-conversion/ieee.h"
 #include "third_party/double-conversion/test/cctest.h"
 #include "third_party/double-conversion/test/gay-fixed.h"
 #include "third_party/double-conversion/test/gay-precision.h"
-#include "third_party/double-conversion/test/gay-shortest.h"
 #include "third_party/double-conversion/test/gay-shortest-single.h"
-#include "third_party/double-conversion/ieee.h"
+#include "third_party/double-conversion/test/gay-shortest.h"
 #include "third_party/double-conversion/utils.h"
+// clang-format off
 
 using namespace double_conversion;
 

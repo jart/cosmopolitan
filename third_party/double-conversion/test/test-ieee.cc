@@ -24,14 +24,13 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #include "libc/isystem/stdlib.h"
-#include "third_party/libcxx/limits"
-
-#include "third_party/double-conversion/test/cctest.h"
 #include "third_party/double-conversion/diy-fp.h"
-#include "third_party/double-conversion/utils.h"
 #include "third_party/double-conversion/ieee.h"
+#include "third_party/double-conversion/test/cctest.h"
+#include "third_party/double-conversion/utils.h"
+#include "third_party/libcxx/limits"
+// clang-format off
 
 
 using namespace double_conversion;

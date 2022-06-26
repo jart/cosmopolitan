@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/fenv.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "third_party/double-conversion/wrapper.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 #define HEX(d) (union Pun){d}.i
@@ -400,4 +403,15 @@ TEST(strtod, testTowardzero) {
     fesetround(FE_TONEAREST);
     free(p);
   }
+}
+
+BENCH(strtod, bench) {
+  char buf[128];
+  EZBENCH2("strtod", donothing, strtod("-1.79769313486231e+308", 0));
+  EZBENCH2("StringToDouble", donothing,
+           StringToDouble("-1.79769313486231e+308", 22, 0));
+  EZBENCH2("snprintf %g", donothing,
+           snprintf(buf, 128, "%g", -1.79769313486231e+308));
+  EZBENCH2("DoubleToEcmascript", donothing,
+           DoubleToEcmascript(buf, -1.79769313486231e+308));
 }
