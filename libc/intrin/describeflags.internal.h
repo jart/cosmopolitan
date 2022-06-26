@@ -51,7 +51,7 @@ const char *DescribePrctlOperation(int);
 const char *DescribeProtFlags(char[48], int);
 const char *DescribeRemapFlags(char[48], int);
 const char *DescribeRlimit(char[64], int, const struct rlimit *);
-const char *DescribeRlimitName(char[12], int);
+const char *DescribeRlimitName(char[20], int);
 const char *DescribeSeccompOperation(int);
 const char *DescribeSigaction(char[128], int, const struct sigaction *);
 const char *DescribeSigaltstk(char[128], int, const struct sigaltstack *);
@@ -94,7 +94,7 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribeProtFlags(dirfd)     DescribeProtFlags(alloca(48), dirfd)
 #define DescribeRemapFlags(dirfd)    DescribeRemapFlags(alloca(48), dirfd)
 #define DescribeRlimit(rc, rl)       DescribeRlimit(alloca(64), rc, rl)
-#define DescribeRlimitName(rl)       DescribeRlimitName(alloca(12), rl)
+#define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSigaction(rc, sa)    DescribeSigaction(alloca(128), rc, sa)
 #define DescribeSigaltstk(rc, ss)    DescribeSigaltstk(alloca(128), rc, ss)
 #define DescribeSigset(rc, ss)       DescribeSigset(alloca(64), rc, ss)

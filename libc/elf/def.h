@@ -84,7 +84,7 @@
 #define EM_RISCV     243
 #define EM_BPF       247
 
-#define GRP_COMDAT 0x1
+#define GRP_COMDAT 1
 #define STN_UNDEF  0
 
 #define EV_NONE    0

@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_INTRIN_NOPL_H_
 #define COSMOPOLITAN_LIBC_INTRIN_NOPL_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
+#if !(__ASSEMBLER__ + __LINKER__ + 0) && defined(__GNUC__) && \
+    !defined(__llvm__) && !defined(__chibicc__) && !defined(__STRICT_ANSI__)
 
 /**
  * @fileoverview Turns CALLs into NOPs that are fixupable at runtime.
@@ -66,5 +67,5 @@
     0;                                                                         \
   })
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* !ASSEMBLER && !LINKER && GNUC && !CHIBICC && !LLVM && !ANSI */
 #endif /* COSMOPOLITAN_LIBC_INTRIN_NOPL_H_ */

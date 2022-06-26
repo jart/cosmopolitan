@@ -1653,7 +1653,8 @@ static int SymbolType(struct As *a, struct Slice s) {
   }
 }
 
-static int GrabSection(struct As *a, int name, int flags, int type) {
+static int GrabSection(struct As *a, int name, int flags, int type, int group,
+                       int comdat) {
   int i;
   for (i = 0; i < a->sections.n; ++i) {
     if (!strcmp(a->strings.p[name], a->strings.p[a->sections.p[i].name])) {
@@ -1664,7 +1665,7 @@ static int GrabSection(struct As *a, int name, int flags, int type) {
 }
 
 static void OnSection(struct As *a, struct Slice s) {
-  int name, flags, type;
+  int name, flags, type, group = -1, comdat = -1;
   name = SliceDup(a, GetSlice(a));
   if (startswith(a->strings.p[name], ".text")) {
     flags = SHF_ALLOC | SHF_EXECINSTR;
@@ -1685,9 +1686,17 @@ static void OnSection(struct As *a, struct Slice s) {
     if (IsComma(a)) {
       ++a->i;
       type = SectionType(a, GetSlice(a));
+      if (IsComma(a)) {
+        ++a->i;
+        group = SectionType(a, GetSlice(a));
+        if (IsComma(a)) {
+          ++a->i;
+          comdat = SectionType(a, GetSlice(a));
+        }
+      }
     }
   }
-  SetSection(a, GrabSection(a, name, flags, type));
+  SetSection(a, GrabSection(a, name, flags, type, group, comdat));
 }
 
 static void OnPushsection(struct As *a, struct Slice s) {
@@ -1705,7 +1714,7 @@ static void OnIdent(struct As *a, struct Slice s) {
   struct Slice arg;
   int comment, oldsection;
   comment = GrabSection(a, StrDup(a, ".comment"), SHF_MERGE | SHF_STRINGS,
-                        SHT_PROGBITS);
+                        SHT_PROGBITS, -1, -1);
   oldsection = a->section;
   a->section = comment;
   arg = GetSlice(a);

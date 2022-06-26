@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/bsf.h"
-#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 

@@ -173,7 +173,7 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 #define putc_unlocked(c, f)  fputc_unlocked(c, f)
 #define putwc_unlocked(c, f) fputwc_unlocked(c, f)
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL1
 #define flockfile(f)    _NOPL1("__threadcalls", flockfile, f)
 #define funlockfile(f)  _NOPL1("__threadcalls", funlockfile, f)
 #define ftrylockfile(f) _NOPL1("__threadcalls", ftrylockfile, f)

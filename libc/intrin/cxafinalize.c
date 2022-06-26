@@ -19,9 +19,9 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
-#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**

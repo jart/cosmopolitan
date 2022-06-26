@@ -19,10 +19,10 @@
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,30 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sock.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/macros.internal.h"
 
-const char *(DescribeSocketType)(char buf[64], int type) {
-  int x;
-  char *p;
-  p = buf;
-  x = type & ~(SOCK_CLOEXEC | SOCK_NONBLOCK);
-  if (x == SOCK_STREAM) {
-    p = stpcpy(p, "SOCK_STREAM");
-  } else if (x == SOCK_DGRAM) {
-    p = stpcpy(p, "SOCK_DGRAM");
-  } else if (x == SOCK_RAW) {
-    p = stpcpy(p, "SOCK_RAW");
-  } else if (x == SOCK_RDM) {
-    p = stpcpy(p, "SOCK_RDM");
-  } else if (x == SOCK_SEQPACKET) {
-    p = stpcpy(p, "SOCK_SEQPACKET");
-  } else {
-    p = FormatInt32(p, x);
-  }
-  if (type & SOCK_CLOEXEC) p = stpcpy(p, "|SOCK_CLOEXEC");
-  if (type & SOCK_NONBLOCK) p = stpcpy(p, "|SOCK_NONBLOCK");
-  return buf;
-}
+	.macro	.e e s
+	.long	\e - kRlimitNames
+	.long	1f - kRlimitNames
+	.rodata.str1.1
+1:	.string	"\s"
+	.previous
+	.endm
+
+	.section .rodata
+	.align 4
+	.underrun
+kRlimitNames:
+	.e	RLIMIT_AS,"AS"
+	.e	RLIMIT_CPU,"CPU"
+	.e	RLIMIT_FSIZE,"FSIZE"
+	.e	RLIMIT_NPROC,"NPROC"
+	.e	RLIMIT_NOFILE,"NOFILE"
+	.e	RLIMIT_RSS,"RSS"
+	.e	RLIMIT_DATA,"DATA"
+	.e	RLIMIT_CORE,"CORE"
+	.e	RLIMIT_STACK,"STACK"
+	.e	RLIMIT_SIGPENDING,"SIGPENDING"
+	.e	RLIMIT_MEMLOCK,"MEMLOCK"
+	.e	RLIMIT_LOCKS,"LOCKS"
+	.e	RLIMIT_MSGQUEUE,"MSGQUEUE"
+	.e	RLIMIT_NICE,"NICE"
+	.e	RLIMIT_RTPRIO,"RTPRIO"
+	.e	RLIMIT_RTTIME,"RTTIME"
+	.e	RLIMIT_SWAP,"SWAP"
+	.e	RLIMIT_SBSIZE,"SBSIZE"
+	.e	RLIMIT_NPTS,"NPTS"
+	.long	MAGNUM_TERMINATOR
+	.endobj	kRlimitNames,globl,hidden
+	.overrun

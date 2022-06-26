@@ -16,39 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/sol.h"
-
-static inline char *StpCpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0;; ++i) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-  }
-}
 
 /**
  * Describes clock_gettime() clock argument.
  */
 const char *(DescribeClockName)(char buf[32], int x) {
-  int i;
-  char *s, *p;
-  if ((s = GetMagnumStr(kClockNames, x))) {
-    p = buf;
-    *p++ = 'C';
-    *p++ = 'L';
-    *p++ = 'O';
-    *p++ = 'C';
-    *p++ = 'K';
-    *p++ = '_';
-    StpCpy(p, s);
-    return buf;
-  } else {
-    FormatInt32(buf, x);
-    return buf;
-  }
+  return DescribeMagnum(buf, kClockNames, "CLOCK_", x);
 }

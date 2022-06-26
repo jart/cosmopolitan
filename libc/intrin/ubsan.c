@@ -204,6 +204,15 @@ static void __ubsan_exit(void) {
   _Exit(99);
 }
 
+static char *__ubsan_stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
+
 dontdiscard static __ubsan_die_f *__ubsan_die(void) {
   if (weaken(__die)) {
     return weaken(__die);
@@ -246,11 +255,11 @@ static char *__ubsan_describe_shift_out_of_bounds(
   char *p = buf;
   lhs = __ubsan_extend(info->lhs_type, lhs);
   rhs = __ubsan_extend(info->rhs_type, rhs);
-  p = __stpcpy(p, __ubsan_describe_shift(info, lhs, rhs)), *p++ = ' ';
+  p = __ubsan_stpcpy(p, __ubsan_describe_shift(info, lhs, rhs)), *p++ = ' ';
   p = __ubsan_itpcpy(p, info->lhs_type, lhs), *p++ = ' ';
-  p = __stpcpy(p, info->lhs_type->name), *p++ = ' ';
+  p = __ubsan_stpcpy(p, info->lhs_type->name), *p++ = ' ';
   p = __ubsan_itpcpy(p, info->rhs_type, rhs), *p++ = ' ';
-  p = __stpcpy(p, info->rhs_type->name);
+  p = __ubsan_stpcpy(p, info->rhs_type->name);
   return buf;
 }
 
@@ -272,12 +281,12 @@ void __ubsan_handle_shift_out_of_bounds_abort(
 void __ubsan_handle_out_of_bounds(struct UbsanOutOfBoundsInfo *info,
                                   uintptr_t index) {
   char buf[512], *p = buf;
-  p = __stpcpy(p, info->index_type->name);
-  p = __stpcpy(p, " index ");
+  p = __ubsan_stpcpy(p, info->index_type->name);
+  p = __ubsan_stpcpy(p, " index ");
   p = __ubsan_itpcpy(p, info->index_type, index);
-  p = __stpcpy(p, " into ");
-  p = __stpcpy(p, info->array_type->name);
-  p = __stpcpy(p, " out of bounds");
+  p = __ubsan_stpcpy(p, " into ");
+  p = __ubsan_stpcpy(p, info->array_type->name);
+  p = __ubsan_stpcpy(p, " out of bounds");
   __ubsan_abort(&info->location, buf)();
   __ubsan_unreachable();
 }
@@ -294,19 +303,19 @@ static __ubsan_die_f *__ubsan_type_mismatch_handler(
   if (!pointer) return __ubsan_abort(&info->location, "null pointer access");
   kind = __ubsan_dubnul(kUbsanTypeCheckKinds, info->type_check_kind);
   if (info->alignment && (pointer & (info->alignment - 1))) {
-    p = __stpcpy(p, "unaligned ");
-    p = __stpcpy(p, kind), *p++ = ' ';
-    p = __stpcpy(p, info->type->name), *p++ = ' ', *p++ = '@';
+    p = __ubsan_stpcpy(p, "unaligned ");
+    p = __ubsan_stpcpy(p, kind), *p++ = ' ';
+    p = __ubsan_stpcpy(p, info->type->name), *p++ = ' ', *p++ = '@';
     p = __ubsan_itpcpy(p, info->type, pointer);
-    p = __stpcpy(p, " align ");
+    p = __ubsan_stpcpy(p, " align ");
     p = __intcpy(p, info->alignment);
   } else {
-    p = __stpcpy(p, "insufficient size ");
-    p = __stpcpy(p, kind);
-    p = __stpcpy(p, " address 0x");
+    p = __ubsan_stpcpy(p, "insufficient size ");
+    p = __ubsan_stpcpy(p, kind);
+    p = __ubsan_stpcpy(p, " address 0x");
     p = __fixcpy(p, pointer, sizeof(pointer) * CHAR_BIT);
-    p = __stpcpy(p, " with insufficient space for object of type ");
-    p = __stpcpy(p, info->type->name);
+    p = __ubsan_stpcpy(p, " with insufficient space for object of type ");
+    p = __ubsan_stpcpy(p, info->type->name);
   }
   return __ubsan_abort(&info->location, buf);
 }

@@ -56,7 +56,7 @@ void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define localtime_lock()   _NOPL0("__threadcalls", localtime_lock)
 #define localtime_unlock() _NOPL0("__threadcalls", localtime_unlock)
 #else

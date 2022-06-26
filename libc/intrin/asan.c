@@ -200,6 +200,15 @@ static char *__asan_utf8cpy(char *p, unsigned c) {
   return p;
 }
 
+static char *__asan_stpcpy(char *d, const char *s) {
+  size_t i;
+  for (i = 0;; ++i) {
+    if (!(d[i] = s[i])) {
+      return d + i;
+    }
+  }
+}
+
 static void __asan_memset(void *p, char c, size_t n) {
   char *b;
   size_t i;
@@ -645,9 +654,9 @@ static char *__asan_format_section(char *p, const void *p1, const void *p2,
   intptr_t a, b;
   if ((a = (intptr_t)p1) < (b = (intptr_t)p2)) {
     p = __asan_format_interval(p, a, b), *p++ = ' ';
-    p = __stpcpy(p, name);
+    p = __asan_stpcpy(p, name);
     if (a <= (intptr_t)addr && (intptr_t)addr <= b) {
-      p = __stpcpy(p, " ←address");
+      p = __asan_stpcpy(p, " ←address");
     }
     *p++ = '\n';
   }
@@ -822,9 +831,9 @@ dontdiscard static __asan_die_f *__asan_report(const void *addr, int size,
     y = m->p[i].y;
     p = __asan_format_interval(p, x << 16, (y << 16) + (FRAMESIZE - 1));
     z = (intptr_t)addr >> 16;
-    if (x <= z && z <= y) p = __stpcpy(p, " ←address");
+    if (x <= z && z <= y) p = __asan_stpcpy(p, " ←address");
     z = (((intptr_t)addr >> 3) + 0x7fff8000) >> 16;
-    if (x <= z && z <= y) p = __stpcpy(p, " ←shadow");
+    if (x <= z && z <= y) p = __asan_stpcpy(p, " ←shadow");
     *p++ = '\n';
   }
   __mmi_unlock();

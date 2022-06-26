@@ -144,7 +144,7 @@
 /*
 ** Macro to disable warnings about missing "break" at the end of a "case".
 */
-#if GCC_VERSION>=7000000
+#if GCC_VERSION>=7000000 && !defined(__chibicc__)
 # define deliberate_fall_through __attribute__((fallthrough));
 #else
 # define deliberate_fall_through

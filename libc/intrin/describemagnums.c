@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pcmpeqb.h"
-#include "libc/intrin/pmovmskb.h"
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
 
-static inline noasan size_t stpcpy_sse2(char *d, const char *s, size_t i) {
-  uint8_t v1[16], v2[16], vz[16];
-  for (;;) {
-    __builtin_memset(vz, 0, 16);
-    __builtin_memcpy(v1, s + i, 16);
-    pcmpeqb(v2, v1, vz);
-    if (!pmovmskb(v2)) {
-      __builtin_memcpy(d + i, v1, 16);
-      i += 16;
-    } else {
-      break;
-    }
-  }
-  return i;
-}
-
-/**
- * Copies bytes from 𝑠 to 𝑑 until a NUL is encountered.
- *
- * @param 𝑑 is destination memory
- * @param 𝑠 is a NUL-terminated string
- * @note 𝑑 and 𝑠 can't overlap
- * @return pointer to nul byte
- * @asyncsignalsafe
- */
-char *stpcpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0; (uintptr_t)(s + i) & 15; ++i) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-  }
-  i = stpcpy_sse2(d, s, i);
-  for (;;) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-    ++i;
+char *DescribeMagnum(char *b, const struct MagnumStr *m, const char *p, int x) {
+  char *s;
+  if ((s = GetMagnumStr(m, x))) {
+    stpcpy(stpcpy(b, p), s);
+    return b;
+  } else {
+    FormatInt32(b, x);
+    return b;
   }
 }

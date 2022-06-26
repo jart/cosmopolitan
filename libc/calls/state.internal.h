@@ -16,7 +16,7 @@ void __fds_unlock(void);
 void __sig_lock(void);
 void __sig_unlock(void);
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __fds_lock()   _NOPL0("__threadcalls", __fds_lock)
 #define __fds_unlock() _NOPL0("__threadcalls", __fds_unlock)
 #else
@@ -24,7 +24,7 @@ void __sig_unlock(void);
 #define __fds_unlock() (__threaded ? __fds_unlock() : 0)
 #endif
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __sig_lock()   _NOPL0("__threadcalls", __sig_lock)
 #define __sig_unlock() _NOPL0("__threadcalls", __sig_unlock)
 #else

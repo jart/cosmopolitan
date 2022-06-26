@@ -26,7 +26,7 @@
 
 int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
   size_t size;
-  if (IsLinux() || IsOpenbsd()) {
+  if (IsLinux() /* || IsOpenbsd() */) {
     return _futex_wait(addr, val, timeout);
   } else {
     return sched_yield();
@@ -34,7 +34,7 @@ int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
 }
 
 int cthread_memory_wake32(int* addr, int n) {
-  if (IsLinux() || IsOpenbsd()) {
+  if (IsLinux() /* || IsOpenbsd() */) {
     return _futex_wake(addr, n);
   } else {
     return 0;

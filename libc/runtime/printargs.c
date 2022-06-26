@@ -294,7 +294,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT("RESOURCE LIMITS");
   for (i = 0; i < RLIM_NLIMITS; ++i) {
     if (!getrlimit(i, &rlim)) {
-      char buf[12];
+      char buf[20];
       if (rlim.rlim_cur == RLIM_INFINITY) rlim.rlim_cur = -1;
       if (rlim.rlim_max == RLIM_INFINITY) rlim.rlim_max = -1;
       PRINT(" ☼ %-20s %,16ld %,16ld", (DescribeRlimitName)(buf, i),

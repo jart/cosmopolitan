@@ -20,9 +20,14 @@
 #include "tool/decode/lib/x86idnames.h"
 
 const struct IdName kX86GradeNames[] = {
-    {X86_GRADE_UNKNOWN, "Unknown"}, {X86_GRADE_APPLIANCE, "Appliance"},
-    {X86_GRADE_MOBILE, "Mobile"},   {X86_GRADE_TABLET, "Tablet"},
-    {X86_GRADE_DESKTOP, "Desktop"}, {X86_GRADE_CLIENT, "Client"},
-    {X86_GRADE_DENSITY, "Density"}, {X86_GRADE_SERVER, "Server"},
-    {X86_GRADE_SCIENCE, "Science"}, {0, 0},
+    {X86_GRADE_UNKNOWN, "Unknown"},      //
+    {X86_GRADE_APPLIANCE, "Appliance"},  //
+    {X86_GRADE_MOBILE, "Mobile"},        //
+    {X86_GRADE_TABLET, "Tablet"},        //
+    {X86_GRADE_DESKTOP, "Desktop"},      //
+    {X86_GRADE_CLIENT, "Client"},        //
+    {X86_GRADE_DENSITY, "Density"},      //
+    {X86_GRADE_SERVER, "Server"},        //
+    {X86_GRADE_SCIENCE, "Science"},      //
+    {0},                                 //
 };

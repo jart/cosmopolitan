@@ -49,7 +49,7 @@ int64_t __zipos_lseek(struct ZiposHandle *, int64_t, unsigned) hidden;
 int __zipos_fcntl(int, int, uintptr_t) hidden;
 int __zipos_notat(int, const char *) hidden;
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __zipos_lock()   _NOPL0("__threadcalls", __zipos_lock)
 #define __zipos_unlock() _NOPL0("__threadcalls", __zipos_unlock)
 #else

@@ -21,7 +21,7 @@ hidden extern struct StdioFlush __fflush;
 void __fflush_lock(void);
 void __fflush_unlock(void);
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __fflush_lock()   _NOPL0("__threadcalls", __fflush_lock)
 #define __fflush_unlock() _NOPL0("__threadcalls", __fflush_unlock)
 #else

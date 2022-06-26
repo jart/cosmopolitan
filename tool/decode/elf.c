@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
@@ -173,6 +175,42 @@ static void printelfsectionheaders(void) {
       Elf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
       const char *str = GetElfString(elf, st->st_size, shstrtab, shdr->sh_name);
       show(".asciz", format(b1, "%`'s", str), NULL);
+    }
+  }
+}
+
+static void printelfgroups(void) {
+  for (int i = 0; i < elf->e_shnum; ++i) {
+    Elf64_Shdr *shdr = GetElfSectionHeaderAddress(elf, st->st_size, i);
+    if (shdr->sh_type == SHT_GROUP) {
+      const Elf64_Shdr *symhdr =
+          GetElfSectionHeaderAddress(elf, st->st_size, shdr->sh_link);
+      const Elf64_Shdr *strhdr =
+          GetElfSectionHeaderAddress(elf, st->st_size, symhdr->sh_link);
+      Elf64_Sym *syms = GetElfSectionAddress(elf, st->st_size, symhdr);
+      char *strs = GetElfSectionAddress(elf, st->st_size, strhdr);
+      printf("\n");
+      printf("//\t%s group\n",
+             GetElfString(elf, st->st_size, strs, syms[shdr->sh_info].st_name));
+      printf("\t.org\t%#x\n", shdr->sh_offset);
+      bool first = true;
+      for (char *p = (char *)elf + shdr->sh_offset;
+           p < (char *)elf + shdr->sh_offset + shdr->sh_size; p += 4) {
+        if (first) {
+          first = false;
+          if (READ32LE(p) == GRP_COMDAT) {
+            printf("\t.long\tGRP_COMDAT\n");
+            continue;
+          }
+        }
+        const Elf64_Shdr *section =
+            GetElfSectionHeaderAddress(elf, st->st_size, READ32LE(p));
+        printf("\t.long\t%#x\t\t\t# %s\n", READ32LE(p),
+               GetElfString(elf, st->st_size,
+                            GetElfSectionNameStringTable(elf, st->st_size),
+                            section->sh_name));
+      }
+      shdr->sh_offset;
     }
   }
 }
@@ -346,6 +384,7 @@ int main(int argc, char *argv[]) {
   printelfehdr();
   printelfsegmentheaders();
   printelfsectionheaders();
+  printelfgroups();
   printelfrelocations();
   printelfsymboltable();
   printelfdynsymboltable();

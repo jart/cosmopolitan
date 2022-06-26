@@ -21,11 +21,13 @@ hidden extern const struct MagnumStr kErrnoDocs[];
 hidden extern const struct MagnumStr kErrnoNames[];
 hidden extern const struct MagnumStr kIpOptnames[];
 hidden extern const struct MagnumStr kOpenFlags[];
+hidden extern const struct MagnumStr kRlimitNames[];
 hidden extern const struct MagnumStr kSignalNames[];
 hidden extern const struct MagnumStr kSockOptnames[];
 hidden extern const struct MagnumStr kTcpOptnames[];
 
 char *GetMagnumStr(const struct MagnumStr *, int);
+char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

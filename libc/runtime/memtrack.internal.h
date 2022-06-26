@@ -72,7 +72,7 @@ void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
 int UntrackMemoryIntervals(void *, size_t) hidden;
 size_t GetMemtrackSize(struct MemoryIntervals *);
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __mmi_lock()   _NOPL0("__threadcalls", __mmi_lock)
 #define __mmi_unlock() _NOPL0("__threadcalls", __mmi_unlock)
 #else

@@ -50,6 +50,7 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
 
 int main(int argc, char *argv[]) {
   int i, rc;
+  char rlnbuf[20];
   struct rlimit rlim;
 
   // // example of how you might change the limits
@@ -64,8 +65,9 @@ int main(int argc, char *argv[]) {
 
   for (i = 0; i < RLIM_NLIMITS; ++i) {
     rc = getrlimit(i, &rlim);
-    printf("SETRLIMIT(%-20s, %,16ld, %,16ld) → %d %s\n", DescribeRlimitName(i),
-           rlim.rlim_cur, rlim.rlim_max, rc, !rc ? "" : strerror(errno));
+    printf("SETRLIMIT(%-20s, %,16ld, %,16ld) → %d %s\n",
+           (DescribeRlimitName)(rlnbuf, i), rlim.rlim_cur, rlim.rlim_max, rc,
+           !rc ? "" : strerror(errno));
   }
 
   return 0;

@@ -22,15 +22,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sol.h"
 
-static inline char *StpCpy(char *d, const char *s) {
-  size_t i;
-  for (i = 0;; ++i) {
-    if (!(d[i] = s[i])) {
-      return d + i;
-    }
-  }
-}
-
 /**
  * Describes setsockopt() optname arguments.
  */
@@ -65,7 +56,7 @@ const char *(DescribeSockOptname)(char buf[32], int l, int x) {
     ms = 0;
   }
   if (ms && (s = GetMagnumStr(ms, x))) {
-    StpCpy(p, s);
+    stpcpy(p, s);
   } else {
     FormatInt32(p, x);
   }

@@ -24,7 +24,7 @@ void __cxa_lock(void);
 void __cxa_unlock(void);
 void __cxa_printexits(FILE *, void *);
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __cxa_lock()   _NOPL0("__threadcalls", __cxa_lock)
 #define __cxa_unlock() _NOPL0("__threadcalls", __cxa_unlock)
 #else

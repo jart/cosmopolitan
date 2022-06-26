@@ -10,7 +10,7 @@ int __gdtoa_unlock(void);
 int __gdtoa_lock1(void);
 int __gdtoa_unlock1(void);
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__STRICT_ANSI__)
+#ifdef _NOPL0
 #define __gdtoa_lock()    _NOPL0("__threadcalls", __gdtoa_lock)
 #define __gdtoa_unlock()  _NOPL0("__threadcalls", __gdtoa_unlock)
 #define __gdtoa_lock1()   _NOPL0("__threadcalls", __gdtoa_lock1)

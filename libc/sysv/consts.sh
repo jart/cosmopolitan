@@ -2789,36 +2789,6 @@ syscon	icmp6	ICMP6_ROUTER_RENUMBERING		138			138			138			138			138			0			# unix 
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_FORBIDDEN		0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_OOB		0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
 
-#	java's computational model
-#	solves the sharing problem by defining everything as shared
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	misc	PTHREAD_MUTEX_STALLED			0			0			0			0			0			0			# consensus
-syscon	misc	PTHREAD_PRIO_NONE			0			0			0			0			0			0			# consensus
-syscon	misc	PTHREAD_PRIO_INHERIT			0			1			1			1			1			0			# bsd consensus
-syscon	misc	PTHREAD_PRIO_PROTECT			0			2			2			2			2			0			# bsd consensus
-syscon	misc	PTHREAD_DESTRUCTOR_ITERATIONS		4			4			4			4			4			0			# unix consensus
-syscon	misc	PTHREAD_PROCESS_SHARED			1			1			1			1			1			0			# unix consensus
-syscon	misc	PTHREAD_CREATE_DETACHED			1			2			1			1			1			0
-syscon	misc	PTHREAD_KEYS_MAX			0x0400			0x0200			0x0100			0x0100			0x0100			0
-syscon	misc	PTHREAD_STACK_MIN			0x4000			0x2000			0x0800			0x1000			0x1000			0
-syscon	misc	PTHREAD_BARRIER_SERIAL_THREAD		-1			0			-1			-1			-1			0
-syscon	misc	PTHREAD_CANCEL_ASYNCHRONOUS		1			0			2			2			2			0
-syscon	misc	PTHREAD_CANCEL_DISABLE			1			0			1			1			1			0
-syscon	misc	PTHREAD_INHERIT_SCHED			0			1			4			4			4			0
-syscon	misc	PTHREAD_SCOPE_SYSTEM			0			1			2			2			2			0
-syscon	misc	PTHREAD_EXPLICIT_SCHED			1			2			0			0			0			0
-syscon	misc	PTHREAD_MUTEX_DEFAULT			0			0			1			4			4			0
-syscon	misc	PTHREAD_MUTEX_ERRORCHECK		0			1			0			1			1			0
-syscon	misc	PTHREAD_MUTEX_RECURSIVE			0			2			0			2			2			0
-syscon	misc	PTHREAD_SCOPE_PROCESS			1			2			0			0			0			0
-syscon	misc	PTHREAD_CANCEL_DEFERRED			0			2			0			0			0			0
-syscon	misc	PTHREAD_CANCEL_ENABLE			0			1			0			0			0			0
-syscon	misc	PTHREAD_CREATE_JOINABLE			0			1			0			0			0			0
-syscon	misc	PTHREAD_MUTEX_NORMAL			0			0			0			3			3			0
-syscon	misc	PTHREAD_MUTEX_ROBUST			0			0			1			0			0			0
-syscon	misc	PTHREAD_PROCESS_PRIVATE			0			2			0			0			0			0
-
 # man fanotify(7)
 syscon	fan	FAN_CLASS_NOTIF				0			0			0			0			0			0			# consensus
 syscon	fan	FAN_ACCESS				1			0			0			0			0			0
