@@ -156,6 +156,7 @@ include third_party/quickjs/quickjs.mk
 include third_party/lz4cli/lz4cli.mk
 include third_party/zip/zip.mk
 include third_party/unzip/unzip.mk
+include third_party/double-conversion/double-conversion.mk
 include tool/build/lib/buildlib.mk
 include third_party/chibicc/chibicc.mk
 include third_party/chibicc/test/test.mk
