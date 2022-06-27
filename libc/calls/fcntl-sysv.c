@@ -19,14 +19,27 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/errfuns.h"
 
 int sys_fcntl(int fd, int cmd, uintptr_t arg) {
   int rc;
   bool islock;
-  islock = cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK;
-  if (islock) cosmo2flock(arg);
+  if ((islock = cmd == F_GETLK ||  //
+                cmd == F_SETLK ||  //
+                cmd == F_SETLKW)) {
+    if ((!IsAsan() && !arg) ||
+        (IsAsan() &&
+         !__asan_is_valid((struct flock *)arg, sizeof(struct flock)))) {
+      return efault();
+    }
+    cosmo2flock(arg);
+  }
   rc = __sys_fcntl(fd, cmd, arg);
-  if (islock) flock2cosmo(arg);
+  if (islock) {
+    flock2cosmo(arg);
+  }
   return rc;
 }

@@ -21,6 +21,10 @@
 #include "libc/dce.h"
 #include "libc/testlib/testlib.h"
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
+
 TEST(arch_prctl, fs) {
   if (IsLinux() || IsOpenbsd()) {
     uint64_t n, x;

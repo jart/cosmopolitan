@@ -36,6 +36,10 @@ STATIC_YOINK("zip_uri_support");
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr", 0);
+}
+
 TEST(stat_010, testEmptyFile_sizeIsZero) {
   struct stat st;
   memset(&st, -1, sizeof(st));

@@ -34,6 +34,7 @@ extern unsigned char _ereal[];                      /* αpε */
 extern unsigned char __privileged_start[];          /* αpε */
 extern unsigned char __privileged_addr[];           /* αpε */
 extern unsigned char __privileged_size[];           /* αpε */
+extern unsigned char __privileged_end[];            /* αpε */
 extern unsigned char __test_start[];                /* αpε */
 extern unsigned char __ro[];                        /* αpε */
 extern unsigned char *__relo_start[];               /* αpε */

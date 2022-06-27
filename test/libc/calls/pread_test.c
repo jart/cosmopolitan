@@ -20,10 +20,13 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
+int fd;
+char buf[8];
 char testlib_enable_tmp_setup_teardown;
 
-static int fd;
-static char buf[8];
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr", 0);
+}
 
 TEST(dog, testReadPastEof_returnsZero) {
   EXPECT_NE(-1, (fd = open("a", O_RDWR | O_CREAT | O_TRUNC, 0644)));

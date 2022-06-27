@@ -28,6 +28,10 @@ testonly void OnUsr1(int sig) {
   _exit(0);
 }
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath proc", 0);
+}
+
 TEST(signal, test) {
   ASSERT_NE(SIG_ERR, signal(SIGUSR1, OnUsr1));
   ASSERT_NE(-1, raise(SIGUSR1));

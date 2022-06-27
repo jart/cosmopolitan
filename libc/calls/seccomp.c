@@ -34,7 +34,7 @@
  *
  * @raise ENOSYS on non-Linux.
  */
-int seccomp(unsigned operation, unsigned flags, void *args) {
+privileged int seccomp(unsigned operation, unsigned flags, void *args) {
   int rc;
   if (IsLinux()) {
     asm volatile("syscall"

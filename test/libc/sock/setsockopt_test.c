@@ -27,6 +27,10 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/testlib.h"
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath inet", 0);
+}
+
 TEST(setsockopt, SO_RCVTIMEO) {
   char buf[32];
   struct timeval tv = {0, 10000};

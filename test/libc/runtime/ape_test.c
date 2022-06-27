@@ -32,6 +32,11 @@ STATIC_YOINK("apetest2.com");
 
 char testlib_enable_tmp_setup_teardown_once;
 
+__attribute__((__constructor__)) static void init(void) {
+  // TODO(jart): What's up with RHEL5 / RHEL7?
+  // pledge("stdio rpath wpath cpath tty proc exec", 0);
+}
+
 void Extract(const char *from, const char *to, int mode) {
   ASSERT_SYS(0, 3, open(from, O_RDONLY));
   ASSERT_SYS(0, 4, creat(to, mode));

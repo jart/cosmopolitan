@@ -47,7 +47,8 @@ static union metatermios __oldtermios;
 static textstartup void __oldtermios_init() {
   int e;
   e = errno;
-  if (sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
+  if (!IsOpenbsd() &&  // avoid pledge(tty)
+      sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
     __isrestorable = true;
   }
   errno = e;

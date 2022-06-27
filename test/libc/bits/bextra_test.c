@@ -17,8 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
 
 unsigned P[] = {
     // 33333222222222111111111000000000
@@ -106,7 +111,5 @@ TEST(bextra, 9bit) {
 }
 
 BENCH(bextra, bench) {
-  EZBENCH2("bextra 0/32", donothing, bextra(P, 0, 32));
   EZBENCH2("bextra 1/31", donothing, bextra(P, 1, 31));
-  EZBENCH2("bextra 1/32", donothing, bextra(P, 1, 32));
 }

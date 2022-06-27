@@ -26,8 +26,8 @@ struct sock_fprog {
 
 #define BPF_STMT(code, k) \
   { (unsigned short)(code), 0, 0, k }
-#define BPF_JUMP(code, k, jt, jf) \
-  { (unsigned short)(code), jt, jf, k }
+#define BPF_JUMP(code, k, jumptrue, jumpfalse) \
+  { (unsigned short)(code), jumptrue, jumpfalse, k }
 
 #define BPF_MEMWORDS 16
 

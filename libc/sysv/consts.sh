@@ -220,6 +220,7 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0			0			#
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	mmap	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
+syscon	mmap	MAP_SHARED_VALIDATE			3			1			1			1			1			1			# weird linux thing
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
 syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
@@ -232,6 +233,7 @@ syscon	mmap	MAP_NORESERVE				0x00004000		0x00000040		0			0			0x00000040		0			# L
 syscon	mmap	MAP_POPULATE				0x00008000		0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
 syscon	mmap	MAP_NONBLOCK				0x00010000		0			0			0			0			0
 syscon	mmap	MAP_HUGETLB				0x00040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_SYNC				0x00080000		0			0			0			0			0			# perform synchronous page faults for mapping (Linux 4.15+)
 syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
 syscon	mmap	MAP_HASSEMAPHORE			0			0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
 syscon	mmap	MAP_NOSYNC				0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
@@ -999,11 +1001,15 @@ syscon	sio	SIOCSIFTXQLEN				0x8943			0			0			0			0			0
 syscon	sio	SIOCSRARP				0x8962			0			0			0			0			0
 syscon	sio	SIOGIFINDEX				0x8933			0			0			0			0			0
 
+#	socket() address families
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	af	AF_UNSPEC				0			0			0			0			0			0			# consensus
 syscon	af	AF_UNIX					1			1			1			1			1			1			# consensus
 syscon	af	AF_LOCAL				1			1			1			1			1			1			# consensus
 syscon	af	AF_FILE					1			0			0			0			0			0
 syscon	af	AF_INET					2			2			2			2			2			2			# consensus
+syscon	af	AF_INET6				10			30			28			24			24			23
 syscon	af	AF_AX25					3			0			0			0			0			0
 syscon	af	AF_IPX					4			23			23			23			23			6			# bsd consensus
 syscon	af	AF_APPLETALK				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
@@ -1011,7 +1017,6 @@ syscon	af	AF_NETROM				6			0			0			0			0			0
 syscon	af	AF_BRIDGE				7			0			0			0			0			0
 syscon	af	AF_ATMPVC				8			0			0			0			0			0
 syscon	af	AF_X25					9			0			0			0			0			0
-syscon	af	AF_INET6				10			30			28			24			24			23
 syscon	af	AF_ROSE					11			0			0			0			0			0
 syscon	af	AF_NETBEUI				13			0			0			0			0			0
 syscon	af	AF_SECURITY				14			0			0			0			0			0
@@ -1250,14 +1255,15 @@ syscon	msg	MSG_PEEK				2			2			2			2			2			2			# consensus
 syscon	msg	MSG_DONTROUTE				4			4			4			4			4			4			# consensus
 syscon	msg	MSG_FASTOPEN				0x20000000		0			0			0			0			0			# TODO
 syscon	msg	MSG_WAITALL				0x0100			0x40			0x40			0x40			0x40			8			# bsd consensus
+syscon	msg	MSG_MORE				0x8000			0			0			0			0			0			# send/sendto: manual TCP_CORK hbasically
+syscon	msg	MSG_NOSIGNAL				0x4000			0x80000			0x020000		0x0400			0x0400			0			# send/sendto: don't SIGPIPE on EOF
+syscon	msg	MSG_DONTWAIT				0x40			0x80			0x80			0x80			0x80			0			# send/sendto: manual non-blocking
 syscon	msg	MSG_TRUNC				0x20			0x10			0x10			0x10			0x10			0x0100			# bsd consensus
 syscon	msg	MSG_CTRUNC				8			0x20			0x20			0x20			0x20			0x0200			# bsd consensus
 syscon	msg	MSG_ERRQUEUE				0x2000			0			0			0			0			0x1000			# bsd consensus
 syscon	msg	MSG_NOERROR				0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
-syscon	msg	MSG_DONTWAIT				0x40			0x80			0x80			0x80			0x80			0			# bsd consensus
 syscon	msg	MSG_EOR					0x80			8			8			8			8			0			# bsd consensus
 syscon	msg	MSG_CMSG_CLOEXEC			0x40000000		0			0x040000		0x0800			0x0800			0
-syscon	msg	MSG_NOSIGNAL				0x4000			0			0x020000		0x0400			0x0400			0
 syscon	msg	MSG_WAITFORONE				0x010000		0			0x080000		0			0x2000			0
 syscon	msg	MSG_BATCH				0x040000		0			0			0			0			0
 syscon	msg	MSG_CONFIRM				0x0800			0			0			0			0			0
@@ -1265,7 +1271,6 @@ syscon	msg	MSG_EXCEPT				0x2000			0			0			0			0			0
 syscon	msg	MSG_FIN					0x0200			0x0100			0x0100			0			0			0
 syscon	msg	MSG_EOF					0x0200			0x0100			0x0100			0			0			0
 syscon	msg	MSG_INFO				12			0			0			0			0			0
-syscon	msg	MSG_MORE				0x8000			0			0			0			0			0
 syscon	msg	MSG_PARITY_ERROR			9			0			0			0			0			0
 syscon	msg	MSG_PROXY				0x10			0			0			0			0			0
 syscon	msg	MSG_RST					0x1000			0			0			0			0			0
@@ -1327,17 +1332,17 @@ syscon	compat	TIOCSETAF				0x5404			0x80487416		0x802c7416		0x802c7416		0x802c74
 syscon	termios	TIOCGWINSZ				0x5413			1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
 syscon	termios	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473		0x40047473		0			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
+syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# get pgrp of tty
+syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# set pgrp of tty
+syscon	termios	TIOCSBRK				0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		0			# set break bit
 syscon	termios	TIOCCBRK				0x5428			0x2000747a		0x2000747a		0x2000747a		0x2000747a		0			# boop
 syscon	termios	TIOCCONS				0x541d			0x80047462		0x80047462		0x80047462		0x80047462		0			# boop
 syscon	termios	TIOCGETD				0x5424			0x4004741a		0x4004741a		0x4004741a		0x4004741a		0			# boop
-syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# boop
 syscon	termios	TIOCNOTTY				0x5422			0x20007471		0x20007471		0x20007471		0x20007471		0			# boop
 syscon	termios	TIOCNXCL				0x540d			0x2000740e		0x2000740e		0x2000740e		0x2000740e		0			# boop
-syscon	termios	TIOCSBRK				0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		0			# boop
 syscon	termios	TIOCSCTTY				0x540e			0x20007461		0x20007461		0x20007461		0x20007461		0			# boop
 syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x8004741b		0			# boop
 syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
-syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
 syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
@@ -1347,7 +1352,7 @@ syscon	termios	TCSBRK					0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745
 syscon	termios	TIOCDRAIN				0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TCSBRK on Linux
 syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
 syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
-syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# boop
+syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# clear data terminal ready
 syscon	termios	TIOCSDTR				0			0x20007479		0x20007479		0x20007479		0x20007479		0			# boop
 syscon	termios	TIOCEXT					0			0x80047460		0x80047460		0x80047460		0x80047460		0			# boop
 syscon	termios	TIOCGDRAINWAIT				0			0x40047456		0x40047456		0			0			0			# boop

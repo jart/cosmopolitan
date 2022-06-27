@@ -18,11 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
 
 TEST(_countbits, testLow) {
   int i;

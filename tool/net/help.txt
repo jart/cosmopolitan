@@ -130,7 +130,6 @@ KEYBOARD
   PROTIP         REMAP CAPS LOCK TO CTRL
 
 ────────────────────────────────────────────────────────────────────────────────
-
 USAGE
 
   This executable is also a ZIP file that contains static assets.
@@ -239,7 +238,6 @@ USAGE
       redbean.com: ELF 64-bit LSB executable
 
 ────────────────────────────────────────────────────────────────────────────────
-
 SECURITY
 
   redbean uses a protocol polyglot for serving HTTP and HTTPS on
@@ -258,7 +256,6 @@ SECURITY
   See http://redbean.dev for further details.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 LUA SERVER PAGES
 
   Any files with the extension .lua will be dynamically served by redbean.
@@ -299,7 +296,6 @@ LUA SERVER PAGES
   isolated processes are cloned from the blueprint you created.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 REPL
 
   Your redbean displays a Read-Eval-Print-Loop that lets you modify the
@@ -352,7 +348,6 @@ REPL
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
 LUA ENHANCEMENTS
 
   We've made some enhancements to the Lua language that should make it
@@ -375,7 +370,6 @@ LUA ENHANCEMENTS
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
 GLOBALS
 
   arg: array[str]
@@ -409,7 +403,6 @@ GLOBALS
               arg[ 2] = 'arg2'
 
 ────────────────────────────────────────────────────────────────────────────────
-
 SPECIAL PATHS
 
   /
@@ -496,7 +489,6 @@ SPECIAL PATHS
           of your `.args` file.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 HOOKS
 
   OnHttpRequest()
@@ -545,7 +537,6 @@ HOOKS
           in uniprocess mode.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 FUNCTIONS
 
   Write(data:str)
@@ -1491,7 +1482,6 @@ FUNCTIONS
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
 CONSTANTS
 
   kLogDebug
@@ -1515,7 +1505,6 @@ CONSTANTS
           process exit.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 LSQLITE3 MODULE
 
   Please refer to the LuaSQLite3 Documentation.
@@ -1552,7 +1541,6 @@ LSQLITE3 MODULE
   administrate your redbean database. See the sqlite3.com download above.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 RE MODULE
 
   This module exposes an API for POSIX regular expressions which enable you
@@ -1622,7 +1610,6 @@ RE MODULE
           regex_t*:search.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 MAXMIND MODULE
 
   This module may be used to get city/country/asn/etc from IPs, e.g.
@@ -1644,7 +1631,6 @@ MAXMIND MODULE
   For further details, please see maxmind.lua in redbean-demo.com.
 
 ────────────────────────────────────────────────────────────────────────────────
-
 ARGON2 MODULE
 
   This module implemeents a password hashing algorithm based on blake2b
@@ -1712,7 +1698,6 @@ ARGON2 MODULE
         true
 
 ────────────────────────────────────────────────────────────────────────────────
-
 UNIX MODULE
 
   This module exposes the low-level System Five system call interface.
@@ -2857,9 +2842,10 @@ UNIX MODULE
 
     `flags` may have any combination (using bitwise OR) of:
 
-    - `MSG_OOB`
-    - `MSG_DONTROUTE`
-    - `MSG_NOSIGNAL`
+    - `MSG_NOSIGNAL`: Don't SIGPIPE on EOF
+    - `MSG_OOB`: Send stream data through out of bound channel
+    - `MSG_DONTROUTE`: Don't go through gateway (for diagnostics)
+    - `MSG_MORE`: Manual corking to belay nodelay (0 on non-Linux)
 
   unix.sendto(fd:int, data:str, ip:uint32, port:uint16[, flags:int])
   unix.sendto(fd:int, data:str, unixpath:str[, flags:int])
@@ -3103,84 +3089,105 @@ UNIX MODULE
     This can be used to sandbox your redbean workers. It allows finer
     customization compared to the `-S` flag.
 
+    Pledging causes most system calls to become unavailable. On Linux the
+    disabled calls will return EPERM whereas OpenBSD kills the process.
+
+    Using pledge is irreversible. On Linux it causes PR_SET_NO_NEW_PRIVS
+    to be set on your process.
+
     By default exit and exit_group are always allowed. This is useful
     for processes that perform pure computation and interface with the
     parent via shared memory.
 
-    Currently only available on OpenBSD and Linux. On Linux, the default
-    action when your policy is violated is to return `EPERM`. On OpenBSD
-    the kernel will kill the process.
+    Once pledge is in effect, the chmod functions (if allowed) will not
+    permit the sticky/setuid/setgid bits to change. Linux will EPERM here
+    and OpenBSD should ignore those three bits rather than crashing.
+
+    User and group IDs also can't be changed once pledge is in effect.
+    OpenBSD should ignore the chown functions without crashing. Linux
+    will just EPERM.
+
+    Memory functions won't permit creating executable code after pledge.
+    Restrictions on origin of SYSCALL instructions will become enforced
+    on Linux (cf. msyscall) after pledge too, which means the process
+    gets killed if SYSCALL is used outside the .privileged section. One
+    exception is if the "exec" group is specified, in which case these
+    restrictions need to be loosened.
 
     `promises` is a string that may include any of the following groups
     delimited by spaces.
 
     stdio
 
-      Allows clock_getres, clock_gettime, close, dup, dup2, dup3,
-      fchdir, fstat, fsync, ftruncate, getdents, getegid, getrandom,
+      Allows read, write, send, recv, recvfrom, recvmsg, close,
+      clock_getres, clock_gettime, dup, dup2, dup3, fchdir, fstat,
+      fsync, fdatasync, ftruncate, getdents, getegid, getrandom,
       geteuid, getgid, getgroups, getitimer, getpgid, getpgrp, getpid,
       getppid, getresgid, getresuid, getrlimit, getsid, gettimeofday,
-      getuid, lseek, madvise, brk, mmap, mprotect, munmap, nanosleep,
-      pipe, pipe2, poll, pread, preadv, pwrite, pwritev, read, readv,
-      recvfrom, recvmsg, select, sendmsg, sendto, setitimer, shutdown,
-      sigaction, sigprocmask, sigreturn, socketpair, umask, wait4,
-      write, writev.
+      getuid, lseek, madvise, brk, mmap/mprotect (PROT_EXEC isn't
+      allowed), msync, munmap, gethostname, nanosleep, pipe, pipe2,
+      poll, setitimer, shutdown, sigaction, sigsuspend, sigprocmask,
+      socketpair, umask, wait4, ioctl(FIONREAD), ioctl(FIONBIO),
+      ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD),
+      fcntl(F_GETFL), fcntl(F_SETFL).
 
     rpath
 
-      Allows chdir, getcwd, openat, fstatat, faccessat, readlinkat,
-      lstat, chmod, fchmod, fchmodat, chown, fchown, fchownat, fstat.
+      Allows chdir, getcwd, open, stat, fstat, access, readlink, chmod,
+      chmod, fchmod.
 
     wpath
 
-      Allows getcwd, openat, fstatat, faccessat, readlinkat, lstat,
-      chmod, fchmod, fchmodat, chown, fchown, fchownat, fstat.
+      Allows getcwd, open, stat, fstat, access, readlink, chmod, fchmod.
 
     cpath
 
-      Allows rename, renameat, link, linkat, symlink, symlinkat, unlink,
-      unlinkat, mkdir, mkdirat, rmdir.
-
-    dpath
-
-      Allows mknod
-
-    tmppath
-
-      Allows lstat, chmod, chown, unlink, fstat.
-
-    inet
-
-      Allows socket, listen, bind, connect, accept4, accept,
-      getpeername, getsockname, setsockopt, getsockopt.
+      Allows rename, link, symlink, unlink, mkdir, rmdir.
 
     fattr
 
-      Allows utimes, utimensat, chmod, fchmod, fchmodat, chown,
-      fchownat, lchown, fchown, utimes.
+      Allows chmod, fchmod, utimensat, futimens.
+
+    flock
+
+      Allows flock, fcntl(F_GETLK), fcntl(F_SETLK), fcntl(F_SETLKW).
+
+    tty
+
+      Allows isatty, tiocgwinsz, tcgets, tcsets, tcsetsw, tcsetsf.
+
+    inet
+
+      Allows socket (AF_INET), listen, bind, connect, accept,
+      getpeername, getsockname, setsockopt, getsockopt.
 
     unix
 
-      Allows socket, listen, bind, connect, accept4, accept,
+      Allows socket (AF_UNIX), listen, bind, connect, accept,
       getpeername, getsockname, setsockopt, getsockopt.
 
     dns
 
-      Allows sendto, recvfrom, socket, connect.
+      Allows sendto, recvfrom, socket (AF_INET), connect.
 
     proc
 
-      Allows fork, vfork, kill, getpriority, setpriority, setrlimit,
-      setpgid, setsid.
-
-    exec
-
-      Allows execve.
+      Allows fork, vfork, clone, kill, getpriority, setpriority,
+      setrlimit, setpgid, setsid.
 
     id
 
       Allows setuid, setreuid, setresuid, setgid, setregid, setresgid,
       setgroups, setrlimit, getpriority, setpriority.
+
+    exec
+
+      Allows execve.
+
+      If this is used then APE binaries should be assimilated in order
+      to work on OpenBSD. On Linux, mmap() will be loosened up to allow
+      creating PROT_EXEC memory (for APE loader) and system call origin
+      verification won't be activated.
 
   unix.gmtime(unixts:int)
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str
@@ -3295,9 +3302,20 @@ UNIX MODULE
     returned unix.Dir ownership takes ownership of the file descriptor
     and will close it automatically when garbage collected.
 
+  unix.isatty(fd:int)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Returns true if file descriptor is a pseudoteletypewriter.
+
+  unix.tiocgwinsz(fd:int)
+      ├─→ rows:int, cols:int
+      └─→ nil, unix.Errno
+
+    Returns cellular dimensions of pseudoteletypewriter display.
+
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX DIR OBJECT
 
   unix.Dir objects are created by opendir() or fdopendir(). The
@@ -3357,7 +3375,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX RUSAGE OBJECT
 
   unix.Rusage objects are created by wait() or getrusage(). The
@@ -3524,7 +3541,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX STAT OBJECT
 
   unix.Stat objects are created by stat() or fstat(). The following
@@ -3667,7 +3683,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX SIGSET OBJECT
 
   The unix.Sigset class defines a mutable bitset that may currently
@@ -3707,7 +3722,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX SIGNAL MAGNUMS
 
   unix.SIGINT
@@ -3795,7 +3809,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX ERRNO OBJECT
 
   This object is returned by system calls that fail. We prefer returning
@@ -3860,7 +3873,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX ERROR MAGNUMS
 
   unix.EINVAL
@@ -4287,7 +4299,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
  UNIX MISCELLANEOUS MAGNUMS
 
   unix.ARG_MAX
@@ -4366,7 +4377,6 @@ UNIX MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
 LEGAL
 
   redbean contains software licensed ISC, MIT, BSD-2, BSD-3, zlib
@@ -4379,7 +4389,6 @@ LEGAL
 
 
 ────────────────────────────────────────────────────────────────────────────────
-
 SEE ALSO
 
   https://redbean.dev/

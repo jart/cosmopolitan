@@ -28,6 +28,10 @@
 
 volatile int n;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath proc", 0);
+}
+
 void OnSig(int sig, siginfo_t *si, ucontext_t *ctx) {
   ++n;
 }

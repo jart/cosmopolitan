@@ -31,6 +31,10 @@ int64_t fd;
 struct stat st;
 const char *path;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath", 0);
+}
+
 TEST(ftruncate, test) {
   mkdir("o", 0755);
   mkdir("o/tmp", 0755);

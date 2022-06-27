@@ -8,7 +8,7 @@
 
 #define _SECCOMP_MACHINE(MAGNUM)                                             \
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch)), \
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),            \
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, MAGNUM, 1, 0),            \
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS)
 
 #define _SECCOMP_LOAD_SYSCALL_NR()                                           \

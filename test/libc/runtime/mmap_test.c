@@ -48,6 +48,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath proc", 0);
+}
+
 TEST(mmap, zeroSize) {
   ASSERT_SYS(EINVAL, MAP_FAILED,
              mmap(NULL, 0, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));

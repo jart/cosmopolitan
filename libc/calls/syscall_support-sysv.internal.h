@@ -19,6 +19,7 @@ void __restore_rt() hidden;
 void __restore_rt_netbsd(void) hidden;
 void cosmo2flock(uintptr_t);
 void flock2cosmo(uintptr_t);
+bool32 sys_isatty_metal(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

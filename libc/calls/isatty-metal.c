@@ -16,16 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/sysv/consts/pr.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/sysv/errfuns.h"
 
-privileged bool __is_linux_2_6_23(void) {
-  int rc;
-  if (!IsLinux()) return false;
-  asm volatile("syscall"
-               : "=a"(rc)
-               : "0"(157), "D"(PR_GET_SECCOMP)
-               : "rcx", "r11", "memory");
-  return rc != -EINVAL;
+bool32 sys_isatty_metal(int fd) {
+  if (__isfdopen(fd)) {
+    if (__isfdkind(fd, kFdSerial)) {
+      return true;
+    } else {
+      enotty();
+      return false;
+    }
+  } else {
+    ebadf();
+    return false;
+  }
 }

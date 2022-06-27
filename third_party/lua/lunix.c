@@ -31,6 +31,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
@@ -1803,6 +1804,29 @@ static int LuaUnixSissock(lua_State *L) {
   return 1;
 }
 
+// unix.isatty(fd:int)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixIsatty(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "isatty", olderr, isatty(luaL_checkinteger(L, 1)));
+}
+
+// unix.tiocgwinsz(fd:int)
+//     ├─→ rows:int, cols:int
+//     └─→ nil, unix.Errno
+static int LuaUnixTiocgwinsz(lua_State *L) {
+  struct winsize ws;
+  int olderr = errno;
+  if (!ioctl(luaL_checkinteger(L, 1), TIOCGWINSZ, &ws)) {
+    lua_pushinteger(L, ws.ws_row);
+    lua_pushinteger(L, ws.ws_col);
+    return 2;
+  } else {
+    return SysretErrno(L, "tiocgwinsz", olderr);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // unix.Stat object
 
@@ -2505,8 +2529,10 @@ static const luaL_Reg kLuaUnix[] = {
     {"getsid", LuaUnixGetsid},            // get session id of pid
     {"getsockname", LuaUnixGetsockname},  // get address of local end
     {"getsockopt", LuaUnixGetsockopt},    // get socket tunings
+    {"tiocgwinsz", LuaUnixTiocgwinsz},    // pseudoteletypewriter dimensions
     {"getuid", LuaUnixGetuid},            // get real user id of process
     {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
+    {"isatty", LuaUnixIsatty},            // detects pseudoteletypewriters
     {"kill", LuaUnixKill},                // signal child process
     {"link", LuaUnixLink},                // create hard link
     {"listen", LuaUnixListen},            // begin listening for clients
@@ -2658,6 +2684,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "MSG_PEEK", MSG_PEEK);
   LuaSetIntField(L, "MSG_OOB", MSG_OOB);
   LuaSetIntField(L, "MSG_NOSIGNAL", MSG_NOSIGNAL);
+  LuaSetIntField(L, "MSG_MORE", MSG_MORE);
 
   // readdir() type
   LuaSetIntField(L, "DT_UNKNOWN", DT_UNKNOWN);

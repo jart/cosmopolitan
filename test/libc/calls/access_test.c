@@ -29,6 +29,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr", 0);
+}
+
 TEST(access, efault) {
   ASSERT_SYS(EFAULT, -1, access(0, F_OK));
   if (IsWindows() && !IsAsan()) return;  // not possible

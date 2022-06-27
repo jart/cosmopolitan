@@ -31,6 +31,7 @@
 	_ehead = 0
 	_ereal = 0
 	__privileged_start = 0
+	__privileged_end = 0
 	__privileged_addr = 0
 	__privileged_size = 0
 	__test_start = 0
@@ -58,6 +59,7 @@
 	.globl	__privileged_size
 	.globl	__privileged_addr
 	.globl	__privileged_start
+	.globl	__privileged_end
 	.globl	__ro
 	.globl	__test_start
 	.globl	_edata
@@ -83,6 +85,7 @@
 	.weak	__privileged_size
 	.weak	__privileged_addr
 	.weak	__privileged_start
+	.weak	__privileged_end
 	.weak	__ro
 	.weak	__test_start
 	.weak	_edata

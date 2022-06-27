@@ -45,6 +45,10 @@ void SetUp(void) {
   if (IsWindows()) exit(0);
 }
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
+
 TEST(malloc, zeroMeansOne) {
   ASSERT_GE(malloc_usable_size(gc(malloc(0))), 1);
 }

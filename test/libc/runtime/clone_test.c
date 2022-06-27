@@ -42,6 +42,10 @@ char *stack, *tls;
 int x, me, tid, *childetid;
 _Atomic(int) thechilde;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath thread", 0);
+}
+
 void SetUp(void) {
   x = 0;
   me = gettid();

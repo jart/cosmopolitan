@@ -25,6 +25,10 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath tty", 0);
+}
+
 TEST(socketpair, testAfUnixStream) {
   int fd[2];
   const char ping[] = "ping";

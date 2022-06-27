@@ -37,6 +37,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -3430,8 +3431,8 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   }
   //////////////////////////////////////////////////////////////////////////////
   if (-1 == fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK})) {
-    WARNF("can't place write lock on file descriptor %d: %s",
-        zfd, strerror(errno));
+    WARNF("can't place write lock on file descriptor %d: %s", zfd,
+          strerror(errno));
     return;
   }
   OpenZip(false);
@@ -3592,7 +3593,7 @@ static void StoreFile(char *path) {
   tlen = strlen(target);
   if (!IsReasonablePath(target, tlen))
     FATALF("(cfg) error: can't store %`'s: contains '.' or '..' segments",
-         target);
+           target);
   if (lstat(path, &st) == -1) FATALF("(cfg) error: can't stat %`'s: %m", path);
   if (!(p = xslurp(path, &plen)))
     FATALF("(cfg) error: can't read %`'s: %m", path);
@@ -4950,7 +4951,8 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
       effectivepath.p = path;
       effectivepath.n = pathlen;
       DEBUGF("(lua) LuaRunAsset(%`'s)", path);
-      status = luaL_loadbuffer(L, code, codelen,
+      status = luaL_loadbuffer(
+          L, code, codelen,
           FreeLater(xasprintf("@%s%s", a->file ? "" : "/zip", path)));
       if (status != LUA_OK || LuaCallWithTrace(L, 0, 0, NULL) != LUA_OK) {
         LogLuaError("lua code", lua_tostring(L, -1));
@@ -6838,7 +6840,7 @@ static int HandleReadline(void) {
       }
     }
     DisableRawMode();
-    LUA_REPL_LOCK;
+    lua_repl_lock();
     if (status == LUA_OK) {
       status = lua_runchunk(L, 0, LUA_MULTRET);
     }
@@ -6847,7 +6849,7 @@ static int HandleReadline(void) {
     } else {
       lua_report(L, status);
     }
-    LUA_REPL_UNLOCK;
+    lua_repl_unlock();
     EnableRawMode();
   }
 }
@@ -6863,14 +6865,14 @@ static int HandlePoll(int ms) {
         if (polls[pollid].fd < 0) continue;
         if (polls[pollid].fd) {
           // handle listen socket
-          LUA_REPL_LOCK;
+          lua_repl_lock();
           serverid = pollid - 1;
           assert(0 <= serverid && serverid < servers.n);
           serveraddr = &servers.p[serverid].addr;
           ishandlingconnection = true;
           rc = HandleConnection(serverid);
           ishandlingconnection = false;
-          LUA_REPL_UNLOCK;
+          lua_repl_unlock();
           if (rc == -1) return -1;
 #ifndef STATIC
         } else {
@@ -6991,18 +6993,18 @@ static int EventLoop(int ms) {
   while (!terminated) {
     errno = 0;
     if (zombied) {
-      LUA_REPL_LOCK;
+      lua_repl_lock();
       ReapZombies();
-      LUA_REPL_UNLOCK;
+      lua_repl_unlock();
     } else if (invalidated) {
-      LUA_REPL_LOCK;
+      lua_repl_lock();
       HandleReload();
-      LUA_REPL_UNLOCK;
+      lua_repl_unlock();
       invalidated = false;
     } else if (meltdown) {
-      LUA_REPL_LOCK;
+      lua_repl_lock();
       EnterMeltdownMode();
-      LUA_REPL_UNLOCK;
+      lua_repl_unlock();
       meltdown = false;
     } else if ((t = nowl()) - lastheartbeat > HEARTBEAT / 1000.) {
       lastheartbeat = t;
@@ -7043,9 +7045,9 @@ static int WindowsReplThread(void *arg) {
   }
   DisableRawMode();
   lua_freerepl();
-  LUA_REPL_LOCK;
+  lua_repl_lock();
   lua_settop(L, 0);  // clear stack
-  LUA_REPL_UNLOCK;
+  lua_repl_unlock();
   if ((sig = linenoiseGetInterrupt())) {
     raise(sig);
   }

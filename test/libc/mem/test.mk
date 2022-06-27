@@ -37,6 +37,7 @@ TEST_LIBC_MEM_DIRECTDEPS =					\
 	LIBC_NEXGEN32E						\
 	LIBC_RAND						\
 	LIBC_RUNTIME						\
+	LIBC_SOCK						\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_STUBS						\

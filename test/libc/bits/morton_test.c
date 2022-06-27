@@ -17,10 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/morton.h"
+#include "libc/calls/calls.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
 
 TEST(morton, test) {
   EXPECT_EQ(0, morton(0, 0));

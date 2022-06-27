@@ -33,6 +33,10 @@
 #include "libc/testlib/testlib.h"
 #include "tool/net/sandbox.h"
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath proc", 0);
+}
+
 // It's been reported that Chromebooks return EINVAL here.
 bool CanUseSeccomp(void) {
   int ws, pid;

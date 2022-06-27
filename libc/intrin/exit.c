@@ -35,7 +35,7 @@
  * @vforksafe
  * @noreturn
  */
-wontreturn void _Exit(int exitcode) {
+privileged wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
   if (!IsWindows() && !IsMetal()) {

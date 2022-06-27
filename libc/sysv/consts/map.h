@@ -26,6 +26,7 @@ extern const long MAP_NOSYNC;
 extern const long MAP_POPULATE;
 extern const long MAP_PRIVATE;
 extern const long MAP_SHARED;
+extern const long MAP_SHARED_VALIDATE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -54,6 +55,7 @@ COSMOPOLITAN_C_END_
 #define MAP_NORESERVE       SYMBOLIC(MAP_NORESERVE)
 #define MAP_NOSYNC          SYMBOLIC(MAP_NOSYNC)
 #define MAP_POPULATE        SYMBOLIC(MAP_POPULATE)
+#define MAP_SHARED_VALIDATE SYMBOLIC(MAP_SHARED_VALIDATE)
 
 #define MAP_ANON   MAP_ANONYMOUS
 #define MAP_NOCORE MAP_CONCEAL

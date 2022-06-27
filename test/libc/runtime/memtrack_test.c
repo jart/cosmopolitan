@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
@@ -29,6 +30,10 @@
 
 #define I(x, y) \
   { x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE }
+
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath", 0);
+}
 
 static bool AreMemoryIntervalsEqual(const struct MemoryIntervals *mm1,
                                     const struct MemoryIntervals *mm2) {

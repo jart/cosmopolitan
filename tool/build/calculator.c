@@ -685,6 +685,7 @@ void StartInteractive(void) {
       isatty(fileno(stdout)) && !__nocolor) {
     interactive = true;
   }
+  errno = 0;
   if (interactive) {
     fputs(BANNER, stdout);
     fflush(/* needed b/c entering tty mode */ stdout);

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sysv/consts/nr.h"
 #include "libc/macros.internal.h"
+.privileged
 
 _futex:	mov	__NR_futex,%eax
 	clc

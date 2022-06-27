@@ -27,6 +27,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr proc", 0);
+}
+
 TEST(lseek, wat) {
   int fd, pid;
   char buf[8] = {0};

@@ -62,15 +62,15 @@ COSMOPOLITAN_C_START_
 #define BPF_TO_BE   0x08
 #define BPF_FROM_LE BPF_TO_LE
 #define BPF_FROM_BE BPF_TO_BE
-#define BPF_JNE     0x50
-#define BPF_JLT     0xa0
-#define BPF_JLE     0xb0
-#define BPF_JSGT    0x60
-#define BPF_JSGE    0x70
-#define BPF_JSLT    0xc0
-#define BPF_JSLE    0xd0
-#define BPF_CALL    0x80
-#define BPF_EXIT    0x90
+#define BPF_JNE     0x50 /* != */
+#define BPF_JLT     0xa0 /* unsigned < */
+#define BPF_JLE     0xb0 /* unsigned <= */
+#define BPF_JSGT    0x60 /* signed > */
+#define BPF_JSGE    0x70 /* signed >= */
+#define BPF_JSLT    0xc0 /* signed < */
+#define BPF_JSLE    0xd0 /* signed <= */
+#define BPF_CALL    0x80 /* call */
+#define BPF_EXIT    0x90 /* ret */
 #define BPF_FETCH   0x01
 #define BPF_XCHG    (0xe0 | BPF_FETCH)
 #define BPF_CMPXCHG (0xf0 | BPF_FETCH)

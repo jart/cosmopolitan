@@ -32,6 +32,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr", 0);
+}
+
 TEST(readlink, enoent) {
   char buf[32];
   ASSERT_SYS(ENOENT, -1, readlink("doesnotexist", buf, 32));

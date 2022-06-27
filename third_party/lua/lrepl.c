@@ -31,6 +31,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -68,11 +69,19 @@ static const char *const kKeywordHints[] = {
 bool lua_repl_blocking;
 bool lua_repl_isterminal;
 linenoiseCompletionCallback *lua_repl_completions_callback;
-_Alignas(64) char lua_repl_lock;
 struct linenoiseState *lua_repl_linenoise;
 static lua_State *globalL;
 static const char *g_progname;
 static const char *g_historypath;
+static pthread_mutex_t lua_repl_lock_obj;
+
+void(lua_repl_lock)(void) {
+  pthread_mutex_lock(&lua_repl_lock_obj);
+}
+
+void(lua_repl_unlock)(void) {
+  pthread_mutex_unlock(&lua_repl_lock_obj);
+}
 
 /*
 ** {==================================================================
@@ -239,7 +248,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
   prmt = strdup(get_prompt(L, firstline));
   lua_pop(L, 1);  /* remove prompt */
   if (lua_repl_isterminal) {
-    LUA_REPL_UNLOCK;
+    lua_repl_unlock();
     rc = linenoiseEdit(lua_repl_linenoise, prmt, &b, !firstline || lua_repl_blocking);
     free(prmt);
     if (rc != -1) {
@@ -249,9 +258,9 @@ static ssize_t pushline (lua_State *L, int firstline) {
         linenoiseHistorySave(g_historypath);
       }
     }
-    LUA_REPL_LOCK;
+    lua_repl_lock();
   } else {
-    LUA_REPL_UNLOCK;
+    lua_repl_unlock();
     fputs(prmt, stdout);
     fflush(stdout);
     b = linenoiseGetLine(stdin);
@@ -262,7 +271,7 @@ static ssize_t pushline (lua_State *L, int firstline) {
     } else {
       rc = 0;
     }
-    LUA_REPL_LOCK;
+    lua_repl_lock();
   }
   if (!(rc == -1 && errno == EAGAIN)) {
     write(1, "\n", 1);
@@ -330,7 +339,7 @@ static int multiline (lua_State *L) {
 
 void lua_initrepl(lua_State *L, const char *progname) {
   const char *prompt;
-  LUA_REPL_LOCK;
+  lua_repl_lock();
   g_progname = progname;
   if ((lua_repl_isterminal = linenoiseIsTerminal())) {
     linenoiseSetCompletionCallback(lua_readline_completions);
@@ -349,16 +358,16 @@ void lua_initrepl(lua_State *L, const char *progname) {
     __replmode = true;
     if (isatty(2)) __replstderr = true;
   }
-  LUA_REPL_UNLOCK;
+  lua_repl_unlock();
 }
 
 
 void lua_freerepl(void) {
-  LUA_REPL_LOCK;
+  lua_repl_lock();
   __replmode = false;
   linenoiseEnd(lua_repl_linenoise);
   free(g_historypath);
-  LUA_REPL_UNLOCK;
+  lua_repl_unlock();
 }
 
 
@@ -375,16 +384,16 @@ int lua_loadline (lua_State *L) {
   ssize_t rc;
   int status;
   lua_settop(L, 0);
-  LUA_REPL_LOCK;
+  lua_repl_lock();
   if ((rc = pushline(L, 1)) != 1) {
-    LUA_REPL_UNLOCK;
+    lua_repl_unlock();
     return rc - 1;  /* eof or error */
   }
   if ((status = addreturn(L)) != LUA_OK) /* 'return ...' did not work? */
     status = multiline(L);  /* try as command, maybe with continuation lines */
   lua_remove(L, 1);  /* remove line from the stack */
   lua_assert(lua_gettop(L) == 1);
-  LUA_REPL_UNLOCK;
+  lua_repl_unlock();
   return status;
 }
 

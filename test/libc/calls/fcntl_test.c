@@ -30,6 +30,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath wpath cpath fattr", 0);
+}
+
 TEST(fcntl_getfl, testRemembersAccessMode) {
   int fd;
   ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
