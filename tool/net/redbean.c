@@ -733,7 +733,7 @@ static void ProgramPrivateKey(const char *p, size_t n) {
   rc = mbedtls_pk_parse_key(key, waqapi, n + 1, 0, 0);
   mbedtls_platform_zeroize(waqapi, n);
   free(waqapi);
-  if (rc != 0) DIEF("(ssl) error: load key (grep -0x%04x)", -rc);
+  if (rc != 0) FATALF("(ssl) error: load key (grep -0x%04x)", -rc);
   for (i = 0; i < certs.n; ++i) {
     if (certs.p[i].cert && !certs.p[i].key &&
         !mbedtls_pk_check_pair(&certs.p[i].cert->pk, key)) {
@@ -754,13 +754,13 @@ static void ProgramFile(const char *path, void program(const char *, size_t)) {
     mbedtls_platform_zeroize(p, n);
     free(p);
   } else {
-    DIEF("(srvr) error: failed to read file %`'s", path);
+    FATALF("(srvr) error: failed to read file %`'s", path);
   }
 }
 
 static void ProgramPort(long port) {
   if (!(0 <= port && port <= 65535)) {
-    DIEF("(cfg) error: bad port: %d", port);
+    FATALF("(cfg) error: bad port: %d", port);
   }
   if (port == 443) listeningonport443 = true;
   ports.p = realloc(ports.p, ++ports.n * sizeof(*ports.p));
@@ -784,12 +784,12 @@ static void ProgramAddr(const char *addr) {
       struct addrinfo hint = {AI_NUMERICSERV, AF_INET, SOCK_STREAM,
                               IPPROTO_TCP};
       if ((rc = getaddrinfo(addr, "0", &hint, &ai)) != EAI_SUCCESS) {
-        DIEF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
+        FATALF("(cfg) error: bad addr: %s (EAI_%s)", addr, gai_strerror(rc));
       }
       ip = ntohl(ai->ai_addr4->sin_addr.s_addr);
       freeaddrinfo(ai);
     } else {
-      DIEF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
+      FATALF("(cfg) error: ProgramAddr() needs an IP in MODE=tiny: %s", addr);
     }
   }
   ips.p = realloc(ips.p, ++ips.n * sizeof(*ips.p));
@@ -801,11 +801,11 @@ static void ProgramRedirect(int code, const char *sp, size_t sn, const char *dp,
   long i, j;
   struct Redirect r;
   if (code && code != 301 && code != 302 && code != 307 && code != 308) {
-    DIEF("(cfg) error: unsupported redirect code %d", code);
+    FATALF("(cfg) error: unsupported redirect code %d", code);
   }
 
   if (!(FreeLater(EncodeHttpHeaderValue(dp, dn, 0)))) {
-    DIEF("(cfg) error: invalid location %s", dp);
+    FATALF("(cfg) error: invalid location %s", dp);
   }
 
   r.code = code;
@@ -836,7 +836,7 @@ static void ProgramRedirectArg(int code, const char *s) {
   const char *p;
   n = strlen(s);
   if (!(p = memchr(s, '=', n))) {
-    DIEF("(cfg) error: redirect arg missing '='");
+    FATALF("(cfg) error: redirect arg missing '='");
   }
   ProgramRedirect(code, s, p - s, p + 1, n - (p - s + 1));
 }
@@ -898,7 +898,7 @@ static void ProgramBrand(const char *s) {
   free(brand);
   free(serverheader);
   if (!(p = EncodeHttpHeaderValue(s, -1, 0))) {
-    DIEF("(cfg) error: brand isn't latin1 encodable: %`'s", s);
+    FATALF("(cfg) error: brand isn't latin1 encodable: %`'s", s);
   }
   brand = strdup(s);
   serverheader = xasprintf("Server: %s\r\n", p);
@@ -921,7 +921,7 @@ static void ProgramTimeout(long ms) {
     timeout.tv_usec = 0;
   } else {
     if (ms < MINTIMEOUT) {
-      DIEF("(cfg) error: timeout needs to be %dms or greater", MINTIMEOUT);
+      FATALF("(cfg) error: timeout needs to be %dms or greater", MINTIMEOUT);
     }
     d = ldiv(ms, 1000);
     timeout.tv_sec = d.quot;
@@ -968,7 +968,7 @@ static void ProgramDirectory(const char *path) {
   size_t n;
   struct stat st;
   if (stat(path, &st) == -1 || !S_ISDIR(st.st_mode)) {
-    DIEF("(cfg) error: not a directory: %`'s", path);
+    FATALF("(cfg) error: not a directory: %`'s", path);
   }
   s = strdup(path);
   n = strlen(s);
@@ -987,7 +987,7 @@ static void ProgramHeader(const char *s) {
       case kHttpContentEncoding:
       case kHttpContentRange:
       case kHttpLocation:
-        DIEF("(cfg) error: can't program header: %`'s", s);
+        FATALF("(cfg) error: can't program header: %`'s", s);
       case kHttpServer:
         ProgramBrand(p + 1);
         break;
@@ -999,7 +999,7 @@ static void ProgramHeader(const char *s) {
     }
     free(v);
   } else {
-    DIEF("(cfg) error: illegal header: %`'s", s);
+    FATALF("(cfg) error: illegal header: %`'s", s);
   }
 }
 
@@ -1781,7 +1781,7 @@ static void ConfigureCertificate(mbedtls_x509write_cert *cw, struct Cert *ca,
       (r = mbedtls_x509write_crt_set_ext_key_usage(cw, type)) ||
       (r = mbedtls_x509write_crt_set_subject_name(cw, subject)) ||
       (r = mbedtls_x509write_crt_set_issuer_name(cw, issuer))) {
-    DIEF("(ssl) configure certificate (grep -0x%04x)", -r);
+    FATALF("(ssl) configure certificate (grep -0x%04x)", -r);
   }
   free(subject);
   free(issuer);
@@ -3401,7 +3401,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   size_t oldcdirsize, oldcdiroffset, records, cdiroffset, cdirsize, complen,
       uselen;
   if (IsOpenbsd() || IsNetbsd() || IsWindows()) {
-    DIEF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
+    FATALF("(cfg) StoreAsset() not available on Windows/NetBSD/OpenBSD yet");
   }
   INFOF("(srvr) storing asset %`'s", path);
   disk = gflags = iattrs = 0;
@@ -3591,11 +3591,11 @@ static void StoreFile(char *path) {
   if (startswith(target, "./")) target += 2;
   tlen = strlen(target);
   if (!IsReasonablePath(target, tlen))
-    DIEF("(cfg) error: can't store %`'s: contains '.' or '..' segments",
+    FATALF("(cfg) error: can't store %`'s: contains '.' or '..' segments",
          target);
-  if (lstat(path, &st) == -1) DIEF("(cfg) error: can't stat %`'s: %m", path);
+  if (lstat(path, &st) == -1) FATALF("(cfg) error: can't stat %`'s: %m", path);
   if (!(p = xslurp(path, &plen)))
-    DIEF("(cfg) error: can't read %`'s: %m", path);
+    FATALF("(cfg) error: can't read %`'s: %m", path);
   StoreAsset(target, tlen, p, plen, st.st_mode & 0777);
   free(p);
 }
@@ -3606,7 +3606,7 @@ static void StorePath(const char *dirpath) {
   struct dirent *e;
   if (!isdirectory(dirpath) && !endswith(dirpath, "/"))
     return StoreFile(dirpath);
-  if (!(d = opendir(dirpath))) DIEF("(cfg) error: can't open %`'s", dirpath);
+  if (!(d = opendir(dirpath))) FATALF("(cfg) error: can't open %`'s", dirpath);
   while ((e = readdir(d))) {
     if (strcmp(e->d_name, ".") == 0) continue;
     if (strcmp(e->d_name, "..") == 0) continue;
