@@ -42,7 +42,10 @@ void __paginate(int fd, const char *s) {
       write(tfd, s, strlen(s));
       close(tfd);
       args[1] = tmppath;
-      if ((pid = vfork()) != -1) {
+      if ((pid = fork()) != -1) {
+        putenv("LC_ALL=C.UTF-8");
+        putenv("LESSCHARSET=utf-8");
+        putenv("LESS=-RS");
         if (!pid) {
           execv(args[0], args);
           _Exit(127);
