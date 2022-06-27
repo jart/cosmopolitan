@@ -113,7 +113,18 @@ macho:	.long	0xFEEDFACE+1
 	.endobj	macho,globl
 
 	.align	64
-_start:	mov	%rsp,%rsi
+_start:
+
+//	Hack for detecting M1 Rosetta environment.
+//	https://github.com/jart/cosmopolitan/issues/429#issuecomment-1166704377
+	cmp	$-1,%ebx
+	jne	0f
+	cmp	$+1,%edx
+	jne	0f
+	mov	$XNU,%dl
+	xor	%ecx,%ecx
+
+0:	mov	%rsp,%rsi
 	jmp	ApeLoader
 	.endfn	_start,globl
 

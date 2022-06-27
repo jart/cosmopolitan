@@ -31,6 +31,18 @@
 //	@noreturn
 _start:
 
+#if SupportsXnu()
+//	Hack for detecting M1 Rosetta environment.
+//	https://github.com/jart/cosmopolitan/issues/429#issuecomment-1166704377
+	cmp	$-1,%ebx
+	jne	0f
+	cmp	$+1,%edx
+	jne	0f
+	mov	$XNU,%cl
+	xor	%edi,%edi
+0:
+#endif
+
 #if SupportsFreebsd()
 //	detect free besiyata dishmaya
 	test	%rdi,%rdi
