@@ -595,11 +595,11 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
   // detect freebsd
   if (handoff) {
     os = handoff->os;
+  } else if (SupportsXnu() && dl == XNU) {
+    os = XNU;
   } else if (SupportsFreebsd() && di) {
     os = FREEBSD;
     sp = (long *)di;
-  } else if (SupportsXnu() && dl == XNU) {
-    os = XNU;
   } else {
     os = 0;
   }
