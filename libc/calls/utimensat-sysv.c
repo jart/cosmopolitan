@@ -23,29 +23,28 @@
 #include "libc/time/time.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_utimensat_linux 0x118 /*RHEL5:CVE-2010-3301*/
-
 int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
                   int flags) {
   int rc, olderr;
   struct timeval tv[2];
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
-  }
   if (!IsXnu()) {
-    olderr = errno;
-    rc = __sys_utimensat(dirfd, path, ts, flags);
-    if (((rc == -1 && errno == ENOSYS) || rc == __NR_utimensat_linux) &&
-        dirfd == AT_FDCWD && !flags) {
-      errno = olderr;
-      if (ts) {
-        tv[0].tv_sec = ts[0].tv_sec;
-        tv[0].tv_usec = ts[0].tv_nsec / 1000;
-        tv[1].tv_sec = ts[1].tv_sec;
-        tv[1].tv_usec = ts[1].tv_nsec / 1000;
-        rc = sys_utimes(path, tv);
-      } else {
-        rc = sys_utimes(path, NULL);
+    if (!path && (IsFreebsd() || IsNetbsd() || IsOpenbsd())) {
+      rc = sys_futimens(dirfd, ts);
+    } else {
+      olderr = errno;
+      rc = __sys_utimensat(dirfd, path, ts, flags);
+      // TODO(jart): How does RHEL5 do futimes()?
+      if (rc == -1 && errno == ENOSYS && path) {
+        errno = olderr;
+        if (ts) {
+          tv[0].tv_sec = ts[0].tv_sec;
+          tv[0].tv_usec = ts[0].tv_nsec / 1000;
+          tv[1].tv_sec = ts[1].tv_sec;
+          tv[1].tv_usec = ts[1].tv_nsec / 1000;
+          rc = sys_utimes(path, tv);
+        } else {
+          rc = sys_utimes(path, NULL);
+        }
       }
     }
     return rc;

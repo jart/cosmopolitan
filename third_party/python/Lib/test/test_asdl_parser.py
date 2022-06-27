@@ -7,10 +7,12 @@ import sys
 import sysconfig
 import unittest
 
+if __name__ == "PYOBJ.COM":
+    import asdl
 
 
-src_base = dirname(dirname(dirname(__file__)))
-parser_dir = os.path.join(src_base, 'Parser')
+src_base = dirname(dirname(__file__))
+parser_dir = src_base
 
 
 class TestAsdlParser(unittest.TestCase):
@@ -20,11 +22,10 @@ class TestAsdlParser(unittest.TestCase):
         # package.
         # Parses Python.asdl into an ast.Module and run the check on it.
         # There's no need to do this for each test method, hence setUpClass.
-        sys.path.insert(0, parser_dir)
-        loader = importlib.machinery.SourceFileLoader(
-                'asdl', os.path.join(parser_dir, 'asdl.py'))
+        loader = importlib.machinery.SourcelessFileLoader(
+                'asdl', os.path.join(parser_dir, 'asdl.pyc'))
         cls.asdl = loader.load_module()
-        cls.mod = cls.asdl.parse(os.path.join(parser_dir, 'Python.asdl'))
+        cls.mod = cls.asdl.parse(os.path.join(parser_dir, 'test', 'Python.asdl'))
         cls.assertTrue(cls.asdl.check(cls.mod), 'Module validation failed')
 
     @classmethod

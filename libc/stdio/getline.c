@@ -19,18 +19,26 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Reads line from stream.
+ * Reads line from stream, e.g.
+ *
+ *     char *line = NULL;
+ *     size_t linesize = 0;
+ *     while (getline(&line, &linesize, stdin) > 0) {
+ *       _chomp(line);
+ *       printf("%s\n", line);
+ *     }
+ *     free(line);
  *
  * This function delegates to getdelim(), which provides further
  * documentation. Concerning lines, please note the \n or \r\n are
- * included in results, and can be removed with chomp().
+ * included in results, and can be removed with _chomp().
  *
  * @param line is the caller's buffer (in/out) which is extended
  *     automatically. *line may be NULL but only if *n is 0;
  *     NUL-termination is guaranteed FTMP
  * @return number of bytes read, including delim, excluding NUL, or -1
  *     w/ errno on EOF or error; see ferror() and feof()
- * @see xgetline(), getdelim(), gettok_r()
+ * @see fgetln(), xgetline(), getdelim(), gettok_r()
  */
 ssize_t getline(char **line, size_t *n, FILE *f) {
   return getdelim(line, n, '\n', f);

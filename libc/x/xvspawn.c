@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"

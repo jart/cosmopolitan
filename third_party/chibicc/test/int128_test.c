@@ -38,8 +38,8 @@ __int128 sub128x6(int f, __int128 a, __int128 b, __int128 c, __int128 d,
   return f - a - b - c - d - e;
 }
 
-void lotsOfArgs(const char *file, int line, const char *func, intmax_t beg,
-                intmax_t end, intmax_t got, const char *gotcode, bool isfatal) {
+void lotsOfArgs(const char *file, int line, const char *func, int128_t beg,
+                int128_t end, int128_t got, const char *gotcode, bool isfatal) {
 }
 
 void testLang128(void) {
@@ -8176,7 +8176,7 @@ void testNot128(void) {
 void testAbi(void) {
   ASSERT(0, ({
            char buf[200];
-           sprintf(buf, "%d %d %d %d %032jx %032jx", 1, 2, 3, 4,
+           sprintf(buf, "%d %d %d %d %032jjx %032jjx", 1, 2, 3, 4,
                    I128(0x1ffffffff, 0x2ffffffff),
                    I128(0x3eeeeeeee, 0x4eeeeeeee));
            strcmp("1 2 3 4 00000001ffffffff00000002ffffffff "
@@ -8185,7 +8185,7 @@ void testAbi(void) {
          }));
   ASSERT(0, ({
            char buf[200];
-           sprintf(buf, "%d %d %d %d %d %032jx %032jx", 1, 2, 3, 4, 5,
+           sprintf(buf, "%d %d %d %d %d %032jjx %032jjx", 1, 2, 3, 4, 5,
                    I128(0x1ffffffff, 0x2ffffffff),
                    I128(0x3eeeeeeee, 0x4eeeeeeee));
            strcmp("1 2 3 4 5 00000001ffffffff00000002ffffffff "

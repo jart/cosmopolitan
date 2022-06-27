@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -33,7 +34,9 @@ const char *path;
 TEST(ftruncate, test) {
   mkdir("o", 0755);
   mkdir("o/tmp", 0755);
-  path = gc(xasprintf("o/tmp/%s.%d", program_invocation_short_name, getpid()));
+  path = gc(xasprintf("o/tmp/%s.%d",
+                      firstnonnull(program_invocation_short_name, "unknown"),
+                      getpid()));
   ASSERT_NE(-1, (fd = creat(path, 0755)));
   ASSERT_EQ(5, write(fd, "hello", 5));
   errno = 31337;

@@ -1,12 +1,5 @@
-/*
-** $Id: lvm.h $
-** Lua virtual machine
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lvm_h
 #define lvm_h
-
 #include "third_party/lua/ldo.h"
 #include "third_party/lua/lobject.h"
 #include "third_party/lua/ltm.h"

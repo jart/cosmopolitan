@@ -18,7 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -35,6 +39,7 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/grnd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 static bool have_getrandom;
@@ -42,7 +47,7 @@ static bool have_getrandom;
 /**
  * Returns cryptographic random data.
  *
- * This random number seed generator blends information from:
+ * This random number seed generator obtains information from:
  *
  * - getrandom() on Linux
  * - RtlGenRandom() on Windows
@@ -60,25 +65,32 @@ static bool have_getrandom;
  * This function is safe to use with fork() and vfork(). It will also
  * close any file descriptor it ends up needing before it returns.
  *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 900 cycles
  * @asyncsignalsafe
+ * @restartable
  * @vforksafe
  */
 ssize_t getrandom(void *p, size_t n, unsigned f) {
   char cf;
   ssize_t rc;
   uint64_t x;
-  size_t i, j, m;
   int fd, cmd[2];
+  size_t i, j, m;
+  const char *via;
   sigset_t neu, old;
   if (n > 256) n = 256;
   if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) return einval();
   if (IsWindows()) {
+    via = "RtlGenRandom";
     if (RtlGenRandom(p, n)) {
       rc = n;
     } else {
-      return __winerr();
+      rc = __winerr();
     }
   } else if (IsFreebsd() || IsNetbsd()) {
+    via = "KERN_ARND";
     if (IsFreebsd()) {
       cmd[0] = 1;  /* CTL_KERN */
       cmd[1] = 37; /* KERN_ARND */
@@ -91,27 +103,44 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
       rc = m;
     }
   } else if (have_getrandom) {
+    via = "getrandom";
     if ((rc = sys_getrandom(p, n, f & (GRND_RANDOM | GRND_NONBLOCK))) != -1) {
       if (!rc && (IsXnu() || IsOpenbsd())) {
         rc = n;
       }
     }
   } else if ((fd = __sys_openat(
-                  AT_FDCWD, (f & GRND_RANDOM) ? "/dev/random" : "/dev/urandom",
+                  AT_FDCWD,
+                  (via = (f & GRND_RANDOM) ? "/dev/random" : "/dev/urandom"),
                   O_RDONLY | ((f & GRND_NONBLOCK) ? O_NONBLOCK : 0), 0)) !=
              -1) {
     rc = sys_read(fd, p, n);
     sys_close(fd);
   } else {
-    return enosys();
+    rc = enosys();
   }
+  STRACE("getrandom(%p, %'zu, %#x) via %s → %'ld% m", p, n, f, via, rc);
   return rc;
 }
 
 static textstartup void getrandom_init(void) {
-  if (sys_getrandom(0, 0, 0) == 0) {
+  int e, rc;
+  e = errno;
+  struct sigaction sa, oldsa;
+  if (IsBsd()) {
+    sa.sa_flags = 0;
+    sa.sa_handler = SIG_IGN;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSYS, &sa, &oldsa);
+  }
+  if (!(rc = sys_getrandom(0, 0, 0))) {
     have_getrandom = true;
   }
+  STRACE("sys_getrandom(0,0,0) → %d% m", rc);
+  if (IsBsd()) {
+    sigaction(SIGSYS, &oldsa, 0);
+  }
+  errno = e;
 }
 
 const void *const g_getrandom_init[] initarray = {getrandom_init};

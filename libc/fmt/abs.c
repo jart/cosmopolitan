@@ -18,6 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 
-int(abs)(int x) {
+/**
+ * Returns absolute value of 32-bit integer.
+ * @note `labs(LONG_MIN)` returns `LONG_MIN` unless `-ftrapv`
+ * @note consider ABS() to avoid narrowing
+ */
+int abs(int x) {
   return 0 < x ? x : -x;
 }

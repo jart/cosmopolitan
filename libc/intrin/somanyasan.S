@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 	.rodata.cst4
 __asan_option_detect_stack_use_after_return:
@@ -185,7 +184,7 @@ __asan_version_mismatch_check_v8:
 	.endfn	__asan_version_mismatch_check_v8,globl
 
 //	Initializes Address Sanitizer runtime earlier if linked.
-	.init.start 301,_init_asan
+	.init.start 303,_init_asan
 	push	%rdi
 	push	%rsi
 	mov	%r12,%rdi
@@ -195,19 +194,7 @@ __asan_version_mismatch_check_v8:
 	call	__asan_init
 	pop	%rsi
 	pop	%rdi
-	.init.end 301,_init_asan
-
-__asan_before_dynamic_init:
-	push	%rbp
-	mov	%rsp,%rbp
-	ud2
-	.endfn	__asan_before_dynamic_init,globl
-
-__asan_after_dynamic_init:
-	push	%rbp
-	mov	%rsp,%rbp
-	ud2
-	.endfn	__asan_after_dynamic_init,globl
+	.init.end 303,_init_asan
 
 __asan_load1:
 	push	%rbp

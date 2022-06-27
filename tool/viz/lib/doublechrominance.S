@@ -50,4 +50,3 @@ doublechrominance:
 1:	mov	%rsi,%rax
 	.leafepilogue
 	.endfn	doublechrominance,globl
-	.source	__FILE__

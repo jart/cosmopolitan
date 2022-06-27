@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
@@ -61,6 +62,10 @@ static optimizesize noasan void longsort_pure(long *x, size_t n, size_t t) {
 
 /**
  * Sorting algorithm for longs that doesn't take long.
+ *
+ *     "What disorder is this? Give me my long sort!"
+ *                               -Lord Capulet
+ *
  */
 void longsort(long *x, size_t n) {
   size_t t, m;
@@ -70,10 +75,13 @@ void longsort(long *x, size_t n) {
   }
   if (n > 1) {
     t = 1ul << bsrl(n - 1);
-    if (X86_HAVE(AVX2)) {
+    if (!IsTiny() && X86_HAVE(AVX2)) {
       longsort_avx2(x, n, t);
     } else {
       longsort_pure(x, n, t);
     }
+  }
+  if (n > 1000) {
+    STRACE("longsort(%p, %'zu)", x, n);
   }
 }

@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
@@ -28,7 +29,7 @@ textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
     case kFdConsole:
       return sys_read_nt(fd, iov, iovlen, -1);
     case kFdSocket:
-      return weaken(sys_recvfrom_nt)(fd, iov, iovlen, 0, NULL, 0);
+      return weaken(sys_recv_nt)(fd, iov, iovlen, 0);
     default:
       return ebadf();
   }

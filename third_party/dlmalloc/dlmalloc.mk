@@ -8,6 +8,7 @@ THIRD_PARTY_DLMALLOC = $(THIRD_PARTY_DLMALLOC_A_DEPS) $(THIRD_PARTY_DLMALLOC_A)
 THIRD_PARTY_DLMALLOC_A = o/$(MODE)/third_party/dlmalloc/dlmalloc.a
 THIRD_PARTY_DLMALLOC_A_FILES := $(wildcard third_party/dlmalloc/*)
 THIRD_PARTY_DLMALLOC_A_HDRS = $(filter %.h,$(THIRD_PARTY_DLMALLOC_A_FILES))
+THIRD_PARTY_DLMALLOC_A_INCS = $(filter %.inc,$(THIRD_PARTY_DLMALLOC_A_FILES))
 THIRD_PARTY_DLMALLOC_A_SRCS_S = $(filter %.S,$(THIRD_PARTY_DLMALLOC_A_FILES))
 THIRD_PARTY_DLMALLOC_A_SRCS_C = $(filter %.c,$(THIRD_PARTY_DLMALLOC_A_FILES))
 
@@ -31,9 +32,11 @@ THIRD_PARTY_DLMALLOC_A_DIRECTDEPS =				\
 	LIBC_NEXGEN32E						\
 	LIBC_RUNTIME						\
 	LIBC_STR						\
+	LIBC_RAND						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS						\
+	THIRD_PARTY_COMPILER_RT
 
 THIRD_PARTY_DLMALLOC_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x))))
@@ -47,20 +50,31 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 		$(THIRD_PARTY_DLMALLOC_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_DLMALLOC_A_OBJS):					\
+# README file recommends -O3
+# It does double performance in default mode
+o//third_party/dlmalloc/dlmalloc.o				\
+o/rel/third_party/dlmalloc/dlmalloc.o:				\
 		OVERRIDE_CFLAGS +=				\
-			$(NO_MAGIC)				\
+			-O3
+
+# we can't use address sanitizer because:
+#   address sanitizer depends on dlmalloc
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
+		OVERRIDE_CFLAGS +=				\
+			-ffreestanding				\
 			-fno-sanitize=address
 
-ifneq ($(MODE),dbg)
-$(THIRD_PARTY_DLMALLOC_A_OBJS):					\
+# we must segregate codegen because:
+#   file contains multiple independently linkable apis
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
 		OVERRIDE_CFLAGS +=				\
-			-DNDEBUG
-endif
+			-ffunction-sections			\
+			-fdata-sections
 
 THIRD_PARTY_DLMALLOC_LIBS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)))
 THIRD_PARTY_DLMALLOC_SRCS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_DLMALLOC_HDRS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_HDRS))
+THIRD_PARTY_DLMALLOC_INCS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_INCS))
 THIRD_PARTY_DLMALLOC_BINS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_BINS))
 THIRD_PARTY_DLMALLOC_CHECKS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_DLMALLOC_OBJS = $(foreach x,$(THIRD_PARTY_DLMALLOC_ARTIFACTS),$($(x)_OBJS))

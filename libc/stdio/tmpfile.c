@@ -35,7 +35,9 @@ FILE *tmpfile(void) {
   char *tmp, *sep, tpl[PATH_MAX];
   tmp = firstnonnull(getenv("TMPDIR"), kTmpPath);
   sep = !isempty(tmp) && !endswith(tmp, "/") ? "/" : "";
-  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.XXXXXX", tmp, sep) < PATH_MAX) {
+  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.%s.XXXXXX", tmp, sep,
+                 firstnonnull(program_invocation_short_name, "unknown")) <=
+      PATH_MAX) {
     if ((fd = mkostemps(tpl, 0, 0)) != -1) {
       return fdopen(fd, "w+");
     }

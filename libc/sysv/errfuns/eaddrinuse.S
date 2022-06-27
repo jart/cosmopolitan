@@ -4,9 +4,6 @@
 eaddrinuse:
 	.leafprologue
 	.profilable
-	mov	EADDRINUSE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EADDRINUSE(%rip),%ecx
+	jmp	__errfun
 	.endfn	eaddrinuse,globl,hidden

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/asancodes.h"
 #include "ape/relocations.h"
 /* clang-format off */
 
@@ -97,13 +98,13 @@
 #endif
 .endm
 
-//	Creates first stack frame.
-.macro	.frame0
-	and	$-16,%rsp
-	xor	%ebp,%ebp
-.endm
-
-.macro	.source	symbol:req
+//	Documents unreachable assembly code.
+.macro	.unreachable
+#ifndef NDEBUG
+	ud2		# crash if contract is broken
+#elif defined(__FNO_OMIT_FRAME_POINTER__)
+	nop		# avoid noreturn tail call backtrace ambiguity
+#endif
 .endm
 
 //	Inserts profiling hook in prologue if cc wants it.
@@ -149,29 +150,6 @@
 .endm
 
 //	Loads address of linktime mergeable string literal into register.
-.macro	getstr	text:req reg64:req reg32 regsz64 regsz32 bias=0
- .section .rodata.str1.1,"aSM",@progbits,1
-  .type	.Lstr\@,@object
-.Lstr\@: .asciz	"\text"
-.Lstr\@.size = .-.Lstr\@ - 1
-  .size	.Lstr\@,.-.Lstr\@
- .previous
-	plea	.Lstr\@,\reg64,\reg32
- .ifnb	\regsz64
-#ifdef	__OPTIMIZE_SIZE__
-  .if	.Lstr\@.size + \bias < 128
-	pushpop	.Lstr\@.size,\regsz64
-  .else
-	mov	$.Lstr\@.size,\regsz32
-  .endif
-#else
-	mov	$.Lstr\@.size,\regsz32
-#endif
- .endif
-.endm
-
-//	TODO(jart): delete
-//	Loads address of linktime mergeable string literal into register.
 .macro	loadstr	text:req reg:req regsz bias=0
  .section .rodata.str1.1,"aSM",@progbits,1
   .type	.Lstr\@,@object
@@ -191,4 +169,32 @@
 	mov	$.Lstr\@.size,%e\regsz
 #endif
  .endif
+.endm
+
+.macro	.poison	name:req kind:req
+#ifdef __SANITIZE_ADDRESS__
+2323:	.quad	0
+	.init.start 304,"_init_\name\()_poison_\@"
+	push	%rdi
+	push	%rsi
+	ezlea	2323b,di
+	mov	$8,%esi
+	mov	$\kind,%edx
+	call	__asan_poison
+	pop	%rsi
+	pop	%rdi
+	.init.end 304,"_init_\name\()_poison_\@"
+#endif
+.endm
+
+.macro	.underrun
+#ifdef __SANITIZE_ADDRESS__
+	.poison	__BASE_FILE__, kAsanGlobalUnderrun
+#endif
+.endm
+
+.macro	.overrun
+#ifdef __SANITIZE_ADDRESS__
+	.poison	__BASE_FILE__, kAsanGlobalUnderrun
+#endif
 .endm

@@ -46,9 +46,9 @@ too short, and lower numbers represent other errors.");
 static PyObject *
 xed_ild(PyObject *self, PyObject *args)
 {
+    int e;
     Py_ssize_t n;
     const char *p;
-    enum XedError e;
     struct XedDecodedInst xedd;
     if (!PyArg_ParseTuple(args, "y#:ild", &p, &n)) return 0;
     xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);

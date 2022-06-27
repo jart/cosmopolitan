@@ -4,9 +4,6 @@
 eremote:
 	.leafprologue
 	.profilable
-	mov	EREMOTE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EREMOTE(%rip),%ecx
+	jmp	__errfun
 	.endfn	eremote,globl,hidden

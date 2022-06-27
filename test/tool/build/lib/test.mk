@@ -66,7 +66,7 @@ o/$(MODE)/test/tool/build/lib/%.com.dbg:			\
 		$(TEST_TOOL_BUILD_LIB_A).pkg			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/tool/build/lib

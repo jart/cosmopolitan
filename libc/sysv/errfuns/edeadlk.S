@@ -4,9 +4,6 @@
 edeadlk:
 	.leafprologue
 	.profilable
-	mov	EDEADLK(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EDEADLK(%rip),%ecx
+	jmp	__errfun
 	.endfn	edeadlk,globl,hidden

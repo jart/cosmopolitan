@@ -3,9 +3,6 @@
 
 e2big:	.leafprologue
 	.profilable
-	mov	E2BIG(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	E2BIG(%rip),%ecx
+	jmp	__errfun
 	.endfn	e2big,globl,hidden

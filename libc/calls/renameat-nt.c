@@ -16,15 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/enum/movefileexflags.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
 
 textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
-                            const char *newpath) {
+                                const char *newpath) {
   char16_t oldpath16[PATH_MAX];
   char16_t newpath16[PATH_MAX];
   if (__mkntpathat(olddirfd, oldpath, 0, oldpath16) == -1 ||
@@ -34,6 +31,6 @@ textwindows int sys_renameat_nt(int olddirfd, const char *oldpath, int newdirfd,
   if (MoveFileEx(oldpath16, newpath16, kNtMovefileReplaceExisting)) {
     return 0;
   } else {
-    return __winerr();
+    return __fix_enotdir3(-1, oldpath16, newpath16);
   }
 }

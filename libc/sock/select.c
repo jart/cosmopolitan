@@ -19,11 +19,14 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
+#include "libc/sock/select.h"
 
 /**
- * Does what poll() does except with a complicated bitset API.
- * @note windows nt is limited to first 64 socket descriptors
+ * Does what poll() does except with bitset API.
+ *
+ * This system call is supported on all platforms. However, on Windows,
+ * this is polyfilled to translate into poll(). So it's recommended that
+ * poll() be used instead.
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {

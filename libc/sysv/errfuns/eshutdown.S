@@ -4,9 +4,6 @@
 eshutdown:
 	.leafprologue
 	.profilable
-	mov	ESHUTDOWN(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ESHUTDOWN(%rip),%ecx
+	jmp	__errfun
 	.endfn	eshutdown,globl,hidden

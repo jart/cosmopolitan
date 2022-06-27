@@ -40,5 +40,5 @@ int main() {
   SetVideoMode(7);
   SetEs(0xb0000 >> 4);
   MdaTest((void *)0);
-  for (;;) asm("pause");
+  for (;;) __builtin_ia32_pause();
 }

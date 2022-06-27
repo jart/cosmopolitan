@@ -29,6 +29,7 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "third_party/gdtoa/gdtoa.h"
 #include "third_party/gdtoa/gdtoa.internal.h"
 /* clang-format off */
 

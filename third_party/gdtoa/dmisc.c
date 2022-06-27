@@ -35,31 +35,31 @@
 void
 freedtoa(char *s)
 {
+	ThInfo *TI = 0;
 	Bigint *b = (Bigint *)((int *)s - 1);
-	b->maxwds = 1 << (b->k = *(int*)b);
-	__gdtoa_Bfree(b);
+	b->maxwds = 1 << (b->k = *(int *)b);
+	__gdtoa_Bfree(b, &TI);
 }
 
 char *
-__gdtoa_rv_alloc(int i)
+__gdtoa_rv_alloc(int i, ThInfo **PTI)
 {
 	int j, k, *r;
 	j = sizeof(ULong);
-	for(k = 0;
-            (int)(sizeof(Bigint) - sizeof(ULong) - sizeof(int)) + j <= i;
-            j <<= 1)
-                k++;
-	r = (int*)__gdtoa_Balloc(k);
+	for (k = 0; (int)(sizeof(Bigint) - sizeof(ULong) - sizeof(int)) + j <= i;
+	     j <<= 1)
+		k++;
+	r = (int *)__gdtoa_Balloc(k, PTI);
 	*r = k;
-	return (char *)(r+1);
+	return (char *)(r + 1);
 }
 
 char *
-__gdtoa_nrv_alloc(char *s, char **rve, int n)
+__gdtoa_nrv_alloc(char *s, char **rve, int n, ThInfo **PTI)
 {
 	char *rv, *t;
-	t = rv = __gdtoa_rv_alloc(n);
-	while((*t = *s++) !=0)
+	t = rv = __gdtoa_rv_alloc(n, PTI);
+	while ((*t = *s++) != 0)
 		t++;
 	if (rve)
 		*rve = t;

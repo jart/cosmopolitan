@@ -12,6 +12,7 @@ import socket
 import statistics
 import subprocess
 import traceback
+import cosmo
 import sys, os, time, errno
 from test.support.script_helper import assert_python_ok, spawn_python
 try:
@@ -71,7 +72,7 @@ class PosixTests(unittest.TestCase):
         'on freebsd6')
     def test_interprocess_signal(self):
         dirname = os.path.dirname(__file__)
-        script = os.path.join(dirname, 'signalinterproctester.py')
+        script = os.path.join(dirname, 'signalinterproctester.pyc')
         assert_python_ok(script)
 
 
@@ -487,7 +488,6 @@ class SiginterruptTest(unittest.TestCase):
             try:
                 # wait until the child process is loaded and has started
                 first_line = process.stdout.readline()
-
                 stdout, stderr = process.communicate(timeout=5.0)
             except subprocess.TimeoutExpired:
                 process.kill()
@@ -514,12 +514,13 @@ class SiginterruptTest(unittest.TestCase):
         interrupted = self.readpipe_interrupted(True)
         self.assertTrue(interrupted)
 
-    def test_siginterrupt_off(self):
-        # If a signal handler is installed and siginterrupt is called with
-        # a false value for the second argument, when that signal arrives, it
-        # does not interrupt a syscall that's in progress.
-        interrupted = self.readpipe_interrupted(False)
-        self.assertFalse(interrupted)
+    # [jart]: lool a test that takes 5 seconds by design
+    # def test_siginterrupt_off(self):
+    #     # If a signal handler is installed and siginterrupt is called with
+    #     # a false value for the second argument, when that signal arrives, it
+    #     # does not interrupt a syscall that's in progress.
+    #     interrupted = self.readpipe_interrupted(False)
+    #     self.assertFalse(interrupted)
 
 
 @unittest.skipIf(sys.platform == "win32", "Not valid on Windows")

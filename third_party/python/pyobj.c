@@ -31,8 +31,11 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/zip.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -641,7 +644,7 @@ Objectify(void)
     assert(PyBytes_CheckExact(marsh));
     mardata = PyBytes_AS_STRING(marsh);
     marsize = PyBytes_GET_SIZE(marsh);
-    WRITE16LE(header+0, 3379); /* Python 3.6rc1 */
+    WRITE16LE(header+0, 3390); /* Python 3.7a1 */
     WRITE16LE(header+2, READ16LE("\r\n"));
     WRITE32LE(header+4, timestamp.tv_sec);
     WRITE32LE(header+8, marsize);
@@ -656,16 +659,19 @@ Objectify(void)
     if (ispkg) {
         elfwriter_zip(elf, zipdir, zipdir, strlen(zipdir),
                       pydata, 0, 040755, timestamp, timestamp,
-                      timestamp, nocompress, image_base);
+                      timestamp, nocompress, image_base,
+                      kZipCdirHdrLinkableSize);
     }
     if (!binonly) {
         elfwriter_zip(elf, gc(xstrcat("py:", modname)), zipfile,
                       strlen(zipfile), pydata, pysize, st.st_mode, timestamp,
-                      timestamp, timestamp, nocompress, image_base);
+                      timestamp, timestamp, nocompress, image_base,
+                      kZipCdirHdrLinkableSize);
     }
     elfwriter_zip(elf, gc(xstrcat("pyc:", modname)), gc(xstrcat(zipfile, 'c')),
                   strlen(zipfile) + 1, pycdata, pycsize, st.st_mode, timestamp,
-                  timestamp, timestamp, nocompress, image_base);
+                  timestamp, timestamp, nocompress, image_base,
+                  kZipCdirHdrLinkableSize);
     elfwriter_align(elf, 1, 0);
     elfwriter_startsection(elf, ".yoink", SHT_PROGBITS,
                            SHF_ALLOC | SHF_EXECINSTR);
@@ -711,6 +717,8 @@ int
 main(int argc, char *argv[])
 {
     int ec;
+    timestamp.tv_sec = 1647414000; /* determinism */
+    /* clock_gettime(CLOCK_REALTIME, &timestamp); */
     GetOpts(argc, argv);
     Py_NoUserSiteDirectory++;
     Py_NoSiteFlag++;

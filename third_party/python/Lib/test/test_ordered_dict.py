@@ -651,6 +651,7 @@ class OrderedDictTests:
         support.check_free_after_iterating(self, lambda d: iter(d.items()), self.OrderedDict)
 
 
+@unittest.skipIf(c_coll, "skip pure-python test if C impl is present")
 class PurePythonOrderedDictTests(OrderedDictTests, unittest.TestCase):
 
     module = py_coll
@@ -750,6 +751,7 @@ class CPythonOrderedDictTests(OrderedDictTests, unittest.TestCase):
                     self.assertEqual(list(it), expected)
 
 
+@unittest.skipIf(c_coll, "skip pure-python test if C impl is present")
 class PurePythonOrderedDictSubclassTests(PurePythonOrderedDictTests):
 
     module = py_coll
@@ -764,6 +766,7 @@ class CPythonOrderedDictSubclassTests(CPythonOrderedDictTests):
         pass
 
 
+@unittest.skipIf(c_coll, "skip pure-python test if C impl is present")
 class PurePythonGeneralMappingTests(mapping_tests.BasicTestMappingProtocol):
 
     @classmethod
@@ -787,6 +790,7 @@ class CPythonGeneralMappingTests(mapping_tests.BasicTestMappingProtocol):
         self.assertRaises(KeyError, d.popitem)
 
 
+@unittest.skipIf(c_coll, "skip pure-python test if C impl is present")
 class PurePythonSubclassMappingTests(mapping_tests.BasicTestMappingProtocol):
 
     @classmethod

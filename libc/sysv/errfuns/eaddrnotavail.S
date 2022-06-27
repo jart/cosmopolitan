@@ -4,9 +4,6 @@
 eaddrnotavail:
 	.leafprologue
 	.profilable
-	mov	EADDRNOTAVAIL(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EADDRNOTAVAIL(%rip),%ecx
+	jmp	__errfun
 	.endfn	eaddrnotavail,globl,hidden

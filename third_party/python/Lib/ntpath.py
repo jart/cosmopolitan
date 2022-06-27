@@ -20,6 +20,7 @@ devnull = 'nul'
 import os
 import sys
 import stat
+import posix
 import genericpath
 from genericpath import *
 
@@ -276,8 +277,8 @@ def lexists(path):
 # common case: drive letter roots. The alternative which uses GetVolumePathName
 # fails if the drive letter is the result of a SUBST.
 try:
-    from posix import _getvolumepathname
-except ImportError:
+    _getvolumepathname = posix._getvolumepathname
+except AttributeError:
     _getvolumepathname = None
 def ismount(path):
     """Test whether a path is a mount point (a drive root, the root of a
@@ -534,9 +535,9 @@ def _abspath_fallback(path):
 
 # Return an absolute path.
 try:
-    from posix import _getfullpathname
+    _getfullpathname = posix._getfullpathname
 
-except ImportError: # not running on Windows - mock up something sensible
+except AttributeError: # not running on Windows - mock up something sensible
     abspath = _abspath_fallback
 
 else:  # use native Windows method on Windows
@@ -664,7 +665,7 @@ try:
     # GetFinalPathNameByHandle is available starting with Windows 6.0.
     # Windows XP and non-Windows OS'es will mock _getfinalpathname.
     if sys.getwindowsversion()[:2] >= (6, 0):
-        from posix import _getfinalpathname
+        _getfinalpathname = posix._getfinalpathname
     else:
         raise ImportError
 except (AttributeError, ImportError, OSError):
@@ -681,7 +682,7 @@ try:
     # attribute to tell whether or not the path is a directory.
     # This is overkill on Windows - just pass the path to GetFileAttributes
     # and check the attribute from there.
-    from posix import _isdir as isdir
-except ImportError:
+    isdir = posix._isdir
+except AttributeError:
     # Use genericpath.isdir as imported above.
     pass

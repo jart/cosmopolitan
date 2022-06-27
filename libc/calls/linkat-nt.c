@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 
@@ -30,7 +30,7 @@ textwindows int sys_linkat_nt(int olddirfd, const char *oldpath, int newdirfd,
     if (CreateHardLink(newpath16, oldpath16, NULL)) {
       return 0;
     } else {
-      return __winerr();
+      return __fix_enotdir3(__winerr(), newpath16, oldpath16);
     }
   } else {
     return -1;

@@ -103,6 +103,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		Sufficient space is allocated to the return value
 		to hold the suppressed trailing zeros.
 	*/
+	ThInfo *TI = 0;
 	int bbits, b2, b5, be, dig, i, ieps, ilim, ilim0, ilim1,
 		j, j1, k, k0, k_check, leftright, m2, m5, s2, s5,
 		spec_case, try_quick;
@@ -128,12 +129,12 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		/* Infinity or NaN */
 		*decpt = 9999;
 		if (!word1(&d) && !(word0(&d) & 0xfffff))
-			return __gdtoa_nrv_alloc("Infinity", rve, 8);
-		return __gdtoa_nrv_alloc("NaN", rve, 3);
+			return __gdtoa_nrv_alloc("Infinity", rve, 8, &TI);
+		return __gdtoa_nrv_alloc("NaN", rve, 3, &TI);
 	}
 	if (!dval(&d)) {
 		*decpt = 1;
-		return __gdtoa_nrv_alloc("0", rve, 1);
+		return __gdtoa_nrv_alloc("0", rve, 1, &TI);
 	}
 	if (Rounding >= 2) {
 		if (*sign)
@@ -142,7 +143,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 			if (Rounding != 2)
 				Rounding = 0;
 	}
-	b = __gdtoa_d2b(dval(&d), &be, &bbits);
+	b = __gdtoa_d2b(dval(&d), &be, &bbits, &TI);
 	if (( i = (int)(word0(&d) >> Exp_shift1 & (Exp_mask>>Exp_shift1)) )!=0) {
 		dval(&d2) = dval(&d);
 		word0(&d2) &= Frac_mask1;
@@ -245,7 +246,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		if (i <= 0)
 			i = 1;
 	}
-	s = s0 = __gdtoa_rv_alloc(i);
+	s = s0 = __gdtoa_rv_alloc(i, &TI);
 	if (mode > 1 && Rounding != 1)
 		leftright = 0;
 	if (ilim >= 0 && ilim <= Quick_max && try_quick) {
@@ -409,7 +410,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		i = denorm ? be + (Bias + (P-1) - 1 + 1) : 1 + P - bbits;
 		b2 += i;
 		s2 += i;
-		mhi = __gdtoa_i2b(1);
+		mhi = __gdtoa_i2b(1, &TI);
 	}
 	if (m2 > 0 && s2 > 0) {
 		i = m2 < s2 ? m2 : s2;
@@ -420,20 +421,20 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 	if (b5 > 0) {
 		if (leftright) {
 			if (m5 > 0) {
-				mhi = __gdtoa_pow5mult(mhi, m5);
-				b1 = __gdtoa_mult(mhi, b);
-				__gdtoa_Bfree(b);
+				mhi = __gdtoa_pow5mult(mhi, m5, &TI);
+				b1 = __gdtoa_mult(mhi, b, &TI);
+				__gdtoa_Bfree(b, &TI);
 				b = b1;
 			}
 			if (( j = b5 - m5 )!=0)
-				b = __gdtoa_pow5mult(b, j);
+				b = __gdtoa_pow5mult(b, j, &TI);
 		}
 		else
-			b = __gdtoa_pow5mult(b, b5);
+			b = __gdtoa_pow5mult(b, b5, &TI);
 	}
-	S = __gdtoa_i2b(1);
+	S = __gdtoa_i2b(1, &TI);
 	if (s5 > 0)
-		S = __gdtoa_pow5mult(S, s5);
+		S = __gdtoa_pow5mult(S, s5, &TI);
 
 	/* Check for special case that d is a normalized power of 2. */
 	spec_case = 0;
@@ -469,20 +470,20 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		s2 += i;
 	}
 	if (b2 > 0)
-		b = __gdtoa_lshift(b, b2);
+		b = __gdtoa_lshift(b, b2, &TI);
 	if (s2 > 0)
-		S = __gdtoa_lshift(S, s2);
+		S = __gdtoa_lshift(S, s2, &TI);
 	if (k_check) {
 		if (__gdtoa_cmp(b,S) < 0) {
 			k--;
-			b = __gdtoa_multadd(b, 10, 0);	/* we botched the k estimate */
+			b = __gdtoa_multadd(b, 10, 0, &TI);	/* we botched the k estimate */
 			if (leftright)
-				mhi = __gdtoa_multadd(mhi, 10, 0);
+				mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			ilim = ilim1;
 		}
 	}
 	if (ilim <= 0 && (mode == 3 || mode == 5)) {
-		if (ilim < 0 || __gdtoa_cmp(b,S = __gdtoa_multadd(S,5,0)) <= 0) {
+		if (ilim < 0 || __gdtoa_cmp(b,S = __gdtoa_multadd(S,5,0,&TI)) <= 0) {
 			/* no digits, fcvt style */
 		no_digits:
 			k = -1 - ndigits;
@@ -495,15 +496,15 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 	}
 	if (leftright) {
 		if (m2 > 0)
-			mhi = __gdtoa_lshift(mhi, m2);
+			mhi = __gdtoa_lshift(mhi, m2, &TI);
 		/* Compute mlo -- check for special case
 		 * that d is a normalized power of 2.
 		 */
 		mlo = mhi;
 		if (spec_case) {
-			mhi = __gdtoa_Balloc(mhi->k);
+			mhi = __gdtoa_Balloc(mhi->k, &TI);
 			Bcopy(mhi, mlo);
-			mhi = __gdtoa_lshift(mhi, Log2P);
+			mhi = __gdtoa_lshift(mhi, Log2P, &TI);
 		}
 		for(i = 1;;i++) {
 			dig = __gdtoa_quorem(b,S) + '0';
@@ -511,9 +512,9 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 			 * that will round to d?
 			 */
 			j = __gdtoa_cmp(b, mlo);
-			delta = __gdtoa_diff(S, mhi);
+			delta = __gdtoa_diff(S, mhi, &TI);
 			j1 = delta->sign ? 1 : __gdtoa_cmp(b, delta);
-			__gdtoa_Bfree(delta);
+			__gdtoa_Bfree(delta, &TI);
 			if (j1 == 0 && mode != 1 && !(word1(&d) & 1) && Rounding >= 1) {
 				if (dig == '9')
 					goto round_9_up;
@@ -533,7 +534,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 					case 2: goto keep_dig;
 					}
 				if (j1 > 0) {
-					b = __gdtoa_lshift(b, 1);
+					b = __gdtoa_lshift(b, 1, &TI);
 					j1 = __gdtoa_cmp(b, S);
 					if ((j1 > 0 || (j1 == 0 && dig & 1))
 					    && dig++ == '9')
@@ -558,12 +559,12 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 			*s++ = dig;
 			if (i == ilim)
 				break;
-			b = __gdtoa_multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0, &TI);
 			if (mlo == mhi)
-				mlo = mhi = __gdtoa_multadd(mhi, 10, 0);
+				mlo = mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			else {
-				mlo = __gdtoa_multadd(mlo, 10, 0);
-				mhi = __gdtoa_multadd(mhi, 10, 0);
+				mlo = __gdtoa_multadd(mlo, 10, 0, &TI);
+				mhi = __gdtoa_multadd(mhi, 10, 0, &TI);
 			}
 		}
 	}
@@ -575,7 +576,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 			}
 			if (i >= ilim)
 				break;
-			b = __gdtoa_multadd(b, 10, 0);
+			b = __gdtoa_multadd(b, 10, 0, &TI);
 		}
 	}
 
@@ -584,7 +585,7 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 	case 0: goto trimzeros;
 	case 2: goto roundoff;
 	}
-	b = __gdtoa_lshift(b, 1);
+	b = __gdtoa_lshift(b, 1, &TI);
 	j = __gdtoa_cmp(b, S);
 	if (j > 0 || (j == 0 && dig & 1))
 	{
@@ -603,17 +604,17 @@ dtoa(double d0, int mode, int ndigits, int *decpt, int *sign, char **rve)
 		s++;
 	}
 ret:
-	__gdtoa_Bfree(S);
+	__gdtoa_Bfree(S, &TI);
 	if (mhi) {
 		if (mlo && mlo != mhi)
-			__gdtoa_Bfree(mlo);
-		__gdtoa_Bfree(mhi);
+			__gdtoa_Bfree(mlo, &TI);
+		__gdtoa_Bfree(mhi, &TI);
 	}
 retc:
 	while(s > s0 && s[-1] == '0')
 		--s;
 ret1:
-	__gdtoa_Bfree(b);
+	__gdtoa_Bfree(b, &TI);
 	*s = 0;
 	*decpt = k + 1;
 	if (rve)

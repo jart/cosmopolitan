@@ -4,9 +4,6 @@
 ehwpoison:
 	.leafprologue
 	.profilable
-	mov	EHWPOISON(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EHWPOISON(%rip),%ecx
+	jmp	__errfun
 	.endfn	ehwpoison,globl,hidden

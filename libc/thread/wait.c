@@ -16,35 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/thread/wait.h"
+#include "libc/bits/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/futex.internal.h"
+#include "libc/thread/thread.h"
 
-int cthread_memory_wait32(uint32_t* addr, uint32_t val,
-                          const struct timespec* timeout) {
-  if (__NR_futex != 0xfff) {
-    int flags = FUTEX_WAIT;
-    int rc;
-    register struct timespec* timeout_ asm("r10") = timeout;
-    asm volatile("syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(val),
-                   "r"(timeout_)
-                 : "rcx", "r11", "cc", "memory");
-    return rc;
+int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
+  size_t size;
+  if (IsLinux() /* || IsOpenbsd() */) {
+    return _futex_wait(addr, val, timeout);
+  } else {
+    return sched_yield();
   }
-  return -1;
 }
 
-int cthread_memory_wake32(uint32_t* addr, int n) {
-  if (__NR_futex != 0xfff) {
-    int flags = FUTEX_WAKE;
-    int rc;
-    asm volatile("syscall"
-                 : "=a"(rc)
-                 : "0"(__NR_futex), "D"(addr), "S"(flags), "d"(n)
-                 : "rcx", "r11", "cc", "memory");
-    return rc;
+int cthread_memory_wake32(int* addr, int n) {
+  if (IsLinux() /* || IsOpenbsd() */) {
+    return _futex_wake(addr, n);
+  } else {
+    return 0;
   }
-  return -1;
 }

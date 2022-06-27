@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/struct/filetime.h"
@@ -25,7 +24,7 @@
 #include "libc/str/str.h"
 #include "libc/time/struct/timezone.h"
 
-int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
+textwindows int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
   struct NtFileTime ft;
   GetSystemTimeAsFileTime(&ft);
   if (tv) *tv = FileTimeToTimeVal(ft);

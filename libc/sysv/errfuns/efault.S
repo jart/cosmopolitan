@@ -3,9 +3,6 @@
 
 efault:	.leafprologue
 	.profilable
-	mov	EFAULT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EFAULT(%rip),%ecx
+	jmp	__errfun
 	.endfn	efault,globl,hidden

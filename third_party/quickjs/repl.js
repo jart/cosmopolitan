@@ -111,9 +111,9 @@ import * as os from "os";
     var plen = 0;
     var ps1;
     if (config_numcalc)
-        ps1 = "> ";
+        ps1 = ">: ";
     else
-        ps1 = "qjs > ";
+        ps1 = "qjs >: ";
     var ps2 = "  ... ";
     var utf8 = true;
     var show_time = false;
@@ -547,6 +547,11 @@ import * as os from "os";
         this_fun = kill_region;
     }
 
+    function clear_screen() {
+        std.puts("\e[H\e[2J");
+        return -1;
+    }
+
     function kill_line() {
         kill_region(cursor_pos, cmd.length, 1);
     }
@@ -743,6 +748,7 @@ import * as os from "os";
         "\x09":     completion,             /* ^I - history-search-backward */
         "\x0a":     accept_line,            /* ^J - newline */
         "\x0b":     kill_line,              /* ^K - delete to end of line */
+        "\x0c":     clear_screen,           /* ^L - clear screen */
         "\x0d":     accept_line,            /* ^M - enter */
         "\x0e":     next_history,           /* ^N - down */
         "\x10":     previous_history,       /* ^P - up */
@@ -750,6 +756,7 @@ import * as os from "os";
         "\x12":     alert,                  /* ^R - reverse-search */
         "\x13":     alert,                  /* ^S - search */
         "\x14":     transpose_chars,        /* ^T - transpose */
+        "\x15":     backward_kill_line,     /* ^U - clear backwards */
         "\x18":     reset,                  /* ^X - cancel */
         "\x19":     yank,                   /* ^Y - yank */
         "\x1bOA":   previous_history,       /* ^[OA - up */

@@ -43,7 +43,7 @@ o/$(MODE)/test/dsp/core/%.com.dbg:				\
 		o/$(MODE)/test/dsp/core/%.o			\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY: o/$(MODE)/test/dsp/core

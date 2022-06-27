@@ -3,9 +3,6 @@
 
 enonet:	.leafprologue
 	.profilable
-	mov	ENONET(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENONET(%rip),%ecx
+	jmp	__errfun
 	.endfn	enonet,globl,hidden

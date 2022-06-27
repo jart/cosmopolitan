@@ -23,9 +23,28 @@ bool CertHasHost(const mbedtls_x509_crt *cert, const void *s, size_t n) {
   const mbedtls_x509_sequence *cur;
   for (cur = &cert->subject_alt_names; cur; cur = cur->next) {
     if ((cur->buf.tag & MBEDTLS_ASN1_TAG_VALUE_MASK) ==
-            MBEDTLS_X509_SAN_DNS_NAME &&
-        SlicesEqualCase(s, n, cur->buf.p, cur->buf.len)) {
-      return true;
+        MBEDTLS_X509_SAN_DNS_NAME) {
+      if (cur->buf.len > 2 && cur->buf.p[0] == '*' && cur->buf.p[1] == '.') {
+        // handle subject alt name like *.foo.com
+        // - match examples
+        //   - bar.foo.com
+        //   - zoo.foo.com
+        // - does not match
+        //   - foo.com
+        //   - zoo.bar.foo.com
+        if (n > cur->buf.len - 1 &&
+            SlicesEqualCase((char *)s + n - (cur->buf.len - 1),
+                            cur->buf.len - 1, cur->buf.p + 1,
+                            cur->buf.len - 1) &&
+            !memchr(s, '.', n - (cur->buf.len - 1))) {
+          return true;
+        }
+      } else {
+        // handle subject alt name like foo.com
+        if (SlicesEqualCase(s, n, cur->buf.p, cur->buf.len)) {
+          return true;
+        }
+      }
     }
   }
   return false;

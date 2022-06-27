@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/runtime/internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 FILE *f;
@@ -59,4 +61,18 @@ TEST(fgetc, testUnbuffered) {
   EXPECT_TRUE(!memcmp(buf, "h\377", 2));
   EXPECT_TRUE(feof(f));
   EXPECT_NE(-1, fclose(f));
+}
+
+BENCH(fputc, bench) {
+  __enable_tls();
+  __enable_threads();
+  FILE *f;
+  ASSERT_NE(NULL, (f = fopen("/dev/null", "w")));
+  EZBENCH2("fputc", donothing, fputc('E', f));
+  flockfile(f);
+  flockfile(f);
+  EZBENCH2("fputc_unlocked", donothing, fputc_unlocked('E', f));
+  funlockfile(f);
+  funlockfile(f);
+  fclose(f);
 }

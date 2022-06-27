@@ -17,11 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/termios.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/version.h"
+#include "libc/nt/version.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
@@ -29,35 +32,54 @@
 textwindows int ioctl_tcsets_nt(int ignored, uint64_t request,
                                 const struct termios *tio) {
   int64_t in, out;
-  bool32 inok, outok;
+  bool32 ok, inok, outok;
   uint32_t inmode, outmode;
-  inok = GetConsoleMode((in = g_fds.p[0].handle), &inmode);
-  outok = GetConsoleMode((out = g_fds.p[1].handle), &outmode);
+  inok = GetConsoleMode((in = __getfdhandleactual(0)), &inmode);
+  outok = GetConsoleMode((out = __getfdhandleactual(1)), &outmode);
   if (inok | outok) {
+
     if (inok) {
       if (request == TCSETSF) {
         FlushConsoleInputBuffer(in);
       }
       inmode &=
           ~(kNtEnableLineInput | kNtEnableEchoInput | kNtEnableProcessedInput);
-      if (tio->c_lflag & ICANON) inmode |= kNtEnableLineInput;
-      if (tio->c_lflag & ECHO) inmode |= kNtEnableEchoInput;
-      if (tio->c_lflag & (IEXTEN | ISIG)) inmode |= kNtEnableProcessedInput;
       inmode |= kNtEnableWindowInput;
-      if (NtGetVersion() >= kNtVersionWindows10) {
+      if (tio->c_lflag & ICANON) {
+        inmode |= kNtEnableLineInput;
+      }
+      if (tio->c_lflag & ECHO) {
+        /*
+         * kNtEnableEchoInput can be used only if the ENABLE_LINE_INPUT mode
+         * is also enabled. --Quoth MSDN
+         */
+        inmode |= kNtEnableEchoInput | kNtEnableLineInput;
+      }
+      if (tio->c_lflag & (IEXTEN | ISIG)) {
+        inmode |= kNtEnableProcessedInput;
+      }
+      if (IsAtLeastWindows10()) {
         inmode |= kNtEnableVirtualTerminalInput;
       }
-      SetConsoleMode(in, inmode);
+      ok = SetConsoleMode(in, inmode);
+      NTTRACE("SetConsoleMode(%p, %s) → %hhhd", in,
+              DescribeNtConsoleInFlags(inmode), ok);
     }
+
     if (outok) {
-      outmode |= kNtEnableWrapAtEolOutput;
-      if (tio->c_oflag & OPOST) outmode |= kNtEnableProcessedOutput;
-      if (!(tio->c_oflag & ONLCR)) outmode |= kNtDisableNewlineAutoReturn;
-      if (NtGetVersion() >= kNtVersionWindows10) {
+      outmode &= ~(kNtDisableNewlineAutoReturn);
+      outmode |= kNtEnableProcessedOutput;
+      if (!(tio->c_oflag & ONLCR)) {
+        outmode |= kNtDisableNewlineAutoReturn;
+      }
+      if (IsAtLeastWindows10()) {
         outmode |= kNtEnableVirtualTerminalProcessing;
       }
-      SetConsoleMode(out, outmode);
+      ok = SetConsoleMode(out, outmode);
+      NTTRACE("SetConsoleMode(%p, %s) → %hhhd", out,
+              DescribeNtConsoleOutFlags(outmode), ok);
     }
+
     return 0;
   } else {
     return enotty();

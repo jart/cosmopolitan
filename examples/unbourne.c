@@ -114,7 +114,6 @@
 #include "libc/assert.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
@@ -142,6 +141,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "third_party/gdtoa/gdtoa.h"
@@ -5731,7 +5731,7 @@ retry:
     linenoiseSetFreeHintsCallback(free);
     linenoiseSetHintsCallback(ShellHint);
     linenoiseSetCompletionCallback(ShellCompletion);
-    if ((p = linenoiseWithHistory("$ ", "unbourne"))) {
+    if ((p = linenoiseWithHistory(">: ", "unbourne"))) {
       nr = min(strlen(p), IBUFSIZ - 2);
       memcpy(buf, p, nr);
       buf[nr++] = '\n';

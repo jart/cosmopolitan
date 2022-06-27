@@ -101,7 +101,7 @@ struct SamplingSolution *ComputeSamplingSolution(long dn, long sn, double dar,
   if (!off) off = (dar - 1) / 2;
   f = dar < 1 ? 1 / dar : dar;
   s = 3 * f + 4;
-  fweights = gc(xcalloc(s, sizeof(double)));
+  fweights = gc(xcalloc(s + /*xxx*/ 2, sizeof(double)));
   res = NewSamplingSolution(dn, s);
   weights = res->weights;
   indices = res->indices;

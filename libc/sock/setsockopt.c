@@ -17,11 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/errfuns.h"
 
@@ -50,19 +54,40 @@ static bool setsockopt_polyfill(int *optname) {
  */
 int setsockopt(int fd, int level, int optname, const void *optval,
                uint32_t optlen) {
-  if (!optval) return efault();
-  if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
-  if (optname == -1) return 0;                  /* our sysvconsts definition */
-  if (!IsWindows()) {
+  int e, rc;
+
+  if (!optname) {
+    rc = enosys(); /* see libc/sysv/consts.sh */
+  } else if ((!optval && optlen) ||
+             (IsAsan() && !__asan_is_valid(optval, optlen))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = -1;
+    e = errno;
     do {
       if (sys_setsockopt(fd, level, optname, optval, optlen) != -1) {
-        return 0;
+        errno = e;
+        rc = 0;
+        break;
       }
     } while (setsockopt_polyfill(&optname));
-    return -1;
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_setsockopt_nt(&g_fds.p[fd], level, optname, optval, optlen);
+    rc = sys_setsockopt_nt(&g_fds.p[fd], level, optname, optval, optlen);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+
+#ifdef SYSDEBUG
+  if (!(rc == -1 && errno == EFAULT)) {
+    STRACE("setsockopt(%d, %s, %s, %#.*hhs, %'u) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           optlen, optval, optlen, rc);
+  } else {
+    STRACE("setsockopt(%d, %s, %s, %p, %'u) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           optval, optlen, rc);
+  }
+#endif
+
+  return rc;
 }

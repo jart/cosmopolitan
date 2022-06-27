@@ -55,7 +55,7 @@ o/$(MODE)/test/tool/viz/lib/%.com.dbg:			\
 		o/$(MODE)/test/tool/viz/lib/vizlib.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PHONY:		o/$(MODE)/test/tool/viz/lib

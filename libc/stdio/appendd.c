@@ -59,7 +59,11 @@ ssize_t appendd(char **b, const void *s, size_t l) {
       return -1;
     }
   }
-  *(char *)mempcpy(p + z.i, s, l) = 0;
+  if (l) {
+    *(char *)mempcpy(p + z.i, s, l) = 0;
+  } else {
+    p[z.i] = 0;
+  }
   z.i += l;
   if (!IsTiny() && W == 8) z.i |= (size_t)APPEND_COOKIE << 48;
   *(size_t *)(p + z.n - W) = z.i;

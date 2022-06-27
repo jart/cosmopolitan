@@ -3,9 +3,6 @@
 
 eisdir:	.leafprologue
 	.profilable
-	mov	EISDIR(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EISDIR(%rip),%ecx
+	jmp	__errfun
 	.endfn	eisdir,globl,hidden

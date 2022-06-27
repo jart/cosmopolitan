@@ -16,26 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Sleeps for a particular amount of time.
+ * @norestart
  */
-int nanosleep(const struct timespec *req, struct timespec *rem) {
-  if (!req) return efault();
-  if (req->tv_sec < 0 || !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
-    return einval();
-  }
-  if (!IsWindows() && !IsMetal() && !IsXnu()) {
-    return sys_nanosleep(req, rem);
+noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
+  int rc;
+  if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
+                            (rem && !__asan_is_valid_timespec(rem))))) {
+    rc = efault();
+  } else if (req->tv_sec < 0 ||
+             !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
+    rc = einval();
+  } else if (!IsWindows() && !IsMetal() && !IsXnu()) {
+    rc = sys_nanosleep(req, rem);
   } else if (IsXnu()) {
-    return sys_nanosleep_xnu(req, rem);
+    rc = sys_nanosleep_xnu(req, rem);
   } else if (IsMetal()) {
-    return enosys(); /* TODO: Sleep on Metal */
+    rc = enosys(); /* TODO: Sleep on Metal */
   } else {
-    return sys_nanosleep_nt(req, rem);
+    rc = sys_nanosleep_nt(req, rem);
   }
+  if (!__time_critical) {
+    POLLTRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
+              DescribeTimespec(rc, rem), rc);
+  }
+  return rc;
 }

@@ -34,7 +34,6 @@ struct ElfWriterRela {
 
 struct ElfWriter {
   char *path;
-  char *tmppath;
   int fd;
   void *map;
   size_t mapsize;
@@ -55,7 +54,7 @@ struct ElfWriter {
   struct Interner *shstrtab;
 };
 
-struct ElfWriter *elfwriter_open(const char *, int) nodiscard;
+struct ElfWriter *elfwriter_open(const char *, int) dontdiscard;
 void elfwriter_cargoculting(struct ElfWriter *);
 void elfwriter_close(struct ElfWriter *);
 void elfwriter_align(struct ElfWriter *, size_t, size_t);
@@ -73,7 +72,7 @@ void elfwriter_yoink(struct ElfWriter *, const char *, int);
 void elfwriter_setsection(struct ElfWriter *, struct ElfWriterSymRef, uint16_t);
 void elfwriter_zip(struct ElfWriter *, const char *, const char *, size_t,
                    const void *, size_t, uint32_t, struct timespec,
-                   struct timespec, struct timespec, bool, uint64_t);
+                   struct timespec, struct timespec, bool, uint64_t, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

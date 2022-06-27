@@ -17,11 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 
 /**
  * Creates session and sets the process group id.
+ * @return new session id, or -1 w/ errno
  */
 int setsid(void) {
-  return sys_setsid();
+  int rc;
+  rc = sys_setsid();
+  STRACE("setsid() → %d% m", rc);
+  return rc;
 }

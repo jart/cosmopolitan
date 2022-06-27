@@ -23,13 +23,19 @@
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 
-textwindows int64_t __winsockblock(int64_t fh, unsigned eventbit, int64_t rc) {
+textwindows int64_t __winsockblock(int64_t fh, unsigned eventbit, int64_t rc,
+                                   uint32_t timeout) {
   int64_t eh;
   struct NtWsaNetworkEvents ev;
   if (rc != -1) return rc;
   if (WSAGetLastError() != EWOULDBLOCK) return __winsockerr();
   eh = WSACreateEvent();
   bzero(&ev, sizeof(ev));
+  /* The proper way to reset the state of an event object used with the
+     WSAEventSelect function is to pass the handle of the event object
+     to the WSAEnumNetworkEvents function in the hEventObject parameter.
+     This will reset the event object and adjust the status of active FD
+     events on the socket in an atomic fashion. -- MSDN */
   if (WSAEventSelect(fh, eh, 1u << eventbit) != -1 &&
       WSAEnumNetworkEvents(fh, eh, &ev) != -1) {
     if (!ev.iErrorCode[eventbit]) {

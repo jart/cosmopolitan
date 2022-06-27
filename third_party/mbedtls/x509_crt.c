@@ -24,6 +24,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/s.h"
 #include "net/http/http.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"

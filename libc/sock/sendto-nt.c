@@ -16,29 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
-#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Performs send(), sendto(), or writev() on Windows NT.
+ * Performs datagram socket send on the New Technology.
  *
  * @param fd must be a socket
  * @return number of bytes handed off, or -1 w/ errno
  */
-textwindows ssize_t sys_sendto_nt(struct Fd *fd, const struct iovec *iov,
+textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
                                   size_t iovlen, uint32_t flags,
                                   void *opt_in_addr, uint32_t in_addrsize) {
-  uint32_t sent;
+  ssize_t rc;
+  uint32_t sent = 0;
+  struct SockFd *sockfd;
   struct NtIovec iovnt[16];
-  if (WSASendTo(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &sent, flags,
-                opt_in_addr, in_addrsize, NULL, NULL) != -1) {
-    return sent;
+  struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
+  if (_check_interrupts(true, g_fds.p)) return eintr();
+  if (!WSASendTo(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen),
+                 &sent, flags, opt_in_addr, in_addrsize, &overlapped, NULL)) {
+    rc = sent;
   } else {
-    return __winsockerr();
+    sockfd = (struct SockFd *)g_fds.p[fd].extra;
+    rc = __wsablock(g_fds.p[fd].handle, &overlapped, &flags, true,
+                    sockfd->sndtimeo);
   }
+  WSACloseEvent(overlapped.hEvent);
+  return rc;
 }

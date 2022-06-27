@@ -1,12 +1,5 @@
-/*
-** $Id: lualib.h $
-** Lua standard libraries
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lualib_h
 #define lualib_h
-
 #include "third_party/lua/lua.h"
 
 /* clang-format off */

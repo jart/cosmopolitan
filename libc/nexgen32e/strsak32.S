@@ -179,4 +179,3 @@ wcssak:	lea	-4(%rdi),%rax
 	.endfn	wcslen,globl
 	.endfn	wcschr,globl
 	.endfn	wcschrnul,globl
-	.source	__FILE__

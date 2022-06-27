@@ -16,10 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -27,29 +33,55 @@
 /**
  * Writes data from multiple buffers.
  *
+ * This is the same thing as write() except it has multiple buffers.
+ * This yields a performance boost in situations where it'd be expensive
+ * to stitch data together using memcpy() or issuing multiple syscalls.
+ * This wrapper is implemented so that writev() calls where iovlen<2 may
+ * be passed to the kernel as write() instead. This yields a 100 cycle
+ * performance boost in the case of a single small iovec.
+ *
  * Please note that it's not an error for a short write to happen. This
  * can happen in the kernel if EINTR happens after some of the write has
  * been committed. It can also happen if we need to polyfill this system
  * call using write().
  *
  * @return number of bytes actually handed off, or -1 w/ errno
+ * @restartable
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
+  int i;
+  ssize_t rc;
+
   if (fd >= 0 && iovlen >= 0) {
-    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) return efault();
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      return weaken(__zipos_write)(
+    if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
+      rc = efault();
+    } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+      rc = weaken(__zipos_write)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
     } else if (!IsWindows() && !IsMetal()) {
-      return sys_writev(fd, iov, iovlen);
+      if (iovlen == 1) {
+        rc = sys_write(fd, iov[0].iov_base, iov[0].iov_len);
+      } else {
+        rc = sys_writev(fd, iov, iovlen);
+      }
     } else if (fd >= g_fds.n) {
-      return ebadf();
+      rc = ebadf();
     } else if (IsMetal()) {
-      return sys_writev_metal(g_fds.p + fd, iov, iovlen);
+      rc = sys_writev_metal(g_fds.p + fd, iov, iovlen);
     } else {
-      return sys_writev_nt(g_fds.p + fd, iov, iovlen);
+      rc = sys_writev_nt(fd, iov, iovlen);
     }
   } else {
-    return einval();
+    rc = einval();
   }
+
+#if defined(SYSDEBUG) && _DATATRACE
+  if (UNLIKELY(__strace > 0)) {
+    kprintf(STRACE_PROLOGUE "writev(%d, ", fd);
+    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
+    kprintf(", %d) → %'ld% m\n", iovlen, rc);
+  }
+#endif
+
+  return rc;
 }

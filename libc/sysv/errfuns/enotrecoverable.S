@@ -4,9 +4,6 @@
 enotrecoverable:
 	.leafprologue
 	.profilable
-	mov	ENOTRECOVERABLE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOTRECOVERABLE(%rip),%ecx
+	jmp	__errfun
 	.endfn	enotrecoverable,globl,hidden

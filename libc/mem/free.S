@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Free memory returned by malloc() & co.
 //
@@ -29,5 +28,6 @@
 //
 //	@param	rdi is allocation address, which may be NULL
 //	@see	dlfree()
+//	@threadsafe
 free:	jmp	*hook_free(%rip)
 	.endfn	free,globl

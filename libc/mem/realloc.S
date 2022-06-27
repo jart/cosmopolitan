@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Allocates / resizes / frees memory, e.g.
 //
@@ -54,6 +53,7 @@
 //	@note	realloc(p=0, n=0) → malloc(32)
 //	@note	realloc(p≠0, n=0) → free(p)
 //	@see	dlrealloc()
+//	@threadsafe
 realloc:
 	jmp	*hook_realloc(%rip)
 	.endfn	realloc,globl

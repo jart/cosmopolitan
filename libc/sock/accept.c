@@ -26,6 +26,7 @@
  * @param inout_addrsize provides and receives addr's byte length
  * @return client fd which needs close(), or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 int accept(int fd, void *out_addr, uint32_t *inout_addrsize) {
   return accept4(fd, out_addr, inout_addrsize, 0);

@@ -25,7 +25,9 @@
  * Creates bidirectional pipe.
  *
  * @param family should be AF_UNIX or synonymously AF_LOCAL
- * @param type may be or'd with SOCK_CLOEXEC
+ * @param type can be SOCK_STREAM (for TCP), SOCK_DGRAM (e.g. UDP), or
+ *     SOCK_RAW (IP) so long as IP_HDRINCL was passed to setsockopt();
+ *     and additionally, may be or'd with SOCK_NONBLOCK, SOCK_CLOEXEC
  * @param sv a vector of 2 integers to store the created sockets
  * @return 0 if success, -1 in case of error
  * @error EFAULT, EPFNOSUPPORT, etc.

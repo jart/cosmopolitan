@@ -17,19 +17,42 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/fmt/isslash.internal.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 
 /**
- * Returns pointer to last filename component in path.
+ * Returns pointer to last filename component in path, e.g.
+ *
+ *     path     │ dirname() │ basename()
+ *     ─────────────────────────────────
+ *     .        │ .         │ .
+ *     ..       │ .         │ ..
+ *     /        │ /         │ /
+ *     usr      │ .         │ usr
+ *     /usr/    │ /         │ usr
+ *     /usr/lib │ /usr      │ lib
  *
  * Both / and \ are are considered valid component separators on all
  * platforms. Trailing slashes are ignored. We don't grant special
  * consideration to things like foo/., c:/, \\?\Volume, etc.
  *
- * @param path is NUL-terminated UTF-8 path
- * @return pointer inside path or path itself
+ * @param path is UTF-8 and may be mutated, but not expanded in length
+ * @return pointer to path, or inside path, or to a special r/o string
+ * @see dirname()
+ * @see SUSv2
  */
-textstartup char *basename(const char *path) {
-  return basename_n(path, strlen(path));
+char *basename(char *path) {
+  size_t i;
+  if (path && *path) {
+    i = strlen(path) - 1;
+    for (; i && _isdirsep(path[i]); i--) {
+      path[i] = 0;
+    }
+    for (; i && !_isdirsep(path[i - 1]);) {
+      i--;
+    }
+    return path + i;
+  } else {
+    return ".";
+  }
 }

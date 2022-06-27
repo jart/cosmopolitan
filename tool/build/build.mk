@@ -50,14 +50,17 @@ TOOL_BUILD_DIRECTDEPS =					\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
 	LIBC_X						\
+	LIBC_ZIPOS					\
 	NET_HTTPS					\
 	THIRD_PARTY_COMPILER_RT				\
 	THIRD_PARTY_GDTOA				\
 	THIRD_PARTY_GETOPT				\
 	THIRD_PARTY_MBEDTLS				\
+	THIRD_PARTY_MUSL				\
 	THIRD_PARTY_STB					\
 	THIRD_PARTY_XED					\
 	THIRD_PARTY_ZLIB				\
+	THIRD_PARTY_ZLIB_GZ				\
 	TOOL_BUILD_LIB
 
 TOOL_BUILD_DEPS :=					\
@@ -77,8 +80,8 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/%.o		\
 		$(CRT)					\
-		$(APE)
-	-@$(APELINK)
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/blinkenlights.com.dbg:		\
 		$(TOOL_BUILD_DEPS)			\
@@ -88,28 +91,39 @@ o/$(MODE)/tool/build/blinkenlights.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+.PRECIOUS: o/$(MODE)/tool/build/blinkenlights.com
+o/$(MODE)/tool/build/blinkenlights.com:						\
+		o/$(MODE)/tool/build/blinkenlights.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/tool/build/.blinkenlights/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
+		o/$(MODE)/tool/build/.blinkenlights/.symtab
+
 o/$(MODE)/tool/build/ar.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/ar.o		\
 		$(CRT)					\
-		$(APE)
-	-@$(APELINK)
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/package.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/package.o		\
 		$(CRT)					\
-		$(APE)
-	-@$(APELINK)
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/mkdeps.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/mkdeps.o		\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/build/compile.com.dbg:			\
@@ -117,16 +131,16 @@ o/$(MODE)/tool/build/compile.com.dbg:			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/compile.o		\
 		$(CRT)					\
-		$(APE)
-	-@$(APELINK)
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/zipobj.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\
 		o/$(MODE)/tool/build/build.pkg		\
 		o/$(MODE)/tool/build/zipobj.o		\
 		$(CRT)					\
-		$(APE)
-	-@$(APELINK)
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\

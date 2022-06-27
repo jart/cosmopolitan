@@ -16,29 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 
-/**
- * Recursively creates directory a.k.a. folder.
- *
- * @param path is a UTF-8 string, preferably relative w/ forward slashes
- * @param mode can be, for example, 0755
- * @return 0 on success or -1 w/ errno
- * @see mkdir()
- */
-int makedirs(const char *path, unsigned mode) {
-  int e, rc;
+static int MakeDirs(const char *path, unsigned mode, int e) {
+  int rc;
   char *dir;
-  e = errno;
-  if (mkdir(path, mode) != -1) return 0;
-  if (errno != ENOENT) return -1;
+  if (mkdir(path, mode) != -1 || errno == EEXIST) {
+    errno = e;
+    return 0;
+  }
+  if (errno != ENOENT) {
+    return -1;
+  }
   dir = xdirname(path);
   if (strcmp(dir, path)) {
-    rc = makedirs(dir, mode);
+    rc = MakeDirs(dir, mode, e);
   } else {
     rc = -1;
   }
@@ -46,4 +46,18 @@ int makedirs(const char *path, unsigned mode) {
   if (rc == -1) return -1;
   errno = e;
   return mkdir(path, mode);
+}
+
+/**
+ * Recursively creates directory a.k.a. folder.
+ *
+ * This function won't fail if the directory already exists.
+ *
+ * @param path is a UTF-8 string, preferably relative w/ forward slashes
+ * @param mode can be, for example, 0755
+ * @return 0 on success or -1 w/ errno
+ * @see mkdir()
+ */
+int makedirs(const char *path, unsigned mode) {
+  return MakeDirs(path, mode, errno);
 }

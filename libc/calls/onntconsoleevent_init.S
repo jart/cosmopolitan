@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.windows
-.source	__FILE__
 
 __onntconsoleevent_nt:
 	ezlea	__onntconsoleevent,ax

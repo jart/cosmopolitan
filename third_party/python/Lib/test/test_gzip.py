@@ -71,8 +71,9 @@ class TestGzip(BaseTest):
             # Try flush and fileno.
             f.flush()
             f.fileno()
-            if hasattr(os, 'fsync'):
-                os.fsync(f.fileno())
+            # TODO(jart): Why does this need fsync()?
+            #if hasattr(os, 'fsync'):
+            #    os.fsync(f.fileno())
             f.close()
 
         # Test multiple close() calls.

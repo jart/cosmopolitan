@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	These function names make it a bit more obvious which signal
 //	caused the crash, particularly in the GDB GUI. They're coded
@@ -25,7 +24,7 @@
 
 __oncrash_thunks:
 
-//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
+//	<SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
 
 	.org	11*0
 __oncrash_sigquit:
@@ -91,14 +90,14 @@ __oncrash_sigbus:
 	.endfn	__oncrash_sigbus,globl
 
 	.org	11*7
-__oncrash_sigpipe:
+__oncrash_sigsys:
 	push	%rbp
 	mov	%rsp,%rbp
 	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	__oncrash_sigpipe,globl
+	.endfn	__oncrash_sigsys,globl
 
-//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c
+//	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
 
 	.endobj	__oncrash_thunks,globl

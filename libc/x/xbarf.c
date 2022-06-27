@@ -26,7 +26,7 @@
  * Writes data to file.
  *
  * @param size can be -1 to strlen(data)
- * @return if failed, -1 w/ errno
+ * @return 0 on success or -1 w/ errno
  * @note this is uninterruptible
  */
 int xbarf(const char *path, const void *data, size_t size) {

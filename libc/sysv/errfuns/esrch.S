@@ -3,9 +3,6 @@
 
 esrch:	.leafprologue
 	.profilable
-	mov	ESRCH(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ESRCH(%rip),%ecx
+	jmp	__errfun
 	.endfn	esrch,globl,hidden

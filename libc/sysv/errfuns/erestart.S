@@ -4,9 +4,6 @@
 erestart:
 	.leafprologue
 	.profilable
-	mov	ERESTART(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ERESTART(%rip),%ecx
+	jmp	__errfun
 	.endfn	erestart,globl,hidden

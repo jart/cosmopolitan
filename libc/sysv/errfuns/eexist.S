@@ -3,9 +3,6 @@
 
 eexist:	.leafprologue
 	.profilable
-	mov	EEXIST(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EEXIST(%rip),%ecx
+	jmp	__errfun
 	.endfn	eexist,globl,hidden

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Resizes the space allocated for p to size n, only if this can be
 //	done without moving p (i.e., only if there is adjacent space
@@ -33,6 +32,7 @@
 //	@param	rsi (newsize) is number of bytes needed
 //	@return	rax is result, or NULL w/ errno
 //	@see	dlrealloc_in_place()
+//	@threadsafe
 realloc_in_place:
 	jmp	*hook_realloc_in_place(%rip)
 	.endfn	realloc_in_place,globl

@@ -50,6 +50,9 @@
 #ifndef __has_cpp_attribute
 #define __has_cpp_attribute(x) 0
 #endif
+#ifndef __has_extension
+#define __has_extension(x) 0
+#endif
 
 #ifdef unix
 #undef unix
@@ -70,13 +73,13 @@
 #define BUFSIZ      0x1000  /* best stdio default */
 #define CACHELINE   0x40    /* nexgen32e */
 #define CHAR_BIT    8       /* b/c von neumann */
-#define ARG_MAX     0x8000  /* b/c windows */
-#define PATH_MAX    248     /* b/c win32 apis limit ~248..260 */
+#define ARG_MAX     0xfffe  /* for argv and envp; see CreateProcess (32767*2) */
+#define PATH_MAX    1024    /* b/c _XOPEN_PATH_MAX */
 #define NAME_MAX    63      /* b/c dns */
-#define CHILD_MAX   25      /* only if malloc isn't linked */
+#define CHILD_MAX   16      /* only if malloc isn't linked */
 #define OPEN_MAX    16      /* only if malloc isn't linked */
 #define ATEXIT_MAX  32      /* only if malloc isn't linked */
-#define NSIG        128     /* it's complicated */
+#define NSIG        128     /* b/c freebsd */
 
 #if defined(__LP64__) && !defined(__INT64_TYPE__)
 #include "libc/integral/lp64.inc"

@@ -4,9 +4,6 @@
 ekeyrejected:
 	.leafprologue
 	.profilable
-	mov	EKEYREJECTED(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EKEYREJECTED(%rip),%ecx
+	jmp	__errfun
 	.endfn	ekeyrejected,globl,hidden

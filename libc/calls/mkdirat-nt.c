@@ -16,34 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
-#include "libc/errno.h"
-#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
 #include "libc/str/str.h"
-
-static textwindows bool SubpathExistsThatsNotDirectory(char16_t *path) {
-  char16_t *p;
-  uint32_t attrs;
-  while ((p = strrchr16(path, '\\'))) {
-    *p = u'\0';
-    if ((attrs = GetFileAttributes(path)) != -1u) {
-      if (attrs & kNtFileAttributeDirectory) return false;
-      return true;
-    }
-  }
-  return false;
-}
+#include "libc/sysv/errfuns.h"
 
 textwindows int sys_mkdirat_nt(int dirfd, const char *path, uint32_t mode) {
   int e;
   char16_t *p, path16[PATH_MAX];
+  /* if (strlen(path) > 248) return enametoolong(); */
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  if (CreateDirectory(path16, NULL)) return 0;
-  e = GetLastError();
-  /* WIN32 doesn't distinguish between ENOTDIR and ENOENT */
-  if (e == ENOTDIR && !SubpathExistsThatsNotDirectory(path16)) e = ENOENT;
-  errno = e;
-  return -1;
+  if (CreateDirectory(path16, 0)) return 0;
+  return __fix_enotdir(-1, path16);
 }

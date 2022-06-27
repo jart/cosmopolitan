@@ -19,22 +19,18 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Formats and writes string to stdout.
+ * Formats and writes text to stdout.
  *
  * Cosmopolitan supports most of the standard formatting behaviors
- * described by `man 3 printf`, in addition to the following:
+ * described by `man 3 printf`, in addition to the following
  *
- * - `%jd`, `%jx`, etc. are {,u}intmax_t which in Cosmopolitan is 128-bit.
+ * - `%jjd`, `%jjx`, etc. are {,u}int128_t (cosmopolitan only)
  *
  * - `%'d` or `%,d` may be used to insert thousands separators. The prior is
  *   consistent with C; the latter is consistent with Python.
  *
  * - `%m` inserts strerror(errno) into the formatted output. This is
  *   consistent with glibc, musl, and uclibc.
- *
- * - `%n` inserts "\n" on non-Windows and "\r\n" on Windows. This is the
- *   same behavior as Java. It's incompatible with glibc's behavior,
- *   since that's problematic according to Android's security team.
  *
  * - `%hs` converts UTF-16/UCS-2 → UTF-8, which can be helpful on Windows.
  *   Formatting (e.g. %-10hs) will use monospace display width rather

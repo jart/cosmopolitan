@@ -23,10 +23,12 @@
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/x/x.h"
 #include "third_party/xed/x86.h"
 #include "tool/decode/lib/asmcodegen.h"
 #include "tool/decode/lib/flagger.h"
@@ -70,7 +72,7 @@ static void *pecheckaddress(struct NtImageDosHeader *mz, size_t mzsize,
   return addr;
 }
 
-static void *pecomputerva(struct NtImageDosHeader *mz, size_t mzsize,
+static void *PeComputeRva(struct NtImageDosHeader *mz, size_t mzsize,
                           uint32_t reladdr, uint32_t addrsize) {
   return pecheckaddress(mz, mzsize, (void *)((intptr_t)mz + reladdr), addrsize);
 }
@@ -109,13 +111,13 @@ static void showmzheader(void) {
   showshorthex(mz->e_lfarlc);
   showshorthex(mz->e_ovno);
   show(".short",
-       format(b1, "%hn,%hn,%hn,%hn", mz->e_res[0], mz->e_res[1], mz->e_res[2],
+       format(b1, "%hu,%hu,%hu,%hu", mz->e_res[0], mz->e_res[1], mz->e_res[2],
               mz->e_res[3]),
        "mz->e_res");
   showshorthex(mz->e_oemid);
   showshorthex(mz->e_oeminfo);
   show(".short",
-       format(b1, "%hn,%hn,%hn,%hn,%hn,%hn,%hn,%hn,%hn,%hn", mz->e_res2[0],
+       format(b1, "%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu", mz->e_res2[0],
               mz->e_res2[1], mz->e_res2[2], mz->e_res2[3], mz->e_res2[4],
               mz->e_res2[5], mz->e_res2[6], mz->e_res2[7], mz->e_res2[8],
               mz->e_res2[9]),
@@ -128,6 +130,7 @@ static void showdosstub(void) {
 }
 
 static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
+  int i;
   showtitle(basename(path), "windows", "pe \"optional\" header", NULL, NULL);
   printf("\n");
   show(".short",
@@ -169,6 +172,49 @@ static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
   showint64hex(opt->SizeOfHeapCommit);
   showinthex(opt->LoaderFlags);
   showinthex(opt->NumberOfRvaAndSizes);
+
+  i = 0;
+#define DATA_DIRECTORY(x)                                             \
+  do {                                                                \
+    if (i++ < opt->NumberOfRvaAndSizes) {                             \
+      show(".long",                                                   \
+           format(b1, "%#X,%u", opt->DataDirectory[x].VirtualAddress, \
+                  opt->DataDirectory[x].Size),                        \
+           gc(xasprintf("opt->DataDirectory[%s]", #x)));              \
+    }                                                                 \
+  } while (0)
+
+  DATA_DIRECTORY(kNtImageDirectoryEntryExport);
+  DATA_DIRECTORY(kNtImageDirectoryEntryImport);
+  DATA_DIRECTORY(kNtImageDirectoryEntryResource);
+  DATA_DIRECTORY(kNtImageDirectoryEntryException);
+  DATA_DIRECTORY(kNtImageDirectoryEntrySecurity);
+  DATA_DIRECTORY(kNtImageDirectoryEntryBasereloc);
+  DATA_DIRECTORY(kNtImageDirectoryEntryDebug);
+  DATA_DIRECTORY(kNtImageDirectoryEntryArchitecture);
+  DATA_DIRECTORY(kNtImageDirectoryEntryGlobalptr);
+  DATA_DIRECTORY(kNtImageDirectoryEntryTls);
+  DATA_DIRECTORY(kNtImageDirectoryEntryLoadConfig);
+  DATA_DIRECTORY(kNtImageDirectoryEntryBoundImport);
+  DATA_DIRECTORY(kNtImageDirectoryEntryIat);
+  DATA_DIRECTORY(kNtImageDirectoryEntryDelayImport);
+  DATA_DIRECTORY(kNtImageDirectoryEntryComDescriptor);
+
+  for (; i < opt->NumberOfRvaAndSizes; ++i) {
+    showint64hex(opt->DataDirectory[i]);
+  }
+}
+
+static void ShowIat(struct NtImageNtHeaders *pe, int64_t *iat, size_t n) {
+  printf("\n");
+  showtitle(basename(path), "windows", "import address table (iat)", NULL,
+            NULL);
+  printf("\n");
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    show(".quad", format(b1, "%#lX", iat[i]),
+         gc(xasprintf("iat[%zu] @%#x", i, (intptr_t)(iat + i) - (intptr_t)pe)));
+  }
 }
 
 static void showpeheader(struct NtImageNtHeaders *pe) {
@@ -195,6 +241,12 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
   printf("\n");
   showpeoptionalheader(pecheckaddress(mz, mzsize, &pe->OptionalHeader,
                                       pe->FileHeader.SizeOfOptionalHeader));
+  ShowIat(
+      pe,
+      (void *)((intptr_t)pe +
+               pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
+                   .VirtualAddress),
+      pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport].Size / 8);
 }
 
 static void showall(void) {
@@ -202,7 +254,7 @@ static void showall(void) {
   showmzheader();
   showdosstub();
   if (mz->e_lfanew) {
-    showpeheader(pecomputerva(mz, mzsize, mz->e_lfanew,
+    showpeheader(PeComputeRva(mz, mzsize, mz->e_lfanew,
                               sizeof(struct NtImageFileHeader)));
   }
 }

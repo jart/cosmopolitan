@@ -4,9 +4,6 @@
 enetdown:
 	.leafprologue
 	.profilable
-	mov	ENETDOWN(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENETDOWN(%rip),%ecx
+	jmp	__errfun
 	.endfn	enetdown,globl,hidden

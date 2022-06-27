@@ -53,7 +53,19 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 	mov	%rdi,%r8
 	xor	%eax,%eax
 1:	xor	%ecx,%ecx
+#ifdef FEATURELESS
+//	It's been reported that GDB reverse debugging doesn't
+//	understand VEX encoding. The workaround is to put:
+//
+//	    CPPFLAGS = -DFEATURELESS
+//
+//	Inside your ~/.cosmo.mk file.
+	xor	%eax,%eax
+	xor	%ebx,%ebx
+	xor	%edx,%edx
+#else
 	cpuid
+#endif
 	stosl
 	xchg	%eax,%ebx
 	stosl
@@ -84,4 +96,3 @@ kCpuids:.long	0,0,0,0				# EAX=0 (Basic Processor Info)
 #endif
 5:	pop	%rbx
 	.init.end 201,_init_kCpuids
-	.source	__FILE__

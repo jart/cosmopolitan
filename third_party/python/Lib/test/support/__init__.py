@@ -3,6 +3,7 @@
 if __name__ != 'test.support':
     raise ImportError('support must be imported from the test package')
 
+import cosmo
 import collections.abc
 import contextlib
 import datetime
@@ -2043,9 +2044,10 @@ def run_unittest(*classes):
 def _check_docstrings():
     """Just used to check if docstrings are enabled"""
 
-MISSING_C_DOCSTRINGS = (check_impl_detail() and
-                        sys.platform != 'win32' and
-                        not sysconfig.get_config_var('WITH_DOC_STRINGS'))
+MISSING_C_DOCSTRINGS = (cosmo.MODE.startswith('tiny') or
+                        (check_impl_detail() and
+                         sys.platform != 'win32' and
+                         not sysconfig.get_config_var('WITH_DOC_STRINGS')))
 
 HAVE_DOCSTRINGS = (_check_docstrings.__doc__ is not None and
                    not MISSING_C_DOCSTRINGS)

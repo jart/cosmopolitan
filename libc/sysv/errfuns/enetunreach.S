@@ -4,9 +4,6 @@
 enetunreach:
 	.leafprologue
 	.profilable
-	mov	ENETUNREACH(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENETUNREACH(%rip),%ecx
+	jmp	__errfun
 	.endfn	enetunreach,globl,hidden

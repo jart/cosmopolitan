@@ -16,33 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
-#define __NR_pwritev_linux 0x0128
-
-/**
- * Writes data from multiple buffers to offset.
- *
- * Please note that it's not an error for a short write to happen. This
- * can happen in the kernel if EINTR happens after some of the write has
- * been committed. It can also happen if we need to polyfill this system
- * call using pwrite().
- *
- * @return number of bytes actually sent, or -1 w/ errno
- * @asyncsignalsafe
- * @vforksafe
- */
-ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
+static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
+                       int64_t off) {
   static bool once, demodernize;
   int i, err;
   ssize_t rc;
@@ -56,7 +48,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);
   } else if (IsWindows()) {
     if (fd < g_fds.n) {
-      return sys_write_nt(g_fds.p + fd, iov, iovlen, off);
+      return sys_write_nt(fd, iov, iovlen, off);
     } else {
       return ebadf();
     }
@@ -64,8 +56,12 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
     return enosys();
   }
 
+  if (iovlen == 1) {
+    return sys_pwrite(fd, iov[0].iov_base, iov[0].iov_len, off, off);
+  }
+
   /*
-   * NT, XNU, and 2007-era Linux don't support this system call.
+   * NT, 2018-era XNU, and 2007-era Linux don't support this system call
    */
   if (!once) {
     err = errno;
@@ -74,13 +70,7 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
       errno = err;
       once = true;
       demodernize = true;
-    } else if (IsLinux() && rc == __NR_pwritev_linux) {
-      if (__iovec_size(iov, iovlen) < __NR_pwritev_linux) {
-        demodernize = true; /*RHEL5:CVE-2010-3301*/
-        once = true;
-      } else {
-        return rc;
-      }
+      STRACE("demodernizing %s() due to %s", "pwritev", "ENOSYS");
     } else {
       once = true;
       return rc;
@@ -112,4 +102,29 @@ ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   }
 
   return toto;
+}
+
+/**
+ * Writes data from multiple buffers to offset.
+ *
+ * Please note that it's not an error for a short write to happen. This
+ * can happen in the kernel if EINTR happens after some of the write has
+ * been committed. It can also happen if we need to polyfill this system
+ * call using pwrite().
+ *
+ * @return number of bytes actually sent, or -1 w/ errno
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
+  ssize_t rc;
+  rc = Pwritev(fd, iov, iovlen, off);
+#if defined(SYSDEBUG) && _DATATRACE
+  if (UNLIKELY(__strace > 0)) {
+    kprintf(STRACE_PROLOGUE "pwritev(%d, ", fd);
+    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
+    kprintf(", %d, %'ld) → %'ld% m\n", iovlen, off, rc);
+  }
+#endif
+  return rc;
 }

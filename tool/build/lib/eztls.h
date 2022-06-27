@@ -20,6 +20,7 @@ extern mbedtls_ctr_drbg_context ezrng;
 
 void EzFd(int);
 void EzHandshake(void);
+int EzHandshake2(void);
 void EzSetup(char[32]);
 void EzInitialize(void);
 int EzTlsFlush(struct EzTlsBio *, const unsigned char *, size_t);

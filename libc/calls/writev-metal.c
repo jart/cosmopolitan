@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/sysv/errfuns.h"
 
 ssize_t sys_writev_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {

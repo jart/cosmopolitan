@@ -17,8 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
@@ -41,6 +44,7 @@ void _firewall(const void *addr, uint32_t addrsize) {
     *p++ = '\n';
     write(2, b, p - b);
     if (weaken(__die)) weaken(__die)();
-    abort();
+    __restorewintty();
+    _Exit(66);
   }
 }

@@ -24,7 +24,7 @@ static PyObject *
 unicode_maketrans_impl(PyObject *x, PyObject *y, PyObject *z);
 
 static PyObject *
-unicode_maketrans(void *null, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+unicode_maketrans(void *null, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *x;
@@ -35,13 +35,9 @@ unicode_maketrans(void *null, PyObject **args, Py_ssize_t nargs, PyObject *kwnam
         &x, &y, &z)) {
         goto exit;
     }
-
-    if (!_PyArg_NoStackKeywords("maketrans", kwnames)) {
-        goto exit;
-    }
     return_value = unicode_maketrans_impl(x, y, z);
 
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=af4804dbf21463b5 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=d1e48260a99031c2 input=a9049054013a1b77]*/

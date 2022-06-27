@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
 #include "libc/bits/weaken.h"
 #include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -114,11 +113,12 @@ void TearDownOnce(void);
 
 #define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    errno = 0;                                                             \
+    int e = errno;                                                         \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
               strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+    errno = e;                                                             \
   } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \
@@ -317,8 +317,8 @@ extern char g_fixturename[256];
 extern char g_testlib_olddir[PATH_MAX];
 extern char g_testlib_tmpdir[PATH_MAX];
 extern bool g_testlib_shoulddebugbreak;     /* set by testmain */
-extern unsigned g_testlib_ran;              /* set by wrappers */
-extern unsigned g_testlib_failed;           /* set by wrappers */
+extern _Atomic(unsigned) g_testlib_ran;     /* set by wrappers */
+extern _Atomic(unsigned) g_testlib_failed;  /* set by wrappers */
 extern const char *testlib_showerror_errno; /* set by macros */
 extern const char *testlib_showerror_file;  /* set by macros */
 extern const char *testlib_showerror_func;  /* set by macros */
@@ -352,7 +352,6 @@ void thrashcodecache(void);
 void testlib_finish(void);
 void testlib_runalltests(void);
 void testlib_runallbenchmarks(void);
-void testlib_checkformemoryleaks(void);
 void testlib_runtestcases(testfn_t *, testfn_t *, testfn_t);
 void testlib_runcombos(testfn_t *, testfn_t *, const struct TestFixture *,
                        const struct TestFixture *);

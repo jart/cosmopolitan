@@ -3,9 +3,6 @@
 
 ebadf:	.leafprologue
 	.profilable
-	mov	EBADF(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EBADF(%rip),%ecx
+	jmp	__errfun
 	.endfn	ebadf,globl,hidden

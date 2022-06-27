@@ -22,6 +22,7 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -46,6 +47,27 @@ TEST(asan, test) {
   EXPECT_FALSE(__asan_is_valid(p, 64 + 4));
   EXPECT_TRUE(__asan_is_valid(p + 1, 64 + 2));
   EXPECT_FALSE(__asan_is_valid(p + 1, 64 + 3));
+  EXPECT_FALSE(__asan_is_valid(p - 1, 64));
+}
+
+TEST(asan, test2) {
+  char *p;
+  if (!IsAsan()) return;
+  p = gc(memalign(16, 64));
+  // asan design precludes this kind of poisoning
+  __asan_poison(p + 1, 1, kAsanProtected);
+  EXPECT_TRUE(__asan_is_valid(p, 2));
+  EXPECT_TRUE(__asan_is_valid(p + 1, 2));
+  // but we can do this
+  __asan_poison(p + 7, 1, kAsanProtected);
+  EXPECT_TRUE(__asan_is_valid(p + 6, 1));
+  EXPECT_FALSE(__asan_is_valid(p + 7, 1));
+  EXPECT_TRUE(__asan_is_valid(p + 8, 1));
+  EXPECT_FALSE(__asan_is_valid(p + 6, 2));
+  EXPECT_FALSE(__asan_is_valid(p + 7, 2));
+  EXPECT_FALSE(__asan_is_valid(p + 6, 3));
+  __asan_unpoison(p + 7, 1);
+  EXPECT_TRUE(__asan_is_valid(p + 6, 3));
 }
 
 TEST(asan, testEmptySize_isAlwaysValid) {

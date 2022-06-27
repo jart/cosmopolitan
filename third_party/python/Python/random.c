@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
@@ -389,35 +388,10 @@ _PyOS_URandomNonblock(void *buffer, Py_ssize_t size)
     return pyurandom(buffer, size, 0, 1);
 }
 
-static uint64_t
-getsome(void)
-{
-    int i;
-    char cf;
-    uint64_t x;
-    for (i = 0; i < 10; ++i) {
-        asm volatile(CFLAG_ASM("rdrand\t%1")
-                     : CFLAG_CONSTRAINT(cf), "=r"(x)
-                     : /* no inputs */
-                     : "cc");
-        if (cf) return x;
-        asm volatile("pause");
-    }
-    while (getrandom(&x, sizeof(x), GRND_NONBLOCK) != sizeof(x)) {
-        if (errno != EINTR) {
-            x ^= rdtsc();
-            x += getpid();
-            break;
-        }
-    }
-    return x;
-}
-
 void
 _PyRandom_Init(void)
 {
     char *env;
-    uint64_t x;
     const unsigned char *auxrng;
     unsigned char *secret = (unsigned char *)&_Py_HashSecret.uc;
     Py_ssize_t secret_size = sizeof(_Py_HashSecret_t);
@@ -456,7 +430,8 @@ _PyRandom_Init(void)
         }
     }
     else {
-        int res;
+        uint64_t x;
+        int res, i, j;
         /* _PyRandom_Init() is called very early in the Python initialization
            and so exceptions cannot be used (use raise=0).
            _PyRandom_Init() must not block Python initialization: call
@@ -465,15 +440,14 @@ _PyRandom_Init(void)
         /* 
          * [jart] modified to be more efficient
          */
-        x = getsome();
-        memcpy(secret, &x, 8);
-        if ((auxrng = (const unsigned char *)getauxval(AT_RANDOM))) {
-            memcpy(secret + 8, auxrng, 16);
-        } else {
-            x = getsome();
-            memcpy(secret + 8, &x, 8);
-            x = getsome();
-            memcpy(secret + 16, &x, 8);
+        for (i = 0; i < secret_size;) {
+            x = rdrand(); // will failover to getrandom() etc.
+            for (j = 0; j < 8; ++j) {
+                if (i < secret_size) {
+                    secret[i++] = x;
+                    x >>= 8;
+                }
+            }
         }
 #else
         res = pyurandom(secret, secret_size, 0, 0);

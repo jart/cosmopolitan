@@ -36,6 +36,9 @@ int GetUserName(char16_t (*buf)[257], uint32_t *in_out_size);
 bool32 GlobalMemoryStatusEx(struct NtMemoryStatusEx *lpBuffer);
 int32_t GetExitCodeProcess(int64_t hProcess, uint32_t *lpExitCode);
 int32_t GetProcessHandleCount(int64_t hProcess, uint32_t *pdwHandleCount);
+bool32 GetSystemTimes(struct NtFileTime *opt_out_lpIdleTime,
+                      struct NtFileTime *opt_out_lpKernelTime,
+                      struct NtFileTime *opt_out_lpUserTime);
 bool32 GetProcessTimes(int64_t hProcess,
                        struct NtFileTime *out_lpCreationFileTime,
                        struct NtFileTime *out_lpExitFileTime,

@@ -3,9 +3,6 @@
 
 enosr:	.leafprologue
 	.profilable
-	mov	ENOSR(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOSR(%rip),%ecx
+	jmp	__errfun
 	.endfn	enosr,globl,hidden

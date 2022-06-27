@@ -3,9 +3,6 @@
 
 edquot:	.leafprologue
 	.profilable
-	mov	EDQUOT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EDQUOT(%rip),%ecx
+	jmp	__errfun
 	.endfn	edquot,globl,hidden

@@ -1,9 +1,3 @@
-/*
-** $Id: lstring.h $
-** String table (keep all strings handled by Lua)
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lstring_h
 #define lstring_h
 

@@ -43,7 +43,9 @@ LIBC_RUNTIME_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
-	LIBC_SYSV_CALLS
+	LIBC_SYSV_CALLS					\
+	THIRD_PARTY_ZLIB				\
+	THIRD_PARTY_XED
 
 LIBC_RUNTIME_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x))))
@@ -57,40 +59,58 @@ $(LIBC_RUNTIME_A).pkg:					\
 		$(LIBC_RUNTIME_A_OBJS)			\
 		$(foreach x,$(LIBC_RUNTIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/runtime/printf.o				\
-o/$(MODE)/libc/runtime/abort-nt.o			\
+# we can't use asan and ubsan because:
+#   asan and ubsan can be function traced
+# we can't use function tracing because:
+#   this is the function tracing runtime
+o/$(MODE)/libc/runtime/ftracer.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all
+
+o/$(MODE)/libc/runtime/fork-nt.o			\
+o/$(MODE)/libc/runtime/printmemoryintervals.o		\
 o/$(MODE)/libc/runtime/arememoryintervalsok.o		\
-o/$(MODE)/libc/runtime/assertfail.o			\
-o/$(MODE)/libc/runtime/directmap.o			\
-o/$(MODE)/libc/runtime/directmapnt.o			\
 o/$(MODE)/libc/runtime/findmemoryinterval.o		\
-o/$(MODE)/libc/runtime/ftrace.greg.o			\
-o/$(MODE)/libc/runtime/ftracer.o			\
-o/$(MODE)/libc/runtime/ezmap.o				\
+o/$(MODE)/libc/runtime/sys_mprotect.greg.o		\
 o/$(MODE)/libc/runtime/getdosargv.o			\
 o/$(MODE)/libc/runtime/getdosenviron.o			\
 o/$(MODE)/libc/runtime/hook.greg.o			\
-o/$(MODE)/libc/runtime/isheap.o				\
-o/$(MODE)/libc/runtime/memtrack.o			\
+o/$(MODE)/libc/runtime/ismemtracked.greg.o		\
 o/$(MODE)/libc/runtime/memtracknt.o			\
+o/$(MODE)/libc/runtime/memtrack.greg.o			\
+o/$(MODE)/libc/runtime/metalprintf.greg.o		\
+o/$(MODE)/libc/runtime/printargs.greg.o			\
 o/$(MODE)/libc/runtime/mman.greg.o			\
 o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
-o/$(MODE)/libc/runtime/winmain.greg.o:			\
+o/$(MODE)/libc/runtime/winmain.greg.o			\
+o/$(MODE)/libc/runtime/opensymboltable.o:		\
 		OVERRIDE_CFLAGS +=			\
+			-Os				\
+			-ffreestanding			\
 			$(NO_MAGIC)
 
-o/$(MODE)/libc/runtime/printf.o				\
-o/$(MODE)/libc/runtime/memtrack.o			\
-o/$(MODE)/libc/runtime/mman.greg.o:			\
-		OVERRIDE_CFLAGS +=			\
-			-ffreestanding			\
-			-mgeneral-regs-only
+# must use alloca()
+# can't use asan or any runtime services
+o/$(MODE)/libc/runtime/fork-nt.o:			\
+		OVERRIDE_CPPFLAGS +=			\
+			-DSTACK_FRAME_UNLIMITED
 
 o/$(MODE)/libc/runtime/qsort.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-Og
+
+# make always linked runtimes less huge when it's profitable
+o//libc/runtime/mmap.o					\
+o//libc/runtime/munmap.o				\
+o//libc/runtime/memtrack.greg.o				\
+o//libc/runtime/opensymboltable.greg.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os
 
 o/$(MODE)/libc/runtime/ftrace.greg.o:			\
 		OVERRIDE_CFLAGS +=			\

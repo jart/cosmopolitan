@@ -3,9 +3,6 @@
 
 enocsi:	.leafprologue
 	.profilable
-	mov	ENOCSI(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOCSI(%rip),%ecx
+	jmp	__errfun
 	.endfn	enocsi,globl,hidden

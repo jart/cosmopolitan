@@ -16,32 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/lockxadd.h"
 #include "libc/nt/process.h"
 
-static const char kPipeNamePrefix[] = "\\\\?\\pipe\\cosmo\\";
-
-static textwindows size_t UintToChar16Array(char16_t *a, uint64_t i) {
-  size_t j = 0;
+static textwindows char16_t *UintToChar16Array(char16_t p[21], uint64_t x) {
+  char t;
+  size_t a, b, i = 0;
   do {
-    a[j++] = i % 10 + '0';
-    i /= 10;
-  } while (i > 0);
-  a[j] = 0;
-  reverse(a, j);
-  return j;
+    p[i++] = x % 10 + '0';
+    x = x / 10;
+  } while (x > 0);
+  if (i) {
+    for (a = 0, b = i - 1; a < b; ++a, --b) {
+      t = p[a];
+      p[a] = p[b];
+      p[b] = t;
+    }
+  }
+  return p + i;
 }
 
 textwindows char16_t *CreatePipeName(char16_t *a) {
   static long x;
-  unsigned i;
-  for (i = 0; kPipeNamePrefix[i]; ++i) a[i] = kPipeNamePrefix[i];
-  i += UintToChar16Array(a + i, GetCurrentProcessId());
-  a[i++] = u'-';
-  i += UintToChar16Array(a + i, GetCurrentProcessId());
-  a[i++] = u'-';
-  i += UintToChar16Array(a + i, x++);
-  a[i] = u'\0';
+  char16_t *p = a;
+  const char *q = "\\\\?\\pipe\\cosmo\\";
+  while (*q) *p++ = *q++;
+  p = UintToChar16Array(p, GetCurrentProcessId());
+  *p++ = '-';
+  p = UintToChar16Array(p, _lockxadd(&x, 1));
+  *p = 0;
   return a;
 }

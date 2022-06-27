@@ -1,7 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #define COSMOPOLITAN_LIBC_NT_PROCESS_H_
 #include "libc/nt/startupinfo.h"
+#include "libc/nt/struct/processentry32.h"
 #include "libc/nt/struct/processinformation.h"
+#include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thunk/msabi.h"
 /*                            ░░░░
@@ -41,7 +43,7 @@ bool32 CreateProcess(const char16_t *opt_lpApplicationName,
                      const char16_t *opt_lpCurrentDirectory,
                      const struct NtStartupInfo *lpStartupInfo,
                      struct NtProcessInformation *opt_out_lpProcessInformation)
-    paramsnonnull((2, 9));
+    paramsnonnull((9));
 
 uint32_t GetThreadId(int64_t hThread);   /* cf. NT_TID */
 uint32_t GetProcessId(int64_t hProcess); /* cf. NT_PID */
@@ -67,6 +69,14 @@ uint32_t GetPriorityClass(int64_t hProcess);
 bool32 SetPriorityClass(int64_t hProcess, uint32_t dwPriorityClass);
 bool32 SetProcessPriorityBoost(int64_t hProcess, bool32 bDisablePriorityBoost);
 bool32 GetProcessPriorityBoost(int64_t hProcess, bool32 *pDisablePriorityBoost);
+
+bool32 GetProcessMemoryInfo(
+    int64_t hProcess, struct NtProcessMemoryCountersEx *out_ppsmemCounters,
+    uint32_t cb);
+
+int64_t CreateToolhelp32Snapshot(uint32_t dwFlags, uint32_t th32ProcessID);
+bool32 Process32First(int64_t hSnapshot, struct NtProcessEntry32 *in_out_lppe);
+bool32 Process32Next(int64_t hSnapshot, struct NtProcessEntry32 *out_lppe);
 
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/process.inc"

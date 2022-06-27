@@ -16,6 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/intrin/pthread.h"
 
 unsigned __sighandrvas[NSIG];
+unsigned __sighandflags[NSIG];
+
+static pthread_mutex_t __sig_lock_obj;
+
+void(__sig_lock)(void) {
+  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
+  pthread_mutex_lock(&__sig_lock_obj);
+}
+
+void(__sig_unlock)(void) {
+  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
+  pthread_mutex_unlock(&__sig_lock_obj);
+}

@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
+#include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -200,7 +201,8 @@ int Run(char **paths, size_t count) {
           rc = RunLengthCode();
         } else {
           suffixlen = strlen(suffix_);
-          if (!IsTrustworthy() && strlen(paths[i]) + suffixlen + 1 > PATH_MAX) {
+          if (!IsTrustworthy() &&
+              strlen(paths[i]) + suffixlen >= ARRAYLEN(pathbuf)) {
             return eoverflow();
           }
           p = stpcpy(pathbuf, paths[i]);

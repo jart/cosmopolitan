@@ -8,8 +8,6 @@ COSMOPOLITAN_C_START_
 
 typedef unsigned char u_char;
 
-int pledge(const char *promises, const char *execpromises);
-
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_COMPAT_OPENBSD_H_ */

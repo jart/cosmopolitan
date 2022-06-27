@@ -4,9 +4,6 @@
 enametoolong:
 	.leafprologue
 	.profilable
-	mov	ENAMETOOLONG(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENAMETOOLONG(%rip),%ecx
+	jmp	__errfun
 	.endfn	enametoolong,globl,hidden

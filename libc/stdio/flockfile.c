@@ -19,20 +19,9 @@
 #include "libc/stdio/stdio.h"
 
 /**
- * Does nothing since Cosmopolitan currently doesn't support threads.
+ * Acquires reentrant lock on stdio object, blocking if needed.
  */
-void flockfile(FILE *f) {
-}
-
-/**
- * Does nothing since Cosmopolitan currently doesn't support threads.
- */
-void funlockfile(FILE *f) {
-}
-
-/**
- * Does nothing since Cosmopolitan currently doesn't support threads.
- */
-int ftrylockfile(FILE *f) {
-  return 0;
+void(flockfile)(FILE *f) {
+  f->lock.attr = PTHREAD_MUTEX_RECURSIVE;
+  pthread_mutex_lock(&f->lock);
 }

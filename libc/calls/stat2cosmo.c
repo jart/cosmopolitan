@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/dce.h"
 
@@ -24,6 +23,10 @@ void __stat2cosmo(struct stat *restrict st, const union metastat *ms) {
   if (st) {
     if (IsLinux()) {
       st->st_birthtim = st->st_ctim;
+      if (st->st_atim.tv_sec < st->st_ctim.tv_sec)
+        st->st_birthtim = st->st_atim;
+      if (st->st_mtim.tv_sec < st->st_ctim.tv_sec)
+        st->st_birthtim = st->st_mtim;
     } else if (IsXnu()) {
       st->st_dev = ms->xnu.st_dev;
       st->st_ino = ms->xnu.st_ino;

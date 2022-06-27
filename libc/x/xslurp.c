@@ -32,22 +32,21 @@
  */
 void *xslurp(const char *path, size_t *opt_out_size) {
   int fd;
-  ssize_t rc;
   size_t i, got;
   char *res, *p;
-  struct stat st;
+  ssize_t rc, size;
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {
-    if (fstat(fd, &st) != -1 && (res = valloc(st.st_size + 1))) {
-      if (st.st_size > 2 * 1024 * 1024) {
-        fadvise(fd, 0, st.st_size, MADV_SEQUENTIAL);
+    if ((size = getfiledescriptorsize(fd)) != -1 && (res = valloc(size + 1))) {
+      if (size > 2 * 1024 * 1024) {
+        fadvise(fd, 0, size, MADV_SEQUENTIAL);
       }
-      for (i = 0; i < st.st_size; i += got) {
+      for (i = 0; i < size; i += got) {
       TryAgain:
-        if ((rc = pread(fd, res + i, st.st_size - i, i)) != -1) {
+        if ((rc = pread(fd, res + i, size - i, i)) != -1) {
           if (!(got = rc)) {
-            if (fstat(fd, &st) == -1) {
-              abort();
+            if (getfiledescriptorsize(fd) == -1) {
+              abort();  // TODO(jart): what is this
             }
           }
         } else if (errno == EINTR) {
@@ -60,7 +59,7 @@ void *xslurp(const char *path, size_t *opt_out_size) {
       }
       if (res) {
         if (opt_out_size) {
-          *opt_out_size = st.st_size;
+          *opt_out_size = size;
         }
         res[i] = '\0';
       }

@@ -19,7 +19,6 @@
 #include "libc/macros.internal.h"
 #include "libc/bits/smmintrin.internal.h"
 #include "libc/nexgen32e/x86feature.h"
-.source	__FILE__
 
 //	Rounds to nearest integer, away from zero.
 //

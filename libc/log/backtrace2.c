@@ -21,14 +21,18 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/gc.internal.h"
@@ -46,21 +50,50 @@
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
 
-static noasan int PrintBacktraceUsingAddr2line(int fd,
-                                               const struct StackFrame *bp) {
+static void ShowHint(const char *s) {
+  kprintf("%snote: %s%s\n", SUBTLE, s, RESET);
+}
+
+static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
+  bool ok;
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
   int ws, pid, pipefds[2];
   struct Garbages *garbage;
-  sigset_t chldmask, savemask;
   const struct StackFrame *frame;
   char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
-  if (IsOpenbsd()) return -1;
-  if (IsWindows()) return -1;
-  if (!(debugbin = FindDebugBinary())) return -1;
-  if (!(addr2line = GetAddr2linePath())) return -1;
+
+  if (!(debugbin = FindDebugBinary())) {
+    return -1;
+  }
+
+  if (!(addr2line = GetAddr2linePath())) {
+    if (IsLinux()) {
+      ShowHint("can't find addr2line on path or in ADDR2LINE");
+    }
+    return -1;
+  }
+
+  // DWARF is a weak standard. Platforms that use LLVM or old GNU
+  // usually can't be counted upon to print backtraces correctly.
+  if (!IsLinux() && !IsWindows()) {
+    ShowHint("won't print addr2line backtrace because probably llvm");
+    return -1;
+  }
+
+  // backtrace_test.com failing on windows for some reason via runitd
+  // don't want to pull in the high-level syscalls here anyway
+  if (IsWindows()) {
+    return -1;
+  }
+
+  // doesn't work on rhel5
+  if (IsLinux() && !__is_linux_2_6_23()) {
+    return -1;
+  }
+
   i = 0;
   j = 0;
   argv[i++] = "addr2line";
@@ -70,9 +103,6 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
   garbage = weaken(__garbage);
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
-    if (!IsValidStackFramePointer(frame)) {
-      return -1;
-    }
     addr = frame->addr;
     if (addr == weakaddr("__gc")) {
       do {
@@ -85,52 +115,28 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
     j += uint64toarray_radix16(addr - 1, buf + j) + 1;
   }
   argv[i++] = NULL;
-  sigemptyset(&chldmask);
-  sigaddset(&chldmask, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &chldmask, &savemask);
-  pipe(pipefds);
+  if (sys_pipe(pipefds) == -1) return -1;
   if (!(pid = vfork())) {
-    sigprocmask(SIG_SETMASK, &savemask, NULL);
-    dup2(pipefds[1], 1);
-    close(pipefds[0]);
-    close(pipefds[1]);
-    execvp(addr2line, argv);
-    _exit(127);
+    sys_dup2(pipefds[1], 1);
+    if (pipefds[0] != 1) sys_close(pipefds[0]);
+    if (pipefds[1] != 1) sys_close(pipefds[1]);
+    sys_execve(addr2line, argv, environ);
+    _Exit(127);
   }
-  close(pipefds[1]);
-  while ((got = read(pipefds[0], buf, kBacktraceBufSize)) > 0) {
+  sys_close(pipefds[1]);
+  for (;;) {
+    got = sys_read(pipefds[0], buf, kBacktraceBufSize);
+    if (!got) break;
+    if (got == -1 && errno == EINTR) {
+      errno = 0;
+      continue;
+    }
+    if (got == -1) {
+      kprintf("error reading backtrace %m\n");
+      break;
+    }
     p1 = buf;
     p3 = p1 + got;
-
-    /*
-     * Remove deep libc error reporting facilities from backtraces.
-     *
-     * For example, if the following shows up in Emacs:
-     *
-     *     40d097: __die at libc/log/die.c:33
-     *     434daa: __asan_die at libc/intrin/asan.c:483
-     *     435146: __asan_report_memory_fault at libc/intrin/asan.c:524
-     *     435b32: __asan_report_store at libc/intrin/asan.c:719
-     *     43472e: __asan_report_store1 at libc/intrin/somanyasan.S:118
-     *     40c3a9: GetCipherSuite at net/https/getciphersuite.c:80
-     *     4383a5: GetCipherSuite_test at test/net/https/getciphersuite.c:23
-     *     ...
-     *
-     * Then it's unpleasant to need to press C-x C-n six times.
-     */
-#if 0
-    while ((p2 = memchr(p1, '\n', p3 - p1))) {
-      if (memmem(p1, p2 - p1, ": __asan_", 9) ||
-          memmem(p1, p2 - p1, ": __die", 7)) {
-        memmove(p1, p2 + 1, p3 - (p2 + 1));
-        p3 -= p2 + 1 - p1;
-      } else {
-        p1 = p2 + 1;
-        break;
-      }
-    }
-#endif
-
     /*
      * remove racist output from gnu tooling, that can't be disabled
      * otherwise, since it breaks other tools like emacs that aren't
@@ -143,21 +149,20 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        __write(p1, p2 - p1);
+        write(2, p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        __write(p1, got);
+        write(2, p1, got);
         break;
       }
     }
   }
-  close(pipefds[0]);
-  while (waitpid(pid, &ws, 0) == -1) {
+  sys_close(pipefds[0]);
+  while (sys_wait4(pid, &ws, 0, 0) == -1) {
     if (errno == EINTR) continue;
     return -1;
   }
-  sigprocmask(SIG_SETMASK, &savemask, NULL);
   if (WIFEXITED(ws) && !WEXITSTATUS(ws)) {
     return 0;
   } else {
@@ -165,8 +170,8 @@ static noasan int PrintBacktraceUsingAddr2line(int fd,
   }
 }
 
-static noasan int PrintBacktrace(int fd, const struct StackFrame *bp) {
-  if (!IsTiny()) {
+static int PrintBacktrace(int fd, const struct StackFrame *bp) {
+  if (!IsTiny() && !__isworker) {
     if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
       return 0;
     }
@@ -174,21 +179,18 @@ static noasan int PrintBacktrace(int fd, const struct StackFrame *bp) {
   return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 
-noasan void ShowBacktrace(int fd, const struct StackFrame *bp) {
+void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
-  static bool noreentry;
-  ++g_ftrace;
+  --__ftrace;
+  --__strace;
   if (!bp) bp = __builtin_frame_address(0);
-  if (!noreentry) {
-    noreentry = true;
-    PrintBacktrace(fd, bp);
-    noreentry = false;
-  }
-  --g_ftrace;
+  PrintBacktrace(fd, bp);
+  ++__strace;
+  ++__ftrace;
 #else
-  __printf("ShowBacktrace() needs these flags to show C backtrace:\n"
-           "\t-D__FNO_OMIT_FRAME_POINTER__\n"
-           "\t-fno-omit-frame-pointer\n");
+  (fprintf)(stderr, "ShowBacktrace() needs these flags to show C backtrace:\n"
+                    "\t-D__FNO_OMIT_FRAME_POINTER__\n"
+                    "\t-fno-omit-frame-pointer\n");
 #endif
 }

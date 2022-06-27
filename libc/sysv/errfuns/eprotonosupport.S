@@ -4,9 +4,6 @@
 eprotonosupport:
 	.leafprologue
 	.profilable
-	mov	EPROTONOSUPPORT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EPROTONOSUPPORT(%rip),%ecx
+	jmp	__errfun
 	.endfn	eprotonosupport,globl,hidden

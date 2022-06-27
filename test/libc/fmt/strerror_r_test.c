@@ -30,55 +30,25 @@
  */
 
 TEST(strerror, e2big) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
-  } else {
-    EXPECT_STARTSWITH("E2BIG[Arg list too long]", strerror(E2BIG));
-  }
+  EXPECT_STARTSWITH("E2BIG", strerror(E2BIG));
 }
 
 TEST(strerror, enosys) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
-  } else {
-    EXPECT_STARTSWITH("ENOSYS[Function not implemented]", strerror(ENOSYS));
-  }
+  EXPECT_STARTSWITH("ENOSYS", strerror(ENOSYS));
 }
 
 TEST(strerror, einval) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
-  } else {
-    EXPECT_STARTSWITH("EINVAL[Invalid argument]", strerror(EINVAL));
-  }
+  EXPECT_STARTSWITH("EINVAL", strerror(EINVAL));
 }
 
 TEST(strerror, symbolizingTheseNumbersAsErrorsIsHeresyInUnixStyle) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
-  } else {
-    EXPECT_STARTSWITH("EUNKNOWN[No error information]", strerror(0));
-  }
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("EUNKNOWN", strerror(-1));
-  } else {
-    EXPECT_STARTSWITH("EUNKNOWN[No error information]", strerror(-1));
-  }
+  EXPECT_STARTSWITH("EUNKNOWN", strerror(0));
 }
 
 TEST(strerror, enotconn_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("ENOTCONN", strerror(ENOTCONN));
-  } else {
-    EXPECT_STARTSWITH("ENOTCONN[Transport endpoint is not connected]",
-                      strerror(ENOTCONN));
-  }
+  EXPECT_STARTSWITH("ENOTCONN", strerror(ENOTCONN));
 }
 
 TEST(strerror, exfull_orLinkerIsntUsingLocaleC_orCodeIsOutOfSync) {
-  if (IsTiny()) {
-    EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
-  } else {
-    EXPECT_STARTSWITH("ETXTBSY[Text file busy]", strerror(ETXTBSY));
-  }
+  EXPECT_STARTSWITH("ETXTBSY", strerror(ETXTBSY));
 }

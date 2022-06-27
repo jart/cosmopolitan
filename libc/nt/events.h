@@ -51,8 +51,8 @@ int32_t ReportEventA(int64_t handle, uint16_t wType, uint16_t wCategory,
                      uint32_t dwEventID, const char *lpUserId,
                      uint16_t wNumStrings, uint32_t dwDataSize,
                      const char **lpStrings, void **lpRawData);
-int64_t RegisterEventSourceA(const char *lpUNCServerName,
-                             const char *lpSourceName);
+int64_t RegisterEventSource(const char16_t *lpUNCServerName,
+                            const char16_t *lpSourceName);
 int32_t DeregisterEventSource(uint64_t handle);
 
 int64_t CreateEvent(struct NtSecurityAttributes *lpEventAttributes,

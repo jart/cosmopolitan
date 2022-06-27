@@ -199,6 +199,7 @@ class TestBisect:
         self.module.insort(a=data, x=25, lo=1, hi=3)
         self.assertEqual(data, [10, 20, 25, 25, 25, 30, 40, 50])
 
+@unittest.skipIf(c_bisect, "skip pure-python test if C impl is present")
 class TestBisectPython(TestBisect, unittest.TestCase):
     module = py_bisect
 
@@ -234,6 +235,7 @@ class TestInsort:
         self.module.insort_right(lst, 5)
         self.assertEqual([5, 10], lst.data)
 
+@unittest.skipIf(c_bisect, "skip pure-python test if C impl is present")
 class TestInsortPython(TestInsort, unittest.TestCase):
     module = py_bisect
 
@@ -289,6 +291,7 @@ class TestErrorHandling:
                   self.module.insort_left, self.module.insort_right):
             self.assertRaises(TypeError, f, 10)
 
+@unittest.skipIf(c_bisect, "skip pure-python test if C impl is present")
 class TestErrorHandlingPython(TestErrorHandling, unittest.TestCase):
     module = py_bisect
 
@@ -316,6 +319,7 @@ class TestDocExample:
         self.assertEqual(data[bisect_left(keys, 5)], ('red', 5))
         self.assertEqual(data[bisect_left(keys, 8)], ('yellow', 8))
 
+@unittest.skipIf(c_bisect, "skip pure-python test if C impl is present")
 class TestDocExamplePython(TestDocExample, unittest.TestCase):
     module = py_bisect
 

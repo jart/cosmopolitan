@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
@@ -37,6 +38,7 @@ static long Write(long fd, const void *data, unsigned long size) {
 BENCH(write, bench) {
   ASSERT_SYS(0, 3, open("/dev/null", O_WRONLY));
   EZBENCH2("write", donothing, write(3, "hello", 5));
+  EZBENCH2("writev", donothing, writev(3, &(struct iovec){"hello", 5}, 1));
   EZBENCH2("sys_write", donothing, sys_write(3, "hello", 5));
   EZBENCH2("sys_writev", donothing,
            sys_writev(3, &(struct iovec){"hello", 5}, 1));

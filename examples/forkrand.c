@@ -8,13 +8,17 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/nt/nt/process.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/gc.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/time/time.h"
+#include "libc/x/x.h"
 
 dontinline void dostuff(const char *s) {
   int i, us;

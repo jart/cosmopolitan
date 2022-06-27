@@ -1,0 +1,27 @@
+name: build
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
+
+  # run workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  matrix_on_mode:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: ["", tiny, opt, rel]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: support ape bins
+        run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+
+      - name: make matrix
+        run: V=0 make -j2 MODE=${{ matrix.mode }}

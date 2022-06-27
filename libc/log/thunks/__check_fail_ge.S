@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .text.unlikely
-.source	__FILE__
 
 //	Code-size saving thunk for CHECK_GE() in NDEBUG mode.
 __check_fail_ge:
-	loadstr	">=",dx
+	lea	.Lop(%rip),%r8
 	jmp	__check_fail_ndebug
 	.endfn	__check_fail_ge,globl
+
+	.rodata.str1.1
+.Lop:	.asciz	">="
+	.previous

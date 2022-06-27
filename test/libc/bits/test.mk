@@ -46,7 +46,7 @@ o/$(MODE)/test/libc/bits/%.com.dbg:			\
 		o/$(MODE)/test/libc/bits/bits.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_BITS_OBJS):					\

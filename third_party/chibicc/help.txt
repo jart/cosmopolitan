@@ -196,7 +196,6 @@ BUILTIN FUNCTIONS
   int            __builtin_unreachable()
   void *         __builtin_frame_address(int)
   _Bool          __builtin_types_compatible_p(typename, typename)
-  T              __builtin_compare_and_swap(T *addr, T old, T neu)
   T              __builtin_atomic_exchange(T *addr, T neu)
   T *            __builtin_assume_aligned(T *addr)
   _Bool          __builtin_add_overflow(T, T, T *)
@@ -259,6 +258,22 @@ BUILTIN FUNCTIONS
   double         __builtin_copysign(double, double)
   float          __builtin_copysignf(float, float)
   long double    __builtin_copysignl(long double, long double)
+  void           __builtin_ia32_movntq(di *, di)
+  int            __builtin_ia32_pmovmskb128(v16qi)
+  T              __atomic_load_n(T *addr, int memorder)
+  void           __atomic_load(T *addr, T *res, int memorder)
+  void           __atomic_store_n(T *addr, T val, int memorder)
+  void           __atomic_store(T *addr, T *val, int memorder)
+  void           __atomic_clear(_Bool *addr, int memorder)
+  _Bool          __atomic_test_and_set(void *addr, int memorder)
+  T              __atomic_fetch_add(T *addr, T amt, int memorder)
+  T              __atomic_fetch_sub(T *addr, T amt, int memorder)
+  T              __atomic_fetch_xor(T *addr, T amt, int memorder)
+  T              __atomic_fetch_and(T *addr, T amt, int memorder)
+  T              __atomic_fetch_or(T *addr, T amt, int memorder)
+  _Bool          __atomic_compare_exchange_n(T *addr, T *old, T neu, int weak, int goodorder, int failorder)
+  T              __sync_lock_test_and_set(T *addr, T value, ...)
+  void           __sync_lock_release(T *addr, ...)
 
 
 BUILTIN OBJECTS

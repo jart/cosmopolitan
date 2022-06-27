@@ -16,9 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -30,17 +35,22 @@
  *
  * @return 0 on success or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 int connect(int fd, const void *addr, uint32_t addrsize) {
-  uint32_t ip;
-  if (!addr) return efault();
-  if (IsAsan() && !__asan_is_valid(addr, addrsize)) return efault();
-  _firewall(addr, addrsize);
-  if (!IsWindows()) {
-    return sys_connect(fd, addr, addrsize);
-  } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_connect_nt(&g_fds.p[fd], addr, addrsize);
+  int rc;
+  if (addr && !(IsAsan() && !__asan_is_valid(addr, addrsize))) {
+    _firewall(addr, addrsize);
+    if (!IsWindows()) {
+      rc = sys_connect(fd, addr, addrsize);
+    } else if (__isfdkind(fd, kFdSocket)) {
+      rc = sys_connect_nt(&g_fds.p[fd], addr, addrsize);
+    } else {
+      rc = ebadf();
+    }
   } else {
-    return ebadf();
+    rc = efault();
   }
+  STRACE("connect(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
+  return rc;
 }

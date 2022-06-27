@@ -53,11 +53,8 @@ errfun() {
     fi
     printf '	.leafprologue
 	.profilable
-	mov	%s(%%rip),%%eax
-	mov	%%eax,errno(%%rip)
-	push	$-1
-	pop	%%rax
-	.leafepilogue
+	mov	%s(%%rip),%%ecx
+	jmp	__errfun
 	.endfn	%s,globl,hidden
 ' "$ERRNO" "$NAME"
   } >"$dir/${1/$/-}.S"

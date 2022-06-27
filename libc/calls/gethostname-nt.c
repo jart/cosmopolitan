@@ -17,16 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/str.h"
 
-textwindows int gethostname_nt(char *name, size_t len) {
+textwindows int gethostname_nt(char *name, size_t len, int kind) {
   uint32_t nSize;
   char16_t name16[256];
   nSize = ARRAYLEN(name16);
-  if (GetComputerNameEx(kNtComputerNamePhysicalDnsHostname, name16, &nSize)) {
+  if (GetComputerNameEx(kind, name16, &nSize)) {
     tprecode16to8(name, len, name16);
     return 0;
   } else {

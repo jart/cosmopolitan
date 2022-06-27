@@ -27,6 +27,7 @@
  * @return memory address, or NULL w/ errno
  * @throw EINVAL if !IS2POW(a)
  * @see pvalloc()
+ * @threadsafe
  */
 void *aligned_alloc(size_t a, size_t n) {
   if (IS2POW(a)) {

@@ -47,16 +47,17 @@
  * @return -1 on error, or positive port number
  * @note aliases are read from file for comparison, but not returned.
  * @see LookupServicesByPort
+ * @threadsafe
  */
 int LookupServicesByName(const char *servname, char *servproto,
                          size_t servprotolen, char *buf, size_t bufsize,
                          const char *filepath) {
   FILE *f;
   char *line;
-  char pathbuf[PATH_MAX];
   const char *path;
   size_t linesize;
   int found, result;
+  char pathbuf[PATH_MAX];
   char *name, *port, *proto, *alias, *comment, *tok;
   if (!(path = filepath)) {
     path = "/etc/services";

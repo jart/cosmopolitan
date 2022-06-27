@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
@@ -25,17 +26,18 @@
 #include "libc/sysv/errfuns.h"
 
 int __mkntpathat(int dirfd, const char *path, int flags,
-                 char16_t file[PATH_MAX]) {
+                 char16_t file[hasatleast PATH_MAX]) {
   char16_t dir[PATH_MAX];
   uint32_t dirlen, filelen;
   if ((filelen = __mkntpath2(path, file, flags)) == -1) return -1;
+  if (!filelen) return enoent();
   if (file[0] != u'\\' && dirfd != AT_FDCWD) { /* ProTip: \\?\C:\foo */
     if (!__isfdkind(dirfd, kFdFile)) return ebadf();
     dirlen = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
                                       kNtFileNameNormalized | kNtVolumeNameDos);
     if (!dirlen) return __winerr();
     if (dirlen + 1 + filelen + 1 > ARRAYLEN(dir)) {
-      SYSDEBUG("path too long: %.*hs\\%.*hs", dirlen, dir, filelen, file);
+      STRACE("path too long: %#.*hs\\%#.*hs", dirlen, dir, filelen, file);
       return enametoolong();
     }
     dir[dirlen] = u'\\';

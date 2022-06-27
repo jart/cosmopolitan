@@ -2,11 +2,11 @@
 .imp	kernel32,__imp_CreatePipe,CreatePipe,0
 
 	.text.windows
-CreatePipe:
+__CreatePipe:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_CreatePipe(%rip),%rax
 	jmp	__sysv2nt
-	.endfn	CreatePipe,globl
+	.endfn	__CreatePipe,globl
 	.previous

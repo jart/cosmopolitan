@@ -13,7 +13,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pydebug.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -97,7 +97,7 @@ static inline void *
 _PyMem_RawMalloc(void *ctx, size_t size)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_memalign(16, size);
 #else
     return dlmalloc(size);
@@ -117,7 +117,7 @@ static inline void *
 _PyMem_RawCalloc(void *ctx, size_t nelem, size_t elsize)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_calloc(nelem, elsize);
 #else
     return dlcalloc(nelem, elsize);
@@ -141,7 +141,7 @@ _PyMem_RawRealloc(void *ctx, void *ptr, size_t size)
     if (size == 0)
         size = 1;
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     return __asan_realloc(ptr, size);
 #else
     return dlrealloc(ptr, size);
@@ -155,7 +155,7 @@ static inline void
 _PyMem_RawFree(void *ctx, void *ptr)
 {
 #ifdef __COSMOPOLITAN__
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
     __asan_free(ptr);
 #else
     dlfree(ptr);
@@ -1984,8 +1984,8 @@ _PyMem_DebugRawAlloc(int use_calloc, void *ctx, size_t nbytes)
     _PyMem_DebugCheckAddress(api->api_id, p+2*SST);
 
     if (IsAsan()) {
-        __asan_poison((uintptr_t)(p + SST + 1), SST-1, kAsanHeapUnderrun);
-        __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
+        __asan_poison((p + SST + 1), SST-1, kAsanHeapUnderrun);
+        __asan_poison(tail, SST, kAsanHeapOverrun);
     }
 
     return p + 2*SST;
@@ -2029,17 +2029,19 @@ int
 static void
 _PyMem_DebugRawFree(void *ctx, void *p)
 {
-    debug_alloc_api_t *api = (debug_alloc_api_t *)ctx;
-    uint8_t *q = (uint8_t *)p - 2*SST;  /* address returned from malloc */
+    debug_alloc_api_t *api;
+    uint8_t *q;
     size_t nbytes;
     if (p == NULL)
         return;
+    api = (debug_alloc_api_t *)ctx;
+    q = (uint8_t *)p - 2*SST;  /* address returned from malloc */
     _PyMem_DebugCheckAddress(api->api_id, p);
     nbytes = read_size_t(q);
     nbytes += 4*SST;
     if (nbytes > 0) {
         if (IsAsan()) {
-            __asan_unpoison((uintptr_t)q, nbytes);
+            __asan_unpoison(q, nbytes);
         }
         memset(q, DEADBYTE, nbytes);
     }
@@ -2078,12 +2080,12 @@ _PyMem_DebugRawRealloc(void *ctx, void *p, size_t nbytes)
     tail = q + nbytes;
     w = 0x0101010101010101ull * FORBIDDENBYTE;
     WRITE64LE(tail, w);
-    if (IsAsan()) __asan_poison((uintptr_t)tail, SST, kAsanHeapOverrun);
+    if (IsAsan()) __asan_poison(tail, SST, kAsanHeapOverrun);
     write_size_t(tail + SST, serialno);
     if (nbytes > original_nbytes) {
         /* growing:  mark new extra memory clean */
         if (IsAsan()) {
-            __asan_unpoison((uintptr_t)(q + original_nbytes),
+            __asan_unpoison((q + original_nbytes),
                             nbytes - original_nbytes);
         }
         memset(q + original_nbytes, CLEANBYTE,

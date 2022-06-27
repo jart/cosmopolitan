@@ -47,15 +47,15 @@ syscon	errno	ENOTDIR					20			20			20			20			20			3			# not a directory; unix co
 syscon	errno	EISDIR					21			21			21			21			21			267			# is a a directory; unix consensus; kNtErrorDirectory; raised by acct(2), copy_file_range(2), execve(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), open(2), read(2), rename(2), truncate(2), unlink(2)
 syscon	errno	EINVAL					22			22			22			22			22			87			# invalid argument; unix consensus; kNtErrorInvalidParameter; raised by accept(2), access(2), add_key(2), adjtimex(2), arch_prctl(2), bdflush(2), bind(2), bpf(2), cacheflush(2), capget(2), chmod(2), chown(2), clock_getres(2), clock_nanosleep(2), clone(2), copy_file_range(2), create_module(2), dup(2), epoll_create(2), epoll_ctl(2), epoll_wait(2), eventfd(2), execve(2), execveat(2), fallocate(2), fanotify_init(2), fanotify_mark(2), fcntl(2), flock(2), futex(2), get_mempolicy(2), get_robust_list(2), getdents(2), getdomainname(2), getgroups(2), gethostname(2), getitimer(2), getpeername(2), getpriority(2), getrandom(2), getrlimit(2), getrusage(2), getsockname(2), getsockopt(2), gettimeofday(2), init_module(2), inotify_add_watch(2), inotify_init(2), inotify_rm_watch(2), io_cancel(2), io_destroy(2), io_getevents(2), io_setup(2), io_submit(2), ioctl(2), ioctl_console(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), ioctl_ns(2), ioctl_tty(2), ioctl_userfaultfd(2), ioperm(2), iopl(2), ioprio_set(2), kcmp(2), kexec_load(2), keyctl(2), kill(2), link(2), llseek(2), lookup_dcookie(2), lseek(2), madvise(2), mbind(2), membarrier(2), memfd_create(2), migrate_pages(2), mincore(2), mkdir(2), mknod(2), mlock(2), mmap(2), mmap2(2), modify_ldt(2), mount(2), move_pages(2), mprotect(2), mremap(2), msgctl(2), msgop(2), msync(2), nanosleep(2), open(2), open_by_handle_at(2), openat2(2), pciconfig_read(2), perf_event_open(2), personality(2), pidfd_getfd(2), pidfd_open(2), pidfd_send_signal(2), pipe(2), pivot_root(2), pkey_alloc(2), poll(2), posix_fadvise(2), prctl(2), process_vm_readv(2), ptrace(2), query_module(2), quotactl(2), read(2), readahead(2), readdir(2), readlink(2), readv(2), reboot(2), recv(2), recvmmsg(2), remap_file_pages(2), rename(2), request_key(2), rmdir(2), rt_sigqueueinfo(2), s390_guarded_storage(2), s390_pci_mmio_write(2), s390_runtime_instr(2), s390_sthyi(2), sched_get_priority_max(2), sched_rr_get_interval(2), sched_setaffinity(2), sched_setattr(2), sched_setparam(2), sched_setscheduler(2), seccomp(2), select(2), semctl(2), semget(2), semop(2), send(2), sendfile(2), set_mempolicy(2), set_thread_area(2), seteuid(2), setfsgid(2), setfsuid(2), setgid(2), setns(2), setpgid(2), setresuid(2), setreuid(2), setuid(2), shmctl(2), shmget(2), shmop(2), shutdown(2), sigaction(2), sigaltstack(2), signal(2), signalfd(2), sigprocmask(2), sigsuspend(2), sigwaitinfo(2), socket(2), splice(2), spu_create(2), spu_run(2), stat(2), statx(2), subpage_prot(2), swapon(2), sync_file_range(2), sysfs(2), syslog(2), tee(2), timer_create(2), timer_delete(2), timer_getoverrun(2), timer_settime(2), timerfd_create(2), tkill(2), truncate(2), umount(2), unlink(2), unshare(2), userfaultfd(2), ustat(2), utimensat(2), vmsplice(2), wait(2), write(2), unix(7), ip(7)
 syscon	errno	ENFILE					23			23			23			23			23			331			# too many open files in system; unix consensus; kNtErrorTooManyDescriptors; raised by accept(2), acct(2), epoll_create(2), eventfd(2), execve(2), futex(2), inotify_init(2), memfd_create(2), mmap(2), open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), shmget(2), signalfd(2), socket(2), socketpair(2), spu_create(2), swapon(2), timerfd_create(2), uselib(2), userfaultfd(2)
-syscon	errno	EMFILE					24			24			24			24			24			336			# too many open files; unix consensus; kNtErrorTooManyOpenFiles; raised by accept(2), dup(2), epoll_create(2), eventfd(2), execve(2), fanotify_init(2), fcntl(2), inotify_init(2), memfd_create(2), mount(2), open(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), signalfd(2), socket(2), socketpair(2), spu_create(2), timerfd_create(2)
+syscon	errno	EMFILE					24			24			24			24			24			4			# too many open files; unix consensus; kNtErrorTooManyOpenFiles; raised by accept(2), dup(2), epoll_create(2), eventfd(2), execve(2), fanotify_init(2), fcntl(2), inotify_init(2), memfd_create(2), mount(2), open(2), perf_event_open(2), pidfd_getfd(2), pidfd_open(2), pipe(2), signalfd(2), socket(2), socketpair(2), spu_create(2), timerfd_create(2)
 syscon	errno	ENOTTY					25			25			25			25			25			1118			# inappropriate i/o control operation; unix consensus; kNtErrorSerialNoDevice; raised by ioctl(2), ioctl_console(2), ioctl_fat(2), ioctl_ns(2), ioctl_tty(2)
 syscon	errno	ETXTBSY					26			26			26			26			26			148			# won't open executable that's executing in write mode; try UnlockExecutable(); unix consensus; kNtErrorPathBusy; raised by access(2), copy_file_range(2), execve(2), fallocate(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), mmap(2), open(2), truncate(2)
 syscon	errno	EFBIG					27			27			27			27			27			223			# file too large; unix consensus; kNtErrorFileTooLarge; raised by copy_file_range(2), fallocate(2), init_module(2), open(2), semop(2), truncate(2), write(2)
 syscon	errno	ENOSPC					28			28			28			28			28			39			# no space left on device; unix consensus; kNtErrorDiskFull; raised by copy_file_range(2), epoll_ctl(2), fallocate(2), fanotify_mark(2), fsync(2), inotify_add_watch(2), link(2), mkdir(2), mknod(2), msgget(2), open(2), perf_event_open(2), pkey_alloc(2), query_module(2), rename(2), semget(2), setxattr(2), shmget(2), spu_create(2), symlink(2), sync_file_range(2), write(2)
-syscon	errno	EDQUOT					122			69			69			69			69			10069			# disk quota exceeded; bsd consensus; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
+syscon	errno	EDQUOT					122			69			69			69			69			1816			# disk quota exceeded; bsd consensus; kNtErrorNotEnoughQuota; raised by add_key(2), keyctl(2), link(2), mkdir(2), mknod(2), open(2), rename(2), request_key(2), setxattr(2), symlink(2), write(2)
 syscon	errno	ESPIPE					29			29			29			29			29			25			# invalid seek; unix consensus; kNtErrorSeek; raised by fallocate(2), lseek(2), posix_fadvise(2), sendfile(2), splice(2), sync_file_range(2)
 syscon	errno	EROFS					30			30			30			30			30			6009			# read-only filesystem; unix consensus; kNtErrorFileReadOnly; raised by access(2), acct(2), bind(2), chmod(2), chown(2), link(2), mkdir(2), mknod(2), mount(2), open(2), rename(2), rmdir(2), symlink(2), truncate(2), unlink(2), utime(2), utimensat(2)
-syscon	errno	EMLINK					31			31			31			31			31			4			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
+syscon	errno	EMLINK					31			31			31			31			31			1142			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
 syscon	errno	EPIPE					32			32			32			32			32			109			# broken pipe; unix consensus; kNtErrorBrokenPipe; raised by send(2), write(2), tcp(7), unix(7), ip(7)
 syscon	errno	EDOM					33			33			33			33			33			33			# mathematics argument out of domain of function; bsd consensus; fudged on NT; returned by cos(3), fmod(3), log1p(3), sin(3), tan(3), tgamma(3)
 syscon	errno	ERANGE					34			34			34			34			34			34			# result too large; bsd consensus; fudged on NT; raised by getxattr(2), listxattr(2), lookup_dcookie(2), prctl(2), quotactl(2), semctl(2), semop(2), setxattr(2)
@@ -125,9 +125,9 @@ syscon	errno	EOWNERDEAD				130			105			96			94			97			0			# raised by pthread_co
 syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENONET					64			0			0			0			0			0			# unilateral; raised by accept(2)
 syscon	errno	ERESTART				85			-1			-1			-1			-3			0			# should only be seen in ptrace()
+syscon	errno	ENODATA					61			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	ENOSR					63			98			0			90			90			0			# out of streams resources; something like EAGAIN; it's in POSIX; maybe some commercial UNIX returns it with openat, putmsg, putpmsg, posix_openpt, ioctl, open
 syscon	errno	ENOSTR					60			99			0			0			91			0			# not a stream; returned by getmsg, putmsg, putpmsg, getpmsg
-syscon	errno	ENODATA					61			96			0			0			89			0			# no data available; barely in posix; returned by ioctl
 syscon	errno	EMULTIHOP				72			95			90			0			94			0			# barely in posix
 syscon	errno	ENOLINK					67			97			91			0			95			0			# barely in posix
 syscon	errno	ENOMEDIUM				123			0			0			85			0			0			# not posix; not documented
@@ -171,36 +171,34 @@ syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
 syscon	sig	SIGRTMAX				64			0			126			0			63			0
 syscon	sig	SIGRTMIN				32			0			65			0			33			0
 syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
+syscon	sig	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO
 syscon	compat	SIGIOT					6			6			6			6			6			6			# PDP-11 feature; same as SIGABRT
-syscon	compat	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 
-#	open() flags																				       ┌──────hoo boy
-#																						   ┌──────┐
-#																						   │┌─<<8─┴───dwFlagsAndAttributes
-#																						  ┌││─────┐
-#																						  │││  │ ┌┴───dwDesiredAccess
-#																						N │││  │ │
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			T │││┌─┴┐│		Commentary
-syscon	open	O_RDONLY				0			0			0			0			0			0xA0000000		# unix consensus & kNtGenericRead|kNtGenericExecute
-syscon	open	O_WRONLY				1			1			1			1			1			0x40000000		# unix consensus & kNtGenericWrite
-syscon	open	O_RDWR					2			2			2			2			2			0xE0000000		# unix consensus & kNtGenericRead|kNtGenericWrite|kNtGenericExecute
-syscon	open	O_ACCMODE				3			3			3			3			3			0xE0000000		# O_RDONLY|O_WRONLY|O_RDWR
-syscon	open	O_APPEND				0x00000400		8			8			8			8			0x00000004		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO)
-syscon	open	O_CREAT					0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux
-syscon	open	O_EXCL					0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux
-syscon	open	O_TRUNC					0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux
-syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x02000000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics)
-syscon	open	O_RANDOM				0			0			0			0			0			0x10000000		# kNtFileFlagRandomAccess
-syscon	open	O_SEQUENTIAL				0			0			0			0			0			0x08000000		# kNtFileFlagSequentialScan
-syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00200000		# kNtFileFlagNoBuffering>>8
-syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux
-syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00000000		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose
-syscon	open	O_SPARSE				0			0			0			0			0			0x00040000		# we invented it
-syscon	open	O_NDELAY				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus & kNtFileFlagWriteThrough>>8 → 0x00800000 (???)
-syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus & faked on nt to be same as linux
+#	open() flags
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			Windoze			Commentary
+syscon	open	O_RDONLY				0			0			0			0			0			0			# consensus
+syscon	open	O_WRONLY				1			1			1			1			1			1			# consensus
+syscon	open	O_RDWR					2			2			2			2			2			2			# consensus
+syscon	open	O_ACCMODE				3			3			3			3			3			3			# O_RDONLY|O_WRONLY|O_RDWR
+syscon	open	O_APPEND				0x00000400		8			8			8			8			0x00000400		# bsd consensus & kNtFileAppendData; won't pose issues w/ mknod(S_IFIFO) [SYNC libc/calls/open-nt.c]
+syscon	open	O_CREAT					0x00000040		0x00000200		0x00000200		0x00000200		0x00000200		0x00000040		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
+syscon	open	O_EXCL					0x00000080		0x00000800		0x00000800		0x00000800		0x00000800		0x00000080		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
+syscon	open	O_TRUNC					0x00000200		0x00000400		0x00000400		0x00000400		0x00000400		0x00000200		# bsd consensus & NT faked as Linux [SYNC libc/calls/open-nt.c]
+syscon	open	O_DIRECTORY				0x00010000		0x00100000		0x00020000		0x00020000		0x00200000		0x00010000		# useful hint on UNIX, but required on NT (see kNtFileFlagBackupSemantics) [SYNC libc/calls/open-nt.c]
+syscon	open	O_NOFOLLOW				0x00020000		0x00000100		0x00000100		0x00000100		0x00000100		0x00020000	       	# bsd consensus; kNtFileFlagOpenReparsePoint
+syscon	open	O_DIRECT				0x00004000		0			0x00010000		0			0x00080000		0x00004000		#  kNtFileFlagNoBuffering [SYNC libc/calls/open-nt.c]
+syscon	open	O_NDELAY				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		#  kNtFileFlagWriteThrough [SYNC libc/calls/open-nt.c]
+syscon	open	O_RANDOM				0			0			0			0			0			0x80000000		#  kNtFileFlagRandomAccess [SYNC libc/calls/open-nt.c]
+syscon	open	O_SEQUENTIAL				0			0			0			0			0			0x40000000		#  kNtFileFlagSequentialScan [SYNC libc/calls/open-nt.c]
+syscon	open	O_COMPRESSED				0			0			0			0			0			0x20000000		#  kNtFileAttributeCompressed [SYNC libc/calls/open-nt.c]
+syscon	open	O_INDEXED				0			0			0			0			0			0x10000000		# !kNtFileAttributeNotContentIndexed [SYNC libc/calls/open-nt.c]
+syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux [SYNC libc/calls/open-nt.c]
+syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00410000		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose [SYNC libc/calls/open-nt.c]
+syscon	open	O_SPARSE				0			0			0			0			0			0			# wut
+syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus
 syscon	open	O_ASYNC					0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0			# bsd consensus
-syscon	open	O_NOFOLLOW				0x00020000		0x00000100		0x00000100		0x00000100		0x00000100		0			# bsd consensus
 syscon	open	O_NOFOLLOW_ANY				0			0x20000000		0			0			0			0			#
 syscon	open	O_SYNC					0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
@@ -220,61 +218,62 @@ syscon	compat	O_LARGEFILE				0			0			0			0			0			0			#
 #	the revolutionary praxis of malloc()
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	compat	MAP_FILE				0			0			0			0			0			0			# consensus
+syscon	mmap	MAP_FILE				0			0			0			0			0			0			# consensus
 syscon	mmap	MAP_SHARED				1			1			1			1			1			1			# forced consensus & faked nt
 syscon	mmap	MAP_PRIVATE				2			2			2			2			2			2			# forced consensus & faked nt
+syscon	mmap	MAP_STACK				6			6			6			6			6			6			# our definition
 syscon	mmap	MAP_TYPE				15			15			15			15			15			15			# mask for type of mapping
-syscon	mmap	MAP_FIXED				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus; openbsd appears to forbid; faked nt
-syscon	mmap	MAP_FIXED_NOREPLACE			0x8000000		0x8000000		0x8000000		0x8000000		0x8000000		0x8000000      		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+
-syscon	mmap	MAP_ANONYMOUS				0x20			0x1000			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	mmap	MAP_GROWSDOWN				0x0100			0			0x0400			0x4000			0x4000			0x100000		# mandatory for OpenBSD stacks; MAP_STACK on Free/OpenBSD; MEM_TOP_DOWN on NT
-syscon	mmap	MAP_CONCEAL				0			0			0x20000			0x8000			0x8000			0			# omit from core dumps; MAP_NOCORE on FreeBSD
-syscon	mmap	MAP_NORESERVE				0x4000			0x40			0			0			64			0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
-syscon	mmap	MAP_HUGETLB				0x040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_FIXED				0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		0x00000010		# unix consensus; openbsd appears to forbid; faked nt
+syscon	mmap	MAP_FIXED_NOREPLACE			0x08000000		0x00004010		0x08000000		0x08000000		0x08000000		0x08000000     		# handled and defined by cosmo runtime; 0x100000 on linux 4.7+; MAP_FIXED|MAP_EXCL on FreeBSD
+syscon	mmap	MAP_ANONYMOUS				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
+syscon	mmap	MAP_GROWSDOWN				0x00000100		0			0			0			0			0			# use MAP_STACK; abstracted by MAP_STACK; may be passed to __sys_mmap() for low-level Linux fiddling
+syscon	mmap	MAP_LOCKED				0x00002000		0			0			0			0			0
+syscon	mmap	MAP_NORESERVE				0x00004000		0x00000040		0			0			0x00000040		0			# Linux calls it "reserve"; NT calls it "commit"? which is default?
+syscon	mmap	MAP_POPULATE				0x00008000		0			0x00040000		0			0			0			# MAP_PREFAULT_READ on FreeBSD; can avoid madvise(MADV_WILLNEED) on private file mapping
+syscon	mmap	MAP_NONBLOCK				0x00010000		0			0			0			0			0
+syscon	mmap	MAP_HUGETLB				0x00040000		0			0			0			0			0x80000000		# kNtSecLargePages
+syscon	mmap	MAP_INHERIT				-1			-1			-1			-1			0x00000080		-1			# make it inherit across execve()
+syscon	mmap	MAP_HASSEMAPHORE			0			0x00000200		0x00000200		0			0x00000200		0			# does it matter on x86?
+syscon	mmap	MAP_NOSYNC				0			0			0x00000800		0			0			0			# flush to physical media only when necessary rather than gratuitously; be sure to use write() rather than ftruncate() with this!
+syscon	mmap	MAP_CONCEAL				0			0			0x00020000		0x00008000		0x00008000		0			# omit from core dumps; MAP_NOCORE on FreeBSD
 syscon	mmap	MAP_HUGE_MASK				63			0			0			0			0			0
 syscon	mmap	MAP_HUGE_SHIFT				26			0			0			0			0			0
-syscon	mmap	MAP_LOCKED				0x2000			0			0			0			0			0
-syscon	mmap	MAP_NONBLOCK				0x10000			0			0			0			0			0
-syscon	mmap	MAP_POPULATE				0x8000			0			0			0			0			0			# can avoid madvise(MADV_WILLNEED) on private file mapping
-syscon	mmap	MAP_CONCEAL				0			0			0			0x8000			0			0			# omit from dumps
-syscon	compat	MAP_STACK				0x0100			0			0x0400			0x4000			0x2000			0x100000		# use MAP_GROWSDOWN
-syscon	compat	MAP_NOCORE				0			0			0x20000			0x8000			0x8000			0			# use MAP_CONCEAL
-syscon	compat	MAP_ANON				0x20			0x1000			0x1000			0x1000			0x1000			0x20			# bsd consensus; faked nt
-syscon	compat	MAP_EXECUTABLE				0x1000			0			0			0			0			0			# ignored
-syscon	compat	MAP_DENYWRITE				0x0800			0			0			0			0			0
-syscon	compat	MAP_32BIT				0x40			0			0x080000		0			0			0			# iffy
+syscon	compat	MAP_NOCORE				0			0			0x00020000		0x00008000		0x00008000		0			# use MAP_CONCEAL
+syscon	compat	MAP_ANON				0x00000020		0x00001000		0x00001000		0x00001000		0x00001000		0x00000020		# bsd consensus; faked nt
+syscon	compat	MAP_EXECUTABLE				0x00001000		0			0			0			0			0			# ignored
+syscon	compat	MAP_DENYWRITE				0x00000800		0			0			0			0			0
+syscon	compat	MAP_32BIT				0x00000040		0			0x00080000		0			0			0			# iffy
 
 #	madvise() flags
-#	beneath the iceberg memory management
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	madv	MADV_NORMAL				0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0x00000080		# consensus & kNtFileAttributeNormal
-syscon	madv	MADV_DONTNEED				4			4			4			4			4			0			# TODO(jart): weird nt decommit thing?
-syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			0			# unix consensus
-syscon	compat	POSIX_FADV_DONTNEED			4			0			4			4			4			0			# unix consensus
-syscon	madv	MADV_RANDOM				1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	compat	POSIX_FADV_RANDOM			1			0			1			1			1			0x10000000		# unix consensus & kNtFileFlagRandomAccess
-syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			0x8000000		# unix consensus & kNtFileFlagSequentialScan
-syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			0x8000000		# unix consensus
-syscon	compat	POSIX_FADV_SEQUENTIAL			2			0			2			2			2			0x8000000		# TODO(jart): double check xnu
+syscon	madv	MADV_NORMAL				0			0			0			0			0			0			# consensus
+syscon	compat	POSIX_FADV_NORMAL			0			0			0			0			0			0			# consensus
+syscon	compat	POSIX_MADV_NORMAL			0			0			0			0			0			0			# consensus
+syscon	madv	MADV_DONTNEED				4			4			4			4			4			127			# TODO(jart): weird nt decommit thing?
+syscon	compat	POSIX_MADV_DONTNEED			4			4			4			4			4			127			# unix consensus
+syscon	compat	POSIX_FADV_DONTNEED			4			127			4			4			4			127			# unix consensus
+syscon	madv	MADV_RANDOM				1			1			1			1			1			1			# unix consensus
+syscon	compat	POSIX_MADV_RANDOM			1			1			1			1			1			1			# unix consensus
+syscon	compat	POSIX_FADV_RANDOM			1			127			1			1			1			1			# unix consensus
+syscon	madv	MADV_SEQUENTIAL				2			2			2			2			2			2			# unix consensus
+syscon	compat	POSIX_MADV_SEQUENTIAL			2			2			2			2			2			2			# unix consensus
+syscon	compat	POSIX_FADV_SEQUENTIAL			2			127			2			2			2			2			# TODO(jart): double check xnu
 syscon	madv	MADV_WILLNEED				3			3			3			3			3			3			# unix consensus (faked on NT)
 syscon	compat	POSIX_MADV_WILLNEED			3			3			3			3			3			3			# unix consensus
-syscon	compat	POSIX_FADV_WILLNEED			3			0			3			3			3			3			# TODO(jart): double check xnu
-syscon	madv	MADV_MERGEABLE				12			0			0			0			0			0			# turns on (private anon range) page scanning and merging service (linux only)
-syscon	madv	MADV_UNMERGEABLE			13			0			0			0			0			0			# turns off mergeable (linux only)
+syscon	compat	POSIX_FADV_WILLNEED			3			127			3			3			3			3			# TODO(jart): double check xnu
+syscon	madv	MADV_MERGEABLE				12			127			127			127			127			127			# turns on (private anon range) page scanning and merging service (linux only)
+syscon	madv	MADV_UNMERGEABLE			13			127			127			127			127			127			# turns off mergeable (linux only)
 syscon	madv	MADV_FREE				8			5			5			6			6			8			# Linux 4.5+ (c. 2016) / NT Faked → VMOfferPriorityNormal (Win8+)
-syscon	madv	MADV_HUGEPAGE				14			0			0			0			0			0			# TODO(jart): why would we need it?
-syscon	madv	MADV_NOHUGEPAGE				15			0			0			0			0			0			# TODO(jart): why would we need it?
-syscon	madv	MADV_DODUMP				17			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_DOFORK				11			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_DONTDUMP				16			0			0			0			0			0			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
-syscon	madv	MADV_DONTFORK				10			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_HWPOISON				100			0			0			0			0			0			# TODO(jart): what is it?
-syscon	madv	MADV_REMOVE				9			0			0			0			0			0			# TODO(jart): what is it?
-syscon	fadv	POSIX_FADV_NOREUSE			5			0			5			0			5			0			# wut
+syscon	madv	MADV_HUGEPAGE				14			127			127			127			127			127			# TODO(jart): why would we need it?
+syscon	madv	MADV_NOHUGEPAGE				15			127			127			127			127			127			# TODO(jart): why would we need it?
+syscon	madv	MADV_DODUMP				17			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_DOFORK				11			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_DONTDUMP				16			127			127			127			127			127			# see MAP_CONCEAL in OpenBSD; TODO(jart): what is it?
+syscon	madv	MADV_DONTFORK				10			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_HWPOISON				100			127			127			127			127			127			# TODO(jart): what is it?
+syscon	madv	MADV_REMOVE				9			127			127			127			127			127			# TODO(jart): what is it?
+syscon	fadv	POSIX_FADV_NOREUSE			5			127			5			127			5			127			# wut
 
 #	mmap(), mprotect(), etc.
 #	digital restrictions management for the people
@@ -340,36 +339,6 @@ syscon	waitpid	WCONTINUED				8			0x10			4			8			16			0			#
 syscon	waitid	WEXITED					4			4			0x10			0			32			0
 syscon	waitid	WSTOPPED				2			8			2			0			2			0
 syscon	waitid	WNOWAIT					0x01000000		0x20			8			0			0x10000			0
-
-#	stat::st_mode constants
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	stat	S_IFREG					0100000			0100000			0100000			0100000			0100000			0100000			# regular file     (unix consensus; faked nt)
-syscon	stat	S_IFBLK					0060000			0060000			0060000			0060000			0060000			0060000			# block device     (unix consensus; faked nt)
-syscon	stat	S_IFCHR					0020000			0020000			0020000			0020000			0020000			0020000			# character device (unix consensus; faked nt)
-syscon	stat	S_IFDIR					0040000			0040000			0040000			0040000			0040000			0040000			# directory        (unix consensus; faked nt)
-syscon	stat	S_IFIFO					0010000			0010000			0010000			0010000			0010000			0010000			# pipe             (unix consensus; faked nt)
-syscon	stat	S_IFLNK					0120000			0120000			0120000			0120000			0120000			0120000			# symbolic link    (unix consensus; faked nt)
-syscon	stat	S_IFSOCK				0140000			0140000			0140000			0140000			0140000			0140000			# socket           (unix consensus; faked nt)
-syscon	stat	S_IFMT					0170000			0170000			0170000			0170000			0170000			0170000			# FILE TYPE MASK   (unix consensus; faked nt)
-syscon	stat	S_ISVTX					0001000			0001000			0001000			0001000			0001000			0001000			# THE STICKY BIT   (unix consensus; faked nt)
-syscon	stat	S_ISGID					0002000			0002000			0002000			0002000			0002000			0002000			# the setgid bit   (unix consensus; faked nt)
-syscon	stat	S_ISUID					0004000			0004000			0004000			0004000			0004000			0004000			# the setuid bit   (unix consensus; faked nt)
-syscon	stat	S_IEXEC					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWRITE				0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IREAD					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXUSR					0000100			0000100			0000100			0000100			0000100			0000100			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWUSR					0000200			0000200			0000200			0000200			0000200			0000200			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRUSR					0000400			0000400			0000400			0000400			0000400			0000400			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXU					0000700			0000700			0000700			0000700			0000700			0000700			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXGRP					0000010			0000010			0000010			0000010			0000010			0000010			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWGRP					0000020			0000020			0000020			0000020			0000020			0000020			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRGRP					0000040			0000040			0000040			0000040			0000040			0000040			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXG					0000070			0000070			0000070			0000070			0000070			0000070			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IXOTH					0000001			0000001			0000001			0000001			0000001			0000001			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IWOTH					0000002			0000002			0000002			0000002			0000002			0000002			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IROTH					0000004			0000004			0000004			0000004			0000004			0000004			# just use octal   (unix consensus; faked nt)
-syscon	stat	S_IRWXO					0000007			0000007			0000007			0000007			0000007			0000007			# just use octal   (unix consensus; faked nt)
 
 #	fcntl()
 #
@@ -439,11 +408,10 @@ syscon	ioctl	TIOCINQ					0x541b			0x4004667f		0x4004667f		0x4004667f		0x4004667f
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	at	AT_FDCWD				-100			-2			-100			-100			-100			-100			# faked nt
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0
 syscon	at	AT_SYMLINK_NOFOLLOW			0x0100			0x20			0x0200			2			0x200			0x0100			# faked nt
+syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			0x400			0			# see linkat(2)
 syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked nt
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0
-syscon	at	AT_SYMLINK_FOLLOW			0x0400			0x40			0x0400			4			4			0
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
 
 #	memfd_create() flags
@@ -471,7 +439,7 @@ syscon	auxv	AT_PHENT				4			0			4			0			4			0
 syscon	auxv	AT_PHNUM				5			0			5			0			5			0
 syscon	auxv	AT_PAGESZ				6			0			6			0			6			0
 syscon	auxv	AT_BASE					7			0			7			0			7			0			# address of program interpreter
-syscon	auxv	AT_FLAGS				8			0			0			0			0			0
+syscon	auxv	AT_FLAGS				8			0			8			0			8			0
 syscon	auxv	AT_ENTRY				9			0			9			0			9			0			# entry address of executable
 syscon	auxv	AT_NOTELF				10			0			10			0			0			0
 syscon	auxv	AT_OSRELDATE				0			0			18			0			0			0
@@ -487,10 +455,20 @@ syscon	auxv	AT_ICACHEBSIZE				20			0			0			0			0			0
 syscon	auxv	AT_UCACHEBSIZE				21			0			0			0			0			0
 syscon	auxv	AT_SECURE				23			0			0			0			0			0
 syscon	auxv	AT_BASE_PLATFORM			24			0			0			0			0			0
-syscon	auxv	AT_RANDOM				25			0			0			0			0			0			# address of sixteen bytes of random data
+syscon	auxv	AT_RANDOM				25			0			16			0			0			0			# address of sixteen bytes of random data; AT_CANARY on FreeBSD whose AT_CANARYLEN should be 64
 syscon	auxv	AT_HWCAP2				26			0			0			0			0			0
-syscon	auxv	AT_EXECFN				31			31			999			999			2014			31			# address of string containing first argument passed to execve() used when running program [faked on non-linux]
+syscon	auxv	AT_EXECFN				31			31			15			999			2014			31			# address of string containing first argument passed to execve() used when running program; AT_EXECPATH on FreeBSD
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0			0
+syscon	auxv	AT_STACKBASE				0			0			0			0			13			0
+syscon	auxv	AT_EXECPATH				31			31			15			999			2014			31			# FreeBSD name for AT_EXECFN
+syscon	auxv	AT_CANARY				0			0			16			0			0			0
+syscon	auxv	AT_CANARYLEN				0			0			17			0			0			0
+syscon	auxv	AT_NCPUS				0			0			19			0			0			0
+syscon	auxv	AT_PAGESIZES				0			0			20			0			0			0
+syscon	auxv	AT_PAGESIZESLEN				0			0			21			0			0			0
+syscon	auxv	AT_TIMEKEEP				0			0			22			0			0			0
+syscon	auxv	AT_STACKPROT				0			0			23			0			0			0
+syscon	auxv	AT_EHDRFLAGS				0			0			24			0			0			0
 syscon	auxv	AT_NO_AUTOMOUNT				0x0800			0			0			0			0			0
 
 #	getrlimit() / setrlimit() resource parameter
@@ -507,7 +485,7 @@ syscon	rlimit	RLIMIT_RSS				5			5			5			5			5			127			# max physical memory size
 syscon	rlimit	RLIMIT_NPROC				6			7			7			7			7			127			# max number of processes; see fork()→EAGAIN; bsd consensus
 syscon	rlimit	RLIMIT_NOFILE				7			8			8			8			8			127			# max number of open files; see accept()→EMFILE/ENFILE; bsd consensus
 syscon	rlimit	RLIMIT_MEMLOCK				8			6			6			6			6			127			# max locked-in-memory address space; bsd consensus
-syscon	rlimit	RLIMIT_AS				9			5			10			127			10			127			# max virtual memory size in bytes; this one actually works; we set this to RLIMIT_DATA on OpenBSD
+syscon	rlimit	RLIMIT_AS				9			5			10			2			10			0			# max virtual memory size in bytes; this one actually works; fudged as RLIMIT_DATA on OpenBSD
 syscon	rlimit	RLIMIT_LOCKS				10			127			127			127			127			127			# max flock() / fcntl() locks; bsd consensus
 syscon	rlimit	RLIMIT_SIGPENDING			11			127			127			127			127			127			# max sigqueue() can enqueue; bsd consensus
 syscon	rlimit	RLIMIT_MSGQUEUE				12			127			127			127			127			127			# meh posix message queues; bsd consensus
@@ -522,10 +500,10 @@ syscon	compat	RLIMIT_VMEM				9			5			10			127			10			127			# same as RLIMIT_AS
 #	resource limit special values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	rlim	RLIM_NLIMITS				16			9			15			9			12			0			# no clue why we need it
-syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
-syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
-syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0
+syscon	rlim	RLIM_NLIMITS				16			9			15			9			12			1
+syscon	rlim	RLIM_INFINITY				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
+syscon	rlim	RLIM_SAVED_CUR				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
+syscon	rlim	RLIM_SAVED_MAX				0xffffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0x7fffffffffffffff	0xffffffffffffffff
 
 #	sigaction() codes
 #
@@ -535,7 +513,7 @@ syscon	sigact	SA_NOCLDWAIT				2			32			32			32			32			2			# changes SIGCHLD so t
 syscon	sigact	SA_SIGINFO				4			64			64			64			64			4			# asks kernel to provide ucontext_t argument, which has mutable cpu/fpu state of signalled process; and it is polyfilled by cosmopolitan; bsd consensus
 syscon	sigact	SA_ONSTACK				0x08000000		1			1			1			1			0x08000000		# causes signal handler to be called on stack provided by sigaltstack(2); bsd consensus
 syscon	sigact	SA_RESTART				0x10000000		2			2			2			2			0x10000000		# prevents signal delivery from triggering EINTR on i/o calls (e.g. read/write/open/wait/accept) but doesn't impact non-i/o blocking calls (e.g. poll, sigsuspend, nanosleep) which will still EINTR; bsd consensus
-syscon	sigact	SA_NODEFER				0x40000000		16			16			16			16			0x40000000		# blocks signal delivery during signal handling (i.e. lets you use longjmp() in the signal handler); bsd consensus
+syscon	sigact	SA_NODEFER				0x40000000		16			16			16			16			0x40000000		# lets signal handler be reentrant (e.g. so you can longjmp() out of signal handler); bsd consensus
 syscon	sigact	SA_RESETHAND				0x80000000		4			4			4			4			0x80000000		# causes signal handler to be called at most once and then set to SIG_DFL automatically; bsd consensus
 syscon	compat	SA_NOMASK				0x40000000		16			16			16			16			0x40000000		# same as SA_NODEFER
 syscon	compat	SA_ONESHOT				0x80000000		4			4			4			4			0x80000000		# same as SA_RESETHAND
@@ -565,6 +543,7 @@ syscon	sicode	TRAP_BRKPT				1			1			1			1			1			1			# SIGTRAP; process breakpoin
 syscon	sicode	TRAP_TRACE				2			2			2			2			2			2			# SIGTRAP; process trace trap; unix consensus
 syscon	sicode	SEGV_MAPERR				1			1			1			1			1			1			# SIGSEGV; address not mapped to object; unix consensus
 syscon	sicode	SEGV_ACCERR				2			2			2			2			2			2			# SIGSEGV; invalid permissions for mapped object; unix consensus
+syscon	sicode	SEGV_PKUERR				-1			-1			100			-1			-1			-1			# SIGSEGV: x86: PKU violation
 syscon	sicode	FPE_INTDIV				1			7			2			1			1			1			# SIGFPE; integer divide by zero
 syscon	sicode	FPE_INTOVF				2			8			1			2			2			2			# SIGFPE; integer overflow
 syscon	sicode	FPE_FLTDIV				3			1			3			3			3			3			# SIGFPE; floating point divide by zero
@@ -584,6 +563,7 @@ syscon	sicode	ILL_BADSTK				8			8			8			8			8			8			# SIGILL; internal stack err
 syscon	sicode	BUS_ADRALN				1			1			1			1			1			1			# SIGBUS; invalid address alignment; unix consensus
 syscon	sicode	BUS_ADRERR				2			2			2			2			2			2			# SIGBUS; non-existent physical address; unix consensus
 syscon	sicode	BUS_OBJERR				3			3			3			3			3			3			# SIGBUS; object specific hardware error; unix consensus
+syscon	sicode	BUS_OOMERR				-1			-1			100			-1			-1			-1			# SIGBUS; Non-standard: No memory.
 syscon	sicode	BUS_MCEERR_AR				4			0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# SIGBUS; Linux 2.6.32+
 syscon	sicode	BUS_MCEERR_AO				5			0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# SIGBUS; Linux 2.6.32+
 syscon	sicode	POLL_IN					1			1			1			1			1			1			# SIGIO; data input available; unix consensus
@@ -592,11 +572,14 @@ syscon	sicode	POLL_MSG				3			3			3			3			3			3			# SIGIO; input message availab
 syscon	sicode	POLL_ERR				4			4			4			4			4			4			# SIGIO; i/o error; unix consensus
 syscon	sicode	POLL_PRI				5			5			5			5			5			5			# SIGIO; high priority input available; unix consensus
 syscon	sicode	POLL_HUP				6			6			6			6			6			6			# SIGIO; device disconnected; unix consensus
+syscon	sicode	SYS_SECCOMP				1			-1			-1			-1			-1			-1			# SIGSYS; seccomp triggered
+syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall user dispatch triggered
 
 #	sigaltstack() values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ss	SIGSTKSZ				0x2000			0x020000		0x8800			0x7000			0x7000			0x2000
+syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlayed with STACKSIZE; you need to #undef SIGSTKSZ to access this symbol
+syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlayed with 32768; you need to #undef MINSIGSTKSZ to access this symbol
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 
@@ -604,31 +587,39 @@ syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
+syscon	clock	CLOCK_REALTIME_FAST			0			0			10			0			0			0			#
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
+syscon	clock	CLOCK_MONOTONIC_FAST			1			1			12			3			3			1			#
 syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1			#
 syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		-1			#
 syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
 syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
-syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			6			-1			#
-syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			# bsd consensus
-syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			# bsd consensus
-syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			# bsd consensus
+syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			-1			-1			#
+syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
+syscon	clock	CLOCK_UPTIME				-1			-1			5			5			-1			-1			#
+syscon	clock	CLOCK_UPTIME_PRECISE			-1			-1			7			-1			-1			-1			#
+syscon	clock	CLOCK_UPTIME_FAST			-1			-1			8			-1			-1			-1			#
+syscon	clock	CLOCK_REALTIME_PRECISE			-1			-1			9			-1			-1			-1			#
+syscon	clock	CLOCK_MONOTONIC_PRECISE			-1			-1			11			-1			-1			-1			#
+syscon	clock	CLOCK_SECOND				-1			-1			13			-1			-1			-1			#
 
 #	poll()
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	poll	POLLIN					1			1			1			1			1			0x300			# unix consensus
+syscon	poll	POLLIN					1			1			1			1			1			0x0300			# unix consensus; POLLRDNORM|POLLRDBAND on Windows
 syscon	poll	POLLPRI					2			2			2			2			2			0x0400			# unix consensus
-syscon	poll	POLLOUT					4			4			4			4			4			0x10			# unix consensus
-syscon	poll	POLLERR					8			8			8			8			8			1			# unix consensus
-syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			2			# unix consensus
-syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			4			# unix consensus
+syscon	poll	POLLOUT					4			4			4			4			4			0x0010			# unix consensus; POLLWRNORM on Windows
+syscon	poll	POLLERR					8			8			8			8			8			0x0001			# unix consensus
+syscon	poll	POLLHUP					0x10			0x10			0x10			0x10			0x10			0x0002			# unix consensus
+syscon	poll	POLLNVAL				0x20			0x20			0x20			0x20			0x20			0x0004			# unix consensus
 syscon	poll	POLLRDBAND				0x80			0x80			0x80			0x80			0x80			0x0200			# unix consensus
 syscon	poll	POLLRDNORM				0x40			0x40			0x40			0x40			0x40			0x0100			# unix consensus
-syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x20			# bsd consensus
-syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x10			# bsd consensus
+syscon	poll	POLLWRBAND				0x0200			0x0100			0x0100			0x0100			0x0100			0x0020			# bsd consensus
+syscon	poll	POLLWRNORM				0x0100			4			4			4			4			0x0010			# bsd consensus
 syscon	poll	POLLRDHUP				0x2000			0x10			0x10			0x10			0x10			2			# bsd consensus (POLLHUP on non-Linux)
 
 #	epoll
@@ -660,30 +651,32 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 #		* -1 we define as no-op
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	so	SO_DEBUG				1			1			1			1			1			1			# debugging is enabled; consensus
+syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
+syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
 syscon	so	SO_REUSEPORT				15			0x0200			0x0200			0x0200			0x0200			4			# bsd consensus (NT calls it SO_REUSEADDR)
-syscon	so	SO_REUSEADDR				2			4			4			4			4			0			# bsd consensus (default behavior on NT)
+syscon	so	SO_REUSEADDR				2			4			4			4			4			4			# bsd consensus (default behavior on NT)
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			~4			# bsd consensus (default behavior on NT)
 syscon	so	SO_KEEPALIVE				9			8			8			8			8			8			# bsd consensus
 syscon	so	SO_DONTROUTE				5			0x10			0x10			0x10			0x10			0x10			# bsd consensus
-syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# bsd consensus
+syscon	so	SO_BROADCAST				6			0x20			0x20			0x20			0x20			0x20			# socket is configured for broadcast messages; bsd consensus
 syscon	so	SO_USELOOPBACK				0			0x40			0x40			0x40			0x40			0x40			# bsd consensus
 syscon	so	SO_LINGER				13			0x80			0x80			0x80			0x80			0x80			# takes struct linger; causes close() return value to actually mean something; bsd consensus
-syscon	so	SO_DEBUG				1			1			1			1			1			1			# consensus
-syscon	so	SO_ACCEPTCONN				30			2			2			2			2			2			# takes int pointer and stores boolean indicating if listen() was called on fd; bsd consensus
-syscon	so	SO_ERROR				4			0x1007			0x1007			0x1007			0x1007			0x1007			# takes int pointer and stores/clears the pending error code; bsd consensus
+syscon	so	SO_DONTLINGER				0			0			0			0			0			~0x80			# disables so_linger on windows
 syscon	so	SO_OOBINLINE				10			0x0100			0x0100			0x0100			0x0100			0x0100			# bsd consensus
 syscon	so	SO_SNDBUF				7			0x1001			0x1001			0x1001			0x1001			0x1001			# bsd consensus
 syscon	so	SO_RCVBUF				8			0x1002			0x1002			0x1002			0x1002			0x1002			# bsd consensus
 syscon	so	SO_RCVTIMEO				20			0x1006			0x1006			0x1006			0x100c			0x1006			# recv timeout; takes struct timeval (overrides SA_RESTART restoring EINTR behavior on recv/send/connect/accept/etc.; bsd consensus)
 syscon	so	SO_SNDTIMEO				21			0x1005			0x1005			0x1005			0x100b			0x1005			# send timeout; takes struct timeval; bsd consensus
 syscon	so	SO_RCVLOWAT				18			0x1004			0x1004			0x1004			0x1004			0x1004			# bsd consensus
-syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	SO_SNDLOWAT				19			0x1003			0x1003			0x1003			0x1003			0x1003			# bsd consensus
-syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
 syscon	so	SO_TIMESTAMP				29			0x0400			0x0400			0x0800			0x2000			0
 syscon	so	SO_SETFIB				0			0			0x1014			0			0			0
 syscon	so	SO_DOMAIN				39			0			0x1019			0x1024			0			0
 syscon	so	SO_MAX_PACING_RATE			47			0			0x1018			0			0			0
 syscon	so	SO_PEERCRED				17			0			0			0x1022			0			0
+syscon	so	SO_EXCLUSIVEADDRUSE			0			0			0			0			0			0xfffffffb		# hoo boy
 syscon	so	LOCAL_PEERCRED				0			1			1			0			0			0
 syscon	so	SO_PROTOCOL				38			0			0x1016			0x1025			0			0
 syscon	so	SO_ATTACH_BPF				50			0			0			0			0			0
@@ -721,9 +714,10 @@ syscon	so	SO_TIMESTAMPNS				35			0			0			0			0			0
 syscon	so	SO_WIFI_STATUS				41			0			0			0			0			0
 
 syscon	sol	SOL_IP					0			0			0			0			0			0			# consensus
-syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			0xffff			# bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
+syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			0xffff			# yes it's actually 0xffff; bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
 syscon	sol	SOL_TCP					6			6			6			6			6			6			# consensus
 syscon	sol	SOL_UDP					17			17			17			17			17			17			# consensus
+syscon	sol	SOL_RAW					255			0			0			0			0			0
 syscon	sol	SOL_IPV6				41			41			41			41			41			41
 syscon	sol	SOL_ICMPV6				58			58			58			58			58			0
 syscon	sol	SOL_AAL					265			0			0			0			0			0
@@ -743,7 +737,6 @@ syscon	sol	SOL_NFC					280			0			0			0			0			0
 syscon	sol	SOL_PACKET				263			0			0			0			0			0
 syscon	sol	SOL_PNPIPE				275			0			0			0			0			0
 syscon	sol	SOL_PPPOL2TP				273			0			0			0			0			0
-syscon	sol	SOL_RAW					255			0			0			0			0			0
 syscon	sol	SOL_RDS					276			0			0			0			0			0
 syscon	sol	SOL_RXRPC				272			0			0			0			0			0
 syscon	sol	SOL_TIPC				271			0			0			0			0			0
@@ -799,13 +792,14 @@ syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			0			# what is it
 syscon	tcp	TCP_THIN_LINEAR_TIMEOUTS		16			0			0			0			0			0			# what is it
 
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
+syscon	ip	IP_TTL					2			4			4			4			4			7			# bsd consensus
+syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
 syscon	ip	IP_DEFAULT_MULTICAST_LOOP		1			1			1			1			1			1			# consensus
 syscon	ip	IP_DEFAULT_MULTICAST_TTL		1			1			1			1			1			1			# consensus
 syscon	ip	IP_PMTUDISC_DONT			0			0			0			0			0			0			# consensus
-syscon	ip	IP_HDRINCL				3			2			2			2			2			2			# bsd consensus
 syscon	ip	IP_MAX_MEMBERSHIPS			20			0x0fff			0x0fff			0x0fff			0x0fff			20			# bsd consensus
 syscon	ip	IP_OPTIONS				4			1			1			1			1			1			# bsd consensus
-syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
 syscon	ip	IP_RECVTTL				12			24			65			31			23			21
 syscon	ip	IP_ADD_MEMBERSHIP			35			12			12			12			12			5			# bsd consensus
 syscon	ip	IP_DROP_MEMBERSHIP			36			13			13			13			13			6			# bsd consensus
@@ -816,7 +810,6 @@ syscon	ip	IP_RECVOPTS				6			5			5			5			5			0			# bsd consensus
 syscon	ip	IP_RECVRETOPTS				7			6			6			6			6			0			# bsd consensus
 syscon	ip	IP_RECVDSTADDR				0			7			7			7			7			0			# bsd consensus
 syscon	ip	IP_RETOPTS				7			8			8			8			8			0			# bsd consensus
-syscon	ip	IP_TTL					2			4			4			4			4			7			# bsd consensus
 syscon	ip	IP_ADD_SOURCE_MEMBERSHIP		39			70			70			0			0			15
 syscon	ip	IP_BLOCK_SOURCE				38			72			72			0			0			17
 syscon	ip	IP_DROP_SOURCE_MEMBERSHIP		40			71			71			0			0			0x10
@@ -894,6 +887,7 @@ syscon	ptrace	PTRACE_O_TRACECLONE			0x0008			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEEXEC			0x0010			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEVFORKDONE			0x0020			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_TRACEEXIT			0x0040			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_O_TRACESECCOMP			0x0080			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_O_MASK				0x007f			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_FORK			1			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_VFORK			2			-1			-1			-1			-1			-1
@@ -901,7 +895,17 @@ syscon	ptrace	PTRACE_EVENT_CLONE			3			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_EXEC			4			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_VFORK_DONE			5			-1			-1			-1			-1			-1
 syscon	ptrace	PTRACE_EVENT_EXIT			6			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_EVENT_SECCOMP			7			-1			-1			-1			-1			-1
+syscon	ptrace	PTRACE_EVENT_STOP			128			-1			-1			-1			-1			-1
 
+#	clone() codes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	clone	CLONE_VM				0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		0x00000100		# intentionally symbolic so we can tell if clone() is being used to create threads
+
+#	IPPROTO_*
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	iproto	IPPROTO_IP				0			0			0			0			0			0			# consensus
 syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			1			# consensus
 syscon	iproto	IPPROTO_TCP				6			6			6			6			6			6			# consensus
@@ -934,109 +938,6 @@ syscon	iproto	IPPROTO_UDPLITE				136			0			136			0			0			0
 syscon	iproto	IPPROTO_BEETPH				94			0			0			0			0			0
 syscon	iproto	IPPROTO_COMP				108			0			0			0			0			0
 syscon	iproto	IPPROTO_DCCP				33			0			0			0			0			0
-
-syscon	pr	PR_SET_PTRACER_ANY			-1			0			0			0			0			0
-syscon	pr	PR_ENDIAN_BIG				0			0			0			0			0			0			# consensus
-syscon	pr	PR_FP_EXC_DISABLED			0			0			0			0			0			0			# consensus
-syscon	pr	PR_MCE_KILL_CLEAR			0			0			0			0			0			0			# consensus
-syscon	pr	PR_MCE_KILL_LATE			0			0			0			0			0			0			# consensus
-syscon	pr	PR_SPEC_NOT_AFFECTED			0			0			0			0			0			0			# consensus
-syscon	pr	PR_SPEC_STORE_BYPASS			0			0			0			0			0			0			# consensus
-syscon	pr	PR_TIMING_STATISTICAL			0			0			0			0			0			0			# consensus
-syscon	pr	PR_CAP_AMBIENT_IS_SET			1			0			0			0			0			0
-syscon	pr	PR_ENDIAN_LITTLE			1			0			0			0			0			0
-syscon	pr	PR_FPEMU_NOPRINT			1			0			0			0			0			0
-syscon	pr	PR_FP_EXC_NONRECOV			1			0			0			0			0			0
-syscon	pr	PR_FP_MODE_FR				1			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_EARLY			1			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_SET				1			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_CODE			1			0			0			0			0			0
-syscon	pr	PR_SET_PDEATHSIG			1			0			0			0			0			0
-syscon	pr	PR_SPEC_PRCTL				1			0			0			0			0			0
-syscon	pr	PR_TIMING_TIMESTAMP			1			0			0			0			0			0
-syscon	pr	PR_TSC_ENABLE				1			0			0			0			0			0
-syscon	pr	PR_UNALIGN_NOPRINT			1			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_RAISE			2			0			0			0			0			0
-syscon	pr	PR_ENDIAN_PPC_LITTLE			2			0			0			0			0			0
-syscon	pr	PR_FPEMU_SIGFPE				2			0			0			0			0			0
-syscon	pr	PR_FP_EXC_ASYNC				2			0			0			0			0			0
-syscon	pr	PR_FP_MODE_FRE				2			0			0			0			0			0
-syscon	pr	PR_GET_PDEATHSIG			2			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_DEFAULT			2			0			0			0			0			0
-syscon	pr	PR_SET_MM_END_CODE			2			0			0			0			0			0
-syscon	pr	PR_SPEC_ENABLE				2			0			0			0			0			0
-syscon	pr	PR_TSC_SIGSEGV				2			0			0			0			0			0
-syscon	pr	PR_UNALIGN_SIGBUS			2			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_LOWER			3			0			0			0			0			0
-syscon	pr	PR_FP_EXC_PRECISE			3			0			0			0			0			0
-syscon	pr	PR_GET_DUMPABLE				3			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_DATA			3			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT_CLEAR_ALL		4			0			0			0			0			0
-syscon	pr	PR_SET_DUMPABLE				4			0			0			0			0			0
-syscon	pr	PR_SET_MM_END_DATA			4			0			0			0			0			0
-syscon	pr	PR_SPEC_DISABLE				4			0			0			0			0			0
-syscon	pr	PR_GET_UNALIGN				5			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_STACK			5			0			0			0			0			0
-syscon	pr	PR_SET_MM_START_BRK			6			0			0			0			0			0
-syscon	pr	PR_SET_UNALIGN				6			0			0			0			0			0
-syscon	pr	PR_GET_KEEPCAPS				7			0			0			0			0			0
-syscon	pr	PR_SET_MM_BRK				7			0			0			0			0			0
-syscon	pr	PR_SET_KEEPCAPS				8			0			0			0			0			0
-syscon	pr	PR_SET_MM_ARG_START			8			0			0			0			0			0
-syscon	pr	PR_SPEC_FORCE_DISABLE			8			0			0			0			0			0
-syscon	pr	PR_GET_FPEMU				9			0			0			0			0			0
-syscon	pr	PR_SET_MM_ARG_END			9			0			0			0			0			0
-syscon	pr	PR_SET_FPEMU				10			0			0			0			0			0
-syscon	pr	PR_SET_MM_ENV_START			10			0			0			0			0			0
-syscon	pr	PR_GET_FPEXC				11			0			0			0			0			0
-syscon	pr	PR_SET_MM_ENV_END			11			0			0			0			0			0
-syscon	pr	PR_SET_FPEXC				12			0			0			0			0			0
-syscon	pr	PR_SET_MM_AUXV				12			0			0			0			0			0
-syscon	pr	PR_GET_TIMING				13			0			0			0			0			0
-syscon	pr	PR_SET_MM_EXE_FILE			13			0			0			0			0			0
-syscon	pr	PR_SET_MM_MAP				14			0			0			0			0			0
-syscon	pr	PR_SET_TIMING				14			0			0			0			0			0
-syscon	pr	PR_SET_MM_MAP_SIZE			15			0			0			0			0			0
-syscon	pr	PR_SET_NAME				15			0			0			0			0			0
-syscon	pr	PR_GET_NAME				0x10			0			0			0			0			0
-syscon	pr	PR_GET_ENDIAN				19			0			0			0			0			0
-syscon	pr	PR_SET_ENDIAN				20			0			0			0			0			0
-syscon	pr	PR_GET_SECCOMP				21			0			0			0			0			0
-syscon	pr	PR_SET_SECCOMP				22			0			0			0			0			0
-syscon	pr	PR_CAPBSET_READ				23			0			0			0			0			0
-syscon	pr	PR_CAPBSET_DROP				24			0			0			0			0			0
-syscon	pr	PR_GET_TSC				25			0			0			0			0			0
-syscon	pr	PR_SET_TSC				26			0			0			0			0			0
-syscon	pr	PR_GET_SECUREBITS			27			0			0			0			0			0
-syscon	pr	PR_SET_SECUREBITS			28			0			0			0			0			0
-syscon	pr	PR_SET_TIMERSLACK			29			0			0			0			0			0
-syscon	pr	PR_GET_TIMERSLACK			30			0			0			0			0			0
-syscon	pr	PR_TASK_PERF_EVENTS_DISABLE		31			0			0			0			0			0
-syscon	pr	PR_TASK_PERF_EVENTS_ENABLE		0x20			0			0			0			0			0
-syscon	pr	PR_MCE_KILL				33			0			0			0			0			0
-syscon	pr	PR_MCE_KILL_GET				34			0			0			0			0			0
-syscon	pr	PR_SET_MM				35			0			0			0			0			0
-syscon	pr	PR_SET_CHILD_SUBREAPER			36			0			0			0			0			0
-syscon	pr	PR_GET_CHILD_SUBREAPER			37			0			0			0			0			0
-syscon	pr	PR_SET_NO_NEW_PRIVS			38			0			0			0			0			0
-syscon	pr	PR_GET_NO_NEW_PRIVS			39			0			0			0			0			0
-syscon	pr	PR_GET_TID_ADDRESS			40			0			0			0			0			0
-syscon	pr	PR_SET_THP_DISABLE			41			0			0			0			0			0
-syscon	pr	PR_GET_THP_DISABLE			42			0			0			0			0			0
-syscon	pr	PR_MPX_ENABLE_MANAGEMENT		43			0			0			0			0			0
-syscon	pr	PR_MPX_DISABLE_MANAGEMENT		44			0			0			0			0			0
-syscon	pr	PR_SET_FP_MODE				45			0			0			0			0			0
-syscon	pr	PR_GET_FP_MODE				46			0			0			0			0			0
-syscon	pr	PR_CAP_AMBIENT				47			0			0			0			0			0
-syscon	pr	PR_GET_SPECULATION_CTRL			52			0			0			0			0			0
-syscon	pr	PR_SET_SPECULATION_CTRL			53			0			0			0			0			0
-syscon	pr	PR_FP_EXC_SW_ENABLE			0x80			0			0			0			0			0
-syscon	pr	PR_FP_EXC_DIV				0x010000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_OVF				0x020000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_UND				0x040000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_RES				0x080000		0			0			0			0			0
-syscon	pr	PR_FP_EXC_INV				0x100000		0			0			0			0			0
-syscon	pr	PR_SET_PTRACER				0x59616d61		0			0			0			0			0
 
 syscon	sio	SIOCADDMULTI				0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
 syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0			# bsd consensus
@@ -1191,9 +1092,6 @@ syscon	pf	PF_VSOCK				40			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			0			0			0			0			0
 syscon	pf	PF_X25					9			0			0			0			0			0
 
-syscon	exit	EXIT_SUCCESS				0			0			0			0			0			0			# consensus
-syscon	exit	EXIT_FAILURE				1			1			1			1			1			1			# consensus
-
 #	Eric Allman's exit() codes
 #
 #	- Broadly supported style guideline;
@@ -1242,18 +1140,18 @@ syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 #	statvfs() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
 syscon	statvfs	ST_RDONLY				1			1			1			1			1			0			# unix consensus
+syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
+syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
+syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_SYNCHRONOUS				16			0			0			0			2			0
 syscon	statvfs	ST_APPEND				0x0100			0			0			0			0			0
 syscon	statvfs	ST_IMMUTABLE				0x0200			0			0			0			0			0
-syscon	statvfs	ST_MANDLOCK				0x40			0			0			0			0			0
+syscon	statvfs	ST_MANDLOCK				0x0040			0			0			0			0			0
 syscon	statvfs	ST_NOATIME				0x0400			0			0			0x04000000		0			0
-syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
 syscon	statvfs	ST_NODIRATIME				0x0800			0			0			0			0			0
-syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
+syscon	statvfs	ST_WRITE				0x0080			0			0			0			0			0
 syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0
-syscon	statvfs	ST_SYNCHRONOUS				0x10			0			0			0			2			0
-syscon	statvfs	ST_WRITE				0x80			0			0			0			0			0
 
 #	sendfile() flags
 #
@@ -1309,6 +1207,15 @@ syscon	mount	MNT_SUIDDIR				0			0			0x00100000		0			0			0			# special suid dir h
 syscon	mount	MNT_NOCLUSTERR				0			0			0x40000000		0			0			0			# disable cluster read
 syscon	mount	MNT_NOCLUSTERW				0			0			0x80000000		0			0			0			# disable cluster write
 syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
+
+#	limits
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	limits	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
+syscon	limits	_ARG_MAX				128*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
+syscon	limits	_NAME_MAX				255			255			255			255			511			255			# probably higher on windows?
+syscon	limits	_PATH_MAX				4096			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
+syscon	limits	_NSIG					64			32			128			32			64			32			# _SIG_MAXSIG on FreeBSD
 
 #	unmount() flags
 #	a.k.a. umount2() on linux
@@ -1378,6 +1285,22 @@ syscon	prio	PRIO_MIN				-20			-20			-20			-20			-20			-20			# unix consensus / p
 syscon	prio	PRIO_MAX				20			20			20			20			20			20			# unix consensus / poly nt
 syscon	prio	NZERO					20			20			20			20			20			20			# unix consensus / polyfilled nt
 
+#	getrusage() who
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
+syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
+syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
+syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
+
+#	fast userspace mutexes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	futex	FUTEX_WAIT				0			0			0			1			0			0
+syscon	futex	FUTEX_WAKE				1			0			0			2			0			0
+syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
+syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			0			0
+
 #	Teletypewriter Control, e.g.
 #
 #		  TCSETS   → About 70,800 results (0.31 seconds)
@@ -1416,7 +1339,6 @@ syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x800474
 syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
 syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
-syscon	termios	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
 syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x40047463		0			# boop
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
@@ -1450,6 +1372,25 @@ syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			0			# boop
 syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			0			# boop
 syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			0			# boop
 syscon	termios	H4DISC					0			0			0x7			0			0			0			# boop
+
+#	Teletypewriter Control Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	CS5					0b0000000000000000	0b000000000000000000	0b000000000000000000	0b0000000000000000	0b0000000000000000	0b0000000000000000	# termios.c_cflag; consensus
+syscon	termios	CS6					0b0000000000010000	0b000000000100000000	0b000000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000010000	# termios.c_cflag; 6-bit characters
+syscon	termios	CS7					0b0000000000100000	0b000000001000000000	0b000000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag; 7-bit characters
+syscon	termios	CS8					0b0000000000110000	0b000000001100000000	0b000000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag; 8-bit characters
+syscon	termios	CSIZE					0b0000000000110000	0b000000001100000000	0b000000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag; mask for CS𝑥 flags
+syscon	termios	CSTOPB					0b0000000001000000	0b000000010000000000	0b000000010000000000	0b0000010000000000	0b0000010000000000	0b0000000001000000	# termios.c_cflag; bsd consensus
+syscon	termios	CREAD					0b0000000010000000	0b000000100000000000	0b000000100000000000	0b0000100000000000	0b0000100000000000	0b0000000010000000	# termios.c_cflag; bsd consensus
+syscon	termios	PARENB					0b0000000100000000	0b000001000000000000	0b000001000000000000	0b0001000000000000	0b0001000000000000	0b0000000100000000	# termios.c_cflag
+syscon	termios	PARODD					0b0000001000000000	0b000010000000000000	0b000010000000000000	0b0010000000000000	0b0010000000000000	0b0000001000000000	# termios.c_cflag
+syscon	termios	HUPCL					0b0000010000000000	0b000100000000000000	0b000100000000000000	0b0100000000000000	0b0100000000000000	0b0000010000000000	# termios.c_cflag; bsd consensus
+syscon	termios	CLOCAL					0b0000100000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b1000000000000000	0b0000100000000000	# termios.c_cflag; consensus
+
+#	Teletypewriter Local Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	ISIG					0b0000000000000001	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000010000000	0b0000000000000001	# termios.c_lflag|=ISIG makes Ctrl-C, Ctrl-\, etc. generate signals
 syscon	termios	ICANON					0b0000000000000010	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000000010	# termios.c_lflag&=~ICANON disables 1960's version of gnu readline (see also VMIN)
 syscon	termios	XCASE					0b0000000000000100	0			0			16777216		0			0b0000000000000100	# termios.c_lflag
@@ -1466,6 +1407,10 @@ syscon	termios	FLUSHO					0b0001000000000000	8388608			8388608			8388608			83886
 syscon	termios	PENDIN					0b0100000000000000	536870912		536870912		536870912		536870912		0b0100000000000000	# termios.c_lflag
 syscon	termios	IEXTEN					0b1000000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b1000000000000000	# termios.c_lflag&=~IEXTEN disables platform input processing magic
 syscon	termios	EXTPROC					65536			0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	65536			# termios.c_lflag
+
+#	Teletypewriter Input Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	termios	IGNBRK					0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
 syscon	termios	BRKINT					0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000010	# termios.c_iflag it's complicated, uart only?                          UNIXCONSENSUS
 syscon	termios	IGNPAR					0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	0b0000000000000100	# termios.c_iflag|=IGNPAR ignores parity and framing errors; see PARMRK UNIXCONSENSUS
@@ -1477,13 +1422,17 @@ syscon	termios	IGNCR					0b0000000010000000	0b0000000010000000	0b000000001000000
 syscon	termios	ICRNL					0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	# termios.c_iflag|=ICRNL maps \r → \n input                             UNIXCONSENSUS
 syscon	termios	IUCLC					0b0000001000000000	0			0			0b0001000000000000	0			0b0000001000000000	# termios.c_iflag|=IUCLC maps A-Z → a-z input
 syscon	termios	IXON					0b0000010000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000010000000000	# termios.c_iflag|=IXON enables flow rida
-syscon	termios	IXANY					0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	# termios.c_iflag|=IXANY tying will un-stuck teletype                   UNIXCONSENSUS
+syscon	termios	IXANY					0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	0b0000100000000000	# termios.c_iflag|=IXANY typing will un-stuck teletype                  UNIXCONSENSUS
 syscon	termios	IXOFF					0b0001000000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0000010000000000	0b0001000000000000	# termios.c_iflag|=IXOFF disables annoying display freeze keys
 syscon	termios	IMAXBEL					0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	0b0010000000000000	# termios.c_iflag|=IMAXBEL rings when queue full                        UNIXCONSENSUS
 syscon	termios	IUTF8					0b0100000000000000	0b0100000000000000	0			0			0			0b0100000000000000	# termios.c_iflag|=IUTF8 helps w/ rubout on UTF-8 input
-syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic
-syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output
-syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR maps \n → \r\n output
+
+#	Teletypewriter Output Modes
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	OPOST					0b0000000000000001	0b000000000000000001	0b000000000000000001	0b0000000000000001	0b0000000000000001	0b0000000000000001	# termios.c_oflag&=~OPOST disables output processing magic, e.g. MULTICS newlines
+syscon	termios	OLCUC					0b0000000000000010	0			0			0b0000000000100000	0			0b0000000000000010	# termios.c_oflag|=OLCUC maps a-z → A-Z output (SHOUTING)
+syscon	termios	ONLCR					0b0000000000000100	0b000000000000000010	0b000000000000000010	0b0000000000000010	0b0000000000000010	0b0000000000000100	# termios.c_oflag|=ONLCR map \n → \r\n output (MULTICS newline) and requires OPOST
 syscon	termios	OCRNL					0b0000000000001000	0b000000000000010000	0b000000000000010000	0b0000000000010000	0b0000000000010000	0b0000000000001000	# termios.c_oflag|=OCRNL maps \r → \n output
 syscon	termios	ONOCR					0b0000000000010000	0b000000000000100000	0b000000000000100000	0b0000000001000000	0b0000000001000000	0b0000000000010000	# termios.c_oflag|=ONOCR maps \r → ∅ output iff column 0
 syscon	termios	ONLRET					0b0000000000100000	0b000000000001000000	0b000000000001000000	0b0000000010000000	0b0000000010000000	0b0000000000100000	# termios.c_oflag|=ONLRET maps \r → ∅ output
@@ -1514,19 +1463,18 @@ syscon	termios	  VT1					0b0100000000000000	0b010000000000000000	0b0100000000000
 syscon	termios	FFDLY					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
 syscon	termios	  FF0					0b0000000000000000	0b000000000000000000	0b000000000000000000	0			0			0b0000000000000000	# termios.c_oflag
 syscon	termios	  FF1					0b1000000000000000	0b000100000000000000	0b000100000000000000	0			0			0b1000000000000000	# termios.c_oflag
-syscon	termios	CS5					0			0			0			0			0			0			# consensus
-syscon	termios	CS6					0b0000000000010000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000100000000	0b0000000000010000	# termios.c_cflag flag for 6-bit characters
-syscon	termios	CS7					0b0000000000100000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000001000000000	0b0000000000100000	# termios.c_cflag flag for 7-bit characters
-syscon	termios	CS8					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# termios.c_cflag flag for 8-bit characters
-syscon	termios	CSIZE					0b0000000000110000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000001100000000	0b0000000000110000	# mask for CS𝑥 flags
+
+#	Teletypewriter Special Control Character Assignments
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
+syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
 syscon	termios	NCCS					20			20			20			20			20			20			# ARRAYLEN(termios.c_cc); we schlep c_line into c_cc on linux
 syscon	termios	VINTR					0+1			8			8			8			8			0			# termios.c_cc[VINTR]=𝑥
 syscon	termios	VQUIT					1+1			9			9			9			9			1			# termios.c_cc[VQUIT]=𝑥
 syscon	termios	VERASE					2+1			3			3			3			3			2			# termios.c_cc[VERASE]=𝑥
 syscon	termios	VKILL					3+1			5			5			5			5			3			# termios.c_cc[VKILL]=𝑥
 syscon	termios	VEOF					4+1			0			0			0			0			4			# termios.c_cc[VEOF]=𝑥
-syscon	termios	VTIME					5+1			17			17			17			17			5			# termios.c_cc[VTIME]=𝑥 sets non-canonical read timeout to 𝑥×𝟷𝟶𝟶ms which is needed when entering escape sequences manually with the escape key
-syscon	termios	VMIN					6+1			16			16			16			16			6			# termios.c_cc[VMIN]=𝑥 in non-canonical mode can be set to 0 for non-blocking reads, 1 for single character raw mode reads, or higher to buffer
 syscon	termios	VSWTC					7+1			0			0			0			0			7			# termios.c_cc[VSWTC]=𝑥
 syscon	termios	VSTART					8+1			12			12			12			12			8			# termios.c_cc[VSTART]=𝑥
 syscon	termios	VSTOP					9+1			13			13			13			13			9			# termios.c_cc[VSTOP]=𝑥
@@ -1537,15 +1485,13 @@ syscon	termios	VDISCARD				13+1			15			15			15			15			13			# termios.c_cc[VDISCA
 syscon	termios	VWERASE					14+1			4			4			4			4			14			# termios.c_cc[VWERASE]=𝑥
 syscon	termios	VLNEXT					15+1			14			14			14			14			15			# termios.c_cc[VLNEXT]=𝑥
 syscon	termios	VEOL2					16+1			2			2			2			2			16			# termios.c_cc[VEOL2]=𝑥
+
 syscon	termios	TIOCSERGETLSR				0x5459			0			0			0			0			0			#
 syscon	termios	TIOCSERGETMULTI				0x545a			0			0			0			0			0			#
 syscon	termios	TIOCSERSETMULTI				0x545b			0			0			0			0			0			#
 syscon	termios	TIOCSER_TEMT				1			0			0			0			0			0			#
 syscon	termios	VERIFY					47			0			0			0			0			0
-syscon	termios	PARENB					0x0100			0x1000			0x1000			0x1000			0x1000			0			#
-syscon	termios	PARODD					0x0200			0x2000			0x2000			0x2000			0x2000			0			#
 syscon	termios	CIBAUD					0x100f0000		0			0			0			0			0
-syscon	termios	CLOCAL					0x0800			0x8000			0x8000			0x8000			0x8000			0			#
 syscon	termios	CMSPAR					0x40000000		0			0			0			0			0
 syscon	termios	BUSY					4			0			0			0			0			0
 syscon	termios	CANBSIZ					255			0			0			0			0			0
@@ -1571,15 +1517,14 @@ syscon	termios	TCOON					1			2			2			2			2			1			# see tcflow; bsd consensus
 syscon	termios	TCIOFF					2			3			3			3			3			2			# see tcflow; bsd consensus
 syscon	termios	TCION					3			4			4			4			4			3			# see tcflow; bsd consensus
 
-syscon	termios	CREAD					0x80			0x0800			0x0800			0x0800			0x0800			0			# bsd consensus
-syscon	termios	CSTOPB					0x40			0x0400			0x0400			0x0400			0x0400			0			# bsd consensus
-syscon	termios	HUPCL					0x0400			0x4000			0x4000			0x4000			0x4000			0			# bsd consensus
 syscon	termios	CSTART					17			17			17			17			17			0			# unix consensus
 syscon	termios	CSTOP					19			19			19			19			19			0			# unix consensus
 
 #	Pseudoteletypewriter Control
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	pty	TIOCGPTN				0x80045430		0			0x4004740f		0			0			0			# boop
+syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			0			# boop
 syscon	pty	TIOCPKT					0x5420			0x80047470		0x80047470		0x80047470		0x80047470		-1			# boop
 syscon	pty	TIOCPKT_DATA				0			0			0			0			0			0			# consensus
 syscon	pty	TIOCPKT_FLUSHREAD			1			1			1			1			1			1			# unix consensus
@@ -1589,7 +1534,6 @@ syscon	pty	TIOCPKT_START				8			8			8			8			8			8			# unix consensus
 syscon	pty	TIOCPKT_NOSTOP				16			16			16			16			16			16			# unix consensus
 syscon	pty	TIOCPKT_DOSTOP				32			32			32			32			32			32			# unix consensus
 syscon	pty	TIOCPKT_IOCTL				64			64			64			64			64			64			# unix consensus
-syscon	pty	TIOCSPTLCK				0x40045431		0			0			0			0			-1			# boop
 syscon	pty	PTMGET					0			0			0			0x40287401		0x40287401		-1			# for /dev/ptm
 
 #	Modem Control
@@ -1645,18 +1589,6 @@ syscon	sock	SOCK_NONBLOCK				0x0800			0x0800			0x20000000		0x4000			0x20000000		
 syscon	sock	SOCK_DCCP				6			0			0			0			0			0			# what is it?
 syscon	sock	SOCK_PACKET				10			0			0			0			0			0			# what is it?
 
-syscon	prsnlty	ADDR_COMPAT_LAYOUT			0x0200000		0			0			0			0			0			# linux only
-syscon	prsnlty	READ_IMPLIES_EXEC			0x0400000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_3GB				0x8000000		0			0			0			0			0			# linux only
-syscon	prsnlty	FDPIC_FUNCPTRS				0x0080000		0			0			0			0			0			# linux only
-syscon	prsnlty	STICKY_TIMEOUTS				0x4000000		0			0			0			0			0			# linux only
-syscon	prsnlty	MMAP_PAGE_ZERO				0x0100000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_LIMIT_32BIT			0x0800000		0			0			0			0			0			# linux only
-syscon	prsnlty	WHOLE_SECONDS				0x2000000		0			0			0			0			0			# linux only
-syscon	prsnlty	ADDR_NO_RANDOMIZE			0x0040000		0			0			0			0			0			# linux only
-syscon	prsnlty	SHORT_INODE				0x1000000		0			0			0			0			0			# linux only
-syscon	prsnlty	UNAME26					0x0020000		0			0			0			0			0			# linux only
-
 syscon	misc	TH_FIN					1			1			1			1			1			1			# consensus
 syscon	misc	TH_SYN					2			2			2			2			2			2			# consensus
 syscon	misc	TH_RST					4			4			4			4			4			4			# consensus
@@ -1688,15 +1620,6 @@ syscon	misc	TCPOPT_TIMESTAMP			8			8			8			8			8			0			# unix consensus
 syscon	misc	TCPOPT_WINDOW				3			3			3			3			3			0			# unix consensus
 
 syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			0			# wut
-
-syscon	misc	ARPHRD_ETHER				1			1			1			1			1			0			# unix consensus
-syscon	misc	ARPHRD_FCFABRIC				787			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211			801			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211_PRISM			802			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE80211_RADIOTAP		803			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE802154			804			0			0			0			0			0
-syscon	misc	ARPHRD_IEEE802_TR			800			0			0			0			0			0
-syscon	misc	ARPHRD_LOCALTLK				773			0			0			0			0			0
 
 syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			# consensus
 syscon	misc	IP6F_OFF_MASK				0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			0xf8ff			# consensus
@@ -1800,11 +1723,6 @@ syscon	misc	NL_TEXTMAX				0x7fffffff		0x0800			0x0800			255			255			0
 syscon	misc	NL_NMAX					0x7fffffff		1			1			0			0			0
 syscon	misc	NL_SETD					1			1			0			1			1			0
 
-syscon	rusage	RUSAGE_SELF				0			0			0			0			0			0			# unix consensus & faked nt
-syscon	rusage	RUSAGE_CHILDREN				-1			-1			-1			-1			-1			99			# unix consensus & unavailable on nt
-syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
-syscon	rusage	RUSAGE_THREAD				1			99			1			1			1			1			# faked nt & unavailable on xnu
-
 syscon	misc	FSETLOCKING_QUERY			0			0			0			0			0			0			# consensus
 syscon	misc	FSETLOCKING_BYCALLER			2			0			0			0			0			0
 syscon	misc	FSETLOCKING_INTERNAL			1			0			0			0			0			0
@@ -1865,19 +1783,6 @@ syscon	misc	SCHED_BATCH				3			0			0			0			0			0
 syscon	misc	SCHED_IDLE				5			0			0			0			0			0
 syscon	misc	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0
 
-syscon	misc	WRDE_APPEND				0			1			1			0			0			0
-syscon	misc	WRDE_BADCHAR				0			1			1			0			0			0
-syscon	misc	WRDE_BADVAL				0			2			2			0			0			0
-syscon	misc	WRDE_CMDSUB				0			3			3			0			0			0
-syscon	misc	WRDE_DOOFFS				0			2			2			0			0			0
-syscon	misc	WRDE_NOCMD				0			4			4			0			0			0
-syscon	misc	WRDE_NOSPACE				0			4			4			0			0			0
-syscon	misc	WRDE_NOSYS				0			5			5			0			0			0
-syscon	misc	WRDE_REUSE				0			8			8			0			0			0
-syscon	misc	WRDE_SHOWERR				0			0x10			0x10			0			0			0
-syscon	misc	WRDE_SYNTAX				0			6			6			0			0			0
-syscon	misc	WRDE_UNDEF				0			0x20			0x20			0			0			0
-
 syscon	misc	MCAST_BLOCK_SOURCE			43			84			84			0			0			43
 syscon	misc	MCAST_JOIN_GROUP			42			80			80			0			0			41
 syscon	misc	MCAST_JOIN_SOURCE_GROUP			46			82			82			0			0			45
@@ -1927,14 +1832,6 @@ syscon	misc	DAY_4					0x02000a		10			10			9			9			0
 syscon	misc	DAY_5					0x02000b		11			11			10			10			0
 syscon	misc	DAY_6					0x02000c		12			12			11			11			0
 syscon	misc	DAY_7					0x02000d		13			13			12			12			0
-
-syscon	misc	FUTEX_PRIVATE_FLAG			128			0			0			0x80			0x80			0
-syscon	misc	FUTEX_REQUEUE				3			0			0			3			3			0
-syscon	misc	FUTEX_REQUEUE_PRIVATE			131			0			0			131			131			0
-syscon	misc	FUTEX_WAIT				0			0			0			1			1			0
-syscon	misc	FUTEX_WAIT_PRIVATE			128			0			0			129			129			0
-syscon	misc	FUTEX_WAKE				1			0			0			2			2			0
-syscon	misc	FUTEX_WAKE_PRIVATE			129			0			0			130			130			0
 
 syscon	misc	HOST_NOT_FOUND				1			1			1			1			1			0x2af9			# unix consensus
 syscon	misc	HOST_NAME_MAX				0x40			0			0			255			255			0
@@ -1991,8 +1888,8 @@ syscon	misc	FALLOC_FL_UNSHARE_RANGE			0x40			-1			-1			-1			-1			-1			# bsd cons
 #	System Call Numbers.
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology
-syscon	nr	__NR_exit				0x003c			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
-syscon	nr	__NR_exit_group				0x00e7			0x2000001          	0x0001        		0x0001          	0x001           	0xfff
+syscon	nr	__NR_exit				0x003c			0x2000169		0x01af			0x012e			0x136			0xfff			# __bsdthread_terminate() on XNU, thr_exit() on FreeBSD, __threxit() on OpenBSD, __lwp_exit() on NetBSD
+syscon	nr	__NR_exit_group				0x00e7			0x2000001		0x0001			0x0001			0x001			0xfff
 syscon	nr	__NR_read				0x0000			0x2000003		0x0003			0x0003			0x003			0xfff
 syscon	nr	__NR_write				0x0001			0x2000004		0x0004			0x0004			0x004			0xfff
 syscon	nr	__NR_open				0x0002			0x2000005		0x0005			0x0005			0x005			0xfff
@@ -2008,7 +1905,7 @@ syscon	nr	__NR_msync				0x001a			0x2000041		0x0041			0x0100			0x115			0xfff
 syscon	nr	__NR_mprotect				0x000a			0x200004a		0x004a			0x004a			0x04a			0xfff
 syscon	nr	__NR_munmap				0x000b			0x2000049		0x0049			0x0049			0x049			0xfff
 syscon	nr	__NR_sigaction				0x000d			0x200002e		0x01a0			0x002e			0x154			0xfff
-syscon	nr	__NR_sigprocmask			0x000e			0x2000030		0x0154			0x0030			0x125			0xfff
+syscon	nr	__NR_sigprocmask			0x000e			0x2000149		0x0154			0x0030			0x125			0xfff
 syscon	nr	__NR_ioctl				0x0010			0x2000036		0x0036			0x0036			0x036			0xfff
 syscon	nr	__NR_pread				0x0011			0x2000099		0x01db			0x00ad			0x0ad			0xfff
 syscon	nr	__NR_pwrite				0x0012			0x200009a		0x01dc			0x00ae			0x0ae			0xfff
@@ -2165,7 +2062,7 @@ syscon	nr	__NR_modify_ldt				0x009a			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_pivot_root				0x009b			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR__sysctl				0x009c			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_prctl				0x009d			0xfff			0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_arch_prctl				0x009e			0xfff			0x00a5			0x00a5			0xfff			0xfff
+syscon	nr	__NR_arch_prctl				0x009e			0x3000003		0x00a5			0x149			0x13d			0xfff		# sysarch on freebsd, _lwp_setprivate on netbsd, __set_tcb on openbsd, thread_fast_set_cthread_self on xnu
 syscon	nr	__NR_adjtimex				0x009f			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_umount2				0x00a6			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_swapon				0x00a7			0x2000055		0x0055			0xfff			0xfff			0xfff
@@ -2176,7 +2073,7 @@ syscon	nr	__NR_iopl				0x00ac			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_ioperm				0x00ad			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_init_module			0x00af			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_delete_module			0x00b0			0xfff			0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_gettid				0x00ba			0x200011e		0xfff			0xfff			0xfff			0xfff
+syscon	nr	__NR_gettid				0x00ba			0x0100001b		432			299			311			0xfff		# TODO(jart): thread_self_trap vs. gettid?
 syscon	nr	__NR_readahead				0x00bb			0xfff			0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_setxattr				0x00bc			0x20000ec		0xfff			0xfff			0x177			0xfff
 syscon	nr	__NR_fsetxattr				0x00be			0x20000ed		0xfff			0xfff			0x179			0xfff
@@ -2391,9 +2288,7 @@ syscon	nr	__NR_access_extended			0xfff			0x200011c		0xfff			0xfff			0xfff			0xff
 syscon	nr	__NR_audit_session_join			0xfff			0x20001ad		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_audit_session_port			0xfff			0x20001b0		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_audit_session_self			0xfff			0x20001ac		0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_bsdthread_create			0xfff			0x2000168		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_bsdthread_ctl			0xfff			0x20001de		0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_bsdthread_register			0xfff			0x200016e		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_bsdthread_terminate		0xfff			0x2000169		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_change_fdguard_np			0xfff			0x20001bc		0xfff			0xfff			0xfff			0xfff
 syscon	nr	__NR_chmod_extended			0xfff			0x200011a		0xfff			0xfff			0xfff			0xfff
@@ -2684,7 +2579,6 @@ syscon	nr	__NR_thr_create				0xfff			0xfff			0x01ae			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_exit				0xfff			0xfff			0x01af			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_kill				0xfff			0xfff			0x01b1			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_kill2				0xfff			0xfff			0x01e1			0xfff			0xfff			0xfff
-syscon	nr	__NR_thr_new				0xfff			0xfff			0x01c7			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_self				0xfff			0xfff			0x01b0			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_set_name			0xfff			0xfff			0x01d0			0xfff			0xfff			0xfff
 syscon	nr	__NR_thr_suspend			0xfff			0xfff			0x01ba			0xfff			0xfff			0xfff
@@ -2895,36 +2789,7 @@ syscon	icmp6	ICMP6_ROUTER_RENUMBERING		138			138			138			138			138			0			# unix 
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_FORBIDDEN		0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
 syscon	icmp6	ICMP6_RR_RESULT_FLAGS_OOB		0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
 
-#	java's computational model
-#	solves the sharing problem by defining everything as shared
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	misc	PTHREAD_MUTEX_STALLED			0			0			0			0			0			0			# consensus
-syscon	misc	PTHREAD_PRIO_NONE			0			0			0			0			0			0			# consensus
-syscon	misc	PTHREAD_PRIO_INHERIT			0			1			1			1			1			0			# bsd consensus
-syscon	misc	PTHREAD_PRIO_PROTECT			0			2			2			2			2			0			# bsd consensus
-syscon	misc	PTHREAD_DESTRUCTOR_ITERATIONS		4			4			4			4			4			0			# unix consensus
-syscon	misc	PTHREAD_PROCESS_SHARED			1			1			1			1			1			0			# unix consensus
-syscon	misc	PTHREAD_CREATE_DETACHED			1			2			1			1			1			0
-syscon	misc	PTHREAD_KEYS_MAX			0x0400			0x0200			0x0100			0x0100			0x0100			0
-syscon	misc	PTHREAD_STACK_MIN			0x4000			0x2000			0x0800			0x1000			0x1000			0
-syscon	misc	PTHREAD_BARRIER_SERIAL_THREAD		-1			0			-1			-1			-1			0
-syscon	misc	PTHREAD_CANCEL_ASYNCHRONOUS		1			0			2			2			2			0
-syscon	misc	PTHREAD_CANCEL_DISABLE			1			0			1			1			1			0
-syscon	misc	PTHREAD_INHERIT_SCHED			0			1			4			4			4			0
-syscon	misc	PTHREAD_SCOPE_SYSTEM			0			1			2			2			2			0
-syscon	misc	PTHREAD_EXPLICIT_SCHED			1			2			0			0			0			0
-syscon	misc	PTHREAD_MUTEX_DEFAULT			0			0			1			4			4			0
-syscon	misc	PTHREAD_MUTEX_ERRORCHECK		0			1			0			1			1			0
-syscon	misc	PTHREAD_MUTEX_RECURSIVE			0			2			0			2			2			0
-syscon	misc	PTHREAD_SCOPE_PROCESS			1			2			0			0			0			0
-syscon	misc	PTHREAD_CANCEL_DEFERRED			0			2			0			0			0			0
-syscon	misc	PTHREAD_CANCEL_ENABLE			0			1			0			0			0			0
-syscon	misc	PTHREAD_CREATE_JOINABLE			0			1			0			0			0			0
-syscon	misc	PTHREAD_MUTEX_NORMAL			0			0			0			3			3			0
-syscon	misc	PTHREAD_MUTEX_ROBUST			0			0			1			0			0			0
-syscon	misc	PTHREAD_PROCESS_PRIVATE			0			2			0			0			0			0
-
+# man fanotify(7)
 syscon	fan	FAN_CLASS_NOTIF				0			0			0			0			0			0			# consensus
 syscon	fan	FAN_ACCESS				1			0			0			0			0			0
 syscon	fan	FAN_ACCESS_PERM				0x020000		0			0			0			0			0
@@ -3137,7 +3002,6 @@ syscon	misc	NGREG					23			0			0			0			0			0
 syscon	misc	NOGROUP					-1			0xffff			0xffff			0xffff			0xffff			0			# bsd consensus
 syscon	misc	ORDERED_QUEUE_TAG			34			0			0			0			0			0
 syscon	misc	ORIG_RAX				15			0			0			0			0			0
-syscon	misc	PIPE_BUF				0x1000			0x0200			0x0200			0x0200			0x0200			0			# bsd consensus
 syscon	misc	PRE_FETCH				52			0			0			0			0			0
 syscon	misc	QUEUE_FULL				20			0			0			0			0			0
 syscon	misc	REASSIGN_BLOCKS				7			0			0			0			0			0
@@ -3207,7 +3071,6 @@ syscon	misc	CSTATUS					0			20			20			255			255			0
 syscon	misc	DEAD_PROCESS				8			8			7			0			0			0
 syscon	misc	FNM_NOSYS				-1			-1			-1			2			2			0
 syscon	misc	INIT_PROCESS				5			5			5			0			0			0
-syscon	misc	MINSIGSTKSZ				0x0800			0x8000			0x0800			0x3000			0x2000			0
 syscon	misc	MQ_PRIO_MAX				0x8000			0			0x40			0			0			0
 syscon	misc	MTERASE					13			0			12			9			9			0
 syscon	misc	MTLOAD					30			0			19			0			0			0
@@ -3236,6 +3099,7 @@ syscon	misc	USER_PROCESS				7			7			4			0			0			0
 syscon	misc	YESEXPR					0x050000		52			52			47			47			0
 syscon	misc	YESSTR					0x050002		54			54			46			46			0
 
+# man inotify(7)
 syscon	in	IN_LOOPBACKNET				127			127			127			127			127			0			# unix consensus
 syscon	in	IN_ACCESS				1			0			0			0			0			0
 syscon	in	IN_ALL_EVENTS				0x0fff			0			0			0			0			0
@@ -3264,84 +3128,6 @@ syscon	in	IN_OPEN					0x20			0			0			0			0			0
 syscon	in	IN_Q_OVERFLOW				0x4000			0			0			0			0			0
 syscon	in	IN_UNMOUNT				0x2000			0			0			0			0			0
 
-syscon	posix	_POSIX_ARG_MAX				0x1000			0x1000			0x1000			0x1000			0x1000			0			# unix consensus
-syscon	posix	_POSIX_CHILD_MAX			25			25			25			25			25			0			# unix consensus
-syscon	posix	_POSIX_HOST_NAME_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_LINK_MAX				8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_LOGIN_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_MAX_CANON			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_MAX_INPUT			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_NAME_MAX				14			14			14			14			14			14			# forced consensus
-syscon	posix	_POSIX_NGROUPS_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_OPEN_MAX				20			20			20			20			20			20			# forced consensus
-syscon	posix	_POSIX_PATH_MAX				255			255			255			255			255			255			# forced consensus
-syscon	posix	_POSIX_PIPE_BUF				0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
-syscon	posix	_POSIX_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SEM_NSEMS_MAX			0x0100			0x0100			0x0100			0x0100			0x0100			0			# unix consensus
-syscon	posix	_POSIX_SEM_VALUE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_SSIZE_MAX			0x7fff			0x7fff			0x7fff			0x7fff			0x7fff			0			# unix consensus
-syscon	posix	_POSIX_STREAM_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_SYMLINK_MAX			255			255			255			255			255			0			# unix consensus
-syscon	posix	_POSIX_SYMLOOP_MAX			8			8			8			8			8			0			# unix consensus
-syscon	posix	_POSIX_THREAD_DESTRUCTOR_ITERATIONS	4			4			4			4			4			0			# unix consensus
-syscon	posix	_POSIX_THREAD_KEYS_MAX			0x80			0x80			0x80			0x80			0x80			0			# unix consensus
-syscon	posix	_POSIX_TTY_NAME_MAX			9			9			9			9			9			0			# unix consensus
-syscon	posix	_POSIX_TZNAME_MAX			6			6			6			6			6			0			# unix consensus
-syscon	posix	_POSIX_CLOCK_SELECTION			0x031069		-1			-1			-1			-1			0			# bsd consensus
-syscon	posix	_POSIX_FSYNC				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MAPPED_FILES			0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_MEMORY_PROTECTION		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_READER_WRITER_LOCKS		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREADS				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKADDR		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_THREAD_ATTR_STACKSIZE		0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	posix	_POSIX_ADVISORY_INFO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_ASYNCHRONOUS_IO			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_BARRIERS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_JOB_CONTROL			1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_MEMLOCK				0x031069		-1			-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_MEMLOCK_RANGE			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MESSAGE_PASSING			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_NO_TRUNC				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_RAW_SOCKETS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_REALTIME_SIGNALS			0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_REGEXP				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SEMAPHORES			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SHARED_MEMORY_OBJECTS		0x031069		-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_SHELL				1			0x030db0		1			1			1			0
-syscon	posix	_POSIX_SPAWN				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_SPIN_LOCKS			0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_PRIORITY_SCHEDULING	0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_PROCESS_SHARED		0x031069		0x030db0		0x030db0		-1			-1			0
-syscon	posix	_POSIX_THREAD_SAFE_FUNCTIONS		0x031069		0x030db0		-1			0x030db0		0x030db0		0
-syscon	posix	_POSIX_THREAD_THREADS_MAX		0x40			0x40			0x40			4			4			0
-syscon	posix	_POSIX_TIMEOUTS				0x031069		-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_TIMERS				0x031069		-1			0x030db0		-1			-1			0
-syscon	posix	_POSIX_VERSION				0x031069		0x030db0		0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_VDISABLE				0			255			255			255			255			0			# bsd consensus
-syscon	posix	_POSIX_AIO_LISTIO_MAX			2			2			2			0			0			0
-syscon	posix	_POSIX_AIO_MAX				1			1			1			0			0			0
-syscon	posix	_POSIX_CHOWN_RESTRICTED			0			0x030db0		1			1			1			0
-syscon	posix	_POSIX_CLOCKRES_MIN			0x01312d00		0			0x01312d00		0x01312d00		0x01312d00		0
-syscon	posix	_POSIX_CPUTIME				0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_DELAYTIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_MONOTONIC_CLOCK			0			-1			0x030db0		0x030db0		0x030db0		0
-syscon	posix	_POSIX_MQ_OPEN_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_MQ_PRIO_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_RTSIG_MAX			8			8			8			0			0			0
-syscon	posix	_POSIX_SAVED_IDS			1			0x030db0		0			1			1			0
-syscon	posix	_POSIX_SIGQUEUE_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_THREAD_CPUTIME			0			-1			0x030db0		0x031069		0x031069		0
-syscon	posix	_POSIX_TIMER_MAX			0x20			0x20			0x20			0			0			0
-syscon	posix	_POSIX_IPV6				0x031069		0x030db0		0			0			0			0
-syscon	posix	_POSIX_SS_REPL_MAX			0			4			4			0			0			0
-syscon	posix	_POSIX_TRACE_EVENT_NAME_MAX		0			30			30			0			0			0
-syscon	posix	_POSIX_TRACE_NAME_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_SYS_MAX			0			8			8			0			0			0
-syscon	posix	_POSIX_TRACE_USER_EVENT_MAX		0			0x20			0x20			0			0			0
-syscon	posix	_POSIX_V6_LP64_OFF64			1			1			0			0			0			0
-syscon	posix	_POSIX_V7_LP64_OFF64			1			1			0			0			0			0
-
 syscon	misc	TYPE_DISK				0			0			0			0			0			0			# consensus
 syscon	misc	TYPE_A					1			1			1			1			1			0			# unix consensus
 syscon	misc	TYPE_E					2			2			2			2			2			0			# unix consensus
@@ -3356,18 +3142,6 @@ syscon	misc	TYPE_ROM				5			0			0			0			0			0
 syscon	misc	TYPE_SCANNER				6			0			0			0			0			0
 syscon	misc	TYPE_TAPE				1			0			0			0			0			0
 syscon	misc	TYPE_WORM				4			0			0			0			0			0
-
-syscon	misc	_POSIX2_BC_BASE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_DIM_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_BC_SCALE_MAX			99			99			99			99			99			0			# unix consensus
-syscon	misc	_POSIX2_BC_STRING_MAX			0x03e8			0x03e8			0x03e8			0x03e8			0x03e8			0			# unix consensus
-syscon	misc	_POSIX2_CHARCLASS_NAME_MAX		14			14			14			14			14			0			# unix consensus
-syscon	misc	_POSIX2_COLL_WEIGHTS_MAX		2			2			2			2			2			0			# unix consensus
-syscon	misc	_POSIX2_EXPR_NEST_MAX			0x20			0x20			0x20			0x20			0x20			0			# unix consensus
-syscon	misc	_POSIX2_LINE_MAX			0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
-syscon	misc	_POSIX2_RE_DUP_MAX			255			255			255			255			255			0			# unix consensus
-syscon	misc	_POSIX2_C_BIND				0x031069		0x030db0		0x030db0		0x030db0		0x030db0		0			# bsd consensus
-syscon	misc	_POSIX2_VERSION				0x031069		0x030db0		0x030a2c		0x031069		0x031069		0
 
 syscon	nd	ND_RA_FLAG_MANAGED			0x80			0x80			0x80			0x80			0x80			0x80			# consensus
 syscon	nd	ND_RA_FLAG_OTHER			0x40			0x40			0x40			0x40			0x40			0x40			# consensus
@@ -3398,23 +3172,6 @@ syscon	misc	N_STRIP					4			0			0			0			0			0
 syscon	misc	N_SYNC_PPP				14			0			0			0			0			0
 syscon	misc	N_X25					6			0			0			0			0			0
 
-syscon	misc	BLKTYPE					52			52			52			52			52			0			# unix consensus
-syscon	misc	BLKBSZGET				0x80081270		0			0			0			0			0
-syscon	misc	BLKBSZSET				0x40081271		0			0			0			0			0
-syscon	misc	BLKFLSBUF				0x1261			0			0			0			0			0
-syscon	misc	BLKFRAGET				0x1265			0			0			0			0			0
-syscon	misc	BLKFRASET				0x1264			0			0			0			0			0
-syscon	misc	BLKGETSIZE				0x1260			0			0			0			0			0
-syscon	misc	BLKGETSIZE64				0x80081272		0			0			0			0			0
-syscon	misc	BLKRAGET				0x1263			0			0			0			0			0
-syscon	misc	BLKRASET				0x1262			0			0			0			0			0
-syscon	misc	BLKROGET				0x125e			0			0			0			0			0
-syscon	misc	BLKROSET				0x125d			0			0			0			0			0
-syscon	misc	BLKRRPART				0x125f			0			0			0			0			0
-syscon	misc	BLKSECTGET				0x1267			0			0			0			0			0
-syscon	misc	BLKSECTSET				0x1266			0			0			0			0			0
-syscon	misc	BLKSSZGET				0x1268			0			0			0			0			0
-
 syscon	misc	ETH_P_CUST				0x6006			0			0			0			0			0
 syscon	misc	ETH_P_DDCMP				6			0			0			0			0			0
 syscon	misc	ETH_P_DEC				0x6000			0			0			0			0			0
@@ -3429,136 +3186,5 @@ syscon	misc	ETH_P_PPP_MP				8			0			0			0			0			0
 syscon	misc	ETH_P_RARP				0x8035			0			0			0			0			0
 syscon	misc	ETH_P_SCA				0x6007			0			0			0			0			0
 syscon	misc	ETH_P_WAN_PPP				7			0			0			0			0			0
-
-syscon	scsi	SCSI_IOCTL_BENCHMARK_COMMAND		3			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_DOORLOCK			0x5380			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_DOORUNLOCK			0x5381			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_GET_BUS_NUMBER		0x5386			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_GET_IDLUN			0x5382			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_PROBE_HOST			0x5385			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_SEND_COMMAND			1			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_START_UNIT			5			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_STOP_UNIT			6			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_SYNC				4			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TAGGED_DISABLE		0x5384			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TAGGED_ENABLE		0x5383			0			0			0			0			0
-syscon	scsi	SCSI_IOCTL_TEST_UNIT_READY		2			0			0			0			0			0
-syscon	scsi	BUS_DEVICE_RESET			12			0			0			0			0			0			# SIGBUS;
-syscon	scsi	READ_10					40			0			0			0			0			0
-syscon	scsi	READ_12					168			0			0			0			0			0
-syscon	scsi	READ_6					8			0			0			0			0			0
-syscon	scsi	READ_BLOCK_LIMITS			5			0			0			0			0			0
-syscon	scsi	READ_BUFFER				60			0			0			0			0			0
-syscon	scsi	READ_CAPACITY				37			0			0			0			0			0
-syscon	scsi	READ_DEFECT_DATA			55			0			0			0			0			0
-syscon	scsi	READ_ELEMENT_STATUS			184			0			0			0			0			0
-syscon	scsi	READ_LONG				62			0			0			0			0			0
-syscon	scsi	READ_POSITION				52			0			0			0			0			0
-syscon	scsi	READ_REVERSE				15			0			0			0			0			0
-syscon	scsi	READ_TOC				67			0			0			0			0			0
-syscon	scsi	WRITE_10				42			0			0			0			0			0
-syscon	scsi	WRITE_12				170			0			0			0			0			0
-syscon	scsi	WRITE_6					10			0			0			0			0			0
-syscon	scsi	WRITE_BUFFER				59			0			0			0			0			0
-syscon	scsi	WRITE_FILEMARKS				0x10			0			0			0			0			0
-syscon	scsi	WRITE_LONG				63			0			0			0			0			0
-syscon	scsi	WRITE_LONG_2				234			0			0			0			0			0
-syscon	scsi	WRITE_SAME				65			0			0			0			0			0
-syscon	scsi	WRITE_VERIFY				46			0			0			0			0			0
-syscon	scsi	WRITE_VERIFY_12				174			0			0			0			0			0
-
-syscon	log	LOG_EMERG				0			0			0			0			0			0			# consensus
-syscon	log	LOG_KERN				0			0			0			0			0			0			# consensus
-syscon	log	LOG_ALERT				1			1			1			1			1			1			# unix consensus
-syscon	log	LOG_PID					1			1			1			1			1			1			# unix consensus
-syscon	log	LOG_CONS				2			2			2			2			2			2			# unix consensus
-syscon	log	LOG_CRIT				2			2			2			2			2			2			# unix consensus
-syscon	log	LOG_ERR					3			3			3			3			3			3			# unix consensus
-syscon	log	LOG_ODELAY				4			4			4			4			4			4			# unix consensus
-syscon	log	LOG_WARNING				4			4			4			4			4			4			# unix consensus
-syscon	log	LOG_NOTICE				5			5			5			5			5			5			# unix consensus
-syscon	log	LOG_INFO				6			6			6			6			6			6			# unix consensus
-syscon	log	LOG_DEBUG				7			7			7			7			7			7			# unix consensus
-syscon	log	LOG_PRIMASK				7			7			7			7			7			7			# unix consensus
-syscon	log	LOG_NDELAY				8			8			8			8			8			8			# unix consensus
-syscon	log	LOG_USER				8			8			8			8			8			8			# unix consensus
-syscon	log	LOG_MAIL				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
-syscon	log	LOG_NOWAIT				0x10			0x10			0x10			0x10			0x10			0x10			# unix consensus
-syscon	log	LOG_DAEMON				24			24			24			24			24			24			# unix consensus
-syscon	log	LOG_NFACILITIES				24			25			24			24			24			24
-syscon	log	LOG_AUTH				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
-syscon	log	LOG_PERROR				0x20			0x20			0x20			0x20			0x20			0x20			# unix consensus
-syscon	log	LOG_SYSLOG				40			40			40			40			40			40			# unix consensus
-syscon	log	LOG_LPR					48			48			48			48			48			48			# unix consensus
-syscon	log	LOG_NEWS				56			56			56			56			56			56			# unix consensus
-syscon	log	LOG_UUCP				0x40			0x40			0x40			0x40			0x40			40			# unix consensus
-syscon	log	LOG_CRON				72			72			72			72			72			72			# unix consensus
-syscon	log	LOG_SELECT				76			0			0			0			0			0
-syscon	log	LOG_SENSE				77			0			0			0			0			0
-syscon	log	LOG_LOCAL0				0x80			0x80			0x80			0x80			0x80			0x80			# unix consensus
-syscon	log	LOG_LOCAL1				136			136			136			136			136			136			# unix consensus
-syscon	log	LOG_LOCAL2				144			144			144			144			144			144			# unix consensus
-syscon	log	LOG_LOCAL3				152			152			152			152			152			152			# unix consensus
-syscon	log	LOG_LOCAL4				160			160			160			160			160			160			# unix consensus
-syscon	log	LOG_LOCAL5				168			168			168			168			168			168			# unix consensus
-syscon	log	LOG_LOCAL6				176			176			176			176			176			176			# unix consensus
-syscon	log	LOG_LOCAL7				184			184			184			184			184			184			# unix consensus
-syscon	log	LOG_FACMASK				0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			0x03f8			# unix consensus
-
-syscon	sg	SG_DXFER_TO_FROM_DEV			-4			0			0			0			0			0
-syscon	sg	SG_DXFER_FROM_DEV			-3			0			0			0			0			0
-syscon	sg	SG_DXFER_TO_DEV				-2			0			0			0			0			0
-syscon	sg	SG_DXFER_NONE				-1			0			0			0			0			0
-syscon	sg	SG_DEF_COMMAND_Q			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_FORCE_LOW_DMA			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_FORCE_PACK_ID			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_KEEP_ORPHAN			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEF_UNDERRUN_FLAG			0			0			0			0			0			0			# consensus
-syscon	sg	SG_INFO_INDIRECT_IO			0			0			0			0			0			0			# consensus
-syscon	sg	SG_INFO_OK				0			0			0			0			0			0			# consensus
-syscon	sg	SG_SCSI_RESET_NOTHING			0			0			0			0			0			0			# consensus
-syscon	sg	SG_DEFAULT_RETRIES			1			0			0			0			0			0
-syscon	sg	SG_FLAG_DIRECT_IO			1			0			0			0			0			0
-syscon	sg	SG_INFO_CHECK				1			0			0			0			0			0
-syscon	sg	SG_INFO_OK_MASK				1			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_DEVICE			1			0			0			0			0			0
-syscon	sg	SG_FLAG_LUN_INHIBIT			2			0			0			0			0			0
-syscon	sg	SG_INFO_DIRECT_IO			2			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_BUS			2			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET_HOST			3			0			0			0			0			0
-syscon	sg	SG_INFO_MIXED_IO			4			0			0			0			0			0
-syscon	sg	SG_INFO_DIRECT_IO_MASK			6			0			0			0			0			0
-syscon	misc	VOLUME_OVERFLOW				13			0			0			0			0			0
-syscon	sg	SG_MAX_QUEUE				0x10			0			0			0			0			0
-syscon	sg	SG_MAX_SENSE				0x10			0			0			0			0			0
-syscon	sg	SG_DEFAULT_TIMEOUT			0x1770			0			0			0			0			0
-syscon	sg	SG_SET_TIMEOUT				0x2201			0			0			0			0			0
-syscon	sg	SG_GET_TIMEOUT				0x2202			0			0			0			0			0
-syscon	sg	SG_EMULATED_HOST			0x2203			0			0			0			0			0
-syscon	sg	SG_SET_TRANSFORM			0x2204			0			0			0			0			0
-syscon	sg	SG_GET_TRANSFORM			0x2205			0			0			0			0			0
-syscon	sg	SG_GET_COMMAND_Q			0x2270			0			0			0			0			0
-syscon	sg	SG_SET_COMMAND_Q			0x2271			0			0			0			0			0
-syscon	sg	SG_GET_RESERVED_SIZE			0x2272			0			0			0			0			0
-syscon	sg	SG_SET_RESERVED_SIZE			0x2275			0			0			0			0			0
-syscon	sg	SG_GET_SCSI_ID				0x2276			0			0			0			0			0
-syscon	sg	SG_SET_FORCE_LOW_DMA			0x2279			0			0			0			0			0
-syscon	sg	SG_GET_LOW_DMA				0x227a			0			0			0			0			0
-syscon	sg	SG_SET_FORCE_PACK_ID			0x227b			0			0			0			0			0
-syscon	sg	SG_GET_PACK_ID				0x227c			0			0			0			0			0
-syscon	sg	SG_GET_NUM_WAITING			0x227d			0			0			0			0			0
-syscon	sg	SG_SET_DEBUG				0x227e			0			0			0			0			0
-syscon	sg	SG_GET_SG_TABLESIZE			0x227f			0			0			0			0			0
-syscon	sg	SG_GET_VERSION_NUM			0x2282			0			0			0			0			0
-syscon	sg	SG_NEXT_CMD_LEN				0x2283			0			0			0			0			0
-syscon	sg	SG_SCSI_RESET				0x2284			0			0			0			0			0
-syscon	sg	SG_IO					0x2285			0			0			0			0			0
-syscon	sg	SG_GET_REQUEST_TABLE			0x2286			0			0			0			0			0
-syscon	sg	SG_SET_KEEP_ORPHAN			0x2287			0			0			0			0			0
-syscon	sg	SG_GET_KEEP_ORPHAN			0x2288			0			0			0			0			0
-syscon	sg	SG_BIG_BUFF				0x8000			0			0			0			0			0
-syscon	sg	SG_DEF_RESERVED_SIZE			0x8000			0			0			0			0			0
-syscon	sg	SG_SCATTER_SZ				0x8000			0			0			0			0			0
-syscon	sg	SG_FLAG_NO_DXFER			0x010000		0			0			0			0			0
 
 # https://youtu.be/GUQUD3IMbb4?t=85

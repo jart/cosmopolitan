@@ -4,9 +4,6 @@
 edotdot:
 	.leafprologue
 	.profilable
-	mov	EDOTDOT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EDOTDOT(%rip),%ecx
+	jmp	__errfun
 	.endfn	edotdot,globl,hidden

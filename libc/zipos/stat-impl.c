@@ -17,8 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zip.h"
@@ -28,12 +27,8 @@ int __zipos_stat_impl(struct Zipos *zipos, size_t cf, struct stat *st) {
   size_t lf;
   if (zipos && st) {
     bzero(st, sizeof(*st));
-    if (ZIP_CFILE_FILEATTRCOMPAT(zipos->map + cf) == kZipOsUnix) {
-      st->st_mode = ZIP_CFILE_EXTERNALATTRIBUTES(zipos->map + cf) >> 16;
-    } else {
-      st->st_mode = 0100644;
-    }
     lf = GetZipCfileOffset(zipos->map + cf);
+    st->st_mode = GetZipCfileMode(zipos->map + cf);
     st->st_size = GetZipLfileUncompressedSize(zipos->map + lf);
     st->st_blocks =
         roundup(GetZipLfileCompressedSize(zipos->map + lf), 512) / 512;

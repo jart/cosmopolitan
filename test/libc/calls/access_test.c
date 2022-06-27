@@ -29,8 +29,21 @@
 
 char testlib_enable_tmp_setup_teardown;
 
-TEST(access, testNull_returnsEfault) {
+TEST(access, efault) {
   ASSERT_SYS(EFAULT, -1, access(0, F_OK));
+  if (IsWindows() && !IsAsan()) return;  // not possible
+  ASSERT_SYS(EFAULT, -1, access((void *)77, F_OK));
+}
+
+TEST(access, enoent) {
+  ASSERT_SYS(ENOENT, -1, access("", F_OK));
+  ASSERT_SYS(ENOENT, -1, access("doesnotexist", F_OK));
+  ASSERT_SYS(ENOENT, -1, access("o/doesnotexist", F_OK));
+}
+
+TEST(access, enotdir) {
+  ASSERT_SYS(0, 0, touch("o", 0644));
+  ASSERT_SYS(ENOTDIR, -1, access("o/doesnotexist", F_OK));
 }
 
 TEST(access, test) {
@@ -59,5 +72,5 @@ TEST(access, testRequestWriteOnReadOnly_returnsEaccess) {
 }
 
 TEST(access, runThisExecutable) {
-  ASSERT_SYS(0, 0, access(program_executable_name, R_OK | X_OK));
+  ASSERT_SYS(0, 0, access(GetProgramExecutableName(), R_OK | X_OK));
 }

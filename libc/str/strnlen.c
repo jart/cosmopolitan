@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
 
 static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
   uint64_t w;
   for (; i + 8 < n; i += 8) {
-    w = READ64LE(s + i);
+    w = *(uint64_t *)(s + i);
     if ((w = ~w & (w - 0x0101010101010101) & 0x8080808080808080)) {
       i += (unsigned)__builtin_ctzll(w) >> 3;
       break;
@@ -40,8 +42,9 @@ static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
  * @return byte length
  * @asyncsignalsafe
  */
-size_t strnlen(const char *s, size_t n) {
+noasan size_t strnlen(const char *s, size_t n) {
   size_t i;
+  if (IsAsan() && n) __asan_verify(s, 1);
   for (i = 0; (uintptr_t)(s + i) & 7; ++i) {
     if (i == n || !s[i]) return i;
   }
@@ -50,5 +53,6 @@ size_t strnlen(const char *s, size_t n) {
     if (i == n || !s[i]) break;
   }
   assert(i == n || (i < n && !s[i]));
+  if (IsAsan()) __asan_verify(s, i);
   return i;
 }

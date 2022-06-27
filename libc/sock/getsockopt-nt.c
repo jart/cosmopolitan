@@ -17,20 +17,72 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/nt/struct/linger.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/yoink.inc"
+#include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/so.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsockopt_nt(struct Fd *fd, int level, int optname,
-                                  void *out_opt_optval, uint32_t *out_optlen) {
-  /* TODO(jart): Use WSAIoctl? */
+                                  void *out_opt_optval,
+                                  uint32_t *inout_optlen) {
+  uint64_t ms;
+  uint32_t in_optlen;
+  struct SockFd *sockfd;
+  struct linger_nt linger;
   assert(fd->kind == kFdSocket);
-  if (__sys_getsockopt_nt(fd->handle, level, optname, out_opt_optval,
-                          out_optlen) != -1) {
-    return 0;
+  sockfd = (struct SockFd *)fd->extra;
+
+  if (out_opt_optval && inout_optlen) {
+    in_optlen = *inout_optlen;
   } else {
+    in_optlen = 0;
+  }
+
+  if (level == SOL_SOCKET &&
+      (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)) {
+    if (in_optlen >= sizeof(struct timeval)) {
+      if (optname == SO_RCVTIMEO) {
+        ms = sockfd->rcvtimeo;
+      } else {
+        ms = sockfd->sndtimeo;
+      }
+      ((struct timeval *)out_opt_optval)->tv_sec = ms / 1000;
+      ((struct timeval *)out_opt_optval)->tv_usec = ms % 1000 * 1000;
+      *inout_optlen = sizeof(struct timeval);
+      return 0;
+    } else {
+      return einval();
+    }
+  }
+
+  // TODO(jart): Use WSAIoctl?
+  if (__sys_getsockopt_nt(fd->handle, level, optname, out_opt_optval,
+                          inout_optlen) == -1) {
     return __winsockerr();
   }
+
+  if (level == SOL_SOCKET) {
+    if (optname == SO_LINGER && in_optlen == sizeof(struct linger)) {
+      linger = *(struct linger_nt *)out_opt_optval;
+      ((struct linger *)out_opt_optval)->l_onoff = !!linger.l_onoff;
+      ((struct linger *)out_opt_optval)->l_linger = linger.l_linger;
+      *inout_optlen = sizeof(struct linger);
+    }
+  }
+
+  if (in_optlen == 4 && *inout_optlen == 1) {
+    // handle cases like this
+    // getsockopt(8, SOL_TCP, TCP_FASTOPEN, [u"☺"], [1]) → 0
+    int32_t wut = *(signed char *)out_opt_optval;
+    memcpy(out_opt_optval, &wut, 4);
+    *inout_optlen = 4;
+  }
+
+  return 0;
 }

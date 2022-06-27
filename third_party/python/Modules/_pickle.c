@@ -653,7 +653,7 @@ typedef struct PicklerObject {
                                    is an unbound method, NULL otherwise */
     PyObject *dispatch_table;   /* private dispatch_table, can be NULL */
 
-    PyObject *write;            /* write() method of the output stream. */
+    PyObject *write_;            /* write() method of the output stream. */
     PyObject *output_buffer;    /* Write into a local bytearray buffer before
                                    flushing to the stream. */
     Py_ssize_t output_len;      /* Length of output_buffer. */
@@ -699,7 +699,7 @@ typedef struct UnpicklerObject {
     Py_ssize_t next_read_idx;
     Py_ssize_t prefetched_idx;  /* index of first prefetched byte */
 
-    PyObject *read;             /* read() method of the input stream. */
+    PyObject *read_;             /* read() method of the input stream. */
     PyObject *readline;         /* readline() method of the input stream. */
     PyObject *peek;             /* peek() method of the input stream, or NULL */
 
@@ -1045,14 +1045,14 @@ _Pickler_FlushToFile(PicklerObject *self)
 {
     PyObject *output, *result;
 
-    assert(self->write != NULL);
+    assert(self->write_ != NULL);
 
     /* This will commit the frame first */
     output = _Pickler_GetString(self);
     if (output == NULL)
         return -1;
 
-    result = _Pickle_FastCall(self->write, output);
+    result = _Pickle_FastCall(self->write_, output);
     Py_XDECREF(result);
     return (result == NULL) ? -1 : 0;
 }
@@ -1118,7 +1118,7 @@ _Pickler_New(void)
 
     self->pers_func = NULL;
     self->dispatch_table = NULL;
-    self->write = NULL;
+    self->write_ = NULL;
     self->proto = 0;
     self->bin = 0;
     self->framing = 0;
@@ -1175,8 +1175,8 @@ _Pickler_SetOutputStream(PicklerObject *self, PyObject *file)
 {
     _Py_IDENTIFIER(write);
     assert(file != NULL);
-    self->write = _PyObject_GetAttrId(file, &PyId_write);
-    if (self->write == NULL) {
+    self->write_ = _PyObject_GetAttrId(file, &PyId_write);
+    if (self->write_ == NULL) {
         if (PyErr_ExceptionMatches(PyExc_AttributeError))
             PyErr_SetString(PyExc_TypeError,
                             "file must have a 'write' attribute");
@@ -1222,7 +1222,7 @@ _Unpickler_SkipConsumed(UnpicklerObject *self)
 
     assert(self->peek);  /* otherwise we did something wrong */
     /* This makes a useless copy... */
-    r = PyObject_CallFunction(self->read, "n", consumed);
+    r = PyObject_CallFunction(self->read_, "n", consumed);
     if (r == NULL)
         return -1;
     Py_DECREF(r);
@@ -1253,7 +1253,7 @@ _Unpickler_ReadFromFile(UnpicklerObject *self, Py_ssize_t n)
     PyObject *data;
     Py_ssize_t read_size;
 
-    assert(self->read != NULL);
+    assert(self->read_ != NULL);
 
     if (_Unpickler_SkipConsumed(self) < 0)
         return -1;
@@ -1287,7 +1287,7 @@ _Unpickler_ReadFromFile(UnpicklerObject *self, Py_ssize_t n)
         len = PyLong_FromSsize_t(n);
         if (len == NULL)
             return -1;
-        data = _Pickle_FastCall(self->read, len);
+        data = _Pickle_FastCall(self->read_, len);
     }
     if (data == NULL)
         return -1;
@@ -1314,7 +1314,7 @@ _Unpickler_ReadImpl(UnpicklerObject *self, char **s, Py_ssize_t n)
     /* This case is handled by the _Unpickler_Read() macro for efficiency */
     assert(self->next_read_idx + n > self->input_len);
 
-    if (!self->read)
+    if (!self->read_)
         return bad_readline();
 
     num_read = _Unpickler_ReadFromFile(self, n);
@@ -1381,7 +1381,7 @@ _Unpickler_Readline(UnpicklerObject *self, char **result)
             return _Unpickler_CopyLine(self, line_start, num_read, result);
         }
     }
-    if (!self->read)
+    if (!self->read_)
         return bad_readline();
 
     num_read = _Unpickler_ReadFromFile(self, READ_WHOLE_LINE);
@@ -1493,7 +1493,7 @@ _Unpickler_New(void)
     self->input_len = 0;
     self->next_read_idx = 0;
     self->prefetched_idx = 0;
-    self->read = NULL;
+    self->read_ = NULL;
     self->readline = NULL;
     self->peek = NULL;
     self->encoding = NULL;
@@ -1533,13 +1533,13 @@ _Unpickler_SetInputStream(UnpicklerObject *self, PyObject *file)
         else
             return -1;
     }
-    self->read = _PyObject_GetAttrId(file, &PyId_read);
+    self->read_ = _PyObject_GetAttrId(file, &PyId_read);
     self->readline = _PyObject_GetAttrId(file, &PyId_readline);
-    if (self->readline == NULL || self->read == NULL) {
+    if (self->readline == NULL || self->read_ == NULL) {
         if (PyErr_ExceptionMatches(PyExc_AttributeError))
             PyErr_SetString(PyExc_TypeError,
                             "file must have 'read' and 'readline' attributes");
-        Py_CLEAR(self->read);
+        Py_CLEAR(self->read_);
         Py_CLEAR(self->readline);
         Py_CLEAR(self->peek);
         return -1;
@@ -4158,7 +4158,7 @@ _pickle_Pickler_dump(PicklerObject *self, PyObject *obj)
     /* Check whether the Pickler was initialized correctly (issue3664).
        Developers often forget to call __init__() in their subclasses, which
        would trigger a segfault without this check. */
-    if (self->write == NULL) {
+    if (self->write_ == NULL) {
         PickleState *st = _Pickle_GetGlobalState();
         PyErr_Format(st->PicklingError,
                      "Pickler.__init__() was not called by %s.__init__()",
@@ -4218,7 +4218,7 @@ Pickler_dealloc(PicklerObject *self)
     PyObject_GC_UnTrack(self);
 
     Py_XDECREF(self->output_buffer);
-    Py_XDECREF(self->write);
+    Py_XDECREF(self->write_);
     Py_XDECREF(self->pers_func);
     Py_XDECREF(self->dispatch_table);
     Py_XDECREF(self->fast_memo);
@@ -4231,7 +4231,7 @@ Pickler_dealloc(PicklerObject *self)
 static int
 Pickler_traverse(PicklerObject *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->write);
+    Py_VISIT(self->write_);
     Py_VISIT(self->pers_func);
     Py_VISIT(self->dispatch_table);
     Py_VISIT(self->fast_memo);
@@ -4242,7 +4242,7 @@ static int
 Pickler_clear(PicklerObject *self)
 {
     Py_CLEAR(self->output_buffer);
-    Py_CLEAR(self->write);
+    Py_CLEAR(self->write_);
     Py_CLEAR(self->pers_func);
     Py_CLEAR(self->dispatch_table);
     Py_CLEAR(self->fast_memo);
@@ -4293,7 +4293,7 @@ _pickle_Pickler___init___impl(PicklerObject *self, PyObject *file,
     _Py_IDENTIFIER(dispatch_table);
 
     /* In case of multiple __init__() calls, clear previous content. */
-    if (self->write != NULL)
+    if (self->write_ != NULL)
         (void)Pickler_clear(self);
 
     if (_Pickler_SetProtocol(self, protocol, fix_imports) < 0)
@@ -6514,9 +6514,9 @@ _pickle_Unpickler_load_impl(UnpicklerObject *self)
 
     /* Check whether the Unpickler was initialized correctly. This prevents
        segfaulting if a subclass overridden __init__ with a function that does
-       not call Unpickler.__init__(). Here, we simply ensure that self->read
+       not call Unpickler.__init__(). Here, we simply ensure that self->read_
        is not NULL. */
-    if (unpickler->read == NULL) {
+    if (unpickler->read_ == NULL) {
         PickleState *st = _Pickle_GetGlobalState();
         PyErr_Format(st->UnpicklingError,
                      "Unpickler.__init__() was not called by %s.__init__()",
@@ -6676,7 +6676,7 @@ Unpickler_dealloc(UnpicklerObject *self)
 {
     PyObject_GC_UnTrack((PyObject *)self);
     Py_XDECREF(self->readline);
-    Py_XDECREF(self->read);
+    Py_XDECREF(self->read_);
     Py_XDECREF(self->peek);
     Py_XDECREF(self->stack);
     Py_XDECREF(self->pers_func);
@@ -6698,7 +6698,7 @@ static int
 Unpickler_traverse(UnpicklerObject *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->readline);
-    Py_VISIT(self->read);
+    Py_VISIT(self->read_);
     Py_VISIT(self->peek);
     Py_VISIT(self->stack);
     Py_VISIT(self->pers_func);
@@ -6709,7 +6709,7 @@ static int
 Unpickler_clear(UnpicklerObject *self)
 {
     Py_CLEAR(self->readline);
-    Py_CLEAR(self->read);
+    Py_CLEAR(self->read_);
     Py_CLEAR(self->peek);
     Py_CLEAR(self->stack);
     Py_CLEAR(self->pers_func);
@@ -6772,7 +6772,7 @@ _pickle_Unpickler___init___impl(UnpicklerObject *self, PyObject *file,
     _Py_IDENTIFIER(persistent_load);
 
     /* In case of multiple __init__() calls, clear previous content. */
-    if (self->read != NULL)
+    if (self->read_ != NULL)
         (void)Unpickler_clear(self);
 
     if (_Unpickler_SetInputStream(self, file) < 0)

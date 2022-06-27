@@ -19,6 +19,8 @@ ssize_t appendw(char **, uint64_t);
 ssize_t appends(char **, const char *);
 ssize_t appendf(char **, const char *, ...);
 ssize_t vappendf(char **, const char *, va_list);
+ssize_t kappendf(char **, const char *, ...);
+ssize_t kvappendf(char **, const char *, va_list);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define appendf(BUF, FMT, ...) appendf(BUF, PFLINK(FMT), ##__VA_ARGS__)

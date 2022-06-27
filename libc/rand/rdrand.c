@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/bits/asmflag.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"
@@ -35,6 +35,7 @@ static dontinline uint64_t rdrand_failover(void) {
       if (r == -1 && errno == EINTR) {
         r = 0;
       } else if (r == -1 && errno == EAGAIN) {
+        r = 0;
         f = 0;
       } else {
         return rand64();
@@ -55,9 +56,12 @@ static dontinline uint64_t rdrand_failover(void) {
  * aren't available then we try /dev/urandom and if that fails, we try
  * getauxval(AT_RANDOM), and if not we finally use RDTSC and getpid().
  *
- * This function takes between 10 nanoseconds to several microseconds.
- *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 300 cycles
  * @see rngset(), rdseed(), rand64()
+ * @asyncsignalsafe
+ * @vforksafe
  */
 uint64_t rdrand(void) {
   int i;

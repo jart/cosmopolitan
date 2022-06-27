@@ -16,31 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
 #include "libc/stdio/stdio.h"
 
 /**
- * Reads content from stream.
+ * Reads line from stream.
  *
  * This function is similar to getline() except it'll truncate lines
  * exceeding size. The line ending marker is included and may be removed
- * using chomp().
+ * using _chomp().
+ *
+ * @param s is output buffer
+ * @param size is capacity of s
+ * @param f is non-null file oject stream pointer
+ * @return s on success, NULL on error, or NULL if EOF happens when
+ *     zero characters have been read
+ * @see fgets_unlocked()
+ * @threadsafe
  */
 char *fgets(char *s, int size, FILE *f) {
-  int c;
-  char *p;
-  p = s;
-  if (size > 0) {
-    while (--size > 0) {
-      if ((c = getc(f)) == -1) {
-        if (ferror(f) == EINTR) continue;
-        break;
-      }
-      *p++ = c & 0xff;
-      if (c == '\n') break;
-    }
-    *p = '\0';
-  }
-  return p > s ? s : NULL;
+  char *res;
+  flockfile(f);
+  res = fgets_unlocked(s, size, f);
+  funlockfile(f);
+  return res;
 }

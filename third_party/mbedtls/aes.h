@@ -5,21 +5,21 @@ COSMOPOLITAN_C_START_
 /* clang-format off */
 
 /* padlock.c and aesni.c rely on these values! */
-#define MBEDTLS_AES_ENCRYPT     1 /**< AES encryption. */
-#define MBEDTLS_AES_DECRYPT     0 /**< AES decryption. */
+#define MBEDTLS_AES_ENCRYPT     1 /*< AES encryption. */
+#define MBEDTLS_AES_DECRYPT     0 /*< AES decryption. */
 
 /* Error codes in range 0x0020-0x0022 */
-#define MBEDTLS_ERR_AES_INVALID_KEY_LENGTH                -0x0020  /**< Invalid key length. */
-#define MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH              -0x0022  /**< Invalid data input length. */
+#define MBEDTLS_ERR_AES_INVALID_KEY_LENGTH                -0x0020  /*< Invalid key length. */
+#define MBEDTLS_ERR_AES_INVALID_INPUT_LENGTH              -0x0022  /*< Invalid data input length. */
 
 /* Error codes in range 0x0021-0x0025 */
-#define MBEDTLS_ERR_AES_BAD_INPUT_DATA                    -0x0021  /**< Invalid input data. */
+#define MBEDTLS_ERR_AES_BAD_INPUT_DATA                    -0x0021  /*< Invalid input data. */
 
 /* MBEDTLS_ERR_AES_FEATURE_UNAVAILABLE is deprecated and should not be used. */
-#define MBEDTLS_ERR_AES_FEATURE_UNAVAILABLE               -0x0023  /**< Feature not available. For example, an unsupported AES key size. */
+#define MBEDTLS_ERR_AES_FEATURE_UNAVAILABLE               -0x0023  /*< Feature not available. For example, an unsupported AES key size. */
 
 /* MBEDTLS_ERR_AES_HW_ACCEL_FAILED is deprecated and should not be used. */
-#define MBEDTLS_ERR_AES_HW_ACCEL_FAILED                   -0x0025  /**< AES hardware accelerator failed. */
+#define MBEDTLS_ERR_AES_HW_ACCEL_FAILED                   -0x0025  /*< AES hardware accelerator failed. */
 
 /**
  * \brief The AES context-type definition.

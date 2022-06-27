@@ -44,6 +44,8 @@ PyObject *_PyObject_Call_Prepend(PyObject *func, PyObject *obj, PyObject *args,
 
 #define _PY_FASTCALL_SMALL_STACK 5
 
+int _PyObject_HasFastCall(PyObject *callable);
+
 PyObject *_PyObject_FastCall_Prepend(
     PyObject *callable,
     PyObject *obj,

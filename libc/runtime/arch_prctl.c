@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/asmflag.h"
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -55,8 +57,6 @@
                  : "c"(msr), "a"((uint32_t)val_), \
                    "d"((uint32_t)(val_ >> 32)));  \
   } while (0)
-
-int sys_arch_prctl(int, int64_t) hidden;
 
 static inline int arch_prctl_fsgsbase(int code, int64_t addr) {
   switch (code) {
@@ -113,12 +113,14 @@ static int arch_prctl_freebsd(int code, int64_t addr) {
 
 static privileged dontinline int arch_prctl_xnu(int code, int64_t addr) {
   int ax;
+  bool failed;
   switch (code) {
     case ARCH_SET_GS:
-      asm volatile("syscall"
-                   : "=a"(ax)
-                   : "0"(0x3000003), "D"(addr - 0x8a0 /* wat */)
+      asm volatile(CFLAG_ASM("syscall")
+                   : CFLAG_CONSTRAINT(failed), "=a"(ax)
+                   : "1"(0x3000003), "D"(addr - 0x30)
                    : "rcx", "r11", "memory", "cc");
+      if (failed) errno = ax, ax = -1;
       return ax;
     case ARCH_GET_FS:
     case ARCH_SET_FS:
@@ -130,21 +132,30 @@ static privileged dontinline int arch_prctl_xnu(int code, int64_t addr) {
 }
 
 static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
+  bool failed;
   int64_t rax;
   switch (code) {
     case ARCH_GET_FS:
-      asm volatile("syscall"
-                   : "=a"(rax)
-                   : "0"(0x014a /* __get_tcb */)
+      asm volatile(CFLAG_ASM("syscall")
+                   : CFLAG_CONSTRAINT(failed), "=a"(rax)
+                   : "1"(0x014a /* __get_tcb */)
                    : "rcx", "r11", "cc", "memory");
+      if (failed) {
+        errno = rax;
+        return -1;
+      }
       *(int64_t *)addr = rax;
       return 0;
     case ARCH_SET_FS:
-      asm volatile("syscall"
-                   : "=a"(rax)
-                   : "0"(0x0149 /* __set_tcb */), "D"(addr)
+      asm volatile(CFLAG_ASM("syscall")
+                   : CFLAG_CONSTRAINT(failed), "=a"(rax)
+                   : "1"(0x0149 /* __set_tcb */), "D"(addr)
                    : "rcx", "r11", "cc", "memory");
-      return 0;
+      if (failed) {
+        errno = rax;
+        rax = -1;
+      }
+      return rax;
     case ARCH_GET_GS:
     case ARCH_SET_GS:
       return enosys();
@@ -161,6 +172,8 @@ static struct InterruptibleCall g_fsgs_icall;
  */
 int arch_prctl(int code, int64_t addr) {
   void *fn = arch_prctl_fsgsbase;
+
+#if 0
   if (!g_fsgs_once) {
     g_fsgs_once = true;
     if (X86_HAVE(FSGSBASE)) {
@@ -180,6 +193,8 @@ int arch_prctl(int code, int64_t addr) {
   if (g_fsgs_once == 2) {
     return arch_prctl_fsgsbase(code, addr);
   }
+#endif
+
   switch (__hostos) {
     case METAL:
       return arch_prctl_msr(code, addr);

@@ -18,7 +18,7 @@ PyDoc_STRVAR(bytes_split__doc__,
 "    -1 (the default value) means no limit.");
 
 #define BYTES_SPLIT_METHODDEF    \
-    {"split", (PyCFunction)bytes_split, METH_FASTCALL, bytes_split__doc__},
+    {"split", (PyCFunction)bytes_split, METH_FASTCALL|METH_KEYWORDS, bytes_split__doc__},
 
 static PyObject *
 bytes_split_impl(PyBytesObject *self, PyObject *sep, Py_ssize_t maxsplit);
@@ -137,7 +137,7 @@ PyDoc_STRVAR(bytes_rsplit__doc__,
 "Splitting is done starting at the end of the bytes and working to the front.");
 
 #define BYTES_RSPLIT_METHODDEF    \
-    {"rsplit", (PyCFunction)bytes_rsplit, METH_FASTCALL, bytes_rsplit__doc__},
+    {"rsplit", (PyCFunction)bytes_rsplit, METH_FASTCALL|METH_KEYWORDS, bytes_rsplit__doc__},
 
 static PyObject *
 bytes_rsplit_impl(PyBytesObject *self, PyObject *sep, Py_ssize_t maxsplit);
@@ -191,7 +191,7 @@ static PyObject *
 bytes_strip_impl(PyBytesObject *self, PyObject *bytes);
 
 static PyObject *
-bytes_strip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+bytes_strip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
@@ -199,10 +199,6 @@ bytes_strip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kw
     if (!_PyArg_UnpackStack(args, nargs, "strip",
         0, 1,
         &bytes)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("strip", kwnames)) {
         goto exit;
     }
     return_value = bytes_strip_impl(self, bytes);
@@ -226,7 +222,7 @@ static PyObject *
 bytes_lstrip_impl(PyBytesObject *self, PyObject *bytes);
 
 static PyObject *
-bytes_lstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+bytes_lstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
@@ -234,10 +230,6 @@ bytes_lstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *k
     if (!_PyArg_UnpackStack(args, nargs, "lstrip",
         0, 1,
         &bytes)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("lstrip", kwnames)) {
         goto exit;
     }
     return_value = bytes_lstrip_impl(self, bytes);
@@ -261,7 +253,7 @@ static PyObject *
 bytes_rstrip_impl(PyBytesObject *self, PyObject *bytes);
 
 static PyObject *
-bytes_rstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+bytes_rstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *bytes = Py_None;
@@ -269,10 +261,6 @@ bytes_rstrip(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *k
     if (!_PyArg_UnpackStack(args, nargs, "rstrip",
         0, 1,
         &bytes)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("rstrip", kwnames)) {
         goto exit;
     }
     return_value = bytes_rstrip_impl(self, bytes);
@@ -294,7 +282,7 @@ PyDoc_STRVAR(bytes_translate__doc__,
 "The remaining characters are mapped through the given translation table.");
 
 #define BYTES_TRANSLATE_METHODDEF    \
-    {"translate", (PyCFunction)bytes_translate, METH_FASTCALL, bytes_translate__doc__},
+    {"translate", (PyCFunction)bytes_translate, METH_FASTCALL|METH_KEYWORDS, bytes_translate__doc__},
 
 static PyObject *
 bytes_translate_impl(PyBytesObject *self, PyObject *table,
@@ -337,7 +325,7 @@ static PyObject *
 bytes_maketrans_impl(Py_buffer *frm, Py_buffer *to);
 
 static PyObject *
-bytes_maketrans(void *null, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+bytes_maketrans(void *null, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_buffer frm = {NULL, NULL};
@@ -345,10 +333,6 @@ bytes_maketrans(void *null, PyObject **args, Py_ssize_t nargs, PyObject *kwnames
 
     if (!_PyArg_ParseStack(args, nargs, "y*y*:maketrans",
         &frm, &to)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("maketrans", kwnames)) {
         goto exit;
     }
     return_value = bytes_maketrans_impl(&frm, &to);
@@ -387,7 +371,7 @@ bytes_replace_impl(PyBytesObject *self, Py_buffer *old, Py_buffer *new,
                    Py_ssize_t count);
 
 static PyObject *
-bytes_replace(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+bytes_replace(PyBytesObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_buffer old = {NULL, NULL};
@@ -396,10 +380,6 @@ bytes_replace(PyBytesObject *self, PyObject **args, Py_ssize_t nargs, PyObject *
 
     if (!_PyArg_ParseStack(args, nargs, "y*y*|n:replace",
         &old, &new, &count)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("replace", kwnames)) {
         goto exit;
     }
     return_value = bytes_replace_impl(self, &old, &new, count);
@@ -433,7 +413,7 @@ PyDoc_STRVAR(bytes_decode__doc__,
 "    can handle UnicodeDecodeErrors.");
 
 #define BYTES_DECODE_METHODDEF    \
-    {"decode", (PyCFunction)bytes_decode, METH_FASTCALL, bytes_decode__doc__},
+    {"decode", (PyCFunction)bytes_decode, METH_FASTCALL|METH_KEYWORDS, bytes_decode__doc__},
 
 static PyObject *
 bytes_decode_impl(PyBytesObject *self, const char *encoding,
@@ -468,7 +448,7 @@ PyDoc_STRVAR(bytes_splitlines__doc__,
 "true.");
 
 #define BYTES_SPLITLINES_METHODDEF    \
-    {"splitlines", (PyCFunction)bytes_splitlines, METH_FASTCALL, bytes_splitlines__doc__},
+    {"splitlines", (PyCFunction)bytes_splitlines, METH_FASTCALL|METH_KEYWORDS, bytes_splitlines__doc__},
 
 static PyObject *
 bytes_splitlines_impl(PyBytesObject *self, int keepends);
@@ -520,4 +500,4 @@ bytes_fromhex(PyTypeObject *type, PyObject *arg)
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=debf785947e0eec2 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=fc9e02359cc56d36 input=a9049054013a1b77]*/

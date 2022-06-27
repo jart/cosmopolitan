@@ -16,10 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 	.init.start 300,_init_wincrash
+#if !IsTiny()
+	mov	__wincrashearly(%rip),%rcx
+	ntcall	__imp_RemoveVectoredExceptionHandler
+#endif
 	pushpop	1,%rcx
 	ezlea	__wincrash_nt,dx
 	ntcall	__imp_AddVectoredExceptionHandler

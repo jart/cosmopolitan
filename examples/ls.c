@@ -15,6 +15,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 
 struct stat st;

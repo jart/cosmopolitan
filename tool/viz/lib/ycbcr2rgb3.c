@@ -27,7 +27,6 @@
 #include "dsp/scale/scale.h"
 #include "libc/bits/xmmintrin.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/pmulhrsw.h"
 #include "libc/log/check.h"
@@ -155,8 +154,8 @@ void YCbCrInit(struct YCbCr **ycbcr, bool yonly, int swing, double gamma,
                const double gamut[3], const double illuminant[3]) {
   if (!*ycbcr) *ycbcr = xcalloc(1, sizeof(struct YCbCr));
   (*ycbcr)->yonly = yonly;
-  memset((*ycbcr)->magnums, 0, sizeof((*ycbcr)->magnums));
-  memset((*ycbcr)->lighting, 0, sizeof((*ycbcr)->lighting));
+  bzero((*ycbcr)->magnums, sizeof((*ycbcr)->magnums));
+  bzero((*ycbcr)->lighting, sizeof((*ycbcr)->lighting));
   YCbCrComputeCoefficients(swing, gamma, gamut, illuminant, (*ycbcr)->magnums,
                            (*ycbcr)->lighting, (*ycbcr)->transfer[0]);
   imapxlatab((*ycbcr)->transfer[1]);

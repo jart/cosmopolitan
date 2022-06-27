@@ -19,9 +19,13 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -40,8 +44,9 @@
  * @param mode is an octal user/group/other permission signifier, that's
  *     ignored if O_CREAT or O_TMPFILE weren't passed
  * @return number needing close(), or -1 w/ errno
- * @asyncsignalsafe
- * @vforksafe
+ * @asyncsignalsafe (zip files may have issues)
+ * @vforksafe (raises error if zip file)
+ * @threadsafe
  */
 int openat(int dirfd, const char *file, int flags, ...) {
   int rc;
@@ -73,8 +78,8 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
-  SYSDEBUG("openat(%d, %s, %d, %d) -> %d %s", (long)dirfd, file, flags,
-           (flags & (O_CREAT | O_TMPFILE)) ? mode : 0, (long)rc,
-           rc == -1 ? strerror(errno) : "");
+  STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), file,
+         DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
+         rc);
   return rc;
 }

@@ -542,54 +542,83 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 //	present two choices.
 	.ascii	"o=\"$(command -v \"$0\")\"\n"
 //	Try to use a system-wide APE loader.
-	.ascii	"type ape-loader >/dev/null 2>&1 && "
-	.ascii	"exec ape-loader \"$o\" \"$@\"\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] && "
+	.ascii	  "type ape >/dev/null 2>&1 && "
+	.ascii	    "exec ape \"$o\" \"$@\"\n"
 #ifdef APE_LOADER
 //	There is no system-wide APE loader, but there is one
 //	embedded inside the APE. So if the system is not MacOs,
 //	extract the loader into a temp folder, and use it to
 //	load the APE without modifying it.
-	.ascii	"if [ ! -d /Applications ]; then\n"
-	.ascii	  "t=\"${TMPDIR:-/tmp}/ape-loader\"\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
 	.ascii	  "[ -x \"$t\" ] || {\n"
+	.ascii	    "mkdir -p \"${t%/*}\" &&\n"
 	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
 	.shstub	      ape_loader_dd_skip,2
 	.ascii	      "\" count=\""
 	.shstub	      ape_loader_dd_count,2
-	.ascii	      "\" bs=64 2>/dev/null &&\n"
-	.ascii	    "chmod 755 \"$t.$$\" &&\n"
-	.ascii	    "mv \"$t.$$\" \"$t\"\n"
+	.ascii	      "\" bs=64 2>/dev/null\n"
+#if SupportsXnu()
+	.ascii	    "[ -d /Applications ] && "
+	.ascii	      "dd if=\"$t.$$\""
+	.ascii	        " of=\"$t.$$\""
+	.ascii	        " skip=6"
+	.ascii	        " count=10"
+	.ascii	        " bs=64"
+	.ascii	        " conv=notrunc"
+	.ascii	        " 2>/dev/null\n"
+#endif /* SupportsXnu() */
+	.ascii	    "chmod 755 \"$t.$$\"\n"
+	.ascii	    "mv -f \"$t.$$\" \"$t\"\n"
 	.ascii	  "}\n"
 	.ascii	  "exec \"$t\" \"$o\" \"$@\"\n"
-	.ascii	"fi\n"
-#endif
+	.ascii	"}\n"
+#endif /* APE_LOADER */
 #ifndef APE_NO_MODIFY_SELF
 //	The default behavior is: to overwrite the header in place.
 //	We prefer this because it's a tiny constant one time cost.
 //	We simply printf a 64-byte header and call execve() again.
 #else
-//	The alternative behavior is to copy to $TMPDIR and edit.
-//	This imposes a variety of caveats of its own that should
-//	be considered by the user beforehand, such as whether or
-//	not /tmp is considered trustworthy on a given system, or
-//	if the administrator chose to mount it with noexec. It's
-//	up to the user to decide what's best in those situations
-//	and also note that argv[0] and getauxval(AT_EXECFN) will
-//	change as a result of this, and lastly note we don't try
-//	to cleanup the tmp copies for the sake of efficiency. It
-//	should also be noted that if $0 has directory components
-//	then permission clashes can happen between system users,
-//	since only root is able to set the sticky bit, which can
-//	be addressed simply by overriding the TMPDIR environment
-	.ascii	"o=\"${TMPDIR:-/tmp}/$0\"\n"
-	.ascii	"if [ ! -e \"$o\" ]; then\n"
-	.ascii	  "d=\"$o\"\n"
-	.ascii	  "o=\"$o.$$\"\n"
-	.ascii	  "mkdir -p \"${o%/*}\" 2>/dev/null\n"
-	.ascii	  "cp -f \"$0\" \"$o\" || exit 120\n"
+//	The alternative behavior is to copy to $TMPDIR or $HOME or
+//	the current directory. We like TMPDIR because it's part of
+//	the IEEE POSIX standard whereas alternatives (XDG) aren't.
+	.ascii	"t=\"${TMPDIR:-${HOME:-.}}/$0\"\n"
+	.ascii	"[ x\"$1\" != x--assimilate ] || [ ! -e \"$t\" ] && {\n"
+	.ascii	  "[ x\"$1\" != x--assimilate ] && {\n"
+	.ascii	    "mkdir -p \"${t%/*}\" 2>/dev/null\n"
+	.ascii	    "cp -f \"$o\" \"$t.$$\" &&\n"
+	.ascii	    "mv -f \"$t.$$\" \"$t\" || exit 120\n"
+	.ascii	    "o=\"$t\"\n"
+	.ascii	  "}\n"
 #endif /* APE_NO_MODIFY_SELF */
+	.ascii	"exec 7<> \"$o\" || exit 121\n"
+	.ascii	"printf '"
+	.ascii	  "\\177ELF"			# 0x0: ⌂ELF
+	.ascii	  "\\2"				#   4: long mode
+	.ascii	  "\\1"				#   5: little endian
+	.ascii	  "\\1"				#   6: elf v1.o
+	.ascii	  "\\011"			#   7: FreeBSD
+	.ascii	  "\\0"				#   8: os/abi ver.
+	.ascii	  "\\0\\0\\0"			#   9: padding 3/7
+	.ascii	  "\\0\\0\\0\\0"		#      padding 4/7
+	.ascii	  "\\2\\0"			#  10: εxεcµταblε
+	.ascii	  "\\076\\0"			#  12: NexGen32e
+	.ascii	  "\\1\\0\\0\\0"		#  14: elf v1.o
+	.shstub	  ape_elf_entry,8		#  18: e_entry
+	.shstub	  ape_elf_phoff,8		#  20: e_phoff
+	.shstub	  ape_elf_shoff,8		#  28: e_shoff
+	.ascii	  "\\0\\0\\0\\0"		#  30: e_flags
+	.ascii	  "\\100\\0"			#  34: e_ehsize
+	.ascii	  "\\070\\0"			#  36: e_phentsize
+	.shstub	  ape_elf_phnum,2		#  38: e_phnum
+	.ascii	  "\\0\\0"			#  3a: e_shentsize
+	.shstub	  ape_elf_shnum,2		#  3c: e_shnum
+	.shstub	  ape_elf_shstrndx,2		#  3e: e_shstrndx
+	.ascii	  "' >&7\n"
+	.ascii	"exec 7<&-\n"
 #if SupportsXnu()
-	.ascii	"if [ -d /Applications ]; then\n"
+	.ascii	"[ -d /Applications ] && "
 	.ascii	  "dd if=\"$o\""
 	.ascii	    " of=\"$o\""
 	.ascii	    " bs=8"
@@ -598,54 +627,21 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	    "\" count=\""
 	.shstub	    ape_macho_dd_count,2
 	.ascii	    "\" conv=notrunc 2>/dev/null\n"
-	.ascii	"el"
 #endif /* XNU */
-	.ascii	"if exec 7<> \"$o\"; then\n"
-	.ascii	  "printf '"
-	.ascii	    "\\177ELF"			# 0x0: ⌂ELF
-	.ascii	    "\\2"			#   4: long mode
-	.ascii	    "\\1"			#   5: little endian
-	.ascii	    "\\1"			#   6: elf v1.o
-	.ascii	    "\\011"			#   7: FreeBSD
-	.ascii	    "\\0"			#   8: os/abi ver.
-	.ascii	    "\\0\\0\\0"			#   9: padding 3/7
-	.ascii	    "\\0\\0\\0\\0"		#      padding 4/7
-	.ascii	    "\\2\\0"			#  10: εxεcµταblε
-	.ascii	    "\\076\\0"			#  12: NexGen32e
-	.ascii	    "\\1\\0\\0\\0"		#  14: elf v1.o
-	.shstub	    ape_elf_entry,8		#  18: e_entry
-	.shstub	    ape_elf_phoff,8		#  20: e_phoff
-	.shstub	    ape_elf_shoff,8		#  28: e_shoff
-	.ascii	    "\\0\\0\\0\\0"		#  30: e_flags
-	.ascii	    "\\100\\0"			#  34: e_ehsize
-	.ascii	    "\\070\\0"			#  36: e_phentsize
-	.shstub	    ape_elf_phnum,2		#  38: e_phnum
-	.ascii	    "\\0\\0"			#  3a: e_shentsize
-	.shstub	    ape_elf_shnum,2		#  3c: e_shnum
-	.shstub	    ape_elf_shstrndx,2		#  3e: e_shstrndx
-	.ascii	    "' >&7\n"
-	.ascii	  "exec 7<&-\n"
-	.ascii	"else\n"
-	.ascii	  "exit 121\n"
-	.ascii	"fi\n"
+	.ascii	"[ x\"$1\" = x--assimilate ] && exit 0\n"
 #ifndef APE_NO_MODIFY_SELF
-	.ascii	"exec \"$0\" \"$@\"\n"		# optimistic execution
+	.ascii	"exec \"$0\" \"$@\"\n"		# try to preserve argv[0]
 #else
-	.ascii	  "mv -f \"$o\" \"$d\" 2>/dev/null\n"
-	.ascii	  "o=\"$d\"\n"
-	.ascii	"fi\n"
+	.ascii	"}\n"
+	.ascii	"o=\"$t\"\n"
 	.ascii	"exec \"$o\" \"$@\"\n"
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	"R=$?\n"
-	.ascii	"\n"
-	.ascii	"if [ $R -eq 126 ] && [ \"$(uname -m)\" != x86_64 ]; then\n"
-	.ascii	  "if Q=\"$(command -v qemu-x86_64)\"; then\n"
+	.ascii	"if [ \"$(uname -m)\" != x86_64 ]; then\n"
+	.ascii	  "Q=\"$(command -v qemu-x86_64)\" &&\n"
 	.ascii	    "exec \"$Q\" \"$o\" \"$@\"\n"
-	.ascii	  "else\n"
-	.ascii	    "echo error: need qemu-x86_64 >&2\n"
-	.ascii	  "fi\n"
 #ifndef APE_NO_MODIFY_SELF
-	.ascii	"elif [ $R -eq 127 ]; then\n"	# means argv[0] was wrong
+	.ascii	"else\n"			# means argv[0] was wrong
 	.ascii	"  exec \"$o\" \"$@\"\n"	# so do a path resolution
 #endif /* APE_NO_MODIFY_SELF */
 	.ascii	"fi\n"
@@ -653,13 +649,21 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.endobj	apesh
 #ifdef APE_LOADER
         .section .ape.loader,"a",@progbits
+	.align	64
+ape_loader:
         .incbin APE_LOADER
+	.endobj	ape_loader,globl
+	.align	64
+ape_loader_end:
+	nop
+	.endobj	ape_loader_end,globl
         .previous
 #endif /* APE_LOADER */
 #endif /* SupportsWindows() || SupportsMetal() || SupportsXnu() */
 
 #if SupportsSystemv() || SupportsMetal()
 	.section .elf.phdrs,"a",@progbits
+
 	.long	PT_LOAD
 	.long	PF_R|PF_X
 	.stub	ape_rom_offset,quad
@@ -668,6 +672,7 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_rom_filesz,quad
 	.stub	ape_rom_memsz,quad
 	.stub	ape_rom_align,quad
+
 	.long	PT_LOAD
 	.long	PF_R|PF_W
 	.stub	ape_ram_offset,quad
@@ -676,14 +681,32 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.stub	ape_ram_filesz,quad
 	.stub	ape_ram_memsz,quad
 	.stub	ape_ram_align,quad
+
+//	APE Stack Configuration
+//
+//	We actually respect this when allocating a deterministically
+//	addressed stack on Windows and other operating systems. However
+//	there's a few caveats:
+//
+//	- If ape_stack_pf has PF_X then OpenBSD probably won't work
+//	- We don't bother creating a deterministic stack in MODE=tiny
+//
+//	With that said, here's some examples of configuration:
+//
+//	    STATIC_SYMBOL("ape_stack_pf", "7");  // RWX
+//	    STATIC_STACK_ADDR(0x6fffffff0000);
+//	    STATIC_STACK_SIZE(65536);
+//
+//	@see ape.lds for defaults
 	.long	PT_GNU_STACK
-	.long	PF_R|PF_W
-	.stub	ape_stack_offset,quad
-	.stub	ape_stack_vaddr,quad
-	.stub	ape_stack_paddr,quad
-	.stub	ape_stack_filesz,quad
-	.stub	ape_stack_memsz,quad
-	.stub	ape_stack_align,quad
+	.stub	ape_stack_pf,long		# override w/ PF_X for execstack
+	.stub	ape_stack_offset,quad		# ignored
+	.stub	ape_stack_vaddr,quad		# is mmap()'d with MAP_FIXED
+	.stub	ape_stack_paddr,quad		# ignored
+	.stub	ape_stack_filesz,quad		# ignored
+	.stub	ape_stack_memsz,quad		# is mmap(size) argument
+	.stub	ape_stack_align,quad		# must be 16+
+
 #if SupportsOpenbsd() || SupportsNetbsd()
 	.long	PT_NOTE
 	.long	PF_R
@@ -836,7 +859,7 @@ ape_macho:
 	.long	(520f-510f)/4			# count
 510:	.quad	0				# rax
 	.quad	IMAGE_BASE_VIRTUAL		# rbx
-	.quad	0				# rcx
+	.quad	XNU				# rcx
 	.quad	0				# rdx
 	.quad	0				# rdi
 	.quad	0				# rsi
@@ -850,7 +873,7 @@ ape_macho:
 	.quad	0				# r13
 	.quad	0				# r14
 	.quad	0				# r15
-	.quad	_xnu				# rip
+	.quad	_start				# rip
 	.quad	0				# rflags
 	.quad	0				# cs
 	.quad	0				# fs
@@ -934,7 +957,7 @@ DLLEXE = DLLSTD
 //	   ││││││││        │       │┌6:Contains Initialized Data
 //	   ││││││││ o      │       ││┌5:Contains Code
 //	   ││││││││┌┴─┐rrrr│  ooror│││rorrr
-PETEXT = 0b01110000000000000000000001100000
+PETEXT = 0b01100000000000000000000001100000
 PEDATA = 0b11000000000000000000000011000000
 PEIMPS = 0b11000000000000000000000001000000
 
@@ -1070,18 +1093,12 @@ str.error:
 str.crlf:
 	.asciz	"\r\n"
 	.endobj	str.crlf
-str.cpuid:
-	.asciz	"cpuid"
-	.endobj	str.cpuid
-str.oldskool:
-	.asciz	"oldskool"
-	.endobj	str.oldskool
 str.e820:
 	.asciz	"e820"
 	.endobj	str.e820
-str.long:
-	.asciz	"nolong"
-	.endobj	str.long
+str.oldcpu:
+	.asciz	"oldcpu"
+	.endobj	str.oldcpu
 
 //	Serial Line Configuration (8250 UART 16550)
 //	If it's hacked, it'll at least get hacked very slowly.
@@ -1141,47 +1158,6 @@ gdt:	.short	2f-1f		# table byte length
 .quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
 .quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
 2:	.endobj	gdt,global,hidden
-
-/*─────────────────────────────────────────────────────────────────────────────╗
-│ αcτµαlly pδrταblε εxεcµταblε § multiboot stub                                │
-╚──────────────────────────────────────────────────────────────────────────────╝
-	boot modernized for the nineties */
-
-#define GRUB_MAGIC 0x1BADB002
-#define GRUB_EAX 0x2BADB002
-#define GRUB_AOUT (1 << 16)
-#define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
-
-//	Grub Header.
-	.align	4
-ape_grub:
-	.long	GRUB_MAGIC			# Magic
-	.long	GRUB_AOUT			# Flags
-	.long	GRUB_CHECKSUM(GRUB_AOUT)	# Checksum
-	.long	RVA(ape_grub)			# HeaderPhysicalAddress
-	.long	IMAGE_BASE_PHYSICAL		# TextPhysicalAddress
-	.long	PHYSICAL(_edata)		# LoadEndPhysicalAddress
-	.long	PHYSICAL(_end)			# BssEndPhysicalAddress
-	.long	RVA(ape_grub_entry)		# EntryPhysicalAddress
-	.endobj	ape_grub,globl
-
-//	Grub Entrypoint.
-//	Takes CPU out of legacy mode and jumps to normal entrypoint.
-//	@noreturn
-	.align	4
-ape_grub_entry:
-	.code32
-//	cmp	$GRUB_EAX,%eax
-//	jne	triplf
-	push	$0
-	popf
-	mov	$0x40,%dl
-	mov	%cr0,%eax
-	and	$~CR0_PE,%eax
-	mov	%eax,%cr0
-	ljmpw	$0,$REAL(pc)
-	.code16
-	.endfn	ape_grub_entry
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
@@ -1264,7 +1240,7 @@ longmodeloader:
 lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pop	%ax
 	test	$0x80,%ah		# see intel manual volume 1 20.1.2
-	jnz	9f			# we now assume 32bit is supported
+	jnz	10f			# we now assume 32bit is supported
 	pushfl				# now check for i386 or early i486
 	pop	%eax			# test ability to change cpuid bit
 	mov	%eax,%ecx
@@ -1275,7 +1251,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	pushfl
 	pop	%eax
 	cmp	%eax,%ecx
-	je	12f			# we assume cpuid inst is available
+	je	10f			# we assume cpuid inst is available
 	or	%ebx,%eax		# puts cpuid bit in the on position
 	push	%eax
 	popfl
@@ -1293,11 +1269,7 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jne	10f
 	xor	%ax,%ax
 1:	ret
-9:	mov	$REAL(str.oldskool),%di
-	jmp	20f
-10:	mov	$REAL(str.long),%di
-	jmp	20f
-12:	mov	$REAL(str.cpuid),%di
+10:	mov	$REAL(str.oldcpu),%di
 20:	call	rldie
 	.endfn	lcheck
 
@@ -1463,6 +1435,47 @@ long:	push	$GDT_LONG_DATA
 	jmp	*%rax
 	.endfn	long
 
+/*─────────────────────────────────────────────────────────────────────────────╗
+│ αcτµαlly pδrταblε εxεcµταblε § multiboot stub                                │
+╚──────────────────────────────────────────────────────────────────────────────╝
+	boot modernized for the nineties */
+
+#define GRUB_MAGIC 0x1BADB002
+#define GRUB_EAX 0x2BADB002
+#define GRUB_AOUT (1 << 16)
+#define GRUB_CHECKSUM(FLAGS) (-(GRUB_MAGIC + (FLAGS)) & 0xffffffff)
+
+//	Grub Header.
+	.align	4
+ape_grub:
+	.long	GRUB_MAGIC			# Magic
+	.long	GRUB_AOUT			# Flags
+	.long	GRUB_CHECKSUM(GRUB_AOUT)	# Checksum
+	.long	RVA(ape_grub)			# HeaderPhysicalAddress
+	.long	IMAGE_BASE_PHYSICAL		# TextPhysicalAddress
+	.long	PHYSICAL(_edata)		# LoadEndPhysicalAddress
+	.long	PHYSICAL(_end)			# BssEndPhysicalAddress
+	.long	RVA(ape_grub_entry)		# EntryPhysicalAddress
+	.endobj	ape_grub,globl
+
+//	Grub Entrypoint.
+//	Takes CPU out of legacy mode and jumps to normal entrypoint.
+//	@noreturn
+	.align	4
+ape_grub_entry:
+	.code32
+//	cmp	$GRUB_EAX,%eax
+//	jne	triplf
+	push	$0
+	popf
+	mov	$0x40,%dl
+	mov	%cr0,%eax
+	and	$~CR0_PE,%eax
+	mov	%eax,%cr0
+	ljmpw	$0,$REAL(pc)
+	.code64
+	.endfn	ape_grub_entry
+
 /*  ▄▄▒▀▀▀▀▒▒▄
 █████▓▓▄░░░░  ▒▒▄
 ▐█▓▓█▓▄█████▓░   ▀▒▄
@@ -1498,12 +1511,9 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
-	.weak	__hostos
-	ezlea	__hostos,ax
-	test	%rax,%rax
-	jz	1f
-	movb	$METAL,(%rax)
-1:	push	$0
+	push	$METAL				# sets __hostos in crt.S
+	pop	%rcx
+	push	$0
 	mov	%rsp,%rbp
 	mov	.Lenv0(%rip),%rax
 	mov	%rax,(%rbp)			# envp[0][0]
@@ -1519,7 +1529,6 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	push	$1				# argc
 	xor	%ebp,%ebp
 	xor	%eax,%eax
-	xor	%ecx,%ecx
 	xor	%edx,%edx
 	xor	%edi,%edi
 	xor	%esi,%esi
@@ -1588,6 +1597,7 @@ ape_pad_text:
 	.type	ape_pad_privileged,@object
 	.hidden	ape_pad_privileged
 ape_pad_privileged:
+	.align	4096
 	.previous
 
 	.section .ape.pad.rodata,"a",@progbits
@@ -1613,6 +1623,27 @@ ape_idata_ro:
 	.globl	__data_start
 	.hidden	__data_start
 __data_start:
+	.previous
+
+	.section .dataepilogue,"aw",@progbits
+	.type	__data_end,@object
+	.globl	__data_end
+	.hidden	__data_end
+__data_end:
+	.previous
+
+	.section .bssprologue,"aw",@nobits
+	.type	__bss_start,@object
+	.globl	__bss_start
+	.hidden	__bss_start
+__bss_start:
+	.previous
+
+	.section .bssepilogue,"aw",@nobits
+	.type	__bss_end,@object
+	.globl	__bss_end
+	.hidden	__bss_end
+__bss_end:
 	.previous
 
 .end

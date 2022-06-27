@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 
 /**
  * Writes string to stream.
@@ -29,11 +28,12 @@
  * @param s is a NUL-terminated string that's non-NULL
  * @param f is an open stream
  * @return bytes written, or -1 w/ errno
+ * @threadsafe
  */
 int fputs(const char *s, FILE *f) {
-  size_t n, r;
-  n = strlen(s);
-  r = fwrite(s, 1, n, f);
-  if (!r && n) return -1;
-  return r;
+  int rc;
+  flockfile(f);
+  rc = fputs_unlocked(s, f);
+  funlockfile(f);
+  return rc;
 }

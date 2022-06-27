@@ -21,6 +21,7 @@
 /**
  * Reads UTF-8 character from stream.
  * @return wide character or -1 on EOF or error
+ * @threadsafe
  */
 wint_t(getwc)(FILE *f) {
   return fgetwc(f);

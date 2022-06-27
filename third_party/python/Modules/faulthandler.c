@@ -5,7 +5,6 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/rlimit.h"
@@ -1121,18 +1120,18 @@ faulthandler_fatal_error_py(PyObject *self, PyObject *args)
 
 #if defined(HAVE_SIGALTSTACK) && defined(HAVE_SIGACTION)
 #define FAULTHANDLER_STACK_OVERFLOW
-static
+static dontinline
 uintptr_t
 stack_overflow(uintptr_t min_sp, uintptr_t max_sp, size_t *depth)
 {
     /* allocate 4096 bytes on the stack at each call */
-    unsigned char buffer[4096];
+    unsigned char buffer[3500]; // [jart] or not
     uintptr_t sp = (uintptr_t)&buffer;
     *depth += 1;
     if (sp < min_sp || max_sp < sp)
         return sp;
     buffer[0] = 1;
-    buffer[4095] = 0;
+    buffer[3500-1] = 0;
     return stack_overflow(min_sp, max_sp, depth);
 }
 

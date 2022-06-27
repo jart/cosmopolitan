@@ -3,9 +3,6 @@
 
 efbig:	.leafprologue
 	.profilable
-	mov	EFBIG(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EFBIG(%rip),%ecx
+	jmp	__errfun
 	.endfn	efbig,globl,hidden

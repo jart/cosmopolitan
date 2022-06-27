@@ -4,9 +4,6 @@
 enetreset:
 	.leafprologue
 	.profilable
-	mov	ENETRESET(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENETRESET(%rip),%ecx
+	jmp	__errfun
 	.endfn	enetreset,globl,hidden

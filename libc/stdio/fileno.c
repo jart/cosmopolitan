@@ -21,11 +21,15 @@
 
 /**
  * Returns file descriptor associated with stream.
+ *
+ * @param f is file stream object pointer
+ * @return fd on success or -1 w/ errno;
+ * @threadsafe
  */
 int fileno(FILE *f) {
-  if (f->fd != -1) {
-    return f->fd;
-  } else {
-    return ebadf();
-  }
+  int rc;
+  flockfile(f);
+  rc = fileno_unlocked(f);
+  funlockfile(f);
+  return rc;
 }

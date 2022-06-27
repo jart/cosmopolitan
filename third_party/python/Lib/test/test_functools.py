@@ -431,7 +431,7 @@ class TestPartialC(TestPartial, unittest.TestCase):
         self.assertIn('astr', r)
         self.assertIn("['sth']", r)
 
-
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestPartialPy(TestPartial, unittest.TestCase):
     partial = py_functools.partial
 
@@ -458,6 +458,7 @@ class TestPartialCSubclass(TestPartialC):
     # partial subclasses are not optimized for nested calls
     test_nested_optimization = None
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestPartialPySubclass(TestPartialPy):
     partial = PyPartialSubclass
 
@@ -619,7 +620,7 @@ class TestUpdateWrapper(unittest.TestCase):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, f = self._default_update()
@@ -681,7 +682,7 @@ class TestUpdateWrapper(unittest.TestCase):
     @support.requires_docstrings
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE .startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_builtin_update(self):
         # Test for bug #1576241
@@ -715,7 +716,7 @@ class TestWraps(TestUpdateWrapper):
 
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
-    @unittest.skipIf(cosmo.MODE == 'tiny',
+    @unittest.skipIf(cosmo.MODE .startswith("tiny"),
                      "No .py files available in Cosmo MODE=tiny")
     def test_default_update_doc(self):
         wrapper, _ = self._default_update()
@@ -928,6 +929,7 @@ class TestCmpToKeyC(TestCmpToKey, unittest.TestCase):
         cmp_to_key = c_functools.cmp_to_key
 
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestCmpToKeyPy(TestCmpToKey, unittest.TestCase):
     cmp_to_key = staticmethod(py_functools.cmp_to_key)
 
@@ -1565,6 +1567,7 @@ def c_cached_func(x, y):
     return 3 * x + y
 
 
+@unittest.skipIf(c_functools, "skip pure-python test if C impl is present")
 class TestLRUPy(TestLRU, unittest.TestCase):
     module = py_functools
     cached_func = py_cached_func,

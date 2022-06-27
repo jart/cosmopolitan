@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/iovec.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/pc.internal.h"
 
@@ -24,7 +25,9 @@ ssize_t sys_writev_serial(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, j, wrote = 0;
   for (i = 0; i < iovlen; ++i) {
     for (j = 0; j < iov[i].iov_len; ++j) {
-      while (!(inb(fd->handle + UART_LSR) & UART_TTYTXR)) asm("pause");
+      while (!(inb(fd->handle + UART_LSR) & UART_TTYTXR)) {
+        __builtin_ia32_pause();
+      }
       outb(fd->handle, ((char *)iov[i].iov_base)[j]);
       ++wrote;
     }

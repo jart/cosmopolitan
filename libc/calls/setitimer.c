@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -64,18 +65,41 @@
  */
 int setitimer(int which, const struct itimerval *newvalue,
               struct itimerval *oldvalue) {
+  int rc;
+
   if (IsAsan() &&
       ((newvalue && !__asan_is_valid(newvalue, sizeof(*newvalue))) ||
        (oldvalue && !__asan_is_valid(oldvalue, sizeof(*oldvalue))))) {
-    return efault();
-  }
-  if (!IsWindows()) {
+    rc = efault();
+  } else if (!IsWindows()) {
     if (newvalue) {
-      return sys_setitimer(which, newvalue, oldvalue);
+      rc = sys_setitimer(which, newvalue, oldvalue);
     } else {
-      return sys_getitimer(which, oldvalue);
+      rc = sys_getitimer(which, oldvalue);
     }
   } else {
-    return sys_setitimer_nt(which, newvalue, oldvalue);
+    rc = sys_setitimer_nt(which, newvalue, oldvalue);
   }
+
+  if (newvalue && oldvalue) {
+    STRACE("setitimer(%d, "
+           "{{%'ld, %'ld}, {%'ld, %'ld}}, "
+           "[{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m",
+           which, newvalue->it_interval.tv_sec, newvalue->it_interval.tv_usec,
+           newvalue->it_value.tv_sec, newvalue->it_value.tv_usec,
+           oldvalue->it_interval.tv_sec, oldvalue->it_interval.tv_usec,
+           oldvalue->it_value.tv_sec, oldvalue->it_value.tv_usec, rc);
+  } else if (newvalue) {
+    STRACE("setitimer(%d, {{%'ld, %'ld}, {%'ld, %'ld}}, NULL) → %d% m", which,
+           newvalue->it_interval.tv_sec, newvalue->it_interval.tv_usec,
+           newvalue->it_value.tv_sec, newvalue->it_value.tv_usec, rc);
+  } else if (oldvalue) {
+    STRACE("setitimer(%d, NULL, [{{%'ld, %'ld}, {%'ld, %'ld}}]) → %d% m", which,
+           oldvalue->it_interval.tv_sec, oldvalue->it_interval.tv_usec,
+           oldvalue->it_value.tv_sec, oldvalue->it_value.tv_usec, rc);
+  } else {
+    STRACE("setitimer(%d, NULL, NULL) → %d% m", which, rc);
+  }
+
+  return rc;
 }

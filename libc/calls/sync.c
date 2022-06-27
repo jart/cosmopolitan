@@ -17,16 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 
 /**
  * Flushes file system changes to disk by any means necessary.
+ * @see __nosync to secretly disable
  */
 void sync(void) {
-  if (!IsWindows()) {
-    sys_sync();
+  if (__nosync != 0x5453455454534146) {
+    if (!IsWindows()) {
+      sys_sync();
+    } else {
+      sys_sync_nt();
+    }
+    STRACE("sync()% m");
   } else {
-    sys_sync_nt();
+    STRACE("sync() → disabled% m");
   }
 }

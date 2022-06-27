@@ -17,16 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 
 /**
  * Returns process group id.
  */
 int getpgid(int pid) {
+  int rc;
   if (!IsWindows()) {
-    return sys_getpgid(pid);
+    rc = sys_getpgid(pid);
   } else {
-    return getpid();
+    rc = getpid();
   }
+  STRACE("%s(%d) → %d% m", "getpgid", pid, rc);
+  return rc;
 }

@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     }
   } else {
     while ((getline(&line_, &linecap_, stdin)) != -1) {
-      processarg(chomp(line_));
+      processarg(_chomp(line_));
     }
     free_s(&line_);
   }

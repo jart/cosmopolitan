@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_CloseHandle,CloseHandle,0
 
 	.text.windows
-CloseHandle:
+__CloseHandle:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ CloseHandle:
 	call	*__imp_CloseHandle(%rip)
 	leave
 	ret
-	.endfn	CloseHandle,globl
+	.endfn	__CloseHandle,globl
 	.previous

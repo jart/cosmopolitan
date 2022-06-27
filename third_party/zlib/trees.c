@@ -809,7 +809,9 @@ void _tr_stored_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
   bi_windup(s);                                /* align on byte boundary */
   put_short(s, (uint16_t)stored_len);
   put_short(s, (uint16_t)~stored_len);
-  memcpy(s->pending_buf + s->pending, (Bytef *)buf, stored_len);
+  if (stored_len) {
+    memcpy(s->pending_buf + s->pending, (Bytef *)buf, stored_len);
+  }
   s->pending += stored_len;
 #ifdef ZLIB_DEBUG
   s->compressed_len = (s->compressed_len + 3 + 7) & (uint64_t)~7L;

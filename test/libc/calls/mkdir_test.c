@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
@@ -27,44 +30,67 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+void SetUp(void) {
+  errno = 0;
+}
+
 TEST(mkdir, testNothingExists_ENOENT) {
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(ENOENT, errno);
+  EXPECT_SYS(ENOENT, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testDirectoryComponentIsFile_ENOTDIR) {
-  EXPECT_NE(-1, touch("yo", 0644));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(ENOTDIR, errno);
+  EXPECT_SYS(0, 0, touch("yo", 0644));
+  EXPECT_SYS(ENOTDIR, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testPathIsFile_EEXIST) {
-  EXPECT_NE(-1, mkdir("yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo", 0755));
-  EXPECT_NE(-1, touch("yo/yo/yo", 0644));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(EEXIST, errno);
+  EXPECT_SYS(0, 0, mkdir("yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
+  EXPECT_SYS(0, 0, touch("yo/yo/yo", 0644));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
 }
 
 TEST(mkdir, testPathIsDirectory_EEXIST) {
-  EXPECT_NE(-1, mkdir("yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo", 0755));
-  EXPECT_NE(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(-1, mkdir("yo/yo/yo", 0755));
-  EXPECT_EQ(EEXIST, errno);
+  EXPECT_SYS(0, 0, mkdir("yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo", 0755));
+  EXPECT_SYS(0, 0, mkdir("yo/yo/yo", 0755));
+  EXPECT_SYS(EEXIST, -1, mkdir("yo/yo/yo", 0755));
+}
+
+TEST(makedirs, pathExists_isSuccess) {
+  EXPECT_SYS(0, 0, makedirs("foo/bar", 0755));
+  EXPECT_SYS(0, 0, makedirs("foo/bar", 0755));
+}
+
+TEST(mkdir, enametoolong) {
+  int i;
+  size_t n = 2048;
+  char *d, *s = gc(calloc(1, n));
+  for (i = 0; i < n - 1; ++i) s[i] = 'x';
+  s[i] = 0;
+  EXPECT_SYS(ENAMETOOLONG, -1, mkdir(s, 0644));
 }
 
 TEST(makedirs, testEmptyString_ENOENT) {
-  EXPECT_EQ(-1, makedirs("", 0755));
-  EXPECT_EQ(ENOENT, errno);
+  EXPECT_SYS(ENOENT, -1, mkdir("", 0755));
 }
 
 TEST(mkdirat, testRelativePath_opensRelativeToDirFd) {
   int dirfd;
-  ASSERT_NE(-1, mkdir("foo", 0755));
-  ASSERT_NE(-1, (dirfd = open("foo", O_RDONLY | O_DIRECTORY)));
-  EXPECT_NE(-1, mkdirat(dirfd, "bar", 0755));
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 3, (dirfd = open("foo", O_RDONLY | O_DIRECTORY)));
+  EXPECT_SYS(0, 0, mkdirat(dirfd, "bar", 0755));
   EXPECT_TRUE(isdirectory("foo/bar"));
-  EXPECT_EQ(-1, makedirs("", 0755));
-  EXPECT_NE(-1, close(dirfd));
+  EXPECT_SYS(0, 0, close(dirfd));
+}
+
+TEST(mkdir, longname) {
+  int i;
+  char *d, s[270] = {0};
+  for (i = 0; i < sizeof(s) - 1; ++i) s[i] = 'x';
+  s[i] = 0;
+  ASSERT_NE(NULL, (d = gc(getcwd(0, 0))));
+  memcpy(s, d, strlen(d));
+  s[strlen(d)] = '/';
+  ASSERT_SYS(0, 0, mkdir(s, 0644));
 }

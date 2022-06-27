@@ -16,22 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/errno.h"
-#include "libc/limits.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/alloca.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -58,45 +51,52 @@ static void __zipos_munmap_unneeded(const uint8_t *base, const uint8_t *cdir,
 
 /**
  * Returns pointer to zip central directory of current executable.
+ * @asyncsignalsafe
+ * @threadsafe
  */
 struct Zipos *__zipos_get(void) {
-  static bool once;
-  static struct Zipos zipos;
   int fd;
-  char *path;
-  size_t size;
-  sigset_t neu, old;
+  ssize_t size;
+  const char *msg;
+  static bool once;
+  struct Zipos *res;
+  const char *progpath;
+  static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
   if (!once) {
-    sigfillset(&neu);
-    sigprocmask(SIG_BLOCK, &neu, &old);
-    if ((fd = open(program_executable_name, O_RDONLY)) != -1) {
-      if ((size = getfiledescriptorsize(fd)) != SIZE_MAX &&
+    __zipos_lock();
+    progpath = GetProgramExecutableName();
+    if ((fd = open(progpath, O_RDONLY)) != -1) {
+      if ((size = getfiledescriptorsize(fd)) != -1ul &&
           (map = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)) != MAP_FAILED) {
         if ((base = FindEmbeddedApe(map, size))) {
           size -= base - map;
         } else {
           base = map;
         }
-        if ((cdir = GetZipCdir(base, size))) {
+        if ((cdir = GetZipCdir(base, size)) && _cmpxchg(&zipos.map, 0, base)) {
           __zipos_munmap_unneeded(base, cdir, map);
-          zipos.map = base;
           zipos.cdir = cdir;
+          msg = "ok";
         } else {
           munmap(map, size);
-          ZTRACE("__zipos_get(%s) → eocd not found", program_executable_name);
+          msg = "eocd not found";
         }
       } else {
-        ZTRACE("__zipos_get(%s) → stat/mmap %s", program_executable_name,
-               strerror(errno));
+        msg = "map failed";
       }
       close(fd);
     } else {
-      ZTRACE("__zipos_get(%s) → open %s", program_executable_name,
-             strerror(errno));
+      msg = "open failed";
     }
     once = true;
-    sigprocmask(SIG_SETMASK, &old, 0);
+    __zipos_unlock();
+    STRACE("__zipos_get(%#s) → %s% m", progpath, msg);
   }
-  return zipos.cdir ? &zipos : 0;
+  if (zipos.cdir) {
+    res = &zipos;
+  } else {
+    res = 0;
+  }
+  return res;
 }

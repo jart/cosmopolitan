@@ -4,14 +4,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-forceinline bool SlicesEqual(const char *a, size_t n, const char *b, size_t m) {
-  return n == m && !memcmp(a, b, n);
-}
+#define SlicesEqual(a, n, b, m)       \
+  ({                                  \
+    size_t __n = (n);                 \
+    __n == (m) && !memcmp(a, b, __n); \
+  })
 
-forceinline bool SlicesEqualCase(const void *a, size_t n, const void *b,
-                                 size_t m) {
-  return n == m && !memcasecmp(a, b, n);
-}
+#define SlicesEqualCase(a, n, b, m)       \
+  ({                                      \
+    size_t __n = (n);                     \
+    __n == (m) && !memcasecmp(a, b, __n); \
+  })
 
 int CompareSlices(const char *, size_t, const char *, size_t);
 int CompareSlicesCase(const char *, size_t, const char *, size_t);

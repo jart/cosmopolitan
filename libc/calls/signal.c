@@ -21,12 +21,20 @@
 #include "libc/sysv/consts/sa.h"
 
 /**
- * Installs kernel interrupt handler.
+ * Installs kernel interrupt handler, e.g.
  *
- * @see sigaction() which has more features
+ *     void GotCtrlC(int sig) { ... }
+ *     CHECK_NE(SIG_ERR, signal(SIGINT, GotCtrlC));
+ *
+ * @return old signal handler on success or SIG_ERR w/ errno
+ * @note this function has BSD semantics, i.e. SA_RESTART
+ * @see sigaction() which has more features and docs
  */
 sighandler_t(signal)(int sig, sighandler_t func) {
-  struct sigaction sa_old, sa = {.sa_handler = func, .sa_flags = SA_RESTART};
-  if ((sigaction)(sig, &sa, &sa_old) == -1) return SIG_ERR;
-  return sa_old.sa_handler;
+  struct sigaction old, sa = {.sa_handler = func, .sa_flags = SA_RESTART};
+  if ((sigaction)(sig, &sa, &old) != -1) {
+    return old.sa_handler;
+  } else {
+    return SIG_ERR;
+  }
 }

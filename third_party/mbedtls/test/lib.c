@@ -16,10 +16,12 @@
  */
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/libfatal.internal.h"
@@ -87,7 +89,7 @@ int mbedtls_test_platform_setup(void) {
   char *p;
   int ret = 0;
   static char mybuf[2][BUFSIZ];
-  showcrashreports();
+  ShowCrashReports();
   setvbuf(stdout, mybuf[0], _IOLBF, BUFSIZ);
   setvbuf(stderr, mybuf[1], _IOLBF, BUFSIZ);
 #if defined(MBEDTLS_PLATFORM_C)
@@ -794,7 +796,8 @@ static int convert_params(size_t cnt, char **params, int *int_params_store) {
  *
  * \return      0 for success else 1
  */
-static dontinline int test_snprintf(size_t n, const char *ref_buf, int ref_ret) {
+static dontinline int test_snprintf(size_t n, const char *ref_buf,
+                                    int ref_ret) {
   int ret;
   char buf[10] = "xxxxxxxxx";
   const char ref[10] = "xxxxxxxxx";
@@ -1010,8 +1013,8 @@ int execute_tests(int argc, const char **argv, const char *default_filename) {
     file = fopen(test_filename, "r");
     if (file == NULL) {
       WRITE("%s (%s) failed to open test file: %s %m\n",
-            program_invocation_short_name, program_executable_name,
-            test_filename);
+            firstnonnull(program_invocation_short_name, "unknown"),
+            GetProgramExecutableName(), test_filename);
       if (outcome_file != NULL) fclose(outcome_file);
       return 1;
     }

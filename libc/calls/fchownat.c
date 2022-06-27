@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -39,9 +41,15 @@
  */
 int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
              int flags) {
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_notat) && weaken(__zipos_notat)(dirfd, path) == -1) {
-    return -1; /* TODO(jart): implement me */
+  int rc;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    rc = efault();
+  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("zipos fchownat not supported yet");
+  } else {
+    rc = sys_fchownat(dirfd, path, uid, gid, flags);
   }
-  return sys_fchownat(dirfd, path, uid, gid, flags);
+  STRACE("fchownat(%s, %#s, %d, %d, %#b) → %d% m", DescribeDirfd(dirfd), path,
+         uid, gid, flags, rc);
+  return rc;
 }

@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -29,25 +32,30 @@ const char *testlib_showerror_func;
 const char *testlib_showerror_isfatal;
 const char *testlib_showerror_macro;
 const char *testlib_showerror_symbol;
+_Alignas(64) static char testlib_showerror_lock;
 
 testonly void testlib_showerror(const char *file, int line, const char *func,
                                 const char *method, const char *symbol,
                                 const char *code, char *v1, char *v2) {
   char *p;
-  /* TODO(jart): Pay off tech debt re duplication */
-  __getpid(); /* make strace easier to read */
-  __getpid();
-  __printf("%serror%s%s:%s:%d%s: %s() in %s(%s)\n"
-           "\t%s\n"
-           "\t\tneed %s %s\n"
-           "\t\t got %s\n"
-           "\t%s%s\n"
-           "\t%s%s\n",
-           RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
-           g_fixturename, code, v1, symbol, v2, SUBTLE, strerror(errno),
-           program_executable_name, RESET);
+  char hostname[128];
+  _spinlock(&testlib_showerror_lock);
+  if (!IsWindows()) __getpid(); /* make strace easier to read */
+  if (!IsWindows()) __getpid();
+  __stpcpy(hostname, "unknown");
+  gethostname(hostname, sizeof(hostname));
+  kprintf("%serror%s%s:%s:%d%s: %s() in %s(%s) on %s pid %d tid %d\n"
+          "\t%s\n"
+          "\t\tneed %s %s\n"
+          "\t\t got %s\n"
+          "\t%s%s\n"
+          "\t%s%s\n",
+          RED2, UNBOLD, BLUE1, file, (long)line, RESET, method, func,
+          g_fixturename, hostname, getpid(), gettid(), code, v1, symbol, v2,
+          SUBTLE, strerror(errno), GetProgramExecutableName(), RESET);
   free_s(&v1);
   free_s(&v2);
+  _spunlock(&testlib_showerror_lock);
 }
 
 /* TODO(jart): Pay off tech debt re duplication */
@@ -56,37 +64,40 @@ testonly void testlib_showerror_(int line, const char *wantcode,
                                  char *FREED_got, const char *fmt, ...) {
   int e;
   va_list va;
-  char hostname[32];
+  char hostname[128];
+  _spinlock(&testlib_showerror_lock);
   e = errno;
-  __getpid();
-  __getpid();
-  __printf("%serror%s:%s%s:%d%s: %s(%s)\n"
-           "\t%s(%s, %s)\n",
-           RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
-           testlib_showerror_func, g_fixturename, testlib_showerror_macro,
-           wantcode, gotcode);
+  if (!IsWindows()) __getpid();
+  if (!IsWindows()) __getpid();
+  if (gethostname(hostname, sizeof(hostname))) {
+    __stpcpy(hostname, "unknown");
+  }
+  kprintf("%serror%s:%s%s:%d%s: %s(%s) on %s pid %d tid %d\n"
+          "\t%s(%s, %s)\n",
+          RED2, UNBOLD, BLUE1, testlib_showerror_file, line, RESET,
+          testlib_showerror_func, g_fixturename, hostname, getpid(), gettid(),
+          testlib_showerror_macro, wantcode, gotcode);
   if (wantcode) {
-    __printf("\t\tneed %s %s\n"
-             "\t\t got %s\n",
-             FREED_want, testlib_showerror_symbol, FREED_got);
+    kprintf("\t\tneed %s %s\n"
+            "\t\t got %s\n",
+            FREED_want, testlib_showerror_symbol, FREED_got);
   } else {
-    __printf("\t\t→ %s%s\n", testlib_showerror_symbol, FREED_want);
+    kprintf("\t\t→ %s%s\n", testlib_showerror_symbol, FREED_want);
   }
   if (!isempty(fmt)) {
-    __printf("\t");
+    kprintf("\t");
     va_start(va, fmt);
-    __vprintf(fmt, va);
+    kvprintf(fmt, va);
     va_end(va);
-    __printf("\n");
+    kprintf("\n");
   }
-  __stpcpy(hostname, "unknown");
-  gethostname(hostname, sizeof(hostname));
-  __printf("\t%s%s%s\n"
-           "\t%s%s @ %s%s\n",
-           SUBTLE, strerror(e), RESET, SUBTLE, program_invocation_name,
-           hostname, RESET);
+  kprintf("\t%s%s%s\n"
+          "\t%s%s @ %s%s\n",
+          SUBTLE, strerror(e), RESET, SUBTLE,
+          firstnonnull(program_invocation_name, "unknown"), hostname, RESET);
   free_s(&FREED_want);
   free_s(&FREED_got);
   ++g_testlib_failed;
   if (testlib_showerror_isfatal) testlib_abort();
+  _spunlock(&testlib_showerror_lock);
 }

@@ -21,7 +21,7 @@
 /**
  * Converts unsigned 64-bit integer to string w/ commas.
  *
- * @param p needs at least 21 bytes
+ * @param p needs at least 27 bytes
  * @return pointer to nul byte
  */
 dontinline char *FormatUint64Thousands(char p[static 27], uint64_t x) {
@@ -44,7 +44,7 @@ dontinline char *FormatUint64Thousands(char p[static 27], uint64_t x) {
 /**
  * Converts 64-bit integer to string w/ commas.
  *
- * @param p needs at least 21 bytes
+ * @param p needs at least 27 bytes
  * @return pointer to nul byte
  */
 char *FormatInt64Thousands(char p[static 27], int64_t x) {

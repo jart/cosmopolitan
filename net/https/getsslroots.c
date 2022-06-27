@@ -32,26 +32,40 @@
 
 STATIC_YOINK("ssl_root_support");
 
+static void FreeSslRoots(mbedtls_x509_crt *c) {
+  mbedtls_x509_crt_free(c);
+  free(c);
+}
+
+/**
+ * Returns singleton of SSL roots stored in /zip/usr/share/ssl/root/...
+ */
 mbedtls_x509_crt *GetSslRoots(void) {
   int fd;
   DIR *d;
   uint8_t *p;
   size_t n, m;
   struct dirent *e;
-  mbedtls_x509_crt *c;
-  char path[PATH_MAX + 1];
-  c = calloc(1, sizeof(*c));
-  m = stpcpy(path, "/zip/usr/share/ssl/root/") - path;
-  if ((d = opendir(path))) {
-    while ((e = readdir(d))) {
-      if (e->d_type != DT_REG) continue;
-      if (m + (n = strlen(e->d_name)) > PATH_MAX) continue;
-      memcpy(path + m, e->d_name, n + 1);
-      CHECK((p = xslurp(path, &n)));
-      CHECK_GE(mbedtls_x509_crt_parse(c, p, n + 1), 0, "%s", path);
-      free(p);
+  static bool once;
+  char path[PATH_MAX];
+  static mbedtls_x509_crt *c;
+  if (!once) {
+    if ((c = calloc(1, sizeof(*c)))) {
+      m = stpcpy(path, "/zip/usr/share/ssl/root/") - path;
+      if ((d = opendir(path))) {
+        while ((e = readdir(d))) {
+          if (e->d_type != DT_REG) continue;
+          if (m + (n = strlen(e->d_name)) >= ARRAYLEN(path)) continue;
+          memcpy(path + m, e->d_name, n + 1);
+          CHECK((p = xslurp(path, &n)));
+          CHECK_GE(mbedtls_x509_crt_parse(c, p, n + 1), 0, "%s", path);
+          free(p);
+        }
+        closedir(d);
+      }
+      __cxa_atexit(FreeSslRoots, c, 0);
     }
-    closedir(d);
+    once = true;
   }
   return c;
 }

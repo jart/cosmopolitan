@@ -7,7 +7,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/stdio/unlocked.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/bytesobject.h"
@@ -364,7 +363,7 @@ PyFile_NewStdPrinter(int fd)
 }
 
 static PyObject *
-stdprinter_write(PyStdPrinter_Object *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+stdprinter_write(PyStdPrinter_Object *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *unicode;
     PyObject *bytes = NULL;
@@ -381,9 +380,6 @@ stdprinter_write(PyStdPrinter_Object *self, PyObject **args, Py_ssize_t nargs, P
     }
 
     if (!_PyArg_UnpackStack(args, nargs, "write", 1, 1, &unicode))
-        return NULL;
-
-    if(!_PyArg_NoStackKeywords("write", kwnames))
         return NULL;
 
     /* encode Unicode to UTF-8 */

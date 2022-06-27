@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -266,7 +267,7 @@ int main(int argc, char *argv[]) {
   int fd;
   uint8_t *map;
   struct stat st;
-  showcrashreports();
+  ShowCrashReports();
   CHECK_EQ(2, argc);
   CHECK_NE(-1, (fd = open(argv[1], O_RDONLY)));
   CHECK_NE(-1, fstat(fd, &st));

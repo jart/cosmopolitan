@@ -322,6 +322,5 @@ double lgamma_r(double x, int *signgamp)
  */
 double lgamma(double x)
 {
-	extern int __signgam;
 	return lgamma_r(x, &__signgam);
 }

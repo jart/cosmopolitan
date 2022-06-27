@@ -17,30 +17,42 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 
-#define ISSLASH(c) (c == '/' || c == '\\')
-#define ISDELIM(c) (ISSLASH(c) || c == '.')
-
 /**
- * Returns directory portion of path.
- * @param s is mutated
+ * Returns directory portion of path, e.g.
+ *
+ *     path     │ dirname() │ basename()
+ *     ─────────────────────────────────
+ *     .        │ .         │ .
+ *     ..       │ .         │ ..
+ *     /        │ /         │ /
+ *     usr      │ .         │ usr
+ *     /usr/    │ /         │ usr
+ *     /usr/lib │ /usr      │ lib
+ *
+ * @param path is UTF-8 and may be mutated, but not expanded in length
+ * @return pointer to path, or inside path, or to a special r/o string
+ * @see basename()
+ * @see SUSv2
  */
-char *dirname(char *s) {
-  size_t i, n;
-  if (!(n = strlen(s))) return s;
-  while (n && ISDELIM(s[n - 1])) --n;
-  if (n) {
-    while (n && !ISSLASH(s[n - 1])) --n;
-    if (n) {
-      while (n && ISDELIM(s[n - 1])) --n;
-      if (!n) ++n;
-    } else {
-      s[n++] = '.';
+char *dirname(char *path) {
+  size_t i;
+  if (path && *path) {
+    i = strlen(path) - 1;
+    for (; _isdirsep(path[i]); i--) {
+      if (!i) return "/";
     }
+    for (; !_isdirsep(path[i]); i--) {
+      if (!i) return ".";
+    }
+    for (; _isdirsep(path[i]); i--) {
+      if (!i) return "/";
+    }
+    path[i + 1] = 0;
+    return path;
   } else {
-    ++n;
+    return ".";
   }
-  s[n] = '\0';
-  return s;
 }

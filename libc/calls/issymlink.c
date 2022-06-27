@@ -18,14 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -44,22 +47,30 @@
  */
 bool issymlink(const char *path) {
   int e;
+  bool res;
   union metastat st;
   struct ZiposUri zipname;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    return false;
+  e = errno;
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    efault();
+    res = false;
+  } else if (weaken(__zipos_open) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    res = false;
   } else if (IsMetal()) {
-    return false;
+    res = false;
   } else if (!IsWindows()) {
-    e = errno;
     if (__sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1) {
-      return S_ISLNK(METASTAT(st, st_mode));
+      res = S_ISLNK(METASTAT(st, st_mode));
     } else {
-      errno = e;
-      return false;
+      res = false;
     }
   } else {
-    return issymlink_nt(path);
+    res = issymlink_nt(path);
   }
+  STRACE("%s(%#s) → %hhhd% m", "issymlink", path, res);
+  if (!res && (errno == ENOENT || errno == ENOTDIR)) {
+    errno = e;
+  }
+  return res;
 }

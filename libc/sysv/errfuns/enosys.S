@@ -3,9 +3,6 @@
 
 enosys:	.leafprologue
 	.profilable
-	mov	ENOSYS(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOSYS(%rip),%ecx
+	jmp	__errfun
 	.endfn	enosys,globl,hidden

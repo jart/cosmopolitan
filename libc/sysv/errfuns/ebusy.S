@@ -3,9 +3,6 @@
 
 ebusy:	.leafprologue
 	.profilable
-	mov	EBUSY(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EBUSY(%rip),%ecx
+	jmp	__errfun
 	.endfn	ebusy,globl,hidden

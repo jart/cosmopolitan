@@ -3,9 +3,6 @@
 
 echrng:	.leafprologue
 	.profilable
-	mov	ECHRNG(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ECHRNG(%rip),%ecx
+	jmp	__errfun
 	.endfn	echrng,globl,hidden

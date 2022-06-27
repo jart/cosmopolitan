@@ -16,19 +16,65 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sigbits.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/stack.h"
+#include "libc/runtime/symbols.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
-STATIC_YOINK("__die");
+STATIC_YOINK("__die");                       // for backtracing
+STATIC_YOINK("ShowBacktrace");               // for backtracing
+STATIC_YOINK("GetSymbolTable");              // for backtracing
+STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
+STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
+STATIC_YOINK("__get_symbol_by_addr");        // for asan memory origin
 
 extern const unsigned char __oncrash_thunks[8][11];
+static struct sigaltstack g_oldsigaltstack;
+static struct sigaction g_oldcrashacts[8];
+
+static void InstallCrashHandlers(int extraflags) {
+  size_t i;
+  struct sigaction sa;
+  bzero(&sa, sizeof(sa));
+  sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
+  sigfillset(&sa.sa_mask);
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    sigdelset(&sa.sa_mask, kCrashSigs[i]);
+  }
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    if (kCrashSigs[i]) {
+      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
+      sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
+    }
+  }
+}
+
+relegated void RestoreDefaultCrashSignalHandlers(void) {
+  size_t i;
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigprocmask(SIG_SETMASK, &ss, NULL);
+  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
+    if (kCrashSigs[i]) {
+      sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
+    }
+  }
+}
+
+static void FreeSigAltStack(void *p) {
+  InstallCrashHandlers(0);
+  sigaltstack(&g_oldsigaltstack, 0);
+  munmap(p, GetStackSize());
+}
 
 /**
  * Installs crash signal handlers.
@@ -48,8 +94,7 @@ extern const unsigned char __oncrash_thunks[8][11];
  * @see callexitontermination()
  */
 void ShowCrashReports(void) {
-  size_t i;
-  struct sigaction sa;
+  char *sp;
   struct sigaltstack ss;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
@@ -59,23 +104,26 @@ void ShowCrashReports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
-  kCrashSigs[7] = SIGPIPE; /* write to closed thing */
+  kCrashSigs[7] = SIGSYS;  /* bad system call */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
-  bzero(&sa, sizeof(sa));
-  ss.ss_flags = 0;
-  ss.ss_size = SIGSTKSZ;
-  ss.ss_sp = malloc(SIGSTKSZ);
-  __cxa_atexit(free, ss.ss_sp, 0);
-  sa.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-  sigfillset(&sa.sa_mask);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    sigdelset(&sa.sa_mask, kCrashSigs[i]);
-  }
-  sigaltstack(&ss, 0);
-  for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
-    if (kCrashSigs[i]) {
-      sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
-      sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
+  if (!IsWindows()) {
+    bzero(&ss, sizeof(ss));
+    ss.ss_flags = 0;
+    ss.ss_size = GetStackSize();
+    // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
+    // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
+    if ((sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+      ss.ss_sp = sp;
+      if (!sigaltstack(&ss, &g_oldsigaltstack)) {
+        __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);
+      } else {
+        munmap(ss.ss_sp, GetStackSize());
+      }
     }
+    InstallCrashHandlers(SA_ONSTACK);
+  } else {
+    InstallCrashHandlers(0);
   }
+  GetSymbolTable();
 }

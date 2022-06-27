@@ -1,3 +1,4 @@
+#include "libc/assert.h"
 #include "third_party/chibicc/chibicc.h"
 
 /* TODO(jart): Why can't these be const? */
@@ -144,6 +145,9 @@ static Type *get_common_type(Type *ty1, Type *ty2) {
 //
 // This operation is called the "usual arithmetic conversion".
 static void usual_arith_conv(Node **lhs, Node **rhs) {
+  if (!(*lhs)->ty || !(*rhs)->ty) {
+    error_tok((*lhs)->tok, "internal npe error");
+  }
   Type *ty = get_common_type((*lhs)->ty, (*rhs)->ty);
   *lhs = new_cast(*lhs, ty);
   *rhs = new_cast(*rhs, ty);
@@ -290,9 +294,16 @@ void add_type(Node *node) {
       if (node->cas_old->ty->kind != TY_PTR)
         error_tok(node->cas_old->tok, "pointer expected");
       return;
-    case ND_EXCH:
+    case ND_EXCH_N:
+    case ND_FETCHADD:
+    case ND_FETCHSUB:
+    case ND_FETCHXOR:
+    case ND_FETCHAND:
+    case ND_FETCHOR:
+    case ND_SUBFETCH:
       if (node->lhs->ty->kind != TY_PTR)
-        error_tok(node->cas_addr->tok, "pointer expected");
+        error_tok(node->lhs->tok, "pointer expected");
+      node->rhs = new_cast(node->rhs, node->lhs->ty->base);
       node->ty = node->lhs->ty->base;
       return;
   }

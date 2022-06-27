@@ -3,9 +3,6 @@
 
 eilseq:	.leafprologue
 	.profilable
-	mov	EILSEQ(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EILSEQ(%rip),%ecx
+	jmp	__errfun
 	.endfn	eilseq,globl,hidden

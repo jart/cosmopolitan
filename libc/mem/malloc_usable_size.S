@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Returns the number of bytes you can actually use in
 //	an allocated chunk, which may be more than you requested
@@ -36,6 +35,7 @@
 //	@param	rdi is address of allocation
 //	@return	rax is total number of bytes
 //	@see	dlmalloc_usable_size()
+//	@threadsafe
 malloc_usable_size:
 	jmp	*hook_malloc_usable_size(%rip)
 	.endfn	malloc_usable_size,globl

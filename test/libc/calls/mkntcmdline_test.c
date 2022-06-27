@@ -23,9 +23,15 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-char16_t cmdline[ARG_MAX];
+char16_t cmdline[ARG_MAX / 2];
 
-TEST(mkntcmdline, emptyArgvList_isEmpty) {
+TEST(mkntcmdline, emptyArgvList_cantBeEmptyOnWindows) {
+  char *argv[] = {NULL};
+  EXPECT_NE(-1, mkntcmdline(cmdline, "foo", argv));
+  EXPECT_STREQ(u"foo", cmdline);
+}
+
+TEST(mkntcmdline, emptyArgvListWithProg_isEmpty) {
   char *argv[] = {NULL};
   EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
   EXPECT_STREQ(u"", cmdline);
@@ -72,15 +78,34 @@ TEST(mkntcmdline, testUnicode) {
                cmdline);
 }
 
-TEST(mkntcmdline, fix) {
+TEST(mkntcmdline, fixAsBestAsWeCanForNow1) {
   char *argv1[] = {
-      "C:/WINDOWS/system32/cmd.exe",
+      "/C/WINDOWS/system32/cmd.exe",
       "/C",
-      "more < \"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\"",
+      "more < \"/C/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
       NULL,
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
   EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more < "
-               u"\\\"C:\\Users\\jtunn\\AppData\\Local\\Temp\\tmplquaa_d6\\\"\"",
+               u"\\\"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\\\"\"",
                cmdline);
+}
+
+TEST(mkntcmdline, fixAsBestAsWeCanForNow2) {
+  char *argv1[] = {
+      "/C/WINDOWS/system32/cmd.exe",
+      "/C",
+      "less /C/Users/jart/AppData/Local/Temp/tmplquaa_d6",
+      NULL,
+  };
+  EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
+  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"less "
+               u"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
+               cmdline);
+}
+
+TEST(mkntcmdline, testWut) {
+  char *argv[] = {"redbean.com", "--strace", NULL};
+  EXPECT_NE(-1, mkntcmdline(cmdline, "C:\\Users\\jart\\redbean.com", argv));
+  EXPECT_STREQ(u"C:\\Users\\jart\\redbean.com --strace", cmdline);
 }

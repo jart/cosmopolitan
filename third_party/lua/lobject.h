@@ -1,9 +1,3 @@
-/*
-** $Id: lobject.h $
-** Type definitions for Lua objects
-** See Copyright Notice in lua.h
-*/
-
 #ifndef lobject_h
 #define lobject_h
 

@@ -97,19 +97,22 @@
   "Beautifies source code in current buffer."
   (interactive)
   (when (and (memq major-mode cosmo-format-modes)
-             (member (file-name-extension (buffer-file-name))
-                     cosmo-format-exts)
-             (not (member (file-name-nondirectory (buffer-name))
-                          cosmo-format-blacklist)))
+           (member (file-name-extension (buffer-file-name))
+              cosmo-format-exts)
+           (not (member (file-name-nondirectory (buffer-name))
+                 cosmo-format-blacklist))
+           (not (save-excursion
+                (beginning-of-buffer)
+                (looking-at "/\\* clang-format off \\*/"))))
     (let ((bin (cosmo--find-clang-format-bin)))
       (when bin
         (let ((p (point))
               (tmp (make-temp-file "cosmo-format"))
               (arg (or cosmo-format-arg
-                       (and (locate-dominating-file
-                             (buffer-file-name)
-                             ".clang-format")
-                            "-style=file"))))
+                      (and (locate-dominating-file
+                          (buffer-file-name)
+                          ".clang-format")
+                         "-style=file"))))
           (when arg
             (message arg)
             (write-region nil nil tmp)

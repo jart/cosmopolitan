@@ -20,7 +20,15 @@
 
 /**
  * Returns true if stream is in end-of-file state.
+ *
+ * @param f is file object stream pointer
+ * @see	feof_unlocked()
+ * @threadsafe
  */
 int feof(FILE *f) {
-  return f->state == -1;
+  int rc;
+  flockfile(f);
+  rc = feof_unlocked(f);
+  funlockfile(f);
+  return rc;
 }

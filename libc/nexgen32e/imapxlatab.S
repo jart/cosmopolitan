@@ -36,4 +36,3 @@ imapxlatab:
 	.loop	1b
 	.leafepilogue
 	.endfn	imapxlatab,globl,hidden
-	.source	__FILE__

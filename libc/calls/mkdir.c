@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
@@ -36,7 +36,7 @@
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
  * @param mode can be, for example, 0755
  * @return 0 on success or -1 w/ errno
- * @error EEXIST, ENOTDIR, ENAMETOOLONG, EACCES
+ * @error ENAMETOOLONG if >246 characters on NT
  * @asyncsignalsafe
  * @see makedirs()
  */

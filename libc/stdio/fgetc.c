@@ -20,14 +20,16 @@
 
 /**
  * Reads byte from stream.
+ *
+ * @param f is non-null file object stream pointer
  * @return byte in range 0..255, or -1 w/ errno
+ * @see fgetc_unlocked()
+ * @threadsafe
  */
 int fgetc(FILE *f) {
-  unsigned char b[1];
-  if (f->beg < f->end) {
-    return f->buf[f->beg++] & 0xff;
-  } else {
-    if (!fread(b, 1, 1, f)) return -1;
-    return b[0];
-  }
+  int rc;
+  flockfile(f);
+  rc = fgetc_unlocked(f);
+  funlockfile(f);
+  return rc;
 }

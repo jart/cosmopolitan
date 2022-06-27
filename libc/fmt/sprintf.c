@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
+#include "libc/log/log.h"
 
 /**
  * Formats string to buffer that's hopefully large enough.

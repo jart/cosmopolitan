@@ -16,12 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/valist.h"
@@ -43,13 +46,18 @@
  * for the first time.
  */
 static int log_facility = -1;
-static char log_ident[32];
+static char16_t log_ident[32];
 static int log_opt;
 static int log_mask;
 static uint16_t log_id; /* Used for Windows EvtID */
 static int64_t log_fd = -1;
 
-static const struct sockaddr_un log_addr = {AF_UNIX, "/dev/log"};
+static const char *const kLogPaths[] = {
+    "/dev/log",
+    // "/var/run/log", // TODO: Help with XNU and FreeBSD.
+};
+
+static struct sockaddr_un log_addr = {AF_UNIX, "/dev/log"};
 
 static int64_t Time(int64_t *tp) {
   struct timespec ts;
@@ -72,16 +80,20 @@ forceinline int is_lost_conn(int e) {
 }
 
 static void __openlog() {
+  int i;
   if (IsWindows()) {
-    log_fd = RegisterEventSourceA(NULL, log_ident);
+    log_fd = RegisterEventSource(NULL, log_ident);
   } else {
     log_fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if (log_fd >= 0) {
-      int rc = connect(log_fd, (void *)&log_addr, sizeof(log_addr));
-      if (rc < 0) {
-        printf("ERR: connect(openlog) failed: %s (errno=%d)\n", strerror(errno),
-               errno);
+      for (i = 0; i < ARRAYLEN(kLogPaths); ++i) {
+        strcpy(log_addr.sun_path, kLogPaths[i]);
+        if (!connect(log_fd, (void *)&log_addr, sizeof(log_addr))) {
+          return;
+        }
       }
+      printf("ERR: connect(openlog) failed: %s (errno=%d)\n", strerror(errno),
+             errno);
     }
   }
 }
@@ -134,8 +146,8 @@ void vsyslog(int priority, const char *message, va_list ap) {
    */
   l = snprintf(buf, sizeof(buf), "<%d>%s ", priority, timebuf);
   hlen = l;
-  l += snprintf(buf + l, sizeof(buf) - l, "%s%s%.0d%s: ", log_ident, "[" + !pid,
-                pid, "]" + !pid);
+  l += snprintf(buf + l, sizeof(buf) - l, "%hs%s%.0d%s: ", log_ident,
+                "[" + !pid, pid, "]" + !pid);
   errno = errno_save;
 
   /* Append user message */
@@ -218,7 +230,9 @@ void vsyslog(int priority, const char *message, va_list ap) {
       ++log_id;
     }
 
-    if (log_opt & LOG_PERROR) dprintf(2, "%.*s", l - hlen, buf + hlen);
+    if (log_opt & LOG_PERROR) {
+      dprintf(2, "%.*s", l - hlen, buf + hlen);
+    }
   }
 }
 
@@ -278,11 +292,9 @@ void openlog(const char *ident, int opt, int facility) {
     __initlog();
   }
   if (!ident) {
-    ident = program_invocation_short_name;
+    ident = firstnonnull(program_invocation_short_name, "unknown");
   }
-  n = strnlen(ident, sizeof(log_ident) - 1);
-  memcpy(log_ident, ident, n);
-  log_ident[n] = 0;
+  tprecode8to16(log_ident, ARRAYLEN(log_ident), ident);
   log_opt = opt;
   log_facility = facility;
   log_id = 0;

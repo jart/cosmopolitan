@@ -7,7 +7,7 @@ THIRD_PARTY_ZLIB_ARTIFACTS += THIRD_PARTY_ZLIB_A
 THIRD_PARTY_ZLIB = $(THIRD_PARTY_ZLIB_A_DEPS) $(THIRD_PARTY_ZLIB_A)
 THIRD_PARTY_ZLIB_A = o/$(MODE)/third_party/zlib/zlib.a
 THIRD_PARTY_ZLIB_A_FILES := $(wildcard third_party/zlib/*)
-THIRD_PARTY_ZLIB_A_HDRS = third_party/zlib/zlib.h
+THIRD_PARTY_ZLIB_A_HDRS = third_party/zlib/zlib.h third_party/zlib/puff.h
 THIRD_PARTY_ZLIB_A_HDRS_ALL = $(filter %.h,$(THIRD_PARTY_ZLIB_A_FILES))
 THIRD_PARTY_ZLIB_A_SRCS_S = $(filter %.S,$(THIRD_PARTY_ZLIB_A_FILES))
 THIRD_PARTY_ZLIB_A_SRCS_C = $(filter %.c,$(THIRD_PARTY_ZLIB_A_FILES))
@@ -69,5 +69,6 @@ $(THIRD_PARTY_ZLIB_OBJS): $(BUILD_FILES) third_party/zlib/zlib.mk
 
 .PHONY: o/$(MODE)/third_party/zlib
 o/$(MODE)/third_party/zlib:				\
+		o/$(MODE)/third_party/zlib/gz		\
 		$(THIRD_PARTY_ZLIB_A)			\
 		$(THIRD_PARTY_ZLIB_CHECKS)

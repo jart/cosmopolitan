@@ -126,7 +126,7 @@ static dontinline bool __arena_grow(size_t offset, size_t request) {
   return false;
 }
 
-static void *__arena_alloc(size_t a, size_t n) {
+static inline void *__arena_alloc(size_t a, size_t n) {
   size_t o;
   if (!n) n = 1;
   o = ROUNDUP(__arena.offset[__arena.depth] + sizeof(size_t), a);
@@ -299,6 +299,25 @@ static void __arena_init(void) {
   atexit(__arena_destroy);
 }
 
+/**
+ * Pushes memory arena.
+ *
+ * This allocator gives a ~3x performance boost over dlmalloc, mostly
+ * because it isn't thread safe and it doesn't do defragmentation.
+ *
+ * Calling this function will push a new arena. It may be called
+ * multiple times from the main thread recursively. The first time it's
+ * called, it hooks all the regular memory allocation functions. Any
+ * allocations that were made previously outside the arena, will be
+ * passed on to the previous hooks. Then, the basic idea, is rather than
+ * bothering with free() you can just call __arena_pop() to bulk free.
+ *
+ * Arena allocations also have a slight size advantage, since 32-bit
+ * pointers are always used. The maximum amount of arena memory is
+ * 805,175,296 bytes.
+ *
+ * @see __arena_pop()
+ */
 void __arena_push(void) {
   if (UNLIKELY(!__arena.once)) {
     __arena_init();
@@ -313,6 +332,15 @@ void __arena_push(void) {
   ++__arena.depth;
 }
 
+/**
+ * Pops memory arena.
+ *
+ * This pops the most recently created arena, freeing all the memory
+ * that was allocated between the push and pop arena calls. If this is
+ * the last arena on the stack, then the old malloc hooks are restored.
+ *
+ * @see __arena_push()
+ */
 void __arena_pop(void) {
   size_t a, b, greed;
   __arena_check();

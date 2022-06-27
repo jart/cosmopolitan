@@ -4,9 +4,6 @@
 eremchg:
 	.leafprologue
 	.profilable
-	mov	EREMCHG(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EREMCHG(%rip),%ecx
+	jmp	__errfun
 	.endfn	eremchg,globl,hidden

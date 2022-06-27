@@ -1,0 +1,26 @@
+#!/bin/sh
+echo " "
+echo "REPORT ALL BUGS, PROBLEMS, AND ACCOLADES TO:"
+echo " "
+echo "         Zip-Bugs@lists.wku.edu"
+echo " "
+echo "Checking architecture platform for .ARCH. ..."
+arch=`uname -p`
+if [ "arch_${arch}" != "arch_.ARCH." ]; then
+   echo " "
+   echo "This product MUST be installed on a Solaris .ARCH. platform."
+   echo "Your machine looks like it is a ${arch} platform."
+   echo "Please install the version for the .ARCH. architecture."
+   echo "Aborting the installation because of this. "
+   echo " "
+   returncode=1
+ else
+   echo " "
+   echo "This product works on .ARCH., which you happen to have!"
+   echo " "
+   returncode=0
+fi
+echo " "
+/usr/bin/sleep 4
+exit ${returncode:-1}
+#

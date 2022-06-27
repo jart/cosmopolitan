@@ -24,7 +24,6 @@ TEST_LIBC_INTRIN_CHECKS =				\
 
 TEST_LIBC_INTRIN_DIRECTDEPS =				\
 	LIBC_CALLS					\
-	LIBC_STDIO					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\
@@ -32,10 +31,13 @@ TEST_LIBC_INTRIN_DIRECTDEPS =				\
 	LIBC_NEXGEN32E					\
 	LIBC_RAND					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
+	LIBC_SYSV					\
 	LIBC_TESTLIB					\
 	LIBC_TINYMATH					\
+	LIBC_UNICODE					\
 	LIBC_X						\
 	TOOL_VIZ_LIB
 
@@ -52,7 +54,7 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		o/$(MODE)/test/libc/intrin/intrin.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_INTRIN_OBJS):				\

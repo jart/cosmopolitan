@@ -25,7 +25,7 @@ struct High g_high;
 char *HighStart(char *p, int h) {
   if (h) {
     p = stpcpy(p, "\e[38;5;");
-    p += uint64toarray_radix10(h, p);
+    p = FormatUint32(p, h);
     p = stpcpy(p, "m");
     g_high.active = true;
   }

@@ -20,8 +20,8 @@
 .privileged
 
 ftrace_hook:
-	cmp	$0,g_ftrace(%rip)
-	je	1f
+	cmp	$0,__ftrace(%rip)
+	jg	1f
 	ret
 1:	push	%rbp
 	mov	%rsp,%rbp

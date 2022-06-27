@@ -1,37 +1,40 @@
-/* clang-format off */
-/************************************************************************
-* lsqlite3                                                              *
-* Copyright (C) 2002-2016 Tiago Dionizio, Doug Currie                   *
-* All rights reserved.                                                  *
-* Author    : Tiago Dionizio <tiago.dionizio@ist.utl.pt>                *
-* Author    : Doug Currie <doug.currie@alum.mit.edu>                    *
-* Library   : lsqlite3 - an SQLite 3 database binding for Lua 5         *
-*                                                                       *
-* Permission is hereby granted, free of charge, to any person obtaining *
-* a copy of this software and associated documentation files (the       *
-* "Software"), to deal in the Software without restriction, including   *
-* without limitation the rights to use, copy, modify, merge, publish,   *
-* distribute, sublicense, and/or sell copies of the Software, and to    *
-* permit persons to whom the Software is furnished to do so, subject to *
-* the following conditions:                                             *
-*                                                                       *
-* The above copyright notice and this permission notice shall be        *
-* included in all copies or substantial portions of the Software.       *
-*                                                                       *
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       *
-* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    *
-* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*
-* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  *
-* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  *
-* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     *
-* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
-************************************************************************/
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ lsqlite3                                                                     │
+│ Copyright (C) 2002-2016 Tiago Dionizio, Doug Currie                          │
+│ All rights reserved.                                                         │
+│ Author    : Tiago Dionizio <tiago.dionizio@ist.utl.pt>                       │
+│ Author    : Doug Currie <doug.currie@alum.mit.edu>                           │
+│ Library   : lsqlite3 - an SQLite 3 database binding for Lua 5                │
+│                                                                              │
+│ Permission is hereby granted, free of charge, to any person obtaining        │
+│ a copy of this software and associated documentation files (the              │
+│ "Software"), to deal in the Software without restriction, including          │
+│ without limitation the rights to use, copy, modify, merge, publish,          │
+│ distribute, sublicense, and/or sell copies of the Software, and to           │
+│ permit persons to whom the Software is furnished to do so, subject to        │
+│ the following conditions:                                                    │
+│                                                                              │
+│ The above copyright notice and this permission notice shall be               │
+│ included in all copies or substantial portions of the Software.              │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,              │
+│ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF           │
+│ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.       │
+│ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY         │
+│ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,         │
+│ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE            │
+│ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                       │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3.h"
+// clang-format off
 
 asm(".ident\t\"\\n\\n\
 lsqlite3 (MIT License)\\n\
@@ -89,6 +92,15 @@ struct sdb {
     /* references */
     int busy_cb;        /* busy callback */
     int busy_udata;
+
+    int update_hook_cb; /* update_hook callback */
+    int update_hook_udata;
+
+    int commit_hook_cb; /* commit_hook callback */
+    int commit_hook_udata;
+
+    int rollback_hook_cb; /* rollback_hook callback */
+    int rollback_hook_udata;
 };
 
 static const char *const sqlite_meta      = ":sqlite3";
@@ -570,6 +582,12 @@ static sdb *newdb (lua_State *L) {
 
     db->busy_cb =
     db->busy_udata =
+    db->update_hook_cb =
+    db->update_hook_udata =
+    db->commit_hook_cb =
+    db->commit_hook_udata =
+    db->rollback_hook_cb =
+    db->rollback_hook_udata =
      LUA_NOREF;
 
     luaL_getmetatable(L, sqlite_meta);
@@ -614,6 +632,12 @@ static int cleanupdb(lua_State *L, sdb *db) {
     /* 'free' all references */
     luaL_unref(L, LUA_REGISTRYINDEX, db->busy_cb);
     luaL_unref(L, LUA_REGISTRYINDEX, db->busy_udata);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_cb);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_udata);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_cb);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_udata);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_cb);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_udata);
 
     /* close database */
     result = sqlite3_close(db->db);
@@ -1131,6 +1155,182 @@ static int db_create_collation(lua_State *L) {
 }
 
 /*
+** update_hook callback:
+** Params: database, callback function, userdata
+**
+** callback function:
+** Params: userdata, {one of SQLITE_INSERT, SQLITE_DELETE, or SQLITE_UPDATE},
+**          database name, table name (containing the affected row), rowid of the row
+*/
+static void db_update_hook_callback(void *user, int op, char const *dbname, char const *tblname, sqlite3_int64 rowid) {
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    lua_Number n;
+
+    /* setup lua callback call */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->update_hook_cb);    /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->update_hook_udata); /* get callback user data */
+    lua_pushinteger(L, op);
+    lua_pushstring(L, dbname); /* update_hook database name */
+    lua_pushstring(L, tblname); /* update_hook database name */
+
+    PUSH_INT64(L, rowid, lua_pushfstring(L, "%ll", rowid));
+
+    /* call lua function */
+    lua_pcall(L, 5, 0, 0);
+    /* ignore any error generated by this function */
+
+    lua_settop(L, top);
+}
+
+static int db_update_hook(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+
+    if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+        luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_udata);
+
+        db->update_hook_cb =
+        db->update_hook_udata = LUA_NOREF;
+
+        /* clear update_hook handler */
+        sqlite3_update_hook(db->db, NULL, NULL);
+    }
+    else {
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+
+        /* make sure we have an userdata field (even if nil) */
+        lua_settop(L, 3);
+
+        luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_udata);
+
+        db->update_hook_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        db->update_hook_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        /* set update_hook handler */
+        sqlite3_update_hook(db->db, db_update_hook_callback, db);
+    }
+
+    return 0;
+}
+
+/*
+** commit_hook callback:
+** Params: database, callback function, userdata
+**
+** callback function:
+** Params: userdata
+** Returned value: Return false or nil to continue the COMMIT operation normally.
+**  return true (non false, non nil), then the COMMIT is converted into a ROLLBACK.
+*/
+static int db_commit_hook_callback(void *user) {
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    int rollback = 0;
+
+    /* setup lua callback call */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->commit_hook_cb);    /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->commit_hook_udata); /* get callback user data */
+
+    /* call lua function */
+    if (!lua_pcall(L, 1, 1, 0))
+        rollback = lua_toboolean(L, -1); /* use result if there was no error */
+
+    lua_settop(L, top);
+    return rollback;
+}
+
+static int db_commit_hook(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+
+    if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+        luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_udata);
+
+        db->commit_hook_cb =
+        db->commit_hook_udata = LUA_NOREF;
+
+        /* clear commit_hook handler */
+        sqlite3_commit_hook(db->db, NULL, NULL);
+    }
+    else {
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+
+        /* make sure we have an userdata field (even if nil) */
+        lua_settop(L, 3);
+
+        luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_udata);
+
+        db->commit_hook_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        db->commit_hook_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        /* set commit_hook handler */
+        sqlite3_commit_hook(db->db, db_commit_hook_callback, db);
+    }
+
+    return 0;
+}
+
+/*
+** rollback hook callback:
+** Params: database, callback function, userdata
+**
+** callback function:
+** Params: userdata
+*/
+static void db_rollback_hook_callback(void *user) {
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+
+    /* setup lua callback call */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->rollback_hook_cb);    /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->rollback_hook_udata); /* get callback user data */
+
+    /* call lua function */
+    lua_pcall(L, 1, 0, 0);
+    /* ignore any error generated by this function */
+
+    lua_settop(L, top);
+}
+
+static int db_rollback_hook(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+
+    if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+        luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_udata);
+
+        db->rollback_hook_cb =
+        db->rollback_hook_udata = LUA_NOREF;
+
+        /* clear rollback_hook handler */
+        sqlite3_rollback_hook(db->db, NULL, NULL);
+    }
+    else {
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+
+        /* make sure we have an userdata field (even if nil) */
+        lua_settop(L, 3);
+
+        luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->rollback_hook_udata);
+
+        db->rollback_hook_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        db->rollback_hook_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        /* set rollback_hook handler */
+        sqlite3_rollback_hook(db->db, db_rollback_hook_callback, db);
+    }
+
+    return 0;
+}
+
+/*
 ** busy handler:
 ** Params: database, callback function, userdata
 **
@@ -1499,6 +1699,9 @@ static int lsqlite_do_open(lua_State *L, const char *filename, int flags) {
 
     if (sqlite3_open_v2(filename, &db->db, flags, 0) == SQLITE_OK) {
         /* database handle already in the stack - return it */
+        sqlite3_fileio_init(db->db, 0, 0);
+        sqlite3_zipfile_init(db->db, 0, 0);
+        sqlite3_sqlar_init(db->db, 0, 0);
         return 1;
     }
 
@@ -1640,6 +1843,9 @@ static const luaL_Reg dblib[] = {
 
     {"busy_timeout",        db_busy_timeout         },
     {"busy_handler",        db_busy_handler         },
+    {"update_hook",         db_update_hook          },
+    {"commit_hook",         db_commit_hook          },
+    {"rollback_hook",       db_rollback_hook        },
 
     {"prepare",             db_prepare              },
     {"rows",                db_rows                 },
@@ -1736,7 +1942,7 @@ static const luaL_Reg sqlitelib[] = {
 
 static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
     luaL_newmetatable(L, name);
-    lua_pushstring(L, "__index");
+    lua_pushliteral(L, "__index");
     lua_pushvalue(L, -2);               /* push metatable */
     lua_rawset(L, -3);                  /* metatable.__index = metatable */
 

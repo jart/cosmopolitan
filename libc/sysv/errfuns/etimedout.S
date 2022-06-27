@@ -4,9 +4,6 @@
 etimedout:
 	.leafprologue
 	.profilable
-	mov	ETIMEDOUT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ETIMEDOUT(%rip),%ecx
+	jmp	__errfun
 	.endfn	etimedout,globl,hidden

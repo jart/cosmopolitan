@@ -48,6 +48,8 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
 #define __PRI128 "ll"
 #elif __SIZEOF_INTMAX__ == 16
 #define __PRI128 "j"
+#else
+#define __PRI128 "jj"
 #endif
 
 #if __SIZEOF_POINTER__ == __SIZEOF_INT__

@@ -18,8 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -36,37 +40,60 @@
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
  * @asyncsignalsafe
+ * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
-  if (!IsWindows()) {
-    if (IsBsd() && msg->msg_name) {
-      /* An optional address is provided, convert it to the BSD form */
-      char addr2[128];
-      struct msghdr msg2;
-      if (msg->msg_namelen > sizeof(addr2)) return einval();
-      memcpy(&addr2[0], msg->msg_name, msg->msg_namelen);
-      sockaddr2bsd(&addr2[0]);
+  int64_t rc;
+  struct msghdr msg2;
+  union sockaddr_storage_bsd bsd;
 
-      /* Copy all of msg (except for msg_name) into the new ephemeral local */
+  if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    if (IsBsd() && msg->msg_name) {
       memcpy(&msg2, msg, sizeof(msg2));
-      msg2.msg_name = &addr2[0];
-      return sys_sendmsg(fd, &msg2, flags);
-    }
-    /* else do the syscall */
-    return sys_sendmsg(fd, msg, flags);
-  } else {
-    if (__isfdopen(fd)) {
-      if (msg->msg_control) return einval(); /* control msg not supported */
-      if (__isfdkind(fd, kFdSocket)) {
-        return sys_sendto_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, flags,
-                             msg->msg_name, msg->msg_namelen);
-      } else if (__isfdkind(fd, kFdFile)) {
-        return sys_write_nt(&g_fds.p[fd], msg->msg_iov, msg->msg_iovlen, -1);
-      } else {
-        return enotsock();
+      if (!(rc = sockaddr2bsd(msg->msg_name, msg->msg_namelen, &bsd,
+                              &msg2.msg_namelen))) {
+        msg2.msg_name = &bsd.sa;
+        rc = sys_sendmsg(fd, &msg2, flags);
       }
     } else {
-      return ebadf();
+      rc = sys_sendmsg(fd, msg, flags);
     }
+  } else if (__isfdopen(fd)) {
+    if (msg->msg_control) {
+      rc = einval(); /* control msg not supported */
+    } else if (__isfdkind(fd, kFdSocket)) {
+      rc = sys_sendto_nt(fd, msg->msg_iov, msg->msg_iovlen, flags,
+                         msg->msg_name, msg->msg_namelen);
+    } else if (__isfdkind(fd, kFdFile)) {
+      rc = sys_write_nt(fd, msg->msg_iov, msg->msg_iovlen, -1);
+    } else {
+      rc = enotsock();
+    }
+  } else {
+    rc = ebadf();
   }
+
+#if defined(SYSDEBUG) && _DATATRACE
+  if (__strace > 0) {
+    kprintf(STRACE_PROLOGUE "sendmsg(");
+    if ((!IsAsan() && kisdangerous(msg)) ||
+        (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {
+      kprintf("%p", msg);
+    } else {
+      kprintf("{");
+      kprintf(".name=%#.*hhs, ", msg->msg_namelen, msg->msg_name);
+      if (msg->msg_controllen)
+        kprintf(", .control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
+      if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
+      kprintf(", .iov=", fd);
+      DescribeIov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
+      kprintf("}");
+    }
+    kprintf(", %#x) → %'ld% m\n", flags, rc);
+  }
+#endif
+
+  return rc;
 }

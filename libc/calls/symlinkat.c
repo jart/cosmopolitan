@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
@@ -33,17 +36,21 @@
  * @param target can be relative and needn't exist
  * @param linkpath is what gets created
  * @return 0 on success, or -1 w/ errno
- * @note Windows NT only lets admins do this
+ * @raise EPERM if a non-admin on Windows NT tries to use this
  * @asyncsignalsafe
  */
 int symlinkat(const char *target, int newdirfd, const char *linkpath) {
+  int rc;
   if (IsAsan() &&
       (!__asan_is_valid(target, 1) || !__asan_is_valid(linkpath, 1))) {
-    return efault();
+    rc = efault();
   }
   if (!IsWindows()) {
-    return sys_symlinkat(target, newdirfd, linkpath);
+    rc = sys_symlinkat(target, newdirfd, linkpath);
   } else {
-    return sys_symlinkat_nt(target, newdirfd, linkpath);
+    rc = sys_symlinkat_nt(target, newdirfd, linkpath);
   }
+  STRACE("symlinkat(%#s, %s, %#s) → %d% m", target, DescribeDirfd(newdirfd),
+         linkpath);
+  return rc;
 }

@@ -3,9 +3,6 @@
 
 ebade:	.leafprologue
 	.profilable
-	mov	EBADE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EBADE(%rip),%ecx
+	jmp	__errfun
 	.endfn	ebade,globl,hidden

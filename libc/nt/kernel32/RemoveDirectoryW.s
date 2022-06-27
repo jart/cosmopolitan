@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_RemoveDirectoryW,RemoveDirectoryW,0
 
 	.text.windows
-RemoveDirectory:
+__RemoveDirectory:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ RemoveDirectory:
 	call	*__imp_RemoveDirectoryW(%rip)
 	leave
 	ret
-	.endfn	RemoveDirectory,globl
+	.endfn	__RemoveDirectory,globl
 	.previous

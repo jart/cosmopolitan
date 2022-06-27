@@ -32,13 +32,14 @@
 __nt2sysv:
 	push	%rbp
 	mov	%rsp,%rbp
+//	TODO(jart): We should probably find some way to use our own
+//	            stack when Windows delivers signals ;_;
 	.profilable
 	sub	$0x100,%rsp
 	push	%rbx
 	push	%rdi
 	push	%rsi
-	pushf
-	ezlea	_base,bx
+	pushf					# TODO(jart): Do we need it?
 	lea	-0x80(%rbp),%rdi
 	call	_savexmm
 	mov	%rcx,%rdi
@@ -55,4 +56,3 @@ __nt2sysv:
 	leave
 	ret
 	.endfn	__nt2sysv,globl,hidden
-	.source	__FILE__

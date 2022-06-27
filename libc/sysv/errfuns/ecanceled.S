@@ -4,9 +4,6 @@
 ecanceled:
 	.leafprologue
 	.profilable
-	mov	ECANCELED(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ECANCELED(%rip),%ecx
+	jmp	__errfun
 	.endfn	ecanceled,globl,hidden

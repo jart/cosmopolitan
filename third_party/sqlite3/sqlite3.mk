@@ -62,7 +62,8 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	THIRD_PARTY_GDTOA						\
 	THIRD_PARTY_LINENOISE						\
 	THIRD_PARTY_MUSL						\
-	THIRD_PARTY_ZLIB				
+	THIRD_PARTY_ZLIB						\
+	TOOL_ARGS
 
 THIRD_PARTY_SQLITE3_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_SQLITE3_A_DIRECTDEPS),$($(x))))
@@ -75,6 +76,16 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	-@$(APELINK)
+
+o/$(MODE)/third_party/sqlite3/sqlite3.com:					\
+		o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
+		-o o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab $<
+	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
+		o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab
 
 $(THIRD_PARTY_SQLITE3_A):						\
 		third_party/sqlite3/					\
@@ -96,6 +107,9 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DSQLITE_OS_UNIX						\
 	-DBUILD_sqlite							\
 	-DHAVE_USLEEP							\
+	-DHAVE_READLINK							\
+	-DHAVE_FCHOWN							\
+	-DHAVE_LSTAT							\
 	-DHAVE_GMTIME_R							\
 	-DHAVE_FDATASYNC						\
 	-DHAVE_STRCHRNUL						\
@@ -113,7 +127,8 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DSQLITE_OMIT_AUTOINIT						\
 	-DSQLITE_OMIT_GET_TABLE						\
 	-DSQLITE_HAVE_C99_MATH_FUNCS					\
-	-DSQLITE_ENABLE_MATH_FUNCTIONS
+	-DSQLITE_ENABLE_MATH_FUNCTIONS					\
+	-DSQLITE_ENABLE_JSON1						\
 
 $(THIRD_PARTY_SQLITE3_A_OBJS):						\
 		OVERRIDE_CFLAGS +=					\
@@ -143,12 +158,7 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 			-DSQLITE_ENABLE_FTS5				\
 			-DSQLITE_ENABLE_RTREE				\
 			-DSQLITE_ENABLE_GEOPOLY				\
-			-DSQLITE_ENABLE_JSON1				\
 			-DHAVE_LINENOISE
-
-o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
-		OVERRIDE_CFLAGS +=					\
-			-DSTACK_FRAME_UNLIMITED
 
 o//third_party/sqlite3/parse.o						\
 o//third_party/sqlite3/select.o						\
@@ -156,6 +166,10 @@ o//third_party/sqlite3/pragma.o						\
 o//third_party/sqlite3/vdbe.o:						\
 		OVERRIDE_CFLAGS +=					\
 			-Os
+
+o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
+		OVERRIDE_CFLAGS +=					\
+			-DSTACK_FRAME_UNLIMITED
 
 $(THIRD_PARTY_SQLITE3_A_OBJS)						\
 $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
@@ -173,11 +187,11 @@ o/$(MODE)/third_party/sqlite3/parse.o:					\
 o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M512m
-o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M512m
+o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M1024m
+o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16
+o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16 -L180
 
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))

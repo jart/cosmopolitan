@@ -19,7 +19,7 @@
 #include "libc/macros.internal.h"
 .text.startup
 
-//	Seventeen byte decompressor.
+//	Thirteen byte decompressor.
 //
 //	@param	di points to output buffer
 //	@param	si points to uint8_t {len₁,byte₁}, ..., {0,0}
@@ -32,9 +32,7 @@ rldecode:
 	xchg	%al,%cl
 	lodsb
 	jrcxz	2f
-1:	stosb
-	.loop	1b
+	rep stosb
 	jmp	0b
 2:	.leafepilogue
 	.endfn	rldecode,globl
-	.source	__FILE__

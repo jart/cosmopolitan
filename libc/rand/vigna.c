@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/xadd.h"
 #include "libc/rand/rand.h"
 
 static uint64_t g_vigna;
@@ -40,9 +39,8 @@ static uint64_t g_vigna;
  *     static uint64_t s = 0;
  *     uint64_t x = svigna_r(&s);
  *
- * This function is the fastest way to generate good scalar pseudorandom
- * numbers that aren't truncated. If you want to fill a buffer with data
- * then rngset() implements vigna's algorithm to do that extremely well:
+ * If you want to fill a buffer with data then rngset() implements
+ * vigna's algorithm to do that extremely well:
  *
  *     char buf[4096];
  *     rngset(buf, sizeof(buf), vigna, 0);
@@ -52,6 +50,9 @@ static uint64_t g_vigna;
  * want true random data then consider rdseed, rdrand, and getrandom.
  *
  * @return 64 bits of pseudorandom data
+ * @note this function is not intended for cryptography
+ * @note this function passes bigcrush and practrand
+ * @note this function takes at minimum 4 cycles
  */
 uint64_t vigna(void) {
   return vigna_r(&g_vigna);

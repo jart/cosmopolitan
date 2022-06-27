@@ -814,7 +814,8 @@ class TestBinaryPlistlib(unittest.TestCase):
         b = plistlib.loads(plistlib.dumps(a, fmt=plistlib.FMT_BINARY))
         self.assertIs(b['x'], b)
 
-    @unittest.skipIf(cosmo.MODE == 'tiny', "no stack awareness in tiny mode")
+    @unittest.skipIf(cosmo.MODE.startswith("tiny"),
+                     "no stack awareness in tiny mode")
     def test_deep_nesting(self):
         for N in [300, 100000]:
             chunks = [b'\xa1' + (i + 1).to_bytes(4, 'big') for i in range(N)]

@@ -3,9 +3,6 @@
 
 eadv:	.leafprologue
 	.profilable
-	mov	EADV(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EADV(%rip),%ecx
+	jmp	__errfun
 	.endfn	eadv,globl,hidden

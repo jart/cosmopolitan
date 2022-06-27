@@ -4,9 +4,6 @@
 enomedium:
 	.leafprologue
 	.profilable
-	mov	ENOMEDIUM(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOMEDIUM(%rip),%ecx
+	jmp	__errfun
 	.endfn	enomedium,globl,hidden

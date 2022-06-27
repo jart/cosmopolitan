@@ -17,65 +17,104 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/typedef/sigaction_f.h"
 #include "libc/calls/ucontext.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
 
-textwindows unsigned __wincrash(struct NtExceptionPointers *ep) {
-  int sig, rva;
-  struct Goodies {
-    ucontext_t ctx;
-    struct siginfo si;
-  } g;
-  SYSDEBUG("__wincrash");
+privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
+  int64_t rip;
+  int sig, code;
+  ucontext_t ctx;
+  STRACE("__wincrash");
+
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
+      code = TRAP_BRKPT;
       sig = SIGTRAP;
       break;
     case kNtSignalIllegalInstruction:
+      code = ILL_ILLOPC;
+      sig = SIGILL;
+      break;
     case kNtSignalPrivInstruction:
+      code = ILL_PRVOPC;
       sig = SIGILL;
       break;
     case kNtSignalGuardPage:
-    case kNtSignalAccessViolation:
     case kNtSignalInPageError:
+      code = SEGV_MAPERR;
+      sig = SIGSEGV;
+      break;
+    case kNtSignalAccessViolation:
+      code = SEGV_ACCERR;
       sig = SIGSEGV;
       break;
     case kNtSignalInvalidHandle:
     case kNtSignalInvalidParameter:
     case kNtSignalAssertionFailure:
+      code = SI_USER;
       sig = SIGABRT;
       break;
-    case kNtSignalFltDenormalOperand:
     case kNtSignalFltDivideByZero:
-    case kNtSignalFltInexactResult:
-    case kNtSignalFltInvalidOperation:
+      code = FPE_FLTDIV;
+      sig = SIGFPE;
+      break;
     case kNtSignalFltOverflow:
-    case kNtSignalFltStackCheck:
+      code = FPE_FLTOVF;
+      sig = SIGFPE;
+      break;
     case kNtSignalFltUnderflow:
+      code = FPE_FLTUND;
+      sig = SIGFPE;
+      break;
+    case kNtSignalFltInexactResult:
+      code = FPE_FLTRES;
+      sig = SIGFPE;
+      break;
+    case kNtSignalFltDenormalOperand:
+    case kNtSignalFltInvalidOperation:
+    case kNtSignalFltStackCheck:
     case kNtSignalIntegerDivideByZero:
     case kNtSignalFloatMultipleFaults:
     case kNtSignalFloatMultipleTraps:
+      code = FPE_FLTINV;
       sig = SIGFPE;
       break;
     case kNtSignalDllNotFound:
     case kNtSignalOrdinalNotFound:
     case kNtSignalEntrypointNotFound:
     case kNtSignalDllInitFailed:
+      code = SI_KERNEL;
       sig = SIGSYS;
       break;
     default:
       return kNtExceptionContinueSearch;
   }
-  bzero(&g, sizeof(g));
-  rva = __sighandrvas[sig];
-  if (rva >= kSigactionMinRva) {
-    ntcontext2linux(&g.ctx, ep->ContextRecord);
-    ((sigaction_f)(_base + rva))(sig, &g.si, &g.ctx);
+  rip = ep->ContextRecord->Rip;
+
+  if (__sighandflags[sig] & SA_SIGINFO) {
+    _ntcontext2linux(&ctx, ep->ContextRecord);
+    __sig_handle(false, sig, code, &ctx);
+    _ntlinux2context(ep->ContextRecord, &ctx);
+  } else {
+    __sig_handle(false, sig, code, 0);
   }
+
+  // Windows seems to be the only operating system that traps INT3 at
+  // addressof(INT3) rather than addressof(INT3)+1. So we must adjust
+  // RIP to prevent the same INT3 from being trapped forevermore.
+  if (sig == SIGTRAP && rip == ep->ContextRecord->Rip) {
+    ep->ContextRecord->Rip++;
+  }
+
   return kNtExceptionContinueExecution;
 }

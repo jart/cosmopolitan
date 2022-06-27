@@ -34,8 +34,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -1324,7 +1327,8 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
   if (wepoll_init() < 0) return -1;
-  if ((fd = __reservefd()) == -1) return -1;
+  fd = __reservefd(-1);
+  if (fd == -1) return -1;
   port_state = port_new(&ephnd);
   if (!port_state) {
     __releasefd(fd);
@@ -1338,14 +1342,17 @@ static textwindows dontinline int sys_epoll_create1_nt(uint32_t flags) {
     __releasefd(fd);
     return -1;
   }
+  __fds_lock();
   g_fds.p[fd].kind = kFdEpoll;
   g_fds.p[fd].handle = ephnd;
   g_fds.p[fd].flags = flags;
+  g_fds.p[fd].mode = 0140666;
+  __fds_unlock();
   return fd;
 }
 
 static textwindows dontinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
-                                                 struct epoll_event *ev) {
+                                                   struct epoll_event *ev) {
   int r;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
@@ -1375,9 +1382,9 @@ static textwindows dontinline int sys_epoll_ctl_nt(int epfd, int op, int fd,
 }
 
 static textwindows dontinline int sys_epoll_wait_nt(int epfd,
-                                                  struct epoll_event *events,
-                                                  int maxevents,
-                                                  int timeoutms) {
+                                                    struct epoll_event *events,
+                                                    int maxevents,
+                                                    int timeoutms) {
   int num_events;
   struct PortState *port_state;
   struct TsTreeNode *tree_node;
@@ -1493,6 +1500,7 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
  * @param maxevents is array length of events
  * @param timeoutms is milliseconds, 0 to not block, or -1 for forever
  * @return number of events stored, 0 on timeout, or -1 w/ errno
+ * @norestart
  */
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
                int timeoutms) {

@@ -502,15 +502,11 @@ def test_main():
             tests.extend([CPickleTests, CUnpicklerTests])
         support.run_unittest(*tests)
     else:
-        tests = [PyPickleTests, PyUnpicklerTests, PyPicklerTests,
-                 PyPersPicklerTests, PyIdPersPicklerTests,
-                 PyDispatchTableTests, PyChainDispatchTableTests,
-                 CompatPickleTests]
+        tests = []
         if has_c_implementation:
             tests.extend([CPickleTests, CUnpicklerTests, CPicklerTests,
                           CPersPicklerTests, CIdPersPicklerTests,
                           CDumpPickle_LoadPickle, DumpPickle_CLoadPickle,
-                          PyPicklerUnpicklerObjectTests,
                           CPicklerUnpicklerObjectTests,
                           CDispatchTableTests, CChainDispatchTableTests,
                           InMemoryPickleTests, SizeofTests])

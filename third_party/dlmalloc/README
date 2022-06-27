@@ -1,10 +1,9 @@
-
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain, as explained at
   http://creativecommons.org/publicdomain/zero/1.0/ Send questions,
   comments, complaints, performance data, etc to dl@cs.oswego.edu
 
-  Version 2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
+* Version 2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
    Note: There may be an updated version of this malloc obtainable at
            ftp://gee.cs.oswego.edu/pub/misc/malloc.c
          Check before installing!
@@ -41,7 +40,9 @@
        (e.g. 2.7.2) supporting these.)
 
   Alignment:                                     8 bytes (minimum)
-       Is set to 16 for NexGen32e.
+       This suffices for nearly all current machines and C compilers.
+       However, you can define MALLOC_ALIGNMENT to be wider than this
+       if necessary (up to 128bytes), at the expense of using more space.
 
   Minimum overhead per allocated chunk:   4 or  8 bytes (if 4byte sizes)
                                           8 or 16 bytes (if 8byte sizes)
@@ -98,7 +99,7 @@
        If you don't like either of these options, you can define
        CORRUPTION_ERROR_ACTION and USAGE_ERROR_ACTION to do anything
        else. And if if you are sure that your program using malloc has
-       no errors or vulnerabilities, you can define TRUSTWORTHY to 1,
+       no errors or vulnerabilities, you can define INSECURE to 1,
        which might (or might not) provide a small performance improvement.
 
        It is also possible to limit the maximum total allocatable
@@ -182,6 +183,371 @@
   For a longer but out of date high-level description, see
      http://gee.cs.oswego.edu/dl/html/malloc.html
 
+  -----------------------  Chunk representations ------------------------
+
+  (The following includes lightly edited explanations by Colin Plumb.)
+
+  The malloc_chunk declaration below is misleading (but accurate and
+  necessary).  It declares a "view" into memory allowing access to
+  necessary fields at known offsets from a given base.
+
+  Chunks of memory are maintained using a `boundary tag' method as
+  originally described by Knuth.  (See the paper by Paul Wilson
+  ftp://ftp.cs.utexas.edu/pub/garbage/allocsrv.ps for a survey of such
+  techniques.)  Sizes of free chunks are stored both in the front of
+  each chunk and at the end.  This makes consolidating fragmented
+  chunks into bigger chunks fast.  The head fields also hold bits
+  representing whether chunks are free or in use.
+
+  Here are some pictures to make it clearer.  They are "exploded" to
+  show that the state of a chunk can be thought of as extending from
+  the high 31 bits of the head field of its header through the
+  prev_foot and PINUSE_BIT bit of the following chunk header.
+
+  A chunk that's in use looks like:
+
+   chunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           | Size of previous chunk (if P = 0)                             |
+           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |P|
+         | Size of this chunk                                         1| +-+
+   mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         |                                                               |
+         +-                                                             -+
+         |                                                               |
+         +-                                                             -+
+         |                                                               :
+         +-      size - sizeof(size_t) available payload bytes          -+
+         :                                                               |
+ chunk-> +-                                                             -+
+         |                                                               |
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |1|
+       | Size of next chunk (may or may not be in use)               | +-+
+ mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    And if it's free, it looks like this:
+
+   chunk-> +-                                                             -+
+           | User payload (must be in use, or we would have merged!)       |
+           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |P|
+         | Size of this chunk                                         0| +-+
+   mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         | Next pointer                                                  |
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         | Prev pointer                                                  |
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         |                                                               :
+         +-      size - sizeof(struct chunk) unused bytes               -+
+         :                                                               |
+ chunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         | Size of this chunk                                            |
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |0|
+       | Size of next chunk (must be in use, or we would have merged)| +-+
+ mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                                                               :
+       +- User payload                                                -+
+       :                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                                                                     |0|
+                                                                     +-+
+  Note that since we always merge adjacent free chunks, the chunks
+  adjacent to a free chunk must be in use.
+
+  Given a pointer to a chunk (which can be derived trivially from the
+  payload pointer) we can, in O(1) time, find out whether the adjacent
+  chunks are free, and if so, unlink them from the lists that they
+  are on and merge them with the current chunk.
+
+  Chunks always begin on even word boundaries, so the mem portion
+  (which is returned to the user) is also on an even word boundary, and
+  thus at least double-word aligned.
+
+  The P (PINUSE_BIT) bit, stored in the unused low-order bit of the
+  chunk size (which is always a multiple of two words), is an in-use
+  bit for the *previous* chunk.  If that bit is *clear*, then the
+  word before the current chunk size contains the previous chunk
+  size, and can be used to find the front of the previous chunk.
+  The very first chunk allocated always has this bit set, preventing
+  access to non-existent (or non-owned) memory. If pinuse is set for
+  any given chunk, then you CANNOT determine the size of the
+  previous chunk, and might even get a memory addressing fault when
+  trying to do so.
+
+  The C (CINUSE_BIT) bit, stored in the unused second-lowest bit of
+  the chunk size redundantly records whether the current chunk is
+  inuse (unless the chunk is mmapped). This redundancy enables usage
+  checks within free and realloc, and reduces indirection when freeing
+  and consolidating chunks.
+
+  Each freshly allocated chunk must have both cinuse and pinuse set.
+  That is, each allocated chunk borders either a previously allocated
+  and still in-use chunk, or the base of its memory arena. This is
+  ensured by making all allocations from the `lowest' part of any
+  found chunk.  Further, no free chunk physically borders another one,
+  so each free chunk is known to be preceded and followed by either
+  inuse chunks or the ends of memory.
+
+  Note that the `foot' of the current chunk is actually represented
+  as the prev_foot of the NEXT chunk. This makes it easier to
+  deal with alignments etc but can be very confusing when trying
+  to extend or adapt this code.
+
+  The exceptions to all this are
+
+     1. The special chunk `top' is the top-most available chunk (i.e.,
+        the one bordering the end of available memory). It is treated
+        specially.  Top is never included in any bin, is used only if
+        no other chunk is available, and is released back to the
+        system if it is very large (see M_TRIM_THRESHOLD).  In effect,
+        the top chunk is treated as larger (and thus less well
+        fitting) than any other available chunk.  The top chunk
+        doesn't update its trailing size field since there is no next
+        contiguous chunk that would have to index off it. However,
+        space is still allocated for it (TOP_FOOT_SIZE) to enable
+        separation or merging when space is extended.
+
+     3. Chunks allocated via mmap, have both cinuse and pinuse bits
+        cleared in their head fields.  Because they are allocated
+        one-by-one, each must carry its own prev_foot field, which is
+        also used to hold the offset this chunk has within its mmapped
+        region, which is needed to preserve alignment. Each mmapped
+        chunk is trailed by the first two fields of a fake next-chunk
+        for sake of usage checks.
+
+  ---------------------- Overlaid data structures -----------------------
+
+  When chunks are not in use, they are treated as nodes of either
+  lists or trees.
+
+  "Small"  chunks are stored in circular doubly-linked lists, and look
+  like this:
+
+    chunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Size of previous chunk                            |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    `head:' |             Size of chunk, in bytes                         |P|
+      mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Forward pointer to next chunk in list             |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Back pointer to previous chunk in list            |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Unused space (may be 0 bytes long)                .
+            .                                                               .
+            .                                                               |
+nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    `foot:' |             Size of chunk, in bytes                           |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+  Larger chunks are kept in a form of bitwise digital trees (aka
+  tries) keyed on chunksizes.  Because malloc_tree_chunks are only for
+  free chunks greater than 256 bytes, their size doesn't impose any
+  constraints on user chunk sizes.  Each node looks like:
+
+    chunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Size of previous chunk                            |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    `head:' |             Size of chunk, in bytes                         |P|
+      mem-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Forward pointer to next chunk of same size        |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Back pointer to previous chunk of same size       |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Pointer to left child (child[0])                  |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Pointer to right child (child[1])                 |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Pointer to parent                                 |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             bin index of this chunk                           |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+            |             Unused space                                      .
+            .                                                               |
+nextchunk-> +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    `foot:' |             Size of chunk, in bytes                           |
+            +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+  Each tree holding treenodes is a tree of unique chunk sizes.  Chunks
+  of the same size are arranged in a circularly-linked list, with only
+  the oldest chunk (the next to be used, in our FIFO ordering)
+  actually in the tree.  (Tree members are distinguished by a non-null
+  parent pointer.)  If a chunk with the same size an an existing node
+  is inserted, it is linked off the existing node using pointers that
+  work in the same way as fd/bk pointers of small chunks.
+
+  Each tree contains a power of 2 sized range of chunk sizes (the
+  smallest is 0x100 <= x < 0x180), which is is divided in half at each
+  tree level, with the chunks in the smaller half of the range (0x100
+  <= x < 0x140 for the top nose) in the left subtree and the larger
+  half (0x140 <= x < 0x180) in the right subtree.  This is, of course,
+  done by inspecting individual bits.
+
+  Using these rules, each node's left subtree contains all smaller
+  sizes than its right subtree.  However, the node at the root of each
+  subtree has no particular ordering relationship to either.  (The
+  dividing line between the subtree sizes is based on trie relation.)
+  If we remove the last chunk of a given size from the interior of the
+  tree, we need to replace it with a leaf node.  The tree ordering
+  rules permit a node to be replaced by any leaf below it.
+
+  The smallest chunk in a tree (a common operation in a best-fit
+  allocator) can be found by walking a path to the leftmost leaf in
+  the tree.  Unlike a usual binary tree, where we follow left child
+  pointers until we reach a null, here we follow the right child
+  pointer any time the left one is null, until we reach a leaf with
+  both child pointers null. The smallest chunk in the tree will be
+  somewhere along that path.
+
+  The worst case number of steps to add, find, or remove a node is
+  bounded by the number of bits differentiating chunks within
+  bins. Under current bin calculations, this ranges from 6 up to 21
+  (for 32 bit sizes) or up to 53 (for 64 bit sizes). The typical case
+  is of course much better.
+
+  ----------------------------- Segments --------------------------------
+
+  Each malloc space may include non-contiguous segments, held in a
+  list headed by an embedded malloc_segment record representing the
+  top-most space. Segments also include flags holding properties of
+  the space. Large chunks that are directly allocated by mmap are not
+  included in this list. They are instead independently created and
+  destroyed without otherwise keeping track of them.
+
+  Segment management mainly comes into play for spaces allocated by
+  MMAP.  Any call to MMAP might or might not return memory that is
+  adjacent to an existing segment.  MORECORE normally contiguously
+  extends the current space, so this space is almost always adjacent,
+  which is simpler and faster to deal with. (This is why MORECORE is
+  used preferentially to MMAP when both are available -- see
+  sys_alloc.)  When allocating using MMAP, we don't use any of the
+  hinting mechanisms (inconsistently) supported in various
+  implementations of unix mmap, or distinguish reserving from
+  committing memory. Instead, we just ask for space, and exploit
+  contiguity when we get it.  It is probably possible to do
+  better than this on some systems, but no general scheme seems
+  to be significantly better.
+
+  Management entails a simpler variant of the consolidation scheme
+  used for chunks to reduce fragmentation -- new adjacent memory is
+  normally prepended or appended to an existing segment. However,
+  there are limitations compared to chunk consolidation that mostly
+  reflect the fact that segment processing is relatively infrequent
+  (occurring only when getting memory from system) and that we
+  don't expect to have huge numbers of segments:
+
+  * Segments are not indexed, so traversal requires linear scans.  (It
+    would be possible to index these, but is not worth the extra
+    overhead and complexity for most programs on most platforms.)
+  * New segments are only appended to old ones when holding top-most
+    memory; if they cannot be prepended to others, they are held in
+    different segments.
+
+  Except for the top-most segment of an mstate, each segment record
+  is kept at the tail of its segment. Segments are added by pushing
+  segment records onto the list headed by &mstate.seg for the
+  containing mstate.
+
+  Segment flags control allocation/merge/deallocation policies:
+  * If EXTERN_BIT set, then we did not allocate this segment,
+    and so should not try to deallocate or merge with others.
+    (This currently holds only for the initial segment passed
+    into create_mspace_with_base.)
+  * If USE_MMAP_BIT set, the segment may be merged with
+    other surrounding mmapped segments and trimmed/de-allocated
+    using munmap.
+  * If neither bit is set, then the segment was obtained using
+    MORECORE so can be merged with surrounding MORECORE'd segments
+    and deallocated/trimmed using MORECORE with negative arguments.
+
+  ---------------------------- malloc_state -----------------------------
+
+   A malloc_state holds all of the bookkeeping for a space.
+   The main fields are:
+
+  Top
+    The topmost chunk of the currently active segment. Its size is
+    cached in topsize.  The actual size of topmost space is
+    topsize+TOP_FOOT_SIZE, which includes space reserved for adding
+    fenceposts and segment records if necessary when getting more
+    space from the system.  The size at which to autotrim top is
+    cached from mparams in trim_check, except that it is disabled if
+    an autotrim fails.
+
+  Designated victim (dv)
+    This is the preferred chunk for servicing small requests that
+    don't have exact fits.  It is normally the chunk split off most
+    recently to service another small request.  Its size is cached in
+    dvsize. The link fields of this chunk are not maintained since it
+    is not kept in a bin.
+
+  SmallBins
+    An array of bin headers for free chunks.  These bins hold chunks
+    with sizes less than MIN_LARGE_SIZE bytes. Each bin contains
+    chunks of all the same size, spaced 8 bytes apart.  To simplify
+    use in double-linked lists, each bin header acts as a malloc_chunk
+    pointing to the real first node, if it exists (else pointing to
+    itself).  This avoids special-casing for headers.  But to avoid
+    waste, we allocate only the fd/bk pointers of bins, and then use
+    repositioning tricks to treat these as the fields of a chunk.
+
+  TreeBins
+    Treebins are pointers to the roots of trees holding a range of
+    sizes. There are 2 equally spaced treebins for each power of two
+    from TREE_SHIFT to TREE_SHIFT+16. The last bin holds anything
+    larger.
+
+  Bin maps
+    There is one bit map for small bins ("smallmap") and one for
+    treebins ("treemap).  Each bin sets its bit when non-empty, and
+    clears the bit when empty.  Bit operations are then used to avoid
+    bin-by-bin searching -- nearly all "search" is done without ever
+    looking at bins that won't be selected.  The bit maps
+    conservatively use 32 bits per map word, even if on 64bit system.
+    For a good description of some of the bit-based techniques used
+    here, see Henry S. Warren Jr's book "Hacker's Delight" (and
+    supplement at http://hackersdelight.org/). Many of these are
+    intended to reduce the branchiness of paths through malloc etc, as
+    well as to reduce the number of memory locations read or written.
+
+  Segments
+    A list of segments headed by an embedded malloc_segment record
+    representing the initial space.
+
+  Address check support
+    The least_addr field is the least address ever obtained from
+    MORECORE or MMAP. Attempted frees and reallocs of any address less
+    than this are trapped (unless INSECURE is defined).
+
+  Magic tag
+    A cross-check field that should always hold same value as mparams.magic.
+
+  Max allowed footprint
+    The maximum allowed bytes to allocate from system (zero means no limit)
+
+  Flags
+    Bits recording whether to use MMAP, locks, or contiguous MORECORE
+
+  Statistics
+    Each space keeps track of current and maximum system memory
+    obtained via MORECORE or MMAP.
+
+  Trim support
+    Fields holding the amount of unused topmost memory that should trigger
+    trimming, and a counter to force periodic scanning to release unused
+    non-topmost segments.
+
+  Locking
+    If USE_LOCKS is defined, the "mutex" lock is acquired and released
+    around every public call using this mspace.
+
+  Extension support
+    A void* pointer and a size_t field that can be used to help implement
+    extensions to this malloc.
+
+////////////////////////////////////////////////////////////////////////////////
+
 * MSPACES
   If MSPACES is defined, then in addition to malloc, free, etc.,
   this file also defines mspace_malloc, mspace_free, etc. These
@@ -213,12 +579,12 @@
   indicating its originating mspace, and frees are directed to their
   originating spaces. Normally, this requires use of locks.
 
- ─────────────────────────  Compile-time options ───────────────────────────
+ -------------------------  Compile-time options ---------------------------
 
 Be careful in setting #define values for numerical constants of type
 size_t. On some systems, literal values are not automatically extended
 to size_t precision unless they are explicitly casted. You can also
-use the symbolic values SIZE_MAX, SIZE_T_ONE, etc below.
+use the symbolic values MAX_SIZE_T, SIZE_T_ONE, etc below.
 
 WIN32                    default: defined if _WIN32 defined
   Defining WIN32 sets up defaults for MS environment and compilers.
@@ -287,7 +653,7 @@ FOOTERS                  default: 0
   information in the footers of allocated chunks. This adds
   space and time overhead.
 
-TRUSTWORTHY                 default: 0
+INSECURE                 default: 0
   If true, omit checks for usage errors and heap space overwrites.
 
 USE_DL_PREFIX            default: NOT defined
@@ -301,7 +667,7 @@ MALLOC_INSPECT_ALL       default: NOT defined
   functions is otherwise restricted, you probably do not want to
   include them in secure implementations.
 
-MALLOC_ABORT           default: defined as abort()
+ABORT                    default: defined as abort()
   Defines how to abort on failed checks.  On most systems, a failed
   check cannot die with an "assert" or even print an informative
   message, because the underlying print routines in turn call malloc,
@@ -389,6 +755,10 @@ HAVE_MMAP                 default: 1 (true)
   able to unmap memory that may have be allocated using multiple calls
   to MMAP, so long as they are adjacent.
 
+HAVE_MREMAP               default: 1 on linux, else 0
+  If true realloc() uses mremap() to re-allocate large blocks and
+  extend or shrink allocation spaces.
+
 MMAP_CLEARS               default: 1 except on WINCE.
   True if mmap clears memory so calloc doesn't need to. This is true
   for standard unix mmap using /dev/zero and on WIN32 except for WINCE.
@@ -407,6 +777,10 @@ malloc_getpagesize         default: derive from system includes, or 4096.
   usually is) a function rather than a constant. This is ignored
   if WIN32, where page size is determined using getSystemInfo during
   initialization.
+
+USE_DEV_RANDOM             default: 0 (i.e., not used)
+  Causes malloc to use /dev/random to initialize secure magic seed for
+  stamping footers. Otherwise, the current time is used.
 
 NO_MALLINFO                default: 0
   If defined, don't compile "mallinfo". This can be a simple way
@@ -466,7 +840,7 @@ DEFAULT_TRIM_THRESHOLD    default: 2MB
   and released in ways that can reuse each other's storage, perhaps
   mixed with phases where there are no such chunks at all. The trim
   value must be greater than page size to have any useful effect.  To
-  disable trimming completely, you can set to SIZE_MAX. Note that the trick
+  disable trimming completely, you can set to MAX_SIZE_T. Note that the trick
   some people use of mallocing a huge space and then freeing it at
   program startup, in an attempt to reserve system memory, doesn't
   have the intended effect under automatic trimming, since that memory
@@ -494,7 +868,7 @@ DEFAULT_MMAP_THRESHOLD       default: 256K
   nearly always outweigh disadvantages for "large" chunks, but the
   value of "large" may vary across systems.  The default is an
   empirically derived value that works well in most systems. You can
-  disable mmap by setting to SIZE_MAX.
+  disable mmap by setting to MAX_SIZE_T.
 
 MAX_RELEASE_CHECK_RATE   default: 4095 unless not HAVE_MMAP
   The number of consolidated frees between checks to release
@@ -507,13 +881,100 @@ MAX_RELEASE_CHECK_RATE   default: 4095 unless not HAVE_MMAP
   consolidation. The best value for this parameter is a compromise
   between slowing down frees with relatively costly checks that
   rarely trigger versus holding on to unused memory. To effectively
-  disable, set to SIZE_MAX. This may lead to a very slight speed
+  disable, set to MAX_SIZE_T. This may lead to a very slight speed
   improvement at the expense of carrying around more memory.
 
-────────────────────────────────────────────────────────────────────────────────
+  Guidelines for creating a custom version of MORECORE:
 
+  * For best performance, MORECORE should allocate in multiples of pagesize.
+  * MORECORE may allocate more memory than requested. (Or even less,
+      but this will usually result in a malloc failure.)
+  * MORECORE must not allocate memory when given argument zero, but
+      instead return one past the end address of memory from previous
+      nonzero call.
+  * For best performance, consecutive calls to MORECORE with positive
+      arguments should return increasing addresses, indicating that
+      space has been contiguously extended.
+  * Even though consecutive calls to MORECORE need not return contiguous
+      addresses, it must be OK for malloc'ed chunks to span multiple
+      regions in those cases where they do happen to be contiguous.
+  * MORECORE need not handle negative arguments -- it may instead
+      just return MFAIL when given negative arguments.
+      Negative arguments are always multiples of pagesize. MORECORE
+      must not misinterpret negative args as large positive unsigned
+      args. You can suppress all such calls from even occurring by defining
+      MORECORE_CANNOT_TRIM,
+
+  As an example alternative MORECORE, here is a custom allocator
+  kindly contributed for pre-OSX macOS.  It uses virtually but not
+  necessarily physically contiguous non-paged memory (locked in,
+  present and won't get swapped out).  You can use it by uncommenting
+  this section, adding some #includes, and setting up the appropriate
+  defines above:
+
+      #define MORECORE osMoreCore
+
+  There is also a shutdown routine that should somehow be called for
+  cleanup upon program exit.
+
+  #define MAX_POOL_ENTRIES 100
+  #define MINIMUM_MORECORE_SIZE  (64 * 1024U)
+  static int next_os_pool;
+  void *our_os_pools[MAX_POOL_ENTRIES];
+
+  void *osMoreCore(int size)
+  {
+    void *ptr = 0;
+    static void *sbrk_top = 0;
+
+    if (size > 0)
+    {
+      if (size < MINIMUM_MORECORE_SIZE)
+         size = MINIMUM_MORECORE_SIZE;
+      if (CurrentExecutionLevel() == kTaskLevel)
+         ptr = PoolAllocateResident(size + RM_PAGE_SIZE, 0);
+      if (ptr == 0)
+      {
+        return (void *) MFAIL;
+      }
+      // save ptrs so they can be freed during cleanup
+      our_os_pools[next_os_pool] = ptr;
+      next_os_pool++;
+      ptr = (void *) ((((size_t) ptr) + RM_PAGE_MASK) & ~RM_PAGE_MASK);
+      sbrk_top = (char *) ptr + size;
+      return ptr;
+    }
+    else if (size < 0)
+    {
+      // we don't currently support shrink behavior
+      return (void *) MFAIL;
+    }
+    else
+    {
+      return sbrk_top;
+    }
+  }
+
+  // cleanup any allocated memory pools
+  // called as last thing before shutting down driver
+
+  void osCleanupMem(void)
+  {
+    void **ptr;
+
+    for (ptr = our_os_pools; ptr < &our_os_pools[MAX_POOL_ENTRIES]; ptr++)
+      if (*ptr)
+      {
+         PoolDeallocate(*ptr);
+         *ptr = 0;
+      }
+  }
+
+*/
+
+
+/* -----------------------------------------------------------------------
 History:
-
     v2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
       * fix bad comparison in dlposix_memalign
       * don't reuse adjusted asize in sys_alloc
@@ -521,7 +982,7 @@ History:
       * reduce compiler warnings -- thanks to all who reported/suggested these
 
     v2.8.5 Sun May 22 10:26:02 2011  Doug Lea  (dl at gee)
-      * Always perform unlink checks unless TRUSTWORTHY
+      * Always perform unlink checks unless INSECURE
       * Add posix_memalign.
       * Improve realloc to expand in more cases; expose realloc_in_place.
         Thanks to Peter Buhr for the suggestion.
@@ -728,94 +1189,3 @@ History:
     Trial version Fri Aug 28 13:14:29 1992  Doug Lea  (dl at g.oswego.edu)
       * Based loosely on libg++-1.2X malloc. (It retains some of the overall
          structure of old version,  but most details differ.)
-
-/* ──────────────────── Alternative MORECORE functions ─────────────────── */
-
-/*
-  Guidelines for creating a custom version of MORECORE:
-
-  * For best performance, MORECORE should allocate in multiples of pagesize.
-  * MORECORE may allocate more memory than requested. (Or even less,
-      but this will usually result in a malloc failure.)
-  * MORECORE must not allocate memory when given argument zero, but
-      instead return one past the end address of memory from previous
-      nonzero call.
-  * For best performance, consecutive calls to MORECORE with positive
-      arguments should return increasing addresses, indicating that
-      space has been contiguously extended.
-  * Even though consecutive calls to MORECORE need not return contiguous
-      addresses, it must be OK for malloc'ed chunks to span multiple
-      regions in those cases where they do happen to be contiguous.
-  * MORECORE need not handle negative arguments -- it may instead
-      just return MFAIL when given negative arguments.
-      Negative arguments are always multiples of pagesize. MORECORE
-      must not misinterpret negative args as large positive unsigned
-      args. You can suppress all such calls from even occurring by defining
-      MORECORE_CANNOT_TRIM,
-
-  As an example alternative MORECORE, here is a custom allocator
-  kindly contributed for pre-OSX macOS.  It uses virtually but not
-  necessarily physically contiguous non-paged memory (locked in,
-  present and won't get swapped out).  You can use it by uncommenting
-  this section, adding some #includes, and setting up the appropriate
-  defines above:
-
-      #define MORECORE osMoreCore
-
-  There is also a shutdown routine that should somehow be called for
-  cleanup upon program exit.
-
-  #define MAX_POOL_ENTRIES 100
-  #define MINIMUM_MORECORE_SIZE  (64 * 1024U)
-  static int next_os_pool;
-  void *our_os_pools[MAX_POOL_ENTRIES];
-
-  void *osMoreCore(int size)
-  {
-    void *ptr = 0;
-    static void *sbrk_top = 0;
-
-    if (size > 0)
-    {
-      if (size < MINIMUM_MORECORE_SIZE)
-         size = MINIMUM_MORECORE_SIZE;
-      if (CurrentExecutionLevel() == kTaskLevel)
-         ptr = PoolAllocateResident(size + RM_PAGE_SIZE, 0);
-      if (ptr == 0)
-      {
-        return (void *) MFAIL;
-      }
-      // save ptrs so they can be freed during cleanup
-      our_os_pools[next_os_pool] = ptr;
-      next_os_pool++;
-      ptr = (void *) ((((size_t) ptr) + RM_PAGE_MASK) & ~RM_PAGE_MASK);
-      sbrk_top = (char *) ptr + size;
-      return ptr;
-    }
-    else if (size < 0)
-    {
-      // we don't currently support shrink behavior
-      return (void *) MFAIL;
-    }
-    else
-    {
-      return sbrk_top;
-    }
-  }
-
-  // cleanup any allocated memory pools
-  // called as last thing before shutting down driver
-
-  void osCleanupMem(void)
-  {
-    void **ptr;
-
-    for (ptr = our_os_pools; ptr < &our_os_pools[MAX_POOL_ENTRIES]; ptr++)
-      if (*ptr)
-      {
-         PoolDeallocate(*ptr);
-         *ptr = 0;
-      }
-  }
-
-*/

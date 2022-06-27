@@ -3,9 +3,6 @@
 
 eloop:	.leafprologue
 	.profilable
-	mov	ELOOP(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ELOOP(%rip),%ecx
+	jmp	__errfun
 	.endfn	eloop,globl,hidden

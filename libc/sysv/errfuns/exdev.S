@@ -3,9 +3,6 @@
 
 exdev:	.leafprologue
 	.profilable
-	mov	EXDEV(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EXDEV(%rip),%ecx
+	jmp	__errfun
 	.endfn	exdev,globl,hidden

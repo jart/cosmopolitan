@@ -192,9 +192,9 @@ void print_loc(int64_t file, int64_t line) {
   if (file != lastfile || line != lastline) {
     locbuf = malloc(2 + 4 + 1 + 20 + 1 + 20 + 1);
     p = stpcpy(locbuf, "\t.loc\t");
-    p += int64toarray_radix10(file, p);
+    p = FormatInt64(p, file);
     *p++ = ' ';
-    int64toarray_radix10(line, p);
+    FormatInt64(p, line);
     emitlin(locbuf);
     free(locbuf);
     lastfile = file;
@@ -258,6 +258,48 @@ static char *reg_ax(int sz) {
       return "%eax";
     case 8:
       return "%rax";
+  }
+  UNREACHABLE();
+}
+
+static char *reg_r8(int sz) {
+  switch (sz) {
+    case 1:
+      return "%r8b";
+    case 2:
+      return "%r8w";
+    case 4:
+      return "%r8d";
+    case 8:
+      return "%r8";
+  }
+  UNREACHABLE();
+}
+
+static char *reg_di(int sz) {
+  switch (sz) {
+    case 1:
+      return "%dil";
+    case 2:
+      return "%di";
+    case 4:
+      return "%edi";
+    case 8:
+      return "%rdi";
+  }
+  UNREACHABLE();
+}
+
+static char *reg_si(int sz) {
+  switch (sz) {
+    case 1:
+      return "%sil";
+    case 2:
+      return "%si";
+    case 4:
+      return "%esi";
+    case 8:
+      return "%rsi";
   }
   UNREACHABLE();
 }
@@ -904,6 +946,9 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
   } else if (!strcmp(name, "trap")) {
     emitlin("\tint3");
     return true;
+  } else if (!strcmp(name, "ia32_pause")) {
+    emitlin("\tpause");
+    return true;
   } else if (!strcmp(name, "unreachable")) {
     emitlin("\tud2");
     return true;
@@ -1117,6 +1162,21 @@ static void HandleOverflow(const char *ax) {
   println("\tmov\t%s,(%%rdi)", ax);
   emitlin("\tseto\t%al");
   emitlin("\tmovzbl\t%al,%eax");
+}
+
+static void HandleAtomicArithmetic(Node *node, const char *op) {
+  gen_expr(node->lhs);
+  push();
+  gen_expr(node->rhs);
+  pop("%r9");
+  println("\tmov\t%s,%s", reg_ax(node->ty->size), reg_si(node->ty->size));
+  println("\tmov\t(%%r9),%s", reg_ax(node->ty->size));
+  println("1:\tmov\t%s,%s", reg_ax(node->ty->size), reg_dx(node->ty->size));
+  println("\tmov\t%s,%s", reg_ax(node->ty->size), reg_di(node->ty->size));
+  println("\t%s\t%s,%s", op, reg_si(node->ty->size), reg_dx(node->ty->size));
+  println("\tlock cmpxchg\t%s,(%%r9)", reg_dx(node->ty->size));
+  println("\tjnz\t1b");
+  println("\tmov\t%s,%s", reg_di(node->ty->size), reg_ax(node->ty->size));
 }
 
 // Generate code for a given node.
@@ -1503,7 +1563,7 @@ void gen_expr(Node *node) {
         println("\tmov\t$%s,%%eax", node->unique_label);
       }
       return;
-    case ND_CAS: {
+    case ND_CAS:
       gen_expr(node->cas_addr);
       push();
       gen_expr(node->cas_new);
@@ -1514,14 +1574,12 @@ void gen_expr(Node *node) {
       pop("%rdx");  // new
       pop("%rdi");  // addr
       println("\tlock cmpxchg %s,(%%rdi)", reg_dx(node->ty->size));
-      emitlin("\tsete\t%cl");
-      emitlin("\tje\t1f");
       println("\tmov\t%s,(%%r8)", reg_ax(node->ty->size));
-      emitlin("1:");
-      emitlin("\tmovzbl\t%cl,%eax");
+      emitlin("\tsetz\t%al");
+      emitlin("\tmovzbl\t%al,%eax");
       return;
-    }
-    case ND_EXCH: {
+    case ND_EXCH_N:
+    case ND_TESTANDSET: {
       gen_expr(node->lhs);
       push();
       gen_expr(node->rhs);
@@ -1529,6 +1587,101 @@ void gen_expr(Node *node) {
       println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
       return;
     }
+    case ND_TESTANDSETA: {
+      gen_expr(node->lhs);
+      push();
+      println("\tmov\t$1,%%eax");
+      pop("%rdi");
+      println("\txchg\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_LOAD: {
+      gen_expr(node->rhs);
+      push();
+      gen_expr(node->lhs);
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      pop("%rdi");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_LOAD_N: {
+      gen_expr(node->lhs);
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      return;
+    }
+    case ND_STORE: {
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tmov\t(%%rax),%s", reg_ax(node->ty->size));
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
+      return;
+    }
+    case ND_STORE_N:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
+      return;
+    case ND_CLEAR:
+      gen_expr(node->lhs);
+      println("\tmov\t%%rax,%%rdi");
+      println("\txor\t%%eax,%%eax");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      if (node->memorder) {
+        println("\tmfence");
+      }
+      return;
+    case ND_FETCHADD:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    case ND_FETCHSUB:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      println("\tneg\t%s", reg_ax(node->ty->size));
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
+    case ND_FETCHXOR:
+      HandleAtomicArithmetic(node, "xor");
+      return;
+    case ND_FETCHAND:
+      HandleAtomicArithmetic(node, "and");
+      return;
+    case ND_FETCHOR:
+      HandleAtomicArithmetic(node, "or");
+      return;
+    case ND_SUBFETCH:
+      gen_expr(node->lhs);
+      push();
+      gen_expr(node->rhs);
+      pop("%rdi");
+      push();
+      println("\tneg\t%s", reg_ax(node->ty->size));
+      println("\txadd\t%s,(%%rdi)", reg_ax(node->ty->size));
+      pop("%rdi");
+      println("\tsub\t%s,%s", reg_di(node->ty->size), reg_ax(node->ty->size));
+      return;
+    case ND_RELEASE:
+      gen_expr(node->lhs);
+      push();
+      pop("%rdi");
+      println("\txor\t%%eax,%%eax");
+      println("\tmov\t%s,(%%rdi)", reg_ax(node->ty->size));
+      return;
     case ND_FPCLASSIFY:
       gen_fpclassify(node->fpc);
       return;
@@ -1658,6 +1811,14 @@ void gen_expr(Node *node) {
     dx = "%edx";
   }
   switch (node->kind) {
+    case ND_PMOVMSKB:
+      println("\tmovdqu\t(%%rax),%%xmm0");
+      println("\tpmovmskb\t%%xmm0,%%rax");
+      break;
+    case ND_MOVNTDQ:
+      println("\tmovdqu\t(%%rdi),%%xmm0");
+      println("\tmovntdq\t%%xmm0,(%%rax)");
+      break;
     case ND_ADD:
       if (node->lhs->ty->kind == TY_INT128) {
         emitlin("\tadd\t%rdi,%rax");

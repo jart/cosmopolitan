@@ -19,5 +19,5 @@
 #include "libc/testlib/testlib.h"
 
 char g_fixturename[256];
-unsigned g_testlib_ran;
-unsigned g_testlib_failed;
+_Atomic(unsigned) g_testlib_ran;
+_Atomic(unsigned) g_testlib_failed;

@@ -7,5 +7,8 @@ struct rlimit {
   uint64_t rlim_max; /* maximum limit in bytes */
 };
 
+int getrlimit(int, struct rlimit *);
+int setrlimit(int, const struct rlimit *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_RLIMIT_H_ */

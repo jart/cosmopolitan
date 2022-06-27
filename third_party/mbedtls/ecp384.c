@@ -28,6 +28,7 @@
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/math.h"
 #include "third_party/mbedtls/profile.h"
+#include "third_party/mbedtls/select.h"
 /* clang-format off */
 
 static bool
@@ -59,21 +60,23 @@ static int
 mbedtls_p384_cmp( const uint64_t a[7],
                   const uint64_t b[7] )
 {
-    if( (int64_t)a[6] < (int64_t)b[6] ) return( -1 );
-    if( (int64_t)a[6] > (int64_t)b[6] ) return( +1 );
-    if( a[5] < b[5] ) return( -1 );
-    if( a[5] > b[5] ) return( +1 );
-    if( a[4] < b[4] ) return( -1 );
-    if( a[4] > b[4] ) return( +1 );
-    if( a[3] < b[3] ) return( -1 );
-    if( a[3] > b[3] ) return( +1 );
-    if( a[2] < b[2] ) return( -1 );
-    if( a[2] > b[2] ) return( +1 );
-    if( a[1] < b[1] ) return( -1 );
-    if( a[1] > b[1] ) return( +1 );
-    if( a[0] < b[0] ) return( -1 );
-    if( a[0] > b[0] ) return( +1 );
-    return( 0 );
+    int i, x, y, done = 0;
+    // return -1 if a[6] < b[6]
+    x = -((int64_t)a[6] < (int64_t)b[6]);
+    done = x;
+    // return +1 if a[6] > b[6]
+    y = (int64_t)a[6] > (int64_t)b[6];
+    x = Select(x, y, done);
+    done |= -y;
+    for (i = 6; i--;) {
+        y = -(a[i] < b[i]);
+        x = Select(x, y, done);
+        done |= y;
+        y = a[i] > b[i];
+        x = Select(x, y, done);
+        done |= -y;
+    }
+    return x;
 }
 
 static inline void

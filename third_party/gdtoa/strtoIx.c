@@ -39,15 +39,16 @@ strtoIx(const char *s, char **sp, void *a, void *b)
 	Long exp[2];
 	Bigint *B[2];
 	int k, rv[2];
+	ThInfo *TI = 0;
 	UShort *L = (UShort *)a, *M = (UShort *)b;
-	B[0] = __gdtoa_Balloc(1);
+	B[0] = __gdtoa_Balloc(1, &TI);
 	B[0]->wds = 2;
 	k = __gdtoa_strtoIg(s, sp, &fpi, exp, B, rv);
 	__gdtoa_ULtox(L, B[0]->x, exp[0], rv[0]);
-	__gdtoa_Bfree(B[0]);
+	__gdtoa_Bfree(B[0], &TI);
 	if (B[1]) {
 		__gdtoa_ULtox(M, B[1]->x, exp[1], rv[1]);
-		__gdtoa_Bfree(B[1]);
+		__gdtoa_Bfree(B[1], &TI);
 	}
 	else {
 		M[0] = L[0];

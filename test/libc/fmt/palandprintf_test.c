@@ -572,7 +572,7 @@ TEST(xasprintf, hugeNtoa) {
   ASSERT_STREQ(
       "0b1111111111111111111111111111111111111111111111111111111111111111111111"
       "1111111111111111111111111111111111111111111111111111111111",
-      gc(xasprintf("%#jb", UINT128_MAX)));
+      gc(xasprintf("%#jjb", UINT128_MAX)));
 }
 
 TEST(xasprintf, twosBane) {
@@ -591,20 +591,19 @@ TEST(snprintf, testFixedWidthString_wontOverrunInput) {
   free(buf);
 }
 
-/* TODO(jart): why is this weird in TINY mode? */
-/* TEST(snprintf, testFixedWidthStringIsNull_wontOverrunBuffer) { */
-/*   int N = 3; */
-/*   char *buf = malloc(N + 1); */
-/*   EXPECT_EQ(3, snprintf(buf, N + 1, "%.*s", pushpop(N), pushpop(NULL))); */
-/*   EXPECT_STREQ("(nu", buf); */
-/*   EXPECT_EQ(3, snprintf(buf, N + 1, "%#.*s", pushpop(N), pushpop(NULL))); */
-/*   EXPECT_STREQ("(nu", buf); */
-/*   EXPECT_EQ(3, snprintf(buf, N + 1, "%`'.*s", pushpop(N), pushpop(NULL))); */
-/*   EXPECT_STREQ("NUL", buf); */
-/*   EXPECT_EQ(3, snprintf(buf, N + 1, "%`#.*s", pushpop(N), pushpop(NULL))); */
-/*   EXPECT_STREQ("NUL", buf); */
-/*   free(buf); */
-/* } */
+TEST(snprintf, testFixedWidthStringIsNull_wontOverrunBuffer) {
+  int N = 3;
+  char *buf = malloc(N + 1);
+  EXPECT_EQ(3, snprintf(buf, N + 1, "%.*s", pushpop(N), pushpop(NULL)));
+  EXPECT_STREQ("(nu", buf);
+  EXPECT_EQ(3, snprintf(buf, N + 1, "%#.*s", pushpop(N), pushpop(NULL)));
+  EXPECT_STREQ("(nu", buf);
+  EXPECT_EQ(3, snprintf(buf, N + 1, "%`'.*s", pushpop(N), pushpop(NULL)));
+  EXPECT_STREQ("NUL", buf);
+  EXPECT_EQ(3, snprintf(buf, N + 1, "%`#.*s", pushpop(N), pushpop(NULL)));
+  EXPECT_STREQ("NUL", buf);
+  free(buf);
+}
 
 TEST(snprintf, twosBaneWithTypePromotion) {
   int16_t x = 0x8000;
@@ -639,22 +638,22 @@ BENCH(palandprintf, bench) {
   EZBENCH2("23 %x", donothing, Format("%x", VEIL("r", 23)));
   EZBENCH2("23 %d", donothing, Format("%d", VEIL("r", 23)));
   EZBENCH2("%f M_PI", donothing, Format("%f", VEIL("x", M_PI)));
+  EZBENCH2("%Lf M_PI", donothing, Format("%Lf", VEIL("t", M_PI)));
   EZBENCH2("%g M_PI", donothing, Format("%g", VEIL("x", M_PI)));
+  EZBENCH2("%Lg M_PI", donothing, Format("%Lg", VEIL("t", M_PI)));
   EZBENCH2("%a M_PI", donothing, Format("%a", VEIL("x", M_PI)));
+  EZBENCH2("%La M_PI", donothing, Format("%La", VEIL("t", M_PI)));
   EZBENCH2("%e M_PI", donothing, Format("%e", VEIL("x", M_PI)));
+  EZBENCH2("%Le M_PI", donothing, Format("%Le", VEIL("t", M_PI)));
+  EZBENCH2("ULONG_MAX %lo", donothing, Format("%lo", VEIL("r", ULONG_MAX)));
   EZBENCH2("INT_MIN %x", donothing, Format("%x", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %d", donothing, Format("%d", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %,d", donothing, Format("%,d", VEIL("r", INT_MIN)));
   EZBENCH2("INT_MIN %ld", donothing, Format("%ld", (long)VEIL("r", INT_MIN)));
-  EZBENCH2("INT_MIN %jd", donothing,
-           Format("%jd", (intmax_t)VEIL("r", INT_MIN)));
   EZBENCH2("LONG_MIN %lx", donothing, Format("%lx", VEIL("r", LONG_MIN)));
   EZBENCH2("LONG_MIN %ld", donothing, Format("%ld", VEIL("r", LONG_MIN)));
-  EZBENCH2("LONG_MIN %jd", donothing,
-           Format("%jd", (intmax_t)VEIL("r", LONG_MIN)));
-  EZBENCH2("LONG_MIN %jx", donothing,
-           Format("%jx", (intmax_t)VEIL("r", LONG_MIN)));
-  EZBENCH2("int64toarray 23", donothing, int64toarray_radix10(23, buffer));
-  EZBENCH2("int64toarray min", donothing,
-           int64toarray_radix10(INT_MIN, buffer));
+  EZBENCH2("INT128_MIN %jjd", donothing, Format("%jjd", INT128_MIN));
+  EZBENCH2("INT128_MIN %jjx", donothing, Format("%jjx", INT128_MIN));
+  EZBENCH2("int64toarray 23", donothing, FormatInt64(buffer, 23));
+  EZBENCH2("int64toarray min", donothing, FormatInt64(buffer, INT_MIN));
 }

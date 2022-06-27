@@ -16,16 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/nt/accounting.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/struct/memorystatusex.h"
-#include "libc/nt/systeminfo.h"
+#include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -47,8 +42,10 @@ int sysinfo(struct sysinfo *info) {
   } else {
     rc = sys_sysinfo_nt(info);
   }
-  info->procs = MAX(1, info->procs);
-  info->mem_unit = MAX(1, info->mem_unit);
-  info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+  if (rc != -1) {
+    info->procs = MAX(1, info->procs);
+    info->mem_unit = MAX(1, info->mem_unit);
+    info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+  }
   return rc;
 }

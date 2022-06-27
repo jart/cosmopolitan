@@ -20,6 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
+#include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
@@ -36,7 +37,7 @@
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 
-#define INT     intmax_t
+#define INT     int128_t
 #define FLOAT   long double
 #define EPSILON 1e-16l
 
@@ -155,7 +156,7 @@ struct Value stack[128];
 int sp, comment, line, column, interactive;
 
 INT Popcnt(INT x) {
-  uintmax_t word = x;
+  uint128_t word = x;
   return popcnt(word >> 64) + popcnt(word);
 }
 
@@ -164,7 +165,7 @@ char *Repr(struct Value x) {
   if (x.t == kFloat) {
     g_xfmt_p(buf, &x.f, 16, sizeof(buf), 0);
   } else {
-    sprintf(buf, "%jd", x.i);
+    sprintf(buf, "%jjd", x.i);
   }
   return buf;
 }
@@ -448,7 +449,7 @@ bool ConsumeLiteral(const char *literal) {
   literal_ = literal;
   errno = 0;
   x.t = kInt;
-  x.i = strtoimax(literal, &e, 0);
+  x.i = strtoi128(literal, &e, 0);
   if (*e) {
     x.t = kFloat;
     x.f = strtod(literal, &e);
@@ -680,8 +681,8 @@ void CleanupTerminal(void) {
 }
 
 void StartInteractive(void) {
-  if (!interactive && !IsTerminalInarticulate() && isatty(fileno(stdin)) &&
-      isatty(fileno(stdout)) && cancolor()) {
+  if (!interactive && !__nocolor && isatty(fileno(stdin)) &&
+      isatty(fileno(stdout)) && !__nocolor) {
     interactive = true;
   }
   if (interactive) {
@@ -726,7 +727,7 @@ void GetOpts(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   int i, rc;
-  showcrashreports();
+  ShowCrashReports();
   GetOpts(argc, argv);
   xsigaction(SIGFPE, OnDivideError, 0, 0, 0);
   if (optind == argc) {

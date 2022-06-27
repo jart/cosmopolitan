@@ -35,6 +35,7 @@
  * @param bytes is number of bytes to allocate
  * @return return 0 or EINVAL or ENOMEM w/o setting errno
  * @see memalign()
+ * @threadsafe
  */
 int posix_memalign(void **pp, size_t alignment, size_t bytes) {
   int e;

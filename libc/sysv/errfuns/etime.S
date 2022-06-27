@@ -3,9 +3,6 @@
 
 etime:	.leafprologue
 	.profilable
-	mov	ETIME(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ETIME(%rip),%ecx
+	jmp	__errfun
 	.endfn	etime,globl,hidden

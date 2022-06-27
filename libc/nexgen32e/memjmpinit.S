@@ -46,4 +46,3 @@ memjmpinit:
 	lodsq
 	.leafepilogue
 	.endfn	memjmpinit,globl,hidden
-	.source	__FILE__

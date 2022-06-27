@@ -4,9 +4,6 @@
 enoprotoopt:
 	.leafprologue
 	.profilable
-	mov	ENOPROTOOPT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOPROTOOPT(%rip),%ecx
+	jmp	__errfun
 	.endfn	enoprotoopt,globl,hidden

@@ -2,7 +2,7 @@
 .imp	kernel32,__imp_UnmapViewOfFile,UnmapViewOfFile,0
 
 	.text.windows
-UnmapViewOfFile:
+__UnmapViewOfFile:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
@@ -11,5 +11,5 @@ UnmapViewOfFile:
 	call	*__imp_UnmapViewOfFile(%rip)
 	leave
 	ret
-	.endfn	UnmapViewOfFile,globl
+	.endfn	__UnmapViewOfFile,globl
 	.previous

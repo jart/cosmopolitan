@@ -4,9 +4,6 @@
 esocktnosupport:
 	.leafprologue
 	.profilable
-	mov	ESOCKTNOSUPPORT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ESOCKTNOSUPPORT(%rip),%ecx
+	jmp	__errfun
 	.endfn	esocktnosupport,globl,hidden

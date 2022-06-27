@@ -16,7 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"
 #include "libc/runtime/runtime.h"
@@ -34,12 +39,15 @@
 hidden struct NtWsaData kNtWsaData;
 
 static textwindows void WinSockCleanup(void) {
-  WSACleanup();
+  int i, rc;
+  rc = WSACleanup();
+  NTTRACE("WSACleanup() → %d% lm", rc);
 }
 
 textwindows noasan void WinSockInit(void) {
   int rc;
   atexit(WinSockCleanup);
+  NTTRACE("WSAStartup()");
   if ((rc = WSAStartup(VERSION, &kNtWsaData)) != 0 ||
       kNtWsaData.wVersion != VERSION) {
     ExitProcess(123);

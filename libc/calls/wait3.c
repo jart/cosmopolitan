@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -30,6 +28,7 @@
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  */
 int wait3(int *opt_out_wstatus, int options, struct rusage *opt_out_rusage) {
   return wait4(-1, opt_out_wstatus, options, opt_out_rusage);

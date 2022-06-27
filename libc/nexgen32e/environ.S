@@ -30,4 +30,3 @@ environ:
 	.init.start 300,_init_environ
 	mov	%r14,environ(%rip)
 	.init.end 300,_init_environ
-	.source	__FILE__

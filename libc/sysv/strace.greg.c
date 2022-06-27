@@ -1,0 +1,43 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+╞══════════════════════════════════════════════════════════════════════════════╡
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│                                                                              │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
+│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
+
+/**
+ * System call logging enabled state.
+ *
+ * If Cosmopolitan was compiled with the `SYSDEBUG` macro (this is the
+ * default behavior, except in tiny and release modes) then `__strace`
+ * shall control whether or not system calls are logged to fd 2. If it's
+ * greater than zero, syscalls are logged. Otherwise, they're aren't.
+ *
+ * By convention, functions wishing to disable syscall tracing for a
+ * short time period should say:
+ *
+ *     void foo() {
+ *       --__strace;
+ *       bar();
+ *       ++__strace;
+ *     }
+ *
+ * This way you still have some flexibility to force syscall tracing, by
+ * setting `__strace` to a higher number like `2` or `200`. Even though
+ * under normal circumstances, `__strace` should only be either zero or
+ * one.
+ */
+_Atomic(int) __strace;

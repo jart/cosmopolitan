@@ -16,46 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
-#include "libc/str/str.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
- * Assigns local address and port number to socket.
+ * Assigns local address and port number to socket, e.g.
+ *
+ *     struct sockaddr_in in = {AF_INET, htons(12345), {htonl(0x7f000001)}};
+ *     int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+ *     bind(fd, &in, sizeof(in));
  *
  * @param fd is the file descriptor returned by socket()
  * @param addr is usually the binary-encoded ip:port on which to listen
  * @param addrsize is the byte-length of addr's true polymorphic form
- * @return socket file descriptor or -1 w/ errno
+ * @return 0 on success or -1 w/ errno
  * @error ENETDOWN, EPFNOSUPPORT, etc.
  * @asyncsignalsafe
  */
 int bind(int fd, const void *addr, uint32_t addrsize) {
-  if (!addr) return efault();
-  if (IsAsan() && !__asan_is_valid(addr, addrsize)) return efault();
-  if (addrsize == sizeof(struct sockaddr_in)) {
+  int rc;
+  if (!addr || (IsAsan() && !__asan_is_valid(addr, addrsize))) {
+    rc = efault();
+  } else if (addrsize >= sizeof(struct sockaddr_in)) {
     if (!IsWindows()) {
-      if (!IsBsd()) {
-        return sys_bind(fd, addr, addrsize);
-      } else {
-        char addr2[sizeof(
-            struct sockaddr_un_bsd)]; /* sockaddr_un_bsd is the largest */
-        assert(addrsize <= sizeof(addr2));
-        memcpy(&addr2, addr, addrsize);
-        sockaddr2bsd(&addr2[0]);
-        return sys_bind(fd, &addr2, addrsize);
-      }
+      rc = sys_bind(fd, addr, addrsize);
     } else if (__isfdkind(fd, kFdSocket)) {
-      return sys_bind_nt(&g_fds.p[fd], addr, addrsize);
+      rc = sys_bind_nt(&g_fds.p[fd], addr, addrsize);
     } else {
-      return ebadf();
+      rc = ebadf();
     }
   } else {
-    return einval();
+    rc = einval();
   }
+  STRACE("bind(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
+  return rc;
 }

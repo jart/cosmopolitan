@@ -4,9 +4,6 @@
 emediumtype:
 	.leafprologue
 	.profilable
-	mov	EMEDIUMTYPE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EMEDIUMTYPE(%rip),%ecx
+	jmp	__errfun
 	.endfn	emediumtype,globl,hidden

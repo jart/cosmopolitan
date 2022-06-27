@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Decentralized section for test fixture registration.
 //
@@ -29,6 +28,7 @@
 	.hidden	__fixture_start,__fixture_end
 	.byte	0
 	.align	__SIZEOF_POINTER__
+	.underrun
 __fixture_start:
 	.previous/*
 	...
@@ -37,4 +37,5 @@ __fixture_start:
 	*/.section .piro.relo.sort.fixture.3,"aw",@nobits
 __fixture_end:
 	.quad	0
+	.overrun
 	.previous

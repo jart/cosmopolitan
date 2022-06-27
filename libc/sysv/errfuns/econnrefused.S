@@ -4,9 +4,6 @@
 econnrefused:
 	.leafprologue
 	.profilable
-	mov	ECONNREFUSED(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ECONNREFUSED(%rip),%ecx
+	jmp	__errfun
 	.endfn	econnrefused,globl,hidden

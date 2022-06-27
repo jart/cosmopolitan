@@ -3,9 +3,6 @@
 
 estale:	.leafprologue
 	.profilable
-	mov	ESTALE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ESTALE(%rip),%ecx
+	jmp	__errfun
 	.endfn	estale,globl,hidden

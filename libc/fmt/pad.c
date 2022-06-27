@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmts.h"
+#include "libc/fmt/fmt.internal.h"
 
 int __fmt_pad(int out(const char *, void *, size_t), void *arg,
               unsigned long n) {

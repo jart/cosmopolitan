@@ -18,6 +18,7 @@ o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/sock		\
 		o/$(MODE)/test/libc/stdio		\
 		o/$(MODE)/test/libc/str			\
+		o/$(MODE)/test/libc/thread		\
 		o/$(MODE)/test/libc/time		\
 		o/$(MODE)/test/libc/tinymath		\
 		o/$(MODE)/test/libc/unicode		\

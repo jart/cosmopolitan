@@ -54,9 +54,10 @@ void testlib_benchwarmup(void) {
 void testlib_runallbenchmarks(void) {
   int e;
   e = errno;
-  _peekall();
-  mlockall(MCL_CURRENT);
-  nice(-1);
+  if (!IsWindows()) {
+    mlockall(MCL_CURRENT);
+    nice(-1);
+  }
   errno = e;
   __log_level = kLogWarn;
   testlib_runtestcases(__bench_start, __bench_end, testlib_benchwarmup);

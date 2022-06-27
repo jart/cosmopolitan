@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
@@ -35,7 +36,7 @@ char *format(char *buf, const char *fmt, ...) {
   return buf;
 }
 
-nodiscard char *tabpad(const char *s, unsigned width) {
+dontdiscard char *tabpad(const char *s, unsigned width) {
   char *p;
   size_t i, l, need;
   l = strlen(s);

@@ -44,7 +44,7 @@
  * @return p + i
  * @see unzleb64()
  */
-char *zleb64(char *p, int64_t x) {
+char *zleb64(char p[hasatleast 10], int64_t x) {
   int c;
   uint64_t u;
   u = x;

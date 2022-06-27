@@ -28,7 +28,6 @@
  */
 char *xdtoal(long double d) {
   char *p = xmalloc(32);
-  g_xfmt_p(p, &d, 16, 32, 2);
-  /* g_xfmt_p(p, &d, 20, 32, 2); */
+  g_xfmt_p(p, &d, 16, 32, NIK(2, 0, 0));
   return p;
 }

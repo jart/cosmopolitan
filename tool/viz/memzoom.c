@@ -496,7 +496,7 @@ static void OnMouse(char *p) {
 
 static void ReadKeyboard(void) {
   char buf[32], *p = buf;
-  memset(buf, 0, sizeof(buf));
+  bzero(buf, sizeof(buf));
   if (readansi(0, buf, sizeof(buf)) == -1) {
     if (errno == EINTR) return;
     exit(errno);
@@ -743,7 +743,7 @@ static void Render(void) {
           fg = InvertXtermGreyscale(fg);
         }
         p = stpcpy(p, "\e[38;5;");
-        p += int64toarray_radix10(fg, p);
+        p = FormatInt64(p, fg);
         *p++ = 'm';
       }
       w = tpenc(kCp437[c]);
@@ -769,14 +769,14 @@ static void Render(void) {
   }
   p = stpcpy(p, " memzoom\e[0m ");
   if (!pid) {
-    p += uint64toarray_radix10(MIN(offset / (long double)size * 100, 100), p);
+    p = FormatUint32(p, MIN(offset / (long double)size * 100, 100));
     p = stpcpy(p, "%-");
-    p += uint64toarray_radix10(
-        MIN((offset + ((tyn * txn) << zoom)) / (long double)size * 100, 100),
-        p);
+    p = FormatUint32(
+        p,
+        MIN((offset + ((tyn * txn) << zoom)) / (long double)size * 100, 100));
     p = stpcpy(p, "% ");
   }
-  p += uint64toarray_radix10(1L << zoom, p);
+  p = FormatUint32(p, 1L << zoom);
   p = stpcpy(p, "x\e[J");
   PreventBufferbloat();
   for (i = 0, n = p - buffer; i < n; i += got) {
@@ -797,7 +797,7 @@ static void Zoom(long have) {
     n >>= 1;
   }
   if (n < tyn * txn) {
-    memset(canvas + n, 0, canvassize - n);
+    bzero(canvas + n, canvassize - n);
   }
   if (have != -1) {
     n = have >> zoom;
@@ -817,7 +817,7 @@ static void FileZoom(void) {
   have = MIN(displaysize, size - offset);
   have = pread(fd, canvas, have, offset);
   have = MAX(0, have);
-  memset(canvas + have, 0, canvassize - have);
+  bzero(canvas + have, canvassize - have);
   Zoom(have);
   Render();
 }
@@ -910,10 +910,10 @@ static void GetOpts(int argc, char *argv[]) {
   }
   if (pid) {
     p = stpcpy(path, "/proc/");
-    p += int64toarray_radix10(pid, p);
+    p = FormatInt64(p, pid);
     stpcpy(p, "/mem");
     p = stpcpy(mapspath, "/proc/");
-    p += int64toarray_radix10(pid, p);
+    p = FormatInt64(p, pid);
     stpcpy(p, "/maps");
   } else {
     if (optind == argc) {
@@ -926,7 +926,7 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!NoDebug()) showcrashreports();
+  if (!NoDebug()) ShowCrashReports();
   out = 1;
   GetOpts(argc, argv);
   Open();

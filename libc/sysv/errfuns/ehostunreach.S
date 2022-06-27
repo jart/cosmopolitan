@@ -4,9 +4,6 @@
 ehostunreach:
 	.leafprologue
 	.profilable
-	mov	EHOSTUNREACH(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EHOSTUNREACH(%rip),%ecx
+	jmp	__errfun
 	.endfn	ehostunreach,globl,hidden

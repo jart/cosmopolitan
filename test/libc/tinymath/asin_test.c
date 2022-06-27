@@ -49,5 +49,5 @@ BENCH(asin, bench) {
   EZBENCH2("asin(-0)", donothing, asin(-0.));
   EZBENCH2("asin(NAN)", donothing, asin(NAN));
   EZBENCH2("asin(INFINITY)", donothing, asin(INFINITY));
-  EZBENCH_C("asin", _real1(vigna()), asin(_real1(vigna())));
+  EZBENCH_C("asin", _real1(lemur64()), asin(_real1(lemur64())));
 }

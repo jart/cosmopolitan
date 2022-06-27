@@ -16,27 +16,84 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Blocks until SIG ∉ MASK is delivered to process.
  *
- * @param ignore is a bitset of signals to block temporarily
- * @return -1 w/ EINTR
+ * This temporarily replaces the signal mask until a signal that it
+ * doesn't contain is delivered.
+ *
+ * @param ignore is a bitset of signals to block temporarily, which if
+ *     NULL is equivalent to passing an empty signal set
+ * @return -1 w/ EINTR (or possibly EFAULT)
  * @asyncsignalsafe
+ * @norestart
  */
 int sigsuspend(const sigset_t *ignore) {
-  unsigned x;
-  if (IsAsan() && !__asan_is_valid(ignore, sizeof(*ignore))) return efault();
-  if (!IsWindows()) {
-    if (IsOpenbsd()) ignore = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
-    return sys_sigsuspend(ignore, 8);
+  int rc;
+  long ms, totoms;
+  sigset_t save, mask, *arg;
+  STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
+  if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
+    rc = efault();
+  } else if (IsXnu() || IsOpenbsd()) {
+    // openbsd and xnu only support 32 signals
+    // they use a register calling convention for sigsuspend
+    if (ignore) {
+      arg = (sigset_t *)(uintptr_t)(*(uint32_t *)ignore);
+    } else {
+      arg = 0;
+    }
+    rc = sys_sigsuspend(arg, 8);
+  } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsWindows()) {
+    if (ignore) {
+      arg = ignore;
+    } else {
+      sigemptyset(&mask);
+      arg = &mask;
+    }
+    if (!IsWindows()) {
+      rc = sys_sigsuspend(arg, 8);
+    } else {
+      __sig_mask(SIG_SETMASK, arg, &save);
+      ms = 0;
+      totoms = 0;
+      do {
+        if (_check_interrupts(false, g_fds.p)) {
+          rc = eintr();
+          break;
+        }
+        if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {
+          POLLTRACE("IOCP EINTR");
+          continue;
+        }
+#if defined(SYSDEBUG) && defined(_POLLTRACE)
+        ms += __SIG_POLLING_INTERVAL_MS;
+        if (ms >= __SIG_LOGGING_INTERVAL_MS) {
+          totoms += ms, ms = 0;
+          POLLTRACE("... sigsuspending for %'lums...", totoms);
+        }
+#endif
+      } while (1);
+      __sig_mask(SIG_SETMASK, &save, 0);
+    }
   } else {
-    return enosys(); /* TODO(jart): Implement me! */
+    // TODO(jart): sigsuspend metal support
+    rc = enosys();
   }
+  STRACE("...sigsuspend → %d% m", rc);
+  return rc;
 }

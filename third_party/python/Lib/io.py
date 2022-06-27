@@ -92,8 +92,6 @@ for klass in (StringIO, TextIOWrapper):
 del klass
 
 try:
-    from _io import _WindowsConsoleIO
-except ImportError:
+    RawIOBase.register(_io._WindowsConsoleIO)
+except AttributeError:
     pass
-else:
-    RawIOBase.register(_WindowsConsoleIO)

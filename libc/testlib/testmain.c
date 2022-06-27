@@ -18,25 +18,40 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/check.h"
+#include "libc/log/color.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "third_party/dlmalloc/dlmalloc.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \
@@ -51,12 +66,13 @@ Flags:\n\
 STATIC_YOINK("__die");
 STATIC_YOINK("__get_symbol_by_addr");
 STATIC_YOINK("testlib_quota_handlers");
+STATIC_YOINK("stack_usage_logging");
 
 static bool runbenchmarks_;
 
 void PrintUsage(int rc, FILE *f) {
   fputs("Usage: ", f);
-  fputs(program_invocation_name, f);
+  fputs(firstnonnull(program_invocation_name, "unknown"), f);
   fputs(USAGE, f);
   exit(rc);
 }
@@ -80,28 +96,98 @@ void GetOpts(int argc, char *argv[]) {
   }
 }
 
+static void EmptySignalMask(void) {
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigprocmask(SIG_SETMASK, &ss, 0);
+}
+
+static void FixIrregularFds(void) {
+  int i, fd, maxfds;
+  struct rlimit rlim;
+  struct pollfd *pfds;
+  for (i = 0; i < 3; ++i) {
+    if (fcntl(i, F_GETFL) == -1) {
+      errno = 0;
+      fd = open("/dev/null", O_RDWR);
+      CHECK_NE(-1, fd);
+      if (fd != i) {
+        close(fd);
+      }
+    }
+  }
+  if (IsWindows()) {
+    maxfds = 64;
+  } else {
+    maxfds = 256;
+    if (!getrlimit(RLIMIT_NOFILE, &rlim)) {
+      maxfds = MIN(maxfds, (uint64_t)rlim.rlim_cur);
+    }
+  }
+  pfds = malloc(maxfds * sizeof(struct pollfd));
+  for (i = 0; i < maxfds; ++i) {
+    pfds[i].fd = i + 3;
+    pfds[i].events = POLLIN;
+  }
+  if (IsGenuineCosmo()) {
+    // TODO(jart): Fix Blinkenlights poll() / close()
+    return;
+  }
+  if (poll(pfds, maxfds, 0) != -1) {
+    for (i = 0; i < maxfds; ++i) {
+      if (pfds[i].revents & POLLNVAL) continue;
+      CHECK_EQ(0, close(pfds[i].fd));
+    }
+  }
+  free(pfds);
+}
+
+static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
+  struct rlimit old;
+  struct rlimit lim = {soft, hard};
+  if (resource == 127) return;
+  if (setrlimit(resource, &lim) == -1) {
+    if (!getrlimit(resource, &old)) {
+      lim.rlim_max = MIN(hard, old.rlim_max);
+      lim.rlim_cur = MIN(soft, lim.rlim_max);
+      setrlimit(resource, &lim);
+    }
+  }
+}
+
 /**
  * Generic test program main function.
  */
 noasan int main(int argc, char *argv[]) {
+  unsigned cpus;
   const char *comdbg;
   __log_level = kLogInfo;
   GetOpts(argc, argv);
+  setenv("GDB", "", true);
+  GetSymbolTable();
+
+  // normalize this process
+  FixIrregularFds();
+  EmptySignalMask();
   ShowCrashReports();
+
+  // now get down to business
   g_testlib_shoulddebugbreak = IsDebuggerPresent(false);
-  sys_getpid(); /* make strace easier to read */
+  if (!IsWindows()) sys_getpid();  // make strace easier to read
   testlib_clearxmmregisters();
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
     weaken(testlib_runallbenchmarks)();
     if (!g_testlib_failed) {
-      testlib_checkformemoryleaks();
+      CheckForMemoryLeaks();
     }
     if (!g_testlib_failed && IsRunningUnderMake()) {
-      return 254; /* compile.com considers this 0 and propagates output */
+      return 254;  // compile.com considers this 0 and propagates output
     }
   } else if (!g_testlib_failed) {
-    testlib_checkformemoryleaks();
+    CheckForMemoryLeaks();
   }
+
+  // we're done!
   exit(min(255, g_testlib_failed));
 }

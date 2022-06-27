@@ -4,9 +4,6 @@
 ebadslt:
 	.leafprologue
 	.profilable
-	mov	EBADSLT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EBADSLT(%rip),%ecx
+	jmp	__errfun
 	.endfn	ebadslt,globl,hidden

@@ -73,10 +73,10 @@ int getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *name,
 
   ip = (uint8_t *)&(((struct sockaddr_in *)addr)->sin_addr);
   p = rdomain;
-  p += int64toarray_radix10(ip[3], p), *p++ = '.';
-  p += int64toarray_radix10(ip[2], p), *p++ = '.';
-  p += int64toarray_radix10(ip[1], p), *p++ = '.';
-  p += int64toarray_radix10(ip[0], p), stpcpy(p, ".in-addr.arpa");
+  p = FormatUint32(p, ip[3]), *p++ = '.';
+  p = FormatUint32(p, ip[2]), *p++ = '.';
+  p = FormatUint32(p, ip[1]), *p++ = '.';
+  p = FormatUint32(p, ip[0]), stpcpy(p, ".in-addr.arpa");
   info[0] = '\0';
   if (name != NULL && namelen != 0) {
     if ((flags & NI_NUMERICHOST) && (flags & NI_NAMEREQD)) return EAI_NONAME;

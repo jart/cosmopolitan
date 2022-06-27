@@ -22,7 +22,6 @@ o/$(MODE)/libc:	o/$(MODE)/libc/alg		\
 		o/$(MODE)/libc/mem		\
 		o/$(MODE)/libc/nexgen32e	\
 		o/$(MODE)/libc/nt		\
-		o/$(MODE)/libc/ohmyplus		\
 		o/$(MODE)/libc/rand		\
 		o/$(MODE)/libc/runtime		\
 		o/$(MODE)/libc/sock		\

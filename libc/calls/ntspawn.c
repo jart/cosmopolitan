@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/pushpop.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -32,8 +32,14 @@
 #include "libc/nt/struct/startupinfo.h"
 
 struct SpawnBlock {
-  char16_t cmdline[ARG_MAX];
-  char16_t envvars[ARG_MAX];
+  union {
+    struct {
+      char16_t cmdline[ARG_MAX / 2];
+      char16_t envvars[ARG_MAX / 2];
+      char buf[ARG_MAX];
+    };
+    char __pad[ROUNDUP(ARG_MAX / 2 * 3 * sizeof(char16_t), FRAMESIZE)];
+  };
 };
 
 /**
@@ -68,39 +74,25 @@ textwindows int ntspawn(
     struct NtProcessInformation *opt_out_lpProcessInformation) {
   int rc;
   int64_t handle;
-  size_t blocksize;
   struct SpawnBlock *block;
   char16_t prog16[PATH_MAX];
   rc = -1;
   block = NULL;
   if (__mkntpath(prog, prog16) == -1) return -1;
-  blocksize = ROUNDUP(sizeof(*block), FRAMESIZE);
-  if ((handle = CreateFileMappingNuma(
-           -1,
-           &(struct NtSecurityAttributes){sizeof(struct NtSecurityAttributes),
-                                          NULL, false},
-           pushpop(kNtPageReadwrite), 0, blocksize, NULL,
-           kNtNumaNoPreferredNode)) &&
-      (block =
-           MapViewOfFileExNuma(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
-                               blocksize, NULL, kNtNumaNoPreferredNode))) {
-    if (mkntcmdline(block->cmdline, prog, argv) != -1 &&
-        mkntenvblock(block->envvars, envp, extravar) != -1) {
-      if (CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
-                        opt_lpThreadAttributes, bInheritHandles,
-                        dwCreationFlags | kNtCreateUnicodeEnvironment,
-                        block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
-                        opt_out_lpProcessInformation)) {
-        rc = 0;
-      } else {
-        __winerr();
-      }
-      SYSDEBUG("CreateProcess(`%hs`, `%hs`) -> %d", prog16, block->cmdline, rc);
-    }
-  } else {
-    __winerr();
+  if ((handle = CreateFileMapping(-1, 0, pushpop(kNtPageReadwrite), 0,
+                                  sizeof(*block), 0)) &&
+      (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,
+                               sizeof(*block), 0)) &&
+      mkntcmdline(block->cmdline, prog, argv) != -1 &&
+      mkntenvblock(block->envvars, envp, extravar, block->buf) != -1 &&
+      CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
+                    opt_lpThreadAttributes, bInheritHandles,
+                    dwCreationFlags | kNtCreateUnicodeEnvironment,
+                    block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
+                    opt_out_lpProcessInformation)) {
+    rc = 0;
   }
   if (block) UnmapViewOfFile(block);
   if (handle) CloseHandle(handle);
-  return rc;
+  return __fix_enotdir(rc, prog16);
 }

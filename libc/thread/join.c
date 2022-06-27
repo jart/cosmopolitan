@@ -16,36 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
-#include "libc/thread/descriptor.h"
-#include "libc/thread/join.h"
+#include "libc/thread/thread.h"
 
-int cthread_join(cthread_t td, int* rc) {
-  int tid = td->tid;  // tid must be loaded before lock xadd
-  // otherwise, tid could be set to 0 even though `state` is not finished
-
-  // mark thread as joining
-  int state;
-  asm volatile("lock xadd\t%1, %0"
-               : "+m"(td->state), "=r"(state)
-               : "1"(cthread_joining)
-               : "cc");
-
-  if (!(state & cthread_finished)) {
-    int flags = FUTEX_WAIT;  // PRIVATE makes it hang
-    register struct timespec* timeout asm("r10") = NULL;
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_futex), "D"(&td->tid), "S"(flags), "d"(tid),
-                   "r"(timeout)
-                 : "rcx", "r11", "cc", "memory");
+/**
+ * Waits for thread to terminate and frees its memory.
+ *
+ * @param td is thread descriptor memory
+ * @param exitcode optionally receives value returned by thread
+ * @return 0 on success, or error number on failure
+ * @raises EDEADLK when trying to join this thread
+ * @raises EINVAL if another thread is joining
+ * @raises ESRCH if no such thread exists
+ * @raises EINVAL if not joinable
+ * @threadsafe
+ */
+int cthread_join(cthread_t td, void **exitcode) {
+  int x, rc, tid;
+  // otherwise, tid could be set to 0 even though `state` is not
+  // finished mark thread as joining
+  if (!td || (IsAsan() && !__asan_is_valid(td, sizeof(*td)))) {
+    rc = ESRCH;
+    tid = -1;
+  } else if ((tid = td->tid) == gettid()) {  // tid must load before lock xadd
+    rc = EDEADLK;
+  } else if (atomic_load(&td->state) & (cthread_detached | cthread_joining)) {
+    rc = EINVAL;
+  } else {
+    if (~atomic_fetch_add(&td->state, cthread_joining) & cthread_finished) {
+      while ((x = atomic_load(&td->tid))) {
+        cthread_memory_wait32(&td->tid, x, 0);
+      }
+    }
+    if (exitcode) {
+      *exitcode = td->exitcode;
+    }
+    if (!munmap(td->alloc.bottom, td->alloc.top - td->alloc.bottom)) {
+      rc = 0;
+    } else {
+      rc = errno;
+    }
   }
-
-  *rc = td->rc;
-
-  size_t size = (intptr_t)(td->alloc.top) - (intptr_t)(td->alloc.bottom);
-  munmap(td->alloc.bottom, size);
-  return 0;
+  STRACE("cthread_join(%d, [%p]) → %s", tid, !rc && exitcode ? *exitcode : 0,
+         !rc ? "0" : strerrno(rc));
+  return rc;
 }

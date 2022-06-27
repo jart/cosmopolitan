@@ -4,9 +4,6 @@
 emsgsize:
 	.leafprologue
 	.profilable
-	mov	EMSGSIZE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EMSGSIZE(%rip),%ecx
+	jmp	__errfun
 	.endfn	emsgsize,globl,hidden

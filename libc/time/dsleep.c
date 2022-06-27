@@ -19,6 +19,8 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/time/time.h"
 
+// todo(jart): delete
+
 /**
  * Sleeps w/ higher precision.
  */
@@ -26,7 +28,7 @@ long double dsleep(long double secs) {
   struct timespec dur, rem;
   dur.tv_sec = secs;
   dur.tv_nsec = secs * 1e9;
-  dur.tv_nsec = rem1000000000int64(dur.tv_nsec);
+  dur.tv_nsec = dur.tv_nsec % 1000000000;
   if (secs > 1e-6) {
     nanosleep(&dur, &rem);
     secs = rem.tv_nsec;

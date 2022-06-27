@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LIMITS_H_
 #define COSMOPOLITAN_LIBC_LIMITS_H_
+#define __STDC_LIMIT_MACROS
 
 #define UCHAR_MIN 0
 #define UCHAR_MAX 255
@@ -32,6 +33,8 @@
 #define UINT16_MAX    __UINT16_MAX__
 #define UINT32_MAX    __UINT32_MAX__
 #define UINT64_MAX    __UINT64_MAX__
+#define INTMAX_MAX    __INTMAX_MAX__
+#define UINTMAX_MAX   __UINTMAX_MAX__
 
 #define SCHAR_MIN     (-SCHAR_MAX - 1)
 #define SHRT_MIN      (-SHRT_MAX - 1)
@@ -70,27 +73,18 @@
 #define UINT32_MIN     0u
 #define UINT64_MIN     0ull
 #define UINTPTR_MIN    0ull
+#define UINTMAX_MIN    ((uintmax_t)0)
 
 #define MB_CUR_MAX 4
 #define MB_LEN_MAX 4
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
-#define INTMAX_MAX \
-  (((intmax_t)0x7fffffffffffffff) << 64 | (intmax_t)0xffffffffffffffff)
-#define UINTMAX_MAX \
-  (((uintmax_t)0xffffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff)
-#define INT128_MIN  INTMAX_MIN
-#define INT128_MAX  INTMAX_MAX
-#define UINTMAX_MIN ((uintmax_t)0)
-#define UINT128_MIN ((uintmax_t)0)
-#define UINT128_MAX UINTMAX_MAX
-#else
-#define INTMAX_MAX  __INT64_MAX__
-#define UINTMAX_MAX __UINT64_MAX__
-#define UINTMAX_MIN UINT64_MIN
+#define INT128_MIN  (-INT128_MAX - 1)
+#define UINT128_MIN ((uint128_t)0)
+#define INT128_MAX \
+  ((int128_t)0x7fffffffffffffff << 64 | (int128_t)0xffffffffffffffff)
+#define UINT128_MAX \
+  ((uint128_t)0xffffffffffffffff << 64 | (uint128_t)0xffffffffffffffff)
 #endif /* GCC 4.6+ */
 
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_LIMITS_H_ */

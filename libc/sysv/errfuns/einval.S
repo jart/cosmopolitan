@@ -3,9 +3,6 @@
 
 einval:	.leafprologue
 	.profilable
-	mov	EINVAL(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EINVAL(%rip),%ecx
+	jmp	__errfun
 	.endfn	einval,globl,hidden

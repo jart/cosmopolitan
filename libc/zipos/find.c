@@ -23,6 +23,8 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
+// TODO(jart): improve time complexity here
+
 ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
   const char *zname;
   size_t i, n, c, znamesize;

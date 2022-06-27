@@ -18,15 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/calls/sysdebug.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -39,7 +41,7 @@
  *     return fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1 &&
  *            S_ISDIR(st.st_mode);
  *
- * Except faster and with fewer dependencies.
+ * Except faster, with fewer dependencies, and less errno clobbering.
  *
  * @see isregularfile(), issymlink(), ischardev()
  */
@@ -49,8 +51,11 @@ bool isdirectory(const char *path) {
   union metastat st;
   struct ZiposUri zipname;
   e = errno;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    efault();
+    res = false;
+  } else if (weaken(__zipos_open) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       res = S_ISDIR(st.cosmo.st_mode);
     } else {
@@ -59,7 +64,6 @@ bool isdirectory(const char *path) {
   } else if (IsMetal()) {
     res = false;
   } else if (!IsWindows()) {
-    e = errno;
     if (__sys_fstatat(AT_FDCWD, path, &st, AT_SYMLINK_NOFOLLOW) != -1) {
       res = S_ISDIR(METASTAT(st, st_mode));
     } else {
@@ -68,8 +72,7 @@ bool isdirectory(const char *path) {
   } else {
     res = isdirectory_nt(path);
   }
-  SYSDEBUG("isdirectory(%s) -> %s %s", path, res ? "true" : "false",
-           res ? "" : strerror(errno));
+  STRACE("%s(%#s) → %hhhd% m", "isdirectory", path, res);
   if (!res && (errno == ENOENT || errno == ENOTDIR)) {
     errno = e;
   }

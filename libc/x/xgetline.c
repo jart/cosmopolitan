@@ -23,10 +23,10 @@
 /**
  * Reads line from stream.
  *
- * @return allocated line that needs free() and usually chomp() too,
+ * @return allocated line that needs free() and usually _chomp() too,
  *     or NULL on ferror() or feof()
  * @see getdelim() for a more difficult api
- * @see chomp()
+ * @see _chomp()
  */
 char *xgetline(FILE *f) {
   char *p;

@@ -21,6 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/interner.h"
@@ -92,10 +93,12 @@ size_t interncount(const struct Interner *t) {
  * @note use consistent size w/ non-string items
  */
 size_t internobj(struct Interner *t, const void *data, size_t size) {
+  char *p2;
+  size_t n2;
   char *item;
   unsigned hash;
-  size_t i, step;
   struct InternerObject *it;
+  size_t i, off, step, need, bytes;
   step = 0;
   item = data;
   it = (struct InternerObject *)t;
@@ -117,9 +120,25 @@ size_t internobj(struct Interner *t, const void *data, size_t size) {
       step++;
     } while (it->p[i].hash);
   }
+  off = it->pool.i;
+  if (__builtin_add_overflow(off, size, &need)) abort();
+  if (__builtin_add_overflow(need, 1, &need)) abort();
+  if (need > it->pool.n) {
+    if (__builtin_add_overflow(it->pool.n, 1, &n2)) abort();
+    do {
+      if (__builtin_add_overflow(n2, n2 >> 1, &n2)) abort();
+    } while (need > n2);
+    if (__builtin_mul_overflow(n2, sizeof(*it->pool.p), &bytes)) abort();
+    if (!(p2 = realloc(it->pool.p, bytes))) abort();
+    it->pool.p = p2;
+    it->pool.n = n2;
+  }
+  memcpy(it->pool.p + off, data, size);
+  it->pool.p[off + size] = 0;
   it->p[i].hash = hash;
-  return (it->p[i].index =
-              CONCAT(&it->pool.p, &it->pool.i, &it->pool.n, item, size));
+  it->p[i].index = off;
+  it->pool.i += size;
+  return off;
 }
 
 /**

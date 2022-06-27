@@ -9,9 +9,12 @@
  * @return (𝑥 mod 𝑦) ∈ [0.,𝑦)
  * @see fmod()
  */
-static inline double emod(double x, double y) {
-  return x - fabs(y) * floor(x / fabs(y));
-}
+#define emod(x, y)                            \
+  ({                                          \
+    double __x = x;                           \
+    double __y = y;                           \
+    __x - fabs(__y) * floor(__x / fabs(__y)); \
+  })
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TINYMATH_EMOD_H_ */

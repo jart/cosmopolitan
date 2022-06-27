@@ -4,9 +4,6 @@
 eunatch:
 	.leafprologue
 	.profilable
-	mov	EUNATCH(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EUNATCH(%rip),%ecx
+	jmp	__errfun
 	.endfn	eunatch,globl,hidden

@@ -17,15 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sysdebug.internal.h"
-#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns path of binary with the debug information, or null.
@@ -35,27 +31,28 @@
 const char *FindDebugBinary(void) {
   static bool once;
   static char *res;
-  static char buf[PATH_MAX + 1];
+  static char buf[PATH_MAX];
   char *p;
   size_t n;
   if (!once) {
-    if (!(res = getenv("COMDBG"))) {
-      p = program_executable_name;
-      n = strlen(p);
-      if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
-        res = p;
-      } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
-                 n + 4 <= PATH_MAX) {
-        mempcpy(mempcpy(buf, p, n), ".dbg", 5);
-        if (fileexists(buf)) {
-          res = buf;
-        }
-      } else if (n + 8 <= PATH_MAX) {
-        mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
-        if (fileexists(buf)) {
-          res = buf;
-        }
+    p = GetProgramExecutableName();
+    n = strlen(p);
+    if (n > 4 && READ32LE(p + n - 4) == READ32LE(".dbg")) {
+      res = p;
+    } else if (n > 4 && READ32LE(p + n - 4) == READ32LE(".com") &&
+               n + 4 < ARRAYLEN(buf)) {
+      mempcpy(mempcpy(buf, p, n), ".dbg", 5);
+      if (fileexists(buf)) {
+        res = buf;
       }
+    } else if (n + 8 < ARRAYLEN(buf)) {
+      mempcpy(mempcpy(buf, p, n), ".com.dbg", 9);
+      if (fileexists(buf)) {
+        res = buf;
+      }
+    }
+    if (!res) {
+      res = getenv("COMDBG");
     }
     once = true;
   }

@@ -208,6 +208,7 @@ int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *);
 bool IsMimeType(const char *, size_t, const char *);
 ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *);
 const char *FindContentType(const char *, size_t);
+char *FoldHeader(struct HttpMessage *, char *, int, size_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

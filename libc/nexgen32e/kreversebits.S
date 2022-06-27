@@ -86,4 +86,3 @@ kReverseBits:
 	.byte	0b00111111,0b10111111,0b01111111,0b11111111
 	.endobj	kReverseBits,globl
 	.previous
-	.source	__FILE__

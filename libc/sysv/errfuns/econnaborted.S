@@ -4,9 +4,6 @@
 econnaborted:
 	.leafprologue
 	.profilable
-	mov	ECONNABORTED(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ECONNABORTED(%rip),%ecx
+	jmp	__errfun
 	.endfn	econnaborted,globl,hidden

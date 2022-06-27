@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/files.h"
 
@@ -25,7 +25,7 @@ textwindows int sys_fchmodat_nt(int dirfd, const char *path, uint32_t mode,
   uint32_t attr;
   uint16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  if ((attr = GetFileAttributes(path16)) != -1) {
+  if ((attr = GetFileAttributes(path16)) != -1u) {
     if (mode & 0200) {
       attr &= ~kNtFileAttributeReadonly;
     } else {

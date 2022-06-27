@@ -20,7 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/bits/weaken.h"
-#include "libc/fmt/fmts.h"
+#include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
@@ -46,7 +46,7 @@ static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
 
 static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
   char buf[8];
-  w = tpenc((*weaken(kCp437))[w & 0xFF]);
+  w = tpenc(kCp437[w & 0xFF]);
   WRITE64LE(buf, w);
   return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
 }
@@ -60,19 +60,6 @@ static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
   }
   WRITE64LE(buf, w);
   return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
-}
-
-static int __fmt_stoa_quote(out_f out, void *arg, unsigned flags, char ch,
-                            unsigned char signbit) {
-  if (flags & FLAGS_REPR) {
-    if (signbit == 63) {
-      if (out("L", arg, 1) == -1) return -1;
-    } else if (signbit == 15) {
-      if (out("u", arg, 1) == -1) return -1;
-    }
-    if (out(&ch, arg, 1) == -1) return -1;
-  }
-  return 0;
 }
 
 /**
@@ -103,8 +90,6 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
     if (flags & FLAGS_PRECISION) {
       precision = min(strlen(p), precision);
     }
-  } else {
-    if (__fmt_stoa_quote(out, arg, flags, qchar, signbit) == -1) return -1;
   }
 
   ignorenul = false;
@@ -153,6 +138,9 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
     } else if (weaken(strnwidth)) {
       w = weaken(strnwidth)(p, precision, 0);
     }
+    if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
+      w += 2 + (signbit == 63) + (signbit == 15);
+    }
     if (w < width) {
       pad = width - w;
     }
@@ -160,6 +148,16 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
 
   if (pad && !(flags & FLAGS_LEFT)) {
     if (__fmt_pad(out, arg, pad) == -1) return -1;
+  }
+
+  if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
+    if (signbit == 63) {
+      if (out("L", arg, 1) == -1) return -1;
+    } else if (signbit == 15) {
+      if (out("u", arg, 1) == -1) return -1;
+    }
+    buf[0] = qchar;
+    if (out(buf, arg, 1) == -1) return -1;
   }
 
   if (justdobytes) {
@@ -207,13 +205,13 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
     }
   }
 
-  if (pad && (flags & FLAGS_LEFT)) {
-    if (__fmt_pad(out, arg, pad) == -1) return -1;
-  }
-
   if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
     buf[0] = qchar;
     if (out(buf, arg, 1) == -1) return -1;
+  }
+
+  if (pad && (flags & FLAGS_LEFT)) {
+    if (__fmt_pad(out, arg, pad) == -1) return -1;
   }
 
   return 0;

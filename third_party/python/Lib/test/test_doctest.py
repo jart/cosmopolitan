@@ -663,7 +663,7 @@ plain ol' Python and is guaranteed to be available.
     True
     >>> real_tests = [t for t in tests if len(t.examples) > 0]
     >>> len(real_tests) # objects that actually have doctests
-    8
+    9
     >>> for t in real_tests:
     ...     print('{}  {}'.format(len(t.examples), t.name))
     ...
@@ -673,6 +673,7 @@ plain ol' Python and is guaranteed to be available.
     2  builtins.float.hex
     1  builtins.hex
     1  builtins.int
+    2  builtins.int.bit_count
     2  builtins.int.bit_length
     1  builtins.oct
 
@@ -2236,7 +2237,7 @@ def test_DocFileSuite():
        '/' should be used as a path separator.  It will be converted
        to a native separator at run time:
 
-         >>> suite = doctest.DocFileSuite('../test/test_doctest.txt')
+         >>> suite = doctest.DocFileSuite('test_doctest.txt') #TODO: path handling in APE ZIP store
          >>> suite.run(unittest.TestResult())
          <unittest.result.TestResult run=1 errors=0 failures=1>
 
@@ -2920,7 +2921,7 @@ Invalid file name:
     >>> print(normalize(err))                    # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    FileNotFoundError: [Errno 2] ENOENT[2]: 'nosuchfile'
+    FileNotFoundError: [Errno 2] ENOENT...
 
 Invalid doctest option:
 
@@ -2960,3 +2961,9 @@ if __name__ == '__main__':
         test_coverage('/tmp/doctest.cover')
     else:
         test_main()
+
+if __name__ == "PYOBJ.COM":
+    import test.sample_doctest
+    import test.sample_doctest_no_docstrings
+    import test.sample_doctest_no_doctests
+    import test.doctest_aliases

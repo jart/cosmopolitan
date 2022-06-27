@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -29,11 +30,16 @@
  * @return 0 on success, or -1 w/ errno
  */
 int getrusage(int who, struct rusage *usage) {
-  if (who == 99) return einval();
-  if (IsAsan() && !__asan_is_valid(usage, sizeof(*usage))) return efault();
-  if (!IsWindows()) {
-    return sys_getrusage(who, usage);
+  int rc;
+  if (who == 99) {
+    rc = einval();
+  } else if (IsAsan() && !__asan_is_valid(usage, sizeof(*usage))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_getrusage(who, usage);
   } else {
-    return sys_getrusage_nt(who, usage);
+    rc = sys_getrusage_nt(who, usage);
   }
+  STRACE("getrusage(%d, %p) → %d% m", who, usage, rc);
+  return rc;
 }

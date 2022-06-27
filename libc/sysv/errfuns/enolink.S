@@ -4,9 +4,6 @@
 enolink:
 	.leafprologue
 	.profilable
-	mov	ENOLINK(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOLINK(%rip),%ecx
+	jmp	__errfun
 	.endfn	enolink,globl,hidden

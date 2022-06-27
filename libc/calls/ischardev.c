@@ -16,17 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/metastat.internal.h"
-#include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/sysv/consts/s.h"
 
 /**
  * Returns true if file descriptor is backed by character i/o.
@@ -44,15 +42,7 @@ bool32 ischardev(int fd) {
   int e;
   union metastat st;
   if (__isfdkind(fd, kFdZip)) {
-    e = errno;
-    if (weaken(__zipos_fstat)(
-            (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, &st.cosmo) !=
-        -1) {
-      return S_ISCHR(st.cosmo.st_mode);
-    } else {
-      errno = e;
-      return false;
-    }
+    return false;
   } else if (IsMetal()) {
     return true;
   } else if (!IsWindows()) {
@@ -66,6 +56,6 @@ bool32 ischardev(int fd) {
   } else {
     return __isfdkind(fd, kFdConsole) ||
            (__isfdkind(fd, kFdFile) &&
-            GetFileType(g_fds.p[fd].handle) == kNtFileTypeChar);
+            GetFileType(__getfdhandleactual(fd)) == kNtFileTypeChar);
   }
 }

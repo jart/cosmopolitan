@@ -4,9 +4,6 @@
 eownerdead:
 	.leafprologue
 	.profilable
-	mov	EOWNERDEAD(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EOWNERDEAD(%rip),%ecx
+	jmp	__errfun
 	.endfn	eownerdead,globl,hidden

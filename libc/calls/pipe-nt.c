@@ -17,46 +17,65 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
+  uint32_t mode;
   int64_t hin, hout;
   int reader, writer;
   char16_t pipename[64];
-  if (!pipefd) return efault();
   CreatePipeName(pipename);
-  if ((reader = __reservefd()) == -1) return -1;
-  if ((writer = __reservefd()) == -1) {
-    __releasefd(reader);
+  __fds_lock();
+  if ((reader = __reservefd_unlocked(-1)) == -1) {
+    __fds_unlock();
     return -1;
   }
-  if ((hin = CreateNamedPipe(pipename, kNtPipeAccessInbound,
-                             kNtPipeWait | kNtPipeReadmodeByte, 1, 65536, 65536,
-                             0, &kNtIsInheritable)) != -1) {
+  if ((writer = __reservefd_unlocked(-1)) == -1) {
+    __releasefd_unlocked(reader);
+    __fds_unlock();
+    return -1;
+  }
+  if (~flags & O_DIRECT) {
+    mode = kNtPipeTypeByte | kNtPipeReadmodeByte;
+  } else {
+    mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
+  }
+  __fds_unlock();
+  hin = CreateNamedPipe(pipename, kNtPipeAccessInbound | kNtFileFlagOverlapped,
+                        mode, 1, PIPE_BUF, PIPE_BUF, 0, &kNtIsInheritable);
+  __fds_lock();
+  if (hin != -1) {
     if ((hout = CreateFile(pipename, kNtGenericWrite, 0, &kNtIsInheritable,
-                           kNtOpenExisting, 0, 0)) != -1) {
+                           kNtOpenExisting, kNtFileFlagOverlapped, 0)) != -1) {
       g_fds.p[reader].kind = kFdFile;
       g_fds.p[reader].flags = flags;
+      g_fds.p[reader].mode = 0010444;
       g_fds.p[reader].handle = hin;
       g_fds.p[writer].kind = kFdFile;
       g_fds.p[writer].flags = flags;
+      g_fds.p[writer].mode = 0010222;
       g_fds.p[writer].handle = hout;
       pipefd[0] = reader;
       pipefd[1] = writer;
+      __fds_unlock();
       return 0;
     } else {
-      __winerr();
       CloseHandle(hin);
     }
-  } else {
-    __winerr();
   }
-  __releasefd(writer);
-  __releasefd(reader);
+  __releasefd_unlocked(writer);
+  __releasefd_unlocked(reader);
+  __fds_unlock();
   return -1;
 }

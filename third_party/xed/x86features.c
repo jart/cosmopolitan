@@ -16,7 +16,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "third_party/xed/x86.h"
+#include "third_party/xed/x86isa.h"
 
 asm(".ident\t\"\\n\\n\
 Xed (Apache 2.0)\\n\

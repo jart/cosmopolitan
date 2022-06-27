@@ -46,7 +46,7 @@
   }
 
 struct DeflateHold {
-  size_t word;
+  uint64_t word;
   size_t bits;
 };
 

@@ -19,12 +19,12 @@ forceinline void convolve(unsigned yn, unsigned xn, __m128 img[yn][xn], int KW,
       kflip[KW - i - 1][KW - j - 1] = (__v4sf){f, f, f, f};
     }
   }
-  memset(&g, 0, sizeof(g));
+  bzero(&g, sizeof(g));
   resizegraphic(&g, yn, xn);
   tmp = g.b.p;
   for (y = 0; y < yn - KW; ++y) {
     for (x = 0; x < xn - KW; ++x) {
-      memset(&p, 0, sizeof(p));
+      bzero(&p, sizeof(p));
       for (i = 0; i < KW; ++i) {
         for (j = 0; j < KW; ++j) {
           p += img[y + i][x + j] * kflip[i][j] + C2;

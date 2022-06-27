@@ -69,7 +69,7 @@ noasan static inline const unsigned char *memchr_sse(const unsigned char *s,
  */
 void *memchr(const void *s, int c, size_t n) {
   const void *r;
-  if (X86_HAVE(SSE)) {
+  if (!IsTiny() && X86_HAVE(SSE)) {
     if (IsAsan()) __asan_verify(s, n);
     r = memchr_sse(s, c, n);
   } else {

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
@@ -28,10 +28,11 @@ STATIC_YOINK("strnwidth");
 
 void __testlib_ezbenchreport(const char *form, uint64_t c1, uint64_t c2) {
   uint64_t ns1, ns2;
+  __warn_if_powersave();
   ns1 = rintl(ConvertTicksToNanos(c1));
   ns2 = rintl(ConvertTicksToNanos(c2));
   (fprintf)(stderr,
-            VEIL("r", " *     %-19s l: %,9lu𝑐 %,9lu𝑛𝑠   m: %,9lu𝑐 %,9lu𝑛𝑠\n"),
+            VEIL("r", " *     %-19s l: %,9luc %,9luns   m: %,9luc %,9luns\n"),
             form, c1, ns1, c2, ns2);
 }
 
@@ -39,6 +40,7 @@ void __testlib_ezbenchreport_n(const char *form, char z, size_t n, uint64_t c) {
   char msg[128];
   uint64_t bps;
   long double cn, lat;
+  __warn_if_powersave();
   (snprintf)(msg, sizeof(msg), "%s %c=%d", form, z, n);
   cn = ConvertTicksToNanos(c);
   if (!n) {

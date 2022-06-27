@@ -3,9 +3,6 @@
 
 enodev:	.leafprologue
 	.profilable
-	mov	ENODEV(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENODEV(%rip),%ecx
+	jmp	__errfun
 	.endfn	enodev,globl,hidden

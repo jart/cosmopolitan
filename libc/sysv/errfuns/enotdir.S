@@ -4,9 +4,6 @@
 enotdir:
 	.leafprologue
 	.profilable
-	mov	ENOTDIR(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOTDIR(%rip),%ecx
+	jmp	__errfun
 	.endfn	enotdir,globl,hidden

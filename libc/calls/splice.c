@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/sysv/errfuns.h"
@@ -32,9 +33,10 @@ static ssize_t splicer(int infd, int64_t *inoffset, int outfd,
   if (!uptobytes || flags == -1) return einval();
   if (IsModeDbg() && uptobytes > 1) uptobytes >>= 1;
   olderr = errno;
-  if ((transferred =
+  if (__isfdkind(infd, kFdZip) || __isfdkind(outfd, kFdZip) ||
+      (transferred =
            impl(infd, inoffset, outfd, outoffset, uptobytes, flags)) == -1 &&
-      errno == ENOSYS) {
+          errno == ENOSYS) {
     errno = olderr;
     transferred = copyfd(infd, inoffset, outfd, outoffset, uptobytes, flags);
   }

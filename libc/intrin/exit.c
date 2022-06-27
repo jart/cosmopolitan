@@ -16,14 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
-
-extern void(__msabi* __imp_ExitProcess)(uint32_t);
 
 /**
  * Terminates process, ignoring destructors and atexit() handlers.
@@ -31,19 +29,22 @@ extern void(__msabi* __imp_ExitProcess)(uint32_t);
  * When running on bare metal, this function will reboot your computer
  * by hosing the interrupt descriptors and triple faulting the system.
  *
- * @param exitcode is masked with 255
+ * @param exitcode is masked with 255 on unix (but not windows)
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  * @noreturn
  */
-privileged noinstrument noasan noubsan wontreturn void _Exit(int exitcode) {
-  if ((!IsWindows() && !IsMetal()) || (IsMetal() && IsGenuineCosmo())) {
+wontreturn void _Exit(int exitcode) {
+  int i;
+  STRACE("_Exit(%d)", exitcode);
+  if (!IsWindows() && !IsMetal()) {
     asm volatile("syscall"
                  : /* no outputs */
                  : "a"(__NR_exit_group), "D"(exitcode)
-                 : "memory");
+                 : "rcx", "r11", "memory");
   } else if (IsWindows()) {
-    __imp_ExitProcess(exitcode & 0xff);
+    ExitProcess(exitcode);
   }
   asm("push\t$0\n\t"
       "push\t$0\n\t"

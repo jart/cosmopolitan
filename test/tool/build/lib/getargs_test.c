@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -43,6 +44,7 @@ TEST(getargs, test) {
   EXPECT_STREQ("yo", getargs_next(&ga));
   EXPECT_STREQ("dawg", getargs_next(&ga));
   EXPECT_STREQ("fun", getargs_next(&ga));
+  EXPECT_EQ(NULL, getargs_next(&ga));
   EXPECT_EQ(NULL, getargs_next(&ga));
   getargs_destroy(&ga);
 }

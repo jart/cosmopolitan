@@ -4,9 +4,6 @@
 ekeyrevoked:
 	.leafprologue
 	.profilable
-	mov	EKEYREVOKED(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EKEYREVOKED(%rip),%ecx
+	jmp	__errfun
 	.endfn	ekeyrevoked,globl,hidden

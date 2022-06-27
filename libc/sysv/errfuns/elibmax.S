@@ -4,9 +4,6 @@
 elibmax:
 	.leafprologue
 	.profilable
-	mov	ELIBMAX(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ELIBMAX(%rip),%ecx
+	jmp	__errfun
 	.endfn	elibmax,globl,hidden

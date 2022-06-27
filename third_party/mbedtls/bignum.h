@@ -7,14 +7,14 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002  /**< An error occurred while reading from or writing to a file. */
-#define MBEDTLS_ERR_MPI_BAD_INPUT_DATA                    -0x0004  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_MPI_INVALID_CHARACTER                 -0x0006  /**< There is an invalid character in the digit string. */
-#define MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL                  -0x0008  /**< The buffer is too small to write to. */
-#define MBEDTLS_ERR_MPI_NEGATIVE_VALUE                    -0x000A  /**< The input arguments are negative or result in illegal output. */
-#define MBEDTLS_ERR_MPI_DIVISION_BY_ZERO                  -0x000C  /**< The input argument for division is zero, which is not allowed. */
-#define MBEDTLS_ERR_MPI_NOT_ACCEPTABLE                    -0x000E  /**< The input arguments are not acceptable. */
-#define MBEDTLS_ERR_MPI_ALLOC_FAILED                      -0x0010  /**< Memory allocation failed. */
+#define MBEDTLS_ERR_MPI_FILE_IO_ERROR                     -0x0002  /*< An error occurred while reading from or writing to a file. */
+#define MBEDTLS_ERR_MPI_BAD_INPUT_DATA                    -0x0004  /*< Bad input parameters to function. */
+#define MBEDTLS_ERR_MPI_INVALID_CHARACTER                 -0x0006  /*< There is an invalid character in the digit string. */
+#define MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL                  -0x0008  /*< The buffer is too small to write to. */
+#define MBEDTLS_ERR_MPI_NEGATIVE_VALUE                    -0x000A  /*< The input arguments are negative or result in illegal output. */
+#define MBEDTLS_ERR_MPI_DIVISION_BY_ZERO                  -0x000C  /*< The input argument for division is zero, which is not allowed. */
+#define MBEDTLS_ERR_MPI_NOT_ACCEPTABLE                    -0x000E  /*< The input arguments are not acceptable. */
+#define MBEDTLS_ERR_MPI_ALLOC_FAILED                      -0x0010  /*< Memory allocation failed. */
 #define MBEDTLS_MPI_CHK(f)       \
     do                           \
     {                            \
@@ -37,7 +37,7 @@ COSMOPOLITAN_C_START_
  *
  * Reduction in size, reduces speed.
  */
-#define MBEDTLS_MPI_WINDOW_SIZE                           6        /**< Maximum window size used. */
+#define MBEDTLS_MPI_WINDOW_SIZE                           6        /*< Maximum window size used. */
 #endif /* !MBEDTLS_MPI_WINDOW_SIZE */
 
 #if !defined(MBEDTLS_MPI_MAX_SIZE)
@@ -48,10 +48,10 @@ COSMOPOLITAN_C_START_
  * Note: Calculations can temporarily result in larger MPIs. So the number
  * of limbs required (MBEDTLS_MPI_MAX_LIMBS) is higher.
  */
-#define MBEDTLS_MPI_MAX_SIZE                              1024     /**< Maximum number of bytes for usable MPIs. */
+#define MBEDTLS_MPI_MAX_SIZE                              1024     /*< Maximum number of bytes for usable MPIs. */
 #endif /* !MBEDTLS_MPI_MAX_SIZE */
 
-#define MBEDTLS_MPI_MAX_BITS                              ( 8 * MBEDTLS_MPI_MAX_SIZE )    /**< Maximum number of bits for usable MPIs. */
+#define MBEDTLS_MPI_MAX_BITS                              ( 8 * MBEDTLS_MPI_MAX_SIZE )    /*< Maximum number of bits for usable MPIs. */
 
 /*
  * When reading from files with mbedtls_mpi_read_file() and writing to files with
@@ -96,8 +96,8 @@ mbedtls_mpi forcealign(16);
  * mbedtls_mpi_gen_prime().
  */
 typedef enum {
-    MBEDTLS_MPI_GEN_PRIME_FLAG_DH =      0x0001, /**< (X-1)/2 is prime too */
-    MBEDTLS_MPI_GEN_PRIME_FLAG_LOW_ERR = 0x0002, /**< lower error rate from 2<sup>-80</sup> to 2<sup>-128</sup> */
+    MBEDTLS_MPI_GEN_PRIME_FLAG_DH =      0x0001, /*< (X-1)/2 is prime too */
+    MBEDTLS_MPI_GEN_PRIME_FLAG_LOW_ERR = 0x0002, /*< lower error rate from 2<sup>-80</sup> to 2<sup>-128</sup> */
 } mbedtls_mpi_gen_prime_flag_t;
 
 int mbedtls_mpi_add_abs( mbedtls_mpi *, const mbedtls_mpi *, const mbedtls_mpi * );

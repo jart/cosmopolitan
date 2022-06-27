@@ -13,5 +13,13 @@ struct dirent {      /* linux getdents64 abi */
 struct dirstream;
 typedef struct dirstream DIR;
 
+DIR *fdopendir(int) dontdiscard;
+DIR *opendir(const char *) dontdiscard;
+int closedir(DIR *);
+int dirfd(DIR *);
+long telldir(DIR *);
+struct dirent *readdir(DIR *);
+void rewinddir(DIR *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

@@ -46,7 +46,7 @@ FILE *popen(const char *cmdline, const char *mode) {
   if (pipe(pipefds) == -1) return NULL;
   fcntl(pipefds[dir], F_SETFD, FD_CLOEXEC);
   if ((f = fdopen(pipefds[dir], mode))) {
-    switch ((pid = vfork())) {
+    switch ((pid = fork())) {
       case 0:
         dup2(pipefds[!dir], !dir);
         systemexec(cmdline);

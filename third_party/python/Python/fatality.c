@@ -124,14 +124,9 @@ Py_FatalError(const char *msg)
     }
     int has_tstate_and_gil = (tss_tstate != NULL);
 
-    if (has_tstate_and_gil) {
-        /* If an exception is set, print the exception with its traceback */
-        if (!_Py_FatalError_PrintExc(fd)) {
-            /* No exception is set, or an exception is set without traceback */
-            _Py_FatalError_DumpTracebacks(fd);
-        }
-    }
-    else {
+    /* If an exception is set, print the exception with its traceback */
+    if (!_Py_FatalError_PrintExc(fd)) {
+        /* No exception is set, or an exception is set without traceback */
         _Py_FatalError_DumpTracebacks(fd);
     }
 

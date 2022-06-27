@@ -122,8 +122,8 @@
     "MEMORY"
     ;; 3.8 PHDRS Command
     "PHDRS" "FILEHDR" "FLAGS"
-    "PT_NULL" "PT_LOAD" "PT_DYNAMIC" "PT_INTERP" "PT_NOTE" "PT_SHLIB" "PT_PHDR"
-    "PT_GNU_STACK"
+    "PT_NULL" "PT_LOAD" "PT_DYNAMIC" "PT_INTERP" "PT_NOTE"
+    "PT_SHLIB" "PT_PHDR" "PT_GNU_STACK" "PT_TLS"
     ;; 3.9 VERSION Command
     "VERSION")
   "Keywords used of GNU ld script.")

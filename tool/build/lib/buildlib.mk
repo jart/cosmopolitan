@@ -9,7 +9,9 @@ TOOL_BUILD_LIB_A = o/$(MODE)/tool/build/lib/buildlib.a
 TOOL_BUILD_LIB_A_FILES := $(wildcard tool/build/lib/*)
 TOOL_BUILD_LIB_A_HDRS = $(filter %.h,$(TOOL_BUILD_LIB_A_FILES))
 TOOL_BUILD_LIB_A_SRCS_S = $(filter %.S,$(TOOL_BUILD_LIB_A_FILES))
-TOOL_BUILD_LIB_A_SRCS_C = $(filter %.c,$(TOOL_BUILD_LIB_A_FILES))
+
+TOOL_BUILD_LIB_A_SRCS_C =				\
+	$(filter-out tool/build/lib/apetest.c,$(filter %.c,$(TOOL_BUILD_LIB_A_FILES)))
 
 TOOL_BUILD_LIB_A_CHECKS =				\
 	$(TOOL_BUILD_LIB_A_HDRS:%=o/$(MODE)/%.ok)	\
@@ -19,9 +21,15 @@ TOOL_BUILD_LIB_A_SRCS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_S)			\
 	$(TOOL_BUILD_LIB_A_SRCS_C)
 
+TOOL_BUILD_LIB_COMS =					\
+	o/$(MODE)/tool/build/lib/apetest.com		\
+	o/$(MODE)/tool/build/lib/apetest2.com
+
 TOOL_BUILD_LIB_A_OBJS =					\
 	$(TOOL_BUILD_LIB_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(TOOL_BUILD_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(TOOL_BUILD_LIB_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	o/$(MODE)/tool/build/lib/apetest.com.zip.o	\
+	o/$(MODE)/tool/build/lib/apetest2.com.zip.o
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_ALG					\
@@ -67,6 +75,25 @@ o/$(MODE)/tool/build/lib/ssefloat.o:			\
 		TARGET_ARCH +=				\
 			-msse3
 
+o/$(MODE)/tool/build/lib/apetest.com.dbg:		\
+		$(TOOL_BUILD_LIB_A_DEPS)		\
+		o/$(MODE)/tool/build/lib/apetest.o	\
+		$(CRT)					\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/tool/build/lib/apetest2.com.dbg:		\
+		$(TOOL_BUILD_LIB_A_DEPS)		\
+		o/$(MODE)/tool/build/lib/apetest.o	\
+		$(CRT)					\
+		$(APE_COPY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/tool/build/lib/apetest.com.zip.o		\
+o/$(MODE)/tool/build/lib/apetest2.com.zip.o:		\
+		ZIPOBJ_FLAGS +=				\
+			-B
+
 TOOL_BUILD_LIB_LIBS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)))
 TOOL_BUILD_LIB_SRCS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_SRCS))
 TOOL_BUILD_LIB_HDRS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_HDRS))
@@ -76,4 +103,6 @@ TOOL_BUILD_LIB_OBJS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_OBJS))
 TOOL_BUILD_LIB_TESTS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_TESTS))
 
 .PHONY: o/$(MODE)/tool/build/lib
-o/$(MODE)/tool/build/lib: $(TOOL_BUILD_LIB_CHECKS)
+o/$(MODE)/tool/build/lib:				\
+		$(TOOL_BUILD_LIB_COMS)			\
+		$(TOOL_BUILD_LIB_CHECKS)

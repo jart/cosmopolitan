@@ -5,29 +5,29 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
-#define MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG              -0x0003  /**< Too many random requested in single call. */
-#define MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG                -0x0005  /**< Input too large (Entropy + additional). */
-#define MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR                -0x0007  /**< Read/write error in file. */
-#define MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED        -0x0009  /**< The entropy source failed. */
+#define MBEDTLS_ERR_HMAC_DRBG_REQUEST_TOO_BIG              -0x0003  /*< Too many random requested in single call. */
+#define MBEDTLS_ERR_HMAC_DRBG_INPUT_TOO_BIG                -0x0005  /*< Input too large (Entropy + additional). */
+#define MBEDTLS_ERR_HMAC_DRBG_FILE_IO_ERROR                -0x0007  /*< Read/write error in file. */
+#define MBEDTLS_ERR_HMAC_DRBG_ENTROPY_SOURCE_FAILED        -0x0009  /*< The entropy source failed. */
 
 #if !defined(MBEDTLS_HMAC_DRBG_RESEED_INTERVAL)
-#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000   /**< Interval before reseed is performed by default */
+#define MBEDTLS_HMAC_DRBG_RESEED_INTERVAL   10000   /*< Interval before reseed is performed by default */
 #endif
 
 #if !defined(MBEDTLS_HMAC_DRBG_MAX_INPUT)
-#define MBEDTLS_HMAC_DRBG_MAX_INPUT         256     /**< Maximum number of additional input bytes */
+#define MBEDTLS_HMAC_DRBG_MAX_INPUT         256     /*< Maximum number of additional input bytes */
 #endif
 
 #if !defined(MBEDTLS_HMAC_DRBG_MAX_REQUEST)
-#define MBEDTLS_HMAC_DRBG_MAX_REQUEST       1024    /**< Maximum number of requested bytes per call */
+#define MBEDTLS_HMAC_DRBG_MAX_REQUEST       1024    /*< Maximum number of requested bytes per call */
 #endif
 
 #if !defined(MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT)
-#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT    384     /**< Maximum size of (re)seed buffer */
+#define MBEDTLS_HMAC_DRBG_MAX_SEED_INPUT    384     /*< Maximum size of (re)seed buffer */
 #endif
 
-#define MBEDTLS_HMAC_DRBG_PR_OFF   0   /**< No prediction resistance       */
-#define MBEDTLS_HMAC_DRBG_PR_ON    1   /**< Prediction resistance enabled  */
+#define MBEDTLS_HMAC_DRBG_PR_OFF   0   /*< No prediction resistance       */
+#define MBEDTLS_HMAC_DRBG_PR_ON    1   /*< Prediction resistance enabled  */
 
 typedef struct mbedtls_hmac_drbg_context
 {

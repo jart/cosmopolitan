@@ -240,7 +240,7 @@ def _getuserbase():
     def joinuser(*args):
         return os.path.expanduser(os.path.join(*args))
 
-    if os.name == "nt":
+    if os.realname == "nt":
         base = os.environ.get("APPDATA") or "~"
         if env_base:
             return env_base
@@ -298,7 +298,7 @@ def getusersitepackages():
         "posix_user":'{userbase}/lib/python3.6/site-packages',
         "nt_user": "{userbase}/Python36/site-packages",
     }
-    USER_SITE = purelib_map.get('%s_user' % os.name).format(userbase=user_base)
+    USER_SITE = purelib_map.get('%s_user' % os.realname).format(userbase=user_base)
     return USER_SITE
 
 def addusersitepackages(known_paths):

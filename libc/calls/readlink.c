@@ -22,16 +22,10 @@
 /**
  * Reads symbolic link.
  *
- * This does *not* nul-terminate the buffer.
- *
- * It is recommended that malloc() be linked into your program when
- * using this function. Otherwise the buffer should be larger. It should
- * also be noted that, without malloc, long names with many astral plane
- * characters might not decode properly.
- *
  * @param path must be a symbolic link pathname
  * @param buf will receive symbolic link contents, and won't be modified
  *     unless the function succeeds (with the exception of no-malloc nt)
+ *     and this buffer will *not* be nul-terminated
  * @return number of bytes written to buf, or -1 w/ errno; if the
  *     return is equal to bufsiz then truncation may have occurred
  * @see readlinkat(AT_FDCWD, ...) for modern version of this

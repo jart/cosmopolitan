@@ -26,7 +26,6 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/ohmyplus/vector.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
@@ -43,6 +42,7 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/libcxx/vector"
 #include "tool/viz/lib/knobs.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -1673,7 +1673,7 @@ char* GetLine(void) {
   static char* line;
   static size_t linesize;
   if (getline(&line, &linesize, stdin) > 0) {
-    return chomp(line);
+    return _chomp(line);
   } else {
     return NULL;
   }
@@ -1703,7 +1703,7 @@ int PlayGame(const char* romfile, const char* opt_tasfile) {
   if ((ffplay = commandvenv("FFPLAY", "ffplay"))) {
     devnull = open("/dev/null", O_WRONLY | O_CLOEXEC);
     pipe2(pipefds, O_CLOEXEC);
-    if (!(playpid_ = vfork())) {
+    if (!(playpid_ = fork())) {
       const char* const args[] = {
           "ffplay",   "-nodisp", "-loglevel", "quiet", "-fflags",
           "nobuffer", "-ac",     "1",         "-ar",   "1789773",

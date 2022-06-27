@@ -723,12 +723,14 @@ static int stbi_write_jpg_core(stbi__write_context *s, int width, int height,
   quality = quality < 50 ? 5000 / quality : 200 - quality * 2;
 
   for (i = 0; i < 64; ++i) {
-    int uvti, yti = div100int64((YQT[i] * quality + 50));
-    YTable[stbiw__jpg_ZigZag[i]] =
-        (unsigned char)(yti < 1 ? 1 : yti > 255 ? 255 : yti);
-    uvti = div100int64(UVQT[i] * quality + 50);
-    UVTable[stbiw__jpg_ZigZag[i]] =
-        (unsigned char)(uvti < 1 ? 1 : uvti > 255 ? 255 : uvti);
+    int uvti, yti = (YQT[i] * quality + 50) / 100;
+    YTable[stbiw__jpg_ZigZag[i]] = (unsigned char)(yti < 1     ? 1
+                                                   : yti > 255 ? 255
+                                                               : yti);
+    uvti = (UVQT[i] * quality + 50) / 100;
+    UVTable[stbiw__jpg_ZigZag[i]] = (unsigned char)(uvti < 1     ? 1
+                                                    : uvti > 255 ? 255
+                                                                 : uvti);
   }
 
   for (row = 0, k = 0; row < 8; ++row) {

@@ -16,10 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -34,14 +37,36 @@
  */
 int getsockopt(int fd, int level, int optname, void *out_opt_optval,
                uint32_t *out_optlen) {
-  if (!level || !optname) return enoprotoopt(); /* our sysvconsts definition */
-  if (optname == -1) return 0;                  /* our sysvconsts definition */
-  if (!IsWindows()) {
-    return sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
+  int rc;
+
+  if (!level || !optname) {
+    rc = enoprotoopt(); /* our sysvconsts definition */
+  } else if (optname == -1) {
+    rc = 0; /* our sysvconsts definition */
+  } else if (IsAsan() && (out_opt_optval && out_optlen &&
+                          (!__asan_is_valid(out_optlen, sizeof(uint32_t)) ||
+                           !__asan_is_valid(out_opt_optval, *out_optlen)))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_getsockopt(fd, level, optname, out_opt_optval, out_optlen);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
-                         out_optlen);
+    rc = sys_getsockopt_nt(&g_fds.p[fd], level, optname, out_opt_optval,
+                           out_optlen);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+
+#ifdef SYSDEBUG
+  if (out_opt_optval && out_optlen && rc != -1) {
+    STRACE("getsockopt(%d, %s, %s, [%#.*hhs], [%d]) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           *out_optlen, out_opt_optval, *out_optlen, rc);
+  } else {
+    STRACE("getsockopt(%d, %s, %s, %p, %p) → %d% lm", fd,
+           DescribeSockLevel(level), DescribeSockOptname(level, optname),
+           out_opt_optval, out_optlen, rc);
+  }
+#endif
+
+  return rc;
 }

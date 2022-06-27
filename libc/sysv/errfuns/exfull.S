@@ -3,9 +3,6 @@
 
 exfull:	.leafprologue
 	.profilable
-	mov	EXFULL(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EXFULL(%rip),%ecx
+	jmp	__errfun
 	.endfn	exfull,globl,hidden

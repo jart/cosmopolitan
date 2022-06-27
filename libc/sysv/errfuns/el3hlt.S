@@ -3,9 +3,6 @@
 
 el3hlt:	.leafprologue
 	.profilable
-	mov	EL3HLT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EL3HLT(%rip),%ecx
+	jmp	__errfun
 	.endfn	el3hlt,globl,hidden

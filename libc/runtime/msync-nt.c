@@ -16,23 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 
-noasan textwindows int sys_msync_nt(void *addr, size_t size, int flags) {
-  int x, y, l, r, i;
-  x = ROUNDDOWN((intptr_t)addr, FRAMESIZE) >> 16;
-  y = ROUNDDOWN((intptr_t)addr + size - 1, FRAMESIZE) >> 16;
-  for (i = FindMemoryInterval(&_mmi, x); i < _mmi.i; ++i) {
-    if ((x >= _mmi.p[i].x && x <= _mmi.p[i].y) ||
-        (y >= _mmi.p[i].x && y <= _mmi.p[i].y)) {
-      FlushFileBuffers(_mmi.p[i].h);
+#define ADDR(x) ((char *)((int64_t)((uint64_t)(x) << 32) >> 16))
+
+noasan textwindows int sys_msync_nt(char *addr, size_t size, int flags) {
+  int i, rc = 0;
+  char *a, *b, *x, *y;
+  __mmi_lock();
+  for (i = FindMemoryInterval(&_mmi, (intptr_t)addr >> 16); i < _mmi.i; ++i) {
+    x = ADDR(_mmi.p[i].x);
+    y = x + _mmi.p[i].size;
+    if ((x <= addr && addr < y) || (x < addr + size && addr + size <= y) ||
+        (addr < x && y < addr + size)) {
+      a = MIN(MAX(addr, x), y);
+      b = MAX(MIN(addr + size, y), x);
+      if (!FlushViewOfFile(a, b - a)) {
+        rc = -1;
+        break;
+      }
+      // TODO(jart): FlushFileBuffers too on g_fds handle if MS_SYNC?
     } else {
       break;
     }
   }
-  return 0;
+  __mmi_unlock();
+  return rc;
 }

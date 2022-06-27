@@ -35,6 +35,9 @@ uint32_t crc32c(uint32_t init, const void *data, size_t size) {
   pe = p + size;
   h = init ^ 0xffffffff;
   if (X86_HAVE(SSE4_2)) {
+    while (p < pe && ((intptr_t)p & 7)) {
+      h = h >> 8 ^ kCrc32cTab[(h & 0xff) ^ *p++];
+    }
     for (; p + 8 <= pe; p += 8) {
       asm("crc32q\t%1,%0" : "+r"(h) : "rm"(*(const uint64_t *)p));
     }

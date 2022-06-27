@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -31,11 +33,14 @@
  * @asyncsignalsafe
  */
 int shutdown(int fd, int how) {
+  int rc;
   if (!IsWindows()) {
-    return sys_shutdown(fd, how);
+    rc = sys_shutdown(fd, how);
   } else if (__isfdkind(fd, kFdSocket)) {
-    return sys_shutdown_nt(&g_fds.p[fd], how);
+    rc = sys_shutdown_nt(&g_fds.p[fd], how);
   } else {
-    return ebadf();
+    rc = ebadf();
   }
+  STRACE("shutdown(%d, %d) -> %d% lm", fd, how, rc);
+  return rc;
 }

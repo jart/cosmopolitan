@@ -18,8 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -31,7 +34,21 @@
  * @see libc/sysv/consts.sh
  */
 int getrlimit(int resource, struct rlimit *rlim) {
-  if (resource == 127) return einval();
-  if (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim))) return efault();
-  return sys_getrlimit(resource, rlim);
+  int rc;
+  if (resource == 127) {
+    rc = einval();
+  } else if (!rlim || (IsAsan() && !__asan_is_valid(rlim, sizeof(*rlim)))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_getrlimit(resource, rlim);
+  } else if (resource == RLIMIT_AS) {
+    rlim->rlim_cur = __virtualmax;
+    rlim->rlim_max = __virtualmax;
+    rc = 0;
+  } else {
+    rc = einval();
+  }
+  STRACE("getrlimit(%s, [%s]) → %d% m", DescribeRlimitName(resource),
+         DescribeRlimit(rc, rlim), rc);
+  return rc;
 }

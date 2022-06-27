@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
@@ -512,6 +513,7 @@ int mbedtls_ecp_check_budget( const mbedtls_ecp_group *grp,
  *     SECP384R1  192       IANA, NIST, FRANCE, GERMANY, NSA
  *     X25519     112-128   IANA
  *     X448       224       IANA
+ *     SECP256K1  128       BITCOIN
  *     BP384R1              GERMANY
  *     SECP521R1            FRANCE
  *     GC512A               RUSSIA
@@ -3339,11 +3341,14 @@ int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp,
                              int (*f_rng)(void *, unsigned char *, size_t),
                              void *p_rng )
 {
+    int rc;
     ECP_VALIDATE_RET( grp   );
     ECP_VALIDATE_RET( d     );
     ECP_VALIDATE_RET( Q     );
     ECP_VALIDATE_RET( f_rng );
-    return( mbedtls_ecp_gen_keypair_base( grp, &grp->G, d, Q, f_rng, p_rng ) );
+    rc = mbedtls_ecp_gen_keypair_base( grp, &grp->G, d, Q, f_rng, p_rng );
+    STRACE("%s() → %d", "mbedtls_ecp_gen_keypair", rc);
+    return( rc );
 }
 
 /**

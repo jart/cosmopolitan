@@ -3,6 +3,26 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/**
+ * Configures g_*fmt()
+ *
+ * @param ic
+ * 	0 ==> Infinity or NaN
+ * 	1 ==> infinity or nan
+ * 	2 ==> INFINITY or NAN
+ * 	3 ==> Inf or NaN
+ * 	4 ==> inf or nan
+ * 	5 ==> INF or NAN
+ * @param ic determines if NaNs are rendered as NaN(...)
+ * 	0 ==> no
+ * 	1 ==> yes
+ * 	2 ==> no for default NaN values; yes otherwise
+ * @param ns determines sign of NaN values reported
+ * 	0 ==> distinguish NaN and -NaN
+ * 	1 ==> report both as NaN
+ */
+#define NIK(ic, nb, ns) (ic + 6 * (nb + 3 * ns))
+
 enum {
   /* return values from strtodg */
   STRTOG_Zero = 0,
@@ -91,6 +111,10 @@ int strtopxL(const char *, char **, void *);
 #define strtopx(s, se, x)  strtorx(s, se, 1, x)
 #define strtopxL(s, se, x) strtorxL(s, se, 1, x)
 #endif
+
+float wcstof(const wchar_t *, wchar_t **);
+double wcstod(const wchar_t *, wchar_t **);
+long double wcstold(const wchar_t *, wchar_t **);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

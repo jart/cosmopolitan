@@ -3,13 +3,16 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern const long SIGSTKSZ;
+extern const long MINSIGSTKSZ;
 extern const long SS_DISABLE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define SIGSTKSZ   STACKSIZE
-#define SS_ONSTACK 1
-#define SS_DISABLE SS_DISABLE
+#define SIGSTKSZ    STACKSIZE
+#define MINSIGSTKSZ 32768
+#define SS_ONSTACK  1
+#define SS_DISABLE  SS_DISABLE
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SS_H_ */

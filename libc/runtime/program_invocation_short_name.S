@@ -17,10 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
-//	Supplies basename(argv[0]) The GNU Way.
 	.initbss 400,_init_program_invocation_short_name
+//	Supplies basename(argv[0]) The GNU Way.
+//
+//	If argv[0] isn't supplied, this value will be null.
+//
+//	@see	GetProgramExecutableName()
+//	@see	program_invocation_name
 program_invocation_short_name:
 	.quad	0
 	.endobj	program_invocation_short_name,globl

@@ -1,0 +1,31 @@
+DESCRIPTION
+
+  HTML Tidy is a tool for spotting errors in HTML code. It's also able
+  to reformat source code in a configurable manner. It has outstanding
+  support for HTML5.
+
+PROVENANCE
+
+  https://github.com/htacg/tidy-html5/
+  Commit: d08ddc2860aa95ba8e301343a30837f157977cba
+  Author: Jim Derry <balthisar@gmail.com>
+  Date:   Tue Jan 25 10:17:15 2022 -0500
+
+LICENSE
+
+  W3C License
+  This is a permissive license that only requires notice preservation in
+  sources. https://en.wikipedia.org/wiki/W3C_Software_Notice_and_License
+  Similar to the Apache 2.0 license any local changes must be documented
+
+LOCAL CHANGES
+
+  No changes to tidy program. Only platform normalization.
+
+  - Obtain .tidyrc from /zip/.tidyrc rather than /etc/tidrc
+  - Configure tidyplatform.h
+  - Rename a few .h files to .inc
+  - Normalize header includes for cosmopolitan repo
+  - Delete ugly no-op macros, e.g. TIDY_CALL, TIDY_EXPORT, etc.
+  - Add clang-format off directives
+  - Delete trailing whitespace

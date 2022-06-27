@@ -25,4 +25,3 @@
 logbf:	ezlea	logbl,ax
 	jmp	_f2ld2
 	.endfn	logbf,globl
-	.source	__FILE__

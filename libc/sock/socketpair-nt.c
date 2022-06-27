@@ -16,9 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/ipc.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/internal.h"
@@ -28,10 +33,10 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
-  int64_t hpipe, h1, h2;
-  int reader, writer, oflags;
-  char16_t pipename[64];
   uint32_t mode;
+  char16_t pipename[64];
+  int64_t hpipe, h1, h2;
+  int rc, reader, writer, oflags;
 
   // Supports only AF_UNIX
   if (family != AF_UNIX) {
@@ -42,49 +47,61 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
   if (type & SOCK_CLOEXEC) oflags |= O_CLOEXEC;
   type &= ~SOCK_CLOEXEC;
 
-  mode = kNtPipeWait;
   if (type == SOCK_STREAM) {
-    mode |= kNtPipeReadmodeByte | kNtPipeTypeByte;
+    mode = kNtPipeTypeByte | kNtPipeReadmodeByte;
   } else if ((type == SOCK_DGRAM) || (type == SOCK_SEQPACKET)) {
-    mode |= kNtPipeReadmodeMessage | kNtPipeTypeMessage;
+    mode = kNtPipeTypeMessage | kNtPipeReadmodeMessage;
   } else {
     return eopnotsupp();
   }
 
   CreatePipeName(pipename);
-  if ((reader = __reservefd()) == -1) return -1;
-  if ((writer = __reservefd()) == -1) {
-    __releasefd(reader);
+  __fds_lock();
+  reader = __reservefd_unlocked(-1);
+  writer = __reservefd_unlocked(-1);
+  __fds_unlock();
+  if (reader == -1 || writer == -1) {
+    if (reader != -1) __releasefd(reader);
+    if (writer != -1) __releasefd(writer);
     return -1;
   }
-  if ((hpipe = CreateNamedPipe(pipename, kNtPipeAccessDuplex, mode, 1, 65536,
-                               65536, 0, &kNtIsInheritable)) == -1) {
-    __winerr();
+  if ((hpipe = CreateNamedPipe(
+           pipename, kNtPipeAccessDuplex | kNtFileFlagOverlapped, mode, 1,
+           65536, 65536, 0, &kNtIsInheritable)) == -1) {
     __releasefd(writer);
     __releasefd(reader);
     return -1;
   }
 
-  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead,
-                  0,  // Not shared
-                  &kNtIsInheritable, kNtOpenExisting, 0, 0);
-  if (h1 == -1) {
+  h1 = CreateFile(pipename, kNtGenericWrite | kNtGenericRead, 0,
+                  &kNtIsInheritable, kNtOpenExisting, kNtFileFlagOverlapped, 0);
+
+  __fds_lock();
+
+  if (h1 != -1) {
+
+    g_fds.p[reader].kind = kFdFile;
+    g_fds.p[reader].flags = oflags;
+    g_fds.p[reader].mode = 0140444;
+    g_fds.p[reader].handle = hpipe;
+
+    g_fds.p[writer].kind = kFdFile;
+    g_fds.p[writer].flags = oflags;
+    g_fds.p[writer].mode = 0140222;
+    g_fds.p[writer].handle = h1;
+
+    sv[0] = reader;
+    sv[1] = writer;
+
+    rc = 0;
+  } else {
     CloseHandle(hpipe);
-    __winerr();
-    __releasefd(writer);
-    __releasefd(reader);
-    return -1;
+    __releasefd_unlocked(writer);
+    __releasefd_unlocked(reader);
+    rc = -1;
   }
 
-  g_fds.p[reader].kind = kFdFile;
-  g_fds.p[reader].flags = oflags;
-  g_fds.p[reader].handle = hpipe;
+  __fds_unlock();
 
-  g_fds.p[writer].kind = kFdFile;
-  g_fds.p[writer].flags = oflags;
-  g_fds.p[writer].handle = h1;
-
-  sv[0] = reader;
-  sv[1] = writer;
-  return 0;
+  return rc;
 }

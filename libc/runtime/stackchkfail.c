@@ -16,59 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
-#include "libc/nt/enum/version.h"
-#include "libc/nt/runtime.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/nr.h"
 
-#define STACK_SMASH_MESSAGE "stack smashed\n"
-
-/**
- * Aborts program under enemy fire to avoid being taken alive.
- */
-privileged noasan void __stack_chk_fail(void) {
-  size_t len;
-  const char *msg;
-  int64_t ax, cx, si;
-  if (!IsWindows()) {
-    msg = STACK_SMASH_MESSAGE;
-    len = pushpop(sizeof(STACK_SMASH_MESSAGE) - 1);
-    if (!IsMetal()) {
-      asm volatile("syscall"
-                   : "=a"(ax)
-                   : "0"(__NR_write), "D"(pushpop(STDERR_FILENO)), "S"(msg),
-                     "d"(len)
-                   : "rcx", "r11", "cc", "memory");
-      asm volatile("syscall"
-                   : "=a"(ax)
-                   : "0"(__NR_exit_group), "D"(pushpop(23))
-                   : "rcx", "r11", "cc", "memory");
-    }
-    asm volatile("rep outsb"
-                 : "=S"(si), "=c"(cx)
-                 : "0"(msg), "1"(len), "d"(0x3F8 /* COM1 */)
-                 : "memory");
-    asm("push\t$0\n\t"
-        "push\t$0\n\t"
-        "cli\n\t"
-        "lidt\t(%rsp)");
-    for (;;) asm("ud2");
-  }
-  if (NtGetVersion() < kNtVersionFuture) {
-    do {
-      asm volatile("syscall"
-                   : "=a"(ax), "=c"(cx)
-                   : "0"(NtGetVersion() < kNtVersionWindows8    ? 0x0029
-                         : NtGetVersion() < kNtVersionWindows81 ? 0x002a
-                         : NtGetVersion() < kNtVersionWindows10 ? 0x002b
-                                                                : 0x002c),
-                     "1"(pushpop(-1L)), "d"(42)
-                   : "r11", "cc", "memory");
-    } while (!ax);
-  }
-  for (;;) {
-    TerminateProcess(GetCurrentProcess(), 42);
-  }
+privileged noasan noinstrument void __stack_chk_fail(void) {
+  kprintf("stack smashed\n");
+  __restorewintty();
+  _Exit(207);
 }

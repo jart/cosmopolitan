@@ -39,7 +39,7 @@ TEST(memset, hug) {
   b = gc(malloc(1025 * 2));
   for (i = 0; i < 1025; ++i) {
     for (j = 0; j < 1025 - i; ++j) {
-      c = vigna();
+      c = lemur64();
       rngset(a, i + j, 0, 0);
       memcpy(b, a, i + j);
       ASSERT_EQ(a + i, golden(a + i, c, j));

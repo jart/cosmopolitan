@@ -46,6 +46,7 @@ asm(".include \"third_party/lz4cli/COPYING\"");
 #include "third_party/lz4cli/lz4hc.h"    /* LZ4HC_CLEVEL_MAX */
 #include "libc/runtime/runtime.h"
 #include "libc/log/log.h"
+#include "libc/stdio/stdio.h"
 #include "third_party/lz4cli/lz4.h"      /* LZ4_VERSION_STRING */
 
 

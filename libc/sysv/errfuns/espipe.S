@@ -3,9 +3,6 @@
 
 espipe:	.leafprologue
 	.profilable
-	mov	ESPIPE(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ESPIPE(%rip),%ecx
+	jmp	__errfun
 	.endfn	espipe,globl,hidden

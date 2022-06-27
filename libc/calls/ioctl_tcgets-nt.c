@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/calls/ttydefaults.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
@@ -31,19 +32,51 @@ textwindows int ioctl_tcgets_nt(int ignored, struct termios *tio) {
   int64_t in, out;
   bool32 inok, outok;
   uint32_t inmode, outmode;
-  inok = GetConsoleMode((in = g_fds.p[0].handle), &inmode);
-  outok = GetConsoleMode((out = g_fds.p[1].handle), &outmode);
+  inok = GetConsoleMode((in = __getfdhandleactual(0)), &inmode);
+  outok = GetConsoleMode((out = __getfdhandleactual(1)), &outmode);
   if (inok | outok) {
     bzero(tio, sizeof(*tio));
+
+    tio->c_cflag |= CS8;
+
+    tio->c_cc[VINTR] = CTRL('C');
+    tio->c_cc[VQUIT] = CTRL('\\');
+    tio->c_cc[VERASE] = CTRL('?');
+    tio->c_cc[VKILL] = CTRL('U');
+    tio->c_cc[VEOF] = CTRL('D');
+    tio->c_cc[VMIN] = CTRL('A');
+    tio->c_cc[VSTART] = CTRL('Q');
+    tio->c_cc[VSTOP] = CTRL('S');
+    tio->c_cc[VSUSP] = CTRL('Z');
+    tio->c_cc[VREPRINT] = CTRL('R');
+    tio->c_cc[VDISCARD] = CTRL('O');
+    tio->c_cc[VWERASE] = CTRL('W');
+    tio->c_cc[VLNEXT] = CTRL('V');
+
     if (inok) {
-      if (inmode & kNtEnableLineInput) tio->c_lflag |= ICANON;
-      if (inmode & kNtEnableEchoInput) tio->c_lflag |= ECHO;
-      if (inmode & kNtEnableProcessedInput) tio->c_lflag |= IEXTEN | ISIG;
+      if (inmode & kNtEnableLineInput) {
+        tio->c_lflag |= ICANON;
+      }
+      if (inmode & kNtEnableEchoInput) {
+        tio->c_lflag |= ECHO;
+      }
+      if (inmode & kNtEnableProcessedInput) {
+        tio->c_lflag |= IEXTEN | ISIG;
+        if (tio->c_lflag | ECHO) {
+          tio->c_lflag |= ECHOE;
+        }
+      }
     }
+
     if (outok) {
-      if (outmode & kNtEnableProcessedOutput) tio->c_oflag |= OPOST;
-      if (!(outmode & kNtDisableNewlineAutoReturn)) tio->c_oflag |= ONLCR;
+      if (outmode & kNtEnableProcessedOutput) {
+        tio->c_oflag |= OPOST;
+      }
+      if (!(outmode & kNtDisableNewlineAutoReturn)) {
+        tio->c_oflag |= OPOST | ONLCR;
+      }
     }
+
     return 0;
   } else {
     return enotty();

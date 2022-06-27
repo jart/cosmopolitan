@@ -7,7 +7,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sigbits.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
@@ -249,6 +248,7 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
     PySys_SetObject("__stderr__", pstderr);
     Py_DECREF(pstderr);
 
+    _PyImportLookupTables_Init();
     _PyImport_Init();
 
     _PyImportHooks_Init();

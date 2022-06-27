@@ -42,6 +42,7 @@ extern "C" {
 #include "libc/time/struct/utimbuf.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/calls/weirdtypes.h"
 
 

@@ -41,5 +41,9 @@ TEST(strclen, testAegeanNumberSupplementaryPlane) {
 }
 
 TEST(strlen16, testCoolKidNulTerminator) {
-  EXPECT_EQ(2, strlen16((const char16_t *)"\x00\xd8\x00\xdc\x00"));
+  union {
+    uint8_t s8[6];
+    char16_t s16[3];
+  } u = {.s8 = {0x00, 0xd8, 0x00, 0xdc, 0x00, 0x00}};
+  EXPECT_EQ(2, strlen16(u.s16));
 }

@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
@@ -46,6 +47,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   unsigned i;
   struct CxaAtexitBlock *b, *b2;
   _Static_assert(ATEXIT_MAX == CHAR_BIT * sizeof(b->mask), "");
+  __cxa_lock();
   b = __cxa_blocks.p;
   if (!b) b = __cxa_blocks.p = &__cxa_blocks.root;
   if (!~b->mask) {
@@ -54,6 +56,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
       b2->next = b;
       __cxa_blocks.p = b = b2;
     } else {
+      __cxa_unlock();
       return enomem();
     }
   }
@@ -63,5 +66,6 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
   b->p[i].fp = fp;
   b->p[i].arg = arg;
   b->p[i].pred = pred;
+  __cxa_unlock();
   return 0;
 }

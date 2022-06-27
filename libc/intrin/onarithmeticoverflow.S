@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .privileged
-.source	__FILE__
 
 //	Arithmetic overflow handler.
 //	@see	-ftrapv
@@ -26,5 +25,6 @@ __on_arithmetic_overflow:
 	push	%rbp
 	mov	%rsp,%rbp
 	int3
-	call	abort
+0:	ud2
+	jmp	0b
 	.endfn	__on_arithmetic_overflow,weak

@@ -4,9 +4,6 @@
 emultihop:
 	.leafprologue
 	.profilable
-	mov	EMULTIHOP(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EMULTIHOP(%rip),%ecx
+	jmp	__errfun
 	.endfn	emultihop,globl,hidden

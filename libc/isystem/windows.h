@@ -250,6 +250,12 @@
 #define HUMPD         int64_t
 #define HWND          int64_t
 
+#define PDH_FUNCTION LONG
+
+#define PDH_HCOUNTER HANDLE
+#define PDH_HQUERY   HANDLE
+#define PDH_HLOG     HANDLE
+
 #define ADDRESS_FAMILY                uint16_t
 #define TUNNEL_TYPE                   uint32_t
 #define NET_IF_CONNECTION_TYPE        uint32_t
@@ -440,6 +446,9 @@
 #define _FILE_FULL_EA_INFORMATION        NtFileFullEaInformation
 #define FILE_FULL_EA_INFORMATION         struct NtFileFullEaInformation
 #define PFILE_FULL_EA_INFORMATION        struct NtFileFullEaInformation*
+#define _PDH_FMT_COUNTERVALUE            NtPdhFmtCountervalue
+#define PDH_FMT_COUNTERVALUE             struct NtPdhFmtCountervalue
+#define PPDH_FMT_COUNTERVALUE            struct NtPdhFmtCountervalue*
 
 #define _LUID NtLuid
 #define LUID  struct NtLuid

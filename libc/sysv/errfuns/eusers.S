@@ -3,9 +3,6 @@
 
 eusers:	.leafprologue
 	.profilable
-	mov	EUSERS(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EUSERS(%rip),%ecx
+	jmp	__errfun
 	.endfn	eusers,globl,hidden

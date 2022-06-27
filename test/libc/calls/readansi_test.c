@@ -52,6 +52,7 @@ TEST(readansi, test) {
   EXPECT_STREQ("\xc2\x9bM", b);
   EXPECT_EQ(0, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("", b);
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
@@ -73,6 +74,7 @@ TEST(readansi, testOperatingSystemCommand) {
   EXPECT_STREQ(s, b);
   EXPECT_EQ(0, readansi(fds[0], b, sizeof(b)));
   EXPECT_STREQ("", b);
+  close(fds[0]);
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));

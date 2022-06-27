@@ -37,7 +37,7 @@ o/$(MODE)/tool/hash/%.com.dbg:			\
 		o/$(MODE)/tool/hash/%.o		\
 		o/$(MODE)/tool/hash/hash.pkg	\
 		$(CRT)				\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TOOL_HASH_OBJS):				\

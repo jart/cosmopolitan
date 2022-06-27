@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/map.h"

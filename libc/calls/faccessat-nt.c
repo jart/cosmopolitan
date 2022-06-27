@@ -17,12 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_faccessat_nt(int dirfd, const char *path, int mode, uint32_t flags) {
+textwindows int sys_faccessat_nt(int dirfd, const char *path, int mode,
+                                 uint32_t flags) {
   char16_t path16[PATH_MAX];
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  return ntaccesscheck(path16, mode);
+  return __fix_enotdir(ntaccesscheck(path16, mode), path16);
 }

@@ -35,13 +35,16 @@ TEST_LIBC_STDIO_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_TINYMATH					\
 	LIBC_TESTLIB					\
 	LIBC_TIME					\
 	LIBC_LOG					\
 	LIBC_UNICODE					\
 	LIBC_X						\
 	LIBC_ZIPOS					\
-	THIRD_PARTY_ZLIB
+	THIRD_PARTY_GDTOA				\
+	THIRD_PARTY_ZLIB				\
+	THIRD_PARTY_ZLIB_GZ
 
 TEST_LIBC_STDIO_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_STDIO_DIRECTDEPS),$($(x))))
@@ -56,7 +59,7 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:			\
 		o/$(MODE)/test/libc/stdio/stdio.pkg	\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_STDIO_OBJS):				\

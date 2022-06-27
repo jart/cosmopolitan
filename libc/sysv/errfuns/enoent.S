@@ -3,9 +3,6 @@
 
 enoent:	.leafprologue
 	.profilable
-	mov	ENOENT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOENT(%rip),%ecx
+	jmp	__errfun
 	.endfn	enoent,globl,hidden

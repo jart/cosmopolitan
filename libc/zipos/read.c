@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/safemacros.internal.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/str/str.h"
 #include "libc/zip.h"
@@ -43,12 +42,8 @@ ssize_t __zipos_read(struct ZiposHandle *h, const struct iovec *iov,
   x = y = opt_offset != -1 ? opt_offset : h->pos;
   for (i = 0; i < iovlen && y < h->size; ++i, y += b) {
     b = min(iov[i].iov_len, h->size - y);
-    memcpy(iov[i].iov_base, h->mem + y, b);
+    if (b) memcpy(iov[i].iov_base, h->mem + y, b);
   }
   if (opt_offset == -1) h->pos = y;
-  ZTRACE("__zipos_read(%.*s, cap=%d, off=%d) -> %d",
-         ZIP_CFILE_NAMESIZE(__zipos_get()->map + h->cfile),
-         ZIP_CFILE_NAME(__zipos_get()->map + h->cfile), GetIovSize(iov, iovlen),
-         x, y - x);
   return y - x;
 }

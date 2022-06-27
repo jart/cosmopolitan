@@ -85,7 +85,7 @@ PyDoc_STRVAR(Struct_unpack_from__doc__,
 "See help(struct) for more on format strings.");
 
 #define STRUCT_UNPACK_FROM_METHODDEF    \
-    {"unpack_from", (PyCFunction)Struct_unpack_from, METH_FASTCALL, Struct_unpack_from__doc__},
+    {"unpack_from", (PyCFunction)Struct_unpack_from, METH_FASTCALL|METH_KEYWORDS, Struct_unpack_from__doc__},
 
 static PyObject *
 Struct_unpack_from_impl(PyStructObject *self, Py_buffer *buffer,
@@ -173,7 +173,7 @@ static PyObject *
 unpack_impl(PyObject *module, PyObject *format, PyObject *inputstr);
 
 static PyObject *
-unpack(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+unpack(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *format;
@@ -182,10 +182,6 @@ unpack(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
     if (!_PyArg_UnpackStack(args, nargs, "unpack",
         2, 2,
         &format, &inputstr)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("unpack", kwnames)) {
         goto exit;
     }
     return_value = unpack_impl(module, format, inputstr);
@@ -205,7 +201,7 @@ PyDoc_STRVAR(unpack_from__doc__,
 "See help(struct) for more on format strings.");
 
 #define UNPACK_FROM_METHODDEF    \
-    {"unpack_from", (PyCFunction)unpack_from, METH_FASTCALL, unpack_from__doc__},
+    {"unpack_from", (PyCFunction)unpack_from, METH_FASTCALL|METH_KEYWORDS, unpack_from__doc__},
 
 static PyObject *
 unpack_from_impl(PyObject *module, PyObject *format, Py_buffer *buffer,
@@ -254,7 +250,7 @@ static PyObject *
 iter_unpack_impl(PyObject *module, PyObject *format, PyObject *buffer);
 
 static PyObject *
-iter_unpack(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+iter_unpack(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     PyObject *format;
@@ -265,13 +261,9 @@ iter_unpack(PyObject *module, PyObject **args, Py_ssize_t nargs, PyObject *kwnam
         &format, &buffer)) {
         goto exit;
     }
-
-    if (!_PyArg_NoStackKeywords("iter_unpack", kwnames)) {
-        goto exit;
-    }
     return_value = iter_unpack_impl(module, format, buffer);
 
 exit:
     return return_value;
 }
-/*[clinic end generated code: output=db8152ad222fa3d0 input=a9049054013a1b77]*/
+/*[clinic end generated code: output=c891fcba70dba650 input=a9049054013a1b77]*/

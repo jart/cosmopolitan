@@ -43,4 +43,3 @@ kBase36:.zero	256
 	.loop	0b
 	add	$255-'Z',%rdi
 	.init.end 300,_init_kBase36
-	.source	__FILE__

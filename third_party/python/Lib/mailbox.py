@@ -2121,8 +2121,9 @@ def _create_temporary(path):
 def _sync_flush(f):
     """Ensure changes to file f are physically on disk."""
     f.flush()
-    if hasattr(os, 'fsync'):
-        os.fsync(f.fileno())
+    # TODO(jart): Why does this need fsync() lool?
+    #if hasattr(os, 'fsync'):
+    #    os.fsync(f.fileno())
 
 def _sync_close(f):
     """Close file f, ensuring all changes are physically on disk."""

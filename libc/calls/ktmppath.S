@@ -43,4 +43,3 @@ kTmpPath:
 	add	$kTmpPathMax,%rdi
 #endif
 	.init.end 300,_init_kTmpPath
-	.source	__FILE__

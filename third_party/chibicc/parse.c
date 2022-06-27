@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/ffs.h"
 #include "libc/testlib/testlib.h"
@@ -352,7 +353,10 @@ static Obj *new_string_literal(char *p, Type *ty) {
 }
 
 static char *get_ident(Token *tok) {
-  if (tok->kind != TK_IDENT) error_tok(tok, "expected an identifier");
+  if (tok->kind != TK_IDENT) {
+    __die();
+    error_tok(tok, "expected an identifier");
+  }
   return strndup(tok->loc, tok->len);
 }
 
@@ -555,7 +559,8 @@ static Token *thing_attributes(Token *tok, void *arg) {
       consume_attribute(&tok, tok, "warn_unused_result") ||
       consume_attribute(&tok, tok, "flatten") ||
       consume_attribute(&tok, tok, "leaf") ||
-      consume_attribute(&tok, tok, "nothrow") ||
+      consume_attribute(&tok, tok, "no_reorder") ||
+      consume_attribute(&tok, tok, "dontthrow") ||
       consume_attribute(&tok, tok, "optnone") ||
       consume_attribute(&tok, tok, "returns_twice") ||
       consume_attribute(&tok, tok, "nodebug") ||
@@ -976,11 +981,12 @@ static Type *type_suffix(Token **rest, Token *tok, Type *ty) {
   return ty;
 }
 
-// pointers = ("*" ("const" | "volatile" | "restrict")*)*
+// pointers = ("*" ("const" | "volatile" | "restrict" | attribute)*)*
 static Type *pointers(Token **rest, Token *tok, Type *ty) {
   while (CONSUME(&tok, tok, "*")) {
     ty = pointer_to(ty);
     for (;;) {
+      tok = attribute_list(tok, ty, type_attributes);
       if (EQUAL(tok, "const")) {
         ty->is_const = true;
         tok = tok->next;
@@ -1087,6 +1093,10 @@ static Type *enum_specifier(Token **rest, Token *tok) {
   int val = 0;
   while (!consume_end(rest, tok)) {
     if (i++ > 0) tok = skip(tok, ',');
+    if (tok->kind == TK_JAVADOWN) {
+      current_javadown = tok;
+      tok = tok->next;
+    }
     char *name = get_ident(tok);
     tok = tok->next;
     if (EQUAL(tok, "=")) val = const_expr(&tok, tok->next);
@@ -1281,6 +1291,10 @@ static void array_designator(Token **rest, Token *tok, Type *ty, int *begin,
 static Member *struct_designator(Token **rest, Token *tok, Type *ty) {
   Token *start = tok;
   tok = skip(tok, '.');
+  if (tok->kind == TK_JAVADOWN) {
+    current_javadown = tok;
+    tok = tok->next;
+  }
   if (tok->kind != TK_IDENT) error_tok(tok, "expected a field designator");
   for (Member *mem = ty->members; mem; mem = mem->next) {
     // Anonymous struct member
@@ -2774,6 +2788,10 @@ static void struct_members(Token **rest, Token *tok, Type *ty) {
     // Regular struct members
     while (!CONSUME(&tok, tok, ";")) {
       if (!first) tok = skip(tok, ',');
+      if (tok->kind == TK_JAVADOWN) {
+        current_javadown = tok;
+        tok = tok->next;
+      }
       first = false;
       Member *mem = calloc(1, sizeof(Member));
       mem->ty = declarator(&tok, tok, basety);
@@ -2832,6 +2850,10 @@ static Type *struct_union_decl(Token **rest, Token *tok) {
   ty->name = tag;
   tok = skip(tok, '{');
   // Construct a struct object.
+  if (tok->kind == TK_JAVADOWN) {
+    current_javadown = tok;
+    tok = tok->next;
+  }
   struct_members(&tok, tok, ty);
   *rest = attribute_list(tok, ty, type_attributes);
   if (tag) {
@@ -3099,6 +3121,33 @@ static Node *generic_selection(Token **rest, Token *tok) {
   return ret;
 }
 
+static Node *ParseAtomic2(NodeKind kind, Token *tok, Token **rest) {
+  Node *node = new_node(kind, tok);
+  tok = skip(tok->next, '(');
+  node->lhs = assign(&tok, tok);
+  add_type(node->lhs);
+  node->ty = node->lhs->ty->base;
+  tok = skip(tok, ',');
+  node->memorder = const_expr(&tok, tok);
+  *rest = skip(tok, ')');
+  return node;
+}
+
+static Node *ParseAtomic3(NodeKind kind, Token *tok, Token **rest) {
+  Node *node = new_node(kind, tok);
+  tok = skip(tok->next, '(');
+  node->lhs = assign(&tok, tok);
+  add_type(node->lhs);
+  node->ty = node->lhs->ty->base;
+  tok = skip(tok, ',');
+  node->rhs = assign(&tok, tok);
+  add_type(node->rhs);
+  tok = skip(tok, ',');
+  node->memorder = const_expr(&tok, tok);
+  *rest = skip(tok, ')');
+  return node;
+}
+
 // primary = "(" "{" stmt+ "}" ")"
 //         | "(" expr ")"
 //         | "sizeof" "(" type-name ")"
@@ -3206,24 +3255,102 @@ static Node *primary(Token **rest, Token *tok) {
       if (is_flonum(ty)) return new_int(1, start);
       return new_int(2, start);
     }
-    if (kw == KW___BUILTIN_COMPARE_AND_SWAP) {
+    if (kw == KW___ATOMIC_COMPARE_EXCHANGE_N) {
       Node *node = new_node(ND_CAS, tok);
       tok = skip(tok->next, '(');
       node->cas_addr = assign(&tok, tok);
+      add_type(node->cas_addr);
       tok = skip(tok, ',');
       node->cas_old = assign(&tok, tok);
+      add_type(node->cas_old);
       tok = skip(tok, ',');
       node->cas_new = assign(&tok, tok);
+      add_type(node->cas_new);
+      tok = skip(tok, ',');
+      /* weak = */ const_expr(&tok, tok);
+      tok = skip(tok, ',');
+      node->memorder = const_expr(&tok, tok);
+      tok = skip(tok, ',');
+      /* memorder_failure = */ const_expr(&tok, tok);
       *rest = skip(tok, ')');
       node->ty = node->cas_addr->ty->base;
       return node;
     }
-    if (kw == KW___BUILTIN_ATOMIC_EXCHANGE) {
-      Node *node = new_node(ND_EXCH, tok);
+    if (kw == KW___ATOMIC_EXCHANGE_N) {
+      return ParseAtomic3(ND_EXCH_N, tok, rest);
+    }
+    if (kw == KW___ATOMIC_LOAD) {
+      return ParseAtomic3(ND_LOAD, tok, rest);
+    }
+    if (kw == KW___ATOMIC_STORE) {
+      return ParseAtomic3(ND_STORE, tok, rest);
+    }
+    if (kw == KW___ATOMIC_LOAD_N) {
+      return ParseAtomic2(ND_LOAD_N, tok, rest);
+    }
+    if (kw == KW___ATOMIC_STORE_N) {
+      return ParseAtomic3(ND_STORE_N, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_ADD) {
+      return ParseAtomic3(ND_FETCHADD, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_SUB) {
+      return ParseAtomic3(ND_FETCHSUB, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_XOR) {
+      return ParseAtomic3(ND_FETCHXOR, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_AND) {
+      return ParseAtomic3(ND_FETCHAND, tok, rest);
+    }
+    if (kw == KW___ATOMIC_FETCH_OR) {
+      return ParseAtomic3(ND_FETCHOR, tok, rest);
+    }
+    if (kw == KW___ATOMIC_TEST_AND_SET) {
+      return ParseAtomic2(ND_TESTANDSETA, tok, rest);
+    }
+    if (kw == KW___ATOMIC_CLEAR) {
+      return ParseAtomic2(ND_CLEAR, tok, rest);
+    }
+    if (kw == KW___SYNC_LOCK_TEST_AND_SET) {
+      // TODO(jart): delete me
+      Node *node = new_node(ND_TESTANDSET, tok);
       tok = skip(tok->next, '(');
       node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
       tok = skip(tok, ',');
       node->rhs = assign(&tok, tok);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___SYNC_LOCK_RELEASE) {
+      // TODO(jart): delete me
+      Node *node = new_node(ND_RELEASE, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___BUILTIN_IA32_MOVNTDQ) {
+      Node *node = new_node(ND_MOVNTDQ, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
+      node->ty = node->lhs->ty->base;
+      tok = skip(tok, ',');
+      node->rhs = assign(&tok, tok);
+      add_type(node->rhs);
+      *rest = skip(tok, ')');
+      return node;
+    }
+    if (kw == KW___BUILTIN_IA32_PMOVMSKB128) {
+      Node *node = new_node(ND_PMOVMSKB, tok);
+      tok = skip(tok->next, '(');
+      node->lhs = assign(&tok, tok);
+      add_type(node->lhs);
       node->ty = node->lhs->ty->base;
       *rest = skip(tok, ')');
       return node;
@@ -3428,7 +3555,9 @@ static Node *primary(Token **rest, Token *tok) {
 static Token *parse_typedef(Token *tok, Type *basety) {
   bool first = true;
   while (!CONSUME(&tok, tok, ";")) {
-    if (!first) tok = skip(tok, ',');
+    if (!first) {
+      tok = skip(tok, ',');
+    }
     first = false;
     Type *ty = declarator(&tok, tok, basety);
     if (!ty->name) error_tok(ty->name_pos, "typedef name omitted");
@@ -3566,11 +3695,18 @@ static Token *function(Token *tok, Type *basety, VarAttr *attr) {
 
 static Token *global_variable(Token *tok, Type *basety, VarAttr *attr) {
   bool first = true;
+  bool isjavadown = tok->kind == TK_JAVADOWN;
   while (!CONSUME(&tok, tok, ";")) {
     if (!first) tok = skip(tok, ',');
     first = false;
     Type *ty = declarator(&tok, tok, basety);
-    if (!ty->name) error_tok(ty->name_pos, "variable name omitted");
+    if (!ty->name) {
+      if (isjavadown) {
+        return tok;
+      } else {
+        error_tok(ty->name_pos, "variable name omitted");
+      }
+    }
     Obj *var = new_gvar(get_ident(ty->name), ty);
     if (!var->tok) var->tok = ty->name;
     var->javadown = current_javadown;
@@ -3690,6 +3826,7 @@ void declare_builtin_functions(void) {
   Type *pchar = pointer_to(ty_char);
   builtin_alloca = declare1("alloca", pointer_to(ty_void), ty_int);
   declare0("trap", ty_int);
+  declare0("ia32_pause", ty_void);
   declare0("unreachable", ty_int);
   declare1("ctz", ty_int, ty_int);
   declare1("ctzl", ty_int, ty_long);

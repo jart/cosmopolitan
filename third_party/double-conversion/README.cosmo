@@ -1,0 +1,13 @@
+DESCRIPTION
+
+    Efficient binary-decimal and decimal-binary conversion routines for IEEE doubles. 
+
+ORIGIN
+
+    double-conversion 3.2.0
+    https://github.com/google/double-conversion/archive/refs/tags/v3.2.0.zip
+    9e0c13564e17362aad8a32c1344a2214f71952c6
+
+LICENSE
+
+    BSD 3-Clause License

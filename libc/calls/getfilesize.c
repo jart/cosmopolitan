@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
 #include "libc/limits.h"
@@ -28,7 +27,7 @@
  * Returns the byte length of file by path.
  *
  * @return number of bytes, or -1ul w/ errno
- * @see getfiledescriptorsize
+ * @see getfiledescriptorsize()
  */
 size_t GetFileSize(const char *pathname) {
   struct stat st;

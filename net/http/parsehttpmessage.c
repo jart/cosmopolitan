@@ -36,7 +36,7 @@
  */
 void InitHttpMessage(struct HttpMessage *r, int type) {
   assert(type == kHttpRequest || type == kHttpResponse);
-  memset(r, 0, sizeof(*r));
+  bzero(r, sizeof(*r));
   r->type = type;
 }
 

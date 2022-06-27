@@ -16,10 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/spinlock.h"
+#include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/startf.h"
 #include "libc/nt/startupinfo.h"
@@ -27,40 +33,52 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int ioctl_tiocgwinsz_nt(int fd, struct winsize *ws) {
-  int i, fds[3];
+textwindows int ioctl_tiocgwinsz_nt(struct Fd *fd, struct winsize *ws) {
+  int i, e, rc;
   uint32_t mode;
+  struct Fd *fds[3];
   struct NtStartupInfo startinfo;
   struct NtConsoleScreenBufferInfoEx sbinfo;
-  if (!ws) return efault();
-  fds[0] = fd, fds[1] = 1, fds[2] = 0;
-  GetStartupInfo(&startinfo);
-  for (i = 0; i < ARRAYLEN(fds); ++i) {
-    if (__isfdkind(fds[i], kFdFile) || __isfdkind(fds[i], kFdConsole)) {
-      if (GetConsoleMode(g_fds.p[fds[i]].handle, &mode)) {
-        bzero(&sbinfo, sizeof(sbinfo));
-        sbinfo.cbSize = sizeof(sbinfo);
-        if (GetConsoleScreenBufferInfoEx(g_fds.p[fds[i]].handle, &sbinfo)) {
-          ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
-          ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
-          ws->ws_xpixel = 0;
-          ws->ws_ypixel = 0;
-          return 0;
-        } else if (startinfo.dwFlags & kNtStartfUsecountchars) {
-          ws->ws_col = startinfo.dwXCountChars;
-          ws->ws_row = startinfo.dwYCountChars;
-          ws->ws_xpixel = 0;
-          ws->ws_ypixel = 0;
-          return 0;
+  rc = -1;
+  e = errno;
+  if (ws) {
+    __fds_lock();
+    fds[0] = fd, fds[1] = g_fds.p + 1, fds[2] = g_fds.p + 0;
+    GetStartupInfo(&startinfo);
+    for (i = 0; i < ARRAYLEN(fds); ++i) {
+      if (fds[i]->kind == kFdFile || fds[i]->kind == kFdConsole) {
+        if (GetConsoleMode(__getfdhandleactual(i), &mode)) {
+          bzero(&sbinfo, sizeof(sbinfo));
+          sbinfo.cbSize = sizeof(sbinfo);
+          if (GetConsoleScreenBufferInfoEx(__getfdhandleactual(i), &sbinfo)) {
+            ws->ws_col = sbinfo.srWindow.Right - sbinfo.srWindow.Left + 1;
+            ws->ws_row = sbinfo.srWindow.Bottom - sbinfo.srWindow.Top + 1;
+            ws->ws_xpixel = 0;
+            ws->ws_ypixel = 0;
+            errno = e;
+            rc = 0;
+            break;
+          } else if (startinfo.dwFlags & kNtStartfUsecountchars) {
+            ws->ws_col = startinfo.dwXCountChars;
+            ws->ws_row = startinfo.dwYCountChars;
+            ws->ws_xpixel = 0;
+            ws->ws_ypixel = 0;
+            errno = e;
+            rc = 0;
+            break;
+          } else {
+            __winerr();
+          }
         } else {
-          __winerr();
+          enotty();
         }
       } else {
-        enotty();
+        ebadf();
       }
-    } else {
-      ebadf();
     }
+    __fds_unlock();
+  } else {
+    efault();
   }
-  return -1;
+  return rc;
 }

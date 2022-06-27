@@ -41,6 +41,7 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_TIME					\
 	LIBC_TINYMATH					\
 	LIBC_UNICODE					\
@@ -63,14 +64,14 @@ o/$(MODE)/libc/log/backtrace3.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
+o/$(MODE)/libc/log/checkfail.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-mgeneral-regs-only
+
 o/$(MODE)/libc/log/attachdebugger.o			\
-o/$(MODE)/libc/log/backtrace2.o				\
-o/$(MODE)/libc/log/backtrace3.o				\
 o/$(MODE)/libc/log/checkaligned.o			\
 o/$(MODE)/libc/log/checkfail.o				\
 o/$(MODE)/libc/log/checkfail_ndebug.o			\
-o/$(MODE)/libc/log/getsymboltable.o			\
-o/$(MODE)/libc/log/cancolor.o				\
 o/$(MODE)/libc/log/restoretty.o				\
 o/$(MODE)/libc/log/oncrash.o				\
 o/$(MODE)/libc/log/onkill.o				\

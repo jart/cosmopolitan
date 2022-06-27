@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sigbits.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
@@ -51,7 +50,7 @@ textexit static void __onkill(int sig, struct siginfo *si,
 
 /**
  * Installs default handlers for friendly kill signals.
- * @see showcrashreports()
+ * @see ShowCrashReports()
  */
 void callexitontermination(sigset_t *opt_out_exitsigs) {
   struct sigaction sa;

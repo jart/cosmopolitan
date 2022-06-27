@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.source	__FILE__
 
 //	Encodes Thompson-Pike varint.
 //
@@ -47,6 +46,7 @@ tpenc:	.leafprologue
 
 	.rodata
 	.align	4
+	.underrun
 kTpenc:	.rept	4			# MSB≤10 (0x7FF)
 	.byte	1,0b11000000		# len,mark
 	.endr
@@ -64,3 +64,4 @@ kTpenc:	.rept	4			# MSB≤10 (0x7FF)
 	.endr
 	.zero	2
 	.endobj	kTpenc
+	.overrun

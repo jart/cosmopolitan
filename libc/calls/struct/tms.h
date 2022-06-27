@@ -9,5 +9,7 @@ struct tms {
   int64_t tms_cstime; /* children kernelspace time */
 };
 
+long times(struct tms *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TMS_H_ */

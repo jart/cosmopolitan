@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 .privileged
-.source	__FILE__
 
 //	Linux Signal Trampoline (HOLY CODE)
 __restore_bt:

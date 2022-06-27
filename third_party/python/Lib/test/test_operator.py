@@ -496,6 +496,7 @@ class OperatorTestCase:
             if dunder:
                 self.assertIs(dunder, orig)
 
+@unittest.skipIf(c_operator, "skip pure-python test if C impl is present")
 class PyOperatorTestCase(OperatorTestCase, unittest.TestCase):
     module = py_operator
 

@@ -138,7 +138,6 @@ crc32_pclmul:
 	shr	$32,%rax
 	.leafepilogue
 	.endfn	crc32_pclmul,globl,hidden
-	.source	__FILE__
 
 //	Definitions of the bit-reflected domain constants k1,k2,k3, etc.
 //	and the CRC32+Barrett polynomials given at the end of the paper.

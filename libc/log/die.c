@@ -16,12 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -31,15 +35,23 @@
  */
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
-  static bool once;
-  if (cmpxchg(&once, false, true)) {
-    __restore_tty(1);
+  int me, owner;
+  static int sync;
+  owner = 0;
+  me = sys_gettid();
+  if (_lockcmpxchgp(&sync, &owner, me)) {
+    __restore_tty();
     if (IsDebuggerPresent(false)) {
       DebugBreak();
     }
-    ShowBacktrace(2, NULL);
-    quick_exit(77);
+    ShowBacktrace(2, __builtin_frame_address(0));
+    __restorewintty();
+    _Exit(77);
+  } else if (owner == me) {
+    kprintf("die failed while dying\n");
+    __restorewintty();
+    _Exit(78);
+  } else {
+    _Exit1(79);
   }
-  __write_str("PANIC: __DIE() DIED\r\n");
-  _Exit(78);
 }

@@ -8,7 +8,7 @@ COSMOPOLITAN_C_START_
  * @see libc/sysv/consts.sh for numbers
  */
 
-extern errno_t errno;
+#define errno (*__errno_location())
 
 /**
  * System call unavailable.
@@ -685,6 +685,10 @@ extern const long EXFULL;
 #define EWOULDBLOCK     EAGAIN
 #define EXDEV           EXDEV
 #define EXFULL          EXFULL
+
+extern errno_t __errno;
+
+errno_t *__errno_location(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

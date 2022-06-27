@@ -22,6 +22,7 @@
  * Writes wide character to stream.
  *
  * @return wc if written or -1 w/ errno
+ * @threadsafe
  */
 wint_t(putwc)(wchar_t wc, FILE *f) {
   return fputwc(wc, f);

@@ -3,9 +3,6 @@
 
 echild:	.leafprologue
 	.profilable
-	mov	ECHILD(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ECHILD(%rip),%ecx
+	jmp	__errfun
 	.endfn	echild,globl,hidden

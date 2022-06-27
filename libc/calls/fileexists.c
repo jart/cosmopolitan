@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -49,8 +51,11 @@ bool fileexists(const char *path) {
   struct ZiposUri zipname;
   uint16_t path16[PATH_MAX];
   e = errno;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
-  if (weaken(__zipos_open) && weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  if (IsAsan() && !__asan_is_valid(path, 1)) {
+    efault();
+    res = false;
+  } else if (weaken(__zipos_open) &&
+             weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       res = true;
     } else {
@@ -69,8 +74,7 @@ bool fileexists(const char *path) {
   } else {
     res = false;
   }
-  SYSDEBUG("fileexists(%s) -> %s %s", path, res ? "true" : "false",
-           res ? "" : strerror(errno));
+  STRACE("%s(%#s) → %hhhd% m", "fileexists", path, res);
   if (!res && (errno == ENOENT || errno == ENOTDIR)) {
     errno = e;
   }

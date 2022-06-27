@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/cxaatexit.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/bsf.h"
-#include "libc/runtime/cxaatexit.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
@@ -37,6 +37,7 @@ void __cxa_printexits(FILE *f, void *pred) {
   fprintf(f, "                       GLOBAL DESTRUCTORS                   \n");
   fprintf(f, "      callback                arg                pred       \n");
   fprintf(f, "---------------------- ------------------ ------------------\n");
+  __cxa_lock();
   if ((b = __cxa_blocks.p)) {
     do {
       mask = b->mask;
@@ -56,5 +57,6 @@ void __cxa_printexits(FILE *f, void *pred) {
       }
     } while ((b = b->next));
   }
+  __cxa_unlock();
   fprintf(f, "\n");
 }

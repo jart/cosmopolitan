@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 #include "libc/notice.inc"
-.source	__FILE__
 
 //	Allocates n * itemsize bytes, initialized to zero.
 //
@@ -27,5 +26,6 @@
 //	@return	rax is memory address, or NULL w/ errno
 //	@note	overreliance on memalign is a sure way to fragment space
 //	@see	dlcalloc()
+//	@threadsafe
 calloc:	jmp	*hook_calloc(%rip)
 	.endfn	calloc,globl

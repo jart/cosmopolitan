@@ -24,7 +24,16 @@
  * @param line is NULL-propagating
  * @see getline
  */
-char16_t *chomp16(char16_t *line) {
-  if (line) line[strcspn16(line, u"\r\n")] = '\0';
+char16_t *_chomp16(char16_t *line) {
+  size_t i;
+  if (line) {
+    for (i = strlen16(line); i--;) {
+      if (line[i] == '\r' || line[i] == '\n') {
+        line[i] = '\0';
+      } else {
+        break;
+      }
+    }
+  }
   return line;
 }

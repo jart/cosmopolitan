@@ -17,9 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
@@ -89,12 +93,21 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   return rc;
 }
 
+forceinline void Sockaddr2linux(void *saddr) {
+  char *p;
+  if (saddr) {
+    p = saddr;
+    p[0] = p[1];
+    p[1] = 0;
+  }
+}
+
 /* Used for all the ioctl that returns sockaddr structure that
  * requires adjustment between Linux and XNU
  */
 static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
   if (sys_ioctl(fd, op, ifr) == -1) return -1;
-  if (IsBsd()) sockaddr2linux(&ifr->ifr_addr);
+  if (IsBsd()) Sockaddr2linux(&ifr->ifr_addr);
   return 0;
 }
 
@@ -104,16 +117,19 @@ static int ioctl_siocgifaddr_sysv(int fd, uint64_t op, struct ifreq *ifr) {
  * @see ioctl(fd, SIOCGIFCONF, tio) dispatches here
  */
 int ioctl_siocgifconf(int fd, ...) {
+  int rc;
   va_list va;
   struct ifconf *ifc;
   va_start(va, fd);
   ifc = va_arg(va, struct ifconf *);
   va_end(va);
   if (!IsWindows()) {
-    return ioctl_siocgifconf_sysv(fd, ifc);
+    rc = ioctl_siocgifconf_sysv(fd, ifc);
   } else {
-    return ioctl_siocgifconf_nt(fd, ifc);
+    rc = ioctl_siocgifconf_nt(fd, ifc);
   }
+  STRACE("%s(%d) → %d% m", "ioctl_siocgifconf", fd, rc);
+  return rc;
 }
 
 int ioctl_siocgifaddr(int fd, ...) {

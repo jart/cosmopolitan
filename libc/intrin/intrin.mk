@@ -26,8 +26,10 @@ LIBC_INTRIN_A_CHECKS =					\
 LIBC_INTRIN_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_SYSV					\
+	LIBC_SYSV_CALLS					\
 	LIBC_NEXGEN32E					\
-	LIBC_NT_KERNEL32
+	LIBC_NT_KERNEL32				\
+	LIBC_NT_WS2_32
 
 LIBC_INTRIN_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x))))
@@ -41,10 +43,8 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(LIBC_INTRIN_A_OBJS):					\
-		OVERRIDE_CFLAGS +=			\
-			-foptimize-sibling-calls
-
+# we can't use asan and ubsan because:
+#   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
 o/$(MODE)/libc/intrin/ubsan.o:				\
 		OVERRIDE_CFLAGS +=			\
@@ -57,15 +57,104 @@ o/$(MODE)/libc/intrin/asan.o:				\
 			-finline			\
 			-finline-functions
 
-o/$(MODE)/libc/intrin/asan.o				\
-o/$(MODE)/libc/intrin/ubsan.o:				\
+# we can't use compiler magic because:
+#   kprintf() is mission critical to error reporting
+o/$(MODE)/libc/intrin/getmagnumstr.greg.o		\
+o/$(MODE)/libc/intrin/strerrno.greg.o			\
+o/$(MODE)/libc/intrin/strerrdoc.greg.o			\
+o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
+o/$(MODE)/libc/intrin/kprintf.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
+			-fpie				\
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
-o/$(MODE)/libc/intrin/memcmp.o:				\
+# synchronization primitives are intended to be magic free
+o/$(MODE)/libc/intrin/futex_wait.o			\
+o/$(MODE)/libc/intrin/futex_wake.o			\
+o/$(MODE)/libc/intrin/gettid.greg.o			\
+o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
+o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
+o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
+o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
 		OVERRIDE_CFLAGS +=			\
-			-Os
+			-fwrapv				\
+			-x-no-pg			\
+			-mno-fentry			\
+			-ffreestanding			\
+			-fno-sanitize=all		\
+			-mgeneral-regs-only		\
+			-fno-stack-protector
+
+# we can't use asan because:
+#   global gone could be raised
+o/$(MODE)/libc/intrin/exit.o				\
+o/$(MODE)/libc/intrin/restorewintty.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=all
+
+# we can't use asan because:
+#   sys_mmap() calls these which sets up shadow memory
+o/$(MODE)/libc/intrin/describeflags.o			\
+o/$(MODE)/libc/intrin/describeframe.o			\
+o/$(MODE)/libc/intrin/describemapflags.o		\
+o/$(MODE)/libc/intrin/describeprotflags.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-fno-sanitize=address
+
+o/$(MODE)/libc/intrin/tls.greg.o			\
+o/$(MODE)/libc/intrin/exit.greg.o			\
+o/$(MODE)/libc/intrin/exit1.greg.o			\
+o/$(MODE)/libc/intrin/getenv.greg.o			\
+o/$(MODE)/libc/intrin/wsarecv.o				\
+o/$(MODE)/libc/intrin/wsarecvfrom.o			\
+o/$(MODE)/libc/intrin/createfile.o			\
+o/$(MODE)/libc/intrin/reopenfile.o			\
+o/$(MODE)/libc/intrin/deletefile.o			\
+o/$(MODE)/libc/intrin/createpipe.o			\
+o/$(MODE)/libc/intrin/closehandle.o			\
+o/$(MODE)/libc/intrin/openprocess.o			\
+o/$(MODE)/libc/intrin/createthread.o			\
+o/$(MODE)/libc/intrin/findclose.o			\
+o/$(MODE)/libc/intrin/findnextfile.o			\
+o/$(MODE)/libc/intrin/createprocess.o			\
+o/$(MODE)/libc/intrin/findfirstfile.o			\
+o/$(MODE)/libc/intrin/removedirectory.o			\
+o/$(MODE)/libc/intrin/createsymboliclink.o		\
+o/$(MODE)/libc/intrin/createnamedpipe.o			\
+o/$(MODE)/libc/intrin/unmapviewoffile.o			\
+o/$(MODE)/libc/intrin/virtualprotect.o			\
+o/$(MODE)/libc/intrin/flushviewoffile.o			\
+o/$(MODE)/libc/intrin/createdirectory.o			\
+o/$(MODE)/libc/intrin/flushfilebuffers.o		\
+o/$(MODE)/libc/intrin/terminateprocess.o		\
+o/$(MODE)/libc/intrin/getfileattributes.o		\
+o/$(MODE)/libc/intrin/getexitcodeprocess.o		\
+o/$(MODE)/libc/intrin/waitforsingleobject.o		\
+o/$(MODE)/libc/intrin/setcurrentdirectory.o		\
+o/$(MODE)/libc/intrin/mapviewoffileex.o			\
+o/$(MODE)/libc/intrin/movefileex.o			\
+o/$(MODE)/libc/intrin/mapviewoffileexnuma.o		\
+o/$(MODE)/libc/intrin/createfilemapping.o		\
+o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
+o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
+o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
+o/$(MODE)/libc/intrin/wsawaitformultipleevents.o	\
+o/$(MODE)/libc/intrin/kstarttsc.o			\
+o/$(MODE)/libc/intrin/nomultics.o			\
+o/$(MODE)/libc/intrin/ntconsolemode.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os				\
+			-fwrapv				\
+			-ffreestanding			\
+			-fno-stack-protector		\
+			-fno-sanitize=all
 
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
@@ -76,7 +165,7 @@ o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
 o//libc/intrin/memmove.o:				\
 		OVERRIDE_CFLAGS +=			\
-			-O3
+			-O2 -finline
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
@@ -84,18 +173,11 @@ o/$(MODE)/libc/intrin/memmove.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
 
-o/$(MODE)/libc/intrin/printf.o:				\
-		OVERRIDE_CFLAGS +=			\
-			-Os				\
-			-fpie				\
-			-mgeneral-regs-only
-
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))
 LIBC_INTRIN_SRCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_SRCS))
 LIBC_INTRIN_CHECKS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_CHECKS))
 LIBC_INTRIN_OBJS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_OBJS))
-LIBC_INTRIN_CHECKS = $(LIBC_INTRIN_HDRS:%=o/$(MODE)/%.ok)
 $(LIBC_INTRIN_OBJS): $(BUILD_FILES) libc/intrin/intrin.mk
 
 .PHONY: o/$(MODE)/libc/intrin

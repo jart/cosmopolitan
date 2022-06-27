@@ -12,50 +12,50 @@ COSMOPOLITAN_C_START_
  */
 typedef struct mbedtls_x509_crt
 {
-    int own_buffer;                     /**< Indicates if \c raw is owned
+    int own_buffer;                     /*< Indicates if \c raw is owned
                                          *   by the structure or not.        */
-    mbedtls_x509_buf raw;               /**< The raw certificate data (DER). */
-    mbedtls_x509_buf tbs;               /**< The raw certificate body (DER). The part that is To Be Signed. */
+    mbedtls_x509_buf raw;               /*< The raw certificate data (DER). */
+    mbedtls_x509_buf tbs;               /*< The raw certificate body (DER). The part that is To Be Signed. */
 
-    int version;                        /**< The X.509 version. (1=v1, 2=v2, 3=v3) */
-    mbedtls_x509_buf serial;            /**< Unique id for certificate issued by a specific CA. */
-    mbedtls_x509_buf sig_oid;           /**< Signature algorithm, e.g. sha1RSA */
+    int version;                        /*< The X.509 version. (1=v1, 2=v2, 3=v3) */
+    mbedtls_x509_buf serial;            /*< Unique id for certificate issued by a specific CA. */
+    mbedtls_x509_buf sig_oid;           /*< Signature algorithm, e.g. sha1RSA */
 
-    mbedtls_x509_buf issuer_raw;        /**< The raw issuer data (DER). Used for quick comparison. */
-    mbedtls_x509_buf subject_raw;       /**< The raw subject data (DER). Used for quick comparison. */
+    mbedtls_x509_buf issuer_raw;        /*< The raw issuer data (DER). Used for quick comparison. */
+    mbedtls_x509_buf subject_raw;       /*< The raw subject data (DER). Used for quick comparison. */
 
-    mbedtls_x509_name issuer;           /**< The parsed issuer data (named information object). */
-    mbedtls_x509_name subject;          /**< The parsed subject data (named information object). */
+    mbedtls_x509_name issuer;           /*< The parsed issuer data (named information object). */
+    mbedtls_x509_name subject;          /*< The parsed subject data (named information object). */
 
-    mbedtls_x509_time valid_from;       /**< Start time of certificate validity. */
-    mbedtls_x509_time valid_to;         /**< End time of certificate validity. */
+    mbedtls_x509_time valid_from;       /*< Start time of certificate validity. */
+    mbedtls_x509_time valid_to;         /*< End time of certificate validity. */
 
     mbedtls_x509_buf pk_raw;
-    mbedtls_pk_context pk;              /**< Container for the public key context. */
+    mbedtls_pk_context pk;              /*< Container for the public key context. */
 
-    mbedtls_x509_buf issuer_id;         /**< Optional X.509 v2/v3 issuer unique identifier. */
-    mbedtls_x509_buf subject_id;        /**< Optional X.509 v2/v3 subject unique identifier. */
-    mbedtls_x509_buf v3_ext;            /**< Optional X.509 v3 extensions.  */
-    mbedtls_x509_sequence subject_alt_names;    /**< Optional list of raw entries of Subject Alternative Names extension (currently only dNSName and OtherName are listed). */
+    mbedtls_x509_buf issuer_id;         /*< Optional X.509 v2/v3 issuer unique identifier. */
+    mbedtls_x509_buf subject_id;        /*< Optional X.509 v2/v3 subject unique identifier. */
+    mbedtls_x509_buf v3_ext;            /*< Optional X.509 v3 extensions.  */
+    mbedtls_x509_sequence subject_alt_names;    /*< Optional list of raw entries of Subject Alternative Names extension (currently only dNSName and OtherName are listed). */
 
-    mbedtls_x509_sequence certificate_policies; /**< Optional list of certificate policies (Only anyPolicy is printed and enforced, however the rest of the policies are still listed). */
+    mbedtls_x509_sequence certificate_policies; /*< Optional list of certificate policies (Only anyPolicy is printed and enforced, however the rest of the policies are still listed). */
 
-    int ext_types;              /**< Bit string containing detected and parsed extensions */
-    int ca_istrue;              /**< Optional Basic Constraint extension value: 1 if this certificate belongs to a CA, 0 otherwise. */
-    int max_pathlen;            /**< Optional Basic Constraint extension value: The maximum path length to the root certificate. Path length is 1 higher than RFC 5280 'meaning', so 1+ */
+    int ext_types;              /*< Bit string containing detected and parsed extensions */
+    int ca_istrue;              /*< Optional Basic Constraint extension value: 1 if this certificate belongs to a CA, 0 otherwise. */
+    int max_pathlen;            /*< Optional Basic Constraint extension value: The maximum path length to the root certificate. Path length is 1 higher than RFC 5280 'meaning', so 1+ */
 
-    unsigned int key_usage;     /**< Optional key usage extension value: See the values in x509.h */
+    unsigned int key_usage;     /*< Optional key usage extension value: See the values in x509.h */
 
-    mbedtls_x509_sequence ext_key_usage; /**< Optional list of extended key usage OIDs. */
+    mbedtls_x509_sequence ext_key_usage; /*< Optional list of extended key usage OIDs. */
 
-    unsigned char ns_cert_type; /**< Optional Netscape certificate type extension value: See the values in x509.h */
+    unsigned char ns_cert_type; /*< Optional Netscape certificate type extension value: See the values in x509.h */
 
-    mbedtls_x509_buf sig;               /**< Signature: hash of the tbs part signed with the private key. */
-    mbedtls_md_type_t sig_md;           /**< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
-    mbedtls_pk_type_t sig_pk;           /**< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
-    void *sig_opts;             /**< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
+    mbedtls_x509_buf sig;               /*< Signature: hash of the tbs part signed with the private key. */
+    mbedtls_md_type_t sig_md;           /*< Internal representation of the MD algorithm of the signature algorithm, e.g. MBEDTLS_MD_SHA256 */
+    mbedtls_pk_type_t sig_pk;           /*< Internal representation of the Public Key algorithm of the signature algorithm, e.g. MBEDTLS_PK_RSA */
+    void *sig_opts;             /*< Signature options to be passed to mbedtls_pk_verify_ext(), e.g. for RSASSA-PSS */
 
-    struct mbedtls_x509_crt *next;     /**< Next certificate in the CA-chain. */
+    struct mbedtls_x509_crt *next;     /*< Next certificate in the CA-chain. */
 }
 mbedtls_x509_crt;
 
@@ -72,7 +72,7 @@ typedef struct mbedtls_x509_san_other_name
      * To check the value of the type id, you should use
      * \p MBEDTLS_OID_CMP with a known OID mbedtls_x509_buf.
      */
-    mbedtls_x509_buf type_id;                   /**< The type id. */
+    mbedtls_x509_buf type_id;                   /*< The type id. */
     union
     {
         /**
@@ -83,8 +83,8 @@ typedef struct mbedtls_x509_san_other_name
          */
         struct
         {
-            mbedtls_x509_buf oid;               /**< The object identifier. */
-            mbedtls_x509_buf val;               /**< The named value. */
+            mbedtls_x509_buf oid;               /*< The object identifier. */
+            mbedtls_x509_buf val;               /*< The named value. */
         }
         hardware_module_name;
     }
@@ -97,13 +97,13 @@ mbedtls_x509_san_other_name;
  */
 typedef struct mbedtls_x509_subject_alternative_name
 {
-    int type;                              /**< The SAN type, value of MBEDTLS_X509_SAN_XXX. */
+    int type;                              /*< The SAN type, value of MBEDTLS_X509_SAN_XXX. */
     union {
-        mbedtls_x509_san_other_name other_name; /**< The otherName supported type. */
-        mbedtls_x509_buf   unstructured_name; /**< The buffer for the un constructed types. Only dnsName currently supported */
+        mbedtls_x509_san_other_name other_name; /*< The otherName supported type. */
+        mbedtls_x509_buf   unstructured_name; /*< The buffer for the un constructed types. Only dnsName currently supported */
         uint32_t ip;
     }
-    san; /**< A union of the supported SAN types */
+    san; /*< A union of the supported SAN types */
 }
 mbedtls_x509_subject_alternative_name;
 
@@ -120,10 +120,10 @@ mbedtls_x509_subject_alternative_name;
  */
 typedef struct mbedtls_x509_crt_profile
 {
-    uint32_t allowed_mds;       /**< MDs for signatures         */
-    uint32_t allowed_pks;       /**< PK algs for signatures     */
-    uint32_t allowed_curves;    /**< Elliptic curves for ECDSA  */
-    uint32_t rsa_min_bitlen;    /**< Minimum size for RSA keys  */
+    uint32_t allowed_mds;       /*< MDs for signatures         */
+    uint32_t allowed_pks;       /*< PK algs for signatures     */
+    uint32_t allowed_curves;    /*< Elliptic curves for ECDSA  */
+    uint32_t rsa_min_bitlen;    /*< Minimum size for RSA keys  */
 }
 mbedtls_x509_crt_profile;
 

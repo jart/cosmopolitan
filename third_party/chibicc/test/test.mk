@@ -39,6 +39,7 @@ THIRD_PARTY_CHIBICC_TEST_CHECKS =						\
 	$(THIRD_PARTY_CHIBICC_TEST_HDRS:%=o/$(MODE)/%.ok)
 
 THIRD_PARTY_CHIBICC_TEST_DIRECTDEPS =						\
+	LIBC_CALLS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\
 	LIBC_MEM								\
@@ -78,7 +79,7 @@ o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\
 		o/$(MODE)/third_party/chibicc/test/%.chibicc.o			\
 		$(THIRD_PARTY_CHIBICC_TEST_A).pkg				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/third_party/chibicc/test/%2.com.dbg:					\
@@ -87,7 +88,7 @@ o/$(MODE)/third_party/chibicc/test/%2.com.dbg:					\
 		o/$(MODE)/third_party/chibicc/test/%.chibicc2.o			\
 		$(THIRD_PARTY_CHIBICC_TEST2_A).pkg				\
 		$(CRT)								\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 .PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST_OBJS)

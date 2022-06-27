@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -44,6 +45,28 @@ static textstartup void TestInit(int argc, char **argv) {
 
 const void *const TestCtor[] initarray = {TestInit};
 
+TEST(dup, ebadf) {
+  ASSERT_SYS(EBADF, -1, dup(-1));
+  ASSERT_SYS(EBADF, -1, dup2(-1, 0));
+  ASSERT_SYS(EBADF, -1, dup2(0, -1));
+  ASSERT_SYS(EBADF, -1, dup3(0, -1, 0));
+  ASSERT_SYS(EBADF, -1, dup3(10, 0, 0));
+}
+
+TEST(dup, sameNumber) {
+  ASSERT_SYS(0, 0, dup2(0, 0));
+  ASSERT_SYS(EINVAL, -1, dup3(0, 0, 0));
+  EXPECT_SYS(EBADF, -1, dup2(-1, -1));
+  EXPECT_SYS(EINVAL, -1, dup3(-1, -1, 0));
+  ASSERT_SYS(EBADF, -1, dup2(3, 3));
+  ASSERT_SYS(EBADF, -1, dup2(0, -1));
+}
+
+TEST(dup, bigNumber) {
+  ASSERT_SYS(0, 100, dup2(0, 100));
+  ASSERT_SYS(0, 0, close(100));
+}
+
 TEST(dup, clearsCloexecFlag) {
   int ws;
   ASSERT_SYS(0, 0, close(creat("file", 0644)));
@@ -51,8 +74,8 @@ TEST(dup, clearsCloexecFlag) {
   ASSERT_NE(-1, (ws = xspawn(0)));
   if (ws == -2) {
     dup2(3, 0);
-    execv(program_executable_name,
-          (char *const[]){program_executable_name, "boop", 0});
+    execv(GetProgramExecutableName(),
+          (char *const[]){GetProgramExecutableName(), "boop", 0});
     _exit(127);
   }
   ASSERT_EQ(72, WEXITSTATUS(ws));

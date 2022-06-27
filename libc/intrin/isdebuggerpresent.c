@@ -21,38 +21,39 @@
 #include "libc/log/log.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 
 #define kBufSize 1024
 #define kPid     "TracerPid:\t"
 
+static textwindows noasan bool IsBeingDebugged(void) {
+  return !!NtGetPeb()->BeingDebugged;
+}
+
 /**
  * Determines if gdb, strace, windbg, etc. is controlling process.
  * @return non-zero if attached, otherwise 0
  */
-noasan noubsan int IsDebuggerPresent(bool force) {
+int IsDebuggerPresent(bool force) {
   /* asan runtime depends on this function */
   int fd, res;
   ssize_t got;
   char *p, buf[1024];
-  if (!force) {
-    if (IsGenuineCosmo()) return 0;
-    if (__getenv(__envp, "HEISENDEBUG")) return 0;
-  }
-  if (IsWindows()) {
-    return NtGetPeb()->BeingDebugged; /* needs noasan */
-  } else {
-    res = 0;
-    if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
-      if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
-        buf[got] = '\0';
-        if ((p = __strstr(buf, kPid))) {
-          p += sizeof(kPid) - 1;
-          res = __atoul(p);
-        }
+  if (!force && IsGenuineCosmo()) return 0;
+  if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
+  if (IsWindows()) return IsBeingDebugged();
+  if (__isworker) return false;
+  res = 0;
+  if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
+    if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
+      buf[got] = '\0';
+      if ((p = __strstr(buf, kPid))) {
+        p += sizeof(kPid) - 1;
+        res = __atoul(p);
       }
-      __sysv_close(fd);
     }
-    return res;
+    __sysv_close(fd);
   }
+  return res;
 }

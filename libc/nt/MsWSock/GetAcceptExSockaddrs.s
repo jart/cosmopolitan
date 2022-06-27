@@ -1,5 +1,5 @@
 .include "o/libc/nt/codegen.inc"
-.imp	MsWSock,__imp_GetAcceptExSockaddrs,GetAcceptExSockaddrs,4
+.imp	MsWSock,__imp_GetAcceptExSockaddrs,GetAcceptExSockaddrs,0
 
 	.text.windows
 GetAcceptExSockaddrs:

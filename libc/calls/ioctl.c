@@ -25,6 +25,7 @@
 
 /**
  * Controls settings on device.
+ * @restartable
  * @vforksafe
  */
 int(ioctl)(int fd, uint64_t request, ...) {

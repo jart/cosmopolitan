@@ -4,9 +4,6 @@
 enotconn:
 	.leafprologue
 	.profilable
-	mov	ENOTCONN(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	ENOTCONN(%rip),%ecx
+	jmp	__errfun
 	.endfn	enotconn,globl,hidden

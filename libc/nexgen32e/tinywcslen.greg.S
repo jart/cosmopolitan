@@ -33,4 +33,3 @@ tinywcslen:
 	jmp	1b
 2:	.leafepilogue
 	.endfn	tinywcslen,globl
-	.source	__FILE__

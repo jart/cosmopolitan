@@ -19,7 +19,6 @@
 #include "libc/macros.internal.h"
 .rodata
 .align	16
-.source	__FILE__
 
 //	ibm cp437 unicode table w/ string literal safety
 //

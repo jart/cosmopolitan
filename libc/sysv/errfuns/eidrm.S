@@ -3,9 +3,6 @@
 
 eidrm:	.leafprologue
 	.profilable
-	mov	EIDRM(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EIDRM(%rip),%ecx
+	jmp	__errfun
 	.endfn	eidrm,globl,hidden

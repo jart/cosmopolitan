@@ -5,6 +5,7 @@
 #
 #   - `make`
 #   - Backtraces
+#   - Syscall tracing
 #   - Function tracing
 #   - Reasonably small
 #   - Reasonably optimized
@@ -13,6 +14,7 @@ ifeq ($(MODE),)
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
+	-DSYSDEBUG		\
 	-Og
 TARGET_ARCH ?=			\
 	-msse3
@@ -23,6 +25,8 @@ endif
 #   - `make MODE=opt`
 #   - Backtraces
 #   - More optimized
+#   - Syscall tracing
+#   - Function tracing
 #   - Reasonably small
 #   - No memory corruption detection
 #   - assert() / CHECK_xx() may leak code into binary for debuggability
@@ -35,7 +39,9 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
-	-O3
+	-DSYSDEBUG		\
+	-O3			\
+	-fmerge-all-constants
 TARGET_ARCH ?=			\
 	-march=native
 endif
@@ -55,7 +61,7 @@ CONFIG_CPPFLAGS +=		\
 	-Wa,-msse2avx		\
 	-DSUPPORT_VECTOR=1
 CONFIG_CCFLAGS +=		\
-	-O3
+	-O3 -fmerge-all-constants
 DEFAULT_COPTS +=		\
 	-mred-zone
 TARGET_ARCH ?=			\
@@ -122,10 +128,12 @@ CONFIG_CPPFLAGS +=		\
 CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
+	-DSYSDEBUG		\
 	-O2			\
 	-fno-inline
 CONFIG_COPTS +=			\
-	-fsanitize=address
+	-fsanitize=address	\
+	-fsanitize=undefined
 TARGET_ARCH ?=			\
 	-msse3
 OVERRIDE_CCFLAGS +=		\
@@ -287,7 +295,7 @@ endif
 # LLVM Mode
 ifeq ($(MODE), llvm)
 TARGET_ARCH ?= -msse3
-CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O2
 AS = clang
 CC = clang
 CXX = clang++

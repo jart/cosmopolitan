@@ -22,4 +22,3 @@
 __x86_return_thunk:
 	ret
 	.endfn	__x86_return_thunk,weak
-	.source	__FILE__

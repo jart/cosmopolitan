@@ -34,3 +34,7 @@ function OnHttpRequest()
    end
    SetHeader('Server', 'redbean!')
 end
+
+function Adder(x, y)
+   return x + y
+end

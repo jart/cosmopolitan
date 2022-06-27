@@ -5,6 +5,8 @@
  * @fileoverview Executable and Linkable Format Definitions.
  */
 
+#define EI_NIDENT 16
+
 #define EI_MAG0 0
 #define EI_MAG1 1
 #define EI_MAG2 2
@@ -82,7 +84,7 @@
 #define EM_RISCV     243
 #define EM_BPF       247
 
-#define GRP_COMDAT 0x1
+#define GRP_COMDAT 1
 #define STN_UNDEF  0
 
 #define EV_NONE    0

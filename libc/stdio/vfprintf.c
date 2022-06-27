@@ -16,35 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/limits.h"
 #include "libc/stdio/stdio.h"
-#include "libc/sysv/errfuns.h"
 
-struct state {
-  FILE *f;
-  int n;
-};
-
-static int vfprintfputchar(const char *s, struct state *t, size_t n) {
-  if (n) {
-    if (n == 1 && *s != '\n' && t->f->beg < t->f->size &&
-        t->f->bufmode != _IONBF) {
-      t->f->buf[t->f->beg++] = *s;
-    } else if (!fwrite(s, 1, n, t->f)) {
-      return -1;
-    }
-    t->n += n;
-  }
-  return 0;
-}
-
+/**
+ * Formats and writes text to stream.
+ * @see printf() for further documentation
+ */
 int(vfprintf)(FILE *f, const char *fmt, va_list va) {
-  struct state st[1] = {{f, 0}};
-  if (__fmt(vfprintfputchar, st, fmt, va) != -1) {
-    return st->n;
-  } else {
-    return -1;
-  }
+  int rc;
+  flockfile(f);
+  rc = (vfprintf_unlocked)(f, fmt, va);
+  funlockfile(f);
+  return rc;
 }

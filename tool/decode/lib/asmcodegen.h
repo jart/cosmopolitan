@@ -6,20 +6,20 @@ COSMOPOLITAN_C_START_
 
 #define COLUMN_WIDTH 24
 
-#define showint(x) show(".long", format(b1, "%d", x), #x)
-#define showint64(x) show(".quad", format(b1, "%ld", x), #x)
-#define showbyte(x) show(".byte", format(b1, "%hhn", x), #x)
-#define showshort(x) show(".short", format(b1, "%hn", x), #x)
+#define showint(x)      show(".long", format(b1, "%d", x), #x)
+#define showint64(x)    show(".quad", format(b1, "%ld", x), #x)
+#define showbyte(x)     show(".byte", format(b1, "%hhu", x), #x)
+#define showshort(x)    show(".short", format(b1, "%hu", x), #x)
 #define showshorthex(x) show(".short", format(b1, "%#-6hX", x), #x)
-#define showinthex(x) show(".long", format(b1, "%#X", x), #x)
+#define showinthex(x)   show(".long", format(b1, "%#X", x), #x)
 #define showint64hex(x) show(".quad", format(b1, "%#lX", x), #x)
-#define showorg(x) show(".org", format(b1, "%#lX", x), #x)
+#define showorg(x)      show(".org", format(b1, "%#lX", x), #x)
 
 extern char b1[BUFSIZ];
 extern char b2[BUFSIZ];
 
 char *format(char *buf, const char *fmt, ...);
-nodiscard char *tabpad(const char *s, unsigned width);
+char *tabpad(const char *s, unsigned width) dontdiscard;
 void show(const char *directive, const char *value, const char *comment);
 
 COSMOPOLITAN_C_END_

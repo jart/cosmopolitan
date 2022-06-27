@@ -1,0 +1,12 @@
+SYNOPSIS
+
+  redbean.com [-hvduzmbagf] [-p PORT] [-D DIR]
+
+DESCRIPTION
+
+  redbean - single-file distributable web server
+
+DOCUMENTATION
+
+  This binary was built in MODE=tiny or MODE=tinylinux
+  You can view documentation online at https://redbean.dev/

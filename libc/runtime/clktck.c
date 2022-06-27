@@ -20,6 +20,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/runtime/clktck.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 
 struct clockinfo_netbsd {

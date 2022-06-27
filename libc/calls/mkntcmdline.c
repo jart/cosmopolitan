@@ -23,13 +23,15 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
-#define APPEND(c)                     \
-  do {                                \
-    cmdline[k++] = c;                 \
-    if (k == ARG_MAX) return e2big(); \
+#define APPEND(c)           \
+  do {                      \
+    cmdline[k++] = c;       \
+    if (k == ARG_MAX / 2) { \
+      return e2big();       \
+    }                       \
   } while (0)
 
-static noasan bool NeedsQuotes(const char *s) {
+static bool NeedsQuotes(const char *s) {
   if (!*s) return true;
   do {
     if (*s == ' ' || *s == '\t') {
@@ -37,6 +39,10 @@ static noasan bool NeedsQuotes(const char *s) {
     }
   } while (*s++);
   return false;
+}
+
+static inline int IsAlpha(int c) {
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
 /**
@@ -52,15 +58,20 @@ static noasan bool NeedsQuotes(const char *s) {
  * @return freshly allocated lpCommandLine or NULL w/ errno
  * @see libc/runtime/dosargv.c
  */
-textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
-                                   char *const argv[]) {
+textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
+                            char *const argv[]) {
   char *arg;
   uint64_t w;
   wint_t x, y;
   int slashes, n;
   bool needsquote;
   char16_t cbuf[2];
+  char *ansiargv[2];
   size_t i, j, k, s;
+  if (!argv[0]) {
+    bzero(ansiargv, sizeof(ansiargv));
+    argv = ansiargv;
+  }
   for (arg = prog, k = i = 0; arg; arg = argv[++i]) {
     if (i) APPEND(u' ');
     if ((needsquote = NeedsQuotes(arg))) APPEND(u'"');
@@ -79,8 +90,27 @@ textwindows noasan int mkntcmdline(char16_t cmdline[ARG_MAX], const char *prog,
         }
       }
       if (!x) break;
-      if (!i && x == '/') {
-        x = '\\';
+      if (x == '/' || x == '\\') {
+        if (!i) {
+          // turn / into \ for first arg
+          x = '\\';
+          // turn \c\... into c:\ for first arg
+          if (k == 2 && IsAlpha(cmdline[1]) && cmdline[0] == '\\') {
+            cmdline[0] = cmdline[1];
+            cmdline[1] = ':';
+          }
+        } else {
+          // turn stuff like `less /c/...`
+          //            into `less c:/...`
+          // turn stuff like `more <\\\"/c/...\\\"`
+          //            into `more <\\\"c:/...\\\"`
+          if (k > 3 && IsAlpha(cmdline[k - 1]) &&
+              (cmdline[k - 2] == '/' || cmdline[k - 2] == '\\') &&
+              (cmdline[k - 3] == '"' || cmdline[k - 3] == ' ')) {
+            cmdline[k - 2] = cmdline[k - 1];
+            cmdline[k - 1] = ':';
+          }
+        }
       }
       if (x == '\\') {
         ++slashes;

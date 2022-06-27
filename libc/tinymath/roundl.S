@@ -44,7 +44,6 @@ roundl:	push	%rbp
 1:	leave
 	ret
 	.endfn	roundl,globl
-	.source	__FILE__
 
 	.rodata.cst4
 .Lhalf:	.float	.5

@@ -239,8 +239,7 @@ _Py_IDENTIFIER(stderr);
 
 /* AC: cannot convert yet, waiting for *args support */
 static PyObject *
-builtin___build_class__(PyObject *self, PyObject **args, Py_ssize_t nargs,
-                        PyObject *kwnames)
+builtin___build_class__(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
 {
     PyObject *func, *name, *bases, *mkw, *meta, *winner, *prep, *ns;
     PyObject *cls = NULL, *cell = NULL;
@@ -974,13 +973,11 @@ finally:
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_dir(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+builtin_dir(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *arg = NULL;
 
     if (!_PyArg_UnpackStack(args, nargs, "dir", 0, 1, &arg))
-        return NULL;
-    if (!_PyArg_NoStackKeywords("dir", kwnames))
         return NULL;
     return PyObject_Dir(arg);
 }
@@ -1189,21 +1186,20 @@ builtin_exec_impl(PyObject *module, PyObject *source, PyObject *globals,
     Py_RETURN_NONE;
 }
 
+PyObject * PyBuiltin_Exec(PyObject *module, PyObject *source, PyObject *globals,
+                  PyObject *locals) {
+    return builtin_exec_impl(module, source, globals, locals);
+}
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_getattr(PyObject *self, PyObject **args, Py_ssize_t nargs,
-                PyObject *kwnames)
+builtin_getattr(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *v, *result, *dflt = NULL;
     PyObject *name;
 
     if (!_PyArg_UnpackStack(args, nargs, "getattr", 2, 3, &v, &name, &dflt))
         return NULL;
-
-    if (!_PyArg_NoStackKeywords("getattr", kwnames)) {
-        return NULL;
-    }
 
     if (!PyUnicode_Check(name)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1502,18 +1498,13 @@ PyTypeObject PyMap_Type = {
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_next(PyObject *self, PyObject **args, Py_ssize_t nargs,
-             PyObject *kwnames)
+builtin_next(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *it, *res;
     PyObject *def = NULL;
 
     if (!_PyArg_UnpackStack(args, nargs, "next", 1, 2, &it, &def))
         return NULL;
-
-    if (!_PyArg_NoStackKeywords("next", kwnames)) {
-        return NULL;
-    }
 
     if (!PyIter_Check(it)) {
         PyErr_Format(PyExc_TypeError,
@@ -1643,13 +1634,11 @@ builtin_hex(PyObject *module, PyObject *number)
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_iter(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+builtin_iter(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *v, *w = NULL;
 
     if (!_PyArg_UnpackStack(args, nargs, "iter", 1, 2, &v, &w))
-        return NULL;
-    if(!_PyArg_NoStackKeywords("iter", kwnames))
         return NULL;
     if (w == NULL)
         return PyObject_GetIter(v);
@@ -2333,7 +2322,7 @@ PyDoc_STRVAR(builtin_sorted__doc__,
 "reverse flag can be set to request the result in descending order.");
 
 #define BUILTIN_SORTED_METHODDEF    \
-    {"sorted", (PyCFunction)builtin_sorted, METH_FASTCALL, builtin_sorted__doc__},
+    {"sorted", (PyCFunction)builtin_sorted, METH_FASTCALL | METH_KEYWORDS, builtin_sorted__doc__},
 
 static PyObject *
 builtin_sorted(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
@@ -2372,14 +2361,12 @@ builtin_sorted(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwna
 
 /* AC: cannot convert yet, as needs PEP 457 group support in inspect */
 static PyObject *
-builtin_vars(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+builtin_vars(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *v = NULL;
     PyObject *d;
 
     if (!_PyArg_UnpackStack(args, nargs, "vars", 0, 1, &v))
-        return NULL;
-    if(!_PyArg_NoStackKeywords("vars", kwnames))
         return NULL;
     if (v == NULL) {
         d = PyEval_GetLocals();
@@ -2834,8 +2821,8 @@ PyTypeObject PyZip_Type = {
 
 static PyMethodDef builtin_methods[] = {
     {"__build_class__", (PyCFunction)builtin___build_class__,
-     METH_FASTCALL, build_class_doc},
-    {"__import__",      (PyCFunction)builtin___import__, METH_FASTCALL, import_doc},
+     METH_FASTCALL | METH_KEYWORDS, build_class_doc},
+    {"__import__",      (PyCFunction)builtin___import__, METH_FASTCALL | METH_KEYWORDS, import_doc},
     BUILTIN_ABS_METHODDEF
     BUILTIN_ALL_METHODDEF
     BUILTIN_ANY_METHODDEF
@@ -2868,7 +2855,7 @@ static PyMethodDef builtin_methods[] = {
     BUILTIN_OCT_METHODDEF
     BUILTIN_ORD_METHODDEF
     BUILTIN_POW_METHODDEF
-    {"print",           (PyCFunction)builtin_print,      METH_FASTCALL, print_doc},
+    {"print",           (PyCFunction)builtin_print,      METH_FASTCALL | METH_KEYWORDS, print_doc},
     BUILTIN_REPR_METHODDEF
     {"round",           (PyCFunction)builtin_round,      METH_VARARGS | METH_KEYWORDS, round_doc},
     BUILTIN_SETATTR_METHODDEF

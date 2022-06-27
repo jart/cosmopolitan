@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/log/libfatal.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 
@@ -33,7 +34,7 @@ static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
 }
 
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
-  char *p, mode[8];
+  char *p, mappingbuf[8], framebuf[32];
   long i, w, frames, maptally = 0, gaptally = 0;
   for (w = i = 0; i < mm->i; ++i) {
     w = MAX(w, LengthInt64Thousands(mm->p[i].y + 1 - mm->p[i].x));
@@ -41,20 +42,26 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
   for (i = 0; i < mm->i; ++i) {
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    __printf("%012x-%012x %s %,*dx%s", ADDR(mm->p[i].x), ADDR(mm->p[i].y + 1),
-             DescribeMapping(mm->p[i].prot, mm->p[i].flags, mode), w, frames,
-             DescribeFrame(mm->p[i].x));
-    if (i + 1 < _mmi.i) {
+    kprintf("%08x-%08x %s %'*ldx%s", mm->p[i].x, mm->p[i].y,
+            (DescribeMapping)(mappingbuf, mm->p[i].prot, mm->p[i].flags), w,
+            frames, (DescribeFrame)(framebuf, mm->p[i].x));
+    if (mm->p[i].iscow) kprintf(" cow");
+    if (mm->p[i].readonlyfile) kprintf(" readonlyfile");
+    if (mm->p[i].size !=
+        (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE + FRAMESIZE) {
+      kprintf(" size=%'zu", mm->p[i].size);
+    }
+    if (i + 1 < mm->i) {
       frames = mm->p[i + 1].x - mm->p[i].y - 1;
       if (frames && IsNoteworthyHole(i, mm)) {
         gaptally += frames;
-        __printf(" w/ %,d frame hole", frames);
+        kprintf(" w/ %'ld frame hole", frames);
       }
     }
     if (mm->p[i].h != -1) {
-      __printf(" h=%d", mm->p[i].h);
+      kprintf(" h=%ld", mm->p[i].h);
     }
-    __printf("\r\n");
+    kprintf("\n");
   }
-  __printf("# %d frames mapped w/ %,d frames gapped\r\n", maptally, gaptally);
+  kprintf("# %ld frames mapped w/ %'ld frames gapped\n", maptally, gaptally);
 }

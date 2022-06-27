@@ -4,9 +4,6 @@
 epfnosupport:
 	.leafprologue
 	.profilable
-	mov	EPFNOSUPPORT(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EPFNOSUPPORT(%rip),%ecx
+	jmp	__errfun
 	.endfn	epfnosupport,globl,hidden

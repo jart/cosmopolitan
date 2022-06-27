@@ -1,11 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SYSLOG_H_
 #define COSMOPOLITAN_LIBC_SOCK_SYSLOG_H_
-
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define	LOG_PRI(p)	((p) & LOG_PRIMASK)
+#define LOG_PRI(p) (LOG_PRIMASK & (p))
 
 int setlogmask(int);
 void openlog(const char *, int, int);

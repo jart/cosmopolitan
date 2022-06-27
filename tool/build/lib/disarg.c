@@ -128,7 +128,7 @@ static char *DisRegisterWord(struct Dis *d, uint32_t rde, char *p, bool g,
 
 static char *DisInt(char *p, int64_t x) {
   if (-15 <= x && x <= 15) {
-    p += int64toarray_radix10(x, p);
+    p = FormatInt64(p, x);
   } else if (x == INT64_MIN) {
     p = stpcpy(p, "-0x");
     p += uint64toarray_radix16(INT64_MIN, p);
@@ -319,7 +319,8 @@ static char *DisRegMem(struct Dis *d, uint32_t rde, char *p,
 }
 
 static dontinline char *DisE(struct Dis *d, uint32_t rde, char *p,
-                           char *f(struct Dis *, uint32_t, char *, bool, int)) {
+                             char *f(struct Dis *, uint32_t, char *, bool,
+                                     int)) {
   if (IsModrmRegister(rde)) {
     return f(d, rde, p, Rexb(rde), ModrmRm(rde));
   } else {
@@ -471,13 +472,13 @@ static char *DisOne(struct Dis *d, uint32_t rde, char *p) {
 
 static char *DisJbs(struct Dis *d, uint32_t rde, char *p) {
   if (d->xedd->op.disp > 0) *p++ = '+';
-  p += int64toarray_radix10(d->xedd->op.disp, p);
+  p = FormatInt64(p, d->xedd->op.disp);
   return p;
 }
 
 static char *DisJb(struct Dis *d, uint32_t rde, char *p) {
   if (d->xedd->op.disp > 0) *p++ = '+';
-  p += uint64toarray_radix10(d->xedd->op.disp & 0xff, p);
+  p = FormatUint32(p, d->xedd->op.disp & 0xff);
   return p;
 }
 
@@ -522,7 +523,7 @@ static char *DisXmm(struct Dis *d, uint32_t rde, char *p, const char *s,
   p = HighStart(p, g_high.reg);
   *p++ = '%';
   p = stpcpy(p, s);
-  p += uint64toarray_radix10(reg, p);
+  p = FormatUint32(p, reg);
   p = HighEnd(p);
   return p;
 }

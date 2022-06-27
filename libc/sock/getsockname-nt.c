@@ -17,15 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/syscall_fd.internal.h"
 #include "libc/sock/yoink.inc"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getsockname_nt(struct Fd *fd, void *out_addr,
-                               uint32_t *out_addrsize) {
+                                   uint32_t *out_addrsize) {
   assert(fd->kind == kFdSocket);
   if (__sys_getsockname_nt(fd->handle, out_addr, out_addrsize) != -1) {
     return 0;

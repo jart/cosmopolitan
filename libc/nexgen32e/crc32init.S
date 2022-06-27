@@ -67,4 +67,3 @@ crc32init:
 	leave
 	ret
 	.endfn	crc32init,globl
-	.source	__FILE__

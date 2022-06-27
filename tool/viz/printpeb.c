@@ -38,6 +38,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/time.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/idname.h"
 
@@ -382,8 +383,8 @@ void PrintModulesLoadOrder(void) {
       /* struct NtLinkedList InLoadOrderLinks; /\* msdn:reserved *\/ */
       /* struct NtLinkedList InMemoryOrderLinks; */
       /* struct NtLinkedList InInitOrderLinks; /\* msdn:reserved *\/ */
-      printf("0x%p\n", ldr);
-      printf("0x%p vs. 0x%p\n", dll, GetModuleHandleW(dll->FullDllName.Data));
+      printf("%p\n", ldr);
+      printf("%p vs. %p\n", dll, GetModuleHandleW(dll->FullDllName.Data));
       printf("0x%04x: %-40s = 0x%lx\n",
              offsetof(struct NtLdrDataTableEntry, DllBase), "DllBase",
              dll->DllBase);
@@ -456,7 +457,7 @@ void PrintModulesMemoryOrder(void) {
       /* struct NtLinkedList InLoadOrderLinks; /\* msdn:reserved *\/ */
       /* struct NtLinkedList InMemoryOrderLinks; */
       /* struct NtLinkedList InInitOrderLinks; /\* msdn:reserved *\/ */
-      printf("0x%p\n", dll);
+      printf("%p\n", dll);
       printf("0x%04x: %-40s = 0x%lx\n",
              offsetof(struct NtLdrDataTableEntry, DllBase), "DllBase",
              dll->DllBase);
@@ -518,7 +519,6 @@ void PrintModulesMemoryOrder(void) {
 }
 
 int main(int argc, char *argv[]) {
-  showcrashreports();
   if (IsLinux()) {
     return NextBestThing();
   }

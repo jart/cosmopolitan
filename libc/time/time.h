@@ -4,6 +4,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/time/struct/timezone.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/struct/utimbuf.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -16,6 +17,8 @@ hidden extern const unsigned short kMonthYearDay[2][12];
 
 extern char *tzname[2];
 extern long CLOCKS_PER_SEC;
+extern long timezone;
+extern int daylight;
 
 int64_t clock(void);
 int64_t time(int64_t *);
@@ -63,8 +66,9 @@ extern long double (*nowl)(void);
 long double ConvertTicksToNanos(uint64_t);
 void RefreshTime(void);
 
-double difftime(int64_t, int64_t) nothrow pureconst;
+double difftime(int64_t, int64_t) dontthrow pureconst;
 char *iso8601(char[hasatleast 20], struct tm *);
+size_t wcsftime(wchar_t *, size_t, const wchar_t *, const struct tm *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

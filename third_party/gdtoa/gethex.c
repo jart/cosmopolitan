@@ -35,7 +35,7 @@
 
 int
 __gdtoa_gethex(const char **sp, const FPI *fpi,
-	       Long *exp, Bigint **bp, int sign)
+	       Long *exp, Bigint **bp, int sign, ThInfo **PTI)
 {
 	Bigint *b;
 	const unsigned char *decpt, *s0, *s, *s1;
@@ -124,7 +124,7 @@ pcheck:
 			}
 			goto retz;
 		ret_tiny:
-			b = __gdtoa_Balloc(0);
+			b = __gdtoa_Balloc(0, PTI);
 			b->wds = 1;
 			b->x[0] = 1;
 			goto dret;
@@ -146,7 +146,7 @@ pcheck:
 		if (nbits & kmask)
 			++n;
 		for(j = n, k = 0; j >>= 1; ++k);
-		*bp = b = __gdtoa_Balloc(k);
+		*bp = b = __gdtoa_Balloc(k, PTI);
 		b->wds = n;
 		for(j = 0; j < n0; ++j)
 			b->x[j] = ALL_ON;
@@ -158,7 +158,7 @@ pcheck:
 	n = s1 - s0 - 1;
 	for(k = 0; n > (1 << (kshift-2)) - 1; n >>= 1)
 		k++;
-	b = __gdtoa_Balloc(k);
+	b = __gdtoa_Balloc(k, PTI);
 	x = b->x;
 	n = 0;
 	L = 0;
@@ -195,13 +195,13 @@ pcheck:
 	}
 	else if (n < nbits) {
 		n = nbits - n;
-		b = __gdtoa_lshift(b, n);
+		b = __gdtoa_lshift(b, n, PTI);
 		e -= n;
 		x = b->x;
 	}
 	if (e > fpi->emax) {
 	ovfl:
-		__gdtoa_Bfree(b);
+		__gdtoa_Bfree(b, PTI);
 	ovfl1:
 		errno = ERANGE;
 		switch (fpi->rounding) {
@@ -243,7 +243,7 @@ pcheck:
 						| STRTOG_Underflow;
 				}
 			}
-			__gdtoa_Bfree(b);
+			__gdtoa_Bfree(b, PTI);
 		retz:
 			errno = ERANGE;
 			return STRTOG_Zero | STRTOG_Inexlo | STRTOG_Underflow;
@@ -277,7 +277,7 @@ pcheck:
 		}
 		if (up) {
 			k = b->wds;
-			b = __gdtoa_increment(b);
+			b = __gdtoa_increment(b, PTI);
 			x = b->x;
 			if (irv == STRTOG_Denormal) {
 				if (nbits == fpi->nbits - 1

@@ -11,6 +11,7 @@
 
 //	extern const char kMonthName[12][10];
 	.section .rodata,"a",@progbits
+	.underrun
 kMonthName:
 	.ascin	"January",10
 	.ascin	"February",10
@@ -25,4 +26,5 @@ kMonthName:
 	.ascin	"November",10
 	.ascin	"December",10
 	.endobj	kMonthName,globl
+	.overrun
 	.previous

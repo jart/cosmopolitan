@@ -3,9 +3,6 @@
 
 el3rst:	.leafprologue
 	.profilable
-	mov	EL3RST(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EL3RST(%rip),%ecx
+	jmp	__errfun
 	.endfn	el3rst,globl,hidden

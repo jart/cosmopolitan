@@ -13,6 +13,7 @@ local enhancements
 - support _Static_assert
 - support __vector_size__
 - support __builtin_add_overflow, etc.
+- support GCC C11 __atomic_* primitives
 - support __builtin_memcpy, strlen, strpbrk, etc.
 - support __builtin_constant_p, __builtin_likely, etc.
 - support __builtin_isunordered, __builtin_islessgreater, etc.

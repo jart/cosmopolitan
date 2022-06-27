@@ -49,7 +49,7 @@ o/$(MODE)/test/libc/fmt/%.com.dbg:			\
 		o/$(MODE)/test/libc/fmt/fmt.pkg		\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TEST_LIBC_FMT_OBJS): test/libc/fmt/test.mk

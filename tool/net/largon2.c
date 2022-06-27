@@ -1,8 +1,49 @@
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│  largon2                                                                     │
+│  Copyright © 2016 Thibault Charbonnier                                       │
+│                                                                              │
+│  Permission is hereby granted, free of charge, to any person obtaining       │
+│  a copy of this software and associated documentation files (the             │
+│  "Software"), to deal in the Software without restriction, including         │
+│  without limitation the rights to use, copy, modify, merge, publish,         │
+│  distribute, sublicense, and/or sell copies of the Software, and to          │
+│  permit persons to whom the Software is furnished to do so, subject to       │
+│  the following conditions:                                                   │
+│                                                                              │
+│  The above copyright notice and this permission notice shall be              │
+│  included in all copies or substantial portions of the Software.             │
+│                                                                              │
+│  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,             │
+│  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF          │
+│  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.      │
+│  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY        │
+│  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,        │
+│  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE           │
+│  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/isystem/stdio.h"
+#include "libc/isystem/string.h"
+#include "third_party/argon2/argon2.h"
+#include "third_party/lua/lauxlib.h"
+#include "third_party/lua/lua.h"
+#include "third_party/lua/lualib.h"
+
+asm(".ident\t\"\\n\\n\
+largon2 (MIT License)\\n\
+Copyright 2016 Thibault Charbonnier\"");
+asm(".include \"libc/disclaimer.inc\"");
+
+// clang-format off
 /***
-Lua C binding for the Argon2 password hashing function. Compatible with Lua
-5.x and LuaJIT.
-See the [Argon2 documentation](https://github.com/P-H-C/phc-winner-argon2) for
-in-depth instructions and details about Argon2.
+Lua C binding for the Argon2 password hashing function.
+Compatible with Lua 5.x and LuaJIT.
+
+See the [Argon2 documentation](https://github.com/P-H-C/phc-winner-argon2)
+for in-depth instructions and details about Argon2.
 
 This module's version is compatible with Argon2
 [20161029](https://github.com/P-H-C/phc-winner-argon2/releases/tag/20161029)
@@ -18,23 +59,6 @@ original implementaiton.
 @license MIT
 @release 3.0.1
 */
-
-
-#include <libc/isystem/string.h>
-#include <libc/isystem/stdio.h>
-#include <third_party/argon2/argon2.h>
-#include <third_party/lua/lauxlib.h>
-#include <third_party/lua/lua.h>
-#include <third_party/lua/lualib.h>
-
-
-#ifndef LUA_51
-#if !defined(LUA_VERSION_NUM) || LUA_VERSION_NUM < 502
-#define LUA_51 1
-#else
-#define LUA_51 0
-#endif
-#endif
 
 
 /***
@@ -318,12 +342,7 @@ largon2_hash_encoded(lua_State *L)
     encoded_len = argon2_encodedlen(t_cost, m_cost, parallelism, saltlen,
                                     hash_len, variant);
 
-#if LUA_51
-    luaL_buffinit(L, &buf);
-    encoded = luaL_prepbuffer(&buf);
-#else
     encoded = luaL_buffinitsize(L, &buf, encoded_len);
-#endif
 
     if (variant == Argon2_d) {
         ret_code =
@@ -341,12 +360,7 @@ largon2_hash_encoded(lua_State *L)
                                salt, saltlen, hash_len, encoded, encoded_len);
     }
 
-#if LUA_51
-    luaL_addsize(&buf, encoded_len);
-    luaL_pushresult(&buf);
-#else
-    luaL_pushresultsize(&buf, encoded_len);
-#endif
+    luaL_pushresultsize(&buf, encoded_len - 1);
 
     if (ret_code != ARGON2_OK) {
         err_msg = (char *) argon2_error_message(ret_code);
@@ -452,30 +466,6 @@ largon2_push_argon2_variants_table(lua_State *L)
 }
 
 
-#if LUA_51
-/* Compatibility for Lua 5.1.
- *
- * luaL_setfuncs() is used to create a module table where the functions have
- * largon2_config_t as their first upvalue. Code borrowed from Lua 5.2 source. */
-static void
-compat_luaL_setfuncs(lua_State *l, const luaL_Reg *reg, int nup)
-{
-    int i;
-
-    luaL_checkstack(l, nup, "too many upvalues");
-    for (; reg->name != NULL; reg++) { /* fill the table with given functions */
-        for (i = 0; i < nup; i++)      /* copy upvalues to the top */
-            lua_pushvalue(l, -nup);
-        lua_pushcclosure(l, reg->func, nup); /* closure with those upvalues */
-        lua_setfield(l, -(nup + 2), reg->name);
-    }
-    lua_pop(l, nup); /* remove upvalues */
-}
-#else
-#define compat_luaL_setfuncs(L, l, nup) luaL_setfuncs(L, l, nup)
-#endif
-
-
 static const luaL_Reg largon2[] = { { "verify", largon2_verify },
                                     { "hash_encoded", largon2_hash_encoded },
                                     { "t_cost", largon2_cfg_t_cost },
@@ -492,23 +482,23 @@ luaopen_argon2(lua_State *L)
     lua_newtable(L);
 
     largon2_create_config(L);
-    compat_luaL_setfuncs(L, largon2, 1);
+    luaL_setfuncs(L, largon2, 1);
 
     /* push argon2.variants table */
 
     largon2_push_argon2_variants_table(L);
     lua_setfield(L, -2, "variants");
 
-    lua_pushstring(L, "3.0.1");
+    lua_pushliteral(L, "3.0.1");
     lua_setfield(L, -2, "_VERSION");
 
-    lua_pushstring(L, "Thibault Charbonnier");
+    lua_pushliteral(L, "Thibault Charbonnier");
     lua_setfield(L, -2, "_AUTHOR");
 
-    lua_pushstring(L, "MIT");
+    lua_pushliteral(L, "MIT");
     lua_setfield(L, -2, "_LICENSE");
 
-    lua_pushstring(L, "https://github.com/thibaultcha/lua-argon2");
+    lua_pushliteral(L, "https://github.com/thibaultcha/lua-argon2");
     lua_setfield(L, -2, "_URL");
 
     return 1;

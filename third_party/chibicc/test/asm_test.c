@@ -83,6 +83,24 @@ void testFlagOutputs(void) {
   ASSERT(false, sf);
 }
 
+void testAugmentLoByte_onlyModifiesLowerBits(void) {
+  int x, y;
+  x = 0x01020304;
+  y = 0x00000005;
+  asm("sub\t%b1,%b0" : "+q"(x) : "q"(y));
+  ASSERT(0x010203ff, x);
+  ASSERT(0x00000005, y);
+}
+
+void testAugmentHiByte_onlyModifiesHigherBits(void) {
+  int x, y;
+  x = 0x01020304;
+  y = 0x00000400;
+  asm("sub\t%h1,%h0" : "+Q"(x) : "Q"(y));
+  ASSERT(0x0102ff04, x);
+  ASSERT(0x00000400, y);
+}
+
 int main() {
   ASSERT(50, asm_fn1());
   ASSERT(55, asm_fn2());
@@ -134,6 +152,9 @@ int main() {
     asm("mov\t%1,%0" : "=r"(p) : "r"("hello"));
     ASSERT(1, !strcmp(p, "hello"));
   }
+
+  testAugmentLoByte_onlyModifiesLowerBits();
+  testAugmentHiByte_onlyModifiesHigherBits();
 
   return 0;
 }

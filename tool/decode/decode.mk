@@ -56,7 +56,7 @@ o/$(MODE)/tool/decode/%.com.dbg:			\
 		o/$(MODE)/tool/decode/%.o		\
 		o/$(MODE)/tool/decode/decode.pkg	\
 		$(CRT)					\
-		$(APE)
+		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 $(TOOL_DECODE_OBJS):					\

@@ -11,6 +11,7 @@
 
 //	extern const char kWeekdayName[7][10];
 	.section .rodata,"a",@progbits
+	.underrun
 kWeekdayName:
 	.ascin	"Sunday",10
 	.ascin	"Monday",10
@@ -20,4 +21,5 @@ kWeekdayName:
 	.ascin	"Friday",10
 	.ascin	"Saturday",10
 	.endobj	kWeekdayName,globl
+	.overrun
 	.previous

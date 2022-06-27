@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/struct/rusage.h"
 
 /**
  * Waits for status to change on any child process.
@@ -25,6 +25,7 @@
  *     may be inspected using WEEXITSTATUS(), etc.
  * @return process id of terminated child or -1 w/ errno
  * @asyncsignalsafe
+ * @restartable
  * @vforksafe
  */
 int wait(int *opt_out_wstatus) {

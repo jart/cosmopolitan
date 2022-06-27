@@ -31,7 +31,7 @@ _jmpstack:
 	mov	%rcx,%rsi
 	mov	%r8,%rdx
 	mov	%r9,%rcx
-	xor	%rbp,%rbp
+	xor	%ebp,%ebp
 	call	*%rax
-	ud2
+	.unreachable
 	.endfn	_jmpstack,globl,hidden

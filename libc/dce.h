@@ -57,7 +57,7 @@
 #define IsOptimized() 0
 #endif
 
-#ifdef __FSANITIZE_ADDRESS__
+#ifdef __SANITIZE_ADDRESS__
 #define IsAsan() 1
 #else
 #define IsAsan() 0

@@ -181,17 +181,13 @@ static PyObject *
 _io__IOBase_readline_impl(PyObject *self, Py_ssize_t limit);
 
 static PyObject *
-_io__IOBase_readline(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_io__IOBase_readline(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t limit = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|O&:readline",
         _PyIO_ConvertSsize_t, &limit)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("readline", kwnames)) {
         goto exit;
     }
     return_value = _io__IOBase_readline_impl(self, limit);
@@ -217,17 +213,13 @@ static PyObject *
 _io__IOBase_readlines_impl(PyObject *self, Py_ssize_t hint);
 
 static PyObject *
-_io__IOBase_readlines(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_io__IOBase_readlines(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t hint = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|O&:readlines",
         _PyIO_ConvertSsize_t, &hint)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("readlines", kwnames)) {
         goto exit;
     }
     return_value = _io__IOBase_readlines_impl(self, hint);
@@ -256,17 +248,13 @@ static PyObject *
 _io__RawIOBase_read_impl(PyObject *self, Py_ssize_t n);
 
 static PyObject *
-_io__RawIOBase_read(PyObject *self, PyObject **args, Py_ssize_t nargs, PyObject *kwnames)
+_io__RawIOBase_read(PyObject *self, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *return_value = NULL;
     Py_ssize_t n = -1;
 
     if (!_PyArg_ParseStack(args, nargs, "|n:read",
         &n)) {
-        goto exit;
-    }
-
-    if (!_PyArg_NoStackKeywords("read", kwnames)) {
         goto exit;
     }
     return_value = _io__RawIOBase_read_impl(self, n);
@@ -292,4 +280,4 @@ _io__RawIOBase_readall(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
     return _io__RawIOBase_readall_impl(self);
 }
-/*[clinic end generated code: output=1bcece367fc7b0cd input=a9049054013a1b77]*/
+/*[clinic end generated code: output=ec8a2ef87208ce4c input=a9049054013a1b77]*/

@@ -3,9 +3,6 @@
 
 eacces:	.leafprologue
 	.profilable
-	mov	EACCES(%rip),%eax
-	mov	%eax,errno(%rip)
-	push	$-1
-	pop	%rax
-	.leafepilogue
+	mov	EACCES(%rip),%ecx
+	jmp	__errfun
 	.endfn	eacces,globl,hidden

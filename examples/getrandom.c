@@ -209,6 +209,7 @@ const struct Function {
     {"getrandom", GetRandom},    //
     {"inc", inc},                //
     {"knuth", knuth},            //
+    {"lemur64", lemur64},        //
     {"libc", libc},              //
     {"moby", moby},              //
     {"mt19937", _mt19937},       //

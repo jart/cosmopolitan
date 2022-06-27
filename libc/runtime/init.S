@@ -20,7 +20,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/dce.h"
-.source	__FILE__
 
 //	Decentralized function for process initialization.
 //
@@ -85,6 +84,7 @@ _woot:	leave
 	.globl	__init_rodata_start,__init_rodata_end
 	.hidden	__init_rodata_start,__init_rodata_end
 	.align	__SIZEOF_POINTER__
+	.underrun
 __init_rodata_start:
 	.previous/*
 	...
@@ -93,6 +93,7 @@ __init_rodata_start:
 	*/.section .initroepilogue,"a",@progbits
 __init_rodata_end:
 	.byte	0x90
+	.overrun
 	.previous
 
 //	Decentralized section for unpacked data structures.
@@ -108,6 +109,7 @@ __init_rodata_end:
 	.globl	__init_bss_start,__init_bss_end
 	.hidden	__init_bss_start,__init_bss_end
 	.align	__SIZEOF_POINTER__
+	.underrun
 __init_bss_start:
 	.previous/*
 	...
@@ -116,6 +118,7 @@ __init_bss_start:
 	*/.section .piro.bss.init.3,"aw",@nobits
 __init_bss_end:
 	.byte	0
+	.overrun
 	.previous
 
 //	Special area for Windows NT support code.

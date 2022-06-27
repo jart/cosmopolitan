@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -34,14 +35,25 @@
 textwindows int sys_utimensat_nt(int dirfd, const char *path,
                                  const struct timespec ts[2], int flags) {
   int i, rc;
-  int64_t fh;
+  int64_t fh, closeme;
   uint16_t path16[PATH_MAX];
   struct NtFileTime ft[2], *ftp[2];
-  if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
-  if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,
-                       kNtOpenExisting, kNtFileAttributeNormal, 0)) == -1) {
-    return __winerr();
+
+  if (path) {
+    if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
+    if ((fh = CreateFile(path16, kNtFileWriteAttributes, kNtFileShareRead, NULL,
+                         kNtOpenExisting, kNtFileAttributeNormal, 0)) != -1) {
+      closeme = fh;
+    } else {
+      return __winerr();
+    }
+  } else if (__isfdkind(dirfd, kFdFile)) {
+    fh = g_fds.p[dirfd].handle;
+    closeme = -1;
+  } else {
+    return ebadf();
   }
+
   if (!ts || ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
     GetSystemTimeAsFileTime(ft);
   }
@@ -65,6 +77,10 @@ textwindows int sys_utimensat_nt(int dirfd, const char *path,
   } else {
     rc = __winerr();
   }
-  CloseHandle(fh);
+
+  if (closeme != -1) {
+    CloseHandle(fh);
+  }
+
   return rc;
 }
