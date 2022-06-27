@@ -222,7 +222,7 @@ _start:
 	cmp	$+1,%edx
 	jne	0f
 	mov	$XNU,%dl
-	mov	$0,%rcx
+	xor	%ecx,%ecx
 
 0:	mov	%rsp,%rsi
 	jmp	ApeLoader

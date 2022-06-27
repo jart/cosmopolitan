@@ -39,7 +39,7 @@ _start:
 	cmp	$+1,%edx
 	jne	0f
 	mov	$XNU,%cl
-	mov	$0,%rdi
+	xor	%edi,%edi
 0:
 #endif
 
