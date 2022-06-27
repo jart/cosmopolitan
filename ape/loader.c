@@ -36,7 +36,7 @@
  * `ape/ape.S` bootloader embeds this binary inside each binary that's
  * linked using `$(APE_NO_MODIFY_SELF)` so it is an automated seamless
  * process. the shell script at the top of the .COM files will copy it
- * to `${TMPDIR:-/tmp}/ape` and call execve(). It's a zero copy
+ * to `${TMPDIR:-${HOME:-.}}/.ape` and call execve(). It's a zero copy
  * operation in praxis since this payload uses mmap() to load the rest
  * of your executable the same way the kernel does, based on ELF phdrs
  * which are located in accordance with the first sh printf statement.

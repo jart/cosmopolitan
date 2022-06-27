@@ -44,6 +44,7 @@ _Atomic(int) thechilde;
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath thread", 0);
+  errno = 0;
 }
 
 void SetUp(void) {

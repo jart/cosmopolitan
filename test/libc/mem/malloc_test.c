@@ -47,6 +47,7 @@ void SetUp(void) {
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath", 0);
+  errno = 0;
 }
 
 TEST(malloc, zeroMeansOne) {

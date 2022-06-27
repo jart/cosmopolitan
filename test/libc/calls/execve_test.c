@@ -33,8 +33,8 @@ int ws, pid;
 char testlib_enable_tmp_setup_teardown;
 
 __attribute__((__constructor__)) static void init(void) {
-  // TODO(jart): what's up with rhel5 / rhel7?
-  // pledge("stdio rpath wpath cpath fattr proc exec", 0);
+  pledge("stdio rpath wpath cpath fattr proc exec", 0);
+  errno = 0;
 }
 
 bool UsingBinfmtMisc(void) {

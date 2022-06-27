@@ -24,6 +24,7 @@
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath tty", 0);
+  errno = 0;
 }
 
 /**

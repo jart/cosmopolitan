@@ -35,6 +35,7 @@
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath proc", 0);
+  errno = 0;
 }
 
 // It's been reported that Chromebooks return EINVAL here.

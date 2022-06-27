@@ -32,6 +32,7 @@ bool gotsig;
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath", 0);
+  errno = 0;
 }
 
 void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {

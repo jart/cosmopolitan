@@ -39,6 +39,7 @@
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath proc inet", 0);
+  errno = 0;
 }
 
 dontdiscard char *FormatPollFd(struct pollfd p[2]) {

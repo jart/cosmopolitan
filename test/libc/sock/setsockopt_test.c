@@ -29,6 +29,7 @@
 
 __attribute__((__constructor__)) static void init(void) {
   pledge("stdio rpath inet", 0);
+  errno = 0;
 }
 
 TEST(setsockopt, SO_RCVTIMEO) {

@@ -22,6 +22,7 @@
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
@@ -64,10 +65,12 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_writev,             //
     __NR_linux_pwrite,             //
     __NR_linux_pwritev,            //
+    __NR_linux_pwritev2,           //
     __NR_linux_read,               //
     __NR_linux_readv,              //
     __NR_linux_pread,              //
     __NR_linux_preadv,             //
+    __NR_linux_preadv2,            //
     __NR_linux_dup,                //
     __NR_linux_dup2,               //
     __NR_linux_dup3,               //
@@ -96,12 +99,16 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_getitimer,          //
     __NR_linux_setitimer,          //
     __NR_linux_gettimeofday,       //
+    __NR_linux_copy_file_range,    //
+    __NR_linux_splice,             //
     __NR_linux_lseek,              //
+    __NR_linux_tee,                //
     __NR_linux_brk,                //
     __NR_linux_mmap,               //
     __NR_linux_msync,              //
     __NR_linux_munmap,             //
     __NR_linux_madvise,            //
+    __NR_linux_fadvise,            //
     __NR_linux_mprotect,           //
     __NR_linux_arch_prctl,         //
     __NR_linux_set_tid_address,    //
@@ -167,6 +174,7 @@ static const uint16_t kPledgeLinuxWpath[] = {
 static const uint16_t kPledgeLinuxCpath[] = {
     __NR_linux_rename,     //
     __NR_linux_renameat,   //
+    __NR_linux_renameat2,  //
     __NR_linux_link,       //
     __NR_linux_linkat,     //
     __NR_linux_symlink,    //
@@ -230,6 +238,7 @@ static const uint16_t kPledgeLinuxTty[] = {
 static const uint16_t kPledgeLinuxProc[] = {
     __NR_linux_fork,         //
     __NR_linux_vfork,        //
+    __NR_linux_clone,        //
     __NR_linux_kill,         //
     __NR_linux_setsid,       //
     __NR_linux_setpgid,      //
@@ -259,7 +268,8 @@ static const uint16_t kPledgeLinuxId[] = {
 };
 
 static const uint16_t kPledgeLinuxExec[] = {
-    __NR_linux_execve,  //
+    __NR_linux_execve,    //
+    __NR_linux_execveat,  //
 };
 
 static const struct Pledges {
@@ -952,8 +962,9 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  *   lstat, fstatat, access, faccessat, readlink, readlinkat, chmod,
  *   fchmod, fchmodat.
  *
- * - "cpath" (create path ops) allows rename, renameat, link, linkat,
- *   symlink, symlinkat, unlink, rmdir, unlinkat, mkdir, mkdirat.
+ * - "cpath" (create path ops) allows rename, renameat, renameat2, link,
+ *   linkat, symlink, symlinkat, unlink, rmdir, unlinkat, mkdir,
+ *   mkdirat.
  *
  * - "flock" allows flock, fcntl(F_GETLK), fcntl(F_SETLK),
  *   fcntl(F_SETLKW).
@@ -980,10 +991,10 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  * - "id" allows setuid, setreuid, setresuid, setgid, setregid,
  *   setresgid, setgroups, prlimit, setrlimit, getpriority, setpriority.
  *
- * - "exec" allows execve. If this is used then APE binaries should be
- *   assimilated in order to work on OpenBSD. On Linux, mmap() will be
- *   loosened up to allow creating PROT_EXEC memory (for APE loader) and
- *   system call origin verification won't be activated.
+ * - "exec" allows execve, execveat. If this is used then APE binaries
+ *   should be assimilated in order to work on OpenBSD. On Linux, mmap()
+ *   will be loosened up to allow creating PROT_EXEC memory (for APE
+ *   loader) and system call origin verification won't be activated.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
