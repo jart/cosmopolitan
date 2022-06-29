@@ -143,6 +143,18 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
+o/$(MODE)/examples/picol.o:					\
+		OVERRIDE_CPPFLAGS +=				\
+			-DSTACK_FRAME_UNLIMITED
+
+o/$(MODE)/examples/picol.com.dbg:				\
+		$(EXAMPLES_DEPS)				\
+		o/$(MODE)/examples/picol.o			\
+		o/$(MODE)/examples/examples.pkg			\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/examples/nesemu1.com:							\
 		o/$(MODE)/examples/nesemu1.com.dbg				\
 		o/$(MODE)/third_party/zip/zip.com				\
