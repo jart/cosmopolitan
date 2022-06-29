@@ -1380,7 +1380,7 @@ FUNCTIONS
               3. data (created by zlib compress function)
 
           `level` is the compression level, which defaults to 7. The max
-          is 10. Lower numbers go faster. Higher numbers go slower, but
+          is 9. Lower numbers go faster. Higher numbers go slower, but
           have better compression ratios.
 
           `raw` may be set to true if you only want `data` (3) to be
@@ -1406,7 +1406,7 @@ FUNCTIONS
 
           If you used the `raw` parameter when calling Compress() i.e.
           `compdata` doesn't have the redbean header described above,
-          then the `uncomplen` parameter may be supplied. IN that case
+          then the `uncomplen` parameter may be supplied. In that case
           your data is handed over directly to zlib `uncompress()`. In
           this case an exception will be raised if the value couldn't be
           decoded, or if the resulting length differed from the supplied
