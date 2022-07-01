@@ -1380,7 +1380,7 @@ FUNCTIONS
               3. data (created by zlib compress function)
 
           `level` is the compression level, which defaults to 7. The max
-          is 10. Lower numbers go faster. Higher numbers go slower, but
+          is 9. Lower numbers go faster. Higher numbers go slower, but
           have better compression ratios.
 
           `raw` may be set to true if you only want `data` (3) to be
@@ -1406,7 +1406,7 @@ FUNCTIONS
 
           If you used the `raw` parameter when calling Compress() i.e.
           `compdata` doesn't have the redbean header described above,
-          then the `uncomplen` parameter may be supplied. IN that case
+          then the `uncomplen` parameter may be supplied. In that case
           your data is handed over directly to zlib `uncompress()`. In
           this case an exception will be raised if the value couldn't be
           decoded, or if the resulting length differed from the supplied
@@ -2754,9 +2754,25 @@ UNIX MODULE
     keys are ignored by poll(). The returned table will be a subset of
     the supplied file descriptors.
 
-    `timeoutms` is the number of seconds to block. If this is set to -1
-    then that means block as long as it takes until there's an event or
-    an interrupt. If the timeout expires, an empty table is returned.
+    `events` and `revents` may be any combination (using bitwise OR) of:
+
+    - `POLLIN` (events, revents): There is data to read.
+    - `POLLOUT` (events, revents): Writing is now possible, although may
+      still block if available space in a socket or pipe is exceeded
+      (unless `O_NONBLOCK` is set).
+    - `POLLPRI` (events, revents): There is some exceptional condition
+      (for example, out-of-band data on a TCP socket).
+    - `POLLRDHUP` (events, revents): Stream socket peer closed
+       connection, or shut down writing half of connection.
+    - `POLLERR` (revents): Some error condition.
+    - `POLLHUP` (revents): Hang up. When reading from a channel such as
+       a pipe or a stream socket, this event merely indicates that the
+       peer closed its end of the channel.
+    - `POLLNVAL` (revents): Invalid request.
+
+    `timeoutms` is the number of milliseconds to block. If this is set to
+    -1 then that means block as long as it takes until there's an event
+    or an interrupt. If the timeout expires, an empty table is returned.
 
   unix.gethostname()
       ├─→ host:str
