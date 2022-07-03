@@ -501,7 +501,7 @@ HOOKS
   OnClientConnection(ip:int,port:int,serverip:int,serverport:int) → bool
           If this function is defined it'll be called from the main process
           each time redbean accepts a new client connection. If it returns
-          true then redbean will close the connection without calling fork.
+          `true`, redbean will close the connection without calling fork.
 
   OnProcessCreate(pid:int,ip:int,port:int,serverip:int,serverport:int)
           If this function is defined it'll be called from the main process
@@ -516,6 +516,12 @@ HOOKS
           If this function is defined it'll be called from the main process
           each time redbean reaps a child connection process using wait4().
           This won't be called in uniprocess mode.
+
+  OnServerListen(socketdescriptor:int,serverip:int,serverport:int) → bool
+          If this function is defined it'll be called from the main process
+          before redbean starts listening on a port. This hook can be used
+          to modify socket configuration to set `SO_REUSEPORT`, for example.
+          If it returns `true`, redbean will not listen to that ip/port.
 
   OnServerStart()
           If this function is defined it'll be called from the main process
