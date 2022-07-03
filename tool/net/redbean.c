@@ -3642,17 +3642,6 @@ static void ReseedRng(mbedtls_ctr_drbg_context *r, const char *s) {
 #endif
 }
 
-static wontreturn void LuaThrowTlsError(lua_State *L, const char *s, int r) {
-  const char *code;
-  code = gc(xasprintf("-0x%04x", -r));
-  if (!IsTiny()) {
-    luaL_error(L, "tls %s failed (%s %s)", s, code, GetTlsError(r));
-  } else {
-    luaL_error(L, "tls %s failed (grep %s)", s, code);
-  }
-  unreachable;
-}
-
 static void LogMessage(const char *d, const char *s, size_t n) {
   size_t n2, n3;
   char *s2, *s3;
@@ -3680,6 +3669,21 @@ static void LogBody(const char *d, const char *s, size_t n) {
     }
     free(s2);
   }
+}
+
+static int LuaNilError(lua_State *L, const char *fmt, ...) {
+  va_list argp;
+  va_start(argp, fmt);
+  lua_pushnil(L);
+  lua_pushvfstring(L, fmt, argp);
+  va_end(argp);
+  return 2;
+}
+
+static int LuaNilTlsError(lua_State *L, const char *s, int r) {
+  return LuaNilError(L, "tls %s failed (%s %s)", s,
+                     IsTiny() ? "grep" : GetTlsError(r),
+                     gc(xasprintf("-0x%04x", -r)));
 }
 
 static int LuaFetch(lua_State *L) {
@@ -3739,11 +3743,11 @@ static int LuaFetch(lua_State *L) {
         if (lua_type(L, -2) == LUA_TSTRING) {  // skip any non-string keys
           key = lua_tolstring(L, -2, &keylen);
           if (!IsValidHttpToken(key, keylen))
-            return luaL_argerror(L, 2, "invalid header name");
+            return LuaNilError(L, "invalid header name: %s", key);
 
           val = lua_tolstring(L, -1, &vallen);
           if (!(hdr = gc(EncodeHttpHeaderValue(val, vallen, 0))))
-            return luaL_argerror(L, 2, "invalid header value encoding");
+            return LuaNilError(L, "invalid header %s value encoding", key);
 
           // Content-Length and Connection will be overwritten;
           // skip them to avoid duplicates;
@@ -3796,8 +3800,7 @@ static int LuaFetch(lua_State *L) {
     } else
 #endif
         if (!(url.scheme.n == 4 && !memcasecmp(url.scheme.p, "http", 4))) {
-      luaL_argerror(L, 1, "bad scheme");
-      unreachable;
+      return LuaNilError(L, "bad scheme");
     }
   }
 
@@ -3824,8 +3827,7 @@ static int LuaFetch(lua_State *L) {
         gc(xasprintf("%d", servers.n ? ntohs(servers.p[0].addr.sin_port) : 80));
   }
   if (!IsAcceptableHost(host, -1)) {
-    luaL_argerror(L, 1, "invalid host");
-    unreachable;
+    return LuaNilError(L, "invalid host");
   }
   if (!hosthdr) hosthdr = gc(xasprintf("%s:%s", host, port));
 
@@ -3860,9 +3862,8 @@ static int LuaFetch(lua_State *L) {
    */
   DEBUGF("(ftch) client resolving %s", host);
   if ((rc = getaddrinfo(host, port, &hints, &addr)) != EAI_SUCCESS) {
-    luaL_error(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
-               gai_strerror(rc), strerror(errno));
-    unreachable;
+    return LuaNilError(L, "getaddrinfo(%s:%s) error: EAI_%s %s", host, port,
+                       gai_strerror(rc), strerror(errno));
   }
 
   /*
@@ -3877,8 +3878,7 @@ static int LuaFetch(lua_State *L) {
   freeaddrinfo(addr), addr = 0;
   if (rc == -1) {
     close(sock);
-    luaL_error(L, "connect(%s:%s) error: %s", host, port, strerror(errno));
-    unreachable;
+    return LuaNilError(L, "connect(%s:%s) error: %s", host, port, strerror(errno));
   }
 
 #ifndef UNSECURE
@@ -3907,8 +3907,7 @@ static int LuaFetch(lua_State *L) {
           goto VerifyFailed;
         default:
           close(sock);
-          LuaThrowTlsError(L, "handshake", ret);
-          unreachable;
+          return LuaNilTlsError(L, "handshake", ret);
       }
     }
     LockInc(&shared->c.sslhandshakes);
@@ -3928,15 +3927,13 @@ static int LuaFetch(lua_State *L) {
     if (ret != requestlen) {
       if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) goto VerifyFailed;
       close(sock);
-      LuaThrowTlsError(L, "write", ret);
-      unreachable;
+      return LuaNilTlsError(L, "write", ret);
     }
   } else
 #endif
       if (WRITE(sock, request, requestlen) != requestlen) {
     close(sock);
-    luaL_error(L, "write error: %s", strerror(errno));
-    unreachable;
+    return LuaNilError(L, "write error: %s", strerror(errno));
   }
   if (logmessages) {
     LogMessage("sent", request, requestlen);
@@ -3964,8 +3961,7 @@ static int LuaFetch(lua_State *L) {
           close(sock);
           free(inbuf.p);
           DestroyHttpMessage(&msg);
-          LuaThrowTlsError(L, "read", rc);
-          unreachable;
+          return LuaNilTlsError(L, "read", rc);
         }
       }
     } else
@@ -3974,8 +3970,7 @@ static int LuaFetch(lua_State *L) {
       close(sock);
       free(inbuf.p);
       DestroyHttpMessage(&msg);
-      luaL_error(L, "read error: %s", strerror(errno));
-      unreachable;
+      return LuaNilError(L, "read error: %s", strerror(errno));
     }
     g = rc;
     inbuf.n += g;
@@ -4118,16 +4113,14 @@ TransportError:
   DestroyHttpMessage(&msg);
   free(inbuf.p);
   close(sock);
-  luaL_error(L, "transport error");
-  unreachable;
+  return LuaNilError(L, "transport error");
 #ifndef UNSECURE
 VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
   close(sock);
-  LuaThrowTlsError(
+  return LuaNilTlsError(
       L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
       ret);
-  unreachable;
 #endif
 #undef ssl
 }

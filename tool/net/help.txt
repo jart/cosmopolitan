@@ -722,7 +722,8 @@ FUNCTIONS
           This function is not available in unsecure mode.
 
   Fetch(url:str[,body:str|{method=value:str,body=value:str,headers=table,...}])
-      → status:int,{header:str=value:str,...},body:str
+      ├─→ status:int, {header:str=value:str,...}, body:str
+      └─→ nil, error:str
           Sends an HTTP/HTTPS request to the specified URL. If only the URL is
           provided, then a GET request is sent. If both URL and body parameters
           are specified, then a POST request is sent. If any other method needs
