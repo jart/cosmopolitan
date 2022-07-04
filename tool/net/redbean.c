@@ -2274,7 +2274,11 @@ static ssize_t Send(struct iovec *iov, int iovlen) {
       errno = 0;
     } else {
       LockInc(&shared->c.writeerrors);
-      WARNF("(rsp) %s write error: %m", DescribeClient());
+      if (errno == EBADF) {  // don't warn on close/bad fd
+        DEBUGF("(rsp) %s write badf", DescribeClient());
+      } else {
+        WARNF("(rsp) %s write error: %m", DescribeClient());
+      }
     }
     connectionclose = true;
   }
@@ -5417,7 +5421,7 @@ static const char *DescribeClose(void) {
   if (killed) return "killed";
   if (meltdown) return "meltdown";
   if (terminated) return "terminated";
-  if (connectionclose) return "connectionclose";
+  if (connectionclose) return "connection closed";
   return "destroyed";
 }
 
@@ -6320,15 +6324,19 @@ static void HandleMessages(void) {
         LockInc(&shared->c.readtimeouts);
         if (amtread) SendTimeout();
         NotifyClose();
-        LogClose("readtimeout");
+        LogClose("read timeout");
         return;
       } else if (errno == ECONNRESET) {
         LockInc(&shared->c.readresets);
-        LogClose("readreset");
+        LogClose("read reset");
         return;
       } else {
         LockInc(&shared->c.readerrors);
-        WARNF("(clnt) %s readerror: %m", DescribeClient());
+        if (errno == EBADF) {  // don't warn on close/bad fd
+          LogClose("read badf");
+        } else {
+          WARNF("(clnt) %s read error: %m", DescribeClient());
+        }
         return;
       }
       if (killed || (terminated && !amtread) ||
