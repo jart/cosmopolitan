@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/fmt/conv.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/utime.h"
@@ -40,20 +41,16 @@ int sys_utimensat_xnu(int dirfd, const char *path, const struct timespec ts[2],
     if (ts[0].tv_nsec == UTIME_NOW) {
       tv[0] = now;
     } else if (ts[0].tv_nsec == UTIME_OMIT) {
-      tv[0].tv_sec = st.st_atim.tv_sec;
-      tv[0].tv_usec = st.st_atim.tv_nsec / 1000;
+      tv[0] = _timespec2timeval(st.st_atim);
     } else {
-      tv[0].tv_sec = ts[0].tv_sec;
-      tv[0].tv_usec = ts[0].tv_nsec / 1000;
+      tv[0] = _timespec2timeval(ts[0]);
     }
     if (ts[1].tv_nsec == UTIME_NOW) {
       tv[1] = now;
     } else if (ts[1].tv_nsec == UTIME_OMIT) {
-      tv[1].tv_sec = st.st_mtim.tv_sec;
-      tv[1].tv_usec = st.st_mtim.tv_nsec / 1000;
+      tv[1] = _timespec2timeval(st.st_mtim);
     } else {
-      tv[1].tv_sec = ts[1].tv_sec;
-      tv[1].tv_usec = ts[1].tv_nsec / 1000;
+      tv[1] = _timespec2timeval(ts[1]);
     }
   } else {
     tv[0] = now;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/atomic.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
@@ -28,6 +29,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/log/check.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
@@ -49,6 +51,7 @@ static int x;
 char g_testlib_olddir[PATH_MAX];
 char g_testlib_tmpdir[PATH_MAX];
 struct sigaction wanthandlers[31];
+static char testlib_error_lock;
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
@@ -57,11 +60,29 @@ void testlib_finish(void) {
   }
 }
 
+void testlib_error_enter(const char *file, const char *func) {
+  atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed);
+  atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed);
+  _spinlock(&testlib_error_lock);
+  if (!IsWindows()) sys_getpid(); /* make strace easier to read */
+  if (!IsWindows()) sys_getpid();
+  if (g_testlib_shoulddebugbreak) {
+    DebugBreak();
+  }
+  testlib_showerror_file = file;
+  testlib_showerror_func = func;
+}
+
+void testlib_error_leave(void) {
+  atomic_fetch_add_explicit(&__ftrace, 1, memory_order_relaxed);
+  atomic_fetch_add_explicit(&__strace, 1, memory_order_relaxed);
+  _spunlock(&testlib_error_lock);
+}
+
 wontreturn void testlib_abort(void) {
   testlib_finish();
   __restorewintty();
   _Exit(MIN(255, g_testlib_failed));
-  unreachable;
 }
 
 static void SetupTmpDir(void) {

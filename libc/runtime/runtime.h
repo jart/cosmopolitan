@@ -117,6 +117,7 @@ unsigned char *GetFirstInstruction(void);
 unsigned char *GetInstructionLengths(void);
 void __print_maps(void);
 void __warn_if_powersave(void);
+const char *__describe_os(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

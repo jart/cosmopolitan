@@ -20,7 +20,6 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
-#include "libc/calls/math.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
@@ -410,7 +409,6 @@ static int statuscode;
 static int shutdownsig;
 static int sslpskindex;
 static int oldloglevel;
-static int maxpayloadsize;
 static int messageshandled;
 static int sslticketlifetime;
 static uint32_t clientaddrsize;
@@ -437,6 +435,7 @@ static const char *zpath;
 static const char *brand;
 static char *monitorstack;
 static char gzip_footer[8];
+static long maxpayloadsize;
 static const char *pidpath;
 static const char *logpath;
 static const char *histpath;
@@ -1205,7 +1204,7 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
 
 static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
   LockInc(&shared->c.connectionshandled);
-  AddRusage(&shared->children, ru);
+  _addrusage(&shared->children, ru);
   ReportWorkerExit(pid, ws);
   ReportWorkerResources(pid, ru);
   if (hasonprocessdestroy) {

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
@@ -25,12 +26,16 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
@@ -38,9 +43,9 @@
 #include "libc/sysv/errfuns.h"
 
 #define READONLY 0x8000
-#define ADDRLESS 0x8000
 #define INET     0x8000
 #define UNIX     0x4000
+#define ADDRLESS 0x2000
 #define LOCK     0x8000
 #define TTY      0x8000
 
@@ -58,8 +63,9 @@ static const uint16_t kPledgeLinuxDefault[] = {
 };
 
 static const uint16_t kPledgeLinuxStdio[] = {
-    __NR_linux_clock_gettime,      //
     __NR_linux_clock_getres,       //
+    __NR_linux_clock_gettime,      //
+    __NR_linux_clock_nanosleep,    //
     __NR_linux_close,              //
     __NR_linux_write,              //
     __NR_linux_writev,             //
@@ -117,7 +123,6 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_pipe2,              //
     __NR_linux_poll,               //
     __NR_linux_select,             //
-    __NR_linux_recvmsg,            //
     __NR_linux_recvfrom,           //
     __NR_linux_sendto | ADDRLESS,  //
     __NR_linux_ioctl,              //
@@ -131,6 +136,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_umask,              //
     __NR_linux_wait4,              //
     __NR_linux_uname,              //
+    __NR_linux_prctl,              //
 };
 
 static const uint16_t kPledgeLinuxFlock[] = {
@@ -151,9 +157,6 @@ static const uint16_t kPledgeLinuxRpath[] = {
     __NR_linux_faccessat,          //
     __NR_linux_readlink,           //
     __NR_linux_readlinkat,         //
-    __NR_linux_chmod,              //
-    __NR_linux_fchmod,             //
-    __NR_linux_fchmodat,           //
 };
 
 static const uint16_t kPledgeLinuxWpath[] = {
@@ -167,6 +170,7 @@ static const uint16_t kPledgeLinuxWpath[] = {
     __NR_linux_access,      //
     __NR_linux_faccessat,   //
     __NR_linux_readlinkat,  //
+    __NR_linux_chmod,       //
     __NR_linux_fchmod,      //
     __NR_linux_fchmodat,    //
 };
@@ -184,6 +188,11 @@ static const uint16_t kPledgeLinuxCpath[] = {
     __NR_linux_unlinkat,   //
     __NR_linux_mkdir,      //
     __NR_linux_mkdirat,    //
+};
+
+static const uint16_t kPledgeLinuxDpath[] = {
+    __NR_linux_mknod,    //
+    __NR_linux_mknodat,  //
 };
 
 static const uint16_t kPledgeLinuxFattr[] = {
@@ -235,6 +244,10 @@ static const uint16_t kPledgeLinuxTty[] = {
     __NR_linux_ioctl | TTY,  //
 };
 
+static const uint16_t kPledgeLinuxRecvfd[] = {
+    __NR_linux_recvmsg,  //
+};
+
 static const uint16_t kPledgeLinuxProc[] = {
     __NR_linux_fork,         //
     __NR_linux_vfork,        //
@@ -282,12 +295,14 @@ static const struct Pledges {
     {"rpath", PLEDGE(kPledgeLinuxRpath)},      //
     {"wpath", PLEDGE(kPledgeLinuxWpath)},      //
     {"cpath", PLEDGE(kPledgeLinuxCpath)},      //
+    {"dpath", PLEDGE(kPledgeLinuxDpath)},      //
     {"flock", PLEDGE(kPledgeLinuxFlock)},      //
     {"fattr", PLEDGE(kPledgeLinuxFattr)},      //
     {"inet", PLEDGE(kPledgeLinuxInet)},        //
     {"unix", PLEDGE(kPledgeLinuxUnix)},        //
     {"dns", PLEDGE(kPledgeLinuxDns)},          //
     {"tty", PLEDGE(kPledgeLinuxTty)},          //
+    {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},    //
     {"proc", PLEDGE(kPledgeLinuxProc)},        //
     {"thread", PLEDGE(kPledgeLinuxThread)},    //
     {"exec", PLEDGE(kPledgeLinuxExec)},        //
@@ -321,16 +336,20 @@ static bool AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
 }
 
 // SYSCALL is only allowed in the .privileged section
+// We assume program image is loaded in 32-bit spaces
 static bool AppendOriginVerification(struct Filter *f) {
   intptr_t x = (intptr_t)__privileged_start;
   intptr_t y = (intptr_t)__privileged_end;
+  assert(0 < x && x < y && y < INT_MAX);
   struct sock_filter fragment[] = {
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(instruction_pointer)),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, x, 0, 4 - 3),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, y, 0, 5 - 4),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      /*L0*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(instruction_pointer) + 4),
+      /*L1*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 2),
+      /*L2*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(instruction_pointer)),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, x, 0, 5 - 4),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, y, 0, 6 - 5),
+      /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL),
+      /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L7*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -469,7 +488,7 @@ static bool AllowGetsockopt(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-// The flags parameter must not have:
+// The flags parameter of mmap() must not have:
 //
 //   - MAP_LOCKED   (0x02000)
 //   - MAP_POPULATE (0x08000)
@@ -477,24 +496,25 @@ static bool AllowGetsockopt(struct Filter *f) {
 //   - MAP_HUGETLB  (0x40000)
 //
 static bool AllowMmap(struct Filter *f) {
-  static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 9 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x80),         // lazy
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 4),
-      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
-      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x5a000),
-      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 7),
-      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L9*/ /* next filter */
+  intptr_t y = (intptr_t)__privileged_end;
+  assert(0 < y && y < INT_MAX);
+  struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 6 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x5a000),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L6*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-// The prot parameter of mmap() must not have:
+// The prot parameter of mmap() may only have:
 //
-//   - PROT_EXEC (4)
+//   - PROT_NONE  (0)
+//   - PROT_READ  (1)
+//   - PROT_WRITE (2)
 //
 // The flags parameter must not have:
 //
@@ -507,7 +527,7 @@ static bool AllowMmapNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, PROT_EXEC),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~(PROT_READ | PROT_WRITE)),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 4),
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
       /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x5a000),
@@ -519,15 +539,17 @@ static bool AllowMmapNoexec(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-// The prot parameter of mprotect() must not have:
+// The prot parameter of mprotect() may only have:
 //
-//   - PROT_EXEC (4)
+//   - PROT_NONE  (0)
+//   - PROT_READ  (1)
+//   - PROT_WRITE (2)
 //
 static bool AllowMprotectNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mprotect, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, PROT_EXEC),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~(PROT_READ | PROT_WRITE)),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
@@ -536,10 +558,9 @@ static bool AllowMprotectNoexec(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-// The flags parameter of open() must not have:
+// The open() system call is permitted only when
 //
-//   - O_WRONLY (1)
-//   - O_RDWR   (2)
+//   - (flags & O_ACCMODE) == O_RDONLY
 //
 static bool AllowOpenReadonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
@@ -677,11 +698,30 @@ static bool AllowFcntlLock(struct Filter *f) {
 //
 //   - NULL
 //
-static bool AllowSendtoRestricted(struct Filter *f) {
+static bool AllowSendtoAddrless(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sendto, 0, 5 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 4 - 3),
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sendto, 0, 7 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 0),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
+      /*L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 4),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
+      /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L7*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The sig parameter of sigaction() must NOT be
+//
+//   - SIGSYS (31)
+//
+static bool AllowSigaction(struct Filter *f) {
+  static const int nr = __NR_linux_sigaction;
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 5 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 31, 4 - 3, 0),
       /*L3*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L5*/ /* next filter */
@@ -691,18 +731,42 @@ static bool AllowSendtoRestricted(struct Filter *f) {
 
 // The family parameter of socket() must be one of:
 //
-//   - AF_INET (2)
+//   - AF_INET  (2)
 //   - AF_INET6 (10)
+//
+// The type parameter of socket() will ignore:
+//
+//   - SOCK_CLOEXEC  (0x80000)
+//   - SOCK_NONBLOCK (0x00800)
+//
+// The type parameter of socket() must be one of:
+//
+//   - SOCK_STREAM (1)
+//   - SOCK_DGRAM  (2)
+//
+// The protocol parameter of socket() must be one of:
+//
+//   - 0
+//   - IPPROTO_TCP (6)
+//   - IPPROTO_UDP (17)
 //
 static bool AllowSocketInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 4 - 3, 0),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 10, 0, 5 - 4),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 14 - 1),
+      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 4 - 3, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 10, 0, 13 - 4),
+      /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /* L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 8 - 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 13 - 8),
+      /* L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 12 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 12 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 17, 0, 13 - 11),
+      /*L12*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L13*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L14*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -712,14 +776,60 @@ static bool AllowSocketInet(struct Filter *f) {
 //   - AF_UNIX (1)
 //   - AF_LOCAL (1)
 //
+// The type parameter of socket() will ignore:
+//
+//   - SOCK_CLOEXEC  (0x80000)
+//   - SOCK_NONBLOCK (0x00800)
+//
+// The type parameter of socket() must be one of:
+//
+//   - SOCK_STREAM (1)
+//   - SOCK_DGRAM  (2)
+//
+// The protocol parameter of socket() must be one of:
+//
+//   - 0
+//
 static bool AllowSocketUnix(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 5 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 11 - 1),
+      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 0, 10 - 3),
+      /* L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /* L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 7 - 6, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 10 - 7),
+      /* L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 10 - 9),
+      /* L9*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L10*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L11*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The first parameter of prctl() can be any of
+//
+//   - PR_SET_NO_NEW_PRIVS (38)
+//   - PR_SET_SECCOMP      (22)
+//
+// The second parameter of prctl() can be any of
+//
+//   - true                (1)
+//   - SECCOMP_MODE_FILTER (2)
+//
+static bool AllowPrctl(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 0, 4 - 3),
-      /*L3*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L5*/ /* next filter */
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 4 - 3, 0),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 0, 8 - 4),
+      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 7 - 6, 0),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 8 - 7),
+      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L9*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -809,6 +919,12 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
       case __NR_linux_fchmodat:
         if (!AllowFchmodat(f)) return false;
         break;
+      case __NR_linux_sigaction:
+        if (!AllowSigaction(f)) return false;
+        break;
+      case __NR_linux_prctl:
+        if (!AllowPrctl(f)) return false;
+        break;
       case __NR_linux_open:
         if (!AllowOpen(f)) return false;
         break;
@@ -846,9 +962,10 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
         if (!AllowSocketUnix(f)) return false;
         break;
       case __NR_linux_sendto | ADDRLESS:
-        if (!AllowSendtoRestricted(f)) return false;
+        if (!AllowSendtoAddrless(f)) return false;
         break;
       default:
+        assert(~p[i] & ~0xfff);
         if (!AllowSyscall(f, p[i])) return false;
         break;
     }
@@ -912,11 +1029,13 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  *
  *     pledge("stdio tty", 0);
  *
- * Pledging causes most system calls to become unavailable. On Linux the
- * disabled calls will return EPERM whereas OpenBSD kills the process.
- *
- * Using pledge is irreversible. On Linux it causes PR_SET_NO_NEW_PRIVS
- * to be set on your process.
+ * Pledging causes most system calls to become unavailable. Your system
+ * call policy is enforced by the kernel, which means it can propagate
+ * across execve() if permitted. This system call is supported on
+ * OpenBSD and Linux where it's polyfilled using SECCOMP BPF. The way it
+ * works on Linux is verboten system calls will raise EPERM whereas
+ * OpenBSD just kills the process while logging a helpful message to
+ * /var/log/messages explaining which promise category you needed.
  *
  * By default exit and exit_group are always allowed. This is useful
  * for processes that perform pure computation and interface with the
@@ -926,9 +1045,8 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  * permit the sticky/setuid/setgid bits to change. Linux will EPERM here
  * and OpenBSD should ignore those three bits rather than crashing.
  *
- * User and group IDs also can't be changed once pledge is in effect.
- * OpenBSD should ignore the chown functions without crashing. Linux
- * will just EPERM.
+ * User and group IDs can't be changed once pledge is in effect. OpenBSD
+ * should ignore chown without crashing; whereas Linux will just EPERM.
  *
  * Memory functions won't permit creating executable code after pledge.
  * Restrictions on origin of SYSCALL instructions will become enforced
@@ -937,26 +1055,40 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  * exception is if the "exec" group is specified, in which case these
  * restrictions need to be loosened.
  *
+ * Using pledge is irreversible. On Linux it causes PR_SET_NO_NEW_PRIVS
+ * to be set on your process; however, if "id" or "recvfd" are allowed
+ * then then they theoretically could permit the gaining of some new
+ * privileges. You may call pledge() multiple times if "stdio" is
+ * allowed. In that case, the process can only move towards a more
+ * restrictive state.
+ *
+ * pledge() can't filter file system paths or internet addresses. For
+ * example, if you enable a category like "inet" then your process will
+ * be able to talk to any internet address. The same applies to
+ * categories like "wpath" and "cpath"; if enabled, any path the
+ * effective user id is permitted to change will be changeable.
+ *
  * `promises` is a string that may include any of the following groups
  * delimited by spaces.
  *
- * - "stdio" allows clock_getres, clock_gettime, close, dup, dup2, dup3,
- *   fchdir, fstat, fsync, fdatasync, ftruncate, getdents, getegid,
- *   getrandom, geteuid, getgid, getgroups, getitimer, getpgid, getpgrp,
- *   getpid, getppid, getresgid, getresuid, getrlimit, getsid,
- *   gettimeofday, getuid, lseek, madvise, brk, arch_prctl, uname,
- *   set_tid_address, mmap (PROT_EXEC and weird flags aren't allowed),
- *   mprotect (PROT_EXEC isn't allowed), msync, munmap, nanosleep, pipe,
- *   pipe2, read, readv, pread, recv, recvmsg, poll, recvfrom, preadv,
- *   write, writev, pwrite, pwritev, select, send, sendto (only if addr
- *   is null), setitimer, shutdown, sigaction, sigaltstack, sigprocmask,
- *   sigreturn, sigsuspend, umask socketpair, wait4, ioctl(FIONREAD),
- *   ioctl(FIONBIO), ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD),
- *   fcntl(F_SETFD), fcntl(F_GETFL), fcntl(F_SETFL).
+ * - "stdio" allows close, dup, dup2, dup3, fchdir, fstat, fsync,
+ *   fdatasync, ftruncate, getdents, getegid, getrandom, geteuid,
+ *   getgid, getgroups, getitimer, getpgid, getpgrp, getpid, getppid,
+ *   getresgid, getresuid, getrlimit, getsid, wait4, gettimeofday,
+ *   getuid, lseek, madvise, brk, arch_prctl, uname, set_tid_address,
+ *   clock_getres, clock_gettime, clock_nanosleep, mmap (PROT_EXEC and
+ *   weird flags aren't allowed), mprotect (PROT_EXEC isn't allowed),
+ *   msync, munmap, nanosleep, pipe, pipe2, read, readv, pread, recv,
+ *   poll, recvfrom, preadv, write, writev, pwrite, pwritev, select,
+ *   send, sendto (only if addr is null), setitimer, shutdown, sigaction
+ *   (but SIGSYS is forbidden), sigaltstack, sigprocmask, sigreturn,
+ *   sigsuspend, umask, socketpair, ioctl(FIONREAD), ioctl(FIONBIO),
+ *   ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD),
+ *   fcntl(F_GETFL), fcntl(F_SETFL).
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
  *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access, faccessat,
- *   readlink, readlinkat, chmod, fchmod, fchmodat.
+ *   readlink, readlinkat.
  *
  * - "wpath" (write path ops) allows getcwd, open, openat, stat, fstat,
  *   lstat, fstatat, access, faccessat, readlink, readlinkat, chmod,
@@ -966,11 +1098,15 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  *   linkat, symlink, symlinkat, unlink, rmdir, unlinkat, mkdir,
  *   mkdirat.
  *
+ * - "dpath" (create special path ops) allows mknod, mknodat, mkfifo.
+ *
  * - "flock" allows flock, fcntl(F_GETLK), fcntl(F_SETLK),
  *   fcntl(F_SETLKW).
  *
  * - "tty" allows ioctl(TIOCGWINSZ), ioctl(TCGETS), ioctl(TCSETS),
  *   ioctl(TCSETSW), ioctl(TCSETSF).
+ *
+ * - "recvfd" allows recvmsg(SCM_RIGHTS).
  *
  * - "fattr" allows chmod, fchmod, fchmodat, utime, utimes, futimens,
  *   utimensat.
@@ -998,6 +1134,7 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
+ * @raise EINVAL if `execpromises` is used on Linux
  */
 int pledge(const char *promises, const char *execpromises) {
   int rc;

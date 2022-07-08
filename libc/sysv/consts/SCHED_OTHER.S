@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,SCHED_OTHER,0,1,2,2,2,0
+.syscon sched,SCHED_OTHER,0,127,2,127,0,127

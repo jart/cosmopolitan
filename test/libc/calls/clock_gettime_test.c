@@ -30,6 +30,10 @@
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
+TEST(clock_gettime, fault) {
+  ASSERT_SYS(EFAULT, -1, clock_gettime(0, 0));
+}
+
 TEST(clock_gettime, test) {
   bool isfast;
   struct timespec ts = {0};

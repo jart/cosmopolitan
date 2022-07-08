@@ -145,10 +145,7 @@ o/$(MODE)/libc/intrin/createfilemapping.o		\
 o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
 o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
-o/$(MODE)/libc/intrin/wsawaitformultipleevents.o	\
-o/$(MODE)/libc/intrin/kstarttsc.o			\
-o/$(MODE)/libc/intrin/nomultics.o			\
-o/$(MODE)/libc/intrin/ntconsolemode.o:			\
+o/$(MODE)/libc/intrin/wsawaitformultipleevents.o:	\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
 			-fwrapv				\

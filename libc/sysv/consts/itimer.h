@@ -1,9 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_ITIMER_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_ITIMER_H_
-#include "libc/runtime/symbolic.h"
 
-#define ITIMER_REAL 0
+#define ITIMER_REAL    0
 #define ITIMER_VIRTUAL 1
-#define ITIMER_PROF 2
+#define ITIMER_PROF    2
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_ITIMER_H_ */

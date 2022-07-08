@@ -60,7 +60,7 @@ scall	__sys_pipe		0x02a10721e202a016	globl hidden # NOTE: pipe2() on FreeBSD; XN
 scall	sys_select		0x1a104705d205d017	globl hidden
 scall	pselect			0x1b406e20a218afff	globl
 scall	pselect6		0xfffffffffffff10e	globl
-scall	sys_sched_yield		0x15e12a14bffff018	globl hidden # swtch on xnu? possibly removed in 12.4
+scall	sys_sched_yield		0x15e12a14bf25d018	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
 scall	__sys_mremap		0x19bffffffffff019	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	globl hidden
 scall	sys_madvise		0x04b04b04b204b01c	globl hidden
@@ -197,12 +197,16 @@ scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl hidden # a.k.a. rt_sigqueueinfo 
 scall	personality		0xfffffffffffff087	globl
 scall	ustat			0xfffffffffffff088	globl
 scall	sysfs			0xfffffffffffff08b	globl
-scall	sched_setparam		0xffffff147ffff08e	globl
-scall	sched_getparam		0xffffff148ffff08f	globl
-scall	sched_setscheduler	0xffffff149ffff090	globl
-scall	sched_getscheduler	0xffffff14affff091	globl
-scall	sched_get_priority_max	0xffffff14cffff092	globl
-scall	sched_get_priority_min	0xffffff14dffff093	globl
+scall	sys_sched_setparam	0x15afff147ffff08e	globl hidden
+scall	sys_sched_getparam	0x15bfff148ffff08f	globl hidden
+scall	sys_sched_setscheduler	0xffffff149ffff090	globl hidden
+scall	sys_sched_getscheduler	0xffffff14affff091	globl hidden
+scall	sys_sched_setaffinity	0x15cffffffffff0cb	globl hidden
+scall	sys_sched_getaffinity	0x15dffffffffff0cc	globl hidden # returns bytes written on success. we polyfill bad posix designs like nice() returning 0, but we won't polyfill a bad unilateral redesign that's just glibc
+scall	sys_sched_get_priority_max 0xffffff14cffff092	globl hidden
+scall	sys_sched_get_priority_min 0xffffff14dffff093	globl hidden
+scall	cpuset_getaffinity	0xffffff1e7fffffff	globl
+scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
 scall	sched_rr_get_interval	0xffffff14effff094	globl
 scall	vhangup			0xfffffffffffff099	globl
 scall	modify_ldt		0xfffffffffffff09a	globl
@@ -233,10 +237,6 @@ scall	lsetxattr		0x178ffffffffff0bd	globl
 scall	lgetxattr		0x17bffffffffff0c0	globl
 scall	llistxattr		0x17effffffffff0c3	globl
 scall	lremovexattr		0x181ffffffffff0c6	globl
-scall	sys_sched_setaffinity	0xfffffffffffff0cb	globl hidden
-scall	sys_sched_getaffinity	0xfffffffffffff0cc	globl hidden # returns bytes written on success. we polyfill bad posix designs like nice() returning 0, but we won't polyfill a bad unilateral redesign that's just glibc
-scall	cpuset_getaffinity	0xffffff1e7fffffff	globl
-scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
 scall	io_setup		0xfffffffffffff0ce	globl
 scall	io_destroy		0xfffffffffffff0cf	globl
 scall	io_getevents		0xfffffffffffff0d0	globl
@@ -263,7 +263,7 @@ scall	ktimer_gettime		0xffffff0eefffffff	globl
 scall	ktimer_settime		0xffffff0edfffffff	globl
 scall	clock_settime		0x1ac0580e9ffff0e3	globl
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
-scall	clock_getres		0x1ad0590eaffff0e5	globl
+scall	sys_clock_getres	0x1ad0590eaffff0e5	globl hidden
 scall	clock_nanosleep		0xffffff0f4ffff0e6	globl
 scall	sys_tgkill		0xfffffffffffff0ea	globl hidden
 scall	mbind			0xfffffffffffff0ed	globl

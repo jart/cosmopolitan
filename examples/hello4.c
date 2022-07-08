@@ -13,6 +13,6 @@
 int main(int argc, char *argv[]) {
   volatile long double x = -.5;
   volatile long double y = 1.5;
-  printf("atan2l(%.19Lg, %.19Lg) is %.19Lg\n", x, y, atan2l(x, y));
+  printf("Hello World! %.19Lg\n", atan2l(x, y));
   return 0;
 }

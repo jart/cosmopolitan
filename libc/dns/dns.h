@@ -37,6 +37,15 @@
 #define AI_ADDRCONFIG  0x0400
 #define AI_V4MAPPED    0x0800
 
+#define NI_NUMERICSCOPE 0
+#define NI_NUMERICHOST  1
+#define NI_NUMERICSERV  2
+#define NI_NOFQDN       4
+#define NI_NAMEREQD     8
+#define NI_DGRAM        16
+#define NI_MAXSERV      32
+#define NI_MAXHOST      1025
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -2,11 +2,13 @@
 #define COSMOPOLITAN_LIBC_INTRIN_DESCRIBEFLAGS_INTERNAL_H_
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/securityattributes.h"
@@ -52,6 +54,8 @@ const char *DescribeProtFlags(char[48], int);
 const char *DescribeRemapFlags(char[48], int);
 const char *DescribeRlimit(char[64], int, const struct rlimit *);
 const char *DescribeRlimitName(char[20], int);
+const char *DescribeSchedParam(char[32], const struct sched_param *);
+const char *DescribeSchedPolicy(char[48], int);
 const char *DescribeSeccompOperation(int);
 const char *DescribeSigaction(char[128], int, const struct sigaction *);
 const char *DescribeSigaltstk(char[128], int, const struct sigaltstack *);
@@ -64,6 +68,7 @@ const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
 const char *DescribeStat(char[300], int, const struct stat *);
 const char *DescribeTimespec(char[45], int, const struct timespec *);
+const char *DescribeTimeval(char[45], int, const struct timeval *);
 
 void DescribeIov(const struct iovec *, int, ssize_t);
 void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
@@ -95,6 +100,8 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribeRemapFlags(dirfd)    DescribeRemapFlags(alloca(48), dirfd)
 #define DescribeRlimit(rc, rl)       DescribeRlimit(alloca(64), rc, rl)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
+#define DescribeSchedParam(x)        DescribeSchedParam(alloca(32), x)
+#define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
 #define DescribeSigaction(rc, sa)    DescribeSigaction(alloca(128), rc, sa)
 #define DescribeSigaltstk(rc, ss)    DescribeSigaltstk(alloca(128), rc, ss)
 #define DescribeSigset(rc, ss)       DescribeSigset(alloca(64), rc, ss)
@@ -106,6 +113,7 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
 #define DescribeStat(rc, st)         DescribeStat(alloca(300), rc, st)
 #define DescribeTimespec(rc, ts)     DescribeTimespec(alloca(45), rc, ts)
+#define DescribeTimeval(rc, ts)      DescribeTimeval(alloca(45), rc, ts)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

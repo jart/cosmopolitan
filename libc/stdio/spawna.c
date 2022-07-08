@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/scheduler.h"
 #include "libc/stdio/spawn.h"
 #include "libc/stdio/spawna.internal.h"
 

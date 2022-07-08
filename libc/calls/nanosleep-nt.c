@@ -16,64 +16,84 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/errno.h"
-#include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/errors.h"
-#include "libc/nt/nt/time.h"
 #include "libc/nt/synchronization.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/time/clockstonanos.internal.h"
 
-textwindows noinstrument int sys_nanosleep_nt(const struct timespec *req,
-                                              struct timespec *rem) {
-  int rc;
+textwindows int sys_nanosleep_nt(const struct timespec *req,
+                                 struct timespec *rem) {
   bool alertable;
   uint32_t slice;
-  int64_t ms, sec, nsec;
+  uint64_t begin;
+  int64_t ms, toto, nanos;
+  struct timespec elapsed;
+
+  // check req is legal timespec
+  if (!(0 <= req->tv_nsec && req->tv_nsec < 1000000000)) {
+    return einval();
+  }
+
+  // save beginning timestamp
+  if (!__time_critical && rem) {
+    begin = rdtsc();
+  } else {
+    begin = 0;  // to prevent uninitialized warning
+  }
+
+  // convert timespec to milliseconds
   if (__builtin_mul_overflow(req->tv_sec, 1000, &ms) ||
-      __builtin_add_overflow(ms, req->tv_nsec / 1000000, &ms)) {
+      __builtin_add_overflow(ms, (req->tv_nsec + 999999) / 1000000, &ms)) {
     ms = INT64_MAX;
   }
-  if (!ms && (req->tv_sec || req->tv_nsec)) {
-    ms = 1;
-  }
-  rc = 0;
-  do {
+
+  for (toto = ms;;) {
+
+    // check if signal was delivered
     if (!__time_critical && _check_interrupts(false, g_fds.p)) {
-      rc = eintr();
-      break;
+      if (rem) {
+        nanos = ClocksToNanos(rdtsc(), begin);
+        elapsed.tv_sec = nanos / 1000000000;
+        elapsed.tv_nsec = nanos % 1000000000;
+        *rem = _timespec_sub(*req, elapsed);
+        if (rem->tv_sec < 0) {
+          rem->tv_sec = 0;
+          rem->tv_nsec = 0;
+        }
+      }
+      return eintr();
     }
+
+    // configure the sleep
     slice = MIN(__SIG_POLLING_INTERVAL_MS, ms);
     if (__time_critical) {
       alertable = false;
     } else {
       alertable = true;
-      POLLTRACE("sys_nanosleep_nt polling for %'ldms of %'ld");
+      POLLTRACE("... sleeping %'ldms of %'ld", toto - ms, toto);
     }
+
+    // perform the sleep
     if (SleepEx(slice, alertable) == kNtWaitIoCompletion) {
-      POLLTRACE("IOCP EINTR");
+      POLLTRACE("IOCP EINTR");  // in case we ever figure it out
       continue;
     }
-    ms -= slice;
-  } while (ms > 0);
-  ms = MAX(ms, 0);
-  if (rem) {
-    sec = ms / 1000;
-    nsec = ms % 1000 * 1000000000;
-    rem->tv_nsec -= nsec;
-    if (rem->tv_nsec < 0) {
-      --rem->tv_sec;
-      rem->tv_nsec = 1000000000 - rem->tv_nsec;
-    }
-    rem->tv_sec -= sec;
-    if (rem->tv_sec < 0) {
-      rem->tv_sec = 0;
-      rem->tv_nsec = 0;
+
+    // check if full duration has elapsed
+    if ((ms -= slice) <= 0) {
+      if (rem) {
+        rem->tv_sec = 0;
+        rem->tv_nsec = 0;
+      }
+      return 0;
     }
   }
-  return rc;
 }

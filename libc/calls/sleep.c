@@ -16,16 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/time/time.h"
 
 /**
- * Sleeps for a particular amount of time.
+ * Sleeps for particular number of seconds.
+ *
+ * @return 0 if the full time elapsed, otherwise we assume an interrupt
+ *     was delivered, in which case the errno condition is ignored, and
+ *     this function shall return the number of unslept seconds rounded
+ *     using the ceiling function
+ * @see nanosleep(), usleep()
  * @asyncsignalsafe
  * @norestart
  */
-int sleep(uint32_t seconds) {
-  return nanosleep(&(struct timespec){seconds, 0}, NULL);
+unsigned sleep(unsigned seconds) {
+  int err;
+  unsigned unslept;
+  struct timespec tv = {seconds};
+  err = errno;
+  nanosleep(&tv, &tv);
+  errno = err;
+  unslept = tv.tv_sec;
+  if (tv.tv_nsec && unslept < UINT_MAX) {
+    ++unslept;
+  }
+  return unslept;
 }

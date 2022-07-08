@@ -8,6 +8,7 @@ struct timeval {
 };
 
 int lutimes(const char *, const struct timeval[2]);
+struct timeval _timeval_add(struct timeval, struct timeval);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_TIMEVAL_H_ */

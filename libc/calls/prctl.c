@@ -26,7 +26,7 @@
 /**
  * Tunes process on Linux.
  *
- * @raise ENOSYS on non-Linux.
+ * @raise ENOSYS on non-Linux
  */
 privileged int prctl(int operation, ...) {
   int rc;

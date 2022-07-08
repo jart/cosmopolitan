@@ -113,6 +113,7 @@
        "asyncsignalsafe"
        "notasyncsignalsafe"
        "isa"
+       "norestart"
        "mayalias"
        "sideffect")
       "\\>"]))

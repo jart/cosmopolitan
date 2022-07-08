@@ -15,15 +15,6 @@ COSMOPOLITAN_C_START_
 
 #define INET_ADDRSTRLEN 22
 
-#define NI_NUMERICHOST 0x01
-#define NI_NUMERICSERV 0x02
-#define NI_NOFQDN      0x04
-#define NI_NAMEREQD    0x08
-#define NI_DGRAM       0x10
-
-#define NI_MAXHOST 0xff
-#define NI_MAXSERV 0x20
-
 #define htons(u16) bswap_16(u16)
 #define ntohs(u16) bswap_16(u16)
 #define htonl(u32) bswap_32(u32)
@@ -70,12 +61,12 @@ struct ifreq {
   } ifr_ifru;
 };
 
-#define ifr_name      ifr_ifrn.ifrn_name /* interface name 	*/
-#define ifr_addr      ifr_ifru.ifru_addr /* address		*/
-#define ifr_netmask   ifr_ifru.ifru_netmask /* netmask		*/
+#define ifr_name      ifr_ifrn.ifrn_name      /* interface name 	*/
+#define ifr_addr      ifr_ifru.ifru_addr      /* address		*/
+#define ifr_netmask   ifr_ifru.ifru_netmask   /* netmask		*/
 #define ifr_broadaddr ifr_ifru.ifru_broadaddr /* broadcast address	*/
-#define ifr_dstaddr   ifr_ifru.ifru_dstaddr /* destination address	*/
-#define ifr_flags     ifr_ifru.ifru_flags /* flags		*/
+#define ifr_dstaddr   ifr_ifru.ifru_dstaddr   /* destination address	*/
+#define ifr_flags     ifr_ifru.ifru_flags     /* flags		*/
 
 #define _IOT_ifreq       _IOT(_IOTS(char), IFNAMSIZ, _IOTS(char), 16, 0, 0)
 #define _IOT_ifreq_short _IOT(_IOTS(char), IFNAMSIZ, _IOTS(short), 1, 0, 0)

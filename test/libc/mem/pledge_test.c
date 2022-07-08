@@ -23,10 +23,12 @@
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -47,6 +49,10 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+void OnSig(int sig) {
+  // do nothing
+}
+
 void SetUp(void) {
   if (!__is_linux_2_6_23() && !IsOpenbsd()) {
     exit(0);
@@ -65,7 +71,8 @@ TEST(pledge, default_allowsExit) {
   EXPECT_EQ(0, WEXITSTATUS(ws));
 }
 
-TEST(pledge, stdio_forbidsOpeningPasswd) {
+TEST(pledge, stdio_forbidsOpeningPasswd1) {
+  if (!IsLinux()) return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -74,13 +81,70 @@ TEST(pledge, stdio_forbidsOpeningPasswd) {
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
-  if (IsLinux()) {
-    EXPECT_TRUE(WIFEXITED(ws));
-    EXPECT_EQ(0, WEXITSTATUS(ws));
-  } else {
-    EXPECT_TRUE(WIFSIGNALED(ws));
-    EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(pledge, stdio_forbidsOpeningPasswd2) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    ASSERT_SYS(EPERM, -1, open("/etc/passwd", O_RDWR));
+    _Exit(0);
   }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFSIGNALED(ws));
+  EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+}
+
+TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive1) {
+  if (IsOpenbsd()) return;
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    ASSERT_SYS(0, 0, pledge("stdio unix", 0));
+    ASSERT_SYS(0, 3, dup(2));
+    ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
+    ASSERT_SYS(EPERM, -1, prctl(PR_SET_NO_NEW_PRIVS, 0, 0, 0, 0));
+    ASSERT_SYS(EPERM, -1, prctl(PR_GET_SECCOMP, SECCOMP_MODE_FILTER, 0));
+    ASSERT_SYS(EPERM, -1, prctl(PR_SET_SECCOMP, 33, 0));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive2) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    ASSERT_SYS(EPERM, -1, pledge("stdio unix", 0));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive3) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio unix", 0));
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    ASSERT_SYS(0, 3, dup(2));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
 }
 
 TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
@@ -89,6 +153,7 @@ TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
   struct flock lk;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio inet", 0));
     ASSERT_SYS(0, 0, pledge("stdio", 0));
     ASSERT_NE(-1, fcntl(0, F_GETFL));
     ASSERT_SYS(0, 0, fcntl(0, F_GETFD));
@@ -108,7 +173,6 @@ TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
 TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid, sv[2];
-  struct sockaddr_in sa = {AF_UNIX};
   ASSERT_SYS(0, 0, socketpair(AF_UNIX, SOCK_STREAM, 0, sv));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -118,7 +182,12 @@ TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
     isatty(0);
     ASSERT_NE(EPERM, errno);
     errno = 0;
-    ASSERT_SYS(EPERM, -1, sendto(sv[0], "hello", 5, 0, &sa, sizeof(sa)));
+    // set lower 32-bit word of pointer to zero lool
+    struct sockaddr_in *sin =
+        mmap((void *)0x300000000000, FRAMESIZE, PROT_READ | PROT_WRITE,
+             MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    sin->sin_family = AF_INET;
+    ASSERT_SYS(EPERM, -1, sendto(sv[0], "hello", 5, 0, sin, sizeof(*sin)));
     _Exit(0);
   }
   close(sv[0]);
@@ -134,8 +203,11 @@ TEST(pledge, unix_forbidsInetSockets) {
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio unix", 0));
     ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_STREAM, 0));
+    ASSERT_SYS(0, 4, socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP));
+    ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_RAW, 0));
+    ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 1));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -148,10 +220,20 @@ TEST(pledge, inet_forbidsOtherSockets) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio inet", 0));
-    ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-    ASSERT_SYS(0, 4, socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(0, 3, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(0, 4, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(0, 5, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+    ASSERT_SYS(0, 6, socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(0, 7, socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP));
     ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
-    ASSERT_SYS(EPERM, -1, socket(AF_BLUETOOTH, SOCK_STREAM, 0));
+    ASSERT_SYS(EPERM, -1, socket(AF_BLUETOOTH, SOCK_DGRAM, IPPROTO_UDP));
+    ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_RAW, IPPROTO_UDP));
+    ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_RAW));
+    struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
+    ASSERT_SYS(0, 0, bind(4, &sin, sizeof(sin)));
+    uint32_t az = sizeof(sin);
+    ASSERT_SYS(0, 0, getsockname(4, &sin, &az));
+    ASSERT_SYS(0, 5, sendto(3, "hello", 5, 0, &sin, sizeof(sin)));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -173,6 +255,26 @@ TEST(pledge, mmap) {
     ASSERT_SYS(EPERM, MAP_FAILED,
                mmap(0, FRAMESIZE, PROT_EXEC | PROT_READ,
                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
+}
+
+TEST(pledge, mmapExec) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  char *p;
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio exec", 0));
+    ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+                                    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
+    ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ));
+    ASSERT_SYS(EPERM, MAP_FAILED,
+               mprotect(p, FRAMESIZE, PROT_READ | PROT_EXEC));
+    ASSERT_NE(MAP_FAILED, mmap(0, FRAMESIZE, PROT_EXEC | PROT_READ,
+                               MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -204,7 +306,7 @@ TEST(pledge, chmod_ignoresDangerBits) {
   ASSERT_SYS(0, 3, creat("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+    ASSERT_SYS(0, 0, pledge("stdio rpath wpath", 0));
     ASSERT_SYS(0, 0, fchmod(3, 00700));
     ASSERT_SYS(0, 0, chmod("foo", 00700));
     ASSERT_SYS(0, 0, fchmodat(AT_FDCWD, "foo", 00700, 0));
@@ -233,7 +335,6 @@ TEST(pledge, open_rpath) {
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
-  close(3);
 }
 
 TEST(pledge, open_wpath) {
@@ -252,5 +353,20 @@ TEST(pledge, open_wpath) {
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
-  close(3);
+}
+
+TEST(pledge, sigaction_isFineButForbidsSigsys) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    struct sigaction sa = {.sa_handler = OnSig};
+    ASSERT_SYS(0, 0, sigaction(SIGINT, &sa, 0));
+    ASSERT_SYS(EPERM, -1, sigaction(SIGSYS, &sa, 0));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
 }

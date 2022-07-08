@@ -16,15 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/macros.internal.h"
-#include "libc/nexgen32e/nexgen32e.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/sock/internal.h"
+#include "libc/sysv/consts/clock.h"
 
 int sys_nanosleep_xnu(const struct timespec *req, struct timespec *rem) {
-  long millis;
-  millis = req->tv_nsec / 1000;
-  millis = MAX(1, millis);
-  return sys_select(0, 0, 0, 0, &(struct timeval){req->tv_sec, millis});
+  int rc;
+  axdx_t axdx;
+  struct timeval tv;
+  struct timespec begin, end, elapsed;
+
+  if (rem) {
+    if (sys_clock_gettime_xnu(CLOCK_MONOTONIC, &begin) == -1) {
+      return -1;
+    }
+  }
+
+  tv = _timespec2timeval(*req);
+  rc = sys_select(0, 0, 0, 0, &tv);
+
+  if (rem) {
+    if (!rc) {
+      rem->tv_sec = 0;
+      rem->tv_nsec = 0;
+    } else if (rc == -1 && errno == EINTR) {
+      sys_clock_gettime_xnu(CLOCK_MONOTONIC, &end);
+      elapsed = _timespec_sub(end, begin);
+      *rem = _timespec_sub(*req, elapsed);
+      if (rem->tv_sec < 0) {
+        rem->tv_sec = 0;
+        rem->tv_nsec = 0;
+      }
+    }
+  }
+
+  return rc;
 }

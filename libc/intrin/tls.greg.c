@@ -92,9 +92,7 @@ privileged void __install_tls(char tib[64]) {
   assert(!__tls_enabled);
   assert(*(int *)(tib + 0x38) != -1);
   if (IsWindows()) {
-    if (!__tls_index) {
-      __tls_index = TlsAlloc();
-    }
+    __tls_index = TlsAlloc();
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
     asm volatile("syscall"

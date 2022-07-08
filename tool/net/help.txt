@@ -1095,7 +1095,7 @@ FUNCTIONS
           operating system to choose a port, which may be revealed later on
           by GetServerAddr or the -z flag to stdout.
 
-  ProgramMaxPayloadSize(int64)
+  ProgramMaxPayloadSize(int)
           Sets the maximum HTTP message payload size in bytes. The
           default is very conservatively set to 65536 so this is
           something many people will want to increase. This limit is

@@ -589,25 +589,25 @@ syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	clock	CLOCK_REALTIME				0			0			0			0			0			0			# consensus
+syscon	clock	CLOCK_REALTIME_PRECISE			0			0			9			0			0			0			#
 syscon	clock	CLOCK_REALTIME_FAST			0			0			10			0			0			0			#
+syscon	clock	CLOCK_REALTIME_COARSE			5			0			10			0			0			0			# Linux 2.6.32+; bsd consensus; not available on RHEL5
 syscon	clock	CLOCK_MONOTONIC				1			1			4			3			3			1			# XNU/NT faked; could move backwards if NTP introduces negative leap second
+syscon	clock	CLOCK_MONOTONIC_PRECISE			1			1			11			3			3			1			#
 syscon	clock	CLOCK_MONOTONIC_FAST			1			1			12			3			3			1			#
-syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			-1			15			2			0x40000000		-1			#
-syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			-1			14			4			0x20000000		-1			#
-syscon	clock	CLOCK_MONOTONIC_RAW			4			4			0x4000			0x4000			0x4000			4			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
-syscon	clock	CLOCK_REALTIME_COARSE			5			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_MONOTONIC_COARSE			6			-1			-1			-1			-1			-1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
-syscon	clock	CLOCK_PROF				-1			-1			2			-1			2			-1			#
-syscon	clock	CLOCK_BOOTTIME				7			-1			-1			6			-1			-1			#
-syscon	clock	CLOCK_REALTIME_ALARM			8			-1			-1			-1			-1			-1			#
-syscon	clock	CLOCK_BOOTTIME_ALARM			9			-1			-1			-1			-1			-1			#
-syscon	clock	CLOCK_TAI				11			-1			-1			-1			-1			-1			#
-syscon	clock	CLOCK_UPTIME				-1			-1			5			5			-1			-1			#
-syscon	clock	CLOCK_UPTIME_PRECISE			-1			-1			7			-1			-1			-1			#
-syscon	clock	CLOCK_UPTIME_FAST			-1			-1			8			-1			-1			-1			#
-syscon	clock	CLOCK_REALTIME_PRECISE			-1			-1			9			-1			-1			-1			#
-syscon	clock	CLOCK_MONOTONIC_PRECISE			-1			-1			11			-1			-1			-1			#
-syscon	clock	CLOCK_SECOND				-1			-1			13			-1			-1			-1			#
+syscon	clock	CLOCK_MONOTONIC_COARSE			6			1			12			3			3			1			# Linux 2.6.32+; bsd consensus; not available on RHEL5
+syscon	clock	CLOCK_MONOTONIC_RAW			4			127			127			127			127			127			# actually monotonic; not subject to NTP adjustments; Linux 2.6.28+; XNU/NT/FreeBSD/OpenBSD faked; not available on RHEL5
+syscon	clock	CLOCK_PROCESS_CPUTIME_ID		2			127			15			2			0x40000000		127			#
+syscon	clock	CLOCK_THREAD_CPUTIME_ID			3			127			14			4			0x20000000		127			#
+syscon	clock	CLOCK_PROF				127			127			2			127			2			127			#
+syscon	clock	CLOCK_BOOTTIME				7			127			127			6			127			127			#
+syscon	clock	CLOCK_REALTIME_ALARM			8			127			127			127			127			127			#
+syscon	clock	CLOCK_BOOTTIME_ALARM			9			127			127			127			127			127			#
+syscon	clock	CLOCK_TAI				11			127			127			127			127			127			#
+syscon	clock	CLOCK_UPTIME				127			127			5			5			127			127			#
+syscon	clock	CLOCK_UPTIME_PRECISE			127			127			7			127			127			127			#
+syscon	clock	CLOCK_UPTIME_FAST			127			127			8			127			127			127			#
+syscon	clock	CLOCK_SECOND				127			127			13			127			127			127			#
 
 #	poll()
 #
@@ -792,6 +792,16 @@ syscon	tcp	TCP_REPAIR				19			0			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_OPTIONS			22			0			0			0			0			0			# what is it
 syscon	tcp	TCP_REPAIR_QUEUE			20			0			0			0			0			0			# what is it
 syscon	tcp	TCP_THIN_LINEAR_TIMEOUTS		16			0			0			0			0			0			# what is it
+
+#	https://blog.cloudflare.com/know-your-scm_rights/
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	scm	SCM_RIGHTS				1			1			1			1			1			1			# unix consensus; faked nt
+syscon	scm	SCM_TIMESTAMP				29			2			2			4			8			0
+syscon	scm	SCM_CREDENTIALS				2			0			0			0			0			0
+syscon	scm	SCM_TIMESTAMPING			37			0			0			0			0			0
+syscon	scm	SCM_TIMESTAMPNS				35			0			0			0			0			0
+syscon	scm	SCM_WIFI_STATUS				41			0			0			0			0			0
 
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	ip	IP_TOS					1			3			3			3			3			8			# bsd consensus
@@ -1306,6 +1316,26 @@ syscon	futex	FUTEX_WAKE				1			0			0			2			0			0
 syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
 syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			0			0
 
+#	lio_listio() magnums
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	lio	LIO_WRITE				127			2			1			127			1			127
+syscon	lio	LIO_NOWAIT				127			1			0			127			0			127
+syscon	lio	LIO_READ				127			1			2			127			2			127
+syscon	lio	LIO_WAIT				127			2			1			127			1			127
+syscon	lio	LIO_NOP					127			0			0			127			0			127
+
+#	posix scheduling
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	sched	SCHED_OTHER				0			127			2			127			0			127			# standard round-robin time-sharing policy
+syscon	sched	SCHED_FIFO				1			127			1			127			1			127			# [real-time] first-in, first-out policy
+syscon	sched	SCHED_RR				2			127			3			127			2			127			# [real-time] round-robin policy
+syscon	sched	SCHED_BATCH				3			127			2			127			0			127			# for "batch" style execution of processes; polyfilled as SCHED_OTHER on non-Linux
+syscon	sched	SCHED_IDLE				5			127			2			127			0			127			# for running very low priority background jobs; polyfilled as SCHED_OTHER on non-Linux
+syscon	sched	SCHED_DEADLINE				6			127			127			127			127			127			# can only be set by sched_setattr()
+syscon	sched	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0			# Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork(); no-op on non-Linux
+
 #	Teletypewriter Control, e.g.
 #
 #		  TCSETS   → About 70,800 results (0.31 seconds)
@@ -1616,14 +1646,6 @@ syscon	shm	SHM_LOCKED				0x0400			0			0			0			0			0
 syscon	shm	SHM_NORESERVE				0x1000			0			0			0			0			0
 syscon	shm	SHM_REMAP				0x4000			0			0			0			0			0
 
-syscon	misc	TCPOPT_EOL				0			0			0			0			0			0			# consensus
-syscon	misc	TCPOPT_MAXSEG				2			2			2			2			2			0			# unix consensus
-syscon	misc	TCPOPT_NOP				1			1			1			1			1			0			# unix consensus
-syscon	misc	TCPOPT_SACK				5			5			5			5			5			0			# unix consensus
-syscon	misc	TCPOPT_SACK_PERMITTED			4			4			4			4			4			0			# unix consensus
-syscon	misc	TCPOPT_TIMESTAMP			8			8			8			8			8			0			# unix consensus
-syscon	misc	TCPOPT_WINDOW				3			3			3			3			3			0			# unix consensus
-
 syscon	lock	LOCK_UNLOCK_CACHE			54			0			0			0			0			0			# wut
 
 syscon	misc	IP6F_MORE_FRAG				0x0100			0x0100			0x0100			0x0100			0x0100			0x0100			# consensus
@@ -1632,37 +1654,6 @@ syscon	misc	IP6F_RESERVED_MASK			0x0600			0x0600			0x0600			0x0600			0x0600			0x
 
 syscon	misc	NO_SENSE				0			0			0			0			0			0			# consensus
 syscon	misc	NO_ADDRESS				4			4			4			4			4			0x2afc			# unix consensus
-syscon	misc	NO_DATA					4			4			4			4			4			0x2afc			# unix consensus
-syscon	misc	NO_RECOVERY				3			3			3			3			3			0x2afb			# unix consensus
-
-syscon	misc	NI_DGRAM				0x10			0x10			0x10			0x10			0x10			0x10			# consensus
-syscon	misc	NI_MAXSERV				0x20			0x20			0x20			0x20			0x20			0x20			# consensus
-syscon	misc	NI_MAXHOST				0x0401			0x0401			0x0401			0x0100			0x0100			0x0401
-syscon	misc	NI_NAMEREQD				8			4			4			8			8			4
-syscon	misc	NI_NOFQDN				4			1			1			4			4			1
-syscon	misc	NI_NUMERICHOST				1			2			2			1			1			2
-syscon	misc	NI_NUMERICSERV				2			8			8			2			2			8
-syscon	misc	NI_NUMERICSCOPE				0			0			0x20			0			0			0
-
-syscon	misc	TCPOLEN_MAXSEG				4			4			4			4			4			0			# unix consensus
-syscon	misc	TCPOLEN_SACK_PERMITTED			2			2			2			2			2			0			# unix consensus
-syscon	misc	TCPOLEN_TIMESTAMP			10			10			10			10			10			0			# unix consensus
-syscon	misc	TCPOLEN_WINDOW				3			3			3			3			3			0			# unix consensus
-
-syscon	misc	TELOPT_NAOL				8			8			8			8			8			0			# unix consensus
-syscon	misc	TELOPT_NAOP				9			9			9			9			9			0			# unix consensus
-syscon	misc	TELOPT_NEW_ENVIRON			39			39			39			39			39			0			# unix consensus
-syscon	misc	TELOPT_OLD_ENVIRON			36			36			36			36			36			0			# unix consensus
-
-syscon	misc	EXTENDED_MODIFY_DATA_POINTER		0			0			0			0			0			0			# consensus
-syscon	misc	EXTENDED_EXTENDED_IDENTIFY		2			0			0			0			0			0
-syscon	misc	EXTENDED_MESSAGE			1			0			0			0			0			0
-syscon	misc	EXTENDED_SDTR				1			0			0			0			0			0
-syscon	misc	EXTENDED_WDTR				3			0			0			0			0			0
-
-syscon	misc	ITIMER_REAL				0			0			0			0			0			0			# consensus
-syscon	misc	ITIMER_VIRTUAL				1			1			1			1			1			1			# unix consensus (force win)
-syscon	misc	ITIMER_PROF				2			2			2			2			2			2			# unix consensus (force win)
 
 syscon	misc	L_SET					0			0			0			0			0			0			# consensus
 syscon	misc	L_INCR					1			1			1			1			1			0			# unix consensus
@@ -1681,35 +1672,9 @@ syscon	misc	Q_GETFMT				0x800004		0			0			0			0			0
 syscon	misc	Q_GETINFO				0x800005		0			0			0			0			0
 syscon	misc	Q_SETINFO				0x800006		0			0			0			0			0
 
-syscon	misc	SCM_RIGHTS				1			1			1			1			1			0			# unix consensus
-syscon	misc	SCM_TIMESTAMP				29			2			2			4			8			0
-syscon	misc	SCM_CREDENTIALS				2			0			0			0			0			0
-syscon	misc	SCM_TIMESTAMPING			37			0			0			0			0			0
-syscon	misc	SCM_TIMESTAMPNS				35			0			0			0			0			0
-syscon	misc	SCM_WIFI_STATUS				41			0			0			0			0			0
-
-syscon	misc	FORM_C					3			3			3			3			3			0			# unix consensus
-syscon	misc	FORM_N					1			1			1			1			1			0			# unix consensus
-syscon	misc	FORM_T					2			2			2			2			2			0			# unix consensus
-
-syscon	misc	REC_EOF					2			2			2			2			2			0			# unix consensus
-syscon	misc	REC_EOR					1			1			1			1			1			0			# unix consensus
-syscon	misc	REC_ESC					-1			-1			-1			-1			-1			0			# unix consensus
-
 syscon	misc	RPM_PCO_ADD				1			1			1			1			1			0			# unix consensus
 syscon	misc	RPM_PCO_CHANGE				2			2			2			2			2			0			# unix consensus
 syscon	misc	RPM_PCO_SETGLOBAL			3			3			3			3			3			0			# unix consensus
-
-syscon	misc	SEARCH_EQUAL				49			0			0			0			0			0
-syscon	misc	SEARCH_EQUAL_12				177			0			0			0			0			0
-syscon	misc	SEARCH_HIGH				48			0			0			0			0			0
-syscon	misc	SEARCH_HIGH_12				176			0			0			0			0			0
-syscon	misc	SEARCH_LOW				50			0			0			0			0			0
-syscon	misc	SEARCH_LOW_12				178			0			0			0			0			0
-
-syscon	misc	STRU_F					1			1			1			1			1			0			# unix consensus
-syscon	misc	STRU_P					3			3			3			3			3			0			# unix consensus
-syscon	misc	STRU_R					2			2			2			2			2			0			# unix consensus
 
 syscon	misc	_XOPEN_IOV_MAX				0x10			0x10			0x10			0x10			0x10			0			# unix consensus
 syscon	misc	_XOPEN_ENH_I18N				1			1			-1			-1			-1			0
@@ -1740,26 +1705,6 @@ syscon	mlock	MCL_CURRENT				1			1			1			1			1			0			# unix consensus
 syscon	mlock	MCL_FUTURE				2			2			2			2			2			0			# unix consensus
 syscon	mlock	MCL_ONFAULT				4			0			0			0			0			0
 
-syscon	misc	NS_DSA_MAX_BYTES			405			405			405			0			0			0
-syscon	misc	NS_DSA_MIN_SIZE				213			213			213			0			0			0
-syscon	misc	NS_DSA_SIG_SIZE				41			41			41			0			0			0
-syscon	misc	NS_KEY_PROT_DNSSEC			3			3			3			0			0			0
-syscon	misc	NS_KEY_PROT_EMAIL			2			2			2			0			0			0
-syscon	misc	NS_KEY_PROT_IPSEC			4			4			4			0			0			0
-syscon	misc	NS_KEY_PROT_TLS				1			1			1			0			0			0
-syscon	misc	NS_KEY_RESERVED_BITMASK2		0xffff			0xffff			0xffff			0			0			0
-syscon	misc	NS_NXT_MAX				127			127			127			0			0			0
-syscon	misc	NS_OPT_DNSSEC_OK			0x8000			0x8000			0x8000			0			0			0
-syscon	misc	NS_TSIG_ERROR_FORMERR			-12			-12			-12			0			0			0
-syscon	misc	NS_TSIG_ERROR_NO_SPACE			-11			-11			-11			0			0			0
-syscon	misc	NS_TSIG_ERROR_NO_TSIG			-10			-10			-10			0			0			0
-syscon	misc	NS_TSIG_FUDGE				300			300			300			0			0			0
-syscon	misc	NS_TSIG_TCP_COUNT			100			100			100			0			0			0
-
-syscon	misc	_IOC_NONE				0			0			0			0			0			0			# consensus
-syscon	misc	_IOC_READ				2			0			0			0			0			0
-syscon	misc	_IOC_WRITE				1			0			0			0			0			0
-
 syscon	misc	MLD_LISTENER_QUERY			130			130			130			130			130			0			# unix consensus
 syscon	misc	MLD_LISTENER_REPORT			131			131			131			131			131			0			# unix consensus
 syscon	misc	MLD_LISTENER_REDUCTION			132			132			132			0			0			0
@@ -1781,13 +1726,6 @@ syscon	select	FD_SETSIZE				0x0400			0x0400			0x0400			0x0400			0x0400			0x0400	
 syscon	misc	MATH_ERREXCEPT				2			2			2			2			2			0			# unix consensus
 syscon	misc	MATH_ERRNO				1			1			1			1			1			0			# unix consensus
 
-syscon	misc	SCHED_FIFO				1			4			1			1			1			0
-syscon	misc	SCHED_RR				2			2			3			3			3			0
-syscon	misc	SCHED_OTHER				0			1			2			2			2			0
-syscon	misc	SCHED_BATCH				3			0			0			0			0			0
-syscon	misc	SCHED_IDLE				5			0			0			0			0			0
-syscon	misc	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0
-
 syscon	misc	MCAST_BLOCK_SOURCE			43			84			84			0			0			43
 syscon	misc	MCAST_JOIN_GROUP			42			80			80			0			0			41
 syscon	misc	MCAST_JOIN_SOURCE_GROUP			46			82			82			0			0			45
@@ -1804,12 +1742,7 @@ syscon	misc	EFD_CLOEXEC				0x080000		0			0			0			0			0
 syscon	misc	EFD_NONBLOCK				0x0800			0			0			0			0			0
 syscon	misc	EFD_SEMAPHORE				1			0			0			0			0			0
 
-syscon	misc	GOOD					0			0			0			0			0			0			# consensus
 syscon	misc	IPPORT_RESERVED				0x0400			0x0400			0x0400			0x0400			0x0400			0x0400			# consensus
-syscon	misc	MTRESET					0			0			0			0			0			0			# consensus
-syscon	misc	MT_ST_CAN_PARTITIONS			0x0400			0			0			0			0			0
-syscon	misc	MT_ST_HPLOADER_OFFSET			0x2710			0			0			0			0			0
-syscon	misc	MT_ST_SCSI2LOGICAL			0x0800			0			0			0			0			0
 
 syscon	misc	SYNC_FILE_RANGE_WAIT_AFTER		4			0			0			0			0			0
 syscon	misc	SYNC_FILE_RANGE_WAIT_BEFORE		1			0			0			0			0			0
@@ -1822,30 +1755,7 @@ syscon	misc	TFD_TIMER_ABSTIME			1			0			0			0			0			0
 
 syscon	misc	USRQUOTA				0			0			0			0			0			0
 
-syscon	misc	ABDAY_1					0x020000		14			14			13			13			0
-syscon	misc	ABDAY_2					0x020001		15			15			14			14			0
-syscon	misc	ABDAY_3					0x020002		0x10			0x10			15			15			0
-syscon	misc	ABDAY_4					0x020003		17			17			0x10			0x10			0
-syscon	misc	ABDAY_5					0x020004		18			18			17			17			0
-syscon	misc	ABDAY_6					0x020005		19			19			18			18			0
-syscon	misc	ABDAY_7					0x020006		20			20			19			19			0
-
-syscon	misc	DAY_1					0x020007		7			7			6			6			0
-syscon	misc	DAY_2					0x020008		8			8			7			7			0
-syscon	misc	DAY_3					0x020009		9			9			8			8			0
-syscon	misc	DAY_4					0x02000a		10			10			9			9			0
-syscon	misc	DAY_5					0x02000b		11			11			10			10			0
-syscon	misc	DAY_6					0x02000c		12			12			11			11			0
-syscon	misc	DAY_7					0x02000d		13			13			12			12			0
-
-syscon	misc	HOST_NOT_FOUND				1			1			1			1			1			0x2af9			# unix consensus
 syscon	misc	HOST_NAME_MAX				0x40			0			0			255			255			0
-
-syscon	misc	LIO_WRITE				1			2			1			0			0			0
-syscon	misc	LIO_NOWAIT				1			1			0			0			0			0
-syscon	misc	LIO_READ				0			1			2			0			0			0
-syscon	misc	LIO_WAIT				0			2			1			0			0			0
-syscon	misc	LIO_NOP					2			0			0			0			0			0
 
 syscon	misc	UDP_ENCAP_ESPINUDP_NON_IKE		1			0			1			0			0			0
 syscon	misc	UDP_NO_CHECK6_RX			102			0			0			0			0			0
@@ -1921,7 +1831,7 @@ syscon	nr	__NR_pipe				0x0016			0x200002a		0x021e			0x0107			0x02a			0xfff
 syscon	nr	__NR_select				0x0017			0x200005d		0x005d			0x0047			0x1a1			0xfff
 syscon	nr	__NR_pselect				0xfff			0x200018a		0x020a			0x006e			0x1b4			0xfff
 syscon	nr	__NR_pselect6				0x010e			0xfff			0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_sched_yield			0x0018			0x010003c		0x014b			0x012a			0x15e			0xfff
+syscon	nr	__NR_sched_yield			0x0018			0x200005d		0x014b			0x012a			0x15e			0xfff			# select() on XNU (previously swtch() but removed in 12.4)
 syscon	nr	__NR_mremap				0x0019			0xfff			0xfff			0xfff			0x19b			0xfff
 syscon	nr	__NR_mincore				0x001b			0x200004e		0x004e			0x004e			0x04e			0xfff
 syscon	nr	__NR_madvise				0x001c			0x200004b		0x004b			0x004b			0x04b			0xfff
@@ -2889,7 +2799,6 @@ syscon	misc	TOEXEC					1			1			1			1			1			0			# unix consensus
 syscon	misc	TOREAD					4			4			4			4			4			0			# unix consensus
 syscon	misc	TOWRITE					2			2			2			2			2			0			# unix consensus
 syscon	misc	TRANSIENT				4			4			4			4			4			0			# unix consensus
-syscon	misc	TRY_AGAIN				2			2			2			2			2			0x2afa			# unix consensus
 syscon	misc	TSGID					0x0400			0x0400			0x0400			0x0400			0x0400			0			# unix consensus
 syscon	misc	TSUID					0x0800			0x0800			0x0800			0x0800			0x0800			0			# unix consensus
 syscon	misc	TSVTX					0x0200			0x0200			0x0200			0x0200			0x0200			0			# unix consensus
@@ -3094,7 +3003,6 @@ syscon	misc	RUN_LVL					1			1			0			0			0			0
 syscon	misc	STA_RONLY				0xff00			0			0xff00			0			0			0
 syscon	misc	SYMLOOP_MAX				0			0			0			0x20			0x20			0
 syscon	misc	THOUSEP					0x010001		51			51			45			45			0
-syscon	misc	TIMER_ABSTIME				1			0			1			1			1			0
 syscon	misc	TIME_UTC				1			0			1			0			0			0
 syscon	misc	TMP_MAX					0x03a2f8		0x1269ae40		0x1269ae40		0x7fffffff		0x7fffffff		0
 syscon	misc	TSS_DTOR_ITERATIONS			0			0			4			0			0			0
@@ -3133,21 +3041,6 @@ syscon	in	IN_OPEN					0x20			0			0			0			0			0
 syscon	in	IN_Q_OVERFLOW				0x4000			0			0			0			0			0
 syscon	in	IN_UNMOUNT				0x2000			0			0			0			0			0
 
-syscon	misc	TYPE_DISK				0			0			0			0			0			0			# consensus
-syscon	misc	TYPE_A					1			1			1			1			1			0			# unix consensus
-syscon	misc	TYPE_E					2			2			2			2			2			0			# unix consensus
-syscon	misc	TYPE_I					3			3			3			3			3			0			# unix consensus
-syscon	misc	TYPE_L					4			4			4			4			4			0			# unix consensus
-syscon	misc	TYPE_ENCLOSURE				13			0			0			0			0			0
-syscon	misc	TYPE_MEDIUM_CHANGER			8			0			0			0			0			0
-syscon	misc	TYPE_MOD				7			0			0			0			0			0
-syscon	misc	TYPE_NO_LUN				127			0			0			0			0			0
-syscon	misc	TYPE_PROCESSOR				3			0			0			0			0			0
-syscon	misc	TYPE_ROM				5			0			0			0			0			0
-syscon	misc	TYPE_SCANNER				6			0			0			0			0			0
-syscon	misc	TYPE_TAPE				1			0			0			0			0			0
-syscon	misc	TYPE_WORM				4			0			0			0			0			0
-
 syscon	nd	ND_RA_FLAG_MANAGED			0x80			0x80			0x80			0x80			0x80			0x80			# consensus
 syscon	nd	ND_RA_FLAG_OTHER			0x40			0x40			0x40			0x40			0x40			0x40			# consensus
 syscon	nd	ND_NA_FLAG_OVERRIDE			0x20			0x20			0x20			0x20			0x20			0x20000000		# unix consensus
@@ -3159,37 +3052,5 @@ syscon	nd	ND_REDIRECT				137			137			137			137			137			0			# unix consensus
 syscon	nd	ND_ROUTER_ADVERT			134			134			134			134			134			0			# unix consensus
 syscon	nd	ND_ROUTER_SOLICIT			133			133			133			133			133			0			# unix consensus
 syscon	nd	ND_RA_FLAG_HOME_AGENT			0x20			0			0			0			0			0x20			# bsd consensus
-
-syscon	misc	N_TTY					0			0			0			0			0			0			# consensus
-syscon	misc	N_6PACK					7			0			0			0			0			0
-syscon	misc	N_AX25					5			0			0			0			0			0
-syscon	misc	N_HCI					15			0			0			0			0			0
-syscon	misc	N_HDLC					13			0			0			0			0			0
-syscon	misc	N_IRDA					11			0			0			0			0			0
-syscon	misc	N_MASC					8			0			0			0			0			0
-syscon	misc	N_MOUSE					2			0			0			0			0			0
-syscon	misc	N_PPP					3			0			0			0			0			0
-syscon	misc	N_PROFIBUS_FDL				10			0			0			0			0			0
-syscon	misc	N_R3964					9			0			0			0			0			0
-syscon	misc	N_SLIP					1			0			0			0			0			0
-syscon	misc	N_SMSBLOCK				12			0			0			0			0			0
-syscon	misc	N_STRIP					4			0			0			0			0			0
-syscon	misc	N_SYNC_PPP				14			0			0			0			0			0
-syscon	misc	N_X25					6			0			0			0			0			0
-
-syscon	misc	ETH_P_CUST				0x6006			0			0			0			0			0
-syscon	misc	ETH_P_DDCMP				6			0			0			0			0			0
-syscon	misc	ETH_P_DEC				0x6000			0			0			0			0			0
-syscon	misc	ETH_P_DIAG				0x6005			0			0			0			0			0
-syscon	misc	ETH_P_DNA_DL				0x6001			0			0			0			0			0
-syscon	misc	ETH_P_DNA_RC				0x6002			0			0			0			0			0
-syscon	misc	ETH_P_DNA_RT				0x6003			0			0			0			0			0
-syscon	misc	ETH_P_IEEE802154			246			0			0			0			0			0
-syscon	misc	ETH_P_LAT				0x6004			0			0			0			0			0
-syscon	misc	ETH_P_LOCALTALK				9			0			0			0			0			0
-syscon	misc	ETH_P_PPP_MP				8			0			0			0			0			0
-syscon	misc	ETH_P_RARP				0x8035			0			0			0			0			0
-syscon	misc	ETH_P_SCA				0x6007			0			0			0			0			0
-syscon	misc	ETH_P_WAN_PPP				7			0			0			0			0			0
 
 # https://youtu.be/GUQUD3IMbb4?t=85

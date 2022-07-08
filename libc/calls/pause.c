@@ -18,34 +18,51 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/nt/synchronization.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/sock/internal.h"
 
 /**
  * Waits for signal.
  *
- * This suspends execution until an unmasked signal is delivered and its
- * callback function has been called. The current signal mask is used.
+ * This suspends execution until an unmasked signal is delivered. If the
+ * signal delivery kills the process, this won't return. The signal mask
+ * of the current thread is used. If a signal handler exists, this shall
+ * return after it's been invoked.
  *
- * @return should always be -1 w/ EINTR
+ * This function is equivalent to:
+ *
+ *     select(0, 0, 0, 0, 0);
+ *
+ * However this has a tinier footprint and better logging.
+ *
+ * @return -1 w/ errno set to EINTR
  * @see sigsuspend()
  * @norestart
  */
 int pause(void) {
-  int e, rc;
-  sigset_t mask;
-  e = errno;
+  int rc;
   STRACE("pause() → [...]");
-  if ((rc = sys_pause()) == -1 && errno == ENOSYS) {
-    errno = e;
-    if (sigprocmask(SIG_BLOCK, 0, &mask) == -1) return -1;
-    rc = sigsuspend(&mask);
+
+  if (!IsWindows()) {
+    // We'll polyfill pause() using select() with a null timeout, which
+    // should hopefully do the same thing, which means wait forever but
+    // the usual signal interrupt rules apply.
+    //
+    //     "If the readfds, writefds, and errorfds arguments are all null
+    //      pointers and the timeout argument is not a null pointer, the
+    //      pselect() or select() function shall block for the time
+    //      specified, or until interrupted by a signal. If the readfds,
+    //      writefds, and errorfds arguments are all null pointers and the
+    //      timeout argument is a null pointer, the pselect() or select()
+    //      function shall block until interrupted by a signal." ──Quoth
+    //      IEEE 1003.1-2017 §functions/select
+    //
+    rc = sys_select(0, 0, 0, 0, 0);
+  } else {
+    rc = sys_pause_nt();
   }
+
   STRACE("[...] pause → %d% m", rc);
   return rc;
 }

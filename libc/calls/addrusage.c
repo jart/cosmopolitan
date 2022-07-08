@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/math.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/macros.internal.h"
 
 /**
- * Adds resource usages.
+ * Accumulates resource statistics in `y` to `x`.
  */
-void AddRusage(struct rusage *x, const struct rusage *y) {
-  x->ru_utime = AddTimeval(x->ru_utime, y->ru_utime);
-  x->ru_stime = AddTimeval(x->ru_stime, y->ru_stime);
+void _addrusage(struct rusage *x, const struct rusage *y) {
+  x->ru_utime = _timeval_add(x->ru_utime, y->ru_utime);
+  x->ru_stime = _timeval_add(x->ru_stime, y->ru_stime);
   x->ru_maxrss = MAX(x->ru_maxrss, y->ru_maxrss);
   x->ru_ixrss += y->ru_ixrss;
   x->ru_idrss += y->ru_idrss;

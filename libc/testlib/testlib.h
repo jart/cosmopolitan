@@ -268,12 +268,11 @@ void TearDownOnce(void);
     Got = (intptr_t)(GOT);                                                   \
     Want = (intptr_t)(WANT);                                                 \
     if (Want != Got) {                                                       \
-      if (g_testlib_shoulddebugbreak) DebugBreak();                          \
-      testlib_showerror_file = FILE;                                         \
-      testlib_showerror_func = FUNC;                                         \
+      testlib_error_enter(FILE, FUNC);                                       \
       testlib_showerror_##KIND##_eq(LINE, WANTCODE, GOTCODE,                 \
                                     testlib_formatint(Want),                 \
                                     testlib_formatint(Got), "" __VA_ARGS__); \
+      testlib_error_leave();                                                 \
     }                                                                        \
     (void)0;                                                                 \
   } while (0)
@@ -285,12 +284,11 @@ void TearDownOnce(void);
     Got = (intptr_t)(GOT);                                                   \
     Want = (intptr_t)(WANT);                                                 \
     if (Want == Got) {                                                       \
-      if (g_testlib_shoulddebugbreak) DebugBreak();                          \
-      testlib_showerror_file = FILE;                                         \
-      testlib_showerror_func = FUNC;                                         \
+      testlib_error_enter(FILE, FUNC);                                       \
       testlib_showerror_##KIND##_ne(LINE, WANTCODE, GOTCODE,                 \
                                     testlib_formatint(Want),                 \
                                     testlib_formatint(Got), "" __VA_ARGS__); \
+      testlib_error_leave();                                                 \
     }                                                                        \
   } while (0)
 
@@ -344,6 +342,8 @@ void testlib_showerror_expect_ne(int, const char *, const char *, char *,
 void testlib_showerror_expect_true(int, const char *, const char *, char *,
                                    char *, const char *, ...);
 
+void testlib_error_leave(void);
+void testlib_error_enter(const char *, const char *);
 void testlib_showerror(const char *, int, const char *, const char *,
                        const char *, const char *, char *, char *);
 
@@ -391,7 +391,9 @@ forceinline void testlib_ontest() {
 
 forceinline void testlib_onfail2(bool isfatal) {
   testlib_incrementfailed();
-  if (isfatal) testlib_abort();
+  if (isfatal) {
+    testlib_abort();
+  }
 }
 
 forceinline void assertNotEquals(FILIFU_ARGS intptr_t donotwant, intptr_t got,

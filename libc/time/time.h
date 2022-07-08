@@ -26,8 +26,8 @@ int gettimeofday(struct timeval *, struct timezone *);
 int clock_gettime(int, struct timespec *);
 int clock_getres(int, struct timespec *);
 
-int sleep(uint32_t);
 int usleep(uint32_t);
+unsigned sleep(unsigned);
 int nanosleep(const struct timespec *, struct timespec *);
 unsigned alarm(unsigned);
 int getitimer(int, struct itimerval *);

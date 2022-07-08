@@ -26,6 +26,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -80,6 +81,7 @@ textwindows void _check_sigalrm(void) {
 textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
                                  struct itimerval *out_opt_oldvalue) {
   long double elapsed, untilnext;
+
   if (which != ITIMER_REAL ||
       (newvalue && (!(0 <= newvalue->it_value.tv_usec &&
                       newvalue->it_value.tv_usec < 1000000) ||
@@ -87,6 +89,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
                       newvalue->it_interval.tv_usec < 1000000)))) {
     return einval();
   }
+
   if (out_opt_oldvalue) {
     if (__hastimer) {
       elapsed = nowl() - __lastalrm;
@@ -106,6 +109,7 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
       out_opt_oldvalue->it_value.tv_usec = 0;
     }
   }
+
   if (newvalue) {
     if (newvalue->it_interval.tv_sec || newvalue->it_interval.tv_usec ||
         newvalue->it_value.tv_sec || newvalue->it_value.tv_usec) {
@@ -124,5 +128,6 @@ textwindows int sys_setitimer_nt(int which, const struct itimerval *newvalue,
       __hastimer = false;
     }
   }
+
   return 0;
 }

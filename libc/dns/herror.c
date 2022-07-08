@@ -25,12 +25,12 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
+#include "libc/stdio/stdio.h"
 
-int h_errno;
-
+/**
+ * Prints `h_errno` description to stderr.
+ * @see perror()
+ */
 void herror(const char *s) {
-}
-
-const char *hstrerror(int err) {
-  return "unknown";
+  fprintf(stderr, "%s%s%s\n", s ? s : "", s ? ": " : "", hstrerror(h_errno));
 }

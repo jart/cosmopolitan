@@ -66,7 +66,7 @@ TEST(unix, datagram) {
   alarm(3);
   while (!fileexists(addr.sun_path)) usleep(10000);
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));
-  ASSERT_SYS(0, 5, sendto(3, "hello", 5, 0, (void *)&addr, len));
+  ASSERT_SYS(0, 5, sendto(3, "hello", 5, 0, &addr, len));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));

@@ -13,6 +13,7 @@ int __mkntpath2(const char *, char16_t[hasatleast PATH_MAX], int) hidden;
 int __mkntpathat(int, const char *, int, char16_t[hasatleast PATH_MAX]) hidden;
 int __sample_pids(int[hasatleast 64], int64_t[hasatleast 64], bool) hidden;
 int ntaccesscheck(const char16_t *, uint32_t) paramsnonnull() hidden;
+int sys_pause_nt(void) hidden;
 int64_t __fix_enotdir(int64_t, char16_t *) hidden;
 int64_t __fix_enotdir3(int64_t, char16_t *, char16_t *) hidden;
 int64_t __winerr(void) nocallback privileged;

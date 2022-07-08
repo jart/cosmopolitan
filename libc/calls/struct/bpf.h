@@ -6,8 +6,8 @@ COSMOPOLITAN_C_START_
 #define BPF_MAXINSNS 4096
 
 #define BPF_CLASS(code) ((code)&0x07)
-#define BPF_LD          0x00 /* load ops */
-#define BPF_LDX         0x01 /* load into register */
+#define BPF_LD          0x00 /* load into accumulator */
+#define BPF_LDX         0x01 /* load into index register */
 #define BPF_ST          0x02 /* store from immediate */
 #define BPF_STX         0x03 /* store from register */
 #define BPF_ALU         0x04 /* 32-bit arithmetic */
@@ -19,6 +19,7 @@ COSMOPOLITAN_C_START_
 #define BPF_W          0x00 /* 32-bit */
 #define BPF_H          0x08 /* 16-bit */
 #define BPF_B          0x10 /*  8-bit */
+#define BPF_DW         0x18 /* 64-bit (eBPF only) */
 
 #define BPF_MODE(code) ((code)&0xe0)
 #define BPF_IMM        0x00 /* 64-bit immediate */
@@ -52,7 +53,6 @@ COSMOPOLITAN_C_START_
 
 #define BPF_JMP32   0x06
 #define BPF_ALU64   0x07
-#define BPF_DW      0x18
 #define BPF_ATOMIC  0xc0
 #define BPF_XADD    0xc0
 #define BPF_MOV     0xb0

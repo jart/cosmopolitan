@@ -23,7 +23,7 @@ STATIC_YOINK("_main_thread_ctor");
 
 #define CTHREAD_THREAD_VAL_BITS 32
 
-static void pause(int attempt) {
+static void Pause(int attempt) {
   if (attempt < 16) {
     for (int i = 0; i < (1 << attempt); ++i) {
       __builtin_ia32_pause();
@@ -108,7 +108,7 @@ int cthread_sem_wait_spin(cthread_sem_t* sem, uint64_t count, int spin,
         return 0;
       }
     }
-    pause(attempt);
+    Pause(attempt);
   }
 
   return cthread_sem_wait_futex(sem, timeout);

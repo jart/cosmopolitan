@@ -22,17 +22,11 @@
 .privileged
 
 //	Asks kernel to let other threads be scheduled.
-//
-//	@return	0 on success, or -1 w/ errno
+//	@return	0 on success, or non-zero on failure
+//	@norestart
 sched_yield:
-
-#if SupportsXnu()
-	testb	IsXnu()
-	jz	1f
-	pause
-	xor	%eax,%eax
-	ret
-#endif
+	push	%rbp
+	mov	%rsp,%rbp
 
 #if SupportsWindows()
 //	Windows Support
@@ -46,32 +40,43 @@ sched_yield:
 //	                                  ──Quoth MSDN
 	testb	IsWindows()
 	jz	1f
-	push	%rbp
-	mov	%rsp,%rbp
 	xor	%ecx,%ecx
 	xor	%edx,%edx
 	ntcall	__imp_SleepEx
 	xor	%eax,%eax
-	pop	%rbp
-	ret
+	jmp	9f
+1:
 #endif
 
 #if SupportsSystemv()
-//	UNIX Support
-1:	mov	__NR_sched_yield,%eax
-#if SupportsBsd() && SupportsLinux()
-	clc
-#endif
+//	On XNU we polyfill sched_yield() using sleep() which'll
+//	be polyfilled using select() with a zero timeout, which
+//	means to wait zero microseconds and then returns a zero
+//	and this hopefully will give other threads a chance too
+//
+//	"If the readfds, writefds, and errorfds arguments are
+//	 all null pointers and the timeout argument is not a
+//	 null pointer, the pselect() or select() function shall
+//	 block for the time specified, or until interrupted by
+//	 a signal." ──Quoth IEEE 1003.1-2017 §functions/select
+//
+//	On other platforms, sched_yield() takes no arguments.
+	push	$0				# timeout.tv_usec
+	push	$0				# timeout.tv_sec
+	xor	%edi,%edi			# nfds
+	xor	%esi,%esi			# readfds
+	xor	%edx,%edx			# writefds
+	xor	%r10d,%r10d			# exceptfds
+	mov	%rsp,%r8			# timeout
+	mov	__NR_sched_yield,%eax		# ordinal
+	clc					# linux
 	syscall
-#if SupportsBsd()
-	jc	systemfive_errno
-#endif
-#if SupportsLinux()
-	cmp	$-4095,%rax
-	jae	systemfive_error
-#endif
+//	It should not be possible for this to fail so we don't
+//	bother going through the errno ritual. If this somehow
+//	fails a positive or negative errno might get returned.
 #endif
 
-2:	ret
+9:	leave
+	ret
 	.endfn	sched_yield,globl
 	.previous

@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
 
@@ -30,9 +32,15 @@
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {
+  int rc;
+  POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
+            exceptfds, DescribeTimeval(0, timeout));
   if (!IsWindows()) {
-    return sys_select(nfds, readfds, writefds, exceptfds, timeout);
+    rc = sys_select(nfds, readfds, writefds, exceptfds, timeout);
   } else {
-    return sys_select_nt(nfds, readfds, writefds, exceptfds, timeout);
+    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout);
   }
+  POLLTRACE("select(%d, %p, %p, %p, [%s]) → %d% m", nfds, readfds, writefds,
+            exceptfds, DescribeTimeval(rc, timeout), rc);
+  return rc;
 }

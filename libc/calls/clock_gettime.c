@@ -48,23 +48,25 @@
  *     __clock_gettime     l:        35𝑐        11𝑛𝑠
  *     sys_clock_gettime   l:       220𝑐        71𝑛𝑠
  *
- * @param clockid can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc.
+ * @param clock can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc.
  * @param ts is where the result is stored
  * @return 0 on success, or -1 w/ errno
- * @error EINVAL if clockid isn't supported on this system
+ * @error EINVAL if clock isn't supported on this system
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
  */
-int clock_gettime(int clockid, struct timespec *ts) {
+int clock_gettime(int clock, struct timespec *ts) {
   int rc;
-  if (IsAsan() && !__asan_is_valid_timespec(ts)) {
+  if (clock == 127) {
+    rc = einval();  // 127 is used by consts.sh to mean unsupported
+  } else if (!ts || (IsAsan() && !__asan_is_valid_timespec(ts))) {
     rc = efault();
   } else {
-    rc = __clock_gettime(clockid, ts);
+    rc = __clock_gettime(clock, ts);
   }
 #if SYSDEBUG
   if (!__time_critical) {
-    STRACE("clock_gettime(%d, [%s]) → %d% m", clockid, DescribeTimespec(rc, ts),
+    STRACE("clock_gettime(%d, [%s]) → %d% m", clock, DescribeTimespec(rc, ts),
            rc);
   }
 #endif

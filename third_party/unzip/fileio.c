@@ -2395,13 +2395,13 @@ int do_string(__G__ length, option)   /* return PK-type error code */
             p = G.outbuf - 1;
             q = slide;
             while (*++p) {
-                int pause = FALSE;
+                int pause_ = FALSE;
 
                 if (*p == 0x1B) {          /* ASCII escape char */
                     *q++ = '^';
                     *q++ = '[';
                 } else if (*p == 0x13) {   /* ASCII ^S (pause) */
-                    pause = TRUE;
+                    pause_ = TRUE;
                     if (p[1] == LF)        /* ASCII LF */
                         *q++ = *++p;
                     else if (p[1] == CR && p[2] == LF) {  /* ASCII CR LF */
@@ -2410,10 +2410,10 @@ int do_string(__G__ length, option)   /* return PK-type error code */
                     }
                 } else
                     *q++ = *p;
-                if ((unsigned)(q-slide) > WSIZE-3 || pause) {   /* flush */
+                if ((unsigned)(q-slide) > WSIZE-3 || pause_) {   /* flush */
                     (*G.message)((zvoid *)&G, slide, (ulg)(q-slide), 0);
                     q = slide;
-                    if (pause && G.extract_flag) /* don't pause for list/test */
+                    if (pause_ && G.extract_flag) /* don't pause for list/test */
                         (*G.mpause)((zvoid *)&G, LoadFarString(QuitPrompt), 0);
                 }
             }

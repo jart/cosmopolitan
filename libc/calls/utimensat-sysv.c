@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
 #include "libc/zipos/zipos.internal.h"
@@ -37,10 +38,8 @@ int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
       if (rc == -1 && errno == ENOSYS && path) {
         errno = olderr;
         if (ts) {
-          tv[0].tv_sec = ts[0].tv_sec;
-          tv[0].tv_usec = ts[0].tv_nsec / 1000;
-          tv[1].tv_sec = ts[1].tv_sec;
-          tv[1].tv_usec = ts[1].tv_nsec / 1000;
+          tv[0] = _timespec2timeval(ts[0]);
+          tv[1] = _timespec2timeval(ts[1]);
           rc = sys_utimes(path, tv);
         } else {
           rc = sys_utimes(path, NULL);

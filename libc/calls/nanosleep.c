@@ -27,10 +27,26 @@
 
 /**
  * Sleeps for a particular amount of time.
+ *
+ * @param req is the duration of time we should sleep
+ * @param rem if non-NULL will receive the amount of time that wasn't
+ *     slept because a signal was delivered. If no signal's delivered
+ *     then this value will be set to `{0, 0}`. It's also fine to set
+ *     this value to the same pointer as `req`.
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
+ * @raise EINTR if a signal was delivered, and `rem` is updated
+ * @raise EFAULT if `req` is NULL or `req` / `rem` is a bad pointer
+ * @raise ENOSYS on bare metal
+ * @note POSIX.1 specifies nanosleep() measures against `CLOCK_REALTIME`
+ *     however Linux measures uses  `CLOCK_MONOTONIC`. This shouldn't
+ *     matter, since POSIX.1 further specifies that discontinuous
+ *     changes in `CLOCK_REALTIME` shouldn't impact nanosleep()
  * @norestart
  */
-noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
+int nanosleep(const struct timespec *req, struct timespec *rem) {
   int rc;
+
   if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
                             (rem && !__asan_is_valid_timespec(rem))))) {
     rc = efault();
@@ -46,9 +62,21 @@ noinstrument int nanosleep(const struct timespec *req, struct timespec *rem) {
   } else {
     rc = sys_nanosleep_nt(req, rem);
   }
+
+  // Linux Kernel doesn't change the remainder value on success, but
+  // some kernels like OpenBSD will. POSIX doesn't specify the Linux
+  // behavior. So we polyfill it here.
+  if (!rc && rem) {
+    rem->tv_sec = 0;
+    rem->tv_nsec = 0;
+  }
+
+#if defined(SYSDEBUG) && _POLLTRACE
   if (!__time_critical) {
     POLLTRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
               DescribeTimespec(rc, rem), rc);
   }
+#endif
+
   return rc;
 }

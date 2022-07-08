@@ -42,6 +42,7 @@ static struct sigaltstack g_oldsigaltstack;
 static struct sigaction g_oldcrashacts[8];
 
 static void InstallCrashHandlers(int extraflags) {
+  int e;
   size_t i;
   struct sigaction sa;
   bzero(&sa, sizeof(sa));
@@ -53,19 +54,24 @@ static void InstallCrashHandlers(int extraflags) {
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
       sa.sa_sigaction = (sigaction_f)__oncrash_thunks[i];
+      e = errno;
       sigaction(kCrashSigs[i], &sa, &g_oldcrashacts[i]);
+      errno = e;
     }
   }
 }
 
 relegated void RestoreDefaultCrashSignalHandlers(void) {
+  int e;
   size_t i;
   sigset_t ss;
   sigemptyset(&ss);
   sigprocmask(SIG_SETMASK, &ss, NULL);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     if (kCrashSigs[i]) {
+      e = errno;
       sigaction(kCrashSigs[i], &g_oldcrashacts[i], NULL);
+      errno = e;
     }
   }
 }

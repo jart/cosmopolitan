@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/math.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
  * Adds two microsecond timestamps.
  */
-struct timeval AddTimeval(struct timeval x, struct timeval y) {
+struct timeval _timeval_add(struct timeval x, struct timeval y) {
   x.tv_sec += y.tv_sec;
   x.tv_usec += y.tv_usec;
   if (x.tv_usec >= 1000000) {

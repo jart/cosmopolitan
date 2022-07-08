@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,NI_MAXHOST,0x0401,0x0401,0x0401,0x0100,0x0100,0x0401

@@ -1,7 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
 #define __NR_linux_exit                   0x003c
 #define __NR_linux_exit_group             0x00e7
@@ -325,6 +323,4 @@ COSMOPOLITAN_C_START_
 #define __NR_linux_io_uring_enter         0x01aa
 #define __NR_linux_io_uring_register      0x01ab
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_ */

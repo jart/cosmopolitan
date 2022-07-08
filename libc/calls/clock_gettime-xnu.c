@@ -17,19 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/errfuns.h"
 
-int sys_clock_gettime_xnu(int clockid, struct timespec *ts) {
+int sys_clock_gettime_xnu(int clock, struct timespec *ts) {
   axdx_t ad;
-  ad = sys_gettimeofday((struct timeval *)ts, NULL, NULL);
-  if (ad.ax != -1) {
-    if (ad.ax) {
-      ts->tv_sec = ad.ax;
-      ts->tv_nsec = ad.dx;
+  if (clock == CLOCK_REALTIME) {
+    ad = sys_gettimeofday((struct timeval *)ts, 0, 0);
+    if (ad.ax != -1) {
+      if (ad.ax) {
+        ts->tv_sec = ad.ax;
+        ts->tv_nsec = ad.dx;
+      }
+      ts->tv_nsec *= 1000;
+      return 0;
+    } else {
+      return -1;
     }
-    ts->tv_nsec *= 1000;
-    return 0;
+  } else if (clock == CLOCK_MONOTONIC) {
+    return sys_clock_gettime_mono(ts);
   } else {
-    return -1;
+    return einval();
   }
 }
