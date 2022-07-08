@@ -1080,8 +1080,8 @@ static bool LuaEvalFile(const char *path) {
 }
 
 static bool LuaOnClientConnection(void) {
+  bool dropit = false;
 #ifndef STATIC
-  bool dropit;
   uint32_t ip, serverip;
   uint16_t port, serverport;
   lua_State *L = GL;
@@ -1096,14 +1096,11 @@ static bool LuaOnClientConnection(void) {
     dropit = lua_toboolean(L, -1);
   } else {
     LogLuaError("OnClientConnection", lua_tostring(L, -1));
-    dropit = false;
   }
   lua_pop(L, 1);  // pop result or error
   AssertLuaStackIsAt(L, 0);
-  return dropit;
-#else
-  return false;
 #endif
+  return dropit;
 }
 
 static void LuaOnProcessCreate(int pid) {
@@ -1125,6 +1122,25 @@ static void LuaOnProcessCreate(int pid) {
   }
   AssertLuaStackIsAt(L, 0);
 #endif
+}
+
+static bool LuaOnServerListen(int fd, uint32_t ip, uint16_t port) {
+  bool nouse = false;
+#ifndef STATIC
+  lua_State *L = GL;
+  lua_getglobal(L, "OnServerListen");
+  lua_pushinteger(L, fd);
+  lua_pushinteger(L, ip);
+  lua_pushinteger(L, port);
+  if (LuaCallWithTrace(L, 3, 1, NULL) == LUA_OK) {
+    nouse = lua_toboolean(L, -1);
+  } else {
+    LogLuaError("OnServerListen", lua_tostring(L, -1));
+  }
+  lua_pop(L, 1);  // pop result or error
+  AssertLuaStackIsAt(L, 0);
+#endif
+  return nouse;
 }
 
 static void LuaOnProcessDestroy(int pid) {
@@ -6913,6 +6929,7 @@ static void Listen(void) {
   char ipbuf[16];
   size_t i, j, n;
   uint32_t ip, port, addrsize, *ifs, *ifp;
+  bool hasonserverlisten = IsHookDefined("OnServerListen");
   if (!ports.n) {
     ProgramPort(8080);
   }
@@ -6939,6 +6956,12 @@ static void Listen(void) {
                                         IPPROTO_TCP, true, &timeout)) == -1) {
         DIEF("(srvr) socket: %m");
       }
+      if (hasonserverlisten &&
+          LuaOnServerListen(servers.p[n].fd, ips.p[i], ports.p[j])) {
+        n--;  // skip this server instance
+        continue;
+      }
+
       if (bind(servers.p[n].fd, &servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
         DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
