@@ -163,6 +163,7 @@ int LuaDecimate(lua_State *L) {
   s = luaL_checklstring(L, 1, &n);
   m = ROUNDUP(n, 16);
   p = luaL_buffinitsize(L, &buf, m);
+  memcpy(p, s, n);
   bzero(p + n, m - n);
   cDecimate2xUint8x8(m, (unsigned char *)p,
                      (signed char[8]){-1, -3, 3, 17, 17, 3, -3, -1});
@@ -355,7 +356,7 @@ int LuaIndentLines(lua_State *L) {
 
 int LuaGetMonospaceWidth(lua_State *L) {
   int w;
-  if (lua_isinteger(L, 1)) {
+  if (lua_isnumber(L, 1)) {
     w = wcwidth(lua_tointeger(L, 1));
   } else if (lua_isstring(L, 1)) {
     w = strwidth(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0) & 7);
@@ -766,9 +767,9 @@ int LuaCompress(lua_State *L) {
 }
 
 int LuaUncompress(lua_State *L) {
+  int rc;
   char *q;
   uint32_t crc;
-  int rc, level;
   const char *p;
   luaL_Buffer buf;
   size_t n, m, len;
@@ -795,5 +796,91 @@ int LuaUncompress(lua_State *L) {
     }
   }
   luaL_pushresultsize(&buf, m);
+  return 1;
+}
+
+// unix.deflate(uncompressed:str[, level:int])
+//     ├─→ compressed:str
+//     └─→ nil, error:str
+int LuaDeflate(lua_State *L) {
+  char *out;
+  z_stream zs;
+  int rc, level;
+  const char *in;
+  luaL_Buffer buf;
+  size_t insize, outsize, actualoutsize;
+  in = luaL_checklstring(L, 1, &insize);
+  level = luaL_optinteger(L, 2, Z_DEFAULT_COMPRESSION);
+  outsize = compressBound(insize);
+  out = luaL_buffinitsize(L, &buf, outsize);
+
+  zs.next_in = (const uint8_t *)in;
+  zs.avail_in = insize;
+  zs.next_out = (uint8_t *)out;
+  zs.avail_out = outsize;
+  zs.zalloc = Z_NULL;
+  zs.zfree = Z_NULL;
+
+  if ((rc = deflateInit2(&zs, level, Z_DEFLATED, -MAX_WBITS, MAX_MEM_LEVEL,
+                         Z_DEFAULT_STRATEGY)) != Z_OK) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "%s() failed: %d", "deflateInit2", rc);
+    return 2;
+  }
+
+  rc = deflate(&zs, Z_FINISH);
+  actualoutsize = outsize - zs.avail_out;
+  deflateEnd(&zs);
+
+  if (rc != Z_STREAM_END) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "%s() failed: %d", "deflate", rc);
+    return 2;
+  }
+
+  luaL_pushresultsize(&buf, actualoutsize);
+  return 1;
+}
+
+// unix.inflate(compressed:str, maxoutsize:int)
+//     ├─→ uncompressed:str
+//     └─→ nil, error:str
+int LuaInflate(lua_State *L) {
+  int rc;
+  char *out;
+  z_stream zs;
+  const char *in;
+  luaL_Buffer buf;
+  size_t insize, outsize, actualoutsize;
+  in = luaL_checklstring(L, 1, &insize);
+  outsize = luaL_checkinteger(L, 2);
+  out = luaL_buffinitsize(L, &buf, outsize);
+
+  zs.next_in = (const uint8_t *)in;
+  zs.avail_in = insize;
+  zs.total_in = insize;
+  zs.next_out = (uint8_t *)out;
+  zs.avail_out = outsize;
+  zs.total_out = outsize;
+  zs.zalloc = Z_NULL;
+  zs.zfree = Z_NULL;
+
+  if ((rc = inflateInit2(&zs, -MAX_WBITS)) != Z_OK) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "%s() failed: %d", "inflateInit2", rc);
+    return 2;
+  }
+
+  rc = inflate(&zs, Z_FINISH);
+  actualoutsize = outsize - zs.avail_out;
+  inflateEnd(&zs);
+
+  if (rc != Z_STREAM_END) {
+    lua_pushnil(L);
+    lua_pushfstring(L, "%s() failed: %d", "inflate", rc);
+    return 2;
+  }
+
+  luaL_pushresultsize(&buf, actualoutsize);
   return 1;
 }

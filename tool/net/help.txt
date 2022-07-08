@@ -1359,8 +1359,8 @@ FUNCTIONS
           Shrinks byte buffer in half using John Costella's magic kernel.
           This downscales data 2x using an eight-tap convolution, e.g.
 
-              >: Decimate(b'\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00\\xff\\xff\\x00\\x00')
-              b'\\xff\\x00\\xff\\x00\\xff\\x00'
+              >: Decimate('\xff\xff\x00\x00\xff\xff\x00\x00\xff\xff\x00\x00')
+              "\xff\x00\xff\x00\xff\x00"
 
           This is very fast if SSSE3 is available (Intel 2004+ / AMD 2011+).
 
@@ -1369,56 +1369,40 @@ FUNCTIONS
           the density of information. Cryptographic random should be in
           the ballpark of 7.9 whereas plaintext will be more like 4.5.
 
-  Compress(uncompdata:str[, level:int[, raw:bool]]) → compdata:str
+  Deflate(uncompressed:str[, level:int])
+      ├─→ compressed:str
+      └─→ nil, error:str
 
-          Compresses data using DEFLATE algorithm. The compression
-          format here is defined to be quick and handy for things like
-          database fields. For example:
+          Compresses data.
 
-              >: Compress('hello')
-              "\x05\x86\xa6\x106x\x9c\xcbH\xcd\xc9\xc9\x07\x00\x06,\x02\x15"
-              >: Uncompress(Compress('hello'))
+              >: Deflate("hello")
+              "\xcbH\xcd\xc9\xc9\x07\x00"
+              >: Inflate("\xcbH\xcd\xc9\xc9\x07\x00", 5)
               "hello"
 
-          The binary wire format is defined as follows:
-
-              1. uleb64 uncompressed byte size (1 to 10 bytes)
-              2. uint32_t crc32 (4 bytes; zlib polynomial)
-              3. data (created by zlib compress function)
+          The output format is raw DEFLATE that's suitable for embedding
+          into formats like a ZIP file. It's recommended that, like ZIP,
+          you also store separately a Crc32() checksum in addition to
+          the original uncompressed size.
 
           `level` is the compression level, which defaults to 7. The max
-          is 9. Lower numbers go faster. Higher numbers go slower, but
-          have better compression ratios.
+          is 9. Lower numbers go faster (4 for instance is a sweet spot)
+          and higher numbers go slower but have better compression.
 
-          `raw` may be set to true if you only want `data` (3) to be
-          returned. In this case, it's assumed the caller will take
-          responsibility for storing the length (and optionall crc)
-          separately. See the redbean Crc32() API.
+  Inflate(compressed:str, maxoutsize:int)
+      ├─→ uncompressed:str
+      └─→ nil, error:str
 
-              >: a = 'hello'
-              >: b = Compress(a, 9, true)
-              >: Uncompress(b, #a)
-              "hello"
+          Decompresses data.
 
-  Uncompress(compdata:str[, uncomplen:int]) → uncompdata:str
+          This function performs the inverse of Deflate(). It's
+          recommended that you perform a Crc32() check on the output
+          string after this function succeeds.
 
-          Uncompresses data using DEFLATE algorithm. This applies the
-          inverse transform of the Compress() function. See its docs for
-          further details on usage and encoding.
-
-          This function throws exceptions in the event that the value
-          couldn't be decoded. There's a crc32 check to make our check
-          of validity iron-clad. It's implemented using Intel CLMUL so
-          it has ludicrous speed performance as well.
-
-          If you used the `raw` parameter when calling Compress() i.e.
-          `compdata` doesn't have the redbean header described above,
-          then the `uncomplen` parameter may be supplied. In that case
-          your data is handed over directly to zlib `uncompress()`. In
-          this case an exception will be raised if the value couldn't be
-          decoded, or if the resulting length differed from the supplied
-          length. It's recommended that Crc32() check still be performed
-          manually after using this method.
+          `maxoutsize` is the uncompressed size, which should be known.
+          However, it is permissable (although not advised) to specify
+          some large number in which case (on success) the byte length
+          of the output string may be less than `maxoutsize`.
 
   Benchmark(func[, count[, maxattempts]])
       └─→ nanos:real, ticks:int, overhead-ticks:int, tries:int

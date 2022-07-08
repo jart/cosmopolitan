@@ -44,7 +44,7 @@ char *Underlong(const char *p, size_t n, size_t *z) {
   int8_t v1[16], v2[16], vz[16];
   if (z) *z = 0;
   if (n == -1) n = p ? strlen(p) : 0;
-  if ((q = r = malloc(n + 1))) {
+  if ((q = r = malloc(n * 2 + 1))) {
     for (i = 0; i < n;) {
       bzero(vz, 16); /* 50x speedup for ASCII */
       while (i + 16 < n) {

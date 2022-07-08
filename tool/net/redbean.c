@@ -3896,7 +3896,8 @@ static int LuaFetch(lua_State *L) {
   freeaddrinfo(addr), addr = 0;
   if (rc == -1) {
     close(sock);
-    return LuaNilError(L, "connect(%s:%s) error: %s", host, port, strerror(errno));
+    return LuaNilError(L, "connect(%s:%s) error: %s", host, port,
+                       strerror(errno));
   }
 
 #ifndef UNSECURE
@@ -4978,6 +4979,7 @@ static bool LuaRunAsset(const char *path, bool mandatory) {
 // <SORTED>
 // list of functions that can't be run from the repl
 static const char *const kDontAutoComplete[] = {
+    "Compress",                  // deprecated
     "GetBody",                   //
     "GetClientAddr",             //
     "GetClientFd",               //
@@ -5037,6 +5039,7 @@ static const char *const kDontAutoComplete[] = {
     "SetCookie",                 //
     "SetHeader",                 //
     "SslInit",                   // TODO
+    "Uncompress",                // deprecated
     "Write",                     //
 };
 // </SORTED>
@@ -5052,6 +5055,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Decimate", LuaDecimate},                                  //
     {"DecodeBase64", LuaDecodeBase64},                          //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
+    {"Deflate", LuaDeflate},                                    //
     {"EncodeBase64", LuaEncodeBase64},                          //
     {"EncodeJson", LuaEncodeJson},                              //
     {"EncodeLatin1", LuaEncodeLatin1},                          //
@@ -5113,11 +5117,12 @@ static const luaL_Reg kLuaFuncs[] = {
     {"HasParam", LuaHasParam},                                  //
     {"HidePath", LuaHidePath},                                  //
     {"IndentLines", LuaIndentLines},                            //
+    {"Inflate", LuaInflate},                                    //
     {"IsAcceptableHost", LuaIsAcceptableHost},                  //
     {"IsAcceptablePath", LuaIsAcceptablePath},                  //
     {"IsAcceptablePort", LuaIsAcceptablePort},                  //
-    {"IsClientUsingSsl", LuaIsClientUsingSsl},                  //
     {"IsAssetCompressed", LuaIsAssetCompressed},                //
+    {"IsClientUsingSsl", LuaIsClientUsingSsl},                  //
     {"IsDaemon", LuaIsDaemon},                                  //
     {"IsHeaderRepeatable", LuaIsHeaderRepeatable},              //
     {"IsHiddenPath", LuaIsHiddenPath},                          //
@@ -5333,7 +5338,7 @@ static void DisableRawMode(void) {
   ++__strace;
 }
 
-static void LuaInterpreter(lua_State *L) {
+static int LuaInterpreter(lua_State *L) {
   int i, n, sig, status;
   const char *script;
   if (optind < __argc) {
@@ -5349,7 +5354,7 @@ static void LuaInterpreter(lua_State *L) {
       status = lua_runchunk(L, n, LUA_MULTRET);
       TRACE_END;
     }
-    lua_report(L, status);
+    return lua_report(L, status);
   } else {
     lua_repl_blocking = true;
     lua_repl_completions_callback = HandleCompletions;
@@ -5384,6 +5389,7 @@ static void LuaInterpreter(lua_State *L) {
     if ((sig = linenoiseGetInterrupt())) {
       raise(sig);
     }
+    return status;
   }
 }
 
@@ -5392,8 +5398,7 @@ static void LuaInit(void) {
   lua_State *L = GL;
   LuaSetArgv(L);
   if (interpretermode) {
-    LuaInterpreter(L);
-    exit(0);
+    exit(LuaInterpreter(L));
   }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");

@@ -101,3 +101,6 @@ o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com
 
 o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
 	@$(COMPILE) -ALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+
+o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
+	@$(COMPILE) -ALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<

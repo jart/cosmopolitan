@@ -22,6 +22,11 @@
 #include "libc/testlib/testlib.h"
 #include "libc/unicode/unicode.h"
 
+TEST(wcwidth, test) {
+  ASSERT_EQ(0, wcwidth(0));
+  ASSERT_EQ(-1, wcwidth(1));
+}
+
 TEST(strwidth, testCjkWidesAndCombiningLowLines_withThompsonPikeEncoding) {
   /*───────────────────────────────────────────────────┬─*/
   EXPECT_EQ(20, strwidth(/**/ "𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷▒▒▒▒▒▒▒▒▒▒▒▒" /*│*/, 0));
@@ -63,6 +68,8 @@ TEST(wcwidth, testCjkWidesAndCombiningLowLines_widthIsNotLength) {
 
 TEST(wcwidth, block) {
   EXPECT_EQ(1, wcwidth(u'▄'));
+  EXPECT_EQ(0x3061, L'ち');
+  EXPECT_EQ(2, wcwidth(L'ち'));
 }
 
 TEST(strwidth, testTextDelimitingControlCodes_dontHaveSubstance) {
