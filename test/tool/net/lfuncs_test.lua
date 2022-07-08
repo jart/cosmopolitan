@@ -32,6 +32,16 @@ assert(Bsf(0x80000001) == 0)
 assert(Lemur64() == 0x1940efe9d47ae889)
 assert(Lemur64() == 0xd4b3103f567f9974)
 
+assert(EncodeLua(nil) == "nil")
+assert(EncodeLua(0) == "0")
+assert(EncodeLua(3.14) == "3.14")
+assert(EncodeLua({1, 2}) == "{1, 2}")
+
+assert(EncodeJson(nil) == "null")
+assert(EncodeJson(0) == "0")
+assert(EncodeJson(3.14) == "3.14")
+assert(EncodeJson({1, 2}) == "[1,2]")
+
 assert(hex(0x1940efe9d47ae889) == "0x1940efe9d47ae889")
 assert(oct(0x1940efe9d47ae889) == "0145007376472436564211")
 assert(bin(0x1940efe9d47ae889) == "0b0001100101000000111011111110100111010100011110101110100010001001")
