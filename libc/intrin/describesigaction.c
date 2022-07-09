@@ -21,15 +21,15 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
-const char *(DescribeSigaction)(char buf[128], int rc,
+const char *(DescribeSigaction)(char buf[256], int rc,
                                 const struct sigaction *sa) {
   if (rc == -1) return "n/a";
   if (!sa) return "NULL";
   if ((!IsAsan() && kisdangerous(sa)) ||
       (IsAsan() && !__asan_is_valid(sa, sizeof(*sa)))) {
-    ksnprintf(buf, 128, "%p", sa);
+    ksnprintf(buf, 256, "%p", sa);
   } else {
-    ksnprintf(buf, 128, "{.sa_handler=%p, .sa_flags=%#lx, .sa_mask=%s}",
+    ksnprintf(buf, 256, "{.sa_handler=%t, .sa_flags=%#lx, .sa_mask=%s}",
               sa->sa_handler, sa->sa_flags, DescribeSigset(rc, &sa->sa_mask));
   }
   return buf;

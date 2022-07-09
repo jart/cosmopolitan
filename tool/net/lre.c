@@ -17,13 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-#include "libc/x/x.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/regex/regex.h"
 
-static const char kRegCode[][8] = {
-    "OK",     "NOMATCH", "BADPAT", "COLLATE", "ECTYPE", "EESCAPE", "ESUBREG",
-    "EBRACK", "EPAREN",  "EBRACE", "BADBR",   "ERANGE", "ESPACE",  "BADRPT",
+struct ReErrno {
+  int err;
+  char doc[64];
 };
 
 static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
@@ -31,40 +30,53 @@ static void LuaSetIntField(lua_State *L, const char *k, lua_Integer v) {
   lua_setfield(L, -2, k);
 }
 
+static int LuaReReturnError(lua_State *L, regex_t *r, int rc) {
+  struct ReErrno *e;
+  lua_pushnil(L);
+  e = lua_newuserdatauv(L, sizeof(struct ReErrno), 0);
+  luaL_setmetatable(L, "re.Errno");
+  e->err = rc;
+  regerror(rc, r, e->doc, sizeof(e->doc));
+  return 2;
+}
+
 static regex_t *LuaReCompileImpl(lua_State *L, const char *p, int f) {
-  int e;
+  int rc;
   regex_t *r;
-  r = xmalloc(sizeof(regex_t));
+  r = lua_newuserdatauv(L, sizeof(regex_t), 0);
+  luaL_setmetatable(L, "re.Regex");
   f &= REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB;
   f ^= REG_EXTENDED;
-  if ((e = regcomp(r, p, f)) != REG_OK) {
-    free(r);
-    luaL_error(L, "regcomp(%s) → REG_%s", p,
-               kRegCode[MAX(0, MIN(ARRAYLEN(kRegCode) - 1, e))]);
-    unreachable;
+  if ((rc = regcomp(r, p, f)) == REG_OK) {
+    return r;
+  } else {
+    LuaReReturnError(L, r, rc);
+    return NULL;
   }
-  return r;
 }
 
 static int LuaReSearchImpl(lua_State *L, regex_t *r, const char *s, int f) {
-  int i, n;
+  int rc, i, n;
   regmatch_t *m;
-  n = r->re_nsub + 1;
-  m = xcalloc(n, sizeof(regmatch_t));
-  if (regexec(r, s, n, m, f >> 8) == REG_OK) {
+  luaL_Buffer tmp;
+  n = 1 + r->re_nsub;
+  m = (regmatch_t *)luaL_buffinitsize(L, &tmp, n * sizeof(regmatch_t));
+  if ((rc = regexec(r, s, n, m, f >> 8)) == REG_OK) {
     for (i = 0; i < n; ++i) {
       lua_pushlstring(L, s + m[i].rm_so, m[i].rm_eo - m[i].rm_so);
     }
+    return n;
   } else {
-    n = 0;
+    return LuaReReturnError(L, r, rc);
   }
-  free(m);
-  return n;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// re
+
 static int LuaReSearch(lua_State *L) {
+  int f;
   regex_t *r;
-  int i, e, n, f;
   const char *p, *s;
   p = luaL_checkstring(L, 1);
   s = luaL_checkstring(L, 2);
@@ -74,56 +86,51 @@ static int LuaReSearch(lua_State *L) {
     luaL_argerror(L, 3, "invalid flags");
     unreachable;
   }
-  r = LuaReCompileImpl(L, p, f);
-  n = LuaReSearchImpl(L, r, s, f);
-  regfree(r);
-  free(r);
-  return n;
+  if ((r = LuaReCompileImpl(L, p, f))) {
+    return LuaReSearchImpl(L, r, s, f);
+  } else {
+    return 2;
+  }
 }
 
 static int LuaReCompile(lua_State *L) {
-  int f, e;
+  int f;
+  regex_t *r;
   const char *p;
-  regex_t *r, **u;
   p = luaL_checkstring(L, 1);
   f = luaL_optinteger(L, 2, 0);
   if (f & ~(REG_EXTENDED | REG_ICASE | REG_NEWLINE | REG_NOSUB)) {
-    luaL_argerror(L, 3, "invalid flags");
+    luaL_argerror(L, 2, "invalid flags");
     unreachable;
   }
-  r = LuaReCompileImpl(L, p, f);
-  u = lua_newuserdata(L, sizeof(regex_t *));
-  luaL_setmetatable(L, "regex_t*");
-  *u = r;
-  return 1;
+  if ((r = LuaReCompileImpl(L, p, f))) {
+    return 1;
+  } else {
+    return 2;
+  }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// re.Regex
 
 static int LuaReRegexSearch(lua_State *L) {
   int f;
-  regex_t **u;
+  regex_t *r;
   const char *s;
-  u = luaL_checkudata(L, 1, "regex_t*");
+  r = luaL_checkudata(L, 1, "re.Regex");
   s = luaL_checkstring(L, 2);
   f = luaL_optinteger(L, 3, 0);
-  if (!*u) {
-    luaL_argerror(L, 1, "destroyed");
-    unreachable;
-  }
   if (f & ~(REG_NOTBOL << 8 | REG_NOTEOL << 8)) {
     luaL_argerror(L, 3, "invalid flags");
     unreachable;
   }
-  return LuaReSearchImpl(L, *u, s, f);
+  return LuaReSearchImpl(L, r, s, f);
 }
 
 static int LuaReRegexGc(lua_State *L) {
-  regex_t **u;
-  u = luaL_checkudata(L, 1, "regex_t*");
-  if (*u) {
-    regfree(*u);
-    free(*u);
-    *u = NULL;
-  }
+  regex_t *r;
+  r = luaL_checkudata(L, 1, "re.Regex");
+  regfree(r);
   return 0;
 }
 
@@ -143,8 +150,8 @@ static const luaL_Reg kLuaReRegexMeta[] = {
     {NULL, NULL},            //
 };
 
-static void LuaReRegex(lua_State *L) {
-  luaL_newmetatable(L, "regex_t*");
+static void LuaReRegexObj(lua_State *L) {
+  luaL_newmetatable(L, "re.Regex");
   luaL_setfuncs(L, kLuaReRegexMeta, 0);
   luaL_newlibtable(L, kLuaReRegexMeth);
   luaL_setfuncs(L, kLuaReRegexMeth, 0);
@@ -152,14 +159,84 @@ static void LuaReRegex(lua_State *L) {
   lua_pop(L, 1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// re.Errno
+
+static struct ReErrno *GetReErrno(lua_State *L) {
+  return luaL_checkudata(L, 1, "re.Errno");
+}
+
+// re.Errno:errno()
+//     └─→ errno:int
+static int LuaReErrnoErrno(lua_State *L) {
+  lua_pushinteger(L, GetReErrno(L)->err);
+  return 1;
+}
+
+// re.Errno:doc()
+//     └─→ description:str
+static int LuaReErrnoDoc(lua_State *L) {
+  lua_pushstring(L, GetReErrno(L)->doc);
+  return 1;
+}
+
+static const luaL_Reg kLuaReErrnoMeth[] = {
+    {"errno", LuaReErrnoErrno},  //
+    {"doc", LuaReErrnoDoc},      //
+    {0},                         //
+};
+
+static const luaL_Reg kLuaReErrnoMeta[] = {
+    {"__tostring", LuaReErrnoDoc},  //
+    {0},                            //
+};
+
+static void LuaReErrnoObj(lua_State *L) {
+  luaL_newmetatable(L, "re.Errno");
+  luaL_setfuncs(L, kLuaReErrnoMeta, 0);
+  luaL_newlibtable(L, kLuaReErrnoMeth);
+  luaL_setfuncs(L, kLuaReErrnoMeth, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+_Alignas(1) static const struct thatispacked {
+  const char s[8];
+  char x;
+} kReMagnums[] = {
+    {"BASIC", REG_EXTENDED},     // compile flag
+    {"ICASE", REG_ICASE},        // compile flag
+    {"NEWLINE", REG_NEWLINE},    // compile flag
+    {"NOSUB", REG_NOSUB},        // compile flag
+    {"NOMATCH", REG_NOMATCH},    // error
+    {"BADPAT", REG_BADPAT},      // error
+    {"ECOLLATE", REG_ECOLLATE},  // error
+    {"ECTYPE", REG_ECTYPE},      // error
+    {"EESCAPE", REG_EESCAPE},    // error
+    {"ESUBREG", REG_ESUBREG},    // error
+    {"EBRACK", REG_EBRACK},      // error
+    {"EPAREN", REG_EPAREN},      // error
+    {"EBRACE", REG_EBRACE},      // error
+    {"BADBR", REG_BADBR},        // error
+    {"ERANGE", REG_ERANGE},      // error
+    {"ESPACE", REG_ESPACE},      // error
+    {"BADRPT", REG_BADRPT},      // error
+};
+
 int LuaRe(lua_State *L) {
+  int i;
+  char buf[9];
   luaL_newlib(L, kLuaRe);
-  LuaSetIntField(L, "BASIC", REG_EXTENDED);
-  LuaSetIntField(L, "ICASE", REG_ICASE);
-  LuaSetIntField(L, "NEWLINE", REG_NEWLINE);
-  LuaSetIntField(L, "NOSUB", REG_NOSUB);
-  LuaSetIntField(L, "NOTBOL", REG_NOTBOL << 8);
-  LuaSetIntField(L, "NOTEOL", REG_NOTEOL << 8);
-  LuaReRegex(L);
+  LuaSetIntField(L, "NOTBOL", REG_NOTBOL << 8);  // search flag
+  LuaSetIntField(L, "NOTEOL", REG_NOTEOL << 8);  // search flag
+  for (i = 0; i < ARRAYLEN(kReMagnums); ++i) {
+    memcpy(buf, kReMagnums[i].s, 8);
+    buf[8] = 0;
+    LuaSetIntField(L, buf, kReMagnums[i].x);
+  }
+  LuaReRegexObj(L);
+  LuaReErrnoObj(L);
   return 1;
 }

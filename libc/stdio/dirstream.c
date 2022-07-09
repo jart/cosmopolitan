@@ -266,7 +266,8 @@ DIR *opendir(const char *name) {
     }
   } else if (!IsWindows()) {
     res = 0;
-    if ((fd = open(name, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) != -1) {
+    if ((fd = open(name, O_RDONLY | O_NOCTTY | O_DIRECTORY | O_CLOEXEC)) !=
+        -1) {
       if (!(res = fdopendir(fd))) {
         close(fd);
       }

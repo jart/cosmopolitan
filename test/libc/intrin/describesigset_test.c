@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,48 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/popcnt.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
 
-#define N 128
+TEST(DescribeSigset, present) {
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGINT);
+  sigaddset(&ss, SIGUSR1);
+  EXPECT_STREQ("{INT,USR1}", DescribeSigset(0, &ss));
+}
 
-const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
-  bool gotsome;
-  int i, sig;
-  sigset_t sigset;
-
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
-  if ((!IsAsan() && kisdangerous(ss)) ||
-      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
-    ksnprintf(buf, N, "%p", ss);
-    return buf;
-  }
-
-  i = 0;
-  sigset = *ss;
-  gotsome = false;
-  if (popcnt(sigset.__bits[0] & 0xffffffff) > 16) {
-    i += ksnprintf(buf + i, N - i, "~");
-    sigset.__bits[0] = ~sigset.__bits[0];
-    sigset.__bits[1] = ~sigset.__bits[1];
-  }
-  i += ksnprintf(buf + i, N - i, "{");
-  for (sig = 1; sig < 32; ++sig) {
-    if (sigismember(&sigset, sig)) {
-      if (gotsome) {
-        i += ksnprintf(buf + i, N - i, ",");
-      } else {
-        gotsome = true;
-      }
-      i += ksnprintf(buf + i, N - i, "%s", strsignal(sig) + 3);
-    }
-  }
-  i += ksnprintf(buf + i, N - i, "}");
-
-  return buf;
+TEST(DescribeSigset, absent) {
+  sigset_t ss;
+  sigfillset(&ss);
+  sigdelset(&ss, SIGINT);
+  sigdelset(&ss, SIGUSR1);
+  EXPECT_STREQ("~{INT,USR1}", DescribeSigset(0, &ss));
 }

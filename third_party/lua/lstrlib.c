@@ -320,12 +320,22 @@ static int arith_sub (lua_State *L) {
 }
 
 static int arith_mul (lua_State *L) {
-  return arith(L, LUA_OPMUL, "__mul");
+  if (lua_isinteger(L, 2)) {
+    // [jart] python multiply string operator
+    lua_pushcfunction(L, str_rep);
+    lua_pushvalue(L, 1);
+    lua_pushvalue(L, 2);
+    lua_call(L, 2, 1);
+    return 1;
+  } else {
+    return arith(L, LUA_OPMUL, "__mul");
+  }
 }
 
 static int arith_mod (lua_State *L) {
   int i, n;
-  if (lua_istable(L, 2)) { // [jart] python printf operator
+  if (lua_istable(L, 2)) {
+    // [jart] python printf operator
     lua_len(L, 2);
     n = lua_tointeger(L, -1);
     lua_pop(L, 1);

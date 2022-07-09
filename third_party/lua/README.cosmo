@@ -34,3 +34,5 @@ LOCAL MODIFICATIONS
   Added luaL_traceback2() for function parameters in traceback.
 
   Added Python-like printf modulus operator for strings.
+
+  Added Python-like printf multiply operator for strings.

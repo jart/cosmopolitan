@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "dsp/core/core.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/log/check.h"
@@ -16,6 +17,10 @@
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
+
+#define CSI  "s"
+#define SGR1 "?80"
+#define SGR2 "?81"
 
 struct Ring {
   int i;     // read index
@@ -30,7 +35,7 @@ struct Speaker {
   struct Ring buf;  // audio playback buffer
 };
 
-const int maxar = 32;
+const int maxar = 31;
 const int ptime = 20;
 
 struct Speaker s;
@@ -64,14 +69,14 @@ void OnAlrm(int sig) {
   int count;
   int samps = s.rate / (1000 / ptime);
   for (i = 0; i < samps; i += count) {
-    printf("\e[");
+    printf("\e[" SGR2);
     count = MIN(samps - i, maxar);
     for (j = 0; j < count; ++j) {
-      if (j) printf(";");
-      printf("%d", s.buf.p[s.buf.i++] & 0xffff);
+      printf(";%d", s.buf.p[s.buf.i++] & 0xffff);
+      /* printf(";%d", mulaw(s.buf.p[s.buf.i++])); */
       if (s.buf.i == s.buf.n) break;
     }
-    printf("p");
+    printf(CSI);
     if (s.buf.i == s.buf.n) break;
   }
   fflush(stdout);
@@ -87,7 +92,7 @@ int main(int argc, char* argv[]) {
   s.channels = 1;
   LoadAudioFile(&s, "/home/jart/Music/numbers.s16");
 
-  printf("\e[%d;%dy", s.rate, s.channels);
+  printf("\e[" SGR1 "%d;%d;0" CSI, s.rate, s.channels);
   fflush(stdout);
 
   struct sigaction sa = {.sa_handler = OnAlrm};

@@ -17,6 +17,9 @@ x = Rdtsc()
 y = Rdtsc()
 assert(y > x)
 
+assert(Rdrand() ~= Rdrand())
+assert(Rdseed() ~= Rdseed())
+
 assert(Bsr(1) == 0)
 assert(Bsr(2) == 1)
 assert(Bsr(3) == 1)
@@ -29,22 +32,54 @@ assert(Bsf(3) == 0)
 assert(Bsf(4) == 2)
 assert(Bsf(0x80000001) == 0)
 
+assert(Popcnt(0) == 0)
+assert(Popcnt(1) == 1)
+assert(Popcnt(2) == 1)
+assert(Popcnt(3) == 2)
+assert(Popcnt(0b0111101001101001) == 9)
+
 assert(Lemur64() == 0x1940efe9d47ae889)
 assert(Lemur64() == 0xd4b3103f567f9974)
+
+assert(hex(0x1940efe9d47ae889) == "0x1940efe9d47ae889")
+assert(oct(0x1940efe9d47ae889) == "0145007376472436564211")
+assert(bin(0x1940efe9d47ae889) == "0b0001100101000000111011111110100111010100011110101110100010001001")
+
+assert(EscapeHtml("?hello&there<>") == "?hello&amp;there&lt;&gt;")
+assert(EscapeParam("?hello&there<>") == "%3Fhello%26there%3C%3E")
+
+assert(DecodeLatin1("hello\xff\xc0") == "helloÿÀ")
+assert(EncodeLatin1("helloÿÀ") == "hello\xff\xc0")
 
 assert(EncodeLua(nil) == "nil")
 assert(EncodeLua(0) == "0")
 assert(EncodeLua(3.14) == "3.14")
 assert(EncodeLua({1, 2}) == "{1, 2}")
+x = {1, 2}
+x[3] = x
+assert(string.match(EncodeLua(x), "{1, 2, \"cyclic@0x%x+\"}"))
+
+-- TODO(jart): EncodeLua() should sort tables
+-- x = {}
+-- x.c = 'c'
+-- x.a = 'a'
+-- x.b = 'b'
+-- assert(EncodeLua(x) == '{a="a", b="b", c="c"}')
 
 assert(EncodeJson(nil) == "null")
 assert(EncodeJson(0) == "0")
 assert(EncodeJson(3.14) == "3.14")
 assert(EncodeJson({1, 2}) == "[1,2]")
 
-assert(hex(0x1940efe9d47ae889) == "0x1940efe9d47ae889")
-assert(oct(0x1940efe9d47ae889) == "0145007376472436564211")
-assert(bin(0x1940efe9d47ae889) == "0b0001100101000000111011111110100111010100011110101110100010001001")
+url = ParseUrl("https://jart:pass@redbean.dev/2.0.html?x&y=z#frag")
+assert(url.scheme == "https")
+assert(url.user == "jart")
+assert(url.pass == "pass")
+assert(url.host == "redbean.dev")
+assert(not url.port)
+assert(url.path == "/2.0.html")
+assert(EncodeLua(url.params) == '{{"x"}, {"y", "z"}}')
+assert(url.fragment == "frag")
 
 assert(DecodeBase64("abcdefgABCDE") == "\x69\xb7\x1d\x79\xf8\x00\x04\x20\xc4")
 assert(EncodeBase64("\x69\xb7\x1d\x79\xf8\x00\x04\x20\xc4") == "abcdefgABCDE")
@@ -82,6 +117,7 @@ assert(IndentLines("hi\nthere\n") == " hi\n there\n")
 assert(IndentLines("hi\nthere\n", 2) == "  hi\n  there\n")
 
 assert(ParseHttpDateTime("Fri, 08 Jul 2022 16:17:43 GMT") == 1657297063)
+assert(FormatHttpDateTime(1657297063) == "Fri, 08 Jul 2022 16:17:43 GMT")
 
 assert(VisualizeControlCodes("hello\x00") == "hello␀")
 
@@ -97,8 +133,8 @@ assert(Sha256("hello") == "\x2c\xf2\x4d\xba\x5f\xb0\xa3\x0e\x26\xe8\x3b\x2a\xc5\
 assert(Sha384("hello") == "\x59\xe1\x74\x87\x77\x44\x8c\x69\xde\x6b\x80\x0d\x7a\x33\xbb\xfb\x9f\xf1\xb4\x63\xe4\x43\x54\xc3\x55\x3b\xcd\xb9\xc6\x66\xfa\x90\x12\x5a\x3c\x79\xf9\x03\x97\xbd\xf5\xf6\xa1\x3d\xe8\x28\x68\x4f")
 assert(Sha512("hello") == "\x9b\x71\xd2\x24\xbd\x62\xf3\x78\x5d\x96\xd4\x6a\xd3\xea\x3d\x73\x31\x9b\xfb\xc2\x89\x0c\xaa\xda\xe2\xdf\xf7\x25\x19\x67\x3c\xa7\x23\x23\xc3\xd9\x9b\xa5\xc1\x1d\x7c\x7a\xcc\x6e\x14\xb8\xc5\xda\x0c\x46\x63\x47\x5c\x2e\x5c\x3a\xde\xf4\x6f\x73\xbc\xde\xc0\x43")
 
-assert(Deflate("hello") == "\xcbH\xcd\xc9\xc9\x07\x00")
-assert(Inflate("\xcbH\xcd\xc9\xc9\x07\x00", 5) == "hello")
+assert(assert(Deflate("hello")) == "\xcbH\xcd\xc9\xc9\x07\x00")
+assert(assert(Inflate("\xcbH\xcd\xc9\xc9\x07\x00", 5)) == "hello")
 
 -- deprecated compression api we wish to forget as quickly as possible
 assert(Uncompress(Compress("hello")) == "hello")

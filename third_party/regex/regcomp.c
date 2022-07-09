@@ -2388,12 +2388,15 @@ static reg_errcode_t tre_ast_to_tnfa(tre_ast_node_t *node,
  * Compiles regular expression, e.g.
  *
  *     regex_t rx;
- *     EXPECT_EQ(REG_OK, regcomp(&rx, "^[A-Za-z]{2}$", REG_EXTENDED));
- *     EXPECT_EQ(REG_OK, regexec(&rx, "→A", 0, NULL, 0));
+ *     CHECK_EQ(REG_OK, regcomp(&rx, "^[A-Za-z]{2}$", REG_EXTENDED));
+ *     CHECK_EQ(REG_OK, regexec(&rx, "→A", 0, NULL, 0));
  *     regfree(&rx);
  *
- * @param preg points to state, and needs regfree() afterwards
- * @param regex is utf-8 regular expression string
+ * @param preg points to caller allocated memory that's used to store
+ *    your regular expression. This memory needn't be initialized. If
+ *    this function succeeds, then `preg` must be passed to regfree()
+ *    later on, to free its associated resources
+ * @param regex is utf-8 regular expression nul-terminated string
  * @param cflags can have REG_EXTENDED, REG_ICASE, REG_NEWLINE, REG_NOSUB
  * @return REG_OK, REG_NOMATCH, REG_BADPAT, etc.
  * @see regexec(), regfree(), regerror()
@@ -2579,39 +2582,48 @@ error_exit:
 
 /**
  * Frees any memory allocated by regcomp().
+ *
+ * The same object may be destroyed by regfree() multiple times, in
+ * which case subsequent calls do nothing. Once a regex is freed, it may
+ * be passed to regcomp() to reinitialize it.
  */
 void regfree(regex_t *preg) {
-  tre_tnfa_t *tnfa;
   unsigned int i;
+  tre_tnfa_t *tnfa;
   tre_tnfa_transition_t *trans;
-  tnfa = (void *)preg->TRE_REGEX_T_FIELD;
-  if (!tnfa) return;
-  for (i = 0; i < tnfa->num_transitions; i++)
-    if (tnfa->transitions[i].state) {
-      if (tnfa->transitions[i].tags)
-        free(tnfa->transitions[i].tags), tnfa->transitions[i].tags = NULL;
-      if (tnfa->transitions[i].neg_classes)
-        free(tnfa->transitions[i].neg_classes),
-            tnfa->transitions[i].neg_classes = NULL;
+  if ((tnfa = preg->TRE_REGEX_T_FIELD)) {
+    preg->TRE_REGEX_T_FIELD = 0;
+    for (i = 0; i < tnfa->num_transitions; i++)
+      if (tnfa->transitions[i].state) {
+        if (tnfa->transitions[i].tags) {
+          free(tnfa->transitions[i].tags);
+        }
+        if (tnfa->transitions[i].neg_classes) {
+          free(tnfa->transitions[i].neg_classes);
+        }
+      }
+    if (tnfa->transitions) {
+      free(tnfa->transitions);
     }
-  if (tnfa->transitions) free(tnfa->transitions), tnfa->transitions = NULL;
-  if (tnfa->initial) {
-    for (trans = tnfa->initial; trans->state; trans++) {
-      if (trans->tags) free(trans->tags), trans->tags = NULL;
+    if (tnfa->initial) {
+      for (trans = tnfa->initial; trans->state; trans++) {
+        if (trans->tags) {
+          free(trans->tags);
+        }
+      }
+      free(tnfa->initial);
     }
-    free(tnfa->initial), tnfa->initial = NULL;
+    if (tnfa->submatch_data) {
+      for (i = 0; i < tnfa->num_submatches; i++) {
+        if (tnfa->submatch_data[i].parents) {
+          free(tnfa->submatch_data[i].parents);
+        }
+      }
+      free(tnfa->submatch_data);
+    }
+    if (tnfa->tag_directions) free(tnfa->tag_directions);
+    if (tnfa->firstpos_chars) free(tnfa->firstpos_chars);
+    if (tnfa->minimal_tags) free(tnfa->minimal_tags);
+    free(tnfa);
   }
-  if (tnfa->submatch_data) {
-    for (i = 0; i < tnfa->num_submatches; i++)
-      if (tnfa->submatch_data[i].parents)
-        free(tnfa->submatch_data[i].parents),
-            tnfa->submatch_data[i].parents = NULL;
-    free(tnfa->submatch_data), tnfa->submatch_data = NULL;
-  }
-  if (tnfa->tag_directions)
-    free(tnfa->tag_directions), tnfa->tag_directions = NULL;
-  if (tnfa->firstpos_chars)
-    free(tnfa->firstpos_chars), tnfa->firstpos_chars = NULL;
-  if (tnfa->minimal_tags) free(tnfa->minimal_tags), tnfa->minimal_tags = NULL;
-  free(tnfa), tnfa = NULL;
 }

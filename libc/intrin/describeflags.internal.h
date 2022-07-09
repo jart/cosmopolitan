@@ -57,9 +57,9 @@ const char *DescribeRlimitName(char[20], int);
 const char *DescribeSchedParam(char[32], const struct sched_param *);
 const char *DescribeSchedPolicy(char[48], int);
 const char *DescribeSeccompOperation(int);
-const char *DescribeSigaction(char[128], int, const struct sigaction *);
+const char *DescribeSigaction(char[256], int, const struct sigaction *);
 const char *DescribeSigaltstk(char[128], int, const struct sigaltstack *);
-const char *DescribeSigset(char[64], int, const sigset_t *);
+const char *DescribeSigset(char[128], int, const sigset_t *);
 const char *DescribeSockLevel(char[12], int);
 const char *DescribeSockOptname(char[32], int, int);
 const char *DescribeSockaddr(char[128], const struct sockaddr *, size_t);
@@ -102,9 +102,9 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedParam(x)        DescribeSchedParam(alloca(32), x)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
-#define DescribeSigaction(rc, sa)    DescribeSigaction(alloca(128), rc, sa)
+#define DescribeSigaction(rc, sa)    DescribeSigaction(alloca(256), rc, sa)
 #define DescribeSigaltstk(rc, ss)    DescribeSigaltstk(alloca(128), rc, ss)
-#define DescribeSigset(rc, ss)       DescribeSigset(alloca(64), rc, ss)
+#define DescribeSigset(rc, ss)       DescribeSigset(alloca(128), rc, ss)
 #define DescribeSockLevel(x)         DescribeSockLevel(alloca(12), x)
 #define DescribeSockOptname(x, y)    DescribeSockOptname(alloca(32), x, y)
 #define DescribeSockaddr(sa, sz)     DescribeSockaddr(alloca(128), sa, sz)

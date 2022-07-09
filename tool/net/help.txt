@@ -357,6 +357,9 @@ LUA ENHANCEMENTS
       example, you can say `"hello %s" % {"world"}` instead of
       `string.format("hello %s", "world")`.
 
+    - redbean supports a string multiply operator, like Python. For
+      example, you can say `"hi" * 2` instead of `string.rep("hi", 2)`.
+
     - redbean supports octal (base 8) integer literals. For example
       `0644 == 420` is the case in redbean, whereas in upstream Lua
       `0644 == 644` would be the case.
@@ -1495,6 +1498,7 @@ CONSTANTS
           Logging anything at this level will result in a backtrace and
           process exit.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 LSQLITE3 MODULE
 
@@ -1531,6 +1535,7 @@ LSQLITE3 MODULE
   we provide an APE build of the SQLite shell which you can use to
   administrate your redbean database. See the sqlite3.com download above.
 
+
 ────────────────────────────────────────────────────────────────────────────────
 RE MODULE
 
@@ -1540,29 +1545,144 @@ RE MODULE
 
     # Example IPv4 Address Regular Expression (see also ParseIP)
     p = re.compile([[^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$]])
-    m,a,b,c,d = p:search(𝑠)
+    m,a,b,c,d = assert(p:search(𝑠))
     if m then
       print("ok", tonumber(a), tonumber(b), tonumber(c), tonumber(d))
     else
       print("not ok")
     end
 
-  re.search(regex:str,text:str[,flags:int]) → [match[,group_1,...]]
-          Shortcut for re.compile plus regex_t*:search.
+  re.search(regex:str, text:str[, flags:int])
+      ├─→ match:str[, group1:str, ...]
+      └─→ nil, re.Errno
 
-  re.compile(regex:str[,flags:int]) → regex_t*
-          Compiles regular expression, using the POSIX extended syntax. This
-          has an O(2^𝑛) cost, so it's a good idea to do this from your
-          /.init.lua file. Flags may contain re.BASIC, re.ICASE, re.NOSUB,
-          and/or re.NEWLINE. See also regcomp() from libc.
+          Searches for regular expression match in text.
 
-  regex_t*:search(text:str[,flags:int]) → [match[,group_1,...]]
-          Executes regular expression. This has an O(𝑛) cost. This returns
-          nothing (nil) if the pattern doesn't match anything. Otherwise it
-          pushes the matched substring and any parenthesis-captured values
-          too. Flags may contain re.NOTBOL or re.NOTEOL to indicate whether
-          or not text should be considered at the start and/or end of a
-          line.
+          This is a shorthand notation roughly equivalent to:
+
+              preg = re.compile(regex)
+              patt = preg:search(re, text)
+
+          `flags` defaults to zero and may have any of:
+
+          - `re.BASIC`
+          - `re.ICASE`
+          - `re.NEWLINE`
+          - `re.NOSUB`
+          - `re.NOTBOL`
+          - `re.NOTEOL`
+
+          This has exponential complexity. Please use re.compile() to
+          compile your regular expressions once from `/.init.lua`. This
+          API exists for convenience. This isn't recommended for prod.
+
+          This uses POSIX extended syntax by default.
+
+  re.compile(regex:str[, flags:int]) → re.Regex
+      ├─→ preg:re.Regex
+      └─→ nil, re.Errno
+
+          Compiles regular expression.
+
+          `flags` defaults to zero and may have any of:
+
+          - `re.BASIC`
+          - `re.ICASE`
+          - `re.NEWLINE`
+          - `re.NOSUB`
+
+          This has an O(2^𝑛) cost. Consider compiling regular
+          expressions once from your `/.init.lua` file.
+
+          If `regex` is an untrusted user value, then `unix.setrlimit`
+          should be used to impose cpu and memory quotas for security.
+
+          This uses POSIX extended syntax by default.
+
+────────────────────────────────────────────────────────────────────────────────
+ RE REGEX OBJECT
+
+  re.Regex:search(text:str[, flags:int])
+      ├─→ match:str[, group1:str, ...]
+      └─→ nil, re.Errno
+
+          Executes precompiled regular expression.
+
+          Returns nothing (nil) if the pattern doesn't match anything.
+          Otherwise it pushes the matched substring and any
+          parenthesis-captured values too. Flags may contain re.NOTBOL
+          or re.NOTEOL to indicate whether or not text should be
+          considered at the start and/or end of a line.
+
+          `flags` defaults to zero and may have any of:
+
+          - `re.NOTBOL`
+          - `re.NOTEOL`
+
+          This has an O(𝑛) cost.
+
+────────────────────────────────────────────────────────────────────────────────
+ RE ERRNO OBJECT
+
+  re.Errno:errno()
+      └─→ errno:int
+
+    Returns regex error number.
+
+  re.Errno:doc()
+      └─→ description:str
+
+    Returns English string describing error code.
+
+  re.Errno:__tostring()
+      └─→ str
+
+    Delegates to re.Errno:doc()
+
+────────────────────────────────────────────────────────────────────────────────
+ RE ERRORS
+
+  re.NOMATCH
+    No match
+
+  re.BADPAT
+    Invalid regex
+
+  re.ECOLLATE
+    Unknown collating element
+
+  re.ECTYPE
+    Unknown character class name
+
+  re.EESCAPE
+    Trailing backslash
+
+  re.ESUBREG
+    Invalid back reference
+
+  re.EBRACK
+    Missing `]`
+
+  re.EPAREN
+    Missing `)`
+
+  re.EBRACE
+    Missing `}`
+
+  re.BADBR
+    Invalid contents of `{}`
+
+  re.ERANGE
+    Invalid character range.
+
+  re.ESPACE
+    Out of memory
+
+  re.BADRPT
+    Repetition not preceded by valid expression
+
+────────────────────────────────────────────────────────────────────────────────
+ RE FLAGS
 
   re.BASIC
           Use this flag if you prefer the default POSIX regex syntax. We use
@@ -1578,27 +1698,29 @@ RE MODULE
           may only be used with re.compile and re.search.
 
   re.NEWLINE
-          Use this flag to change the handling of NEWLINE (\x0a) characters.
-          When this flag is set, (1) a NEWLINE shall not be matched by a "."
-          or any form of a non-matching list, (2) a "^" shall match the
-          zero-length string immediately after a NEWLINE (regardless of
-          re.NOTBOL), and (3) a "$" shall match the zero-length string
-          immediately before a NEWLINE (regardless of re.NOTEOL).
+          Use this flag to change the handling of NEWLINE (\x0a)
+          characters. When this flag is set, (1) a NEWLINE shall not be
+          matched by a "." or any form of a non-matching list, (2) a "^"
+          shall match the zero-length string immediately after a NEWLINE
+          (regardless of re.NOTBOL), and (3) a "$" shall match the
+          zero-length string immediately before a NEWLINE (regardless of
+          re.NOTEOL).
 
   re.NOSUB
           Causes re.search to only report success and failure. This is
-          reported via the API by returning empty string for success. This
-          flag may only be used with re.compile and re.search.
+          reported via the API by returning empty string for success.
+          This flag may only be used with re.compile and re.search.
 
   re.NOTBOL
-          The first character of the string pointed to by string is not the
-          beginning of the line. This flag may only be used with re.search
-          and regex_t*:search.
+          The first character of the string pointed to by string is not
+          the beginning of the line. This flag may only be used with
+          re.search and re.Regex:search.
 
   re.NOTEOL
-          The last character of the string pointed to by string is not the
-          end of the line. This flag may only be used with re.search and
-          regex_t*:search.
+          The last character of the string pointed to by string is not
+          the end of the line. This flag may only be used with re.search
+          and re.Regex:search.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 MAXMIND MODULE
@@ -1620,6 +1742,7 @@ MAXMIND MODULE
       end
 
   For further details, please see maxmind.lua in redbean-demo.com.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 ARGON2 MODULE
@@ -1687,6 +1810,7 @@ ARGON2 MODULE
               "p=4$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWRWJTmaaJObG",
             "password")
         true
+
 
 ────────────────────────────────────────────────────────────────────────────────
 UNIX MODULE
@@ -2276,6 +2400,18 @@ UNIX MODULE
     thereby assisting with simple absolute filename checks in addition
     to enabling one to exceed the traditional 260 character limit.
 
+  unix.rmrf(path:str)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Recursively removes filesystem path.
+
+    Like unix.makedirs() this function isn't actually a system call but
+    rather is a Libc convenience wrapper. It's intended to be equivalent
+    to using the UNIX shell's `rm -rf path` command.
+
+    `path` is the file or directory path you wish to destroy.
+
   unix.fcntl(fd:int, cmd:int, ...)
       ├─→ ...
       └─→ nil, unix.Errno
@@ -2532,7 +2668,7 @@ UNIX MODULE
 
     `whence` can be one of:
 
-    - `SEEK_SET`: Sets the file position to `offset`
+    - `SEEK_SET`: Sets the file position to `offset` [default]
     - `SEEK_CUR`: Sets the file position to `position + offset`
     - `SEEK_END`: Sets the file position to `filesize + offset`
 
@@ -2580,14 +2716,14 @@ UNIX MODULE
     - `SOCK_CLOEXEC`
     - `SOCK_NONBLOCK`
 
-    `protocol` defaults to `IPPROTO_TCP` for AF_INET` and `0` for
-    `AF_UNIX`. It can also be:
+    `protocol` may be any of:
 
-    - `IPPROTO_IP`
-    - `IPPROTO_ICMP`
+    - `0` to let kernel choose [default]
     - `IPPROTO_TCP`
     - `IPPROTO_UDP`
     - `IPPROTO_RAW`
+    - `IPPROTO_IP`
+    - `IPPROTO_ICMP`
 
   unix.socketpair([family:int[, type:int[, protocol:int]]])
       ├─→ fd1:int, fd2:int
@@ -2964,18 +3100,19 @@ UNIX MODULE
 
     Example:
 
-        assert(unix.sigaction(unix.SIGUSR1, function(sig)
-           gotsigusr1 = true
-        end))
-        gotsigusr1 = false
-        assert(unix.raise(unix.SIGUSR1))
-        ok, err = unix.sigsuspend()
-        assert(err:errno == unix.EINTR)
-        if gotsigusr1
-           print('hooray the signal was delivered')
-        else
-           print('oh no some other signal was handled')
+        function OnSigUsr1(sig)
+          gotsigusr1 = true
         end
+        gotsigusr1 = false
+        oldmask = assert(unix.sigprocmask(unix.SIG_BLOCK, unix.Sigset(unix.SIGUSR1)))
+        assert(unix.sigaction(unix.SIGUSR1, OnSigUsr1))
+        assert(unix.raise(unix.SIGUSR1))
+        assert(not gotsigusr1)
+        ok, err = unix.sigsuspend(oldmask)
+        assert(not ok)
+        assert(err:errno() == unix.EINTR)
+        assert(gotsigusr1)
+        assert(unix.sigprocmask(unix.SIG_SETMASK, oldmask))
 
     It's a good idea to not do too much work in a signal handler.
 

@@ -5398,7 +5398,11 @@ static void LuaInit(void) {
   lua_State *L = GL;
   LuaSetArgv(L);
   if (interpretermode) {
-    exit(LuaInterpreter(L));
+    int rc = LuaInterpreter(L);
+    if (IsModeDbg()) {
+      CheckForMemoryLeaks();
+    }
+    exit(rc);
   }
   if (LuaRunAsset("/.init.lua", true)) {
     hasonhttprequest = IsHookDefined("OnHttpRequest");

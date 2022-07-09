@@ -405,7 +405,7 @@ int LuaResolveIp(lua_State *L) {
 }
 
 static int LuaCheckControlFlags(lua_State *L, int idx) {
-  int f = luaL_checkinteger(L, idx);
+  int f = luaL_optinteger(L, idx, 0);
   if (f & ~(kControlWs | kControlC0 | kControlC1)) {
     luaL_argerror(L, idx, "invalid control flags");
     unreachable;

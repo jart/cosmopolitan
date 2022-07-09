@@ -386,6 +386,14 @@ static int LuaUnixMakedirs(lua_State *L) {
       makedirs(luaL_checkstring(L, 1), luaL_optinteger(L, 2, 0755)));
 }
 
+// unix.rmrf(path:str)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixRmrf(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "rmrf", olderr, rmrf(luaL_checkstring(L, 1)));
+}
+
 // unix.chdir(path:str)
 //     ├─→ true
 //     └─→ nil, unix.Errno
@@ -1204,10 +1212,9 @@ static int LuaUnixGetsockopt(lua_State *L) {
 static int LuaUnixSocket(lua_State *L) {
   int olderr = errno;
   int family = luaL_optinteger(L, 1, AF_INET);
-  return SysretInteger(
-      L, "socket", olderr,
-      socket(family, luaL_optinteger(L, 2, SOCK_STREAM),
-             luaL_optinteger(L, 3, family == AF_INET ? IPPROTO_TCP : 0)));
+  return SysretInteger(L, "socket", olderr,
+                       socket(family, luaL_optinteger(L, 2, SOCK_STREAM),
+                              luaL_optinteger(L, 3, 0)));
 }
 
 // unix.socketpair([family:int[, type:int[, protocol:int]]])
@@ -1600,11 +1607,17 @@ static int LuaUnixSigaction(lua_State *L) {
     luaL_argerror(L, 2, "sigaction handler not integer or function");
     unreachable;
   }
-  sa.sa_flags = luaL_optinteger(L, 3, 0);
   if (!lua_isnoneornil(L, 4)) {
     mask = luaL_checkudata(L, 4, "unix.Sigset");
     sa.sa_mask.__bits[0] |= mask->__bits[0];
     sa.sa_mask.__bits[1] |= mask->__bits[1];
+    lua_remove(L, 4);
+  }
+  if (lua_isnoneornil(L, 3)) {
+    sa.sa_flags = 0;
+  } else {
+    sa.sa_flags = lua_tointeger(L, 3);
+    lua_remove(L, 3);
   }
   if (!sigaction(sig, saptr, &oldsa)) {
     lua_getglobal(L, "__signal_handlers");
@@ -2529,7 +2542,6 @@ static const luaL_Reg kLuaUnix[] = {
     {"getsid", LuaUnixGetsid},            // get session id of pid
     {"getsockname", LuaUnixGetsockname},  // get address of local end
     {"getsockopt", LuaUnixGetsockopt},    // get socket tunings
-    {"tiocgwinsz", LuaUnixTiocgwinsz},    // pseudoteletypewriter dimensions
     {"getuid", LuaUnixGetuid},            // get real user id of process
     {"gmtime", LuaUnixGmtime},            // destructure unix timestamp
     {"isatty", LuaUnixIsatty},            // detects pseudoteletypewriters
@@ -2556,6 +2568,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"recvfrom", LuaUnixRecvfrom},        // receive udp from some address
     {"rename", LuaUnixRename},            // rename file or directory
     {"rmdir", LuaUnixRmdir},              // remove empty directory
+    {"rmrf", LuaUnixRmrf},                // remove file recursively
     {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
     {"setgid", LuaUnixSetgid},            // set real group id of process
@@ -2580,6 +2593,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"symlink", LuaUnixSymlink},          // create symbolic link
     {"sync", LuaUnixSync},                // flushes files and disks
     {"syslog", LuaUnixSyslog},            // logs to system log
+    {"tiocgwinsz", LuaUnixTiocgwinsz},    // pseudoteletypewriter dimensions
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file
