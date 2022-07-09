@@ -73,15 +73,6 @@ struct linenoiseState *lua_repl_linenoise;
 static lua_State *globalL;
 static const char *g_progname;
 static const char *g_historypath;
-static pthread_mutex_t lua_repl_lock_obj;
-
-void(lua_repl_lock)(void) {
-  pthread_mutex_lock(&lua_repl_lock_obj);
-}
-
-void(lua_repl_unlock)(void) {
-  pthread_mutex_unlock(&lua_repl_lock_obj);
-}
 
 /*
 ** {==================================================================

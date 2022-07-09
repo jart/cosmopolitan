@@ -738,6 +738,7 @@ static void LuaCompress2(lua_State *L, void *dest, size_t *destLen,
   }
 }
 
+// VERY DEPRECATED - PLEASE DO NOT USE
 int LuaCompress(lua_State *L) {
   size_t n, m;
   char *q, *e;
@@ -766,6 +767,7 @@ int LuaCompress(lua_State *L) {
   return 1;
 }
 
+// VERY DEPRECATED - PLEASE DO NOT USE
 int LuaUncompress(lua_State *L) {
   int rc;
   char *q;

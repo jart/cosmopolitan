@@ -5,6 +5,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
@@ -79,15 +80,15 @@ extern unsigned __log_level; /* log level for runtime check */
 // log a message with the specified log level (not checking if LOGGABLE)
 #define LOGF(LEVEL, FMT, ...)                                   \
   do {                                                          \
-    --__ftrace;                                                 \
+    if (!IsTiny()) --__ftrace;                                  \
     flogf(LEVEL, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-    ++__ftrace;                                                 \
+    if (!IsTiny()) ++__ftrace;                                  \
   } while (0)
 
 // report an error without backtrace and debugger invocation
 #define FATALF(FMT, ...)                                            \
   do {                                                              \
-    --__ftrace;                                                     \
+    if (!IsTiny()) --__ftrace;                                      \
     flogf(kLogError, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     __restorewintty();                                              \
     _Exit(1);                                                       \
@@ -96,95 +97,101 @@ extern unsigned __log_level; /* log level for runtime check */
 
 #define DIEF(FMT, ...)                                                \
   do {                                                                \
-    --__ftrace;                                                       \
+    if (!IsTiny()) --__ftrace;                                        \
     ffatalf(kLogFatal, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
     unreachable;                                                      \
   } while (0)
 
-#define ERRORF(FMT, ...)                                              \
-  do {                                                                \
-    if (LOGGABLE(kLogError)) { LOGF(kLogError, FMT, ##__VA_ARGS__); } \
+#define ERRORF(FMT, ...)                   \
+  do {                                     \
+    if (LOGGABLE(kLogError)) {             \
+      LOGF(kLogError, FMT, ##__VA_ARGS__); \
+    }                                      \
   } while (0)
 
-#define WARNF(FMT, ...)                                              \
-  do {                                                               \
-    if (LOGGABLE(kLogWarn)) { LOGF(kLogWarn, FMT, ##__VA_ARGS__); }  \
+#define WARNF(FMT, ...)                   \
+  do {                                    \
+    if (LOGGABLE(kLogWarn)) {             \
+      LOGF(kLogWarn, FMT, ##__VA_ARGS__); \
+    }                                     \
   } while (0)
 
-#define INFOF(FMT, ...)                                              \
-  do {                                                               \
-    if (LOGGABLE(kLogInfo)) { LOGF(kLogInfo, FMT, ##__VA_ARGS__); }  \
+#define INFOF(FMT, ...)                   \
+  do {                                    \
+    if (LOGGABLE(kLogInfo)) {             \
+      LOGF(kLogInfo, FMT, ##__VA_ARGS__); \
+    }                                     \
   } while (0)
 
 #define VERBOSEF(FMT, ...)                                                  \
   do {                                                                      \
     if (LOGGABLE(kLogVerbose)) {                                            \
-      --__ftrace;                                                           \
+      if (!IsTiny()) --__ftrace;                                            \
       fverbosef(kLogVerbose, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                           \
+      if (!IsTiny()) ++__ftrace;                                            \
     }                                                                       \
   } while (0)
 
 #define DEBUGF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                                \
-      --__ftrace;                                                       \
+      if (!IsTiny()) --__ftrace;                                        \
       fdebugf(kLogDebug, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                       \
+      if (!IsTiny()) ++__ftrace;                                        \
     }                                                                   \
   } while (0)
 
 #define NOISEF(FMT, ...)                                                \
   do {                                                                  \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                                \
-      --__ftrace;                                                       \
+      if (!IsTiny()) --__ftrace;                                        \
       fnoisef(kLogNoise, __FILE__, __LINE__, NULL, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                       \
+      if (!IsTiny()) ++__ftrace;                                        \
     }                                                                   \
   } while (0)
 
 #define FLOGF(F, FMT, ...)                                        \
   do {                                                            \
     if (LOGGABLE(kLogInfo)) {                                     \
-      --__ftrace;                                                 \
+      if (!IsTiny()) --__ftrace;                                  \
       flogf(kLogInfo, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                 \
+      if (!IsTiny()) ++__ftrace;                                  \
     }                                                             \
   } while (0)
 
 #define FWARNF(F, FMT, ...)                                       \
   do {                                                            \
     if (LOGGABLE(kLogWarn)) {                                     \
-      --__ftrace;                                                 \
+      if (!IsTiny()) --__ftrace;                                  \
       flogf(kLogWarn, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                 \
+      if (!IsTiny()) ++__ftrace;                                  \
     }                                                             \
   } while (0)
 
-#define FFATALF(F, FMT, ...)                                       \
-  do {                                                             \
-    --__ftrace;                                                    \
-    flogf(kLogError, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__);   \
-    __restorewintty();                                             \
-    _Exit(1);                                                      \
-    unreachable;                                                   \
+#define FFATALF(F, FMT, ...)                                     \
+  do {                                                           \
+    if (!IsTiny()) --__ftrace;                                   \
+    flogf(kLogError, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
+    __restorewintty();                                           \
+    _Exit(1);                                                    \
+    unreachable;                                                 \
   } while (0)
 
 #define FDEBUGF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogDebug))) {                             \
-      --__ftrace;                                                    \
+      if (!IsTiny()) --__ftrace;                                     \
       fdebugf(kLogDebug, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                    \
+      if (!IsTiny()) ++__ftrace;                                     \
     }                                                                \
   } while (0)
 
 #define FNOISEF(F, FMT, ...)                                         \
   do {                                                               \
     if (UNLIKELY(LOGGABLE(kLogNoise))) {                             \
-      --__ftrace;                                                    \
+      if (!IsTiny()) --__ftrace;                                     \
       fnoisef(kLogNoise, __FILE__, __LINE__, F, FMT, ##__VA_ARGS__); \
-      ++__ftrace;                                                    \
+      if (!IsTiny()) ++__ftrace;                                     \
     }                                                                \
   } while (0)
 
@@ -197,9 +204,9 @@ extern unsigned __log_level; /* log level for runtime check */
     int e = errno;                                                \
     autotype(FORM) Ax = (FORM);                                   \
     if (UNLIKELY(Ax == (typeof(Ax))(-1)) && LOGGABLE(kLogWarn)) { \
-      --__ftrace;                                                 \
+      if (!IsTiny()) --__ftrace;                                  \
       __logerrno(__FILE__, __LINE__, #FORM);                      \
-      ++__ftrace;                                                 \
+      if (!IsTiny()) ++__ftrace;                                  \
       errno = e;                                                  \
     }                                                             \
     Ax;                                                           \
@@ -210,9 +217,9 @@ extern unsigned __log_level; /* log level for runtime check */
     int e = errno;                           \
     autotype(FORM) Ax = (FORM);              \
     if (Ax == NULL && LOGGABLE(kLogWarn)) {  \
-      --__ftrace;                            \
+      if (!IsTiny()) --__ftrace;             \
       __logerrno(__FILE__, __LINE__, #FORM); \
-      ++__ftrace;                            \
+      if (!IsTiny()) ++__ftrace;             \
       errno = e;                             \
     }                                        \
     Ax;                                      \

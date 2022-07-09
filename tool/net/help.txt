@@ -61,7 +61,7 @@ FLAGS
   -s        increase silence                  [repeatable]
   -v        increase verbosity                [repeatable]
   -V        increase ssl verbosity            [repeatable]
-  -S        increase bpf seccomp sandboxing   [repeatable]
+  -S        increase pledge sandboxing        [repeatable]
   -H K:V    sets http header globally         [repeatable]
   -D DIR    overlay assets in local directory [repeatable]
   -r /X=/Y  redirect X to Y                   [repeatable]
@@ -253,6 +253,32 @@ SECURITY
     -VV      log ssl state changes too
     -VVV     log ssl informational messages too
     -VVVV    log ssl verbose details too
+
+  Redbean supports sandboxing flags on Linux and OpenBSD.
+
+    -S (online policy)
+
+      This causes unix.pledge("stdio rpath inet dns") to be called on
+      workers after fork() is called. This permits read-only operations
+      and APIs like Fetch() that let workers send and receive data with
+      private and public Internet hosts. Access to the unix module is
+      somewhat restricted, disallowing its more powerful APIs like exec.
+
+    -SS (offline policy)
+
+      This causes unix.pledge("stdio rpath") to be called on workers
+      after after fork() is called. This prevents workers from talking
+      to the network (other than the client) and allows read-only file
+      system access (e.g. `-D DIR` flag).
+
+    -SSS (contained policy)
+
+      This causes unix.pledge("stdio") to be called on workers after
+      after fork() is called. This prevents workers from communicating
+      with the network (other than the client connection) and prevents
+      file system access (with some exceptions like logging). Redbean
+      should only be able to serve from its own zip file in this mode.
+      Lua script access to the unix module is highly restricted.
 
   See http://redbean.dev for further details.
 

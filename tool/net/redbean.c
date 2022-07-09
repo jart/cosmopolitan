@@ -21,7 +21,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/dirent.h"
-#include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
@@ -63,6 +62,7 @@
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clone.h"
@@ -145,7 +145,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020008
+#define VERSION          0x020009
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
@@ -2259,7 +2259,11 @@ static wontreturn void PrintUsage(int fd, int rc) {
     fprintf(stderr, "error: /help.txt is not a zip asset\n");
     exit(1);
   }
-  __paginate(fd, p);
+  if (IsTiny()) {
+    write(fd, p, strlen(p));
+  } else {
+    __paginate(fd, p);
+  }
   exit(rc);
 }
 
@@ -6453,99 +6457,19 @@ static int ExitWorker(void) {
   _Exit(0);
 }
 
-static const struct sock_filter kSandboxOnline[] = {
-    _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
-    _SECCOMP_LOAD_SYSCALL_NR(),           //
-    _SECCOMP_ALLOW_SYSCALL(0x013),        // readv
-    _SECCOMP_ALLOW_SYSCALL(0x014),        // writev
-    _SECCOMP_ALLOW_SYSCALL(0x009),        // mmap
-    _SECCOMP_ALLOW_SYSCALL(0x00b),        // munmap
-    _SECCOMP_ALLOW_SYSCALL(0x000),        // read
-    _SECCOMP_ALLOW_SYSCALL(0x001),        // write
-    _SECCOMP_ALLOW_SYSCALL(0x003),        // close
-    _SECCOMP_ALLOW_SYSCALL(0x008),        // lseek
-    _SECCOMP_ALLOW_SYSCALL(0x04f),        // getcwd
-    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
-    _SECCOMP_ALLOW_SYSCALL(0x066),        // getuid
-    _SECCOMP_ALLOW_SYSCALL(0x068),        // getgid
-    _SECCOMP_ALLOW_SYSCALL(0x06e),        // getppid
-    _SECCOMP_ALLOW_SYSCALL(0x06f),        // getpgrp
-    _SECCOMP_ALLOW_SYSCALL(0x07c),        // getsid
-    _SECCOMP_ALLOW_SYSCALL(0x06b),        // geteuid
-    _SECCOMP_ALLOW_SYSCALL(0x06c),        // getegid
-    _SECCOMP_ALLOW_SYSCALL(0x061),        // getrlimit
-    _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
-    _SECCOMP_ALLOW_SYSCALL(0x0e7),        // exit_group
-    _SECCOMP_ALLOW_SYSCALL(0x106),        // newfstatat
-    _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
-    _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
-    _SECCOMP_ALLOW_SYSCALL(0x048),        // fcntl
-    _SECCOMP_ALLOW_SYSCALL(0x029),        // socket
-    _SECCOMP_ALLOW_SYSCALL(0x02a),        // connect
-    _SECCOMP_ALLOW_SYSCALL(0x02c),        // sendto
-    _SECCOMP_ALLOW_SYSCALL(0x02d),        // recvfrom
-    _SECCOMP_ALLOW_SYSCALL(0x036),        // setsockopt
-    _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
-};
-
-static const struct sock_filter kSandboxOffline[] = {
-    _SECCOMP_MACHINE(AUDIT_ARCH_X86_64),  //
-    _SECCOMP_LOAD_SYSCALL_NR(),           //
-    _SECCOMP_ALLOW_SYSCALL(0x013),        // readv
-    _SECCOMP_ALLOW_SYSCALL(0x014),        // writev
-    _SECCOMP_ALLOW_SYSCALL(0x000),        // read
-    _SECCOMP_ALLOW_SYSCALL(0x001),        // write
-    _SECCOMP_ALLOW_SYSCALL(0x009),        // mmap
-    _SECCOMP_ALLOW_SYSCALL(0x00b),        // munmap
-    _SECCOMP_ALLOW_SYSCALL(0x003),        // close
-    _SECCOMP_ALLOW_SYSCALL(0x008),        // lseek
-    _SECCOMP_ALLOW_SYSCALL(0x04f),        // getcwd
-    _SECCOMP_ALLOW_SYSCALL(0x027),        // getpid
-    _SECCOMP_ALLOW_SYSCALL(0x066),        // getuid
-    _SECCOMP_ALLOW_SYSCALL(0x068),        // getgid
-    _SECCOMP_ALLOW_SYSCALL(0x06e),        // getppid
-    _SECCOMP_ALLOW_SYSCALL(0x06f),        // getpgrp
-    _SECCOMP_ALLOW_SYSCALL(0x07c),        // getsid
-    _SECCOMP_ALLOW_SYSCALL(0x06b),        // geteuid
-    _SECCOMP_ALLOW_SYSCALL(0x06c),        // getegid
-    _SECCOMP_ALLOW_SYSCALL(0x061),        // getrlimit
-    _SECCOMP_ALLOW_SYSCALL(0x00f),        // rt_sigreturn
-    _SECCOMP_ALLOW_SYSCALL(0x0e7),        // exit_group
-    _SECCOMP_ALLOW_SYSCALL(0x106),        // newfstatat
-    _SECCOMP_ALLOW_SYSCALL(0x0e4),        // clock_gettime
-    _SECCOMP_ALLOW_SYSCALL(0x03f),        // uname
-    _SECCOMP_ALLOW_SYSCALL(0x048),        // fcntl
-    _SECCOMP_LOG_AND_RETURN_ERRNO(1),     // EPERM
-};
-
-static const struct sock_fprog kSandboxOnlineProg = {
-    .len = ARRAYLEN(kSandboxOnline),
-    .filter = kSandboxOnline,
-};
-
-static const struct sock_fprog kSandboxOfflineProg = {
-    .len = ARRAYLEN(kSandboxOffline),
-    .filter = kSandboxOffline,
-};
-
 static int EnableSandbox(void) {
-  const struct sock_fprog *sandbox;
   switch (sandboxed) {
     case 0:
       return 0;
-    case 1:
+    case 1:  // -S
       DEBUGF("(stat) applying '%s' sandbox policy", "online");
-      sandbox = &kSandboxOnlineProg;
-      break;
-    default:
+      return pledge("stdio rpath inet dns", 0);
+    case 2:  // -SS
       DEBUGF("(stat) applying '%s' sandbox policy", "offline");
-      sandbox = &kSandboxOfflineProg;
-      break;
-  }
-  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, sandbox) != -1) {
-    return 0;
-  } else {
-    return -1;
+      return pledge("stdio rpath", 0);
+    default:  // -SSS
+      DEBUGF("(stat) applying '%s' sandbox policy", "contained");
+      return pledge("stdio", 0);
   }
 }
 
@@ -7232,7 +7156,6 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
-      CASE('*', selfmodifiable = true);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -7249,29 +7172,30 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('M', ProgramMaxPayloadSize(ParseInt(optarg)));
 #if !IsTiny()
       CASE('W', monitortty = optarg);
-#endif
-#ifndef STATIC
-      CASE('e', LuaEvalCode(optarg));
-      CASE('F', LuaEvalFile(optarg));
-      CASE('i', interpretermode = true);
-      CASE('E', leakcrashreports = true);
-      CASE('A', storeasset = true; StorePath(optarg));
-#endif
-#ifndef UNSECURE
-      CASE('B', suiteb = true);
-      CASE('V', ++mbedtls_debug_threshold);
-      CASE('k', sslfetchverify = false);
-      CASE('j', sslclientverify = true);
-      CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
-      CASE('C', ProgramFile(optarg, ProgramCertificate));
-      CASE('K', ProgramFile(optarg, ProgramPrivateKey));
-#endif
       case 'f':
         funtrace = true;
         if (ftrace_install() == -1) {
           WARNF("(srvr) ftrace failed to install %m");
         }
         break;
+#endif
+#ifndef STATIC
+        CASE('e', LuaEvalCode(optarg));
+        CASE('F', LuaEvalFile(optarg));
+        CASE('*', selfmodifiable = true);
+        CASE('i', interpretermode = true);
+        CASE('E', leakcrashreports = true);
+        CASE('A', storeasset = true; StorePath(optarg));
+#endif
+#ifndef UNSECURE
+        CASE('B', suiteb = true);
+        CASE('V', ++mbedtls_debug_threshold);
+        CASE('k', sslfetchverify = false);
+        CASE('j', sslclientverify = true);
+        CASE('T', ProgramSslTicketLifetime(ParseInt(optarg)));
+        CASE('C', ProgramFile(optarg, ProgramCertificate));
+        CASE('K', ProgramFile(optarg, ProgramPrivateKey));
+#endif
       default:
         PrintUsage(2, EX_USAGE);
     }
@@ -7302,9 +7226,11 @@ void RedBean(int argc, char *argv[]) {
   SetDefaults();
   LuaStart();
   GetOpts(argc, argv);
+#ifndef STATIC
   if (selfmodifiable) {
     MakeExecutableModifiable();
   }
+#endif
   LuaInit();
   oldloglevel = __log_level;
   if (uniprocess) {
@@ -7399,8 +7325,25 @@ void RedBean(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   LoadZipArgs(&argc, &argv);
   RedBean(argc, argv);
+
+  // try to detect memory leaks upon:
+  // 1. main process exit
+  // 2. unwound worker exit
   if (IsModeDbg()) {
+    if (isexitingworker) {
+      if (IsWindows()) {
+        // TODO(jart): Get windows worker leak detector working again.
+        return 0;
+        CloseServerFds();
+      }
+      if (repltls) {
+        free(repltls);
+        linenoiseDisableRawMode();
+        linenoiseHistoryFree();
+      }
+    }
     CheckForMemoryLeaks();
   }
+
   return 0;
 }
