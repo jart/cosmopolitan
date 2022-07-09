@@ -394,7 +394,7 @@ void WithImageFile(const char *path,
       dxn = dyn * xn * (1 + !g_flags.half) / yn;
     }
     if (dxn && !dyn) {
-      dyn = g_flags.width * yn / (xn * (1 + !g_flags.half));
+      dyn = dxn * yn / (xn * (1 + !g_flags.half));
     }
     if (g_flags.magikarp) {
       while (HALF(syn) > dyn || HALF(sxn) > dxn) {
