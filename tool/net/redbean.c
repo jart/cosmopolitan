@@ -3455,7 +3455,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   }
   //////////////////////////////////////////////////////////////////////////////
   if (-1 == fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK})) {
-    WARNF("can't place write lock on file descriptor %d: %s", zfd,
+    WARNF("(srvr) can't place write lock on file descriptor %d: %s", zfd,
           strerror(errno));
     return;
   }
