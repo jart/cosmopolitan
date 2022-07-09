@@ -144,6 +144,7 @@ function UnixTest()
    for name, kind, ino, off in assert(unix.opendir(tmpdir)) do
       table.insert(t, name)
    end
+   table.sort(t)
    assert(EncodeLua(t) == '{".", "..", "foo"}');
 
 end
