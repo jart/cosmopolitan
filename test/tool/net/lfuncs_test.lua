@@ -54,17 +54,17 @@ assert(EncodeLatin1("helloÿÀ") == "hello\xff\xc0")
 assert(EncodeLua(nil) == "nil")
 assert(EncodeLua(0) == "0")
 assert(EncodeLua(3.14) == "3.14")
-assert(EncodeLua({2, 1}) == "{1, 2}")
+assert(EncodeLua({2, 1}) == "{2, 1}")
 
 assert(EncodeJson(nil) == "null")
 assert(EncodeJson(0) == "0")
 assert(EncodeJson(3.14) == "3.14")
-assert(EncodeJson({2, 1}) == "[1,2]")
+assert(EncodeJson({2, 1}) == "[2,1]")
 
 -- EncodeLua() permits serialization of cyclic data structures
 x = {2, 1}
 x[3] = x
-assert(string.match(EncodeLua(x), "{\"cyclic@0x%x+\", 1, 2}"))
+assert(string.match(EncodeLua(x), "{2, 1, \"cyclic@0x%x+\"}"))
 
 -- EncodeLua() sorts table entries
 x = {}

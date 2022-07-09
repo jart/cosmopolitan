@@ -120,9 +120,9 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
               lua_pop(L, 1);  // table/-2, key/-1
             }
             // stack: table/-1, as the key was popped by lua_next
+            SortStrList(&sl);
           }
           RETURN_ON_ERROR(appendw(buf, isarray ? '[' : '{'));
-          SortStrList(&sl);
           RETURN_ON_ERROR(JoinStrList(&sl, buf, ','));
           FreeStrList(&sl);
           RETURN_ON_ERROR(appendw(buf, isarray ? ']' : '}'));

@@ -181,8 +181,8 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
             lua_pop(L, 1);  // table/-2, key/-1
           }
           lua_pop(L, 1);  // table ref
+          if (!isarray) SortStrList(&sl);
           RETURN_ON_ERROR(appendw(buf, '{'));
-          SortStrList(&sl);
           RETURN_ON_ERROR(JoinStrList(&sl, buf, READ16LE(", ")));
           RETURN_ON_ERROR(appendw(buf, '}'));
           FreeStrList(&sl);
