@@ -24,7 +24,9 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/strlist.internal.h"
+#include "libc/str/str.h"
 #include "net/http/escape.h"
+#include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
@@ -38,7 +40,7 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
   bool isarray;
   size_t tbllen, i, z;
   struct StrList sl = {0};
-  char ibuf[21], fmt[] = "%.14g";
+  char ibuf[128], fmt[] = "%.14g";
   if (level > 0) {
     switch (lua_type(L, idx)) {
 
@@ -66,22 +68,8 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
           RETURN_ON_ERROR(appendd(
               buf, ibuf, FormatInt64(ibuf, luaL_checkinteger(L, idx)) - ibuf));
         } else {
-          // TODO(jart): replace this api
-          while (*numformat == '%' || *numformat == '.' ||
-                 isdigit(*numformat)) {
-            ++numformat;
-          }
-          switch (*numformat) {
-            case 'a':
-            case 'g':
-            case 'f':
-              fmt[4] = *numformat;
-              break;
-            default:
-              // prevent format string hacking
-              goto OnError;
-          }
-          RETURN_ON_ERROR(appendf(buf, fmt, lua_tonumber(L, idx)));
+          RETURN_ON_ERROR(
+              appends(buf, DoubleToEcmascript(ibuf, lua_tonumber(L, idx))));
         }
         return 0;
 

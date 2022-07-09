@@ -112,6 +112,7 @@
 #include "tool/args/args.h"
 #include "tool/build/lib/case.h"
 #include "tool/net/lfuncs.h"
+#include "tool/net/ljson.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
@@ -4258,6 +4259,13 @@ static int LuaEncodeLua(lua_State *L) {
   return LuaEncodeSmth(L, LuaEncodeLuaData);
 }
 
+static int LuaParseJson(lua_State *L) {
+  size_t n;
+  const char *p;
+  p = luaL_checklstring(L, 1, &n);
+  return ParseJson(L, p, n);
+}
+
 static int LuaGetUrl(lua_State *L) {
   char *p;
   size_t n;
@@ -5150,6 +5158,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ParseHost", LuaParseHost},                                //
     {"ParseHttpDateTime", LuaParseHttpDateTime},                //
     {"ParseIp", LuaParseIp},                                    //
+    {"ParseJson", LuaParseJson},                                //
     {"ParseParams", LuaParseParams},                            //
     {"ParseUrl", LuaParseUrl},                                  //
     {"Popcnt", LuaPopcnt},                                      //

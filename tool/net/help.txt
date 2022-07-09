@@ -673,6 +673,21 @@ FUNCTIONS
           URIs that do things like embed a PNG file in a web page. See
           encodebase64.c.
 
+  ParseJson(input:str)
+      ├─→ value:*
+      ├─→ true [if useoutput]
+      └─→ nil, error:str
+
+          Turns JSON string into a Lua data structure.
+
+          This is a very permissive parser. That means it should always
+          parse correctly formatted JSON correctly. However it will not
+          complain if the `input` string is weirdly formatted. There is
+          currently no validation performed, other than what we need to
+          ensure security. For example `{3=4}` will decode as `{[3]=4}`
+          even though that structure won't round-trip with `EncodeJson`
+          since redbean won't generate invalid JSON (see Postel's Law).
+
   EncodeJson(value[,options:table])
       ├─→ json:str
       ├─→ true [if useoutput]

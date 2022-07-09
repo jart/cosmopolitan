@@ -170,5 +170,5 @@ function JsonSerialization()
    EncodeJson({2, 1, 10, 3, "hello"})
 end
 
-print(Benchmark(LuaSerialization), "LuaSerialization")
-print(Benchmark(JsonSerialization), "JsonSerialization")
+print("LuaSerialization", Benchmark(LuaSerialization))
+print("JsonSerialization", Benchmark(JsonSerialization))
