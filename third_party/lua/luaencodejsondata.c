@@ -99,12 +99,17 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
                 // json tables must be arrays or use string keys
                 goto OnError;
               }
-              RETURN_ON_ERROR(sli = AppendStrList(&sl));
-              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
-                                                    numformat, -2, visited));
-              RETURN_ON_ERROR(appendw(&sl.p[sli], ':'));
-              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
-                                                    numformat, -1, visited));
+              // the json parser inserts a `__json_object__` into empty
+              // objects, so we don't serialize `{}` as `[]` by mistake
+              // and as such, we should ignore it here, for readability
+              if (strcmp(luaL_checkstring(L, -2), "__json_object__")) {
+                RETURN_ON_ERROR(sli = AppendStrList(&sl));
+                RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
+                                                      numformat, -2, visited));
+                RETURN_ON_ERROR(appendw(&sl.p[sli], ':'));
+                RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
+                                                      numformat, -1, visited));
+              }
               lua_pop(L, 1);  // table/-2, key/-1
             }
             // stack: table/-1, as the key was popped by lua_next

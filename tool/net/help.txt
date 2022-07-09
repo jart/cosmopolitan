@@ -675,7 +675,6 @@ FUNCTIONS
 
   ParseJson(input:str)
       ├─→ value:*
-      ├─→ true [if useoutput]
       └─→ nil, error:str
 
           Turns JSON string into a Lua data structure.
@@ -706,8 +705,6 @@ FUNCTIONS
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
-            - numformat: sets numeric format to be used, which can be 'g',
-              'f', or 'a' [experimental api]
 
           This function will fail if:
 

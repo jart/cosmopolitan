@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/limits.h"
-#include "libc/math.h"
-#include "libc/str/str.h"
+#include "libc/bits/bits.h"
+#include "libc/bits/likely.h"
 #include "libc/str/tpenc.h"
+#include "libc/str/utf16.h"
+#include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 
@@ -29,38 +29,80 @@ struct Rc {
   const char *p;
 };
 
-static int Accumulate(int x, int c, int d) {
-  if (!__builtin_mul_overflow(x, 10, &x) &&
-      !__builtin_add_overflow(x, (c - '0') * d, &x)) {
-    return x;
-  } else {
-    errno = ERANGE;
-    if (d > 0) {
-      return INT_MAX;
-    } else {
-      return INT_MIN;
-    }
-  }
-}
-
 static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
-  uint64_t w;
+  long x;
+  char w[4];
   struct Rc r;
+  const char *a;
   luaL_Buffer b;
-  int A, B, C, D;
-  int c, d, i, j, x, y, z;
-  for (d = +1; p < e;) {
+  int A, B, C, D, c, d, i, u;
+  for (a = p, d = +1; p < e;) {
     switch ((c = *p++ & 255)) {
 
-      case '-':
+      case ' ':  // spaces
+      case '\n':
+      case '\r':
+      case '\t':
+      case ',':  // separators
+      case ':':
+      default:
+        a = p;
+        break;
+
+      case 'n':  // null
+        if (p + 3 <= e && READ32LE(p - 1) == READ32LE("null")) {
+          lua_pushnil(L);
+          return (struct Rc){1, p + 3};
+        }
+        break;
+
+      case 't':  // true
+        if (p + 3 <= e && READ32LE(p - 1) == READ32LE("true")) {
+          lua_pushboolean(L, true);
+          return (struct Rc){1, p + 3};
+        }
+        break;
+
+      case 'f':  // false
+        if (p + 4 <= e && READ32LE(p) == READ32LE("alse")) {
+          lua_pushboolean(L, false);
+          return (struct Rc){1, p + 4};
+        }
+        break;
+
+      case '-':  // negative
         d = -1;
         break;
 
-      case ']':
-      case '}':
-        return (struct Rc){0, p};
+      case '0':  // zero or number
+        if (p < e && *p == '.') {
+          goto UseDubble;
+        }
+        lua_pushinteger(L, 0);
+        return (struct Rc){1, p};
 
-      case '[':
+      case '1' ... '9':  // integer
+        for (x = (c - '0') * d; p < e; ++p) {
+          c = *p & 255;
+          if (isdigit(c)) {
+            if (__builtin_mul_overflow(x, 10, &x) ||
+                __builtin_add_overflow(x, (c - '0') * d, &x)) {
+              goto UseDubble;
+            }
+          } else if (c == '.' || c == 'e' || c == 'E') {
+            goto UseDubble;
+          } else {
+            break;
+          }
+        }
+        lua_pushinteger(L, x);
+        return (struct Rc){1, p};
+
+      UseDubble:  // number
+        lua_pushnumber(L, StringToDouble(a, e - a, &c));
+        return (struct Rc){1, a + c};
+
+      case '[':  // Array
         lua_newtable(L);
         i = 0;
         do {
@@ -72,7 +114,11 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
         } while (r.t);
         return (struct Rc){1, p};
 
-      case '{':
+      case ']':
+      case '}':
+        return (struct Rc){0, p};
+
+      case '{':  // Object
         lua_newtable(L);
         i = 0;
         do {
@@ -85,16 +131,23 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
               lua_pushnil(L);
             }
             lua_settable(L, -3);
+            ++i;
           }
         } while (r.t);
+        if (!i) {
+          // we need this kludge so `{}` won't round-trip as `[]`
+          lua_pushstring(L, "__json_object__");
+          lua_pushboolean(L, true);
+          lua_settable(L, -3);
+        }
         return (struct Rc){1, p};
 
-      case '"':
+      case '"':  // string
         luaL_buffinit(L, &b);
         while (p < e) {
           switch ((c = *p++ & 255)) {
             default:
-            AddChar:
+            AddByte:
               luaL_addchar(&b, c);
               break;
             case '\\':
@@ -104,38 +157,86 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
                   case '/':
                   case '\\':
                   default:
-                    goto AddChar;
+                    goto AddByte;
                   case 'b':
                     c = '\b';
-                    goto AddChar;
+                    goto AddByte;
                   case 'f':
                     c = '\f';
-                    goto AddChar;
+                    goto AddByte;
                   case 'n':
                     c = '\n';
-                    goto AddChar;
+                    goto AddByte;
                   case 'r':
                     c = '\r';
-                    goto AddChar;
+                    goto AddByte;
                   case 't':
                     c = '\t';
-                    goto AddChar;
+                    goto AddByte;
                   case 'u':
                     if (p + 4 <= e &&                         //
                         (A = kHexToInt[p[0] & 255]) != -1 &&  //
-                        (B = kHexToInt[p[1] & 255]) != -1 &&  //
+                        (B = kHexToInt[p[1] & 255]) != -1 &&  // UCS-2
                         (C = kHexToInt[p[2] & 255]) != -1 &&  //
-                        (D = kHexToInt[p[3] & 255]) != -1) {
-                      p += 4;
+                        (D = kHexToInt[p[3] & 255]) != -1) {  //
                       c = A << 12 | B << 8 | C << 4 | D;
-                      w = tpenc(c);
-                      do {
-                        luaL_addchar(&b, w & 255);
-                      } while ((w >>= 8));
-                      break;
+                      if (!IsSurrogate(c)) {
+                        p += 4;
+                      } else if (IsHighSurrogate(c)) {
+                        if (p + 4 + 6 <= e &&                     //
+                            p[4] == '\\' &&                       //
+                            p[5] == 'u' &&                        //
+                            (A = kHexToInt[p[6] & 255]) != -1 &&  // UTF-16
+                            (B = kHexToInt[p[7] & 255]) != -1 &&  //
+                            (C = kHexToInt[p[8] & 255]) != -1 &&  //
+                            (D = kHexToInt[p[9] & 255]) != -1) {  //
+                          u = A << 12 | B << 8 | C << 4 | D;
+                          if (IsLowSurrogate(u)) {
+                            p += 4 + 6;
+                            c = MergeUtf16(c, u);
+                          } else {
+                            goto BadUnicode;
+                          }
+                        } else {
+                          goto BadUnicode;
+                        }
+                      } else {
+                        goto BadUnicode;
+                      }
+                      // UTF-8
+                      if (c < 0x7f) {
+                        w[0] = c;
+                        i = 1;
+                      } else if (c <= 0x7ff) {
+                        w[0] = 0300 | (c >> 6);
+                        w[1] = 0200 | (c & 077);
+                        i = 2;
+                      } else if (c <= 0xffff) {
+                        if (UNLIKELY(IsSurrogate(c))) {
+                        ReplacementCharacter:
+                          c = 0xfffd;
+                        }
+                        w[0] = 0340 | (c >> 12);
+                        w[1] = 0200 | ((c >> 6) & 077);
+                        w[2] = 0200 | (c & 077);
+                        i = 3;
+                      } else if (~(c >> 18) & 007) {
+                        w[0] = 0360 | (c >> 18);
+                        w[1] = 0200 | ((c >> 12) & 077);
+                        w[2] = 0200 | ((c >> 6) & 077);
+                        w[3] = 0200 | (c & 077);
+                        i = 4;
+                      } else {
+                        goto ReplacementCharacter;
+                      }
+                      luaL_addlstring(&b, w, i);
                     } else {
-                      goto AddChar;
+                    BadUnicode:
+                      // Echo invalid \uXXXX sequences
+                      // Rather than corrupting UTF-8!
+                      luaL_addstring(&b, "\\u");
                     }
+                    break;
                 }
               }
               break;
@@ -146,75 +247,33 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
       FinishString:
         luaL_pushresult(&b);
         return (struct Rc){1, p};
-
-      case '0' ... '9':
-        for (x = (c - '0') * d; p < e; ++p) {
-          c = *p & 255;
-          if (isdigit(c)) {
-            x = Accumulate(x, c, d);
-          } else if (c == '.') {
-            ++p;
-            goto Fraction;
-          } else if (c == 'e' || c == 'E') {
-            ++p;
-            j = 0;
-            y = 0;
-            goto Exponent;
-          } else {
-            break;
-          }
-        }
-        lua_pushinteger(L, x);
-        return (struct Rc){1, p};
-
-      Fraction:
-        for (j = y = 0; p < e; ++p) {
-          c = *p & 255;
-          if (isdigit(c)) {
-            --j;
-            y = Accumulate(y, c, d);
-          } else if (c == 'e' || c == 'E') {
-            ++p;
-            goto Exponent;
-          } else {
-            break;
-          }
-        }
-        lua_pushnumber(L, x + y * exp10(j));
-        return (struct Rc){1, p};
-
-      Exponent:
-        d = +1;
-        for (z = 0; p < e; ++p) {
-          c = *p & 255;
-          if (isdigit(c)) {
-            z = Accumulate(z, c, d);
-          } else if (c == '-') {
-            d = -1;
-          } else if (c == '+') {
-            d = +1;
-          } else {
-            break;
-          }
-        }
-        lua_pushnumber(L, (x + y * exp10(j)) * exp10(z));
-        return (struct Rc){1, p};
-
-      case ',':
-      case ':':
-      case ' ':
-      case '\n':
-      case '\r':
-      case '\t':
-      default:
-        break;
     }
   }
   return (struct Rc){0, p};
 }
 
 /**
- * Parses JSON data structure string into a Lua data structure.
+ * Parses JSON data structure string into Lua data structure.
+ *
+ * This function returns the number of items pushed to the Lua stack,
+ * which should be 1, unless no parseable JSON content was found, in
+ * which case this will return 0. On error -1 is returned. There's
+ * currently no error return condition. This function doesn't do JSON
+ * validity enforcement.
+ *
+ * JSON UTF-16 strings are re-encoded as valid UTF-8. 64-bit integers
+ * are supported. If an integer overflows during parsing, it'll be
+ * converted to a floating-point number instead. Invalid surrogate
+ * escape sequences in strings won't be decoded.
+ *
+ * A weird case exists when parsing empty objects. In order to let Lua
+ * tell them apart from empty arrays, we insert a special key that's
+ * ignored by our JSON serializer, called `[__json_object__]=true`.
+ *
+ * @param L is Lua interpreter state
+ * @param p is input string
+ * @param n is byte length of `p` or -1 for automatic strlen()
+ * @return 1 if value was pushed, 0 on end, or -1 on error
  */
 int ParseJson(struct lua_State *L, const char *p, size_t n) {
   if (n == -1) n = p ? strlen(p) : 0;

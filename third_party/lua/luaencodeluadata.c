@@ -25,6 +25,7 @@
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/strlist.internal.h"
 #include "libc/x/x.h"
+#include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lctype.h"
@@ -126,22 +127,8 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
               appendd(buf, ibuf,
                       FormatFlex64(ibuf, luaL_checkinteger(L, idx), 2) - ibuf));
         } else {
-          // TODO(jart): replace this api
-          while (*numformat == '%' || *numformat == '.' ||
-                 isdigit(*numformat)) {
-            ++numformat;
-          }
-          switch (*numformat) {
-            case 'a':
-            case 'g':
-            case 'f':
-              fmt[4] = *numformat;
-              break;
-            default:
-              // prevent format string hacking
-              goto OnError;
-          }
-          RETURN_ON_ERROR(appendf(buf, fmt, lua_tonumber(L, idx)));
+          RETURN_ON_ERROR(
+              appends(buf, DoubleToLua(ibuf, lua_tonumber(L, idx))));
         }
         return 0;
 

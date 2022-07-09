@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "third_party/double-conversion/double-conversion.h"
+#include "third_party/double-conversion/double-to-string.h"
 #include "third_party/double-conversion/wrapper.h"
 
 namespace double_conversion {
@@ -28,6 +29,16 @@ char* DoubleToEcmascript(char buf[128], double x) {
   const DoubleToStringConverter& dc =
       DoubleToStringConverter::EcmaScriptConverter();
   dc.ToShortest(x, &b);
+  return b.Finalize();
+}
+
+char* DoubleToLua(char buf[128], double x) {
+  static const DoubleToStringConverter kDoubleToLua(
+      DoubleToStringConverter::EMIT_TRAILING_DECIMAL_POINT |
+          DoubleToStringConverter::NO_TRAILING_ZERO,
+      "math.huge", "0/0", 'e', -6, 21, 6, 0);
+  StringBuilder b(buf, 128);
+  kDoubleToLua.ToShortest(x, &b);
   return b.Finalize();
 }
 

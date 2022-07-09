@@ -68,7 +68,8 @@ TOOL_NET_DIRECTDEPS =								\
 	THIRD_PARTY_ZLIB							\
 	TOOL_ARGS								\
 	TOOL_BUILD_LIB								\
-	TOOL_DECODE_LIB
+	TOOL_DECODE_LIB								\
+	THIRD_PARTY_DOUBLECONVERSION
 
 TOOL_NET_DEPS :=								\
 	$(call uniq,$(foreach x,$(TOOL_NET_DIRECTDEPS),$($(x))))

@@ -58,7 +58,9 @@ int AppendStrList(struct StrList *sl) {
 }
 
 void SortStrList(struct StrList *sl) {
-  qsort(sl->p, sl->i, sizeof(*sl->p), CompareStrings);
+  if (sl->i) {
+    qsort(sl->p, sl->i, sizeof(*sl->p), CompareStrings);
+  }
 }
 
 int JoinStrList(struct StrList *sl, char **buf, uint64_t sep) {
