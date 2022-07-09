@@ -16,30 +16,65 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/x/x.h"
-#include "third_party/lua/visitor.h"
+#include "libc/alg/alg.h"
+#include "libc/stdio/append.internal.h"
+#include "libc/stdio/strlist.internal.h"
+#include "libc/str/str.h"
 
-int LuaPushVisit(struct LuaVisited *visited, const void *p) {
-  int i, n2;
-  const void **p2;
-  for (i = 0; i < visited->n; ++i) {
-    if (visited->p[i] == p) {
-      return 1;
-    }
-  }
-  n2 = visited->n;
-  if ((p2 = realloc(visited->p, ++n2 * sizeof(*visited->p)))) {
-    visited->p = p2;
-    visited->n = n2;
-  } else {
-    return -1;
-  }
-  visited->p[visited->n - 1] = p;
-  return 0;
+static int CompareStrings(const void *p1, const void *p2) {
+  const char **a = p1;
+  const char **b = p2;
+  return strcmp(*a, *b);
 }
 
-void LuaPopVisit(struct LuaVisited *visited) {
-  assert(visited->n > 0);
-  --visited->n;
+void FreeStrList(struct StrList *sl) {
+  int i;
+  for (i = 0; i < sl->i; ++i) {
+    free(sl->p[i]);
+  }
+  free(sl->p);
+  sl->p = 0;
+  sl->i = 0;
+  sl->n = 0;
+}
+
+int AppendStrList(struct StrList *sl) {
+  int n2;
+  char **p2;
+  if (sl->i == sl->n) {
+    n2 = sl->n;
+    if (!n2) n2 = 2;
+    n2 += n2 >> 1;
+    if ((p2 = realloc(sl->p, n2 * sizeof(*p2)))) {
+      sl->p = p2;
+      sl->n = n2;
+    } else {
+      return -1;
+    }
+  }
+  sl->p[sl->i] = 0;
+  appendr(&sl->p[sl->i], 0);
+  return sl->i++;
+}
+
+void SortStrList(struct StrList *sl) {
+  qsort(sl->p, sl->i, sizeof(*sl->p), CompareStrings);
+}
+
+int JoinStrList(struct StrList *sl, char **buf, uint64_t sep) {
+  int i;
+  if (!*buf && !sl->i) {
+    return appendr(buf, 0);
+  }
+  for (i = 0; i < sl->i; ++i) {
+    if (i) {
+      if (appendw(buf, sep) == -1) {
+        return -1;
+      }
+    }
+    if (appends(buf, sl->p[i]) == -1) {
+      return -1;
+    }
+  }
+  return 0;
 }

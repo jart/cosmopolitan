@@ -19,9 +19,11 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/fmt/itoa.h"
+#include "libc/log/rop.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/strlist.internal.h"
 #include "libc/x/x.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -60,41 +62,45 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
   char *s;
   bool isarray;
   lua_Integer i;
-  int ktype, vtype;
+  struct StrList sl = {0};
+  int ktype, vtype, sli, rc;
   size_t tbllen, buflen, slen;
   char ibuf[24], fmt[] = "%.14g";
   if (level > 0) {
     switch (lua_type(L, idx)) {
 
       case LUA_TNIL:
-        appendw(buf, READ32LE("nil"));
+        RETURN_ON_ERROR(appendw(buf, READ32LE("nil")));
         return 0;
 
       case LUA_TSTRING:
         s = lua_tolstring(L, idx, &slen);
-        EscapeLuaString(s, slen, buf);
+        RETURN_ON_ERROR(EscapeLuaString(s, slen, buf));
         return 0;
 
       case LUA_TFUNCTION:
-        appendf(buf, "\"func@%p\"", lua_topointer(L, idx));
+        RETURN_ON_ERROR(
+            appendf(buf, "\"%s@%p\"", "func", lua_topointer(L, idx)));
         return 0;
 
       case LUA_TLIGHTUSERDATA:
-        appendf(buf, "\"light@%p\"", lua_topointer(L, idx));
+        RETURN_ON_ERROR(
+            appendf(buf, "\"%s@%p\"", "light", lua_topointer(L, idx)));
         return 0;
 
       case LUA_TTHREAD:
-        appendf(buf, "\"thread@%p\"", lua_topointer(L, idx));
+        RETURN_ON_ERROR(
+            appendf(buf, "\"%s@%p\"", "thread", lua_topointer(L, idx)));
         return 0;
 
       case LUA_TUSERDATA:
         if (luaL_callmeta(L, idx, "__repr")) {
           if (lua_type(L, -1) == LUA_TSTRING) {
             s = lua_tolstring(L, -1, &slen);
-            appendd(buf, s, slen);
+            RETURN_ON_ERROR(appendd(buf, s, slen));
           } else {
-            appendf(buf, "[[error %s returned a %s value]]", "__repr",
-                    luaL_typename(L, -1));
+            RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]",
+                                    "__repr", luaL_typename(L, -1)));
           }
           lua_pop(L, 1);
           return 0;
@@ -102,21 +108,23 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
         if (luaL_callmeta(L, idx, "__tostring")) {
           if (lua_type(L, -1) == LUA_TSTRING) {
             s = lua_tolstring(L, -1, &slen);
-            EscapeLuaString(s, slen, buf);
+            RETURN_ON_ERROR(EscapeLuaString(s, slen, buf));
           } else {
-            appendf(buf, "[[error %s returned a %s value]]", "__tostring",
-                    luaL_typename(L, -1));
+            RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]",
+                                    "__tostring", luaL_typename(L, -1)));
           }
           lua_pop(L, 1);
           return 0;
         }
-        appendf(buf, "\"udata@%p\"", lua_touserdata(L, idx));
+        RETURN_ON_ERROR(
+            appendf(buf, "\"%s@%p\"", "udata", lua_touserdata(L, idx)));
         return 0;
 
       case LUA_TNUMBER:
         if (lua_isinteger(L, idx)) {
-          appendd(buf, ibuf,
-                  FormatFlex64(ibuf, luaL_checkinteger(L, idx), 2) - ibuf);
+          RETURN_ON_ERROR(
+              appendd(buf, ibuf,
+                      FormatFlex64(ibuf, luaL_checkinteger(L, idx), 2) - ibuf));
         } else {
           // TODO(jart): replace this api
           while (*numformat == '%' || *numformat == '.' ||
@@ -130,71 +138,87 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
               fmt[4] = *numformat;
               break;
             default:
-              free(visited->p);
-              luaL_error(L, "numformat string not allowed");
-              unreachable;
+              // prevent format string hacking
+              goto OnError;
           }
-          appendf(buf, fmt, lua_tonumber(L, idx));
+          RETURN_ON_ERROR(appendf(buf, fmt, lua_tonumber(L, idx)));
         }
         return 0;
 
       case LUA_TBOOLEAN:
-        appendw(buf, lua_toboolean(L, idx) ? READ32LE("true")
-                                           : READ64LE("false\0\0"));
+        RETURN_ON_ERROR(appendw(buf, lua_toboolean(L, idx)
+                                         ? READ32LE("true")
+                                         : READ64LE("false\0\0")));
         return 0;
 
       case LUA_TTABLE:
         i = 0;
-        if (LuaPushVisit(visited, lua_topointer(L, idx))) {
-          appendw(buf, '{');
+        RETURN_ON_ERROR(rc = LuaPushVisit(visited, lua_topointer(L, idx)));
+        if (!rc) {
           lua_pushvalue(L, idx);  // idx becomes invalid once we change stack
           isarray = IsLuaArray(L);
           lua_pushnil(L);  // push the first key
           while (lua_next(L, -2)) {
             ktype = lua_type(L, -2);
             vtype = lua_type(L, -1);
-            if (i++ > 0) appendw(buf, ',' | ' ' << 8);
+            RETURN_ON_ERROR(sli = AppendStrList(&sl));
             if (isarray) {
               // use {v₁′,v₂′,...} for lua-normal integer keys
             } else if (ktype == LUA_TSTRING && IsLuaIdentifier(L, -2)) {
               // use {𝑘=𝑣′} syntax when 𝑘 is legal as a lua identifier
               s = lua_tolstring(L, -2, &slen);
-              appendd(buf, s, slen);
-              appendw(buf, '=');
+              RETURN_ON_ERROR(appendd(&sl.p[sli], s, slen));
+              RETURN_ON_ERROR(appendw(&sl.p[sli], '='));
             } else {
               // use {[𝑘′]=𝑣′} otherwise
-              appendw(buf, '[');
-              LuaEncodeLuaDataImpl(L, buf, level - 1, numformat, -2, visited);
-              appendw(buf, ']' | '=' << 010);
+              RETURN_ON_ERROR(appendw(&sl.p[sli], '['));
+              RETURN_ON_ERROR(LuaEncodeLuaDataImpl(L, &sl.p[sli], level - 1,
+                                                   numformat, -2, visited));
+              RETURN_ON_ERROR(appendw(&sl.p[sli], ']' | '=' << 010));
             }
-            LuaEncodeLuaDataImpl(L, buf, level - 1, numformat, -1, visited);
+            RETURN_ON_ERROR(LuaEncodeLuaDataImpl(L, &sl.p[sli], level - 1,
+                                                 numformat, -1, visited));
             lua_pop(L, 1);  // table/-2, key/-1
           }
           lua_pop(L, 1);  // table ref
+          RETURN_ON_ERROR(appendw(buf, '{'));
+          SortStrList(&sl);
+          RETURN_ON_ERROR(JoinStrList(&sl, buf, READ16LE(", ")));
+          RETURN_ON_ERROR(appendw(buf, '}'));
+          FreeStrList(&sl);
           LuaPopVisit(visited);
-          appendw(buf, '}');
         } else {
-          appendf(buf, "\"cyclic@%p\"", lua_topointer(L, idx));
+          RETURN_ON_ERROR(
+              appendf(buf, "\"%s@%p\"", "cyclic", lua_topointer(L, idx)));
         }
         return 0;
 
       default:
-        free(visited->p);
-        luaL_error(L, "can't serialize value of this type");
-        unreachable;
+        // unsupported lua type
+        goto OnError;
     }
   } else {
-    free(visited->p);
-    luaL_error(L, "too many nested tables");
-    unreachable;
+    // too much depth
+    goto OnError;
   }
+OnError:
+  FreeStrList(&sl);
+  return -1;
 }
 
+/**
+ * Encodes Lua data structure as Lua code string.
+ *
+ * @param L is Lua interpreter state
+ * @param buf receives encoded output string
+ * @param numformat controls double formatting
+ * @param idx is index of item on Lua stack
+ * @return 0 on success, or -1 on error
+ */
 int LuaEncodeLuaData(lua_State *L, char **buf, char *numformat, int idx) {
   int rc;
   struct LuaVisited visited = {0};
   rc = LuaEncodeLuaDataImpl(L, buf, 64, numformat, idx, &visited);
-  assert(!visited.n);
   free(visited.p);
   return rc;
 }

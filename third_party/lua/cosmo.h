@@ -14,7 +14,7 @@ int LuaEncodeUrl(lua_State *);
 int LuaParseUrl(lua_State *);
 int LuaPushHeader(lua_State *, struct HttpMessage *, char *, int);
 int LuaPushHeaders(lua_State *, struct HttpMessage *, const char *);
-void EscapeLuaString(char *, size_t, char **);
+int EscapeLuaString(char *, size_t, char **);
 void LuaPrintStack(lua_State *);
 void LuaPushLatin1(lua_State *, const char *, size_t);
 void LuaPushUrlParams(lua_State *, struct UrlParams *);

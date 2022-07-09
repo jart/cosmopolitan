@@ -19,9 +19,11 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/fmt/itoa.h"
+#include "libc/log/rop.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/strlist.internal.h"
 #include "net/http/escape.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -32,34 +34,37 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
                                  char *numformat, int idx,
                                  struct LuaVisited *visited) {
   char *s;
+  int sli, rc;
   bool isarray;
   size_t tbllen, i, z;
+  struct StrList sl = {0};
   char ibuf[21], fmt[] = "%.14g";
   if (level > 0) {
     switch (lua_type(L, idx)) {
 
       case LUA_TNIL:
-        appendw(buf, READ32LE("null"));
+        RETURN_ON_ERROR(appendw(buf, READ32LE("null")));
         return 0;
 
       case LUA_TBOOLEAN:
-        appendw(buf, lua_toboolean(L, idx) ? READ32LE("true")
-                                           : READ64LE("false\0\0"));
+        RETURN_ON_ERROR(appendw(buf, lua_toboolean(L, idx)
+                                         ? READ32LE("true")
+                                         : READ64LE("false\0\0")));
         return 0;
 
       case LUA_TSTRING:
         s = lua_tolstring(L, idx, &z);
-        s = EscapeJsStringLiteral(s, z, &z);
-        appendw(buf, '"');
-        appendd(buf, s, z);
-        appendw(buf, '"');
+        if (!(s = EscapeJsStringLiteral(s, z, &z))) goto OnError;
+        RETURN_ON_ERROR(appendw(buf, '"'));
+        RETURN_ON_ERROR(appendd(buf, s, z));
+        RETURN_ON_ERROR(appendw(buf, '"'));
         free(s);
         return 0;
 
       case LUA_TNUMBER:
         if (lua_isinteger(L, idx)) {
-          appendd(buf, ibuf,
-                  FormatInt64(ibuf, luaL_checkinteger(L, idx)) - ibuf);
+          RETURN_ON_ERROR(appendd(
+              buf, ibuf, FormatInt64(ibuf, luaL_checkinteger(L, idx)) - ibuf));
         } else {
           // TODO(jart): replace this api
           while (*numformat == '%' || *numformat == '.' ||
@@ -73,16 +78,16 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
               fmt[4] = *numformat;
               break;
             default:
-              free(visited->p);
-              luaL_error(L, "numformat string not allowed");
-              unreachable;
+              // prevent format string hacking
+              goto OnError;
           }
-          appendf(buf, fmt, lua_tonumber(L, idx));
+          RETURN_ON_ERROR(appendf(buf, fmt, lua_tonumber(L, idx)));
         }
         return 0;
 
       case LUA_TTABLE:
-        if (LuaPushVisit(visited, lua_topointer(L, idx))) {
+        RETURN_ON_ERROR(rc = LuaPushVisit(visited, lua_topointer(L, idx)));
+        if (!rc) {
           lua_pushvalue(L, idx);  // table ref
           tbllen = lua_rawlen(L, -1);
           // encode tables with numeric indices and empty tables as arrays
@@ -90,12 +95,12 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
               tbllen > 0 ||                          // integer keys present
               (lua_pushnil(L), !lua_next(L, -2)) ||  // no non-integer keys
               (lua_pop(L, 2), false);  // pop key/value pushed by lua_next
-          appendw(buf, isarray ? '[' : '{');
           if (isarray) {
             for (i = 1; i <= tbllen; i++) {
-              if (i > 1) appendw(buf, ',');
+              RETURN_ON_ERROR(sli = AppendStrList(&sl));
               lua_rawgeti(L, -1, i);  // table/-2, value/-1
-              LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -1, visited);
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
+                                                    numformat, -1, visited));
               lua_pop(L, 1);
             }
           } else {
@@ -103,45 +108,58 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
             lua_pushnil(L);  // push the first key
             while (lua_next(L, -2)) {
               if (lua_type(L, -2) != LUA_TSTRING) {
-                free(visited->p);
-                luaL_error(L, "json tables must be arrays or use string keys");
-                unreachable;
+                // json tables must be arrays or use string keys
+                goto OnError;
               }
-              if (i++ > 1) appendw(buf, ',');
-              LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -2, visited);
-              appendw(buf, ':');
-              LuaEncodeJsonDataImpl(L, buf, level - 1, numformat, -1, visited);
+              RETURN_ON_ERROR(sli = AppendStrList(&sl));
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
+                                                    numformat, -2, visited));
+              RETURN_ON_ERROR(appendw(&sl.p[sli], ':'));
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
+                                                    numformat, -1, visited));
               lua_pop(L, 1);  // table/-2, key/-1
             }
             // stack: table/-1, as the key was popped by lua_next
           }
-          appendw(buf, isarray ? ']' : '}');
+          RETURN_ON_ERROR(appendw(buf, isarray ? '[' : '{'));
+          SortStrList(&sl);
+          RETURN_ON_ERROR(JoinStrList(&sl, buf, ','));
+          FreeStrList(&sl);
+          RETURN_ON_ERROR(appendw(buf, isarray ? ']' : '}'));
           LuaPopVisit(visited);
           lua_pop(L, 1);  // table ref
           return 0;
         } else {
-          free(visited->p);
-          luaL_error(L, "can't serialize cyclic data structure to json");
-          unreachable;
+          // cyclic data structure
+          goto OnError;
         }
 
       default:
-        free(visited->p);
-        luaL_error(L, "won't serialize %s to json", luaL_typename(L, idx));
-        unreachable;
+        // unsupported lua type
+        goto OnError;
     }
   } else {
-    free(visited->p);
-    luaL_error(L, "too many nested tables");
-    unreachable;
+    // too much depth
+    goto OnError;
   }
+OnError:
+  FreeStrList(&sl);
+  return -1;
 }
 
+/**
+ * Encodes Lua data structure as JSON.
+ *
+ * @param L is Lua interpreter state
+ * @param buf receives encoded output string
+ * @param numformat controls double formatting
+ * @param idx is index of item on Lua stack
+ * @return 0 on success, or -1 on error
+ */
 int LuaEncodeJsonData(lua_State *L, char **buf, char *numformat, int idx) {
   int rc;
   struct LuaVisited visited = {0};
   rc = LuaEncodeJsonDataImpl(L, buf, 64, numformat, idx, &visited);
-  assert(!visited.n);
   free(visited.p);
   return rc;
 }

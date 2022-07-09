@@ -140,8 +140,11 @@ function UnixTest()
    assert(unix.close(fd))
 
    -- getdents
+   t = {}
    for name, kind, ino, off in assert(unix.opendir(tmpdir)) do
+      table.insert(t, name)
    end
+   assert(EncodeLua(t) == '{".", "..", "foo"}');
 
 end
 

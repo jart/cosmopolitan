@@ -54,22 +54,39 @@ assert(EncodeLatin1("helloÿÀ") == "hello\xff\xc0")
 assert(EncodeLua(nil) == "nil")
 assert(EncodeLua(0) == "0")
 assert(EncodeLua(3.14) == "3.14")
-assert(EncodeLua({1, 2}) == "{1, 2}")
-x = {1, 2}
-x[3] = x
-assert(string.match(EncodeLua(x), "{1, 2, \"cyclic@0x%x+\"}"))
-
--- TODO(jart): EncodeLua() should sort tables
--- x = {}
--- x.c = 'c'
--- x.a = 'a'
--- x.b = 'b'
--- assert(EncodeLua(x) == '{a="a", b="b", c="c"}')
+assert(EncodeLua({2, 1}) == "{1, 2}")
 
 assert(EncodeJson(nil) == "null")
 assert(EncodeJson(0) == "0")
 assert(EncodeJson(3.14) == "3.14")
-assert(EncodeJson({1, 2}) == "[1,2]")
+assert(EncodeJson({2, 1}) == "[1,2]")
+
+-- EncodeLua() permits serialization of cyclic data structures
+x = {2, 1}
+x[3] = x
+assert(string.match(EncodeLua(x), "{\"cyclic@0x%x+\", 1, 2}"))
+
+-- EncodeLua() sorts table entries
+x = {}
+x.c = 'c'
+x.a = 'a'
+x.b = 'b'
+assert(EncodeLua(x) == '{a="a", b="b", c="c"}')
+
+-- EncodeJson() doesn't permit serialization of cyclic data structures
+x = {2, 1}
+x[3] = x
+json, err = EncodeJson(x)
+assert(not json)
+assert(err == "serialization failed")
+
+-- EncodeJson() sorts table entries
+-- JSON always requires quotes around key names
+x = {}
+x.c = 'c'
+x.a = 'a'
+x.b = 'b'
+assert(EncodeJson(x) == '{"a":"a","b":"b","c":"c"}')
 
 url = ParseUrl("https://jart:pass@redbean.dev/2.0.html?x&y=z#frag")
 assert(url.scheme == "https")
@@ -141,3 +158,17 @@ assert(Uncompress(Compress("hello")) == "hello")
 assert(Compress("hello") == "\x05\x86\xa6\x106x\x9c\xcbH\xcd\xc9\xc9\x07\x00\x06,\x02\x15")
 assert(Compress("hello", 0) == "\x05\x86\xa6\x106x\x01\x01\x05\x00\xfa\xffhello\x06,\x02\x15")
 assert(Compress("hello", 0, true) == "x\x01\x01\x05\x00\xfa\xffhello\x06,\x02\x15")
+
+----------------------------------------------------------------------------------------------------
+-- benchmarks
+
+function LuaSerialization()
+   EncodeLua({2, 1, 10, 3, "hello"})
+end
+
+function JsonSerialization()
+   EncodeJson({2, 1, 10, 3, "hello"})
+end
+
+print(Benchmark(LuaSerialization), "LuaSerialization")
+print(Benchmark(JsonSerialization), "JsonSerialization")

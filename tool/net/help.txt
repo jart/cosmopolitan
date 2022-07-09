@@ -647,25 +647,65 @@ FUNCTIONS
           URIs that do things like embed a PNG file in a web page. See
           encodebase64.c.
 
-  EncodeJson(value[,options:table]) → json:str
-          Turns passed Lua value into a JSON string. Tables with non-zero
-          length (as reported by `#`) are encoded as arrays with non-array
-          elements ignored. Empty tables are encoded as empty arrays. All
-          other tables are encoded as objects with numerical keys
-          converted to strings (so `{[3]=1}` is encoded as `{"3":1}`).
-          The following options can be used:
+  EncodeJson(value[,options:table])
+      ├─→ json:str
+      ├─→ true [if useoutput]
+      └─→ nil, error:str
+
+          Turns Lua data structure into a JSON string.
+
+          Tables with non-zero length (as reported by `#`) are encoded
+          as arrays with non-array elements ignored. Empty tables are
+          encoded as empty arrays. All other tables are encoded as
+          objects with numerical keys converted to strings (so `{[3]=1}`
+          is encoded as `{"3":1}`).
+
+          The following options may be used:
+
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
             - numformat: sets numeric format to be used, which can be 'g',
               'f', or 'a' [experimental api]
 
-  EncodeLua(value[,options:table]) → json:str
-          Turns passed Lua value into a Lua string. The following options
-          can be used:
+          This function will fail if:
+
+            - `value` is cyclic
+            - `value` has depth greater than 64
+            - `value` contains functions, user data, or threads
+
+          When arrays and objects are serialized, entries will be sorted
+          in a deterministic order.
+
+  EncodeLua(value[,options:table])
+      ├─→ luacode:str
+      ├─→ true [if useoutput]
+      └─→ nil, error:str
+
+          Turns Lua data structure into Lua code string.
+
+          The following options may be used:
+
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
+
+          This function will fail if:
+
+            - `value` has depth greater than 64
+
+          If a user data object has a `__repr` or `__tostring` meta
+          method, then that'll be used to encode the Lua code.
+
+          Non-encodable value types (e.g. threads, functions) will be
+          represented as a string literal with the type name and pointer
+          address. Note this is subject to change in the future.
+
+          This encoder detects cyclic tables, and encodes a string
+          literal saying it's cyclic when cycles are encountered.
+
+          When tables are serialized, entries will be sorted in a
+          deterministic order.
 
   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
           Turns UTF-8 into ISO-8859-1 string.

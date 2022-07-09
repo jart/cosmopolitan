@@ -1,0 +1,11 @@
+#ifndef COSMOPOLITAN_LIBC_LOG_ROP_H_
+#define COSMOPOLITAN_LIBC_LOG_ROP_H_
+
+#define RETURN_ON_ERROR(expr) \
+  do {                        \
+    if ((expr) == -1) {       \
+      goto OnError;           \
+    }                         \
+  } while (0)
+
+#endif /* COSMOPOLITAN_LIBC_LOG_ROP_H_ */

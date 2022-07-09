@@ -4231,9 +4231,14 @@ static int LuaEncodeSmth(lua_State *L,
     numformat = luaL_optstring(L, -1, numformat);
   }
   lua_settop(L, 1);  // keep the passed argument on top
-  Encoder(L, useoutput ? &outbuf : &p, numformat, -1);
-  if (useoutput) {
+  if (Encoder(L, useoutput ? &outbuf : &p, numformat, -1) == -1) {
+    free(p);
     lua_pushnil(L);
+    lua_pushstring(L, "serialization failed");
+    return 2;
+  }
+  if (useoutput) {
+    lua_pushboolean(L, true);
   } else {
     lua_pushstring(L, p);
     free(p);
@@ -5394,12 +5399,45 @@ static int LuaInterpreter(lua_State *L) {
   }
 }
 
+static void LuaDestroy(void) {
+#ifndef STATIC
+  lua_State *L = GL;
+  lua_close(L);
+  free(g_lua_path_default);
+#endif
+}
+
+static void MemDestroy(void) {
+  FreeAssets();
+  CollectGarbage();
+  inbuf.p = 0, inbuf.n = 0, inbuf.c = 0;
+  Free(&inbuf_actual.p), inbuf_actual.n = inbuf_actual.c = 0;
+  Free(&unmaplist.p), unmaplist.n = unmaplist.c = 0;
+  Free(&freelist.p), freelist.n = freelist.c = 0;
+  Free(&hdrbuf.p), hdrbuf.n = hdrbuf.c = 0;
+  Free(&servers.p), servers.n = 0;
+  Free(&ports.p), ports.n = 0;
+  Free(&ips.p), ips.n = 0;
+  Free(&outbuf);
+  FreeStrings(&stagedirs);
+  FreeStrings(&hidepaths);
+  Free(&launchbrowser);
+  Free(&serverheader);
+  Free(&extrahdrs);
+  Free(&pidpath);
+  Free(&logpath);
+  Free(&brand);
+  Free(&polls);
+}
+
 static void LuaInit(void) {
 #ifndef STATIC
   lua_State *L = GL;
   LuaSetArgv(L);
   if (interpretermode) {
     int rc = LuaInterpreter(L);
+    LuaDestroy();
+    MemDestroy();
     if (IsModeDbg()) {
       CheckForMemoryLeaks();
     }
@@ -5423,14 +5461,6 @@ static void LuaReload(void) {
   if (!LuaRunAsset("/.reload.lua", false)) {
     DEBUGF("(srvr) no /.reload.lua defined");
   }
-#endif
-}
-
-static void LuaDestroy(void) {
-#ifndef STATIC
-  lua_State *L = GL;
-  lua_close(L);
-  free(g_lua_path_default);
 #endif
 }
 
@@ -7181,29 +7211,6 @@ static void TlsDestroy(void) {
   PsksDestroy();
   Free(&suites.p), suites.n = 0;
 #endif
-}
-
-static void MemDestroy(void) {
-  FreeAssets();
-  CollectGarbage();
-  inbuf.p = 0, inbuf.n = 0, inbuf.c = 0;
-  Free(&inbuf_actual.p), inbuf_actual.n = inbuf_actual.c = 0;
-  Free(&unmaplist.p), unmaplist.n = unmaplist.c = 0;
-  Free(&freelist.p), freelist.n = freelist.c = 0;
-  Free(&hdrbuf.p), hdrbuf.n = hdrbuf.c = 0;
-  Free(&servers.p), servers.n = 0;
-  Free(&ports.p), ports.n = 0;
-  Free(&ips.p), ips.n = 0;
-  Free(&outbuf);
-  FreeStrings(&stagedirs);
-  FreeStrings(&hidepaths);
-  Free(&launchbrowser);
-  Free(&serverheader);
-  Free(&extrahdrs);
-  Free(&pidpath);
-  Free(&logpath);
-  Free(&brand);
-  Free(&polls);
 }
 
 static void GetOpts(int argc, char *argv[]) {

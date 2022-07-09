@@ -16,30 +16,43 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/x/x.h"
-#include "third_party/lua/visitor.h"
+#include "libc/bits/bits.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/stdio/append.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/strlist.internal.h"
+#include "libc/testlib/testlib.h"
 
-int LuaPushVisit(struct LuaVisited *visited, const void *p) {
-  int i, n2;
-  const void **p2;
-  for (i = 0; i < visited->n; ++i) {
-    if (visited->p[i] == p) {
-      return 1;
-    }
-  }
-  n2 = visited->n;
-  if ((p2 = realloc(visited->p, ++n2 * sizeof(*visited->p)))) {
-    visited->p = p2;
-    visited->n = n2;
-  } else {
-    return -1;
-  }
-  visited->p[visited->n - 1] = p;
-  return 0;
+struct StrList sl;
+
+void TearDown(void) {
+  FreeStrList(&sl);
 }
 
-void LuaPopVisit(struct LuaVisited *visited) {
-  assert(visited->n > 0);
-  --visited->n;
+TEST(strlist, test) {
+  int i;
+  char *b = 0;
+  ASSERT_NE(-1, (i = AppendStrList(&sl)));
+  ASSERT_NE(-1, appends(&sl.p[i], "world"));
+  ASSERT_NE(-1, (i = AppendStrList(&sl)));
+  ASSERT_NE(-1, appends(&sl.p[i], "hello"));
+  SortStrList(&sl);
+  ASSERT_NE(-1, JoinStrList(&sl, &b, READ16LE(", ")));
+  EXPECT_STREQ("hello, world", b);
+  free(b);
+}
+
+TEST(strlist, testNumbers) {
+  int i;
+  char *b = 0;
+  ASSERT_NE(-1, (i = AppendStrList(&sl)));
+  ASSERT_NE(-1, appends(&sl.p[i], "2"));
+  ASSERT_NE(-1, (i = AppendStrList(&sl)));
+  ASSERT_NE(-1, appends(&sl.p[i], "1"));
+  SortStrList(&sl);
+  ASSERT_NE(-1, JoinStrList(&sl, &b, ':'));
+  EXPECT_STREQ("1:2", b);
+  free(b);
 }
