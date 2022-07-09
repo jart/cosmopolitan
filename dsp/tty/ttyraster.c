@@ -775,7 +775,7 @@ char *ttyraster(char *v, const struct TtyRgb *c, size_t yn, size_t xn,
   struct Glyph glyph;
   struct TtyRgb chun[4], lastchunk[4];
   for (y = 0; y < yn; y += 2, c += xn) {
-    if (y) *v++ = '\r', *v++ = '\n';
+    if (y) v = stpcpy(v, "\e[0m\r\n");
     for (x = 0; x < xn; x += 2, c += 2) {
       CopyChunk(chun, c, xn);
       if (ttyquant()->alg == kTtyQuantTrue) {
@@ -795,6 +795,6 @@ char *ttyraster(char *v, const struct TtyRgb *c, size_t yn, size_t xn,
       memcpy(lastchunk, chun, sizeof(chun));
     }
   }
-  *v = '\0';
+  v = stpcpy(v, "\e[0m");
   return v;
 }

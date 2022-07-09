@@ -43,7 +43,7 @@ void ttyraster2x2_true(void) {
 TEST(ttyraster, testCorner) {
   ttyraster_true_setup();
   ttyraster2x2_true();
-  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝", vtbuf);
+  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝\e[0m", vtbuf);
 }
 
 TEST(ttyraster, testFullBlock_favorsSpace) {
@@ -54,7 +54,7 @@ TEST(ttyraster, testFullBlock_favorsSpace) {
                 {DARKRED, DARKRED},
             },
             2, 2, kBlack, kBlack);
-  EXPECT_STREQ("\e[48;2;139;0;0m ", vtbuf);
+  EXPECT_STREQ("\e[48;2;139;0;0m \e[0m", vtbuf);
 }
 
 TEST(ttyraster, testFullBlock_favorsUnicodeWhenCurrenttFgMatchesButNotBg) {
@@ -65,7 +65,7 @@ TEST(ttyraster, testFullBlock_favorsUnicodeWhenCurrenttFgMatchesButNotBg) {
                 {DARKRED, DARKRED, GRAY1, GRAY1},
             },
             2, 4, kBlack, kBlack);
-  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝█", vtbuf);
+  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝█\e[0m", vtbuf);
 }
 
 TEST(ttyraster, testFullBlock_forcesSwitchBackToSpaceForRuns) {
@@ -76,7 +76,7 @@ TEST(ttyraster, testFullBlock_forcesSwitchBackToSpaceForRuns) {
                 {DARKRED, DARKRED, GRAY1, GRAY1, GRAY1, GRAY1, GRAY1, GRAY1},
             },
             2, 8, kBlack, kBlack);
-  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝█\e[48;2;3;3;3m  ", vtbuf);
+  EXPECT_STREQ("\e[48;2;139;0;0;38;2;3;3;3m▝█\e[48;2;3;3;3m  \e[0m", vtbuf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ TEST(ttyraster_cp437, testSide) {
                 {DARKRED, GRAY1},
             },
             2, 2, kBlack, kBlack);
-  EXPECT_STREQ("\e[48;2;3;3;3;38;2;139;0;0m▌", vtbuf);
+  EXPECT_STREQ("\e[48;2;3;3;3;38;2;139;0;0m▌\e[0m", vtbuf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +110,7 @@ void ttyraster2x2_xterm256(void) {
 TEST(ttyraster_xterm256, testCorner) {
   ttyraster_xterm256_setup();
   ttyraster2x2_xterm256();
-  EXPECT_STREQ("\e[48;5;16;38;5;231m▝", vtbuf);
+  EXPECT_STREQ("\e[48;5;16;38;5;231m▝\e[0m", vtbuf);
 }
 
 void ttyraster6x2_xterm256(void) {
@@ -125,7 +125,7 @@ void ttyraster6x2_xterm256(void) {
 TEST(ttyraster_xterm256, testCornerRepeat3) {
   ttyraster_xterm256_setup();
   ttyraster6x2_xterm256();
-  EXPECT_STREQ("\e[48;5;16;38;5;231m▝▝▝", vtbuf);
+  EXPECT_STREQ("\e[48;5;16;38;5;231m▝▝▝\e[0m", vtbuf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
