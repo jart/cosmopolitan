@@ -186,8 +186,8 @@ STATIC_YOINK("ShowCrashReportsEarly");
 
 // letters not used: EINOQYnoqwxy
 // digits not used:  0123456789
-// puncts not used:  !"#$&'()*+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "%BJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
+// puncts not used:  !"#$&'()+,-./;<=>@[\]^_`{|}~
+#define GETOPTS "*%BJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -376,6 +376,7 @@ static bool checkedmethod;
 static bool sslinitialized;
 static bool sslfetchverify;
 static bool hascontenttype;
+static bool selfmodifiable;
 static bool gotcachecontrol;
 static bool interpretermode;
 static bool sslclientverify;
@@ -7224,6 +7225,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
+      CASE('*', selfmodifiable = true);
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));
@@ -7290,10 +7292,12 @@ void RedBean(int argc, char *argv[]) {
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
   OpenZip(true);
-  MakeExecutableModifiable();
   SetDefaults();
   LuaStart();
   GetOpts(argc, argv);
+  if (selfmodifiable) {
+    MakeExecutableModifiable();
+  }
   LuaInit();
   oldloglevel = __log_level;
   if (uniprocess) {

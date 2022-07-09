@@ -13,6 +13,9 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
+assert(string.match("127.123.231.1", "%d+.%d+.%d+.%d+"))
+assert(re.search([[^\d{1,3}(\.\d{1,3}){3}$]], "127.123.231.1"))
+
 m,a,b,c,d = assert(re.search([[^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$]], "127.0.0.1"))
 assert(m == "127.0.0.1")
 assert(a == "127")
@@ -38,3 +41,26 @@ assert(d == "1")
 p,e = re.compile("[{")
 assert(e:errno() == re.EBRACK)
 assert(e:doc() == "Missing ']'")
+
+----------------------------------------------------------------------------------------------------
+-- BENCHMARKS
+
+function ReCompileSearch()
+   assert(re.search([[^\d{1,3}(\.\d{1,3}){3}$]], "127.123.231.1"))
+end
+
+preg = assert(re.compile[[^\d{1,3}(\.\d{1,3}){3}$]])
+function ReSearch()
+   assert(preg:search("127.123.231.1"))
+end
+
+function Match()
+   assert(string.match("127.123.231.1", "%d+.%d+.%d+.%d+"))
+end
+
+--	6120	re.search()
+--	425	re.Regex:search()
+--	196	string.match()
+print("--", Benchmark(ReCompileSearch), "re.search()")
+print("--", Benchmark(ReSearch), "re.Regex:search()")
+print("--", Benchmark(Match), "string.match()")

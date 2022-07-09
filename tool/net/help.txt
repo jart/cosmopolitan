@@ -55,6 +55,7 @@ FLAGS
   -f        log worker function calls
   -B        only use stronger cryptography
   -X        disable ssl server and client support
+  -*        permit self-modification of executable
   -J        disable non-ssl server and client support
   -%        hasten startup by not generating an rsa key
   -s        increase silence                  [repeatable]
@@ -996,10 +997,11 @@ FUNCTIONS
           then consider using ServeAsset which can serve directly off disk.
 
   StoreAsset(path:str,data:str[,mode:int])
-          Stores asset to executable's ZIP central directory. This currently
-          happens in an append-only fashion and is still largely in the
-          proof-of-concept stages. Currently only supported on Linux, XNU,
-          and FreeBSD.
+          Stores asset to executable's ZIP central directory. This
+          currently happens in an append-only fashion and is still
+          largely in the proof-of-concept stages. Currently only
+          supported on Linux, XNU, and FreeBSD. In order to use this
+          feature, the -* flag must be passed.
 
   Log(level:int,message:str)
           Emits message string to log, if level is less than or equal to
