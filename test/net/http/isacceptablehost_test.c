@@ -29,7 +29,6 @@ TEST(IsAcceptableHost, test) {
   EXPECT_TRUE(IsAcceptableHost("1.2.3.4.5.arpa", -1));
   EXPECT_TRUE(IsAcceptableHost("255.255.255.255", -1));
   EXPECT_FALSE(IsAcceptableHost("255.255.255", -1));
-  EXPECT_FALSE(IsAcceptableHost("256.255.255.255", -1));
   EXPECT_TRUE(IsAcceptableHost("hello.example", -1));
   EXPECT_FALSE(IsAcceptableHost("hello..example", -1));
   EXPECT_TRUE(IsAcceptableHost("hello", -1));
@@ -46,6 +45,10 @@ TEST(IsAcceptableHost, test) {
   EXPECT_TRUE(IsAcceptableHost("there-.example", -1));
   EXPECT_FALSE(IsAcceptableHost("ther#e.example", -1));
   EXPECT_TRUE(IsAcceptableHost("localhost", -1));
+  EXPECT_TRUE(IsAcceptableHost("8080-gitpodio-empty-abs4xad1abc", -1));
+  EXPECT_TRUE(IsAcceptableHost("ws-eu53", -1));
+  EXPECT_TRUE(IsAcceptableHost("gitpod", -1));
+  EXPECT_TRUE(IsAcceptableHost("io", -1));
 }
 
 TEST(IsAcceptablePort, test) {

@@ -55,17 +55,18 @@ bool IsAcceptableHost(const char *s, size_t n) {
   int c, b, j;
   if (n == -1) n = s ? strlen(s) : 0;
   if (!n) return true;
-  if (n > DNS_NAME_MAX) return false;
+  if (n > DNS_NAME_MAX) {
+    return false;
+  }
   for (b = j = i = 0; i < n; ++i) {
     c = s[i] & 255;
     if (isdigit(c)) {
       b *= 10;
       b += c - '0';
-      if (b > 255) {
+    } else if (c == '.') {
+      if (!i || s[i - 1] == '.') {
         return false;
       }
-    } else if (c == '.') {
-      if (!i || s[i - 1] == '.') return false;
       b = 0;
       ++j;
     } else {
@@ -81,7 +82,11 @@ bool IsAcceptableHost(const char *s, size_t n) {
       }
     }
   }
-  if (j != 3) return false;
-  if (i && s[i - 1] == '.') return false;
+  if (j != 3) {
+    return false;
+  }
+  if (i && s[i - 1] == '.') {
+    return false;
+  }
   return true;
 }
