@@ -169,7 +169,7 @@ static void GetOpts(int *argc, char *argv[]) {
         PrintUsage(EX_USAGE, stderr);
     }
   }
-  if (!g_flags.full && (!g_flags.width || !g_flags.width)) {
+  if (!g_flags.full && (!g_flags.width && !g_flags.height)) {
     ws.ws_col = 80;
     ws.ws_row = 24;
     if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 ||
@@ -385,11 +385,17 @@ void WithImageFile(const char *path,
                          data, 0, yn, 0, xn);
     cn = 3;
   }
-  if (g_flags.height && g_flags.width) {
+  if (g_flags.height || g_flags.width) {
     syn = yn;
     sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
+    if (dyn && !dxn) {
+      dxn = dyn * xn * (1 + !g_flags.half) / yn;
+    }
+    if (dxn && !dyn) {
+      dyn = dxn * yn / (xn * (1 + !g_flags.half));
+    }
     if (g_flags.magikarp) {
       while (HALF(syn) > dyn || HALF(sxn) > dxn) {
         if (HALF(sxn) > dxn) {
