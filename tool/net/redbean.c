@@ -3456,7 +3456,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   }
   //////////////////////////////////////////////////////////////////////////////
   if (-1 == fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK})) {
-    WARNF("can't place write lock on file descriptor %d: %s", zfd,
+    WARNF("(srvr) can't place write lock on file descriptor %d: %s", zfd,
           strerror(errno));
     return;
   }
@@ -6931,6 +6931,7 @@ static void Listen(void) {
       }
       if (hasonserverlisten &&
           LuaOnServerListen(servers.p[n].fd, ips.p[i], ports.p[j])) {
+        close(servers.p[n].fd);
         n--;  // skip this server instance
         continue;
       }
@@ -6958,6 +6959,8 @@ static void Listen(void) {
       }
     }
   }
+  // shrink allocated memory in case some of the sockets were skipped
+  if (n < ips.n * ports.n) servers.p = realloc(servers.p, n*sizeof(*servers.p));
   servers.n = n;
   polls = malloc((1 + n) * sizeof(*polls));
   polls[0].fd = -1;
