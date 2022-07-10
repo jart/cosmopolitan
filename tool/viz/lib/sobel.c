@@ -37,7 +37,7 @@ forceinline void ConvolveGradient(unsigned yn, unsigned xn,
   size_t size;
   unsigned y, x, i, j, k;
   float py[4], px[4], (*tmp)[yn][xn][4];
-  tmp = mapanon((size = ROUNDUP(sizeof(float) * 4 * xn * yn, FRAMESIZE)));
+  tmp = _mapanon((size = ROUNDUP(sizeof(float) * 4 * xn * yn, FRAMESIZE)));
   for (y = 0; y < yn - KW + 1; ++y) {
     for (x = 0; x < xn - KW + 1; ++x) {
       for (k = 0; k < 4; ++k) py[k] = 0;

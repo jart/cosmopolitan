@@ -16,25 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/str/str.h"
+#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
-static char tib[64];
+#define _TLSZ ((intptr_t)_tls_size)
+#define _TLDZ ((intptr_t)_tdata_size)
+#define _TIBZ sizeof(struct cthread_descriptor_t)
+#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct cthread_descriptor_t))
 
-TEST(tls, test) {
-  errno = 31337;
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(&__errno, __errno_location());
-  __initialize_tls(tib);
-  *(int *)((char *)tib + 0x38) = gettid();
-  *(int *)((char *)tib + 0x3c) = __errno;
-  __install_tls(tib);
-  EXPECT_EQ(31337, errno);
-  EXPECT_EQ(tib, __get_tls());
-  EXPECT_EQ(tib, __get_tls_inline());
-  EXPECT_EQ(tib + 0x3c, (char *)__errno_location());
+/**
+ * Allocates thread-local storage memory for new thread.
+ * @return buffer that must be released with free()
+ */
+char *_mktls(char **out_tib) {
+  char *tls;
+  cthread_t tib;
+
+  // Allocate enough TLS memory for all the GNU Linuker (_tls_size)
+  // organized _Thread_local data, as well as Cosmpolitan Libc (64)
+  if (!(tls = calloc(1, _MEMZ))) return 0;
+
+  // set up thread informaiton block
+  tib = (cthread_t)(tls + _MEMZ - _TIBZ);
+  tib->self = tib;
+  tib->self2 = tib;
+  tib->err = 0;
+  tib->tid = -1;
+  memmove(tls, _tdata_start, _TLDZ);
+
+  if (out_tib) {
+    *out_tib = (char *)tib;
+  }
+  return tls;
 }

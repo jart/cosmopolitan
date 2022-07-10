@@ -6,7 +6,7 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § runtime                                                   ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-typedef long jmp_buf[8] forcealign(CACHELINE);
+typedef long jmp_buf[8];
 
 extern char **environ;                              /* CRT */
 extern int __argc;                                  /* CRT */
@@ -45,8 +45,10 @@ extern size_t __virtualmax;
 extern bool __isworker;
 
 void mcount(void);
+int _freestack(void *);
 unsigned long getauxval(unsigned long);
-void *mapanon(size_t) attributeallocsize((1));
+void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
+void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 axdx_t setlongerjmp(jmp_buf) libcesque returnstwice paramsnonnull();

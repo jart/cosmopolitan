@@ -16,22 +16,42 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
-char tib[64];
+#define N 128
 
-TEST(gettid, test) {
-  if (IsLinux()) EXPECT_EQ(getpid(), gettid());
-  if (IsNetbsd()) EXPECT_EQ(1, gettid());
+struct spawn t[N];
+_Atomic(int) itworked;
+_Thread_local int var;
+
+int Worker(void *arg, int tid) {
+  int i = (long)arg;
+  ASSERT_EQ(0, var++);
+  ASSERT_EQ(gettid(), tid);
+  ASSERT_EQ(1, var++);
+  ASSERT_EQ(sys_gettid(), tid);
+  ASSERT_EQ(2, var++);
+  itworked++;
+  return 0;
 }
 
-BENCH(gettid, bench) {
-  int gettid_(void) asm("gettid");
-  EZBENCH2("gettid (single threaded)", donothing, gettid());
-  __install_tls(__initialize_tls(tib));
-  EZBENCH2("gettid (tls enabled)", donothing, gettid());
+TEST(_spawn, test) {
+  long i;
+  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _spawn(Worker, (void *)i, t + i));
+  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  EXPECT_EQ(N, itworked);
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  pledge("stdio rpath thread", 0);
+  errno = 0;
 }

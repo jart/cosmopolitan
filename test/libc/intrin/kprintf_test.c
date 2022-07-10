@@ -43,7 +43,8 @@
  */
 static uint64_t Rando(void) {
   uint64_t x;
-  do x = lemur64();
+  do
+    x = lemur64();
   while (((x ^ READ64LE("!!!!!!!!")) - 0x0101010101010101) &
          ~(x ^ READ64LE("!!!!!!!!")) & 0x8080808080808080);
   return x;
@@ -279,7 +280,7 @@ TEST(ksnprintf, testMisalignedPointer_wontFormat) {
 TEST(ksnprintf, testUnterminatedOverrun_truncatesAtPageBoundary) {
   char *m;
   char b[32];
-  m = memset(mapanon(FRAMESIZE * 2), 1, FRAMESIZE);
+  m = memset(_mapanon(FRAMESIZE * 2), 1, FRAMESIZE);
   EXPECT_SYS(0, 0, munmap(m + FRAMESIZE, FRAMESIZE));
   EXPECT_EQ(12, ksnprintf(b, 32, "%'s", m + FRAMESIZE - 3));
   EXPECT_STREQ("\\001\\001\\001", b);

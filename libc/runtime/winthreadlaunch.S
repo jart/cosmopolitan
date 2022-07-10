@@ -26,8 +26,9 @@
 //	runtime facilities.
 //
 //	@param	%rdi is arg
-//	@param	%rsi is func
-//	@param	%rdx is stack
+//	@param	%rsi is tid
+//	@param	%rdx is func
+//	@param	%rcx is stack
 //	@return	%rax is exit code
 //	@see	clone()
 WinThreadLaunch:
@@ -35,9 +36,9 @@ WinThreadLaunch:
 	push	%r15
 	mov	%rbp,%r15
 	mov	%rsp,%rbx
-	mov	%rdx,%rsp
+	mov	%rcx,%rsp
 	xor	%rbp,%rbp
-	call	*%rsi
+	call	*%rdx
 	mov	%r15,%rbp
 	mov	%rbx,%rsp
 	pop	%r15

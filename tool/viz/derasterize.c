@@ -104,7 +104,7 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define Mode BEST
 
 #if Mode == BEST
-#define MC 9u /* log2(#) of color combos to consider */
+#define MC 9u  /* log2(#) of color combos to consider */
 #define GN 35u /* # of glyphs to consider */
 #elif Mode == FAST
 #define MC 6u
@@ -114,10 +114,10 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define GN 25u
 #endif
 
-#define CN 3u /* # channels (rgb) */
-#define YS 8u /* row stride -or- block height */
-#define XS 4u /* column stride -or- block width */
-#define GT 44u /* total glyphs */
+#define CN 3u        /* # channels (rgb) */
+#define YS 8u        /* row stride -or- block height */
+#define XS 4u        /* column stride -or- block width */
+#define GT 44u       /* total glyphs */
 #define BN (YS * XS) /* # scalars in block/glyph plane */
 
 #define PHIPRIME 0x9E3779B1u
@@ -434,7 +434,7 @@ static void PrintImage(unsigned yn, unsigned xn,
   char *v, *vt;
   size = yn * (xn * (32 + (2 + (1 + 3) * 3) * 2 + 1 + 3)) * 1 + 5 + 1;
   size = ROUNDUP(size, FRAMESIZE);
-  CHECK_NE(MAP_FAILED, (vt = mapanon(size)));
+  CHECK_NOTNULL((vt = _mapanon(size)));
   v = RenderImage(vt, yn, xn, rgb);
   *v++ = '\r';
   *v++ = 033;
@@ -532,8 +532,8 @@ static void LoadFile(const char *path, size_t yn, size_t xn, void *rgb) {
   CHECK_EQ(CN, 3);
   data2size = ROUNDUP(sizeof(float) * goty * gotx * CN, FRAMESIZE);
   data3size = ROUNDUP(sizeof(float) * yn * YS * xn * XS * CN, FRAMESIZE);
-  CHECK_NE(MAP_FAILED, (data2 = mapanon(data2size)));
-  CHECK_NE(MAP_FAILED, (data3 = mapanon(data3size)));
+  CHECK_NOTNULL((data2 = _mapanon(data2size)));
+  CHECK_NOTNULL((data3 = _mapanon(data3size)));
   rgb2lin(goty * gotx * CN, data2, data);
   lanczos3(yn * YS, xn * XS, data3, goty, gotx, data2, gotx * 3);
   rgb2std(yn * YS * xn * XS * CN, rgb, data3);
@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
   // FIXME: on the conversion stage should do 2Y because of halfblocks
   // printf( "filename >%s<\tx >%d<\ty >%d<\n\n", filename, x_, y_);
   size = y_ * YS * x_ * XS * CN;
-  CHECK_NE(MAP_FAILED, (rgb = mapanon(ROUNDUP(size, FRAMESIZE))));
+  CHECK_NOTNULL((rgb = _mapanon(ROUNDUP(size, FRAMESIZE))));
   for (i = optind; i < argc; ++i) {
     if (!argv[i]) continue;
     if (m_) {

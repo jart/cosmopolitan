@@ -153,7 +153,8 @@ DEFAULT_COPTS =								\
 	-fno-gnu-unique							\
 	-fstrict-aliasing						\
 	-fstrict-overflow						\
-	-fno-semantic-interposition
+	-fno-semantic-interposition					\
+	-mno-tls-direct-seg-refs
 
 MATHEMATICAL =								\
 	-O3								\

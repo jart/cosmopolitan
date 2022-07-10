@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,30 +16,75 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/errno.h"
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/mem/alloca.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/futex.h"
+#include "libc/macros.internal.h"
 
-static const char *DescribeFutexWaitResult(char buf[12], int ax) {
-  const char *s;
-  if (ax && ((s = strerrno(ax)) || (s = strerrno(-ax)))) {
-    return s;
-  } else {
-    FormatInt32(buf, ax);
-    return buf;
-  }
-}
+//	Code morphing TLS polyfills for The New Technology.
+//
+//	@note	msvc generates this code so it's stable
+//	@note	func ordering follows x86 reg encoding
+//	@note	each function is exactly 18 bytes
+//	@see	__enable_threads()
 
-int _futex_wait(void *addr, int expect, struct timespec *timeout) {
-  int ax;
-  ax = _futex(addr, FUTEX_WAIT, expect, timeout, 0);
-  STRACE("futex(%t[%p], FUTEX_WAIT, %d, %s) → %s", addr, addr, expect,
-         DescribeTimespec(0, timeout), DescribeFutexWaitResult(alloca(12), ax));
-  return ax;
-}
+__get_tls_nt_rax:
+	push	%rcx
+	mov	__tls_index(%rip),%ecx
+	mov	%gs:0x1480(,%rcx,8),%rax
+	pop	%rcx
+	ret
+	.endfn	__get_tls_nt_rax,globl,hidden
+
+__get_tls_nt_rcx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rcx
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rcx
+
+__get_tls_nt_rdx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rdx
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rdx
+
+__get_tls_nt_rbx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rbx
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rbx
+
+__get_tls_nt_rsp:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rsp
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rsp
+
+__get_tls_nt_rbp:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rbp
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rbp
+
+__get_tls_nt_rsi:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rsi
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rsi
+
+__get_tls_nt_rdi:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	mov	%gs:0x1480(,%rax,8),%rdi
+	pop	%rax
+	ret
+	.endfn	__get_tls_nt_rdi

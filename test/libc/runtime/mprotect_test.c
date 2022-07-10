@@ -119,7 +119,7 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
 }
 
 TEST(mprotect, testExecOnly_canExecute) {
-  char *p = mapanon(FRAMESIZE);
+  char *p = _mapanon(FRAMESIZE);
   void (*f)(void) = (void *)p;
   p[0] = 0xC3;  // RET
   ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_EXEC | PROT_READ));

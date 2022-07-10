@@ -32,7 +32,7 @@
  * they are passed in the ≤64kb bytes preceding src.
  *
  * @return pointer to end of decoded data, similar to mempcpy()
- * @see mapanon(), lz4check()
+ * @see _mapanon(), lz4check()
  */
 void *lz4decode(void *dest, const void *src) {
   const unsigned char *frame, *block;

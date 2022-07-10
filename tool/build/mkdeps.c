@@ -52,6 +52,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/spawn.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
@@ -122,11 +123,10 @@ struct Edges {
 };
 
 char *out;
-char **tls;
 int threads;
 char **bouts;
-char **stack;
 unsigned counter;
+struct spawn *th;
 struct GetArgs ga;
 struct Edges edges;
 struct Sauce *sauces;
@@ -248,7 +248,7 @@ wontreturn void OnMissingFile(const char *list, const char *src) {
   exit(1);
 }
 
-int LoadRelationshipsWorker(void *arg) {
+int LoadRelationshipsWorker(void *arg, int tid) {
   int fd;
   ssize_t rc;
   bool skipme;
@@ -307,18 +307,14 @@ void LoadRelationships(int argc, char *argv[]) {
   int i;
   getargs_init(&ga, argv + optind);
   for (i = 0; i < threads; ++i) {
-    if (clone(LoadRelationshipsWorker, stack[i], GetStackSize(),
-              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-              (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
-              (int *)(tls[i] + 0x38)) == -1) {
+    if (_spawn(LoadRelationshipsWorker, (void *)(intptr_t)i, th + i) == -1) {
       pthread_mutex_lock(&reportlock);
       kprintf("error: clone(%d) failed %m\n", i);
       exit(1);
     }
   }
   for (i = 0; i < threads; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
+    _join(th + i);
   }
   getargs_destroy(&ga);
 }
@@ -388,17 +384,17 @@ void Dive(char **bout, uint32_t *visited, unsigned id) {
   }
 }
 
-int Diver(void *arg) {
+int Diver(void *arg, int tid) {
   char *bout = 0;
   const char *path;
   uint32_t *visited;
   size_t i, visilen;
   char pathbuf[PATH_MAX];
-  int tid = (intptr_t)arg;
+  int x = (intptr_t)arg;
   visilen = (sources.i + sizeof(*visited) * CHAR_BIT - 1) /
             (sizeof(*visited) * CHAR_BIT);
   visited = malloc(visilen * sizeof(*visited));
-  for (i = tid; i < sources.i; i += threads) {
+  for (i = x; i < sources.i; i += threads) {
     path = strings.p + sauces[i].name;
     if (!IsObjectSource(path)) continue;
     appendw(&bout, '\n');
@@ -415,25 +411,21 @@ int Diver(void *arg) {
   }
   free(visited);
   appendw(&bout, '\n');
-  bouts[tid] = bout;
+  bouts[x] = bout;
   return 0;
 }
 
 void Explore(void) {
   int i;
   for (i = 0; i < threads; ++i) {
-    if (clone(Diver, stack[i], GetStackSize(),
-              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-              (void *)(intptr_t)i, 0, __initialize_tls(tls[i]), 64,
-              (int *)(tls[i] + 0x38)) == -1) {
+    if (_spawn(Diver, (void *)(intptr_t)i, th + i) == -1) {
       pthread_mutex_lock(&reportlock);
       kprintf("error: clone(%d) failed %m\n", i);
       exit(1);
     }
   }
   for (i = 0; i < threads; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
+    _join(th + i);
   }
 }
 
@@ -443,17 +435,8 @@ int main(int argc, char *argv[]) {
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   GetOpts(argc, argv);
   threads = GetCpuCount();
-  tls = calloc(threads, sizeof(*tls));
-  stack = calloc(threads, sizeof(*stack));
+  th = calloc(threads, sizeof(*th));
   bouts = calloc(threads, sizeof(*bouts));
-  for (i = 0; i < threads; ++i) {
-    if (!(tls[i] = malloc(64)) ||
-        (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                         MAP_STACK | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED) {
-      kprintf("error: mmap(%d) failed %m\n", i);
-      exit(1);
-    }
-  }
   LoadRelationships(argc, argv);
   Crunch();
   Explore();
@@ -466,15 +449,12 @@ int main(int argc, char *argv[]) {
   CHECK_NE(-1, close(fd));
   CHECK_NE(-1, rename(path, out));
   for (i = 0; i < threads; ++i) {
-    munmap(stack[i], GetStackSize());
     free(bouts[i]);
-    free(tls[i]);
   }
   free(strings.p);
   free(edges.p);
   free(sauces);
-  free(stack);
   free(bouts);
-  free(tls);
+  free(th);
   return 0;
 }

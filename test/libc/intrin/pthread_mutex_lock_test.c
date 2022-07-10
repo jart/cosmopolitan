@@ -41,32 +41,18 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
 #define THREADS    8
 #define ITERATIONS 512
-#define TLS_SIZE   PAGESIZE
-
-char *tls[THREADS];
-char *stack[THREADS];
-_Alignas(PAGESIZE) char tlsdata[THREADS * 3][TLS_SIZE];
 
 int count;
 _Atomic(int) started;
 _Atomic(int) finished;
 _Alignas(64) char slock;
 pthread_mutex_t mylock;
-
-__attribute__((__constructor__)) void init(void) {
-  int i;
-  __enable_tls();
-  __enable_threads();
-  for (i = 0; i < THREADS; ++i) {
-    CHECK_NE(-1, mprotect(tlsdata[i * 3 + 0], TLS_SIZE, PROT_NONE));
-    tls[i] = tlsdata[i * 3 + 1];
-    CHECK_NE(-1, mprotect(tlsdata[i * 3 + 2], TLS_SIZE, PROT_NONE));
-  }
-}
+struct spawn th[THREADS];
 
 TEST(pthread_mutex_lock, normal) {
   pthread_mutex_t lock;
@@ -116,7 +102,7 @@ TEST(pthread_mutex_lock, errorcheck) {
   __assert_disable = false;
 }
 
-int MutexWorker(void *p) {
+int MutexWorker(void *p, int tid) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
@@ -124,7 +110,6 @@ int MutexWorker(void *p) {
     ++count;
     pthread_mutex_unlock(&mylock);
   }
-  ASSERT_NE(0, (int *)(tls[(intptr_t)p] + 0x38));
   ++finished;
   return 0;
 }
@@ -140,29 +125,14 @@ TEST(pthread_mutex_lock, contention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(MAP_FAILED,
-              (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
-    ASSERT_NE(-1, clone(MutexWorker, stack[i], GetStackSize(),
-                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                            CLONE_SIGHAND | CLONE_CHILD_SETTID |
-                            CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                        (void *)(intptr_t)i, 0, __initialize_tls(tls[i]),
-                        TLS_SIZE, (int *)(tls[i] + 0x38)));
+    ASSERT_SYS(0, 0, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
-  }
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
+    ASSERT_SYS(0, 0, _join(th + i));
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
   EXPECT_EQ(THREADS * ITERATIONS, count);
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, munmap(stack[i], GetStackSize()));
-  }
   EXPECT_EQ(0, pthread_mutex_destroy(&mylock));
 }
 
@@ -177,29 +147,14 @@ TEST(pthread_mutex_lock, rcontention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(MAP_FAILED,
-              (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
-    ASSERT_NE(-1, clone(MutexWorker, stack[i], GetStackSize(),
-                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                            CLONE_SIGHAND | CLONE_CHILD_SETTID |
-                            CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                        (void *)(intptr_t)i, 0, __initialize_tls(tls[i]),
-                        TLS_SIZE, (int *)(tls[i] + 0x38)));
+    ASSERT_NE(-1, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
-  }
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
+    _join(th + i);
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
   EXPECT_EQ(THREADS * ITERATIONS, count);
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, munmap(stack[i], GetStackSize()));
-  }
   EXPECT_EQ(0, pthread_mutex_destroy(&mylock));
 }
 
@@ -214,33 +169,18 @@ TEST(pthread_mutex_lock, econtention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(MAP_FAILED,
-              (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
-    ASSERT_NE(-1, clone(MutexWorker, stack[i], GetStackSize(),
-                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                            CLONE_SIGHAND | CLONE_CHILD_SETTID |
-                            CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                        (void *)(intptr_t)i, 0, __initialize_tls(tls[i]),
-                        TLS_SIZE, (int *)(tls[i] + 0x38)));
+    ASSERT_NE(-1, _spawn(MutexWorker, (void *)(intptr_t)i, th + i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
-  }
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_EQ(0, *(int *)(tls[i] + 0x38));
+    _join(th + i);
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
   EXPECT_EQ(THREADS * ITERATIONS, count);
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, munmap(stack[i], GetStackSize()));
-  }
   EXPECT_EQ(0, pthread_mutex_destroy(&mylock));
 }
 
-int SpinlockWorker(void *p) {
+int SpinlockWorker(void *p, int tid) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
@@ -248,7 +188,6 @@ int SpinlockWorker(void *p) {
     ++count;
     _spunlock(&slock);
   }
-  ASSERT_NE(0, (int *)(tls[(intptr_t)p] + 0x38));
   ++finished;
   return 0;
 }
@@ -259,25 +198,14 @@ TEST(_spinlock, contention) {
   started = 0;
   finished = 0;
   for (i = 0; i < THREADS; ++i) {
-    ASSERT_NE(MAP_FAILED,
-              (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
-    ASSERT_NE(-1, clone(SpinlockWorker, stack[i], GetStackSize(),
-                        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                            CLONE_SIGHAND | CLONE_CHILD_SETTID |
-                            CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-                        (void *)(intptr_t)i, 0, __initialize_tls(tls[i]),
-                        TLS_SIZE, (int *)(tls[i] + 0x38)));
+    ASSERT_NE(-1, _spawn(SpinlockWorker, (void *)(intptr_t)i, th + i));
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
+    _join(th + i);
   }
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
   EXPECT_EQ(THREADS * ITERATIONS, count);
-  for (i = 0; i < THREADS; ++i) {
-    ASSERT_SYS(0, 0, munmap(stack[i], GetStackSize()));
-  }
 }
 
 BENCH(pthread_mutex_lock, bench) {

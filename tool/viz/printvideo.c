@@ -751,7 +751,7 @@ static void RasterIt(void) {
   static bool once;
   static void *buf;
   if (!once) {
-    buf = mapanon(ROUNDUP(fb0_.size, FRAMESIZE));
+    buf = _mapanon(ROUNDUP(fb0_.size, FRAMESIZE));
     once = true;
   }
   WriteToFrameBuffer(fb0_.vscreen.yres_virtual, fb0_.vscreen.xres_virtual, buf,

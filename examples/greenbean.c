@@ -43,6 +43,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
+#include "libc/thread/spawn.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "net/http/http.h"
@@ -106,7 +107,7 @@ _Atomic(int) connections;
 _Atomic(int) closingtime;
 const char *volatile status;
 
-int Worker(void *id) {
+int Worker(void *id, int tid) {
   int server, yes = 1;
 
   // load balance incoming connections for port 8080 across all threads
@@ -273,8 +274,7 @@ void PrintStatus(void) {
 
 int main(int argc, char *argv[]) {
   int i;
-  char **tls;
-  char **stack;
+  struct spawn *th;
   uint32_t *hostips;
   // ShowCrashReports();
 
@@ -293,36 +293,23 @@ int main(int argc, char *argv[]) {
             PORT);
   }
 
-  // spawn over 9,000 worker threads
-  tls = 0;
-  stack = 0;
   threads = argc > 1 ? atoi(argv[1]) : GetCpuCount();
-  if ((1 <= threads && threads <= INT_MAX) &&
-      (tls = malloc(threads * sizeof(*tls))) &&
-      (stack = malloc(threads * sizeof(*stack)))) {
-    for (i = 0; i < threads; ++i) {
-      if ((tls[i] = __initialize_tls(malloc(64))) &&
-          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                           MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
-        ++workers;
-        if (clone(Worker, stack[i], GetStackSize(),
-                  CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES |
-                      CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_SETTID |
-                      CLONE_CHILD_CLEARTID,
-                  (void *)(intptr_t)i, 0, tls[i], 64,
-                  (int *)(tls[i] + 0x38)) == -1) {
-          --workers;
-          kprintf("error: clone(%d) failed %m\n", i);
-        }
-      } else {
-        kprintf("error: mmap(%d) failed %m\n", i);
-      }
-      if (!(i % 500)) {
-        PrintStatus();
-      }
-    }
-  } else {
+  if ((1 <= threads && threads <= 100000)) {
     kprintf("error: invalid number of threads\n");
+    exit(1);
+  }
+
+  // spawn over 9,000 worker threads
+  th = calloc(threads, sizeof(*th));
+  for (i = 0; i < threads; ++i) {
+    ++workers;
+    if (_spawn(Worker, (void *)(intptr_t)i, th + i) == -1) {
+      --workers;
+      kprintf("error: _spawn(%d) failed %m\n", i);
+    }
+    if (!(i % 500)) {
+      PrintStatus();
+    }
   }
 
   // wait for workers to terminate
@@ -335,17 +322,11 @@ int main(int argc, char *argv[]) {
   kprintf("\r\e[K");
 
   // join the workers
-  // this is how we guarantee stacks are safe to free
-  if (tls && stack) {
-    for (i = 0; i < threads; ++i) {
-      _wait0((int *)(tls[i] + 0x38));
-      munmap(stack[i], GetStackSize());
-      free(tls[i]);
-    }
+  for (i = 0; i < threads; ++i) {
+    _join(th + i);
   }
 
   // clean up memory
   free(hostips);
-  free(stack);
-  free(tls);
+  free(th);
 }

@@ -184,7 +184,7 @@ static void *
 _PyObject_ArenaMmap(void *ctx, size_t size)
 {
 #ifdef __COSMOPOLITAN__
-    return mapanon(size);
+    return _mapanon(size);
 #else
     void *ptr;
     ptr = mmap(NULL, size, PROT_READ|PROT_WRITE,

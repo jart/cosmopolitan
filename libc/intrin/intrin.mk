@@ -108,7 +108,6 @@ o/$(MODE)/libc/intrin/describeprotflags.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=address
 
-o/$(MODE)/libc/intrin/tls.greg.o			\
 o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/getenv.greg.o			\

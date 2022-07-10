@@ -28,6 +28,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 
 #define THREADS 32
@@ -46,10 +47,9 @@ union Dub {
   double x;
 };
 
-char *stack[THREADS];
-char tls[THREADS][64];
+struct spawn th[THREADS];
 
-int Worker(void *p) {
+int Worker(void *p, int tid) {
   int i;
   char str[64];
   for (i = 0; i < 256; ++i) {
@@ -63,17 +63,10 @@ int Worker(void *p) {
 TEST(dtoa, test) {
   int i;
   for (i = 0; i < THREADS; ++i) {
-    clone(Worker,
-          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                           MAP_STACK | MAP_ANONYMOUS, -1, 0)),
-          GetStackSize(),
-          CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-              CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-          0, 0, __initialize_tls(tls[i]), sizeof(tls[i]),
-          (int *)(tls[i] + 0x38));
+    _spawn(Worker, 0, th + i);
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
+    _join(th + i);
   }
 }
 

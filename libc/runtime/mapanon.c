@@ -54,13 +54,16 @@
  *     }
  *
  * That is performed automatically for unit test executables.
+ *
+ * @return memory map address on success, or null w/ errrno
  */
-noasan void *mapanon(size_t size) {
+void *_mapanon(size_t size) {
   /* asan runtime depends on this function */
   void *m;
   m = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (m == MAP_FAILED && weaken(__oom_hook)) {
     weaken(__oom_hook)(size);
+    return 0;
   }
   return m;
 }

@@ -36,7 +36,6 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/spinlock.h"
-#include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -86,6 +85,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "net/http/escape.h"
@@ -421,7 +421,6 @@ static lua_State *GL;
 static lua_State *YL;
 static char *content;
 static uint8_t *zmap;
-static char *repltls;
 static uint8_t *zbase;
 static uint8_t *zcdir;
 static size_t hdrsize;
@@ -431,7 +430,6 @@ static char *replstack;
 static reader_f reader;
 static writer_f writer;
 static char *extrahdrs;
-static char *monitortls;
 static char *luaheaderp;
 static const char *zpath;
 static const char *brand;
@@ -454,6 +452,8 @@ static const char *launchbrowser;
 static const char *referrerpolicy;
 static ssize_t (*generator)(struct iovec[3]);
 
+static struct spawn replth;
+static struct spawn monitorth;
 static struct Buffer inbuf_actual;
 static struct Buffer inbuf;
 static struct Buffer oldin;
@@ -6461,7 +6461,7 @@ static int ExitWorker(void) {
   }
   if (monitortty) {
     terminatemonitor = true;
-    _wait0((int *)(monitortls + 0x38));
+    _join(&monitorth);
   }
   _Exit(0);
 }
@@ -6482,7 +6482,7 @@ static int EnableSandbox(void) {
   }
 }
 
-static int MemoryMonitor(void *arg) {
+static int MemoryMonitor(void *arg, int tid) {
   static struct termios oldterm;
   static int tty;
   sigset_t ss;
@@ -6637,23 +6637,9 @@ static int MemoryMonitor(void *arg) {
 }
 
 static void MonitorMemory(void) {
-  if ((monitortls = malloc(64))) {
-    if ((monitorstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                             MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
-      if (clone(MemoryMonitor, monitorstack, GetStackSize(),
-                CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
-                    CLONE_SIGHAND | CLONE_SETTLS | CLONE_CHILD_SETTID |
-                    CLONE_CHILD_CLEARTID,
-                0, 0, __initialize_tls(monitortls), 64,
-                (int *)(monitortls + 0x38)) != -1) {
-        return;
-      }
-      munmap(monitorstack, GetStackSize());
-    }
-    free(monitortls);
+  if (_spawn(MemoryMonitor, 0, &monitorth) == -1) {
+    WARNF("(memv) failed to start memory monitor %m");
   }
-  WARNF("(memv) failed to start memory monitor %m");
-  monitortty = 0;
 }
 
 static int HandleConnection(size_t i) {
@@ -7029,7 +7015,7 @@ static void ReplEventLoop(void) {
   polls[0].fd = -1;
 }
 
-static int WindowsReplThread(void *arg) {
+static int WindowsReplThread(void *arg, int tid) {
   int sig;
   lua_State *L = GL;
   DEBUGF("(repl) started windows thread");
@@ -7289,16 +7275,7 @@ void RedBean(int argc, char *argv[]) {
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
     EventLoop(HEARTBEAT);
   } else if (IsWindows()) {
-    CHECK_NE(MAP_FAILED, (repltls = malloc(64)));
-    CHECK_NE(MAP_FAILED,
-             (replstack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                               MAP_STACK | MAP_ANONYMOUS, -1, 0)));
-    CHECK_NE(
-        -1,
-        clone(WindowsReplThread, replstack, GetStackSize(),
-              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-              0, 0, __initialize_tls(repltls), 64, (int *)(repltls + 0x38)));
+    CHECK_NE(-1, _spawn(WindowsReplThread, 0, &replth));
     EventLoop(100);
   } else {
     ReplEventLoop();
@@ -7315,19 +7292,11 @@ void RedBean(int argc, char *argv[]) {
   }
   if (!isexitingworker) {
     if (!IsTiny()) {
-      if (monitortty) {
-        terminatemonitor = true;
-        _wait0((int *)(monitortls + 0x38));
-        munmap(monitorstack, GetStackSize());
-        free(monitortls);
-      }
+      terminatemonitor = true;
+      _join(&monitorth);
     }
 #ifndef STATIC
-    if (repltls) {
-      _wait0((int *)(repltls + 0x38));
-      munmap(replstack, GetStackSize());
-      free(repltls);
-    }
+    _join(&replth);
 #endif
   }
   if (!isexitingworker) {
@@ -7349,11 +7318,9 @@ int main(int argc, char *argv[]) {
         return 0;
         CloseServerFds();
       }
-      if (repltls) {
-        free(repltls);
-        linenoiseDisableRawMode();
-        linenoiseHistoryFree();
-      }
+      _join(&replth);
+      linenoiseDisableRawMode();
+      linenoiseHistoryFree();
     }
     CheckForMemoryLeaks();
   }

@@ -64,7 +64,7 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
     lf = GetZipCfileOffset(zipos->map + cf);
     size = GetZipLfileUncompressedSize(zipos->map + lf);
     size2 = ROUNDUP(size, FRAMESIZE);
-    if ((res = mapanon(size2))) {
+    if ((res = _mapanon(size2))) {
       switch (ZIP_LFILE_COMPRESSIONMETHOD(zipos->map + lf)) {
         case kZipCompressionNone:
           memcpy(res, (void *)ZIP_LFILE_CONTENT(zipos->map + lf), size);

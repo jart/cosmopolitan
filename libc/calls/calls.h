@@ -67,6 +67,7 @@ int chdir(const char *);
 int chmod(const char *, uint32_t);
 int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
+int clone(void *, void *, size_t, int, void *, int *, void *, size_t, int *);
 int close(int);
 int creat(const char *, uint32_t);
 int dup(int);
@@ -195,9 +196,6 @@ ssize_t readlinkat(int, const char *, char *, size_t);
 ssize_t splice(int, int64_t *, int, int64_t *, size_t, uint32_t);
 ssize_t write(int, const void *, size_t);
 void sync(void);
-
-int clone(int (*)(void *), void *, size_t, int, void *, int *, void *, size_t,
-          int *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

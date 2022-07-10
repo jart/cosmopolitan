@@ -26,7 +26,7 @@
 //	@param	rdx is ptid
 //	@param	rcx is ctid
 //	@param	r8 is tls
-//	@param	r9 is func
+//	@param	r9 is func(void*,int)→int
 //	@param	8(rsp) is arg
 //	@return	tid of child on success, or -1 w/ errno
 sys_clone_linux:
@@ -48,8 +48,9 @@ sys_clone_linux:
 	jmp	0b
 2:	xor	%ebp,%ebp		# child thread
 	mov	%rbx,%rdi		# arg
-	call	*%r9			# func(arg)
-	xchg	%eax,%edi		# func(arg) → exitcode
+	mov	(%r10),%esi		# tid
+	call	*%r9			# func(arg,tid)
+	xchg	%eax,%edi		# func(arg,tid) → exitcode
 	mov	$60,%eax		# __NR_exit(exitcode)
 	syscall
 	.endfn	sys_clone_linux,globl,hidden

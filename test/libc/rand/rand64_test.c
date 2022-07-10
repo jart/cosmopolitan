@@ -37,6 +37,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/time/time.h"
 
@@ -54,7 +55,7 @@ dontinline void Generate(int i) {
   A[i] = rand64();
 }
 
-int Thrasher(void *arg) {
+int Thrasher(void *arg, int tid) {
   int i, id = (intptr_t)arg;
   while (!atomic_load(&ready)) {
     cthread_memory_wait32(&ready, 0, 0);
@@ -83,9 +84,8 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
 TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   int i, j, rc, ws;
   sigset_t ss, oldss;
-  char *tls[THREADS];
-  void *stacks[THREADS];
   struct sigaction oldsa;
+  struct spawn th[THREADS];
   struct sigaction sa = {.sa_handler = OnChld, .sa_flags = SA_RESTART};
   EXPECT_NE(-1, sigaction(SIGCHLD, &sa, &oldsa));
   bzero(A, sizeof(A));
@@ -94,25 +94,12 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
   ready = false;
   for (i = 0; i < THREADS; ++i) {
-    tls[i] = __initialize_tls(calloc(1, 64));
-    stacks[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                     MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    ASSERT_NE(
-        -1,
-        clone(Thrasher, stacks[i], GetStackSize(),
-              CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                  CLONE_SETTLS | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
-              (void *)(intptr_t)i, 0, tls[i], 64, (int *)(tls[i] + 0x38)));
+    ASSERT_SYS(0, 0, _spawn(Thrasher, (void *)(intptr_t)i, th + i));
   }
   atomic_store(&ready, 1);
   cthread_memory_wake32(&ready, INT_MAX);
   for (i = 0; i < THREADS; ++i) {
-    while ((j = atomic_load((uint32_t *)(tls[i] + 0x38)))) {
-      // FUTEX_WAIT_PRIVATE makes it hang
-      cthread_memory_wait32((int *)(tls[i] + 0x38), j, 0);
-    }
-    EXPECT_SYS(0, 0, munmap(stacks[i], GetStackSize()));
-    free(tls[i]);
+    ASSERT_SYS(0, 0, _join(th + i));
   }
   sigaction(SIGCHLD, &oldsa, 0);
   sigprocmask(SIG_BLOCK, &oldss, 0);

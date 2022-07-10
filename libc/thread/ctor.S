@@ -21,7 +21,7 @@
 	.init.start 400,_main_thread_ctor
 	push	%rdi
 	push	%rsi
-	call	_main_thread_init
+	call	__enable_tls
 	pop	%rsi
 	pop	%rdi
 	.init.end 400,_main_thread_ctor

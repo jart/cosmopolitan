@@ -78,7 +78,7 @@ TEST(lz4, zoneFileGmt) {
   size_t mapsize, gmtsize;
   char *mapping, *gmtdata;
   lz4decode((gmtdata = lz4decode(
-                 (mapping = mapanon(
+                 (mapping = _mapanon(
                       (mapsize = roundup(
                            LZ4_FRAME_BLOCKCONTENTSIZE(lz4check(dict.addr)) +
                                (gmtsize = LZ4_FRAME_BLOCKCONTENTSIZE(

@@ -40,6 +40,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/time/time.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -50,9 +51,6 @@ STATIC_YOINK("libc/testlib/hyperion.txt");
 void PullSomeZipFilesIntoLinkage(void) {
   gmtime(0);
 }
-
-char *stack[THREADS];
-char tls[THREADS][64];
 
 TEST(reservefd, testGrowthOfFdsDataStructure) {
   int i, n;
@@ -87,7 +85,7 @@ void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {
   close(fd);  // can eintr which doesn't matter
 }
 
-int Worker(void *p) {
+int Worker(void *p, int tid) {
   char buf[64];
   int i, rc, fd;
   for (i = 0; i < 64; ++i) {
@@ -111,6 +109,7 @@ int Worker(void *p) {
 
 TEST(reservefd, tortureTest) {
   int i;
+  struct spawn th[THREADS];
   struct sigaction oldsa;
   struct itimerval oldit;
   struct itimerval it = {{0, 10000}, {0, 100}};
@@ -119,17 +118,10 @@ TEST(reservefd, tortureTest) {
   // ASSERT_SYS(0, 0, sigaction(SIGALRM, &sa, &oldsa));
   // ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, &oldit));
   for (i = 0; i < THREADS; ++i) {
-    clone(Worker,
-          (stack[i] = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                           MAP_STACK | MAP_ANONYMOUS, -1, 0)),
-          GetStackSize(),
-          CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-              CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-          0, 0, __initialize_tls(tls[i]), sizeof(tls[i]),
-          (int *)(tls[i] + 0x38));
+    _spawn(Worker, 0, th + i);
   }
   for (i = 0; i < THREADS; ++i) {
-    _wait0((int *)(tls[i] + 0x38));
+    _join(th + i);
   }
   // EXPECT_SYS(0, 0, sigaction(SIGALRM, &oldsa, 0));
   // EXPECT_SYS(0, 0, setitimer(ITIMER_REAL, &oldit, 0));

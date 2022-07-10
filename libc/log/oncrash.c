@@ -245,9 +245,12 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
           "RIP %x\n"
           "RSP %x\n"
           "RBP %x\n"
+          "PID %d\n"
+          "TID %d\n"
           "\n",
           kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
-          ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0);
+          ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0, __pid,
+          sys_gettid());
   __restorewintty();
   _Exit(119);
 }
