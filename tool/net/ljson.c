@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
+#include "libc/log/log.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "third_party/double-conversion/wrapper.h"
@@ -38,14 +39,26 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
   int A, B, C, D, c, d, i, u;
   for (a = p, d = +1; p < e;) {
     switch ((c = *p++ & 255)) {
+      default:
+        luaL_error(L, "illegal character\n");
+        return (struct Rc){-1, p};
 
       case ' ':  // spaces
       case '\n':
       case '\r':
       case '\t':
-      case ',':  // separators
-      case ':':
-      default:
+        a = p;
+        break;
+      
+      case ',':  // present in list and object
+        a = p;
+        break;
+
+      case ':':  // present only in object after key
+        if (LUA_TSTRING != lua_type(L, -1)) {
+            luaL_error(L, "unexpected ':'\n");
+            return (struct Rc){-1, p};
+        }
         a = p;
         break;
 
@@ -54,21 +67,24 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
           lua_pushnil(L);
           return (struct Rc){1, p + 3};
         }
-        break;
+        luaL_error(L, "expecting null\n");
+        return (struct Rc){-1, p};
 
       case 't':  // true
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("true")) {
           lua_pushboolean(L, true);
           return (struct Rc){1, p + 3};
         }
-        break;
+        luaL_error(L, "expecting true\n");
+        return (struct Rc){-1, p};
 
       case 'f':  // false
         if (p + 4 <= e && READ32LE(p) == READ32LE("alse")) {
           lua_pushboolean(L, false);
           return (struct Rc){1, p + 4};
         }
-        break;
+        luaL_error(L, "expecting false\n");
+        return (struct Rc){-1, p};
 
       case '-':  // negative
         d = -1;
@@ -112,6 +128,10 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
             lua_rawseti(L, -2, i++ + 1);
           }
         } while (r.t);
+        if (*(p-1) != ']') {
+          luaL_error(L, "invalid list\n");
+          return (struct Rc){-1, p};
+        }
         return (struct Rc){1, p};
 
       case ']':
@@ -125,10 +145,18 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
           r = Parse(L, p, e);
           p = r.p;
           if (r.t) {
+            if (LUA_TSTRING != lua_type(L, -1)) {
+                /* json keys can only be strings */
+                lua_settop(L, -2);
+                break;
+            }
             r = Parse(L, p, e);
             p = r.p;
             if (!r.t) {
-              lua_pushnil(L);
+              /* key provided but no value */
+              lua_settop(L, -2);
+              luaL_error(L, "key provided but no value\n");
+              return (struct Rc){-1, p};
             }
             lua_settable(L, -3);
             ++i;
@@ -139,6 +167,10 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
           lua_pushstring(L, "__json_object__");
           lua_pushboolean(L, true);
           lua_settable(L, -3);
+        }
+        if (*(p-1) != '}') {
+          luaL_error(L, "invalid object\n");
+          return (struct Rc){-1, p};
         }
         return (struct Rc){1, p};
 
@@ -153,6 +185,11 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
             case '\\':
               if (p < e) {
                 switch ((c = *p++ & 255)) {
+                  case '0':
+                  case 'x':
+                    luaL_error(L, "invalid escaped character\n");
+                    return (struct Rc){-1, p};
+
                   case '"':
                   case '/':
                   case '\\':
