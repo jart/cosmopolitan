@@ -1610,11 +1610,6 @@ LSQLITE3 MODULE
   project. Most of the unsupported APIs relate to pointers and database
   notification hooks.
 
-  redbean also currently disables SQLite features which don't make sense for
-  production serving, such as ALTER, VACUUM, ANALYZE, etc. For that reason
-  we provide an APE build of the SQLite shell which you can use to
-  administrate your redbean database. See the sqlite3.com download above.
-
 
 ────────────────────────────────────────────────────────────────────────────────
 RE MODULE

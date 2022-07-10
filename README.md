@@ -47,22 +47,21 @@ that maps your program into memory without needing to copy it. It's
 possible to install the APE loader systemwide as follows.
 
 ```sh
-# (1) linux systems that want binfmt_misc
+# System-Wide APE Install
+# for Linux, Darwin, and BSDs
+# 1. Copies APE Loader to /usr/bin/ape
+# 2. Registers w/ binfmt_misc too if Linux
 ape/apeinstall.sh
 
-# (2) for linux/freebsd/netbsd/openbsd systems
-cp build/bootstrap/ape.elf /usr/bin/ape
-
-# (3) for mac os x systems
-cp build/bootstrap/ape.macho /usr/bin/ape
+# System-Wide APE Uninstall
+# for Linux, Darwin, and BSDs
+ape/apeuninstall.sh
 ```
 
-If you followed steps (2) and (3) then there's going to be a slight
-constant-time startup latency each time you run an APE binary. Your
-system might also prevent your APE program from being installed to a
-system directory as a setuid binary or a script interpreter. To solve
-that, you can use the following flag to turn your binary into the
-platform local format (ELF or Mach-O):
+It's also possible to convert APE binaries into the system-local format
+by using the `--assimilate` flag. Plesae note that if binfmt_misc is in
+play, you'll need to unregister it temporarily before doing this, since
+the assimilate feature is part of the shell script header.
 
 ```sh
 $ file hello.com
@@ -72,18 +71,27 @@ $ file hello.com
 hello.com: ELF 64-bit LSB executable
 ```
 
-There's also some other useful flags that get baked into your binary by
-default:
+Now that you're up and running with Cosmopolitan Libc and APE, here's
+some of the most important troubleshooting tools APE offers that you
+should know, in case you encounter any issues:
 
 ```sh
 ./hello.com --strace   # log system calls to stderr
 ./hello.com --ftrace   # log function calls to stderr
 ```
 
-If you want your `hello.com` program to be much tinier, more on the
-order of 16kb rather than 60kb, then all you have to do is use
-<https://justine.lol/cosmopolitan/cosmopolitan-tiny.zip> instead. See
-<https://justine.lol/cosmopolitan/download.html>.
+Do you love tiny binaries? If so, you may not be happy with Cosmo adding
+heavyweight features like tracing to your binaries by default. In that
+case, you may want to consider using our build system:
+
+```sh
+make -j8 MODE=tiny
+```
+
+Which will cause programs such as `hello.com` and `life.com` to shrink
+from 60kb in size to about 16kb. There's also a prebuilt amalgamation
+online <https://justine.lol/cosmopolitan/cosmopolitan-tiny.zip> hosted
+on our download page <https://justine.lol/cosmopolitan/download.html>.
 
 ### MacOS
 
