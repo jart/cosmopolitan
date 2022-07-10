@@ -18,11 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/lauxlib.h"
+#include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
 
 struct Rc {
@@ -49,15 +51,15 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
       case '\t':
         a = p;
         break;
-      
+
       case ',':  // present in list and object
         a = p;
         break;
 
       case ':':  // present only in object after key
         if (LUA_TSTRING != lua_type(L, -1)) {
-            luaL_error(L, "unexpected ':'\n");
-            return (struct Rc){-1, p};
+          luaL_error(L, "unexpected ':'\n");
+          return (struct Rc){-1, p};
         }
         a = p;
         break;
@@ -128,7 +130,7 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
             lua_rawseti(L, -2, i++ + 1);
           }
         } while (r.t);
-        if (*(p-1) != ']') {
+        if (*(p - 1) != ']') {
           luaL_error(L, "invalid list\n");
           return (struct Rc){-1, p};
         }
@@ -146,9 +148,9 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
           p = r.p;
           if (r.t) {
             if (LUA_TSTRING != lua_type(L, -1)) {
-                /* json keys can only be strings */
-                lua_settop(L, -2);
-                break;
+              /* json keys can only be strings */
+              lua_settop(L, -2);
+              break;
             }
             r = Parse(L, p, e);
             p = r.p;
@@ -168,7 +170,7 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
           lua_pushboolean(L, true);
           lua_settable(L, -3);
         }
-        if (*(p-1) != '}') {
+        if (*(p - 1) != '}') {
           luaL_error(L, "invalid object\n");
           return (struct Rc){-1, p};
         }
@@ -314,5 +316,6 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
  */
 int DecodeJson(struct lua_State *L, const char *p, size_t n) {
   if (n == -1) n = p ? strlen(p) : 0;
+  lua_checkstack(L, 128);
   return Parse(L, p, p + n).t;
 }

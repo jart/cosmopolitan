@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
@@ -35,4 +37,10 @@ TEST(pthread_key_create, testRunsDtors_becauseNoLeakReport) {
   EXPECT_EQ(0, pthread_key_create(&key, free));
   EXPECT_EQ(0, pthread_setspecific(key, x));
   EXPECT_EQ(x, pthread_getspecific(key));
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  if (IsTiny()) {
+    __enable_tls();
+  }
 }
