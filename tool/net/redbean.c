@@ -146,7 +146,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x02000a
+#define VERSION          0x02000b
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
@@ -4259,11 +4259,11 @@ static int LuaEncodeLua(lua_State *L) {
   return LuaEncodeSmth(L, LuaEncodeLuaData);
 }
 
-static int LuaParseJson(lua_State *L) {
+static int LuaDecodeJson(lua_State *L) {
   size_t n;
   const char *p;
   p = luaL_checklstring(L, 1, &n);
-  return ParseJson(L, p, n);
+  return DecodeJson(L, p, n);
 }
 
 static int LuaGetUrl(lua_State *L) {
@@ -5072,6 +5072,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Crc32c", LuaCrc32c},                                      //
     {"Decimate", LuaDecimate},                                  //
     {"DecodeBase64", LuaDecodeBase64},                          //
+    {"DecodeJson", LuaDecodeJson},                              //
     {"DecodeLatin1", LuaDecodeLatin1},                          //
     {"Deflate", LuaDeflate},                                    //
     {"EncodeBase64", LuaEncodeBase64},                          //
@@ -5158,7 +5159,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ParseHost", LuaParseHost},                                //
     {"ParseHttpDateTime", LuaParseHttpDateTime},                //
     {"ParseIp", LuaParseIp},                                    //
-    {"ParseJson", LuaParseJson},                                //
     {"ParseParams", LuaParseParams},                            //
     {"ParseUrl", LuaParseUrl},                                  //
     {"Popcnt", LuaPopcnt},                                      //

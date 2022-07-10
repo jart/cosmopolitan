@@ -673,7 +673,7 @@ FUNCTIONS
           URIs that do things like embed a PNG file in a web page. See
           encodebase64.c.
 
-  ParseJson(input:str)
+  DecodeJson(input:str)
       ├─→ value:*
       └─→ nil, error:str
 

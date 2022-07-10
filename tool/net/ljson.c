@@ -275,7 +275,7 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
  * @param n is byte length of `p` or -1 for automatic strlen()
  * @return 1 if value was pushed, 0 on end, or -1 on error
  */
-int ParseJson(struct lua_State *L, const char *p, size_t n) {
+int DecodeJson(struct lua_State *L, const char *p, size_t n) {
   if (n == -1) n = p ? strlen(p) : 0;
   return Parse(L, p, p + n).t;
 }
