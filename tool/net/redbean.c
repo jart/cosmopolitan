@@ -146,7 +146,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020009
+#define VERSION          0x02000a
 #define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
@@ -6960,7 +6960,8 @@ static void Listen(void) {
     }
   }
   // shrink allocated memory in case some of the sockets were skipped
-  if (n < ips.n * ports.n) servers.p = realloc(servers.p, n*sizeof(*servers.p));
+  if (n < ips.n * ports.n)
+    servers.p = realloc(servers.p, n * sizeof(*servers.p));
   servers.n = n;
   polls = malloc((1 + n) * sizeof(*polls));
   polls[0].fd = -1;
