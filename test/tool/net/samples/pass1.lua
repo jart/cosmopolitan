@@ -1,6 +1,6 @@
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass1.json
-assert(DecodeJson([[
+assert(pcall(DecodeJson, [[
 [ 
     "JSON Test Pattern pass1",
     {"object with 1 member":[ "array with 1 element"] },
