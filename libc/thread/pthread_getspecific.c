@@ -18,16 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/nexgen32e/gettls.h"
+#include "libc/thread/internal.h"
 #include "libc/thread/thread.h"
-
-STATIC_YOINK("_main_thread_ctor");
 
 /**
  * Gets value of TLS slot for current thread.
  */
 void *pthread_getspecific(pthread_key_t key) {
-  if (key < PTHREAD_KEYS_MAX) {
-    return ((cthread_t)__get_tls_inline())->key[key];
+  if (0 <= key && key < PTHREAD_KEYS_MAX) {
+    return _pthread_keys[key];
   } else {
     return 0;
   }

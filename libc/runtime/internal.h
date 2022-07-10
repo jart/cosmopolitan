@@ -24,6 +24,7 @@ extern unsigned char _tdata_size[];
 extern unsigned char _tbss_start[];
 extern unsigned char _tbss_end[];
 extern unsigned char _tls_size[];
+extern unsigned char _tls_content[];
 
 void _init(void) hidden;
 void __enable_tls(void) hidden;

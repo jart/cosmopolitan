@@ -77,6 +77,23 @@ cosmo:	push	%rbp
 	.endfn	cosmo,weak
 
 #if !IsTiny()
+//	Enable TLS early if _Thread_local is used
+//	In MODE=tiny you may need to explicitly call __enable_tls()
+//	Otherwise this would bloat life.com from 16kb → 32kb D:
+	.init.start 304,_init_tls
+	mov	$_tls_content,%eax
+	test	%eax,%eax
+	jz	1f
+	push	%rdi
+	push	%rsi
+	call	__enable_tls
+	pop	%rsi
+	pop	%rdi
+	jz	1f
+1:	.init.end 304,_init_tls
+#endif
+
+#if !IsTiny()
 //	Creates deterministically addressed stack we can use
 //
 //	This helps debugging be more comprehensible, because

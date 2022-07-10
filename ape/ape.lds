@@ -484,6 +484,7 @@ PFSTUB4(ape_elf_shstrndx, 0);
 
 HIDDEN(_tdata_size = _tdata_end - _tdata_start);
 HIDDEN(_tls_size = _tbss_end - _tdata_start);
+HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
 HIDDEN(__privileged_size = (ROUNDUP(__privileged_end, PAGESIZE) -

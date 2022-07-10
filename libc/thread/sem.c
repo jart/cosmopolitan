@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
+#include "libc/calls/calls.h"
 #include "libc/thread/thread.h"
 
 STATIC_YOINK("_main_thread_ctor");
@@ -29,7 +30,7 @@ static void Pause(int attempt) {
       __builtin_ia32_pause();
     }
   } else {
-    cthread_yield();
+    sched_yield();
   }
 }
 

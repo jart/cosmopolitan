@@ -51,6 +51,7 @@
 	_tbss_start = 0
 	_tbss_end = 0
 	_tls_size = 0
+	_tls_content = 0
 
 	.globl	_base
 	.globl	ape_xlm
@@ -73,6 +74,7 @@
 	.globl	_tbss_start
 	.globl	_tbss_end
 	.globl	_tls_size
+	.globl	_tls_content
 	.globl	__data_start
 	.globl	__data_end
 	.globl	__bss_start
@@ -99,6 +101,7 @@
 	.weak	_tbss_start
 	.weak	_tbss_end
 	.weak	_tls_size
+	.weak	_tls_content
 	.weak	__data_start
 	.weak	__data_end
 	.weak	__bss_start

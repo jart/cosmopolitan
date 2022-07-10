@@ -23,8 +23,6 @@
 #include "libc/thread/internal.h"
 #include "libc/thread/thread.h"
 
-STATIC_YOINK("_main_thread_ctor");
-
 /**
  * Allocates TLS slot.
  */
@@ -43,7 +41,7 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
 }
 
 static textexit void _pthread_key_atexit(void) {
-  _pthread_key_destruct(((cthread_t)__get_tls())->key);
+  _pthread_key_destruct(_pthread_keys);
 }
 
 __attribute__((__constructor__)) static textstartup void _pthread_key_init() {

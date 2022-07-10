@@ -25,66 +25,132 @@
 //	@note	each function is exactly 18 bytes
 //	@see	__enable_threads()
 
-__get_tls_nt_rax:
+__tls_mov_nt_rax:
 	push	%rcx
 	mov	__tls_index(%rip),%ecx
 	mov	%gs:0x1480(,%rcx,8),%rax
 	pop	%rcx
 	ret
-	.endfn	__get_tls_nt_rax,globl,hidden
+	.endfn	__tls_mov_nt_rax,globl,hidden
 
-__get_tls_nt_rcx:
+__tls_mov_nt_rcx:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rcx
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rcx
+	.endfn	__tls_mov_nt_rcx
 
-__get_tls_nt_rdx:
+__tls_mov_nt_rdx:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rdx
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rdx
+	.endfn	__tls_mov_nt_rdx
 
-__get_tls_nt_rbx:
+__tls_mov_nt_rbx:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rbx
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rbx
+	.endfn	__tls_mov_nt_rbx
 
-__get_tls_nt_rsp:
+__tls_mov_nt_rsp:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rsp
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rsp
+	.endfn	__tls_mov_nt_rsp
 
-__get_tls_nt_rbp:
+__tls_mov_nt_rbp:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rbp
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rbp
+	.endfn	__tls_mov_nt_rbp
 
-__get_tls_nt_rsi:
+__tls_mov_nt_rsi:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rsi
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rsi
+	.endfn	__tls_mov_nt_rsi
 
-__get_tls_nt_rdi:
+__tls_mov_nt_rdi:
 	push	%rax
 	mov	__tls_index(%rip),%eax
 	mov	%gs:0x1480(,%rax,8),%rdi
 	pop	%rax
 	ret
-	.endfn	__get_tls_nt_rdi
+	.endfn	__tls_mov_nt_rdi
+
+////////////////////////////////////////////////////////////////////////////////
+
+__tls_add_nt_rax:
+	push	%rcx
+	mov	__tls_index(%rip),%ecx
+	add	%gs:0x1480(,%rcx,8),%rax
+	pop	%rcx
+	ret
+	.endfn	__tls_add_nt_rax,globl,hidden
+
+__tls_add_nt_rcx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rcx
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rcx
+
+__tls_add_nt_rdx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rdx
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rdx
+
+__tls_add_nt_rbx:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rbx
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rbx
+
+__tls_add_nt_rsp:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rsp
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rsp
+
+__tls_add_nt_rbp:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rbp
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rbp
+
+__tls_add_nt_rsi:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rsi
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rsi
+
+__tls_add_nt_rdi:
+	push	%rax
+	mov	__tls_index(%rip),%eax
+	add	%gs:0x1480(,%rax,8),%rdi
+	pop	%rax
+	ret
+	.endfn	__tls_add_nt_rdi

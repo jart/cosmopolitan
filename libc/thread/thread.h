@@ -23,17 +23,11 @@ struct cthread_descriptor_t {
   int32_t __pad0;                     /* 0x10 */
   int32_t state;                      /* 0x14 */
   void *arg;                          /* 0x18 */
-  void *pthread_ret_ptr;              /* 0x20 */
-  int64_t __pad1;                     /* 0x28 */
+  int64_t __pad1;                     /* 0x20 */
+  int64_t __pad2;                     /* 0x28 */
   struct cthread_descriptor_t *self2; /* 0x30 */
   int32_t tid;                        /* 0x38 */
   int32_t err;                        /* 0x3c */
-  void *exitcode;
-  struct {
-    char *top, *bottom;
-  } stack, alloc;
-  jmp_buf exiter;
-  void *key[PTHREAD_KEYS_MAX];
 };
 
 typedef struct cthread_descriptor_t *cthread_t;
@@ -49,16 +43,7 @@ typedef struct cthread_attr_t {
   int mode;
 } cthread_attr_t;
 
-extern const void *const _main_thread_ctor[];
-
-int cthread_create(cthread_t *, const cthread_attr_t *, void *(*)(void *),
-                   void *);
-
-int cthread_yield(void);
 cthread_t cthread_self(void);
-int cthread_join(cthread_t, void **);
-void cthread_exit(void *) wontreturn;
-int cthread_detach(cthread_t);
 int cthread_attr_init(cthread_attr_t *);
 int cthread_attr_destroy(cthread_attr_t *);
 int cthread_attr_setstacksize(cthread_attr_t *, size_t);

@@ -19,6 +19,7 @@
 #define ShouldUseMsabiAttribute() 1
 #include "libc/bits/asmflag.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -58,6 +59,7 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
  */
 privileged void __morph_begin(void) {
   sigset_t ss = {{-1, -1}};
+  STRACE("__morph_begin()");
   if (!IsWindows()) {
     sys_sigprocmask(SIG_BLOCK, &ss, &oldss);
   }
@@ -74,4 +76,5 @@ privileged void __morph_end(void) {
   if (!IsWindows()) {
     sys_sigprocmask(SIG_SETMASK, &oldss, 0);
   }
+  STRACE("__morph_end()");
 }

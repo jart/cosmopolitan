@@ -42,6 +42,10 @@ p,e = re.compile("[{")
 assert(e:errno() == re.EBRACK)
 assert(e:doc() == "Missing ']'")
 
+p,e = re.search("notfound", "fanatics have their dreams wherewith they weave")
+assert(not p)
+assert(e:errno() == re.NOMATCH)
+
 ----------------------------------------------------------------------------------------------------
 -- BENCHMARKS
 

@@ -115,7 +115,7 @@ int Worker(void *id, int tid) {
   struct timeval timeo = {KEEPALIVE / 1000, KEEPALIVE % 1000};
   struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(PORT)};
 
-  server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  server = socket(AF_INET, SOCK_STREAM, 0);
   if (server == -1) {
     kprintf("socket() failed %m\n"
             "  try running: sudo prlimit --pid=$$ --nofile=%d\n",
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
   }
 
   threads = argc > 1 ? atoi(argv[1]) : GetCpuCount();
-  if ((1 <= threads && threads <= 100000)) {
+  if (!(1 <= threads && threads <= 100000)) {
     kprintf("error: invalid number of threads\n");
     exit(1);
   }

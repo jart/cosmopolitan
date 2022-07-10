@@ -64,10 +64,7 @@ struct CloneArgs {
     uint32_t utid;
     int64_t tid64;
   };
-  union {
-    char lock;
-    void *oldrsp;
-  };
+  char lock;
   int *ptid;
   int *ctid;
   int *ztid;
@@ -287,6 +284,15 @@ static int CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // OPEN BESIYATA DISHMAYA
 
+static void *oldrsp;
+
+__attribute__((__constructor__)) static void OpenbsdGetSafeRsp(void) {
+  // main thread stack should never be freed during process lifetime. we
+  // won't actually change this stack below. we just need need a place
+  // where threads can park RSP for a few instructions while dying.
+  oldrsp = __builtin_frame_address(0);
+}
+
 static wontreturn void OpenbsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
   *wt->ptid = wt->tid;
@@ -303,7 +309,7 @@ static wontreturn void OpenbsdThreadMain(void *p) {
                "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0
                "syscall"               // __threxit()
                : "=m"(*wt->ztid)
-               : "a"(302), "m"(wt->oldrsp), "D"(wt->ztid)
+               : "a"(302), "m"(oldrsp), "D"(wt->ztid)
                : "rcx", "r11", "memory");
   unreachable;
 }
@@ -325,7 +331,6 @@ static int CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
   wt->ptid = flags & CLONE_PARENT_SETTID ? ptid : &wt->tid;
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
-  wt->oldrsp = __builtin_frame_address(0);
   wt->arg = arg;
   wt->func = func;
   tf->tf_stack = (char *)wt - 8;
@@ -591,13 +596,8 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
   int rc;
   struct CloneArgs *wt;
 
-  if ((flags & CLONE_SETTLS) && !__tls_enabled) {
-    __enable_tls();
-  }
-
-  if ((flags & CLONE_THREAD) && !__threaded) {
-    __enable_threads();
-  }
+  if (flags & CLONE_SETTLS) __enable_tls();
+  if (flags & CLONE_THREAD) __enable_threads();
 
   if (!func) {
     rc = einval();

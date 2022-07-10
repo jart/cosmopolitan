@@ -35,7 +35,19 @@
 STATIC_YOINK("_main_thread_ctor");
 
 /**
- * @fileoverview Simple System Threads API
+ * @fileoverview Simple threading API
+ *
+ * This API is supported on all six operating systems. We have this
+ * because the POSIX threads API is positively enormous. We currently
+ * only implement a small subset of POSIX threads, e.g. mutexes. So
+ * until we can implement all of POSIX threads, this API is great. If we
+ * consider that the classic forking concurrency library consists of a
+ * single function, it's a shame POSIX didn't define threads in the past
+ * to just be this. Since create/join/atomics is really all we need.
+ *
+ * Your spawn library abstracts clone() which also works on all
+ * platforms; however our implementation of clone() is significantly
+ * complicated so we strongly recommend always favoring this API.
  */
 
 #define _TLSZ ((intptr_t)_tls_size)
@@ -50,7 +62,7 @@ STATIC_YOINK("_main_thread_ctor");
  * @param arg shall be passed to `fun`
  * @param opt_out_thread needn't be initialiized and is always clobbered
  *     except when it isn't specified, in which case, the thread is kind
- *     of detached and will leak in stack / tls memory
+ *     of detached and will (currently) just leak the stack / tls memory
  * @return 0 on success, or -1 w/ errno
  */
 int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
