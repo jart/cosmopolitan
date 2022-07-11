@@ -27,7 +27,7 @@
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
 
-#define MAX_JSON_DEPTH 1024
+#define MAX_JSON_DEPTH 128
 
 struct Rc {
   int t;
@@ -99,7 +99,7 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
         break;
 
       case '0':  // zero or number
-        if (p < e && *p == '.') {
+        if (p < e && (*p == '.' || *p == 'e' || *p == 'E')) {
           goto UseDubble;
         }
         lua_pushinteger(L, 0);
