@@ -161,23 +161,10 @@ TEST(clone, tlsSystemCallsErrno_wontClobberMainThreadBecauseTls) {
 ////////////////////////////////////////////////////////////////////////////////
 // BENCHMARK
 
-void LaunchThread(void) {
-  char *tls, *stack;
-  tls = __initialize_tls(malloc(64));
-  __cxa_atexit(free, tls, 0);
-  stack = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-               MAP_STACK | MAP_ANONYMOUS, -1, 0);
-  clone(DoNothing, stack, GetStackSize(),
-        CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-            CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-        0, 0, tls, 64, (int *)(tls + 0x38));
-}
-
 BENCH(clone, bench) {
   char *volatile tp;
   errno_t *volatile ep;
   EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
   EZBENCH2("__get_tls_inline", donothing, (tp = __get_tls_inline()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
-  EZBENCH2("clone()", donothing, LaunchThread());
 }

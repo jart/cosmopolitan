@@ -36,6 +36,7 @@
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nexgen32e/uart.internal.h"
@@ -154,6 +155,7 @@ privileged bool kisdangerous(const void *p) {
 
 privileged static void klog(const char *b, size_t n) {
   int e;
+  bool cf;
   size_t i;
   uint16_t dx;
   uint32_t wrote;
@@ -309,19 +311,15 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'P':
           if (!__vforked) {
-            if (!__threaded) {
+            if (!__tls_enabled) {
               x = __pid;
             } else {
-              // clone() is linked and it yoinks gettid()
-              x = weaken(gettid)();
+              x = *(int *)(__get_tls_inline() + 0x38);
             }
           } else {
-            asm volatile("syscall"
-                         : "=a"(x)
-                         : "0"(__NR_getpid)
-                         : "rcx", "rdx", "r11", "memory", "cc");
+            x = 666;
           }
-          goto FormatUnsigned;
+          goto FormatDecimal;
 
         case 'u':
         case 'd':
@@ -397,7 +395,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do z[i++ & 127] = abet[x & m];
+          do
+            z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
@@ -806,7 +805,7 @@ privileged void kvprintf(const char *fmt, va_list v) {
  * - `X` uppercase
  * - `T` timestamp
  * - `x` hexadecimal
- * - `P` pid (or tid if threaded)
+ * - `P` PID (or TID if TLS is enabled)
  *
  * Types:
  *

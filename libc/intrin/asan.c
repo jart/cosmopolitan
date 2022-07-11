@@ -195,7 +195,8 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
   z = tpenc(c);
-  do *p++ = z;
+  do
+    *p++ = z;
   while ((z >>= 8));
   return p;
 }
@@ -946,7 +947,8 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
       if (addr == weakaddr("__gc") && weakaddr("__gc")) {
-        do --gi;
+        do
+          --gi;
         while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
       }
       bt->p[i] = addr;
@@ -1197,7 +1199,7 @@ void __asan_stack_free(char *p, size_t size, int classid) {
 }
 
 void __asan_handle_no_return(void) {
-  __asan_unpoison(GetStackAddr(0), GetStackSize());
+  __asan_unpoison((void *)GetStackAddr(), GetStackSize());
 }
 
 void __asan_register_globals(struct AsanGlobal g[], int n) {
@@ -1379,8 +1381,8 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
 
 static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_shadow_mapping(&_mmi, 0);
-  __asan_map_shadow((intptr_t)GetStackAddr(0), GetStackSize());
-  __asan_poison(GetStackAddr(0), PAGESIZE, kAsanStackOverflow);
+  __asan_map_shadow(GetStackAddr(), GetStackSize());
+  __asan_poison((void *)GetStackAddr(), PAGESIZE, kAsanStackOverflow);
 }
 
 textstartup void __asan_init(int argc, char **argv, char **envp,

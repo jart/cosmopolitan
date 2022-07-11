@@ -28,8 +28,8 @@
  * Blocks until memory location becomes zero.
  *
  * This is intended to be used on the child thread id, which is updated
- * by the clone() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a thread stack.
+ * by the _spawn() system call when a thread terminates. The purpose of
+ * this operation is to know when it's safe to munmap() a threads stack
  */
 void _wait0(const int *ctid) {
   int x;

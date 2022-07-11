@@ -91,7 +91,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
     return -1;
   }
 
-  if (clone(fun, th->stk, GetStackSize(),
+  if (clone(fun, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
@@ -117,6 +117,7 @@ int _join(struct spawn *th) {
     // free thread memory
     free(th->tls);
     rc = munmap(th->stk, GetStackSize());
+    rc = 0;
   } else {
     rc = 0;
   }

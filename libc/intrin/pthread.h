@@ -120,6 +120,17 @@ void *pthread_getspecific(pthread_key_t);
 #define pthread_mutexattr_settype(pAttr, type)  ((pAttr)->attr = type, 0)
 
 #ifdef __GNUC__
+#define pthread_mutex_init(mutex, pAttr)                   \
+  ({                                                       \
+    pthread_mutexattr_t *_pAttr = (pAttr);                 \
+    *(mutex) = (pthread_mutex_t){                          \
+        (_pAttr) ? (_pAttr)->attr : PTHREAD_MUTEX_DEFAULT, \
+    };                                                     \
+    0;                                                     \
+  })
+#endif
+
+#ifdef __GNUC__
 #define pthread_mutex_lock(mutex)                                  \
   (((mutex)->attr == PTHREAD_MUTEX_NORMAL &&                       \
     !atomic_load_explicit(&(mutex)->lock, memory_order_relaxed) && \

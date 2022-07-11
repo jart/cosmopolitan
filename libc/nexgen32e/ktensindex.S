@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,44 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/runtime.h"
+#include "libc/macros.internal.h"
 
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-#pragma weak __threadcalls_start
-#pragma weak __threadcalls_end
-
-privileged void __enable_threads(void) {
-  if (__threaded) return;
-  STRACE("__enable_threads()");
-  __morph_begin();
-  /*
-   * _NOPL("__threadcalls", func)
-   *
-   * The big ugly macro above is used by Cosmopolitan Libc to unser
-   * locking primitive (e.g. flockfile, funlockfile) have zero impact on
-   * performance and binary size when threads aren't actually in play.
-   *
-   * we have this
-   *
-   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
-   *
-   * we're going to turn it into this
-   *
-   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
-   *
-   * This is cheap and fast because the big ugly macro stored in the
-   * binary the offsets of all the instructions we need to change.
-   */
-  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
-  }
-  __morph_end();
-  __threaded = gettid();
-}
+	.rodata
+kTensIndex:
+	.byte	 0,  0,  0,  1,  1,  1,  2,  2
+	.byte	 2,  3,  3,  3,  3,  4,  4,  4
+	.byte	 5,  5,  5,  6,  6,  6,  6,  7
+	.byte	 7,  7,  8,  8,  8,  9,  9,  9
+	.byte	10, 10, 10, 11, 11, 11, 12, 12
+	.byte	12, 12, 13, 13, 13, 14, 14, 14
+	.byte	15, 15, 15, 15, 16, 16, 16, 17
+	.byte	17, 17, 18, 18, 18, 18, 19, 19
+	.endfn	kTensIndex,globl

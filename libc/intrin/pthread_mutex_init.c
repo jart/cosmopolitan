@@ -24,8 +24,8 @@
  * @param attr may be NULL
  * @return 0 on success, or error number on failure
  */
-int pthread_mutex_init(pthread_mutex_t *mutex,
-                       const pthread_mutexattr_t *attr) {
+int(pthread_mutex_init)(pthread_mutex_t *mutex,
+                        const pthread_mutexattr_t *attr) {
   bzero(mutex, sizeof(*mutex));
   mutex->attr = attr ? attr->attr : PTHREAD_MUTEX_DEFAULT;
   return 0;

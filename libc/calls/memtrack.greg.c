@@ -73,7 +73,8 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
   flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED;
   // TODO(jart): These map handles should not leak across NT fork()
   if (mm->p == mm->s) {
-    if (IsAsan()) {
+    // TODO(jart): How can we detect ASAN mode under GREG?
+    if (1 || IsAsan()) {
       shad = (char *)(((intptr_t)base >> 3) + 0x7fff8000);
       dm = sys_mmap(shad, gran >> 3, prot, flags, -1, 0);
       if (!dm.addr) return false;

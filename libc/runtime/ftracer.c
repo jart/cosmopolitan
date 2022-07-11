@@ -21,6 +21,8 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/nopl.h"
+#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nexgen32e/threaded.h"
@@ -43,8 +45,21 @@ static struct Ftrace {
   int skew;
   int stackdigs;
   int64_t lastaddr;
-  volatile bool busy;
+  pthread_mutex_t lock;
+  volatile bool noreentry;
 } g_ftrace;
+
+static void __ftrace_lock(void) {
+  if (__threaded) {
+    pthread_mutex_lock(&g_ftrace.lock);
+  }
+}
+
+static void __ftrace_unlock(void) {
+  if (__threaded) {
+    pthread_mutex_unlock(&g_ftrace.lock);
+  }
+}
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
@@ -63,18 +78,6 @@ static privileged inline int GetNestingLevel(struct StackFrame *frame) {
   return MIN(MAX_NESTING, nesting);
 }
 
-static privileged inline void ReleaseFtraceLock(void) {
-  g_ftrace.busy = false;
-}
-
-static privileged inline bool AcquireFtraceLock(void) {
-  if (!__threaded) {
-    return _cmpxchg(&g_ftrace.busy, false, true);
-  } else {
-    return _lockcmpxchg(&g_ftrace.busy, false, true);
-  }
-}
-
 /**
  * Prints name of function being called.
  *
@@ -85,20 +88,26 @@ static privileged inline bool AcquireFtraceLock(void) {
 privileged void ftracer(void) {
   long stackuse;
   struct StackFrame *frame;
-  if (AcquireFtraceLock()) {
+  __ftrace_lock();
+  if (_cmpxchg(&g_ftrace.noreentry, false, true)) {
     frame = __builtin_frame_address(0);
     frame = frame->next;
     if (frame->addr != g_ftrace.lastaddr) {
-      stackuse = (intptr_t)GetStackAddr(0) + GetStackSize() - (intptr_t)frame;
+      stackuse = GetStackAddr() + GetStackSize() - (intptr_t)frame;
       kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
               GetNestingLevel(frame) * 2, "", frame->addr);
       g_ftrace.lastaddr = frame->addr;
     }
-    ReleaseFtraceLock();
+    g_ftrace.noreentry = false;
   }
+  __ftrace_unlock();
 }
 
 textstartup int ftrace_install(void) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&g_ftrace.lock, &attr);
   if (GetSymbolTable()) {
     g_ftrace.lastaddr = -1;
     g_ftrace.stackdigs = LengthInt64Thousands(GetStackSize());

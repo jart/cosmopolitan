@@ -309,7 +309,7 @@ void LoadRelationships(int argc, char *argv[]) {
   for (i = 0; i < threads; ++i) {
     if (_spawn(LoadRelationshipsWorker, (void *)(intptr_t)i, th + i) == -1) {
       pthread_mutex_lock(&reportlock);
-      kprintf("error: clone(%d) failed %m\n", i);
+      kprintf("error: _spawn(%d) failed %m\n", i);
       exit(1);
     }
   }
@@ -420,7 +420,7 @@ void Explore(void) {
   for (i = 0; i < threads; ++i) {
     if (_spawn(Diver, (void *)(intptr_t)i, th + i) == -1) {
       pthread_mutex_lock(&reportlock);
-      kprintf("error: clone(%d) failed %m\n", i);
+      kprintf("error: _spawn(%d) failed %m\n", i);
       exit(1);
     }
   }

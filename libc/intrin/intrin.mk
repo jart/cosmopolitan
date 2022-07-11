@@ -79,6 +79,8 @@ o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
 o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_wait.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_wake.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
 o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
@@ -108,7 +110,6 @@ o/$(MODE)/libc/intrin/describeprotflags.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=address
 
-o/$(MODE)/libc/intrin/exit.greg.o			\
 o/$(MODE)/libc/intrin/exit1.greg.o			\
 o/$(MODE)/libc/intrin/getenv.greg.o			\
 o/$(MODE)/libc/intrin/wsarecv.o				\

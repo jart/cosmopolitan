@@ -52,7 +52,7 @@ static textexit void LogStackUse(void) {
   bool quote;
   char *p, *q;
   size_t n, usage;
-  usage = GetStackUsage(GetStackAddr(0), GetStackSize());
+  usage = GetStackUsage((char *)GetStackAddr(), GetStackSize());
   fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644);
   p = FormatUint64(stacklog, usage);
   for (i = 0; i < __argc; ++i) {

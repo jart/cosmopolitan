@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
   if (IsWindows() && !IsAtLeastWindows10()) {
     plan(0x50000000, 0x7ffdffff, "arena");
   }
-  x = (intptr_t)GetStaticStackAddr(0);
+  x = GetStaticStackAddr(0);
   y = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
   plan(x - y, x - 1, "winargs");
   plan(x, x + GetStackSize() - 1, "stack");

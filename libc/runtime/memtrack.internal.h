@@ -106,25 +106,25 @@ forceinline pureconst bool IsShadowFrame(int x) {
 }
 
 forceinline pureconst bool IsKernelFrame(int x) {
-  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  intptr_t stack = GetStaticStackAddr(0);
   return (int)(stack >> 16) <= x &&
          x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStaticStackFrame(int x) {
-  intptr_t stack = (intptr_t)GetStaticStackAddr(0);
+  intptr_t stack = GetStaticStackAddr(0);
   return (int)(stack >> 16) <= x &&
          x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsStackFrame(int x) {
-  intptr_t stack = (intptr_t)GetStackAddr(0);
+  intptr_t stack = GetStackAddr();
   return (int)(stack >> 16) <= x &&
          x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsSigAltStackFrame(int x) {
-  intptr_t stack = (intptr_t)GetStackAddr(0);
+  intptr_t stack = GetStackAddr();
   return (int)(stack >> 16) <= x &&
          x <= (int)((stack + (SIGSTKSZ - FRAMESIZE)) >> 16);
 }

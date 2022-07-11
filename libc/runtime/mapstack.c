@@ -16,19 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
+static char *_stkbase;
+
+__attribute__((__constructor__)) static void init(void) {
+  _stkbase = (char *)kFixedmapStart;
+}
+
 /**
  * Allocates stack.
+ *
+ * The size of your returned stack is always GetStackSize().
+ *
+ * The bottom 4096 bytes of your stack can't be used, since it's always
+ * reserved for a read-only guard page. With ASAN it'll be poisoned too.
+ *
+ * The top 16 bytes of a stack can't be used due to openbsd:stackbound
+ * and those bytes are also poisoned under ASAN build modes.
  *
  * @return stack bottom address on success, or null w/ errrno
  */
 void *_mapstack(void) {
-  return mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-              MAP_STACK | MAP_ANONYMOUS, -1, 0);
+  char *p;
+  if ((p = mmap(_stkbase, GetStackSize(), PROT_READ | PROT_WRITE,
+                MAP_STACK | MAP_ANONYMOUS | MAP_FIXED, -1, 0)) != MAP_FAILED) {
+    if (IsAsan()) {
+      __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
+      __asan_poison(p, 4096, kAsanStackOverflow);
+    }
+    _stkbase += GetStackSize() * 4;
+    return p;
+  } else {
+    return 0;
+  }
 }
 
 /**

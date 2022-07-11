@@ -26,7 +26,7 @@
  *
  * @see __get_tls_inline()
  * @see __install_tls()
- * @see clone()
+ * @see _spawn()
  */
 optimizespeed char *__get_tls(void) {
   return __get_tls_inline();

@@ -78,9 +78,8 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * and (2) the mmap() address picker will choose aligned addresses when
  * the provided size is a two power.
  */
-#define GetStackAddr(ADDEND)                                                 \
-  ((void *)((((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize()) + \
-            (ADDEND)))
+#define GetStackAddr() \
+  (((intptr_t)__builtin_frame_address(0) - 1) & -GetStackSize())
 
 /**
  * Returns preferred bottom address of stack.
@@ -102,7 +101,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
     } else {                                    \
       vAddr = 0x100000000 - GetStackSize();     \
     }                                           \
-    (void *)vAddr;                              \
+    vAddr;                                      \
   })
 
 COSMOPOLITAN_C_END_

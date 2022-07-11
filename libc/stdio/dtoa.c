@@ -1,7 +1,6 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright (C) 2022 Justine Alexandra Roberts Tunney                          │
 │ Copyright (C) 1997, 1999, 2001 Lucent Technologies                           │
 │ All Rights Reserved                                                          │
 │                                                                              │
@@ -294,10 +293,12 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         if ((flags & FLAGS_ZEROPAD)) {
           if (sign) __FMT_PUT(sign);
           sign = 0;
-          do __FMT_PUT('0');
+          do
+            __FMT_PUT('0');
           while (--width > 0);
         } else
-          do __FMT_PUT(' ');
+          do
+            __FMT_PUT(' ');
           while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
@@ -409,10 +410,12 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         if ((flags & FLAGS_ZEROPAD)) {
           if (sign) __FMT_PUT(sign);
           sign = 0;
-          do __FMT_PUT('0');
+          do
+            __FMT_PUT('0');
           while (--width > 0);
         } else
-          do __FMT_PUT(' ');
+          do
+            __FMT_PUT(' ');
           while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
@@ -482,14 +485,16 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       }
       if ((width -= prec1) > 0 && !(flags & FLAGS_LEFT) &&
           !(flags & FLAGS_ZEROPAD)) {
-        do __FMT_PUT(' ');
+        do
+          __FMT_PUT(' ');
         while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
       __FMT_PUT('0');
       __FMT_PUT(alphabet[17]);
       if ((flags & FLAGS_ZEROPAD) && width > 0 && !(flags & FLAGS_LEFT)) {
-        do __FMT_PUT('0');
+        do
+          __FMT_PUT('0');
         while (--width > 0);
       }
       i1 = prec1 & 7;
@@ -507,7 +512,8 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
           --prec1;
         }
         if ((flags & FLAGS_HASH) && prec > 0) {
-          do __FMT_PUT(0);
+          do
+            __FMT_PUT(0);
           while (--prec > 0);
         }
       }

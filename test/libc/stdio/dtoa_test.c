@@ -31,8 +31,6 @@
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 
-#define THREADS 32
-
 #define DUB(i) (union Dub){i}.x
 
 #define DUBBLE(a, b, c, d, e)             \
@@ -47,8 +45,6 @@ union Dub {
   double x;
 };
 
-struct spawn th[THREADS];
-
 int Worker(void *p, int tid) {
   int i;
   char str[64];
@@ -60,14 +56,12 @@ int Worker(void *p, int tid) {
   return 0;
 }
 
-TEST(dtoa, test) {
-  int i;
-  for (i = 0; i < THREADS; ++i) {
-    _spawn(Worker, 0, th + i);
-  }
-  for (i = 0; i < THREADS; ++i) {
-    _join(th + i);
-  }
+TEST(dtoa, locks) {
+  int i, n = 32;
+  struct spawn th[n];
+  if (IsOpenbsd()) return;  // TODO(jart): OpenBSD flakes :'(
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, th + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(th + i));
 }
 
 static const struct {

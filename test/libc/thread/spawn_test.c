@@ -26,9 +26,6 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
-#define N 128
-
-struct spawn t[N];
 _Atomic(int) itworked;
 _Thread_local int var;
 
@@ -44,11 +41,12 @@ int Worker(void *arg, int tid) {
 }
 
 TEST(_spawn, test) {
-  long i;
-  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _spawn(Worker, (void *)i, t + i));
-  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _join(t + i));
-  for (i = 0; i < N; ++i) EXPECT_SYS(0, 0, _join(t + i));
-  EXPECT_EQ(N, itworked);
+  long i, n = 128;
+  struct spawn t[n];
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, (void *)i, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  EXPECT_EQ(n, itworked);
 }
 
 __attribute__((__constructor__)) static void init(void) {

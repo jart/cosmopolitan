@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/nt/console.h"
 #include "libc/nt/process.h"
@@ -34,10 +33,9 @@ const char kConsoleHandles[3] = {
 /**
  * Puts cmd.exe gui back the way it was.
  */
-void __restorewintty(void) {
+noinstrument void __restorewintty(void) {
   int i;
   if (!IsWindows()) return;
-  NTTRACE("__restorewintty()");
   if (GetCurrentProcessId() == __winmainpid) {
     for (i = 0; i < 3; ++i) {
       SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);

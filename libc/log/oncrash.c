@@ -24,6 +24,7 @@
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
@@ -31,13 +32,13 @@
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -76,7 +77,7 @@ relegated static void ShowFunctionCalls(ucontext_t *ctx) {
 
 relegated static char *AddFlag(char *p, int b, const char *s) {
   if (b) {
-    p = __stpcpy(p, s);
+    p = stpcpy(p, s);
   } else {
     *p = 0;
   }
@@ -109,6 +110,12 @@ relegated static char *DescribeCpuFlags(char *p, int flags, int x87sw,
   return p;
 }
 
+static char *HexCpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
+  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p;
+}
+
 relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
   int64_t x;
   const char *s;
@@ -120,8 +127,8 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) *p++ = ' ';
     if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
-    p = __stpcpy(p, s), *p++ = ' ';
-    p = __fixcpy(p, ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]], 64);
+    p = stpcpy(p, s), *p++ = ' ';
+    p = HexCpy(p, ctx->uc_mcontext.gregs[(unsigned)kGregOrder[i]], 64);
     if (++j == 3) {
       j = 0;
       if (ctx->uc_mcontext.fpregs) {
@@ -129,13 +136,13 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
       } else {
         bzero(&st, sizeof(st));
       }
-      p = __stpcpy(p, " ST(");
-      p = __uintcpy(p, k++);
-      p = __stpcpy(p, ") ");
+      p = stpcpy(p, " ST(");
+      p = FormatUint64(p, k++);
+      p = stpcpy(p, ") ");
       x = st * 1000;
       if (x < 0) x = -x, *p++ = '-';
-      p = __uintcpy(p, x / 1000), *p++ = '.';
-      p = __uintcpy(p, x % 1000);
+      p = FormatUint64(p, x / 1000), *p++ = '.';
+      p = FormatUint64(p, x % 1000);
       *p = 0;
       kprintf("%s\n", buf);
       p = buf;
@@ -163,9 +170,9 @@ relegated static void ShowSseRegisters(ucontext_t *ctx) {
         *p++ = ' ';
       }
       *p++ = ' ';
-      p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1], 64);
-      p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], 64);
-      p = __stpcpy(p, " XMM");
+      p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[1], 64);
+      p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 0].u64[0], 64);
+      p = stpcpy(p, " XMM");
       if (i + 8 >= 10) {
         *p++ = (i + 8) / 10 + '0';
         *p++ = (i + 8) % 10 + '0';
@@ -174,8 +181,8 @@ relegated static void ShowSseRegisters(ucontext_t *ctx) {
         *p++ = ' ';
       }
       *p++ = ' ';
-      p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1], 64);
-      p = __fixcpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0], 64);
+      p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1], 64);
+      p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0], 64);
       *p = 0;
       kprintf("XMM%s\n", buf);
     }
@@ -198,7 +205,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   names.release[0] = 0;
   names.version[0] = 0;
   names.nodename[0] = 0;
-  __stpcpy(host, "unknown");
+  stpcpy(host, "unknown");
   gethostname(host, sizeof(host));
   uname(&names);
   p = buf;
@@ -208,9 +215,8 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           "  %m\n"
           "  %s %s %s %s\n",
           !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-          (ctx &&
-           (ctx->uc_mcontext.rsp >= (intptr_t)GetStaticStackAddr(0) &&
-            ctx->uc_mcontext.rsp <= (intptr_t)GetStaticStackAddr(0) + PAGESIZE))
+          (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
+                   ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
               ? "Stack Overflow"
               : GetSiCodeName(sig, si->si_code),
           host, getpid(), gettid(), program_invocation_name, names.sysname,

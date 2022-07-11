@@ -223,9 +223,8 @@ textstartup void __printargs(const char *prologue) {
     PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
           "%,u sets of %,u byte lines shared across %u threads%s",
           CPUID4_CACHE_LEVEL,
-          CPUID4_CACHE_TYPE == 1   ? " data"
-          : CPUID4_CACHE_TYPE == 2 ? " code"
-                                   : "",
+          CPUID4_CACHE_TYPE == 1 ? " data"
+                                 : CPUID4_CACHE_TYPE == 2 ? " code" : "",
           CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
           CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
           CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
@@ -358,7 +357,7 @@ textstartup void __printargs(const char *prologue) {
   PRINT(" ☼ %s = %#s", "GetInterpreterExecutableName",
         GetInterpreterExecutableName(u.path, sizeof(u.path)));
   PRINT(" ☼ %s = %p", "RSP", __builtin_frame_address(0));
-  PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr(0));
+  PRINT(" ☼ %s = %p", "GetStackAddr()", GetStackAddr());
   PRINT(" ☼ %s = %p", "GetStaticStackAddr(0)", GetStaticStackAddr(0));
   PRINT(" ☼ %s = %p", "GetStackSize()", GetStackSize());
 

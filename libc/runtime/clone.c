@@ -43,8 +43,6 @@
 #include "libc/thread/openbsd.internal.h"
 #include "libc/thread/xnu.internal.h"
 
-STATIC_YOINK("gettid");  // for kprintf()
-
 #define __NR_thr_new                      455
 #define __NR_clone_linux                  56
 #define __NR__lwp_create                  309
@@ -84,6 +82,7 @@ int WinThreadLaunch(void *arg,                 // rdi
 // we can't log this function because:
 //   1. windows owns the backtrace pointer right now
 //   2. ftrace unwinds rbp to determine depth
+//   3. tid in tls for ftrace isn't set yet
 // we can't use address sanitizer because:
 //   1. __asan_handle_no_return wipes stack
 //   2. windows owns the stack memory right now
@@ -293,7 +292,9 @@ __attribute__((__constructor__)) static void OpenbsdGetSafeRsp(void) {
   oldrsp = __builtin_frame_address(0);
 }
 
-static wontreturn void OpenbsdThreadMain(void *p) {
+// we can't use address sanitizer because:
+//   1. __asan_handle_no_return wipes stack [todo?]
+noasan static wontreturn void OpenbsdThreadMain(void *p) {
   struct CloneArgs *wt = p;
   *wt->ptid = wt->tid;
   *wt->ctid = wt->tid;
@@ -643,7 +644,7 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
     *ptid = rc;
   }
 
-  STRACE("clone(%p, %p, %'zu, %#x, %p, %p, %p, %'zu, %p) → %d% m", func, stk,
+  STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %'zu, %p) → %d% m", func, stk,
          stksz, flags, arg, ptid, tls, tlssz, ctid, rc);
 
   return rc;
