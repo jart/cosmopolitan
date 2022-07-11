@@ -27,6 +27,8 @@
 #include "third_party/lua/ltests.h"
 #include "third_party/lua/lua.h"
 
+#define MAX_JSON_DEPTH 1024
+
 struct Rc {
   int t;
   const char *p;
@@ -39,6 +41,10 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
   const char *a;
   luaL_Buffer b;
   int A, B, C, D, c, d, i, u;
+  if (lua_gettop(L) >= MAX_JSON_DEPTH) {
+     luaL_error(L, "maximum depth exceeded\n");
+     return (struct Rc){-1, p};
+  }
   for (a = p, d = +1; p < e;) {
     switch ((c = *p++ & 255)) {
       default:
@@ -316,6 +322,9 @@ static struct Rc Parse(struct lua_State *L, const char *p, const char *e) {
  */
 int DecodeJson(struct lua_State *L, const char *p, size_t n) {
   if (n == -1) n = p ? strlen(p) : 0;
-  lua_checkstack(L, 128);
+  if(!lua_checkstack(L, MAX_JSON_DEPTH + MAX_JSON_DEPTH/2)) {
+      luaL_error(L, "unable to set stack depth of %d\n", MAX_JSON_DEPTH + MAX_JSON_DEPTH/2);
+      return -1;
+  }
   return Parse(L, p, p + n).t;
 }
