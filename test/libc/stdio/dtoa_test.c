@@ -22,6 +22,8 @@
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/math.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clone.h"
@@ -58,10 +60,10 @@ int Worker(void *p, int tid) {
 
 TEST(dtoa, locks) {
   int i, n = 32;
-  struct spawn th[n];
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
   if (IsOpenbsd()) return;  // TODO(jart): OpenBSD flakes :'(
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, th + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(th + i));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
 }
 
 static const struct {

@@ -22,6 +22,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
@@ -42,7 +44,7 @@ int Worker(void *arg, int tid) {
 
 TEST(_spawn, test) {
   long i, n = 128;
-  struct spawn t[n];
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, (void *)i, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
