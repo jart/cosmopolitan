@@ -1,4 +1,4 @@
--- 
+
 -- 
 -- Nicolas Seriot's JSONTestSuite
 -- https://github.com/nst/JSONTestSuite
@@ -67,6 +67,9 @@ assert(true == pcall(DecodeJson, [[ ["aa"] ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_utf8.json
 assert(true == pcall(DecodeJson, [[ ["€𝄞"] ]]))
 
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_escaped_double_quote.json
+assert(true == pcall(DecodeJson, [[ ["\u0022"] ]]))
+
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_U+FFFE_nonchar.json
 assert(true == pcall(DecodeJson, [[ ["\uFFFE"] ]]))
 
@@ -85,26 +88,23 @@ assert(true == pcall(DecodeJson, [[ ["\uD83F\uDFFE"] ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_U+10FFFE_nonchar.json
 assert(true == pcall(DecodeJson, [[ ["\uDBFF\uDFFE"] ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode.json
-assert(true == pcall(DecodeJson, [[ ["\uA66D"] ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_escaped_double_quote.json
-assert(true == pcall(DecodeJson, [[ ["\u0022"] ]]))
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_2.json
+assert(true == pcall(DecodeJson, [[ ["⍂㈴⍂"] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicodeEscapedBackslash.json
 assert(true == pcall(DecodeJson, [[ ["\u005C"] ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_2.json
-assert(true == pcall(DecodeJson, [[ ["⍂㈴⍂"] ]]))
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode.json
+assert(true == pcall(DecodeJson, [[ ["\uA66D"] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unescaped_char_delete.json
 assert(true == pcall(DecodeJson, [[ [""] ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_uEscape.json
-assert(true == pcall(DecodeJson, [[ ["\u0061\u30af\u30EA\u30b9"] ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_uescaped_newline.json
 assert(true == pcall(DecodeJson, [[ ["new\u000Aline"] ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_uEscape.json
+assert(true == pcall(DecodeJson, [[ ["\u0061\u30af\u30EA\u30b9"] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_u+2029_par_sep.json
 assert(true == pcall(DecodeJson, [[ [" "] ]]))
@@ -205,9 +205,6 @@ assert(true == pcall(DecodeJson, [[ {"a":[]} ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_long_strings.json
 assert(true == pcall(DecodeJson, [[ {"x":[{"id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}], "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"} ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object.json
-assert(true == pcall(DecodeJson, [[ {"asd":"sdf", "dfg":"fgh"} ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_extreme_numbers.json
 assert(true == pcall(DecodeJson, [[ { "min": -1.0e+28, "max": 1.0e+28 } ]]))
 
@@ -220,14 +217,17 @@ assert(true == pcall(DecodeJson, [[ {"":0} ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_empty.json
 assert(true == pcall(DecodeJson, [[ {} ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_duplicated_key.json
-assert(true == pcall(DecodeJson, [[ {"a":"b","a":"c"} ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_duplicated_key_and_value.json
 assert(true == pcall(DecodeJson, [[ {"a":"b","a":"b"} ]]))
 
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_duplicated_key.json
+assert(true == pcall(DecodeJson, [[ {"a":"b","a":"c"} ]]))
+
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object_basic.json
 assert(true == pcall(DecodeJson, [[ {"asd":"sdf"} ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_object.json
+assert(true == pcall(DecodeJson, [[ {"asd":"sdf", "dfg":"fgh"} ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number_simple_real.json
 assert(true == pcall(DecodeJson, [[ [123.456789] ]]))
@@ -268,9 +268,6 @@ assert(true == pcall(DecodeJson, [[ [-123] ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number_minus_zero.json
 assert(true == pcall(DecodeJson, [[ [-0] ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number.json
-assert(true == pcall(DecodeJson, [[ [123e65] ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number_int_with_exp.json
 assert(true == pcall(DecodeJson, [[ [20e1] ]]))
 
@@ -285,6 +282,9 @@ assert(true == pcall(DecodeJson, [[ [0e1] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number_0e+1.json
 assert(true == pcall(DecodeJson, [[ [0e+1] ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_number.json
+assert(true == pcall(DecodeJson, [[ [123e65] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_with_trailing_space.json
 assert(true == pcall(DecodeJson, [[ [2] ]]))
@@ -312,11 +312,11 @@ assert(true == pcall(DecodeJson, [[ [false] ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_ending_with_newline.json
 assert(true == pcall(DecodeJson, [[ ["a"] ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_empty-string.json
-assert(true == pcall(DecodeJson, [[ [""] ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_empty.json
 assert(true == pcall(DecodeJson, [[ [] ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_empty-string.json
+assert(true == pcall(DecodeJson, [[ [""] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_array_arraysWithSpaces.json
 -- (added spaces between [[ and ]] so lua doesn't get confused)
