@@ -210,9 +210,6 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
 			-Predbean.justine.lol					\
 			-B
 
-o/$(MODE)/tool/net/ljson.o:	\
-		-DSTACK_FRAME_UNLIMITED
-
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
