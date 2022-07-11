@@ -52,14 +52,16 @@ static struct Flags {
   bool dither;
   bool ruler;
   bool magikarp;
-  bool trailingnewline;
   long half;
   bool full;
+  bool ignoreaspect;
   long width;
   long height;
   enum TtyBlocksSelection blocks;
   enum TtyQuantizationAlgorithm quant;
 } g_flags;
+
+struct winsize g_winsize;
 
 static wontreturn void PrintUsage(int rc, FILE *f) {
   fprintf(f, "Usage: %s%s", program_invocation_name, "\
@@ -70,12 +72,13 @@ FLAGS\n\
   -o PATH    output path\n\
   -w INT     manual width\n\
   -h INT     manual height\n\
+  -f         display full size\n\
+  -i         ignore aspect ratio\n\
   -4         unicode blocks\n\
   -a         ansi color mode\n\
   -t         true color mode\n\
   -2         use half blocks\n\
   -3         ibm cp437 blocks\n\
-  -f         display full size\n\
   -s         unsharp sharpening\n\
   -x         xterm256 color mode\n\
   -m         use magikarp scaling\n\
@@ -104,14 +107,13 @@ static int ParseNumberOption(const char *arg) {
 
 static void GetOpts(int *argc, char *argv[]) {
   int opt;
-  struct winsize ws;
   g_flags.quant = kTtyQuantTrue;
   g_flags.blocks = IsWindows() ? kTtyBlocksCp437 : kTtyBlocksUnicode;
   if (*argc == 2 &&
       (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0)) {
     PrintUsage(EXIT_SUCCESS, stdout);
   }
-  while ((opt = getopt(*argc, argv, "?vpmfrtxads234o:w:h:")) != -1) {
+  while ((opt = getopt(*argc, argv, "?vpmfirtxads234o:w:h:")) != -1) {
     switch (opt) {
       case 'o':
         g_flags.out = optarg;
@@ -123,15 +125,16 @@ static void GetOpts(int *argc, char *argv[]) {
         g_flags.unsharp = true;
         break;
       case 'w':
-        g_flags.trailingnewline = true;
         g_flags.width = ParseNumberOption(optarg);
         break;
       case 'h':
-        g_flags.trailingnewline = true;
         g_flags.height = ParseNumberOption(optarg);
         break;
       case 'f':
         g_flags.full = true;
+        break;
+      case 'i':
+        g_flags.ignoreaspect = true;
         break;
       case '2':
         g_flags.half = true;
@@ -169,14 +172,11 @@ static void GetOpts(int *argc, char *argv[]) {
         PrintUsage(EX_USAGE, stderr);
     }
   }
-  if (!g_flags.full && (!g_flags.width && !g_flags.height)) {
-    ws.ws_col = 80;
-    ws.ws_row = 24;
-    if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 ||
-        ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1) {
-      g_flags.width = ws.ws_col * (1 + !g_flags.half);
-      g_flags.height = ws.ws_row * 2;
-    }
+  g_winsize.ws_col = 80;
+  g_winsize.ws_row = 24;
+  if (!g_flags.full && (!g_flags.width || !g_flags.height)) {
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &g_winsize) != -1 ||
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_winsize);
   }
   ttyquantsetup(g_flags.quant, kTtyQuantRgb, g_flags.blocks);
 }
@@ -335,9 +335,7 @@ static void PrintImageSerious(long yn, long xn, unsigned char RGB[3][yn][xn],
     }
   }
   p = ttyraster(vt, (void *)TTY, tyn, txn, bg, fg);
-  *p++ = '\r';
-  if (g_flags.trailingnewline) *p++ = '\n';
-  p = stpcpy(p, "\e[0m");
+  p = stpcpy(p, "\e[0m\r\n");
   ttywrite(STDOUT_FILENO, vt, p - vt);
 }
 
@@ -363,7 +361,7 @@ void WithImageFile(const char *path,
                    void fn(long yn, long xn, unsigned char RGB[3][yn][xn])) {
   struct stat st;
   void *map, *data, *data2;
-  int fd, yn, xn, cn, dyn, dxn, syn, sxn;
+  int fd, yn, xn, cn, dyn, dxn, syn, sxn, wyn, wxn;
   CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
   CHECK_NE(-1, fstat(fd, &st));
   CHECK_GT(st.st_size, 0);
@@ -385,16 +383,28 @@ void WithImageFile(const char *path,
                          data, 0, yn, 0, xn);
     cn = 3;
   }
-  if (g_flags.height || g_flags.width) {
+  if (!g_flags.full) {
     syn = yn;
     sxn = xn;
     dyn = g_flags.height;
     dxn = g_flags.width;
-    if (dyn && !dxn) {
-      dxn = dyn * xn * (1 + !g_flags.half) / yn;
+    wyn = g_winsize.ws_row * 2;
+    wxn = g_winsize.ws_col;
+    if (g_flags.ignoreaspect) {
+      if (!dyn) dyn = wyn;
+      if (!dxn) dxn = wxn * (1 + !g_flags.half);
     }
-    if (dxn && !dyn) {
-      dyn = dxn * yn / (xn * (1 + !g_flags.half));
+    if (!dyn && !dxn) {
+      if (sxn * wyn > syn * wxn) {
+        dxn = wxn * (1 + !g_flags.half);
+      } else {
+        dyn = wyn;
+      }
+    }
+    if (dyn && !dxn) {
+      dxn = dyn * sxn * (1 + !g_flags.half) / syn;
+    } else if (dxn && !dyn) {
+      dyn = dxn * syn / (sxn * (1 + !g_flags.half));
     }
     if (g_flags.magikarp) {
       while (HALF(syn) > dyn || HALF(sxn) > dxn) {
