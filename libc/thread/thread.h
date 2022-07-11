@@ -17,12 +17,17 @@ enum cthread_state {
   cthread_detached = 4,
 };
 
+struct FtraceTls {  /* 16 */
+  bool once;        /*  0 */
+  bool noreentry;   /*  1 */
+  int skew;         /*  4 */
+  int64_t lastaddr; /*  8 */
+};
+
 struct cthread_descriptor_t {
   struct cthread_descriptor_t *self;  /* 0x00 */
-  void *(*func)(void *);              /* 0x08 */
-  int32_t __pad0;                     /* 0x10 */
-  int32_t state;                      /* 0x14 */
-  void *arg;                          /* 0x18 */
+  struct FtraceTls ftrace;            /* 0x08 */
+  int64_t __pad0;                     /* 0x10 */
   int64_t __pad1;                     /* 0x20 */
   int64_t __pad2;                     /* 0x28 */
   struct cthread_descriptor_t *self2; /* 0x30 */

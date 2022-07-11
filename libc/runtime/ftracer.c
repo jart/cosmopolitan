@@ -20,14 +20,14 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nopl.h"
-#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/thread/thread.h"
 
 #define MAX_NESTING 512
 
@@ -41,25 +41,7 @@
 
 void ftrace_hook(void);
 
-static struct Ftrace {
-  int skew;
-  int stackdigs;
-  int64_t lastaddr;
-  pthread_mutex_t lock;
-  volatile bool noreentry;
-} g_ftrace;
-
-static void __ftrace_lock(void) {
-  if (__threaded) {
-    pthread_mutex_lock(&g_ftrace.lock);
-  }
-}
-
-static void __ftrace_unlock(void) {
-  if (__threaded) {
-    pthread_mutex_unlock(&g_ftrace.lock);
-  }
-}
+static int g_stackdigs;
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
@@ -70,11 +52,12 @@ static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-static privileged inline int GetNestingLevel(struct StackFrame *frame) {
+static privileged inline int GetNestingLevel(struct FtraceTls *ft,
+                                             struct StackFrame *sf) {
   int nesting;
-  nesting = GetNestingLevelImpl(frame);
-  if (nesting < g_ftrace.skew) g_ftrace.skew = nesting;
-  nesting -= g_ftrace.skew;
+  nesting = GetNestingLevelImpl(sf);
+  if (nesting < ft->skew) ft->skew = nesting;
+  nesting -= ft->skew;
   return MIN(MAX_NESTING, nesting);
 }
 
@@ -87,31 +70,30 @@ static privileged inline int GetNestingLevel(struct StackFrame *frame) {
  */
 privileged void ftracer(void) {
   long stackuse;
-  struct StackFrame *frame;
-  __ftrace_lock();
-  if (_cmpxchg(&g_ftrace.noreentry, false, true)) {
-    frame = __builtin_frame_address(0);
-    frame = frame->next;
-    if (frame->addr != g_ftrace.lastaddr) {
-      stackuse = GetStackAddr() + GetStackSize() - (intptr_t)frame;
-      kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_ftrace.stackdigs, stackuse,
-              GetNestingLevel(frame) * 2, "", frame->addr);
-      g_ftrace.lastaddr = frame->addr;
-    }
-    g_ftrace.noreentry = false;
+  struct FtraceTls *ft;
+  struct StackFrame *sf;
+  ft = (struct FtraceTls *)(__get_tls_inline() + 0x08);
+  if (_cmpxchg(&ft->once, false, true)) {
+    ft->lastaddr = -1;
+    ft->skew = GetNestingLevelImpl(__builtin_frame_address(0));
   }
-  __ftrace_unlock();
+  if (_cmpxchg(&ft->noreentry, false, true)) {
+    sf = __builtin_frame_address(0);
+    sf = sf->next;
+    if (sf->addr != ft->lastaddr) {
+      stackuse = GetStackAddr() + GetStackSize() - (intptr_t)sf;
+      kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_stackdigs, stackuse,
+              GetNestingLevel(ft, sf) * 2, "", sf->addr);
+      ft->lastaddr = sf->addr;
+    }
+    ft->noreentry = false;
+  }
 }
 
 textstartup int ftrace_install(void) {
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
-  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-  pthread_mutex_init(&g_ftrace.lock, &attr);
   if (GetSymbolTable()) {
-    g_ftrace.lastaddr = -1;
-    g_ftrace.stackdigs = LengthInt64Thousands(GetStackSize());
-    g_ftrace.skew = GetNestingLevelImpl(__builtin_frame_address(0));
+    __enable_tls();
+    g_stackdigs = LengthInt64Thousands(GetStackSize());
     return __hook(ftrace_hook, GetSymbolTable());
   } else {
     kprintf("error: --ftrace failed to open symbol table\n");
