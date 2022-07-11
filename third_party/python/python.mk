@@ -4222,6 +4222,8 @@ o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_bytes.py.runs: QUOTA = -L300
 o/$(MODE)/third_party/python/Lib/test/test_urlparse.py.runs: QUOTA = -L300
 o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o: QUOTA = -L180
+o/$(MODE)/third_party/python/Modules/_sre.o: QUOTA = -L180
+o/dbg/third_party/python/Lib/test/test_set.py.runs: QUOTA = -L300
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
