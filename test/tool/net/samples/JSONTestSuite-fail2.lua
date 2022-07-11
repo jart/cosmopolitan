@@ -62,9 +62,6 @@ assert(false == pcall(DecodeJson, [[ [1 ]]))
  -- (converted to binary for safety)
 assert(false == pcall(DecodeJson, [[ \x5b\x5c\x75\x30\x30\x30\x41\x22\x22\x5d ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_trailing_#.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}#{} ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_single_star.json
 assert(false == pcall(DecodeJson, [[ * ]]))
 
@@ -111,27 +108,15 @@ assert(false == pcall(DecodeJson, [[ [, ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_open_array_apostrophe.json
 assert(false == pcall(DecodeJson, [[ [' ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_object_with_trailing_garbage.json
-assert(false == pcall(DecodeJson, [[ {"a": true} "x" ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_object_with_comment.json
 assert(false == pcall(DecodeJson, [[ {"a":/*comment*/"b"} ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_object_unclosed_no_value.json
 assert(false == pcall(DecodeJson, [[ {"": ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_object_followed_by_closing_object.json
-assert(false == pcall(DecodeJson, [[ {}} ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_number_with_trailing_garbage.json
-assert(false == pcall(DecodeJson, [[ 2@ ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_null-byte-outside-string.json
  -- (converted to binary for safety)
 assert(false == pcall(DecodeJson, [[ \x5b\x0\x5d ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_no_data.json
-assert(false == pcall(DecodeJson, [[  ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_lone-open-bracket.json
 assert(false == pcall(DecodeJson, [[ [ ]]))
@@ -143,17 +128,8 @@ assert(false == pcall(DecodeJson, [[ \xe5 ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_incomplete_UTF8_BOM.json
 assert(false == pcall(DecodeJson, [[ ï»{} ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_end_array.json
-assert(false == pcall(DecodeJson, [[ ] ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_double_array.json
-assert(false == pcall(DecodeJson, [[ [][] ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_comma_instead_of_closing_brace.json
 assert(false == pcall(DecodeJson, [[ {"x": true, ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_close_unopened_array.json
-assert(false == pcall(DecodeJson, [[ 1] ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_capitalized_True.json
 assert(false == pcall(DecodeJson, [[ [True] ]]))
@@ -165,14 +141,6 @@ assert(false == pcall(DecodeJson, [[ \x61\xc3\xa5 ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_array_with_unclosed_string.json
  -- (converted to binary for safety)
 assert(false == pcall(DecodeJson, [[ \x5b\x22\x61\x73\x64\x5d ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_array_with_extra_array_close.json
--- (added spaces between [[ and ]] so lua doesn't get confused)
-assert(false == pcall(DecodeJson, [[
-[ 1] ]   ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_array_trailing_garbage.json
-assert(false == pcall(DecodeJson, [[ [1]x ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_angle_bracket_null.json
 assert(false == pcall(DecodeJson, [[ [<null>] ]]))

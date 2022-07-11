@@ -146,12 +146,6 @@ assert(false == pcall(DecodeJson, [[ \x5b\x22\x5c\x75\x44\x38\x30\x30\x5c\x75\x2
  -- (converted to binary for safety)
 assert(false == pcall(DecodeJson, [[ \x5b\x22\x5c\x75\x44\x38\x30\x30\x5c\x22\x5d ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_single_space.json
-assert(false == pcall(DecodeJson, [[  ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_with_trailing_garbage.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}# ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_with_single_string.json
  -- (converted to binary for safety)
 assert(false == pcall(DecodeJson, [[ \x7b\x20\x22\x66\x6f\x6f\x22\x20\x3a\x20\x22\x62\x61\x72\x22\x2c\x20\x22\x61\x22\x20\x7d ]]))
@@ -162,29 +156,8 @@ assert(false == pcall(DecodeJson, [[ {"a":"a ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_unquoted_key.json
 assert(false == pcall(DecodeJson, [[ {a: "b"} ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_two_commas_in_a_row.json
-assert(false == pcall(DecodeJson, [[ {"a":"b",,"c":"d"} ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comment_slash_open_incomplete.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}/ ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comment_slash_open.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}// ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comment_open.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}/**// ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comment.json
-assert(false == pcall(DecodeJson, [[ {"a":"b"}/**/ ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comma.json
-assert(false == pcall(DecodeJson, [[ {"id":0,} ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_single_quote.json
 assert(false == pcall(DecodeJson, [[ {'a':0} ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_several_trailing_commas.json
-assert(false == pcall(DecodeJson, [[ {"id":0,,,,,} ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_repeated_null_null.json
 assert(false == pcall(DecodeJson, [[ {null:null,null:null} ]]))
