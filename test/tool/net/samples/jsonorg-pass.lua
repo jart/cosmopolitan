@@ -60,3 +60,38 @@ assert(pcall(DecodeJson, [[
 1e00,2e+00,2e-00
 ,"rosebud"] 
 ]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: pass2.json
+assert(pcall(DecodeJson, [[
+[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Not too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
+]]))
+
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: pass3.json
+assert(pcall(DecodeJson, [[
+{
+    "JSON Test Pattern pass3": {
+        "The outermost value": "must be an object or array.",
+        "In this test": "It is an object."
+    }
+}
+
+]]))
+
+
+-- json.org says these should fail, but many parsers,
+-- including python's json.load allow the following
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail1.json  (actually passes)
+assert(pcall(DecodeJson, [[
+"A JSON payload should be an object or array, not a string."
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail18.json (actually passes)
+assert(pcall(DecodeJson, [[
+[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
+]]))
