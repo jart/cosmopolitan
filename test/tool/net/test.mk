@@ -6,13 +6,9 @@ PKGS += TEST_TOOL_NET
 TEST_TOOL_NET = $(TOOL_NET_A_DEPS) $(TOOL_NET_A)
 TEST_TOOL_NET_A = o/$(MODE)/test/tool/net/net.a
 TEST_TOOL_NET_FILES := $(wildcard test/tool/net/*)
-TEST_TOOL_NET_SAMPLES := $(wildcard test/tool/net/samples/*)
-TEST_TOOL_NET_SAMPLES_LUA = $(filter %.lua,$(TEST_TOOL_NET_SAMPLES))
 TEST_TOOL_NET_SRCS = $(filter %.c,$(TEST_TOOL_NET_FILES))
 TEST_TOOL_NET_SRCS_TEST = $(filter %_test.c,$(TEST_TOOL_NET_SRCS))
-TEST_TOOL_NET_LUAS_TEST = \
-	$(filter %_test.lua,$(TEST_TOOL_NET_FILES)) \
-	$(TEST_TOOL_NET_SAMPLES_LUA)
+TEST_TOOL_NET_LUAS_TEST = $(filter %_test.lua,$(TEST_TOOL_NET_FILES))
 TEST_TOOL_NET_HDRS = $(filter %.h,$(TEST_TOOL_NET_FILES))
 TEST_TOOL_NET_COMS = $(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%.com)
 
