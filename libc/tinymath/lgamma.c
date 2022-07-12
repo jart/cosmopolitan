@@ -19,6 +19,9 @@
 #include "libc/math.h"
 #include "libc/tinymath/kernel.internal.h"
 
+/**
+ * Returns natural logarithm of absolute value of gamma function.
+ */
 double lgamma(double x) {
   return lgamma_r(x, &__signgam);
 }

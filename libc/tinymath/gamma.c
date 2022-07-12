@@ -316,11 +316,3 @@ double lgamma_r(double x, int *signgamp)
 		r = nadj - r;
 	return r;
 }
-
-/**
- * Returns natural logarithm of absolute value of gamma function.
- */
-double lgamma(double x)
-{
-	return lgamma_r(x, &__signgam);
-}
