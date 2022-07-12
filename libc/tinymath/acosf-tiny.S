@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Returns cosine of 𝑥.
+//	Returns arc cosine of 𝑥.
 //
 //	@param	𝑥 is float scalar in low quarter of %xmm0
 //	@return	float scalar in low quarter of %xmm0
-//	@domain	-(3π/8) < 𝑥 < 3π/8 for best accuracy
-cosf:	ezlea	cosl,ax
+acosf:	ezlea	acosl,ax
 	jmp	_f2ld2
-	.endfn	cosf,globl
+	.endfn	acosf,globl
+
+#endif /* TINY */

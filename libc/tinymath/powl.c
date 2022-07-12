@@ -21,6 +21,7 @@
 
 /**
  * Returns 𝑥^𝑦.
+ * @note should take ~56ns
  */
 long double powl(long double x, long double y) {
   long double t, u;

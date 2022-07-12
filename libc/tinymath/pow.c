@@ -288,6 +288,7 @@ static inline int zeroinfnan(uint64_t i)
 
 /**
  * Returns 𝑥^𝑦.
+ * @note should take ~18ns
  */
 double pow(double x, double y)
 {

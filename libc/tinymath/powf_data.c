@@ -25,90 +25,43 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/runtime/runtime.h"
-#include "libc/tinymath/feval.internal.h"
-#include "libc/tinymath/kernel.internal.h"
+#include "libc/tinymath/powf_data.internal.h"
 
 asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
+Double-precision math functions (MIT License)\\n\
+Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/* origin: FreeBSD /usr/src/lib/msun/src/s_sin.c */
+
 /*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ * Data definition for powf.
  *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Copyright (c) 2017-2018, Arm Limited.
+ * SPDX-License-Identifier: MIT
  */
 
-#define asuint64(f) ((union{double _f; uint64_t _i;}){f})._i
-#define gethighw(hi,d) (hi) = asuint64(d) >> 32
-
-/**
- * Returns sine and cosine of 𝑥.
- * @note should take ~10ns
- */
-void sincos(double x, double *sin, double *cos)
-{
-	double y[2], s, c;
-	uint32_t ix;
-	unsigned n;
-
-	gethighw(ix, x);
-	ix &= 0x7fffffff;
-
-	/* |x| ~< pi/4 */
-	if (ix <= 0x3fe921fb) {
-		/* if |x| < 2**-27 * sqrt(2) */
-		if (ix < 0x3e46a09e) {
-			/* raise inexact if x!=0 and underflow if subnormal */
-			feval(ix < 0x00100000 ? x/0x1p120f : x+0x1p120f);
-			*sin = x;
-			*cos = 1.0;
-			return;
-		}
-		*sin = __sin(x, 0.0, 0);
-		*cos = __cos(x, 0.0);
-		return;
-	}
-
-	/* sincos(Inf or NaN) is NaN */
-	if (ix >= 0x7ff00000) {
-		*sin = *cos = x - x;
-		return;
-	}
-
-	/* argument reduction needed */
-	n = __rem_pio2(x, y);
-	s = __sin(y[0], y[1], 1);
-	c = __cos(y[0], y[1]);
-	switch (n&3) {
-	case 0:
-		*sin = s;
-		*cos = c;
-		break;
-	case 1:
-		*sin = c;
-		*cos = -s;
-		break;
-	case 2:
-		*sin = -s;
-		*cos = -c;
-		break;
-	case 3:
-	default:
-		*sin = -c;
-		*cos = s;
-		break;
-	}
-}
+const struct powf_log2_data __powf_log2_data = {
+  .tab = {
+  { 0x1.661ec79f8f3bep+0, -0x1.efec65b963019p-2 * POWF_SCALE },
+  { 0x1.571ed4aaf883dp+0, -0x1.b0b6832d4fca4p-2 * POWF_SCALE },
+  { 0x1.49539f0f010bp+0, -0x1.7418b0a1fb77bp-2 * POWF_SCALE },
+  { 0x1.3c995b0b80385p+0, -0x1.39de91a6dcf7bp-2 * POWF_SCALE },
+  { 0x1.30d190c8864a5p+0, -0x1.01d9bf3f2b631p-2 * POWF_SCALE },
+  { 0x1.25e227b0b8eap+0, -0x1.97c1d1b3b7afp-3 * POWF_SCALE },
+  { 0x1.1bb4a4a1a343fp+0, -0x1.2f9e393af3c9fp-3 * POWF_SCALE },
+  { 0x1.12358f08ae5bap+0, -0x1.960cbbf788d5cp-4 * POWF_SCALE },
+  { 0x1.0953f419900a7p+0, -0x1.a6f9db6475fcep-5 * POWF_SCALE },
+  { 0x1p+0, 0x0p+0 * POWF_SCALE },
+  { 0x1.e608cfd9a47acp-1, 0x1.338ca9f24f53dp-4 * POWF_SCALE },
+  { 0x1.ca4b31f026aap-1, 0x1.476a9543891bap-3 * POWF_SCALE },
+  { 0x1.b2036576afce6p-1, 0x1.e840b4ac4e4d2p-3 * POWF_SCALE },
+  { 0x1.9c2d163a1aa2dp-1, 0x1.40645f0c6651cp-2 * POWF_SCALE },
+  { 0x1.886e6037841edp-1, 0x1.88e9c2c1b9ff8p-2 * POWF_SCALE },
+  { 0x1.767dcf5534862p-1, 0x1.ce0a44eb17bccp-2 * POWF_SCALE },
+  },
+  .poly = {
+  0x1.27616c9496e0bp-2 * POWF_SCALE, -0x1.71969a075c67ap-2 * POWF_SCALE,
+  0x1.ec70a6ca7baddp-2 * POWF_SCALE, -0x1.7154748bef6c8p-1 * POWF_SCALE,
+  0x1.71547652ab82bp0 * POWF_SCALE,
+  }
+};

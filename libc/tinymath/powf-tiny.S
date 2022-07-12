@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
 //	Returns 𝑥^𝑦.
 //
@@ -26,3 +27,5 @@
 powf:	ezlea	powl,ax
 	jmp	_f2ld2
 	.endfn	powf,globl
+
+#endif /* TINY */

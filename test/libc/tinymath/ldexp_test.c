@@ -20,6 +20,7 @@
 #include "libc/rand/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -110,7 +111,11 @@ TEST(ldexp, stuff) {
   ASSERT_STREQ("100.48", gc(xasprintf("%.2Lf", scalblnl(pi, twopow))));
 }
 
-TEST(exp10, test) {
-  ASSERT_EQ(100, (int)exp10(2));
-  ASSERT_STREQ("100.000000", gc(xasprintf("%Lf", exp10l(2))));
+BENCH(ldexpl, bench) {
+  double _ldexp(double, int) asm("ldexp");
+  float _ldexpf(float, int) asm("ldexpf");
+  long double _ldexpl(long double, int) asm("ldexpl");
+  EZBENCH2("ldexp", donothing, _ldexp(.7, 3));   /* ~1ns */
+  EZBENCH2("ldexpf", donothing, _ldexpf(.7, 3)); /* ~1ns */
+  EZBENCH2("ldexpl", donothing, _ldexpl(.7, 3)); /* ~7ns */
 }

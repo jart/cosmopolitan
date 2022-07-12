@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -37,4 +38,13 @@ TEST(tan, test) {
   EXPECT_STREQ("2.2250738585072e-308",
                gc(xasprintf("%.15g", tan(__DBL_MIN__))));
   EXPECT_STREQ("-0.0049620158744449", gc(xasprintf("%.15g", tan(__DBL_MAX__))));
+}
+
+BENCH(tan, bench) {
+  double _tan(double) asm("tan");
+  float _tanf(float) asm("tanf");
+  long double _tanl(long double) asm("tanl");
+  EZBENCH2("tan", donothing, _tan(.7));   /* ~19ns */
+  EZBENCH2("tanf", donothing, _tanf(.7)); /* ~32ns */
+  EZBENCH2("tanl", donothing, _tanl(.7)); /* ~28ns */
 }

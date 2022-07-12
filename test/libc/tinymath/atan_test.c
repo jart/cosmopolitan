@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -37,4 +38,13 @@ TEST(atan, test) {
   EXPECT_STREQ("2.2250738585072e-308",
                gc(xasprintf("%.15g", atan(__DBL_MIN__))));
   EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", atan(__DBL_MAX__))));
+}
+
+BENCH(atanl, bench) {
+  double _atan(double) asm("atan");
+  float _atanf(float) asm("atanf");
+  long double _atanl(long double) asm("atanl");
+  EZBENCH2("-atan", donothing, _atan(.7));   /* ~18ns */
+  EZBENCH2("-atanf", donothing, _atanf(.7)); /* ~12ns */
+  EZBENCH2("-atanl", donothing, _atanl(.7)); /* ~34ns */
 }

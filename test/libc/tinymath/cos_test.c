@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -42,4 +43,13 @@ TEST(cos, test) {
   EXPECT_STREQ("0.54030230586814",
                gc(xasprintf("%.15g", cos(-1.0000000000000002))));
   EXPECT_STREQ("1", gc(xasprintf("%.15g", cos(-2.1073424255447e-08))));
+}
+
+BENCH(cos, bench) {
+  double _cos(double) asm("cos");
+  float _cosf(float) asm("cosf");
+  long double _cosl(long double) asm("cosl");
+  EZBENCH2("cos", donothing, _cos(.7));   /*  ~6ns */
+  EZBENCH2("cosf", donothing, _cosf(.7)); /*  ~5ns */
+  EZBENCH2("cosl", donothing, _cosl(.7)); /* ~28ns */
 }

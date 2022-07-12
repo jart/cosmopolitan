@@ -83,6 +83,9 @@ asm(".include \"libc/disclaimer.inc\"");
  *      TRIG(x) returns trig(x) nearly rounded
  */
 
+/**
+ * Returns tangent of x.
+ */
 double tan(double x)
 {
 	double y[2];

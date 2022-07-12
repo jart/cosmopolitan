@@ -17,11 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Returns arc tangent of 𝑥.
+//	Returns arc sine of 𝑥.
 //
 //	@param	𝑥 is float scalar in low quarter of %xmm0
 //	@return	float scalar in low quarter of %xmm0
-atanf:	ezlea	atanl,ax
+asinf:	ezlea	asinl,ax
 	jmp	_f2ld2
-	.endfn	atanf,globl
+	.endfn	asinf,globl
+
+#endif /* TINY */

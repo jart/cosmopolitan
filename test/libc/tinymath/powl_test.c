@@ -563,6 +563,6 @@ BENCH(powl, bench) {
   float _powf(float, float) asm("powf");
   long double _powl(long double, long double) asm("powl");
   EZBENCH2("pow", donothing, _pow(.7, .2));   /* ~18ns */
-  EZBENCH2("powf", donothing, _powf(.7, .2)); /* ~56ns */
+  EZBENCH2("powf", donothing, _powf(.7, .2)); /* ~16ns */
   EZBENCH2("powl", donothing, _powl(.7, .2)); /* ~56ns */
 }

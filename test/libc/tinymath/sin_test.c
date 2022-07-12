@@ -72,8 +72,11 @@ TEST(sinf, test) {
   EXPECT_STARTSWITH(".873283", gc(xdtoaf(sinf(555))));
 }
 
-BENCH(sinl, bench) {
-  EZBENCH(donothing, sinl(0.7));  /* ~30ns */
-  EZBENCH(donothing, sin(0.7));   /* ~35ns */
-  EZBENCH(donothing, sinf(0.7f)); /* ~35ns */
+BENCH(sin, bench) {
+  double _sin(double) asm("sin");
+  float _sinf(float) asm("sinf");
+  long double _sinl(long double) asm("sinl");
+  EZBENCH2("sin", donothing, _sin(.7));   /*  ~5ns */
+  EZBENCH2("sinf", donothing, _sinf(.7)); /*  ~5ns */
+  EZBENCH2("sinl", donothing, _sinl(.7)); /* ~28ns */
 }

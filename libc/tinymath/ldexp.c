@@ -26,89 +26,45 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/runtime.h"
 #include "libc/tinymath/feval.internal.h"
 #include "libc/tinymath/kernel.internal.h"
 
 asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
 Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
-
 /* clang-format off */
-/* origin: FreeBSD /usr/src/lib/msun/src/s_sin.c */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
- */
-
-#define asuint64(f) ((union{double _f; uint64_t _i;}){f})._i
-#define gethighw(hi,d) (hi) = asuint64(d) >> 32
 
 /**
- * Returns sine and cosine of 𝑥.
- * @note should take ~10ns
+ * Returns 𝑥 × 2ʸ.
  */
-void sincos(double x, double *sin, double *cos)
+double ldexp(double x, int n)
 {
-	double y[2], s, c;
-	uint32_t ix;
-	unsigned n;
+	union {double f; uint64_t i;} u;
+	double_t y = x;
 
-	gethighw(ix, x);
-	ix &= 0x7fffffff;
-
-	/* |x| ~< pi/4 */
-	if (ix <= 0x3fe921fb) {
-		/* if |x| < 2**-27 * sqrt(2) */
-		if (ix < 0x3e46a09e) {
-			/* raise inexact if x!=0 and underflow if subnormal */
-			feval(ix < 0x00100000 ? x/0x1p120f : x+0x1p120f);
-			*sin = x;
-			*cos = 1.0;
-			return;
+	if (n > 1023) {
+		y *= 0x1p1023;
+		n -= 1023;
+		if (n > 1023) {
+			y *= 0x1p1023;
+			n -= 1023;
+			if (n > 1023)
+				n = 1023;
 		}
-		*sin = __sin(x, 0.0, 0);
-		*cos = __cos(x, 0.0);
-		return;
+	} else if (n < -1022) {
+		/* make sure final n < -53 to avoid double
+		   rounding in the subnormal range */
+		y *= 0x1p-1022 * 0x1p53;
+		n += 1022 - 53;
+		if (n < -1022) {
+			y *= 0x1p-1022 * 0x1p53;
+			n += 1022 - 53;
+			if (n < -1022)
+				n = -1022;
+		}
 	}
-
-	/* sincos(Inf or NaN) is NaN */
-	if (ix >= 0x7ff00000) {
-		*sin = *cos = x - x;
-		return;
-	}
-
-	/* argument reduction needed */
-	n = __rem_pio2(x, y);
-	s = __sin(y[0], y[1], 1);
-	c = __cos(y[0], y[1]);
-	switch (n&3) {
-	case 0:
-		*sin = s;
-		*cos = c;
-		break;
-	case 1:
-		*sin = c;
-		*cos = -s;
-		break;
-	case 2:
-		*sin = -s;
-		*cos = -c;
-		break;
-	case 3:
-	default:
-		*sin = -c;
-		*cos = s;
-		break;
-	}
+	u.i = (uint64_t)(0x3ff+n)<<52;
+	x = y * u.f;
+	return x;
 }

@@ -29,9 +29,39 @@ TEST(sincos, test) {
   EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15g", cosine)));
 }
 
+TEST(sincosf, test) {
+  float sine, cosine;
+  sincosf(.1, &sine, &cosine);
+  EXPECT_STREQ("0.0998334", gc(xasprintf("%.6g", sine)));
+  EXPECT_STREQ("0.995004", gc(xasprintf("%.6g", cosine)));
+}
+
+TEST(sincosl, test) {
+  long double sine, cosine;
+  sincosl(.1, &sine, &cosine);
+  EXPECT_STREQ("0.0998334166468282", gc(xasprintf("%.15Lg", sine)));
+  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15Lg", cosine)));
+}
+
+#define NUM .123
+
 BENCH(sincos, bench) {
-  volatile double x = 31337;
+  double _sin(double) asm("sin");
+  float _sinf(float) asm("sinf");
+  long double _sinl(long double) asm("sinl");
+  double _cos(double) asm("cos");
+  float _cosf(float) asm("cosf");
+  long double _cosl(long double) asm("cosl");
+  double _sincos(double, double*, double*) asm("sincos");
+  float _sincosf(float, float*, float*) asm("sincosf");
+  long double _sincosl(long double, long double*, long double*) asm("sincosl");
+  volatile float sinef, cosinef;
   volatile double sine, cosine;
-  EZBENCH2("sin+cos", donothing, (sin(x), cos(x)));
-  EZBENCH2("sincos", donothing, sincos(x, &sine, &cosine));
+  volatile long double sinel, cosinel;
+  EZBENCH2("sin+cos", donothing, (_sin(NUM), _cos(NUM)));
+  EZBENCH2("sincos", donothing, _sincos(NUM, &sine, &cosine));
+  EZBENCH2("sinf+cosf", donothing, (_sinf(NUM), _cosf(NUM)));
+  EZBENCH2("sincosf", donothing, _sincosf(NUM, &sinef, &cosinef));
+  EZBENCH2("sinl+cosl", donothing, (_sinl(NUM), _cosl(NUM)));
+  EZBENCH2("sincosl", donothing, _sincosl(NUM, &sinel, &cosinel));
 }

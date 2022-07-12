@@ -44,10 +44,11 @@ TEST(acos, test) {
   EXPECT_TRUE(isnan(acos(__DBL_MAX__)));
 }
 
-BENCH(acos, bench) {
-  EZBENCH2("acos(+0)", donothing, acos(0));
-  EZBENCH2("acos(-0)", donothing, acos(-0.));
-  EZBENCH2("acos(NAN)", donothing, acos(NAN));
-  EZBENCH2("acos(INFINITY)", donothing, acos(INFINITY));
-  EZBENCH_C("acos", _real1(vigna()), acos(_real1(vigna())));
+BENCH(acosl, bench) {
+  double _acos(double) asm("acos");
+  float _acosf(float) asm("acosf");
+  long double _acosl(long double) asm("acosl");
+  EZBENCH2("-acos", donothing, _acos(.7));   /* ~17ns */
+  EZBENCH2("-acosf", donothing, _acosf(.7)); /* ~11ns */
+  EZBENCH2("-acosl", donothing, _acosl(.7)); /* ~40ns */
 }

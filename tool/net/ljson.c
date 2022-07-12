@@ -306,7 +306,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
                   goto BadUnicode;
                 }
                 // UTF-8
-                if (c < 0x7f) {
+                if (c <= 0x7f) {
                   w[0] = c;
                   i = 1;
                 } else if (c <= 0x7ff) {
@@ -346,7 +346,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
               goto StringFailureWithReason;
           }
         }
-        break;
+        unreachable;
       StringFailureWithReason:
         luaL_pushresultsize(&b, 0);
         lua_pop(L, 1);
