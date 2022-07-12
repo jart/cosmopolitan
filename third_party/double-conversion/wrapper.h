@@ -4,6 +4,7 @@
 COSMOPOLITAN_C_START_
 
 char *DoubleToLua(char[128], double);
+char *DoubleToJson(char[128], double);
 char *DoubleToEcmascript(char[128], double);
 double StringToDouble(const char *, size_t, int *);
 

@@ -9,30 +9,35 @@ assert(DecodeJson([[
 [ "extra comma",] 
 ]]))
 
+-- [jart] we deviate from json.org because we don't care about commas
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail5.json
 assert(DecodeJson([[
 [ "double extra comma",,] 
 ]]))
 
+-- [jart] we deviate from json.org because we don't care about commas
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail6.json
 assert(DecodeJson([[
 [    , "<-- missing value"] 
 ]]))
 
+-- [jart] we deviate from json.org because we don't care about commas
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail9.json
 assert(DecodeJson([[
 {"Extra comma": true,}
 ]]))
 
+-- [jart] we deviate from json.org because we don't care about colons
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail19.json
 assert(DecodeJson([[
 {"Missing colon" null}
 ]]))
 
+-- [jart] we deviate from json.org because we don't care about colons
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail20.json
 assert(DecodeJson([[
@@ -41,19 +46,19 @@ assert(DecodeJson([[
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail25.json
-assert(DecodeJson([[
+assert(not DecodeJson([[
 [ "	tab	character	in	string	"] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail27.json
-assert(DecodeJson([[
+assert(not DecodeJson([[
 [ "line
 break"] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail15.json
-assert(DecodeJson([[
+assert(not DecodeJson([[
 [ "Illegal backslash escape: \x15"] 
 ]]))

@@ -23,7 +23,7 @@
 #include "net/http/escape.h"
 
 /**
- * Filters out control codes from string.
+ * Makes control codes and trojan source plainly viewable.
  *
  * This is useful for logging data like HTTP messages, where we don't
  * want full blown C string literal escaping, but we don't want things
@@ -67,6 +67,32 @@ char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
           }
         }
       }
+
+      // remap trojan source characters
+      if (x == 0x2028) {
+        x = L'↵';  // line separator
+      } else if (x == 0x2029) {
+        x = L'¶';  // paragraph separator
+      } else if (x == 0x202A) {
+        x = L'⟫';  // left-to-right embedding
+      } else if (x == 0x202B) {
+        x = L'⟪';  // right-to-left embedding
+      } else if (x == 0x202D) {
+        x = L'❯';  // left-to-right override
+      } else if (x == 0x202E) {
+        x = L'❮';  // right-to-left override
+      } else if (x == 0x2066) {
+        x = L'⟩';  // left-to-right isolate
+      } else if (x == 0x2067) {
+        x = L'⟨';  // right-to-left isolate
+      } else if (x == 0x2068) {
+        x = L'⧽';  // first strong isolate
+      } else if (x == 0x202C) {
+        x = L'⇮';  // pop directional formatting
+      } else if (x == 0x2069) {
+        x = L'⇯';  // pop directional isolate
+      }
+
       if (0x80 <= x && x < 0xA0) {
         q[0] = '\\';
         q[1] = 'u';

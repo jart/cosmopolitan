@@ -85,7 +85,6 @@ assert(err == "won't serialize cyclic lua table")
 -- pass the parser to itself lool
 json, err = EncodeJson(EncodeJson)
 assert(not json)
-print(err)
 assert(err == "unsupported lua type")
 
 -- EncodeJson() sorts table entries
@@ -145,6 +144,9 @@ assert(ParseHttpDateTime("Fri, 08 Jul 2022 16:17:43 GMT") == 1657297063)
 assert(FormatHttpDateTime(1657297063) == "Fri, 08 Jul 2022 16:17:43 GMT")
 
 assert(VisualizeControlCodes("hello\x00") == "hello␀")
+assert(VisualizeControlCodes("\xe2\x80\xa8") == "↵")  -- line separator
+assert(VisualizeControlCodes("\xe2\x80\xaa") == "⟫")  -- left-to-right embedding
+assert(VisualizeControlCodes("\xe2\x80\xab") == "⟪")  -- right-to-left embedding
 
 assert(math.floor(10 * MeasureEntropy("            ") + .5) == 0)
 assert(math.floor(10 * MeasureEntropy("abcabcabcabc") + .5) == 16)

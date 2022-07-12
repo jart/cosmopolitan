@@ -1,4 +1,3 @@
-
 -- 
 -- Nicolas Seriot's JSONTestSuite
 -- https://github.com/nst/JSONTestSuite
@@ -26,7 +25,6 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 -- 
-
 
 -- these test cases are prefixed with n_
 -- ljson should reject all of them as invalid

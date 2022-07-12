@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/str/str.h"
 #include "third_party/double-conversion/double-conversion.h"
 #include "third_party/double-conversion/double-to-string.h"
@@ -30,6 +31,21 @@ char* DoubleToEcmascript(char buf[128], double x) {
       DoubleToStringConverter::EcmaScriptConverter();
   dc.ToShortest(x, &b);
   return b.Finalize();
+}
+
+char* DoubleToJson(char buf[128], double x) {
+  StringBuilder b(buf, 128);
+  static const DoubleToStringConverter kDoubleToJson(
+      DoubleToStringConverter::UNIQUE_ZERO |
+          DoubleToStringConverter::EMIT_POSITIVE_EXPONENT_SIGN,
+      "null", "null", 'e', -6, 21, 6, 0);
+  kDoubleToJson.ToShortest(x, &b);
+  b.Finalize();
+  if (READ32LE(buf) != READ32LE("-nul")) {
+    return buf;
+  } else {
+    return strcpy(buf, "null");
+  }
 }
 
 char* DoubleToLua(char buf[128], double x) {

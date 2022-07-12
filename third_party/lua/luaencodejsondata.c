@@ -74,7 +74,7 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
               buf, ibuf, FormatInt64(ibuf, luaL_checkinteger(L, idx)) - ibuf));
         } else {
           RETURN_ON_ERROR(
-              appends(buf, DoubleToEcmascript(ibuf, lua_tonumber(L, idx))));
+              appends(buf, DoubleToJson(ibuf, lua_tonumber(L, idx))));
         }
         return 0;
 

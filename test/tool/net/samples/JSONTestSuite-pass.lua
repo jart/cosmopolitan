@@ -1,4 +1,3 @@
-
 -- 
 -- Nicolas Seriot's JSONTestSuite
 -- https://github.com/nst/JSONTestSuite
@@ -27,9 +26,20 @@
 -- SOFTWARE.
 -- 
 
-
 -- these test cases are prefixed with y_
 -- ljson should accept all of them as valid
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_null.json
+val, err = DecodeJson([[ null ]])
+assert(not val)
+assert(val == nil)
+assert(err == nil)
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_false.json
+val, err = DecodeJson([[ false ]])
+assert(not val)
+assert(val == false)
+assert(err == nil)
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_whitespace_array.json
 assert(DecodeJson([[  [] ]]))
@@ -49,27 +59,29 @@ assert(DecodeJson([[ true ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_string.json
 assert(DecodeJson([[ "asd" ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_null.json
-assert(not DecodeJson([[ null ]]))
-
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_negative_real.json
 assert(DecodeJson([[ -0.1 ]]))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_int.json
 assert(DecodeJson([[ 42 ]]))
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_structure_lonely_false.json
-assert(not DecodeJson([[ false ]]))
-
+-- Raw ASCII DEL allowed in string literals
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_with_del_character.json
-assert(DecodeJson([[ ["aa"] ]]))
+assert(DecodeJson(" [\"a\x7fa\"] "))
+assert(EncodeJson(DecodeJson(" [\"a\x7fa\"] ")) == '["a\\u007fa"]')
 
+-- EURO SIGN (20AC) and MUSICAL SYMBOL G CLEF (1D11E) in string literal
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_utf8.json
 assert(DecodeJson([[ ["€𝄞"] ]]))
+assert(EncodeJson(DecodeJson([[ ["€𝄞"] ]])) == "[\"\\u20ac\\ud834\\udd1e\"]")
+assert(EncodeJson(DecodeJson([[ ["€𝄞"] ]])) == EncodeJson(DecodeJson(" [\"\xe2\x82\xac\xf0\x9d\x84\x9e\"] ")))
 
+-- unicode escape for double quote
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_escaped_double_quote.json
 assert(DecodeJson([[ ["\u0022"] ]]))
+assert(DecodeJson([[ ["\u0022"] ]])[1] == '"')
 
+-- replacement character
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_unicode_U+FFFE_nonchar.json
 assert(DecodeJson([[ ["\uFFFE"] ]]))
 
@@ -106,9 +118,11 @@ assert(DecodeJson([[ ["new\u000Aline"] ]]))
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_uEscape.json
 assert(DecodeJson([[ ["\u0061\u30af\u30EA\u30b9"] ]]))
 
+-- paragraph separator trojan source
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_u+2029_par_sep.json
 assert(DecodeJson([[ [" "] ]]))
 
+-- line separator trojan source
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/y_string_u+2028_line_sep.json
 assert(DecodeJson([[ [" "] ]]))
 
@@ -322,4 +336,3 @@ assert(DecodeJson([[ [""] ]]))
 -- (added spaces between [[ and ]] so lua doesn't get confused)
 assert(DecodeJson([[
 [ [ ]    ]   ]]))
-

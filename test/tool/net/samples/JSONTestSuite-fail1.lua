@@ -236,8 +236,7 @@ assert(not DecodeJson(' ["x" '))
 assert(not DecodeJson(' ["": 1] '))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_a_invalid_utf8.json
- -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x61\xe5\x5d '))
+assert(not DecodeJson(" [a\xe5] "))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_comma_instead_of_colon.json
 assert(not DecodeJson(' {"x", null} '))
@@ -252,3 +251,21 @@ assert(not DecodeJson(' 123\x00 '))
 -- (added spaces between [[ and ]] so lua doesn't get confused)
 assert(not DecodeJson([[
 [ "x"] ]   ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_with_leading_zero.json
+assert(not DecodeJson(' [012] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_neg_int_starting_with_zero.json
+assert(not DecodeJson(' [-012] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1_000.json
+assert(not DecodeJson(' [1 000.0] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-01.json
+assert(not DecodeJson(' [-01] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_minus_space_1.json
+assert(not DecodeJson(' [- 1] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_just_minus.json
+assert(not DecodeJson(' [-] '))

@@ -1,6 +1,6 @@
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass1.json
-assert(pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ 
     "JSON Test Pattern pass1",
     {"object with 1 member":[ "array with 1 element"] },
@@ -63,14 +63,13 @@ assert(pcall(DecodeJson, [[
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass2.json
-assert(pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Not too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
 ]]))
 
-
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass3.json
-assert(pcall(DecodeJson, [[
+assert(DecodeJson([[
 {
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
@@ -80,18 +79,20 @@ assert(pcall(DecodeJson, [[
 
 ]]))
 
-
 -- json.org says these should fail, but many parsers,
 -- including python's json.load allow the following
 
+-- [jart] our behavior is consistent with v8
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail1.json  (actually passes)
-assert(pcall(DecodeJson, [[
+assert(DecodeJson([[
 "A JSON payload should be an object or array, not a string."
 ]]))
 
+-- [jart] this deviates from json.org
+--        we permit depth up to 128
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail18.json (actually passes)
-assert(pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
 ]]))

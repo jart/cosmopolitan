@@ -679,21 +679,61 @@ FUNCTIONS
       ├─→ double
       ├─→ array
       ├─→ object
+      ├─→ false
       ├─→ true
+      ├─→ nil
       └─→ nil, error:str
 
           Turns JSON string into a Lua data structure.
 
-          This is a very permissive parser. That means it should always
-          parse correctly formatted JSON correctly. However it will not
-          complain if the `input` string is weirdly formatted. There is
-          currently no validation performed, other than what we need to
-          ensure security. For example `{3=4}` will decode as `{[3]=4}`
-          even though that structure won't round-trip with `EncodeJson`
-          since redbean won't generate invalid JSON (see Postel's Law).
+          This is a generally permissive parser, in the sense that like
+          v8, it permits scalars as top-level values. Therefore we must
+          note that this API can be thought of as special, in the sense
 
-          This parser permits top-level values regardless of type, with
-          the exception of `false`, `null`, and absent.
+              val = assert(DecodeJson(str))
+
+          will usually do the right thing, except in cases where false
+          or null are the top-level value. In those cases, it's needed
+          to check the second value too in order to discern from error
+
+              val, err = DecodeJson(str)
+              if not val then
+                 if err then
+                    print('bad json', err)
+                 elseif val == nil then
+                    print('val is null')
+                 elseif val == false then
+                    print('val is false')
+                 end
+              end
+
+          This parser supports 64-bit signed integers. If an overflow
+          happens, then the integer is silently coerced to double, as
+          consistent with v8. If a double overflows into Infinity, we
+          coerce it to `null` since that's what v8 does, and the same
+          goes for underflows which, like v8, are coerced to 0.0.
+
+          This parser does not validate UTF-8 which is copied how the
+          JSON specifies. It may therefore contain underlong overlong
+          characters, trojan source and even numbers banned the IETF.
+          You can use VisualizeControlCodes() and Underlong(), to see
+          if a string round-trips, to detect these weirdo codepoints.
+
+          This parser does some validation of UTF-16. Consistent with
+          v8, bad surrogate characters will be silently preserved, as
+          their original escape sequence text. Thereby ensuring utf-8
+          output is valid. Please note that invalid utf-8 could still
+          happen if it's encoded as utf-8.
+
+          This parser is lenient about commas and colons. For example
+          it's permissible to say `DecodeJson('[1 2 3 4]')`. Trailing
+          commas are allowed. Even prefix commas are allowed. However
+          it's not recommended that you rely on this behavior, and it
+          won't round-trip with EncodeJson() currently.
+
+          When objects are parsed, your Lua object can't preserve the
+          the original ordering of fields. As such, they'll be sorted
+          by EncodeJson() and may not round-trip with original intent
 
   EncodeJson(value[,options:table])
       ├─→ json:str
@@ -725,6 +765,8 @@ FUNCTIONS
 
           When arrays and objects are serialized, entries will be sorted
           in a deterministic order.
+
+          This parser does not support UTF-8
 
   EncodeLua(value[,options:table])
       ├─→ luacode:str
@@ -1385,10 +1427,10 @@ FUNCTIONS
           access log and message logging.
 
   VisualizeControlCodes(str) → str
-          Replaces C0 control codes with their UNICODE pictures
-          representation. This function also canonicalizes overlong
-          encodings. C1 control codes are replaced with a JavaScript-like
-          escape sequence.
+          Replaces C0 control codes and trojan source characters with
+          descriptive UNICODE pictorial representation. This function
+          also canonicalizes overlong encodings. C1 control codes are
+          replaced with a JavaScript-like escape sequence.
 
   Underlong(str) → str
           Canonicalizes overlong encodings.

@@ -17,7 +17,6 @@ assert(EncodeLua(assert(DecodeJson[[  0  ]])) ==  '0' )
 assert(EncodeLua(assert(DecodeJson[[ [1] ]])) == '{1}')
 assert(EncodeLua(assert(DecodeJson[[ 2.3 ]])) == '2.3')
 assert(EncodeLua(assert(DecodeJson[[ [1,3,2] ]])) == '{1, 3, 2}')
--- assert(EncodeLua(assert(DecodeJson[[ {1: 2, 3: 4} ]])) == '{[1]=2, [3]=4}')
 assert(EncodeLua(assert(DecodeJson[[ {"foo": 2, "bar": 4} ]])) == '{bar=4, foo=2}')
 assert(EncodeLua(assert(DecodeJson[[ -123 ]])) == '-123')
 assert(EncodeLua(assert(DecodeJson[[ 1e6 ]])) == '1000000.')
@@ -26,7 +25,6 @@ assert(EncodeLua(assert(DecodeJson[[ 1e-06 ]])) == '0.000001')
 assert(EncodeLua(assert(DecodeJson[[ 9.123e6 ]])) == '9123000.')
 assert(EncodeLua(assert(DecodeJson[[ [{"heh": [1,3,2]}] ]])) == '{{heh={1, 3, 2}}}')
 assert(EncodeLua(assert(DecodeJson[[ 3.14159 ]])) == '3.14159')
--- assert(EncodeLua(assert(DecodeJson[[ {3=4} ]])) == '{[3]=4}')
 assert(EncodeLua(assert(DecodeJson[[ 1e-12 ]])) == '1e-12')
 
 assert(EncodeJson(assert(DecodeJson[[ 1e-12 ]])) == '1e-12')
@@ -52,6 +50,14 @@ assert(EncodeJson(assert(DecodeJson[[ 9223372036854775807.0 ]])) ==  '9223372036
 assert(EncodeJson(assert(DecodeJson[[ 2.7182818284590452354 ]])) == '2.718281828459045')     -- euler constant w/ 17 digit precision
 assert( EncodeLua(assert(DecodeJson[[ 2.7182818284590452354 ]])) == '2.718281828459045')     -- euler constant w/ 17 digit precision
 
+res, err = DecodeJson[[ null ]]
+assert(res == nil)
+assert(err == nil)
+
+res, err = DecodeJson[[ false ]]
+assert(res == false)
+assert(err == nil)
+
 res, err = DecodeJson[[     ]]
 assert(not res)
 assert(err == 'unexpected eof')
@@ -59,14 +65,6 @@ assert(err == 'unexpected eof')
 res, err = DecodeJson[[ {} {} ]]
 assert(not res)
 assert(err == "junk after expression")
-
-res, err = DecodeJson[[ null ]]
-assert(not res)
-assert(err == "toplevel json can't be null")
-
-res, err = DecodeJson[[ false ]]
-assert(not res)
-assert(err == "toplevel json can't be false")
 
 res, err = DecodeJson[[ {3:4} ]]
 assert(not res)
@@ -95,6 +93,26 @@ assert(err == "unexpected eof")
 res, err = DecodeJson[[ {true:3} ]]
 assert(not res)
 assert(err == "object key must be string")
+
+res, err = DecodeJson('"\x00"')
+assert(res == nil)
+assert(err == 'non-del c0 in string')
+
+res, err = DecodeJson('"e')
+assert(res == nil)
+assert(err == 'unexpected eof in string')
+
+res, err = DecodeJson('"\\xcc\\xa9"')
+assert(res == nil)
+assert(err == 'hex escape not printable')
+
+res, err = DecodeJson('"\\xcj"')
+assert(res == nil)
+assert(err == 'invalid hex escape')
+
+res, err = DecodeJson('"\\ucjcc"')
+assert(res == nil)
+assert(err == 'invalid unicode escape')
 
 res, err = DecodeJson('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[')
 assert(not res)

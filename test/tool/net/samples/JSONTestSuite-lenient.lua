@@ -26,111 +26,111 @@
 -- SOFTWARE.
 -- 
 
+-- [jart] these tests deviate from the expectations of the upstream test
+--        suite. most of these failures are because we permit syntax
+--        like this since it saves bandwidth and makes the impl smaller.
+--        we're also more permissive about things like the encoding of
+--        double exponents and empty double fraction.
+assert(EncodeLua(DecodeJson('[0 1 2 3 4]')) == '{0, 1, 2, 3, 4}')
+
 -- from fail4.lua
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_string_escape_x.json
--- (converted to binary for safety)
-assert(DecodeJson(" [\"\\x00\"] "))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_string_unescaped_tab.json
--- (converted to binary for safety)
-assert(DecodeJson([[ ["	"] ]]))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_string_unescaped_newline.json
--- (converted to binary for safety)
-assert(DecodeJson(" [\"new\nline\"] "))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_string_unescaped_ctrl_char.json
--- (converted to binary for safety)
-assert(assert(EncodeLua(assert(DecodeJson(" [\"a\x00a\"] ")))) == assert(EncodeLua({"a\x00a"})))
+--------------------------------------------------------------------------------
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_two_commas_in_a_row.json
-assert(assert(EncodeLua(assert(DecodeJson(' {"a":"b",,"c":"d"} ')))) == assert(EncodeLua({a="b", c="d"})))
 assert(DecodeJson(' {"a":"b",,"c":"d"} '))
+assert(EncodeLua(DecodeJson(' {"a":"b",,"c":"d"} ')) == '{a="b", c="d"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comma.json
 assert(DecodeJson(' {"id":0,} '))
+assert(EncodeLua(DecodeJson(' {"id":0,} ')) == '{id=0}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_several_trailing_commas.json
 assert(DecodeJson(' {"id":0,,,,,} '))
+assert(EncodeLua(DecodeJson(' {"id":0,,,,,} ')) == '{id=0}')
 
 -- from fail1.lua
+--------------------------------------------------------------------------------
 
+-- [jart] v8 permits the \xb9 but doesn't permit the trailing comma
+--        therefore this succeeds beacuse we don't care about comma
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_lone_continuation_byte_in_key_and_trailing_comma.json
- -- (converted to binary for safety)
 assert(DecodeJson(" {\"\xb9\":\"0\",} "))
+assert(EncodeLua(DecodeJson(" {\"\xb9\":\"0\",} ")) == '{["\\xb9"]="0"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_semicolon.json
 assert(DecodeJson(' {"a" "b"} '))
+assert(EncodeLua(DecodeJson(' {"a" "b"} ')) == '{a="b"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_double_colon.json
 assert(DecodeJson(' {"x"::"b"} '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_with_leading_zero.json
-assert(DecodeJson(' [012] '))
+assert(EncodeLua(DecodeJson(' {"x"::"b"} ')) == '{x="b"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_real_without_fractional_part.json
 assert(DecodeJson(' [1.] '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_neg_int_starting_with_zero.json
-assert(DecodeJson(' [-012] '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_minus_space_1.json
-assert(DecodeJson(' [- 1] '))
+assert(EncodeLua(DecodeJson(' [1.] ')) == EncodeLua({1.0}))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e3.json
 assert(DecodeJson(' [2.e3] '))
+assert(EncodeLua(DecodeJson(' [2.e3] ')) == '{2000.}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e-3.json
 assert(DecodeJson(' [2.e-3] '))
+assert(EncodeLua(DecodeJson(' [2.e-3] ')) == '{0.002}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e+3.json
 assert(DecodeJson(' [2.e+3] '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1_000.json
-assert(DecodeJson(' [1 000.0] '))
+assert(EncodeLua(DecodeJson(' [2.e+3] ')) == '{2000.}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0.e1.json
 assert(DecodeJson(' [0.e1] '))
+assert(EncodeLua(DecodeJson(' [0.e1] ')) == '{0.}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-2..json
 assert(DecodeJson(' [-2.] '))
+assert(EncodeLua(DecodeJson(' [-2.] ')) == '{-2.}')
 
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-01.json
-assert(DecodeJson(' [-01] '))
+-- lool
+assert(not DecodeJson(' [--2.] '))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_number_and_several_commas.json
 assert(DecodeJson(' [1,,] '))
+assert(EncodeLua(DecodeJson(' [1,,] ')) == '{1}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_number_and_comma.json
 assert(DecodeJson(' [1,] '))
+assert(EncodeLua(DecodeJson(' [1,] ')) == '{1}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_missing_value.json
 assert(DecodeJson(' [   , ""] '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_just_minus.json
-assert(DecodeJson(' [-] '))
+assert(EncodeLua(DecodeJson(' [   , ""] ')) == '{""}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_just_comma.json
 assert(DecodeJson(' [,] '))
+assert(EncodeLua(DecodeJson(' [,] ')) == EncodeLua(DecodeJson(' [] ')))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_inner_array_no_comma.json
 -- (added spaces between [[ and ]] so lua doesn't get confused)
 assert(DecodeJson([[
 [ 3[ 4] ]   ]]))
+assert(EncodeLua(DecodeJson([[
+[ 3[ 4] ]   ]])) == '{3, {4}}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_extra_comma.json
 assert(DecodeJson(' ["",] '))
+assert(EncodeLua(DecodeJson(' ["",] ')) == '{""}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_double_extra_comma.json
 assert(DecodeJson(' ["x",,] '))
-
+assert(EncodeLua(DecodeJson(' ["x",,] ')) == '{"x"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_double_comma.json
 assert(DecodeJson(' [1,,2] '))
+assert(EncodeLua(DecodeJson(' [1,,2] ')) == '{1, 2}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_comma_and_number.json
 assert(DecodeJson(' [,1] '))
+assert(EncodeLua(DecodeJson(' [,1] ')) == '{1}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_1_true_without_comma.json
 assert(DecodeJson(' [1 true] '))
+assert(EncodeLua(DecodeJson(' [1 true] ')) == '{1, true}')
