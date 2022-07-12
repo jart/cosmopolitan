@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -53,4 +54,13 @@ TEST(exp2f, test) {
   EXPECT_STREQ("NAN", gc(xdtoaf(exp2f(NAN))));
   EXPECT_STREQ("0", gc(xdtoaf(exp2f(-132098844872390))));
   EXPECT_STREQ("INFINITY", gc(xdtoaf(exp2f(132098844872390))));
+}
+
+BENCH(exp2l, bench) {
+  double _exp2(double) asm("exp2");
+  float _exp2f(float) asm("exp2f");
+  long double _exp2l(long double) asm("exp2l");
+  EZBENCH2("exp2", donothing, _exp2(.7));   /*  ~6ns */
+  EZBENCH2("exp2f", donothing, _exp2f(.7)); /*  ~5ns */
+  EZBENCH2("exp2l", donothing, _exp2l(.7)); /* ~30ns */
 }

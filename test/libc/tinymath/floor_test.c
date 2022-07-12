@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -52,4 +53,13 @@ TEST(floorl, test) {
   EXPECT_STREQ("-NAN", gc(xdtoal(floorl(-NAN))));
   EXPECT_STREQ("INFINITY", gc(xdtoal(floorl(INFINITY))));
   EXPECT_STREQ("-INFINITY", gc(xdtoal(floorl(-INFINITY))));
+}
+
+BENCH(floorl, bench) {
+  double _floor(double) asm("floor");
+  float _floorf(float) asm("floorf");
+  long double _floorl(long double) asm("floorl");
+  EZBENCH2("floor", donothing, _floor(.7));   /* ~3ns */
+  EZBENCH2("floorf", donothing, _floorf(.7)); /* ~3ns */
+  EZBENCH2("floorl", donothing, _floorl(.7)); /* ~9ns */
 }

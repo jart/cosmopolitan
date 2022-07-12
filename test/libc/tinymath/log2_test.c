@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -53,4 +54,13 @@ TEST(log2f, test) {
   EXPECT_STREQ("-INFINITY", gc(xdtoaf(log2f(-0.))));
   EXPECT_STREQ("-NAN", gc(xdtoaf(log2f(-1))));
   EXPECT_STREQ("-NAN", gc(xdtoaf(log2f(-2))));
+}
+
+BENCH(log2, bench) {
+  double _log2(double) asm("log2");
+  float _log2f(float) asm("log2f");
+  long double _log2l(long double) asm("log2l");
+  EZBENCH2("log2", donothing, _log2(.7));   /*  ~9ns */
+  EZBENCH2("log2f", donothing, _log2f(.7)); /*  ~6ns */
+  EZBENCH2("log2l", donothing, _log2l(.7)); /* ~21ns */
 }

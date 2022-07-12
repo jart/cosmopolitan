@@ -19,6 +19,7 @@
 #include "libc/math.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -60,4 +61,13 @@ TEST(exp, fun) {
   ASSERT_STREQ("7.389056", gc(xasprintf("%f", exp(2.0))));
   ASSERT_STREQ("6.389056", gc(xasprintf("%f", expm1(2.0))));
   ASSERT_STREQ("6.389056", gc(xasprintf("%f", exp(2.0) - 1.0)));
+}
+
+BENCH(expl, bench) {
+  double _exp(double) asm("exp");
+  float _expf(float) asm("expf");
+  long double _expl(long double) asm("expl");
+  EZBENCH2("exp", donothing, _exp(.7));   /*  ~6ns */
+  EZBENCH2("expf", donothing, _expf(.7)); /*  ~5ns */
+  EZBENCH2("expl", donothing, _expl(.7)); /* ~20ns */
 }

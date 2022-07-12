@@ -3,7 +3,7 @@
 ╚──────────────────────────────────────────────────────────────────────────────╝
 │                                                                              │
 │  Musl Libc                                                                   │
-│  Copyright © 2005-2020 Rich Felker, et al.                                   │
+│  Copyright © 2005-2014 Rich Felker, et al.                                   │
 │                                                                              │
 │  Permission is hereby granted, free of charge, to any person obtaining       │
 │  a copy of this software and associated documentation files (the             │
@@ -25,49 +25,42 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/tinymath/kernel.internal.h"
+#include "libc/tinymath/log2f_data.internal.h"
 
 asm(".ident\t\"\\n\\n\
-fdlibm (fdlibm license)\\n\
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.\"");
-asm(".ident\t\"\\n\\n\
-Musl libc (MIT License)\\n\
-Copyright 2005-2014 Rich Felker, et. al.\"");
+Double-precision math functions (MIT License)\\n\
+Copyright 2018 ARM Limited\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-/* origin: FreeBSD /usr/src/lib/msun/src/k_sinf.c */
 /*
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- * Optimized by Bruce D. Evans.
- */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ * Data definition for log2f.
  *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Copyright (c) 2017-2018, Arm Limited.
+ * SPDX-License-Identifier: MIT
  */
 
-/* |sin(x)/x - s(x)| < 2**-37.5 (~[-4.89e-12, 4.824e-12]). */
-static const double
-S1 = -0x15555554cbac77.0p-55, /* -0.166666666416265235595 */
-S2 =  0x111110896efbb2.0p-59, /*  0.0083333293858894631756 */
-S3 = -0x1a00f9e2cae774.0p-65, /* -0.000198393348360966317347 */
-S4 =  0x16cd878c3b46a7.0p-71; /*  0.0000027183114939898219064 */
-
-float __sindf(double x)
-{
-	double_t r, s, w, z;
-
-	/* Try to optimize for parallel evaluation as in __tandf.c. */
-	z = x*x;
-	w = z*z;
-	r = S3 + z*S4;
-	s = z*x;
-	return (x + s*(S1 + z*S2)) + s*w*r;
-}
+const struct log2f_data __log2f_data = {
+  .tab = {
+  { 0x1.661ec79f8f3bep+0, -0x1.efec65b963019p-2 },
+  { 0x1.571ed4aaf883dp+0, -0x1.b0b6832d4fca4p-2 },
+  { 0x1.49539f0f010bp+0, -0x1.7418b0a1fb77bp-2 },
+  { 0x1.3c995b0b80385p+0, -0x1.39de91a6dcf7bp-2 },
+  { 0x1.30d190c8864a5p+0, -0x1.01d9bf3f2b631p-2 },
+  { 0x1.25e227b0b8eap+0, -0x1.97c1d1b3b7afp-3 },
+  { 0x1.1bb4a4a1a343fp+0, -0x1.2f9e393af3c9fp-3 },
+  { 0x1.12358f08ae5bap+0, -0x1.960cbbf788d5cp-4 },
+  { 0x1.0953f419900a7p+0, -0x1.a6f9db6475fcep-5 },
+  { 0x1p+0, 0x0p+0 },
+  { 0x1.e608cfd9a47acp-1, 0x1.338ca9f24f53dp-4 },
+  { 0x1.ca4b31f026aap-1, 0x1.476a9543891bap-3 },
+  { 0x1.b2036576afce6p-1, 0x1.e840b4ac4e4d2p-3 },
+  { 0x1.9c2d163a1aa2dp-1, 0x1.40645f0c6651cp-2 },
+  { 0x1.886e6037841edp-1, 0x1.88e9c2c1b9ff8p-2 },
+  { 0x1.767dcf5534862p-1, 0x1.ce0a44eb17bccp-2 },
+  },
+  .poly = {
+  -0x1.712b6f70a7e4dp-2, 0x1.ecabf496832ep-2, -0x1.715479ffae3dep-1,
+  0x1.715475f35c8b8p0,
+  }
+};

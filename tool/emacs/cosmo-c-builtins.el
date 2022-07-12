@@ -155,6 +155,7 @@
            "__builtin_infd64"
            "__builtin_infd128"
            "__builtin_inff"
+           "__builtin_fma"
            "__builtin_infl"
            "__builtin_inffn"
            "__builtin_inffnx"

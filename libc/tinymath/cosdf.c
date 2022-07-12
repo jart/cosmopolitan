@@ -26,6 +26,7 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/tinymath/kernel.internal.h"
 
 asm(".ident\t\"\\n\\n\
 fdlibm (fdlibm license)\\n\

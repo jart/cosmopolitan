@@ -17,11 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Returns natural logarithm of 𝑥.
+//	Returns 𝑥^𝑦.
 //
 //	@param	𝑥 is double scalar in low half of %xmm0
+//	@param	𝑦 is double scalar in low half of %xmm1
 //	@return	double scalar in low half of %xmm0
-log:	ezlea	logl,ax
+pow:	ezlea	powl,ax
 	jmp	_d2ld2
-	.endfn	log,globl
+	.endfn	pow,globl
+
+#endif /* TINY */

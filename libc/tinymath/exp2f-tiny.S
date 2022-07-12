@@ -17,11 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Returns 𝑒^x.
+//	Returns 2^𝑥.
 //
-//	@param	𝑥 is double scalar in low half of %xmm0
-//	@return	double scalar in low half of %xmm0
-expf:	ezlea	expl,ax
+//	@param	𝑥 is a float passed in the lower quarter of %xmm0
+//	@return	result in lower quarter of %xmm0
+exp2f:
+	ezlea	exp2l,ax
 	jmp	_f2ld2
-	.endfn	expf,globl
+	.endfn	exp2f,globl
+
+#endif /* TINY */

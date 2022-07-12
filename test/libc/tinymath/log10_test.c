@@ -22,45 +22,45 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(logl, test) {
-  EXPECT_STREQ("1", gc(xdtoal(logl(2.71828182845904523536L))));
-  EXPECT_STREQ("NAN", gc(xdtoal(logl(NAN))));
-  EXPECT_STREQ("0", gc(xdtoal(logl(1))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(logl(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(0))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(logl(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(logl(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoal(logl(-2))));
+TEST(log10l, test) {
+  EXPECT_STREQ("1", gc(xdtoal(log10l(10))));
+  EXPECT_STREQ("NAN", gc(xdtoal(log10l(NAN))));
+  EXPECT_STREQ("0", gc(xdtoal(log10l(1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoal(log10l(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(log10l(0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoal(log10l(-0.))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(log10l(-1))));
+  EXPECT_STREQ("-NAN", gc(xdtoal(log10l(-2))));
 }
 
-TEST(log, test) {
-  EXPECT_STREQ("1", gc(xdtoa(log(M_E))));
-  EXPECT_STREQ("2", gc(xdtoa(log(M_E * M_E))));
-  EXPECT_STREQ("NAN", gc(xdtoa(log(NAN))));
-  EXPECT_STREQ("0", gc(xdtoa(log(1))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(log(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(log(0))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(log(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(log(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoa(log(-2))));
+TEST(log10, test) {
+  EXPECT_STREQ(".301029995663981", gc(xdtoa(log10(2))));
+  EXPECT_STREQ("2", gc(xdtoa(log10(100))));
+  EXPECT_STREQ("NAN", gc(xdtoa(log10(NAN))));
+  EXPECT_STREQ("0", gc(xdtoa(log10(1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoa(log10(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(log10(0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoa(log10(-0.))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(log10(-1))));
+  EXPECT_STREQ("-NAN", gc(xdtoa(log10(-2))));
 }
 
-TEST(logf, test) {
-  EXPECT_STREQ("1", gc(xdtoaf(logf(M_E))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(logf(NAN))));
-  EXPECT_STREQ("0", gc(xdtoaf(logf(1))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(logf(INFINITY))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoaf(logf(0))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoaf(logf(-0.))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(logf(-1))));
-  EXPECT_STREQ("-NAN", gc(xdtoaf(logf(-2))));
+TEST(log10f, test) {
+  EXPECT_STREQ("1", gc(xdtoaf(log10f(10))));
+  EXPECT_STREQ("NAN", gc(xdtoaf(log10f(NAN))));
+  EXPECT_STREQ("0", gc(xdtoaf(log10f(1))));
+  EXPECT_STREQ("INFINITY", gc(xdtoaf(log10f(INFINITY))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(log10f(0))));
+  EXPECT_STREQ("-INFINITY", gc(xdtoaf(log10f(-0.))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(log10f(-1))));
+  EXPECT_STREQ("-NAN", gc(xdtoaf(log10f(-2))));
 }
 
-BENCH(logl, bench) {
-  double _log(double) asm("log");
-  float _logf(float) asm("logf");
-  long double _logl(long double) asm("logl");
-  EZBENCH2("log", donothing, _log(.7));   /*  ~9ns */
-  EZBENCH2("logf", donothing, _logf(.7)); /* ~20ns */
-  EZBENCH2("logl", donothing, _logl(.7)); /* ~20ns */
+BENCH(log10, bench) {
+  double _log10(double) asm("log10");
+  float _log10f(float) asm("log10f");
+  long double _log10l(long double) asm("log10l");
+  EZBENCH2("log10", donothing, _log10(.7));   /* ~20ns */
+  EZBENCH2("log10f", donothing, _log10f(.7)); /* ~21ns */
+  EZBENCH2("log10l", donothing, _log10l(.7)); /* ~21ns */
 }

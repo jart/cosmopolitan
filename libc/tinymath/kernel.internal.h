@@ -5,14 +5,14 @@ COSMOPOLITAN_C_START_
 
 extern int __signgam;
 
-float __cosdf(double);
-float __sindf(double);
-float __tandf(double, int);
-double __sin(double, double, int);
-double __tan(double, double, int);
-double __cos(double, double);
-int __rem_pio2(double, double *);
-int __rem_pio2_large(double *, double *, int, int, int);
+float __cosdf(double) hidden;
+float __sindf(double) hidden;
+float __tandf(double, int) hidden;
+double __sin(double, double, int) hidden;
+double __tan(double, double, int) hidden;
+double __cos(double, double) hidden;
+int __rem_pio2(double, double *) hidden;
+int __rem_pio2_large(double *, double *, int, int, int) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

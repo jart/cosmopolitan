@@ -17,11 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Calculates log₁₀𝑥.
+//	Returns 2^𝑥.
 //
-//	@param	𝑥 is double scalar in low half of %xmm0
-//	@return	double scalar in low half of %xmm0
-log10:	ezlea	log10l,ax
+//	@param	𝑥 is a double passed in the lower quadword of %xmm0
+//	@return	result in lower quadword of %xmm0
+exp2:	ezlea	exp2l,ax
 	jmp	_d2ld2
-	.endfn	log10,globl
+	.endfn	exp2,globl
+
+#endif /* TINY */

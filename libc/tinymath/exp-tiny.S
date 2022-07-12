@@ -17,21 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
-//	Calculates log₂𝑥.
+//	Returns 𝑒^x.
 //
-//	@param	𝑥 is a double passed in the lower quadword of %xmm0
-//	@return	result in lower quadword of %xmm0
-log2:	push	%rbp
-	mov	%rsp,%rbp
-	.profilable
-	push	%rax
-	movsd	%xmm0,-8(%rbp)
-	fld1
-	fldl	-8(%rbp)
-	fyl2x
-	fstpl	-8(%rbp)
-	movsd	-8(%rbp),%xmm0
-	leave
-	ret
-	.endfn	log2,globl
+//	@param	𝑥 is float scalar in low quarter of %xmm0
+//	@return	float scalar in low quarter of %xmm0
+exp:	ezlea	expl,ax
+	jmp	_d2ld2
+	.endfn	exp,globl
+
+#endif /* TINY */
