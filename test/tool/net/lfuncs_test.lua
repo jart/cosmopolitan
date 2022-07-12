@@ -61,6 +61,8 @@ assert(EncodeJson(0) == "0")
 assert(EncodeJson(3.14) == "3.14")
 assert(EncodeJson({2, 1}) == "[2,1]")
 
+assert(EncodeLua(" [\"new\nline\"] ") == "\" [\\\"new\\nline\\\"] \"")
+
 -- EncodeLua() permits serialization of cyclic data structures
 x = {2, 1}
 x[3] = x
@@ -78,7 +80,13 @@ x = {2, 1}
 x[3] = x
 json, err = EncodeJson(x)
 assert(not json)
-assert(err == "serialization failed")
+assert(err == "won't serialize cyclic lua table")
+
+-- pass the parser to itself lool
+json, err = EncodeJson(EncodeJson)
+assert(not json)
+print(err)
+assert(err == "unsupported lua type")
 
 -- EncodeJson() sorts table entries
 -- JSON always requires quotes around key names

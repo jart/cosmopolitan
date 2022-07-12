@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
+#include "libc/bits/likely.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
@@ -4238,8 +4239,6 @@ static int LuaEncodeSmth(lua_State *L,
   lua_settop(L, 1);  // keep the passed argument on top
   if (Encoder(L, useoutput ? &outbuf : &p, numformat, -1) == -1) {
     free(p);
-    lua_pushnil(L);
-    lua_pushstring(L, "serialization failed");
     return 2;
   }
   if (useoutput) {
@@ -4262,8 +4261,26 @@ static int LuaEncodeLua(lua_State *L) {
 static int LuaDecodeJson(lua_State *L) {
   size_t n;
   const char *p;
+  struct DecodeJson r;
   p = luaL_checklstring(L, 1, &n);
-  return DecodeJson(L, p, n);
+  r = DecodeJson(L, p, n);
+  if (UNLIKELY(!r.rc)) {
+    lua_pushnil(L);
+    lua_pushstring(L, "unexpected eof");
+    return 2;
+  }
+  if (UNLIKELY(r.rc == -1)) {
+    lua_pushnil(L);
+    lua_pushstring(L, r.p);
+    return 2;
+  }
+  r = DecodeJson(L, r.p, n - (r.p - p));
+  if (UNLIKELY(r.rc)) {
+    lua_pushnil(L);
+    lua_pushstring(L, "junk after expression");
+    return 2;
+  }
+  return 1;
 }
 
 static int LuaGetUrl(lua_State *L) {

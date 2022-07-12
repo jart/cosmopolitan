@@ -674,7 +674,12 @@ FUNCTIONS
           encodebase64.c.
 
   DecodeJson(input:str)
-      ├─→ value:*
+      ├─→ int64
+      ├─→ string
+      ├─→ double
+      ├─→ array
+      ├─→ object
+      ├─→ true
       └─→ nil, error:str
 
           Turns JSON string into a Lua data structure.
@@ -687,6 +692,9 @@ FUNCTIONS
           even though that structure won't round-trip with `EncodeJson`
           since redbean won't generate invalid JSON (see Postel's Law).
 
+          This parser permits top-level values regardless of type, with
+          the exception of `false`, `null`, and absent.
+
   EncodeJson(value[,options:table])
       ├─→ json:str
       ├─→ true [if useoutput]
@@ -695,10 +703,12 @@ FUNCTIONS
           Turns Lua data structure into a JSON string.
 
           Tables with non-zero length (as reported by `#`) are encoded
-          as arrays with non-array elements ignored. Empty tables are
-          encoded as empty arrays. All other tables are encoded as
-          objects with numerical keys converted to strings (so `{[3]=1}`
-          is encoded as `{"3":1}`).
+          as arrays and any non-array elements are ignored. Empty tables
+          are encoded as `{}` with the exception of the special empty
+          table `{[0]=false}` shall be encoded as `[]`. Arrays elements
+          are serialized in specified order. Object entries are sorted
+          ASCIIbetically using strcmp() on their string keys to ensure
+          deterministic order.
 
           The following options may be used:
 
@@ -711,6 +721,7 @@ FUNCTIONS
             - `value` is cyclic
             - `value` has depth greater than 64
             - `value` contains functions, user data, or threads
+            - `value` is table that blends string / non-string keys
 
           When arrays and objects are serialized, entries will be sorted
           in a deterministic order.
@@ -728,22 +739,30 @@ FUNCTIONS
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
 
-          This function will fail if:
-
-            - `value` has depth greater than 64
-
           If a user data object has a `__repr` or `__tostring` meta
           method, then that'll be used to encode the Lua code.
 
+          When tables are serialized, entries will be sorted in a
+          deterministic order. This makes `EncodeLua` a great fit for
+          writing unit tests, when tables contain regular normal data.
+
+          This serializer is designed primarily to describe data. For
+          example, it's used by the REPL where we need to be able to
+          ignore errors when displaying data structures, since showing
+          most things imperfectly is better than crashing. Therefore
+          this isn't the kind of serializer you'd want to use to persist
+          data in prod. Try using the JSON serializer for that purpose.
+
           Non-encodable value types (e.g. threads, functions) will be
           represented as a string literal with the type name and pointer
-          address. Note this is subject to change in the future.
+          address. The string description is of an unspecified format
+          that could most likely change. This encoder detects cyclic
+          tables; however instead of failing, it embeds a string of
+          unspecified layout describing the cycle.
 
-          This encoder detects cyclic tables, and encodes a string
-          literal saying it's cyclic when cycles are encountered.
+          The only failure return condition currently implemented is
+          when C runs out of heap memory.
 
-          When tables are serialized, entries will be sorted in a
-          deterministic order.
 
   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
           Turns UTF-8 into ISO-8859-1 string.

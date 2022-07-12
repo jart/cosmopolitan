@@ -4,7 +4,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int DecodeJson(struct lua_State *, const char *, size_t);
+struct DecodeJson {
+  int rc;
+  const char *p;
+};
+
+struct DecodeJson DecodeJson(struct lua_State *, const char *, size_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

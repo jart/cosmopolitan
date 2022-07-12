@@ -28,12 +28,12 @@ int EscapeLuaString(char *s, size_t len, char **buf) {
   size_t i;
   RETURN_ON_ERROR(appendw(buf, '"'));
   for (i = 0; i < len; i++) {
-    if (' ' <= s[i] && s[i] <= 0x7e) {
-      RETURN_ON_ERROR(appendw(buf, s[i]));
-    } else if (s[i] == '\n') {
+    if (s[i] == '\n') {
       RETURN_ON_ERROR(appendw(buf, '\\' | 'n' << 8));
     } else if (s[i] == '\\' || s[i] == '\'' || s[i] == '\"') {
       RETURN_ON_ERROR(appendw(buf, '\\' | s[i] << 8));
+    } else if (' ' <= s[i] && s[i] <= 0x7e) {
+      RETURN_ON_ERROR(appendw(buf, s[i]));
     } else {
       RETURN_ON_ERROR(
           appendw(buf, '\\' | 'x' << 010 |

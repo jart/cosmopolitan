@@ -19,6 +19,8 @@
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/log.h"
 #include "libc/log/rop.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
@@ -34,13 +36,14 @@
 
 static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
                                  char *numformat, int idx,
-                                 struct LuaVisited *visited) {
+                                 struct LuaVisited *visited,
+                                 const char **reason) {
   char *s;
   int sli, rc;
   bool isarray;
+  char ibuf[128];
   size_t tbllen, i, z;
   struct StrList sl = {0};
-  char ibuf[128], fmt[] = "%.14g";
   if (level > 0) {
     switch (lua_type(L, idx)) {
 
@@ -56,7 +59,9 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
 
       case LUA_TSTRING:
         s = lua_tolstring(L, idx, &z);
-        if (!(s = EscapeJsStringLiteral(s, z, &z))) goto OnError;
+        if (!(s = EscapeJsStringLiteral(s, z, &z))) {
+          goto OnError;
+        }
         RETURN_ON_ERROR(appendw(buf, '"'));
         RETURN_ON_ERROR(appendd(buf, s, z));
         RETURN_ON_ERROR(appendw(buf, '"'));
@@ -76,19 +81,28 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
       case LUA_TTABLE:
         RETURN_ON_ERROR(rc = LuaPushVisit(visited, lua_topointer(L, idx)));
         if (!rc) {
-          lua_pushvalue(L, idx);  // table ref
-          tbllen = lua_rawlen(L, -1);
-          // encode tables with numeric indices and empty tables as arrays
-          isarray =
-              tbllen > 0 ||                          // integer keys present
-              (lua_pushnil(L), !lua_next(L, -2)) ||  // no non-integer keys
-              (lua_pop(L, 2), false);  // pop key/value pushed by lua_next
+          // create nearby reference to table at idx
+          lua_pushvalue(L, idx);
+
+          // fast way to tell if table is an array or object
+          if ((tbllen = lua_rawlen(L, -1)) > 0) {
+            isarray = true;
+          } else {
+            // the json parser inserts `[0]=false` in empty arrays
+            // so we can tell them apart from empty objects, which
+            // is needed in order to have `[]` roundtrip the parse
+            isarray = (lua_rawgeti(L, -1, 0) == LUA_TBOOLEAN &&
+                       !lua_toboolean(L, -1));
+            lua_pop(L, 1);
+          }
+
+          // now serialize the table
           if (isarray) {
             for (i = 1; i <= tbllen; i++) {
               RETURN_ON_ERROR(sli = AppendStrList(&sl));
               lua_rawgeti(L, -1, i);  // table/-2, value/-1
-              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
-                                                    numformat, -1, visited));
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(
+                  L, &sl.p[sli], level - 1, numformat, -1, visited, reason));
               lua_pop(L, 1);
             }
           } else {
@@ -96,20 +110,15 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
             lua_pushnil(L);  // push the first key
             while (lua_next(L, -2)) {
               if (lua_type(L, -2) != LUA_TSTRING) {
-                // json tables must be arrays or use string keys
+                *reason = "json objects must only use string keys";
                 goto OnError;
               }
-              // the json parser inserts a `__json_object__` into empty
-              // objects, so we don't serialize `{}` as `[]` by mistake
-              // and as such, we should ignore it here, for readability
-              if (strcmp(luaL_checkstring(L, -2), "__json_object__")) {
-                RETURN_ON_ERROR(sli = AppendStrList(&sl));
-                RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
-                                                      numformat, -2, visited));
-                RETURN_ON_ERROR(appendw(&sl.p[sli], ':'));
-                RETURN_ON_ERROR(LuaEncodeJsonDataImpl(L, &sl.p[sli], level - 1,
-                                                      numformat, -1, visited));
-              }
+              RETURN_ON_ERROR(sli = AppendStrList(&sl));
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(
+                  L, &sl.p[sli], level - 1, numformat, -2, visited, reason));
+              RETURN_ON_ERROR(appendw(&sl.p[sli], ':'));
+              RETURN_ON_ERROR(LuaEncodeJsonDataImpl(
+                  L, &sl.p[sli], level - 1, numformat, -1, visited, reason));
               lua_pop(L, 1);  // table/-2, key/-1
             }
             // stack: table/-1, as the key was popped by lua_next
@@ -121,18 +130,18 @@ static int LuaEncodeJsonDataImpl(lua_State *L, char **buf, int level,
           RETURN_ON_ERROR(appendw(buf, isarray ? ']' : '}'));
           LuaPopVisit(visited);
           lua_pop(L, 1);  // table ref
+
           return 0;
         } else {
-          // cyclic data structure
+          *reason = "won't serialize cyclic lua table";
           goto OnError;
         }
-
       default:
-        // unsupported lua type
+        *reason = "unsupported lua type";
         goto OnError;
     }
   } else {
-    // too much depth
+    *reason = "table has great depth";
     goto OnError;
   }
 OnError:
@@ -152,7 +161,12 @@ OnError:
 int LuaEncodeJsonData(lua_State *L, char **buf, char *numformat, int idx) {
   int rc;
   struct LuaVisited visited = {0};
-  rc = LuaEncodeJsonDataImpl(L, buf, 64, numformat, idx, &visited);
+  const char *reason = "out of memory";
+  rc = LuaEncodeJsonDataImpl(L, buf, 64, numformat, idx, &visited, &reason);
   free(visited.p);
+  if (rc == -1) {
+    lua_pushnil(L);
+    lua_pushstring(L, reason);
+  }
   return rc;
 }

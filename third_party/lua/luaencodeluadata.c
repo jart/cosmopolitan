@@ -57,6 +57,15 @@ static bool IsLuaArray(lua_State *L) {
   return true;
 }
 
+static int LuaEncodeLuaOpaqueData(lua_State *L, char **buf, int idx,
+                                  const char *kind) {
+  if (appendf(buf, "\"%s@%p\"", kind, lua_topointer(L, idx)) != -1) {
+    return 0;
+  } else {
+    return -1;
+  }
+}
+
 static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
                                 char *numformat, int idx,
                                 struct LuaVisited *visited) {
@@ -80,19 +89,13 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
         return 0;
 
       case LUA_TFUNCTION:
-        RETURN_ON_ERROR(
-            appendf(buf, "\"%s@%p\"", "func", lua_topointer(L, idx)));
-        return 0;
+        return LuaEncodeLuaOpaqueData(L, buf, idx, "func");
 
       case LUA_TLIGHTUSERDATA:
-        RETURN_ON_ERROR(
-            appendf(buf, "\"%s@%p\"", "light", lua_topointer(L, idx)));
-        return 0;
+        return LuaEncodeLuaOpaqueData(L, buf, idx, "light");
 
       case LUA_TTHREAD:
-        RETURN_ON_ERROR(
-            appendf(buf, "\"%s@%p\"", "thread", lua_topointer(L, idx)));
-        return 0;
+        return LuaEncodeLuaOpaqueData(L, buf, idx, "thread");
 
       case LUA_TUSERDATA:
         if (luaL_callmeta(L, idx, "__repr")) {
@@ -117,9 +120,7 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
           lua_pop(L, 1);
           return 0;
         }
-        RETURN_ON_ERROR(
-            appendf(buf, "\"%s@%p\"", "udata", lua_touserdata(L, idx)));
-        return 0;
+        return LuaEncodeLuaOpaqueData(L, buf, idx, "udata");
 
       case LUA_TNUMBER:
         if (lua_isinteger(L, idx)) {
@@ -174,19 +175,16 @@ static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
           RETURN_ON_ERROR(appendw(buf, '}'));
           FreeStrList(&sl);
           LuaPopVisit(visited);
-        } else {
-          RETURN_ON_ERROR(
-              appendf(buf, "\"%s@%p\"", "cyclic", lua_topointer(L, idx)));
-        }
-        return 0;
 
+          return 0;
+        } else {
+          return LuaEncodeLuaOpaqueData(L, buf, idx, "cyclic");
+        }
       default:
-        // unsupported lua type
-        goto OnError;
+        return LuaEncodeLuaOpaqueData(L, buf, idx, "unsupported");
     }
   } else {
-    // too much depth
-    goto OnError;
+    return LuaEncodeLuaOpaqueData(L, buf, idx, "greatdepth");
   }
 OnError:
   FreeStrList(&sl);
@@ -195,6 +193,13 @@ OnError:
 
 /**
  * Encodes Lua data structure as Lua code string.
+ *
+ * This serializer is intended primarily for describing the data
+ * structure. For example, it's used by the REPL where we need to be
+ * able to ignore errors when displaying data structures, since showing
+ * most things imperfectly is better than crashing. Therefore this isn't
+ * the kind of serializer you'd want to use to persist data in prod. Try
+ * using the JSON serializer for that purpose.
  *
  * @param L is Lua interpreter state
  * @param buf receives encoded output string
@@ -207,5 +212,9 @@ int LuaEncodeLuaData(lua_State *L, char **buf, char *numformat, int idx) {
   struct LuaVisited visited = {0};
   rc = LuaEncodeLuaDataImpl(L, buf, 64, numformat, idx, &visited);
   free(visited.p);
+  if (rc == -1) {
+    lua_pushnil(L);
+    lua_pushstring(L, "out of memory");
+  }
   return rc;
 }

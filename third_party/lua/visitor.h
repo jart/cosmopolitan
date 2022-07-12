@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 struct LuaVisited {
-  int n;
+  int i, n;
   const void **p;
 };
 

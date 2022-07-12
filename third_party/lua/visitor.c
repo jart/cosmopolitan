@@ -17,29 +17,43 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/x/x.h"
+#include "libc/mem/mem.h"
 #include "third_party/lua/visitor.h"
 
-int LuaPushVisit(struct LuaVisited *visited, const void *p) {
-  int i, n2;
-  const void **p2;
-  for (i = 0; i < visited->n; ++i) {
-    if (visited->p[i] == p) {
-      return 1;
+static inline bool IsVisited(struct LuaVisited *v, const void *p) {
+  int i;
+  for (i = 0; i < v->i; ++i) {
+    if (v->p[i] == p) {
+      return true;
     }
   }
-  n2 = visited->n;
-  if ((p2 = realloc(visited->p, ++n2 * sizeof(*visited->p)))) {
-    visited->p = p2;
-    visited->n = n2;
-  } else {
-    return -1;
+  return false;
+}
+
+static inline int Visit(struct LuaVisited *v, const void *p) {
+  int n2;
+  const void **p2;
+  if (v->i == v->n) {
+    n2 = v->n;
+    if (!n2) n2 = 2;
+    n2 += n2 >> 1;
+    if ((p2 = realloc(v->p, n2 * sizeof(*p2)))) {
+      v->p = p2;
+      v->n = n2;
+    } else {
+      return -1;
+    }
   }
-  visited->p[visited->n - 1] = p;
+  v->p[v->i++] = p;
   return 0;
 }
 
-void LuaPopVisit(struct LuaVisited *visited) {
-  assert(visited->n > 0);
-  --visited->n;
+int LuaPushVisit(struct LuaVisited *v, const void *p) {
+  if (IsVisited(v, p)) return 1;
+  return Visit(v, p);
+}
+
+void LuaPopVisit(struct LuaVisited *v) {
+  assert(v->i > 0);
+  --v->i;
 }

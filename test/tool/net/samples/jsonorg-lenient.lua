@@ -5,86 +5,55 @@
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail4.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ "extra comma",] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail5.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ "double extra comma",,] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail6.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 [    , "<-- missing value"] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail7.json
-assert(nil ~= pcall(DecodeJson, [[
-[ "Comma after the close"] ,
-]]))
-
--- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail8.json
-assert(nil ~= pcall(DecodeJson, [[
-[ "Extra close"] ] 
-]]))
-
--- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail9.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 {"Extra comma": true,}
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail19.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 {"Missing colon" null}
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail20.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 {"Double colon":: null}
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail21.json
-assert(nil ~= pcall(DecodeJson, [[
-{"Comma instead of colon", null}
-]]))
-
--- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail10.json
-assert(nil ~= pcall(DecodeJson, [[
-{"Extra value after close": true} "misplaced quoted value"
-]]))
-
--- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail25.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ "	tab	character	in	string	"] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail26.json
-assert(nil ~= pcall(DecodeJson, [[
-[ "tab\   character\   in\  string\  "] 
-]]))
-
--- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail27.json
-assert(nil ~= pcall(DecodeJson, [[
+assert(DecodeJson([[
 [ "line
 break"] 
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
--- JSON parsing sample test case: fail28.json
-assert(nil ~= pcall(DecodeJson, [[
-[ "line\
-break"] 
+-- JSON parsing sample test case: fail15.json
+assert(DecodeJson([[
+[ "Illegal backslash escape: \x15"] 
 ]]))

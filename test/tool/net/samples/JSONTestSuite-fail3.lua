@@ -32,7 +32,7 @@
 -- ljson should reject all of them as invalid
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_open_array_object.json
-assert(false == pcall(DecodeJson, [[ [{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
+assert(not DecodeJson([[ [{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
 ":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
 ":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
 ":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
@@ -3161,7 +3161,7 @@ assert(false == pcall(DecodeJson, [[ [{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"":[{"
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_structure_100000_opening_arrays.json
 -- (added spaces between [[ and ]] so lua doesn't get confused)
-assert(false == pcall(DecodeJson, [[
+assert(not DecodeJson([[
 [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ 
 [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ 
 [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ 
