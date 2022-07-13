@@ -36,8 +36,6 @@
 #define OBJECT_KEY 2
 #define OBJECT_VAL 3
 
-#define MAX_JSON_DEPTH 128
-
 static struct DecodeJson Parse(struct lua_State *L, const char *p,
                                const char *e, int context, int depth) {
   long x;
@@ -47,7 +45,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
   const char *reason;
   struct DecodeJson r;
   int A, B, C, D, c, d, i, u;
-  if (UNLIKELY(!--depth)) {
+  if (UNLIKELY(!depth)) {
     return (struct DecodeJson){-1, "maximum depth exceeded"};
   }
   for (a = p, d = +1; p < e;) {
@@ -154,7 +152,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         lua_newtable(L);
         i = 0;
         for (;;) {
-          r = Parse(L, p, e, ARRAY_VAL, depth);
+          r = Parse(L, p, e, ARRAY_VAL, depth - 1);
           if (UNLIKELY(r.rc == -1)) {
             lua_pop(L, 1);
             return r;
@@ -190,7 +188,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         if (UNLIKELY(context == OBJECT_KEY)) goto BadObjectKey;
         lua_newtable(L);
         for (;;) {
-          r = Parse(L, p, e, OBJECT_KEY, depth);
+          r = Parse(L, p, e, OBJECT_KEY, depth - 1);
           if (r.rc == -1) {
             lua_pop(L, 1);
             return r;
@@ -199,7 +197,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           if (!r.rc) {
             break;
           }
-          r = Parse(L, p, e, OBJECT_VAL, depth);
+          r = Parse(L, p, e, OBJECT_VAL, depth - 1);
           if (r.rc == -1) {
             lua_pop(L, 2);
             return r;
@@ -388,9 +386,10 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
  * @return r.p is string describing error if `rc < 0`
  */
 struct DecodeJson DecodeJson(struct lua_State *L, const char *p, size_t n) {
+  int depth = 64;
   if (n == -1) n = p ? strlen(p) : 0;
-  if (lua_checkstack(L, MAX_JSON_DEPTH + MAX_JSON_DEPTH / 2)) {
-    return Parse(L, p, p + n, TOP_LEVEL, MAX_JSON_DEPTH);
+  if (lua_checkstack(L, depth * 4)) {
+    return Parse(L, p, p + n, TOP_LEVEL, depth);
   } else {
     return (struct DecodeJson){-1, "can't set stack depth"};
   }

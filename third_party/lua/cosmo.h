@@ -8,13 +8,12 @@ COSMOPOLITAN_C_START_
 
 char *LuaFormatStack(lua_State *) dontdiscard;
 int LuaCallWithTrace(lua_State *, int, int, lua_State *);
-int LuaEncodeJsonData(lua_State *, char **, char *, int);
-int LuaEncodeLuaData(lua_State *, char **, char *, int);
+int LuaEncodeJsonData(lua_State *, char **, int, bool);
+int LuaEncodeLuaData(lua_State *, char **, int, bool);
 int LuaEncodeUrl(lua_State *);
 int LuaParseUrl(lua_State *);
 int LuaPushHeader(lua_State *, struct HttpMessage *, char *, int);
 int LuaPushHeaders(lua_State *, struct HttpMessage *, const char *);
-int EscapeLuaString(char *, size_t, char **);
 void LuaPrintStack(lua_State *);
 void LuaPushLatin1(lua_State *, const char *, size_t);
 void LuaPushUrlParams(lua_State *, struct UrlParams *);

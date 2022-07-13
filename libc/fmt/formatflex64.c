@@ -16,48 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/fmt.h"
+#include "libc/bits/popcnt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/math.h"
-
-static inline int CountZeroesHex(uint64_t x) {
-  int n;
-  for (n = 0; x;) {
-    if (!(x & 15)) {
-      ++n;
-    }
-    x >>= 4;
-  }
-  return n;
-}
-
-static inline int CountZeroesDec(int64_t s) {
-  int n, r;
-  uint64_t x;
-  x = s >= 0 ? s : -(uint64_t)s;
-  for (n = 0; x;) {
-    r = x % 10;
-    x = x / 10;
-    if (!r) ++n;
-  }
-  return n;
-}
 
 /**
  * Formats integer using decimal or hexadecimal.
  *
- * We choose hex vs. decimal based on whichever one has the most zeroes.
- * We only bother counting zeroes for numbers outside -256 ≤ 𝑥 ≤ 256.
+ * This formats as int64 signed decimal. However it's a:
+ *
+ * 1. positive number
+ * 2. with population count of 1
+ * 3. and a magnitude of at least 256
+ *
+ * Then we switch to hex notation to make the number more readable.
  */
 char *FormatFlex64(char p[hasatleast 24], int64_t x, char z) {
-  int zhex, zdec;
-  if (-256 <= x && x <= 256) goto UseDecimal;
-  zhex = CountZeroesHex(x) * 16;
-  zdec = CountZeroesDec(x) * 10;
-  if (zdec >= zhex) {
-  UseDecimal:
-    return FormatInt64(p, x);
-  } else {
+  if (x >= 256 && popcnt(x) == 1) {
     return FormatHex64(p, x, z);
+  } else {
+    return FormatInt64(p, x);
   }
 }

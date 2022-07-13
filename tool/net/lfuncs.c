@@ -511,9 +511,13 @@ static dontinline int LuaCoderImpl(lua_State *L,
   void *p;
   size_t n;
   p = luaL_checklstring(L, 1, &n);
-  p = C(p, n, &n);
-  lua_pushlstring(L, p, n);
-  free(p);
+  if ((p = C(p, n, &n))) {
+    lua_pushlstring(L, p, n);
+    free(p);
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
   return 1;
 }
 
@@ -575,7 +579,17 @@ int LuaEscapeFragment(lua_State *L) {
 }
 
 int LuaEscapeLiteral(lua_State *L) {
-  return LuaCoder(L, EscapeJsStringLiteral);
+  char *p, *q = 0;
+  size_t n, y = 0;
+  p = luaL_checklstring(L, 1, &n);
+  if ((p = EscapeJsStringLiteral(&q, &y, p, n, &n))) {
+    lua_pushlstring(L, p, n);
+    free(q);
+    return 1;
+  } else {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
 }
 
 int LuaVisualizeControlCodes(lua_State *L) {

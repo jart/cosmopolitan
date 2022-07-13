@@ -64,7 +64,6 @@ THIRD_PARTY_LUA_A_HDRS =						\
 	third_party/lua/visitor.h
 
 THIRD_PARTY_LUA_A_SRCS =						\
-	third_party/lua/escapeluastring.c				\
 	third_party/lua/lapi.c						\
 	third_party/lua/lauxlib.c					\
 	third_party/lua/lbaselib.c					\

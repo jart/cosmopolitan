@@ -115,8 +115,27 @@ res, err = DecodeJson('"\\ucjcc"')
 assert(res == nil)
 assert(err == 'invalid unicode escape')
 
-res, err = DecodeJson('[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[')
-assert(not res)
+-- 63 objects
+res, err = DecodeJson([[
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+}}}}}}}}}
+]])
+assert(res)
+
+-- 64 objects
+res, err = DecodeJson([[
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":{"k":
+{"k":{"k":{"k":{"k":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+}}}}}}}}}}
+]])
+assert(res == nil)
 assert(err == "maximum depth exceeded")
 
 --------------------------------------------------------------------------------
@@ -126,9 +145,11 @@ assert(err == "maximum depth exceeded")
 -- JsonParseInteger	66	206
 -- JsonParseDouble	123	383
 -- JsonParseString	116	361
--- JsonParseArray	256	793
+-- JsonParseInts	256	793
+-- JsonParseFloats	361	1118
 -- JsonParseObject	890	2756
--- JsonEncodeArray	639	1979
+-- JsonEncodeInts	498	1543
+-- JsonEncodeFloats	498	1543
 -- JsonEncodeObject	1333	4129
 
 function JsonParseEmpty()
@@ -147,27 +168,39 @@ function JsonParseString()
    DecodeJson[[ "\ud800\udf30 he𐌰𐌰o \ud800\udf30" ]]
 end
 
-function JsonParseArray()
+function JsonParseInts()
    DecodeJson[[ [123,456,789] ]]
+end
+
+function JsonParseFloats()
+   DecodeJson[[ [3.14,1.23,7.89] ]]
 end
 
 function JsonParseObject()
    DecodeJson[[ {"3": "1", "4": "1", "5": {"3":"1", "4":"1", "5":"9"}} ]]
 end
 
-function JsonEncodeArray()
+function JsonEncodeInts()
    EncodeJson({2, 0, {5, 7, 3}})
+end
+
+function JsonEncodeFloats()
+   EncodeJson({3.14,1.23,7.89})
 end
 
 function JsonEncodeObject()
    EncodeJson({["3"]="1", ["4"]="1", ["5"]={["3"]="1", ["4"]="1", ["5"]="9"}})
 end
 
--- print('JsonParseEmpty', Benchmark(JsonParseEmpty))
--- print('JsonParseInteg', Benchmark(JsonParseInteger))
--- print('JsonParseDouble', Benchmark(JsonParseDouble))
--- print('JsonParseString', Benchmark(JsonParseString))
--- print('JsonParseArray', Benchmark(JsonParseArray))
--- print('JsonParseObject', Benchmark(JsonParseObject))
--- print('JsonEncodeArr', Benchmark(JsonEncodeArray))
--- print('JsonEncodeObj', Benchmark(JsonEncodeObject))
+if nil then
+   print('JsonParseEmpty', Benchmark(JsonParseEmpty))
+   print('JsonParseInteg', Benchmark(JsonParseInteger))
+   print('JsonParseDouble', Benchmark(JsonParseDouble))
+   print('JsonParseString', Benchmark(JsonParseString))
+   print('JsonParseInts', Benchmark(JsonParseInts))
+   print('JsonParseFloats', Benchmark(JsonParseFloats))
+   print('JsonParseObject', Benchmark(JsonParseObject))
+   print('JsonEncodeInts', Benchmark(JsonEncodeInts))
+   print('JsonEncodeFlts', Benchmark(JsonEncodeFloats))
+   print('JsonEncodeObj', Benchmark(JsonEncodeObject))
+end

@@ -32,6 +32,14 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/visitor.h"
 
+struct Serializer {
+  struct LuaVisited visited;
+  const char *reason;
+  bool sorted;
+};
+
+static int Serialize(lua_State *, char **, int, struct Serializer *, int);
+
 static bool IsLuaIdentifier(lua_State *L, int idx) {
   size_t i, n;
   const char *p;
@@ -43,12 +51,37 @@ static bool IsLuaIdentifier(lua_State *L, int idx) {
   return true;
 }
 
-// TODO: Can we be smarter with lua_rawlen?
+// returns true if table at index -1 is an array
+//
+// for the purposes of lua serialization, we can only serialize using
+// array ordering when a table is an array in the strictest sense. we
+// consider a lua table an array if the following conditions are met:
+//
+//   1. for all 𝑘=𝑣 in table, 𝑘 is an integer ≥1
+//   2. no holes exist between MIN(𝑘) and MAX(𝑘)
+//   3. if non-empty, MIN(𝑘) is 1
+//
+// we need to do this because
+//
+//   "the order in which the indices are enumerated is not specified,
+//    even for numeric indices" ──quoth lua 5.4 manual § next()
+//
+// we're able to implement this check in one pass, since lua_rawlen()
+// reports the number of integers keys up until the first hole. so we
+// simply need to check if any non-integers keys exist or any integer
+// keys greater than the raw length.
+//
+// plesae note this is a more expensive check than the one we use for
+// the json serializer, because lua doesn't require objects have only
+// string keys. we want to be able to display mixed tables. it's just
+// they won't be displayed with specified ordering, unless sorted.
 static bool IsLuaArray(lua_State *L) {
-  int i;
+  lua_Integer i;
+  lua_Unsigned n;
+  n = lua_rawlen(L, -1);
   lua_pushnil(L);
-  for (i = 1; lua_next(L, -2); ++i) {
-    if (!lua_isinteger(L, -2) || lua_tointeger(L, -2) != i) {
+  while (lua_next(L, -2)) {
+    if (!lua_isinteger(L, -2) || (i = lua_tointeger(L, -2)) < 1 || i > n) {
       lua_pop(L, 2);
       return false;
     }
@@ -57,138 +90,295 @@ static bool IsLuaArray(lua_State *L) {
   return true;
 }
 
-static int LuaEncodeLuaOpaqueData(lua_State *L, char **buf, int idx,
-                                  const char *kind) {
-  if (appendf(buf, "\"%s@%p\"", kind, lua_topointer(L, idx)) != -1) {
-    return 0;
-  } else {
-    return -1;
-  }
+static int SerializeNil(lua_State *L, char **buf) {
+  RETURN_ON_ERROR(appendw(buf, READ32LE("nil")));
+  return 0;
+OnError:
+  return -1;
 }
 
-static int LuaEncodeLuaDataImpl(lua_State *L, char **buf, int level,
-                                char *numformat, int idx,
-                                struct LuaVisited *visited) {
-  char *s;
-  bool isarray;
-  lua_Integer i;
-  struct StrList sl = {0};
-  int ktype, vtype, sli, rc;
-  size_t tbllen, buflen, slen;
-  char ibuf[24], fmt[] = "%.14g";
-  if (level > 0) {
-    switch (lua_type(L, idx)) {
+static int SerializeBoolean(lua_State *L, char **buf, int idx) {
+  RETURN_ON_ERROR(appendw(
+      buf, lua_toboolean(L, idx) ? READ32LE("true") : READ64LE("false\0\0")));
+  return 0;
+OnError:
+  return -1;
+}
 
-      case LUA_TNIL:
-        RETURN_ON_ERROR(appendw(buf, READ32LE("nil")));
-        return 0;
+static int SerializeOpaque(lua_State *L, char **buf, int idx,
+                           const char *kind) {
+  RETURN_ON_ERROR(appendf(buf, "\"%s@%p\"", kind, lua_topointer(L, idx)));
+  return 0;
+OnError:
+  return -1;
+}
 
-      case LUA_TSTRING:
-        s = lua_tolstring(L, idx, &slen);
-        RETURN_ON_ERROR(EscapeLuaString(s, slen, buf));
-        return 0;
-
-      case LUA_TFUNCTION:
-        return LuaEncodeLuaOpaqueData(L, buf, idx, "func");
-
-      case LUA_TLIGHTUSERDATA:
-        return LuaEncodeLuaOpaqueData(L, buf, idx, "light");
-
-      case LUA_TTHREAD:
-        return LuaEncodeLuaOpaqueData(L, buf, idx, "thread");
-
-      case LUA_TUSERDATA:
-        if (luaL_callmeta(L, idx, "__repr")) {
-          if (lua_type(L, -1) == LUA_TSTRING) {
-            s = lua_tolstring(L, -1, &slen);
-            RETURN_ON_ERROR(appendd(buf, s, slen));
-          } else {
-            RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]",
-                                    "__repr", luaL_typename(L, -1)));
-          }
-          lua_pop(L, 1);
-          return 0;
-        }
-        if (luaL_callmeta(L, idx, "__tostring")) {
-          if (lua_type(L, -1) == LUA_TSTRING) {
-            s = lua_tolstring(L, -1, &slen);
-            RETURN_ON_ERROR(EscapeLuaString(s, slen, buf));
-          } else {
-            RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]",
-                                    "__tostring", luaL_typename(L, -1)));
-          }
-          lua_pop(L, 1);
-          return 0;
-        }
-        return LuaEncodeLuaOpaqueData(L, buf, idx, "udata");
-
-      case LUA_TNUMBER:
-        if (lua_isinteger(L, idx)) {
-          RETURN_ON_ERROR(
-              appendd(buf, ibuf,
-                      FormatFlex64(ibuf, luaL_checkinteger(L, idx), 2) - ibuf));
-        } else {
-          RETURN_ON_ERROR(
-              appends(buf, DoubleToLua(ibuf, lua_tonumber(L, idx))));
-        }
-        return 0;
-
-      case LUA_TBOOLEAN:
-        RETURN_ON_ERROR(appendw(buf, lua_toboolean(L, idx)
-                                         ? READ32LE("true")
-                                         : READ64LE("false\0\0")));
-        return 0;
-
-      case LUA_TTABLE:
-        i = 0;
-        RETURN_ON_ERROR(rc = LuaPushVisit(visited, lua_topointer(L, idx)));
-        if (!rc) {
-          lua_pushvalue(L, idx);  // idx becomes invalid once we change stack
-          isarray = IsLuaArray(L);
-          lua_pushnil(L);  // push the first key
-          while (lua_next(L, -2)) {
-            ktype = lua_type(L, -2);
-            vtype = lua_type(L, -1);
-            RETURN_ON_ERROR(sli = AppendStrList(&sl));
-            if (isarray) {
-              // use {v₁′,v₂′,...} for lua-normal integer keys
-            } else if (ktype == LUA_TSTRING && IsLuaIdentifier(L, -2)) {
-              // use {𝑘=𝑣′} syntax when 𝑘 is legal as a lua identifier
-              s = lua_tolstring(L, -2, &slen);
-              RETURN_ON_ERROR(appendd(&sl.p[sli], s, slen));
-              RETURN_ON_ERROR(appendw(&sl.p[sli], '='));
-            } else {
-              // use {[𝑘′]=𝑣′} otherwise
-              RETURN_ON_ERROR(appendw(&sl.p[sli], '['));
-              RETURN_ON_ERROR(LuaEncodeLuaDataImpl(L, &sl.p[sli], level - 1,
-                                                   numformat, -2, visited));
-              RETURN_ON_ERROR(appendw(&sl.p[sli], ']' | '=' << 010));
-            }
-            RETURN_ON_ERROR(LuaEncodeLuaDataImpl(L, &sl.p[sli], level - 1,
-                                                 numformat, -1, visited));
-            lua_pop(L, 1);  // table/-2, key/-1
-          }
-          lua_pop(L, 1);  // table ref
-          if (!isarray) SortStrList(&sl);
-          RETURN_ON_ERROR(appendw(buf, '{'));
-          RETURN_ON_ERROR(JoinStrList(&sl, buf, READ16LE(", ")));
-          RETURN_ON_ERROR(appendw(buf, '}'));
-          FreeStrList(&sl);
-          LuaPopVisit(visited);
-
-          return 0;
-        } else {
-          return LuaEncodeLuaOpaqueData(L, buf, idx, "cyclic");
-        }
-      default:
-        return LuaEncodeLuaOpaqueData(L, buf, idx, "unsupported");
+static int SerializeNumber(lua_State *L, char **buf, int idx) {
+  int64_t x;
+  char ibuf[24];
+  if (lua_isinteger(L, idx)) {
+    x = luaL_checkinteger(L, idx);
+    if (x == -9223372036854775807 - 1) {
+      RETURN_ON_ERROR(appends(buf, "-9223372036854775807 - 1"));
+    } else {
+      RETURN_ON_ERROR(appendd(buf, ibuf, FormatFlex64(ibuf, x, 2) - ibuf));
     }
   } else {
-    return LuaEncodeLuaOpaqueData(L, buf, idx, "greatdepth");
+    RETURN_ON_ERROR(appends(buf, DoubleToLua(ibuf, lua_tonumber(L, idx))));
   }
+  return 0;
+OnError:
+  return -1;
+}
+
+#if 0
+int main(int argc, char *argv[]) {
+  int i, j;
+  signed char tab[256] = {0};
+  for (i = 0; i < 256; ++i) {
+    if (i < 0x20) tab[i] = 1;   // hex
+    if (i >= 0x7f) tab[i] = 1;  // hex
+  }
+  tab['\e'] = 'e';
+  tab['\a'] = 'a';
+  tab['\b'] = 'b';
+  tab['\f'] = 'f';
+  tab['\n'] = 'n';
+  tab['\r'] = 'r';
+  tab['\t'] = 't';
+  tab['\v'] = 'v';
+  tab['\\'] = '\\';
+  tab['\"'] = '"';
+  tab['\v'] = 'v';
+  printf("const char kBase64[256] = {\n");
+  for (i = 0; i < 16; ++i) {
+    printf("  ");
+    for (j = 0; j < 16; ++j) {
+      if (isprint(tab[i * 16 + j])) {
+        printf("'%c',", tab[i * 16 + j]);
+      } else {
+        printf("%d,", tab[i * 16 + j]);
+      }
+    }
+    printf(" // 0x%02x\n", i * 16);
+  }
+  printf("};\n");
+  return 0;
+}
+#endif
+
+// clang-format off
+static const char kLuaStrXlat[256] = {
+  1,1,1,1,1,1,1,'a','b','t','n','v','f','r',1,1, // 0x00
+  1,1,1,1,1,1,1,1,1,1,1,'e',1,1,1,1, // 0x10
+  0,0,'"',0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x20
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x30
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x40
+  0,0,0,0,0,0,0,0,0,0,0,0,'\\',0,0,0, // 0x50
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x60
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1, // 0x70
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x80
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x90
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xa0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xb0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xc0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xd0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xe0
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xf0
+};
+// clang-format on
+
+static int SerializeString(lua_State *L, char **buf, int idx) {
+  int x;
+  size_t i, n;
+  const char *s;
+  s = lua_tolstring(L, idx, &n);
+  RETURN_ON_ERROR(appendw(buf, '"'));
+  for (i = 0; i < n; i++) {
+    switch ((x = kLuaStrXlat[s[i] & 255])) {
+      case 0:
+        RETURN_ON_ERROR(appendw(buf, s[i]));
+        break;
+      default:
+        RETURN_ON_ERROR(appendw(buf, READ32LE("\\\x00\x00") | (x << 8)));
+        break;
+      case 1:
+        RETURN_ON_ERROR(
+            appendw(buf, '\\' | 'x' << 010 |
+                             "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
+                             "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030));
+        break;
+    }
+  }
+  RETURN_ON_ERROR(appendw(buf, '"'));
+  return 0;
+OnError:
+  return -1;
+}
+
+static int SerializeUserData(lua_State *L, char **buf, int idx) {
+  size_t n;
+  const char *s;
+  if (luaL_callmeta(L, idx, "__repr")) {
+    if (lua_type(L, -1) == LUA_TSTRING) {
+      s = lua_tolstring(L, -1, &n);
+      RETURN_ON_ERROR(appendd(buf, s, n));
+    } else {
+      RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]", "__repr",
+                              luaL_typename(L, -1)));
+    }
+    lua_pop(L, 1);
+    return 0;
+  }
+  if (luaL_callmeta(L, idx, "__tostring")) {
+    if (lua_type(L, -1) == LUA_TSTRING) {
+      RETURN_ON_ERROR(SerializeString(L, buf, -1));
+    } else {
+      RETURN_ON_ERROR(appendf(buf, "[[error %s returned a %s value]]",
+                              "__tostring", luaL_typename(L, -1)));
+    }
+    lua_pop(L, 1);
+    return 0;
+  }
+  return SerializeOpaque(L, buf, idx, "udata");
+OnError:
+  return -1;
+}
+
+static int SerializeArray(lua_State *L, char **buf, struct Serializer *z,
+                          int depth) {
+  size_t i, n;
+  const char *s;
+  RETURN_ON_ERROR(appendw(buf, '{'));
+  n = lua_rawlen(L, -1);
+  for (i = 1; i <= n; i++) {
+    lua_rawgeti(L, -1, i);
+    if (i > 1) RETURN_ON_ERROR(appendw(buf, READ16LE(", ")));
+    RETURN_ON_ERROR(Serialize(L, buf, -1, z, depth - 1));
+    lua_pop(L, 1);
+  }
+  RETURN_ON_ERROR(appendw(buf, '}'));
+  return 0;
+OnError:
+  return -1;
+}
+
+static int SerializeObject(lua_State *L, char **buf, struct Serializer *z,
+                           int depth) {
+  int rc;
+  size_t n;
+  const char *s;
+  bool comma = false;
+  RETURN_ON_ERROR(appendw(buf, '{'));
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    if (comma) {
+      RETURN_ON_ERROR(appendw(buf, READ16LE(", ")));
+    } else {
+      comma = true;
+    }
+    if (lua_type(L, -2) == LUA_TSTRING && IsLuaIdentifier(L, -2)) {
+      // use {𝑘=𝑣′} syntax when 𝑘 is a legal lua identifier
+      s = lua_tolstring(L, -2, &n);
+      RETURN_ON_ERROR(appendd(buf, s, n));
+      RETURN_ON_ERROR(appendw(buf, '='));
+    } else {
+      // use {[𝑘′]=𝑣′} otherwise
+      RETURN_ON_ERROR(appendw(buf, '['));
+      RETURN_ON_ERROR(Serialize(L, buf, -2, z, depth - 1));
+      RETURN_ON_ERROR(appendw(buf, READ16LE("]=")));
+    }
+    RETURN_ON_ERROR(Serialize(L, buf, -1, z, depth - 1));
+    lua_pop(L, 1);
+  }
+  RETURN_ON_ERROR(appendw(buf, '}'));
+  return 0;
+OnError:
+  return -1;
+}
+
+static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
+                           int depth) {
+  size_t n;
+  int i, rc;
+  const char *s;
+  struct StrList sl = {0};
+  lua_pushnil(L);
+  while (lua_next(L, -2)) {
+    RETURN_ON_ERROR(i = AppendStrList(&sl));
+    if (lua_type(L, -2) == LUA_TSTRING && IsLuaIdentifier(L, -2)) {
+      // use {𝑘=𝑣′} syntax when 𝑘 is a legal lua identifier
+      s = lua_tolstring(L, -2, &n);
+      RETURN_ON_ERROR(appendd(sl.p + i, s, n));
+      RETURN_ON_ERROR(appendw(sl.p + i, '='));
+    } else {
+      // use {[𝑘′]=𝑣′} otherwise
+      RETURN_ON_ERROR(appendw(sl.p + i, '['));
+      RETURN_ON_ERROR(Serialize(L, sl.p + i, -2, z, depth - 1));
+      RETURN_ON_ERROR(appendw(sl.p + i, ']' | '=' << 010));
+    }
+    RETURN_ON_ERROR(Serialize(L, sl.p + i, -1, z, depth - 1));
+    lua_pop(L, 1);
+  }
+  SortStrList(&sl);
+  RETURN_ON_ERROR(appendw(buf, '{'));
+  RETURN_ON_ERROR(JoinStrList(&sl, buf, READ16LE(", ")));
+  RETURN_ON_ERROR(appendw(buf, '}'));
+  FreeStrList(&sl);
+  return 0;
 OnError:
   FreeStrList(&sl);
   return -1;
+}
+
+static int SerializeTable(lua_State *L, char **buf, int idx,
+                          struct Serializer *z, int depth) {
+  int rc;
+  RETURN_ON_ERROR(rc = LuaPushVisit(&z->visited, lua_topointer(L, idx)));
+  if (rc) return SerializeOpaque(L, buf, idx, "cyclic");
+  lua_pushvalue(L, idx);  // idx becomes invalid once we change stack
+  if (IsLuaArray(L)) {
+    RETURN_ON_ERROR(SerializeArray(L, buf, z, depth));
+  } else if (z->sorted) {
+    RETURN_ON_ERROR(SerializeSorted(L, buf, z, depth));
+  } else {
+    RETURN_ON_ERROR(SerializeObject(L, buf, z, depth));
+  }
+  LuaPopVisit(&z->visited);
+  lua_pop(L, 1);  // table ref
+  return 0;
+OnError:
+  return -1;
+}
+
+static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
+                     int depth) {
+  if (depth > 0) {
+    switch (lua_type(L, idx)) {
+      case LUA_TNIL:
+        return SerializeNil(L, buf);
+      case LUA_TBOOLEAN:
+        return SerializeBoolean(L, buf, idx);
+      case LUA_TNUMBER:
+        return SerializeNumber(L, buf, idx);
+      case LUA_TSTRING:
+        return SerializeString(L, buf, idx);
+      case LUA_TTABLE:
+        return SerializeTable(L, buf, idx, z, depth);
+      case LUA_TUSERDATA:
+        return SerializeUserData(L, buf, idx);
+      case LUA_TFUNCTION:
+        return SerializeOpaque(L, buf, idx, "func");
+      case LUA_TLIGHTUSERDATA:
+        return SerializeOpaque(L, buf, idx, "light");
+      case LUA_TTHREAD:
+        return SerializeOpaque(L, buf, idx, "thread");
+      default:
+        return SerializeOpaque(L, buf, idx, "unsupported");
+    }
+  } else {
+    return SerializeOpaque(L, buf, idx, "greatdepth");
+  }
 }
 
 /**
@@ -203,18 +393,23 @@ OnError:
  *
  * @param L is Lua interpreter state
  * @param buf receives encoded output string
- * @param numformat controls double formatting
  * @param idx is index of item on Lua stack
+ * @param sorted is ignored (always sorted)
  * @return 0 on success, or -1 on error
  */
-int LuaEncodeLuaData(lua_State *L, char **buf, char *numformat, int idx) {
-  int rc;
-  struct LuaVisited visited = {0};
-  rc = LuaEncodeLuaDataImpl(L, buf, 64, numformat, idx, &visited);
-  free(visited.p);
-  if (rc == -1) {
-    lua_pushnil(L);
-    lua_pushstring(L, "out of memory");
+int LuaEncodeLuaData(lua_State *L, char **buf, int idx, bool sorted) {
+  int rc, depth = 64;
+  struct Serializer z = {.reason = "out of memory", .sorted = sorted};
+  if (lua_checkstack(L, depth * 4)) {
+    rc = Serialize(L, buf, idx, &z, depth);
+    free(z.visited.p);
+    if (rc == -1) {
+      lua_pushnil(L);
+      lua_pushstring(L, z.reason);
+    }
+    return rc;
+  } else {
+    luaL_error(L, "can't set stack depth");
+    unreachable;
   }
-  return rc;
 }

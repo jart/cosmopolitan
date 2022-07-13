@@ -38,7 +38,7 @@ static inline int PickGoodWidth(unsigned x, char z) {
  * Converts unsigned 64-bit integer to hex string.
  *
  * @param p needs at least 19 bytes
- * @param z is 0 for DIGITS, 1 for 0bDIGITS, 2 for 0bDIGITS if ≠0
+ * @param z is 0 for DIGITS, 1 for 0xDIGITS, 2 for 0xDIGITS if ≠0
  * @return pointer to nul byte
  */
 char *FormatHex64(char p[hasatleast 19], uint64_t x, char z) {

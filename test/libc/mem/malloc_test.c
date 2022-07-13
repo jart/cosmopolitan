@@ -130,7 +130,14 @@ void FreeBulk(void) {
   }
 }
 
+void MallocFree(void) {
+  char *volatile p;
+  p = malloc(16);
+  free(p);
+}
+
 BENCH(bulk_free, bench) {
+  EZBENCH2("free(malloc(16))", donothing, MallocFree());
   EZBENCH2("free() bulk", BulkFreeBenchSetup(), FreeBulk());
   EZBENCH2("bulk_free()", BulkFreeBenchSetup(),
            bulk_free(bulk, ARRAYLEN(bulk)));

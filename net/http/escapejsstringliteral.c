@@ -47,19 +47,30 @@ static const char kEscapeLiteral[128] = {
  * EscapeJsStringLiteral(Underlong(𝑥)) since EscapeJsStringLiteral(𝑥)
  * will do the same thing.
  *
+ * @param r is realloc'able output buffer reused between calls
+ * @param y is used to track byte length of `*r`
  * @param p is input value
  * @param n if -1 implies strlen
  * @param out_size if non-NULL receives output length
- * @return allocated NUL-terminated buffer, or NULL w/ errno
+ * @return *r on success, or null w/ errno
  */
-char *EscapeJsStringLiteral(const char *p, size_t n, size_t *z) {
+char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
+                            size_t *z) {
+  char *q;
   uint64_t w;
-  char *q, *r;
   size_t i, j, m;
   wint_t x, a, b;
-  if (z) *z = 0;
+  if (z) *z = 0;  // TODO(jart): why is this here?
   if (n == -1) n = p ? strlen(p) : 0;
-  if ((q = r = malloc(n * 6 + 6 + 1))) {
+  q = *r;
+  i = n * 8 + 6 + 1;  // only need *6 but *8 is faster
+  if (i > *y) {
+    if ((q = realloc(q, i))) {
+      *r = q;
+      *y = i;
+    }
+  }
+  if (q) {
     for (i = 0; i < n;) {
       x = p[i++] & 0xff;
       if (x >= 0300) {
@@ -138,9 +149,8 @@ char *EscapeJsStringLiteral(const char *p, size_t n, size_t *z) {
           unreachable;
       }
     }
-    if (z) *z = q - r;
+    if (z) *z = q - *r;
     *q++ = '\0';
-    if ((q = realloc(r, q - r))) r = q;
   }
-  return r;
+  return *r;
 }

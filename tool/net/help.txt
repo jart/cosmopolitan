@@ -735,20 +735,52 @@ FUNCTIONS
           the original ordering of fields. As such, they'll be sorted
           by EncodeJson() and may not round-trip with original intent
 
-  EncodeJson(value[,options:table])
+  EncodeJson(value[, options:table])
       ├─→ json:str
       ├─→ true [if useoutput]
       └─→ nil, error:str
 
-          Turns Lua data structure into a JSON string.
+          Turns Lua data structure into JSON string.
 
-          Tables with non-zero length (as reported by `#`) are encoded
-          as arrays and any non-array elements are ignored. Empty tables
-          are encoded as `{}` with the exception of the special empty
-          table `{[0]=false}` shall be encoded as `[]`. Arrays elements
-          are serialized in specified order. Object entries are sorted
-          ASCIIbetically using strcmp() on their string keys to ensure
-          deterministic order.
+          Since Lua uses tables for both hashmaps and arrays, we use a
+          simple fast algorithm for telling the two apart. Tables with
+          non-zero length (as reported by `#`) are encoded as arrays,
+          and any non-array elements are ignored. For example:
+
+              >: EncodeJson({2})
+              "[2]"
+              >: EncodeJson({[1]=2, ["hi"]=1})
+              "[2]"
+
+          If there are holes in your array, then the serialized array
+          will exclude everything after the first hole. If the beginning
+          of your array is a hole, then an error is returned.
+
+              >: EncodeJson({[1]=1, [3]=3})
+              "[1]"
+              >: EncodeJson({[2]=1, [3]=3})
+              "[]"
+              >: EncodeJson({[2]=1, [3]=3})
+              nil     "json objects must only use string keys"
+
+          If the raw length of a table is reported as zero, then we
+          check for the magic element `[0]=false`. If it's present, then
+          your table will be serialized as empty array `[]`. That entry
+          inserted by DecodeJson() automatically, only when encountering
+          empty arrays, and it's necessary in order to make empty arrays
+          round-trip. If raw length is zero and `[0]=false` is absent,
+          then your table will be serialized as an iterated object.
+
+              >: EncodeJson({})
+              "{}"
+              >: EncodeJson({[0]=false})
+              "[]"
+              >: EncodeJson({["hi"]=1})
+              "{\"hi\":1}"
+              >: EncodeJson({["hi"]=1, [0]=false})
+              "[]"
+              >: EncodeJson({["hi"]=1, [7]=false})
+              nil     "json objects must only use string keys"
 
           The following options may be used:
 
@@ -756,37 +788,71 @@ FUNCTIONS
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
 
-          This function will fail if:
+            - sorted: (bool=true) Lua uses hash tables so the order of
+              object keys is lost in a Lua table. So, by default, we use
+              `qsort(strcmp)` to impose a deterministic output order. If
+              you don't care about ordering then setting `sorted=false`
+              should yield a 1.6x performance boost in serialization.
+
+          This function will return an error if:
 
             - `value` is cyclic
             - `value` has depth greater than 64
             - `value` contains functions, user data, or threads
             - `value` is table that blends string / non-string keys
+            - Your serializer runs out of C heap memory (setrlimit)
 
-          When arrays and objects are serialized, entries will be sorted
-          in a deterministic order.
+          We assume strings in `value` contain UTF-8. This serializer
+          currently does not produce UTF-8 output. The output format is
+          right now ASCII. Your UTF-8 data will be safely transcoded to
+          \uXXXX sequences which are UTF-16. Overlong encodings in your
+          input strings will be canonicalized rather than validated.
 
-          This parser does not support UTF-8
+          NaNs are serialized as `null` and Infinities are `null` which
+          is consistent with the v8 behavior.
 
-  EncodeLua(value[,options:table])
+  EncodeLua(value[, options:table])
       ├─→ luacode:str
       ├─→ true [if useoutput]
       └─→ nil, error:str
 
           Turns Lua data structure into Lua code string.
 
+          Since Lua uses tables as both hashmaps and arrays, tables will
+          only be serialized as an array with determinate order, if it's
+          an array in the strictest possible sense.
+
+          1. for all 𝑘=𝑣 in table, 𝑘 is an integer ≥1
+          2. no holes exist between MIN(𝑘) and MAX(𝑘)
+          3. if non-empty, MIN(𝑘) is 1
+
+          In all other cases, your table will be serialized as an object
+          which is iterated and displayed as a list of (possibly) sorted
+          entries that have equal signs.
+
+              >: EncodeLua({3, 2})
+              "{3, 2}"
+              >: EncodeLua({[1]=3, [2]=3})
+              "{3, 2}"
+              >: EncodeLua({[1]=3, [3]=3})
+              "{[1]=3, [3]=3}"
+              >: EncodeLua({["hi"]=1, [1]=2})
+              "{[1]=2, hi=1}"
+
           The following options may be used:
 
             - useoutput: (bool=false) encodes the result directly to the
               output buffer and returns `nil` value. This option is
               ignored if used outside of request handling code.
 
+            - sorted: (bool=true) Lua uses hash tables so the order of
+              object keys is lost in a Lua table. So, by default, we use
+              `qsort(strcmp)` to impose a deterministic output order. If
+              you don't care about ordering then setting `sorted=false`
+              should yield a 2x performance boost in serialization.
+
           If a user data object has a `__repr` or `__tostring` meta
           method, then that'll be used to encode the Lua code.
-
-          When tables are serialized, entries will be sorted in a
-          deterministic order. This makes `EncodeLua` a great fit for
-          writing unit tests, when tables contain regular normal data.
 
           This serializer is designed primarily to describe data. For
           example, it's used by the REPL where we need to be able to
@@ -802,9 +868,31 @@ FUNCTIONS
           tables; however instead of failing, it embeds a string of
           unspecified layout describing the cycle.
 
+          Integer literals are encoded as decimal. However if the int64
+          number is ≥256 and has a population count of 1 then we switch
+          to representating the number in hexadecimal, for readability.
+          Hex numbers have leading zeroes added in order to visualize
+          whether the number fits in a uint16, uint32, or int64. Also
+          some numbers can only be encoded expressionally. For example,
+          NaNs are serialized as `0/0`, and Infinity is `math.huge`.
+
+              >: 7000
+              7000
+              >: 0x100
+              0x0100
+              >: 0x10000
+              0x00010000
+              >: 0x100000000
+              0x0000000100000000
+              >: 0/0
+              0/0
+              >: 1.5e+9999
+              math.huge
+              >: -9223372036854775807 - 1
+              -9223372036854775807 - 1
+
           The only failure return condition currently implemented is
           when C runs out of heap memory.
-
 
   EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
           Turns UTF-8 into ISO-8859-1 string.
