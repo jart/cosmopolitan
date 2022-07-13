@@ -27,18 +27,11 @@
 -- 
 
 -- [jart] these tests deviate from the expectations of the upstream test
---        suite. most of these failures are because we permit syntax
---        like this since it saves bandwidth and makes the impl smaller.
---        we're also more permissive about things like the encoding of
---        double exponents and empty double fraction.
-assert(EncodeLua(DecodeJson('[0 1 2 3 4]')) == '{0, 1, 2, 3, 4}')
+--        suite. most of these failures are because we're more permissive
+--        about the encoding of double exponents and empty double fraction.
 
 -- from fail1.lua
 --------------------------------------------------------------------------------
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_semicolon.json
-assert(DecodeJson(' {"a" "b"} '))
-assert(EncodeLua(DecodeJson(' {"a" "b"} ')) == '{a="b"}')
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_real_without_fractional_part.json
 assert(DecodeJson(' [1.] '))
@@ -66,14 +59,3 @@ assert(EncodeLua(DecodeJson(' [-2.] ')) == '{-2.}')
 
 -- lool
 assert(not DecodeJson(' [--2.] '))
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_inner_array_no_comma.json
--- (added spaces between [[ and ]] so lua doesn't get confused)
-assert(DecodeJson([[
-[ 3[ 4] ]   ]]))
-assert(EncodeLua(DecodeJson([[
-[ 3[ 4] ]   ]])) == '{3, {4}}')
-
--- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_1_true_without_comma.json
-assert(DecodeJson(' [1 true] '))
-assert(EncodeLua(DecodeJson(' [1 true] ')) == '{1, true}')
