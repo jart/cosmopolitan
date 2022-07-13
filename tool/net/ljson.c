@@ -81,6 +81,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case 'n':  // null
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("null")) {
           lua_pushnil(L);
           return (struct DecodeJson){1, p + 3};
@@ -90,6 +91,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case 'f':  // false
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         if (p + 4 <= e && READ32LE(p) == READ32LE("alse")) {
           lua_pushboolean(L, false);
           return (struct DecodeJson){1, p + 4};
@@ -99,6 +101,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case 't':  // true
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("true")) {
           lua_pushboolean(L, true);
           return (struct DecodeJson){1, p + 3};
@@ -108,9 +111,12 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       BadObjectKey:
         return (struct DecodeJson){-1, "object key must be string"};
+      MissingPunctuation:
+        return (struct DecodeJson){-1, "missing ',' or ':'"};
 
       case '-':  // negative
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         if (p < e && isdigit(*p)) {
           d = -1;
           break;
@@ -120,6 +126,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case '0':  // zero or number
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         if (p < e) {
           if ((*p == '.' || *p == 'e' || *p == 'E')) {
             goto UseDubble;
@@ -132,6 +139,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case '1' ... '9':  // integer
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         for (x = (c - '0') * d; p < e; ++p) {
           c = *p & 255;
           if (isdigit(c)) {
@@ -155,6 +163,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case '[':  // Array
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         lua_newtable(L);
         i = 0;
         r = Parse(L, p, e, ARRAY_SINGLE | ARRAY_END, depth - 1);
@@ -193,6 +202,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
 
       case '{':  // Object
         if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         lua_newtable(L);
         r = Parse(L, p, e, OBJECT_KEY | OBJECT_END, depth - 1);
         for (;;) {
@@ -220,6 +230,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         return (struct DecodeJson){1, p};
 
       case '"':  // string
+        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
         luaL_buffinit(L, &b);
         for (;;) {
           if (UNLIKELY(p >= e)) {

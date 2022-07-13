@@ -300,3 +300,14 @@ assert(not DecodeJson(' [1,,2] '))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_comma_and_number.json
 assert(not DecodeJson(' [,1] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_inner_array_no_comma.json
+-- (added spaces between [[ and ]] so lua doesn't get confused)
+assert(not DecodeJson([[
+[ 3[ 4] ]   ]]))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_1_true_without_comma.json
+assert(not DecodeJson(' [1 true] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_semicolon.json
+assert(not DecodeJson(' {"a" "b"} '))

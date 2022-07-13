@@ -177,3 +177,9 @@ break"]
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail15.json
 assert(not DecodeJson(' ["Illegal backslash escape: \x15"] '))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail19.json
+assert(not DecodeJson([[
+{"Missing colon" null}
+]]))
