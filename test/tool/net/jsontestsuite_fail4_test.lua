@@ -177,3 +177,12 @@ assert(not DecodeJson(" [\"\t\"] "))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_string_unescaped_newline.json
 assert(not DecodeJson(" [\"new\nline\"] "))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_two_commas_in_a_row.json
+assert(not DecodeJson(' {"a":"b",,"c":"d"} '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_trailing_comma.json
+assert(not DecodeJson(' {"id":0,} '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_several_trailing_commas.json
+assert(not DecodeJson(' {"id":0,,,,,} '))
