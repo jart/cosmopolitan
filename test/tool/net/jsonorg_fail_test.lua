@@ -130,3 +130,50 @@ assert(not DecodeJson([[
 [ "line\
 break"] 
 ]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail4.json
+assert(not DecodeJson([[
+[ "extra comma",] 
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail5.json
+assert(not DecodeJson([[
+[ "double extra comma",,] 
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail6.json
+assert(not DecodeJson([[
+[    , "<-- missing value"] 
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail9.json
+assert(not DecodeJson([[
+{"Extra comma": true,}
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail20.json
+assert(not DecodeJson([[
+{"Double colon":: null}
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail25.json
+assert(not DecodeJson([[
+[ "	tab	character	in	string	"] 
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail27.json
+assert(not DecodeJson([[
+[ "line
+break"] 
+]]))
+
+-- https://www.json.org/JSON_checker/test.zip
+-- JSON parsing sample test case: fail15.json
+assert(not DecodeJson(' ["Illegal backslash escape: \x15"] '))
