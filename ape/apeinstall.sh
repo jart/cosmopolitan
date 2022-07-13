@@ -99,6 +99,15 @@ if [ x"$(uname -s)" = xLinux ]; then
   $SUDO sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register" || exit
   echo done >&2
 
+  if [ x"$(cat /proc/sys/fs/binfmt_misc/status)" = xdisabled ]; then
+    echo >&2
+    echo enabling binfmt_misc >&2
+    echo you may need to edit configs to persist across reboot >&2
+    echo $SUDO sh -c 'echo 1 >/proc/sys/fs/binfmt_misc/status' >&2
+    $SUDO sh -c 'echo 1 >/proc/sys/fs/binfmt_misc/status' || exit
+    echo done >&2
+  fi
+
 fi
 
 ################################################################################

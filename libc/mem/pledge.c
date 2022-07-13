@@ -42,12 +42,13 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define READONLY 0x8000
-#define INET     0x8000
-#define UNIX     0x4000
-#define ADDRLESS 0x2000
-#define LOCK     0x8000
-#define TTY      0x8000
+#define READONLY  0x8000
+#define WRITEONLY 0x4000
+#define INET      0x8000
+#define UNIX      0x4000
+#define ADDRLESS  0x2000
+#define LOCK      0x8000
+#define TTY       0x8000
 
 #define OFF(f)         offsetof(struct seccomp_data, f)
 #define PLEDGE(pledge) pledge, ARRAYLEN(pledge)
@@ -157,25 +158,29 @@ static const uint16_t kPledgeLinuxRpath[] = {
     __NR_linux_faccessat,          //
     __NR_linux_readlink,           //
     __NR_linux_readlinkat,         //
+    __NR_linux_statfs,             //
+    __NR_linux_fstatfs,            //
 };
 
 static const uint16_t kPledgeLinuxWpath[] = {
-    __NR_linux_getcwd,      //
-    __NR_linux_open,        //
-    __NR_linux_openat,      //
-    __NR_linux_stat,        //
-    __NR_linux_fstat,       //
-    __NR_linux_lstat,       //
-    __NR_linux_fstatat,     //
-    __NR_linux_access,      //
-    __NR_linux_faccessat,   //
-    __NR_linux_readlinkat,  //
-    __NR_linux_chmod,       //
-    __NR_linux_fchmod,      //
-    __NR_linux_fchmodat,    //
+    __NR_linux_getcwd,              //
+    __NR_linux_open | WRITEONLY,    //
+    __NR_linux_openat | WRITEONLY,  //
+    __NR_linux_stat,                //
+    __NR_linux_fstat,               //
+    __NR_linux_lstat,               //
+    __NR_linux_fstatat,             //
+    __NR_linux_access,              //
+    __NR_linux_faccessat,           //
+    __NR_linux_readlinkat,          //
+    __NR_linux_chmod,               //
+    __NR_linux_fchmod,              //
+    __NR_linux_fchmodat,            //
 };
 
 static const uint16_t kPledgeLinuxCpath[] = {
+    __NR_linux_open,       //
+    __NR_linux_openat,     //
     __NR_linux_rename,     //
     __NR_linux_renameat,   //
     __NR_linux_renameat2,  //
@@ -278,9 +283,20 @@ static const uint16_t kPledgeLinuxId[] = {
     __NR_linux_setrlimit,    //
     __NR_linux_getpriority,  //
     __NR_linux_setpriority,  //
+    __NR_linux_setfsuid,     //
+    __NR_linux_setfsgid,     //
 };
 
 static const uint16_t kPledgeLinuxExec[] = {
+    __NR_linux_execve,             //
+    __NR_linux_execveat,           //
+    __NR_linux_access,             //
+    __NR_linux_faccessat,          //
+    __NR_linux_open | READONLY,    //
+    __NR_linux_openat | READONLY,  //
+};
+
+static const uint16_t kPledgeLinuxExecnative[] = {
     __NR_linux_execve,    //
     __NR_linux_execveat,  //
 };
@@ -290,24 +306,25 @@ static const struct Pledges {
   const uint16_t *syscalls;
   const size_t len;
 } kPledgeLinux[] = {
-    {"default", PLEDGE(kPledgeLinuxDefault)},  //
-    {"stdio", PLEDGE(kPledgeLinuxStdio)},      //
-    {"rpath", PLEDGE(kPledgeLinuxRpath)},      //
-    {"wpath", PLEDGE(kPledgeLinuxWpath)},      //
-    {"cpath", PLEDGE(kPledgeLinuxCpath)},      //
-    {"dpath", PLEDGE(kPledgeLinuxDpath)},      //
-    {"flock", PLEDGE(kPledgeLinuxFlock)},      //
-    {"fattr", PLEDGE(kPledgeLinuxFattr)},      //
-    {"inet", PLEDGE(kPledgeLinuxInet)},        //
-    {"unix", PLEDGE(kPledgeLinuxUnix)},        //
-    {"dns", PLEDGE(kPledgeLinuxDns)},          //
-    {"tty", PLEDGE(kPledgeLinuxTty)},          //
-    {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},    //
-    {"proc", PLEDGE(kPledgeLinuxProc)},        //
-    {"thread", PLEDGE(kPledgeLinuxThread)},    //
-    {"exec", PLEDGE(kPledgeLinuxExec)},        //
-    {"id", PLEDGE(kPledgeLinuxId)},            //
-    {0},                                       //
+    {"default", PLEDGE(kPledgeLinuxDefault)},        //
+    {"stdio", PLEDGE(kPledgeLinuxStdio)},            //
+    {"rpath", PLEDGE(kPledgeLinuxRpath)},            //
+    {"wpath", PLEDGE(kPledgeLinuxWpath)},            //
+    {"cpath", PLEDGE(kPledgeLinuxCpath)},            //
+    {"dpath", PLEDGE(kPledgeLinuxDpath)},            //
+    {"flock", PLEDGE(kPledgeLinuxFlock)},            //
+    {"fattr", PLEDGE(kPledgeLinuxFattr)},            //
+    {"inet", PLEDGE(kPledgeLinuxInet)},              //
+    {"unix", PLEDGE(kPledgeLinuxUnix)},              //
+    {"dns", PLEDGE(kPledgeLinuxDns)},                //
+    {"tty", PLEDGE(kPledgeLinuxTty)},                //
+    {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},          //
+    {"proc", PLEDGE(kPledgeLinuxProc)},              //
+    {"thread", PLEDGE(kPledgeLinuxThread)},          //
+    {"exec", PLEDGE(kPledgeLinuxExec)},              //
+    {"execnative", PLEDGE(kPledgeLinuxExecnative)},  //
+    {"id", PLEDGE(kPledgeLinuxId)},                  //
+    {0},                                             //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -397,23 +414,25 @@ static bool AllowIoctl(struct Filter *f) {
 //   - TIOCGPGRP  (0x540f)
 //   - TIOCSWINSZ (0x5414)
 //   - TIOCSBRK   (0x5427)
+//   - TCFLSH     (0x540b)
 //
 static bool AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 13 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 14 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 11 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 11 - 4, 0),
-      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 11 - 5, 0),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 11 - 6, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 11 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 11 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 11 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 11 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5427, 0, 12 - 11),
-      /*L11*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L12*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L13*/ /* next filter */
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 12 - 3, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 12 - 4, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 12 - 5, 0),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 12 - 6, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 12 - 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 12 - 8, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 12 - 9, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 12 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540b, 12 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5427, 0, 13 - 12),
+      /*L12*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L13*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L14*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -586,6 +605,42 @@ static bool AllowOpenatReadonly(struct Filter *f) {
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 5 - 4),
+      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L6*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The open() flags parameter must not contain
+//
+//   - O_CREAT   (000000100)
+//   - O_TMPFILE (020200000)
+//
+static bool AllowOpenWriteonly(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 6 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L6*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The openat() flags parameter must not contain
+//
+//   - O_CREAT   (000000100)
+//   - O_TMPFILE (020200000)
+//
+static bool AllowOpenatWriteonly(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 6 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -810,23 +865,21 @@ static bool AllowSocketUnix(struct Filter *f) {
 
 // The first parameter of prctl() can be any of
 //
-//   - PR_SET_NO_NEW_PRIVS (38)
+//   - PR_SET_NAME         (15)
+//   - PR_GET_NAME         (16)
+//   - PR_GET_SECCOMP      (21)
 //   - PR_SET_SECCOMP      (22)
-//
-// The second parameter of prctl() can be any of
-//
-//   - true                (1)
-//   - SECCOMP_MODE_FILTER (2)
+//   - PR_SET_NO_NEW_PRIVS (38)
 //
 static bool AllowPrctl(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 4 - 3, 0),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 0, 8 - 4),
-      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 7 - 6, 0),
-      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 8 - 7),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 7 - 3, 0),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 16, 7 - 4, 0),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 7 - 5, 0),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 7 - 6, 0),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 0, 8 - 7),
       /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */
@@ -937,6 +990,12 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
       case __NR_linux_openat | READONLY:
         if (!AllowOpenatReadonly(f)) return false;
         break;
+      case __NR_linux_open | WRITEONLY:
+        if (!AllowOpenWriteonly(f)) return false;
+        break;
+      case __NR_linux_openat | WRITEONLY:
+        if (!AllowOpenatWriteonly(f)) return false;
+        break;
       case __NR_linux_setsockopt:
         if (!AllowSetsockopt(f)) return false;
         break;
@@ -990,6 +1049,7 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
   int rc = -1;
   size_t plen;
   bool needmapexec;
+  bool needexecnative;
   bool needmorphing;
   struct Filter f = {0};
   const uint16_t *pledge;
@@ -997,9 +1057,10 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
   if (execpromises) return einval();
   needmapexec = strstr(promises, "exec");
   needmorphing = strstr(promises, "thread");
+  needexecnative = strstr(promises, "execnative");
   if ((start = s = strdup(promises)) &&
       AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
-      (needmapexec || AppendOriginVerification(&f)) &&
+      (needmapexec || needexecnative || AppendOriginVerification(&f)) &&
       AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault),
                    needmapexec, needmorphing)) {
     for (ok = true; (tok = strtok_r(start, " \t\r\n", &state)); start = 0) {
@@ -1088,15 +1149,15 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
  *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access, faccessat,
- *   readlink, readlinkat.
+ *   readlink, readlinkat, statfs, fstatfs.
  *
- * - "wpath" (write path ops) allows getcwd, open, openat, stat, fstat,
- *   lstat, fstatat, access, faccessat, readlink, readlinkat, chmod,
- *   fchmod, fchmodat.
+ * - "wpath" (write path ops) allows getcwd, open(O_WRONLY),
+ *   openat(O_WRONLY), stat, fstat, lstat, fstatat, access, faccessat,
+ *   readlink, readlinkat, chmod, fchmod, fchmodat.
  *
- * - "cpath" (create path ops) allows rename, renameat, renameat2, link,
- *   linkat, symlink, symlinkat, unlink, rmdir, unlinkat, mkdir,
- *   mkdirat.
+ * - "cpath" (create path ops) allows open(O_CREAT), openat(O_CREAT),
+ *   rename, renameat, renameat2, link, linkat, symlink, symlinkat,
+ *   unlink, rmdir, unlinkat, mkdir, mkdirat.
  *
  * - "dpath" (create special path ops) allows mknod, mknodat, mkfifo.
  *
@@ -1125,12 +1186,20 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  * - "thread" allows clone, futex, and permits PROT_EXEC in mprotect.
  *
  * - "id" allows setuid, setreuid, setresuid, setgid, setregid,
- *   setresgid, setgroups, prlimit, setrlimit, getpriority, setpriority.
+ *   setresgid, setgroups, prlimit, setrlimit, getpriority, setpriority,
+ *   setfsuid, setfsgid.
  *
- * - "exec" allows execve, execveat. If this is used then APE binaries
- *   should be assimilated in order to work on OpenBSD. On Linux, mmap()
+ * - "exec" allows execve, execveat, access, faccessat. On Linux this
+ *   also weakens some security to permit running APE binaries. However
+ *   on OpenBSD they must be assimilate beforehand. On Linux, mmap()
  *   will be loosened up to allow creating PROT_EXEC memory (for APE
  *   loader) and system call origin verification won't be activated.
+ *
+ * - "execnative" allows execve, execveat. Can only be used to run
+ *   native executables; you won't be able to run APE binaries. mmap()
+ *   and mprotect() are still prevented from creating executable memory.
+ *   System call origin verification can't be enabled. If you always
+ *   assimilate your APE binaries, then this should be preferred.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD

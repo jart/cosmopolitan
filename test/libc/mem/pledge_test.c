@@ -108,9 +108,9 @@ TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive1) {
     ASSERT_SYS(0, 0, pledge("stdio unix", 0));
     ASSERT_SYS(0, 3, dup(2));
     ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
-    ASSERT_SYS(EPERM, -1, prctl(PR_SET_NO_NEW_PRIVS, 0, 0, 0, 0));
-    ASSERT_SYS(EPERM, -1, prctl(PR_GET_SECCOMP, SECCOMP_MODE_FILTER, 0));
-    ASSERT_SYS(EPERM, -1, prctl(PR_SET_SECCOMP, 33, 0));
+    ASSERT_SYS(0, 2, prctl(PR_GET_SECCOMP, 0, 0));
+    ASSERT_SYS(0, 0, prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0));
+    ASSERT_SYS(EINVAL, -1, prctl(PR_SET_NO_NEW_PRIVS, 0, 0, 0, 0));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -347,8 +347,23 @@ TEST(pledge, open_wpath) {
     ASSERT_SYS(0, 0, pledge("stdio wpath", 0));
     ASSERT_SYS(0, 3, open("foo", O_RDONLY));
     ASSERT_SYS(EPERM, -1, open(".", O_RDWR | O_TMPFILE, 07644));
-    ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 07644));
-    ASSERT_SYS(0, 4, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
+    ASSERT_SYS(0, 4, open("foo", O_WRONLY | O_TRUNC, 07644));
+    ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
+}
+
+TEST(pledge, open_cpath) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  struct stat st;
+  ASSERT_SYS(0, 0, touch("foo", 0644));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio cpath", 0));
+    ASSERT_SYS(0, 3, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));

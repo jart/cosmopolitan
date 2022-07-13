@@ -1536,7 +1536,6 @@ syscon	termios	EXTA					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd conse
 syscon	termios	EXTB					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
 syscon	termios	ERA					0x02002c		45			45			0			0			0
 syscon	termios	EMPTY					0			0			0			0			0			0			# consensus
-syscon	termios	TCFLSH					0x540b			0			0			0			0			0
 
 syscon	termios	TCFLSH					0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TIOCFLUSH on BSD
 syscon	termios	TIOCFLUSH				0x540b			0x80047410		0x80047410		0x80047410		0x80047410		0			# see tcflush; TCFLSH on Linux

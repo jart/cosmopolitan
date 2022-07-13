@@ -11,7 +11,7 @@
 #define PR_GET_NO_NEW_PRIVS 39
 
 #define PR_SET_NAME 15
-#define PR_GET_NAME 0x10
+#define PR_GET_NAME 16
 
 #define PR_GET_TSC     25
 #define PR_SET_TSC     26

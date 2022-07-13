@@ -765,7 +765,7 @@ FUNCTIONS
 
           If the raw length of a table is reported as zero, then we
           check for the magic element `[0]=false`. If it's present, then
-          your table will be serialized as empty array `[]`. That entry
+          your table will be serialized as empty array `[]`. An entry is
           inserted by DecodeJson() automatically, only when encountering
           empty arrays, and it's necessary in order to make empty arrays
           round-trip. If raw length is zero and `[0]=false` is absent,
