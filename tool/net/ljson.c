@@ -21,6 +21,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
@@ -31,26 +32,27 @@
 #include "third_party/lua/lua.h"
 #include "tool/net/ljson.h"
 
-#define AFTER_VALUE  0x01u
-#define ARRAY_SINGLE 0x02u
-#define ARRAY_END    0x04u
-#define OBJECT_KEY   0x10u
-#define OBJECT_VAL   0x20u
-#define OBJECT_END   0x40u
-
-#define TOP_LEVEL    64
+#define KEY    1
+#define COMMA  2
+#define COLON  4
+#define ARRAY  8
+#define OBJECT 16
+#define DEPTH  64
 
 static struct DecodeJson Parse(struct lua_State *L, const char *p,
                                const char *e, int context, int depth) {
   long x;
   char w[4];
-  const char *a;
   luaL_Buffer b;
-  const char *reason;
   struct DecodeJson r;
+  const char *a, *reason;
   int A, B, C, D, c, d, i, u;
   if (UNLIKELY(!depth)) {
     return (struct DecodeJson){-1, "maximum depth exceeded"};
+  }
+  if (UNLIKELY((intptr_t)__builtin_frame_address(0) <
+               GetStackAddr() + PAGESIZE * 2)) {
+    return (struct DecodeJson){-1, "out of stack"};
   }
   for (a = p, d = +1; p < e;) {
     switch ((c = *p++ & 255)) {
@@ -62,7 +64,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         break;
 
       case ',':  // present in list and object
-        if (0 != (context & AFTER_VALUE)) {
+        if (context & COMMA) {
           context = 0;
           a = p;
           break;
@@ -71,7 +73,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case ':':  // present only in object after key
-        if (0 != (context & OBJECT_VAL)) {
+        if (context & COLON) {
           context = 0;
           a = p;
           break;
@@ -80,8 +82,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 'n':  // null
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("null")) {
           lua_pushnil(L);
           return (struct DecodeJson){1, p + 3};
@@ -90,8 +91,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 'f':  // false
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
         if (p + 4 <= e && READ32LE(p) == READ32LE("alse")) {
           lua_pushboolean(L, false);
           return (struct DecodeJson){1, p + 4};
@@ -100,8 +100,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case 't':  // true
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (KEY | COLON | COMMA)) goto OnColonCommaKey;
         if (p + 3 <= e && READ32LE(p - 1) == READ32LE("true")) {
           lua_pushboolean(L, true);
           return (struct DecodeJson){1, p + 3};
@@ -109,14 +108,21 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           goto IllegalCharacter;
         }
 
+      default:
+      IllegalCharacter:
+        return (struct DecodeJson){-1, "illegal character"};
+      OnColonCommaKey:
+        if (context & KEY) goto BadObjectKey;
+      OnColonComma:
+        if (context & COLON) goto MissingColon;
+        return (struct DecodeJson){-1, "missing ','"};
+      MissingColon:
+        return (struct DecodeJson){-1, "missing ':'"};
       BadObjectKey:
         return (struct DecodeJson){-1, "object key must be string"};
-      MissingPunctuation:
-        return (struct DecodeJson){-1, "missing ',' or ':'"};
 
       case '-':  // negative
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
         if (p < e && isdigit(*p)) {
           d = -1;
           break;
@@ -125,10 +131,14 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         }
 
       case '0':  // zero or number
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
         if (p < e) {
-          if ((*p == '.' || *p == 'e' || *p == 'E')) {
+          if (*p == '.') {
+            if (p + 1 == e || !isdigit(p[1])) {
+              return (struct DecodeJson){-1, "bad double"};
+            }
+            goto UseDubble;
+          } else if (*p == 'e' || *p == 'E') {
             goto UseDubble;
           } else if (isdigit(*p)) {
             return (struct DecodeJson){-1, "unexpected octal"};
@@ -138,8 +148,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         return (struct DecodeJson){1, p};
 
       case '1' ... '9':  // integer
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
         for (x = (c - '0') * d; p < e; ++p) {
           c = *p & 255;
           if (isdigit(c)) {
@@ -147,7 +156,12 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
                 __builtin_add_overflow(x, (c - '0') * d, &x)) {
               goto UseDubble;
             }
-          } else if (c == '.' || c == 'e' || c == 'E') {
+          } else if (c == '.') {
+            if (p + 1 == e || !isdigit(p[1])) {
+              return (struct DecodeJson){-1, "bad double"};
+            }
+            goto UseDubble;
+          } else if (c == 'e' || c == 'E') {
             goto UseDubble;
           } else {
             break;
@@ -159,15 +173,16 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
       UseDubble:  // number
         lua_pushnumber(L, StringToDouble(a, e - a, &c));
         DCHECK(c > 0, "paranoid avoiding infinite loop");
+        if (a + c < e && (a[c] == 'e' || a[c] == 'E')) {
+          return (struct DecodeJson){-1, "bad exponent"};
+        }
         return (struct DecodeJson){1, a + c};
 
       case '[':  // Array
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
-        lua_newtable(L);
-        i = 0;
-        r = Parse(L, p, e, ARRAY_SINGLE | ARRAY_END, depth - 1);
-        for (;;) {
+        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        lua_newtable(L);  // +1
+        for (context = ARRAY, i = 0;;) {
+          r = Parse(L, p, e, context, depth - 1);  // +2
           if (UNLIKELY(r.rc == -1)) {
             lua_pop(L, 1);
             return r;
@@ -177,44 +192,44 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
             break;
           }
           lua_rawseti(L, -2, i++ + 1);
-          r = Parse(L, p, e, AFTER_VALUE | ARRAY_END, depth - 1);
+          context = ARRAY | COMMA;
         }
         if (!i) {
           // we need this kludge so `[]` won't round-trip as `{}`
-          lua_pushboolean(L, false);
+          lua_pushboolean(L, false);  // +2
           lua_rawseti(L, -2, 0);
         }
         return (struct DecodeJson){1, p};
 
       case ']':
-        if (0 != (context & ARRAY_END)) {
+        if (context & ARRAY) {
           return (struct DecodeJson){0, p};
         } else {
           return (struct DecodeJson){-1, "unexpected ']'"};
         }
 
       case '}':
-        if (0 != (context & OBJECT_END)) {
+        if (context & OBJECT) {
           return (struct DecodeJson){0, p};
         } else {
           return (struct DecodeJson){-1, "unexpected '}'"};
         }
 
       case '{':  // Object
-        if (UNLIKELY(0 != (context & OBJECT_KEY))) goto BadObjectKey;
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
-        lua_newtable(L);
-        r = Parse(L, p, e, OBJECT_KEY | OBJECT_END, depth - 1);
+        if (context & (COLON | COMMA | KEY)) goto OnColonCommaKey;
+        lua_newtable(L);  // +1
+        context = KEY | OBJECT;
         for (;;) {
+          r = Parse(L, p, e, context, depth - 1);  // +2
           if (r.rc == -1) {
             lua_pop(L, 1);
             return r;
           }
           p = r.p;
           if (!r.rc) {
-            break;
+            return (struct DecodeJson){1, p};
           }
-          r = Parse(L, p, e, OBJECT_VAL, depth - 1);
+          r = Parse(L, p, e, COLON, depth - 1);  // +3
           if (r.rc == -1) {
             lua_pop(L, 2);
             return r;
@@ -225,12 +240,11 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           }
           p = r.p;
           lua_settable(L, -3);
-          r = Parse(L, p, e, OBJECT_KEY | AFTER_VALUE | OBJECT_END, depth - 1);
+          context = KEY | COMMA | OBJECT;
         }
-        return (struct DecodeJson){1, p};
 
       case '"':  // string
-        if (UNLIKELY(0 != (context & (OBJECT_VAL | AFTER_VALUE)))) goto MissingPunctuation;
+        if (context & (COLON | COMMA)) goto OnColonComma;
         luaL_buffinit(L, &b);
         for (;;) {
           if (UNLIKELY(p >= e)) {
@@ -252,7 +266,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
           }
           continue;
         HandleEscape:
-          if (UNLIKELY(p >= e)) {
+          if (p >= e) {
             goto UnexpectedEofString;
           }
           switch ((c = *p++ & 255)) {
@@ -331,7 +345,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
                   w[1] = 0200 | (c & 077);
                   i = 2;
                 } else if (c <= 0xffff) {
-                  if (UNLIKELY(IsSurrogate(c))) {
+                  if (IsSurrogate(c)) {
                   ReplacementCharacter:
                     c = 0xfffd;
                   }
@@ -368,13 +382,9 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
         luaL_pushresultsize(&b, 0);
         lua_pop(L, 1);
         return (struct DecodeJson){-1, reason};
-
-      default:
-      IllegalCharacter:
-        return (struct DecodeJson){-1, "illegal character"};
     }
   }
-  if (UNLIKELY(depth == TOP_LEVEL)) {
+  if (depth == DEPTH) {
     return (struct DecodeJson){0, 0};
   } else {
     return (struct DecodeJson){-1, "unexpected eof"};
@@ -405,10 +415,9 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
  * @return r.p is string describing error if `rc < 0`
  */
 struct DecodeJson DecodeJson(struct lua_State *L, const char *p, size_t n) {
-  int depth = TOP_LEVEL;
   if (n == -1) n = p ? strlen(p) : 0;
-  if (lua_checkstack(L, depth * 4)) {
-    return Parse(L, p, p + n, 0, depth);
+  if (lua_checkstack(L, DEPTH * 3 + LUA_MINSTACK)) {
+    return Parse(L, p, p + n, 0, DEPTH);
   } else {
     return (struct DecodeJson){-1, "can't set stack depth"};
   }

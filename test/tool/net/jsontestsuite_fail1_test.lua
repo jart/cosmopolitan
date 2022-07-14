@@ -30,165 +30,266 @@
 -- ljson should reject all of them as invalid
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_no-colon.json
-assert(not DecodeJson(' {"a" '))
+val, err = DecodeJson(' {"a" ')
+assert(val == nil)
+assert(err == "unexpected eof")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_value.json
-assert(not DecodeJson(' {"a": '))
+val, err = DecodeJson(' {"a": ')
+assert(val == nil)
+assert(err == "unexpected eof")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_key.json
-assert(not DecodeJson(' {:"b"} '))
+val, err = DecodeJson(' {:"b"} ')
+assert(val == nil)
+assert(err == "unexpected ':'")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_colon.json
-assert(not DecodeJson(' {"a" b} '))
+val, err = DecodeJson(' {"a" b} ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_key_with_single_quotes.json
-assert(not DecodeJson(' {key: \'value\'} '))
+val, err = DecodeJson(' {key: \'value\'} ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_garbage_at_end.json
-assert(not DecodeJson(' {"a":"a" 123} '))
+val, err = DecodeJson(' {"a":"a" 123} ')
+assert(val == nil)
+assert(err == "object key must be string")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_emoji.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x7b\xf0\x9f\x87\xa8\xf0\x9f\x87\xad\x7d '))
+val, err = DecodeJson(' \x7b\xf0\x9f\x87\xa8\xf0\x9f\x87\xad\x7d ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_bracket_key.json
-assert(not DecodeJson(' {[: "x"} '))
+val, err = DecodeJson(' {[: "x"} ')
+assert(val == nil)
+assert(err == "object key must be string")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_with_alpha_char.json
-assert(not DecodeJson(' [1.8011670033376514H-308] '))
+val, err = DecodeJson(' [1.8011670033376514H-308] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_with_alpha.json
-assert(not DecodeJson(' [1.2a-3] '))
+val, err = DecodeJson(' [1.2a-3] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_starting_with_dot.json
-assert(not DecodeJson(' [.123] '))
+val, err = DecodeJson(' [.123] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_real_with_invalid_utf8_after_e.json
- -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x31\x65\xe5\x5d '))
+val, err = DecodeJson(" [1e\xe5] ")
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_real_garbage_after_e.json
-assert(not DecodeJson(' [1ea] '))
+val, err = DecodeJson(' [1ea] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_neg_with_garbage_at_end.json
-assert(not DecodeJson(' [-1x] '))
+val, err = DecodeJson(' [-1x] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_neg_real_without_int_part.json
-assert(not DecodeJson(' [-.123] '))
+val, err = DecodeJson(' [-.123] ')
+assert(val == nil)
+assert(err == "bad negative")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_minus_sign_with_trailing_garbage.json
-assert(not DecodeJson(' [-foo] '))
+val, err = DecodeJson(' [-foo] ')
+assert(val == nil)
+assert(err == "bad negative")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_minus_infinity.json
-assert(not DecodeJson(' [-Infinity] '))
+val, err = DecodeJson(' [-Infinity] ')
+assert(val == nil)
+assert(err == "bad negative")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_invalid-utf-8-in-int.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x30\xe5\x5d '))
+val, err = DecodeJson(' \x5b\x30\xe5\x5d ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_invalid-utf-8-in-exponent.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x31\x65\x31\xe5\x5d '))
+val, err = DecodeJson(' \x5b\x31\x65\x31\xe5\x5d ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_invalid-utf-8-in-bigger-int.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x31\x32\x33\xe5\x5d '))
+val, err = DecodeJson(' \x5b\x31\x32\x33\xe5\x5d ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_invalid-negative-real.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x2d\x31\x32\x33\x2e\x31\x32\x33\x66\x6f\x6f\x5d '))
+val, err = DecodeJson(' \x5b\x2d\x31\x32\x33\x2e\x31\x32\x33\x66\x6f\x6f\x5d ')
+assert(val == nil)
+assert(err == "missing ','")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_invalid+-.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\x30\x65\x2b\x2d\x31\x5d '))
+val, err = DecodeJson(" [0e+-1] ")
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_infinity.json
-assert(not DecodeJson(' [Infinity] '))
+val, err = DecodeJson(' [Infinity] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_hex_2_digits.json
-assert(not DecodeJson(' [0x42] '))
+val, err = DecodeJson(' [0x42] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_hex_1_digit.json
-assert(not DecodeJson(' [0x1] '))
+val, err = DecodeJson(' [0x1] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_expression.json
-assert(not DecodeJson(' [1+2] '))
+val, err = DecodeJson(' [1+2] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_U+FF11_fullwidth_digit_one.json
  -- (converted to binary for safety)
-assert(not DecodeJson(' \x5b\xef\xbc\x91\x5d '))
+val, err = DecodeJson(' \x5b\xef\xbc\x91\x5d ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_NaN.json
-assert(not DecodeJson(' [NaN] '))
+val, err = DecodeJson(' [NaN] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_Inf.json
-assert(not DecodeJson(' [Inf] '))
+val, err = DecodeJson(' [Inf] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_9.e+.json
-assert(not DecodeJson(' [9.e+] '))
+val, err = DecodeJson(' [9.e+] ')
+assert(val == nil)
+assert(err == "bad double")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1eE2.json
-assert(not DecodeJson(' [1eE2] '))
+val, err = DecodeJson(' [1eE2] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1.0e.json
-assert(not DecodeJson(' [1.0e] '))
+val, err = DecodeJson(' [1.0e] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1.0e-.json
-assert(not DecodeJson(' [1.0e-] '))
+val, err = DecodeJson(' [1.0e-] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_1.0e+.json
-assert(not DecodeJson(' [1.0e+] '))
+val, err = DecodeJson(' [1.0e+] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0e.json
-assert(not DecodeJson(' [0e] '))
+val, err = DecodeJson(' [0e] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0e+.json
-assert(not DecodeJson(' [0e+] '))
+val, err = DecodeJson(' [0e+] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0_capital_E.json
-assert(not DecodeJson(' [0E] '))
+val, err = DecodeJson(' [0E] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0_capital_E+.json
-assert(not DecodeJson(' [0E+] '))
+val, err = DecodeJson(' [0E+] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0.3e.json
-assert(not DecodeJson(' [0.3e] '))
+val, err = DecodeJson(' [0.3e] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0.3e+.json
-assert(not DecodeJson(' [0.3e+] '))
+val, err = DecodeJson(' [0.3e+] ')
+assert(val == nil)
+assert(err == "bad exponent")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0.1.2.json
-assert(not DecodeJson(' [0.1.2] '))
+val, err = DecodeJson(' [0.1.2] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_.2e-3.json
-assert(not DecodeJson(' [.2e-3] '))
+val, err = DecodeJson(' [.2e-3] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_.-1.json
-assert(not DecodeJson(' [.-1] '))
+val, err = DecodeJson(' [.-1] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-NaN.json
-assert(not DecodeJson(' [-NaN] '))
+val, err = DecodeJson(' [-NaN] ')
+assert(val == nil)
+assert(err == "bad negative")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-1.0..json
-assert(not DecodeJson(' [-1.0.] '))
+val, err = DecodeJson(' [-1.0.] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_+Inf.json
-assert(not DecodeJson(' [+Inf] '))
+val, err = DecodeJson(' [+Inf] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_+1.json
-assert(not DecodeJson(' [+1] '))
+val, err = DecodeJson(' [+1] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_++.json
-assert(not DecodeJson(' [++1234] '))
+val, err = DecodeJson(' [++1234] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_incomplete_true.json
-assert(not DecodeJson(' [tru] '))
+val, err = DecodeJson(' [tru] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_incomplete_null.json
-assert(not DecodeJson(' [nul] '))
+val, err = DecodeJson(' [nul] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_incomplete_false.json
-assert(not DecodeJson(' [fals] '))
+val, err = DecodeJson(' [fals] ')
+assert(val == nil)
+assert(err == "illegal character")
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_array_unclosed_with_object_inside.json
 assert(not DecodeJson(' [{} '))
@@ -311,3 +412,24 @@ assert(not DecodeJson(' [1 true] '))
 
 -- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_object_missing_semicolon.json
 assert(not DecodeJson(' {"a" "b"} '))
+
+-- lool
+assert(not DecodeJson(' [--2.] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_real_without_fractional_part.json
+assert(not DecodeJson(' [1.] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e3.json
+assert(not DecodeJson(' [2.e3] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e-3.json
+assert(not DecodeJson(' [2.e-3] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_2.e+3.json
+assert(not DecodeJson(' [2.e+3] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_0.e1.json
+assert(not DecodeJson(' [0.e1] '))
+
+-- https://github.com/nst/JSONTestSuite/tree/d64aefb55228d9584d3e5b2433f720ea8fd00c82/test_parsing/n_number_-2..json
+assert(not DecodeJson(' [-2.] '))

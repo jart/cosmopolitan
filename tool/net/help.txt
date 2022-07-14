@@ -725,15 +725,11 @@ FUNCTIONS
           output is valid. Please note that invalid utf-8 could still
           happen if it's encoded as utf-8.
 
-          This parser is lenient about commas and colons. For example
-          it's permissible to say `DecodeJson('[1 2 3 4]')`. Trailing
-          commas are allowed. Even prefix commas are allowed. However
-          it's not recommended that you rely on this behavior, and it
-          won't round-trip with EncodeJson() currently.
-
           When objects are parsed, your Lua object can't preserve the
           the original ordering of fields. As such, they'll be sorted
           by EncodeJson() and may not round-trip with original intent
+
+          This parser has perfect conformance with JSONTestSuite.
 
   EncodeJson(value[, options:table])
       ├─→ json:str

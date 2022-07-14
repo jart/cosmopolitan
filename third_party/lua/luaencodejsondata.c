@@ -24,6 +24,7 @@
 #include "libc/log/rop.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
@@ -93,7 +94,7 @@ static int SerializeArray(lua_State *L, char **buf, struct Serializer *z,
   size_t i;
   RETURN_ON_ERROR(appendw(buf, '['));
   for (i = 1; i <= tbllen; i++) {
-    lua_rawgeti(L, -1, i);
+    lua_rawgeti(L, -1, i);  // +2
     if (i > 1) RETURN_ON_ERROR(appendw(buf, ','));
     RETURN_ON_ERROR(Serialize(L, buf, -1, z, level - 1));
     lua_pop(L, 1);
@@ -108,8 +109,8 @@ static int SerializeObject(lua_State *L, char **buf, struct Serializer *z,
                            int level) {
   bool comma = false;
   RETURN_ON_ERROR(appendw(buf, '{'));
-  lua_pushnil(L);
-  while (lua_next(L, -2)) {
+  lua_pushnil(L);            // +2
+  while (lua_next(L, -2)) {  // +3
     if (lua_type(L, -2) == LUA_TSTRING) {
       if (comma) {
         RETURN_ON_ERROR(appendw(buf, ','));
@@ -164,9 +165,13 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   int rc;
   bool isarray;
   lua_Unsigned n;
+  if ((intptr_t)__builtin_frame_address(0) < GetStackAddr() + PAGESIZE * 2) {
+    z->reason = "out of stack";
+    return -1;
+  }
   RETURN_ON_ERROR(rc = LuaPushVisit(&z->visited, lua_topointer(L, idx)));
   if (!rc) {
-    lua_pushvalue(L, idx);
+    lua_pushvalue(L, idx);  // +1
     if ((n = lua_rawlen(L, -1)) > 0) {
       isarray = true;
     } else {
@@ -250,7 +255,7 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
 int LuaEncodeJsonData(lua_State *L, char **buf, int idx, bool sorted) {
   int rc, depth = 64;
   struct Serializer z = {.reason = "out of memory", .sorted = sorted};
-  if (lua_checkstack(L, depth * 4)) {
+  if (lua_checkstack(L, depth * 3 + LUA_MINSTACK)) {
     rc = Serialize(L, buf, idx, &z, depth);
     free(z.visited.p);
     free(z.strbuf);

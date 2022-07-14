@@ -22,6 +22,7 @@
 #include "libc/log/rop.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/stack.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/strlist.internal.h"
 #include "libc/x/x.h"
@@ -334,6 +335,11 @@ OnError:
 static int SerializeTable(lua_State *L, char **buf, int idx,
                           struct Serializer *z, int depth) {
   int rc;
+  intptr_t rsp, bot;
+  if ((intptr_t)__builtin_frame_address(0) < GetStackAddr() + PAGESIZE * 2) {
+    z->reason = "out of stack";
+    return -1;
+  }
   RETURN_ON_ERROR(rc = LuaPushVisit(&z->visited, lua_topointer(L, idx)));
   if (rc) return SerializeOpaque(L, buf, idx, "cyclic");
   lua_pushvalue(L, idx);  // idx becomes invalid once we change stack
@@ -400,7 +406,7 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
 int LuaEncodeLuaData(lua_State *L, char **buf, int idx, bool sorted) {
   int rc, depth = 64;
   struct Serializer z = {.reason = "out of memory", .sorted = sorted};
-  if (lua_checkstack(L, depth * 4)) {
+  if (lua_checkstack(L, depth * 3 + LUA_MINSTACK)) {
     rc = Serialize(L, buf, idx, &z, depth);
     free(z.visited.p);
     if (rc == -1) {
