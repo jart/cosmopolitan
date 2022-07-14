@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "master"
+      - "flake"
   pull_request:
     branches:
       - "master"
