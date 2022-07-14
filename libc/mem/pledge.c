@@ -439,6 +439,7 @@ static bool AllowIoctlTty(struct Filter *f) {
 
 // The level argument of setsockopt() must be one of:
 //
+//   - SOL_IP     (0)
 //   - SOL_SOCKET (1)
 //   - SOL_TCP    (6)
 //
@@ -450,24 +451,27 @@ static bool AllowIoctlTty(struct Filter *f) {
 //   - SO_KEEPALIVE ( 9)
 //   - SO_RCVTIMEO  (20)
 //   - SO_SNDTIMEO  (21)
+//   - IP_RECVTTL   (12)
 //
 static bool AllowSetsockopt(struct Filter *f) {
   static const int nr = __NR_linux_setsockopt;
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 15 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 11 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 11 - 4, 0),
-      /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 11 - 6, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 11 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 11 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 11 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 11 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 12 - 11),
-      /*L11*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L12*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L13*/ /* next filter */
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 5 - 3, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 5 - 4, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 14 - 5),
+      /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 13 - 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 12, 13 - 8, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 13 - 9, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 13 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 13 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 13 - 12, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 14 - 13),
+      /*L13*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L14*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L15*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -802,26 +806,28 @@ static bool AllowSigaction(struct Filter *f) {
 // The protocol parameter of socket() must be one of:
 //
 //   - 0
+//   - IPPROTO_ICMP (1)
 //   - IPPROTO_TCP (6)
 //   - IPPROTO_UDP (17)
 //
 static bool AllowSocketInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 14 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 15 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 4 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 10, 0, 13 - 4),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 10, 0, 14 - 4),
       /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 8 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 13 - 8),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 14 - 8),
       /* L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 12 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 12 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 17, 0, 13 - 11),
-      /*L12*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L13*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L14*/ /* next filter */
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 13 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 13 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 13 - 12, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 17, 0, 14 - 12),
+      /*L13*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L14*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L15*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
