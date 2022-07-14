@@ -111,6 +111,8 @@ int getresuid(uint32_t *, uint32_t *, uint32_t *);
 int getsid(int) nosideeffect libcesque;
 int gettid(void) libcesque;
 int getuid(void) nosideeffect libcesque;
+int ioprio_get(int, int);
+int ioprio_set(int, int, int);
 int kill(int, int);
 int killpg(int, int);
 int link(const char *, const char *) dontthrow;

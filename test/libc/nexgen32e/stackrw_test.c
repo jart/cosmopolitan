@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,44 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nt/runtime.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
 
 /**
- * Terminates process, ignoring destructors and atexit() handlers.
- *
- * When running on bare metal, this function will reboot your computer
- * by hosing the interrupt descriptors and triple faulting the system.
- *
- * @param exitcode is masked with 255 on unix (but not windows)
- * @asyncsignalsafe
- * @threadsafe
- * @vforksafe
- * @noreturn
+ * @fileoverview test non-executable stack is default
  */
-privileged wontreturn void _Exit(int exitcode) {
-  int i;
-  STRACE("_Exit(%d)", exitcode);
-  if (!IsWindows() && !IsMetal()) {
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit_group), "D"(exitcode)
-                 : "rcx", "r11", "memory");
-    // this should only be possible on Linux in a pledge ultra sandbox
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(exitcode)
-                 : "rcx", "r11", "memory");
-  } else if (IsWindows()) {
-    ExitProcess(exitcode);
+
+jmp_buf jb;
+
+void EscapeSegfault(int sig) {
+  longjmp(jb, 666);
+}
+
+TEST(xstack, test) {
+  struct sigaction old[2];
+  struct sigaction sa = {
+      .sa_handler = EscapeSegfault,
+      .sa_flags = SA_NODEFER,
+  };
+  sigaction(SIGSEGV, &sa, old + 0);
+  sigaction(SIGBUS, &sa, old + 1);
+  char code[16] = {
+      0x55,                          // push %rbp
+      0xb8, 0007, 0x00, 0x00, 0x00,  // mov  $7,%eax
+      0x5d,                          // push %rbp
+      0xc3,                          // ret
+  };
+  int (*func)(void) = (void *)code;
+  int rc;
+  if (!(rc = setjmp(jb))) {
+    func();
+    abort();
   }
-  asm("push\t$0\n\t"
-      "push\t$0\n\t"
-      "cli\n\t"
-      "lidt\t(%rsp)");
-  for (;;) asm("ud2");
+  ASSERT_EQ(666, rc);
+  sigaction(SIGBUS, old + 1, 0);
+  sigaction(SIGSEGV, old + 0, 0);
 }

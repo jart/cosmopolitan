@@ -126,21 +126,21 @@ void GetElfHeader(char ehdr[hasatleast 64], const char *image) {
         ehdr[i++] = c;
       } else {
         kprintf("%s: ape printf elf header too long\n", prog);
-        exit(__COUNTER__);
+        exit(1);
       }
     }
     if (i != 64) {
       kprintf("%s: ape printf elf header too short\n", prog);
-      exit(__COUNTER__);
+      exit(2);
     }
     if (READ32LE(ehdr) != READ32LE("\177ELF")) {
       kprintf("%s: ape printf elf header didn't have elf magic\n", prog);
-      exit(__COUNTER__);
+      exit(3);
     }
     return;
   }
   kprintf("%s: printf statement not found in first 4096 bytes\n", prog);
-  exit(__COUNTER__);
+  exit(4);
 }
 
 void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
@@ -151,7 +151,7 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   int rc, skip, count, bs, offset, size;
   if (!(script = memmem(image, imagesize, "'\n#'\"\n", 6))) {
     kprintf("%s: ape shell script not found\n", prog);
-    exit(__COUNTER__);
+    exit(5);
   }
   script += 6;
   DCHECK_EQ(REG_OK, regcomp(&rx,
@@ -163,11 +163,11 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   if (rc != REG_OK) {
     if (rc == REG_NOMATCH) {
       kprintf("%s: ape macho dd command not found\n", prog);
-      exit(__COUNTER__);
+      exit(6);
     }
     regerror(rc, &rx, errstr, sizeof(errstr));
     kprintf("%s: ape macho dd regex failed: %s\n", prog, errstr);
-    exit(__COUNTER__);
+    exit(7);
   }
   bs = atoi(script + rm[1].rm_so);
   skip = atoi(script + rm[2].rm_so);
@@ -175,23 +175,23 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   if (__builtin_mul_overflow(skip, bs, &offset) ||
       __builtin_mul_overflow(count, bs, &size)) {
     kprintf("%s: integer overflow parsing macho\n");
-    exit(__COUNTER__);
+    exit(8);
   }
   if (offset < 64) {
     kprintf("%s: ape macho dd offset should be ≥64: %d\n", prog, offset);
-    exit(__COUNTER__);
+    exit(9);
   }
   if (offset >= imagesize) {
     kprintf("%s: ape macho dd offset is outside file: %d\n", prog, offset);
-    exit(__COUNTER__);
+    exit(10);
   }
   if (size < 32) {
     kprintf("%s: ape macho dd size should be ≥32: %d\n", prog, size);
-    exit(__COUNTER__);
+    exit(11);
   }
   if (size > imagesize - offset) {
     kprintf("%s: ape macho dd size is outside file: %d\n", prog, size);
-    exit(__COUNTER__);
+    exit(12);
   }
   *out_offset = offset;
   *out_size = size;
@@ -218,20 +218,20 @@ void Assimilate(void) {
   struct stat st;
   if ((fd = open(prog, O_RDWR)) == -1) {
     kprintf("%s: open(O_RDWR) failed: %m\n", prog);
-    exit(__COUNTER__);
+    exit(13);
   }
   if (fstat(fd, &st) == -1) {
     kprintf("%s: fstat() failed: %m\n", prog);
-    exit(__COUNTER__);
+    exit(14);
   }
   if (st.st_size < 8192) {
     kprintf("%s: ape binaries must be at least 4096 bytes\n", prog);
-    exit(__COUNTER__);
+    exit(15);
   }
   if ((p = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) ==
       MAP_FAILED) {
     kprintf("%s: mmap failed: %m\n", prog);
-    exit(__COUNTER__);
+    exit(16);
   }
   if (READ32LE(p) == READ32LE("\177ELF")) {
     if (!g_force) {
@@ -253,7 +253,7 @@ void Assimilate(void) {
   }
   if (READ64LE(p) != READ64LE("MZqFpD='")) {
     kprintf("%s: this file is not an actually portable executable\n", prog);
-    exit(__COUNTER__);
+    exit(17);
   }
   if (g_mode == MODE_ELF) {
     AssimilateElf(p, st.st_size);
@@ -263,7 +263,7 @@ void Assimilate(void) {
 Finish:
   if (munmap(p, st.st_size) == -1) {
     kprintf("%s: munmap() failed: %m\n", prog);
-    exit(__COUNTER__);
+    exit(18);
   }
 }
 

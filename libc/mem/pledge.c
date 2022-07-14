@@ -59,11 +59,11 @@ struct Filter {
 };
 
 static const uint16_t kPledgeLinuxDefault[] = {
-    __NR_linux_exit,        //
-    __NR_linux_exit_group,  //
+    __NR_linux_exit,  //
 };
 
 static const uint16_t kPledgeLinuxStdio[] = {
+    __NR_linux_exit_group,         //
     __NR_linux_clock_getres,       //
     __NR_linux_clock_gettime,      //
     __NR_linux_clock_nanosleep,    //
@@ -1132,7 +1132,7 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
  * `promises` is a string that may include any of the following groups
  * delimited by spaces.
  *
- * - "stdio" allows close, dup, dup2, dup3, fchdir, fstat, fsync,
+ * - "stdio" allows exit, close, dup, dup2, dup3, fchdir, fstat, fsync,
  *   fdatasync, ftruncate, getdents, getegid, getrandom, geteuid,
  *   getgid, getgroups, getitimer, getpgid, getpgrp, getpid, getppid,
  *   getresgid, getresuid, getrlimit, getsid, wait4, gettimeofday,

@@ -46,6 +46,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -60,15 +61,40 @@ void SetUp(void) {
 }
 
 TEST(pledge, default_allowsExit) {
+  int *job;
   int ws, pid;
-  ASSERT_NE(-1, (pid = fork()));
+  // create small shared memory region
+  ASSERT_NE(-1, (job = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+                            MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  job[0] = 2;  // create workload
+  job[1] = 2;
+  ASSERT_NE(-1, (pid = fork()));  // create enclaved worker
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("", 0));
+    job[0] = job[0] + job[1];  // do work
     _Exit(0);
   }
-  EXPECT_NE(-1, wait(&ws));
+  EXPECT_NE(-1, wait(&ws));  // wait for worker
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));
+  EXPECT_EQ(4, job[0]);  // check result
+  EXPECT_SYS(0, 0, munmap(job, FRAMESIZE));
+}
+
+int Enclave(void *arg, int tid) {
+  ASSERT_SYS(0, 0, pledge("", 0));
+  int *job = arg;            // get job
+  job[0] = job[0] + job[1];  // do work
+  return 0;                  // exit
+}
+
+TEST(pledge, withThreadMemory) {
+  if (IsOpenbsd()) return;  // openbsd doesn't allow it, wisely
+  struct spawn worker;
+  int job[2] = {2, 2};                              // create workload
+  ASSERT_SYS(0, 0, _spawn(Enclave, job, &worker));  // create worker
+  ASSERT_SYS(0, 0, _join(&worker));                 // wait for exit
+  EXPECT_EQ(4, job[0]);                             // check result
 }
 
 TEST(pledge, stdio_forbidsOpeningPasswd1) {

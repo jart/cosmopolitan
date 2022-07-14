@@ -777,7 +777,7 @@ int main(int argc, char *argv[]) {
         ccversion = atoi(optarg);
         break;
       case 'P':
-        proquota = sizetol(optarg, 1024);
+        proquota = atoi(optarg);
         break;
       case 'F':
         fszquota = sizetol(optarg, 1000);

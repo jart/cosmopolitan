@@ -48,6 +48,23 @@
 #define STATIC_STACK_ADDR(ADDR) \
   STATIC_SYMBOL("ape_stack_vaddr", _STACK_STRINGIFY(ADDR))
 
+/**
+ * Makes program stack executable if declared, e.g.
+ *
+ *     STATIC_EXEC_STACK();
+ *     int main() {
+ *       char code[16] = {
+ *           0x55,                          // push %rbp
+ *           0xb8, 0007, 0x00, 0x00, 0x00,  // mov  $7,%eax
+ *           0x5d,                          // push %rbp
+ *           0xc3,                          // ret
+ *       };
+ *       int (*func)(void) = (void *)code;
+ *       printf("result %d should be 7\n", func());
+ *     }
+ */
+#define STATIC_EXEC_STACK() STATIC_SYMBOL("ape_stack_pf", "7")
+
 #define _STACK_STRINGIFY(ADDR) #ADDR
 
 #if IsAsan()

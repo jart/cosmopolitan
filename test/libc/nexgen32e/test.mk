@@ -37,10 +37,12 @@ TEST_LIBC_NEXGEN32E_DIRECTDEPS =				\
 	LIBC_STDIO						\
 	LIBC_STR						\
 	LIBC_STUBS						\
+	LIBC_SYSV						\
 	LIBC_TESTLIB						\
 	LIBC_UNICODE						\
 	LIBC_X							\
-	TOOL_VIZ_LIB
+	TOOL_VIZ_LIB						\
+	THIRD_PARTY_XED
 
 TEST_LIBC_NEXGEN32E_DEPS :=					\
 	$(call uniq,$(foreach x,$(TEST_LIBC_NEXGEN32E_DIRECTDEPS),$($(x))))
@@ -57,6 +59,13 @@ o/$(MODE)/test/libc/nexgen32e/%.com.dbg:			\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+# we can't run this test on openbsd because rwx memory isn't allowed
+o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com.ok:		\
+		o/$(MODE)/tool/build/runit.com			\
+		o/$(MODE)/tool/build/runitd.com			\
+		o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com
+	@$(COMPILE) -ATEST -tT$@ $^ $(filter-out openbsd,$(HOSTS))
 
 $(TEST_LIBC_NEXGEN32E_OBJS):					\
 	DEFAULT_CCFLAGS +=					\
