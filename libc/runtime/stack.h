@@ -126,7 +126,7 @@ extern char ape_stack_align[] __attribute__((__weak__));
  */
 #define HaveStackMemory(n) \
   (IsTiny() ||             \
-   (intptr_t)__builtin_frame_address(0) >= GetStackAddr() + PAGESIZE * (n))
+   (intptr_t)__builtin_frame_address(0) >= GetStackAddr() + PAGESIZE + (n))
 
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
