@@ -74,6 +74,8 @@ i32 sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 sys_pledge(const char *, const char *) hidden;
 i32 sys_posix_openpt(i32) hidden;
 i32 sys_renameat(i32, const char *, i32, const char *) hidden;
+i32 sys_setfsgid(i32) hidden;
+i32 sys_setfsuid(i32) hidden;
 i32 sys_setgid(i32) hidden;
 i32 sys_setpgid(i32, i32) hidden;
 i32 sys_setpriority(i32, u32, i32) hidden;

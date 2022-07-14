@@ -819,6 +819,20 @@ static int LuaUnixSetgid(lua_State *L) {
   return LuaUnixSetid(L, "setgid", setgid);
 }
 
+// unix.setfsuid(fsuid:int)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixSetfsuid(lua_State *L) {
+  return LuaUnixSetid(L, "setfsuid", setfsuid);
+}
+
+// unix.setfsgid(fsgid:int)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixSetfsgid(lua_State *L) {
+  return LuaUnixSetid(L, "setfsgid", setfsgid);
+}
+
 static dontinline int LuaUnixSetresid(lua_State *L, const char *call,
                                       int f(uint32_t, uint32_t, uint32_t)) {
   int olderr = errno;
@@ -2571,18 +2585,20 @@ static const luaL_Reg kLuaUnix[] = {
     {"rmrf", LuaUnixRmrf},                // remove file recursively
     {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
-    {"setgid", LuaUnixSetgid},            // set real group id of process
-    {"setitimer", LuaUnixSetitimer},      // set alarm clock
-    {"setpgid", LuaUnixSetpgid},          // set process group id for pid
-    {"setpgrp", LuaUnixSetpgrp},          // sets process group id
-    {"setresgid", LuaUnixSetresgid},      // sets real/effective/saved gids
-    {"setresuid", LuaUnixSetresuid},      // sets real/effective/saved uids
-    {"setrlimit", LuaUnixSetrlimit},      // prevent cpu memory bombs
-    {"setsid", LuaUnixSetsid},            // create a new session id
-    {"setsockopt", LuaUnixSetsockopt},    // tune socket options
-    {"setuid", LuaUnixSetuid},            // set real user id of process
-    {"shutdown", LuaUnixShutdown},        // make socket half empty or full
-    {"sigaction", LuaUnixSigaction},      // install signal handler
+    {"setfsgid", LuaUnixSetfsgid},      // set/get group id for file system ops
+    {"setfsuid", LuaUnixSetfsuid},      // set/get user id for file system ops
+    {"setgid", LuaUnixSetgid},          // set real group id of process
+    {"setitimer", LuaUnixSetitimer},    // set alarm clock
+    {"setpgid", LuaUnixSetpgid},        // set process group id for pid
+    {"setpgrp", LuaUnixSetpgrp},        // sets process group id
+    {"setresgid", LuaUnixSetresgid},    // sets real/effective/saved gids
+    {"setresuid", LuaUnixSetresuid},    // sets real/effective/saved uids
+    {"setrlimit", LuaUnixSetrlimit},    // prevent cpu memory bombs
+    {"setsid", LuaUnixSetsid},          // create a new session id
+    {"setsockopt", LuaUnixSetsockopt},  // tune socket options
+    {"setuid", LuaUnixSetuid},          // set real user id of process
+    {"shutdown", LuaUnixShutdown},      // make socket half empty or full
+    {"sigaction", LuaUnixSigaction},    // install signal handler
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces

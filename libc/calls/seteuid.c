@@ -21,6 +21,10 @@
 
 /**
  * Sets effective user ID.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if euid not in legal range
+ * @raise EPERM if lack privileges
  */
 int seteuid(uint32_t euid) {
   return setregid(euid, -1);

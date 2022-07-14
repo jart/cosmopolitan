@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -59,8 +60,20 @@ static int rmrfdir(const char *dirpath) {
  * Recursively removes file or directory.
  */
 int rmrf(const char *path) {
+  int e;
   struct stat st;
-  if (stat(path, &st) == -1) return -1;
-  if (!S_ISDIR(st.st_mode)) return unlink(path);
-  return rmrfdir(path);
+  e = errno;
+  if (stat(path, &st) == -1) {
+    if (errno == ENOENT) {
+      errno = e;
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+  if (!S_ISDIR(st.st_mode)) {
+    return unlink(path);
+  } else {
+    return rmrfdir(path);
+  }
 }

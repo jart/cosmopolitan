@@ -22,7 +22,12 @@
 
 /**
  * Sets user id of current process.
- * @return 0 on success or -1 w/ errno
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if uid not in legal range
+ * @raise EAGAIN on temporary failure
+ * @raise EAGAIN change would cause `RLIMIT_NPROC` to be exceeded
+ * @raise EPERM if lack privileges
  */
 int setuid(int uid) {
   int rc;

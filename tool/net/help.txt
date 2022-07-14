@@ -2810,6 +2810,13 @@ UNIX MODULE
 
     Returns `ENOSYS` on Windows NT if `uid` isn't `getuid()`.
 
+  unix.setfsuid(uid:int)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Sets user id for file system ops.
+
+
   unix.setgid(gid:int)
       ├─→ true
       └─→ nil, unix.Errno

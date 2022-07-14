@@ -187,8 +187,8 @@ scall	sys_unmount		0x016016016209f0a6	globl hidden # umount2() on linux
 scall	umount2			0x016016016209f0a6	globl hidden # unmount() on bsd
 scall	sys_reboot		0x0d003703720370a9	globl hidden # two arguments b/c netbsd/sparc lool
 scall	quotactl		0xfff09409420a50b3	globl
-scall	setfsuid		0xfffffffffffff07a	globl
-scall	setfsgid		0xfffffffffffff07b	globl
+scall	sys_setfsuid		0xfffffffffffff07a	globl hidden
+scall	sys_setfsgid		0xfffffffffffff07b	globl hidden
 scall	capget			0xfffffffffffff07d	globl
 scall	capset			0xfffffffffffff07e	globl
 scall	sigtimedwait		0xffffff159ffff080	globl

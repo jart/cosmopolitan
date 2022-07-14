@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,39 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 
 /**
- * Returns information about file, via open()'d descriptor.
- *
- * @return 0 on success or -1 w/ errno
- * @raise EBADF if `fd` isn't a valid file descriptor
- * @raise EIO if an i/o error happens while reading from file system
- * @raise EOVERFLOW shouldn't be possible on 64-bit systems
- * @asyncsignalsafe
+ * Sets user id of current process for file system ops.
+ * @return previous filesystem gid
  */
-int fstat(int fd, struct stat *st) {
+int setfsgid(int gid) {
   int rc;
-  if (__isfdkind(fd, kFdZip)) {
-    rc = weaken(__zipos_fstat)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
-  } else if (!IsWindows() && !IsMetal()) {
-    rc = sys_fstat(fd, st);
-  } else if (IsMetal()) {
-    rc = sys_fstat_metal(fd, st);
-  } else if (!__isfdkind(fd, kFdFile)) {
-    rc = ebadf();
+  if (IsLinux()) {
+    rc = sys_setfsgid(gid);
   } else {
-    rc = sys_fstat_nt(__getfdhandleactual(fd), st);
+    rc = getegid();
+    setegid(gid);
   }
-  STRACE("fstat(%d, [%s]) → %d% m", fd, DescribeStat(rc, st), rc);
+  STRACE("setfsgid(%d) → %d% m", gid, rc);
   return rc;
 }

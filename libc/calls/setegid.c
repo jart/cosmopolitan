@@ -21,6 +21,10 @@
 
 /**
  * Sets effective group ID.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if euid not in legal range
+ * @raise EPERM if lack privileges
  */
 int setegid(uint32_t egid) {
   return setregid(-1, egid);

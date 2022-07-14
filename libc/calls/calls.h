@@ -152,6 +152,8 @@ int sched_yield(void);
 int seccomp(unsigned, unsigned, void *);
 int setegid(uint32_t);
 int seteuid(uint32_t);
+int setfsgid(int);
+int setfsuid(int);
 int setgid(int);
 int setpgid(int, int);
 int setpgrp(void);

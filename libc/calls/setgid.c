@@ -22,7 +22,10 @@
 
 /**
  * Sets group id of current process.
- * @return 0 on success or -1 w/ errno
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if gid not in legal range
+ * @raise EPERM if lack privileges
  */
 int setgid(int gid) {
   int rc;
