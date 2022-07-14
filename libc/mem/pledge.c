@@ -514,7 +514,6 @@ static bool AllowGetsockopt(struct Filter *f) {
 // The flags parameter of mmap() must not have:
 //
 //   - MAP_LOCKED   (0x02000)
-//   - MAP_POPULATE (0x08000)
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //
@@ -524,7 +523,7 @@ static bool AllowMmap(struct Filter *f) {
   struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x5a000),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x52000),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
