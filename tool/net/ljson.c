@@ -50,8 +50,7 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
   if (UNLIKELY(!depth)) {
     return (struct DecodeJson){-1, "maximum depth exceeded"};
   }
-  if (UNLIKELY((intptr_t)__builtin_frame_address(0) <
-               GetStackAddr() + PAGESIZE * 2)) {
+  if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
     return (struct DecodeJson){-1, "out of stack"};
   }
   for (a = p, d = +1; p < e;) {

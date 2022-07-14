@@ -121,6 +121,13 @@ extern char ape_stack_align[] __attribute__((__weak__));
     vAddr;                                      \
   })
 
+/**
+ * Returns true if at least `n` bytes of stack are available.
+ */
+#define HaveStackMemory(n) \
+  (IsTiny() ||             \
+   (intptr_t)__builtin_frame_address(0) >= GetStackAddr() + PAGESIZE * (n))
+
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

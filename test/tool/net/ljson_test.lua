@@ -124,9 +124,6 @@ res, err = DecodeJson([[
 {"k":{"k":{"k":{"k":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
 }}}}}}}}}
 ]])
-if not res then
-   print('wut', err)
-end
 assert(res)
 
 -- 64 objects

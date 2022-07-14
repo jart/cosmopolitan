@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/likely.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
@@ -165,7 +166,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   int rc;
   bool isarray;
   lua_Unsigned n;
-  if ((intptr_t)__builtin_frame_address(0) < GetStackAddr() + PAGESIZE * 2) {
+  if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
     z->reason = "out of stack";
     return -1;
   }

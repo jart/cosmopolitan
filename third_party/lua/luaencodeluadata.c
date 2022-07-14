@@ -336,7 +336,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
                           struct Serializer *z, int depth) {
   int rc;
   intptr_t rsp, bot;
-  if ((intptr_t)__builtin_frame_address(0) < GetStackAddr() + PAGESIZE * 2) {
+  if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
     z->reason = "out of stack";
     return -1;
   }
