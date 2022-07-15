@@ -39,6 +39,55 @@
 #define OBJECT 16
 #define DEPTH  64
 
+#define ASCII     0
+#define C0        1
+#define DQUOTE    2
+#define BACKSLASH 3
+#define UTF8_2    4
+#define UTF8_3    5
+#define UTF8_4    6
+#define C1        7
+#define UTF8_3_E0 8
+#define UTF8_3_ED 9
+#define UTF8_4_F0 10
+#define BADUTF8   11
+#define EVILUTF8  12
+
+static const char kJsonStr[256] = {
+    1,  1,  1,  1,  1,  1,  1,  1,   // 0000 ascii (0)
+    1,  1,  1,  1,  1,  1,  1,  1,   // 0010
+    1,  1,  1,  1,  1,  1,  1,  1,   // 0020 c0 (1)
+    1,  1,  1,  1,  1,  1,  1,  1,   // 0030
+    0,  0,  2,  0,  0,  0,  0,  0,   // 0040 dquote (2)
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0050
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0060
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0070
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0100
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0110
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0120
+    0,  0,  0,  0,  3,  0,  0,  0,   // 0130 backslash (3)
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0140
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0150
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0160
+    0,  0,  0,  0,  0,  0,  0,  0,   // 0170
+    7,  7,  7,  7,  7,  7,  7,  7,   // 0200 c1 (8)
+    7,  7,  7,  7,  7,  7,  7,  7,   // 0210
+    7,  7,  7,  7,  7,  7,  7,  7,   // 0220
+    7,  7,  7,  7,  7,  7,  7,  7,   // 0230
+    11, 11, 11, 11, 11, 11, 11, 11,  // 0240 latin1 (4)
+    11, 11, 11, 11, 11, 11, 11, 11,  // 0250
+    11, 11, 11, 11, 11, 11, 11, 11,  // 0260
+    11, 11, 11, 11, 11, 11, 11, 11,  // 0270
+    12, 12, 4,  4,  4,  4,  4,  4,   // 0300 utf8-2 (5)
+    4,  4,  4,  4,  4,  4,  4,  4,   // 0310
+    4,  4,  4,  4,  4,  4,  4,  4,   // 0320 utf8-2
+    4,  4,  4,  4,  4,  4,  4,  4,   // 0330
+    8,  5,  5,  5,  5,  5,  5,  5,   // 0340 utf8-3 (6)
+    5,  5,  5,  5,  5,  9,  5,  5,   // 0350
+    10, 6,  6,  6,  6,  11, 11, 11,  // 0360 utf8-4 (7)
+    11, 11, 11, 11, 11, 11, 11, 11,  // 0370
+};
+
 static struct DecodeJson Parse(struct lua_State *L, const char *p,
                                const char *e, int context, int depth) {
   long x;
@@ -251,129 +300,251 @@ static struct DecodeJson Parse(struct lua_State *L, const char *p,
             reason = "unexpected eof in string";
             goto StringFailureWithReason;
           }
-          c = *p++ & 255;
-          if (c == '"') {
-            luaL_pushresult(&b);
-            return (struct DecodeJson){1, p};
-          } else if (c == '\\') {
-            goto HandleEscape;
-          } else if (UNLIKELY(c <= 0x1F)) {
-            reason = "non-del c0 in string";
-            goto StringFailureWithReason;
-          } else {
-            luaL_addchar(&b, c);
-          }
-          continue;
-        HandleEscape:
-          if (p >= e) {
-            goto UnexpectedEofString;
-          }
-          switch ((c = *p++ & 255)) {
-            case '"':
-            case '/':
-            case '\\':
+          switch (kJsonStr[(c = *p++ & 255)]) {
+
+            case ASCII:
               luaL_addchar(&b, c);
               break;
-            case 'b':
-              luaL_addchar(&b, '\b');
-              break;
-            case 'f':
-              luaL_addchar(&b, '\f');
-              break;
-            case 'n':
-              luaL_addchar(&b, '\n');
-              break;
-            case 'r':
-              luaL_addchar(&b, '\r');
-              break;
-            case 't':
-              luaL_addchar(&b, '\t');
-              break;
-            case 'x':
-              if (p + 2 <= e &&                         //
-                  (A = kHexToInt[p[0] & 255]) != -1 &&  // HEX
-                  (B = kHexToInt[p[1] & 255]) != -1) {  //
-                c = A << 4 | B;
-                if (!(0x20 <= c && c <= 0x7E)) {
-                  reason = "hex escape not printable";
-                  goto StringFailureWithReason;
-                }
-                p += 2;
-                luaL_addchar(&b, c);
-                break;
-              } else {
-                reason = "invalid hex escape";
-                goto StringFailureWithReason;
+
+            case DQUOTE:
+              luaL_pushresult(&b);
+              return (struct DecodeJson){1, p};
+
+            case BACKSLASH:
+              if (p >= e) {
+                goto UnexpectedEofString;
               }
-            case 'u':
-              if (p + 4 <= e &&                         //
-                  (A = kHexToInt[p[0] & 255]) != -1 &&  //
-                  (B = kHexToInt[p[1] & 255]) != -1 &&  // UCS-2
-                  (C = kHexToInt[p[2] & 255]) != -1 &&  //
-                  (D = kHexToInt[p[3] & 255]) != -1) {  //
-                c = A << 12 | B << 8 | C << 4 | D;
-                if (!IsSurrogate(c)) {
-                  p += 4;
-                } else if (IsHighSurrogate(c)) {
-                  if (p + 4 + 6 <= e &&                     //
-                      p[4] == '\\' &&                       //
-                      p[5] == 'u' &&                        //
-                      (A = kHexToInt[p[6] & 255]) != -1 &&  // UTF-16
-                      (B = kHexToInt[p[7] & 255]) != -1 &&  //
-                      (C = kHexToInt[p[8] & 255]) != -1 &&  //
-                      (D = kHexToInt[p[9] & 255]) != -1) {  //
-                    u = A << 12 | B << 8 | C << 4 | D;
-                    if (IsLowSurrogate(u)) {
-                      p += 4 + 6;
-                      c = MergeUtf16(c, u);
+              switch ((c = *p++ & 255)) {
+                case '"':
+                case '/':
+                case '\\':
+                  luaL_addchar(&b, c);
+                  break;
+                case 'b':
+                  luaL_addchar(&b, '\b');
+                  break;
+                case 'f':
+                  luaL_addchar(&b, '\f');
+                  break;
+                case 'n':
+                  luaL_addchar(&b, '\n');
+                  break;
+                case 'r':
+                  luaL_addchar(&b, '\r');
+                  break;
+                case 't':
+                  luaL_addchar(&b, '\t');
+                  break;
+                case 'x':
+                  if (p + 2 <= e &&                         //
+                      (A = kHexToInt[p[0] & 255]) != -1 &&  // HEX
+                      (B = kHexToInt[p[1] & 255]) != -1) {  //
+                    c = A << 4 | B;
+                    if (!(0x20 <= c && c <= 0x7E)) {
+                      reason = "hex escape not printable";
+                      goto StringFailureWithReason;
+                    }
+                    p += 2;
+                    luaL_addchar(&b, c);
+                    break;
+                  } else {
+                    reason = "invalid hex escape";
+                    goto StringFailureWithReason;
+                  }
+                case 'u':
+                  if (p + 4 <= e &&                         //
+                      (A = kHexToInt[p[0] & 255]) != -1 &&  //
+                      (B = kHexToInt[p[1] & 255]) != -1 &&  // UCS-2
+                      (C = kHexToInt[p[2] & 255]) != -1 &&  //
+                      (D = kHexToInt[p[3] & 255]) != -1) {  //
+                    c = A << 12 | B << 8 | C << 4 | D;
+                    if (!IsSurrogate(c)) {
+                      p += 4;
+                    } else if (IsHighSurrogate(c)) {
+                      if (p + 4 + 6 <= e &&                     //
+                          p[4] == '\\' &&                       //
+                          p[5] == 'u' &&                        //
+                          (A = kHexToInt[p[6] & 255]) != -1 &&  // UTF-16
+                          (B = kHexToInt[p[7] & 255]) != -1 &&  //
+                          (C = kHexToInt[p[8] & 255]) != -1 &&  //
+                          (D = kHexToInt[p[9] & 255]) != -1) {  //
+                        u = A << 12 | B << 8 | C << 4 | D;
+                        if (IsLowSurrogate(u)) {
+                          p += 4 + 6;
+                          c = MergeUtf16(c, u);
+                        } else {
+                          goto BadUnicode;
+                        }
+                      } else {
+                        goto BadUnicode;
+                      }
                     } else {
                       goto BadUnicode;
                     }
+                    // UTF-8
+                  EncodeUtf8:
+                    if (c <= 0x7f) {
+                      w[0] = c;
+                      i = 1;
+                    } else if (c <= 0x7ff) {
+                      w[0] = 0300 | (c >> 6);
+                      w[1] = 0200 | (c & 077);
+                      i = 2;
+                    } else if (c <= 0xffff) {
+                      if (IsSurrogate(c)) {
+                      ReplacementCharacter:
+                        c = 0xfffd;
+                      }
+                      w[0] = 0340 | (c >> 12);
+                      w[1] = 0200 | ((c >> 6) & 077);
+                      w[2] = 0200 | (c & 077);
+                      i = 3;
+                    } else if (~(c >> 18) & 007) {
+                      w[0] = 0360 | (c >> 18);
+                      w[1] = 0200 | ((c >> 12) & 077);
+                      w[2] = 0200 | ((c >> 6) & 077);
+                      w[3] = 0200 | (c & 077);
+                      i = 4;
+                    } else {
+                      goto ReplacementCharacter;
+                    }
+                    luaL_addlstring(&b, w, i);
                   } else {
-                    goto BadUnicode;
+                    reason = "invalid unicode escape";
+                    goto StringFailureWithReason;
+                  BadUnicode:
+                    // Echo invalid \uXXXX sequences
+                    // Rather than corrupting UTF-8!
+                    luaL_addstring(&b, "\\u");
                   }
-                } else {
-                  goto BadUnicode;
-                }
-                // UTF-8
-                if (c <= 0x7f) {
-                  w[0] = c;
-                  i = 1;
-                } else if (c <= 0x7ff) {
-                  w[0] = 0300 | (c >> 6);
-                  w[1] = 0200 | (c & 077);
-                  i = 2;
-                } else if (c <= 0xffff) {
-                  if (IsSurrogate(c)) {
-                  ReplacementCharacter:
-                    c = 0xfffd;
-                  }
-                  w[0] = 0340 | (c >> 12);
-                  w[1] = 0200 | ((c >> 6) & 077);
-                  w[2] = 0200 | (c & 077);
-                  i = 3;
-                } else if (~(c >> 18) & 007) {
-                  w[0] = 0360 | (c >> 18);
-                  w[1] = 0200 | ((c >> 12) & 077);
-                  w[2] = 0200 | ((c >> 6) & 077);
-                  w[3] = 0200 | (c & 077);
-                  i = 4;
-                } else {
-                  goto ReplacementCharacter;
-                }
-                luaL_addlstring(&b, w, i);
-              } else {
-                reason = "invalid unicode escape";
-                goto StringFailureWithReason;
-              BadUnicode:
-                // Echo invalid \uXXXX sequences
-                // Rather than corrupting UTF-8!
-                luaL_addstring(&b, "\\u");
+                  break;
+                default:
+                  reason = "invalid escape character";
+                  goto StringFailureWithReason;
               }
               break;
-            default:
-              reason = "invalid escape character";
+
+            case UTF8_2:
+              if (p < e &&                  //
+                  (p[0] & 0300) == 0200) {  //
+                c = (c & 037) << 6 |        //
+                    (p[0] & 077);           //
+                p += 1;
+                goto EncodeUtf8;
+              } else {
+                reason = "malformed utf-8";
+                goto StringFailureWithReason;
+              }
+
+            case UTF8_3_E0:
+              if (p + 2 <= e &&             //
+                  (p[0] & 0377) < 0240 &&   //
+                  (p[0] & 0300) == 0200 &&  //
+                  (p[1] & 0300) == 0200) {
+                reason = "overlong utf-8 0..0x7ff";
+                goto StringFailureWithReason;
+              }
+              // fallthrough
+            case UTF8_3:
+            ThreeUtf8:
+              if (p + 2 <= e &&             //
+                  (p[0] & 0300) == 0200 &&  //
+                  (p[1] & 0300) == 0200) {  //
+                c = (c & 017) << 12 |       //
+                    (p[0] & 077) << 6 |     //
+                    (p[1] & 077);           //
+                p += 2;
+                goto EncodeUtf8;
+              } else {
+                reason = "malformed utf-8";
+                goto StringFailureWithReason;
+              }
+
+            case UTF8_3_ED:
+              if (p + 2 <= e &&                  //
+                  (p[0] & 0377) >= 0240) {       //
+                if (p + 5 <= e &&                //
+                    (p[0] & 0377) >= 0256 &&     //
+                    (p[1] & 0300) == 0200 &&     //
+                    (p[2] & 0377) == 0355 &&     //
+                    (p[3] & 0377) >= 0260 &&     //
+                    (p[4] & 0300) == 0200) {     //
+                  A = (0355 & 017) << 12 |       // CESU-8
+                      (p[0] & 077) << 6 |        //
+                      (p[1] & 077);              //
+                  B = (0355 & 017) << 12 |       //
+                      (p[3] & 077) << 6 |        //
+                      (p[4] & 077);              //
+                  c = ((A - 0xDB80) << 10) +     //
+                      ((B - 0xDC00) + 0x10000);  //
+                  goto EncodeUtf8;
+                } else if ((p[0] & 0300) == 0200 &&  //
+                           (p[1] & 0300) == 0200) {  //
+                  reason = "utf-16 surrogate in utf-8";
+                  goto StringFailureWithReason;
+                } else {
+                  reason = "malformed utf-8";
+                  goto StringFailureWithReason;
+                }
+              }
+              goto ThreeUtf8;
+
+            case UTF8_4_F0:
+              if (p + 3 <= e && (p[0] & 0377) < 0220 &&
+                  (((uint32_t)(p[+2] & 0377) << 030 |
+                    (uint32_t)(p[+1] & 0377) << 020 |
+                    (uint32_t)(p[+0] & 0377) << 010 |
+                    (uint32_t)(p[-1] & 0377) << 000) &
+                   0xC0C0C000) == 0x80808000) {
+                reason = "overlong utf-8 0..0xffff";
+                goto StringFailureWithReason;
+              }
+              // fallthrough
+            case UTF8_4:
+              if (p + 3 <= e &&                               //
+                  ((A = ((uint32_t)(p[+2] & 0377) << 030 |    //
+                         (uint32_t)(p[+1] & 0377) << 020 |    //
+                         (uint32_t)(p[+0] & 0377) << 010 |    //
+                         (uint32_t)(p[-1] & 0377) << 000)) &  //
+                   0xC0C0C000) == 0x80808000) {               //
+                A = (A & 7) << 18 |                           //
+                    (A & (077 << 010)) << (12 - 010) |        //
+                    (A & (077 << 020)) >> -(6 - 020) |        //
+                    (A & (077 << 030)) >> 030;                //
+                if (A <= 0x10FFFF) {
+                  c = A;
+                  p += 3;
+                  goto EncodeUtf8;
+                } else {
+                  reason = "utf-8 exceeds utf-16 range";
+                  goto StringFailureWithReason;
+                }
+              } else {
+                reason = "malformed utf-8";
+                goto StringFailureWithReason;
+              }
+
+            case EVILUTF8:
+              if (p < e &&                  //
+                  (p[0] & 0300) == 0200) {  //
+                reason = "overlong ascii";
+                goto StringFailureWithReason;
+              }
+              // fallthrough
+            case BADUTF8:
+              reason = "illegal utf-8 character";
               goto StringFailureWithReason;
+
+            case C0:
+              reason = "non-del c0 control code in string";
+              goto StringFailureWithReason;
+
+            case C1:
+              reason = "c1 control code in string";
+              goto StringFailureWithReason;
+
+            default:
+              unreachable;
           }
         }
         unreachable;

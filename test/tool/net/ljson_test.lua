@@ -27,6 +27,8 @@ assert(EncodeLua(assert(DecodeJson[[ [{"heh": [1,3,2]}] ]])) == '{{heh={1, 3, 2}
 assert(EncodeLua(assert(DecodeJson[[ 3.14159 ]])) == '3.14159')
 assert(EncodeLua(assert(DecodeJson[[ 1e-12 ]])) == '1e-12')
 assert(assert(DecodeJson[[ "\u007f" ]]) == '\x7f')
+assert(assert(DecodeJson[[ "𝐀 𝐁 𝐂" ]]) == "𝐀 𝐁 𝐂")
+assert(assert(DecodeJson[[ "😀 😁 😂" ]]) == "😀 😁 😂")
 
 assert(EncodeJson(assert(DecodeJson[[ 1e-12 ]])) == '1e-12')
 assert(EncodeJson(assert(DecodeJson[[ true ]])) == 'true')
@@ -42,6 +44,9 @@ assert(assert(DecodeJson[["\""]]) == '\"')                        -- c0
 assert(assert(DecodeJson[["\u0100"]]) == 'Ā')                     -- latin-1
 assert(assert(DecodeJson[["\ud800\udf30\ud800\udf30"]]) == '𐌰𐌰')  -- utf-16 astral planes gothic
 assert(assert(DecodeJson[["\uD800"]]) == '\\uD800')               -- utf-16 invalid (keep utf-8 well-formed)
+assert(not DecodeJson('"\xc0\x80"'))
+assert(not DecodeJson('"\xc1\x80"'))
+assert(DecodeJson('"\xc2\x80"'))
 
 assert(EncodeJson(assert(DecodeJson[[ -9223372036854775808  ]])) == '-9223372036854775808')  -- minimum 64-bit integer
 assert(EncodeJson(assert(DecodeJson[[  9223372036854775807  ]])) ==  '9223372036854775807')  -- maximum 64-bit integer
@@ -97,7 +102,7 @@ assert(err == "object key must be string")
 
 res, err = DecodeJson('"\x00"')
 assert(res == nil)
-assert(err == 'non-del c0 in string')
+assert(err == 'non-del c0 control code in string')
 
 res, err = DecodeJson('"e')
 assert(res == nil)
@@ -151,6 +156,7 @@ assert(err == "maximum depth exceeded")
 -- JsonEncodeInts	498	1543
 -- JsonEncodeFloats	498	1543
 -- JsonEncodeObject	1333	4129
+-- BigString		3183	9855
 
 function JsonParseEmpty()
    DecodeJson[[]]
@@ -166,6 +172,13 @@ end
 
 function JsonParseString()
    DecodeJson[[ "\ud800\udf30 he𐌰𐌰o \ud800\udf30" ]]
+end
+
+function BigString()
+   assert(DecodeJson[[
+     ["The fall of Hyperion - a DreamJohn KeatsCANTO I𝘍𝘢𝘯𝘢𝘵𝘪𝘤𝘴 𝘩𝘢𝘷𝘦 𝘵𝘩𝘦𝘪𝘳 dreams, 𝘄𝗵𝗲𝗿𝗲𝘄𝗶𝘁𝗵 𝘁𝗵𝗲𝘆 𝘄𝗲𝗮𝘃𝗲A paradise for a sect; the savage tooFrom forth the loftiest fashion of his sleepGuesses at Heaven; pity these have notTrac'd upon vellum or wild Indian leafThe shadows of melodious utterance.But bare of laurel they live, dream, and die;For Poesy alone can tell her dreams,With the fine spell of words alone can saveImagination from the sable charmAnd dumb enchantment. Who alive can say,'Thou art no Poet may'st not tell thy dreams?'Since every man whose soul is not a clodHath visions, and would speak, if he had lovedAnd been well nurtured in his mother tongue.Whether the dream now purpos'd to rehearseBe poet's or fanatic's will be knownWhen this warm scribe my hand is in the grave.",
+      "The fall of Hyperion - a DreamJohn KeatsCANTO I𝘍𝘢𝘯𝘢𝘵𝘪𝘤𝘴 𝘩𝘢𝘷𝘦 𝘵𝘩𝘦𝘪𝘳 dreams, 𝘄𝗵𝗲𝗿𝗲𝘄𝗶𝘁𝗵 𝘁𝗵𝗲𝘆 𝘄𝗲𝗮𝘃𝗲A paradise for a sect; the savage tooFrom forth the loftiest fashion of his sleepGuesses at Heaven; pity these have notTrac'd upon vellum or wild Indian leafThe shadows of melodious utterance.But bare of laurel they live, dream, and die;For Poesy alone can tell her dreams,With the fine spell of words alone can saveImagination from the sable charmAnd dumb enchantment. Who alive can say,'Thou art no Poet may'st not tell thy dreams?'Since every man whose soul is not a clodHath visions, and would speak, if he had lovedAnd been well nurtured in his mother tongue.Whether the dream now purpos'd to rehearseBe poet's or fanatic's will be knownWhen this warm scribe my hand is in the grave."]
+   ]])
 end
 
 function JsonParseInts()
@@ -192,7 +205,7 @@ function JsonEncodeObject()
    EncodeJson({["3"]="1", ["4"]="1", ["5"]={["3"]="1", ["4"]="1", ["5"]="9"}})
 end
 
-if nil then
+function bench()
    print('JsonParseEmpty', Benchmark(JsonParseEmpty))
    print('JsonParseInteg', Benchmark(JsonParseInteger))
    print('JsonParseDouble', Benchmark(JsonParseDouble))
@@ -203,4 +216,7 @@ if nil then
    print('JsonEncodeInts', Benchmark(JsonEncodeInts))
    print('JsonEncodeFlts', Benchmark(JsonEncodeFloats))
    print('JsonEncodeObj', Benchmark(JsonEncodeObject))
+   print('BigString', Benchmark(BigString))
 end
+
+bench()

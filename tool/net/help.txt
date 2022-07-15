@@ -713,23 +713,13 @@ FUNCTIONS
           coerce it to `null` since that's what v8 does, and the same
           goes for underflows which, like v8, are coerced to 0.0.
 
-          This parser does not validate UTF-8 which is copied how the
-          JSON specifies. It may therefore contain underlong overlong
-          characters, trojan source and even numbers banned the IETF.
-          You can use VisualizeControlCodes() and Underlong(), to see
-          if a string round-trips, to detect these weirdo codepoints.
-
-          This parser does some validation of UTF-16. Consistent with
-          v8, bad surrogate characters will be silently preserved, as
-          their original escape sequence text. Thereby ensuring utf-8
-          output is valid. Please note that invalid utf-8 could still
-          happen if it's encoded as utf-8.
-
           When objects are parsed, your Lua object can't preserve the
           the original ordering of fields. As such, they'll be sorted
           by EncodeJson() and may not round-trip with original intent
 
           This parser has perfect conformance with JSONTestSuite.
+
+          This parser validates utf-8 and utf-16.
 
   EncodeJson(value[, options:table])
       ├─→ json:str
