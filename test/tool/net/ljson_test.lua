@@ -218,5 +218,3 @@ function bench()
    print('JsonEncodeObj', Benchmark(JsonEncodeObject))
    print('BigString', Benchmark(BigString))
 end
-
-bench()

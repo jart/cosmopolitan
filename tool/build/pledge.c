@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -103,11 +104,13 @@ const char *g_promises;
 
 static void GetOpts(int argc, char *argv[]) {
   int opt;
+  struct sysinfo si;
   g_promises = 0;
   g_proquota = GetCpuCount() * 2;
   g_fszquota = 256 * 1000 * 1000;
   g_fszquota = 4 * 1000 * 1000 * 1000;
   g_memquota = 4L * 1024 * 1024 * 1024;
+  if (!sysinfo(&si)) g_memquota = si.totalram;
   while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:P:M:F:")) != -1) {
     switch (opt) {
       case 'n':
