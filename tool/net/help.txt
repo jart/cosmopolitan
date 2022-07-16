@@ -356,7 +356,7 @@ REPL
       #!/usr/bin/redbean -i
       print('hello world')
 
-  However UNIX operating systems usually require that interperters be
+  However UNIX operating systems usually require that interpreters be
   encoded in its preferred executable format. You can assimilate your
   redbean into the local format using the following commands:
 
@@ -523,7 +523,7 @@ HOOKS
 
   OnHttpRequest()
           If this function is defined in the global scope by your /.init.lua
-          then redbean will call it at the ealiest possible moment to
+          then redbean will call it at the earliest possible moment to
           hand over control for all messages (with the exception of OPTIONS
           *). See functions like Route which asks redbean to do its default
           thing from the handler.
@@ -1421,7 +1421,7 @@ FUNCTIONS
   ProgramLogPath(str)
           Same as the -L flag if called from .init.lua for setting the log
           file path on the local file system. It's created if it doesn't
-          exist. This is called before de-escalating the uesr / group id.
+          exist. This is called before de-escalating the user / group id.
           The file is opened in append only mode. If the disk runs out of
           space then redbean will truncate the log file if has access to
           change the log file after daemonizing.
@@ -1679,7 +1679,7 @@ FUNCTIONS
     associated with hostname. If no such entry is found, a DNS lookup is
     performed using the system configured (e.g. /etc/resolv.conf) DNS
     resolution service. If the service returns multiple IN A records
-    then only the first one is reutrned.
+    then only the first one is returned.
 
     The returned address is word-encoded in host endian order. For
     example, 1.2.3.4 is encoded as 0x01020304. The `FormatIp` function
@@ -1957,7 +1957,7 @@ MAXMIND MODULE
 ────────────────────────────────────────────────────────────────────────────────
 ARGON2 MODULE
 
-  This module implemeents a password hashing algorithm based on blake2b
+  This module implements a password hashing algorithm based on blake2b
   that won the Password Hashing Competition.
 
   It can be used to securely store user passwords in your SQLite
@@ -2249,7 +2249,7 @@ UNIX MODULE
     `env` is a string list table. Values are coerced to strings. No
     ordering requirement is imposed. By convention, each string has its
     key and value divided by an equals sign without spaces. If this
-    paremeter is not specified, it'll default to the C/C++ `environ`
+    parameter is not specified, it'll default to the C/C++ `environ`
     variable which is inherited from the shell that launched redbean.
     It's the responsibility of the user to supply a sanitized environ
     when spawning untrusted processes.
@@ -3988,7 +3988,7 @@ UNIX MODULE
     File birth time.
 
     This field should be accurate on Apple, Windows, and BSDs. On Linux
-    this is the mimimum of atim/mtim/ctim. On Windows NT nanos is only
+    this is the minimum of atim/mtim/ctim. On Windows NT nanos is only
     accurate to hectonanoseconds.
 
     Here's an example of how you might print a file timestamp:
