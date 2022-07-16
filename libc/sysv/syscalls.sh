@@ -376,6 +376,29 @@ scall	io_uring_register	0xfffffffffffff1ab	globl
 scall	sys_pledge		0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
 scall	msyscall		0xfff025ffffffffff	globl
 scall	sys_bogus		0x5005005002500500	globl
+scall	open_tree		0xfffffffffffff1ac	globl
+scall	move_mount		0xfffffffffffff1ad	globl
+scall	fsopen			0xfffffffffffff1ae	globl
+scall	fsconfig		0xfffffffffffff1af	globl
+scall	fsmount			0xfffffffffffff1b0	globl
+scall	fspick			0xfffffffffffff1b1	globl
+scall	pidfd_open		0xfffffffffffff1b2	globl
+scall	clone3			0xfffffffffffff1b3	globl
+scall	close_range		0xfffffffffffff1b4	globl
+scall	openat2			0xfffffffffffff1b5	globl # Linux 5.6
+scall	pidfd_getfd		0xfffffffffffff1b6	globl
+scall	faccessat2		0xfffffffffffff1b7	globl
+scall	process_madvise		0xfffffffffffff1b8	globl
+scall	epoll_pwait2		0xfffffffffffff1b9	globl
+scall	mount_setattr		0xfffffffffffff1ba	globl
+scall	quotactl_fd		0xfffffffffffff1bb	globl
+scall	landlock_create_ruleset	0xfffffffffffff1bc	globl
+scall	landlock_add_rule	0xfffffffffffff1bd	globl
+scall	landlock_restrict_self	0xfffffffffffff1be	globl
+scall	memfd_secret		0xfffffffffffff1bf	globl
+scall	process_mrelease	0xfffffffffffff1c0	globl
+scall	futex_waitv		0xfffffffffffff1c1	globl
+scall	set_mempolicy_home_node	0xfffffffffffff1c2	globl
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya
