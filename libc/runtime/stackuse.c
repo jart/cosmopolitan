@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -74,11 +75,8 @@ static textexit void LogStackUse(void) {
 }
 
 static textstartup void LogStackUseInit(void) {
-  if (IsOpenbsd()) {
-    // avoid pledge() dependency on wpath
-    return;
-  }
   if (IsTiny()) return;
+  if (!PLEDGED(WPATH)) return;
   if (isdirectory("o/" MODE) &&
       getcwd(stacklog, sizeof(stacklog) - strlen("/o/" MODE "/stack.log"))) {
     strcat(stacklog, "/o/" MODE "/stack.log");

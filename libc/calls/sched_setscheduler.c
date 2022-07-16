@@ -47,12 +47,22 @@
  *     The `policy` must have one of:
  *
  *     - `SCHED_OTHER` (or `SCHED_NORMAL`) for the default policy
+ *
  *     - `SCHED_RR` for real-time round-robin scheduling
+ *
  *     - `SCHED_FIFO` for real-time first-in first-out scheduling
+ *
  *     - `SCHED_BATCH` for "batch" style execution of processes if
  *       supported (Linux), otherwise it's treated as `SCHED_OTHER`
- *     - `SCHED_IDLE` for running very low priority background jobs
- *       if it's supported (Linux), otherwise this is `SCHED_OTHER`
+ *
+ *     - `SCHED_IDLE` for running very low priority background jobs if
+ *       it's supported (Linux), otherwise this is `SCHED_OTHER`.
+ *       Pledging away scheduling privilege is permanent for your
+ *       process; if a subsequent attempt is made to restore the
+ *       `SCHED_OTHER` policy then this system call will `EPERM` (but on
+ *       older kernels like RHEL7 this isn't the case). This policy
+ *       isn't available on old Linux kernels like RHEL5, where it'll
+ *       raise `EINVAL`.
  *
  *     The `policy` may optionally bitwise-or any one of:
  *
@@ -65,7 +75,9 @@
  *     greater than or equal to sched_get_priority_min(policy) and less
  *     than or equal to sched_get_priority_max(policy). Linux allows the
  *     static priority range 1 to 99 for the `SCHED_FIFO` and `SCHED_RR`
- *     policies, and the priority 0 for the remaining policies.
+ *     policies, and the priority 0 is used for the remaining policies.
+ *     You should still consider calling the function, because on NetBSD
+ *     the correct priority might be -1.
  *
  * @return the former scheduling policy of the specified process. If
  *     this function fails, then the scheduling policy is not changed,

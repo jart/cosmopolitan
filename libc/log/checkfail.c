@@ -51,10 +51,14 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   __start_fatal(file, line);
   __stpcpy(hostname, "unknown");
   gethostname(hostname, sizeof(hostname));
-  kprintf("check failed on %s pid %d\n", hostname, getpid());
-  kprintf("\tCHECK_%^s(%s, %s);\n", suffix, wantstr, gotstr);
-  kprintf("\t\t → %p (%s)\n", want, wantstr);
-  kprintf("\t\t%s %p (%s)\n", opstr, got, gotstr);
+  kprintf("check failed on %s pid %d\n"
+          "\tCHECK_%^s(%s, %s);\n"
+          "\t\t → %p (%s)\n"
+          "\t\t%s %p (%s)\n",       //
+          hostname, getpid(),       //
+          suffix, wantstr, gotstr,  //
+          want, wantstr,            //
+          opstr, got, gotstr);
   if (!isempty(fmt)) {
     kprintf("\t");
     va_start(va, fmt);

@@ -27,7 +27,7 @@ struct FtraceTls {  /* 16 */
 struct cthread_descriptor_t {
   struct cthread_descriptor_t *self;  /* 0x00 */
   struct FtraceTls ftrace;            /* 0x08 */
-  int64_t __pad0;                     /* 0x10 */
+  void *garbages;                     /* 0x10 */
   int64_t __pad1;                     /* 0x20 */
   int64_t __pad2;                     /* 0x28 */
   struct cthread_descriptor_t *self2; /* 0x30 */

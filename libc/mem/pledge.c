@@ -26,6 +26,7 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -296,7 +297,7 @@ static const uint16_t kPledgeLinuxExec[] = {
     __NR_linux_openat | READONLY,  //
 };
 
-static const uint16_t kPledgeLinuxExecnative[] = {
+static const uint16_t kPledgeLinuxExec2[] = {
     __NR_linux_execve,    //
     __NR_linux_execveat,  //
 };
@@ -306,25 +307,25 @@ static const struct Pledges {
   const uint16_t *syscalls;
   const size_t len;
 } kPledgeLinux[] = {
-    {"default", PLEDGE(kPledgeLinuxDefault)},        //
-    {"stdio", PLEDGE(kPledgeLinuxStdio)},            //
-    {"rpath", PLEDGE(kPledgeLinuxRpath)},            //
-    {"wpath", PLEDGE(kPledgeLinuxWpath)},            //
-    {"cpath", PLEDGE(kPledgeLinuxCpath)},            //
-    {"dpath", PLEDGE(kPledgeLinuxDpath)},            //
-    {"flock", PLEDGE(kPledgeLinuxFlock)},            //
-    {"fattr", PLEDGE(kPledgeLinuxFattr)},            //
-    {"inet", PLEDGE(kPledgeLinuxInet)},              //
-    {"unix", PLEDGE(kPledgeLinuxUnix)},              //
-    {"dns", PLEDGE(kPledgeLinuxDns)},                //
-    {"tty", PLEDGE(kPledgeLinuxTty)},                //
-    {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},          //
-    {"proc", PLEDGE(kPledgeLinuxProc)},              //
-    {"thread", PLEDGE(kPledgeLinuxThread)},          //
-    {"exec", PLEDGE(kPledgeLinuxExec)},              //
-    {"execnative", PLEDGE(kPledgeLinuxExecnative)},  //
-    {"id", PLEDGE(kPledgeLinuxId)},                  //
-    {0},                                             //
+    [PROMISE_DEFAULT] = {"default", PLEDGE(kPledgeLinuxDefault)},      //
+    [PROMISE_STDIO] = {"stdio", PLEDGE(kPledgeLinuxStdio)},            //
+    [PROMISE_RPATH] = {"rpath", PLEDGE(kPledgeLinuxRpath)},            //
+    [PROMISE_WPATH] = {"wpath", PLEDGE(kPledgeLinuxWpath)},            //
+    [PROMISE_CPATH] = {"cpath", PLEDGE(kPledgeLinuxCpath)},            //
+    [PROMISE_DPATH] = {"dpath", PLEDGE(kPledgeLinuxDpath)},            //
+    [PROMISE_FLOCK] = {"flock", PLEDGE(kPledgeLinuxFlock)},            //
+    [PROMISE_FATTR] = {"fattr", PLEDGE(kPledgeLinuxFattr)},            //
+    [PROMISE_INET] = {"inet", PLEDGE(kPledgeLinuxInet)},               //
+    [PROMISE_UNIX] = {"unix", PLEDGE(kPledgeLinuxUnix)},               //
+    [PROMISE_DNS] = {"dns", PLEDGE(kPledgeLinuxDns)},                  //
+    [PROMISE_TTY] = {"tty", PLEDGE(kPledgeLinuxTty)},                  //
+    [PROMISE_RECVFD] = {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},         //
+    [PROMISE_PROC] = {"proc", PLEDGE(kPledgeLinuxProc)},               //
+    [PROMISE_THREAD] = {"thread", PLEDGE(kPledgeLinuxThread)},         //
+    [PROMISE_EXEC] = {"exec", PLEDGE(kPledgeLinuxExec)},               //
+    [PROMISE_EXECNATIVE] = {"execnative", PLEDGE(kPledgeLinuxExec2)},  //
+    [PROMISE_ID] = {"id", PLEDGE(kPledgeLinuxId)},                     //
+    [PROMISE_MAX + 1] = {0},                                           //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -949,8 +950,8 @@ static bool AllowFchmodat(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
-                         bool needmapexec, bool needmorphing) {
+static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len, bool needmapexec,
+                         bool needmorphing) {
   int i;
   for (i = 0; i < len; ++i) {
     switch (p[i]) {
@@ -1037,39 +1038,42 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
   return true;
 }
 
-static const uint16_t *FindPledge(const struct Pledges *p, const char *name,
-                                  size_t *len) {
+static int FindPromise(const struct Pledges *p, const char *name, size_t *len) {
   int i;
   for (i = 0; p[i].name; ++i) {
     if (!strcasecmp(name, p[i].name)) {
       *len = p[i].len;
-      return p[i].syscalls;
+      return i;
     }
   }
-  return 0;
+  return -1;
 }
 
 static int sys_pledge_linux(const char *promises, const char *execpromises) {
   bool ok;
   int rc = -1;
   size_t plen;
+  int promise;
   bool needmapexec;
   bool needexecnative;
   bool needmorphing;
   struct Filter f = {0};
   const uint16_t *pledge;
+  unsigned long ipromises = -1;
   char *s, *tok, *state, *start;
   if (execpromises) return einval();
   needmapexec = strstr(promises, "exec");
   needmorphing = strstr(promises, "thread");
   needexecnative = strstr(promises, "execnative");
-  if ((start = s = strdup(promises)) &&
-      AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
+  if ((start = s = strdup(promises)) && AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
       (needmapexec || needexecnative || AppendOriginVerification(&f)) &&
-      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault),
-                   needmapexec, needmorphing)) {
+      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault), needmapexec,
+                   needmorphing)) {
     for (ok = true; (tok = strtok_r(start, " \t\r\n", &state)); start = 0) {
-      if (!(pledge = FindPledge(kPledgeLinux, tok, &plen))) {
+      if ((promise = FindPromise(kPledgeLinux, tok, &plen)) != -1) {
+        pledge = kPledgeLinux[promise].syscalls;
+        ipromises &= ~(1ULL << promise);
+      } else {
         ok = false;
         rc = einval();
         break;
@@ -1084,10 +1088,27 @@ static int sys_pledge_linux(const char *promises, const char *execpromises) {
       struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
       rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
     }
+    if (!rc) {
+      __promises = ipromises;
+    }
   }
   free(f.p);
   free(s);
   return rc;
+}
+
+static void SetPromises(const char *promises) {
+  int promise;
+  size_t plen;
+  char *tok, *state, *start;
+  unsigned long ipromises = -1;
+  while ((tok = strtok_r(start, " \t\r\n", &state))) {
+    if ((promise = FindPromise(kPledgeLinux, tok, &plen)) != -1) {
+      ipromises &= ~(1ULL << promise);
+    }
+    start = 0;
+  }
+  __promises = ipromises;
 }
 
 /**
@@ -1216,6 +1237,9 @@ int pledge(const char *promises, const char *execpromises) {
     rc = sys_pledge_linux(promises, execpromises);
   } else {
     rc = sys_pledge(promises, execpromises);
+    if (!rc) {
+      SetPromises(promises);
+    }
   }
   STRACE("pledge(%#s, %#s) → %d% m", promises, execpromises, rc);
   return rc;

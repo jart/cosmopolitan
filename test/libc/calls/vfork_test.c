@@ -34,9 +34,6 @@ TEST(vfork, test) {
   ASSERT_NE(-1, lseek(fd, 0, SEEK_SET));
   if (!vfork()) {
     EXPECT_EQ(5, pread(fd, buf, 5, 0));
-    /*
-     * TODO(jart): DOES PREAD IN CHILD REALLY CHANGE PARENT HANDLE POSITION?
-     */
     ASSERT_NE(-1, lseek(fd, 0, SEEK_SET));
     EXPECT_STREQ("hello", buf);
     EXPECT_NE(-1, close(fd));

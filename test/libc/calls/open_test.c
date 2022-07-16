@@ -117,6 +117,15 @@ TEST(open, testOpenExistingForAppendWriteOnly_seeksToEnd) {
   EXPECT_SYS(0, 0, close(3));
 }
 
+TEST(open, testRelativePath_opensRelativeToDirFd) {
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 3, open("foo", O_RDONLY | O_DIRECTORY));
+  EXPECT_SYS(0, 4, openat(3, "bar", O_WRONLY | O_TRUNC | O_CREAT, 0755));
+  EXPECT_TRUE(fileexists("foo/bar"));
+  EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
+}
+
 int CountFds(void) {
   int i, count;
   for (count = i = 0; i < g_fds.n; ++i) {
