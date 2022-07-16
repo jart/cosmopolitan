@@ -1124,9 +1124,13 @@ static void SetPromises(const char *promises) {
  * OpenBSD just kills the process while logging a helpful message to
  * /var/log/messages explaining which promise category you needed.
  *
- * By default exit and exit_group are always allowed. This is useful
- * for processes that perform pure computation and interface with the
- * parent via shared memory.
+ * By default exit() is allowed. This is useful for processes that
+ * perform pure computation and interface with the parent via shared
+ * memory. On Linux we mean sys_exit (_Exit1), not sys_exit_group
+ * (_Exit). The difference is effectively meaningless, since _Exit()
+ * will attempt both. All it means is that, if you're using threads,
+ * then a `pledge("", 0)` thread can't kill all your threads unless you
+ * `pledge("stdio", 0)`.
  *
  * Once pledge is in effect, the chmod functions (if allowed) will not
  * permit the sticky/setuid/setgid bits to change. Linux will EPERM here

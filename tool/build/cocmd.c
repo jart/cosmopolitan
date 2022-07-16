@@ -38,39 +38,77 @@
 
 char *p;
 char *q;
+size_t n;
 char *cmd;
 char *args[8192];
 const char *prog;
 char argbuf[ARG_MAX];
 bool unsupported[256];
 
+void Write(const char *s, ...) {
+  va_list va;
+  va_start(va, s);
+  do {
+    write(2, s, strlen(s));
+  } while ((s = va_arg(va, const char *)));
+  va_end(va);
+}
+
 wontreturn void UnsupportedSyntax(unsigned char c) {
+  char cbuf[2];
   char ibuf[13];
+  cbuf[0] = c;
+  cbuf[1] = 0;
   FormatOctal32(ibuf, c, true);
-  fputs(prog, stderr);
-  fputs(": unsupported shell syntax '", stderr);
-  fputc(c, stderr);
-  fputs("' (", stderr);
-  fputs(ibuf, stderr);
-  fputs("): ", stderr);
-  fputs(cmd, stderr);
-  fputs("\n", stderr);
-  exit(1);
+  Write(prog, ": unsupported shell syntax '", cbuf, "' (", ibuf, "): ", cmd,
+        "\n", 0);
+  exit(4);
+}
+
+wontreturn void SysExit(int rc, const char *call, const char *thing) {
+  int err;
+  char ibuf[12];
+  const char *estr;
+  err = errno;
+  FormatInt32(ibuf, err);
+  estr = strerdoc(err);
+  if (!estr) estr = "EUNKNOWN";
+  Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
+  exit(rc);
 }
 
 void Open(const char *path, int fd, int flags) {
   const char *err;
   close(fd);
   if (open(path, flags, 0644) == -1) {
-    err = strerdoc(errno);
-    fputs(prog, stderr);
-    fputs(": failed to open '", stderr);
-    fputs(path, stderr);
-    fputs("': ", stderr);
-    fputs(err, stderr);
-    fputs("\n", stderr);
-    exit(1);
+    SysExit(7, "open", path);
   }
+}
+
+wontreturn void Exec(void) {
+  const char *s;
+  if (!n) {
+    Write(prog, ": error: too few args\n", 0);
+    exit(5);
+  }
+  execv(args[0], args);
+  SysExit(127, "execve", args[0]);
+}
+
+void Pipe(void) {
+  int pid, pfds[2];
+  if (pipe2(pfds, O_CLOEXEC)) {
+    SysExit(8, "pipe2", prog);
+  }
+  if ((pid = vfork()) == -1) {
+    SysExit(9, "vfork", prog);
+  }
+  if (!pid) {
+    dup2(pfds[1], 1);
+    Exec();
+  }
+  dup2(pfds[0], 0);
+  n = 0;
 }
 
 char *Tokenize(void) {
@@ -97,6 +135,14 @@ char *Tokenize(void) {
         } else if (*p == '\\') {
           if (!p[1]) UnsupportedSyntax(*p);
           *q++ = *++p;
+        } else if (*p == '|') {
+          if (q > r) {
+            *q = 0;
+            return r;
+          } else {
+            Pipe();
+            ++p;
+          }
         } else {
           *q++ = *p;
         }
@@ -104,8 +150,8 @@ char *Tokenize(void) {
 
       case STATE_STR:
         if (!*p) {
-          fputs("cmd: error: unterminated string\n", stderr);
-          exit(1);
+          Write("cmd: error: unterminated string\n", 0);
+          exit(6);
         }
         if (*p == '\'') {
           t = STATE_SHELL;
@@ -121,8 +167,8 @@ char *Tokenize(void) {
 }
 
 int main(int argc, char *argv[]) {
-  char *s, *arg;
-  size_t i, j, n;
+  char *arg;
+  size_t i, j;
   prog = argc > 0 ? argv[0] : "cocmd.com";
 
   for (i = 1; i < 32; ++i) {
@@ -136,7 +182,6 @@ int main(int argc, char *argv[]) {
   unsupported['*'] = true;
   unsupported['('] = true;
   unsupported[')'] = true;
-  unsupported['|'] = true;
   unsupported['['] = true;
   unsupported[']'] = true;
   unsupported['{'] = true;
@@ -147,24 +192,19 @@ int main(int argc, char *argv[]) {
   unsupported['!'] = true;
 
   if (argc != 3) {
-    fputs(prog, stderr);
-    fputs(": error: wrong number of args\n", stderr);
-    return 1;
+    Write(prog, ": error: wrong number of args\n", 0);
+    exit(10);
   }
 
   if (strcmp(argv[1], "-c")) {
-    fputs(prog, stderr);
-    fputs(": error: argv[1] should -c\n", stderr);
-    return 1;
+    Write(prog, ": error: argv[1] should -c\n", 0);
+    exit(11);
   }
 
   p = cmd = argv[2];
   if (strlen(cmd) >= ARG_MAX) {
-    fputs(prog, stderr);
-    fputs(": error: cmd too long: ", stderr);
-    fputs(cmd, stderr);
-    fputs("\n", stderr);
-    return 1;
+    Write(prog, ": error: cmd too long: ", cmd, "\n", 0);
+    exit(12);
   }
 
   n = 0;
@@ -188,31 +228,13 @@ int main(int argc, char *argv[]) {
         Open(arg + 1, 0, O_RDONLY);
       } else {
         args[n++] = arg;
+        args[n] = 0;
       }
     } else {
-      fputs(prog, stderr);
-      fputs(": error: too many args\n", stderr);
-      return 1;
+      Write(prog, ": error: too many args\n", 0);
+      exit(13);
     }
   }
 
-  if (!n) {
-    fputs(prog, stderr);
-    fputs(": error: too few args\n", stderr);
-    return 1;
-  }
-
-  execv(args[0], args);
-  if (!n) {
-    s = strerdoc(errno);
-    fputs(prog, stderr);
-    fputs(": execve '", stderr);
-    fputs(args[0], stderr);
-    fputs("' failed: ", stderr);
-    fputs(s, stderr);
-    fputs("\n", stderr);
-    return 1;
-  }
-
-  return 127;
+  Exec();
 }

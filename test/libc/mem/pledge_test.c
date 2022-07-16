@@ -328,7 +328,6 @@ TEST(pledge, msyscall) {
 TEST(pledge, chmod_ignoresDangerBits) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_SYS(0, 3, creat("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -390,6 +389,10 @@ TEST(pledge, open_cpath) {
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio cpath", 0));
     ASSERT_SYS(0, 3, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
+    ASSERT_SYS(0, 0, fstat(3, &st));
+    ASSERT_EQ(0100644, st.st_mode);
+    // make sure open() can't apply the setuid bit
+    ASSERT_SYS(EPERM, -1, open("bar", O_WRONLY | O_TRUNC | O_CREAT, 04644));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));

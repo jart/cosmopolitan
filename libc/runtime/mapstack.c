@@ -26,12 +26,6 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-static char *_stkbase;
-
-__attribute__((__constructor__)) static void init(void) {
-  _stkbase = (char *)kFixedmapStart;
-}
-
 /**
  * Allocates stack.
  *
@@ -47,13 +41,12 @@ __attribute__((__constructor__)) static void init(void) {
  */
 void *_mapstack(void) {
   char *p;
-  if ((p = mmap(_stkbase, GetStackSize(), PROT_READ | PROT_WRITE,
-                MAP_STACK | MAP_ANONYMOUS | MAP_FIXED, -1, 0)) != MAP_FAILED) {
+  if ((p = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
+                MAP_STACK | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
     if (IsAsan()) {
       __asan_poison(p + GetStackSize() - 16, 16, kAsanStackOverflow);
       __asan_poison(p, 4096, kAsanStackOverflow);
     }
-    _stkbase += GetStackSize() * 4;
     return p;
   } else {
     return 0;
