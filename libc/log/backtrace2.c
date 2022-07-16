@@ -115,8 +115,15 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     j += uint64toarray_radix16(addr - 1, buf + j) + 1;
   }
   argv[i++] = NULL;
-  if (sys_pipe(pipefds) == -1) return -1;
-  if (!(pid = vfork())) {
+  if (sys_pipe(pipefds) == -1) {
+    return -1;
+  }
+  if ((pid = vfork()) == -1) {
+    sys_close(pipefds[0]);
+    sys_close(pipefds[1]);
+    return -1;
+  }
+  if (!pid) {
     sys_dup2(pipefds[1], 1);
     if (pipefds[0] != 1) sys_close(pipefds[0]);
     if (pipefds[1] != 1) sys_close(pipefds[1]);

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
@@ -28,6 +29,7 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -135,11 +137,53 @@ static void BootProgram(struct Machine *m, struct Elf *elf, size_t codesize) {
   }
 }
 
+static int GetElfHeader(char ehdr[hasatleast 64], const char *prog,
+                        const char *image) {
+  char *p;
+  int c, i;
+  for (p = image; p < image + 4096; ++p) {
+    if (READ64LE(p) != READ64LE("printf '")) continue;
+    for (i = 0, p += 8; p + 3 < image + 4096 && (c = *p++) != '\'';) {
+      if (c == '\\') {
+        if ('0' <= *p && *p <= '7') {
+          c = *p++ - '0';
+          if ('0' <= *p && *p <= '7') {
+            c *= 8;
+            c += *p++ - '0';
+            if ('0' <= *p && *p <= '7') {
+              c *= 8;
+              c += *p++ - '0';
+            }
+          }
+        }
+      }
+      if (i < 64) {
+        ehdr[i++] = c;
+      } else {
+        WARNF("%s: ape printf elf header too long\n", prog);
+        return -1;
+      }
+    }
+    if (i != 64) {
+      WARNF("%s: ape printf elf header too short\n", prog);
+      return -1;
+    }
+    if (READ32LE(ehdr) != READ32LE("\177ELF")) {
+      WARNF("%s: ape printf elf header didn't have elf magic\n", prog);
+      return -1;
+    }
+    return 0;
+  }
+  WARNF("%s: printf statement not found in first 4096 bytes\n", prog);
+  return -1;
+}
+
 void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
                  struct Elf *elf) {
   int fd;
   ssize_t rc;
   int64_t sp;
+  char ehdr[64];
   struct stat st;
   size_t i, mappedsize;
   DCHECK_NOTNULL(prog);
@@ -166,6 +210,12 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
                                 PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV));
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {
+      elf->ehdr = (void *)elf->map;
+      elf->size = elf->mapsize;
+      LoadElf(m, elf);
+    } else if (READ64LE(elf->map) == READ64LE("MZqFpD='") &&
+               !GetElfHeader(ehdr, prog, elf->map)) {
+      memcpy(elf->map, ehdr, 64);
       elf->ehdr = (void *)elf->map;
       elf->size = elf->mapsize;
       LoadElf(m, elf);

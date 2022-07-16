@@ -212,7 +212,11 @@ static int XlatSocketOptname(int x) {
     XLAT(5, SO_DONTROUTE);
     XLAT(7, SO_SNDBUF);
     XLAT(8, SO_RCVBUF);
+    XLAT(1, TCP_NODELAY);
+    XLAT(12, TCP_QUICKACK);
     XLAT(13, SO_LINGER);
+    XLAT(23, TCP_FASTOPEN);
+    XLAT(30, TCP_FASTOPEN_CONNECT);
     default:
       return einval();
   }
@@ -761,6 +765,60 @@ static int OpSetsockopt(struct Machine *m, int fd, int level, int optname,
   VirtualSendRead(m, optval, optvaladdr, optvalsize);
   rc = setsockopt(fd, level, optname, optval, optvalsize);
   free(optval);
+  return rc;
+}
+
+static int OpGetsockopt(struct Machine *m, int fd, int level, int optname,
+                        int64_t optvaladdr, int64_t optsizeaddr) {
+  int rc;
+  void *optval;
+  uint32_t optsize;
+  if ((level = XlatSocketLevel(level)) == -1) return -1;
+  if ((optname = XlatSocketOptname(optname)) == -1) return -1;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if (!optvaladdr) {
+    rc = getsockopt(fd, level, optname, 0, 0);
+  } else {
+    VirtualSendRead(m, &optsize, optsizeaddr, sizeof(optsize));
+    if (!(optval = malloc(optsize))) return -1;
+    if ((rc = getsockopt(fd, level, optname, optval, &optsize)) != -1) {
+      VirtualRecvWrite(m, optvaladdr, optval, optsize);
+      VirtualRecvWrite(m, optsizeaddr, &optsize, sizeof(optsize));
+    }
+    free(optval);
+  }
+  return rc;
+}
+
+static int OpGetsockname(struct Machine *m, int fd, int64_t addraddr,
+                         int64_t addrlenaddr) {
+  int rc;
+  void *addr;
+  uint32_t addrlen;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  VirtualSendRead(m, &addrlen, addrlenaddr, sizeof(addrlen));
+  if (!(addr = malloc(addrlen))) return -1;
+  if ((rc = getsockname(fd, addr, &addrlen)) != -1) {
+    VirtualRecvWrite(m, addraddr, addr, addrlen);
+    VirtualRecvWrite(m, addrlenaddr, &addrlen, sizeof(addrlen));
+  }
+  free(addr);
+  return rc;
+}
+
+static int OpGetpeername(struct Machine *m, int fd, int64_t addraddr,
+                         int64_t addrlenaddr) {
+  int rc;
+  void *addr;
+  uint32_t addrlen;
+  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  VirtualSendRead(m, &addrlen, addrlenaddr, sizeof(addrlen));
+  if (!(addr = malloc(addrlen))) return -1;
+  if ((rc = getpeername(fd, addr, &addrlen)) != -1) {
+    VirtualRecvWrite(m, addraddr, addr, addrlen);
+    VirtualRecvWrite(m, addrlenaddr, &addrlen, sizeof(addrlen));
+  }
+  free(addr);
   return rc;
 }
 
@@ -1402,10 +1460,10 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x030, OpShutdown(m, di, si));
     SYSCALL(0x031, OpBind(m, di, si, dx));
     SYSCALL(0x032, OpListen(m, di, si));
-    SYSCALL(0x033, getsockname(di, PNN(si), PNN(dx)));
-    SYSCALL(0x034, getpeername(di, PNN(si), PNN(dx)));
+    SYSCALL(0x033, OpGetsockname(m, di, si, dx));
+    SYSCALL(0x034, OpGetpeername(m, di, si, dx));
     SYSCALL(0x036, OpSetsockopt(m, di, si, dx, r0, r8));
-    SYSCALL(0x037, getsockopt(di, si, dx, PNN(r0), PNN(r8)));
+    SYSCALL(0x037, OpGetsockopt(m, di, si, dx, r0, r8));
     SYSCALL(0x039, OpFork(m));
     SYSCALL(0x03B, OpExecve(m, di, si, dx));
     SYSCALL(0x03D, OpWait4(m, di, si, dx, r0));
