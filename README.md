@@ -59,7 +59,7 @@ ape/apeuninstall.sh
 ```
 
 It's also possible to convert APE binaries into the system-local format
-by using the `--assimilate` flag. Plesae note that if binfmt_misc is in
+by using the `--assimilate` flag. Please note that if binfmt_misc is in
 play, you'll need to unregister it temporarily before doing this, since
 the assimilate feature is part of the shell script header.
 
