@@ -36,6 +36,7 @@
 
 int dig;
 int xlat[256];
+bool identity;
 const char *symbol;
 
 static int Bing(int c) {
@@ -50,7 +51,7 @@ static void Fill(int f(int)) {
   int i;
   for (i = 0; i < 256; ++i) {
     if (f(i)) {
-      xlat[i] = 1;
+      xlat[i] = identity ? i : 1;
     }
   }
 }
@@ -143,7 +144,8 @@ int main(int argc, char *argv[]) {
   for (k = 1; k < argc; ++k) {
     if (argv[k][0] != '-') {
       for (i = 0; argv[k][i]; ++i) {
-        xlat[argv[k][i] & 255] = dig;
+        /* xlat[argv[k][i] & 255] = identity ? i : dig; */
+        xlat[argv[k][i] & 255] = identity ? (argv[k][i] & 255) : dig;
       }
     } else {
       i = 0;
@@ -159,6 +161,9 @@ int main(int argc, char *argv[]) {
             break;
           case 'i':
             Invert();
+            goto moar;
+          case 'I':
+            identity = !identity;
             goto moar;
           case 'n':
             Negative();
@@ -239,7 +244,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < 16; ++i) {
     printf("  ");
     for (j = 0; j < 16; ++j) {
-      printf("%2d,", xlat[i * 16 + j]);
+      printf("%2d,", (char)xlat[i * 16 + j]);
     }
     printf(" // 0x%02x\n//\t", i * 16);
   }
