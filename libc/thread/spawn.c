@@ -56,7 +56,19 @@ STATIC_YOINK("_main_thread_ctor");
 #define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct cthread_descriptor_t))
 
 /**
- * Spawns thread.
+ * Spawns thread, e.g.
+ *
+ *     int worker(void *arg, int tid) {
+ *       const char *s = arg;
+ *       printf("%s\n", s);
+ *       return 0;
+ *     }
+ *
+ *     int main() {
+ *       struct spawn th;
+ *       _spawn(worker, "hi", &th);
+ *       _join(&th);
+ *     }
  *
  * @param fun is thread worker callback, which receives `arg` and `ctid`
  * @param arg shall be passed to `fun`
@@ -77,14 +89,14 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
     th = &ths;
   }
 
-  // Allocate enough TLS memory for all the GNU Linuker (_tls_size)
+  // allocate enough TLS memory for all the GNU Linuker (_tls_size)
   // organized _Thread_local data, as well as Cosmpolitan Libc (64)
   if (!(th->tls = _mktls(&th->tib))) {
     return -1;
   }
   th->ctid = (int *)(th->tib + 0x38);
 
-  // We must use _mapstack() to allocate the stack because OpenBSD has
+  // we must use _mapstack() to allocate the stack because OpenBSD has
   // very strict requirements for what's allowed to be used for stacks
   if (!(th->stk = _mapstack())) {
     free(th->tls);
