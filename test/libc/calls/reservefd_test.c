@@ -48,6 +48,10 @@ STATIC_YOINK("libc/testlib/hyperion.txt");
 
 #define THREADS 8
 
+__attribute__((__constructor__)) static void init(void) {
+  if (IsOpenbsd()) exit(0);  // TODO(jart): flakes :'(
+}
+
 void PullSomeZipFilesIntoLinkage(void) {
   gmtime(0);
 }

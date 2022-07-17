@@ -20,8 +20,20 @@ db:exec[[
   INSERT INTO test (content) VALUES ('Hello Sqlite3');
 ]]
 
+function OnServerListen(fd, ip, port)
+   unix.setsockopt(fd, unix.SOL_TCP, unix.TCP_SAVE_SYN, true)
+   return false
+end
+
+function OnClientConnection(ip, port, serverip, serverport)
+   syn, synerr = unix.getsockopt(GetClientFd(), unix.SOL_TCP, unix.TCP_SAVED_SYN)
+end
+
 -- this intercepts all requests if it's defined
 function OnHttpRequest()
+   Log(kLogInfo, "client is running %s and reports %s" % {
+          finger.GetSynFingerOs(finger.FingerSyn(syn)),
+          GetHeader('User-Agent')})
    if HasParam('magic') then
       Write('<p>\r\n')
       Write('OnHttpRequest() has intercepted your request<br>\r\n')

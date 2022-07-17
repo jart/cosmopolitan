@@ -649,9 +649,6 @@ syscon	epoll	EPOLLET					0x80000000		0x80000000		0x80000000		0x80000000		0x80000
 
 #	{set,get}sockopt(fd, level=SOL_SOCKET, X, ...)
 #
-#		*  0 we define as EINVAL
-#		* -1 we define as no-op
-#
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	so	SO_DEBUG				1			1			1			1			1			1			# debugging is enabled; consensus
 syscon	so	SO_TYPE					3			0x1008			0x1008			0x1008			0x1008			0x1008			# bsd consensus
@@ -719,30 +716,30 @@ syscon	sol	SOL_IP					0			0			0			0			0			0			# consensus
 syscon	sol	SOL_SOCKET				1			0xffff			0xffff			0xffff			0xffff			0xffff			# yes it's actually 0xffff; bsd+nt consensus (todo: what's up with ipproto_icmp overlap)
 syscon	sol	SOL_TCP					6			6			6			6			6			6			# consensus
 syscon	sol	SOL_UDP					17			17			17			17			17			17			# consensus
-syscon	sol	SOL_RAW					255			0			0			0			0			0
+syscon	sol	SOL_RAW					255			-1			-1			-1			-1			-1
 syscon	sol	SOL_IPV6				41			41			41			41			41			41
-syscon	sol	SOL_ICMPV6				58			58			58			58			58			0
-syscon	sol	SOL_AAL					265			0			0			0			0			0
-syscon	sol	SOL_ALG					279			0			0			0			0			0
-syscon	sol	SOL_ATM					264			0			0			0			0			0
-syscon	sol	SOL_BLUETOOTH				274			0			0			0			0			0
-syscon	sol	SOL_CAIF				278			0			0			0			0			0
-syscon	sol	SOL_DCCP				269			0			0			0			0			0
-syscon	sol	SOL_DECNET				261			0			0			0			0			0
-syscon	sol	SOL_IRDA				266			0			0			0			0			0
-syscon	sol	SOL_IUCV				277			0			0			0			0			0
-syscon	sol	SOL_KCM					281			0			0			0			0			0
-syscon	sol	SOL_LLC					268			0			0			0			0			0
-syscon	sol	SOL_NETBEUI				267			0			0			0			0			0
-syscon	sol	SOL_NETLINK				270			0			0			0			0			0
-syscon	sol	SOL_NFC					280			0			0			0			0			0
-syscon	sol	SOL_PACKET				263			0			0			0			0			0
-syscon	sol	SOL_PNPIPE				275			0			0			0			0			0
-syscon	sol	SOL_PPPOL2TP				273			0			0			0			0			0
-syscon	sol	SOL_RDS					276			0			0			0			0			0
-syscon	sol	SOL_RXRPC				272			0			0			0			0			0
-syscon	sol	SOL_TIPC				271			0			0			0			0			0
-syscon	sol	SOL_X25					262			0			0			0			0			0
+syscon	sol	SOL_ICMPV6				58			58			58			58			58			-1
+syscon	sol	SOL_AAL					265			-1			-1			-1			-1			-1
+syscon	sol	SOL_ALG					279			-1			-1			-1			-1			-1
+syscon	sol	SOL_ATM					264			-1			-1			-1			-1			-1
+syscon	sol	SOL_BLUETOOTH				274			-1			-1			-1			-1			-1
+syscon	sol	SOL_CAIF				278			-1			-1			-1			-1			-1
+syscon	sol	SOL_DCCP				269			-1			-1			-1			-1			-1
+syscon	sol	SOL_DECNET				261			-1			-1			-1			-1			-1
+syscon	sol	SOL_IRDA				266			-1			-1			-1			-1			-1
+syscon	sol	SOL_IUCV				277			-1			-1			-1			-1			-1
+syscon	sol	SOL_KCM					281			-1			-1			-1			-1			-1
+syscon	sol	SOL_LLC					268			-1			-1			-1			-1			-1
+syscon	sol	SOL_NETBEUI				267			-1			-1			-1			-1			-1
+syscon	sol	SOL_NETLINK				270			-1			-1			-1			-1			-1
+syscon	sol	SOL_NFC					280			-1			-1			-1			-1			-1
+syscon	sol	SOL_PACKET				263			-1			-1			-1			-1			-1
+syscon	sol	SOL_PNPIPE				275			-1			-1			-1			-1			-1
+syscon	sol	SOL_PPPOL2TP				273			-1			-1			-1			-1			-1
+syscon	sol	SOL_RDS					276			-1			-1			-1			-1			-1
+syscon	sol	SOL_RXRPC				272			-1			-1			-1			-1			-1
+syscon	sol	SOL_TIPC				271			-1			-1			-1			-1			-1
+syscon	sol	SOL_X25					262			-1			-1			-1			-1			-1
 
 syscon	alg	ALG_SET_KEY				1			0			0			0			0			0
 syscon	alg	ALG_SET_IV				2			0			0			0			0			0
@@ -751,11 +748,8 @@ syscon	alg	ALG_SET_AEAD_ASSOCLEN			4			0			0			0			0			0
 syscon	alg	ALG_SET_AEAD_AUTHSIZE			5			0			0			0			0			0
 syscon	alg	ALG_SET_DRBG_ENTROPY			6			0			0			0			0			0
 
-#	{set,get}sockopt(fd, level=IPPROTO_TCP, X, ...)
+#	{set,get}sockopt(fd, level=SOL_TCP, X, ...)
 #	» most elite of all tuning groups
-#
-#		*  0 we define as EINVAL
-#		* -1 we define as no-op
 #
 #	@see https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
 #	@see https://www.iana.org/assignments/tcp-parameters/tcp-parameters.txt
@@ -923,33 +917,33 @@ syscon	iproto	IPPROTO_ICMP				1			1			1			1			1			1			# consensus
 syscon	iproto	IPPROTO_TCP				6			6			6			6			6			6			# consensus
 syscon	iproto	IPPROTO_UDP				17			17			17			17			17			17			# consensus
 syscon	iproto	IPPROTO_RAW				255			255			255			255			255			255			# consensus
-syscon	iproto	IPPROTO_HOPOPTS				0			0			0			0			0			0			# consensus
+syscon	iproto	IPPROTO_HOPOPTS				-1			-1			-1			-1			-1			-1			# consensus
 syscon	iproto	IPPROTO_IDP				22			22			22			22			22			22			# consensus
 syscon	iproto	IPPROTO_IGMP				2			2			2			2			2			2			# consensus
 syscon	iproto	IPPROTO_PUP				12			12			12			12			12			12			# consensus
-syscon	iproto	IPPROTO_AH				51			51			51			51			51			0			# unix consensus
-syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			60			0			# unix consensus
-syscon	iproto	IPPROTO_EGP				8			8			8			8			8			0			# unix consensus
-syscon	iproto	IPPROTO_ENCAP				98			98			98			98			98			0			# unix consensus
-syscon	iproto	IPPROTO_ESP				50			50			50			50			50			0			# unix consensus
-syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			44			0			# unix consensus
-syscon	iproto	IPPROTO_GRE				47			47			47			47			47			0			# unix consensus
-syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			58			0			# unix consensus
-syscon	iproto	IPPROTO_IPIP				4			4			4			4			4			0			# unix consensus
-syscon	iproto	IPPROTO_IPV6				41			41			41			41			41			0			# unix consensus
-syscon	iproto	IPPROTO_NONE				59			59			59			59			59			0			# unix consensus
-syscon	iproto	IPPROTO_PIM				103			103			103			103			103			0			# unix consensus
-syscon	iproto	IPPROTO_ROUTING				43			43			43			43			43			0			# unix consensus
-syscon	iproto	IPPROTO_RSVP				46			46			46			46			46			0			# unix consensus
-syscon	iproto	IPPROTO_TP				29			29			29			29			29			0			# unix consensus
-syscon	iproto	IPPROTO_MPLS				137			0			137			137			137			0
-syscon	iproto	IPPROTO_MTP				92			92			92			0			0			0
-syscon	iproto	IPPROTO_SCTP				132			132			132			0			0			0
-syscon	iproto	IPPROTO_MH				135			0			135			0			0			0
-syscon	iproto	IPPROTO_UDPLITE				136			0			136			0			0			0
-syscon	iproto	IPPROTO_BEETPH				94			0			0			0			0			0
-syscon	iproto	IPPROTO_COMP				108			0			0			0			0			0
-syscon	iproto	IPPROTO_DCCP				33			0			0			0			0			0
+syscon	iproto	IPPROTO_AH				51			51			51			51			51			-1			# unix consensus
+syscon	iproto	IPPROTO_DSTOPTS				60			60			60			60			60			-1			# unix consensus
+syscon	iproto	IPPROTO_EGP				8			8			8			8			8			-1			# unix consensus
+syscon	iproto	IPPROTO_ENCAP				98			98			98			98			98			-1			# unix consensus
+syscon	iproto	IPPROTO_ESP				50			50			50			50			50			-1			# unix consensus
+syscon	iproto	IPPROTO_FRAGMENT			44			44			44			44			44			-1			# unix consensus
+syscon	iproto	IPPROTO_GRE				47			47			47			47			47			-1			# unix consensus
+syscon	iproto	IPPROTO_ICMPV6				58			58			58			58			58			-1			# unix consensus
+syscon	iproto	IPPROTO_IPIP				4			4			4			4			4			-1			# unix consensus
+syscon	iproto	IPPROTO_IPV6				41			41			41			41			41			-1			# unix consensus
+syscon	iproto	IPPROTO_NONE				59			59			59			59			59			-1			# unix consensus
+syscon	iproto	IPPROTO_PIM				103			103			103			103			103			-1			# unix consensus
+syscon	iproto	IPPROTO_ROUTING				43			43			43			43			43			-1			# unix consensus
+syscon	iproto	IPPROTO_RSVP				46			46			46			46			46			-1			# unix consensus
+syscon	iproto	IPPROTO_TP				29			29			29			29			29			-1			# unix consensus
+syscon	iproto	IPPROTO_MPLS				137			-1			137			137			137			-1
+syscon	iproto	IPPROTO_MTP				92			92			92			-1			-1			-1
+syscon	iproto	IPPROTO_SCTP				132			132			132			-1			-1			-1
+syscon	iproto	IPPROTO_MH				135			-1			135			-1			-1			-1
+syscon	iproto	IPPROTO_UDPLITE				136			-1			136			-1			-1			-1
+syscon	iproto	IPPROTO_BEETPH				94			-1			-1			-1			-1			-1
+syscon	iproto	IPPROTO_COMP				108			-1			-1			-1			-1			-1
+syscon	iproto	IPPROTO_DCCP				33			-1			-1			-1			-1			-1
 
 syscon	sio	SIOCADDMULTI				0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
 syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0			# bsd consensus

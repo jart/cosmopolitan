@@ -49,6 +49,10 @@ static bool setsockopt_polyfill(int *optname) {
  * @param optname can be SO_{REUSE{PORT,ADDR},KEEPALIVE,etc.} etc.
  * @return 0 on success, or -1 w/ errno
  * @error ENOPROTOOPT for unknown (level,optname)
+ * @error EINVAL if `optlen` is invalid somehow
+ * @error ENOTSOCK if `fd` is valid but not a socket
+ * @error EBADF if `fd` isn't valid
+ * @error EFAULT if optval memory isn't valid
  * @see libc/sysv/consts.sh for tuning catalogue
  * @see getsockopt()
  */
@@ -56,8 +60,8 @@ int setsockopt(int fd, int level, int optname, const void *optval,
                uint32_t optlen) {
   int e, rc;
 
-  if (!optname) {
-    rc = enosys(); /* see libc/sysv/consts.sh */
+  if (level == -1 || !optname) {
+    rc = enoprotoopt(); /* see libc/sysv/consts.sh */
   } else if ((!optval && optlen) ||
              (IsAsan() && !__asan_is_valid(optval, optlen))) {
     rc = efault();

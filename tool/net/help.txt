@@ -1975,6 +1975,100 @@ MAXMIND MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
+FINGER MODULE
+
+  This is an experimental module that, like the maxmind module, gives
+  you insight into what kind of device is connecting to your redbean.
+  This module can help you protect your redbean because it provides
+  tools for identifying clients that misrepresent themselves. For
+  example the User-Agent header might report itself as a Windows
+  computer when the SYN packet says it's a Linux computer.
+
+      function OnServerListen(fd, ip, port)
+         unix.setsockopt(fd, unix.SOL_TCP, unix.TCP_SAVE_SYN, true)
+         return false
+      end
+
+      function OnClientConnection(ip, port, serverip, serverport)
+         fd = GetClientFd()
+         syn = unix.getsockopt(fd, unix.SOL_TCP, unix.TCP_SAVED_SYN)
+      end
+
+      function OnHttpRequest()
+         Log(kLogInfo, "client is running %s and reports %s" % {
+                finger.GetSynFingerOs(finger.FingerSyn(syn)),
+                GetHeader('User-Agent')})
+         Route()
+      end
+
+  The following functions are provided.
+
+  finger.FingerSyn(syn_packet_bytes:str)
+      ├─→ synfinger:uint32
+      └─→ nil, error:str
+
+    Fingerprints IP+TCP SYN packet.
+
+    This returns a hash-like magic number that reflects the SYN packet
+    structure, e.g. ordering of options, maximum segment size, etc. We
+    make no guarantees this hashing algorithm won't change as we learn
+    more about the optimal way to fingerprint, so be sure to save your
+    syn packets too if you're using this feature, in case they need to
+    be rehashed in the future.
+
+    This function is nil/error propagating.
+
+  finger.GetSynFingerOs(synfinger:uint32)
+      ├─→ osname:str
+      └─→ nil, error:str
+
+    Fingerprints IP+TCP SYN packet.
+
+    If `synfinger` is a known hard-coded magic number, then one of the
+    following strings may be returned:
+
+      - `"LINUX"`
+      - `"WINDOWS"`
+      - `"XNU"`
+      - `"NETBSD"`
+      - `"FREEBSD"`
+      - `"OPENBSD"`
+
+    If this function returns nil, then one thing you can do to help is
+    file an issue and share with us your SYN packet specimens. The way
+    we prefer to receive them is in EncodeLua(syn_packet_bytes) format
+    along with details on the operating system which you must know.
+
+  finger.DescribeSyn(syn_packet_bytes:str)
+      ├─→ description:str
+      └─→ nil, error:str
+
+    Describes IP+TCP SYN packet.
+
+    The layout looks as follows:
+
+        TTL:OPTIONS:WSIZE:MSS
+
+    The `TTL`, `WSIZE`, and `MSS` fields are unsigned decimal fields.
+
+    The `OPTIONS` field communicates the ordering of the commonly used
+    subset of tcp options. The following character mappings are defined.
+    TCP options not on this list will be ignored.
+
+      - E: End of Option list
+      - N: No-Operation
+      - M: Maxmimum Segment Size
+      - K: Window Scale
+      - O: SACK Permitted
+      - A: SACK
+      - e: Echo (obsolete)
+      - r: Echo reply (obsolete)
+      - T: Timestamps
+
+    This function is nil/error propagating.
+
+
+────────────────────────────────────────────────────────────────────────────────
 ARGON2 MODULE
 
   This module implements a password hashing algorithm based on blake2b
@@ -3071,6 +3165,17 @@ UNIX MODULE
     `level` and `optname` may be one of the following pairs. The ellipses
     type signature above changes depending on which options are used.
 
+    `optname` is the option feature magic number. The constants for
+    these will be set to `0` if the option isn't supported on the host
+    platform.
+
+    Raises `ENOPROTOOPT` if your `level` / `optname` combination isn't
+    valid, recognized, or supported on the host platform.
+
+    Raises `ENOTSOCK` if `fd` is valid but isn't a socket.
+
+    Raises `EBADF` if `fd` isn't valid.
+
     unix.getsockopt(fd:int, level:int, optname:int)
         ├─→ value:int
         └─→ nil, unix.Errno
@@ -3145,9 +3250,19 @@ UNIX MODULE
     close(). Sometimes it's desirable to have extra assurance on errors
     happened, even if it comes at the cost of performance.
 
-    Returns `EINVAL` if settings other than the above are used.
+    unix.setsockopt(serverfd:int, unix.SOL_TCP, unix.TCP_SAVE_SYN, enabled:int)
+        ├─→ true
+        └─→ nil, unix.Errno
+    unix.getsockopt(clientfd:int, unix.SOL_TCP, unix.TCP_SAVED_SYN)
+        ├─→ syn_packet_bytes:str
+        └─→ nil, unix.Errno
 
-    Returns `ENOSYS` if setting isn't supported by the host OS.
+    This `TCP_SAVED_SYN` option may be used to retrieve the bytes of the
+    TCP SYN packet that the client sent when the connection for `fd` was
+    opened. In order for this to work, `TCP_SAVE_SYN` must have been set
+    earlier on the listening socket. This is Linux-only. You can use the
+    `OnServerListen` hook to enable SYN saving in your Redbean. When the
+    `TCP_SAVE_SYN` option isn't used, this may return empty string.
 
   unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
       ├─→ {[fd:int]=revents:int, ...}

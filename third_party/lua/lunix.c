@@ -1085,6 +1085,7 @@ static bool IsSockoptBool(int l, int x) {
     return x == TCP_NODELAY ||           //
            x == TCP_CORK ||              //
            x == TCP_QUICKACK ||          //
+           x == TCP_SAVE_SYN ||          //
            x == TCP_FASTOPEN_CONNECT ||  //
            x == TCP_DEFER_ACCEPT;        //
   } else if (l = SOL_IP) {
@@ -1136,6 +1137,11 @@ static int LuaUnixSetsockopt(lua_State *L) {
   fd = luaL_checkinteger(L, 1);
   level = luaL_checkinteger(L, 2);
   optname = luaL_checkinteger(L, 3);
+  if (level == -1 || optname == 0) {
+  NoProtocolOption:
+    enoprotoopt();
+    return SysretErrno(L, "setsockopt", olderr);
+  }
   if (IsSockoptBool(level, optname)) {
     // unix.setsockopt(fd:int, level:int, optname:int, value:bool)
     //     ├─→ true
@@ -1167,14 +1173,14 @@ static int LuaUnixSetsockopt(lua_State *L) {
     optval = &l;
     optsize = sizeof(l);
   } else {
-    einval();
-    return SysretErrno(L, "setsockopt", olderr);
+    goto NoProtocolOption;
   }
   return SysretBool(L, "setsockopt", olderr,
                     setsockopt(fd, level, optname, optval, optsize));
 }
 
 static int LuaUnixGetsockopt(lua_State *L) {
+  char *p;
   uint32_t size;
   struct linger l;
   struct timeval tv;
@@ -1182,6 +1188,11 @@ static int LuaUnixGetsockopt(lua_State *L) {
   fd = luaL_checkinteger(L, 1);
   level = luaL_checkinteger(L, 2);
   optname = luaL_checkinteger(L, 3);
+  if (level == -1 || optname == 0) {
+  NoProtocolOption:
+    enoprotoopt();
+    return SysretErrno(L, "setsockopt", olderr);
+  }
   if (IsSockoptBool(level, optname) || IsSockoptInt(level, optname)) {
     // unix.getsockopt(fd:int, level:int, optname:int)
     //     ├─→ value:int
@@ -1214,8 +1225,20 @@ static int LuaUnixGetsockopt(lua_State *L) {
       lua_pushboolean(L, !!l.l_onoff);
       return 1;
     }
+  } else if (level == SOL_TCP && optname == TCP_SAVED_SYN) {
+    // unix.getsockopt(fd:int, unix.SOL_TCP, unix.SO_SAVED_SYN)
+    //     ├─→ syn_packet_bytes:str
+    //     └─→ nil, unix.Errno
+    if ((p = malloc((size = 1500)))) {
+      if (getsockopt(fd, level, optname, p, &size) != -1) {
+        lua_pushlstring(L, p, size);
+        free(p);
+        return 1;
+      }
+      free(p);
+    }
   } else {
-    einval();
+    goto NoProtocolOption;
   }
   return SysretErrno(L, "getsockopt", olderr);
 }

@@ -112,6 +112,7 @@
 #include "third_party/zlib/zlib.h"
 #include "tool/args/args.h"
 #include "tool/build/lib/case.h"
+#include "tool/net/lfinger.h"
 #include "tool/net/lfuncs.h"
 #include "tool/net/ljson.h"
 #include "tool/net/luacheck.h"
@@ -5253,6 +5254,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"argon2", luaopen_argon2},      //
     {"lsqlite3", luaopen_lsqlite3},  //
     {"maxmind", LuaMaxmind},         //
+    {"finger", LuaFinger},           //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
 };

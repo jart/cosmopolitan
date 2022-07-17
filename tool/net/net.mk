@@ -54,6 +54,7 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_UNICODE								\
 	LIBC_X									\
 	LIBC_ZIPOS								\
+	NET_FINGER								\
 	NET_HTTP								\
 	NET_HTTPS								\
 	THIRD_PARTY_ARGON2							\
@@ -95,6 +96,7 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -178,6 +180,7 @@ o/$(MODE)/tool/net/demo/unix-dir.lua.zip.o					\
 o/$(MODE)/tool/net/demo/unix-info.lua.zip.o					\
 o/$(MODE)/tool/net/demo/unix-finger.lua.zip.o					\
 o/$(MODE)/tool/net/demo/fetch.lua.zip.o						\
+o/$(MODE)/tool/net/demo/finger.lua.zip.o					\
 o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o				\
 o/$(MODE)/tool/net/demo/store-asset.lua.zip.o					\
 o/$(MODE)/tool/net/demo/maxmind.lua.zip.o					\
@@ -214,6 +217,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\
@@ -229,6 +233,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/unix-info.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/unix-finger.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/fetch.lua.zip.o				\
+		o/$(MODE)/tool/net/demo/finger.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/store-asset.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/call-lua-module.lua.zip.o		\
 		o/$(MODE)/tool/net/demo/redbean.lua.zip.o			\
@@ -331,6 +336,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\
 		o/$(MODE)/tool/net/lmaxmind.o					\

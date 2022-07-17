@@ -32,6 +32,10 @@
  * @param optname can be SO_{REUSE{PORT,ADDR},KEEPALIVE,etc.} etc.
  * @return 0 on success, or -1 w/ errno
  * @error ENOPROTOOPT for unknown (level,optname)
+ * @error EINVAL if `out_optlen` is invalid somehow
+ * @error ENOTSOCK if `fd` is valid but not a socket
+ * @error EBADF if `fd` isn't valid
+ * @error EFAULT if optval memory isn't valid
  * @see libc/sysv/consts.sh for tuning catalogue
  * @see setsockopt()
  */
@@ -39,10 +43,8 @@ int getsockopt(int fd, int level, int optname, void *out_opt_optval,
                uint32_t *out_optlen) {
   int rc;
 
-  if (!level || !optname) {
-    rc = enoprotoopt(); /* our sysvconsts definition */
-  } else if (optname == -1) {
-    rc = 0; /* our sysvconsts definition */
+  if (level == -1 || !optname) {
+    rc = enoprotoopt(); /* see libc/sysv/consts.sh */
   } else if (IsAsan() && (out_opt_optval && out_optlen &&
                           (!__asan_is_valid(out_optlen, sizeof(uint32_t)) ||
                            !__asan_is_valid(out_opt_optval, *out_optlen)))) {

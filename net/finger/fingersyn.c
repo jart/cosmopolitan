@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/bsr.h"
 
-	.macro	.e e s
-	.long	\e - kTcpOptnames
-	.long	1f - kTcpOptnames
-	.rodata.str1.1
-1:	.string	"\s"
-	.previous
-	.endm
-
-	.section .rodata
-	.align	4
-	.underrun
-kTcpOptnames:
-	.e	TCP_NODELAY,"NODELAY"			# bool32
-	.e	TCP_CORK,"CORK"				# bool32
-	.e	TCP_QUICKACK,"QUICKACK"			# bool32
-	.e	TCP_FASTOPEN_CONNECT,"FASTOPEN_CONNECT"	# bool32
-	.e	TCP_DEFER_ACCEPT,"DEFER_ACCEPT"		# bool32
-	.e	TCP_KEEPIDLE,"KEEPIDLE"			# int (seconds)
-	.e	TCP_KEEPINTVL,"KEEPINTVL"		# int (seconds)
-	.e	TCP_FASTOPEN,"FASTOPEN"			# int
-	.e	TCP_KEEPCNT,"KEEPCNT"			# int
-	.e	TCP_MAXSEG,"MAXSEG"			# int
-	.e	TCP_SYNCNT,"SYNCNT"			# int
-	.e	TCP_NOTSENT_LOWAT,"NOTSENT_LOWAT"	# int
-	.e	TCP_WINDOW_CLAMP,"WINDOW_CLAMP"		# int
-	.e	TCP_SAVE_SYN,"SAVE_SYN"			# int
-	.e	TCP_SAVED_SYN,"SAVED_SYN"		# buffer
-	.long	MAGNUM_TERMINATOR
-	.endobj	kTcpOptnames,globl,hidden
-	.overrun
+/**
+ * Fingers IP+TCP SYN packet.
+ *
+ * This returns a hash-like magic number that reflects the SYN packet
+ * structure, e.g. ordering of options, maximum segment size, etc.
+ */
+uint32_t FingerSyn(const char *p, size_t n) {
+  uint32_t h = 0;
+  int i, j, k, q, r, iplen, tcplen, ttl;
+  if (n >= 20 + 20 && n >= (iplen = (p[0] & 0x0F) * 4) + 20 &&
+      n >= iplen + (tcplen = ((p[iplen + 12] & 0xF0) >> 4) * 4)) {
+    n = iplen + tcplen;
+    // Time to Live
+    // ttl<=256 Crisco, Solaris 6
+    // ttl<=128 Windows, OpenVMS 8+
+    // ttl<=64  Mac, Linux, BSD, Solaris 8+, Tru64, HP-UX
+    ttl = p[8] & 255;
+    h += bsr(MAX(1, ttl - 1));
+    h *= 0x9e3779b1;
+    // TCP Options
+    // We care about the order and presence of leading common options.
+    for (j = 0, i = iplen + 20; i < n; ++j) {
+      k = p[i] & 255;
+      if (k == 0 || k == 1 || k == 2 || k == 3 || k == 4 || k == 8) {
+        if (k <= 1) {
+          ++i;
+        } else if (i + 1 < n) {
+          i += p[i + 1] & 255;
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+      h += j << 8 | k;
+      h *= 0x9e3779b1;
+    }
+    if (!h) {
+      ++h;
+    }
+  }
+  return h;
+}

@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon sol,SOL_NFC,280,0,0,0,0,0
+.syscon sol,SOL_NFC,280,-1,-1,-1,-1,-1

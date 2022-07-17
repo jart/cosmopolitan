@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,36 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/magnumstrs.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/dce.h"
+#include "net/finger/finger.h"
 
-	.macro	.e e s
-	.long	\e - kTcpOptnames
-	.long	1f - kTcpOptnames
-	.rodata.str1.1
-1:	.string	"\s"
-	.previous
-	.endm
-
-	.section .rodata
-	.align	4
-	.underrun
-kTcpOptnames:
-	.e	TCP_NODELAY,"NODELAY"			# bool32
-	.e	TCP_CORK,"CORK"				# bool32
-	.e	TCP_QUICKACK,"QUICKACK"			# bool32
-	.e	TCP_FASTOPEN_CONNECT,"FASTOPEN_CONNECT"	# bool32
-	.e	TCP_DEFER_ACCEPT,"DEFER_ACCEPT"		# bool32
-	.e	TCP_KEEPIDLE,"KEEPIDLE"			# int (seconds)
-	.e	TCP_KEEPINTVL,"KEEPINTVL"		# int (seconds)
-	.e	TCP_FASTOPEN,"FASTOPEN"			# int
-	.e	TCP_KEEPCNT,"KEEPCNT"			# int
-	.e	TCP_MAXSEG,"MAXSEG"			# int
-	.e	TCP_SYNCNT,"SYNCNT"			# int
-	.e	TCP_NOTSENT_LOWAT,"NOTSENT_LOWAT"	# int
-	.e	TCP_WINDOW_CLAMP,"WINDOW_CLAMP"		# int
-	.e	TCP_SAVE_SYN,"SAVE_SYN"			# int
-	.e	TCP_SAVED_SYN,"SAVED_SYN"		# buffer
-	.long	MAGNUM_TERMINATOR
-	.endobj	kTcpOptnames,globl,hidden
-	.overrun
+/**
+ * Turns result of FingerprintSyn() into operating system.
+ */
+int GetSynFingerOs(uint32_t x) {
+  switch (x) {
+    case 0x7e7a6599:
+      return XNU;
+    case 0xbb724187:
+      return LINUX;
+    case 0xb228b212:
+      return WINDOWS;
+    case 0x77c30887:
+      return FREEBSD;
+    case 0xc45d694b:
+      return OPENBSD;
+    default:
+      return 0;
+  }
+}

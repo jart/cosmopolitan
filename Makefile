@@ -145,6 +145,7 @@ include tool/args/args.mk
 include test/tool/args/test.mk
 include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
+include net/finger/finger.mk
 include third_party/double-conversion/double-conversion.mk
 include third_party/lua/lua.mk
 include third_party/make/make.mk
@@ -202,6 +203,7 @@ include test/libc/release/test.mk
 include test/libc/test.mk
 include test/net/http/test.mk
 include test/net/https/test.mk
+include test/net/finger/test.mk
 include test/net/test.mk
 include test/tool/build/lib/test.mk
 include test/tool/build/test.mk
