@@ -1363,7 +1363,7 @@ static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
     /* [jart] grab some client ciphers for error messages */
     bzero(ssl->client_ciphers, sizeof(ssl->client_ciphers));
     for( i = j = 0, p = buf + 6; j < ciph_len; j += 3, p += 3 )
-        if( !p[0] && i < ARRAYLEN( ssl->client_ciphers ) )
+        if( !p[0] && i+1 < ARRAYLEN( ssl->client_ciphers ) )
             ssl->client_ciphers[i++] = p[1] << 8 | p[2];
 
 #if defined(MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE)
@@ -2208,7 +2208,7 @@ read_record_header:
     /* [jart] grab some client ciphers for error messages */
     bzero(ssl->client_ciphers, sizeof(ssl->client_ciphers));
     for( i = j = 0, p = buf + ciph_offset + 2; j < ciph_len; j += 2, p += 2 )
-        if( i < ARRAYLEN( ssl->client_ciphers ) )
+        if( i+1 < ARRAYLEN( ssl->client_ciphers ) )
             ssl->client_ciphers[i++] = p[0] << 8 | p[1];
 
     /*

@@ -187,10 +187,11 @@ STATIC_YOINK("ShowCrashReportsEarly");
     }                                                                  \
   } while (0)
 
-// letters not used: EINOQYnoqwxy
+// letters not used: INOQYnoqwxy
 // digits not used:  0123456789
 // puncts not used:  !"#$&'()+,-./;<=>@[\]^_`{|}~
-#define GETOPTS "*%BJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:"
+#define GETOPTS \
+  "*%BEJSVXZabdfghijkmsuvzA:C:D:F:G:H:K:L:M:P:R:T:U:W:c:e:l:p:r:t:w:"
 
 static const uint8_t kGzipHeader[] = {
     0x1F,        // MAGNUM
@@ -7174,6 +7175,7 @@ static void GetOpts(int argc, char *argv[]) {
       CASE('u', uniprocess = true);
       CASE('g', loglatency = true);
       CASE('m', logmessages = true);
+      CASE('w', launchbrowser = strdup(optarg));
       CASE('l', ProgramAddr(optarg));
       CASE('H', ProgramHeader(optarg));
       CASE('L', ProgramLogPath(optarg));

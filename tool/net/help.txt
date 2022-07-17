@@ -79,6 +79,7 @@ FLAGS
   -P PATH   pid file location
   -U INT    daemon set user id
   -G INT    daemon set group id
+  -w PATH   launch browser on startup
   --strace  enables system call tracing (see also -Z)
   --ftrace  enables function call tracing (see also -f)
 
