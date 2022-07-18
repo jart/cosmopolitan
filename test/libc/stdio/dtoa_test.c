@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/spinlock.h"
@@ -29,6 +30,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sched.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
@@ -61,7 +63,6 @@ int Worker(void *p, int tid) {
 TEST(dtoa, locks) {
   int i, n = 32;
   struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
-  if (IsOpenbsd()) return;  // TODO(jart): OpenBSD flakes :'(
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
 }

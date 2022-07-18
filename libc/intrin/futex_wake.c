@@ -16,30 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/asmflag.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/mem/alloca.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
 
-static const char *DescribeFutexWakeResult(char buf[12], int ax) {
-  const char *s;
-  if (ax < 0 && (s = strerrno(ax))) {
-    return s;
-  } else {
-    FormatInt32(buf, ax);
-    return buf;
-  }
-}
-
+int _futex(void *, int, int) hidden;
 int _futex_wake(void *addr, int count) {
-  int ax;
-  ax = _futex(addr, FUTEX_WAKE, count, 0, 0);
-  STRACE("futex(%t[%p], FUTEX_WAKE, %d) → %s", addr, addr, count,
-         DescribeFutexWakeResult(alloca(12), ax));
+  int ax = _futex(addr, FUTEX_WAKE, count);
+  STRACE("futex(%t, FUTEX_WAKE, %d) → %s", addr, count,
+         DescribeFutexResult(ax));
   return ax;
 }

@@ -306,11 +306,14 @@ noasan static wontreturn void OpenbsdThreadMain(void *p) {
   // although ideally there should be a better solution.
   //
   // void __threxit(%rdi = int32_t *notdead);
-  asm volatile("mov\t%2,%%rsp\n\t"     // set stack
+  asm volatile("mov\t%2,%%rsp\n\t"
                "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0
-               "syscall"               // __threxit()
+               "syscall\n\t"           // futex()
+               "mov\t$302,%%eax\n\t"   // threxit()
+               "syscall"
                : "=m"(*wt->ztid)
-               : "a"(302), "m"(oldrsp), "D"(wt->ztid)
+               : "a"(83), "m"(oldrsp), "D"(wt->ztid), "S"(FUTEX_WAKE),
+                 "d"(INT_MAX)
                : "rcx", "r11", "memory");
   unreachable;
 }

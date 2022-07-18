@@ -36,10 +36,14 @@ void _wait0(const int *ctid) {
   for (;;) {
     if (!(x = atomic_load_explicit(ctid, memory_order_acquire))) {
       break;
-    } else if (IsLinux() /* || IsOpenbsd() */) {
+    } else if (IsLinux() || IsOpenbsd()) {
       _futex_wait(ctid, x, &(struct timespec){2});
     } else {
       sched_yield();
     }
+  }
+  if (IsOpenbsd()) {
+    // TODO(jart): whyyyy do we need it
+    sched_yield();
   }
 }

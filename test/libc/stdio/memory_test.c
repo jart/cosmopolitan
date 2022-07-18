@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,15 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/nr.h"
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 
-_futex:	mov	%rcx,%r10
-	mov	__NR_futex,%eax
-	clc
-	syscall
-	jnc	1f
-	neg	%eax
-1:	ret
-	.endfn	_futex,globl,hidden
+int Worker(void *arg, int tid) {
+  int i;
+  char *volatile p;
+  char *volatile q;
+  for (i = 0; i < 256; ++i) {
+    p = malloc(17);
+    free(p);
+    p = malloc(17);
+    q = malloc(17);
+    sched_yield();
+    free(p);
+    free(q);
+  }
+  return 0;
+}
+
+TEST(memory, test) {
+  int i, n = 32;
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+}

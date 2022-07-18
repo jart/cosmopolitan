@@ -18,28 +18,16 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/errno.h"
-#include "libc/fmt/itoa.h"
+#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/mem/alloca.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 
-static const char *DescribeFutexWaitResult(char buf[12], int ax) {
-  const char *s;
-  if (ax && ((s = strerrno(ax)) || (s = strerrno(-ax)))) {
-    return s;
-  } else {
-    FormatInt32(buf, ax);
-    return buf;
-  }
-}
-
+int _futex(void *, int, int, struct timespec *) hidden;
 int _futex_wait(void *addr, int expect, struct timespec *timeout) {
-  int ax;
-  ax = _futex(addr, FUTEX_WAIT, expect, timeout, 0);
-  STRACE("futex(%t[%p], FUTEX_WAIT, %d, %s) → %s", addr, addr, expect,
-         DescribeTimespec(0, timeout), DescribeFutexWaitResult(alloca(12), ax));
+  int ax = _futex(addr, FUTEX_WAIT, expect, timeout);
+  if (IsOpenbsd() && ax > 0) ax = -ax;  // yes openbsd does this w/o cf
+  STRACE("futex(%t, FUTEX_WAIT, %d, %s) → %s", addr, expect,
+         DescribeTimespec(0, timeout), DescribeFutexResult(ax));
   return ax;
 }

@@ -29,7 +29,6 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -54,7 +53,9 @@ __gdtoa_Bclear(void)
 	__gdtoa_lock();
 	for (i = 0; i < ARRAYLEN(TI0.Freelist); ++i)
 		__gdtoa_Brelease(TI0.Freelist[i]);
+	__gdtoa_lock1();
 	__gdtoa_Brelease(TI0.P5s);
+	__gdtoa_unlock1();
 	bzero(&TI0, sizeof(TI0));
 	__gdtoa_unlock();
 }

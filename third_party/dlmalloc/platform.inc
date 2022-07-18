@@ -250,12 +250,9 @@ extern void*     sbrk(ptrdiff_t);
 #if USE_LOCKS
 #ifndef WIN32
 #if defined (__SVR4) && defined (__sun)  /* solaris */
-#include <thread.h>
 #elif !defined(LACKS_SCHED_H)
-#include <sched.h>
 #endif /* solaris or LACKS_SCHED_H */
 #if (defined(USE_RECURSIVE_LOCKS) && USE_RECURSIVE_LOCKS != 0) || !USE_SPIN_LOCKS
-#include <pthread.h>
 #endif /* USE_RECURSIVE_LOCKS ... */
 #elif defined(_MSC_VER)
 #ifndef _M_AMD64

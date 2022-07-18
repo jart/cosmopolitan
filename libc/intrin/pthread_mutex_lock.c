@@ -32,12 +32,12 @@
 
 static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
                                    int tries) {
-  volatile int i;
   if (tries < 7) {
+    volatile int i;
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux() /* || IsOpenbsd() */) {
+  } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&mutex->waits, 1);
     _futex_wait(&mutex->lock, expect, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);

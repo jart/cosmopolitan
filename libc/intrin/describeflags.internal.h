@@ -27,6 +27,7 @@ const char *DescribeFlags(char *, size_t, struct DescribeFlags *, size_t,
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
 const char *DescribeFrame(char[32], int);
+const char *DescribeFutexResult(char[12], int);
 const char *DescribeHow(char[12], int);
 const char *DescribeMapFlags(char[64], int);
 const char *DescribeMapping(char[8], int, int);
@@ -76,6 +77,7 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(dirfd)         DescribeDirfd(alloca(12), dirfd)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
+#define DescribeFutexResult(x)       DescribeFutexResult(alloca(12), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
 #define DescribeMapFlags(dirfd)      DescribeMapFlags(alloca(64), dirfd)
 #define DescribeMapping(x, y)        DescribeMapping(alloca(8), x, y)

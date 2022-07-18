@@ -44,7 +44,7 @@ int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
       // fallthrough
     case PTHREAD_MUTEX_NORMAL:
       atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
-      if ((IsLinux() /* || IsOpenbsd() */) &&
+      if ((IsLinux() || IsOpenbsd()) &&
           atomic_load_explicit(&mutex->waits, memory_order_relaxed) > 0) {
         _pthread_mutex_wake(mutex);
       }

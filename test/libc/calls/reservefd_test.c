@@ -48,10 +48,6 @@ STATIC_YOINK("libc/testlib/hyperion.txt");
 
 #define THREADS 8
 
-__attribute__((__constructor__)) static void init(void) {
-  if (IsOpenbsd()) exit(0);  // TODO(jart): flakes :'(
-}
-
 void PullSomeZipFilesIntoLinkage(void) {
   gmtime(0);
 }
@@ -121,12 +117,8 @@ TEST(reservefd, tortureTest) {
                          .sa_flags = 0 /* SA_NODEFER */};
   // ASSERT_SYS(0, 0, sigaction(SIGALRM, &sa, &oldsa));
   // ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, &oldit));
-  for (i = 0; i < THREADS; ++i) {
-    _spawn(Worker, 0, th + i);
-  }
-  for (i = 0; i < THREADS; ++i) {
-    _join(th + i);
-  }
+  for (i = 0; i < THREADS; ++i) _spawn(Worker, 0, th + i);
+  for (i = 0; i < THREADS; ++i) _join(th + i);
   // EXPECT_SYS(0, 0, sigaction(SIGALRM, &oldsa, 0));
   // EXPECT_SYS(0, 0, setitimer(ITIMER_REAL, &oldit, 0));
 }

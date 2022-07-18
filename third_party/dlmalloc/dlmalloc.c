@@ -23,6 +23,7 @@
 #define HAVE_MMAP 1
 #define HAVE_MREMAP 0
 #define HAVE_MORECORE 0
+#define USE_LOCKS 1
 #define USE_SPIN_LOCKS 1
 #define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
