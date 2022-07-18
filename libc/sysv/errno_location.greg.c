@@ -28,5 +28,5 @@
  */
 privileged nocallersavedregisters errno_t *(__errno_location)(void) {
   if (!__tls_enabled) return &__errno;
-  return (errno_t *)(__get_tls_inline() + 0x3c);
+  return (errno_t *)(__get_tls_privileged() + 0x3c);
 }

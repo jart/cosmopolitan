@@ -72,7 +72,7 @@ privileged void ftracer(void) {
   long stackuse;
   struct FtraceTls *ft;
   struct StackFrame *sf;
-  ft = (struct FtraceTls *)(__get_tls_inline() + 0x08);
+  ft = (struct FtraceTls *)(__get_tls_privileged() + 0x08);
   if (_cmpxchg(&ft->once, false, true)) {
     ft->lastaddr = -1;
     ft->skew = GetNestingLevelImpl(__builtin_frame_address(0));

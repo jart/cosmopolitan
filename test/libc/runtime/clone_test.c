@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
@@ -31,6 +32,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -165,6 +168,6 @@ BENCH(clone, bench) {
   char *volatile tp;
   errno_t *volatile ep;
   EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
-  EZBENCH2("__get_tls_inline", donothing, (tp = __get_tls_inline()));
+  EZBENCH2("__get_tls_privileged", donothing, (tp = __get_tls_privileged()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
 }

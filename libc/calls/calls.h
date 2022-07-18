@@ -67,7 +67,7 @@ int chdir(const char *);
 int chmod(const char *, uint32_t);
 int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
-int clone(void *, void *, size_t, int, void *, int *, void *, size_t, int *);
+int clone(void *, void *, size_t, int, void *, int *, void *, int *);
 int close(int);
 int creat(const char *, uint32_t);
 int dup(int);

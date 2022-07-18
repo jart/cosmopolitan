@@ -113,8 +113,7 @@ WinThreadEntry(int rdi,                                 // rcx
 
 static textwindows int CloneWindows(int (*func)(void *, int), char *stk,
                                     size_t stksz, int flags, void *arg,
-                                    void *tls, size_t tlssz, int *ptid,
-                                    int *ctid) {
+                                    void *tls, int *ptid, int *ctid) {
   int64_t h;
   struct CloneArgs *wt;
   wt = (struct CloneArgs *)(((intptr_t)(stk + stksz) -
@@ -193,7 +192,7 @@ XnuThreadMain(void *pthread,                    // rdi
 }
 
 static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
-                    void *arg, void *tls, size_t tlssz, int *ptid, int *ctid) {
+                    void *arg, void *tls, int *ptid, int *ctid) {
   int rc;
   bool failed;
   static bool once;
@@ -244,8 +243,7 @@ static wontreturn void FreebsdThreadMain(void *p) {
 }
 
 static int CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
-                        int flags, void *arg, void *tls, size_t tlssz,
-                        int *ptid, int *ctid) {
+                        int flags, void *arg, void *tls, int *ptid, int *ctid) {
   int ax;
   bool failed;
   int64_t tid;
@@ -265,7 +263,7 @@ static int CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
       .stack_base = stk,
       .stack_size = (((intptr_t)wt - (intptr_t)stk) & -16) - 8,
       .tls_base = flags & CLONE_SETTLS ? tls : 0,
-      .tls_size = flags & CLONE_SETTLS ? tlssz : 0,
+      .tls_size = 64,
       .child_tid = &wt->tid64,
       .parent_tid = &tid,
   };
@@ -319,8 +317,7 @@ noasan static wontreturn void OpenbsdThreadMain(void *p) {
 }
 
 static int CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
-                        int flags, void *arg, void *tls, size_t tlssz,
-                        int *ptid, int *ctid) {
+                        int flags, void *arg, void *tls, int *ptid, int *ctid) {
   int tid;
   intptr_t sp;
   struct __tfork *tf;
@@ -373,8 +370,7 @@ static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
 }
 
 static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
-                       int flags, void *arg, void *tls, size_t tlssz, int *ptid,
-                       int *ctid) {
+                       int flags, void *arg, void *tls, int *ptid, int *ctid) {
   // NetBSD has its own clone() and it works, but it's technically a
   // second-class API, intended to help Linux folks migrate to this.
   bool failed;
@@ -465,8 +461,7 @@ int sys_clone_linux(int flags,   // rdi
                     void *arg);  // 8(rsp)
 
 static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
-                      int flags, void *arg, void *tls, size_t tlssz, int *ptid,
-                      int *ctid) {
+                      int flags, void *arg, void *tls, int *ptid, int *ctid) {
   long sp;
   sp = (intptr_t)(stk + stksz);
   if (~flags & CLONE_CHILD_SETTID) {
@@ -589,14 +584,13 @@ static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
  * @param arg is passed as an argument to `func` in the child thread
  * @param tls may be used to set the thread local storage segment;
  *     this parameter is ignored if `CLONE_SETTLS` is not set
- * @param tlssz is the size of tls in bytes which must be at least 64
  * @param ctid lets the child receive its thread id without having to
  *     call gettid() and is ignored if `CLONE_CHILD_SETTID` isn't set
  * @return tid of child on success, or -1 w/ errno
  * @threadsafe
  */
 int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
-          void *tls, size_t tlssz, int *ctid) {
+          void *tls, int *ctid) {
   int rc;
   struct CloneArgs *wt;
 
@@ -606,13 +600,12 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
   if (!func) {
     rc = einval();
   } else if (!IsTiny() &&
-             (((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15))) ||
-              ((flags & CLONE_SETTLS) && (tlssz < 64 || (tlssz & 7))))) {
+             ((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15)))) {
     rc = einval();
   } else if (IsAsan() &&
              ((stksz > PAGESIZE &&
                !__asan_is_valid((char *)stk + PAGESIZE, stksz - PAGESIZE)) ||
-              ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, tlssz)) ||
+              ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, 64)) ||
               ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, sizeof(long))) ||
               ((flags & CLONE_PARENT_SETTID) &&
                !__asan_is_valid(ptid, sizeof(*ptid))) ||
@@ -620,7 +613,7 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
                !__asan_is_valid(ctid, sizeof(*ctid))))) {
     rc = efault();
   } else if (IsLinux()) {
-    rc = CloneLinux(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneLinux(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (!IsTiny() &&
              (flags & ~(CLONE_SETTLS | CLONE_PARENT_SETTID |
                         CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID)) !=
@@ -629,15 +622,15 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
     STRACE("clone flag unsupported on this platform");
     rc = einval();
   } else if (IsXnu()) {
-    rc = CloneXnu(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneXnu(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsFreebsd()) {
-    rc = CloneFreebsd(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneFreebsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsNetbsd()) {
-    rc = CloneNetbsd(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneNetbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsOpenbsd()) {
-    rc = CloneOpenbsd(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneOpenbsd(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else if (IsWindows()) {
-    rc = CloneWindows(func, stk, stksz, flags, arg, tls, tlssz, ptid, ctid);
+    rc = CloneWindows(func, stk, stksz, flags, arg, tls, ptid, ctid);
   } else {
     rc = enosys();
   }
@@ -647,8 +640,8 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
     *ptid = rc;
   }
 
-  STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %'zu, %p) → %d% m", func, stk,
-         stksz, flags, arg, ptid, tls, tlssz, ctid, rc);
+  STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %p) → %d% m", func, stk, stksz,
+         flags, arg, ptid, tls, ctid, rc);
 
   return rc;
 }

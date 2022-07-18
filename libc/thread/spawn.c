@@ -107,7 +107,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
-            arg, &th->ptid, th->tib, _TIBZ, th->ctid) == -1) {
+            arg, &th->ptid, th->tib, th->ctid) == -1) {
     _freestack(th->stk);
     free(th->tls);
     return -1;

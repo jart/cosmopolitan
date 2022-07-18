@@ -26,5 +26,5 @@ STATIC_YOINK("_main_thread_ctor");
  * Returns thread descriptor of the current thread.
  */
 cthread_t(cthread_self)(void) {
-  return (cthread_t)__get_tls_inline();
+  return (cthread_t)__get_tls();
 }

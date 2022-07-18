@@ -314,7 +314,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             if (!__tls_enabled) {
               x = __pid;
             } else {
-              x = *(int *)(__get_tls_inline() + 0x38);
+              x = *(int *)(__get_tls_privileged() + 0x38);
             }
           } else {
             x = 666;
@@ -395,8 +395,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           i = 0;
           m = (1 << base) - 1;
           if (hash && x) sign = hash;
-          do
-            z[i++ & 127] = abet[x & m];
+          do z[i++ & 127] = abet[x & m];
           while ((x >>= base) || (pdot && i < prec));
           goto EmitNumber;
 
