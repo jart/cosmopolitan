@@ -288,7 +288,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   --__strace;
   owner = 0;
   me = sys_gettid();
-  if (_lockcmpxchgp(&sync, &owner, me)) {
+  if (__vforked || _lockcmpxchgp(&sync, &owner, me)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
       err = errno;

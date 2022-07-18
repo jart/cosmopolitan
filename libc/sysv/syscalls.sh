@@ -399,7 +399,6 @@ scall	memfd_secret		0xfffffffffffff1bf	globl
 scall	process_mrelease	0xfffffffffffff1c0	globl
 scall	futex_waitv		0xfffffffffffff1c1	globl
 scall	set_mempolicy_home_node	0xfffffffffffff1c2	globl
-scall	sys_unveil		0xfff072ffffffffff	globl
 
 #	The Fifth Bell System Interface, Community Edition
 #	» besiyata dishmaya
@@ -799,7 +798,7 @@ scall	sendsyslog		0xfff070ffffffffff	globl
 scall	setrtable		0xfff136ffffffffff	globl
 scall	swapctl			0x10f0c1ffffffffff	globl
 scall	thrkill			0xfff077ffffffffff	globl
-scall	unveil			0xfff072ffffffffff	globl
+scall	sys_unveil		0xfff072ffffffffff	globl hidden
 
 #	The Fifth Bell System Interface, Community Edition
 #	» beyond the pale

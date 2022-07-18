@@ -20,6 +20,7 @@
 #include "libc/bits/atomic.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
@@ -63,7 +64,7 @@ void testlib_finish(void) {
 void testlib_error_enter(const char *file, const char *func) {
   atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed);
   atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed);
-  _spinlock(&testlib_error_lock);
+  if (!__vforked) _spinlock(&testlib_error_lock);
   if (!IsWindows()) sys_getpid(); /* make strace easier to read */
   if (!IsWindows()) sys_getpid();
   if (g_testlib_shoulddebugbreak) {

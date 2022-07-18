@@ -42,8 +42,11 @@ TEST_LIBC_MEM_DIRECTDEPS =					\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
-	LIBC_THREAD						\
+	LIBC_SYSV_CALLS						\
 	LIBC_TESTLIB						\
+	LIBC_THREAD						\
+	LIBC_X							\
+	LIBC_ZIPOS						\
 	THIRD_PARTY_DLMALLOC					\
 	THIRD_PARTY_LIBCXX
 
@@ -58,10 +61,33 @@ o/$(MODE)/test/libc/mem/%.com.dbg:				\
 		$(TEST_LIBC_MEM_DEPS)				\
 		o/$(MODE)/test/libc/mem/%.o			\
 		o/$(MODE)/test/libc/mem/mem.pkg			\
+		o/$(MODE)/test/libc/mem/life.elf.zip.o		\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/test/libc/mem/life.com.dbg:				\
+		$(LIBC_RUNTIME)					\
+		o/$(MODE)/test/libc/mem/life.o			\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/mem/life.elf:				\
+		o/$(MODE)/tool/build/assimilate.com		\
+		o/$(MODE)/test/libc/mem/life.com
+	@$(COMPILE) -ACP -T$@					\
+		build/bootstrap/cp.com				\
+		o/$(MODE)/test/libc/mem/life.com		\
+		o/$(MODE)/test/libc/mem/life.elf
+	@$(COMPILE) -AASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate.com		\
+		o/$(MODE)/test/libc/mem/life.elf
+
+o/$(MODE)/test/libc/mem/life.elf.zip.o:				\
+		ZIPOBJ_FLAGS +=					\
+			-B
 
 $(TEST_LIBC_MEM_OBJS):						\
 		DEFAULT_CCFLAGS +=				\

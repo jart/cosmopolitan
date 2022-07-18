@@ -26,6 +26,7 @@
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/s.h"
@@ -45,7 +46,7 @@
  *  - Integrate with pledge and remove the file access?
  *  - Stuff state into the .protected section?
  */
-static struct {
+_Thread_local static struct {
   int abi;
   int fd;
   uint64_t read;
@@ -54,7 +55,6 @@ static struct {
   uint64_t create;
 } State = {
     .abi = 2,
-    .fd = 0,
     .read = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR |
             LANDLOCK_ACCESS_FS_REFER,
     .write = LANDLOCK_ACCESS_FS_WRITE_FILE,
@@ -65,21 +65,27 @@ static struct {
               LANDLOCK_ACCESS_FS_MAKE_BLOCK | LANDLOCK_ACCESS_FS_MAKE_SYM,
 };
 
-forceinline int unveil_final(void) {
+static int unveil_final(void) {
   int rc;
   if (State.fd == -1) return 0;
   assert(State.fd > 0);
   if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1 &&
       (rc = landlock_restrict_self(State.fd, 0)) != -1 &&
-      (rc = close(State.fd)) != -1)
+      (rc = sys_close(State.fd)) != -1)
     State.fd = -1;
   return rc;
 }
 
-forceinline int unveil_init(void) {
-  int rc;
-  if ((rc = landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION)) <
-      0)
+static int err_close(int rc, int fd) {
+  int serrno = errno;
+  sys_close(fd);
+  errno = serrno;
+  return rc;
+}
+
+static int unveil_init(void) {
+  int rc, fd;
+  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) < 0)
     return -1;
   State.abi = rc;
   if (State.abi < 2) State.read &= ~LANDLOCK_ACCESS_FS_REFER;
@@ -87,21 +93,17 @@ forceinline int unveil_init(void) {
       .handled_access_fs = State.read | State.write | State.exec | State.create,
   };
   if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0) return -1;
-  State.fd = rc;
+  // grant file descriptor a higher number that's less likely to interfere
+  if ((fd = __sys_fcntl(rc, F_DUPFD, 100)) == -1) return err_close(-1, rc);
+  if (sys_close(rc) == -1) return err_close(-1, fd);
+  State.fd = fd;
   return 0;
-}
-
-forceinline int err_close(int rc, int fd) {
-  int serrno = errno;
-  close(fd);
-  errno = serrno;
-  return rc;
 }
 
 static int sys_unveil_linux(const char *path, const char *permissions) {
   int rc;
-  if (State.fd == 0 && (rc = unveil_init()) == -1) return rc;
-  if (path == NULL && permissions == NULL) return unveil_final();
+  if (!State.fd && (rc = unveil_init()) == -1) return rc;
+  if (!path && !permissions) return unveil_final();
   struct landlock_path_beneath_attr pb = {0};
   for (const char *c = permissions; *c != '\0'; c++) {
     switch (*c) {
@@ -121,17 +123,20 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
         return einval();
     }
   }
-  if ((rc = open(path, O_RDONLY | O_PATH | O_CLOEXEC)) == -1) return rc;
+  if ((rc = sys_open(path, O_PATH | O_CLOEXEC, 0)) == -1) return rc;
   pb.parent_fd = rc;
   struct stat st;
   if ((rc = fstat(pb.parent_fd, &st)) == -1) return err_close(rc, pb.parent_fd);
   if (!S_ISDIR(st.st_mode)) pb.allowed_access &= FILE_BITS;
   if ((rc = landlock_add_rule(State.fd, LANDLOCK_RULE_PATH_BENEATH, &pb, 0)))
     return err_close(rc, pb.parent_fd);
-  close(pb.parent_fd);
+  sys_close(pb.parent_fd);
   return rc;
 }
 
+/**
+ * Unveil parts of a restricted filesystem view.
+ */
 int unveil(const char *path, const char *permissions) {
   int rc;
   if (IsLinux()) {

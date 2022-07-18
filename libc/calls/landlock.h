@@ -16,7 +16,15 @@
 #define LANDLOCK_ACCESS_FS_MAKE_FIFO   0x0400ul
 #define LANDLOCK_ACCESS_FS_MAKE_BLOCK  0x0800ul
 #define LANDLOCK_ACCESS_FS_MAKE_SYM    0x1000ul
-#define LANDLOCK_ACCESS_FS_REFER       0x2000ul
+
+/**
+ * Allow renaming or linking file to a different directory.
+ *
+ * @see https://lore.kernel.org/r/20220329125117.1393824-8-mic@digikod.net
+ * @see https://docs.kernel.org/userspace-api/landlock.html
+ * @note ABI 2+
+ */
+#define LANDLOCK_ACCESS_FS_REFER 0x2000ul
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

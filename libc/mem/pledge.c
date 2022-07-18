@@ -302,6 +302,12 @@ static const uint16_t kPledgeLinuxExec2[] = {
     __NR_linux_execveat,  //
 };
 
+static const uint16_t kPledgeLinuxUnveil[] = {
+    __NR_linux_landlock_create_ruleset,  //
+    __NR_linux_landlock_add_rule,        //
+    __NR_linux_landlock_restrict_self,   //
+};
+
 static const struct Pledges {
   const char *name;
   const uint16_t *syscalls;
@@ -325,6 +331,7 @@ static const struct Pledges {
     [PROMISE_EXEC] = {"exec", PLEDGE(kPledgeLinuxExec)},               //
     [PROMISE_EXECNATIVE] = {"execnative", PLEDGE(kPledgeLinuxExec2)},  //
     [PROMISE_ID] = {"id", PLEDGE(kPledgeLinuxId)},                     //
+    [PROMISE_UNVEIL] = {"unveil", PLEDGE(kPledgeLinuxUnveil)},         //
     [PROMISE_MAX + 1] = {0},                                           //
 };
 
@@ -1230,6 +1237,10 @@ static void SetPromises(const char *promises) {
  *   and mprotect() are still prevented from creating executable memory.
  *   System call origin verification can't be enabled. If you always
  *   assimilate your APE binaries, then this should be preferred.
+ *
+ * - "unveil" allows unveil() to be called, as well as the underlying
+ *   landlock_create_ruleset, landlock_add_rule, landlock_restrict_self
+ *   calls on Linux.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD

@@ -19,7 +19,8 @@
 #define PROMISE_EXEC       15
 #define PROMISE_EXECNATIVE 16
 #define PROMISE_ID         17
-#define PROMISE_MAX        17
+#define PROMISE_UNVEIL     18
+#define PROMISE_MAX        18
 
 #define PLEDGED(x) (~__promises & (1L << PROMISE_##x))
 
