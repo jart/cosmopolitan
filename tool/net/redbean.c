@@ -385,6 +385,7 @@ static bool gotcachecontrol;
 static bool interpretermode;
 static bool sslclientverify;
 static bool connectionclose;
+static bool hasonloglatency;
 static bool hasonworkerstop;
 static bool isexitingworker;
 static bool hasonworkerstart;
@@ -1106,6 +1107,21 @@ static bool LuaOnClientConnection(void) {
   AssertLuaStackIsAt(L, 0);
 #endif
   return dropit;
+}
+
+static void LuaOnLogLatency(long reqtime, long contime) {
+#ifndef STATIC
+  lua_State *L = GL;
+  int n = lua_gettop(L);
+  lua_getglobal(L, "OnLogLatency");
+  lua_pushinteger(L, reqtime);
+  lua_pushinteger(L, contime);
+  if (LuaCallWithTrace(L, 2, 0, NULL) != LUA_OK) {
+    LogLuaError("OnLogLatency", lua_tostring(L, -1));
+    lua_pop(L, 1);  // pop error
+  }
+  AssertLuaStackIsAt(L, n);
+#endif
 }
 
 static void LuaOnProcessCreate(int pid) {
@@ -5483,6 +5499,7 @@ static void LuaInit(void) {
     hasonprocessdestroy = IsHookDefined("OnProcessDestroy");
     hasonworkerstart = IsHookDefined("OnWorkerStart");
     hasonworkerstop = IsHookDefined("OnWorkerStop");
+    hasonloglatency = IsHookDefined("OnLogLatency");
   } else {
     DEBUGF("(srvr) no /.init.lua defined");
   }
@@ -6258,6 +6275,7 @@ static bool StreamResponse(char *p) {
 
 static bool HandleMessageActual(void) {
   int rc;
+  long reqtime, contime;
   char *p;
   long double now;
   if ((rc = ParseHttpMessage(&msg, inbuf.p, amtread)) != -1) {
@@ -6298,12 +6316,15 @@ static bool HandleMessageActual(void) {
     p = stpcpy(p, referrerpolicy);
     p = stpcpy(p, "\r\n");
   }
-  if (loglatency || LOGGABLE(kLogDebug)) {
+  if (loglatency || LOGGABLE(kLogDebug) || hasonloglatency) {
     now = nowl();
-    LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
-         msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
-         (long)((now - startrequest) * 1e6L),
-         (long)((now - startconnection) * 1e6L));
+    reqtime = (long)((now - startrequest) * 1e6L);
+    contime = (long)((now - startconnection) * 1e6L);
+    if (hasonloglatency) LuaOnLogLatency(reqtime, contime);
+    if (loglatency || LOGGABLE(kLogDebug))
+      LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
+           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
+           reqtime, contime);
   }
   if (!generator) {
     return TransmitResponse(p);
