@@ -38,9 +38,7 @@ https://justine.lol/pledge/\n\
 https://github.com/jart\n\
 \n\
 this program lets you launch linux commands in a filesystem sandbox\n\
-inspired by the design of openbsd's unveil() system call. Visit\n\
-the https://justine.lol/pledge/ page for online documentation.\n\
-\n\
+inspired by the design of openbsd's unveil() system call.\n\
 "
 
 wontreturn void usage(void) {
@@ -61,7 +59,6 @@ int main(int argc, char *argv[]) {
   if (!(IsLinux() || IsOpenbsd()))
     errx(1, "this program is only intended for Linux and OpenBSD");
 
-  // parse flags
   while ((opt = getopt(argc, argv, "h")) != -1) {
     switch (opt) {
       case 'h':
@@ -79,7 +76,13 @@ int main(int argc, char *argv[]) {
 
   while ((len = getline(&line, &size, stdin)) != -1) {
     count++;
-    _chomp(line);
+
+    bool chomped = false;
+    while (!chomped)
+      if (line[len-1] == '\r' || line[len-1] == '\n')
+        line[--len] = '\0';
+      else
+        chomped = true;
 
     char *tok = line;
     const char *p;
@@ -98,9 +101,11 @@ int main(int argc, char *argv[]) {
       err(1, "unveil(%s, %s)", fields[0], fields[1]);
   }
   free(line);
-  if (ferror(stdin)) err(1, "getline");
+  if (ferror(stdin))
+    err(1, "getline");
 
-  if (unveil(NULL, NULL) == -1) err(1, "unveil disable");
+  if (unveil(NULL, NULL) == -1)
+    err(1, "unveil(NULL, NULL)");
 
   __sys_execve(prog, argv + optind, environ);
   err(127, "execve");
