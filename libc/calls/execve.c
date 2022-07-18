@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -24,9 +25,12 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+
+int sys_pledge_linux(unsigned long);
 
 /**
  * Replaces current process with program.
@@ -66,7 +70,13 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
     }
 #endif
     if (!IsWindows()) {
-      rc = sys_execve(prog, argv, envp);
+      rc = 0;
+      if (IsLinux() && __execpromises && weaken(sys_pledge_linux)) {
+        rc = weaken(sys_pledge_linux)(__execpromises);
+      }
+      if (!rc) {
+        rc = sys_execve(prog, argv, envp);
+      }
     } else {
       rc = sys_execve_nt(prog, argv, envp);
     }

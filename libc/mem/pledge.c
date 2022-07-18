@@ -25,7 +25,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -157,6 +156,7 @@ static const uint16_t kPledgeLinuxRpath[] = {
     __NR_linux_fstatat,            //
     __NR_linux_access,             //
     __NR_linux_faccessat,          //
+    __NR_linux_faccessat2,         //
     __NR_linux_readlink,           //
     __NR_linux_readlinkat,         //
     __NR_linux_statfs,             //
@@ -173,6 +173,7 @@ static const uint16_t kPledgeLinuxWpath[] = {
     __NR_linux_fstatat,             //
     __NR_linux_access,              //
     __NR_linux_faccessat,           //
+    __NR_linux_faccessat2,          //
     __NR_linux_readlinkat,          //
     __NR_linux_chmod,               //
     __NR_linux_fchmod,              //
@@ -254,6 +255,10 @@ static const uint16_t kPledgeLinuxRecvfd[] = {
     __NR_linux_recvmsg,  //
 };
 
+static const uint16_t kPledgeLinuxSendfd[] = {
+    __NR_linux_sendmsg,  //
+};
+
 static const uint16_t kPledgeLinuxProc[] = {
     __NR_linux_fork,         //
     __NR_linux_vfork,        //
@@ -268,8 +273,10 @@ static const uint16_t kPledgeLinuxProc[] = {
 };
 
 static const uint16_t kPledgeLinuxThread[] = {
-    __NR_linux_clone,  //
-    __NR_linux_futex,  //
+    __NR_linux_clone,            //
+    __NR_linux_futex,            //
+    __NR_linux_set_robust_list,  //
+    __NR_linux_get_robust_list,  //
 };
 
 static const uint16_t kPledgeLinuxId[] = {
@@ -313,7 +320,6 @@ static const struct Pledges {
   const uint16_t *syscalls;
   const size_t len;
 } kPledgeLinux[] = {
-    [PROMISE_DEFAULT] = {"default", PLEDGE(kPledgeLinuxDefault)},      //
     [PROMISE_STDIO] = {"stdio", PLEDGE(kPledgeLinuxStdio)},            //
     [PROMISE_RPATH] = {"rpath", PLEDGE(kPledgeLinuxRpath)},            //
     [PROMISE_WPATH] = {"wpath", PLEDGE(kPledgeLinuxWpath)},            //
@@ -326,13 +332,13 @@ static const struct Pledges {
     [PROMISE_DNS] = {"dns", PLEDGE(kPledgeLinuxDns)},                  //
     [PROMISE_TTY] = {"tty", PLEDGE(kPledgeLinuxTty)},                  //
     [PROMISE_RECVFD] = {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},         //
+    [PROMISE_SENDFD] = {"sendfd", PLEDGE(kPledgeLinuxSendfd)},         //
     [PROMISE_PROC] = {"proc", PLEDGE(kPledgeLinuxProc)},               //
     [PROMISE_THREAD] = {"thread", PLEDGE(kPledgeLinuxThread)},         //
     [PROMISE_EXEC] = {"exec", PLEDGE(kPledgeLinuxExec)},               //
     [PROMISE_EXECNATIVE] = {"execnative", PLEDGE(kPledgeLinuxExec2)},  //
     [PROMISE_ID] = {"id", PLEDGE(kPledgeLinuxId)},                     //
     [PROMISE_UNVEIL] = {"unveil", PLEDGE(kPledgeLinuxUnveil)},         //
-    [PROMISE_MAX + 1] = {0},                                           //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -342,6 +348,13 @@ static const struct sock_filter kFilterStart[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     // each filter assumes ordinal is already loaded into accumulator
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+    // Forbid some system calls with ENOSYS (rather than EPERM)
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat2, 0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (38 & SECCOMP_RET_DATA)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone3, 0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (38 & SECCOMP_RET_DATA)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_statx, 0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (38 & SECCOMP_RET_DATA)),
 };
 
 static const struct sock_filter kFilterEnd[] = {
@@ -957,8 +970,8 @@ static bool AllowFchmodat(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len, bool needmapexec,
-                         bool needmorphing) {
+static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
+                         bool needmapexec, bool needmorphing) {
   int i;
   for (i = 0; i < len; ++i) {
     switch (p[i]) {
@@ -1045,83 +1058,100 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len, bool n
   return true;
 }
 
-static int FindPromise(const struct Pledges *p, const char *name, size_t *len) {
-  int i;
-  for (i = 0; p[i].name; ++i) {
-    if (!strcasecmp(name, p[i].name)) {
-      *len = p[i].len;
-      return i;
-    }
-  }
-  return -1;
-}
-
-static int sys_pledge_linux(const char *promises, const char *execpromises) {
-  bool ok;
-  int rc = -1;
-  size_t plen;
-  int promise;
+int sys_pledge_linux(unsigned long ipromises) {
+  bool ok = true;
+  int i, rc = -1;
   bool needmapexec;
-  bool needexecnative;
   bool needmorphing;
+  bool needexecnative;
   struct Filter f = {0};
-  const uint16_t *pledge;
-  unsigned long ipromises = -1;
-  char *s, *tok, *state, *start;
-  if (execpromises) return einval();
-  needmapexec = strstr(promises, "exec");
-  needmorphing = strstr(promises, "thread");
-  needexecnative = strstr(promises, "execnative");
-  if ((start = s = strdup(promises)) && AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
+  ipromises = ~ipromises;
+  needmapexec = (ipromises >> PROMISE_EXEC) & 1;
+  needmorphing = (ipromises >> PROMISE_THREAD) & 1;
+  needexecnative = (ipromises >> PROMISE_EXECNATIVE) & 1;
+  if (AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
       (needmapexec || needexecnative || AppendOriginVerification(&f)) &&
-      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault), needmapexec,
-                   needmorphing)) {
-    for (ok = true; (tok = strtok_r(start, " \t\r\n", &state)); start = 0) {
-      if ((promise = FindPromise(kPledgeLinux, tok, &plen)) != -1) {
-        pledge = kPledgeLinux[promise].syscalls;
-        ipromises &= ~(1ULL << promise);
-      } else {
-        ok = false;
-        rc = einval();
-        break;
+      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault),
+                   needmapexec, needmorphing)) {
+    for (i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
+      if ((ipromises & (1ul << i)) && kPledgeLinux[i].name) {
+        ipromises &= ~(1ul << i);
+        if (!AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len,
+                          needmapexec, needmorphing)) {
+          ok = false;
+          rc = einval();
+          break;
+        }
       }
-      if (!AppendPledge(&f, pledge, plen, needmapexec, needmorphing)) {
-        ok = false;
-        break;
-      }
+    }
+    if (ipromises) {
+      ok = false;
+      rc = einval();
     }
     if (ok && AppendFilter(&f, kFilterEnd, ARRAYLEN(kFilterEnd)) &&
         (rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1) {
       struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
       rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
     }
-    if (!rc) {
-      __promises = ipromises;
-    }
   }
   free(f.p);
-  free(s);
   return rc;
 }
 
-static void SetPromises(const char *promises) {
-  int promise;
-  size_t plen;
-  char *tok, *state, *start;
-  unsigned long ipromises = -1;
-  while ((tok = strtok_r(start, " \t\r\n", &state))) {
-    if ((promise = FindPromise(kPledgeLinux, tok, &plen)) != -1) {
-      ipromises &= ~(1ULL << promise);
+static int FindPromise(const char *name) {
+  int i;
+  for (i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
+    if (!strcasecmp(name, kPledgeLinux[i].name)) {
+      return i;
     }
-    start = 0;
   }
-  __promises = ipromises;
+  STRACE("unknown promise %s", name);
+  return -1;
+}
+
+static int ParsePromises(const char *promises, unsigned long *out) {
+  int rc = 0;
+  int promise;
+  unsigned long ipromises;
+  char *tok, *state, *start, *freeme;
+  if (promises) {
+    ipromises = -1;
+    freeme = start = strdup(promises);
+    while ((tok = strtok_r(start, " \t\r\n", &state))) {
+      if ((promise = FindPromise(tok)) != -1) {
+        ipromises &= ~(1ULL << promise);
+      } else {
+        rc = einval();
+        break;
+      }
+      start = 0;
+    }
+    free(freeme);
+  } else {
+    ipromises = 0;
+  }
+  if (!rc) {
+    *out = ipromises;
+  }
+  return rc;
+}
+
+static void FixupOpenbsdPromises(char *p) {
+  if (!p) return;
+  if ((p = strstr(p, "execnative"))) {
+    p[4] = ' ';
+    p[5] = ' ';
+    p[6] = ' ';
+    p[7] = ' ';
+    p[8] = ' ';
+    p[9] = ' ';
+  }
 }
 
 /**
  * Restricts system operations, e.g.
  *
- *     pledge("stdio tty", 0);
+ *     pledge("stdio rfile tty", 0);
  *
  * Pledging causes most system calls to become unavailable. Your system
  * call policy is enforced by the kernel, which means it can propagate
@@ -1185,12 +1215,13 @@ static void SetPromises(const char *promises) {
  *   fcntl(F_GETFL), fcntl(F_SETFL).
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
- *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access, faccessat,
- *   readlink, readlinkat, statfs, fstatfs.
+ *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access,
+ *   faccessat,faccessat2, readlink, readlinkat, statfs, fstatfs.
  *
  * - "wpath" (write path ops) allows getcwd, open(O_WRONLY),
- *   openat(O_WRONLY), stat, fstat, lstat, fstatat, access, faccessat,
- *   readlink, readlinkat, chmod, fchmod, fchmodat.
+ *   openat(O_WRONLY), stat, fstat, lstat, fstatat, access,
+ *   faccessat,faccessat2, readlink, readlinkat, chmod, fchmod,
+ *   fchmodat.
  *
  * - "cpath" (create path ops) allows open(O_CREAT), openat(O_CREAT),
  *   rename, renameat, renameat2, link, linkat, symlink, symlinkat,
@@ -1204,7 +1235,9 @@ static void SetPromises(const char *promises) {
  * - "tty" allows ioctl(TIOCGWINSZ), ioctl(TCGETS), ioctl(TCSETS),
  *   ioctl(TCSETSW), ioctl(TCSETSF).
  *
- * - "recvfd" allows recvmsg(SCM_RIGHTS).
+ * - "recvfd" allows recvmsg in general (for SCM_RIGHTS).
+ *
+ * - "recvfd" allows sendmsg in general (for SCM_RIGHTS).
  *
  * - "fattr" allows chmod, fchmod, fchmodat, utime, utimes, futimens,
  *   utimensat.
@@ -1236,24 +1269,70 @@ static void SetPromises(const char *promises) {
  *   native executables; you won't be able to run APE binaries. mmap()
  *   and mprotect() are still prevented from creating executable memory.
  *   System call origin verification can't be enabled. If you always
- *   assimilate your APE binaries, then this should be preferred.
+ *   assimilate your APE binaries, then this should be preferred. On
+ *   OpenBSD this will be rewritten to be "exec".
  *
  * - "unveil" allows unveil() to be called, as well as the underlying
  *   landlock_create_ruleset, landlock_add_rule, landlock_restrict_self
  *   calls on Linux.
  *
+ * `execpromises` only matters if "exec" or "execnative" are specified
+ * in `promises`. In that case, this specifies the promises that'll
+ * apply once execve() happens. If this is NULL then the default is
+ * used, which is unrestricted. OpenBSD allows child processes to escape
+ * the sandbox (so a pledged OpenSSH server process can do things like
+ * spawn a root shell). Linux however requires monotonically decreasing
+ * privileges. This function will will perform some validation on Linux
+ * to make sure that `execpromises` is a subset of `promises`. Your libc
+ * wrapper for execve() will then apply its SECCOMP BPF filter later.
+ * Since Linux has to do this before calling sys_execve(), the executed
+ * process will be weakened to have execute permissions too.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
- * @raise EINVAL if `execpromises` is used on Linux
+ * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
  */
 int pledge(const char *promises, const char *execpromises) {
   int rc;
-  if (IsLinux()) {
-    rc = sys_pledge_linux(promises, execpromises);
-  } else {
-    rc = sys_pledge(promises, execpromises);
+  char *p, *q;
+  unsigned long ipromises, iexecpromises;
+  if (!(rc = ParsePromises(promises, &ipromises)) &&
+      !(rc = ParsePromises(execpromises, &iexecpromises))) {
+    if (IsLinux()) {
+      // copy exec and execnative from promises to execpromises
+      iexecpromises =
+          ~(~iexecpromises | (~ipromises & ((1ul << PROMISE_EXEC) |  //
+                                            (1ul << PROMISE_EXECNATIVE))));
+      // if bits are missing in execpromises that exist in promises
+      // then execpromises wouldn't be a monotonic access reduction
+      // this check only matters when exec / execnative are allowed
+      if ((ipromises & ~iexecpromises) &&
+          (~ipromises &
+           ((1ul << PROMISE_EXEC) | (1ul << PROMISE_EXECNATIVE)))) {
+        STRACE("execpromises must be a subset of promises");
+        rc = einval();
+      } else {
+        rc = sys_pledge_linux(ipromises);
+      }
+    } else {
+      // openbsd only supports execnative and calls it exec
+      if ((p = strdup(promises))) {
+        FixupOpenbsdPromises(p);
+        if ((q = execpromises ? strdup(execpromises) : 0) || !execpromises) {
+          FixupOpenbsdPromises(q);
+          rc = sys_pledge(p, q);
+          free(q);
+        } else {
+          rc = -1;
+        }
+        free(p);
+      } else {
+        rc = -1;
+      }
+    }
     if (!rc) {
-      SetPromises(promises);
+      __promises = ipromises;
+      __execpromises = iexecpromises;
     }
   }
   STRACE("pledge(%#s, %#s) → %d% m", promises, execpromises, rc);

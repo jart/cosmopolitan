@@ -385,9 +385,9 @@ scall	fspick			0xfffffffffffff1b1	globl
 scall	pidfd_open		0xfffffffffffff1b2	globl
 scall	clone3			0xfffffffffffff1b3	globl
 scall	close_range		0xfffffffffffff1b4	globl
-scall	openat2			0xfffffffffffff1b5	globl # Linux 5.6
+scall	sys_openat2		0xfffffffffffff1b5	globl hidden # Linux 5.6
 scall	pidfd_getfd		0xfffffffffffff1b6	globl
-scall	faccessat2		0xfffffffffffff1b7	globl
+scall	sys_faccessat2		0xfffffffffffff1b7	globl hidden
 scall	process_madvise		0xfffffffffffff1b8	globl
 scall	epoll_pwait2		0xfffffffffffff1b9	globl
 scall	mount_setattr		0xfffffffffffff1ba	globl

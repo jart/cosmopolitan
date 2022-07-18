@@ -27,12 +27,14 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/o.h"
@@ -49,17 +51,18 @@ STATIC_YOINK("strerror_wr");
 #define USAGE \
   "\
 usage: pledge.com [-hnN] PROG ARGS...\n\
-  -h           show help\n\
-  -g GID       call setgid()\n\
-  -u UID       call setuid()\n\
-  -c PATH      call chroot()\n\
-  -n           maximum niceness\n\
-  -N           don't normalize file descriptors\n\
-  -C SECS      set cpu limit [default: inherited]\n\
-  -M BYTES     set virtual memory limit [default: 4gb]\n\
-  -P PROCS     set process limit [default: GetCpuCount()*2]\n\
-  -F BYTES     set individual file size limit [default: 4gb]\n\
-  -p PLEDGE    may contain any of following separated by spaces\n\
+  -h              show help\n\
+  -g GID          call setgid()\n\
+  -u UID          call setuid()\n\
+  -c PATH         call chroot()\n\
+  -v [PERM:]PATH  call unveil(PATH,PERM) where PERM can have rwxc\n\
+  -n              set maximum niceness\n\
+  -N              don't normalize file descriptors\n\
+  -C SECS         set cpu limit [default: inherited]\n\
+  -M BYTES        set virtual memory limit [default: 4gb]\n\
+  -P PROCS        set process limit [default: GetCpuCount()*2]\n\
+  -F BYTES        set individual file size limit [default: 4gb]\n\
+  -p PLEDGE       may contain any of following separated by spaces\n\
      - stdio: allow stdio and benign system calls\n\
      - rpath: read-only path ops\n\
      - wpath: write path ops\n\
@@ -68,6 +71,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - flock: file locks\n\
      - tty: terminal ioctls\n\
      - recvfd: allow SCM_RIGHTS\n\
+     - sendfd: allow SCM_RIGHTS\n\
      - fattr: allow changing some struct stat bits\n\
      - inet: allow IPv4 and IPv6\n\
      - unix: allow local sockets\n\
@@ -75,9 +79,9 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - proc: allow fork, clone and friends\n\
      - thread: allow clone\n\
      - id: allow setuid and friends\n\
-     - exec: allow executing ape binaries\n\
+     - exec: make execution more permissive\n\
 \n\
-pledge.com v1.o\n\
+pledge.com v1.1\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
@@ -102,6 +106,11 @@ long g_proquota;
 const char *g_chroot;
 const char *g_promises;
 
+struct {
+  int n;
+  char **p;
+} unveils;
+
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   struct sysinfo si;
@@ -111,7 +120,7 @@ static void GetOpts(int argc, char *argv[]) {
   g_fszquota = 4 * 1000 * 1000 * 1000;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:P:M:F:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:P:M:F:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
@@ -147,6 +156,10 @@ static void GetOpts(int argc, char *argv[]) {
           g_promises = optarg;
         }
         break;
+      case 'v':
+        unveils.p = realloc(unveils.p, ++unveils.n * sizeof(*unveils.p));
+        unveils.p[unveils.n - 1] = optarg;
+        break;
       case 'h':
       case '?':
         write(1, USAGE, sizeof(USAGE) - 1);
@@ -157,9 +170,8 @@ static void GetOpts(int argc, char *argv[]) {
     }
   }
   if (!g_promises) {
-    g_promises = "stdio rpath execnative";
+    g_promises = "stdio rpath";
   }
-  g_promises = xstrcat(g_promises, ' ', "execnative");
 }
 
 const char *prog;
@@ -290,6 +302,7 @@ void MakeProcessNice(void) {
 }
 
 int main(int argc, char *argv[]) {
+  int i;
   bool hasfunbits;
   int useruid, usergid;
   int owneruid, ownergid;
@@ -430,14 +443,50 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if (unveils.n) {
+    if (unveil(prog, "rx") == -1) {
+      kprintf("error: unveil(0, 0) failed: %m\n", prog, "rx");
+      _Exit(20);
+    }
+    if (strstr(g_promises, "exec") && isexecutable("/usr/bin/ape")) {
+      if (unveil("/usr/bin/ape", "rx") == -1) {
+        kprintf("error: unveil(0, 0) failed: %m\n", "/usr/bin/ape", "rx");
+        _Exit(20);
+      }
+    }
+    for (i = 0; i < unveils.n; ++i) {
+      char *s, *t;
+      const char *path;
+      const char *perm;
+      s = unveils.p[i];
+      if ((t = strchr(s, ':'))) {
+        *t = 0;
+        perm = s;
+        path = t + 1;
+      } else {
+        perm = "r";
+        path = s;
+      }
+      if (unveil(path, perm) == -1) {
+        kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
+        _Exit(20);
+      }
+    }
+    if (unveil(0, 0) == -1) {
+      kprintf("error: unveil(0, 0) failed: %m\n");
+      _Exit(20);
+    }
+  }
+
   // apply sandbox
-  if (pledge(g_promises, 0) == -1) {
+  g_promises = xstrcat(g_promises, ' ', "execnative");
+  if (pledge(g_promises, g_promises) == -1) {
     kprintf("error: pledge(%#s) failed: %m\n", g_promises);
     _Exit(19);
   }
 
   // launch program
-  __sys_execve(prog, argv + optind, environ);
+  execve(prog, argv + optind, environ);
   kprintf("%s: execve failed: %m\n", prog);
   return 127;
 }

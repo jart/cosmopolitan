@@ -61,33 +61,63 @@ o/$(MODE)/test/libc/mem/%.com.dbg:				\
 		$(TEST_LIBC_MEM_DEPS)				\
 		o/$(MODE)/test/libc/mem/%.o			\
 		o/$(MODE)/test/libc/mem/mem.pkg			\
-		o/$(MODE)/test/libc/mem/life.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o	\
+		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o	\
 		$(LIBC_TESTMAIN)				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/mem/life.com.dbg:				\
+################################################################################
+
+o/$(MODE)/test/libc/mem/prog/life.com.dbg:			\
 		$(LIBC_RUNTIME)					\
-		o/$(MODE)/test/libc/mem/life.o			\
+		o/$(MODE)/test/libc/mem/prog/life.o		\
 		$(CRT)						\
 		$(APE)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/mem/life.elf:				\
+o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
-		o/$(MODE)/test/libc/mem/life.com
+		o/$(MODE)/test/libc/mem/prog/life.com
 	@$(COMPILE) -ACP -T$@					\
 		build/bootstrap/cp.com				\
-		o/$(MODE)/test/libc/mem/life.com		\
-		o/$(MODE)/test/libc/mem/life.elf
+		o/$(MODE)/test/libc/mem/prog/life.com		\
+		o/$(MODE)/test/libc/mem/prog/life.elf
 	@$(COMPILE) -AASSIMILATE -T$@				\
 		o/$(MODE)/tool/build/assimilate.com		\
-		o/$(MODE)/test/libc/mem/life.elf
+		o/$(MODE)/test/libc/mem/prog/life.elf
 
-o/$(MODE)/test/libc/mem/life.elf.zip.o:				\
+o/$(MODE)/test/libc/mem/prog/life.elf.zip.o:			\
 		ZIPOBJ_FLAGS +=					\
 			-B
+
+################################################################################
+
+o/$(MODE)/test/libc/mem/prog/sock.com.dbg:			\
+		$(LIBC_RUNTIME)					\
+		$(LIBC_SOCK)					\
+		o/$(MODE)/test/libc/mem/prog/sock.o		\
+		$(CRT)						\
+		$(APE)
+	@$(APELINK)
+
+o/$(MODE)/test/libc/mem/prog/sock.elf:				\
+		o/$(MODE)/tool/build/assimilate.com		\
+		o/$(MODE)/test/libc/mem/prog/sock.com
+	@$(COMPILE) -ACP -T$@					\
+		build/bootstrap/cp.com				\
+		o/$(MODE)/test/libc/mem/prog/sock.com		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf
+	@$(COMPILE) -AASSIMILATE -T$@				\
+		o/$(MODE)/tool/build/assimilate.com		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf
+
+o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o:			\
+		ZIPOBJ_FLAGS +=					\
+			-B
+
+################################################################################
 
 $(TEST_LIBC_MEM_OBJS):						\
 		DEFAULT_CCFLAGS +=				\

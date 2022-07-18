@@ -16,7 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/promises.internal.h"
+#include "libc/errno.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/sock.h"
 
-unsigned long __promises;
-unsigned long __execpromises;
+int main(int argc, char *argv[]) {
+  int fd;
+  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) != -1) {
+    return fd;
+  } else {
+    return 128 + errno;
+  }
+}

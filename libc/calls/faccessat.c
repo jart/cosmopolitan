@@ -22,6 +22,7 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/at.h"
@@ -36,18 +37,27 @@
  * @param path is a filename or directory
  * @param mode can be R_OK, W_OK, X_OK, F_OK
  * @param flags can have AT_EACCESS, AT_SYMLINK_NOFOLLOW
+ * @note on Linux flags is only supported on Linux 5.8+
  * @return 0 if ok, or -1 and sets errno
  * @asyncsignalsafe
  */
 int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
-  int rc;
+  int e, rc;
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     rc = efault();
   } else if (weaken(__zipos_notat) &&
              weaken(__zipos_notat)(dirfd, path) == -1) {
     rc = -1; /* TODO(jart): implement me */
   } else if (!IsWindows()) {
-    rc = sys_faccessat(dirfd, path, mode, flags);
+    e = errno;
+    if (!flags) goto NoFlags;
+    if ((rc = sys_faccessat2(dirfd, path, mode, flags)) == -1) {
+      if (errno == ENOSYS) {
+        errno = e;
+      NoFlags:
+        rc = sys_faccessat(dirfd, path, mode, flags);
+      }
+    }
   } else {
     rc = sys_faccessat_nt(dirfd, path, mode, flags);
   }

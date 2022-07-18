@@ -1382,12 +1382,22 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   return 1;
 }
 
-// sandbox.pledge([promises:str])
+// sandbox.pledge([promises:str[, execpromises:str]])
 //     ├─→ true
 //     └─→ nil, unix.Errno
 static int LuaUnixPledge(lua_State *L) {
   int olderr = errno;
-  return SysretBool(L, "pledge", olderr, pledge(luaL_checkstring(L, 1), 0));
+  return SysretBool(L, "pledge", olderr,
+                    pledge(luaL_checkstring(L, 1), luaL_optstring(L, 2, 0)));
+}
+
+// sandbox.unveil(path:str, permissions:str)
+//     ├─→ true
+//     └─→ nil, unix.Errno
+static int LuaUnixUnveil(lua_State *L) {
+  int olderr = errno;
+  return SysretBool(L, "unveil", olderr,
+                    unveil(luaL_checkstring(L, 1), luaL_checkstring(L, 2)));
 }
 
 // unix.gethostname()
@@ -2636,6 +2646,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file
+    {"unveil", LuaUnixUnveil},            // filesystem sandboxing
     {"utimensat", LuaUnixUtimensat},      // change access/modified time
     {"wait", LuaUnixWait},                // wait for child to change status
     {"write", LuaUnixWrite},              // write to file or socket

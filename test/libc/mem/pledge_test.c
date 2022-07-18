@@ -28,7 +28,9 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -48,16 +50,33 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 
+STATIC_YOINK("zip_uri_support");
+
 char testlib_enable_tmp_setup_teardown;
 
 void OnSig(int sig) {
   // do nothing
 }
 
-void SetUp(void) {
-  if (!__is_linux_2_6_23() && !IsOpenbsd()) {
-    exit(0);
+int extract(const char *from, const char *to, int mode) {
+  int fdin, fdout;
+  if ((fdin = open(from, O_RDONLY)) == -1) return -1;
+  if ((fdout = creat(to, mode)) == -1) {
+    close(fdin);
+    return -1;
   }
+  if (_copyfd(fdin, fdout, -1) == -1) {
+    close(fdout);
+    close(fdin);
+    return -1;
+  }
+  return close(fdout) | close(fdin);
+}
+
+void SetUp(void) {
+  if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
+  ASSERT_SYS(0, 0, extract("/zip/life.elf", "life.elf", 0755));
+  ASSERT_SYS(0, 0, extract("/zip/sock.elf", "sock.elf", 0755));
 }
 
 TEST(pledge, default_allowsExit) {
@@ -149,8 +168,8 @@ TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive2) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio", 0));
-    ASSERT_SYS(EPERM, -1, pledge("stdio unix", 0));
+    ASSERT_SYS(0, 0, pledge("stdio", "stdio"));
+    ASSERT_SYS(EPERM, -1, pledge("stdio unix", "stdio unix"));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -293,7 +312,7 @@ TEST(pledge, mmapExec) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio exec", 0));
+    ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
     ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ));
@@ -413,4 +432,99 @@ TEST(pledge, sigaction_isFineButForbidsSigsys) {
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
+}
+
+TEST(pledge, execpromises_ok) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    execl("life.elf", "life.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(42, WEXITSTATUS(ws));
+}
+
+TEST(pledge, execpromises_notok) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(128 + EPERM, WEXITSTATUS(ws));
+}
+
+TEST(pledge, execpromises_reducesAtExecOnLinux) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio inet tty execnative", "stdio tty"));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(128 + EPERM, WEXITSTATUS(ws));
+}
+
+TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio execnative", 0));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(3, WEXITSTATUS(ws));
+}
+
+TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio rpath execnative", "stdio rpath tty inet"));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(3, WEXITSTATUS(ws));
+}
+
+TEST(pledge_linux, execpromisesIsSuperset_notPossible) {
+  if (IsOpenbsd()) return;
+  ASSERT_SYS(EINVAL, -1, pledge("stdio execnative", "stdio inet execnative"));
+}
+
+TEST(pledge_openbsd, execpromises_notok) {
+  if (!IsOpenbsd()) return;
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFSIGNALED(ws));
+  EXPECT_EQ(SIGABRT, WTERMSIG(ws));
 }

@@ -3619,7 +3619,7 @@ UNIX MODULE
 
     See the unix.Rusage section below for details on returned fields.
 
-  unix.pledge([promises:str])
+  unix.pledge([promises:str[, execpromises:str]])
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -3654,11 +3654,15 @@ UNIX MODULE
     restrictions need to be loosened.
 
     `promises` is a string that may include any of the following groups
-    delimited by spaces.
+    delimited by spaces. This list has been curated to focus on the
+    system calls for which this module provides wrappers. See the
+    Cosmopolitan Libc pledge() documentation for a comprehensive and
+    authoritative list of raw system calls. Having the raw system call
+    list may be useful if you're executing foreign programs.
 
     stdio
 
-      Allows read, write, send, recv, recvfrom, recvmsg, close,
+      Allows read, write, send, recv, recvfrom, close,
       clock_getres, clock_gettime, dup, dup2, dup3, fchdir, fstat,
       fsync, fdatasync, ftruncate, getdents, getegid, getrandom,
       geteuid, getgid, getgroups, getitimer, getpgid, getpgrp, getpid,
@@ -3721,12 +3725,49 @@ UNIX MODULE
 
     exec
 
-      Allows execve.
+      Allows execve, access.
 
-      If this is used then APE binaries should be assimilated in order
-      to work on OpenBSD. On Linux, mmap() will be loosened up to allow
-      creating PROT_EXEC memory (for APE loader) and system call origin
-      verification won't be activated.
+      On Linux this also weakens some security to permit running APE
+      binaries. However on OpenBSD they must be assimilate beforehand.
+      On Linux, mmap() will be loosened up to allow creating PROT_EXEC
+      memory (for APE loader) and system call origin verification won't
+      be activated.
+
+    execnative
+
+      Allows execve, execveat.
+
+      Can only be used to run native executables; you won't be able to
+      run APE binaries. mmap() and mprotect() are still prevented from
+      creating executable memory. System call origin verification can't
+      be enabled. If you always assimilate your APE binaries, then this
+      should be preferred. On OpenBSD this will be rewritten to be
+      "exec".
+
+    `execpromises` only matters if "exec" or "execnative" are specified
+    in `promises`. In that case, this specifies the promises that'll
+    apply once execve() happens. If this is NULL then the default is
+    used, which is unrestricted. OpenBSD allows child processes to escape
+    the sandbox (so a pledged OpenSSH server process can do things like
+    spawn a root shell). Linux however requires monotonically decreasing
+    privileges. This function will will perform some validation on Linux
+    to make sure that `execpromises` is a subset of `promises`. Your libc
+    wrapper for execve() will then apply its SECCOMP BPF filter later.
+    Since Linux has to do this before calling sys_execve(), the executed
+    process will be weakened to have execute permissions too.
+
+  unix.unveil(path:str, permissions:str)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Unveil parts of a restricted filesystem view, e.g.
+
+        unix.unveil(".", "r")
+        unix.unveil(nil, nil)
+
+    This can be used for sandboxing file system access.
+
+    Unveil support is a work in progress.
 
   unix.gmtime(unixts:int)
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
@@ -25,7 +26,10 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
@@ -126,10 +130,13 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
   if ((rc = sys_open(path, O_PATH | O_CLOEXEC, 0)) == -1) return rc;
   pb.parent_fd = rc;
   struct stat st;
-  if ((rc = fstat(pb.parent_fd, &st)) == -1) return err_close(rc, pb.parent_fd);
-  if (!S_ISDIR(st.st_mode)) pb.allowed_access &= FILE_BITS;
-  if ((rc = landlock_add_rule(State.fd, LANDLOCK_RULE_PATH_BENEATH, &pb, 0)))
+  if ((rc = sys_fstat(pb.parent_fd, &st)) == -1) {
     return err_close(rc, pb.parent_fd);
+  }
+  if (!S_ISDIR(st.st_mode)) pb.allowed_access &= FILE_BITS;
+  if ((rc = landlock_add_rule(State.fd, LANDLOCK_RULE_PATH_BENEATH, &pb, 0))) {
+    return err_close(rc, pb.parent_fd);
+  }
   sys_close(pb.parent_fd);
   return rc;
 }
@@ -139,6 +146,7 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  */
 int unveil(const char *path, const char *permissions) {
   int rc;
+  __enable_tls();
   if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);
   } else {
