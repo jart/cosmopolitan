@@ -20,8 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/thread/thread.h"
 
-STATIC_YOINK("_main_thread_ctor");
-
 #define CTHREAD_THREAD_VAL_BITS 32
 
 static void Pause(int attempt) {

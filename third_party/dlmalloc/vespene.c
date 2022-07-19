@@ -16,24 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
+#include "third_party/dlmalloc/vespene.internal.h"
 
 /**
  * Acquires more system memory for dlmalloc.
+ * @return memory map address on success, or null w/ errno
  */
 void *dlmalloc_requires_more_vespene_gas(size_t size) {
   char *p;
-  if ((p = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-                -1, 0)) != MAP_FAILED) {
-    if (weaken(__asan_poison)) {
-      weaken(__asan_poison)(p, size, kAsanHeapFree);
+  if ((p = _mapanon(size))) {
+    if (IsAsan()) {
+      __asan_poison(p, size, kAsanHeapFree);
     }
   }
   return p;

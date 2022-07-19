@@ -205,6 +205,11 @@ static int __sigaction(int sig, const struct sigaction *act,
       arg4 = (int64_t)(intptr_t)oldact; /* from go code */
       arg5 = 0;
     } else if (IsNetbsd()) {
+      /* int __sigaction_sigtramp(int signum,
+                                  const struct sigaction *nsa,
+                                  struct sigaction *osa,
+                                  const void *tramp,
+                                  int vers); */
       if (ap) {
         arg4 = (int64_t)(intptr_t)&__restore_rt_netbsd;
         arg5 = 2; /* netbsd/lib/libc/arch/x86_64/sys/__sigtramp2.S */

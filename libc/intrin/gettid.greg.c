@@ -54,7 +54,9 @@ int gettid(void) {
   int tid;
   if (__tls_enabled) {
     tid = *(int *)(__get_tls() + 0x38);
-    if (tid > 0) return tid;
+    if (tid > 0) {
+      return tid;
+    }
   }
   return sys_gettid();
 }

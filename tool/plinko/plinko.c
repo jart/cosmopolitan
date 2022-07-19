@@ -18,12 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
 #include "tool/plinko/lib/plinko.h"
 
 STATIC_YOINK("__zipos_get");
 
 int main(int argc, char *argv[]) {
+  __tls_enabled = false;
   Plinko(argc, argv);
   return 0;
 }

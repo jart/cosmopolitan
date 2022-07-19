@@ -64,7 +64,6 @@ TEST(fgetc, testUnbuffered) {
 }
 
 BENCH(fputc, bench) {
-  __enable_tls();
   __enable_threads();
   FILE *f;
   ASSERT_NE(NULL, (f = fopen("/dev/null", "w")));

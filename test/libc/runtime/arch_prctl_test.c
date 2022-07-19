@@ -19,9 +19,11 @@
 #include "libc/bits/segmentation.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/testlib/testlib.h"
 
 __attribute__((__constructor__)) static void init(void) {
+  __tls_enabled = false;
   pledge("stdio rpath", 0);
   errno = 0;
 }

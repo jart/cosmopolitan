@@ -24,6 +24,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -66,6 +67,12 @@ TEST(munmap, doesntExist_doesntCare) {
   }
 }
 
+TEST(munmap, invalidParams) {
+  EXPECT_SYS(EINVAL, -1, munmap(0, 0));
+  EXPECT_SYS(EINVAL, -1, munmap((void *)0x100080000000, 0));
+  EXPECT_SYS(EINVAL, -1, munmap((void *)0x100080000001, FRAMESIZE));
+}
+
 TEST(munmap, test) {
   char *p;
   ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
@@ -73,12 +80,6 @@ TEST(munmap, test) {
   EXPECT_TRUE(MemoryExists(p));
   EXPECT_SYS(0, 0, munmap(p, FRAMESIZE));
   EXPECT_FALSE(MemoryExists(p));
-}
-
-TEST(munmap, invalidParams) {
-  EXPECT_SYS(EINVAL, -1, munmap(0, 0));
-  EXPECT_SYS(EINVAL, -1, munmap((void *)0x100080000000, 0));
-  EXPECT_SYS(EINVAL, -1, munmap((void *)0x100080000001, FRAMESIZE));
 }
 
 TEST(munmap, punchHoleInMemory) {

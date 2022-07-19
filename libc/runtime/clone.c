@@ -565,21 +565,9 @@ static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
  *       either terminated or has finished using its stack memory
  *
  *     - `CLONE_SETTLS` is needed if you intend to specify the `tls`
- *       argument, which provides a fast-path solution for changing the
- *       appropriate TLS segment register within the child thread. The
- *       child thread may then obtain a reference to the TIB address you
- *       supplied, by calling __get_tls(). Your C library holds certain
- *       expectations about the layout of your Thread Information Block
- *       (TIB), which are all documented by __initialize_tls(). That
- *       function can be used to initialize the first positive 64 bytes
- *       of your TLS allocation, which is the memory Cosmopolitan Libc
- *       wants for itself (and negative addresses are reserved by the
- *       GNU Linker). Using this flag will transition the C runtime to a
- *       `__tls_enabled` state automatically. If you use TLS for just
- *       one thread, then you must be specify TLS for ALL THREADS. It's
- *       a good idea to do that since TLS can offer considerable (i.e.
- *       multiple orders of a magnitude) performance improvement for
- *       TID-dependent C library services, e.g. recursive mutexes.
+ *       argument, which after thread creation may be accessed using
+ *       __get_tls(). Doing this means that `errno`, gettid(), etc.
+ *       correctly work. Caveat emptor if you choose not to do this.
  *
  * @param arg is passed as an argument to `func` in the child thread
  * @param tls may be used to set the thread local storage segment;
@@ -594,8 +582,9 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
   int rc;
   struct CloneArgs *wt;
 
-  if (flags & CLONE_SETTLS) __enable_tls();
-  if (flags & CLONE_THREAD) __enable_threads();
+  if (flags & CLONE_THREAD) {
+    __enable_threads();
+  }
 
   if (!func) {
     rc = einval();

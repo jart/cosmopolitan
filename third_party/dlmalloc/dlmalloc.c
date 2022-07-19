@@ -5,7 +5,9 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
@@ -917,11 +919,8 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
   void* mem = 0;
   if (alignment <  MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
     alignment = MIN_CHUNK_SIZE;
-  if ((alignment & (alignment-SIZE_T_ONE)) != 0) {/* Ensure a power of 2 */
-    size_t a = MALLOC_ALIGNMENT << 1;
-    while (a < alignment) a <<= 1;
-    alignment = a;
-  }
+  /* alignment is 32+ bytes rounded up to nearest two power */
+  alignment = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0)  { /* Test isn't needed but avoids compiler warning */
       MALLOC_FAILURE_ACTION;

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
+#include "libc/assert.h"
 #include "libc/bits/asmflag.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
@@ -58,10 +59,28 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
  * @return 0 on success, or -1 w/ errno
  */
 privileged void __morph_begin(void) {
+  int ax;
+  bool cf;
+  intptr_t dx;
   sigset_t ss = {{-1, -1}};
   STRACE("__morph_begin()");
   if (!IsWindows()) {
-    sys_sigprocmask(SIG_BLOCK, &ss, &oldss);
+    if (!IsOpenbsd()) {
+      asm volatile("mov\t$8,%%r10d\n\t"
+                   "syscall"
+                   : "=a"(ax), "=d"(dx)
+                   : "0"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(&ss),
+                     "1"(&oldss)
+                   : "rcx", "r10", "r11", "memory", "cc");
+      assert(!ax);
+    } else {
+      asm volatile(CFLAG_ASM("syscall")
+                   : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
+                   : "1"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(-1u)
+                   : "rcx", "r11", "memory");
+      oldss.__bits[0] = ax & 0xffffffff;
+      assert(!cf);
+    }
   }
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_WRITE,
                    kNtPageWritecopy);
@@ -71,10 +90,28 @@ privileged void __morph_begin(void) {
  * Begins code morphing execuatble.
  */
 privileged void __morph_end(void) {
+  int ax;
+  long dx;
+  bool cf;
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_EXEC,
                    kNtPageExecuteRead);
   if (!IsWindows()) {
-    sys_sigprocmask(SIG_SETMASK, &oldss, 0);
+    if (!IsOpenbsd()) {
+      asm volatile("mov\t$8,%%r10d\n\t"
+                   "syscall"
+                   : "=a"(ax), "=d"(dx)
+                   : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(&oldss),
+                     "1"(0)
+                   : "rcx", "r10", "r11", "memory", "cc");
+      assert(!ax);
+    } else {
+      asm volatile(CFLAG_ASM("syscall")
+                   : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
+                   : "1"(__NR_sigprocmask), "D"(SIG_SETMASK),
+                     "S"(oldss.__bits[0])
+                   : "rcx", "r11", "memory");
+      assert(!cf);
+    }
   }
   STRACE("__morph_end()");
 }

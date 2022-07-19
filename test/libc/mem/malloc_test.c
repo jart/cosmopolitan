@@ -114,6 +114,12 @@ TEST(malloc, test) {
   for (i = 0; i < ARRAYLEN(fds); ++i) close(fds[i]);
 }
 
+TEST(memalign, roundsUpAlignmentToTwoPower) {
+  char *volatile p = memalign(129, 1);
+  ASSERT_EQ(0, (intptr_t)p & 255);
+  free(p);
+}
+
 void *bulk[1024];
 
 void BulkFreeBenchSetup(void) {

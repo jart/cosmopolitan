@@ -199,7 +199,7 @@ int arch_prctl(int code, int64_t addr) {
     case METAL:
       return arch_prctl_msr(code, addr);
     case FREEBSD:
-      /* claims support but it appears not */
+      // TODO(jart): this should use sysarch()
       return arch_prctl_freebsd(code, addr);
     case OPENBSD:
       return arch_prctl_openbsd(code, addr);

@@ -38,9 +38,3 @@ TEST(pthread_key_create, testRunsDtors_becauseNoLeakReport) {
   EXPECT_EQ(0, pthread_setspecific(key, x));
   EXPECT_EQ(x, pthread_getspecific(key));
 }
-
-__attribute__((__constructor__)) static void init(void) {
-  if (IsTiny()) {
-    __enable_tls();
-  }
-}

@@ -35,6 +35,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
@@ -283,6 +284,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   int gdbpid, err;
   static int sync;
   static bool notpossible;
+  __tls_enabled = false;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   --__ftrace;
   --__strace;

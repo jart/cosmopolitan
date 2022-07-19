@@ -179,6 +179,8 @@
 /*
   ========================================================================
   To make a fully customizable malloc.h header file, cut everything
+#include "libc/sysv/consts/map.h"
+#include "libc/runtime/runtime.h"
   above this line, put into file malloc.h, edit to suit, and #include it
   on the next line, as well as in programs that use this malloc.
   ========================================================================
@@ -385,7 +387,7 @@ unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
 
 
 /* MORECORE and MMAP must return MFAIL on failure */
-#define MFAIL                ((void*)(MAX_SIZE_T))
+#define MFAIL                NULL
 #define CMFAIL               ((char*)(MFAIL)) /* defined for convenience */
 
 #if HAVE_MMAP
@@ -398,7 +400,7 @@ unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
 #endif /* MAP_ANON */
 #ifdef MAP_ANONYMOUS
 #define MMAP_FLAGS           (MAP_PRIVATE|MAP_ANONYMOUS)
-#define MMAP_DEFAULT(s)       mmap(0, (s), MMAP_PROT, MMAP_FLAGS, -1, 0)
+#define MMAP_DEFAULT(s)       _mapanon(s)
 #else /* MAP_ANONYMOUS */
 /*
    Nearly all versions of mmap support MAP_ANONYMOUS, so the following
@@ -408,8 +410,8 @@ unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
 static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
 #define MMAP_DEFAULT(s) ((dev_zero_fd < 0) ? \
            (dev_zero_fd = open("/dev/zero", O_RDWR), \
-            mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0)) : \
-            mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0))
+            mmap_no(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0)) : \
+            mmap_no(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0))
 #endif /* MAP_ANONYMOUS */
 
 #define DIRECT_MMAP_DEFAULT(s) MMAP_DEFAULT(s)

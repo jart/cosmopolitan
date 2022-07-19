@@ -21,9 +21,9 @@
 
 __restore_rt_netbsd:
 	mov	%r15,%rdi
-	mov	$308,%rax			# setcontext
+	mov	$308,%eax			# setcontext
 	syscall
-	mov	$-1,%edi
+	or	$-1,%edi
 	mov	$1,%rax				# exit
 	syscall
 	.endfn	__restore_rt_netbsd,globl,hidden

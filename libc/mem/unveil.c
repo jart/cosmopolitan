@@ -194,7 +194,6 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  */
 int unveil(const char *path, const char *permissions) {
   int rc;
-  __enable_tls();
   if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);
   } else {

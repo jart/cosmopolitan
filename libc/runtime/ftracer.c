@@ -92,7 +92,6 @@ privileged void ftracer(void) {
 
 textstartup int ftrace_install(void) {
   if (GetSymbolTable()) {
-    __enable_tls();
     g_stackdigs = LengthInt64Thousands(GetStackSize());
     return __hook(ftrace_hook, GetSymbolTable());
   } else {

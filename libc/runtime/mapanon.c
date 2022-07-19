@@ -55,15 +55,16 @@
  *
  * That is performed automatically for unit test executables.
  *
- * @return memory map address on success, or null w/ errrno
+ * @return memory map address on success, or null w/ errno
  */
 void *_mapanon(size_t size) {
-  /* asan runtime depends on this function */
   void *m;
   m = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (m == MAP_FAILED && weaken(__oom_hook)) {
-    weaken(__oom_hook)(size);
-    return 0;
+  if (m != MAP_FAILED) {
+    return m;
   }
-  return m;
+  if (errno == ENOMEM && weaken(__oom_hook)) {
+    weaken(__oom_hook)(size);
+  }
+  return 0;
 }

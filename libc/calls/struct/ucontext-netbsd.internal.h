@@ -13,7 +13,6 @@ COSMOPOLITAN_C_START_
 #define _UC_TLSBASE     0x00080000
 #define _UC_SETSTACK    0x00010000
 #define _UC_CLRSTACK    0x00020000
-#define _UC_CLRSTACK    0x00020000
 
 union sigval_netbsd {
   int32_t sival_int;

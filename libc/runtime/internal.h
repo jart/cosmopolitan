@@ -27,7 +27,7 @@ extern unsigned char _tls_size[];
 extern unsigned char _tls_content[];
 
 void _init(void) hidden;
-void __enable_tls(void) hidden;
+void __enable_tls(void);
 void __enable_threads(void) hidden;
 void __restorewintty(void) hidden;
 void *__cxa_finalize(void *) hidden;

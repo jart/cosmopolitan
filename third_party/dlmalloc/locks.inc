@@ -1,4 +1,5 @@
 // clang-format off
+#include "libc/calls/calls.h"
 #include "libc/nexgen32e/threaded.h"
 
 /* --------------------------- Lock preliminaries ------------------------ */
@@ -94,7 +95,7 @@ FORCEINLINE void x86_clear_lock(int* sl) {
 /* Plain spin locks use single word (embedded in malloc_states) */
 static dontinline int spin_acquire_lock(int *sl) {
   while (*(volatile int *)sl != 0 || CAS_LOCK(sl)) {
-    __builtin_ia32_pause();
+    sched_yield();
   }
   return 0;
 }
@@ -154,7 +155,7 @@ FORCEINLINE int recursive_acquire_lock(MLOCK_T *lk) {
       ++lk->c;
       return 0;
     }
-    __builtin_ia32_pause();
+    sched_yield();
   }
 }
 

@@ -27,7 +27,7 @@ wget https://justine.lol/cosmopolitan/cosmopolitan.zip
 unzip cosmopolitan.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
-  -fno-omit-frame-pointer -pg -mnop-mcount \
+  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
   -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com

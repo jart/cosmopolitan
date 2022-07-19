@@ -20,8 +20,6 @@
 #include "libc/nexgen32e/threaded.h"
 #include "libc/thread/thread.h"
 
-STATIC_YOINK("_main_thread_ctor");
-
 /**
  * Returns thread descriptor of the current thread.
  */

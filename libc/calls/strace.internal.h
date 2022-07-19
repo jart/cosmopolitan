@@ -7,7 +7,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/runtime/runtime.h"
 
-#define _KERNTRACE 0 /* not configurable w/ flag yet */
+#define _KERNTRACE 1 /* not configurable w/ flag yet */
 #define _POLLTRACE 0 /* not configurable w/ flag yet */
 #define _DATATRACE 1 /* not configurable w/ flag yet */
 #define _NTTRACE   0 /* not configurable w/ flag yet */

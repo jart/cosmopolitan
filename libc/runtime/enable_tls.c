@@ -16,12 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
@@ -52,12 +56,35 @@ __msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
 
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
+_Alignas(long) static char __static_tls[5008];
 
 /**
  * Enables thread local storage.
+ *
+ * This function is always called by the core runtime to guarantee TLS
+ * is always available to your program. You must build your code using
+ * -mno-tls-direct-seg-refs if you want to use _Thread_local.
+ *
+ * You can use __get_tls() to get the linear address of your tib. When
+ * accessing TLS via privileged code you must use __get_tls_privileged
+ * because we need code morphing to support The New Technology and XNU
+ *
+ * On XNU and The New Technology, this function imposes 1ms of latency
+ * during startup for larger binaries like Python.
+ *
+ * If you don't want TLS and you're sure you're not using it, then you
+ * can disable it as follows:
+ *
+ *     int main() {
+ *       __tls_enabled = false;
+ *       // do stuff
+ *     }
+ *
+ * This is useful if you want to wrestle back control of %fs using the
+ * arch_prctl() function. However, such programs might not be portable
+ * and your `errno` variable also won't be thread safe anymore.
  */
 privileged void __enable_tls(void) {
-  if (__tls_enabled) return;
   STRACE("__enable_tls()");
 
   // allocate tls memory for main process
@@ -74,20 +101,42 @@ privileged void __enable_tls(void) {
   size_t siz;
   cthread_t tib;
   char *mem, *tls;
-  siz = ROUNDUP(_TLSZ + _TIBZ, FRAMESIZE);
-  mem = _mapanon(siz);
+  siz = ROUNDUP(_TLSZ + _TIBZ, alignof(__static_tls));
+  if (siz <= sizeof(__static_tls)) {
+    // if tls requirement is small then use the static tls block
+    // which helps avoid a system call for appes with little tls
+    // this is crucial to keeping life.com 16 kilobytes in size!
+    _Static_assert(alignof(__static_tls) >= alignof(cthread_t));
+    mem = __static_tls;
+  } else {
+    // if this binary needs a hefty tls block then we'll bank on
+    // malloc() being linked, which links _mapanon().  otherwise
+    // if you exceed this, you need to STATIC_YOINK("_mapanon").
+    // please note that it's probably too early to call calloc()
+    assert(weaken(_mapanon));
+    siz = ROUNDUP(siz, FRAMESIZE);
+    mem = weaken(_mapanon)(siz);
+    assert(mem);
+  }
   tib = (cthread_t)(mem + siz - _TIBZ);
   tls = mem + siz - _TIBZ - _TLSZ;
   tib->self = tib;
   tib->self2 = tib;
   tib->err = __errno;
-  tib->tid = sys_gettid();
-  memmove(tls, _tdata_start, _TLDZ);
+  if (IsLinux()) {
+    // gnu/systemd guarantees pid==tid for the main thread so we can
+    // avoid issuing a superfluous system call at startup in program
+    tib->tid = __pid;
+  } else {
+    tib->tid = sys_gettid();
+  }
+  __repmovsb(tls, _tdata_start, _TLDZ);
 
   // ask the operating system to change the x86 segment register
   int ax, dx;
   if (IsWindows()) {
     __tls_index = __imp_TlsAlloc();
+    assert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
     asm volatile("syscall"
@@ -95,9 +144,12 @@ privileged void __enable_tls(void) {
                  : "0"(__NR_sysarch), "D"(AMD64_SET_FSBASE), "S"(tib)
                  : "rcx", "r11", "memory", "cc");
   } else if (IsNetbsd()) {
+    // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
+    // signal handlers will cause it to be reset due to net setting the
+    // _mc_tlsbase field in struct mcontext_netbsd.
     asm volatile("syscall"
                  : "=a"(ax), "=d"(dx)
-                 : "0"(__NR_sysarch), "D"(X86_SET_FSBASE), "S"(tib)
+                 : "0"(__NR__lwp_setprivate), "D"(tib)
                  : "rcx", "r11", "memory", "cc");
   } else if (IsXnu()) {
     asm volatile("syscall"
@@ -179,7 +231,7 @@ privileged void __enable_tls(void) {
       }
 
       // we're checking for the following expression:
-      //   0144 == p[0] &&           // fs
+      //   0144 == p[0] &&           // %fs
       //   0110 == p[1] &&           // rex.w (64-bit operand size)
       //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
       //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
@@ -195,7 +247,7 @@ privileged void __enable_tls(void) {
           !p[8]) {
 
         // now change the code
-        p[0] = 0145;  // this changes gs segment to fs segment
+        p[0] = 0145;                       // change %fs to %gs
         p[5] = (dis & 0x000000ff) >> 000;  // displacement
         p[6] = (dis & 0x0000ff00) >> 010;  // displacement
         p[7] = (dis & 0x00ff0000) >> 020;  // displacement

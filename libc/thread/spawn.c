@@ -32,8 +32,6 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
-STATIC_YOINK("_main_thread_ctor");
-
 /**
  * @fileoverview Simple threading API
  *
