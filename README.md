@@ -229,9 +229,9 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | :---            | ---:        | ---:  |
 | AMD             | K8 Venus    | 2005  |
 | Intel           | Core        | 2006  |
-| New Technology  | Vista       | 2006  |
-| GNU/Systemd     | 2.6.18      | 2007  |
-| XNU's Not UNIX! | 15.6        | 2018  |
+| Windows         | Vista       | 2006  |
+| Linux           | 2.6.18      | 2007  |
+| Mac OS X        | 15.6        | 2018  |
 | FreeBSD         | 13          | 2020  |
 | OpenBSD         | 6.4         | 2018  |
 | NetBSD          | 9.2         | 2021  |
