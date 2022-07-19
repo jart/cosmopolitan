@@ -33,7 +33,7 @@ end
 function OnHttpRequest()
    Log(kLogInfo, "client is running %s and reports %s" % {
           finger.GetSynFingerOs(finger.FingerSyn(syn)),
-          GetHeader('User-Agent')})
+          VisualizeControlCodes(GetHeader('User-Agent'))})
    if HasParam('magic') then
       Write('<p>\r\n')
       Write('OnHttpRequest() has intercepted your request<br>\r\n')
