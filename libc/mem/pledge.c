@@ -50,7 +50,13 @@
 #define LOCK      0x8000
 #define TTY       0x8000
 
-#define OFF(f)         offsetof(struct seccomp_data, f)
+// TODO(jart): fix chibicc
+#ifdef __chibicc__
+#define OFF(f) -1
+#else
+#define OFF(f) offsetof(struct seccomp_data, f)
+#endif
+
 #define PLEDGE(pledge) pledge, ARRAYLEN(pledge)
 
 struct Filter {
@@ -105,8 +111,13 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_getresuid,          //
     __NR_linux_getitimer,          //
     __NR_linux_setitimer,          //
+    __NR_linux_timerfd_create,     //
+    __NR_linux_timerfd_settime,    //
+    __NR_linux_timerfd_gettime,    //
     __NR_linux_gettimeofday,       //
     __NR_linux_copy_file_range,    //
+    __NR_linux_sendfile,           //
+    __NR_linux_vmsplice,           //
     __NR_linux_splice,             //
     __NR_linux_lseek,              //
     __NR_linux_tee,                //
@@ -114,6 +125,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_mmap,               //
     __NR_linux_msync,              //
     __NR_linux_munmap,             //
+    __NR_linux_mincore,            //
     __NR_linux_madvise,            //
     __NR_linux_fadvise,            //
     __NR_linux_mprotect,           //
@@ -123,10 +135,20 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_pipe,               //
     __NR_linux_pipe2,              //
     __NR_linux_poll,               //
+    __NR_linux_ppoll,              //
     __NR_linux_select,             //
+    __NR_linux_pselect6,           //
+    __NR_linux_epoll_create,       //
+    __NR_linux_epoll_create1,      //
+    __NR_linux_epoll_ctl,          //
+    __NR_linux_epoll_wait,         //
+    __NR_linux_epoll_pwait,        //
+    __NR_linux_epoll_pwait2,       //
     __NR_linux_recvfrom,           //
     __NR_linux_sendto | ADDRLESS,  //
     __NR_linux_ioctl,              //
+    __NR_linux_alarm,              //
+    __NR_linux_pause,              //
     __NR_linux_shutdown,           //
     __NR_linux_sigaction,          //
     __NR_linux_sigaltstack,        //
@@ -138,6 +160,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_wait4,              //
     __NR_linux_uname,              //
     __NR_linux_prctl,              //
+    __NR_linux_sched_yield,        //
 };
 
 static const uint16_t kPledgeLinuxFlock[] = {
@@ -275,6 +298,7 @@ static const uint16_t kPledgeLinuxProc[] = {
 static const uint16_t kPledgeLinuxThread[] = {
     __NR_linux_clone,            //
     __NR_linux_futex,            //
+    __NR_linux_tgkill,           //
     __NR_linux_set_robust_list,  //
     __NR_linux_get_robust_list,  //
 };
@@ -1206,11 +1230,14 @@ static void FixupOpenbsdPromises(char *p) {
  *   weird flags aren't allowed), mprotect (PROT_EXEC isn't allowed),
  *   msync, munmap, nanosleep, pipe, pipe2, read, readv, pread, recv,
  *   poll, recvfrom, preadv, write, writev, pwrite, pwritev, select,
- *   send, sendto (only if addr is null), setitimer, shutdown, sigaction
- *   (but SIGSYS is forbidden), sigaltstack, sigprocmask, sigreturn,
- *   sigsuspend, umask, socketpair, ioctl(FIONREAD), ioctl(FIONBIO),
- *   ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD),
- *   fcntl(F_GETFL), fcntl(F_SETFL).
+ *   pselect6, copy_file_range, sendfile, splice, vmsplice, alarm,
+ *   pause, send, sendto (only if addr is null), setitimer, shutdown,
+ *   sigaction (but SIGSYS is forbidden), sigaltstack, sigprocmask,
+ *   sigreturn, sigsuspend, umask, mincore, socketpair, ioctl(FIONREAD),
+ *   ioctl(FIONBIO), ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD),
+ *   fcntl(F_SETFD), fcntl(F_GETFL), fcntl(F_SETFL), sched_yield,
+ *   epoll_create, epoll_create1, epoll_ctl, epoll_wait, epoll_pwait,
+ *   epoll_pwait2.
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
  *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access,

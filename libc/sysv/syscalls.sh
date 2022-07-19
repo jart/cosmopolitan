@@ -58,8 +58,7 @@ scall	sys_writev		0x0790790792079014	globl hidden
 scall	sys_access		0x0210210212021015	globl hidden
 scall	__sys_pipe		0x02a10721e202a016	globl hidden # NOTE: pipe2() on FreeBSD; XNU is pipe(void)→eax:edx
 scall	sys_select		0x1a104705d205d017	globl hidden
-scall	pselect			0x1b406e20a218afff	globl
-scall	pselect6		0xfffffffffffff10e	globl
+scall	pselect			0x1b406e20a218a10e	globl # pselect6() on gnu/systemd
 scall	sys_sched_yield		0x15e12a14bf25d018	globl hidden # select() on XNU (previously swtch() but removed in 12.4)
 scall	__sys_mremap		0x19bffffffffff019	globl hidden
 scall	sys_mincore		0x04e04e04e204e01b	globl hidden
