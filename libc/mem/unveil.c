@@ -25,12 +25,14 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/s.h"
@@ -90,7 +92,8 @@ static int err_close(int rc, int fd) {
 
 static int unveil_init(void) {
   int rc, fd;
-  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) < 0) {
+  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) <
+      0) {
     if (errno == EOPNOTSUPP) errno = ENOSYS;
     return -1;
   }
@@ -98,10 +101,16 @@ static int unveil_init(void) {
   const struct landlock_ruleset_attr attr = {
       .handled_access_fs = State.fs_mask,
   };
+  // [undocumented] landlock_create_ruleset() always returns o_cloexec
+  //                assert(__sys_fcntl(rc, F_GETFD, 0) == FD_CLOEXEC);
   if ((rc = landlock_create_ruleset(&attr, sizeof(attr), 0)) < 0) return -1;
   // grant file descriptor a higher number that's less likely to interfere
-  if ((fd = __sys_fcntl(rc, F_DUPFD, 100)) == -1) return err_close(-1, rc);
-  if (sys_close(rc) == -1) return err_close(-1, fd);
+  if ((fd = __sys_fcntl(rc, F_DUPFD_CLOEXEC, 100)) == -1) {
+    return err_close(-1, rc);
+  }
+  if (sys_close(rc) == -1) {
+    return err_close(-1, fd);
+  }
   State.fd = fd;
   return 0;
 }

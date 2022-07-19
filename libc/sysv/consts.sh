@@ -355,7 +355,7 @@ syscon	fcntl2	F_GETOWN				9			5			5			5			5			0			# bsd consensus
 syscon	fcntl2	F_FULLFSYNC				0			51			0			0			0			0			#
 syscon	fcntl2	F_NOCACHE				0			48			0			0			0			0			#
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
-syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# faked nt
+syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# Linux 2.6.24+; faked nt
 syscon	fcntl	F_MAXFD					0			0			0			0			11			0			#
 syscon	fcntl	FREAD					0			1			1			1			1			0			#
 syscon	fcntl	FWRITE					0			2			2			2			2			0			#
