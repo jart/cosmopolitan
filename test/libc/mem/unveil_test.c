@@ -26,10 +26,17 @@
 #include "libc/mem/io.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -203,4 +210,66 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
     // EXITS(42);
   }
   EXITS(0);
+}
+
+TEST(unveil, usedTwice_forbidden) {
+  SPAWN();
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  ASSERT_SYS(EPERM, -1, unveil("jail", "rw"));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  if (IsLinux()) {
+    ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
+    ASSERT_EQ(5, st.st_size);  // wut linux metadata is accessible
+  }
+  EXITS(0);
+}
+
+TEST(unveil, usedTwice_forbidden_worksWithPledge) {
+  int ws, pid;
+  bool *gotsome;
+  ASSERT_NE(-1, (gotsome = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
+                                MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    // install our first seccomp filter
+    ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath unveil", 0));
+    ASSERT_SYS(0, 0, mkdir("jail", 0755));
+    ASSERT_SYS(0, 0, mkdir("garden", 0755));
+    ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+    ASSERT_SYS(0, 0, unveil("jail", "rw"));
+    // committing and locking causes a new bpf filter to be installed
+    ASSERT_SYS(0, 0, unveil(0, 0));
+    ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+    // verify the second filter is working
+    ASSERT_SYS(EPERM, -1, unveil("jail", "rw"));
+    if (IsLinux()) {
+      ASSERT_SYS(
+          EPERM, -1,
+          landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION));
+    }
+    ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+    // verify the first filter is still working
+    *gotsome = true;
+    ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
+    if (IsLinux()) {
+      ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
+      ASSERT_EQ(5, st.st_size);  // wut linux metadata is accessible
+    }
+    _Exit(0);
+  }
+  ASSERT_NE(-1, wait(&ws));
+  ASSERT_TRUE(*gotsome);
+  if (IsOpenbsd()) {
+    ASSERT_TRUE(WIFSIGNALED(ws));
+    ASSERT_EQ(SIGABRT, WTERMSIG(ws));
+  } else {
+    ASSERT_TRUE(WIFEXITED(ws));
+    ASSERT_EQ(0, WEXITSTATUS(ws));
+  }
+  EXPECT_SYS(0, 0, munmap(gotsome, FRAMESIZE));
 }

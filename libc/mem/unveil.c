@@ -21,22 +21,30 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/bpf.h"
+#include "libc/calls/struct/filter.h"
+#include "libc/calls/struct/seccomp.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+
+#define OFF(f) offsetof(struct seccomp_data, f)
 
 #define UNVEIL_READ                                             \
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR | \
@@ -52,6 +60,20 @@
 #define FILE_BITS                                                 \
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_WRITE_FILE | \
    LANDLOCK_ACCESS_FS_EXECUTE)
+
+static const struct sock_filter kBlacklistLandlock[] = {
+    // clang-format off
+    BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
+    BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_create_ruleset, 2, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_add_rule,       1, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_restrict_self,  0, 1),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (1 & SECCOMP_RET_DATA)),
+    BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+    // clang-format on
+};
 
 /**
  * Long living state for landlock calls.
@@ -75,11 +97,16 @@ _Thread_local static struct {
 
 static int unveil_final(void) {
   int rc;
-  if (State.fd == -1) return eperm();
+  struct sock_fprog sandbox = {
+      .filter = kBlacklistLandlock,
+      .len = ARRAYLEN(kBlacklistLandlock),
+  };
   if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1 &&
       (rc = landlock_restrict_self(State.fd, 0)) != -1 &&
-      (rc = sys_close(State.fd)) != -1)
-    State.fd = -1;
+      (rc = sys_close(State.fd)) != -1 &&
+      (rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox)) != -1) {
+    State.fd = 0;
+  }
   return rc;
 }
 
@@ -150,47 +177,71 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
 /**
  * Restricts filesystem operations, e.g.
  *
- *    unveil("/etc", "r");
+ *    unveil(".", "r");     // current directory + children are visible
+ *    unveil("/etc", "r");  // make /etc readable too
+ *    unveil(0, 0);         // commit and lock policy
  *
- * Unveiling restricts the visibility of the filesystem to a set of allowed
- * paths with specific operations. This system call is supported natively on
- * OpenBSD and polyfilled on Linux using the Landlock LSM[1].
+ * Unveiling restricts a thread's view of the filesystem to a set of
+ * allowed paths with specific privileges.
  *
- * On OpenBSD, accessing paths outside of the allowed set raises ENOENT, and
- * accessing ones with incorrect permissions raises EACCES. On Linux, both these
- * cases raise EACCES.
+ * Once you start using unveil(), the entire file system is considered
+ * hidden. You then specify, by repeatedly calling unveil(), which paths
+ * should become unhidden. When you're finished, you call `unveil(0,0)`
+ * which commits your policy, after which further use is forbidden, in
+ * the current thread, as well as any threads or processes it spawns.
  *
- * Using unveil is irreversible. On OpenBSD, the first call immediately enforces
- * the filesystem visibilty, and existing paths can only be updated with equal
- * or lesser permissions. Filesystem operations that try to access invisible
- * paths will raise ENOENT, and operations without the correct permissions raise
- * EACCES. Unveiling can be disabled by either passing two NULL arguments or by
- * calling pledge() without the "unveil" promise.
+ * There are some differences between unveil() on Linux versus OpenBSD.
  *
- * Landlock is more permissive than OpenBSD's unveil. Filesystem visibility is
- * only enforced after disabling, and path permissions can be increased at any
- * time. Finally, both accessing invisible paths or ones with incorrect
- * permissions will raise EACCES.
+ * 1. Build your policy and lock it in one go. On OpenBSD, policies take
+ *    effect immediately and may evolve as you continue to call unveil()
+ *    but only in a more restrictive direction. On Linux, nothing will
+ *    happen until you call `unveil(0,0)` which commits and locks.
  *
- * `permissions` is a string consisting of zero or more of the following
- * characters:
+ * 2. Try not to overlap directory trees. On OpenBSD, if directory trees
+ *    overlap, then the most restrictive policy will be used for a given
+ *    file. On Linux overlapping may result in a less restrictive policy
+ *    and possibly even undefined behavior.
  *
- * - 'r' makes `path` available for read-only path operations, corresponding to
- *   the pledge promise "rpath".
- * - `w` makes `path` available for write operations, corresponding to the
- *   pledge promise "wpath".
- * - `x` makes `path` available for execute operations, corresponding to the
- *   pledge promises "exec" and "execnative".
- * - `c` allows `path` to be created and removed, corresponding to the pledge
- *   promise "cpath".
+ * 3. OpenBSD and Linux disagree on error codes. On OpenBSD, accessing
+ *    paths outside of the allowed set raises ENOENT, and accessing ones
+ *    with incorrect permissions raises EACCES. On Linux, both these
+ *    cases raise EACCES.
  *
- * [1] https://docs.kernel.org/userspace-api/landlock.html
+ * 4. Unlike OpenBSD, Linux does nothing to conceal the existence of
+ *    paths. Even with an unveil() policy in place, it's still possible
+ *    to access the metadata of all files using functions like stat()
+ *    and open(O_PATH), provided you know the path. A sandboxed process
+ *    can always, for example, determine how many bytes of data are in
+ *    /etc/passwd, even if the file isn't readable. But it's still not
+ *    possible to use opendir() and go fishing for paths which weren't
+ *    previously known.
+ *
+ * This system call is supported natively on OpenBSD and polyfilled on
+ * Linux using the Landlock LSM[1].
+ *
+ * @param path is the file or directory to unveil
+ * @param permissions is a string consisting of zero or more of the
+ *     following characters:
+ *
+ *     - 'r' makes `path` available for read-only path operations,
+ *       corresponding to the pledge promise "rpath".
+ *
+ *     - `w` makes `path` available for write operations, corresponding
+ *       to the pledge promise "wpath".
+ *
+ *     - `x` makes `path` available for execute operations,
+ *       corresponding to the pledge promises "exec" and "execnative".
+ *
+ *     - `c` allows `path` to be created and removed, corresponding to
+ *       the pledge promise "cpath".
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
  * @raise ENOSYS if Landlock isn't supported on this kernel
  * @raise EINVAL if one argument is set and the other is not
  * @raise EINVAL if an invalid character in `permissions` was found
+ * @raise EPERM if unveil() is called after locking
+ * @see [1] https://docs.kernel.org/userspace-api/landlock.html
  */
 int unveil(const char *path, const char *permissions) {
   int rc;
