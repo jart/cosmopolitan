@@ -148,7 +148,7 @@ const struct IdName kNtImageCharacteristicNames[] = {
     {kNtImageFileExecutableImage, "kNtImageFileExecutableImage"},
     {kNtImageFileLineNumsStripped, "kNtImageFileLineNumsStripped"},
     {kNtImageFileLocalSymsStripped, "kNtImageFileLocalSymsStripped"},
-    {kNtImageFileAggressiveWsTrim, "kNtImageFileAggressiveWsTrim"},
+    {kNtImageFileAggresiveWsTrim, "kNtImageFileAggresiveWsTrim"},
     {kNtImageFileLargeAddressAware, "kNtImageFileLargeAddressAware"},
     {kNtImageFileBytesReversedLo, "kNtImageFileBytesReversedLo"},
     {kNtImageFile32bitMachine, "kNtImageFile32bitMachine"},
