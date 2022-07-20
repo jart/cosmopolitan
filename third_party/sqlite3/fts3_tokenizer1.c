@@ -107,7 +107,7 @@ static int simpleDestroy(sqlite3_tokenizer *pTokenizer){
 /*
 ** Prepare to begin tokenizing a particular string.  The input
 ** string to be tokenized is pInput[0..nBytes-1].  A cursor
-** used to incrementally tokenize this string is returned in 
+** used to incrementally tokenize this string is returned in
 ** *ppCursor.
 */
 static int simpleOpen(

@@ -80,7 +80,7 @@ int mbedtls_mpi_shift_l(mbedtls_mpi *X, size_t k)
     m = k / biL;
     k = k % biL;
     z = X->n;
-    if (n > X->n && (r = mbedtls_mpi_grow(X, n))) 
+    if (n > X->n && (r = mbedtls_mpi_grow(X, n)))
         return r;
     if (k)
     {

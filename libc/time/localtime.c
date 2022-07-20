@@ -187,7 +187,7 @@ static bool increment_overflow(int *, int);
 static bool increment_overflow_time(time_t *, int_fast32_t);
 static int_fast32_t leapcorr(struct state const *, time_t);
 static bool normalize_overflow32(int_fast32_t *, int *, int);
-static struct tm *localtime_timesub(time_t const *, int_fast32_t, 
+static struct tm *localtime_timesub(time_t const *, int_fast32_t,
 				    struct state const *, struct tm *);
 static bool localtime_typesequiv(struct state const *, int, int);
 static bool localtime_tzparse(char const *, struct state *, struct state *);

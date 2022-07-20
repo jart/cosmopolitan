@@ -94,7 +94,7 @@ plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 
 	self->demux = plm_demux_create(buffer, destroy_when_done);
 
-	// In theory we should check plm_demux_get_num_video_streams() and 
+	// In theory we should check plm_demux_get_num_video_streams() and
 	// plm_demux_get_num_audio_streams() here, but older files typically
 	// do not specify these correctly. So we just assume we have a video and
 	// audio stream and create the decoders.
@@ -159,7 +159,7 @@ double plm_get_framerate(plm_t *self) {
 
 int plm_get_num_audio_streams(plm_t *self) {
 	// Some files do not specify the number of audio streams in the system header.
-	// If the reported number of streams is 0, we check if we have a samplerate, 
+	// If the reported number of streams is 0, we check if we have a samplerate,
 	// indicating at least one audio stream.
 	int num_streams = plm_demux_get_num_audio_streams(self->demux);
 	return num_streams == 0 && plm_get_samplerate(self) ? 1 : num_streams;

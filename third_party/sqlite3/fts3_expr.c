@@ -20,7 +20,7 @@
 /* clang-format off */
 
 /*
-** By default, this module parses the legacy syntax that has been 
+** By default, this module parses the legacy syntax that has been
 ** traditionally used by fts3. Or, if SQLITE_ENABLE_FTS3_PARENTHESIS
 ** is defined, then it uses the new syntax. The differences between
 ** the new and the old syntaxes are:
@@ -29,7 +29,7 @@
 **
 **  b) The new syntax supports the AND and NOT operators. The old does not.
 **
-**  c) The old syntax supports the "-" token qualifier. This is not 
+**  c) The old syntax supports the "-" token qualifier. This is not
 **     supported by the new syntax (it is replaced by the NOT operator).
 **
 **  d) When using the old syntax, the OR operator has a greater precedence
@@ -38,7 +38,7 @@
 **
 ** If compiled with SQLITE_TEST defined, then this module exports the
 ** symbol "int sqlite3_fts3_enable_parentheses". Setting this variable
-** to zero causes the module to use the old syntax. If it is set to 
+** to zero causes the module to use the old syntax. If it is set to
 ** non-zero the new syntax is activated. This is so both syntaxes can
 ** be tested using a single build of testfixture.
 **
@@ -67,7 +67,7 @@
 #ifdef SQLITE_TEST
 int sqlite3_fts3_enable_parentheses = 0;
 #else
-# ifdef SQLITE_ENABLE_FTS3_PARENTHESIS 
+# ifdef SQLITE_ENABLE_FTS3_PARENTHESIS
 #  define sqlite3_fts3_enable_parentheses 1
 # else
 #  define sqlite3_fts3_enable_parentheses 0
@@ -85,7 +85,7 @@ int sqlite3_fts3_enable_parentheses = 0;
 /*
 ** isNot:
 **   This variable is used by function getNextNode(). When getNextNode() is
-**   called, it sets ParseContext.isNot to true if the 'next node' is a 
+**   called, it sets ParseContext.isNot to true if the 'next node' is a
 **   FTSQUERY_PHRASE with a unary "-" attached to it. i.e. "mysql" in the
 **   FTS3 query "sqlite -mysql". Otherwise, ParseContext.isNot is set to
 **   zero.
@@ -104,7 +104,7 @@ struct ParseContext {
 };
 
 /*
-** This function is equivalent to the standard isspace() function. 
+** This function is equivalent to the standard isspace() function.
 **
 ** The standard isspace() can be awkward to use safely, because although it
 ** is defined to accept an argument of type int, its behavior when passed
@@ -120,7 +120,7 @@ static int fts3isspace(char c){
 
 /*
 ** Allocate nByte bytes of memory using sqlite3_malloc(). If successful,
-** zero the memory before returning a pointer to it. If unsuccessful, 
+** zero the memory before returning a pointer to it. If unsuccessful,
 ** return NULL.
 */
 static void *fts3MallocZero(sqlite3_int64 nByte){
@@ -168,7 +168,7 @@ static int fts3ExprParse(ParseContext *, const char *, int, Fts3Expr **, int *);
 ** structure of type FTSQUERY_PHRASE containing a phrase consisting of this
 ** single token and set *ppExpr to point to it. If the end of the buffer is
 ** reached before a token is found, set *ppExpr to zero. It is the
-** responsibility of the caller to eventually deallocate the allocated 
+** responsibility of the caller to eventually deallocate the allocated
 ** Fts3Expr structure (if any) by passing it to sqlite3_free().
 **
 ** Return SQLITE_OK if successful, or SQLITE_NOMEM if a memory allocation
@@ -222,8 +222,8 @@ static int getNextToken(
         }
 
         while( 1 ){
-          if( !sqlite3_fts3_enable_parentheses 
-           && iStart>0 && z[iStart-1]=='-' 
+          if( !sqlite3_fts3_enable_parentheses
+           && iStart>0 && z[iStart-1]=='-'
           ){
             pParse->isNot = 1;
             iStart--;
@@ -243,7 +243,7 @@ static int getNextToken(
 
     pModule->xClose(pCursor);
   }
-  
+
   *ppExpr = pRet;
   return rc;
 }
@@ -265,7 +265,7 @@ static void *fts3ReallocOrFree(void *pOrig, sqlite3_int64 nNew){
 ** Buffer zInput, length nInput, contains the contents of a quoted string
 ** that appeared as part of an fts3 query expression. Neither quote character
 ** is included in the buffer. This function attempts to tokenize the entire
-** input buffer and create an Fts3Expr structure of type FTSQUERY_PHRASE 
+** input buffer and create an Fts3Expr structure of type FTSQUERY_PHRASE
 ** containing the results.
 **
 ** If successful, SQLITE_OK is returned and *ppExpr set to point at the
@@ -290,7 +290,7 @@ static int getNextString(
   int nToken = 0;
 
   /* The final Fts3Expr data structure, including the Fts3Phrase,
-  ** Fts3PhraseToken structures token buffers are all stored as a single 
+  ** Fts3PhraseToken structures token buffers are all stored as a single
   ** allocation so that the expression can be freed with a single call to
   ** sqlite3_free(). Setting this up requires a two pass approach.
   **
@@ -299,7 +299,7 @@ static int getNextString(
   ** to assemble data in two dynamic buffers:
   **
   **   Buffer p: Points to the Fts3Expr structure, followed by the Fts3Phrase
-  **             structure, followed by the array of Fts3PhraseToken 
+  **             structure, followed by the array of Fts3PhraseToken
   **             structures. This pass only populates the Fts3PhraseToken array.
   **
   **   Buffer zTemp: Contains copies of all tokens.
@@ -384,7 +384,7 @@ no_mem:
 }
 
 /*
-** The output variable *ppExpr is populated with an allocated Fts3Expr 
+** The output variable *ppExpr is populated with an allocated Fts3Expr
 ** structure, or set to 0 if the end of the input buffer is reached.
 **
 ** Returns an SQLite error code. SQLITE_OK if everything works, SQLITE_NOMEM
@@ -420,7 +420,7 @@ static int getNextNode(
   pParse->isNot = 0;
 
   /* Skip over any whitespace before checking for a keyword, an open or
-  ** close bracket, or a quoted string. 
+  ** close bracket, or a quoted string.
   */
   while( nInput>0 && fts3isspace(*zInput) ){
     nInput--;
@@ -453,10 +453,10 @@ static int getNextNode(
 
       /* At this point this is probably a keyword. But for that to be true,
       ** the next byte must contain either whitespace, an open or close
-      ** parenthesis, a quote character, or EOF. 
+      ** parenthesis, a quote character, or EOF.
       */
       cNext = zInput[nKey];
-      if( fts3isspace(cNext) 
+      if( fts3isspace(cNext)
        || cNext=='"' || cNext=='(' || cNext==')' || cNext==0
       ){
         pRet = (Fts3Expr *)fts3MallocZero(sizeof(Fts3Expr));
@@ -510,15 +510,15 @@ static int getNextNode(
     }
   }
 
-  /* If control flows to this point, this must be a regular token, or 
+  /* If control flows to this point, this must be a regular token, or
   ** the end of the input. Read a regular token using the sqlite3_tokenizer
   ** interface. Before doing so, figure out if there is an explicit
-  ** column specifier for the token. 
+  ** column specifier for the token.
   **
   ** TODO: Strangely, it is not possible to associate a column specifier
   ** with a quoted phrase, only with a single token. Not sure if this was
   ** an implementation artifact or an intentional decision when fts3 was
-  ** first implemented. Whichever it was, this module duplicates the 
+  ** first implemented. Whichever it was, this module duplicates the
   ** limitation.
   */
   iCol = pParse->iDefaultCol;
@@ -526,8 +526,8 @@ static int getNextNode(
   for(ii=0; ii<pParse->nCol; ii++){
     const char *zStr = pParse->azCol[ii];
     int nStr = (int)strlen(zStr);
-    if( nInput>nStr && zInput[nStr]==':' 
-     && sqlite3_strnicmp(zStr, zInput, nStr)==0 
+    if( nInput>nStr && zInput[nStr]==':'
+     && sqlite3_strnicmp(zStr, zInput, nStr)==0
     ){
       iCol = ii;
       iColLen = (int)((zInput - z) + nStr + 1);
@@ -572,7 +572,7 @@ static int opPrecedence(Fts3Expr *p){
 }
 
 /*
-** Argument ppHead contains a pointer to the current head of a query 
+** Argument ppHead contains a pointer to the current head of a query
 ** expression tree being parsed. pPrev is the expression node most recently
 ** inserted into the tree. This function adds pNew, which is always a binary
 ** operator node, into the expression tree based on the relative precedence
@@ -602,7 +602,7 @@ static void insertBinaryOperator(
 
 /*
 ** Parse the fts3 query expression found in buffer z, length n. This function
-** returns either when the end of the buffer is reached or an unmatched 
+** returns either when the end of the buffer is reached or an unmatched
 ** closing bracket - ')' - is encountered.
 **
 ** If successful, SQLITE_OK is returned, *ppExpr is set to point to the
@@ -634,8 +634,8 @@ static int fts3ExprParse(
       if( p ){
         int isPhrase;
 
-        if( !sqlite3_fts3_enable_parentheses 
-            && p->eType==FTSQUERY_PHRASE && pParse->isNot 
+        if( !sqlite3_fts3_enable_parentheses
+            && p->eType==FTSQUERY_PHRASE && pParse->isNot
         ){
           /* Create an implicit NOT operator. */
           Fts3Expr *pNot = fts3MallocZero(sizeof(Fts3Expr));
@@ -756,13 +756,13 @@ exprparse_out:
 }
 
 /*
-** Return SQLITE_ERROR if the maximum depth of the expression tree passed 
+** Return SQLITE_ERROR if the maximum depth of the expression tree passed
 ** as the only argument is more than nMaxDepth.
 */
 static int fts3ExprCheckDepth(Fts3Expr *p, int nMaxDepth){
   int rc = SQLITE_OK;
   if( p ){
-    if( nMaxDepth<0 ){ 
+    if( nMaxDepth<0 ){
       rc = SQLITE_TOOBIG;
     }else{
       rc = fts3ExprCheckDepth(p->pLeft, nMaxDepth-1);
@@ -777,12 +777,12 @@ static int fts3ExprCheckDepth(Fts3Expr *p, int nMaxDepth){
 /*
 ** This function attempts to transform the expression tree at (*pp) to
 ** an equivalent but more balanced form. The tree is modified in place.
-** If successful, SQLITE_OK is returned and (*pp) set to point to the 
-** new root expression node. 
+** If successful, SQLITE_OK is returned and (*pp) set to point to the
+** new root expression node.
 **
 ** nMaxDepth is the maximum allowable depth of the balanced sub-tree.
 **
-** Otherwise, if an error occurs, an SQLite error code is returned and 
+** Otherwise, if an error occurs, an SQLite error code is returned and
 ** expression (*pp) freed.
 */
 static int fts3ExprBalance(Fts3Expr **pp, int nMaxDepth){
@@ -897,7 +897,7 @@ static int fts3ExprBalance(Fts3Expr **pp, int nMaxDepth){
           }
           pRoot = p;
         }else{
-          /* An error occurred. Delete the contents of the apLeaf[] array 
+          /* An error occurred. Delete the contents of the apLeaf[] array
           ** and pFree list. Everything else is cleaned up by the call to
           ** sqlite3Fts3ExprFree(pRoot) below.  */
           Fts3Expr *pDel;
@@ -939,7 +939,7 @@ static int fts3ExprBalance(Fts3Expr **pp, int nMaxDepth){
       }
     }
   }
-  
+
   if( rc!=SQLITE_OK ){
     sqlite3Fts3ExprFree(pRoot);
     pRoot = 0;
@@ -953,9 +953,9 @@ static int fts3ExprBalance(Fts3Expr **pp, int nMaxDepth){
 ** differences:
 **
 **   1. It does not do expression rebalancing.
-**   2. It does not check that the expression does not exceed the 
+**   2. It does not check that the expression does not exceed the
 **      maximum allowable depth.
-**   3. Even if it fails, *ppExpr may still be set to point to an 
+**   3. Even if it fails, *ppExpr may still be set to point to an
 **      expression tree. It should be deleted using sqlite3Fts3ExprFree()
 **      in this case.
 */
@@ -994,7 +994,7 @@ static int fts3ExprParseUnbalanced(
   if( rc==SQLITE_OK && sParse.nNest ){
     rc = SQLITE_ERROR;
   }
-  
+
   return rc;
 }
 
@@ -1013,7 +1013,7 @@ static int fts3ExprParseUnbalanced(
 ** The first parameter, pTokenizer, is passed the fts3 tokenizer module to
 ** use to normalize query tokens while parsing the expression. The azCol[]
 ** array, which is assumed to contain nCol entries, should contain the names
-** of each column in the target fts3 table, in order from left to right. 
+** of each column in the target fts3 table, in order from left to right.
 ** Column names must be nul-terminated strings.
 **
 ** The iDefaultCol parameter should be passed the index of the table column
@@ -1036,7 +1036,7 @@ int sqlite3Fts3ExprParse(
   int rc = fts3ExprParseUnbalanced(
       pTokenizer, iLangid, azCol, bFts4, nCol, iDefaultCol, z, n, ppExpr
   );
-  
+
   /* Rebalance the expression. And check that its depth does not exceed
   ** SQLITE_FTS3_MAX_EXPR_DEPTH.  */
   if( rc==SQLITE_OK && *ppExpr ){
@@ -1051,7 +1051,7 @@ int sqlite3Fts3ExprParse(
     *ppExpr = 0;
     if( rc==SQLITE_TOOBIG ){
       sqlite3Fts3ErrMsg(pzErr,
-          "FTS expression tree is too large (maximum depth %d)", 
+          "FTS expression tree is too large (maximum depth %d)",
           SQLITE_FTS3_MAX_EXPR_DEPTH
       );
       rc = SQLITE_ERROR;
@@ -1113,11 +1113,11 @@ void sqlite3Fts3ExprFree(Fts3Expr *pDel){
 /*
 ** Return a pointer to a buffer containing a text representation of the
 ** expression passed as the first argument. The buffer is obtained from
-** sqlite3_malloc(). It is the responsibility of the caller to use 
+** sqlite3_malloc(). It is the responsibility of the caller to use
 ** sqlite3_free() to release the memory. If an OOM condition is encountered,
 ** NULL is returned.
 **
-** If the second argument is not NULL, then its contents are prepended to 
+** If the second argument is not NULL, then its contents are prepended to
 ** the returned expression text and then freed using sqlite3_free().
 */
 static char *exprToString(Fts3Expr *pExpr, char *zBuf){
@@ -1131,7 +1131,7 @@ static char *exprToString(Fts3Expr *pExpr, char *zBuf){
       zBuf = sqlite3_mprintf(
           "%zPHRASE %d 0", zBuf, pPhrase->iColumn);
       for(i=0; zBuf && i<pPhrase->nToken; i++){
-        zBuf = sqlite3_mprintf("%z %.*s%s", zBuf, 
+        zBuf = sqlite3_mprintf("%z %.*s%s", zBuf,
             pPhrase->aToken[i].n, pPhrase->aToken[i].z,
             (pPhrase->aToken[i].isPrefix?"+":"")
         );
@@ -1164,7 +1164,7 @@ static char *exprToString(Fts3Expr *pExpr, char *zBuf){
 }
 
 /*
-** This is the implementation of a scalar SQL function used to test the 
+** This is the implementation of a scalar SQL function used to test the
 ** expression parser. It should be called as follows:
 **
 **   fts3_exprtest(<tokenizer>, <expr>, <column 1>, ...);
@@ -1197,7 +1197,7 @@ static void fts3ExprTestCommon(
   char *zErr = 0;
 
   if( argc<3 ){
-    sqlite3_result_error(context, 
+    sqlite3_result_error(context,
         "Usage: fts3_exprtest(tokenizer, expr, col1, ...", -1
     );
     return;
@@ -1275,15 +1275,15 @@ static void fts3ExprTestRebalance(
 }
 
 /*
-** Register the query expression parser test function fts3_exprtest() 
-** with database connection db. 
+** Register the query expression parser test function fts3_exprtest()
+** with database connection db.
 */
 int sqlite3Fts3ExprInitTestInterface(sqlite3 *db, Fts3Hash *pHash){
   int rc = sqlite3_create_function(
       db, "fts3_exprtest", -1, SQLITE_UTF8, (void*)pHash, fts3ExprTest, 0, 0
   );
   if( rc==SQLITE_OK ){
-    rc = sqlite3_create_function(db, "fts3_exprtest_rebalance", 
+    rc = sqlite3_create_function(db, "fts3_exprtest_rebalance",
         -1, SQLITE_UTF8, (void*)pHash, fts3ExprTestRebalance, 0, 0
     );
   }

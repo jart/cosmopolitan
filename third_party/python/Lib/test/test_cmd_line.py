@@ -365,7 +365,7 @@ class CmdLineTest(unittest.TestCase):
     # Issue #7111: Python should work without standard streams
 
     @unittest.skipIf(True, # TODO: sys, os need to be tested first
-                     # os.name != 'posix', 
+                     # os.name != 'posix',
                      "test needs POSIX semantics")
     def _test_no_stdio(self, streams):
         code = """if 1:

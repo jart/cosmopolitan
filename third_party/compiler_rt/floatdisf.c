@@ -17,9 +17,9 @@ STATIC_YOINK("huge_compiler_rt_license");
 
 /* Returns: convert a to a float, rounding toward even.*/
 
-/* Assumption: float is a IEEE 32 bit floating point type 
+/* Assumption: float is a IEEE 32 bit floating point type
  *             di_int is a 64 bit integral type
- */ 
+ */
 
 /* seee eeee emmm mmmm mmmm mmmm mmmm mmmm */
 
@@ -37,13 +37,13 @@ __floatdisf(di_int a)
     int e = sd - 1;             /* exponent */
     if (sd > FLT_MANT_DIG)
     {
-        /*  start:  0000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQxxxxxxxxxxxxxxxxxx 
-         *  finish: 000000000000000000000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQR 
-         *                                                12345678901234567890123456 
-         *  1 = msb 1 bit 
-         *  P = bit FLT_MANT_DIG-1 bits to the right of 1 
-         *  Q = bit FLT_MANT_DIG bits to the right of 1   
-         *  R = "or" of all bits to the right of Q 
+        /*  start:  0000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQxxxxxxxxxxxxxxxxxx
+         *  finish: 000000000000000000000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQR
+         *                                                12345678901234567890123456
+         *  1 = msb 1 bit
+         *  P = bit FLT_MANT_DIG-1 bits to the right of 1
+         *  Q = bit FLT_MANT_DIG bits to the right of 1
+         *  R = "or" of all bits to the right of Q
          */
         switch (sd)
         {

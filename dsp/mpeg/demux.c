@@ -115,8 +115,8 @@ plm_packet_t *plm_demux_decode(plm_demux_t *self) {
 	do {
 		code = plm_buffer_next_start_code(self->buffer);
 		if (
-			code == PLM_DEMUX_PACKET_VIDEO_1 || 
-			code == PLM_DEMUX_PACKET_PRIVATE || 
+			code == PLM_DEMUX_PACKET_VIDEO_1 ||
+			code == PLM_DEMUX_PACKET_PRIVATE ||
 			(code >= PLM_DEMUX_PACKET_AUDIO_1 && code <= PLM_DEMUX_PACKET_AUDIO_4)
 		) {
 			return plm_demux_decode_packet(self, code);

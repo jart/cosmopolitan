@@ -45,7 +45,7 @@ function test_file1()
     f.seek(0, std.SEEK_SET);
     str1 = f.readAsString();
     assert(str1 === str);
-    
+
     f.seek(0, std.SEEK_END);
     size = f.tell();
     assert(size === str.length);
@@ -80,7 +80,7 @@ function test_file2()
 function test_getline()
 {
     var f, line, line_count, lines, i;
-    
+
     lines = ["hello world", "line 1", "line 2" ];
     f = std.tmpfile();
     for(i = 0; i < lines.length; i++) {
@@ -102,7 +102,7 @@ function test_getline()
 
     f.close();
 }
- 
+
 function test_popen()
 {
     var str, f, fname = "tmp_file.txt";
@@ -114,7 +114,7 @@ function test_popen()
 
     /* test loadFile */
     assert(std.loadFile(fname), content);
-    
+
     /* execute the 'cat' shell command */
     f = std.popen("cat " + fname, "r");
     str = f.readAsString();
@@ -149,17 +149,17 @@ function test_os()
     fname = "tmp_file.txt";
     fpath = fdir + "/" + fname;
     link_path = fdir + "/test_link";
-    
+
     os.remove(link_path);
     os.remove(fpath);
     os.remove(fdir);
 
     err = os.mkdir(fdir, 0o755);
     assert(err === 0);
-    
+
     fd = os.open(fpath, os.O_RDWR | os.O_CREAT | os.O_TRUNC);
     assert(fd >= 0);
-    
+
     buf = new Uint8Array(10);
     for(i = 0; i < buf.length; i++)
         buf[i] = i;
@@ -168,16 +168,16 @@ function test_os()
     assert(os.seek(fd, 0, std.SEEK_SET) === 0);
     buf2 = new Uint8Array(buf.length);
     assert(os.read(fd, buf2.buffer, 0, buf2.length) === buf2.length);
-    
+
     for(i = 0; i < buf.length; i++)
         assert(buf[i] == buf2[i]);
-    
+
     if (typeof BigInt !== "undefined") {
         assert(os.seek(fd, BigInt(6), std.SEEK_SET), BigInt(6));
         assert(os.read(fd, buf2.buffer, 0, 1) === 1);
         assert(buf[6] == buf2[0]);
     }
-    
+
     assert(os.close(fd) === 0);
 
     [files, err] = os.readdir(fdir);
@@ -188,7 +188,7 @@ function test_os()
 
     err = os.utimes(fpath, fdate, fdate);
     assert(err, 0);
-    
+
     [st, err] = os.stat(fpath);
     assert(err, 0);
     assert(st.mode & os.S_IFMT, os.S_IFREG);
@@ -196,7 +196,7 @@ function test_os()
 
     err = os.symlink(fname, link_path);
     assert(err === 0);
-    
+
     [st, err] = os.lstat(link_path);
     assert(err, 0);
     assert(st.mode & os.S_IFMT, os.S_IFLNK);
@@ -204,7 +204,7 @@ function test_os()
     [buf, err] = os.readlink(link_path);
     assert(err, 0);
     assert(buf, fname);
-    
+
     assert(os.remove(link_path) === 0);
 
     [buf, err] = os.getcwd();
@@ -214,7 +214,7 @@ function test_os()
     assert(err, 0);
 
     assert(buf, buf2);
-    
+
     assert(os.remove(fpath) === 0);
 
     fd = os.open(fpath, os.O_RDONLY);
@@ -232,7 +232,7 @@ function test_os_exec()
 
     ret = os.exec(["/bin/sh", "-c", "exit 1"], { usePath: false });
     assert(ret, 1);
-    
+
     fds = os.pipe();
     pid = os.exec(["sh", "-c", "echo $FOO"], {
         stdout: fds[1],

@@ -110,7 +110,7 @@ malloc_failed:
 ** at the conclusion of the call.
 **
 ** The result that is written to ***pazResult is held in memory obtained
-** from malloc().  But the caller cannot free this memory directly.  
+** from malloc().  But the caller cannot free this memory directly.
 ** Instead, the entire table should be passed to sqlite3_free_table() when
 ** the calling procedure is finished using it.
 */

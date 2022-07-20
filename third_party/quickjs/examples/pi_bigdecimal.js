@@ -11,7 +11,7 @@ function calc_pi(prec) {
     const CHUD_C = 640320m;
     const CHUD_C3 = 10939058860032000m; /* C^3/24 */
     const CHUD_DIGITS_PER_TERM = 14.18164746272548; /* log10(C/12)*3 */
-    
+
     /* return [P, Q, G] */
     function chud_bs(a, b, need_G) {
         var c, P, Q, G, P1, Q1, G1, P2, Q2, G2, b1;

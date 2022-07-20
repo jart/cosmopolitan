@@ -64,7 +64,7 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
             /* K X
              * ---
              * 0 0
-             */ 
+             */
             if (rem)
                 *rem = n.s.high % d.s.low;
             return n.s.high / d.s.low;

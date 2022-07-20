@@ -162,8 +162,8 @@ static JSValue js_generator_next(JSContext *ctx, JSValueConst this_val,
     return ret;
 }
 
-JSValue js_generator_function_call(JSContext *ctx, JSValueConst func_obj, 
-                                   JSValueConst this_obj, int argc, 
+JSValue js_generator_function_call(JSContext *ctx, JSValueConst func_obj,
+                                   JSValueConst this_obj, int argc,
                                    JSValueConst *argv, int flags)
 {
     JSValue obj, func_ret;

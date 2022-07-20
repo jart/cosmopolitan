@@ -36,7 +36,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 /**
  * Returns hyperbolic sine of 𝑥.
- * 
+ *
  *     sinh(x) = (exp(x) - 1/exp(x))/2
  *             = (exp(x)-1 + (exp(x)-1)/exp(x))/2
  *             = x + x^3/6 + o(x^5)

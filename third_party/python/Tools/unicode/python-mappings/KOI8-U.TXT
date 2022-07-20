@@ -12,7 +12,7 @@
 #       (c) Copyright Marc-Andre Lemburg, 2005.
 #           Licensed to PSF under a Contributor Agreement.
 #
-#       Based on the file 
+#       Based on the file
 #       ftp://ftp.unicode.org/Public/MAPPINGS/VENDORS/MISC/KOI8-R.TXT
 #       which is:
 #

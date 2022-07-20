@@ -68,57 +68,57 @@
 */
 static const char *const pragCName[] = {
   /*   0 */ "id",          /* Used by: foreign_key_list */
-  /*   1 */ "seq",        
-  /*   2 */ "table",      
-  /*   3 */ "from",       
-  /*   4 */ "to",         
-  /*   5 */ "on_update",  
-  /*   6 */ "on_delete",  
-  /*   7 */ "match",      
+  /*   1 */ "seq",
+  /*   2 */ "table",
+  /*   3 */ "from",
+  /*   4 */ "to",
+  /*   5 */ "on_update",
+  /*   6 */ "on_delete",
+  /*   7 */ "match",
   /*   8 */ "cid",         /* Used by: table_xinfo */
-  /*   9 */ "name",       
-  /*  10 */ "type",       
-  /*  11 */ "notnull",    
-  /*  12 */ "dflt_value", 
-  /*  13 */ "pk",         
-  /*  14 */ "hidden",     
+  /*   9 */ "name",
+  /*  10 */ "type",
+  /*  11 */ "notnull",
+  /*  12 */ "dflt_value",
+  /*  13 */ "pk",
+  /*  14 */ "hidden",
                            /* table_info reuses 8 */
   /*  15 */ "seqno",       /* Used by: index_xinfo */
-  /*  16 */ "cid",        
-  /*  17 */ "name",       
-  /*  18 */ "desc",       
-  /*  19 */ "coll",       
-  /*  20 */ "key",        
+  /*  16 */ "cid",
+  /*  17 */ "name",
+  /*  18 */ "desc",
+  /*  19 */ "coll",
+  /*  20 */ "key",
   /*  21 */ "name",        /* Used by: function_list */
-  /*  22 */ "builtin",    
-  /*  23 */ "type",       
-  /*  24 */ "enc",        
-  /*  25 */ "narg",       
-  /*  26 */ "flags",      
+  /*  22 */ "builtin",
+  /*  23 */ "type",
+  /*  24 */ "enc",
+  /*  25 */ "narg",
+  /*  26 */ "flags",
   /*  27 */ "tbl",         /* Used by: stats */
-  /*  28 */ "idx",        
-  /*  29 */ "wdth",       
-  /*  30 */ "hght",       
-  /*  31 */ "flgs",       
+  /*  28 */ "idx",
+  /*  29 */ "wdth",
+  /*  30 */ "hght",
+  /*  31 */ "flgs",
   /*  32 */ "seq",         /* Used by: index_list */
-  /*  33 */ "name",       
-  /*  34 */ "unique",     
-  /*  35 */ "origin",     
-  /*  36 */ "partial",    
+  /*  33 */ "name",
+  /*  34 */ "unique",
+  /*  35 */ "origin",
+  /*  36 */ "partial",
   /*  37 */ "table",       /* Used by: foreign_key_check */
-  /*  38 */ "rowid",      
-  /*  39 */ "parent",     
-  /*  40 */ "fkid",       
+  /*  38 */ "rowid",
+  /*  39 */ "parent",
+  /*  40 */ "fkid",
                            /* index_info reuses 15 */
   /*  41 */ "seq",         /* Used by: database_list */
-  /*  42 */ "name",       
-  /*  43 */ "file",       
+  /*  42 */ "name",
+  /*  43 */ "file",
   /*  44 */ "busy",        /* Used by: wal_checkpoint */
-  /*  45 */ "log",        
+  /*  45 */ "log",
   /*  46 */ "checkpointed",
                            /* collation_list reuses 32 */
   /*  47 */ "database",    /* Used by: lock_status */
-  /*  48 */ "status",     
+  /*  48 */ "status",
   /*  49 */ "cache_size",  /* Used by: default_cache_size */
                            /* module_list pragma_list reuses 9 */
   /*  50 */ "timeout",     /* Used by: busy_timeout */

@@ -1,7 +1,7 @@
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass1.json
 assert(DecodeJson([[
-[ 
+[
     "JSON Test Pattern pass1",
     {"object with 1 member":[ "array with 1 element"] },
     {},
@@ -58,13 +58,13 @@ assert(DecodeJson([[
 0.1e1,
 1e-1,
 1e00,2e+00,2e-00
-,"rosebud"] 
+,"rosebud"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: pass2.json
 assert(DecodeJson([[
-[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Not too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
+[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Not too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
@@ -94,5 +94,5 @@ assert(DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail18.json (actually passes)
 assert(DecodeJson([[
-[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] 
+[ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ [ "Too deep"] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ]
 ]]))

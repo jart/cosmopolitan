@@ -96,7 +96,7 @@ static int fts3tokQueryTokenizer(
 
 /*
 ** The second argument, argv[], is an array of pointers to nul-terminated
-** strings. This function makes a copy of the array and strings into a 
+** strings. This function makes a copy of the array and strings into a
 ** single block of memory. It then dequotes any of the strings that appear
 ** to be quoted.
 **
@@ -152,7 +152,7 @@ static int fts3tokDequoteArray(
 ** and xCreate are identical operations.
 **
 **   argv[0]: module name
-**   argv[1]: database name 
+**   argv[1]: database name
 **   argv[2]: table name
 **   argv[3]: first argument (tokenizer name)
 */
@@ -233,16 +233,16 @@ static int fts3tokDisconnectMethod(sqlite3_vtab *pVtab){
 ** xBestIndex - Analyze a WHERE and ORDER BY clause.
 */
 static int fts3tokBestIndexMethod(
-  sqlite3_vtab *pVTab, 
+  sqlite3_vtab *pVTab,
   sqlite3_index_info *pInfo
 ){
   int i;
   UNUSED_PARAMETER(pVTab);
 
   for(i=0; i<pInfo->nConstraint; i++){
-    if( pInfo->aConstraint[i].usable 
-     && pInfo->aConstraint[i].iColumn==0 
-     && pInfo->aConstraint[i].op==SQLITE_INDEX_CONSTRAINT_EQ 
+    if( pInfo->aConstraint[i].usable
+     && pInfo->aConstraint[i].iColumn==0
+     && pInfo->aConstraint[i].op==SQLITE_INDEX_CONSTRAINT_EQ
     ){
       pInfo->idxNum = 1;
       pInfo->aConstraintUsage[i].argvIndex = 1;

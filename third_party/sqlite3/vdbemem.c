@@ -32,7 +32,7 @@
 ** this:    assert( sqlite3VdbeCheckMemInvariants(pMem) );
 */
 int sqlite3VdbeCheckMemInvariants(Mem *p){
-  /* If MEM_Dyn is set then Mem.xDel!=0.  
+  /* If MEM_Dyn is set then Mem.xDel!=0.
   ** Mem.xDel might not be initialized if MEM_Dyn is clear.
   */
   assert( (p->flags & MEM_Dyn)==0 || p->xDel!=0 );
@@ -87,7 +87,7 @@ int sqlite3VdbeCheckMemInvariants(Mem *p){
   **   (4) A static string or blob
   */
   if( (p->flags & (MEM_Str|MEM_Blob)) && p->n>0 ){
-    assert( 
+    assert(
       ((p->szMalloc>0 && p->z==p->zMalloc)? 1 : 0) +
       ((p->flags&MEM_Dyn)!=0 ? 1 : 0) +
       ((p->flags&MEM_Ephem)!=0 ? 1 : 0) +
@@ -119,7 +119,7 @@ static void vdbeMemRenderNum(int sz, char *zBuf, Mem *p){
 #endif
   }else{
     sqlite3StrAccumInit(&acc, 0, zBuf, sz, 0);
-    sqlite3_str_appendf(&acc, "%!.15g", 
+    sqlite3_str_appendf(&acc, "%!.15g",
          (p->flags & MEM_IntReal)!=0 ? (double)p->u.i : p->u.r);
     assert( acc.zText==zBuf && acc.mxAlloc<=0 );
     zBuf[acc.nChar] = 0; /* Fast version of sqlite3StrAccumFinish(&acc) */
@@ -464,7 +464,7 @@ int sqlite3VdbeMemFinalize(Mem *pMem, FuncDef *pFunc){
 ** This routine calls the xValue method for that function and stores
 ** the results in memory cell pMem.
 **
-** SQLITE_ERROR is returned if xValue() reports an error. SQLITE_OK 
+** SQLITE_ERROR is returned if xValue() reports an error. SQLITE_OK
 ** otherwise.
 */
 #ifndef SQLITE_OMIT_WINDOWFUNC
@@ -637,7 +637,7 @@ double sqlite3VdbeRealValue(Mem *pMem){
 
 /*
 ** Return 1 if pMem represents true, and return 0 if pMem represents false.
-** Return the value ifNull if pMem is NULL.  
+** Return the value ifNull if pMem is NULL.
 */
 int sqlite3VdbeBooleanValue(Mem *pMem, int ifNull){
   testcase( pMem->flags & MEM_IntReal );
@@ -828,7 +828,7 @@ void sqlite3VdbeMemSetNull(Mem *pMem){
   }
 }
 void sqlite3ValueSetNull(sqlite3_value *p){
-  sqlite3VdbeMemSetNull((Mem*)p); 
+  sqlite3VdbeMemSetNull((Mem*)p);
 }
 
 /*
@@ -949,7 +949,7 @@ int sqlite3VdbeMemTooBig(Mem *p){
     }
     return n>p->db->aLimit[SQLITE_LIMIT_LENGTH];
   }
-  return 0; 
+  return 0;
 }
 
 #ifdef SQLITE_DEBUG
@@ -979,7 +979,7 @@ void sqlite3VdbeMemAboutToChange(Vdbe *pVdbe, Mem *pMem){
       ** same. */
       mFlags = pMem->flags & pX->flags & pX->mScopyFlags;
       assert( (mFlags&(MEM_Int|MEM_IntReal))==0 || pMem->u.i==pX->u.i );
-      
+
       /* pMem is the register that is changing.  But also mark pX as
       ** undefined so that we can quickly detect the shallow-copy error */
       pX->flags = MEM_Undefined;
@@ -1055,8 +1055,8 @@ void sqlite3VdbeMemMove(Mem *pTo, Mem *pFrom){
 ** Change the value of a Mem to be a string or a BLOB.
 **
 ** The memory management strategy depends on the value of the xDel
-** parameter. If the value passed is SQLITE_TRANSIENT, then the 
-** string is copied into a (possibly existing) buffer managed by the 
+** parameter. If the value passed is SQLITE_TRANSIENT, then the
+** string is copied into a (possibly existing) buffer managed by the
 ** Mem structure. Otherwise, any existing buffer is freed and the
 ** pointer copied.
 **
@@ -1208,7 +1208,7 @@ int sqlite3VdbeMemFromBtreeZeroOffset(
   assert( sqlite3BtreeCursorIsValid(pCur) );
   assert( !VdbeMemDynamic(pMem) );
 
-  /* Note: the calls to BtreeKeyFetch() and DataFetch() below assert() 
+  /* Note: the calls to BtreeKeyFetch() and DataFetch() below assert()
   ** that both the BtShared and database handle mutexes are held. */
   assert( !sqlite3VdbeMemIsRowSet(pMem) );
   pMem->z = (char *)sqlite3BtreePayloadFetch(pCur, &available);
@@ -1300,7 +1300,7 @@ sqlite3_value *sqlite3ValueNew(sqlite3 *db){
 }
 
 /*
-** Context object passed by sqlite3Stat4ProbeSetValue() through to 
+** Context object passed by sqlite3Stat4ProbeSetValue() through to
 ** valueNew(). See comments above valueNew() for details.
 */
 struct ValueNewStat4Ctx {
@@ -1315,9 +1315,9 @@ struct ValueNewStat4Ctx {
 ** the second argument to this function is NULL, the object is allocated
 ** by calling sqlite3ValueNew().
 **
-** Otherwise, if the second argument is non-zero, then this function is 
+** Otherwise, if the second argument is non-zero, then this function is
 ** being called indirectly by sqlite3Stat4ProbeSetValue(). If it has not
-** already been allocated, allocate the UnpackedRecord structure that 
+** already been allocated, allocate the UnpackedRecord structure that
 ** that function will return to its caller here. Then return a pointer to
 ** an sqlite3_value within the UnpackedRecord.a[] array.
 */
@@ -1331,7 +1331,7 @@ static sqlite3_value *valueNew(sqlite3 *db, struct ValueNewStat4Ctx *p){
       int nByte;                  /* Bytes of space to allocate */
       int i;                      /* Counter variable */
       int nCol = pIdx->nColumn;   /* Number of index columns including rowid */
-  
+
       nByte = sizeof(Mem) * nCol + ROUND8(sizeof(UnpackedRecord));
       pRec = (UnpackedRecord*)sqlite3DbMallocZero(db, nByte);
       if( pRec ){
@@ -1352,7 +1352,7 @@ static sqlite3_value *valueNew(sqlite3 *db, struct ValueNewStat4Ctx *p){
       if( pRec==0 ) return 0;
       p->ppRec[0] = pRec;
     }
-  
+
     pRec->nField = p->iVal+1;
     return &pRec->aMem[p->iVal];
   }
@@ -1371,11 +1371,11 @@ static sqlite3_value *valueNew(sqlite3 *db, struct ValueNewStat4Ctx *p){
 **   * the SQLITE_FUNC_NEEDCOLL function flag is not set,
 **
 ** then this routine attempts to invoke the SQL function. Assuming no
-** error occurs, output parameter (*ppVal) is set to point to a value 
+** error occurs, output parameter (*ppVal) is set to point to a value
 ** object containing the result before returning SQLITE_OK.
 **
 ** Affinity aff is applied to the result of the function before returning.
-** If the result is a text value, the sqlite3_value object uses encoding 
+** If the result is a text value, the sqlite3_value object uses encoding
 ** enc.
 **
 ** If the conditions above are not met, this function returns SQLITE_OK
@@ -1406,7 +1406,7 @@ static int valueFromFunction(
   if( pList ) nVal = pList->nExpr;
   pFunc = sqlite3FindFunction(db, p->u.zToken, nVal, enc, 0);
   assert( pFunc );
-  if( (pFunc->funcFlags & (SQLITE_FUNC_CONSTANT|SQLITE_FUNC_SLOCHNG))==0 
+  if( (pFunc->funcFlags & (SQLITE_FUNC_CONSTANT|SQLITE_FUNC_SLOCHNG))==0
    || (pFunc->funcFlags & SQLITE_FUNC_NEEDCOLL)
   ){
     return SQLITE_OK;
@@ -1554,7 +1554,7 @@ static int valueFromExpr(
     }
   }else if( op==TK_UMINUS ) {
     /* This branch happens for multiple negative signs.  Ex: -(-5) */
-    if( SQLITE_OK==valueFromExpr(db,pExpr->pLeft,enc,affinity,&pVal,pCtx) 
+    if( SQLITE_OK==valueFromExpr(db,pExpr->pLeft,enc,affinity,&pVal,pCtx)
      && pVal!=0
     ){
       sqlite3VdbeMemNumerify(pVal);
@@ -1703,8 +1703,8 @@ static int stat4ValueFromExpr(
 }
 
 /*
-** This function is used to allocate and populate UnpackedRecord 
-** structures intended to be compared against sample index keys stored 
+** This function is used to allocate and populate UnpackedRecord
+** structures intended to be compared against sample index keys stored
 ** in the sqlite_stat4 table.
 **
 ** A single call to this function populates zero or more fields of the
@@ -1715,14 +1715,14 @@ static int stat4ValueFromExpr(
 **
 **  * The expression is a bound variable, and this is a reprepare, or
 **
-**  * The sqlite3ValueFromExpr() function is able to extract a value 
+**  * The sqlite3ValueFromExpr() function is able to extract a value
 **    from the expression (i.e. the expression is a literal value).
 **
 ** Or, if pExpr is a TK_VECTOR, one field is populated for each of the
 ** vector components that match either of the two latter criteria listed
 ** above.
 **
-** Before any value is appended to the record, the affinity of the 
+** Before any value is appended to the record, the affinity of the
 ** corresponding column within index pIdx is applied to it. Before
 ** this function returns, output parameter *pnExtract is set to the
 ** number of values appended to the record.
@@ -1773,9 +1773,9 @@ int sqlite3Stat4ProbeSetValue(
 
 /*
 ** Attempt to extract a value from expression pExpr using the methods
-** as described for sqlite3Stat4ProbeSetValue() above. 
+** as described for sqlite3Stat4ProbeSetValue() above.
 **
-** If successful, set *ppVal to point to a new value object and return 
+** If successful, set *ppVal to point to a new value object and return
 ** SQLITE_OK. If no value can be extracted, but no other error occurs
 ** (e.g. OOM), return SQLITE_OK and set *ppVal to NULL. Or, if an error
 ** does occur, return an SQLite error code. The final value of *ppVal
@@ -1795,7 +1795,7 @@ int sqlite3Stat4ValueFromExpr(
 ** the column value into *ppVal.  If *ppVal is initially NULL then a new
 ** sqlite3_value object is allocated.
 **
-** If *ppVal is initially NULL then the caller is responsible for 
+** If *ppVal is initially NULL then the caller is responsible for
 ** ensuring that the value written into *ppVal is eventually freed.
 */
 int sqlite3Stat4Column(

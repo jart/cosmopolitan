@@ -41,12 +41,12 @@
 **   (in this case max()) to process rows sorted in order of (c, d), which
 **   makes things easier for obvious reasons. More generally:
 **
-**     * FROM, WHERE, GROUP BY and HAVING clauses are all moved to 
+**     * FROM, WHERE, GROUP BY and HAVING clauses are all moved to
 **       the sub-query.
 **
 **     * ORDER BY, LIMIT and OFFSET remain part of the parent query.
 **
-**     * Terminals from each of the expression trees that make up the 
+**     * Terminals from each of the expression trees that make up the
 **       select-list and ORDER BY expressions in the parent query are
 **       selected by the sub-query. For the purposes of the transformation,
 **       terminals are column references and aggregate functions.
@@ -55,14 +55,14 @@
 **   the same window declaration (the OVER bit), then a single scan may
 **   be used to process more than one window function. For example:
 **
-**     SELECT max(b) OVER (PARTITION BY c ORDER BY d), 
-**            min(e) OVER (PARTITION BY c ORDER BY d) 
+**     SELECT max(b) OVER (PARTITION BY c ORDER BY d),
+**            min(e) OVER (PARTITION BY c ORDER BY d)
 **     FROM t1;
 **
 **   is transformed in the same way as the example above. However:
 **
-**     SELECT max(b) OVER (PARTITION BY c ORDER BY d), 
-**            min(e) OVER (PARTITION BY a ORDER BY b) 
+**     SELECT max(b) OVER (PARTITION BY c ORDER BY d),
+**            min(e) OVER (PARTITION BY a ORDER BY b)
 **     FROM t1;
 **
 **   Must be transformed to:
@@ -115,15 +115,15 @@
 **     first_value(expr)
 **     last_value(expr)
 **     nth_value(expr, N)
-**   
-**   These are the same built-in window functions supported by Postgres. 
+**
+**   These are the same built-in window functions supported by Postgres.
 **   Although the behaviour of aggregate window functions (functions that
 **   can be used as either aggregates or window funtions) allows them to
 **   be implemented using an API, built-in window functions are much more
-**   esoteric. Additionally, some window functions (e.g. nth_value()) 
+**   esoteric. Additionally, some window functions (e.g. nth_value())
 **   may only be implemented by caching the entire partition in memory.
 **   As such, some built-in window functions use the same API as aggregate
-**   window functions and some are implemented directly using VDBE 
+**   window functions and some are implemented directly using VDBE
 **   instructions. Additionally, for those functions that use the API, the
 **   window frame is sometimes modified before the SELECT statement is
 **   rewritten. For example, regardless of the specified window frame, the
@@ -135,7 +135,7 @@
 **
 **   As well as some of the built-in window functions, aggregate window
 **   functions min() and max() are implemented using VDBE instructions if
-**   the start of the window frame is declared as anything other than 
+**   the start of the window frame is declared as anything other than
 **   UNBOUNDED PRECEDING.
 */
 
@@ -146,7 +146,7 @@
 **   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 */
 static void row_numberStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -174,10 +174,10 @@ struct CallCount {
 ** Implementation of built-in window function dense_rank(). Assumes that
 ** the window frame has been set to:
 **
-**   RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW 
+**   RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 */
 static void dense_rankStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -209,7 +209,7 @@ struct NthValueCtx {
   sqlite3_value *pValue;
 };
 static void nth_valueStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -262,7 +262,7 @@ static void nth_valueFinalizeFunc(sqlite3_context *pCtx){
 #define nth_valueValueFunc noopValueFunc
 
 static void first_valueStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -293,10 +293,10 @@ static void first_valueFinalizeFunc(sqlite3_context *pCtx){
 ** Implementation of built-in window function rank(). Assumes that
 ** the window frame has been set to:
 **
-**   RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW 
+**   RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
 */
 static void rankStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -327,7 +327,7 @@ static void rankValueFunc(sqlite3_context *pCtx){
 **   GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
 */
 static void percent_rankStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -340,7 +340,7 @@ static void percent_rankStepFunc(
   }
 }
 static void percent_rankInvFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -372,7 +372,7 @@ static void percent_rankValueFunc(sqlite3_context *pCtx){
 **   GROUPS BETWEEN 1 FOLLOWING AND UNBOUNDED FOLLOWING
 */
 static void cume_distStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -385,7 +385,7 @@ static void cume_distStepFunc(
   }
 }
 static void cume_distInvFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -421,7 +421,7 @@ struct NtileCtx {
 **   ROWS CURRENT ROW AND UNBOUNDED FOLLOWING
 */
 static void ntileStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -441,7 +441,7 @@ static void ntileStepFunc(
   }
 }
 static void ntileInvFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -487,7 +487,7 @@ struct LastValueCtx {
 ** Implementation of last_value().
 */
 static void last_valueStepFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -505,7 +505,7 @@ static void last_valueStepFunc(
   }
 }
 static void last_valueInvFunc(
-  sqlite3_context *pCtx, 
+  sqlite3_context *pCtx,
   int nArg,
   sqlite3_value **apArg
 ){
@@ -658,7 +658,7 @@ static Window *windowFind(Parse *pParse, Window *pList, const char *zName){
 **     of this file), pWin is updated here.
 */
 void sqlite3WindowUpdate(
-  Parse *pParse, 
+  Parse *pParse,
   Window *pList,                  /* List of named windows for this SELECT */
   Window *pWin,                   /* Window frame to update */
   FuncDef *pFunc                  /* Window function definition */
@@ -678,17 +678,17 @@ void sqlite3WindowUpdate(
     sqlite3WindowChain(pParse, pWin, pList);
   }
   if( (pWin->eFrmType==TK_RANGE)
-   && (pWin->pStart || pWin->pEnd) 
+   && (pWin->pStart || pWin->pEnd)
    && (pWin->pOrderBy==0 || pWin->pOrderBy->nExpr!=1)
   ){
-    sqlite3ErrorMsg(pParse, 
+    sqlite3ErrorMsg(pParse,
       "RANGE with offset PRECEDING/FOLLOWING requires one ORDER BY expression"
     );
   }else
   if( pFunc->funcFlags & SQLITE_FUNC_WINDOW ){
     sqlite3 *db = pParse->db;
     if( pWin->pFilter ){
-      sqlite3ErrorMsg(pParse, 
+      sqlite3ErrorMsg(pParse,
           "FILTER clause may only be used with aggregate window functions"
       );
     }else{
@@ -698,14 +698,14 @@ void sqlite3WindowUpdate(
         int eStart;
         int eEnd;
       } aUp[] = {
-        { row_numberName,   TK_ROWS,   TK_UNBOUNDED, TK_CURRENT }, 
-        { dense_rankName,   TK_RANGE,  TK_UNBOUNDED, TK_CURRENT }, 
-        { rankName,         TK_RANGE,  TK_UNBOUNDED, TK_CURRENT }, 
-        { percent_rankName, TK_GROUPS, TK_CURRENT,   TK_UNBOUNDED }, 
-        { cume_distName,    TK_GROUPS, TK_FOLLOWING, TK_UNBOUNDED }, 
-        { ntileName,        TK_ROWS,   TK_CURRENT,   TK_UNBOUNDED }, 
-        { leadName,         TK_ROWS,   TK_UNBOUNDED, TK_UNBOUNDED }, 
-        { lagName,          TK_ROWS,   TK_UNBOUNDED, TK_CURRENT }, 
+        { row_numberName,   TK_ROWS,   TK_UNBOUNDED, TK_CURRENT },
+        { dense_rankName,   TK_RANGE,  TK_UNBOUNDED, TK_CURRENT },
+        { rankName,         TK_RANGE,  TK_UNBOUNDED, TK_CURRENT },
+        { percent_rankName, TK_GROUPS, TK_CURRENT,   TK_UNBOUNDED },
+        { cume_distName,    TK_GROUPS, TK_FOLLOWING, TK_UNBOUNDED },
+        { ntileName,        TK_ROWS,   TK_CURRENT,   TK_UNBOUNDED },
+        { leadName,         TK_ROWS,   TK_UNBOUNDED, TK_UNBOUNDED },
+        { lagName,          TK_ROWS,   TK_UNBOUNDED, TK_CURRENT },
       };
       int i;
       for(i=0; i<ArraySize(aUp); i++){
@@ -743,7 +743,7 @@ struct WindowRewrite {
 
 /*
 ** Callback function used by selectWindowRewriteEList(). If necessary,
-** this function appends to the output expression-list and updates 
+** this function appends to the output expression-list and updates
 ** expression (*ppExpr) in place.
 */
 static int selectWindowRewriteExprCb(Walker *pWalker, Expr *pExpr){
@@ -846,16 +846,16 @@ static int selectWindowRewriteSelectCb(Walker *pWalker, Select *pSelect){
 **
 **   * TK_COLUMN,
 **   * aggregate function, or
-**   * window function with a Window object that is not a member of the 
+**   * window function with a Window object that is not a member of the
 **     Window list passed as the second argument (pWin).
 **
 ** Append the node to output expression-list (*ppSub). And replace it
-** with a TK_COLUMN that reads the (N-1)th element of table 
+** with a TK_COLUMN that reads the (N-1)th element of table
 ** pWin->iEphCsr, where N is the number of elements in (*ppSub) after
 ** appending the new one.
 */
 static void selectWindowRewriteEList(
-  Parse *pParse, 
+  Parse *pParse,
   Window *pWin,
   SrcList *pSrc,
   ExprList *pEList,               /* Rewrite expressions in this list */
@@ -938,7 +938,7 @@ static int sqlite3WindowExtraAggFuncDepth(Walker *pWalker, Expr *pExpr){
 
 /*
 ** If the SELECT statement passed as the second argument does not invoke
-** any SQL window functions, this function is a no-op. Otherwise, it 
+** any SQL window functions, this function is a no-op. Otherwise, it
 ** rewrites the SELECT statement so that window function xStep functions
 ** are invoked in the correct order as described under "SELECT REWRITING"
 ** at the top of this file.
@@ -1002,8 +1002,8 @@ int sqlite3WindowRewrite(Parse *pParse, Select *p){
     selectWindowRewriteEList(pParse, pMWin, pSrc, p->pOrderBy, pTab, &pSublist);
     pMWin->nBufferCol = (pSublist ? pSublist->nExpr : 0);
 
-    /* Append the PARTITION BY and ORDER BY expressions to the to the 
-    ** sub-select expression list. They are required to figure out where 
+    /* Append the PARTITION BY and ORDER BY expressions to the to the
+    ** sub-select expression list. They are required to figure out where
     ** boundaries for partitions and sets of peer rows lie.  */
     pSublist = exprListAppendList(pParse, pSublist, pMWin->pPartition, 0);
     pSublist = exprListAppendList(pParse, pSublist, pMWin->pOrderBy, 0);
@@ -1034,11 +1034,11 @@ int sqlite3WindowRewrite(Parse *pParse, Select *p){
     /* If there is no ORDER BY or PARTITION BY clause, and the window
     ** function accepts zero arguments, and there are no other columns
     ** selected (e.g. "SELECT row_number() OVER () FROM t1"), it is possible
-    ** that pSublist is still NULL here. Add a constant expression here to 
-    ** keep everything legal in this case. 
+    ** that pSublist is still NULL here. Add a constant expression here to
+    ** keep everything legal in this case.
     */
     if( pSublist==0 ){
-      pSublist = sqlite3ExprListAppend(pParse, 0, 
+      pSublist = sqlite3ExprListAppend(pParse, 0,
         sqlite3Expr(db, TK_INTEGER, "0")
       );
     }
@@ -1221,10 +1221,10 @@ windowAllocErr:
 ** equivalent nul-terminated string.
 */
 Window *sqlite3WindowAssemble(
-  Parse *pParse, 
-  Window *pWin, 
-  ExprList *pPartition, 
-  ExprList *pOrderBy, 
+  Parse *pParse,
+  Window *pWin,
+  ExprList *pPartition,
+  ExprList *pOrderBy,
   Token *pBase
 ){
   if( pWin ){
@@ -1262,7 +1262,7 @@ void sqlite3WindowChain(Parse *pParse, Window *pWin, Window *pList){
         zErr = "frame specification";
       }
       if( zErr ){
-        sqlite3ErrorMsg(pParse, 
+        sqlite3ErrorMsg(pParse,
             "cannot override %s of window: %s", zErr, pWin->zBase
         );
       }else{
@@ -1503,7 +1503,7 @@ struct WindowCsrAndReg {
 };
 
 /*
-** A single instance of this structure is allocated on the stack by 
+** A single instance of this structure is allocated on the stack by
 ** sqlite3WindowCodeStep() and a pointer to it passed to the various helper
 ** routines. This is to reduce the number of arguments required by each
 ** helper function.
@@ -1550,7 +1550,7 @@ struct WindowCsrAndReg {
 **
 **   Each cursor (start, current and end) consists of a VDBE cursor
 **   (WindowCsrAndReg.csr) and an array of registers (starting at
-**   WindowCodeArg.reg) that always contains a copy of the peer values 
+**   WindowCodeArg.reg) that always contains a copy of the peer values
 **   read from the corresponding cursor.
 **
 **   Depending on the window-frame in question, all three cursors may not
@@ -1594,8 +1594,8 @@ static void windowReadPeerValues(
 }
 
 /*
-** Generate VM code to invoke either xStep() (if bInverse is 0) or 
-** xInverse (if bInverse is non-zero) for each window function in the 
+** Generate VM code to invoke either xStep() (if bInverse is 0) or
+** xInverse (if bInverse is non-zero) for each window function in the
 ** linked list starting at pMWin. Or, for built-in window functions
 ** that do not use the standard function API, generate the required
 ** inline VM code.
@@ -1644,7 +1644,7 @@ static void windowAggStep(
     regArg = reg;
 
     if( pMWin->regStartRowid==0
-     && (pFunc->funcFlags & SQLITE_FUNC_MINMAX) 
+     && (pFunc->funcFlags & SQLITE_FUNC_MINMAX)
      && (pWin->eStart!=TK_UNBOUNDED)
     ){
       int addrIsNull = sqlite3VdbeAddOp1(v, OP_IsNull, regArg);
@@ -1679,7 +1679,7 @@ static void windowAggStep(
         VdbeCoverage(v);
         sqlite3ReleaseTempReg(pParse, regTmp);
       }
-      
+
       if( pWin->bExprArgs ){
         int iStart = sqlite3VdbeCurrentAddr(v);
         VdbeOp *pOp, *pEnd;
@@ -1701,7 +1701,7 @@ static void windowAggStep(
         pColl = sqlite3ExprNNCollSeq(pParse, pWin->pOwner->x.pList->a[0].pExpr);
         sqlite3VdbeAddOp4(v, OP_CollSeq, 0,0,0, (const char*)pColl, P4_COLLSEQ);
       }
-      sqlite3VdbeAddOp3(v, bInverse? OP_AggInverse : OP_AggStep, 
+      sqlite3VdbeAddOp3(v, bInverse? OP_AggInverse : OP_AggStep,
                         bInverse, regArg, pWin->regAccum);
       sqlite3VdbeAppendP4(v, pFunc, P4_FUNCDEF);
       sqlite3VdbeChangeP5(v, (u8)nArg);
@@ -1734,7 +1734,7 @@ static void windowAggFinal(WindowCodeArg *p, int bFin){
 
   for(pWin=pMWin; pWin; pWin=pWin->pNextWin){
     if( pMWin->regStartRowid==0
-     && (pWin->pFunc->funcFlags & SQLITE_FUNC_MINMAX) 
+     && (pWin->pFunc->funcFlags & SQLITE_FUNC_MINMAX)
      && (pWin->eStart!=TK_UNBOUNDED)
     ){
       sqlite3VdbeAddOp2(v, OP_Null, 0, pWin->regResult);
@@ -1890,7 +1890,7 @@ static void windowReturnOneRow(WindowCodeArg *p){
         int lbl = sqlite3VdbeMakeLabel(pParse);
         int tmpReg = sqlite3GetTempReg(pParse);
         sqlite3VdbeAddOp2(v, OP_Null, 0, pWin->regResult);
-  
+
         if( pFunc->zName==nth_valueName ){
           sqlite3VdbeAddOp3(v, OP_Column,pMWin->iEphCsr,pWin->iArgCol+1,tmpReg);
           windowCheckValue(pParse, tmpReg, 2);
@@ -1912,7 +1912,7 @@ static void windowReturnOneRow(WindowCodeArg *p){
         int lbl = sqlite3VdbeMakeLabel(pParse);
         int tmpReg = sqlite3GetTempReg(pParse);
         int iEph = pMWin->iEphCsr;
-  
+
         if( nArg<3 ){
           sqlite3VdbeAddOp2(v, OP_Null, 0, pWin->regResult);
         }else{
@@ -1929,7 +1929,7 @@ static void windowReturnOneRow(WindowCodeArg *p){
           sqlite3VdbeAddOp3(v, op, tmpReg2, tmpReg, tmpReg);
           sqlite3ReleaseTempReg(pParse, tmpReg2);
         }
-  
+
         sqlite3VdbeAddOp3(v, OP_SeekRowid, csr, lbl, tmpReg);
         VdbeCoverage(v);
         sqlite3VdbeAddOp3(v, OP_Column, csr, pWin->iArgCol, pWin->regResult);
@@ -1975,7 +1975,7 @@ static int windowInitAccum(Parse *pParse, Window *pMWin){
   return regArg;
 }
 
-/* 
+/*
 ** Return true if the current frame should be cached in the ephemeral table,
 ** even if there are no xInverse() calls required.
 */
@@ -1999,9 +1999,9 @@ static int windowCacheFrame(Window *pMWin){
 ** regOld and regNew are each the first register in an array of size
 ** pOrderBy->nExpr. This function generates code to compare the two
 ** arrays of registers using the collation sequences and other comparison
-** parameters specified by pOrderBy. 
+** parameters specified by pOrderBy.
 **
-** If the two arrays are not equal, the contents of regNew is copied to 
+** If the two arrays are not equal, the contents of regNew is copied to
 ** regOld and control falls through. Otherwise, if the contents of the arrays
 ** are equal, an OP_Goto is executed. The address of the OP_Goto is returned.
 */
@@ -2018,7 +2018,7 @@ static void windowIfNewPeer(
     KeyInfo *pKeyInfo = sqlite3KeyInfoFromExprList(pParse, pOrderBy, 0, 0);
     sqlite3VdbeAddOp3(v, OP_Compare, regOld, regNew, nVal);
     sqlite3VdbeAppendP4(v, (void*)pKeyInfo, P4_KEYINFO);
-    sqlite3VdbeAddOp3(v, OP_Jump, 
+    sqlite3VdbeAddOp3(v, OP_Jump,
       sqlite3VdbeCurrentAddr(v)+1, addr, sqlite3VdbeCurrentAddr(v)+1
     );
     VdbeCoverageEqNe(v);
@@ -2052,7 +2052,7 @@ static void windowIfNewPeer(
 ** or subtraction is a a copy of csr1.peerVal.
 */
 static void windowCodeRangeTest(
-  WindowCodeArg *p, 
+  WindowCodeArg *p,
   int op,                         /* OP_Ge, OP_Gt, or OP_Le */
   int csr1,                       /* Cursor number for cursor 1 */
   int regVal,                     /* Register containing non-negative number */
@@ -2108,8 +2108,8 @@ static void windowCodeRangeTest(
   sqlite3VdbeAddOp3(v, arith, regVal, reg1, reg1);
   sqlite3VdbeJumpHere(v, addrGe);
 
-  /* If the BIGNULL flag is set for the ORDER BY, then it is required to 
-  ** consider NULL values to be larger than all other values, instead of 
+  /* If the BIGNULL flag is set for the ORDER BY, then it is required to
+  ** consider NULL values to be larger than all other values, instead of
   ** the usual smaller. The VDBE opcodes OP_Ge and so on do not handle this
   ** (and adding that capability causes a performance regression), so
   ** instead if the BIGNULL flag is set then cases where either reg1 or
@@ -2124,23 +2124,23 @@ static void windowCodeRangeTest(
   **     if( op==OP_Le ) goto lbl;
   **   }
   **
-  ** Additionally, if either reg1 or reg2 are NULL but the jump to lbl is 
+  ** Additionally, if either reg1 or reg2 are NULL but the jump to lbl is
   ** not taken, control jumps over the comparison operator coded below this
   ** block.  */
   if( pOrderBy->a[0].sortFlags & KEYINFO_ORDER_BIGNULL ){
     /* This block runs if reg1 contains a NULL. */
     int addr = sqlite3VdbeAddOp1(v, OP_NotNull, reg1); VdbeCoverage(v);
     switch( op ){
-      case OP_Ge: 
-        sqlite3VdbeAddOp2(v, OP_Goto, 0, lbl); 
+      case OP_Ge:
+        sqlite3VdbeAddOp2(v, OP_Goto, 0, lbl);
         break;
-      case OP_Gt: 
-        sqlite3VdbeAddOp2(v, OP_NotNull, reg2, lbl); 
-        VdbeCoverage(v); 
+      case OP_Gt:
+        sqlite3VdbeAddOp2(v, OP_NotNull, reg2, lbl);
+        VdbeCoverage(v);
         break;
-      case OP_Le: 
-        sqlite3VdbeAddOp2(v, OP_IsNull, reg2, lbl); 
-        VdbeCoverage(v); 
+      case OP_Le:
+        sqlite3VdbeAddOp2(v, OP_IsNull, reg2, lbl);
+        VdbeCoverage(v);
         break;
       default: assert( op==OP_Lt ); /* no-op */ break;
     }
@@ -2175,7 +2175,7 @@ static void windowCodeRangeTest(
 
 /*
 ** Helper function for sqlite3WindowCodeStep(). Each call to this function
-** generates VM code for a single RETURN_ROW, AGGSTEP or AGGINVERSE 
+** generates VM code for a single RETURN_ROW, AGGSTEP or AGGINVERSE
 ** operation. Refer to the header comment for sqlite3WindowCodeStep() for
 ** details.
 */
@@ -2234,8 +2234,8 @@ static int windowCodeOp(
   addrContinue = sqlite3VdbeCurrentAddr(v);
 
   /* If this is a (RANGE BETWEEN a FOLLOWING AND b FOLLOWING) or
-  ** (RANGE BETWEEN b PRECEDING AND a PRECEDING) frame, ensure the 
-  ** start cursor does not advance past the end cursor within the 
+  ** (RANGE BETWEEN b PRECEDING AND a PRECEDING) frame, ensure the
+  ** start cursor does not advance past the end cursor within the
   ** temporary table. It otherwise might, if (a>b).  */
   if( pMWin->eStart==pMWin->eEnd && regCountdown
    && pMWin->eFrmType==TK_RANGE && op==WINDOW_AGGINVERSE
@@ -2368,11 +2368,11 @@ Window *sqlite3WindowListDup(sqlite3 *db, Window *p){
 }
 
 /*
-** Return true if it can be determined at compile time that expression 
-** pExpr evaluates to a value that, when cast to an integer, is greater 
+** Return true if it can be determined at compile time that expression
+** pExpr evaluates to a value that, when cast to an integer, is greater
 ** than zero. False otherwise.
 **
-** If an OOM error occurs, this function sets the Parse.db.mallocFailed 
+** If an OOM error occurs, this function sets the Parse.db.mallocFailed
 ** flag and returns zero.
 */
 static int windowExprGtZero(Parse *pParse, Expr *pExpr){
@@ -2388,11 +2388,11 @@ static int windowExprGtZero(Parse *pParse, Expr *pExpr){
 }
 
 /*
-** sqlite3WhereBegin() has already been called for the SELECT statement 
+** sqlite3WhereBegin() has already been called for the SELECT statement
 ** passed as the second argument when this function is invoked. It generates
-** code to populate the Window.regResult register for each window function 
+** code to populate the Window.regResult register for each window function
 ** and invoke the sub-routine at instruction addrGosub once for each row.
-** sqlite3WhereEnd() is always called before returning. 
+** sqlite3WhereEnd() is always called before returning.
 **
 ** This function handles several different types of window frames, which
 ** require slightly different processing. The following pseudo code is
@@ -2407,17 +2407,17 @@ static int windowExprGtZero(Parse *pParse, Expr *pExpr){
 **         Gosub flush
 **       }
 **       Insert new row into eph table.
-**       
+**
 **       if( first row of partition ){
 **         // Rewind three cursors, all open on the eph table.
 **         Rewind(csrEnd);
 **         Rewind(csrStart);
 **         Rewind(csrCurrent);
-**       
+**
 **         regEnd = <expr2>          // FOLLOWING expression
 **         regStart = <expr1>        // PRECEDING expression
 **       }else{
-**         // First time this branch is taken, the eph table contains two 
+**         // First time this branch is taken, the eph table contains two
 **         // rows. The first row in the partition, which all three cursors
 **         // currently point to, and the following row.
 **         AGGSTEP
@@ -2446,17 +2446,17 @@ static int windowExprGtZero(Parse *pParse, Expr *pExpr){
 **               with arguments read from the current row of cursor csrEnd, then
 **               step cursor csrEnd forward one row (i.e. sqlite3BtreeNext()).
 **
-**   RETURN_ROW: return a row to the caller based on the contents of the 
-**               current row of csrCurrent and the current state of all 
+**   RETURN_ROW: return a row to the caller based on the contents of the
+**               current row of csrCurrent and the current state of all
 **               aggregates. Then step cursor csrCurrent forward one row.
 **
-**   AGGINVERSE: invoke the aggregate xInverse() function for each window 
+**   AGGINVERSE: invoke the aggregate xInverse() function for each window
 **               functions with arguments read from the current row of cursor
 **               csrStart. Then step csrStart forward one row.
 **
 ** There are two other ROWS window frames that are handled significantly
 ** differently from the above - "BETWEEN <expr> PRECEDING AND <expr> PRECEDING"
-** and "BETWEEN <expr> FOLLOWING AND <expr> FOLLOWING". These are special 
+** and "BETWEEN <expr> FOLLOWING AND <expr> FOLLOWING". These are special
 ** cases because they change the order in which the three cursors (csrStart,
 ** csrCurrent and csrEnd) iterate through the ephemeral table. Cases that
 ** use UNBOUNDED or CURRENT ROW are much simpler variations on one of these
@@ -2606,15 +2606,15 @@ static int windowExprGtZero(Parse *pParse, Expr *pExpr){
 **           regEnd = <expr2>
 **           regStart = <expr1>
 **         }else if( new group ){
-**           ... 
+**           ...
 **         }
 **       }
 **
-**   2. Instead of processing a single row, each RETURN_ROW, AGGSTEP or 
+**   2. Instead of processing a single row, each RETURN_ROW, AGGSTEP or
 **      AGGINVERSE step processes the current row of the relevant cursor and
 **      all subsequent rows belonging to the same group.
 **
-** RANGE window frames are a little different again. As for GROUPS, the 
+** RANGE window frames are a little different again. As for GROUPS, the
 ** main loop runs once per group only. And RETURN_ROW, AGGSTEP and AGGINVERSE
 ** deal in groups instead of rows. As for ROWS and GROUPS, there are three
 ** basic cases:
@@ -2651,7 +2651,7 @@ static int windowExprGtZero(Parse *pParse, Expr *pExpr){
 **         }
 **       }
 **
-** In the above notation, "csr.key" means the current value of the ORDER BY 
+** In the above notation, "csr.key" means the current value of the ORDER BY
 ** expression (there is only ever 1 for a RANGE that uses an <expr> FOLLOWING
 ** or <expr PRECEDING) read from cursor csr.
 **
@@ -2751,11 +2751,11 @@ void sqlite3WindowCodeStep(
   int regStart = 0;               /* Value of <expr> PRECEDING */
   int regEnd = 0;                 /* Value of <expr> FOLLOWING */
 
-  assert( pMWin->eStart==TK_PRECEDING || pMWin->eStart==TK_CURRENT 
-       || pMWin->eStart==TK_FOLLOWING || pMWin->eStart==TK_UNBOUNDED 
+  assert( pMWin->eStart==TK_PRECEDING || pMWin->eStart==TK_CURRENT
+       || pMWin->eStart==TK_FOLLOWING || pMWin->eStart==TK_UNBOUNDED
   );
-  assert( pMWin->eEnd==TK_FOLLOWING || pMWin->eEnd==TK_CURRENT 
-       || pMWin->eEnd==TK_UNBOUNDED || pMWin->eEnd==TK_PRECEDING 
+  assert( pMWin->eEnd==TK_FOLLOWING || pMWin->eEnd==TK_CURRENT
+       || pMWin->eEnd==TK_UNBOUNDED || pMWin->eEnd==TK_PRECEDING
   );
   assert( pMWin->eExclude==0 || pMWin->eExclude==TK_CURRENT
        || pMWin->eExclude==TK_GROUP || pMWin->eExclude==TK_TIES
@@ -2777,9 +2777,9 @@ void sqlite3WindowCodeStep(
   s.end.csr = s.current.csr+3;
 
   /* Figure out when rows may be deleted from the ephemeral table. There
-  ** are four options - they may never be deleted (eDelete==0), they may 
+  ** are four options - they may never be deleted (eDelete==0), they may
   ** be deleted as soon as they are no longer part of the window frame
-  ** (eDelete==WINDOW_AGGINVERSE), they may be deleted as after the row 
+  ** (eDelete==WINDOW_AGGINVERSE), they may be deleted as after the row
   ** has been returned to the caller (WINDOW_RETURN_ROW), or they may
   ** be deleted after they enter the frame (WINDOW_AGGSTEP). */
   switch( pMWin->eStart ){
@@ -2827,7 +2827,7 @@ void sqlite3WindowCodeStep(
   }
 
   /* If this is not a "ROWS BETWEEN ..." frame, then allocate arrays of
-  ** registers to store copies of the ORDER BY expressions (peer values) 
+  ** registers to store copies of the ORDER BY expressions (peer values)
   ** for the main loop, and for each cursor (start, current and end). */
   if( pMWin->eFrmType!=TK_ROWS ){
     int nPeer = (pOrderBy ? pOrderBy->nExpr : 0);
@@ -2848,7 +2848,7 @@ void sqlite3WindowCodeStep(
   sqlite3VdbeAddOp3(v, OP_MakeRecord, regNew, nInput, regRecord);
 
   /* An input row has just been read into an array of registers starting
-  ** at regNew. If the window has a PARTITION clause, this block generates 
+  ** at regNew. If the window has a PARTITION clause, this block generates
   ** VM code to check if the input row is the start of a new partition.
   ** If so, it does an OP_Gosub to an address to be filled in later. The
   ** address of the OP_Gosub is stored in local variable addrGosubFlush. */

@@ -248,8 +248,8 @@ static void ieee754func_to_blob(
 }
 
 int sqlite3_ieee_init(
-  sqlite3 *db, 
-  char **pzErrMsg, 
+  sqlite3 *db,
+  char **pzErrMsg,
   const sqlite3_api_routines *pApi
 ){
   static const struct {

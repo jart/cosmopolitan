@@ -151,12 +151,12 @@ void rt_end(double *r_ent, double *r_chisq, double *r_mean,
        in the entropy calculation below.  While we're at it,
        we sum of all the data which will be used to compute the
        mean. */
-       
+
     cexp_ = totalc / (binary ? 2.0 : 256.0);  /* Expected count per bin */
     for (i = 0; i < (binary ? 2 : 256); i++) {
        double a = ccount[i] - cexp_;
-       
-       prob[i] = ((double) ccount[i]) / totalc;       
+
+       prob[i] = ((double) ccount[i]) / totalc;
        chisq += (a * a) / cexp_;
        datasum += ((double) i) * ccount[i];
     }

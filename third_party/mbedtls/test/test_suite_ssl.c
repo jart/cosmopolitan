@@ -1038,7 +1038,7 @@ int mbedtls_move_handshake_to_state( mbedtls_ssl_context *ssl,
     enum { BUFFSIZE = 1024 };
     int max_steps = 1000;
     int ret = 0;
- 
+
     if( ssl == NULL || second_ssl == NULL )
     {
         return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;

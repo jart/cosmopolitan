@@ -79,7 +79,7 @@ end
 print "testing pack"
 
 a = table.pack()
-assert(a[1] == undef and a.n == 0) 
+assert(a[1] == undef and a.n == 0)
 
 a = table.pack(table)
 assert(a[1] == table and a.n == 1)
@@ -94,8 +94,8 @@ do
   checkerror("table expected", table.move, 1, 2, 3, 4)
 
   local function eqT (a, b)
-    for k, v in pairs(a) do assert(b[k] == v) end 
-    for k, v in pairs(b) do assert(a[k] == v) end 
+    for k, v in pairs(a) do assert(b[k] == v) end
+    for k, v in pairs(b) do assert(a[k] == v) end
   end
 
   local a = table.move({10,20,30}, 1, 3, 2)  -- move forward

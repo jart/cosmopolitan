@@ -65,7 +65,7 @@ ARGUMENTS
 
 OPTIONS
        -1     list  filenames  only,  one  per line.  This option excludes all
-              others;  headers,  trailers  and  zipfile  comments  are   never 
+              others;  headers,  trailers  and  zipfile  comments  are   never
              printed.  It is intended for use in Unix shell scripts.
 
        -2     list  filenames  only,  one  per  line,  but allow headers (-h),

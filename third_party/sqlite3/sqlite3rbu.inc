@@ -17,36 +17,36 @@
 /*
 ** SUMMARY
 **
-** Writing a transaction containing a large number of operations on 
+** Writing a transaction containing a large number of operations on
 ** b-tree indexes that are collectively larger than the available cache
-** memory can be very inefficient. 
+** memory can be very inefficient.
 **
 ** The problem is that in order to update a b-tree, the leaf page (at least)
 ** containing the entry being inserted or deleted must be modified. If the
-** working set of leaves is larger than the available cache memory, then a 
-** single leaf that is modified more than once as part of the transaction 
+** working set of leaves is larger than the available cache memory, then a
+** single leaf that is modified more than once as part of the transaction
 ** may be loaded from or written to the persistent media multiple times.
 ** Additionally, because the index updates are likely to be applied in
-** random order, access to pages within the database is also likely to be in 
+** random order, access to pages within the database is also likely to be in
 ** random order, which is itself quite inefficient.
 **
 ** One way to improve the situation is to sort the operations on each index
 ** by index key before applying them to the b-tree. This leads to an IO
 ** pattern that resembles a single linear scan through the index b-tree,
-** and all but guarantees each modified leaf page is loaded and stored 
+** and all but guarantees each modified leaf page is loaded and stored
 ** exactly once. SQLite uses this trick to improve the performance of
 ** CREATE INDEX commands. This extension allows it to be used to improve
 ** the performance of large transactions on existing databases.
 **
-** Additionally, this extension allows the work involved in writing the 
-** large transaction to be broken down into sub-transactions performed 
-** sequentially by separate processes. This is useful if the system cannot 
-** guarantee that a single update process will run for long enough to apply 
-** the entire update, for example because the update is being applied on a 
-** mobile device that is frequently rebooted. Even after the writer process 
+** Additionally, this extension allows the work involved in writing the
+** large transaction to be broken down into sub-transactions performed
+** sequentially by separate processes. This is useful if the system cannot
+** guarantee that a single update process will run for long enough to apply
+** the entire update, for example because the update is being applied on a
+** mobile device that is frequently rebooted. Even after the writer process
 ** has committed one or more sub-transactions, other database clients continue
-** to read from the original database snapshot. In other words, partially 
-** applied transactions are not visible to other clients. 
+** to read from the original database snapshot. In other words, partially
+** applied transactions are not visible to other clients.
 **
 ** "RBU" stands for "Resumable Bulk Update". As in a large database update
 ** transmitted via a wireless network to a mobile device. A transaction
@@ -62,9 +62,9 @@
 **
 **   * INSERT statements may not use any default values.
 **
-**   * UPDATE and DELETE statements must identify their target rows by 
+**   * UPDATE and DELETE statements must identify their target rows by
 **     non-NULL PRIMARY KEY values. Rows with NULL values stored in PRIMARY
-**     KEY fields may not be updated or deleted. If the table being written 
+**     KEY fields may not be updated or deleted. If the table being written
 **     has no PRIMARY KEY, affected rows must be identified by rowid.
 **
 **   * UPDATE statements may not modify PRIMARY KEY columns.
@@ -81,10 +81,10 @@
 ** PREPARATION
 **
 ** An "RBU update" is stored as a separate SQLite database. A database
-** containing an RBU update is an "RBU database". For each table in the 
+** containing an RBU update is an "RBU database". For each table in the
 ** target database to be updated, the RBU database should contain a table
 ** named "data_<target name>" containing the same set of columns as the
-** target table, and one more - "rbu_control". The data_% table should 
+** target table, and one more - "rbu_control". The data_% table should
 ** have no PRIMARY KEY or UNIQUE constraints, but each column should have
 ** the same type as the corresponding column in the target database.
 ** The "rbu_control" column should have no type at all. For example, if
@@ -99,22 +99,22 @@
 ** The order of the columns in the data_% table does not matter.
 **
 ** Instead of a regular table, the RBU database may also contain virtual
-** tables or view named using the data_<target> naming scheme. 
+** tables or view named using the data_<target> naming scheme.
 **
-** Instead of the plain data_<target> naming scheme, RBU database tables 
+** Instead of the plain data_<target> naming scheme, RBU database tables
 ** may also be named data<integer>_<target>, where <integer> is any sequence
 ** of zero or more numeric characters (0-9). This can be significant because
-** tables within the RBU database are always processed in order sorted by 
+** tables within the RBU database are always processed in order sorted by
 ** name. By judicious selection of the <integer> portion of the names
 ** of the RBU tables the user can therefore control the order in which they
 ** are processed. This can be useful, for example, to ensure that "external
 ** content" FTS4 tables are updated before their underlying content tables.
 **
 ** If the target database table is a virtual table or a table that has no
-** PRIMARY KEY declaration, the data_% table must also contain a column 
-** named "rbu_rowid". This column is mapped to the tables implicit primary 
-** key column - "rowid". Virtual tables for which the "rowid" column does 
-** not function like a primary key value cannot be updated using RBU. For 
+** PRIMARY KEY declaration, the data_% table must also contain a column
+** named "rbu_rowid". This column is mapped to the tables implicit primary
+** key column - "rowid". Virtual tables for which the "rowid" column does
+** not function like a primary key value cannot be updated using RBU. For
 ** example, if the target db contains either of the following:
 **
 **   CREATE VIRTUAL TABLE x1 USING fts3(a, b);
@@ -137,35 +137,35 @@
 **   CREATE TABLE data_ft1(a, b, langid, rbu_rowid, rbu_control);
 **   CREATE TABLE data_ft1(a, b, rbu_rowid, rbu_control);
 **
-** For each row to INSERT into the target database as part of the RBU 
+** For each row to INSERT into the target database as part of the RBU
 ** update, the corresponding data_% table should contain a single record
 ** with the "rbu_control" column set to contain integer value 0. The
-** other columns should be set to the values that make up the new record 
-** to insert. 
+** other columns should be set to the values that make up the new record
+** to insert.
 **
-** If the target database table has an INTEGER PRIMARY KEY, it is not 
-** possible to insert a NULL value into the IPK column. Attempting to 
+** If the target database table has an INTEGER PRIMARY KEY, it is not
+** possible to insert a NULL value into the IPK column. Attempting to
 ** do so results in an SQLITE_MISMATCH error.
 **
-** For each row to DELETE from the target database as part of the RBU 
+** For each row to DELETE from the target database as part of the RBU
 ** update, the corresponding data_% table should contain a single record
 ** with the "rbu_control" column set to contain integer value 1. The
 ** real primary key values of the row to delete should be stored in the
 ** corresponding columns of the data_% table. The values stored in the
 ** other columns are not used.
 **
-** For each row to UPDATE from the target database as part of the RBU 
+** For each row to UPDATE from the target database as part of the RBU
 ** update, the corresponding data_% table should contain a single record
 ** with the "rbu_control" column set to contain a value of type text.
-** The real primary key values identifying the row to update should be 
+** The real primary key values identifying the row to update should be
 ** stored in the corresponding columns of the data_% table row, as should
-** the new values of all columns being update. The text value in the 
+** the new values of all columns being update. The text value in the
 ** "rbu_control" column must contain the same number of characters as
 ** there are columns in the target database table, and must consist entirely
-** of 'x' and '.' characters (or in some special cases 'd' - see below). For 
+** of 'x' and '.' characters (or in some special cases 'd' - see below). For
 ** each column that is being updated, the corresponding character is set to
 ** 'x'. For those that remain as they are, the corresponding character of the
-** rbu_control value should be set to '.'. For example, given the tables 
+** rbu_control value should be set to '.'. For example, given the tables
 ** above, the update statement:
 **
 **   UPDATE t1 SET c = 'usa' WHERE a = 4;
@@ -179,30 +179,30 @@
 ** target table with the value stored in the corresponding data_% column, the
 ** user-defined SQL function "rbu_delta()" is invoked and the result stored in
 ** the target table column. rbu_delta() is invoked with two arguments - the
-** original value currently stored in the target table column and the 
+** original value currently stored in the target table column and the
 ** value specified in the data_xxx table.
 **
 ** For example, this row:
 **
 **   INSERT INTO data_t1(a, b, c, rbu_control) VALUES(4, NULL, 'usa', '..d');
 **
-** is similar to an UPDATE statement such as: 
+** is similar to an UPDATE statement such as:
 **
 **   UPDATE t1 SET c = rbu_delta(c, 'usa') WHERE a = 4;
 **
-** Finally, if an 'f' character appears in place of a 'd' or 's' in an 
+** Finally, if an 'f' character appears in place of a 'd' or 's' in an
 ** ota_control string, the contents of the data_xxx table column is assumed
 ** to be a "fossil delta" - a patch to be applied to a blob value in the
 ** format used by the fossil source-code management system. In this case
-** the existing value within the target database table must be of type BLOB. 
+** the existing value within the target database table must be of type BLOB.
 ** It is replaced by the result of applying the specified fossil delta to
 ** itself.
 **
 ** If the target database table is a virtual table or a table with no PRIMARY
-** KEY, the rbu_control value should not include a character corresponding 
+** KEY, the rbu_control value should not include a character corresponding
 ** to the rbu_rowid value. For example, this:
 **
-**   INSERT INTO data_ft1(a, b, rbu_rowid, rbu_control) 
+**   INSERT INTO data_ft1(a, b, rbu_rowid, rbu_control)
 **       VALUES(NULL, 'usa', 12, '.x');
 **
 ** causes a result similar to:
@@ -212,14 +212,14 @@
 ** The data_xxx tables themselves should have no PRIMARY KEY declarations.
 ** However, RBU is more efficient if reading the rows in from each data_xxx
 ** table in "rowid" order is roughly the same as reading them sorted by
-** the PRIMARY KEY of the corresponding target database table. In other 
-** words, rows should be sorted using the destination table PRIMARY KEY 
+** the PRIMARY KEY of the corresponding target database table. In other
+** words, rows should be sorted using the destination table PRIMARY KEY
 ** fields before they are inserted into the data_xxx tables.
 **
 ** USAGE
 **
-** The API declared below allows an application to apply an RBU update 
-** stored on disk to an existing target database. Essentially, the 
+** The API declared below allows an application to apply an RBU update
+** stored on disk to an existing target database. Essentially, the
 ** application:
 **
 **     1) Opens an RBU handle using the sqlite3rbu_open() function.
@@ -230,24 +230,24 @@
 **
 **     3) Calls the sqlite3rbu_step() function one or more times on
 **        the new handle. Each call to sqlite3rbu_step() performs a single
-**        b-tree operation, so thousands of calls may be required to apply 
+**        b-tree operation, so thousands of calls may be required to apply
 **        a complete update.
 **
 **     4) Calls sqlite3rbu_close() to close the RBU update handle. If
 **        sqlite3rbu_step() has been called enough times to completely
 **        apply the update to the target database, then the RBU database
-**        is marked as fully applied. Otherwise, the state of the RBU 
-**        update application is saved in the RBU database for later 
+**        is marked as fully applied. Otherwise, the state of the RBU
+**        update application is saved in the RBU database for later
 **        resumption.
 **
 ** See comments below for more detail on APIs.
 **
 ** If an update is only partially applied to the target database by the
-** time sqlite3rbu_close() is called, various state information is saved 
+** time sqlite3rbu_close() is called, various state information is saved
 ** within the RBU database. This allows subsequent processes to automatically
 ** resume the RBU update from where it left off.
 **
-** To remove all RBU extension state information, returning an RBU database 
+** To remove all RBU extension state information, returning an RBU database
 ** to its original contents, it is sufficient to drop all tables that begin
 ** with the prefix "rbu_"
 **
@@ -283,21 +283,21 @@ typedef struct sqlite3rbu sqlite3rbu;
 ** the path to the RBU database. Each call to this function must be matched
 ** by a call to sqlite3rbu_close(). When opening the databases, RBU passes
 ** the SQLITE_CONFIG_URI flag to sqlite3_open_v2(). So if either zTarget
-** or zRbu begin with "file:", it will be interpreted as an SQLite 
+** or zRbu begin with "file:", it will be interpreted as an SQLite
 ** database URI, not a regular file name.
 **
-** If the zState argument is passed a NULL value, the RBU extension stores 
-** the current state of the update (how many rows have been updated, which 
+** If the zState argument is passed a NULL value, the RBU extension stores
+** the current state of the update (how many rows have been updated, which
 ** indexes are yet to be updated etc.) within the RBU database itself. This
 ** can be convenient, as it means that the RBU application does not need to
-** organize removing a separate state file after the update is concluded. 
-** Or, if zState is non-NULL, it must be a path to a database file in which 
+** organize removing a separate state file after the update is concluded.
+** Or, if zState is non-NULL, it must be a path to a database file in which
 ** the RBU extension can store the state of the update.
 **
 ** When resuming an RBU update, the zState argument must be passed the same
 ** value as when the RBU update was started.
 **
-** Once the RBU update is finished, the RBU extension does not 
+** Once the RBU update is finished, the RBU extension does not
 ** automatically remove any zState database file, even if it created it.
 **
 ** By default, RBU uses the default VFS to access the files on disk. To
@@ -310,7 +310,7 @@ typedef struct sqlite3rbu sqlite3rbu;
 ** the zipvfs_create_vfs() API below for details on using RBU with zipvfs.
 */
 SQLITE_API sqlite3rbu *sqlite3rbu_open(
-  const char *zTarget, 
+  const char *zTarget,
   const char *zRbu,
   const char *zState
 );
@@ -320,13 +320,13 @@ SQLITE_API sqlite3rbu *sqlite3rbu_open(
 ** An RBU vacuum is similar to SQLite's built-in VACUUM command, except
 ** that it can be suspended and resumed like an RBU update.
 **
-** The second argument to this function identifies a database in which 
-** to store the state of the RBU vacuum operation if it is suspended. The 
+** The second argument to this function identifies a database in which
+** to store the state of the RBU vacuum operation if it is suspended. The
 ** first time sqlite3rbu_vacuum() is called, to start an RBU vacuum
 ** operation, the state database should either not exist or be empty
-** (contain no tables). If an RBU vacuum is suspended by calling 
+** (contain no tables). If an RBU vacuum is suspended by calling
 ** sqlite3rbu_close() on the RBU handle before sqlite3rbu_step() has
-** returned SQLITE_DONE, the vacuum state is stored in the state database. 
+** returned SQLITE_DONE, the vacuum state is stored in the state database.
 ** The vacuum can be resumed by calling this function to open a new RBU
 ** handle specifying the same target and state databases.
 **
@@ -334,26 +334,26 @@ SQLITE_API sqlite3rbu *sqlite3rbu_open(
 ** name of the state database is "<database>-vacuum", where <database>
 ** is the name of the target database file. In this case, on UNIX, if the
 ** state database is not already present in the file-system, it is created
-** with the same permissions as the target db is made. 
+** with the same permissions as the target db is made.
 **
-** With an RBU vacuum, it is an SQLITE_MISUSE error if the name of the 
-** state database ends with "-vactmp". This name is reserved for internal 
+** With an RBU vacuum, it is an SQLITE_MISUSE error if the name of the
+** state database ends with "-vactmp". This name is reserved for internal
 ** use.
 **
 ** This function does not delete the state database after an RBU vacuum
 ** is completed, even if it created it. However, if the call to
 ** sqlite3rbu_close() returns any value other than SQLITE_OK, the contents
 ** of the state tables within the state database are zeroed. This way,
-** the next call to sqlite3rbu_vacuum() opens a handle that starts a 
+** the next call to sqlite3rbu_vacuum() opens a handle that starts a
 ** new RBU vacuum operation.
 **
 ** As with sqlite3rbu_open(), Zipvfs users should rever to the comment
-** describing the sqlite3rbu_create_vfs() API function below for 
-** a description of the complications associated with using RBU with 
+** describing the sqlite3rbu_create_vfs() API function below for
+** a description of the complications associated with using RBU with
 ** zipvfs databases.
 */
 SQLITE_API sqlite3rbu *sqlite3rbu_vacuum(
-  const char *zTarget, 
+  const char *zTarget,
   const char *zState
 );
 
@@ -365,7 +365,7 @@ SQLITE_API sqlite3rbu *sqlite3rbu_vacuum(
 ** is removed entirely. If the second parameter is negative, the limit is
 ** not modified (this is useful for querying the current limit).
 **
-** In all cases the returned value is the current limit in bytes (zero 
+** In all cases the returned value is the current limit in bytes (zero
 ** indicates unlimited).
 **
 ** If the temp space limit is exceeded during operation, an SQLITE_FULL
@@ -374,13 +374,13 @@ SQLITE_API sqlite3rbu *sqlite3rbu_vacuum(
 SQLITE_API sqlite3_int64 sqlite3rbu_temp_size_limit(sqlite3rbu*, sqlite3_int64);
 
 /*
-** Return the current amount of temp file space, in bytes, currently used by 
+** Return the current amount of temp file space, in bytes, currently used by
 ** the RBU handle passed as the only argument.
 */
 SQLITE_API sqlite3_int64 sqlite3rbu_temp_size(sqlite3rbu*);
 
 /*
-** Internally, each RBU connection uses a separate SQLite database 
+** Internally, each RBU connection uses a separate SQLite database
 ** connection to access the target and rbu update databases. This
 ** API allows the application direct access to these database handles.
 **
@@ -391,10 +391,10 @@ SQLITE_API sqlite3_int64 sqlite3rbu_temp_size(sqlite3rbu*);
 ** following scenarios:
 **
 **   * If any target tables are virtual tables, it may be necessary to
-**     call sqlite3_create_module() on the target database handle to 
+**     call sqlite3_create_module() on the target database handle to
 **     register the required virtual table implementations.
 **
-**   * If the data_xxx tables in the RBU source database are virtual 
+**   * If the data_xxx tables in the RBU source database are virtual
 **     tables, the application may need to call sqlite3_create_module() on
 **     the rbu update db handle to any required virtual table
 **     implementations.
@@ -413,12 +413,12 @@ SQLITE_API sqlite3_int64 sqlite3rbu_temp_size(sqlite3rbu*);
 SQLITE_API sqlite3 *sqlite3rbu_db(sqlite3rbu*, int bRbu);
 
 /*
-** Do some work towards applying the RBU update to the target db. 
+** Do some work towards applying the RBU update to the target db.
 **
-** Return SQLITE_DONE if the update has been completely applied, or 
+** Return SQLITE_DONE if the update has been completely applied, or
 ** SQLITE_OK if no error occurs but there remains work to do to apply
-** the RBU update. If an error does occur, some other error code is 
-** returned. 
+** the RBU update. If an error does occur, some other error code is
+** returned.
 **
 ** Once a call to sqlite3rbu_step() has returned a value other than
 ** SQLITE_OK, all subsequent calls on the same RBU handle are no-ops
@@ -431,7 +431,7 @@ SQLITE_API int sqlite3rbu_step(sqlite3rbu *pRbu);
 **
 ** If a power failure or application crash occurs during an update, following
 ** system recovery RBU may resume the update from the point at which the state
-** was last saved. In other words, from the most recent successful call to 
+** was last saved. In other words, from the most recent successful call to
 ** sqlite3rbu_close() or this function.
 **
 ** SQLITE_OK is returned if successful, or an SQLite error code otherwise.
@@ -439,7 +439,7 @@ SQLITE_API int sqlite3rbu_step(sqlite3rbu *pRbu);
 SQLITE_API int sqlite3rbu_savestate(sqlite3rbu *pRbu);
 
 /*
-** Close an RBU handle. 
+** Close an RBU handle.
 **
 ** If the RBU update has been completely applied, mark the RBU database
 ** as fully applied. Otherwise, assuming no error has occurred, save the
@@ -453,20 +453,20 @@ SQLITE_API int sqlite3rbu_savestate(sqlite3rbu *pRbu);
 ** eventually free any such buffer using sqlite3_free().
 **
 ** Otherwise, if no error occurs, this function returns SQLITE_OK if the
-** update has been partially applied, or SQLITE_DONE if it has been 
+** update has been partially applied, or SQLITE_DONE if it has been
 ** completely applied.
 */
 SQLITE_API int sqlite3rbu_close(sqlite3rbu *pRbu, char **pzErrmsg);
 
 /*
-** Return the total number of key-value operations (inserts, deletes or 
+** Return the total number of key-value operations (inserts, deletes or
 ** updates) that have been performed on the target database since the
 ** current RBU update was started.
 */
 SQLITE_API sqlite3_int64 sqlite3rbu_progress(sqlite3rbu *pRbu);
 
 /*
-** Obtain permyriadage (permyriadage is to 10000 as percentage is to 100) 
+** Obtain permyriadage (permyriadage is to 10000 as percentage is to 100)
 ** progress indications for the two stages of an RBU update. This API may
 ** be useful for driving GUI progress indicators and similar.
 **
@@ -479,16 +479,16 @@ SQLITE_API sqlite3_int64 sqlite3rbu_progress(sqlite3rbu *pRbu);
 ** The update is visible to non-RBU clients during stage 2. During stage 1
 ** non-RBU reader clients may see the original database.
 **
-** If this API is called during stage 2 of the update, output variable 
+** If this API is called during stage 2 of the update, output variable
 ** (*pnOne) is set to 10000 to indicate that stage 1 has finished and (*pnTwo)
 ** to a value between 0 and 10000 to indicate the permyriadage progress of
-** stage 2. A value of 5000 indicates that stage 2 is half finished, 
+** stage 2. A value of 5000 indicates that stage 2 is half finished,
 ** 9000 indicates that it is 90% finished, and so on.
 **
-** If this API is called during stage 1 of the update, output variable 
+** If this API is called during stage 1 of the update, output variable
 ** (*pnTwo) is set to 0 to indicate that stage 2 has not yet started. The
-** value to which (*pnOne) is set depends on whether or not the RBU 
-** database contains an "rbu_count" table. The rbu_count table, if it 
+** value to which (*pnOne) is set depends on whether or not the RBU
+** database contains an "rbu_count" table. The rbu_count table, if it
 ** exists, must contain the same columns as the following:
 **
 **   CREATE TABLE rbu_count(tbl TEXT PRIMARY KEY, cnt INTEGER) WITHOUT ROWID;
@@ -547,20 +547,20 @@ SQLITE_API int sqlite3rbu_state(sqlite3rbu *pRbu);
 
 /*
 ** Create an RBU VFS named zName that accesses the underlying file-system
-** via existing VFS zParent. Or, if the zParent parameter is passed NULL, 
+** via existing VFS zParent. Or, if the zParent parameter is passed NULL,
 ** then the new RBU VFS uses the default system VFS to access the file-system.
-** The new object is registered as a non-default VFS with SQLite before 
+** The new object is registered as a non-default VFS with SQLite before
 ** returning.
 **
 ** Part of the RBU implementation uses a custom VFS object. Usually, this
-** object is created and deleted automatically by RBU. 
+** object is created and deleted automatically by RBU.
 **
 ** The exception is for applications that also use zipvfs. In this case,
 ** the custom VFS must be explicitly created by the user before the RBU
 ** handle is opened. The RBU VFS should be installed so that the zipvfs
-** VFS uses the RBU VFS, which in turn uses any other VFS layers in use 
+** VFS uses the RBU VFS, which in turn uses any other VFS layers in use
 ** (for example multiplexor) to access the file-system. For example,
-** to assemble an RBU enabled VFS stack that uses both zipvfs and 
+** to assemble an RBU enabled VFS stack that uses both zipvfs and
 ** multiplexor (error checking omitted):
 **
 **     // Create a VFS named "multiplex" (not the default).
@@ -582,9 +582,9 @@ SQLITE_API int sqlite3rbu_state(sqlite3rbu *pRbu);
 ** may be used by RBU clients. Attempting to use RBU with a zipvfs VFS stack
 ** that does not include the RBU layer results in an error.
 **
-** The overhead of adding the "rbu" VFS to the system is negligible for 
-** non-RBU users. There is no harm in an application accessing the 
-** file-system via "rbu" all the time, even if it only uses RBU functionality 
+** The overhead of adding the "rbu" VFS to the system is negligible for
+** non-RBU users. There is no harm in an application accessing the
+** file-system via "rbu" all the time, even if it only uses RBU functionality
 ** occasionally.
 */
 SQLITE_API int sqlite3rbu_create_vfs(const char *zName, const char *zParent);

@@ -52,7 +52,7 @@ JSContext *JS_GetFunctionRealm(JSContext *ctx, JSValueConst func_obj)
 {
     JSObject *p;
     JSContext *realm;
-    
+
     if (JS_VALUE_GET_TAG(func_obj) != JS_TAG_OBJECT)
         return ctx;
     p = JS_VALUE_GET_OBJ(func_obj);
@@ -101,7 +101,7 @@ JSValue js_create_from_ctor(JSContext *ctx, JSValueConst ctor,
 {
     JSValue proto, obj;
     JSContext *realm;
-    
+
     if (JS_IsUndefined(ctor)) {
         proto = JS_DupValue(ctx, ctx->class_proto[class_id]);
     } else {

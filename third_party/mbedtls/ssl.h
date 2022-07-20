@@ -1514,7 +1514,7 @@ void mbedtls_ssl_set_verify( mbedtls_ssl_context *, int (*)(void *, mbedtls_x509
  *                  MBEDTLS_ERR_XXX_ALLOC_FAILED on memory allocation error.
  */
 forceinline int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
-                                             int endpoint, int transport, 
+                                             int endpoint, int transport,
                                              int preset ) {
   int mbedtls_ssl_config_defaults_impl(mbedtls_ssl_config *, int, int, int,
                                        int (*)(mbedtls_ssl_context *));
@@ -1522,13 +1522,13 @@ forceinline int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
 #if defined(MBEDTLS_SSL_CLI_C)
     case MBEDTLS_SSL_IS_CLIENT:
       return mbedtls_ssl_config_defaults_impl(
-          conf, endpoint, transport, preset, 
+          conf, endpoint, transport, preset,
           mbedtls_ssl_handshake_client_step);
 #endif
 #if defined(MBEDTLS_SSL_SRV_C)
     case MBEDTLS_SSL_IS_SERVER:
       return mbedtls_ssl_config_defaults_impl(
-          conf, endpoint, transport, preset, 
+          conf, endpoint, transport, preset,
           mbedtls_ssl_handshake_server_step);
 #endif
     default:

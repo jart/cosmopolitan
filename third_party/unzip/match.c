@@ -418,7 +418,7 @@ int iswildw(pw)          /* originally only used for stat()-bug workaround in */
             return TRUE;
 
     return FALSE;
- 
+
 } /* end function iswildw() */
 #endif /* defined(UNICODE_SUPPORT) && defined(WIN32_WIDE) */
 

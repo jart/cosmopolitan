@@ -475,7 +475,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
                                  mbedtls_md_type_t md_alg,
                                  const unsigned char *hash, size_t hash_len,
                                  unsigned char *sig, size_t *sig_len,
-                                 int (*f_rng)(void *, unsigned char *, size_t), 
+                                 int (*f_rng)(void *, unsigned char *, size_t),
                                  void *p_rng, mbedtls_pk_restart_ctx *rs_ctx )
 {
     PK_VALIDATE_RET( ctx );

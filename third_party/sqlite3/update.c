@@ -31,10 +31,10 @@ static void updateVirtualTable(
 
 /*
 ** The most recently coded instruction was an OP_Column to retrieve the
-** i-th column of table pTab. This routine sets the P4 parameter of the 
+** i-th column of table pTab. This routine sets the P4 parameter of the
 ** OP_Column to the default value, if any.
 **
-** The default value of a column is specified by a DEFAULT clause in the 
+** The default value of a column is specified by a DEFAULT clause in the
 ** column definition. This was either supplied by the user when the table
 ** was created, or added later to the table definition by an ALTER TABLE
 ** command. If the latter, then the row-records in the table btree on disk
@@ -43,9 +43,9 @@ static void updateVirtualTable(
 ** If the former, then all row-records are guaranteed to include a value
 ** for the column and the P4 value is not required.
 **
-** Column definitions created by an ALTER TABLE command may only have 
+** Column definitions created by an ALTER TABLE command may only have
 ** literal default values specified: a number, null or a string. (If a more
-** complicated default expression value was provided, it is evaluated 
+** complicated default expression value was provided, it is evaluated
 ** when the ALTER TABLE is executed and one of the literal values written
 ** into the sqlite_schema table.)
 **
@@ -67,7 +67,7 @@ void sqlite3ColumnDefault(Vdbe *v, Table *pTab, int i, int iReg){
     Column *pCol = &pTab->aCol[i];
     VdbeComment((v, "%s.%s", pTab->zName, pCol->zName));
     assert( i<pTab->nCol );
-    sqlite3ValueFromExpr(sqlite3VdbeDb(v), pCol->pDflt, enc, 
+    sqlite3ValueFromExpr(sqlite3VdbeDb(v), pCol->pDflt, enc,
                          pCol->affinity, &pValue);
     if( pValue ){
       sqlite3VdbeAppendP4(v, pValue, P4_MEM);
@@ -147,17 +147,17 @@ static Expr *exprRowColumn(Parse *pParse, int iCol){
 ** Assuming both the pLimit and pOrderBy parameters are NULL, this function
 ** generates VM code to run the query:
 **
-**   SELECT <other-columns>, pChanges FROM pTabList WHERE pWhere 
+**   SELECT <other-columns>, pChanges FROM pTabList WHERE pWhere
 **
-** and write the results to the ephemeral table already opened as cursor 
-** iEph. None of pChanges, pTabList or pWhere are modified or consumed by 
+** and write the results to the ephemeral table already opened as cursor
+** iEph. None of pChanges, pTabList or pWhere are modified or consumed by
 ** this function, they must be deleted by the caller.
 **
 ** Or, if pLimit and pOrderBy are not NULL, and pTab is not a view:
 **
-**   SELECT <other-columns>, pChanges FROM pTabList 
+**   SELECT <other-columns>, pChanges FROM pTabList
 **   WHERE pWhere
-**   GROUP BY <other-columns> 
+**   GROUP BY <other-columns>
 **   ORDER BY pOrderBy LIMIT pLimit
 **
 ** If pTab is a view, the GROUP BY clause is omitted.
@@ -175,11 +175,11 @@ static Expr *exprRowColumn(Parse *pParse, int iCol){
 ** the view. The results are written to the ephemeral table iEph as records
 ** with automatically assigned integer keys.
 **
-** If the table is a virtual or ordinary intkey table, then <other-columns> 
+** If the table is a virtual or ordinary intkey table, then <other-columns>
 ** is its rowid. For a virtual table, the results are written to iEph as
 ** records with automatically assigned integer keys For intkey tables, the
-** rowid value in <other-columns> is used as the integer key, and the 
-** remaining fields make up the table record. 
+** rowid value in <other-columns> is used as the integer key, and the
+** remaining fields make up the table record.
 */
 static void updateFromSelect(
   Parse *pParse,                  /* Parse context */
@@ -252,12 +252,12 @@ static void updateFromSelect(
   }
   if( ALWAYS(pChanges) ){
     for(i=0; i<pChanges->nExpr; i++){
-      pList = sqlite3ExprListAppend(pParse, pList, 
+      pList = sqlite3ExprListAppend(pParse, pList,
           sqlite3ExprDup(db, pChanges->a[i].pExpr, 0)
       );
     }
   }
-  pSelect = sqlite3SelectNew(pParse, pList, 
+  pSelect = sqlite3SelectNew(pParse, pList,
       pSrc, pWhere2, pGrp, 0, pOrderBy2, SF_UpdateFrom|SF_IncludeHidden, pLimit2
   );
   sqlite3SelectDestInit(&dest, eDest, iEph);
@@ -348,7 +348,7 @@ void sqlite3Update(
     goto update_cleanup;
   }
 
-  /* Locate the table which we want to update. 
+  /* Locate the table which we want to update.
   */
   pTab = sqlite3SrcListLookup(pParse, pTabList);
   if( pTab==0 ) goto update_cleanup;
@@ -418,7 +418,7 @@ void sqlite3Update(
   }
   pTabList->a[0].iCursor = iDataCur;
 
-  /* Allocate space for aXRef[], aRegIdx[], and aToOpen[].  
+  /* Allocate space for aXRef[], aRegIdx[], and aToOpen[].
   ** Initialize aXRef[] and aToOpen[] to their default values.
   */
   aXRef = sqlite3DbMallocRawNN(db, sizeof(int) * (pTab->nCol+nIdx+1) + nIdx+2 );
@@ -466,7 +466,7 @@ void sqlite3Update(
         else if( pTab->aCol[j].colFlags & COLFLAG_GENERATED ){
           testcase( pTab->aCol[j].colFlags & COLFLAG_VIRTUAL );
           testcase( pTab->aCol[j].colFlags & COLFLAG_STORED );
-          sqlite3ErrorMsg(pParse, 
+          sqlite3ErrorMsg(pParse,
              "cannot UPDATE generated column \"%s\"",
              pTab->aCol[j].zName);
           goto update_cleanup;
@@ -509,11 +509,11 @@ void sqlite3Update(
 
 #ifndef SQLITE_OMIT_GENERATED_COLUMNS
   /* Mark generated columns as changing if their generator expressions
-  ** reference any changing column.  The actual aXRef[] value for 
+  ** reference any changing column.  The actual aXRef[] value for
   ** generated expressions is not used, other than to check to see that it
   ** is non-negative, so the value of aXRef[] for generated columns can be
   ** set to any non-negative number.  We use 99999 so that the value is
-  ** obvious when looking at aXRef[] in a symbolic debugger. 
+  ** obvious when looking at aXRef[] in a symbolic debugger.
   */
   if( pTab->tabFlags & TF_HasGenerated ){
     int bProgress;
@@ -534,7 +534,7 @@ void sqlite3Update(
   }
 #endif
 
-  /* The SET expressions are not actually used inside the WHERE loop.  
+  /* The SET expressions are not actually used inside the WHERE loop.
   ** So reset the colUsed mask. Unless this is a virtual table. In that
   ** case, set all bits of the colUsed mask (to ensure that the virtual
   ** table implementation makes all columns available).
@@ -573,7 +573,7 @@ void sqlite3Update(
   }
   aRegIdx[nAllIdx] = ++pParse->nMem;  /* Register storing the table record */
   if( bReplace ){
-    /* If REPLACE conflict resolution might be invoked, open cursors on all 
+    /* If REPLACE conflict resolution might be invoked, open cursors on all
     ** indexes in case they are needed to delete records.  */
     memset(aToOpen, 1, nIdx+1);
   }
@@ -612,7 +612,7 @@ void sqlite3Update(
   */
 #if !defined(SQLITE_OMIT_VIEW) && !defined(SQLITE_OMIT_TRIGGER)
   if( nChangeFrom==0 && isView ){
-    sqlite3MaterializeView(pParse, pTab, 
+    sqlite3MaterializeView(pParse, pTab,
         pWhere, pOrderBy, pLimit, iDataCur
     );
     pOrderBy = 0;
@@ -684,7 +684,7 @@ void sqlite3Update(
       }
     }
   }
-  
+
   if( nChangeFrom ){
     sqlite3MultiWrite(pParse);
     eOnePass = ONEPASS_OFF;
@@ -702,7 +702,7 @@ void sqlite3Update(
       sqlite3ExprIfFalse(pParse, pWhere, labelBreak, SQLITE_JUMPIFNULL);
       bFinishSeek = 0;
     }else{
-      /* Begin the database scan. 
+      /* Begin the database scan.
       **
       ** Do not consider a single-pass strategy for a multi-row update if
       ** there are any triggers or foreign keys to process, or rows may
@@ -755,7 +755,7 @@ void sqlite3Update(
       /* Read the PK of the current row into an array of registers. In
       ** ONEPASS_OFF mode, serialize the array into a record and store it in
       ** the ephemeral table. Or, in ONEPASS_SINGLE or MULTI mode, change
-      ** the OP_OpenEphemeral instruction to a Noop (the ephemeral table 
+      ** the OP_OpenEphemeral instruction to a Noop (the ephemeral table
       ** is not required) and leave the PK fields in the array of registers.  */
       for(i=0; i<nPk; i++){
         assert( pPk->aiColumn[i]>=0 );
@@ -778,16 +778,16 @@ void sqlite3Update(
     if( nChangeFrom==0 && eOnePass!=ONEPASS_MULTI ){
       sqlite3WhereEnd(pWInfo);
     }
-  
+
     if( !isView ){
       int addrOnce = 0;
-  
+
       /* Open every index that needs updating. */
       if( eOnePass!=ONEPASS_OFF ){
         if( aiCurOnePass[0]>=0 ) aToOpen[aiCurOnePass[0]-iBaseCur] = 0;
         if( aiCurOnePass[1]>=0 ) aToOpen[aiCurOnePass[1]-iBaseCur] = 0;
       }
-  
+
       if( eOnePass==ONEPASS_MULTI && (nIdx-(aiCurOnePass[1]>=0))>0 ){
         addrOnce = sqlite3VdbeAddOp0(v, OP_Once); VdbeCoverage(v);
       }
@@ -797,7 +797,7 @@ void sqlite3Update(
         sqlite3VdbeJumpHereOrPopInst(v, addrOnce);
       }
     }
-  
+
     /* Top of the update loop */
     if( eOnePass!=ONEPASS_OFF ){
       if( !isView && aiCurOnePass[0]!=iDataCur && aiCurOnePass[1]!=iDataCur ){
@@ -865,7 +865,7 @@ void sqlite3Update(
   ** information is needed */
   if( chngPk || hasFK || pTrigger ){
     u32 oldmask = (hasFK ? sqlite3FkOldmask(pParse, pTab) : 0);
-    oldmask |= sqlite3TriggerColmask(pParse, 
+    oldmask |= sqlite3TriggerColmask(pParse,
         pTrigger, pChanges, 0, TRIGGER_BEFORE|TRIGGER_AFTER, pTab, onError
     );
     for(i=0; i<pTab->nCol; i++){
@@ -894,8 +894,8 @@ void sqlite3Update(
   ** If there are one or more BEFORE triggers, then do not populate the
   ** registers associated with columns that are (a) not modified by
   ** this UPDATE statement and (b) not accessed by new.* references. The
-  ** values for registers not modified by the UPDATE must be reloaded from 
-  ** the database after the BEFORE triggers are fired anyway (as the trigger 
+  ** values for registers not modified by the UPDATE must be reloaded from
+  ** the database after the BEFORE triggers are fired anyway (as the trigger
   ** may have modified them). So not loading those that are not going to
   ** be used eliminates some redundant opcodes.
   */
@@ -918,7 +918,7 @@ void sqlite3Update(
           sqlite3ExprCode(pParse, pChanges->a[j].pExpr, k);
         }
       }else if( 0==(tmask&TRIGGER_BEFORE) || i>31 || (newmask & MASKBIT32(i)) ){
-        /* This branch loads the value of a column that will not be changed 
+        /* This branch loads the value of a column that will not be changed
         ** into a register. This is done if there are no BEFORE triggers, or
         ** if there are one or more BEFORE triggers that use this value via
         ** a new.* reference in a trigger program.
@@ -945,12 +945,12 @@ void sqlite3Update(
   */
   if( tmask&TRIGGER_BEFORE ){
     sqlite3TableAffinity(v, pTab, regNew);
-    sqlite3CodeRowTrigger(pParse, pTrigger, TK_UPDATE, pChanges, 
+    sqlite3CodeRowTrigger(pParse, pTrigger, TK_UPDATE, pChanges,
         TRIGGER_BEFORE, pTab, regOldRowid, onError, labelContinue);
 
     if( !isView ){
       /* The row-trigger may have deleted the row being updated. In this
-      ** case, jump to the next row. No updates or AFTER triggers are 
+      ** case, jump to the next row. No updates or AFTER triggers are
       ** required. This behavior - what happens when the row being updated
       ** is deleted or renamed by a BEFORE trigger - is left undefined in the
       ** documentation.
@@ -964,8 +964,8 @@ void sqlite3Update(
       }
 
       /* After-BEFORE-trigger-reload-loop:
-      ** If it did not delete it, the BEFORE trigger may still have modified 
-      ** some of the columns of the row being updated. Load the values for 
+      ** If it did not delete it, the BEFORE trigger may still have modified
+      ** some of the columns of the row being updated. Load the values for
       ** all columns not modified by the update statement into their registers
       ** in case this has happened. Only unmodified columns are reloaded.
       ** The values computed for modified columns use the values before the
@@ -985,7 +985,7 @@ void sqlite3Update(
         testcase( pTab->tabFlags & TF_HasStored );
         sqlite3ComputeGeneratedColumns(pParse, regNew, pTab);
       }
-#endif 
+#endif
     }
   }
 
@@ -1029,7 +1029,7 @@ void sqlite3Update(
     ** to process, delete the old record. Otherwise, add a noop OP_Delete
     ** to invoke the pre-update hook.
     **
-    ** That (regNew==regnewRowid+1) is true is also important for the 
+    ** That (regNew==regnewRowid+1) is true is also important for the
     ** pre-update hook. If the caller invokes preupdate_new(), the returned
     ** value is copied from memory cell (regNewRowid+1+iCol), where iCol
     ** is the column index supplied by the user.
@@ -1056,29 +1056,29 @@ void sqlite3Update(
     if( hasFK ){
       sqlite3FkCheck(pParse, pTab, 0, regNewRowid, aXRef, chngKey);
     }
-  
+
     /* Insert the new index entries and the new record. */
     sqlite3CompleteInsertion(
-        pParse, pTab, iDataCur, iIdxCur, regNewRowid, aRegIdx, 
-        OPFLAG_ISUPDATE | (eOnePass==ONEPASS_MULTI ? OPFLAG_SAVEPOSITION : 0), 
+        pParse, pTab, iDataCur, iIdxCur, regNewRowid, aRegIdx,
+        OPFLAG_ISUPDATE | (eOnePass==ONEPASS_MULTI ? OPFLAG_SAVEPOSITION : 0),
         0, 0
     );
 
     /* Do any ON CASCADE, SET NULL or SET DEFAULT operations required to
     ** handle rows (possibly in other tables) that refer via a foreign key
-    ** to the row just updated. */ 
+    ** to the row just updated. */
     if( hasFK ){
       sqlite3FkActions(pParse, pTab, pChanges, regOldRowid, aXRef, chngKey);
     }
   }
 
-  /* Increment the row counter 
+  /* Increment the row counter
   */
   if( regRowCount ){
     sqlite3VdbeAddOp2(v, OP_AddImm, regRowCount, 1);
   }
 
-  sqlite3CodeRowTrigger(pParse, pTrigger, TK_UPDATE, pChanges, 
+  sqlite3CodeRowTrigger(pParse, pTrigger, TK_UPDATE, pChanges,
       TRIGGER_AFTER, pTab, regOldRowid, onError, labelContinue);
 
   /* Repeat the above with the next record to be updated, until
@@ -1119,7 +1119,7 @@ update_cleanup:
   sqlite3SrcListDelete(db, pTabList);
   sqlite3ExprListDelete(db, pChanges);
   sqlite3ExprDelete(db, pWhere);
-#if defined(SQLITE_ENABLE_UPDATE_DELETE_LIMIT) 
+#if defined(SQLITE_ENABLE_UPDATE_DELETE_LIMIT)
   sqlite3ExprListDelete(db, pOrderBy);
   sqlite3ExprDelete(db, pLimit);
 #endif
@@ -1139,8 +1139,8 @@ update_cleanup:
 /*
 ** Generate code for an UPDATE of a virtual table.
 **
-** There are two possible strategies - the default and the special 
-** "onepass" strategy. Onepass is only used if the virtual table 
+** There are two possible strategies - the default and the special
+** "onepass" strategy. Onepass is only used if the virtual table
 ** implementation indicates that pWhere may match at most one row.
 **
 ** The default strategy is to create an ephemeral table that contains
@@ -1298,7 +1298,7 @@ static void updateVirtualTable(
     /* Begin scannning through the ephemeral table. */
     addr = sqlite3VdbeAddOp1(v, OP_Rewind, ephemTab); VdbeCoverage(v);
 
-    /* Extract arguments from the current row of the ephemeral table and 
+    /* Extract arguments from the current row of the ephemeral table and
     ** invoke the VUpdate method.  */
     for(i=0; i<nArg; i++){
       sqlite3VdbeAddOp3(v, OP_Column, ephemTab, i, regArg+i);

@@ -47,8 +47,8 @@
 #define N_HASH  61
 
 /*
-** A memory allocation (also called a "chunk") consists of two or 
-** more blocks where each block is 8 bytes.  The first 8 bytes are 
+** A memory allocation (also called a "chunk") consists of two or
+** more blocks where each block is 8 bytes.  The first 8 bytes are
 ** a header that is not returned to the user.
 **
 ** A chunk is two or more blocks that is either checked out or
@@ -71,10 +71,10 @@
 **
 ** The second block of free chunks is of the form u.list.  The
 ** two fields form a double-linked list of chunks of related sizes.
-** Pointers to the head of the list are stored in mem3.aiSmall[] 
+** Pointers to the head of the list are stored in mem3.aiSmall[]
 ** for smaller chunks and mem3.aiHash[] for larger chunks.
 **
-** The second block of a chunk is user data if the chunk is checked 
+** The second block of a chunk is user data if the chunk is checked
 ** out.  If a chunk is checked out, the user data may extend into
 ** the u.hdr.prevSize value of the following chunk.
 */
@@ -110,12 +110,12 @@ static SQLITE_WSD struct Mem3Global {
   ** True if we are evaluating an out-of-memory callback.
   */
   int alarmBusy;
-  
+
   /*
   ** Mutex to control access to the memory allocation subsystem.
   */
   sqlite3_mutex *mutex;
-  
+
   /*
   ** The minimum amount of free space that we have seen.
   */
@@ -131,7 +131,7 @@ static SQLITE_WSD struct Mem3Global {
   u32 szKeyBlk;
 
   /*
-  ** Array of lists of free blocks according to the block size 
+  ** Array of lists of free blocks according to the block size
   ** for smaller chunks, or a hash on the block size for larger
   ** chunks.
   */
@@ -162,7 +162,7 @@ static void memsys3UnlinkFromList(u32 i, u32 *pRoot){
 }
 
 /*
-** Unlink the chunk at index i from 
+** Unlink the chunk at index i from
 ** whatever list is currently a member of.
 */
 static void memsys3Unlink(u32 i){
@@ -246,8 +246,8 @@ static void memsys3OutOfMemory(int nByte){
 
 
 /*
-** Chunk i is a free chunk that has been unlinked.  Adjust its 
-** size parameters for check-out and return a pointer to the 
+** Chunk i is a free chunk that has been unlinked.  Adjust its
+** size parameters for check-out and return a pointer to the
 ** user portion of the chunk.
 */
 static void *memsys3Checkout(u32 i, u32 nBlock){
@@ -300,12 +300,12 @@ static void *memsys3FromKeyBlk(u32 nBlock){
 /*
 ** *pRoot is the head of a list of free chunks of the same size
 ** or same size hash.  In other words, *pRoot is an entry in either
-** mem3.aiSmall[] or mem3.aiHash[].  
+** mem3.aiSmall[] or mem3.aiHash[].
 **
 ** This routine examines all entries on the given list and tries
-** to coalesce each entries with adjacent free chunks.  
+** to coalesce each entries with adjacent free chunks.
 **
-** If it sees a chunk that is larger than mem3.iKeyBlk, it replaces 
+** If it sees a chunk that is larger than mem3.iKeyBlk, it replaces
 ** the current mem3.iKeyBlk with the new larger chunk.  In order for
 ** this mem3.iKeyBlk replacement to work, the key chunk must be
 ** linked into the hash tables.  That is not the normal state of
@@ -396,7 +396,7 @@ static void *memsys3MallocUnsafe(int nByte){
   }
 
 
-  /* STEP 3:  
+  /* STEP 3:
   ** Loop through the entire memory pool.  Coalesce adjacent free
   ** chunks.  Recompute the key chunk as the largest free chunk.
   ** Then try again to satisfy the allocation by carving a piece off
@@ -503,7 +503,7 @@ static void *memsys3Malloc(int nBytes){
   memsys3Enter();
   p = memsys3MallocUnsafe(nBytes);
   memsys3Leave();
-  return (void*)p; 
+  return (void*)p;
 }
 
 /*
@@ -584,7 +584,7 @@ static void memsys3Shutdown(void *NotUsed){
 
 
 /*
-** Open the file indicated and write a log of all unfreed memory 
+** Open the file indicated and write a log of all unfreed memory
 ** allocations into that log.
 */
 void sqlite3Memsys3Dump(const char *zFilename){
@@ -635,7 +635,7 @@ void sqlite3Memsys3Dump(const char *zFilename){
       fprintf(out, " %p(%d)", &mem3.aPool[j],
               (mem3.aPool[j-1].u.hdr.size4x/4)*8-8);
     }
-    fprintf(out, "\n"); 
+    fprintf(out, "\n");
   }
   for(i=0; i<N_HASH; i++){
     if( mem3.aiHash[i]==0 ) continue;
@@ -644,7 +644,7 @@ void sqlite3Memsys3Dump(const char *zFilename){
       fprintf(out, " %p(%d)", &mem3.aPool[j],
               (mem3.aPool[j-1].u.hdr.size4x/4)*8-8);
     }
-    fprintf(out, "\n"); 
+    fprintf(out, "\n");
   }
   fprintf(out, "key=%d\n", mem3.iKeyBlk);
   fprintf(out, "nowUsed=%d\n", mem3.nPool*8 - mem3.szKeyBlk*8);
@@ -661,7 +661,7 @@ void sqlite3Memsys3Dump(const char *zFilename){
 }
 
 /*
-** This routine is the only routine in this file with external 
+** This routine is the only routine in this file with external
 ** linkage.
 **
 ** Populate the low-level memory allocation function pointers in

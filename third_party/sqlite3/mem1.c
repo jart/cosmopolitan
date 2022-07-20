@@ -71,7 +71,7 @@ static malloc_zone_t* _sqliteZone_;
 #else /* if not __APPLE__ */
 
 /*
-** Use standard C library malloc and free on non-Apple systems.  
+** Use standard C library malloc and free on non-Apple systems.
 ** Also used by Apple systems if SQLITE_WITHOUT_ZONEMALLOC is defined.
 */
 #define SQLITE_MALLOC(x)             malloc(x)
@@ -251,7 +251,7 @@ static int sqlite3MemInit(void *NotUsed){
     /* defer MT decisions to system malloc */
     _sqliteZone_ = malloc_default_zone();
   }else{
-    /* only 1 core, use our own zone to contention over global locks, 
+    /* only 1 core, use our own zone to contention over global locks,
     ** e.g. we have our own dedicated locks */
     _sqliteZone_ = malloc_create_zone(4096, 0);
     malloc_set_zone_name(_sqliteZone_, "Sqlite_Heap");

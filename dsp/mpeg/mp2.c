@@ -273,7 +273,7 @@ typedef plm_audio_t plm_audio_t;
 int plm_audio_decode_header(plm_audio_t *self);
 void plm_audio_decode_frame(plm_audio_t *self);
 const plm_quantizer_spec_t *plm_audio_read_allocation(plm_audio_t *self, int sb, int tab3);
-void plm_audio_read_samples(plm_audio_t *self, int ch, int sb, int part); 
+void plm_audio_read_samples(plm_audio_t *self, int ch, int sb, int part);
 void plm_audio_matrix_transform(int s[32][3], int ss, float *d, int dp);
 
 plm_audio_t *plm_audio_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
@@ -345,7 +345,7 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self) {
 	self->samples.time = self->time;
 
 	self->samples_decoded += PLM_AUDIO_SAMPLES_PER_FRAME;
-	self->time = (double)self->samples_decoded / 
+	self->time = (double)self->samples_decoded /
 		(double)PLM_AUDIO_SAMPLE_RATE[self->samplerate_index];
 
 	return &self->samples;
@@ -402,7 +402,7 @@ int plm_audio_decode_header(plm_audio_t *self) {
 		plm_buffer_skip(self->buffer, 16);
 	}
 
-	// Compute frame size, check if we have enough data to decode the whole 
+	// Compute frame size, check if we have enough data to decode the whole
 	// frame.
 	int bitrate = PLM_AUDIO_BIT_RATE[self->bitrate_index];
 	int samplerate = PLM_AUDIO_SAMPLE_RATE[self->samplerate_index];
@@ -561,7 +561,7 @@ void plm_audio_decode_frame(plm_audio_t *self) {
 						}
 					#else
 						for (int j = 0; j < 32; j++) {
-							self->samples.interleaved[((out_pos + j) << 1) + ch] = 
+							self->samples.interleaved[((out_pos + j) << 1) + ch] =
 								self->U[j] / 2147418112.0f;
 						}
 					#endif

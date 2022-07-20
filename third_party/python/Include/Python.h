@@ -2,9 +2,9 @@
 #define Py_PYTHON_H
 /* clang-format off */
 
-/* 
- * PYTHON DIAMOND DEPENDENCY HEADER 
- * 
+/*
+ * PYTHON DIAMOND DEPENDENCY HEADER
+ *
  * If your editor isn't able to automatically insert #include lines,
  * then this header can make development easier. It's also great for
  * making beginner's tutorials simpler and more attractive.
@@ -12,7 +12,7 @@
  * However it's sloppy to use something like this in the long term since
  * it's not a scalable dependency model. It makes builds slower, because
  * changing any single header will invalidate all the build artifacts.
- * 
+ *
  * So please consider doing the conscientious thing and avoid using it!
  */
 

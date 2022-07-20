@@ -1047,7 +1047,7 @@ float_round(PyObject *v, PyObject **args, Py_ssize_t nargs)
     x = PyFloat_AsDouble(v);
     if (!_PyArg_UnpackStack(args, nargs, "__round__", 0, 1, &o_ndigits))
         return NULL;
-    
+
     if (o_ndigits == NULL || o_ndigits == Py_None) {
         /* single-argument round or with None ndigits:
          * round to nearest integer */

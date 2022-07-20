@@ -696,7 +696,7 @@ static int js_binary_arith_bigdecimal(JSContext *ctx, OPCodeEnum op,
     JS_FreeValue(ctx, op2);
     return -1;
 }
- 
+
 void JS_AddIntrinsicBigDecimal(JSContext *ctx)
 {
     JSRuntime *rt = ctx->rt;

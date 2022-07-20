@@ -105,7 +105,7 @@ SQLITE_EXTENSION_INIT1
 
 
 /*
-** Set the result stored by context ctx to a blob containing the 
+** Set the result stored by context ctx to a blob containing the
 ** contents of file zName.  Or, leave the result unchanged (NULL)
 ** if the file does not exist or is unreadable.
 **
@@ -261,7 +261,7 @@ static int makeDirectory(
 }
 
 /*
-** This function does the work for the writefile() UDF. Refer to 
+** This function does the work for the writefile() UDF. Refer to
 ** header comments at the top of this file for details.
 */
 static int writeFile(
@@ -329,7 +329,7 @@ static int writeFile(
 }
 
 /*
-** Implementation of the "writefile(W,X[,Y[,Z]]])" SQL function.  
+** Implementation of the "writefile(W,X[,Y[,Z]]])" SQL function.
 ** Refer to header comments at the top of this file for details.
 */
 static void writefileFunc(
@@ -343,7 +343,7 @@ static void writefileFunc(
   sqlite3_int64 mtime = -1;
 
   if( argc<2 || argc>4 ){
-    sqlite3_result_error(context, 
+    sqlite3_result_error(context,
         "wrong number of arguments to function writefile()", -1
     );
     return;
@@ -413,7 +413,7 @@ static void lsModeFunc(
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
-/* 
+/*
 ** Cursor type for recursively iterating through a directory structure.
 */
 typedef struct fsdir_cursor fsdir_cursor;
@@ -561,7 +561,7 @@ static int fsdirNext(sqlite3_vtab_cursor *cur){
     }
     pCur->iLvl = iNew;
     pLvl = &pCur->aLvl[iNew];
-    
+
     pLvl->zDir = pCur->zPath;
     pCur->zPath = 0;
     pLvl->pDir = opendir(pLvl->zDir);
@@ -690,7 +690,7 @@ static int fsdirEof(sqlite3_vtab_cursor *cur){
 ** idxNum==2   Both PATH and DIR supplied
 */
 static int fsdirFilter(
-  sqlite3_vtab_cursor *cur, 
+  sqlite3_vtab_cursor *cur,
   int idxNum, const char *idxStr,
   int argc, sqlite3_value **argv
 ){
@@ -779,7 +779,7 @@ static int fsdirBestIndex(
         }
         break;
       }
-    } 
+    }
   }
   if( seenPath || seenDir ){
     /* If input parameters are unusable, disallow this plan */
@@ -847,14 +847,14 @@ static int fsdirRegister(sqlite3 *db){
 #endif
 
 int sqlite3_fileio_init(
-  sqlite3 *db, 
-  char **pzErrMsg, 
+  sqlite3 *db,
+  char **pzErrMsg,
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;
   SQLITE_EXTENSION_INIT2(pApi);
   (void)pzErrMsg;  /* Unused parameter */
-  rc = sqlite3_create_function(db, "readfile", 1, 
+  rc = sqlite3_create_function(db, "readfile", 1,
                                SQLITE_UTF8|SQLITE_DIRECTONLY, 0,
                                readfileFunc, 0, 0);
   if( rc==SQLITE_OK ){

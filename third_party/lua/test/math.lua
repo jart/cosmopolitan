@@ -140,7 +140,7 @@ assert(eqT(3.5 // 1.5, 2.0))
 assert(eqT(3.5 // -1.5, -3.0))
 
 do   -- tests for different kinds of opcodes
-  local x, y 
+  local x, y
   x = 1; assert(x // 0.0 == 1/0)
   x = 1.0; assert(x // 0 == 1/0)
   x = 3.5; assert(eqT(x // 1, 3.0))
@@ -618,7 +618,7 @@ assert(minint % -1 == 0)
 assert(minint % -2 == 0)
 assert(maxint % -2 == -1)
 
--- non-portable tests because Windows C library cannot compute 
+-- non-portable tests because Windows C library cannot compute
 -- fmod(1, huge) correctly
 if not _port then
   local function anan (x) assert(isNaN(x)) end   -- assert Not a Number

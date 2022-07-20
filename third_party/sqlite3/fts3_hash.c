@@ -50,8 +50,8 @@ static void fts3HashFree(void *p){
 ** fields of the Hash structure.
 **
 ** "pNew" is a pointer to the hash table that is to be initialized.
-** keyClass is one of the constants 
-** FTS3_HASH_BINARY or FTS3_HASH_STRING.  The value of keyClass 
+** keyClass is one of the constants
+** FTS3_HASH_BINARY or FTS3_HASH_STRING.  The value of keyClass
 ** determines what kind of key the hash table will use.  "copyKey" is
 ** true if the hash table should make its own private copy of keys and
 ** false if it should just use the supplied pointer.
@@ -128,7 +128,7 @@ static int fts3BinCompare(const void *pKey1, int n1, const void *pKey2, int n2){
 /*
 ** Return a pointer to the appropriate hash function given the key class.
 **
-** The C syntax in this function definition may be unfamilar to some 
+** The C syntax in this function definition may be unfamilar to some
 ** programmers, so we provide the following additional explanation:
 **
 ** The name of the function is "ftsHashFunction".  The function takes a
@@ -188,7 +188,7 @@ static void fts3HashInsertElement(
 
 
 /* Resize the hash table so that it cantains "new_size" buckets.
-** "new_size" must be a power of 2.  The hash table might fail 
+** "new_size" must be a power of 2.  The hash table might fail
 ** to resize if sqliteMalloc() fails.
 **
 ** Return non-zero if a memory allocation error occurs.
@@ -233,7 +233,7 @@ static Fts3HashElem *fts3FindElementByHash(
     count = pEntry->count;
     xCompare = ftsCompareFunction(pH->keyClass);
     while( count-- && elem ){
-      if( (*xCompare)(elem->pKey,elem->nKey,pKey,nKey)==0 ){ 
+      if( (*xCompare)(elem->pKey,elem->nKey,pKey,nKey)==0 ){
         return elem;
       }
       elem = elem->next;
@@ -252,7 +252,7 @@ static void fts3RemoveElementByHash(
 ){
   struct _fts3ht *pEntry;
   if( elem->prev ){
-    elem->prev->next = elem->next; 
+    elem->prev->next = elem->next;
   }else{
     pH->first = elem->next;
   }
@@ -280,8 +280,8 @@ static void fts3RemoveElementByHash(
 }
 
 Fts3HashElem *sqlite3Fts3HashFindElem(
-  const Fts3Hash *pH, 
-  const void *pKey, 
+  const Fts3Hash *pH,
+  const void *pKey,
   int nKey
 ){
   int h;                          /* A hash on key */
@@ -295,7 +295,7 @@ Fts3HashElem *sqlite3Fts3HashFindElem(
   return fts3FindElementByHash(pH,pKey,nKey, h & (pH->htsize-1));
 }
 
-/* 
+/*
 ** Attempt to locate an element of the hash table pH with a key
 ** that matches pKey,nKey.  Return the data for this element if it is
 ** found, or NULL if there is no match.

@@ -35,7 +35,7 @@ function test_operators_create() {
             return "Vec2(" + this.x + "," + this.y + ")";
         }
     }
-    
+
     Vec2.prototype[Symbol.operatorSet] = Operators.create(
     {
         "+"(p1, p2) {
@@ -172,7 +172,7 @@ function test_operators()
             return "Vec2(" + this.x + "," + this.y + ")";
         }
     }
-    
+
     var a = new Vec2(1, 2);
     var b = new Vec2(3, 4);
     var r;
