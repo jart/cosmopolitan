@@ -27,8 +27,8 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-/* TOOD: Why can't we change CR3? Could it really need PML5T? */
-/* TOOD: Why does QEMU in UEFI mode take ten seconds to boot? */
+/* TODO: Why can't we change CR3? Could it really need PML5T? */
+/* TODO: Why does QEMU in UEFI mode take ten seconds to boot? */
 
 struct EfiArgs {
   char *Args[0x400 / sizeof(char *)];

@@ -23,7 +23,7 @@
  *
  * On supported platforms, this will cause GDB to automatically attach.
  * The nice thing about this, is you can start stepping through your
- * code at the precice instruction where the interrupt happened. See
+ * code at the precise instruction where the interrupt happened. See
  * `libc/log/attachdebugger.c` to see how it works.
  *
  * If you wish to suppress the auto-GDB behavior, then:

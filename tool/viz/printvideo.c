@@ -229,7 +229,7 @@ static const struct itimerval kTimerDisarm = {
     {0, 0},
 };
 
-static const struct itimerval kTimerHalfSecordSingleShot = {
+static const struct itimerval kTimerHalfSecondSingleShot = {
     {0, 0},
     {0, 500000},
 };
@@ -353,7 +353,7 @@ static bool CloseSpeaker(void) {
   if (playpid_) {
     kill(playpid_, SIGTERM);
     xsigaction(SIGALRM, StrikeDownCrapware, SA_RESETHAND, 0, 0);
-    setitimer(ITIMER_REAL, &kTimerHalfSecordSingleShot, NULL);
+    setitimer(ITIMER_REAL, &kTimerHalfSecondSingleShot, NULL);
     while (playpid_) {
       if (waitpid(playpid_, &wstatus, 0) != -1) {
         rc |= WEXITSTATUS(wstatus);

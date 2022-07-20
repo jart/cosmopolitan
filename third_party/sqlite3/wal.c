@@ -282,7 +282,7 @@ int sqlite3WalTrace = 0;
 **
 ** Technically, the various VFSes are free to implement these locks however
 ** they see fit.  However, compatibility is encouraged so that VFSes can
-** interoperate.  The standard implemention used on both unix and windows
+** interoperate.  The standard implementation used on both unix and windows
 ** is for the index number to indicate a byte offset into the
 ** WalCkptInfo.aLock[] array in the wal-index header.  In other words, all
 ** locks are on the shm file.  The WALINDEX_LOCK_OFFSET constant (which
@@ -358,7 +358,7 @@ struct WalIndexHdr {
 ** the mxFrame for that reader.  The value READMARK_NOT_USED (0xffffffff)
 ** for any aReadMark[] means that entry is unused.  aReadMark[0] is 
 ** a special case; its value is never used and it exists as a place-holder
-** to avoid having to offset aReadMark[] indexs by one.  Readers holding
+** to avoid having to offset aReadMark[] indexes by one.  Readers holding
 ** WAL_READ_LOCK(0) always ignore the entire WAL and read all content
 ** directly from the database.
 **
@@ -1469,7 +1469,7 @@ int sqlite3WalOpen(
 }
 
 /*
-** Change the size to which the WAL file is trucated on each reset.
+** Change the size to which the WAL file is truncated on each reset.
 */
 void sqlite3WalLimit(Wal *pWal, i64 iLimit){
   if( pWal ) pWal->mxWalSize = iLimit;

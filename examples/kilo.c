@@ -539,7 +539,7 @@ void editorUpdateSyntax(erow *row) {
     i++;
   }
 
-  /* Propagate syntax change to the next row if the open commen
+  /* Propagate syntax change to the next row if the open comment
    * state changed. This may recursively affect all the following rows
    * in the file. */
   int oc = editorRowHasOpenComment(row);
@@ -745,7 +745,7 @@ void editorInsertChar(int c) {
   erow *row = (filerow >= E.numrows) ? NULL : &E.row[filerow];
 
   /* If the row where the cursor is currently located does not exist in our
-   * logical representaion of the file, add enough empty rows as needed. */
+   * logical representation of the file, add enough empty rows as needed. */
   if (!row) {
     while (E.numrows <= filerow) editorInsertRow(E.numrows, "", 0);
   }
@@ -920,7 +920,7 @@ void editorRefreshScreen(void) {
         char welcome[80];
         int welcomelen =
             snprintf(welcome, sizeof(welcome),
-                     "Kilo editor -- verison %s\e[0K\r\n", KILO_VERSION);
+                     "Kilo editor -- version %s\e[0K\r\n", KILO_VERSION);
         int padding = (E.screencols - welcomelen) / 2;
         if (padding) {
           abAppend(&ab, "~", 1);

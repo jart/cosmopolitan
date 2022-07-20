@@ -96,7 +96,7 @@ plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 
 	// In theory we should check plm_demux_get_num_video_streams() and 
 	// plm_demux_get_num_audio_streams() here, but older files typically
-	// do not specify these correcly. So we just assume we have a video and
+	// do not specify these correctly. So we just assume we have a video and
 	// audio stream and create the decoders.
 
 	self->video_packet_type = PLM_DEMUX_PACKET_VIDEO_1;

@@ -24,7 +24,7 @@
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/pml4t.h"
 
-struct Pml4tFormater {
+struct Pml4tFormatter {
   bool t;
   int64_t start;
   struct Buffer b;
@@ -45,14 +45,14 @@ static int64_t MakeAddress(unsigned short a[4]) {
   return x;
 }
 
-static void FormatStartPage(struct Pml4tFormater *pp, int64_t start) {
+static void FormatStartPage(struct Pml4tFormatter *pp, int64_t start) {
   pp->t = true;
   pp->start = start;
   if (pp->lines++) AppendChar(&pp->b, '\n');
   AppendFmt(&pp->b, "%012lx-", start);
 }
 
-static void FormatEndPage(struct Pml4tFormater *pp, int64_t end) {
+static void FormatEndPage(struct Pml4tFormatter *pp, int64_t end) {
   int64_t size;
   pp->t = false;
   size = end - pp->start;
@@ -67,7 +67,7 @@ static void *GetPt(struct Machine *m, uint64_t r) {
 char *FormatPml4t(struct Machine *m) {
   uint64_t *pd[4];
   unsigned short i, a[4];
-  struct Pml4tFormater pp = {0};
+  struct Pml4tFormatter pp = {0};
   unsigned short range[][2] = {{256, 512}, {0, 256}};
   if ((m->mode & 3) != XED_MODE_LONG) return strdup("");
   pd[0] = GetPt(m, m->cr3);

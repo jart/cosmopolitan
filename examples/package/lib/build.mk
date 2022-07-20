@@ -41,7 +41,7 @@ EXAMPLES_PACKAGE_LIB_A = o/$(MODE)/examples/package/lib/lib.a
 EXAMPLES_PACKAGE_LIB_ARTIFACTS += EXAMPLES_PACKAGE_LIB_A
 
 # Build configs might seem somewhat complicated. Rest assured they're
-# mostly maintainence free. That's largely thanks to how we wildcard.
+# mostly maintenance free. That's largely thanks to how we wildcard.
 EXAMPLES_PACKAGE_LIB_A_FILES := $(wildcard examples/package/lib/*)
 EXAMPLES_PACKAGE_LIB_A_HDRS = $(filter %.h,$(EXAMPLES_PACKAGE_LIB_A_FILES))
 

@@ -7,7 +7,7 @@ DESCRIPTION
   popular interpreters cannot do; this lets plinko gain a considerable
   performance edge while retaining an event greater edge in simplicity
 
-  We hope you find these sources informative, eductional, and possibly
+  We hope you find these sources informative, educational, and possibly
   useful too. Lisp source code, written in its dialect is included too
   under //tool/plinko/lib and unit tests which clarify their usage can
   be found in //test/tool/plinko.

@@ -1409,7 +1409,7 @@ local void bi_windup()
  *
  * The problem results in the zip file having bad data and so a bad CRC.
  * This does not happen often and to recreate the problem a large file
- * with non-compressable data is needed so that deflate chooses to store the
+ * with non-compressible data is needed so that deflate chooses to store the
  * data.  A test file of 400 MB seems large enough to recreate the problem
  * using a command such as
  *     zip -1 -e crcerror.zip testfile.dat

@@ -2517,7 +2517,7 @@ void inverse_mdct_naive(float *buffer, int n)
    // Note there are bugs in that pseudocode, presumably due to them attempting
    // to rename the arrays nicely rather than representing the way their actual
    // implementation bounces buffers back and forth. As a result, even in the
-   // "some formulars corrected" version, a direct implementation fails. These
+   // "some formulas corrected" version, a direct implementation fails. These
    // are noted below as "paper bug".
 
    // copy and reflect spectral data

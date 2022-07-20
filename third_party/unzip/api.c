@@ -519,7 +519,7 @@ int close_redirect(__G)
                           a wildcard to be meaningful
                pattern  = string to search for
                cmd      = 0 - case-insensitive search
-                          1 - case-sensitve search
+                          1 - case-sensitive search
                           2 - case-insensitive, whole words only
                           3 - case-sensitive, whole words only
                SkipBin  = if true, skip any files that have control

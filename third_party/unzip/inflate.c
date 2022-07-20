@@ -207,7 +207,7 @@
       end-of-block.  Note however that the static length tree defines
       288 codes just to fill out the Huffman codes.  Codes 286 and 287
       cannot be used though, since there is no length base or extra bits
-      defined for them.  Similarily, there are up to 30 distance codes.
+      defined for them.  Similarly, there are up to 30 distance codes.
       However, static trees define 32 codes (all 5 bits) to fill out the
       Huffman codes, but the last two had better not show up in the data.
    7. Unzip can check dynamic Huffman blocks for complete code sets.
@@ -855,7 +855,7 @@ ZCONST unsigned near mask_bits[17] = {
    block.  See the huft_build() routine.
 
    Actually, the precautions mentioned above are not sufficient to
-   prevent fetches of bits beyound the end of the last block in every
+   prevent fetches of bits beyond the end of the last block in every
    case. When the last code fetched before the end-of-block code was
    a very short distance code (shorter than "distance-prefetch-bits" -
    "end-of-block code bits"), this last distance code fetch already
@@ -1351,7 +1351,7 @@ static int inflate_dynamic(__G)
   }
 #ifdef FIX_PAST_EOB_BY_TABLEADJUST
   /* Adjust the requested distance base table size so that a distance code
-     fetch never tries to get bits behind an immediatly following end-of-block
+     fetch never tries to get bits behind an immediately following end-of-block
      code. */
   bd = (dbits <= bl+1 ? dbits : bl+1);
 #else

@@ -120,7 +120,7 @@ ENVIRONMENT\n\
   V=4          print command w/ wall+cpu+mem usage\n\
   V=5          print output when exitcode is zero\n\
   COLUMNS=INT  explicitly set terminal width for output truncation\n\
-  TERM=dumb    disable ansi x3.64 seuences and thousands separators\n\
+  TERM=dumb    disable ansi x3.64 sequences and thousands separators\n\
 \n"
 
 struct Strings {

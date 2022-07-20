@@ -10,7 +10,7 @@
 #include "libc/log/log.h"
 
 /**
- * Automatically launchs GDB Debugger TUI during crash.
+ * Automatically launches GDB Debugger TUI during crash.
  *
  * Run the following inside a terminal:
  *

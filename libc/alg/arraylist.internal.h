@@ -5,7 +5,7 @@
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
-/* TOOD(jart): DELETE */
+/* TODO(jart): DELETE */
 
 #define append(ARRAYLIST, ITEM) concat((ARRAYLIST), (ITEM), 1)
 

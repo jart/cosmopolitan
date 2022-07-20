@@ -5,7 +5,7 @@
 echo " "
 echo " "
 echo "Installation is complete.  Now, you should add the following"
-echo "(or equivalnet) commands to the appropriate initial user shell"
+echo "(or equivalent) commands to the appropriate initial user shell"
 echo "scripts (such as .profile, .login, etc) -- "
 echo " "
 echo " For korn or bourne shell:"

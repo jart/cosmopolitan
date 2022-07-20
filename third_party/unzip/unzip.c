@@ -4832,7 +4832,7 @@ unsigned long get_option(__G__ option_group, pargs, argc, argnum, optchar, value
 
     } else if (allow_arg_files && arg[0] == '@') {
       /* arg file */
-      oERR(PK_PARMS, no_arg_files_err);
+      oERR(PK_PARAMS, no_arg_files_err);
 #endif
 
     } else {

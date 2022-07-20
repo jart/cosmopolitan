@@ -21,7 +21,7 @@
 #include "libc/runtime/symbols.internal.h"
 
 /**
- * Returns name of funciton that called caller function.
+ * Returns name of function that called caller function.
  */
 const char *GetCallerName(const struct StackFrame *bp) {
   struct SymbolTable *st;

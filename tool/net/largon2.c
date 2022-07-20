@@ -52,7 +52,7 @@ and later.
 Note: this document is also valid for the
 [lua-argon2-ffi](https://github.com/thibaultcha/lua-argon2-ffi) module: an FFI
 implementation of this binding for LuaJIT which uses the same API as this
-original implementaiton.
+original implementation.
 
 @module argon2
 @author Thibault Charbonnier
@@ -76,7 +76,7 @@ for a description of those variants.
 /***
 Argon2 hashing options. Those options can be given to `hash_encoded` as a table.
 If values are omitted, the default values of this module will be used.
-Default values of this module can be overriden with `m_cost()`, `t_cost()`,
+Default values of this module can be overridden with `m_cost()`, `t_cost()`,
 `parallelism()`, `hash_len()`, and `variant()`.
 @field t_cost Number of iterations (`number`, default: `3`).
     argon2.hash_encoded("password", "salt", { t_cost = 4 })

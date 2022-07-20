@@ -2663,7 +2663,7 @@ static void stbtt__add_point(stbtt__point *points, int n, float x, float y)
 }
 
 // tessellate until threshold p is happy... @TODO warped to compensate for non-linear stretching
-static int stbtt__tesselate_curve(stbtt__point *points, int *num_points,
+static int stbtt__tessellate_curve(stbtt__point *points, int *num_points,
                                   float x0, float y0, float x1, float y1,
                                   float x2, float y2,
                                   float objspace_flatness_squared, int n)
@@ -2677,8 +2677,8 @@ static int stbtt__tesselate_curve(stbtt__point *points, int *num_points,
    if (n > 16) // 65536 segments on one curve better be enough!
       return 1;
    if (dx*dx+dy*dy > objspace_flatness_squared) { // half-pixel error allowed... need to be smaller if AA
-      stbtt__tesselate_curve(points, num_points, x0,y0, (x0+x1)/2.0f,(y0+y1)/2.0f, mx,my, objspace_flatness_squared,n+1);
-      stbtt__tesselate_curve(points, num_points, mx,my, (x1+x2)/2.0f,(y1+y2)/2.0f, x2,y2, objspace_flatness_squared,n+1);
+      stbtt__tessellate_curve(points, num_points, x0,y0, (x0+x1)/2.0f,(y0+y1)/2.0f, mx,my, objspace_flatness_squared,n+1);
+      stbtt__tessellate_curve(points, num_points, mx,my, (x1+x2)/2.0f,(y1+y2)/2.0f, x2,y2, objspace_flatness_squared,n+1);
    } else {
       stbtt__add_point(points, *num_points,x2,y2);
       *num_points = *num_points+1;
@@ -2686,7 +2686,7 @@ static int stbtt__tesselate_curve(stbtt__point *points, int *num_points,
    return 1;
 }
 
-static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points,
+static void stbtt__tessellate_cubic(stbtt__point *points, int *num_points,
                                    float x0, float y0, float x1, float y1,
                                    float x2, float y2, float x3, float y3,
                                    float objspace_flatness_squared, int n)
@@ -2718,8 +2718,8 @@ static void stbtt__tesselate_cubic(stbtt__point *points, int *num_points,
       float yb = (y12+y23)/2;
       float mx = (xa+xb)/2;
       float my = (ya+yb)/2;
-      stbtt__tesselate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n+1);
-      stbtt__tesselate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n+1);
+      stbtt__tessellate_cubic(points, num_points, x0,y0, x01,y01, xa,ya, mx,my, objspace_flatness_squared,n+1);
+      stbtt__tessellate_cubic(points, num_points, mx,my, xb,yb, x23,y23, x3,y3, objspace_flatness_squared,n+1);
    } else {
       stbtt__add_point(points, *num_points,x3,y3);
       *num_points = *num_points+1;
@@ -2772,14 +2772,14 @@ static stbtt__point *stbtt_FlattenCurves(stbtt_vertex *vertices, int num_verts,
                stbtt__add_point(points, num_points++, x, y);
                break;
             case STBTT_vcurve:
-               stbtt__tesselate_curve(points, &num_points, x,y,
+               stbtt__tessellate_curve(points, &num_points, x,y,
                                         vertices[i].cx, vertices[i].cy,
                                         vertices[i].x,  vertices[i].y,
                                         objspace_flatness_squared, 0);
                x = vertices[i].x, y = vertices[i].y;
                break;
             case STBTT_vcubic:
-               stbtt__tesselate_cubic(points, &num_points, x,y,
+               stbtt__tessellate_cubic(points, &num_points, x,y,
                                         vertices[i].cx, vertices[i].cy,
                                         vertices[i].cx1, vertices[i].cy1,
                                         vertices[i].x,  vertices[i].y,
@@ -3853,7 +3853,7 @@ unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float scale,
             float sy = (float) y + 0.5f;
             float x_gspace = (sx / scale_x);
             float y_gspace = (sy / scale_y);
-            int winding = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts); // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path
+            int winding = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts); // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tessellated curves so a new path
             for (i=0; i < num_verts; ++i) {
                float x0 = verts[i].x*scale_x, y0 = verts[i].y*scale_y;
                if (verts[i].type == STBTT_vline && precompute[i] != 0.0f) {

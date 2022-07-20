@@ -676,7 +676,7 @@ struct redirtab {
  * We enclose jmp_buf in a structure so that we can declare pointers to
  * jump locations. The global variable handler contains the location to
  * jump to when an exception occurs, and the global variable exception
- * contains a code identifying the exeception. To implement nested
+ * contains a code identifying the exception. To implement nested
  * exception handlers, the user should save the value of handler on
  * entry to an inner scope, set handler to point to a jmploc structure
  * for the inner scope, and restore handler on exit from the scope.
@@ -1953,7 +1953,7 @@ wontreturn static void varunset(const char *end, const char *var_, const char *u
 }
 
 /*
- * Convert a string into an integer of type int64.  Alow trailing spaces.
+ * Convert a string into an integer of type int64.  Allow trailing spaces.
  */
 static int64_t atomax(const char *s, int base) {
   char *p;
@@ -6653,7 +6653,7 @@ static struct job *vforkexec(union node *n, char **argv, const char *path, int i
  * the interactive program catches interrupts, the user doesn't want
  * these interrupts to also abort the loop.  The approach we take here
  * is to have the shell ignore interrupt signals while waiting for a
- * forground process to terminate, and then send itself an interrupt
+ * foreground process to terminate, and then send itself an interrupt
  * signal if the child process was terminated by an interrupt signal.
  * Unfortunately, some programs want to do a bit of cleanup and then
  * exit on interrupt; unless these processes terminate themselves by

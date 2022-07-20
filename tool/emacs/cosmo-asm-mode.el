@@ -292,7 +292,7 @@
       (1 font-lock-constant-face)
       (2 font-lock-constant-face))
 
-     ;; Bultin Constants
+     ;; Builtin Constants
      ;;
      ;;   - Valid
      ;;
