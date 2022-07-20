@@ -65,7 +65,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -g GID          call setgid()\n\
   -u UID          call setuid()\n\
   -c PATH         call chroot()\n\
-  -v [PERM:]PATH  make PATH visible where PERM can have rwxc\n\
+  -v [PERM:]PATH  call unveil(PATH, PERM[rwxc])\n\
   -n              set maximum niceness\n\
   -N              don't normalize file descriptors\n\
   -C SECS         set cpu limit [default: inherited]\n\

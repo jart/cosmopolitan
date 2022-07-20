@@ -92,10 +92,7 @@ static const struct sock_filter kBlacklistLandlock[] = {
 _Thread_local static struct {
   uint64_t fs_mask;
   int fd;
-} State = {
-    .fs_mask = UNVEIL_READ | UNVEIL_WRITE | UNVEIL_EXEC | UNVEIL_CREATE,
-    .fd = 0,
-};
+} State;
 
 static int unveil_final(void) {
   int rc;
@@ -121,6 +118,7 @@ static int err_close(int rc, int fd) {
 
 static int unveil_init(void) {
   int rc, fd;
+  State.fs_mask = UNVEIL_READ | UNVEIL_WRITE | UNVEIL_EXEC | UNVEIL_CREATE;
   if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) <
       0) {
     if (errno == EOPNOTSUPP) errno = ENOSYS;
