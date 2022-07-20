@@ -2428,7 +2428,9 @@ char *linenoiseRaw(const char *prompt, int infd, int outfd) {
     rc = -1;
   }
   if (rc != -1) {
-    linenoiseWriteStr(outfd, "\n");
+    if (buf) {
+      linenoiseWriteStr(outfd, "\n");
+    }
     return buf;
   } else {
     return 0;

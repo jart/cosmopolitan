@@ -16,37 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/str/path.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
+#include "libc/sysv/errfuns.h"
 
-char b[PATH_MAX];
-
-TEST(xjoinpaths, test) {
-  EXPECT_EQ(NULL, _joinpaths(b, sizeof(b), 0, 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), "x", 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), 0, "x"));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", 0));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), 0, ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("b", _joinpaths(b, sizeof(b), "", "b"));
-  EXPECT_STREQ("a/", _joinpaths(b, sizeof(b), "a", ""));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a", "b"));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, sizeof(b), "a", "b/"));
-  EXPECT_STREQ("/b", _joinpaths(b, sizeof(b), "a", "/b"));
-  EXPECT_STREQ("./b", _joinpaths(b, sizeof(b), ".", "b"));
-  EXPECT_STREQ("b/.", _joinpaths(b, sizeof(b), "b", "."));
-  EXPECT_EQ(NULL, _joinpaths(b, 3, "a", "b/"));
-  EXPECT_EQ(NULL, _joinpaths(b, 4, "a", "b/"));
-  EXPECT_STREQ("a/b", _joinpaths(b, 4, "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, 5, "a", "b/"));
-}
-
-BENCH(joinpaths, bench) {
-  EZBENCH2("_joinpaths", donothing, _joinpaths(b, sizeof(b), "care", "bear"));
-  EZBENCH2("xjoinpaths", donothing, free(xjoinpaths("care", "bear")));
+/**
+ * Closes extra file descriptors, e.g.
+ *
+ *     // close all non-stdio file descriptors
+ *     if (closefrom(3) == -1) {
+ *       for (int i = 3; i < 256; ++i) {
+ *         close(i);
+ *       }
+ *     }
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @error ENOSYS if not Linux 5.9+ / FreeBSD / OpenBSD
+ * @error EBADF on OpenBSD if `first` is greater than highest fd
+ * @error EINVAL if flags are bad or first is greater than last
+ * @error EMFILE if a weird race condition happens on Linux
+ * @error EINTR possibly on OpenBSD
+ * @error ENOMEM on Linux maybe
+ * @note supported on Linux 5.9+, FreeBSD 8+, and OpenBSD
+ */
+int closefrom(int first) {
+  int rc, err;
+  if (first >= 0) {
+    err = errno;
+    if ((rc = sys_close_range(first, -1, 0)) == -1) {
+      if (errno == ENOSYS) {
+        errno = err;
+        rc = sys_closefrom(first);
+      }
+    }
+  } else {
+    rc = ebadf();
+  }
+  STRACE("closefrom(%d) → %d% m", first, rc);
+  return rc;
 }

@@ -24,12 +24,18 @@
 /**
  * Joins paths, e.g.
  *
+ *     0    + 0    → 0
+ *     ""   + ""   → ""
+ *     "a"  + 0    → "a"
+ *     "a"  + ""   → "a/"
+ *     0    + "b"  → "b"
+ *     ""   + "b"  → "b"
+ *     "."  + "b"  → "./b"
+ *     "b"  + "."  → "b/."
  *     "a"  + "b"  → "a/b"
  *     "a/" + "b"  → "a/b"
  *     "a"  + "b/" → "a/b/"
  *     "a"  + "/b" → "/b"
- *     "."  + "b"  → "b"
- *     ""   + "b"  → "b"
  *
  * @return joined path, which may be `buf`, `path`, or `other`, or null
  *     if (1) `buf` didn't have enough space, or (2) both `path` and
@@ -39,14 +45,11 @@ char *_joinpaths(char *buf, size_t size, const char *path, const char *other) {
   size_t pathlen, otherlen;
   if (!other) return path;
   if (!path) return other;
-  otherlen = strlen(other);
-  if (!otherlen) {
-    return (/*unconst*/ char *)path;
-  }
   pathlen = strlen(path);
-  if (!pathlen || (READ16LE(path) == READ16LE(".")) || *other == '/') {
+  if (!pathlen || *other == '/') {
     return (/*unconst*/ char *)other;
   }
+  otherlen = strlen(other);
   if (path[pathlen - 1] == '/') {
     if (pathlen + otherlen + 1 <= size) {
       memmove(buf, path, pathlen);

@@ -69,6 +69,8 @@ int chown(const char *, uint32_t, uint32_t);
 int chroot(const char *);
 int clone(void *, void *, size_t, int, void *, int *, void *, int *);
 int close(int);
+int close_range(unsigned, unsigned, unsigned);
+int closefrom(int);
 int creat(const char *, uint32_t);
 int dup(int);
 int dup2(int, int);

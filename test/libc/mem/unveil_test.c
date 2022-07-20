@@ -182,6 +182,18 @@ TEST(unveil, dirfdHacking_doesntWork) {
   EXITS(0);
 }
 
+TEST(unveil, mostRestrictivePolicy) {
+  if (IsOpenbsd()) return;  // openbsd behaves oddly; see docs
+  SPAWN();
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, touch("garden/secret.txt", 0644));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("jail", O_RDONLY | O_DIRECTORY));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  EXITS(0);
+}
+
 TEST(unveil, overlappingDirectories_inconsistentBehavior) {
   SPAWN();
   ASSERT_SYS(0, 0, makedirs("f1/f2", 0755));

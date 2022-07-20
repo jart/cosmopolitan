@@ -35,6 +35,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/log/log.h"
@@ -49,6 +50,7 @@
 #include "libc/sock/syslog.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -89,18 +91,13 @@
 #include "third_party/lua/lgc.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
+#include "third_party/lua/lunix.h"
 #include "tool/net/luacheck.h"
 
 /**
  * @fileoverview UNIX system calls thinly wrapped for Lua
  * @support Linux, Mac, Windows, FreeBSD, NetBSD, OpenBSD
  */
-
-struct UnixErrno {
-  int errno_;
-  int winerr;
-  const char *call;
-};
 
 static lua_State *GL;
 
@@ -177,7 +174,7 @@ static dontinline int ReturnString(lua_State *L, const char *x) {
   return 1;
 }
 
-static int SysretErrno(lua_State *L, const char *call, int olderr) {
+int LuaUnixSysretErrno(lua_State *L, const char *call, int olderr) {
   struct UnixErrno *ep;
   int i, unixerr, winerr;
   unixerr = errno;
@@ -195,7 +192,7 @@ static int SysretErrno(lua_State *L, const char *call, int olderr) {
   return 2;
 }
 
-int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
+static int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
   if (!IsTiny() && (rc != 0 && rc != -1)) {
     WARNF("syscall supposed to return 0 / -1 but got %d", rc);
   }
@@ -203,7 +200,7 @@ int SysretBool(lua_State *L, const char *call, int olderr, int rc) {
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return SysretErrno(L, call, olderr);
+    return LuaUnixSysretErrno(L, call, olderr);
   }
 }
 
@@ -216,7 +213,7 @@ static int SysretInteger(lua_State *L, const char *call, int olderr,
     lua_pushinteger(L, rc);
     return 1;
   } else {
-    return SysretErrno(L, call, olderr);
+    return LuaUnixSysretErrno(L, call, olderr);
   }
 }
 
@@ -502,7 +499,7 @@ static int LuaUnixReadlink(lua_State *L) {
     }
   }
   free(buf);
-  return SysretErrno(L, "readlink", olderr);
+  return LuaUnixSysretErrno(L, "readlink", olderr);
 }
 
 // unix.getcwd()
@@ -516,7 +513,7 @@ static int LuaUnixGetcwd(lua_State *L) {
     free(path);
     return 1;
   } else {
-    return SysretErrno(L, "getcwd", olderr);
+    return LuaUnixSysretErrno(L, "getcwd", olderr);
   }
 }
 
@@ -558,14 +555,14 @@ static int LuaUnixExecve(lua_State *L) {
           freeme2 = envp;
         } else {
           FreeStringList(argv);
-          return SysretErrno(L, "execve", olderr);
+          return LuaUnixSysretErrno(L, "execve", olderr);
         }
       } else {
         envp = environ;
         freeme2 = 0;
       }
     } else {
-      return SysretErrno(L, "execve", olderr);
+      return LuaUnixSysretErrno(L, "execve", olderr);
     }
   } else {
     ezargs[0] = prog;
@@ -578,7 +575,7 @@ static int LuaUnixExecve(lua_State *L) {
   execve(prog, argv, envp);
   FreeStringList(freeme1);
   FreeStringList(freeme2);
-  return SysretErrno(L, "execve", olderr);
+  return LuaUnixSysretErrno(L, "execve", olderr);
 }
 
 // unix.commandv(prog:str)
@@ -597,7 +594,7 @@ static int LuaUnixCommandv(lua_State *L) {
     return 1;
   } else {
     free(pathbuf);
-    return SysretErrno(L, "commandv", olderr);
+    return LuaUnixSysretErrno(L, "commandv", olderr);
   }
 }
 
@@ -615,7 +612,7 @@ static int LuaUnixRealpath(lua_State *L) {
     free(resolved);
     return 1;
   } else {
-    return SysretErrno(L, "realpath", olderr);
+    return LuaUnixSysretErrno(L, "realpath", olderr);
   }
 }
 
@@ -656,7 +653,7 @@ static int LuaUnixGetrlimit(lua_State *L) {
     lua_pushinteger(L, FixLimit(rlim.rlim_max));
     return 2;
   } else {
-    return SysretErrno(L, "getrlimit", olderr);
+    return LuaUnixSysretErrno(L, "getrlimit", olderr);
   }
 }
 
@@ -670,7 +667,7 @@ static int LuaUnixGetrusage(lua_State *L) {
     LuaPushRusage(L, &ru);
     return 1;
   } else {
-    return SysretErrno(L, "getrusage", olderr);
+    return LuaUnixSysretErrno(L, "getrusage", olderr);
   }
 }
 
@@ -704,7 +701,7 @@ static int LuaUnixWait(lua_State *L) {
     LuaPushRusage(L, &ru);
     return 3;
   } else {
-    return SysretErrno(L, "wait", olderr);
+    return LuaUnixSysretErrno(L, "wait", olderr);
   }
 }
 
@@ -745,7 +742,7 @@ static int LuaUnixPipe(lua_State *L) {
     lua_pushinteger(L, pipefd[1]);
     return 2;
   } else {
-    return SysretErrno(L, "pipe", olderr);
+    return LuaUnixSysretErrno(L, "pipe", olderr);
   }
 }
 
@@ -898,7 +895,7 @@ static int LuaUnixGettime(lua_State *L) {
     lua_pushinteger(L, ts.tv_nsec);
     return 2;
   } else {
-    return SysretErrno(L, "clock_gettime", olderr);
+    return LuaUnixSysretErrno(L, "clock_gettime", olderr);
   }
 }
 
@@ -915,7 +912,7 @@ static int LuaUnixNanosleep(lua_State *L) {
     lua_pushinteger(L, rem.tv_nsec);
     return 2;
   } else {
-    return SysretErrno(L, "nanosleep", olderr);
+    return LuaUnixSysretErrno(L, "nanosleep", olderr);
   }
 }
 
@@ -1016,7 +1013,7 @@ static int LuaUnixRead(lua_State *L) {
     return 1;
   } else {
     free(buf);
-    return SysretErrno(L, "read", olderr);
+    return LuaUnixSysretErrno(L, "read", olderr);
   }
 }
 
@@ -1052,7 +1049,7 @@ static int LuaUnixStat(lua_State *L) {
     LuaPushStat(L, &st);
     return 1;
   } else {
-    return SysretErrno(L, "stat", olderr);
+    return LuaUnixSysretErrno(L, "stat", olderr);
   }
 }
 
@@ -1066,7 +1063,7 @@ static int LuaUnixFstat(lua_State *L) {
     LuaPushStat(L, &st);
     return 1;
   } else {
-    return SysretErrno(L, "fstat", olderr);
+    return LuaUnixSysretErrno(L, "fstat", olderr);
   }
 }
 
@@ -1140,7 +1137,7 @@ static int LuaUnixSetsockopt(lua_State *L) {
   if (level == -1 || optname == 0) {
   NoProtocolOption:
     enoprotoopt();
-    return SysretErrno(L, "setsockopt", olderr);
+    return LuaUnixSysretErrno(L, "setsockopt", olderr);
   }
   if (IsSockoptBool(level, optname)) {
     // unix.setsockopt(fd:int, level:int, optname:int, value:bool)
@@ -1191,7 +1188,7 @@ static int LuaUnixGetsockopt(lua_State *L) {
   if (level == -1 || optname == 0) {
   NoProtocolOption:
     enoprotoopt();
-    return SysretErrno(L, "setsockopt", olderr);
+    return LuaUnixSysretErrno(L, "setsockopt", olderr);
   }
   if (IsSockoptBool(level, optname) || IsSockoptInt(level, optname)) {
     // unix.getsockopt(fd:int, level:int, optname:int)
@@ -1240,7 +1237,7 @@ static int LuaUnixGetsockopt(lua_State *L) {
   } else {
     goto NoProtocolOption;
   }
-  return SysretErrno(L, "getsockopt", olderr);
+  return LuaUnixSysretErrno(L, "getsockopt", olderr);
 }
 
 // unix.socket([family:int[, type:int[, protocol:int]]])
@@ -1266,7 +1263,7 @@ static int LuaUnixSocketpair(lua_State *L) {
     lua_pushinteger(L, sv[1]);
     return 2;
   } else {
-    return SysretErrno(L, "socketpair", olderr);
+    return LuaUnixSysretErrno(L, "socketpair", olderr);
   }
 }
 
@@ -1315,7 +1312,7 @@ static int LuaUnixGetname(lua_State *L, const char *name,
   if (!func(luaL_checkinteger(L, 1), &ss, &addrsize)) {
     return PushSockaddr(L, &ss);
   } else {
-    return SysretErrno(L, name, olderr);
+    return LuaUnixSysretErrno(L, name, olderr);
   }
 }
 
@@ -1348,14 +1345,14 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   data = LuaAllocOrDie(L, (n = 4096));
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) {
     free(data);
-    return SysretErrno(L, "siocgifconf", olderr);
+    return LuaUnixSysretErrno(L, "siocgifconf", olderr);
   }
   conf.ifc_buf = data;
   conf.ifc_len = n;
   if (ioctl(fd, SIOCGIFCONF, &conf) == -1) {
     close(fd);
     free(data);
-    return SysretErrno(L, "siocgifconf", olderr);
+    return LuaUnixSysretErrno(L, "siocgifconf", olderr);
   }
   lua_newtable(L);
   i = 0;
@@ -1415,7 +1412,7 @@ static int LuaUnixGethostname(lua_State *L) {
       enomem();
     }
   }
-  return SysretErrno(L, "gethostname", olderr);
+  return LuaUnixSysretErrno(L, "gethostname", olderr);
 }
 
 // unix.accept(serverfd:int[, flags:int])
@@ -1435,7 +1432,7 @@ static int LuaUnixAccept(lua_State *L) {
     lua_pushinteger(L, clientfd);
     return 1 + PushSockaddr(L, &ss);
   } else {
-    return SysretErrno(L, "accept", olderr);
+    return LuaUnixSysretErrno(L, "accept", olderr);
   }
 }
 
@@ -1458,7 +1455,7 @@ static int LuaUnixPoll(lua_State *L) {
         ++nfds;
       } else {
         free(fds);
-        return SysretErrno(L, "poll", olderr);
+        return LuaUnixSysretErrno(L, "poll", olderr);
       }
     } else {
       // ignore non-integer key
@@ -1478,7 +1475,7 @@ static int LuaUnixPoll(lua_State *L) {
     return 1;
   } else {
     free(fds);
-    return SysretErrno(L, "poll", olderr);
+    return LuaUnixSysretErrno(L, "poll", olderr);
   }
 }
 
@@ -1508,7 +1505,7 @@ static int LuaUnixRecvfrom(lua_State *L) {
     return pushed;
   } else {
     free(buf);
-    return SysretErrno(L, "recvfrom", olderr);
+    return LuaUnixSysretErrno(L, "recvfrom", olderr);
   }
 }
 
@@ -1534,7 +1531,7 @@ static int LuaUnixRecv(lua_State *L) {
     return 1;
   } else {
     free(buf);
-    return SysretErrno(L, "recv", olderr);
+    return LuaUnixSysretErrno(L, "recv", olderr);
   }
 }
 
@@ -1591,7 +1588,7 @@ static int LuaUnixSigprocmask(lua_State *L) {
     LuaPushSigset(L, oldmask);
     return 1;
   } else {
-    return SysretErrno(L, "sigprocmask", olderr);
+    return LuaUnixSysretErrno(L, "sigprocmask", olderr);
   }
 }
 
@@ -1692,7 +1689,7 @@ static int LuaUnixSigaction(lua_State *L) {
     LuaPushSigset(L, oldsa.sa_mask);
     return 3;
   } else {
-    return SysretErrno(L, "sigaction", olderr);
+    return LuaUnixSysretErrno(L, "sigaction", olderr);
   }
 }
 
@@ -1701,7 +1698,7 @@ static int LuaUnixSigaction(lua_State *L) {
 static int LuaUnixSigsuspend(lua_State *L) {
   int olderr = errno;
   sigsuspend(!lua_isnoneornil(L, 1) ? luaL_checkudata(L, 1, "unix.Sigset") : 0);
-  return SysretErrno(L, "sigsuspend", olderr);
+  return LuaUnixSysretErrno(L, "sigsuspend", olderr);
 }
 
 // unix.setitimer(which[, intervalsec, intns, valuesec, valuens])
@@ -1727,7 +1724,7 @@ static int LuaUnixSetitimer(lua_State *L) {
     lua_pushinteger(L, oldit.it_value.tv_usec * 1000);
     return 4;
   } else {
-    return SysretErrno(L, "setitimer", olderr);
+    return LuaUnixSysretErrno(L, "setitimer", olderr);
   }
 }
 
@@ -1785,7 +1782,7 @@ static dontinline int LuaUnixTime(lua_State *L, const char *call,
     lua_pushstring(L, tm.tm_zone);
     return 11;
   } else {
-    return SysretErrno(L, call, olderr);
+    return LuaUnixSysretErrno(L, call, olderr);
   }
 }
 
@@ -1883,7 +1880,7 @@ static int LuaUnixTiocgwinsz(lua_State *L) {
     lua_pushinteger(L, ws.ws_col);
     return 2;
   } else {
-    return SysretErrno(L, "tiocgwinsz", olderr);
+    return LuaUnixSysretErrno(L, "tiocgwinsz", olderr);
   }
 }
 
@@ -2459,7 +2456,7 @@ static int LuaUnixDirFd(lua_State *L) {
     lua_pushinteger(L, fd);
     return 1;
   } else {
-    return SysretErrno(L, "dirfd", olderr);
+    return LuaUnixSysretErrno(L, "dirfd", olderr);
   }
 }
 
@@ -2494,7 +2491,7 @@ static int LuaUnixOpendir(lua_State *L) {
   if ((dir = opendir(luaL_checkstring(L, 1)))) {
     return ReturnDir(L, dir);
   } else {
-    return SysretErrno(L, "opendir", olderr);
+    return LuaUnixSysretErrno(L, "opendir", olderr);
   }
 }
 
@@ -2507,7 +2504,7 @@ static int LuaUnixFdopendir(lua_State *L) {
   if ((dir = fdopendir(luaL_checkinteger(L, 1)))) {
     return ReturnDir(L, dir);
   } else {
-    return SysretErrno(L, "fdopendir", olderr);
+    return LuaUnixSysretErrno(L, "fdopendir", olderr);
   }
 }
 

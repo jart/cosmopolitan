@@ -32,8 +32,8 @@
 /**
  * Closes file descriptor.
  *
- * This function may be used for file descriptors returned by socket,
- * accept, epoll_create, and zipos file descriptors too.
+ * This function may be used for file descriptors returned by functions
+ * like open, socket, accept, epoll_create, and landlock_create_ruleset.
  *
  * This function should never be called twice for the same file
  * descriptor, regardless of whether or not an error happened. However

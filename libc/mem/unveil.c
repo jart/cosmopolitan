@@ -296,6 +296,9 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  *    possible to use opendir() and go fishing for paths which weren't
  *    previously known.
  *
+ * 5. Always specify at least one path. OpenBSD has unclear semantics
+ *    when `pledge(0,0)` is used without any previous calls.
+ *
  * This system call is supported natively on OpenBSD and polyfilled on
  * Linux using the Landlock LSM[1].
  *
@@ -321,6 +324,7 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  * @raise EINVAL if one argument is set and the other is not
  * @raise EINVAL if an invalid character in `permissions` was found
  * @raise EPERM if unveil() is called after locking
+ * @note on Linux this function requires Linux Kernel 5.13+
  * @see [1] https://docs.kernel.org/userspace-api/landlock.html
  */
 int unveil(const char *path, const char *permissions) {

@@ -84,6 +84,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_clock_getres,       //
     __NR_linux_clock_gettime,      //
     __NR_linux_clock_nanosleep,    //
+    __NR_linux_close_range,        //
     __NR_linux_close,              //
     __NR_linux_write,              //
     __NR_linux_writev,             //

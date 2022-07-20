@@ -1960,6 +1960,96 @@ RE MODULE
 
 
 ────────────────────────────────────────────────────────────────────────────────
+PATH MODULE
+
+  The path module may be used to manipulate unix paths.
+
+  Note that we use unix paths on Windows. For example, if you have a
+  path like C:\foo\bar then it should be /c/foo/bar with redbean. It
+  should also be noted the unix module is more permissive when using
+  Windows paths, where translation to win32 is very light.
+
+  path.dirname(str)
+      └─→ str
+
+    Strips final component of path, e.g.
+
+        path      │ dirname
+        ───────────────────
+        .         │ .
+        ..        │ .
+        /         │ /
+        usr       │ .
+        /usr/     │ /
+        /usr/lib  │ /usr
+        /usr/lib/ │ /usr
+
+  path.basename(path:str)
+      └─→ str
+
+    Returns final component of path, e.g.
+
+        path      │ basename
+        ─────────────────────
+        .         │ .
+        ..        │ ..
+        /         │ /
+        usr       │ usr
+        /usr/     │ usr
+        /usr/lib  │ lib
+        /usr/lib/ │ lib
+
+  path.join(str, ...)
+      └─→ str
+
+    Concatenates path components, e.g.
+
+        x         │ y        │ joined
+        ─────────────────────────────────
+        /         │ /        │ /
+        /usr      │ lib      │ /usr/lib
+        /usr/     │ lib      │ /usr/lib
+        /usr/lib  │ /lib     │ /lib
+
+    You may specify 1+ arguments.
+
+    Specifying no arguments will raise an error. If nil arguments are
+    specified, then they're skipped over. If exclusively nil arguments
+    are passed, then nil is returned. Empty strings behave similarly to
+    nil, but unlike nil may coerce a trailing slash.
+
+  path.exists(path:str)
+      └─→ bool
+
+    Returns true if path exists.
+
+    This function is inclusive of regular files, directories, and
+    special files. Symbolic links are followed are resolved. On error,
+    false is returned.
+
+  path.isfile(path:str)
+      └─→ bool
+
+    Returns true if path exists and is regular file.
+
+    Symbolic links are not followed. On error, false is returned.
+
+  path.isdir(path:str)
+      └─→ bool
+
+    Returns true if path exists and is directory.
+
+    Symbolic links are not followed. On error, false is returned.
+
+  path.islink(path:str)
+      └─→ bool
+
+    Returns true if path exists and is symbolic link.
+
+    Symbolic links are not followed. On error, false is returned.
+
+
+────────────────────────────────────────────────────────────────────────────────
 MAXMIND MODULE
 
   This module may be used to get city/country/asn/etc from IPs, e.g.
@@ -2220,11 +2310,35 @@ UNIX MODULE
 
     Closes file descriptor.
 
+    This function should never be called twice for the same file
+    descriptor, regardless of whether or not an error happened. The file
+    descriptor is always gone after close is called. So it technically
+    always succeeds, but that doesn't mean an error should be ignored.
+    For example, on NFS a close failure could indicate data loss.
+
+    Closing does not mean that scheduled i/o operations have been
+    completed. You'd need to use fsync() or fdatasync() beforehand to
+    ensure that. You shouldn't need to do that normally, because our
+    close implementation guarantees a consistent view, since on systems
+    where it isn't guaranteed (like Windows) close will implicitly sync.
+
+    File descriptors are automatically closed on exit().
+
+    Returns `EBADF` if `fd` wasn't valid.
+
+    Returns `EINTR` possibly maybe.
+
+    Returns `EIO` if an i/o error occurred.
+
   unix.read(fd:int[, bufsiz:str[, offset:int]])
       ├─→ data:str
       └─→ nil, unix.Errno
 
     Reads from file descriptor.
+
+    This function returns empty string on end of file. The exception is
+    if `bufsiz` is zero, in which case an empty returned string means
+    the file descriptor works.
 
   unix.write(fd:int, data:str[, offset:int])
       ├─→ wrotebytes:int
@@ -3778,14 +3892,66 @@ UNIX MODULE
       ├─→ true
       └─→ nil, unix.Errno
 
-    Unveil parts of a restricted filesystem view, e.g.
+    Restricts filesystem operations, e.g.
 
-        unix.unveil(".", "r")
-        unix.unveil(nil, nil)
+        unix.unveil(".", "r");     -- current dir + children visible
+        unix.unveil("/etc", "r");  -- make /etc readable too
+        unix.unveil(0, 0);         -- commit and lock policy
 
-    This can be used for sandboxing file system access.
+    Unveiling restricts a thread's view of the filesystem to a set of
+    allowed paths with specific privileges.
 
-    Unveil support is a work in progress.
+    Once you start using unveil(), the entire file system is considered
+    hidden. You then specify, by repeatedly calling unveil(), which paths
+    should become unhidden. When you're finished, you call `unveil(0,0)`
+    which commits your policy, after which further use is forbidden, in
+    the current thread, as well as any threads or processes it spawns.
+
+    There are some differences between unveil() on Linux versus OpenBSD.
+
+    1. Build your policy and lock it in one go. On OpenBSD, policies take
+       effect immediately and may evolve as you continue to call unveil()
+       but only in a more restrictive direction. On Linux, nothing will
+       happen until you call `unveil(0,0)` which commits and locks.
+
+    2. Try not to overlap directory trees. On OpenBSD, if directory trees
+       overlap, then the most restrictive policy will be used for a given
+       file. On Linux overlapping may result in a less restrictive policy
+       and possibly even undefined behavior.
+
+    3. OpenBSD and Linux disagree on error codes. On OpenBSD, accessing
+       paths outside of the allowed set raises ENOENT, and accessing ones
+       with incorrect permissions raises EACCES. On Linux, both these
+       cases raise EACCES.
+
+    4. Unlike OpenBSD, Linux does nothing to conceal the existence of
+       paths. Even with an unveil() policy in place, it's still possible
+       to access the metadata of all files using functions like stat()
+       and open(O_PATH), provided you know the path. A sandboxed process
+       can always, for example, determine how many bytes of data are in
+       /etc/passwd, even if the file isn't readable. But it's still not
+       possible to use opendir() and go fishing for paths which weren't
+       previously known.
+
+    This system call is supported natively on OpenBSD and polyfilled on
+    Linux using the Landlock LSM[1].
+
+    `path` is the file or directory to unveil
+
+    `permissions` is a string consisting of zero or more of the
+    following characters:
+
+      - 'r' makes `path` available for read-only path operations,
+        corresponding to the pledge promise "rpath".
+
+      - `w` makes `path` available for write operations, corresponding
+        to the pledge promise "wpath".
+
+      - `x` makes `path` available for execute operations,
+        corresponding to the pledge promises "exec" and "execnative".
+
+      - `c` allows `path` to be created and removed, corresponding to
+        the pledge promise "cpath".
 
   unix.gmtime(unixts:int)
       ├─→ year,mon,mday,hour,min,sec,gmtoffsec,wday,yday,dst:int,zone:str

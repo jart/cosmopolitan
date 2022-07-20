@@ -16,37 +16,46 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/str/path.h"
-#include "libc/testlib/ezbench.h"
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
 
-char b[PATH_MAX];
-
-TEST(xjoinpaths, test) {
-  EXPECT_EQ(NULL, _joinpaths(b, sizeof(b), 0, 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), "x", 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), 0, "x"));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", 0));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), 0, ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("b", _joinpaths(b, sizeof(b), "", "b"));
-  EXPECT_STREQ("a/", _joinpaths(b, sizeof(b), "a", ""));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a", "b"));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, sizeof(b), "a", "b/"));
-  EXPECT_STREQ("/b", _joinpaths(b, sizeof(b), "a", "/b"));
-  EXPECT_STREQ("./b", _joinpaths(b, sizeof(b), ".", "b"));
-  EXPECT_STREQ("b/.", _joinpaths(b, sizeof(b), "b", "."));
-  EXPECT_EQ(NULL, _joinpaths(b, 3, "a", "b/"));
-  EXPECT_EQ(NULL, _joinpaths(b, 4, "a", "b/"));
-  EXPECT_STREQ("a/b", _joinpaths(b, 4, "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, 5, "a", "b/"));
+void SetUp(void) {
+  if (closefrom(3) == -1) {
+    if (IsOpenbsd()) {
+      ASSERT_EQ(EBADF, errno);
+    } else {
+      ASSERT_EQ(ENOSYS, errno);
+      exit(0);
+    }
+  }
 }
 
-BENCH(joinpaths, bench) {
-  EZBENCH2("_joinpaths", donothing, _joinpaths(b, sizeof(b), "care", "bear"));
-  EZBENCH2("xjoinpaths", donothing, free(xjoinpaths("care", "bear")));
+TEST(closefrom, test) {
+  ASSERT_SYS(0, 3, dup(2));
+  ASSERT_SYS(0, 4, dup(2));
+  ASSERT_SYS(0, 5, dup(2));
+  ASSERT_SYS(0, 6, dup(2));
+  EXPECT_SYS(0, 0, closefrom(3));
+  ASSERT_SYS(0, 0, fcntl(2, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(4, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(5, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(6, F_GETFD));
+}
+
+TEST(close_range, test) {
+  ASSERT_SYS(0, 3, dup(2));
+  ASSERT_SYS(0, 4, dup(2));
+  ASSERT_SYS(0, 5, dup(2));
+  ASSERT_SYS(0, 6, dup(2));
+  EXPECT_SYS(0, 0, close_range(3, -1, 0));
+  ASSERT_SYS(0, 0, fcntl(2, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(4, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(5, F_GETFD));
+  ASSERT_SYS(EBADF, -1, fcntl(6, F_GETFD));
 }

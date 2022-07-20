@@ -25,6 +25,7 @@
  *
  *     path     │ dirname() │ basename()
  *     ─────────────────────────────────
+ *     0        │ .         │ .
  *     .        │ .         │ .
  *     ..       │ .         │ ..
  *     /        │ /         │ /
@@ -48,7 +49,7 @@ char *basename(char *path) {
     for (; i && _isdirsep(path[i]); i--) {
       path[i] = 0;
     }
-    for (; i && !_isdirsep(path[i - 1]);) {
+    while (i && !_isdirsep(path[i - 1])) {
       i--;
     }
     return path + i;

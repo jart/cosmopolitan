@@ -96,6 +96,7 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lpath.o					\
 		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\
@@ -217,6 +218,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lpath.o					\
 		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\
@@ -336,6 +338,7 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
 		o/$(MODE)/tool/net/lfuncs.o					\
+		o/$(MODE)/tool/net/lpath.o					\
 		o/$(MODE)/tool/net/lfinger.o					\
 		o/$(MODE)/tool/net/lre.o					\
 		o/$(MODE)/tool/net/ljson.o					\

@@ -214,8 +214,11 @@ int GetPollMaxFds(void) {
 }
 
 void NormalizeFileDescriptors(void) {
-  int i, n, fd;
+  int e, i, n, fd;
   n = GetPollMaxFds();
+  e = errno;
+  closefrom(3);  // more secure if linux 5.9+
+  errno = e;
   for (i = 0; i < n; ++i) {
     pfds[i].fd = i;
     pfds[i].events = POLLIN;

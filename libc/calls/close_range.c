@@ -16,37 +16,50 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
-#include "libc/str/path.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/errno.h"
+#include "libc/limits.h"
 
-char b[PATH_MAX];
-
-TEST(xjoinpaths, test) {
-  EXPECT_EQ(NULL, _joinpaths(b, sizeof(b), 0, 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), "x", 0));
-  EXPECT_STREQ("x", _joinpaths(b, sizeof(b), 0, "x"));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", 0));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), 0, ""));
-  EXPECT_STREQ("", _joinpaths(b, sizeof(b), "", ""));
-  EXPECT_STREQ("b", _joinpaths(b, sizeof(b), "", "b"));
-  EXPECT_STREQ("a/", _joinpaths(b, sizeof(b), "a", ""));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a", "b"));
-  EXPECT_STREQ("a/b", _joinpaths(b, sizeof(b), "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, sizeof(b), "a", "b/"));
-  EXPECT_STREQ("/b", _joinpaths(b, sizeof(b), "a", "/b"));
-  EXPECT_STREQ("./b", _joinpaths(b, sizeof(b), ".", "b"));
-  EXPECT_STREQ("b/.", _joinpaths(b, sizeof(b), "b", "."));
-  EXPECT_EQ(NULL, _joinpaths(b, 3, "a", "b/"));
-  EXPECT_EQ(NULL, _joinpaths(b, 4, "a", "b/"));
-  EXPECT_STREQ("a/b", _joinpaths(b, 4, "a/", "b"));
-  EXPECT_STREQ("a/b/", _joinpaths(b, 5, "a", "b/"));
-}
-
-BENCH(joinpaths, bench) {
-  EZBENCH2("_joinpaths", donothing, _joinpaths(b, sizeof(b), "care", "bear"));
-  EZBENCH2("xjoinpaths", donothing, free(xjoinpaths("care", "bear")));
+/**
+ * Closes inclusive range of file descriptors, e.g.
+ *
+ *     // close all non-stdio file descriptors
+ *     if (close_range(3, -1, 0) == -1) {
+ *       for (int i = 3; i < 256; ++i) {
+ *         close(i);
+ *       }
+ *     }
+ *
+ * This is supported on Linux 5.9+, FreeBSD, and OpenBSD. On FreeBSD,
+ * `flags` must be zero. On OpenBSD, we call closefrom(int) so `last`
+ * should be `-1` in order to get OpenBSD support, otherwise `ENOSYS`
+ * will be returned. We also polyfill closefrom on FreeBSD since it's
+ * available on older kernels.
+ *
+ * On Linux, the following flags are supported:
+ *
+ * - CLOSE_RANGE_UNSHARE
+ * - CLOSE_RANGE_CLOEXEC
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @error ENOSYS if not Linux 5.9+ / FreeBSD / OpenBSD
+ * @error EBADF on OpenBSD if `first` is greater than highest fd
+ * @error EINVAL if flags are bad or first is greater than last
+ * @error EMFILE if a weird race condition happens on Linux
+ * @error EINTR possibly on OpenBSD
+ * @error ENOMEM on Linux maybe
+ */
+int close_range(unsigned int first, unsigned int last, unsigned int flags) {
+  int rc, err;
+  err = errno;
+  if ((rc = sys_close_range(first, last, flags)) == -1) {
+    if (errno == ENOSYS && first <= INT_MAX && last == UINT_MAX && !flags) {
+      errno = err;
+      rc = sys_closefrom(first);
+    }
+  }
+  STRACE("close_range(%d, %d, %#x) → %d% m", first, last, flags, rc);
+  return rc;
 }

@@ -383,7 +383,7 @@ scall	fsmount			0xfffffffffffff1b0	globl
 scall	fspick			0xfffffffffffff1b1	globl
 scall	pidfd_open		0xfffffffffffff1b2	globl
 scall	clone3			0xfffffffffffff1b3	globl
-scall	close_range		0xfffffffffffff1b4	globl
+scall	sys_close_range		0xffffff23fffff1b4	globl hidden # linux 5.9
 scall	sys_openat2		0xfffffffffffff1b5	globl hidden # Linux 5.6
 scall	pidfd_getfd		0xfffffffffffff1b6	globl
 scall	sys_faccessat2		0xfffffffffffff1b7	globl hidden
@@ -463,7 +463,7 @@ scall	chflagsat		0xfff06b21cfffffff	globl
 scall	profil			0x02c02c02cfffffff	globl
 scall	fhstatfs		0xfff04122efffffff	globl
 scall	utrace			0x1320d114ffffffff	globl
-scall	closefrom		0xfff11f1fdfffffff	globl
+scall	sys_closefrom		0xfff11f1fdfffffff	globl hidden
 #───────────────────────────XNU──────────────────────────────
 scall	__pthread_markcancel	0xfffffffff214cfff	globl
 scall	__pthread_kill		0xfffffffff2148fff	globl

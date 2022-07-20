@@ -115,6 +115,7 @@
 #include "tool/net/lfinger.h"
 #include "tool/net/lfuncs.h"
 #include "tool/net/ljson.h"
+#include "tool/net/lpath.h"
 #include "tool/net/luacheck.h"
 #include "tool/net/sandbox.h"
 
@@ -5272,6 +5273,7 @@ static const luaL_Reg kLuaLibs[] = {
     {"lsqlite3", luaopen_lsqlite3},  //
     {"maxmind", LuaMaxmind},         //
     {"finger", LuaFinger},           //
+    {"path", LuaPath},               //
     {"re", LuaRe},                   //
     {"unix", LuaUnix},               //
 };
@@ -6323,8 +6325,7 @@ static bool HandleMessageActual(void) {
     if (hasonloglatency) LuaOnLogLatency(reqtime, contime);
     if (loglatency || LOGGABLE(kLogDebug))
       LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
-           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a,
-           reqtime, contime);
+           msg.uri.b - msg.uri.a, inbuf.p + msg.uri.a, reqtime, contime);
   }
   if (!generator) {
     return TransmitResponse(p);

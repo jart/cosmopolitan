@@ -586,6 +586,12 @@ syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlayed
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 
+#	close_range() values
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	close	CLOSE_RANGE_UNSHARE			2			-1			-1			-1			-1			-1			#
+syscon	close	CLOSE_RANGE_CLOEXEC			4			-1			-1			-1			-1			-1			#
+
 #	clock_{gettime,settime} timers
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary

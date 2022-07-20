@@ -4,7 +4,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct UnixErrno {
+  int errno_;
+  int winerr;
+  const char *call;
+};
+
 int LuaUnix(lua_State *);
+int LuaUnixSysretErrno(lua_State *, const char *, int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
