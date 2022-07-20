@@ -116,6 +116,7 @@ kErrnoDocs:
 	.e	ENOTRECOVERABLE,"State not recoverable"
 	.e	ENONET,"Machine is not on the network"
 	.e	ERESTART,"Interrupted system call should be restarted"
+	.e	EBADFD,"File descriptor in bad state"
 	.long	MAGNUM_TERMINATOR
 	.endobj	kErrnoDocs,globl,hidden
 	.overrun

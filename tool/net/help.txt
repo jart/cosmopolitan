@@ -3668,17 +3668,17 @@ UNIX MODULE
 
     stdio
 
-      Allows read, write, send, recv, recvfrom, close,
-      clock_getres, clock_gettime, dup, dup2, dup3, fchdir, fstat,
-      fsync, fdatasync, ftruncate, getdents, getegid, getrandom,
-      geteuid, getgid, getgroups, getitimer, getpgid, getpgrp, getpid,
-      getppid, getresgid, getresuid, getrlimit, getsid, gettimeofday,
-      getuid, lseek, madvise, brk, mmap/mprotect (PROT_EXEC isn't
-      allowed), msync, munmap, gethostname, nanosleep, pipe, pipe2,
-      poll, setitimer, shutdown, sigaction, sigsuspend, sigprocmask,
-      socketpair, umask, wait4, ioctl(FIONREAD), ioctl(FIONBIO),
-      ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD),
-      fcntl(F_GETFL), fcntl(F_SETFL).
+      Allows read, write, send, recv, recvfrom, close, clock_getres,
+      clock_gettime, dup, fchdir, fstat, fsync, fdatasync, ftruncate,
+      getdents, getegid, getrandom, geteuid, getgid, getgroups,
+      getitimer, getpgid, getpgrp, getpid, hgetppid, getresgid,
+      getresuid, getrlimit, getsid, gettimeofday, getuid, lseek,
+      madvise, brk, mmap/mprotect (PROT_EXEC isn't allowed), msync,
+      munmap, gethostname, nanosleep, pipe, pipe2, poll, setitimer,
+      shutdown, sigaction, sigsuspend, sigprocmask, socketpair, umask,
+      wait4, getrusage, ioctl(FIONREAD), ioctl(FIONBIO), ioctl(FIOCLEX),
+      ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD), fcntl(F_GETFL),
+      fcntl(F_SETFL).
 
     rpath
 
@@ -3717,11 +3717,19 @@ UNIX MODULE
 
     dns
 
-      Allows sendto, recvfrom, socket (AF_INET), connect.
+      Allows sendto, recvfrom, socket(AF_INET), connect.
+
+    recvfd
+
+      Allows recvmsg, recvmmsg.
+
+    sendfd
+
+      Allows sendmsg, sendmmsg.
 
     proc
 
-      Allows fork, vfork, clone, kill, getpriority, setpriority,
+      Allows fork, vfork, clone, kill, tgkill, getpriority, setpriority,
       setrlimit, setpgid, setsid.
 
     id
@@ -3729,26 +3737,30 @@ UNIX MODULE
       Allows setuid, setreuid, setresuid, setgid, setregid, setresgid,
       setgroups, setrlimit, getpriority, setpriority.
 
+    settime
+
+      Allows settimeofday and clock_adjtime.
+
+    unveil
+
+      Allows unveil().
+
     exec
 
-      Allows execve, access.
+      Allows execve, access, faccessat, openat(O_RDONLY).
 
-      On Linux this also weakens some security to permit running APE
-      binaries. However on OpenBSD they must be assimilate beforehand.
-      On Linux, mmap() will be loosened up to allow creating PROT_EXEC
-      memory (for APE loader) and system call origin verification won't
-      be activated.
+      If the executable in question needs a loader, then you may need
+      "prot_exec" too. With APE, security will be stronger if you
+      assimilate your binaries beforehand, using the --assimilate flag,
+      or the o//tool/build/assimilate.com program.
 
-    execnative
+    prot_exec
 
-      Allows execve, execveat.
+      Allows mmap(PROT_EXEC) and mprotect(PROT_EXEC).
 
-      Can only be used to run native executables; you won't be able to
-      run APE binaries. mmap() and mprotect() are still prevented from
-      creating executable memory. System call origin verification can't
-      be enabled. If you always assimilate your APE binaries, then this
-      should be preferred. On OpenBSD this will be rewritten to be
-      "exec".
+      This may be needed to launch non-static non-native executables,
+      such as non-assimilated APE binaries, or programs that link
+      dynamic shared objects, i.e. most Linux distro binaries.
 
     `execpromises` only matters if "exec" or "execnative" are specified
     in `promises`. In that case, this specifies the promises that'll

@@ -28,11 +28,13 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
+#include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
+#include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/audit.h"
@@ -144,29 +146,109 @@ static int unveil_init(void) {
 
 static int sys_unveil_linux(const char *path, const char *permissions) {
   int rc;
+
   if (!State.fd && (rc = unveil_init()) == -1) return rc;
   if ((path && !permissions) || (!path && permissions)) return einval();
   if (!path && !permissions) return unveil_final();
   struct landlock_path_beneath_attr pb = {0};
   for (const char *c = permissions; *c != '\0'; c++) {
     switch (*c) {
-      // clang-format off
-      case 'r': pb.allowed_access |= UNVEIL_READ;   break;
-      case 'w': pb.allowed_access |= UNVEIL_WRITE;  break;
-      case 'x': pb.allowed_access |= UNVEIL_EXEC;   break;
-      case 'c': pb.allowed_access |= UNVEIL_CREATE; break;
-      default:  return einval();
-        // clang-format on
+      case 'r':
+        pb.allowed_access |= UNVEIL_READ;
+        break;
+      case 'w':
+        pb.allowed_access |= UNVEIL_WRITE;
+        break;
+      case 'x':
+        pb.allowed_access |= UNVEIL_EXEC;
+        break;
+      case 'c':
+        pb.allowed_access |= UNVEIL_CREATE;
+        break;
+      default:
+        return einval();
     }
   }
   pb.allowed_access &= State.fs_mask;
-  if ((rc = sys_open(path, O_PATH | O_CLOEXEC, 0)) == -1) return rc;
+
+  // landlock exposes all metadata, so we only technically need to add
+  // realpath(path) to the ruleset. however a corner case exists where
+  // it isn't valid, e.g. /dev/stdin -> /proc/2834/fd/pipe:[51032], so
+  // we'll need to work around this, by adding the path which is valid
+  const char *dir;
+  const char *last;
+  const char *next;
+  struct {
+    char lbuf[PATH_MAX];
+    char buf1[PATH_MAX];
+    char buf2[PATH_MAX];
+    char buf3[PATH_MAX];
+    char buf4[PATH_MAX];
+  } * b;
+  if (strlen(path) + 1 > PATH_MAX) return enametoolong();
+  if (!(b = malloc(sizeof(*b)))) return -1;
+  last = path;
+  next = path;
+  for (int i = 0;; ++i) {
+    if (i == 64) {
+      // give up
+      free(b);
+      return eloop();
+    }
+    int err = errno;
+    if ((rc = sys_readlinkat(AT_FDCWD, next, b->lbuf, PATH_MAX)) != -1) {
+      if (rc < PATH_MAX) {
+        // we need to nul-terminate
+        b->lbuf[rc] = 0;
+        // last = next
+        strcpy(b->buf1, next);
+        last = b->buf1;
+        // next = join(dirname(next), link)
+        strcpy(b->buf2, next);
+        dir = dirname(b->buf2);
+        if ((next = _joinpaths(b->buf3, PATH_MAX, dir, b->lbuf))) {
+          // next now points to either: buf3, buf2, lbuf, rodata
+          strcpy(b->buf4, next);
+          next = b->buf4;
+        } else {
+          free(b);
+          return enametoolong();
+        }
+      } else {
+        // symbolic link data was too long
+        free(b);
+        return enametoolong();
+      }
+    } else if (errno == EINVAL) {
+      // next wasn't a symbolic link
+      errno = err;
+      path = next;
+      break;
+    } else if (i && (errno == ENOENT || errno == ENOTDIR)) {
+      // next is a broken symlink, use last
+      errno = err;
+      path = last;
+      break;
+    } else {
+      // readlink failed for some other reason
+      free(b);
+      return -1;
+    }
+  }
+
+  // now we can open the path
+  rc = sys_open(path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
+  free(b);
+  if (rc == -1) return rc;
+
   pb.parent_fd = rc;
   struct stat st;
   if ((rc = sys_fstat(pb.parent_fd, &st)) == -1) {
     return err_close(rc, pb.parent_fd);
   }
-  if (!S_ISDIR(st.st_mode)) pb.allowed_access &= FILE_BITS;
+  if (!S_ISDIR(st.st_mode)) {
+    pb.allowed_access &= FILE_BITS;
+  }
   if ((rc = landlock_add_rule(State.fd, LANDLOCK_RULE_PATH_BENEATH, &pb, 0))) {
     return err_close(rc, pb.parent_fd);
   }
@@ -177,9 +259,9 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
 /**
  * Restricts filesystem operations, e.g.
  *
- *    unveil(".", "r");     // current directory + children are visible
- *    unveil("/etc", "r");  // make /etc readable too
- *    unveil(0, 0);         // commit and lock policy
+ *     unveil(".", "r");     // current directory + children are visible
+ *     unveil("/etc", "r");  // make /etc readable too
+ *     unveil(0, 0);         // commit and lock policy
  *
  * Unveiling restricts a thread's view of the filesystem to a set of
  * allowed paths with specific privileges.

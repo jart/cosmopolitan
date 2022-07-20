@@ -332,7 +332,7 @@ scall	timerfd_gettime		0xfffffffffffff11f	globl # won't polyfill; see INTON/INTO
 scall	recvmmsg		0x1dbffffffffff12b	globl #  ├─ end of life 2024-06-30 (extended)
 scall	fanotify_init		0xfffffffffffff12c	globl #  ├─ last distro with the original gnome desktop
 scall	fanotify_mark		0xfffffffffffff12d	globl #  └─ apple and google condemn the gplv3/gccrtev3
-scall	prlimit			0xfffffffffffff12e	globl
+scall	prlimit			0xfffffffffffff12e	globl # a.k.a. prlimit64()
 scall	name_to_handle_at	0xfffffffffffff12f	globl
 scall	open_by_handle_at	0xfffffffffffff130	globl
 scall	clock_adjtime		0xfffffffffffff131	globl
@@ -391,9 +391,9 @@ scall	process_madvise		0xfffffffffffff1b8	globl
 scall	epoll_pwait2		0xfffffffffffff1b9	globl
 scall	mount_setattr		0xfffffffffffff1ba	globl
 scall	quotactl_fd		0xfffffffffffff1bb	globl
-scall	landlock_create_ruleset	0xfffffffffffff1bc	globl
-scall	landlock_add_rule	0xfffffffffffff1bd	globl
-scall	landlock_restrict_self	0xfffffffffffff1be	globl
+scall	sys_landlock_create_ruleset 0xfffffffffffff1bc	globl hidden # Linux 5.13+
+scall	sys_landlock_add_rule	0xfffffffffffff1bd	globl hidden
+scall	sys_landlock_restrict_self 0xfffffffffffff1be	globl hidden
 scall	memfd_secret		0xfffffffffffff1bf	globl
 scall	process_mrelease	0xfffffffffffff1c0	globl
 scall	futex_waitv		0xfffffffffffff1c1	globl

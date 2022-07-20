@@ -29,6 +29,7 @@
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
@@ -41,13 +42,22 @@ static sigset_t oldss;
 
 static privileged void __morph_mprotect(void *addr, size_t size, int prot,
                                         int ntprot) {
+  bool cf;
   int ax, dx;
   uint32_t op;
   if (!IsWindows()) {
-    asm volatile("syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR_mprotect), "D"(addr), "S"(size), "1"(prot)
+    asm volatile(CFLAG_ASM("clc\n\t"
+                           "syscall")
+                 : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
+                 : "1"(__NR_mprotect), "D"(addr), "S"(size), "2"(prot)
                  : "rcx", "r11", "memory");
+#ifndef NDEBUG
+    if (cf) ax = -ax;
+    if (ax == -EPERM) {
+      kprintf("error: need pledge(prot_exec) permission to code morph\n");
+      _Exit(26);
+    }
+#endif
   } else {
     __imp_VirtualProtect(addr, size, ntprot, &op);
   }

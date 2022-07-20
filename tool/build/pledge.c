@@ -16,19 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/landlock.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/elf/def.h"
+#include "libc/elf/struct/ehdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
@@ -37,12 +44,15 @@
 #include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ioprio.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sched.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 
@@ -55,7 +65,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -g GID          call setgid()\n\
   -u UID          call setuid()\n\
   -c PATH         call chroot()\n\
-  -v [PERM:]PATH  call unveil(PATH,PERM) where PERM can have rwxc\n\
+  -v [PERM:]PATH  make PATH visible where PERM can have rwxc\n\
   -n              set maximum niceness\n\
   -N              don't normalize file descriptors\n\
   -C SECS         set cpu limit [default: inherited]\n\
@@ -75,11 +85,12 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - fattr: allow changing some struct stat bits\n\
      - inet: allow IPv4 and IPv6\n\
      - unix: allow local sockets\n\
-     - dns: allow dns\n\
-     - proc: allow fork, clone and friends\n\
-     - thread: allow clone\n\
      - id: allow setuid and friends\n\
-     - exec: make execution more permissive\n\
+     - dns: allow dns and related files\n\
+     - proc: allow process and thread creation\n\
+     - exec: implied by default\n\
+     - prot_exec: allow creating executable memory\n\
+     - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
 \n\
 pledge.com v1.1\n\
 copyright 2022 justine alexandra roberts tunney\n\
@@ -93,6 +104,8 @@ inspired by the design of openbsd's pledge() system call. Visit\n\
 the https://justine.lol/pledge/ page for online documentation.\n\
 \n\
 "
+
+int ParsePromises(const char *, unsigned long *);
 
 int g_gflag;
 int g_uflag;
@@ -115,8 +128,8 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   struct sysinfo si;
   g_promises = 0;
-  g_proquota = GetCpuCount() * 2;
   g_fszquota = 256 * 1000 * 1000;
+  g_proquota = GetCpuCount() * 100;
   g_fszquota = 4 * 1000 * 1000 * 1000;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
@@ -180,6 +193,13 @@ struct pollfd pfds[256];
 
 int GetBaseCpuFreqMhz(void) {
   return KCPUIDS(16H, EAX) & 0x7fff;
+}
+
+static bool SupportsLandlock(void) {
+  int e = errno;
+  bool r = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION) >= 0;
+  errno = e;
+  return r;
 }
 
 int GetPollMaxFds(void) {
@@ -283,6 +303,61 @@ void SetProLimit(long n) {
   }
 }
 
+bool PathExists(const char *path) {
+  int err;
+  struct stat st;
+  if (path) {
+    err = errno;
+    if (!stat(path, &st)) {
+      return true;
+    } else {
+      errno = err;
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+bool IsDynamicExecutable(const char *prog) {
+  int fd;
+  Elf64_Ehdr e;
+  struct stat st;
+  if ((fd = open(prog, O_RDONLY)) == -1) {
+    kprintf("open(%#s, O_RDONLY) failed: %m\n", prog);
+    exit(13);
+  }
+  if (read(fd, &e, sizeof(e)) != sizeof(e)) {
+    kprintf("%s: read(64) failed: %m\n", prog);
+    exit(16);
+  }
+  close(fd);
+  return e.e_type == ET_DYN &&  //
+         READ32LE(e.e_ident) == READ32LE(ELFMAG);
+}
+
+void Unveil(const char *path, const char *perm) {
+  if (unveil(path, perm) == -1) {
+    kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
+    _Exit(20);
+  }
+}
+
+void UnveilIfExists(const char *path, const char *perm) {
+  int err;
+  if (path) {
+    err = errno;
+    if (unveil(path, perm) == -1) {
+      if (errno == ENOENT) {
+        errno = err;
+      } else {
+        kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
+        _Exit(20);
+      }
+    }
+  }
+}
+
 void MakeProcessNice(void) {
   if (!g_nice) return;
   if (setpriority(PRIO_PROCESS, 0, 19) == -1) {
@@ -301,12 +376,119 @@ void MakeProcessNice(void) {
   }
 }
 
+void ApplyFilesystemPolicy(unsigned long ipromises) {
+
+  if (!SupportsLandlock()) {
+    if (unveils.n) {
+      kprintf("error: the unveil() -v flag needs Linux 5.13+\n");
+      _Exit(20);
+    }
+  }
+
+  Unveil(prog, "rx");
+
+  if (IsDynamicExecutable(prog)) {
+    UnveilIfExists("/lib", "rx");
+    UnveilIfExists("/lib64", "rx");
+    UnveilIfExists("/usr/lib", "rx");
+    UnveilIfExists("/usr/lib64", "rx");
+    UnveilIfExists("/usr/local/lib", "rx");
+    UnveilIfExists("/usr/local/lib64", "rx");
+    UnveilIfExists("/etc/ld-musl-x86_64.path", "r");
+    UnveilIfExists("/etc/ld.so.conf", "r");
+    UnveilIfExists("/etc/ld.so.cache", "r");
+    UnveilIfExists("/etc/ld.so.conf.d", "r");
+    UnveilIfExists("/etc/ld.so.preload", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_STDIO)) {
+    UnveilIfExists("/dev/fd", "r");
+    UnveilIfExists("/dev/log", "w");
+    UnveilIfExists("/dev/zero", "r");
+    UnveilIfExists("/dev/null", "rw");
+    UnveilIfExists("/dev/full", "rw");
+    UnveilIfExists("/dev/stdin", "rw");
+    UnveilIfExists("/dev/stdout", "rw");
+    UnveilIfExists("/dev/stderr", "rw");
+    UnveilIfExists("/dev/urandom", "r");
+    UnveilIfExists("/dev/localtime", "r");
+    UnveilIfExists("/proc/self/fd", "rw");
+    UnveilIfExists("/proc/self/stat", "r");
+    UnveilIfExists("/proc/self/status", "r");
+    UnveilIfExists("/usr/share/locale", "r");
+    UnveilIfExists("/proc/self/cmdline", "r");
+    UnveilIfExists("/usr/share/zoneinfo", "r");
+    UnveilIfExists("/proc/sys/kernel/version", "r");
+    UnveilIfExists("/usr/share/common-licenses", "r");
+    UnveilIfExists("/proc/sys/kernel/ngroups_max", "r");
+    UnveilIfExists("/proc/sys/kernel/cap_last_cap", "r");
+    UnveilIfExists("/proc/sys/vm/overcommit_memory", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_INET)) {
+    UnveilIfExists("/etc/ssl/certs/ca-certificates.crt", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_RPATH)) {
+    UnveilIfExists("/proc/filesystems", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_DNS)) {
+    UnveilIfExists("/etc/hosts", "r");
+    UnveilIfExists("/etc/hostname", "r");
+    UnveilIfExists("/etc/services", "r");
+    UnveilIfExists("/etc/protocols", "r");
+    UnveilIfExists("/etc/resolv.conf", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_TTY)) {
+    UnveilIfExists(ttyname(0), "rw");  // 1-up apparmor
+    UnveilIfExists("/etc/tty", "rw");
+    UnveilIfExists("/etc/console", "rw");
+    UnveilIfExists("/usr/share/terminfo", "r");
+  }
+
+  if (~ipromises & (1ul << PROMISE_PROT_EXEC)) {
+    UnveilIfExists("/usr/bin/ape", "rx");
+  }
+
+  if (~ipromises & (1ul << PROMISE_VMINFO)) {
+    UnveilIfExists("/proc/stat", "r");
+    UnveilIfExists("/proc/meminfo", "r");
+    UnveilIfExists("/proc/cpuinfo", "r");
+    UnveilIfExists("/proc/diskstats", "r");
+    UnveilIfExists("/proc/self/maps", "r");
+    UnveilIfExists("/sys/devices/system/cpu", "r");
+  }
+
+  for (int i = 0; i < unveils.n; ++i) {
+    char *s, *t;
+    const char *path;
+    const char *perm;
+    s = unveils.p[i];
+    if ((t = strchr(s, ':'))) {
+      *t = 0;
+      perm = s;
+      path = t + 1;
+    } else {
+      perm = "r";
+      path = s;
+    }
+    Unveil(path, perm);
+  }
+
+  if (unveil(0, 0) == -1) {
+    kprintf("error: unveil(0, 0) failed: %m\n");
+    _Exit(20);
+  }
+}
+
 int main(int argc, char *argv[]) {
-  int i;
   bool hasfunbits;
   int useruid, usergid;
   int owneruid, ownergid;
   int oldfsuid, oldfsgid;
+  unsigned long ipromises;
 
   if (!IsLinux()) {
     kprintf("error: this program is only intended for linux\n");
@@ -365,13 +547,6 @@ int main(int argc, char *argv[]) {
   }
 
   // change root fs path
-  // all the documentation on the subject is unprofessional and crazy
-  // the linux devs willfully deprive linux users of security tools
-  // linux appears to not even forbid chroot on setuid binaries
-  // yes i've considered fchdir() and i don't really care
-  // ohh it's sooo insecure they say, and they solve it
-  // by imposing a requirement that we must only do
-  // the "insecure" thing as the root user lool
   if (g_chroot) {
     if (chdir(g_chroot) == -1) {
       kprintf("error: chdir(%#s) failed: %m\n", g_chroot);
@@ -443,50 +618,26 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (unveils.n) {
-    if (unveil(prog, "rx") == -1) {
-      kprintf("error: unveil(0, 0) failed: %m\n", prog, "rx");
-      _Exit(20);
-    }
-    if (strstr(g_promises, "exec") && isexecutable("/usr/bin/ape")) {
-      if (unveil("/usr/bin/ape", "rx") == -1) {
-        kprintf("error: unveil(0, 0) failed: %m\n", "/usr/bin/ape", "rx");
-        _Exit(20);
-      }
-    }
-    for (i = 0; i < unveils.n; ++i) {
-      char *s, *t;
-      const char *path;
-      const char *perm;
-      s = unveils.p[i];
-      if ((t = strchr(s, ':'))) {
-        *t = 0;
-        perm = s;
-        path = t + 1;
-      } else {
-        perm = "r";
-        path = s;
-      }
-      if (unveil(path, perm) == -1) {
-        kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
-        _Exit(20);
-      }
-    }
-    if (unveil(0, 0) == -1) {
-      kprintf("error: unveil(0, 0) failed: %m\n");
-      _Exit(20);
-    }
+  if (ParsePromises(g_promises, &ipromises) == -1) {
+    kprintf("error: bad promises list: %s\n", g_promises);
+    _Exit(21);
+  }
+
+  ApplyFilesystemPolicy(ipromises);
+
+  // we always need exec which is a weakness of this model
+  if (!(~ipromises & (1ul << PROMISE_EXEC))) {
+    g_promises = xstrcat(g_promises, ' ', "exec");
   }
 
   // apply sandbox
-  g_promises = xstrcat(g_promises, ' ', "execnative");
   if (pledge(g_promises, g_promises) == -1) {
     kprintf("error: pledge(%#s) failed: %m\n", g_promises);
     _Exit(19);
   }
 
   // launch program
-  execve(prog, argv + optind, environ);
+  sys_execve(prog, argv + optind, environ);
   kprintf("%s: execve failed: %m\n", prog);
   return 127;
 }

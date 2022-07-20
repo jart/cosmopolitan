@@ -25,6 +25,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -34,6 +35,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/audit.h"
+#include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nrlinux.h"
@@ -49,6 +51,8 @@
 #define ADDRLESS  0x2000
 #define LOCK      0x8000
 #define TTY       0x8000
+#define NOEXEC    0x8000
+#define THREAD    0x8000
 
 // TODO(jart): fix chibicc
 #ifdef __chibicc__
@@ -68,8 +72,15 @@ static const uint16_t kPledgeLinuxDefault[] = {
     __NR_linux_exit,  //
 };
 
+// the stdio contains all the benign system calls. openbsd makes the
+// assumption that preexisting file descriptors are trustworthy. we
+// implement checking for these as a simple linear scan rather than
+// binary search, since there doesn't appear to be any measurable
+// difference in the latency of sched_yield() if it's at the start of
+// the bpf script or the end.
 static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_exit_group,         //
+    __NR_linux_sched_yield,        //
     __NR_linux_clock_getres,       //
     __NR_linux_clock_gettime,      //
     __NR_linux_clock_nanosleep,    //
@@ -91,6 +102,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_fcntl,              //
     __NR_linux_fstat,              //
     __NR_linux_fsync,              //
+    __NR_linux_sysinfo,            //
     __NR_linux_fdatasync,          //
     __NR_linux_ftruncate,          //
     __NR_linux_getdents,           //
@@ -114,22 +126,24 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_timerfd_create,     //
     __NR_linux_timerfd_settime,    //
     __NR_linux_timerfd_gettime,    //
-    __NR_linux_gettimeofday,       //
     __NR_linux_copy_file_range,    //
+    __NR_linux_gettimeofday,       //
     __NR_linux_sendfile,           //
     __NR_linux_vmsplice,           //
     __NR_linux_splice,             //
     __NR_linux_lseek,              //
     __NR_linux_tee,                //
     __NR_linux_brk,                //
-    __NR_linux_mmap,               //
     __NR_linux_msync,              //
+    __NR_linux_mmap | NOEXEC,      //
     __NR_linux_munmap,             //
     __NR_linux_mincore,            //
     __NR_linux_madvise,            //
     __NR_linux_fadvise,            //
-    __NR_linux_mprotect,           //
+    __NR_linux_mprotect | NOEXEC,  //
     __NR_linux_arch_prctl,         //
+    __NR_linux_migrate_pages,      //
+    __NR_linux_sync_file_range,    //
     __NR_linux_set_tid_address,    //
     __NR_linux_nanosleep,          //
     __NR_linux_pipe,               //
@@ -150,17 +164,27 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_alarm,              //
     __NR_linux_pause,              //
     __NR_linux_shutdown,           //
+    __NR_linux_eventfd,            //
+    __NR_linux_eventfd2,           //
+    __NR_linux_signalfd,           //
+    __NR_linux_signalfd4,          //
     __NR_linux_sigaction,          //
     __NR_linux_sigaltstack,        //
     __NR_linux_sigprocmask,        //
     __NR_linux_sigsuspend,         //
     __NR_linux_sigreturn,          //
+    __NR_linux_sigpending,         //
     __NR_linux_socketpair,         //
+    __NR_linux_getrusage,          //
+    __NR_linux_times,              //
     __NR_linux_umask,              //
     __NR_linux_wait4,              //
     __NR_linux_uname,              //
     __NR_linux_prctl,              //
-    __NR_linux_sched_yield,        //
+    __NR_linux_clone | THREAD,     //
+    __NR_linux_futex,              //
+    __NR_linux_set_robust_list,    //
+    __NR_linux_get_robust_list,    //
 };
 
 static const uint16_t kPledgeLinuxFlock[] = {
@@ -265,6 +289,7 @@ static const uint16_t kPledgeLinuxUnix[] = {
 
 static const uint16_t kPledgeLinuxDns[] = {
     __NR_linux_socket | INET,  //
+    __NR_linux_bind,           //
     __NR_linux_sendto,         //
     __NR_linux_connect,        //
     __NR_linux_recvfrom,       //
@@ -275,11 +300,13 @@ static const uint16_t kPledgeLinuxTty[] = {
 };
 
 static const uint16_t kPledgeLinuxRecvfd[] = {
-    __NR_linux_recvmsg,  //
+    __NR_linux_recvmsg,   //
+    __NR_linux_recvmmsg,  //
 };
 
 static const uint16_t kPledgeLinuxSendfd[] = {
-    __NR_linux_sendmsg,  //
+    __NR_linux_sendmsg,   //
+    __NR_linux_sendmmsg,  //
 };
 
 static const uint16_t kPledgeLinuxProc[] = {
@@ -293,14 +320,9 @@ static const uint16_t kPledgeLinuxProc[] = {
     __NR_linux_setrlimit,    //
     __NR_linux_getpriority,  //
     __NR_linux_setpriority,  //
-};
-
-static const uint16_t kPledgeLinuxThread[] = {
-    __NR_linux_clone,            //
-    __NR_linux_futex,            //
-    __NR_linux_tgkill,           //
-    __NR_linux_set_robust_list,  //
-    __NR_linux_get_robust_list,  //
+    __NR_linux_ioprio_get,   //
+    __NR_linux_ioprio_set,   //
+    __NR_linux_tgkill,       //
 };
 
 static const uint16_t kPledgeLinuxId[] = {
@@ -319,13 +341,23 @@ static const uint16_t kPledgeLinuxId[] = {
     __NR_linux_setfsgid,     //
 };
 
+static const uint16_t kPledgeLinuxSettime[] = {
+    __NR_linux_settimeofday,   //
+    __NR_linux_clock_adjtime,  //
+};
+
+static const uint16_t kPledgeLinuxProtExec[] = {
+    __NR_linux_mmap,      //
+    __NR_linux_mprotect,  //
+};
+
 static const uint16_t kPledgeLinuxExec[] = {
     __NR_linux_execve,             //
     __NR_linux_execveat,           //
-    __NR_linux_access,             //
-    __NR_linux_faccessat,          //
-    __NR_linux_open | READONLY,    //
-    __NR_linux_openat | READONLY,  //
+    __NR_linux_access,             // for ape loader
+    __NR_linux_faccessat,          // for ape binaries
+    __NR_linux_open | READONLY,    // for ape loader
+    __NR_linux_openat | READONLY,  // for ape binaries
 };
 
 static const uint16_t kPledgeLinuxExec2[] = {
@@ -339,30 +371,37 @@ static const uint16_t kPledgeLinuxUnveil[] = {
     __NR_linux_landlock_restrict_self,   //
 };
 
+// placeholder group
+// pledge.com checks this to do auto-unveiling
+static const uint16_t kPledgeLinuxVminfo[] = {
+    __NR_linux_openat | READONLY,  //
+};
+
 static const struct Pledges {
   const char *name;
   const uint16_t *syscalls;
   const size_t len;
 } kPledgeLinux[] = {
-    [PROMISE_STDIO] = {"stdio", PLEDGE(kPledgeLinuxStdio)},            //
-    [PROMISE_RPATH] = {"rpath", PLEDGE(kPledgeLinuxRpath)},            //
-    [PROMISE_WPATH] = {"wpath", PLEDGE(kPledgeLinuxWpath)},            //
-    [PROMISE_CPATH] = {"cpath", PLEDGE(kPledgeLinuxCpath)},            //
-    [PROMISE_DPATH] = {"dpath", PLEDGE(kPledgeLinuxDpath)},            //
-    [PROMISE_FLOCK] = {"flock", PLEDGE(kPledgeLinuxFlock)},            //
-    [PROMISE_FATTR] = {"fattr", PLEDGE(kPledgeLinuxFattr)},            //
-    [PROMISE_INET] = {"inet", PLEDGE(kPledgeLinuxInet)},               //
-    [PROMISE_UNIX] = {"unix", PLEDGE(kPledgeLinuxUnix)},               //
-    [PROMISE_DNS] = {"dns", PLEDGE(kPledgeLinuxDns)},                  //
-    [PROMISE_TTY] = {"tty", PLEDGE(kPledgeLinuxTty)},                  //
-    [PROMISE_RECVFD] = {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},         //
-    [PROMISE_SENDFD] = {"sendfd", PLEDGE(kPledgeLinuxSendfd)},         //
-    [PROMISE_PROC] = {"proc", PLEDGE(kPledgeLinuxProc)},               //
-    [PROMISE_THREAD] = {"thread", PLEDGE(kPledgeLinuxThread)},         //
-    [PROMISE_EXEC] = {"exec", PLEDGE(kPledgeLinuxExec)},               //
-    [PROMISE_EXECNATIVE] = {"execnative", PLEDGE(kPledgeLinuxExec2)},  //
-    [PROMISE_ID] = {"id", PLEDGE(kPledgeLinuxId)},                     //
-    [PROMISE_UNVEIL] = {"unveil", PLEDGE(kPledgeLinuxUnveil)},         //
+    [PROMISE_STDIO] = {"stdio", PLEDGE(kPledgeLinuxStdio)},             //
+    [PROMISE_RPATH] = {"rpath", PLEDGE(kPledgeLinuxRpath)},             //
+    [PROMISE_WPATH] = {"wpath", PLEDGE(kPledgeLinuxWpath)},             //
+    [PROMISE_CPATH] = {"cpath", PLEDGE(kPledgeLinuxCpath)},             //
+    [PROMISE_DPATH] = {"dpath", PLEDGE(kPledgeLinuxDpath)},             //
+    [PROMISE_FLOCK] = {"flock", PLEDGE(kPledgeLinuxFlock)},             //
+    [PROMISE_FATTR] = {"fattr", PLEDGE(kPledgeLinuxFattr)},             //
+    [PROMISE_INET] = {"inet", PLEDGE(kPledgeLinuxInet)},                //
+    [PROMISE_UNIX] = {"unix", PLEDGE(kPledgeLinuxUnix)},                //
+    [PROMISE_DNS] = {"dns", PLEDGE(kPledgeLinuxDns)},                   //
+    [PROMISE_TTY] = {"tty", PLEDGE(kPledgeLinuxTty)},                   //
+    [PROMISE_RECVFD] = {"recvfd", PLEDGE(kPledgeLinuxRecvfd)},          //
+    [PROMISE_SENDFD] = {"sendfd", PLEDGE(kPledgeLinuxSendfd)},          //
+    [PROMISE_PROC] = {"proc", PLEDGE(kPledgeLinuxProc)},                //
+    [PROMISE_EXEC] = {"exec", PLEDGE(kPledgeLinuxExec)},                //
+    [PROMISE_ID] = {"id", PLEDGE(kPledgeLinuxId)},                      //
+    [PROMISE_UNVEIL] = {"unveil", PLEDGE(kPledgeLinuxUnveil)},          //
+    [PROMISE_SETTIME] = {"settime", PLEDGE(kPledgeLinuxSettime)},       //
+    [PROMISE_PROT_EXEC] = {"prot_exec", PLEDGE(kPledgeLinuxProtExec)},  //
+    [PROMISE_VMINFO] = {"vminfo", PLEDGE(kPledgeLinuxVminfo)},          //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -373,6 +412,9 @@ static const struct sock_filter kFilterStart[] = {
     // each filter assumes ordinal is already loaded into accumulator
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
     // Forbid some system calls with ENOSYS (rather than EPERM)
+    BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, __NR_linux_memfd_secret, 5, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_rseq, 4, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_memfd_create, 3, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat2, 2, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone3, 1, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_statx, 0, 1),
@@ -397,7 +439,7 @@ static bool AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
 
 // SYSCALL is only allowed in the .privileged section
 // We assume program image is loaded in 32-bit spaces
-static bool AppendOriginVerification(struct Filter *f) {
+static bool AppendOriginVerification(struct Filter *f, long ipromises) {
   intptr_t x = (intptr_t)__privileged_start;
   intptr_t y = (intptr_t)__privileged_end;
   assert(0 < x && x < y && y < INT_MAX);
@@ -420,6 +462,55 @@ static bool AllowSyscall(struct Filter *f, uint16_t w) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, w, 0, 2 - 1),
       /*L1*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L2*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The first argument of sys_clone_linux() must NOT have:
+//
+//   - CLONE_NEWNS    (0x00020000)
+//   - CLONE_PTRACE   (0x00002000)
+//   - CLONE_UNTRACED (0x00800000)
+//
+static bool AllowClone(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 6 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x00822000),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L6*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
+// The first argument of sys_clone_linux() must have:
+//
+//   - CLONE_VM       (0x00000100)
+//   - CLONE_FS       (0x00000200)
+//   - CLONE_FILES    (0x00000400)
+//   - CLONE_THREAD   (0x00010000)
+//   - CLONE_SIGHAND  (0x00000800)
+//
+// The first argument of sys_clone_linux() must NOT have:
+//
+//   - CLONE_NEWNS    (0x00020000)
+//   - CLONE_PTRACE   (0x00002000)
+//   - CLONE_UNTRACED (0x00800000)
+//
+static bool AllowCloneThread(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 9 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x00010f00),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x00010f00, 0, 8 - 4),
+      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x00822000),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L9*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -488,33 +579,48 @@ static bool AllowIoctlTty(struct Filter *f) {
 //
 // The optname argument of setsockopt() must be one of:
 //
-//   - SO_TYPE      ( 3)
-//   - SO_REUSEPORT (15)
-//   - SO_REUSEADDR ( 2)
-//   - SO_KEEPALIVE ( 9)
-//   - SO_RCVTIMEO  (20)
-//   - SO_SNDTIMEO  (21)
-//   - IP_RECVTTL   (12)
+//   - TCP_NODELAY          ( 1)
+//   - TCP_CORK             ( 3)
+//   - TCP_KEEPIDLE         ( 4)
+//   - TCP_KEEPINTVL        ( 5)
+//   - SO_TYPE              ( 3)
+//   - SO_ERROR             ( 4)
+//   - SO_DONTROUTE         ( 5)
+//   - SO_REUSEPORT         (15)
+//   - SO_REUSEADDR         ( 2)
+//   - SO_KEEPALIVE         ( 9)
+//   - SO_RCVTIMEO          (20)
+//   - SO_SNDTIMEO          (21)
+//   - IP_RECVTTL           (12)
+//   - IP_RECVERR           (11)
+//   - TCP_FASTOPEN         (23)
+//   - TCP_FASTOPEN_CONNECT (30)
 //
 static bool AllowSetsockopt(struct Filter *f) {
   static const int nr = __NR_linux_setsockopt;
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 15 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 21 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 5 - 3, 0),
       /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 5 - 4, 0),
-      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 14 - 5),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 20 - 5),
       /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 13 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 12, 13 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 13 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 13 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 13 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 13 - 12, 0),
-      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 14 - 13),
-      /*L13*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L14*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L15*/ /* next filter */
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 19 - 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 12, 19 - 8, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 19, 19 - 9, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 19 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 19 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 19 - 12, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 19 - 13, 0),
+      /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11, 19 - 14, 0),
+      /*L14*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 4, 19 - 15, 0),
+      /*L15*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 5, 19 - 16, 0),
+      /*L16*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 23, 19 - 17, 0),
+      /*L17*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 30, 19 - 18, 0),
+      /*L18*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 20 - 19),
+      /*L19*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L20*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L21*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -992,24 +1098,18 @@ static bool AllowFchmodat(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
-                         bool needmapexec, bool needmorphing) {
+static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
   int i;
   for (i = 0; i < len; ++i) {
     switch (p[i]) {
       case __NR_linux_mmap:
-        if (needmapexec) {
-          if (!AllowMmap(f)) return false;
-        } else {
-          if (!AllowMmapNoexec(f)) return false;
-        }
+        if (!AllowMmap(f)) return false;
         break;
-      case __NR_linux_mprotect:
-        if (needmorphing) {
-          if (!AllowSyscall(f, __NR_linux_mprotect)) return false;
-        } else {
-          if (!AllowMprotectNoexec(f)) return false;
-        }
+      case __NR_linux_mmap | NOEXEC:
+        if (!AllowMmapNoexec(f)) return false;
+        break;
+      case __NR_linux_mprotect | NOEXEC:
+        if (!AllowMprotectNoexec(f)) return false;
         break;
       case __NR_linux_chmod:
         if (!AllowChmod(f)) return false;
@@ -1071,6 +1171,12 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
       case __NR_linux_sendto | ADDRLESS:
         if (!AllowSendtoAddrless(f)) return false;
         break;
+      case __NR_linux_clone:
+        if (!AllowClone(f)) return false;
+        break;
+      case __NR_linux_clone | THREAD:
+        if (!AllowCloneThread(f)) return false;
+        break;
       default:
         assert(~p[i] & ~0xfff);
         if (!AllowSyscall(f, p[i])) return false;
@@ -1083,23 +1189,16 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len,
 int sys_pledge_linux(unsigned long ipromises) {
   bool ok = true;
   int i, rc = -1;
-  bool needmapexec;
-  bool needmorphing;
-  bool needexecnative;
   struct Filter f = {0};
   ipromises = ~ipromises;
-  needmapexec = (ipromises >> PROMISE_EXEC) & 1;
-  needmorphing = (ipromises >> PROMISE_THREAD) & 1;
-  needexecnative = (ipromises >> PROMISE_EXECNATIVE) & 1;
   if (AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
-      (needmapexec || needexecnative || AppendOriginVerification(&f)) &&
-      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault),
-                   needmapexec, needmorphing)) {
+      ((ipromises & (1ul << PROMISE_EXEC)) ||
+       AppendOriginVerification(&f, ipromises)) &&
+      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault))) {
     for (i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
       if ((ipromises & (1ul << i)) && kPledgeLinux[i].name) {
         ipromises &= ~(1ul << i);
-        if (!AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len,
-                          needmapexec, needmorphing)) {
+        if (!AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len)) {
           ok = false;
           rc = einval();
           break;
@@ -1131,7 +1230,7 @@ static int FindPromise(const char *name) {
   return -1;
 }
 
-static int ParsePromises(const char *promises, unsigned long *out) {
+int ParsePromises(const char *promises, unsigned long *out) {
   int rc = 0;
   int promise;
   unsigned long ipromises;
@@ -1156,18 +1255,6 @@ static int ParsePromises(const char *promises, unsigned long *out) {
     *out = ipromises;
   }
   return rc;
-}
-
-static void FixupOpenbsdPromises(char *p) {
-  if (!p) return;
-  if ((p = strstr(p, "execnative"))) {
-    p[4] = ' ';
-    p[5] = ' ';
-    p[6] = ' ';
-    p[7] = ' ';
-    p[8] = ' ';
-    p[9] = ' ';
-  }
 }
 
 /**
@@ -1223,30 +1310,31 @@ static void FixupOpenbsdPromises(char *p) {
  *
  * - "stdio" allows exit, close, dup, dup2, dup3, fchdir, fstat, fsync,
  *   fdatasync, ftruncate, getdents, getegid, getrandom, geteuid,
- *   getgid, getgroups, getitimer, getpgid, getpgrp, getpid, getppid,
- *   getresgid, getresuid, getrlimit, getsid, wait4, gettimeofday,
- *   getuid, lseek, madvise, brk, arch_prctl, uname, set_tid_address,
- *   clock_getres, clock_gettime, clock_nanosleep, mmap (PROT_EXEC and
- *   weird flags aren't allowed), mprotect (PROT_EXEC isn't allowed),
- *   msync, munmap, nanosleep, pipe, pipe2, read, readv, pread, recv,
- *   poll, recvfrom, preadv, write, writev, pwrite, pwritev, select,
- *   pselect6, copy_file_range, sendfile, splice, vmsplice, alarm,
- *   pause, send, sendto (only if addr is null), setitimer, shutdown,
- *   sigaction (but SIGSYS is forbidden), sigaltstack, sigprocmask,
- *   sigreturn, sigsuspend, umask, mincore, socketpair, ioctl(FIONREAD),
+ *   getgid, getgroups, times, getrusage, getitimer, getpgid, getpgrp,
+ *   getpid, getppid, getresgid, getresuid, getrlimit, getsid, wait4,
+ *   gettimeofday, getuid, lseek, madvise, brk, arch_prctl, uname,
+ *   set_tid_address, clock_getres, clock_gettime, clock_nanosleep, mmap
+ *   (PROT_EXEC and weird flags aren't allowed), mprotect (PROT_EXEC
+ *   isn't allowed), msync, sync_file_range, migrate_pages, munmap,
+ *   nanosleep, pipe, pipe2, read, readv, pread, recv, poll, recvfrom,
+ *   preadv, write, writev, pwrite, pwritev, select, pselect6,
+ *   copy_file_range, sendfile, tee, splice, vmsplice, alarm, pause,
+ *   send, sendto (only if addr is null), setitimer, shutdown, sigaction
+ *   (but SIGSYS is forbidden), sigaltstack, sigprocmask, sigreturn,
+ *   sigsuspend, umask, mincore, socketpair, ioctl(FIONREAD),
  *   ioctl(FIONBIO), ioctl(FIOCLEX), ioctl(FIONCLEX), fcntl(F_GETFD),
  *   fcntl(F_SETFD), fcntl(F_GETFL), fcntl(F_SETFL), sched_yield,
  *   epoll_create, epoll_create1, epoll_ctl, epoll_wait, epoll_pwait,
- *   epoll_pwait2.
+ *   epoll_pwait2, clone(CLONE_THREAD), futex, set_robust_list,
+ *   get_robust_list, sigpending.
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
- *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access,
- *   faccessat,faccessat2, readlink, readlinkat, statfs, fstatfs.
+ *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access, faccessat,
+ *   faccessat2, readlink, readlinkat, statfs, fstatfs.
  *
  * - "wpath" (write path ops) allows getcwd, open(O_WRONLY),
- *   openat(O_WRONLY), stat, fstat, lstat, fstatat, access,
- *   faccessat,faccessat2, readlink, readlinkat, chmod, fchmod,
- *   fchmodat.
+ *   openat(O_WRONLY), stat, fstat, lstat, fstatat, access, faccessat,
+ *   faccessat2, readlink, readlinkat, chmod, fchmod, fchmodat.
  *
  * - "cpath" (create path ops) allows open(O_CREAT), openat(O_CREAT),
  *   rename, renameat, renameat2, link, linkat, symlink, symlinkat,
@@ -1260,9 +1348,9 @@ static void FixupOpenbsdPromises(char *p) {
  * - "tty" allows ioctl(TIOCGWINSZ), ioctl(TCGETS), ioctl(TCSETS),
  *   ioctl(TCSETSW), ioctl(TCSETSF).
  *
- * - "recvfd" allows recvmsg in general (for SCM_RIGHTS).
+ * - "recvfd" allows recvmsg and recvmmsg.
  *
- * - "recvfd" allows sendmsg in general (for SCM_RIGHTS).
+ * - "recvfd" allows sendmsg and sendmmsg.
  *
  * - "fattr" allows chmod, fchmod, fchmodat, utime, utimes, futimens,
  *   utimensat.
@@ -1275,31 +1363,34 @@ static void FixupOpenbsdPromises(char *p) {
  *
  * - "dns" allows socket(AF_INET), sendto, recvfrom, connect.
  *
- * - "proc" allows fork, vfork, kill, getpriority, setpriority, prlimit,
- *   setrlimit, setpgid, setsid.
- *
- * - "thread" allows clone, futex, and permits PROT_EXEC in mprotect.
+ * - "proc" allows fork, vfork, clone, kill, tgkill, getpriority,
+ *   setpriority, prlimit, setrlimit, setpgid, setsid.
  *
  * - "id" allows setuid, setreuid, setresuid, setgid, setregid,
  *   setresgid, setgroups, prlimit, setrlimit, getpriority, setpriority,
  *   setfsuid, setfsgid.
  *
- * - "exec" allows execve, execveat, access, faccessat. On Linux this
- *   also weakens some security to permit running APE binaries. However
- *   on OpenBSD they must be assimilate beforehand. On Linux, mmap()
- *   will be loosened up to allow creating PROT_EXEC memory (for APE
- *   loader) and system call origin verification won't be activated.
+ * - "settime" allows settimeofday and clock_adjtime.
  *
- * - "execnative" allows execve, execveat. Can only be used to run
- *   native executables; you won't be able to run APE binaries. mmap()
- *   and mprotect() are still prevented from creating executable memory.
- *   System call origin verification can't be enabled. If you always
- *   assimilate your APE binaries, then this should be preferred. On
- *   OpenBSD this will be rewritten to be "exec".
+ * - "exec" allows execve, execveat, access, openat(O_RDONLY). If the
+ *   executable in question needs a loader, then you may need prot_exec
+ *   too. With APE, security will be stronger if you assimilate your
+ *   binaries beforehand, using the --assimilate flag, or the
+ *   o//tool/build/assimilate.com program.
+ *
+ * - "prot_exec" allows mmap(PROT_EXEC) and mprotect(PROT_EXEC). This is
+ *   needed to (1) code morph mutexes in __enable_threads(), and it's
+ *   needed to (2) launch non-static or non-native executables, e.g.
+ *   non-assimilated APE binaries, or dynamic-linked executables.
  *
  * - "unveil" allows unveil() to be called, as well as the underlying
  *   landlock_create_ruleset, landlock_add_rule, landlock_restrict_self
  *   calls on Linux.
+ *
+ * - "vminfo" OpenBSD defines this for programs like `top`. On Linux,
+ *   this is a placeholder group that lets tools like pledge.com check
+ *   `__promises` and automatically unveil() a subset of files top would
+ *   need, e.g. /proc/stat, /proc/meminfo.
  *
  * `execpromises` only matters if "exec" or "execnative" are specified
  * in `promises`. In that case, this specifies the promises that'll
@@ -1316,44 +1407,28 @@ static void FixupOpenbsdPromises(char *p) {
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
+ * @raise EINVAL if `promises` allows exec and `execpromises` is null
  */
 int pledge(const char *promises, const char *execpromises) {
   int rc;
-  char *p, *q;
   unsigned long ipromises, iexecpromises;
   if (!(rc = ParsePromises(promises, &ipromises)) &&
       !(rc = ParsePromises(execpromises, &iexecpromises))) {
     if (IsLinux()) {
       // copy exec and execnative from promises to execpromises
-      iexecpromises =
-          ~(~iexecpromises | (~ipromises & ((1ul << PROMISE_EXEC) |  //
-                                            (1ul << PROMISE_EXECNATIVE))));
+      iexecpromises = ~(~iexecpromises | (~ipromises & (1ul << PROMISE_EXEC)));
       // if bits are missing in execpromises that exist in promises
       // then execpromises wouldn't be a monotonic access reduction
       // this check only matters when exec / execnative are allowed
       if ((ipromises & ~iexecpromises) &&
-          (~ipromises &
-           ((1ul << PROMISE_EXEC) | (1ul << PROMISE_EXECNATIVE)))) {
+          (~ipromises & (1ul << PROMISE_EXEC))) {
         STRACE("execpromises must be a subset of promises");
         rc = einval();
       } else {
         rc = sys_pledge_linux(ipromises);
       }
     } else {
-      // openbsd only supports execnative and calls it exec
-      if ((p = strdup(promises))) {
-        FixupOpenbsdPromises(p);
-        if ((q = execpromises ? strdup(execpromises) : 0) || !execpromises) {
-          FixupOpenbsdPromises(q);
-          rc = sys_pledge(p, q);
-          free(q);
-        } else {
-          rc = -1;
-        }
-        free(p);
-      } else {
-        rc = -1;
-      }
+      rc = sys_pledge(promises, execpromises);
     }
     if (!rc) {
       __promises = ipromises;

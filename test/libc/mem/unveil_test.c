@@ -273,3 +273,23 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   }
   EXPECT_SYS(0, 0, munmap(gotsome, FRAMESIZE));
 }
+
+TEST(unveil, lotsOfPaths) {
+  int i, n;
+  SPAWN();
+  n = 100;
+  for (i = 0; i < n; ++i) {
+    ASSERT_SYS(0, 0, touch(xasprintf("%d", i), 0644));
+    ASSERT_SYS(0, 0, touch(xasprintf("%d-", i), 0644));
+  }
+  for (i = 0; i < n; ++i) {
+    ASSERT_SYS(0, 0, unveil(xasprintf("%d", i), "rw"));
+  }
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  for (i = 0; i < n; ++i) {
+    ASSERT_SYS(0, 3, open(xasprintf("%d", i), O_RDONLY));
+    ASSERT_SYS(0, 0, close(3));
+    ASSERT_SYS(EACCES_OR_ENOENT, -1, open(xasprintf("%d-", i), O_RDONLY));
+  }
+  EXITS(0);
+}

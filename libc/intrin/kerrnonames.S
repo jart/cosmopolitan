@@ -117,6 +117,7 @@ kErrnoNames:
 	.e	ENONET
 	.e	ERESTART
 	.e	ENODATA
+	.e	EBADFD
 	.long	MAGNUM_TERMINATOR
 	.endobj	kErrnoNames,globl,hidden
 	.overrun

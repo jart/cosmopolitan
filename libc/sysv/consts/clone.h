@@ -1,15 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_CLONE_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_CLONE_H_
-#include "libc/runtime/symbolic.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
-extern const long CLONE_VM;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-#define CLONE_VM             SYMBOLIC(CLONE_VM)
+#define CLONE_VM             0x00000100
 #define CLONE_FS             0x00000200
 #define CLONE_FILES          0x00000400
 #define CLONE_SIGHAND        0x00000800

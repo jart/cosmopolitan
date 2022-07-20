@@ -132,6 +132,7 @@ syscon	errno	EMULTIHOP				72			95			90			0			94			0			# barely in posix
 syscon	errno	ENOLINK					67			97			91			0			95			0			# barely in posix
 syscon	errno	ENOMEDIUM				123			0			0			85			0			0			# not posix; not documented
 syscon	errno	EMEDIUMTYPE				124			0			0			86			0			0			# not posix; not documented
+syscon	errno	EBADFD					77			9			0			0			0			0			# file descriptor in bad state
 syscon	compat	EWOULDBLOCK				11			35			35			35			35			10035			# same as EAGAIN on every platform we've seen
 
 #	signals
@@ -2583,7 +2584,6 @@ syscon	junkerr	ESRMNT					69			0			0			0			0			0
 syscon	junkerr	ECOMM					70			0			0			0			0			0
 syscon	junkerr	EDOTDOT					73			0			0			0			0			0
 syscon	junkerr	ENOTUNIQ				76			0			0			0			0			0
-syscon	junkerr	EBADFD					77			9			0			0			0			0
 syscon	junkerr	EREMCHG					78			0			0			0			0			0
 syscon	junkerr	ELIBACC					79			0			0			0			0			0
 syscon	junkerr	ELIBBAD					80			0			0			0			0			0

@@ -20,6 +20,7 @@ int openpty(int *, int *, char *, const struct termios *,
             const struct winsize *) paramsnonnull((1, 2)) dontdiscard;
 int forkpty(int *, char *, const struct termios *, const struct winsize *)
     paramsnonnull((1, 2)) dontdiscard;
+char *ptsname(int);
 errno_t ptsname_r(int, char *, size_t);
 
 int grantpt(int);

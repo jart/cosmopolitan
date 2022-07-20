@@ -32,9 +32,11 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/io.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
@@ -47,8 +49,10 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/time/time.h"
 
 STATIC_YOINK("zip_uri_support");
 
@@ -57,6 +61,8 @@ char testlib_enable_tmp_setup_teardown;
 void OnSig(int sig) {
   // do nothing
 }
+
+int memfd_secret(unsigned int);  // our ENOSYS threshold
 
 int extract(const char *from, const char *to, int mode) {
   int fdin, fdout;
@@ -306,18 +312,17 @@ TEST(pledge, mmap) {
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
 }
 
-TEST(pledge, mmapExec) {
+TEST(pledge, mmapProtExec) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   char *p;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
+    ASSERT_SYS(0, 0, pledge("stdio prot_exec", 0));
     ASSERT_NE(MAP_FAILED, (p = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
                                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0)));
     ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ));
-    ASSERT_SYS(EPERM, MAP_FAILED,
-               mprotect(p, FRAMESIZE, PROT_READ | PROT_EXEC));
+    ASSERT_SYS(0, 0, mprotect(p, FRAMESIZE, PROT_READ | PROT_EXEC));
     ASSERT_NE(MAP_FAILED, mmap(0, FRAMESIZE, PROT_EXEC | PROT_READ,
                                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
     _Exit(0);
@@ -440,7 +445,7 @@ TEST(pledge, execpromises_ok) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("life.elf", "life.elf", 0);
     _Exit(127);
   }
@@ -455,7 +460,7 @@ TEST(pledge, execpromises_notok) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
@@ -470,7 +475,7 @@ TEST(pledge, execpromises_reducesAtExecOnLinux) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio inet tty execnative", "stdio tty"));
+    ASSERT_SYS(0, 0, pledge("stdio inet tty exec", "stdio tty"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
@@ -485,7 +490,7 @@ TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio execnative", 0));
+    ASSERT_SYS(0, 0, pledge("stdio exec", 0));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
@@ -500,7 +505,7 @@ TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio rpath execnative", "stdio rpath tty inet"));
+    ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio rpath tty inet"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
@@ -511,7 +516,7 @@ TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
 
 TEST(pledge_linux, execpromisesIsSuperset_notPossible) {
   if (IsOpenbsd()) return;
-  ASSERT_SYS(EINVAL, -1, pledge("stdio execnative", "stdio inet execnative"));
+  ASSERT_SYS(EINVAL, -1, pledge("stdio exec", "stdio inet exec"));
 }
 
 TEST(pledge_openbsd, execpromises_notok) {
@@ -520,11 +525,59 @@ TEST(pledge_openbsd, execpromises_notok) {
   struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio execnative", "stdio"));
+    ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFSIGNALED(ws));
   EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+}
+
+TEST(pledge_openbsd, bigSyscalls) {
+  if (IsOpenbsd()) return;  // testing lunix
+  int ws, pid;
+  struct stat st;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    ASSERT_SYS(ENOSYS, -1, memfd_secret(0));
+    ASSERT_SYS(ENOSYS, -1, sys_bogus());
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+int LockWorker(void *arg, int tid) {
+  flockfile(stdout);
+  ASSERT_EQ(gettid(), stdout->lock.lock);
+  funlockfile(stdout);
+  return 0;
+}
+
+TEST(pledge, threadWithLocks_canCodeMorph) {
+  struct spawn worker;
+  int ws, pid;
+  // not sure how this works on OpenBSD but it works!
+  if (!fork()) {
+    ASSERT_SYS(0, 0, pledge("stdio prot_exec", 0));
+    ASSERT_SYS(0, 0, _spawn(LockWorker, 0, &worker));
+    ASSERT_SYS(0, 0, _join(&worker));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+BENCH(pledge, bench) {
+  int pid;
+  if (!fork()) {
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
+    EZBENCH2("sched_yield", donothing, sched_yield());
+    _Exit(0);
+  }
+  wait(0);
 }
