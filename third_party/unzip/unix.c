@@ -1994,7 +1994,7 @@ void init_conversion_charsets()
 
 /* Convert a string from one encoding to the current locale using iconv().
  * Be as non-intrusive as possible. If error is encountered during
- * convertion just leave the string intact. */
+ * conversion just leave the string intact. */
 static void charset_to_intern(char *string, char *from_charset)
 {
     iconv_t cd;

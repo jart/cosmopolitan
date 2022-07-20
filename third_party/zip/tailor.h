@@ -20,7 +20,7 @@
 #    undef FORCE_UNIX_OVER_WIN32
 #  endif
 #  ifdef FORCE_WIN32_OVER_UNIX
-     /* native Win32 support was explicitely requested... */
+     /* native Win32 support was explicitly requested... */
 #    undef UNIX
 #  else
      /* use the POSIX (Unix) emulation features by default... */
@@ -122,7 +122,7 @@
 
 /*
  * Some compiler environments may require additional attributes attached
- * to declarations of runtime libary functions (e.g. to prepare for
+ * to declarations of runtime library functions (e.g. to prepare for
  * linking against a "shared dll" version of the RTL).  Here, we provide
  * the "empty" default for these attributes.
  */

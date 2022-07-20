@@ -149,7 +149,7 @@ static inline bf_flags_t bf_set_exp_bits(int n)
 #define BF_ST_OVERFLOW    (1 << 2)
 #define BF_ST_UNDERFLOW   (1 << 3)
 #define BF_ST_INEXACT     (1 << 4)
-/* indicate that a memory allocation error occured. NaN is returned */
+/* indicate that a memory allocation error occurred. NaN is returned */
 #define BF_ST_MEM_ERROR   (1 << 5) 
 
 #define BF_RADIX_MAX 36 /* maximum radix for bf_atof() and bf_ftoa() */
@@ -267,7 +267,7 @@ int bf_mul_si(bf_t *r, const bf_t *a, int64_t b1, limb_t prec,
               bf_flags_t flags);
 int bf_mul_2exp(bf_t *r, slimb_t e, limb_t prec, bf_flags_t flags);
 int bf_div(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec, bf_flags_t flags);
-#define BF_DIVREM_EUCLIDIAN BF_RNDF
+#define BF_DIVREM_EUCLIDEAN BF_RNDF
 int bf_divrem(bf_t *q, bf_t *r, const bf_t *a, const bf_t *b,
               limb_t prec, bf_flags_t flags, int rnd_mode);
 int bf_rem(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,

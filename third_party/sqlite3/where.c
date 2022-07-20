@@ -1356,7 +1356,7 @@ char sqlite3IndexColumnAffinity(sqlite3 *db, Index *pIdx, int iCol){
 ** Value pLoop->nOut is currently set to the estimated number of rows 
 ** visited for scanning (a=? AND b=?). This function reduces that estimate 
 ** by some factor to account for the (c BETWEEN ? AND ?) expression based
-** on the stat4 data for the index. this scan will be peformed multiple 
+** on the stat4 data for the index. this scan will be performed multiple 
 ** times (once for each (a,b) combination that matches a=?) is dealt with 
 ** by the caller.
 **
@@ -2929,7 +2929,7 @@ static int whereUsablePartialIndex(
 */
 static int whereLoopAddBtree(
   WhereLoopBuilder *pBuilder, /* WHERE clause information */
-  Bitmask mPrereq             /* Extra prerequesites for using this table */
+  Bitmask mPrereq             /* Extra prerequisites for using this table */
 ){
   WhereInfo *pWInfo;          /* WHERE analysis context */
   Index *pProbe;              /* An index we are evaluating */

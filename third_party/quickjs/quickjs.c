@@ -10513,7 +10513,7 @@ static int find_private_class_field_all(JSContext *ctx, JSFunctionDef *fd,
 
 static void get_loc_or_ref(DynBuf *bc, BOOL is_ref, int idx)
 {
-    /* if the field is not initialized, the error is catched when
+    /* if the field is not initialized, the error is caught when
        accessing it */
     if (is_ref)
         dbuf_putc(bc, OP_get_var_ref);
@@ -12667,7 +12667,7 @@ static __exception int ss_check(JSContext *ctx, StackSizeState *s,
     if (s->stack_level_tab[pos] != 0xffff) {
         /* already explored: check that the stack size is consistent */
         if (s->stack_level_tab[pos] != stack_len) {
-            JS_ThrowInternalError(ctx, "unconsistent stack size: %d %d (pc=%d)",
+            JS_ThrowInternalError(ctx, "inconsistent stack size: %d %d (pc=%d)",
                                   s->stack_level_tab[pos], stack_len, pos);
             return -1;
         } else {

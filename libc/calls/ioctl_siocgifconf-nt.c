@@ -261,7 +261,7 @@ static int createHostInfo(struct NtIpAdapterAddresses *firstAdapter) {
       continue;
     }
 
-    /* Use max IFNAMSIZ-1 chars, leave the last char for eventual conficts */
+    /* Use max IFNAMSIZ-1 chars, leave the last char for eventual conflicts */
     tprecode16to8(baseName, IFNAMSIZ - 1, aa->FriendlyName);
     baseName[IFNAMSIZ - 2] = '\0';
     /* Replace any space with a '_' */

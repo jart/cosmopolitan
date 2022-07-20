@@ -2259,7 +2259,7 @@ char **argv;            /* command line tokens */
   des_usize = 0;          /* Data descriptor usize */
 
   dot_size = 0;           /* buffers processed in deflate per dot, 0 = no dots */
-  dot_count = 0;          /* buffers seen, recyles at dot_size */
+  dot_count = 0;          /* buffers seen, recycles at dot_size */
 
   display_counts = 0;     /* display running file count */
   display_bytes = 0;      /* display running bytes remaining */
@@ -2455,7 +2455,7 @@ char **argv;            /* command line tokens */
 #endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
 
 /* For systems that do not have tzset() but supply this function using another
-   name (_tzset() or something similar), an appropiate "#define tzset ..."
+   name (_tzset() or something similar), an appropriate "#define tzset ..."
    should be added to the system specifc configuration section.  */
 #if (!defined(TOPS20) && !defined(VMS))
 #if (!defined(RISCOS) && !defined(MACOS) && !defined(QDOS))

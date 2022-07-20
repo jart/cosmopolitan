@@ -669,8 +669,8 @@ static int js_binary_arith_bigdecimal(JSContext *ctx, OPCodeEnum op,
         ret = bfdec_div(r, a, b, BF_PREC_INF, BF_RNDZ);
         break;
     case OP_math_mod:
-        /* Euclidian remainder */
-        ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_DIVREM_EUCLIDIAN);
+        /* Euclidean remainder */
+        ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_DIVREM_EUCLIDEAN);
         break;
     case OP_mod:
         ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_RNDZ);

@@ -272,7 +272,7 @@ static void tr_static_init(void) {
 }
 
 /**
- * Genererate the file trees.h describing the static trees.
+ * Generate the file trees.h describing the static trees.
  */
 #ifdef GEN_TREES_H
 

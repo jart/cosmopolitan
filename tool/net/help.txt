@@ -863,7 +863,7 @@ FUNCTIONS
 
           Integer literals are encoded as decimal. However if the int64
           number is ≥256 and has a population count of 1 then we switch
-          to representating the number in hexadecimal, for readability.
+          to representing the number in hexadecimal, for readability.
           Hex numbers have leading zeroes added in order to visualize
           whether the number fits in a uint16, uint32, or int64. Also
           some numbers can only be encoded expressionally. For example,

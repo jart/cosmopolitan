@@ -51,7 +51,7 @@
 	.previous
 	.section .rodata,"a",@progbits
 	.align	__SIZEOF_POINTER__
-__ro:	.endobj	__ro,globl,hidden		# ←for gdb readibility
+__ro:	.endobj	__ro,globl,hidden		# ←for gdb readability
 	.previous
 	.section .data,"aw",@progbits
 	.align	__SIZEOF_POINTER__
@@ -60,7 +60,7 @@ __ro:	.endobj	__ro,globl,hidden		# ←for gdb readibility
 	.align	__SIZEOF_POINTER__
 	.previous
 	.section .rodata.str1.1,"a",@progbits
-cstr:	.endobj	cstr,globl,hidden		# ←for gdb readibility
+cstr:	.endobj	cstr,globl,hidden		# ←for gdb readability
 	.previous
 	.section .head,"ax",@progbits
 

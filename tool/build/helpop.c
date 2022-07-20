@@ -251,7 +251,7 @@ const struct Descriptors {
      "STOS, and SCAS). In 64-bit mode, only 64-bit (RDI) and 32-bit (EDI) "
      "address sizes are supported. In non-64-bit modes, only 32-bit (EDI) "
      "and 16-bit (DI) address sizes are supported. The implicit ES "
-     "segment register cannot be overriden by a segment prefix."},
+     "segment register cannot be overridden by a segment prefix."},
 
     {"Z", "r",
      "The instruction has no ModR/M byte; the three least-significant "

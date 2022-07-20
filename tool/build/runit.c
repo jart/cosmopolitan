@@ -367,7 +367,7 @@ bool IsParallelBuild(void) {
   return (makeflags = getenv("MAKEFLAGS")) && strstr(makeflags, "-j");
 }
 
-bool ShouldRunInParralel(void) {
+bool ShouldRunInParallel(void) {
   return !IsWindows() && IsParallelBuild();
 }
 

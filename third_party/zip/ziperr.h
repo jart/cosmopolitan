@@ -88,7 +88,7 @@ struct
 /* 13 */ { "NAME",    "Missing or empty zip file",    ZE_S_ERROR },
 /* 14 */ { "WRITE",   "Output file write failure",    ZE_S_SEVERE | ZE_S_PERR },
 /* 15 */ { "CREAT",   "Could not create output file", ZE_S_SEVERE | ZE_S_PERR },
-/* 16 */ { "PARMS",   "Invalid command arguments",    ZE_S_ERROR },
+/* 16 */ { "PARAMS",   "Invalid command arguments",   ZE_S_ERROR },
 /* 17 */ { "",        "",                             ZE_S_UNUSED },
 /* 18 */ { "OPEN",    "File not found or no read permission",
                                                       ZE_S_ERROR | ZE_S_PERR },

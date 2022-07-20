@@ -888,12 +888,12 @@ linux_shlibz:	unix_make
 lynx:		unix_make
 	$(MAKE) unzips CC=gcc CF="$(CF) -DLynx -DLYNX -DBSD -DUNIX"
 
-# Macintosh MacOS X (Unix-compatible enviroment), using standard compiler
+# Macintosh MacOS X (Unix-compatible environment), using standard compiler
 macosx:	unix_make
 	$(MAKE) unzips CFLAGS="-O3 -Wall -DBSD" LF2=""
 	$(STRIP) $(UNZIPS)
 
-# Macintosh MacOS X (Unix-compatible enviroment), using gcc
+# Macintosh MacOS X (Unix-compatible environment), using gcc
 macosx_gcc:	unix_make
 	$(MAKE) unzips CC=gcc CFLAGS="-O3 -Wall -DBSD" LF2=""
 	$(STRIP) $(UNZIPS)

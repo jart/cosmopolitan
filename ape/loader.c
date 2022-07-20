@@ -562,11 +562,11 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
                "xor\t%%r9d,%%r9d\n\t"
                "xor\t%%r10d,%%r10d\n\t"
                "xor\t%%r11d,%%r11d\n\t"
-               "xor\t%%ebx,%%ebx\n\t"    // netbsd dosen't clear this
-               "xor\t%%r12d,%%r12d\n\t"  // netbsd dosen't clear this
-               "xor\t%%r13d,%%r13d\n\t"  // netbsd dosen't clear this
-               "xor\t%%r14d,%%r14d\n\t"  // netbsd dosen't clear this
-               "xor\t%%r15d,%%r15d\n\t"  // netbsd dosen't clear this
+               "xor\t%%ebx,%%ebx\n\t"    // netbsd doesnt't clear this
+               "xor\t%%r12d,%%r12d\n\t"  // netbsd doesnt't clear this
+               "xor\t%%r13d,%%r13d\n\t"  // netbsd doesnt't clear this
+               "xor\t%%r14d,%%r14d\n\t"  // netbsd doesnt't clear this
+               "xor\t%%r15d,%%r15d\n\t"  // netbsd doesnt't clear this
                "mov\t%%rdx,%%rsp\n\t"
                "xor\t%%edx,%%edx\n\t"
                "push\t%%rsi\n\t"

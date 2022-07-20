@@ -26,7 +26,7 @@
 #include "libc/runtime/symbols.internal.h"
 
 /**
- * Attachs GDB temporarilly, to do something like print a variable.
+ * Attaches GDB temporarily, to do something like print a variable.
  */
 privileged int(gdbexec)(const char *cmd) {
   struct StackFrame *bp;
