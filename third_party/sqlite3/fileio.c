@@ -1,3 +1,18 @@
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/time/time.h"
+#include "third_party/sqlite3/sqlite3ext.h"
+// clang-format off
+
 /*
 ** 2014-06-13
 **
@@ -73,21 +88,6 @@
 **   And the paths returned in the "name" column of the table are also
 **   relative to directory $dir.
 */
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/errno.h"
-#include "libc/isystem/unistd.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/time/time.h"
-#include "third_party/sqlite3/sqlite3ext.h"
-// clang-format off
 
 SQLITE_EXTENSION_INIT1
 

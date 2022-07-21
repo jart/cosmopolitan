@@ -20,6 +20,7 @@ THIRD_PARTY_SQLITE3 = $(THIRD_PARTY_SQLITE3_A_DEPS) $(THIRD_PARTY_SQLITE3_A)
 THIRD_PARTY_SQLITE3_A = o/$(MODE)/third_party/sqlite3/libsqlite3.a
 THIRD_PARTY_SQLITE3_A_FILES := $(wildcard third_party/sqlite3/*)
 THIRD_PARTY_SQLITE3_A_HDRS = $(filter %.h,$(THIRD_PARTY_SQLITE3_A_FILES))
+THIRD_PARTY_SQLITE3_A_INCS = $(filter %.inc,$(THIRD_PARTY_SQLITE3_A_FILES))
 THIRD_PARTY_SQLITE3_A_SRCS_C = $(filter %.c,$(THIRD_PARTY_SQLITE3_A_FILES))
 THIRD_PARTY_SQLITE3_A_SRCS_T = $(filter %.inc,$(THIRD_PARTY_SQLITE3_A_FILES))
 THIRD_PARTY_SQLITE3_BINS = $(THIRD_PARTY_SQLITE3_COMS) $(THIRD_PARTY_SQLITE3_COMS:%=%.dbg)
@@ -29,10 +30,10 @@ THIRD_PARTY_SQLITE3_A_SRCS =						\
 	$(THIRD_PARTY_SQLITE3_A_SRCS_T)
 
 THIRD_PARTY_SQLITE3_A_OBJS =						\
-	$(filter-out %/shell.o,$(THIRD_PARTY_SQLITE3_A_SRCS_C:%.c=o/$(MODE)/%.o))
+	$(filter-out %shell.o,$(THIRD_PARTY_SQLITE3_A_SRCS_C:%.c=o/$(MODE)/%.o))
 
 THIRD_PARTY_SQLITE3_SHELL_OBJS =					\
-	$(THIRD_PARTY_SQLITE3_A_SRCS_C:%.c=o/$(MODE)/%.shell.o)
+	$(filter %shell.o,$(THIRD_PARTY_SQLITE3_A_SRCS_C:%.c=o/$(MODE)/%.o))
 
 THIRD_PARTY_SQLITE3_COMS =						\
 	o/$(MODE)/third_party/sqlite3/sqlite3.com
@@ -71,11 +72,11 @@ THIRD_PARTY_SQLITE3_A_DEPS :=						\
 o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		$(THIRD_PARTY_SQLITE3_A_DEPS)				\
 		$(THIRD_PARTY_SQLITE3_SHELL_OBJS)			\
-		o/$(MODE)/third_party/sqlite3/shell.shell.o		\
+		o/$(MODE)/third_party/sqlite3/shell.o			\
 		o/$(MODE)/third_party/sqlite3/shell.pkg			\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
-	-@$(APELINK)
+	@$(APELINK)
 
 o/$(MODE)/third_party/sqlite3/sqlite3.com:					\
 		o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg			\
@@ -167,7 +168,7 @@ o//third_party/sqlite3/vdbe.o:						\
 		OVERRIDE_CFLAGS +=					\
 			-Os
 
-o/$(MODE)/third_party/sqlite3/shell.shell.o:				\
+o/$(MODE)/third_party/sqlite3/shell.o:					\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
@@ -184,18 +185,26 @@ o/$(MODE)/third_party/sqlite3/parse.o:					\
 		OVERRIDE_CFLAGS +=					\
 			-fpie
 
-o/$(MODE)/%.shell.o: %.c o/$(MODE)/%.o
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
-
-o/$(MODE)/third_party/sqlite3/shell.shell.o: QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/shell.o: QUOTA = -M512m -C16 -L180
 o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M1024m
 o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
 o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16 -L180
 
+o/$(MODE)/third_party/sqlite3/rtree.o:					\
+		third_party/sqlite3/rtree.c				\
+		third_party/sqlite3/geopoly.inc				\
+		third_party/gdtoa/gdtoa.h
+
+o/$(MODE)/third_party/sqlite3/rtree.shell.o:				\
+		third_party/sqlite3/rtree.shell.c			\
+		third_party/sqlite3/geopoly.inc				\
+		third_party/gdtoa/gdtoa.h
+
 THIRD_PARTY_SQLITE3_LIBS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)))
 THIRD_PARTY_SQLITE3_SRCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_SQLITE3_HDRS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_HDRS))
+THIRD_PARTY_SQLITE3_INCS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_INCS))
 THIRD_PARTY_SQLITE3_CHECKS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_CHECKS))
 THIRD_PARTY_SQLITE3_OBJS = $(foreach x,$(THIRD_PARTY_SQLITE3_ARTIFACTS),$($(x)_OBJS))
 

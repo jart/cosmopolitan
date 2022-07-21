@@ -59,7 +59,16 @@ extern unsigned char __tls_add_nt_rax[];
 _Alignas(long) static char __static_tls[5008];
 
 /**
- * Enables thread local storage.
+ * Enables thread local storage for main process.
+ *
+ *                              %fs Linux/BSDs
+ *                               │
+ *            _Thread_local      │ __get_tls()
+ *     ┌───┬──────────┬──────────┼───┐
+ *     │pad│  .tdata  │  .tbss   │tib│
+ *     └───┴──────────┴──────────┼───┘
+ *                               │
+ *                  Windows/Mac %gs
  *
  * This function is always called by the core runtime to guarantee TLS
  * is always available to your program. You must build your code using
@@ -85,19 +94,6 @@ _Alignas(long) static char __static_tls[5008];
  * and your `errno` variable also won't be thread safe anymore.
  */
 privileged void __enable_tls(void) {
-  STRACE("__enable_tls()");
-
-  // allocate tls memory for main process
-  //
-  //                              %fs Linux/BSDs
-  //                               │
-  //            _Thread_local      │ __get_tls()
-  //     ┌───┬──────────┬──────────┼───┐
-  //     │pad│  .tdata  │  .tbss   │tib│
-  //     └───┴──────────┴──────────┼───┘
-  //                               │
-  //                  Windows/Mac %gs
-  //
   size_t siz;
   cthread_t tib;
   char *mem, *tls;
@@ -179,11 +175,6 @@ privileged void __enable_tls(void) {
   //
   //     65 48 8b 0R4 25 30 00 00 00   mov %gs:0x30,%R
   //
-  // Whereas on Windows we'll replace it with this:
-  //
-  //     0f 1f 40 00     fatnop4
-  //     e8 xx xx xx xx  call __tls_mov_nt_%R
-  //
   // Since we have no idea where the TLS instructions exist in the
   // binary, we need to disassemble the whole program image. This'll
   // potentially take a few milliseconds for some larger programs.
@@ -264,6 +255,5 @@ privileged void __enable_tls(void) {
   }
 
   // we are now allowed to use tls
-  // setting this variable
   __tls_enabled = true;
 }

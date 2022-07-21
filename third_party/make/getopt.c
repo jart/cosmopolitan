@@ -31,7 +31,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef HAVE_CONFIG_H
-# include "third_party/make/config.h"
+#include "third_party/make/config.h"
 #endif
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 

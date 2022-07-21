@@ -1,4 +1,9 @@
 /* clang-format off */
+#define ZCRYPT_INTERNAL
+#include "third_party/zip/zip.h"
+#include "third_party/zip/crypt.h"
+#include "third_party/zip/ttyio.h"
+#include "libc/rand/rand.h"
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 
@@ -29,12 +34,6 @@
   file (appnote.txt) is distributed with the PKZIP program (even in the
   version without encryption capabilities).
  */
-
-#define ZCRYPT_INTERNAL
-#include "third_party/zip/zip.h"
-#include "third_party/zip/crypt.h"
-#include "third_party/zip/ttyio.h"
-#include "libc/rand/rand.h"
 
 #if CRYPT
 

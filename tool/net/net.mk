@@ -308,9 +308,6 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/net/redbean-static.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DREDBEAN=\"redbean-static\" $(OUTPUT_OPTION) $<
-
 # REDBEAN-UNSECURE.COM
 #
 # Passing the -DUNSECURE will cause the TLS security code to be removed.
@@ -349,9 +346,6 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-o/$(MODE)/tool/net/redbean-unsecure.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DUNSECURE -DREDBEAN=\"redbean-unsecure\" $(OUTPUT_OPTION) $<
 
 # REDBEAN-ORIGINAL.COM
 #
@@ -413,12 +407,6 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-o/$(MODE)/tool/net/redbean-original.o: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
-
-o/$(MODE)/tool/net/redbean-original.s: tool/net/redbean.c o/$(MODE)/tool/net/redbean.o
-	@$(COMPILE) -AOBJECTIFY.c $(COMPILE.c) -DSTATIC -DUNSECURE -DREDBEAN=\"redbean-original\" $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:								\

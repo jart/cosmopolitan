@@ -57,7 +57,8 @@ size_t strlen(const char* s);
 #pragma GCC system_header
 #endif
 
-#include "libc/isystem/string.h"
+#include "libc/alg/alg.h"
+#include "libc/str/str.h"
 
 // MSVCRT, GNU libc and its derivates may already have the correct prototype in
 // <string.h>. This macro can be defined by users if their C library provides

@@ -1,4 +1,14 @@
 /* clang-format off */
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/s.h"
+#include "third_party/zip/zip.h"
+#include "libc/time/time.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/calls.h"
+#include "third_party/zip/osdep.h"
+#include "libc/sysv/consts/dt.h"
+
 /*
   unix/unix.c - Zip 3
 
@@ -9,15 +19,6 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/s.h"
-#include "third_party/zip/zip.h"
-#include "libc/time/time.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/calls.h"
-#include "third_party/zip/osdep.h"
-#include "libc/sysv/consts/dt.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
 

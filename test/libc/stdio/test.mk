@@ -58,6 +58,7 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:			\
 		$(TEST_LIBC_STDIO_DEPS)			\
 		o/$(MODE)/test/libc/stdio/%.o		\
 		o/$(MODE)/test/libc/stdio/stdio.pkg	\
+		o/$(MODE)/tool/build/echo.zip.o		\
 		$(LIBC_TESTMAIN)			\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)

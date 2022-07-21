@@ -4194,6 +4194,39 @@ $(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
 o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C64 -M1024m -L300
 o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C64 -M1024m -L300
 
+o/$(MODE)/third_party/python/Objects/unicodeobject.o:			\
+		third_party/python/Objects/unicodeobject.c		\
+		third_party/python/Objects/stringlib/localeutil.inc	\
+		third_party/python/Objects/stringlib/unicode_format.inc	\
+		third_party/python/Objects/stringlib/asciilib.inc	\
+		third_party/python/Objects/stringlib/codecs.inc		\
+		third_party/python/Objects/stringlib/undef.inc		\
+		third_party/python/Objects/stringlib/ucs1lib.inc	\
+		third_party/python/Objects/stringlib/codecs.inc		\
+		third_party/python/Objects/stringlib/undef.inc		\
+		third_party/python/Objects/stringlib/ucs2lib.inc	\
+		third_party/python/Objects/stringlib/codecs.inc		\
+		third_party/python/Objects/stringlib/undef.inc		\
+		third_party/python/Objects/stringlib/ucs4lib.inc	\
+		third_party/python/Objects/stringlib/codecs.inc		\
+		third_party/python/Objects/stringlib/undef.inc
+
+o/$(MODE)/third_party/python/Modules/_elementtree.o:			\
+		third_party/python/Modules/_elementtree.c		\
+		third_party/python/Modules/clinic/_elementtree.inc
+
+o/$(MODE)/third_party/python/Modules/_io/bufferedio.o:			\
+		third_party/python/Modules/_io/bufferedio.c		\
+		third_party/python/Modules/_io/clinic/bufferedio.inc
+
+o/$(MODE)/third_party/python/Modules/_io/textio.o:			\
+		third_party/python/Modules/_io/textio.c			\
+		third_party/python/Modules/_io/clinic/textio.inc
+
+o/$(MODE)/third_party/python/Modules/_sre.o:				\
+		third_party/python/Modules/_sre.c			\
+		third_party/python/Modules/clinic/_sre.inc
+
 o/$(MODE)/third_party/python/Parser/asdl_c.o: PYFLAGS += -m
 $(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): PYFLAGS += -t -P.python -C3
 $(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o): PYFLAGS += -t -P.python -C3
@@ -4348,7 +4381,6 @@ o/$(MODE)/third_party/python/chibicc.inc:				\
 		libc/nexgen32e/kcpuids.h				\
 		libc/runtime/runtime.h					\
 		libc/runtime/symbolic.h					\
-		libc/runtime/valist.h					\
 		libc/stdio/stdio.h					\
 		libc/str/str.h						\
 		libc/unicode/unicode.h					\

@@ -33,6 +33,11 @@
 #include "third_party/python/Include/weakrefobject.h"
 /* clang-format off */
 
+static const short slotoffsets[] = {
+    -1, /* invalid slot */
+#include "third_party/python/Objects/typeslots.inc"
+};
+
 /* Type object implementation */
 
 /* Support type attribute cache */
@@ -2790,11 +2795,6 @@ error:
     Py_XDECREF(type);
     return NULL;
 }
-
-static const short slotoffsets[] = {
-    -1, /* invalid slot */
-#include "typeslots.inc"
-};
 
 PyObject *
 PyType_FromSpecWithBases(PyType_Spec *spec, PyObject *bases)

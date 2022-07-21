@@ -445,7 +445,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   }
 
   if (~ipromises & (1ul << PROMISE_TTY)) {
-    UnveilIfExists(ttyname(0), "rw");  // 1-up apparmor
+    UnveilIfExists(ttyname(0), "rw");
     UnveilIfExists("/etc/tty", "rw");
     UnveilIfExists("/etc/console", "rw");
     UnveilIfExists("/usr/share/terminfo", "r");

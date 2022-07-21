@@ -1049,7 +1049,7 @@ def temp_cwd(name='tempcwd', quiet=False):
     only a warning is raised and the original CWD is used.
 
     """
-    with temp_dir(path=name, quiet=quiet) as temp_path:
+    with temp_dir(quiet=quiet) as temp_path:
         with change_cwd(temp_path, quiet=quiet) as cwd_dir:
             yield cwd_dir
 

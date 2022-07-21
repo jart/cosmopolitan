@@ -17,12 +17,14 @@
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pycapsule.h"
+#include "third_party/python/Include/pyexpat.h"
 #include "third_party/python/Include/pyhash.h"
 #include "third_party/python/Include/pystate.h"
 #include "third_party/python/Include/sliceobject.h"
 #include "third_party/python/Include/structmember.h"
 #include "third_party/python/Include/warnings.h"
 #include "third_party/python/Include/yoink.h"
+#include "third_party/python/Modules/expat/expat.h"
 /* clang-format off */
 
 PYTHON_PROVIDE("_elementtree");
@@ -2771,9 +2773,6 @@ _elementtree_TreeBuilder_start_impl(TreeBuilderObject *self, PyObject *tag,
 
 /* ==================================================================== */
 /* the expat interface */
-
-#include "third_party/python/Modules/expat/expat.h"
-#include "third_party/python/Include/pyexpat.h"
 
 /* The PyExpat_CAPI structure is an immutable dispatch table, so it can be
  * cached globally without being in per-module state.

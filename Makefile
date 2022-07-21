@@ -59,8 +59,9 @@
 #
 #   build/config.mk
 
-SHELL   = build/bootstrap/cocmd.com
-HOSTS  ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
+SHELL      = build/bootstrap/cocmd.com
+HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
+MAKEFLAGS += --no-builtin-rules
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
@@ -313,6 +314,7 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NEXGEN32E
 
 COSMOPOLITAN_HEADERS =		\
+	APE			\
 	LIBC			\
 	LIBC_ALG		\
 	LIBC_BITS		\
@@ -350,10 +352,11 @@ COSMOPOLITAN_HEADERS =		\
 o/$(MODE)/cosmopolitan.a:	\
 		$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_A_OBJS))
 
-o/cosmopolitan.h:				\
-		o/$(MODE)/tool/build/rollup.com	\
-		libc/integral/normalize.inc	\
-		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))
+o/cosmopolitan.h:							\
+		o/$(MODE)/tool/build/rollup.com				\
+		libc/integral/normalize.inc				\
+		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS))	\
+		$(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_INCS))
 	$(file >$@.args,libc/integral/normalize.inc $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS)))
 	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$@.args >$@
 

@@ -13,6 +13,42 @@ THIRD_PARTY_MAKE_BINS =					\
 THIRD_PARTY_MAKE_A =					\
 	o/$(MODE)/third_party/make/make.a
 
+THIRD_PARTY_MAKE_HDRS =					\
+	third_party/make/filename.h			\
+	third_party/make/dirname.h			\
+	third_party/make/stddef.h			\
+	third_party/make/error.h			\
+	third_party/make/gnumake.h			\
+	third_party/make/gettext.h			\
+	third_party/make/stdlib.h			\
+	third_party/make/xalloc.h			\
+	third_party/make/xalloc-oversized.h		\
+	third_party/make/os.h				\
+	third_party/make/stdint.h			\
+	third_party/make/fd-hook.h			\
+	third_party/make/job.h				\
+	third_party/make/unistd.h			\
+	third_party/make/getprogname.h			\
+	third_party/make/dosname.h			\
+	third_party/make/config.h			\
+	third_party/make/concat-filename.h		\
+	third_party/make/findprog.h			\
+	third_party/make/intprops.h			\
+	third_party/make/exitfail.h			\
+	third_party/make/alloca.h			\
+	third_party/make/hash.h				\
+	third_party/make/rule.h				\
+	third_party/make/filedef.h			\
+	third_party/make/fcntl.h			\
+	third_party/make/stdio.h			\
+	third_party/make/variable.h			\
+	third_party/make/debug.h			\
+	third_party/make/output.h			\
+	third_party/make/getopt.h			\
+	third_party/make/dep.h				\
+	third_party/make/commands.h
+
+
 THIRD_PARTY_MAKE_INCS =					\
 	third_party/make/makeint.inc
 

@@ -9,10 +9,6 @@ int main(int argc, char *argv[]) {
   fputs(_gc(xiso8601ts(NULL)), f);
   fputs(_gc(xasprintf("hello world %d %s\n", argc, s)), f);
   fclose(f);
-  rc = system("exit 42");
-  CHECK_NE(-1, rc);
-  CHECK(WIFEXITED(rc));
-  CHECK_EQ(42, WEXITSTATUS(rc));
   free(s);
   return 0;
 }

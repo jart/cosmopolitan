@@ -44,10 +44,10 @@ STATIC_YOINK("zip_uri_support");
 
 #define EACCES_OR_ENOENT (IsOpenbsd() ? ENOENT : EACCES)
 
-#define SPAWN()                    \
-  {                                \
-    int ws, pid;                   \
-    ASSERT_NE(-1, (pid = fork())); \
+#define SPAWN(METHOD)                \
+  {                                  \
+    int ws, pid;                     \
+    ASSERT_NE(-1, (pid = METHOD())); \
     if (!pid) {
 
 #define EXITS(rc)                 \
@@ -94,7 +94,7 @@ int extract(const char *from, const char *to, int mode) {
 }
 
 TEST(unveil, api_differences) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, stat("/", &st));
   ASSERT_SYS(0, 0, unveil(".", "rw"));
   if (IsOpenbsd()) {
@@ -117,12 +117,12 @@ TEST(unveil, api_differences) {
 }
 
 TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rx"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  SPAWN();
+  SPAWN(fork);
   execl("folder/life.elf", "folder/life.elf", 0);
   kprintf("execve failed! %s\n", strerror(errno));
   _Exit(127);
@@ -131,24 +131,41 @@ TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
 }
 
 TEST(unveil, r_noExecutePreexistingExecutable_raisesEacces) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "r"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(EACCES, -1, execl("folder/life.elf", "folder/life.elf", 0));
   EXITS(0);
   EXITS(0);
 }
 
+TEST(unveil, canBeUsedAgainAfterVfork) {
+  ASSERT_SYS(0, 0, touch("bad", 0644));
+  ASSERT_SYS(0, 0, touch("good", 0644));
+  SPAWN(fork);
+  SPAWN(vfork);
+  ASSERT_SYS(0, 0, unveil("bad", "r"));
+  ASSERT_SYS(0, 0, unveil("good", "r"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 3, open("bad", 0));
+  EXITS(0);
+  ASSERT_SYS(0, 0, unveil("good", "r"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 3, open("good", 0));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("bad", 0));
+  EXITS(0);
+}
+
 TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwc"));
   ASSERT_SYS(0, 0, unveil(0, 0));
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   ASSERT_SYS(EACCES, -1, execl("folder/life.elf", "folder/life.elf", 0));
   EXITS(0);
@@ -156,12 +173,12 @@ TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
 }
 
 TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwcx"));
   ASSERT_SYS(0, 0, unveil(0, 0));
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   execl("folder/life.elf", "folder/life.elf", 0);
   kprintf("execve failed! %s\n", strerror(errno));
@@ -171,7 +188,7 @@ TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
 }
 
 TEST(unveil, dirfdHacking_doesntWork) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, touch("garden/secret.txt", 0644));
@@ -184,7 +201,7 @@ TEST(unveil, dirfdHacking_doesntWork) {
 
 TEST(unveil, mostRestrictivePolicy) {
   if (IsOpenbsd()) return;  // openbsd behaves oddly; see docs
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, touch("garden/secret.txt", 0644));
@@ -195,7 +212,7 @@ TEST(unveil, mostRestrictivePolicy) {
 }
 
 TEST(unveil, overlappingDirectories_inconsistentBehavior) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, makedirs("f1/f2", 0755));
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "f1/f2/life.elf", 0755));
   ASSERT_SYS(0, 0, unveil("f1", "x"));
@@ -203,7 +220,7 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
   ASSERT_SYS(0, 0, unveil(0, 0));
   if (IsOpenbsd()) {
     // OpenBSD favors the most restrictive policy
-    SPAWN();
+    SPAWN(fork);
     ASSERT_SYS(0, 0, stat("f1/f2/life.elf", &st));
     ASSERT_SYS(EACCES, -1, execl("f1/f2/life.elf", "f1/f2/life.elf", 0));
     EXITS(0);
@@ -214,7 +231,7 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
     //             exit code of 0! find out why this is happening...
     //             so far it's happened to MODE=rel and MODE=tiny...
     //
-    // SPAWN();
+    // SPAWN(fork);
     // ASSERT_SYS(0, 0, stat("f1/f2/life.elf", &st));
     // execl("f1/f2/life.elf", "f1/f2/life.elf", 0);
     // kprintf("execve failed! %s\n", strerror(errno));
@@ -225,7 +242,7 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
 }
 
 TEST(unveil, usedTwice_forbidden) {
-  SPAWN();
+  SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
@@ -288,7 +305,7 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
 
 TEST(unveil, lotsOfPaths) {
   int i, n;
-  SPAWN();
+  SPAWN(fork);
   n = 100;
   for (i = 0; i < n; ++i) {
     ASSERT_SYS(0, 0, touch(xasprintf("%d", i), 0644));
@@ -303,5 +320,17 @@ TEST(unveil, lotsOfPaths) {
     ASSERT_SYS(0, 0, close(3));
     ASSERT_SYS(EACCES_OR_ENOENT, -1, open(xasprintf("%d-", i), O_RDONLY));
   }
+  EXITS(0);
+}
+
+TEST(unveil, reparent) {
+  return;  // need abi 2 :'(
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("x", 0755));
+  ASSERT_SYS(0, 0, unveil("x", "rwc"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 0, mkdir("x/y", 0755));
+  ASSERT_SYS(0, 0, touch("x/y/z", 0644));
+  ASSERT_SYS(0, 0, rename("x/y/z", "x/z"));
   EXITS(0);
 }

@@ -31,58 +31,6 @@
 ** This file contains code to implement the "sqlite" command line
 ** utility for accessing SQLite databases.
 */
-#if (defined(_WIN32) || defined(WIN32)) && !defined(_CRT_SECURE_NO_WARNINGS)
-/* This needs to come before any includes for MSVC compiler */
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-/*
-** Determine if we are dealing with WinRT, which provides only a subset of
-** the full Win32 API.
-*/
-#if !defined(SQLITE_OS_WINRT)
-# define SQLITE_OS_WINRT 0
-#endif
-
-/*
-** Warning pragmas copied from msvc.h in the core.
-*/
-#if defined(_MSC_VER)
-#pragma warning(disable : 4054)
-#pragma warning(disable : 4055)
-#pragma warning(disable : 4100)
-#pragma warning(disable : 4127)
-#pragma warning(disable : 4130)
-#pragma warning(disable : 4152)
-#pragma warning(disable : 4189)
-#pragma warning(disable : 4206)
-#pragma warning(disable : 4210)
-#pragma warning(disable : 4232)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4305)
-#pragma warning(disable : 4306)
-#pragma warning(disable : 4702)
-#pragma warning(disable : 4706)
-#endif /* defined(_MSC_VER) */
-
-/*
-** No support for loadable extensions in VxWorks.
-*/
-#if (defined(__RTP__) || defined(_WRS_KERNEL)) && !SQLITE_OMIT_LOAD_EXTENSION
-# define SQLITE_OMIT_LOAD_EXTENSION 1
-#endif
-
-/*
-** Enable large-file support for fopen() and friends on unix.
-*/
-#ifndef SQLITE_DISABLE_LFS
-# define _LARGE_FILE       1
-# ifndef _FILE_OFFSET_BITS
-#   define _FILE_OFFSET_BITS 64
-# endif
-# define _LARGEFILE_SOURCE 1
-#endif
-
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
@@ -102,23 +50,23 @@
 #include "third_party/sqlite3/sqlite3expert.h"
 #include "third_party/zlib/zlib.h"
 #include "third_party/sqlite3/sqlite3.h"
+#include "libc/str/str.h"
+#include "third_party/musl/passwd.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/calls/calls.h"
+#include "third_party/linenoise/linenoise.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/time/time.h"
+#if SQLITE_USER_AUTHENTICATION
+#include "third_party/sqlite3/sqlite3userauth.inc"
+#endif
 
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
-#if SQLITE_USER_AUTHENTICATION
-#include "third_party/sqlite3/sqlite3userauth.inc"
-#endif
-#include "libc/str/str.h"
 
-#if !defined(_WIN32) && !defined(WIN32)
-#if !defined(__RTP__) && !defined(_WRS_KERNEL)
-#include "third_party/musl/passwd.h"
-#endif
-#endif
 #if (!defined(_WIN32) && !defined(WIN32)) || defined(__MINGW32__)
-#include "libc/calls/calls.h"
-#include "libc/isystem/unistd.h"
 #define GETPID getpid
 #if defined(__MINGW32__)
 #define DIRENT dirent
@@ -129,8 +77,6 @@ typedef unsigned char u8;
 #else
 # define GETPID (int)GetCurrentProcessId
 #endif
-#include "libc/calls/weirdtypes.h"
-#include "libc/calls/calls.h"
 
 #if HAVE_READLINE
 # include <readline/readline.h>
@@ -150,7 +96,6 @@ typedef unsigned char u8;
 # define shell_readline(X) readline(X)
 
 #elif HAVE_LINENOISE
-#include "third_party/linenoise/linenoise.h"
 
 #define shell_add_history(X)    linenoiseHistoryAdd(X)
 #define shell_read_history(X)   linenoiseHistoryLoad(X)
@@ -225,8 +170,6 @@ static sqlite3_int64 timeOfDay(void){
 }
 
 #if !defined(_WIN32) && !defined(WIN32) && !defined(__minux)
-#include "libc/sysv/consts/rusage.h"
-#include "libc/time/time.h"
 
 /* Saved resource information for the beginning of an operation */
 static struct rusage sBegin;  /* CPU time at start */

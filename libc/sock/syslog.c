@@ -27,7 +27,6 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/valist.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/syslog.h"
 #include "libc/stdio/stdio.h"

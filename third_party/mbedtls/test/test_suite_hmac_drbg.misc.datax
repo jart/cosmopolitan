@@ -20,7 +20,7 @@ depends_on:2
 
 HMAC_DRBG write/update seed file SHA-1 [#1]
 depends_on:0
-1:exp:0:char*:"/tmp/test_suite_hmac_drbg_seed":int:0
+1:exp:0:char*:"o/tmp/test_suite_hmac_drbg_seed":int:0
 
 HMAC_DRBG write/update seed file SHA-1 [#2]
 depends_on:0
@@ -28,7 +28,7 @@ depends_on:0
 
 HMAC_DRBG write/update seed file SHA-224 [#1]
 depends_on:1
-1:exp:1:char*:"/tmp/test_suite_hmac_drbg_seed":int:0
+1:exp:1:char*:"o/tmp/test_suite_hmac_drbg_seed":int:0
 
 HMAC_DRBG write/update seed file SHA-224 [#2]
 depends_on:1
@@ -36,7 +36,7 @@ depends_on:1
 
 HMAC_DRBG write/update seed file SHA-256 [#1]
 depends_on:1
-1:exp:2:char*:"/tmp/test_suite_hmac_drbg_seed":int:0
+1:exp:2:char*:"o/tmp/test_suite_hmac_drbg_seed":int:0
 
 HMAC_DRBG write/update seed file SHA-256 [#2]
 depends_on:1
@@ -44,7 +44,7 @@ depends_on:1
 
 HMAC_DRBG write/update seed file SHA-384 [#1]
 depends_on:2:3
-1:exp:3:char*:"/tmp/test_suite_hmac_drbg_seed":int:0
+1:exp:3:char*:"o/tmp/test_suite_hmac_drbg_seed":int:0
 
 HMAC_DRBG write/update seed file SHA-384 [#2]
 depends_on:2:3
@@ -52,11 +52,11 @@ depends_on:2:3
 
 HMAC_DRBG write/update seed file SHA-512 [#1]
 depends_on:2
-1:exp:4:char*:"/tmp/test_suite_hmac_drbg_seed":int:0
+1:exp:4:char*:"o/tmp/test_suite_hmac_drbg_seed":int:0
 
 HMAC_DRBG write/update seed file SHA-512 [#2]
 depends_on:2
-1:exp:4:char*:"/tmp/test_suite_hmac_drbg_no_such_dir/file":exp:5
+1:exp:4:char*:"o/tmp/test_suite_hmac_drbg_no_such_dir/file":exp:5
 
 HMAC_DRBG from buffer SHA-1
 depends_on:0

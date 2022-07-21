@@ -1,3 +1,10 @@
+#include "libc/assert.h"
+#include "libc/assert.h"
+#include "libc/math.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/sqlite3.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 
 /* clang-format off */
 
@@ -33,8 +40,6 @@
 
 #ifndef _FTS5_H
 #define _FTS5_H
-
-#include "third_party/sqlite3/sqlite3.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -604,12 +609,8 @@ struct fts5_api {
 #ifndef _FTS5INT_H
 #define _FTS5INT_H
 
-/* #include "third_party/sqlite3/fts5.h" */
-#include "third_party/sqlite3/sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
-#include "libc/assert.h"
-#include "libc/str/str.h"
 
 #ifndef SQLITE_AMALGAMATION
 
@@ -1478,9 +1479,6 @@ static void sqlite3Fts5UnicodeAscii(u8*, u8*);
 /************ Begin %include sections from the grammar ************************/
 #line 47 "fts5parse.y"
 
-/* #include "third_party/sqlite3/fts5Int.h" */
-/* #include "third_party/sqlite3/fts5parse.h" */
-
 /*
 ** Disable all error recovery processing in the parser push-down
 ** automaton.
@@ -1807,8 +1805,6 @@ struct fts5yyParser {
 typedef struct fts5yyParser fts5yyParser;
 
 #ifndef NDEBUG
-#include "libc/assert.h"
-#include "libc/stdio/stdio.h"
 static FILE *fts5yyTraceFILE = 0;
 static char *fts5yyTracePrompt = 0;
 #endif /* NDEBUG */
@@ -3012,9 +3008,6 @@ static int sqlite3Fts5ParserFallback(int iToken){
 **
 ******************************************************************************
 */
-
-/* #include "third_party/sqlite3/fts5Int.h" */
-#include "libc/math.h" /* amalgamator: keep */
 
 /*
 ** Object used to iterate through all "coalesced phrase instances" in

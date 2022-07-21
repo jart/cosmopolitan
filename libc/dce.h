@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_DCE_H_
 #define COSMOPOLITAN_LIBC_DCE_H_
-#include "libc/nexgen32e/kcpuids.h"
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ cosmopolitan § autotune » dead code elimination                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/

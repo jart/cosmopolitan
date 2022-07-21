@@ -24,6 +24,7 @@ LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/fastrandomstring.h				\
 	libc/testlib/hyperion.h					\
 	libc/testlib/moby.h					\
+	libc/testlib/ugly.h					\
 	libc/testlib/testlib.h
 
 LIBC_TESTLIB_A_SRCS_S =						\

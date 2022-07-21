@@ -34,6 +34,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -124,7 +125,9 @@ static int unveil_init(void) {
     if (errno == EOPNOTSUPP) errno = ENOSYS;
     return -1;
   }
-  if (rc < 2) State.fs_mask &= ~LANDLOCK_ACCESS_FS_REFER;
+  if (rc < 2) {
+    State.fs_mask &= ~LANDLOCK_ACCESS_FS_REFER;
+  }
   const struct landlock_ruleset_attr attr = {
       .handled_access_fs = State.fs_mask,
   };
@@ -326,6 +329,7 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  * @raise EPERM if unveil() is called after locking
  * @note on Linux this function requires Linux Kernel 5.13+
  * @see [1] https://docs.kernel.org/userspace-api/landlock.html
+ * @threadsafe
  */
 int unveil(const char *path, const char *permissions) {
   int rc;

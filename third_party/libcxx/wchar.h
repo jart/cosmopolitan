@@ -9,7 +9,8 @@
 
 #ifndef _LIBCPP_WCHAR_H
 #define _LIBCPP_WCHAR_H
-#include "libc/isystem/wchar.h"
+#include "libc/str/str.h"
+#include "libc/time/time.h"
 
 /*
     wchar.h synopsis

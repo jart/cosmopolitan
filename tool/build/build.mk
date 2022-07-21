@@ -85,14 +85,6 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/build/blinkenlights.com.dbg:		\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/blinkenlights.o	\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 .PRECIOUS: o/$(MODE)/tool/build/blinkenlights.com
 o/$(MODE)/tool/build/blinkenlights.com:						\
 		o/$(MODE)/tool/build/blinkenlights.com.dbg			\
@@ -104,49 +96,26 @@ o/$(MODE)/tool/build/blinkenlights.com:						\
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/tool/build/.blinkenlights/.symtab
 
-o/$(MODE)/tool/build/ar.com.dbg:			\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/ar.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/tool/build/package.com.dbg:			\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/package.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/tool/build/mkdeps.com.dbg:			\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/mkdeps.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/tool/build/compile.com.dbg:			\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/compile.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
-o/$(MODE)/tool/build/zipobj.com.dbg:			\
-		$(TOOL_BUILD_DEPS)			\
-		o/$(MODE)/tool/build/build.pkg		\
-		o/$(MODE)/tool/build/zipobj.o		\
-		$(CRT)					\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 o/$(MODE)/tool/build/emulator.o:			\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
+
+o/$(MODE)/tool/build/mkdir.zip.o: o/$(MODE)/tool/build/mkdir
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/chmod.zip.o: o/$(MODE)/tool/build/chmod
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/cp.zip.o: o/$(MODE)/tool/build/cp
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/mv.zip.o: o/$(MODE)/tool/build/mv
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/echo.zip.o: o/$(MODE)/tool/build/echo
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/gzip.zip.o: o/$(MODE)/tool/build/gzip
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/printf.zip.o: o/$(MODE)/tool/build/printf
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/dd.zip.o: o/$(MODE)/tool/build/dd
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\

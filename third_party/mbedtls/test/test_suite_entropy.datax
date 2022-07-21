@@ -8,10 +8,10 @@ Create NV seed_file
 8
 
 Entropy write/update seed file: good
-1:char*:"/tmp/mbedtls_test_suite_entropy_seed":int:0
+1:char*:"o/tmp/mbedtls_test_suite_entropy_seed":int:0
 
 Entropy write/update seed file: nonexistent
-1:char*:"/tmp/no_such_dir/file":exp:0
+1:char*:"o/tmp/no_such_dir/file":exp:0
 
 Entropy no sources
 2

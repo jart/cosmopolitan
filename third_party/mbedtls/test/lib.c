@@ -90,6 +90,7 @@ int mbedtls_test_platform_setup(void) {
   int ret = 0;
   static char mybuf[2][BUFSIZ];
   ShowCrashReports();
+  makedirs("o/tmp", 0755);
   setvbuf(stdout, mybuf[0], _IOLBF, BUFSIZ);
   setvbuf(stderr, mybuf[1], _IOLBF, BUFSIZ);
 #if defined(MBEDTLS_PLATFORM_C)

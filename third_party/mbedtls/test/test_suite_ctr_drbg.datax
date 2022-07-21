@@ -1088,10 +1088,10 @@ depends_on:0
 5:int:256
 
 CTR_DRBG write/update seed file [#1]
-7:char*:"/tmp/test_suite_ctr_drbg_seed":int:0
+7:char*:"o/tmp/test_suite_ctr_drbg_seed":int:0
 
 CTR_DRBG write/update seed file [#2]
-7:char*:"/tmp/test_suite_ctr_dbg_no_such_dir/file":exp:1
+7:char*:"o/tmp/test_suite_ctr_dbg_no_such_dir/file":exp:1
 
 CTR_DRBG Special Behaviours
 0

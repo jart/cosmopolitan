@@ -63,8 +63,10 @@ APE shell script format. This is useful on UNIX operating systems when\n\
 you want to use your APE programs as script interpreter or for setuid.\n\
 "
 
-#define MODE_ELF   1
-#define MODE_MACHO 2
+#define MODE_NATIVE 0
+#define MODE_ELF    1
+#define MODE_MACHO  2
+#define MODE_PE     3
 
 int g_mode;
 bool g_force;
@@ -94,11 +96,13 @@ void GetOpts(int argc, char *argv[]) {
         exit(64);
     }
   }
-  if (!g_mode) {
+  if (g_mode == MODE_NATIVE) {
     if (IsXnu()) {
       g_mode = MODE_MACHO;
-    } else {
+    } else if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
       g_mode = MODE_ELF;
+    } else {
+      g_mode = MODE_PE;
     }
   }
 }
@@ -232,6 +236,20 @@ void Assimilate(void) {
       MAP_FAILED) {
     kprintf("%s: mmap failed: %m\n", prog);
     exit(16);
+  }
+  if (g_mode == MODE_PE) {
+    if (READ16LE(p) == READ16LE("MZ")) {
+      if (!g_force) {
+        kprintf("%s: program is already an elf binary\n", prog);
+        if (g_mode != MODE_ELF) {
+          exitcode = 1;
+        }
+      }
+      goto Finish;
+    } else {
+      kprintf("%s: currently cannot back-convert to pe\n", prog);
+      exit(17);
+    }
   }
   if (READ32LE(p) == READ32LE("\177ELF")) {
     if (!g_force) {

@@ -15,38 +15,38 @@
 
 PKGS += APE
 
-APE =	o/$(MODE)/ape/ape.o				\
+APE =	o/$(MODE)/ape/ape.o			\
 	o/$(MODE)/ape/ape.lds
 
-APE_NO_MODIFY_SELF =					\
-	o/$(MODE)/ape/ape.lds				\
+APE_NO_MODIFY_SELF =				\
+	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/ape/ape-no-modify-self.o
 
-APE_COPY_SELF =						\
-	o/$(MODE)/ape/ape.lds				\
+APE_COPY_SELF =					\
+	o/$(MODE)/ape/ape.lds			\
 	o/$(MODE)/ape/ape-copy-self.o
 
-APELINK =						\
-	$(COMPILE)					\
-	-ALINK.ape					\
-	$(LINK)						\
-	$(LINKARGS)					\
+APELINK =					\
+	$(COMPILE)				\
+	-ALINK.ape				\
+	$(LINK)					\
+	$(LINKARGS)				\
 	$(OUTPUT_OPTION)
 
-APE_LOADER_FLAGS =					\
-	-DNDEBUG					\
-	-iquote.					\
-	-Wall						\
-	-Wextra						\
-	-fpie						\
-	-Os						\
-	-ffreestanding					\
-	-mgeneral-regs-only				\
-	-mno-red-zone					\
-	-fno-ident					\
-	-fno-gnu-unique					\
-	-c						\
-	 $(OUTPUT_OPTION)				\
+APE_LOADER_FLAGS =				\
+	-DNDEBUG				\
+	-iquote.				\
+	-Wall					\
+	-Wextra					\
+	-fpie					\
+	-Os					\
+	-ffreestanding				\
+	-mgeneral-regs-only			\
+	-mno-red-zone				\
+	-fno-ident				\
+	-fno-gnu-unique				\
+	-c					\
+	 $(OUTPUT_OPTION)			\
 	$<
 
 APE_FILES := $(wildcard ape/*.*)
@@ -58,32 +58,76 @@ APE_SRCS = $(APE_SRCS_C) $(APE_SRCS_S)
 APE_OBJS = $(APE_SRCS_S:%.S=o/$(MODE)/%.o)
 APE_CHECKS = $(APE_HDRS:%=o/%.ok)
 
-o/$(MODE)/ape/ape.lds:					\
-		ape/ape.lds				\
-		ape/macros.internal.h			\
-		libc/dce.h				\
+o/$(MODE)/ape/ape.lds:				\
+		ape/ape.lds			\
+		ape/macros.internal.h		\
+		ape/relocations.h		\
+		libc/bits/bits.h		\
+		libc/calls/struct/timespec.h	\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		libc/elf/pf2prot.internal.h	\
+		libc/macros.internal.h		\
+		libc/nt/pedef.internal.h	\
+		libc/str/str.h			\
 		libc/zip.h
 
-o/ape/idata.inc:					\
-		ape/idata.internal.h			\
+o/ape/idata.inc:				\
+		ape/idata.internal.h		\
 		ape/relocations.h
 
-o/$(MODE)/ape/ape-no-modify-self.o:			\
-		ape/ape.S				\
+o/$(MODE)/ape/ape-no-modify-self.o:		\
+		ape/ape.S			\
+		ape/macros.internal.h		\
+		ape/notice.inc			\
+		ape/relocations.h		\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		libc/intrin/asancodes.h		\
+		libc/macho.internal.h		\
+		libc/macros-cpp.internal.inc	\
+		libc/macros.internal.h		\
+		libc/macros.internal.inc	\
+		libc/nexgen32e/uart.internal.h	\
+		libc/nexgen32e/vidya.internal.h	\
+		libc/nt/pedef.internal.h	\
+		libc/runtime/e820.internal.h	\
+		libc/runtime/mman.internal.h	\
+		libc/runtime/pc.internal.h	\
+		libc/runtime/symbolic.h		\
+		libc/sysv/consts/prot.h		\
 		o/$(MODE)/ape/ape.elf
-	@$(COMPILE)					\
-		-AOBJECTIFY.S				\
-		$(OBJECTIFY.S)				\
-		$(OUTPUT_OPTION)			\
-		-DAPE_NO_MODIFY_SELF			\
+	@$(COMPILE)				\
+		-AOBJECTIFY.S			\
+		$(OBJECTIFY.S)			\
+		$(OUTPUT_OPTION)		\
+		-DAPE_NO_MODIFY_SELF		\
 		-DAPE_LOADER='"o/$(MODE)/ape/ape.elf"' $<
 
-o/$(MODE)/ape/ape-copy-self.o:				\
-		ape/ape.S
-	@$(COMPILE)					\
-		-AOBJECTIFY.S				\
-		$(OBJECTIFY.S)				\
-		$(OUTPUT_OPTION)			\
+o/$(MODE)/ape/ape-copy-self.o:			\
+		ape/ape.S			\
+		ape/macros.internal.h		\
+		ape/notice.inc			\
+		ape/relocations.h		\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		libc/intrin/asancodes.h		\
+		libc/macho.internal.h		\
+		libc/macros-cpp.internal.inc	\
+		libc/macros.internal.h		\
+		libc/macros.internal.inc	\
+		libc/nexgen32e/uart.internal.h	\
+		libc/nexgen32e/vidya.internal.h	\
+		libc/nt/pedef.internal.h	\
+		libc/runtime/e820.internal.h	\
+		libc/runtime/mman.internal.h	\
+		libc/runtime/pc.internal.h	\
+		libc/runtime/symbolic.h		\
+		libc/sysv/consts/prot.h
+	@$(COMPILE)				\
+		-AOBJECTIFY.S			\
+		$(OBJECTIFY.S)			\
+		$(OUTPUT_OPTION)		\
 		-DAPE_NO_MODIFY_SELF $<
 
 o/$(MODE)/ape/loader.o: ape/loader.c
@@ -103,23 +147,23 @@ o/$(MODE)/ape/loader-xnu-clang.asm: ape/loader.c
 o/$(MODE)/ape/ape.elf: o/$(MODE)/ape/ape.elf.dbg
 o/$(MODE)/ape/ape.macho: o/$(MODE)/ape/ape.macho.dbg
 
-o/$(MODE)/ape/ape.elf.dbg:				\
-		o/$(MODE)/ape/loader.o			\
-		o/$(MODE)/ape/loader-elf.o		\
+o/$(MODE)/ape/ape.elf.dbg:			\
+		o/$(MODE)/ape/loader.o		\
+		o/$(MODE)/ape/loader-elf.o	\
 		ape/loader.lds
 	@$(ELFLINK) -z max-page-size=0x10
 
-o/$(MODE)/ape/ape.macho.dbg:				\
-		o/$(MODE)/ape/loader-xnu.o		\
-		o/$(MODE)/ape/loader-macho.o		\
+o/$(MODE)/ape/ape.macho.dbg:			\
+		o/$(MODE)/ape/loader-xnu.o	\
+		o/$(MODE)/ape/loader-macho.o	\
 		ape/loader-macho.lds
 	@$(ELFLINK) -z max-page-size=0x10
 
 .PHONY: o/$(MODE)/ape
-o/$(MODE)/ape:	$(APE_CHECKS)				\
-		o/$(MODE)/ape/ape.o			\
-		o/$(MODE)/ape/ape.lds			\
-		o/$(MODE)/ape/ape.elf			\
-		o/$(MODE)/ape/ape.macho			\
-		o/$(MODE)/ape/ape-copy-self.o		\
+o/$(MODE)/ape:	$(APE_CHECKS)			\
+		o/$(MODE)/ape/ape.o		\
+		o/$(MODE)/ape/ape.lds		\
+		o/$(MODE)/ape/ape.elf		\
+		o/$(MODE)/ape/ape.macho		\
+		o/$(MODE)/ape/ape-copy-self.o	\
 		o/$(MODE)/ape/ape-no-modify-self.o

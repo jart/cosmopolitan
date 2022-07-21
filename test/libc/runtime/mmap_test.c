@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/atomic.h"
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/bits/xchg.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
@@ -45,6 +46,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 #include "third_party/xed/x86.h"
+
+#define TMP firstnonnull(getenv("TMPDIR"), kTmpPath)
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -93,7 +96,7 @@ TEST(mmap, testMapFile) {
   int fd;
   char *p;
   char path[PATH_MAX];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
@@ -107,7 +110,7 @@ TEST(mmap, testMapFile) {
 TEST(mmap, testMapFile_fdGetsClosed_makesNoDifference) {
   int fd;
   char *p, buf[16], path[PATH_MAX];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
@@ -227,8 +230,9 @@ TEST(mmap, cow) {
   int fd;
   char *p;
   char path[PATH_MAX];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
-  ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
+  ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)), "%s",
+            path);
   EXPECT_EQ(5, write(fd, "hello", 5));
   EXPECT_NE(-1, fdatasync(fd));
   EXPECT_NE(MAP_FAILED,
@@ -246,7 +250,7 @@ TEST(mmap, cowFileMapReadonlyFork) {
   char *p;
   int fd, pid, ws;
   char path[PATH_MAX], lol[6];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "hello", 6));
   EXPECT_NE(-1, close(fd));
@@ -271,7 +275,7 @@ TEST(mmap, cowFileMapFork) {
   char *p;
   int fd, pid, ws;
   char path[PATH_MAX], lol[6];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "parnt", 6));
   EXPECT_NE(-1, fdatasync(fd));
@@ -321,7 +325,7 @@ TEST(mmap, sharedFileMapFork) {
   char *p;
   int fd, pid, ws;
   char path[PATH_MAX], lol[6];
-  sprintf(path, "%s%s.%ld", kTmpPath, program_invocation_short_name, lemur64());
+  sprintf(path, "%s.%ld", program_invocation_short_name, lemur64());
   ASSERT_NE(-1, (fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0644)));
   EXPECT_EQ(6, write(fd, "parnt", 6));
   EXPECT_NE(-1, fdatasync(fd));

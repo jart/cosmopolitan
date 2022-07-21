@@ -1194,6 +1194,13 @@ typedef int VList;
 typedef u32 Pgno;
 
 /*
+** Enable SQLITE_ENABLE_EXPLAIN_COMMENTS if SQLITE_DEBUG is turned on.
+*/
+#if !defined(SQLITE_ENABLE_EXPLAIN_COMMENTS) && defined(SQLITE_DEBUG)
+# define SQLITE_ENABLE_EXPLAIN_COMMENTS 1
+#endif
+
+/*
 ** Defer sourcing vdbe.h and btree.h until after the "u8" and
 ** "BusyHandler" typedefs. vdbe.h also requires a few of the opaque
 ** pointer types (i.e. FuncDef) defined above.

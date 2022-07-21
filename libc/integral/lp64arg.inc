@@ -1,4 +1,15 @@
-#include "libc/runtime/valist.h"
+/* variadic arguments for chibicc */
+
+/* <sync libc/runtime/valist.c> */
+struct __va_list {
+  uint32_t gp_offset;
+  uint32_t fp_offset;
+  void *overflow_arg_area;
+  void *reg_save_area;
+};
+/* </sync libc/runtime/valist.c> */
+
+void *__va_arg(struct __va_list *, size_t, unsigned, unsigned);
 
 #define __GNUC_VA_LIST 1
 #define __gnuc_va_list va_list

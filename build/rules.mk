@@ -29,7 +29,6 @@ o/%.o: %.cc                        ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx
 o/%.o: o/%.cc                      ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
-o/%.h.ok: %.h                      ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 o/%.okk: %                         ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/%.zip.o: o/%                     ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
@@ -58,8 +57,6 @@ o/$(MODE)/%.s: o/$(MODE)/%.i       ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTP
 o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.cc      ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.h.ok: %.h              ; @$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
-o/$(MODE)/%.hh.ok: %.hh            ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/$(MODE)/%.okk: %                 ; @$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/$(MODE)/%.cxx.o: %.c             ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) -xc++ $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
@@ -104,3 +101,19 @@ o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
 
 o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
 	@$(COMPILE) -ALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
+
+o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com
+	@$(COMPILE) -ACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
+	@$(COMPILE) -AASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
+
+# TODO(jart): find a way to generate dependencies
+#             or alternatively disable sandboxing
+o/%.h.ok: %.h
+	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/$(MODE)/%.h.ok: %.h
+	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/$(MODE)/%.hh.ok: %.hh
+	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+#	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<

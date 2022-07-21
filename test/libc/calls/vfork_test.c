@@ -23,13 +23,12 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
-#define PATH "o/vfork_test"
+char testlib_enable_tmp_setup_teardown;
 
 TEST(vfork, test) {
   int fd;
   char buf[8] = {0};
-  mkdir("o", 0755);
-  ASSERT_NE(-1, (fd = open(PATH, O_RDWR | O_CREAT, 0644)));
+  ASSERT_NE(-1, (fd = open("vfork_test", O_RDWR | O_CREAT, 0644)));
   ASSERT_EQ(5, write(fd, "hello", 5));
   ASSERT_NE(-1, lseek(fd, 0, SEEK_SET));
   if (!vfork()) {
@@ -44,5 +43,4 @@ TEST(vfork, test) {
   EXPECT_EQ(5, read(fd, buf, 5));
   EXPECT_STREQ("hello", buf);
   EXPECT_NE(-1, close(fd));
-  unlink(PATH);
 }

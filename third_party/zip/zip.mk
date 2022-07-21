@@ -5,7 +5,7 @@ PKGS += THIRD_PARTY_ZIP
 
 THIRD_PARTY_ZIP_FILES := $(wildcard third_party/zip/*)
 THIRD_PARTY_ZIP_SRCS = $(filter %.c,$(THIRD_PARTY_ZIP_FILES))
-#THIRD_PARTY_ZIP_HDRS = $(filter %.h,$(THIRD_PARTY_ZIP_FILES))
+THIRD_PARTY_ZIP_HDRS = $(filter %.h,$(THIRD_PARTY_ZIP_FILES))
 THIRD_PARTY_ZIP_INCS = $(filter %.inc,$(THIRD_PARTY_ZIP_FILES))
 
 THIRD_PARTY_ZIP_COMS =				\
@@ -163,25 +163,12 @@ o/$(MODE)/third_party/zip/zipup.o:		\
 		-DZIP64_SUPPORT			\
 		-DBZIP2_SUPPORT
 
-o/$(MODE)/third_party/zip/crypt_.o		\
-o/$(MODE)/third_party/zip/unix_.o		\
-o/$(MODE)/third_party/zip/zipfile_.o		\
-o/$(MODE)/third_party/zip/fileio_.o		\
-o/$(MODE)/third_party/zip/util_.o:		\
-	OVERRIDE_CPPFLAGS +=			\
-		-DUTIL
-
 o/$(MODE)/third_party/zip/zip.o			\
 o/$(MODE)/third_party/zip/zipsplit.o		\
 o/$(MODE)/third_party/zip/fileio.o		\
 o/$(MODE)/third_party/zip/fileio_.o:		\
 	OVERRIDE_CPPFLAGS +=			\
 		-DSTACK_FRAME_UNLIMITED
-
-o/$(MODE)/third_party/zip/%_.o:			\
-		third_party/zip/%.c		\
-		o/$(MODE)/third_party/zip/%.o
-	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/third_party/zip
 o/$(MODE)/third_party/zip:			\

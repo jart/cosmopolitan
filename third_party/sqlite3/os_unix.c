@@ -96,7 +96,6 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
-#include "libc/isystem/unistd.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/map.h"

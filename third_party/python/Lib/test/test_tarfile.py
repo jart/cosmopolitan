@@ -2607,8 +2607,9 @@ class NumericOwnerTest(unittest.TestCase):
     #  because the uname and gname in the test file are 'root', and extract()
     #  will look them up using pwd and grp to find their uid and gid, which we
     #  test here to be 0.
-    @unittest.skipUnless(root_is_uid_gid_0(),
-                         'uid=0,gid=0 must be named "root"')
+    # [jart] tests shouldn't read /etc/passwd lool
+    # @unittest.skipUnless(root_is_uid_gid_0(),
+    #                      'uid=0,gid=0 must be named "root"')
     @unittest.mock.patch('os.chown')
     @unittest.mock.patch('os.chmod')
     @unittest.mock.patch('os.geteuid')
