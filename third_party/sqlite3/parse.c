@@ -122,7 +122,7 @@ static void updateDeleteLimitError(
         pNext = pLoop;
         pLoop = pLoop->pPrior;
         if( pLoop==0 ) break;
-        cnt++;        
+        cnt++;
         if( pLoop->pOrderBy || pLoop->pLimit ){
           sqlite3ErrorMsg(pParse,"%s clause should come after %s not before",
              pLoop->pOrderBy!=0 ? "ORDER BY" : "LIMIT",
@@ -130,7 +130,7 @@ static void updateDeleteLimitError(
           break;
         }
       }
-      if( (p->selFlags & SF_MultiValue)==0 && 
+      if( (p->selFlags & SF_MultiValue)==0 &&
         (mxSelect = pParse->db->aLimit[SQLITE_LIMIT_COMPOUND_SELECT])>0 &&
         cnt>mxSelect
       ){
@@ -181,7 +181,7 @@ static void updateDeleteLimitError(
       }
 #if SQLITE_MAX_EXPR_DEPTH>0
       p->nHeight = 1;
-#endif  
+#endif
       if( IN_RENAME_OBJECT ){
         return (Expr*)sqlite3RenameTokenMap(pParse, (void*)p, &t);
       }
@@ -439,7 +439,7 @@ static void updateDeleteLimitError(
 **                       the minor type might be the name of the identifier.
 **                       Each non-terminal can have a different minor type.
 **                       Terminal symbols all have the same minor type, though.
-**                       This macros defines the minor type for terminal 
+**                       This macros defines the minor type for terminal
 **                       symbols.
 **    YYMINORTYPE        is the data type used for all minor types.
 **                       This is typically a union of many types, one of
@@ -541,7 +541,7 @@ typedef union {
 /* Next are the tables used to determine what action to take based on the
 ** current state and lookahead token.  These tables are used to implement
 ** functions that take a state number and lookahead value and return an
-** action integer.  
+** action integer.
 **
 ** Suppose the action integer is N.  Then the action is determined as
 ** follows
@@ -1185,9 +1185,9 @@ static const YYACTIONTYPE yy_default[] = {
 };
 /********** End of lemon-generated parsing tables *****************************/
 
-/* The next table maps tokens (terminal symbols) into fallback tokens.  
+/* The next table maps tokens (terminal symbols) into fallback tokens.
 ** If a construct like the following:
-** 
+**
 **      %fallback ID X Y Z.
 **
 ** appears in the grammar, then ID becomes a fallback token for X, Y,
@@ -1443,10 +1443,10 @@ static char *yyTracePrompt = 0;
 #endif /* NDEBUG */
 
 #ifndef NDEBUG
-/* 
+/*
 ** Turn parser tracing on by giving a stream to which to write the trace
 ** and a prompt to preface each trace message.  Tracing is turned off
-** by making either argument NULL 
+** by making either argument NULL
 **
 ** Inputs:
 ** <ul>
@@ -1471,7 +1471,7 @@ void sqlite3ParserTrace(FILE *TraceFILE, char *zTracePrompt){
 #if defined(YYCOVERAGE) || !defined(NDEBUG)
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
-static const char *const yyTokenName[] = { 
+static const char *const yyTokenName[] = {
   /*    0 */ "$",
   /*    1 */ "SEMI",
   /*    2 */ "EXPLAIN",
@@ -2226,7 +2226,7 @@ static int yyGrowStack(yyParser *p){
 #endif
     p->yystksz = newSize;
   }
-  return pNew==0; 
+  return pNew==0;
 }
 #endif
 
@@ -2268,7 +2268,7 @@ void sqlite3ParserInit(void *yypRawParser sqlite3ParserCTX_PDECL){
 }
 
 #ifndef sqlite3Parser_ENGINEALWAYSONSTACK
-/* 
+/*
 ** This function allocates a new parser.
 ** The only argument is a pointer to a function which works like
 ** malloc.
@@ -2295,7 +2295,7 @@ void *sqlite3ParserAlloc(void *(*mallocProc)(YYMALLOCARGTYPE) sqlite3ParserCTX_P
 /* The following function deletes the "minor type" or semantic value
 ** associated with a symbol.  The symbol can be either a terminal
 ** or nonterminal. "yymajor" is the symbol code, and "yypminor" is
-** a pointer to the value to be deleted.  The code used to do the 
+** a pointer to the value to be deleted.  The code used to do the
 ** deletions is derived from the %destructor and/or %token_destructor
 ** directives of the input grammar.
 */
@@ -2310,7 +2310,7 @@ static void yy_destructor(
     /* Here is inserted the actions which take place when a
     ** terminal or non-terminal is destroyed.  This can happen
     ** when the symbol is popped from the stack during a
-    ** reduce or during error processing or when a parser is 
+    ** reduce or during error processing or when a parser is
     ** being destroyed before it is finished parsing.
     **
     ** Note: during a reduce, the only symbols destroyed are those
@@ -2460,7 +2460,7 @@ void sqlite3ParserFinalize(void *p){
 }
 
 #ifndef sqlite3Parser_ENGINEALWAYSONSTACK
-/* 
+/*
 ** Deallocate and destroy a parser.  Destructors are called for
 ** all stack elements before shutting the parser down.
 **
@@ -2682,7 +2682,7 @@ static void yy_shift(
     assert( yypParser->yyhwm == (int)(yypParser->yytos - yypParser->yystack) );
   }
 #endif
-#if YYSTACKDEPTH>0 
+#if YYSTACKDEPTH>0
   if( yypParser->yytos>yypParser->yystackEnd ){
     yypParser->yytos--;
     yyStackOverflow(yypParser);
@@ -4053,7 +4053,7 @@ static YYACTIONTYPE yy_reduce(
 }
         break;
       case 118: /* xfullname ::= nm AS nm */
-{  
+{
    yymsp[-2].minor.yy291 = sqlite3SrcListAppend(pParse,0,&yymsp[-2].minor.yy0,0); /*A-overwrites-X*/
    if( yymsp[-2].minor.yy291 ) yymsp[-2].minor.yy291->a[0].zAlias = sqlite3NameFromToken(pParse->db, &yymsp[0].minor.yy0);
 }
@@ -4157,7 +4157,7 @@ static YYACTIONTYPE yy_reduce(
       case 155: /* cmd ::= with UPDATE orconf xfullname indexed_opt SET setlist from where_opt_ret */
 {
   sqlite3SrcListIndexedBy(pParse, yymsp[-5].minor.yy291, &yymsp[-4].minor.yy0);
-  sqlite3ExprListCheckLength(pParse,yymsp[-2].minor.yy338,"set list"); 
+  sqlite3ExprListCheckLength(pParse,yymsp[-2].minor.yy338,"set list");
   yymsp[-5].minor.yy291 = sqlite3SrcListAppendList(pParse, yymsp[-5].minor.yy291, yymsp[-1].minor.yy291);
   sqlite3Update(pParse,yymsp[-5].minor.yy291,yymsp[-2].minor.yy338,yymsp[0].minor.yy602,yymsp[-6].minor.yy60,0,0,0);
 }
@@ -4428,7 +4428,7 @@ static YYACTIONTYPE yy_reduce(
     yymsp[-4].minor.yy602->x.pList = pList;
   }else{
     sqlite3ExprListDelete(pParse->db, pList);
-  } 
+  }
   if( yymsp[-3].minor.yy60 ) yymsp[-4].minor.yy602 = sqlite3PExpr(pParse, TK_NOT, yymsp[-4].minor.yy602, 0);
 }
         break;
@@ -4533,7 +4533,7 @@ static YYACTIONTYPE yy_reduce(
         break;
       case 232: /* cmd ::= createkw uniqueflag INDEX ifnotexists nm dbnm ON nm LP sortlist RP where_opt */
 {
-  sqlite3CreateIndex(pParse, &yymsp[-7].minor.yy0, &yymsp[-6].minor.yy0, 
+  sqlite3CreateIndex(pParse, &yymsp[-7].minor.yy0, &yymsp[-6].minor.yy0,
                      sqlite3SrcListAppend(pParse,0,&yymsp[-4].minor.yy0,0), yymsp[-2].minor.yy338, yymsp[-10].minor.yy60,
                       &yymsp[-11].minor.yy0, yymsp[0].minor.yy602, SQLITE_SO_ASC, yymsp[-8].minor.yy60, SQLITE_IDXTYPE_APPDEF);
   if( IN_RENAME_OBJECT && pParse->pNewIndex ){
@@ -4636,7 +4636,7 @@ static YYACTIONTYPE yy_reduce(
 }
         break;
       case 264: /* trigger_cmd_list ::= trigger_cmd SEMI */
-{ 
+{
   assert( yymsp[-1].minor.yy483!=0 );
   yymsp[-1].minor.yy483->pLast = yymsp[-1].minor.yy483;
 }
@@ -4644,7 +4644,7 @@ static YYACTIONTYPE yy_reduce(
       case 265: /* trnm ::= nm DOT nm */
 {
   yymsp[-2].minor.yy0 = yymsp[0].minor.yy0;
-  sqlite3ErrorMsg(pParse, 
+  sqlite3ErrorMsg(pParse,
         "qualified table names are not allowed on INSERT, UPDATE, and DELETE "
         "statements within triggers");
 }
@@ -4683,7 +4683,7 @@ static YYACTIONTYPE yy_reduce(
         break;
       case 272: /* expr ::= RAISE LP IGNORE RP */
 {
-  yymsp[-3].minor.yy602 = sqlite3PExpr(pParse, TK_RAISE, 0, 0); 
+  yymsp[-3].minor.yy602 = sqlite3PExpr(pParse, TK_RAISE, 0, 0);
   if( yymsp[-3].minor.yy602 ){
     yymsp[-3].minor.yy602->affExpr = OE_Ignore;
   }
@@ -4691,7 +4691,7 @@ static YYACTIONTYPE yy_reduce(
         break;
       case 273: /* expr ::= RAISE LP raisetype COMMA nm RP */
 {
-  yymsp[-5].minor.yy602 = sqlite3ExprAlloc(pParse->db, TK_RAISE, &yymsp[-1].minor.yy0, 1); 
+  yymsp[-5].minor.yy602 = sqlite3ExprAlloc(pParse->db, TK_RAISE, &yymsp[-1].minor.yy0, 1);
   if( yymsp[-5].minor.yy602 ) {
     yymsp[-5].minor.yy602->affExpr = (char)yymsp[-3].minor.yy60;
   }
@@ -4907,7 +4907,7 @@ static YYACTIONTYPE yy_reduce(
 #ifdef SQLITE_OMIT_WINDOWFUNC
   goto SqliteOmitWindowfunc;
 #else
-{ 
+{
   yymsp[1].minor.yy19 = sqlite3WindowAlloc(pParse, 0, TK_UNBOUNDED, 0, TK_CURRENT, 0, 0);
 }
 #endif
@@ -4916,7 +4916,7 @@ static YYACTIONTYPE yy_reduce(
 #ifdef SQLITE_OMIT_WINDOWFUNC
   goto SqliteOmitWindowfunc;
 #else
-{ 
+{
   yylhsminor.yy19 = sqlite3WindowAlloc(pParse, yymsp[-2].minor.yy60, yymsp[-1].minor.yy113.eType, yymsp[-1].minor.yy113.pExpr, TK_CURRENT, 0, yymsp[0].minor.yy570);
 }
   yymsp[-2].minor.yy19 = yylhsminor.yy19;
@@ -4926,7 +4926,7 @@ static YYACTIONTYPE yy_reduce(
 #ifdef SQLITE_OMIT_WINDOWFUNC
   goto SqliteOmitWindowfunc;
 #else
-{ 
+{
   yylhsminor.yy19 = sqlite3WindowAlloc(pParse, yymsp[-5].minor.yy60, yymsp[-3].minor.yy113.eType, yymsp[-3].minor.yy113.pExpr, yymsp[-1].minor.yy113.eType, yymsp[-1].minor.yy113.pExpr, yymsp[0].minor.yy570);
 }
   yymsp[-5].minor.yy19 = yylhsminor.yy19;
@@ -5267,7 +5267,7 @@ void sqlite3Parser(
                   (int)(yypParser->yytos - yypParser->yystack));
         }
 #endif
-#if YYSTACKDEPTH>0 
+#if YYSTACKDEPTH>0
         if( yypParser->yytos>=yypParser->yystackEnd ){
           yyStackOverflow(yypParser);
           break;
@@ -5306,7 +5306,7 @@ void sqlite3Parser(
 #ifdef YYERRORSYMBOL
       /* A syntax error has occurred.
       ** The response to an error depends upon whether or not the
-      ** grammar defines an error token "ERROR".  
+      ** grammar defines an error token "ERROR".
       **
       ** This is what we do if the grammar does define ERROR:
       **

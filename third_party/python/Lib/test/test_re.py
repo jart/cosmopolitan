@@ -1342,7 +1342,7 @@ class ReTests(unittest.TestCase):
         self.assertTrue(re.match(' (?x) (?i) ' + upper_char, lower_char, re.X))
 
         # [jart] why does it care if it's a py or pyc?
-        
+
         # p = upper_char + '(?i)'
         # with self.assertWarns(DeprecationWarning) as warns:
         #     self.assertTrue(re.match(p, lower_char))

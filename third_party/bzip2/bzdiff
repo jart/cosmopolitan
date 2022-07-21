@@ -1,7 +1,7 @@
 #!/bin/sh
 # sh is buggy on RS/6000 AIX 3.2. Replace above line with #!/bin/ksh
 
-# Bzcmp/diff wrapped for bzip2, 
+# Bzcmp/diff wrapped for bzip2,
 # adapted from zdiff by Philippe Troin <phil@fifi.org> for Debian GNU/Linux.
 
 # Bzcmp and bzdiff are used to invoke the cmp or the  diff  pro-

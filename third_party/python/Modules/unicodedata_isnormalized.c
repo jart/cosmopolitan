@@ -8,7 +8,7 @@
 /* clang-format off */
 
 /**
- * Returns 1 if the input is certainly normalized, 0 if it might not be. 
+ * Returns 1 if the input is certainly normalized, 0 if it might not be.
  */
 int
 _PyUnicode_IsNormalized(PyObject *self, PyObject *input, int nfc, int k)

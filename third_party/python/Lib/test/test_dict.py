@@ -1268,7 +1268,7 @@ class CAPITest(unittest.TestCase):
         self.assertEqual(dict_getitem_knownhash(d, 'y', hash('y')), 2)
         self.assertEqual(dict_getitem_knownhash(d, 'z', hash('z')), 3)
 
-        # # TODO: Did this break? What did this do? 
+        # # TODO: Did this break? What did this do?
         # (likely related to disabling BadInternalCall in #264)
         # # not a dict
         # # find the APE compilation mode, run this test in dbg only #

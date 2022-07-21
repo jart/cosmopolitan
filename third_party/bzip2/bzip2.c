@@ -27,7 +27,7 @@
    bzip2/libbzip2 version 1.0.8 of 13 July 2019
    Copyright (C) 1996-2019 Julian Seward <jseward@acm.org>
 
-   Please read the WARNING, DISCLAIMER and PATENTS sections in the 
+   Please read the WARNING, DISCLAIMER and PATENTS sections in the
    README file.
 
    This program is released under the terms of the license contained
@@ -76,7 +76,7 @@ typedef int             Int32;
 typedef unsigned int    UInt32;
 typedef short           Int16;
 typedef unsigned short  UInt16;
-                                       
+
 #define True  ((Bool)1)
 #define False ((Bool)0)
 
@@ -141,7 +141,7 @@ static void    applySavedFileAttrToOutputFile ( IntNative fd );
 /*---------------------------------------------------*/
 
 typedef
-   struct { UChar b[8]; } 
+   struct { UChar b[8]; }
    UInt64;
 
 
@@ -184,7 +184,7 @@ Bool uInt64_isZero ( UInt64* n )
 
 
 /* Divide *n by 10, and return the remainder.  */
-static 
+static
 Int32 uInt64_qrm10 ( UInt64* n )
 {
    UInt32 rem, tmp;
@@ -215,7 +215,7 @@ void uInt64_toAscii ( char* outbuf, UInt64* n )
       nBuf++;
    } while (!uInt64_isZero(&n_copy));
    outbuf[nBuf] = 0;
-   for (i = 0; i < nBuf; i++) 
+   for (i = 0; i < nBuf; i++)
       outbuf[i] = buf[nBuf-i-1];
 }
 
@@ -225,7 +225,7 @@ void uInt64_toAscii ( char* outbuf, UInt64* n )
 /*---------------------------------------------------*/
 
 /*---------------------------------------------*/
-static 
+static
 Bool myfeof ( FILE* f )
 {
    Int32 c = fgetc ( f );
@@ -236,7 +236,7 @@ Bool myfeof ( FILE* f )
 
 
 /*---------------------------------------------*/
-static 
+static
 void compressStream ( FILE *stream, FILE *zStream )
 {
    BZFILE* bzf = NULL;
@@ -252,8 +252,8 @@ void compressStream ( FILE *stream, FILE *zStream )
    if (ferror(stream)) goto errhandler_io;
    if (ferror(zStream)) goto errhandler_io;
 
-   bzf = BZ2_bzWriteOpen ( &bzerr, zStream, 
-                           blockSize100k, verbosity, workFactor );   
+   bzf = BZ2_bzWriteOpen ( &bzerr, zStream,
+                           blockSize100k, verbosity, workFactor );
    if (bzerr != BZ_OK) goto errhandler;
 
    if (verbosity >= 2) (fprintf) ( stderr, "\n" );
@@ -268,7 +268,7 @@ void compressStream ( FILE *stream, FILE *zStream )
 
    }
 
-   BZ2_bzWriteClose64 ( &bzerr, bzf, 0, 
+   BZ2_bzWriteClose64 ( &bzerr, bzf, 0,
                         &nbytes_in_lo32, &nbytes_in_hi32,
                         &nbytes_out_lo32, &nbytes_out_hi32 );
    if (bzerr != BZ_OK) goto errhandler;
@@ -296,9 +296,9 @@ void compressStream ( FILE *stream, FILE *zStream )
 	 Char   buf_nin[32], buf_nout[32];
 	 UInt64 nbytes_in,   nbytes_out;
 	 double nbytes_in_d, nbytes_out_d;
-	 uInt64_from_UInt32s ( &nbytes_in, 
+	 uInt64_from_UInt32s ( &nbytes_in,
 			       nbytes_in_lo32, nbytes_in_hi32 );
-	 uInt64_from_UInt32s ( &nbytes_out, 
+	 uInt64_from_UInt32s ( &nbytes_out,
 			       nbytes_out_lo32, nbytes_out_hi32 );
 	 nbytes_in_d  = uInt64_to_double ( &nbytes_in );
 	 nbytes_out_d = uInt64_to_double ( &nbytes_out );
@@ -318,7 +318,7 @@ void compressStream ( FILE *stream, FILE *zStream )
    return;
 
    errhandler:
-   BZ2_bzWriteClose64 ( &bzerr_dummy, bzf, 1, 
+   BZ2_bzWriteClose64 ( &bzerr_dummy, bzf, 1,
                         &nbytes_in_lo32, &nbytes_in_hi32,
                         &nbytes_out_lo32, &nbytes_out_hi32 );
    switch (bzerr) {
@@ -340,7 +340,7 @@ void compressStream ( FILE *stream, FILE *zStream )
 
 
 /*---------------------------------------------*/
-static 
+static
 Bool uncompressStream ( FILE *zStream, FILE *stream )
 {
    BZFILE* bzf = NULL;
@@ -362,8 +362,8 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
 
    while (True) {
 
-      bzf = BZ2_bzReadOpen ( 
-               &bzerr, zStream, verbosity, 
+      bzf = BZ2_bzReadOpen (
+               &bzerr, zStream, verbosity,
                (int)smallMode, unused, nUnused
             );
       if (bzf == NULL || bzerr != BZ_OK) goto errhandler;
@@ -412,7 +412,7 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
    if (verbosity >= 2) (fprintf) ( stderr, "\n    " );
    return True;
 
-   trycat: 
+   trycat:
    if (forceOverwrite) {
       rewind(zStream);
       while (True) {
@@ -424,7 +424,7 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
       }
       goto closeok;
    }
-  
+
    errhandler:
    BZ2_bzReadClose ( &bzerr_dummy, bzf );
    switch (bzerr) {
@@ -446,10 +446,10 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
             return False;
          } else {
             if (noisy)
-            (fprintf) ( stderr, 
+            (fprintf) ( stderr,
                       "\n%s: %s: trailing garbage after EOF ignored\n",
                       progName, inName );
-            return True;       
+            return True;
          }
       default:
          panic ( "decompress:unexpected error" );
@@ -461,7 +461,7 @@ Bool uncompressStream ( FILE *zStream, FILE *stream )
 
 
 /*---------------------------------------------*/
-static 
+static
 Bool testStream ( FILE *zStream )
 {
    BZFILE* bzf = NULL;
@@ -480,8 +480,8 @@ Bool testStream ( FILE *zStream )
 
    while (True) {
 
-      bzf = BZ2_bzReadOpen ( 
-               &bzerr, zStream, verbosity, 
+      bzf = BZ2_bzReadOpen (
+               &bzerr, zStream, verbosity,
                (int)smallMode, unused, nUnused
             );
       if (bzf == NULL || bzerr != BZ_OK) goto errhandler;
@@ -514,7 +514,7 @@ Bool testStream ( FILE *zStream )
 
    errhandler:
    BZ2_bzReadClose ( &bzerr_dummy, bzf );
-   if (verbosity == 0) 
+   if (verbosity == 0)
       (fprintf) ( stderr, "%s: %s: ", progName, inName );
    switch (bzerr) {
       case BZ_CONFIG_ERROR:
@@ -535,14 +535,14 @@ Bool testStream ( FILE *zStream )
       case BZ_DATA_ERROR_MAGIC:
          if (zStream != stdin) fclose(zStream);
          if (streamNo == 1) {
-          (fprintf) ( stderr, 
+          (fprintf) ( stderr,
                     "bad magic number (file not created by bzip2)\n" );
             return False;
          } else {
             if (noisy)
-            (fprintf) ( stderr, 
+            (fprintf) ( stderr,
                       "trailing garbage after EOF ignored\n" );
-            return True;       
+            return True;
          }
       default:
          panic ( "test:unexpected error" );
@@ -566,7 +566,7 @@ void setExit ( Int32 v )
 
 
 /*---------------------------------------------*/
-static 
+static
 void cadvise ( void )
 {
    if (noisy)
@@ -581,26 +581,26 @@ void cadvise ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void showFileNames ( void )
 {
    if (noisy)
    (fprintf) (
       stderr,
       "\tInput file = %s, output file = %s\n",
-      inName, outName 
+      inName, outName
    );
 }
 
 
 /*---------------------------------------------*/
-static 
+static
 void cleanUpAndFail ( Int32 ec )
 {
    IntNative      retVal;
    struct MY_STAT statBuf;
 
-   if ( srcMode == SM_F2F 
+   if ( srcMode == SM_F2F
         && opMode != OM_TEST
         && deleteOutputOnInterrupt ) {
 
@@ -612,7 +612,7 @@ void cleanUpAndFail ( Int32 ec )
       retVal = MY_STAT ( inName, &statBuf );
       if (retVal == 0) {
          if (noisy)
-            (fprintf) ( stderr, 
+            (fprintf) ( stderr,
                       "%s: Deleting output file %s, if it exists.\n",
                       progName, outName );
          if (outputHandleJustInCase != NULL)
@@ -633,7 +633,7 @@ void cleanUpAndFail ( Int32 ec )
          (fprintf) ( stderr,
                    "%s:    `%s' may be incomplete.\n",
                    progName, outName );
-         (fprintf) ( stderr, 
+         (fprintf) ( stderr,
                    "%s:    I suggest doing an integrity test (bzip2 -tv)"
                    " of it.\n",
                    progName );
@@ -641,7 +641,7 @@ void cleanUpAndFail ( Int32 ec )
    }
 
    if (noisy && numFileNames > 0 && numFilesProcessed < numFileNames) {
-      (fprintf) ( stderr, 
+      (fprintf) ( stderr,
                 "%s: WARNING: some files have not been processed:\n"
                 "%s:    %d specified on command line, %d not processed yet.\n\n",
                 progName, progName,
@@ -653,7 +653,7 @@ void cleanUpAndFail ( Int32 ec )
 
 
 /*---------------------------------------------*/
-static 
+static
 void panic ( const Char* s )
 {
    (fprintf) ( stderr,
@@ -668,7 +668,7 @@ void panic ( const Char* s )
 
 
 /*---------------------------------------------*/
-static 
+static
 void crcError ( void )
 {
    (fprintf) ( stderr,
@@ -681,7 +681,7 @@ void crcError ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void compressedStreamEOF ( void )
 {
   if (noisy) {
@@ -698,7 +698,7 @@ void compressedStreamEOF ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void ioError ( void )
 {
    (fprintf) ( stderr,
@@ -712,7 +712,7 @@ void ioError ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void mySignalCatcher ( IntNative n )
 {
    (fprintf) ( stderr,
@@ -723,11 +723,11 @@ void mySignalCatcher ( IntNative n )
 
 
 /*---------------------------------------------*/
-static 
+static
 void mySIGSEGVorSIGBUScatcher ( IntNative n )
 {
    if (opMode == OM_Z)
-      (fprintf) ( 
+      (fprintf) (
       stderr,
       "\n%s: Caught a SIGSEGV or SIGBUS whilst compressing.\n"
       "\n"
@@ -748,7 +748,7 @@ void mySIGSEGVorSIGBUScatcher ( IntNative n )
       "\n",
       progName );
       else
-      (fprintf) ( 
+      (fprintf) (
       stderr,
       "\n%s: Caught a SIGSEGV or SIGBUS whilst decompressing.\n"
       "\n"
@@ -779,7 +779,7 @@ void mySIGSEGVorSIGBUScatcher ( IntNative n )
 
 
 /*---------------------------------------------*/
-static 
+static
 void outOfMemory ( void )
 {
    (fprintf) ( stderr,
@@ -791,7 +791,7 @@ void outOfMemory ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void configError ( void )
 {
    (fprintf) ( stderr,
@@ -811,11 +811,11 @@ void configError ( void )
 
 /* All rather crufty.  The main problem is that input files
    are stat()d multiple times before use.  This should be
-   cleaned up. 
+   cleaned up.
 */
 
 /*---------------------------------------------*/
-static 
+static
 void pad ( Char *s )
 {
    Int32 i;
@@ -826,8 +826,8 @@ void pad ( Char *s )
 
 
 /*---------------------------------------------*/
-static 
-void copyFileName ( Char* to, Char* from ) 
+static
+void copyFileName ( Char* to, Char* from )
 {
    if ( strlen(from) > FILE_NAME_LEN-10 )  {
       (fprintf) (
@@ -847,7 +847,7 @@ void copyFileName ( Char* to, Char* from )
 
 
 /*---------------------------------------------*/
-static 
+static
 Bool fileExists ( Char* name )
 {
    FILE *tmp   = fopen ( name, "rb" );
@@ -888,7 +888,7 @@ FILE* fopen_output_safely ( Char* name, const char* mode )
 /*--
   if in doubt, return True
 --*/
-static 
+static
 Bool notAStandardFile ( Char* name )
 {
    IntNative      i;
@@ -905,9 +905,9 @@ Bool notAStandardFile ( Char* name )
 /*--
   rac 11/21/98 see if file has hard links to it
 --*/
-static 
+static
 Int32 countHardLinks ( Char* name )
-{  
+{
    IntNative      i;
    struct MY_STAT statBuf;
 
@@ -938,14 +938,14 @@ Int32 countHardLinks ( Char* name )
 
    It sounds pretty fragile to me.  Whether this carries across
    robustly to arbitrary Unix-like platforms (or even works robustly
-   on this one, RedHat 7.2) is unknown to me.  Nevertheless ...  
+   on this one, RedHat 7.2) is unknown to me.  Nevertheless ...
 */
 #if BZ_UNIX
-static 
+static
 struct MY_STAT fileMetaInfo;
 #endif
 
-static 
+static
 void saveInputFileMetaInfo ( Char *srcName )
 {
 #  if BZ_UNIX
@@ -957,7 +957,7 @@ void saveInputFileMetaInfo ( Char *srcName )
 }
 
 
-static 
+static
 void applySavedTimeInfoToOutputFile ( Char *dstName )
 {
 #  if BZ_UNIX
@@ -972,7 +972,7 @@ void applySavedTimeInfoToOutputFile ( Char *dstName )
 #  endif
 }
 
-static 
+static
 void applySavedFileAttrToOutputFile ( IntNative fd )
 {
 #  if BZ_UNIX
@@ -990,7 +990,7 @@ void applySavedFileAttrToOutputFile ( IntNative fd )
 
 
 /*---------------------------------------------*/
-static 
+static
 Bool containsDubiousChars ( Char* name )
 {
 #  if BZ_UNIX
@@ -999,7 +999,7 @@ Bool containsDubiousChars ( Char* name )
     */
    return False;
 #  else /* ! BZ_UNIX */
-   /* On non-unix (Win* platforms), wildcard characters are not allowed in 
+   /* On non-unix (Win* platforms), wildcard characters are not allowed in
     * filenames.
     */
    for (; *name != '\0'; name++)
@@ -1012,12 +1012,12 @@ Bool containsDubiousChars ( Char* name )
 /*---------------------------------------------*/
 #define BZ_N_SUFFIX_PAIRS 4
 
-const Char* zSuffix[BZ_N_SUFFIX_PAIRS] 
+const Char* zSuffix[BZ_N_SUFFIX_PAIRS]
    = { ".bz2", ".bz", ".tbz2", ".tbz" };
-const Char* unzSuffix[BZ_N_SUFFIX_PAIRS] 
+const Char* unzSuffix[BZ_N_SUFFIX_PAIRS]
    = { "", "", ".tar", ".tar" };
 
-static 
+static
 Bool hasSuffix ( Char* s, const Char* suffix )
 {
    Int32 ns = strlen(s);
@@ -1027,9 +1027,9 @@ Bool hasSuffix ( Char* s, const Char* suffix )
    return False;
 }
 
-static 
-Bool mapSuffix ( Char* name, 
-                 const Char* oldSuffix, 
+static
+Bool mapSuffix ( Char* name,
+                 const Char* oldSuffix,
                  const Char* newSuffix )
 {
    if (!hasSuffix(name,oldSuffix)) return False;
@@ -1040,7 +1040,7 @@ Bool mapSuffix ( Char* name,
 
 
 /*---------------------------------------------*/
-static 
+static
 void compress ( Char *name )
 {
    FILE  *inStr;
@@ -1054,18 +1054,18 @@ void compress ( Char *name )
       panic ( "compress: bad modes\n" );
 
    switch (srcMode) {
-      case SM_I2O: 
+      case SM_I2O:
          copyFileName ( inName, (Char*)"(stdin)" );
-         copyFileName ( outName, (Char*)"(stdout)" ); 
+         copyFileName ( outName, (Char*)"(stdout)" );
          break;
-      case SM_F2F: 
+      case SM_F2F:
          copyFileName ( inName, name );
          copyFileName ( outName, name );
-         strcat ( outName, ".bz2" ); 
+         strcat ( outName, ".bz2" );
          break;
-      case SM_F2O: 
+      case SM_F2O:
          copyFileName ( inName, name );
-         copyFileName ( outName, (Char*)"(stdout)" ); 
+         copyFileName ( outName, (Char*)"(stdout)" );
          break;
    }
 
@@ -1085,7 +1085,7 @@ void compress ( Char *name )
    for (i = 0; i < BZ_N_SUFFIX_PAIRS; i++) {
       if (hasSuffix(inName, zSuffix[i])) {
          if (noisy)
-         (fprintf) ( stderr, 
+         (fprintf) ( stderr,
                    "%s: Input file %s already has %s suffix.\n",
                    progName, inName, zSuffix[i] );
          setExit(1);
@@ -1221,7 +1221,7 @@ void compress ( Char *name )
 
 
 /*---------------------------------------------*/
-static 
+static
 void uncompress ( Char *name )
 {
    FILE  *inStr;
@@ -1238,22 +1238,22 @@ void uncompress ( Char *name )
 
    cantGuess = False;
    switch (srcMode) {
-      case SM_I2O: 
+      case SM_I2O:
          copyFileName ( inName, (Char*)"(stdin)" );
-         copyFileName ( outName, (Char*)"(stdout)" ); 
+         copyFileName ( outName, (Char*)"(stdout)" );
          break;
-      case SM_F2F: 
+      case SM_F2F:
          copyFileName ( inName, name );
          copyFileName ( outName, name );
          for (i = 0; i < BZ_N_SUFFIX_PAIRS; i++)
             if (mapSuffix(outName,zSuffix[i],unzSuffix[i]))
-               goto zzz; 
+               goto zzz;
          cantGuess = True;
          strcat ( outName, ".out" );
          break;
-      case SM_F2O: 
+      case SM_F2O:
          copyFileName ( inName, name );
-         copyFileName ( outName, (Char*)"(stdout)" ); 
+         copyFileName ( outName, (Char*)"(stdout)" );
          break;
    }
 
@@ -1290,11 +1290,11 @@ void uncompress ( Char *name )
    }
    if ( /* srcMode == SM_F2F implied && */ cantGuess ) {
       if (noisy)
-      (fprintf) ( stderr, 
+      (fprintf) ( stderr,
                 "%s: Can't guess original name for %s -- using %s\n",
                 progName, inName, outName );
       /* just a warning, no return */
-   }   
+   }
    if ( srcMode == SM_F2F && fileExists ( outName ) ) {
       if (forceOverwrite) {
 	remove(outName);
@@ -1419,7 +1419,7 @@ void uncompress ( Char *name )
 
 
 /*---------------------------------------------*/
-static 
+static
 void testf ( Char *name )
 {
    FILE *inStr;
@@ -1508,7 +1508,7 @@ void testf ( Char *name )
 
 
 /*---------------------------------------------*/
-static 
+static
 void license ( void )
 {
    (fprintf) ( stderr,
@@ -1533,7 +1533,7 @@ void license ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 void usage ( Char *fullProgName )
 {
    (fprintf) (
@@ -1577,11 +1577,11 @@ void usage ( Char *fullProgName )
 
 
 /*---------------------------------------------*/
-static 
+static
 void redundant ( Char* flag )
 {
-   (fprintf) ( 
-      stderr, 
+   (fprintf) (
+      stderr,
       "%s: %s is redundant in versions 0.9.5 and above\n",
       progName, flag );
 }
@@ -1593,8 +1593,8 @@ void redundant ( Char* flag )
   implement a linked list of command-line arguments,
   into which main() copies argv[1 .. argc-1].
 
-  The purpose of this exercise is to facilitate 
-  the expansion of wildcard characters * and ? in 
+  The purpose of this exercise is to facilitate
+  the expansion of wildcard characters * and ? in
   filenames for OSs which don't know how to do it
   themselves, like MSDOS, Windows 95 and NT.
 
@@ -1611,7 +1611,7 @@ typedef
 
 
 /*---------------------------------------------*/
-static 
+static
 void *myMalloc ( Int32 n )
 {
    void* p;
@@ -1623,7 +1623,7 @@ void *myMalloc ( Int32 n )
 
 
 /*---------------------------------------------*/
-static 
+static
 Cell *mkCell ( void )
 {
    Cell *c;
@@ -1636,7 +1636,7 @@ Cell *mkCell ( void )
 
 
 /*---------------------------------------------*/
-static 
+static
 Cell *snocString ( Cell *root, Char *name )
 {
    if (root == NULL) {
@@ -1654,8 +1654,8 @@ Cell *snocString ( Cell *root, Char *name )
 
 
 /*---------------------------------------------*/
-static 
-void addFlagsFromEnvVar ( Cell** argList, Char* varName ) 
+static
+void addFlagsFromEnvVar ( Cell** argList, Char* varName )
 {
    Int32 i, j, k;
    Char *envbase, *p;
@@ -1732,7 +1732,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       if (*tmp == PATH_SEP) progName = tmp + 1;
 
 
-   /*-- Copy flags from env var BZIP2, and 
+   /*-- Copy flags from env var BZIP2, and
         expand filename wildcards in arg list.
    --*/
    argList = NULL;
@@ -1815,7 +1815,7 @@ IntNative main ( IntNative argc, Char *argv[] )
          }
       }
    }
-   
+
    /*-- And again ... --*/
    for (aa = argList; aa != NULL; aa = aa->link) {
       if (ISFLAG("--")) break;
@@ -1829,7 +1829,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       if (ISFLAG("--quiet"))             noisy            = False;   else
       if (ISFLAG("--version"))           license();                  else
       if (ISFLAG("--license"))           license();                  else
-      if (ISFLAG("--exponential"))       workFactor = 1;             else 
+      if (ISFLAG("--exponential"))       workFactor = 1;             else
       if (ISFLAG("--repetitive-best"))   redundant(aa->name);        else
       if (ISFLAG("--repetitive-fast"))   redundant(aa->name);        else
       if (ISFLAG("--fast"))              blockSize100k = 1;          else
@@ -1845,7 +1845,7 @@ IntNative main ( IntNative argc, Char *argv[] )
    }
 
    if (verbosity > 4) verbosity = 4;
-   if (opMode == OM_Z && smallMode && blockSize100k > 2) 
+   if (opMode == OM_Z && smallMode && blockSize100k > 2)
       blockSize100k = 2;
 
    if (opMode == OM_TEST && srcMode == SM_F2O) {
@@ -1879,7 +1879,7 @@ IntNative main ( IntNative argc, Char *argv[] )
            compress ( aa->name );
         }
      }
-   } 
+   }
    else
 
    if (opMode == OM_UNZ) {
@@ -1893,13 +1893,13 @@ IntNative main ( IntNative argc, Char *argv[] )
             if (aa->name[0] == '-' && decode) continue;
             numFilesProcessed++;
             uncompress ( aa->name );
-         }      
+         }
       }
-      if (unzFailsExist) { 
-         setExit(2); 
+      if (unzFailsExist) {
+         setExit(2);
          exit(exitValue);
       }
-   } 
+   }
 
    else {
       testFailsExist = False;
@@ -1927,7 +1927,7 @@ IntNative main ( IntNative argc, Char *argv[] )
       }
    }
 
-   /* Free the argument list memory to mollify leak detectors 
+   /* Free the argument list memory to mollify leak detectors
       (eg) Purify, Checker.  Serves no other useful purpose.
    */
    aa = argList;

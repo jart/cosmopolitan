@@ -184,7 +184,7 @@ SQLITE_NOINLINE int sqlite3RunVacuum(
     zOut = "";
   }
 
-  /* Save the current value of the database flags so that it can be 
+  /* Save the current value of the database flags so that it can be
   ** restored before returning. Then set the writable-schema flag, and
   ** disable CHECK and foreign key constraints.  */
   saved_flags = db->flags;
@@ -316,7 +316,7 @@ SQLITE_NOINLINE int sqlite3RunVacuum(
   );
   if( rc ) goto end_of_vacuum;
 
-  /* At this point, there is a write transaction open on both the 
+  /* At this point, there is a write transaction open on both the
   ** vacuum database and the main database. Assuming no error occurs,
   ** both transactions are closed by this block - the main database
   ** transaction by sqlite3BtreeCopyFile() and the other by an explicit
@@ -396,7 +396,7 @@ end_of_vacuum:
   }
 
   /* This both clears the schemas and reduces the size of the db->aDb[]
-  ** array. */ 
+  ** array. */
   sqlite3ResetAllSchemasOfConnection(db);
 
   return rc;

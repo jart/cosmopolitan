@@ -17,7 +17,7 @@ STATIC_YOINK("huge_compiler_rt_license");
 
 /* Returns: convert a to a float, rounding toward even. */
 
-/* Assumption: float is a IEEE 32 bit floating point type 
+/* Assumption: float is a IEEE 32 bit floating point type
  *            du_int is a 64 bit integral type
  */
 

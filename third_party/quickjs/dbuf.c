@@ -124,7 +124,7 @@ int dbuf_printf(DynBuf *s, const char *fmt, ...)
     va_list ap;
     char buf[128];
     int len;
-    
+
     va_start(ap, fmt);
     len = vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);

@@ -32,7 +32,7 @@ void PrintGarbageNumeric(FILE *f) {
   fprintf(f, " garbage entry  parent frame     original ret        callback              arg        \n");
   fprintf(f, "-------------- -------------- ------------------ ------------------ ------------------\n");
   for (i = __garbage.i; i--;) {
-    fprintf(f, "0x%012lx 0x%012lx 0x%016lx 0x%016lx 0x%016lx\n", 
+    fprintf(f, "0x%012lx 0x%012lx 0x%016lx 0x%016lx 0x%016lx\n",
             __garbage.p + i,
             __garbage.p[i].frame,
             __garbage.p[i].ret,

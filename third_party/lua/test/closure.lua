@@ -162,7 +162,7 @@ do
     X = function () return b end   -- closure with upvalue
     if a then break end
   end
-  
+
   do
     local b = 20
     Y = function () return b end   -- closure with upvalue
@@ -172,7 +172,7 @@ do
   assert(X() == 10 and Y() == 20)
 end
 
-  
+
 -- testing closures x repeat-until
 
 local a = {}

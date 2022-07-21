@@ -333,7 +333,7 @@ function test_try_catch7()
 function test_try_catch8()
 {
     var i, s;
-    
+
     s = "";
     for(var i in {x:1, y:2}) {
         try {

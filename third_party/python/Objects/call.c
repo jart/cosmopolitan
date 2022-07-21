@@ -678,13 +678,13 @@ _PyMethodDef_RawFastCallKeywords(PyMethodDef *method, PyObject *self, PyObject *
         result = ((_PyCFunctionFastWithKeywords)meth) (self, args, nargs, kwnames);
         break;
 
-        
+
     case METH_VARARGS:
         if (nkwargs) {
             goto no_keyword_error;
         }
         /* fall through next case */
-    
+
     case METH_VARARGS | METH_KEYWORDS:
     {
         /* Slow-path: create a temporary tuple for positional arguments

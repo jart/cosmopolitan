@@ -37,10 +37,10 @@ This library provides several interfaces to load, demux and decode MPEG video
 and audio data. A high-level API combines the demuxer, video & audio decoders
 in an easy to use wrapper.
 
-Lower-level APIs for accessing the demuxer, video decoder and audio decoder, 
+Lower-level APIs for accessing the demuxer, video decoder and audio decoder,
 as well as providing different data sources are also available.
 
-Interfaces are written in an object orientet style, meaning you create object 
+Interfaces are written in an object orientet style, meaning you create object
 instances via various different constructor functions (plm_*create()),
 do some work on them and later dispose them via plm_*destroy().
 
@@ -51,11 +51,11 @@ plm_video_*  -- the MPEG1 Video ("mpeg1") decoder
 plm_audio_*  -- the MPEG1 Audio Layer II ("mp2") decoder
 
 
-This library uses malloc(), realloc() and free() to manage memory. Typically 
+This library uses malloc(), realloc() and free() to manage memory. Typically
 all allocation happens up-front when creating the interface. However, the
 default buffer size may be too small for certain inputs. In these cases plmpeg
 will realloc() the buffer with a larger size whenever needed. You can configure
-the default buffer size by defining PLM_BUFFER_DEFAULT_SIZE *before* 
+the default buffer size by defining PLM_BUFFER_DEFAULT_SIZE *before*
 including this library.
 
 With the high-level interface you have two options to decode video & audio:
@@ -85,7 +85,7 @@ mat4 rec601 = mat4(
 gl_FragColor = vec4(y, cb, cr, 1.0) * rec601;
 
 Audio data is decoded into a struct with either one single float array with the
-samples for the left and right channel interleaved, or if the 
+samples for the left and right channel interleaved, or if the
 PLM_AUDIO_SEPARATE_CHANNELS is defined *before* including this library, into
 two separate float arrays - one for each channel.
 

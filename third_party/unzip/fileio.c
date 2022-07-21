@@ -935,7 +935,7 @@ static int partflush(__G__ rawbuf, size, unshrink)
             if (size < G.apl_dbl_hdr_bytes)
             {
                 /* Fewer bytes than needed to complete the AppleDouble
-                 * header.  (Unlikely?)  Move them to the AppleDouble 
+                 * header.  (Unlikely?)  Move them to the AppleDouble
                  * header buffer, adjust the byte counts, and resume
                  * extraction.
                  */

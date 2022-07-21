@@ -109,7 +109,7 @@ double asin(double x)
 	int ng;
 	uint32_t ix,lx;
 	double z,r,s,f,c;
-	union { 
+	union {
 		double f;
 		int64_t s;
 		uint64_t i;

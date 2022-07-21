@@ -54,7 +54,7 @@ function test_closure1()
     function f2()
     {
         var val = 1;
-        
+
         function set(a) {
             val = a;
         }
@@ -63,7 +63,7 @@ function test_closure1()
         }
         return { "set": set, "get": get };
     }
-    
+
     var obj = f2();
     obj.set(10);
     var r;

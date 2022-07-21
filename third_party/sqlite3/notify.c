@@ -42,13 +42,13 @@ static sqlite3 *SQLITE_WSD sqlite3BlockedList = 0;
 
 #ifndef NDEBUG
 /*
-** This function is a complex assert() that verifies the following 
+** This function is a complex assert() that verifies the following
 ** properties of the blocked connections list:
 **
-**   1) Each entry in the list has a non-NULL value for either 
+**   1) Each entry in the list has a non-NULL value for either
 **      pUnlockConnection or pBlockingConnection, or both.
 **
-**   2) All entries in the list that share a common value for 
+**   2) All entries in the list that share a common value for
 **      xUnlockNotify are grouped together.
 **
 **   3) If the argument db is not NULL, then none of the entries in the
@@ -100,8 +100,8 @@ static void addToBlockedList(sqlite3 *db){
   sqlite3 **pp;
   assertMutexHeld();
   for(
-    pp=&sqlite3BlockedList; 
-    *pp && (*pp)->xUnlockNotify!=db->xUnlockNotify; 
+    pp=&sqlite3BlockedList;
+    *pp && (*pp)->xUnlockNotify!=db->xUnlockNotify;
     pp=&(*pp)->pNextBlocked
   );
   db->pNextBlocked = *pp;
@@ -163,9 +163,9 @@ int sqlite3_unlock_notify(
     db->xUnlockNotify = 0;
     db->pUnlockArg = 0;
   }else if( 0==db->pBlockingConnection ){
-    /* The blocking transaction has been concluded. Or there never was a 
+    /* The blocking transaction has been concluded. Or there never was a
     ** blocking transaction. In either case, invoke the notify callback
-    ** immediately. 
+    ** immediately.
     */
     xNotify(&pArg, 1);
   }else{
@@ -191,7 +191,7 @@ int sqlite3_unlock_notify(
 }
 
 /*
-** This function is called while stepping or preparing a statement 
+** This function is called while stepping or preparing a statement
 ** associated with connection db. The operation will return SQLITE_LOCKED
 ** to the user because it requires a lock that will not be available
 ** until connection pBlocker concludes its current transaction.
@@ -207,7 +207,7 @@ void sqlite3ConnectionBlocked(sqlite3 *db, sqlite3 *pBlocker){
 
 /*
 ** This function is called when
-** the transaction opened by database db has just finished. Locks held 
+** the transaction opened by database db has just finished. Locks held
 ** by database connection db have been released.
 **
 ** This function loops through each entry in the blocked connections
@@ -267,7 +267,7 @@ void sqlite3ConnectionUnlocked(sqlite3 *db){
         }else{
           /* This occurs when the array of context pointers that need to
           ** be passed to the unlock-notify callback is larger than the
-          ** aStatic[] array allocated on the stack and the attempt to 
+          ** aStatic[] array allocated on the stack and the attempt to
           ** allocate a larger array from the heap has failed.
           **
           ** This is a difficult situation to handle. Returning an error
@@ -275,17 +275,17 @@ void sqlite3ConnectionUnlocked(sqlite3 *db){
           ** is returned the transaction on connection db will still be
           ** closed and the unlock-notify callbacks on blocked connections
           ** will go unissued. This might cause the application to wait
-          ** indefinitely for an unlock-notify callback that will never 
+          ** indefinitely for an unlock-notify callback that will never
           ** arrive.
           **
           ** Instead, invoke the unlock-notify callback with the context
           ** array already accumulated. We can then clear the array and
-          ** begin accumulating any further context pointers without 
+          ** begin accumulating any further context pointers without
           ** requiring any dynamic allocation. This is sub-optimal because
           ** it means that instead of one callback with a large array of
           ** context pointers the application will receive two or more
           ** callbacks with smaller arrays of context pointers, which will
-          ** reduce the applications ability to prioritize multiple 
+          ** reduce the applications ability to prioritize multiple
           ** connections. But it is the best that can be done under the
           ** circumstances.
           */
@@ -320,7 +320,7 @@ void sqlite3ConnectionUnlocked(sqlite3 *db){
 }
 
 /*
-** This is called when the database connection passed as an argument is 
+** This is called when the database connection passed as an argument is
 ** being closed. The connection is removed from the blocked list.
 */
 void sqlite3ConnectionClosed(sqlite3 *db){

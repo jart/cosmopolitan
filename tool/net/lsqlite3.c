@@ -1818,7 +1818,7 @@ static const struct {
     SC(OPEN_FULLMUTEX)
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
-    
+
     /* terminator */
     { NULL, 0 }
 };

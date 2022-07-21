@@ -524,9 +524,9 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
 
 // clang-format off
 // asan error: null pointer dereference 1-byte load at 0x000000000000 shadow 0x00007fff8000
-//                                         x                                       
+//                                         x
 // MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅∅
-// |-17    |-17    |-17    |-17    |-17    |-1     |-1     |-1     |-1     |-1     
+// |-17    |-17    |-17    |-17    |-17    |-1     |-1     |-1     |-1     |-1
 // ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅
 // 000000400000-000000464000 .text
 // 000000464000-00000046d000 .data

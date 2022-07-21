@@ -48,7 +48,7 @@ static const unsigned char base64_dec_map[128] =
 #define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
 
 /*
- * Constant flow conditional assignment to unsigned char 
+ * Constant flow conditional assignment to unsigned char
 */
 forceinline void mbedtls_base64_cond_assign_uchar( unsigned char * dest,
                                                    const unsigned char * const src,

@@ -86,7 +86,7 @@ class TestFilemode:
 
     def get_mode(self, fname=TESTFN, lstat=True):
         if lstat:
-            st_mode = os.lstat(fname).st_mode 
+            st_mode = os.lstat(fname).st_mode
         else:
             st_mode = os.stat(fname).st_mode
         modestr = self.statmod.filemode(st_mode)

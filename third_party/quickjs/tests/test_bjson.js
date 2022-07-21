@@ -34,7 +34,7 @@ function toHex(a)
 
 function isArrayLike(a)
 {
-    return Array.isArray(a) || 
+    return Array.isArray(a) ||
         (a instanceof Uint8ClampedArray) ||
         (a instanceof Uint8Array) ||
         (a instanceof Uint16Array) ||
@@ -147,7 +147,7 @@ function bjson_test_reference()
 function bjson_test_all()
 {
     var obj;
-    
+
     bjson_test({x:1, y:2, if:3});
     bjson_test([1, 2, 3]);
     bjson_test([1.0, "aa", true, false, undefined, null, NaN, -Infinity, -0.0]);
@@ -174,7 +174,7 @@ function bjson_test_all()
 
     bjson_test(new Int32Array([123123, 222111, -32222]));
     bjson_test(new Float64Array([123123, 222111.5]));
-    
+
     /* tested with a circular reference */
     obj = {};
     obj.x = obj;

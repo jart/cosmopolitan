@@ -51,7 +51,7 @@
            ;; lea x@tlsgd(,%rbx,1),%rdi
            ;; call __tls_get_addr@plt
            "tlsgd"
-           "tlsld" 
+           "tlsld"
            "dtpmod"
            "dtpoff"
            "gottpoff"

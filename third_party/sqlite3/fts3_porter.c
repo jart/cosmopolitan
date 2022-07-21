@@ -83,7 +83,7 @@ static int porterDestroy(sqlite3_tokenizer *pTokenizer){
 /*
 ** Prepare to begin tokenizing a particular string.  The input
 ** string to be tokenized is zInput[0..nInput-1].  A cursor
-** used to incrementally tokenize this string is returned in 
+** used to incrementally tokenize this string is returned in
 ** *ppCursor.
 */
 static int porterOpen(
@@ -136,7 +136,7 @@ static const char cType[] = {
 /*
 ** isConsonant() and isVowel() determine if their first character in
 ** the string they point to is a consonant or a vowel, according
-** to Porter ruls.  
+** to Porter ruls.
 **
 ** A consonate is any letter other than 'a', 'e', 'i', 'o', or 'u'.
 ** 'Y' is a consonant unless it follows another consonant,
@@ -256,11 +256,11 @@ static int star_oh(const char *z){
 
 /*
 ** If the word ends with zFrom and xCond() is true for the stem
-** of the word that preceeds the zFrom ending, then change the 
+** of the word that preceeds the zFrom ending, then change the
 ** ending to zTo.
 **
 ** The input word *pz and zFrom are both in reverse order.  zTo
-** is in normal order. 
+** is in normal order.
 **
 ** Return TRUE if zFrom matches.  Return FALSE if zFrom does not
 ** match.  Not that TRUE is returned even if xCond() fails and
@@ -329,9 +329,9 @@ static void copy_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
 ** word contains digits, 3 bytes are taken from the beginning and
 ** 3 bytes from the end.  For long words without digits, 10 bytes
 ** are taken from each end.  US-ASCII case folding still applies.
-** 
-** If the input word contains not digits but does characters not 
-** in [a-zA-Z] then no stemming is attempted and this routine just 
+**
+** If the input word contains not digits but does characters not
+** in [a-zA-Z] then no stemming is attempted and this routine just
 ** copies the input into the input into the output with US-ASCII
 ** case folding.
 **
@@ -376,11 +376,11 @@ static void porter_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
     }
   }
 
-  /* Step 1b */  
+  /* Step 1b */
   z2 = z;
   if( stem(&z, "dee", "ee", m_gt_0) ){
     /* Do nothing.  The work was all in the test */
-  }else if( 
+  }else if(
      (stem(&z, "gni", "", hasVowel) || stem(&z, "de", "", hasVowel))
       && z!=z2
   ){
@@ -419,7 +419,7 @@ static void porter_stemmer(const char *zIn, int nIn, char *zOut, int *pnOut){
      stem(&z, "igol", "log", m_gt_0);
      break;
    case 'l':
-     if( !stem(&z, "ilb", "ble", m_gt_0) 
+     if( !stem(&z, "ilb", "ble", m_gt_0)
       && !stem(&z, "illa", "al", m_gt_0)
       && !stem(&z, "iltne", "ent", m_gt_0)
       && !stem(&z, "ile", "e", m_gt_0)

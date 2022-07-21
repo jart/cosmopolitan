@@ -139,7 +139,7 @@
 #include "third_party/sqlite3/vdbeInt.inc"
 /* clang-format off */
 
-/* 
+/*
 ** If SQLITE_DEBUG_SORTER_THREADS is defined, this module outputs various
 ** messages to stderr that may be helpful in understanding the performance
 ** characteristics of the sorter in multi-threaded mode.
@@ -168,7 +168,7 @@ typedef struct SorterList SorterList;       /* In-memory list of records */
 typedef struct IncrMerger IncrMerger;       /* Read & merge multiple PMAs */
 
 /*
-** A container for a temp file handle and the current amount of data 
+** A container for a temp file handle and the current amount of data
 ** stored in the file.
 */
 struct SorterFile {
@@ -208,17 +208,17 @@ struct SorterList {
 ** the MergeEngine.nTree variable.
 **
 ** The final (N/2) elements of aTree[] contain the results of comparing
-** pairs of PMA keys together. Element i contains the result of 
+** pairs of PMA keys together. Element i contains the result of
 ** comparing aReadr[2*i-N] and aReadr[2*i-N+1]. Whichever key is smaller, the
-** aTree element is set to the index of it. 
+** aTree element is set to the index of it.
 **
 ** For the purposes of this comparison, EOF is considered greater than any
 ** other key value. If the keys are equal (only possible with two EOF
 ** values), it doesn't matter which index is stored.
 **
-** The (N/4) elements of aTree[] that precede the final (N/2) described 
+** The (N/4) elements of aTree[] that precede the final (N/2) described
 ** above contains the index of the smallest of each block of 4 PmaReaders
-** And so on. So that aTree[1] contains the index of the PmaReader that 
+** And so on. So that aTree[1] contains the index of the PmaReader that
 ** currently points to the smallest key value. aTree[0] is unused.
 **
 ** Example:
@@ -234,7 +234,7 @@ struct SorterList {
 **
 **     aTree[] = { X, 5   0, 5    0, 3, 5, 6 }
 **
-** The current element is "Apple" (the value of the key indicated by 
+** The current element is "Apple" (the value of the key indicated by
 ** PmaReader 5). When the Next() operation is invoked, PmaReader 5 will
 ** be advanced to the next key in its segment. Say the next key is
 ** "Eggplant":
@@ -275,8 +275,8 @@ struct MergeEngine {
 ** each thread requries its own UnpackedRecord object to unpack records in
 ** as part of comparison operations.
 **
-** Before a background thread is launched, variable bDone is set to 0. Then, 
-** right before it exits, the thread itself sets bDone to 1. This is used for 
+** Before a background thread is launched, variable bDone is set to 0. Then,
+** right before it exits, the thread itself sets bDone to 1. This is used for
 ** two purposes:
 **
 **   1. When flushing the contents of memory to a level-0 PMA on disk, to
@@ -307,7 +307,7 @@ struct SortSubtask {
 
 
 /*
-** Main sorter structure. A single instance of this is allocated for each 
+** Main sorter structure. A single instance of this is allocated for each
 ** sorter cursor created by the VDBE.
 **
 ** mxKeysize:
@@ -363,21 +363,21 @@ struct PmaReader {
 };
 
 /*
-** Normally, a PmaReader object iterates through an existing PMA stored 
+** Normally, a PmaReader object iterates through an existing PMA stored
 ** within a temp file. However, if the PmaReader.pIncr variable points to
 ** an object of the following type, it may be used to iterate/merge through
 ** multiple PMAs simultaneously.
 **
-** There are two types of IncrMerger object - single (bUseThread==0) and 
-** multi-threaded (bUseThread==1). 
+** There are two types of IncrMerger object - single (bUseThread==0) and
+** multi-threaded (bUseThread==1).
 **
-** A multi-threaded IncrMerger object uses two temporary files - aFile[0] 
-** and aFile[1]. Neither file is allowed to grow to more than mxSz bytes in 
-** size. When the IncrMerger is initialized, it reads enough data from 
-** pMerger to populate aFile[0]. It then sets variables within the 
-** corresponding PmaReader object to read from that file and kicks off 
-** a background thread to populate aFile[1] with the next mxSz bytes of 
-** sorted record data from pMerger. 
+** A multi-threaded IncrMerger object uses two temporary files - aFile[0]
+** and aFile[1]. Neither file is allowed to grow to more than mxSz bytes in
+** size. When the IncrMerger is initialized, it reads enough data from
+** pMerger to populate aFile[0]. It then sets variables within the
+** corresponding PmaReader object to read from that file and kicks off
+** a background thread to populate aFile[1] with the next mxSz bytes of
+** sorted record data from pMerger.
 **
 ** When the PmaReader reaches the end of aFile[0], it blocks until the
 ** background thread has finished populating aFile[1]. It then exchanges
@@ -388,7 +388,7 @@ struct PmaReader {
 **
 ** A single-threaded IncrMerger does not open any temporary files of its
 ** own. Instead, it has exclusive access to mxSz bytes of space beginning
-** at offset iStartOff of file pTask->file2. And instead of using a 
+** at offset iStartOff of file pTask->file2. And instead of using a
 ** background thread to prepare data for the PmaReader, with a single
 ** threaded IncrMerger the allocate part of pTask->file2 is "refilled" with
 ** keys from pMerger by the calling thread whenever the PmaReader runs out
@@ -500,7 +500,7 @@ static int vdbePmaReadBlob(
 
   assert( p->aBuffer );
 
-  /* If there is no more data to be read from the buffer, read the next 
+  /* If there is no more data to be read from the buffer, read the next
   ** p->nBuffer bytes of data from the file into it. Or, if there are less
   ** than p->nBuffer bytes remaining in the PMA, read all remaining data.  */
   iBuf = p->iReadOff % p->nBuffer;
@@ -521,11 +521,11 @@ static int vdbePmaReadBlob(
     assert( rc!=SQLITE_IOERR_SHORT_READ );
     if( rc!=SQLITE_OK ) return rc;
   }
-  nAvail = p->nBuffer - iBuf; 
+  nAvail = p->nBuffer - iBuf;
 
   if( nByte<=nAvail ){
     /* The requested data is available in the in-memory buffer. In this
-    ** case there is no need to make a copy of the data, just return a 
+    ** case there is no need to make a copy of the data, just return a
     ** pointer into the buffer to the caller.  */
     *ppOut = &p->aBuffer[iBuf];
     p->iReadOff += nByte;
@@ -604,7 +604,7 @@ static int vdbePmaReadVarint(PmaReader *p, u64 *pnOut){
 
 /*
 ** Attempt to memory map file pFile. If successful, set *pp to point to the
-** new mapping and return SQLITE_OK. If the mapping is not attempted 
+** new mapping and return SQLITE_OK. If the mapping is not attempted
 ** (because the file is too large or the VFS layer is configured not to use
 ** mmap), return SQLITE_OK and set *pp to NULL.
 **
@@ -625,7 +625,7 @@ static int vdbeSorterMapFile(SortSubtask *pTask, SorterFile *pFile, u8 **pp){
 
 /*
 ** Attach PmaReader pReadr to file pFile (if it is not already attached to
-** that file) and seek it to offset iOff within the file.  Return SQLITE_OK 
+** that file) and seek it to offset iOff within the file.  Return SQLITE_OK
 ** if successful, or an SQLite error code if an error occurs.
 */
 static int vdbePmaReaderSeek(
@@ -715,11 +715,11 @@ static int vdbePmaReaderNext(PmaReader *pReadr){
 
 /*
 ** Initialize PmaReader pReadr to scan through the PMA stored in file pFile
-** starting at offset iStart and ending at offset iEof-1. This function 
-** leaves the PmaReader pointing to the first key in the PMA (or EOF if the 
+** starting at offset iStart and ending at offset iEof-1. This function
+** leaves the PmaReader pointing to the first key in the PMA (or EOF if the
 ** PMA is empty).
 **
-** If the pnByte parameter is NULL, then it is assumed that the file 
+** If the pnByte parameter is NULL, then it is assumed that the file
 ** contains a single PMA, and that that PMA omits the initial length varint.
 */
 static int vdbePmaReaderInit(
@@ -752,7 +752,7 @@ static int vdbePmaReaderInit(
 
 /*
 ** A version of vdbeSorterCompare() that assumes that it has already been
-** determined that the first field of key1 is equal to the first field of 
+** determined that the first field of key1 is equal to the first field of
 ** key2.
 */
 static int vdbeSorterCompareTail(
@@ -770,7 +770,7 @@ static int vdbeSorterCompareTail(
 }
 
 /*
-** Compare key1 (buffer pKey1, size nKey1 bytes) with key2 (buffer pKey2, 
+** Compare key1 (buffer pKey1, size nKey1 bytes) with key2 (buffer pKey2,
 ** size nKey2 bytes). Use (pTask->pKeyInfo) for the collation sequences
 ** used by the comparison. Return the result of the comparison.
 **
@@ -916,7 +916,7 @@ static int vdbeSorterCompareInt(
 ** is non-zero and the sorter is able to guarantee a stable sort, nField
 ** is used instead. This is used when sorting records for a CREATE INDEX
 ** statement. In this case, keys are always delivered to the sorter in
-** order of the primary key, which happens to be make up the final part 
+** order of the primary key, which happens to be make up the final part
 ** of the records being sorted. So if the sort is stable, there is never
 ** any reason to compare PK fields and they can be ignored for a small
 ** performance boost.
@@ -1016,7 +1016,7 @@ int sqlite3VdbeSorterInit(
       }
     }
 
-    if( pKeyInfo->nAllField<13 
+    if( pKeyInfo->nAllField<13
      && (pKeyInfo->aColl[0]==0 || pKeyInfo->aColl[0]==db->pDfltColl)
      && (pKeyInfo->aSortFlags[0] & KEYINFO_ORDER_BIGNULL)==0
     ){
@@ -1041,7 +1041,7 @@ static void vdbeSorterRecordFree(sqlite3 *db, SorterRecord *pRecord){
 }
 
 /*
-** Free all resources owned by the object indicated by argument pTask. All 
+** Free all resources owned by the object indicated by argument pTask. All
 ** fields of *pTask are zeroed before returning.
 */
 static void vdbeSortSubtaskCleanup(sqlite3 *db, SortSubtask *pTask){
@@ -1140,7 +1140,7 @@ static int vdbeSorterCreateThread(
 }
 
 /*
-** Join all outstanding threads launched by SorterWrite() to create 
+** Join all outstanding threads launched by SorterWrite() to create
 ** level-0 PMAs.
 */
 static int vdbeSorterJoinAll(VdbeSorter *pSorter, int rcin){
@@ -1149,10 +1149,10 @@ static int vdbeSorterJoinAll(VdbeSorter *pSorter, int rcin){
 
   /* This function is always called by the main user thread.
   **
-  ** If this function is being called after SorterRewind() has been called, 
+  ** If this function is being called after SorterRewind() has been called,
   ** it is possible that thread pSorter->aTask[pSorter->nTask-1].pThread
   ** is currently attempt to join one of the other threads. To avoid a race
-  ** condition where this thread also attempts to join the same object, join 
+  ** condition where this thread also attempts to join the same object, join
   ** thread pSorter->aTask[pSorter->nTask-1].pThread first. */
   for(i=pSorter->nTask-1; i>=0; i--){
     SortSubtask *pTask = &pSorter->aTask[i];
@@ -1324,8 +1324,8 @@ static int vdbeSorterOpenTempFile(
 }
 
 /*
-** If it has not already been allocated, allocate the UnpackedRecord 
-** structure at pTask->pUnpacked. Return SQLITE_OK if successful (or 
+** If it has not already been allocated, allocate the UnpackedRecord
+** structure at pTask->pUnpacked. Return SQLITE_OK if successful (or
 ** if no allocation was required), or SQLITE_NOMEM otherwise.
 */
 static int vdbeSortAllocUnpacked(SortSubtask *pTask){
@@ -1388,14 +1388,14 @@ static SorterCompare vdbeSorterGetCompare(VdbeSorter *p){
   if( p->typeMask==SORTER_TYPE_INTEGER ){
     return vdbeSorterCompareInt;
   }else if( p->typeMask==SORTER_TYPE_TEXT ){
-    return vdbeSorterCompareText; 
+    return vdbeSorterCompareText;
   }
   return vdbeSorterCompare;
 }
 
 /*
-** Sort the linked list of records headed at pTask->pList. Return 
-** SQLITE_OK if successful, or an SQLite error code (i.e. SQLITE_NOMEM) if 
+** Sort the linked list of records headed at pTask->pList. Return
+** SQLITE_OK if successful, or an SQLite error code (i.e. SQLITE_NOMEM) if
 ** an error occurs.
 */
 static int vdbeSorterSort(SortSubtask *pTask, SorterList *pList){
@@ -1440,8 +1440,8 @@ static int vdbeSorterSort(SortSubtask *pTask, SorterList *pList){
   }
   pList->pList = p;
 
-  assert( pTask->pUnpacked->errCode==SQLITE_OK 
-       || pTask->pUnpacked->errCode==SQLITE_NOMEM 
+  assert( pTask->pUnpacked->errCode==SQLITE_OK
+       || pTask->pUnpacked->errCode==SQLITE_NOMEM
   );
   return pTask->pUnpacked->errCode;
 }
@@ -1482,8 +1482,8 @@ static void vdbePmaWriteBlob(PmaWriter *p, u8 *pData, int nData){
     memcpy(&p->aBuffer[p->iBufEnd], &pData[nData-nRem], nCopy);
     p->iBufEnd += nCopy;
     if( p->iBufEnd==p->nBuffer ){
-      p->eFWErr = sqlite3OsWrite(p->pFd, 
-          &p->aBuffer[p->iBufStart], p->iBufEnd - p->iBufStart, 
+      p->eFWErr = sqlite3OsWrite(p->pFd,
+          &p->aBuffer[p->iBufStart], p->iBufEnd - p->iBufStart,
           p->iWriteOff + p->iBufStart
       );
       p->iBufStart = p->iBufEnd = 0;
@@ -1498,7 +1498,7 @@ static void vdbePmaWriteBlob(PmaWriter *p, u8 *pData, int nData){
 /*
 ** Flush any buffered data to disk and clean up the PMA-writer object.
 ** The results of using the PMA-writer after this call are undefined.
-** Return SQLITE_OK if flushing the buffered data succeeds or is not 
+** Return SQLITE_OK if flushing the buffered data succeeds or is not
 ** required. Otherwise, return an SQLite error code.
 **
 ** Before returning, set *piEof to the offset immediately following the
@@ -1507,8 +1507,8 @@ static void vdbePmaWriteBlob(PmaWriter *p, u8 *pData, int nData){
 static int vdbePmaWriterFinish(PmaWriter *p, i64 *piEof){
   int rc;
   if( p->eFWErr==0 && ALWAYS(p->aBuffer) && p->iBufEnd>p->iBufStart ){
-    p->eFWErr = sqlite3OsWrite(p->pFd, 
-        &p->aBuffer[p->iBufStart], p->iBufEnd - p->iBufStart, 
+    p->eFWErr = sqlite3OsWrite(p->pFd,
+        &p->aBuffer[p->iBufStart], p->iBufEnd - p->iBufStart,
         p->iWriteOff + p->iBufStart
     );
   }
@@ -1520,11 +1520,11 @@ static int vdbePmaWriterFinish(PmaWriter *p, i64 *piEof){
 }
 
 /*
-** Write value iVal encoded as a varint to the PMA. Return 
+** Write value iVal encoded as a varint to the PMA. Return
 ** SQLITE_OK if successful, or an SQLite error code if an error occurs.
 */
 static void vdbePmaWriteVarint(PmaWriter *p, u64 iVal){
-  int nByte; 
+  int nByte;
   u8 aByte[10];
   nByte = sqlite3PutVarint(aByte, iVal);
   vdbePmaWriteBlob(p, aByte, nByte);
@@ -1532,7 +1532,7 @@ static void vdbePmaWriteVarint(PmaWriter *p, u64 iVal){
 
 /*
 ** Write the current contents of in-memory linked-list pList to a level-0
-** PMA in the temp file belonging to sub-task pTask. Return SQLITE_OK if 
+** PMA in the temp file belonging to sub-task pTask. Return SQLITE_OK if
 ** successful, or an SQLite error code otherwise.
 **
 ** The format of a PMA is:
@@ -1540,8 +1540,8 @@ static void vdbePmaWriteVarint(PmaWriter *p, u64 iVal){
 **     * A varint. This varint contains the total number of bytes of content
 **       in the PMA (not including the varint itself).
 **
-**     * One or more records packed end-to-end in order of ascending keys. 
-**       Each record consists of a varint followed by a blob of data (the 
+**     * One or more records packed end-to-end in order of ascending keys.
+**       Each record consists of a varint followed by a blob of data (the
 **       key). The varint is the number of bytes in the blob of data.
 */
 static int vdbeSorterListToPMA(SortSubtask *pTask, SorterList *pList){
@@ -1550,7 +1550,7 @@ static int vdbeSorterListToPMA(SortSubtask *pTask, SorterList *pList){
   PmaWriter writer;               /* Object used to write to the file */
 
 #ifdef SQLITE_DEBUG
-  /* Set iSz to the expected size of file pTask->file after writing the PMA. 
+  /* Set iSz to the expected size of file pTask->file after writing the PMA.
   ** This is used by an assert() statement at the end of this function.  */
   i64 iSz = pList->szPMA + sqlite3VarintLen(pList->szPMA) + pTask->file.iEof;
 #endif
@@ -1703,7 +1703,7 @@ static int vdbeSorterFlushPMA(VdbeSorter *pSorter){
   SortSubtask *pTask = 0;    /* Thread context used to create new PMA */
   int nWorker = (pSorter->nTask-1);
 
-  /* Set the flag to indicate that at least one PMA has been written. 
+  /* Set the flag to indicate that at least one PMA has been written.
   ** Or will be, anyhow.  */
   pSorter->bUsePMA = 1;
 
@@ -1713,7 +1713,7 @@ static int vdbeSorterFlushPMA(VdbeSorter *pSorter){
   ** the background thread from a sub-tasks previous turn is still running,
   ** skip it. If the first (pSorter->nTask-1) sub-tasks are all still busy,
   ** fall back to using the final sub-task. The first (pSorter->nTask-1)
-  ** sub-tasks are prefered as they use background threads - the final 
+  ** sub-tasks are prefered as they use background threads - the final
   ** sub-task uses the main thread. */
   for(i=0; i<nWorker; i++){
     int iTest = (pSorter->iPrev + i + 1) % nWorker;
@@ -1794,14 +1794,14 @@ int sqlite3VdbeSorterWrite(
   ** If using the single large allocation mode (pSorter->aMemory!=0), then
   ** flush the contents of memory to a new PMA if (a) at least one value is
   ** already in memory and (b) the new value will not fit in memory.
-  ** 
+  **
   ** Or, if using separate allocations for each record, flush the contents
   ** of memory to a PMA if either of the following are true:
   **
-  **   * The total memory allocated for the in-memory list is greater 
+  **   * The total memory allocated for the in-memory list is greater
   **     than (page-size * cache-size), or
   **
-  **   * The total memory allocated for the in-memory list is greater 
+  **   * The total memory allocated for the in-memory list is greater
   **     than (page-size * 10) and sqlite3HeapNearlyFull() returns true.
   */
   nReq = pVal->n + sizeof(SorterRecord);
@@ -1940,11 +1940,11 @@ static int vdbeIncrBgPopulate(IncrMerger *pIncr){
 ** aFile[0] such that the PmaReader should start rereading it from the
 ** beginning.
 **
-** For single-threaded objects, this is accomplished by literally reading 
-** keys from pIncr->pMerger and repopulating aFile[0]. 
+** For single-threaded objects, this is accomplished by literally reading
+** keys from pIncr->pMerger and repopulating aFile[0].
 **
-** For multi-threaded objects, all that is required is to wait until the 
-** background thread is finished (if it is not already) and then swap 
+** For multi-threaded objects, all that is required is to wait until the
+** background thread is finished (if it is not already) and then swap
 ** aFile[0] and aFile[1] in place. If the contents of pMerger have not
 ** been exhausted, this function also launches a new background thread
 ** to populate the new aFile[1].
@@ -2084,7 +2084,7 @@ static void vdbeMergeEngineCompare(
 #define INCRINIT_TASK   1
 #define INCRINIT_ROOT   2
 
-/* 
+/*
 ** Forward reference required as the vdbeIncrMergeInit() and
 ** vdbePmaReaderIncrInit() routines are called mutually recursively when
 ** building a merge tree.
@@ -2093,7 +2093,7 @@ static int vdbePmaReaderIncrInit(PmaReader *pReadr, int eMode);
 
 /*
 ** Initialize the MergeEngine object passed as the second argument. Once this
-** function returns, the first key of merged data may be read from the 
+** function returns, the first key of merged data may be read from the
 ** MergeEngine object in the usual fashion.
 **
 ** If argument eMode is INCRINIT_ROOT, then it is assumed that any IncrMerge
@@ -2103,8 +2103,8 @@ static int vdbePmaReaderIncrInit(PmaReader *pReadr, int eMode);
 ** required is to call vdbePmaReaderNext() on each PmaReader to point it at
 ** its first key.
 **
-** Otherwise, if eMode is any value other than INCRINIT_ROOT, then use 
-** vdbePmaReaderIncrMergeInit() to initialize each PmaReader that feeds data 
+** Otherwise, if eMode is any value other than INCRINIT_ROOT, then use
+** vdbePmaReaderIncrMergeInit() to initialize each PmaReader that feeds data
 ** to pMerger.
 **
 ** SQLITE_OK is returned if successful, or an SQLite error code otherwise.
@@ -2159,19 +2159,19 @@ static int vdbeMergeEngineInit(
 ** object at (pReadr->pIncr).
 **
 ** If argument eMode is set to INCRINIT_NORMAL, then all PmaReaders
-** in the sub-tree headed by pReadr are also initialized. Data is then 
-** loaded into the buffers belonging to pReadr and it is set to point to 
+** in the sub-tree headed by pReadr are also initialized. Data is then
+** loaded into the buffers belonging to pReadr and it is set to point to
 ** the first key in its range.
 **
 ** If argument eMode is set to INCRINIT_TASK, then pReadr is guaranteed
 ** to be a multi-threaded PmaReader and this function is being called in a
-** background thread. In this case all PmaReaders in the sub-tree are 
+** background thread. In this case all PmaReaders in the sub-tree are
 ** initialized as for INCRINIT_NORMAL and the aFile[1] buffer belonging to
 ** pReadr is populated. However, pReadr itself is not set up to point
 ** to its first key. A call to vdbePmaReaderNext() is still required to do
-** that. 
+** that.
 **
-** The reason this function does not call vdbePmaReaderNext() immediately 
+** The reason this function does not call vdbePmaReaderNext() immediately
 ** in the INCRINIT_TASK case is that vdbePmaReaderNext() assumes that it has
 ** to block on thread (pTask->thread) before accessing aFile[1]. But, since
 ** this entire function is being run by thread (pTask->thread), that will
@@ -2227,12 +2227,12 @@ static int vdbePmaReaderIncrMergeInit(PmaReader *pReadr, int eMode){
   if( rc==SQLITE_OK && pIncr->bUseThread ){
     /* Use the current thread to populate aFile[1], even though this
     ** PmaReader is multi-threaded. If this is an INCRINIT_TASK object,
-    ** then this function is already running in background thread 
-    ** pIncr->pTask->thread. 
+    ** then this function is already running in background thread
+    ** pIncr->pTask->thread.
     **
-    ** If this is the INCRINIT_ROOT object, then it is running in the 
+    ** If this is the INCRINIT_ROOT object, then it is running in the
     ** main VDBE thread. But that is Ok, as that thread cannot return
-    ** control to the VDBE or proceed with anything useful until the 
+    ** control to the VDBE or proceed with anything useful until the
     ** first results are ready from this merger object anyway.
     */
     assert( eMode==INCRINIT_ROOT || eMode==INCRINIT_TASK );
@@ -2249,7 +2249,7 @@ static int vdbePmaReaderIncrMergeInit(PmaReader *pReadr, int eMode){
 
 #if SQLITE_MAX_WORKER_THREADS>0
 /*
-** The main routine for vdbePmaReaderIncrMergeInit() operations run in 
+** The main routine for vdbePmaReaderIncrMergeInit() operations run in
 ** background threads.
 */
 static void *vdbePmaReaderBgIncrInit(void *pCtx){
@@ -2267,8 +2267,8 @@ static void *vdbePmaReaderBgIncrInit(void *pCtx){
 ** (if pReadr->pIncr==0), then this function is a no-op. Otherwise, it invokes
 ** the vdbePmaReaderIncrMergeInit() function with the parameters passed to
 ** this routine to initialize the incremental merge.
-** 
-** If the IncrMerger object is multi-threaded (IncrMerger.bUseThread==1), 
+**
+** If the IncrMerger object is multi-threaded (IncrMerger.bUseThread==1),
 ** then a background thread is launched to call vdbePmaReaderIncrMergeInit().
 ** Or, if the IncrMerger is single threaded, the same function is called
 ** using the current thread.
@@ -2298,7 +2298,7 @@ static int vdbePmaReaderIncrInit(PmaReader *pReadr, int eMode){
 ** to NULL and return an SQLite error code.
 **
 ** When this function is called, *piOffset is set to the offset of the
-** first PMA to read from pTask->file. Assuming no error occurs, it is 
+** first PMA to read from pTask->file. Assuming no error occurs, it is
 ** set to the offset immediately following the last byte of the last
 ** PMA before returning. If an error does occur, then the final value of
 ** *piOffset is undefined.
@@ -2408,12 +2408,12 @@ static int vdbeSorterAddToTree(
 /*
 ** This function is called as part of a SorterRewind() operation on a sorter
 ** that has already written two or more level-0 PMAs to one or more temp
-** files. It builds a tree of MergeEngine/IncrMerger/PmaReader objects that 
+** files. It builds a tree of MergeEngine/IncrMerger/PmaReader objects that
 ** can be used to incrementally merge all PMAs on disk.
 **
 ** If successful, SQLITE_OK is returned and *ppOut set to point to the
 ** MergeEngine object at the root of the tree before returning. Or, if an
-** error occurs, an SQLite error code is returned and the final value 
+** error occurs, an SQLite error code is returned and the final value
 ** of *ppOut is undefined.
 */
 static int vdbeSorterMergeTreeBuild(
@@ -2425,8 +2425,8 @@ static int vdbeSorterMergeTreeBuild(
   int iTask;
 
 #if SQLITE_MAX_WORKER_THREADS>0
-  /* If the sorter uses more than one task, then create the top-level 
-  ** MergeEngine here. This MergeEngine will read data from exactly 
+  /* If the sorter uses more than one task, then create the top-level
+  ** MergeEngine here. This MergeEngine will read data from exactly
   ** one PmaReader per sub-task.  */
   assert( pSorter->bUseThreads || pSorter->nTask==1 );
   if( pSorter->nTask>1 ){
@@ -2535,7 +2535,7 @@ static int vdbeSorterSetupMerge(VdbeSorter *pSorter){
           }
           for(iTask=0; rc==SQLITE_OK && iTask<pSorter->nTask; iTask++){
             /* Check that:
-            **   
+            **
             **   a) The incremental merge object is configured to use the
             **      right task, and
             **   b) If it is using task (nTask-1), it is configured to run
@@ -2598,7 +2598,7 @@ int sqlite3VdbeSorterRewind(const VdbeCursor *pCsr, int *pbEof){
     return rc;
   }
 
-  /* Write the current in-memory list to a PMA. When the VdbeSorterWrite() 
+  /* Write the current in-memory list to a PMA. When the VdbeSorterWrite()
   ** function flushes the contents of memory to disk, it immediately always
   ** creates a new list consisting of a single key immediately afterwards.
   ** So the list is never empty at this point.  */
@@ -2610,7 +2610,7 @@ int sqlite3VdbeSorterRewind(const VdbeCursor *pCsr, int *pbEof){
 
   vdbeSorterRewindDebug("rewind");
 
-  /* Assuming no errors have occurred, set up a merger structure to 
+  /* Assuming no errors have occurred, set up a merger structure to
   ** incrementally read and merge all remaining PMAs.  */
   assert( pSorter->pReader==0 );
   if( rc==SQLITE_OK ){
@@ -2664,7 +2664,7 @@ int sqlite3VdbeSorterNext(sqlite3 *db, const VdbeCursor *pCsr){
 }
 
 /*
-** Return a pointer to a buffer owned by the sorter that contains the 
+** Return a pointer to a buffer owned by the sorter that contains the
 ** current key.
 */
 static void *vdbeSorterRowkey(

@@ -32,7 +32,7 @@
 **
 **   The PCache.pSynced variable is used to optimize searching for a dirty
 **   page to eject from the cache mid-transaction. It is better to eject
-**   a page that does not require a journal sync than one that does. 
+**   a page that does not require a journal sync than one that does.
 **   Therefore, pSynced is maintained so that it *almost* always points
 **   to either the oldest page in the pDirty/pDirtyTail list that has a
 **   clear PGHDR_NEED_SYNC flag or to a page that is older than this one
@@ -73,7 +73,7 @@ struct PCache {
     sqlite3_pcache_page *pLower;
     PgHdr *pPg;
     unsigned char *a;
-  
+
     if( sqlite3PcacheTrace<2 ) return;
     if( pCache->pCache==0 ) return;
     N = sqlite3PcachePagecount(pCache);
@@ -165,12 +165,12 @@ static void pcacheManageDirtyList(PgHdr *pPage, u8 addRemove){
   if( addRemove & PCACHE_DIRTYLIST_REMOVE ){
     assert( pPage->pDirtyNext || pPage==p->pDirtyTail );
     assert( pPage->pDirtyPrev || pPage==p->pDirty );
-  
+
     /* Update the PCache1.pSynced variable if necessary. */
     if( p->pSynced==pPage ){
       p->pSynced = pPage->pDirtyPrev;
     }
-  
+
     if( pPage->pDirtyNext ){
       pPage->pDirtyNext->pDirtyPrev = pPage->pDirtyPrev;
     }else{
@@ -180,7 +180,7 @@ static void pcacheManageDirtyList(PgHdr *pPage, u8 addRemove){
     if( pPage->pDirtyPrev ){
       pPage->pDirtyPrev->pDirtyNext = pPage->pDirtyNext;
     }else{
-      /* If there are now no dirty pages in the cache, set eCreate to 2. 
+      /* If there are now no dirty pages in the cache, set eCreate to 2.
       ** This is an optimization that allows sqlite3PcacheFetch() to skip
       ** searching for a dirty page to eject from the cache when it might
       ** otherwise have to.  */
@@ -209,11 +209,11 @@ static void pcacheManageDirtyList(PgHdr *pPage, u8 addRemove){
     p->pDirty = pPage;
 
     /* If pSynced is NULL and this page has a clear NEED_SYNC flag, set
-    ** pSynced to point to it. Checking the NEED_SYNC flag is an 
+    ** pSynced to point to it. Checking the NEED_SYNC flag is an
     ** optimization, as if pSynced points to a page with the NEED_SYNC
-    ** flag set sqlite3PcacheFetchStress() searches through all newer 
+    ** flag set sqlite3PcacheFetchStress() searches through all newer
     ** entries of the dirty-list for a page with NEED_SYNC clear anyway.  */
-    if( !p->pSynced 
+    if( !p->pSynced
      && 0==(pPage->flags&PGHDR_NEED_SYNC)   /*OPTIMIZATION-IF-FALSE*/
     ){
       p->pSynced = pPage;
@@ -254,7 +254,7 @@ static int numberOfCachePages(PCache *p){
 
 /*************************************************** General Interfaces ******
 **
-** Initialize and shutdown the page cache subsystem. Neither of these 
+** Initialize and shutdown the page cache subsystem. Neither of these
 ** functions are threadsafe.
 */
 int sqlite3PcacheInitialize(void){
@@ -281,8 +281,8 @@ int sqlite3PcacheSize(void){ return sizeof(PCache); }
 
 /*
 ** Create a new PCache object. Storage space to hold the object
-** has already been allocated and is passed in as the p pointer. 
-** The caller discovers how much space needs to be allocated by 
+** has already been allocated and is passed in as the p pointer.
+** The caller discovers how much space needs to be allocated by
 ** calling sqlite3PcacheSize().
 **
 ** szExtra is some extra space allocated for each page.  The first
@@ -394,7 +394,7 @@ sqlite3_pcache_page *sqlite3PcacheFetch(
 /*
 ** If the sqlite3PcacheFetch() routine is unable to allocate a new
 ** page because no clean pages are available for reuse and the cache
-** size limit has been reached, then this routine can be invoked to 
+** size limit has been reached, then this routine can be invoked to
 ** try harder to allocate a page.  This routine might invoke the stress
 ** callback to spill dirty pages to the journal.  It will then try to
 ** allocate the new page and will only fail to allocate a new page on
@@ -411,17 +411,17 @@ int sqlite3PcacheFetchStress(
   if( pCache->eCreate==2 ) return 0;
 
   if( sqlite3PcachePagecount(pCache)>pCache->szSpill ){
-    /* Find a dirty page to write-out and recycle. First try to find a 
+    /* Find a dirty page to write-out and recycle. First try to find a
     ** page that does not require a journal-sync (one with PGHDR_NEED_SYNC
-    ** cleared), but if that is not possible settle for any other 
+    ** cleared), but if that is not possible settle for any other
     ** unreferenced dirty page.
     **
     ** If the LRU page in the dirty list that has a clear PGHDR_NEED_SYNC
     ** flag is currently referenced, then the following may leave pSynced
     ** set incorrectly (pointing to other than the LRU page with NEED_SYNC
     ** cleared). This is Ok, as pSynced is just an optimization.  */
-    for(pPg=pCache->pSynced; 
-        pPg && (pPg->nRef || (pPg->flags&PGHDR_NEED_SYNC)); 
+    for(pPg=pCache->pSynced;
+        pPg && (pPg->nRef || (pPg->flags&PGHDR_NEED_SYNC));
         pPg=pPg->pDirtyPrev
     );
     pCache->pSynced = pPg;
@@ -431,7 +431,7 @@ int sqlite3PcacheFetchStress(
     if( pPg ){
       int rc;
 #ifdef SQLITE_LOG_CACHE_SPILL
-      sqlite3_log(SQLITE_FULL, 
+      sqlite3_log(SQLITE_FULL,
                   "spill page %d making room for %d - cache used: %d/%d",
                   pPg->pgno, pgno,
                   sqlite3GlobalConfig.pcache2.xPagecount(pCache->pCache),
@@ -616,7 +616,7 @@ void sqlite3PcacheClearSyncFlags(PCache *pCache){
 }
 
 /*
-** Change the page number of page p to newPgno. 
+** Change the page number of page p to newPgno.
 */
 void sqlite3PcacheMove(PgHdr *p, Pgno newPgno){
   PCache *pCache = p->pCache;
@@ -679,7 +679,7 @@ void sqlite3PcacheClose(PCache *pCache){
   sqlite3GlobalConfig.pcache2.xDestroy(pCache->pCache);
 }
 
-/* 
+/*
 ** Discard the contents of the cache.
 */
 void sqlite3PcacheClear(PCache *pCache){
@@ -770,7 +770,7 @@ PgHdr *sqlite3PcacheDirtyList(PCache *pCache){
   return pcacheSortDirtyList(pCache->pDirty);
 }
 
-/* 
+/*
 ** Return the total number of references to all pages held by the cache.
 **
 ** This is not the total number of pages referenced, but the sum of the
@@ -787,7 +787,7 @@ int sqlite3PcachePageRefcount(PgHdr *p){
   return p->nRef;
 }
 
-/* 
+/*
 ** Return the total number of pages in the cache.
 */
 int sqlite3PcachePagecount(PCache *pCache){
@@ -829,7 +829,7 @@ int sqlite3PcacheSetSpillsize(PCache *p, int mxPage){
     p->szSpill = mxPage;
   }
   res = numberOfCachePages(p);
-  if( res<p->szSpill ) res = p->szSpill; 
+  if( res<p->szSpill ) res = p->szSpill;
   return res;
 }
 
@@ -860,7 +860,7 @@ int sqlite3PCachePercentDirty(PCache *pCache){
 }
 
 #ifdef SQLITE_DIRECT_OVERFLOW_READ
-/* 
+/*
 ** Return true if there are one or more dirty pages in the cache. Else false.
 */
 int sqlite3PCacheIsDirty(PCache *pCache){

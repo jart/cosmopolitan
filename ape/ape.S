@@ -193,12 +193,12 @@ stub:	mov	$0x40,%dl		# *literally* dos
 	to a program as soon as its first sector is loaded. That gives
 	us control over user-facing latency, even though the next step
 	will generally be asking the BIOS to load more.
-	
+
 	The process is trivial enough that this entrypoint can support
 	handoffs from alternative program-loaders e.g. Grub and MS-DOS
 	so long as they either load our full program, or implement the
 	PC BIOS disk service API.
-	
+
 	Since so many different implementations of these APIs have been
 	built the last forty years these routines also canonicalize the
 	cpu and program state, as it is written in the System V ABI. */
@@ -910,7 +910,7 @@ ape_macho:
 │ αcτµαlly pδrταblε εxεcµταblε § the new technology                        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝
 	The Portable Executable Format
-	
+
 	@see https://docs.microsoft.com/en-us/windows/desktop/debug/pe-format
 	@see "The Portable Executable File Format from Top to Bottom",
 	     Randy Kath, Microsoft Developer Network Technology Group. */

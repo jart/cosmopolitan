@@ -159,7 +159,7 @@
     (LAMBDA (AND)
       (LAMBDA (A)
         (COND ((CDR A)
-               (CONS COND (CONS (CONS (CAR A) (CONS (AND (CDR A))))))) 
+               (CONS COND (CONS (CONS (CAR A) (CONS (AND (CDR A)))))))
               ((CAR A))))))))
 
 (DEFINE OR

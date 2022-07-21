@@ -182,7 +182,7 @@ static sqlite3_vfs apnd_vfs = {
   1024,                         /* mxPathname */
   0,                            /* pNext */
   "apndvfs",                    /* zName */
-  0,                            /* pAppData (set when registered) */ 
+  0,                            /* pAppData (set when registered) */
   apndOpen,                     /* xOpen */
   apndDelete,                   /* xDelete */
   apndAccess,                   /* xAccess */
@@ -235,9 +235,9 @@ static int apndClose(sqlite3_file *pFile){
 ** Read data from an apnd-file.
 */
 static int apndRead(
-  sqlite3_file *pFile, 
-  void *zBuf, 
-  int iAmt, 
+  sqlite3_file *pFile,
+  void *zBuf,
+  int iAmt,
   sqlite_int64 iOfst
 ){
   ApndFile *paf = (ApndFile *)pFile;
@@ -540,7 +540,7 @@ static int apndOpen(
   }
   if( apndIsOrdinaryDatabaseFile(sz, pBaseFile) ){
     /* The file being opened appears to be just an ordinary DB. Copy
-    ** the base dispatch-table so this instance mimics the base VFS. 
+    ** the base dispatch-table so this instance mimics the base VFS.
     */
     memmove(pApndFile, pBaseFile, pBaseVfs->szOsFile);
     return SQLITE_OK;
@@ -555,7 +555,7 @@ static int apndOpen(
     rc = SQLITE_CANTOPEN;
     pFile->pMethods = 0;
   }else{
-    /* Round newly added appendvfs location to #define'd page boundary. 
+    /* Round newly added appendvfs location to #define'd page boundary.
     ** Note that nothing has yet been written to the underlying file.
     ** The append mark will be written along with first content write.
     ** Until then, paf->iMark value indicates it is not yet written.
@@ -579,18 +579,18 @@ static int apndDelete(sqlite3_vfs *pVfs, const char *zPath, int dirSync){
 ** All other VFS methods are pass-thrus.
 */
 static int apndAccess(
-  sqlite3_vfs *pVfs, 
-  const char *zPath, 
-  int flags, 
+  sqlite3_vfs *pVfs,
+  const char *zPath,
+  int flags,
   int *pResOut
 ){
   return ORIGVFS(pVfs)->xAccess(ORIGVFS(pVfs), zPath, flags, pResOut);
 }
 
 static int apndFullPathname(
-  sqlite3_vfs *pVfs, 
-  const char *zPath, 
-  int nOut, 
+  sqlite3_vfs *pVfs,
+  const char *zPath,
+  int nOut,
   char *zOut
 ){
   return ORIGVFS(pVfs)->xFullPathname(ORIGVFS(pVfs),zPath,nOut,zOut);
@@ -651,13 +651,13 @@ static const char *apndNextSystemCall(sqlite3_vfs *pVfs, const char *zName){
   return ORIGVFS(pVfs)->xNextSystemCall(ORIGVFS(pVfs), zName);
 }
 
-/* 
+/*
 ** This routine is called when the extension is loaded.
 ** Register the new VFS.
 */
 int sqlite3_appendvfs_init(
-  sqlite3 *db, 
-  char **pzErrMsg, 
+  sqlite3 *db,
+  char **pzErrMsg,
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;

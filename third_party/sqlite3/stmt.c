@@ -171,7 +171,7 @@ static int stmtColumn(
     }
     default: {
       assert( i==STMT_COLUMN_MEM );
-      i = SQLITE_STMTSTATUS_MEMUSED + 
+      i = SQLITE_STMTSTATUS_MEMUSED +
             STMT_COLUMN_NSCAN - SQLITE_STMTSTATUS_FULLSCAN_STEP;
       /* Fall thru */
     }
@@ -211,11 +211,11 @@ static int stmtEof(sqlite3_vtab_cursor *cur){
 /*
 ** This method is called to "rewind" the stmt_cursor object back
 ** to the first row of output.  This method is always called at least
-** once prior to any call to stmtColumn() or stmtRowid() or 
+** once prior to any call to stmtColumn() or stmtRowid() or
 ** stmtEof().
 */
 static int stmtFilter(
-  sqlite3_vtab_cursor *pVtabCursor, 
+  sqlite3_vtab_cursor *pVtabCursor,
   int idxNum, const char *idxStr,
   int argc, sqlite3_value **argv
 ){
@@ -241,7 +241,7 @@ static int stmtBestIndex(
 }
 
 /*
-** This following structure defines all the methods for the 
+** This following structure defines all the methods for the
 ** stmt virtual table.
 */
 static sqlite3_module stmtModule = {
@@ -286,8 +286,8 @@ int sqlite3StmtVtabInit(sqlite3 *db){
 __declspec(dllexport)
 #endif
 int sqlite3_stmt_init(
-  sqlite3 *db, 
-  char **pzErrMsg, 
+  sqlite3 *db,
+  char **pzErrMsg,
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;

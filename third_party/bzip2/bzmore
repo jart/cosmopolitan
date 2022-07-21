@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Bzmore wrapped for bzip2, 
+# Bzmore wrapped for bzip2,
 # adapted from zmore by Philippe Troin <phil@fifi.org> for Debian GNU/Linux.
 
 PATH="/usr/bin:$PATH"; export PATH
@@ -43,7 +43,7 @@ else
 	if test $FIRST -eq 0; then
 		echo $n1 "--More--(Next file: $FILE)$n2"
 		stty $cb -echo 2>/dev/null
-		ANS=`dd bs=1 count=1 2>/dev/null` 
+		ANS=`dd bs=1 count=1 2>/dev/null`
 		stty $ncb echo 2>/dev/null
 		echo " "
 		if test "$ANS" = 'e' -o "$ANS" = 'q'; then

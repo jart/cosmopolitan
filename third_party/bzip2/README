@@ -79,7 +79,7 @@ unmodified with MS Visual C.  If you have difficulties building, you
 might want to read README.COMPILATION.PROBLEMS.
 
 At least using MS Visual C++ 6, you can build from the unmodified
-sources by issuing, in a command shell: 
+sources by issuing, in a command shell:
 
    nmake -f makefile.msc
 
@@ -103,12 +103,12 @@ Please read and be aware of the following:
 
 WARNING:
 
-   This program and library (attempts to) compress data by 
-   performing several non-trivial transformations on it.  
-   Unless you are 100% familiar with *all* the algorithms 
-   contained herein, and with the consequences of modifying them, 
-   you should NOT meddle with the compression or decompression 
-   machinery.  Incorrect changes can and very likely *will* 
+   This program and library (attempts to) compress data by
+   performing several non-trivial transformations on it.
+   Unless you are 100% familiar with *all* the algorithms
+   contained herein, and with the consequences of modifying them,
+   you should NOT meddle with the compression or decompression
+   machinery.  Incorrect changes can and very likely *will*
    lead to disastrous loss of data.
 
 
@@ -128,16 +128,16 @@ DISCLAIMER:
    PROGRAM UNLESS YOU ARE PREPARED TO ACCEPT THE POSSIBILITY, HOWEVER
    SMALL, THAT THE DATA WILL NOT BE RECOVERABLE.
 
-   That is not to say this program is inherently unreliable.  
-   Indeed, I very much hope the opposite is true.  bzip2/libbzip2 
+   That is not to say this program is inherently unreliable.
+   Indeed, I very much hope the opposite is true.  bzip2/libbzip2
    has been carefully constructed and extensively tested.
 
 
 PATENTS:
 
-   To the best of my knowledge, bzip2/libbzip2 does not use any 
-   patented algorithms.  However, I do not have the resources 
-   to carry out a patent search.  Therefore I cannot give any 
+   To the best of my knowledge, bzip2/libbzip2 does not use any
+   patented algorithms.  However, I do not have the resources
+   to carry out a patent search.  Therefore I cannot give any
    guarantee of the above statement.
 
 

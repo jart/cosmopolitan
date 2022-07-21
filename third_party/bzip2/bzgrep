@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Bzgrep wrapped for bzip2, 
+# Bzgrep wrapped for bzip2,
 # adapted from zgrep by Philippe Troin <phil@fifi.org> for Debian GNU/Linux.
 ## zgrep notice:
 ## zgrep -- a wrapper around a grep program that decompresses files as needed

@@ -5,11 +5,11 @@
 /*
 
     Compute probability of measured Chi Square value.
-    
+
     This code was developed by Gary Perlman of the Wang
     Institute (full citation below) and has been minimally
     modified for use in this program.
-    
+
 */
 
 #include "libc/math.h"

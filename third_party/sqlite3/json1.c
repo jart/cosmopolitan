@@ -220,7 +220,7 @@ static void jsonReset(JsonString *p){
 }
 
 
-/* Report an out-of-memory (OOM) condition 
+/* Report an out-of-memory (OOM) condition
 */
 static void jsonOom(JsonString *p){
   p->bErr = 1;
@@ -338,7 +338,7 @@ static void jsonAppendString(JsonString *p, const char *zIn, u32 N){
 }
 
 /*
-** Append a function parameter value to the JSON string under 
+** Append a function parameter value to the JSON string under
 ** construction.
 */
 static void jsonAppendValue(
@@ -383,7 +383,7 @@ static void jsonAppendValue(
 */
 static void jsonResult(JsonString *p){
   if( p->bErr==0 ){
-    sqlite3_result_text64(p->pCtx, p->zBuf, p->nUsed, 
+    sqlite3_result_text64(p->pCtx, p->zBuf, p->nUsed,
                           p->bStatic ? SQLITE_TRANSIENT : sqlite3_free,
                           SQLITE_UTF8);
     jsonZero(p);
@@ -626,7 +626,7 @@ static void jsonReturn(
       if( pNode->jnFlags & JNODE_RAW ){
         sqlite3_result_text(pCtx, pNode->u.zJContent, pNode->n,
                             SQLITE_TRANSIENT);
-      }else 
+      }else
 #endif
       assert( (pNode->jnFlags & JNODE_RAW)==0 );
       if( (pNode->jnFlags & JNODE_ESCAPE)==0 ){
@@ -1347,7 +1347,7 @@ static void jsonWrongNumArgs(
   char *zMsg = sqlite3_mprintf("json_%s() needs an odd number of arguments",
                                zFuncName);
   sqlite3_result_error(pCtx, zMsg, -1);
-  sqlite3_free(zMsg);     
+  sqlite3_free(zMsg);
 }
 
 /*
@@ -1434,7 +1434,7 @@ static void jsonTest1Func(
 
 /*
 ** Implementation of the json_QUOTE(VALUE) function.  Return a JSON value
-** corresponding to the SQL value input.  Mostly this means putting 
+** corresponding to the SQL value input.  Mostly this means putting
 ** double-quotes around strings and returning the unquoted string "null"
 ** when given a NULL input.
 */
@@ -1481,7 +1481,7 @@ static void jsonArrayFunc(
 ** json_array_length(JSON)
 ** json_array_length(JSON, PATH)
 **
-** Return the number of elements in the top-level JSON array.  
+** Return the number of elements in the top-level JSON array.
 ** Return 0 if the input is not a well-formed JSON array.
 */
 static void jsonArrayLengthFunc(
@@ -1974,7 +1974,7 @@ static void jsonGroupInverse(
       if( c=='}' || c==']' ) nNest--;
     }
   }
-  pStr->nUsed -= i;      
+  pStr->nUsed -= i;
   memmove(&z[1], &z[i+1], (size_t)pStr->nUsed-1);
 }
 #else
@@ -2090,7 +2090,7 @@ static int jsonEachConnect(
   UNUSED_PARAM(argv);
   UNUSED_PARAM(argc);
   UNUSED_PARAM(pAux);
-  rc = sqlite3_declare_vtab(db, 
+  rc = sqlite3_declare_vtab(db,
      "CREATE TABLE x(key,value,type,atom,id,parent,fullkey,path,"
                     "json HIDDEN,root HIDDEN)");
   if( rc==SQLITE_OK ){
@@ -2269,7 +2269,7 @@ static int jsonEachColumn(
       break;
     }
     case JEACH_ID: {
-      sqlite3_result_int64(ctx, 
+      sqlite3_result_int64(ctx,
          (sqlite3_int64)p->i + ((pThis->jnFlags & JNODE_LABEL)!=0));
       break;
     }
@@ -2589,7 +2589,7 @@ int sqlite3Json1Init(sqlite3 *db){
     { "json_tree",            &jsonTreeModule               },
   };
 #endif
-  static const int enc = 
+  static const int enc =
        SQLITE_UTF8 |
        SQLITE_DETERMINISTIC |
        SQLITE_INNOCUOUS;
@@ -2620,8 +2620,8 @@ int sqlite3Json1Init(sqlite3 *db){
 __declspec(dllexport)
 #endif
 int sqlite3_json_init(
-  sqlite3 *db, 
-  char **pzErrMsg, 
+  sqlite3 *db,
+  char **pzErrMsg,
   const sqlite3_api_routines *pApi
 ){
   SQLITE_EXTENSION_INIT2(pApi);

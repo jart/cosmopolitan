@@ -21,10 +21,10 @@ function handle_msg(e) {
 
 function worker_main() {
     var i;
-    
+
     parent.onmessage = handle_msg;
     for(i = 0; i < 10; i++) {
-        parent.postMessage({ type: "num", num: i }); 
+        parent.postMessage({ type: "num", num: i });
     }
 }
 

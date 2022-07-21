@@ -14,7 +14,7 @@ PORTTIME = -lporttime
 #--EndConfig
 
 #DEBUG = -C-W -C-Wall
-DEBUG = 
+DEBUG =
 
 #the following modules are optional. you will want to compile
 #everything you can, but you can ignore ones you don't have
@@ -31,8 +31,8 @@ scrap src/scrap.c $(SDL) $(SCRAP) $(DEBUG)
 _camera src/_camera.c src/camera_v4l2.c src/camera_v4l.c $(SDL) $(DEBUG)
 pypm src/pypm.c $(SDL) $(PORTMIDI) $(PORTTIME) $(DEBUG)
 
-GFX = src/SDL_gfx/SDL_gfxPrimitives.c 
-#GFX = src/SDL_gfx/SDL_gfxBlitFunc.c src/SDL_gfx/SDL_gfxPrimitives.c 
+GFX = src/SDL_gfx/SDL_gfxPrimitives.c
+#GFX = src/SDL_gfx/SDL_gfxBlitFunc.c src/SDL_gfx/SDL_gfxPrimitives.c
 gfxdraw src/gfxdraw.c $(SDL) $(GFX) $(DEBUG)
 
 

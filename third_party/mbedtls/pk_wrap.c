@@ -309,7 +309,7 @@ cleanup:
 static int eckey_sign_rs_wrap( void *ctx, mbedtls_md_type_t md_alg,
                                const unsigned char *hash, size_t hash_len,
                                unsigned char *sig, size_t *sig_len,
-                               int (*f_rng)(void *, unsigned char *, size_t), 
+                               int (*f_rng)(void *, unsigned char *, size_t),
                                void *p_rng, void *rs_ctx )
 {
     int ret = MBEDTLS_ERR_THIS_CORRUPTION;

@@ -83,7 +83,7 @@ static sqlite3_vfs memdb_vfs = {
   1024,                        /* mxPathname */
   0,                           /* pNext */
   "memdb",                     /* zName */
-  0,                           /* pAppData (set when registered) */ 
+  0,                           /* pAppData (set when registered) */
   memdbOpen,                   /* xOpen */
   0, /* memdbDelete, */        /* xDelete */
   memdbAccess,                 /* xAccess */
@@ -108,7 +108,7 @@ static const sqlite3_io_methods memdb_io_methods = {
   memdbSync,                       /* xSync */
   memdbFileSize,                   /* xFileSize */
   memdbLock,                       /* xLock */
-  memdbLock,                       /* xUnlock - same as xLock in this case */ 
+  memdbLock,                       /* xUnlock - same as xLock in this case */
   0, /* memdbCheckReservedLock, */ /* xCheckReservedLock */
   memdbFileControl,                /* xFileControl */
   0, /* memdbSectorSize,*/         /* xSectorSize */
@@ -142,9 +142,9 @@ static int memdbClose(sqlite3_file *pFile){
 ** Read data from an memdb-file.
 */
 static int memdbRead(
-  sqlite3_file *pFile, 
-  void *zBuf, 
-  int iAmt, 
+  sqlite3_file *pFile,
+  void *zBuf,
+  int iAmt,
   sqlite_int64 iOfst
 ){
   MemFile *p = (MemFile *)pFile;
@@ -212,7 +212,7 @@ static int memdbWrite(
 static int memdbTruncate(sqlite3_file *pFile, sqlite_int64 size){
   MemFile *p = (MemFile *)pFile;
   if( NEVER(size>p->sz) ) return SQLITE_FULL;
-  p->sz = size; 
+  p->sz = size;
   return SQLITE_OK;
 }
 
@@ -237,7 +237,7 @@ static int memdbFileSize(sqlite3_file *pFile, sqlite_int64 *pSize){
 */
 static int memdbLock(sqlite3_file *pFile, int eLock){
   MemFile *p = (MemFile *)pFile;
-  if( eLock>SQLITE_LOCK_SHARED 
+  if( eLock>SQLITE_LOCK_SHARED
    && (p->mFlags & SQLITE_DESERIALIZE_READONLY)!=0
   ){
     return SQLITE_READONLY;
@@ -295,7 +295,7 @@ static int memdbSectorSize(sqlite3_file *pFile){
 ** Return the device characteristic flags supported by an memdb-file.
 */
 static int memdbDeviceCharacteristics(sqlite3_file *pFile){
-  return SQLITE_IOCAP_ATOMIC | 
+  return SQLITE_IOCAP_ATOMIC |
          SQLITE_IOCAP_POWERSAFE_OVERWRITE |
          SQLITE_IOCAP_SAFE_APPEND |
          SQLITE_IOCAP_SEQUENTIAL;
@@ -367,9 +367,9 @@ static int memdbDelete(sqlite3_vfs *pVfs, const char *zPath, int dirSync){
 ** With memdb, no files ever exist on disk.  So always return false.
 */
 static int memdbAccess(
-  sqlite3_vfs *pVfs, 
-  const char *zPath, 
-  int flags, 
+  sqlite3_vfs *pVfs,
+  const char *zPath,
+  int flags,
   int *pResOut
 ){
   *pResOut = 0;
@@ -382,9 +382,9 @@ static int memdbAccess(
 ** of at least (INST_MAX_PATHNAME+1) bytes.
 */
 static int memdbFullPathname(
-  sqlite3_vfs *pVfs, 
-  const char *zPath, 
-  int nOut, 
+  sqlite3_vfs *pVfs,
+  const char *zPath,
+  int nOut,
   char *zOut
 ){
   sqlite3_snprintf(nOut, zOut, "%s", zPath);
@@ -400,7 +400,7 @@ static void *memdbDlOpen(sqlite3_vfs *pVfs, const char *zPath){
 
 /*
 ** Populate the buffer zErrMsg (size nByte bytes) with a human readable
-** utf-8 string describing the most recent error encountered associated 
+** utf-8 string describing the most recent error encountered associated
 ** with dynamic libraries.
 */
 static void memdbDlError(sqlite3_vfs *pVfs, int nByte, char *zErrMsg){
@@ -422,7 +422,7 @@ static void memdbDlClose(sqlite3_vfs *pVfs, void *pHandle){
 }
 
 /*
-** Populate the buffer pointed to by zBufOut with nByte bytes of 
+** Populate the buffer pointed to by zBufOut with nByte bytes of
 ** random data.
 */
 static int memdbRandomness(sqlite3_vfs *pVfs, int nByte, char *zBufOut){
@@ -430,7 +430,7 @@ static int memdbRandomness(sqlite3_vfs *pVfs, int nByte, char *zBufOut){
 }
 
 /*
-** Sleep for nMicro microseconds. Return the number of microseconds 
+** Sleep for nMicro microseconds. Return the number of microseconds
 ** actually slept.
 */
 static int memdbSleep(sqlite3_vfs *pVfs, int nMicro){
@@ -536,7 +536,7 @@ unsigned char *sqlite3_serialize(
           }else{
             memset(pTo, 0, szPage);
           }
-          sqlite3PagerUnref(pPage);       
+          sqlite3PagerUnref(pPage);
         }
       }
     }
@@ -575,7 +575,7 @@ int sqlite3_deserialize(
   if( iDb<0 ){
     rc = SQLITE_ERROR;
     goto end_deserialize;
-  }    
+  }
   zSql = sqlite3_mprintf("ATTACH x AS %Q", zSchema);
   if( zSql==0 ){
     rc = SQLITE_NOMEM;
@@ -617,7 +617,7 @@ end_deserialize:
   return rc;
 }
 
-/* 
+/*
 ** This routine is called when the extension is loaded.
 ** Register the new VFS.
 */

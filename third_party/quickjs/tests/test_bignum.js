@@ -94,7 +94,7 @@ function test_bigint1()
 
     r = 1n << 31n;
     assert(r, 2147483648n, "1 << 31n === 2147483648n");
-    
+
     r = 1n << 32n;
     assert(r, 4294967296n, "1 << 32n === 4294967296n");
 }
@@ -150,7 +150,7 @@ function test_bigint_ext()
 function test_bigfloat()
 {
     var e, a, b, sqrt2;
-    
+
     assert(typeof 1n === "bigint");
     assert(typeof 1l === "bigfloat");
     assert(1 == 1.0l);
@@ -164,7 +164,7 @@ function test_bigfloat()
 
     test_less(2.1, 3l);
     test_eq(Math.sqrt(9), 3l);
-    
+
     test_less(2n, 3l);
     test_eq(3n, 3l);
 
@@ -174,7 +174,7 @@ function test_bigfloat()
     assert(a === BigFloat.parseFloat("0x1.6a09e667f3bcc908b2fb1366ea957d3e", 0, e));
     assert(e.inexact === true);
     assert(BigFloat.fpRound(a) == 0x1.6a09e667f3bcc908b2fb1366ea95l);
-    
+
     b = BigFloatEnv.setPrec(BigFloat.sqrt.bind(null, 2), 128);
     assert(a === b);
 
@@ -188,7 +188,7 @@ function test_bigfloat()
     assert(BigFloat.exp(0.2l) === 1.2214027581601698339210719946396742l);
     assert(BigFloat.log(3l) === 1.0986122886681096913952452369225256l);
     assert(BigFloat.pow(2.1l, 1.6l) === 3.277561666451861947162828744873745l);
-    
+
     assert(BigFloat.sin(-1l) === -0.841470984807896506652502321630299l);
     assert(BigFloat.cos(1l) === 0.5403023058681397174009366074429766l);
     assert(BigFloat.tan(0.1l) === 0.10033467208545054505808004578111154l);
@@ -241,16 +241,16 @@ function test_bigdecimal()
     assert(1m !== 2m);
     test_less(1m, 2m);
     test_eq(2m, 2m);
-    
+
     test_less(1, 2m);
     test_eq(2, 2m);
 
     test_less(1.1, 2m);
     test_eq(Math.sqrt(4), 2m);
-    
+
     test_less(2n, 3m);
     test_eq(3n, 3m);
-    
+
     assert(BigDecimal("1234.1") === 1234.1m);
     assert(BigDecimal("    1234.1") === 1234.1m);
     assert(BigDecimal("    1234.1  ") === 1234.1m);
@@ -272,7 +272,7 @@ function test_bigdecimal()
     assert(1234.5m ** 3m === 1881365963.625m);
     assertThrows(RangeError, () => { 2m ** 3.1m } );
     assertThrows(RangeError, () => { 2m ** -3m } );
-    
+
     assert(BigDecimal.sqrt(2m,
                        { roundingMode: "half-even",
                          maximumSignificantDigits: 4 }) === 1.414m);
@@ -282,7 +282,7 @@ function test_bigdecimal()
     assert(BigDecimal.sqrt(0.002m,
                        { roundingMode: "half-even",
                          maximumFractionDigits: 3 }) === 0.045m);
-    
+
     assert(BigDecimal.round(3.14159m,
                        { roundingMode: "half-even",
                          maximumFractionDigits: 3 }) === 3.142m);

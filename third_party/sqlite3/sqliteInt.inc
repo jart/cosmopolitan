@@ -36,10 +36,10 @@
 **
 **    PREVENTS-HARMLESS-OVERREAD  - This branch prevents a buffer overread
 **                                  that would be harmless and undetectable
-**                                  if it did occur.  
+**                                  if it did occur.
 **
 ** In all cases, the special comment must be enclosed in the usual
-** slash-asterisk...asterisk-slash comment marks, with no spaces between the 
+** slash-asterisk...asterisk-slash comment marks, with no spaces between the
 ** asterisks and the comment text.
 */
 
@@ -673,7 +673,7 @@
 #endif
 
 /*
-** The compile-time options SQLITE_MMAP_READWRITE and 
+** The compile-time options SQLITE_MMAP_READWRITE and
 ** SQLITE_ENABLE_BATCH_ATOMIC_WRITE are not compatible with one another.
 ** You must choose one or the other (or neither) but not both.
 */
@@ -1821,7 +1821,7 @@ struct FuncDestructor {
 #define INLINEFUNC_coalesce             0
 #define INLINEFUNC_implies_nonnull_row  1
 #define INLINEFUNC_expr_implies_expr    2
-#define INLINEFUNC_expr_compare         3      
+#define INLINEFUNC_expr_compare         3
 #define INLINEFUNC_affinity             4
 #define INLINEFUNC_iif                  5
 #define INLINEFUNC_unlikely            99  /* Default case */
@@ -1869,7 +1869,7 @@ struct FuncDestructor {
 **   PURE_DATE(zName, nArg, iArg, bNC, xFunc)
 **     Used for "pure" date/time functions, this macro is like DFUNCTION
 **     except that it does set the SQLITE_FUNC_CONSTANT flags.  iArg is
-**     ignored and the user-data for these functions is set to an 
+**     ignored and the user-data for these functions is set to an
 **     arbitrary non-NULL pointer.  The bNC parameter is not used.
 **
 **   AGGREGATE(zName, nArg, iArg, bNC, xStep, xFinal)
@@ -3083,7 +3083,7 @@ struct NameContext {
 ** conflict-target clause.)  The pUpsertTargetWhere is the optional
 ** WHERE clause used to identify partial unique indexes.
 **
-** pUpsertSet is the list of column=expr terms of the UPDATE statement. 
+** pUpsertSet is the list of column=expr terms of the UPDATE statement.
 ** The pUpsertSet field is NULL for a ON CONFLICT DO NOTHING.  The
 ** pUpsertWhere is the WHERE clause for the UPDATE and is NULL if the
 ** WHERE clause is omitted.
@@ -3563,7 +3563,7 @@ struct AuthContext {
 #define OPFLAG_SAVEPOSITION  0x02    /* OP_Delete/Insert: save cursor pos */
 #define OPFLAG_AUXDELETE     0x04    /* OP_Delete: index in a DELETE op */
 #define OPFLAG_NOCHNG_MAGIC  0x6d    /* OP_MakeRecord: serialtype 10 is ok */
-#define OPFLAG_PREFORMAT     0x80    /* OP_Insert uses preformatted cell */ 
+#define OPFLAG_PREFORMAT     0x80    /* OP_Insert uses preformatted cell */
 
 /*
  * Each trigger present in the database schema is stored as an instance of
@@ -4784,10 +4784,10 @@ int sqlite3KeyInfoIsWriteable(KeyInfo*);
 #endif
 int sqlite3CreateFunc(sqlite3 *, const char *, int, int, void *,
   void (*)(sqlite3_context*,int,sqlite3_value **),
-  void (*)(sqlite3_context*,int,sqlite3_value **), 
+  void (*)(sqlite3_context*,int,sqlite3_value **),
   void (*)(sqlite3_context*),
   void (*)(sqlite3_context*),
-  void (*)(sqlite3_context*,int,sqlite3_value **), 
+  void (*)(sqlite3_context*,int,sqlite3_value **),
   FuncDestructor *pDestructor
 );
 void sqlite3NoopDestructor(void*);

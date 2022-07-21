@@ -469,7 +469,7 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
         *olen = ilen;
 
         if( ( ret = ctx->cipher_info->base->ecb_func( ctx->cipher_ctx,
-                                                      ctx->operation, 
+                                                      ctx->operation,
                                                       input, output ) ) )
         {
             return( ret );

@@ -51,11 +51,11 @@ Certificate:
                     a2:d5
                 Exponent: 65537 (0x10001)
         X509v3 extensions:
-            X509v3 Basic Constraints: 
+            X509v3 Basic Constraints:
                 CA:TRUE
-            X509v3 Subject Key Identifier: 
+            X509v3 Subject Key Identifier:
                 B4:5A:E4:A5:B3:DE:D2:52:F6:B9:D5:A6:95:0F:EB:3E:BC:C7:FD:FF
-            X509v3 Authority Key Identifier: 
+            X509v3 Authority Key Identifier:
                 keyid:B4:5A:E4:A5:B3:DE:D2:52:F6:B9:D5:A6:95:0F:EB:3E:BC:C7:FD:FF
                 DirName:/C=NL/O=PolarSSL/CN=PolarSSL Test CA
                 serial:00

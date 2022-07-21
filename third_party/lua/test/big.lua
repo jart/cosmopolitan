@@ -7,7 +7,7 @@ end
 
 print "testing large tables"
 
-local debug = require"debug" 
+local debug = require"debug"
 
 local lim = 2^18 + 1000
 local prog = { "local y = {0" }
@@ -46,7 +46,7 @@ getmetatable(env).__newindex = function () end
 local e, m = pcall(f)
 assert(not e and m:find("global 'X'"))
 
--- errors in metamethods 
+-- errors in metamethods
 getmetatable(env).__newindex = function () error("hi") end
 local e, m = xpcall(f, debug.traceback)
 assert(not e and m:find("'newindex'"))
@@ -55,7 +55,7 @@ f, X = nil
 
 coroutine.yield'b'
 
-if 2^32 == 0 then   -- (small integers) {   
+if 2^32 == 0 then   -- (small integers) {
 
 print "testing string length overflow"
 

@@ -60,10 +60,10 @@ function test_integer()
 
     r = 1 << 31;
     assert(r, 2147483648, "1 << 31 === 2147483648");
-    
+
     r = 1 << 32;
     assert(r, 4294967296, "1 << 32 === 4294967296");
-    
+
     r = (1 << 31) < 0;
     assert(r, false, "(1 << 31) < 0 === false");
 
@@ -115,7 +115,7 @@ function test_fraction()
 function test_mod()
 {
     var a, b, p;
-    
+
     a = Mod(3, 101);
     b = Mod(-1, 101);
     assert((a + b) == Mod(2, 101));
@@ -131,7 +131,7 @@ function test_polynomial()
     var a, b, q, r, t, i;
     a = (1 + X) ^ 4;
     assert(a == X^4+4*X^3+6*X^2+4*X+1);
-    
+
     r = (1 + X);
     q = (1+X+X^2);
     b = (1 - X^2);

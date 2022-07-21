@@ -36,7 +36,7 @@
 ** When an fts3 table is created, it passes any arguments passed to
 ** the tokenizer clause of the CREATE VIRTUAL TABLE statement to the
 ** sqlite3_tokenizer_module.xCreate() function of the requested tokenizer
-** implementation. The xCreate() function in turn returns an 
+** implementation. The xCreate() function in turn returns an
 ** sqlite3_tokenizer structure representing the specific tokenizer to
 ** be used for the fts3 table (customized by the tokenizer clause arguments).
 **
@@ -68,7 +68,7 @@ struct sqlite3_tokenizer_module {
   ** then argc is set to 2, and the argv[] array contains pointers
   ** to the strings "arg1" and "arg2".
   **
-  ** This method should return either SQLITE_OK (0), or an SQLite error 
+  ** This method should return either SQLITE_OK (0), or an SQLite error
   ** code. If SQLITE_OK is returned, then *ppTokenizer should be set
   ** to point at the newly created tokenizer structure. The generic
   ** sqlite3_tokenizer.pModule variable should not be initialized by
@@ -89,7 +89,7 @@ struct sqlite3_tokenizer_module {
   /*
   ** Create a tokenizer cursor to tokenize an input buffer. The caller
   ** is responsible for ensuring that the input buffer remains valid
-  ** until the cursor is closed (using the xClose() method). 
+  ** until the cursor is closed (using the xClose() method).
   */
   int (*xOpen)(
     sqlite3_tokenizer *pTokenizer,       /* Tokenizer object */
@@ -98,7 +98,7 @@ struct sqlite3_tokenizer_module {
   );
 
   /*
-  ** Destroy an existing tokenizer cursor. The fts3 module calls this 
+  ** Destroy an existing tokenizer cursor. The fts3 module calls this
   ** method exactly once for each successful call to xOpen().
   */
   int (*xClose)(sqlite3_tokenizer_cursor *pCursor);
@@ -109,7 +109,7 @@ struct sqlite3_tokenizer_module {
   ** "OUT" variables identified below, or SQLITE_DONE to indicate that
   ** the end of the buffer has been reached, or an SQLite error code.
   **
-  ** *ppToken should be set to point at a buffer containing the 
+  ** *ppToken should be set to point at a buffer containing the
   ** normalized version of the token (i.e. after any case-folding and/or
   ** stemming has been performed). *pnBytes should be set to the length
   ** of this buffer in bytes. The input text that generated the token is
@@ -121,7 +121,7 @@ struct sqlite3_tokenizer_module {
   **
   ** The buffer *ppToken is set to point at is managed by the tokenizer
   ** implementation. It is only required to be valid until the next call
-  ** to xNext() or xClose(). 
+  ** to xNext() or xClose().
   */
   /* TODO(shess) current implementation requires pInput to be
   ** nul-terminated.  This should either be fixed, or pInput/nBytes
@@ -139,7 +139,7 @@ struct sqlite3_tokenizer_module {
   ** Methods below this point are only available if iVersion>=1.
   */
 
-  /* 
+  /*
   ** Configure the language id of a tokenizer cursor.
   */
   int (*xLanguageid)(sqlite3_tokenizer_cursor *pCsr, int iLangid);

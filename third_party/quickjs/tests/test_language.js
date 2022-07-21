@@ -68,10 +68,10 @@ function test_op1()
 
     r = 1 << 31;
     assert(r, -2147483648, "1 << 31 === -2147483648");
-    
+
     r = 1 << 32;
     assert(r, 1, "1 << 32 === 1");
-    
+
     r = (1 << 31) < 0;
     assert(r, true, "(1 << 31) < 0 === true");
 
@@ -113,7 +113,7 @@ function test_cvt()
     assert(("12345" | 0) === 12345);
     assert(("0x12345" | 0) === 0x12345);
     assert(((4294967296 * 3 - 4) | 0) === -4);
-    
+
     assert(("12345" >>> 0) === 12345);
     assert(("0x12345" >>> 0) === 0x12345);
     assert((NaN >>> 0) === 0);
@@ -140,7 +140,7 @@ function test_eq()
 function test_inc_dec()
 {
     var a, r;
-    
+
     a = 1;
     r = a++;
     assert(r === 1 && a === 2, true, "++");
@@ -168,19 +168,19 @@ function test_inc_dec()
     a = [true];
     a[0]++;
     assert(a[0], 2, "++");
-    
+
     a = {x:true};
     r = a.x++;
     assert(r === 1 && a.x === 2, true, "++");
-    
+
     a = {x:true};
     r = a.x--;
     assert(r === 1 && a.x === 0, true, "--");
-    
+
     a = [true];
     r = a[0]++;
     assert(r === 1 && a[0] === 2, true, "++");
-    
+
     a = [true];
     r = a[0]--;
     assert(r === 1 && a[0] === 0, true, "--");
@@ -212,7 +212,7 @@ function test_op2()
     assert((typeof Object), "function", "typeof");
     assert((typeof null), "object", "typeof");
     assert((typeof unknown_var), "undefined", "typeof");
-    
+
     a = {x: 1, if: 2, async: 3};
     assert(a.if === 2);
     assert(a.async === 3);
@@ -225,7 +225,7 @@ function test_delete()
     a = {x: 1, y: 1};
     assert((delete a.x), true, "delete");
     assert(("x" in a), false, "delete");
-    
+
     /* the following are not tested by test262 */
     assert(delete "abc"[100], true);
 
@@ -310,7 +310,7 @@ function test_class()
     o = new C();
     assert(o.f() === 1);
     assert(o.x === 10);
-    
+
     assert(D.F() === -1);
     assert(D.G() === -2);
     assert(D.H() === -1);
@@ -364,7 +364,7 @@ function test_regexp_skip()
     var a, b;
     [a, b = /abc\(/] = [1];
     assert(a === 1);
-    
+
     [a, b =/abc\(/] = [2];
     assert(a === 2);
 }
@@ -409,7 +409,7 @@ function test_argument_scope()
 {
     var f;
     var c = "global";
-    
+
     f = function(a = eval("var arguments")) {};
     assert_throws(SyntaxError, f);
 
@@ -480,7 +480,7 @@ function test_function_expr_name()
 
     /* non strict mode test : assignment to the function name silently
        fails */
-    
+
     f = function myfunc() {
         myfunc = 1;
         return myfunc;
@@ -501,7 +501,7 @@ function test_function_expr_name()
         return myfunc;
     };
     assert(f(), f);
-    
+
     /* strict mode test : assignment to the function name raises a
        TypeError exception */
 

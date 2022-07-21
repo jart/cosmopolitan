@@ -312,7 +312,7 @@ cleanup:
  * Pick a random R in the range [2, M) for blinding purposes
  */
 static int dhm_random_below( mbedtls_mpi *R, const mbedtls_mpi *M,
-                             int (*f_rng)(void *, unsigned char *, size_t), 
+                             int (*f_rng)(void *, unsigned char *, size_t),
                              void *p_rng )
 {
     int ret, count;
@@ -342,7 +342,7 @@ cleanup:
  *  Berlin Heidelberg, 1996. p. 104-113.
  */
 static int dhm_update_blinding( mbedtls_dhm_context *ctx,
-                                int (*f_rng)(void *, unsigned char *, size_t), 
+                                int (*f_rng)(void *, unsigned char *, size_t),
                                 void *p_rng )
 {
     int ret;

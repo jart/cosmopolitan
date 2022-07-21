@@ -69,7 +69,7 @@ static int bytecodevtabConnect(
       "p4 TEXT,"
       "p5 INT,"
       "comment TEXT,"
-      "subprog TEXT," 
+      "subprog TEXT,"
       "stmt HIDDEN"
     ");",
 
@@ -79,7 +79,7 @@ static int bytecodevtabConnect(
       "schema TEXT,"
       "name TEXT,"
       "wr INT,"
-      "subprog TEXT," 
+      "subprog TEXT,"
       "stmt HIDDEN"
    ");"
   };
@@ -165,7 +165,7 @@ static int bytecodevtabNext(sqlite3_vtab_cursor *cur){
     pCur->zSchema = 0;
   }
   rc = sqlite3VdbeNextOpcode(
-           (Vdbe*)pCur->pStmt, 
+           (Vdbe*)pCur->pStmt,
            pCur->showSubprograms ? &pCur->sub : 0,
            pTab->bTablesUsed,
            &pCur->iRowid,
@@ -312,7 +312,7 @@ static int bytecodevtabRowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid){
 **    idxNum==1     means show only the main bytecode and omit subprograms.
 */
 static int bytecodevtabFilter(
-  sqlite3_vtab_cursor *pVtabCursor, 
+  sqlite3_vtab_cursor *pVtabCursor,
   int idxNum, const char *idxStr,
   int argc, sqlite3_value **argv
 ){
@@ -381,7 +381,7 @@ static int bytecodevtabBestIndex(
 }
 
 /*
-** This following structure defines all the methods for the 
+** This following structure defines all the methods for the
 ** virtual table.
 */
 static sqlite3_module bytecodevtabModule = {

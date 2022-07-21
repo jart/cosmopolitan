@@ -289,7 +289,7 @@ precision.
 Otherwise, the number is rounded to nearest with ties to even using
 the global precision. It is then converted to string using the minimum
 number of digits so that its conversion back to a floating point using
-the global precision and round to nearest gives the same number. 
+the global precision and round to nearest gives the same number.
 
 @end itemize
 

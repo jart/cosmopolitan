@@ -1643,9 +1643,9 @@ reprompt:
         UserStop();
 #endif
     } /* end for-loop (i:  files in current block) */
- 
+
     return error_in_archive;
- 
+
 } /* end function extract_or_test_entrylistw() */
 
 

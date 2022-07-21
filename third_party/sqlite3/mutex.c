@@ -32,7 +32,7 @@ static SQLITE_WSD int mutexIsInit = 0;
 /*
 ** This block (enclosed by SQLITE_ENABLE_MULTITHREADED_CHECKS) contains
 ** the implementation of a wrapper around the system default mutex
-** implementation (sqlite3DefaultMutex()). 
+** implementation (sqlite3DefaultMutex()).
 **
 ** Most calls are passed directly through to the underlying default
 ** mutex implementation. Except, if a mutex is configured by calling
@@ -43,7 +43,7 @@ static SQLITE_WSD int mutexIsInit = 0;
 ** apps that usually use SQLITE_CONFIG_MULTITHREAD mode.
 */
 
-/* 
+/*
 ** Type for all mutexes used when SQLITE_ENABLE_MULTITHREADED_CHECKS
 ** is defined. Variable CheckMutex.mutex is a pointer to the real mutex
 ** allocated by the system mutex implementation. Variable iType is usually set
@@ -60,9 +60,9 @@ struct CheckMutex {
 
 #define SQLITE_MUTEX_WARNONCONTENTION  (-1)
 
-/* 
+/*
 ** Pointer to real mutex methods object used by the CheckMutex
-** implementation. Set by checkMutexInit(). 
+** implementation. Set by checkMutexInit().
 */
 static SQLITE_WSD const sqlite3_mutex_methods *pGlobalMutexMethods;
 
@@ -78,13 +78,13 @@ static int checkMutexNotheld(sqlite3_mutex *p){
 /*
 ** Initialize and deinitialize the mutex subsystem.
 */
-static int checkMutexInit(void){ 
+static int checkMutexInit(void){
   pGlobalMutexMethods = sqlite3DefaultMutex();
-  return SQLITE_OK; 
+  return SQLITE_OK;
 }
-static int checkMutexEnd(void){ 
+static int checkMutexEnd(void){
   pGlobalMutexMethods = 0;
-  return SQLITE_OK; 
+  return SQLITE_OK;
 }
 
 /*
@@ -158,7 +158,7 @@ static void checkMutexEnter(sqlite3_mutex *p){
     if( SQLITE_OK==pGlobalMutexMethods->xMutexTry(pCheck->mutex) ){
       return;
     }
-    sqlite3_log(SQLITE_MISUSE, 
+    sqlite3_log(SQLITE_MISUSE,
         "illegal multi-threaded access to database connection"
     );
   }
@@ -217,11 +217,11 @@ void sqlite3MutexWarnOnContention(sqlite3_mutex *p){
 /*
 ** Initialize the mutex system.
 */
-int sqlite3MutexInit(void){ 
+int sqlite3MutexInit(void){
   int rc = SQLITE_OK;
   if( !sqlite3GlobalConfig.mutex.xMutexAlloc ){
     /* If the xMutexAlloc method has not been set, then the user did not
-    ** install a mutex implementation via sqlite3_config() prior to 
+    ** install a mutex implementation via sqlite3_config() prior to
     ** sqlite3_initialize() being called. This block copies pointers to
     ** the default implementation into the sqlite3GlobalConfig structure.
     */
@@ -333,7 +333,7 @@ int sqlite3_mutex_try(sqlite3_mutex *p){
 
 /*
 ** The sqlite3_mutex_leave() routine exits a mutex that was previously
-** entered by the same thread.  The behavior is undefined if the mutex 
+** entered by the same thread.  The behavior is undefined if the mutex
 ** is not currently entered. If a NULL pointer is passed as an argument
 ** this function is a no-op.
 */

@@ -25,7 +25,7 @@ STATIC_YOINK("huge_compiler_rt_license");
 
 /* Assumption: long double is an intel 80 bit floating point type padded with 6 bytes
  *             du_int is a 64 bit integral type
- *             value in long double is representable in du_int or is negative 
+ *             value in long double is representable in du_int or is negative
  *                 (no range checking performed)
  */
 

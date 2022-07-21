@@ -25,37 +25,37 @@ assert(not DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail16.json
 assert(not DecodeJson([[
-[ \naked] 
+[ \naked]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail17.json
 assert(not DecodeJson([[
-[ "Illegal backslash escape: \017"] 
+[ "Illegal backslash escape: \017"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail22.json
 assert(not DecodeJson([[
-[ "Colon instead of comma": false] 
+[ "Colon instead of comma": false]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail23.json
 assert(not DecodeJson([[
-[ "Bad value", truth] 
+[ "Bad value", truth]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail24.json
 assert(not DecodeJson([[
-[ 'single quote'] 
+[ 'single quote']
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail29.json
 assert(not DecodeJson([[
-[ 0e] 
+[ 0e]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
@@ -67,13 +67,13 @@ assert(not DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail30.json
 assert(not DecodeJson([[
-[ 0e+] 
+[ 0e+]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail31.json
 assert(not DecodeJson([[
-[ 0e+-1] 
+[ 0e+-1]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
@@ -103,7 +103,7 @@ assert(not DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail8.json
 assert(not DecodeJson([[
-[ "Extra close"] ] 
+[ "Extra close"] ]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
@@ -121,32 +121,32 @@ assert(not DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail26.json
 assert(not DecodeJson([[
-[ "tab\   character\   in\  string\  "] 
+[ "tab\   character\   in\  string\  "]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail28.json
 assert(not DecodeJson([[
 [ "line\
-break"] 
+break"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail4.json
 assert(not DecodeJson([[
-[ "extra comma",] 
+[ "extra comma",]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail5.json
 assert(not DecodeJson([[
-[ "double extra comma",,] 
+[ "double extra comma",,]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail6.json
 assert(not DecodeJson([[
-[    , "<-- missing value"] 
+[    , "<-- missing value"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
@@ -164,14 +164,14 @@ assert(not DecodeJson([[
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail25.json
 assert(not DecodeJson([[
-[ "	tab	character	in	string	"] 
+[ "	tab	character	in	string	"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip
 -- JSON parsing sample test case: fail27.json
 assert(not DecodeJson([[
 [ "line
-break"] 
+break"]
 ]]))
 
 -- https://www.json.org/JSON_checker/test.zip

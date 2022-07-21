@@ -19,8 +19,8 @@
 #define SQLITE_PAGER_H
 
 /*
-** Default maximum size for persistent journal files. A negative 
-** value means no limit. This value may be overridden using the 
+** Default maximum size for persistent journal files. A negative
+** value means no limit. This value may be overridden using the
 ** sqlite3PagerJournalSizeLimit() API. See also "PRAGMA journal_size_limit".
 */
 #ifndef SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT
@@ -46,9 +46,9 @@ typedef struct PgHdr DbPage;
 /*
 ** Page number PAGER_MJ_PGNO is never used in an SQLite database (it is
 ** reserved for working around a windows/posix incompatibility). It is
-** used in the journal to signify that the remainder of the journal file 
+** used in the journal to signify that the remainder of the journal file
 ** is devoted to storing a super-journal name - there are no more pages to
-** roll back. See comments for function writeSuperJournal() in pager.c 
+** roll back. See comments for function writeSuperJournal() in pager.c
 ** for details.
 */
 #define PAGER_MJ_PGNO(x) ((Pgno)((PENDING_BYTE/((x)->pageSize))+1))
@@ -109,11 +109,11 @@ typedef struct PgHdr DbPage;
 
 /*
 ** The remainder of this file contains the declarations of the functions
-** that make up the Pager sub-system API. See source code comments for 
+** that make up the Pager sub-system API. See source code comments for
 ** a detailed description of each routine.
 */
 
-/* Open and close a Pager connection. */ 
+/* Open and close a Pager connection. */
 int sqlite3PagerOpen(
   sqlite3_vfs*,
   Pager **ppPager,
@@ -143,7 +143,7 @@ i64 sqlite3PagerJournalSizeLimit(Pager *, i64);
 sqlite3_backup **sqlite3PagerBackupPtr(Pager*);
 int sqlite3PagerFlush(Pager*);
 
-/* Functions used to obtain and release page references. */ 
+/* Functions used to obtain and release page references. */
 int sqlite3PagerGet(Pager *pPager, Pgno pgno, DbPage **ppPage, int clrFlag);
 DbPage *sqlite3PagerLookup(Pager *pPager, Pgno pgno);
 void sqlite3PagerRef(DbPage*);
@@ -156,8 +156,8 @@ int sqlite3PagerWrite(DbPage*);
 void sqlite3PagerDontWrite(DbPage*);
 int sqlite3PagerMovepage(Pager*,DbPage*,Pgno,int);
 int sqlite3PagerPageRefcount(DbPage*);
-void *sqlite3PagerGetData(DbPage *); 
-void *sqlite3PagerGetExtra(DbPage *); 
+void *sqlite3PagerGetData(DbPage *);
+void *sqlite3PagerGetExtra(DbPage *);
 
 /* Functions used to manage pager transactions and savepoints. */
 void sqlite3PagerPagecount(Pager*, int*);

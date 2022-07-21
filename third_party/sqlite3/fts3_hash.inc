@@ -42,7 +42,7 @@ struct Fts3Hash {
   } *ht;
 };
 
-/* Each element in the hash table is an instance of the following 
+/* Each element in the hash table is an instance of the following
 ** structure.  All elements are stored on a single doubly-linked list.
 **
 ** Again, this structure is intended to be opaque, but it can't really
@@ -61,10 +61,10 @@ struct Fts3HashElem {
 **                           (including the null-terminator, if any).  Case
 **                           is respected in comparisons.
 **
-**   FTS3_HASH_BINARY        pKey points to binary data nKey bytes long. 
+**   FTS3_HASH_BINARY        pKey points to binary data nKey bytes long.
 **                           memcmp() is used to compare keys.
 **
-** A copy of the key is made if the copyKey parameter to fts3HashInit is 1.  
+** A copy of the key is made if the copyKey parameter to fts3HashInit is 1.
 */
 #define FTS3_HASH_STRING    1
 #define FTS3_HASH_BINARY    2
