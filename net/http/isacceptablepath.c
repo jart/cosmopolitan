@@ -26,6 +26,7 @@
  *
  * 1. The substring "//" is disallowed.
  * 2. We won't serve hidden files (segment starts with '.').
+ *    The only exception is `/.well-known/`.
  * 3. We won't serve paths with segments equal to "." or "..".
  *
  * It is assumed that the URI parser already took care of percent
@@ -66,7 +67,10 @@ bool IsAcceptablePath(const char *data, size_t size) {
       x = '/';
     }
     if (y == '/') {
-      if (x == '.') return false;
+      if (x == '.' &&  // allow /.well-known/ in the first position
+         (p - data > 2 ||
+          size < 13 ||
+          memcmp(data, "/.well-known/", 13) != 0)) return false;
       if (x == '/' && t) return false;
     }
     y = x;
