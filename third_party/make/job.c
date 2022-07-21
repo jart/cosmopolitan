@@ -24,6 +24,11 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/commands.h"
 #include "third_party/make/os.h"
 #include "third_party/make/variable.h"
+#include "libc/log/log.h"
+#include "libc/runtime/stack.h"
+#include "libc/calls/calls.h"
+#include "libc/x/x.h"
+#include "third_party/make/dep.h"
 
 #ifdef WINDOWS32
 const char *default_shell = "sh.exe";
@@ -1564,6 +1569,14 @@ start_waiting_jobs (void)
 }
 
 
+void Unveil (const char *path, const char *perm)
+{
+  int e;
+  e = errno;
+  unveil(path, perm);
+  errno = e;
+}
+
 /* POSIX:
    Create a child process executing the command in ARGV.
    Returns the PID or -1.  */
@@ -1585,7 +1598,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         fderr = child->output.err;
     }
 
-  pid = vfork();
+  pid = fork();
   if (pid != 0)
     return pid;
 
@@ -1604,6 +1617,48 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
     EINTRLOOP (r, dup2 (fdout, FD_STDOUT));
   if (fderr != FD_STDERR)
     EINTRLOOP (r, dup2 (fderr, FD_STDERR));
+
+  /* [jart] sandbox command based on prerequisites */
+  intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
+  if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
+    struct dep *d;
+    struct child *c;
+    char pathbuf[PATH_MAX];
+    char outpathbuf[PATH_MAX];
+    c = (struct child *)child;
+    if (c->file->deps) {
+      argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
+      Unveil (argv[0], "rx");
+      Unveil ("o/tmp", "rwcx");
+      Unveil ("/dev/zero", "r");
+      Unveil ("/dev/null", "rw");
+      Unveil ("/dev/full", "rw");
+      Unveil ("/etc/hosts", "r");
+      Unveil ("/dev/stdin", "rw");
+      Unveil ("/dev/stdout", "rw");
+      Unveil ("/dev/stderr", "rw");
+      Unveil ("/usr/bin/ape", "rx");
+      Unveil ("/etc/console", "rw");
+      Unveil ("/etc/services", "r");
+      Unveil ("libc/integral", "r");
+      Unveil ("/etc/protocols", "r");
+      Unveil ("build/bootstrap", "rx");
+      Unveil ("/etc/resolv.conf", "r");
+      Unveil ("o/third_party/gcc", "rx");
+      Unveil ("libc/disclaimer.inc", "r");
+      if (strlen(c->file->name) < PATH_MAX) {
+        const char *dir;
+        strcpy (outpathbuf, c->file->name);
+        dir = dirname (outpathbuf);
+        makedirs (dir, 0755);
+        Unveil (dir, "rwc");
+      }
+      for (d = c->file->deps; d; d = d->next)
+        /* TODO(jart): remove w (do code morphing outside package.com) */
+        Unveil (d->file->name, "rwx");
+      Unveil (0, 0);
+    }
+  }
 
   /* Run the command.  */
   exec_command (argv, child->environment);
