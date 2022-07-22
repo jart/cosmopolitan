@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
   if (!(prog = commandv(argv[1], pathbuf, sizeof(pathbuf)))) {
     write(2, STR("error: "));
-    write(2, prog, strlen(prog));
+    write(2, argv[1], strlen(argv[1]));
     write(2, STR(" not found\n"));
     return 2;
   }
