@@ -1055,6 +1055,10 @@ FUNCTIONS
           IsPrivateIp or IsLoopbackIp return true. When multiple addresses
           are present in the header, the last/right-most address is used.
 
+  GetResponseBody() → str
+          Returns the response message body if present or an empty string.
+          Also returns an empty string during streaming.
+
   GetClientAddr() → ip:uint32,port:uint16
           Returns client socket ip4 address and port, e.g. 0x01020304,31337
           would represent 1.2.3.4:31337. Please consider using GetRemoteAddr

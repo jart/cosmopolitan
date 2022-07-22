@@ -3365,7 +3365,7 @@ static int LuaSetStatus(lua_State *L) {
 
 static int LuaGetStatus(lua_State *L) {
   OnlyCallDuringRequest(L, "GetStatus");
-  if (!luaheaderp) {
+  if (!statuscode) {
     lua_pushnil(L);
   } else {
     lua_pushinteger(L, statuscode);
@@ -4418,6 +4418,12 @@ static int LuaGetBody(lua_State *L) {
   return 1;
 }
 
+static int LuaGetResponseBody(lua_State *L) {
+  OnlyCallDuringRequest(L, "GetResponseBody");
+  lua_pushlstring(L, content, contentlength);
+  return 1;
+}
+
 static int LuaGetHeader(lua_State *L) {
   int h;
   const char *key;
@@ -5074,6 +5080,7 @@ static const char *const kDontAutoComplete[] = {
     "GetPayload",                // deprecated
     "GetPort",                   //
     "GetRemoteAddr",             //
+    "GetResponseBody",           //
     "GetScheme",                 //
     "GetServerAddr",             //
     "GetSslIdentity",            //
@@ -5181,6 +5188,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
+    {"GetResponseBody", LuaGetResponseBody},                    //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
     {"GetStatus", LuaGetStatus},                                //
@@ -6378,8 +6386,9 @@ static void InitRequest(void) {
   msgsize = 0;
   loops.n = 0;
   generator = 0;
-  luaheaderp = 0;
   isyielding = 0;
+  luaheaderp = 0;
+  statuscode = 0;
   contentlength = 0;
   referrerpolicy = 0;
   gotcachecontrol = 0;
