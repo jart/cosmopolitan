@@ -783,9 +783,9 @@ FUNCTIONS
 
             - sorted: (bool=true) Lua uses hash tables so the order of
               object keys is lost in a Lua table. So, by default, we use
-              `qsort(strcmp)` to impose a deterministic output order. If
-              you don't care about ordering then setting `sorted=false`
-              should yield a 1.6x performance boost in serialization.
+              `strcmp` to impose a deterministic output order. If you
+              don't care about ordering then setting `sorted=false`
+              should yield a performance boost in serialization.
 
           This function will return an error if:
 
@@ -840,9 +840,9 @@ FUNCTIONS
 
             - sorted: (bool=true) Lua uses hash tables so the order of
               object keys is lost in a Lua table. So, by default, we use
-              `qsort(strcmp)` to impose a deterministic output order. If
-              you don't care about ordering then setting `sorted=false`
-              should yield a 2x performance boost in serialization.
+              `strcmp` to impose a deterministic output order. If you
+              don't care about ordering then setting `sorted=false`
+              should yield a performance boost in serialization.
 
           If a user data object has a `__repr` or `__tostring` meta
           method, then that'll be used to encode the Lua code.

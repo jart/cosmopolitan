@@ -13,14 +13,14 @@ struct critbit0 {
 
 bool critbit0_contains(struct critbit0 *, const char *) dontthrow nosideeffect
     paramsnonnull();
-bool critbit0_insert(struct critbit0 *, const char *) paramsnonnull();
+int critbit0_insert(struct critbit0 *, const char *) paramsnonnull();
 bool critbit0_delete(struct critbit0 *, const char *) dontthrow paramsnonnull();
 void critbit0_clear(struct critbit0 *) dontthrow paramsnonnull();
 char *critbit0_get(struct critbit0 *, const char *);
 intptr_t critbit0_allprefixed(struct critbit0 *, const char *,
                               intptr_t (*)(const char *, void *), void *)
     paramsnonnull((1, 2, 3)) dontthrow;
-bool critbit0_emplace(struct critbit0 *, char *, size_t) paramsnonnull();
+int critbit0_emplace(struct critbit0 *, char *, size_t) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

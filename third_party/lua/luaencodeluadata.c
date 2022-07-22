@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/critbit0.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/fmt/itoa.h"
@@ -24,7 +25,6 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/append.internal.h"
-#include "libc/stdio/strlist.internal.h"
 #include "libc/x/x.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
@@ -37,6 +37,11 @@ struct Serializer {
   struct LuaVisited visited;
   const char *reason;
   bool sorted;
+};
+
+struct Joiner {
+  char **buf;
+  int i;
 };
 
 static int Serialize(lua_State *, char **, int, struct Serializer *, int);
@@ -298,37 +303,54 @@ OnError:
   return -1;
 }
 
+static intptr_t Join(const char *elem, void *arg) {
+  struct Joiner *j = arg;
+  if (!j->i) {
+    ++j->i;
+  } else {
+    RETURN_ON_ERROR(appendw(j->buf, READ16LE(", ")));
+  }
+  RETURN_ON_ERROR(appends(j->buf, elem));
+  return 0;
+OnError:
+  return -1;
+}
+
 static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
                            int depth) {
   size_t n;
   int i, rc;
+  char *b = 0;
   const char *s;
-  struct StrList sl = {0};
+  struct Joiner j = {buf};
+  struct critbit0 t = {0};
   lua_pushnil(L);
   while (lua_next(L, -2)) {
-    RETURN_ON_ERROR(i = AppendStrList(&sl));
+    RETURN_ON_ERROR(appendr(&b, 0));
     if (lua_type(L, -2) == LUA_TSTRING && IsLuaIdentifier(L, -2)) {
       // use {𝑘=𝑣′} syntax when 𝑘 is a legal lua identifier
       s = lua_tolstring(L, -2, &n);
-      RETURN_ON_ERROR(appendd(sl.p + i, s, n));
-      RETURN_ON_ERROR(appendw(sl.p + i, '='));
+      RETURN_ON_ERROR(appendd(&b, s, n));
+      RETURN_ON_ERROR(appendw(&b, '='));
     } else {
       // use {[𝑘′]=𝑣′} otherwise
-      RETURN_ON_ERROR(appendw(sl.p + i, '['));
-      RETURN_ON_ERROR(Serialize(L, sl.p + i, -2, z, depth - 1));
-      RETURN_ON_ERROR(appendw(sl.p + i, ']' | '=' << 010));
+      RETURN_ON_ERROR(appendw(&b, '['));
+      RETURN_ON_ERROR(Serialize(L, &b, -2, z, depth - 1));
+      RETURN_ON_ERROR(appendw(&b, ']' | '=' << 010));
     }
-    RETURN_ON_ERROR(Serialize(L, sl.p + i, -1, z, depth - 1));
+    RETURN_ON_ERROR(Serialize(L, &b, -1, z, depth - 1));
+    RETURN_ON_ERROR(critbit0_insert(&t, b));
     lua_pop(L, 1);
   }
-  SortStrList(&sl);
   RETURN_ON_ERROR(appendw(buf, '{'));
-  RETURN_ON_ERROR(JoinStrList(&sl, buf, READ16LE(", ")));
+  RETURN_ON_ERROR(critbit0_allprefixed(&t, "", Join, &j));
   RETURN_ON_ERROR(appendw(buf, '}'));
-  FreeStrList(&sl);
+  critbit0_clear(&t);
+  free(b);
   return 0;
 OnError:
-  FreeStrList(&sl);
+  critbit0_clear(&t);
+  free(b);
   return -1;
 }
 

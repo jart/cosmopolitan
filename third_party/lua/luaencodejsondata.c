@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/alg/critbit0.h"
 #include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
@@ -27,7 +28,6 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/append.internal.h"
-#include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
 #include "net/http/escape.h"
 #include "third_party/double-conversion/wrapper.h"
@@ -42,6 +42,11 @@ struct Serializer {
   char *strbuf;
   size_t strbuflen;
   bool sorted;
+};
+
+struct Joiner {
+  char **buf;
+  int i;
 };
 
 static int Serialize(lua_State *, char **, int, struct Serializer *, int);
@@ -133,31 +138,48 @@ OnError:
   return -1;
 }
 
+static intptr_t Join(const char *elem, void *arg) {
+  struct Joiner *j = arg;
+  if (!j->i) {
+    ++j->i;
+  } else {
+    RETURN_ON_ERROR(appendw(j->buf, ','));
+  }
+  RETURN_ON_ERROR(appends(j->buf, elem));
+  return 0;
+OnError:
+  return -1;
+}
+
 static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
                            int level) {
   int i;
-  struct StrList sl = {0};
+  char *b = 0;
+  struct Joiner j = {buf};
+  struct critbit0 t = {0};
   lua_pushnil(L);
   while (lua_next(L, -2)) {
     if (lua_type(L, -2) == LUA_TSTRING) {
-      RETURN_ON_ERROR(i = AppendStrList(&sl));
-      RETURN_ON_ERROR(SerializeString(L, sl.p + i, -2, z));
-      RETURN_ON_ERROR(appendw(sl.p + i, ':'));
-      RETURN_ON_ERROR(Serialize(L, sl.p + i, -1, z, level - 1));
+      RETURN_ON_ERROR(appendr(&b, 0));
+      RETURN_ON_ERROR(SerializeString(L, &b, -2, z));
+      RETURN_ON_ERROR(appendw(&b, ':'));
+      RETURN_ON_ERROR(Serialize(L, &b, -1, z, level - 1));
+      RETURN_ON_ERROR(critbit0_insert(&t, b));
       lua_pop(L, 1);
     } else {
       z->reason = "json objects must only use string keys";
       goto OnError;
     }
   }
-  SortStrList(&sl);
   RETURN_ON_ERROR(appendw(buf, '{'));
-  RETURN_ON_ERROR(JoinStrList(&sl, buf, ','));
+  RETURN_ON_ERROR(critbit0_allprefixed(&t, "", Join, &j));
   RETURN_ON_ERROR(appendw(buf, '}'));
-  FreeStrList(&sl);
+  critbit0_clear(&t);
+  free(b);
   return 0;
 OnError:
-  FreeStrList(&sl);
+  critbit0_clear(&t);
+  free(b);
   return -1;
 }
 

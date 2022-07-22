@@ -23,18 +23,19 @@
 
 /**
  * Inserts 𝑢 into 𝑡 without copying.
- * @param t tree
- * @param u NUL-terminated string which must be 8+ byte aligned and
- *     becomes owned by the tree afterwards
- * @return true if 𝑡 was mutated
+ *
+ * @param t is critical bit tree
+ * @param u is nul-terminated string which must be 8+ byte aligned
+ *     and becomes owned by the tree afterwards
+ * @return true if 𝑡 was mutated, or -1 w/ errno
  * @note h/t djb and agl
  */
-bool critbit0_emplace(struct critbit0 *t, char *u, size_t ulen) {
+int critbit0_emplace(struct critbit0 *t, char *u, size_t ulen) {
   unsigned char *p = t->root;
   if (!p) {
     t->root = u;
     t->count = 1;
-    return true;
+    return 1;
   }
   const unsigned char *const ubytes = (void *)u;
   while (1 & (intptr_t)p) {
@@ -49,39 +50,43 @@ bool critbit0_emplace(struct critbit0 *t, char *u, size_t ulen) {
   for (newbyte = 0; newbyte < ulen; ++newbyte) {
     if (p[newbyte] != ubytes[newbyte]) {
       newotherbits = p[newbyte] ^ ubytes[newbyte];
-      goto different_byte_found;
+      goto DifferentByteFound;
     }
   }
   if (p[newbyte] != 0) {
     newotherbits = p[newbyte];
-    goto different_byte_found;
+    goto DifferentByteFound;
   }
-  return false;
-different_byte_found:
+  return 0;
+DifferentByteFound:
   newotherbits |= newotherbits >> 1;
   newotherbits |= newotherbits >> 2;
   newotherbits |= newotherbits >> 4;
   newotherbits = (newotherbits & ~(newotherbits >> 1)) ^ 255;
   unsigned char c = p[newbyte];
   int newdirection = (1 + (newotherbits | c)) >> 8;
-  struct CritbitNode *newnode = malloc(sizeof(struct CritbitNode));
-  newnode->byte = newbyte;
-  newnode->otherbits = newotherbits;
-  newnode->child[1 - newdirection] = (void*)ubytes;
-  void **wherep = &t->root;
-  for (;;) {
-    unsigned char *wp = *wherep;
-    if (!(1 & (intptr_t)wp)) break;
-    struct CritbitNode *q = (void *)(wp - 1);
-    if (q->byte > newbyte) break;
-    if (q->byte == newbyte && q->otherbits > newotherbits) break;
-    unsigned char c2 = 0;
-    if (q->byte < ulen) c2 = ubytes[q->byte];
-    const int direction = (1 + (q->otherbits | c2)) >> 8;
-    wherep = q->child + direction;
+  struct CritbitNode *newnode;
+  if ((newnode = malloc(sizeof(struct CritbitNode)))) {
+    newnode->byte = newbyte;
+    newnode->otherbits = newotherbits;
+    newnode->child[1 - newdirection] = (void *)ubytes;
+    void **wherep = &t->root;
+    for (;;) {
+      unsigned char *wp = *wherep;
+      if (!(1 & (intptr_t)wp)) break;
+      struct CritbitNode *q = (void *)(wp - 1);
+      if (q->byte > newbyte) break;
+      if (q->byte == newbyte && q->otherbits > newotherbits) break;
+      unsigned char c2 = 0;
+      if (q->byte < ulen) c2 = ubytes[q->byte];
+      const int direction = (1 + (q->otherbits | c2)) >> 8;
+      wherep = q->child + direction;
+    }
+    newnode->child[newdirection] = *wherep;
+    *wherep = (void *)(1 + (char *)newnode);
+    t->count++;
+    return 1;
+  } else {
+    return -1;
   }
-  newnode->child[newdirection] = *wherep;
-  *wherep = (void *)(1 + (char *)newnode);
-  t->count++;
-  return true;
 }

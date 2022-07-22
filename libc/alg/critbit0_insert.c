@@ -25,10 +25,15 @@
  * Inserts 𝑢 into 𝑡.
  * @param t tree
  * @param u NUL-terminated string
- * @return true if 𝑡 was mutated
+ * @return true if 𝑡 was mutated, or -1 w/ errno
  * @note h/t djb and agl
  */
-bool critbit0_insert(struct critbit0 *t, const char *u) {
-  size_t ulen = strlen(u);
-  return critbit0_emplace(t, memcpy(malloc(ulen + 1), u, ulen + 1), ulen);
+int critbit0_insert(struct critbit0 *t, const char *u) {
+  char *p;
+  size_t n;
+  if ((p = malloc((n = strlen(u)) + 1))) {
+    return critbit0_emplace(t, memcpy(p, u, n + 1), n);
+  } else {
+    return -1;
+  }
 }

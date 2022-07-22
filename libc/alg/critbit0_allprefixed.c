@@ -58,7 +58,9 @@ intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
     if (q->byte < ulen) top = p;
   }
   for (size_t i = 0; i < ulen; ++i) {
-    if (p[i] != ubytes[i]) return 0;
+    if (p[i] != ubytes[i]) {
+      return 0;
+    }
   }
   return allprefixed_traverse(top, callback, arg);
 }

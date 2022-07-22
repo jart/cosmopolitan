@@ -41,7 +41,6 @@
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
-#include "libc/stdio/strlist.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ioprio.h"
 #include "libc/sysv/consts/map.h"
