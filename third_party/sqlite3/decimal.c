@@ -135,7 +135,7 @@ static Decimal *decimal_new(
         p->nFrac = 0;
       }
     }
-    if( iExp>0 ){
+    if( iExp>0 ){   
       p->a = sqlite3_realloc64(p->a, p->nDigit + iExp + 1 );
       if( p->a==0 ) goto new_no_mem;
       memset(p->a+p->nDigit, 0, iExp);
@@ -537,7 +537,7 @@ static void decimalMulFunc(
   int i, j, k;
   int minFrac;
   if( pA==0 || pA->oom || pA->isNull
-   || pB==0 || pB->oom || pB->isNull
+   || pB==0 || pB->oom || pB->isNull 
   ){
     goto mul_end;
   }
@@ -580,8 +580,8 @@ mul_end:
 }
 
 int sqlite3_decimal_init(
-  sqlite3 *db,
-  char **pzErrMsg,
+  sqlite3 *db, 
+  char **pzErrMsg, 
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;

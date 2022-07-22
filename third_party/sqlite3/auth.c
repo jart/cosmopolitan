@@ -131,10 +131,10 @@ int sqlite3AuthReadCol(
 
 /*
 ** The pExpr should be a TK_COLUMN expression.  The table referred to
-** is in pTabList or else it is the NEW or OLD table of a trigger.
+** is in pTabList or else it is the NEW or OLD table of a trigger.  
 ** Check to see if it is OK to read this particular column.
 **
-** If the auth function returns SQLITE_IGNORE, change the TK_COLUMN
+** If the auth function returns SQLITE_IGNORE, change the TK_COLUMN 
 ** instruction into a TK_NULL.  If the auth function returns SQLITE_DENY,
 ** then generate an error.
 */
@@ -246,7 +246,7 @@ int sqlite3AuthCheck(
 */
 void sqlite3AuthContextPush(
   Parse *pParse,
-  AuthContext *pContext,
+  AuthContext *pContext, 
   const char *zContext
 ){
   assert( pParse );

@@ -73,7 +73,7 @@ static PyMemberDef DB_members[] = {
 };
 
 static PyObject *
-new_previous_version(const char *name,
+new_previous_version(const char *name, 
                      const _PyUnicode_ChangeRecord* (*getrecord)(Py_UCS4),
                      Py_UCS4 (*normalization)(Py_UCS4))
 {

@@ -351,10 +351,10 @@ bzip2(1)                                                 bzip2(1)
        This manual page pertains to version 1.0.8 of b̲z̲i̲p̲2̲.̲  Com-
        pressed  data created by this version is entirely forwards
        and  backwards  compatible  with   the   previous   public
-       releases,  versions  0.1pl2,  0.9.0,  0.9.5, 1.0.0, 1.0.1,
+       releases,  versions  0.1pl2,  0.9.0,  0.9.5, 1.0.0, 1.0.1, 
        1.0.2 and above, but with the  following  exception: 0.9.0
        and above can  correctly decompress  multiple concatenated
-       compressed files.  0.1pl2  cannot do this;  it  will  stop
+       compressed files.  0.1pl2  cannot do this;  it  will  stop 
        after  decompressing just the first file in the stream.
 
        b̲z̲i̲p̲2̲r̲e̲c̲o̲v̲e̲r̲  versions prior to 1.0.2 used 32-bit integers

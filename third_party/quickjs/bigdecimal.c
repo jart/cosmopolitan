@@ -669,8 +669,8 @@ static int js_binary_arith_bigdecimal(JSContext *ctx, OPCodeEnum op,
         ret = bfdec_div(r, a, b, BF_PREC_INF, BF_RNDZ);
         break;
     case OP_math_mod:
-        /* Euclidean remainder */
-        ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_DIVREM_EUCLIDEAN);
+        /* Euclidian remainder */
+        ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_DIVREM_EUCLIDIAN);
         break;
     case OP_mod:
         ret = bfdec_rem(r, a, b, BF_PREC_INF, BF_RNDZ, BF_RNDZ);
@@ -696,7 +696,7 @@ static int js_binary_arith_bigdecimal(JSContext *ctx, OPCodeEnum op,
     JS_FreeValue(ctx, op2);
     return -1;
 }
-
+ 
 void JS_AddIntrinsicBigDecimal(JSContext *ctx)
 {
     JSRuntime *rt = ctx->rt;

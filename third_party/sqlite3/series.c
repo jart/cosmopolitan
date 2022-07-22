@@ -225,7 +225,7 @@ static int seriesEof(sqlite3_vtab_cursor *cur){
   }
 }
 
-/* True to cause run-time checking of the start=, stop=, and/or step=
+/* True to cause run-time checking of the start=, stop=, and/or step= 
 ** parameters.  The only reason to do this is for testing the
 ** constraint checking logic for virtual tables in the SQLite core.
 */
@@ -236,7 +236,7 @@ static int seriesEof(sqlite3_vtab_cursor *cur){
 /*
 ** This method is called to "rewind" the series_cursor object back
 ** to the first row of output.  This method is always called at least
-** once prior to any call to seriesColumn() or seriesRowid() or
+** once prior to any call to seriesColumn() or seriesRowid() or 
 ** seriesEof().
 **
 ** The query plan selected by seriesBestIndex is passed in the idxNum
@@ -256,7 +256,7 @@ static int seriesEof(sqlite3_vtab_cursor *cur){
 ** (so that seriesEof() will return true) if the table is empty.
 */
 static int seriesFilter(
-  sqlite3_vtab_cursor *pVtabCursor,
+  sqlite3_vtab_cursor *pVtabCursor, 
   int idxNum, const char *idxStrUnused,
   int argc, sqlite3_value **argv
 ){
@@ -369,7 +369,7 @@ static int seriesBestIndex(
     return SQLITE_CONSTRAINT;
   }
   if( (idxNum & 3)==3 ){
-    /* Both start= and stop= boundaries are available.  This is the
+    /* Both start= and stop= boundaries are available.  This is the 
     ** the preferred case */
     pIdxInfo->estimatedCost = (double)(2 - ((idxNum&4)!=0));
     pIdxInfo->estimatedRows = 1000;
@@ -392,7 +392,7 @@ static int seriesBestIndex(
 }
 
 /*
-** This following structure defines all the methods for the
+** This following structure defines all the methods for the 
 ** generate_series virtual table.
 */
 static sqlite3_module seriesModule = {
@@ -425,8 +425,8 @@ static sqlite3_module seriesModule = {
 #endif /* SQLITE_OMIT_VIRTUALTABLE */
 
 int sqlite3_series_init(
-  sqlite3 *db,
-  char **pzErrMsg,
+  sqlite3 *db, 
+  char **pzErrMsg, 
   const sqlite3_api_routines *pApi
 ){
   int rc = SQLITE_OK;

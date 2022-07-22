@@ -4555,9 +4555,9 @@ Node* TY_(ParsePre)( TidyDocImpl* doc, Node *pre, GetTokenMode ARG_UNUSED(mode) 
 
                     /*
                       This is basically what Tidy 04 August 2000 did and far more accurate
-                      with respect to browser behaviour than the code commented out above.
+                      with respect to browser behaivour than the code commented out above.
                       Tidy could try to propagate the <pre> into each disallowed child where
-                      <pre> is allowed in order to replicate some browsers behaviour, but
+                      <pre> is allowed in order to replicate some browsers behaivour, but
                       there are a lot of exceptions, e.g. Internet Explorer does not propagate
                       <pre> into table cells while Mozilla does. Opera 6 never propagates
                       <pre> into blocklevel elements while Opera 7 behaves much like Mozilla.

@@ -887,7 +887,7 @@ int extract_or_test_files(__G)    /* return PK-type error code */
 
     if ((filnum == 0) && error_in_archive <= PK_WARN) {
         if (num_skipped > 0L)
-            error_in_archive = IZ_UNSUP; /* unsupported. compression/encryption */
+            error_in_archive = IZ_UNSUP; /* unsupport. compression/encryption */
         else
             error_in_archive = PK_FIND;  /* no files found at all */
     }
@@ -1643,9 +1643,9 @@ reprompt:
         UserStop();
 #endif
     } /* end for-loop (i:  files in current block) */
-
+ 
     return error_in_archive;
-
+ 
 } /* end function extract_or_test_entrylistw() */
 
 
@@ -3239,7 +3239,7 @@ char *fnfilter(raw, space, size)   /* convert name to safely printable form */
      * appear in filenames by itself.  The following default definition
      * sets the replacement char to a question mark as the most common
      * "single char wildcard"; this setting should be overridden in the
-     * appropriate system-specific configuration header when needed.
+     * appropiate system-specific configuration header when needed.
      */
 # define UZ_FNFILTER_REPLACECHAR      '?'
 #endif

@@ -89,18 +89,18 @@ fxputc(FILE *f, int ch)
 	ch = ch&0xff;
 
 	/* on 7-bit terminals, strip high bit */
-	if (!is8bit()) ch &= 0x7f;
+	if (!is8bit()) ch &= 0x7f; 
 
-	/*
+	/* 
 	 * Assume anything that isn't a control character is printable.
-	 * We can't count on locale stuff to tell us what's printable
+	 * We can't count on locale stuff to tell us what's printable 
 	 * because we might be looking at someone who uses different
 	 * locale settings or is on the other side of the planet. So,
 	 * strip 0-31, 127, 128-159, and 255. Note that not stripping
 	 * 128-159 is asking for trouble, as 155 (M-esc) is interpreted
 	 * as esc-[ by most terminals. Hopefully this won't break anyone's
 	 * charset.
-	 *
+	 * 
 	 * It would be nice if we could set the terminal to display in the
 	 * right charset, but we have no way to know what it is. feh.
 	 */

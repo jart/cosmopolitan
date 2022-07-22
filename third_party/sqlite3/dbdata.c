@@ -78,7 +78,7 @@
 
 SQLITE_EXTENSION_INIT1
 
-#define DBDATA_PADDING_BYTES 100
+#define DBDATA_PADDING_BYTES 100 
 
 typedef unsigned char u8;
 typedef struct DbdataTable DbdataTable;
@@ -105,7 +105,7 @@ struct DbdataCursor {
   int iField;                     /* Current field number */
   u8 *pHdrPtr;
   u8 *pPtr;
-
+  
   sqlite3_int64 iIntkey;          /* Integer key value */
 };
 
@@ -144,7 +144,7 @@ struct DbdataTable {
       ")"
 
 /*
-** Connect to an sqlite_dbdata (pAux==0) or sqlite_dbptr (pAux!=0) virtual
+** Connect to an sqlite_dbdata (pAux==0) or sqlite_dbptr (pAux!=0) virtual 
 ** table.
 */
 static int dbdataConnect(
@@ -263,7 +263,7 @@ static int dbdataOpen(sqlite3_vtab *pVTab, sqlite3_vtab_cursor **ppCursor){
 }
 
 /*
-** Restore a cursor object to the state it was in when first allocated
+** Restore a cursor object to the state it was in when first allocated 
 ** by dbdataOpen().
 */
 static void dbdataResetCursor(DbdataCursor *pCsr){
@@ -294,8 +294,8 @@ static int dbdataClose(sqlite3_vtab_cursor *pCursor){
   return SQLITE_OK;
 }
 
-/*
-** Utility methods to decode 16 and 32-bit big-endian unsigned integers.
+/* 
+** Utility methods to decode 16 and 32-bit big-endian unsigned integers. 
 */
 static unsigned int get_uint16(unsigned char *a){
   return (a[0]<<8)|a[1];
@@ -402,26 +402,26 @@ static int dbdataValueBytes(int eType){
 ** result of context object pCtx.
 */
 static void dbdataValue(
-  sqlite3_context *pCtx,
-  int eType,
+  sqlite3_context *pCtx, 
+  int eType, 
   u8 *pData,
   int nData
 ){
   if( eType>=0 && dbdataValueBytes(eType)<=nData ){
     switch( eType ){
-      case 0:
-      case 10:
-      case 11:
+      case 0: 
+      case 10: 
+      case 11: 
         sqlite3_result_null(pCtx);
         break;
-
-      case 8:
+      
+      case 8: 
         sqlite3_result_int(pCtx, 0);
         break;
       case 9:
         sqlite3_result_int(pCtx, 1);
         break;
-
+  
       case 1: case 2: case 3: case 4: case 5: case 6: case 7: {
         sqlite3_uint64 v = (signed char)pData[0];
         pData++;
@@ -433,7 +433,7 @@ static void dbdataValue(
           case 3:  v = (v<<8) + pData[0];  pData++;
           case 2:  v = (v<<8) + pData[0];  pData++;
         }
-
+  
         if( eType==7 ){
           double r;
           memcpy(&r, &v, sizeof(r));
@@ -443,7 +443,7 @@ static void dbdataValue(
         }
         break;
       }
-
+  
       default: {
         int n = ((eType-12) / 2);
         if( eType % 2 ){
@@ -504,7 +504,7 @@ static int dbdataNext(sqlite3_vtab_cursor *pCursor){
         int iHdr;
         int U, X;
         int nLocal;
-
+  
         switch( pCsr->aPage[iOff] ){
           case 0x02:
             nPointer = 4;
@@ -523,29 +523,29 @@ static int dbdataNext(sqlite3_vtab_cursor *pCursor){
         if( pCsr->iCell>=pCsr->nCell ){
           bNextPage = 1;
         }else{
-
+  
           iOff += 8 + nPointer + pCsr->iCell*2;
           if( iOff>pCsr->nPage ){
             bNextPage = 1;
           }else{
             iOff = get_uint16(&pCsr->aPage[iOff]);
           }
-
+    
           /* For an interior node cell, skip past the child-page number */
           iOff += nPointer;
-
+    
           /* Load the "byte of payload including overflow" field */
           if( bNextPage || iOff>pCsr->nPage ){
             bNextPage = 1;
           }else{
             iOff += dbdataGetVarint(&pCsr->aPage[iOff], &nPayload);
           }
-
+    
           /* If this is a leaf intkey cell, load the rowid */
           if( bHasRowid && !bNextPage && iOff<pCsr->nPage ){
             iOff += dbdataGetVarint(&pCsr->aPage[iOff], &pCsr->iIntkey);
           }
-
+    
           /* Figure out how much data to read from the local page */
           U = pCsr->nPage;
           if( bHasRowid ){
@@ -571,7 +571,7 @@ static int dbdataNext(sqlite3_vtab_cursor *pCursor){
           }else{
 
             /* Allocate space for payload. And a bit more to catch small buffer
-            ** overruns caused by attempting to read a varint or similar from
+            ** overruns caused by attempting to read a varint or similar from 
             ** near the end of a corrupt record.  */
             pCsr->pRec = (u8*)sqlite3_malloc64(nPayload+DBDATA_PADDING_BYTES);
             if( pCsr->pRec==0 ) return SQLITE_NOMEM;
@@ -604,7 +604,7 @@ static int dbdataNext(sqlite3_vtab_cursor *pCursor){
                 sqlite3_free(aOvfl);
               }
             }
-
+    
             iHdr = dbdataGetVarint(pCsr->pRec, &nHdr);
             pCsr->nHdr = nHdr;
             pCsr->pHdrPtr = &pCsr->pRec[iHdr];
@@ -650,7 +650,7 @@ static int dbdataNext(sqlite3_vtab_cursor *pCursor){
   return SQLITE_OK;
 }
 
-/*
+/* 
 ** Return true if the cursor is at EOF.
 */
 static int dbdataEof(sqlite3_vtab_cursor *pCursor){
@@ -658,9 +658,9 @@ static int dbdataEof(sqlite3_vtab_cursor *pCursor){
   return pCsr->aPage==0;
 }
 
-/*
+/* 
 ** Determine the size in pages of database zSchema (where zSchema is
-** "main", "temp" or the name of an attached database) and set
+** "main", "temp" or the name of an attached database) and set 
 ** pCsr->szDb accordingly. If successful, return SQLITE_OK. Otherwise,
 ** an SQLite error code.
 */
@@ -682,11 +682,11 @@ static int dbdataDbsize(DbdataCursor *pCsr, const char *zSchema){
   return rc;
 }
 
-/*
+/* 
 ** xFilter method for sqlite_dbdata and sqlite_dbptr.
 */
 static int dbdataFilter(
-  sqlite3_vtab_cursor *pCursor,
+  sqlite3_vtab_cursor *pCursor, 
   int idxNum, const char *idxStr,
   int argc, sqlite3_value **argv
 ){
@@ -713,7 +713,7 @@ static int dbdataFilter(
       pCsr->pStmt = pTab->pStmt;
       pTab->pStmt = 0;
     }else{
-      rc = sqlite3_prepare_v2(pTab->db,
+      rc = sqlite3_prepare_v2(pTab->db, 
           "SELECT data FROM sqlite_dbpage(?) WHERE pgno=?", -1,
           &pCsr->pStmt, 0
       );
@@ -730,12 +730,12 @@ static int dbdataFilter(
   return rc;
 }
 
-/*
+/* 
 ** Return a column for the sqlite_dbdata or sqlite_dbptr table.
 */
 static int dbdataColumn(
-  sqlite3_vtab_cursor *pCursor,
-  sqlite3_context *ctx,
+  sqlite3_vtab_cursor *pCursor, 
+  sqlite3_context *ctx, 
   int i
 ){
   DbdataCursor *pCsr = (DbdataCursor*)pCursor;
@@ -788,7 +788,7 @@ static int dbdataColumn(
   return SQLITE_OK;
 }
 
-/*
+/* 
 ** Return the rowid for an sqlite_dbdata or sqlite_dptr table.
 */
 static int dbdataRowid(sqlite3_vtab_cursor *pCursor, sqlite_int64 *pRowid){
@@ -837,8 +837,8 @@ static int sqlite3DbdataRegister(sqlite3 *db){
 }
 
 int sqlite3_dbdata_init(
-  sqlite3 *db,
-  char **pzErrMsg,
+  sqlite3 *db, 
+  char **pzErrMsg, 
   const sqlite3_api_routines *pApi
 ){
   SQLITE_EXTENSION_INIT2(pApi);

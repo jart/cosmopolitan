@@ -17,10 +17,10 @@ Content-Transfer-Encoding: 7bit
 
 
 Unlike the test test_nested-multiples-with-internal-boundary, this
-piece of text not only contains the outer boundary tags
-------- =_aaaaaaaaaa1
-and
-------- =_aaaaaaaaaa0
+piece of text not only contains the outer boundary tags 
+------- =_aaaaaaaaaa1 
+and 
+------- =_aaaaaaaaaa0 
 but puts them at the start of a line! And, to be even nastier, it
 even includes a couple of end tags, such as this one:
 
@@ -30,7 +30,7 @@ and this one, which is from a multipart we haven't even seen yet!
 
 ------- =_aaaaaaaaaa4--
 
-This will, I'm sure, cause much breakage of MIME parsers. But, as
+This will, I'm sure, cause much breakage of MIME parsers. But, as 
 far as I can tell, it's perfectly legal. I have not yet ever seen
 a case of this in the wild, but I've seen *similar* things.
 

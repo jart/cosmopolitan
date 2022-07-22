@@ -548,8 +548,8 @@ calculate_path(void)
     */
     /* not searching for pyvenv.cfg */
     /* Avoid absolute path for prefix */
-    wcsncpy(prefix,
-            L"third_party/python/Lib",
+    wcsncpy(prefix, 
+            L"third_party/python/Lib", 
             MAXPATHLEN);
     /* wcsncpy(prefix, */
     /*         L"/zip/.python", */

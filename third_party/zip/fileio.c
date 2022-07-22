@@ -645,7 +645,7 @@ int newnamew(namew, isdir, casesensitive)
     int save_dosify = dosify, save_pathput = pathput;
     dosify = 0;
     pathput = 1;
-    /* zname is temporarily mis-used as "undosmode" iname pointer */
+    /* zname is temporarly mis-used as "undosmode" iname pointer */
     if ((znamew = ex2inw(namew, isdir, NULL)) != NULL) {
       undosmw = in2exw(znamew);
       free(znamew);
@@ -2757,7 +2757,7 @@ size_t bfwrite(buffer, size, count, mode)
    the provided buffer length.  If the returned value is less than the
    buffer length, then the contents of the buffer will be null-terminated;
    otherwise, it will not be terminated and may be invalid, possibly
-   stopping in the middle of a multi-byte sequence.
+   stopping in the middle of a multibyte sequence.
 
    In all cases you may pass NULL as the buffer and/or 0 as the length, if
    you just want to learn how much space the string is going to require.
@@ -2830,7 +2830,7 @@ long ucs4_char_from_utf8(utf8)
   if (bytes == 1)
     ret = **utf8;                       /* ascii-7 */
   else
-    ret = **utf8 & (0x7F >> bytes);     /* lead byte of a multi-byte sequence */
+    ret = **utf8 & (0x7F >> bytes);     /* lead byte of a multibyte sequence */
   (*utf8)++;
   for (t = 1; t < bytes; t++)           /* consume trailing bytes */
     ret = (ret << 6) | (*((*utf8)++) & 0x3F);
@@ -3537,17 +3537,17 @@ zwchar *utf8_to_wide_string(utf8_string)
 #define oERR(err,message) ZIPERR(err, (char *) message)
 
 
-/* Although the below provides some support for multi-byte characters
+/* Although the below provides some support for multibyte characters
    the proper thing to do may be to use wide characters and support
    Unicode.  May get to it soon.  EG
  */
 
-/* For now stay with multi-byte characters.  May support wide characters
+/* For now stay with muti-byte characters.  May support wide characters
    in Zip 3.1.
  */
 
-/* multi-byte character set support
-   multi-byte characters use typically two or more sequential bytes
+/* multibyte character set support
+   Multibyte characters use typically two or more sequential bytes
    to represent additional characters than can fit in a single byte
    character set.  The code used here is based on the ANSI mblen function. */
 #ifdef MULTIBYTE_GETOPTNS
@@ -3555,7 +3555,7 @@ zwchar *utf8_to_wide_string(utf8_string)
     ZCONST char *ptr;
   {
     /* return the number of bytes that the char pointed to is.  Return 1 if
-       null character or error like not start of valid multi-byte character. */
+       null character or error like not start of valid multibyte character. */
     int cl;
 
     cl = mblen(ptr, MB_CUR_MAX);
@@ -3578,8 +3578,8 @@ zwchar *utf8_to_wide_string(utf8_string)
 #    define MULTIBYTE_GETOPTNS
 #  endif
 # endif
-/* multi-byte character set support
-   multi-byte characters use typically two or more sequential bytes
+/* multibyte character set support
+   Multibyte characters use typically two or more sequential bytes
    to represent additional characters than can fit in a single byte
    character set.  The code used here is based on the ANSI mblen function. */
 #  ifdef MULTIBYTE_GETOPTNS
@@ -3588,7 +3588,7 @@ zwchar *utf8_to_wide_string(utf8_string)
     ZCONST char *ptr;
   {
     /* return the number of bytes that the char pointed to is.  Return 1 if
-       null character or error like not start of valid multi-byte character. */
+       null character or error like not start of valid multibyte character. */
     int cl;
 
     cl = mblen(ptr, MB_CUR_MAX);
@@ -3636,7 +3636,7 @@ static ZCONST char Far op_req_val_err[] = "option %s requires a value";
 static ZCONST char Far op_no_allow_val_err[] = "option %s does not allow a value";
 static ZCONST char Far sh_op_not_sup_err[] = "short option '%c' not supported";
 static ZCONST char Far oco_req_val_err[] = "option %s requires one character value";
-static ZCONST char Far oco_no_mbc_err[] = "option %s does not support multi-byte values";
+static ZCONST char Far oco_no_mbc_err[] = "option %s does not support multibyte values";
 static ZCONST char Far num_req_val_err[] = "option %s requires number value";
 static ZCONST char Far long_op_ambig_err[] = "long option '%s' ambiguous";
 static ZCONST char Far long_op_not_sup_err[] = "long option '%s' not supported";
@@ -3940,7 +3940,7 @@ local unsigned long get_shortopt(args, argnum, optchar, negated, value,
       if (arg[(*optchar) + clen]) {
         /* has value */
         if (MB_CLEN(arg + (*optchar) + clen) > 1) {
-          /* multi-byte value not allowed for now */
+          /* multibyte value not allowed for now */
           optionerr(optionerrbuf, oco_no_mbc_err, match, 0);
           if (depth > 0) {
             /* unwind */
@@ -4364,7 +4364,7 @@ local unsigned long get_longopt(args, argnum, optchar, negated, value,
  *             -e=
  *       Either optional or required values can be specified.  Optional values
  *       now use both forms as ignoring the later got confusing.  Any
- *       non-value short options can precede a valued short option as in
+ *       non-value short options can preceed a valued short option as in
  *             -abevalue
  *       Some value types (one_char and number) allow options after the value
  *       so if oc is an option that takes a character and n takes a number
@@ -4406,7 +4406,7 @@ local unsigned long get_longopt(args, argnum, optchar, negated, value,
  *             -o value1 value2 value3 ...
  *       for a list of values.  The list ends at the next option, the
  *       end of the command line, or at a single "@" argument.
- *       Each value is treated as if it was preceded by the option, so
+ *       Each value is treated as if it was preceeded by the option, so
  *             --option1 val1 val2
  *       with option1 value_type set to o_VALUE_LIST is the same as
  *             --option1=val1 --option1=val2

@@ -2575,7 +2575,7 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
     PyObject *none;
 
     backup_optname = SO_REUSEADDR;
-    if(IsWindows() && SO_REUSEADDR != 1)
+    if(IsWindows() && SO_REUSEADDR != 1) 
         backup_optname = 1;
 
     /* setsockopt(level, opt, flag) */

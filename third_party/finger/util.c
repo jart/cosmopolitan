@@ -258,7 +258,7 @@ void enter_lastlog(PERSON *pn) {
 		/*
 		 * and if it's not any of the current logins
 		 * can't use time comparison because there may be a small
-		 * discrepancy since login calls time() twice
+		 * discrepency since login calls time() twice
 		 */
 		for (w = pn->whead; doit && w != NULL; w = w->next)
 			if (w->info == LOGGEDIN &&

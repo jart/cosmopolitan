@@ -12,7 +12,7 @@
    bzip2/libbzip2 version 1.0.8 of 13 July 2019
    Copyright (C) 1996-2019 Julian Seward <jseward@acm.org>
 
-   Please read the WARNING, DISCLAIMER and PATENTS sections in the
+   Please read the WARNING, DISCLAIMER and PATENTS sections in the 
    README file.
 
    This program is released under the terms of the license contained
@@ -63,7 +63,7 @@
 
 
 /*---------------------------------------------------*/
-void BZ2_hbMakeCodeLengths ( UChar *len,
+void BZ2_hbMakeCodeLengths ( UChar *len, 
                              Int32 *freq,
                              Int32 alphaSize,
                              Int32 maxLen )
@@ -99,7 +99,7 @@ void BZ2_hbMakeCodeLengths ( UChar *len,
       }
 
       AssertH( nHeap < (BZ_MAX_ALPHA_SIZE+2), 2001 );
-
+   
       while (nHeap > 1) {
          n1 = heap[1]; heap[1] = heap[nHeap]; nHeap--; DOWNHEAP(1);
          n2 = heap[1]; heap[1] = heap[nHeap]; nHeap--; DOWNHEAP(1);
@@ -122,7 +122,7 @@ void BZ2_hbMakeCodeLengths ( UChar *len,
          len[i-1] = j;
          if (j > maxLen) tooLong = True;
       }
-
+      
       if (! tooLong) break;
 
       /* 17 Oct 04: keep-going condition for the following loop used

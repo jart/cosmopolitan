@@ -1380,8 +1380,8 @@ static int setsignalhandler(__G__ p_savedhandler_chain, signal_type,
 
 # endif /* REENTRANT && !NO_EXCEPT_SIGNALS */
 
-
-
+  
+  
 /*
   -------------------------------------------------------
   Command Line Options
@@ -2900,7 +2900,7 @@ static void help_extended(__G)
   "  displays may be limited to a specific code page.  Either way full UTF-8",
   "  paths are generally restored on extraction where OS supports.  Use -U",
   "  to force use of escapes in extracted names.  Use -UU to totally ignore",
-  "  Unicode.  Unicode comments not yet fully supported.",
+  "  Unicode.  Unicode comments not yet fully supported.", 
   "",
   "  \"New\" options -I and -O (from a patch that has been out there awhile)",
   "  are used on UNIX to set the ISO and OEM code pages used for conversions.",
@@ -3101,7 +3101,7 @@ static void show_options(__G)
             strcpy(gr, "INF");
         else
             strcpy(gr, "?  ");
-
+        
         strcpy(sh, options[i].shortopt);
         strcat(sh, "  ");
         sh[2] = '\0';
@@ -4832,7 +4832,7 @@ unsigned long get_option(__G__ option_group, pargs, argc, argnum, optchar, value
 
     } else if (allow_arg_files && arg[0] == '@') {
       /* arg file */
-      oERR(PK_PARAMS, no_arg_files_err);
+      oERR(PK_PARMS, no_arg_files_err);
 #endif
 
     } else {

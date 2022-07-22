@@ -1000,9 +1000,9 @@ static int js_binary_arith_bigfloat(JSContext *ctx, OPCodeEnum op,
         ret = bf_div(r, a, b, ctx->fp_env.prec, ctx->fp_env.flags);
         break;
     case OP_math_mod:
-        /* Euclidean remainder */
+        /* Euclidian remainder */
         ret = bf_rem(r, a, b, ctx->fp_env.prec, ctx->fp_env.flags,
-                     BF_DIVREM_EUCLIDEAN);
+                     BF_DIVREM_EUCLIDIAN);
         break;
     case OP_mod:
         ret = bf_rem(r, a, b, ctx->fp_env.prec, ctx->fp_env.flags,

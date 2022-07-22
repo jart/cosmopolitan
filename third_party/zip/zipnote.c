@@ -365,7 +365,7 @@ extent size;
 local int catalloc(a, s)
 char * far *a;          /* pointer to a pointer to a malloc'ed string */
 char *s;                /* string to concatenate on a */
-/* Concatenate the string s to the malloc'ed string pointed to by a.
+/* Concatentate the string s to the malloc'ed string pointed to by a.
    Preprocess s by removing backslash escape characters. */
 {
   char *p;              /* temporary pointer */

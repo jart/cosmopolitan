@@ -359,7 +359,7 @@ end
 function g(a,b) return (a+1) + f() end
 
 assert(g(0,0) == 30)
-
+ 
 
 debug.sethook(nil);
 assert(not debug.gethook())
@@ -411,7 +411,7 @@ debug.sethook(function (e)
   dostring("XX = 12")  -- test dostring inside hooks
   -- testing errors inside hooks
   assert(not pcall(load("a='joao'+1")))
-  debug.sethook(function (e, l)
+  debug.sethook(function (e, l) 
     assert(debug.getinfo(2, "l").currentline == l)
     local f,m,c = debug.gethook()
     assert(e == "line")
@@ -474,7 +474,7 @@ do  print("testing inspection of parameters/returned values")
     local t = {}
     for i = ar.ftransfer, ar.ftransfer + ar.ntransfer - 1 do
       local _, v = debug.getlocal(2, i)
-      t[#t + 1] = v
+      t[#t + 1] = v 
     end
     if event == "return" then
       out = t
@@ -528,7 +528,7 @@ assert(t.a == 1 and t.b == 2 and t.c == 3)
 assert(debug.setupvalue(foo1, 1, "xuxu") == "b")
 assert(({debug.getupvalue(foo2, 3)})[2] == "xuxu")
 -- upvalues of C functions are allways "called" "" (the empty string)
-assert(debug.getupvalue(string.gmatch("x", "x"), 1) == "")
+assert(debug.getupvalue(string.gmatch("x", "x"), 1) == "")  
 
 
 -- testing count hooks
@@ -960,7 +960,7 @@ end
 do   -- tests for 'source' in binary dumps
   local prog = [[
     return function (x)
-      return function (y)
+      return function (y) 
         return x + y
       end
     end
@@ -975,7 +975,7 @@ do   -- tests for 'source' in binary dumps
   local h = g(3)
   assert(h(5) == 8)
   assert(debug.getinfo(f).source == name and   -- all functions have 'source'
-         debug.getinfo(g).source == name and
+         debug.getinfo(g).source == name and 
          debug.getinfo(h).source == name)
   -- again, without debug info
   local c = string.dump(p, true)
@@ -985,7 +985,7 @@ do   -- tests for 'source' in binary dumps
   local h = g(30)
   assert(h(50) == 80)
   assert(debug.getinfo(f).source == '=?' and   -- no function has 'source'
-         debug.getinfo(g).source == '=?' and
+         debug.getinfo(g).source == '=?' and 
          debug.getinfo(h).source == '=?')
 end
 

@@ -2142,7 +2142,7 @@ vgetargskeywordsfast(PyObject *args, PyObject *kwargs,
     PyObject **stack;
     Py_ssize_t nargs;
 
-    if(args == NULL
+    if(args == NULL 
             || !PyTuple_Check(args)
             || (kwargs != NULL && !PyDict_Check(kwargs)))
     {

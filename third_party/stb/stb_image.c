@@ -194,7 +194,7 @@ static int stbi__mad2sizes_valid(int a, int b, int add) {
   return stbi__mul2sizes_valid(a, b) && stbi__addsizes_valid(a * b, add);
 }
 
-// returns 1 if "a*b*c + add" has no negative terms/factors and doesn't overflow
+// returns 1 if "a*b*c + add" has no negaive terms/factors and doesn't overflow
 static int stbi__mad3sizes_valid(int a, int b, int c, int add) {
   return stbi__mul2sizes_valid(a, b) && stbi__mul2sizes_valid(a * b, c) &&
          stbi__addsizes_valid(a * b * c, add);
@@ -1251,7 +1251,7 @@ static void stbi__jpeg_reset(stbi__jpeg *j) {
   j->marker = STBI__MARKER_none;
   j->todo = j->restart_interval ? j->restart_interval : 0x7fffffff;
   j->eob_run = 0;
-  // no more than 1<<31 MCUs if no restart_interval? that's plenty safe,
+  // no more than 1<<31 MCUs if no restart_interal? that's plenty safe,
   // since we don't even allow 1<<30 pixels
 }
 
@@ -3728,13 +3728,13 @@ static unsigned char *stbi__gif_load_next(stbi__context *s, stbi__gif *g,
         }
       }
     } else {
-      // This is a non-disposal case either way, so just
+      // This is a non-disposal case eithe way, so just
       // leave the pixels as is, and they will become the new background
       // 1: do not dispose
       // 0:  not specified.
     }
 
-    // background is what out is after the undoing of the previous frame;
+    // background is what out is after the undoing of the previou frame;
     memcpy(g->background, g->out, 4 * g->w * g->h);
   }
 

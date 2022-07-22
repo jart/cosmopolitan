@@ -143,7 +143,7 @@ struct VdbeCursor {
 ** When a sub-program is executed (OP_Program), a structure of this type
 ** is allocated to store the current value of the program counter, as
 ** well as the current memory cell array and various other frame specific
-** values stored in the Vdbe struct. When the sub-program is finished,
+** values stored in the Vdbe struct. When the sub-program is finished, 
 ** these values are copied back to the Vdbe from the VdbeFrame structure,
 ** restoring the state of the VM to as it was before the sub-program
 ** began executing.
@@ -240,7 +240,7 @@ struct sqlite3_value {
 ** If the MEM_Str flag is set then Mem.z points at a string representation.
 ** Usually this is encoded in the same unicode encoding as the main
 ** database (see below for exceptions). If the MEM_Term flag is also
-** set, then the string is nul terminated. The MEM_Int and MEM_Real
+** set, then the string is nul terminated. The MEM_Int and MEM_Real 
 ** flags may coexist with the MEM_Str flag.
 */
 #define MEM_Null      0x0001   /* Value is NULL (or a pointer) */
@@ -301,7 +301,7 @@ struct sqlite3_value {
 #endif
 
 /*
-** Each auxiliary data pointer stored by a user defined function
+** Each auxiliary data pointer stored by a user defined function 
 ** implementation calling sqlite3_set_auxdata() is stored in an instance
 ** of this structure. All such structures associated with a single VM
 ** are stored in a linked list headed at Vdbe.pAuxData. All are destroyed
@@ -461,7 +461,7 @@ struct Vdbe {
 #define VDBE_MAGIC_DEAD     0x5606c3c8    /* The VDBE has been deallocated */
 
 /*
-** Structure used to store the context required by the
+** Structure used to store the context required by the 
 ** sqlite3_preupdate_*() API functions.
 */
 struct PreUpdate {
@@ -476,7 +476,7 @@ struct PreUpdate {
   i64 iKey1;                      /* First key value passed to hook */
   i64 iKey2;                      /* Second key value passed to hook */
   Mem *aNew;                      /* Array of new.* values */
-  Table *pTab;                    /* Schema object being upated */
+  Table *pTab;                    /* Schema object being upated */          
   Index *pPk;                     /* PK index if pTab is WITHOUT ROWID */
 };
 
@@ -582,7 +582,7 @@ int sqlite3VdbeSorterCompare(const VdbeCursor *, Mem *, int, int *);
 # define sqlite3VdbeAssertAbortable(V)
 #endif
 
-#if !defined(SQLITE_OMIT_SHARED_CACHE)
+#if !defined(SQLITE_OMIT_SHARED_CACHE) 
   void sqlite3VdbeEnter(Vdbe*);
 #else
 # define sqlite3VdbeEnter(X)

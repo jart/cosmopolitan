@@ -357,7 +357,7 @@ PyInit_resource(void)
     if (RLIMIT_NPROC!=127) PyModule_AddIntMacro(m, RLIMIT_NPROC);
     if (RLIMIT_MEMLOCK!=127) PyModule_AddIntMacro(m, RLIMIT_MEMLOCK);
     if (RLIMIT_SBSIZE!=127) PyModule_AddIntMacro(m, RLIMIT_SBSIZE);
-
+    
     /* Linux specific */
     if (RLIMIT_MSGQUEUE!=127) PyModule_AddIntMacro(m, RLIMIT_MSGQUEUE);
     if (RLIMIT_NICE!=127) PyModule_AddIntMacro(m, RLIMIT_NICE);

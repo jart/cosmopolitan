@@ -1585,7 +1585,7 @@ PREFIX(getAtts)(const ENCODING *enc, const char *ptr, int attsMax,
   /* not reached */
 }
 
-static int
+static int 
 PREFIX(charRefNumber)(const ENCODING *enc, const char *ptr) {
   int result = 0;
   /* skip &# */
@@ -1716,7 +1716,7 @@ PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
   return ptr1 == end1;
 }
 
-static int
+static int 
 PREFIX(nameLength)(const ENCODING *enc, const char *ptr) {
   const char *start = ptr;
   for (;;) {

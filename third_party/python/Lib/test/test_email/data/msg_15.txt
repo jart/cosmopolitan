@@ -20,7 +20,7 @@ Content-type: multipart/alternative;
 Content-type: text/plain; charset="ISO-8859-1"
 Content-transfer-encoding: quoted-printable
 
-Some removed test.
+Some removed test. 
 
 --MS_Mac_OE_3071477847_720252_MIME_Part
 Content-type: text/html; charset="ISO-8859-1"

@@ -125,7 +125,7 @@ static inline int ecp_drbg_random( void *p_rng,
 
 /* DRBG context seeding */
 static int ecp_drbg_seed( ecp_drbg_context *ctx,
-                          const mbedtls_mpi *secret,
+                          const mbedtls_mpi *secret, 
                           size_t secret_len )
 {
     int ret;

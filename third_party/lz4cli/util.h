@@ -32,9 +32,9 @@ extern "C" {
 ******************************************/
 
 #include "third_party/lz4cli/platform.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "libc/stdio/stdio.h"
+#include "libc/mem/mem.h"     
+#include "libc/str/str.h"     
+#include "libc/stdio/stdio.h"      
 #include "libc/calls/calls.h"
 #include "libc/time/time.h"
 #include "libc/errno.h"

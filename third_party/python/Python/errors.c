@@ -611,7 +611,7 @@ PyObject *PyErr_SetExcFromWindowsErrWithFilenameObjects(
         buf32 = utf16to32(s_buf, len, &buf32z);
         message = PyUnicode_FromWideChar(buf32, buf32z);
         free(buf32);
-
+        
     }
     if (message == NULL) {
         LocalFree(s_buf);

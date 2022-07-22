@@ -291,10 +291,10 @@ void sqlite3BtreeEnterAll(sqlite3 *db){
 
 #ifndef SQLITE_OMIT_INCRBLOB
 /*
-** Enter a mutex on a Btree given a cursor owned by that Btree.
+** Enter a mutex on a Btree given a cursor owned by that Btree. 
 **
-** These entry points are used by incremental I/O only. Enter() is required
-** any time OMIT_SHARED_CACHE is not defined, regardless of whether or not
+** These entry points are used by incremental I/O only. Enter() is required 
+** any time OMIT_SHARED_CACHE is not defined, regardless of whether or not 
 ** the build is threadsafe. Leave() is only required by threadsafe builds.
 */
 void sqlite3BtreeEnterCursor(BtCursor *pCur){

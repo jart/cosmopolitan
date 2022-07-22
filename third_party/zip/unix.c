@@ -403,7 +403,7 @@ int set_new_unix_extra_field(z, s)
    gid_size  (1 byte - size in bytes)
    gid       (variable)
  */
-
+   
   ef_data_size = 1 + 1 + uid_size + 1 + gid_size;
 
   if ((extra = (char *)malloc(z->ext + 4 + ef_data_size)) == NULL)

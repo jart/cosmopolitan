@@ -58,9 +58,9 @@
 #endif
 
 /*
-** The maximum depth of an expression tree. This is limited to
-** some extent by SQLITE_MAX_SQL_LENGTH. But sometime you might
-** want to place more severe limits on the complexity of an
+** The maximum depth of an expression tree. This is limited to 
+** some extent by SQLITE_MAX_SQL_LENGTH. But sometime you might 
+** want to place more severe limits on the complexity of an 
 ** expression. A value of 0 means that there is no limit.
 */
 #ifndef SQLITE_MAX_EXPR_DEPTH
@@ -141,10 +141,10 @@
 **
 ** Earlier versions of SQLite allowed the user to change this value at
 ** compile time. This is no longer permitted, on the grounds that it creates
-** a library that is technically incompatible with an SQLite library
-** compiled with a different limit. If a process operating on a database
-** with a page-size of 65536 bytes crashes, then an instance of SQLite
-** compiled with the default page-size limit will not be able to rollback
+** a library that is technically incompatible with an SQLite library 
+** compiled with a different limit. If a process operating on a database 
+** with a page-size of 65536 bytes crashes, then an instance of SQLite 
+** compiled with the default page-size limit will not be able to rollback 
 ** the aborted transaction. This could lead to database corruption.
 */
 #ifdef SQLITE_MAX_PAGE_SIZE
@@ -203,7 +203,7 @@
 ** Maximum depth of recursion for triggers.
 **
 ** A value of 1 means that a trigger program will not be able to itself
-** fire any triggers. A value of 0 means that no trigger programs at all
+** fire any triggers. A value of 0 means that no trigger programs at all 
 ** may be executed.
 */
 #ifndef SQLITE_MAX_TRIGGER_DEPTH

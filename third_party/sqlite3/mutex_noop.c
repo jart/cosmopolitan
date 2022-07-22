@@ -38,9 +38,9 @@
 */
 static int noopMutexInit(void){ return SQLITE_OK; }
 static int noopMutexEnd(void){ return SQLITE_OK; }
-static sqlite3_mutex *noopMutexAlloc(int id){
+static sqlite3_mutex *noopMutexAlloc(int id){ 
   UNUSED_PARAMETER(id);
-  return (sqlite3_mutex*)8;
+  return (sqlite3_mutex*)8; 
 }
 static void noopMutexFree(sqlite3_mutex *p){ UNUSED_PARAMETER(p); return; }
 static void noopMutexEnter(sqlite3_mutex *p){ UNUSED_PARAMETER(p); return; }
@@ -105,7 +105,7 @@ static int debugMutexEnd(void){ return SQLITE_OK; }
 /*
 ** The sqlite3_mutex_alloc() routine allocates a new
 ** mutex and returns a pointer to it.  If it returns NULL
-** that means that a mutex could not be allocated.
+** that means that a mutex could not be allocated. 
 */
 static sqlite3_mutex *debugMutexAlloc(int id){
   static sqlite3_debug_mutex aStatic[SQLITE_MUTEX_STATIC_VFS3 - 1];

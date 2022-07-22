@@ -19,7 +19,7 @@ index 9c1217351e..3c24755558 100644
 +  long: 100,
 +  huge: 1000,
  };
-
+ 
  /**
 diff --git a/harness/regExpUtils.js b/harness/regExpUtils.js
 index be7039fda0..7b38abf8df 100644
@@ -28,7 +28,7 @@ index be7039fda0..7b38abf8df 100644
 @@ -6,24 +6,27 @@ description: |
  defines: [buildString, testPropertyEscapes, matchValidator]
  ---*/
-
+ 
 +if ($262 && typeof $262.codePointRange === "function") {
 +    /* use C function to build the codePointRange (much faster with
 +       slow JS engines) */
@@ -67,5 +67,5 @@ index be7039fda0..7b38abf8df 100644
 -  return result;
 +    return result;
  }
-
+ 
  function testPropertyEscapes(regex, string, expression) {

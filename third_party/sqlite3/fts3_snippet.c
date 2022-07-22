@@ -32,7 +32,7 @@
 #define FTS3_MATCHINFO_LHITS_BM  'b'        /* nCol*nPhrase values */
 
 /*
-** The default value for the second argument to matchinfo().
+** The default value for the second argument to matchinfo(). 
 */
 #define FTS3_MATCHINFO_DEFAULT   "pcx"
 
@@ -49,7 +49,7 @@ struct LoadDoclistCtx {
 };
 
 /*
-** The following types are used as part of the implementation of the
+** The following types are used as part of the implementation of the 
 ** fts3BestSnippet() routine.
 */
 typedef struct SnippetIter SnippetIter;
@@ -82,7 +82,7 @@ struct SnippetFragment {
 };
 
 /*
-** This type is used as an fts3ExprIterate() context object while
+** This type is used as an fts3ExprIterate() context object while 
 ** accumulating the data returned by the matchinfo() function.
 */
 typedef struct MatchInfo MatchInfo;
@@ -153,8 +153,8 @@ static MatchinfoBuffer *fts3MIBufferNew(size_t nElem, const char *zMatchinfo){
 static void fts3MIBufferFree(void *p){
   MatchinfoBuffer *pBuf = (MatchinfoBuffer*)((u8*)p - ((u32*)p)[-1]);
 
-  assert( (u32*)p==&pBuf->aMatchinfo[1]
-       || (u32*)p==&pBuf->aMatchinfo[pBuf->nElem+2]
+  assert( (u32*)p==&pBuf->aMatchinfo[1] 
+       || (u32*)p==&pBuf->aMatchinfo[pBuf->nElem+2] 
   );
   if( (u32*)p==&pBuf->aMatchinfo[1] ){
     pBuf->aRef[1] = 0;
@@ -210,7 +210,7 @@ void sqlite3Fts3MIBufferFree(MatchinfoBuffer *p){
   }
 }
 
-/*
+/* 
 ** End of MatchinfoBuffer code.
 *************************************************************************/
 
@@ -271,7 +271,7 @@ static int fts3ExprIterate2(
 ** are part of a sub-tree that is the right-hand-side of a NOT operator.
 ** For each phrase node found, the supplied callback function is invoked.
 **
-** If the callback function returns anything other than SQLITE_OK,
+** If the callback function returns anything other than SQLITE_OK, 
 ** the iteration is abandoned and the error code returned immediately.
 ** Otherwise, SQLITE_OK is returned after a callback has been made for
 ** all eligible phrase nodes.
@@ -306,11 +306,11 @@ static int fts3ExprLoadDoclistsCb(Fts3Expr *pExpr, int iPhrase, void *ctx){
 
 /*
 ** Load the doclists for each phrase in the query associated with FTS3 cursor
-** pCsr.
+** pCsr. 
 **
-** If pnPhrase is not NULL, then *pnPhrase is set to the number of matchable
-** phrases in the expression (all phrases except those directly or
-** indirectly descended from the right-hand-side of a NOT operator). If
+** If pnPhrase is not NULL, then *pnPhrase is set to the number of matchable 
+** phrases in the expression (all phrases except those directly or 
+** indirectly descended from the right-hand-side of a NOT operator). If 
 ** pnToken is not NULL, then it is set to the number of tokens in all
 ** matchable phrases of the expression.
 */
@@ -340,7 +340,7 @@ static int fts3ExprPhraseCount(Fts3Expr *pExpr){
 }
 
 /*
-** Advance the position list iterator specified by the first two
+** Advance the position list iterator specified by the first two 
 ** arguments so that it points to the first element with a value greater
 ** than or equal to parameter iNext.
 */
@@ -409,7 +409,7 @@ static int fts3SnippetNextCandidate(SnippetIter *pIter){
 }
 
 /*
-** Retrieve information about the current candidate snippet of snippet
+** Retrieve information about the current candidate snippet of snippet 
 ** iterator pIter.
 */
 static void fts3SnippetDetails(
@@ -489,7 +489,7 @@ static int fts3SnippetFindPositions(Fts3Expr *pExpr, int iPhrase, void *ctx){
     }
   }else{
     assert( rc!=SQLITE_OK || (
-       pPhrase->pList==0 && pPhrase->pHead==0 && pPhrase->pTail==0
+       pPhrase->pList==0 && pPhrase->pHead==0 && pPhrase->pTail==0 
     ));
   }
 
@@ -497,14 +497,14 @@ static int fts3SnippetFindPositions(Fts3Expr *pExpr, int iPhrase, void *ctx){
 }
 
 /*
-** Select the fragment of text consisting of nFragment contiguous tokens
+** Select the fragment of text consisting of nFragment contiguous tokens 
 ** from column iCol that represent the "best" snippet. The best snippet
 ** is the snippet with the highest score, where scores are calculated
 ** by adding:
 **
 **   (a) +1 point for each occurrence of a matchable phrase in the snippet.
 **
-**   (b) +1000 points for the first occurrence of each matchable phrase in
+**   (b) +1000 points for the first occurrence of each matchable phrase in 
 **       the snippet for which the corresponding mCovered bit is not set.
 **
 ** The selected snippet parameters are stored in structure *pFragment before
@@ -565,7 +565,7 @@ static int fts3BestSnippet(
       }
     }
 
-    /* Loop through all candidate snippets. Store the best snippet in
+    /* Loop through all candidate snippets. Store the best snippet in 
      ** *pFragment. Store its associated 'score' in iBestScore.
      */
     pFragment->iCol = iCol;
@@ -637,8 +637,8 @@ static int fts3StringAppend(
 **
 **     ........X.....X
 **
-** This function "shifts" the beginning of the snippet forward in the
-** document so that there are approximately the same number of
+** This function "shifts" the beginning of the snippet forward in the 
+** document so that there are approximately the same number of 
 ** non-highlighted terms to the right of the final highlighted term as there
 ** are to the left of the first highlighted term. For example, to this:
 **
@@ -646,8 +646,8 @@ static int fts3StringAppend(
 **
 ** This is done as part of extracting the snippet text, not when selecting
 ** the snippet. Snippet selection is done based on doclists only, so there
-** is no way for fts3BestSnippet() to know whether or not the document
-** actually contains terms that follow the final highlighted term.
+** is no way for fts3BestSnippet() to know whether or not the document 
+** actually contains terms that follow the final highlighted term. 
 */
 static int fts3SnippetShift(
   Fts3Table *pTab,                /* FTS3 table snippet comes from */
@@ -737,7 +737,7 @@ static int fts3SnippetText(
   int iCol = pFragment->iCol+1;   /* Query column to extract text from */
   sqlite3_tokenizer_module *pMod; /* Tokenizer module methods object */
   sqlite3_tokenizer_cursor *pC;   /* Tokenizer cursor open on zDoc/nDoc */
-
+  
   zDoc = (const char *)sqlite3_column_text(pCsr->pStmt, iCol);
   if( zDoc==0 ){
     if( sqlite3_column_type(pCsr->pStmt, iCol)!=SQLITE_NULL ){
@@ -777,7 +777,7 @@ static int fts3SnippetText(
       if( rc==SQLITE_DONE ){
         /* Special case - the last token of the snippet is also the last token
         ** of the column. Append any punctuation that occurred between the end
-        ** of the previous token and the end of the document to the output.
+        ** of the previous token and the end of the document to the output. 
         ** Then break out of the loop. */
         rc = fts3StringAppend(pOut, &zDoc[iEnd], -1);
       }
@@ -794,7 +794,7 @@ static int fts3SnippetText(
 
       /* Now that the shift has been done, check if the initial "..." are
       ** required. They are required if (a) this is not the first fragment,
-      ** or (b) this fragment does not begin at position 0 of its column.
+      ** or (b) this fragment does not begin at position 0 of its column. 
       */
       if( rc==SQLITE_OK ){
         if( iPos>0 || iFragment>0 ){
@@ -830,8 +830,8 @@ static int fts3SnippetText(
 
 
 /*
-** This function is used to count the entries in a column-list (a
-** delta-encoded list of term offsets within a single column of a single
+** This function is used to count the entries in a column-list (a 
+** delta-encoded list of term offsets within a single column of a single 
 ** row). When this function is called, *ppCollist should point to the
 ** beginning of the first varint in the column-list (the varint that
 ** contains the position of the first matching term in the column data).
@@ -917,11 +917,11 @@ static int fts3ExprLHitGather(
 
 /*
 ** fts3ExprIterate() callback used to collect the "global" matchinfo stats
-** for a single query.
+** for a single query. 
 **
 ** fts3ExprIterate() callback to load the 'global' elements of a
-** FTS3_MATCHINFO_HITS matchinfo array. The global stats are those elements
-** of the matchinfo array that are constant for all rows returned by the
+** FTS3_MATCHINFO_HITS matchinfo array. The global stats are those elements 
+** of the matchinfo array that are constant for all rows returned by the 
 ** current query.
 **
 ** Argument pCtx is actually a pointer to a struct of type MatchInfo. This
@@ -937,7 +937,7 @@ static int fts3ExprLHitGather(
 ** at least one instance of phrase iPhrase.
 **
 ** If the phrase pExpr consists entirely of deferred tokens, then all X and
-** Y values are set to nDoc, where nDoc is the number of documents in the
+** Y values are set to nDoc, where nDoc is the number of documents in the 
 ** file system. This is done because the full-text index doclist is required
 ** to calculate these values properly, and the full-text index doclist is
 ** not available for deferred tokens.
@@ -955,7 +955,7 @@ static int fts3ExprGlobalHitsCb(
 
 /*
 ** fts3ExprIterate() callback used to collect the "local" part of the
-** FTS3_MATCHINFO_HITS array. The local stats are those elements of the
+** FTS3_MATCHINFO_HITS array. The local stats are those elements of the 
 ** array that are different for each row returned by the query.
 */
 static int fts3ExprLocalHitsCb(
@@ -982,7 +982,7 @@ static int fts3ExprLocalHitsCb(
 }
 
 static int fts3MatchinfoCheck(
-  Fts3Table *pTab,
+  Fts3Table *pTab, 
   char cArg,
   char **pzErr
 ){
@@ -1007,8 +1007,8 @@ static size_t fts3MatchinfoSize(MatchInfo *pInfo, char cArg){
 
   switch( cArg ){
     case FTS3_MATCHINFO_NDOC:
-    case FTS3_MATCHINFO_NPHRASE:
-    case FTS3_MATCHINFO_NCOL:
+    case FTS3_MATCHINFO_NPHRASE: 
+    case FTS3_MATCHINFO_NCOL: 
       nVal = 1;
       break;
 
@@ -1074,7 +1074,7 @@ static int fts3MatchinfoSelectDoctotal(
 }
 
 /*
-** An instance of the following structure is used to store state while
+** An instance of the following structure is used to store state while 
 ** iterating through a multi-column position-list corresponding to the
 ** hits for a single phrase on a single row in order to calculate the
 ** values for a matchinfo() FTS3_MATCHINFO_LCS request.
@@ -1087,7 +1087,7 @@ struct LcsIterator {
   int iPos;                       /* Current position */
 };
 
-/*
+/* 
 ** If LcsIterator.iCol is set to the following value, the iterator has
 ** finished iterating through all offsets for all columns.
 */
@@ -1124,16 +1124,16 @@ static int fts3LcsIteratorAdvance(LcsIterator *pIter){
   pIter->pRead = pRead;
   return rc;
 }
-
+  
 /*
-** This function implements the FTS3_MATCHINFO_LCS matchinfo() flag.
+** This function implements the FTS3_MATCHINFO_LCS matchinfo() flag. 
 **
 ** If the call is successful, the longest-common-substring lengths for each
-** column are written into the first nCol elements of the pInfo->aMatchinfo[]
+** column are written into the first nCol elements of the pInfo->aMatchinfo[] 
 ** array before returning. SQLITE_OK is returned in this case.
 **
 ** Otherwise, if an error occurs, an SQLite error code is returned and the
-** data written to the first nCol elements of pInfo->aMatchinfo[] is
+** data written to the first nCol elements of pInfo->aMatchinfo[] is 
 ** undefined.
 */
 static int fts3MatchinfoLcs(Fts3Cursor *pCsr, MatchInfo *pInfo){
@@ -1210,7 +1210,7 @@ static int fts3MatchinfoLcs(Fts3Cursor *pCsr, MatchInfo *pInfo){
 
 /*
 ** Populate the buffer pInfo->aMatchinfo[] with an array of integers to
-** be returned by the matchinfo() function. Argument zArg contains the
+** be returned by the matchinfo() function. Argument zArg contains the 
 ** format string passed as the second argument to matchinfo (or the
 ** default value "pcx" if no second argument was specified). The format
 ** string has already been validated and the pInfo->aMatchinfo[] array
@@ -1221,7 +1221,7 @@ static int fts3MatchinfoLcs(Fts3Cursor *pCsr, MatchInfo *pInfo){
 ** rows (i.e. FTS3_MATCHINFO_NPHRASE, NCOL, NDOC, AVGLENGTH and part of HITS)
 ** have already been populated.
 **
-** Return SQLITE_OK if successful, or an SQLite error code if an error
+** Return SQLITE_OK if successful, or an SQLite error code if an error 
 ** occurs. If a value other than SQLITE_OK is returned, the state the
 ** pInfo->aMatchinfo[] buffer is left in is undefined.
 */
@@ -1246,7 +1246,7 @@ static int fts3MatchinfoValues(
       case FTS3_MATCHINFO_NCOL:
         if( bGlobal ) pInfo->aMatchinfo[0] = pInfo->nCol;
         break;
-
+        
       case FTS3_MATCHINFO_NDOC:
         if( bGlobal ){
           sqlite3_int64 nDoc = 0;
@@ -1255,7 +1255,7 @@ static int fts3MatchinfoValues(
         }
         break;
 
-      case FTS3_MATCHINFO_AVGLENGTH:
+      case FTS3_MATCHINFO_AVGLENGTH: 
         if( bGlobal ){
           sqlite3_int64 nDoc;     /* Number of rows in table */
           const char *a;          /* Aggregate column length array */
@@ -1344,7 +1344,7 @@ static int fts3MatchinfoValues(
 
 
 /*
-** Populate pCsr->aMatchinfo[] with data for the current row. The
+** Populate pCsr->aMatchinfo[] with data for the current row. The 
 ** 'matchinfo' data is an array of 32-bit unsigned integers (C type u32).
 */
 static void fts3GetMatchinfo(
@@ -1364,8 +1364,8 @@ static void fts3GetMatchinfo(
   sInfo.pCursor = pCsr;
   sInfo.nCol = pTab->nColumn;
 
-  /* If there is cached matchinfo() data, but the format string for the
-  ** cache does not match the format string for this request, discard
+  /* If there is cached matchinfo() data, but the format string for the 
+  ** cache does not match the format string for this request, discard 
   ** the cached data. */
   if( pCsr->pMIBuffer && strcmp(pCsr->pMIBuffer->zMatchinfo, zArg) ){
     sqlite3Fts3MIBufferFree(pCsr->pMIBuffer);
@@ -1373,7 +1373,7 @@ static void fts3GetMatchinfo(
   }
 
   /* If Fts3Cursor.pMIBuffer is NULL, then this is the first time the
-  ** matchinfo function has been called for this query. In this case
+  ** matchinfo function has been called for this query. In this case 
   ** allocate the array used to accumulate the matchinfo data and
   ** initialize those elements that are constant for every row.
   */
@@ -1448,7 +1448,7 @@ void sqlite3Fts3Snippet(
 
   /* The returned text includes up to four fragments of text extracted from
   ** the data in the current row. The first iteration of the for(...) loop
-  ** below attempts to locate a single fragment of text nToken tokens in
+  ** below attempts to locate a single fragment of text nToken tokens in 
   ** size that contains at least one instance of all phrases in the query
   ** expression that appear in the current row. If such a fragment of text
   ** cannot be found, the second iteration of the loop attempts to locate
@@ -1519,7 +1519,7 @@ void sqlite3Fts3Snippet(
   assert( nFToken>0 );
 
   for(i=0; i<nSnippet && rc==SQLITE_OK; i++){
-    rc = fts3SnippetText(pCsr, &aSnippet[i],
+    rc = fts3SnippetText(pCsr, &aSnippet[i], 
         i, (i==nSnippet-1), nFToken, zStart, zEnd, zEllipsis, &res
     );
   }
@@ -1617,7 +1617,7 @@ void sqlite3Fts3Offsets(
   sCtx.iDocid = pCsr->iPrevId;
   sCtx.pCsr = pCsr;
 
-  /* Loop through the table columns, appending offset information to
+  /* Loop through the table columns, appending offset information to 
   ** string-buffer res for each column.
   */
   for(iCol=0; iCol<pTab->nColumn; iCol++){
@@ -1630,7 +1630,7 @@ void sqlite3Fts3Offsets(
     const char *zDoc;
     int nDoc;
 
-    /* Initialize the contents of sCtx.aTerm[] for column iCol. There is
+    /* Initialize the contents of sCtx.aTerm[] for column iCol. There is 
     ** no way that this operation can fail, so the return code from
     ** fts3ExprIterate() can be discarded.
     */
@@ -1638,11 +1638,11 @@ void sqlite3Fts3Offsets(
     sCtx.iTerm = 0;
     (void)fts3ExprIterate(pCsr->pExpr, fts3ExprTermOffsetInit, (void*)&sCtx);
 
-    /* Retreive the text stored in column iCol. If an SQL NULL is stored
+    /* Retreive the text stored in column iCol. If an SQL NULL is stored 
     ** in column iCol, jump immediately to the next iteration of the loop.
     ** If an OOM occurs while retrieving the data (this can happen if SQLite
-    ** needs to transform the data from utf-16 to utf-8), return SQLITE_NOMEM
-    ** to the caller.
+    ** needs to transform the data from utf-16 to utf-8), return SQLITE_NOMEM 
+    ** to the caller. 
     */
     zDoc = (const char *)sqlite3_column_text(pCsr->pStmt, iCol+1);
     nDoc = sqlite3_column_bytes(pCsr->pStmt, iCol+1);
@@ -1689,7 +1689,7 @@ void sqlite3Fts3Offsets(
         }
         if( rc==SQLITE_OK ){
           char aBuffer[64];
-          sqlite3_snprintf(sizeof(aBuffer), aBuffer,
+          sqlite3_snprintf(sizeof(aBuffer), aBuffer, 
               "%d %d %d %d ", iCol, pTerm-sCtx.aTerm, iStart, iEnd-iStart
           );
           rc = fts3StringAppend(&res, aBuffer, -1);

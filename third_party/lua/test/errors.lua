@@ -493,7 +493,7 @@ if not _soft then
   f(3)
 
   local function loop (x,y,z) return 1 + loop(x, y, z) end
-
+ 
   local res, msg = xpcall(loop, function (m)
     assert(string.find(m, "stack overflow"))
     checkerr("error handling", loop)
@@ -526,7 +526,7 @@ do
   -- 'assert' with extra arguments
   res, msg = pcall(assert, false, "X", t)
   assert(not res and msg == "X")
-
+ 
   -- 'assert' with no message
   res, msg = pcall(function () assert(false) end)
   local line = string.match(msg, "%w+%.lua:(%d+): assertion failed!$")

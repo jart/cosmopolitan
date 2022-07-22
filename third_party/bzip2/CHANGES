@@ -5,7 +5,7 @@
  bzip2/libbzip2 version 1.0.8 of 13 July 2019
  Copyright (C) 1996-2019 Julian Seward <jseward@acm.org>
 
- Please read the WARNING, DISCLAIMER and PATENTS sections in the
+ Please read the WARNING, DISCLAIMER and PATENTS sections in the 
  README file.
 
  This program is released under the terms of the license contained
@@ -20,7 +20,7 @@ First version.
 
 0.9.0a
 ~~~~~~
-Removed 'ranlib' from Makefile, since most modern Unix-es
+Removed 'ranlib' from Makefile, since most modern Unix-es 
 don't need it, or even know about it.
 
 
@@ -52,7 +52,7 @@ In bzlib.c:
      bzBuffToBuffDecompress.  Fixed.
 
 In compress.c:
-   * changed setting of nGroups in sendMTFValues() so as to
+   * changed setting of nGroups in sendMTFValues() so as to 
      do a bit better on small files.  This _does_ effect
      bzip2.c.
 
@@ -117,7 +117,7 @@ changes are minor documentation changes.
 Several minor bugfixes and enhancements:
 
 * Large file support.  The library uses 64-bit counters to
-  count the volume of data passing through it.  bzip2.c
+  count the volume of data passing through it.  bzip2.c 
   is now compiled with -D_FILE_OFFSET_BITS=64 to get large
   file support from the C library.  -v correctly prints out
   file sizes greater than 4 gigabytes.  All these changes have
@@ -128,7 +128,7 @@ Several minor bugfixes and enhancements:
 * Decompression robustness.  The library/program should be
   robust to any corruption of compressed data, detecting and
   handling _all_ corruption, instead of merely relying on
-  the CRCs.  What this means is that the program should
+  the CRCs.  What this means is that the program should 
   never crash, given corrupted data, and the library should
   always return BZ_DATA_ERROR.
 
@@ -140,13 +140,13 @@ Several minor bugfixes and enhancements:
 * Don't run out of file handles on test/decompression when
   large numbers of files have invalid magic numbers.
 
-* Avoid library namespace pollution.  Prefix all exported
+* Avoid library namespace pollution.  Prefix all exported 
   symbols with BZ2_.
 
 * Minor sorting enhancements from my DCC2000 paper.
 
 * Advance the version number to 1.0, so as to counteract the
-  (false-in-this-case) impression some people have that programs
+  (false-in-this-case) impression some people have that programs 
   with version numbers less than 1.0 are in some way, experimental,
   pre-release versions.
 
@@ -156,10 +156,10 @@ Several minor bugfixes and enhancements:
 * Make the program exit with 2 instead of 0 when decompression
   fails due to a bad magic number (ie, an invalid bzip2 header).
   Also exit with 1 (as the manual claims :-) whenever a diagnostic
-  message would have been printed AND the corresponding operation
+  message would have been printed AND the corresponding operation 
   is aborted, for example
      bzip2: Output file xx already exists.
-  When a diagnostic message is printed but the operation is not
+  When a diagnostic message is printed but the operation is not 
   aborted, for example
      bzip2: Can't guess original name for wurble -- using wurble.out
   then the exit value 0 is returned, unless some other problem is
@@ -272,7 +272,7 @@ Fixes some minor bugs since the last version, 1.0.2.
 * Further robustification against corrupted compressed data.
   There are currently no known bitstreams which can cause the
   decompressor to crash, loop or access memory which does not
-  belong to it.  If you are using bzip2 or the library to
+  belong to it.  If you are using bzip2 or the library to 
   decompress bitstreams from untrusted sources, an upgrade
   to 1.0.3 is recommended.  This fixes CAN-2005-1260.
 

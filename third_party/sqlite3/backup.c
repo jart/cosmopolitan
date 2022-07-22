@@ -47,15 +47,15 @@ struct sqlite3_backup {
 **   Once it has been created using backup_init(), a single sqlite3_backup
 **   structure may be accessed via two groups of thread-safe entry points:
 **
-**     * Via the sqlite3_backup_XXX() API function backup_step() and
+**     * Via the sqlite3_backup_XXX() API function backup_step() and 
 **       backup_finish(). Both these functions obtain the source database
-**       handle mutex and the mutex associated with the source BtShared
+**       handle mutex and the mutex associated with the source BtShared 
 **       structure, in that order.
 **
 **     * Via the BackupUpdate() and BackupRestart() functions, which are
 **       invoked by the pager layer to report various state changes in
 **       the page cache associated with the source database. The mutex
-**       associated with the source database BtShared structure will always
+**       associated with the source database BtShared structure will always 
 **       be held when either of these functions are invoked.
 **
 **   The other sqlite3_backup_XXX() API functions, backup_remaining() and
@@ -76,8 +76,8 @@ struct sqlite3_backup {
 ** in connection handle pDb. If such a database cannot be found, return
 ** a NULL pointer and write an error message to pErrorDb.
 **
-** If the "temp" database is requested, it may need to be opened by this
-** function. If an error occurs while doing so, return 0 and write an
+** If the "temp" database is requested, it may need to be opened by this 
+** function. If an error occurs while doing so, return 0 and write an 
 ** error message to pErrorDb.
 */
 static Btree *findBtree(sqlite3 *pErrorDb, sqlite3 *pDb, const char *zDb){
@@ -120,7 +120,7 @@ static int setDestPgsz(sqlite3_backup *p){
 /*
 ** Check that there is no open read-transaction on the b-tree passed as the
 ** second argument. If there is not, return SQLITE_OK. Otherwise, if there
-** is an open read-transaction, return SQLITE_ERROR and leave an error
+** is an open read-transaction, return SQLITE_ERROR and leave an error 
 ** message in database handle db.
 */
 static int checkReadTransaction(sqlite3 *db, Btree *p){
@@ -190,13 +190,13 @@ sqlite3_backup *sqlite3_backup_init(
     p->iNext = 1;
     p->isAttached = 0;
 
-    if( 0==p->pSrc || 0==p->pDest
-     || checkReadTransaction(pDestDb, p->pDest)!=SQLITE_OK
+    if( 0==p->pSrc || 0==p->pDest 
+     || checkReadTransaction(pDestDb, p->pDest)!=SQLITE_OK 
      ){
       /* One (or both) of the named databases did not exist or an OOM
       ** error was hit. Or there is a transaction open on the destination
-      ** database. The error has already been written into the pDestDb
-      ** handle. All that is left to do here is free the sqlite3_backup
+      ** database. The error has already been written into the pDestDb 
+      ** handle. All that is left to do here is free the sqlite3_backup 
       ** structure.  */
       sqlite3_free(p);
       p = 0;
@@ -212,7 +212,7 @@ sqlite3_backup *sqlite3_backup_init(
 }
 
 /*
-** Argument rc is an SQLite error code. Return true if this error is
+** Argument rc is an SQLite error code. Return true if this error is 
 ** considered fatal if encountered during a backup operation. All errors
 ** are considered fatal except for SQLITE_BUSY and SQLITE_LOCKED.
 */
@@ -221,8 +221,8 @@ static int isFatalError(int rc){
 }
 
 /*
-** Parameter zSrcData points to a buffer containing the data for
-** page iSrcPg from the source database. Copy this data into the
+** Parameter zSrcData points to a buffer containing the data for 
+** page iSrcPg from the source database. Copy this data into the 
 ** destination database.
 */
 static int backupOnePage(
@@ -246,13 +246,13 @@ static int backupOnePage(
   assert( zSrcData );
 
   /* Catch the case where the destination is an in-memory database and the
-  ** page sizes of the source and destination differ.
+  ** page sizes of the source and destination differ. 
   */
   if( nSrcPgsz!=nDestPgsz && sqlite3PagerIsMemdb(pDestPager) ){
     rc = SQLITE_READONLY;
   }
 
-  /* This loop runs once for each destination page spanned by the source
+  /* This loop runs once for each destination page spanned by the source 
   ** page. For each iteration, variable iOff is set to the byte offset
   ** of the destination page.
   */
@@ -271,7 +271,7 @@ static int backupOnePage(
       ** Then clear the Btree layer MemPage.isInit flag. Both this module
       ** and the pager code use this trick (clearing the first byte
       ** of the page 'extra' space to invalidate the Btree layers
-      ** cached parse of the page). MemPage.isInit is marked
+      ** cached parse of the page). MemPage.isInit is marked 
       ** "MUST BE FIRST" for this purpose.
       */
       memcpy(zOut, zIn, nCopy);
@@ -291,7 +291,7 @@ static int backupOnePage(
 ** exactly iSize bytes. If pFile is not larger than iSize bytes, then
 ** this function is a no-op.
 **
-** Return SQLITE_OK if everything is successful, or an SQLite error
+** Return SQLITE_OK if everything is successful, or an SQLite error 
 ** code if an error occurs.
 */
 static int backupTruncateFile(sqlite3_file *pFile, i64 iSize){
@@ -373,7 +373,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
     /* Lock the destination database, if it is not locked already. */
     if( SQLITE_OK==rc && p->bDestLocked==0
      && SQLITE_OK==(rc = sqlite3BtreeBeginTrans(p->pDest, 2,
-                                                (int*)&p->iDestSchema))
+                                                (int*)&p->iDestSchema)) 
     ){
       p->bDestLocked = 1;
     }
@@ -386,7 +386,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
     if( SQLITE_OK==rc && destMode==PAGER_JOURNALMODE_WAL && pgszSrc!=pgszDest ){
       rc = SQLITE_READONLY;
     }
-
+  
     /* Now that there is a read-lock on the source database, query the
     ** source pager for the number of pages in the database.
     */
@@ -413,7 +413,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
         attachBackupObject(p);
       }
     }
-
+  
     /* Update the schema version field in the destination database. This
     ** is to make sure that the schema-version really does change in
     ** the case where the source and destination databases have the
@@ -439,12 +439,12 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
         int nDestTruncate;
         /* Set nDestTruncate to the final number of pages in the destination
         ** database. The complication here is that the destination page
-        ** size may be different to the source page size.
+        ** size may be different to the source page size. 
         **
-        ** If the source page size is smaller than the destination page size,
+        ** If the source page size is smaller than the destination page size, 
         ** round up. In this case the call to sqlite3OsTruncate() below will
         ** fix the size of the file. However it is important to call
-        ** sqlite3PagerTruncateImage() here so that any pages in the
+        ** sqlite3PagerTruncateImage() here so that any pages in the 
         ** destination file that lie beyond the nDestTruncate page mark are
         ** journalled by PagerCommitPhaseOne() before they are destroyed
         ** by the file truncation.
@@ -468,7 +468,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           **
           **   * The destination may need to be truncated, and
           **
-          **   * Data stored on the pages immediately following the
+          **   * Data stored on the pages immediately following the 
           **     pending-byte page in the source database may need to be
           **     copied into the destination database.
           */
@@ -480,7 +480,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           i64 iEnd;
 
           assert( pFile );
-          assert( nDestTruncate==0
+          assert( nDestTruncate==0 
               || (i64)nDestTruncate*(i64)pgszDest >= iSize || (
                 nDestTruncate==(int)(PENDING_BYTE_PAGE(p->pDest->pBt)-1)
              && iSize>=PENDING_BYTE && iSize<=PENDING_BYTE+pgszDest
@@ -490,7 +490,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           ** database has been stored in the journal for pDestPager and the
           ** journal synced to disk. So at this point we may safely modify
           ** the database file in any way, knowing that if a power failure
-          ** occurs, the original database will be reconstructed from the
+          ** occurs, the original database will be reconstructed from the 
           ** journal file.  */
           sqlite3PagerPagecount(pDestPager, &nDstPage);
           for(iPg=nDestTruncate; rc==SQLITE_OK && iPg<=(Pgno)nDstPage; iPg++){
@@ -510,8 +510,8 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           /* Write the extra pages and truncate the database file as required */
           iEnd = MIN(PENDING_BYTE + pgszDest, iSize);
           for(
-            iOff=PENDING_BYTE+pgszSrc;
-            rc==SQLITE_OK && iOff<iEnd;
+            iOff=PENDING_BYTE+pgszSrc; 
+            rc==SQLITE_OK && iOff<iEnd; 
             iOff+=pgszSrc
           ){
             PgHdr *pSrcPg = 0;
@@ -535,7 +535,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
           sqlite3PagerTruncateImage(pDestPager, nDestTruncate);
           rc = sqlite3PagerCommitPhaseOne(pDestPager, 0, 0);
         }
-
+    
         /* Finish committing the transaction to the destination database. */
         if( SQLITE_OK==rc
          && SQLITE_OK==(rc = sqlite3BtreeCommitPhaseTwo(p->pDest, 0))
@@ -544,7 +544,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
         }
       }
     }
-
+  
     /* If bCloseTrans is true, then this function opened a read transaction
     ** on the source database. Close the read transaction here. There is
     ** no need to check the return values of the btree methods here, as
@@ -556,7 +556,7 @@ int sqlite3_backup_step(sqlite3_backup *p, int nPage){
       TESTONLY( rc2 |= ) sqlite3BtreeCommitPhaseTwo(p->pSrc, 0);
       assert( rc2==SQLITE_OK );
     }
-
+  
     if( rc==SQLITE_IOERR_NOMEM ){
       rc = SQLITE_NOMEM_BKPT;
     }
@@ -638,7 +638,7 @@ int sqlite3_backup_remaining(sqlite3_backup *p){
 }
 
 /*
-** Return the total number of pages in the source database as of the most
+** Return the total number of pages in the source database as of the most 
 ** recent call to sqlite3_backup_step().
 */
 int sqlite3_backup_pagecount(sqlite3_backup *p){
@@ -653,7 +653,7 @@ int sqlite3_backup_pagecount(sqlite3_backup *p){
 
 /*
 ** This function is called after the contents of page iPage of the
-** source database have been modified. If page iPage has already been
+** source database have been modified. If page iPage has already been 
 ** copied into the destination database, then the data written to the
 ** destination is now invalidated. The destination copy of iPage needs
 ** to be updated with the new data before the backup operation is
@@ -696,7 +696,7 @@ void sqlite3BackupUpdate(sqlite3_backup *pBackup, Pgno iPage, const u8 *aData){
 ** Restart the backup process. This is called when the pager layer
 ** detects that the database has been modified by an external database
 ** connection. In this case there is no way of knowing which of the
-** pages that have been copied into the destination database are still
+** pages that have been copied into the destination database are still 
 ** valid and which are not, so the entire process needs to be restarted.
 **
 ** It is assumed that the mutex associated with the BtShared object
@@ -716,8 +716,8 @@ void sqlite3BackupRestart(sqlite3_backup *pBackup){
 ** Copy the complete content of pBtFrom into pBtTo.  A transaction
 ** must be active for both files.
 **
-** The size of file pTo may be reduced by this operation. If anything
-** goes wrong, the transaction on pTo is rolled back. If successful, the
+** The size of file pTo may be reduced by this operation. If anything 
+** goes wrong, the transaction on pTo is rolled back. If successful, the 
 ** transaction is committed before returning.
 */
 int sqlite3BtreeCopyFile(Btree *pTo, Btree *pFrom){
@@ -749,9 +749,9 @@ int sqlite3BtreeCopyFile(Btree *pTo, Btree *pFrom){
 
   /* 0x7FFFFFFF is the hard limit for the number of pages in a database
   ** file. By passing this as the number of pages to copy to
-  ** sqlite3_backup_step(), we can guarantee that the copy finishes
+  ** sqlite3_backup_step(), we can guarantee that the copy finishes 
   ** within a single call (unless an error occurs). The assert() statement
-  ** checks this assumption - (p->rc) should be set to either SQLITE_DONE
+  ** checks this assumption - (p->rc) should be set to either SQLITE_DONE 
   ** or an error code.  */
   sqlite3_backup_step(&b, 0x7FFFFFFF);
   assert( b.rc!=SQLITE_OK );

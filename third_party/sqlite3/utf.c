@@ -171,7 +171,7 @@ u32 sqlite3Utf8Read(
 /*
 ** If the TRANSLATE_TRACE macro is defined, the value of each Mem is
 ** printed on stderr on the way into and out of sqlite3VdbeMemTranslate().
-*/
+*/ 
 /* #define TRANSLATE_TRACE 1 */
 
 #ifndef SQLITE_OMIT_UTF16
@@ -198,13 +198,13 @@ SQLITE_NOINLINE int sqlite3VdbeMemTranslate(Mem *pMem, u8 desiredEnc){
   {
     StrAccum acc;
     char zBuf[1000];
-    sqlite3StrAccumInit(&acc, 0, zBuf, sizeof(zBuf), 0);
+    sqlite3StrAccumInit(&acc, 0, zBuf, sizeof(zBuf), 0);  
     sqlite3VdbeMemPrettyPrint(pMem, &acc);
     fprintf(stderr, "INPUT:  %s\n", sqlite3StrAccumFinish(&acc));
   }
 #endif
 
-  /* If the translation is between UTF-16 little and big endian, then
+  /* If the translation is between UTF-16 little and big endian, then 
   ** all that is required is to swap the byte order. This case is handled
   ** differently from the others.
   */
@@ -356,7 +356,7 @@ translate_out:
   {
     StrAccum acc;
     char zBuf[1000];
-    sqlite3StrAccumInit(&acc, 0, zBuf, sizeof(zBuf), 0);
+    sqlite3StrAccumInit(&acc, 0, zBuf, sizeof(zBuf), 0);  
     sqlite3VdbeMemPrettyPrint(pMem, &acc);
     fprintf(stderr, "OUTPUT: %s\n", sqlite3StrAccumFinish(&acc));
   }
@@ -367,7 +367,7 @@ translate_out:
 
 #ifndef SQLITE_OMIT_UTF16
 /*
-** This routine checks for a byte-order mark at the beginning of the
+** This routine checks for a byte-order mark at the beginning of the 
 ** UTF-16 string stored in *pMem. If one is present, it is removed and
 ** the encoding of the Mem adjusted. This routine does not do any
 ** byte-swapping, it just sets Mem.enc appropriately.
@@ -390,7 +390,7 @@ int sqlite3VdbeMemHandleBom(Mem *pMem){
       bom = SQLITE_UTF16LE;
     }
   }
-
+  
   if( bom ){
     rc = sqlite3VdbeMemMakeWriteable(pMem);
     if( rc==SQLITE_OK ){
@@ -410,7 +410,7 @@ int sqlite3VdbeMemHandleBom(Mem *pMem){
 ** pZ is a UTF-8 encoded unicode string. If nByte is less than zero,
 ** return the number of unicode characters in pZ up to (but not including)
 ** the first 0x00 byte. If nByte is not less than zero, return the
-** number of unicode characters in the first nByte of pZ (or up to
+** number of unicode characters in the first nByte of pZ (or up to 
 ** the first 0x00, whichever comes first).
 */
 int sqlite3Utf8CharLen(const char *zIn, int nByte){
@@ -430,7 +430,7 @@ int sqlite3Utf8CharLen(const char *zIn, int nByte){
   return r;
 }
 
-/* This test function is not currently used by the automated test-suite.
+/* This test function is not currently used by the automated test-suite. 
 ** Hence it is only available in debug builds.
 */
 #if defined(SQLITE_TEST) && defined(SQLITE_DEBUG)
@@ -492,7 +492,7 @@ int sqlite3Utf16ByteLen(const void *zIn, int nChar){
   int c;
   unsigned char const *z = zIn;
   int n = 0;
-
+  
   if( SQLITE_UTF16NATIVE==SQLITE_UTF16LE ) z++;
   while( n<nChar ){
     c = z[0];
@@ -500,7 +500,7 @@ int sqlite3Utf16ByteLen(const void *zIn, int nChar){
     if( c>=0xd8 && c<0xdc && z[0]>=0xdc && z[0]<0xe0 ) z += 2;
     n++;
   }
-  return (int)(z-(unsigned char const *)zIn)
+  return (int)(z-(unsigned char const *)zIn) 
               - (SQLITE_UTF16NATIVE==SQLITE_UTF16LE);
 }
 

@@ -243,7 +243,7 @@ void sqlite3_str_vappendf(
   PrintfArguments *pArgList = 0; /* Arguments for SQLITE_PRINTF_SQLFUNC */
   char buf[etBUFSIZE];       /* Conversion buffer */
 
-  /* pAccum never starts out with an empty buffer that was obtained from
+  /* pAccum never starts out with an empty buffer that was obtained from 
   ** malloc().  This precondition is required by the mprintf("%z...")
   ** optimization. */
   assert( pAccum->nChar>0 || (pAccum->printfFlags&SQLITE_PRINTF_MALLOCED)==0 );
@@ -410,7 +410,7 @@ void sqlite3_str_vappendf(
                      sizeof(char*)==sizeof(long int) ? 1 : 0;
         /* no break */ deliberate_fall_through
       case etORDINAL:
-      case etRADIX:
+      case etRADIX:      
         cThousand = 0;
         /* no break */ deliberate_fall_through
       case etDECIMAL:
@@ -1167,7 +1167,7 @@ char *sqlite3_vmprintf(const char *zFormat, va_list ap){
   char zBase[SQLITE_PRINT_BUF_SIZE];
   StrAccum acc;
 
-#ifdef SQLITE_ENABLE_API_ARMOR
+#ifdef SQLITE_ENABLE_API_ARMOR  
   if( zFormat==0 ){
     (void)SQLITE_MISUSE_BKPT;
     return 0;

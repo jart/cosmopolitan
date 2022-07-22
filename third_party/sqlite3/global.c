@@ -16,7 +16,7 @@
 /* clang-format off */
 
 /* An array to map all upper-case characters into their corresponding
-** lower-case character.
+** lower-case character. 
 **
 ** SQLite only considers US-ASCII (or EBCDIC) characters.  We do not
 ** handle case conversions for the UTF character set since the tables
@@ -83,7 +83,7 @@ const unsigned char sqlite3UpperToLower[] = {
 ** The equivalent of tolower() is implemented using the sqlite3UpperToLower[]
 ** array. tolower() is used more often than toupper() by SQLite.
 **
-** Bit 0x40 is set if the character is non-alphanumeric and can be used in an
+** Bit 0x40 is set if the character is non-alphanumeric and can be used in an 
 ** SQLite identifier.  Identifiers are alphanumerics, "_", "$", and any
 ** non-ASCII UTF character. Hence the test for whether or not a character is
 ** part of an identifier is 0x46.
@@ -148,7 +148,7 @@ const unsigned char sqlite3CtypeMap[256] = {
 #if !defined(SQLITE_ALLOW_COVERING_INDEX_SCAN)
 # define SQLITE_ALLOW_COVERING_INDEX_SCAN 1
 #else
-# if !SQLITE_ALLOW_COVERING_INDEX_SCAN
+# if !SQLITE_ALLOW_COVERING_INDEX_SCAN 
 #   error "Compile-time disabling of covering index scan using the\
  -DSQLITE_ALLOW_COVERING_INDEX_SCAN=0 option is deprecated.\
  Contact SQLite developers if this is a problem for you, and\
@@ -171,7 +171,7 @@ const unsigned char sqlite3CtypeMap[256] = {
 ** if journal_mode=MEMORY or if temp_store=MEMORY, regardless of this
 ** setting.)
 */
-#ifndef SQLITE_STMTJRNL_SPILL
+#ifndef SQLITE_STMTJRNL_SPILL 
 # define SQLITE_STMTJRNL_SPILL (64*1024)
 #endif
 
@@ -312,7 +312,7 @@ u32 sqlite3WhereTrace = 0;
 ** Properties of opcodes.  The OPFLG_INITIALIZER macro is
 ** created by mkopcodeh.awk during compilation.  Data is obtained
 ** from the comments following the "case OP_xxxx:" statements in
-** the vdbe.c file.
+** the vdbe.c file.  
 */
 const unsigned char sqlite3OpcodeProperty[] = OPFLG_INITIALIZER;
 
