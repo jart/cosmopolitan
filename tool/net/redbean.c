@@ -3365,7 +3365,7 @@ static int LuaSetStatus(lua_State *L) {
 
 static int LuaGetStatus(lua_State *L) {
   OnlyCallDuringRequest(L, "GetStatus");
-  if (!luaheaderp) {
+  if (!statuscode) {
     lua_pushnil(L);
   } else {
     lua_pushinteger(L, statuscode);
@@ -6360,8 +6360,9 @@ static void InitRequest(void) {
   msgsize = 0;
   loops.n = 0;
   generator = 0;
-  luaheaderp = 0;
   isyielding = 0;
+  luaheaderp = 0;
+  statuscode = 0;
   contentlength = 0;
   referrerpolicy = 0;
   gotcachecontrol = 0;
