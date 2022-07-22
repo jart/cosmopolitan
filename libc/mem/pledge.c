@@ -44,15 +44,16 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define READONLY  0x8000
-#define WRITEONLY 0x4000
-#define INET      0x8000
-#define UNIX      0x4000
 #define ADDRLESS  0x2000
+#define INET      0x8000
 #define LOCK      0x8000
-#define TTY       0x8000
 #define NOEXEC    0x8000
+#define READONLY  0x8000
+#define STDIO     0x8000
 #define THREAD    0x8000
+#define TTY       0x8000
+#define UNIX      0x4000
+#define WRITEONLY 0x4000
 
 // TODO(jart): fix chibicc
 #ifdef __chibicc__
@@ -137,6 +138,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_brk,                //
     __NR_linux_msync,              //
     __NR_linux_mmap | NOEXEC,      //
+    __NR_linux_mremap,             //
     __NR_linux_munmap,             //
     __NR_linux_mincore,            //
     __NR_linux_madvise,            //
@@ -186,6 +188,7 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_futex,              //
     __NR_linux_set_robust_list,    //
     __NR_linux_get_robust_list,    //
+    __NR_linux_prlimit | STDIO,    //
 };
 
 static const uint16_t kPledgeLinuxFlock[] = {
@@ -373,9 +376,21 @@ static const uint16_t kPledgeLinuxUnveil[] = {
 };
 
 // placeholder group
+//
 // pledge.com checks this to do auto-unveiling
 static const uint16_t kPledgeLinuxVminfo[] = {
-    __NR_linux_openat | READONLY,  //
+    __NR_linux_sched_yield,  //
+};
+
+// placeholder group
+//
+// pledge.com uses this to auto-unveil /tmp and $TMPPATH with rwc
+// permissions. pledge() alone (without unveil() too) offers very
+// little security here. consider using them together.
+static const uint16_t kPledgeLinuxTmppath[] = {
+    __NR_linux_lstat,     //
+    __NR_linux_unlink,    //
+    __NR_linux_unlinkat,  //
 };
 
 static const struct Pledges {
@@ -403,6 +418,7 @@ static const struct Pledges {
     [PROMISE_SETTIME] = {"settime", PLEDGE(kPledgeLinuxSettime)},       //
     [PROMISE_PROT_EXEC] = {"prot_exec", PLEDGE(kPledgeLinuxProtExec)},  //
     [PROMISE_VMINFO] = {"vminfo", PLEDGE(kPledgeLinuxVminfo)},          //
+    [PROMISE_TMPPATH] = {"tmppath", PLEDGE(kPledgeLinuxTmppath)},       //
 };
 
 static const struct sock_filter kFilterStart[] = {
@@ -548,26 +564,30 @@ static bool AllowIoctl(struct Filter *f) {
 //   - TIOCSPGRP  (0x5410)
 //   - TIOCGPGRP  (0x540f)
 //   - TIOCSWINSZ (0x5414)
-//   - TIOCSBRK   (0x5427)
 //   - TCFLSH     (0x540b)
+//   - TCXONC     (0x540a)
+//   - TCSBRK     (0x5409)
+//   - TIOCSBRK   (0x5427)
 //
 static bool AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 14 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 16 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 12 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 12 - 4, 0),
-      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 12 - 5, 0),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 12 - 6, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 12 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 12 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 12 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 12 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540b, 12 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5427, 0, 13 - 12),
-      /*L12*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L13*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L14*/ /* next filter */
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 14 - 3, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 14 - 4, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 14 - 5, 0),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 14 - 6, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 14 - 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 14 - 8, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 14 - 9, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 14 - 10, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540b, 14 - 11, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540a, 14 - 12, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5409, 14 - 13, 0),
+      /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5427, 0, 1),
+      /*L14*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L15*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L16*/ /* next filter */
   };
   return AppendFilter(f, PLEDGE(fragment));
 }
@@ -1099,6 +1119,24 @@ static bool AllowFchmodat(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
+// The new_limit parameter of prlimit() must be
+//
+//   - NULL (0)
+//
+static bool AllowPrlimitStdio(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prlimit, 0, 7 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
+      /*L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2]) + 4),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 5),
+      /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L7*/ /* next filter */
+  };
+  return AppendFilter(f, PLEDGE(fragment));
+}
+
 static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
   int i;
   for (i = 0; i < len; ++i) {
@@ -1177,6 +1215,9 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
         break;
       case __NR_linux_clone | THREAD:
         if (!AllowCloneThread(f)) return false;
+        break;
+      case __NR_linux_prlimit | STDIO:
+        if (!AllowPrlimitStdio(f)) return false;
         break;
       default:
         assert(~p[i] & ~0xfff);
@@ -1314,11 +1355,11 @@ int ParsePromises(const char *promises, unsigned long *out) {
  *   getgid, getgroups, times, getrusage, getitimer, getpgid, getpgrp,
  *   getpid, getppid, getresgid, getresuid, getrlimit, getsid, wait4,
  *   gettimeofday, getuid, lseek, madvise, brk, arch_prctl, uname,
- *   set_tid_address, clock_getres, clock_gettime, clock_nanosleep, mmap
- *   (PROT_EXEC and weird flags aren't allowed), mprotect (PROT_EXEC
- *   isn't allowed), msync, sync_file_range, migrate_pages, munmap,
- *   nanosleep, pipe, pipe2, read, readv, pread, recv, poll, recvfrom,
- *   preadv, write, writev, pwrite, pwritev, select, pselect6,
+ *   set_tid_address, clock_getres, clock_gettime, clock_nanosleep,
+ *   mremap, mmap, (PROT_EXEC and weird flags aren't allowed), mprotect
+ *   (PROT_EXEC isn't allowed), msync, sync_file_range, migrate_pages,
+ *   munmap, nanosleep, pipe, pipe2, read, readv, pread, recv, poll,
+ *   recvfrom, preadv, write, writev, pwrite, pwritev, select, pselect6,
  *   copy_file_range, sendfile, tee, splice, vmsplice, alarm, pause,
  *   send, sendto (only if addr is null), setitimer, shutdown, sigaction
  *   (but SIGSYS is forbidden), sigaltstack, sigprocmask, sigreturn,
@@ -1392,6 +1433,10 @@ int ParsePromises(const char *promises, unsigned long *out) {
  *   this is a placeholder group that lets tools like pledge.com check
  *   `__promises` and automatically unveil() a subset of files top would
  *   need, e.g. /proc/stat, /proc/meminfo.
+ *
+ * - "tmppath" allows unlink, unlinkat, and lstat. This is mostly a
+ *   placeholder group for pledge.com, which reads the `__promises`
+ *   global to determine if /tmp and $TMPPATH should be unveiled.
  *
  * `execpromises` only matters if "exec" or "execnative" are specified
  * in `promises`. In that case, this specifies the promises that'll

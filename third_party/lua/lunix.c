@@ -480,25 +480,19 @@ static int LuaUnixChmod(lua_State *L) {
 //     ├─→ content:str
 //     └─→ nil, unix.Errno
 static int LuaUnixReadlink(lua_State *L) {
-  char *buf;
+  size_t got;
   ssize_t rc;
-  const char *path;
-  int dirfd, olderr = errno;
-  size_t got, bufsiz = 8192;
-  path = luaL_checkstring(L, 1);
-  dirfd = luaL_optinteger(L, 2, AT_FDCWD);
-  buf = LuaAllocOrDie(L, bufsiz);
-  if ((rc = readlinkat(dirfd, path, buf, bufsiz)) != -1) {
-    got = rc;
-    if (got < bufsiz) {
-      lua_pushlstring(L, buf, got);
-      free(buf);
+  luaL_Buffer lb;
+  int olderr = errno;
+  if ((rc = readlinkat(luaL_optinteger(L, 2, AT_FDCWD), luaL_checkstring(L, 1),
+                       luaL_buffinitsize(L, &lb, BUFSIZ), BUFSIZ)) != -1) {
+    if ((got = rc) < BUFSIZ) {
+      luaL_pushresultsize(&lb, got);
       return 1;
     } else {
       enametoolong();
     }
   }
-  free(buf);
   return LuaUnixSysretErrno(L, "readlink", olderr);
 }
 

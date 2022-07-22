@@ -21,6 +21,7 @@
 #define PROMISE_SETTIME   17
 #define PROMISE_PROT_EXEC 18
 #define PROMISE_VMINFO    19
+#define PROMISE_TMPPATH   20
 
 #define PLEDGED(x) ((~__promises >> PROMISE_##x) & 1)
 

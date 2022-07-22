@@ -96,7 +96,7 @@ i32 sys_sync_file_range(i32, i64, i64, u32) hidden;
 i32 sys_tgkill(i32, i32, i32) hidden;
 i32 sys_tkill(i32, i32, void *) hidden;
 i32 sys_truncate(const char *, u64, u64) hidden;
-i32 sys_uname(char *) hidden;
+i32 sys_uname(void *) hidden;
 i32 sys_unlinkat(i32, const char *, i32) hidden;
 i32 sys_unveil(const char *, const char *) hidden;
 i64 sys_copy_file_range(i32, long *, i32, long *, u64, u32) hidden;

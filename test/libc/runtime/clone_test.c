@@ -20,6 +20,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
@@ -36,6 +37,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
@@ -60,6 +62,10 @@ void *__initialize_tls(char tib[64]) {
     *(int *)(tib + 0x3c) = 0;
   }
   return tib;
+}
+
+int Hog(void *arg, int tid) {
+  return 0;
 }
 
 void SetUp(void) {

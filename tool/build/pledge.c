@@ -90,6 +90,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - exec: implied by default\n\
      - prot_exec: allow creating executable memory\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
+     - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
 pledge.com v1.1\n\
 copyright 2022 justine alexandra roberts tunney\n\
@@ -413,7 +414,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/dev/stdout", "rw");
     UnveilIfExists("/dev/stderr", "rw");
     UnveilIfExists("/dev/urandom", "r");
-    UnveilIfExists("/dev/localtime", "r");
+    UnveilIfExists("/etc/localtime", "r");
     UnveilIfExists("/proc/self/fd", "rw");
     UnveilIfExists("/proc/self/stat", "r");
     UnveilIfExists("/proc/self/status", "r");
@@ -445,8 +446,10 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
 
   if (~ipromises & (1ul << PROMISE_TTY)) {
     UnveilIfExists(ttyname(0), "rw");
-    UnveilIfExists("/etc/tty", "rw");
-    UnveilIfExists("/etc/console", "rw");
+    UnveilIfExists("/dev/tty", "rw");
+    UnveilIfExists("/dev/console", "rw");
+    UnveilIfExists("/etc/terminfo", "r");
+    UnveilIfExists("/usr/lib/terminfo", "r");
     UnveilIfExists("/usr/share/terminfo", "r");
   }
 
@@ -463,6 +466,11 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
     UnveilIfExists("/sys/devices/system/cpu", "r");
   }
 
+  if (~ipromises & (1ul << PROMISE_TMPPATH)) {
+    UnveilIfExists("/tmp", "rwc");
+    UnveilIfExists(getenv("TMPPATH"), "rwc");
+  }
+
   for (int i = 0; i < unveils.n; ++i) {
     char *s, *t;
     const char *path;
@@ -476,7 +484,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
       perm = "r";
       path = s;
     }
-    Unveil(path, perm);
+    UnveilIfExists(path, perm);
   }
 
   if (unveil(0, 0) == -1) {

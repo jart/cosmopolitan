@@ -32,7 +32,7 @@
 int touch(const char *file, uint32_t mode) {
   int rc, fd, olderr;
   olderr = errno;
-  if ((rc = utimes(file, NULL)) == -1 && errno == ENOENT) {
+  if ((rc = utimes(file, 0)) == -1 && errno == ENOENT) {
     errno = olderr;
     if ((fd = open(file, O_CREAT | O_WRONLY, mode)) == -1) return -1;
     return close(fd);

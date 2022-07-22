@@ -19,6 +19,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/utsname-netbsd.internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -52,14 +53,14 @@ int uname(struct utsname *lool) {
   int rc;
   char *out, *p;
   size_t i, j, len;
-  char tmp[sizeof(struct utsname)];
   if (!lool) return efault();
   if (!lool || (IsAsan() && !__asan_is_valid(lool, sizeof(*lool)))) {
     rc = efault();
   } else {
-    bzero(tmp, sizeof(tmp));
     if (!IsWindows()) {
       if (IsLinux() || IsFreebsd()) {
+        char tmp[sizeof(struct utsname)];
+        bzero(tmp, sizeof(tmp));
         if ((rc = sys_uname(tmp)) != -1) {
           out = (char *)lool;
           for (i = j = 0;;) {

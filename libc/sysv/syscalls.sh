@@ -92,17 +92,17 @@ scall	sys_setsockopt		0x0690690692069036	globl hidden
 scall	sys_getsockopt		0x0760760762076037	globl hidden
 scall	sys_fork		0x0020020022002039	globl hidden # xnu needs eax&=~-edx bc eax always holds pid and edx is 0 for parent and 1 for child
 #scall	vfork			0x042042042204203a	globl        # this syscall is from the moon so we implement it by hand in libc/runtime/vfork.S; probably removed from XNU in 12.5
-scall	sys_posix_spawn		0xfffffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
+scall	sys_posix_spawn		0x1daffffff20f4fff	globl hidden # good luck figuring out how xnu defines this
 scall	__sys_execve		0x03b03b03b203b03b	globl hidden
 scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
-scall	sys_killpg		0xffffff092fffffff	globl hidden
+scall	sys_killpg		0x092fff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
 scall	sys_tkill		0x13e0771b121690c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; bsdthread_terminate() on XNU which only has 1 arg
-scall	sys_futex		0xfff053fffffff0ca	globl hidden
-scall	set_robust_list		0xfffffffffffff111	globl
-scall	get_robust_list		0xfffffffffffff112	globl
-scall	sys_uname		0xffffff0a4ffff03f	globl hidden
+scall	sys_futex		0x0a6053fffffff0ca	globl hidden # raises SIGSYS on NetBSD
+scall	set_robust_list		0x0a7ffffffffff111	globl
+scall	get_robust_list		0x0a8ffffffffff112	globl
+scall	sys_uname		0x0a4fff0a4ffff03f	globl hidden
 scall	semget			0x0dd0dd0dd20ff040	globl # won't polyfill for windows
 scall	semop			0x0de1220de2100041	globl # won't polyfill for windows
 scall	semctl			0xfff1271fe20fe042	globl # won't polyfill for windows
@@ -123,7 +123,7 @@ scall	sys_fchdir		0x00d00d00d200d051	globl hidden
 scall	sys_rename		0x0800800802080052	globl hidden
 scall	sys_mkdir		0x0880880882088053	globl hidden
 scall	sys_rmdir		0x0890890892089054	globl hidden
-scall	sys_creat		0xffffff008ffff055	globl hidden
+scall	sys_creat		0x008fff008ffff055	globl hidden
 scall	sys_link		0x0090090092009056	globl hidden
 scall	sys_unlink		0x00a00a00a200a057	globl hidden
 scall	sys_symlink		0x0390390392039058	globl hidden
@@ -178,7 +178,7 @@ scall	mlockall		0x0f210f1442144097	globl
 scall	munlockall		0x0f31101452145098	globl
 scall	sys_setrlimit		0x0c30c30c320c30a0	globl hidden
 scall	sys_chroot		0x03d03d03d203d0a1	globl hidden
-scall	sys_sync		0xfff02402420240a2	globl hidden
+scall	sys_sync		0x02402402420240a2	globl hidden
 scall	acct			0x03303303320330a3	globl
 scall	settimeofday		0x1a304407a207a0a4	globl
 scall	sys_mount		0x19a01501520a70a5	globl hidden
@@ -263,9 +263,9 @@ scall	ktimer_settime		0xffffff0edfffffff	globl
 scall	clock_settime		0x1ac0580e9ffff0e3	globl
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	globl hidden
-scall	clock_nanosleep		0xffffff0f4ffff0e6	globl
+scall	clock_nanosleep		0x1ddfff0f4ffff0e6	globl
 scall	sys_tgkill		0xfffffffffffff0ea	globl hidden
-scall	mbind			0xfffffffffffff0ed	globl
+scall	mbind			0xfffffffffffff0ed	globl # numa numa yeah
 scall	set_mempolicy		0xfffffffffffff0ee	globl
 scall	get_mempolicy		0xfffffffffffff0ef	globl
 scall	mq_open			0x101ffffffffff0f0	globl # won't polyfill
@@ -312,7 +312,7 @@ scall	sys_preadv		0x12110b121221c127	globl hidden #  ├─ last distro with sys
 scall	sys_pwritev		0x12210c122221d128	globl hidden #  ├─ rob landley unleashes busybox gpl lawsuits
 scall	__sys_utimensat		0x1d3054223ffff118	globl hidden #  ├─ python modules need this due to pep513
 scall	fallocate		0xfffffffffffff11d	globl hidden #  ├─ end of life 2020-11-30 (extended)
-scall	posix_fallocate		0xffffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
+scall	posix_fallocate		0x1dffff212fffffff	globl hidden #  └─ cosmopolitan supports rhel5+
 scall	__sys_accept4		0xfff05d21dffff120	globl hidden # Linux 2.6.28+
 scall	__sys_dup3		0x1c6066fffffff124	globl hidden # Linux 2.6.27+
 scall	__sys_pipe2		0x1c506521effff125	globl hidden # Linux 2.6.27+
