@@ -304,8 +304,8 @@ int process_zipfiles(__G)    /* return PK-type error code */
 #endif /* IZ_CHECK_TZ && USE_EF_UT_TIME */
 
 /* For systems that do not have tzset() but supply this function using another
-   name (_tzset() or something similar), an appropriate "#define tzset ..."
-   should be added to the system specific configuration section.  */
+   name (_tzset() or something similar), an appropiate "#define tzset ..."
+   should be added to the system specifc configuration section.  */
 #if (!defined(T20_VMS) && !defined(MACOS) && !defined(RISCOS) && !defined(QDOS))
 #if (!defined(BSD) && !defined(MTS) && !defined(CMS_MVS) && !defined(TANDEM))
     tzset();
@@ -2784,7 +2784,7 @@ unsigned ef_scan_for_izux(ef_buf, ef_len, ef_is_c, dos_mdatetime,
     structure (provided the z_utim pointer is not NULL).
     If a IZUNIX2 block is found or the IZUNIX block contains UID/GID fields,
     and the z_uidgid array pointer is valid (!= NULL), the owner info is
-    transferred as well.
+    transfered as well.
     The presence of an EF_TIME or EF_IZUNIX2 block results in ignoring all
     data from probably present obsolete EF_IZUNIX blocks.
     If multiple blocks of the same type are found, only the information from
@@ -3052,7 +3052,7 @@ unsigned ef_scan_for_izux(ef_buf, ef_len, ef_is_c, dos_mdatetime,
                           ? (dos_mdatetime == DOSTIME_MINIMUM)
                           : (dos_mdatetime >= DOSTIME_2038_01_18);
                         if (!ut_zip_unzip_compatible) {
-                            /* UnZip interprets mtime differently than Zip;
+                            /* UnZip interpretes mtime differently than Zip;
                                without modtime: ignore complete UT field */
                             flags &= ~0x0ff;    /* no time_t times available */
                             TTrace((stderr,

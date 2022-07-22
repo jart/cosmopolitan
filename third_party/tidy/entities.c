@@ -33,7 +33,7 @@ struct _entity
 /*
 ** Issue #643 - list increased to
 ** 2032 known entities.
-** Note also struct /not/ padded to
+** Note also stuct /not/ padded to
 ** keep source weight down, 79K vs 149K,
 ** and is strictly alphabetic to optimize
 ** the searching.

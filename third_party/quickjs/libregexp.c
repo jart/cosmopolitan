@@ -1635,7 +1635,7 @@ static int re_parse_term(REParseState *s, BOOL is_backward_dir)
                         put_u32(s->byte_code.buf + last_atom_start + 1,
                                 len + 5 + add_zero_advance_check);
                         if (add_zero_advance_check) {
-                            /* avoid infinite loop by stopping the
+                            /* avoid infinite loop by stoping the
                                recursion if no advance was made in the
                                atom (only works if the atom has no
                                side effect) */

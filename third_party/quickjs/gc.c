@@ -397,7 +397,7 @@ void JS_RunGC(JSRuntime *rt)
     /* decrement the reference of the children of each object. mark =
        1 after this pass. */
     gc_decref(rt);
-    /* keep the GC objects with a non zero refcount and their children */
+    /* keep the GC objects with a non zero refcount and their childs */
     gc_scan(rt);
     /* free the GC objects in a cycle */
     gc_free_cycles(rt);

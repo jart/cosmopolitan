@@ -278,7 +278,7 @@ extern int translate_eol;       /* Translate end-of-line LF -> CR LF */
    extern int vms_case_2;       /* ODS2 file name case in VMS. -1: down. */
    extern int vms_case_5;       /* ODS5 file name case in VMS. +1: preserve. */
 
-/* Accommodation for /NAMES = AS_IS with old header files. */
+/* Accomodation for /NAMES = AS_IS with old header files. */
 # define cma$tis_errno_get_addr CMA$TIS_ERRNO_GET_ADDR
 # define lib$establish LIB$ESTABLISH
 # define lib$get_foreign LIB$GET_FOREIGN

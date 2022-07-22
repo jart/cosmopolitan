@@ -73,7 +73,7 @@ uzoff_t des_usize = 0;  /* Data descriptor usize */
 
 /* dots 10/20/04 */
 zoff_t dot_size = 0;          /* bytes processed in deflate per dot, 0 = no dots */
-zoff_t dot_count = 0;         /* buffers seen, recycles at dot_size */
+zoff_t dot_count = 0;         /* buffers seen, recyles at dot_size */
 /* status 10/30/04 */
 int display_counts = 0;       /* display running file count */
 int display_bytes = 0;        /* display running bytes remaining */

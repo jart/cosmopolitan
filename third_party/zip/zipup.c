@@ -166,7 +166,7 @@ int percent(n, m)
 
 /* 2004-12-01 SMS.
  * Changed to do big-n test only for small zoff_t.
- * Changed big-n arithmetic to accommodate apparently negative values
+ * Changed big-n arithmetic to accomodate apparently negative values
  * when a small zoff_t value exceeds 2G.
  * Increased the reduction divisor from 256 to 512 to avoid the sign bit
  * in a reduced intermediate, allowing signed arithmetic for the final

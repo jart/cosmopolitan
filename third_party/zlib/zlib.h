@@ -636,7 +636,7 @@ int deflateSetDictionary(z_streamp strm, const Bytef *dictionary,
  * to dictionary.  dictionary must have enough space, where 32768 bytes is
  * always enough.  If deflateGetDictionary() is called with dictionary equal to
  * Z_NULL, then only the dictionary length is returned, and nothing is copied.
- * Similarly, if dictLength is Z_NULL, then it is not set.
+ * Similary, if dictLength is Z_NULL, then it is not set.
  *
  * deflateGetDictionary() may return a length less than the window size, even
  * when more than the window size in input has been provided. It may return up
@@ -881,7 +881,7 @@ int inflateSetDictionary(z_streamp strm, const Bytef *dictionary,
  * to dictionary.  dictionary must have enough space, where 32768 bytes is
  * always enough.  If inflateGetDictionary() is called with dictionary equal to
  * Z_NULL, then only the dictionary length is returned, and nothing is copied.
- * Similarly, if dictLength is Z_NULL, then it is not set.
+ * Similary, if dictLength is Z_NULL, then it is not set.
  *
  * @return Z_OK on success, or Z_STREAM_ERROR if the stream state is
  *     inconsistent.
@@ -1411,7 +1411,7 @@ int gzread(gzFile file, voidp buf, unsigned len);
  * provided, but could be inferred from the result of gztell().  This behavior
  * is the same as the behavior of fread() implementations in common libraries,
  * but it prevents the direct use of gzfread() to read a concurrently written
- * file, resetting and retrying on end-of-file, when size is not 1.
+ * file, reseting and retrying on end-of-file, when size is not 1.
  */
 size_t gzfread(voidp buf, size_t size, size_t nitems, gzFile file);
 

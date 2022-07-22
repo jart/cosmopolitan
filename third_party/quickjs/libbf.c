@@ -1729,7 +1729,7 @@ static int __bf_div(bf_t *r, const bf_t *a, const bf_t *b, limb_t prec,
 /* division and remainder.
 
    rnd_mode is the rounding mode for the quotient. The additional
-   rounding mode BF_RND_EUCLIDEAN is supported.
+   rounding mode BF_RND_EUCLIDIAN is supported.
 
    'q' is an integer. 'r' is rounded with prec and flags (prec can be
    BF_PREC_INF).
@@ -1778,7 +1778,7 @@ int bf_divrem(bf_t *q, bf_t *r, const bf_t *a, const bf_t *b,
     case BF_RNDA:
         is_ceil = TRUE;
         break;
-    case BF_DIVREM_EUCLIDEAN:
+    case BF_DIVREM_EUCLIDIAN:
         is_ceil = a->sign;
         break;
     }
@@ -4120,7 +4120,7 @@ static void bf_const_pi_internal(bf_t *Q, limb_t prec)
     int64_t n, prec1;
     bf_t P, G;
 
-    /* number of series terms */
+    /* number of serie terms */
     n = prec / CHUD_BITS_PER_TERM + 1;
     /* XXX: precision analysis */
     prec1 = prec + 32;
@@ -5188,7 +5188,7 @@ static int bf_atan2_internal(bf_t *r, const bf_t *y, limb_t prec, void *opaque)
         return 0;
     }
 
-    /* compute atan(y/x) assuming inf/inf = 1 and 0/0 = 0 */
+    /* compute atan(y/x) assumming inf/inf = 1 and 0/0 = 0 */
     bf_init(s, T);
     prec1 = prec + 32;
     if (y->expn == BF_EXP_INF && x->expn == BF_EXP_INF) {
@@ -5670,7 +5670,7 @@ limb_t mp_add_mul1_dec(limb_t *tabr, const limb_t *taba, mp_size_t n,
 }
 
 /* tabr[] -= taba[] * b. 0 <= b <= base - 1. Return the value to
-   subtract to the high word. */
+   substract to the high word. */
 limb_t mp_sub_mul1_dec(limb_t *tabr, const limb_t *taba, mp_size_t n,
                        limb_t b)
 {
@@ -6934,7 +6934,7 @@ static void bfdec_tdivremu(bf_context_t *s, bfdec_t *q, bfdec_t *r,
 /* division and remainder.
 
    rnd_mode is the rounding mode for the quotient. The additional
-   rounding mode BF_RND_EUCLIDEAN is supported.
+   rounding mode BF_RND_EUCLIDIAN is supported.
 
    'q' is an integer. 'r' is rounded with prec and flags (prec can be
    BF_PREC_INF).
@@ -6985,7 +6985,7 @@ int bfdec_divrem(bfdec_t *q, bfdec_t *r, const bfdec_t *a, const bfdec_t *b,
     case BF_RNDA:
         is_ceil = TRUE;
         break;
-    case BF_DIVREM_EUCLIDEAN:
+    case BF_DIVREM_EUCLIDIAN:
         is_ceil = a->sign;
         break;
     }

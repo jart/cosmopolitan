@@ -168,7 +168,7 @@ int envargs(Pargc, Pargv, envstr, envstr2)
     /* finally, add a NULL after the last arg, like Unix */
     *argv = (char *)NULL;
 
-    /* save the values and return, indicating success */
+    /* save the values and return, indicating succes */
     *Pargv = argvect;
     *Pargc = argc;
 

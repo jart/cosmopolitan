@@ -1393,7 +1393,7 @@ static void check_match(struct DeflateState *s, IPos start, IPos match,
  *
  * deflate_stored() is written to minimize the number of times an input
  * byte is copied. It is most efficient with large input and output
- * buffers, which maximizes the opportunities to have a single copy from
+ * buffers, which maximizes the opportunites to have a single copy from
  * next_in to next_out.
  */
 static block_state deflate_stored(struct DeflateState *s, int flush) {

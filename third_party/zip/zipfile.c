@@ -1777,12 +1777,12 @@ struct zlist far *z;
     }
 
     if ((fix == 2) && (z->flg != z->lflg))
-    /* The comparison between central and local version of the
+    /* The comparision between central and local version of the
        "general purpose bit flag" cannot be used from scanzipf_regnew(),
        because in the "regular" zipfile processing, the local header reads
        have been postponed until the actual entry processing takes place.
        They have not yet been read when "zipoddities()" is called.
-       This change was necessary to support multivolume archives.
+       This change was neccessary to support multivolume archives.
      */
     {
         sprintf(errbuf, "local flags = 0x%04x, central = 0x%04x: ",
@@ -3959,7 +3959,7 @@ local int scanzipf_fixnew()
 /* New regular scan       */
 
 /*
- * scanzipf_regnew is similar to the original scanzipf_reg in that it
+ * scanzipf_regnew is similar to the orignal scanzipf_reg in that it
  * reads the end of the archive and goes from there.  Unlike that
  * scan this one stops after reading the central directory and does
  * not read the local headers.  After the directory scan for new
@@ -5280,7 +5280,7 @@ int putlocal(z, rewrite)
 
      This assumes that for large entries the compressed size won't need a
      Zip64 extra field if the uncompressed size did not.  This assumption should
-     only fail for a large file of nearly totally uncompressible data.
+     only fail for a large file of nearly totally uncompressable data.
 
      If streaming stdin in and use_descriptors is set then always create a Zip64
      extra field flagging the data descriptor as being in Zip64 format.  This is

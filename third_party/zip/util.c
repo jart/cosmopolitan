@@ -894,7 +894,7 @@ void expand_args(argcp, argvp)
 {
 #ifdef DOS
 
-/* Do NEVER include (re)definition of `environ' variable with any version
+/* Do NEVER include (re)definiton of `environ' variable with any version
    of MSC or BORLAND/Turbo C. These compilers supply an incompatible
    definition in <stdlib.h>.  */
 #if defined(__GO32__) || defined(__EMX__)
