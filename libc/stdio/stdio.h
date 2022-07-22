@@ -6,6 +6,7 @@
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/symbolic.h"
 
+#define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -81,6 +82,7 @@ void setbuffer(FILE *, char *, size_t);
 int setvbuf(FILE *, char *, int, size_t);
 FILE *popen(const char *, const char *);
 int pclose(FILE *);
+char *ctermid(char *);
 
 typedef uint64_t fpos_t;
 compatfn char *gets(char *) paramsnonnull();
