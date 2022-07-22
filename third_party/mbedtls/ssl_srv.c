@@ -1762,7 +1762,7 @@ read_record_header:
     MBEDTLS_SSL_DEBUG_BUF( 3, "client hello, session id", buf + 35, sess_len );
 
     ssl->session_negotiate->id_len = sess_len;
-    mbedtls_platform_zeroize( ssl->session_negotiate->id,
+    mbedtls_platform_zeroize( ssl->session_negotiate->id, 
                               sizeof( ssl->session_negotiate->id ) );
     memcpy( ssl->session_negotiate->id, buf + 35,
             ssl->session_negotiate->id_len );

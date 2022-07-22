@@ -138,7 +138,7 @@ typedef struct VdbeOpList VdbeOpList;
 #define P5_ConstraintFK      4
 
 /*
-** The Vdbe.aColName array contains 5n Mem structures, where n is the
+** The Vdbe.aColName array contains 5n Mem structures, where n is the 
 ** number of columns of data returned by the statement.
 */
 #define COLNAME_NAME     0

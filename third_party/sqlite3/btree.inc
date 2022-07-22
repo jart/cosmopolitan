@@ -80,13 +80,13 @@ int sqlite3BtreeSchemaLocked(Btree *pBtree);
 int sqlite3BtreeLockTable(Btree *pBtree, int iTab, u8 isWriteLock);
 #endif
 
-/* Savepoints are named, nestable SQL transactions mostly implemented */
+/* Savepoints are named, nestable SQL transactions mostly implemented */ 
 /* in vdbe.c and pager.c See https://sqlite.org/lang_savepoint.html */
 int sqlite3BtreeSavepoint(Btree *, int, int);
 
 /* "Checkpoint" only refers to WAL. See https://sqlite.org/wal.html#ckpt */
 #ifndef SQLITE_OMIT_WAL
-  int sqlite3BtreeCheckpoint(Btree*, int, int *, int *);
+  int sqlite3BtreeCheckpoint(Btree*, int, int *, int *);  
 #endif
 
 const char *sqlite3BtreeGetFilename(Btree *);
@@ -120,7 +120,7 @@ int sqlite3BtreeNewDb(Btree *p);
 
 /*
 ** The second parameter to sqlite3BtreeGetMeta or sqlite3BtreeUpdateMeta
-** should be one of the following values. The integer values are assigned
+** should be one of the following values. The integer values are assigned 
 ** to constants so that the offset of the corresponding field in an
 ** SQLite database header may be found using the following formula:
 **
@@ -191,7 +191,7 @@ int sqlite3BtreeNewDb(Btree *p);
 #define BTREE_BULKLOAD 0x00000001  /* Used to full index in sorted order */
 #define BTREE_SEEK_EQ  0x00000002  /* EQ seeks only - no range seeks */
 
-/*
+/* 
 ** Flags passed as the third argument to sqlite3BtreeCursor().
 **
 ** For read-only cursors the wrFlag argument is always zero. For read-write
@@ -260,7 +260,7 @@ int sqlite3BtreeDelete(BtCursor*, u8 flags);
 ** The nMem field might be zero, indicating that no decomposition is available.
 **
 ** Table btrees (used for rowid tables) contain an integer rowid used as
-** the key and passed in the nKey field.  The pKey field is zero.
+** the key and passed in the nKey field.  The pKey field is zero.  
 ** pData,nData hold the content of the new entry.  nZero extra zero bytes
 ** are appended to the end of the content when constructing the entry.
 ** The aMem,nMem fields are uninitialized for table btrees.
@@ -279,7 +279,7 @@ int sqlite3BtreeDelete(BtCursor*, u8 flags);
 **
 ** This object is used to pass information into sqlite3BtreeInsert().  The
 ** same information used to be passed as five separate parameters.  But placing
-** the information into this object helps to keep the interface more
+** the information into this object helps to keep the interface more 
 ** organized and understandable, and it also helps the resulting code to
 ** run a little faster by using fewer registers for parameter passing.
 */
@@ -362,7 +362,7 @@ int sqlite3BtreeTransferRow(BtCursor*, BtCursor*, i64);
   void sqlite3BtreeEnterCursor(BtCursor*);
   int sqlite3BtreeConnectionCount(Btree*);
 #else
-# define sqlite3BtreeEnter(X)
+# define sqlite3BtreeEnter(X) 
 # define sqlite3BtreeEnterAll(X)
 # define sqlite3BtreeSharable(X) 0
 # define sqlite3BtreeEnterCursor(X)

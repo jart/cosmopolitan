@@ -52,7 +52,7 @@
 /* clang-format off */
 
 /*
-** This version of the memory allocator is used only when
+** This version of the memory allocator is used only when 
 ** SQLITE_ENABLE_MEMSYS5 is defined.
 */
 #ifdef SQLITE_ENABLE_MEMSYS5
@@ -97,7 +97,7 @@ static SQLITE_WSD struct Mem5Global {
   int szAtom;      /* Smallest possible allocation in bytes */
   int nBlock;      /* Number of szAtom sized blocks in zPool */
   u8 *zPool;       /* Memory available to be allocated */
-
+  
   /*
   ** Mutex to control access to the memory allocation subsystem.
   */
@@ -116,7 +116,7 @@ static SQLITE_WSD struct Mem5Global {
   u32 maxCount;       /* Maximum instantaneous currentCount */
   u32 maxRequest;     /* Largest allocation (exclusive of internal frag) */
 #endif
-
+  
   /*
   ** Lists of free blocks.  aiFreelist[0] is a list of free blocks of
   ** size mem5.szAtom.  aiFreelist[1] holds blocks of size szAtom*2.
@@ -292,7 +292,7 @@ static void memsys5FreeUnsafe(void *pOld){
   u32 size, iLogsize;
   int iBlock;
 
-  /* Set iBlock to the index of the block pointed to by pOld in
+  /* Set iBlock to the index of the block pointed to by pOld in 
   ** the array of mem5.szAtom byte blocks pointed to by mem5.zPool.
   */
   iBlock = (int)(((u8 *)pOld-mem5.zPool)/mem5.szAtom);
@@ -361,7 +361,7 @@ static void *memsys5Malloc(int nBytes){
     p = memsys5MallocUnsafe(nBytes);
     memsys5Leave();
   }
-  return (void*)p;
+  return (void*)p; 
 }
 
 /*
@@ -374,14 +374,14 @@ static void memsys5Free(void *pPrior){
   assert( pPrior!=0 );
   memsys5Enter();
   memsys5FreeUnsafe(pPrior);
-  memsys5Leave();
+  memsys5Leave();  
 }
 
 /*
 ** Change the size of an existing memory allocation.
 **
 ** The outer layer memory allocator prevents this routine from
-** being called with pPrior==0.
+** being called with pPrior==0.  
 **
 ** nBytes is always a value obtained from a prior call to
 ** memsys5Round().  Hence nBytes is always a non-negative power
@@ -514,7 +514,7 @@ static void memsys5Shutdown(void *NotUsed){
 
 #ifdef SQLITE_TEST
 /*
-** Open the file indicated and write a log of all unfreed memory
+** Open the file indicated and write a log of all unfreed memory 
 ** allocations into that log.
 */
 void sqlite3Memsys5Dump(const char *zFilename){
@@ -556,7 +556,7 @@ void sqlite3Memsys5Dump(const char *zFilename){
 #endif
 
 /*
-** This routine is the only routine in this file with external
+** This routine is the only routine in this file with external 
 ** linkage. It returns a pointer to a static sqlite3_mem_methods
 ** struct populated with the memsys5 methods.
 */

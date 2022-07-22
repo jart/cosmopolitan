@@ -31,7 +31,7 @@ asm(".include \"libc/disclaimer.inc\"");
 
 /*
  *  CRYPTOGRAPHY 101
- *
+ * 
  *  OK                  WEAK     BROKEN
  *  ------------------  ------   ------
  *  ECDHE > ECDH > DHE

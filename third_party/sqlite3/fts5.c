@@ -8,9 +8,9 @@
 
 /* clang-format off */
 
-#if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS5)
+#if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS5) 
 
-#if !defined(NDEBUG) && !defined(SQLITE_DEBUG)
+#if !defined(NDEBUG) && !defined(SQLITE_DEBUG) 
 # define NDEBUG 1
 #endif
 #if defined(NDEBUG) && defined(SQLITE_DEBUG)
@@ -30,7 +30,7 @@
 **
 ******************************************************************************
 **
-** Interfaces to extend FTS5. Using the interfaces defined in this file,
+** Interfaces to extend FTS5. Using the interfaces defined in this file, 
 ** FTS5 may be extended with:
 **
 **     * custom tokenizers, and
@@ -73,19 +73,19 @@ struct Fts5PhraseIter {
 ** EXTENSION API FUNCTIONS
 **
 ** xUserData(pFts):
-**   Return a copy of the context pointer the extension function was
+**   Return a copy of the context pointer the extension function was 
 **   registered with.
 **
 ** xColumnTotalSize(pFts, iCol, pnToken):
 **   If parameter iCol is less than zero, set output variable *pnToken
 **   to the total number of tokens in the FTS5 table. Or, if iCol is
 **   non-negative but less than the number of columns in the table, return
-**   the total number of tokens in column iCol, considering all rows in
+**   the total number of tokens in column iCol, considering all rows in 
 **   the FTS5 table.
 **
 **   If parameter iCol is greater than or equal to the number of columns
 **   in the table, SQLITE_RANGE is returned. Or, if an error occurs (e.g.
-**   an OOM condition or IO error), an appropriate SQLite error code is
+**   an OOM condition or IO error), an appropriate SQLite error code is 
 **   returned.
 **
 ** xColumnCount(pFts):
@@ -99,7 +99,7 @@ struct Fts5PhraseIter {
 **
 **   If parameter iCol is greater than or equal to the number of columns
 **   in the table, SQLITE_RANGE is returned. Or, if an error occurs (e.g.
-**   an OOM condition or IO error), an appropriate SQLite error code is
+**   an OOM condition or IO error), an appropriate SQLite error code is 
 **   returned.
 **
 **   This function may be quite inefficient if used with an FTS5 table
@@ -126,8 +126,8 @@ struct Fts5PhraseIter {
 **   an error code (i.e. SQLITE_NOMEM) if an error occurs.
 **
 **   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" or "detail=column" option. If the FTS5 table is created
-**   with either "detail=none" or "detail=column" and "content=" option
+**   "detail=none" or "detail=column" option. If the FTS5 table is created 
+**   with either "detail=none" or "detail=column" and "content=" option 
 **   (i.e. if it is a contentless table), then this API always returns 0.
 **
 ** xInst:
@@ -142,7 +142,7 @@ struct Fts5PhraseIter {
 **   code (i.e. SQLITE_NOMEM) if an error occurs.
 **
 **   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" or "detail=column" option.
+**   "detail=none" or "detail=column" option. 
 **
 ** xRowid:
 **   Returns the rowid of the current row.
@@ -158,11 +158,11 @@ struct Fts5PhraseIter {
 **
 **   with $p set to a phrase equivalent to the phrase iPhrase of the
 **   current query is executed. Any column filter that applies to
-**   phrase iPhrase of the current query is included in $p. For each
-**   row visited, the callback function passed as the fourth argument
-**   is invoked. The context and API objects passed to the callback
+**   phrase iPhrase of the current query is included in $p. For each 
+**   row visited, the callback function passed as the fourth argument 
+**   is invoked. The context and API objects passed to the callback 
 **   function may be used to access the properties of each matched row.
-**   Invoking Api.xUserData() returns a copy of the pointer passed as
+**   Invoking Api.xUserData() returns a copy of the pointer passed as 
 **   the third argument to pUserData.
 **
 **   If the callback function returns any value other than SQLITE_OK, the
@@ -177,14 +177,14 @@ struct Fts5PhraseIter {
 **
 ** xSetAuxdata(pFts5, pAux, xDelete)
 **
-**   Save the pointer passed as the second argument as the extension function's
+**   Save the pointer passed as the second argument as the extension function's 
 **   "auxiliary data". The pointer may then be retrieved by the current or any
 **   future invocation of the same fts5 extension function made as part of
 **   the same MATCH query using the xGetAuxdata() API.
 **
 **   Each extension function is allocated a single auxiliary data slot for
-**   each FTS query (MATCH expression). If the extension function is invoked
-**   more than once for a single FTS query, then all invocations share a
+**   each FTS query (MATCH expression). If the extension function is invoked 
+**   more than once for a single FTS query, then all invocations share a 
 **   single auxiliary data context.
 **
 **   If there is already an auxiliary data pointer when this function is
@@ -203,7 +203,7 @@ struct Fts5PhraseIter {
 **
 ** xGetAuxdata(pFts5, bClear)
 **
-**   Returns the current auxiliary data pointer for the fts5 extension
+**   Returns the current auxiliary data pointer for the fts5 extension 
 **   function. See the xSetAuxdata() method for details.
 **
 **   If the bClear argument is non-zero, then the auxiliary data is cleared
@@ -223,7 +223,7 @@ struct Fts5PhraseIter {
 **   method, to iterate through all instances of a single query phrase within
 **   the current row. This is the same information as is accessible via the
 **   xInstCount/xInst APIs. While the xInstCount/xInst APIs are more convenient
-**   to use, this API may be faster under some circumstances. To iterate
+**   to use, this API may be faster under some circumstances. To iterate 
 **   through instances of phrase iPhrase, use the following code:
 **
 **       Fts5PhraseIter iter;
@@ -241,8 +241,8 @@ struct Fts5PhraseIter {
 **   xPhraseFirstColumn() and xPhraseNextColumn() as illustrated below).
 **
 **   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" or "detail=column" option. If the FTS5 table is created
-**   with either "detail=none" or "detail=column" and "content=" option
+**   "detail=none" or "detail=column" option. If the FTS5 table is created 
+**   with either "detail=none" or "detail=column" and "content=" option 
 **   (i.e. if it is a contentless table), then this API always iterates
 **   through an empty set (all calls to xPhraseFirst() set iCol to -1).
 **
@@ -266,16 +266,16 @@ struct Fts5PhraseIter {
 **       }
 **
 **   This API can be quite slow if used with an FTS5 table created with the
-**   "detail=none" option. If the FTS5 table is created with either
-**   "detail=none" "content=" option (i.e. if it is a contentless table),
-**   then this API always iterates through an empty set (all calls to
+**   "detail=none" option. If the FTS5 table is created with either 
+**   "detail=none" "content=" option (i.e. if it is a contentless table), 
+**   then this API always iterates through an empty set (all calls to 
 **   xPhraseFirstColumn() set iCol to -1).
 **
 **   The information accessed using this API and its companion
 **   xPhraseFirstColumn() may also be obtained using xPhraseFirst/xPhraseNext
 **   (or xInst/xInstCount). The chief advantage of this API is that it is
 **   significantly more efficient than those alternatives when used with
-**   "detail=column" tables.
+**   "detail=column" tables.  
 **
 ** xPhraseNextColumn()
 **   See xPhraseFirstColumn above.
@@ -289,7 +289,7 @@ struct Fts5ExtensionApi {
   int (*xRowCount)(Fts5Context*, sqlite3_int64 *pnRow);
   int (*xColumnTotalSize)(Fts5Context*, int iCol, sqlite3_int64 *pnToken);
 
-  int (*xTokenize)(Fts5Context*,
+  int (*xTokenize)(Fts5Context*, 
     const char *pText, int nText, /* Text to tokenize */
     void *pCtx,                   /* Context passed to xToken() */
     int (*xToken)(void*, int, const char*, int, int, int)       /* Callback */
@@ -318,15 +318,15 @@ struct Fts5ExtensionApi {
   void (*xPhraseNextColumn)(Fts5Context*, Fts5PhraseIter*, int *piCol);
 };
 
-/*
+/* 
 ** CUSTOM AUXILIARY FUNCTIONS
 *************************************************************************/
 
 /*************************************************************************
 ** CUSTOM TOKENIZERS
 **
-** Applications may also register custom tokenizer types. A tokenizer
-** is registered by providing fts5 with a populated instance of the
+** Applications may also register custom tokenizer types. A tokenizer 
+** is registered by providing fts5 with a populated instance of the 
 ** following structure. All structure methods must be defined, setting
 ** any member of the fts5_tokenizer struct to NULL leads to undefined
 ** behaviour. The structure methods are expected to function as follows:
@@ -337,16 +337,16 @@ struct Fts5ExtensionApi {
 **
 **   The first argument passed to this function is a copy of the (void*)
 **   pointer provided by the application when the fts5_tokenizer object
-**   was registered with FTS5 (the third argument to xCreateTokenizer()).
+**   was registered with FTS5 (the third argument to xCreateTokenizer()). 
 **   The second and third arguments are an array of nul-terminated strings
 **   containing the tokenizer arguments, if any, specified following the
 **   tokenizer name as part of the CREATE VIRTUAL TABLE statement used
 **   to create the FTS5 table.
 **
-**   The final argument is an output variable. If successful, (*ppOut)
+**   The final argument is an output variable. If successful, (*ppOut) 
 **   should be set to point to the new tokenizer handle and SQLITE_OK
 **   returned. If an error occurs, some value other than SQLITE_OK should
-**   be returned. In this case, fts5 assumes that the final value of *ppOut
+**   be returned. In this case, fts5 assumes that the final value of *ppOut 
 **   is undefined.
 **
 ** xDelete:
@@ -355,7 +355,7 @@ struct Fts5ExtensionApi {
 **   be invoked exactly once for each successful call to xCreate().
 **
 ** xTokenize:
-**   This function is expected to tokenize the nText byte string indicated
+**   This function is expected to tokenize the nText byte string indicated 
 **   by argument pText. pText may or may not be nul-terminated. The first
 **   argument passed to this function is a pointer to an Fts5Tokenizer object
 **   returned by an earlier call to xCreate().
@@ -369,8 +369,8 @@ struct Fts5ExtensionApi {
 **            determine the set of tokens to add to (or delete from) the
 **            FTS index.
 **
-**       <li> <b>FTS5_TOKENIZE_QUERY</b> - A MATCH query is being executed
-**            against the FTS index. The tokenizer is being called to tokenize
+**       <li> <b>FTS5_TOKENIZE_QUERY</b> - A MATCH query is being executed 
+**            against the FTS index. The tokenizer is being called to tokenize 
 **            a bareword or quoted string specified as part of the query.
 **
 **       <li> <b>(FTS5_TOKENIZE_QUERY | FTS5_TOKENIZE_PREFIX)</b> - Same as
@@ -378,10 +378,10 @@ struct Fts5ExtensionApi {
 **            followed by a "*" character, indicating that the last token
 **            returned by the tokenizer will be treated as a token prefix.
 **
-**       <li> <b>FTS5_TOKENIZE_AUX</b> - The tokenizer is being invoked to
+**       <li> <b>FTS5_TOKENIZE_AUX</b> - The tokenizer is being invoked to 
 **            satisfy an fts5_api.xTokenize() request made by an auxiliary
 **            function. Or an fts5_api.xColumnSize() request made by the same
-**            on a columnsize=0 database.
+**            on a columnsize=0 database.  
 **   </ul>
 **
 **   For each token in the input string, the supplied callback xToken() must
@@ -393,10 +393,10 @@ struct Fts5ExtensionApi {
 **   which the token is derived within the input.
 **
 **   The second argument passed to the xToken() callback ("tflags") should
-**   normally be set to 0. The exception is if the tokenizer supports
+**   normally be set to 0. The exception is if the tokenizer supports 
 **   synonyms. In this case see the discussion below for details.
 **
-**   FTS5 assumes the xToken() callback is invoked for each token in the
+**   FTS5 assumes the xToken() callback is invoked for each token in the 
 **   order that they occur within the input text.
 **
 **   If an xToken() callback returns any value other than SQLITE_OK, then
@@ -410,7 +410,7 @@ struct Fts5ExtensionApi {
 ** SYNONYM SUPPORT
 **
 **   Custom tokenizers may also support synonyms. Consider a case in which a
-**   user wishes to query for a phrase such as "first place". Using the
+**   user wishes to query for a phrase such as "first place". Using the 
 **   built-in tokenizers, the FTS5 query 'first + place' will match instances
 **   of "first place" within the document set, but not alternative forms
 **   such as "1st place". In some applications, it would be better to match
@@ -430,34 +430,34 @@ struct Fts5ExtensionApi {
 **
 **       <li> By querying the index for all synonyms of each query term
 **            separately. In this case, when tokenizing query text, the
-**            tokenizer may provide multiple synonyms for a single term
-**            within the document. FTS5 then queries the index for each
+**            tokenizer may provide multiple synonyms for a single term 
+**            within the document. FTS5 then queries the index for each 
 **            synonym individually. For example, faced with the query:
 **
 **   <codeblock>
 **     ... MATCH 'first place'</codeblock>
 **
 **            the tokenizer offers both "1st" and "first" as synonyms for the
-**            first token in the MATCH query and FTS5 effectively runs a query
+**            first token in the MATCH query and FTS5 effectively runs a query 
 **            similar to:
 **
 **   <codeblock>
 **     ... MATCH '(first OR 1st) place'</codeblock>
 **
 **            except that, for the purposes of auxiliary functions, the query
-**            still appears to contain just two phrases - "(first OR 1st)"
+**            still appears to contain just two phrases - "(first OR 1st)" 
 **            being treated as a single phrase.
 **
 **       <li> By adding multiple synonyms for a single term to the FTS index.
 **            Using this method, when tokenizing document text, the tokenizer
-**            provides multiple synonyms for each token. So that when a
+**            provides multiple synonyms for each token. So that when a 
 **            document such as "I won first place" is tokenized, entries are
 **            added to the FTS index for "i", "won", "first", "1st" and
 **            "place".
 **
 **            This way, even if the tokenizer does not provide synonyms
 **            when tokenizing query text (it should not - to do so would be
-**            inefficient), it doesn't matter if the user queries for
+**            inefficient), it doesn't matter if the user queries for 
 **            'first + place' or '1st + place', as there are entries in the
 **            FTS index corresponding to both forms of the first token.
 **   </ol>
@@ -478,11 +478,11 @@ struct Fts5ExtensionApi {
 **
 **   It is an error to specify the FTS5_TOKEN_COLOCATED flag the first time
 **   xToken() is called. Multiple synonyms may be specified for a single token
-**   by making multiple calls to xToken(FTS5_TOKEN_COLOCATED) in sequence.
+**   by making multiple calls to xToken(FTS5_TOKEN_COLOCATED) in sequence. 
 **   There is no limit to the number of synonyms that may be provided for a
 **   single token.
 **
-**   In many cases, method (1) above is the best approach. It does not add
+**   In many cases, method (1) above is the best approach. It does not add 
 **   extra data to the FTS index or require FTS5 to query for multiple terms,
 **   so it is efficient in terms of disk space and query speed. However, it
 **   does not support prefix queries very well. If, as suggested above, the
@@ -494,18 +494,18 @@ struct Fts5ExtensionApi {
 **   will not match documents that contain the token "1st" (as the tokenizer
 **   will probably not map "1s" to any prefix of "first").
 **
-**   For full prefix support, method (3) may be preferred. In this case,
+**   For full prefix support, method (3) may be preferred. In this case, 
 **   because the index contains entries for both "first" and "1st", prefix
 **   queries such as 'fi*' or '1s*' will match correctly. However, because
 **   extra entries are added to the FTS index, this method uses more space
 **   within the database.
 **
 **   Method (2) offers a midpoint between (1) and (3). Using this method,
-**   a query such as '1s*' will match documents that contain the literal
+**   a query such as '1s*' will match documents that contain the literal 
 **   token "1st", but not "first" (assuming the tokenizer is not able to
 **   provide synonyms for prefixes). However, a non-prefix query like '1st'
 **   will match against "1st" and "first". This method does not require
-**   extra disk space, as no extra entries are added to the FTS index.
+**   extra disk space, as no extra entries are added to the FTS index. 
 **   On the other hand, it may require more CPU cycles to run MATCH queries,
 **   as separate queries of the FTS index are required for each synonym.
 **
@@ -519,10 +519,10 @@ typedef struct fts5_tokenizer fts5_tokenizer;
 struct fts5_tokenizer {
   int (*xCreate)(void*, const char **azArg, int nArg, Fts5Tokenizer **ppOut);
   void (*xDelete)(Fts5Tokenizer*);
-  int (*xTokenize)(Fts5Tokenizer*,
+  int (*xTokenize)(Fts5Tokenizer*, 
       void *pCtx,
       int flags,            /* Mask of FTS5_TOKENIZE_* flags */
-      const char *pText, int nText,
+      const char *pText, int nText, 
       int (*xToken)(
         void *pCtx,         /* Copy of 2nd argument to xTokenize() */
         int tflags,         /* Mask of FTS5_TOKEN_* flags */
@@ -640,7 +640,7 @@ typedef sqlite3_uint64 u64;
 
 #endif
 
-/* Truncate very long tokens to this many bytes. Hard limit is
+/* Truncate very long tokens to this many bytes. Hard limit is 
 ** (65536-1-1-4-9)==65521 bytes. The limiting factor is the 16-bit offset
 ** field that occurs at the start of each leaf page (see fts5_index.c). */
 #define FTS5_MAX_TOKEN_SIZE 32768
@@ -653,7 +653,7 @@ typedef sqlite3_uint64 u64;
 #define FTS5_MAX_PREFIX_INDEXES 31
 
 /*
-** Maximum segments permitted in a single index
+** Maximum segments permitted in a single index 
 */
 #define FTS5_MAX_SEGMENT 2000
 
@@ -673,7 +673,7 @@ static int sqlite3Fts5Corrupt(void);
 
 /*
 ** The assert_nc() macro is similar to the assert() macro, except that it
-** is used for assert() conditions that are true only if it can be
+** is used for assert() conditions that are true only if it can be 
 ** guranteed that the database is not corrupt.
 */
 #ifdef SQLITE_DEBUG
@@ -702,7 +702,7 @@ extern int sqlite3_fts5_may_be_corrupt;
 typedef struct Fts5Global Fts5Global;
 typedef struct Fts5Colset Fts5Colset;
 
-/* If a NEAR() clump or phrase may only match a specific set of columns,
+/* If a NEAR() clump or phrase may only match a specific set of columns, 
 ** then an object of the following type is used to record the set of columns.
 ** Each entry in the aiCol[] array is a column that may be matched.
 **
@@ -730,20 +730,20 @@ typedef struct Fts5Config Fts5Config;
 **
 ** nAutomerge:
 **   The minimum number of segments that an auto-merge operation should
-**   attempt to merge together. A value of 1 sets the object to use the
+**   attempt to merge together. A value of 1 sets the object to use the 
 **   compile time default. Zero disables auto-merge altogether.
 **
 ** zContent:
 **
 ** zContentRowid:
-**   The value of the content_rowid= option, if one was specified. Or
+**   The value of the content_rowid= option, if one was specified. Or 
 **   the string "rowid" otherwise. This text is not quoted - if it is
 **   used as part of an SQL statement it needs to be quoted appropriately.
 **
 ** zContentExprlist:
 **
 ** pzErrmsg:
-**   This exists in order to allow the fts5_index.c module to return a
+**   This exists in order to allow the fts5_index.c module to return a 
 **   decent error message if it encounters a file-format version it does
 **   not understand.
 **
@@ -767,8 +767,8 @@ struct Fts5Config {
   int nPrefix;                    /* Number of prefix indexes */
   int *aPrefix;                   /* Sizes in bytes of nPrefix prefix indexes */
   int eContent;                   /* An FTS5_CONTENT value */
-  char *zContent;                 /* content table */
-  char *zContentRowid;            /* "content_rowid=" option value */
+  char *zContent;                 /* content table */ 
+  char *zContentRowid;            /* "content_rowid=" option value */ 
   int bColumnsize;                /* "columnsize=" option value (dflt==1) */
   int eDetail;                    /* FTS5_DETAIL_XXX value */
   char *zContentExprlist;
@@ -973,27 +973,27 @@ static int sqlite3Fts5IndexClose(Fts5Index *p);
 ** Return a simple checksum value based on the arguments.
 */
 static u64 sqlite3Fts5IndexEntryCksum(
-  i64 iRowid,
-  int iCol,
-  int iPos,
+  i64 iRowid, 
+  int iCol, 
+  int iPos, 
   int iIdx,
   const char *pTerm,
   int nTerm
 );
 
 /*
-** Argument p points to a buffer containing utf-8 text that is n bytes in
+** Argument p points to a buffer containing utf-8 text that is n bytes in 
 ** size. Return the number of bytes in the nChar character prefix of the
 ** buffer, or 0 if there are less than nChar characters in total.
 */
 static int sqlite3Fts5IndexCharlenToBytelen(
-  const char *p,
-  int nByte,
+  const char *p, 
+  int nByte, 
   int nChar
 );
 
 /*
-** Open a new iterator to iterate though all rowids that match the
+** Open a new iterator to iterate though all rowids that match the 
 ** specified token or token prefix.
 */
 static int sqlite3Fts5IndexQuery(
@@ -1029,7 +1029,7 @@ static int sqlite3Fts5IterNextScan(Fts5IndexIter*);
 
 
 /*
-** Insert or remove data to or from the index. Each time a document is
+** Insert or remove data to or from the index. Each time a document is 
 ** added to or removed from the index, this function is called one or more
 ** times.
 **
@@ -1064,7 +1064,7 @@ static int sqlite3Fts5IndexSync(Fts5Index *p);
 /*
 ** Discard any data stored in the in-memory hash tables. Do not write it
 ** to the database. Additionally, assume that the contents of the %_data
-** table may have changed on disk. So any in-memory caches of %_data
+** table may have changed on disk. So any in-memory caches of %_data 
 ** records must be invalidated.
 */
 static int sqlite3Fts5IndexRollback(Fts5Index *p);
@@ -1080,16 +1080,16 @@ static int sqlite3Fts5IndexSetAverages(Fts5Index *p, const u8*, int);
 */
 static int sqlite3Fts5IndexIntegrityCheck(Fts5Index*, u64 cksum, int bUseCksum);
 
-/*
-** Called during virtual module initialization to register UDF
-** fts5_decode() with SQLite
+/* 
+** Called during virtual module initialization to register UDF 
+** fts5_decode() with SQLite 
 */
 static int sqlite3Fts5IndexInit(sqlite3*);
 
 static int sqlite3Fts5IndexSetCookie(Fts5Index*, int);
 
 /*
-** Return the total number of entries read from the %_data table by
+** Return the total number of entries read from the %_data table by 
 ** this connection since it was created.
 */
 static int sqlite3Fts5IndexReads(Fts5Index *p);
@@ -1106,7 +1106,7 @@ static int sqlite3Fts5IndexLoadConfig(Fts5Index *p);
 **************************************************************************/
 
 /**************************************************************************
-** Interface to code in fts5_varint.c.
+** Interface to code in fts5_varint.c. 
 */
 static int sqlite3Fts5GetVarint32(const unsigned char *p, u32 *v);
 static int sqlite3Fts5GetVarintLen(u32 iVal);
@@ -1131,7 +1131,7 @@ static int sqlite3Fts5PutVarint(unsigned char *p, u64 v);
 
 
 /**************************************************************************
-** Interface to code in fts5_main.c.
+** Interface to code in fts5_main.c. 
 */
 
 /*
@@ -1145,7 +1145,7 @@ struct Fts5Table {
 };
 
 static int sqlite3Fts5GetTokenizer(
-  Fts5Global*,
+  Fts5Global*, 
   const char **azArg,
   int nArg,
   Fts5Config*,
@@ -1161,7 +1161,7 @@ static int sqlite3Fts5FlushToDisk(Fts5Table*);
 **************************************************************************/
 
 /**************************************************************************
-** Interface to code in fts5_hash.c.
+** Interface to code in fts5_hash.c. 
 */
 typedef struct Fts5Hash Fts5Hash;
 
@@ -1211,7 +1211,7 @@ static void sqlite3Fts5HashScanEntry(Fts5Hash *,
 **************************************************************************/
 
 /**************************************************************************
-** Interface to code in fts5_storage.c. fts5_storage.c contains contains
+** Interface to code in fts5_storage.c. fts5_storage.c contains contains 
 ** code to access the data stored in the %_content and %_docsize tables.
 */
 
@@ -1260,7 +1260,7 @@ static int sqlite3Fts5StorageReset(Fts5Storage *p);
 
 
 /**************************************************************************
-** Interface to code in fts5_expr.c.
+** Interface to code in fts5_expr.c. 
 */
 typedef struct Fts5Expr Fts5Expr;
 typedef struct Fts5ExprNode Fts5ExprNode;
@@ -1276,18 +1276,18 @@ struct Fts5Token {
 
 /* Parse a MATCH expression. */
 static int sqlite3Fts5ExprNew(
-  Fts5Config *pConfig,
+  Fts5Config *pConfig, 
   int bPhraseToAnd,
   int iCol,                       /* Column on LHS of MATCH operator */
   const char *zExpr,
-  Fts5Expr **ppNew,
+  Fts5Expr **ppNew, 
   char **pzErr
 );
 static int sqlite3Fts5ExprPattern(
-  Fts5Config *pConfig,
-  int bGlob,
-  int iCol,
-  const char *zText,
+  Fts5Config *pConfig, 
+  int bGlob, 
+  int iCol, 
+  const char *zText, 
   Fts5Expr **pp
 );
 
@@ -1348,8 +1348,8 @@ static Fts5ExprNode *sqlite3Fts5ParseImplicitAnd(
 );
 
 static Fts5ExprPhrase *sqlite3Fts5ParseTerm(
-  Fts5Parse *pParse,
-  Fts5ExprPhrase *pPhrase,
+  Fts5Parse *pParse, 
+  Fts5ExprPhrase *pPhrase, 
   Fts5Token *pToken,
   int bPrefix
 );
@@ -1357,14 +1357,14 @@ static Fts5ExprPhrase *sqlite3Fts5ParseTerm(
 static void sqlite3Fts5ParseSetCaret(Fts5ExprPhrase*);
 
 static Fts5ExprNearset *sqlite3Fts5ParseNearset(
-  Fts5Parse*,
+  Fts5Parse*, 
   Fts5ExprNearset*,
-  Fts5ExprPhrase*
+  Fts5ExprPhrase* 
 );
 
 static Fts5Colset *sqlite3Fts5ParseColset(
-  Fts5Parse*,
-  Fts5Colset*,
+  Fts5Parse*, 
+  Fts5Colset*, 
   Fts5Token *
 );
 
@@ -1385,7 +1385,7 @@ static void sqlite3Fts5ParseNear(Fts5Parse *pParse, Fts5Token*);
 
 
 /**************************************************************************
-** Interface to code in fts5_aux.c.
+** Interface to code in fts5_aux.c. 
 */
 
 static int sqlite3Fts5AuxInit(fts5_api*);
@@ -1394,7 +1394,7 @@ static int sqlite3Fts5AuxInit(fts5_api*);
 **************************************************************************/
 
 /**************************************************************************
-** Interface to code in fts5_tokenizer.c.
+** Interface to code in fts5_tokenizer.c. 
 */
 
 static int sqlite3Fts5TokenizerInit(fts5_api*);
@@ -1407,7 +1407,7 @@ static int sqlite3Fts5TokenizerPattern(
 **************************************************************************/
 
 /**************************************************************************
-** Interface to code in fts5_vocab.c.
+** Interface to code in fts5_vocab.c. 
 */
 
 static int sqlite3Fts5VocabInit(Fts5Global*, sqlite3*);
@@ -1418,7 +1418,7 @@ static int sqlite3Fts5VocabInit(Fts5Global*, sqlite3*);
 
 
 /**************************************************************************
-** Interface to automatically generated code in fts5_unicode2.c.
+** Interface to automatically generated code in fts5_unicode2.c. 
 */
 static int sqlite3Fts5UnicodeIsdiacritic(int c);
 static int sqlite3Fts5UnicodeFold(int c, int bRemoveDiacritic);
@@ -1548,7 +1548,7 @@ static void sqlite3Fts5UnicodeAscii(u8*, u8*);
 **                       the minor type might be the name of the identifier.
 **                       Each non-terminal can have a different minor type.
 **                       Terminal symbols all have the same minor type, though.
-**                       This macros defines the minor type for terminal
+**                       This macros defines the minor type for terminal 
 **                       symbols.
 **    fts5YYMINORTYPE        is the data type used for all minor types.
 **                       This is typically a union of many types, one of
@@ -1637,7 +1637,7 @@ typedef union {
 /* Next are the tables used to determine what action to take based on the
 ** current state and lookahead token.  These tables are used to implement
 ** functions that take a state number and lookahead value and return an
-** action integer.
+** action integer.  
 **
 ** Suppose the action integer is N.  Then the action is determined as
 ** follows
@@ -1737,9 +1737,9 @@ static const fts5YYACTIONTYPE fts5yy_default[] = {
 };
 /********** End of lemon-generated parsing tables *****************************/
 
-/* The next table maps tokens (terminal symbols) into fallback tokens.
+/* The next table maps tokens (terminal symbols) into fallback tokens.  
 ** If a construct like the following:
-**
+** 
 **      %fallback ID X Y Z.
 **
 ** appears in the grammar, then ID becomes a fallback token for X, Y,
@@ -1810,10 +1810,10 @@ static char *fts5yyTracePrompt = 0;
 #endif /* NDEBUG */
 
 #ifndef NDEBUG
-/*
+/* 
 ** Turn parser tracing on by giving a stream to which to write the trace
 ** and a prompt to preface each trace message.  Tracing is turned off
-** by making either argument NULL
+** by making either argument NULL 
 **
 ** Inputs:
 ** <ul>
@@ -1838,7 +1838,7 @@ static void sqlite3Fts5ParserTrace(FILE *TraceFILE, char *zTracePrompt){
 #if defined(fts5YYCOVERAGE) || !defined(NDEBUG)
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
-static const char *const fts5yyTokenName[] = {
+static const char *const fts5yyTokenName[] = { 
   /*    0 */ "$",
   /*    1 */ "OR",
   /*    2 */ "AND",
@@ -1934,7 +1934,7 @@ static int fts5yyGrowStack(fts5yyParser *p){
 #endif
     p->fts5yystksz = newSize;
   }
-  return pNew==0;
+  return pNew==0; 
 }
 #endif
 
@@ -1976,7 +1976,7 @@ static void sqlite3Fts5ParserInit(void *fts5yypRawParser sqlite3Fts5ParserCTX_PD
 }
 
 #ifndef sqlite3Fts5Parser_ENGINEALWAYSONSTACK
-/*
+/* 
 ** This function allocates a new parser.
 ** The only argument is a pointer to a function which works like
 ** malloc.
@@ -2003,7 +2003,7 @@ static void *sqlite3Fts5ParserAlloc(void *(*mallocProc)(fts5YYMALLOCARGTYPE) sql
 /* The following function deletes the "minor type" or semantic value
 ** associated with a symbol.  The symbol can be either a terminal
 ** or nonterminal. "fts5yymajor" is the symbol code, and "fts5yypminor" is
-** a pointer to the value to be deleted.  The code used to do the
+** a pointer to the value to be deleted.  The code used to do the 
 ** deletions is derived from the %destructor and/or %token_destructor
 ** directives of the input grammar.
 */
@@ -2018,7 +2018,7 @@ static void fts5yy_destructor(
     /* Here is inserted the actions which take place when a
     ** terminal or non-terminal is destroyed.  This can happen
     ** when the symbol is popped from the stack during a
-    ** reduce or during error processing or when a parser is
+    ** reduce or during error processing or when a parser is 
     ** being destroyed before it is finished parsing.
     **
     ** Note: during a reduce, the only symbols destroyed are those
@@ -2029,7 +2029,7 @@ static void fts5yy_destructor(
     case 16: /* input */
 {
 #line 83 "fts5parse.y"
- (void)pParse;
+ (void)pParse; 
 #line 586 "fts5parse.c"
 }
       break;
@@ -2038,7 +2038,7 @@ static void fts5yy_destructor(
     case 19: /* exprlist */
 {
 #line 89 "fts5parse.y"
- sqlite3Fts5ParseNodeFree((fts5yypminor->fts5yy24));
+ sqlite3Fts5ParseNodeFree((fts5yypminor->fts5yy24)); 
 #line 595 "fts5parse.c"
 }
       break;
@@ -2046,7 +2046,7 @@ static void fts5yy_destructor(
     case 21: /* colsetlist */
 {
 #line 93 "fts5parse.y"
- sqlite3_free((fts5yypminor->fts5yy11));
+ sqlite3_free((fts5yypminor->fts5yy11)); 
 #line 603 "fts5parse.c"
 }
       break;
@@ -2054,14 +2054,14 @@ static void fts5yy_destructor(
     case 23: /* nearphrases */
 {
 #line 148 "fts5parse.y"
- sqlite3Fts5ParseNearsetFree((fts5yypminor->fts5yy46));
+ sqlite3Fts5ParseNearsetFree((fts5yypminor->fts5yy46)); 
 #line 611 "fts5parse.c"
 }
       break;
     case 24: /* phrase */
 {
 #line 183 "fts5parse.y"
- sqlite3Fts5ParsePhraseFree((fts5yypminor->fts5yy53));
+ sqlite3Fts5ParsePhraseFree((fts5yypminor->fts5yy53)); 
 #line 618 "fts5parse.c"
 }
       break;
@@ -2103,7 +2103,7 @@ static void sqlite3Fts5ParserFinalize(void *p){
 }
 
 #ifndef sqlite3Fts5Parser_ENGINEALWAYSONSTACK
-/*
+/* 
 ** Deallocate and destroy a parser.  Destructors are called for
 ** all stack elements before shutting the parser down.
 **
@@ -2327,7 +2327,7 @@ static void fts5yy_shift(
     assert( fts5yypParser->fts5yyhwm == (int)(fts5yypParser->fts5yytos - fts5yypParser->fts5yystack) );
   }
 #endif
-#if fts5YYSTACKDEPTH>0
+#if fts5YYSTACKDEPTH>0 
   if( fts5yypParser->fts5yytos>fts5yypParser->fts5yystackEnd ){
     fts5yypParser->fts5yytos--;
     fts5yyStackOverflow(fts5yypParser);
@@ -2464,7 +2464,7 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 1: /* colset ::= MINUS LCP colsetlist RCP */
 #line 97 "fts5parse.y"
-{
+{ 
     fts5yymsp[-3].minor.fts5yy11 = sqlite3Fts5ParseColsetInvert(pParse, fts5yymsp[-1].minor.fts5yy11);
 }
 #line 1023 "fts5parse.c"
@@ -2492,15 +2492,15 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 5: /* colsetlist ::= colsetlist STRING */
 #line 109 "fts5parse.y"
-{
+{ 
   fts5yylhsminor.fts5yy11 = sqlite3Fts5ParseColset(pParse, fts5yymsp[-1].minor.fts5yy11, &fts5yymsp[0].minor.fts5yy0); }
 #line 1050 "fts5parse.c"
   fts5yymsp[-1].minor.fts5yy11 = fts5yylhsminor.fts5yy11;
         break;
       case 6: /* colsetlist ::= STRING */
 #line 111 "fts5parse.y"
-{
-  fts5yylhsminor.fts5yy11 = sqlite3Fts5ParseColset(pParse, 0, &fts5yymsp[0].minor.fts5yy0);
+{ 
+  fts5yylhsminor.fts5yy11 = sqlite3Fts5ParseColset(pParse, 0, &fts5yymsp[0].minor.fts5yy0); 
 }
 #line 1058 "fts5parse.c"
   fts5yymsp[0].minor.fts5yy11 = fts5yylhsminor.fts5yy11;
@@ -2560,16 +2560,16 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 15: /* cnearset ::= nearset */
 #line 137 "fts5parse.y"
-{
-  fts5yylhsminor.fts5yy24 = sqlite3Fts5ParseNode(pParse, FTS5_STRING, 0, 0, fts5yymsp[0].minor.fts5yy46);
+{ 
+  fts5yylhsminor.fts5yy24 = sqlite3Fts5ParseNode(pParse, FTS5_STRING, 0, 0, fts5yymsp[0].minor.fts5yy46); 
 }
 #line 1119 "fts5parse.c"
   fts5yymsp[0].minor.fts5yy24 = fts5yylhsminor.fts5yy24;
         break;
       case 16: /* cnearset ::= colset COLON nearset */
 #line 140 "fts5parse.y"
-{
-  fts5yylhsminor.fts5yy24 = sqlite3Fts5ParseNode(pParse, FTS5_STRING, 0, 0, fts5yymsp[0].minor.fts5yy46);
+{ 
+  fts5yylhsminor.fts5yy24 = sqlite3Fts5ParseNode(pParse, FTS5_STRING, 0, 0, fts5yymsp[0].minor.fts5yy46); 
   sqlite3Fts5ParseSetColset(pParse, fts5yylhsminor.fts5yy24, fts5yymsp[-2].minor.fts5yy11);
 }
 #line 1128 "fts5parse.c"
@@ -2583,9 +2583,9 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 18: /* nearset ::= CARET phrase */
 #line 152 "fts5parse.y"
-{
+{ 
   sqlite3Fts5ParseSetCaret(fts5yymsp[0].minor.fts5yy53);
-  fts5yymsp[-1].minor.fts5yy46 = sqlite3Fts5ParseNearset(pParse, 0, fts5yymsp[0].minor.fts5yy53);
+  fts5yymsp[-1].minor.fts5yy46 = sqlite3Fts5ParseNearset(pParse, 0, fts5yymsp[0].minor.fts5yy53); 
 }
 #line 1143 "fts5parse.c"
         break;
@@ -2601,8 +2601,8 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 20: /* nearphrases ::= phrase */
 #line 162 "fts5parse.y"
-{
-  fts5yylhsminor.fts5yy46 = sqlite3Fts5ParseNearset(pParse, 0, fts5yymsp[0].minor.fts5yy53);
+{ 
+  fts5yylhsminor.fts5yy46 = sqlite3Fts5ParseNearset(pParse, 0, fts5yymsp[0].minor.fts5yy53); 
 }
 #line 1160 "fts5parse.c"
   fts5yymsp[0].minor.fts5yy46 = fts5yylhsminor.fts5yy46;
@@ -2627,7 +2627,7 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 24: /* phrase ::= phrase PLUS STRING star_opt */
 #line 185 "fts5parse.y"
-{
+{ 
   fts5yylhsminor.fts5yy53 = sqlite3Fts5ParseTerm(pParse, fts5yymsp[-3].minor.fts5yy53, &fts5yymsp[-1].minor.fts5yy0, fts5yymsp[0].minor.fts5yy4);
 }
 #line 1186 "fts5parse.c"
@@ -2635,7 +2635,7 @@ static fts5YYACTIONTYPE fts5yy_reduce(
         break;
       case 25: /* phrase ::= STRING star_opt */
 #line 188 "fts5parse.y"
-{
+{ 
   fts5yylhsminor.fts5yy53 = sqlite3Fts5ParseTerm(pParse, 0, &fts5yymsp[-1].minor.fts5yy0, fts5yymsp[0].minor.fts5yy4);
 }
 #line 1194 "fts5parse.c"
@@ -2838,7 +2838,7 @@ static void sqlite3Fts5Parser(
                   (int)(fts5yypParser->fts5yytos - fts5yypParser->fts5yystack));
         }
 #endif
-#if fts5YYSTACKDEPTH>0
+#if fts5YYSTACKDEPTH>0 
         if( fts5yypParser->fts5yytos>=fts5yypParser->fts5yystackEnd ){
           fts5yyStackOverflow(fts5yypParser);
           break;
@@ -2877,7 +2877,7 @@ static void sqlite3Fts5Parser(
 #ifdef fts5YYERRORSYMBOL
       /* A syntax error has occurred.
       ** The response to an error depends upon whether or not the
-      ** grammar defines an error token "ERROR".
+      ** grammar defines an error token "ERROR".  
       **
       ** This is what we do if the grammar does define ERROR:
       **
@@ -3010,7 +3010,7 @@ static int sqlite3Fts5ParserFallback(int iToken){
 */
 
 /*
-** Object used to iterate through all "coalesced phrase instances" in
+** Object used to iterate through all "coalesced phrase instances" in 
 ** a single column of the current row. If the phrase instances in the
 ** column being considered do not overlap, this object simply iterates
 ** through them. Or, if they do overlap (share one or more tokens in
@@ -3073,7 +3073,7 @@ static int fts5CInstIterNext(CInstIter *pIter){
 }
 
 /*
-** Initialize the iterator object indicated by the final parameter to
+** Initialize the iterator object indicated by the final parameter to 
 ** iterate through coalesced phrase instances in column iCol.
 */
 static int fts5CInstIterInit(
@@ -3118,16 +3118,16 @@ struct HighlightContext {
 
 /*
 ** Append text to the HighlightContext output string - p->zOut. Argument
-** z points to a buffer containing n bytes of text to append. If n is
+** z points to a buffer containing n bytes of text to append. If n is 
 ** negative, everything up until the first '\0' is appended to the output.
 **
-** If *pRc is set to any value other than SQLITE_OK when this function is
-** called, it is a no-op. If an error (i.e. an OOM condition) is encountered,
-** *pRc is set to an error code before returning.
+** If *pRc is set to any value other than SQLITE_OK when this function is 
+** called, it is a no-op. If an error (i.e. an OOM condition) is encountered, 
+** *pRc is set to an error code before returning. 
 */
 static void fts5HighlightAppend(
-  int *pRc,
-  HighlightContext *p,
+  int *pRc, 
+  HighlightContext *p, 
   const char *z, int n
 ){
   if( *pRc==SQLITE_OK && z ){
@@ -3354,7 +3354,7 @@ static int fts5SnippetScore(
 }
 
 /*
-** Return the value in pVal interpreted as utf-8 text. Except, if pVal
+** Return the value in pVal interpreted as utf-8 text. Except, if pVal 
 ** contains a NULL value, return a pointer to a static string zero
 ** bytes in length instead of a NULL pointer.
 */
@@ -3423,7 +3423,7 @@ static void fts5SnippetFunction(
       sFinder.nFirst = 0;
       rc = pApi->xColumnText(pFts, i, &sFinder.zDoc, &nDoc);
       if( rc!=SQLITE_OK ) break;
-      rc = pApi->xTokenize(pFts,
+      rc = pApi->xTokenize(pFts, 
           sFinder.zDoc, nDoc, (void*)&sFinder,fts5SentenceFinderCb
       );
       if( rc!=SQLITE_OK ) break;
@@ -3458,7 +3458,7 @@ static void fts5SnippetFunction(
 
           if( sFinder.aFirst[jj]<io ){
             memset(aSeen, 0, nPhrase);
-            rc = fts5SnippetScore(pApi, pFts, nDocsize, aSeen, i,
+            rc = fts5SnippetScore(pApi, pFts, nDocsize, aSeen, i, 
               sFinder.aFirst[jj], nToken, &nScore, 0
             );
 
@@ -3537,7 +3537,7 @@ struct Fts5Bm25Data {
 ** table matched by each individual phrase within the query.
 */
 static int fts5CountCb(
-  const Fts5ExtensionApi *pApi,
+  const Fts5ExtensionApi *pApi, 
   Fts5Context *pFts,
   void *pUserData                 /* Pointer to sqlite3_int64 variable */
 ){
@@ -3548,12 +3548,12 @@ static int fts5CountCb(
 }
 
 /*
-** Set *ppData to point to the Fts5Bm25Data object for the current query.
+** Set *ppData to point to the Fts5Bm25Data object for the current query. 
 ** If the object has not already been allocated, allocate and populate it
 ** now.
 */
 static int fts5Bm25GetData(
-  const Fts5ExtensionApi *pApi,
+  const Fts5ExtensionApi *pApi, 
   Fts5Context *pFts,
   Fts5Bm25Data **ppData           /* OUT: bm25-data object for this query */
 ){
@@ -3601,7 +3601,7 @@ static int fts5Bm25GetData(
         ** is the number that contain at least one instance of the phrase
         ** under consideration.
         **
-        ** The problem with this is that if (N < 2*nHit), the IDF is
+        ** The problem with this is that if (N < 2*nHit), the IDF is 
         ** negative. Which is undesirable. So the mimimum allowable IDF is
         ** (1e-6) - roughly the same as a term that appears in just over
         ** half of set of 5,000,000 documents.  */
@@ -3671,7 +3671,7 @@ static void fts5Bm25Function(
   if( rc==SQLITE_OK ){
     for(i=0; i<pData->nPhrase; i++){
       score += pData->aIDF[i] * (
-          ( aFreq[i] * (k1 + 1.0) ) /
+          ( aFreq[i] * (k1 + 1.0) ) / 
           ( aFreq[i] + k1 * (1 - b + b * D / pData->avgdl) )
       );
     }
@@ -3764,14 +3764,14 @@ static int sqlite3Fts5Get32(const u8 *aBuf){
 }
 
 /*
-** Append buffer nData/pData to buffer pBuf. If an OOM error occurs, set
+** Append buffer nData/pData to buffer pBuf. If an OOM error occurs, set 
 ** the error code in p. If an error has already occurred when this function
 ** is called, it is a no-op.
 */
 static void sqlite3Fts5BufferAppendBlob(
   int *pRc,
-  Fts5Buffer *pBuf,
-  u32 nData,
+  Fts5Buffer *pBuf, 
+  u32 nData, 
   const u8 *pData
 ){
   assert_nc( *pRc || nData>=0 );
@@ -3784,12 +3784,12 @@ static void sqlite3Fts5BufferAppendBlob(
 
 /*
 ** Append the nul-terminated string zStr to the buffer pBuf. This function
-** ensures that the byte following the buffer data is set to 0x00, even
+** ensures that the byte following the buffer data is set to 0x00, even 
 ** though this byte is not included in the pBuf->n count.
 */
 static void sqlite3Fts5BufferAppendString(
   int *pRc,
-  Fts5Buffer *pBuf,
+  Fts5Buffer *pBuf, 
   const char *zStr
 ){
   int nStr = (int)strlen(zStr);
@@ -3801,13 +3801,13 @@ static void sqlite3Fts5BufferAppendString(
 ** Argument zFmt is a printf() style format string. This function performs
 ** the printf() style processing, then appends the results to buffer pBuf.
 **
-** Like sqlite3Fts5BufferAppendString(), this function ensures that the byte
+** Like sqlite3Fts5BufferAppendString(), this function ensures that the byte 
 ** following the buffer data is set to 0x00, even though this byte is not
 ** included in the pBuf->n count.
-*/
+*/ 
 static void sqlite3Fts5BufferAppendPrintf(
   int *pRc,
-  Fts5Buffer *pBuf,
+  Fts5Buffer *pBuf, 
   char *zFmt, ...
 ){
   if( *pRc==SQLITE_OK ){
@@ -3834,12 +3834,12 @@ static char *sqlite3Fts5Mprintf(int *pRc, const char *zFmt, ...){
     zRet = sqlite3_vmprintf(zFmt, ap);
     va_end(ap);
     if( zRet==0 ){
-      *pRc = SQLITE_NOMEM;
+      *pRc = SQLITE_NOMEM; 
     }
   }
   return zRet;
 }
-
+ 
 
 /*
 ** Free any buffer allocated by pBuf. Zero the structure before returning.
@@ -3850,7 +3850,7 @@ static void sqlite3Fts5BufferFree(Fts5Buffer *pBuf){
 }
 
 /*
-** Zero the contents of the buffer object. But do not free the associated
+** Zero the contents of the buffer object. But do not free the associated 
 ** memory allocation.
 */
 static void sqlite3Fts5BufferZero(Fts5Buffer *pBuf){
@@ -3864,8 +3864,8 @@ static void sqlite3Fts5BufferZero(Fts5Buffer *pBuf){
 */
 static void sqlite3Fts5BufferSet(
   int *pRc,
-  Fts5Buffer *pBuf,
-  int nData,
+  Fts5Buffer *pBuf, 
+  int nData, 
   const u8 *pData
 ){
   pBuf->n = 0;
@@ -3881,7 +3881,7 @@ static int sqlite3Fts5PoslistNext64(
   if( i>=n ){
     /* EOF */
     *piOff = -1;
-    return 1;
+    return 1;  
   }else{
     i64 iOff = *piOff;
     int iVal;
@@ -3936,8 +3936,8 @@ static int sqlite3Fts5PoslistReaderInit(
 ** to iPos before returning.
 */
 static void sqlite3Fts5PoslistSafeAppend(
-  Fts5Buffer *pBuf,
-  i64 *piPrev,
+  Fts5Buffer *pBuf, 
+  i64 *piPrev, 
   i64 iPos
 ){
   static const i64 colmask = ((i64)(0x7FFFFFFF)) << 32;
@@ -3951,7 +3951,7 @@ static void sqlite3Fts5PoslistSafeAppend(
 }
 
 static int sqlite3Fts5PoslistWriterAppend(
-  Fts5Buffer *pBuf,
+  Fts5Buffer *pBuf, 
   Fts5PoslistWriter *pWriter,
   i64 iPos
 ){
@@ -3980,7 +3980,7 @@ static void *sqlite3Fts5MallocZero(int *pRc, sqlite3_int64 nByte){
 ** the length of the string is determined using strlen().
 **
 ** It is the responsibility of the caller to eventually free the returned
-** buffer using sqlite3_free(). If an OOM error occurs, NULL is returned.
+** buffer using sqlite3_free(). If an OOM error occurs, NULL is returned. 
 */
 static char *sqlite3Fts5Strndup(int *pRc, const char *pIn, int nIn){
   char *zRet = 0;
@@ -4047,9 +4047,9 @@ static int sqlite3Fts5TermsetNew(Fts5Termset **pp){
 }
 
 static int sqlite3Fts5TermsetAdd(
-  Fts5Termset *p,
+  Fts5Termset *p, 
   int iIdx,
-  const char *pTerm, int nTerm,
+  const char *pTerm, int nTerm, 
   int *pbPresent
 ){
   int rc = SQLITE_OK;
@@ -4070,9 +4070,9 @@ static int sqlite3Fts5TermsetAdd(
     hash = hash % ArraySize(p->apHash);
 
     for(pEntry=p->apHash[hash]; pEntry; pEntry=pEntry->pNext){
-      if( pEntry->iIdx==iIdx
-          && pEntry->nTerm==nTerm
-          && memcmp(pEntry->pTerm, pTerm, nTerm)==0
+      if( pEntry->iIdx==iIdx 
+          && pEntry->nTerm==nTerm 
+          && memcmp(pEntry->pTerm, pTerm, nTerm)==0 
       ){
         *pbPresent = 1;
         break;
@@ -4146,8 +4146,8 @@ static int fts5_isopenquote(char x){
 }
 
 /*
-** Argument pIn points to a character that is part of a nul-terminated
-** string. Return a pointer to the first character following *pIn in
+** Argument pIn points to a character that is part of a nul-terminated 
+** string. Return a pointer to the first character following *pIn in 
 ** the string that is not a white-space character.
 */
 static const char *fts5ConfigSkipWhitespace(const char *pIn){
@@ -4159,8 +4159,8 @@ static const char *fts5ConfigSkipWhitespace(const char *pIn){
 }
 
 /*
-** Argument pIn points to a character that is part of a nul-terminated
-** string. Return a pointer to the first character following *pIn in
+** Argument pIn points to a character that is part of a nul-terminated 
+** string. Return a pointer to the first character following *pIn in 
 ** the string that is not a "bareword" character.
 */
 static const char *fts5ConfigSkipBareword(const char *pIn){
@@ -4191,9 +4191,9 @@ static const char *fts5ConfigSkipLiteral(const char *pIn){
       p++;
       if( *p=='\'' ){
         p++;
-        while( (*p>='a' && *p<='f')
-            || (*p>='A' && *p<='F')
-            || (*p>='0' && *p<='9')
+        while( (*p>='a' && *p<='f') 
+            || (*p>='A' && *p<='F') 
+            || (*p>='0' && *p<='9') 
             ){
           p++;
         }
@@ -4224,7 +4224,7 @@ static const char *fts5ConfigSkipLiteral(const char *pIn){
       if( *p=='+' || *p=='-' ) p++;
       while( fts5_isdigit(*p) ) p++;
 
-      /* At this point, if the literal was an integer, the parse is
+      /* At this point, if the literal was an integer, the parse is 
       ** finished. Or, if it is a floating point value, it may continue
       ** with either a decimal point or an 'E' character. */
       if( *p=='.' && fts5_isdigit(p[1]) ){
@@ -4248,8 +4248,8 @@ static const char *fts5ConfigSkipLiteral(const char *pIn){
 ** nul-terminator byte.
 **
 ** If the close-quote is found, the value returned is the byte offset of
-** the character immediately following it. Or, if the close-quote is not
-** found, -1 is returned. If -1 is returned, the buffer is left in an
+** the character immediately following it. Or, if the close-quote is not 
+** found, -1 is returned. If -1 is returned, the buffer is left in an 
 ** undefined state.
 */
 static int fts5Dequote(char *z){
@@ -4260,7 +4260,7 @@ static int fts5Dequote(char *z){
 
   /* Set stack variable q to the close-quote character */
   assert( q=='[' || q=='\'' || q=='"' || q=='`' );
-  if( q=='[' ) q = ']';
+  if( q=='[' ) q = ']';  
 
   while( z[iIn] ){
     if( z[iIn]==q ){
@@ -4270,7 +4270,7 @@ static int fts5Dequote(char *z){
         break;
       }else{
         /* Character iIn and iIn+1 form an escaped quote character. Skip
-        ** the input cursor past both and copy a single quote character
+        ** the input cursor past both and copy a single quote character 
         ** to the output buffer. */
         iIn += 2;
         z[iOut++] = q;
@@ -4315,8 +4315,8 @@ struct Fts5Enum {
 typedef struct Fts5Enum Fts5Enum;
 
 static int fts5ConfigSetEnum(
-  const Fts5Enum *aEnum,
-  const char *zEnum,
+  const Fts5Enum *aEnum, 
+  const char *zEnum, 
   int *peVal
 ){
   int nEnum = (int)strlen(zEnum);
@@ -4436,7 +4436,7 @@ static int fts5ConfigParseSpecial(
           *pzErr = sqlite3_mprintf("parse error in tokenize directive");
           rc = SQLITE_ERROR;
         }else{
-          rc = sqlite3Fts5GetTokenizer(pGlobal,
+          rc = sqlite3Fts5GetTokenizer(pGlobal, 
               (const char**)azArg, (int)nArg, pConfig,
               pzErr
           );
@@ -4503,7 +4503,7 @@ static int fts5ConfigParseSpecial(
 }
 
 /*
-** Allocate an instance of the default tokenizer ("simple") at
+** Allocate an instance of the default tokenizer ("simple") at 
 ** Fts5Config.pTokenizer. Return SQLITE_OK if successful, or an SQLite error
 ** code if an error occurs.
 */
@@ -4568,14 +4568,14 @@ static const char *fts5ConfigGobbleWord(
 }
 
 static int fts5ConfigParseColumn(
-  Fts5Config *p,
-  char *zCol,
-  char *zArg,
+  Fts5Config *p, 
+  char *zCol, 
+  char *zArg, 
   char **pzErr
 ){
   int rc = SQLITE_OK;
-  if( 0==sqlite3_stricmp(zCol, FTS5_RANK_NAME)
-   || 0==sqlite3_stricmp(zCol, FTS5_ROWID_NAME)
+  if( 0==sqlite3_stricmp(zCol, FTS5_RANK_NAME) 
+   || 0==sqlite3_stricmp(zCol, FTS5_ROWID_NAME) 
   ){
     *pzErr = sqlite3_mprintf("reserved fts5 column name: %s", zCol);
     rc = SQLITE_ERROR;
@@ -4618,14 +4618,14 @@ static int fts5ConfigMakeExprlist(Fts5Config *p){
 
 /*
 ** Arguments nArg/azArg contain the string arguments passed to the xCreate
-** or xConnect method of the virtual table. This function attempts to
+** or xConnect method of the virtual table. This function attempts to 
 ** allocate an instance of Fts5Config containing the results of parsing
 ** those arguments.
 **
 ** If successful, SQLITE_OK is returned and *ppOut is set to point to the
-** new Fts5Config object. If an error occurs, an SQLite error code is
+** new Fts5Config object. If an error occurs, an SQLite error code is 
 ** returned, *ppOut is set to NULL and an error message may be left in
-** *pzErr. It is the responsibility of the caller to eventually free any
+** *pzErr. It is the responsibility of the caller to eventually free any 
 ** such error message using sqlite3_free().
 */
 static int sqlite3Fts5ConfigParse(
@@ -4712,8 +4712,8 @@ static int sqlite3Fts5ConfigParse(
   /* If no zContent option was specified, fill in the default values. */
   if( rc==SQLITE_OK && pRet->zContent==0 ){
     const char *zTail = 0;
-    assert( pRet->eContent==FTS5_CONTENT_NORMAL
-         || pRet->eContent==FTS5_CONTENT_NONE
+    assert( pRet->eContent==FTS5_CONTENT_NORMAL 
+         || pRet->eContent==FTS5_CONTENT_NONE 
     );
     if( pRet->eContent==FTS5_CONTENT_NORMAL ){
       zTail = "content";
@@ -4784,7 +4784,7 @@ static int sqlite3Fts5ConfigDeclareVtab(Fts5Config *pConfig){
     const char *zSep = (i==0?"":", ");
     zSql = sqlite3Fts5Mprintf(&rc, "%z%s%Q", zSql, zSep, pConfig->azCol[i]);
   }
-  zSql = sqlite3Fts5Mprintf(&rc, "%z, %Q HIDDEN, %s HIDDEN)",
+  zSql = sqlite3Fts5Mprintf(&rc, "%z, %Q HIDDEN, %s HIDDEN)", 
       zSql, pConfig->zName, FTS5_RANK_NAME
   );
 
@@ -4793,7 +4793,7 @@ static int sqlite3Fts5ConfigDeclareVtab(Fts5Config *pConfig){
     rc = sqlite3_declare_vtab(pConfig->db, zSql);
     sqlite3_free(zSql);
   }
-
+ 
   return rc;
 }
 
@@ -4811,7 +4811,7 @@ static int sqlite3Fts5ConfigDeclareVtab(Fts5Config *pConfig){
 **     int iPos            // Position of token in input (first token is 0)
 **
 ** If the callback returns a non-zero value the tokenization is abandoned
-** and no further callbacks are issued.
+** and no further callbacks are issued. 
 **
 ** This function returns SQLITE_OK if successful or an SQLite error code
 ** if an error occurs. If the tokenization was abandoned early because
@@ -4841,7 +4841,7 @@ static int sqlite3Fts5Tokenize(
 */
 static const char *fts5ConfigSkipArgs(const char *pIn){
   const char *p = pIn;
-
+  
   while( 1 ){
     p = fts5ConfigSkipWhitespace(p);
     p = fts5ConfigSkipLiteral(p);
@@ -4858,7 +4858,7 @@ static const char *fts5ConfigSkipArgs(const char *pIn){
 }
 
 /*
-** Parameter zIn contains a rank() function specification. The format of
+** Parameter zIn contains a rank() function specification. The format of 
 ** this is:
 **
 **   + Bareword (function name)
@@ -4900,7 +4900,7 @@ static int sqlite3Fts5ConfigParseRank(
       p++;
     }
     if( rc==SQLITE_OK ){
-      const char *pArgs;
+      const char *pArgs; 
       p = fts5ConfigSkipWhitespace(p);
       pArgs = p;
       if( *p!=')' ){
@@ -4926,8 +4926,8 @@ static int sqlite3Fts5ConfigParseRank(
 }
 
 static int sqlite3Fts5ConfigSetValue(
-  Fts5Config *pConfig,
-  const char *zKey,
+  Fts5Config *pConfig, 
+  const char *zKey, 
   sqlite3_value *pVal,
   int *pbBadkey
 ){
@@ -5053,7 +5053,7 @@ static int sqlite3Fts5ConfigLoad(Fts5Config *pConfig, int iCookie){
     }
     rc = sqlite3_finalize(p);
   }
-
+  
   if( rc==SQLITE_OK && iVersion!=FTS5_CURRENT_VERSION ){
     rc = SQLITE_ERROR;
     if( pConfig->pzErrmsg ){
@@ -5141,7 +5141,7 @@ struct Fts5ExprNode {
   i64 iRowid;                     /* Current rowid */
   Fts5ExprNearset *pNear;         /* For FTS5_STRING - cluster of phrases */
 
-  /* Child nodes. For a NOT node, this array always contains 2 entries. For
+  /* Child nodes. For a NOT node, this array always contains 2 entries. For 
   ** AND or OR nodes, it contains 2 or more entries.  */
   int nChild;                     /* Number of child nodes */
   Fts5ExprNode *apChild[1];       /* Array of child nodes */
@@ -5221,7 +5221,7 @@ static int fts5ExprIsspace(char t){
 ** Read the first token from the nul-terminated string at *pz.
 */
 static int fts5ExprGetToken(
-  Fts5Parse *pParse,
+  Fts5Parse *pParse, 
   const char **pz,                /* IN/OUT: Pointer into buffer */
   Fts5Token *pToken
 ){
@@ -5292,7 +5292,7 @@ static int sqlite3Fts5ExprNew(
   int bPhraseToAnd,
   int iCol,
   const char *zExpr,              /* Expression text */
-  Fts5Expr **ppNew,
+  Fts5Expr **ppNew, 
   char **pzErr
 ){
   Fts5Parse sParse;
@@ -5394,8 +5394,8 @@ static int sqlite3Fts5ExprPattern(
     }
 
     while( i<=nText ){
-      if( i==nText
-       || zText[i]==aSpec[0] || zText[i]==aSpec[1] || zText[i]==aSpec[2]
+      if( i==nText 
+       || zText[i]==aSpec[0] || zText[i]==aSpec[1] || zText[i]==aSpec[2] 
       ){
         if( i-iFirst>=3 ){
           int jj;
@@ -5525,7 +5525,7 @@ static i64 fts5ExprSynonymRowid(Fts5ExprTerm *pTerm, int bDesc, int *pbEof){
 ** Argument pTerm must be a synonym iterator.
 */
 static int fts5ExprSynonymList(
-  Fts5ExprTerm *pTerm,
+  Fts5ExprTerm *pTerm, 
   i64 iRowid,
   Fts5Buffer *pBuf,               /* Use this buffer for space if required */
   u8 **pa, int *pn
@@ -5598,13 +5598,13 @@ static int fts5ExprSynonymList(
 
 /*
 ** All individual term iterators in pPhrase are guaranteed to be valid and
-** pointing to the same rowid when this function is called. This function
+** pointing to the same rowid when this function is called. This function 
 ** checks if the current rowid really is a match, and if so populates
 ** the pPhrase->poslist buffer accordingly. Output parameter *pbMatch
 ** is set to true if this is really a match, or false otherwise.
 **
-** SQLITE_OK is returned if an error occurs, or an SQLite error code
-** otherwise. It is not considered an error code if the current rowid is
+** SQLITE_OK is returned if an error occurs, or an SQLite error code 
+** otherwise. It is not considered an error code if the current rowid is 
 ** not a match.
 */
 static int fts5ExprPhraseIsMatch(
@@ -5618,7 +5618,7 @@ static int fts5ExprPhraseIsMatch(
   int i;
   int rc = SQLITE_OK;
   int bFirst = pPhrase->aTerm[0].bFirst;
-
+  
   fts5BufferZero(&pPhrase->poslist);
 
   /* If the aStatic[] array is not large enough, allocate a large array
@@ -5740,7 +5740,7 @@ struct Fts5NearTrimmer {
 ** function is called, it is a no-op. Or, if an error (e.g. SQLITE_NOMEM)
 ** occurs within this function (*pRc) is set accordingly before returning.
 ** The return value is undefined in both these cases.
-**
+** 
 ** If no error occurs and non-zero (a match) is returned, the position-list
 ** of each phrase object is edited to contain only those entries that
 ** meet the constraint before returning.
@@ -5772,7 +5772,7 @@ static int fts5ExprNearIsMatch(int *pRc, Fts5ExprNearset *pNear){
   /* Initialize a lookahead iterator for each phrase. After passing the
   ** buffer and buffer size to the lookaside-reader init function, zero
   ** the phrase poslist buffer. The new poslist for the phrase (containing
-  ** the same entries as the original with some entries removed on account
+  ** the same entries as the original with some entries removed on account 
   ** of the NEAR constraint) is written over the original even as it is
   ** being read. This is safe as the entries for the new poslist are a
   ** subset of the old, so it is not possible for data yet to be read to
@@ -5929,7 +5929,7 @@ static int fts5ExprNearTest(
     ** phrase is not a match, break out of the loop early.  */
     for(i=0; rc==SQLITE_OK && i<pNear->nPhrase; i++){
       Fts5ExprPhrase *pPhrase = pNear->apPhrase[i];
-      if( pPhrase->nTerm>1 || pPhrase->aTerm[0].pSynonym
+      if( pPhrase->nTerm>1 || pPhrase->aTerm[0].pSynonym 
        || pNear->pColset || pPhrase->aTerm[0].bFirst
       ){
         int bMatch = 0;
@@ -6077,7 +6077,7 @@ static void fts5ExprNodeZeroPoslist(Fts5ExprNode *pNode){
 */
 static int fts5NodeCompare(
   Fts5Expr *pExpr,
-  Fts5ExprNode *p1,
+  Fts5ExprNode *p1, 
   Fts5ExprNode *p2
 ){
   if( p2->bEof ) return -1;
@@ -6092,7 +6092,7 @@ static int fts5NodeCompare(
 ** If an EOF is reached before this happens, *pbEof is set to true before
 ** returning.
 **
-** SQLITE_OK is returned if an error occurs, or an SQLite error code
+** SQLITE_OK is returned if an error occurs, or an SQLite error code 
 ** otherwise. It is not considered an error code if an iterator reaches
 ** EOF.
 */
@@ -6109,8 +6109,8 @@ static int fts5ExprNodeTest_STRING(
   const int bDesc = pExpr->bDesc;
 
   /* Check that this node should not be FTS5_TERM */
-  assert( pNear->nPhrase>1
-       || pNear->apPhrase[0]->nTerm>1
+  assert( pNear->nPhrase>1 
+       || pNear->apPhrase[0]->nTerm>1 
        || pNear->apPhrase[0]->aTerm[0].pSynonym
        || pNear->apPhrase[0]->aTerm[0].bFirst
   );
@@ -6170,7 +6170,7 @@ static int fts5ExprNodeNext_STRING(
   Fts5Expr *pExpr,                /* Expression pPhrase belongs to */
   Fts5ExprNode *pNode,            /* FTS5_STRING or FTS5_TERM node */
   int bFromValid,
-  i64 iFrom
+  i64 iFrom 
 ){
   Fts5ExprTerm *pTerm = &pNode->pNear->apPhrase[0]->aTerm[0];
   int rc = SQLITE_OK;
@@ -6188,8 +6188,8 @@ static int fts5ExprNodeNext_STRING(
     for(p=pTerm; p; p=p->pSynonym){
       if( sqlite3Fts5IterEof(p->pIter)==0 ){
         i64 ii = p->pIter->iRowid;
-        if( ii==iRowid
-         || (bFromValid && ii!=iFrom && (ii>iFrom)==pExpr->bDesc)
+        if( ii==iRowid 
+         || (bFromValid && ii!=iFrom && (ii>iFrom)==pExpr->bDesc) 
         ){
           if( bFromValid ){
             rc = sqlite3Fts5IterNextFrom(p->pIter, iFrom);
@@ -6235,9 +6235,9 @@ static int fts5ExprNodeTest_TERM(
   Fts5Expr *pExpr,                /* Expression that pNear is a part of */
   Fts5ExprNode *pNode             /* The "NEAR" node (FTS5_TERM) */
 ){
-  /* As this "NEAR" object is actually a single phrase that consists
+  /* As this "NEAR" object is actually a single phrase that consists 
   ** of a single term only, grab pointers into the poslist managed by the
-  ** fts5_index.c iterator object. This is much faster than synthesizing
+  ** fts5_index.c iterator object. This is much faster than synthesizing 
   ** a new poslist the way we have to for more complicated phrase or NEAR
   ** expressions.  */
   Fts5ExprPhrase *pPhrase = pNode->pNear->apPhrase[0];
@@ -6260,7 +6260,7 @@ static int fts5ExprNodeTest_TERM(
 ** xNext() method for a node of type FTS5_TERM.
 */
 static int fts5ExprNodeNext_TERM(
-  Fts5Expr *pExpr,
+  Fts5Expr *pExpr, 
   Fts5ExprNode *pNode,
   int bFromValid,
   i64 iFrom
@@ -6303,7 +6303,7 @@ static void fts5ExprNodeTest_OR(
 }
 
 static int fts5ExprNodeNext_OR(
-  Fts5Expr *pExpr,
+  Fts5Expr *pExpr, 
   Fts5ExprNode *pNode,
   int bFromValid,
   i64 iFrom
@@ -6315,7 +6315,7 @@ static int fts5ExprNodeNext_OR(
     Fts5ExprNode *p1 = pNode->apChild[i];
     assert( p1->bEof || fts5RowidCmp(pExpr, p1->iRowid, iLast)>=0 );
     if( p1->bEof==0 ){
-      if( (p1->iRowid==iLast)
+      if( (p1->iRowid==iLast) 
        || (bFromValid && fts5RowidCmp(pExpr, p1->iRowid, iFrom)<0)
       ){
         int rc = fts5ExprNodeNext(pExpr, p1, bFromValid, iFrom);
@@ -6387,7 +6387,7 @@ static int fts5ExprNodeTest_AND(
 }
 
 static int fts5ExprNodeNext_AND(
-  Fts5Expr *pExpr,
+  Fts5Expr *pExpr, 
   Fts5ExprNode *pNode,
   int bFromValid,
   i64 iFrom
@@ -6430,7 +6430,7 @@ static int fts5ExprNodeTest_NOT(
 }
 
 static int fts5ExprNodeNext_NOT(
-  Fts5Expr *pExpr,
+  Fts5Expr *pExpr, 
   Fts5ExprNode *pNode,
   int bFromValid,
   i64 iFrom
@@ -6487,7 +6487,7 @@ static int fts5ExprNodeTest(
   return rc;
 }
 
-
+ 
 /*
 ** Set node pNode, which is part of expression pExpr, to point to the first
 ** match. If there are no matches, set the Node.bEof flag to indicate EOF.
@@ -6541,8 +6541,8 @@ static int fts5ExprNodeFirst(Fts5Expr *pExpr, Fts5ExprNode *pNode){
 
 /*
 ** Begin iterating through the set of documents in index pIdx matched by
-** the MATCH expression passed as the first argument. If the "bDesc"
-** parameter is passed a non-zero value, iteration is in descending rowid
+** the MATCH expression passed as the first argument. If the "bDesc" 
+** parameter is passed a non-zero value, iteration is in descending rowid 
 ** order. Or, if it is zero, in ascending order.
 **
 ** If iterating in ascending rowid order (bDesc==0), the first document
@@ -6564,9 +6564,9 @@ static int sqlite3Fts5ExprFirst(Fts5Expr *p, Fts5Index *pIdx, i64 iFirst, int bD
 
   /* If not at EOF but the current rowid occurs earlier than iFirst in
   ** the iteration order, move to document iFirst or later. */
-  if( rc==SQLITE_OK
-   && 0==pRoot->bEof
-   && fts5RowidCmp(p, pRoot->iRowid, iFirst)<0
+  if( rc==SQLITE_OK 
+   && 0==pRoot->bEof 
+   && fts5RowidCmp(p, pRoot->iRowid, iFirst)<0 
   ){
     rc = fts5ExprNodeNext(p, pRoot, 1, iFirst);
   }
@@ -6580,7 +6580,7 @@ static int sqlite3Fts5ExprFirst(Fts5Expr *p, Fts5Index *pIdx, i64 iFirst, int bD
 }
 
 /*
-** Move to the next document
+** Move to the next document 
 **
 ** Return SQLITE_OK if successful, or an SQLite error code otherwise. It
 ** is not considered an error if the query does not match any documents.
@@ -6762,7 +6762,7 @@ static int fts5ParseTokenize(
       Fts5ExprPhrase *pNew;
       int nNew = SZALLOC + (pPhrase ? pPhrase->nTerm : 0);
 
-      pNew = (Fts5ExprPhrase*)sqlite3_realloc64(pPhrase,
+      pNew = (Fts5ExprPhrase*)sqlite3_realloc64(pPhrase, 
           sizeof(Fts5ExprPhrase) + sizeof(Fts5ExprTerm) * nNew
       );
       if( pNew==0 ){
@@ -6886,8 +6886,8 @@ static Fts5ExprPhrase *sqlite3Fts5ParseTerm(
 ** expression passed as the second argument.
 */
 static int sqlite3Fts5ExprClonePhrase(
-  Fts5Expr *pExpr,
-  int iPhrase,
+  Fts5Expr *pExpr, 
+  int iPhrase, 
   Fts5Expr **ppNew
 ){
   int rc = SQLITE_OK;             /* Return code */
@@ -6898,15 +6898,15 @@ static int sqlite3Fts5ExprClonePhrase(
   pOrig = pExpr->apExprPhrase[iPhrase];
   pNew = (Fts5Expr*)sqlite3Fts5MallocZero(&rc, sizeof(Fts5Expr));
   if( rc==SQLITE_OK ){
-    pNew->apExprPhrase = (Fts5ExprPhrase**)sqlite3Fts5MallocZero(&rc,
+    pNew->apExprPhrase = (Fts5ExprPhrase**)sqlite3Fts5MallocZero(&rc, 
         sizeof(Fts5ExprPhrase*));
   }
   if( rc==SQLITE_OK ){
-    pNew->pRoot = (Fts5ExprNode*)sqlite3Fts5MallocZero(&rc,
+    pNew->pRoot = (Fts5ExprNode*)sqlite3Fts5MallocZero(&rc, 
         sizeof(Fts5ExprNode));
   }
   if( rc==SQLITE_OK ){
-    pNew->pRoot->pNear = (Fts5ExprNearset*)sqlite3Fts5MallocZero(&rc,
+    pNew->pRoot->pNear = (Fts5ExprNearset*)sqlite3Fts5MallocZero(&rc, 
         sizeof(Fts5ExprNearset) + sizeof(Fts5ExprPhrase*));
   }
   if( rc==SQLITE_OK ){
@@ -6916,7 +6916,7 @@ static int sqlite3Fts5ExprClonePhrase(
       Fts5Colset *pColset;
       nByte = sizeof(Fts5Colset) + (pColsetOrig->nCol-1) * sizeof(int);
       pColset = (Fts5Colset*)sqlite3Fts5MallocZero(&rc, nByte);
-      if( pColset ){
+      if( pColset ){ 
         memcpy(pColset, pColsetOrig, (size_t)nByte);
       }
       pNew->pRoot->pNear->pColset = pColset;
@@ -6955,9 +6955,9 @@ static int sqlite3Fts5ExprClonePhrase(
     pNew->pRoot->pNear->nPhrase = 1;
     sCtx.pPhrase->pNode = pNew->pRoot;
 
-    if( pOrig->nTerm==1
-     && pOrig->aTerm[0].pSynonym==0
-     && pOrig->aTerm[0].bFirst==0
+    if( pOrig->nTerm==1 
+     && pOrig->aTerm[0].pSynonym==0 
+     && pOrig->aTerm[0].bFirst==0 
     ){
       pNew->pRoot->eType = FTS5_TERM;
       pNew->pRoot->xNext = fts5ExprNodeNext_TERM;
@@ -6990,7 +6990,7 @@ static void sqlite3Fts5ParseNear(Fts5Parse *pParse, Fts5Token *pTok){
 }
 
 static void sqlite3Fts5ParseSetDistance(
-  Fts5Parse *pParse,
+  Fts5Parse *pParse, 
   Fts5ExprNearset *pNear,
   Fts5Token *p
 ){
@@ -7019,7 +7019,7 @@ static void sqlite3Fts5ParseSetDistance(
 ** The second argument passed to this function may be NULL, or it may be
 ** an existing Fts5Colset object. This function returns a pointer to
 ** a new colset object containing the contents of (p) with new value column
-** number iCol appended.
+** number iCol appended. 
 **
 ** If an OOM error occurs, store an error code in pParse and return NULL.
 ** The old colset object (if any) is not freed in this case.
@@ -7069,7 +7069,7 @@ static Fts5Colset *sqlite3Fts5ParseColsetInvert(Fts5Parse *pParse, Fts5Colset *p
   Fts5Colset *pRet;
   int nCol = pParse->pConfig->nCol;
 
-  pRet = (Fts5Colset*)sqlite3Fts5MallocZero(&pParse->rc,
+  pRet = (Fts5Colset*)sqlite3Fts5MallocZero(&pParse->rc, 
       sizeof(Fts5Colset) + sizeof(int)*nCol
   );
   if( pRet ){
@@ -7122,7 +7122,7 @@ static Fts5Colset *sqlite3Fts5ParseColset(
 
 /*
 ** If argument pOrig is NULL, or if (*pRc) is set to anything other than
-** SQLITE_OK when this function is called, NULL is returned.
+** SQLITE_OK when this function is called, NULL is returned. 
 **
 ** Otherwise, a copy of (*pOrig) is made into memory obtained from
 ** sqlite3Fts5MallocZero() and a pointer to it returned. If the allocation
@@ -7133,7 +7133,7 @@ static Fts5Colset *fts5CloneColset(int *pRc, Fts5Colset *pOrig){
   if( pOrig ){
     sqlite3_int64 nByte = sizeof(Fts5Colset) + (pOrig->nCol-1) * sizeof(int);
     pRet = (Fts5Colset*)sqlite3Fts5MallocZero(pRc, nByte);
-    if( pRet ){
+    if( pRet ){ 
       memcpy(pRet, pOrig, (size_t)nByte);
     }
   }else{
@@ -7172,13 +7172,13 @@ static void fts5MergeColset(Fts5Colset *pColset, Fts5Colset *pMerge){
 ** zero, or it may create copies of pColset using fts5CloneColset().
 */
 static void fts5ParseSetColset(
-  Fts5Parse *pParse,
-  Fts5ExprNode *pNode,
+  Fts5Parse *pParse, 
+  Fts5ExprNode *pNode, 
   Fts5Colset *pColset,
   Fts5Colset **ppFree
 ){
   if( pParse->rc==SQLITE_OK ){
-    assert( pNode->eType==FTS5_TERM || pNode->eType==FTS5_STRING
+    assert( pNode->eType==FTS5_TERM || pNode->eType==FTS5_STRING 
          || pNode->eType==FTS5_AND  || pNode->eType==FTS5_OR
          || pNode->eType==FTS5_NOT  || pNode->eType==FTS5_EOF
     );
@@ -7210,9 +7210,9 @@ static void fts5ParseSetColset(
 ** Apply colset pColset to expression node pExpr and all of its descendents.
 */
 static void sqlite3Fts5ParseSetColset(
-  Fts5Parse *pParse,
-  Fts5ExprNode *pExpr,
-  Fts5Colset *pColset
+  Fts5Parse *pParse, 
+  Fts5ExprNode *pExpr, 
+  Fts5Colset *pColset 
 ){
   Fts5Colset *pFree = pColset;
   if( pParse->pConfig->eDetail==FTS5_DETAIL_NONE ){
@@ -7230,7 +7230,7 @@ static void fts5ExprAssignXNext(Fts5ExprNode *pNode){
   switch( pNode->eType ){
     case FTS5_STRING: {
       Fts5ExprNearset *pNear = pNode->pNear;
-      if( pNear->nPhrase==1 && pNear->apPhrase[0]->nTerm==1
+      if( pNear->nPhrase==1 && pNear->apPhrase[0]->nTerm==1 
        && pNear->apPhrase[0]->aTerm[0].pSynonym==0
        && pNear->apPhrase[0]->aTerm[0].bFirst==0
       ){
@@ -7282,7 +7282,7 @@ static void fts5ExprAddChildren(Fts5ExprNode *p, Fts5ExprNode *pSub){
 **     abc AND def AND ghi
 */
 static Fts5ExprNode *fts5ParsePhraseToAnd(
-  Fts5Parse *pParse,
+  Fts5Parse *pParse, 
   Fts5ExprNearset *pNear
 ){
   int nTerm = pNear->apPhrase[0]->nTerm;
@@ -7313,13 +7313,13 @@ static Fts5ExprNode *fts5ParsePhraseToAnd(
           pPhrase->aTerm[0].zTerm = sqlite3Fts5Strndup(
               &pParse->rc, pNear->apPhrase[0]->aTerm[ii].zTerm, -1
           );
-          pRet->apChild[ii] = sqlite3Fts5ParseNode(pParse, FTS5_STRING,
+          pRet->apChild[ii] = sqlite3Fts5ParseNode(pParse, FTS5_STRING, 
               0, 0, sqlite3Fts5ParseNearset(pParse, 0, pPhrase)
           );
         }
       }
     }
-
+  
     if( pParse->rc ){
       sqlite3Fts5ParseNodeFree(pRet);
       pRet = 0;
@@ -7347,7 +7347,7 @@ static Fts5ExprNode *sqlite3Fts5ParseNode(
   if( pParse->rc==SQLITE_OK ){
     int nChild = 0;               /* Number of children of returned node */
     sqlite3_int64 nByte;          /* Bytes of space to allocate for this node */
-
+ 
     assert( (eType!=FTS5_STRING && !pNear)
          || (eType==FTS5_STRING && !pLeft && !pRight)
     );
@@ -7355,8 +7355,8 @@ static Fts5ExprNode *sqlite3Fts5ParseNode(
     if( eType!=FTS5_STRING && pLeft==0 ) return pRight;
     if( eType!=FTS5_STRING && pRight==0 ) return pLeft;
 
-    if( eType==FTS5_STRING
-     && pParse->bPhraseToAnd
+    if( eType==FTS5_STRING 
+     && pParse->bPhraseToAnd 
      && pNear->apPhrase[0]->nTerm>1
     ){
       pRet = fts5ParsePhraseToAnd(pParse, pNear);
@@ -7388,7 +7388,7 @@ static Fts5ExprNode *sqlite3Fts5ParseNode(
 
           if( pParse->pConfig->eDetail!=FTS5_DETAIL_FULL ){
             Fts5ExprPhrase *pPhrase = pNear->apPhrase[0];
-            if( pNear->nPhrase!=1
+            if( pNear->nPhrase!=1 
                 || pPhrase->nTerm>1
                 || (pPhrase->nTerm>0 && pPhrase->aTerm[0].bFirst)
               ){
@@ -7396,7 +7396,7 @@ static Fts5ExprNode *sqlite3Fts5ParseNode(
               pParse->rc = SQLITE_ERROR;
               assert( pParse->zErr==0 );
               pParse->zErr = sqlite3_mprintf(
-                  "fts5: %s queries are not supported (detail!=full)",
+                  "fts5: %s queries are not supported (detail!=full)", 
                   pNear->nPhrase==1 ? "phrase": "NEAR"
                   );
               sqlite3_free(pRet);
@@ -7433,14 +7433,14 @@ static Fts5ExprNode *sqlite3Fts5ParseImplicitAnd(
     sqlite3Fts5ParseNodeFree(pRight);
   }else{
 
-    assert( pLeft->eType==FTS5_STRING
+    assert( pLeft->eType==FTS5_STRING 
         || pLeft->eType==FTS5_TERM
         || pLeft->eType==FTS5_EOF
         || pLeft->eType==FTS5_AND
     );
-    assert( pRight->eType==FTS5_STRING
-        || pRight->eType==FTS5_TERM
-        || pRight->eType==FTS5_EOF
+    assert( pRight->eType==FTS5_STRING 
+        || pRight->eType==FTS5_TERM 
+        || pRight->eType==FTS5_EOF 
     );
 
     if( pLeft->eType==FTS5_AND ){
@@ -7448,9 +7448,9 @@ static Fts5ExprNode *sqlite3Fts5ParseImplicitAnd(
     }else{
       pPrev = pLeft;
     }
-    assert( pPrev->eType==FTS5_STRING
-        || pPrev->eType==FTS5_TERM
-        || pPrev->eType==FTS5_EOF
+    assert( pPrev->eType==FTS5_STRING 
+        || pPrev->eType==FTS5_TERM 
+        || pPrev->eType==FTS5_EOF 
         );
 
     if( pRight->eType==FTS5_EOF ){
@@ -7532,20 +7532,20 @@ static char *fts5PrintfAppend(char *zApp, const char *zFmt, ...){
 }
 
 /*
-** Compose a tcl-readable representation of expression pExpr. Return a
-** pointer to a buffer containing that representation. It is the
-** responsibility of the caller to at some point free the buffer using
+** Compose a tcl-readable representation of expression pExpr. Return a 
+** pointer to a buffer containing that representation. It is the 
+** responsibility of the caller to at some point free the buffer using 
 ** sqlite3_free().
 */
 static char *fts5ExprPrintTcl(
-  Fts5Config *pConfig,
+  Fts5Config *pConfig, 
   const char *zNearsetCmd,
   Fts5ExprNode *pExpr
 ){
   char *zRet = 0;
   if( pExpr->eType==FTS5_STRING || pExpr->eType==FTS5_TERM ){
     Fts5ExprNearset *pNear = pExpr->pNear;
-    int i;
+    int i; 
     int iTerm;
 
     zRet = fts5PrintfAppend(zRet, "%s ", zNearsetCmd);
@@ -7595,9 +7595,9 @@ static char *fts5ExprPrintTcl(
     switch( pExpr->eType ){
       case FTS5_AND: zOp = "AND"; break;
       case FTS5_NOT: zOp = "NOT"; break;
-      default:
+      default: 
         assert( pExpr->eType==FTS5_OR );
-        zOp = "OR";
+        zOp = "OR"; 
         break;
     }
 
@@ -7623,7 +7623,7 @@ static char *fts5ExprPrint(Fts5Config *pConfig, Fts5ExprNode *pExpr){
   }else
   if( pExpr->eType==FTS5_STRING || pExpr->eType==FTS5_TERM ){
     Fts5ExprNearset *pNear = pExpr->pNear;
-    int i;
+    int i; 
     int iTerm;
 
     if( pNear->pColset ){
@@ -7631,7 +7631,7 @@ static char *fts5ExprPrint(Fts5Config *pConfig, Fts5ExprNode *pExpr){
       Fts5Colset *pColset = pNear->pColset;
       if( pColset->nCol>1 ) zRet = fts5PrintfAppend(zRet, "{");
       for(ii=0; ii<pColset->nCol; ii++){
-        zRet = fts5PrintfAppend(zRet, "%s%s",
+        zRet = fts5PrintfAppend(zRet, "%s%s", 
             pConfig->azCol[pColset->aiCol[ii]], ii==pColset->nCol-1 ? "" : " "
         );
       }
@@ -7677,9 +7677,9 @@ static char *fts5ExprPrint(Fts5Config *pConfig, Fts5ExprNode *pExpr){
     switch( pExpr->eType ){
       case FTS5_AND: zOp = " AND "; break;
       case FTS5_NOT: zOp = " NOT "; break;
-      default:
+      default:  
         assert( pExpr->eType==FTS5_OR );
-        zOp = " OR ";
+        zOp = " OR "; 
         break;
     }
 
@@ -7691,7 +7691,7 @@ static char *fts5ExprPrint(Fts5Config *pConfig, Fts5ExprNode *pExpr){
       }else{
         int e = pExpr->apChild[i]->eType;
         int b = (e!=FTS5_STRING && e!=FTS5_TERM && e!=FTS5_EOF);
-        zRet = fts5PrintfAppend(zRet, "%s%s%z%s",
+        zRet = fts5PrintfAppend(zRet, "%s%s%z%s", 
             (i==0 ? "" : zOp),
             (b?"(":""), z, (b?")":"")
         );
@@ -7809,7 +7809,7 @@ static void fts5ExprFunctionTcl(
 
 /*
 ** The implementation of an SQLite user-defined-function that accepts a
-** single integer as an argument. If the integer is an alpha-numeric
+** single integer as an argument. If the integer is an alpha-numeric 
 ** unicode code point, 1 is returned. Otherwise 0.
 */
 static void fts5ExprIsAlnum(
@@ -7820,7 +7820,7 @@ static void fts5ExprIsAlnum(
   int iCode;
   u8 aArr[32];
   if( nArg!=1 ){
-    sqlite3_result_error(pCtx,
+    sqlite3_result_error(pCtx, 
         "wrong number of arguments to function fts5_isalnum", -1
     );
     return;
@@ -7839,7 +7839,7 @@ static void fts5ExprFold(
   sqlite3_value **apVal           /* Function arguments */
 ){
   if( nArg!=1 && nArg!=2 ){
-    sqlite3_result_error(pCtx,
+    sqlite3_result_error(pCtx, 
         "wrong number of arguments to function fts5_fold", -1
     );
   }else{
@@ -7933,7 +7933,7 @@ static Fts5PoslistPopulator *sqlite3Fts5ExprClearPoslists(Fts5Expr *pExpr, int b
       Fts5Buffer *pBuf = &pExpr->apExprPhrase[i]->poslist;
       Fts5ExprNode *pNode = pExpr->apExprPhrase[i]->pNode;
       assert( pExpr->apExprPhrase[i]->nTerm==1 );
-      if( bLive &&
+      if( bLive && 
           (pBuf->n==0 || pNode->iRowid!=pExpr->pRoot->iRowid || pNode->bEof)
       ){
         pRet[i].bMiss = 1;
@@ -8000,9 +8000,9 @@ static int fts5ExprPopulatePoslistsCb(
 
 static int sqlite3Fts5ExprPopulatePoslists(
   Fts5Config *pConfig,
-  Fts5Expr *pExpr,
+  Fts5Expr *pExpr, 
   Fts5PoslistPopulator *aPopulator,
-  int iCol,
+  int iCol, 
   const char *z, int n
 ){
   int i;
@@ -8014,7 +8014,7 @@ static int sqlite3Fts5ExprPopulatePoslists(
   for(i=0; i<pExpr->nPhrase; i++){
     Fts5ExprNode *pNode = pExpr->apExprPhrase[i]->pNode;
     Fts5Colset *pColset = pNode->pNear->pColset;
-    if( (pColset && 0==fts5ExprColsetTest(pColset, iCol))
+    if( (pColset && 0==fts5ExprColsetTest(pColset, iCol)) 
      || aPopulator[i].bMiss
     ){
       aPopulator[i].bOk = 0;
@@ -8023,7 +8023,7 @@ static int sqlite3Fts5ExprPopulatePoslists(
     }
   }
 
-  return sqlite3Fts5Tokenize(pConfig,
+  return sqlite3Fts5Tokenize(pConfig, 
       FTS5_TOKENIZE_DOCUMENT, z, n, (void*)&sCtx, fts5ExprPopulatePoslistsCb
   );
 }
@@ -8088,12 +8088,12 @@ static void sqlite3Fts5ExprCheckPoslists(Fts5Expr *pExpr, i64 iRowid){
 }
 
 /*
-** This function is only called for detail=columns tables.
+** This function is only called for detail=columns tables. 
 */
 static int sqlite3Fts5ExprPhraseCollist(
-  Fts5Expr *pExpr,
-  int iPhrase,
-  const u8 **ppCollist,
+  Fts5Expr *pExpr, 
+  int iPhrase, 
+  const u8 **ppCollist, 
   int *pnCollist
 ){
   Fts5ExprPhrase *pPhrase = pExpr->apExprPhrase[iPhrase];
@@ -8103,8 +8103,8 @@ static int sqlite3Fts5ExprPhraseCollist(
   assert( iPhrase>=0 && iPhrase<pExpr->nPhrase );
   assert( pExpr->pConfig->eDetail==FTS5_DETAIL_COLUMNS );
 
-  if( pNode->bEof==0
-   && pNode->iRowid==pExpr->pRoot->iRowid
+  if( pNode->bEof==0 
+   && pNode->iRowid==pExpr->pRoot->iRowid 
    && pPhrase->poslist.n>0
   ){
     Fts5ExprTerm *pTerm = &pPhrase->aTerm[0];
@@ -8161,9 +8161,9 @@ struct Fts5Hash {
 };
 
 /*
-** Each entry in the hash table is represented by an object of the
-** following type. Each object, its key (a nul-terminated string) and
-** its current data are stored in a single memory allocation. The
+** Each entry in the hash table is represented by an object of the 
+** following type. Each object, its key (a nul-terminated string) and 
+** its current data are stored in a single memory allocation. The 
 ** key immediately follows the object in memory. The position list
 ** data immediately follows the key data in memory.
 **
@@ -8185,7 +8185,7 @@ struct Fts5Hash {
 struct Fts5HashEntry {
   Fts5HashEntry *pHashNext;       /* Next hash entry with same hash-key */
   Fts5HashEntry *pScanNext;       /* Next entry in sorted order */
-
+  
   int nAlloc;                     /* Total size of allocation */
   int iSzPoslist;                 /* Offset of space for 4-byte poslist size */
   int nData;                      /* Total bytes of data (incl. structure) */
@@ -8314,7 +8314,7 @@ static int fts5HashResize(Fts5Hash *pHash){
 }
 
 static int fts5HashAddPoslistSize(
-  Fts5Hash *pHash,
+  Fts5Hash *pHash, 
   Fts5HashEntry *p,
   Fts5HashEntry *p2
 ){
@@ -8377,16 +8377,16 @@ static int sqlite3Fts5HashWrite(
   u8 *pPtr;
   int nIncr = 0;                  /* Amount to increment (*pHash->pnByte) by */
   int bNew;                       /* If non-delete entry should be written */
-
+  
   bNew = (pHash->eDetail==FTS5_DETAIL_FULL);
 
   /* Attempt to locate an existing hash entry */
   iHash = fts5HashKey2(pHash->nSlot, (u8)bByte, (const u8*)pToken, nToken);
   for(p=pHash->aSlot[iHash]; p; p=p->pHashNext){
     char *zKey = fts5EntryKey(p);
-    if( zKey[0]==bByte
+    if( zKey[0]==bByte 
      && p->nKey==nToken
-     && memcmp(&zKey[1], pToken, nToken)==0
+     && memcmp(&zKey[1], pToken, nToken)==0 
     ){
       break;
     }
@@ -8434,8 +8434,8 @@ static int sqlite3Fts5HashWrite(
 
   }else{
 
-    /* Appending to an existing hash-entry. Check that there is enough
-    ** space to append the largest possible new entry. Worst case scenario
+    /* Appending to an existing hash-entry. Check that there is enough 
+    ** space to append the largest possible new entry. Worst case scenario 
     ** is:
     **
     **     + 9 bytes for a new rowid,
@@ -8564,7 +8564,7 @@ static Fts5HashEntry *fts5HashEntryMerge(
 ** list.
 */
 static int fts5HashEntrySort(
-  Fts5Hash *pHash,
+  Fts5Hash *pHash, 
   const char *pTerm, int nTerm,   /* Query prefix, if any */
   Fts5HashEntry **ppSorted
 ){
@@ -8582,7 +8582,7 @@ static int fts5HashEntrySort(
   for(iSlot=0; iSlot<pHash->nSlot; iSlot++){
     Fts5HashEntry *pIter;
     for(pIter=pHash->aSlot[iSlot]; pIter; pIter=pIter->pHashNext){
-      if( pTerm==0
+      if( pTerm==0 
        || (pIter->nKey+1>=nTerm && 0==memcmp(fts5EntryKey(pIter), pTerm, nTerm))
       ){
         Fts5HashEntry *pEntry = pIter;
@@ -8698,7 +8698,7 @@ static void sqlite3Fts5HashScanEntry(
 **
 ******************************************************************************
 **
-** Low level access to the FTS index stored in the database file. The
+** Low level access to the FTS index stored in the database file. The 
 ** routines in this file file implement all read and write access to the
 ** %_data table. Other parts of the system access this functionality via
 ** the interface defined in fts5Int.h.
@@ -8713,10 +8713,10 @@ static void sqlite3Fts5HashScanEntry(
 ** As well as the main term index, there may be up to 31 prefix indexes.
 ** The format is similar to FTS3/4, except that:
 **
-**   * all segment b-tree leaf data is stored in fixed size page records
-**     (e.g. 1000 bytes). A single doclist may span multiple pages. Care is
-**     taken to ensure it is possible to iterate in either direction through
-**     the entries in a doclist, or to seek to a specific entry within a
+**   * all segment b-tree leaf data is stored in fixed size page records 
+**     (e.g. 1000 bytes). A single doclist may span multiple pages. Care is 
+**     taken to ensure it is possible to iterate in either direction through 
+**     the entries in a doclist, or to seek to a specific entry within a 
 **     doclist, without loading it into memory.
 **
 **   * large doclists that span many pages have associated "doclist index"
@@ -8749,14 +8749,14 @@ static void sqlite3Fts5HashScanEntry(
 **     CREATE TABLE %_data(id INTEGER PRIMARY KEY, block BLOB);
 **
 ** , contains the following 5 types of records. See the comments surrounding
-** the FTS5_*_ROWID macros below for a description of how %_data rowids are
+** the FTS5_*_ROWID macros below for a description of how %_data rowids are 
 ** assigned to each fo them.
 **
 ** 1. Structure Records:
 **
 **   The set of segments that make up an index - the index structure - are
 **   recorded in a single record within the %_data table. The record consists
-**   of a single 32-bit configuration cookie value followed by a list of
+**   of a single 32-bit configuration cookie value followed by a list of 
 **   SQLite varints. If the FTS table features more than one index (because
 **   there are one or more prefix indexes), it is guaranteed that all share
 **   the same cookie value.
@@ -8788,7 +8788,7 @@ static void sqlite3Fts5HashScanEntry(
 **
 **   TERM/DOCLIST FORMAT:
 **
-**     Most of each segment leaf is taken up by term/doclist data. The
+**     Most of each segment leaf is taken up by term/doclist data. The 
 **     general format of term/doclist, starting with the first term
 **     on the leaf page, is:
 **
@@ -8831,7 +8831,7 @@ static void sqlite3Fts5HashScanEntry(
 **
 **   PAGE FORMAT
 **
-**     Each leaf page begins with a 4-byte header containing 2 16-bit
+**     Each leaf page begins with a 4-byte header containing 2 16-bit 
 **     unsigned integer fields in big-endian format. They are:
 **
 **       * The byte offset of the first rowid on the page, if it exists
@@ -8866,7 +8866,7 @@ static void sqlite3Fts5HashScanEntry(
 ** 5. Segment doclist indexes:
 **
 **   Doclist indexes are themselves b-trees, however they usually consist of
-**   a single leaf record only. The format of each doclist index leaf page
+**   a single leaf record only. The format of each doclist index leaf page 
 **   is:
 **
 **     * Flags byte. Bits are:
@@ -8876,8 +8876,8 @@ static void sqlite3Fts5HashScanEntry(
 **
 **     * First rowid on page indicated by previous field. As a varint.
 **
-**     * A list of varints, one for each subsequent termless page. A
-**       positive delta if the termless page contains at least one rowid,
+**     * A list of varints, one for each subsequent termless page. A 
+**       positive delta if the termless page contains at least one rowid, 
 **       or an 0x00 byte otherwise.
 **
 **   Internal doclist index nodes are:
@@ -8890,7 +8890,7 @@ static void sqlite3Fts5HashScanEntry(
 **     * Copy of first rowid on page indicated by previous field. As a varint.
 **
 **     * A list of delta-encoded varints - the first rowid on each subsequent
-**       child page.
+**       child page. 
 **
 */
 
@@ -8907,7 +8907,7 @@ static void sqlite3Fts5HashScanEntry(
 **
 ** Each segment has a unique non-zero 16-bit id.
 **
-** The rowid for each segment leaf is found by passing the segment id and
+** The rowid for each segment leaf is found by passing the segment id and 
 ** the leaf page number to the FTS5_SEGMENT_ROWID macro. Leaves are numbered
 ** sequentially starting from 1.
 */
@@ -9004,7 +9004,7 @@ struct Fts5DoclistIter {
 
 /*
 ** The contents of the "structure" record for each index are represented
-** using an Fts5Structure record in memory. Which uses instances of the
+** using an Fts5Structure record in memory. Which uses instances of the 
 ** other Fts5StructureXXX types as components.
 */
 struct Fts5StructureSegment {
@@ -9077,10 +9077,10 @@ struct Fts5CResult {
 **   Current leaf page number within segment.
 **
 ** iLeafOffset:
-**   Byte offset within the current leaf that is the first byte of the
+**   Byte offset within the current leaf that is the first byte of the 
 **   position list data (one byte passed the position-list size field).
 **   rowid field of the current entry. Usually this is the size field of the
-**   position list data. The exception is if the rowid for the current entry
+**   position list data. The exception is if the rowid for the current entry 
 **   is the last thing on the leaf page.
 **
 ** pLeaf:
@@ -9094,7 +9094,7 @@ struct Fts5CResult {
 **   Mask of FTS5_SEGITER_XXX values. Interpreted as follows:
 **
 **   FTS5_SEGITER_ONETERM:
-**     If set, set the iterator to point to EOF after the current doclist
+**     If set, set the iterator to point to EOF after the current doclist 
 **     has been exhausted. Do not proceed to the next term in the segment.
 **
 **   FTS5_SEGITER_REVERSE:
@@ -9123,7 +9123,7 @@ struct Fts5SegIter {
   /* Next method */
   void (*xNext)(Fts5Index*, Fts5SegIter*, int*);
 
-  /* The page and offset from which the current term was read. The offset
+  /* The page and offset from which the current term was read. The offset 
   ** is the offset of the first rowid in the current doclist.  */
   int iTermLeafPgno;
   int iTermLeafOffset;
@@ -9146,7 +9146,7 @@ struct Fts5SegIter {
 };
 
 /*
-** Argument is a pointer to an Fts5Data structure that contains a
+** Argument is a pointer to an Fts5Data structure that contains a 
 ** leaf page.
 */
 #define ASSERT_SZLEAF_OK(x) assert( \
@@ -9156,7 +9156,7 @@ struct Fts5SegIter {
 #define FTS5_SEGITER_ONETERM 0x01
 #define FTS5_SEGITER_REVERSE 0x02
 
-/*
+/* 
 ** Argument is a pointer to an Fts5Data structure that contains a leaf
 ** page. This macro evaluates to true if the leaf contains no terms, or
 ** false if it contains at least one term.
@@ -9178,13 +9178,13 @@ struct Fts5SegIter {
 ** on empty segments.
 **
 ** The results of comparing segments aSeg[N] and aSeg[N+1], where N is an
-** even number, is stored in aFirst[(nSeg+N)/2]. The "result" of the
+** even number, is stored in aFirst[(nSeg+N)/2]. The "result" of the 
 ** comparison in this context is the index of the iterator that currently
 ** points to the smaller term/rowid combination. Iterators at EOF are
 ** considered to be greater than all other iterators.
 **
 ** aFirst[1] contains the index in aSeg[] of the iterator that points to
-** the smallest key overall. aFirst[0] is unused.
+** the smallest key overall. aFirst[0] is unused. 
 **
 ** poslist:
 **   Used by sqlite3Fts5IterPoslist() when the poslist needs to be buffered.
@@ -9246,7 +9246,7 @@ static void fts5PutU16(u8 *aOut, u16 iVal){
 
 static u16 fts5GetU16(const u8 *aIn){
   return ((u16)aIn[0] << 8) + aIn[1];
-}
+} 
 
 /*
 ** Allocate and return a buffer at least nByte bytes in size.
@@ -9312,7 +9312,7 @@ static void sqlite3Fts5IndexCloseReader(Fts5Index *p){
 /*
 ** Retrieve a record from the %_data table.
 **
-** If an error occurs, NULL is returned and an error left in the
+** If an error occurs, NULL is returned and an error left in the 
 ** Fts5Index object.
 */
 static Fts5Data *fts5DataRead(Fts5Index *p, i64 iRowid){
@@ -9335,11 +9335,11 @@ static Fts5Data *fts5DataRead(Fts5Index *p, i64 iRowid){
       if( rc==SQLITE_ABORT ) rc = SQLITE_OK;
     }
 
-    /* If the blob handle is not open at this point, open it and seek
+    /* If the blob handle is not open at this point, open it and seek 
     ** to the requested entry.  */
     if( p->pReader==0 && rc==SQLITE_OK ){
       Fts5Config *pConfig = p->pConfig;
-      rc = sqlite3_blob_open(pConfig->db,
+      rc = sqlite3_blob_open(pConfig->db, 
           pConfig->zDb, p->zDataTbl, "block", iRowid, 0, &p->pReader
       );
     }
@@ -9347,7 +9347,7 @@ static Fts5Data *fts5DataRead(Fts5Index *p, i64 iRowid){
     /* If either of the sqlite3_blob_open() or sqlite3_blob_reopen() calls
     ** above returned SQLITE_ERROR, return SQLITE_CORRUPT_VTAB instead.
     ** All the reasons those functions might return SQLITE_ERROR - missing
-    ** table, missing row, non-blob/text in block column - indicate
+    ** table, missing row, non-blob/text in block column - indicate 
     ** backing store corruption.  */
     if( rc==SQLITE_ERROR ) rc = FTS5_CORRUPT;
 
@@ -9432,7 +9432,7 @@ static void fts5DataWrite(Fts5Index *p, i64 iRowid, const u8 *pData, int nData){
   if( p->pWriter==0 ){
     Fts5Config *pConfig = p->pConfig;
     fts5IndexPrepareStmt(p, &p->pWriter, sqlite3_mprintf(
-          "REPLACE INTO '%q'.'%q_data'(id, block) VALUES(?,?)",
+          "REPLACE INTO '%q'.'%q_data'(id, block) VALUES(?,?)", 
           pConfig->zDb, pConfig->zName
     ));
     if( p->rc ) return;
@@ -9456,7 +9456,7 @@ static void fts5DataDelete(Fts5Index *p, i64 iFirst, i64 iLast){
   if( p->pDeleter==0 ){
     Fts5Config *pConfig = p->pConfig;
     char *zSql = sqlite3_mprintf(
-        "DELETE FROM '%q'.'%q_data' WHERE id>=? AND id<=?",
+        "DELETE FROM '%q'.'%q_data' WHERE id>=? AND id<=?", 
           pConfig->zDb, pConfig->zName
     );
     if( fts5IndexPrepareStmt(p, &p->pDeleter, zSql) ) return;
@@ -9490,7 +9490,7 @@ static void fts5DataRemoveSegment(Fts5Index *p, int iSegid){
 }
 
 /*
-** Release a reference to an Fts5Structure object returned by an earlier
+** Release a reference to an Fts5Structure object returned by an earlier 
 ** call to fts5StructureRead() or fts5StructureDecode().
 */
 static void fts5StructureRelease(Fts5Structure *pStruct){
@@ -9570,7 +9570,7 @@ static int fts5StructureDecode(
         i += fts5GetVarint32(&pData[i], pLvl->nMerge);
         i += fts5GetVarint32(&pData[i], nTotal);
         if( nTotal<pLvl->nMerge ) rc = FTS5_CORRUPT;
-        pLvl->aSeg = (Fts5StructureSegment*)sqlite3Fts5MallocZero(&rc,
+        pLvl->aSeg = (Fts5StructureSegment*)sqlite3Fts5MallocZero(&rc, 
             nTotal * sizeof(Fts5StructureSegment)
         );
         nSegment -= nTotal;
@@ -9636,10 +9636,10 @@ static void fts5StructureAddLevel(int *pRc, Fts5Structure **ppStruct){
 ** segments.
 */
 static void fts5StructureExtendLevel(
-  int *pRc,
-  Fts5Structure *pStruct,
-  int iLvl,
-  int nExtra,
+  int *pRc, 
+  Fts5Structure *pStruct, 
+  int iLvl, 
+  int nExtra, 
   int bInsert
 ){
   if( *pRc==SQLITE_OK ){
@@ -9693,7 +9693,7 @@ static i64 fts5IndexDataVersion(Fts5Index *p){
 
   if( p->rc==SQLITE_OK ){
     if( p->pDataVersion==0 ){
-      p->rc = fts5IndexPrepareStmt(p, &p->pDataVersion,
+      p->rc = fts5IndexPrepareStmt(p, &p->pDataVersion, 
           sqlite3_mprintf("PRAGMA %Q.data_version", p->pConfig->zDb)
           );
       if( p->rc ) return 0;
@@ -9712,7 +9712,7 @@ static i64 fts5IndexDataVersion(Fts5Index *p){
 ** Read, deserialize and return the structure record.
 **
 ** The Fts5Structure.aLevel[] and each Fts5StructureLevel.aSeg[] array
-** are over-allocated as described for function fts5StructureDecode()
+** are over-allocated as described for function fts5StructureDecode() 
 ** above.
 **
 ** If an error occurs, NULL is returned and an error code left in the
@@ -9861,8 +9861,8 @@ static int fts5SegmentSize(Fts5StructureSegment *pSeg){
 }
 
 /*
-** Return a copy of index structure pStruct. Except, promote as many
-** segments as possible to level iPromote. If an OOM occurs, NULL is
+** Return a copy of index structure pStruct. Except, promote as many 
+** segments as possible to level iPromote. If an OOM occurs, NULL is 
 ** returned.
 */
 static void fts5StructurePromoteTo(
@@ -9902,8 +9902,8 @@ static void fts5StructurePromoteTo(
 **
 **   b) If the segment just written is larger than the newest segment on
 **      the next populated level, then that segment, and any other adjacent
-**      segments that are also smaller than the one just written, are
-**      promoted.
+**      segments that are also smaller than the one just written, are 
+**      promoted. 
 **
 ** If one or more segments are promoted, the structure object is updated
 ** to reflect this.
@@ -9937,7 +9937,7 @@ static void fts5StructurePromote(
         if( sz>szMax ) szMax = sz;
       }
       if( szMax>=szSeg ){
-        /* Condition (a) is true. Promote the newest segment on level
+        /* Condition (a) is true. Promote the newest segment on level 
         ** iLvl to level iTst.  */
         iPromote = iTst;
         szPromote = szMax;
@@ -9956,7 +9956,7 @@ static void fts5StructurePromote(
 
 
 /*
-** Advance the iterator passed as the only argument. If the end of the
+** Advance the iterator passed as the only argument. If the end of the 
 ** doclist-index page is reached, return non-zero.
 */
 static int fts5DlidxLvlNext(Fts5DlidxLvl *pLvl){
@@ -9971,7 +9971,7 @@ static int fts5DlidxLvlNext(Fts5DlidxLvl *pLvl){
   }else{
     int iOff;
     for(iOff=pLvl->iOff; iOff<pData->nn; iOff++){
-      if( pData->p[iOff] ) break;
+      if( pData->p[iOff] ) break; 
     }
 
     if( iOff<pData->nn ){
@@ -10001,7 +10001,7 @@ static int fts5DlidxIterNextR(Fts5Index *p, Fts5DlidxIter *pIter, int iLvl){
       if( pLvl[1].bEof==0 ){
         fts5DataRelease(pLvl->pData);
         memset(pLvl, 0, sizeof(Fts5DlidxLvl));
-        pLvl->pData = fts5DataRead(p,
+        pLvl->pData = fts5DataRead(p, 
             FTS5_DLIDX_ROWID(pIter->iSegid, iLvl, pLvl[1].iLeafPgno)
         );
         if( pLvl->pData ) fts5DlidxLvlNext(pLvl);
@@ -10021,7 +10021,7 @@ static int fts5DlidxIterNext(Fts5Index *p, Fts5DlidxIter *pIter){
 ** points to the first rowid in the doclist-index.
 **
 **   pData:
-**     pointer to doclist-index record,
+**     pointer to doclist-index record, 
 **
 ** When this function is called pIter->iLeafPgno is the page number the
 ** doclist is associated with (the one featuring the term).
@@ -10052,7 +10052,7 @@ static void fts5DlidxIterLast(Fts5Index *p, Fts5DlidxIter *pIter){
       Fts5DlidxLvl *pChild = &pLvl[-1];
       fts5DataRelease(pChild->pData);
       memset(pChild, 0, sizeof(Fts5DlidxLvl));
-      pChild->pData = fts5DataRead(p,
+      pChild->pData = fts5DataRead(p, 
           FTS5_DLIDX_ROWID(pIter->iSegid, i-1, pLvl->iLeafPgno)
       );
     }
@@ -10075,8 +10075,8 @@ static int fts5DlidxLvlPrev(Fts5DlidxLvl *pLvl){
     int ii;
     int nZero = 0;
 
-    /* Currently iOff points to the first byte of a varint. This block
-    ** decrements iOff until it points to the first byte of the previous
+    /* Currently iOff points to the first byte of a varint. This block 
+    ** decrements iOff until it points to the first byte of the previous 
     ** varint. Taking care not to read any memory locations that occur
     ** before the buffer in memory.  */
     iLimit = (iOff>9 ? iOff-9 : 0);
@@ -10121,7 +10121,7 @@ static int fts5DlidxIterPrevR(Fts5Index *p, Fts5DlidxIter *pIter, int iLvl){
       if( pLvl[1].bEof==0 ){
         fts5DataRelease(pLvl->pData);
         memset(pLvl, 0, sizeof(Fts5DlidxLvl));
-        pLvl->pData = fts5DataRead(p,
+        pLvl->pData = fts5DataRead(p, 
             FTS5_DLIDX_ROWID(pIter->iSegid, iLvl, pLvl[1].iLeafPgno)
         );
         if( pLvl->pData ){
@@ -10220,7 +10220,7 @@ static void fts5SegIterNextPage(
     pIter->pLeaf = pIter->pNextLeaf;
     pIter->pNextLeaf = 0;
   }else if( pIter->iLeafPgno<=pSeg->pgnoLast ){
-    pIter->pLeaf = fts5LeafRead(p,
+    pIter->pLeaf = fts5LeafRead(p, 
         FTS5_SEGMENT_ROWID(pSeg->iSegid, pIter->iLeafPgno)
     );
   }else{
@@ -10264,7 +10264,7 @@ static int fts5GetPoslistSize(const u8 *p, int *pnSz, int *pbDel){
 **   Fts5SegIter.nPos
 **   Fts5SegIter.bDel
 **
-** Leave Fts5SegIter.iLeafOffset pointing to the first byte of the
+** Leave Fts5SegIter.iLeafOffset pointing to the first byte of the 
 ** position list content (if any).
 */
 static void fts5SegIterLoadNPos(Fts5Index *p, Fts5SegIter *pIter){
@@ -10315,7 +10315,7 @@ static void fts5SegIterLoadRowid(Fts5Index *p, Fts5SegIter *pIter){
 }
 
 /*
-** Fts5SegIter.iLeafOffset currently points to the first byte of the
+** Fts5SegIter.iLeafOffset currently points to the first byte of the 
 ** "nSuffix" field of a term. Function parameter nKeep contains the value
 ** of the "nPrefix" field (if there was one - it is passed 0 if this is
 ** the first term in the segment).
@@ -10326,7 +10326,7 @@ static void fts5SegIterLoadRowid(Fts5Index *p, Fts5SegIter *pIter){
 **   Fts5SegIter.rowid
 **
 ** accordingly and leaves (Fts5SegIter.iLeafOffset) set to the content of
-** the first position list. The position list belonging to document
+** the first position list. The position list belonging to document 
 ** (Fts5SegIter.iRowid).
 */
 static void fts5SegIterLoadTerm(Fts5Index *p, Fts5SegIter *pIter, int nKeep){
@@ -10374,10 +10374,10 @@ static void fts5SegIterSetNext(Fts5Index *p, Fts5SegIter *pIter){
 
 /*
 ** Initialize the iterator object pIter to iterate through the entries in
-** segment pSeg. The iterator is left pointing to the first entry when
+** segment pSeg. The iterator is left pointing to the first entry when 
 ** this function returns.
 **
-** If an error occurs, Fts5Index.rc is set to an appropriate error code. If
+** If an error occurs, Fts5Index.rc is set to an appropriate error code. If 
 ** an error has already occurred when this function is called, it is a no-op.
 */
 static void fts5SegIterInit(
@@ -10422,8 +10422,8 @@ static void fts5SegIterInit(
 ** the position-list size field for the first relevant rowid on the page.
 ** Fts5SegIter.rowid is set, but nPos and bDel are not.
 **
-** This function advances the iterator so that it points to the last
-** relevant rowid on the page and, if necessary, initializes the
+** This function advances the iterator so that it points to the last 
+** relevant rowid on the page and, if necessary, initializes the 
 ** aRowidOffset[] and iRowidOffset variables. At this point the iterator
 ** is in its regular state - Fts5SegIter.iLeafOffset points to the first
 ** byte of the position list content associated with said rowid.
@@ -10643,10 +10643,10 @@ static void fts5SegIterNext_None(
 
 
 /*
-** Advance iterator pIter to the next entry.
+** Advance iterator pIter to the next entry. 
 **
-** If an error occurs, Fts5Index.rc is set to an appropriate error code. It
-** is not considered an error if the iterator reaches EOF. If an error has
+** If an error occurs, Fts5Index.rc is set to an appropriate error code. It 
+** is not considered an error if the iterator reaches EOF. If an error has 
 ** already occurred when this function is called, it is a no-op.
 */
 static void fts5SegIterNext(
@@ -10833,7 +10833,7 @@ static void fts5SegIterReverse(Fts5Index *p, Fts5SegIter *pIter){
   }
 
   /* If pLast is NULL at this point, then the last rowid for this doclist
-  ** lies on the page currently indicated by the iterator. In this case
+  ** lies on the page currently indicated by the iterator. In this case 
   ** pIter->iLeafOffset is already set to point to the position-list size
   ** field associated with the first relevant rowid on the page.
   **
@@ -10863,8 +10863,8 @@ static void fts5SegIterReverse(Fts5Index *p, Fts5SegIter *pIter){
 
 /*
 ** Iterator pIter currently points to the first rowid of a doclist.
-** There is a doclist-index associated with the final term on the current
-** page. If the current term is the last term on the page, load the
+** There is a doclist-index associated with the final term on the current 
+** page. If the current term is the last term on the page, load the 
 ** doclist-index from disk and initialize an iterator at (pIter->pDlidx).
 */
 static void fts5SegIterLoadDlidx(Fts5Index *p, Fts5SegIter *pIter){
@@ -10878,8 +10878,8 @@ static void fts5SegIterLoadDlidx(Fts5Index *p, Fts5SegIter *pIter){
   /* Check if the current doclist ends on this page. If it does, return
   ** early without loading the doclist-index (as it belongs to a different
   ** term. */
-  if( pIter->iTermLeafPgno==pIter->iLeafPgno
-   && pIter->iEndofDoclist<pLeaf->szLeaf
+  if( pIter->iTermLeafPgno==pIter->iLeafPgno 
+   && pIter->iEndofDoclist<pLeaf->szLeaf 
   ){
     return;
   }
@@ -11044,7 +11044,7 @@ static sqlite3_stmt *fts5IdxSelectStmt(Fts5Index *p){
 ** Initialize the object pIter to point to term pTerm/nTerm within segment
 ** pSeg. If there is no such term in the index, the iterator is set to EOF.
 **
-** If an error occurs, Fts5Index.rc is set to an appropriate error code. If
+** If an error occurs, Fts5Index.rc is set to an appropriate error code. If 
 ** an error has already occurred when this function is called, it is a no-op.
 */
 static void fts5SegIterSeekInit(
@@ -11124,10 +11124,10 @@ static void fts5SegIterSeekInit(
 
 /*
 ** Initialize the object pIter to point to term pTerm/nTerm within the
-** in-memory hash table. If there is no such term in the hash-table, the
+** in-memory hash table. If there is no such term in the hash-table, the 
 ** iterator is set to EOF.
 **
-** If an error occurs, Fts5Index.rc is set to an appropriate error code. If
+** If an error occurs, Fts5Index.rc is set to an appropriate error code. If 
 ** an error has already occurred when this function is called, it is a no-op.
 */
 static void fts5SegIterHashInit(
@@ -11157,7 +11157,7 @@ static void fts5SegIterHashInit(
       }
     }
   }else{
-    p->rc = sqlite3Fts5HashQuery(p->pHash, sizeof(Fts5Data),
+    p->rc = sqlite3Fts5HashQuery(p->pHash, sizeof(Fts5Data), 
         (const char*)pTerm, nTerm, (void**)&pLeaf, &nList
     );
     if( pLeaf ){
@@ -11207,7 +11207,7 @@ static void fts5SegIterClear(Fts5SegIter *pIter){
 ** two iterators.
 */
 static void fts5AssertComparisonResult(
-  Fts5Iter *pIter,
+  Fts5Iter *pIter, 
   Fts5SegIter *p1,
   Fts5SegIter *p2,
   Fts5CResult *pRes
@@ -11244,7 +11244,7 @@ static void fts5AssertComparisonResult(
 
 /*
 ** This function is a no-op unless SQLITE_DEBUG is defined when this module
-** is compiled. In that case, this function is essentially an assert()
+** is compiled. In that case, this function is essentially an assert() 
 ** statement used to verify that the contents of the pIter->aFirst[] array
 ** are correct.
 */
@@ -11258,9 +11258,9 @@ static void fts5AssertMultiIterSetup(Fts5Index *p, Fts5Iter *pIter){
     /* Check that pIter->iSwitchRowid is set correctly. */
     for(i=0; i<pIter->nSeg; i++){
       Fts5SegIter *p1 = &pIter->aSeg[i];
-      assert( p1==pFirst
-           || p1->pLeaf==0
-           || fts5BufferCompare(&pFirst->term, &p1->term)
+      assert( p1==pFirst 
+           || p1->pLeaf==0 
+           || fts5BufferCompare(&pFirst->term, &p1->term) 
            || p1->iRowid==pIter->iSwitchRowid
            || (p1->iRowid<pIter->iSwitchRowid)==pIter->bRev
       );
@@ -11290,7 +11290,7 @@ static void fts5AssertMultiIterSetup(Fts5Index *p, Fts5Iter *pIter){
 **
 ** If the returned value is non-zero, then it is the index of an entry
 ** in the pIter->aSeg[] array that is (a) not at EOF, and (b) pointing
-** to a key that is a duplicate of another, higher priority,
+** to a key that is a duplicate of another, higher priority, 
 ** segment-iterator in the pSeg->aSeg[] array.
 */
 static int fts5MultiIterDoCompare(Fts5Iter *pIter, int iOut){
@@ -11381,7 +11381,7 @@ static void fts5SegIterGotoPage(
 }
 
 /*
-** Advance the iterator passed as the second argument until it is at or
+** Advance the iterator passed as the second argument until it is at or 
 ** past rowid iFrom. Regardless of the value of iFrom, the iterator is
 ** always advanced at least once.
 */
@@ -11477,7 +11477,7 @@ static void fts5MultiIterAdvanced(
 ** If non-zero is returned, the caller should call fts5MultiIterAdvanced()
 ** on the iterator instead. That function does the same as this one, except
 ** that it deals with more complicated cases as well.
-*/
+*/ 
 static int fts5MultiIterAdvanceRowid(
   Fts5Iter *pIter,                /* Iterator to update aFirst[] array for */
   int iChanged,                   /* Index of sub-iterator just advanced */
@@ -11528,14 +11528,14 @@ static void fts5MultiIterSetEof(Fts5Iter *pIter){
 }
 
 /*
-** Move the iterator to the next entry.
+** Move the iterator to the next entry. 
 **
-** If an error occurs, an error code is left in Fts5Index.rc. It is not
-** considered an error if the iterator reaches EOF, or if it is already at
+** If an error occurs, an error code is left in Fts5Index.rc. It is not 
+** considered an error if the iterator reaches EOF, or if it is already at 
 ** EOF when this function is called.
 */
 static void fts5MultiIterNext(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5Iter *pIter,
   int bFrom,                      /* True if argument iFrom is valid */
   i64 iFrom                       /* Advance at least as far as this */
@@ -11553,7 +11553,7 @@ static void fts5MultiIterNext(
       pSeg->xNext(p, pSeg, &bNewTerm);
     }
 
-    if( pSeg->pLeaf==0 || bNewTerm
+    if( pSeg->pLeaf==0 || bNewTerm 
      || fts5MultiIterAdvanceRowid(pIter, iFirst, &pSeg)
     ){
       fts5MultiIterAdvanced(p, pIter, iFirst, 1);
@@ -11573,7 +11573,7 @@ static void fts5MultiIterNext(
 }
 
 static void fts5MultiIterNext2(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5Iter *pIter,
   int *pbNewTerm                  /* OUT: True if *might* be new term */
 ){
@@ -11587,7 +11587,7 @@ static void fts5MultiIterNext2(
 
       assert( p->rc==SQLITE_OK );
       pSeg->xNext(p, pSeg, &bNewTerm);
-      if( pSeg->pLeaf==0 || bNewTerm
+      if( pSeg->pLeaf==0 || bNewTerm 
        || fts5MultiIterAdvanceRowid(pIter, iFirst, &pSeg)
       ){
         fts5MultiIterAdvanced(p, pIter, iFirst, 1);
@@ -11612,7 +11612,7 @@ static Fts5Iter *fts5MultiIterAlloc(
   int nSlot;                      /* Power of two >= nSeg */
 
   for(nSlot=2; nSlot<nSeg; nSlot=nSlot*2);
-  pNew = fts5IdxMalloc(p,
+  pNew = fts5IdxMalloc(p, 
       sizeof(Fts5Iter) +                  /* pNew */
       sizeof(Fts5SegIter) * (nSlot-1) +   /* pNew->aSeg[] */
       sizeof(Fts5CResult) * nSlot         /* pNew->aFirst[] */
@@ -11627,8 +11627,8 @@ static Fts5Iter *fts5MultiIterAlloc(
 }
 
 static void fts5PoslistCallback(
-  Fts5Index *pUnused,
-  void *pContext,
+  Fts5Index *pUnused, 
+  void *pContext, 
   const u8 *pChunk, int nChunk
 ){
   UNUSED_PARAM(pUnused);
@@ -11665,8 +11665,8 @@ static int fts5IndexColsetTest(Fts5Colset *pColset, int iCol){
 }
 
 static void fts5PoslistOffsetsCallback(
-  Fts5Index *pUnused,
-  void *pContext,
+  Fts5Index *pUnused, 
+  void *pContext, 
   const u8 *pChunk, int nChunk
 ){
   PoslistOffsetsCtx *pCtx = (PoslistOffsetsCtx*)pContext;
@@ -11689,7 +11689,7 @@ static void fts5PoslistOffsetsCallback(
 
 static void fts5PoslistFilterCallback(
   Fts5Index *pUnused,
-  void *pContext,
+  void *pContext, 
   const u8 *pChunk, int nChunk
 ){
   PoslistCallbackCtx *pCtx = (PoslistCallbackCtx*)pContext;
@@ -11908,7 +11908,7 @@ static void fts5IterSetOutputs_Nocolset(Fts5Iter *pIter, Fts5SegIter *pSeg){
   assert( pIter->pColset==0 );
 
   if( pSeg->iLeafOffset+pSeg->nPos<=pSeg->pLeaf->szLeaf ){
-    /* All data is stored on the current page. Populate the output
+    /* All data is stored on the current page. Populate the output 
     ** variables to point into the body of the page object. */
     pIter->base.pData = &pSeg->pLeaf->p[pSeg->iLeafOffset];
   }else{
@@ -11944,13 +11944,13 @@ static void fts5IterSetOutputs_Col(Fts5Iter *pIter, Fts5SegIter *pSeg){
 }
 
 /*
-** xSetOutputs callback used when:
+** xSetOutputs callback used when: 
 **
 **   * detail=col,
 **   * there is a column filter, and
-**   * the table contains 100 or fewer columns.
+**   * the table contains 100 or fewer columns. 
 **
-** The last point is to ensure all column numbers are stored as
+** The last point is to ensure all column numbers are stored as 
 ** single-byte varints.
 */
 static void fts5IterSetOutputs_Col100(Fts5Iter *pIter, Fts5SegIter *pSeg){
@@ -11962,7 +11962,7 @@ static void fts5IterSetOutputs_Col100(Fts5Iter *pIter, Fts5SegIter *pSeg){
     fts5IterSetOutputs_Col(pIter, pSeg);
   }else{
     u8 *a = (u8*)&pSeg->pLeaf->p[pSeg->iLeafOffset];
-    u8 *pEnd = (u8*)&a[pSeg->nPos];
+    u8 *pEnd = (u8*)&a[pSeg->nPos]; 
     int iPrev = 0;
     int *aiCol = pIter->pColset->aiCol;
     int *aiColEnd = &aiCol[pIter->pColset->nCol];
@@ -12001,7 +12001,7 @@ static void fts5IterSetOutputs_Full(Fts5Iter *pIter, Fts5SegIter *pSeg){
   assert( pColset );
 
   if( pSeg->iLeafOffset+pSeg->nPos<=pSeg->pLeaf->szLeaf ){
-    /* All data is stored on the current page. Populate the output
+    /* All data is stored on the current page. Populate the output 
     ** variables to point into the body of the page object. */
     const u8 *a = &pSeg->pLeaf->p[pSeg->iLeafOffset];
     int *pRc = &pIter->pIndex->rc;
@@ -12058,7 +12058,7 @@ static void fts5IterSetOutputCb(int *pRc, Fts5Iter *pIter){
 ** is zero or greater, data from the first nSegment segments on level iLevel
 ** is merged.
 **
-** The iterator initially points to the first term/rowid entry in the
+** The iterator initially points to the first term/rowid entry in the 
 ** iterated data.
 */
 static void fts5MultiIterNew(
@@ -12127,8 +12127,8 @@ static void fts5MultiIterNew(
     assert( iIter==nSeg );
   }
 
-  /* If the above was successful, each component iterators now points
-  ** to the first entry in its segment. In this case initialize the
+  /* If the above was successful, each component iterators now points 
+  ** to the first entry in its segment. In this case initialize the 
   ** aFirst[] array. Or, if an error has occurred, free the iterator
   ** object and set the output variable to NULL.  */
   if( p->rc==SQLITE_OK ){
@@ -12197,12 +12197,12 @@ static void fts5MultiIterNew2(
 }
 
 /*
-** Return true if the iterator is at EOF or if an error has occurred.
+** Return true if the iterator is at EOF or if an error has occurred. 
 ** False otherwise.
 */
 static int fts5MultiIterEof(Fts5Index *p, Fts5Iter *pIter){
-  assert( p->rc
-      || (pIter->aSeg[ pIter->aFirst[1].iFirst ].pLeaf==0)==pIter->base.bEof
+  assert( p->rc 
+      || (pIter->aSeg[ pIter->aFirst[1].iFirst ].pLeaf==0)==pIter->base.bEof 
   );
   return (p->rc || pIter->base.bEof);
 }
@@ -12221,8 +12221,8 @@ static i64 fts5MultiIterRowid(Fts5Iter *pIter){
 ** Move the iterator to the next entry at or following iMatch.
 */
 static void fts5MultiIterNextFrom(
-  Fts5Index *p,
-  Fts5Iter *pIter,
+  Fts5Index *p, 
+  Fts5Iter *pIter, 
   i64 iMatch
 ){
   while( 1 ){
@@ -12236,7 +12236,7 @@ static void fts5MultiIterNextFrom(
 }
 
 /*
-** Return a pointer to a buffer containing the term associated with the
+** Return a pointer to a buffer containing the term associated with the 
 ** entry that the iterator currently points to.
 */
 static const u8 *fts5MultiIterTerm(Fts5Iter *pIter, int *pn){
@@ -12247,11 +12247,11 @@ static const u8 *fts5MultiIterTerm(Fts5Iter *pIter, int *pn){
 
 /*
 ** Allocate a new segment-id for the structure pStruct. The new segment
-** id must be between 1 and 65335 inclusive, and must not be used by
+** id must be between 1 and 65335 inclusive, and must not be used by 
 ** any currently existing segment. If a free segment id cannot be found,
 ** SQLITE_FULL is returned.
 **
-** If an error has already occurred, this function is a no-op. 0 is
+** If an error has already occurred, this function is a no-op. 0 is 
 ** returned in this case.
 */
 static int fts5AllocateSegid(Fts5Index *p, Fts5Structure *pStruct){
@@ -12320,10 +12320,10 @@ static void fts5IndexDiscardData(Fts5Index *p){
 }
 
 /*
-** Return the size of the prefix, in bytes, that buffer
+** Return the size of the prefix, in bytes, that buffer 
 ** (pNew/<length-unknown>) shares with buffer (pOld/nOld).
 **
-** Buffer (pNew/<length-unknown>) is guaranteed to be greater
+** Buffer (pNew/<length-unknown>) is guaranteed to be greater 
 ** than buffer (pOld/nOld).
 */
 static int fts5PrefixCompress(int nOld, const u8 *pOld, const u8 *pNew){
@@ -12335,7 +12335,7 @@ static int fts5PrefixCompress(int nOld, const u8 *pOld, const u8 *pNew){
 }
 
 static void fts5WriteDlidxClear(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5SegWriter *pWriter,
   int bFlush                      /* If true, write dlidx to disk */
 ){
@@ -12346,7 +12346,7 @@ static void fts5WriteDlidxClear(
     if( pDlidx->buf.n==0 ) break;
     if( bFlush ){
       assert( pDlidx->pgno!=0 );
-      fts5DataWrite(p,
+      fts5DataWrite(p, 
           FTS5_DLIDX_ROWID(pWriter->iSegid, i, pDlidx->pgno),
           pDlidx->buf.p, pDlidx->buf.n
       );
@@ -12400,8 +12400,8 @@ static int fts5WriteFlushDlidx(Fts5Index *p, Fts5SegWriter *pWriter){
 }
 
 /*
-** This function is called whenever processing of the doclist for the
-** last term on leaf page (pWriter->iBtPage) is completed.
+** This function is called whenever processing of the doclist for the 
+** last term on leaf page (pWriter->iBtPage) is completed. 
 **
 ** The doclist-index for that term is currently stored in-memory within the
 ** Fts5SegWriter.aDlidx[] array. If it is large enough, this function
@@ -12486,8 +12486,8 @@ static i64 fts5DlidxExtractFirstRowid(Fts5Buffer *pBuf){
 ** doclist-index.
 */
 static void fts5WriteDlidxAppend(
-  Fts5Index *p,
-  Fts5SegWriter *pWriter,
+  Fts5Index *p, 
+  Fts5SegWriter *pWriter, 
   i64 iRowid
 ){
   int i;
@@ -12500,11 +12500,11 @@ static void fts5WriteDlidxAppend(
     if( pDlidx->buf.n>=p->pConfig->pgsz ){
       /* The current doclist-index page is full. Write it to disk and push
       ** a copy of iRowid (which will become the first rowid on the next
-      ** doclist-index leaf page) up into the next level of the b-tree
+      ** doclist-index leaf page) up into the next level of the b-tree 
       ** hierarchy. If the node being flushed is currently the root node,
       ** also push its first rowid upwards. */
       pDlidx->buf.p[0] = 0x01;    /* Not the root node */
-      fts5DataWrite(p,
+      fts5DataWrite(p, 
           FTS5_DLIDX_ROWID(pWriter->iSegid, i, pDlidx->pgno),
           pDlidx->buf.p, pDlidx->buf.n
       );
@@ -12588,13 +12588,13 @@ static void fts5WriteFlushLeaf(Fts5Index *p, Fts5SegWriter *pWriter){
 ** Append term pTerm/nTerm to the segment being written by the writer passed
 ** as the second argument.
 **
-** If an error occurs, set the Fts5Index.rc error code. If an error has
+** If an error occurs, set the Fts5Index.rc error code. If an error has 
 ** already occurred, this function is a no-op.
 */
 static void fts5WriteAppendTerm(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5SegWriter *pWriter,
-  int nTerm, const u8 *pTerm
+  int nTerm, const u8 *pTerm 
 ){
   int nPrefix;                    /* Bytes of prefix compression for term */
   Fts5PageWriter *pPage = &pWriter->writer;
@@ -12613,7 +12613,7 @@ static void fts5WriteAppendTerm(
     }
     fts5BufferGrow(&p->rc, &pPage->buf, nTerm+FTS5_DATA_PADDING);
   }
-
+  
   /* TODO1: Updating pgidx here. */
   pPgidx->n += sqlite3Fts5PutVarint(
       &pPgidx->p[pPgidx->n], pPage->buf.n - pPage->iPrevPgidx
@@ -12629,11 +12629,11 @@ static void fts5WriteAppendTerm(
     if( pPage->pgno!=1 ){
       /* This is the first term on a leaf that is not the leftmost leaf in
       ** the segment b-tree. In this case it is necessary to add a term to
-      ** the b-tree hierarchy that is (a) larger than the largest term
+      ** the b-tree hierarchy that is (a) larger than the largest term 
       ** already written to the segment and (b) smaller than or equal to
       ** this term. In other words, a prefix of (pTerm/nTerm) that is one
       ** byte longer than the longest prefix (pTerm/nTerm) shares with the
-      ** previous term.
+      ** previous term. 
       **
       ** Usually, the previous term is available in pPage->term. The exception
       ** is if this is the first term written in an incremental-merge step.
@@ -12670,10 +12670,10 @@ static void fts5WriteAppendTerm(
 }
 
 /*
-** Append a rowid and position-list size field to the writers output.
+** Append a rowid and position-list size field to the writers output. 
 */
 static void fts5WriteAppendRowid(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5SegWriter *pWriter,
   i64 iRowid
 ){
@@ -12684,7 +12684,7 @@ static void fts5WriteAppendRowid(
       fts5WriteFlushLeaf(p, pWriter);
     }
 
-    /* If this is to be the first rowid written to the page, set the
+    /* If this is to be the first rowid written to the page, set the 
     ** rowid-pointer in the page-header. Also append a value to the dlidx
     ** buffer, in case a doclist-index is required.  */
     if( pWriter->bFirstRowidInPage ){
@@ -12706,18 +12706,18 @@ static void fts5WriteAppendRowid(
 }
 
 static void fts5WriteAppendPoslistData(
-  Fts5Index *p,
-  Fts5SegWriter *pWriter,
-  const u8 *aData,
+  Fts5Index *p, 
+  Fts5SegWriter *pWriter, 
+  const u8 *aData, 
   int nData
 ){
   Fts5PageWriter *pPage = &pWriter->writer;
   const u8 *a = aData;
   int n = nData;
-
+  
   assert( p->pConfig->pgsz>0 );
-  while( p->rc==SQLITE_OK
-     && (pPage->buf.n + pPage->pgidx.n + n)>=p->pConfig->pgsz
+  while( p->rc==SQLITE_OK 
+     && (pPage->buf.n + pPage->pgidx.n + n)>=p->pConfig->pgsz 
   ){
     int nReq = p->pConfig->pgsz - pPage->buf.n - pPage->pgidx.n;
     int nCopy = 0;
@@ -12740,7 +12740,7 @@ static void fts5WriteAppendPoslistData(
 ** allocations associated with the writer.
 */
 static void fts5WriteFinish(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5SegWriter *pWriter,         /* Writer object */
   int *pnLeaf                     /* OUT: Number of leaf pages in b-tree */
 ){
@@ -12768,8 +12768,8 @@ static void fts5WriteFinish(
 }
 
 static void fts5WriteInit(
-  Fts5Index *p,
-  Fts5SegWriter *pWriter,
+  Fts5Index *p, 
+  Fts5SegWriter *pWriter, 
   int iSegid
 ){
   const int nBuffer = p->pConfig->pgsz + FTS5_DATA_PADDING;
@@ -12792,7 +12792,7 @@ static void fts5WriteInit(
   if( p->pIdxWriter==0 ){
     Fts5Config *pConfig = p->pConfig;
     fts5IndexPrepareStmt(p, &p->pIdxWriter, sqlite3_mprintf(
-          "INSERT INTO '%q'.'%q_idx'(segid,term,pgno) VALUES(?,?,?)",
+          "INSERT INTO '%q'.'%q_idx'(segid,term,pgno) VALUES(?,?,?)", 
           pConfig->zDb, pConfig->zName
     ));
   }
@@ -12858,13 +12858,13 @@ static void fts5TrimSegments(Fts5Index *p, Fts5Iter *pIter){
 
           /* Set up the new page-index array */
           fts5BufferAppendVarint(&p->rc, &buf, 4);
-          if( pSeg->iLeafPgno==pSeg->iTermLeafPgno
+          if( pSeg->iLeafPgno==pSeg->iTermLeafPgno 
            && pSeg->iEndofDoclist<pData->szLeaf
            && pSeg->iPgidxOff<=pData->nn
           ){
             int nDiff = pData->szLeaf - pSeg->iEndofDoclist;
             fts5BufferAppendVarint(&p->rc, &buf, buf.n - 1 - nDiff - 4);
-            fts5BufferAppendBlob(&p->rc, &buf,
+            fts5BufferAppendBlob(&p->rc, &buf, 
                 pData->nn - pSeg->iPgidxOff, &pData->p[pSeg->iPgidxOff]
             );
           }
@@ -12881,8 +12881,8 @@ static void fts5TrimSegments(Fts5Index *p, Fts5Iter *pIter){
 }
 
 static void fts5MergeChunkCallback(
-  Fts5Index *p,
-  void *pCtx,
+  Fts5Index *p, 
+  void *pCtx, 
   const u8 *pChunk, int nChunk
 ){
   Fts5SegWriter *pWriter = (Fts5SegWriter*)pCtx;
@@ -13097,7 +13097,7 @@ static int fts5IndexMerge(
 ** segment. This function updates the write-counter accordingly and, if
 ** necessary, performs incremental merge work.
 **
-** If an error occurs, set the Fts5Index.rc error code. If an error has
+** If an error occurs, set the Fts5Index.rc error code. If an error has 
 ** already occurred, this function is a no-op.
 */
 static void fts5IndexAutomerge(
@@ -13148,12 +13148,12 @@ static int fts5IndexReturn(Fts5Index *p){
 typedef struct Fts5FlushCtx Fts5FlushCtx;
 struct Fts5FlushCtx {
   Fts5Index *pIdx;
-  Fts5SegWriter writer;
+  Fts5SegWriter writer; 
 };
 
 /*
 ** Buffer aBuf[] contains a list of varints, all small enough to fit
-** in a 32-bit integer. Return the size of the largest prefix of this
+** in a 32-bit integer. Return the size of the largest prefix of this 
 ** list nMax bytes or less in size.
 */
 static int fts5PoslistPrefix(const u8 *aBuf, int nMax){
@@ -13171,10 +13171,10 @@ static int fts5PoslistPrefix(const u8 *aBuf, int nMax){
 }
 
 /*
-** Flush the contents of in-memory hash table iHash to a new level-0
+** Flush the contents of in-memory hash table iHash to a new level-0 
 ** segment on disk. Also update the corresponding structure record.
 **
-** If an error occurs, set the Fts5Index.rc error code. If an error has
+** If an error occurs, set the Fts5Index.rc error code. If an error has 
 ** already occurred, this function is a no-op.
 */
 static void fts5FlushOneHash(Fts5Index *p){
@@ -13231,13 +13231,13 @@ static void fts5FlushOneHash(Fts5Index *p){
         i64 iDelta = 0;
         int iOff = 0;
 
-        /* The entire doclist will not fit on this leaf. The following
-        ** loop iterates through the poslists that make up the current
+        /* The entire doclist will not fit on this leaf. The following 
+        ** loop iterates through the poslists that make up the current 
         ** doclist.  */
         while( p->rc==SQLITE_OK && iOff<nDoclist ){
           iOff += fts5GetVarint(&pDoclist[iOff], (u64*)&iDelta);
           iRowid += iDelta;
-
+          
           if( writer.bFirstRowidInPage ){
             fts5PutU16(&pBuf->p[0], (u16)pBuf->n);   /* first rowid on page */
             pBuf->n += sqlite3Fts5PutVarint(&pBuf->p[pBuf->n], iRowid);
@@ -13341,7 +13341,7 @@ static void fts5IndexFlush(Fts5Index *p){
 }
 
 static Fts5Structure *fts5IndexOptimizeStruct(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5Structure *pStruct
 ){
   Fts5Structure *pNew = 0;
@@ -13352,7 +13352,7 @@ static Fts5Structure *fts5IndexOptimizeStruct(
   /* Figure out if this structure requires optimization. A structure does
   ** not require optimization if either:
   **
-  **  + it consists of fewer than two segments, or
+  **  + it consists of fewer than two segments, or 
   **  + all segments are on the same level, or
   **  + all segments except one are currently inputs to a merge operation.
   **
@@ -13429,7 +13429,7 @@ static int sqlite3Fts5IndexOptimize(Fts5Index *p){
     fts5StructureRelease(pNew);
   }
 
-  return fts5IndexReturn(p);
+  return fts5IndexReturn(p); 
 }
 
 /*
@@ -13516,7 +13516,7 @@ static void fts5DoclistIterNext(Fts5DoclistIter *pIter){
 }
 
 static void fts5DoclistIterInit(
-  Fts5Buffer *pBuf,
+  Fts5Buffer *pBuf, 
   Fts5DoclistIter *pIter
 ){
   memset(pIter, 0, sizeof(*pIter));
@@ -13628,7 +13628,7 @@ struct PrefixMerger {
 };
 
 static void fts5PrefixMergerInsertByRowid(
-  PrefixMerger **ppHead,
+  PrefixMerger **ppHead, 
   PrefixMerger *p
 ){
   if( p->iter.aPoslist ){
@@ -13642,7 +13642,7 @@ static void fts5PrefixMergerInsertByRowid(
 }
 
 static void fts5PrefixMergerInsertByPosition(
-  PrefixMerger **ppHead,
+  PrefixMerger **ppHead, 
   PrefixMerger *p
 ){
   if( p->iPos>=0 ){
@@ -13664,7 +13664,7 @@ static void fts5MergePrefixLists(
   Fts5Index *p,                   /* FTS5 backend object */
   Fts5Buffer *p1,                 /* First list to merge */
   int nBuf,                       /* Number of buffers in array aBuf[] */
-  Fts5Buffer *aBuf                /* Other lists to merge in */
+  Fts5Buffer *aBuf                /* Other lists to merge in */ 
 ){
 #define fts5PrefixMergerNextPosition(p) \
   sqlite3Fts5PoslistNext64((p)->aPos,(p)->iter.nPoslist,&(p)->iOff,&(p)->iPos);
@@ -13679,7 +13679,7 @@ static void fts5MergePrefixLists(
 
   /* Initialize a doclist-iterator for each input buffer. Arrange them in
   ** a linked-list starting at pHead in ascending order of rowid. Avoid
-  ** linking any iterators already at EOF into the linked list at all. */
+  ** linking any iterators already at EOF into the linked list at all. */ 
   assert( nBuf+1<=sizeof(aMerger)/sizeof(aMerger[0]) );
   memset(aMerger, 0, sizeof(PrefixMerger)*(nBuf+1));
   pHead = &aMerger[nBuf];
@@ -13697,12 +13697,12 @@ static void fts5MergePrefixLists(
   ** first rowid in one input is a large negative number, and the first in
   ** the other a non-negative number, the delta for the non-negative
   ** number will be larger on disk than the literal integer value
-  ** was.
+  ** was.  
   **
   ** Or, if the input position-lists are corrupt, then the output might
   ** include up to (nBuf+1) extra 10-byte positions created by interpreting -1
   ** (the value PoslistNext64() uses for EOF) as a position and appending
-  ** it to the output. This can happen at most once for each input
+  ** it to the output. This can happen at most once for each input 
   ** position-list, hence (nBuf+1) 10 byte paddings.  */
   if( sqlite3Fts5BufferSize(&p->rc, &out, nOut) ) return;
 
@@ -13833,8 +13833,8 @@ static void fts5SetupPrefixIter(
   pStruct = fts5StructureRead(p);
 
   if( aBuf && pStruct ){
-    const int flags = FTS5INDEX_QUERY_SCAN
-                    | FTS5INDEX_QUERY_SKIPEMPTY
+    const int flags = FTS5INDEX_QUERY_SCAN 
+                    | FTS5INDEX_QUERY_SKIPEMPTY 
                     | FTS5INDEX_QUERY_NOOUTPUT;
     int i;
     i64 iLastRowid = 0;
@@ -13949,9 +13949,9 @@ static int sqlite3Fts5IndexBeginWrite(Fts5Index *p, int bDelete, i64 iRowid){
   }
 
   /* Flush the hash table to disk if required */
-  if( iRowid<p->iWriteRowid
+  if( iRowid<p->iWriteRowid 
    || (iRowid==p->iWriteRowid && p->bDelete==0)
-   || (p->nPendingData > p->pConfig->nHashSize)
+   || (p->nPendingData > p->pConfig->nHashSize) 
   ){
     fts5IndexFlush(p);
   }
@@ -13974,7 +13974,7 @@ static int sqlite3Fts5IndexSync(Fts5Index *p){
 /*
 ** Discard any data stored in the in-memory hash tables. Do not write it
 ** to the database. Additionally, assume that the contents of the %_data
-** table may have changed on disk. So any in-memory caches of %_data
+** table may have changed on disk. So any in-memory caches of %_data 
 ** records must be invalidated.
 */
 static int sqlite3Fts5IndexRollback(Fts5Index *p){
@@ -14008,8 +14008,8 @@ static int sqlite3Fts5IndexReinit(Fts5Index *p){
 ** Otherwise, set *pp to NULL and return an SQLite error code.
 */
 static int sqlite3Fts5IndexOpen(
-  Fts5Config *pConfig,
-  int bCreate,
+  Fts5Config *pConfig, 
+  int bCreate, 
   Fts5Index **pp,
   char **pzErr
 ){
@@ -14026,8 +14026,8 @@ static int sqlite3Fts5IndexOpen(
           pConfig, "data", "id INTEGER PRIMARY KEY, block BLOB", 0, pzErr
       );
       if( rc==SQLITE_OK ){
-        rc = sqlite3Fts5CreateTable(pConfig, "idx",
-            "segid, term, pgno, PRIMARY KEY(segid, term)",
+        rc = sqlite3Fts5CreateTable(pConfig, "idx", 
+            "segid, term, pgno, PRIMARY KEY(segid, term)", 
             1, pzErr
         );
       }
@@ -14067,13 +14067,13 @@ static int sqlite3Fts5IndexClose(Fts5Index *p){
 }
 
 /*
-** Argument p points to a buffer containing utf-8 text that is n bytes in
+** Argument p points to a buffer containing utf-8 text that is n bytes in 
 ** size. Return the number of bytes in the nChar character prefix of the
 ** buffer, or 0 if there are less than nChar characters in total.
 */
 static int sqlite3Fts5IndexCharlenToBytelen(
-  const char *p,
-  int nByte,
+  const char *p, 
+  int nByte, 
   int nChar
 ){
   int n = 0;
@@ -14099,7 +14099,7 @@ static int sqlite3Fts5IndexCharlenToBytelen(
 ** unicode characters in the string.
 */
 static int fts5IndexCharlen(const char *pIn, int nIn){
-  int nChar = 0;
+  int nChar = 0;            
   int i = 0;
   while( i<nIn ){
     if( (unsigned char)pIn[i++]>=0xc0 ){
@@ -14111,7 +14111,7 @@ static int fts5IndexCharlen(const char *pIn, int nIn){
 }
 
 /*
-** Insert or remove data to or from the index. Each time a document is
+** Insert or remove data to or from the index. Each time a document is 
 ** added to or removed from the index, this function is called one or more
 ** times.
 **
@@ -14142,7 +14142,7 @@ static int sqlite3Fts5IndexWrite(
     const int nChar = pConfig->aPrefix[i];
     int nByte = sqlite3Fts5IndexCharlenToBytelen(pToken, nToken, nChar);
     if( nByte ){
-      rc = sqlite3Fts5HashWrite(p->pHash,
+      rc = sqlite3Fts5HashWrite(p->pHash, 
           p->iWriteRowid, iCol, iPos, (char)(FTS5_MAIN_PREFIX+i+1), pToken,
           nByte
       );
@@ -14153,7 +14153,7 @@ static int sqlite3Fts5IndexWrite(
 }
 
 /*
-** Open a new iterator to iterate though all rowid that match the
+** Open a new iterator to iterate though all rowid that match the 
 ** specified token or token prefix.
 */
 static int sqlite3Fts5IndexQuery(
@@ -14181,9 +14181,9 @@ static int sqlite3Fts5IndexQuery(
     ** satisfied by scanning multiple terms in the main index.
     **
     ** If the QUERY_TEST_NOIDX flag was specified, then this must be a
-    ** prefix-query. Instead of using a prefix-index (if one exists),
+    ** prefix-query. Instead of using a prefix-index (if one exists), 
     ** evaluate the prefix query using the main FTS index. This is used
-    ** for internal sanity checking by the integrity-check in debug
+    ** for internal sanity checking by the integrity-check in debug 
     ** mode only.  */
 #ifdef SQLITE_DEBUG
     if( pConfig->bPrefixIndex==0 || (flags & FTS5INDEX_QUERY_TEST_NOIDX) ){
@@ -14205,7 +14205,7 @@ static int sqlite3Fts5IndexQuery(
       Fts5Structure *pStruct = fts5StructureRead(p);
       buf.p[0] = (u8)(FTS5_MAIN_PREFIX + iIdx);
       if( pStruct ){
-        fts5MultiIterNew(p, pStruct, flags | FTS5INDEX_QUERY_SKIPEMPTY,
+        fts5MultiIterNew(p, pStruct, flags | FTS5INDEX_QUERY_SKIPEMPTY, 
             pColset, buf.p, nToken+1, -1, 0, &pRet
         );
         fts5StructureRelease(pStruct);
@@ -14238,7 +14238,7 @@ static int sqlite3Fts5IndexQuery(
 ** Return true if the iterator passed as the only argument is at EOF.
 */
 /*
-** Move to the next matching rowid.
+** Move to the next matching rowid. 
 */
 static int sqlite3Fts5IterNext(Fts5IndexIter *pIndexIter){
   Fts5Iter *pIter = (Fts5Iter*)pIndexIter;
@@ -14304,7 +14304,7 @@ static void sqlite3Fts5IterClose(Fts5IndexIter *pIndexIter){
 }
 
 /*
-** Read and decode the "averages" record from the database.
+** Read and decode the "averages" record from the database. 
 **
 ** Parameter anSize must point to an array of size nCol, where nCol is
 ** the number of user defined columns in the FTS table.
@@ -14330,7 +14330,7 @@ static int sqlite3Fts5IndexGetAverages(Fts5Index *p, i64 *pnRow, i64 *anSize){
 }
 
 /*
-** Replace the current "averages" record with the contents of the buffer
+** Replace the current "averages" record with the contents of the buffer 
 ** supplied as the second argument.
 */
 static int sqlite3Fts5IndexSetAverages(Fts5Index *p, const u8 *pData, int nData){
@@ -14348,7 +14348,7 @@ static int sqlite3Fts5IndexReads(Fts5Index *p){
 }
 
 /*
-** Set the 32-bit cookie value stored at the start of all structure
+** Set the 32-bit cookie value stored at the start of all structure 
 ** records to the value passed as the second argument.
 **
 ** Return SQLITE_OK if successful, or an SQLite error code if an error
@@ -14363,7 +14363,7 @@ static int sqlite3Fts5IndexSetCookie(Fts5Index *p, int iNew){
   assert( p->rc==SQLITE_OK );
   sqlite3Fts5Put32(aCookie, iNew);
 
-  rc = sqlite3_blob_open(pConfig->db, pConfig->zDb, p->zDataTbl,
+  rc = sqlite3_blob_open(pConfig->db, pConfig->zDb, p->zDataTbl, 
       "block", FTS5_STRUCTURE_ROWID, 1, &pBlob
   );
   if( rc==SQLITE_OK ){
@@ -14384,7 +14384,7 @@ static int sqlite3Fts5IndexLoadConfig(Fts5Index *p){
 
 /*************************************************************************
 **************************************************************************
-** Below this point is the implementation of the integrity-check
+** Below this point is the implementation of the integrity-check 
 ** functionality.
 */
 
@@ -14392,9 +14392,9 @@ static int sqlite3Fts5IndexLoadConfig(Fts5Index *p){
 ** Return a simple checksum value based on the arguments.
 */
 static u64 sqlite3Fts5IndexEntryCksum(
-  i64 iRowid,
-  int iCol,
-  int iPos,
+  i64 iRowid, 
+  int iCol, 
+  int iPos, 
   int iIdx,
   const char *pTerm,
   int nTerm
@@ -14410,15 +14410,15 @@ static u64 sqlite3Fts5IndexEntryCksum(
 
 #ifdef SQLITE_DEBUG
 /*
-** This function is purely an internal test. It does not contribute to
+** This function is purely an internal test. It does not contribute to 
 ** FTS functionality, or even the integrity-check, in any way.
 **
-** Instead, it tests that the same set of pgno/rowid combinations are
+** Instead, it tests that the same set of pgno/rowid combinations are 
 ** visited regardless of whether the doclist-index identified by parameters
 ** iSegid/iLeaf is iterated in forwards or reverse order.
 */
 static void fts5TestDlidxReverse(
-  Fts5Index *p,
+  Fts5Index *p, 
   int iSegid,                     /* Segment id to load from */
   int iLeaf                       /* Load doclist-index for this leaf */
 ){
@@ -14525,11 +14525,11 @@ static int fts5TestUtf8(const char *z, int n){
 }
 
 /*
-** This function is also purely an internal test. It does not contribute to
+** This function is also purely an internal test. It does not contribute to 
 ** FTS functionality, or even the integrity-check, in any way.
 */
 static void fts5TestTerm(
-  Fts5Index *p,
+  Fts5Index *p, 
   Fts5Buffer *pPrev,              /* Previous term */
   const char *z, int n,           /* Possibly new term to test */
   u64 expected,
@@ -14558,12 +14558,12 @@ static void fts5TestTerm(
     if( rc==SQLITE_OK && ck1!=ck2 ) rc = FTS5_CORRUPT;
 
     /* If this is a prefix query, check that the results returned if the
-    ** the index is disabled are the same. In both ASC and DESC order.
+    ** the index is disabled are the same. In both ASC and DESC order. 
     **
     ** This check may only be performed if the hash table is empty. This
     ** is because the hash table only supports a single scan query at
     ** a time, and the multi-iter loop from which this function is called
-    ** is already performing such a scan.
+    ** is already performing such a scan. 
     **
     ** Also only do this if buffer zTerm contains nTerm bytes of valid
     ** utf-8. Otherwise, the last part of the buffer contents might contain
@@ -14595,7 +14595,7 @@ static void fts5TestTerm(
   }
   p->rc = rc;
 }
-
+ 
 #else
 # define fts5TestDlidxReverse(x,y,z)
 # define fts5TestTerm(u,v,w,x,y,z)
@@ -14708,7 +14708,7 @@ static void fts5IndexIntegrityCheckSegment(
     int iIdxLeaf = sqlite3_column_int(pStmt, 2);
     int bIdxDlidx = sqlite3_column_int(pStmt, 3);
 
-    /* If the leaf in question has already been trimmed from the segment,
+    /* If the leaf in question has already been trimmed from the segment, 
     ** ignore this b-tree entry. Otherwise, load it into memory. */
     if( iIdxLeaf<pSeg->pgnoFirst ) continue;
     iRow = FTS5_SEGMENT_ROWID(pSeg->iSegid, iIdxLeaf);
@@ -14816,7 +14816,7 @@ static void fts5IndexIntegrityCheckSegment(
 
 
 /*
-** Run internal checks to ensure that the FTS index (a) is internally
+** Run internal checks to ensure that the FTS index (a) is internally 
 ** consistent and (b) contains entries for which the XOR of the checksums
 ** as calculated by sqlite3Fts5IndexEntryCksum() is cksum.
 **
@@ -14838,7 +14838,7 @@ static int sqlite3Fts5IndexIntegrityCheck(Fts5Index *p, u64 cksum, int bUseCksum
   Fts5Buffer term = {0,0,0};      /* Buffer used to hold most recent term */
 #endif
   const int flags = FTS5INDEX_QUERY_NOOUTPUT;
-
+  
   /* Load the FTS index structure */
   pStruct = fts5StructureRead(p);
 
@@ -14860,7 +14860,7 @@ static int sqlite3Fts5IndexIntegrityCheck(Fts5Index *p, u64 cksum, int bUseCksum
   **
   ** Two versions of the same checksum are calculated. The first (stack
   ** variable cksum2) based on entries extracted from the full-text index
-  ** while doing a linear scan of each individual index in turn.
+  ** while doing a linear scan of each individual index in turn. 
   **
   ** As each term visited by the linear scans, a separate query for the
   ** same term is performed. cksum3 is calculated based on the entries
@@ -14963,12 +14963,12 @@ static void fts5DebugStructure(
 
   for(iLvl=0; iLvl<p->nLevel; iLvl++){
     Fts5StructureLevel *pLvl = &p->aLevel[iLvl];
-    sqlite3Fts5BufferAppendPrintf(pRc, pBuf,
+    sqlite3Fts5BufferAppendPrintf(pRc, pBuf, 
         " {lvl=%d nMerge=%d nSeg=%d", iLvl, pLvl->nMerge, pLvl->nSeg
     );
     for(iSeg=0; iSeg<pLvl->nSeg; iSeg++){
       Fts5StructureSegment *pSeg = &pLvl->aSeg[iSeg];
-      sqlite3Fts5BufferAppendPrintf(pRc, pBuf, " {id=%d leaves=%d..%d}",
+      sqlite3Fts5BufferAppendPrintf(pRc, pBuf, " {id=%d leaves=%d..%d}", 
           pSeg->iSegid, pSeg->pgnoFirst, pSeg->pgnoLast
       );
     }
@@ -14981,7 +14981,7 @@ static void fts5DebugStructure(
 **
 ** Arguments pBlob/nBlob contain a serialized Fts5Structure object. This
 ** function appends a human-readable representation of the same object
-** to the buffer passed as the second argument.
+** to the buffer passed as the second argument. 
 */
 static void fts5DecodeStructure(
   int *pRc,                       /* IN/OUT: error code */
@@ -15004,9 +15004,9 @@ static void fts5DecodeStructure(
 /*
 ** This is part of the fts5_decode() debugging aid.
 **
-** Arguments pBlob/nBlob contain an "averages" record. This function
-** appends a human-readable representation of record to the buffer passed
-** as the second argument.
+** Arguments pBlob/nBlob contain an "averages" record. This function 
+** appends a human-readable representation of record to the buffer passed 
+** as the second argument. 
 */
 static void fts5DecodeAverages(
   int *pRc,                       /* IN/OUT: error code */
@@ -15045,7 +15045,7 @@ static int fts5DecodePoslist(int *pRc, Fts5Buffer *pBuf, const u8 *a, int n){
 ** The start of buffer (a/n) contains the start of a doclist. The doclist
 ** may or may not finish within the buffer. This function appends a text
 ** representation of the part of the doclist that is present to buffer
-** pBuf.
+** pBuf. 
 **
 ** The return value is the number of bytes read from the input buffer.
 */
@@ -15075,7 +15075,7 @@ static int fts5DecodeDoclist(int *pRc, Fts5Buffer *pBuf, const u8 *a, int n){
 }
 
 /*
-** This function is part of the fts5_decode() debugging function. It is
+** This function is part of the fts5_decode() debugging function. It is 
 ** only ever used with detail=none tables.
 **
 ** Buffer (pData/nData) contains a doclist in the format used by detail=none
@@ -15162,7 +15162,7 @@ static void fts5DecodeFunction(
     lvl.iLeafPgno = iPgno;
 
     for(fts5DlidxLvlNext(&lvl); lvl.bEof==0; fts5DlidxLvlNext(&lvl)){
-      sqlite3Fts5BufferAppendPrintf(&rc, &s,
+      sqlite3Fts5BufferAppendPrintf(&rc, &s, 
           " %d(%lld)", lvl.iLeafPgno, lvl.iRowid
       );
     }
@@ -15273,7 +15273,7 @@ static void fts5DecodeFunction(
       int bFirst = (iPgidxOff==szLeaf);     /* True for first term on page */
       int nByte;                            /* Bytes of data */
       int iEnd;
-
+      
       iPgidxOff += fts5GetVarint32(&a[iPgidxOff], nByte);
       iPgidxPrev += nByte;
       iOff = iPgidxPrev;
@@ -15313,7 +15313,7 @@ static void fts5DecodeFunction(
 
     fts5BufferFree(&term);
   }
-
+  
  decode_out:
   sqlite3_free(a);
   if( rc==SQLITE_OK ){
@@ -15341,7 +15341,7 @@ static void fts5RowidFunction(
       i64 iRowid;
       int segid, pgno;
       if( nArg!=3 ){
-        sqlite3_result_error(pCtx,
+        sqlite3_result_error(pCtx, 
             "should be: fts5_rowid('segment', segid, pgno))", -1
         );
       }else{
@@ -15351,7 +15351,7 @@ static void fts5RowidFunction(
         sqlite3_result_int64(pCtx, iRowid);
       }
     }else{
-      sqlite3_result_error(pCtx,
+      sqlite3_result_error(pCtx, 
         "first arg to fts5_rowid() must be 'segment'" , -1
       );
     }
@@ -15373,7 +15373,7 @@ static int sqlite3Fts5IndexInit(sqlite3 *db){
 
   if( rc==SQLITE_OK ){
     rc = sqlite3_create_function(
-        db, "fts5_decode_none", 2,
+        db, "fts5_decode_none", 2, 
         SQLITE_UTF8, (void*)db, fts5DecodeFunction, 0, 0
     );
   }
@@ -15430,9 +15430,9 @@ typedef struct Fts5Sorter Fts5Sorter;
 typedef struct Fts5TokenizerModule Fts5TokenizerModule;
 
 /*
-** NOTES ON TRANSACTIONS:
+** NOTES ON TRANSACTIONS: 
 **
-** SQLite invokes the following virtual table methods as transactions are
+** SQLite invokes the following virtual table methods as transactions are 
 ** opened and closed by the user:
 **
 **     xBegin():    Start of a new transaction.
@@ -15441,7 +15441,7 @@ typedef struct Fts5TokenizerModule Fts5TokenizerModule;
 **     xRollback(): Rollback the transaction.
 **
 ** Anything that is required as part of a commit that may fail is performed
-** in the xSync() callback. Current versions of SQLite ignore any errors
+** in the xSync() callback. Current versions of SQLite ignore any errors 
 ** returned by xCommit().
 **
 ** And as sub-transactions are opened/closed:
@@ -15450,9 +15450,9 @@ typedef struct Fts5TokenizerModule Fts5TokenizerModule;
 **     xRelease(int S):    Commit and close savepoint S.
 **     xRollbackTo(int S): Rollback to start of savepoint S.
 **
-** During a write-transaction the fts5_index.c module may cache some data
+** During a write-transaction the fts5_index.c module may cache some data 
 ** in-memory. It is flushed to disk whenever xSync(), xRelease() or
-** xSavepoint() is called. And discarded whenever xRollback() or xRollbackTo()
+** xSavepoint() is called. And discarded whenever xRollback() or xRollbackTo() 
 ** is called.
 **
 ** Additionally, if SQLITE_DEBUG is defined, an instance of the following
@@ -15466,13 +15466,13 @@ struct Fts5TransactionState {
 };
 
 /*
-** A single object of this type is allocated when the FTS5 module is
+** A single object of this type is allocated when the FTS5 module is 
 ** registered with a database handle. It is used to store pointers to
 ** all registered FTS5 extensions - tokenizers and auxiliary functions.
 */
 struct Fts5Global {
   fts5_api api;                   /* User visible part of object (see fts5.h) */
-  sqlite3 *db;                    /* Associated database connection */
+  sqlite3 *db;                    /* Associated database connection */ 
   i64 iNextId;                    /* Used to allocate unique cursor ids */
   Fts5Auxiliary *pAux;            /* First in list of all aux. functions */
   Fts5TokenizerModule *pTok;      /* First in list of all tokenizer modules */
@@ -15528,7 +15528,7 @@ struct Fts5MatchPhrase {
 **
 ** aIdx[]:
 **   There is one entry in the aIdx[] array for each phrase in the query,
-**   the value of which is the offset within aPoslist[] following the last
+**   the value of which is the offset within aPoslist[] following the last 
 **   byte of the position list for the corresponding phrase.
 */
 struct Fts5Sorter {
@@ -15544,8 +15544,8 @@ struct Fts5Sorter {
 ** Virtual-table cursor object.
 **
 ** iSpecial:
-**   If this is a 'special' query (refer to function fts5SpecialMatch()),
-**   then this variable contains the result of the query.
+**   If this is a 'special' query (refer to function fts5SpecialMatch()), 
+**   then this variable contains the result of the query. 
 **
 ** iFirstRowid, iLastRowid:
 **   These variables are only used for FTS5_PLAN_MATCH cursors. Assuming the
@@ -15596,7 +15596,7 @@ struct Fts5Cursor {
 };
 
 /*
-** Bits that make up the "idxNum" parameter passed indirectly by
+** Bits that make up the "idxNum" parameter passed indirectly by 
 ** xBestIndex() to xFilter().
 */
 #define FTS5_BI_MATCH        0x0001         /* <tbl> MATCH ? */
@@ -15675,7 +15675,7 @@ static void fts5CheckTransactionState(Fts5FullTable *p, int op, int iSavepoint){
       assert( iSavepoint>=p->ts.iSavepoint );
       p->ts.iSavepoint = iSavepoint;
       break;
-
+      
     case FTS5_RELEASE:
       assert( p->ts.eState==1 );
       assert( iSavepoint>=0 );
@@ -15706,7 +15706,7 @@ static int fts5IsContentless(Fts5FullTable *pTab){
 }
 
 /*
-** Delete a virtual table handle allocated by fts5InitVtab().
+** Delete a virtual table handle allocated by fts5InitVtab(). 
 */
 static void fts5FreeVtab(Fts5FullTable *pTab){
   if( pTab ){
@@ -15862,7 +15862,7 @@ static void fts5SetUniqueFlag(sqlite3_index_info *pIdxInfo){
 }
 
 static int fts5UsePatternMatch(
-  Fts5Config *pConfig,
+  Fts5Config *pConfig, 
   struct sqlite3_index_constraint *p
 ){
   assert( FTS5_PATTERN_GLOB==SQLITE_INDEX_CONSTRAINT_GLOB );
@@ -15870,7 +15870,7 @@ static int fts5UsePatternMatch(
   if( pConfig->ePattern==FTS5_PATTERN_GLOB && p->op==FTS5_PATTERN_GLOB ){
     return 1;
   }
-  if( pConfig->ePattern==FTS5_PATTERN_LIKE
+  if( pConfig->ePattern==FTS5_PATTERN_LIKE 
    && (p->op==FTS5_PATTERN_LIKE || p->op==FTS5_PATTERN_GLOB)
   ){
     return 1;
@@ -15879,7 +15879,7 @@ static int fts5UsePatternMatch(
 }
 
 /*
-** Implementation of the xBestIndex method for FTS5 tables. Within the
+** Implementation of the xBestIndex method for FTS5 tables. Within the 
 ** WHERE constraint, it searches for the following:
 **
 **   1. A MATCH constraint against the table column.
@@ -15894,7 +15894,7 @@ static int fts5UsePatternMatch(
 **   5. ORDER BY rank [ASC|DESC]
 **   6. ORDER BY rowid [ASC|DESC]
 **
-** Information for the xFilter call is passed via both the idxNum and
+** Information for the xFilter call is passed via both the idxNum and 
 ** idxStr variables. Specifically, idxNum is a bitmask of the following
 ** flags used to encode the ORDER BY clause:
 **
@@ -15983,7 +15983,7 @@ static int fts5BestIndexMethod(sqlite3_vtab *pVTab, sqlite3_index_info *pInfo){
     ){
       /* A MATCH operator or equivalent */
       if( p->usable==0 || iCol<0 ){
-        /* As there exists an unusable MATCH constraint this is an
+        /* As there exists an unusable MATCH constraint this is an 
         ** unusable plan. Set a prohibitively high cost. */
         pInfo->estimatedCost = 1e50;
         assert( iIdxStr < pInfo->nConstraint*6 + 1 );
@@ -16120,15 +16120,15 @@ static int fts5StmtType(Fts5Cursor *pCsr){
 
 /*
 ** This function is called after the cursor passed as the only argument
-** is moved to point at a different row. It clears all cached data
+** is moved to point at a different row. It clears all cached data 
 ** specific to the previous row stored by the cursor object.
 */
 static void fts5CsrNewrow(Fts5Cursor *pCsr){
-  CsrFlagSet(pCsr,
-      FTS5CSR_REQUIRE_CONTENT
-    | FTS5CSR_REQUIRE_DOCSIZE
-    | FTS5CSR_REQUIRE_INST
-    | FTS5CSR_REQUIRE_POSLIST
+  CsrFlagSet(pCsr, 
+      FTS5CSR_REQUIRE_CONTENT 
+    | FTS5CSR_REQUIRE_DOCSIZE 
+    | FTS5CSR_REQUIRE_INST 
+    | FTS5CSR_REQUIRE_POSLIST 
   );
 }
 
@@ -16232,14 +16232,14 @@ static int fts5SorterNext(Fts5Cursor *pCsr){
 
 
 /*
-** Set the FTS5CSR_REQUIRE_RESEEK flag on all FTS5_PLAN_MATCH cursors
+** Set the FTS5CSR_REQUIRE_RESEEK flag on all FTS5_PLAN_MATCH cursors 
 ** open on table pTab.
 */
 static void fts5TripCursors(Fts5FullTable *pTab){
   Fts5Cursor *pCsr;
   for(pCsr=pTab->pGlobal->pCsr; pCsr; pCsr=pCsr->pNext){
     if( pCsr->ePlan==FTS5_PLAN_MATCH
-     && pCsr->base.pVtab==(sqlite3_vtab*)pTab
+     && pCsr->base.pVtab==(sqlite3_vtab*)pTab 
     ){
       CsrFlagSet(pCsr, FTS5CSR_REQUIRE_RESEEK);
     }
@@ -16248,14 +16248,14 @@ static void fts5TripCursors(Fts5FullTable *pTab){
 
 /*
 ** If the REQUIRE_RESEEK flag is set on the cursor passed as the first
-** argument, close and reopen all Fts5IndexIter iterators that the cursor
+** argument, close and reopen all Fts5IndexIter iterators that the cursor 
 ** is using. Then attempt to move the cursor to a rowid equal to or laster
-** (in the cursors sort order - ASC or DESC) than the current rowid.
+** (in the cursors sort order - ASC or DESC) than the current rowid. 
 **
 ** If the new rowid is not equal to the old, set output parameter *pbSkip
 ** to 1 before returning. Otherwise, leave it unchanged.
 **
-** Return SQLITE_OK if successful or if no reseek was required, or an
+** Return SQLITE_OK if successful or if no reseek was required, or an 
 ** error code if an error occurred.
 */
 static int fts5CursorReseek(Fts5Cursor *pCsr, int *pbSkip){
@@ -16283,7 +16283,7 @@ static int fts5CursorReseek(Fts5Cursor *pCsr, int *pbSkip){
 
 
 /*
-** Advance the cursor to the next row in the table that matches the
+** Advance the cursor to the next row in the table that matches the 
 ** search criteria.
 **
 ** Return SQLITE_OK if nothing goes wrong.  SQLITE_OK is returned
@@ -16295,7 +16295,7 @@ static int fts5NextMethod(sqlite3_vtab_cursor *pCursor){
   int rc;
 
   assert( (pCsr->ePlan<3)==
-          (pCsr->ePlan==FTS5_PLAN_MATCH || pCsr->ePlan==FTS5_PLAN_SOURCE)
+          (pCsr->ePlan==FTS5_PLAN_MATCH || pCsr->ePlan==FTS5_PLAN_SOURCE) 
   );
   assert( !CsrFlagTest(pCsr, FTS5CSR_EOF) );
 
@@ -16312,12 +16312,12 @@ static int fts5NextMethod(sqlite3_vtab_cursor *pCursor){
         rc = SQLITE_OK;
         break;
       }
-
+  
       case FTS5_PLAN_SORTED_MATCH: {
         rc = fts5SorterNext(pCsr);
         break;
       }
-
+  
       default: {
         Fts5Config *pConfig = ((Fts5Table*)pCursor->pVtab)->pConfig;
         pConfig->bLock++;
@@ -16338,14 +16338,14 @@ static int fts5NextMethod(sqlite3_vtab_cursor *pCursor){
       }
     }
   }
-
+  
   return rc;
 }
 
 
 static int fts5PrepareStatement(
   sqlite3_stmt **ppStmt,
-  Fts5Config *pConfig,
+  Fts5Config *pConfig, 
   const char *zFmt,
   ...
 ){
@@ -16357,9 +16357,9 @@ static int fts5PrepareStatement(
   va_start(ap, zFmt);
   zSql = sqlite3_vmprintf(zFmt, ap);
   if( zSql==0 ){
-    rc = SQLITE_NOMEM;
+    rc = SQLITE_NOMEM; 
   }else{
-    rc = sqlite3_prepare_v3(pConfig->db, zSql, -1,
+    rc = sqlite3_prepare_v3(pConfig->db, zSql, -1, 
                             SQLITE_PREPARE_PERSISTENT, &pRet, 0);
     if( rc!=SQLITE_OK ){
       *pConfig->pzErrmsg = sqlite3_mprintf("%s", sqlite3_errmsg(pConfig->db));
@@ -16370,11 +16370,11 @@ static int fts5PrepareStatement(
   va_end(ap);
   *ppStmt = pRet;
   return rc;
-}
+} 
 
 static int fts5CursorFirstSorted(
-  Fts5FullTable *pTab,
-  Fts5Cursor *pCsr,
+  Fts5FullTable *pTab, 
+  Fts5Cursor *pCsr, 
   int bDesc
 ){
   Fts5Config *pConfig = pTab->p.pConfig;
@@ -16384,7 +16384,7 @@ static int fts5CursorFirstSorted(
   int rc;
   const char *zRank = pCsr->zRank;
   const char *zRankArgs = pCsr->zRankArgs;
-
+  
   nPhrase = sqlite3Fts5ExprPhraseCount(pCsr->pExpr);
   nByte = sizeof(Fts5Sorter) + sizeof(int) * (nPhrase-1);
   pSorter = (Fts5Sorter*)sqlite3_malloc64(nByte);
@@ -16395,7 +16395,7 @@ static int fts5CursorFirstSorted(
   /* TODO: It would be better to have some system for reusing statement
   ** handles here, rather than preparing a new one for each query. But that
   ** is not possible as SQLite reference counts the virtual table objects.
-  ** And since the statement required here reads from this very virtual
+  ** And since the statement required here reads from this very virtual 
   ** table, saving it creates a circular reference.
   **
   ** If SQLite a built-in statement cache, this wouldn't be a problem. */
@@ -16442,8 +16442,8 @@ static int fts5CursorFirst(Fts5FullTable *pTab, Fts5Cursor *pCsr, int bDesc){
 ** parameters.
 */
 static int fts5SpecialMatch(
-  Fts5FullTable *pTab,
-  Fts5Cursor *pCsr,
+  Fts5FullTable *pTab, 
+  Fts5Cursor *pCsr, 
   const char *zQuery
 ){
   int rc = SQLITE_OK;             /* Return code */
@@ -16541,7 +16541,7 @@ static int fts5FindRankFunction(Fts5Cursor *pCsr){
 
 static int fts5CursorParseRank(
   Fts5Config *pConfig,
-  Fts5Cursor *pCsr,
+  Fts5Cursor *pCsr, 
   sqlite3_value *pRank
 ){
   int rc = SQLITE_OK;
@@ -16590,7 +16590,7 @@ static i64 fts5GetRowidLimit(sqlite3_value *pVal, i64 iDefault){
 ** This is the xFilter interface for the virtual table.  See
 ** the virtual table xFilter method documentation for additional
 ** information.
-**
+** 
 ** There are three possible query strategies:
 **
 **   1. Full-text search using a MATCH operator.
@@ -16709,7 +16709,7 @@ static int fts5FilterMethod(
   bOrderByRank = ((idxNum & FTS5_BI_ORDER_RANK) ? 1 : 0);
   pCsr->bDesc = bDesc = ((idxNum & FTS5_BI_ORDER_DESC) ? 1 : 0);
 
-  /* Set the cursor upper and lower rowid limits. Only some strategies
+  /* Set the cursor upper and lower rowid limits. Only some strategies 
   ** actually use them. This is ok, as the xBestIndex() method leaves the
   ** sqlite3_index_constraint.omit flag clear for range constraints
   ** on the rowid field.  */
@@ -16725,11 +16725,11 @@ static int fts5FilterMethod(
   }
 
   if( pTab->pSortCsr ){
-    /* If pSortCsr is non-NULL, then this call is being made as part of
+    /* If pSortCsr is non-NULL, then this call is being made as part of 
     ** processing for a "... MATCH <expr> ORDER BY rank" query (ePlan is
     ** set to FTS5_PLAN_SORTED_MATCH). pSortCsr is the cursor that will
-    ** return results to the user for this query. The current cursor
-    ** (pCursor) is used to execute the query issued by function
+    ** return results to the user for this query. The current cursor 
+    ** (pCursor) is used to execute the query issued by function 
     ** fts5CursorFirstSorted() above.  */
     assert( pRowidEq==0 && pRowidLe==0 && pRowidGe==0 && pRank==0 );
     assert( nVal==0 && bOrderByRank==0 && bDesc==0 );
@@ -16785,8 +16785,8 @@ static int fts5FilterMethod(
   return rc;
 }
 
-/*
-** This is the xEof method of the virtual table. SQLite calls this
+/* 
+** This is the xEof method of the virtual table. SQLite calls this 
 ** routine to find out if it has reached the end of a result set.
 */
 static int fts5EofMethod(sqlite3_vtab_cursor *pCursor){
@@ -16798,9 +16798,9 @@ static int fts5EofMethod(sqlite3_vtab_cursor *pCursor){
 ** Return the rowid that the cursor currently points to.
 */
 static i64 fts5CursorRowid(Fts5Cursor *pCsr){
-  assert( pCsr->ePlan==FTS5_PLAN_MATCH
-       || pCsr->ePlan==FTS5_PLAN_SORTED_MATCH
-       || pCsr->ePlan==FTS5_PLAN_SOURCE
+  assert( pCsr->ePlan==FTS5_PLAN_MATCH 
+       || pCsr->ePlan==FTS5_PLAN_SORTED_MATCH 
+       || pCsr->ePlan==FTS5_PLAN_SOURCE 
   );
   if( pCsr->pSorter ){
     return pCsr->pSorter->iRowid;
@@ -16809,7 +16809,7 @@ static i64 fts5CursorRowid(Fts5Cursor *pCsr){
   }
 }
 
-/*
+/* 
 ** This is the xRowid method. The SQLite core calls this routine to
 ** retrieve the rowid for the current row of the result set. fts5
 ** exposes %_content.rowid as the rowid for the virtual table. The
@@ -16818,7 +16818,7 @@ static i64 fts5CursorRowid(Fts5Cursor *pCsr){
 static int fts5RowidMethod(sqlite3_vtab_cursor *pCursor, sqlite_int64 *pRowid){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCursor;
   int ePlan = pCsr->ePlan;
-
+  
   assert( CsrFlagTest(pCsr, FTS5CSR_EOF)==0 );
   switch( ePlan ){
     case FTS5_PLAN_SPECIAL:
@@ -16849,7 +16849,7 @@ static int fts5RowidMethod(sqlite3_vtab_cursor *pCursor, sqlite_int64 *pRowid){
 static int fts5SeekCursor(Fts5Cursor *pCsr, int bErrormsg){
   int rc = SQLITE_OK;
 
-  /* If the cursor does not yet have a statement handle, obtain one now. */
+  /* If the cursor does not yet have a statement handle, obtain one now. */ 
   if( pCsr->pStmt==0 ){
     Fts5FullTable *pTab = (Fts5FullTable*)(pCsr->base.pVtab);
     int eStmt = fts5StmtType(pCsr);
@@ -16900,7 +16900,7 @@ static void fts5SetVtabError(Fts5FullTable *p, const char *zFormat, ...){
 **     INSERT INTO fts(fts) VALUES($pCmd)
 **     INSERT INTO fts(fts, rank) VALUES($pCmd, $pVal)
 **
-** Argument pVal is the value assigned to column "fts" by the INSERT
+** Argument pVal is the value assigned to column "fts" by the INSERT 
 ** statement. This function returns SQLITE_OK if successful, or an SQLite
 ** error code if an error occurs.
 **
@@ -16919,7 +16919,7 @@ static int fts5SpecialInsert(
 
   if( 0==sqlite3_stricmp("delete-all", zCmd) ){
     if( pConfig->eContent==FTS5_CONTENT_NORMAL ){
-      fts5SetVtabError(pTab,
+      fts5SetVtabError(pTab, 
           "'delete-all' may only be used with a "
           "contentless or external content fts5 table"
       );
@@ -16929,7 +16929,7 @@ static int fts5SpecialInsert(
     }
   }else if( 0==sqlite3_stricmp("rebuild", zCmd) ){
     if( pConfig->eContent==FTS5_CONTENT_NONE ){
-      fts5SetVtabError(pTab,
+      fts5SetVtabError(pTab, 
           "'rebuild' may not be used with a contentless fts5 table"
       );
       rc = SQLITE_ERROR;
@@ -16965,7 +16965,7 @@ static int fts5SpecialInsert(
 }
 
 static int fts5SpecialDelete(
-  Fts5FullTable *pTab,
+  Fts5FullTable *pTab, 
   sqlite3_value **apVal
 ){
   int rc = SQLITE_OK;
@@ -16978,9 +16978,9 @@ static int fts5SpecialDelete(
 }
 
 static void fts5StorageInsert(
-  int *pRc,
-  Fts5FullTable *pTab,
-  sqlite3_value **apVal,
+  int *pRc, 
+  Fts5FullTable *pTab, 
+  sqlite3_value **apVal, 
   i64 *piRowid
 ){
   int rc = *pRc;
@@ -16993,13 +16993,13 @@ static void fts5StorageInsert(
   *pRc = rc;
 }
 
-/*
-** This function is the implementation of the xUpdate callback used by
+/* 
+** This function is the implementation of the xUpdate callback used by 
 ** FTS3 virtual tables. It is invoked by SQLite each time a row is to be
 ** inserted, updated or deleted.
 **
 ** A delete specifies a single argument - the rowid of the row to remove.
-**
+** 
 ** Update and insert operations pass:
 **
 **   1. The "old" rowid, or NULL.
@@ -17023,8 +17023,8 @@ static int fts5UpdateMethod(
 
   assert( pVtab->zErrMsg==0 );
   assert( nArg==1 || nArg==(2+pConfig->nCol+2) );
-  assert( sqlite3_value_type(apVal[0])==SQLITE_INTEGER
-       || sqlite3_value_type(apVal[0])==SQLITE_NULL
+  assert( sqlite3_value_type(apVal[0])==SQLITE_INTEGER 
+       || sqlite3_value_type(apVal[0])==SQLITE_NULL 
   );
   assert( pTab->p.pConfig->pzErrmsg==0 );
   pTab->p.pConfig->pzErrmsg = &pTab->p.base.zErrMsg;
@@ -17033,13 +17033,13 @@ static int fts5UpdateMethod(
   fts5TripCursors(pTab);
 
   eType0 = sqlite3_value_type(apVal[0]);
-  if( eType0==SQLITE_NULL
-   && sqlite3_value_type(apVal[2+pConfig->nCol])!=SQLITE_NULL
+  if( eType0==SQLITE_NULL 
+   && sqlite3_value_type(apVal[2+pConfig->nCol])!=SQLITE_NULL 
   ){
     /* A "special" INSERT op. These are handled separately. */
     const char *z = (const char*)sqlite3_value_text(apVal[2+pConfig->nCol]);
-    if( pConfig->eContent!=FTS5_CONTENT_NORMAL
-      && 0==sqlite3_stricmp("delete", z)
+    if( pConfig->eContent!=FTS5_CONTENT_NORMAL 
+      && 0==sqlite3_stricmp("delete", z) 
     ){
       rc = fts5SpecialDelete(pTab, apVal);
     }else{
@@ -17047,7 +17047,7 @@ static int fts5UpdateMethod(
     }
   }else{
     /* A regular INSERT, UPDATE or DELETE statement. The trick here is that
-    ** any conflict on the rowid value must be detected before any
+    ** any conflict on the rowid value must be detected before any 
     ** modifications are made to the database file. There are 4 cases:
     **
     **   1) DELETE
@@ -17069,7 +17069,7 @@ static int fts5UpdateMethod(
     ** This is not suported.  */
     if( eType0==SQLITE_INTEGER && fts5IsContentless(pTab) ){
       pTab->p.base.zErrMsg = sqlite3_mprintf(
-          "cannot %s contentless fts5 table: %s",
+          "cannot %s contentless fts5 table: %s", 
           (nArg>1 ? "UPDATE" : "DELETE from"), pConfig->zName
       );
       rc = SQLITE_ERROR;
@@ -17089,7 +17089,7 @@ static int fts5UpdateMethod(
         rc = SQLITE_MISMATCH;
       }
 
-      else if( eType0!=SQLITE_INTEGER ){
+      else if( eType0!=SQLITE_INTEGER ){     
         /* If this is a REPLACE, first remove the current entry (if any) */
         if( eConflict==SQLITE_REPLACE && eType1==SQLITE_INTEGER ){
           i64 iNew = sqlite3_value_int64(apVal[1]);  /* Rowid to delete */
@@ -17131,7 +17131,7 @@ static int fts5UpdateMethod(
 }
 
 /*
-** Implementation of xSync() method.
+** Implementation of xSync() method. 
 */
 static int fts5SyncMethod(sqlite3_vtab *pVtab){
   int rc;
@@ -17145,7 +17145,7 @@ static int fts5SyncMethod(sqlite3_vtab *pVtab){
 }
 
 /*
-** Implementation of xBegin() method.
+** Implementation of xBegin() method. 
 */
 static int fts5BeginMethod(sqlite3_vtab *pVtab){
   fts5CheckTransactionState((Fts5FullTable*)pVtab, FTS5_BEGIN, 0);
@@ -17189,8 +17189,8 @@ static int fts5ApiColumnCount(Fts5Context *pCtx){
 }
 
 static int fts5ApiColumnTotalSize(
-  Fts5Context *pCtx,
-  int iCol,
+  Fts5Context *pCtx, 
+  int iCol, 
   sqlite3_int64 *pnToken
 ){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
@@ -17205,8 +17205,8 @@ static int fts5ApiRowCount(Fts5Context *pCtx, i64 *pnRow){
 }
 
 static int fts5ApiTokenize(
-  Fts5Context *pCtx,
-  const char *pText, int nText,
+  Fts5Context *pCtx, 
+  const char *pText, int nText, 
   void *pUserData,
   int (*xToken)(void*, int, const char*, int, int, int)
 ){
@@ -17228,15 +17228,15 @@ static int fts5ApiPhraseSize(Fts5Context *pCtx, int iPhrase){
 }
 
 static int fts5ApiColumnText(
-  Fts5Context *pCtx,
-  int iCol,
-  const char **pz,
+  Fts5Context *pCtx, 
+  int iCol, 
+  const char **pz, 
   int *pn
 ){
   int rc = SQLITE_OK;
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
-  if( fts5IsContentless((Fts5FullTable*)(pCsr->base.pVtab))
-   || pCsr->ePlan==FTS5_PLAN_SPECIAL
+  if( fts5IsContentless((Fts5FullTable*)(pCsr->base.pVtab)) 
+   || pCsr->ePlan==FTS5_PLAN_SPECIAL 
   ){
     *pz = 0;
     *pn = 0;
@@ -17251,8 +17251,8 @@ static int fts5ApiColumnText(
 }
 
 static int fts5CsrPoslist(
-  Fts5Cursor *pCsr,
-  int iPhrase,
+  Fts5Cursor *pCsr, 
+  int iPhrase, 
   const u8 **pa,
   int *pn
 ){
@@ -17307,7 +17307,7 @@ static int fts5CacheInstArray(Fts5Cursor *pCsr){
   Fts5PoslistReader *aIter;       /* One iterator for each phrase */
   int nIter;                      /* Number of iterators/phrases */
   int nCol = ((Fts5Table*)pCsr->base.pVtab)->pConfig->nCol;
-
+  
   nIter = sqlite3Fts5ExprPhraseCount(pCsr->pExpr);
   if( pCsr->aInstIter==0 ){
     sqlite3_int64 nByte = sizeof(Fts5PoslistReader) * nIter;
@@ -17322,7 +17322,7 @@ static int fts5CacheInstArray(Fts5Cursor *pCsr){
     /* Initialize all iterators */
     for(i=0; i<nIter && rc==SQLITE_OK; i++){
       const u8 *a;
-      int n;
+      int n; 
       rc = fts5CsrPoslist(pCsr, i, &a, &n);
       if( rc==SQLITE_OK ){
         sqlite3Fts5PoslistReaderInit(a, n, &aIter[i]);
@@ -17334,8 +17334,8 @@ static int fts5CacheInstArray(Fts5Cursor *pCsr){
         int *aInst;
         int iBest = -1;
         for(i=0; i<nIter; i++){
-          if( (aIter[i].bEof==0)
-              && (iBest<0 || aIter[i].iPos<aIter[iBest].iPos)
+          if( (aIter[i].bEof==0) 
+              && (iBest<0 || aIter[i].iPos<aIter[iBest].iPos) 
             ){
             iBest = i;
           }
@@ -17377,7 +17377,7 @@ static int fts5CacheInstArray(Fts5Cursor *pCsr){
 static int fts5ApiInstCount(Fts5Context *pCtx, int *pnInst){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
   int rc = SQLITE_OK;
-  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_INST)==0
+  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_INST)==0 
    || SQLITE_OK==(rc = fts5CacheInstArray(pCsr)) ){
     *pnInst = pCsr->nInstCount;
   }
@@ -17385,16 +17385,16 @@ static int fts5ApiInstCount(Fts5Context *pCtx, int *pnInst){
 }
 
 static int fts5ApiInst(
-  Fts5Context *pCtx,
-  int iIdx,
-  int *piPhrase,
-  int *piCol,
+  Fts5Context *pCtx, 
+  int iIdx, 
+  int *piPhrase, 
+  int *piCol, 
   int *piOff
 ){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
   int rc = SQLITE_OK;
-  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_INST)==0
-   || SQLITE_OK==(rc = fts5CacheInstArray(pCsr))
+  if( CsrFlagTest(pCsr, FTS5CSR_REQUIRE_INST)==0 
+   || SQLITE_OK==(rc = fts5CacheInstArray(pCsr)) 
   ){
     if( iIdx<0 || iIdx>=pCsr->nInstCount ){
       rc = SQLITE_RANGE;
@@ -17543,8 +17543,8 @@ static void *fts5ApiGetAuxdata(Fts5Context *pCtx, int bClear){
 }
 
 static void fts5ApiPhraseNext(
-  Fts5Context *pUnused,
-  Fts5PhraseIter *pIter,
+  Fts5Context *pUnused, 
+  Fts5PhraseIter *pIter, 
   int *piCol, int *piOff
 ){
   UNUSED_PARAM(pUnused);
@@ -17565,9 +17565,9 @@ static void fts5ApiPhraseNext(
 }
 
 static int fts5ApiPhraseFirst(
-  Fts5Context *pCtx,
-  int iPhrase,
-  Fts5PhraseIter *pIter,
+  Fts5Context *pCtx, 
+  int iPhrase, 
+  Fts5PhraseIter *pIter, 
   int *piCol, int *piOff
 ){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
@@ -17584,8 +17584,8 @@ static int fts5ApiPhraseFirst(
 }
 
 static void fts5ApiPhraseNextColumn(
-  Fts5Context *pCtx,
-  Fts5PhraseIter *pIter,
+  Fts5Context *pCtx, 
+  Fts5PhraseIter *pIter, 
   int *piCol
 ){
   Fts5Cursor *pCsr = (Fts5Cursor*)pCtx;
@@ -17614,9 +17614,9 @@ static void fts5ApiPhraseNextColumn(
 }
 
 static int fts5ApiPhraseFirstColumn(
-  Fts5Context *pCtx,
-  int iPhrase,
-  Fts5PhraseIter *pIter,
+  Fts5Context *pCtx, 
+  int iPhrase, 
+  Fts5PhraseIter *pIter, 
   int *piCol
 ){
   int rc = SQLITE_OK;
@@ -17659,7 +17659,7 @@ static int fts5ApiPhraseFirstColumn(
 }
 
 
-static int fts5ApiQueryPhrase(Fts5Context*, int, void*,
+static int fts5ApiQueryPhrase(Fts5Context*, int, void*, 
     int(*)(const Fts5ExtensionApi*, Fts5Context*, void*)
 );
 
@@ -17690,8 +17690,8 @@ static const Fts5ExtensionApi sFts5Api = {
 ** Implementation of API function xQueryPhrase().
 */
 static int fts5ApiQueryPhrase(
-  Fts5Context *pCtx,
-  int iPhrase,
+  Fts5Context *pCtx, 
+  int iPhrase, 
   void *pUserData,
   int(*xCallback)(const Fts5ExtensionApi*, Fts5Context*, void*)
 ){
@@ -17773,7 +17773,7 @@ static void fts5ApiCallback(
 
 
 /*
-** Given cursor id iId, return a pointer to the corresponding Fts5Table
+** Given cursor id iId, return a pointer to the corresponding Fts5Table 
 ** object. Or NULL If the cursor id does not exist.
 */
 static Fts5Table *sqlite3Fts5TableFromCsrid(
@@ -17856,7 +17856,7 @@ static int fts5PoslistBlob(sqlite3_context *pCtx, Fts5Cursor *pCsr){
   return rc;
 }
 
-/*
+/* 
 ** This is the xColumn method, called by SQLite to request a value from
 ** the row that the supplied cursor currently points to.
 */
@@ -17869,7 +17869,7 @@ static int fts5ColumnMethod(
   Fts5Config *pConfig = pTab->p.pConfig;
   Fts5Cursor *pCsr = (Fts5Cursor*)pCursor;
   int rc = SQLITE_OK;
-
+  
   assert( CsrFlagTest(pCsr, FTS5CSR_EOF)==0 );
 
   if( pCsr->ePlan==FTS5_PLAN_SPECIAL ){
@@ -17889,7 +17889,7 @@ static int fts5ColumnMethod(
     /* The value of the "rank" column. */
     if( pCsr->ePlan==FTS5_PLAN_SOURCE ){
       fts5PoslistBlob(pCtx, pCsr);
-    }else if(
+    }else if( 
         pCsr->ePlan==FTS5_PLAN_MATCH
      || pCsr->ePlan==FTS5_PLAN_SORTED_MATCH
     ){
@@ -18025,7 +18025,7 @@ static int fts5CreateAux(
 }
 
 /*
-** Register a new tokenizer. This is the implementation of the
+** Register a new tokenizer. This is the implementation of the 
 ** fts5_api.xCreateTokenizer() method.
 */
 static int fts5CreateTokenizer(
@@ -18064,7 +18064,7 @@ static int fts5CreateTokenizer(
 }
 
 static Fts5TokenizerModule *fts5LocateTokenizer(
-  Fts5Global *pGlobal,
+  Fts5Global *pGlobal, 
   const char *zName
 ){
   Fts5TokenizerModule *pMod = 0;
@@ -18081,7 +18081,7 @@ static Fts5TokenizerModule *fts5LocateTokenizer(
 }
 
 /*
-** Find a tokenizer. This is the implementation of the
+** Find a tokenizer. This is the implementation of the 
 ** fts5_api.xFindTokenizer() method.
 */
 static int fts5FindTokenizer(
@@ -18106,7 +18106,7 @@ static int fts5FindTokenizer(
 }
 
 static int sqlite3Fts5GetTokenizer(
-  Fts5Global *pGlobal,
+  Fts5Global *pGlobal, 
   const char **azArg,
   int nArg,
   Fts5Config *pConfig,
@@ -18281,7 +18281,7 @@ static int fts5Init(sqlite3 *db){
 ** this module is being built as part of the SQLite core (SQLITE_CORE is
 ** defined), then sqlite3_open() will call sqlite3Fts5Init() directly.
 **
-** Or, if this module is being built as a loadable extension,
+** Or, if this module is being built as a loadable extension, 
 ** sqlite3Fts5Init() is omitted and the two standard entry points
 ** sqlite3_fts_init() and sqlite3_fts5_init() defined instead.
 */
@@ -18339,19 +18339,19 @@ struct Fts5Storage {
   Fts5Index *pIndex;
   int bTotalsValid;               /* True if nTotalRow/aTotalSize[] are valid */
   i64 nTotalRow;                  /* Total number of rows in FTS table */
-  i64 *aTotalSize;                /* Total sizes of each column */
+  i64 *aTotalSize;                /* Total sizes of each column */ 
   sqlite3_stmt *aStmt[11];
 };
 
 
-#if FTS5_STMT_SCAN_ASC!=0
-# error "FTS5_STMT_SCAN_ASC mismatch"
+#if FTS5_STMT_SCAN_ASC!=0 
+# error "FTS5_STMT_SCAN_ASC mismatch" 
 #endif
-#if FTS5_STMT_SCAN_DESC!=1
-# error "FTS5_STMT_SCAN_DESC mismatch"
+#if FTS5_STMT_SCAN_DESC!=1 
+# error "FTS5_STMT_SCAN_DESC mismatch" 
 #endif
 #if FTS5_STMT_LOOKUP!=2
-# error "FTS5_STMT_LOOKUP mismatch"
+# error "FTS5_STMT_LOOKUP mismatch" 
 #endif
 
 #define FTS5_STMT_INSERT_CONTENT  3
@@ -18377,12 +18377,12 @@ static int fts5StorageGetStmt(
 ){
   int rc = SQLITE_OK;
 
-  /* If there is no %_docsize table, there should be no requests for
+  /* If there is no %_docsize table, there should be no requests for 
   ** statements to operate on it.  */
   assert( p->pConfig->bColumnsize || (
-        eStmt!=FTS5_STMT_REPLACE_DOCSIZE
-     && eStmt!=FTS5_STMT_DELETE_DOCSIZE
-     && eStmt!=FTS5_STMT_LOOKUP_DOCSIZE
+        eStmt!=FTS5_STMT_REPLACE_DOCSIZE 
+     && eStmt!=FTS5_STMT_DELETE_DOCSIZE 
+     && eStmt!=FTS5_STMT_LOOKUP_DOCSIZE 
   ));
 
   assert( eStmt>=0 && eStmt<ArraySize(p->aStmt) );
@@ -18408,26 +18408,26 @@ static int fts5StorageGetStmt(
 
     switch( eStmt ){
       case FTS5_STMT_SCAN:
-        zSql = sqlite3_mprintf(azStmt[eStmt],
+        zSql = sqlite3_mprintf(azStmt[eStmt], 
             pC->zContentExprlist, pC->zContent
         );
         break;
 
       case FTS5_STMT_SCAN_ASC:
       case FTS5_STMT_SCAN_DESC:
-        zSql = sqlite3_mprintf(azStmt[eStmt], pC->zContentExprlist,
+        zSql = sqlite3_mprintf(azStmt[eStmt], pC->zContentExprlist, 
             pC->zContent, pC->zContentRowid, pC->zContentRowid,
             pC->zContentRowid
         );
         break;
 
       case FTS5_STMT_LOOKUP:
-        zSql = sqlite3_mprintf(azStmt[eStmt],
+        zSql = sqlite3_mprintf(azStmt[eStmt], 
             pC->zContentExprlist, pC->zContent, pC->zContentRowid
         );
         break;
 
-      case FTS5_STMT_INSERT_CONTENT:
+      case FTS5_STMT_INSERT_CONTENT: 
       case FTS5_STMT_REPLACE_CONTENT: {
         int nCol = pC->nCol + 1;
         char *zBind;
@@ -18501,7 +18501,7 @@ static int fts5ExecPrintf(
 ** code otherwise.
 */
 static int sqlite3Fts5DropAll(Fts5Config *pConfig){
-  int rc = fts5ExecPrintf(pConfig->db, 0,
+  int rc = fts5ExecPrintf(pConfig->db, 0, 
       "DROP TABLE IF EXISTS %Q.'%q_data';"
       "DROP TABLE IF EXISTS %Q.'%q_idx';"
       "DROP TABLE IF EXISTS %Q.'%q_config';",
@@ -18510,13 +18510,13 @@ static int sqlite3Fts5DropAll(Fts5Config *pConfig){
       pConfig->zDb, pConfig->zName
   );
   if( rc==SQLITE_OK && pConfig->bColumnsize ){
-    rc = fts5ExecPrintf(pConfig->db, 0,
+    rc = fts5ExecPrintf(pConfig->db, 0, 
         "DROP TABLE IF EXISTS %Q.'%q_docsize';",
         pConfig->zDb, pConfig->zName
     );
   }
   if( rc==SQLITE_OK && pConfig->eContent==FTS5_CONTENT_NORMAL ){
-    rc = fts5ExecPrintf(pConfig->db, 0,
+    rc = fts5ExecPrintf(pConfig->db, 0, 
         "DROP TABLE IF EXISTS %Q.'%q_content';",
         pConfig->zDb, pConfig->zName
     );
@@ -18531,7 +18531,7 @@ static void fts5StorageRenameOne(
   const char *zName               /* New name of FTS5 table */
 ){
   if( *pRc==SQLITE_OK ){
-    *pRc = fts5ExecPrintf(pConfig->db, 0,
+    *pRc = fts5ExecPrintf(pConfig->db, 0, 
         "ALTER TABLE %Q.'%q_%s' RENAME TO '%q_%s';",
         pConfig->zDb, pConfig->zName, zTail, zName, zTail
     );
@@ -18569,7 +18569,7 @@ static int sqlite3Fts5CreateTable(
   char *zErr = 0;
 
   rc = fts5ExecPrintf(pConfig->db, &zErr, "CREATE TABLE %Q.'%q_%q'(%s)%s",
-      pConfig->zDb, pConfig->zName, zPost, zDefn,
+      pConfig->zDb, pConfig->zName, zPost, zDefn, 
 #ifndef SQLITE_FTS5_NO_WITHOUT_ROWID
       bWithout?" WITHOUT ROWID":
 #endif
@@ -18577,7 +18577,7 @@ static int sqlite3Fts5CreateTable(
   );
   if( zErr ){
     *pzErr = sqlite3_mprintf(
-        "fts5: error creating shadow table %q_%s: %s",
+        "fts5: error creating shadow table %q_%s: %s", 
         pConfig->zName, zPost, zErr
     );
     sqlite3_free(zErr);
@@ -18588,15 +18588,15 @@ static int sqlite3Fts5CreateTable(
 
 /*
 ** Open a new Fts5Index handle. If the bCreate argument is true, create
-** and initialize the underlying tables
+** and initialize the underlying tables 
 **
 ** If successful, set *pp to point to the new object and return SQLITE_OK.
 ** Otherwise, set *pp to NULL and return an SQLite error code.
 */
 static int sqlite3Fts5StorageOpen(
-  Fts5Config *pConfig,
-  Fts5Index *pIndex,
-  int bCreate,
+  Fts5Config *pConfig, 
+  Fts5Index *pIndex, 
+  int bCreate, 
   Fts5Storage **pp,
   char **pzErr                    /* OUT: Error message */
 ){
@@ -18708,8 +18708,8 @@ static int fts5StorageInsertCallback(
 ** remove the %_content row at this time though.
 */
 static int fts5StorageDeleteFromIndex(
-  Fts5Storage *p,
-  i64 iDel,
+  Fts5Storage *p, 
+  i64 iDel, 
   sqlite3_value **apVal
 ){
   Fts5Config *pConfig = p->pConfig;
@@ -18743,7 +18743,7 @@ static int fts5StorageDeleteFromIndex(
         nText = sqlite3_value_bytes(apVal[iCol-1]);
       }
       ctx.szCol = 0;
-      rc = sqlite3Fts5Tokenize(pConfig, FTS5_TOKENIZE_DOCUMENT,
+      rc = sqlite3Fts5Tokenize(pConfig, FTS5_TOKENIZE_DOCUMENT, 
           zText, nText, (void*)&ctx, fts5StorageInsertCallback
       );
       p->aTotalSize[iCol-1] -= (i64)ctx.szCol;
@@ -18793,7 +18793,7 @@ static int fts5StorageInsertDocsize(
 }
 
 /*
-** Load the contents of the "averages" record from disk into the
+** Load the contents of the "averages" record from disk into the 
 ** p->nTotalRow and p->aTotalSize[] variables. If successful, and if
 ** argument bCache is true, set the p->bTotalsValid flag to indicate
 ** that the contents of aTotalSize[] and nTotalRow are valid until
@@ -18812,7 +18812,7 @@ static int fts5StorageLoadTotals(Fts5Storage *p, int bCache){
 }
 
 /*
-** Store the current contents of the p->nTotalRow and p->aTotalSize[]
+** Store the current contents of the p->nTotalRow and p->aTotalSize[] 
 ** variables in the "averages" record on disk.
 **
 ** Return SQLITE_OK if successful, or an SQLite error code if an error
@@ -18889,7 +18889,7 @@ static int sqlite3Fts5StorageDeleteAll(Fts5Storage *p){
 
   /* Delete the contents of the %_data and %_docsize tables. */
   rc = fts5ExecPrintf(pConfig->db, 0,
-      "DELETE FROM %Q.'%q_data';"
+      "DELETE FROM %Q.'%q_data';" 
       "DELETE FROM %Q.'%q_idx';",
       pConfig->zDb, pConfig->zName,
       pConfig->zDb, pConfig->zName
@@ -18940,7 +18940,7 @@ static int sqlite3Fts5StorageRebuild(Fts5Storage *p){
       if( pConfig->abUnindexed[ctx.iCol]==0 ){
         const char *zText = (const char*)sqlite3_column_text(pScan, ctx.iCol+1);
         int nText = sqlite3_column_bytes(pScan, ctx.iCol+1);
-        rc = sqlite3Fts5Tokenize(pConfig,
+        rc = sqlite3Fts5Tokenize(pConfig, 
             FTS5_TOKENIZE_DOCUMENT,
             zText, nText,
             (void*)&ctx,
@@ -19010,8 +19010,8 @@ static int fts5StorageNewRowid(Fts5Storage *p, i64 *piRowid){
 ** Insert a new row into the FTS content table.
 */
 static int sqlite3Fts5StorageContentInsert(
-  Fts5Storage *p,
-  sqlite3_value **apVal,
+  Fts5Storage *p, 
+  sqlite3_value **apVal, 
   i64 *piRowid
 ){
   Fts5Config *pConfig = p->pConfig;
@@ -19045,8 +19045,8 @@ static int sqlite3Fts5StorageContentInsert(
 ** Insert new entries into the FTS index and %_docsize table.
 */
 static int sqlite3Fts5StorageIndexInsert(
-  Fts5Storage *p,
-  sqlite3_value **apVal,
+  Fts5Storage *p, 
+  sqlite3_value **apVal, 
   i64 iRowid
 ){
   Fts5Config *pConfig = p->pConfig;
@@ -19066,7 +19066,7 @@ static int sqlite3Fts5StorageIndexInsert(
     if( pConfig->abUnindexed[ctx.iCol]==0 ){
       const char *zText = (const char*)sqlite3_value_text(apVal[ctx.iCol+2]);
       int nText = sqlite3_value_bytes(apVal[ctx.iCol+2]);
-      rc = sqlite3Fts5Tokenize(pConfig,
+      rc = sqlite3Fts5Tokenize(pConfig, 
           FTS5_TOKENIZE_DOCUMENT,
           zText, nText,
           (void*)&ctx,
@@ -19092,7 +19092,7 @@ static int fts5StorageCount(Fts5Storage *p, const char *zSuffix, i64 *pnRow){
   char *zSql;
   int rc;
 
-  zSql = sqlite3_mprintf("SELECT count(*) FROM %Q.'%q_%s'",
+  zSql = sqlite3_mprintf("SELECT count(*) FROM %Q.'%q_%s'", 
       pConfig->zDb, pConfig->zName, zSuffix
   );
   if( zSql==0 ){
@@ -19244,7 +19244,7 @@ static int sqlite3Fts5StorageIntegrity(Fts5Storage *p, int iArg){
           if( rc==SQLITE_OK ){
             const char *zText = (const char*)sqlite3_column_text(pScan, i+1);
             int nText = sqlite3_column_bytes(pScan, i+1);
-            rc = sqlite3Fts5Tokenize(pConfig,
+            rc = sqlite3Fts5Tokenize(pConfig, 
                 FTS5_TOKENIZE_DOCUMENT,
                 zText, nText,
                 (void*)&ctx,
@@ -19262,7 +19262,7 @@ static int sqlite3Fts5StorageIntegrity(Fts5Storage *p, int iArg){
         }
         sqlite3Fts5TermsetFree(ctx.pTermset);
         ctx.pTermset = 0;
-
+  
         if( rc!=SQLITE_OK ) break;
       }
       rc2 = sqlite3_reset(pScan);
@@ -19308,13 +19308,13 @@ static int sqlite3Fts5StorageIntegrity(Fts5Storage *p, int iArg){
 ** %_content table.
 */
 static int sqlite3Fts5StorageStmt(
-  Fts5Storage *p,
-  int eStmt,
-  sqlite3_stmt **pp,
+  Fts5Storage *p, 
+  int eStmt, 
+  sqlite3_stmt **pp, 
   char **pzErrMsg
 ){
   int rc;
-  assert( eStmt==FTS5_STMT_SCAN_ASC
+  assert( eStmt==FTS5_STMT_SCAN_ASC 
        || eStmt==FTS5_STMT_SCAN_DESC
        || eStmt==FTS5_STMT_LOOKUP
   );
@@ -19332,8 +19332,8 @@ static int sqlite3Fts5StorageStmt(
 ** must match that passed to the sqlite3Fts5StorageStmt() call.
 */
 static void sqlite3Fts5StorageStmtRelease(
-  Fts5Storage *p,
-  int eStmt,
+  Fts5Storage *p, 
+  int eStmt, 
   sqlite3_stmt *pStmt
 ){
   assert( eStmt==FTS5_STMT_SCAN_ASC
@@ -19416,7 +19416,7 @@ static int sqlite3Fts5StorageSize(Fts5Storage *p, int iCol, i64 *pnToken){
 static int sqlite3Fts5StorageRowCount(Fts5Storage *p, i64 *pnRow){
   int rc = fts5StorageLoadTotals(p, 0);
   if( rc==SQLITE_OK ){
-    /* nTotalRow being zero does not necessarily indicate a corrupt
+    /* nTotalRow being zero does not necessarily indicate a corrupt 
     ** database - it might be that the FTS5 table really does contain zero
     ** rows. However this function is only called from the xRowCount() API,
     ** and there is no way for that API to be invoked if the table contains
@@ -19450,7 +19450,7 @@ static int sqlite3Fts5StorageRollback(Fts5Storage *p){
 }
 
 static int sqlite3Fts5StorageConfigValue(
-  Fts5Storage *p,
+  Fts5Storage *p, 
   const char *z,
   sqlite3_value *pVal,
   int iVal
@@ -19500,7 +19500,7 @@ static int sqlite3Fts5StorageConfigValue(
 
 /*
 ** For tokenizers with no "unicode" modifier, the set of token characters
-** is the same as the set of ASCII range alphanumeric characters.
+** is the same as the set of ASCII range alphanumeric characters. 
 */
 static unsigned char aAsciiTokenChar[128] = {
   0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0,   /* 0x00..0x0F */
@@ -19519,8 +19519,8 @@ struct AsciiTokenizer {
 };
 
 static void fts5AsciiAddExceptions(
-  AsciiTokenizer *p,
-  const char *zArg,
+  AsciiTokenizer *p, 
+  const char *zArg, 
   int bTokenChars
 ){
   int i;
@@ -19542,7 +19542,7 @@ static void fts5AsciiDelete(Fts5Tokenizer *p){
 ** Create an "ascii" tokenizer.
 */
 static int fts5AsciiCreate(
-  void *pUnused,
+  void *pUnused, 
   const char **azArg, int nArg,
   Fts5Tokenizer **ppOut
 ){
@@ -19645,7 +19645,7 @@ static int fts5AsciiTokenize(
     rc = xToken(pCtx, 0, pFold, nByte, is, ie);
     is = ie+1;
   }
-
+  
   if( pFold!=aFold ) sqlite3_free(pFold);
   if( rc==SQLITE_DONE ) rc = SQLITE_OK;
   return rc;
@@ -19750,7 +19750,7 @@ static int fts5UnicodeAddExceptions(
           p->aTokenChar[iCode] = (unsigned char)bTokenChars;
         }else{
           bToken = p->aCategory[sqlite3Fts5UnicodeCategory(iCode)];
-          assert( (bToken==0 || bToken==1) );
+          assert( (bToken==0 || bToken==1) ); 
           assert( (bTokenChars==0 || bTokenChars==1) );
           if( bToken!=bTokenChars && sqlite3Fts5UnicodeIsdiacritic(iCode)==0 ){
             int i;
@@ -19829,12 +19829,12 @@ static int unicodeSetCategories(Unicode61Tokenizer *p, const char *zCat){
 ** Create a "unicode61" tokenizer.
 */
 static int fts5UnicodeCreate(
-  void *pUnused,
+  void *pUnused, 
   const char **azArg, int nArg,
   Fts5Tokenizer **ppOut
 ){
   int rc = SQLITE_OK;             /* Return code */
-  Unicode61Tokenizer *p = 0;      /* New tokenizer object */
+  Unicode61Tokenizer *p = 0;      /* New tokenizer object */ 
 
   UNUSED_PARAM(pUnused);
 
@@ -19905,7 +19905,7 @@ static int fts5UnicodeCreate(
 
 /*
 ** Return true if, for the purposes of tokenizing with the tokenizer
-** passed as the first argument, codepoint iCode is considered a token
+** passed as the first argument, codepoint iCode is considered a token 
 ** character (not a separator).
 */
 static int fts5UnicodeIsAlnum(Unicode61Tokenizer *p, int iCode){
@@ -19997,7 +19997,7 @@ static int fts5UnicodeTokenize(
         }
       }else if( a[*zCsr]==0 ){
         /* An ascii-range separator character. End of token. */
-        break;
+        break; 
       }else{
  ascii_tokenchar:
         if( *zCsr>='A' && *zCsr<='Z' ){
@@ -20011,9 +20011,9 @@ static int fts5UnicodeTokenize(
     }
 
     /* Invoke the token callback */
-    rc = xToken(pCtx, 0, aFold, zOut-aFold, is, ie);
+    rc = xToken(pCtx, 0, aFold, zOut-aFold, is, ie); 
   }
-
+  
  tokenize_done:
   if( rc==SQLITE_DONE ) rc = SQLITE_OK;
   return rc;
@@ -20051,7 +20051,7 @@ static void fts5PorterDelete(Fts5Tokenizer *pTok){
 ** Create a "porter" tokenizer.
 */
 static int fts5PorterCreate(
-  void *pCtx,
+  void *pCtx, 
   const char **azArg, int nArg,
   Fts5Tokenizer **ppOut
 ){
@@ -20195,7 +20195,7 @@ static int fts5Porter_Ostar(char *zStem, int nStem){
 /* porter rule condition: (m > 1 and (*S or *T)) */
 static int fts5Porter_MGt1_and_S_or_T(char *zStem, int nStem){
   assert( nStem>0 );
-  return (zStem[nStem-1]=='s' || zStem[nStem-1]=='t')
+  return (zStem[nStem-1]=='s' || zStem[nStem-1]=='t') 
       && fts5Porter_MGt1(zStem, nStem);
 }
 
@@ -20220,16 +20220,16 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
   int ret = 0;
   int nBuf = *pnBuf;
   switch( aBuf[nBuf-2] ){
-
-    case 'a':
+    
+    case 'a': 
       if( nBuf>2 && 0==memcmp("al", &aBuf[nBuf-2], 2) ){
         if( fts5Porter_MGt1(aBuf, nBuf-2) ){
           *pnBuf = nBuf - 2;
         }
       }
       break;
-
-    case 'c':
+  
+    case 'c': 
       if( nBuf>4 && 0==memcmp("ance", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt1(aBuf, nBuf-4) ){
           *pnBuf = nBuf - 4;
@@ -20240,24 +20240,24 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'e':
+  
+    case 'e': 
       if( nBuf>2 && 0==memcmp("er", &aBuf[nBuf-2], 2) ){
         if( fts5Porter_MGt1(aBuf, nBuf-2) ){
           *pnBuf = nBuf - 2;
         }
       }
       break;
-
-    case 'i':
+  
+    case 'i': 
       if( nBuf>2 && 0==memcmp("ic", &aBuf[nBuf-2], 2) ){
         if( fts5Porter_MGt1(aBuf, nBuf-2) ){
           *pnBuf = nBuf - 2;
         }
       }
       break;
-
-    case 'l':
+  
+    case 'l': 
       if( nBuf>4 && 0==memcmp("able", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt1(aBuf, nBuf-4) ){
           *pnBuf = nBuf - 4;
@@ -20268,8 +20268,8 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'n':
+  
+    case 'n': 
       if( nBuf>3 && 0==memcmp("ant", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
@@ -20288,8 +20288,8 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'o':
+  
+    case 'o': 
       if( nBuf>3 && 0==memcmp("ion", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1_and_S_or_T(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
@@ -20300,16 +20300,16 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 's':
+  
+    case 's': 
       if( nBuf>3 && 0==memcmp("ism", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
         }
       }
       break;
-
-    case 't':
+  
+    case 't': 
       if( nBuf>3 && 0==memcmp("ate", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
@@ -20320,76 +20320,76 @@ static int fts5PorterStep4(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'u':
+  
+    case 'u': 
       if( nBuf>3 && 0==memcmp("ous", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
         }
       }
       break;
-
-    case 'v':
+  
+    case 'v': 
       if( nBuf>3 && 0==memcmp("ive", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
         }
       }
       break;
-
-    case 'z':
+  
+    case 'z': 
       if( nBuf>3 && 0==memcmp("ize", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt1(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
         }
       }
       break;
-
+  
   }
   return ret;
 }
-
+  
 
 static int fts5PorterStep1B2(char *aBuf, int *pnBuf){
   int ret = 0;
   int nBuf = *pnBuf;
   switch( aBuf[nBuf-2] ){
-
-    case 'a':
+    
+    case 'a': 
       if( nBuf>2 && 0==memcmp("at", &aBuf[nBuf-2], 2) ){
         memcpy(&aBuf[nBuf-2], "ate", 3);
         *pnBuf = nBuf - 2 + 3;
         ret = 1;
       }
       break;
-
-    case 'b':
+  
+    case 'b': 
       if( nBuf>2 && 0==memcmp("bl", &aBuf[nBuf-2], 2) ){
         memcpy(&aBuf[nBuf-2], "ble", 3);
         *pnBuf = nBuf - 2 + 3;
         ret = 1;
       }
       break;
-
-    case 'i':
+  
+    case 'i': 
       if( nBuf>2 && 0==memcmp("iz", &aBuf[nBuf-2], 2) ){
         memcpy(&aBuf[nBuf-2], "ize", 3);
         *pnBuf = nBuf - 2 + 3;
         ret = 1;
       }
       break;
-
+  
   }
   return ret;
 }
-
+  
 
 static int fts5PorterStep2(char *aBuf, int *pnBuf){
   int ret = 0;
   int nBuf = *pnBuf;
   switch( aBuf[nBuf-2] ){
-
-    case 'a':
+    
+    case 'a': 
       if( nBuf>7 && 0==memcmp("ational", &aBuf[nBuf-7], 7) ){
         if( fts5Porter_MGt0(aBuf, nBuf-7) ){
           memcpy(&aBuf[nBuf-7], "ate", 3);
@@ -20402,8 +20402,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'c':
+  
+    case 'c': 
       if( nBuf>4 && 0==memcmp("enci", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt0(aBuf, nBuf-4) ){
           memcpy(&aBuf[nBuf-4], "ence", 4);
@@ -20416,8 +20416,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'e':
+  
+    case 'e': 
       if( nBuf>4 && 0==memcmp("izer", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt0(aBuf, nBuf-4) ){
           memcpy(&aBuf[nBuf-4], "ize", 3);
@@ -20425,8 +20425,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'g':
+  
+    case 'g': 
       if( nBuf>4 && 0==memcmp("logi", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt0(aBuf, nBuf-4) ){
           memcpy(&aBuf[nBuf-4], "log", 3);
@@ -20434,8 +20434,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'l':
+  
+    case 'l': 
       if( nBuf>3 && 0==memcmp("bli", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt0(aBuf, nBuf-3) ){
           memcpy(&aBuf[nBuf-3], "ble", 3);
@@ -20463,8 +20463,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'o':
+  
+    case 'o': 
       if( nBuf>7 && 0==memcmp("ization", &aBuf[nBuf-7], 7) ){
         if( fts5Porter_MGt0(aBuf, nBuf-7) ){
           memcpy(&aBuf[nBuf-7], "ize", 3);
@@ -20482,8 +20482,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 's':
+  
+    case 's': 
       if( nBuf>5 && 0==memcmp("alism", &aBuf[nBuf-5], 5) ){
         if( fts5Porter_MGt0(aBuf, nBuf-5) ){
           memcpy(&aBuf[nBuf-5], "al", 2);
@@ -20506,8 +20506,8 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 't':
+  
+    case 't': 
       if( nBuf>5 && 0==memcmp("aliti", &aBuf[nBuf-5], 5) ){
         if( fts5Porter_MGt0(aBuf, nBuf-5) ){
           memcpy(&aBuf[nBuf-5], "al", 2);
@@ -20525,18 +20525,18 @@ static int fts5PorterStep2(char *aBuf, int *pnBuf){
         }
       }
       break;
-
+  
   }
   return ret;
 }
-
+  
 
 static int fts5PorterStep3(char *aBuf, int *pnBuf){
   int ret = 0;
   int nBuf = *pnBuf;
   switch( aBuf[nBuf-2] ){
-
-    case 'a':
+    
+    case 'a': 
       if( nBuf>4 && 0==memcmp("ical", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt0(aBuf, nBuf-4) ){
           memcpy(&aBuf[nBuf-4], "ic", 2);
@@ -20544,16 +20544,16 @@ static int fts5PorterStep3(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 's':
+  
+    case 's': 
       if( nBuf>4 && 0==memcmp("ness", &aBuf[nBuf-4], 4) ){
         if( fts5Porter_MGt0(aBuf, nBuf-4) ){
           *pnBuf = nBuf - 4;
         }
       }
       break;
-
-    case 't':
+  
+    case 't': 
       if( nBuf>5 && 0==memcmp("icate", &aBuf[nBuf-5], 5) ){
         if( fts5Porter_MGt0(aBuf, nBuf-5) ){
           memcpy(&aBuf[nBuf-5], "ic", 2);
@@ -20566,24 +20566,24 @@ static int fts5PorterStep3(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'u':
+  
+    case 'u': 
       if( nBuf>3 && 0==memcmp("ful", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt0(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
         }
       }
       break;
-
-    case 'v':
+  
+    case 'v': 
       if( nBuf>5 && 0==memcmp("ative", &aBuf[nBuf-5], 5) ){
         if( fts5Porter_MGt0(aBuf, nBuf-5) ){
           *pnBuf = nBuf - 5;
         }
       }
       break;
-
-    case 'z':
+  
+    case 'z': 
       if( nBuf>5 && 0==memcmp("alize", &aBuf[nBuf-5], 5) ){
         if( fts5Porter_MGt0(aBuf, nBuf-5) ){
           memcpy(&aBuf[nBuf-5], "al", 2);
@@ -20591,18 +20591,18 @@ static int fts5PorterStep3(char *aBuf, int *pnBuf){
         }
       }
       break;
-
+  
   }
   return ret;
 }
-
+  
 
 static int fts5PorterStep1B(char *aBuf, int *pnBuf){
   int ret = 0;
   int nBuf = *pnBuf;
   switch( aBuf[nBuf-2] ){
-
-    case 'e':
+    
+    case 'e': 
       if( nBuf>3 && 0==memcmp("eed", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_MGt0(aBuf, nBuf-3) ){
           memcpy(&aBuf[nBuf-3], "ee", 2);
@@ -20615,8 +20615,8 @@ static int fts5PorterStep1B(char *aBuf, int *pnBuf){
         }
       }
       break;
-
-    case 'n':
+  
+    case 'n': 
       if( nBuf>3 && 0==memcmp("ing", &aBuf[nBuf-3], 3) ){
         if( fts5Porter_Vowel(aBuf, nBuf-3) ){
           *pnBuf = nBuf - 3;
@@ -20624,12 +20624,12 @@ static int fts5PorterStep1B(char *aBuf, int *pnBuf){
         }
       }
       break;
-
+  
   }
   return ret;
 }
-
-/*
+  
+/* 
 ** GENERATED CODE ENDS HERE (mkportersteps.tcl)
 ***************************************************************************
 **************************************************************************/
@@ -20638,7 +20638,7 @@ static void fts5PorterStep1A(char *aBuf, int *pnBuf){
   int nBuf = *pnBuf;
   if( aBuf[nBuf-1]=='s' ){
     if( aBuf[nBuf-2]=='e' ){
-      if( (nBuf>4 && aBuf[nBuf-4]=='s' && aBuf[nBuf-3]=='s')
+      if( (nBuf>4 && aBuf[nBuf-4]=='s' && aBuf[nBuf-3]=='s') 
        || (nBuf>3 && aBuf[nBuf-3]=='i' )
       ){
         *pnBuf = nBuf-2;
@@ -20653,11 +20653,11 @@ static void fts5PorterStep1A(char *aBuf, int *pnBuf){
 }
 
 static int fts5PorterCb(
-  void *pCtx,
+  void *pCtx, 
   int tflags,
-  const char *pToken,
-  int nToken,
-  int iStart,
+  const char *pToken, 
+  int nToken, 
+  int iStart, 
   int iEnd
 ){
   PorterContext *p = (PorterContext*)pCtx;
@@ -20675,8 +20675,8 @@ static int fts5PorterCb(
   if( fts5PorterStep1B(aBuf, &nBuf) ){
     if( fts5PorterStep1B2(aBuf, &nBuf)==0 ){
       char c = aBuf[nBuf-1];
-      if( fts5PorterIsVowel(c, 0)==0
-       && c!='l' && c!='s' && c!='z' && c==aBuf[nBuf-2]
+      if( fts5PorterIsVowel(c, 0)==0 
+       && c!='l' && c!='s' && c!='z' && c==aBuf[nBuf-2] 
       ){
         nBuf--;
       }else if( fts5Porter_MEq1(aBuf, nBuf) && fts5Porter_Ostar(aBuf, nBuf) ){
@@ -20698,7 +20698,7 @@ static int fts5PorterCb(
   /* Step 5a. */
   assert( nBuf>0 );
   if( aBuf[nBuf-1]=='e' ){
-    if( fts5Porter_MGt1(aBuf, nBuf-1)
+    if( fts5Porter_MGt1(aBuf, nBuf-1) 
      || (fts5Porter_MEq1(aBuf, nBuf-1) && !fts5Porter_Ostar(aBuf, nBuf-1))
     ){
       nBuf--;
@@ -20706,8 +20706,8 @@ static int fts5PorterCb(
   }
 
   /* Step 5b. */
-  if( nBuf>1 && aBuf[nBuf-1]=='l'
-   && aBuf[nBuf-2]=='l' && fts5Porter_MGt1(aBuf, nBuf-1)
+  if( nBuf>1 && aBuf[nBuf-1]=='l' 
+   && aBuf[nBuf-2]=='l' && fts5Porter_MGt1(aBuf, nBuf-1) 
   ){
     nBuf--;
   }
@@ -20812,7 +20812,7 @@ static int fts5TriTokenize(
   while( 1 ){
     char *zOut = aBuf;
     int iStart = zIn - (const unsigned char*)pText;
-    const unsigned char *zNext;
+    const unsigned char *zNext; 
 
     READ_UTF8(zIn, zEof, iCode);
     if( iCode==0 ) break;
@@ -20878,7 +20878,7 @@ static int sqlite3Fts5TokenizerInit(fts5_api *pApi){
     { "porter",    {fts5PorterCreate, fts5PorterDelete, fts5PorterTokenize }},
     { "trigram",   {fts5TriCreate, fts5TriDelete, fts5TriTokenize}},
   };
-
+  
   int rc = SQLITE_OK;             /* Return code */
   int i;                          /* To iterate through builtin functions */
 
@@ -20926,46 +20926,46 @@ static int sqlite3Fts5TokenizerInit(fts5_api *pApi){
 */
 static int fts5_remove_diacritic(int c, int bComplex){
   unsigned short aDia[] = {
-        0,  1797,  1848,  1859,  1891,  1928,  1940,  1995,
-     2024,  2040,  2060,  2110,  2168,  2206,  2264,  2286,
-     2344,  2383,  2472,  2488,  2516,  2596,  2668,  2732,
-     2782,  2842,  2894,  2954,  2984,  3000,  3028,  3336,
-     3456,  3696,  3712,  3728,  3744,  3766,  3832,  3896,
-     3912,  3928,  3944,  3968,  4008,  4040,  4056,  4106,
-     4138,  4170,  4202,  4234,  4266,  4296,  4312,  4344,
-     4408,  4424,  4442,  4472,  4488,  4504,  6148,  6198,
-     6264,  6280,  6360,  6429,  6505,  6529, 61448, 61468,
-    61512, 61534, 61592, 61610, 61642, 61672, 61688, 61704,
-    61726, 61784, 61800, 61816, 61836, 61880, 61896, 61914,
-    61948, 61998, 62062, 62122, 62154, 62184, 62200, 62218,
-    62252, 62302, 62364, 62410, 62442, 62478, 62536, 62554,
-    62584, 62604, 62640, 62648, 62656, 62664, 62730, 62766,
-    62830, 62890, 62924, 62974, 63032, 63050, 63082, 63118,
-    63182, 63242, 63274, 63310, 63368, 63390,
+        0,  1797,  1848,  1859,  1891,  1928,  1940,  1995, 
+     2024,  2040,  2060,  2110,  2168,  2206,  2264,  2286, 
+     2344,  2383,  2472,  2488,  2516,  2596,  2668,  2732, 
+     2782,  2842,  2894,  2954,  2984,  3000,  3028,  3336, 
+     3456,  3696,  3712,  3728,  3744,  3766,  3832,  3896, 
+     3912,  3928,  3944,  3968,  4008,  4040,  4056,  4106, 
+     4138,  4170,  4202,  4234,  4266,  4296,  4312,  4344, 
+     4408,  4424,  4442,  4472,  4488,  4504,  6148,  6198, 
+     6264,  6280,  6360,  6429,  6505,  6529, 61448, 61468, 
+    61512, 61534, 61592, 61610, 61642, 61672, 61688, 61704, 
+    61726, 61784, 61800, 61816, 61836, 61880, 61896, 61914, 
+    61948, 61998, 62062, 62122, 62154, 62184, 62200, 62218, 
+    62252, 62302, 62364, 62410, 62442, 62478, 62536, 62554, 
+    62584, 62604, 62640, 62648, 62656, 62664, 62730, 62766, 
+    62830, 62890, 62924, 62974, 63032, 63050, 63082, 63118, 
+    63182, 63242, 63274, 63310, 63368, 63390, 
   };
 #define HIBIT ((unsigned char)0x80)
   unsigned char aChar[] = {
-    '\0',      'a',       'c',       'e',       'i',       'n',
-    'o',       'u',       'y',       'y',       'a',       'c',
-    'd',       'e',       'e',       'g',       'h',       'i',
-    'j',       'k',       'l',       'n',       'o',       'r',
-    's',       't',       'u',       'u',       'w',       'y',
-    'z',       'o',       'u',       'a',       'i',       'o',
-    'u',       'u'|HIBIT, 'a'|HIBIT, 'g',       'k',       'o',
-    'o'|HIBIT, 'j',       'g',       'n',       'a'|HIBIT, 'a',
-    'e',       'i',       'o',       'r',       'u',       's',
-    't',       'h',       'a',       'e',       'o'|HIBIT, 'o',
-    'o'|HIBIT, 'y',       '\0',      '\0',      '\0',      '\0',
-    '\0',      '\0',      '\0',      '\0',      'a',       'b',
-    'c'|HIBIT, 'd',       'd',       'e'|HIBIT, 'e',       'e'|HIBIT,
-    'f',       'g',       'h',       'h',       'i',       'i'|HIBIT,
-    'k',       'l',       'l'|HIBIT, 'l',       'm',       'n',
-    'o'|HIBIT, 'p',       'r',       'r'|HIBIT, 'r',       's',
-    's'|HIBIT, 't',       'u',       'u'|HIBIT, 'v',       'w',
-    'w',       'x',       'y',       'z',       'h',       't',
-    'w',       'y',       'a',       'a'|HIBIT, 'a'|HIBIT, 'a'|HIBIT,
-    'e',       'e'|HIBIT, 'e'|HIBIT, 'i',       'o',       'o'|HIBIT,
-    'o'|HIBIT, 'o'|HIBIT, 'u',       'u'|HIBIT, 'u'|HIBIT, 'y',
+    '\0',      'a',       'c',       'e',       'i',       'n',       
+    'o',       'u',       'y',       'y',       'a',       'c',       
+    'd',       'e',       'e',       'g',       'h',       'i',       
+    'j',       'k',       'l',       'n',       'o',       'r',       
+    's',       't',       'u',       'u',       'w',       'y',       
+    'z',       'o',       'u',       'a',       'i',       'o',       
+    'u',       'u'|HIBIT, 'a'|HIBIT, 'g',       'k',       'o',       
+    'o'|HIBIT, 'j',       'g',       'n',       'a'|HIBIT, 'a',       
+    'e',       'i',       'o',       'r',       'u',       's',       
+    't',       'h',       'a',       'e',       'o'|HIBIT, 'o',       
+    'o'|HIBIT, 'y',       '\0',      '\0',      '\0',      '\0',      
+    '\0',      '\0',      '\0',      '\0',      'a',       'b',       
+    'c'|HIBIT, 'd',       'd',       'e'|HIBIT, 'e',       'e'|HIBIT, 
+    'f',       'g',       'h',       'h',       'i',       'i'|HIBIT, 
+    'k',       'l',       'l'|HIBIT, 'l',       'm',       'n',       
+    'o'|HIBIT, 'p',       'r',       'r'|HIBIT, 'r',       's',       
+    's'|HIBIT, 't',       'u',       'u'|HIBIT, 'v',       'w',       
+    'w',       'x',       'y',       'z',       'h',       't',       
+    'w',       'y',       'a',       'a'|HIBIT, 'a'|HIBIT, 'a'|HIBIT, 
+    'e',       'e'|HIBIT, 'e'|HIBIT, 'i',       'o',       'o'|HIBIT, 
+    'o'|HIBIT, 'o'|HIBIT, 'u',       'u'|HIBIT, 'u'|HIBIT, 'y',       
   };
 
   unsigned int key = (((unsigned int)c)<<3) | 0x00000007;
@@ -21087,19 +21087,19 @@ static int sqlite3Fts5UnicodeFold(int c, int eRemoveDiacritic){
     {42802, 1, 62},        {42873, 1, 4},         {42877, 76, 1},
     {42878, 1, 10},        {42891, 0, 1},         {42893, 74, 1},
     {42896, 1, 4},         {42912, 1, 10},        {42922, 72, 1},
-    {65313, 14, 26},
+    {65313, 14, 26},       
   };
   static const unsigned short aiOff[] = {
-   1,     2,     8,     15,    16,    26,    28,    32,
-   37,    38,    40,    48,    63,    64,    69,    71,
-   79,    80,    116,   202,   203,   205,   206,   207,
-   209,   210,   211,   213,   214,   217,   218,   219,
-   775,   7264,  10792, 10795, 23228, 23256, 30204, 54721,
-   54753, 54754, 54756, 54787, 54793, 54809, 57153, 57274,
-   57921, 58019, 58363, 61722, 65268, 65341, 65373, 65406,
-   65408, 65410, 65415, 65424, 65436, 65439, 65450, 65462,
-   65472, 65476, 65478, 65480, 65482, 65488, 65506, 65511,
-   65514, 65521, 65527, 65528, 65529,
+   1,     2,     8,     15,    16,    26,    28,    32,    
+   37,    38,    40,    48,    63,    64,    69,    71,    
+   79,    80,    116,   202,   203,   205,   206,   207,   
+   209,   210,   211,   213,   214,   217,   218,   219,   
+   775,   7264,  10792, 10795, 23228, 23256, 30204, 54721, 
+   54753, 54754, 54756, 54787, 54793, 54809, 57153, 57274, 
+   57921, 58019, 58363, 61722, 65268, 65341, 65373, 65406, 
+   65408, 65410, 65415, 65424, 65436, 65439, 65450, 65462, 
+   65472, 65476, 65478, 65480, 65482, 65488, 65506, 65511, 
+   65514, 65521, 65527, 65528, 65529, 
   };
 
   int ret = c;
@@ -21137,7 +21137,7 @@ static int sqlite3Fts5UnicodeFold(int c, int eRemoveDiacritic){
       ret = fts5_remove_diacritic(ret, eRemoveDiacritic==2);
     }
   }
-
+  
   else if( c>=66560 && c<66600 ){
     ret = c + 40;
   }
@@ -21146,7 +21146,7 @@ static int sqlite3Fts5UnicodeFold(int c, int eRemoveDiacritic){
 }
 
 
-static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
+static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){ 
   aArray[0] = 1;
   switch( zCat[0] ){
     case 'C':
@@ -21156,7 +21156,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'n': aArray[3] = 1; break;
             case 's': aArray[4] = 1; break;
             case 'o': aArray[31] = 1; break;
-            case '*':
+            case '*': 
               aArray[1] = 1;
               aArray[2] = 1;
               aArray[3] = 1;
@@ -21174,7 +21174,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 't': aArray[8] = 1; break;
             case 'u': aArray[9] = 1; break;
             case 'C': aArray[30] = 1; break;
-            case '*':
+            case '*': 
               aArray[5] = 1;
               aArray[6] = 1;
               aArray[7] = 1;
@@ -21190,7 +21190,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'c': aArray[10] = 1; break;
             case 'e': aArray[11] = 1; break;
             case 'n': aArray[12] = 1; break;
-            case '*':
+            case '*': 
               aArray[10] = 1;
               aArray[11] = 1;
               aArray[12] = 1;
@@ -21203,7 +21203,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'd': aArray[13] = 1; break;
             case 'l': aArray[14] = 1; break;
             case 'o': aArray[15] = 1; break;
-            case '*':
+            case '*': 
               aArray[13] = 1;
               aArray[14] = 1;
               aArray[15] = 1;
@@ -21220,7 +21220,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'i': aArray[20] = 1; break;
             case 'o': aArray[21] = 1; break;
             case 's': aArray[22] = 1; break;
-            case '*':
+            case '*': 
               aArray[16] = 1;
               aArray[17] = 1;
               aArray[18] = 1;
@@ -21238,7 +21238,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'k': aArray[24] = 1; break;
             case 'm': aArray[25] = 1; break;
             case 'o': aArray[26] = 1; break;
-            case '*':
+            case '*': 
               aArray[23] = 1;
               aArray[24] = 1;
               aArray[25] = 1;
@@ -21252,7 +21252,7 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
             case 'l': aArray[27] = 1; break;
             case 'p': aArray[28] = 1; break;
             case 's': aArray[29] = 1; break;
-            case '*':
+            case '*': 
               aArray[27] = 1;
               aArray[28] = 1;
               aArray[29] = 1;
@@ -21265,369 +21265,369 @@ static int sqlite3Fts5UnicodeCatParse(const char *zCat, u8 *aArray){
 }
 
 static u16 aFts5UnicodeBlock[] = {
-    0,     1471,  1753,  1760,  1760,  1760,  1760,  1760,  1760,  1760,
-    1760,  1760,  1760,  1760,  1760,  1763,  1765,
+    0,     1471,  1753,  1760,  1760,  1760,  1760,  1760,  1760,  1760,  
+    1760,  1760,  1760,  1760,  1760,  1763,  1765,  
   };
 static u16 aFts5UnicodeMap[] = {
-    0,     32,    33,    36,    37,    40,    41,    42,    43,    44,
-    45,    46,    48,    58,    60,    63,    65,    91,    92,    93,
-    94,    95,    96,    97,    123,   124,   125,   126,   127,   160,
-    161,   162,   166,   167,   168,   169,   170,   171,   172,   173,
-    174,   175,   176,   177,   178,   180,   181,   182,   184,   185,
-    186,   187,   188,   191,   192,   215,   216,   223,   247,   248,
-    256,   312,   313,   329,   330,   377,   383,   385,   387,   388,
-    391,   394,   396,   398,   402,   403,   405,   406,   409,   412,
-    414,   415,   417,   418,   423,   427,   428,   431,   434,   436,
-    437,   440,   442,   443,   444,   446,   448,   452,   453,   454,
-    455,   456,   457,   458,   459,   460,   461,   477,   478,   496,
-    497,   498,   499,   500,   503,   505,   506,   564,   570,   572,
-    573,   575,   577,   580,   583,   584,   592,   660,   661,   688,
-    706,   710,   722,   736,   741,   748,   749,   750,   751,   768,
-    880,   884,   885,   886,   890,   891,   894,   900,   902,   903,
-    904,   908,   910,   912,   913,   931,   940,   975,   977,   978,
-    981,   984,   1008,  1012,  1014,  1015,  1018,  1020,  1021,  1072,
-    1120,  1154,  1155,  1160,  1162,  1217,  1231,  1232,  1329,  1369,
-    1370,  1377,  1417,  1418,  1423,  1425,  1470,  1471,  1472,  1473,
-    1475,  1476,  1478,  1479,  1488,  1520,  1523,  1536,  1542,  1545,
-    1547,  1548,  1550,  1552,  1563,  1566,  1568,  1600,  1601,  1611,
-    1632,  1642,  1646,  1648,  1649,  1748,  1749,  1750,  1757,  1758,
-    1759,  1765,  1767,  1769,  1770,  1774,  1776,  1786,  1789,  1791,
-    1792,  1807,  1808,  1809,  1810,  1840,  1869,  1958,  1969,  1984,
-    1994,  2027,  2036,  2038,  2039,  2042,  2048,  2070,  2074,  2075,
-    2084,  2085,  2088,  2089,  2096,  2112,  2137,  2142,  2208,  2210,
-    2276,  2304,  2307,  2308,  2362,  2363,  2364,  2365,  2366,  2369,
-    2377,  2381,  2382,  2384,  2385,  2392,  2402,  2404,  2406,  2416,
-    2417,  2418,  2425,  2433,  2434,  2437,  2447,  2451,  2474,  2482,
-    2486,  2492,  2493,  2494,  2497,  2503,  2507,  2509,  2510,  2519,
-    2524,  2527,  2530,  2534,  2544,  2546,  2548,  2554,  2555,  2561,
-    2563,  2565,  2575,  2579,  2602,  2610,  2613,  2616,  2620,  2622,
-    2625,  2631,  2635,  2641,  2649,  2654,  2662,  2672,  2674,  2677,
-    2689,  2691,  2693,  2703,  2707,  2730,  2738,  2741,  2748,  2749,
-    2750,  2753,  2759,  2761,  2763,  2765,  2768,  2784,  2786,  2790,
-    2800,  2801,  2817,  2818,  2821,  2831,  2835,  2858,  2866,  2869,
-    2876,  2877,  2878,  2879,  2880,  2881,  2887,  2891,  2893,  2902,
-    2903,  2908,  2911,  2914,  2918,  2928,  2929,  2930,  2946,  2947,
-    2949,  2958,  2962,  2969,  2972,  2974,  2979,  2984,  2990,  3006,
-    3008,  3009,  3014,  3018,  3021,  3024,  3031,  3046,  3056,  3059,
-    3065,  3066,  3073,  3077,  3086,  3090,  3114,  3125,  3133,  3134,
-    3137,  3142,  3146,  3157,  3160,  3168,  3170,  3174,  3192,  3199,
-    3202,  3205,  3214,  3218,  3242,  3253,  3260,  3261,  3262,  3263,
-    3264,  3270,  3271,  3274,  3276,  3285,  3294,  3296,  3298,  3302,
-    3313,  3330,  3333,  3342,  3346,  3389,  3390,  3393,  3398,  3402,
-    3405,  3406,  3415,  3424,  3426,  3430,  3440,  3449,  3450,  3458,
-    3461,  3482,  3507,  3517,  3520,  3530,  3535,  3538,  3542,  3544,
-    3570,  3572,  3585,  3633,  3634,  3636,  3647,  3648,  3654,  3655,
-    3663,  3664,  3674,  3713,  3716,  3719,  3722,  3725,  3732,  3737,
-    3745,  3749,  3751,  3754,  3757,  3761,  3762,  3764,  3771,  3773,
-    3776,  3782,  3784,  3792,  3804,  3840,  3841,  3844,  3859,  3860,
-    3861,  3864,  3866,  3872,  3882,  3892,  3893,  3894,  3895,  3896,
-    3897,  3898,  3899,  3900,  3901,  3902,  3904,  3913,  3953,  3967,
-    3968,  3973,  3974,  3976,  3981,  3993,  4030,  4038,  4039,  4046,
-    4048,  4053,  4057,  4096,  4139,  4141,  4145,  4146,  4152,  4153,
-    4155,  4157,  4159,  4160,  4170,  4176,  4182,  4184,  4186,  4190,
-    4193,  4194,  4197,  4199,  4206,  4209,  4213,  4226,  4227,  4229,
-    4231,  4237,  4238,  4239,  4240,  4250,  4253,  4254,  4256,  4295,
-    4301,  4304,  4347,  4348,  4349,  4682,  4688,  4696,  4698,  4704,
-    4746,  4752,  4786,  4792,  4800,  4802,  4808,  4824,  4882,  4888,
-    4957,  4960,  4969,  4992,  5008,  5024,  5120,  5121,  5741,  5743,
-    5760,  5761,  5787,  5788,  5792,  5867,  5870,  5888,  5902,  5906,
-    5920,  5938,  5941,  5952,  5970,  5984,  5998,  6002,  6016,  6068,
-    6070,  6071,  6078,  6086,  6087,  6089,  6100,  6103,  6104,  6107,
-    6108,  6109,  6112,  6128,  6144,  6150,  6151,  6155,  6158,  6160,
-    6176,  6211,  6212,  6272,  6313,  6314,  6320,  6400,  6432,  6435,
-    6439,  6441,  6448,  6450,  6451,  6457,  6464,  6468,  6470,  6480,
-    6512,  6528,  6576,  6593,  6600,  6608,  6618,  6622,  6656,  6679,
-    6681,  6686,  6688,  6741,  6742,  6743,  6744,  6752,  6753,  6754,
-    6755,  6757,  6765,  6771,  6783,  6784,  6800,  6816,  6823,  6824,
-    6912,  6916,  6917,  6964,  6965,  6966,  6971,  6972,  6973,  6978,
-    6979,  6981,  6992,  7002,  7009,  7019,  7028,  7040,  7042,  7043,
-    7073,  7074,  7078,  7080,  7082,  7083,  7084,  7086,  7088,  7098,
-    7142,  7143,  7144,  7146,  7149,  7150,  7151,  7154,  7164,  7168,
-    7204,  7212,  7220,  7222,  7227,  7232,  7245,  7248,  7258,  7288,
-    7294,  7360,  7376,  7379,  7380,  7393,  7394,  7401,  7405,  7406,
-    7410,  7412,  7413,  7424,  7468,  7531,  7544,  7545,  7579,  7616,
-    7676,  7680,  7830,  7838,  7936,  7944,  7952,  7960,  7968,  7976,
-    7984,  7992,  8000,  8008,  8016,  8025,  8027,  8029,  8031,  8033,
-    8040,  8048,  8064,  8072,  8080,  8088,  8096,  8104,  8112,  8118,
-    8120,  8124,  8125,  8126,  8127,  8130,  8134,  8136,  8140,  8141,
-    8144,  8150,  8152,  8157,  8160,  8168,  8173,  8178,  8182,  8184,
-    8188,  8189,  8192,  8203,  8208,  8214,  8216,  8217,  8218,  8219,
-    8221,  8222,  8223,  8224,  8232,  8233,  8234,  8239,  8240,  8249,
-    8250,  8251,  8255,  8257,  8260,  8261,  8262,  8263,  8274,  8275,
-    8276,  8277,  8287,  8288,  8298,  8304,  8305,  8308,  8314,  8317,
-    8318,  8319,  8320,  8330,  8333,  8334,  8336,  8352,  8400,  8413,
-    8417,  8418,  8421,  8448,  8450,  8451,  8455,  8456,  8458,  8459,
-    8462,  8464,  8467,  8468,  8469,  8470,  8472,  8473,  8478,  8484,
-    8485,  8486,  8487,  8488,  8489,  8490,  8494,  8495,  8496,  8500,
-    8501,  8505,  8506,  8508,  8510,  8512,  8517,  8519,  8522,  8523,
-    8524,  8526,  8527,  8528,  8544,  8579,  8581,  8585,  8592,  8597,
-    8602,  8604,  8608,  8609,  8611,  8612,  8614,  8615,  8622,  8623,
-    8654,  8656,  8658,  8659,  8660,  8661,  8692,  8960,  8968,  8972,
-    8992,  8994,  9001,  9002,  9003,  9084,  9085,  9115,  9140,  9180,
-    9186,  9216,  9280,  9312,  9372,  9450,  9472,  9655,  9656,  9665,
-    9666,  9720,  9728,  9839,  9840,  9985,  10088, 10089, 10090, 10091,
-    10092, 10093, 10094, 10095, 10096, 10097, 10098, 10099, 10100, 10101,
-    10102, 10132, 10176, 10181, 10182, 10183, 10214, 10215, 10216, 10217,
-    10218, 10219, 10220, 10221, 10222, 10223, 10224, 10240, 10496, 10627,
-    10628, 10629, 10630, 10631, 10632, 10633, 10634, 10635, 10636, 10637,
-    10638, 10639, 10640, 10641, 10642, 10643, 10644, 10645, 10646, 10647,
-    10648, 10649, 10712, 10713, 10714, 10715, 10716, 10748, 10749, 10750,
-    11008, 11056, 11077, 11079, 11088, 11264, 11312, 11360, 11363, 11365,
-    11367, 11374, 11377, 11378, 11380, 11381, 11383, 11388, 11390, 11393,
-    11394, 11492, 11493, 11499, 11503, 11506, 11513, 11517, 11518, 11520,
-    11559, 11565, 11568, 11631, 11632, 11647, 11648, 11680, 11688, 11696,
-    11704, 11712, 11720, 11728, 11736, 11744, 11776, 11778, 11779, 11780,
-    11781, 11782, 11785, 11786, 11787, 11788, 11789, 11790, 11799, 11800,
-    11802, 11803, 11804, 11805, 11806, 11808, 11809, 11810, 11811, 11812,
-    11813, 11814, 11815, 11816, 11817, 11818, 11823, 11824, 11834, 11904,
-    11931, 12032, 12272, 12288, 12289, 12292, 12293, 12294, 12295, 12296,
-    12297, 12298, 12299, 12300, 12301, 12302, 12303, 12304, 12305, 12306,
-    12308, 12309, 12310, 12311, 12312, 12313, 12314, 12315, 12316, 12317,
-    12318, 12320, 12321, 12330, 12334, 12336, 12337, 12342, 12344, 12347,
-    12348, 12349, 12350, 12353, 12441, 12443, 12445, 12447, 12448, 12449,
-    12539, 12540, 12543, 12549, 12593, 12688, 12690, 12694, 12704, 12736,
-    12784, 12800, 12832, 12842, 12872, 12880, 12881, 12896, 12928, 12938,
-    12977, 12992, 13056, 13312, 19893, 19904, 19968, 40908, 40960, 40981,
-    40982, 42128, 42192, 42232, 42238, 42240, 42508, 42509, 42512, 42528,
-    42538, 42560, 42606, 42607, 42608, 42611, 42612, 42622, 42623, 42624,
-    42655, 42656, 42726, 42736, 42738, 42752, 42775, 42784, 42786, 42800,
-    42802, 42864, 42865, 42873, 42878, 42888, 42889, 42891, 42896, 42912,
-    43000, 43002, 43003, 43010, 43011, 43014, 43015, 43019, 43020, 43043,
-    43045, 43047, 43048, 43056, 43062, 43064, 43065, 43072, 43124, 43136,
-    43138, 43188, 43204, 43214, 43216, 43232, 43250, 43256, 43259, 43264,
-    43274, 43302, 43310, 43312, 43335, 43346, 43359, 43360, 43392, 43395,
-    43396, 43443, 43444, 43446, 43450, 43452, 43453, 43457, 43471, 43472,
-    43486, 43520, 43561, 43567, 43569, 43571, 43573, 43584, 43587, 43588,
-    43596, 43597, 43600, 43612, 43616, 43632, 43633, 43639, 43642, 43643,
-    43648, 43696, 43697, 43698, 43701, 43703, 43705, 43710, 43712, 43713,
-    43714, 43739, 43741, 43742, 43744, 43755, 43756, 43758, 43760, 43762,
-    43763, 43765, 43766, 43777, 43785, 43793, 43808, 43816, 43968, 44003,
-    44005, 44006, 44008, 44009, 44011, 44012, 44013, 44016, 44032, 55203,
-    55216, 55243, 55296, 56191, 56319, 57343, 57344, 63743, 63744, 64112,
-    64256, 64275, 64285, 64286, 64287, 64297, 64298, 64312, 64318, 64320,
-    64323, 64326, 64434, 64467, 64830, 64831, 64848, 64914, 65008, 65020,
-    65021, 65024, 65040, 65047, 65048, 65049, 65056, 65072, 65073, 65075,
-    65077, 65078, 65079, 65080, 65081, 65082, 65083, 65084, 65085, 65086,
-    65087, 65088, 65089, 65090, 65091, 65092, 65093, 65095, 65096, 65097,
-    65101, 65104, 65108, 65112, 65113, 65114, 65115, 65116, 65117, 65118,
-    65119, 65122, 65123, 65124, 65128, 65129, 65130, 65136, 65142, 65279,
-    65281, 65284, 65285, 65288, 65289, 65290, 65291, 65292, 65293, 65294,
-    65296, 65306, 65308, 65311, 65313, 65339, 65340, 65341, 65342, 65343,
-    65344, 65345, 65371, 65372, 65373, 65374, 65375, 65376, 65377, 65378,
-    65379, 65380, 65382, 65392, 65393, 65438, 65440, 65474, 65482, 65490,
-    65498, 65504, 65506, 65507, 65508, 65509, 65512, 65513, 65517, 65529,
-    65532, 0,     13,    40,    60,    63,    80,    128,   256,   263,
-    311,   320,   373,   377,   394,   400,   464,   509,   640,   672,
-    768,   800,   816,   833,   834,   842,   896,   927,   928,   968,
-    976,   977,   1024,  1064,  1104,  1184,  2048,  2056,  2058,  2103,
-    2108,  2111,  2135,  2136,  2304,  2326,  2335,  2336,  2367,  2432,
-    2494,  2560,  2561,  2565,  2572,  2576,  2581,  2585,  2616,  2623,
-    2624,  2640,  2656,  2685,  2687,  2816,  2873,  2880,  2904,  2912,
-    2936,  3072,  3680,  4096,  4097,  4098,  4099,  4152,  4167,  4178,
-    4198,  4224,  4226,  4227,  4272,  4275,  4279,  4281,  4283,  4285,
-    4286,  4304,  4336,  4352,  4355,  4391,  4396,  4397,  4406,  4416,
-    4480,  4482,  4483,  4531,  4534,  4543,  4545,  4549,  4560,  5760,
-    5803,  5804,  5805,  5806,  5808,  5814,  5815,  5824,  8192,  9216,
-    9328,  12288, 26624, 28416, 28496, 28497, 28559, 28563, 45056, 53248,
-    53504, 53545, 53605, 53607, 53610, 53613, 53619, 53627, 53635, 53637,
-    53644, 53674, 53678, 53760, 53826, 53829, 54016, 54112, 54272, 54298,
-    54324, 54350, 54358, 54376, 54402, 54428, 54430, 54434, 54437, 54441,
-    54446, 54454, 54459, 54461, 54469, 54480, 54506, 54532, 54535, 54541,
-    54550, 54558, 54584, 54587, 54592, 54598, 54602, 54610, 54636, 54662,
-    54688, 54714, 54740, 54766, 54792, 54818, 54844, 54870, 54896, 54922,
-    54952, 54977, 54978, 55003, 55004, 55010, 55035, 55036, 55061, 55062,
-    55068, 55093, 55094, 55119, 55120, 55126, 55151, 55152, 55177, 55178,
-    55184, 55209, 55210, 55235, 55236, 55242, 55246, 60928, 60933, 60961,
-    60964, 60967, 60969, 60980, 60985, 60987, 60994, 60999, 61001, 61003,
-    61005, 61009, 61012, 61015, 61017, 61019, 61021, 61023, 61025, 61028,
-    61031, 61036, 61044, 61049, 61054, 61056, 61067, 61089, 61093, 61099,
-    61168, 61440, 61488, 61600, 61617, 61633, 61649, 61696, 61712, 61744,
-    61808, 61926, 61968, 62016, 62032, 62208, 62256, 62263, 62336, 62368,
-    62406, 62432, 62464, 62528, 62530, 62713, 62720, 62784, 62800, 62971,
-    63045, 63104, 63232, 0,     42710, 42752, 46900, 46912, 47133, 63488,
-    1,     32,    256,   0,     65533,
+    0,     32,    33,    36,    37,    40,    41,    42,    43,    44,    
+    45,    46,    48,    58,    60,    63,    65,    91,    92,    93,    
+    94,    95,    96,    97,    123,   124,   125,   126,   127,   160,   
+    161,   162,   166,   167,   168,   169,   170,   171,   172,   173,   
+    174,   175,   176,   177,   178,   180,   181,   182,   184,   185,   
+    186,   187,   188,   191,   192,   215,   216,   223,   247,   248,   
+    256,   312,   313,   329,   330,   377,   383,   385,   387,   388,   
+    391,   394,   396,   398,   402,   403,   405,   406,   409,   412,   
+    414,   415,   417,   418,   423,   427,   428,   431,   434,   436,   
+    437,   440,   442,   443,   444,   446,   448,   452,   453,   454,   
+    455,   456,   457,   458,   459,   460,   461,   477,   478,   496,   
+    497,   498,   499,   500,   503,   505,   506,   564,   570,   572,   
+    573,   575,   577,   580,   583,   584,   592,   660,   661,   688,   
+    706,   710,   722,   736,   741,   748,   749,   750,   751,   768,   
+    880,   884,   885,   886,   890,   891,   894,   900,   902,   903,   
+    904,   908,   910,   912,   913,   931,   940,   975,   977,   978,   
+    981,   984,   1008,  1012,  1014,  1015,  1018,  1020,  1021,  1072,  
+    1120,  1154,  1155,  1160,  1162,  1217,  1231,  1232,  1329,  1369,  
+    1370,  1377,  1417,  1418,  1423,  1425,  1470,  1471,  1472,  1473,  
+    1475,  1476,  1478,  1479,  1488,  1520,  1523,  1536,  1542,  1545,  
+    1547,  1548,  1550,  1552,  1563,  1566,  1568,  1600,  1601,  1611,  
+    1632,  1642,  1646,  1648,  1649,  1748,  1749,  1750,  1757,  1758,  
+    1759,  1765,  1767,  1769,  1770,  1774,  1776,  1786,  1789,  1791,  
+    1792,  1807,  1808,  1809,  1810,  1840,  1869,  1958,  1969,  1984,  
+    1994,  2027,  2036,  2038,  2039,  2042,  2048,  2070,  2074,  2075,  
+    2084,  2085,  2088,  2089,  2096,  2112,  2137,  2142,  2208,  2210,  
+    2276,  2304,  2307,  2308,  2362,  2363,  2364,  2365,  2366,  2369,  
+    2377,  2381,  2382,  2384,  2385,  2392,  2402,  2404,  2406,  2416,  
+    2417,  2418,  2425,  2433,  2434,  2437,  2447,  2451,  2474,  2482,  
+    2486,  2492,  2493,  2494,  2497,  2503,  2507,  2509,  2510,  2519,  
+    2524,  2527,  2530,  2534,  2544,  2546,  2548,  2554,  2555,  2561,  
+    2563,  2565,  2575,  2579,  2602,  2610,  2613,  2616,  2620,  2622,  
+    2625,  2631,  2635,  2641,  2649,  2654,  2662,  2672,  2674,  2677,  
+    2689,  2691,  2693,  2703,  2707,  2730,  2738,  2741,  2748,  2749,  
+    2750,  2753,  2759,  2761,  2763,  2765,  2768,  2784,  2786,  2790,  
+    2800,  2801,  2817,  2818,  2821,  2831,  2835,  2858,  2866,  2869,  
+    2876,  2877,  2878,  2879,  2880,  2881,  2887,  2891,  2893,  2902,  
+    2903,  2908,  2911,  2914,  2918,  2928,  2929,  2930,  2946,  2947,  
+    2949,  2958,  2962,  2969,  2972,  2974,  2979,  2984,  2990,  3006,  
+    3008,  3009,  3014,  3018,  3021,  3024,  3031,  3046,  3056,  3059,  
+    3065,  3066,  3073,  3077,  3086,  3090,  3114,  3125,  3133,  3134,  
+    3137,  3142,  3146,  3157,  3160,  3168,  3170,  3174,  3192,  3199,  
+    3202,  3205,  3214,  3218,  3242,  3253,  3260,  3261,  3262,  3263,  
+    3264,  3270,  3271,  3274,  3276,  3285,  3294,  3296,  3298,  3302,  
+    3313,  3330,  3333,  3342,  3346,  3389,  3390,  3393,  3398,  3402,  
+    3405,  3406,  3415,  3424,  3426,  3430,  3440,  3449,  3450,  3458,  
+    3461,  3482,  3507,  3517,  3520,  3530,  3535,  3538,  3542,  3544,  
+    3570,  3572,  3585,  3633,  3634,  3636,  3647,  3648,  3654,  3655,  
+    3663,  3664,  3674,  3713,  3716,  3719,  3722,  3725,  3732,  3737,  
+    3745,  3749,  3751,  3754,  3757,  3761,  3762,  3764,  3771,  3773,  
+    3776,  3782,  3784,  3792,  3804,  3840,  3841,  3844,  3859,  3860,  
+    3861,  3864,  3866,  3872,  3882,  3892,  3893,  3894,  3895,  3896,  
+    3897,  3898,  3899,  3900,  3901,  3902,  3904,  3913,  3953,  3967,  
+    3968,  3973,  3974,  3976,  3981,  3993,  4030,  4038,  4039,  4046,  
+    4048,  4053,  4057,  4096,  4139,  4141,  4145,  4146,  4152,  4153,  
+    4155,  4157,  4159,  4160,  4170,  4176,  4182,  4184,  4186,  4190,  
+    4193,  4194,  4197,  4199,  4206,  4209,  4213,  4226,  4227,  4229,  
+    4231,  4237,  4238,  4239,  4240,  4250,  4253,  4254,  4256,  4295,  
+    4301,  4304,  4347,  4348,  4349,  4682,  4688,  4696,  4698,  4704,  
+    4746,  4752,  4786,  4792,  4800,  4802,  4808,  4824,  4882,  4888,  
+    4957,  4960,  4969,  4992,  5008,  5024,  5120,  5121,  5741,  5743,  
+    5760,  5761,  5787,  5788,  5792,  5867,  5870,  5888,  5902,  5906,  
+    5920,  5938,  5941,  5952,  5970,  5984,  5998,  6002,  6016,  6068,  
+    6070,  6071,  6078,  6086,  6087,  6089,  6100,  6103,  6104,  6107,  
+    6108,  6109,  6112,  6128,  6144,  6150,  6151,  6155,  6158,  6160,  
+    6176,  6211,  6212,  6272,  6313,  6314,  6320,  6400,  6432,  6435,  
+    6439,  6441,  6448,  6450,  6451,  6457,  6464,  6468,  6470,  6480,  
+    6512,  6528,  6576,  6593,  6600,  6608,  6618,  6622,  6656,  6679,  
+    6681,  6686,  6688,  6741,  6742,  6743,  6744,  6752,  6753,  6754,  
+    6755,  6757,  6765,  6771,  6783,  6784,  6800,  6816,  6823,  6824,  
+    6912,  6916,  6917,  6964,  6965,  6966,  6971,  6972,  6973,  6978,  
+    6979,  6981,  6992,  7002,  7009,  7019,  7028,  7040,  7042,  7043,  
+    7073,  7074,  7078,  7080,  7082,  7083,  7084,  7086,  7088,  7098,  
+    7142,  7143,  7144,  7146,  7149,  7150,  7151,  7154,  7164,  7168,  
+    7204,  7212,  7220,  7222,  7227,  7232,  7245,  7248,  7258,  7288,  
+    7294,  7360,  7376,  7379,  7380,  7393,  7394,  7401,  7405,  7406,  
+    7410,  7412,  7413,  7424,  7468,  7531,  7544,  7545,  7579,  7616,  
+    7676,  7680,  7830,  7838,  7936,  7944,  7952,  7960,  7968,  7976,  
+    7984,  7992,  8000,  8008,  8016,  8025,  8027,  8029,  8031,  8033,  
+    8040,  8048,  8064,  8072,  8080,  8088,  8096,  8104,  8112,  8118,  
+    8120,  8124,  8125,  8126,  8127,  8130,  8134,  8136,  8140,  8141,  
+    8144,  8150,  8152,  8157,  8160,  8168,  8173,  8178,  8182,  8184,  
+    8188,  8189,  8192,  8203,  8208,  8214,  8216,  8217,  8218,  8219,  
+    8221,  8222,  8223,  8224,  8232,  8233,  8234,  8239,  8240,  8249,  
+    8250,  8251,  8255,  8257,  8260,  8261,  8262,  8263,  8274,  8275,  
+    8276,  8277,  8287,  8288,  8298,  8304,  8305,  8308,  8314,  8317,  
+    8318,  8319,  8320,  8330,  8333,  8334,  8336,  8352,  8400,  8413,  
+    8417,  8418,  8421,  8448,  8450,  8451,  8455,  8456,  8458,  8459,  
+    8462,  8464,  8467,  8468,  8469,  8470,  8472,  8473,  8478,  8484,  
+    8485,  8486,  8487,  8488,  8489,  8490,  8494,  8495,  8496,  8500,  
+    8501,  8505,  8506,  8508,  8510,  8512,  8517,  8519,  8522,  8523,  
+    8524,  8526,  8527,  8528,  8544,  8579,  8581,  8585,  8592,  8597,  
+    8602,  8604,  8608,  8609,  8611,  8612,  8614,  8615,  8622,  8623,  
+    8654,  8656,  8658,  8659,  8660,  8661,  8692,  8960,  8968,  8972,  
+    8992,  8994,  9001,  9002,  9003,  9084,  9085,  9115,  9140,  9180,  
+    9186,  9216,  9280,  9312,  9372,  9450,  9472,  9655,  9656,  9665,  
+    9666,  9720,  9728,  9839,  9840,  9985,  10088, 10089, 10090, 10091, 
+    10092, 10093, 10094, 10095, 10096, 10097, 10098, 10099, 10100, 10101, 
+    10102, 10132, 10176, 10181, 10182, 10183, 10214, 10215, 10216, 10217, 
+    10218, 10219, 10220, 10221, 10222, 10223, 10224, 10240, 10496, 10627, 
+    10628, 10629, 10630, 10631, 10632, 10633, 10634, 10635, 10636, 10637, 
+    10638, 10639, 10640, 10641, 10642, 10643, 10644, 10645, 10646, 10647, 
+    10648, 10649, 10712, 10713, 10714, 10715, 10716, 10748, 10749, 10750, 
+    11008, 11056, 11077, 11079, 11088, 11264, 11312, 11360, 11363, 11365, 
+    11367, 11374, 11377, 11378, 11380, 11381, 11383, 11388, 11390, 11393, 
+    11394, 11492, 11493, 11499, 11503, 11506, 11513, 11517, 11518, 11520, 
+    11559, 11565, 11568, 11631, 11632, 11647, 11648, 11680, 11688, 11696, 
+    11704, 11712, 11720, 11728, 11736, 11744, 11776, 11778, 11779, 11780, 
+    11781, 11782, 11785, 11786, 11787, 11788, 11789, 11790, 11799, 11800, 
+    11802, 11803, 11804, 11805, 11806, 11808, 11809, 11810, 11811, 11812, 
+    11813, 11814, 11815, 11816, 11817, 11818, 11823, 11824, 11834, 11904, 
+    11931, 12032, 12272, 12288, 12289, 12292, 12293, 12294, 12295, 12296, 
+    12297, 12298, 12299, 12300, 12301, 12302, 12303, 12304, 12305, 12306, 
+    12308, 12309, 12310, 12311, 12312, 12313, 12314, 12315, 12316, 12317, 
+    12318, 12320, 12321, 12330, 12334, 12336, 12337, 12342, 12344, 12347, 
+    12348, 12349, 12350, 12353, 12441, 12443, 12445, 12447, 12448, 12449, 
+    12539, 12540, 12543, 12549, 12593, 12688, 12690, 12694, 12704, 12736, 
+    12784, 12800, 12832, 12842, 12872, 12880, 12881, 12896, 12928, 12938, 
+    12977, 12992, 13056, 13312, 19893, 19904, 19968, 40908, 40960, 40981, 
+    40982, 42128, 42192, 42232, 42238, 42240, 42508, 42509, 42512, 42528, 
+    42538, 42560, 42606, 42607, 42608, 42611, 42612, 42622, 42623, 42624, 
+    42655, 42656, 42726, 42736, 42738, 42752, 42775, 42784, 42786, 42800, 
+    42802, 42864, 42865, 42873, 42878, 42888, 42889, 42891, 42896, 42912, 
+    43000, 43002, 43003, 43010, 43011, 43014, 43015, 43019, 43020, 43043, 
+    43045, 43047, 43048, 43056, 43062, 43064, 43065, 43072, 43124, 43136, 
+    43138, 43188, 43204, 43214, 43216, 43232, 43250, 43256, 43259, 43264, 
+    43274, 43302, 43310, 43312, 43335, 43346, 43359, 43360, 43392, 43395, 
+    43396, 43443, 43444, 43446, 43450, 43452, 43453, 43457, 43471, 43472, 
+    43486, 43520, 43561, 43567, 43569, 43571, 43573, 43584, 43587, 43588, 
+    43596, 43597, 43600, 43612, 43616, 43632, 43633, 43639, 43642, 43643, 
+    43648, 43696, 43697, 43698, 43701, 43703, 43705, 43710, 43712, 43713, 
+    43714, 43739, 43741, 43742, 43744, 43755, 43756, 43758, 43760, 43762, 
+    43763, 43765, 43766, 43777, 43785, 43793, 43808, 43816, 43968, 44003, 
+    44005, 44006, 44008, 44009, 44011, 44012, 44013, 44016, 44032, 55203, 
+    55216, 55243, 55296, 56191, 56319, 57343, 57344, 63743, 63744, 64112, 
+    64256, 64275, 64285, 64286, 64287, 64297, 64298, 64312, 64318, 64320, 
+    64323, 64326, 64434, 64467, 64830, 64831, 64848, 64914, 65008, 65020, 
+    65021, 65024, 65040, 65047, 65048, 65049, 65056, 65072, 65073, 65075, 
+    65077, 65078, 65079, 65080, 65081, 65082, 65083, 65084, 65085, 65086, 
+    65087, 65088, 65089, 65090, 65091, 65092, 65093, 65095, 65096, 65097, 
+    65101, 65104, 65108, 65112, 65113, 65114, 65115, 65116, 65117, 65118, 
+    65119, 65122, 65123, 65124, 65128, 65129, 65130, 65136, 65142, 65279, 
+    65281, 65284, 65285, 65288, 65289, 65290, 65291, 65292, 65293, 65294, 
+    65296, 65306, 65308, 65311, 65313, 65339, 65340, 65341, 65342, 65343, 
+    65344, 65345, 65371, 65372, 65373, 65374, 65375, 65376, 65377, 65378, 
+    65379, 65380, 65382, 65392, 65393, 65438, 65440, 65474, 65482, 65490, 
+    65498, 65504, 65506, 65507, 65508, 65509, 65512, 65513, 65517, 65529, 
+    65532, 0,     13,    40,    60,    63,    80,    128,   256,   263,   
+    311,   320,   373,   377,   394,   400,   464,   509,   640,   672,   
+    768,   800,   816,   833,   834,   842,   896,   927,   928,   968,   
+    976,   977,   1024,  1064,  1104,  1184,  2048,  2056,  2058,  2103,  
+    2108,  2111,  2135,  2136,  2304,  2326,  2335,  2336,  2367,  2432,  
+    2494,  2560,  2561,  2565,  2572,  2576,  2581,  2585,  2616,  2623,  
+    2624,  2640,  2656,  2685,  2687,  2816,  2873,  2880,  2904,  2912,  
+    2936,  3072,  3680,  4096,  4097,  4098,  4099,  4152,  4167,  4178,  
+    4198,  4224,  4226,  4227,  4272,  4275,  4279,  4281,  4283,  4285,  
+    4286,  4304,  4336,  4352,  4355,  4391,  4396,  4397,  4406,  4416,  
+    4480,  4482,  4483,  4531,  4534,  4543,  4545,  4549,  4560,  5760,  
+    5803,  5804,  5805,  5806,  5808,  5814,  5815,  5824,  8192,  9216,  
+    9328,  12288, 26624, 28416, 28496, 28497, 28559, 28563, 45056, 53248, 
+    53504, 53545, 53605, 53607, 53610, 53613, 53619, 53627, 53635, 53637, 
+    53644, 53674, 53678, 53760, 53826, 53829, 54016, 54112, 54272, 54298, 
+    54324, 54350, 54358, 54376, 54402, 54428, 54430, 54434, 54437, 54441, 
+    54446, 54454, 54459, 54461, 54469, 54480, 54506, 54532, 54535, 54541, 
+    54550, 54558, 54584, 54587, 54592, 54598, 54602, 54610, 54636, 54662, 
+    54688, 54714, 54740, 54766, 54792, 54818, 54844, 54870, 54896, 54922, 
+    54952, 54977, 54978, 55003, 55004, 55010, 55035, 55036, 55061, 55062, 
+    55068, 55093, 55094, 55119, 55120, 55126, 55151, 55152, 55177, 55178, 
+    55184, 55209, 55210, 55235, 55236, 55242, 55246, 60928, 60933, 60961, 
+    60964, 60967, 60969, 60980, 60985, 60987, 60994, 60999, 61001, 61003, 
+    61005, 61009, 61012, 61015, 61017, 61019, 61021, 61023, 61025, 61028, 
+    61031, 61036, 61044, 61049, 61054, 61056, 61067, 61089, 61093, 61099, 
+    61168, 61440, 61488, 61600, 61617, 61633, 61649, 61696, 61712, 61744, 
+    61808, 61926, 61968, 62016, 62032, 62208, 62256, 62263, 62336, 62368, 
+    62406, 62432, 62464, 62528, 62530, 62713, 62720, 62784, 62800, 62971, 
+    63045, 63104, 63232, 0,     42710, 42752, 46900, 46912, 47133, 63488, 
+    1,     32,    256,   0,     65533, 
   };
 static u16 aFts5UnicodeData[] = {
-    1025,  61,    117,   55,    117,   54,    50,    53,    57,    53,
-    49,    85,    333,   85,    121,   85,    841,   54,    53,    50,
-    56,    48,    56,    837,   54,    57,    50,    57,    1057,  61,
-    53,    151,   58,    53,    56,    58,    39,    52,    57,    34,
-    58,    56,    58,    57,    79,    56,    37,    85,    56,    47,
-    39,    51,    111,   53,    745,   57,    233,   773,   57,    261,
-    1822,  37,    542,   37,    1534,  222,   69,    73,    37,    126,
-    126,   73,    69,    137,   37,    73,    37,    105,   101,   73,
-    37,    73,    37,    190,   158,   37,    126,   126,   73,    37,
-    126,   94,    37,    39,    94,    69,    135,   41,    40,    37,
-    41,    40,    37,    41,    40,    37,    542,   37,    606,   37,
-    41,    40,    37,    126,   73,    37,    1886,  197,   73,    37,
-    73,    69,    126,   105,   37,    286,   2181,  39,    869,   582,
-    152,   390,   472,   166,   248,   38,    56,    38,    568,   3596,
-    158,   38,    56,    94,    38,    101,   53,    88,    41,    53,
-    105,   41,    73,    37,    553,   297,   1125,  94,    37,    105,
-    101,   798,   133,   94,    57,    126,   94,    37,    1641,  1541,
-    1118,  58,    172,   75,    1790,  478,   37,    2846,  1225,  38,
-    213,   1253,  53,    49,    55,    1452,  49,    44,    53,    76,
-    53,    76,    53,    44,    871,   103,   85,    162,   121,   85,
-    55,    85,    90,    364,   53,    85,    1031,  38,    327,   684,
-    333,   149,   71,    44,    3175,  53,    39,    236,   34,    58,
-    204,   70,    76,    58,    140,   71,    333,   103,   90,    39,
-    469,   34,    39,    44,    967,   876,   2855,  364,   39,    333,
-    1063,  300,   70,    58,    117,   38,    711,   140,   38,    300,
-    38,    108,   38,    172,   501,   807,   108,   53,    39,    359,
-    876,   108,   42,    1735,  44,    42,    44,    39,    106,   268,
-    138,   44,    74,    39,    236,   327,   76,    85,    333,   53,
-    38,    199,   231,   44,    74,    263,   71,    711,   231,   39,
-    135,   44,    39,    106,   140,   74,    74,    44,    39,    42,
-    71,    103,   76,    333,   71,    87,    207,   58,    55,    76,
-    42,    199,   71,    711,   231,   71,    71,    71,    44,    106,
-    76,    76,    108,   44,    135,   39,    333,   76,    103,   44,
-    76,    42,    295,   103,   711,   231,   71,    167,   44,    39,
-    106,   172,   76,    42,    74,    44,    39,    71,    76,    333,
-    53,    55,    44,    74,    263,   71,    711,   231,   71,    167,
-    44,    39,    42,    44,    42,    140,   74,    74,    44,    44,
-    42,    71,    103,   76,    333,   58,    39,    207,   44,    39,
-    199,   103,   135,   71,    39,    71,    71,    103,   391,   74,
-    44,    74,    106,   106,   44,    39,    42,    333,   111,   218,
-    55,    58,    106,   263,   103,   743,   327,   167,   39,    108,
-    138,   108,   140,   76,    71,    71,    76,    333,   239,   58,
-    74,    263,   103,   743,   327,   167,   44,    39,    42,    44,
-    170,   44,    74,    74,    76,    74,    39,    71,    76,    333,
-    71,    74,    263,   103,   1319,  39,    106,   140,   106,   106,
-    44,    39,    42,    71,    76,    333,   207,   58,    199,   74,
-    583,   775,   295,   39,    231,   44,    106,   108,   44,    266,
-    74,    53,    1543,  44,    71,    236,   55,    199,   38,    268,
-    53,    333,   85,    71,    39,    71,    39,    39,    135,   231,
-    103,   39,    39,    71,    135,   44,    71,    204,   76,    39,
-    167,   38,    204,   333,   135,   39,    122,   501,   58,    53,
-    122,   76,    218,   333,   335,   58,    44,    58,    44,    58,
-    44,    54,    50,    54,    50,    74,    263,   1159,  460,   42,
-    172,   53,    76,    167,   364,   1164,  282,   44,    218,   90,
-    181,   154,   85,    1383,  74,    140,   42,    204,   42,    76,
-    74,    76,    39,    333,   213,   199,   74,    76,    135,   108,
-    39,    106,   71,    234,   103,   140,   423,   44,    74,    76,
-    202,   44,    39,    42,    333,   106,   44,    90,    1225,  41,
-    41,    1383,  53,    38,    10631, 135,   231,   39,    135,   1319,
-    135,   1063,  135,   231,   39,    135,   487,   1831,  135,   2151,
-    108,   309,   655,   519,   346,   2727,  49,    19847, 85,    551,
-    61,    839,   54,    50,    2407,  117,   110,   423,   135,   108,
-    583,   108,   85,    583,   76,    423,   103,   76,    1671,  76,
-    42,    236,   266,   44,    74,    364,   117,   38,    117,   55,
-    39,    44,    333,   335,   213,   49,    149,   108,   61,    333,
-    1127,  38,    1671,  1319,  44,    39,    2247,  935,   108,   138,
-    76,    106,   74,    44,    202,   108,   58,    85,    333,   967,
-    167,   1415,  554,   231,   74,    333,   47,    1114,  743,   76,
-    106,   85,    1703,  42,    44,    42,    236,   44,    42,    44,
-    74,    268,   202,   332,   44,    333,   333,   245,   38,    213,
-    140,   42,    1511,  44,    42,    172,   42,    44,    170,   44,
-    74,    231,   333,   245,   346,   300,   314,   76,    42,    967,
-    42,    140,   74,    76,    42,    44,    74,    71,    333,   1415,
-    44,    42,    76,    106,   44,    42,    108,   74,    149,   1159,
-    266,   268,   74,    76,    181,   333,   103,   333,   967,   198,
-    85,    277,   108,   53,    428,   42,    236,   135,   44,    135,
-    74,    44,    71,    1413,  2022,  421,   38,    1093,  1190,  1260,
-    140,   4830,  261,   3166,  261,   265,   197,   201,   261,   265,
-    261,   265,   197,   201,   261,   41,    41,    41,    94,    229,
-    265,   453,   261,   264,   261,   264,   261,   264,   165,   69,
-    137,   40,    56,    37,    120,   101,   69,    137,   40,    120,
-    133,   69,    137,   120,   261,   169,   120,   101,   69,    137,
-    40,    88,    381,   162,   209,   85,    52,    51,    54,    84,
-    51,    54,    52,    277,   59,    60,    162,   61,    309,   52,
-    51,    149,   80,    117,   57,    54,    50,    373,   57,    53,
-    48,    341,   61,    162,   194,   47,    38,    207,   121,   54,
-    50,    38,    335,   121,   54,    50,    422,   855,   428,   139,
-    44,    107,   396,   90,    41,    154,   41,    90,    37,    105,
-    69,    105,   37,    58,    41,    90,    57,    169,   218,   41,
-    58,    41,    58,    41,    58,    137,   58,    37,    137,   37,
-    135,   37,    90,    69,    73,    185,   94,    101,   58,    57,
-    90,    37,    58,    527,   1134,  94,    142,   47,    185,   186,
-    89,    154,   57,    90,    57,    90,    57,    250,   57,    1018,
-    89,    90,    57,    58,    57,    1018,  8601,  282,   153,   666,
-    89,    250,   54,    50,    2618,  57,    986,   825,   1306,  217,
-    602,   1274,  378,   1935,  2522,  719,   5882,  57,    314,   57,
-    1754,  281,   3578,  57,    4634,  3322,  54,    50,    54,    50,
-    54,    50,    54,    50,    54,    50,    54,    50,    54,    50,
-    975,   1434,  185,   54,    50,    1017,  54,    50,    54,    50,
-    54,    50,    54,    50,    54,    50,    537,   8218,  4217,  54,
-    50,    54,    50,    54,    50,    54,    50,    54,    50,    54,
-    50,    54,    50,    54,    50,    54,    50,    54,    50,    54,
-    50,    2041,  54,    50,    54,    50,    1049,  54,    50,    8281,
-    1562,  697,   90,    217,   346,   1513,  1509,  126,   73,    69,
-    254,   105,   37,    94,    37,    94,    165,   70,    105,   37,
-    3166,  37,    218,   158,   108,   94,    149,   47,    85,    1221,
-    37,    37,    1799,  38,    53,    44,    743,   231,   231,   231,
-    231,   231,   231,   231,   231,   1036,  85,    52,    51,    52,
-    51,    117,   52,    51,    53,    52,    51,    309,   49,    85,
-    49,    53,    52,    51,    85,    52,    51,    54,    50,    54,
-    50,    54,    50,    54,    50,    181,   38,    341,   81,    858,
-    2874,  6874,  410,   61,    117,   58,    38,    39,    46,    54,
-    50,    54,    50,    54,    50,    54,    50,    54,    50,    90,
-    54,    50,    54,    50,    54,    50,    54,    50,    49,    54,
-    82,    58,    302,   140,   74,    49,    166,   90,    110,   38,
-    39,    53,    90,    2759,  76,    88,    70,    39,    49,    2887,
-    53,    102,   39,    1319,  3015,  90,    143,   346,   871,   1178,
-    519,   1018,  335,   986,   271,   58,    495,   1050,  335,   1274,
-    495,   2042,  8218,  39,    39,    2074,  39,    39,    679,   38,
-    36583, 1786,  1287,  198,   85,    8583,  38,    117,   519,   333,
-    71,    1502,  39,    44,    107,   53,    332,   53,    38,    798,
-    44,    2247,  334,   76,    213,   760,   294,   88,    478,   69,
-    2014,  38,    261,   190,   350,   38,    88,    158,   158,   382,
-    70,    37,    231,   44,    103,   44,    135,   44,    743,   74,
-    76,    42,    154,   207,   90,    55,    58,    1671,  149,   74,
-    1607,  522,   44,    85,    333,   588,   199,   117,   39,    333,
-    903,   268,   85,    743,   364,   74,    53,    935,   108,   42,
-    1511,  44,    74,    140,   74,    44,    138,   437,   38,    333,
-    85,    1319,  204,   74,    76,    74,    76,    103,   44,    263,
-    44,    42,    333,   149,   519,   38,    199,   122,   39,    42,
-    1543,  44,    39,    108,   71,    76,    167,   76,    39,    44,
-    39,    71,    38,    85,    359,   42,    76,    74,    85,    39,
-    70,    42,    44,    199,   199,   199,   231,   231,   1127,  74,
-    44,    74,    44,    74,    53,    42,    44,    333,   39,    39,
-    743,   1575,  36,    68,    68,    36,    63,    63,    11719, 3399,
-    229,   165,   39,    44,    327,   57,    423,   167,   39,    71,
-    71,    3463,  536,   11623, 54,    50,    2055,  1735,  391,   55,
-    58,    524,   245,   54,    50,    53,    236,   53,    81,    80,
-    54,    50,    54,    50,    54,    50,    54,    50,    54,    50,
-    54,    50,    54,    50,    54,    50,    85,    54,    50,    149,
-    112,   117,   149,   49,    54,    50,    54,    50,    54,    50,
-    117,   57,    49,    121,   53,    55,    85,    167,   4327,  34,
-    117,   55,    117,   54,    50,    53,    57,    53,    49,    85,
-    333,   85,    121,   85,    841,   54,    53,    50,    56,    48,
-    56,    837,   54,    57,    50,    57,    54,    50,    53,    54,
-    50,    85,    327,   38,    1447,  70,    999,   199,   199,   199,
-    103,   87,    57,    56,    58,    87,    58,    153,   90,    98,
-    90,    391,   839,   615,   71,    487,   455,   3943,  117,   1455,
-    314,   1710,  143,   570,   47,    410,   1466,  44,    935,   1575,
-    999,   143,   551,   46,    263,   46,    967,   53,    1159,  263,
-    53,    174,   1289,  1285,  2503,  333,   199,   39,    1415,  71,
-    39,    743,   53,    271,   711,   207,   53,    839,   53,    1799,
-    71,    39,    108,   76,    140,   135,   103,   871,   108,   44,
-    271,   309,   935,   79,    53,    1735,  245,   711,   271,   615,
-    271,   2343,  1007,  42,    44,    42,    1703,  492,   245,   655,
-    333,   76,    42,    1447,  106,   140,   74,    76,    85,    34,
-    149,   807,   333,   108,   1159,  172,   42,    268,   333,   149,
-    76,    42,    1543,  106,   300,   74,    135,   149,   333,   1383,
-    44,    42,    44,    74,    204,   42,    44,    333,   28135, 3182,
-    149,   34279, 18215, 2215,  39,    1482,  140,   422,   71,    7898,
-    1274,  1946,  74,    108,   122,   202,   258,   268,   90,    236,
-    986,   140,   1562,  2138,  108,   58,    2810,  591,   841,   837,
-    841,   229,   581,   841,   837,   41,    73,    41,    73,    137,
-    265,   133,   37,    229,   357,   841,   837,   73,    137,   265,
-    233,   837,   73,    137,   169,   41,    233,   837,   841,   837,
-    841,   837,   841,   837,   841,   837,   841,   837,   841,   901,
-    809,   57,    805,   57,    197,   809,   57,    805,   57,    197,
-    809,   57,    805,   57,    197,   809,   57,    805,   57,    197,
-    809,   57,    805,   57,    197,   94,    1613,  135,   871,   71,
-    39,    39,    327,   135,   39,    39,    39,    39,    39,    39,
-    103,   71,    39,    39,    39,    39,    39,    39,    71,    39,
-    135,   231,   135,   135,   39,    327,   551,   103,   167,   551,
-    89,    1434,  3226,  506,   474,   506,   506,   367,   1018,  1946,
-    1402,  954,   1402,  314,   90,    1082,  218,   2266,  666,   1210,
-    186,   570,   2042,  58,    5850,  154,   2010,  154,   794,   2266,
-    378,   2266,  3738,  39,    39,    39,    39,    39,    39,    17351,
-    34,    3074,  7692,  63,    63,
+    1025,  61,    117,   55,    117,   54,    50,    53,    57,    53,    
+    49,    85,    333,   85,    121,   85,    841,   54,    53,    50,    
+    56,    48,    56,    837,   54,    57,    50,    57,    1057,  61,    
+    53,    151,   58,    53,    56,    58,    39,    52,    57,    34,    
+    58,    56,    58,    57,    79,    56,    37,    85,    56,    47,    
+    39,    51,    111,   53,    745,   57,    233,   773,   57,    261,   
+    1822,  37,    542,   37,    1534,  222,   69,    73,    37,    126,   
+    126,   73,    69,    137,   37,    73,    37,    105,   101,   73,    
+    37,    73,    37,    190,   158,   37,    126,   126,   73,    37,    
+    126,   94,    37,    39,    94,    69,    135,   41,    40,    37,    
+    41,    40,    37,    41,    40,    37,    542,   37,    606,   37,    
+    41,    40,    37,    126,   73,    37,    1886,  197,   73,    37,    
+    73,    69,    126,   105,   37,    286,   2181,  39,    869,   582,   
+    152,   390,   472,   166,   248,   38,    56,    38,    568,   3596,  
+    158,   38,    56,    94,    38,    101,   53,    88,    41,    53,    
+    105,   41,    73,    37,    553,   297,   1125,  94,    37,    105,   
+    101,   798,   133,   94,    57,    126,   94,    37,    1641,  1541,  
+    1118,  58,    172,   75,    1790,  478,   37,    2846,  1225,  38,    
+    213,   1253,  53,    49,    55,    1452,  49,    44,    53,    76,    
+    53,    76,    53,    44,    871,   103,   85,    162,   121,   85,    
+    55,    85,    90,    364,   53,    85,    1031,  38,    327,   684,   
+    333,   149,   71,    44,    3175,  53,    39,    236,   34,    58,    
+    204,   70,    76,    58,    140,   71,    333,   103,   90,    39,    
+    469,   34,    39,    44,    967,   876,   2855,  364,   39,    333,   
+    1063,  300,   70,    58,    117,   38,    711,   140,   38,    300,   
+    38,    108,   38,    172,   501,   807,   108,   53,    39,    359,   
+    876,   108,   42,    1735,  44,    42,    44,    39,    106,   268,   
+    138,   44,    74,    39,    236,   327,   76,    85,    333,   53,    
+    38,    199,   231,   44,    74,    263,   71,    711,   231,   39,    
+    135,   44,    39,    106,   140,   74,    74,    44,    39,    42,    
+    71,    103,   76,    333,   71,    87,    207,   58,    55,    76,    
+    42,    199,   71,    711,   231,   71,    71,    71,    44,    106,   
+    76,    76,    108,   44,    135,   39,    333,   76,    103,   44,    
+    76,    42,    295,   103,   711,   231,   71,    167,   44,    39,    
+    106,   172,   76,    42,    74,    44,    39,    71,    76,    333,   
+    53,    55,    44,    74,    263,   71,    711,   231,   71,    167,   
+    44,    39,    42,    44,    42,    140,   74,    74,    44,    44,    
+    42,    71,    103,   76,    333,   58,    39,    207,   44,    39,    
+    199,   103,   135,   71,    39,    71,    71,    103,   391,   74,    
+    44,    74,    106,   106,   44,    39,    42,    333,   111,   218,   
+    55,    58,    106,   263,   103,   743,   327,   167,   39,    108,   
+    138,   108,   140,   76,    71,    71,    76,    333,   239,   58,    
+    74,    263,   103,   743,   327,   167,   44,    39,    42,    44,    
+    170,   44,    74,    74,    76,    74,    39,    71,    76,    333,   
+    71,    74,    263,   103,   1319,  39,    106,   140,   106,   106,   
+    44,    39,    42,    71,    76,    333,   207,   58,    199,   74,    
+    583,   775,   295,   39,    231,   44,    106,   108,   44,    266,   
+    74,    53,    1543,  44,    71,    236,   55,    199,   38,    268,   
+    53,    333,   85,    71,    39,    71,    39,    39,    135,   231,   
+    103,   39,    39,    71,    135,   44,    71,    204,   76,    39,    
+    167,   38,    204,   333,   135,   39,    122,   501,   58,    53,    
+    122,   76,    218,   333,   335,   58,    44,    58,    44,    58,    
+    44,    54,    50,    54,    50,    74,    263,   1159,  460,   42,    
+    172,   53,    76,    167,   364,   1164,  282,   44,    218,   90,    
+    181,   154,   85,    1383,  74,    140,   42,    204,   42,    76,    
+    74,    76,    39,    333,   213,   199,   74,    76,    135,   108,   
+    39,    106,   71,    234,   103,   140,   423,   44,    74,    76,    
+    202,   44,    39,    42,    333,   106,   44,    90,    1225,  41,    
+    41,    1383,  53,    38,    10631, 135,   231,   39,    135,   1319,  
+    135,   1063,  135,   231,   39,    135,   487,   1831,  135,   2151,  
+    108,   309,   655,   519,   346,   2727,  49,    19847, 85,    551,   
+    61,    839,   54,    50,    2407,  117,   110,   423,   135,   108,   
+    583,   108,   85,    583,   76,    423,   103,   76,    1671,  76,    
+    42,    236,   266,   44,    74,    364,   117,   38,    117,   55,    
+    39,    44,    333,   335,   213,   49,    149,   108,   61,    333,   
+    1127,  38,    1671,  1319,  44,    39,    2247,  935,   108,   138,   
+    76,    106,   74,    44,    202,   108,   58,    85,    333,   967,   
+    167,   1415,  554,   231,   74,    333,   47,    1114,  743,   76,    
+    106,   85,    1703,  42,    44,    42,    236,   44,    42,    44,    
+    74,    268,   202,   332,   44,    333,   333,   245,   38,    213,   
+    140,   42,    1511,  44,    42,    172,   42,    44,    170,   44,    
+    74,    231,   333,   245,   346,   300,   314,   76,    42,    967,   
+    42,    140,   74,    76,    42,    44,    74,    71,    333,   1415,  
+    44,    42,    76,    106,   44,    42,    108,   74,    149,   1159,  
+    266,   268,   74,    76,    181,   333,   103,   333,   967,   198,   
+    85,    277,   108,   53,    428,   42,    236,   135,   44,    135,   
+    74,    44,    71,    1413,  2022,  421,   38,    1093,  1190,  1260,  
+    140,   4830,  261,   3166,  261,   265,   197,   201,   261,   265,   
+    261,   265,   197,   201,   261,   41,    41,    41,    94,    229,   
+    265,   453,   261,   264,   261,   264,   261,   264,   165,   69,    
+    137,   40,    56,    37,    120,   101,   69,    137,   40,    120,   
+    133,   69,    137,   120,   261,   169,   120,   101,   69,    137,   
+    40,    88,    381,   162,   209,   85,    52,    51,    54,    84,    
+    51,    54,    52,    277,   59,    60,    162,   61,    309,   52,    
+    51,    149,   80,    117,   57,    54,    50,    373,   57,    53,    
+    48,    341,   61,    162,   194,   47,    38,    207,   121,   54,    
+    50,    38,    335,   121,   54,    50,    422,   855,   428,   139,   
+    44,    107,   396,   90,    41,    154,   41,    90,    37,    105,   
+    69,    105,   37,    58,    41,    90,    57,    169,   218,   41,    
+    58,    41,    58,    41,    58,    137,   58,    37,    137,   37,    
+    135,   37,    90,    69,    73,    185,   94,    101,   58,    57,    
+    90,    37,    58,    527,   1134,  94,    142,   47,    185,   186,   
+    89,    154,   57,    90,    57,    90,    57,    250,   57,    1018,  
+    89,    90,    57,    58,    57,    1018,  8601,  282,   153,   666,   
+    89,    250,   54,    50,    2618,  57,    986,   825,   1306,  217,   
+    602,   1274,  378,   1935,  2522,  719,   5882,  57,    314,   57,    
+    1754,  281,   3578,  57,    4634,  3322,  54,    50,    54,    50,    
+    54,    50,    54,    50,    54,    50,    54,    50,    54,    50,    
+    975,   1434,  185,   54,    50,    1017,  54,    50,    54,    50,    
+    54,    50,    54,    50,    54,    50,    537,   8218,  4217,  54,    
+    50,    54,    50,    54,    50,    54,    50,    54,    50,    54,    
+    50,    54,    50,    54,    50,    54,    50,    54,    50,    54,    
+    50,    2041,  54,    50,    54,    50,    1049,  54,    50,    8281,  
+    1562,  697,   90,    217,   346,   1513,  1509,  126,   73,    69,    
+    254,   105,   37,    94,    37,    94,    165,   70,    105,   37,    
+    3166,  37,    218,   158,   108,   94,    149,   47,    85,    1221,  
+    37,    37,    1799,  38,    53,    44,    743,   231,   231,   231,   
+    231,   231,   231,   231,   231,   1036,  85,    52,    51,    52,    
+    51,    117,   52,    51,    53,    52,    51,    309,   49,    85,    
+    49,    53,    52,    51,    85,    52,    51,    54,    50,    54,    
+    50,    54,    50,    54,    50,    181,   38,    341,   81,    858,   
+    2874,  6874,  410,   61,    117,   58,    38,    39,    46,    54,    
+    50,    54,    50,    54,    50,    54,    50,    54,    50,    90,    
+    54,    50,    54,    50,    54,    50,    54,    50,    49,    54,    
+    82,    58,    302,   140,   74,    49,    166,   90,    110,   38,    
+    39,    53,    90,    2759,  76,    88,    70,    39,    49,    2887,  
+    53,    102,   39,    1319,  3015,  90,    143,   346,   871,   1178,  
+    519,   1018,  335,   986,   271,   58,    495,   1050,  335,   1274,  
+    495,   2042,  8218,  39,    39,    2074,  39,    39,    679,   38,    
+    36583, 1786,  1287,  198,   85,    8583,  38,    117,   519,   333,   
+    71,    1502,  39,    44,    107,   53,    332,   53,    38,    798,   
+    44,    2247,  334,   76,    213,   760,   294,   88,    478,   69,    
+    2014,  38,    261,   190,   350,   38,    88,    158,   158,   382,   
+    70,    37,    231,   44,    103,   44,    135,   44,    743,   74,    
+    76,    42,    154,   207,   90,    55,    58,    1671,  149,   74,    
+    1607,  522,   44,    85,    333,   588,   199,   117,   39,    333,   
+    903,   268,   85,    743,   364,   74,    53,    935,   108,   42,    
+    1511,  44,    74,    140,   74,    44,    138,   437,   38,    333,   
+    85,    1319,  204,   74,    76,    74,    76,    103,   44,    263,   
+    44,    42,    333,   149,   519,   38,    199,   122,   39,    42,    
+    1543,  44,    39,    108,   71,    76,    167,   76,    39,    44,    
+    39,    71,    38,    85,    359,   42,    76,    74,    85,    39,    
+    70,    42,    44,    199,   199,   199,   231,   231,   1127,  74,    
+    44,    74,    44,    74,    53,    42,    44,    333,   39,    39,    
+    743,   1575,  36,    68,    68,    36,    63,    63,    11719, 3399,  
+    229,   165,   39,    44,    327,   57,    423,   167,   39,    71,    
+    71,    3463,  536,   11623, 54,    50,    2055,  1735,  391,   55,    
+    58,    524,   245,   54,    50,    53,    236,   53,    81,    80,    
+    54,    50,    54,    50,    54,    50,    54,    50,    54,    50,    
+    54,    50,    54,    50,    54,    50,    85,    54,    50,    149,   
+    112,   117,   149,   49,    54,    50,    54,    50,    54,    50,    
+    117,   57,    49,    121,   53,    55,    85,    167,   4327,  34,    
+    117,   55,    117,   54,    50,    53,    57,    53,    49,    85,    
+    333,   85,    121,   85,    841,   54,    53,    50,    56,    48,    
+    56,    837,   54,    57,    50,    57,    54,    50,    53,    54,    
+    50,    85,    327,   38,    1447,  70,    999,   199,   199,   199,   
+    103,   87,    57,    56,    58,    87,    58,    153,   90,    98,    
+    90,    391,   839,   615,   71,    487,   455,   3943,  117,   1455,  
+    314,   1710,  143,   570,   47,    410,   1466,  44,    935,   1575,  
+    999,   143,   551,   46,    263,   46,    967,   53,    1159,  263,   
+    53,    174,   1289,  1285,  2503,  333,   199,   39,    1415,  71,    
+    39,    743,   53,    271,   711,   207,   53,    839,   53,    1799,  
+    71,    39,    108,   76,    140,   135,   103,   871,   108,   44,    
+    271,   309,   935,   79,    53,    1735,  245,   711,   271,   615,   
+    271,   2343,  1007,  42,    44,    42,    1703,  492,   245,   655,   
+    333,   76,    42,    1447,  106,   140,   74,    76,    85,    34,    
+    149,   807,   333,   108,   1159,  172,   42,    268,   333,   149,   
+    76,    42,    1543,  106,   300,   74,    135,   149,   333,   1383,  
+    44,    42,    44,    74,    204,   42,    44,    333,   28135, 3182,  
+    149,   34279, 18215, 2215,  39,    1482,  140,   422,   71,    7898,  
+    1274,  1946,  74,    108,   122,   202,   258,   268,   90,    236,   
+    986,   140,   1562,  2138,  108,   58,    2810,  591,   841,   837,   
+    841,   229,   581,   841,   837,   41,    73,    41,    73,    137,   
+    265,   133,   37,    229,   357,   841,   837,   73,    137,   265,   
+    233,   837,   73,    137,   169,   41,    233,   837,   841,   837,   
+    841,   837,   841,   837,   841,   837,   841,   837,   841,   901,   
+    809,   57,    805,   57,    197,   809,   57,    805,   57,    197,   
+    809,   57,    805,   57,    197,   809,   57,    805,   57,    197,   
+    809,   57,    805,   57,    197,   94,    1613,  135,   871,   71,    
+    39,    39,    327,   135,   39,    39,    39,    39,    39,    39,    
+    103,   71,    39,    39,    39,    39,    39,    39,    71,    39,    
+    135,   231,   135,   135,   39,    327,   551,   103,   167,   551,   
+    89,    1434,  3226,  506,   474,   506,   506,   367,   1018,  1946,  
+    1402,  954,   1402,  314,   90,    1082,  218,   2266,  666,   1210,  
+    186,   570,   2042,  58,    5850,  154,   2010,  154,   794,   2266,  
+    378,   2266,  3738,  39,    39,    39,    39,    39,    39,    17351, 
+    34,    3074,  7692,  63,    63,    
   };
 
-static int sqlite3Fts5UnicodeCategory(u32 iCode) {
+static int sqlite3Fts5UnicodeCategory(u32 iCode) { 
   int iRes = -1;
   int iHi;
   int iLo;
@@ -21979,7 +21979,7 @@ static int FTS5_NOINLINE fts5PutVarint64(unsigned char *p, u64 v){
       v >>= 7;
     }
     return 9;
-  }
+  }    
   n = 0;
   do{
     buf[n++] = (u8)((v & 0x7f) | 0x80);
@@ -22032,7 +22032,7 @@ static int sqlite3Fts5GetVarintLen(u32 iVal){
 ******************************************************************************
 **
 ** This is an SQLite virtual table module implementing direct access to an
-** existing FTS5 index. The module may create several different types of
+** existing FTS5 index. The module may create several different types of 
 ** tables:
 **
 ** col:
@@ -22040,21 +22040,21 @@ static int sqlite3Fts5GetVarintLen(u32 iVal){
 **
 **   One row for each term/column combination. The value of $doc is set to
 **   the number of fts5 rows that contain at least one instance of term
-**   $term within column $col. Field $cnt is set to the total number of
-**   instances of term $term in column $col (in any row of the fts5 table).
+**   $term within column $col. Field $cnt is set to the total number of 
+**   instances of term $term in column $col (in any row of the fts5 table). 
 **
 ** row:
 **     CREATE TABLE vocab(term, doc, cnt, PRIMARY KEY(term));
 **
 **   One row for each term in the database. The value of $doc is set to
 **   the number of fts5 rows that contain at least one instance of term
-**   $term. Field $cnt is set to the total number of instances of term
+**   $term. Field $cnt is set to the total number of instances of term 
 **   $term in the database.
 **
 ** instance:
 **     CREATE TABLE vocab(term, doc, col, offset, PRIMARY KEY(<all-fields>));
 **
-**   One row for each term instance in the database.
+**   One row for each term instance in the database. 
 */
 
 /* #include "third_party/sqlite3/fts5Int.h" */
@@ -22115,7 +22115,7 @@ struct Fts5VocabCursor {
 
 
 /*
-** Translate a string containing an fts5vocab table type to an
+** Translate a string containing an fts5vocab table type to an 
 ** FTS5_VOCAB_XXX constant. If successful, set *peType to the output
 ** value and return SQLITE_OK. Otherwise, set *pzErr to an error message
 ** and return SQLITE_ERROR.
@@ -22193,8 +22193,8 @@ static int fts5VocabInitVtab(
   sqlite3_vtab **ppVTab,          /* Write the resulting vtab structure here */
   char **pzErr                    /* Write any error message here */
 ){
-  const char *azSchema[] = {
-    "CREATE TABlE vocab(" FTS5_VOCAB_COL_SCHEMA  ")",
+  const char *azSchema[] = { 
+    "CREATE TABlE vocab(" FTS5_VOCAB_COL_SCHEMA  ")", 
     "CREATE TABlE vocab(" FTS5_VOCAB_ROW_SCHEMA  ")",
     "CREATE TABlE vocab(" FTS5_VOCAB_INST_SCHEMA ")"
   };
@@ -22213,10 +22213,10 @@ static int fts5VocabInitVtab(
     const char *zDb = bDb ? argv[3] : argv[1];
     const char *zTab = bDb ? argv[4] : argv[3];
     const char *zType = bDb ? argv[5] : argv[4];
-    int nDb = (int)strlen(zDb)+1;
+    int nDb = (int)strlen(zDb)+1; 
     int nTab = (int)strlen(zTab)+1;
     int eType = 0;
-
+    
     rc = fts5VocabTableType(zType, pzErr, &eType);
     if( rc==SQLITE_OK ){
       assert( eType>=0 && eType<ArraySize(azSchema) );
@@ -22268,7 +22268,7 @@ static int fts5VocabCreateMethod(
   return fts5VocabInitVtab(db, pAux, argc, argv, ppVtab, pzErr);
 }
 
-/*
+/* 
 ** Implementation of the xBestIndex method.
 **
 ** Only constraints of the form:
@@ -22277,7 +22277,7 @@ static int fts5VocabCreateMethod(
 **     term == ?
 **     term >= ?
 **
-** are interpreted. Less-than and less-than-or-equal are treated
+** are interpreted. Less-than and less-than-or-equal are treated 
 ** identically, as are greater-than and greater-than-or-equal.
 */
 static int fts5VocabBestIndexMethod(
@@ -22328,8 +22328,8 @@ static int fts5VocabBestIndexMethod(
   ** specifically - "ORDER BY term" or "ORDER BY term ASC" - set the
   ** sqlite3_index_info.orderByConsumed flag to tell the core the results
   ** are already in sorted order.  */
-  if( pInfo->nOrderBy==1
-   && pInfo->aOrderBy[0].iColumn==0
+  if( pInfo->nOrderBy==1 
+   && pInfo->aOrderBy[0].iColumn==0 
    && pInfo->aOrderBy[0].desc==0
   ){
     pInfo->orderByConsumed = 1;
@@ -22343,7 +22343,7 @@ static int fts5VocabBestIndexMethod(
 ** Implementation of xOpen method.
 */
 static int fts5VocabOpenMethod(
-  sqlite3_vtab *pVTab,
+  sqlite3_vtab *pVTab, 
   sqlite3_vtab_cursor **ppCsr
 ){
   Fts5VocabTable *pTab = (Fts5VocabTable*)pVTab;
@@ -22435,7 +22435,7 @@ static int fts5VocabCloseMethod(sqlite3_vtab_cursor *pCursor){
 
 static int fts5VocabInstanceNewTerm(Fts5VocabCursor *pCsr){
   int rc = SQLITE_OK;
-
+  
   if( sqlite3Fts5IterEof(pCsr->pIter) ){
     pCsr->bEof = 1;
   }else{
@@ -22461,11 +22461,11 @@ static int fts5VocabInstanceNext(Fts5VocabCursor *pCsr){
   Fts5IndexIter *pIter = pCsr->pIter;
   i64 *pp = &pCsr->iInstPos;
   int *po = &pCsr->iInstOff;
-
+  
   assert( sqlite3Fts5IterEof(pIter)==0 );
   assert( pCsr->bEof==0 );
   while( eDetail==FTS5_DETAIL_NONE
-      || sqlite3Fts5PoslistNext64(pIter->pData, pIter->nData, po, pp)
+      || sqlite3Fts5PoslistNext64(pIter->pData, pIter->nData, po, pp) 
   ){
     pCsr->iInstPos = 0;
     pCsr->iInstOff = 0;
@@ -22590,8 +22590,8 @@ static int fts5VocabNextMethod(sqlite3_vtab_cursor *pCursor){
 
         if( rc==SQLITE_OK ){
           zTerm = sqlite3Fts5IterTerm(pCsr->pIter, &nTerm);
-          if( nTerm!=pCsr->term.n
-          || (nTerm>0 && memcmp(zTerm, pCsr->term.p, nTerm))
+          if( nTerm!=pCsr->term.n 
+          || (nTerm>0 && memcmp(zTerm, pCsr->term.p, nTerm)) 
           ){
             break;
           }
@@ -22670,8 +22670,8 @@ static int fts5VocabFilterMethod(
   if( rc==SQLITE_OK && eType==FTS5_VOCAB_INSTANCE ){
     rc = fts5VocabInstanceNewTerm(pCsr);
   }
-  if( rc==SQLITE_OK && !pCsr->bEof
-   && (eType!=FTS5_VOCAB_INSTANCE
+  if( rc==SQLITE_OK && !pCsr->bEof 
+   && (eType!=FTS5_VOCAB_INSTANCE 
     || pCsr->pFts5->pConfig->eDetail!=FTS5_DETAIL_NONE)
   ){
     rc = fts5VocabNextMethod(pCursor);
@@ -22680,8 +22680,8 @@ static int fts5VocabFilterMethod(
   return rc;
 }
 
-/*
-** This is the xEof method of the virtual table. SQLite calls this
+/* 
+** This is the xEof method of the virtual table. SQLite calls this 
 ** routine to find out if it has reached the end of a result set.
 */
 static int fts5VocabEofMethod(sqlite3_vtab_cursor *pCursor){
@@ -22756,13 +22756,13 @@ static int fts5VocabColumnMethod(
   return SQLITE_OK;
 }
 
-/*
+/* 
 ** This is the xRowid method. The SQLite core calls this routine to
 ** retrieve the rowid for the current row of the result set. The
 ** rowid should be written to *pRowid.
 */
 static int fts5VocabRowidMethod(
-  sqlite3_vtab_cursor *pCursor,
+  sqlite3_vtab_cursor *pCursor, 
   sqlite_int64 *pRowid
 ){
   Fts5VocabCursor *pCsr = (Fts5VocabCursor*)pCursor;
@@ -22803,5 +22803,5 @@ static int sqlite3Fts5VocabInit(Fts5Global *pGlobal, sqlite3 *db){
 }
 
 
-
+    
 #endif /* !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS5) */

@@ -210,7 +210,7 @@ int mbedtls_internal_ecp_double_add_mxz( const mbedtls_ecp_group *grp,
  */
 #if defined(MBEDTLS_ECP_RANDOMIZE_MXZ_ALT)
 int mbedtls_internal_ecp_randomize_mxz( const mbedtls_ecp_group *grp,
-                                        mbedtls_ecp_point *P,
+                                        mbedtls_ecp_point *P, 
                                         int (*f_rng)(void *, unsigned char *, size_t),
                                         void *p_rng );
 #endif

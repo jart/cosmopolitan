@@ -40,13 +40,13 @@
 /* Size of the Bitvec structure in bytes. */
 #define BITVEC_SZ        512
 
-/* Round the union size down to the nearest pointer boundary, since that's how
+/* Round the union size down to the nearest pointer boundary, since that's how 
 ** it will be aligned within the Bitvec struct. */
 #define BITVEC_USIZE \
     (((BITVEC_SZ-(3*sizeof(u32)))/sizeof(Bitvec*))*sizeof(Bitvec*))
 
-/* Type of the array "element" for the bitmap representation.
-** Should be a power of 2, and ideally, evenly divide into BITVEC_USIZE.
+/* Type of the array "element" for the bitmap representation. 
+** Should be a power of 2, and ideally, evenly divide into BITVEC_USIZE. 
 ** Setting this to the "natural word" size of your CPU may improve
 ** performance. */
 #define BITVEC_TELEM     u8
@@ -59,12 +59,12 @@
 
 /* Number of u32 values in hash table. */
 #define BITVEC_NINT      (BITVEC_USIZE/sizeof(u32))
-/* Maximum number of entries in hash table before
+/* Maximum number of entries in hash table before 
 ** sub-dividing and re-hashing. */
 #define BITVEC_MXHASH    (BITVEC_NINT/2)
 /* Hashing function for the aHash representation.
-** Empirical testing showed that the *37 multiplier
-** (an arbitrary prime)in the hash function provided
+** Empirical testing showed that the *37 multiplier 
+** (an arbitrary prime)in the hash function provided 
 ** no fewer collisions than the no-op *1. */
 #define BITVEC_HASH(X)   (((X)*1)%BITVEC_NINT)
 
@@ -110,7 +110,7 @@ struct Bitvec {
 
 /*
 ** Create a new bitmap object able to handle bits between 0 and iSize,
-** inclusive.  Return a pointer to the new object.  Return NULL if
+** inclusive.  Return a pointer to the new object.  Return NULL if 
 ** malloc fails.
 */
 Bitvec *sqlite3BitvecCreate(u32 iSize){
@@ -366,7 +366,7 @@ int sqlite3BitvecBuiltinTest(int sz, int *aOp){
         break;
       }
       case 3:
-      case 4:
+      case 4: 
       default: {
         nx = 2;
         sqlite3_randomness(sizeof(i), &i);

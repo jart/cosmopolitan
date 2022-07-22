@@ -28,6 +28,6 @@ class x(Command):
 
     def finalize_options(self):
         if self.x is None:
-            self.x =
+            self.x = 
 
     def run(self):

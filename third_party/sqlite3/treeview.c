@@ -158,7 +158,7 @@ void sqlite3TreeViewSrcList(TreeView *pView, const SrcList *pSrc){
       sqlite3_str_appendf(&x, " CteUse=0x%p", pItem->u2.pCteUse);
     }
     sqlite3StrAccumFinish(&x);
-    sqlite3TreeViewItem(pView, zLine, i<pSrc->nSrc-1);
+    sqlite3TreeViewItem(pView, zLine, i<pSrc->nSrc-1); 
     if( pItem->pSelect ){
       sqlite3TreeViewSelect(pView, pItem->pSelect, 0);
     }
@@ -178,7 +178,7 @@ void sqlite3TreeViewSelect(TreeView *pView, const Select *p, u8 moreToFollow){
   if( p==0 ){
     sqlite3TreeViewLine(pView, "nil-SELECT");
     return;
-  }
+  } 
   pView = sqlite3TreeViewPush(pView, moreToFollow);
   if( p->pWith ){
     sqlite3TreeViewWith(pView, p->pWith, 1);
@@ -586,7 +586,7 @@ void sqlite3TreeViewExpr(TreeView *pView, const Expr *pExpr, u8 moreToFollow){
         pWin = ExprHasProperty(pExpr, EP_WinFunc) ? pExpr->y.pWin : 0;
 #else
         pWin = 0;
-#endif
+#endif 
       }
       if( pExpr->op==TK_AGG_FUNCTION ){
         sqlite3TreeViewLine(pView, "AGG_FUNCTION%d %Q%s agg=%d[%d]/%p",
@@ -669,7 +669,7 @@ void sqlite3TreeViewExpr(TreeView *pView, const Expr *pExpr, u8 moreToFollow){
       ** is set to the column of the pseudo-table to read, or to -1 to
       ** read the rowid field.
       */
-      sqlite3TreeViewLine(pView, "%s(%d)",
+      sqlite3TreeViewLine(pView, "%s(%d)", 
           pExpr->iTable ? "NEW" : "OLD", pExpr->iColumn);
       break;
     }

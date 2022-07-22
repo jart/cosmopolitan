@@ -254,7 +254,7 @@ int sqlite3_db_status(
       break;
     }
 
-    /*
+    /* 
     ** Return an approximation for the amount of memory currently used
     ** by all pagers associated with the given database connection.  The
     ** highwater mark is meaningless and is returned as zero.
@@ -298,7 +298,7 @@ int sqlite3_db_status(
           HashElem *p;
 
           nByte += sqlite3GlobalConfig.m.xRoundup(sizeof(HashElem)) * (
-              pSchema->tblHash.count
+              pSchema->tblHash.count 
             + pSchema->trigHash.count
             + pSchema->idxHash.count
             + pSchema->fkeyHash.count
@@ -348,7 +348,7 @@ int sqlite3_db_status(
 
     /*
     ** Set *pCurrent to the total cache hits or misses encountered by all
-    ** pagers the database handle is connected to. *pHighwater is always set
+    ** pagers the database handle is connected to. *pHighwater is always set 
     ** to zero.
     */
     case SQLITE_DBSTATUS_CACHE_SPILL:

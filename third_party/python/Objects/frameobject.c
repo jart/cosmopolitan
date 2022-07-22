@@ -469,7 +469,7 @@ frame_dealloc(PyFrameObject *restrict f)
 
     if (_PyObject_GC_IS_TRACKED(f))
         _PyObject_GC_UNTRACK(f);
-
+    
     Py_TRASHCAN_SAFE_BEGIN(f)
     /* Kill all local variables */
     valuestack = f->f_valuestack;

@@ -362,7 +362,7 @@ static void geopolyBlobFunc(
 ){
   GeoPoly *p = geopolyFuncParam(context, argv[0], 0);
   if( p ){
-    sqlite3_result_blob(context, p->hdr,
+    sqlite3_result_blob(context, p->hdr, 
        4+8*p->nVertex, SQLITE_TRANSIENT);
     sqlite3_free(p);
   }
@@ -470,7 +470,7 @@ static void geopolyXformFunc(
       GeoX(p,ii) = x1;
       GeoY(p,ii) = y1;
     }
-    sqlite3_result_blob(context, p->hdr,
+    sqlite3_result_blob(context, p->hdr, 
        4+8*p->nVertex, SQLITE_TRANSIENT);
     sqlite3_free(p);
   }
@@ -514,7 +514,7 @@ static void geopolyAreaFunc(
   if( p ){
     sqlite3_result_double(context, geopolyArea(p));
     sqlite3_free(p);
-  }
+  }            
 }
 
 /*
@@ -522,7 +522,7 @@ static void geopolyAreaFunc(
 **
 ** If the rotation of polygon X is clockwise (incorrect) instead of
 ** counter-clockwise (the correct winding order according to RFC7946)
-** then reverse the order of the vertexes in polygon X.
+** then reverse the order of the vertexes in polygon X.  
 **
 ** In other words, this routine returns a CCW polygon regardless of the
 ** winding order of its input.
@@ -548,10 +548,10 @@ static void geopolyCcwFunc(
         GeoY(p,jj) = t;
       }
     }
-    sqlite3_result_blob(context, p->hdr,
+    sqlite3_result_blob(context, p->hdr, 
        4+8*p->nVertex, SQLITE_TRANSIENT);
     sqlite3_free(p);
-  }
+  }            
 }
 
 #define GEOPOLY_PI 3.1415926535897932385
@@ -700,7 +700,7 @@ static void geopolyBBoxFunc(
 ){
   GeoPoly *p = geopolyBBox(context, argv[0], 0, 0);
   if( p ){
-    sqlite3_result_blob(context, p->hdr,
+    sqlite3_result_blob(context, p->hdr, 
        4+8*p->nVertex, SQLITE_TRANSIENT);
     sqlite3_free(p);
   }
@@ -751,7 +751,7 @@ static void geopolyBBoxFinal(
   if( pBBox==0 ) return;
   p = geopolyBBox(context, 0, pBBox->a, 0);
   if( p ){
-    sqlite3_result_blob(context, p->hdr,
+    sqlite3_result_blob(context, p->hdr, 
        4+8*p->nVertex, SQLITE_TRANSIENT);
     sqlite3_free(p);
   }
@@ -931,7 +931,7 @@ static void geopolyAddOneSegment(
   pEvent->eType = 1;
   pEvent->pSeg = pSeg;
 }
-
+  
 
 
 /*
@@ -971,7 +971,7 @@ static GeoEvent *geopolyEventMerge(GeoEvent *pLeft, GeoEvent *pRight){
     }
   }
   pLast->pNext = pRight ? pRight : pLeft;
-  return head.pNext;
+  return head.pNext;  
 }
 
 /*
@@ -1020,7 +1020,7 @@ static GeoSegment *geopolySegmentMerge(GeoSegment *pLeft, GeoSegment *pRight){
     }
   }
   pLast->pNext = pRight ? pRight : pLeft;
-  return head.pNext;
+  return head.pNext;  
 }
 
 /*
@@ -1065,8 +1065,8 @@ static int geopolyOverlap(GeoPoly *p1, GeoPoly *p2){
   GeoSegment *pSeg;
   unsigned char aOverlap[4];
 
-  nByte = sizeof(GeoEvent)*nVertex*2
-           + sizeof(GeoSegment)*nVertex
+  nByte = sizeof(GeoEvent)*nVertex*2 
+           + sizeof(GeoSegment)*nVertex 
            + sizeof(GeoOverlap);
   p = sqlite3_malloc64( nByte );
   if( p==0 ) return -1;
@@ -1208,7 +1208,7 @@ static void geopolyDebugFunc(
 #endif
 }
 
-/*
+/* 
 ** This function is the implementation of both the xConnect and xCreate
 ** methods of the geopoly virtual table.
 **
@@ -1298,7 +1298,7 @@ geopolyInit_fail:
 }
 
 
-/*
+/* 
 ** GEOPOLY virtual table module xCreate method.
 */
 static int geopolyCreate(
@@ -1311,7 +1311,7 @@ static int geopolyCreate(
   return geopolyInit(db, pAux, argc, argv, ppVtab, pzErr, 1);
 }
 
-/*
+/* 
 ** GEOPOLY virtual table module xConnect method.
 */
 static int geopolyConnect(
@@ -1325,7 +1325,7 @@ static int geopolyConnect(
 }
 
 
-/*
+/* 
 ** GEOPOLY virtual table module xFilter method.
 **
 ** Query plans:
@@ -1375,8 +1375,8 @@ static int geopolyFilter(
       pCsr->atEOF = 1;
     }
   }else{
-    /* Normal case - r-tree scan. Set up the RtreeCursor.aConstraint array
-    ** with the configured constraints.
+    /* Normal case - r-tree scan. Set up the RtreeCursor.aConstraint array 
+    ** with the configured constraints. 
     */
     rc = nodeAcquire(pRtree, 1, 0, &pRoot);
     if( rc==SQLITE_OK && idxNum<=3 ){
@@ -1457,7 +1457,7 @@ geopoly_filter_end:
 
 /*
 ** Rtree virtual table module xBestIndex method. There are three
-** table scan strategies to choose from (in order from most to
+** table scan strategies to choose from (in order from most to 
 ** least desirable):
 **
 **   idxNum     idxStr        Strategy
@@ -1517,7 +1517,7 @@ static int geopolyBestIndex(sqlite3_vtab *tab, sqlite3_index_info *pIdxInfo){
 }
 
 
-/*
+/* 
 ** GEOPOLY virtual table module xColumn method.
 */
 static int geopolyColumn(sqlite3_vtab_cursor *cur, sqlite3_context *ctx, int i){
@@ -1537,7 +1537,7 @@ static int geopolyColumn(sqlite3_vtab_cursor *cur, sqlite3_context *ctx, int i){
                                 &pCsr->pReadAux, 0);
         if( rc ) return rc;
       }
-      sqlite3_bind_int64(pCsr->pReadAux, 1,
+      sqlite3_bind_int64(pCsr->pReadAux, 1, 
           nodeGetRowid(pRtree, pNode, p->iCell));
       rc = sqlite3_step(pCsr->pReadAux);
       if( rc==SQLITE_ROW ){
@@ -1576,9 +1576,9 @@ static int geopolyColumn(sqlite3_vtab_cursor *cur, sqlite3_context *ctx, int i){
 **     argv[3] = new value for first application-defined column....
 */
 static int geopolyUpdate(
-  sqlite3_vtab *pVtab,
-  int nData,
-  sqlite3_value **aData,
+  sqlite3_vtab *pVtab, 
+  int nData, 
+  sqlite3_value **aData, 
   sqlite_int64 *pRowid
 ){
   Rtree *pRtree = (Rtree *)pVtab;
@@ -1620,7 +1620,7 @@ static int geopolyUpdate(
     }
     coordChange = 1;
 
-    /* If a rowid value was supplied, check if it is already present in
+    /* If a rowid value was supplied, check if it is already present in 
     ** the table. If so, the constraint has failed. */
     if( newRowidValid && (!oldRowidValid || oldRowid!=newRowid) ){
       int steprc;
@@ -1800,7 +1800,7 @@ static int sqlite3_geopoly_init(sqlite3 *db){
                                  aFunc[i].xFunc, 0, 0);
   }
   for(i=0; i<sizeof(aAgg)/sizeof(aAgg[0]) && rc==SQLITE_OK; i++){
-    rc = sqlite3_create_function(db, aAgg[i].zName, 1,
+    rc = sqlite3_create_function(db, aAgg[i].zName, 1, 
               SQLITE_UTF8|SQLITE_DETERMINISTIC|SQLITE_INNOCUOUS, 0,
               0, aAgg[i].xStep, aAgg[i].xFinal);
   }

@@ -123,7 +123,7 @@ static void attachFunc(
     **     * Specified database name already being used.
     */
     if( db->nDb>=db->aLimit[SQLITE_LIMIT_ATTACHED]+2 ){
-      zErrDyn = sqlite3MPrintf(db, "too many attached databases - max %d",
+      zErrDyn = sqlite3MPrintf(db, "too many attached databases - max %d", 
         db->aLimit[SQLITE_LIMIT_ATTACHED]
       );
       goto attach_error;
@@ -135,7 +135,7 @@ static void attachFunc(
         goto attach_error;
       }
     }
-
+  
     /* Allocate the new entry in the db->aDb[] array and initialize the schema
     ** hash tables.
     */
@@ -150,7 +150,7 @@ static void attachFunc(
     db->aDb = aNew;
     pNew = &db->aDb[db->nDb];
     memset(pNew, 0, sizeof(*pNew));
-
+  
     /* Open the database file. If the btree is successfully opened, use
     ** it to obtain the database schema. At this point the schema may
     ** or may not be initialized.
@@ -179,7 +179,7 @@ static void attachFunc(
     if( !pNew->pSchema ){
       rc = SQLITE_NOMEM_BKPT;
     }else if( pNew->pSchema->file_format && pNew->pSchema->enc!=ENC(db) ){
-      zErrDyn = sqlite3MPrintf(db,
+      zErrDyn = sqlite3MPrintf(db, 
         "attached databases must use the same text encoding as main database");
       rc = SQLITE_ERROR;
     }
@@ -201,7 +201,7 @@ static void attachFunc(
   sqlite3_free_filename( zPath );
 
   /* If the file was opened successfully, read the schema for the new database.
-  ** If this fails, or if opening the file failed, then close the file and
+  ** If this fails, or if opening the file failed, then close the file and 
   ** remove the entry from the db->aDb[] array. i.e. put everything back the
   ** way we found it.
   */
@@ -245,7 +245,7 @@ static void attachFunc(
     }
     goto attach_error;
   }
-
+  
   return;
 
 attach_error:
@@ -346,7 +346,7 @@ static void codeAttach(
   memset(&sName, 0, sizeof(NameContext));
   sName.pParse = pParse;
 
-  if(
+  if( 
       SQLITE_OK!=(rc = resolveAttachExpr(&sName, pFilename)) ||
       SQLITE_OK!=(rc = resolveAttachExpr(&sName, pDbname)) ||
       SQLITE_OK!=(rc = resolveAttachExpr(&sName, pKey))
@@ -386,7 +386,7 @@ static void codeAttach(
     */
     sqlite3VdbeAddOp1(v, OP_Expire, (type==SQLITE_ATTACH));
   }
-
+  
 attach_end:
   sqlite3ExprDelete(db, pFilename);
   sqlite3ExprDelete(db, pDbname);
@@ -538,7 +538,7 @@ int sqlite3FixSrcList(
 ){
   int res = 0;
   if( pList ){
-    Select s;
+    Select s; 
     memset(&s, 0, sizeof(s));
     s.pSrc = pList;
     res = sqlite3WalkSelect(&pFix->w, &s);
@@ -567,7 +567,7 @@ int sqlite3FixTriggerStep(
 ){
   while( pStep ){
     if( sqlite3WalkSelect(&pFix->w, pStep->pSelect)
-     || sqlite3WalkExpr(&pFix->w, pStep->pWhere)
+     || sqlite3WalkExpr(&pFix->w, pStep->pWhere) 
      || sqlite3WalkExprList(&pFix->w, pStep->pExprList)
      || sqlite3FixSrcList(pFix, pStep->pFrom)
     ){

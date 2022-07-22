@@ -19,7 +19,7 @@ Author: Rich Felker <dalias@aerifal.cx>
 Date:   Wed Dec 18 14:29:07 2019 -0500
 
     switch linux kernel headers to 4.19.88 by default
-
+    
     using slim headers-only version. this change is needed to support all
     future versions of musl on 32-bit archs, since prior to 4.16 the
     kernel headers had incompatibility with userspace time_t not matching

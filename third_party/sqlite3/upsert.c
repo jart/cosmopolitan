@@ -121,12 +121,12 @@ int sqlite3UpsertAnalyzeTarget(
     if( rc ) return rc;
     rc = sqlite3ResolveExprNames(&sNC, pUpsert->pUpsertTargetWhere);
     if( rc ) return rc;
-
-    /* Check to see if the conflict target matches the rowid. */
+  
+    /* Check to see if the conflict target matches the rowid. */  
     pTab = pTabList->a[0].pTab;
     pTarget = pUpsert->pUpsertTarget;
     iCursor = pTabList->a[0].iCursor;
-    if( HasRowid(pTab)
+    if( HasRowid(pTab) 
      && pTarget->nExpr==1
      && (pTerm = pTarget->a[0].pExpr)->op==TK_COLUMN
      && pTerm->iColumn==XN_ROWID
@@ -135,7 +135,7 @@ int sqlite3UpsertAnalyzeTarget(
       assert( pUpsert->pUpsertIdx==0 );
       continue;
     }
-
+  
     /* Initialize sCol[0..1] to be an expression parse tree for a
     ** single column of an index.  The sCol[0] node will be the TK_COLLATE
     ** operator and sCol[1] will be the TK_COLUMN operator.  Code below
@@ -147,7 +147,7 @@ int sqlite3UpsertAnalyzeTarget(
     sCol[0].pLeft = &sCol[1];
     sCol[1].op = TK_COLUMN;
     sCol[1].iTable = pTabList->a[0].iCursor;
-
+  
     /* Check for matches against other indexes */
     for(pIdx=pTab->pIndex; pIdx; pIdx=pIdx->pNext){
       int ii, jj, nn;
@@ -293,7 +293,7 @@ void sqlite3UpsertDoUpdate(
       sqlite3VdbeVerifyAbortable(v, OE_Abort);
       i = sqlite3VdbeAddOp4Int(v, OP_Found, iDataCur, 0, iPk, nPk);
       VdbeCoverage(v);
-      sqlite3VdbeAddOp4(v, OP_Halt, SQLITE_CORRUPT, OE_Abort, 0,
+      sqlite3VdbeAddOp4(v, OP_Halt, SQLITE_CORRUPT, OE_Abort, 0, 
             "corrupt database", P4_STATIC);
       sqlite3MayAbort(pParse);
       sqlite3VdbeJumpHere(v, i);

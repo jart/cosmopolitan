@@ -365,7 +365,7 @@ int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_inf
     ctx->md_info = md_info;
     ctx->md_ctx = NULL;
     ctx->hmac_ctx = NULL;
-    if ((csize = GetMdContextSize(md_info->type)) < 0)
+    if ((csize = GetMdContextSize(md_info->type)) < 0) 
         return( csize );
     if( !( ctx->md_ctx = mbedtls_calloc( 1, csize ) ) )
         return( MBEDTLS_ERR_MD_ALLOC_FAILED );

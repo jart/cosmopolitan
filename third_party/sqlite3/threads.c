@@ -65,13 +65,13 @@ int sqlite3ThreadCreate(
   memset(p, 0, sizeof(*p));
   p->xTask = xTask;
   p->pIn = pIn;
-  /* If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a
+  /* If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a 
   ** function that returns SQLITE_ERROR when passed the argument 200, that
-  ** forces worker threads to run sequentially and deterministically
+  ** forces worker threads to run sequentially and deterministically 
   ** for testing purposes. */
   if( sqlite3FaultSim(200) ){
     rc = 1;
-  }else{
+  }else{    
     rc = pthread_create(&p->tid, 0, xTask, pIn);
   }
   if( rc ){
@@ -153,9 +153,9 @@ int sqlite3ThreadCreate(
   *ppThread = 0;
   p = sqlite3Malloc(sizeof(*p));
   if( p==0 ) return SQLITE_NOMEM_BKPT;
-  /* If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a
+  /* If the SQLITE_TESTCTRL_FAULT_INSTALL callback is registered to a 
   ** function that returns SQLITE_ERROR when passed the argument 200, that
-  ** forces worker threads to run sequentially and deterministically
+  ** forces worker threads to run sequentially and deterministically 
   ** (via the sqlite3FaultSim() term of the conditional) for testing
   ** purposes. */
   if( sqlite3GlobalConfig.bCoreMutex==0 || sqlite3FaultSim(200) ){

@@ -23,24 +23,24 @@ STATIC_YOINK("huge_compiler_rt_license");
 
 COMPILER_RT_ABI fp_t
 __floatsisf(int a) {
-
+    
     const int aWidth = sizeof a * CHAR_BIT;
-
+    
     // Handle zero as a special case to protect clz
     if (a == 0)
         return fromRep(0);
-
+    
     // All other cases begin by extracting the sign and absolute value of a
     rep_t sign = 0;
     if (a < 0) {
         sign = signBit;
         a = -a;
     }
-
+    
     // Exponent of (fp_t)a is the width of abs(a).
     const int exponent = (aWidth - 1) - __builtin_clz(a);
     rep_t result;
-
+    
     // Shift a into the significand field, rounding if it is a right-shift
     if (exponent <= significandBits) {
         const int shift = significandBits - exponent;
@@ -52,7 +52,7 @@ __floatsisf(int a) {
         if (round > signBit) result++;
         if (round == signBit) result += result & 1;
     }
-
+    
     // Insert the exponent
     result += (rep_t)(exponent + exponentBias) << significandBits;
     // Insert the sign bit and return

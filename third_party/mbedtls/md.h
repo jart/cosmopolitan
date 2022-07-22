@@ -178,7 +178,7 @@ forceinline int mbedtls_md_starts( mbedtls_md_context_t *ctx )
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-forceinline int mbedtls_md_update( mbedtls_md_context_t *ctx,
+forceinline int mbedtls_md_update( mbedtls_md_context_t *ctx, 
                                    const unsigned char *input, size_t ilen )
 {
     if( !ctx || !ctx->md_info )
@@ -204,7 +204,7 @@ forceinline int mbedtls_md_update( mbedtls_md_context_t *ctx,
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-forceinline int mbedtls_md_finish( mbedtls_md_context_t *ctx,
+forceinline int mbedtls_md_finish( mbedtls_md_context_t *ctx, 
                                    unsigned char *output )
 {
     if( !ctx || !ctx->md_info )
@@ -230,7 +230,7 @@ forceinline int mbedtls_md_finish( mbedtls_md_context_t *ctx,
  * \return         #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                 failure.
  */
-forceinline int mbedtls_md( const mbedtls_md_info_t *md_info,
+forceinline int mbedtls_md( const mbedtls_md_info_t *md_info, 
                             const unsigned char *input, size_t ilen,
                             unsigned char *output )
 {
@@ -264,8 +264,8 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
  * \return          #MBEDTLS_ERR_MD_BAD_INPUT_DATA on parameter-verification
  *                  failure.
  */
-forceinline int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx,
-                                        const unsigned char *input,
+forceinline int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, 
+                                        const unsigned char *input, 
                                         size_t ilen )
 {
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )

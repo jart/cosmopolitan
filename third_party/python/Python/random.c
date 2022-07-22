@@ -437,7 +437,7 @@ _PyRandom_Init(void)
            _PyRandom_Init() must not block Python initialization: call
            pyurandom() is non-blocking mode (blocking=0): see the PEP 524. */
 #if 1
-        /*
+        /* 
          * [jart] modified to be more efficient
          */
         for (i = 0; i < secret_size;) {

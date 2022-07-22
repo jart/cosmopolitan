@@ -24,7 +24,7 @@ Here's an example interpreter session for test_gestalt which still leaks:
 [28938 refs]
 >>> leak()
 [28940 refs]
->>>
+>>> 
 
 Once the leak is fixed, the test case should be moved into an appropriate
 test (even if it was originally from the test suite).  This ensures the
