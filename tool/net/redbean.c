@@ -4398,6 +4398,12 @@ static int LuaGetBody(lua_State *L) {
   return 1;
 }
 
+static int LuaGetResponseBody(lua_State *L) {
+  OnlyCallDuringRequest(L, "GetResponseBody");
+  lua_pushlstring(L, content, contentlength);
+  return 1;
+}
+
 static int LuaGetHeader(lua_State *L) {
   int h;
   const char *key;
@@ -5054,6 +5060,7 @@ static const char *const kDontAutoComplete[] = {
     "GetPayload",                // deprecated
     "GetPort",                   //
     "GetRemoteAddr",             //
+    "GetResponseBody",           //
     "GetScheme",                 //
     "GetServerAddr",             //
     "GetSslIdentity",            //
@@ -5161,6 +5168,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"GetRandomBytes", LuaGetRandomBytes},                      //
     {"GetRedbeanVersion", LuaGetRedbeanVersion},                //
     {"GetRemoteAddr", LuaGetRemoteAddr},                        //
+    {"GetResponseBody", LuaGetResponseBody},                    //
     {"GetScheme", LuaGetScheme},                                //
     {"GetServerAddr", LuaGetServerAddr},                        //
     {"GetStatus", LuaGetStatus},                                //
