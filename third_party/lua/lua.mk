@@ -109,6 +109,7 @@ THIRD_PARTY_LUA_A_SRCS =						\
 	third_party/lua/lutf8lib.c					\
 	third_party/lua/lvm.c						\
 	third_party/lua/lzio.c						\
+	third_party/lua/serialize.c					\
 	third_party/lua/visitor.c
 
 THIRD_PARTY_LUA_A_OBJS =						\

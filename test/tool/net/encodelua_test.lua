@@ -53,6 +53,36 @@ assert(EncodeLua("\e") == [["\e"]])
 assert(EncodeLua("\"") == [["\""]])
 assert(EncodeLua("\\") == [["\\"]])
 
+assert(EncodeLua(
+          {yo=2,
+           bye={yo=2,
+                dawg=3},
+           there={yo=2},
+           sup={yo=2},
+           hi="hello"},
+          {pretty=true}) ==
+       "{\n"..
+       "  bye={\n"..
+       "    dawg=3,\n"..
+       "    yo=2\n"..
+       "  },\n"..
+       "  hi=\"hello\",\n"..
+       "  sup={yo=2},\n"..
+       "  there={yo=2},\n"..
+       "  yo=2\n"..
+       "}")
+
+assert(EncodeLua(
+          {yo=2, bye=1, there=10, sup=3, hi="hello"},
+          {pretty=true, indent="    "}) ==
+       "{\n"..
+       "    bye=1,\n"..
+       "    hi=\"hello\",\n"..
+       "    sup=3,\n"..
+       "    there=10,\n"..
+       "    yo=2\n"..
+       "}")
+
 x = {}
 x.c = 'c'
 x.a = 'a'
@@ -70,7 +100,7 @@ assert(EncodeLua(
 {k={k={k={k={k={k={k={k={k={k={k={k={k={k={k=
 {k={k={k={k={k={k={k={k={k={k={k={k={k={k={k=
 {k={k={k={k=0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
-}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}) ==
+}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}, {maxdepth=64}) ==
 "{k={k={k={k={k={k={k={k={k={k={k={k={k={k={k={k="..
 "{k={k={k={k={k={k={k={k={k={k={k={k={k={k={k={k="..
 "{k={k={k={k={k={k={k={k={k={k={k={k={k={k={k={k="..
@@ -85,7 +115,7 @@ assert(EncodeLua(
 {k={k={k={k={k={k={k={k={k={k={k={k={k={k={k=
 {k={k={k={k={k={k={k={k={k={k={k={k={k={k={k=
 {k={k={k={k=0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
-}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}, {maxdepth=64}
 ) ==
 "{k={k={k={k={k={k={k={k={k={k={k={k={k={k={k={k="..
 "{k={k={k={k={k={k={k={k={k={k={k={k={k={k={k={k="..

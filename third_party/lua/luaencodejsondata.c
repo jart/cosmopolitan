@@ -21,7 +21,6 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/likely.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/log/rop.h"
 #include "libc/mem/mem.h"
@@ -35,19 +34,6 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/visitor.h"
-
-struct Serializer {
-  struct LuaVisited visited;
-  const char *reason;
-  char *strbuf;
-  size_t strbuflen;
-  bool sorted;
-};
-
-struct Joiner {
-  char **buf;
-  int i;
-};
 
 static int Serialize(lua_State *, char **, int, struct Serializer *, int);
 
@@ -96,13 +82,13 @@ OnError:
 }
 
 static int SerializeArray(lua_State *L, char **buf, struct Serializer *z,
-                          int level, size_t tbllen) {
+                          int depth, size_t tbllen) {
   size_t i;
   RETURN_ON_ERROR(appendw(buf, '['));
   for (i = 1; i <= tbllen; i++) {
     lua_rawgeti(L, -1, i);  // +2
     if (i > 1) RETURN_ON_ERROR(appendw(buf, ','));
-    RETURN_ON_ERROR(Serialize(L, buf, -1, z, level - 1));
+    RETURN_ON_ERROR(Serialize(L, buf, -1, z, depth + 1));
     lua_pop(L, 1);
   }
   RETURN_ON_ERROR(appendw(buf, ']'));
@@ -112,38 +98,44 @@ OnError:
 }
 
 static int SerializeObject(lua_State *L, char **buf, struct Serializer *z,
-                           int level) {
+                           int depth, bool multi) {
   bool comma = false;
-  RETURN_ON_ERROR(appendw(buf, '{'));
+  RETURN_ON_ERROR(SerializeObjectStart(buf, z, depth, multi));
   lua_pushnil(L);            // +2
   while (lua_next(L, -2)) {  // +3
     if (lua_type(L, -2) == LUA_TSTRING) {
       if (comma) {
         RETURN_ON_ERROR(appendw(buf, ','));
+        if (multi) {
+          RETURN_ON_ERROR(SerializeObjectIndent(buf, z, depth + 1));
+        }
       } else {
         comma = true;
       }
       RETURN_ON_ERROR(SerializeString(L, buf, -2, z));
-      RETURN_ON_ERROR(appendw(buf, ':'));
-      RETURN_ON_ERROR(Serialize(L, buf, -1, z, level - 1));
+      RETURN_ON_ERROR(appendw(buf, z->conf.pretty ? READ16LE(": ") : ':'));
+      RETURN_ON_ERROR(Serialize(L, buf, -1, z, depth + 1));
       lua_pop(L, 1);
     } else {
       z->reason = "json objects must only use string keys";
       goto OnError;
     }
   }
-  RETURN_ON_ERROR(appendw(buf, '}'));
+  RETURN_ON_ERROR(SerializeObjectEnd(buf, z, depth, multi));
   return 0;
 OnError:
   return -1;
 }
 
 static intptr_t Join(const char *elem, void *arg) {
-  struct Joiner *j = arg;
+  struct SerializerJoin *j = arg;
   if (!j->i) {
     ++j->i;
   } else {
     RETURN_ON_ERROR(appendw(j->buf, ','));
+    if (j->multi) {
+      RETURN_ON_ERROR(SerializeObjectIndent(j->buf, j->z, j->depth + 1));
+    }
   }
   RETURN_ON_ERROR(appends(j->buf, elem));
   return 0;
@@ -152,18 +144,17 @@ OnError:
 }
 
 static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
-                           int level) {
+                           int depth, bool multi) {
   int i;
   char *b = 0;
-  struct Joiner j = {buf};
   struct critbit0 t = {0};
   lua_pushnil(L);
   while (lua_next(L, -2)) {
     if (lua_type(L, -2) == LUA_TSTRING) {
       RETURN_ON_ERROR(appendr(&b, 0));
       RETURN_ON_ERROR(SerializeString(L, &b, -2, z));
-      RETURN_ON_ERROR(appendw(&b, ':'));
-      RETURN_ON_ERROR(Serialize(L, &b, -1, z, level - 1));
+      RETURN_ON_ERROR(appendw(&b, z->conf.pretty ? READ16LE(": ") : ':'));
+      RETURN_ON_ERROR(Serialize(L, &b, -1, z, depth + 1));
       RETURN_ON_ERROR(critbit0_insert(&t, b));
       lua_pop(L, 1);
     } else {
@@ -171,9 +162,15 @@ static int SerializeSorted(lua_State *L, char **buf, struct Serializer *z,
       goto OnError;
     }
   }
-  RETURN_ON_ERROR(appendw(buf, '{'));
+  struct SerializerJoin j = {
+      .z = z,
+      .buf = buf,
+      .multi = multi,
+      .depth = depth,
+  };
+  RETURN_ON_ERROR(SerializeObjectStart(buf, z, depth, multi));
   RETURN_ON_ERROR(critbit0_allprefixed(&t, "", Join, &j));
-  RETURN_ON_ERROR(appendw(buf, '}'));
+  RETURN_ON_ERROR(SerializeObjectEnd(buf, z, depth, multi));
   critbit0_clear(&t);
   free(b);
   return 0;
@@ -184,8 +181,9 @@ OnError:
 }
 
 static int SerializeTable(lua_State *L, char **buf, int idx,
-                          struct Serializer *z, int level) {
+                          struct Serializer *z, int depth) {
   int rc;
+  bool multi;
   bool isarray;
   lua_Unsigned n;
   if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
@@ -206,11 +204,14 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
       lua_pop(L, 1);
     }
     if (isarray) {
-      RETURN_ON_ERROR(SerializeArray(L, buf, z, level, n));
-    } else if (z->sorted) {
-      RETURN_ON_ERROR(SerializeSorted(L, buf, z, level));
+      RETURN_ON_ERROR(SerializeArray(L, buf, z, depth, n));
     } else {
-      RETURN_ON_ERROR(SerializeObject(L, buf, z, level));
+      multi = z->conf.pretty && LuaHasMultipleItems(L);
+      if (z->conf.sorted) {
+        RETURN_ON_ERROR(SerializeSorted(L, buf, z, depth, multi));
+      } else {
+        RETURN_ON_ERROR(SerializeObject(L, buf, z, depth, multi));
+      }
     }
     LuaPopVisit(&z->visited);
     lua_pop(L, 1);  // table ref
@@ -224,8 +225,8 @@ OnError:
 }
 
 static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
-                     int level) {
-  if (level > 0) {
+                     int depth) {
+  if (depth < z->conf.maxdepth) {
     switch (lua_type(L, idx)) {
       case LUA_TNIL:
         return SerializeNull(L, buf);
@@ -236,7 +237,7 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
       case LUA_TNUMBER:
         return SerializeNumber(L, buf, idx);
       case LUA_TTABLE:
-        return SerializeTable(L, buf, idx, z, level);
+        return SerializeTable(L, buf, idx, z, depth);
       default:
         z->reason = "unsupported lua type";
         return -1;
@@ -275,11 +276,12 @@ static int Serialize(lua_State *L, char **buf, int idx, struct Serializer *z,
  * @param idx is index of item on Lua stack
  * @return 0 on success, or -1 on error
  */
-int LuaEncodeJsonData(lua_State *L, char **buf, int idx, bool sorted) {
-  int rc, depth = 64;
-  struct Serializer z = {.reason = "out of memory", .sorted = sorted};
-  if (lua_checkstack(L, depth * 3 + LUA_MINSTACK)) {
-    rc = Serialize(L, buf, idx, &z, depth);
+int LuaEncodeJsonData(lua_State *L, char **buf, int idx,
+                      struct EncoderConfig conf) {
+  int rc;
+  struct Serializer z = {.reason = "out of memory", .conf = conf};
+  if (lua_checkstack(L, conf.maxdepth * 3 + LUA_MINSTACK)) {
+    rc = Serialize(L, buf, idx, &z, 0);
     free(z.visited.p);
     free(z.strbuf);
     if (rc == -1) {

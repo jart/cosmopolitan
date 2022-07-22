@@ -787,6 +787,20 @@ FUNCTIONS
               don't care about ordering then setting `sorted=false`
               should yield a performance boost in serialization.
 
+            - pretty: (bool=false) Setting this option to true will
+              cause tables with more than one entry to be formatted
+              across multiple lines for readability.
+
+            - indent: (str=" ") This option controls the indentation of
+              pretty formatting. This field is ignored if `pretty` isn't
+              true.
+
+            - maxdepth: (int=64) This option controls the maximum amount
+              of recursion the serializer is allowed to perform. The max
+              is 32767. You might not be able to set it that high if
+              there isn't enough C stack memory. Your serializer checks
+              for this and will return an error rather than crashing.
+
           This function will return an error if:
 
             - `value` is cyclic
@@ -843,6 +857,20 @@ FUNCTIONS
               `strcmp` to impose a deterministic output order. If you
               don't care about ordering then setting `sorted=false`
               should yield a performance boost in serialization.
+
+            - pretty: (bool=false) Setting this option to true will
+              cause tables with more than one entry to be formatted
+              across multiple lines for readability.
+
+            - indent: (str=" ") This option controls the indentation of
+              pretty formatting. This field is ignored if `pretty` isn't
+              true.
+
+            - maxdepth: (int=64) This option controls the maximum amount
+              of recursion the serializer is allowed to perform. The max
+              is 32767. You might not be able to set it that high if
+              there isn't enough C stack memory. Your serializer checks
+              for this and will return an error rather than crashing.
 
           If a user data object has a `__repr` or `__tostring` meta
           method, then that'll be used to encode the Lua code.

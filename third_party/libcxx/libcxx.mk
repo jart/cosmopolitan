@@ -154,6 +154,8 @@ $(THIRD_PARTY_LIBCXX_A_OBJS):					\
 			-ffunction-sections			\
 			-fdata-sections
 
+o/$(MODE)/third_party/libcxx/locale.o: QUOTA = -C32 -M1024m
+
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))
 THIRD_PARTY_LIBCXX_SRCS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_LIBCXX_HDRS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_HDRS))

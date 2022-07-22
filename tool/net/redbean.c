@@ -4239,12 +4239,16 @@ static int LuaLog(lua_State *L) {
   return 0;
 }
 
-static int LuaEncodeSmth(lua_State *L,
-                         int Encoder(lua_State *, char **, int, bool)) {
+static int LuaEncodeSmth(lua_State *L, int Encoder(lua_State *, char **, int,
+                                                   struct EncoderConfig)) {
   char *p = 0;
-  int maxdepth = 64;
-  int sorted = true;
   int useoutput = false;
+  struct EncoderConfig conf = {
+      .maxdepth = 64,
+      .sorted = true,
+      .pretty = false,
+      .indent = "  ",
+  };
   if (lua_istable(L, 2)) {
     lua_settop(L, 2);  // discard any extra arguments
     lua_getfield(L, 2, "useoutput");
@@ -4252,11 +4256,27 @@ static int LuaEncodeSmth(lua_State *L,
     if (ishandlingrequest && lua_isboolean(L, -1)) {
       useoutput = lua_toboolean(L, -1);
     }
+    lua_getfield(L, 2, "maxdepth");
+    if (!lua_isnoneornil(L, -1)) {
+      lua_Integer n = lua_tointeger(L, -1);
+      n = MAX(0, MIN(n, SHRT_MAX));
+      conf.maxdepth = n;
+    }
     lua_getfield(L, 2, "sorted");
-    sorted = lua_toboolean(L, -1);
+    if (!lua_isnoneornil(L, -1)) {
+      conf.sorted = lua_toboolean(L, -1);
+    }
+    lua_getfield(L, 2, "pretty");
+    if (!lua_isnoneornil(L, -1)) {
+      conf.pretty = lua_toboolean(L, -1);
+      lua_getfield(L, 2, "indent");
+      if (!lua_isnoneornil(L, -1)) {
+        conf.indent = luaL_checkstring(L, -1);
+      }
+    }
   }
   lua_settop(L, 1);  // keep the passed argument on top
-  if (Encoder(L, useoutput ? &outbuf : &p, -1, sorted) == -1) {
+  if (Encoder(L, useoutput ? &outbuf : &p, -1, conf) == -1) {
     free(p);
     return 2;
   }
@@ -5373,7 +5393,13 @@ static void LuaPrint(lua_State *L) {
   if (n > 0) {
     for (i = 1; i <= n; i++) {
       if (i > 1) appendw(&b, '\t');
-      LuaEncodeLuaData(L, &b, i, true);
+      struct EncoderConfig conf = {
+          .maxdepth = 64,
+          .sorted = true,
+          .pretty = true,
+          .indent = "  ",
+      };
+      LuaEncodeLuaData(L, &b, i, conf);
     }
     appendw(&b, '\n');
     WRITE(1, b, appendz(b).i);
