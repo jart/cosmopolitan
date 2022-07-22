@@ -47,7 +47,7 @@ htobe32:
 htole32:
 be32toh:
 le32toh:
-ntohl:	
+ntohl:
 htonl:	mov	%edi,%eax
 	bswap	%eax
 	ret
@@ -64,7 +64,7 @@ htobe16:
 htole16:
 be16toh:
 le16toh:
-ntohs:	
+ntohs:
 htons:	movzwl	%di,%eax
 	xchg	%al,%ah
 	ret

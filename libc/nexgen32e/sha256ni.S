@@ -75,7 +75,7 @@ Tim Chen <tim.c.chen@linux.intel.com>\n"
 //	    void sha256_transform_ni(uint32_t digest[static 8],
 //	                             const void *data,
 //	                             int32_t numBlocks);
-//	
+//
 //	@param	%rdi points to output digest
 //	@param	%rsi points to input data
 //	@param	%rdx is number of blocks to process

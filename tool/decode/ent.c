@@ -13,10 +13,10 @@
 	Terse mode output, getopt() command line processing,
 	optional stdin input, and HTML documentation added in
 	October 1998.
-	
+
 	Documentation for the -t (terse output) option added
 	in July 2006.
-	
+
 	Replaced table look-up for chi square to probability
 	conversion with algorithmic computation in January 2008.
 

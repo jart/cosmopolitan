@@ -23,7 +23,7 @@
 //	This is intended for security-conscious applications.
 //
 //	@param	rdi is dest
-//	@param	rsi is the number of bytes to set	
+//	@param	rsi is the number of bytes to set
 explicit_bzero:
 	jmp	bzero
 	.endfn	explicit_bzero,globl

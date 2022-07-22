@@ -20,7 +20,7 @@
 
 //	Magic words to unbreak build if GCOV flags are passed.
 
-__gcov_init:	
+__gcov_init:
 	ret
 	.endfn	__gcov_init,globl,weak
 
@@ -28,7 +28,7 @@ __gcov_exit:
 	ret
 	.endfn	__gcov_exit,globl,weak
 
-__gcov_merge_add:	
+__gcov_merge_add:
 	ret
 	.endfn	__gcov_merge_add,globl,weak
 
