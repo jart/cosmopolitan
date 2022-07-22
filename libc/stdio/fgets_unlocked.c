@@ -28,7 +28,7 @@
  *
  * @param s is output buffer
  * @param size is capacity of s
- * @param f is non-null file oject stream pointer
+ * @param f is non-null file object stream pointer
  * @return s on success, NULL on error, or NULL if EOF happens when
  *     zero characters have been read
  */

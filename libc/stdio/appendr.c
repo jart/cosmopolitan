@@ -41,7 +41,7 @@
  * filled with NUL characters. If `i` is less than the current length
  * then memory is released to the system.
  *
- * The resulting buffer is guarranteed to be NUL-terminated, i.e.
+ * The resulting buffer is guaranteed to be NUL-terminated, i.e.
  * `!b[appendz(b).i]` will be the case even if both params are 0.
  *
  * @return `i` or -1 if `ENOMEM`
