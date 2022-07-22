@@ -108,7 +108,7 @@ TEST(ParseHttpRange, testInvalidRange) {
   EXPECT_EQ(0, length);
 }
 
-TEST(ParseHttpRange, testOverflow_duringIntepretation_doesntSetRanges) {
+TEST(ParseHttpRange, testOverflow_duringInterpretation_doesntSetRanges) {
   long start, length;
   const char *s = "bytes=99-9223372036854775808";
   EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));

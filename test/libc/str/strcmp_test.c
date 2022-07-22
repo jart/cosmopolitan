@@ -606,7 +606,7 @@ BENCH(memcmp, bench) {
   volatile char *copy = gc(strdup(kHyperion));
   EZBENCH2("memcmp big", donothing,
            EXPROPRIATE(memcmp(kHyperion, copy, kHyperionSize)));
-  copy = gc(strdup("tought little ship"));
+  copy = gc(strdup("tough little ship"));
   EZBENCH2("memcmp 19", donothing,
-           EXPROPRIATE(memcmp("tought little ship", copy, 19)));
+           EXPROPRIATE(memcmp("tough little ship", copy, 19)));
 }

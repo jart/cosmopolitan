@@ -83,7 +83,7 @@ poz(const double z)  /*VAR normal z value */
 #define	BIGX           20.0         /* max value to represent exp (x) */
 #define	ex(x)             (((x) < -BIGX) ? 0.0 : exp(x))
 
-/*FUNCTION pochisq: probability of chi sqaure value */
+/*FUNCTION pochisq: probability of chi square value */
 /*ALGORITHM Compute probability of chi square value.
 	Adapted from:
 		Hill, I. D. and Pike, M. C.  Algorithm 299

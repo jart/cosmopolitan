@@ -26,7 +26,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Returns path of executable interperter.
+ * Returns path of executable interpreter.
  *
  * Unlike `program_executable_name` which is designed to figure out the
  * absolute path of the first argument passed to `execve()`, what we do

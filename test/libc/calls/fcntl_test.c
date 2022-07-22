@@ -47,7 +47,7 @@ TEST(fcntl_getfl, testRemembersAccessMode) {
 
 TEST(fcntl_setfl, testChangeAppendStatus) {
   if (IsWindows()) {
-    // no obivous way to do fcntl(fd, F_SETFL, O_APPEND)
+    // no obvious way to do fcntl(fd, F_SETFL, O_APPEND)
     return;
   }
   int fd;

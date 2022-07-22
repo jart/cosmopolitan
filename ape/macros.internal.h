@@ -54,7 +54,7 @@
 	jmp	297f
 	.byte	0xbf			# mov $0x????xxxx,%edi
 	.long	\address
-297:	
+297:
 .endm
 
 //	Loads 16-bit CONSTEXPR into Qw-register w/ optional zero-extend.

@@ -185,7 +185,7 @@ typedef float __m128_u _Vector_size(16) forcealign(1) mayalias;
 #define _mm_movehl_ps(M128_0, M128_1)                        \
   ((__m128)__builtin_shufflevector((__v4sf)(__m128)(M128_0), \
                                    (__v4sf)(__m128)(M128_1), 6, 7, 2, 3))
-/* instrinsics unstable & constantly breaking, consider ansi c or asm. */
+/* intrinsics unstable & constantly breaking, consider ansi c or asm. */
 /* each version of llvm has a different incompatible impl for this one */
 #else
 #define _mm_movehl_ps(M128_0, M128_1)                       \

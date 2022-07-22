@@ -257,7 +257,7 @@ TEST(ParseUrl, testEmptyParams_absentCanBeDiscerned) {
   ASSERT_NE(NULL, h.params.p);
 }
 
-TEST(ParseUrl, testWeirdAmps_areReprodicible) {
+TEST(ParseUrl, testWeirdAmps_areReproducible) {
   struct Url h;
   gc(ParseUrl("?&&", -1, &h));
   gc(h.params.p);

@@ -30,7 +30,7 @@
 #define VERSION 0x0202 /* Windows Vista+ */
 
 /**
- * Information about underyling Windows Sockets implemmentation.
+ * Information about underlying Windows Sockets implementation.
  *
  * Cosmopolitan automatically calls YOINK() on this symbol when its
  * Berkeley Socket wrappers are linked. The latest version of Winsock

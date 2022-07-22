@@ -41,7 +41,7 @@ char *_mktls(char **out_tib) {
   // organized _Thread_local data, as well as Cosmpolitan Libc (64)
   if (!(tls = calloc(1, _MEMZ))) return 0;
 
-  // set up thread informaiton block
+  // set up thread information block
   tib = (cthread_t)(tls + _MEMZ - _TIBZ);
   tib->self = tib;
   tib->self2 = tib;

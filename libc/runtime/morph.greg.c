@@ -64,7 +64,7 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
 }
 
 /**
- * Begins code morphing execuatble.
+ * Begins code morphing executable.
  *
  * @return 0 on success, or -1 w/ errno
  */
@@ -97,7 +97,7 @@ privileged void __morph_begin(void) {
 }
 
 /**
- * Begins code morphing execuatble.
+ * Begins code morphing executable.
  */
 privileged void __morph_end(void) {
   int ax;

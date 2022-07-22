@@ -217,6 +217,6 @@
            (lambda (x)
              (lambda ()
                x))))))
-     ((error '(enclosed memory failed to propogate upward))))
+     ((error '(enclosed memory failed to propagate upward))))
   (ignore))
 
