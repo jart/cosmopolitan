@@ -359,7 +359,7 @@ basic_istream<_CharT, _Traits>::~basic_istream()
 }
 
 template <class _Tp, class _CharT, class _Traits>
-_LIBCPP_INLINE_VISIBILITY
+inline _LIBCPP_INLINE_VISIBILITY
 basic_istream<_CharT, _Traits>&
 __input_arithmetic(basic_istream<_CharT, _Traits>& __is, _Tp& __n) {
     ios_base::iostate __state = ios_base::goodbit;
@@ -468,7 +468,7 @@ basic_istream<_CharT, _Traits>::operator>>(void*& __n)
 }
 
 template <class _Tp, class _CharT, class _Traits>
-_LIBCPP_INLINE_VISIBILITY
+inline _LIBCPP_INLINE_VISIBILITY
 basic_istream<_CharT, _Traits>&
 __input_arithmetic_with_numeric_limits(basic_istream<_CharT, _Traits>& __is, _Tp& __n) {
     ios_base::iostate __state = ios_base::goodbit;

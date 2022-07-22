@@ -17,7 +17,7 @@ int tcsetpgrp(int, int32_t);
 int32_t tcgetpgrp(int);
 
 int openpty(int *, int *, char *, const struct termios *,
-            const struct winsize *) paramsnonnull((1, 2)) dontdiscard;
+            const struct winsize *) paramsnonnull((1, 2));
 int forkpty(int *, char *, const struct termios *, const struct winsize *)
     paramsnonnull((1, 2)) dontdiscard;
 char *ptsname(int);

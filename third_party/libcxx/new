@@ -95,10 +95,6 @@ void  operator delete[](void* ptr, void*) noexcept;
 #include "third_party/libcxx/cstdlib"
 #endif
 
-#if defined(_LIBCPP_ABI_VCRUNTIME)
-#include "third_party/libcxx/new.h"
-#endif
-
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
 #endif

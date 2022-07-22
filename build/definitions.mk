@@ -176,7 +176,8 @@ DEFAULT_CXXFLAGS =							\
 	-fuse-cxa-atexit						\
 	-fno-threadsafe-statics						\
 	-Wno-int-in-bool-context					\
-	-Wno-narrowing
+	-Wno-narrowing							\
+	-Wno-literal-suffix
 
 DEFAULT_ASFLAGS =							\
 	-W								\

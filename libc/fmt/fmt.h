@@ -35,7 +35,7 @@ char *ecvt(double, int, int *, int *);
 │ cosmopolitan § string formatting » optimizations                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && !defined(__cplusplus)
 #define sprintf(BUF, FMT, ...)        (sprintf)(BUF, PFLINK(FMT), ##__VA_ARGS__)
 #define vsprintf(BUF, FMT, VA)        (vsprintf)(BUF, PFLINK(FMT), VA)
 #define snprintf(B, Z, F, ...)        (snprintf)(B, Z, PFLINK(F), ##__VA_ARGS__)

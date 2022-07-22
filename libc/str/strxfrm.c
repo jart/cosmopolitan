@@ -29,7 +29,7 @@
 #include "libc/str/str.h"
 
 /**
- * transforms strings into the current C locale.
+ * Transforms strings into current C locale.
  * calling strcmp() on two strxfrm()-ed strings
  * is same as calling strcoll() on the originals.
  *

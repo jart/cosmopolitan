@@ -109,11 +109,11 @@ o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/as
 # TODO(jart): find a way to generate dependencies
 #             or alternatively disable sandboxing
 o/%.h.ok: %.h
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+#	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 o/$(MODE)/%.h.ok: %.h
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+#	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 o/$(MODE)/%.hh.ok: %.hh
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+#	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<

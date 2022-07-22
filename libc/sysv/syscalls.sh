@@ -206,7 +206,7 @@ scall	sys_sched_get_priority_max 0xffffff14cffff092	globl hidden
 scall	sys_sched_get_priority_min 0xffffff14dffff093	globl hidden
 scall	cpuset_getaffinity	0xffffff1e7fffffff	globl
 scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
-scall	sched_rr_get_interval	0xffffff14effff094	globl
+scall	sys_sched_rr_get_interval 0xffffff14effff094	globl hidden
 scall	vhangup			0xfffffffffffff099	globl
 scall	modify_ldt		0xfffffffffffff09a	globl
 scall	pivot_root		0xfffffffffffff09b	globl

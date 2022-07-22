@@ -12,6 +12,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/makedev.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/struct/tms.h"
 #include "libc/calls/struct/utsname.h"

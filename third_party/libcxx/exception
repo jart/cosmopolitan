@@ -82,10 +82,6 @@ template <class E> void rethrow_if_nested(const E& e);
 #include "third_party/libcxx/type_traits"
 #include "third_party/libcxx/version"
 
-#if defined(_LIBCPP_ABI_VCRUNTIME)
-#include "third_party/libcxx/vcruntime_exception.h"
-#endif
-
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
 #endif

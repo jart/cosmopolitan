@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
-#include "libc/bits/atomic.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 
@@ -130,20 +129,20 @@ void *pthread_getspecific(pthread_key_t);
   })
 #endif
 
-#ifdef __GNUC__
-#define pthread_mutex_lock(mutex)                                  \
-  (((mutex)->attr == PTHREAD_MUTEX_NORMAL &&                       \
-    !atomic_load_explicit(&(mutex)->lock, memory_order_relaxed) && \
-    !atomic_exchange(&(mutex)->lock, 1))                           \
-       ? 0                                                         \
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
+#define pthread_mutex_lock(mutex)                              \
+  (((mutex)->attr == PTHREAD_MUTEX_NORMAL &&                   \
+    !__atomic_load_n(&(mutex)->lock, __ATOMIC_RELAXED) &&      \
+    !__atomic_exchange_n(&(mutex)->lock, 1, __ATOMIC_SEQ_CST)) \
+       ? 0                                                     \
        : pthread_mutex_lock(mutex))
-#define pthread_mutex_unlock(mutex)                                       \
-  ((mutex)->attr == PTHREAD_MUTEX_NORMAL                                  \
-       ? (atomic_store_explicit(&(mutex)->lock, 0, memory_order_relaxed), \
-          ((IsLinux() || IsOpenbsd()) &&                                  \
-           atomic_load_explicit(&(mutex)->waits, memory_order_relaxed) && \
-           _pthread_mutex_wake(mutex)),                                   \
-          0)                                                              \
+#define pthread_mutex_unlock(mutex)                              \
+  ((mutex)->attr == PTHREAD_MUTEX_NORMAL                         \
+       ? (__atomic_store_n(&(mutex)->lock, 0, __ATOMIC_RELAXED), \
+          ((IsLinux() || IsOpenbsd()) &&                         \
+           __atomic_load_n(&(mutex)->waits, __ATOMIC_RELAXED) && \
+           _pthread_mutex_wake(mutex)),                          \
+          0)                                                     \
        : pthread_mutex_unlock(mutex))
 #endif
 

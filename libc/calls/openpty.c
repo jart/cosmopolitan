@@ -41,7 +41,7 @@ int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
   char buf[20];
   if ((m = open("/dev/ptmx", O_RDWR | O_NOCTTY)) != -1) {
     n = 0;
-    if (!ioctl(m, TIOCSPTLCK, &n) || !ioctl(m, TIOCGPTN, &n)) {
+    if (!ioctl(m, TIOCSPTLCK, &n) && !ioctl(m, TIOCGPTN, &n)) {
       if (!name) name = buf;
       name[0] = '/', name[1] = 'd', name[2] = 'e', name[3] = 'v';
       name[4] = '/', name[5] = 'p', name[6] = 't', name[7] = 's';

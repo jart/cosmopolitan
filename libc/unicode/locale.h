@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_UNICODE_LOCALE_H_
 #define COSMOPOLITAN_LIBC_UNICODE_LOCALE_H_
 #include "libc/fmt/conv.h"
+#include "libc/time/struct/tm.h"
 
 #define LC_CTYPE         0
 #define LC_NUMERIC       1
@@ -24,20 +25,43 @@ struct __locale_struct;
 typedef struct __locale_struct *locale_t;
 
 char *setlocale(int, const char *);
-locale_t uselocale(locale_t);
-locale_t newlocale(int, const char *, locale_t);
-long long strtoll_l(const char *, char **, int, locale_t);
-unsigned long long strtoull_l(const char *, char **, int, locale_t);
-long long wcstoll_l(const wchar_t *, wchar_t **, int, locale_t);
-unsigned long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
+double strtod_l(const char *, char **, locale_t);
+double wcstod_l(const wchar_t *, wchar_t **, locale_t);
 float strtof_l(const char *, char **, locale_t);
 float wcstof_l(const wchar_t *, wchar_t **, locale_t);
-double wcstod_l(const wchar_t *, wchar_t **, locale_t);
-long double wcstold_l(const wchar_t *, wchar_t **, locale_t);
-double strtod_l(const char *, char **, locale_t);
-long double strtold_l(const char *, char **, locale_t);
-int isxdigit_l(int, locale_t);
 int isdigit_l(int, locale_t);
+int islower_l(int, locale_t);
+int isupper_l(int, locale_t);
+int iswalpha_l(wint_t, locale_t);
+int iswblank_l(wint_t, locale_t);
+int iswcntrl_l(wint_t, locale_t);
+int iswdigit_l(wint_t, locale_t);
+int iswlower_l(wint_t, locale_t);
+int iswprint_l(wint_t, locale_t);
+int iswpunct_l(wint_t, locale_t);
+int iswspace_l(wint_t, locale_t);
+int iswupper_l(wint_t, locale_t);
+int iswxdigit_l(wint_t, locale_t);
+int isxdigit_l(int, locale_t);
+int strcoll_l(const char *, const char *, locale_t);
+int tolower_l(int, locale_t);
+int toupper_l(int, locale_t);
+int wcscoll_l(const wchar_t *, const wchar_t *, locale_t);
+locale_t duplocale(locale_t);
+locale_t newlocale(int, const char *, locale_t);
+locale_t uselocale(locale_t);
+long double strtold_l(const char *, char **, locale_t);
+long double wcstold_l(const wchar_t *, wchar_t **, locale_t);
+long long strtoll_l(const char *, char **, int, locale_t);
+long long wcstoll_l(const wchar_t *, wchar_t **, int, locale_t);
+size_t strftime_l(char *, size_t, char const *, struct tm const *, locale_t);
+size_t strxfrm_l(char *, const char *, size_t, locale_t);
+size_t wcsxfrm_l(wchar_t *, const wchar_t *, size_t, locale_t);
+unsigned long long strtoull_l(const char *, char **, int, locale_t);
+unsigned long long wcstoull_l(const wchar_t *, wchar_t **, int, locale_t);
+void freelocale(locale_t);
+wint_t towlower_l(wint_t, locale_t);
+wint_t towupper_l(wint_t, locale_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

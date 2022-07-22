@@ -24,8 +24,10 @@
 #elif !defined(_LIBCPP_HAS_NO_THREADS)
 
 #if defined(_LIBCPP_HAS_THREAD_API_PTHREAD)
-# include "third_party/libcxx/pthread.h"
-# include "third_party/libcxx/sched.h"
+#include "libc/intrin/pthread.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sched_param.h"
+#include "libc/sysv/consts/sched.h"
 #endif
 
 #if defined(_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL) || \

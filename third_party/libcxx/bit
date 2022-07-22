@@ -59,13 +59,6 @@ namespace std {
 #include "third_party/libcxx/version"
 #include "third_party/libcxx/__debug"
 
-#if defined(__IBMCPP__)
-#include "support/ibm/support.h"
-#endif
-#if defined(_LIBCPP_COMPILER_MSVC)
-#include "third_party/libcxx/intrin.h"
-#endif
-
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header
 #endif

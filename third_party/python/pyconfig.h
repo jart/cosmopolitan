@@ -50,7 +50,7 @@
 /* #undef HAVE_CONFSTR */
 
 /* Define to 1 if you have the `ctermid' function. */
-/* #undef HAVE_CTERMID */
+#define HAVE_CTERMID 1
 
 /* Define if you have the 'ctermid_r' function. */
 /* #undef HAVE_CTERMID_R */
@@ -217,9 +217,6 @@
 /* Define to 1 if you have the `ieee' library (-lieee). */
 /* #undef HAVE_LIBIEEE */
 
-/* Define if you have the readline library (-lreadline). */
-/* #undef HAVE_LIBREADLINE */
-
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 /* #undef HAVE_LIBRESOLV */
 
@@ -240,68 +237,17 @@
 #define HAVE_MEMMOVE 1
 #define HAVE_MEMRCHR 1
 
-/* /\* #undef HAVE_RL_APPEND_HISTORY *\/ */
-/* /\* #undef HAVE_RL_CALLBACK *\/ */
-/* #define HAVE_RL_CATCH_SIGNAL 1 */
-/* #define HAVE_RL_COMPLETION_APPEND_CHARACTER 1 */
-/* #define HAVE_RL_COMPLETION_DISPLAY_MATCHES_HOOK 1 */
-/* /\* #undef HAVE_RL_COMPLETION_MATCHES *\/ */
-/* #define HAVE_RL_COMPLETION_SUPPRESS_APPEND 1 */
-/* #define HAVE_RL_PRE_INPUT_HOOK 1 */
-/* /\* #undef HAVE_RL_RESIZE_TERMINAL *\/ */
-
-/* Define to 1 if you have the `sched_get_priority_max' function. */
-/* #undef HAVE_SCHED_GET_PRIORITY_MAX */
-
-/* Define to 1 if you have the `sched_rr_get_interval' function. */
-/* #undef HAVE_SCHED_RR_GET_INTERVAL */
-
 /* #undef HAVE_SEM_GETVALUE */
 /* #undef HAVE_SEM_OPEN */
 /* #undef HAVE_SEM_TIMEDWAIT */
 /* #undef HAVE_SEM_UNLINK */
 
-#define HAVE_SELECT           1
-#define HAVE_SENDFILE         1
-#define HAVE_SETEGID          1
-#define HAVE_SETEUID          1
-#define HAVE_SETGID           1
-#define HAVE_SETHOSTNAME      1
-#define HAVE_SETITIMER        1
-#define HAVE_SETLOCALE        1
-#define HAVE_SETPGID          1
-#define HAVE_SETPRIORITY      1
-#define HAVE_UTIMENSAT        1
-#define HAVE_UTIMES           1
-#define HAVE_WAIT             1
-#define HAVE_WAIT3            1
-#define HAVE_WAIT4            1
-#define HAVE_WAITPID          1
-#define HAVE_SYMLINK          1
-#define HAVE_SYMLINKAT        1
-#define HAVE_SYNC             1
-#define HAVE_SYSCONF          1
-#define HAVE_TCGETPGRP        1
-#define HAVE_TCSETPGRP        1
-#define HAVE_TEMPNAM          1
-#define HAVE_TIMEGM           1
-#define HAVE_TIMES            1
-#define HAVE_TMPFILE          1
-#define HAVE_UNAME            1
-#define HAVE_UNLINKAT         1
-#define HAVE_UNSETENV         1
-#define HAVE_TRUNCATE         1
-#define HAVE_SETREGID         1
-#define HAVE_SETRESGID        1
-#define HAVE_SETRESUID        1
-#define HAVE_SETREUID         1
-#define HAVE_SETSID           1
-#define HAVE_SETUID           1
-#define HAVE_SETVBUF          1
-#define HAVE_SIGACTION        1
-#define HAVE_SIGINTERRUPT     1
-#define HAVE_SOCKADDR_STORAGE 1
 #define HAVE_DIRENT_H         1
+#define HAVE_GETPPID          1
+#define HAVE_LINK             1
+#define HAVE_LINKAT           1
+#define HAVE_LSTAT            1
+#define HAVE_LUTIMES          1
 #define HAVE_MKFIFO           1
 #define HAVE_MKFIFOAT         1
 #define HAVE_MKNOD            1
@@ -311,10 +257,6 @@
 #define HAVE_NICE             1
 #define HAVE_OPENAT           1
 #define HAVE_PATHCONF         1
-#define HAVE_LINK             1
-#define HAVE_LINKAT           1
-#define HAVE_LSTAT            1
-#define HAVE_LUTIMES          1
 #define HAVE_PAUSE            1
 #define HAVE_PIPE             1
 #define HAVE_PIPE2            1
@@ -328,7 +270,47 @@
 #define HAVE_READV            1
 #define HAVE_REALPATH         1
 #define HAVE_RENAMEAT         1
+#define HAVE_SELECT           1
+#define HAVE_SENDFILE         1
+#define HAVE_SETEGID          1
+#define HAVE_SETEUID          1
+#define HAVE_SETGID           1
+#define HAVE_SETHOSTNAME      1
+#define HAVE_SETITIMER        1
+#define HAVE_SETLOCALE        1
+#define HAVE_SETPGID          1
+#define HAVE_SETPRIORITY      1
+#define HAVE_SETREGID         1
+#define HAVE_SETRESGID        1
+#define HAVE_SETRESUID        1
+#define HAVE_SETREUID         1
+#define HAVE_SETSID           1
+#define HAVE_SETUID           1
+#define HAVE_SETVBUF          1
+#define HAVE_SIGACTION        1
 #define HAVE_SIGALTSTACK      1
+#define HAVE_SIGINTERRUPT     1
+#define HAVE_SOCKADDR_STORAGE 1
+#define HAVE_SYMLINK          1
+#define HAVE_SYMLINKAT        1
+#define HAVE_SYNC             1
+#define HAVE_SYSCONF          1
+#define HAVE_TCGETPGRP        1
+#define HAVE_TCSETPGRP        1
+#define HAVE_TEMPNAM          1
+#define HAVE_TIMEGM           1
+#define HAVE_TIMES            1
+#define HAVE_TMPFILE          1
+#define HAVE_TRUNCATE         1
+#define HAVE_UNAME            1
+#define HAVE_UNLINKAT         1
+#define HAVE_UNSETENV         1
+#define HAVE_UTIMENSAT        1
+#define HAVE_UTIMES           1
+#define HAVE_WAIT             1
+#define HAVE_WAIT3            1
+#define HAVE_WAIT4            1
+#define HAVE_WAITPID          1
 
 /* #define HAVE_MREMAP 1 */
 /* #undef HAVE_PLOCK */
@@ -563,9 +545,11 @@
 /* Define if `unsetenv` does not return an int. */
 /* #undef HAVE_BROKEN_UNSETENV */
 
-#define HAVE_SCHED_SETAFFINITY 1
-/* #define HAVE_SCHED_SETPARAM 1 */
-/* #define HAVE_SCHED_SETSCHEDULER 1 */
+#define HAVE_SCHED_SETAFFINITY      1
+#define HAVE_SCHED_SETPARAM         1
+#define HAVE_SCHED_SETSCHEDULER     1
+#define HAVE_SCHED_GET_PRIORITY_MAX 1
+#define HAVE_SCHED_RR_GET_INTERVAL  1
 
 #define Py_NSIG           32
 #define HAVE_SYSTEM       1
