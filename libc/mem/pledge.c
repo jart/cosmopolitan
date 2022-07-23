@@ -1438,17 +1438,17 @@ int ParsePromises(const char *promises, unsigned long *out) {
  *   placeholder group for pledge.com, which reads the `__promises`
  *   global to determine if /tmp and $TMPPATH should be unveiled.
  *
- * `execpromises` only matters if "exec" or "execnative" are specified
- * in `promises`. In that case, this specifies the promises that'll
- * apply once execve() happens. If this is NULL then the default is
- * used, which is unrestricted. OpenBSD allows child processes to escape
- * the sandbox (so a pledged OpenSSH server process can do things like
- * spawn a root shell). Linux however requires monotonically decreasing
- * privileges. This function will will perform some validation on Linux
- * to make sure that `execpromises` is a subset of `promises`. Your libc
- * wrapper for execve() will then apply its SECCOMP BPF filter later.
- * Since Linux has to do this before calling sys_execve(), the executed
- * process will be weakened to have execute permissions too.
+ * `execpromises` only matters if "exec" is specified in `promises`. In
+ * that case, this specifies the promises that'll apply once execve()
+ * happens. If this is NULL then the default is used, which is
+ * unrestricted. OpenBSD allows child processes to escape the sandbox
+ * (so a pledged OpenSSH server process can do things like spawn a root
+ * shell). Linux however requires monotonically decreasing privileges.
+ * This function will will perform some validation on Linux to make sure
+ * that `execpromises` is a subset of `promises`. Your libc wrapper for
+ * execve() will then apply its SECCOMP BPF filter later. Since Linux
+ * has to do this before calling sys_execve(), the executed process will
+ * be weakened to have execute permissions too.
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if host os isn't Linux or OpenBSD
