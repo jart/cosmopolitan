@@ -22,6 +22,7 @@ end
 test("\x69\xb7\x1d\x79\xf8\x00\x04\x20\xc4", "abcdefgABCDE")
 
 -- 🦞 padding tests
+--    https://datatracker.ietf.org/doc/html/rfc4648#section-10
 test("", "")
 test("r", "cg==")
 test("re", "cmU=")
