@@ -63,9 +63,6 @@ assert(url.path == "/2.0.html")
 assert(EncodeLua(url.params) == '{{"x"}, {"y", "z"}}')
 assert(url.fragment == "frag")
 
-assert(DecodeBase64("abcdefgABCDE") == "\x69\xb7\x1d\x79\xf8\x00\x04\x20\xc4")
-assert(EncodeBase64("\x69\xb7\x1d\x79\xf8\x00\x04\x20\xc4") == "abcdefgABCDE")
-
 assert(Decimate("\xff\xff\x00\x00\xff\xff\x00\x00\xff\xff\x00\x00") == "\xff\x00\xff\x00\xff\x00")
 
 assert(Underlong("hello") == "hello")
