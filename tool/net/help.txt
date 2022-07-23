@@ -1503,7 +1503,7 @@ FUNCTIONS
       ├─→ data:str
       └─→ nil, unix.Errno
 
-          Writes all data from file the easy way.
+          Reads all data from file the easy way.
 
           This function reads file data from local file system. Zip file
           assets can be accessed using the `/zip/...` prefix.
