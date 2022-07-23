@@ -13,6 +13,8 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
+unix.pledge("stdio")
+
 assert(assert(argon2.hash_encoded("password", "somesalt", {
                variant = argon2.variants.argon2_i,
                m_cost = 65536,

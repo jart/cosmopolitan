@@ -151,6 +151,9 @@ end
 
 function main()
    assert(unix.makedirs(tmpdir))
+   unix.unveil(tmpdir, "rwc")
+   unix.unveil(nil, nil)
+   unix.pledge("stdio rpath wpath cpath proc")
    ok, err = pcall(UnixTest)
    if ok then
       assert(unix.rmrf(tmpdir))

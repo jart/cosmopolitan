@@ -216,7 +216,7 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
 
 
 /**
- * Improved Lua traceback.
+ * [jart] Improved Lua traceback.
  * @see https://luyuhuang.tech/2020/12/01/lua-traceback-with-parameters.html
  * @author Luyu Huang
  */

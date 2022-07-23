@@ -26,6 +26,8 @@
 -- SOFTWARE.
 --
 
+unix.pledge("stdio")
+
 -- these test cases are prefixed with n_
 -- ljson should reject all of them as invalid
 

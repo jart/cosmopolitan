@@ -13,6 +13,8 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
+unix.pledge("stdio")
+
 x = Rdtsc()
 y = Rdtsc()
 assert(y > x)

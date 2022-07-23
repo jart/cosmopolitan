@@ -3965,14 +3965,14 @@ UNIX MODULE
 
         unix.unveil(".", "r");     -- current dir + children visible
         unix.unveil("/etc", "r");  -- make /etc readable too
-        unix.unveil(0, 0);         -- commit and lock policy
+        unix.unveil(nil, nil);     -- commit and lock policy
 
     Unveiling restricts a thread's view of the filesystem to a set of
     allowed paths with specific privileges.
 
     Once you start using unveil(), the entire file system is considered
     hidden. You then specify, by repeatedly calling unveil(), which paths
-    should become unhidden. When you're finished, you call `unveil(0,0)`
+    should become unhidden. When you're finished, you call `unveil(nil,nil)`
     which commits your policy, after which further use is forbidden, in
     the current thread, as well as any threads or processes it spawns.
 
@@ -3981,7 +3981,7 @@ UNIX MODULE
     1. Build your policy and lock it in one go. On OpenBSD, policies take
        effect immediately and may evolve as you continue to call unveil()
        but only in a more restrictive direction. On Linux, nothing will
-       happen until you call `unveil(0,0)` which commits and locks.
+       happen until you call `unveil(nil,nil)` which commits and locks.
 
     2. Try not to overlap directory trees. On OpenBSD, if directory trees
        overlap, then the most restrictive policy will be used for a given

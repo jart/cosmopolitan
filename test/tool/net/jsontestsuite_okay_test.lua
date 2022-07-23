@@ -26,6 +26,8 @@
 -- SOFTWARE.
 --
 
+unix.pledge("stdio")
+
 -- these test cases are prefixed with i_
 -- ljson is free to accept or reject,
 -- but we run them anyway to check for segfaults

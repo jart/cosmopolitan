@@ -1382,13 +1382,13 @@ static int LuaUnixPledge(lua_State *L) {
                     pledge(luaL_checkstring(L, 1), luaL_optstring(L, 2, 0)));
 }
 
-// sandbox.unveil(path:str, permissions:str)
+// sandbox.unveil([path:str[, permissions:str]])
 //     ├─→ true
 //     └─→ nil, unix.Errno
 static int LuaUnixUnveil(lua_State *L) {
   int olderr = errno;
   return SysretBool(L, "unveil", olderr,
-                    unveil(luaL_checkstring(L, 1), luaL_checkstring(L, 2)));
+                    unveil(luaL_optstring(L, 1, 0), luaL_optstring(L, 2, 0)));
 }
 
 // unix.gethostname()

@@ -13,6 +13,8 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
+unix.pledge("stdio")
+
 assert(EncodeLua(nil) == "nil")
 assert(EncodeLua(true) == "true")
 assert(EncodeLua(false) == "false")
