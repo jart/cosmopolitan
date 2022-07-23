@@ -1012,6 +1012,8 @@ static void ProgramHeader(const char *s) {
 
 static void ProgramLogPath(const char *s) {
   logpath = strdup(s);
+  close(2);
+  open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
 }
 
 static void ProgramPidPath(const char *s) {
@@ -1054,11 +1056,6 @@ static void Daemonize(void) {
     WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
     close(fd);
   }
-  if (!logpath) ProgramLogPath("/dev/null");
-  open("/dev/null", O_RDONLY);
-  open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
-  dup2(1, 2);
-  ChangeUser();
 }
 
 static void LogLuaError(char *hook, char *err) {
@@ -7310,6 +7307,8 @@ void RedBean(int argc, char *argv[]) {
         close(i);
       }
     }
+    open("/dev/null", O_RDONLY);
+    open("/dev/null", O_WRONLY);
   }
   zpath = GetProgramExecutableName();
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
@@ -7328,6 +7327,10 @@ void RedBean(int argc, char *argv[]) {
   if (uniprocess) {
     shared->workers = 1;
   }
+  if (daemonize) {
+    if (!logpath) ProgramLogPath("/dev/null");
+    dup2(2, 1);
+  }
   SigInit();
   Listen();
   TlsInit();
@@ -7336,13 +7339,8 @@ void RedBean(int argc, char *argv[]) {
   }
   if (daemonize) {
     Daemonize();
-  } else {
-    if (logpath) {
-      close(2);
-      open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
-    }
-    ChangeUser();
   }
+  ChangeUser();
   UpdateCurrentDate(nowl());
   CollectGarbage();
   hdrbuf.n = 4 * 1024;
