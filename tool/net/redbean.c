@@ -1045,17 +1045,10 @@ static void ChangeUser(void) {
 }
 
 static void Daemonize(void) {
-  char ibuf[21];
-  int fd;
   if (fork() > 0) exit(0);
   setsid();
   if (fork() > 0) _exit(0);
   umask(0);
-  if (pidpath) {
-    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
-    WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
-    close(fd);
-  }
 }
 
 static void LogLuaError(char *hook, char *err) {
@@ -7287,6 +7280,8 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 void RedBean(int argc, char *argv[]) {
+  char ibuf[21];
+  int fd;
   if (IsLinux()) {
     // disable sneak privilege since we don't use them
     // seccomp will fail later if this fails
@@ -7339,6 +7334,11 @@ void RedBean(int argc, char *argv[]) {
   }
   if (daemonize) {
     Daemonize();
+  }
+  if (pidpath) {
+    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
+    WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
+    close(fd);
   }
   ChangeUser();
   UpdateCurrentDate(nowl());
