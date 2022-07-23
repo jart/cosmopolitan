@@ -1044,15 +1044,10 @@ static void ChangeUser(void) {
 
 static void Daemonize(void) {
   char ibuf[21];
-  int i, fd, pid;
-  for (i = 0; i < 256; ++i) {
-    if (!IsServerFd(i)) {
-      close(i);
-    }
-  }
-  if ((pid = fork()) > 0) exit(0);
+  int fd;
+  if (fork() > 0) exit(0);
   setsid();
-  if ((pid = fork()) > 0) _exit(0);
+  if (fork() > 0) _exit(0);
   umask(0);
   if (pidpath) {
     fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
@@ -7309,6 +7304,13 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
+  if (daemonize) {
+    for (int i = 0; i < 256; ++i) {
+      if (!IsServerFd(i)) {
+        close(i);
+      }
+    }
+  }
   zpath = GetProgramExecutableName();
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
