@@ -302,7 +302,8 @@ textstartup void __printargs(const char *prologue) {
     if (prctl(PR_CAPBSET_READ, 0) != -1) {
       for (gotsome = i = 0; i <= CAP_LAST_CAP; ++i) {
         if (prctl(PR_CAPBSET_READ, i) == 1) {
-          PRINT(" ☼ %s", DescribeCapability(i));
+          char buf[64];
+          PRINT(" ☼ %s", (DescribeCapability)(buf, i));
           gotsome = true;
         }
       }
