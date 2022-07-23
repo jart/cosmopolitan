@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -44,6 +45,7 @@ int IsDebuggerPresent(bool force) {
   if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
   if (IsWindows()) return IsBeingDebugged();
   if (__isworker) return false;
+  if (!PLEDGED(RPATH)) return false;
   res = 0;
   if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
     if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {

@@ -25,6 +25,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
   signed char tab[256] = {0};
   for (i = 0; i < 256; ++i) {
     if (i < 0x20) tab[i] = 1;   // hex
-    if (i >= 0x7f) tab[i] = 1;  // hex
+    if (i >= 0x7f) tab[i] = 2;  // hex/utf8
   }
   tab['\e'] = 'e';
   tab['\a'] = 'a';
@@ -172,36 +173,42 @@ static const char kLuaStrXlat[256] = {
   0,0,0,0,0,0,0,0,0,0,0,0,'\\',0,0,0, // 0x50
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x60
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1, // 0x70
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x80
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x90
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xa0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xb0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xc0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xd0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xe0
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0xf0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0x80
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0x90
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xa0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xb0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xc0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xd0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xe0
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xf0
 };
 // clang-format on
 
 static int SerializeString(lua_State *L, char **buf, int idx) {
-  int x;
+  int c, x;
+  bool utf8;
   size_t i, n;
   const char *s;
   s = lua_tolstring(L, idx, &n);
+  utf8 = _isutf8(s, n);
   RETURN_ON_ERROR(appendw(buf, '"'));
   for (i = 0; i < n; i++) {
-    switch ((x = kLuaStrXlat[s[i] & 255])) {
+    switch ((x = kLuaStrXlat[(c = s[i] & 255)])) {
       case 0:
-        RETURN_ON_ERROR(appendw(buf, s[i]));
+      EmitByte:
+        RETURN_ON_ERROR(appendw(buf, c));
         break;
-      default:
-        RETURN_ON_ERROR(appendw(buf, READ32LE("\\\x00\x00") | (x << 8)));
-        break;
+      case 2:
+        if (utf8) goto EmitByte;
+        // fallthrough
       case 1:
         RETURN_ON_ERROR(
             appendw(buf, '\\' | 'x' << 010 |
-                             "0123456789abcdef"[(s[i] & 0xF0) >> 4] << 020 |
-                             "0123456789abcdef"[(s[i] & 0x0F) >> 0] << 030));
+                             "0123456789abcdef"[(c & 0xF0) >> 4] << 020 |
+                             "0123456789abcdef"[(c & 0x0F) >> 0] << 030));
+        break;
+      default:
+        RETURN_ON_ERROR(appendw(buf, READ32LE("\\\x00\x00") | (x << 8)));
         break;
     }
   }

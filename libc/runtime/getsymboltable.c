@@ -20,6 +20,7 @@
 #include "libc/bits/bits.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
@@ -95,7 +96,7 @@ static struct SymbolTable *GetSymbolTableFromZip(struct Zipos *zipos) {
 static struct SymbolTable *GetSymbolTableFromElf(void) {
   int e;
   const char *s;
-  if ((s = FindDebugBinary())) {
+  if (PLEDGED(RPATH) && (s = FindDebugBinary())) {
     return OpenSymbolTable(s);
   } else {
     return 0;

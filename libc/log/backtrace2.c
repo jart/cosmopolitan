@@ -31,6 +31,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
@@ -64,6 +65,10 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   const struct StackFrame *frame;
   char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
+
+  if (!PLEDGED(STDIO) || !PLEDGED(EXEC) || !PLEDGED(EXEC)) {
+    return -1;
+  }
 
   if (!(debugbin = FindDebugBinary())) {
     return -1;

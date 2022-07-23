@@ -212,8 +212,13 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
    */
   const testfn_t *fn;
   CopySignalHandlers();
-  CHECK_NOTNULL(getcwd(g_testlib_olddir, sizeof(g_testlib_olddir)));
-  if (weaken(testlib_enable_tmp_setup_teardown_once)) SetupTmpDir();
+  if (weaken(testlib_enable_tmp_setup_teardown) ||
+      weaken(testlib_enable_tmp_setup_teardown_once)) {
+    CHECK_NOTNULL(getcwd(g_testlib_olddir, sizeof(g_testlib_olddir)));
+  }
+  if (weaken(testlib_enable_tmp_setup_teardown_once)) {
+    SetupTmpDir();
+  }
   if (weaken(SetUpOnce)) weaken(SetUpOnce)();
   for (x = 0, fn = start; fn != end; ++fn) {
     if (weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
@@ -231,6 +236,10 @@ testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
     CheckForSignalHandlers();
     CheckForZombies();
   }
-  if (weaken(TearDownOnce)) weaken(TearDownOnce)();
-  if (weaken(testlib_enable_tmp_setup_teardown_once)) TearDownTmpDir();
+  if (weaken(TearDownOnce)) {
+    weaken(TearDownOnce)();
+  }
+  if (weaken(testlib_enable_tmp_setup_teardown_once)) {
+    TearDownTmpDir();
+  }
 }

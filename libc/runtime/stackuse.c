@@ -53,6 +53,7 @@ static textexit void LogStackUse(void) {
   bool quote;
   char *p, *q;
   size_t n, usage;
+  if (!PLEDGED(STDIO) || !PLEDGED(WPATH) || !PLEDGED(CPATH)) return;
   usage = GetStackUsage((char *)GetStackAddr(), GetStackSize());
   fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644);
   p = FormatUint64(stacklog, usage);

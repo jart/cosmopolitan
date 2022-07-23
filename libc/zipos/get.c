@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -63,7 +64,7 @@ struct Zipos *__zipos_get(void) {
   const char *progpath;
   static struct Zipos zipos;
   uint8_t *map, *base, *cdir;
-  if (!once) {
+  if (!once && PLEDGED(RPATH)) {
     __zipos_lock();
     progpath = GetProgramExecutableName();
     if ((fd = open(progpath, O_RDONLY)) != -1) {
