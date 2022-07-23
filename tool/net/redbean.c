@@ -7058,6 +7058,7 @@ static void HandleShutdown(void) {
     KillGroup();
   }
   WaitAll();
+  INFOF("(srvr) shutdown complete");
 }
 
 // this function coroutines with linenoise
@@ -7372,15 +7373,6 @@ void RedBean(int argc, char *argv[]) {
   }
 #endif
   if (!isexitingworker) {
-    HandleShutdown();
-    CallSimpleHookIfDefined("OnServerStop");
-  }
-  if (!IsTiny()) {
-    LuaDestroy();
-    TlsDestroy();
-    MemDestroy();
-  }
-  if (!isexitingworker) {
     if (!IsTiny()) {
       terminatemonitor = true;
       _join(&monitorth);
@@ -7388,9 +7380,13 @@ void RedBean(int argc, char *argv[]) {
 #ifndef STATIC
     _join(&replth);
 #endif
+    HandleShutdown();
+    CallSimpleHookIfDefined("OnServerStop");
   }
-  if (!isexitingworker) {
-    INFOF("(srvr) shutdown complete");
+  if (!IsTiny()) {
+    LuaDestroy();
+    TlsDestroy();
+    MemDestroy();
   }
 }
 
