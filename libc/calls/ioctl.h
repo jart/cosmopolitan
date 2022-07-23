@@ -27,31 +27,31 @@ int ioctl(int, uint64_t, ...);
   ({                                                     \
     int ReZ;                                             \
     if (CMP(REQUEST, TIOCGWINSZ)) {                      \
-      ReZ = ioctl_tiocgwinsz(FD, __VA_ARGS__);           \
+      ReZ = ioctl_tiocgwinsz(FD, ##__VA_ARGS__);         \
     } else if (CMP(REQUEST, TIOCSWINSZ)) {               \
-      ReZ = ioctl_tiocswinsz(FD, __VA_ARGS__);           \
+      ReZ = ioctl_tiocswinsz(FD, ##__VA_ARGS__);         \
     } else if (CMP(REQUEST, TCGETS)) {                   \
-      ReZ = ioctl_tcgets(FD, __VA_ARGS__);               \
+      ReZ = ioctl_tcgets(FD, ##__VA_ARGS__);             \
     } else if (CMP(REQUEST, TCSETS)) {                   \
-      ReZ = ioctl_tcsets(FD, REQUEST, __VA_ARGS__);      \
+      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
     } else if (CMP(REQUEST, TCSETSW)) {                  \
-      ReZ = ioctl_tcsets(FD, REQUEST, __VA_ARGS__);      \
+      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
     } else if (CMP(REQUEST, TCSETSF)) {                  \
-      ReZ = ioctl_tcsets(FD, REQUEST, __VA_ARGS__);      \
+      ReZ = ioctl_tcsets(FD, REQUEST, ##__VA_ARGS__);    \
     } else if (CMP(REQUEST, SIOCGIFCONF)) {              \
-      ReZ = ioctl_siocgifconf(FD, __VA_ARGS__);          \
+      ReZ = ioctl_siocgifconf(FD, ##__VA_ARGS__);        \
     } else if (CMP(REQUEST, SIOCGIFADDR)) {              \
-      ReZ = ioctl_siocgifaddr(FD, __VA_ARGS__);          \
+      ReZ = ioctl_siocgifaddr(FD, ##__VA_ARGS__);        \
     } else if (CMP(REQUEST, SIOCGIFNETMASK)) {           \
-      ReZ = ioctl_siocgifnetmask(FD, __VA_ARGS__);       \
+      ReZ = ioctl_siocgifnetmask(FD, ##__VA_ARGS__);     \
     } else if (CMP(REQUEST, SIOCGIFBRDADDR)) {           \
-      ReZ = ioctl_siocgifbrdaddr(FD, __VA_ARGS__);       \
+      ReZ = ioctl_siocgifbrdaddr(FD, ##__VA_ARGS__);     \
     } else if (CMP(REQUEST, SIOCGIFDSTADDR)) {           \
-      ReZ = ioctl_siocgifdstaddr(FD, __VA_ARGS__);       \
+      ReZ = ioctl_siocgifdstaddr(FD, ##__VA_ARGS__);     \
     } else if (CMP(REQUEST, SIOCGIFFLAGS)) {             \
-      ReZ = ioctl_siocgifflags(FD, __VA_ARGS__);         \
+      ReZ = ioctl_siocgifflags(FD, ##__VA_ARGS__);       \
     } else if (CMP(REQUEST, FIONBIO)) {                  \
-      ReZ = ioctl_default(FD, REQUEST, __VA_ARGS__);     \
+      ReZ = ioctl_default(FD, REQUEST, ##__VA_ARGS__);   \
     } else if (CMP(REQUEST, FIOCLEX)) {                  \
       ReZ = ioctl_fioclex(FD, REQUEST);                  \
     } else if (CMP(REQUEST, FIONCLEX)) {                 \
