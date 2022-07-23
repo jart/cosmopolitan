@@ -7,6 +7,9 @@
 #define SECCOMP_MODE_STRICT   1
 #define SECCOMP_MODE_FILTER   2
 
+#define PR_CAPBSET_READ 23
+#define PR_CAPBSET_DROP 24
+
 #define PR_SET_NO_NEW_PRIVS 38
 #define PR_GET_NO_NEW_PRIVS 39
 
@@ -73,8 +76,6 @@
 #define PR_SET_MM_EXE_FILE          13
 #define PR_SET_MM_MAP               14
 #define PR_SET_MM_MAP_SIZE          15
-#define PR_CAPBSET_READ             23
-#define PR_CAPBSET_DROP             24
 #define PR_GET_TSC                  25
 #define PR_SET_TSC                  26
 #define PR_GET_SECUREBITS           27

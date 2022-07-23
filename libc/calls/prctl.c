@@ -31,25 +31,36 @@
 privileged int prctl(int operation, ...) {
   int rc;
   va_list va;
-  intptr_t a, b;
-  register intptr_t c asm("r10");
-  register intptr_t d asm("r8");
+  intptr_t a, b, c, d;
+
   va_start(va, operation);
   a = va_arg(va, intptr_t);
   b = va_arg(va, intptr_t);
   c = va_arg(va, intptr_t);
   d = va_arg(va, intptr_t);
   va_end(va);
+
   if (IsLinux()) {
-    asm volatile("syscall"
+    asm volatile("mov\t%5,%%r10\n\t"
+                 "mov\t%6,%%r8\n\t"
+                 "syscall"
                  : "=a"(rc)
-                 : "0"(157), "D"(operation), "S"(a), "d"(b), "r"(c), "r"(d)
-                 : "rcx", "r11", "memory");
+                 : "0"(157), "D"(operation), "S"(a), "d"(b), "g"(c), "g"(d)
+                 : "rcx", "r8", "r10", "r11", "memory");
     if (rc > -4096u) errno = -rc, rc = -1;
   } else {
     rc = enosys();
   }
-  STRACE("prctl(%s, %p, %p, %p, %p) → %d% m", DescribePrctlOperation(operation),
-         a, b, c, d, rc);
+
+#ifdef SYSDEBUG
+  if (operation == PR_CAPBSET_READ || operation == PR_CAPBSET_DROP) {
+    STRACE("prctl(%s, %s) → %d% m", DescribePrctlOperation(operation),
+           DescribeCapability(a), rc);
+  } else {
+    STRACE("prctl(%s, %p, %p, %p, %p) → %d% m",
+           DescribePrctlOperation(operation), a, b, c, d, rc);
+  }
+#endif
+
   return rc;
 }

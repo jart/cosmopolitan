@@ -48,8 +48,10 @@
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/cap.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
@@ -137,6 +139,9 @@ static noasan void PrintDependencies(const char *prologue) {
   } while ((ldr = ldr->Next) && ldr != head);
 }
 
+static noasan void Print(const char *prologue) {
+}
+
 /**
  * Prints lots of information about this process, e.g.
  *
@@ -150,6 +155,7 @@ textstartup void __printargs(const char *prologue) {
   long key;
   char **env;
   sigset_t ss;
+  bool gotsome;
   unsigned i, n;
   int e, x, flags;
   uintptr_t *auxp;
@@ -223,8 +229,9 @@ textstartup void __printargs(const char *prologue) {
     PRINT("  L%d%s%s %u-way %,u byte cache w/%s "
           "%,u sets of %,u byte lines shared across %u threads%s",
           CPUID4_CACHE_LEVEL,
-          CPUID4_CACHE_TYPE == 1 ? " data"
-                                 : CPUID4_CACHE_TYPE == 2 ? " code" : "",
+          CPUID4_CACHE_TYPE == 1   ? " data"
+          : CPUID4_CACHE_TYPE == 2 ? " code"
+                                   : "",
           CPUID4_IS_FULLY_ASSOCIATIVE ? " fully-associative" : "",
           CPUID4_WAYS_OF_ASSOCIATIVITY, CPUID4_CACHE_SIZE_IN_BYTES,
           CPUID4_PHYSICAL_LINE_PARTITIONS > 1 ? " physically partitioned" : "",
@@ -287,6 +294,24 @@ textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("SIGNALS");
     PRINT("  error: sigprocmask() failed %m");
+  }
+
+  if (IsLinux()) {
+    PRINT("");
+    PRINT("CAPABILITIES");
+    if (prctl(PR_CAPBSET_READ, 0) != -1) {
+      for (gotsome = i = 0; i <= CAP_LAST_CAP; ++i) {
+        if (prctl(PR_CAPBSET_READ, i) == 1) {
+          PRINT(" ☼ %s", DescribeCapability(i));
+          gotsome = true;
+        }
+      }
+      if (!gotsome) {
+        PRINT(" ☼ %s", "none");
+      }
+    } else {
+      PRINT(" ☼ %s", strerror(errno));
+    }
   }
 
   PRINT("");

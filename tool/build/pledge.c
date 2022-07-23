@@ -47,6 +47,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlimit.h"
@@ -66,6 +67,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -c PATH         call chroot()\n\
   -v [PERM:]PATH  call unveil(PATH, PERM[rwxc])\n\
   -n              set maximum niceness\n\
+  -D              don't drop capabilities\n\
   -N              don't normalize file descriptors\n\
   -C SECS         set cpu limit [default: inherited]\n\
   -M BYTES        set virtual memory limit [default: 4gb]\n\
@@ -116,6 +118,7 @@ long g_cpuquota;
 long g_fszquota;
 long g_memquota;
 long g_proquota;
+long g_dontdrop;
 const char *g_chroot;
 const char *g_promises;
 
@@ -133,13 +136,16 @@ static void GetOpts(int argc, char *argv[]) {
   g_fszquota = 4 * 1000 * 1000 * 1000;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:P:M:F:v:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:D:P:M:F:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
         break;
       case 'N':
         g_noclose = true;
+        break;
+      case 'D':
+        g_dontdrop = true;
         break;
       case 'c':
         g_chroot = optarg;
@@ -493,6 +499,21 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   }
 }
 
+void DropCapabilities(void) {
+  int e, i;
+  for (e = errno, i = 0;; ++i) {
+    if (prctl(PR_CAPBSET_DROP, i) == -1) {
+      if (errno == EINVAL || errno == EPERM) {
+        errno = e;
+        break;
+      } else {
+        kprintf("error: prctl(PR_CAPBSET_DROP, %d) failed: %m\n", i);
+        _Exit(25);
+      }
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   bool hasfunbits;
   int useruid, usergid;
@@ -530,6 +551,15 @@ int main(int argc, char *argv[]) {
   useruid = getuid();
   owneruid = geteuid();
   hasfunbits = usergid != ownergid || useruid != owneruid;
+
+  if (g_dontdrop) {
+    if (hasfunbits) {
+      kprintf("error: -D flag forbidden on setuid binaries\n");
+      _Exit(6);
+    }
+  } else {
+    DropCapabilities();
+  }
 
   if (hasfunbits) {
     setuid(owneruid);

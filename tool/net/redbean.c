@@ -7295,6 +7295,13 @@ static void GetOpts(int argc, char *argv[]) {
 
 void RedBean(int argc, char *argv[]) {
   if (IsLinux()) {
+    // disable weird linux capabilities
+    for (int e = errno, i = 0;; ++i) {
+      if (prctl(PR_CAPBSET_DROP, i) == -1) {
+        errno = e;
+        break;
+      }
+    }
     // disable sneak privilege since we don't use them
     // seccomp will fail later if this fails
     prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);

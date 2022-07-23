@@ -1045,16 +1045,18 @@ static bool AllowSocketUnix(struct Filter *f) {
 //   - PR_GET_SECCOMP      (21)
 //   - PR_SET_SECCOMP      (22)
 //   - PR_SET_NO_NEW_PRIVS (38)
+//   - PR_CAPBSET_READ     (23)
 //
 static bool AllowPrctl(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 9 - 1),
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 10 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 7 - 3, 0),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 16, 7 - 4, 0),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 7 - 5, 0),
-      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 7 - 6, 0),
-      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 0, 8 - 7),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 5, 0),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 16, 4, 0),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 3, 0),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 2, 0),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 23, 1, 0),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 0, 1),
       /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */

@@ -27,6 +27,10 @@ const char *DescribePrctlOperation(int x) {
       return "PR_SET_SECCOMP";
     case PR_GET_SECCOMP:
       return "PR_GET_SECCOMP";
+    case PR_CAPBSET_READ:
+      return "PR_CAPBSET_READ";
+    case PR_CAPBSET_DROP:
+      return "PR_CAPBSET_DROP";
     default:
       return "PRCTL_???";
   }

@@ -735,7 +735,7 @@ FUNCTIONS
 
           Turns Lua data structure into JSON string.
 
-          Since Lua uses tables for both hashmaps and arrays, we use a
+          Since Lua uses tables are both hashmaps and arrays, we use a
           simple fast algorithm for telling the two apart. Tables with
           non-zero length (as reported by `#`) are encoded as arrays,
           and any non-array elements are ignored. For example:

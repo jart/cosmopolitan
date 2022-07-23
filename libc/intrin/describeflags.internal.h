@@ -24,6 +24,7 @@ struct thatispacked DescribeFlags {
 const char *DescribeFlags(char *, size_t, struct DescribeFlags *, size_t,
                           const char *, unsigned);
 
+const char *DescribeCapability(char[20], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
 const char *DescribeFrame(char[32], int);
@@ -74,6 +75,7 @@ const char *DescribeTimeval(char[45], int, const struct timeval *);
 void DescribeIov(const struct iovec *, int, ssize_t);
 void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 
+#define DescribeCapability(x)        DescribeCapability(alloca(20), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(dirfd)         DescribeDirfd(alloca(12), dirfd)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
