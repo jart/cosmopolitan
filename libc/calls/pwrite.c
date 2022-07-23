@@ -33,7 +33,9 @@
  * @param fd is something open()'d earlier, noting pipes might not work
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
  * @param size in range [1..0x7ffff000] is reasonable
- * @param offset is bytes from start of file at which write begins
+ * @param offset is bytes from start of file at which write begins,
+ *     which can exceed or overlap the end of file, in which case your
+ *     file will be extended
  * @return [1..size] bytes on success, or -1 w/ errno; noting zero is
  *     impossible unless size was passed as zero to do an error check
  * @see pread(), write()

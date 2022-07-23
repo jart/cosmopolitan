@@ -21,7 +21,9 @@
 #include "libc/bits/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/dns/dns.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/kprintf.h"
@@ -43,6 +45,7 @@
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
@@ -54,6 +57,8 @@
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
+#include "third_party/lua/luaconf.h"
+#include "third_party/lua/lunix.h"
 #include "third_party/mbedtls/md.h"
 #include "third_party/mbedtls/md5.h"
 #include "third_party/mbedtls/platform.h"
@@ -368,19 +373,128 @@ int LuaGetMonospaceWidth(lua_State *L) {
   return 1;
 }
 
+// Slurp(path:str[, i:int[, j:int]])
+//     ├─→ data:str
+//     └─→ nil, unix.Errno
 int LuaSlurp(lua_State *L) {
-  char *p, *f;
-  size_t n;
-  f = luaL_checkstring(L, 1);
-  if ((p = xslurp(f, &n))) {
-    lua_pushlstring(L, p, n);
-    free(p);
-    return 1;
+  ssize_t rc;
+  char tb[2048];
+  luaL_Buffer b;
+  struct stat st;
+  int fd, olderr;
+  bool shouldpread;
+  lua_Integer i, j, got;
+  olderr = errno;
+  if (lua_isnoneornil(L, 2)) {
+    i = 1;
   } else {
-    lua_pushnil(L);
-    lua_pushstring(L, gc(xasprintf("Can't slurp file %`'s: %m", f)));
-    return 2;
+    i = luaL_checkinteger(L, 2);
   }
+  if (lua_isnoneornil(L, 3)) {
+    j = LUA_MAXINTEGER;
+  } else {
+    j = luaL_checkinteger(L, 3);
+  }
+  luaL_buffinit(L, &b);
+  if ((fd = open(luaL_checkstring(L, 1), O_RDONLY | O_SEQUENTIAL)) == -1) {
+    return LuaUnixSysretErrno(L, "open", olderr);
+  }
+  if (i < 0 || j < 0) {
+    if (fstat(fd, &st) == -1) {
+      close(fd);
+      return LuaUnixSysretErrno(L, "fstat", olderr);
+    }
+    if (i < 0) {
+      i = st.st_size + (i + 1);
+    }
+    if (j < 0) {
+      j = st.st_size + (j + 1);
+    }
+  }
+  if (i < 1) {
+    i = 1;
+  }
+  shouldpread = i > 1;
+  for (; i <= j; i += got) {
+    if (shouldpread) {
+      rc = pread(fd, tb, MIN(j - i + 1, sizeof(tb)), i - 1);
+    } else {
+      rc = read(fd, tb, MIN(j - i + 1, sizeof(tb)));
+    }
+    if (rc != -1) {
+      got = rc;
+      if (!got) break;
+      luaL_addlstring(&b, tb, got);
+    } else if (errno == EINTR) {
+      errno = olderr;
+      got = 0;
+    } else {
+      close(fd);
+      return LuaUnixSysretErrno(L, "read", olderr);
+    }
+  }
+  if (close(fd) == -1) {
+    return LuaUnixSysretErrno(L, "close", olderr);
+  }
+  luaL_pushresult(&b);
+  return 1;
+}
+
+// Barf(path:str, data:str[, mode:int[, flags:int[, offset:int]]])
+//     ├─→ true
+//     └─→ nil, unix.Errno
+int LuaBarf(lua_State *L) {
+  char *data;
+  ssize_t rc;
+  lua_Number offset;
+  size_t i, n, wrote;
+  int fd, mode, flags, olderr;
+  olderr = errno;
+  data = luaL_checklstring(L, 2, &n);
+  if (lua_isnoneornil(L, 5)) {
+    offset = 0;
+  } else {
+    offset = luaL_checkinteger(L, 5);
+    if (offset < 1) {
+      luaL_error(L, "offset must be >= 1");
+      unreachable;
+    }
+    --offset;
+  }
+  mode = luaL_optinteger(L, 3, 0644);
+  flags = O_WRONLY | O_SEQUENTIAL | luaL_optinteger(L, 4, O_TRUNC | O_CREAT);
+  if (flags & O_NONBLOCK) {
+    luaL_error(L, "O_NONBLOCK not allowed");
+    unreachable;
+  }
+  if ((flags & O_APPEND) && offset) {
+    luaL_error(L, "O_APPEND with offset not possible");
+    unreachable;
+  }
+  if ((fd = open(luaL_checkstring(L, 1), flags, mode)) == -1) {
+    return LuaUnixSysretErrno(L, "open", olderr);
+  }
+  for (i = 0; i < n; i += wrote) {
+    if (offset) {
+      rc = pwrite(fd, data + i, n - i, offset + i);
+    } else {
+      rc = write(fd, data + i, n - i);
+    }
+    if (rc != -1) {
+      wrote = rc;
+    } else if (errno == EINTR) {
+      errno = olderr;
+      wrote = 0;
+    } else {
+      close(fd);
+      return LuaUnixSysretErrno(L, "write", olderr);
+    }
+  }
+  if (close(fd) == -1) {
+    return LuaUnixSysretErrno(L, "close", olderr);
+  }
+  lua_pushboolean(L, true);
+  return 1;
 }
 
 int LuaResolveIp(lua_State *L) {

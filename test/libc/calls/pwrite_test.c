@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
-int fd;
 char buf[8];
+struct stat st;
 char testlib_enable_tmp_setup_teardown;
 
 __attribute__((__constructor__)) static void init(void) {
@@ -29,15 +30,10 @@ __attribute__((__constructor__)) static void init(void) {
   errno = 0;
 }
 
-TEST(pread, testReadPastEof_returnsZero) {
-  EXPECT_NE(-1, (fd = open("a", O_RDWR | O_CREAT | O_TRUNC, 0644)));
-  EXPECT_EQ(0, pread(fd, buf, 8, 0));
-  EXPECT_EQ(0, close(fd));
-}
-
-TEST(pread, testReadOverlapsEof_returnsShortNumber) {
-  EXPECT_NE(-1, (fd = open("b", O_RDWR | O_CREAT | O_TRUNC, 0644)));
-  EXPECT_EQ(4, pwrite(fd, buf, 4, 0));
-  EXPECT_EQ(4, pread(fd, buf, 8, 0));
-  EXPECT_EQ(0, close(fd));
+TEST(pwrite, testWritePastEof_extendsFile) {
+  EXPECT_SYS(0, 3, creat("foo", 0644));
+  EXPECT_SYS(0, 8, pwrite(3, buf, 8, 100));
+  EXPECT_SYS(0, 0, fstat(3, &st));
+  EXPECT_EQ(108, st.st_size);
+  EXPECT_SYS(0, 0, close(3));
 }

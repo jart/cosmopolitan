@@ -5126,6 +5126,7 @@ static const char *const kDontAutoComplete[] = {
 // </SORTED>
 
 static const luaL_Reg kLuaFuncs[] = {
+    {"Barf", LuaBarf},                                          //
     {"Benchmark", LuaBenchmark},                                //
     {"Bsf", LuaBsf},                                            //
     {"Bsr", LuaBsr},                                            //
@@ -6543,18 +6544,29 @@ static int ExitWorker(void) {
   _Exit(0);
 }
 
+static void UnveilRedbean(void) {
+  size_t i;
+  for (i = 0; i < stagedirs.n; ++i) {
+    unveil(stagedirs.p[i].s, "r");
+  }
+  unveil(0, 0);
+}
+
 static int EnableSandbox(void) {
   switch (sandboxed) {
     case 0:
       return 0;
     case 1:  // -S
       DEBUGF("(stat) applying '%s' sandbox policy", "online");
+      UnveilRedbean();
       return pledge("stdio rpath inet dns", 0);
     case 2:  // -SS
       DEBUGF("(stat) applying '%s' sandbox policy", "offline");
+      UnveilRedbean();
       return pledge("stdio rpath", 0);
     default:  // -SSS
       DEBUGF("(stat) applying '%s' sandbox policy", "contained");
+      UnveilRedbean();
       return pledge("stdio", 0);
   }
 }

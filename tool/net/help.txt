@@ -1499,8 +1499,46 @@ FUNCTIONS
           Same as the -u flag if called from .init.lua. Can be used to
           configure the uniprocess mode. The current value is returned.
 
-  Slurp(filename:str) → str
-          Reads file data from local file system.
+  Slurp(filename:str[, i:int[, j:int]])
+      ├─→ data:str
+      └─→ nil, unix.Errno
+
+          Writes all data from file the easy way.
+
+          This function reads file data from local file system. Zip file
+          assets can be accessed using the `/zip/...` prefix.
+
+          `i` and `j` may be used to slice a substring in `filename`.
+          These parameters are 1-indexed and behave consistently with
+          Lua's string.sub() API. For example:
+
+              assert(Barf('x.txt', 'abc123'))
+              assert(assert(Slurp('x.txt', 2, 3)) == 'bc')
+
+          This function is uninterruptible so `unix.EINTR` errors will
+          be ignored. This should only be a concern if you've installed
+          signal handlers. Use the UNIX API if you need to react to it.
+
+  Barf(filename:str, data:str[, mode:int[, flags:int[, offset:int]]])
+      ├─→ true
+      └─→ nil, unix.Errno
+
+          Writes all data to file the easy way.
+
+          This function writes to the local file system.
+
+          `mode` defaults to `0644`. This parameter is ignored when
+          `flags` doesn't have `unix.O_CREAT`.
+
+          `flags` defaults to `unix.O_TRUNC | unix.O_CREAT`.
+
+          `offset` is 1-indexed and may be used to overwrite arbitrary
+          slices within a file when used in conjunction with `flags=0`.
+          For example:
+
+              assert(Barf('x.txt', 'abc123'))
+              assert(Barf('x.txt', 'XX', 0, 0, 3))
+              assert(assert(Slurp('x.txt', 1, 6)) == 'abXX23')
 
   Sleep(seconds:number)
           Sleeps the specified number of seconds (can be fractional). The
@@ -3068,7 +3106,6 @@ UNIX MODULE
       └─→ nil, unix.Errno
 
     Sets user id for file system ops.
-
 
   unix.setgid(gid:int)
       ├─→ true
