@@ -1012,6 +1012,8 @@ static void ProgramHeader(const char *s) {
 
 static void ProgramLogPath(const char *s) {
   logpath = strdup(s);
+  close(2);
+  open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
 }
 
 static void ProgramPidPath(const char *s) {
@@ -1043,27 +1045,10 @@ static void ChangeUser(void) {
 }
 
 static void Daemonize(void) {
-  char ibuf[21];
-  int i, fd, pid;
-  for (i = 0; i < 256; ++i) {
-    if (!IsServerFd(i)) {
-      close(i);
-    }
-  }
-  if ((pid = fork()) > 0) exit(0);
+  if (fork() > 0) exit(0);
   setsid();
-  if ((pid = fork()) > 0) _exit(0);
+  if (fork() > 0) _exit(0);
   umask(0);
-  if (pidpath) {
-    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
-    WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
-    close(fd);
-  }
-  if (!logpath) ProgramLogPath("/dev/null");
-  open("/dev/null", O_RDONLY);
-  open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
-  dup2(1, 2);
-  ChangeUser();
 }
 
 static void LogLuaError(char *hook, char *err) {
@@ -7058,6 +7043,7 @@ static void HandleShutdown(void) {
     KillGroup();
   }
   WaitAll();
+  INFOF("(srvr) shutdown complete");
 }
 
 // this function coroutines with linenoise
@@ -7294,6 +7280,8 @@ static void GetOpts(int argc, char *argv[]) {
 }
 
 void RedBean(int argc, char *argv[]) {
+  char ibuf[21];
+  int fd;
   if (IsLinux()) {
     // disable weird linux capabilities
     for (int e = errno, i = 0;; ++i) {
@@ -7315,6 +7303,15 @@ void RedBean(int argc, char *argv[]) {
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
                           PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
                           -1, 0)));
+  if (daemonize) {
+    for (int i = 0; i < 256; ++i) {
+      if (!IsServerFd(i)) {
+        close(i);
+      }
+    }
+    open("/dev/null", O_RDONLY);
+    open("/dev/null", O_WRONLY);
+  }
   zpath = GetProgramExecutableName();
   CHECK_NE(-1, (zfd = open(zpath, O_RDONLY)));
   CHECK_NE(-1, fstat(zfd, &zst));
@@ -7332,6 +7329,10 @@ void RedBean(int argc, char *argv[]) {
   if (uniprocess) {
     shared->workers = 1;
   }
+  if (daemonize) {
+    if (!logpath) ProgramLogPath("/dev/null");
+    dup2(2, 1);
+  }
   SigInit();
   Listen();
   TlsInit();
@@ -7340,13 +7341,13 @@ void RedBean(int argc, char *argv[]) {
   }
   if (daemonize) {
     Daemonize();
-  } else {
-    if (logpath) {
-      close(2);
-      open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
-    }
-    ChangeUser();
   }
+  if (pidpath) {
+    fd = open(pidpath, O_CREAT | O_WRONLY, 0644);
+    WRITE(fd, ibuf, FormatInt32(ibuf, getpid()) - ibuf);
+    close(fd);
+  }
+  ChangeUser();
   UpdateCurrentDate(nowl());
   CollectGarbage();
   hdrbuf.n = 4 * 1024;
@@ -7379,15 +7380,6 @@ void RedBean(int argc, char *argv[]) {
   }
 #endif
   if (!isexitingworker) {
-    HandleShutdown();
-    CallSimpleHookIfDefined("OnServerStop");
-  }
-  if (!IsTiny()) {
-    LuaDestroy();
-    TlsDestroy();
-    MemDestroy();
-  }
-  if (!isexitingworker) {
     if (!IsTiny()) {
       terminatemonitor = true;
       _join(&monitorth);
@@ -7395,9 +7387,13 @@ void RedBean(int argc, char *argv[]) {
 #ifndef STATIC
     _join(&replth);
 #endif
+    HandleShutdown();
+    CallSimpleHookIfDefined("OnServerStop");
   }
-  if (!isexitingworker) {
-    INFOF("(srvr) shutdown complete");
+  if (!IsTiny()) {
+    LuaDestroy();
+    TlsDestroy();
+    MemDestroy();
   }
 }
 
