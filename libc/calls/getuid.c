@@ -53,10 +53,12 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  */
 int getuid(void) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_getuid();
-  } else {
-    rc = GetUserNameHash();
+  if (!(rc = getauxval(AT_UID))) {
+    if (!IsWindows()) {
+      rc = sys_getuid();
+    } else {
+      rc = GetUserNameHash();
+    }
   }
   STRACE("%s() → %d% m", "getuid", rc);
   return rc;
@@ -73,10 +75,12 @@ int getuid(void) {
  */
 int getgid(void) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_getgid();
-  } else {
-    rc = GetUserNameHash();
+  if (!(rc = getauxval(AT_GID))) {
+    if (!IsWindows()) {
+      rc = sys_getgid();
+    } else {
+      rc = GetUserNameHash();
+    }
   }
   STRACE("%s() → %d% m", "getgid", rc);
   return rc;

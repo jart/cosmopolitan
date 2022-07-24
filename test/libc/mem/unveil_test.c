@@ -38,6 +38,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -241,19 +242,107 @@ TEST(unveil, overlappingDirectories_inconsistentBehavior) {
   EXITS(0);
 }
 
-TEST(unveil, usedTwice_forbidden) {
+TEST(unveil, usedTwice_allowedOnLinux) {
+  if (IsOpenbsd()) return;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, xbarf("jail/ok.txt", "hello", 5));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, mkdir("heaven", 0755));
+  ASSERT_SYS(0, 0, xbarf("heaven/verysecret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil("garden", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 3, open("garden/secret.txt", O_RDONLY));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil("heaven", "rw"));  // not allowed, superset of parent
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 4, open("jail/ok.txt", O_RDONLY));
+  ASSERT_SYS(EACCES, -1, open("garden/secret.txt", O_RDONLY));
+  ASSERT_SYS(EACCES, -1, open("heaven/verysecret.txt", O_RDONLY));
+  EXITS(0);
+}
+
+TEST(unveil, truncate_isForbiddenBySeccomp) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("jail", 0755));
   ASSERT_SYS(0, 0, mkdir("garden", 0755));
   ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
   ASSERT_SYS(0, 0, unveil("jail", "rw"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
-  ASSERT_SYS(EPERM, -1, unveil("jail", "rw"));
-  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  ASSERT_SYS(IsOpenbsd() ? ENOENT : EPERM, -1,
+             truncate("garden/secret.txt", 0));
   if (IsLinux()) {
     ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
-    ASSERT_EQ(5, st.st_size);  // wut linux metadata is accessible
+    ASSERT_EQ(5, st.st_size);
+  }
+  EXITS(0);
+}
+
+TEST(unveil, ftruncate_isForbidden) {
+  if (IsOpenbsd()) return;  // b/c O_PATH is a Linux thing
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 3, open("garden/secret.txt", O_PATH));
+  ASSERT_SYS(EBADF, -1, ftruncate(3, 0));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
+  ASSERT_EQ(5, st.st_size);
+  EXITS(0);
+}
+
+TEST(unveil, procfs_isForbiddenByDefault) {
+  if (IsOpenbsd()) return;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(EACCES, -1, open("/proc/self/cmdline", O_RDONLY));
+  EXITS(0);
+}
+
+int Worker(void *arg, int tid) {
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  return 0;
+}
+
+TEST(unveil, isInheritedAcrossThreads) {
+  struct spawn t;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(0, 0, _spawn(Worker, 0, &t));
+  EXPECT_SYS(0, 0, _join(&t));
+  EXITS(0);
+}
+
+int Worker2(void *arg, int tid) {
+  ASSERT_SYS(0, 0, unveil("jail", "rw"));
+  ASSERT_SYS(0, 0, unveil(0, 0));
+  ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  return 0;
+}
+
+TEST(unveil, isThreadSpecificOnLinux_isProcessWideOnOpenbsd) {
+  struct spawn t;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("jail", 0755));
+  ASSERT_SYS(0, 0, mkdir("garden", 0755));
+  ASSERT_SYS(0, 0, xbarf("garden/secret.txt", "hello", 5));
+  ASSERT_SYS(0, 0, _spawn(Worker2, 0, &t));
+  EXPECT_SYS(0, 0, _join(&t));
+  if (IsOpenbsd()) {
+    ASSERT_SYS(ENOENT, -1, open("garden/secret.txt", O_RDONLY));
+  } else {
+    ASSERT_SYS(0, 3, open("garden/secret.txt", O_RDONLY));
   }
   EXITS(0);
 }
@@ -275,12 +364,6 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
     ASSERT_SYS(0, 0, unveil(0, 0));
     ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
     // verify the second filter is working
-    ASSERT_SYS(EPERM, -1, unveil("jail", "rw"));
-    if (IsLinux()) {
-      ASSERT_SYS(
-          EPERM, -1,
-          landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION));
-    }
     ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
     // verify the first filter is still working
     *gotsome = true;

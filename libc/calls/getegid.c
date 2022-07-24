@@ -20,6 +20,8 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns effective group ID of calling process.
@@ -27,10 +29,12 @@
  */
 int getegid(void) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_getegid();
-  } else {
-    rc = getgid();
+  if (!(rc = getauxval(AT_EGID))) {
+    if (!IsWindows()) {
+      rc = sys_getegid();
+    } else {
+      rc = getgid();
+    }
   }
   STRACE("%s() → %d% m", "getegid", rc);
   return rc;

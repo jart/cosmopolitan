@@ -19,6 +19,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns effective user ID of calling process.
@@ -26,10 +28,12 @@
  */
 int geteuid(void) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_geteuid();
-  } else {
-    rc = getuid();
+  if (!(rc = getauxval(AT_EUID))) {
+    if (!IsWindows()) {
+      rc = sys_geteuid();
+    } else {
+      rc = getuid();
+    }
   }
   STRACE("%s() → %d% m", "geteuid", rc);
   return rc;

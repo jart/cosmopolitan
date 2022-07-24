@@ -64,18 +64,15 @@
   (LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_WRITE_FILE | \
    LANDLOCK_ACCESS_FS_EXECUTE)
 
-static const struct sock_filter kBlacklistLandlock[] = {
-    // clang-format off
+static const struct sock_filter kUnveilBlacklist[] = {
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(arch)),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_create_ruleset, 2, 0),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_add_rule,       1, 0),
-    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_landlock_restrict_self,  0, 1),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_truncate, 1, 0),
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setxattr, 0, 1),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (1 & SECCOMP_RET_DATA)),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-    // clang-format on
 };
 
 /**
@@ -98,8 +95,8 @@ _Thread_local static struct {
 static int unveil_final(void) {
   int rc;
   struct sock_fprog sandbox = {
-      .filter = kBlacklistLandlock,
-      .len = ARRAYLEN(kBlacklistLandlock),
+      .filter = kUnveilBlacklist,
+      .len = ARRAYLEN(kUnveilBlacklist),
   };
   if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1 &&
       (rc = landlock_restrict_self(State.fd, 0)) != -1 &&
@@ -264,14 +261,13 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  *     unveil("/etc", "r");  // make /etc readable too
  *     unveil(0, 0);         // commit and lock policy
  *
- * Unveiling restricts a thread's view of the filesystem to a set of
- * allowed paths with specific privileges.
+ * Unveiling restricts a view of the filesystem to a set of allowed
+ * paths with specific privileges.
  *
  * Once you start using unveil(), the entire file system is considered
  * hidden. You then specify, by repeatedly calling unveil(), which paths
  * should become unhidden. When you're finished, you call `unveil(0,0)`
- * which commits your policy, after which further use is forbidden, in
- * the current thread, as well as any threads or processes it spawns.
+ * which commits your policy.
  *
  * There are some differences between unveil() on Linux versus OpenBSD.
  *
@@ -299,8 +295,28 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
  *    possible to use opendir() and go fishing for paths which weren't
  *    previously known.
  *
- * 5. Always specify at least one path. OpenBSD has unclear semantics
- *    when `pledge(0,0)` is used without any previous calls.
+ * 5. Use ftruncate() rather than truncate(). One of the backdoors with
+ *    Landlock is it currently can't restrict truncate() and setxattr()
+ *    which permits certain kinds of modifications to files outside the
+ *    sandbox. When your policy is committed, we install a SECCOMP BPF
+ *    filter to disable those calls, however similar trickery may be
+ *    possible through other unaddressed calls like ioctl(). Using the
+ *    pledge() function in addition to unveil() will solve this, since
+ *    it installs a strong system call access policy.
+ *
+ * 6. Set your process-wide policy at startup from the main thread. On
+ *    OpenBSD unveil() will apply process-wide even when called from a
+ *    child thread; whereas with Linux, calling unveil() from a thread
+ *    will cause your ruleset to only apply to that thread in addition
+ *    to any descendent threads it creates.
+ *
+ * 7. Always specify at least one path. OpenBSD has unclear semantics
+ *    when `unveil(0,0)` is used without any previous calls.
+ *
+ * 8. On OpenBSD calling `unveil(0,0)` will prevent unveil() from being
+ *    used again. On Linux this is allowed, because Landlock is able to
+ *    do that securely, i.e. the second ruleset can only be a subset of
+ *    the previous ones.
  *
  * This system call is supported natively on OpenBSD and polyfilled on
  * Linux using the Landlock LSM[1].
