@@ -372,7 +372,6 @@ TEST(pledge, chmod_ignoresDangerBits) {
 TEST(pledge, open_rpath) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -389,7 +388,6 @@ TEST(pledge, open_rpath) {
 TEST(pledge, open_wpath) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_SYS(0, 0, touch("foo", 0644));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -426,7 +424,6 @@ TEST(pledge, open_cpath) {
 TEST(pledge, sigaction_isFineButForbidsSigsys) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));
@@ -442,7 +439,6 @@ TEST(pledge, sigaction_isFineButForbidsSigsys) {
 TEST(pledge, execpromises_ok) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
@@ -457,7 +453,6 @@ TEST(pledge, execpromises_ok) {
 TEST(pledge, execpromises_notok) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
@@ -472,7 +467,6 @@ TEST(pledge, execpromises_notok) {
 TEST(pledge, execpromises_reducesAtExecOnLinux) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio inet tty exec", "stdio tty"));
@@ -487,7 +481,6 @@ TEST(pledge, execpromises_reducesAtExecOnLinux) {
 TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
   if (!IsOpenbsd()) return;
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio exec", 0));
@@ -502,7 +495,6 @@ TEST(pledge_openbsd, execpromisesIsNull_letsItDoAnything) {
 TEST(pledge_openbsd, execpromisesIsSuperset_letsItDoAnything) {
   if (!IsOpenbsd()) return;
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio rpath tty inet"));
@@ -522,7 +514,6 @@ TEST(pledge_linux, execpromisesIsSuperset_notPossible) {
 TEST(pledge_openbsd, execpromises_notok) {
   if (!IsOpenbsd()) return;
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio exec", "stdio"));
@@ -537,7 +528,6 @@ TEST(pledge_openbsd, execpromises_notok) {
 TEST(pledge_openbsd, bigSyscalls) {
   if (IsOpenbsd()) return;  // testing lunix
   int ws, pid;
-  struct stat st;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));
@@ -570,6 +560,25 @@ TEST(pledge, threadWithLocks_canCodeMorph) {
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(pledge, execWithoutRpath) {
+  int ws, pid;
+  ASSERT_SYS(0, 0, touch("foo", 0644));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio prot_exec exec", "stdio prot_exec exec"));
+    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  if (IsOpenbsd()) {
+    EXPECT_TRUE(WIFSIGNALED(ws));
+    EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+  } else {
+    EXPECT_TRUE(WIFEXITED(ws));
+    EXPECT_EQ(0, WEXITSTATUS(ws));
+  }
 }
 
 BENCH(pledge, bench) {

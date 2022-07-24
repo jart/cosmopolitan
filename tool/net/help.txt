@@ -3930,12 +3930,13 @@ UNIX MODULE
 
     exec
 
-      Allows execve, access, faccessat, openat(O_RDONLY).
+      Allows execve.
 
-      If the executable in question needs a loader, then you may need
-      "prot_exec" too. With APE, security will be stronger if you
+      If the executable in question needs a loader, then you will need
+      "rpath prot_exec" too. With APE, security is strongest when you
       assimilate your binaries beforehand, using the --assimilate flag,
-      or the o//tool/build/assimilate.com program.
+      or the o//tool/build/assimilate.com program. On OpenBSD this is
+      mandatory.
 
     prot_exec
 

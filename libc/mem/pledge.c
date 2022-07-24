@@ -25,7 +25,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
@@ -44,16 +43,22 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#define SPECIAL   0xf000
 #define ADDRLESS  0x2000
 #define INET      0x8000
-#define LOCK      0x8000
+#define LOCK      0x4000
 #define NOEXEC    0x8000
+#define EXEC      0x4000
 #define READONLY  0x8000
+#define WRITEONLY 0x4000
+#define CREATONLY 0x2000
 #define STDIO     0x8000
 #define THREAD    0x8000
 #define TTY       0x8000
 #define UNIX      0x4000
-#define WRITEONLY 0x4000
+#define NOBITS    0x8000
+#define NOSIGSYS  0x8000
+#define RESTRICT  0x1000
 
 // TODO(jart): fix chibicc
 #ifdef __chibicc__
@@ -70,7 +75,7 @@ struct Filter {
 };
 
 static const uint16_t kPledgeLinuxDefault[] = {
-    __NR_linux_exit,  //
+    __NR_linux_exit,  // thread return / exit()
 };
 
 // the stdio contains all the benign system calls. openbsd makes the
@@ -80,115 +85,116 @@ static const uint16_t kPledgeLinuxDefault[] = {
 // difference in the latency of sched_yield() if it's at the start of
 // the bpf script or the end.
 static const uint16_t kPledgeLinuxStdio[] = {
-    __NR_linux_exit_group,         //
-    __NR_linux_sched_yield,        //
-    __NR_linux_clock_getres,       //
-    __NR_linux_clock_gettime,      //
-    __NR_linux_clock_nanosleep,    //
-    __NR_linux_close_range,        //
-    __NR_linux_close,              //
-    __NR_linux_write,              //
-    __NR_linux_writev,             //
-    __NR_linux_pwrite,             //
-    __NR_linux_pwritev,            //
-    __NR_linux_pwritev2,           //
-    __NR_linux_read,               //
-    __NR_linux_readv,              //
-    __NR_linux_pread,              //
-    __NR_linux_preadv,             //
-    __NR_linux_preadv2,            //
-    __NR_linux_dup,                //
-    __NR_linux_dup2,               //
-    __NR_linux_dup3,               //
-    __NR_linux_fchdir,             //
-    __NR_linux_fcntl,              //
-    __NR_linux_fstat,              //
-    __NR_linux_fsync,              //
-    __NR_linux_sysinfo,            //
-    __NR_linux_fdatasync,          //
-    __NR_linux_ftruncate,          //
-    __NR_linux_getdents,           //
-    __NR_linux_getegid,            //
-    __NR_linux_getrandom,          //
-    __NR_linux_getgroups,          //
-    __NR_linux_getpgid,            //
-    __NR_linux_getpgrp,            //
-    __NR_linux_getpid,             //
-    __NR_linux_gettid,             //
-    __NR_linux_getuid,             //
-    __NR_linux_getgid,             //
-    __NR_linux_getsid,             //
-    __NR_linux_getppid,            //
-    __NR_linux_geteuid,            //
-    __NR_linux_getrlimit,          //
-    __NR_linux_getresgid,          //
-    __NR_linux_getresuid,          //
-    __NR_linux_getitimer,          //
-    __NR_linux_setitimer,          //
-    __NR_linux_timerfd_create,     //
-    __NR_linux_timerfd_settime,    //
-    __NR_linux_timerfd_gettime,    //
-    __NR_linux_copy_file_range,    //
-    __NR_linux_gettimeofday,       //
-    __NR_linux_sendfile,           //
-    __NR_linux_vmsplice,           //
-    __NR_linux_splice,             //
-    __NR_linux_lseek,              //
-    __NR_linux_tee,                //
-    __NR_linux_brk,                //
-    __NR_linux_msync,              //
-    __NR_linux_mmap | NOEXEC,      //
-    __NR_linux_mremap,             //
-    __NR_linux_munmap,             //
-    __NR_linux_mincore,            //
-    __NR_linux_madvise,            //
-    __NR_linux_fadvise,            //
-    __NR_linux_mprotect | NOEXEC,  //
-    __NR_linux_arch_prctl,         //
-    __NR_linux_migrate_pages,      //
-    __NR_linux_sync_file_range,    //
-    __NR_linux_set_tid_address,    //
-    __NR_linux_nanosleep,          //
-    __NR_linux_pipe,               //
-    __NR_linux_pipe2,              //
-    __NR_linux_poll,               //
-    __NR_linux_ppoll,              //
-    __NR_linux_select,             //
-    __NR_linux_pselect6,           //
-    __NR_linux_epoll_create,       //
-    __NR_linux_epoll_create1,      //
-    __NR_linux_epoll_ctl,          //
-    __NR_linux_epoll_wait,         //
-    __NR_linux_epoll_pwait,        //
-    __NR_linux_epoll_pwait2,       //
-    __NR_linux_recvfrom,           //
-    __NR_linux_sendto | ADDRLESS,  //
-    __NR_linux_ioctl,              //
-    __NR_linux_alarm,              //
-    __NR_linux_pause,              //
-    __NR_linux_shutdown,           //
-    __NR_linux_eventfd,            //
-    __NR_linux_eventfd2,           //
-    __NR_linux_signalfd,           //
-    __NR_linux_signalfd4,          //
-    __NR_linux_sigaction,          //
-    __NR_linux_sigaltstack,        //
-    __NR_linux_sigprocmask,        //
-    __NR_linux_sigsuspend,         //
-    __NR_linux_sigreturn,          //
-    __NR_linux_sigpending,         //
-    __NR_linux_socketpair,         //
-    __NR_linux_getrusage,          //
-    __NR_linux_times,              //
-    __NR_linux_umask,              //
-    __NR_linux_wait4,              //
-    __NR_linux_uname,              //
-    __NR_linux_prctl,              //
-    __NR_linux_clone | THREAD,     //
-    __NR_linux_futex,              //
-    __NR_linux_set_robust_list,    //
-    __NR_linux_get_robust_list,    //
-    __NR_linux_prlimit | STDIO,    //
+    __NR_linux_exit_group,            //
+    __NR_linux_sched_yield,           //
+    __NR_linux_sched_getaffinity,     //
+    __NR_linux_clock_getres,          //
+    __NR_linux_clock_gettime,         //
+    __NR_linux_clock_nanosleep,       //
+    __NR_linux_close_range,           //
+    __NR_linux_close,                 //
+    __NR_linux_write,                 //
+    __NR_linux_writev,                //
+    __NR_linux_pwrite,                //
+    __NR_linux_pwritev,               //
+    __NR_linux_pwritev2,              //
+    __NR_linux_read,                  //
+    __NR_linux_readv,                 //
+    __NR_linux_pread,                 //
+    __NR_linux_preadv,                //
+    __NR_linux_preadv2,               //
+    __NR_linux_dup,                   //
+    __NR_linux_dup2,                  //
+    __NR_linux_dup3,                  //
+    __NR_linux_fchdir,                //
+    __NR_linux_fcntl | STDIO,         //
+    __NR_linux_fstat,                 //
+    __NR_linux_fsync,                 //
+    __NR_linux_sysinfo,               //
+    __NR_linux_fdatasync,             //
+    __NR_linux_ftruncate,             //
+    __NR_linux_getdents,              //
+    __NR_linux_getrandom,             //
+    __NR_linux_getgroups,             //
+    __NR_linux_getpgid,               //
+    __NR_linux_getpgrp,               //
+    __NR_linux_getpid,                //
+    __NR_linux_gettid,                //
+    __NR_linux_getuid,                //
+    __NR_linux_getgid,                //
+    __NR_linux_getsid,                //
+    __NR_linux_getppid,               //
+    __NR_linux_geteuid,               //
+    __NR_linux_getegid,               //
+    __NR_linux_getrlimit,             //
+    __NR_linux_getresgid,             //
+    __NR_linux_getresuid,             //
+    __NR_linux_getitimer,             //
+    __NR_linux_setitimer,             //
+    __NR_linux_timerfd_create,        //
+    __NR_linux_timerfd_settime,       //
+    __NR_linux_timerfd_gettime,       //
+    __NR_linux_copy_file_range,       //
+    __NR_linux_gettimeofday,          //
+    __NR_linux_sendfile,              //
+    __NR_linux_vmsplice,              //
+    __NR_linux_splice,                //
+    __NR_linux_lseek,                 //
+    __NR_linux_tee,                   //
+    __NR_linux_brk,                   //
+    __NR_linux_msync,                 //
+    __NR_linux_mmap | NOEXEC,         //
+    __NR_linux_mremap,                //
+    __NR_linux_munmap,                //
+    __NR_linux_mincore,               //
+    __NR_linux_madvise,               //
+    __NR_linux_fadvise,               //
+    __NR_linux_mprotect | NOEXEC,     //
+    __NR_linux_arch_prctl,            //
+    __NR_linux_migrate_pages,         //
+    __NR_linux_sync_file_range,       //
+    __NR_linux_set_tid_address,       //
+    __NR_linux_nanosleep,             //
+    __NR_linux_pipe,                  //
+    __NR_linux_pipe2,                 //
+    __NR_linux_poll,                  //
+    __NR_linux_ppoll,                 //
+    __NR_linux_select,                //
+    __NR_linux_pselect6,              //
+    __NR_linux_epoll_create,          //
+    __NR_linux_epoll_create1,         //
+    __NR_linux_epoll_ctl,             //
+    __NR_linux_epoll_wait,            //
+    __NR_linux_epoll_pwait,           //
+    __NR_linux_epoll_pwait2,          //
+    __NR_linux_recvfrom,              //
+    __NR_linux_sendto | ADDRLESS,     //
+    __NR_linux_ioctl | RESTRICT,      //
+    __NR_linux_alarm,                 //
+    __NR_linux_pause,                 //
+    __NR_linux_shutdown,              //
+    __NR_linux_eventfd,               //
+    __NR_linux_eventfd2,              //
+    __NR_linux_signalfd,              //
+    __NR_linux_signalfd4,             //
+    __NR_linux_sigaction | NOSIGSYS,  //
+    __NR_linux_sigaltstack,           //
+    __NR_linux_sigprocmask,           //
+    __NR_linux_sigsuspend,            //
+    __NR_linux_sigreturn,             //
+    __NR_linux_sigpending,            //
+    __NR_linux_socketpair,            //
+    __NR_linux_getrusage,             //
+    __NR_linux_times,                 //
+    __NR_linux_umask,                 //
+    __NR_linux_wait4,                 //
+    __NR_linux_uname,                 //
+    __NR_linux_prctl | STDIO,         //
+    __NR_linux_clone | THREAD,        //
+    __NR_linux_futex,                 //
+    __NR_linux_set_robust_list,       //
+    __NR_linux_get_robust_list,       //
+    __NR_linux_prlimit | STDIO,       //
 };
 
 static const uint16_t kPledgeLinuxFlock[] = {
@@ -226,26 +232,26 @@ static const uint16_t kPledgeLinuxWpath[] = {
     __NR_linux_faccessat,           //
     __NR_linux_faccessat2,          //
     __NR_linux_readlinkat,          //
-    __NR_linux_chmod,               //
-    __NR_linux_fchmod,              //
-    __NR_linux_fchmodat,            //
+    __NR_linux_chmod | NOBITS,      //
+    __NR_linux_fchmod | NOBITS,     //
+    __NR_linux_fchmodat | NOBITS,   //
 };
 
 static const uint16_t kPledgeLinuxCpath[] = {
-    __NR_linux_open,       //
-    __NR_linux_openat,     //
-    __NR_linux_rename,     //
-    __NR_linux_renameat,   //
-    __NR_linux_renameat2,  //
-    __NR_linux_link,       //
-    __NR_linux_linkat,     //
-    __NR_linux_symlink,    //
-    __NR_linux_symlinkat,  //
-    __NR_linux_rmdir,      //
-    __NR_linux_unlink,     //
-    __NR_linux_unlinkat,   //
-    __NR_linux_mkdir,      //
-    __NR_linux_mkdirat,    //
+    __NR_linux_open | CREATONLY,    //
+    __NR_linux_openat | CREATONLY,  //
+    __NR_linux_rename,              //
+    __NR_linux_renameat,            //
+    __NR_linux_renameat2,           //
+    __NR_linux_link,                //
+    __NR_linux_linkat,              //
+    __NR_linux_symlink,             //
+    __NR_linux_symlinkat,           //
+    __NR_linux_rmdir,               //
+    __NR_linux_unlink,              //
+    __NR_linux_unlinkat,            //
+    __NR_linux_mkdir,               //
+    __NR_linux_mkdirat,             //
 };
 
 static const uint16_t kPledgeLinuxDpath[] = {
@@ -254,49 +260,53 @@ static const uint16_t kPledgeLinuxDpath[] = {
 };
 
 static const uint16_t kPledgeLinuxFattr[] = {
-    __NR_linux_chmod,      //
-    __NR_linux_fchmod,     //
-    __NR_linux_fchmodat,   //
-    __NR_linux_utime,      //
-    __NR_linux_utimes,     //
-    __NR_linux_futimesat,  //
-    __NR_linux_utimensat,  //
+    __NR_linux_chmod | NOBITS,     //
+    __NR_linux_fchmod | NOBITS,    //
+    __NR_linux_fchmodat | NOBITS,  //
+    __NR_linux_utime,              //
+    __NR_linux_utimes,             //
+    __NR_linux_futimesat,          //
+    __NR_linux_utimensat,          //
 };
 
 static const uint16_t kPledgeLinuxInet[] = {
-    __NR_linux_socket | INET,  //
-    __NR_linux_listen,         //
-    __NR_linux_bind,           //
-    __NR_linux_sendto,         //
-    __NR_linux_connect,        //
-    __NR_linux_accept,         //
-    __NR_linux_accept4,        //
-    __NR_linux_getsockopt,     //
-    __NR_linux_setsockopt,     //
-    __NR_linux_getpeername,    //
-    __NR_linux_getsockname,    //
+    __NR_linux_socket | INET,          //
+    __NR_linux_listen,                 //
+    __NR_linux_bind,                   //
+    __NR_linux_sendto,                 //
+    __NR_linux_connect,                //
+    __NR_linux_accept,                 //
+    __NR_linux_accept4,                //
+    __NR_linux_getsockopt | RESTRICT,  //
+    __NR_linux_setsockopt | RESTRICT,  //
+    __NR_linux_getpeername,            //
+    __NR_linux_getsockname,            //
 };
 
 static const uint16_t kPledgeLinuxUnix[] = {
-    __NR_linux_socket | UNIX,  //
-    __NR_linux_listen,         //
-    __NR_linux_bind,           //
-    __NR_linux_connect,        //
-    __NR_linux_sendto,         //
-    __NR_linux_accept,         //
-    __NR_linux_accept4,        //
-    __NR_linux_getsockopt,     //
-    __NR_linux_setsockopt,     //
-    __NR_linux_getpeername,    //
-    __NR_linux_getsockname,    //
+    __NR_linux_socket | UNIX,          //
+    __NR_linux_listen,                 //
+    __NR_linux_bind,                   //
+    __NR_linux_connect,                //
+    __NR_linux_sendto,                 //
+    __NR_linux_accept,                 //
+    __NR_linux_accept4,                //
+    __NR_linux_getsockopt | RESTRICT,  //
+    __NR_linux_setsockopt | RESTRICT,  //
+    __NR_linux_getpeername,            //
+    __NR_linux_getsockname,            //
 };
 
 static const uint16_t kPledgeLinuxDns[] = {
-    __NR_linux_socket | INET,  //
-    __NR_linux_bind,           //
-    __NR_linux_sendto,         //
-    __NR_linux_connect,        //
-    __NR_linux_recvfrom,       //
+    __NR_linux_socket | INET,      //
+    __NR_linux_bind,               //
+    __NR_linux_sendto,             //
+    __NR_linux_connect,            //
+    __NR_linux_recvfrom,           //
+    __NR_linux_fstatat,            //
+    __NR_linux_openat | READONLY,  //
+    __NR_linux_read,               //
+    __NR_linux_close,              //
 };
 
 static const uint16_t kPledgeLinuxTty[] = {
@@ -314,19 +324,27 @@ static const uint16_t kPledgeLinuxSendfd[] = {
 };
 
 static const uint16_t kPledgeLinuxProc[] = {
-    __NR_linux_fork,         //
-    __NR_linux_vfork,        //
-    __NR_linux_clone,        //
-    __NR_linux_kill,         //
-    __NR_linux_setsid,       //
-    __NR_linux_setpgid,      //
-    __NR_linux_prlimit,      //
-    __NR_linux_setrlimit,    //
-    __NR_linux_getpriority,  //
-    __NR_linux_setpriority,  //
-    __NR_linux_ioprio_get,   //
-    __NR_linux_ioprio_set,   //
-    __NR_linux_tgkill,       //
+    __NR_linux_fork,                    //
+    __NR_linux_vfork,                   //
+    __NR_linux_clone | RESTRICT,        //
+    __NR_linux_kill,                    //
+    __NR_linux_setsid,                  //
+    __NR_linux_setpgid,                 //
+    __NR_linux_prlimit,                 //
+    __NR_linux_setrlimit,               //
+    __NR_linux_getpriority,             //
+    __NR_linux_setpriority,             //
+    __NR_linux_ioprio_get,              //
+    __NR_linux_ioprio_set,              //
+    __NR_linux_sched_getscheduler,      //
+    __NR_linux_sched_setscheduler,      //
+    __NR_linux_sched_get_priority_min,  //
+    __NR_linux_sched_get_priority_max,  //
+    __NR_linux_sched_getaffinity,       //
+    __NR_linux_sched_setaffinity,       //
+    __NR_linux_sched_getparam,          //
+    __NR_linux_sched_setparam,          //
+    __NR_linux_tgkill,                  //
 };
 
 static const uint16_t kPledgeLinuxId[] = {
@@ -351,20 +369,11 @@ static const uint16_t kPledgeLinuxSettime[] = {
 };
 
 static const uint16_t kPledgeLinuxProtExec[] = {
-    __NR_linux_mmap,      //
-    __NR_linux_mprotect,  //
+    __NR_linux_mmap | EXEC,  //
+    __NR_linux_mprotect,     //
 };
 
 static const uint16_t kPledgeLinuxExec[] = {
-    __NR_linux_execve,             //
-    __NR_linux_execveat,           //
-    __NR_linux_access,             // for ape loader
-    __NR_linux_faccessat,          // for ape binaries
-    __NR_linux_open | READONLY,    // for ape loader
-    __NR_linux_openat | READONLY,  // for ape binaries
-};
-
-static const uint16_t kPledgeLinuxExec2[] = {
     __NR_linux_execve,    //
     __NR_linux_execveat,  //
 };
@@ -473,23 +482,13 @@ static bool AppendOriginVerification(struct Filter *f, long ipromises) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
-// Authorize specific system call w/o considering its arguments.
-static bool AllowSyscall(struct Filter *f, uint16_t w) {
-  struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, w, 0, 2 - 1),
-      /*L1*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L2*/ /* next filter */
-  };
-  return AppendFilter(f, PLEDGE(fragment));
-}
-
 // The first argument of sys_clone_linux() must NOT have:
 //
 //   - CLONE_NEWNS    (0x00020000)
 //   - CLONE_PTRACE   (0x00002000)
 //   - CLONE_UNTRACED (0x00800000)
 //
-static bool AllowClone(struct Filter *f) {
+static bool AllowCloneRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -539,14 +538,14 @@ static bool AllowCloneThread(struct Filter *f) {
 //   - FIOCLEX  (0x5451)
 //   - FIONCLEX (0x5450)
 //
-static bool AllowIoctl(struct Filter *f) {
+static bool AllowIoctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 8 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x541b, 6 - 3, 0),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5421, 6 - 4, 0),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5451, 6 - 5, 0),
-      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5450, 0, 7 - 6),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x541b, 3, 0),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5421, 2, 0),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5451, 1, 0),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5450, 0, 1),
       /*L6*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L8*/ /* next filter */
@@ -573,17 +572,17 @@ static bool AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 16 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 14 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 14 - 4, 0),
-      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 14 - 5, 0),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 14 - 6, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 14 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 14 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 14 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 14 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540b, 14 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540a, 14 - 12, 0),
-      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5409, 14 - 13, 0),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 11, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 10, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5403, 9, 0),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5404, 8, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5413, 7, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5410, 6, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540f, 5, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5414, 4, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540b, 3, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x540a, 2, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5409, 1, 0),
       /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5427, 0, 1),
       /*L14*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L15*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
@@ -600,45 +599,45 @@ static bool AllowIoctlTty(struct Filter *f) {
 //
 // The optname argument of setsockopt() must be one of:
 //
-//   - TCP_NODELAY          ( 1)
-//   - TCP_CORK             ( 3)
-//   - TCP_KEEPIDLE         ( 4)
-//   - TCP_KEEPINTVL        ( 5)
-//   - SO_TYPE              ( 3)
-//   - SO_ERROR             ( 4)
-//   - SO_DONTROUTE         ( 5)
-//   - SO_REUSEPORT         (15)
-//   - SO_REUSEADDR         ( 2)
-//   - SO_KEEPALIVE         ( 9)
-//   - SO_RCVTIMEO          (20)
-//   - SO_SNDTIMEO          (21)
-//   - IP_RECVTTL           (12)
-//   - IP_RECVERR           (11)
-//   - TCP_FASTOPEN         (23)
-//   - TCP_FASTOPEN_CONNECT (30)
+//   - TCP_NODELAY          (0x01)
+//   - TCP_CORK             (0x03)
+//   - TCP_KEEPIDLE         (0x04)
+//   - TCP_KEEPINTVL        (0x05)
+//   - SO_TYPE              (0x03)
+//   - SO_ERROR             (0x04)
+//   - SO_DONTROUTE         (0x05)
+//   - SO_REUSEPORT         (0x0f)
+//   - SO_REUSEADDR         (0x02)
+//   - SO_KEEPALIVE         (0x09)
+//   - SO_RCVTIMEO          (0x14)
+//   - SO_SNDTIMEO          (0x15)
+//   - IP_RECVTTL           (0x0c)
+//   - IP_RECVERR           (0x0b)
+//   - TCP_FASTOPEN         (0x17)
+//   - TCP_FASTOPEN_CONNECT (0x1e)
 //
-static bool AllowSetsockopt(struct Filter *f) {
+static bool AllowSetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_setsockopt;
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 21 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 5 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 5 - 4, 0),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 2, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
       /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 20 - 5),
       /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 19 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 12, 19 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 19, 19 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 19 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 19 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 19 - 12, 0),
-      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 19 - 13, 0),
-      /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11, 19 - 14, 0),
-      /*L14*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 4, 19 - 15, 0),
-      /*L15*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 5, 19 - 16, 0),
-      /*L16*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 23, 19 - 17, 0),
-      /*L17*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 30, 19 - 18, 0),
-      /*L18*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 20 - 19),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 12, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 11, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 10, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 9, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 8, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 7, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 6, 0),
+      /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0b, 5, 0),
+      /*L14*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 4, 0),
+      /*L15*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 3, 0),
+      /*L16*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x17, 2, 0),
+      /*L17*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1e, 1, 0),
+      /*L18*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
       /*L19*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L20*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L21*/ /* next filter */
@@ -653,27 +652,27 @@ static bool AllowSetsockopt(struct Filter *f) {
 //
 // The optname argument of getsockopt() must be one of:
 //
-//   - SO_TYPE      ( 3)
-//   - SO_REUSEPORT (15)
-//   - SO_REUSEADDR ( 2)
-//   - SO_KEEPALIVE ( 9)
-//   - SO_RCVTIMEO  (20)
-//   - SO_SNDTIMEO  (21)
+//   - SO_TYPE      (0x03)
+//   - SO_REUSEPORT (0x0f)
+//   - SO_REUSEADDR (0x02)
+//   - SO_KEEPALIVE (0x09)
+//   - SO_RCVTIMEO  (0x14)
+//   - SO_SNDTIMEO  (0x15)
 //
-static bool AllowGetsockopt(struct Filter *f) {
+static bool AllowGetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_getsockopt;
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 11 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 11 - 4, 0),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 12 - 4),
       /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 3, 11 - 6, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 11 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 11 - 8, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9, 11 - 9, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 20, 11 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 0, 12 - 11),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 5, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 4, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 3, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 2, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 1, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
       /*L11*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L12*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L13*/ /* next filter */
@@ -687,7 +686,7 @@ static bool AllowGetsockopt(struct Filter *f) {
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //
-static bool AllowMmap(struct Filter *f) {
+static bool AllowMmapExec(struct Filter *f) {
   intptr_t y = (intptr_t)__privileged_end;
   assert(0 < y && y < INT_MAX);
   struct sock_filter fragment[] = {
@@ -723,7 +722,7 @@ static bool AllowMmapNoexec(struct Filter *f) {
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 4),
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),  // flags
       /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 0x5a000),
-      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 8 - 7),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */
@@ -742,7 +741,7 @@ static bool AllowMprotectNoexec(struct Filter *f) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mprotect, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~(PROT_READ | PROT_WRITE)),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -759,7 +758,7 @@ static bool AllowOpenReadonly(struct Filter *f) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -777,7 +776,7 @@ static bool AllowOpenatReadonly(struct Filter *f) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -795,7 +794,7 @@ static bool AllowOpenWriteonly(struct Filter *f) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -813,7 +812,7 @@ static bool AllowOpenatWriteonly(struct Filter *f) {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -832,7 +831,7 @@ static bool AllowOpenatWriteonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowOpen(struct Filter *f) {
+static bool AllowOpenCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -843,7 +842,7 @@ static bool AllowOpen(struct Filter *f) {
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 020200000, 0, 10 - 7),
       /* L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /* L8*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 11 - 10),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L10*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L11*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L12*/ /* next filter */
@@ -862,7 +861,7 @@ static bool AllowOpen(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowOpenat(struct Filter *f) {
+static bool AllowOpenatCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -873,7 +872,7 @@ static bool AllowOpenat(struct Filter *f) {
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 020200000, 0, 10 - 7),
       /* L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[3])),
       /* L8*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 11 - 10),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L10*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L11*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L12*/ /* next filter */
@@ -890,7 +889,7 @@ static bool AllowOpenat(struct Filter *f) {
 //   - F_GETFL (3)
 //   - F_SETFL (4)
 //
-static bool AllowFcntl(struct Filter *f) {
+static bool AllowFcntlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -932,7 +931,7 @@ static bool AllowSendtoAddrless(struct Filter *f) {
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 0),
       /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
       /*L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 4),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 5),
       /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L7*/ /* next filter */
@@ -944,12 +943,12 @@ static bool AllowSendtoAddrless(struct Filter *f) {
 //
 //   - SIGSYS (31)
 //
-static bool AllowSigaction(struct Filter *f) {
+static bool AllowSigactionNosigsys(struct Filter *f) {
   static const int nr = __NR_linux_sigaction;
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 5 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 31, 4 - 3, 0),
+      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 31, 1, 0),
       /*L3*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L5*/ /* next filter */
@@ -959,8 +958,8 @@ static bool AllowSigaction(struct Filter *f) {
 
 // The family parameter of socket() must be one of:
 //
-//   - AF_INET  (2)
-//   - AF_INET6 (10)
+//   - AF_INET  (0x02)
+//   - AF_INET6 (0x0a)
 //
 // The type parameter of socket() will ignore:
 //
@@ -969,31 +968,31 @@ static bool AllowSigaction(struct Filter *f) {
 //
 // The type parameter of socket() must be one of:
 //
-//   - SOCK_STREAM (1)
-//   - SOCK_DGRAM  (2)
+//   - SOCK_STREAM (0x01)
+//   - SOCK_DGRAM  (0x02)
 //
 // The protocol parameter of socket() must be one of:
 //
 //   - 0
-//   - IPPROTO_ICMP (1)
-//   - IPPROTO_TCP (6)
-//   - IPPROTO_UDP (17)
+//   - IPPROTO_ICMP (0x01)
+//   - IPPROTO_TCP  (0x06)
+//   - IPPROTO_UDP  (0x11)
 //
 static bool AllowSocketInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 15 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 4 - 3, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 10, 0, 14 - 4),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 1, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0a, 0, 14 - 4),
       /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 8 - 7, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 14 - 8),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 1, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 0, 14 - 8),
       /* L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 13 - 10, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 13 - 11, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 13 - 12, 0),
-      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 17, 0, 14 - 12),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x00, 3, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 2, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 1, 0),
+      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x11, 0, 1),
       /*L13*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L14*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L15*/ /* next filter */
@@ -1027,10 +1026,10 @@ static bool AllowSocketUnix(struct Filter *f) {
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 0, 10 - 3),
       /* L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, ~0x80800),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 7 - 6, 0),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 2, 0, 10 - 7),
       /* L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 10 - 9),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /* L9*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L10*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L11*/ /* next filter */
@@ -1047,7 +1046,7 @@ static bool AllowSocketUnix(struct Filter *f) {
 //   - PR_SET_NO_NEW_PRIVS (38)
 //   - PR_CAPBSET_READ     (23)
 //
-static bool AllowPrctl(struct Filter *f) {
+static bool AllowPrctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 10 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1070,12 +1069,12 @@ static bool AllowPrctl(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowChmod(struct Filter *f) {
+static bool AllowChmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_chmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -1089,12 +1088,12 @@ static bool AllowChmod(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowFchmod(struct Filter *f) {
+static bool AllowFchmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -1108,12 +1107,12 @@ static bool AllowFchmod(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowFchmodat(struct Filter *f) {
+static bool AllowFchmodatNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmodat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 5 - 4),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
@@ -1131,7 +1130,7 @@ static bool AllowPrlimitStdio(struct Filter *f) {
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 3),
       /*L3*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2]) + 4),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 6 - 5),
+      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
       /*L5*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L7*/ /* next filter */
@@ -1139,12 +1138,55 @@ static bool AllowPrlimitStdio(struct Filter *f) {
   return AppendFilter(f, PLEDGE(fragment));
 }
 
+static int CountUnspecial(const uint16_t *p, size_t len) {
+  int i, count;
+  for (count = i = 0; i < len; ++i) {
+    if (!(p[i] & SPECIAL)) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
-  int i;
+  int i, j, count;
+
+  // handle ordinals which allow syscalls regardless of args
+  // we put in extra effort here to reduce num of bpf instrs
+  if ((count = CountUnspecial(p, len))) {
+    if (count < 256) {
+      for (j = i = 0; i < len; ++i) {
+        if (p[i] & SPECIAL) continue;
+        // jump to ALLOW rule below if accumulator equals ordinal
+        struct sock_filter fragment[] = {
+            BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K,  // instruction
+                     p[i],                       // operand
+                     count - j - 1,              // jump if true displacement
+                     j == count - 1),            // jump if false displacement
+        };
+        if (!AppendFilter(f, PLEDGE(fragment))) {
+          return false;
+        }
+        ++j;
+      }
+      struct sock_filter fragment[] = {
+          BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      };
+      if (!AppendFilter(f, PLEDGE(fragment))) {
+        return false;
+      }
+    } else {
+      asm("ud2");  // list of ordinals exceeds max displacement
+      unreachable;
+    }
+  }
+
+  // handle "special" ordinals which use hand-crafted bpf
   for (i = 0; i < len; ++i) {
+    if (!(p[i] & SPECIAL)) continue;
     switch (p[i]) {
-      case __NR_linux_mmap:
-        if (!AllowMmap(f)) return false;
+      case __NR_linux_mmap | EXEC:
+        if (!AllowMmapExec(f)) return false;
         break;
       case __NR_linux_mmap | NOEXEC:
         if (!AllowMmapNoexec(f)) return false;
@@ -1152,26 +1194,26 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
       case __NR_linux_mprotect | NOEXEC:
         if (!AllowMprotectNoexec(f)) return false;
         break;
-      case __NR_linux_chmod:
-        if (!AllowChmod(f)) return false;
+      case __NR_linux_chmod | NOBITS:
+        if (!AllowChmodNobits(f)) return false;
         break;
-      case __NR_linux_fchmod:
-        if (!AllowFchmod(f)) return false;
+      case __NR_linux_fchmod | NOBITS:
+        if (!AllowFchmodNobits(f)) return false;
         break;
-      case __NR_linux_fchmodat:
-        if (!AllowFchmodat(f)) return false;
+      case __NR_linux_fchmodat | NOBITS:
+        if (!AllowFchmodatNobits(f)) return false;
         break;
-      case __NR_linux_sigaction:
-        if (!AllowSigaction(f)) return false;
+      case __NR_linux_sigaction | NOSIGSYS:
+        if (!AllowSigactionNosigsys(f)) return false;
         break;
-      case __NR_linux_prctl:
-        if (!AllowPrctl(f)) return false;
+      case __NR_linux_prctl | STDIO:
+        if (!AllowPrctlStdio(f)) return false;
         break;
-      case __NR_linux_open:
-        if (!AllowOpen(f)) return false;
+      case __NR_linux_open | CREATONLY:
+        if (!AllowOpenCreatonly(f)) return false;
         break;
-      case __NR_linux_openat:
-        if (!AllowOpenat(f)) return false;
+      case __NR_linux_openat | CREATONLY:
+        if (!AllowOpenatCreatonly(f)) return false;
         break;
       case __NR_linux_open | READONLY:
         if (!AllowOpenReadonly(f)) return false;
@@ -1185,20 +1227,20 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
       case __NR_linux_openat | WRITEONLY:
         if (!AllowOpenatWriteonly(f)) return false;
         break;
-      case __NR_linux_setsockopt:
-        if (!AllowSetsockopt(f)) return false;
+      case __NR_linux_setsockopt | RESTRICT:
+        if (!AllowSetsockoptRestrict(f)) return false;
         break;
-      case __NR_linux_getsockopt:
-        if (!AllowGetsockopt(f)) return false;
+      case __NR_linux_getsockopt | RESTRICT:
+        if (!AllowGetsockoptRestrict(f)) return false;
         break;
-      case __NR_linux_fcntl:
-        if (!AllowFcntl(f)) return false;
+      case __NR_linux_fcntl | STDIO:
+        if (!AllowFcntlStdio(f)) return false;
         break;
       case __NR_linux_fcntl | LOCK:
         if (!AllowFcntlLock(f)) return false;
         break;
-      case __NR_linux_ioctl:
-        if (!AllowIoctl(f)) return false;
+      case __NR_linux_ioctl | RESTRICT:
+        if (!AllowIoctlStdio(f)) return false;
         break;
       case __NR_linux_ioctl | TTY:
         if (!AllowIoctlTty(f)) return false;
@@ -1212,8 +1254,8 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
       case __NR_linux_sendto | ADDRLESS:
         if (!AllowSendtoAddrless(f)) return false;
         break;
-      case __NR_linux_clone:
-        if (!AllowClone(f)) return false;
+      case __NR_linux_clone | RESTRICT:
+        if (!AllowCloneRestrict(f)) return false;
         break;
       case __NR_linux_clone | THREAD:
         if (!AllowCloneThread(f)) return false;
@@ -1222,11 +1264,11 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
         if (!AllowPrlimitStdio(f)) return false;
         break;
       default:
-        assert(~p[i] & ~0xfff);
-        if (!AllowSyscall(f, p[i])) return false;
-        break;
+        asm("ud2");  // switch forgot to define a special ordinal
+        unreachable;
     }
   }
+
   return true;
 }
 
@@ -1416,11 +1458,11 @@ int ParsePromises(const char *promises, unsigned long *out) {
  *
  * - "settime" allows settimeofday and clock_adjtime.
  *
- * - "exec" allows execve, execveat, access, openat(O_RDONLY). If the
- *   executable in question needs a loader, then you may need prot_exec
- *   too. With APE, security will be stronger if you assimilate your
- *   binaries beforehand, using the --assimilate flag, or the
- *   o//tool/build/assimilate.com program.
+ * - "exec" allows execve, execveat. If the executable in question needs
+ *   a loader, then you'll need rpath and prot_exec too. However that's
+ *   not needed if you assimilate your APE binary beforehand, because
+ *   security is strongest for static binaries; use the --assimilate
+ *   flag or o//tool/build/assimilate.com program.
  *
  * - "prot_exec" allows mmap(PROT_EXEC) and mprotect(PROT_EXEC). This is
  *   needed to (1) code morph mutexes in __enable_threads(), and it's

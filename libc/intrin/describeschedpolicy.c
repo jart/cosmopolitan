@@ -27,14 +27,29 @@
  * Describes clock_gettime() clock argument.
  */
 const char *(DescribeSchedPolicy)(char buf[48], int x) {
-  struct DescribeFlags flags[] = {
-      {SCHED_RESET_ON_FORK, "RESET_ON_FORK"},  //
-      {SCHED_OTHER, "OTHER"},                  //
-      {SCHED_FIFO, "FIFO"},                    //
-      {SCHED_RR, "RR"},                        //
-      {SCHED_BATCH, "BATCH"},                  //
-      {SCHED_IDLE, "IDLE"},                    //
-      {SCHED_DEADLINE, "DEADLINE"},            //
-  };
-  return DescribeFlags(buf, 48, flags, ARRAYLEN(flags), "SCHED_", x);
+  char *p = buf;
+  if (x == -1) {
+    goto DoNumber;
+  }
+  if (x & SCHED_RESET_ON_FORK) {
+    x &= ~SCHED_RESET_ON_FORK;
+    p = stpcpy(p, "SCHED_RESET_ON_FORK");
+  }
+  if (x == SCHED_OTHER) {
+    stpcpy(p, "SCHED_OTHER");
+  } else if (x == SCHED_FIFO) {
+    stpcpy(p, "SCHED_FIFO");
+  } else if (x == SCHED_RR) {
+    stpcpy(p, "SCHED_RR");
+  } else if (x == SCHED_BATCH) {
+    stpcpy(p, "SCHED_BATCH");
+  } else if (x == SCHED_IDLE) {
+    stpcpy(p, "SCHED_IDLE");
+  } else if (x == SCHED_DEADLINE) {
+    stpcpy(p, "SCHED_DEADLINE");
+  } else {
+  DoNumber:
+    FormatInt32(p, x);
+  }
+  return buf;
 }

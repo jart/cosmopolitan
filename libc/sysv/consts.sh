@@ -464,6 +464,7 @@ syscon	auxv	AT_EXECFN				31			31			15			999			2014			31			# address of string co
 syscon	auxv	AT_SYSINFO_EHDR				33			0			0			0			0			0
 syscon	auxv	AT_STACKBASE				0			0			0			0			13			0
 syscon	auxv	AT_EXECPATH				31			31			15			999			2014			31			# FreeBSD name for AT_EXECFN
+syscon	auxv	AT_MINSIGSTKSZ				51			0			0			0			0			0			# FreeBSD name for AT_EXECFN
 syscon	auxv	AT_CANARY				0			0			16			0			0			0
 syscon	auxv	AT_CANARYLEN				0			0			17			0			0			0
 syscon	auxv	AT_NCPUS				0			0			19			0			0			0

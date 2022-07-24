@@ -35,12 +35,12 @@
  * before processes with numerically lower priority values.
  *
  * @param pid is the id of the process whose scheduling policy should be
- *     changed. This applies to all threads associated with the process.
- *     Linux is special; the kernel treats this as a thread id (noting
- *     that `getpid() == gettid()` is always the case on Linux for the
- *     main thread) and will only take effect for the specified tid.
+ *     changed. Setting `pid` to zero means the same thing as getpid().
+ *     This applies to all threads associated with the process. Linux is
+ *     special; the kernel treats this as a thread id (noting that
+ *     `getpid() == gettid()` is always the case on Linux for the main
+ *     thread) and will only take effect for the specified tid.
  *     Therefore this function is POSIX-compliant iif `!__threaded`.
- *     Setting `pid` to zero means the same thing as getpid().
  *
  * @param policy specifies the kernel's timesharing strategy.
  *

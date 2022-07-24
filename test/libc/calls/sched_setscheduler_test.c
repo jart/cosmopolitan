@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/testlib/testlib.h"
@@ -51,6 +52,10 @@ bool CanTuneRealtimeSchedulers(void) {
   } else {
     abort();
   }
+}
+
+TEST(sched_getscheduler, einval) {
+  ASSERT_SYS(IsLinux() ? EINVAL : ESRCH, -1, sched_getscheduler(INT_MIN));
 }
 
 TEST(sched_setscheduler, test) {

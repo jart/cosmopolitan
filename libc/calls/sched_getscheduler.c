@@ -20,12 +20,22 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 
 /**
  * Gets scheduler policy for `pid`.
  *
- * @param pid is id of process (where 0 is same as getpid())
+ * @param pid is the id of the process whose scheduling policy should be
+ *     queried. Setting `pid` to zero means the same thing as getpid().
+ *     This applies to all threads associated with the process. Linux is
+ *     special; the kernel treats this as a thread id (noting that
+ *     `getpid() == gettid()` is always the case on Linux for the main
+ *     thread) and will only take effect for the specified tid.
+ *     Therefore this function is POSIX-compliant iif `!__threaded`.
  * @return scheduler policy, or -1 w/ errno
+ * @error ESRCH if `pid` not found
+ * @error EPERM if not permitted
+ * @error EINVAL if `pid` is negative on Linux
  */
 int sched_getscheduler(int pid) {
   int rc;
@@ -34,6 +44,6 @@ int sched_getscheduler(int pid) {
   } else {
     rc = sys_sched_getscheduler(pid);
   }
-  STRACE("sched_getscheduler(%d) → %d% m", pid, rc);
+  STRACE("sched_getscheduler(%d) → %s% m", pid, DescribeSchedPolicy(rc));
   return rc;
 }

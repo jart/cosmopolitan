@@ -27,12 +27,14 @@
  * @param which can be PRIO_PROCESS, PRIO_PGRP, PRIO_USER
  * @param who is the pid, pgid, or uid, 0 meaning current
  * @param value ∈ [-NZERO,NZERO) which is clamped automatically
- * @return nonzero on success or -1 w/ errno
+ * @return 0 on success or -1 w/ errno
+ * @error EACCES if lower that RLIMIT_NICE
+ * @error EACCES on Linux without CAP_SYS_NICE
  * @see getpriority(), nice()
  */
 int setpriority(int which, unsigned who, int value) {
   if (!IsWindows()) {
-    return sys_setpriority(which, who, value); /* TODO(jart): -20 */
+    return sys_setpriority(which, who, value);
   } else {
     return sys_getsetpriority_nt(which, who, value, sys_setpriority_nt);
   }

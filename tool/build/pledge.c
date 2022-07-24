@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/struct/rlimit.h"
@@ -56,6 +57,11 @@
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 
+// MANUALLY TESTED BY RUNNING
+//
+//     test/tool/build/pledge_test.sh
+//
+
 STATIC_YOINK("strerror_wr");
 
 #define USAGE \
@@ -94,7 +100,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.1\n\
+pledge.com v1.2\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
@@ -352,19 +358,20 @@ void Unveil(const char *path, const char *perm) {
   }
 }
 
-void UnveilIfExists(const char *path, const char *perm) {
+int UnveilIfExists(const char *path, const char *perm) {
   int err;
   if (path) {
     err = errno;
-    if (unveil(path, perm) == -1) {
-      if (errno == ENOENT) {
-        errno = err;
-      } else {
-        kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
-        _Exit(20);
-      }
+    if (unveil(path, perm) != -1) {
+      return 0;
+    } else if (errno == ENOENT) {
+      errno = err;
+    } else {
+      kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);
+      _Exit(20);
     }
   }
+  return -1;
 }
 
 void MakeProcessNice(void) {
@@ -386,6 +393,7 @@ void MakeProcessNice(void) {
 }
 
 void ApplyFilesystemPolicy(unsigned long ipromises) {
+  const char *p;
 
   if (!SupportsLandlock()) {
     if (unveils.n) {
@@ -460,7 +468,12 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   }
 
   if (~ipromises & (1ul << PROMISE_PROT_EXEC)) {
-    UnveilIfExists("/usr/bin/ape", "rx");
+    if (UnveilIfExists("/usr/bin/ape", "rx") == -1) {
+      UnveilIfExists(xjoinpaths(firstnonnull(getenv("TMPDIR"),
+                                             firstnonnull(getenv("HOME"), ".")),
+                                ".ape"),
+                     "rx");
+    }
   }
 
   if (~ipromises & (1ul << PROMISE_VMINFO)) {
@@ -552,15 +565,6 @@ int main(int argc, char *argv[]) {
   owneruid = geteuid();
   hasfunbits = usergid != ownergid || useruid != owneruid;
 
-  if (g_dontdrop) {
-    if (hasfunbits) {
-      kprintf("error: -D flag forbidden on setuid binaries\n");
-      _Exit(6);
-    }
-  } else {
-    DropCapabilities();
-  }
-
   if (hasfunbits) {
     setuid(owneruid);
     setgid(ownergid);
@@ -575,7 +579,7 @@ int main(int argc, char *argv[]) {
   }
 
   // check if user has permission to chroot directory
-  if (hasfunbits) {
+  if (hasfunbits && g_chroot) {
     oldfsuid = setfsuid(useruid);
     oldfsgid = setfsgid(usergid);
     if (access(g_chroot, R_OK) == -1) {
@@ -610,6 +614,15 @@ int main(int argc, char *argv[]) {
   if (hasfunbits) {
     setfsuid(oldfsuid);
     setfsgid(oldfsgid);
+  }
+
+  if (g_dontdrop) {
+    if (hasfunbits) {
+      kprintf("error: -D flag forbidden on setuid binaries\n");
+      _Exit(6);
+    }
+  } else {
+    DropCapabilities();
   }
 
   // set group id

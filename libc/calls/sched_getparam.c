@@ -21,6 +21,8 @@
 
 /**
  * Gets scheduler policy parameter.
+ *
+ * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS on XNU, Windows
  */
 int sched_getparam(int pid, struct sched_param *param) {

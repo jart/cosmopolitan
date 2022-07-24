@@ -24,6 +24,10 @@
 /**
  * Returns nice value of thing.
  *
+ * Since -1 might be a valid return value for this API, it's necessary
+ * to clear `errno` beforehand and see if it changed, in order to truly
+ * determine if an error happened.
+ *
  * @param which can be PRIO_PROCESS, PRIO_PGRP, PRIO_USER
  * @param who is the pid, pgid, or uid (0 means current)
  * @return value ∈ [-NZERO,NZERO) or -1 w/ errno
@@ -32,7 +36,9 @@
 int getpriority(int which, unsigned who) {
   int rc;
   if (!IsWindows()) {
-    rc = sys_getpriority(which, who) - 20;
+    if ((rc = sys_getpriority(which, who)) != -1) {
+      rc = 20 - rc;
+    }
   } else {
     rc = sys_getsetpriority_nt(which, who, 0, sys_getpriority_nt);
   }

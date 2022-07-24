@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/utsname.h"
@@ -29,6 +30,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -52,6 +54,7 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/pr.h"
+#include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
@@ -107,6 +110,7 @@ static const struct AuxiliaryValue {
     {"%-14p", &AT_TIMEKEEP, "AT_TIMEKEEP"},
     {"%-14p", &AT_STACKPROT, "AT_STACKPROT"},
     {"%-14p", &AT_EHDRFLAGS, "AT_EHDRFLAGS"},
+    {"%-14d", &AT_MINSIGSTKSZ, "AT_MINSIGSTKSZ"},
 };
 
 static const char *FindNameById(const struct IdName *names, unsigned long id) {
@@ -161,12 +165,15 @@ textstartup void __printargs(const char *prologue) {
   uintptr_t *auxp;
   struct rlimit rlim;
   struct utsname uts;
+  struct sched_param sp;
   struct termios termios;
   struct AuxiliaryValue *auxinfo;
   union {
     char path[PATH_MAX];
     struct pollfd pfds[128];
   } u;
+
+  if (!PLEDGED(STDIO)) return;
 
   --__ftrace;
   --__strace;
@@ -294,6 +301,24 @@ textstartup void __printargs(const char *prologue) {
     PRINT("");
     PRINT("SIGNALS");
     PRINT("  error: sigprocmask() failed %m");
+  }
+
+  if (PLEDGED(PROC)) {
+    PRINT("");
+    PRINT("SCHEDULER");
+    errno = 0;
+    PRINT(" ☼ getpriority(PRIO_PROCESS) → %d% m", getpriority(PRIO_PROCESS, 0));
+    errno = 0;
+    PRINT(" ☼ getpriority(PRIO_PGRP)    → %d% m", getpriority(PRIO_PGRP, 0));
+    errno = 0;
+    PRINT(" ☼ getpriority(PRIO_USER)    → %d% m", getpriority(PRIO_USER, 0));
+    errno = 0;
+    PRINT(" ☼ sched_getscheduler()      → %s% m",
+          DescribeSchedPolicy(sched_getscheduler(0)));
+    errno = 0;
+    if (sched_getparam(0, &sp) != -1) {
+      PRINT(" ☼ sched_getparam()          → %d% m", sp.sched_priority);
+    }
   }
 
   if (IsLinux()) {
