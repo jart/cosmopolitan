@@ -100,7 +100,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.2\n\
+pledge.com v1.3\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
