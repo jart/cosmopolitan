@@ -41,6 +41,17 @@ lsqlite3 (MIT License)\\n\
 Copyright 2002-2016 Tiago Dionizio, Doug Currie\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+// LOCAL CHANGES
+//
+//   - Remove online backup code
+//   - Remove trace callback code
+//   - Remove progress callback code
+//   - Removed extension loading code
+//   - Relocate static .data to .rodata
+//   - Changed lua_strlen() to lua_rawlen()
+//
+#define LSQLITE_VERSION "0.9.5"
+
 /* luaL_typerror always used with arg at ndx == NULL */
 #define luaL_typerror(L,ndx,str) luaL_error(L,"bad argument %d (%s expected, got nil)",ndx,str)
 /* luaL_register used once, so below expansion is OK for this case */
@@ -1732,11 +1743,6 @@ static int lsqlite_newindex(lua_State *L) {
     lua_error(L);
     return 0;
 }
-
-#ifndef LSQLITE_VERSION
-/* should be defined in rockspec, but just in case... */
-#define LSQLITE_VERSION "unknown"
-#endif
 
 /* Version number of this library
 */

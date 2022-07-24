@@ -19,6 +19,8 @@
 --    5869).  As with RFC 4634, code to perform SHA-based Hashed Message
 --    Authentication Codes (HMACs) is also included.
 
+unix.pledge('stdio')
+
 -- SHA-1
 assert(Sha1("abc") == "\xa9\x99\x3e\x36\x47\x06\x81\x6a\xba\x3e\x25\x71\x78\x50\xc2\x6c\x9c\xd0\xd8\x9d")
 assert(

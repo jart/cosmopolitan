@@ -13,6 +13,8 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
+unix.pledge('stdio')
+
 -- https://datatracker.ietf.org/doc/html/rfc1321#appendix-A.5
 assert(Md5("hello") == "\x5d\x41\x40\x2a\xbc\x4b\x2a\x76\xb9\x71\x9d\x91\x10\x17\xc5\x92")
 assert(Md5("") == "\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09\x98\xec\xf8\x42\x7e")
