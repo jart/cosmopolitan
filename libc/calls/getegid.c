@@ -16,13 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns effective group ID of calling process.
@@ -30,10 +28,7 @@
  */
 int getegid(void) {
   int rc;
-  struct AuxiliaryValue av;
-  if ((av = _getauxval(AT_EGID)).isfound) {
-    rc = av.value;
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_getegid();
   } else {
     rc = getgid();

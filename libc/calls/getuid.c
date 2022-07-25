@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -25,7 +24,6 @@
 #include "libc/nt/accounting.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/auxv.h"
 
 static uint32_t KnuthMultiplicativeHash32(const void *buf, size_t size) {
   size_t i;
@@ -54,10 +52,7 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  */
 int getuid(void) {
   int rc;
-  struct AuxiliaryValue av;
-  if ((av = _getauxval(AT_UID)).isfound) {
-    rc = av.value;
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_getuid();
   } else {
     rc = GetUserNameHash();
@@ -78,10 +73,7 @@ int getuid(void) {
  */
 int getgid(void) {
   int rc;
-  struct AuxiliaryValue av;
-  if ((av = _getauxval(AT_GID)).isfound) {
-    rc = av.value;
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_getgid();
   } else {
     rc = GetUserNameHash();

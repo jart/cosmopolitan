@@ -16,12 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/auxv.h"
 
 /**
  * Returns effective user ID of calling process.
@@ -29,10 +27,7 @@
  */
 int geteuid(void) {
   int rc;
-  struct AuxiliaryValue av;
-  if ((av = _getauxval(AT_EUID)).isfound) {
-    rc = av.value;
-  } else if (!IsWindows()) {
+  if (!IsWindows()) {
     rc = sys_geteuid();
   } else {
     rc = getuid();
