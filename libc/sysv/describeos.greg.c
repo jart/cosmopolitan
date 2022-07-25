@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/nexgen32e/vendor.internal.h"
 
 const char *__describe_os(void) {
   if (IsLinux()) {

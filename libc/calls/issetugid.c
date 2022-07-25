@@ -16,7 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/runtime.h"
+#include "libc/calls/_getauxval.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/auxv.h"
 
-int issetugid(void) { return !!getauxval(AT_SECURE); }
+/**
+ * Determines if process is tainted.
+ *
+ * This function returns 1 if process was launched as a result of an
+ * execve() call on a binary that had the setuid or setgid bits set.
+ * FreeBSD defines tainted as including processes that changed their
+ * effective user / group ids at some point.
+ *
+ * @return always successful, 1 if yes, 0 if no
+ */
+int issetugid(void) {
+  int rc;
+  if (IsLinux()) {
+    rc = !!_getauxval(AT_SECURE).value;
+  } else if (IsMetal()) {
+    rc = 0;
+  } else {
+    rc = sys_issetugid();
+  }
+  STRACE("issetugid() → %d", rc);
+  return rc;
+}

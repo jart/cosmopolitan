@@ -28,8 +28,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern unsigned long __promises;
-hidden extern unsigned long __execpromises;
+extern unsigned long __promises;
+extern unsigned long __execpromises;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

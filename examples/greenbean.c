@@ -25,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
@@ -298,6 +299,12 @@ int main(int argc, char *argv[]) {
     kprintf("error: invalid number of threads\n");
     exit(1);
   }
+
+  // secure the server
+  __enable_threads();
+  unveil("/dev/null", "rw");
+  unveil(0, 0);
+  pledge("stdio inet", 0);
 
   // spawn over 9,000 worker threads
   th = calloc(threads, sizeof(*th));

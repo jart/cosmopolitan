@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -29,12 +30,13 @@
  */
 int getegid(void) {
   int rc;
-  if (!(rc = getauxval(AT_EGID))) {
-    if (!IsWindows()) {
-      rc = sys_getegid();
-    } else {
-      rc = getgid();
-    }
+  struct AuxiliaryValue av;
+  if ((av = _getauxval(AT_EGID)).isfound) {
+    rc = av.value;
+  } else if (!IsWindows()) {
+    rc = sys_getegid();
+  } else {
+    rc = getgid();
   }
   STRACE("%s() → %d% m", "getegid", rc);
   return rc;

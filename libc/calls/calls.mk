@@ -179,6 +179,11 @@ o//libc/calls/getcwd-xnu.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+o/$(MODE)/libc/calls/pledge.o				\
+o/$(MODE)/libc/calls/unveil.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-DSTACK_FRAME_UNLIMITED
+
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))
 LIBC_CALLS_HDRS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_HDRS))

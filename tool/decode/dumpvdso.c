@@ -23,7 +23,8 @@
 
 noasan int main(int argc, char *argv[]) {
   int i = 0;
-  Elf64_Ehdr *ehdr = (Elf64_Ehdr *)getauxval(AT_SYSINFO_EHDR);
+  Elf64_Ehdr *ehdr;
+  ehdr = (Elf64_Ehdr *)getauxval(AT_SYSINFO_EHDR);
   if (isatty(1)) exit(1);
   for (;;) {
     write(1, ((char *)ehdr) + i++, 1);

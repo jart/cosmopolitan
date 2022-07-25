@@ -56,6 +56,7 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sa.h"
@@ -497,6 +498,11 @@ static struct sigaction_linux *CoerceSigactionToLinux(
   ASSIGN(dst->sa_flags, src->sa_flags);
   ASSIGN(dst->sa_mask, src->sa_mask);
   return dst;
+}
+
+static int OpPrctl(struct Machine *m, int op, int64_t a, int64_t b, int64_t c,
+                   int64_t d) {
+  return einval();
 }
 
 static int OpArchPrctl(struct Machine *m, int code, int64_t addr) {
@@ -1503,6 +1509,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x0A0, setrlimit(di, P(si)));
     SYSCALL(0x084, utime(PNN(di), PNN(si)));
     SYSCALL(0x0EB, utimes(P(di), P(si)));
+    SYSCALL(0x09D, OpPrctl(m, di, si, dx, r0, r8));
     SYSCALL(0x09E, OpArchPrctl(m, di, si));
     SYSCALL(0x0BA, OpGetTid(m));
     SYSCALL(0x0CB, sched_setaffinity(di, si, P(dx)));

@@ -57,6 +57,7 @@ i32 sys_getresuid(u32 *, u32 *, u32 *);
 i32 sys_getsid(int) hidden;
 i32 sys_gettid(void) hidden;
 i32 sys_ioctl(i32, u64, ...) hidden;
+i32 sys_issetugid(void) hidden;
 i32 sys_kill(i32, i32, i32) hidden;
 i32 sys_linkat(i32, const char *, i32, const char *, i32) hidden;
 i32 sys_lseek(i32, i64, i64, i64) hidden;

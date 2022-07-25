@@ -1426,7 +1426,7 @@ static void PickDefaults(void) {
 }
 
 static void RenounceSpecialPrivileges(void) {
-  if (getauxval(AT_SECURE)) {
+  if (issetugid()) {
     setegid(getgid());
     seteuid(getuid());
   }

@@ -115,6 +115,7 @@ int gettid(void) libcesque;
 int getuid(void) libcesque;
 int ioprio_get(int, int);
 int ioprio_set(int, int, int);
+int issetugid(void);
 int kill(int, int);
 int killpg(int, int);
 int link(const char *, const char *) dontthrow;

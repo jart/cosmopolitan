@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -54,7 +55,7 @@ static dontinline int __clk_tck_init(void) {
       x = -1;
     }
   } else {
-    x = getauxval(AT_CLKTCK);
+    x = _getauxval(AT_CLKTCK).value;
   }
   if (x < 1) x = 100;
   clk_tck = x;

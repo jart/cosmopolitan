@@ -18,5 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/promises.internal.h"
 
+// XXX: should be inherited thread local
 unsigned long __promises;
 unsigned long __execpromises;

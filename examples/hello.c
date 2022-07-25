@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 
 STATIC_YOINK("mmap");  // TODO: fix bandaid for MODE=asan

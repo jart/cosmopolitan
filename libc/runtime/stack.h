@@ -128,6 +128,12 @@ extern char ape_stack_align[] __attribute__((__weak__));
   (IsTiny() ||             \
    (intptr_t)__builtin_frame_address(0) >= GetStackAddr() + PAGESIZE + (n))
 
+forceinline void CheckLargeStackAllocation(void *p, ssize_t n) {
+  for (; n > 0; n -= 4096) {
+    ((char *)p)[n - 1] = 0;
+  }
+}
+
 COSMOPOLITAN_C_END_
 #endif /* GNU ELF */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

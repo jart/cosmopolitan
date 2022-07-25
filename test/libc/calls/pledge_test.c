@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/flock.h"
@@ -555,6 +556,28 @@ TEST(pledge, threadWithLocks_canCodeMorph) {
     ASSERT_SYS(0, 0, pledge("stdio prot_exec", 0));
     ASSERT_SYS(0, 0, _spawn(LockWorker, 0, &worker));
     ASSERT_SYS(0, 0, _join(&worker));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(pledge, everything) {
+  int ws, pid;
+  if (!fork()) {
+    // contains 548 bpf instructions [2022-07-24]
+    ASSERT_SYS(0, 0,
+               pledge("stdio rpath wpath cpath dpath "
+                      "flock fattr inet unix dns tty "
+                      "recvfd sendfd proc exec id "
+                      "unveil settime prot_exec "
+                      "vminfo tmppath",
+                      "stdio rpath wpath cpath dpath "
+                      "flock fattr inet unix dns tty "
+                      "recvfd sendfd proc exec id "
+                      "unveil settime prot_exec "
+                      "vminfo tmppath"));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));

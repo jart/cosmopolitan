@@ -63,6 +63,8 @@ o/$(MODE)/test/libc/calls/%.com.dbg:					\
 		o/$(MODE)/test/libc/calls/life-nomod.com.zip.o		\
 		o/$(MODE)/test/libc/calls/life-classic.com.zip.o	\
 		o/$(MODE)/test/libc/calls/tiny64.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/life.elf.zip.o		\
+		o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o		\
 		o/$(MODE)/third_party/python/Lib/test/tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt.zip.o	\
 		o/$(MODE)/test/libc/calls/calls.pkg			\
 		$(LIBC_TESTMAIN)					\

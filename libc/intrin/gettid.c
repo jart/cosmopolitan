@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/gettls.h"
@@ -49,10 +50,11 @@
  * @return thread id greater than zero or -1 w/ errno
  * @asyncsignalsafe
  * @threadsafe
+ * @vforksafe
  */
 int gettid(void) {
   int tid;
-  if (__tls_enabled) {
+  if (__tls_enabled && !__vforked) {
     tid = *(int *)(__get_tls() + 0x38);
     if (tid > 0) {
       return tid;

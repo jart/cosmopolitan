@@ -70,7 +70,6 @@ int setenv(const char *, const char *, int) paramsnonnull();
 int unsetenv(const char *);
 int clearenv(void);
 void fpreset(void);
-int issetugid(void);
 void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
 void *mremap(void *, size_t, size_t, int, ...);
 int munmap(void *, uint64_t);

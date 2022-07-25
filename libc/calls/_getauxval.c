@@ -16,57 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-nt.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/nt/process.h"
-#include "libc/runtime/internal.h"
+#include "libc/calls/_getauxval.internal.h"
+#include "libc/runtime/runtime.h"
 
 /**
- * Creates new process.
+ * Returns auxiliary value, or zero if kernel didn't provide it.
  *
- * @return 0 to child, child pid to parent, or -1 on error
+ * This function is typically regarded as a libc implementation detail;
+ * thus, the source code is the documentation.
+ *
+ * @param at is `AT_...` search key
+ * @return true if value was found
+ * @see libc/sysv/consts.sh
+ * @see System Five Application Binary Interface § 3.4.3
+ * @error ENOENT when value not found
  * @asyncsignalsafe
  */
-int fork(void) {
-  axdx_t ad;
-  int ax, dx, parent;
-  if (!IsWindows()) {
-    ad = sys_fork();
-    ax = ad.ax;
-    dx = ad.dx;
-    if (IsXnu() && ax != -1) {
-      /* eax always returned with childs pid */
-      /* edx is 0 for parent and 1 for child */
-      ax &= dx - 1;
+struct AuxiliaryValue _getauxval(unsigned long at) {
+  unsigned long *ap;
+  for (ap = __auxv; ap[0]; ap += 2) {
+    if (at == ap[0]) {
+      return (struct AuxiliaryValue){ap[1], true};
     }
-  } else {
-    ax = sys_fork_nt();
   }
-  if (!ax) {
-    if (!IsWindows()) {
-      dx = sys_getpid().ax;
-    } else {
-      dx = GetCurrentProcessId();
-    }
-    parent = __pid;
-    __pid = dx;
-    if (__tls_enabled) {
-      *(int *)(__get_tls() + 0x38) = IsLinux() ? dx : sys_gettid();
-    }
-    STRACE("fork() → 0 (child of %d)", parent);
-    if (weaken(__onfork)) {
-      weaken(__onfork)();
-    }
-  } else {
-    STRACE("fork() → %d% m", ax);
-  }
-  return ax;
+  return (struct AuxiliaryValue){0, false};
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -53,13 +54,15 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  */
 int getuid(void) {
   int rc;
-  if (!(rc = getauxval(AT_UID))) {
-    if (!IsWindows()) {
-      rc = sys_getuid();
-    } else {
-      rc = GetUserNameHash();
-    }
+  struct AuxiliaryValue av;
+  if ((av = _getauxval(AT_UID)).isfound) {
+    rc = av.value;
+  } else if (!IsWindows()) {
+    rc = sys_getuid();
+  } else {
+    rc = GetUserNameHash();
   }
+
   STRACE("%s() → %d% m", "getuid", rc);
   return rc;
 }
@@ -75,12 +78,13 @@ int getuid(void) {
  */
 int getgid(void) {
   int rc;
-  if (!(rc = getauxval(AT_GID))) {
-    if (!IsWindows()) {
-      rc = sys_getgid();
-    } else {
-      rc = GetUserNameHash();
-    }
+  struct AuxiliaryValue av;
+  if ((av = _getauxval(AT_GID)).isfound) {
+    rc = av.value;
+  } else if (!IsWindows()) {
+    rc = sys_getgid();
+  } else {
+    rc = GetUserNameHash();
   }
   STRACE("%s() → %d% m", "getgid", rc);
   return rc;

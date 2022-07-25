@@ -422,7 +422,7 @@ scall	__bsd_seteuid		0xfff0b70b720b7fff	globl hidden # wrapped via setreuid()
 scall	__bsd_setegid		0xfff0b60b620b6fff	globl hidden # wrapped via setregid()
 scall	fpathconf		0x0c00c00c020c0fff	globl
 scall	fhopen			0x18c10812a20f8fff	globl
-scall	issetugid		0xfff0fd0fd2147fff	globl
+scall	sys_issetugid		0xfff0fd0fd2147fff	globl hidden
 scall	minherit		0x1110fa0fa20fafff	globl
 scall	pathconf		0x0bf0bf0bf20bffff	globl
 scall	sysctl			0x0ca0ca0ca20cafff	globl

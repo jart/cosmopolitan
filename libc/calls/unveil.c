@@ -31,10 +31,10 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -142,8 +142,19 @@ static int unveil_init(void) {
   return 0;
 }
 
-static int sys_unveil_linux(const char *path, const char *permissions) {
+int sys_unveil_linux(const char *path, const char *permissions) {
   int rc;
+  const char *dir;
+  const char *last;
+  const char *next;
+  struct {
+    char lbuf[PATH_MAX];
+    char buf1[PATH_MAX];
+    char buf2[PATH_MAX];
+    char buf3[PATH_MAX];
+    char buf4[PATH_MAX];
+  } b;
+  CheckLargeStackAllocation(&b, sizeof(b));
 
   if (!State.fd && (rc = unveil_init()) == -1) return rc;
   if ((path && !permissions) || (!path && permissions)) return einval();
@@ -173,48 +184,34 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
   // realpath(path) to the ruleset. however a corner case exists where
   // it isn't valid, e.g. /dev/stdin -> /proc/2834/fd/pipe:[51032], so
   // we'll need to work around this, by adding the path which is valid
-  const char *dir;
-  const char *last;
-  const char *next;
-  struct {
-    char lbuf[PATH_MAX];
-    char buf1[PATH_MAX];
-    char buf2[PATH_MAX];
-    char buf3[PATH_MAX];
-    char buf4[PATH_MAX];
-  } * b;
   if (strlen(path) + 1 > PATH_MAX) return enametoolong();
-  if (!(b = malloc(sizeof(*b)))) return -1;
   last = path;
   next = path;
   for (int i = 0;; ++i) {
     if (i == 64) {
       // give up
-      free(b);
       return eloop();
     }
     int err = errno;
-    if ((rc = sys_readlinkat(AT_FDCWD, next, b->lbuf, PATH_MAX)) != -1) {
+    if ((rc = sys_readlinkat(AT_FDCWD, next, b.lbuf, PATH_MAX)) != -1) {
       if (rc < PATH_MAX) {
         // we need to nul-terminate
-        b->lbuf[rc] = 0;
+        b.lbuf[rc] = 0;
         // last = next
-        strcpy(b->buf1, next);
-        last = b->buf1;
+        strcpy(b.buf1, next);
+        last = b.buf1;
         // next = join(dirname(next), link)
-        strcpy(b->buf2, next);
-        dir = dirname(b->buf2);
-        if ((next = _joinpaths(b->buf3, PATH_MAX, dir, b->lbuf))) {
+        strcpy(b.buf2, next);
+        dir = dirname(b.buf2);
+        if ((next = _joinpaths(b.buf3, PATH_MAX, dir, b.lbuf))) {
           // next now points to either: buf3, buf2, lbuf, rodata
-          strcpy(b->buf4, next);
-          next = b->buf4;
+          strcpy(b.buf4, next);
+          next = b.buf4;
         } else {
-          free(b);
           return enametoolong();
         }
       } else {
         // symbolic link data was too long
-        free(b);
         return enametoolong();
       }
     } else if (errno == EINVAL) {
@@ -229,14 +226,12 @@ static int sys_unveil_linux(const char *path, const char *permissions) {
       break;
     } else {
       // readlink failed for some other reason
-      free(b);
       return -1;
     }
   }
 
   // now we can open the path
   rc = sys_open(path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
-  free(b);
   if (rc == -1) return rc;
 
   pb.parent_fd = rc;

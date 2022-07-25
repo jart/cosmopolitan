@@ -23,20 +23,13 @@
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/struct/sockaddr.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/audit.h"
-#include "libc/sysv/consts/clone.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
@@ -71,7 +64,7 @@
 
 struct Filter {
   size_t n;
-  struct sock_filter *p;
+  struct sock_filter p[700];
 };
 
 static const uint16_t kPledgeLinuxDefault[] = {
@@ -453,14 +446,14 @@ static const struct sock_filter kFilterEnd[] = {
 };
 
 static bool AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
-  size_t m;
-  struct sock_filter *q;
-  m = f->n + n;
-  if (!(q = realloc(f->p, m * sizeof(*f->p)))) return false;
-  memcpy(q + f->n, p, n * sizeof(*q));
-  f->p = q;
-  f->n = m;
-  return true;
+  if (f->n + n <= ARRAYLEN(f->p)) {
+    memcpy(f->p + f->n, p, n * sizeof(*f->p));
+    f->n += n;
+    return true;
+  } else {
+    enomem();
+    return false;
+  }
 }
 
 // SYSCALL is only allowed in the .privileged section
@@ -625,6 +618,7 @@ static bool AllowSetsockoptRestrict(struct Filter *f) {
       /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
       /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 20 - 5),
       /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 13, 0),
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 12, 0),
       /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 11, 0),
       /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 10, 0),
@@ -1176,7 +1170,7 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
         return false;
       }
     } else {
-      asm("ud2");  // list of ordinals exceeds max displacement
+      asm("hlt");  // list of ordinals exceeds max displacement
       unreachable;
     }
   }
@@ -1264,7 +1258,7 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
         if (!AllowPrlimitStdio(f)) return false;
         break;
       default:
-        asm("ud2");  // switch forgot to define a special ordinal
+        asm("hlt");  // switch forgot to define a special ordinal
         unreachable;
     }
   }
@@ -1275,7 +1269,9 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
 int sys_pledge_linux(unsigned long ipromises) {
   bool ok = true;
   int i, rc = -1;
-  struct Filter f = {0};
+  struct Filter f;
+  CheckLargeStackAllocation(&f, sizeof(f));
+  f.n = 0;
   ipromises = ~ipromises;
   if (AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
       ((ipromises & (1ul << PROMISE_EXEC)) ||
@@ -1301,7 +1297,6 @@ int sys_pledge_linux(unsigned long ipromises) {
       rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
     }
   }
-  free(f.p);
   return rc;
 }
 
@@ -1320,20 +1315,23 @@ int ParsePromises(const char *promises, unsigned long *out) {
   int rc = 0;
   int promise;
   unsigned long ipromises;
-  char *tok, *state, *start, *freeme;
+  char *tok, *state, *start, buf[256];
   if (promises) {
     ipromises = -1;
-    freeme = start = strdup(promises);
-    while ((tok = strtok_r(start, " \t\r\n", &state))) {
-      if ((promise = FindPromise(tok)) != -1) {
-        ipromises &= ~(1ULL << promise);
-      } else {
-        rc = einval();
-        break;
+    if (memccpy(buf, promises, 0, sizeof(buf))) {
+      start = buf;
+      while ((tok = strtok_r(start, " \t\r\n", &state))) {
+        if ((promise = FindPromise(tok)) != -1) {
+          ipromises &= ~(1ULL << promise);
+        } else {
+          rc = einval();
+          break;
+        }
+        start = 0;
       }
-      start = 0;
+    } else {
+      rc = einval();
     }
-    free(freeme);
   } else {
     ipromises = 0;
   }
@@ -1355,6 +1353,18 @@ int ParsePromises(const char *promises, unsigned long *out) {
  * works on Linux is verboten system calls will raise EPERM whereas
  * OpenBSD just kills the process while logging a helpful message to
  * /var/log/messages explaining which promise category you needed.
+ *
+ * Timing is everything with pledge. For example, if you're using
+ * threads, then you may want to enable them explicitly *before* calling
+ * pledge(), since otherwise you'd need "prot_exec":
+ *
+ *     __enable_threads();
+ *     pledge("...", 0);
+ *
+ * If you want crash reports, then you can avoid needing "rpath" with:
+ *
+ *     ShowCrashReports();
+ *     pledge("...", 0);
  *
  * By default exit() is allowed. This is useful for processes that
  * perform pure computation and interface with the parent via shared
@@ -1520,7 +1530,7 @@ int pledge(const char *promises, const char *execpromises) {
     } else {
       rc = sys_pledge(promises, execpromises);
     }
-    if (!rc) {
+    if (!rc && (IsOpenbsd() || getpid() == gettid())) {
       __promises = ipromises;
       __execpromises = iexecpromises;
     }
