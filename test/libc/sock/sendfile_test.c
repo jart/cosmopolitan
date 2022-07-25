@@ -32,7 +32,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath cpath proc inet", 0);
+  pledge("stdio rpath wpath cpath proc inet", 0);
   errno = 0;
 }
 
