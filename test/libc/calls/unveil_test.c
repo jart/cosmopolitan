@@ -351,8 +351,7 @@ TEST(unveil, isThreadSpecificOnLinux_isProcessWideOnOpenbsd) {
 TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   int ws, pid;
   bool *gotsome;
-  ASSERT_NE(-1, (gotsome = mmap(0, FRAMESIZE, PROT_READ | PROT_WRITE,
-                                MAP_SHARED | MAP_ANONYMOUS, -1, 0)));
+  ASSERT_NE(-1, (gotsome = _mapshared(FRAMESIZE)));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     // install our first seccomp filter

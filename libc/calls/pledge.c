@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/bits/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
@@ -233,6 +234,7 @@ static const uint16_t kPledgeLinuxWpath[] = {
 static const uint16_t kPledgeLinuxCpath[] = {
     __NR_linux_open | CREATONLY,    //
     __NR_linux_openat | CREATONLY,  //
+    __NR_linux_creat | RESTRICT,    //
     __NR_linux_rename,              //
     __NR_linux_renameat,            //
     __NR_linux_renameat2,           //
@@ -445,20 +447,18 @@ static const struct sock_filter kFilterEnd[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (1 & SECCOMP_RET_DATA)),
 };
 
-static bool AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
-  if (f->n + n <= ARRAYLEN(f->p)) {
-    memcpy(f->p + f->n, p, n * sizeof(*f->p));
-    f->n += n;
-    return true;
-  } else {
-    enomem();
-    return false;
+static void AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
+  if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) {
+    asm("hlt");  // need to increase array size
+    unreachable;
   }
+  memcpy(f->p + f->n, p, n * sizeof(*f->p));
+  f->n += n;
 }
 
 // SYSCALL is only allowed in the .privileged section
 // We assume program image is loaded in 32-bit spaces
-static bool AppendOriginVerification(struct Filter *f, long ipromises) {
+static void AppendOriginVerification(struct Filter *f) {
   intptr_t x = (intptr_t)__privileged_start;
   intptr_t y = (intptr_t)__privileged_end;
   assert(0 < x && x < y && y < INT_MAX);
@@ -472,7 +472,7 @@ static bool AppendOriginVerification(struct Filter *f, long ipromises) {
       /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L7*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The first argument of sys_clone_linux() must NOT have:
@@ -481,7 +481,7 @@ static bool AppendOriginVerification(struct Filter *f, long ipromises) {
 //   - CLONE_PTRACE   (0x00002000)
 //   - CLONE_UNTRACED (0x00800000)
 //
-static bool AllowCloneRestrict(struct Filter *f) {
+static void AllowCloneRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -491,7 +491,7 @@ static bool AllowCloneRestrict(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The first argument of sys_clone_linux() must have:
@@ -508,7 +508,7 @@ static bool AllowCloneRestrict(struct Filter *f) {
 //   - CLONE_PTRACE   (0x00002000)
 //   - CLONE_UNTRACED (0x00800000)
 //
-static bool AllowCloneThread(struct Filter *f) {
+static void AllowCloneThread(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_clone, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -521,7 +521,7 @@ static bool AllowCloneThread(struct Filter *f) {
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The second argument of ioctl() must be one of:
@@ -531,7 +531,7 @@ static bool AllowCloneThread(struct Filter *f) {
 //   - FIOCLEX  (0x5451)
 //   - FIONCLEX (0x5450)
 //
-static bool AllowIoctlStdio(struct Filter *f) {
+static void AllowIoctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 8 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -543,7 +543,7 @@ static bool AllowIoctlStdio(struct Filter *f) {
       /*L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L8*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The second argument of ioctl() must be one of:
@@ -561,7 +561,7 @@ static bool AllowIoctlStdio(struct Filter *f) {
 //   - TCSBRK     (0x5409)
 //   - TIOCSBRK   (0x5427)
 //
-static bool AllowIoctlTty(struct Filter *f) {
+static void AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 16 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -581,7 +581,7 @@ static bool AllowIoctlTty(struct Filter *f) {
       /*L15*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L16*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The level argument of setsockopt() must be one of:
@@ -609,7 +609,7 @@ static bool AllowIoctlTty(struct Filter *f) {
 //   - TCP_FASTOPEN         (0x17)
 //   - TCP_FASTOPEN_CONNECT (0x1e)
 //
-static bool AllowSetsockoptRestrict(struct Filter *f) {
+static void AllowSetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_setsockopt;
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 21 - 1),
@@ -636,7 +636,7 @@ static bool AllowSetsockoptRestrict(struct Filter *f) {
       /*L20*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L21*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The level argument of getsockopt() must be one of:
@@ -653,7 +653,7 @@ static bool AllowSetsockoptRestrict(struct Filter *f) {
 //   - SO_RCVTIMEO  (0x14)
 //   - SO_SNDTIMEO  (0x15)
 //
-static bool AllowGetsockoptRestrict(struct Filter *f) {
+static void AllowGetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_getsockopt;
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13 - 1),
@@ -671,7 +671,7 @@ static bool AllowGetsockoptRestrict(struct Filter *f) {
       /*L12*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L13*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The flags parameter of mmap() must not have:
@@ -680,7 +680,7 @@ static bool AllowGetsockoptRestrict(struct Filter *f) {
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //
-static bool AllowMmapExec(struct Filter *f) {
+static void AllowMmapExec(struct Filter *f) {
   intptr_t y = (intptr_t)__privileged_end;
   assert(0 < y && y < INT_MAX);
   struct sock_filter fragment[] = {
@@ -692,7 +692,7 @@ static bool AllowMmapExec(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The prot parameter of mmap() may only have:
@@ -708,7 +708,7 @@ static bool AllowMmapExec(struct Filter *f) {
 //   - MAP_NONBLOCK (0x10000)
 //   - MAP_HUGETLB  (0x40000)
 //
-static bool AllowMmapNoexec(struct Filter *f) {
+static void AllowMmapNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mmap, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
@@ -721,7 +721,7 @@ static bool AllowMmapNoexec(struct Filter *f) {
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The prot parameter of mprotect() may only have:
@@ -730,7 +730,7 @@ static bool AllowMmapNoexec(struct Filter *f) {
 //   - PROT_READ  (1)
 //   - PROT_WRITE (2)
 //
-static bool AllowMprotectNoexec(struct Filter *f) {
+static void AllowMprotectNoexec(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_mprotect, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),  // prot
@@ -740,84 +740,119 @@ static bool AllowMprotectNoexec(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The open() system call is permitted only when
 //
 //   - (flags & O_ACCMODE) == O_RDONLY
 //
-static bool AllowOpenReadonly(struct Filter *f) {
-  static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 1),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
-  };
-  return AppendFilter(f, PLEDGE(fragment));
-}
-
 // The flags parameter of open() must not have:
 //
-//   - O_WRONLY (1)
-//   - O_RDWR   (2)
+//   - O_CREAT     (000000100)
+//   - O_TRUNC     (000001000)
+//   - __O_TMPFILE (020000000)
 //
-static bool AllowOpenatReadonly(struct Filter *f) {
+static void AllowOpenReadonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 6 - 1),
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 9 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 8 - 4),
+      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020001100),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L9*/ /* next filter */
+  };
+  AppendFilter(f, PLEDGE(fragment));
+}
+
+// The open() system call is permitted only when
+//
+//   - (flags & O_ACCMODE) == O_RDONLY
+//
+// The flags parameter of open() must not have:
+//
+//   - O_CREAT     (000000100)
+//   - O_TRUNC     (000001000)
+//   - __O_TMPFILE (020000000)
+//
+static void AllowOpenatReadonly(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 9 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 1),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDONLY, 0, 8 - 4),
+      /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /*L5*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020001100),
+      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L9*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
+// The open() system call is permitted only when
+//
+//   - (flags & O_ACCMODE) == O_WRONLY
+//   - (flags & O_ACCMODE) == O_RDWR
+//
 // The open() flags parameter must not contain
 //
-//   - O_CREAT   (000000100)
-//   - O_TMPFILE (020200000)
+//   - O_CREAT     (000000100)
+//   - __O_TMPFILE (020000000)
 //
-static bool AllowOpenWriteonly(struct Filter *f) {
+static void AllowOpenWriteonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 10 - 1),
+      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /* L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_WRONLY, 1, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDWR, 0, 9 - 5),
+      /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /* L6*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020000100),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /* L8*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /* L9*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L10*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
+// The open() system call is permitted only when
+//
+//   - (flags & O_ACCMODE) == O_WRONLY
+//   - (flags & O_ACCMODE) == O_RDWR
+//
 // The openat() flags parameter must not contain
 //
-//   - O_CREAT   (000000100)
-//   - O_TMPFILE (020200000)
+//   - O_CREAT     (000000100)
+//   - __O_TMPFILE (020000000)
 //
-static bool AllowOpenatWriteonly(struct Filter *f) {
+static void AllowOpenatWriteonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020200100),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 10 - 1),
+      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, O_ACCMODE),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_WRONLY, 1, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, O_RDWR, 0, 9 - 5),
+      /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      /* L6*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 020000100),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /* L8*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /* L9*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L10*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // If the flags parameter of open() has one of:
 //
-//   - O_CREAT   (000000100)
-//   - O_TMPFILE (020200000)
+//   - O_CREAT     (000000100)
+//   - __O_TMPFILE (020000000)
 //
 // Then the mode parameter must not have:
 //
@@ -825,7 +860,7 @@ static bool AllowOpenatWriteonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowOpenCreatonly(struct Filter *f) {
+static void AllowOpenCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_open, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -841,13 +876,13 @@ static bool AllowOpenCreatonly(struct Filter *f) {
       /*L11*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L12*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // If the flags parameter of openat() has one of:
 //
-//   - O_CREAT   (000000100)
-//   - O_TMPFILE (020200000)
+//   - O_CREAT     (000000100)
+//   - __O_TMPFILE (020000000)
 //
 // Then the mode parameter must not have:
 //
@@ -855,7 +890,7 @@ static bool AllowOpenCreatonly(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowOpenatCreatonly(struct Filter *f) {
+static void AllowOpenatCreatonly(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_openat, 0, 12 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -871,7 +906,26 @@ static bool AllowOpenatCreatonly(struct Filter *f) {
       /*L11*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L12*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
+}
+
+// Then the mode parameter must not have:
+//
+//   - S_ISVTX (01000 sticky)
+//   - S_ISGID (02000 setgid)
+//   - S_ISUID (04000 setuid)
+//
+static void AllowCreatRestrict(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_creat, 0, 6 - 1),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L2*/ BPF_STMT(BPF_ALU | BPF_AND | BPF_K, 07000),
+      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 0, 1),
+      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L6*/ /* next filter */
+  };
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The second argument of fcntl() must be one of:
@@ -883,7 +937,7 @@ static bool AllowOpenatCreatonly(struct Filter *f) {
 //   - F_GETFL (3)
 //   - F_SETFL (4)
 //
-static bool AllowFcntlStdio(struct Filter *f) {
+static void AllowFcntlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -893,7 +947,7 @@ static bool AllowFcntlStdio(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The second argument of fcntl() must be one of:
@@ -902,7 +956,7 @@ static bool AllowFcntlStdio(struct Filter *f) {
 //   - F_SETLK (6)
 //   - F_SETLKW (7)
 //
-static bool AllowFcntlLock(struct Filter *f) {
+static void AllowFcntlLock(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -912,14 +966,14 @@ static bool AllowFcntlLock(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The addr parameter of sendto() must be
 //
 //   - NULL
 //
-static bool AllowSendtoAddrless(struct Filter *f) {
+static void AllowSendtoAddrless(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sendto, 0, 7 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[4]) + 0),
@@ -930,14 +984,14 @@ static bool AllowSendtoAddrless(struct Filter *f) {
       /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L7*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The sig parameter of sigaction() must NOT be
 //
 //   - SIGSYS (31)
 //
-static bool AllowSigactionNosigsys(struct Filter *f) {
+static void AllowSigactionNosigsys(struct Filter *f) {
   static const int nr = __NR_linux_sigaction;
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 5 - 1),
@@ -947,7 +1001,7 @@ static bool AllowSigactionNosigsys(struct Filter *f) {
       /*L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L5*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The family parameter of socket() must be one of:
@@ -972,7 +1026,7 @@ static bool AllowSigactionNosigsys(struct Filter *f) {
 //   - IPPROTO_TCP  (0x06)
 //   - IPPROTO_UDP  (0x11)
 //
-static bool AllowSocketInet(struct Filter *f) {
+static void AllowSocketInet(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 15 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -991,7 +1045,7 @@ static bool AllowSocketInet(struct Filter *f) {
       /*L14*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L15*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The family parameter of socket() must be one of:
@@ -1013,7 +1067,7 @@ static bool AllowSocketInet(struct Filter *f) {
 //
 //   - 0
 //
-static bool AllowSocketUnix(struct Filter *f) {
+static void AllowSocketUnix(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_socket, 0, 11 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1028,7 +1082,7 @@ static bool AllowSocketUnix(struct Filter *f) {
       /*L10*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L11*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The first parameter of prctl() can be any of
@@ -1040,7 +1094,7 @@ static bool AllowSocketUnix(struct Filter *f) {
 //   - PR_SET_NO_NEW_PRIVS (38)
 //   - PR_CAPBSET_READ     (23)
 //
-static bool AllowPrctlStdio(struct Filter *f) {
+static void AllowPrctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 10 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
@@ -1054,7 +1108,7 @@ static bool AllowPrctlStdio(struct Filter *f) {
       /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L9*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The mode parameter of chmod() can't have the following:
@@ -1063,7 +1117,7 @@ static bool AllowPrctlStdio(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowChmodNobits(struct Filter *f) {
+static void AllowChmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_chmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1073,7 +1127,7 @@ static bool AllowChmodNobits(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The mode parameter of fchmod() can't have the following:
@@ -1082,7 +1136,7 @@ static bool AllowChmodNobits(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowFchmodNobits(struct Filter *f) {
+static void AllowFchmodNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmod, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
@@ -1092,7 +1146,7 @@ static bool AllowFchmodNobits(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The mode parameter of fchmodat() can't have the following:
@@ -1101,7 +1155,7 @@ static bool AllowFchmodNobits(struct Filter *f) {
 //   - S_ISGID (02000 setgid)
 //   - S_ISUID (04000 setuid)
 //
-static bool AllowFchmodatNobits(struct Filter *f) {
+static void AllowFchmodatNobits(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fchmodat, 0, 6 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -1111,14 +1165,14 @@ static bool AllowFchmodatNobits(struct Filter *f) {
       /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L6*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The new_limit parameter of prlimit() must be
 //
 //   - NULL (0)
 //
-static bool AllowPrlimitStdio(struct Filter *f) {
+static void AllowPrlimitStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
       /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prlimit, 0, 7 - 1),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
@@ -1129,7 +1183,7 @@ static bool AllowPrlimitStdio(struct Filter *f) {
       /*L6*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L7*/ /* next filter */
   };
-  return AppendFilter(f, PLEDGE(fragment));
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 static int CountUnspecial(const uint16_t *p, size_t len) {
@@ -1142,7 +1196,7 @@ static int CountUnspecial(const uint16_t *p, size_t len) {
   return count;
 }
 
-static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
+static void AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
   int i, j, count;
 
   // handle ordinals which allow syscalls regardless of args
@@ -1158,17 +1212,13 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
                      count - j - 1,              // jump if true displacement
                      j == count - 1),            // jump if false displacement
         };
-        if (!AppendFilter(f, PLEDGE(fragment))) {
-          return false;
-        }
+        AppendFilter(f, PLEDGE(fragment));
         ++j;
       }
       struct sock_filter fragment[] = {
           BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       };
-      if (!AppendFilter(f, PLEDGE(fragment))) {
-        return false;
-      }
+      AppendFilter(f, PLEDGE(fragment));
     } else {
       asm("hlt");  // list of ordinals exceeds max displacement
       unreachable;
@@ -1180,122 +1230,112 @@ static bool AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
     if (!(p[i] & SPECIAL)) continue;
     switch (p[i]) {
       case __NR_linux_mmap | EXEC:
-        if (!AllowMmapExec(f)) return false;
+        AllowMmapExec(f);
         break;
       case __NR_linux_mmap | NOEXEC:
-        if (!AllowMmapNoexec(f)) return false;
+        AllowMmapNoexec(f);
         break;
       case __NR_linux_mprotect | NOEXEC:
-        if (!AllowMprotectNoexec(f)) return false;
+        AllowMprotectNoexec(f);
         break;
       case __NR_linux_chmod | NOBITS:
-        if (!AllowChmodNobits(f)) return false;
+        AllowChmodNobits(f);
         break;
       case __NR_linux_fchmod | NOBITS:
-        if (!AllowFchmodNobits(f)) return false;
+        AllowFchmodNobits(f);
         break;
       case __NR_linux_fchmodat | NOBITS:
-        if (!AllowFchmodatNobits(f)) return false;
+        AllowFchmodatNobits(f);
         break;
       case __NR_linux_sigaction | NOSIGSYS:
-        if (!AllowSigactionNosigsys(f)) return false;
+        AllowSigactionNosigsys(f);
         break;
       case __NR_linux_prctl | STDIO:
-        if (!AllowPrctlStdio(f)) return false;
+        AllowPrctlStdio(f);
         break;
       case __NR_linux_open | CREATONLY:
-        if (!AllowOpenCreatonly(f)) return false;
+        AllowOpenCreatonly(f);
         break;
       case __NR_linux_openat | CREATONLY:
-        if (!AllowOpenatCreatonly(f)) return false;
+        AllowOpenatCreatonly(f);
         break;
       case __NR_linux_open | READONLY:
-        if (!AllowOpenReadonly(f)) return false;
+        AllowOpenReadonly(f);
         break;
       case __NR_linux_openat | READONLY:
-        if (!AllowOpenatReadonly(f)) return false;
+        AllowOpenatReadonly(f);
         break;
       case __NR_linux_open | WRITEONLY:
-        if (!AllowOpenWriteonly(f)) return false;
+        AllowOpenWriteonly(f);
         break;
       case __NR_linux_openat | WRITEONLY:
-        if (!AllowOpenatWriteonly(f)) return false;
+        AllowOpenatWriteonly(f);
         break;
       case __NR_linux_setsockopt | RESTRICT:
-        if (!AllowSetsockoptRestrict(f)) return false;
+        AllowSetsockoptRestrict(f);
         break;
       case __NR_linux_getsockopt | RESTRICT:
-        if (!AllowGetsockoptRestrict(f)) return false;
+        AllowGetsockoptRestrict(f);
+        break;
+      case __NR_linux_creat | RESTRICT:
+        AllowCreatRestrict(f);
         break;
       case __NR_linux_fcntl | STDIO:
-        if (!AllowFcntlStdio(f)) return false;
+        AllowFcntlStdio(f);
         break;
       case __NR_linux_fcntl | LOCK:
-        if (!AllowFcntlLock(f)) return false;
+        AllowFcntlLock(f);
         break;
       case __NR_linux_ioctl | RESTRICT:
-        if (!AllowIoctlStdio(f)) return false;
+        AllowIoctlStdio(f);
         break;
       case __NR_linux_ioctl | TTY:
-        if (!AllowIoctlTty(f)) return false;
+        AllowIoctlTty(f);
         break;
       case __NR_linux_socket | INET:
-        if (!AllowSocketInet(f)) return false;
+        AllowSocketInet(f);
         break;
       case __NR_linux_socket | UNIX:
-        if (!AllowSocketUnix(f)) return false;
+        AllowSocketUnix(f);
         break;
       case __NR_linux_sendto | ADDRLESS:
-        if (!AllowSendtoAddrless(f)) return false;
+        AllowSendtoAddrless(f);
         break;
       case __NR_linux_clone | RESTRICT:
-        if (!AllowCloneRestrict(f)) return false;
+        AllowCloneRestrict(f);
         break;
       case __NR_linux_clone | THREAD:
-        if (!AllowCloneThread(f)) return false;
+        AllowCloneThread(f);
         break;
       case __NR_linux_prlimit | STDIO:
-        if (!AllowPrlimitStdio(f)) return false;
+        AllowPrlimitStdio(f);
         break;
       default:
         asm("hlt");  // switch forgot to define a special ordinal
         unreachable;
     }
   }
-
-  return true;
 }
 
 int sys_pledge_linux(unsigned long ipromises) {
-  bool ok = true;
   int i, rc = -1;
   struct Filter f;
   CheckLargeStackAllocation(&f, sizeof(f));
   f.n = 0;
-  ipromises = ~ipromises;
-  if (AppendFilter(&f, kFilterStart, ARRAYLEN(kFilterStart)) &&
-      ((ipromises & (1ul << PROMISE_EXEC)) ||
-       AppendOriginVerification(&f, ipromises)) &&
-      AppendPledge(&f, kPledgeLinuxDefault, ARRAYLEN(kPledgeLinuxDefault))) {
-    for (i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
-      if ((ipromises & (1ul << i)) && kPledgeLinux[i].name) {
-        ipromises &= ~(1ul << i);
-        if (!AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len)) {
-          ok = false;
-          rc = einval();
-          break;
-        }
-      }
+  AppendFilter(&f, PLEDGE(kFilterStart));
+  if (!(~ipromises & (1ul << PROMISE_EXEC))) {
+    AppendOriginVerification(&f);
+  }
+  AppendPledge(&f, PLEDGE(kPledgeLinuxDefault));
+  for (i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
+    if (~ipromises & (1ul << i)) {
+      AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len);
     }
-    if (ipromises) {
-      ok = false;
-      rc = einval();
-    }
-    if (ok && AppendFilter(&f, kFilterEnd, ARRAYLEN(kFilterEnd)) &&
-        (rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1) {
-      struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
-      rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
-    }
+  }
+  AppendFilter(&f, PLEDGE(kFilterEnd));
+  if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1) {
+    struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
+    rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
   }
   return rc;
 }
@@ -1530,7 +1570,7 @@ int pledge(const char *promises, const char *execpromises) {
     } else {
       rc = sys_pledge(promises, execpromises);
     }
-    if (!rc && (IsOpenbsd() || getpid() == gettid())) {
+    if (!rc && (IsOpenbsd() || (IsLinux() && getpid() == gettid()))) {
       __promises = ipromises;
       __execpromises = iexecpromises;
     }

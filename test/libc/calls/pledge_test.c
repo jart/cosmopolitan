@@ -54,6 +54,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/time/time.h"
+#include "libc/x/x.h"
 
 STATIC_YOINK("zip_uri_support");
 
@@ -266,6 +267,30 @@ TEST(pledge, unix_forbidsInetSockets) {
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
 }
 
+TEST(pledge, wpath_doesNotImplyRpath) {
+  int ws, pid;
+  bool *gotsome;
+  ASSERT_NE(-1, (gotsome = _mapshared(FRAMESIZE)));
+  ASSERT_SYS(0, 0, touch("foo", 0644));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio wpath", 0));
+    ASSERT_SYS(0, 3, open("foo", O_WRONLY));
+    *gotsome = true;
+    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY));
+    _Exit(0);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  ASSERT_TRUE(*gotsome);
+  if (IsOpenbsd()) {
+    ASSERT_TRUE(WIFSIGNALED(ws));
+    ASSERT_EQ(SIGABRT, WTERMSIG(ws));
+  } else {
+    ASSERT_TRUE(WIFEXITED(ws));
+    ASSERT_EQ(0, WEXITSTATUS(ws));
+  }
+}
+
 TEST(pledge, inet_forbidsOtherSockets) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
@@ -378,6 +403,8 @@ TEST(pledge, open_rpath) {
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
     ASSERT_SYS(0, 3, open("foo", O_RDONLY));
+    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | O_TRUNC));
+    ASSERT_SYS(EPERM, -1, open("foo", O_RDONLY | O_TMPFILE));
     ASSERT_SYS(EPERM, -1, open("foo", O_RDWR | O_TRUNC | O_CREAT, 0644));
     ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
     _Exit(0);
@@ -393,9 +420,9 @@ TEST(pledge, open_wpath) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio wpath", 0));
-    ASSERT_SYS(0, 3, open("foo", O_RDONLY));
     ASSERT_SYS(EPERM, -1, open(".", O_RDWR | O_TMPFILE, 07644));
-    ASSERT_SYS(0, 4, open("foo", O_WRONLY | O_TRUNC, 07644));
+    ASSERT_SYS(0, 3, open("foo", O_WRONLY | O_TRUNC));
+    ASSERT_SYS(0, 4, open("foo", O_RDWR));
     ASSERT_SYS(EPERM, -1, open("foo", O_WRONLY | O_TRUNC | O_CREAT, 0644));
     _Exit(0);
   }

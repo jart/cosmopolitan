@@ -196,7 +196,7 @@ syscon	open	O_SEQUENTIAL				0			0			0			0			0			0x40000000		#  kNtFileFlagSequen
 syscon	open	O_COMPRESSED				0			0			0			0			0			0x20000000		#  kNtFileAttributeCompressed [SYNC libc/calls/open-nt.c]
 syscon	open	O_INDEXED				0			0			0			0			0			0x10000000		# !kNtFileAttributeNotContentIndexed [SYNC libc/calls/open-nt.c]
 syscon	open	O_CLOEXEC				0x00080000		0x01000000		0x00100000		0x00010000		0x00400000		0x00080000		# NT faked as Linux [SYNC libc/calls/open-nt.c]
-syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00410000		# Linux 3.11+ (c. 2013) & kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose [SYNC libc/calls/open-nt.c]
+syscon	open	O_TMPFILE				0x00410000		0			0			0			0			0x00410000		# Linux 3.11+ (c. 2013) __O_TMPFILE | O_DIRECTORY; kNtFileAttributeTemporary|kNtFileFlagDeleteOnClose [SYNC libc/calls/open-nt.c]
 syscon	open	O_SPARSE				0			0			0			0			0			0			# wut
 syscon	open	O_NONBLOCK				0x00000800		0x00000004		0x00000004		0x00000004		0x00000004		0x00000800		# bsd consensus
 syscon	open	O_ASYNC					0x00002000		0x00000040		0x00000040		0x00000040		0x00000040		0			# bsd consensus

@@ -48,6 +48,7 @@ void mcount(void);
 int _freestack(void *);
 unsigned long getauxval(unsigned long);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
+void *_mapshared(size_t) attributeallocsize((1)) mallocesque;
 void *_mapstack(void) returnsaligned((FRAMESIZE)) mallocesque;
 int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
