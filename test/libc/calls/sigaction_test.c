@@ -33,7 +33,7 @@
 struct sigaction oldsa;
 volatile bool gotsigint;
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   pledge("stdio rpath proc", 0);
   errno = 0;
 }

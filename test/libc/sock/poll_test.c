@@ -37,8 +37,8 @@
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/pollnames.h"
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath proc inet", 0);
+void SetUpOnce(void) {
+  pledge("stdio proc inet", 0);
   errno = 0;
 }
 

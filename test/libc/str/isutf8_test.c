@@ -26,7 +26,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   GetSymbolTable();
   pledge("stdio", 0);
 }

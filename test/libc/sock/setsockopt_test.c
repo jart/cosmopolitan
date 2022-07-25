@@ -27,8 +27,8 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/testlib.h"
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath inet", 0);
+void SetUpOnce(void) {
+  pledge("stdio inet", 0);
   errno = 0;
 }
 

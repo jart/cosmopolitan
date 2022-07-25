@@ -32,11 +32,6 @@ STATIC_YOINK("apetest2.com");
 
 char testlib_enable_tmp_setup_teardown_once;
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath wpath cpath tty proc exec", 0);
-  errno = 0;
-}
-
 void Extract(const char *from, const char *to, int mode) {
   ASSERT_SYS(0, 3, open(from, O_RDONLY));
   ASSERT_SYS(0, 4, creat(to, mode));
@@ -46,6 +41,8 @@ void Extract(const char *from, const char *to, int mode) {
 }
 
 void SetUpOnce(void) {
+  pledge("stdio rpath wpath cpath tty proc exec", 0);
+  errno = 0;
 
   // nothing to do if we're using elf
   if (~SUPPORT_VECTOR & (WINDOWS | XNU)) {

@@ -33,8 +33,8 @@
 #include "libc/testlib/testlib.h"
 #include "tool/net/sandbox.h"
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath proc", 0);
+void SetUpOnce(void) {
+  pledge("stdio proc", 0);
   errno = 0;
 }
 

@@ -31,7 +31,7 @@
 #define I(x, y) \
   { x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE }
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   pledge("stdio rpath", 0);
   errno = 0;
 }

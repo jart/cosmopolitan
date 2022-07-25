@@ -17,7 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/testlib/testlib.h"
+
+void SetUpOnce(void) {
+  pledge("stdio", 0);
+  errno = 0;
+}
 
 TEST(roundup2log, test) {
   EXPECT_EQ(0, roundup2log(0));

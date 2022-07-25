@@ -20,6 +20,7 @@
 #include "libc/calls/landlock.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
@@ -70,7 +71,7 @@ static bool SupportsLandlock(void) {
   return r;
 }
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   if (!(IsLinux() && SupportsLandlock()) && !IsOpenbsd()) exit(0);
 }
 

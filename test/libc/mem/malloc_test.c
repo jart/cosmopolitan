@@ -45,7 +45,7 @@ void SetUp(void) {
   if (IsWindows()) exit(0);
 }
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   pledge("stdio rpath", 0);
   errno = 0;
 }

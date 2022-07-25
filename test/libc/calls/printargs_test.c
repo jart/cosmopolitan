@@ -22,7 +22,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   pledge("stdio rpath tty proc", 0);
   errno = 0;
 }

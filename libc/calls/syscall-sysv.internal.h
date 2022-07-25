@@ -30,6 +30,7 @@ i32 sys_chroot(const char *) hidden;
 i32 sys_close(i32) hidden;
 i32 sys_close_range(u32, u32, u32) hidden;
 i32 sys_closefrom(i32) hidden;
+i32 sys_creat(const char *, u32) hidden;
 i32 sys_dup(i32) hidden;
 i32 sys_dup2(i32, i32) hidden;
 i32 sys_dup3(i32, i32, i32) hidden;

@@ -29,8 +29,8 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath proc", 0);
+void SetUpOnce(void) {
+  pledge("stdio proc", 0);
   errno = 0;
 }
 

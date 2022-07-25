@@ -17,11 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/testlib/testlib.h"
+
+void SetUpOnce(void) {
+  pledge("stdio", 0);
+  errno = 0;
+}
 
 TEST(roundup2pow, test) {
   EXPECT_EQ(0, roundup2pow(0));

@@ -24,6 +24,7 @@ TEST_LIBC_BITS_CHECKS =					\
 
 TEST_LIBC_BITS_DIRECTDEPS =				\
 	LIBC_BITS					\
+	LIBC_CALLS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_MEM					\

@@ -31,6 +31,11 @@
 _Atomic(int) itworked;
 _Thread_local int var;
 
+void SetUpOnce(void) {
+  pledge("stdio rpath thread", 0);
+  errno = 0;
+}
+
 int Worker(void *arg, int tid) {
   int i = (long)arg;
   ASSERT_EQ(0, var++);
@@ -49,9 +54,4 @@ TEST(_spawn, test) {
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
   EXPECT_EQ(n, itworked);
-}
-
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath thread", 0);
-  errno = 0;
 }

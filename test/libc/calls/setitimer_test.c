@@ -30,8 +30,8 @@
 
 bool gotsig;
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath", 0);
+void SetUpOnce(void) {
+  pledge("stdio", 0);
   errno = 0;
 }
 

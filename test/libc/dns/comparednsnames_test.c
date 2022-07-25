@@ -22,7 +22,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-__attribute__((__constructor__)) static void init(void) {
+void SetUpOnce(void) {
   pledge("stdio rpath", 0);
   errno = 0;
 }

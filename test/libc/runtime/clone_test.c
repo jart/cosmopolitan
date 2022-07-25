@@ -49,8 +49,8 @@
 int x, me, tid;
 _Atomic(int) thechilde;
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath thread", 0);
+void SetUpOnce(void) {
+  pledge("stdio thread", 0);
   errno = 0;
 }
 

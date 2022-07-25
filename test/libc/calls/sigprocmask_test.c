@@ -28,8 +28,8 @@
 
 volatile int n;
 
-__attribute__((__constructor__)) static void init(void) {
-  pledge("stdio rpath proc", 0);
+void SetUpOnce(void) {
+  pledge("stdio proc", 0);
   errno = 0;
 }
 

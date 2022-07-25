@@ -29,28 +29,23 @@
 
 int64_t fd;
 struct stat st;
-const char *path;
 
-__attribute__((__constructor__)) static void init(void) {
+char testlib_enable_tmp_setup_teardown;
+
+void SetUpOnce(void) {
   pledge("stdio rpath wpath cpath", 0);
   errno = 0;
 }
 
 TEST(ftruncate, test) {
-  mkdir("o", 0755);
-  mkdir("o/tmp", 0755);
-  path = gc(xasprintf("o/tmp/%s.%d",
-                      firstnonnull(program_invocation_short_name, "unknown"),
-                      getpid()));
-  ASSERT_NE(-1, (fd = creat(path, 0755)));
+  ASSERT_NE(-1, (fd = creat("foo", 0755)));
   ASSERT_EQ(5, write(fd, "hello", 5));
   errno = 31337;
   ASSERT_NE(-1, ftruncate(fd, 31337));
   EXPECT_EQ(31337, errno);
   ASSERT_EQ(5, write(fd, "world", 5));
   ASSERT_NE(-1, close(fd));
-  ASSERT_NE(-1, stat(path, &st));
+  ASSERT_NE(-1, stat("foo", &st));
   ASSERT_EQ(31337, st.st_size);
-  ASSERT_BINEQ(u"helloworld", gc(xslurp(path, 0)));
-  unlink(path);
+  ASSERT_BINEQ(u"helloworld", gc(xslurp("foo", 0)));
 }

@@ -17,9 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+
+void SetUpOnce(void) {
+  pledge("stdio", 0);
+  errno = 0;
+}
 
 TEST(popcnt, test) {
   EXPECT_EQ(32, popcnt(0x5555555555555555));

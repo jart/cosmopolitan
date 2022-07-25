@@ -31,6 +31,11 @@
 
 char testlib_enable_tmp_setup_teardown;
 
+void SetUpOnce(void) {
+  pledge("stdio rpath cpath proc inet", 0);
+  errno = 0;
+}
+
 TEST(sendfile, test) {
   int ws;
   char *buf;

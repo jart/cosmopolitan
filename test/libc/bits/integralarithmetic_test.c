@@ -17,12 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/calls/calls.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/testlib/testlib.h"
 
 #define ROR(w, k) (CheckUnsigned(w) >> (k) | (w) << (sizeof(w) * 8 - (k)))
 #define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
+
+void SetUpOnce(void) {
+  pledge("stdio", 0);
+  errno = 0;
+}
 
 TEST(TwosComplementBane, LiteralsThatAreLiterallyTheSameNumber) {
   EXPECT_EQ(4, sizeof(INT_MIN));
