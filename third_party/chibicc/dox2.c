@@ -549,6 +549,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     width: 80ch;\n\
   }\n\
   .toc {\n\
+    display: block;\n\
     overflow-x: auto;\n\
   }\n\
   .toc a {\n\
@@ -587,7 +588,23 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     margin-bottom: .5em;\n\
     margin-left: 1em;\n\
   }\n\
+  #search {\n\
+    top: 1ch;\n\
+    right: 1ch;\n\
+    float: right;\n\
+    position: sticky;\n\
+    margin: 1ch;\n\
+  }\n\
+  @media (max-width: 60ch) {\n\
+    .toc {\n\
+      display: none;\n\
+    }\n\
+  }\n\
 </style>\n\
+<noscript><style>\n\
+  .toc { display: block; }\n\
+  #search { display: none; }\n\
+</style></noscript>\n\
 \n\
 <header>\n\
   <img width=\"196\" height=\"105\"\n\
@@ -662,6 +679,26 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 
   fprintf(f, "<main>\n");
 
+  // search bar
+  fprintf(f, "\
+<input type=\"search\" id=\"search\" placeholder=\"Search...\" list=\"search-list\" spellcheck=\"false\" />\n\
+<datalist id=\"search-list\"></datalist>\n\
+<script>\n\
+document.addEventListener('DOMContentLoaded', function () {\n\
+  var datalist = document.getElementById('search-list')\n\
+  document.querySelectorAll('.api').forEach(function (el) {\n\
+    var option = document.createElement('option')\n\
+    option.setAttribute('value', el.id)\n\
+    datalist.appendChild(option)\n\
+  })\n\
+  document.getElementById('search').addEventListener('change', function (event) {\n\
+    var value = event.target.value\n\
+    if (document.getElementById(value)) {\n\
+      location.hash = value\n\
+    }\n\
+  })\n\
+})\n\
+</script>\n\n");
 
   // righthand contents
   for (i = 0; i < dox->index.n; ++i) {
