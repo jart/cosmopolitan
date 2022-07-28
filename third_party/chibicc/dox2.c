@@ -588,6 +588,18 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     margin-bottom: .5em;\n\
     margin-left: 1em;\n\
   }\n\
+  #top {\n\
+    position: fixed;\n\
+    left: max(0.5rem, calc(50vw - 56ch));\n\
+    bottom: 0.5rem;\n\
+    width: 2rem;\n\
+    height: 2rem;\n\
+    opacity: 0.45;\n\
+    transition: opacity 0.4s;\n\
+  }\n\
+  #top:hover {\n\
+    opacity: 0.9;\n\
+  }\n\
   #search {\n\
     top: 1ch;\n\
     right: 1ch;\n\
@@ -597,6 +609,11 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   }\n\
   @media (max-width: 60ch) {\n\
     .toc {\n\
+      display: none;\n\
+    }\n\
+  }\n\
+  @media print {\n\
+    #top, #search, nav, nav.toc { \n\
       display: none;\n\
     }\n\
   }\n\
@@ -676,7 +693,15 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   }
   fprintf(f, "</p></nav>\n\n");
 
+  // jump to top button
+  fprintf(f, "\
+<a href=\"#\" id=\"top\"><svg viewBox=\"-60 -60 120 120\" stroke=\"#404040\" stroke-width=\"10\">\n\
+<title>Top of the page</title>\n\
+<circle r=\"50\" fill=\"#f6f6f6\" />\n\
+<path d=\"M-25,18l25,-40l25,40\" fill=\"none\" stroke-linecap=\"round\" />\n\
+</svg></a>");
 
+  // right hand column
   fprintf(f, "<main>\n");
 
   // search bar
