@@ -508,7 +508,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-43182592-5\"></script>\n\
 <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-43182592-5');</script>\n\
 <title>Cosmopolitan C Library</title>\n\
-<meta name=\"viewport\" content=\"width=1024\">\n\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
 <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap\">\n\
 <link rel=\"stylesheet\" href=\"style.css\">\n\
@@ -517,8 +517,36 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\">\n\
 <link rel=\"manifest\" href=\"/site.webmanifest\">\n\
 <style>\n\
-  .nav {\n\
-    margin-bottom: 0;\n\
+  *, body {\n\
+    min-width: 0;\n\
+  }\n\
+  body {\n\
+    width: 100ch;\n\
+    max-width: calc(100vw - 3em);\n\
+    overflow-wrap: break-word;\n\
+  }\n\
+  body, .nav, .dox {\n\
+    margin: 0 auto;\n\
+  }\n\
+  .dox, header {\n\
+    display: flex;\n\
+  }\n\
+  header {\n\
+    flex-direction: column;\n\
+    align-items: center;\n\
+    margin: 4em auto 2em;\n\
+  }\n\
+  header>* {\n\
+    min-width: max-content;\n\
+  }\n\
+  header>img {\n\
+    max-width: 196px;\n\
+    min-width: 196px;\n\
+    max-height: 105px;\n\
+    min-height: 105px;\n\
+  }\n\
+  main {\n\
+    width: 80ch;\n\
   }\n\
   .toc {\n\
     overflow-x: auto;\n\
@@ -534,7 +562,6 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     margin-left: 0;\n\
     padding: 12px;\n\
     background: #f6f6f6;\n\
-    width: 100%;\n\
     overflow-x: auto;\n\
     border-radius: 5px;\n\
   }\n\
@@ -568,7 +595,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
        title=\"cosmopolitan honeybadger\"\n\
        alt=\"honeybadger\">\n\
   <h1>cosmopolitan libc</h1>\n\
-  <span>your build-once run-anywhere c library</span>\n\
+  <div>your build-once run-anywhere c library</div>\n\
 </header>\n\
 \n\
 <nav class=\"nav\">\n\
@@ -583,9 +610,8 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   </ul>\n\
 </nav>\n\
 \n\
-<table class=\"dox\" width=\"960\">\n\
-<tr>\n\
-<td width=\"283\" valign=\"top\" class=\"toc\">\n\
+<div class=\"dox\">\n\
+<nav class=\"toc\">\n\
 ");
 
   /* // lefthand index: objects */
@@ -631,9 +657,13 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     if (!o->is_function) continue;
     fprintf(f, "<a href=\"#%s\">%s</a><br>\n", o->name, o->name);
   }
+  fprintf(f, "</p></nav>\n\n");
+
+
+  fprintf(f, "<main>\n");
+
 
   // righthand contents
-  fprintf(f, "<td width=\"667\" valign=\"top\">\n");
   for (i = 0; i < dox->index.n; ++i) {
     if (dox->index.p[i].t == kObject) {
       o = dox->objects.p + dox->index.p[i].i;
@@ -834,7 +864,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
       fprintf(f, "</div>\n"); /* class=".api" */
     }
   }
-  fprintf(f, "</table>\n");
+  fprintf(f, "</main></div>\n");
 
   // footer
   fprintf(f, "\
