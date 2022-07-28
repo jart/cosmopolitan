@@ -728,8 +728,8 @@ static void PrintDox(struct Dox *dox, FILE *f) {
             PrintText(f, o->type);
           }
           fprintf(f, "</dl>\n");
-          fprintf(f, "</div>\n");  // .tag
         }
+        fprintf(f, "</div>\n");  // .tag
       }
 
       // type
