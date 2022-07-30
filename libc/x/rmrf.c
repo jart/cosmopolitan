@@ -30,9 +30,11 @@
 #include "libc/x/x.h"
 
 static int rmrfdir(const char *dirpath) {
-  int rc;
+  int rc, err;
   DIR *d;
   char *path;
+  bool isdir;
+  struct stat st;
   struct dirent *e;
   if (!(d = opendir(dirpath))) return -1;
   while ((e = readdir(d))) {
@@ -40,11 +42,26 @@ static int rmrfdir(const char *dirpath) {
     if (!strcmp(e->d_name, "..")) continue;
     assert(!strchr(e->d_name, '/'));
     path = xjoinpaths(dirpath, e->d_name);
-    if (e->d_type == DT_DIR) {
+    if (e->d_type == DT_UNKNOWN) {
+      err = errno;
+      if ((rc = lstat(path, &st)) == -1) {
+        if (errno == ENOENT) {
+          errno = err;
+          rc = 0;
+        }
+        goto errcheck;
+      } else {
+        isdir = S_ISDIR(st.st_mode);
+      }
+    } else {
+      isdir = e->d_type == DT_DIR;
+    }
+    if (isdir) {
       rc = rmrfdir(path);
     } else {
       rc = unlink(path);
     }
+  errcheck:
     free(path);
     if (rc == -1) {
       closedir(d);
