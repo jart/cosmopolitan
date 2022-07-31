@@ -716,11 +716,18 @@ document.addEventListener('DOMContentLoaded', function () {\n\
     option.setAttribute('value', el.id)\n\
     datalist.appendChild(option)\n\
   })\n\
-  document.getElementById('search').addEventListener('change', function (event) {\n\
+  function scrollIntoView(event) {\n\
     var value = event.target.value\n\
-    if (document.getElementById(value)) {\n\
+    var el = document.getElementById(value) \n\
+    if (el) {\n\
       location.hash = value\n\
+      el.scrollIntoView()\n\
     }\n\
+  }\n\
+  var search = document.getElementById('search')\n\
+  search.addEventListener('change', scrollIntoView)\n\
+  search.addEventListener('keypress', function (event) {\n\
+    if (event.key === 'Enter') scrollIntoView(event)\n\
   })\n\
 })\n\
 </script>\n\n");
