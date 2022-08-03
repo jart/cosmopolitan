@@ -4749,6 +4749,7 @@ static int LuaProgramHeartbeatInterval(lua_State *L) {
 }
 
 static int LuaProgramMaxWorkers(lua_State *L) {
+  OnlyCallFromMainProcess(L, "ProgramMaxWorkers");
   if (!lua_isinteger(L, 1) && !lua_isnoneornil(L, 1)) {
     return luaL_argerror(L, 1, "invalid number of workers; integer expected");
   }
