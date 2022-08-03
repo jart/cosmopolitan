@@ -191,6 +191,7 @@ o/$(MODE)/tool/net/demo/binarytrees.lua.zip.o					\
 o/$(MODE)/tool/net/demo/crashreport.lua.zip.o					\
 o/$(MODE)/tool/net/demo/closedsource.lua.zip.o					\
 o/$(MODE)/tool/net/demo/printpayload.lua.zip.o					\
+o/$(MODE)/tool/net/demo/gensvg.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean-form.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean-xhr.lua.zip.o					\
 o/$(MODE)/tool/net/redbean.png.zip.o						\
@@ -245,6 +246,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/crashreport.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/closedsource.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/printpayload.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/gensvg.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/redbean-form.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/redbean-xhr.lua.zip.o			\
 		o/$(MODE)/tool/.zip.o						\
