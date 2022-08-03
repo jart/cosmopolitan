@@ -554,6 +554,12 @@ HOOKS
           each time redbean reaps a child connection process using wait4().
           This won't be called in uniprocess mode.
 
+  OnServerHeartbeat()
+          If this function is defined it'll be called from the main process
+          on each server heartbeat. The heartbeat interval is configurable
+          with ProgramHeartbeatInterval. If this hook is defined, then
+          `/.heartbeat.lua` is not called.
+
   OnServerListen(socketdescriptor:int,serverip:int,serverport:int) → bool
           If this function is defined it'll be called from the main process
           before redbean starts listening on a port. This hook can be used
@@ -1367,6 +1373,10 @@ FUNCTIONS
           buffer. This function disallows the setting of certain headers such
           as Content-Range and Date, which are abstracted by the transport
           layer.
+
+  ProgramHeartbeatInterval(milliseconds:int)
+          Sets the heartbeat interval (in milliseconds). 5000ms is the default
+          and 100ms is the minimum.
 
   ProgramTimeout(milliseconds:int|seconds:int)
           Default timeout is 60000ms. Minimal value of timeout is 10(ms).

@@ -150,7 +150,6 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #endif
 
 #define VERSION          0x02000f
-#define HEARTBEAT        5000 /*ms*/
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
@@ -418,6 +417,7 @@ static int sslpskindex;
 static int oldloglevel;
 static int messageshandled;
 static int sslticketlifetime;
+static int heartbeatint = 5000;  // ms
 static uint32_t clientaddrsize;
 
 static size_t zsize;
@@ -4737,6 +4737,16 @@ static int LuaProgramUniprocess(lua_State *L) {
   return 1;
 }
 
+static int LuaProgramHeartbeatInterval(lua_State *L) {
+  OnlyCallFromMainProcess(L, "ProgramHeartbeatInterval");
+  if (!lua_isinteger(L, 1) && !lua_isnoneornil(L, 1)) {
+    return luaL_argerror(L, 1, "invalid heartbeat interval; integer expected");
+  }
+  lua_pushinteger(L, heartbeatint);
+  if (lua_isinteger(L, 1)) heartbeatint = MAX(100, lua_tointeger(L, 1));
+  return 1;
+}
+
 static int LuaProgramAddr(lua_State *L) {
   uint32_t ip;
   OnlyCallFromInitLua(L, "ProgramAddr");
@@ -5218,6 +5228,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramDirectory", LuaProgramDirectory},                  //
     {"ProgramGid", LuaProgramGid},                              //
     {"ProgramHeader", LuaProgramHeader},                        //
+    {"ProgramHeartbeatInterval", LuaProgramHeartbeatInterval},  //
     {"ProgramLogBodies", LuaProgramLogBodies},                  //
     {"ProgramLogMessages", LuaProgramLogMessages},              //
     {"ProgramLogPath", LuaProgramLogPath},                      //
@@ -5734,7 +5745,11 @@ static void HandleHeartbeat(void) {
   Reindex();
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
-  LuaRunAsset("/.heartbeat.lua", false);
+  if (IsHookDefined("OnServerHeartbeat")) {
+    CallSimpleHook("OnServerHeartbeat");
+  } else {
+    LuaRunAsset("/.heartbeat.lua", false);
+  }
   CollectGarbage();
 #endif
   for (i = 1; i < servers.n; ++i) {
@@ -7066,7 +7081,7 @@ static int EventLoop(int ms) {
       EnterMeltdownMode();
       lua_repl_unlock();
       meltdown = false;
-    } else if ((t = nowl()) - lastheartbeat > HEARTBEAT / 1000.) {
+    } else if ((t = nowl()) - lastheartbeat > heartbeatint / 1000.) {
       lastheartbeat = t;
       HandleHeartbeat();
     } else if (HandlePoll(ms) == -1) {
@@ -7366,12 +7381,12 @@ void RedBean(int argc, char *argv[]) {
     }
   }
 #ifdef STATIC
-  EventLoop(HEARTBEAT);
+  EventLoop(heartbeatint);
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
-    EventLoop(HEARTBEAT);
+    EventLoop(heartbeatint);
   } else if (IsWindows()) {
     CHECK_NE(-1, _spawn(WindowsReplThread, 0, &replth));
     EventLoop(100);
