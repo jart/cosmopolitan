@@ -15,15 +15,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long SA_NOCLDSTOP;
-extern const long SA_NOCLDWAIT;
-extern const long SA_NODEFER;
-extern const long SA_NOMASK;
-extern const long SA_ONESHOT;
-extern const long SA_ONSTACK;
-extern const long SA_RESETHAND;
-extern const long SA_RESTART;
-extern const long SA_SIGINFO;
+extern const uint64_t SA_NOCLDSTOP;
+extern const uint64_t SA_NOCLDWAIT;
+extern const uint64_t SA_NODEFER;
+extern const uint64_t SA_NOMASK;
+extern const uint64_t SA_ONESHOT;
+extern const uint64_t SA_ONSTACK;
+extern const uint64_t SA_RESETHAND;
+extern const uint64_t SA_RESTART;
+extern const uint64_t SA_SIGINFO;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

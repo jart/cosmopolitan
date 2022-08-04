@@ -10,10 +10,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long RLIM_INFINITY;
-extern const long RLIM_NLIMITS;
-extern const long RLIM_SAVED_CUR;
-extern const long RLIM_SAVED_MAX;
+extern const uint64_t RLIM_INFINITY;
+extern const uint64_t RLIM_NLIMITS;
+extern const uint64_t RLIM_SAVED_CUR;
+extern const uint64_t RLIM_SAVED_MAX;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,34 +4,34 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long SOL_AAL;
-extern const long SOL_ALG;
-extern const long SOL_ATM;
-extern const long SOL_BLUETOOTH;
-extern const long SOL_CAIF;
-extern const long SOL_DCCP;
-extern const long SOL_DECNET;
-extern const long SOL_ICMPV6;
-extern const long SOL_IP;
-extern const long SOL_IPV6;
-extern const long SOL_IRDA;
-extern const long SOL_IUCV;
-extern const long SOL_KCM;
-extern const long SOL_LLC;
-extern const long SOL_NETBEUI;
-extern const long SOL_NETLINK;
-extern const long SOL_NFC;
-extern const long SOL_PACKET;
-extern const long SOL_PNPIPE;
-extern const long SOL_PPPOL2TP;
-extern const long SOL_RAW;
-extern const long SOL_RDS;
-extern const long SOL_RXRPC;
-extern const long SOL_SOCKET;
-extern const long SOL_TCP;
-extern const long SOL_TIPC;
-extern const long SOL_UDP;
-extern const long SOL_X25;
+extern const int SOL_AAL;
+extern const int SOL_ALG;
+extern const int SOL_ATM;
+extern const int SOL_BLUETOOTH;
+extern const int SOL_CAIF;
+extern const int SOL_DCCP;
+extern const int SOL_DECNET;
+extern const int SOL_ICMPV6;
+extern const int SOL_IP;
+extern const int SOL_IPV6;
+extern const int SOL_IRDA;
+extern const int SOL_IUCV;
+extern const int SOL_KCM;
+extern const int SOL_LLC;
+extern const int SOL_NETBEUI;
+extern const int SOL_NETLINK;
+extern const int SOL_NFC;
+extern const int SOL_PACKET;
+extern const int SOL_PNPIPE;
+extern const int SOL_PPPOL2TP;
+extern const int SOL_RAW;
+extern const int SOL_RDS;
+extern const int SOL_RXRPC;
+extern const int SOL_SOCKET;
+extern const int SOL_TCP;
+extern const int SOL_TIPC;
+extern const int SOL_UDP;
+extern const int SOL_X25;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

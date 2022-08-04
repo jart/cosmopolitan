@@ -14,14 +14,14 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long ARPHRD_ETHER;
-extern const long ARPHRD_FCFABRIC;
-extern const long ARPHRD_IEEE80211;
-extern const long ARPHRD_IEEE80211_PRISM;
-extern const long ARPHRD_IEEE80211_RADIOTAP;
-extern const long ARPHRD_IEEE802154;
-extern const long ARPHRD_IEEE802_TR;
-extern const long ARPHRD_LOCALTLK;
+extern const uint16_t ARPHRD_ETHER;
+extern const uint16_t ARPHRD_FCFABRIC;
+extern const uint16_t ARPHRD_IEEE80211;
+extern const uint16_t ARPHRD_IEEE80211_PRISM;
+extern const uint16_t ARPHRD_IEEE80211_RADIOTAP;
+extern const uint16_t ARPHRD_IEEE802154;
+extern const uint16_t ARPHRD_IEEE802_TR;
+extern const uint16_t ARPHRD_LOCALTLK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

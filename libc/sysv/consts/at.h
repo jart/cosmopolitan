@@ -9,12 +9,12 @@ COSMOPOLITAN_C_START_
  * @see libc/sysv/consts/auxv.h for getauxval() constants
  */
 
-extern const long AT_FDCWD;
-extern const long AT_SYMLINK_FOLLOW;
-extern const long AT_SYMLINK_NOFOLLOW;
-extern const long AT_REMOVEDIR;
-extern const long AT_EACCESS;
-extern const long AT_EMPTY_PATH;
+extern const int AT_FDCWD;
+extern const int AT_SYMLINK_FOLLOW;
+extern const int AT_SYMLINK_NOFOLLOW;
+extern const int AT_REMOVEDIR;
+extern const int AT_EACCESS;
+extern const int AT_EMPTY_PATH;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

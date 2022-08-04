@@ -4,17 +4,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long TIOCPKT;
-extern const long TIOCPKT_DATA;
-extern const long TIOCPKT_DOSTOP;
-extern const long TIOCPKT_FLUSHREAD;
-extern const long TIOCPKT_FLUSHWRITE;
-extern const long TIOCPKT_IOCTL;
-extern const long TIOCPKT_NOSTOP;
-extern const long TIOCPKT_START;
-extern const long TIOCPKT_STOP;
-extern const long TIOCSPTLCK;
-extern const long PTMGET;
+extern const int TIOCPKT;
+extern const int TIOCPKT_DATA;
+extern const int TIOCPKT_DOSTOP;
+extern const int TIOCPKT_FLUSHREAD;
+extern const int TIOCPKT_FLUSHWRITE;
+extern const int TIOCPKT_IOCTL;
+extern const int TIOCPKT_NOSTOP;
+extern const int TIOCPKT_START;
+extern const int TIOCPKT_STOP;
+extern const int TIOCSPTLCK;
+extern const int PTMGET;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

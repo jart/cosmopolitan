@@ -15,15 +15,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long MCAST_BLOCK_SOURCE;
-extern const long MCAST_EXCLUDE;
-extern const long MCAST_INCLUDE;
-extern const long MCAST_JOIN_GROUP;
-extern const long MCAST_JOIN_SOURCE_GROUP;
-extern const long MCAST_LEAVE_GROUP;
-extern const long MCAST_LEAVE_SOURCE_GROUP;
-extern const long MCAST_MSFILTER;
-extern const long MCAST_UNBLOCK_SOURCE;
+extern const int MCAST_BLOCK_SOURCE;
+extern const int MCAST_EXCLUDE;
+extern const int MCAST_INCLUDE;
+extern const int MCAST_JOIN_GROUP;
+extern const int MCAST_JOIN_SOURCE_GROUP;
+extern const int MCAST_LEAVE_GROUP;
+extern const int MCAST_LEAVE_SOURCE_GROUP;
+extern const int MCAST_MSFILTER;
+extern const int MCAST_UNBLOCK_SOURCE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -15,15 +15,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long ALG_SET_AEAD_ASSOCLEN;
-extern const long ALG_SET_AEAD_AUTHSIZE;
-extern const long ALG_SET_DRBG_ENTROPY;
-extern const long ALG_SET_IV;
-extern const long ALG_SET_KEY;
-extern const long ALG_SET_OP;
+extern const int ALG_SET_AEAD_ASSOCLEN;
+extern const int ALG_SET_AEAD_AUTHSIZE;
+extern const int ALG_SET_DRBG_ENTROPY;
+extern const int ALG_SET_IV;
+extern const int ALG_SET_KEY;
+extern const int ALG_SET_OP;
 
-extern const long ALG_OP_DECRYPT;
-extern const long ALG_OP_ENCRYPT;
+extern const int ALG_OP_DECRYPT;
+extern const int ALG_OP_ENCRYPT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -26,26 +26,26 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long RLIMIT_AS;
-extern const long RLIMIT_CORE;
-extern const long RLIMIT_CPU;
-extern const long RLIMIT_DATA;
-extern const long RLIMIT_FSIZE;
-extern const long RLIMIT_LOCKS;
-extern const long RLIMIT_MEMLOCK;
-extern const long RLIMIT_MSGQUEUE;
-extern const long RLIMIT_NICE;
-extern const long RLIMIT_NOFILE;
-extern const long RLIMIT_NPROC;
-extern const long RLIMIT_NPTS;
-extern const long RLIMIT_RSS;
-extern const long RLIMIT_RTPRIO;
-extern const long RLIMIT_RTTIME;
-extern const long RLIMIT_SBSIZE;
-extern const long RLIMIT_SIGPENDING;
-extern const long RLIMIT_STACK;
-extern const long RLIMIT_SWAP;
-extern const long RLIMIT_VMEM;
+extern const uint64_t RLIMIT_AS;
+extern const uint64_t RLIMIT_CORE;
+extern const uint64_t RLIMIT_CPU;
+extern const uint64_t RLIMIT_DATA;
+extern const uint64_t RLIMIT_FSIZE;
+extern const uint64_t RLIMIT_LOCKS;
+extern const uint64_t RLIMIT_MEMLOCK;
+extern const uint64_t RLIMIT_MSGQUEUE;
+extern const uint64_t RLIMIT_NICE;
+extern const uint64_t RLIMIT_NOFILE;
+extern const uint64_t RLIMIT_NPROC;
+extern const uint64_t RLIMIT_NPTS;
+extern const uint64_t RLIMIT_RSS;
+extern const uint64_t RLIMIT_RTPRIO;
+extern const uint64_t RLIMIT_RTTIME;
+extern const uint64_t RLIMIT_SBSIZE;
+extern const uint64_t RLIMIT_SIGPENDING;
+extern const uint64_t RLIMIT_STACK;
+extern const uint64_t RLIMIT_SWAP;
+extern const uint64_t RLIMIT_VMEM;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -5,27 +5,27 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long EPOLL_CLOEXEC;
+extern const int EPOLL_CLOEXEC;
 
-extern const long EPOLL_CTL_ADD;
-extern const long EPOLL_CTL_DEL;
-extern const long EPOLL_CTL_MOD;
+extern const int EPOLL_CTL_ADD;
+extern const int EPOLL_CTL_DEL;
+extern const int EPOLL_CTL_MOD;
 
-extern const long EPOLLIN;
-extern const long EPOLLPRI;
-extern const long EPOLLOUT;
-extern const long EPOLLERR;
-extern const long EPOLLHUP;
-extern const long EPOLLRDNORM;
-extern const long EPOLLRDBAND;
-extern const long EPOLLWRNORM;
-extern const long EPOLLWRBAND;
-extern const long EPOLLMSG;
-extern const long EPOLLRDHUP;
-extern const long EPOLLEXCLUSIVE;
-extern const long EPOLLWAKEUP;
-extern const long EPOLLONESHOT;
-extern const long EPOLLET;
+extern const uint32_t EPOLLIN;
+extern const uint32_t EPOLLPRI;
+extern const uint32_t EPOLLOUT;
+extern const uint32_t EPOLLERR;
+extern const uint32_t EPOLLHUP;
+extern const uint32_t EPOLLRDNORM;
+extern const uint32_t EPOLLRDBAND;
+extern const uint32_t EPOLLWRNORM;
+extern const uint32_t EPOLLWRBAND;
+extern const uint32_t EPOLLMSG;
+extern const uint32_t EPOLLRDHUP;
+extern const uint32_t EPOLLEXCLUSIVE;
+extern const uint32_t EPOLLWAKEUP;
+extern const uint32_t EPOLLONESHOT;
+extern const uint32_t EPOLLET;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

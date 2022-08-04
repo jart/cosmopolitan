@@ -14,13 +14,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long SCHED_BATCH;
-extern const long SCHED_DEADLINE;
-extern const long SCHED_FIFO;
-extern const long SCHED_IDLE;
-extern const long SCHED_OTHER;
-extern const long SCHED_RESET_ON_FORK;
-extern const long SCHED_RR;
+extern const int SCHED_BATCH;
+extern const int SCHED_DEADLINE;
+extern const int SCHED_FIFO;
+extern const int SCHED_IDLE;
+extern const int SCHED_OTHER;
+extern const int SCHED_RESET_ON_FORK;
+extern const int SCHED_RR;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
