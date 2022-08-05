@@ -4755,6 +4755,7 @@ static int LuaProgramMaxWorkers(lua_State *L) {
   }
   lua_pushinteger(L, maxworkers);
   if (lua_isinteger(L, 1)) maxworkers = lua_tointeger(L, 1);
+  maxworkers = MAX(maxworkers, 1);
   return 1;
 }
 
@@ -6749,6 +6750,12 @@ static int HandleConnection(size_t i) {
   if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
                         SOCK_CLOEXEC)) != -1) {
     startconnection = nowl();
+    if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {
+      EnterMeltdownMode();
+      SendServiceUnavailable();
+      close(client);
+      return 0;
+    }
     VERBOSEF("(srvr) accept %s via %s", DescribeClient(), DescribeServer());
     messageshandled = 0;
     if (hasonclientconnection && LuaOnClientConnection()) {
@@ -6939,7 +6946,6 @@ static int HandlePoll(int ms) {
         if (!polls[pollid].revents) continue;
         if (polls[pollid].fd < 0) continue;
         if (polls[pollid].fd) {
-          if (maxworkers && shared->workers >= maxworkers) continue;
           // handle listen socket
           lua_repl_lock();
           serverid = pollid - 1;
