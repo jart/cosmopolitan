@@ -7275,7 +7275,13 @@ static void GetOpts(int argc, char *argv[]) {
         CASE('*', selfmodifiable = true);
         CASE('i', interpretermode = true);
         CASE('E', leakcrashreports = true);
-        CASE('A', storeasset = true; StorePath(optarg));
+      case 'A':
+        if (!storeasset) {
+          storeasset = true;
+          MakeExecutableModifiable();
+        }
+        StorePath(optarg);
+        break;
 #endif
 #ifndef UNSECURE
         CASE('B', suiteb = true);
