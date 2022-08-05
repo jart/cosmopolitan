@@ -14,527 +14,527 @@ COSMOPOLITAN_C_START_
  * System call unavailable.
  * @note kNtErrorInvalidFunction on NT
  */
-extern const long ENOSYS;
+extern const errno_t ENOSYS;
 
 /**
  * Operation not permitted.
  * @note kNtErrorInvalidAccess on NT
  */
-extern const long EPERM;
+extern const errno_t EPERM;
 
 /**
  * No such file or directory.
  */
-extern const long ENOENT;
+extern const errno_t ENOENT;
 
 /**
  * No such process.
  */
-extern const long ESRCH;
+extern const errno_t ESRCH;
 
 /**
  * The greatest of all errnos.
  */
-extern const long EINTR;
+extern const errno_t EINTR;
 
 /**
  * Unix consensus.
  */
-extern const long EIO;
+extern const errno_t EIO;
 
 /**
  * No such device or address.
  */
-extern const long ENXIO;
+extern const errno_t ENXIO;
 
 /**
- * Argument list too long.
+ * Argument list too errno_t.
  */
-extern const long E2BIG;
+extern const errno_t E2BIG;
 
 /**
  * Exec format error.
  */
-extern const long ENOEXEC;
+extern const errno_t ENOEXEC;
 
 /**
  * Bad file descriptor.
  */
-extern const long EBADF;
+extern const errno_t EBADF;
 
 /**
  * No child process.
  */
-extern const long ECHILD;
+extern const errno_t ECHILD;
 
 /**
  * Resource temporarily unavailable (e.g. SO_RCVTIMEO expired, too many
  * processes, too much memory locked, read or write with O_NONBLOCK needs
  * polling, etc.).
  */
-extern const long EAGAIN;
+extern const errno_t EAGAIN;
 
 /**
  * We require more vespene gas.
  */
-extern const long ENOMEM;
+extern const errno_t ENOMEM;
 
 /**
  * Permission denied.
  */
-extern const long EACCES;
+extern const errno_t EACCES;
 
 /**
  * Pointer passed to system call that would otherwise segfault.
  */
-extern const long EFAULT;
+extern const errno_t EFAULT;
 
 /**
  * Block device required.
  */
-extern const long ENOTBLK;
+extern const errno_t ENOTBLK;
 
 /**
  * Device or resource busy.
  */
-extern const long EBUSY;
+extern const errno_t EBUSY;
 
 /**
  * File exists.
  */
-extern const long EEXIST;
+extern const errno_t EEXIST;
 
 /**
  * Improper link.
  */
-extern const long EXDEV;
+extern const errno_t EXDEV;
 
 /**
  * No such device.
  */
-extern const long ENODEV;
+extern const errno_t ENODEV;
 
 /**
  * Not a directory.
  */
-extern const long ENOTDIR;
+extern const errno_t ENOTDIR;
 
 /**
  * Is a a directory.
  */
-extern const long EISDIR;
+extern const errno_t EISDIR;
 
 /**
  * Invalid argument.
  */
-extern const long EINVAL;
+extern const errno_t EINVAL;
 
 /**
  * Too many open files in system.
  */
-extern const long ENFILE;
+extern const errno_t ENFILE;
 
 /**
  * Too many open files.
  */
-extern const long EMFILE;
+extern const errno_t EMFILE;
 
 /**
  * Inappropriate i/o control operation.
  */
-extern const long ENOTTY;
+extern const errno_t ENOTTY;
 
 /**
  * Won't open executable that's executing in write mode.
  */
-extern const long ETXTBSY;
+extern const errno_t ETXTBSY;
 
 /**
  * File too large.
  */
-extern const long EFBIG;
+extern const errno_t EFBIG;
 
 /**
  * No space left on device.
  */
-extern const long ENOSPC;
+extern const errno_t ENOSPC;
 
 /**
  * Disk quota exceeded.
  */
-extern const long EDQUOT;
+extern const errno_t EDQUOT;
 
 /**
  * Invalid seek.
  */
-extern const long ESPIPE;
+extern const errno_t ESPIPE;
 
 /**
  * Read-only filesystem.
  */
-extern const long EROFS;
+extern const errno_t EROFS;
 
 /**
  * Too many links.
  */
-extern const long EMLINK;
+extern const errno_t EMLINK;
 
 /**
  * Broken pipe.
  */
-extern const long EPIPE;
+extern const errno_t EPIPE;
 
 /**
  * Mathematics argument out of domain of function.
  */
-extern const long EDOM;
+extern const errno_t EDOM;
 
 /**
  * Result too large.
  */
-extern const long ERANGE;
+extern const errno_t ERANGE;
 
 /**
  * Resource deadlock avoided.
  */
-extern const long EDEADLK;
+extern const errno_t EDEADLK;
 
 /**
- * Filename too long.
+ * Filename too errno_t.
  */
-extern const long ENAMETOOLONG;
+extern const errno_t ENAMETOOLONG;
 
 /**
  * No locks available.
  */
-extern const long ENOLCK;
+extern const errno_t ENOLCK;
 
 /**
  * Directory not empty.
  */
-extern const long ENOTEMPTY;
+extern const errno_t ENOTEMPTY;
 
 /**
  * Too many levels of symbolic links.
  */
-extern const long ELOOP;
+extern const errno_t ELOOP;
 
 /**
  * No message error.
  */
-extern const long ENOMSG;
+extern const errno_t ENOMSG;
 
 /**
  * Identifier removed.
  */
-extern const long EIDRM;
+extern const errno_t EIDRM;
 
 /**
  * Timer expired.
  */
-extern const long ETIME;
+extern const errno_t ETIME;
 
 /**
  * Protocol error.
  */
-extern const long EPROTO;
+extern const errno_t EPROTO;
 
 /**
  * Overflow error.
  */
-extern const long EOVERFLOW;
+extern const errno_t EOVERFLOW;
 
 /**
  * Unicode decoding error.
  */
-extern const long EILSEQ;
+extern const errno_t EILSEQ;
 
 /**
  * Too many users.
  */
-extern const long EUSERS;
+extern const errno_t EUSERS;
 
 /**
  * Not a socket.
  */
-extern const long ENOTSOCK;
+extern const errno_t ENOTSOCK;
 
 /**
  * Destination address required.
  */
-extern const long EDESTADDRREQ;
+extern const errno_t EDESTADDRREQ;
 
 /**
- * Message too long.
+ * Message too errno_t.
  */
-extern const long EMSGSIZE;
+extern const errno_t EMSGSIZE;
 
 /**
  * Protocol wrong type for socket.
  */
-extern const long EPROTOTYPE;
+extern const errno_t EPROTOTYPE;
 
 /**
  * Protocol not available.
  */
-extern const long ENOPROTOOPT;
+extern const errno_t ENOPROTOOPT;
 
 /**
  * Protocol not supported.
  */
-extern const long EPROTONOSUPPORT;
+extern const errno_t EPROTONOSUPPORT;
 
 /**
  * Socket type not supported.
  */
-extern const long ESOCKTNOSUPPORT;
+extern const errno_t ESOCKTNOSUPPORT;
 
 /**
  * Operation not supported.
  */
-extern const long ENOTSUP;
+extern const errno_t ENOTSUP;
 
 /**
  * Socket operation not supported.
  */
-extern const long EOPNOTSUPP;
+extern const errno_t EOPNOTSUPP;
 
 /**
  * Protocol family not supported.
  */
-extern const long EPFNOSUPPORT;
+extern const errno_t EPFNOSUPPORT;
 
 /**
  * Address family not supported.
  */
-extern const long EAFNOSUPPORT;
+extern const errno_t EAFNOSUPPORT;
 
 /**
  * Address already in use.
  */
-extern const long EADDRINUSE;
+extern const errno_t EADDRINUSE;
 
 /**
  * Address not available.
  */
-extern const long EADDRNOTAVAIL;
+extern const errno_t EADDRNOTAVAIL;
 
 /**
  * Network is down.
  */
-extern const long ENETDOWN;
+extern const errno_t ENETDOWN;
 
 /**
  * Host is unreachable.
  */
-extern const long ENETUNREACH;
+extern const errno_t ENETUNREACH;
 
 /**
  * Connection reset by network.
  */
-extern const long ENETRESET;
+extern const errno_t ENETRESET;
 
 /**
  * Connection reset before accept.
  */
-extern const long ECONNABORTED;
+extern const errno_t ECONNABORTED;
 
 /**
  * Connection reset by client.
  */
-extern const long ECONNRESET;
+extern const errno_t ECONNRESET;
 
 /**
  * No buffer space available.
  */
-extern const long ENOBUFS;
+extern const errno_t ENOBUFS;
 
 /**
  * Socket is connected.
  */
-extern const long EISCONN;
+extern const errno_t EISCONN;
 
 /**
  * Socket is not connected.
  */
-extern const long ENOTCONN;
+extern const errno_t ENOTCONN;
 
 /**
  * Cannot send after transport endpoint shutdown.
  */
-extern const long ESHUTDOWN;
+extern const errno_t ESHUTDOWN;
 
 /**
  * Too many references: cannot splice.
  */
-extern const long ETOOMANYREFS;
+extern const errno_t ETOOMANYREFS;
 
 /**
  * Connection timed out.
  */
-extern const long ETIMEDOUT;
+extern const errno_t ETIMEDOUT;
 
 /**
  * Connection refused error.
  */
-extern const long ECONNREFUSED;
+extern const errno_t ECONNREFUSED;
 
 /**
  * Host down error.
  */
-extern const long EHOSTDOWN;
+extern const errno_t EHOSTDOWN;
 
 /**
  * Host unreachable error.
  */
-extern const long EHOSTUNREACH;
+extern const errno_t EHOSTUNREACH;
 
 /**
  * Connection already in progress.
  */
-extern const long EALREADY;
+extern const errno_t EALREADY;
 
 /**
  * Operation already in progress.
  */
-extern const long EINPROGRESS;
+extern const errno_t EINPROGRESS;
 
 /**
  * Stale error.
  */
-extern const long ESTALE;
+extern const errno_t ESTALE;
 
 /**
  * Remote error.
  */
-extern const long EREMOTE;
+extern const errno_t EREMOTE;
 
 /**
  * Bad message.
  */
-extern const long EBADMSG;
+extern const errno_t EBADMSG;
 
 /**
  * Operation canceled.
  */
-extern const long ECANCELED;
+extern const errno_t ECANCELED;
 
 /**
  * Owner died.
  */
-extern const long EOWNERDEAD;
+extern const errno_t EOWNERDEAD;
 
 /**
  * State not recoverable.
  */
-extern const long ENOTRECOVERABLE;
+extern const errno_t ENOTRECOVERABLE;
 
 /**
  * No network.
  */
-extern const long ENONET;
+extern const errno_t ENONET;
 
 /**
  * Please restart syscall.
  */
-extern const long ERESTART;
+extern const errno_t ERESTART;
 
 /**
  * Out of streams resources.
  */
-extern const long ENOSR;
+extern const errno_t ENOSR;
 
 /**
  * No string.
  */
-extern const long ENOSTR;
+extern const errno_t ENOSTR;
 
 /**
  * No data.
  */
-extern const long ENODATA;
+extern const errno_t ENODATA;
 
 /**
  * Multihop attempted.
  */
-extern const long EMULTIHOP;
+extern const errno_t EMULTIHOP;
 
 /**
  * Link severed.
  */
-extern const long ENOLINK;
+extern const errno_t ENOLINK;
 
 /**
  * No medium found.
  */
-extern const long ENOMEDIUM;
+extern const errno_t ENOMEDIUM;
 
 /**
  * Wrong medium type.
  */
-extern const long EMEDIUMTYPE;
+extern const errno_t EMEDIUMTYPE;
 
 /**
  * Inappropriate file type or format. (BSD only)
  */
-extern const long EFTYPE;
+extern const errno_t EFTYPE;
 
-extern const long EAUTH;
-extern const long EBADARCH;
-extern const long EBADEXEC;
-extern const long EBADMACHO;
-extern const long EBADRPC;
-extern const long EDEVERR;
-extern const long ENEEDAUTH;
-extern const long ENOATTR;
-extern const long ENOPOLICY;
-extern const long EPROCLIM;
-extern const long EPROCUNAVAIL;
-extern const long EPROGMISMATCH;
-extern const long EPROGUNAVAIL;
-extern const long EPWROFF;
-extern const long ERPCMISMATCH;
-extern const long ESHLIBVERS;
+extern const errno_t EAUTH;
+extern const errno_t EBADARCH;
+extern const errno_t EBADEXEC;
+extern const errno_t EBADMACHO;
+extern const errno_t EBADRPC;
+extern const errno_t EDEVERR;
+extern const errno_t ENEEDAUTH;
+extern const errno_t ENOATTR;
+extern const errno_t ENOPOLICY;
+extern const errno_t EPROCLIM;
+extern const errno_t EPROCUNAVAIL;
+extern const errno_t EPROGMISMATCH;
+extern const errno_t EPROGUNAVAIL;
+extern const errno_t EPWROFF;
+extern const errno_t ERPCMISMATCH;
+extern const errno_t ESHLIBVERS;
 
-extern const long EADV;
-extern const long EBADE;
-extern const long EBADFD;
-extern const long EBADR;
-extern const long EBADRQC;
-extern const long EBADSLT;
-extern const long ECHRNG;
-extern const long ECOMM;
-extern const long EDOTDOT;
-extern const long EHWPOISON;
-extern const long EISNAM;
-extern const long EKEYEXPIRED;
-extern const long EKEYREJECTED;
-extern const long EKEYREVOKED;
-extern const long EL2HLT;
-extern const long EL2NSYNC;
-extern const long EL3HLT;
-extern const long EL3RST;
-extern const long ELIBACC;
-extern const long ELIBBAD;
-extern const long ELIBEXEC;
-extern const long ELIBMAX;
-extern const long ELIBSCN;
-extern const long ELNRNG;
-extern const long ENAVAIL;
-extern const long ENOANO;
-extern const long ENOCSI;
-extern const long ENOKEY;
-extern const long ENOPKG;
-extern const long ENOTNAM;
-extern const long ENOTUNIQ;
-extern const long EREMCHG;
-extern const long EREMOTEIO;
-extern const long ERFKILL;
-extern const long ESRMNT;
-extern const long ESTRPIPE;
-extern const long EUCLEAN;
-extern const long EUNATCH;
-extern const long EXFULL;
+extern const errno_t EADV;
+extern const errno_t EBADE;
+extern const errno_t EBADFD;
+extern const errno_t EBADR;
+extern const errno_t EBADRQC;
+extern const errno_t EBADSLT;
+extern const errno_t ECHRNG;
+extern const errno_t ECOMM;
+extern const errno_t EDOTDOT;
+extern const errno_t EHWPOISON;
+extern const errno_t EISNAM;
+extern const errno_t EKEYEXPIRED;
+extern const errno_t EKEYREJECTED;
+extern const errno_t EKEYREVOKED;
+extern const errno_t EL2HLT;
+extern const errno_t EL2NSYNC;
+extern const errno_t EL3HLT;
+extern const errno_t EL3RST;
+extern const errno_t ELIBACC;
+extern const errno_t ELIBBAD;
+extern const errno_t ELIBEXEC;
+extern const errno_t ELIBMAX;
+extern const errno_t ELIBSCN;
+extern const errno_t ELNRNG;
+extern const errno_t ENAVAIL;
+extern const errno_t ENOANO;
+extern const errno_t ENOCSI;
+extern const errno_t ENOKEY;
+extern const errno_t ENOPKG;
+extern const errno_t ENOTNAM;
+extern const errno_t ENOTUNIQ;
+extern const errno_t EREMCHG;
+extern const errno_t EREMOTEIO;
+extern const errno_t ERFKILL;
+extern const errno_t ESRMNT;
+extern const errno_t ESTRPIPE;
+extern const errno_t EUCLEAN;
+extern const errno_t EUNATCH;
+extern const errno_t EXFULL;
 
 #define E2BIG           E2BIG
 #define EACCES          EACCES

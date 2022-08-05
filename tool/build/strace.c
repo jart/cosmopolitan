@@ -413,7 +413,7 @@ static const struct Syscall {
 };
 
 static const struct Errno {
-  long *number;
+  errno_t *number;
   const char *name;
 } kErrnos[] = {
     {&ENOSYS, "ENOSYS"},                    //
