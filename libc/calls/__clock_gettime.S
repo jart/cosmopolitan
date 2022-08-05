@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-	.initbss 201,_init___clock_gettime
+	.initbss 301,_init___clock_gettime
 __clock_gettime:
 	.quad	0
 	.endobj	__clock_gettime,globl,hidden
 	.previous
 
-	.init.start 201,_init___clock_gettime
+	.init.start 301,_init___clock_gettime
 	ezlea	__clock_gettime_init,ax
 	stosq
-	.init.end 201,_init___clock_gettime
+	.init.end 301,_init___clock_gettime

@@ -16,32 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/calls/internal.h"
 
-/**
- * Returns time as seconds from UNIX epoch.
- *
- * @param opt_out_ret can receive return value on success
- * @return seconds since epoch, or -1 w/ errno
- * @asyncsignalsafe
- */
-int64_t time(int64_t *opt_out_ret) {
-  int64_t secs;
-  struct timeval tv;
-  if (IsAsan() && opt_out_ret &&
-      !__asan_is_valid(opt_out_ret, sizeof(*opt_out_ret))) {
-    secs = efault();
-  } else if (gettimeofday(&tv, 0) != -1) {
-    secs = tv.tv_sec;
-    if (opt_out_ret) {
-      *opt_out_ret = secs;
-    }
-  } else {
-    secs = -1;
-  }
-  return secs;
+axdx_t sys_gettimeofday_metal(struct timeval *tv, struct timezone *tz,
+                              void *wut) {
+  return (axdx_t){-1, 0};
 }

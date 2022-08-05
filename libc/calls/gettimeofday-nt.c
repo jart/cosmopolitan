@@ -16,18 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/calls/internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/struct/filetime.h"
-#include "libc/nt/struct/systemtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/str/str.h"
-#include "libc/time/struct/timezone.h"
 
-textwindows int sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz) {
+textwindows axdx_t sys_gettimeofday_nt(struct timeval *tv, struct timezone *tz,
+                                       void *wut) {
   struct NtFileTime ft;
   GetSystemTimeAsFileTime(&ft);
   if (tv) *tv = FileTimeToTimeVal(ft);
   if (tz) bzero(tz, sizeof(*tz));
-  return 0;
+  return (axdx_t){0, 0};
 }

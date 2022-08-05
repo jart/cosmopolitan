@@ -157,17 +157,18 @@ void __rusage2linux(struct rusage *) hidden;
 void __sigenter_xnu(void *, i32, i32, struct siginfo_xnu *,
                     struct __darwin_ucontext *) hidden;
 void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
+axdx_t sys_gettimeofday_xnu(struct timeval *, struct timezone *, void *) hidden;
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § syscalls » windows nt » veneers                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+axdx_t sys_gettimeofday_nt(struct timeval *, struct timezone *, void *) hidden;
 int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
 int sys_close_nt(struct Fd *) hidden;
 int sys_fstat_nt(i64, struct stat *) hidden;
 int sys_fstatat_nt(int, const char *, struct stat *, int) hidden;
 int sys_getrusage_nt(int, struct rusage *) hidden;
-int sys_gettimeofday_nt(struct timeval *, struct timezone *) hidden;
 int sys_lstat_nt(const char *, struct stat *) hidden;
 int sys_nanosleep_nt(const struct timespec *, struct timespec *) hidden;
 int sys_setitimer_nt(int, const struct itimerval *, struct itimerval *) hidden;
@@ -196,6 +197,7 @@ struct NtOverlapped *_offset2overlap(int64_t, int64_t,
 │ cosmopolitan § syscalls » metal                                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+axdx_t sys_gettimeofday_metal(struct timeval *, struct timezone *, void *);
 int sys_fstat_metal(int, struct stat *);
 int sys_openat_metal(int, const char *, int, unsigned);
 ssize_t sys_readv_metal(struct Fd *, const struct iovec *, int) hidden;

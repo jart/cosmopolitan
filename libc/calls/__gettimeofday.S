@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/time/time.h"
+#include "libc/macros.internal.h"
 
-/**
- * Returns time as seconds from UNIX epoch.
- *
- * @param opt_out_ret can receive return value on success
- * @return seconds since epoch, or -1 w/ errno
- * @asyncsignalsafe
- */
-int64_t time(int64_t *opt_out_ret) {
-  int64_t secs;
-  struct timeval tv;
-  if (IsAsan() && opt_out_ret &&
-      !__asan_is_valid(opt_out_ret, sizeof(*opt_out_ret))) {
-    secs = efault();
-  } else if (gettimeofday(&tv, 0) != -1) {
-    secs = tv.tv_sec;
-    if (opt_out_ret) {
-      *opt_out_ret = secs;
-    }
-  } else {
-    secs = -1;
-  }
-  return secs;
-}
+	.initbss 301,_init___gettimeofday
+__gettimeofday:
+	.quad	0
+	.endobj	__gettimeofday,globl,hidden
+	.previous
+
+	.init.start 301,_init___gettimeofday
+	ezlea	__gettimeofday_init,ax
+	stosq
+	.init.end 301,_init___gettimeofday

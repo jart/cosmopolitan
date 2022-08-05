@@ -83,7 +83,7 @@ static void LoadElfLoadSegment(struct Machine *m, void *code, size_t codesize,
 static void LoadElf(struct Machine *m, struct Elf *elf) {
   unsigned i;
   Elf64_Phdr *phdr;
-  m->ip = elf->base = elf->ehdr->e_entry;
+  m->ip = elf->base = 0x400000 /* elf->ehdr->e_entry */;
   VERBOSEF("LOADELF ENTRY %012lx", m->ip);
   for (i = 0; i < elf->ehdr->e_phnum; ++i) {
     phdr = GetElfSegmentHeaderAddress(elf->ehdr, elf->size, i);
