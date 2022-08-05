@@ -23,7 +23,7 @@
 
 typedef uint64_t xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
-static dontinline antiquity int memcmp_sse(const char *p, const char *q,
+static dontinline antiquity int bcmp_sse(const char *p, const char *q,
                                          size_t n) {
   xmm_t a;
   while (n > 32) {
@@ -38,8 +38,8 @@ static dontinline antiquity int memcmp_sse(const char *p, const char *q,
   return !!(a[0] | a[1]);
 }
 
-microarchitecture("avx") static int memcmp_avx(const char *p, const char *q,
-                                               size_t n) {
+microarchitecture("avx") static int bcmp_avx(const char *p, const char *q,
+                                             size_t n) {
   xmm_t a, b, c, d;
   if (n > 32) {
     if (n >= 16 + 64) {
@@ -123,9 +123,9 @@ int bcmp(const void *a, const void *b, size_t n) {
         return !!(i ^ j);
       }
     } else if (LIKELY(X86_HAVE(AVX))) {
-      return memcmp_avx(p, q, n);
+      return bcmp_avx(p, q, n);
     } else {
-      return memcmp_sse(p, q, n);
+      return bcmp_sse(p, q, n);
     }
   }
   while (n--) {
