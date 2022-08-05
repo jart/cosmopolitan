@@ -411,6 +411,7 @@ static int sandboxed;
 static int changeuid;
 static int changegid;
 static int isyielding;
+static int maxworkers;
 static int statuscode;
 static int shutdownsig;
 static int sslpskindex;
@@ -4747,6 +4748,16 @@ static int LuaProgramHeartbeatInterval(lua_State *L) {
   return 1;
 }
 
+static int LuaProgramMaxWorkers(lua_State *L) {
+  OnlyCallFromMainProcess(L, "ProgramMaxWorkers");
+  if (!lua_isinteger(L, 1) && !lua_isnoneornil(L, 1)) {
+    return luaL_argerror(L, 1, "invalid number of workers; integer expected");
+  }
+  lua_pushinteger(L, maxworkers);
+  if (lua_isinteger(L, 1)) maxworkers = lua_tointeger(L, 1);
+  return 1;
+}
+
 static int LuaProgramAddr(lua_State *L) {
   uint32_t ip;
   OnlyCallFromInitLua(L, "ProgramAddr");
@@ -5239,6 +5250,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramTimeout", LuaProgramTimeout},                      //
     {"ProgramUid", LuaProgramUid},                              //
     {"ProgramUniprocess", LuaProgramUniprocess},                //
+    {"ProgramMaxWorkers", LuaProgramMaxWorkers},                //
     {"Rand64", LuaRand64},                                      //
     {"Rdrand", LuaRdrand},                                      //
     {"Rdseed", LuaRdseed},                                      //
@@ -6927,6 +6939,7 @@ static int HandlePoll(int ms) {
         if (!polls[pollid].revents) continue;
         if (polls[pollid].fd < 0) continue;
         if (polls[pollid].fd) {
+          if (maxworkers && shared->workers >= maxworkers) continue;
           // handle listen socket
           lua_repl_lock();
           serverid = pollid - 1;

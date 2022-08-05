@@ -1403,6 +1403,12 @@ FUNCTIONS
           increased to 1450, since that's the size of ethernet frames.
           This function can only be called from .init.lua.
 
+  ProgramMaxWorkers(int)
+          Limits the number of workers forked by redbean. If that number
+          is reached, the server continues polling until the number of
+          workers is reduced or the value is updated. Setting it to 0
+          removes the limit (this is the default).
+
   ProgramPrivateKey(pem:str)
           Same as the -K flag if called from .init.lua, e.g.
           ProgramPrivateKey(LoadAsset("/.sign.key")) for zip loading or
