@@ -7320,11 +7320,10 @@ void RedBean(int argc, char *argv[]) {
                           -1, 0)));
   if (daemonize) {
     for (int i = 0; i < 256; ++i) {
-      if (!IsServerFd(i)) {
-        close(i);
-      }
+      close(i);
     }
     open("/dev/null", O_RDONLY);
+    open("/dev/null", O_WRONLY);
     open("/dev/null", O_WRONLY);
   }
   zpath = GetProgramExecutableName();
