@@ -13,10 +13,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long FUTEX_WAIT;
-extern const long FUTEX_WAKE;
-extern const long FUTEX_REQUEUE;
-extern const long FUTEX_PRIVATE_FLAG;
+extern const int FUTEX_WAIT;
+extern const int FUTEX_WAKE;
+extern const int FUTEX_REQUEUE;
+extern const int FUTEX_PRIVATE_FLAG;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

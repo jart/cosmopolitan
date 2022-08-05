@@ -4,11 +4,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long MNT_FORCE;
-extern const long MNT_DETACH;
-extern const long MNT_EXPIRE;
-extern const long UMOUNT_NOFOLLOW;
-extern const long MNT_BYFSID;
+extern const int MNT_FORCE;
+extern const int MNT_DETACH;
+extern const int MNT_EXPIRE;
+extern const int UMOUNT_NOFOLLOW;
+extern const int MNT_BYFSID;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

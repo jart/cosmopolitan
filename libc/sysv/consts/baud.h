@@ -4,35 +4,35 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long B0;
-extern const long B50;
-extern const long B75;
-extern const long B110;
-extern const long B134;
-extern const long B150;
-extern const long B200;
-extern const long B300;
-extern const long B600;
-extern const long B1200;
-extern const long B1800;
-extern const long B2400;
-extern const long B4800;
-extern const long B9600;
-extern const long B19200;
-extern const long B38400;
-extern const long B57600;
-extern const long B115200;
-extern const long B230400;
-extern const long B500000;
-extern const long B576000;
-extern const long B1000000;
-extern const long B1152000;
-extern const long B1500000;
-extern const long B2000000;
-extern const long B2500000;
-extern const long B3000000;
-extern const long B3500000;
-extern const long B4000000;
+extern const uint32_t B0;
+extern const uint32_t B50;
+extern const uint32_t B75;
+extern const uint32_t B110;
+extern const uint32_t B134;
+extern const uint32_t B150;
+extern const uint32_t B200;
+extern const uint32_t B300;
+extern const uint32_t B600;
+extern const uint32_t B1200;
+extern const uint32_t B1800;
+extern const uint32_t B2400;
+extern const uint32_t B4800;
+extern const uint32_t B9600;
+extern const uint32_t B19200;
+extern const uint32_t B38400;
+extern const uint32_t B57600;
+extern const uint32_t B115200;
+extern const uint32_t B230400;
+extern const uint32_t B500000;
+extern const uint32_t B576000;
+extern const uint32_t B1000000;
+extern const uint32_t B1152000;
+extern const uint32_t B1500000;
+extern const uint32_t B2000000;
+extern const uint32_t B2500000;
+extern const uint32_t B3000000;
+extern const uint32_t B3500000;
+extern const uint32_t B4000000;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

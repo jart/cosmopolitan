@@ -4,11 +4,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long FIOASYNC;
-extern const long FIOCLEX;
-extern const long FIONBIO;
-extern const long FIONCLEX;
-extern const long FIONREAD;
+extern const uint64_t FIOASYNC;
+extern const uint64_t FIOCLEX;
+extern const uint64_t FIONBIO;
+extern const uint64_t FIONCLEX;
+extern const uint64_t FIONREAD;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

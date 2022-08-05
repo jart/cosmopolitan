@@ -10,10 +10,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long F_OK;
-extern const long R_OK;
-extern const long W_OK;
-extern const long X_OK;
+extern const int F_OK;
+extern const int R_OK;
+extern const int W_OK;
+extern const int X_OK;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

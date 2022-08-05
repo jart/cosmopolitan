@@ -3,22 +3,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long IFF_UP;
-extern const long IFF_ALLMULTI;
-extern const long IFF_AUTOMEDIA;
-extern const long IFF_BROADCAST;
-extern const long IFF_DEBUG;
-extern const long IFF_DYNAMIC;
-extern const long IFF_LOOPBACK;
-extern const long IFF_MASTER;
-extern const long IFF_MULTICAST;
-extern const long IFF_NOARP;
-extern const long IFF_NOTRAILERS;
-extern const long IFF_POINTOPOINT;
-extern const long IFF_PORTSEL;
-extern const long IFF_PROMISC;
-extern const long IFF_RUNNING;
-extern const long IFF_SLAVE;
+extern const int IFF_UP;
+extern const int IFF_ALLMULTI;
+extern const int IFF_AUTOMEDIA;
+extern const int IFF_BROADCAST;
+extern const int IFF_DEBUG;
+extern const int IFF_DYNAMIC;
+extern const int IFF_LOOPBACK;
+extern const int IFF_MASTER;
+extern const int IFF_MULTICAST;
+extern const int IFF_NOARP;
+extern const int IFF_NOTRAILERS;
+extern const int IFF_POINTOPOINT;
+extern const int IFF_PORTSEL;
+extern const int IFF_PROMISC;
+extern const int IFF_RUNNING;
+extern const int IFF_SLAVE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

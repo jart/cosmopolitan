@@ -4,12 +4,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long PRIO_MAX;
-extern const long PRIO_MIN;
-extern const long PRIO_PGRP;
-extern const long PRIO_PROCESS;
-extern const long PRIO_USER;
-extern const long NZERO;
+extern const int PRIO_MAX;
+extern const int PRIO_MIN;
+extern const int PRIO_PGRP;
+extern const int PRIO_PROCESS;
+extern const int PRIO_USER;
+extern const int NZERO;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,24 +4,24 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long EX_CANTCREAT;
-extern const long EX_CONFIG;
-extern const long EX_DATAERR;
-extern const long EX_IOERR;
-extern const long EX_NOHOST;
-extern const long EX_NOINPUT;
-extern const long EX_NOPERM;
-extern const long EX_NOUSER;
-extern const long EX_OK;
-extern const long EX_OSERR;
-extern const long EX_OSFILE;
-extern const long EX_PROTOCOL;
-extern const long EX_SOFTWARE;
-extern const long EX_TEMPFAIL;
-extern const long EX_UNAVAILABLE;
-extern const long EX_USAGE;
-extern const long EX__BASE;
-extern const long EX__MAX;
+extern const int EX_CANTCREAT;
+extern const int EX_CONFIG;
+extern const int EX_DATAERR;
+extern const int EX_IOERR;
+extern const int EX_NOHOST;
+extern const int EX_NOINPUT;
+extern const int EX_NOPERM;
+extern const int EX_NOUSER;
+extern const int EX_OK;
+extern const int EX_OSERR;
+extern const int EX_OSFILE;
+extern const int EX_PROTOCOL;
+extern const int EX_SOFTWARE;
+extern const int EX_TEMPFAIL;
+extern const int EX_UNAVAILABLE;
+extern const int EX_USAGE;
+extern const int EX__BASE;
+extern const int EX__MAX;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,29 +4,29 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long MAP_32BIT;
-extern const long MAP_ANON;
-extern const long MAP_ANONYMOUS;
-extern const long MAP_CONCEAL;
-extern const long MAP_DENYWRITE;
-extern const long MAP_EXECUTABLE;
-extern const long MAP_FILE;
-extern const long MAP_FIXED;
-extern const long MAP_FIXED_NOREPLACE;
-extern const long MAP_GROWSDOWN;
-extern const long MAP_HASSEMAPHORE;
-extern const long MAP_HUGETLB;
-extern const long MAP_HUGE_MASK;
-extern const long MAP_HUGE_SHIFT;
-extern const long MAP_INHERIT;
-extern const long MAP_LOCKED;
-extern const long MAP_NONBLOCK;
-extern const long MAP_NORESERVE;
-extern const long MAP_NOSYNC;
-extern const long MAP_POPULATE;
-extern const long MAP_PRIVATE;
-extern const long MAP_SHARED;
-extern const long MAP_SHARED_VALIDATE;
+extern const int MAP_32BIT;
+extern const int MAP_ANON;
+extern const int MAP_ANONYMOUS;
+extern const int MAP_CONCEAL;
+extern const int MAP_DENYWRITE;
+extern const int MAP_EXECUTABLE;
+extern const int MAP_FILE;
+extern const int MAP_FIXED;
+extern const int MAP_FIXED_NOREPLACE;
+extern const int MAP_GROWSDOWN;
+extern const int MAP_HASSEMAPHORE;
+extern const int MAP_HUGETLB;
+extern const int MAP_HUGE_MASK;
+extern const int MAP_HUGE_SHIFT;
+extern const int MAP_INHERIT;
+extern const int MAP_LOCKED;
+extern const int MAP_NONBLOCK;
+extern const int MAP_NORESERVE;
+extern const int MAP_NOSYNC;
+extern const int MAP_POPULATE;
+extern const int MAP_PRIVATE;
+extern const int MAP_SHARED;
+extern const int MAP_SHARED_VALIDATE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

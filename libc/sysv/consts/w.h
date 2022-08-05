@@ -4,9 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long WNOHANG;
-extern const long WUNTRACED;
-extern const long WCONTINUED;
+extern const int WNOHANG;
+extern const int WUNTRACED;
+extern const int WCONTINUED;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

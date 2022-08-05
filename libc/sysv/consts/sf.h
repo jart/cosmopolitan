@@ -11,9 +11,9 @@ struct sf_hdtr {
   int trl_cnt;
 };
 
-extern const long SF_MNOWAIT;
-extern const long SF_NODISKIO;
-extern const long SF_SYNC;
+extern const int SF_MNOWAIT;
+extern const int SF_NODISKIO;
+extern const int SF_SYNC;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

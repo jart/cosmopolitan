@@ -33,33 +33,33 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long IN_ACCESS;
-extern const long IN_ALL_EVENTS;
-extern const long IN_ATTRIB;
-extern const long IN_CLOEXEC;
-extern const long IN_CLOSE;
-extern const long IN_CLOSE_NOWRITE;
-extern const long IN_CLOSE_WRITE;
-extern const long IN_CREATE;
-extern const long IN_DELETE;
-extern const long IN_DELETE_SELF;
-extern const long IN_DONT_FOLLOW;
-extern const long IN_EXCL_UNLINK;
-extern const long IN_IGNORED;
-extern const long IN_ISDIR;
-extern const long IN_LOOPBACKNET;
-extern const long IN_MASK_ADD;
-extern const long IN_MODIFY;
-extern const long IN_MOVE;
-extern const long IN_MOVED_FROM;
-extern const long IN_MOVED_TO;
-extern const long IN_MOVE_SELF;
-extern const long IN_NONBLOCK;
-extern const long IN_ONESHOT;
-extern const long IN_ONLYDIR;
-extern const long IN_OPEN;
-extern const long IN_Q_OVERFLOW;
-extern const long IN_UNMOUNT;
+extern const uint32_t IN_ACCESS;
+extern const uint32_t IN_ALL_EVENTS;
+extern const uint32_t IN_ATTRIB;
+extern const uint32_t IN_CLOEXEC;
+extern const uint32_t IN_CLOSE;
+extern const uint32_t IN_CLOSE_NOWRITE;
+extern const uint32_t IN_CLOSE_WRITE;
+extern const uint32_t IN_CREATE;
+extern const uint32_t IN_DELETE;
+extern const uint32_t IN_DELETE_SELF;
+extern const uint32_t IN_DONT_FOLLOW;
+extern const uint32_t IN_EXCL_UNLINK;
+extern const uint32_t IN_IGNORED;
+extern const uint32_t IN_ISDIR;
+extern const uint32_t IN_LOOPBACKNET;
+extern const uint32_t IN_MASK_ADD;
+extern const uint32_t IN_MODIFY;
+extern const uint32_t IN_MOVE;
+extern const uint32_t IN_MOVED_FROM;
+extern const uint32_t IN_MOVED_TO;
+extern const uint32_t IN_MOVE_SELF;
+extern const uint32_t IN_NONBLOCK;
+extern const uint32_t IN_ONESHOT;
+extern const uint32_t IN_ONLYDIR;
+extern const uint32_t IN_OPEN;
+extern const uint32_t IN_Q_OVERFLOW;
+extern const uint32_t IN_UNMOUNT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,17 +4,17 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long POSIX_FADV_DONTNEED;
-extern const long POSIX_FADV_NOREUSE;
-extern const long POSIX_FADV_NORMAL;
-extern const long POSIX_FADV_RANDOM;
-extern const long POSIX_FADV_SEQUENTIAL;
-extern const long POSIX_FADV_WILLNEED;
-extern const long POSIX_MADV_DONTNEED;
-extern const long POSIX_MADV_NORMAL;
-extern const long POSIX_MADV_RANDOM;
-extern const long POSIX_MADV_SEQUENTIAL;
-extern const long POSIX_MADV_WILLNEED;
+extern const int POSIX_FADV_DONTNEED;
+extern const int POSIX_FADV_NOREUSE;
+extern const int POSIX_FADV_NORMAL;
+extern const int POSIX_FADV_RANDOM;
+extern const int POSIX_FADV_SEQUENTIAL;
+extern const int POSIX_FADV_WILLNEED;
+extern const int POSIX_MADV_DONTNEED;
+extern const int POSIX_MADV_NORMAL;
+extern const int POSIX_MADV_RANDOM;
+extern const int POSIX_MADV_SEQUENTIAL;
+extern const int POSIX_MADV_WILLNEED;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

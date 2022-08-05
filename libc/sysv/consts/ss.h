@@ -3,9 +3,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long SIGSTKSZ;
-extern const long MINSIGSTKSZ;
-extern const long SS_DISABLE;
+extern const size_t SIGSTKSZ;
+extern const size_t MINSIGSTKSZ;
+extern const int SS_DISABLE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

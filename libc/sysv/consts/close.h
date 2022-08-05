@@ -4,8 +4,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long CLOSE_RANGE_UNSHARE;
-extern const long CLOSE_RANGE_CLOEXEC;
+extern const unsigned int CLOSE_RANGE_UNSHARE;
+extern const unsigned int CLOSE_RANGE_CLOEXEC;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -4,22 +4,22 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long TIOCMGET;
-extern const long TIOCMSET;
-extern const long TIOCMBIC;
-extern const long TIOCMBIS;
+extern const uint64_t TIOCMGET;
+extern const uint64_t TIOCMSET;
+extern const uint64_t TIOCMBIC;
+extern const uint64_t TIOCMBIS;
 
-extern const long TIOCM_CAR;
-extern const long TIOCM_CD;
-extern const long TIOCM_CTS;
-extern const long TIOCM_DSR;
-extern const long TIOCM_DTR;
-extern const long TIOCM_LE;
-extern const long TIOCM_RI;
-extern const long TIOCM_RNG;
-extern const long TIOCM_RTS;
-extern const long TIOCM_SR;
-extern const long TIOCM_ST;
+extern const int TIOCM_CAR;
+extern const int TIOCM_CD;
+extern const int TIOCM_CTS;
+extern const int TIOCM_DSR;
+extern const int TIOCM_DTR;
+extern const int TIOCM_LE;
+extern const int TIOCM_RI;
+extern const int TIOCM_RNG;
+extern const int TIOCM_RTS;
+extern const int TIOCM_SR;
+extern const int TIOCM_ST;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

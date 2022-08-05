@@ -4,25 +4,25 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern const long CLOCK_BOOTTIME;
-extern const long CLOCK_BOOTTIME_ALARM;
-extern const long CLOCK_MONOTONIC;
-extern const long CLOCK_MONOTONIC_COARSE;
-extern const long CLOCK_MONOTONIC_FAST;
-extern const long CLOCK_MONOTONIC_PRECISE;
-extern const long CLOCK_MONOTONIC_RAW;
-extern const long CLOCK_PROCESS_CPUTIME_ID;
-extern const long CLOCK_PROF;
-extern const long CLOCK_REALTIME_ALARM;
-extern const long CLOCK_REALTIME_COARSE;
-extern const long CLOCK_REALTIME_FAST;
-extern const long CLOCK_REALTIME_PRECISE;
-extern const long CLOCK_SECOND;
-extern const long CLOCK_TAI;
-extern const long CLOCK_THREAD_CPUTIME_ID;
-extern const long CLOCK_UPTIME;
-extern const long CLOCK_UPTIME_FAST;
-extern const long CLOCK_UPTIME_PRECISE;
+extern const int CLOCK_BOOTTIME;
+extern const int CLOCK_BOOTTIME_ALARM;
+extern const int CLOCK_MONOTONIC;
+extern const int CLOCK_MONOTONIC_COARSE;
+extern const int CLOCK_MONOTONIC_FAST;
+extern const int CLOCK_MONOTONIC_PRECISE;
+extern const int CLOCK_MONOTONIC_RAW;
+extern const int CLOCK_PROCESS_CPUTIME_ID;
+extern const int CLOCK_PROF;
+extern const int CLOCK_REALTIME_ALARM;
+extern const int CLOCK_REALTIME_COARSE;
+extern const int CLOCK_REALTIME_FAST;
+extern const int CLOCK_REALTIME_PRECISE;
+extern const int CLOCK_SECOND;
+extern const int CLOCK_TAI;
+extern const int CLOCK_THREAD_CPUTIME_ID;
+extern const int CLOCK_UPTIME;
+extern const int CLOCK_UPTIME_FAST;
+extern const int CLOCK_UPTIME_PRECISE;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
