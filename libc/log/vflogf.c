@@ -85,35 +85,39 @@ static void vflogf_onfail(FILE *f) {
 void(vflogf)(unsigned level, const char *file, int line, FILE *f,
              const char *fmt, va_list va) {
   int bufmode;
+  int64_t dots;
   struct tm tm;
-  long double t2;
-  const char *prog;
-  bool issamesecond;
   char buf32[32];
-  int64_t secs, nsec, dots;
+  const char *prog;
+  const char *sign;
+  bool issamesecond;
+  struct timespec t2;
   if (!f) f = __log_file;
   if (!f) return;
   flockfile(f);
   --__strace;
 
-  t2 = nowl();
-  secs = t2;
-  nsec = (t2 - secs) * 1e9L;
-  issamesecond = secs == vflogf_ts.tv_sec;
-  dots = issamesecond ? nsec - vflogf_ts.tv_nsec : nsec;
-  vflogf_ts.tv_sec = secs;
-  vflogf_ts.tv_nsec = nsec;
+  // We display TIMESTAMP.MICROS normally. However, when we log multiple
+  // times in the same second, we display TIMESTAMP+DELTAMICROS instead.
+  t2 = _timespec_real();
+  if (t2.tv_sec == vflogf_ts.tv_sec) {
+    sign = "+";
+    dots = t2.tv_nsec - vflogf_ts.tv_nsec;
+  } else {
+    sign = ".";
+    dots = t2.tv_nsec;
+  }
+  vflogf_ts = t2;
 
-  localtime_r(&secs, &tm);
-  strcpy(iso8601(buf32, &tm), issamesecond ? "+" : ".");
+  localtime_r(&t2.tv_sec, &tm);
+  strcpy(iso8601(buf32, &tm), sign);
   prog = basename(firstnonnull(program_invocation_name, "unknown"));
   bufmode = f->bufmode;
   if (bufmode == _IOLBF) f->bufmode = _IOFBF;
 
   if ((fprintf_unlocked)(f, "%r%c%s%06ld:%s:%d:%.*s:%d] ",
-                         "FEWIVDNT"[level & 7], buf32, dots / 1000 % 1000000,
-                         file, line, strchrnul(prog, '.') - prog, prog,
-                         getpid()) <= 0) {
+                         "FEWIVDNT"[level & 7], buf32, dots / 1000, file, line,
+                         strchrnul(prog, '.') - prog, prog, getpid()) <= 0) {
     vflogf_onfail(f);
   }
   (vfprintf_unlocked)(f, fmt, va);

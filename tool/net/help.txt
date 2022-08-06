@@ -1374,9 +1374,10 @@ FUNCTIONS
           as Content-Range and Date, which are abstracted by the transport
           layer.
 
-  ProgramHeartbeatInterval(milliseconds:int)
-          Sets the heartbeat interval (in milliseconds). 5000ms is the default
-          and 100ms is the minimum.
+  ProgramHeartbeatInterval([milliseconds:int])
+          Sets the heartbeat interval (in milliseconds). 5000ms is the
+          default and 100ms is the minimum. If `milliseconds` is not
+          specified, then the current interval is returned.
 
   ProgramTimeout(milliseconds:int|seconds:int)
           Default timeout is 60000ms. Minimal value of timeout is 10(ms).

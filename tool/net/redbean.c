@@ -328,9 +328,9 @@ static struct Assets {
 
 static struct Shared {
   int workers;
-  long double nowish;
-  long double lastreindex;
-  long double lastmeltdown;
+  struct timespec nowish;
+  struct timespec lastreindex;
+  struct timespec lastmeltdown;
   char currentdate[32];
   struct rusage server;
   struct rusage children;
@@ -430,7 +430,6 @@ static int sslpskindex;
 static int oldloglevel;
 static int messageshandled;
 static int sslticketlifetime;
-static int heartbeatint = 5000;  // ms
 static uint32_t clientaddrsize;
 
 static size_t zsize;
@@ -470,16 +469,17 @@ static struct Buffer oldin;
 static struct Buffer hdrbuf;
 static struct timeval timeout;
 static struct Buffer effectivepath;
+static struct timespec heartbeatinterval;
 
 static struct Url url;
 
 static struct stat zst;
-static long double startread;
-static long double lastrefresh;
-static long double startserver;
-static long double startrequest;
-static long double lastheartbeat;
-static long double startconnection;
+static struct timespec startread;
+static struct timespec lastrefresh;
+static struct timespec startserver;
+static struct timespec startrequest;
+static struct timespec lastheartbeat;
+static struct timespec startconnection;
 static struct sockaddr_in clientaddr;
 static struct sockaddr_in *serveraddr;
 
@@ -1314,6 +1314,11 @@ static ssize_t ReadAll(int fd, char *p, size_t n) {
   return i;
 }
 
+static bool IsTakingTooLong(void) {
+  return meltdown && _timespec_gte(_timespec_sub(_timespec_real(), startread),
+                                   (struct timespec){2});
+}
+
 static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
   int i;
   ssize_t rc;
@@ -1340,7 +1345,7 @@ static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
     } else if (errno == EINTR) {
       errno = 0;
       LockInc(&shared->c.writeinterruputs);
-      if (killed || (meltdown && nowl() - startread > 2)) {
+      if (killed || IsTakingTooLong()) {
         return total ? total : -1;
       }
     } else {
@@ -1556,7 +1561,6 @@ static void CertsDestroy(void) {
 
 static void WipeServingKeys(void) {
   size_t i;
-  long double t = nowl();
   if (uniprocess) return;
   mbedtls_ssl_ticket_free(&ssltick);
   mbedtls_ssl_key_cert_free(conf.key_cert), conf.key_cert = 0;
@@ -1675,7 +1679,7 @@ static bool TlsSetup(void) {
       return true;
     } else if (r == MBEDTLS_ERR_SSL_WANT_READ) {
       LockInc(&shared->c.handshakeinterrupts);
-      if (terminated || killed || (meltdown && nowl() - startread > 2)) {
+      if (terminated || killed || IsTakingTooLong()) {
         return false;
       }
     } else {
@@ -1935,10 +1939,10 @@ char *FormatUnixHttpDateTime(char *s, int64_t t) {
   return s;
 }
 
-static void UpdateCurrentDate(long double now) {
+static void UpdateCurrentDate(struct timespec now) {
   int64_t t;
   struct tm tm;
-  t = now;
+  t = now.tv_sec;
   shared->nowish = now;
   gmtime_r(&t, &tm);
   FormatHttpDateTime(shared->currentdate, &tm);
@@ -2169,7 +2173,7 @@ static char *AppendCache(char *p, int64_t seconds) {
     p = stpcpy(p, ", must-revalidate");
   }
   p = AppendCrlf(p);
-  return AppendExpires(p, (int64_t)shared->nowish + seconds);
+  return AppendExpires(p, shared->nowish.tv_sec + seconds);
 }
 
 static inline char *AppendContentLength(char *p, size_t n) {
@@ -2923,7 +2927,7 @@ td { padding-right: 3em; }\r\n\
   }
   appends(&cpm.outbuf, "<td valign=\"top\">\r\n");
   and = "";
-  x = nowl() - startserver;
+  x = _timespec_sub(_timespec_real(), startserver).tv_sec;
   y = ldiv(x, 24L * 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
@@ -3012,12 +3016,12 @@ static char *ServeStatusz(void) {
   }
   AppendLong1("pid", getpid());
   AppendLong1("ppid", getppid());
-  AppendLong1("now", nowl());
-  AppendLong1("nowish", shared->nowish);
+  AppendLong1("now", _timespec_real().tv_sec);
+  AppendLong1("nowish", shared->nowish.tv_sec);
   AppendLong1("gmtoff", gmtoff);
   AppendLong1("CLK_TCK", CLK_TCK);
-  AppendLong1("startserver", startserver);
-  AppendLong1("lastmeltdown", shared->lastmeltdown);
+  AppendLong1("startserver", startserver.tv_sec);
+  AppendLong1("lastmeltdown", shared->lastmeltdown.tv_sec);
   AppendLong1("workers", shared->workers);
   AppendLong1("assets.n", assets.n);
 #ifndef STATIC
@@ -3436,7 +3440,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
   int i;
   uint32_t crc;
   char *comp, *p;
-  long double now;
+  struct timespec now;
   struct Asset *a;
   struct iovec v[13];
   uint8_t *cdir, era;
@@ -3479,14 +3483,14 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
     return;
   }
   OpenZip(false);
-  now = nowl();
+  now = _timespec_real();
   a = GetAssetZip(path, pathlen);
   if (!mode) mode = a ? GetMode(a) : 0644;
   if (!(mode & S_IFMT)) mode |= S_IFREG;
   if (pathlen > 1 && path[0] == '/') ++path, --pathlen;
   dosmode = !(mode & 0200) ? kNtFileAttributeReadonly : 0;
-  ft = (now + MODERNITYSECONDS) * HECTONANOSECONDS;
-  GetDosLocalTime(now, &mtime, &mdate);
+  ft = (now.tv_sec + MODERNITYSECONDS) * HECTONANOSECONDS;
+  GetDosLocalTime(now.tv_sec, &mtime, &mdate);
   // local file header
   if (uselen >= 0xffffffff || datalen >= 0xffffffff) {
     era = kZipEra2001;
@@ -4169,7 +4173,7 @@ VerifyFailed:
 }
 
 static int LuaGetDate(lua_State *L) {
-  lua_pushinteger(L, shared->nowish);
+  lua_pushinteger(L, shared->nowish.tv_sec);
   return 1;
 }
 
@@ -4753,12 +4757,14 @@ static int LuaProgramUniprocess(lua_State *L) {
 }
 
 static int LuaProgramHeartbeatInterval(lua_State *L) {
+  int64_t millis;
   OnlyCallFromMainProcess(L, "ProgramHeartbeatInterval");
-  if (!lua_isinteger(L, 1) && !lua_isnoneornil(L, 1)) {
-    return luaL_argerror(L, 1, "invalid heartbeat interval; integer expected");
+  if (!lua_isnoneornil(L, 1)) {
+    millis = luaL_checkinteger(L, 1);
+    millis = MAX(100, millis);
+    heartbeatinterval = _timespec_frommillis(millis);
   }
-  lua_pushinteger(L, heartbeatint);
-  if (lua_isinteger(L, 1)) heartbeatint = MAX(100, lua_tointeger(L, 1));
+  lua_pushinteger(L, _timespec_tomillis(heartbeatinterval));
   return 1;
 }
 
@@ -5634,10 +5640,13 @@ Content-Length: 0\r\n\
 }
 
 static void EnterMeltdownMode(void) {
-  if (shared->lastmeltdown && nowl() - shared->lastmeltdown < 1) return;
+  if (shared->lastmeltdown.tv_sec &&
+      !_timespec_gte(_timespec_sub(_timespec_real(), shared->lastmeltdown),
+                     (struct timespec){1}))
+    return;
   WARNF("(srvr) server is melting down (%,d workers)", shared->workers);
   LOGIFNEG1(kill(0, SIGUSR2));
-  shared->lastmeltdown = nowl();
+  shared->lastmeltdown = _timespec_real();
   ++shared->c.meltdowns;
 }
 
@@ -5767,8 +5776,7 @@ static void HandleReload(void) {
 static void HandleHeartbeat(void) {
   size_t i;
   sigset_t mask;
-  if (nowl() - lastrefresh > 60 * 60) RefreshTime();
-  UpdateCurrentDate(nowl());
+  UpdateCurrentDate(_timespec_real());
   Reindex();
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
@@ -5866,7 +5874,9 @@ static char *ReadMore(void) {
     amtread += got;
   } else if (errno == EINTR) {
     LockInc(&shared->c.readinterrupts);
-    if (killed || ((meltdown || terminated) && nowl() - startread > 1)) {
+    if (killed || ((meltdown || terminated) &&
+                   _timespec_gte(_timespec_sub(_timespec_real(), startread),
+                                 (struct timespec){1}))) {
       return HandlePayloadDrop();
     }
   } else {
@@ -6347,7 +6357,7 @@ static bool HandleMessageActual(void) {
   int rc;
   long reqtime, contime;
   char *p;
-  long double now;
+  struct timespec now;
   if ((rc = ParseHttpMessage(&cpm.msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
@@ -6387,9 +6397,9 @@ static bool HandleMessageActual(void) {
     p = stpcpy(p, "\r\n");
   }
   if (loglatency || LOGGABLE(kLogDebug) || hasonloglatency) {
-    now = nowl();
-    reqtime = (long)((now - startrequest) * 1e6L);
-    contime = (long)((now - startconnection) * 1e6L);
+    now = _timespec_real();
+    reqtime = _timespec_tomicros(_timespec_sub(now, startrequest));
+    contime = _timespec_tomicros(_timespec_sub(now, startconnection));
     if (hasonloglatency) LuaOnLogLatency(reqtime, contime);
     if (loglatency || LOGGABLE(kLogDebug))
       LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
@@ -6431,14 +6441,14 @@ static void HandleMessages(void) {
   size_t got;
   for (once = false;;) {
     InitRequest();
-    startread = nowl();
+    startread = _timespec_real();
     for (;;) {
       if (!cpm.msg.i && amtread) {
-        startrequest = nowl();
+        startrequest = _timespec_real();
         if (HandleMessage()) break;
       }
       if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
-        startrequest = nowl();
+        startrequest = _timespec_real();
         got = rc;
         amtread += got;
         if (amtread) {
@@ -6496,7 +6506,10 @@ static void HandleMessages(void) {
         return;
       }
       if (killed || (terminated && !amtread) ||
-          (meltdown && (!amtread || nowl() - startread > 1))) {
+          (meltdown &&
+           (!amtread ||
+            _timespec_gte(_timespec_sub(_timespec_real(), startread),
+                          (struct timespec){1})))) {
         if (amtread) {
           LockInc(&shared->c.dropped);
           SendServiceUnavailable();
@@ -6754,7 +6767,7 @@ static int HandleConnection(size_t i) {
   clientaddrsize = sizeof(clientaddr);
   if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
                         SOCK_CLOEXEC)) != -1) {
-    startconnection = nowl();
+    startconnection = _timespec_real();
     if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {
       EnterMeltdownMode();
       SendServiceUnavailable();
@@ -6807,8 +6820,9 @@ static int HandleConnection(size_t i) {
       CloseServerFds();
     }
     HandleMessages();
-    DEBUGF("(stat) %s closing after %,ldµs", DescribeClient(),
-           (long)((nowl() - startconnection) * 1e6L));
+    DEBUGF(
+        "(stat) %s closing after %,ldµs", DescribeClient(),
+        _timespec_tomicros(_timespec_sub(_timespec_real(), startconnection)));
     if (!pid) {
       if (hasonworkerstop) {
         CallSimpleHook("OnWorkerStop");
@@ -7087,7 +7101,7 @@ static void HandleShutdown(void) {
 
 // this function coroutines with linenoise
 static int EventLoop(int ms) {
-  long double t;
+  struct timespec t;
   DEBUGF("(repl) event loop");
   while (!terminated) {
     errno = 0;
@@ -7105,7 +7119,9 @@ static int EventLoop(int ms) {
       EnterMeltdownMode();
       lua_repl_unlock();
       meltdown = false;
-    } else if ((t = nowl()) - lastheartbeat > heartbeatint / 1000.) {
+    } else if (_timespec_gte(
+                   _timespec_sub((t = _timespec_real()), lastheartbeat),
+                   heartbeatinterval)) {
       lastheartbeat = t;
       HandleHeartbeat();
     } else if (HandlePoll(ms) == -1) {
@@ -7341,8 +7357,9 @@ void RedBean(int argc, char *argv[]) {
   }
   reader = read;
   writer = WritevAll;
-  gmtoff = GetGmtOffset((lastrefresh = startserver = nowl()));
+  gmtoff = GetGmtOffset((lastrefresh = startserver = _timespec_real()).tv_sec);
   mainpid = getpid();
+  heartbeatinterval.tv_sec = 5;
   CHECK_GT(CLK_TCK, 0);
   CHECK_NE(MAP_FAILED,
            (shared = mmap(NULL, ROUNDUP(sizeof(struct Shared), FRAMESIZE),
@@ -7392,7 +7409,7 @@ void RedBean(int argc, char *argv[]) {
     close(fd);
   }
   ChangeUser();
-  UpdateCurrentDate(nowl());
+  UpdateCurrentDate(_timespec_real());
   CollectGarbage();
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xmalloc(hdrbuf.n);
@@ -7410,12 +7427,12 @@ void RedBean(int argc, char *argv[]) {
     }
   }
 #ifdef STATIC
-  EventLoop(heartbeatint);
+  EventLoop(_timespec_tomillis(heartbeatinterval));
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
-    EventLoop(heartbeatint);
+    EventLoop(_timespec_tomillis(heartbeatinterval));
   } else if (IsWindows()) {
     CHECK_NE(-1, _spawn(WindowsReplThread, 0, &replth));
     EventLoop(100);

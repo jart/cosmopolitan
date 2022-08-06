@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ASSERT_H_
 #define COSMOPOLITAN_LIBC_ASSERT_H_
+#include "libc/bits/likely.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -10,7 +11,7 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
 #define assert(EXPR) ((void)0)
 #else
 #define assert(EXPR) \
-  ((void)((EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
+  ((void)(LIKELY(EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
 #endif
 
 #ifndef __cplusplus

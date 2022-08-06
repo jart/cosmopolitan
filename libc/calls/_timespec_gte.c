@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -19,14 +19,10 @@
 #include "libc/calls/struct/timespec.h"
 
 /**
- * Adds two nanosecond timestamps.
+ * Checks if 𝑥 ≥ 𝑦.
  */
-struct timespec _timespec_add(struct timespec x, struct timespec y) {
-  x.tv_sec += y.tv_sec;
-  x.tv_nsec += y.tv_nsec;
-  if (x.tv_nsec >= 1000000000) {
-    x.tv_nsec -= 1000000000;
-    x.tv_sec += 1;
-  }
-  return x;
+bool _timespec_gte(struct timespec x, struct timespec y) {
+  if (x.tv_sec > y.tv_sec) return true;
+  if (x.tv_sec < y.tv_sec) return false;
+  return x.tv_nsec >= y.tv_nsec;
 }

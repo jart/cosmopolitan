@@ -179,6 +179,15 @@ o//libc/calls/getcwd-xnu.greg.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+# we always want -O2 because:
+#   division is expensive if not optimized
+o/$(MODE)/libc/calls/_timespec_tomillis.o		\
+o/$(MODE)/libc/calls/_timespec_tomicros.o		\
+o/$(MODE)/libc/calls/_timespec_frommillis.o		\
+o/$(MODE)/libc/calls/_timespec_frommicros.o:		\
+		OVERRIDE_CFLAGS +=			\
+			-O2
+
 o/$(MODE)/libc/calls/pledge.o				\
 o/$(MODE)/libc/calls/unveil.o:				\
 		OVERRIDE_CFLAGS +=			\
