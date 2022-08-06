@@ -47,9 +47,13 @@ assert(hex(0x1940efe9d47ae889) == "0x1940efe9d47ae889")
 assert(oct(0x1940efe9d47ae889) == "0145007376472436564211")
 assert(bin(0x1940efe9d47ae889) == "0b0001100101000000111011111110100111010100011110101110100010001001")
 
+assert(EscapeHtml(nil) == nil)
 assert(EscapeHtml("?hello&there<>") == "?hello&amp;there&lt;&gt;")
+
+assert(EscapeParam(nil) == nil)
 assert(EscapeParam("?hello&there<>") == "%3Fhello%26there%3C%3E")
 
+assert(DecodeLatin1(nil) == nil)
 assert(DecodeLatin1("hello\xff\xc0") == "helloÿÀ")
 assert(EncodeLatin1("helloÿÀ") == "hello\xff\xc0")
 
@@ -65,6 +69,7 @@ assert(url.fragment == "frag")
 
 assert(Decimate("\xff\xff\x00\x00\xff\xff\x00\x00\xff\xff\x00\x00") == "\xff\x00\xff\x00\xff\x00")
 
+assert(Underlong(nil) == nil)
 assert(Underlong("hello") == "hello")
 assert(Underlong("hello\xc0\x80") == "hello\x00")
 
@@ -91,6 +96,7 @@ assert(not IsLoopbackIp(0x08080808))
 assert(not IsLoopbackIp(0x0a000000))
 assert(IsLoopbackIp(0x7f000001))
 
+assert(IndentLines(nil) == nil)
 assert(IndentLines("hi\nthere") == " hi\n there")
 assert(IndentLines("hi\nthere\n") == " hi\n there\n")
 assert(IndentLines("hi\nthere\n", 2) == "  hi\n  there\n")

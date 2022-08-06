@@ -267,16 +267,20 @@ int LuaParseParams(lua_State *L) {
   size_t size;
   const char *data;
   struct UrlParams h;
-  data = luaL_checklstring(L, 1, &size);
-  bzero(&h, sizeof(h));
-  if ((m = ParseParams(data, size, &h))) {
-    LuaPushUrlParams(L, &h);
-    free(h.p);
-    free(m);
-    return 1;
+  if (!lua_isnoneornil(L, 1)) {
+    data = luaL_checklstring(L, 1, &size);
+    bzero(&h, sizeof(h));
+    if ((m = ParseParams(data, size, &h))) {
+      LuaPushUrlParams(L, &h);
+      free(h.p);
+      free(m);
+      return 1;
+    } else {
+      luaL_error(L, "out of memory");
+      unreachable;
+    }
   } else {
-    luaL_error(L, "out of memory");
-    unreachable;
+    return lua_gettop(L);
   }
 }
 
@@ -285,17 +289,21 @@ int LuaParseHost(lua_State *L) {
   size_t n;
   struct Url h;
   const char *p;
-  bzero(&h, sizeof(h));
-  p = luaL_checklstring(L, 1, &n);
-  if ((m = ParseHost(p, n, &h))) {
-    lua_newtable(L);
-    LuaPushUrlView(L, &h.host);
-    LuaPushUrlView(L, &h.port);
-    free(m);
-    return 1;
+  if (!lua_isnoneornil(L, 1)) {
+    bzero(&h, sizeof(h));
+    p = luaL_checklstring(L, 1, &n);
+    if ((m = ParseHost(p, n, &h))) {
+      lua_newtable(L);
+      LuaPushUrlView(L, &h.host);
+      LuaPushUrlView(L, &h.port);
+      free(m);
+      return 1;
+    } else {
+      luaL_error(L, "out of memory");
+      unreachable;
+    }
   } else {
-    luaL_error(L, "out of memory");
-    unreachable;
+    return lua_gettop(L);
   }
 }
 
@@ -347,16 +355,20 @@ int LuaCrc32c(lua_State *L) {
 int LuaIndentLines(lua_State *L) {
   void *p;
   size_t n, j;
-  p = luaL_checklstring(L, 1, &n);
-  j = luaL_optinteger(L, 2, 1);
-  if (!(0 <= j && j <= 65535)) {
-    luaL_argerror(L, 2, "not in range 0..65535");
-    unreachable;
+  if (!lua_isnoneornil(L, 1)) {
+    p = luaL_checklstring(L, 1, &n);
+    j = luaL_optinteger(L, 2, 1);
+    if (!(0 <= j && j <= 65535)) {
+      luaL_argerror(L, 2, "not in range 0..65535");
+      unreachable;
+    }
+    p = IndentLines(p, n, &n, j);
+    lua_pushlstring(L, p, n);
+    free(p);
+    return 1;
+  } else {
+    return lua_gettop(L);
   }
-  p = IndentLines(p, n, &n, j);
-  lua_pushlstring(L, p, n);
-  free(p);
-  return 1;
 }
 
 int LuaGetMonospaceWidth(lua_State *L) {
@@ -624,15 +636,19 @@ static dontinline int LuaCoderImpl(lua_State *L,
                                    char *C(const char *, size_t, size_t *)) {
   void *p;
   size_t n;
-  p = luaL_checklstring(L, 1, &n);
-  if ((p = C(p, n, &n))) {
-    lua_pushlstring(L, p, n);
-    free(p);
+  if (!lua_isnoneornil(L, 1)) {
+    p = luaL_checklstring(L, 1, &n);
+    if ((p = C(p, n, &n))) {
+      lua_pushlstring(L, p, n);
+      free(p);
+    } else {
+      luaL_error(L, "out of memory");
+      unreachable;
+    }
+    return 1;
   } else {
-    luaL_error(L, "out of memory");
-    unreachable;
+    return lua_gettop(L);
   }
-  return 1;
 }
 
 static dontinline int LuaCoder(lua_State *L,
@@ -715,11 +731,15 @@ static dontinline int LuaHasherImpl(lua_State *L, size_t k,
   void *p;
   size_t n;
   uint8_t d[64];
-  p = luaL_checklstring(L, 1, &n);
-  H(p, n, d);
-  lua_pushlstring(L, (void *)d, k);
-  mbedtls_platform_zeroize(d, sizeof(d));
-  return 1;
+  if (!lua_isnoneornil(L, 1)) {
+    p = luaL_checklstring(L, 1, &n);
+    H(p, n, d);
+    lua_pushlstring(L, (void *)d, k);
+    mbedtls_platform_zeroize(d, sizeof(d));
+    return 1;
+  } else {
+    return lua_gettop(L);
+  }
 }
 
 static dontinline int LuaHasher(lua_State *L, size_t k,

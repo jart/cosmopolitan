@@ -31,9 +31,11 @@ end
 
 -- this intercepts all requests if it's defined
 function OnHttpRequest()
-   Log(kLogInfo, "client is running %s and reports %s" % {
-          finger.GetSynFingerOs(finger.FingerSyn(syn)),
-          VisualizeControlCodes(GetHeader('User-Agent'))})
+   if GetHeader('User-Agent') then
+      Log(kLogInfo, "client is running %s and reports %s" % {
+             finger.GetSynFingerOs(finger.FingerSyn(syn)),
+             VisualizeControlCodes(GetHeader('User-Agent'))})
+   end
    if HasParam('magic') then
       Write('<p>\r\n')
       Write('OnHttpRequest() has intercepted your request<br>\r\n')

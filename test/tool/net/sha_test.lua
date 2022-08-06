@@ -22,6 +22,7 @@
 unix.pledge('stdio')
 
 -- SHA-1
+assert(Sha1(nil) == nil)
 assert(Sha1("abc") == "\xa9\x99\x3e\x36\x47\x06\x81\x6a\xba\x3e\x25\x71\x78\x50\xc2\x6c\x9c\xd0\xd8\x9d")
 assert(
     Sha1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") ==
@@ -57,6 +58,7 @@ assert(
 )
 
 -- SHA-224
+assert(Sha224(nil) == nil)
 assert(
     Sha224("abc") ==
     "\x23\x09\x7d\x22\x34\x05\xd8\x22\x86\x42\xa4\x77\xbd\xa2" ..
@@ -106,6 +108,7 @@ assert(
 )
 
 -- SHA-256
+assert(Sha256(nil) == nil)
 assert(
     Sha256("abc") ==
     "\xba\x78\x16\xbf\x8f\x01\xcf\xea\x41\x41\x40\xde\x5d\xae\x22\x23" ..
@@ -150,6 +153,7 @@ assert(
 )
 
 -- SHA-384
+assert(Sha384(nil) == nil)
 assert(
     Sha384("abc") ==
     "\xcb\x00\x75\x3f\x45\xa3\x5e\x8b\xb5\xa0\x3d\x69\x9a\xc6\x50\x07\x27\x2c\x32\xab\x0e\xde\xd1\x63" ..
@@ -203,6 +207,7 @@ assert(
 )
 
 -- SHA-512
+assert(Sha512(nil) == nil)
 assert(
     Sha512("abc") ==
     "\xdd\xaf\x35\xa1\x93\x61\x7a\xba\xcc\x41\x73\x49\xae\x20\x41\x31\x12\xe6\xfa\x4e\x89\xa9\x7e\xa2" ..
