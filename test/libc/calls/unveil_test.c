@@ -97,6 +97,8 @@ int extract(const char *from, const char *to, int mode) {
 
 TEST(unveil, api_differences) {
   SPAWN(fork);
+  ASSERT_SYS(0, 0, mkdir("foo", 0755));
+  ASSERT_SYS(0, 0, unveil("foo", "r"));
   if (IsOpenbsd()) {
     // openbsd imposes restrictions immediately
     ASSERT_SYS(ENOENT, -1, open("/", O_RDONLY | O_DIRECTORY));

@@ -75,6 +75,8 @@ int creat(const char *, uint32_t);
 int dup(int);
 int dup2(int, int);
 int dup3(int, int, int);
+int eaccess(const char *, int);
+int euidaccess(const char *, int);
 int execl(const char *, const char *, ...) nullterminated();
 int execle(const char *, const char *, ...) nullterminated((1));
 int execlp(const char *, const char *, ...) nullterminated();

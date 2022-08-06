@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,42 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/unicode/locale.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/rand/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-typedef void *iconv_t;
-
-iconv_t iconv_open(const char *to, const char *from) {
-  return NULL;
-}
-
-int iconv_close(iconv_t cd) {
-  return -1;
-}
-
-size_t iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
-  return -1;
+/**
+ * Creates temporary directory.
+ *
+ * @param template must end with XXXXXX which is replaced with
+ *     nondeterministic base36 random data
+ * @return pointer to template on success, or NULL w/ errno
+ * @raise EINVAL if template didn't end with XXXXXX
+ */
+char *mkdtemp(char *template) {
+  int i, j, n, x;
+  if ((n = strlen(template)) >= 6 && !memcmp(template + n - 6, "XXXXXX", 6)) {
+    x = rand64();
+    for (i = 0; i < 10; ++i) {
+      for (j = 0; j < 6; ++j) {
+        template[n - 6 + j] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % 36];
+        x /= 36;
+      }
+      if (!mkdir(template, 0700)) {
+        return template;
+      }
+      if (errno != EEXIST) {
+        break;
+      }
+    }
+    for (j = 0; j < 6; ++j) {
+      template[n - 6 + j] = 'X';
+    }
+  } else {
+    einval();
+  }
+  return 0;
 }

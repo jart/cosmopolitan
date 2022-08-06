@@ -4,4 +4,6 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "third_party/getopt/getopt.h"
 #endif

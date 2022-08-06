@@ -3,6 +3,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
+#include "libc/unicode/locale.h"
 
 #define CTHREAD_CREATE_DETACHED 1
 #define CTHREAD_CREATE_JOINABLE 0
@@ -28,7 +29,7 @@ struct cthread_descriptor_t {
   struct cthread_descriptor_t *self;  /* 0x00 */
   struct FtraceTls ftrace;            /* 0x08 */
   void *garbages;                     /* 0x10 */
-  int64_t __pad1;                     /* 0x20 */
+  locale_t locale;                    /* 0x20 */
   int64_t __pad2;                     /* 0x28 */
   struct cthread_descriptor_t *self2; /* 0x30 */
   int32_t tid;                        /* 0x38 */

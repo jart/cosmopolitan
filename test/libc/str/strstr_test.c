@@ -30,8 +30,19 @@
 #define MAKESTRING(NAME, VALUE) \
   char *NAME = strcpy(malloc(sizeof(VALUE) + 16), VALUE)
 
-char *strstr_kmp(const char *haystak, const char *needle) {
-  return memmem(haystak, strlen(haystak), needle, strlen(needle));
+char *strstr_naive(const char *haystack, const char *needle) {
+  size_t i;
+  unsigned k, m;
+  if (haystack == needle || !*needle) return haystack;
+  for (;;) {
+    for (i = 0;; ++i) {
+      if (!needle[i]) return (/*unconst*/ char *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+    }
+    if (!*haystack++) break;
+  }
+  return 0;
 }
 
 TEST(strstr, test_emptyString_isFoundAtBeginning) {
@@ -84,7 +95,28 @@ TEST(strstr, test) {
   ASSERT_STREQ("x", strstr("x", "x"));
 }
 
+/*
+ *     strstr naive        l:   103,057c    33,287ns   m:    47,035c    15,192ns
+ *     strstr              l:     3,186c     1,029ns   m:     3,218c     1,039ns
+ *     strstr torture 1    l:        27c         9ns   m:        61c        20ns
+ *     strstr torture 2    l:     2,322c       750ns   m:     2,362c       763ns
+ *     strstr torture 4    l:     2,407c       777ns   m:     2,448c       791ns
+ *     strstr torture 8    l:     2,803c       905ns   m:     2,862c       924ns
+ *     strstr torture 16   l:     4,559c     1,473ns   m:     3,614c     1,167ns
+ *     strstr torture 32   l:     5,324c     1,720ns   m:     5,577c     1,801ns
+ *
+ *     strcasestr naive    l:   129,908c    41,959ns   m:   155,420c    50,200ns
+ *     strcasestr          l:    33,464c    10,809ns   m:    31,636c    10,218ns
+ *     strcasestr tort 1   l:        38c        12ns   m:        69c        22ns
+ *     strcasestr tort 2   l:     2,544c       822ns   m:     2,580c       833ns
+ *     strcasestr tort 4   l:     2,745c       887ns   m:     2,767c       894ns
+ *     strcasestr tort 8   l:     4,198c     1,356ns   m:     4,216c     1,362ns
+ *     strcasestr tort 16  l:     7,402c     2,391ns   m:     7,487c     2,418ns
+ *     strcasestr tort 32  l:    13,772c     4,448ns   m:    12,945c     4,181ns
+ */
 BENCH(strstr, bench) {
+  EZBENCH2("strstr naive", donothing,
+           EXPROPRIATE(strstr_naive(kHyperion, "THE END")));
   EZBENCH2("strstr", donothing, EXPROPRIATE(strstr(kHyperion, "THE END")));
   EZBENCH2("strstr torture 1", donothing,
            EXPROPRIATE(strstr(

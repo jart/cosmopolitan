@@ -1,5 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SELECT_H_
 #define COSMOPOLITAN_LIBC_SOCK_SELECT_H_
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/str/str.h"
 
@@ -18,6 +20,8 @@ typedef struct fd_set {
 #define FD_ZERO(SET)      bzero((SET)->fds_bits, sizeof((SET)->fds_bits))
 
 int select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
+            const sigset_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

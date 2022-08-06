@@ -32,6 +32,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  *     against pathological cases, and therefore shouldn't be used on
  *     untrustworthy data
  * @asyncsignalsafe
+ * @see strcasestr()
  * @see memmem()
  */
 noasan char *strstr(const char *haystack, const char *needle) {

@@ -42,6 +42,7 @@ int feof(FILE *) paramsnonnull();
 int getc(FILE *) paramsnonnull();
 int putc(int, FILE *) paramsnonnull();
 int fflush(FILE *);
+int fpurge(FILE *);
 int fgetc(FILE *) paramsnonnull();
 char *fgetln(FILE *, size_t *) paramsnonnull((1));
 int ungetc(int, FILE *) paramsnonnull();

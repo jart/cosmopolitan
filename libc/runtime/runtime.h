@@ -65,7 +65,7 @@ void abort(void) wontreturn noinstrument;
 int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;
 int atexit(void (*)(void)) libcesque;
-char *getenv(const char *) paramsnonnull() nosideeffect libcesque;
+char *getenv(const char *) nosideeffect libcesque;
 int putenv(char *) paramsnonnull();
 int setenv(const char *, const char *, int) paramsnonnull();
 int unsetenv(const char *);

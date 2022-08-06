@@ -10,7 +10,6 @@ extern const uint32_t BS1;
 extern const uint32_t BS2;
 extern const uint32_t BSDLY;
 extern const long BUSY;
-extern const long CANBSIZ;
 extern const uint32_t CBAUD;
 extern const uint32_t CBAUDEX;
 extern const uint32_t CIBAUD;
@@ -228,7 +227,6 @@ COSMOPOLITAN_C_END_
 #define FF2    SYMBOLIC(FF2)
 
 #define BUSY             SYMBOLIC(BUSY)
-#define CANBSIZ          SYMBOLIC(CANBSIZ)
 #define CBAUD            SYMBOLIC(CBAUD)
 #define CBAUDEX          SYMBOLIC(CBAUDEX)
 #define CIBAUD           SYMBOLIC(CIBAUD)

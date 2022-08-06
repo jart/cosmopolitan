@@ -17,10 +17,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sockaddr6.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/sock/select.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/ipproto.h"

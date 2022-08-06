@@ -7,6 +7,7 @@
 #include "libc/sysv/consts/mlock.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prot.h"
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #include "libc/sysv/consts/madv.h"
 #endif

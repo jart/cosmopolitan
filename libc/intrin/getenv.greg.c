@@ -62,6 +62,7 @@ forceinline char *GetEnv(const char *s, int xlat(int)) {
  */
 char *getenv(const char *s) {
   char *r;
+  if (!s) return 0;
   if (!IsWindows()) {
     r = GetEnv(s, Identity);
   } else {

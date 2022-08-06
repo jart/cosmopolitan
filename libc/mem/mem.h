@@ -30,7 +30,7 @@ bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
 int malloc_trim(size_t);
 size_t bulk_free(void **, size_t);
-size_t malloc_usable_size(const void *);
+size_t malloc_usable_size(void *);
 void **independent_calloc(size_t, size_t, void **);
 void **independent_comalloc(size_t, size_t *, void **);
 

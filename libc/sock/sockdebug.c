@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sockaddr6.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr6.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"

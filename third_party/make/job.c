@@ -36,6 +36,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/bits/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \
@@ -1748,12 +1750,19 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         Unveil ("/dev/stdout", "rw");
         Unveil ("/dev/stderr", "rw");
 
-        /* unveil cosmopolitan specific */
+        /* unveil cosmopolitan build specific */
         Unveil ("o/tmp", "rwcx");
         Unveil ("libc/integral", "r");
         Unveil ("libc/disclaimer.inc", "r");
         Unveil ("build/bootstrap", "rx");
         Unveil ("o/third_party/gcc", "rx");
+
+        /* unveil cosmopolitan test specific */
+        Unveil ("/etc/hosts", "r");
+        Unveil (xjoinpaths (firstnonnull (getenv ("HOME"),
+                                          "."),
+                            ".runit.psk"),
+                "r");
 
         /* unveil target output directory */
         if (strlen(c->file->name) < PATH_MAX)
@@ -1767,7 +1776,11 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
         /* unveil target prerequisites */
         for (d = c->file->deps; d; d = d->next)
-          Unveil (d->file->name, "rx");
+          {
+            Unveil (d->file->name, "rx");
+            if (endswith (d->file->name, ".com"))
+              Unveil (xstrcat (d->file->name, ".dbg"), "rx");
+          }
 
         /* unveil explicit .UNVEIL entries */
         if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE(".UNVEIL"),

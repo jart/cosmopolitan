@@ -3,4 +3,6 @@
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
 #endif

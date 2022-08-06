@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_STRUCT_IP_MREQ_H_
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_IP_MREQ_H_
+#include "libc/sock/struct/sockaddr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/stdio_ext.h"
+#include "libc/stdio/stdio.h"
 
 /**
  * Discards contents of stream buffer.
  */
-void __fpurge(FILE *f) {
+int fpurge(FILE *f) {
   f->beg = f->end = 0;
+  return 0;
 }

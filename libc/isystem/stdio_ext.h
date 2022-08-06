@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_STDIO_EXT_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_STDIO_EXT_H_
+#include "libc/stdio/stdio_ext.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_STDIO_EXT_H_ */
