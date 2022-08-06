@@ -275,6 +275,7 @@
 /* #define DEBUG */
 #define INFMOD          /* tell inflate.h to include code to be compiled */
 #include "third_party/unzip/inflate.h"
+#include "third_party/unzip/globals.h"
 
 
 /* marker for "unused" huft code, and corresponding check macro */

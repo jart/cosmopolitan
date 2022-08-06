@@ -10,6 +10,20 @@
 #ifndef _LIBCPP_UNORDERED_SET
 #define _LIBCPP_UNORDERED_SET
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__hash_table"
+#include "third_party/libcxx/__node_handle"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/version"
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
 
     unordered_set synopsis
@@ -359,20 +373,6 @@ template <class Value, class Hash, class Pred, class Alloc>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__hash_table"
-#include "third_party/libcxx/__node_handle"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/version"
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Value, class _Hash, class _Pred, class _Alloc>
 class unordered_multiset;

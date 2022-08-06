@@ -11,6 +11,26 @@
 #ifndef _LIBCPP_VARIANT
 #define _LIBCPP_VARIANT
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__tuple"
+#include "third_party/libcxx/array"
+#include "third_party/libcxx/exception"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/new"
+#include "third_party/libcxx/tuple"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/utility"
+#include "third_party/libcxx/limits"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
 /*
    variant synopsis
 
@@ -196,26 +216,6 @@ namespace std {
 } // namespace std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__tuple"
-#include "third_party/libcxx/array"
-#include "third_party/libcxx/exception"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/new"
-#include "third_party/libcxx/tuple"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/utility"
-#include "third_party/libcxx/limits"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
 
 namespace std { // explicitly not using versioning namespace
 

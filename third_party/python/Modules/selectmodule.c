@@ -13,6 +13,7 @@
 #include "libc/sock/epoll.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/epoll.h"
 #include "libc/sysv/consts/poll.h"
 #include "third_party/python/Include/abstract.h"

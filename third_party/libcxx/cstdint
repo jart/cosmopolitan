@@ -10,6 +10,16 @@
 #ifndef _LIBCPP_CSTDINT
 #define _LIBCPP_CSTDINT
 
+#include "libc/inttypes.h"
+#include "libc/calls/weirdtypes.h"
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     cstdint synopsis
 
@@ -139,16 +149,6 @@ Types:
 
 }  // std
 */
-
-#include "libc/inttypes.h"
-#include "libc/calls/weirdtypes.h"
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 using::int8_t;
 using::int16_t;

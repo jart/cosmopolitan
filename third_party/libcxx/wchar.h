@@ -11,6 +11,11 @@
 #define _LIBCPP_WCHAR_H
 #include "libc/str/str.h"
 #include "libc/time/time.h"
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
 
 /*
     wchar.h synopsis
@@ -98,12 +103,6 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
                  mbstate_t* restrict ps);
 
 */
-
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 #define __CORRECT_ISO_CPP_WCHAR_H_PROTO

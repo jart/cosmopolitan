@@ -36,6 +36,7 @@
 #define __EXTRACT_C     /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "third_party/unzip/unzip.h"
+#include "third_party/unzip/globals.h"
 #include "third_party/unzip/crc32.h"
 #include "libc/alg/alg.h"
 #include "libc/log/log.h"
@@ -1346,6 +1347,7 @@ static int extract_or_test_entrylist(__G__ numchunk,
         }
 
 #if CRYPT
+int decrypt(const char *);
         if (G.pInfo->encrypted &&
             (error = decrypt(__G__ uO.pwdarg)) != PK_COOL) {
             if (error == PK_WARN) {

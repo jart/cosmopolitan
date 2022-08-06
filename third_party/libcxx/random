@@ -10,6 +10,30 @@
 #ifndef _LIBCPP_RANDOM
 #define _LIBCPP_RANDOM
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/cmath"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/limits"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/numeric"
+#include "third_party/libcxx/vector"
+#include "third_party/libcxx/string"
+#include "third_party/libcxx/istream"
+#include "third_party/libcxx/ostream"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     random synopsis
 
@@ -1630,30 +1654,6 @@ class piecewise_linear_distribution
 
 } // std
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/cstdint"
-#include "third_party/libcxx/cmath"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/limits"
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/numeric"
-#include "third_party/libcxx/vector"
-#include "third_party/libcxx/string"
-#include "third_party/libcxx/istream"
-#include "third_party/libcxx/ostream"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 // __is_seed_sequence
 

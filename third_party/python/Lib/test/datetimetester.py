@@ -4720,7 +4720,7 @@ def pairs(iterable):
     return zip(a, b)
 
 class ZoneInfo(tzinfo):
-    zoneroot = '/usr/share/zoneinfo'
+    zoneroot = '/zip/usr/share/zoneinfo'
     def __init__(self, ut, ti):
         """
 

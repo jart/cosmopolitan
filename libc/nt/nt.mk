@@ -143,7 +143,8 @@ o/libc/nt/ntdllimport.inc:				\
 		libc/nt/ntdllimport.h			\
 		libc/macros.internal.h			\
 		libc/macros.internal.inc		\
-		libc/macros-cpp.internal.inc
+		libc/macros-cpp.internal.inc		\
+		libc/intrin/asancodes.h
 
 #───────────────────────────────────────────────────────────────────────────────
 
@@ -368,11 +369,17 @@ $(LIBC_NT_PSAPI_A).pkg:					\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-$(LIBC_NT_OBJS): o/libc/nt/codegen.inc
+$(LIBC_NT_OBJS):					\
+		o/libc/nt/codegen.inc
 
 o/libc/nt/codegen.inc:					\
 		ape/idata.internal.h			\
-		ape/macros.internal.h
+		ape/macros.internal.h			\
+		ape/relocations.h			\
+		libc/macros.internal.h			\
+		libc/macros.internal.inc		\
+		libc/macros-cpp.internal.inc		\
+		libc/intrin/asancodes.h
 
 .PHONY:		o/$(MODE)/libc/nt
 o/$(MODE)/libc/nt:					\

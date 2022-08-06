@@ -22,6 +22,7 @@
 // standard's wording:
 // https://github.com/rui314/chibicc/wiki/cpp.algo.pdf
 
+#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/arena.h"
 #include "libc/stdio/stdio.h"
@@ -639,7 +640,7 @@ char *search_include_paths(char *filename) {
   if (cached) return cached;
   // Search a file from the include paths.
   for (int i = 0; i < include_paths.len; i++) {
-    char *path = xasprintf("%s/%s", include_paths.data[i], filename);
+    char *path = xjoinpaths(include_paths.data[i], filename);
     if (!fileexists(path)) continue;
     hashmap_put(&cache, filename, path);
     include_next_idx = i + 1;

@@ -5,7 +5,7 @@ PKGS += LIBC
 
 LIBC_HDRS = $(filter %.h,$(LIBC_FILES))
 LIBC_INCS = $(filter %.inc,$(LIBC_FILES))
-LIBC_FILES := $(wildcard libc/*)
+LIBC_FILES := $(wildcard libc/*) $(wildcard libc/isystem/*)
 LIBC_CHECKS = $(LIBC_HDRS:%=o/$(MODE)/%.ok)
 
 .PHONY:		o/$(MODE)/libc

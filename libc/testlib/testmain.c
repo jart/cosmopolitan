@@ -42,6 +42,7 @@
 #include "libc/runtime/symbols.internal.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"

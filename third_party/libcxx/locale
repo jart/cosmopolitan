@@ -10,6 +10,41 @@
 #ifndef _LIBCPP_LOCALE
 #define _LIBCPP_LOCALE
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__locale"
+#include "third_party/libcxx/__debug"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/ios"
+#include "third_party/libcxx/streambuf"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/limits"
+#include "third_party/libcxx/version"
+#include "third_party/libcxx/cstdarg"
+#include "third_party/libcxx/cstdlib"
+#include "third_party/libcxx/ctime"
+#include "third_party/libcxx/cstdio"
+#ifdef _LIBCPP_HAS_CATOPEN
+# include "libc/unicode/locale.h"
+# include "third_party/libcxx/nl_types.h"
+#endif
+
+#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
+# include "third_party/libcxx/__bsd_locale_defaults.h"
+#else
+#include "third_party/libcxx/__bsd_locale_fallbacks.h"
+#endif
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     locale synopsis
 
@@ -176,47 +211,6 @@ template <class charT> class messages_byname;
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__locale"
-#include "third_party/libcxx/__debug"
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/ios"
-#include "third_party/libcxx/streambuf"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/limits"
-#include "third_party/libcxx/version"
-#ifndef __APPLE__
-#include "third_party/libcxx/cstdarg"
-#endif
-#include "third_party/libcxx/cstdlib"
-#include "third_party/libcxx/ctime"
-#include "third_party/libcxx/cstdio"
-#ifdef _LIBCPP_HAS_CATOPEN
-#include "libc/unicode/locale.h"
-#include "third_party/libcxx/nl_types.h"
-#endif
-
-#ifdef __APPLE__
-#include "third_party/libcxx/Availability.h"
-#endif
-
-#ifdef _LIBCPP_LOCALE__L_EXTENSIONS
-#include "third_party/libcxx/__bsd_locale_defaults.h"
-#else
-#include "third_party/libcxx/__bsd_locale_fallbacks.h"
-#endif
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__COSMOPOLITAN__)
 #  define _LIBCPP_GET_C_LOCALE 0

@@ -10,6 +10,16 @@
 #ifndef _LIBCPP_EXCEPTION
 #define _LIBCPP_EXCEPTION
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/cstdlib"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
 /*
     exception synopsis
 
@@ -75,16 +85,6 @@ template <class E> void rethrow_if_nested(const E& e);
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/cstdlib"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
 
 namespace std  // purposefully not using versioning namespace
 {

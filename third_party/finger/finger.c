@@ -40,6 +40,7 @@
 #include "libc/nt/struct/msg.h"
 #include "libc/runtime/utmp.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/time/time.h"
 #include "third_party/finger/finger.h"

@@ -33,6 +33,7 @@
 #include "libc/log/log.h"
 #include "libc/time/time.h"
 #include "third_party/unzip/unzip.h"
+#include "third_party/unzip/globals.h"
 
 #ifdef USE_ICONV_MAPPING
 #endif /* USE_ICONV_MAPPING */

@@ -21,6 +21,7 @@
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/termios.h"
 

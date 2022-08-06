@@ -14,6 +14,9 @@ struct msghdr {            /* Linux+NT ABI */
   uint32_t msg_flags;      /* MSG_XXX */
 };
 
+ssize_t recvmsg(int, struct msghdr *, int);
+ssize_t sendmsg(int, const struct msghdr *, int);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_MSGHDR_H_ */

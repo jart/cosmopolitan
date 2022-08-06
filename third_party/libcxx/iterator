@@ -10,6 +10,22 @@
 #ifndef _LIBCPP_ITERATOR
 #define _LIBCPP_ITERATOR
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/iosfwd" // for forward declarations of vector and string.
+#include "third_party/libcxx/__functional_base"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/version"
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     iterator synopsis
 
@@ -415,25 +431,6 @@ template <class E> constexpr const E* data(initializer_list<E> il) noexcept;    
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/iosfwd" // for forward declarations of vector and string.
-#include "third_party/libcxx/__functional_base"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/version"
-#ifdef __APPLE__
-#include "third_party/libcxx/Availability.h"
-#endif
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 struct _LIBCPP_TEMPLATE_VIS input_iterator_tag {};
 struct _LIBCPP_TEMPLATE_VIS output_iterator_tag {};

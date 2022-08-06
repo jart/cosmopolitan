@@ -7,43 +7,62 @@ THIRD_PARTY_LIBCXX_ARTIFACTS += THIRD_PARTY_LIBCXX_A
 THIRD_PARTY_LIBCXX = $(THIRD_PARTY_LIBCXX_A_DEPS) $(THIRD_PARTY_LIBCXX_A)
 THIRD_PARTY_LIBCXX_A = o/$(MODE)/third_party/libcxx/libcxx.a
 
+#	third_party/libcxx/__functional_base_03			\
+
 THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/__bit_reference			\
+	third_party/libcxx/__bsd_locale_fallbacks.h		\
 	third_party/libcxx/__config				\
 	third_party/libcxx/__debug				\
+	third_party/libcxx/__errc				\
 	third_party/libcxx/__functional_base			\
 	third_party/libcxx/__hash_table				\
+	third_party/libcxx/__locale				\
 	third_party/libcxx/__mutex_base				\
 	third_party/libcxx/__node_handle			\
 	third_party/libcxx/__nullptr				\
 	third_party/libcxx/__split_buffer			\
 	third_party/libcxx/__sso_allocator			\
 	third_party/libcxx/__std_stream				\
+	third_party/libcxx/__string				\
 	third_party/libcxx/__threading_support			\
+	third_party/libcxx/__tree				\
 	third_party/libcxx/__tuple				\
 	third_party/libcxx/__undef_macros			\
 	third_party/libcxx/algorithm				\
 	third_party/libcxx/array				\
+	third_party/libcxx/atomic				\
 	third_party/libcxx/atomic_support.hh			\
 	third_party/libcxx/bit					\
 	third_party/libcxx/bitset				\
 	third_party/libcxx/cassert				\
+	third_party/libcxx/cctype				\
 	third_party/libcxx/cerrno				\
+	third_party/libcxx/charconv				\
 	third_party/libcxx/chrono				\
 	third_party/libcxx/climits				\
+	third_party/libcxx/clocale				\
 	third_party/libcxx/cmath				\
 	third_party/libcxx/codecvt				\
 	third_party/libcxx/condition_variable			\
 	third_party/libcxx/config_elast.h			\
+	third_party/libcxx/cstdarg				\
 	third_party/libcxx/cstddef				\
 	third_party/libcxx/cstdint				\
 	third_party/libcxx/cstdio				\
 	third_party/libcxx/cstdlib				\
 	third_party/libcxx/cstring				\
+	third_party/libcxx/ctime				\
+	third_party/libcxx/ctype.h				\
+	third_party/libcxx/cwchar				\
+	third_party/libcxx/cwctype				\
 	third_party/libcxx/deque				\
+	third_party/libcxx/errno.h				\
 	third_party/libcxx/exception				\
 	third_party/libcxx/exception_fallback.hh		\
 	third_party/libcxx/exception_pointer_unimplemented.hh	\
+	third_party/libcxx/experimental/__config		\
+	third_party/libcxx/functional				\
 	third_party/libcxx/include/atomic_support.hh		\
 	third_party/libcxx/include/config_elast.hh		\
 	third_party/libcxx/initializer_list			\
@@ -51,9 +70,14 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/iosfwd				\
 	third_party/libcxx/iostream				\
 	third_party/libcxx/istream				\
+	third_party/libcxx/iterator				\
 	third_party/libcxx/limits				\
+	third_party/libcxx/limits.h				\
 	third_party/libcxx/list					\
+	third_party/libcxx/locale				\
+	third_party/libcxx/locale.h				\
 	third_party/libcxx/map					\
+	third_party/libcxx/math.h				\
 	third_party/libcxx/memory				\
 	third_party/libcxx/mutex				\
 	third_party/libcxx/new					\
@@ -68,12 +92,17 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/refstring.hh				\
 	third_party/libcxx/set					\
 	third_party/libcxx/sstream				\
+	third_party/libcxx/stack				\
 	third_party/libcxx/stdexcept				\
 	third_party/libcxx/stdexcept_default.hh			\
+	third_party/libcxx/stdio.h				\
+	third_party/libcxx/stdlib.h				\
 	third_party/libcxx/streambuf				\
 	third_party/libcxx/string				\
+	third_party/libcxx/string.h				\
 	third_party/libcxx/string_view				\
 	third_party/libcxx/system_error				\
+	third_party/libcxx/thread				\
 	third_party/libcxx/tuple				\
 	third_party/libcxx/type_traits				\
 	third_party/libcxx/typeinfo				\
@@ -83,7 +112,8 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/variant				\
 	third_party/libcxx/vector				\
 	third_party/libcxx/version				\
-	third_party/libcxx/wchar.h
+	third_party/libcxx/wchar.h				\
+	third_party/libcxx/wctype.h
 
 THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/algorithm.cc				\

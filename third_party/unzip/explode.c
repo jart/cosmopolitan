@@ -117,6 +117,7 @@
 #define __EXPLODE_C     /* identifies this source module */
 #define UNZIP_INTERNAL
 #include "third_party/unzip/unzip.h"      /* must supply slide[] (uch) array and NEXTBYTE macro */
+#include "third_party/unzip/globals.h"
 
 #ifndef WSIZE
 #  define WSIZE 0x8000  /* window size--must be a power of two, and */

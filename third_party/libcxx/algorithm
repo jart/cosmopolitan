@@ -10,6 +10,34 @@
 #ifndef _LIBCPP_ALGORITHM
 #define _LIBCPP_ALGORITHM
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/utility" // needed to provide swap_ranges.
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/bit"
+#include "third_party/libcxx/version"
+
+#if defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS) && _LIBCPP_STD_VER >= 17
+# include "third_party/libcxx/__pstl_algorithm"
+#endif
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     algorithm synopsis
 
@@ -634,30 +662,6 @@ template <class BidirectionalIterator, class Compare>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/cstring"
-#include "third_party/libcxx/utility" // needed to provide swap_ranges.
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/bit"
-#include "third_party/libcxx/version"
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 // I'd like to replace these with _VSTD::equal_to<void>, but can't because:
 //   * That only works with C++14 and later, and
@@ -5677,9 +5681,5 @@ prev_permutation(_BidirectionalIterator __first, _BidirectionalIterator __last)
 _LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
-
-#if defined(_LIBCPP_HAS_PARALLEL_ALGORITHMS) && _LIBCPP_STD_VER >= 17
-#   include "third_party/libcxx/__pstl_algorithm"
-#endif
 
 #endif  // _LIBCPP_ALGORITHM

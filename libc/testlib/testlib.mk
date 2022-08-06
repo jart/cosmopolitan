@@ -127,6 +127,10 @@ $(LIBC_TESTLIB_A).pkg:						\
 		$(LIBC_TESTLIB_A_OBJS)				\
 		$(foreach x,$(LIBC_TESTLIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/libc/testlib/blocktronics.o: libc/testlib/blocktronics.txt
+o/$(MODE)/libc/testlib/hyperion.o: libc/testlib/hyperion.txt
+o/$(MODE)/libc/testlib/moby.o: libc/testlib/moby.txt
+
 #───────────────────────────────────────────────────────────────────────────────
 
 LIBC_TESTLIB_ARTIFACTS += LIBC_TESTLIB_RUNNER_A

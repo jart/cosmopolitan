@@ -24,6 +24,7 @@
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"

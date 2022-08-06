@@ -10,6 +10,24 @@
 #ifndef _LIBCPP_OPTIONAL
 #define _LIBCPP_OPTIONAL
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__debug"
+#include "third_party/libcxx/__functional_base"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/new"
+#include "third_party/libcxx/stdexcept"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/utility"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
 /*
     optional synopsis
 
@@ -145,24 +163,6 @@ template<class T>
 } // namespace std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__debug"
-#include "third_party/libcxx/__functional_base"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/new"
-#include "third_party/libcxx/stdexcept"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/utility"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
 
 
 namespace std  // purposefully not using versioning namespace

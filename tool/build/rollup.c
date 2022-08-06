@@ -102,6 +102,7 @@ void Visit(const char *path) {
   if (endswith(path, "/internal.h")) return;
   if (endswith(path, ".internal.inc")) return;
   if (endswith(path, "/internal.inc")) return;
+  if (startswith(path, "libc/isystem/")) return;
   isheader = endswith(path, ".h");
   if (isheader && isinterned(visited, path)) return;
   appends(&output, "\n\f\n/*!BEGIN ");

@@ -1663,8 +1663,8 @@ THIRD_PARTY_PYTHON_PYTEST_A_DATA =										\
 	third_party/python/Lib/test/formatfloat_testcases.txt							\
 	third_party/python/Lib/test/talos-2019-0758.pem								\
 	third_party/python/Lib/test/badcert.pem									\
-	third_party/python/Lib/test/bad_coding.py									\
-	third_party/python/Lib/test/bad_coding2.py									\
+	third_party/python/Lib/test/bad_coding.py								\
+	third_party/python/Lib/test/bad_coding2.py								\
 	third_party/python/Lib/test/cmath_testcases.txt								\
 	third_party/python/Lib/test/pstats.pck									\
 	third_party/python/Lib/test/test_importlib/namespace_pkgs/project2/parent/child/two.py			\
@@ -1837,12 +1837,8 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_genexps.py				\
 	third_party/python/Lib/test/test_getargs2.py				\
 	third_party/python/Lib/test/test_getopt.py				\
-	third_party/python/Lib/test/test_getpass.py				\
-	third_party/python/Lib/test/test_gettext.py				\
-	third_party/python/Lib/test/test_glob.py				\
 	third_party/python/Lib/test/test_global.py				\
 	third_party/python/Lib/test/test_grammar.py				\
-	third_party/python/Lib/test/test_grp.py					\
 	third_party/python/Lib/test/test_gzip.py				\
 	third_party/python/Lib/test/test_hash.py				\
 	third_party/python/Lib/test/test_hashlib.py				\
@@ -1864,14 +1860,11 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_itertools.py				\
 	third_party/python/Lib/test/test_json/__main__.py			\
 	third_party/python/Lib/test/test_kdf.py					\
-	third_party/python/Lib/test/test_keyword.py				\
 	third_party/python/Lib/test/test_keywordonlyarg.py			\
 	third_party/python/Lib/test/test_list.py				\
 	third_party/python/Lib/test/test_listcomps.py				\
-	third_party/python/Lib/test/test_logging.py				\
 	third_party/python/Lib/test/test_long.py				\
 	third_party/python/Lib/test/test_longexp.py				\
-	third_party/python/Lib/test/test_mailbox.py				\
 	third_party/python/Lib/test/test_marshal.py				\
 	third_party/python/Lib/test/test_memoryio.py				\
 	third_party/python/Lib/test/test_memoryview.py				\
@@ -1886,22 +1879,15 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_opcodes.py				\
 	third_party/python/Lib/test/test_operator.py				\
 	third_party/python/Lib/test/test_optparse.py				\
-	third_party/python/Lib/test/test_ordered_dict.py		\
-	third_party/python/Lib/test/test_os.py					\
+	third_party/python/Lib/test/test_ordered_dict.py			\
 	third_party/python/Lib/test/test_parser.py				\
-	third_party/python/Lib/test/test_pathlib.py				\
-	third_party/python/Lib/test/test_pdb.py					\
 	third_party/python/Lib/test/test_peepholer.py				\
 	third_party/python/Lib/test/test_pickle.py				\
 	third_party/python/Lib/test/test_pickletools.py				\
-	third_party/python/Lib/test/test_pipes.py				\
 	third_party/python/Lib/test/test_pkgimport.py				\
 	third_party/python/Lib/test/test_plistlib.py				\
 	third_party/python/Lib/test/test_poll.py				\
 	third_party/python/Lib/test/test_poll.py				\
-	third_party/python/Lib/test/test_popen.py				\
-	third_party/python/Lib/test/test_posix.py				\
-	third_party/python/Lib/test/test_posixpath.py				\
 	third_party/python/Lib/test/test_pow.py					\
 	third_party/python/Lib/test/test_pprint.py				\
 	third_party/python/Lib/test/test_print.py				\
@@ -1909,8 +1895,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_property.py				\
 	third_party/python/Lib/test/test_pstats.py				\
 	third_party/python/Lib/test/test_pulldom.py				\
-	third_party/python/Lib/test/test_pwd.py					\
-	third_party/python/Lib/test/test_py_compile.py				\
 	third_party/python/Lib/test/test_pyexpat.py				\
 	third_party/python/Lib/test/test_quopri.py				\
 	third_party/python/Lib/test/test_raise.py				\
@@ -1933,13 +1917,10 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_set.py					\
 	third_party/python/Lib/test/test_setcomps.py				\
 	third_party/python/Lib/test/test_shlex.py				\
-	third_party/python/Lib/test/test_shutil.py				\
-	third_party/python/Lib/test/test_signal.py			\
-	third_party/python/Lib/test/test_site.py				\
+	third_party/python/Lib/test/test_signal.py				\
 	third_party/python/Lib/test/test_slice.py				\
 	third_party/python/Lib/test/test_sndhdr.py				\
 	third_party/python/Lib/test/test_sort.py				\
-	third_party/python/Lib/test/test_sqlite.py				\
 	third_party/python/Lib/test/test_stat.py				\
 	third_party/python/Lib/test/test_statistics.py				\
 	third_party/python/Lib/test/test_strftime.py				\
@@ -1961,13 +1942,10 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_sys_setprofile.py			\
 	third_party/python/Lib/test/test_syslog.py				\
 	third_party/python/Lib/test/test_tarfile.py				\
-	third_party/python/Lib/test/test_tempfile.py				\
 	third_party/python/Lib/test/test_textwrap.py				\
 	third_party/python/Lib/test/test_time.py				\
 	third_party/python/Lib/test/test_timeit.py				\
 	third_party/python/Lib/test/test_timeout.py				\
-	third_party/python/Lib/test/test_tokenize.py				\
-	third_party/python/Lib/test/test_trace.py				\
 	third_party/python/Lib/test/test_traceback.py				\
 	third_party/python/Lib/test/test_tracemalloc.py				\
 	third_party/python/Lib/test/test_tuple.py				\
@@ -1977,7 +1955,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_unary.py				\
 	third_party/python/Lib/test/test_unicode.py				\
 	third_party/python/Lib/test/test_unicode_file.py			\
-	third_party/python/Lib/test/test_unicode_file_functions.py		\
 	third_party/python/Lib/test/test_unicode_identifiers.py			\
 	third_party/python/Lib/test/test_unicodedata.py				\
 	third_party/python/Lib/test/test_univnewlines.py			\
@@ -2000,7 +1977,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS =						\
 	third_party/python/Lib/test/test_xml_etree_c.py				\
 	third_party/python/Lib/test/test_yield_from.py				\
 	third_party/python/Lib/test/test_zipapp.py				\
-	third_party/python/Lib/test/test_zipimport.py				\
 	third_party/python/Lib/test/test_zlib.py
 
 THIRD_PARTY_PYTHON_PYTEST_TODOS =						\
@@ -2127,9 +2103,10 @@ o/$(MODE)/third_party/python/Lib/test/test_genexps.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_genexps $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_sqlite $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_sqlite $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -2283,9 +2260,10 @@ o/$(MODE)/third_party/python/Lib/test/test_cmd.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_cmd $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_pwd.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pwd $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_pwd.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pwd $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_cmath.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -2515,9 +2493,10 @@ o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_longexp $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_glob.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_glob $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_glob.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_glob $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_global.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -2803,9 +2782,10 @@ o/$(MODE)/third_party/python/Lib/test/test_unicode_identifiers.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_unicode_identifiers $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_unicode_file_functions.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_unicode_file_functions $(PYTESTARGS)
+# [jart] unsupported with landlock right now because exdev renaming
+# o/$(MODE)/third_party/python/Lib/test/test_unicode_file_functions.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_unicode_file_functions $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_textwrap.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -2831,21 +2811,24 @@ o/$(MODE)/third_party/python/Lib/test/test_coroutines.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_coroutines $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_tempfile.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_tempfile $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_tempfile.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_tempfile $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_normalization.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_normalization $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_os.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_os $(PYTESTARGS)
+# [jart] unsupported with landlock right now because it needs /bin/sh
+# o/$(MODE)/third_party/python/Lib/test/test_os.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_os $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_logging $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_logging $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_io.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -2867,9 +2850,10 @@ o/$(MODE)/third_party/python/Lib/test/test_flufl.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_flufl $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_keyword.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_keyword $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_keyword.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_keyword $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_keywordonlyarg.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3139,17 +3123,20 @@ o/$(MODE)/third_party/python/Lib/test/test_getargs2.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_getargs2 $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_getpass.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_getpass $(PYTESTARGS)
+# [jart] incompatible with landlock because it reads /etc/passwd
+# o/$(MODE)/third_party/python/Lib/test/test_getpass.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_getpass $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_gettext.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_gettext $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_gettext.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_gettext $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_grp.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_grp $(PYTESTARGS)
+# [jart] incompatible with landlock because it reads /etc/passwd
+# o/$(MODE)/third_party/python/Lib/test/test_grp.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_grp $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_imaplib.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3191,9 +3178,10 @@ o/$(MODE)/third_party/python/Lib/test/test_macurl2path.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_macurl2path $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_mailbox.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_mailbox $(PYTESTARGS)
+# [jart] unsupported with landlock right now because exdev renaming
+# o/$(MODE)/third_party/python/Lib/test/test_mailbox.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_mailbox $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_mailcap.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3255,21 +3243,24 @@ o/$(MODE)/third_party/python/Lib/test/test_parser.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_parser $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_pathlib.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pathlib $(PYTESTARGS)
+# [jart] unsupported with landlock right now because exdev renaming
+# o/$(MODE)/third_party/python/Lib/test/test_pathlib.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pathlib $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_pdb.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pdb $(PYTESTARGS)
+# [jart] unsupported with landlock right now because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_pdb.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pdb $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_peepholer.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_peepholer $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_pipes.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pipes $(PYTESTARGS)
+# [jart] unsupported with landlock right now because it needs /bin/sh
+# o/$(MODE)/third_party/python/Lib/test/test_pipes.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pipes $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_pkgimport.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3287,21 +3278,24 @@ o/$(MODE)/third_party/python/Lib/test/test_httplib.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_httplib $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_popen.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_popen $(PYTESTARGS)
+# [jart] unsupported with landlock right now because it needs /bin/sh
+# o/$(MODE)/third_party/python/Lib/test/test_popen.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_popen $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_poplib.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_poplib $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_posix.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_posix $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_posix.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_posix $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_posixpath.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_posixpath $(PYTESTARGS)
+# [jart] unsupported with landlock right now because exdev renaming
+# o/$(MODE)/third_party/python/Lib/test/test_posixpath.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_posixpath $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_profile.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3319,9 +3313,10 @@ o/$(MODE)/third_party/python/Lib/test/test_pty.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_pty $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_py_compile.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_py_compile $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_py_compile.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_py_compile $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_pyclbr.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3363,17 +3358,19 @@ o/$(MODE)/third_party/python/Lib/test/test_shlex.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_shlex $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_shutil.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_shutil $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_shutil.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_shutil $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_signal.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_signal $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_site.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_site $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_site.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_site $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_smtpd.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3475,13 +3472,15 @@ o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_timeout $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_tokenize.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_tokenize $(PYTESTARGS)
+# TODO(jart): what's wrong with this since landlock?
+# o/$(MODE)/third_party/python/Lib/test/test_tokenize.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_tokenize $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_trace $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_trace $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_traceback.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3551,9 +3550,10 @@ o/$(MODE)/third_party/python/Lib/test/test_zipapp.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipapp $(PYTESTARGS)
 
-o/$(MODE)/third_party/python/Lib/test/test_zipimport.py.runs: \
-		o/$(MODE)/third_party/python/pythontester.com
-	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipimport $(PYTESTARGS)
+# [jart] incompatible with landlock because it uses current directory for temp files
+# o/$(MODE)/third_party/python/Lib/test/test_zipimport.py.runs: \
+# 		o/$(MODE)/third_party/python/pythontester.com
+# 	@$(COMPILE) -ACHECK -tT$@ $(PYHARNESSARGS) $< -m test.test_zipimport $(PYTESTARGS)
 
 o/$(MODE)/third_party/python/Lib/test/test_zipfile.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
@@ -3833,50 +3833,51 @@ o/$(MODE)/third_party/python/Lib/test/test_sunau.o:			\
 		PYFLAGS +=						\
 			-Y.python/test/audiodata/pluck-alaw.aifc	\
 			-Y.python/test/audiodata/pluck-pcm16.aiff	\
-			-Y.python/test/audiodata/pluck-pcm16.au	\
+			-Y.python/test/audiodata/pluck-pcm16.au		\
 			-Y.python/test/audiodata/pluck-pcm16.wav	\
 			-Y.python/test/audiodata/pluck-pcm24.aiff	\
-			-Y.python/test/audiodata/pluck-pcm24.au	\
+			-Y.python/test/audiodata/pluck-pcm24.au		\
 			-Y.python/test/audiodata/pluck-pcm24.wav	\
 			-Y.python/test/audiodata/pluck-pcm32.aiff	\
-			-Y.python/test/audiodata/pluck-pcm32.au	\
+			-Y.python/test/audiodata/pluck-pcm32.au		\
 			-Y.python/test/audiodata/pluck-pcm32.wav	\
 			-Y.python/test/audiodata/pluck-pcm8.aiff	\
-			-Y.python/test/audiodata/pluck-pcm8.au	\
-			-Y.python/test/audiodata/pluck-pcm8.wav	\
+			-Y.python/test/audiodata/pluck-pcm8.au		\
+			-Y.python/test/audiodata/pluck-pcm8.wav		\
 			-Y.python/test/audiodata/pluck-ulaw.aifc	\
 			-Y.python/test/audiodata/pluck-ulaw.au
 
-o/$(MODE)/third_party/python/Lib/test/test_py_compile.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_py_compile.o:		\
 		PYFLAGS +=						\
 			-Y.python/test/bad_coding2.py
 
 o/$(MODE)/third_party/python/Lib/test/test_tokenize.o:			\
 		PYFLAGS +=						\
-			-Y.python/test/bad_coding.py
+			-Y.python/test/bad_coding.py			\
+			-Y.python/test/bad_coding2.py
 
 o/$(MODE)/third_party/python/Lib/test/test_doctest.o:			\
 		PYFLAGS +=						\
-			-Y.python/test/test_doctest.txt	\
-			-Y.python/test/test_doctest2.txt	\
-			-Y.python/test/test_doctest3.txt	\
+			-Y.python/test/test_doctest.txt			\
+			-Y.python/test/test_doctest2.txt		\
+			-Y.python/test/test_doctest3.txt		\
 			-Y.python/test/test_doctest4.txt
 
 o/$(MODE)/third_party/python/Lib/test/test_imghdr.o:			\
 		PYFLAGS +=						\
-			-Y.python/test/imghdrdata/	\
-			-Y.python/test/imghdrdata/python.bmp	\
-			-Y.python/test/imghdrdata/python.exr	\
-			-Y.python/test/imghdrdata/python.gif	\
-			-Y.python/test/imghdrdata/python.jpg	\
-			-Y.python/test/imghdrdata/python.pbm	\
-			-Y.python/test/imghdrdata/python.pgm	\
-			-Y.python/test/imghdrdata/python.png	\
-			-Y.python/test/imghdrdata/python.ppm	\
-			-Y.python/test/imghdrdata/python.ras	\
-			-Y.python/test/imghdrdata/python.sgi	\
-			-Y.python/test/imghdrdata/python.tiff	\
-			-Y.python/test/imghdrdata/python.webp	\
+			-Y.python/test/imghdrdata/			\
+			-Y.python/test/imghdrdata/python.bmp		\
+			-Y.python/test/imghdrdata/python.exr		\
+			-Y.python/test/imghdrdata/python.gif		\
+			-Y.python/test/imghdrdata/python.jpg		\
+			-Y.python/test/imghdrdata/python.pbm		\
+			-Y.python/test/imghdrdata/python.pgm		\
+			-Y.python/test/imghdrdata/python.png		\
+			-Y.python/test/imghdrdata/python.ppm		\
+			-Y.python/test/imghdrdata/python.ras		\
+			-Y.python/test/imghdrdata/python.sgi		\
+			-Y.python/test/imghdrdata/python.tiff		\
+			-Y.python/test/imghdrdata/python.webp		\
 			-Y.python/test/imghdrdata/python.xbm	
 
 o/$(MODE)/third_party/python/Lib/test/test_sndhdr.o:			\
@@ -4269,7 +4270,9 @@ THIRD_PARTY_PYTHON_OBJS =						\
 THIRD_PARTY_PYTHON_SRCS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)_SRCS))	\
 	third_party/python/pyobj.c					\
-	third_party/python/pycomp.c
+	third_party/python/pycomp.c					\
+	third_party/python/repl.c					\
+	third_party/python/pythontester.c
 
 ################################################################################
 # PYTHON.COM

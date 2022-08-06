@@ -10,6 +10,14 @@
 #ifndef _LIBCPP_STRING_H
 #define _LIBCPP_STRING_H
 
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+#include "libc/str/str.h"
+
 /*
     string.h synopsis
 
@@ -50,15 +58,6 @@ char* strerror(int errnum);
 size_t strlen(const char* s);
 
 */
-
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-#include "libc/alg/alg.h"
-#include "libc/str/str.h"
 
 // MSVCRT, GNU libc and its derivates may already have the correct prototype in
 // <string.h>. This macro can be defined by users if their C library provides

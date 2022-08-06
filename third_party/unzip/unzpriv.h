@@ -23,6 +23,17 @@
 #ifndef __unzpriv_h   /* prevent multiple inclusions */
 #define __unzpriv_h
 
+#include "libc/sysv/consts/s.h"
+#include "libc/calls/calls.h"
+#include "libc/str/str.h"
+#include "libc/unicode/locale.h"
+#include "libc/errno.h"
+#include "third_party/unzip/unzpriv.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "third_party/zip/crypt.h"
+#include "third_party/unzip/unxcfg.h"
+
 /* First thing: Signal all following code that we compile UnZip utilities! */
 #ifndef UNZIP
 #  define UNZIP
@@ -207,16 +218,6 @@
 /*---------------------------------------------------------------------------
     Unix section:
   ---------------------------------------------------------------------------*/
-
-#include "libc/sysv/consts/s.h"
-#include "libc/calls/calls.h"
-#include "libc/str/str.h"
-#include "libc/unicode/locale.h"
-#include "libc/errno.h"
-#include "third_party/unzip/unzpriv.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "third_party/unzip/unxcfg.h"
 
 
 /* ----------------------------------------------------------------------------
@@ -1925,20 +1926,6 @@ typedef struct _APIDocStruct {
     char *syntax;
     char *purpose;
 } APIDocStruct;
-
-
-
-
-/*************/
-/*  Globals  */
-/*************/
-
-#if (defined(OS2) && !defined(FUNZIP))
-#include "third_party/unzip/os2/os2data.h"
-#endif
-
-#include "third_party/unzip/globals.h"
-
 
 
 /*************************/

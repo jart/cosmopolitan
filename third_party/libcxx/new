@@ -10,6 +10,15 @@
 #ifndef _LIBCPP_NEW
 #define _LIBCPP_NEW
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/exception"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/version"
+#ifdef _LIBCPP_NO_EXCEPTIONS
+#include "third_party/libcxx/cstdlib"
+#endif
+
 /*
     new synopsis
 
@@ -85,15 +94,6 @@ void  operator delete  (void* ptr, void*) noexcept;
 void  operator delete[](void* ptr, void*) noexcept;
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/exception"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/version"
-#ifdef _LIBCPP_NO_EXCEPTIONS
-#include "third_party/libcxx/cstdlib"
-#endif
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

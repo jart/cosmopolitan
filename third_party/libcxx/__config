@@ -9,6 +9,7 @@
 
 #ifndef _LIBCPP_CONFIG
 #define _LIBCPP_CONFIG
+#include "libc/isystem/features.h"
 
 #define _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
 #define _LIBCPP_HAS_NO_THREADS
@@ -218,7 +219,6 @@
 
 // Need to detect which libc we're using if we're on Linux.
 #if defined(__linux__)
-#  include "libc/isystem/features.h"
 #  if defined(__GLIBC_PREREQ)
 #    define _LIBCPP_GLIBC_PREREQ(a, b) __GLIBC_PREREQ(a, b)
 #  else
@@ -246,68 +246,6 @@
 #  endif // __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #endif // __BYTE_ORDER__
 
-#ifdef __FreeBSD__
-#  include "third_party/libcxx/sys/endian.h"
-#  include "third_party/libcxx/osreldate.h"
-#  if _BYTE_ORDER == _LITTLE_ENDIAN
-#    define _LIBCPP_LITTLE_ENDIAN
-#  else  // _BYTE_ORDER == _LITTLE_ENDIAN
-#    define _LIBCPP_BIG_ENDIAN
-#  endif  // _BYTE_ORDER == _LITTLE_ENDIAN
-#  ifndef __LONG_LONG_SUPPORTED
-#    define _LIBCPP_HAS_NO_LONG_LONG
-#  endif  // __LONG_LONG_SUPPORTED
-#endif  // __FreeBSD__
-
-#ifdef __NetBSD__
-#  include "third_party/libcxx/sys/endian.h"
-#  if _BYTE_ORDER == _LITTLE_ENDIAN
-#    define _LIBCPP_LITTLE_ENDIAN
-#  else  // _BYTE_ORDER == _LITTLE_ENDIAN
-#    define _LIBCPP_BIG_ENDIAN
-#  endif  // _BYTE_ORDER == _LITTLE_ENDIAN
-#  define _LIBCPP_HAS_QUICK_EXIT
-#endif  // __NetBSD__
-
-#if defined(_WIN32)
-#  define _LIBCPP_WIN32API
-#  define _LIBCPP_LITTLE_ENDIAN
-#  define _LIBCPP_SHORT_WCHAR   1
-// Both MinGW and native MSVC provide a "MSVC"-like environment
-#  define _LIBCPP_MSVCRT_LIKE
-// If mingw not explicitly detected, assume using MS C runtime only if
-// a MS compatibility version is specified.
-#  if defined(_MSC_VER) && !defined(__MINGW32__)
-#    define _LIBCPP_MSVCRT // Using Microsoft's C Runtime library
-#  endif
-#  if (defined(_M_AMD64) || defined(__x86_64__)) || (defined(_M_ARM) || defined(__arm__))
-#    define _LIBCPP_HAS_BITSCAN64
-#  endif
-#  define _LIBCPP_HAS_OPEN_WITH_WCHAR
-#  if defined(_LIBCPP_MSVCRT)
-#    define _LIBCPP_HAS_QUICK_EXIT
-#  endif
-
-// Some CRT APIs are unavailable to store apps
-#  if defined(WINAPI_FAMILY)
-#    include "third_party/libcxx/winapifamily.h"
-#    if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP) &&                  \
-        (!defined(WINAPI_PARTITION_SYSTEM) ||                                  \
-         !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_SYSTEM))
-#      define _LIBCPP_WINDOWS_STORE_APP
-#    endif
-#  endif
-#endif // defined(_WIN32)
-
-#ifdef __sun__
-#  include "third_party/libcxx/sys/isa_defs.h"
-#  ifdef _LITTLE_ENDIAN
-#    define _LIBCPP_LITTLE_ENDIAN
-#  else
-#    define _LIBCPP_BIG_ENDIAN
-#  endif
-#endif // __sun__
-
 #if defined(__CloudABI__)
    // Certain architectures provide arc4random(). Prefer using
    // arc4random() over /dev/{u,}random to make it possible to obtain
@@ -328,7 +266,7 @@
 #endif
 
 #if !defined(_LIBCPP_LITTLE_ENDIAN) && !defined(_LIBCPP_BIG_ENDIAN)
-#  include "libc/isystem/endian.h"
+#include "libc/isystem/endian.h"
 #  if __BYTE_ORDER == __LITTLE_ENDIAN
 #    define _LIBCPP_LITTLE_ENDIAN
 #  elif __BYTE_ORDER == __BIG_ENDIAN

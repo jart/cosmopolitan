@@ -7,9 +7,13 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "libc/dce.h"
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {
-  system("notepad");
-  return 0;
+  if (IsWindows()) {
+    system("notepad");
+  } else {
+    system("ls | tr a-z A-Z");
+  }
 }

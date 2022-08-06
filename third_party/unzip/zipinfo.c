@@ -25,6 +25,7 @@
 
 #define UNZIP_INTERNAL
 #include "third_party/unzip/unzip.h"
+#include "third_party/unzip/globals.h"
 
 
 #ifndef NO_ZIPINFO  /* strings use up too much space in small-memory systems */

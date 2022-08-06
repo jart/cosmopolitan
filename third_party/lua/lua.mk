@@ -292,8 +292,12 @@ o/$(MODE)/third_party/lua/luac.com.dbg:					\
 
 ################################################################################
 
+THIRD_PARTY_LUA_SRCS =							\
+	$(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_SRCS))		\
+	third_party/lua/lua.main.c					\
+	third_party/lua/luac.main.c
+
 THIRD_PARTY_LUA_LIBS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)))
-THIRD_PARTY_LUA_SRCS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_SRCS))
 THIRD_PARTY_LUA_HDRS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_HDRS))
 THIRD_PARTY_LUA_OBJS = $(foreach x,$(THIRD_PARTY_LUA_ARTIFACTS),$($(x)_OBJS))
 $(THIRD_PARTY_LUA_OBJS): third_party/lua/lua.mk

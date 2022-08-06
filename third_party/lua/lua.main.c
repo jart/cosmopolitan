@@ -34,6 +34,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/poll.h"

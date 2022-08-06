@@ -60,6 +60,7 @@
 #include "libc/runtime/stack.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
 #include "libc/stdio/stdio.h"

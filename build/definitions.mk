@@ -62,6 +62,7 @@ TOUCH = build/bootstrap/touch.com
 PKG = build/bootstrap/package.com
 MKDEPS = build/bootstrap/mkdeps.com
 ZIPOBJ = build/bootstrap/zipobj.com
+FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
 COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
 
@@ -165,7 +166,7 @@ DEFAULT_CPPFLAGS =							\
 	-DMODE='"$(MODE)"'						\
 	-DIMAGE_BASE_VIRTUAL=$(IMAGE_BASE_VIRTUAL)			\
 	-nostdinc							\
-	-iquote.
+	-iquote .
 
 DEFAULT_CFLAGS =							\
 	-std=gnu2x
@@ -232,7 +233,7 @@ cpp.flags =								\
 	$(CONFIG_CPPFLAGS)						\
 	$(CPPFLAGS)							\
 	$(OVERRIDE_CPPFLAGS)						\
-	-includelibc/integral/normalize.inc
+	-include libc/integral/normalize.inc
 
 copt.flags =								\
 	$(TARGET_ARCH)							\

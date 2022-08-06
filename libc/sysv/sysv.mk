@@ -75,6 +75,13 @@ o/libc/sysv/consts/syscon.internal.inc:			\
 		libc/sysv/consts/syscon.internal.h	\
 		libc/macros.internal.h			\
 		libc/macros-cpp.internal.inc		\
+		libc/macros.internal.inc		\
+		libc/dce.h				\
+		libc/intrin/asancodes.h			\
+		ape/relocations.h
+
+o/libc/sysv/macros.internal.inc:			\
+		libc/sysv/macros.internal.h		\
 		libc/macros.internal.inc
 
 #───────────────────────────────────────────────────────────────────────────────

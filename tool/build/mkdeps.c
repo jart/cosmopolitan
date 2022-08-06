@@ -352,9 +352,6 @@ bool IsObjectSource(const char *name) {
   for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
     if (endswith(name, kSourceExts[i])) return true;
   }
-  if (strstr(name, "/libcxx/")) {
-    return true;
-  }
   return false;
 }
 

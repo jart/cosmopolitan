@@ -10,6 +10,37 @@
 #ifndef _LIBCPP_STRING
 #define _LIBCPP_STRING
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/string_view"
+#include "third_party/libcxx/iosfwd"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/cstdio"  // For EOF.
+#include "third_party/libcxx/cwchar"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/utility"
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/stdexcept"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/__functional_base"
+#include "third_party/libcxx/version"
+#ifndef _LIBCPP_HAS_NO_UNICODE_CHARS
+#include "third_party/libcxx/cstdint"
+#endif
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     string synopsis
 
@@ -499,37 +530,6 @@ basic_string<char32_t> operator "" s( const char32_t *str, size_t len ); // C++1
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/string_view"
-#include "third_party/libcxx/iosfwd"
-#include "third_party/libcxx/cstring"
-#include "third_party/libcxx/cstdio"  // For EOF.
-#include "third_party/libcxx/cwchar"
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/utility"
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/stdexcept"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/__functional_base"
-#include "third_party/libcxx/version"
-#ifndef _LIBCPP_HAS_NO_UNICODE_CHARS
-#include "third_party/libcxx/cstdint"
-#endif
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 // fpos
 

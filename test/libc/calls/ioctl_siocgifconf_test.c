@@ -25,6 +25,8 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/ifconf.h"
+#include "libc/sock/struct/ifreq.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"

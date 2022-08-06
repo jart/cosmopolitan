@@ -18,6 +18,7 @@
 #include "third_party/unzip/unzip.h"
 #include "third_party/unzip/unzpriv.h"
 #include "third_party/zip/crc32.h"
+#include "third_party/unzip/globals.h"
 
 /* This header should be read AFTER zip.h resp. unzip.h
  * (the latter with UNZIP_INTERNAL defined...).

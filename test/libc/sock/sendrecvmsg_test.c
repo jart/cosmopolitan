@@ -21,6 +21,7 @@
 #include "libc/dce.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/msghdr.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sock.h"

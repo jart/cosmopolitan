@@ -10,6 +10,16 @@
 #ifndef _LIBCPP_TYPE_TRAITS
 #define _LIBCPP_TYPE_TRAITS
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     type_traits synopsis
 
@@ -413,15 +423,6 @@ namespace std
 }
 
 */
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _T1, class _T2> struct _LIBCPP_TEMPLATE_VIS pair;
 template <class _Tp> class _LIBCPP_TEMPLATE_VIS reference_wrapper;

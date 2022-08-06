@@ -3,6 +3,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 
 #define DNS_PORT      53
 #define DNS_NAME_MAX  253

@@ -10,7 +10,27 @@
 #ifndef _LIBCPP_STRING_VIEW
 #define _LIBCPP_STRING_VIEW
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__string"
+#include "third_party/libcxx/iosfwd"
+#include "third_party/libcxx/algorithm"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/limits"
+#include "third_party/libcxx/stdexcept"
+#include "third_party/libcxx/version"
+#include "third_party/libcxx/__debug"
+
 #pragma GCC diagnostic ignored "-Wliteral-suffix"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
 
 /*
 string_view synopsis
@@ -172,26 +192,6 @@ namespace std {
 
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__string"
-#include "third_party/libcxx/iosfwd"
-#include "third_party/libcxx/algorithm"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/limits"
-#include "third_party/libcxx/stdexcept"
-#include "third_party/libcxx/version"
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template<class _CharT, class _Traits = char_traits<_CharT> >
 class _LIBCPP_TEMPLATE_VIS basic_string_view {

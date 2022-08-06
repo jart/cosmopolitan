@@ -73,6 +73,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "third_party/unzip/unzvers.h"
+#include "third_party/unzip/globals.h"
 
 #ifndef WINDLL          /* The WINDLL port uses windll/windll.c instead... */
 

@@ -10,6 +10,20 @@
 #ifndef _LIBCPP_TUPLE
 #define _LIBCPP_TUPLE
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__tuple"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/__functional_base"
+#include "third_party/libcxx/utility"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     tuple synopsis
 
@@ -144,20 +158,6 @@ template <class... Types>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__tuple"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/__functional_base"
-#include "third_party/libcxx/utility"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 #ifndef _LIBCPP_CXX03_LANG
 

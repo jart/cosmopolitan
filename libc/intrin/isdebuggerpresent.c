@@ -38,8 +38,8 @@ static textwindows noasan bool IsBeingDebugged(void) {
  */
 int IsDebuggerPresent(bool force) {
   /* asan runtime depends on this function */
-  int fd, res;
   ssize_t got;
+  int e, fd, res;
   char *p, buf[1024];
   if (!force && IsGenuineCosmo()) return 0;
   if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
@@ -47,6 +47,7 @@ int IsDebuggerPresent(bool force) {
   if (__isworker) return false;
   if (!PLEDGED(RPATH)) return false;
   res = 0;
+  e = errno;
   if ((fd = __sysv_open("/proc/self/status", O_RDONLY, 0)) >= 0) {
     if ((got = __sysv_read(fd, buf, sizeof(buf) - 1)) > 0) {
       buf[got] = '\0';
@@ -57,5 +58,6 @@ int IsDebuggerPresent(bool force) {
     }
     __sysv_close(fd);
   }
+  errno = e;
   return res;
 }

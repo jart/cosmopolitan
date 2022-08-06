@@ -10,6 +10,21 @@
 #ifndef _LIBCPP_FUNCTIONAL
 #define _LIBCPP_FUNCTIONAL
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/typeinfo"
+#include "third_party/libcxx/exception"
+#include "third_party/libcxx/memory"
+#include "third_party/libcxx/tuple"
+#include "third_party/libcxx/utility"
+#include "third_party/libcxx/version"
+
+#include "third_party/libcxx/__functional_base"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
 /*
     functional synopsis
 
@@ -496,21 +511,6 @@ POLICY:  For non-variadic implementations, the number of arguments is limited
          will be minimal.
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/typeinfo"
-#include "third_party/libcxx/exception"
-#include "third_party/libcxx/memory"
-#include "third_party/libcxx/tuple"
-#include "third_party/libcxx/utility"
-#include "third_party/libcxx/version"
-
-#include "third_party/libcxx/__functional_base"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
@@ -2528,7 +2528,7 @@ swap(function<_Rp(_ArgTypes...)>& __x, function<_Rp(_ArgTypes...)>& __y) _NOEXCE
 
 #else // _LIBCPP_CXX03_LANG
 
-#include "third_party/libcxx/__functional_03"
+# include "third_party/libcxx/__functional_03"
 
 #endif
 

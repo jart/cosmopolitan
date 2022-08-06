@@ -10,6 +10,23 @@
 #ifndef _LIBCPP___STRING
 #define _LIBCPP___STRING
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/algorithm"  // for search and min
+#include "third_party/libcxx/cstdio"     // For EOF.
+#include "third_party/libcxx/memory"     // for __murmur2_or_cityhash
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     string synopsis
 
@@ -51,23 +68,6 @@ template <> struct char_traits<char8_t>;  // c++20
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/algorithm"  // for search and min
-#include "third_party/libcxx/cstdio"     // For EOF.
-#include "third_party/libcxx/memory"     // for __murmur2_or_cityhash
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 // char_traits
 

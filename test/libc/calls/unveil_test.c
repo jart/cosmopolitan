@@ -97,14 +97,12 @@ int extract(const char *from, const char *to, int mode) {
 
 TEST(unveil, api_differences) {
   SPAWN(fork);
-  ASSERT_SYS(0, 0, stat("/", &st));
-  ASSERT_SYS(0, 0, unveil(".", "rw"));
   if (IsOpenbsd()) {
     // openbsd imposes restrictions immediately
     ASSERT_SYS(ENOENT, -1, open("/", O_RDONLY | O_DIRECTORY));
   } else {
     // restrictions on linux don't go into effect until unveil(0,0)
-    ASSERT_SYS(0, 3, open("/", O_RDONLY | O_DIRECTORY));
+    ASSERT_SYS(0, 3, open(".", O_RDONLY | O_DIRECTORY));
     ASSERT_SYS(0, 0, close(3));
   }
   ASSERT_SYS(0, 0, unveil(0, 0));

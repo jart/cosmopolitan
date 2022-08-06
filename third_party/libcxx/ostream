@@ -10,6 +10,20 @@
 #ifndef _LIBCPP_OSTREAM
 #define _LIBCPP_OSTREAM
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/ios"
+#include "third_party/libcxx/streambuf"
+#include "third_party/libcxx/locale"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/bitset"
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     ostream synopsis
 
@@ -133,20 +147,6 @@ template <class charT, class traits, class T>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/ios"
-#include "third_party/libcxx/streambuf"
-#include "third_party/libcxx/locale"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/bitset"
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _CharT, class _Traits>
 class _LIBCPP_TEMPLATE_VIS basic_ostream

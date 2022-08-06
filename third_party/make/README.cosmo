@@ -2,3 +2,11 @@ ORIGIN
 
     GNU Make 4.3
     http://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+
+LOCAL CHANGES
+
+  - Remove portability torture code
+  - Add support for Landlock LSM sandboxing
+  - Add .UNSANDBOXED variable to disable it
+  - Add .UNVEIL variable which works like .EXTRA_PREREQS
+  - Remove code that forces slow path if not using /bin/sh

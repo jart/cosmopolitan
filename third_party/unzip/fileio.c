@@ -81,6 +81,7 @@
 #  endif
 #endif
 #include "third_party/unzip/ebcdic.h"   /* definition/initialization of ebcdic[] */
+#include "third_party/unzip/globals.h"
 
 
 /*

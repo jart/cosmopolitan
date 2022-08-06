@@ -56,7 +56,7 @@ class TZInfo:
             print("%s UTC = %s %-5s isdst=%d" % (utc, lmt, abbr, tti[1]) + shift, file=stream)
 
     @classmethod
-    def zonelist(cls, zonedir='/usr/share/zoneinfo'):
+    def zonelist(cls, zonedir='/zip/usr/share/zoneinfo'):
         zones = []
         for root, _, files in os.walk(zonedir):
             for f in files:
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         sys.exit()
     filepath = sys.argv[1]
     if not filepath.startswith('/'):
-        filepath = os.path.join('/usr/share/zoneinfo', filepath)
+        filepath = os.path.join('/zip/usr/share/zoneinfo', filepath)
     with open(filepath, 'rb') as fileobj:
         tzi = TZInfo.fromfile(fileobj)
     tzi.dump(sys.stdout)

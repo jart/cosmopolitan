@@ -14,6 +14,8 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/linger.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -34,7 +36,8 @@
  * Here's an example usage:
  *
  *     make -j8 o//examples/nc.com
- *     printf 'GET /\r\nHost: justine.lol\r\n\r\n' | o//examples/nc.com justine.lol 80
+ *     printf 'GET /\r\nHost: justine.lol\r\n\r\n' | o//examples/nc.com
+ * justine.lol 80
  *
  * Once upon time we called this command "telnet"
  */

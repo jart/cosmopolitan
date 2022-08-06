@@ -10,6 +10,22 @@
 #ifndef _LIBCPP_UTILITY
 #define _LIBCPP_UTILITY
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__tuple"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/initializer_list"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/cstring"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/version"
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     utility synopsis
 
@@ -194,22 +210,6 @@ template <size_t I>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__tuple"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/initializer_list"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/cstring"
-#include "third_party/libcxx/cstdint"
-#include "third_party/libcxx/version"
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 namespace rel_ops
 {

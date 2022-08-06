@@ -26,6 +26,8 @@
 #include "libc/mem/mem.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/ifconf.h"
+#include "libc/sock/struct/ifreq.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/sio.h"

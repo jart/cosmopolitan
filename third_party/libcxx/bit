@@ -10,6 +10,21 @@
 #ifndef _LIBCPP_BIT
 #define _LIBCPP_BIT
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/limits"
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/version"
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     bit synopsis
 
@@ -52,21 +67,6 @@ namespace std {
 } // namespace std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/limits"
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/version"
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 #ifndef _LIBCPP_COMPILER_MSVC
 

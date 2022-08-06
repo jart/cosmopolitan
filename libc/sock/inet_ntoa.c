@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 
 /**
  * Converts IPv4 network address to array.

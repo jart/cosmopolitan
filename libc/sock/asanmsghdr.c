@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/asan.internal.h"
-#include "libc/sock/sock.h"
+#include "libc/sock/struct/msghdr.h"
 
 bool __asan_is_valid_msghdr(const struct msghdr *msg) {
   if (!__asan_is_valid(msg, sizeof(struct msghdr))) return false;

@@ -10,6 +10,18 @@
 #ifndef _LIBCPP_QUEUE
 #define _LIBCPP_QUEUE
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/deque"
+#include "third_party/libcxx/vector"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/algorithm"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     queue synopsis
 
@@ -184,18 +196,6 @@ template <class T, class Container, class Compare>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/deque"
-#include "third_party/libcxx/vector"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/algorithm"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Tp, class _Container = deque<_Tp> > class _LIBCPP_TEMPLATE_VIS queue;
 

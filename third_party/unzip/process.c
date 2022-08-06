@@ -33,6 +33,7 @@
 
 #define UNZIP_INTERNAL
 #include "third_party/unzip/unzip.h"
+#include "third_party/unzip/globals.h"
 #if defined(DYNALLOC_CRCTAB) || defined(UNICODE_SUPPORT)
 #include "third_party/unzip/crc32.h"
 #endif

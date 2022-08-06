@@ -130,14 +130,14 @@ o/$(MODE)/ape/ape-copy-self.o:			\
 		$(OUTPUT_OPTION)		\
 		-DAPE_NO_MODIFY_SELF $<
 
-o/$(MODE)/ape/loader.o: ape/loader.c
+o/$(MODE)/ape/loader.o: ape/loader.c ape/loader.h
 	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b01111001 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-gcc.asm: ape/loader.c
 	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b01111001 -S -g0 $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-clang.asm: ape/loader.c
 	@$(COMPILE) -AOBJECTIFY.c $(CLANG) -DSUPPORT_VECTOR=0b01111001 -S -g0 $(APE_LOADER_FLAGS)
 
-o/$(MODE)/ape/loader-xnu.o: ape/loader.c
+o/$(MODE)/ape/loader-xnu.o: ape/loader.c ape/loader.h
 	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b00001000 -g $(APE_LOADER_FLAGS)
 o/$(MODE)/ape/loader-xnu-gcc.asm: ape/loader.c
 	@$(COMPILE) -AOBJECTIFY.c $(CC) -DSUPPORT_VECTOR=0b00001000 -S -g0 $(APE_LOADER_FLAGS)

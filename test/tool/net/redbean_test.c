@@ -22,6 +22,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/auxv.h"

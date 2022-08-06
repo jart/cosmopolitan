@@ -25,6 +25,8 @@
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/inaddr.h"
 #include "libc/sysv/consts/ipproto.h"

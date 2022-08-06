@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_TOOL_BUILD_LIB_FDS_H_
 #include "libc/calls/struct/iovec.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -8,7 +8,7 @@ NET_HTTP = $(NET_HTTP_A_DEPS) $(NET_HTTP_A)
 NET_HTTP_A = o/$(MODE)/net/http/http.a
 NET_HTTP_A_FILES := $(wildcard net/http/*)
 NET_HTTP_A_HDRS = $(filter %.h,$(NET_HTTP_A_FILES))
-NET_HTTP_A_INCS := $(filter %.inc,$(NET_HTTP_A_FILES))
+NET_HTTP_A_INCS = $(filter %.inc,$(NET_HTTP_A_FILES))
 NET_HTTP_A_SRCS_C = $(filter %.c,$(NET_HTTP_A_FILES))
 NET_HTTP_A_SRCS_S = $(filter %.S,$(NET_HTTP_A_FILES))
 NET_HTTP_A_SRCS = $(NET_HTTP_A_SRCS_S) $(NET_HTTP_A_SRCS_C)
@@ -64,6 +64,7 @@ o/$(MODE)/net/http/formathttpdatetime.o:	\
 NET_HTTP_LIBS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)))
 NET_HTTP_SRCS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_SRCS))
 NET_HTTP_HDRS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_HDRS))
+NET_HTTP_INCS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_INCS))
 NET_HTTP_OBJS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_OBJS))
 NET_HTTP_CHECKS = $(foreach x,$(NET_HTTP_ARTIFACTS),$($(x)_CHECKS))
 

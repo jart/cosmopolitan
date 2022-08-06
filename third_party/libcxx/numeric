@@ -10,6 +10,22 @@
 #ifndef _LIBCPP_NUMERIC
 #define _LIBCPP_NUMERIC
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/iterator"
+#include "third_party/libcxx/limits" // for numeric_limits
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/cmath" // for isnormal
+#include "third_party/libcxx/version"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     numeric synopsis
 
@@ -140,22 +156,6 @@ floating_point  midpoint(floating_point a, floating_point b);    // C++20
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/iterator"
-#include "third_party/libcxx/limits" // for numeric_limits
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/cmath" // for isnormal
-#include "third_party/libcxx/version"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _InputIterator, class _Tp>
 inline _LIBCPP_INLINE_VISIBILITY

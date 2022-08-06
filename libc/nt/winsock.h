@@ -7,6 +7,7 @@
 #include "libc/nt/struct/pollfd.h"
 #include "libc/nt/struct/timeval.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 /* ░▓█████████████████████████████████████████████▓▒
    ░█▓░░░░░░░░░▓██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██▓▒░
    ░█▓░ ░▒▒▒▒  ▓██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██▓▒▒

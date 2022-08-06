@@ -10,6 +10,14 @@
 #ifndef __LIBCPP_TYPEINFO
 #define __LIBCPP_TYPEINFO
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/exception"
+#include "third_party/libcxx/cstddef"
+#include "third_party/libcxx/cstdint"
+#ifdef _LIBCPP_NO_EXCEPTIONS
+#include "third_party/libcxx/cstdlib"
+#endif
+
 /*
 
     typeinfo synopsis
@@ -55,14 +63,6 @@ public:
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/exception"
-#include "third_party/libcxx/cstddef"
-#include "third_party/libcxx/cstdint"
-#ifdef _LIBCPP_NO_EXCEPTIONS
-#include "third_party/libcxx/cstdlib"
-#endif
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

@@ -28,6 +28,7 @@
 #include "libc/nt/events.h"
 #include "libc/nt/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syslog.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

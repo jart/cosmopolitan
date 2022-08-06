@@ -5,6 +5,8 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/msghdr.h"
+#include "libc/sock/struct/pollfd.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

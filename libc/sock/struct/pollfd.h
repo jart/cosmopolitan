@@ -9,6 +9,8 @@ struct pollfd {
   int16_t revents;
 };
 
+int poll(struct pollfd *, uint64_t, int32_t);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_POLLFD_H_ */

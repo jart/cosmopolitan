@@ -47,8 +47,6 @@
 #include "libc/x/x.h"
 #include "third_party/xed/x86.h"
 
-#define TMP firstnonnull(getenv("TMPDIR"), kTmpPath)
-
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {

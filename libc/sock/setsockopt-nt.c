@@ -21,6 +21,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/struct/linger.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/linger.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sol.h"

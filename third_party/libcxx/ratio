@@ -10,6 +10,21 @@
 #ifndef _LIBCPP_RATIO
 #define _LIBCPP_RATIO
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/cstdint"
+#include "third_party/libcxx/climits"
+#include "third_party/libcxx/type_traits"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_PUSH_MACROS
+#include "third_party/libcxx/__undef_macros"
+
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     ratio synopsis
 
@@ -76,21 +91,6 @@ typedef ratio<1000000000000000000000000, 1> yotta;  // not supported
     = ratio_greater_equal<R1, R2>::value;                               // C++17
 }
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/cstdint"
-#include "third_party/libcxx/climits"
-#include "third_party/libcxx/type_traits"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_PUSH_MACROS
-#include "third_party/libcxx/__undef_macros"
-
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 // __static_gcd
 

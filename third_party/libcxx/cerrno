@@ -10,6 +10,9 @@
 #ifndef _LIBCPP_CERRNO
 #define _LIBCPP_CERRNO
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/errno.h"
+
 /*
     cerrno synopsis
 
@@ -21,9 +24,6 @@ Macros:
     errno
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/errno.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

@@ -2,6 +2,7 @@
 # Contact: email-sig@python.org
 # email package unit tests
 
+import os
 import re
 import sys
 import time
@@ -4034,7 +4035,7 @@ class Test8BitBytesHandling(TestEmailBase):
     non_latin_bin_msg_as7bit = '\n'.join(non_latin_bin_msg_as7bit)
 
     def test_message_from_binary_file(self):
-        fn = 'test.msg'
+        fn = os.path.join(os.environ['TMPDIR'], 'test.msg')
         self.addCleanup(unlink, fn)
         with open(fn, 'wb') as testfile:
             testfile.write(self.non_latin_bin_msg)

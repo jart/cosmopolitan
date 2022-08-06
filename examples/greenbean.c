@@ -30,6 +30,8 @@
 #include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clock.h"

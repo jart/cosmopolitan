@@ -10,6 +10,14 @@
 #ifndef _LIBCPP_CSTDARG
 #define _LIBCPP_CSTDARG
 
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     cstdarg synopsis
 
@@ -30,14 +38,6 @@ Types:
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 using ::va_list;
 

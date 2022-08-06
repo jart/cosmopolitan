@@ -10,6 +10,12 @@
 #ifndef _LIBCPP_VERSIONH
 #define _LIBCPP_VERSIONH
 
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
 /*
   version synopsis
 
@@ -113,12 +119,6 @@ __cpp_lib_variant                                       201606L <variant>
 __cpp_lib_void_t                                        201411L <type_traits>
 
 */
-
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
 
 #if _LIBCPP_STD_VER > 11
 # define __cpp_lib_chrono_udls                          201304L

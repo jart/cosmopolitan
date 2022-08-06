@@ -27,33 +27,7 @@
 #define __crypt_h
 #include "third_party/unzip/crc32.h"
 
-#ifdef CRYPT
-#  undef CRYPT
-#endif
-/*
-   Logic of selecting "full crypt" code:
-   a) default behaviour:
-      - dummy crypt code when compiling UnZipSFX stub, to minimize size
-      - full crypt code when used to compile Zip, UnZip and fUnZip
-   b) USE_CRYPT defined:
-      - always full crypt code
-   c) NO_CRYPT defined:
-      - never full crypt code
-   NO_CRYPT takes precedence over USE_CRYPT
- */
-#if defined(NO_CRYPT)
-#  define CRYPT  0  /* dummy version */
-#else
-#if defined(USE_CRYPT)
-#  define CRYPT  1  /* full version */
-#else
-#if !defined(SFX)
-#  define CRYPT  1  /* full version for zip and main unzip */
-#else
-#  define CRYPT  0  /* dummy version for unzip sfx */
-#endif
-#endif /* ?USE_CRYPT */
-#endif /* ?NO_CRYPT */
+#define CRYPT 1
 
 #if CRYPT
 /* full version */
@@ -146,9 +120,7 @@ void init_keys OF((__GPRO__ ZCONST char *passwd));
 #  endif
 #endif /* ZIP */
 
-#if (defined(UNZIP) && !defined(FUNZIP))
-   int  decrypt OF((__GPRO__ ZCONST char *passwrd));
-#endif
+int  decrypt OF((__GPRO__ ZCONST char *passwrd));
 
 #ifdef FUNZIP
    extern int encrypted;

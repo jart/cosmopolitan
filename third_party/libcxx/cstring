@@ -10,6 +10,15 @@
 #ifndef _LIBCPP_CSTRING
 #define _LIBCPP_CSTRING
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/string.h"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
     cstring synopsis
 
@@ -55,15 +64,6 @@ size_t strlen(const char* s);
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/string.h"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 using ::size_t;
 using ::memcpy;

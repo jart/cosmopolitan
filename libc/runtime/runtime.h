@@ -21,7 +21,7 @@ extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern uint64_t __syscount;                         /* RII */
 extern uint64_t kStartTsc;                          /* RII */
-extern const char kTmpPath[];                       /* RII */
+extern char kTmpPath[];                             /* RII */
 extern const char kNtSystemDirectory[];             /* RII */
 extern const char kNtWindowsDirectory[];            /* RII */
 extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */

@@ -33,6 +33,9 @@ struct sockaddr_storage {
   };
 };
 
+int inet_aton(const char *, struct in_addr *);
+char *inet_ntoa(struct in_addr);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_H_ */

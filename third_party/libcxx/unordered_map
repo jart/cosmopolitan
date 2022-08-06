@@ -10,6 +10,22 @@
 #ifndef _LIBCPP_UNORDERED_MAP
 #define _LIBCPP_UNORDERED_MAP
 
+#include "third_party/libcxx/__config"
+#include "third_party/libcxx/__hash_table"
+#include "third_party/libcxx/__node_handle"
+#include "third_party/libcxx/functional"
+#include "third_party/libcxx/stdexcept"
+#include "third_party/libcxx/tuple"
+#include "third_party/libcxx/version"
+
+#include "third_party/libcxx/__debug"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+_LIBCPP_BEGIN_NAMESPACE_STD
+
 /*
 
     unordered_map synopsis
@@ -404,22 +420,6 @@ template <class Key, class T, class Hash, class Pred, class Alloc>
 }  // std
 
 */
-
-#include "third_party/libcxx/__config"
-#include "third_party/libcxx/__hash_table"
-#include "third_party/libcxx/__node_handle"
-#include "third_party/libcxx/functional"
-#include "third_party/libcxx/stdexcept"
-#include "third_party/libcxx/tuple"
-#include "third_party/libcxx/version"
-
-#include "third_party/libcxx/__debug"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Key, class _Cp, class _Hash,
           bool = is_empty<_Hash>::value && !__libcpp_is_final<_Hash>::value>

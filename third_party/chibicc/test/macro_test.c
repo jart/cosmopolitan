@@ -27,12 +27,13 @@ int main() {
   ASSERT(5, include1);
   ASSERT(7, include2);
 
-#if 0
-#include "/no/such/file"
-  ASSERT(0, 1);
-#if nested
-#endif
-#endif
+/* [jart] breaks mkdeps */
+/* #if 0 */
+/* #include "/no/such/file" */
+/*   ASSERT(0, 1); */
+/* #if nested */
+/* #endif */
+/* #endif */
 
   int m = 0;
 

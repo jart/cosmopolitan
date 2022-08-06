@@ -189,7 +189,7 @@
          (runs (format "o/$m/%s.com%s V=5 TESTARGS=-b" name runsuffix))
          (buns (format "o/$m/test/%s_test.com%s V=5 TESTARGS=-b" name runsuffix)))
     (cond ((not (member ext '("c" "cc" "s" "S" "rl" "f")))
-           (format "m=%s; make -j12 -O MODE=$m o/$m/%s"
+           (format "m=%s; o//third_party/make/make.com -j12 -O MODE=$m o/$m/%s"
                    mode
                    (directory-file-name
                     (or (file-name-directory
@@ -200,7 +200,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j12 -O $f MODE=$m")
+               ,(concat "o//third_party/make/make.com -j12 -O $f MODE=$m")
                "scp $f $f.dbg win7:"
                "ssh win7 ./%s.com"))
             mode name (file-name-nondirectory name)))
@@ -209,7 +209,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j12 -O $f MODE=$m")
+               ,(concat "o//third_party/make/make.com -j12 -O $f MODE=$m")
                "scp $f $f.dbg win10:"
                "ssh win10 ./%s.com"))
             mode name (file-name-nondirectory name)))
@@ -218,19 +218,19 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j12 -O $f MODE=$m")
+               ,(concat "o//third_party/make/make.com -j12 -O $f MODE=$m")
                "scp $f $f.dbg xnu:"
                "ssh xnu ./%s.com"))
             mode name (file-name-nondirectory name)))
           ((and (equal suffix "")
                 (cosmo-contains "_test." (buffer-file-name)))
-           (format "m=%s; make -j12 -O MODE=$m %s"
+           (format "m=%s; o//third_party/make/make.com -j12 -O MODE=$m %s"
                    mode runs))
           ((and (equal suffix "")
                 (file-exists-p (format "%s" buddy)))
            (format (cosmo-join
                     " && "
-                    '("m=%s; n=%s; make -j12 -O o/$m/$n%s.o MODE=$m"
+                    '("m=%s; n=%s; o//third_party/make/make.com -j12 -O o/$m/$n%s.o MODE=$m"
                       ;; "bloat o/$m/%s.o | head"
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
@@ -242,11 +242,11 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j12 -O $f MODE=$m")
+               ,(concat "o//third_party/make/make.com -j12 -O $f MODE=$m")
                "./$f"))
             mode name))
           ((eq kind 'test)
-           (format `"m=%s; f=o/$m/%s.com.ok && make -j12 -O $f MODE=$m" mode name))
+           (format `"m=%s; f=o/$m/%s.com.ok && o//third_party/make/make.com -j12 -O $f MODE=$m" mode name))
           ((and (file-regular-p this)
                 (file-executable-p this))
            (format "./%s" file))
@@ -255,7 +255,7 @@
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s%s.o"
-               ,(concat "make -j12 -O $f MODE=$m")
+               ,(concat "o//third_party/make/make.com -j12 -O $f MODE=$m")
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
@@ -465,7 +465,7 @@
           (error "don't know how to show assembly for non c/c++ source file"))
         (let* ((default-directory root)
                (compile-command
-                (format "make %s -j12 -O MODE=%s %s %s"
+                (format "o//third_party/make/make.com %s -j12 -O MODE=%s %s %s"
                         (or extra-make-flags "") mode asm-gcc asm-clang)))
           (save-buffer)
           (set-visited-file-modtime (current-time))
@@ -612,7 +612,7 @@
         (cond ((save-excursion
                  (goto-char (point-min))
                  (looking-at "#!"))
-               (compile (format "sh %s" file)))
+               (compile (format "sh -c %s" file)))
               ((file-executable-p file)
                (compile (if (cosmo-contains "/" file)
                             file
@@ -622,15 +622,15 @@
                       (compile-command (cosmo--compile-command this root 'run mode "" "" ".runs")))
                  (compile compile-command)))
               ((eq major-mode 'sh-mode)
-               (compile (format "sh %s" file)))
+               (compile (format "sh -c %s" file)))
               ((eq major-mode 'lua-mode)
                (let* ((mode (cosmo--make-mode arg))
                       (redbean ))
-                 (compile (format "make -j16 MODE=%s o/%s/tool/net/redbean.com && o/%s/tool/net/redbean.com -i %s" mode mode mode file))))
+                 (compile (format "o//third_party/make/make.com -j16 MODE=%s o/%s/tool/net/redbean.com && o/%s/tool/net/redbean.com -i %s" mode mode mode file))))
               ((and (eq major-mode 'python-mode)
                     (cosmo-startswith "third_party/python/Lib/test/" file))
                (let ((mode (cosmo--make-mode arg)))
-                 (compile (format "make -j12 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
+                 (compile (format "o//third_party/make/make.com -j12 MODE=%s PYHARNESSARGS=-vv PYTESTARGS=-v o/%s/%s.py.runs"
                                   mode mode (file-name-sans-extension file)))))
               ((eq major-mode 'python-mode)
                (compile (format "python.com %s" file)))

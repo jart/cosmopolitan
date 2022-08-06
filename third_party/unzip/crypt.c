@@ -34,6 +34,7 @@
 #include "third_party/unzip/zip.h"
 #include "third_party/unzip/crypt.h"
 #include "third_party/unzip/ttyio.h"
+#include "third_party/unzip/globals.h"
 
 #if CRYPT
 

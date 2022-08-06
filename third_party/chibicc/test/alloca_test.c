@@ -1,3 +1,4 @@
+#include "libc/mem/alloca.h"
 #include "third_party/chibicc/test/test.h"
 
 void *fn(int x, void *p, int y) {

@@ -94,6 +94,10 @@ o/$(MODE)/tool/build/lib/apetest2.com.zip.o:		\
 		ZIPOBJ_FLAGS +=				\
 			-B
 
+o/$(MODE)/tool/build/lib/apetest.o:			\
+		tool/build/lib/apetest.c		\
+		libc/calls/calls.h
+
 TOOL_BUILD_LIB_LIBS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)))
 TOOL_BUILD_LIB_SRCS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_SRCS))
 TOOL_BUILD_LIB_HDRS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_HDRS))

@@ -25,6 +25,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"

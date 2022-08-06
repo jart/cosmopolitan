@@ -10,6 +10,26 @@
 #ifndef _LIBCPP_MATH_H
 #define _LIBCPP_MATH_H
 
+#include "third_party/libcxx/__config"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+#define _LIBCPP_STDLIB_INCLUDE_NEXT
+#include "third_party/libcxx/stdlib.h"
+
+#include "libc/isystem/math.h"
+
+#ifdef __cplusplus
+
+// We support including .h headers inside 'extern "C"' contexts, so switch
+// back to C++ linkage before including these C++ headers.
+extern "C++" {
+
+#include "third_party/libcxx/type_traits"
+#include "third_party/libcxx/limits"
+
 /*
     math.h synopsis
 
@@ -290,26 +310,6 @@ float          truncf(float x);
 long double    truncl(long double x);
 
 */
-
-#include "third_party/libcxx/__config"
-
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-#pragma GCC system_header
-#endif
-
-#define _LIBCPP_STDLIB_INCLUDE_NEXT
-#include "third_party/libcxx/stdlib.h"
-
-#include "libc/isystem/math.h"
-
-#ifdef __cplusplus
-
-// We support including .h headers inside 'extern "C"' contexts, so switch
-// back to C++ linkage before including these C++ headers.
-extern "C++" {
-
-#include "third_party/libcxx/type_traits"
-#include "third_party/libcxx/limits"
 
 // signbit
 

@@ -252,14 +252,17 @@ o/$(MODE)/srcs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS
 o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
+TAGS: .UNSANDBOXED = 1
 TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
 	@$(RM) $@
 	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
 
+HTAGS: .UNSANDBOXED = 1
 HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
 	@$(RM) $@
 	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
 
+loc: .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy.com
 	find -name \*.h -or -name \*.c -or -name \*.S | \
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<

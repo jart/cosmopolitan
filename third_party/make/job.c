@@ -28,7 +28,21 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/runtime/stack.h"
 #include "libc/calls/calls.h"
 #include "libc/x/x.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/x/x.h"
+#include "libc/runtime/runtime.h"
+#include "libc/bits/safemacros.internal.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/bits/bits.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/make/dep.h"
+
+#define GOTO_SLOW                                       \
+  do {                                                  \
+    kprintf("%s:%d: goto slow\n", __FILE__, __LINE__);  \
+    goto slow;                                          \
+  } while (0)
 
 #ifdef WINDOWS32
 const char *default_shell = "sh.exe";
@@ -217,6 +231,8 @@ is_bourne_compatible_shell (const char *path)
 {
   /* List of known POSIX (or POSIX-ish) shells.  */
   static const char *unix_shells[] = {
+    "build/bootstrap/cocmd.com",
+    "dash",
     "sh",
     "bash",
     "ksh",
@@ -1569,12 +1585,76 @@ start_waiting_jobs (void)
 }
 
 
-void Unveil (const char *path, const char *perm)
+bool IsDynamicExecutable(const char *prog)
+{
+  int fd;
+  Elf64_Ehdr e;
+  struct stat st;
+  if ((fd = open(prog, O_RDONLY)) == -1)
+    return false;
+  if (read(fd, &e, sizeof(e)) != sizeof(e))
+    return false;
+  close(fd);
+  return e.e_type == ET_DYN &&
+         READ32LE(e.e_ident) == READ32LE(ELFMAG);
+}
+
+bool GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
+{
+  int c, n;
+  for (n = 0;;)
+    switch ((c = *path++)) {
+    case 'r':
+    case 'w':
+    case 'c':
+    case 'x':
+      out_perm[n++] = c;
+      out_perm[n] = 0;
+      break;
+    case ':':
+      if (n)
+        {
+          *out_path = path;
+          return true;
+        }
+      else
+        return false;
+    default:
+      return false;
+    }
+}
+
+/* Adds path to sandbox, returning true if found. */
+bool Unveil (const char *path, const char *perm)
 {
   int e;
+  char permprefix[5];
+
+  /* if path is like `rwcx:o/tmp` then `rwcx` will override perm */
+  if (path && GetPermPrefix (path, permprefix, &path))
+    perm = permprefix;
+
   e = errno;
-  unveil(path, perm);
-  errno = e;
+  if (unveil (path, perm) != -1)
+    return true;
+
+  /* if we're not on openbsd or linux 5.13+ we assume it worked */
+  if (errno == ENOSYS)
+    {
+      errno = e;
+      return true;
+    }
+
+  /* path not found isn't really much of an error */
+  if (errno == ENOENT)
+    {
+      errno = e;
+      return false;
+    }
+
+  /* otherwise fail */
+  OSS (error, NILF, "%s: %s", path, strerror (errno));
+  return true;
 }
 
 /* POSIX:
@@ -1625,39 +1705,87 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
     struct child *c;
     char pathbuf[PATH_MAX];
     char outpathbuf[PATH_MAX];
+    const struct variable *var;
     c = (struct child *)child;
-    if (c->file->deps) {
-      argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
-      Unveil (argv[0], "rx");
-      Unveil ("o/tmp", "rwcx");
-      Unveil ("/dev/zero", "r");
-      Unveil ("/dev/null", "rw");
-      Unveil ("/dev/full", "rw");
-      Unveil ("/etc/hosts", "r");
-      Unveil ("/dev/stdin", "rw");
-      Unveil ("/dev/stdout", "rw");
-      Unveil ("/dev/stderr", "rw");
-      Unveil ("/usr/bin/ape", "rx");
-      Unveil ("/etc/console", "rw");
-      Unveil ("/etc/services", "r");
-      Unveil ("libc/integral", "r");
-      Unveil ("/etc/protocols", "r");
-      Unveil ("build/bootstrap", "rx");
-      Unveil ("/etc/resolv.conf", "r");
-      Unveil ("o/third_party/gcc", "rx");
-      Unveil ("libc/disclaimer.inc", "r");
-      if (strlen(c->file->name) < PATH_MAX) {
-        const char *dir;
-        strcpy (outpathbuf, c->file->name);
-        dir = dirname (outpathbuf);
-        makedirs (dir, 0755);
-        Unveil (dir, "rwc");
+    if (!lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                                 c->file->variables->set))
+      {
+        /* resolve command into executable path */
+        argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
+
+        if (argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
+          {
+            /* make it easier to run dynamic system executables */
+            Unveil ("/lib", "rx");
+            Unveil ("/lib64", "rx");
+            Unveil ("/usr/lib", "rx");
+            Unveil ("/usr/lib64", "rx");
+            Unveil ("/usr/local/lib", "rx");
+            Unveil ("/usr/local/lib64", "rx");
+            Unveil ("/etc/ld-musl-x86_64.path", "r");
+            Unveil ("/etc/ld.so.conf", "r");
+            Unveil ("/etc/ld.so.cache", "r");
+            Unveil ("/etc/ld.so.conf.d", "r");
+            Unveil ("/etc/ld.so.preload", "r");
+          }
+        else
+          /* permit launching actually portable executables */
+          if (!Unveil ("/usr/bin/ape", "rx"))
+            Unveil (xjoinpaths (firstnonnull (getenv ("TMPDIR"),
+                                              firstnonnull (getenv ("HOME"),
+                                                            ".")),
+                                ".ape"),
+                    "rx");
+
+        /* unveil executable */
+        Unveil (argv[0], "rx");
+
+        /* unveil essential paths */
+        Unveil ("/dev/zero", "r");
+        Unveil ("/dev/null", "rw");
+        Unveil ("/dev/full", "rw");
+        Unveil ("/dev/stdin", "rw");
+        Unveil ("/dev/stdout", "rw");
+        Unveil ("/dev/stderr", "rw");
+
+        /* unveil cosmopolitan specific */
+        Unveil ("o/tmp", "rwcx");
+        Unveil ("libc/integral", "r");
+        Unveil ("libc/disclaimer.inc", "r");
+        Unveil ("build/bootstrap", "rx");
+        Unveil ("o/third_party/gcc", "rx");
+
+        /* unveil target output directory */
+        if (strlen(c->file->name) < PATH_MAX)
+          {
+            const char *dir;
+            strcpy (outpathbuf, c->file->name);
+            dir = dirname (outpathbuf);
+            makedirs (dir, 0755);
+            Unveil (dir, "rwc");
+          }
+
+        /* unveil target prerequisites */
+        for (d = c->file->deps; d; d = d->next)
+          Unveil (d->file->name, "rx");
+
+        /* unveil explicit .UNVEIL entries */
+        if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE(".UNVEIL"),
+                                           c->file->variables->set)))
+          {
+            char *val, *tok, *state, *start;
+            start = val = strdup (variable_expand (var->value));
+            while (tok = strtok_r (start, " \t\r\n", &state))
+              {
+                Unveil (tok, "r");
+                start = 0;
+              }
+            free(val);
+          }
+
+        /* commit sandbox */
+        Unveil (0, 0);
       }
-      for (d = c->file->deps; d; d = d->next)
-        /* TODO(jart): remove w (do code morphing outside package.com) */
-        Unveil (d->file->name, "rwx");
-      Unveil (0, 0);
-    }
   }
 
   /* Run the command.  */
@@ -1743,36 +1871,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
                                  const char *shellflags, const char *ifs,
                                  int flags, char **batch_filename UNUSED)
 {
-#if defined (WINDOWS32)
-  /* We used to have a double quote (") in sh_chars_dos[] below, but
-     that caused any command line with quoted file names be run
-     through a temporary batch file, which introduces command-line
-     limit of 4K charcaters imposed by cmd.exe.  Since CreateProcess
-     can handle quoted file names just fine, removing the quote lifts
-     the limit from a very frequent use case, because using quoted
-     file names is commonplace on MS-Windows.  */
-  static const char *sh_chars_dos = "|&<>";
-  static const char *sh_cmds_dos[] =
-    { "assoc", "break", "call", "cd", "chcp", "chdir", "cls", "color", "copy",
-      "ctty", "date", "del", "dir", "echo", "echo.", "endlocal", "erase",
-      "exit", "for", "ftype", "goto", "if", "if", "md", "mkdir", "move",
-      "path", "pause", "prompt", "rd", "rem", "ren", "rename", "rmdir",
-      "set", "setlocal", "shift", "time", "title", "type", "ver", "verify",
-      "vol", ":", 0 };
-
-  static const char *sh_chars_sh = "#;\"*?[]&|<>(){}$`^";
-  static const char *sh_cmds_sh[] =
-    { "cd", "eval", "exec", "exit", "login", "logout", "set", "umask", "wait",
-      "while", "for", "case", "if", ":", ".", "break", "continue", "export",
-      "read", "readonly", "shift", "times", "trap", "switch", "test", "command",
-#ifdef BATCH_MODE_ONLY_SHELL
-      "echo",
-#endif
-      0 };
-
-  const char *sh_chars;
-  const char **sh_cmds;
-#else  /* must be UNIX-ish */
   static const char *sh_chars = "#;\"*?[]&|<>(){}$`^~!";
   static const char *sh_cmds[] =
     { ".", ":", "alias", "bg", "break", "case", "cd", "command", "continue",
@@ -1780,15 +1878,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
       "if", "jobs", "login", "logout", "read", "readonly", "return", "set",
       "shift", "test", "times", "trap", "type", "ulimit", "umask", "unalias",
       "unset", "wait", "while", 0 };
-
-# ifdef HAVE_DOS_PATHS
-  /* This is required if the MSYS/Cygwin ports (which do not define
-     WINDOWS32) are compiled with HAVE_DOS_PATHS defined, which uses
-     sh_chars_sh directly (see below).  The value must be identical
-     to that of sh_chars immediately above.  */
-  static const char *sh_chars_sh =  "#;\"*?[]&|<>(){}$`^~!";
-# endif  /* HAVE_DOS_PATHS */
-#endif
   size_t i;
   char *p;
 #ifndef NDEBUG
@@ -1800,20 +1889,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
   int instring, word_has_equals, seen_nonequals, last_argument_was_empty;
   char **new_argv = 0;
   char *argstr = 0;
-#ifdef WINDOWS32
-  int slow_flag = 0;
-
-  if (!unixy_shell)
-    {
-      sh_cmds = sh_cmds_dos;
-      sh_chars = sh_chars_dos;
-    }
-  else
-    {
-      sh_cmds = sh_cmds_sh;
-      sh_chars = sh_chars_sh;
-    }
-#endif /* WINDOWS32 */
 
   if (restp != NULL)
     *restp = NULL;
@@ -1830,47 +1905,8 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
   /* See if it is safe to parse commands internally.  */
   if (shell == 0)
     shell = default_shell;
-#ifdef WINDOWS32
-  else if (strcmp (shell, default_shell))
-  {
-    char *s1 = _fullpath (NULL, shell, 0);
-    char *s2 = _fullpath (NULL, default_shell, 0);
-
-    slow_flag = strcmp ((s1 ? s1 : ""), (s2 ? s2 : ""));
-
-    free (s1);
-    free (s2);
-  }
-  if (slow_flag)
-    goto slow;
-#else  /* not WINDOWS32 */
-#if defined (__MSDOS__) || defined (__EMX__)
-  else if (strcasecmp (shell, default_shell))
-    {
-      extern int _is_unixy_shell (const char *_path);
-
-      DB (DB_BASIC, (_("$SHELL changed (was '%s', now '%s')\n"),
-                     default_shell, shell));
-      unixy_shell = _is_unixy_shell (shell);
-      /* we must allocate a copy of shell: construct_command_argv() will free
-       * shell after this function returns.  */
-      default_shell = xstrdup (shell);
-    }
-  if (unixy_shell)
-    {
-      sh_chars = sh_chars_sh;
-      sh_cmds  = sh_cmds_sh;
-    }
-  else
-    {
-      sh_chars = sh_chars_dos;
-      sh_cmds  = sh_cmds_dos;
-    }
-#else  /* !__MSDOS__ */
-  else if (strcmp (shell, default_shell))
-    goto slow;
-#endif /* !__MSDOS__ && !__EMX__ */
-#endif /* not WINDOWS32 */
+  
+  /* [jart] remove code that forces slow path if not using /bin/sh */
 
   if (ifs)
     for (cap = ifs; *cap != '\0'; ++cap)
@@ -1942,14 +1978,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
              quotes have the same effect.  */
           else if (instring == '"' && strchr ("\\$`", *p) != 0 && unixy_shell)
             goto slow;
-#ifdef WINDOWS32
-          /* Quoted wildcard characters must be passed quoted to the
-             command, so give up the fast route.  */
-          else if (instring == '"' && strchr ("*?", *p) != 0 && !unixy_shell)
-            goto slow;
-          else if (instring == '"' && strncmp (p, "\\\"", 2) == 0)
-            *ap++ = *++p;
-#endif
           else
             *ap++ = *p;
         }
@@ -1988,30 +2016,8 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
                   while (ISBLANK (p[1]))
                     ++p;
               }
-#ifdef WINDOWS32
-            /* Backslash before whitespace is not special if our shell
-               is not Unixy.  */
-            else if (ISSPACE (p[1]) && !unixy_shell)
-              {
-                *ap++ = *p;
-                break;
-              }
-#endif
             else if (p[1] != '\0')
               {
-#ifdef HAVE_DOS_PATHS
-                /* Only remove backslashes before characters special to Unixy
-                   shells.  All other backslashes are copied verbatim, since
-                   they are probably DOS-style directory separators.  This
-                   still leaves a small window for problems, but at least it
-                   should work for the vast majority of naive users.  */
-                  if (p[1] != '\\' && p[1] != '\''
-                      && !ISSPACE (p[1])
-                      && strchr (sh_chars_sh, p[1]) == 0)
-                    /* back up one notch, to copy the backslash */
-                    --p;
-#endif  /* HAVE_DOS_PATHS */
-
                 /* Copy and skip the following char.  */
                 *ap++ = *++p;
               }
@@ -2061,12 +2067,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
                   {
                     if (streq (sh_cmds[j], new_argv[0]))
                       goto slow;
-#if defined(__EMX__) || defined(WINDOWS32)
-                    /* Non-Unix shells are case insensitive.  */
-                    if (!unixy_shell
-                        && strcasecmp (sh_cmds[j], new_argv[0]) == 0)
-                      goto slow;
-#endif
                   }
               }
 
@@ -2121,23 +2121,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
       free (new_argv);
     }
 
-#ifdef WINDOWS32
-  /*
-   * Not eating this whitespace caused things like
-   *
-   *    sh -c "\n"
-   *
-   * which gave the shell fits. I think we have to eat
-   * whitespace here, but this code should be considered
-   * suspicious if things start failing....
-   */
-
-  /* Make sure not to bother processing an empty line.  */
-  NEXT_TOKEN (line);
-  if (*line == '\0')
-    return 0;
-#endif /* WINDOWS32 */
-
   {
     /* SHELL may be a multi-word command.  Construct a command line
        "$(SHELL) $(.SHELLFLAGS) LINE", with all special chars in LINE escaped.
@@ -2148,9 +2131,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
     size_t shell_len = strlen (shell);
     size_t line_len = strlen (line);
     size_t sflags_len = shellflags ? strlen (shellflags) : 0;
-#ifdef WINDOWS32
-    char *command_ptr = NULL; /* used for batch_mode_shell mode */
-#endif
 
     /* In .ONESHELL mode we are allowed to throw the entire current
         recipe string at a single shell and trust that the user
@@ -2168,12 +2148,7 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
 
         /* Remove and ignore interior prefix chars [@+-] because they're
              meaningless given a single shell. */
-        if (is_bourne_compatible_shell (shell)
-#ifdef WINDOWS32
-            /* If we didn't find any sh.exe, don't behave is if we did!  */
-            && !no_default_sh_exe
-#endif
-            )
+        if (is_bourne_compatible_shell (shell))
           {
             const char *f = line;
             char *t = line;
@@ -2208,79 +2183,6 @@ construct_command_argv_internal (char *line, char **restp, const char *shell,
               }
             *t = '\0';
           }
-#ifdef WINDOWS32
-        else    /* non-Posix shell (cmd.exe etc.) */
-          {
-            const char *f = line;
-            char *t = line;
-            char *tstart = t;
-            int temp_fd;
-            FILE* batch = NULL;
-            int id = GetCurrentProcessId ();
-            PATH_VAR(fbuf);
-
-            /* Generate a file name for the temporary batch file.  */
-            sprintf (fbuf, "make%d", id);
-            *batch_filename = create_batch_file (fbuf, 0, &temp_fd);
-            DB (DB_JOBS, (_("Creating temporary batch file %s\n"),
-                          *batch_filename));
-
-            /* Create a FILE object for the batch file, and write to it the
-               commands to be executed.  Put the batch file in TEXT mode.  */
-            _setmode (temp_fd, _O_TEXT);
-            batch = _fdopen (temp_fd, "wt");
-            fputs ("@echo off\n", batch);
-            DB (DB_JOBS, (_("Batch file contents:\n\t@echo off\n")));
-
-            /* Copy the recipe, removing and ignoring interior prefix chars
-               [@+-]: they're meaningless in .ONESHELL mode.  */
-            while (*f != '\0')
-              {
-                /* This is the start of a new recipe line.  Skip whitespace
-                   and prefix characters but not newlines.  */
-                while (ISBLANK (*f) || *f == '-' || *f == '@' || *f == '+')
-                  ++f;
-
-                /* Copy until we get to the next logical recipe line.  */
-                while (*f != '\0')
-                  {
-                    /* Remove the escaped newlines in the command, and the
-                       blanks that follow them.  Windows shells cannot handle
-                       escaped newlines.  */
-                    if (*f == '\\' && f[1] == '\n')
-                      {
-                        f += 2;
-                        while (ISBLANK (*f))
-                          ++f;
-                      }
-                    *(t++) = *(f++);
-                    /* On an unescaped newline, we're done with this
-                       line.  */
-                    if (f[-1] == '\n')
-                      break;
-                  }
-                /* Write another line into the batch file.  */
-                if (t > tstart)
-                  {
-                    char c = *t;
-                    *t = '\0';
-                    fputs (tstart, batch);
-                    DB (DB_JOBS, ("\t%s", tstart));
-                    tstart = t;
-                    *t = c;
-                  }
-              }
-            DB (DB_JOBS, ("\n"));
-            fclose (batch);
-
-            /* Create an argv list for the shell command line that
-               will run the batch file.  */
-            new_argv = xmalloc (2 * sizeof (char *));
-            new_argv[0] = xstrdup (*batch_filename);
-            new_argv[1] = NULL;
-            return new_argv;
-          }
-#endif /* WINDOWS32 */
         /* Create an argv list for the shell command line.  */
         {
           int n = 0;

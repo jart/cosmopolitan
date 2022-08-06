@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 
 /**
  * Converts dotted IPv4 address string to network order binary.
