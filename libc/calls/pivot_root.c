@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,31 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/sysv/errfuns.h"
 
 /**
- * Sets current directory.
+ * Changes root mount.
  *
- * This does *not* update the `PWD` environment variable.
- *
- * @return 0 on success, or -1 w/ errno
- * @asyncsignalsafe
- * @see fchdir()
+ * @raise ENOSYS on non-Linux
  */
-int chdir(const char *path) {
+int pivot_root(const char *new_root, const char *put_old) {
   int rc;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
-    rc = efault();
-  } else if (!IsWindows()) {
-    rc = sys_chdir(path);
-  } else {
-    rc = sys_chdir_nt(path);
-  }
-  STRACE("%s(%#s) → %d% m", "chdir", path, rc);
+  rc = sys_pivot_root(new_root, put_old);
+  STRACE("pivot_root(%#s, %#s) → %d% m", new_root, put_old, rc);
   return rc;
 }

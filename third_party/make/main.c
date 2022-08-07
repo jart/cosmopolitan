@@ -29,6 +29,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/sig.h"
 #include "libc/log/log.h"
 #include "libc/log/log.h"
+#include "libc/log/log.h"
 #include "third_party/make/getopt.h"
 
 STATIC_STACK_SIZE(0x200000);  // 2mb stack

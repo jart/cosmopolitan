@@ -38,6 +38,15 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/intrin/kprintf.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/elf/def.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/elf/struct/phdr.h"
+#include "libc/elf/def.h"
+#include "libc/elf/elf.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \
@@ -234,6 +243,7 @@ is_bourne_compatible_shell (const char *path)
   /* List of known POSIX (or POSIX-ish) shells.  */
   static const char *unix_shells[] = {
     "build/bootstrap/cocmd.com",
+    "false",
     "dash",
     "sh",
     "bash",
@@ -1587,20 +1597,6 @@ start_waiting_jobs (void)
 }
 
 
-bool IsDynamicExecutable(const char *prog)
-{
-  int fd;
-  Elf64_Ehdr e;
-  struct stat st;
-  if ((fd = open(prog, O_RDONLY)) == -1)
-    return false;
-  if (read(fd, &e, sizeof(e)) != sizeof(e))
-    return false;
-  close(fd);
-  return e.e_type == ET_DYN &&
-         READ32LE(e.e_ident) == READ32LE(ELFMAG);
-}
-
 bool GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
 {
   int c, n;
@@ -1709,6 +1705,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
     char outpathbuf[PATH_MAX];
     const struct variable *var;
     c = (struct child *)child;
+    errno = 0;
     if (!lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
                                  c->file->variables->set))
       {
@@ -1717,9 +1714,11 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
         if (argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
           {
-            /* make it easier to run dynamic system executables */
+            /* weaken sandbox if user is using dynamic shared lolbjects */
+            Unveil ("/bin", "rx");
             Unveil ("/lib", "rx");
             Unveil ("/lib64", "rx");
+            Unveil ("/usr/bin", "rx");
             Unveil ("/usr/lib", "rx");
             Unveil ("/usr/lib64", "rx");
             Unveil ("/usr/local/lib", "rx");
@@ -1729,6 +1728,9 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
             Unveil ("/etc/ld.so.cache", "r");
             Unveil ("/etc/ld.so.conf.d", "r");
             Unveil ("/etc/ld.so.preload", "r");
+            Unveil ("/usr/include", "r");
+            Unveil ("/usr/share/locale", "r");
+            Unveil ("/usr/share/locale-langpack", "r");
           }
         else
           /* permit launching actually portable executables */
@@ -1751,6 +1753,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         Unveil ("/dev/stderr", "rw");
 
         /* unveil cosmopolitan build specific */
+        Unveil ("/tmp", "rwc");
         Unveil ("o/tmp", "rwcx");
         Unveil ("libc/integral", "r");
         Unveil ("libc/disclaimer.inc", "r");

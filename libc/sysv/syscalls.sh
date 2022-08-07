@@ -209,7 +209,7 @@ scall	cpuset_setaffinity	0xffffff1e8fffffff	globl
 scall	sys_sched_rr_get_interval 0xffffff14effff094	globl hidden
 scall	vhangup			0xfffffffffffff099	globl
 scall	modify_ldt		0xfffffffffffff09a	globl
-scall	pivot_root		0xfffffffffffff09b	globl
+scall	sys_pivot_root		0xfffffffffffff09b	globl hidden
 scall	_sysctl			0xfffffffffffff09c	globl
 #scall	prctl			0xfffffffffffff09d	globl # wrapped manually
 scall	sys_arch_prctl		0xfff0a50a5ffff09e	globl hidden # sysarch() on bsd

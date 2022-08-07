@@ -60,7 +60,7 @@
 #   build/config.mk
 
 SHELL      = build/bootstrap/cocmd.com
-HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 win7 win10 xnu
+HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 win10 xnu
 MAKEFLAGS += --no-builtin-rules
 
 .SUFFIXES:
@@ -365,7 +365,9 @@ o/cosmopolitan.h:							\
 
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
-		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))
+		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\
+		$(SRCS)							\
+		$(HDRS)
 	$(file >$@.args,$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS))))
 	o/$(MODE)/third_party/chibicc/chibicc.com.dbg -J		\
 		-fno-common -include libc/integral/normalize.inc -o $@	\

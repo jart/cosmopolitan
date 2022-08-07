@@ -142,6 +142,7 @@ int pause(void);
 int personality(uint64_t);
 int pipe(int[hasatleast 2]);
 int pipe2(int[hasatleast 2], int);
+int pivot_root(const char *, const char *);
 int pledge(const char *, const char *);
 int posix_fadvise(int, uint64_t, uint64_t, int);
 int posix_madvise(void *, uint64_t, int);

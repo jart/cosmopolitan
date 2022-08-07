@@ -334,23 +334,6 @@ bool PathExists(const char *path) {
   }
 }
 
-bool IsDynamicExecutable(const char *prog) {
-  int fd;
-  Elf64_Ehdr e;
-  struct stat st;
-  if ((fd = open(prog, O_RDONLY)) == -1) {
-    kprintf("open(%#s, O_RDONLY) failed: %m\n", prog);
-    exit(13);
-  }
-  if (read(fd, &e, sizeof(e)) != sizeof(e)) {
-    kprintf("%s: read(64) failed: %m\n", prog);
-    exit(16);
-  }
-  close(fd);
-  return e.e_type == ET_DYN &&  //
-         READ32LE(e.e_ident) == READ32LE(ELFMAG);
-}
-
 void Unveil(const char *path, const char *perm) {
   if (unveil(path, perm) == -1) {
     kprintf("error: unveil(%#s, %#s) failed: %m\n", path, perm);

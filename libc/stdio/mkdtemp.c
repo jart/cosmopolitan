@@ -24,7 +24,13 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Creates temporary directory.
+ * Creates temporary directory, e.g.
+ *
+ *     char path[PATH_MAX];
+ *     snprintf(path, sizeof(path), "%s%s.XXXXXX",
+ *              kTmpPath, program_invocation_short_name);
+ *     printf("%s\n", mkdtemp(path));
+ *     rmdir(path);
  *
  * @param template must end with XXXXXX which is replaced with
  *     nondeterministic base36 random data
