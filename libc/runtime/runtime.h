@@ -17,6 +17,7 @@ extern intptr_t __oldstack;                         /* CRT */
 extern uint64_t __nosync;                           /* SYS */
 extern _Atomic(int) __ftrace;                       /* SYS */
 extern _Atomic(int) __strace;                       /* SYS */
+extern uint32_t __pledge_mode;                      /* SYS */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern uint64_t __syscount;                         /* RII */
@@ -41,6 +42,10 @@ extern unsigned char *__relo_start[];               /* αpε */
 extern unsigned char *__relo_end[];                 /* αpε */
 extern uint8_t __zip_start[];                       /* αpε */
 extern uint8_t __zip_end[];                         /* αpε */
+extern uint8_t __data_start[];                      /* αpε */
+extern uint8_t __data_end[];                        /* αpε */
+extern uint8_t __bss_start[];                       /* αpε */
+extern uint8_t __bss_end[];                         /* αpε */
 extern size_t __virtualmax;
 extern bool __isworker;
 

@@ -259,7 +259,7 @@ SECURITY
 
     -S (online policy)
 
-      This causes unix.pledge("stdio rpath inet dns") to be called on
+      This causes unix.pledge("stdio rpath inet dns id") to be called on
       workers after fork() is called. This permits read-only operations
       and APIs like Fetch() that let workers send and receive data with
       private and public Internet hosts. Access to the unix module is
@@ -267,10 +267,12 @@ SECURITY
 
     -SS (offline policy)
 
-      This causes unix.pledge("stdio rpath") to be called on workers
+      This causes unix.pledge("stdio rpath id") to be called on workers
       after after fork() is called. This prevents workers from talking
       to the network (other than the client) and allows read-only file
-      system access (e.g. `-D DIR` flag).
+      system access (e.g. `-D DIR` flag). The `id` group helps you to
+      call other functions important to redbean security, such as the
+      unix.setrlimit() function.
 
     -SSS (contained policy)
 
@@ -280,6 +282,11 @@ SECURITY
       file system access (with some exceptions like logging). Redbean
       should only be able to serve from its own zip file in this mode.
       Lua script access to the unix module is highly restricted.
+
+  Unlike the unix.pledge() function, these sandboxing flags use a more
+  permissive policy on Linux. Rather than killing the process, they'll
+  cause system calls to fail with EPERM instead. Therefore these flags
+  should be gentler when you want security errors to be recoverable.
 
   See http://redbean.dev for further details.
 
@@ -3834,8 +3841,11 @@ UNIX MODULE
     This can be used to sandbox your redbean workers. It allows finer
     customization compared to the `-S` flag.
 
-    Pledging causes most system calls to become unavailable. On Linux the
-    disabled calls will return EPERM whereas OpenBSD kills the process.
+    Pledging causes most system calls to become unavailable. If a
+    forbidden system call is used, then the process will be killed. In
+    that case, on OpenBSD, your system log will explain which promise
+    you need. On Linux, we report the promise to stderr, with one
+    exception: reporting is currently not possible if you pledge exec.
 
     Using pledge is irreversible. On Linux it causes PR_SET_NO_NEW_PRIVS
     to be set on your process.

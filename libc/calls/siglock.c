@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 sw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/sysv/consts/nrlinux.h"
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/calls/state.internal.h"
+#include "libc/intrin/pthread.h"
 
-//	Linux Signal Trampoline (HOLY CODE)
-__restore_bt:
-	nop
-	.endfn	__restore_bt,globl,hidden
-	nop	# gap so that __get_symbol(st, addr - 1) fails
-	.align	16
-__restore_rt:					# @see gdb/amd64-linux-tdep.c
-	mov	$__NR_linux_sigreturn,%rax	# [sic]
-	syscall
-	.align	16
-	.endfn	__restore_rt,globl,hidden
+static pthread_mutex_t __sig_lock_obj;
+
+void(__sig_lock)(void) {
+  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
+  pthread_mutex_lock(&__sig_lock_obj);
+}
+
+void(__sig_unlock)(void) {
+  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
+  pthread_mutex_unlock(&__sig_lock_obj);
+}

@@ -25,6 +25,7 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/seccomp.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
@@ -32,6 +33,7 @@
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/dos.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
@@ -6585,17 +6587,18 @@ static void UnveilRedbean(void) {
 }
 
 static int EnableSandbox(void) {
+  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
   switch (sandboxed) {
     case 0:
       return 0;
     case 1:  // -S
       DEBUGF("(stat) applying '%s' sandbox policy", "online");
       UnveilRedbean();
-      return pledge("stdio rpath inet dns", 0);
+      return pledge("stdio rpath inet dns id", 0);
     case 2:  // -SS
       DEBUGF("(stat) applying '%s' sandbox policy", "offline");
       UnveilRedbean();
-      return pledge("stdio rpath", 0);
+      return pledge("stdio rpath id", 0);
     default:  // -SSS
       DEBUGF("(stat) applying '%s' sandbox policy", "contained");
       UnveilRedbean();

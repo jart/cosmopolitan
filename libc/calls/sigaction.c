@@ -37,7 +37,6 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
@@ -245,7 +244,7 @@ static int __sigaction(int sig, const struct sigaction *act,
 }
 
 /**
- * Installs handler for kernel interrupt, e.g.:
+ * Installs handler for kernel interrupt to thread, e.g.:
  *
  *     void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
  *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
@@ -445,6 +444,7 @@ static int __sigaction(int sig, const struct sigaction *act,
  * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
@@ -452,9 +452,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
-    __sig_lock();
     rc = __sigaction(sig, act, oldact);
-    __sig_unlock();
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
          DescribeSigaction(rc, oldact), rc);

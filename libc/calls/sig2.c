@@ -99,7 +99,6 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
   STRACE("delivering %G", sig);
 
   // enter the signal
-  __sig_lock();
   rva = __sighandrvas[sig];
   flags = __sighandflags[sig];
   if ((~flags & SA_NODEFER) || (flags & SA_RESETHAND)) {
@@ -110,7 +109,6 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
     // signal handler. in that case you must use SA_NODEFER.
     __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
-  __sig_unlock();
 
   // setup the somewhat expensive information args
   // only if they're requested by the user in sigaction()

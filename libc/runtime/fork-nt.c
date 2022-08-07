@@ -55,10 +55,6 @@
 STATIC_YOINK("_check_sigchld");
 
 extern int64_t __wincrashearly;
-extern unsigned char __data_start[]; /* αpε */
-extern unsigned char __data_end[];   /* αpε */
-extern unsigned char __bss_start[];  /* αpε */
-extern unsigned char __bss_end[];    /* αpε */
 bool32 __onntconsoleevent_nt(uint32_t);
 
 static textwindows wontreturn void AbortFork(const char *func) {

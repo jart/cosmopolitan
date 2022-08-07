@@ -19,17 +19,5 @@
 #include "libc/calls/state.internal.h"
 #include "libc/intrin/pthread.h"
 
-unsigned __sighandrvas[NSIG];
-unsigned __sighandflags[NSIG];
-
-static pthread_mutex_t __sig_lock_obj;
-
-void(__sig_lock)(void) {
-  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
-  pthread_mutex_lock(&__sig_lock_obj);
-}
-
-void(__sig_unlock)(void) {
-  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
-  pthread_mutex_unlock(&__sig_lock_obj);
-}
+_Thread_local unsigned __sighandrvas[NSIG];
+_Thread_local unsigned __sighandflags[NSIG];

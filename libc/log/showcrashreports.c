@@ -111,7 +111,7 @@ void ShowCrashReports(void) {
   kCrashSigs[4] = SIGTRAP; /* bad system call */
   kCrashSigs[5] = SIGABRT; /* abort() called */
   kCrashSigs[6] = SIGBUS;  /* misaligned, noncanonical ptr, etc. */
-  kCrashSigs[7] = SIGSYS;  /* bad system call */
+  kCrashSigs[7] = SIGURG;  /* placeholder */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   if (!IsWindows()) {
     bzero(&ss, sizeof(ss));

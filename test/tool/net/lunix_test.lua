@@ -16,6 +16,10 @@
 gotsigusr1 = false
 tmpdir = "o/tmp/lunix_test.%d" % {unix.getpid()}
 
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
+
 function OnSigUsr1(sig)
    gotsigusr1 = true
 end
@@ -67,15 +71,18 @@ function UnixTest()
    -- 2. sandbox the process
    -- 3. then violate its security
    if GetHostOs() == "LINUX" then
+      reader, writer = assert(unix.pipe())
       if assert(unix.fork()) == 0 then
+         assert(unix.dup(writer, 2))
          assert(unix.pledge("stdio"))
-         _, err = unix.socket()
-         assert(err:errno() == unix.EPERM)
+         unix.socket()
          unix.exit(0)
       end
+      unix.close(writer)
+      unix.close(reader)
       pid, ws = assert(unix.wait())
-      assert(unix.WIFEXITED(ws))
-      assert(unix.WEXITSTATUS(ws) == 0)
+      assert(unix.WIFSIGNALED(ws))
+      assert(unix.WTERMSIG(ws) == unix.SIGSYS)
    elseif GetHostOs() == "OPENBSD" then
       if assert(unix.fork()) == 0 then
          assert(unix.pledge("stdio"))

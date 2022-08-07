@@ -90,13 +90,13 @@ __oncrash_sigbus:
 	.endfn	__oncrash_sigbus,globl
 
 	.org	11*7
-__oncrash_sigsys:
+__oncrash_sigurg:
 	push	%rbp
 	mov	%rsp,%rbp
 	call	__oncrash
 	pop	%rbp
 	ret
-	.endfn	__oncrash_sigsys,globl
+	.endfn	__oncrash_sigurg,globl
 
 //	</SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c, internal.h
 

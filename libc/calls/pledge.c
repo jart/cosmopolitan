@@ -23,18 +23,27 @@
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/bsr.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/audit.h"
+#include "libc/sysv/consts/kern.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 #define SPECIAL   0xf000
@@ -63,6 +72,13 @@
 
 #define PLEDGE(pledge) pledge, ARRAYLEN(pledge)
 
+#define AbortPledge(reason) \
+  do {                      \
+    assert(!reason);        \
+    asm("hlt");             \
+    unreachable;            \
+  } while (0)
+
 struct Filter {
   size_t n;
   struct sock_filter p[700];
@@ -79,6 +95,7 @@ static const uint16_t kPledgeLinuxDefault[] = {
 // difference in the latency of sched_yield() if it's at the start of
 // the bpf script or the end.
 static const uint16_t kPledgeLinuxStdio[] = {
+    __NR_linux_sigreturn,             //
     __NR_linux_exit_group,            //
     __NR_linux_sched_yield,           //
     __NR_linux_sched_getaffinity,     //
@@ -175,7 +192,6 @@ static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_sigaltstack,           //
     __NR_linux_sigprocmask,           //
     __NR_linux_sigsuspend,            //
-    __NR_linux_sigreturn,             //
     __NR_linux_sigpending,            //
     __NR_linux_socketpair,            //
     __NR_linux_getrusage,             //
@@ -432,7 +448,7 @@ static const struct sock_filter kFilterStart[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     // each filter assumes ordinal is already loaded into accumulator
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-    // Forbid some system calls with ENOSYS (rather than EPERM)
+    // forbid some system calls with ENOSYS (rather than EPERM)
     BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, __NR_linux_memfd_secret, 5, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_rseq, 4, 0),
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_memfd_create, 3, 0),
@@ -442,15 +458,91 @@ static const struct sock_filter kFilterStart[] = {
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (38 & SECCOMP_RET_DATA)),
 };
 
-static const struct sock_filter kFilterEnd[] = {
-    // if syscall isn't whitelisted then have it return -EPERM (-1)
+static const struct sock_filter kFilterIgnoreExitGroup[] = {
+    BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_exit_group, 0, 1),
     BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | (1 & SECCOMP_RET_DATA)),
 };
 
+static void Log(const char *s, ...) {
+  va_list va;
+  va_start(va, s);
+  do {
+    write(2, s, strlen(s));
+  } while ((s = va_arg(va, const char *)));
+  va_end(va);
+}
+
+static bool HasSyscall(struct Pledges *p, uint16_t n) {
+  int i;
+  for (i = 0; i < p->len; ++i) {
+    if ((p->syscalls[i] & 0x0fff) == n) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static char *FixCpy(char p[17], uint64_t x, uint8_t k) {
+  while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
+  *p = '\0';
+  return p;
+}
+
+static char *HexCpy(char p[17], uint64_t x) {
+  return FixCpy(p, x, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
+}
+
+static void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
+  int i;
+  bool found;
+  char ord[17], rip[17];
+  struct sigaction dfl = {.sa_sigaction = SIG_DFL};
+  ctx->uc_mcontext.rax = -si->si_errno;
+  FixCpy(ord, si->si_syscall, 12);
+  HexCpy(rip, ctx->uc_mcontext.rip);
+  for (found = i = 0; i < ARRAYLEN(kPledgeLinux); ++i) {
+    if (HasSyscall(kPledgeLinux + i, si->si_syscall)) {
+      Log("error: has not pledged ", kPledgeLinux[i].name,  //
+          " (ord=", ord, " rip=", rip, ")\n", 0);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    Log("error: unsupported syscall (ord=", ord, " rip=", rip, ")\n", 0);
+  }
+  switch (__pledge_mode) {
+    case SECCOMP_RET_KILL_PROCESS:
+      if (!sigaction(SIGABRT, &dfl, 0)) {
+        sys_kill(getpid(), SIGABRT, 1);
+      }
+      _Exit(128 + SIGABRT);
+    case SECCOMP_RET_KILL_THREAD:
+      if (!sigaction(SIGABRT, &dfl, 0)) {
+        sys_tgkill(getpid(), gettid(), SIGABRT);
+      }
+      _Exit1(128 + SIGABRT);
+    default:
+      break;
+  }
+}
+
+static void MonitorSigSys(void) {
+  static _Thread_local bool once;
+  if (once) return;
+  once = true;
+  struct sigaction sa = {
+      .sa_sigaction = OnSigSys,
+      .sa_flags = SA_SIGINFO | SA_RESTART,
+  };
+  if (sigaction(SIGSYS, &sa, 0)) {
+    AbortPledge("sigaction failed");
+  }
+}
+
 static void AppendFilter(struct Filter *f, struct sock_filter *p, size_t n) {
   if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) {
-    asm("hlt");  // need to increase array size
-    unreachable;
+    AbortPledge("need to increase array size");
   }
   memcpy(f->p + f->n, p, n * sizeof(*f->p));
   f->n += n;
@@ -1093,20 +1185,22 @@ static void AllowSocketUnix(struct Filter *f) {
 //   - PR_SET_SECCOMP      (22)
 //   - PR_SET_NO_NEW_PRIVS (38)
 //   - PR_CAPBSET_READ     (23)
+//   - PR_CAPBSET_DROP     (24)
 //
 static void AllowPrctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 10 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 5, 0),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 16, 4, 0),
-      /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 3, 0),
-      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 2, 0),
-      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 23, 1, 0),
-      /*L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 0, 1),
-      /*L7*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L8*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L9*/ /* next filter */
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_prctl, 0, 11 - 1),
+      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15, 6, 0),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 16, 5, 0),
+      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 21, 4, 0),
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 22, 3, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 23, 2, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 24, 1, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 38, 0, 1),
+      /* L9*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L10*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L11*/ /* next filter */
   };
   AppendFilter(f, PLEDGE(fragment));
 }
@@ -1220,8 +1314,7 @@ static void AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
       };
       AppendFilter(f, PLEDGE(fragment));
     } else {
-      asm("hlt");  // list of ordinals exceeds max displacement
-      unreachable;
+      AbortPledge("list of ordinals exceeds max displacement");
     }
   }
 
@@ -1311,8 +1404,7 @@ static void AppendPledge(struct Filter *f, const uint16_t *p, size_t len) {
         AllowPrlimitStdio(f);
         break;
       default:
-        asm("hlt");  // switch forgot to define a special ordinal
-        unreachable;
+        AbortPledge("switch forgot to define a special ordinal");
     }
   }
 }
@@ -1322,7 +1414,14 @@ int sys_pledge_linux(unsigned long ipromises) {
   struct Filter f;
   CheckLargeStackAllocation(&f, sizeof(f));
   f.n = 0;
+
+  // set up the seccomp filter
   AppendFilter(&f, PLEDGE(kFilterStart));
+  if (ipromises == -1) {
+    // if we're pledging empty string, then avoid triggering a sigsys
+    // when _Exit() gets called since we need to fallback to _Exit1()
+    AppendFilter(&f, PLEDGE(kFilterIgnoreExitGroup));
+  }
   if (!(~ipromises & (1ul << PROMISE_EXEC))) {
     AppendOriginVerification(&f);
   }
@@ -1332,7 +1431,30 @@ int sys_pledge_linux(unsigned long ipromises) {
       AppendPledge(&f, kPledgeLinux[i].syscalls, kPledgeLinux[i].len);
     }
   }
-  AppendFilter(&f, PLEDGE(kFilterEnd));
+
+  // now determine the default seccomp action
+  // the __pledge_mode global could be set to
+  // - SECCOMP_RET_KILL
+  // - SECCOMP_RET_KILL_THREAD
+  // - SECCOMP_RET_KILL_PROCESS
+  // - SECCOMP_RET_ERRNO | EPERM
+  struct sock_filter filter[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
+  if (~ipromises & (1ul << PROMISE_EXEC)) {
+    // our sigsys error message handler can't be inherited across
+    // execve() boundaries so if you've pledged exec then that'll
+    // mean no error messages for you.
+    filter[0].k = __pledge_mode;
+    AppendFilter(&f, PLEDGE(filter));
+  } else {
+    // if we haven't pledged exec, then we can monitor SIGSYS
+    // and print a helpful error message when things do break
+    // the handler then decides what to do with __pledge_mode
+    MonitorSigSys();
+    filter[0].k = SECCOMP_RET_TRAP | EPERM;
+    AppendFilter(&f, PLEDGE(filter));
+  }
+
+  // register our seccomp filter with the kernel
   if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1) {
     struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
     rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox);
@@ -1388,11 +1510,13 @@ int ParsePromises(const char *promises, unsigned long *out) {
  *
  * Pledging causes most system calls to become unavailable. Your system
  * call policy is enforced by the kernel, which means it can propagate
- * across execve() if permitted. This system call is supported on
- * OpenBSD and Linux where it's polyfilled using SECCOMP BPF. The way it
- * works on Linux is verboten system calls will raise EPERM whereas
- * OpenBSD just kills the process while logging a helpful message to
- * /var/log/messages explaining which promise category you needed.
+ * across execve() if permitted. Root is not required. This system call
+ * is supported on OpenBSD and Linux where it's polyfilled using SECCOMP
+ * BPF. The way it works on Linux is, if a forbidden system call is used
+ * then the kernel will will the process. On OpenBSD, a helpful message
+ * explaining which promise is needed should be emitted to your system
+ * log. On Linux, we log that to stderr with one exception: reporting is
+ * currently not possible if you pledge exec.
  *
  * Timing is everything with pledge. For example, if you're using
  * threads, then you may want to enable them explicitly *before* calling
@@ -1548,6 +1672,7 @@ int ParsePromises(const char *promises, unsigned long *out) {
  * @raise ENOSYS if host os isn't Linux or OpenBSD
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
  * @raise EINVAL if `promises` allows exec and `execpromises` is null
+ * @threadsafe
  */
 int pledge(const char *promises, const char *execpromises) {
   int rc;

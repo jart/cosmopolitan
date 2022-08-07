@@ -158,6 +158,11 @@ const char *GetSiCodeName(int sig, int si_code) {
     } else if (si_code == POLL_HUP) {
       strcpy(b + 5, "HUP"); /* device disconnected */
     }
+  } else if (sig == SIGSYS) {
+    NameIt(b, "SYS_", si_code);
+    if (si_code == SYS_SECCOMP) {
+      strcpy(b + 4, "SECCOMP");
+    }
   }
   return b;
 }

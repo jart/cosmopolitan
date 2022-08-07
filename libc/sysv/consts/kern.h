@@ -1,0 +1,21 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_KERN_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_KERN_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+#define KERN_SOH       "\001"
+#define KERN_SOH_ASCII '\001'
+#define KERN_EMERG     KERN_SOH "0"
+#define KERN_ALERT     KERN_SOH "1"
+#define KERN_CRIT      KERN_SOH "2"
+#define KERN_ERR       KERN_SOH "3"
+#define KERN_WARNING   KERN_SOH "4"
+#define KERN_NOTICE    KERN_SOH "5"
+#define KERN_INFO      KERN_SOH "6"
+#define KERN_DEBUG     KERN_SOH "7"
+#define KERN_DEFAULT   ""
+#define KERN_CONT      KERN_SOH "c"
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_KERN_H_ */

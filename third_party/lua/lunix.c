@@ -1381,6 +1381,7 @@ static int LuaUnixSiocgifconf(lua_State *L) {
 //     └─→ nil, unix.Errno
 static int LuaUnixPledge(lua_State *L) {
   int olderr = errno;
+  __pledge_mode = 0;
   return SysretBool(L, "pledge", olderr,
                     pledge(luaL_checkstring(L, 1), luaL_optstring(L, 2, 0)));
 }

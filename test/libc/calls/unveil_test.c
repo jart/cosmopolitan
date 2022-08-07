@@ -367,22 +367,13 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
     ASSERT_SYS(EACCES_OR_ENOENT, -1, open("garden/secret.txt", O_RDONLY));
     // verify the first filter is still working
     *gotsome = true;
-    ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
-    if (IsLinux()) {
-      ASSERT_SYS(0, 0, stat("garden/secret.txt", &st));
-      ASSERT_EQ(5, st.st_size);  // wut linux metadata is accessible
-    }
+    socket(AF_UNIX, SOCK_STREAM, 0);
     _Exit(0);
   }
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(*gotsome);
-  if (IsOpenbsd()) {
-    ASSERT_TRUE(WIFSIGNALED(ws));
-    ASSERT_EQ(SIGABRT, WTERMSIG(ws));
-  } else {
-    ASSERT_TRUE(WIFEXITED(ws));
-    ASSERT_EQ(0, WEXITSTATUS(ws));
-  }
+  ASSERT_TRUE(WIFSIGNALED(ws));
+  ASSERT_EQ(IsOpenbsd() ? SIGABRT : SIGSYS, WTERMSIG(ws));
   EXPECT_SYS(0, 0, munmap(gotsome, FRAMESIZE));
 }
 

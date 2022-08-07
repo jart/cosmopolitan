@@ -386,6 +386,7 @@ SECTIONS {
     _tdata_start = .;
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
+    . = ALIGN(16);
     _tdata_end = .;
     . = ALIGN(PAGESIZE);
   } :Tls
@@ -398,6 +399,8 @@ SECTIONS {
     _tbss_start = .;
     *(SORT_BY_ALIGNMENT(.tbss))
     *(SORT_BY_ALIGNMENT(.tbss.*))
+    . = ALIGN(16);
+    /* the %fs register is based on this location */
     _tbss_end = .;
   } :Tls
 

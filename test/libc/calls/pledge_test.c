@@ -60,6 +60,10 @@ STATIC_YOINK("zip_uri_support");
 
 char testlib_enable_tmp_setup_teardown;
 
+__attribute__((__constructor__)) static void init(void) {
+  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
+}
+
 void OnSig(int sig) {
   // do nothing
 }
@@ -106,6 +110,20 @@ TEST(pledge, default_allowsExit) {
   EXPECT_EQ(0, WEXITSTATUS(ws));
   EXPECT_EQ(4, job[0]);  // check result
   EXPECT_SYS(0, 0, munmap(job, FRAMESIZE));
+}
+
+TEST(pledge, execpromises_notok) {
+  if (IsOpenbsd()) return;  // b/c testing linux bpf
+  int ws, pid;
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio"));
+    execl("sock.elf", "sock.elf", 0);
+    _Exit(127);
+  }
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(129, WEXITSTATUS(ws));
 }
 
 int Enclave(void *arg, int tid) {
@@ -478,7 +496,7 @@ TEST(pledge, execpromises_ok) {
   EXPECT_EQ(42, WEXITSTATUS(ws));
 }
 
-TEST(pledge, execpromises_notok) {
+TEST(pledge, execpromises_notok1) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));

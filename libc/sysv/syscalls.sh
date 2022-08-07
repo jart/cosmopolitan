@@ -140,7 +140,7 @@ scall	__sys_getrusage		0x1bd0130752075062	globl hidden
 scall	sys_sysinfo		0xfffffffffffff063	globl hidden
 scall	sys_times		0xfffffffffffff064	globl hidden
 scall	sys_ptrace		0x01a01a01a201a065	globl hidden
-scall	syslog			0xfffffffffffff067	globl
+scall	sys_syslog		0xfffffffffffff067	globl hidden
 scall	sys_getuid		0x0180180182018066	globl hidden
 scall	sys_getgid		0x02f02f02f202f068	globl hidden
 scall	sys_getppid		0xfff027027202706e	globl hidden # see sys_getpid()→edx for netbsd
