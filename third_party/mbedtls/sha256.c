@@ -18,6 +18,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/sha.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
@@ -119,7 +120,6 @@ int mbedtls_sha256_starts_ret( mbedtls_sha256_context *ctx, int is224 )
 }
 
 #if !defined(MBEDTLS_SHA256_PROCESS_ALT)
-extern const uint32_t kSha256[64];
 #define K kSha256
 
 #define  SHR(x,n) (((x) & 0xFFFFFFFF) >> (n))

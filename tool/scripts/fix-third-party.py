@@ -21,7 +21,7 @@ import re
 import sys
 
 LIBC_ISYSTEM = 'libc/isystem/'
-EXTENSIONS = ('.c', '.cc', '.cpp', '.h', '.hh', '.hpp', '.inc', 'h.in')
+EXTENSIONS = ('.c', '.cc', '.cpp', '.h', '.hh', '.hpp', '.inc', '.tab', 'h.in')
 
 isystem = {}
 for dirpath, dirs, files in os.walk(LIBC_ISYSTEM):
@@ -52,24 +52,28 @@ def FixThirdParty(path):
   res = []
   if not code.startswith('// clang-format off\n'):
     res.append('// clang-format off\n')
-  for m in re.finditer(r'# *include *"([^"]+)"', code):
+  for m in re.finditer(r'(?:/[/*] MISSING )?#\s*include\s*"([^"]+)"(?: \*/)?', code):
     end, newstart = m.span()
     res.append(code[start:end])
-    res.append('#include "%s"' % (FixQuotedPath(path, m.group(1))))
+    inc = FixQuotedPath(path, m.group(1))
+    if os.path.exists(inc):
+      res.append('#include "%s"' % (inc))
+    else:
+      res.append('// MISSING #include "%s"' % (inc))
     start = newstart
   res.append(code[start:])
   code = ''.join(res)
 
   res = []
   start = 0
-  for m in re.finditer(r'# *include *<([^>]+)>', code):
+  for m in re.finditer(r'(?:/[/*] MISSING )?#\s*include\s*<([^>]+)>(?: \*/)?', code):
     end, newstart = m.span()
     res.append(code[start:end])
     inc = m.group(1)
     if inc in isystem:
       res.append(isystem[inc])
     else:
-      res.append('/* MISSING #include <%s> */' % (m.group(1)))
+      res.append('// MISSING #include <%s>' % (m.group(1)))
     start = newstart
   res.append(code[start:])
 
@@ -77,8 +81,6 @@ def FixThirdParty(path):
   # print(code)
   with open(path, 'wb') as f:
     f.write(code.encode('utf-8'))
-
-sys.argv = ['', 'third_party/bash']
 
 for arg in sys.argv[1:]:
   if os.path.isdir(arg):

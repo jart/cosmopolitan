@@ -134,8 +134,8 @@ static ZCONST char CannotSetTimestamps[] =
 #ifndef SFX
 #ifdef NO_DIR                  /* for AT&T 3B1 */
 
-#define opendir(path) fopen(path,"r")
-#define closedir(dir) fclose(dir)
+#define _opendir(path) fopen(path,"r")
+#define _closedir(dir) fclose(dir)
 typedef FILE DIR;
 typedef struct zdir {
     FILE *dirhandle;

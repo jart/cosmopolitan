@@ -27,9 +27,10 @@ COSMOPOLITAN_C_START_
 #define isset(x, i)      __bitop(x, i, &)
 #define isclr(x, i)      !isset(x, i)
 
-#define howmany(n, d) (((n) + ((d)-1)) / (d))
+#undef roundup
 #define roundup(n, d) (howmany(n, d) * (d))
 #define powerof2(n)   !(((n)-1) & (n))
+#define howmany(n, d) (((n) + ((d)-1)) / (d))
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -25,6 +25,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/sysparam.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
@@ -58,8 +59,6 @@
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/getargs.h"
 
-#define MAX_READ FRAMESIZE
-
 /**
  * @fileoverview Make dependency generator.
  *
@@ -76,10 +75,9 @@
  *   - #  include "foo.h"
  *   - #include   "foo.h"
  *
- * Only the first 64kb of each source file is considered.
  */
 
-_Alignas(16) const char kIncludePrefix[] = "include \"";
+#define kIncludePrefix "include \""
 
 const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
 
@@ -252,16 +250,13 @@ int LoadRelationshipsWorker(void *arg, int tid) {
   int fd;
   ssize_t rc;
   bool skipme;
+  struct stat st;
   struct Edge edge;
-  char *buf, *freeme;
-  char srcbuf[PATH_MAX];
-  size_t i, n, inclen, size;
+  size_t i, n, size, inclen;
   unsigned srcid, dependency;
+  char *buf, srcbuf[PATH_MAX];
   const char *p, *pe, *src, *path, *pathend;
   inclen = strlen(kIncludePrefix);
-  freeme = buf = memalign(PAGESIZE, PAGESIZE + MAX_READ + 16);
-  buf += PAGESIZE;
-  buf[-1] = '\n';
   for (;;) {
     pthread_mutex_lock(&galock);
     if ((src = getargs_next(&ga))) strcpy(srcbuf, src);
@@ -277,29 +272,31 @@ int LoadRelationshipsWorker(void *arg, int tid) {
       pthread_mutex_lock(&reportlock);
       OnMissingFile(ga.path, src);
     }
-    CHECK_NE(-1, (rc = read(fd, buf, MAX_READ)));
-    close(fd);
-    size = rc;
-    bzero(buf + size, 16);
-    for (p = buf, pe = p + size; p < pe; ++p) {
-      p = strstr(p, kIncludePrefix);
-      if (!p) break;
-      path = p + inclen;
-      pathend = memchr(path, '"', pe - path);
-      if (pathend && (p[-1] == '#' || p[-1] == '.') && p[-2] == '\n') {
-        pthread_mutex_lock(&readlock);
-        dependency = GetSourceId(path, pathend - path);
-        pthread_mutex_unlock(&readlock);
-        edge.from = srcid;
-        edge.to = dependency;
-        pthread_mutex_lock(&writelock);
-        append(&edges, &edge);
-        pthread_mutex_unlock(&writelock);
-        p = pathend;
+    CHECK_NE(-1, fstat(fd, &st));
+    if ((size = st.st_size)) {
+      CHECK_NE(MAP_FAILED, (buf = mmap(0, size, PROT_READ, MAP_SHARED, fd, 0)));
+      for (p = buf + 1, pe = buf + size; p < pe; ++p) {
+        if (!(p = memmem(p, pe - p, kIncludePrefix, inclen))) break;
+        path = p + inclen;
+        pathend = memchr(path, '"', pe - path);
+        if (pathend &&                          //
+            (p[-1] == '#' || p[-1] == '.') &&   //
+            (p - buf == 1 || p[-2] == '\n')) {  //
+          pthread_mutex_lock(&readlock);
+          dependency = GetSourceId(path, pathend - path);
+          pthread_mutex_unlock(&readlock);
+          edge.from = srcid;
+          edge.to = dependency;
+          pthread_mutex_lock(&writelock);
+          append(&edges, &edge);
+          pthread_mutex_unlock(&writelock);
+          p = pathend;
+        }
       }
+      munmap(buf, size);
     }
+    close(fd);
   }
-  free(freeme);
   return 0;
 }
 
@@ -429,9 +426,10 @@ void Explore(void) {
 int main(int argc, char *argv[]) {
   int i, fd;
   char path[PATH_MAX];
+  ShowCrashReports();
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   GetOpts(argc, argv);
-  threads = GetCpuCount();
+  threads = 1;  // GetCpuCount();
   th = calloc(threads, sizeof(*th));
   bouts = calloc(threads, sizeof(*bouts));
   LoadRelationships(argc, argv);

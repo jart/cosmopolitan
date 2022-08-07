@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,57 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
+#include "third_party/musl/crypt.h"
 
-typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
-
-/**
- * Searches for fixed-length substring in memory region.
- *
- * @param haystack is the region of memory to be searched
- * @param haystacklen is its character count
- * @param needle contains the memory for which we're searching
- * @param needlelen is its character count
- * @return pointer to first result or NULL if not found
- */
-noasan void *memmem(const void *haystack, size_t haystacklen,
-                    const void *needle, size_t needlelen) {
-  char c;
-  xmm_t n, *v;
-  unsigned i, k, m;
-  const char *p, *q, *e;
-  if (IsAsan()) __asan_verify(needle, needlelen);
-  if (IsAsan()) __asan_verify(haystack, haystacklen);
-  if (!needlelen) return haystack;
-  if (UNLIKELY(needlelen > haystacklen)) return 0;
-  q = needle;
-  c = *q;
-  n = (xmm_t){c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c};
-  p = haystack;
-  e = p + haystacklen;
-  k = (uintptr_t)p & 15;
-  v = (const xmm_t *)((uintptr_t)p & -16);
-  m = __builtin_ia32_pmovmskb128(*v == n);
-  m >>= k;
-  m <<= k;
-  for (;;) {
-    while (!m) {
-      ++v;
-      if ((const char *)v >= e) return 0;
-      m = __builtin_ia32_pmovmskb128(*v == n);
-    }
-    do {
-      k = __builtin_ctzl(m);
-      p = (const char *)v + k;
-      if (UNLIKELY(p + needlelen > e)) return 0;
-      for (i = 1;; ++i) {
-        if (i == needlelen) return (/*unconst*/ char *)p;
-        if (p[i] != q[i]) break;
-      }
-      m &= ~(1 << k);
-    } while (m);
-  }
+TEST(crypt, test) {
+  // consistent with python crypt.crypt()
+  EXPECT_STREQ("thXpd0YFlQG2w", crypt("hello", "there"));
+  EXPECT_STREQ("$1$there$3B/lVCUlX8R18HDBuijby1", crypt("hello", "$1$there"));
+  EXPECT_STREQ("$2aVOhEz8P7i6", crypt("hello", "$2$there"));
+  EXPECT_STREQ("$5$there$.u5mdR0jvLs0jEf7qHTG98t8la1KVhEBH3eOFZ7ztL0",
+               crypt("hello", "$5$there"));
+  EXPECT_STREQ(
+      "$6$there$y0TGuPcNSR23fFWCwYUj6VUfhnc9nlnkm6Y8waSLnANwCUcxK6esd7xm7.Jl."
+      "jjr1/sPTaRK7igDNSxC.BhgX/",
+      crypt("hello", "$6$there"));
 }

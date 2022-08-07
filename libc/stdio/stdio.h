@@ -6,6 +6,7 @@
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/symbolic.h"
 
+#define _STDIO_H
 #define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
 
@@ -78,12 +79,14 @@ int fseeko(FILE *, int64_t, int) paramsnonnull();
 int64_t ftello(FILE *) paramsnonnull();
 void rewind(FILE *) paramsnonnull();
 int fopenflags(const char *) paramsnonnull();
+void setlinebuf(FILE *);
 void setbuf(FILE *, char *);
 void setbuffer(FILE *, char *, size_t);
 int setvbuf(FILE *, char *, int, size_t);
 FILE *popen(const char *, const char *);
 int pclose(FILE *);
 char *ctermid(char *);
+void perror(const char *) relegated;
 
 typedef uint64_t fpos_t;
 compatfn char *gets(char *) paramsnonnull();

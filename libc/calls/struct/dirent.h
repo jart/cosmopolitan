@@ -20,6 +20,7 @@ int dirfd(DIR *);
 long telldir(DIR *);
 struct dirent *readdir(DIR *);
 void rewinddir(DIR *);
+void seekdir(DIR *, long);
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

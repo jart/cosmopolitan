@@ -30,6 +30,7 @@ int __fmt(void *, void *, const char *, va_list) hidden;
 char *itoa(int, char *, int) compatfn;
 char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);
+char *gcvt(double, int, char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § string formatting » optimizations                         ─╬─│┼

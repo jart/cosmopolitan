@@ -41,7 +41,6 @@ COSMOPOLITAN_C_START_
 
 extern FILE *__log_file;
 
-void perror(const char *) relegated;   /* print the last system error */
 void __die(void) relegated wontreturn; /* print backtrace and abort() */
 void meminfo(int);                     /* shows malloc statistics &c. */
 void memsummary(int);                  /* light version of same thing */

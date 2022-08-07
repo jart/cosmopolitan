@@ -17,13 +17,27 @@
 #define LC_MONETARY_MASK 16
 #define LC_MESSAGES_MASK 32
 #define LC_ALL_MASK      0x1fbf
+#define LOCALE_NAME_MAX  23
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct __locale_struct;
+#define LC_GLOBAL_LOCALE ((locale_t)-1)
+
+struct __locale_map {
+  const void *map;
+  size_t map_size;
+  char name[LOCALE_NAME_MAX + 1];
+  const struct __locale_map *next;
+};
+
+struct __locale_struct {
+  const struct __locale_map *cat[6];
+};
+
 typedef struct __locale_struct *locale_t;
 
+char *nl_langinfo_l(int, locale_t);
 char *setlocale(int, const char *);
 double strtod_l(const char *, char **, locale_t);
 double wcstod_l(const wchar_t *, wchar_t **, locale_t);

@@ -95,7 +95,20 @@ TEST(strstr, test) {
   ASSERT_STREQ("x", strstr("x", "x"));
 }
 
+TEST(strstr, breakit) {
+  char *p;
+  p = gc(calloc(1, 32));
+  p[0] = 'c';
+  p[1] = 'c';
+  p[10] = 'b';
+  ASSERT_EQ(NULL, strstr(p, "b"));
+}
+
 /*
+ *     memmem naive        l:    43,783c    14,142ns   m:    31,285c    10,105ns
+ *     memmem              l:     2,597c       839ns   m:     2,612c       844ns
+ *     memmem              l:       509c       164ns   m:       599c       193ns
+ *
  *     strstr naive        l:   103,057c    33,287ns   m:    47,035c    15,192ns
  *     strstr              l:     3,186c     1,029ns   m:     3,218c     1,039ns
  *     strstr torture 1    l:        27c         9ns   m:        61c        20ns

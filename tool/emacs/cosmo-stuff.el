@@ -465,7 +465,7 @@
           (error "don't know how to show assembly for non c/c++ source file"))
         (let* ((default-directory root)
                (compile-command
-                (format "o//third_party/make/make.com %s -j12 -O MODE=%s %s %s"
+                (format "/usr/bin/make %s -j12 -O MODE=%s %s %s"
                         (or extra-make-flags "") mode asm-gcc asm-clang)))
           (save-buffer)
           (set-visited-file-modtime (current-time))

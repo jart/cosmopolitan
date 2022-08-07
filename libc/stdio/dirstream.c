@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/bits/weaken.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/nopl.h"
+#include "libc/intrin/pthread.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filetype.h"
@@ -53,6 +56,7 @@ struct dirstream {
   bool iszip;
   int64_t fd;
   int64_t tell;
+  pthread_mutex_t lock;
   struct {
     uint64_t offset;
     uint64_t records;
@@ -108,6 +112,22 @@ struct dirent_netbsd {
   uint8_t d_type;
   char d_name[512];
 };
+
+void _lockdir(DIR *dir) {
+  pthread_mutex_lock(&dir->lock);
+}
+
+void _unlockdir(DIR *dir) {
+  pthread_mutex_unlock(&dir->lock);
+}
+
+#ifdef _NOPL1
+#define _lockdir(d)   _NOPL1("__threadcalls", _lockdir, d)
+#define _unlockdir(d) _NOPL1("__threadcalls", _unlockdir, d)
+#else
+#define _lockdir(d)   (__threaded ? _lockdir(d) : 0)
+#define _unlockdir(d) (__threaded ? _unlockdir(d) : 0)
+#endif
 
 static textwindows DIR *opendir_nt_impl(char16_t *name, size_t len) {
   DIR *res;
@@ -299,16 +319,7 @@ DIR *fdopendir(int fd) {
   return dir;
 }
 
-/**
- * Reads next entry from directory stream.
- *
- * This API doesn't define any particular ordering.
- *
- * @param dir is the object opendir() or fdopendir() returned
- * @return next entry or NULL on end or error, which can be
- *     differentiated by setting errno to 0 beforehand
- */
-struct dirent *readdir(DIR *dir) {
+static struct dirent *readdir_impl(DIR *dir) {
   size_t n;
   long basep;
   int rc, mode;
@@ -394,6 +405,23 @@ struct dirent *readdir(DIR *dir) {
 }
 
 /**
+ * Reads next entry from directory stream.
+ *
+ * This API doesn't define any particular ordering.
+ *
+ * @param dir is the object opendir() or fdopendir() returned
+ * @return next entry or NULL on end or error, which can be
+ *     differentiated by setting errno to 0 beforehand
+ */
+struct dirent *readdir(DIR *dir) {
+  struct dirent *e;
+  _lockdir(dir);
+  e = readdir_impl(dir);
+  _unlockdir(dir);
+  return e;
+}
+
+/**
  * Closes directory object returned by opendir().
  * @return 0 on success or -1 w/ errno
  */
@@ -421,8 +449,12 @@ int closedir(DIR *dir) {
  * Returns offset into directory data.
  */
 long telldir(DIR *dir) {
-  STRACE("telldir(%p) → %d", dir, dir->tell);
-  return dir->tell;
+  long rc;
+  _lockdir(dir);
+  rc = dir->tell;
+  STRACE("telldir(%p) → %ld", dir, rc);
+  _unlockdir(dir);
+  return rc;
 }
 
 /**
@@ -430,6 +462,7 @@ long telldir(DIR *dir) {
  */
 int dirfd(DIR *dir) {
   int rc;
+  _lockdir(dir);
   if (dir->iszip) {
     rc = eopnotsupp();
   } else if (IsWindows()) {
@@ -438,6 +471,7 @@ int dirfd(DIR *dir) {
     rc = dir->fd;
   }
   STRACE("dirfd(%p) → %d% m", dir, rc);
+  _unlockdir(dir);
   return rc;
 }
 
@@ -445,6 +479,7 @@ int dirfd(DIR *dir) {
  * Seeks to beginning of directory stream.
  */
 void rewinddir(DIR *dir) {
+  _lockdir(dir);
   if (dir->iszip) {
     dir->tell = 0;
     dir->zip.offset = GetZipCdirOffset(weaken(__zipos_get)()->cdir);
@@ -463,4 +498,27 @@ void rewinddir(DIR *dir) {
     }
   }
   STRACE("rewinddir(%p)", dir);
+  _unlockdir(dir);
+}
+
+/**
+ * Seeks in directory stream.
+ */
+void seekdir(DIR *dir, long off) {
+  long i;
+  struct Zipos *zip;
+  _lockdir(dir);
+  zip = weaken(__zipos_get)();
+  if (dir->iszip) {
+    dir->zip.offset = GetZipCdirOffset(weaken(__zipos_get)()->cdir);
+    for (i = 0; i < off && i < dir->zip.records; ++i) {
+      dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
+    }
+  } else {
+    i = lseek(dir->fd, off, SEEK_SET);
+    dir->buf_pos = dir->buf_end = 0;
+  }
+  dir->tell = i;
+  STRACE("seekdir(%p, %ld) → %ld", dir, off, i);
+  _unlockdir(dir);
 }
