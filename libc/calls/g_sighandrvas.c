@@ -19,5 +19,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/intrin/pthread.h"
 
-_Thread_local unsigned __sighandrvas[NSIG];
-_Thread_local unsigned __sighandflags[NSIG];
+// TODO(jart): These should be _Thread_local but doing that currently
+//             causes a regression with runitd.com on Windows.
+unsigned __sighandrvas[NSIG];
+unsigned __sighandflags[NSIG];

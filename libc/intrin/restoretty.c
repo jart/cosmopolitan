@@ -16,18 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/metatermios.internal.h"
-#include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/termios.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
-#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/termios.h"
 
 /**
@@ -45,22 +39,19 @@
 static bool __isrestorable;
 static union metatermios __oldtermios;
 
-static textstartup void __oldtermios_init() {
+// called weakly by libc/calls/ioctl_tcsets.c to avoid pledge("tty")
+void __on_ioctl_tcsets(void) {
   int e;
   e = errno;
-  if (PLEDGED(TTY) && sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
+  if (sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
     __isrestorable = true;
   }
   errno = e;
 }
 
-const void *const __oldtermios_ctor[] initarray = {
-    __oldtermios_init,
-};
-
 void __restore_tty(void) {
   int e;
-  if (__isrestorable && PLEDGED(TTY) && !__isworker && !__nocolor) {
+  if (__isrestorable && !__isworker && !__nocolor) {
     e = errno;
     sys_write(0, ANSI_RESTORE, __strlen(ANSI_RESTORE));
     sys_ioctl(0, TCSETSF, &__oldtermios);

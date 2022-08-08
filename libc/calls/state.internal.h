@@ -7,8 +7,8 @@ COSMOPOLITAN_C_START_
 
 hidden extern int __vforked;
 hidden extern bool __time_critical;
-hidden _Thread_local extern unsigned __sighandrvas[NSIG];
-hidden _Thread_local extern unsigned __sighandflags[NSIG];
+hidden extern unsigned __sighandrvas[NSIG];
+hidden extern unsigned __sighandflags[NSIG];
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_lock(void);

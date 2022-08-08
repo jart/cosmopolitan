@@ -21,4 +21,4 @@ set -ex
 if [ -f /proc/sys/fs/binfmt_misc/APE ]; then
   $SUDO sh -c 'echo -1 >/proc/sys/fs/binfmt_misc/APE' || exit
 fi
-$SUDO rm -f /usr/bin/ape ~/.ape o/tmp/.ape /tmp/.ape || exit
+$SUDO rm -f /usr/bin/ape ~/.ape o/tmp/.ape o/tmp/ape /tmp/.ape /tmp/ape || exit

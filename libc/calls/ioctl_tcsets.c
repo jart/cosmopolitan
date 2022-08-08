@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/bits/weaken.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/strace.internal.h"
@@ -28,6 +29,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
+void __on_ioctl_tcsets(void);
 int ioctl_tcsets_nt(int, uint64_t, const struct termios *);
 
 static int ioctl_tcsets_metal(int fd, uint64_t request,
@@ -65,10 +67,17 @@ static int ioctl_tcsets_sysv(int fd, uint64_t request,
 int ioctl_tcsets(int fd, uint64_t request, ...) {
   int rc;
   va_list va;
+  static bool once;
   const struct termios *tio;
   va_start(va, request);
   tio = va_arg(va, const struct termios *);
   va_end(va);
+  if (weaken(__on_ioctl_tcsets)) {
+    if (!once) {
+      weaken(__on_ioctl_tcsets)();
+      once = true;
+    }
+  }
   if (!tio || (IsAsan() && !__asan_is_valid(tio, sizeof(*tio)))) {
     rc = efault();
   } else if (fd >= 0) {

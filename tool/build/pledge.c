@@ -22,6 +22,7 @@
 #include "libc/calls/landlock.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/seccomp.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -665,6 +666,12 @@ int main(int argc, char *argv[]) {
   if (!(~ipromises & (1ul << PROMISE_EXEC))) {
     g_promises = xstrcat(g_promises, ' ', "exec");
   }
+
+  // pledge.com uses the return eperm instead of killing the process
+  // model. we do this becasue it's only possible to have sigsys print
+  // crash messages if we're not pledging exec, which is what this tool
+  // always has to do currently.
+  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
 
   // apply sandbox
   if (pledge(g_promises, g_promises) == -1) {

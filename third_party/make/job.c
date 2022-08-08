@@ -1714,7 +1714,9 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
         if (argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
           {
-            /* weaken sandbox if user is using dynamic shared lolbjects */
+            /*
+             * weaken sandbox if user is using dynamic shared lolbjects
+             */
             Unveil ("/bin", "rx");
             Unveil ("/lib", "rx");
             Unveil ("/lib64", "rx");
@@ -1733,13 +1735,25 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
             Unveil ("/usr/share/locale-langpack", "r");
           }
         else
-          /* permit launching actually portable executables */
-          if (!Unveil ("/usr/bin/ape", "rx"))
-            Unveil (xjoinpaths (firstnonnull (getenv ("TMPDIR"),
-                                              firstnonnull (getenv ("HOME"),
-                                                            ".")),
-                                ".ape"),
-                    "rx");
+          {
+            /*
+             * permit launching actually portable executables
+             *
+             * we assume launching make.com already did the expensive
+             * work of extracting the ape loader program, via /bin/sh
+             * and we won't need to do that again, since sys_execve()
+             * will pass ape binaries directly to the ape loader, but
+             * only if the ape loader exists on a well-known path.
+             */
+            if (!Unveil ("/usr/bin/ape", "rx"))
+              {
+                char *s;
+                if ((s = getenv ("TMPDIR")))
+                  Unveil (xjoinpaths (s, ".ape"), "rx");
+                if ((s = getenv ("HOME")))
+                  Unveil (xjoinpaths (s, ".ape"), "rx");
+              }
+          }
 
         /* unveil executable */
         Unveil (argv[0], "rx");
