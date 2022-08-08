@@ -290,9 +290,9 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *    possible to use opendir() and go fishing for paths which weren't
  *    previously known.
  *
- * 5. Use ftruncate() rather than truncate(). One of the backdoors with
- *    Landlock is it currently can't restrict truncate() and setxattr()
- *    which permits certain kinds of modifications to files outside the
+ * 5. Use ftruncate() rather than truncate(). One issue Landlock hasn't
+ *    addressed yet is restrictions over truncate() and setxattr() which
+ *    could permit certain kinds of modifications to files outside the
  *    sandbox. When your policy is committed, we install a SECCOMP BPF
  *    filter to disable those calls, however similar trickery may be
  *    possible through other unaddressed calls like ioctl(). Using the

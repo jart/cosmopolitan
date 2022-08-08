@@ -69,10 +69,10 @@ o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_CHIBICC_TEST_OBJS): CC = $(CHIBICC)
-$(THIRD_PARTY_CHIBICC_TEST_OBJS): $(CHIBICC)
-
-.PRECIOUS: $(THIRD_PARTY_CHIBICC_TEST_OBJS)
+o/$(MODE)/third_party/chibicc/test/%.o:						\
+		third_party/chibicc/test/%.c					\
+		$(CHIBICC)
+	@$(COMPILE) -AOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/third_party/chibicc/test/int128_test.o: QUOTA = -M1024m
 

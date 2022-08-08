@@ -16,41 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/calls/pledge.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/str/str.h"
+
+static int FindPromise(const char *name) {
+  int i;
+  for (i = 0; i < ARRAYLEN(kPledge); ++i) {
+    if (!strcasecmp(name, kPledge[i].name)) {
+      return i;
+    }
+  }
+  return -1;
+}
 
 /**
- * Terminates thread with raw system call.
+ * Parses the arguments to pledge() into a bitmask.
  *
- * @param rc only works on Linux and Windows
- * @see cthread_exit()
- * @threadsafe
- * @noreturn
+ * @return 0 on success, or -1 if invalid
  */
-privileged wontreturn void _Exit1(int rc) {
-  struct WinThread *wt;
-  STRACE("_Exit1(%d)", rc);
-  if (!IsWindows() && !IsMetal()) {
-    if (IsOpenbsd() && !PLEDGED(STDIO)) {
-      asm volatile("syscall"
-                   : /* no outputs */
-                   : "a"(__NR_exit), "D"(rc)
-                   : "rcx", "r11", "memory");
+int ParsePromises(const char *promises, unsigned long *out) {
+  int rc = 0;
+  int promise;
+  unsigned long ipromises;
+  char *tok, *state, *start, buf[256];
+  if (promises) {
+    ipromises = -1;
+    if (memccpy(buf, promises, 0, sizeof(buf))) {
+      start = buf;
+      while ((tok = strtok_r(start, " \t\r\n", &state))) {
+        if ((promise = FindPromise(tok)) != -1) {
+          ipromises &= ~(1ULL << promise);
+        } else {
+          rc = -1;
+          break;
+        }
+        start = 0;
+      }
+    } else {
+      rc = -1;
     }
-    asm volatile("xor\t%%r10d,%%r10d\n\t"
-                 "syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
-                 : "rcx", "r10", "r11", "memory");
-  } else if (IsWindows()) {
-    ExitThread(rc);
+  } else {
+    ipromises = 0;
   }
-  for (;;) {
-    asm("ud2");
+  if (!rc) {
+    *out = ipromises;
   }
+  return rc;
 }

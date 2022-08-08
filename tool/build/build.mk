@@ -117,6 +117,25 @@ o/$(MODE)/tool/build/printf.zip.o: o/$(MODE)/tool/build/printf
 o/$(MODE)/tool/build/dd.zip.o: o/$(MODE)/tool/build/dd
 	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 
+# we need pic because:
+#   so it can be an LD_PRELOAD payload
+o/$(MODE)/tool/build/sandbox.o:				\
+		OVERRIDE_CFLAGS +=			\
+			-fPIC
+
+o/$(MODE)/tool/build/sandbox.so:			\
+		o/$(MODE)/tool/build/sandbox.o		\
+		o/$(MODE)/libc/calls/pledge-linux.o	\
+		o/$(MODE)/libc/sysv/restorert.o
+	@$(COMPILE) -ALINK.so				\
+		$(CC)					\
+		-s					\
+		-shared					\
+		-nostdlib				\
+		-Wl,--gc-sections			\
+		$(LINKARGS)				\
+		$(OUTPUT_OPTION)
+
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\
 		o/$(MODE)/tool/build/emucrt		\

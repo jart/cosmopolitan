@@ -21,6 +21,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/pledge.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/iovec.h"
@@ -6587,7 +6588,7 @@ static void UnveilRedbean(void) {
 }
 
 static int EnableSandbox(void) {
-  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
+  __pledge_mode = kPledgeModeErrno;
   switch (sandboxed) {
     case 0:
       return 0;

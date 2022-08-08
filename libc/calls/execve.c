@@ -19,6 +19,8 @@
 #include "libc/bits/likely.h"
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
+#include "libc/calls/pledge.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -29,8 +31,6 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
-
-int sys_pledge_linux(unsigned long);
 
 /**
  * Replaces current process with program.
@@ -72,7 +72,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
     if (!IsWindows()) {
       rc = 0;
       if (IsLinux() && __execpromises && weaken(sys_pledge_linux)) {
-        rc = weaken(sys_pledge_linux)(__execpromises);
+        rc = weaken(sys_pledge_linux)(__execpromises, __pledge_mode, false);
       }
       if (!rc) {
         rc = sys_execve(prog, argv, envp);

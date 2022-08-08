@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/runtime.h"
@@ -39,11 +40,18 @@ privileged wontreturn void _Exit(int exitcode) {
   int i;
   STRACE("_Exit(%d)", exitcode);
   if (!IsWindows() && !IsMetal()) {
-    asm volatile("syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit_group), "D"(exitcode)
-                 : "rcx", "r11", "memory");
-    // this should only be possible on Linux in a pledge ultra sandbox
+    // On Linux _Exit1 (exit) must be called in pledge("") mode. If we
+    // call _Exit (exit_group) when we haven't used pledge("stdio") then
+    // it'll terminate the process instead. On OpenBSD we must not call
+    // _Exit1 (__threxit) because only _Exit (exit) is whitelisted when
+    // operating in pledge("") mode.
+    if (!(IsLinux() && !PLEDGED(STDIO))) {
+      asm volatile("syscall"
+                   : /* no outputs */
+                   : "a"(__NR_exit_group), "D"(exitcode)
+                   : "rcx", "r11", "memory");
+    }
+    // Inline _Exit1() just in case _Exit() isn't allowed by pledge()
     asm volatile("syscall"
                  : /* no outputs */
                  : "a"(__NR_exit), "D"(exitcode)

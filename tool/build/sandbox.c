@@ -16,41 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/calls/pledge.h"
+#include "libc/calls/pledge.internal.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
 
-/**
- * Terminates thread with raw system call.
- *
- * @param rc only works on Linux and Windows
- * @see cthread_exit()
- * @threadsafe
- * @noreturn
- */
-privileged wontreturn void _Exit1(int rc) {
-  struct WinThread *wt;
-  STRACE("_Exit1(%d)", rc);
-  if (!IsWindows() && !IsMetal()) {
-    if (IsOpenbsd() && !PLEDGED(STDIO)) {
-      asm volatile("syscall"
-                   : /* no outputs */
-                   : "a"(__NR_exit), "D"(rc)
-                   : "rcx", "r11", "memory");
-    }
-    asm volatile("xor\t%%r10d,%%r10d\n\t"
-                 "syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
-                 : "rcx", "r10", "r11", "memory");
-  } else if (IsWindows()) {
-    ExitThread(rc);
-  }
-  for (;;) {
-    asm("ud2");
-  }
+hidden char __privileged_start;
+hidden char __privileged_end;
+
+__attribute__((__constructor__)) void InitializeSandbox(void) {
+  sys_pledge_linux(~(1ul << PROMISE_STDIO), kPledgeModeErrno, false);
 }

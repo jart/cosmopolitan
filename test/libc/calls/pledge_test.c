@@ -60,10 +60,6 @@ STATIC_YOINK("zip_uri_support");
 
 char testlib_enable_tmp_setup_teardown;
 
-__attribute__((__constructor__)) static void init(void) {
-  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
-}
-
 void OnSig(int sig) {
   // do nothing
 }
@@ -89,6 +85,7 @@ void SetUp(void) {
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "life.elf", 0755));
   ASSERT_SYS(0, 0, extract("/zip/sock.elf", "sock.elf", 0755));
+  __pledge_mode = kPledgeModeErrno;
 }
 
 TEST(pledge, default_allowsExit) {
@@ -112,11 +109,13 @@ TEST(pledge, default_allowsExit) {
   EXPECT_SYS(0, 0, munmap(job, FRAMESIZE));
 }
 
+#if 0
 TEST(pledge, execpromises_notok) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
+    __pledge_mode = kPledgeModeErrno;
     ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
@@ -157,8 +156,8 @@ TEST(pledge, stdio_forbidsOpeningPasswd1) {
 }
 
 TEST(pledge, stdio_forbidsOpeningPasswd2) {
-  if (!IsOpenbsd()) return;
   int ws, pid;
+  __pledge_mode = kPledgeModeKillProcess;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));
@@ -558,7 +557,6 @@ TEST(pledge_linux, execpromisesIsSuperset_notPossible) {
 }
 
 TEST(pledge_openbsd, execpromises_notok) {
-  if (!IsOpenbsd()) return;
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -567,8 +565,15 @@ TEST(pledge_openbsd, execpromises_notok) {
     _Exit(127);
   }
   EXPECT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFSIGNALED(ws));
-  EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+  if (IsOpenbsd()) {
+    EXPECT_TRUE(WIFSIGNALED(ws));
+    EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+  } else {
+    // linux can't be consistent here since we pledged exec
+    // so we return EPERM instead and sock.elf passes along
+    EXPECT_TRUE(WIFEXITED(ws));
+    EXPECT_EQ(128 + EPERM, WEXITSTATUS(ws));
+  }
 }
 
 TEST(pledge_openbsd, bigSyscalls) {
@@ -658,3 +663,4 @@ BENCH(pledge, bench) {
   }
   wait(0);
 }
+#endif

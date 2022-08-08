@@ -123,6 +123,7 @@ int killpg(int, int);
 int link(const char *, const char *) dontthrow;
 int linkat(int, const char *, int, const char *, int);
 int madvise(void *, uint64_t, int);
+int memfd_create(const char *, unsigned int);
 int mincore(void *, size_t, unsigned char *);
 int mkdir(const char *, uint32_t);
 int mkdirat(int, const char *, uint32_t);

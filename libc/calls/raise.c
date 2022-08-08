@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/getconsolectrlevent.internal.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -39,7 +41,7 @@ static textwindows inline bool HasWorkingConsole(void) {
 }
 
 /**
- * Sends signal to this process.
+ * Sends signal to this thread.
  *
  * @param sig can be SIGALRM, SIGINT, SIGTERM, SIGKILL, etc.
  * @return 0 on success or -1 w/ errno
@@ -56,8 +58,7 @@ int raise(int sig) {
     x = 1 / x;
     rc = 0;
   } else if (!IsWindows()) {
-    // XXX: should be tkill() or tgkill() on linux
-    rc = sys_kill(getpid(), sig, 1);
+    rc = sys_tkill(gettid(), sig, 0);
   } else {
     if (HasWorkingConsole() && (event = GetConsoleCtrlEvent(sig)) != -1) {
       // XXX: MSDN says "If this parameter is zero, the signal is

@@ -20,6 +20,7 @@
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
+#include "libc/calls/pledge.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/seccomp.h"
@@ -73,6 +74,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -u UID          call setuid()\n\
   -c PATH         call chroot()\n\
   -v [PERM:]PATH  call unveil(PATH, PERM[rwxc])\n\
+  -k              kill process rather than eperm'ing\n\
   -n              set maximum niceness\n\
   -D              don't drop capabilities\n\
   -N              don't normalize file descriptors\n\
@@ -118,6 +120,7 @@ int ParsePromises(const char *, unsigned long *);
 
 int g_gflag;
 int g_uflag;
+int g_kflag;
 int g_hflag;
 bool g_nice;
 bool g_noclose;
@@ -140,13 +143,15 @@ static void GetOpts(int argc, char *argv[]) {
   g_promises = 0;
   g_fszquota = 256 * 1000 * 1000;
   g_proquota = GetCpuCount() * 100;
-  g_fszquota = 4 * 1000 * 1000 * 1000;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnNp:u:g:c:C:D:P:M:F:v:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnkNp:u:g:c:C:D:P:M:F:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
+        break;
+      case 'k':
+        g_kflag = true;
         break;
       case 'N':
         g_noclose = true;
@@ -453,10 +458,12 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
 
   if (~ipromises & (1ul << PROMISE_PROT_EXEC)) {
     if (UnveilIfExists("/usr/bin/ape", "rx") == -1) {
-      UnveilIfExists(xjoinpaths(firstnonnull(getenv("TMPDIR"),
-                                             firstnonnull(getenv("HOME"), ".")),
-                                ".ape"),
-                     "rx");
+      if ((p = getenv("TMPDIR"))) {
+        UnveilIfExists(xjoinpaths(p, ".ape"), "rx");
+      }
+      if ((p = getenv("HOME"))) {
+        UnveilIfExists(xjoinpaths(p, ".ape"), "rx");
+      }
     }
   }
 
@@ -671,7 +678,11 @@ int main(int argc, char *argv[]) {
   // model. we do this becasue it's only possible to have sigsys print
   // crash messages if we're not pledging exec, which is what this tool
   // always has to do currently.
-  __pledge_mode = SECCOMP_RET_ERRNO | EPERM;
+  if (g_kflag) {
+    __pledge_mode = kPledgeModeKillProcess;
+  } else {
+    __pledge_mode = kPledgeModeErrno;
+  }
 
   // apply sandbox
   if (pledge(g_promises, g_promises) == -1) {

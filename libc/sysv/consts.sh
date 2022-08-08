@@ -417,14 +417,6 @@ syscon	at	AT_REMOVEDIR				0x0200			0x80			0x0800			8			0x800			0x0200			# faked 
 syscon	at	AT_EACCESS				0x0200			0x10			0x0100			1			0x100			0			# performs check using effective uid/gid; unnecessary nt
 syscon	at	AT_EMPTY_PATH				0x1000			0			0			0			0			0			# linux 2.6.39+; see unlink, O_TMPFILE, etc.
 
-#	memfd_create() flags
-#
-#	Unsupported flags are encoded as 0.
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	memfd	MFD_CLOEXEC				1			0			0			0			0			0
-syscon	memfd	MFD_ALLOW_SEALING			2			0			0			0			0			0
-
 #	utimensat() special values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary

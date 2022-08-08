@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,IPPORT_RESERVED,0x0400,0x0400,0x0400,0x0400,0x0400,0x0400

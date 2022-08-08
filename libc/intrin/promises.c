@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/pledge.h"
 #include "libc/intrin/promises.internal.h"
 
 // XXX: should be inherited thread local
-unsigned __pledge_mode;
+//      see also sys_pledge_linux() which is 100% pure
+enum PledgeMode __pledge_mode;
 unsigned long __promises;
 unsigned long __execpromises;

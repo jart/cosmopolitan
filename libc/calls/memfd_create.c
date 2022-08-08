@@ -16,41 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/nr.h"
+#include "libc/calls/syscall-sysv.internal.h"
 
 /**
- * Terminates thread with raw system call.
+ * Creates anonymous file.
  *
- * @param rc only works on Linux and Windows
- * @see cthread_exit()
- * @threadsafe
- * @noreturn
+ * @param name is used for the `/proc/self/fd/FD` symlink
+ * @param flags can have `MFD_CLOEXEC`, `MFD_ALLOW_SEALING`
+ * @raise ENOSYS if not RHEL8+
  */
-privileged wontreturn void _Exit1(int rc) {
-  struct WinThread *wt;
-  STRACE("_Exit1(%d)", rc);
-  if (!IsWindows() && !IsMetal()) {
-    if (IsOpenbsd() && !PLEDGED(STDIO)) {
-      asm volatile("syscall"
-                   : /* no outputs */
-                   : "a"(__NR_exit), "D"(rc)
-                   : "rcx", "r11", "memory");
-    }
-    asm volatile("xor\t%%r10d,%%r10d\n\t"
-                 "syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
-                 : "rcx", "r10", "r11", "memory");
-  } else if (IsWindows()) {
-    ExitThread(rc);
-  }
-  for (;;) {
-    asm("ud2");
-  }
+int memfd_create(const char *name, unsigned int flags) {
+  int rc;
+  rc = sys_memfd_create(name, flags);
+  STRACE("memfd_create(%#s, %#x) → %d% m", name, flags, rc);
+  return rc;
 }

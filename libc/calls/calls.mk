@@ -188,10 +188,19 @@ o/$(MODE)/libc/calls/_timespec_frommicros.o:		\
 		OVERRIDE_CFLAGS +=			\
 			-O2
 
-o/$(MODE)/libc/calls/pledge.o				\
+o/$(MODE)/libc/calls/pledge-linux.o			\
 o/$(MODE)/libc/calls/unveil.o:				\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
+
+# we want -Os because:
+#   it makes a big difference
+# we need pic because:
+#   so it can be an LD_PRELOAD payload
+o/$(MODE)/libc/calls/pledge-linux.o:			\
+		OVERRIDE_CFLAGS +=			\
+			-Os				\
+			-fPIC
 
 LIBC_CALLS_LIBS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)))
 LIBC_CALLS_SRCS = $(foreach x,$(LIBC_CALLS_ARTIFACTS),$($(x)_SRCS))

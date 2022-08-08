@@ -136,6 +136,6 @@ char *GetProgramExecutableName(void) {
   return program_executable_name;
 }
 
-const void *const GetProgramExecutableNameCtor[] initarray = {
-    GetProgramExecutableName,
-};
+/* const void *const GetProgramExecutableNameCtor[] initarray = { */
+/*     GetProgramExecutableName, */
+/* }; */

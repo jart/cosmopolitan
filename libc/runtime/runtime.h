@@ -17,7 +17,6 @@ extern intptr_t __oldstack;                         /* CRT */
 extern uint64_t __nosync;                           /* SYS */
 extern _Atomic(int) __ftrace;                       /* SYS */
 extern _Atomic(int) __strace;                       /* SYS */
-extern uint32_t __pledge_mode;                      /* SYS */
 extern char *program_invocation_name;               /* RII */
 extern char *program_invocation_short_name;         /* RII */
 extern uint64_t __syscount;                         /* RII */

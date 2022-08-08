@@ -82,7 +82,7 @@ function UnixTest()
       unix.close(reader)
       pid, ws = assert(unix.wait())
       assert(unix.WIFSIGNALED(ws))
-      assert(unix.WTERMSIG(ws) == unix.SIGSYS)
+      assert(unix.WTERMSIG(ws) == unix.SIGABRT)
    elseif GetHostOs() == "OPENBSD" then
       if assert(unix.fork()) == 0 then
          assert(unix.pledge("stdio"))

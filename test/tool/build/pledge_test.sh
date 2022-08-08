@@ -116,7 +116,7 @@ elif [ "$1" = ape_assimilated_test_suite ]; then
   startit ape assimilated curl.com
   cp o//examples/curl.com $t/assimilated
   o//tool/build/assimilate.com $t/assimilated/curl.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio inet dns' $t/assimilated/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' $t/assimilated/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = ape_native_test_suite ]; then
@@ -131,7 +131,7 @@ elif [ "$1" = ape_native_test_suite ]; then
   checkem
 
   startit ape native curl.com
-  [ "$(o/$m/tool/build/pledge.com -p 'stdio inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = setuid_test_suite ]; then
@@ -146,23 +146,23 @@ elif [ "$1" = setuid_test_suite ]; then
   checkem
 
   startit setuid curl.com
-  [ "$($t/pledge.com -p 'stdio inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$($t/pledge.com -p 'stdio rpath inet dns' o/$m/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   startit setuid getuid
-  [ "$($t/pledge.com -pstdio o/$m/examples/printargs.com 2>&1 | grep getuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
+  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep getuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
   checkem
 
   startit setuid geteuid
-  [ "$($t/pledge.com -pstdio o/$m/examples/printargs.com 2>&1 | grep geteuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
+  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep geteuid | grep -o [[:digit:]]*)" = "$(id -u)" ]
   checkem
 
   startit setuid no capabilities
-  [ "$($t/pledge.com -pstdio o/$m/examples/printargs.com 2>&1 | grep CAP_ | wc -l)" = 0 ]
+  [ "$($t/pledge.com -p 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep CAP_ | wc -l)" = 0 ]
   checkem
 
   startit setuid maximum nice
-  $t/pledge.com -np 'stdio proc' o/$m/examples/printargs.com 2>&1 | grep SCHED_IDLE >/dev/null
+  $t/pledge.com -np 'stdio rpath proc tty' o/$m/examples/printargs.com 2>&1 | grep SCHED_IDLE >/dev/null
   checkem
 
   startit setuid chroot
