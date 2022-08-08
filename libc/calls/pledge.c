@@ -96,6 +96,7 @@ static const uint16_t kPledgeLinuxDefault[] = {
 // the bpf script or the end.
 static const uint16_t kPledgeLinuxStdio[] = {
     __NR_linux_sigreturn,             //
+    __NR_linux_restart_syscall,       //
     __NR_linux_exit_group,            //
     __NR_linux_sched_yield,           //
     __NR_linux_sched_getaffinity,     //
