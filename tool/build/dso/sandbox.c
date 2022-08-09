@@ -16,13 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/runtime/runtime.h"
 
-hidden char __privileged_start;
-hidden char __privileged_end;
+/*
+ * runs pledge at glibc executable load time, e.g.
+ * strace -vff bash -c '_PLEDGE=4194303,0,1 LD_PRELOAD=$HOME/sandbox.so ls'
+ */
 
-__attribute__((__constructor__)) void InitializeSandbox(void) {
-  sys_pledge_linux(~(1ul << PROMISE_STDIO), kPledgeModeErrno, false);
+hidden uint8_t __privileged_start[1];
+hidden uint8_t __privileged_end[1];
+
+__attribute__((__constructor__)) void init(void) {
+  int c, i, j;
+  const char *s;
+  uint64_t arg[3] = {0};
+  s = getenv("_PLEDGE");
+  for (i = j = 0; i < 3; ++i) {
+    while ((c = s[j] & 255)) {
+      ++j;
+      if ('0' <= c & c <= '9') {
+        arg[i] *= 10;
+        arg[i] += c - '0';
+      } else {
+        break;
+      }
+    }
+  }
+  sys_pledge_linux(~arg[0], arg[1], arg[2]);
 }

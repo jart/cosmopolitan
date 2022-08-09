@@ -68,7 +68,6 @@
 #define TTY       0x8000
 #define UNIX      0x4000
 #define NOBITS    0x8000
-#define NOSIGSYS  0x8000
 #define RESTRICT  0x1000
 
 #define PLEDGE(pledge) pledge, ARRAYLEN(pledge)
@@ -96,117 +95,117 @@ static const uint16_t kPledgeDefault[] = {
 // difference in the latency of sched_yield() if it's at the start of
 // the bpf script or the end.
 static const uint16_t kPledgeStdio[] = {
-    __NR_linux_sigreturn,             //
-    __NR_linux_restart_syscall,       //
-    __NR_linux_exit_group,            //
-    __NR_linux_sched_yield,           //
-    __NR_linux_sched_getaffinity,     //
-    __NR_linux_clock_getres,          //
-    __NR_linux_clock_gettime,         //
-    __NR_linux_clock_nanosleep,       //
-    __NR_linux_close_range,           //
-    __NR_linux_close,                 //
-    __NR_linux_write,                 //
-    __NR_linux_writev,                //
-    __NR_linux_pwrite,                //
-    __NR_linux_pwritev,               //
-    __NR_linux_pwritev2,              //
-    __NR_linux_read,                  //
-    __NR_linux_readv,                 //
-    __NR_linux_pread,                 //
-    __NR_linux_preadv,                //
-    __NR_linux_preadv2,               //
-    __NR_linux_dup,                   //
-    __NR_linux_dup2,                  //
-    __NR_linux_dup3,                  //
-    __NR_linux_fchdir,                //
-    __NR_linux_fcntl | STDIO,         //
-    __NR_linux_fstat,                 //
-    __NR_linux_fsync,                 //
-    __NR_linux_sysinfo,               //
-    __NR_linux_fdatasync,             //
-    __NR_linux_ftruncate,             //
-    __NR_linux_getdents,              //
-    __NR_linux_getrandom,             //
-    __NR_linux_getgroups,             //
-    __NR_linux_getpgid,               //
-    __NR_linux_getpgrp,               //
-    __NR_linux_getpid,                //
-    __NR_linux_gettid,                //
-    __NR_linux_getuid,                //
-    __NR_linux_getgid,                //
-    __NR_linux_getsid,                //
-    __NR_linux_getppid,               //
-    __NR_linux_geteuid,               //
-    __NR_linux_getegid,               //
-    __NR_linux_getrlimit,             //
-    __NR_linux_getresgid,             //
-    __NR_linux_getresuid,             //
-    __NR_linux_getitimer,             //
-    __NR_linux_setitimer,             //
-    __NR_linux_timerfd_create,        //
-    __NR_linux_timerfd_settime,       //
-    __NR_linux_timerfd_gettime,       //
-    __NR_linux_copy_file_range,       //
-    __NR_linux_gettimeofday,          //
-    __NR_linux_sendfile,              //
-    __NR_linux_vmsplice,              //
-    __NR_linux_splice,                //
-    __NR_linux_lseek,                 //
-    __NR_linux_tee,                   //
-    __NR_linux_brk,                   //
-    __NR_linux_msync,                 //
-    __NR_linux_mmap | NOEXEC,         //
-    __NR_linux_mremap,                //
-    __NR_linux_munmap,                //
-    __NR_linux_mincore,               //
-    __NR_linux_madvise,               //
-    __NR_linux_fadvise,               //
-    __NR_linux_mprotect | NOEXEC,     //
-    __NR_linux_arch_prctl,            //
-    __NR_linux_migrate_pages,         //
-    __NR_linux_sync_file_range,       //
-    __NR_linux_set_tid_address,       //
-    __NR_linux_nanosleep,             //
-    __NR_linux_pipe,                  //
-    __NR_linux_pipe2,                 //
-    __NR_linux_poll,                  //
-    __NR_linux_ppoll,                 //
-    __NR_linux_select,                //
-    __NR_linux_pselect6,              //
-    __NR_linux_epoll_create,          //
-    __NR_linux_epoll_create1,         //
-    __NR_linux_epoll_ctl,             //
-    __NR_linux_epoll_wait,            //
-    __NR_linux_epoll_pwait,           //
-    __NR_linux_epoll_pwait2,          //
-    __NR_linux_recvfrom,              //
-    __NR_linux_sendto | ADDRLESS,     //
-    __NR_linux_ioctl | RESTRICT,      //
-    __NR_linux_alarm,                 //
-    __NR_linux_pause,                 //
-    __NR_linux_shutdown,              //
-    __NR_linux_eventfd,               //
-    __NR_linux_eventfd2,              //
-    __NR_linux_signalfd,              //
-    __NR_linux_signalfd4,             //
-    __NR_linux_sigaction | NOSIGSYS,  //
-    __NR_linux_sigaltstack,           //
-    __NR_linux_sigprocmask,           //
-    __NR_linux_sigsuspend,            //
-    __NR_linux_sigpending,            //
-    __NR_linux_socketpair,            //
-    __NR_linux_getrusage,             //
-    __NR_linux_times,                 //
-    __NR_linux_umask,                 //
-    __NR_linux_wait4,                 //
-    __NR_linux_uname,                 //
-    __NR_linux_prctl | STDIO,         //
-    __NR_linux_clone | THREAD,        //
-    __NR_linux_futex,                 //
-    __NR_linux_set_robust_list,       //
-    __NR_linux_get_robust_list,       //
-    __NR_linux_prlimit | STDIO,       //
+    __NR_linux_sigreturn,          //
+    __NR_linux_restart_syscall,    //
+    __NR_linux_exit_group,         //
+    __NR_linux_sched_yield,        //
+    __NR_linux_sched_getaffinity,  //
+    __NR_linux_clock_getres,       //
+    __NR_linux_clock_gettime,      //
+    __NR_linux_clock_nanosleep,    //
+    __NR_linux_close_range,        //
+    __NR_linux_close,              //
+    __NR_linux_write,              //
+    __NR_linux_writev,             //
+    __NR_linux_pwrite,             //
+    __NR_linux_pwritev,            //
+    __NR_linux_pwritev2,           //
+    __NR_linux_read,               //
+    __NR_linux_readv,              //
+    __NR_linux_pread,              //
+    __NR_linux_preadv,             //
+    __NR_linux_preadv2,            //
+    __NR_linux_dup,                //
+    __NR_linux_dup2,               //
+    __NR_linux_dup3,               //
+    __NR_linux_fchdir,             //
+    __NR_linux_fcntl | STDIO,      //
+    __NR_linux_fstat,              //
+    __NR_linux_fsync,              //
+    __NR_linux_sysinfo,            //
+    __NR_linux_fdatasync,          //
+    __NR_linux_ftruncate,          //
+    __NR_linux_getdents,           //
+    __NR_linux_getrandom,          //
+    __NR_linux_getgroups,          //
+    __NR_linux_getpgid,            //
+    __NR_linux_getpgrp,            //
+    __NR_linux_getpid,             //
+    __NR_linux_gettid,             //
+    __NR_linux_getuid,             //
+    __NR_linux_getgid,             //
+    __NR_linux_getsid,             //
+    __NR_linux_getppid,            //
+    __NR_linux_geteuid,            //
+    __NR_linux_getegid,            //
+    __NR_linux_getrlimit,          //
+    __NR_linux_getresgid,          //
+    __NR_linux_getresuid,          //
+    __NR_linux_getitimer,          //
+    __NR_linux_setitimer,          //
+    __NR_linux_timerfd_create,     //
+    __NR_linux_timerfd_settime,    //
+    __NR_linux_timerfd_gettime,    //
+    __NR_linux_copy_file_range,    //
+    __NR_linux_gettimeofday,       //
+    __NR_linux_sendfile,           //
+    __NR_linux_vmsplice,           //
+    __NR_linux_splice,             //
+    __NR_linux_lseek,              //
+    __NR_linux_tee,                //
+    __NR_linux_brk,                //
+    __NR_linux_msync,              //
+    __NR_linux_mmap | NOEXEC,      //
+    __NR_linux_mremap,             //
+    __NR_linux_munmap,             //
+    __NR_linux_mincore,            //
+    __NR_linux_madvise,            //
+    __NR_linux_fadvise,            //
+    __NR_linux_mprotect | NOEXEC,  //
+    __NR_linux_arch_prctl,         //
+    __NR_linux_migrate_pages,      //
+    __NR_linux_sync_file_range,    //
+    __NR_linux_set_tid_address,    //
+    __NR_linux_nanosleep,          //
+    __NR_linux_pipe,               //
+    __NR_linux_pipe2,              //
+    __NR_linux_poll,               //
+    __NR_linux_ppoll,              //
+    __NR_linux_select,             //
+    __NR_linux_pselect6,           //
+    __NR_linux_epoll_create,       //
+    __NR_linux_epoll_create1,      //
+    __NR_linux_epoll_ctl,          //
+    __NR_linux_epoll_wait,         //
+    __NR_linux_epoll_pwait,        //
+    __NR_linux_epoll_pwait2,       //
+    __NR_linux_recvfrom,           //
+    __NR_linux_sendto | ADDRLESS,  //
+    __NR_linux_ioctl | RESTRICT,   //
+    __NR_linux_alarm,              //
+    __NR_linux_pause,              //
+    __NR_linux_shutdown,           //
+    __NR_linux_eventfd,            //
+    __NR_linux_eventfd2,           //
+    __NR_linux_signalfd,           //
+    __NR_linux_signalfd4,          //
+    __NR_linux_sigaction,          //
+    __NR_linux_sigaltstack,        //
+    __NR_linux_sigprocmask,        //
+    __NR_linux_sigsuspend,         //
+    __NR_linux_sigpending,         //
+    __NR_linux_socketpair,         //
+    __NR_linux_getrusage,          //
+    __NR_linux_times,              //
+    __NR_linux_umask,              //
+    __NR_linux_wait4,              //
+    __NR_linux_uname,              //
+    __NR_linux_prctl | STDIO,      //
+    __NR_linux_clone | THREAD,     //
+    __NR_linux_futex,              //
+    __NR_linux_set_robust_list,    //
+    __NR_linux_get_robust_list,    //
+    __NR_linux_prlimit | STDIO,    //
 };
 
 static const uint16_t kPledgeFlock[] = {
@@ -585,18 +584,21 @@ static privileged void KillThisThread(void) {
                : "rcx", "r11", "memory");
 }
 
-static privileged bool HasSyscall(struct Pledges *p, uint16_t n) {
+static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
   int i;
   for (i = 0; i < p->len; ++i) {
-    if ((p->syscalls[i] & 0x0fff) == n) {
-      return true;
+    if (p->syscalls[i] == n) {
+      return 1;
+    }
+    if ((p->syscalls[i] & 0xfff) == n) {
+      return 2;
     }
   }
-  return false;
+  return 0;
 }
 
 static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
-  int i;
+  int i, ok;
   bool found;
   char ord[17], rip[17];
   enum PledgeMode mode = si->si_errno;
@@ -604,15 +606,23 @@ static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
   FixCpy(ord, si->si_syscall, 12);
   HexCpy(rip, ctx->uc_mcontext.rip);
   for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
-    if (HasSyscall(kPledge + i, si->si_syscall)) {
-      Log("error: has not pledged ", kPledge[i].name,  //
-          " (ord=", ord, " rip=", rip, ")\n", 0);
-      found = true;
-      break;
+    switch (HasSyscall(kPledge + i, si->si_syscall)) {
+      case 1:
+        Log("error: should pledge ", kPledge[i].name,  //
+            " (ord=", ord, " rip=", rip, ")\n", 0);
+        found = true;
+        break;
+      case 2:
+        Log("error: maybe pledge ", kPledge[i].name,  //
+            " (ord=", ord, " rip=", rip, ")\n", 0);
+        found = true;
+        break;
+      default:
+        break;
     }
   }
   if (!found) {
-    Log("error: unsupported syscall (ord=", ord, " rip=", rip, ")\n", 0);
+    Log("error: bad syscall (ord=", ord, " rip=", rip, ")\n", 0);
   }
   switch (mode) {
     case kPledgeModeKillProcess:
@@ -876,6 +886,7 @@ static privileged void AllowSetsockoptRestrict(struct Filter *f) {
 // The optname argument of getsockopt() must be one of:
 //
 //   - SO_TYPE      (0x03)
+//   - SO_ERROR     (0x04)
 //   - SO_REUSEPORT (0x0f)
 //   - SO_REUSEADDR (0x02)
 //   - SO_KEEPALIVE (0x09)
@@ -885,20 +896,21 @@ static privileged void AllowSetsockoptRestrict(struct Filter *f) {
 static privileged void AllowGetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_getsockopt;
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 14 - 1),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 12 - 4),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 13 - 4),
       /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 5, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 4, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 3, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 2, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 1, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
-      /*L11*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L12*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L13*/ /* next filter */
+      /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 6, 0),
+      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 5, 0),
+      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 4, 0),
+      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 3, 0),
+      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 2, 0),
+      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 1, 0),
+      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
+      /*L12*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L13*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L14*/ /* next filter */
   };
   AppendFilter(f, PLEDGE(fragment));
 }
@@ -1215,24 +1227,6 @@ static privileged void AllowSendtoAddrless(struct Filter *f) {
   AppendFilter(f, PLEDGE(fragment));
 }
 
-// The sig parameter of sigaction() must NOT be
-//
-//   - SIGSYS (31) [always eperm]
-//
-static privileged void AllowSigactionNosigsys(struct Filter *f) {
-  static const int nr = __NR_linux_sigaction;
-  static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 31, 0, 1),
-      /*L3*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | Eperm),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
-  };
-  AppendFilter(f, PLEDGE(fragment));
-}
-
 // The family parameter of socket() must be one of:
 //
 //   - AF_INET  (0x02)
@@ -1479,9 +1473,6 @@ static privileged void AppendPledge(struct Filter *f,   //
       case __NR_linux_fchmodat | NOBITS:
         AllowFchmodatNobits(f);
         break;
-      case __NR_linux_sigaction | NOSIGSYS:
-        AllowSigactionNosigsys(f);
-        break;
       case __NR_linux_prctl | STDIO:
         AllowPrctlStdio(f);
         break;
@@ -1582,7 +1573,11 @@ privileged int sys_pledge_linux(unsigned long ipromises,  //
   AppendPledge(&f, PLEDGE(kPledgeDefault));
   for (i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (~ipromises & (1ul << i)) {
-      AppendPledge(&f, kPledge[i].syscalls, kPledge[i].len);
+      if (kPledge[i].len) {
+        AppendPledge(&f, kPledge[i].syscalls, kPledge[i].len);
+      } else {
+        AbortPledge("bad ipromises");
+      }
     }
   }
 

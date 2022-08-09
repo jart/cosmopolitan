@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
@@ -36,6 +37,7 @@
 #include "libc/intrin/promises.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/gc.internal.h"
@@ -65,6 +67,7 @@
 //
 
 STATIC_YOINK("strerror_wr");
+STATIC_YOINK("zip_uri_support");
 
 #define USAGE \
   "\
@@ -123,6 +126,7 @@ int g_uflag;
 int g_kflag;
 int g_hflag;
 bool g_nice;
+bool isdynamic;
 bool g_noclose;
 long g_cpuquota;
 long g_fszquota;
@@ -131,6 +135,8 @@ long g_proquota;
 long g_dontdrop;
 const char *g_chroot;
 const char *g_promises;
+char dsopath[PATH_MAX];
+char tmppath[PATH_MAX];
 
 struct {
   int n;
@@ -393,7 +399,8 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
 
   Unveil(prog, "rx");
 
-  if (IsDynamicExecutable(prog)) {
+  if (isdynamic) {
+    Unveil(dsopath, "rx");
     UnveilIfExists("/lib", "rx");
     UnveilIfExists("/lib64", "rx");
     UnveilIfExists("/usr/lib", "rx");
@@ -518,8 +525,36 @@ void DropCapabilities(void) {
   }
 }
 
+bool FileExistsAndIsNewerThan(const char *filepath, const char *thanpath) {
+  struct stat st1, st2;
+  if (stat(filepath, &st1) == -1) return false;
+  if (stat(thanpath, &st2) == -1) return false;
+  if (st1.st_mtim.tv_sec < st2.st_mtim.tv_sec) return false;
+  if (st1.st_mtim.tv_sec > st2.st_mtim.tv_sec) return true;
+  return st1.st_mtim.tv_nsec >= st2.st_mtim.tv_nsec;
+}
+
+int Extract(const char *from, const char *to, int mode) {
+  int fdin, fdout;
+  if ((fdin = open(from, O_RDONLY)) == -1) return -1;
+  if ((fdout = creat(to, mode)) == -1) {
+    close(fdin);
+    return -1;
+  }
+  if (_copyfd(fdin, fdout, -1) == -1) {
+    close(fdout);
+    close(fdin);
+    return -1;
+  }
+  return close(fdout) | close(fdin);
+}
+
 int main(int argc, char *argv[]) {
+  const char *s;
   bool hasfunbits;
+  int fdin, fdout;
+  char buf[PATH_MAX];
+  int e, zipfd, memfd;
   int useruid, usergid;
   int owneruid, ownergid;
   int oldfsuid, oldfsgid;
@@ -607,6 +642,29 @@ int main(int argc, char *argv[]) {
     setfsgid(oldfsgid);
   }
 
+  // figure out where we want the dso
+  if (IsDynamicExecutable(prog)) {
+    isdynamic = true;
+    if ((s = getenv("TMPDIR")) ||  //
+        (s = getenv("HOME")) ||    //
+        (s = ".")) {
+      ksnprintf(dsopath, sizeof(dsopath), "%s/sandbox.so", s);
+      if (!FileExistsAndIsNewerThan(dsopath, GetProgramExecutableName())) {
+        ksnprintf(tmppath, sizeof(tmppath), "%s/sandbox.so.%d", s, getpid());
+        if (Extract("/zip/sandbox.so", tmppath, 0755) == -1) {
+          kprintf("error: extract dso failed: %m\n");
+          exit(1);
+        }
+        if (rename(tmppath, dsopath) == -1) {
+          kprintf("error: rename dso failed: %m\n");
+          exit(1);
+        }
+      }
+      ksnprintf(buf, sizeof(buf), "LD_PRELOAD=%s", dsopath);
+      putenv(buf);
+    }
+  }
+
   if (g_dontdrop) {
     if (hasfunbits) {
       kprintf("error: -D flag forbidden on setuid binaries\n");
@@ -669,11 +727,6 @@ int main(int argc, char *argv[]) {
 
   ApplyFilesystemPolicy(ipromises);
 
-  // we always need exec which is a weakness of this model
-  if (!(~ipromises & (1ul << PROMISE_EXEC))) {
-    g_promises = xstrcat(g_promises, ' ', "exec");
-  }
-
   // pledge.com uses the return eperm instead of killing the process
   // model. we do this becasue it's only possible to have sigsys print
   // crash messages if we're not pledging exec, which is what this tool
@@ -682,6 +735,22 @@ int main(int argc, char *argv[]) {
     __pledge_mode = kPledgeModeKillProcess;
   } else {
     __pledge_mode = kPledgeModeErrno;
+  }
+
+  // we need to be able to call execv and mmap the dso
+  // it'll be pledged away once/if the dso gets loaded
+  if (!(~ipromises & (1ul << PROMISE_EXEC))) {
+    g_promises = xstrcat(g_promises, ' ', "exec");
+  }
+  if (isdynamic) {
+    g_promises = xstrcat(g_promises, ' ', "prot_exec");
+  }
+
+  // pass arguments to pledge() inside the dso
+  if (isdynamic) {
+    ksnprintf(buf, sizeof(buf), "_PLEDGE=%ld,%ld,%ld", ~ipromises,
+              __pledge_mode, false);
+    putenv(buf);
   }
 
   // apply sandbox

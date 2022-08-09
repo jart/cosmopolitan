@@ -86,7 +86,7 @@ TEST(pledge, testKillProcessMode) {
 TEST(pledge, testLogMessage_inSoftyMode) {
   if (IsOpenbsd()) return;
   int fds[2];
-  char msg[64] = {0};
+  char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));
   SPAWN(fork);
   __pledge_mode = kPledgeModeErrno;
@@ -98,13 +98,13 @@ TEST(pledge, testLogMessage_inSoftyMode) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: has not pledged inet", msg);
+    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
   }
 }
 
 TEST(pledge, testLogMessage_onKillProcess) {
   int fds[2];
-  char msg[64] = {0};
+  char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));
   SPAWN(fork);
   __pledge_mode = kPledgeModeKillThread;
@@ -116,13 +116,13 @@ TEST(pledge, testLogMessage_onKillProcess) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: has not pledged inet", msg);
+    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
   }
 }
 
 TEST(pledge, testNoLogOrAbrtsignoPossibleSadly_becausePledgedExec) {
   int fds[2];
-  char msg[64] = {0};
+  char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));
   SPAWN(fork);
   ASSERT_SYS(0, 2, dup2(fds[1], 2));

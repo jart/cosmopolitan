@@ -119,22 +119,44 @@ o/$(MODE)/tool/build/dd.zip.o: o/$(MODE)/tool/build/dd
 
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
-o/$(MODE)/tool/build/sandbox.o:				\
+o/$(MODE)/tool/build/dso/sandbox.o:			\
 		OVERRIDE_CFLAGS +=			\
 			-fPIC
 
-o/$(MODE)/tool/build/sandbox.so:			\
-		o/$(MODE)/tool/build/sandbox.o		\
+o/$(MODE)/tool/build/dso/sandbox.o:			\
+		libc/calls/calls.h			\
+		tool/build/dso/sandbox.c		\
+		libc/calls/pledge.h			\
+		libc/runtime/runtime.h			\
+		libc/calls/pledge.internal.h		\
+		libc/intrin/promises.internal.h		\
+		tool/build/build.mk
+
+o/$(MODE)/tool/build/dso/sandbox.so:			\
+		o/$(MODE)/tool/build/dso/sandbox.o	\
 		o/$(MODE)/libc/calls/pledge-linux.o	\
 		o/$(MODE)/libc/sysv/restorert.o
-	@$(COMPILE) -ALINK.so				\
-		$(CC)					\
-		-s					\
+	@$(CC)	-s					\
 		-shared					\
 		-nostdlib				\
 		-Wl,--gc-sections			\
-		$(LINKARGS)				\
+		o/$(MODE)/tool/build/dso/sandbox.o	\
+		o/$(MODE)/libc/calls/pledge-linux.o	\
+		o/$(MODE)/libc/sysv/restorert.o		\
 		$(OUTPUT_OPTION)
+
+o/$(MODE)/tool/build/dso/sandbox.so.zip.o:		\
+		ZIPOBJ_FLAGS +=				\
+			-B
+
+o/$(MODE)/tool/build/pledge.com.dbg:			\
+		$(TOOL_BUILD_DEPS)			\
+		o/$(MODE)/tool/build/build.pkg		\
+		o/$(MODE)/tool/build/dso/sandbox.so.zip.o \
+		o/$(MODE)/tool/build/pledge.o		\
+		$(CRT)					\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
 
 .PHONY: o/$(MODE)/tool/build
 o/$(MODE)/tool/build:					\
