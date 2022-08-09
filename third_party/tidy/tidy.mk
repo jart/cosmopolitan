@@ -64,9 +64,8 @@ o/$(MODE)/third_party/tidy/tidy.com:						\
 	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
 		o/$(MODE)/third_party/tidy/.tidy/.symtab
 
-o/$(MODE)/third_party/tidy/.tidyrc.zip.o:					\
-		ZIPOBJ_FLAGS +=							\
-			-B
+o/$(MODE)/third_party/tidy/.tidyrc.zip.o: third_party/tidy/.tidyrc
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 THIRD_PARTY_TIDY_COMS =								\
 	o/$(MODE)/third_party/tidy/tidy.com

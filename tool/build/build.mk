@@ -146,8 +146,8 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 		$(OUTPUT_OPTION)
 
 o/$(MODE)/tool/build/dso/sandbox.so.zip.o:		\
-		ZIPOBJ_FLAGS +=				\
-			-B
+		o/$(MODE)/tool/build/dso/sandbox.so
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/tool/build/pledge.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\

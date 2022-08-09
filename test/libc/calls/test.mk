@@ -72,7 +72,8 @@ o/$(MODE)/test/libc/calls/%.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/calls/tiny64.elf.zip.o: ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/libc/calls/tiny64.elf.zip.o: test/libc/calls/tiny64.elf
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/test/libc/calls/life-nomod.com.zip.o: o/$(MODE)/test/libc/calls/life-nomod.com
 	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
