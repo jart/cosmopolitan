@@ -35,9 +35,16 @@
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/x/x.h"
 #include "third_party/bzip2/bzlib.h"
 
 #define MAXCOM 256      /* Maximum one-line comment size */
+
+static char *EnsureDirs(char *path) {
+  makedirs(gc(xdirname(path)), 0755);
+  return path;
+}
 
 /* Local option flags */
 #ifndef DELETE
@@ -3828,7 +3835,7 @@ char **argv;            /* command line tokens */
       }
       strcat(tempzip, "ziXXXXXX");
 
-      if ((yd = mkstemp(tempzip)) == EOF) {
+      if ((yd = mkstemp(EnsureDirs(gc(xjoinpaths(kTmpPath, tempzip))))) == EOF) {
         ZIPERR(ZE_TEMP, tempzip);
       }
       if ((y = fdopen(yd, FOPW_TMP)) == NULL) {
@@ -4831,7 +4838,7 @@ char **argv;            /* command line tokens */
       }
       strcat(tempzip, "ziXXXXXX");
 
-      if ((yd = mkstemp(tempzip)) == EOF) {
+      if ((yd = mkstemp(EnsureDirs(gc(xjoinpaths(kTmpPath, tempzip))))) == EOF) {
         ZIPERR(ZE_TEMP, tempzip);
       }
       if ((y = fdopen(yd, FOPW_TMP)) == NULL) {

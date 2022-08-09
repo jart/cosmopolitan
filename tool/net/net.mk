@@ -104,65 +104,20 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
+		o/$(MODE)/tool/net/help.txt.zip.o				\
+		o/$(MODE)/tool/net/.init.lua.zip.o				\
+		o/$(MODE)/tool/net/favicon.ico.zip.o				\
+		o/$(MODE)/tool/net/redbean.png.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-ifneq ($(MODE),tiny)
-ifneq ($(MODE),tinylinux)
 o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com					\
-		tool/net/net.mk							\
-		tool/net/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
+		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/net/.redbean/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@ 	\
-		o/$(MODE)/tool/net/.redbean/.symtab				\
-		tool/net/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-endif
-endif
-
-o/tiny/tool/net/redbean.com:							\
-		o/tiny/tool/net/redbean.com.dbg					\
-		o/tiny/third_party/zip/zip.com					\
-		tool/net/net.mk							\
-		tool/net/tiny/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tiny/tool/net/.redbean
-	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/zip/zip.com -9qj $@		\
-		tool/net/tiny/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-
-o/tinylinux/tool/net/redbean.com:						\
-		o/tinylinux/tool/net/redbean.com.dbg				\
-		o/tinylinux/third_party/zip/zip.com				\
-		tool/net/net.mk							\
-		tool/net/tiny/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tinylinux/tool/net/.redbean
-	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/zip/zip.com -9qj $@ 	\
-		tool/net/tiny/help.txt						\
-		tool/net/.init.lua						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
+	@$(COMPILE) -AZIP -T$@ $@ -A $(SYMTAB)
 
 # REDBEAN-DEMO.COM
 #
@@ -170,6 +125,7 @@ o/tinylinux/tool/net/redbean.com:						\
 # bundles a bunch of example code and there's a live of it available
 # online at http://redbean.justine.lol/
 
+o/$(MODE)/tool/net/.init.lua.zip.o						\
 o/$(MODE)/tool/net/demo/.init.lua.zip.o						\
 o/$(MODE)/tool/net/demo/.reload.lua.zip.o					\
 o/$(MODE)/tool/net/demo/sql.lua.zip.o						\
@@ -196,6 +152,7 @@ o/$(MODE)/tool/net/demo/redbean-form.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean-xhr.lua.zip.o					\
 o/$(MODE)/tool/net/redbean.png.zip.o						\
 o/$(MODE)/tool/net/favicon.ico.zip.o						\
+o/$(MODE)/tool/net/help.txt.zip.o						\
 o/$(MODE)/tool/net/demo/404.html.zip.o:						\
 		ZIPOBJ_FLAGS +=							\
 			-B
@@ -263,49 +220,30 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.reload.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/.init.lua.zip.o				\
+		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
 o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
-		o/$(MODE)/tool/build/symtab.com					\
-		o/$(MODE)/third_party/zip/zip.com				\
-		tool/net/help.txt
+		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-demo
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/net/.redbean-demo/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-demo/.symtab			\
-		tool/net/help.txt
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
+	@$(COMPILE) -AZIP -T$@ $@ -A $(SYMTAB)
 
 # REDBEAN-STATIC.COM
 #
 # Passing the -DSTATIC causes Lua and SQLite to be removed. This reduces
 # the binary size from roughly 1500 kb to 500 kb. It still supports SSL.
 
-o/$(MODE)/tool/net/redbean-static.com:						\
-		o/$(MODE)/tool/net/redbean-static.com.dbg			\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com					\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-static
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/net/.redbean-static/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-static/.symtab			\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-
 o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-static.o				\
 		o/$(MODE)/tool/net/net.pkg					\
+		o/$(MODE)/tool/net/favicon.ico.zip.o				\
+		o/$(MODE)/tool/net/redbean.png.zip.o				\
+		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -315,23 +253,6 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 # Passing the -DUNSECURE will cause the TLS security code to be removed.
 # That doesn't mean redbean becomes insecure. It just reduces complexity
 # in situations where you'd rather have SSL be handled in an edge proxy.
-
-o/$(MODE)/tool/net/redbean-unsecure.com:					\
-		o/$(MODE)/tool/net/redbean-unsecure.com.dbg			\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com					\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-unsecure
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/net/.redbean-unsecure/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-unsecure/.symtab			\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
 
 o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
@@ -345,6 +266,9 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		o/$(MODE)/tool/net/lsqlite3.o					\
 		o/$(MODE)/tool/net/largon2.o					\
 		o/$(MODE)/tool/net/net.pkg					\
+		o/$(MODE)/tool/net/favicon.ico.zip.o				\
+		o/$(MODE)/tool/net/redbean.png.zip.o				\
+		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -355,57 +279,13 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 # produce 200kb binary that's very similar to redbean as it existed on
 # Hacker News the day it went viral.
 
-ifneq ($(MODE),tiny)
-ifneq ($(MODE),tinylinux)
-o/$(MODE)/tool/net/redbean-original.com:					\
-		o/$(MODE)/tool/net/redbean-original.com.dbg			\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com					\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/$(MODE)/tool/net/.redbean-original
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/net/.redbean-original/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/net/.redbean-original/.symtab			\
-		tool/net/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-endif
-endif
-
-o/tiny/tool/net/redbean-original.com:						\
-		o/tiny/tool/net/redbean-original.com.dbg			\
-		o/tiny/third_party/zip/zip.com					\
-		tool/net/tiny/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tiny/tool/net/.redbean-original
-	@$(COMPILE) -AZIP -T$@ o/tiny/third_party/zip/zip.com -9qj $@		\
-		tool/net/tiny/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-
-o/tinylinux/tool/net/redbean-original.com:					\
-		o/tinylinux/tool/net/redbean-original.com.dbg			\
-		o/tinylinux/third_party/zip/zip.com				\
-		tool/net/tiny/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -AMKDIR -T$@ $(MKDIR) o/tinylinux/tool/net/.redbean-original
-	@$(COMPILE) -AZIP -T$@ o/tinylinux/third_party/zip/zip.com -9qj $@	\
-		tool/net/tiny/help.txt						\
-		tool/net/favicon.ico						\
-		tool/net/redbean.png
-
 o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-original.o				\
 		o/$(MODE)/tool/net/net.pkg					\
+		o/$(MODE)/tool/net/favicon.ico.zip.o				\
+		o/$(MODE)/tool/net/redbean.png.zip.o				\
+		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)

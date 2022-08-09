@@ -31,6 +31,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -322,13 +323,9 @@ int main(int argc, char *argv[]) {
       goto fail;
     }
     outsize += (remain = sizes.p[i]);
-    while ((rc = copy_file_range(fd, 0, outfd, 0, remain, 0)) < remain) {
-      if (rc <= 0) {
-        reason = "copy_file_range failed";
-        goto fail;
-      } else {
-        remain -= rc;
-      }
+    if (_copyfd(fd, outfd, remain) == -1) {
+      reason = "copy_file_range failed";
+      goto fail;
     }
     close(fd);
   }

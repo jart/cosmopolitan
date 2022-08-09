@@ -78,16 +78,6 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/sqlite3/sqlite3.com:					\
-		o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg			\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/third_party/sqlite3/.sqlite3/.symtab
-
 $(THIRD_PARTY_SQLITE3_A):						\
 		third_party/sqlite3/					\
 		$(THIRD_PARTY_SQLITE3_A).pkg				\

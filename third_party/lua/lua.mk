@@ -250,16 +250,6 @@ o/$(MODE)/third_party/lua/lua.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/dbg/third_party/lua/lua.com:						\
-		o/dbg/third_party/lua/lua.com.dbg			\
-		o/dbg/third_party/zip/zip.com				\
-		o/dbg/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ASYMTAB o/dbg/tool/build/symtab.com		\
-		-o o/dbg/third_party/lua/.lua/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/dbg/third_party/zip/zip.com		\
-		-9qj $@ o/dbg/third_party/lua/.lua/.symtab
-
 ################################################################################
 # luac.com
 

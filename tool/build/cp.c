@@ -23,6 +23,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/io.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -30,6 +31,7 @@
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
@@ -162,6 +164,24 @@ char *Join(const char *a, const char *b) {
   return dstfile;
 }
 
+bool MovePreservingDestinationInode(const char *from, const char *to) {
+  bool res;
+  struct stat st;
+  int fdin, fdout;
+  if ((fdin = open(from, O_RDONLY)) == -1) {
+    return false;
+  }
+  fstat(fdin, &st);
+  if ((fdout = creat(to, st.st_mode)) == -1) {
+    close(fdin);
+    return false;
+  }
+  res = _copyfd(fdin, fdout, -1) != -1;
+  close(fdin);
+  close(fdout);
+  return res;
+}
+
 void Cp(char *src, char *dst) {
   ssize_t rc;
   const char *s;
@@ -207,7 +227,7 @@ void Cp(char *src, char *dst) {
     linkbuf[rc] = 0;
     if (symlink(linkbuf, dst) == -1) goto OnFail;
   } else {
-    if (copyfile(src, dst, flags) == -1) goto OnFail;
+    if (!MovePreservingDestinationInode(src, dst)) goto OnFail;
   }
   return;
 OnFail:

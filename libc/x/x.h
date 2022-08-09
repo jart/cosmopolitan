@@ -69,6 +69,7 @@ void *xloadzd(bool *, void **, const void *, size_t, size_t, size_t, size_t,
 
 int rmrf(const char *);
 int makedirs(const char *, unsigned);
+char *xbasename(const char *) paramsnonnull() _XMAL;
 char *xdirname(const char *) paramsnonnull() _XMAL;
 char *xjoinpaths(const char *, const char *) paramsnonnull() _XMAL;
 char *xreadlink(const char *) paramsnonnull() _XMAL;

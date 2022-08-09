@@ -425,7 +425,6 @@ void Explore(void) {
 
 int main(int argc, char *argv[]) {
   int i, fd;
-  char path[PATH_MAX];
   ShowCrashReports();
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   GetOpts(argc, argv);
@@ -435,14 +434,12 @@ int main(int argc, char *argv[]) {
   LoadRelationships(argc, argv);
   Crunch();
   Explore();
-  ksnprintf(path, sizeof(path), "%s.%d", out, getpid());
-  CHECK_NE(-1, (fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)),
-           "open(%#s)", path);
+  CHECK_NE(-1, (fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644)),
+           "open(%#s)", out);
   for (i = 0; i < threads; ++i) {
     CHECK_NE(-1, xwrite(fd, bouts[i], appendz(bouts[i]).i));
   }
   CHECK_NE(-1, close(fd));
-  CHECK_NE(-1, rename(path, out));
   for (i = 0; i < threads; ++i) {
     free(bouts[i]);
   }

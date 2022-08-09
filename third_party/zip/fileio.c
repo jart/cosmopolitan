@@ -22,6 +22,10 @@
 #include "libc/stdio/temp.h"
 #include "libc/time/time.h"
 #include "libc/time/struct/tm.h"
+#include "libc/fmt/fmt.h"
+#include "libc/x/x.h"
+#include "libc/x/x.h"
+#include "libc/runtime/gc.internal.h"
 #include "libc/limits.h"
 
 #ifdef NO_MKTIME
@@ -1322,12 +1326,24 @@ int a;                  /* attributes returned by getfileattr() */
 
 #ifndef VMS /* VMS-specific function is in VMS.C. */
 
+static char *EnsureDirs(char *path) {
+  makedirs(gc(xdirname(path)), 0755);
+  return path;
+}
+
 char *tempname(zip)
   char *zip;              /* path name of zip file to generate temp name for */
 
 /* Return a temporary file name in its own malloc'ed space, using tempath. */
 {
   char *t = zip;   /* malloc'ed space for name (use zip to avoid warning) */
+
+#ifdef __COSMOPOLITAN__
+  t = malloc(PATH_MAX);
+  snprintf(t, PATH_MAX, "%szip.XXXXXX", kTmpPath);
+  mkstemp(EnsureDirs(t));
+  return t;
+#endif
 
 # ifdef CMS_MVS
   if ((t = malloc(strlen(tempath) + L_tmpnam + 2)) == NULL)

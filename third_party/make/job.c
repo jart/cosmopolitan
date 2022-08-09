@@ -47,6 +47,24 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/x/x.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/time/time.h"
+#include "libc/calls/calls.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/assert.h"
+#include "libc/sysv/consts/pr.h"
+#include "libc/calls/struct/bpf.h"
+#include "libc/calls/struct/filter.h"
+#include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/filter.h"
+#include "libc/sysv/consts/pr.h"
+#include "libc/sysv/consts/pr.h"
+#include "libc/sysv/consts/audit.h"
+#include "libc/sysv/consts/nrlinux.h"
+#include "libc/macros.internal.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \
@@ -1781,14 +1799,34 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                             ".runit.psk"),
                 "r");
 
-        /* unveil target output directory */
+        /*
+         * unveils target output file
+         *
+         * landlock operates per inode so it can't whitelist missing
+         * paths. so we create the output file manually, and prevent
+         * creation so that it can't be deleted by the command which
+         * must truncate when writing its output.
+         */
         if (strlen(c->file->name) < PATH_MAX)
           {
-            const char *dir;
+            int fd, rc, err = errno;
             strcpy (outpathbuf, c->file->name);
-            dir = dirname (outpathbuf);
-            makedirs (dir, 0755);
-            Unveil (dir, "rwc");
+            if (makedirs (dirname (outpathbuf), 0777) == -1)
+              errno = err;
+            fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
+            if (fd != -1)
+              {
+                futimens (fd, (struct timespec[2]){0});
+                close (fd);
+              }
+            else if (errno == EEXIST)
+              errno = err;
+            else
+              OSS (error, NILF, "%s: touch target failed %s",
+                   c->file->name, strerror (errno));
+            if (unveil (c->file->name, "rwx") && errno != ENOSYS)
+              OSS (error, NILF, "%s: unveil target failed %s",
+                   c->file->name, strerror (errno));
           }
 
         /* unveil target prerequisites */
@@ -1838,7 +1876,7 @@ exec_command (char **argv, char **envp)
 
   /* Run the program.  */
   environ = envp;
-  execvp (argv[0], argv);
+  execv (argv[0], argv);
 
   if(errno == ENOENT)
     OSS (error, NILF, "%s: %s", argv[0], strerror (errno));

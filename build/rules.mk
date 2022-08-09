@@ -92,16 +92,16 @@ o/$(MODE)/%.o: o/$(MODE)/%.cc
 	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
 
 o/%.a:
-	$(file >$@.args,$^)
-	@$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ @$@.args
+	$(file >$(TMPDIR)/$(subst /,_,$@),$^)
+	@$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ @$(TMPDIR)/$(subst /,_,$@)
 
 o/%.pkg:
-	$(file >$@.args,$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$@.args
+	$(file >$(TMPDIR)/$(subst /,_,$@).args,$(filter %.o,$^))
+	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
 
 o/$(MODE)/%.pkg:
-	$(file >$@.args,$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$@.args
+	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter %.o,$^))
+	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
 
 o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
 	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<

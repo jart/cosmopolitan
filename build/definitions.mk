@@ -65,6 +65,7 @@ ZIPOBJ = build/bootstrap/zipobj.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
 COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
+SYMTAB = $(TMPDIR)/$(subst /,_,$@).symtab
 
 COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)

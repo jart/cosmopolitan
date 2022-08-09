@@ -62,9 +62,9 @@ static bool IsOverlappingIov(struct iovec *a, struct iovec *b) {
  */
 void PersistObject(const char *path, size_t align,
                    const struct ObjectParam *obj) {
+  const char *pad;
   struct iovec *iov;
   int i, n, fd, iovlen;
-  const char *tmp, *pad;
   long len, size, bytes, filesize;
   unsigned char *hdr, *p1, *p2, **pp;
   intptr_t arrayptroffset, arraydataoffset;
@@ -79,7 +79,6 @@ void PersistObject(const char *path, size_t align,
   pad = gc(xcalloc(align, 1));
   hdr = gc(xmalloc(obj->size));
   iov = gc(xcalloc(iovlen, sizeof(*iov)));
-  tmp = gc(xasprintf("%s.%d.%s", path, getpid(), "tmp"));
   bytes = obj->size;
   iov[0].iov_base = memcpy(hdr, obj->p, obj->size);
   iov[0].iov_len = bytes;
@@ -115,8 +114,7 @@ void PersistObject(const char *path, size_t align,
           iov[(i + 0) * 2].iov_base, iov[(i + 0) * 2].iov_len, (i + 1) * 2,
           iov[(i + 1) * 2].iov_base, iov[(i + 1) * 2].iov_len, path);
   }
-  CHECK_NE(-1, (fd = open(tmp, O_CREAT | O_WRONLY | O_EXCL, 0644)), "%s", tmp);
+  CHECK_NE(-1, (fd = creat(path, 0644)), "%s", path);
   CHECK_EQ(filesize, writev(fd, iov, iovlen));
   CHECK_NE(-1, close(fd));
-  CHECK_NE(-1, rename(tmp, path), "%s", path);
 }

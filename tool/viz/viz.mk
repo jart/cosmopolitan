@@ -82,26 +82,6 @@ o/$(MODE)/tool/viz/printimage.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/viz/printimage.com:						\
-		o/$(MODE)/tool/viz/printimage.com.dbg				\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/viz/.printimage/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/viz/.printimage/.symtab
-
-o/$(MODE)/tool/viz/printvideo.com:						\
-		o/$(MODE)/tool/viz/printvideo.com.dbg				\
-		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com			\
-		-o o/$(MODE)/tool/viz/.printvideo/.symtab $<
-	@$(COMPILE) -AZIP -T$@ o/$(MODE)/third_party/zip/zip.com -9qj $@	\
-		o/$(MODE)/tool/viz/.printvideo/.symtab
-
 o/$(MODE)/tool/viz/derasterize.o:		\
 		OVERRIDE_CFLAGS +=		\
 			-DSTACK_FRAME_UNLIMITED	\

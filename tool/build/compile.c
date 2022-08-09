@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
@@ -38,6 +37,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -171,6 +171,7 @@ char *target;
 char *output;
 char *outpath;
 char *command;
+char *movepath;
 char *shortened;
 char *colorflag;
 char ccpath[PATH_MAX];
@@ -188,6 +189,7 @@ struct timespec signalled;
 sigset_t mask;
 sigset_t savemask;
 char buf[PAGESIZE];
+char tmpout[PATH_MAX];
 
 const char *const kSafeEnv[] = {
     "ADDR2LINE",  // needed by GetAddr2linePath
@@ -707,6 +709,24 @@ void ReportResources(void) {
   appendw(&output, '\n');
 }
 
+bool MovePreservingDestinationInode(const char *from, const char *to) {
+  bool res;
+  struct stat st;
+  int fdin, fdout;
+  if ((fdin = open(from, O_RDONLY)) == -1) {
+    return false;
+  }
+  fstat(fdin, &st);
+  if ((fdout = creat(to, st.st_mode)) == -1) {
+    close(fdin);
+    return false;
+  }
+  res = _copyfd(fdin, fdout, -1) != -1;
+  close(fdin);
+  close(fdout);
+  return res;
+}
+
 bool IsNativeExecutable(const char *path) {
   bool res;
   char buf[4];
@@ -737,6 +757,7 @@ int main(int argc, char *argv[]) {
   char *s, *p, *q, **envp;
 
   mode = firstnonnull(getenv("MODE"), MODE);
+  ksnprintf(tmpout, sizeof(tmpout), "%scompile.%d", kTmpPath, getpid());
 
   /*
    * parse prefix arguments
@@ -835,18 +856,26 @@ int main(int argc, char *argv[]) {
    * ingest arguments
    */
   for (i = optind; i < argc; ++i) {
+    if (!movepath && !outpath && target && !strcmp(target, argv[i])) {
+      outpath = argv[i];
+      AddArg(tmpout);
+      movepath = target;
+      MovePreservingDestinationInode(target, tmpout);
+      continue;
+    }
     if (argv[i][0] != '-') {
       AddArg(argv[i]);
       continue;
     }
     if (startswith(argv[i], "-o")) {
       if (!strcmp(argv[i], "-o")) {
-        AddArg(argv[i]);
-        AddArg((outpath = argv[++i]));
+        outpath = argv[++i];
       } else {
-        AddArg(argv[i]);
         outpath = argv[i] + 2;
       }
+      AddArg("-o");
+      AddArg(tmpout);
+      movepath = outpath;
       continue;
     }
     if (!iscc) {
@@ -1090,6 +1119,19 @@ int main(int argc, char *argv[]) {
         if (touchtarget && target) {
           makedirs(xdirname(target), 0755);
           touch(target, 0644);
+        }
+        if (movepath) {
+          if (!MovePreservingDestinationInode(tmpout, movepath)) {
+            unlink(tmpout);
+            exitcode = 90;
+            appends(&output, "\nfailed to move output file\n");
+            appends(&output, tmpout);
+            appends(&output, "\n");
+            appends(&output, movepath);
+            appends(&output, "\n");
+          } else {
+            unlink(tmpout);
+          }
         }
       } else {
         appendw(&output, '\n');
