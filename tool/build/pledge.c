@@ -28,6 +28,7 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/ehdr.h"
@@ -77,6 +78,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -u UID          call setuid()\n\
   -c PATH         call chroot()\n\
   -v [PERM:]PATH  call unveil(PATH, PERM[rwxc])\n\
+  -V              disable unveiling (only pledge)\n\
   -k              kill process rather than eperm'ing\n\
   -n              set maximum niceness\n\
   -D              don't drop capabilities\n\
@@ -85,6 +87,8 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -M BYTES        set virtual memory limit [default: 4gb]\n\
   -P PROCS        set process limit [default: GetCpuCount()*2]\n\
   -F BYTES        set individual file size limit [default: 4gb]\n\
+  -T pledge       exits 0 if pledge() is supported by host system\n\
+  -T unveil       exits 0 if unveil() is supported by host system\n\
   -p PLEDGE       may contain any of following separated by spaces\n\
      - stdio: allow stdio and benign system calls\n\
      - rpath: read-only path ops\n\
@@ -106,7 +110,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.5\n\
+pledge.com v1.6\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
@@ -133,6 +137,8 @@ long g_fszquota;
 long g_memquota;
 long g_proquota;
 long g_dontdrop;
+long g_dontunveil;
+const char *g_test;
 const char *g_chroot;
 const char *g_promises;
 char dsopath[PATH_MAX];
@@ -151,7 +157,7 @@ static void GetOpts(int argc, char *argv[]) {
   g_proquota = GetCpuCount() * 100;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnkNp:u:g:c:C:D:P:M:F:v:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnkNVT:p:u:g:c:C:D:P:M:F:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
@@ -164,6 +170,12 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'D':
         g_dontdrop = true;
+        break;
+      case 'V':
+        g_dontunveil = true;
+        break;
+      case 'T':
+        g_test = optarg;
         break;
       case 'c':
         g_chroot = optarg;
@@ -390,9 +402,8 @@ void MakeProcessNice(void) {
 void ApplyFilesystemPolicy(unsigned long ipromises) {
   const char *p;
 
-  if (!SupportsLandlock()) {
-    return;
-  }
+  if (g_dontunveil) return;
+  if (!SupportsLandlock()) return;
 
   Unveil(prog, "rx");
 
@@ -564,6 +575,24 @@ int main(int argc, char *argv[]) {
 
   // parse flags
   GetOpts(argc, argv);
+  if (g_test) {
+    if (!strcmp(g_test, "pledge")) {
+      if (IsOpenbsd() || (IsLinux() && __is_linux_2_6_23())) {
+        exit(0);
+      } else {
+        exit(1);
+      }
+    }
+    if (!strcmp(g_test, "unveil")) {
+      if (IsOpenbsd() || (IsLinux() && SupportsLandlock())) {
+        exit(0);
+      } else {
+        exit(1);
+      }
+    }
+    kprintf("error: unknown test: %s\n", g_test);
+    exit(2);
+  }
   if (optind == argc) {
     kprintf("error: too few args\n");
     write(2, USAGE, sizeof(USAGE) - 1);

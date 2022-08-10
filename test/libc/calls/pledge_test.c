@@ -604,7 +604,8 @@ TEST(pledge, threadWithLocks_canCodeMorph) {
   int ws, pid;
   // not sure how this works on OpenBSD but it works!
   if (!fork()) {
-    ASSERT_SYS(0, 0, pledge("stdio prot_exec", 0));
+    __enable_threads();
+    ASSERT_SYS(0, 0, pledge("stdio", 0));
     ASSERT_SYS(0, 0, _spawn(LockWorker, 0, &worker));
     ASSERT_SYS(0, 0, _join(&worker));
     _Exit(0);

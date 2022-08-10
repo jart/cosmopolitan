@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/spawn.h"
@@ -31,17 +32,22 @@
 
 void SetUpOnce(void) {
   __enable_threads();
-  ASSERT_SYS(0, 0,
-             pledge("stdio rpath wpath cpath proc exec prot_exec",
-                    "stdio rpath wpath cpath prot_exec"));
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) {
+    exit(42);
+  }
 }
 
 TEST(spawn, test) {
+  if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) {
+    exit(42);
+  }
   int rc, ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {program_invocation_name, NULL};
   char *envs[] = {"THE_DOGE=42", NULL};
-  if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) exit(42);
   EXPECT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_TRUE(WIFEXITED(ws));
