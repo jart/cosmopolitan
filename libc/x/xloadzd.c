@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

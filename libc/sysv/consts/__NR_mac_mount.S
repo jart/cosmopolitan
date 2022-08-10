@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_mac_mount,0xfff,0x20001a8,0xfff,0xfff,0xfff,0xfff

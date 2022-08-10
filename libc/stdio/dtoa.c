@@ -29,6 +29,7 @@
 #include "libc/fmt/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
+#include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 /**
@@ -293,12 +294,10 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         if ((flags & FLAGS_ZEROPAD)) {
           if (sign) __FMT_PUT(sign);
           sign = 0;
-          do
-            __FMT_PUT('0');
+          do __FMT_PUT('0');
           while (--width > 0);
         } else
-          do
-            __FMT_PUT(' ');
+          do __FMT_PUT(' ');
           while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
@@ -410,12 +409,10 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
         if ((flags & FLAGS_ZEROPAD)) {
           if (sign) __FMT_PUT(sign);
           sign = 0;
-          do
-            __FMT_PUT('0');
+          do __FMT_PUT('0');
           while (--width > 0);
         } else
-          do
-            __FMT_PUT(' ');
+          do __FMT_PUT(' ');
           while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
@@ -485,16 +482,14 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       }
       if ((width -= prec1) > 0 && !(flags & FLAGS_LEFT) &&
           !(flags & FLAGS_ZEROPAD)) {
-        do
-          __FMT_PUT(' ');
+        do __FMT_PUT(' ');
         while (--width > 0);
       }
       if (sign) __FMT_PUT(sign);
       __FMT_PUT('0');
       __FMT_PUT(alphabet[17]);
       if ((flags & FLAGS_ZEROPAD) && width > 0 && !(flags & FLAGS_LEFT)) {
-        do
-          __FMT_PUT('0');
+        do __FMT_PUT('0');
         while (--width > 0);
       }
       i1 = prec1 & 7;
@@ -512,8 +507,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
           --prec1;
         }
         if ((flags & FLAGS_HASH) && prec > 0) {
-          do
-            __FMT_PUT(0);
+          do __FMT_PUT(0);
           while (--prec > 0);
         }
       }

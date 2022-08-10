@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getkerninfo,0xfff,0xfff,0x003f,0xfff,0xfff,0xfff

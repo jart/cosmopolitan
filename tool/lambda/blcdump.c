@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/unicode/locale.h"
 #include "third_party/getopt/getopt.h"

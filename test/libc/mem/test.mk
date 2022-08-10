@@ -89,17 +89,17 @@ o/$(MODE)/test/libc/mem/prog/life.com.dbg:			\
 o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/life.com
-	@$(COMPILE) -ACP -T$@					\
+	@$(COMPILE) -wACP -T$@					\
 		build/bootstrap/cp.com				\
 		o/$(MODE)/test/libc/mem/prog/life.com		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
-	@$(COMPILE) -AASSIMILATE -T$@				\
+	@$(COMPILE) -wAASSIMILATE -T$@				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 
 o/$(MODE)/test/libc/mem/prog/life.elf.zip.o:			\
 		o/$(MODE)/test/libc/mem/prog/life.elf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 ################################################################################
 
@@ -114,17 +114,17 @@ o/$(MODE)/test/libc/mem/prog/sock.com.dbg:			\
 o/$(MODE)/test/libc/mem/prog/sock.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/sock.com
-	@$(COMPILE) -ACP -T$@					\
+	@$(COMPILE) -wACP -T$@					\
 		build/bootstrap/cp.com				\
 		o/$(MODE)/test/libc/mem/prog/sock.com		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
-	@$(COMPILE) -AASSIMILATE -T$@				\
+	@$(COMPILE) -wAASSIMILATE -T$@				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 
 o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o:			\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 ################################################################################
 

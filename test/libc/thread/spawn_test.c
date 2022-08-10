@@ -24,6 +24,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
@@ -32,8 +33,8 @@ _Atomic(int) itworked;
 _Thread_local int var;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath thread", 0);
-  errno = 0;
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
 int Worker(void *arg, int tid) {

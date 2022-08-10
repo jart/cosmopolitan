@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/str/str.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/asn1write.h"
 #include "third_party/mbedtls/common.h"

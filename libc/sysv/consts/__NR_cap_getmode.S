@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_cap_getmode,0xfff,0xfff,0x0205,0xfff,0xfff,0xfff

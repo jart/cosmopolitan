@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_ksem_timedwait,0xfff,0xfff,0x01b9,0xfff,0xfff,0xfff

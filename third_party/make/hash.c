@@ -414,24 +414,6 @@ jhash(unsigned const char *k, int length)
 
 #define UINTSZ sizeof (unsigned int)
 
-#ifdef WORDS_BIGENDIAN
-/* The ifs are ordered from the first byte in memory to the last.  */
-#define sum_up_to_nul(r, p, plen, flag)   \
-  do {                                    \
-    unsigned int val = 0;                 \
-    size_t pn = (plen);                   \
-    size_t n = pn < UINTSZ ? pn : UINTSZ; \
-    memcpy (&val, (p), n);                \
-    if ((val & 0xFF000000) == 0)          \
-      flag = 1;                           \
-    else if ((val & 0xFF0000) == 0)       \
-      r += val & ~0xFFFF, flag = 1;       \
-    else if ((val & 0xFF00) == 0)         \
-      r += val & ~0xFF, flag = 1;         \
-    else                                  \
-      r += val, flag = (val & 0xFF) == 0; \
-  } while (0)
-#else
 /* First detect the presence of zeroes.  If there is none, we can
    sum the 4 bytes directly.  Otherwise, the ifs are ordered as in the
    big endian case, from the first byte in memory to the last.  */
@@ -454,7 +436,6 @@ jhash(unsigned const char *k, int length)
           r += val;                                  \
       }                                              \
   } while (0)
-#endif
 
 unsigned int
 jhash_string(unsigned const char *k)

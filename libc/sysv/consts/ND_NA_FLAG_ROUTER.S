@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nd,ND_NA_FLAG_ROUTER,0x80,0x80,0x80,0x80,0x80,0x80000000

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sfi_pidctl,0xfff,0x20001c9,0xfff,0xfff,0xfff,0xfff

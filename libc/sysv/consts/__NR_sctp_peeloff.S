@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sctp_peeloff,0xfff,0xfff,0x01d7,0xfff,0xfff,0xfff

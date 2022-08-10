@@ -1,6 +1,8 @@
 #include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
+#include "third_party/python/Include/object.h"
 // clang-format off
 /* asctime and asctime_r a la POSIX and ISO C, except pad years before 1000.  */
 

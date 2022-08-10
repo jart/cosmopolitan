@@ -29,7 +29,9 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/map.h"
@@ -47,6 +49,11 @@ STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("libc/testlib/hyperion.txt");
 
 #define THREADS 8
+
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+}
 
 void PullSomeZipFilesIntoLinkage(void) {
   gmtime(0);

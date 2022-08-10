@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_setattrlist,0xfff,0x20000dd,0xfff,0xfff,0xfff,0xfff

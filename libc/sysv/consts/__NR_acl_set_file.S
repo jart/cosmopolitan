@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_acl_set_file,0xfff,0xfff,0x015c,0xfff,0xfff,0xfff

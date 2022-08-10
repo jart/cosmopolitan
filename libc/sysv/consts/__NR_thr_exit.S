@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_thr_exit,0xfff,0xfff,0x01af,0xfff,0xfff,0xfff

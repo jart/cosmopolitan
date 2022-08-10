@@ -18,8 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/bsd.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -27,7 +29,7 @@
 
 #define USAGE \
   "\
-usage: pledge.com [-h] PROG ARGS...\n\
+usage: unveil.com [-h] PROG ARGS...\n\
   -h           show help\n\
 \n\
 unveil.com v1.o\n\
@@ -79,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     bool chomped = false;
     while (!chomped)
-      if (line[len-1] == '\r' || line[len-1] == '\n')
+      if (line[len - 1] == '\r' || line[len - 1] == '\n')
         line[--len] = '\0';
       else
         chomped = true;
@@ -101,11 +103,11 @@ int main(int argc, char *argv[]) {
       err(1, "unveil(%s, %s)", fields[0], fields[1]);
   }
   free(line);
-  if (ferror(stdin))
+  if (ferror(stdin)) {
     err(1, "getline");
+  }
 
-  if (unveil(NULL, NULL) == -1)
-    err(1, "unveil(NULL, NULL)");
+  if (unveil(NULL, NULL) == -1) err(1, "unveil(NULL, NULL)");
 
   __sys_execve(prog, argv + optind, environ);
   err(127, "execve");

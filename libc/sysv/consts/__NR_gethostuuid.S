@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_gethostuuid,0xfff,0x200008e,0xfff,0xfff,0xfff,0xfff

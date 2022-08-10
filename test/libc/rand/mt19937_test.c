@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
+#include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

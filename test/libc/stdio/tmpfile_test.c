@@ -16,25 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
-
 TEST(tmpfile, test) {
-  FILE *f;
-  mkdir("doge", 0755);
-  setenv("TMPDIR", "doge", true);
-  ASSERT_NE(NULL, (f = tmpfile()));
+  FILE *f = tmpfile();
   EXPECT_NE(-1, fputc('t', f));
   EXPECT_NE(-1, fflush(f));
   rewind(f);
   EXPECT_EQ('t', fgetc(f));
   EXPECT_NE(-1, fclose(f));
-  EXPECT_EQ(-1, rmdir("doge"));
-  EXPECT_EQ(ENOTEMPTY, errno);
 }

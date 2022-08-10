@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"

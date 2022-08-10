@@ -39,6 +39,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/hook/hook.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nt/enum/version.h"
@@ -195,8 +196,7 @@ static uint64_t __asan_roundup2pow(uint64_t x) {
 static char *__asan_utf8cpy(char *p, unsigned c) {
   uint64_t z;
   z = tpenc(c);
-  do
-    *p++ = z;
+  do *p++ = z;
   while ((z >>= 8));
   return p;
 }
@@ -947,8 +947,7 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
     if (!__asan_checka(SHADOW(bp), sizeof(*bp) >> 3).kind) {
       addr = bp->addr;
       if (addr == weakaddr("__gc") && weakaddr("__gc")) {
-        do
-          --gi;
+        do --gi;
         while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
       }
       bt->p[i] = addr;

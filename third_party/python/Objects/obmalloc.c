@@ -10,6 +10,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"

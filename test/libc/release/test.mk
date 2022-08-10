@@ -9,7 +9,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
 		o/$(MODE)/cosmopolitan.a				\
 		o/$(MODE)/third_party/zip/zip.com
-	@$(COMPILE) -AZIP -T$@						\
+	@$(COMPILE) -wAZIP -T$@						\
 		o/$(MODE)/third_party/zip/zip.com			\
 		-qj $@							\
 		o/cosmopolitan.h					\
@@ -88,7 +88,7 @@ o/$(MODE)/test/libc/release/smoke-chibicc.o:				\
 		test/libc/release/smoke.c				\
 		o/cosmopolitan.h					\
 		o/$(MODE)/third_party/chibicc/chibicc.com
-	@$(COMPILE) -ACHIBICC						\
+	@$(COMPILE) -wACHIBICC						\
 		o/$(MODE)/third_party/chibicc/chibicc.com		\
 		$(CHIBICC_FLAGS)					\
 		-o $@							\

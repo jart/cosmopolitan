@@ -20,6 +20,7 @@
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/itimer.h"

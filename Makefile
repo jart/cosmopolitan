@@ -255,12 +255,12 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 TAGS: .UNSANDBOXED = 1
 TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
 	@$(RM) $@
-	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
+	@$(TAGS) $(TAGSFLAGS) -L $< -o $@
 
 HTAGS: .UNSANDBOXED = 1
 HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
 	@$(RM) $@
-	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
+	@build/htags -L $< -o $@
 
 loc: .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy.com
@@ -297,10 +297,8 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_NT_PSAPI		\
 	LIBC_NT_POWRPROF	\
 	LIBC_NT_PDH		\
-	LIBC_NT_SHELL32		\
 	LIBC_NT_GDI32		\
 	LIBC_NT_COMDLG32	\
-	LIBC_NT_NETAPI32	\
 	LIBC_NT_URL		\
 	LIBC_NT_USER32		\
 	LIBC_NT_NTDLL		\

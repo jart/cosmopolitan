@@ -23,12 +23,14 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -50,6 +52,11 @@ union Dub {
   uint64_t i;
   double x;
 };
+
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
+}
 
 int Worker(void *p, int tid) {
   int i;

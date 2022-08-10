@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/io.h"
 #include "libc/runtime/runtime.h"
@@ -41,8 +40,9 @@ void Extract(const char *from, const char *to, int mode) {
 }
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath tty proc exec", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0,
+             pledge("stdio rpath wpath cpath tty proc exec prot_exec",
+                    "stdio rpath prot_exec"));
 
   // nothing to do if we're using elf
   if (~SUPPORT_VECTOR & (WINDOWS | XNU)) {

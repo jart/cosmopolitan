@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
@@ -37,6 +38,11 @@ int Worker(void *arg, int tid) {
     free(q);
   }
   return 0;
+}
+
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
 TEST(memory, test) {

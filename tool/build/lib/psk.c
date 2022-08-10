@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"

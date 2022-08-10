@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/fenv.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"

@@ -19,6 +19,8 @@
  |     to make the action of the code less obscure.
  |----------------------------------------------------------------
  | UnZip notes: 24 May 92 ("v1.4"):
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
  |  1. #include "third_party/unzip/unzip.h" for prototypes (24 May 92)
  |  2. changed ch to type char (24 May 92)
  |  3. added an ifdef to avoid Borland warnings (24 May 92)

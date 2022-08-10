@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * @fileoverview Sums per-line integers from stdin.

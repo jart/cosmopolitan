@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_aio_mlock,0xfff,0xfff,0x021f,0xfff,0xfff,0xfff

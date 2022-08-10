@@ -1,84 +1,41 @@
 #ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_FAN_H_
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_FAN_H_
-#include "libc/runtime/symbolic.h"
 
-#define FAN_ACCESS SYMBOLIC(FAN_ACCESS)
-#define FAN_ACCESS_PERM SYMBOLIC(FAN_ACCESS_PERM)
-#define FAN_ALLOW SYMBOLIC(FAN_ALLOW)
-#define FAN_ALL_CLASS_BITS SYMBOLIC(FAN_ALL_CLASS_BITS)
-#define FAN_ALL_EVENTS SYMBOLIC(FAN_ALL_EVENTS)
-#define FAN_ALL_INIT_FLAGS SYMBOLIC(FAN_ALL_INIT_FLAGS)
-#define FAN_ALL_MARK_FLAGS SYMBOLIC(FAN_ALL_MARK_FLAGS)
-#define FAN_ALL_OUTGOING_EVENTS SYMBOLIC(FAN_ALL_OUTGOING_EVENTS)
-#define FAN_ALL_PERM_EVENTS SYMBOLIC(FAN_ALL_PERM_EVENTS)
-#define FAN_CLASS_CONTENT SYMBOLIC(FAN_CLASS_CONTENT)
-#define FAN_CLASS_NOTIF SYMBOLIC(FAN_CLASS_NOTIF)
-#define FAN_CLASS_PRE_CONTENT SYMBOLIC(FAN_CLASS_PRE_CONTENT)
-#define FAN_CLOEXEC SYMBOLIC(FAN_CLOEXEC)
-#define FAN_CLOSE SYMBOLIC(FAN_CLOSE)
-#define FAN_CLOSE_NOWRITE SYMBOLIC(FAN_CLOSE_NOWRITE)
-#define FAN_CLOSE_WRITE SYMBOLIC(FAN_CLOSE_WRITE)
-#define FAN_DENY SYMBOLIC(FAN_DENY)
-#define FAN_EVENT_METADATA_LEN SYMBOLIC(FAN_EVENT_METADATA_LEN)
-#define FAN_EVENT_ON_CHILD SYMBOLIC(FAN_EVENT_ON_CHILD)
-#define FAN_MARK_ADD SYMBOLIC(FAN_MARK_ADD)
-#define FAN_MARK_DONT_FOLLOW SYMBOLIC(FAN_MARK_DONT_FOLLOW)
-#define FAN_MARK_FLUSH SYMBOLIC(FAN_MARK_FLUSH)
-#define FAN_MARK_IGNORED_MASK SYMBOLIC(FAN_MARK_IGNORED_MASK)
-#define FAN_MARK_IGNORED_SURV_MODIFY SYMBOLIC(FAN_MARK_IGNORED_SURV_MODIFY)
-#define FAN_MARK_MOUNT SYMBOLIC(FAN_MARK_MOUNT)
-#define FAN_MARK_ONLYDIR SYMBOLIC(FAN_MARK_ONLYDIR)
-#define FAN_MARK_REMOVE SYMBOLIC(FAN_MARK_REMOVE)
-#define FAN_MODIFY SYMBOLIC(FAN_MODIFY)
-#define FAN_NOFD SYMBOLIC(FAN_NOFD)
-#define FAN_NONBLOCK SYMBOLIC(FAN_NONBLOCK)
-#define FAN_ONDIR SYMBOLIC(FAN_ONDIR)
-#define FAN_OPEN SYMBOLIC(FAN_OPEN)
-#define FAN_OPEN_PERM SYMBOLIC(FAN_OPEN_PERM)
-#define FAN_Q_OVERFLOW SYMBOLIC(FAN_Q_OVERFLOW)
-#define FAN_UNLIMITED_MARKS SYMBOLIC(FAN_UNLIMITED_MARKS)
-#define FAN_UNLIMITED_QUEUE SYMBOLIC(FAN_UNLIMITED_QUEUE)
+#define FAN_CLASS_NOTIF              0
+#define FAN_ACCESS                   1
+#define FAN_ACCESS_PERM              0x020000
+#define FAN_ALLOW                    1
+#define FAN_ALL_CLASS_BITS           12
+#define FAN_ALL_EVENTS               59
+#define FAN_ALL_INIT_FLAGS           63
+#define FAN_ALL_MARK_FLAGS           255
+#define FAN_ALL_OUTGOING_EVENTS      0x03403b
+#define FAN_ALL_PERM_EVENTS          0x030000
+#define FAN_CLASS_CONTENT            4
+#define FAN_CLASS_PRE_CONTENT        8
+#define FAN_CLOEXEC                  1
+#define FAN_CLOSE                    24
+#define FAN_CLOSE_NOWRITE            0x10
+#define FAN_CLOSE_WRITE              8
+#define FAN_DENY                     2
+#define FAN_EVENT_METADATA_LEN       24
+#define FAN_EVENT_ON_CHILD           0x08000000
+#define FAN_MARK_ADD                 1
+#define FAN_MARK_DONT_FOLLOW         4
+#define FAN_MARK_FLUSH               0x80
+#define FAN_MARK_IGNORED_MASK        0x20
+#define FAN_MARK_IGNORED_SURV_MODIFY 0x40
+#define FAN_MARK_MOUNT               0x10
+#define FAN_MARK_ONLYDIR             8
+#define FAN_MARK_REMOVE              2
+#define FAN_MODIFY                   2
+#define FAN_NOFD                     -1
+#define FAN_NONBLOCK                 2
+#define FAN_ONDIR                    0x40000000
+#define FAN_OPEN                     0x20
+#define FAN_OPEN_PERM                0x010000
+#define FAN_Q_OVERFLOW               0x4000
+#define FAN_UNLIMITED_MARKS          0x20
+#define FAN_UNLIMITED_QUEUE          0x10
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const unsigned int FAN_ACCESS;
-extern const unsigned int FAN_ACCESS_PERM;
-extern const unsigned int FAN_ALLOW;
-extern const unsigned int FAN_ALL_CLASS_BITS;
-extern const unsigned int FAN_ALL_EVENTS;
-extern const unsigned int FAN_ALL_INIT_FLAGS;
-extern const unsigned int FAN_ALL_MARK_FLAGS;
-extern const unsigned int FAN_ALL_OUTGOING_EVENTS;
-extern const unsigned int FAN_ALL_PERM_EVENTS;
-extern const unsigned int FAN_CLASS_CONTENT;
-extern const unsigned int FAN_CLASS_NOTIF;
-extern const unsigned int FAN_CLASS_PRE_CONTENT;
-extern const unsigned int FAN_CLOEXEC;
-extern const unsigned int FAN_CLOSE;
-extern const unsigned int FAN_CLOSE_NOWRITE;
-extern const unsigned int FAN_CLOSE_WRITE;
-extern const unsigned int FAN_DENY;
-extern const unsigned int FAN_EVENT_METADATA_LEN;
-extern const unsigned int FAN_EVENT_ON_CHILD;
-extern const unsigned int FAN_MARK_ADD;
-extern const unsigned int FAN_MARK_DONT_FOLLOW;
-extern const unsigned int FAN_MARK_FLUSH;
-extern const unsigned int FAN_MARK_IGNORED_MASK;
-extern const unsigned int FAN_MARK_IGNORED_SURV_MODIFY;
-extern const unsigned int FAN_MARK_MOUNT;
-extern const unsigned int FAN_MARK_ONLYDIR;
-extern const unsigned int FAN_MARK_REMOVE;
-extern const unsigned int FAN_MODIFY;
-extern const unsigned int FAN_NOFD;
-extern const unsigned int FAN_NONBLOCK;
-extern const unsigned int FAN_ONDIR;
-extern const unsigned int FAN_OPEN;
-extern const unsigned int FAN_OPEN_PERM;
-extern const unsigned int FAN_Q_OVERFLOW;
-extern const unsigned int FAN_UNLIMITED_MARKS;
-extern const unsigned int FAN_UNLIMITED_QUEUE;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_FAN_H_ */

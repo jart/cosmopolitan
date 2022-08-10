@@ -21,13 +21,13 @@
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  pledge("stdio", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
 TEST(_countbits, testLow) {

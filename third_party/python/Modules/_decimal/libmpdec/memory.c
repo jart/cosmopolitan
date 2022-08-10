@@ -27,6 +27,7 @@
 │ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,            │
 │ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpalloc.h"
 #include "third_party/python/Modules/_decimal/libmpdec/mpdecimal.h"
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"

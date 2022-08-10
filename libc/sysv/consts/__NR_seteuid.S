@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_seteuid,0xfff,0x20000b7,0x00b7,0x00b7,0xfff,0xfff

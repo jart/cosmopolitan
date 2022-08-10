@@ -50,8 +50,8 @@ int x, me, tid;
 _Atomic(int) thechilde;
 
 void SetUpOnce(void) {
-  pledge("stdio thread", 0);
-  errno = 0;
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 void *__initialize_tls(char tib[64]) {

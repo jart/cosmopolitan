@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_lpathconf,0xfff,0xfff,0x0201,0xfff,0x1f3,0xfff

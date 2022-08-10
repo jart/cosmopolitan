@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_fileport_makefd,0xfff,0x20001af,0xfff,0xfff,0xfff,0xfff

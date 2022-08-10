@@ -28,14 +28,20 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Restricts system operations, e.g.
+ * Permits system operations, e.g.
  *
- *     pledge("stdio rfile tty", 0);
+ *     if (pledge("stdio rfile tty", 0)) {
+ *       perror("pledge");
+ *       exit(1);
+ *     }
  *
  * Pledging causes most system calls to become unavailable. Your system
  * call policy is enforced by the kernel (which means it can propagate
  * across execve() if permitted). Root access is not required. Support
- * is limited to Linux and OpenBSD.
+ * is limited to Linux 2.6.23+ (c. RHEL6) and OpenBSD. If your kernel
+ * isn't supported, then pledge() will return 0 and do nothing rather
+ * than raising ENOSYS. We don't consider lack of system support to be
+ * an error, because the specified operations will be permitted.
  *
  * The promises you give pledge() define which system calls are allowed.
  * Error messages are logged when sandbox violations occur that well you
@@ -213,14 +219,13 @@
  * be weakened to have execute permissions too.
  *
  * @return 0 on success, or -1 w/ errno
- * @raise ENOSYS if host os isn't Linux or OpenBSD
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
  * @raise EINVAL if `promises` allows exec and `execpromises` is null
  * @threadsafe
  * @vforksafe
  */
 int pledge(const char *promises, const char *execpromises) {
-  int rc;
+  int e, rc;
   unsigned long ipromises, iexecpromises;
   if (!ParsePromises(promises, &ipromises) &&
       !ParsePromises(execpromises, &iexecpromises)) {
@@ -239,7 +244,12 @@ int pledge(const char *promises, const char *execpromises) {
         if (rc > -4096u) errno = -rc, rc = -1;
       }
     } else {
+      e = errno;
       rc = sys_pledge(promises, execpromises);
+      if (rc && errno == ENOSYS) {
+        errno = e;
+        rc = 0;
+      }
     }
     if (!rc && !__vforked &&
         (IsOpenbsd() || (IsLinux() && getpid() == gettid()))) {

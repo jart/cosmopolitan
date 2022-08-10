@@ -24,6 +24,7 @@
  */
 #include "libc/assert.h"
 #include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
 #include "third_party/quickjs/internal.h"
 #include "third_party/quickjs/libregexp.h"
 #include "third_party/quickjs/quickjs.h"

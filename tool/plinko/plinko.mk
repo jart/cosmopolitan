@@ -60,7 +60,7 @@ o/$(MODE)/tool/plinko/lib/ok.lisp.zip.o:			\
 
 o/$(MODE)/tool/plinko/plinko.com.zip.o:				\
 		o/$(MODE)/tool/plinko/plinko.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/tool/plinko
 o/$(MODE)/tool/plinko: $(TOOL_PLINKO_BINS) $(TOOL_PLINKO_CHECKS)

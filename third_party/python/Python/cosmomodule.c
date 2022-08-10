@@ -19,7 +19,9 @@
 #define PY_SSIZE_T_CLEAN
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/bits/popcnt.h"
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -27,6 +29,7 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/longobject.h"
@@ -187,6 +190,59 @@ cosmo_popcount(PyObject *self, PyObject *args)
     return PyLong_FromSize_t(_countbits(p, n));
 }
 
+PyDoc_STRVAR(pledge_doc,
+"pledge($module, promises, execpromises)\n\
+--\n\n\
+Permits syscall operations, e.g.\n\
+\n\
+    >>> cosmo.pledge('stdio rpath tty', None)\n\
+\n\
+This function implements the OpenBSD pledge() API for\n\
+OpenBSD and Linux, where we use SECCOMP BPF. Read the\n\
+Cosmopolitan Libc documentation to learn more.");
+
+static PyObject *
+cosmo_pledge(PyObject *self, PyObject *args)
+{
+    int e = errno;
+    const char *x, *y;
+    if (!PyArg_ParseTuple(args, "sz:pledge", &x, &y)) return 0;
+    if (!pledge(x, y)) {
+        Py_RETURN_NONE;
+    } else {
+        PyErr_SetString(PyExc_SystemError, strerror(errno));
+        errno = e;
+        return 0;
+    }
+}
+
+PyDoc_STRVAR(unveil_doc,
+"unveil($module, path, permissions)\n\
+--\n\n\
+Permits filesystem operations, e.g.\n\
+\n\
+    >>> cosmo.unveil('.', 'rwcx')\n\
+    >>> cosmo.unveil(None, None)\n\
+\n\
+This function implements the OpenBSD unveil() API for\n\
+OpenBSD and Linux where we use Landlock LSM. Read the\n\
+Cosmopolitan Libc documentation to learn more.");
+
+static PyObject *
+cosmo_unveil(PyObject *self, PyObject *args)
+{
+    int e = errno;
+    const char *x, *y;
+    if (!PyArg_ParseTuple(args, "zz:unveil", &x, &y)) return 0;
+    if (!unveil(x, y)) {
+        Py_RETURN_NONE;
+    } else {
+        PyErr_SetString(PyExc_SystemError, strerror(errno));
+        errno = e;
+        return 0;
+    }
+}
+
 PyDoc_STRVAR(exit1_doc,
 "exit1($module)\n\
 --\n\n\
@@ -269,6 +325,8 @@ static PyMethodDef cosmo_methods[] = {
     {"exit1", cosmo_exit1, METH_NOARGS, exit1_doc},
     {"rdtsc", cosmo_rdtsc, METH_NOARGS, rdtsc_doc},
     {"crc32c", cosmo_crc32c, METH_VARARGS, crc32c_doc},
+    {"pledge", cosmo_pledge, METH_VARARGS, pledge_doc},
+    {"unveil", cosmo_unveil, METH_VARARGS, unveil_doc},
     {"syscount", cosmo_syscount, METH_NOARGS, syscount_doc},
     {"popcount", cosmo_popcount, METH_VARARGS, popcount_doc},
     {"decimate", cosmo_decimate, METH_VARARGS, decimate_doc},

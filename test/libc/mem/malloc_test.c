@@ -46,8 +46,7 @@ void SetUp(void) {
 }
 
 void SetUpOnce(void) {
-  pledge("stdio rpath", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 TEST(malloc, zeroMeansOne) {

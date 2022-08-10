@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/prototxt.h"
 #include "libc/nt/systeminfo.h"
+#include "libc/str/str.h"
 
 textwindows char *GetNtProtocolsTxtPath(char *pathbuf, uint32_t size) {
   /* protocol, not plural */

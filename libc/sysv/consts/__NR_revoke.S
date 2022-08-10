@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_revoke,0xfff,0x2000038,0x0038,0x0038,0x038,0xfff

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 char buf[25];

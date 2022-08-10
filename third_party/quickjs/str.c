@@ -26,6 +26,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/runtime/fenv.h"
+#include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/quickjs/internal.h"
 #include "third_party/quickjs/libregexp.h"

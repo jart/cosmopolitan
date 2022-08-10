@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_extattr_set_link,0xfff,0xfff,0x019c,0xfff,0x16f,0xfff

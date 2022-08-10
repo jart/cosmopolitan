@@ -35,7 +35,9 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 enum { PICOL_OK, PICOL_ERR, PICOL_RETURN, PICOL_BREAK, PICOL_CONTINUE };
 enum { PT_ESC, PT_STR, PT_CMD, PT_VAR, PT_SEP, PT_EOL, PT_EOF };

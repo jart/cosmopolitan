@@ -33,8 +33,9 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr proc exec", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0,
+             pledge("stdio rpath wpath cpath fattr proc exec prot_exec",
+                    "stdio rpath wpath prot_exec"));
 }
 
 static textstartup void TestInit(int argc, char **argv) {

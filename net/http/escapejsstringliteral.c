@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"

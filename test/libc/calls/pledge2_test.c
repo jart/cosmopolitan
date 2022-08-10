@@ -21,6 +21,7 @@
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/runtime/runtime.h"
@@ -98,7 +99,7 @@ TEST(pledge, testLogMessage_inSoftyMode) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
+    ASSERT_STARTSWITH("error: pledge inet for socket", msg);
   }
 }
 
@@ -116,7 +117,7 @@ TEST(pledge, testLogMessage_onKillProcess) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
+    ASSERT_STARTSWITH("error: pledge inet for socket", msg);
   }
 }
 

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/escape.h"
 

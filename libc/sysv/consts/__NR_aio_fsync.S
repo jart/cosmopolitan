@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_aio_fsync,0xfff,0x2000139,0x01d1,0xfff,0x191,0xfff

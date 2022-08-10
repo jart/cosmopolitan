@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/morton.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  pledge("stdio rpath", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 TEST(morton, test) {

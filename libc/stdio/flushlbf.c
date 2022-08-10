@@ -20,6 +20,7 @@
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/stdio/fflush.internal.h"
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/stdio_ext.h"
 

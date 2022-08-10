@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
@@ -29,8 +28,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath cpath fattr", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath cpath fattr", 0));
 }
 
 TEST(getcwd, test) {

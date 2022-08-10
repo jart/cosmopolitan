@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR___mac_syscall,0xfff,0x200017d,0xfff,0xfff,0xfff,0xfff

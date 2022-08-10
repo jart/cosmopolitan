@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/servicestxt.h"
 #include "libc/nt/systeminfo.h"
+#include "libc/str/str.h"
 
 textwindows char *GetNtServicesTxtPath(char *pathbuf, uint32_t size) {
   const char *const kWinHostsPath = "\\drivers\\etc\\services";

@@ -391,10 +391,7 @@ void ApplyFilesystemPolicy(unsigned long ipromises) {
   const char *p;
 
   if (!SupportsLandlock()) {
-    if (unveils.n) {
-      kprintf("error: the unveil() -v flag needs Linux 5.13+\n");
-      _Exit(20);
-    }
+    return;
   }
 
   Unveil(prog, "rx");

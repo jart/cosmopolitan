@@ -23,8 +23,7 @@
 #include "libc/x/x.h"
 
 void SetUpOnce(void) {
-  pledge("stdio rpath tty proc", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath tty proc", 0));
 }
 
 /**

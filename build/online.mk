@@ -27,4 +27,4 @@ o/$(MODE)/%.com.ok:				\
 		o/$(MODE)/tool/build/runit.com	\
 		o/$(MODE)/tool/build/runitd.com	\
 		o/$(MODE)/%.com
-	@$(COMPILE) -ATEST -tT$@ $^ $(HOSTS)
+	@$(COMPILE) -ATEST -wtT$@ $^ $(HOSTS)

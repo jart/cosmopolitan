@@ -91,11 +91,11 @@ o/$(MODE)/tool/build/lib/apetest2.com.dbg:		\
 
 o/$(MODE)/tool/build/lib/apetest.com.zip.o:		\
 		o/$(MODE)/tool/build/lib/apetest.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/tool/build/lib/apetest2.com.zip.o:		\
 		o/$(MODE)/tool/build/lib/apetest2.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/tool/build/lib/apetest.o:			\
 		tool/build/lib/apetest.c		\

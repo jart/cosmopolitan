@@ -33,6 +33,7 @@
 #include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"

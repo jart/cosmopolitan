@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pid_resume,0xfff,0x20001b2,0xfff,0xfff,0xfff,0xfff

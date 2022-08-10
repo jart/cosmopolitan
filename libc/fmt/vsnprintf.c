@@ -21,6 +21,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 
 struct SprintfStr {
   char *p;

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_thread_selfid,0xfff,0x2000174,0xfff,0xfff,0xfff,0xfff

@@ -19,11 +19,13 @@
 #include "libc/bits/atomic.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 const char *testlib_showerror_errno;

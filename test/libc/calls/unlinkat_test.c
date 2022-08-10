@@ -18,14 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
 TEST(unlink, efault) {

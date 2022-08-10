@@ -143,9 +143,9 @@ TEST(sscanf, testDiscard_notIncludedInCount) {
 }
 
 TEST(sscanf, testFixedWidthFormat_Integer) {
-    int r, g, b;
-    ASSERT_EQ(3, sscanf("#321030", "#%2x%2b%2d", &r, &g, &b));
-    ASSERT_EQ(0x32, r);
-    ASSERT_EQ(2, g);
-    ASSERT_EQ(30, b);
+  int r, g, b;
+  ASSERT_EQ(3, sscanf("#321030", "#%2x%2b%2d", &r, &g, &b));
+  ASSERT_EQ(0x32, r);
+  ASSERT_EQ(2, g);
+  ASSERT_EQ(30, b);
 }

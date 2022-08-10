@@ -29,6 +29,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/rand/rand.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
@@ -46,6 +47,11 @@
 
 int ready;
 volatile uint64_t A[THREADS * ENTRIES];
+
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
+}
 
 void OnChld(int sig) {
   // do nothing

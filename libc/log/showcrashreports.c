@@ -24,6 +24,7 @@
 #include "libc/macros.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"

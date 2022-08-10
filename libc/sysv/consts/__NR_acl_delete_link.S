@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_acl_delete_link,0xfff,0xfff,0x01ab,0xfff,0xfff,0xfff

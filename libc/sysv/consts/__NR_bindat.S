@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_bindat,0xfff,0xfff,0x021a,0xfff,0xfff,0xfff

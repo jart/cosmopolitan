@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lzio_c
 #define LUA_CORE
+#include "libc/str/str.h"
 #include "third_party/lua/llimits.h"
 #include "third_party/lua/lmem.h"
 #include "third_party/lua/lprefix.h"

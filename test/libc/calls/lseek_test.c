@@ -28,8 +28,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr proc", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc", 0));
 }
 
 TEST(lseek, wat) {

@@ -53,7 +53,6 @@ LIBC_UNICODE_BINS = $(foreach x,$(LIBC_UNICODE_ARTIFACTS),$($(x)_BINS))
 LIBC_UNICODE_CHECKS = $(foreach x,$(LIBC_UNICODE_ARTIFACTS),$($(x)_CHECKS))
 LIBC_UNICODE_OBJS = $(foreach x,$(LIBC_UNICODE_ARTIFACTS),$($(x)_OBJS))
 LIBC_UNICODE_TESTS = $(foreach x,$(LIBC_UNICODE_ARTIFACTS),$($(x)_TESTS))
-$(LIBC_UNICODE_OBJS): $(BUILD_FILES) libc/unicode/unicode.mk
 
 .PHONY: o/$(MODE)/libc/unicode
 o/$(MODE)/libc/unicode: $(LIBC_UNICODE) $(LIBC_UNICODE_CHECKS)

@@ -24,6 +24,7 @@
 #include "libc/math.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 static double GetTotal(const struct countbranch *p) {
   return p->total;

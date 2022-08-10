@@ -59,6 +59,20 @@ TEST(_timespec_frommicros, test) {
       _timespec_eq((struct timespec){0, 2000}, _timespec_frommicros(2)));
   EXPECT_TRUE(
       _timespec_eq((struct timespec){1}, _timespec_frommicros(1000000)));
+  EXPECT_TRUE(_timespec_eq((struct timespec){2, 123000},
+                           _timespec_frommicros(2000123)));
+}
+
+TEST(_timespec_tomillis, test) {
+  EXPECT_EQ(2123, _timespec_tomillis((struct timespec){2, 123000000}));
+}
+
+TEST(_timespec_tomicros, test) {
+  EXPECT_EQ(2000123, _timespec_tomicros((struct timespec){2, 123000}));
+}
+
+TEST(_timespec_tonanos, test) {
+  EXPECT_EQ(2000123000, _timespec_tonanos((struct timespec){2, 123000}));
 }
 
 static long mod(long x, long y) {

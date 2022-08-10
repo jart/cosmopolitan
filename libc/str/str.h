@@ -1,11 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_STR_STR_H_
 #define COSMOPOLITAN_LIBC_STR_STR_H_
+
+#define INVALID_CODEPOINT 0xfffd
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § characters » usas x3.4-1967                               ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│─╝
-  fourth age telecommunications */
 
 extern const int8_t kHexToInt[256];
 extern const uint8_t gperf_downcase[256];
@@ -32,36 +31,6 @@ int toupper(int);
 int hextoint(int);
 int cescapec(int);
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § characters » thompson-pike encoding                       ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│─╝
-  fifth age telecommunications
-
-      0123456789abcdef
-    ┌0─ ☺☻♥♦♣♠•◘○◙♂♀♪♫☼┬───Control
-    └1─►◄↕‼¶§▬↨↑↓→←∟↔▲▼┘
-    ┌2─ !"#$%&'()*+,-./┐
-    │3 0123456789:;<=>?│
-    │4 @ABCDEFGHIJKLMNO├───ASA x3.4-1967
-    │5 PQRSTUVWXYZ[\]^_│
-    │6 `abcdefghijklmno│
-    └7─pqrstuvwxyz{|}~⌂┘
-    ┌8─ÇüéâäàåçêëèïîìÄÅ┐
-    │9 ÉæÆôöòûùÿÖÜ¢£¥€ƒ├───Thompson-Pike Continuation
-    │a á¡óúñÑªº¿⌐¬½¼¡«»│    (not really characters)
-    └b─░▒▓│┤╡╢╖╕╣║╗╝╜╛┐┘
-    ┌c─└┴┬├─┼╞╟╚╔╩╦╠═╬╧┬───1 Continuation will follow
-    └d─╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀┘
-    ─e─αßΓπΣσμτΦΘΩδ∞φε∩────2 Continuations will follow
-     f─≡±≥≤⌠⌡÷≈°∙·√ⁿ²■λ
-       │      ││  │││└┤
-       │      ││  │└┤ └───5 Continuations follow (and is negative)
-       │      │└─┬┘ └─────5 Continuations follow (note: -1=λ┐┐┐┐┐)
-       └───┬──┘  └────────4 Continuations follow
-           └──────────────3 Continuations follow */
-
-#define INVALID_CODEPOINT 0xfffd
-
 int iswalnum(wint_t);
 int iswalpha(wint_t);
 int iswblank(wint_t);
@@ -77,10 +46,6 @@ int iswprint(wint_t);
 int iswseparator(wint_t);
 wint_t towlower(wint_t);
 wint_t towupper(wint_t);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § strings                                                   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 void bzero(void *, size_t) memcpyesque;
 void *memset(void *, int, size_t) memcpyesque;
@@ -206,10 +171,6 @@ bool _istext(const void *, size_t) libcesque;
 bool _isutf8(const void *, size_t) libcesque;
 bool _escapedos(char16_t *, unsigned, const char16_t *, unsigned) libcesque;
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § strings » multibyte                                       ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 typedef unsigned mbstate_t;
 
 axdx_t tprecode8to16(char16_t *, size_t, const char *);
@@ -255,10 +216,6 @@ int iswctype(wint_t, wctype_t) pureconst;
 typedef const int *wctrans_t;
 wctrans_t wctrans(const char *);
 wint_t towctrans(wint_t, wctrans_t);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § strings » system                                          ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 char *strsignal(int) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;

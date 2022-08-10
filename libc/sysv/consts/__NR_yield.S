@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_yield,0xfff,0xfff,0x0141,0xfff,0xfff,0xfff

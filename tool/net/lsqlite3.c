@@ -29,6 +29,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"

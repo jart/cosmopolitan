@@ -148,27 +148,6 @@ o/libc/nt/ntdllimport.inc:				\
 
 #───────────────────────────────────────────────────────────────────────────────
 
-LIBC_NT_ARTIFACTS += LIBC_NT_NETAPI32_A
-LIBC_NT_NETAPI32 = $(LIBC_NT_NETAPI32_A_DEPS) $(LIBC_NT_NETAPI32_A)
-LIBC_NT_NETAPI32_A = o/$(MODE)/libc/nt/netapi32.a
-LIBC_NT_NETAPI32_A_SRCS := $(wildcard libc/nt/netapi32/*.s)
-LIBC_NT_NETAPI32_A_OBJS = $(LIBC_NT_NETAPI32_A_SRCS:%.s=o/$(MODE)/%.o)
-LIBC_NT_NETAPI32_A_CHECKS = $(LIBC_NT_NETAPI32_A).pkg
-LIBC_NT_NETAPI32_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_NETAPI32_A_DEPS :=				\
-	$(call uniq,$(foreach x,$(LIBC_NT_NETAPI32_A_DIRECTDEPS),$($(x))))
-
-$(LIBC_NT_NETAPI32_A):					\
-		libc/nt/netapi32/			\
-		$(LIBC_NT_NETAPI32_A).pkg		\
-		$(LIBC_NT_NETAPI32_A_OBJS)
-
-$(LIBC_NT_NETAPI32_A).pkg:				\
-		$(LIBC_NT_NETAPI32_A_OBJS)		\
-		$(foreach x,$(LIBC_NT_NETAPI32_A_DIRECTDEPS),$($(x)_A).pkg)
-
-#───────────────────────────────────────────────────────────────────────────────
-
 LIBC_NT_ARTIFACTS += LIBC_NT_URL_A
 LIBC_NT_URL = $(LIBC_NT_URL_A_DEPS) $(LIBC_NT_URL_A)
 LIBC_NT_URL_A = o/$(MODE)/libc/nt/url.a
@@ -271,25 +250,6 @@ $(LIBC_NT_MSWSOCK_A):					\
 $(LIBC_NT_MSWSOCK_A).pkg:				\
 		$(LIBC_NT_MSWSOCK_A_OBJS)		\
 		$(foreach x,$(LIBC_NT_MSWSOCK_A_DIRECTDEPS),$($(x)_A).pkg)
-
-#───────────────────────────────────────────────────────────────────────────────
-
-LIBC_NT_ARTIFACTS += LIBC_NT_SHELL32_A
-LIBC_NT_SHELL32 = $(LIBC_NT_SHELL32_A_DEPS) $(LIBC_NT_SHELL32_A)
-LIBC_NT_SHELL32_A = o/$(MODE)/libc/nt/shell32.a
-LIBC_NT_SHELL32_A_SRCS := $(wildcard libc/nt/shell32/*.s)
-LIBC_NT_SHELL32_A_OBJS = $(LIBC_NT_SHELL32_A_SRCS:%.s=o/$(MODE)/%.o)
-LIBC_NT_SHELL32_A_CHECKS = $(LIBC_NT_SHELL32_A).pkg
-LIBC_NT_SHELL32_A_DIRECTDEPS = LIBC_NT_KERNEL32
-LIBC_NT_SHELL32_A_DEPS :=				\
-	$(call uniq,$(foreach x,$(LIBC_NT_SHELL32_A_DIRECTDEPS),$($(x))))
-$(LIBC_NT_SHELL32_A):					\
-		libc/nt/shell32/			\
-		$(LIBC_NT_SHELL32_A).pkg		\
-		$(LIBC_NT_SHELL32_A_OBJS)
-$(LIBC_NT_SHELL32_A).pkg:				\
-		$(LIBC_NT_SHELL32_A_OBJS)		\
-		$(foreach x,$(LIBC_NT_SHELL32_A_DIRECTDEPS),$($(x)_A).pkg)
 
 #───────────────────────────────────────────────────────────────────────────────
 

@@ -1,14 +1,11 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_H_
-#include "libc/bits/weaken.h"
-#include "libc/errno.h"
-#include "libc/str/str.h"
-#include "libc/testlib/ugly.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library                                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+#include "libc/macros.internal.h"
 
 /**
  * Declares test case function.
@@ -66,6 +63,34 @@ COSMOPOLITAN_C_START_
 #define EXPECT_LE(C, X) _TEST2("EXPECT_LE", C, <=, (X), #C, " ≤ ", #X, 0)
 #define EXPECT_LT(C, X) _TEST2("EXPECT_LT", C, <, (X), #C, " < ", #X, 0)
 
+#define __TEST_ARRAY(S) \
+  _Section(".piro.relo.sort.testcase.2." #S ",\"aw\",@init_array #")
+
+#define __BENCH_ARRAY(S) \
+  _Section(".piro.relo.sort.bench.2." #S ",\"aw\",@init_array #")
+
+#define __TEST_PROTOTYPE(S, N, A, K)               \
+  void S##_##N(void);                              \
+  testfn_t S##_##N##_ptr[] A(S##_##N) = {S##_##N}; \
+  testonly K void S##_##N(void)
+
+#define __TEST_SECTION(NAME, CONTENT) \
+  ".section " NAME "\n" CONTENT "\n\t.previous\n"
+
+#define __RELOSECTION(NAME, CONTENT) \
+  __TEST_SECTION(".piro.relo.sort" NAME ",\"aw\",@progbits", CONTENT)
+
+#define __ROSTR(STR) __TEST_SECTION(".rodata.str1.1,\"aSM\",@progbits,1", STR)
+
+#define __FIXTURE(KIND, GROUP, ENTRY)                       \
+  asm(__RELOSECTION("." KIND ".2." #GROUP #ENTRY,           \
+                    "\t.quad\t1f\n"                         \
+                    "\t.quad\t2f\n"                         \
+                    "\t.quad\t" STRINGIFY(GROUP##_##ENTRY)) \
+          __ROSTR("1:\t.asciz\t" STRINGIFY(#GROUP))         \
+              __ROSTR("2:\t.asciz\t" STRINGIFY(#ENTRY)));   \
+  testonly void GROUP##_##ENTRY(void)
+
 /**
  * Enables setup and teardown of test directories.
  *
@@ -113,12 +138,12 @@ void TearDownOnce(void);
 
 #define ASSERT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    int e = errno;                                                         \
+    int e = testlib_geterrno();                                            \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(assert, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
-              strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
-    errno = e;                                                             \
+              testlib_strerror(), ERRNO, testlib_geterrno(), __VA_ARGS__); \
+    testlib_seterrno(e);                                                   \
   } while (0)
 
 #define ASSERT_BETWEEN(BEG, END, GOT) \
@@ -188,11 +213,11 @@ void TearDownOnce(void);
 
 #define EXPECT_SYS(ERRNO, WANT, GOT, ...)                                  \
   do {                                                                     \
-    errno = 0;                                                             \
+    testlib_seterrno(0);                                                   \
     __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #WANT, #GOT, WANT, \
               GOT, __VA_ARGS__);                                           \
     __TEST_EQ(expect, __FILE__, __LINE__, __FUNCTION__, #ERRNO,            \
-              strerror(errno), ERRNO, errno, __VA_ARGS__);                 \
+              testlib_strerror(), ERRNO, testlib_geterrno(), __VA_ARGS__); \
   } while (0)
 
 #define EXPECT_FALSE(X) _TEST2("EXPECT_FALSE", false, ==, (X), #X, "", "", 0)
@@ -350,7 +375,10 @@ void testlib_showerror(const char *, int, const char *, const char *,
 void thrashcodecache(void);
 
 void testlib_finish(void);
+int testlib_geterrno(void);
+void testlib_seterrno(int);
 void testlib_runalltests(void);
+const char *testlib_strerror(void);
 void testlib_runallbenchmarks(void);
 void testlib_runtestcases(testfn_t *, testfn_t *, testfn_t);
 void testlib_runcombos(testfn_t *, testfn_t *, const struct TestFixture *,

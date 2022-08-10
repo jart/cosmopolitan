@@ -26,6 +26,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/ent.h"
 #include "libc/dns/prototxt.h"
+#include "libc/mem/mem.h"
 
 struct protoent *getprotobyname(const char *name) {
   static struct protoent *ptr0, pe0;

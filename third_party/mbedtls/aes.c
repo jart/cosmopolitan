@@ -17,6 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/aesni.h"
 #include "third_party/mbedtls/common.h"

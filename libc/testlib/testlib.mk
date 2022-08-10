@@ -24,7 +24,6 @@ LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/fastrandomstring.h				\
 	libc/testlib/hyperion.h					\
 	libc/testlib/moby.h					\
-	libc/testlib/ugly.h					\
 	libc/testlib/testlib.h
 
 LIBC_TESTLIB_A_SRCS_S =						\
@@ -52,6 +51,9 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/almostequallongdouble.c			\
 	libc/testlib/benchrunner.c				\
 	libc/testlib/getcore.c					\
+	libc/testlib/geterrno.c					\
+	libc/testlib/seterrno.c					\
+	libc/testlib/strerror.c					\
 	libc/testlib/getinterrupts.c				\
 	libc/testlib/ezbenchwarn.c				\
 	libc/testlib/binequals.c				\

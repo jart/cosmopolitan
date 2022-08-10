@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 

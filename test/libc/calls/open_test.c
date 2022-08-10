@@ -19,8 +19,10 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -28,8 +30,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
 TEST(open, efault) {
@@ -51,7 +52,7 @@ TEST(open, enotdir) {
 
 TEST(open, eexist) {
   ASSERT_SYS(0, 0, touch("exists", 0644));
-  ASSERT_SYS(EEXIST, -1, open("exists", O_WRONLY | O_CREAT | O_EXCL));
+  ASSERT_SYS(EEXIST, -1, open("exists", O_WRONLY | O_CREAT | O_EXCL, 0644));
 }
 
 TEST(open, doubleSlash_worksAndGetsNormalizedOnWindows) {

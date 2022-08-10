@@ -122,39 +122,39 @@ THIRD_PARTY_DOUBLECONVERSION_TEST_RUNS =					\
 
 o/$(MODE)/third_party/double-conversion/test-strtod.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-strtod
+	@$(COMPILE) -wACHECK -tT$@ $< test-strtod
 
 o/$(MODE)/third_party/double-conversion/test-ieee.runs:				\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-ieee
+	@$(COMPILE) -wACHECK -tT$@ $< test-ieee
 
 o/$(MODE)/third_party/double-conversion/test-fixed-dtoa.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-fixed-dtoa
+	@$(COMPILE) -wACHECK -tT$@ $< test-fixed-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-fast-dtoa.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-fast-dtoa
+	@$(COMPILE) -wACHECK -tT$@ $< test-fast-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-dtoa.runs:				\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-dtoa
+	@$(COMPILE) -wACHECK -tT$@ $< test-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-diy-fp.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-diy-fp
+	@$(COMPILE) -wACHECK -tT$@ $< test-diy-fp
 
 o/$(MODE)/third_party/double-conversion/test-conversions.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-conversions
+	@$(COMPILE) -wACHECK -tT$@ $< test-conversions
 
 o/$(MODE)/third_party/double-conversion/test-bignum-dtoa.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-bignum-dtoa
+	@$(COMPILE) -wACHECK -tT$@ $< test-bignum-dtoa
 
 o/$(MODE)/third_party/double-conversion/test-bignum.runs:			\
 		o/$(MODE)/third_party/double-conversion/double-conversion-tester.com
-	@$(COMPILE) -ACHECK -tT$@ $< test-bignum
+	@$(COMPILE) -wACHECK -tT$@ $< test-bignum
 
 THIRD_PARTY_DOUBLECONVERSION_LIBS = $(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_ARTIFACTS),$($(x)))
 THIRD_PARTY_DOUBLECONVERSION_SRCS = $(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_ARTIFACTS),$($(x)_SRCS))

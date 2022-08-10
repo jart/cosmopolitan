@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"

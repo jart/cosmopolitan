@@ -18,7 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/unicode/locale.h"
 #include "third_party/getopt/getopt.h"
 

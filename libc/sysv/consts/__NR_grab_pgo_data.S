@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_grab_pgo_data,0xfff,0x20001ed,0xfff,0xfff,0xfff,0xfff

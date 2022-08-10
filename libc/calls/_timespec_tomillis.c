@@ -23,9 +23,10 @@
  * Converts timespec interval to milliseconds.
  */
 int64_t _timespec_tomillis(struct timespec x) {
-  int64_t us;
-  if (!__builtin_add_overflow(x.tv_sec, x.tv_nsec / 1000000, &us)) {
-    return us;
+  int64_t ns;
+  if (!__builtin_mul_overflow(x.tv_sec, 1000ul, &ns) &&
+      !__builtin_add_overflow(ns, x.tv_nsec / 1000000, &ns)) {
+    return ns;
   } else {
     return INT64_MAX;
   }

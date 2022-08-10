@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/spawn.h"
 #include "libc/stdio/stdio.h"
@@ -27,6 +28,13 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0,
+             pledge("stdio rpath wpath cpath proc exec prot_exec",
+                    "stdio rpath wpath cpath prot_exec"));
+}
 
 TEST(spawn, test) {
   int rc, ws, pid;
@@ -76,13 +84,13 @@ const char kTinyLinuxExit[128] = {
     0x6a, 0x2a, 0x5f, 0x6a, 0x3c, 0x58, 0x0f, 0x05,  // j*_j<X☼♣
 };
 
-BENCH(spawn, bench) {
-  int fd;
-  if (IsLinux()) {
-    fd = open("/tmp/tiny64", O_CREAT | O_TRUNC | O_WRONLY, 0755);
-    write(fd, kTinyLinuxExit, 128);
-    close(fd);
-    EZBENCH2("spawn", donothing, BenchmarkProcessLifecycle());
-    unlink("/tmp/tiny64");
-  }
-}
+/* BENCH(spawn, bench) { */
+/*   int fd; */
+/*   if (IsLinux()) { */
+/*     fd = open("/tmp/tiny64", O_CREAT | O_TRUNC | O_WRONLY, 0755); */
+/*     write(fd, kTinyLinuxExit, 128); */
+/*     close(fd); */
+/*     EZBENCH2("spawn", donothing, BenchmarkProcessLifecycle()); */
+/*     unlink("/tmp/tiny64"); */
+/*   } */
+/* } */
