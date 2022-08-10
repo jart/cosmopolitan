@@ -62,8 +62,9 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
     rc = einval();  // unsupported flag
   } else if (!path && flags) {
     rc = einval();  // futimens() doesn't take flags
-  } else if (weaken(__zipos_notat) && (rc = __zipos_notat(dirfd, path)) == -1) {
-    STRACE("zipos mkdirat not supported yet");
+  } else if ((path || __isfdkind(dirfd, kFdZip)) && weaken(__zipos_notat) &&
+             (rc = __zipos_notat(dirfd, path)) == -1) {
+    STRACE("zipos utimensat not supported yet");
   } else if (!IsWindows()) {
     rc = sys_utimensat(dirfd, path, ts, flags);
   } else {
