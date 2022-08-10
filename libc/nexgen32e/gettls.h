@@ -27,7 +27,7 @@ static noasan inline char *__get_tls(void) {
  */
 static noasan inline char *__get_tls_privileged(void) {
   char *tib, *lin = (char *)0x30;
-  if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd()) {
+  if (IsLinux() || IsFreebsd() || IsNetbsd() || IsOpenbsd() || IsMetal()) {
     asm("mov\t%%fs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
   } else {
     asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
