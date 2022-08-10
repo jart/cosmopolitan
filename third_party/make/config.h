@@ -644,13 +644,13 @@
 #define PACKAGE_BUGREPORT "bug-make@gnu.org"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Landlock Make"
+#define PACKAGE_NAME "GNU make"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Landlock Make 1.0 (GNU make 4.3)"
+#define PACKAGE_STRING "GNU make 4.3"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "landlockmake"
+#define PACKAGE_TARNAME "make"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL "http://www.gnu.org/software/make/"
