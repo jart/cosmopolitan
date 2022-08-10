@@ -16,31 +16,60 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/macros.internal.h"
+#include "libc/errno.h"
+#include "libc/rand/rand.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 
 /**
- * Creates a temporary file.
+ * Opens stream backed by anonymous file.
+ *
+ * We use $TMPDIR or /tmp to create a temporary file securely, which
+ * will be unlink()'d before this function returns. The file content
+ * will be released from disk once fclose() is called.
  *
  * @see mkostempsm(), kTmpPath
+ * @asyncsignalsafe
+ * @threadsafe
+ * @vforksafe
  */
 FILE *tmpfile(void) {
-  int fd;
-  char *tmp, *sep, tpl[PATH_MAX];
-  tmp = firstnonnull(getenv("TMPDIR"), kTmpPath);
-  sep = !isempty(tmp) && !endswith(tmp, "/") ? "/" : "";
-  if ((snprintf)(tpl, PATH_MAX, "%s%stmp.%s.XXXXXX", tmp, sep,
-                 firstnonnull(program_invocation_short_name, "unknown")) <=
-      PATH_MAX) {
-    if ((fd = mkostemps(tpl, 0, 0)) != -1) {
-      return fdopen(fd, "w+");
+  FILE *f;
+  unsigned x;
+  int fd, i, j, e;
+  char path[PATH_MAX], *p;
+  p = path;
+  p = stpcpy(p, kTmpPath);
+  p = stpcpy(p, "tmp.");
+  if (program_invocation_short_name &&
+      strlen(program_invocation_short_name) < 128) {
+    p = stpcpy(p, program_invocation_short_name);
+    *p++ = '.';
+  }
+  for (i = 0; i < 10; ++i) {
+    x = rand64();
+    for (j = 0; j < 6; ++j) {
+      p[j] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % 36];
+      x /= 36;
+    }
+    p[j] = 0;
+    e = errno;
+    if ((fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0600)) != -1) {
+      unlink(path);
+      if ((f = fdopen(fd, "w+"))) {
+        return f;
+      } else {
+        close(fd);
+        return 0;
+      }
+    } else if (errno == EEXIST) {
+      errno = e;
+    } else {
+      break;
     }
   }
-  return NULL;
+  return 0;
 }

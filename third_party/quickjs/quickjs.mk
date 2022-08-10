@@ -179,7 +179,7 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 $(THIRD_PARTY_QUICKJS_OBJS):							\
 		OVERRIDE_CPPFLAGS +=						\
 			-DCONFIG_BIGNUM						\
-			-DCONFIG_VERSION=\"$(shell cat third_party/quickjs/VERSION)\"
+			-DCONFIG_VERSION=\"2021-03-27\"
 
 o/tiny/third_party/quickjs/call.o:						\
 		OVERRIDE_CFLAGS +=						\

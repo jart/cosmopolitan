@@ -98,7 +98,7 @@ TEST(pledge, testLogMessage_inSoftyMode) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
+    ASSERT_STARTSWITH("error: pledge inet for socket", msg);
   }
 }
 
@@ -116,7 +116,7 @@ TEST(pledge, testLogMessage_onKillProcess) {
   read(fds[0], msg, sizeof(msg));
   close(fds[0]);
   if (IsLinux()) {
-    ASSERT_STARTSWITH("error: maybe pledge inet", msg);
+    ASSERT_STARTSWITH("error: pledge inet for socket", msg);
   }
 }
 

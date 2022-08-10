@@ -343,11 +343,16 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  * @threadsafe
  */
 int unveil(const char *path, const char *permissions) {
-  int rc;
+  int e, rc;
+  e = errno;
   if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);
   } else {
     rc = sys_unveil(path, permissions);
+  }
+  if (rc == -1 && errno == ENOSYS) {
+    errno = e;
+    rc = 0;
   }
   STRACE("unveil(%#s, %#s) → %d% m", path, permissions, rc);
   return rc;

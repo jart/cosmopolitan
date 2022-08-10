@@ -255,12 +255,12 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 TAGS: .UNSANDBOXED = 1
 TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
 	@$(RM) $@
-	@$(COMPILE) -ATAGS -T$@ $(TAGS) $(TAGSFLAGS) -L $< -o $@
+	@$(TAGS) $(TAGSFLAGS) -L $< -o $@
 
 HTAGS: .UNSANDBOXED = 1
 HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
 	@$(RM) $@
-	@$(COMPILE) -ATAGS -T$@ build/htags -L $< -o $@
+	@build/htags -L $< -o $@
 
 loc: .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy.com
