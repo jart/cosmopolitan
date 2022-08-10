@@ -508,7 +508,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-43182592-5\"></script>\n\
 <script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-43182592-5');</script>\n\
 <title>Cosmopolitan C Library</title>\n\
-<meta name=\"viewport\" content=\"width=1024\">\n\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
 <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap\">\n\
 <link rel=\"stylesheet\" href=\"style.css\">\n\
@@ -517,10 +517,39 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\">\n\
 <link rel=\"manifest\" href=\"/site.webmanifest\">\n\
 <style>\n\
-  .nav {\n\
-    margin-bottom: 0;\n\
+  *, body {\n\
+    min-width: 0;\n\
+  }\n\
+  body {\n\
+    width: 100ch;\n\
+    max-width: calc(100vw - 3em);\n\
+    overflow-wrap: break-word;\n\
+  }\n\
+  body, .nav, .dox {\n\
+    margin: 0 auto;\n\
+  }\n\
+  .dox, header {\n\
+    display: flex;\n\
+  }\n\
+  header {\n\
+    flex-direction: column;\n\
+    align-items: center;\n\
+    margin: 4em auto 2em;\n\
+  }\n\
+  header>* {\n\
+    min-width: max-content;\n\
+  }\n\
+  header>img {\n\
+    max-width: 196px;\n\
+    min-width: 196px;\n\
+    max-height: 105px;\n\
+    min-height: 105px;\n\
+  }\n\
+  main {\n\
+    width: 80ch;\n\
   }\n\
   .toc {\n\
+    display: block;\n\
     overflow-x: auto;\n\
   }\n\
   .toc a {\n\
@@ -534,7 +563,6 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     margin-left: 0;\n\
     padding: 12px;\n\
     background: #f6f6f6;\n\
-    width: 100%;\n\
     overflow-x: auto;\n\
     border-radius: 5px;\n\
   }\n\
@@ -560,7 +588,40 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     margin-bottom: .5em;\n\
     margin-left: 1em;\n\
   }\n\
+  #top {\n\
+    position: fixed;\n\
+    left: max(0.5rem, calc(50vw - 56ch));\n\
+    bottom: 0.5rem;\n\
+    width: 2rem;\n\
+    height: 2rem;\n\
+    opacity: 0.45;\n\
+    transition: opacity 0.4s;\n\
+  }\n\
+  #top:hover {\n\
+    opacity: 0.9;\n\
+  }\n\
+  #search {\n\
+    top: 1ch;\n\
+    right: 1ch;\n\
+    float: right;\n\
+    position: sticky;\n\
+    margin: 1ch;\n\
+  }\n\
+  @media (max-width: 60ch) {\n\
+    .toc {\n\
+      display: none;\n\
+    }\n\
+  }\n\
+  @media print {\n\
+    #top, #search, nav, nav.toc { \n\
+      display: none;\n\
+    }\n\
+  }\n\
 </style>\n\
+<noscript><style>\n\
+  .toc { display: block; }\n\
+  #search { display: none; }\n\
+</style></noscript>\n\
 \n\
 <header>\n\
   <img width=\"196\" height=\"105\"\n\
@@ -568,7 +629,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
        title=\"cosmopolitan honeybadger\"\n\
        alt=\"honeybadger\">\n\
   <h1>cosmopolitan libc</h1>\n\
-  <span>your build-once run-anywhere c library</span>\n\
+  <div>your build-once run-anywhere c library</div>\n\
 </header>\n\
 \n\
 <nav class=\"nav\">\n\
@@ -583,9 +644,8 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   </ul>\n\
 </nav>\n\
 \n\
-<table class=\"dox\" width=\"960\">\n\
-<tr>\n\
-<td width=\"283\" valign=\"top\" class=\"toc\">\n\
+<div class=\"dox\">\n\
+<nav class=\"toc\">\n\
 ");
 
   /* // lefthand index: objects */
@@ -631,9 +691,48 @@ static void PrintDox(struct Dox *dox, FILE *f) {
     if (!o->is_function) continue;
     fprintf(f, "<a href=\"#%s\">%s</a><br>\n", o->name, o->name);
   }
+  fprintf(f, "</p></nav>\n\n");
+
+  // jump to top button
+  fprintf(f, "\
+<a href=\"#\" id=\"top\"><svg viewBox=\"-60 -60 120 120\" stroke=\"#404040\" stroke-width=\"10\">\n\
+<title>Top of the page</title>\n\
+<circle r=\"50\" fill=\"#f6f6f6\" />\n\
+<path d=\"M-25,18l25,-40l25,40\" fill=\"none\" stroke-linecap=\"round\" />\n\
+</svg></a>");
+
+  // right hand column
+  fprintf(f, "<main>\n");
+
+  // search bar
+  fprintf(f, "\
+<input type=\"search\" id=\"search\" placeholder=\"Search...\" list=\"search-list\" spellcheck=\"false\" />\n\
+<datalist id=\"search-list\"></datalist>\n\
+<script>\n\
+document.addEventListener('DOMContentLoaded', function () {\n\
+  var datalist = document.getElementById('search-list')\n\
+  document.querySelectorAll('.api').forEach(function (el) {\n\
+    var option = document.createElement('option')\n\
+    option.setAttribute('value', el.id)\n\
+    datalist.appendChild(option)\n\
+  })\n\
+  function scrollIntoView(event) {\n\
+    var value = event.target.value\n\
+    var el = document.getElementById(value) \n\
+    if (el) {\n\
+      location.hash = value\n\
+      el.scrollIntoView()\n\
+    }\n\
+  }\n\
+  var search = document.getElementById('search')\n\
+  search.addEventListener('change', scrollIntoView)\n\
+  search.addEventListener('keypress', function (event) {\n\
+    if (event.key === 'Enter') scrollIntoView(event)\n\
+  })\n\
+})\n\
+</script>\n\n");
 
   // righthand contents
-  fprintf(f, "<td width=\"667\" valign=\"top\">\n");
   for (i = 0; i < dox->index.n; ++i) {
     if (dox->index.p[i].t == kObject) {
       o = dox->objects.p + dox->index.p[i].i;
@@ -728,8 +827,8 @@ static void PrintDox(struct Dox *dox, FILE *f) {
             PrintText(f, o->type);
           }
           fprintf(f, "</dl>\n");
-          fprintf(f, "</div>\n");  // .tag
         }
+        fprintf(f, "</div>\n");  // .tag
       }
 
       // type
@@ -834,7 +933,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
       fprintf(f, "</div>\n"); /* class=".api" */
     }
   }
-  fprintf(f, "</table>\n");
+  fprintf(f, "</main></div>\n");
 
   // footer
   fprintf(f, "\
