@@ -24,7 +24,6 @@
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/enum/lang.h"
 #include "libc/nt/process.h"
-#include "libc/str/str.h"
 
 /**
  * Converts errno value to string with explicit windows errno too.

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_pthread_kill,0xfff,0x2000148,0xfff,0xfff,0xfff,0xfff

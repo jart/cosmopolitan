@@ -73,13 +73,13 @@ o/$(MODE)/test/libc/calls/%.com.dbg:					\
 	@$(APELINK)
 
 o/$(MODE)/test/libc/calls/tiny64.elf.zip.o: test/libc/calls/tiny64.elf
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/test/libc/calls/life-nomod.com.zip.o: o/$(MODE)/test/libc/calls/life-nomod.com
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/test/libc/calls/life-classic.com.zip.o: o/$(MODE)/test/libc/calls/life-classic.com
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/test/libc/calls/life-classic.com.dbg:				\
 		$(LIBC_RUNTIME)						\

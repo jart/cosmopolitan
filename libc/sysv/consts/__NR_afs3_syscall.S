@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_afs3_syscall,0xfff,0xfff,0x0179,0xfff,0xfff,0xfff

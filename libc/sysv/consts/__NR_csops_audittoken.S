@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_csops_audittoken,0xfff,0x20000aa,0xfff,0xfff,0xfff,0xfff

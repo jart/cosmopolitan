@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_ktimer_delete,0xfff,0xfff,0x00ec,0xfff,0xfff,0xfff

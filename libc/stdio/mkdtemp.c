@@ -38,11 +38,10 @@
  * @raise EINVAL if template didn't end with XXXXXX
  */
 char *mkdtemp(char *template) {
-  unsigned x;
-  int i, j, n;
+  int i, j, n, x;
   if ((n = strlen(template)) >= 6 && !memcmp(template + n - 6, "XXXXXX", 6)) {
+    x = rand64();
     for (i = 0; i < 10; ++i) {
-      x = rand64();
       for (j = 0; j < 6; ++j) {
         template[n - 6 + j] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % 36];
         x /= 36;

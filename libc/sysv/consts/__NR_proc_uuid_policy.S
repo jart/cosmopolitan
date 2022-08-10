@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_proc_uuid_policy,0xfff,0x20001c4,0xfff,0xfff,0xfff,0xfff

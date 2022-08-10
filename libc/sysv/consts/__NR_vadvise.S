@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_vadvise,0xfff,0xfff,0x0048,0xfff,0xfff,0xfff

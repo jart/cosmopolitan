@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_mac_get_fd,0xfff,0x2000184,0x0182,0xfff,0xfff,0xfff

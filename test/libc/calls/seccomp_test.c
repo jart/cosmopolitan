@@ -34,7 +34,8 @@
 #include "tool/net/sandbox.h"
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
+  pledge("stdio proc", 0);
+  errno = 0;
 }
 
 // It's been reported that Chromebooks return EINVAL here.

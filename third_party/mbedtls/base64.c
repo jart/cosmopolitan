@@ -15,7 +15,6 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
 #include "third_party/mbedtls/base64.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/platform.h"

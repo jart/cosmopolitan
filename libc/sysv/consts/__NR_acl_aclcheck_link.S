@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_acl_aclcheck_link,0xfff,0xfff,0x01ac,0xfff,0xfff,0xfff

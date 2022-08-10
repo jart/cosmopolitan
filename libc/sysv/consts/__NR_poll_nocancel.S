@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_poll_nocancel,0xfff,0x20001a1,0xfff,0xfff,0xfff,0xfff

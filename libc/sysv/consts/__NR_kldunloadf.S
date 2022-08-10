@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_kldunloadf,0xfff,0xfff,0x01bc,0xfff,0xfff,0xfff

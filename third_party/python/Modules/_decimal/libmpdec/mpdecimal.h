@@ -3,7 +3,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/python/pyconfig.h"
 COSMOPOLITAN_C_START_

@@ -16,7 +16,6 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/runtime/runtime.h"
 #include "third_party/tidy/mappedio.h"
 
 #if SUPPORT_POSIX_MAPPED_FILES

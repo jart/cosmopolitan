@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_sigqueue,0xfff,0xfff,0x01c8,0xfff,0xfff,0xfff

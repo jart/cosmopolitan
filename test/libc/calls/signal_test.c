@@ -31,7 +31,8 @@ testonly void OnUsr1(int sig) {
 }
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
+  pledge("stdio proc", 0);
+  errno = 0;
 }
 
 TEST(signal, test) {

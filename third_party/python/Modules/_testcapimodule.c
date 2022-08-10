@@ -12,7 +12,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/math.h"
-#include "libc/mem/mem.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "third_party/python/Include/abstract.h"

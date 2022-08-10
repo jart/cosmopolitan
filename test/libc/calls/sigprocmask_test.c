@@ -29,7 +29,8 @@
 volatile int n;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
+  pledge("stdio proc", 0);
+  errno = 0;
 }
 
 void OnSig(int sig, siginfo_t *si, ucontext_t *ctx) {

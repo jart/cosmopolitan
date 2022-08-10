@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/errno.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
 #include "libc/sysv/consts/af.h"
@@ -29,7 +28,8 @@
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio inet", 0));
+  pledge("stdio inet", 0);
+  errno = 0;
 }
 
 TEST(setsockopt, SO_RCVTIMEO) {

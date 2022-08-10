@@ -25,7 +25,6 @@
 #include "libc/bits/avxintrin.internal.h"
 #include "libc/bits/likely.h"
 #include "libc/inttypes.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/quickjs/cutils.h"

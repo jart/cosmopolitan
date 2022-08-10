@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_thr_wake,0xfff,0xfff,0x01bb,0xfff,0xfff,0xfff

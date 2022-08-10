@@ -25,7 +25,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
@@ -36,7 +35,8 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath cpath proc unix", 0));
+  pledge("stdio rpath cpath proc unix", 0);
+  errno = 0;
 }
 
 void DatagramServer(void) {

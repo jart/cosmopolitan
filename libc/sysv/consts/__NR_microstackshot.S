@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_microstackshot,0xfff,0x20001ec,0xfff,0xfff,0xfff,0xfff

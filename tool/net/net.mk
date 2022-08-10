@@ -116,8 +116,8 @@ o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -wASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
-	@$(COMPILE) -wAZIP -T$@ $@ -A $(SYMTAB)
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
+	@$(COMPILE) -AZIP -T$@ $@ -A $(SYMTAB)
 
 # REDBEAN-DEMO.COM
 #
@@ -229,8 +229,8 @@ o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
 		o/$(MODE)/tool/build/symtab.com
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -wASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
-	@$(COMPILE) -wAZIP -T$@ $@ -A $(SYMTAB)
+	@$(COMPILE) -ASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
+	@$(COMPILE) -AZIP -T$@ $@ -A $(SYMTAB)
 
 # REDBEAN-STATIC.COM
 #

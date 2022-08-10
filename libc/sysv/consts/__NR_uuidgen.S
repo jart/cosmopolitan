@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_uuidgen,0xfff,0xfff,0x0188,0xfff,0x163,0xfff

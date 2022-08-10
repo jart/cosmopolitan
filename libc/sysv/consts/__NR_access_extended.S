@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_access_extended,0xfff,0x200011c,0xfff,0xfff,0xfff,0xfff

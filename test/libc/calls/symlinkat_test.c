@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/rand/rand.h"
@@ -32,7 +31,8 @@ char p[2][PATH_MAX];
 struct stat st;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
+  pledge("stdio rpath wpath cpath fattr", 0);
+  errno = 0;
 }
 
 TEST(symlink, enoent) {

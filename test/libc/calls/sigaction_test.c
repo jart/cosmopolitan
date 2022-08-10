@@ -34,7 +34,8 @@ struct sigaction oldsa;
 volatile bool gotsigint;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath proc", 0));
+  pledge("stdio rpath proc", 0);
+  errno = 0;
 }
 
 void OnSigInt(int sig) {

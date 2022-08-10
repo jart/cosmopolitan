@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

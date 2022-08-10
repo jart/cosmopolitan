@@ -55,7 +55,7 @@ o/$(MODE)/third_party/tidy/tidy.com.dbg:					\
 	@$(APELINK)
 
 o/$(MODE)/third_party/tidy/.tidyrc.zip.o: third_party/tidy/.tidyrc
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 THIRD_PARTY_TIDY_COMS =								\
 	o/$(MODE)/third_party/tidy/tidy.com

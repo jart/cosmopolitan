@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/str/str.h"
 #include "tool/lambda/lib/blc.h"
 
 const char *GetOpName(int x) {

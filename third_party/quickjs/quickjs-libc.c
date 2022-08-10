@@ -35,7 +35,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
-#include "libc/mem/mem.h"
 #include "libc/nt/synchronization.h"
 #include "libc/runtime/dlfcn.h"
 #include "libc/runtime/sysconf.h"

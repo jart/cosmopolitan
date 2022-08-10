@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/str/str.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/common.h"

@@ -132,12 +132,12 @@ THIRD_PARTY_QUICKJS_CHECKS =							\
 o/$(MODE)/third_party/quickjs/qjscalc.c:					\
 		third_party/quickjs/qjscalc.js					\
 		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
+	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
 
 o/$(MODE)/third_party/quickjs/repl.c:						\
 		third_party/quickjs/repl.js					\
 		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
+	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		$(THIRD_PARTY_QUICKJS)						\
@@ -179,7 +179,7 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 $(THIRD_PARTY_QUICKJS_OBJS):							\
 		OVERRIDE_CPPFLAGS +=						\
 			-DCONFIG_BIGNUM						\
-			-DCONFIG_VERSION=\"2021-03-27\"
+			-DCONFIG_VERSION=\"$(shell cat third_party/quickjs/VERSION)\"
 
 o/tiny/third_party/quickjs/call.o:						\
 		OVERRIDE_CFLAGS +=						\

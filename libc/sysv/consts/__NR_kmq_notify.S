@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_kmq_notify,0xfff,0xfff,0x01cd,0xfff,0xfff,0xfff

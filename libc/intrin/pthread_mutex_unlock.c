@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/bits/atomic.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"

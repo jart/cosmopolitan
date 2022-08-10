@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_workq_kernreturn,0xfff,0x2000170,0xfff,0xfff,0xfff,0xfff

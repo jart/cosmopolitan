@@ -26,7 +26,8 @@
 #define ROL(w, k) ((w) << (k) | CheckUnsigned(w) >> (sizeof(w) * 8 - (k)))
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  pledge("stdio", 0);
+  errno = 0;
 }
 
 TEST(TwosComplementBane, LiteralsThatAreLiterallyTheSameNumber) {

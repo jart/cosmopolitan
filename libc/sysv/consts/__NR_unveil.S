@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_unveil,0xfff,0xfff,0xfff,0x0072,0xfff,0xfff

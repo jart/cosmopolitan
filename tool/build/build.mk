@@ -75,7 +75,7 @@ o/$(MODE)/tool/build/build.pkg:				\
 o/$(MODE)/%.ctest.ok:					\
 		%.ctest					\
 		$(TOOL_BUILD_CALCULATOR)
-	@$(COMPILE) -wAMKWIDES -tT$@ $(TOOL_BUILD_CALCULATOR) $<
+	@$(COMPILE) -AMKWIDES -tT$@ $(TOOL_BUILD_CALCULATOR) $<
 
 o/$(MODE)/tool/build/%.com.dbg:				\
 		$(TOOL_BUILD_DEPS)			\
@@ -90,21 +90,21 @@ o/$(MODE)/tool/build/emulator.o:			\
 			-fno-sanitize=pointer-overflow
 
 o/$(MODE)/tool/build/mkdir.zip.o: o/$(MODE)/tool/build/mkdir
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/chmod.zip.o: o/$(MODE)/tool/build/chmod
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/cp.zip.o: o/$(MODE)/tool/build/cp
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/mv.zip.o: o/$(MODE)/tool/build/mv
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/echo.zip.o: o/$(MODE)/tool/build/echo
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/gzip.zip.o: o/$(MODE)/tool/build/gzip
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/printf.zip.o: o/$(MODE)/tool/build/printf
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 o/$(MODE)/tool/build/dd.zip.o: o/$(MODE)/tool/build/dd
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
 
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
@@ -125,9 +125,7 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 		o/$(MODE)/tool/build/dso/sandbox.o	\
 		o/$(MODE)/libc/calls/pledge-linux.o	\
 		o/$(MODE)/libc/sysv/restorert.o
-	@$(COMPILE) -ALINK.so -tT$@			\
-		$(CC)					\
-		-s					\
+	@$(CC)	-s					\
 		-shared					\
 		-nostdlib				\
 		-Wl,--gc-sections			\
@@ -138,7 +136,7 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 
 o/$(MODE)/tool/build/dso/sandbox.so.zip.o:		\
 		o/$(MODE)/tool/build/dso/sandbox.so
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/tool/build/pledge.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\

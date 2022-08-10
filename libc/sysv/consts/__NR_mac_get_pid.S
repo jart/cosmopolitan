@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_mac_get_pid,0xfff,0x2000186,0x0199,0xfff,0xfff,0xfff

@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
 #include "libc/bits/bits.h"
 #include "libc/bits/safemacros.internal.h"
 #include "libc/calls/calls.h"
@@ -42,7 +41,6 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.internal.h"
@@ -51,7 +49,6 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
-#include "libc/sysv/consts/madv.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/s.h"
@@ -112,7 +109,6 @@ FLAGS\n\
   -s           decrement verbosity [default 4]\n\
   -v           increments verbosity [default 4]\n\
   -n           do nothing (prime ape executable)\n\
-  -w           disable landlock tmp workaround\n\
   -h           print help\n\
 \n\
 ENVIRONMENT\n\
@@ -148,7 +144,6 @@ bool wantfentry;
 bool wantrecord;
 bool fulloutput;
 bool touchtarget;
-bool noworkaround;
 bool wantnoredzone;
 bool stdoutmustclose;
 bool no_sanitize_null;
@@ -716,8 +711,6 @@ void ReportResources(void) {
 
 bool MovePreservingDestinationInode(const char *from, const char *to) {
   bool res;
-  ssize_t rc;
-  size_t remain;
   struct stat st;
   int fdin, fdout;
   if ((fdin = open(from, O_RDONLY)) == -1) {
@@ -728,30 +721,7 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
     close(fdin);
     return false;
   }
-  fadvise(fdin, 0, st.st_size, MADV_SEQUENTIAL);
-  ftruncate(fdout, st.st_size);
-  for (res = true, remain = st.st_size; remain;) {
-    rc = copy_file_range(fdin, 0, fdout, 0, remain, 0);
-    if (rc != -1) {
-      remain -= rc;
-    } else if (errno == EXDEV) {
-      if (lseek(fdin, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek after exdev\n", from);
-        res = false;
-        break;
-      }
-      if (lseek(fdout, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek after exdev\n", to);
-        res = false;
-        break;
-      }
-      res = _copyfd(fdin, fdout, -1) != -1;
-      break;
-    } else {
-      res = false;
-      break;
-    }
-  }
+  res = _copyfd(fdin, fdout, -1) != -1;
   close(fdin);
   close(fdout);
   return res;
@@ -777,23 +747,6 @@ bool IsNativeExecutable(const char *path) {
   return res;
 }
 
-char *MakeTmpOut(const char *path) {
-  int c;
-  char *p = tmpout;
-  char *e = tmpout + sizeof(tmpout) - 1;
-  p = stpcpy(p, kTmpPath);
-  while ((c = *path++)) {
-    if (c == '/') c = '_';
-    if (p == e) {
-      kprintf("MakeTmpOut path too long: %s\n", tmpout);
-      exit(1);
-    }
-    *p++ = c;
-  }
-  *p = 0;
-  return tmpout;
-}
-
 int main(int argc, char *argv[]) {
   int columns;
   uint64_t us;
@@ -804,6 +757,7 @@ int main(int argc, char *argv[]) {
   char *s, *p, *q, **envp;
 
   mode = firstnonnull(getenv("MODE"), MODE);
+  ksnprintf(tmpout, sizeof(tmpout), "%scompile.%d", kTmpPath, getpid());
 
   /*
    * parse prefix arguments
@@ -815,7 +769,7 @@ int main(int argc, char *argv[]) {
   fszquota = 256 * 1000 * 1000; /* bytes */
   memquota = 512 * 1024 * 1024; /* bytes */
   if ((s = getenv("V"))) verbose = atoi(s);
-  while ((opt = getopt(argc, argv, "hnstvwA:C:F:L:M:O:P:T:V:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnstvA:C:F:L:M:O:P:T:V:")) != -1) {
     switch (opt) {
       case 'n':
         exit(0);
@@ -833,9 +787,6 @@ int main(int argc, char *argv[]) {
         break;
       case 't':
         touchtarget = true;
-        break;
-      case 'w':
-        noworkaround = true;
         break;
       case 'L':
         timeout = atoi(optarg);
@@ -905,37 +856,17 @@ int main(int argc, char *argv[]) {
    * ingest arguments
    */
   for (i = optind; i < argc; ++i) {
-
-    /*
-     * replace output filename argument
-     *
-     * some commands (e.g. ar) don't use the `-o PATH` notation. in that
-     * case we assume the output path was passed to compile.com -TTARGET
-     * which means we can replace the appropriate command line argument.
-     */
-    if (!noworkaround &&  //
-        !movepath &&      //
-        !outpath &&       //
-        target &&         //
-        !strcmp(target, argv[i])) {
-      AddArg(MakeTmpOut(argv[i]));
-      outpath = target;
+    if (!movepath && !outpath && target && !strcmp(target, argv[i])) {
+      outpath = argv[i];
+      AddArg(tmpout);
       movepath = target;
       MovePreservingDestinationInode(target, tmpout);
       continue;
     }
-
-    /*
-     * capture arguments
-     */
     if (argv[i][0] != '-') {
       AddArg(argv[i]);
       continue;
     }
-
-    /*
-     * capture flags
-     */
     if (startswith(argv[i], "-o")) {
       if (!strcmp(argv[i], "-o")) {
         outpath = argv[++i];
@@ -943,12 +874,8 @@ int main(int argc, char *argv[]) {
         outpath = argv[i] + 2;
       }
       AddArg("-o");
-      if (noworkaround) {
-        AddArg(outpath);
-      } else {
-        movepath = outpath;
-        AddArg(MakeTmpOut(outpath));
-      }
+      AddArg(tmpout);
+      movepath = outpath;
       continue;
     }
     if (!iscc) {

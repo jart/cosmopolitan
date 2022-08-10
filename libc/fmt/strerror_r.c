@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/nt/runtime.h"
-#include "libc/str/str.h"
 
 /**
  * Converts errno value to string.

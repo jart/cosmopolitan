@@ -78,11 +78,11 @@ o/$(MODE)/test/libc/log/backtrace.com.dbg:			\
 
 o/$(MODE)/test/libc/log/backtrace.com.zip.o:			\
 		o/$(MODE)/test/libc/log/backtrace.com
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/test/libc/log/backtrace.com.dbg.zip.o:			\
 		o/$(MODE)/test/libc/log/backtrace.com.dbg
-	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 .PHONY: o/$(MODE)/test/libc/log
 o/$(MODE)/test/libc/log:					\

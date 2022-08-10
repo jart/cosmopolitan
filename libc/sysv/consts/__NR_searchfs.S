@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_searchfs,0xfff,0x20000e1,0xfff,0xfff,0xfff,0xfff

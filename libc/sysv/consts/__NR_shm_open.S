@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_shm_open,0xfff,0x200010a,0x01e2,0xfff,0xfff,0xfff

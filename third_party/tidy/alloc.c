@@ -13,8 +13,6 @@
 #include "third_party/tidy/forward.h"
 #include "libc/stdio/stdio.h"
 #include "libc/assert.h"
-#include "libc/runtime/runtime.h"
-#include "libc/mem/mem.h"
 #include "third_party/tidy/sprtf.h"
 
 static TidyMalloc  g_malloc  = NULL;

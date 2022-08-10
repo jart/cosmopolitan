@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_lutimes,0xfff,0xfff,0x0114,0xfff,0x1a8,0xfff

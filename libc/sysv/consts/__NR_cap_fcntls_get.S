@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_cap_fcntls_get,0xfff,0xfff,0x0219,0xfff,0xfff,0xfff

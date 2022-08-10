@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_rctl_get_rules,0xfff,0xfff,0x020e,0xfff,0xfff,0xfff

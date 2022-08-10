@@ -28,7 +28,7 @@
 
 void SetUpOnce(void) {
   GetSymbolTable();
-  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+  pledge("stdio", 0);
 }
 
 TEST(isutf8, good) {

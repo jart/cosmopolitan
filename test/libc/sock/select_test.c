@@ -24,7 +24,8 @@
 #include "libc/time/time.h"
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  pledge("stdio", 0);
+  errno = 0;
 }
 
 // TEST(select, allZero) {

@@ -3,7 +3,6 @@
 #define Py_PYDEBUG_H
 COSMOPOLITAN_C_START_
 /* clang-format off */
-#include "libc/runtime/runtime.h"
 
 /* These global variable are defined in pylifecycle.c */
 /* XXX (ncoghlan): move these declarations to pylifecycle.h? */

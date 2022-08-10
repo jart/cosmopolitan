@@ -16,7 +16,6 @@
 #include "libc/log/log.h"
 #include "libc/runtime/gc.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
 

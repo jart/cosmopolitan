@@ -74,6 +74,8 @@ THIRD_PARTY_MAKE_SRCS_LIB =				\
 	third_party/make/xmalloc.c
 
 THIRD_PARTY_MAKE_SRCS_BASE =				\
+	third_party/make/ar.c				\
+	third_party/make/arscan.c			\
 	third_party/make/commands.c			\
 	third_party/make/default.c			\
 	third_party/make/dir.c				\
@@ -162,7 +164,6 @@ o/$(MODE)/third_party/make/hash.o:			\
 
 $(THIRD_PARTY_MAKE_OBJS):				\
 		OVERRIDE_CFLAGS +=			\
-			-DNO_ARCHIVES			\
 			-DSTACK_FRAME_UNLIMITED		\
 			-DHAVE_CONFIG_H			\
 			-DINCLUDEDIR=\".\"		\

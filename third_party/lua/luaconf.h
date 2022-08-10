@@ -4,7 +4,6 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
-#include "libc/unicode/unicode.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 #define LUA_USE_POSIX

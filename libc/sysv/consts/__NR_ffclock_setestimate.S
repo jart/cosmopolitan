@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_ffclock_setestimate,0xfff,0xfff,0x00f2,0xfff,0xfff,0xfff

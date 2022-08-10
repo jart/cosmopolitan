@@ -1,6 +1,5 @@
 #ifndef MBEDTLS_ASN1_H
 #define MBEDTLS_ASN1_H
-#include "libc/str/str.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 /* clang-format off */

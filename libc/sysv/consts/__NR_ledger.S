@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_ledger,0xfff,0x2000175,0xfff,0xfff,0xfff,0xfff

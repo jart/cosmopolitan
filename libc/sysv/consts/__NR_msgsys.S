@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_msgsys,0xfff,0x20000fc,0x00aa,0xfff,0xfff,0xfff

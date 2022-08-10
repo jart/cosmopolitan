@@ -17,7 +17,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/bits.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
 #include "third_party/mbedtls/chacha20.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"

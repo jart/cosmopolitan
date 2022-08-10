@@ -17,9 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
-#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/str/str.h"
 
 /**
  * Converts errno value to string non-reentrantly.

@@ -25,8 +25,6 @@
 #include "libc/stdio/stdio.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/fmt.h"
-#include "libc/str/str.h"
-#include "libc/runtime/runtime.h"
 #include "third_party/make/stdio.h"
 
 #if !_LIBC && ENABLE_NLS

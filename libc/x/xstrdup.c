@@ -16,17 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/str/str.h"
+#include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 
 /**
  * Allocates new copy of string, or dies.
  */
 char *xstrdup(const char *s) {
-  size_t len = strlen(s);
-  char *s2 = malloc(len + 1);
-  if (UNLIKELY(!s2)) xdie();
-  return memcpy(s2, s, len + 1);
+  void *res = strdup(s);
+  if (!res) xdie();
+  return res;
 }

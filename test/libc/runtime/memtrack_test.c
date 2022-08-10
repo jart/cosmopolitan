@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -31,7 +32,8 @@
   { x, y, 0, (y - x) * FRAMESIZE + FRAMESIZE }
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+  pledge("stdio rpath", 0);
+  errno = 0;
 }
 
 static bool AreMemoryIntervalsEqual(const struct MemoryIntervals *mm1,

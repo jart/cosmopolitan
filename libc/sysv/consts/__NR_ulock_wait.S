@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_ulock_wait,0xfff,0x2000203,0xfff,0xfff,0xfff,0xfff

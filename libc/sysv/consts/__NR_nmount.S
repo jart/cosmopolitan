@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_nmount,0xfff,0xfff,0x017a,0xfff,0xfff,0xfff

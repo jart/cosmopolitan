@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_thrsleep,0xfff,0xfff,0xfff,0x005e,0xfff,0xfff

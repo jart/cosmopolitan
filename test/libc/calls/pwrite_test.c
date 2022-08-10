@@ -26,7 +26,8 @@ struct stat st;
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
+  pledge("stdio rpath wpath cpath fattr", 0);
+  errno = 0;
 }
 
 TEST(pwrite, testWritePastEof_extendsFile) {

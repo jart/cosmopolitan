@@ -96,7 +96,7 @@ o/$(MODE)/examples/pylife/pylife.com.dbg: \
 		o/$(MODE)/examples/pylife/pylife.o \
 		$(CRT) \
 		$(APE_NO_MODIFY_SELF)
-	@$(COMPILE) -ALINK.ape $(LINK) $(LINKARGS) -o $@
+	$(LINK) $(LINKARGS) -o $@
 
 # # Unwrap the APE .COM binary, that's embedded within the linked file
 # # NOTE: This line can be commented out, since it's in build/rules.mk

@@ -47,9 +47,8 @@
 
 #define Eperm       1
 #define Sigabrt     6
-#define Einval      22
-#define Sigsys      31
 #define Enosys      38
+#define Sigsys      31
 #define Sig_Setmask 2
 #define Sa_Siginfo  4
 #define Sa_Restorer 0x04000000
@@ -83,356 +82,6 @@
 struct Filter {
   size_t n;
   struct sock_filter p[700];
-};
-
-static const struct thatispacked SyscallName {
-  uint16_t n;
-  const char *const s;
-} kSyscallName[] = {
-    {__NR_linux_exit, "exit"},                                        //
-    {__NR_linux_exit_group, "exit_group"},                            //
-    {__NR_linux_read, "read"},                                        //
-    {__NR_linux_write, "write"},                                      //
-    {__NR_linux_open, "open"},                                        //
-    {__NR_linux_close, "close"},                                      //
-    {__NR_linux_stat, "stat"},                                        //
-    {__NR_linux_fstat, "fstat"},                                      //
-    {__NR_linux_lstat, "lstat"},                                      //
-    {__NR_linux_poll, "poll"},                                        //
-    {__NR_linux_ppoll, "ppoll"},                                      //
-    {__NR_linux_brk, "brk"},                                          //
-    {__NR_linux_sigreturn, "sigreturn"},                              //
-    {__NR_linux_lseek, "lseek"},                                      //
-    {__NR_linux_mmap, "mmap"},                                        //
-    {__NR_linux_msync, "msync"},                                      //
-    {__NR_linux_mprotect, "mprotect"},                                //
-    {__NR_linux_munmap, "munmap"},                                    //
-    {__NR_linux_sigaction, "sigaction"},                              //
-    {__NR_linux_sigprocmask, "sigprocmask"},                          //
-    {__NR_linux_ioctl, "ioctl"},                                      //
-    {__NR_linux_pread, "pread"},                                      //
-    {__NR_linux_pwrite, "pwrite"},                                    //
-    {__NR_linux_readv, "readv"},                                      //
-    {__NR_linux_writev, "writev"},                                    //
-    {__NR_linux_access, "access"},                                    //
-    {__NR_linux_pipe, "pipe"},                                        //
-    {__NR_linux_select, "select"},                                    //
-    {__NR_linux_pselect6, "pselect6"},                                //
-    {__NR_linux_sched_yield, "sched_yield"},                          //
-    {__NR_linux_mremap, "mremap"},                                    //
-    {__NR_linux_mincore, "mincore"},                                  //
-    {__NR_linux_madvise, "madvise"},                                  //
-    {__NR_linux_shmget, "shmget"},                                    //
-    {__NR_linux_shmat, "shmat"},                                      //
-    {__NR_linux_shmctl, "shmctl"},                                    //
-    {__NR_linux_dup, "dup"},                                          //
-    {__NR_linux_dup2, "dup2"},                                        //
-    {__NR_linux_pause, "pause"},                                      //
-    {__NR_linux_nanosleep, "nanosleep"},                              //
-    {__NR_linux_getitimer, "getitimer"},                              //
-    {__NR_linux_setitimer, "setitimer"},                              //
-    {__NR_linux_alarm, "alarm"},                                      //
-    {__NR_linux_getpid, "getpid"},                                    //
-    {__NR_linux_sendfile, "sendfile"},                                //
-    {__NR_linux_socket, "socket"},                                    //
-    {__NR_linux_connect, "connect"},                                  //
-    {__NR_linux_accept, "accept"},                                    //
-    {__NR_linux_sendto, "sendto"},                                    //
-    {__NR_linux_recvfrom, "recvfrom"},                                //
-    {__NR_linux_sendmsg, "sendmsg"},                                  //
-    {__NR_linux_recvmsg, "recvmsg"},                                  //
-    {__NR_linux_shutdown, "shutdown"},                                //
-    {__NR_linux_bind, "bind"},                                        //
-    {__NR_linux_listen, "listen"},                                    //
-    {__NR_linux_getsockname, "getsockname"},                          //
-    {__NR_linux_getpeername, "getpeername"},                          //
-    {__NR_linux_socketpair, "socketpair"},                            //
-    {__NR_linux_setsockopt, "setsockopt"},                            //
-    {__NR_linux_getsockopt, "getsockopt"},                            //
-    {__NR_linux_fork, "fork"},                                        //
-    {__NR_linux_vfork, "vfork"},                                      //
-    {__NR_linux_execve, "execve"},                                    //
-    {__NR_linux_wait4, "wait4"},                                      //
-    {__NR_linux_kill, "kill"},                                        //
-    {__NR_linux_clone, "clone"},                                      //
-    {__NR_linux_tkill, "tkill"},                                      //
-    {__NR_linux_futex, "futex"},                                      //
-    {__NR_linux_set_robust_list, "set_robust_list"},                  //
-    {__NR_linux_get_robust_list, "get_robust_list"},                  //
-    {__NR_linux_uname, "uname"},                                      //
-    {__NR_linux_semget, "semget"},                                    //
-    {__NR_linux_semop, "semop"},                                      //
-    {__NR_linux_semctl, "semctl"},                                    //
-    {__NR_linux_shmdt, "shmdt"},                                      //
-    {__NR_linux_msgget, "msgget"},                                    //
-    {__NR_linux_msgsnd, "msgsnd"},                                    //
-    {__NR_linux_msgrcv, "msgrcv"},                                    //
-    {__NR_linux_msgctl, "msgctl"},                                    //
-    {__NR_linux_fcntl, "fcntl"},                                      //
-    {__NR_linux_flock, "flock"},                                      //
-    {__NR_linux_fsync, "fsync"},                                      //
-    {__NR_linux_fdatasync, "fdatasync"},                              //
-    {__NR_linux_truncate, "truncate"},                                //
-    {__NR_linux_ftruncate, "ftruncate"},                              //
-    {__NR_linux_getcwd, "getcwd"},                                    //
-    {__NR_linux_chdir, "chdir"},                                      //
-    {__NR_linux_fchdir, "fchdir"},                                    //
-    {__NR_linux_rename, "rename"},                                    //
-    {__NR_linux_mkdir, "mkdir"},                                      //
-    {__NR_linux_rmdir, "rmdir"},                                      //
-    {__NR_linux_creat, "creat"},                                      //
-    {__NR_linux_link, "link"},                                        //
-    {__NR_linux_unlink, "unlink"},                                    //
-    {__NR_linux_symlink, "symlink"},                                  //
-    {__NR_linux_readlink, "readlink"},                                //
-    {__NR_linux_chmod, "chmod"},                                      //
-    {__NR_linux_fchmod, "fchmod"},                                    //
-    {__NR_linux_chown, "chown"},                                      //
-    {__NR_linux_fchown, "fchown"},                                    //
-    {__NR_linux_lchown, "lchown"},                                    //
-    {__NR_linux_umask, "umask"},                                      //
-    {__NR_linux_gettimeofday, "gettimeofday"},                        //
-    {__NR_linux_getrlimit, "getrlimit"},                              //
-    {__NR_linux_getrusage, "getrusage"},                              //
-    {__NR_linux_sysinfo, "sysinfo"},                                  //
-    {__NR_linux_times, "times"},                                      //
-    {__NR_linux_ptrace, "ptrace"},                                    //
-    {__NR_linux_syslog, "syslog"},                                    //
-    {__NR_linux_getuid, "getuid"},                                    //
-    {__NR_linux_getgid, "getgid"},                                    //
-    {__NR_linux_getppid, "getppid"},                                  //
-    {__NR_linux_getpgrp, "getpgrp"},                                  //
-    {__NR_linux_setsid, "setsid"},                                    //
-    {__NR_linux_getsid, "getsid"},                                    //
-    {__NR_linux_getpgid, "getpgid"},                                  //
-    {__NR_linux_setpgid, "setpgid"},                                  //
-    {__NR_linux_geteuid, "geteuid"},                                  //
-    {__NR_linux_getegid, "getegid"},                                  //
-    {__NR_linux_getgroups, "getgroups"},                              //
-    {__NR_linux_setgroups, "setgroups"},                              //
-    {__NR_linux_setreuid, "setreuid"},                                //
-    {__NR_linux_setregid, "setregid"},                                //
-    {__NR_linux_setuid, "setuid"},                                    //
-    {__NR_linux_setgid, "setgid"},                                    //
-    {__NR_linux_setresuid, "setresuid"},                              //
-    {__NR_linux_setresgid, "setresgid"},                              //
-    {__NR_linux_getresuid, "getresuid"},                              //
-    {__NR_linux_getresgid, "getresgid"},                              //
-    {__NR_linux_sigpending, "sigpending"},                            //
-    {__NR_linux_sigsuspend, "sigsuspend"},                            //
-    {__NR_linux_sigaltstack, "sigaltstack"},                          //
-    {__NR_linux_mknod, "mknod"},                                      //
-    {__NR_linux_mknodat, "mknodat"},                                  //
-    {__NR_linux_statfs, "statfs"},                                    //
-    {__NR_linux_fstatfs, "fstatfs"},                                  //
-    {__NR_linux_getpriority, "getpriority"},                          //
-    {__NR_linux_setpriority, "setpriority"},                          //
-    {__NR_linux_mlock, "mlock"},                                      //
-    {__NR_linux_munlock, "munlock"},                                  //
-    {__NR_linux_mlockall, "mlockall"},                                //
-    {__NR_linux_munlockall, "munlockall"},                            //
-    {__NR_linux_setrlimit, "setrlimit"},                              //
-    {__NR_linux_chroot, "chroot"},                                    //
-    {__NR_linux_sync, "sync"},                                        //
-    {__NR_linux_acct, "acct"},                                        //
-    {__NR_linux_settimeofday, "settimeofday"},                        //
-    {__NR_linux_mount, "mount"},                                      //
-    {__NR_linux_reboot, "reboot"},                                    //
-    {__NR_linux_quotactl, "quotactl"},                                //
-    {__NR_linux_setfsuid, "setfsuid"},                                //
-    {__NR_linux_setfsgid, "setfsgid"},                                //
-    {__NR_linux_capget, "capget"},                                    //
-    {__NR_linux_capset, "capset"},                                    //
-    {__NR_linux_sigtimedwait, "sigtimedwait"},                        //
-    {__NR_linux_rt_sigqueueinfo, "rt_sigqueueinfo"},                  //
-    {__NR_linux_personality, "personality"},                          //
-    {__NR_linux_ustat, "ustat"},                                      //
-    {__NR_linux_sysfs, "sysfs"},                                      //
-    {__NR_linux_sched_setparam, "sched_setparam"},                    //
-    {__NR_linux_sched_getparam, "sched_getparam"},                    //
-    {__NR_linux_sched_setscheduler, "sched_setscheduler"},            //
-    {__NR_linux_sched_getscheduler, "sched_getscheduler"},            //
-    {__NR_linux_sched_get_priority_max, "sched_get_priority_max"},    //
-    {__NR_linux_sched_get_priority_min, "sched_get_priority_min"},    //
-    {__NR_linux_sched_rr_get_interval, "sched_rr_get_interval"},      //
-    {__NR_linux_vhangup, "vhangup"},                                  //
-    {__NR_linux_modify_ldt, "modify_ldt"},                            //
-    {__NR_linux_pivot_root, "pivot_root"},                            //
-    {__NR_linux__sysctl, "_sysctl"},                                  //
-    {__NR_linux_prctl, "prctl"},                                      //
-    {__NR_linux_arch_prctl, "arch_prctl"},                            //
-    {__NR_linux_adjtimex, "adjtimex"},                                //
-    {__NR_linux_umount2, "umount2"},                                  //
-    {__NR_linux_swapon, "swapon"},                                    //
-    {__NR_linux_swapoff, "swapoff"},                                  //
-    {__NR_linux_sethostname, "sethostname"},                          //
-    {__NR_linux_setdomainname, "setdomainname"},                      //
-    {__NR_linux_iopl, "iopl"},                                        //
-    {__NR_linux_ioperm, "ioperm"},                                    //
-    {__NR_linux_init_module, "init_module"},                          //
-    {__NR_linux_delete_module, "delete_module"},                      //
-    {__NR_linux_gettid, "gettid"},                                    //
-    {__NR_linux_readahead, "readahead"},                              //
-    {__NR_linux_setxattr, "setxattr"},                                //
-    {__NR_linux_fsetxattr, "fsetxattr"},                              //
-    {__NR_linux_getxattr, "getxattr"},                                //
-    {__NR_linux_fgetxattr, "fgetxattr"},                              //
-    {__NR_linux_listxattr, "listxattr"},                              //
-    {__NR_linux_flistxattr, "flistxattr"},                            //
-    {__NR_linux_removexattr, "removexattr"},                          //
-    {__NR_linux_fremovexattr, "fremovexattr"},                        //
-    {__NR_linux_lsetxattr, "lsetxattr"},                              //
-    {__NR_linux_lgetxattr, "lgetxattr"},                              //
-    {__NR_linux_llistxattr, "llistxattr"},                            //
-    {__NR_linux_lremovexattr, "lremovexattr"},                        //
-    {__NR_linux_sched_setaffinity, "sched_setaffinity"},              //
-    {__NR_linux_sched_getaffinity, "sched_getaffinity"},              //
-    {__NR_linux_io_setup, "io_setup"},                                //
-    {__NR_linux_io_destroy, "io_destroy"},                            //
-    {__NR_linux_io_getevents, "io_getevents"},                        //
-    {__NR_linux_io_submit, "io_submit"},                              //
-    {__NR_linux_io_cancel, "io_cancel"},                              //
-    {__NR_linux_lookup_dcookie, "lookup_dcookie"},                    //
-    {__NR_linux_epoll_create, "epoll_create"},                        //
-    {__NR_linux_epoll_wait, "epoll_wait"},                            //
-    {__NR_linux_epoll_ctl, "epoll_ctl"},                              //
-    {__NR_linux_getdents, "getdents"},                                //
-    {__NR_linux_set_tid_address, "set_tid_address"},                  //
-    {__NR_linux_restart_syscall, "restart_syscall"},                  //
-    {__NR_linux_semtimedop, "semtimedop"},                            //
-    {__NR_linux_fadvise, "fadvise"},                                  //
-    {__NR_linux_timer_create, "timer_create"},                        //
-    {__NR_linux_timer_settime, "timer_settime"},                      //
-    {__NR_linux_timer_gettime, "timer_gettime"},                      //
-    {__NR_linux_timer_getoverrun, "timer_getoverrun"},                //
-    {__NR_linux_timer_delete, "timer_delete"},                        //
-    {__NR_linux_clock_settime, "clock_settime"},                      //
-    {__NR_linux_clock_gettime, "clock_gettime"},                      //
-    {__NR_linux_clock_getres, "clock_getres"},                        //
-    {__NR_linux_clock_nanosleep, "clock_nanosleep"},                  //
-    {__NR_linux_tgkill, "tgkill"},                                    //
-    {__NR_linux_mbind, "mbind"},                                      //
-    {__NR_linux_set_mempolicy, "set_mempolicy"},                      //
-    {__NR_linux_get_mempolicy, "get_mempolicy"},                      //
-    {__NR_linux_mq_open, "mq_open"},                                  //
-    {__NR_linux_mq_unlink, "mq_unlink"},                              //
-    {__NR_linux_mq_timedsend, "mq_timedsend"},                        //
-    {__NR_linux_mq_timedreceive, "mq_timedreceive"},                  //
-    {__NR_linux_mq_notify, "mq_notify"},                              //
-    {__NR_linux_mq_getsetattr, "mq_getsetattr"},                      //
-    {__NR_linux_kexec_load, "kexec_load"},                            //
-    {__NR_linux_waitid, "waitid"},                                    //
-    {__NR_linux_add_key, "add_key"},                                  //
-    {__NR_linux_request_key, "request_key"},                          //
-    {__NR_linux_keyctl, "keyctl"},                                    //
-    {__NR_linux_ioprio_set, "ioprio_set"},                            //
-    {__NR_linux_ioprio_get, "ioprio_get"},                            //
-    {__NR_linux_inotify_init, "inotify_init"},                        //
-    {__NR_linux_inotify_add_watch, "inotify_add_watch"},              //
-    {__NR_linux_inotify_rm_watch, "inotify_rm_watch"},                //
-    {__NR_linux_openat, "openat"},                                    //
-    {__NR_linux_mkdirat, "mkdirat"},                                  //
-    {__NR_linux_fchownat, "fchownat"},                                //
-    {__NR_linux_utime, "utime"},                                      //
-    {__NR_linux_utimes, "utimes"},                                    //
-    {__NR_linux_futimesat, "futimesat"},                              //
-    {__NR_linux_fstatat, "fstatat"},                                  //
-    {__NR_linux_unlinkat, "unlinkat"},                                //
-    {__NR_linux_renameat, "renameat"},                                //
-    {__NR_linux_linkat, "linkat"},                                    //
-    {__NR_linux_symlinkat, "symlinkat"},                              //
-    {__NR_linux_readlinkat, "readlinkat"},                            //
-    {__NR_linux_fchmodat, "fchmodat"},                                //
-    {__NR_linux_faccessat, "faccessat"},                              //
-    {__NR_linux_unshare, "unshare"},                                  //
-    {__NR_linux_splice, "splice"},                                    //
-    {__NR_linux_tee, "tee"},                                          //
-    {__NR_linux_sync_file_range, "sync_file_range"},                  //
-    {__NR_linux_vmsplice, "vmsplice"},                                //
-    {__NR_linux_migrate_pages, "migrate_pages"},                      //
-    {__NR_linux_move_pages, "move_pages"},                            //
-    {__NR_linux_preadv, "preadv"},                                    //
-    {__NR_linux_pwritev, "pwritev"},                                  //
-    {__NR_linux_utimensat, "utimensat"},                              //
-    {__NR_linux_fallocate, "fallocate"},                              //
-    {__NR_linux_accept4, "accept4"},                                  //
-    {__NR_linux_dup3, "dup3"},                                        //
-    {__NR_linux_pipe2, "pipe2"},                                      //
-    {__NR_linux_epoll_pwait, "epoll_pwait"},                          //
-    {__NR_linux_epoll_create1, "epoll_create1"},                      //
-    {__NR_linux_perf_event_open, "perf_event_open"},                  //
-    {__NR_linux_inotify_init1, "inotify_init1"},                      //
-    {__NR_linux_rt_tgsigqueueinfo, "rt_tgsigqueueinfo"},              //
-    {__NR_linux_signalfd, "signalfd"},                                //
-    {__NR_linux_signalfd4, "signalfd4"},                              //
-    {__NR_linux_eventfd, "eventfd"},                                  //
-    {__NR_linux_eventfd2, "eventfd2"},                                //
-    {__NR_linux_timerfd_create, "timerfd_create"},                    //
-    {__NR_linux_timerfd_settime, "timerfd_settime"},                  //
-    {__NR_linux_timerfd_gettime, "timerfd_gettime"},                  //
-    {__NR_linux_recvmmsg, "recvmmsg"},                                //
-    {__NR_linux_fanotify_init, "fanotify_init"},                      //
-    {__NR_linux_fanotify_mark, "fanotify_mark"},                      //
-    {__NR_linux_prlimit, "prlimit"},                                  //
-    {__NR_linux_name_to_handle_at, "name_to_handle_at"},              //
-    {__NR_linux_open_by_handle_at, "open_by_handle_at"},              //
-    {__NR_linux_clock_adjtime, "clock_adjtime"},                      //
-    {__NR_linux_syncfs, "syncfs"},                                    //
-    {__NR_linux_sendmmsg, "sendmmsg"},                                //
-    {__NR_linux_setns, "setns"},                                      //
-    {__NR_linux_getcpu, "getcpu"},                                    //
-    {__NR_linux_process_vm_readv, "process_vm_readv"},                //
-    {__NR_linux_process_vm_writev, "process_vm_writev"},              //
-    {__NR_linux_kcmp, "kcmp"},                                        //
-    {__NR_linux_finit_module, "finit_module"},                        //
-    {__NR_linux_sched_setattr, "sched_setattr"},                      //
-    {__NR_linux_sched_getattr, "sched_getattr"},                      //
-    {__NR_linux_renameat2, "renameat2"},                              //
-    {__NR_linux_seccomp, "seccomp"},                                  //
-    {__NR_linux_getrandom, "getrandom"},                              //
-    {__NR_linux_memfd_create, "memfd_create"},                        //
-    {__NR_linux_kexec_file_load, "kexec_file_load"},                  //
-    {__NR_linux_bpf, "bpf"},                                          //
-    {__NR_linux_execveat, "execveat"},                                //
-    {__NR_linux_userfaultfd, "userfaultfd"},                          //
-    {__NR_linux_membarrier, "membarrier"},                            //
-    {__NR_linux_mlock2, "mlock2"},                                    //
-    {__NR_linux_copy_file_range, "copy_file_range"},                  //
-    {__NR_linux_preadv2, "preadv2"},                                  //
-    {__NR_linux_pwritev2, "pwritev2"},                                //
-    {__NR_linux_pkey_mprotect, "pkey_mprotect"},                      //
-    {__NR_linux_pkey_alloc, "pkey_alloc"},                            //
-    {__NR_linux_pkey_free, "pkey_free"},                              //
-    {__NR_linux_statx, "statx"},                                      //
-    {__NR_linux_io_pgetevents, "io_pgetevents"},                      //
-    {__NR_linux_rseq, "rseq"},                                        //
-    {__NR_linux_pidfd_send_signal, "pidfd_send_signal"},              //
-    {__NR_linux_io_uring_setup, "io_uring_setup"},                    //
-    {__NR_linux_io_uring_enter, "io_uring_enter"},                    //
-    {__NR_linux_io_uring_register, "io_uring_register"},              //
-    {__NR_linux_open_tree, "open_tree"},                              //
-    {__NR_linux_move_mount, "move_mount"},                            //
-    {__NR_linux_fsopen, "fsopen"},                                    //
-    {__NR_linux_fsconfig, "fsconfig"},                                //
-    {__NR_linux_fsmount, "fsmount"},                                  //
-    {__NR_linux_fspick, "fspick"},                                    //
-    {__NR_linux_pidfd_open, "pidfd_open"},                            //
-    {__NR_linux_clone3, "clone3"},                                    //
-    {__NR_linux_close_range, "close_range"},                          //
-    {__NR_linux_openat2, "openat2"},                                  //
-    {__NR_linux_pidfd_getfd, "pidfd_getfd"},                          //
-    {__NR_linux_faccessat2, "faccessat2"},                            //
-    {__NR_linux_process_madvise, "process_madvise"},                  //
-    {__NR_linux_epoll_pwait2, "epoll_pwait2"},                        //
-    {__NR_linux_mount_setattr, "mount_setattr"},                      //
-    {__NR_linux_quotactl_fd, "quotactl_fd"},                          //
-    {__NR_linux_landlock_create_ruleset, "landlock_create_ruleset"},  //
-    {__NR_linux_landlock_add_rule, "landlock_add_rule"},              //
-    {__NR_linux_landlock_restrict_self, "landlock_restrict_self"},    //
-    {__NR_linux_memfd_secret, "memfd_secret"},                        //
-    {__NR_linux_process_mrelease, "process_mrelease"},                //
-    {__NR_linux_futex_waitv, "futex_waitv"},                          //
-    {__NR_linux_set_mempolicy_home_node, "set_mempolicy_home_node"},  //
 };
 
 static const uint16_t kPledgeDefault[] = {
@@ -935,16 +584,6 @@ static privileged void KillThisThread(void) {
                : "rcx", "r11", "memory");
 }
 
-static privileged const char *GetSyscallName(uint16_t n) {
-  int i;
-  for (i = 0; i < ARRAYLEN(kSyscallName); ++i) {
-    if (kSyscallName[i].n == n) {
-      return kSyscallName[i].s;
-    }
-  }
-  return "unknown";
-}
-
 static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
   int i;
   for (i = 0; i < p->len; ++i) {
@@ -967,16 +606,23 @@ static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
   FixCpy(ord, si->si_syscall, 12);
   HexCpy(rip, ctx->uc_mcontext.rip);
   for (found = i = 0; i < ARRAYLEN(kPledge); ++i) {
-    if (HasSyscall(kPledge + i, si->si_syscall)) {
-      Log("error: pledge ", kPledge[i].name, " for ",
-          GetSyscallName(si->si_syscall), " (ord=", ord, " rip=", rip, ")\n",
-          0);
-      found = true;
+    switch (HasSyscall(kPledge + i, si->si_syscall)) {
+      case 1:
+        Log("error: should pledge ", kPledge[i].name,  //
+            " (ord=", ord, " rip=", rip, ")\n", 0);
+        found = true;
+        break;
+      case 2:
+        Log("error: maybe pledge ", kPledge[i].name,  //
+            " (ord=", ord, " rip=", rip, ")\n", 0);
+        found = true;
+        break;
+      default:
+        break;
     }
   }
   if (!found) {
-    Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
-        " rip=", rip, ")\n", 0);
+    Log("error: bad syscall (ord=", ord, " rip=", rip, ")\n", 0);
   }
   switch (mode) {
     case kPledgeModeKillProcess:
@@ -1908,8 +1554,8 @@ static privileged void AppendPledge(struct Filter *f,   //
 privileged int sys_pledge_linux(unsigned long ipromises,  //
                                 enum PledgeMode mode,     //
                                 bool want_msyscall) {     //
+  int i, rc = -1;
   struct Filter f;
-  int i, e, rc = -1;
   struct sock_filter sf[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
   CheckLargeStackAllocation(&f, sizeof(f));
   f.n = 0;
@@ -1964,24 +1610,10 @@ privileged int sys_pledge_linux(unsigned long ipromises,  //
     AppendFilter(&f, PLEDGE(sf));
   }
 
-  // drop privileges
-  //
-  // PR_SET_SECCOMP (Linux 2.6.23+) will refuse to work if
-  // PR_SET_NO_NEW_PRIVS (Linux 3.5+) wasn't called so we punt the error
-  // detection to the seccomp system call below.
-  Prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
-
   // register our seccomp filter with the kernel
-  struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
-  rc = Prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox, 0, 0);
-
-  // the EINVAL error could mean a lot of things. it could mean the bpf
-  // code is broken. it could also mean we're running on RHEL5 which
-  // doesn't have SECCOMP support. since we don't consider lack of
-  // system support for security to be an error, we distinguish these
-  // two cases by running a simpler SECCOMP operation.
-  if (rc == -Einval && Prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == -Einval) {
-    rc = 0;  // -Enosys
+  if ((rc = Prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1) {
+    struct sock_fprog sandbox = {.len = f.n, .filter = f.p};
+    rc = Prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox, 0, 0);
   }
 
   return rc;

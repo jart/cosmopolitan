@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_chflagsat,0xfff,0xfff,0x021c,0x006b,0xfff,0xfff

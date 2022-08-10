@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_rtprio_thread,0xfff,0xfff,0x01d2,0xfff,0xfff,0xfff

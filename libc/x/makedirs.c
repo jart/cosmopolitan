@@ -21,6 +21,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
@@ -28,7 +29,7 @@
 static int MakeDirs(const char *path, unsigned mode, int e) {
   int rc;
   char *dir;
-  if (!mkdir(path, mode) || errno == EEXIST) {
+  if (mkdir(path, mode) != -1 || errno == EEXIST) {
     errno = e;
     return 0;
   }

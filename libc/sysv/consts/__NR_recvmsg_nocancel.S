@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_recvmsg_nocancel,0xfff,0x2000191,0xfff,0xfff,0xfff,0xfff

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_getaudit,0xfff,0xfff,0x01c1,0xfff,0xfff,0xfff

@@ -1,0 +1,2 @@
+#include "libc/sysv/consts/syscon.internal.h"
+.syscon nr,__NR_thrkill,0xfff,0xfff,0xfff,0x0077,0xfff,0xfff
