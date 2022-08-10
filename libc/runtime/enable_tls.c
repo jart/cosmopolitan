@@ -27,6 +27,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
@@ -158,11 +159,17 @@ privileged void __enable_tls(void) {
                  : "=a"(ax)
                  : "0"(__NR___set_tcb), "D"(tib)
                  : "rcx", "r11", "memory", "cc");
-  } else {
+  } else if (IsLinux()) {
     asm volatile("syscall"
                  : "=a"(ax)
                  : "0"(__NR_linux_arch_prctl), "D"(ARCH_SET_FS), "S"(tib)
                  : "rcx", "r11", "memory");
+  } else {
+    uint64_t val = (uint64_t)tib;
+    asm volatile("wrmsr"
+                 : /* no outputs */
+                 : "c"(MSR_IA32_FS_BASE), "a"((uint32_t)val),
+                   "d"((uint32_t)(val >> 32)));
   }
 
   // We need to rewrite SysV _Thread_local code. You MUST use the
