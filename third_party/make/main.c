@@ -783,7 +783,7 @@ handle_runtime_exceptions (struct _EXCEPTION_POINTERS *exinfo)
 
   /* turn this on if we want to put stuff in the event log too */
 #ifdef USE_EVENT_LOG
-  hEventSource = RegisterEventSource (NULL, u"GNU Make");
+  hEventSource = RegisterEventSource (NULL, u"Landlock Make");
   lpszStrings[0] = errmsg;
 
   if (hEventSource != NULL)
@@ -1051,7 +1051,7 @@ main (int argc, char **argv, char **envp)
   if (argv[0] == 0)
     argv[0] = (char *)"";
   if (argv[0][0] == '\0')
-    program = "make";
+    program = "landlockmake";
   else
     {
 #if defined(HAVE_DOS_PATHS)
@@ -1062,7 +1062,7 @@ main (int argc, char **argv, char **envp)
         start += 2;
 
       if (start[0] == '\0')
-        program = "make";
+        program = "landlockmake";
       else
         {
           program = start + strlen (start);
@@ -2971,7 +2971,7 @@ print_version (void)
     /* Do it only once.  */
     return;
 
-  printf ("%sGNU Make %s\n", precede, version_string);
+  printf ("%sLandlock Make 1.0 (GNU Make %s)\n", precede, version_string);
 
   if (!remote_description || *remote_description == '\0')
     printf (_("%sBuilt for %s\n"), precede, make_host);
