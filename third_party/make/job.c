@@ -1807,7 +1807,8 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
          * creation so that it can't be deleted by the command which
          * must truncate when writing its output.
          */
-        if (strlen(c->file->name) < PATH_MAX)
+        if (!c->file->phony &&
+            strlen(c->file->name) < PATH_MAX)
           {
             int fd, rc, err = errno;
             strcpy (outpathbuf, c->file->name);
