@@ -1680,6 +1680,11 @@ pid_t
 child_execute_job (struct childbase *child, int good_stdin, char **argv)
 {
   const int fdin = good_stdin ? FD_STDIN : get_bad_stdin ();
+  struct dep *d;
+  struct child *c;
+  char pathbuf[PATH_MAX];
+  char outpathbuf[PATH_MAX];
+  const struct variable *var;
   int fdout = FD_STDOUT;
   int fderr = FD_STDERR;
   pid_t pid;
@@ -1714,22 +1719,17 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (fderr != FD_STDERR)
     EINTRLOOP (r, dup2 (fderr, FD_STDERR));
 
+  /* resolve command into executable path */
+  argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
+
   /* [jart] sandbox command based on prerequisites */
   intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
   if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
-    struct dep *d;
-    struct child *c;
-    char pathbuf[PATH_MAX];
-    char outpathbuf[PATH_MAX];
-    const struct variable *var;
     c = (struct child *)child;
     errno = 0;
     if (!lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
                                  c->file->variables->set))
       {
-        /* resolve command into executable path */
-        argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
-
         if (argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
           {
             /*
