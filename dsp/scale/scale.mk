@@ -51,7 +51,7 @@ $(DSP_SCALE_A).pkg:				\
 o/$(MODE)/dsp/scale/cdecimate2xuint8x8.o	\
 o/$(MODE)/dsp/scale/gyarados.o			\
 o/$(MODE)/dsp/scale/magikarp.o			\
-o/$(MODE)/dsp/scale/scale.o:			\
+o/$(MODE)/dsp/scale/scale.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 

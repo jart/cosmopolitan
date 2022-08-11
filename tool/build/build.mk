@@ -7,7 +7,19 @@ TOOL_BUILD_FILES := $(wildcard tool/build/*)
 TOOL_BUILD_SRCS = $(filter %.c,$(TOOL_BUILD_FILES))
 TOOL_BUILD_HDRS = $(filter %.h,$(TOOL_BUILD_FILES))
 TOOL_BUILD_CTESTS = $(filter %.ctest,$(TOOL_BUILD_FILES))
-TOOL_BUILD_BINS = $(TOOL_BUILD_COMS) $(TOOL_BUILD_COMS:%=%.dbg)
+
+TOOL_BUILD_BINS =					\
+	$(TOOL_BUILD_COMS)				\
+	$(TOOL_BUILD_COMS:%=%.dbg)			\
+	o/$(MODE)/tool/build/mkdir			\
+	o/$(MODE)/tool/build/chmod			\
+	o/$(MODE)/tool/build/cp				\
+	o/$(MODE)/tool/build/mv				\
+	o/$(MODE)/tool/build/echo			\
+	o/$(MODE)/tool/build/gzip			\
+	o/$(MODE)/tool/build/printf			\
+	o/$(MODE)/tool/build/dd
+
 TOOL_BUILD_CALCULATOR = o/$(MODE)/tool/build/calculator.com
 
 TOOL_BUILD_OBJS =					\
@@ -85,30 +97,25 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/build/emulator.o:			\
+o/$(MODE)/tool/build/emulator.o: private		\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow
 
-o/$(MODE)/tool/build/mkdir.zip.o: o/$(MODE)/tool/build/mkdir
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/chmod.zip.o: o/$(MODE)/tool/build/chmod
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/cp.zip.o: o/$(MODE)/tool/build/cp
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/mv.zip.o: o/$(MODE)/tool/build/mv
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/echo.zip.o: o/$(MODE)/tool/build/echo
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/gzip.zip.o: o/$(MODE)/tool/build/gzip
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/printf.zip.o: o/$(MODE)/tool/build/printf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
-o/$(MODE)/tool/build/dd.zip.o: o/$(MODE)/tool/build/dd
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -0 -B -Pbin $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/dso/sandbox.so.zip.o		\
+o/$(MODE)/tool/build/mkdir.zip.o			\
+o/$(MODE)/tool/build/chmod.zip.o			\
+o/$(MODE)/tool/build/cp.zip.o				\
+o/$(MODE)/tool/build/mv.zip.o				\
+o/$(MODE)/tool/build/echo.zip.o				\
+o/$(MODE)/tool/build/gzip.zip.o				\
+o/$(MODE)/tool/build/printf.zip.o			\
+o/$(MODE)/tool/build/dd.zip.o: private			\
+		ZIPOBJ_FLAGS +=				\
+			-B
 
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
-o/$(MODE)/tool/build/dso/sandbox.o:			\
+o/$(MODE)/tool/build/dso/sandbox.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fPIC
 
@@ -125,7 +132,9 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 		o/$(MODE)/tool/build/dso/sandbox.o	\
 		o/$(MODE)/libc/calls/pledge-linux.o	\
 		o/$(MODE)/libc/sysv/restorert.o
-	@$(CC)	-s					\
+	@$(COMPILE) -ALINK.so				\
+		$(CC)					\
+		-s					\
 		-shared					\
 		-nostdlib				\
 		-Wl,--gc-sections			\
@@ -133,10 +142,6 @@ o/$(MODE)/tool/build/dso/sandbox.so:			\
 		o/$(MODE)/libc/calls/pledge-linux.o	\
 		o/$(MODE)/libc/sysv/restorert.o		\
 		$(OUTPUT_OPTION)
-
-o/$(MODE)/tool/build/dso/sandbox.so.zip.o:		\
-		o/$(MODE)/tool/build/dso/sandbox.so
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
 
 o/$(MODE)/tool/build/pledge.com.dbg:			\
 		$(TOOL_BUILD_DEPS)			\

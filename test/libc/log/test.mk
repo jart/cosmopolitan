@@ -76,13 +76,10 @@ o/$(MODE)/test/libc/log/backtrace.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/log/backtrace.com.zip.o:			\
-		o/$(MODE)/test/libc/log/backtrace.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/test/libc/log/backtrace.com.dbg.zip.o:			\
-		o/$(MODE)/test/libc/log/backtrace.com.dbg
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+o/$(MODE)/test/libc/log/backtrace.com.zip.o			\
+o/$(MODE)/test/libc/log/backtrace.com.dbg.zip.o: private	\
+		ZIPOBJ_FLAGS +=					\
+			-B
 
 .PHONY: o/$(MODE)/test/libc/log
 o/$(MODE)/test/libc/log:					\

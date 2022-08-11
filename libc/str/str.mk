@@ -45,11 +45,11 @@ $(LIBC_STR_A).pkg:						\
 		$(LIBC_STR_A_OBJS)				\
 		$(foreach x,$(LIBC_STR_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/str/memmem.o:					\
+o/$(MODE)/libc/str/memmem.o: private				\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/libc/str/dosdatetimetounix.o:				\
+o/$(MODE)/libc/str/dosdatetimetounix.o: private			\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
@@ -64,14 +64,14 @@ o/$(MODE)/libc/str/getzipcfileoffset.o				\
 o/$(MODE)/libc/str/getzipcfileuncompressedsize.o		\
 o/$(MODE)/libc/str/getziplfilecompressedsize.o			\
 o/$(MODE)/libc/str/getziplfileuncompressedsize.o		\
-o/$(MODE)/libc/str/getzipcfiletimestamps.o:			\
+o/$(MODE)/libc/str/getzipcfiletimestamps.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-Os
 
 o/$(MODE)/libc/str/iswpunct.o					\
 o/$(MODE)/libc/str/iswupper.o					\
 o/$(MODE)/libc/str/iswlower.o					\
-o/$(MODE)/libc/str/iswseparator.o:				\
+o/$(MODE)/libc/str/iswseparator.o: private			\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables
 
@@ -82,16 +82,16 @@ o/$(MODE)/libc/str/windowsdurationtotimespec.o			\
 o/$(MODE)/libc/str/timevaltowindowstime.o			\
 o/$(MODE)/libc/str/timespectowindowstime.o			\
 o/$(MODE)/libc/str/windowstimetotimeval.o			\
-o/$(MODE)/libc/str/windowstimetotimespec.o:			\
+o/$(MODE)/libc/str/windowstimetotimespec.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-O2
 
 # we can't use compiler magic because:
 #   kprintf() depends on these functions
-o/$(MODE)/libc/fmt/strsignal.greg.o:		\
-		OVERRIDE_CFLAGS +=		\
-			-fpie			\
-			-ffreestanding		\
+o/$(MODE)/libc/fmt/strsignal.greg.o: private			\
+		OVERRIDE_CFLAGS +=				\
+			-fpie					\
+			-ffreestanding				\
 			$(NO_MAGIC)
 
 LIBC_STR_LIBS = $(foreach x,$(LIBC_STR_ARTIFACTS),$($(x)))

@@ -51,11 +51,11 @@ $(LIBC_STDIO_A).pkg:					\
 		$(LIBC_STDIO_A_OBJS)			\
 		$(foreach x,$(LIBC_STDIO_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/stdio/fputc.o:				\
+o/$(MODE)/libc/stdio/fputc.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-O3
 
-o//libc/stdio/appendw.o:				\
+o//libc/stdio/appendw.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 

@@ -154,15 +154,15 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 
 o/$(MODE)/third_party/make/strcache.o			\
 o/$(MODE)/third_party/make/expand.o			\
-o/$(MODE)/third_party/make/read.o:			\
+o/$(MODE)/third_party/make/read.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-O2
 
-o/$(MODE)/third_party/make/hash.o:			\
+o/$(MODE)/third_party/make/hash.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-O3
 
-$(THIRD_PARTY_MAKE_OBJS):				\
+$(THIRD_PARTY_MAKE_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED		\
 			-DHAVE_CONFIG_H			\

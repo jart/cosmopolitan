@@ -176,27 +176,27 @@ o/$(MODE)/third_party/quickjs/unicode_gen.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_QUICKJS_OBJS):							\
+$(THIRD_PARTY_QUICKJS_OBJS): private						\
 		OVERRIDE_CPPFLAGS +=						\
 			-DCONFIG_BIGNUM						\
 			-DCONFIG_VERSION=\"2021-03-27\"
 
-o/tiny/third_party/quickjs/call.o:						\
+o/tiny/third_party/quickjs/call.o: private					\
 		OVERRIDE_CFLAGS +=						\
 			-O2
 
-o/$(MODE)/third_party/quickjs/unicode_gen.o:					\
+o/$(MODE)/third_party/quickjs/unicode_gen.o: private				\
 		OVERRIDE_CPPFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
 # TODO(jart): Replace alloca() calls with malloc().
 o/$(MODE)/third_party/quickjs/libregexp.o					\
-o/$(MODE)/third_party/quickjs/quickjs.o:					\
+o/$(MODE)/third_party/quickjs/quickjs.o: private				\
 		OVERRIDE_CPPFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/quickjs/call.o: QUOTA = -M1024m -C32 -L180
-o/$(MODE)/third_party/quickjs/quickjs.o: QUOTA = -M512m -C32 -L180
+o/$(MODE)/third_party/quickjs/call.o: private QUOTA = -M1024m -C32 -L180
+o/$(MODE)/third_party/quickjs/quickjs.o: private QUOTA = -M512m -C32 -L180
 
 .PHONY: o/$(MODE)/third_party/quickjs
 o/$(MODE)/third_party/quickjs:							\

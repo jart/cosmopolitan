@@ -67,7 +67,7 @@ o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com.ok:		\
 		o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com
 	@$(COMPILE) -ATEST -tT$@ $^ $(filter-out openbsd,$(HOSTS))
 
-$(TEST_LIBC_NEXGEN32E_OBJS):					\
+$(TEST_LIBC_NEXGEN32E_OBJS): private				\
 	DEFAULT_CCFLAGS +=					\
 		-fno-builtin
 

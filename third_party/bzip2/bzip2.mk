@@ -63,7 +63,7 @@ o/$(MODE)/third_party/bzip2/bzip2recover.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_BZIP2_A_OBJS):					\
+$(THIRD_PARTY_BZIP2_A_OBJS): private				\
 		OVERRIDE_CFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections

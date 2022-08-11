@@ -97,7 +97,7 @@ o/$(MODE)/examples/examples.pkg:						\
 		$(EXAMPLES_OBJS)						\
 		$(foreach x,$(EXAMPLES_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/examples/unbourne.o:							\
+o/$(MODE)/examples/unbourne.o: private						\
 		OVERRIDE_CPPFLAGS +=						\
 			-DSTACK_FRAME_UNLIMITED					\
 			-fpie
@@ -143,7 +143,7 @@ o/$(MODE)/examples/nesemu1.com.dbg:						\
 		$(EXAMPLES_BOOTLOADER)
 	@$(APELINK)
 
-o/$(MODE)/examples/picol.o:					\
+o/$(MODE)/examples/picol.o: private				\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
@@ -155,8 +155,8 @@ o/$(MODE)/examples/picol.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/examples/nesemu1.o: QUOTA += -M512m
-o/$(MODE)/usr/share/dict/words.zip.o: ZIPOBJ_FLAGS += -C2
+o/$(MODE)/examples/nesemu1.o: private QUOTA += -M512m
+o/$(MODE)/usr/share/dict/words.zip.o: private ZIPOBJ_FLAGS += -C2
 
 $(EXAMPLES_OBJS): examples/examples.mk
 

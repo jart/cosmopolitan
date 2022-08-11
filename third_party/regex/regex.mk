@@ -51,7 +51,7 @@ $(THIRD_PARTY_REGEX_OBJS): third_party/regex/regex.mk
 
 o/$(MODE)/third_party/regex/regcomp.o			\
 o/$(MODE)/third_party/regex/regexec.o			\
-o/$(MODE)/third_party/regex/tre-mem.o:			\
+o/$(MODE)/third_party/regex/tre-mem.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			$(OLD_CODE)
 

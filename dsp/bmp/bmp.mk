@@ -40,11 +40,11 @@ $(DSP_BMP_A).pkg:				\
 		$(foreach x,$(DSP_BMP_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/dsp/bmp/float2short.o			\
-o/$(MODE)/dsp/bmp/scalevolume.o:		\
+o/$(MODE)/dsp/bmp/scalevolume.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 
-o/tiny/dsp/bmp/scalevolume.o:			\
+o/tiny/dsp/bmp/scalevolume.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-Os
 

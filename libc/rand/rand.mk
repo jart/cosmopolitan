@@ -45,7 +45,7 @@ $(LIBC_RAND_A).pkg:				\
 		$(LIBC_RAND_A_OBJS)		\
 		$(foreach x,$(LIBC_RAND_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/rand/mt19937-64.o:		\
+o/$(MODE)/libc/rand/mt19937-64.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-ffunction-sections
 

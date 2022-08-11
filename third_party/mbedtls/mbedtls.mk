@@ -49,29 +49,29 @@ $(THIRD_PARTY_MBEDTLS_A).pkg:						\
 		$(THIRD_PARTY_MBEDTLS_A_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_MBEDTLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_MBEDTLS_A_OBJS):						\
+$(THIRD_PARTY_MBEDTLS_A_OBJS): private					\
 			OVERRIDE_CFLAGS +=				\
 				-fdata-sections				\
 				-ffunction-sections
 
-o/$(MODE)/third_party/mbedtls/everest.o:				\
+o/$(MODE)/third_party/mbedtls/everest.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O3
 
 o/$(MODE)/third_party/mbedtls/bigmul4.o					\
-o/$(MODE)/third_party/mbedtls/bigmul6.o:				\
+o/$(MODE)/third_party/mbedtls/bigmul6.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O2
 
-o/$(MODE)/third_party/mbedtls/shiftright-avx.o:				\
+o/$(MODE)/third_party/mbedtls/shiftright-avx.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O3 -mavx
 
-o/$(MODE)/third_party/mbedtls/shiftright2-avx.o:			\
+o/$(MODE)/third_party/mbedtls/shiftright2-avx.o: private		\
 			OVERRIDE_CFLAGS +=				\
 				-O3 -mavx
 
-o/$(MODE)/third_party/mbedtls/zeroize.o:				\
+o/$(MODE)/third_party/mbedtls/zeroize.o: private			\
 			OVERRIDE_CFLAGS +=				\
 				-O3					\
 				-x-no-pg				\

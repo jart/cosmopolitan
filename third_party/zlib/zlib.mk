@@ -41,18 +41,18 @@ $(THIRD_PARTY_ZLIB_A).pkg:				\
 		$(THIRD_PARTY_ZLIB_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_ZLIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/zlib/adler32simd.o:		\
+o/$(MODE)/third_party/zlib/adler32simd.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-mssse3
 
-o/$(MODE)/third_party/zlib/crcfold.o:			\
+o/$(MODE)/third_party/zlib/crcfold.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-mpclmul			\
 			-mssse3
 
 o/$(MODE)/third_party/zlib/deflate.o			\
 o/$(MODE)/third_party/zlib/inflate.o			\
-o/$(MODE)/third_party/zlib/adler32.o:			\
+o/$(MODE)/third_party/zlib/adler32.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections		\
 			-fdata-sections

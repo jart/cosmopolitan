@@ -82,12 +82,12 @@ o/$(MODE)/tool/viz/printimage.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/viz/derasterize.o:		\
+o/$(MODE)/tool/viz/derasterize.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-DSTACK_FRAME_UNLIMITED	\
 			$(MATHEMATICAL)
 
-o/$(MODE)/tool/viz/magikarp.o:			\
+o/$(MODE)/tool/viz/magikarp.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 

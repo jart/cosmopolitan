@@ -97,9 +97,9 @@ o/$(MODE)/test/libc/mem/prog/life.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/life.elf
 
-o/$(MODE)/test/libc/mem/prog/life.elf.zip.o:			\
-		o/$(MODE)/test/libc/mem/prog/life.elf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+o/$(MODE)/test/libc/mem/prog/life.elf.zip.o: private		\
+		ZIPOBJ_FLAGS +=					\
+			-B
 
 ################################################################################
 
@@ -122,13 +122,13 @@ o/$(MODE)/test/libc/mem/prog/sock.elf:				\
 		o/$(MODE)/tool/build/assimilate.com		\
 		o/$(MODE)/test/libc/mem/prog/sock.elf
 
-o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o:			\
-		o/$(MODE)/test/libc/mem/prog/sock.elf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+o/$(MODE)/test/libc/mem/prog/sock.elf.zip.o: private		\
+		ZIPOBJ_FLAGS +=					\
+			-B
 
 ################################################################################
 
-$(TEST_LIBC_MEM_OBJS):						\
+$(TEST_LIBC_MEM_OBJS): private					\
 		DEFAULT_CCFLAGS +=				\
 			-fno-builtin
 

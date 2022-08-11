@@ -54,7 +54,7 @@ o/$(MODE)/test/libc/fmt/%.com.dbg:			\
 
 $(TEST_LIBC_FMT_OBJS): test/libc/fmt/test.mk
 
-$(TEST_LIBC_FMT_OBJS):					\
+$(TEST_LIBC_FMT_OBJS): private				\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 

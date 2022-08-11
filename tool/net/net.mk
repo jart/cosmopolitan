@@ -153,21 +153,21 @@ o/$(MODE)/tool/net/demo/redbean-xhr.lua.zip.o					\
 o/$(MODE)/tool/net/redbean.png.zip.o						\
 o/$(MODE)/tool/net/favicon.ico.zip.o						\
 o/$(MODE)/tool/net/help.txt.zip.o						\
-o/$(MODE)/tool/net/demo/404.html.zip.o:						\
+o/$(MODE)/tool/net/demo/404.html.zip.o: private					\
 		ZIPOBJ_FLAGS +=							\
 			-B
 
 o/$(MODE)/tool/net/demo/.lua/.zip.o						\
-o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o:				\
+o/$(MODE)/tool/net/demo/.lua/mymodule.lua.zip.o: private			\
 		ZIPOBJ_FLAGS +=							\
 			-C3
 
-o/$(MODE)/tool/net/demo/seekable.txt.zip.o:					\
+o/$(MODE)/tool/net/demo/seekable.txt.zip.o: private				\
 		ZIPOBJ_FLAGS +=							\
 			-B							\
 			-0
 
-o/$(MODE)/tool/net/demo/virtualbean.html.zip.o:					\
+o/$(MODE)/tool/net/demo/virtualbean.html.zip.o: private				\
 		ZIPOBJ_FLAGS +=							\
 			-Predbean.justine.lol					\
 			-B

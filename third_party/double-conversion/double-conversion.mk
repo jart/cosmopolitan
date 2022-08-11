@@ -91,7 +91,7 @@ $(THIRD_PARTY_DOUBLECONVERSION_A).pkg:						\
 		$(THIRD_PARTY_DOUBLECONVERSION_A_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_DOUBLECONVERSION_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_DOUBLECONVERSION_A_OBJS):						\
+$(THIRD_PARTY_DOUBLECONVERSION_A_OBJS): private					\
 		OVERRIDE_CXXFLAGS +=						\
 			-ffunction-sections					\
 			-fdata-sections

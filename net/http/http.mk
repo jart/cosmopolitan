@@ -53,11 +53,11 @@ o/$(MODE)/net/http/islacnicip.o			\
 o/$(MODE)/net/http/isloopbackip.o		\
 o/$(MODE)/net/http/ismulticastip.o		\
 o/$(MODE)/net/http/isripeip.o			\
-o/$(MODE)/net/http/istestnetip.o:		\
+o/$(MODE)/net/http/istestnetip.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-Os
 
-o/$(MODE)/net/http/formathttpdatetime.o:	\
+o/$(MODE)/net/http/formathttpdatetime.o: private\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 

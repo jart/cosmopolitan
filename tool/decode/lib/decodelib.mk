@@ -54,7 +54,7 @@ TOOL_DECODE_LIB_TESTS = $(foreach x,$(TOOL_DECODE_LIB_ARTIFACTS),$($(x)_TESTS))
 
 o/$(MODE)/tool/decode/lib/elfidnames.o			\
 o/$(MODE)/tool/decode/lib/machoidnames.o		\
-o/$(MODE)/tool/decode/lib/peidnames.o:			\
+o/$(MODE)/tool/decode/lib/peidnames.o: private		\
 	DEFAULT_CFLAGS +=				\
 		-fdata-sections
 

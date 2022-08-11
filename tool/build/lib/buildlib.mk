@@ -71,7 +71,7 @@ $(TOOL_BUILD_LIB_A).pkg:				\
 		$(TOOL_BUILD_LIB_A_OBJS)		\
 		$(foreach x,$(TOOL_BUILD_LIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/tool/build/lib/ssefloat.o:			\
+o/$(MODE)/tool/build/lib/ssefloat.o: private		\
 		TARGET_ARCH +=				\
 			-msse3
 
@@ -89,13 +89,10 @@ o/$(MODE)/tool/build/lib/apetest2.com.dbg:		\
 		$(APE_COPY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/build/lib/apetest.com.zip.o:		\
-		o/$(MODE)/tool/build/lib/apetest.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/tool/build/lib/apetest2.com.zip.o:		\
-		o/$(MODE)/tool/build/lib/apetest2.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+o/$(MODE)/tool/build/lib/apetest.com.zip.o		\
+o/$(MODE)/tool/build/lib/apetest2.com.zip.o: private	\
+		ZIPOBJ_FLAGS +=				\
+			-B
 
 o/$(MODE)/tool/build/lib/apetest.o:			\
 		tool/build/lib/apetest.c		\

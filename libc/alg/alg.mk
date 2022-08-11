@@ -44,7 +44,7 @@ $(LIBC_ALG_A).pkg:				\
 		$(LIBC_ALG_A_OBJS)		\
 		$(foreach x,$(LIBC_ALG_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/alg/critbit0.o:			\
+o/$(MODE)/libc/alg/critbit0.o: private		\
 	DEFAULT_CFLAGS +=			\
 		-ffunction-sections		\
 		-fdata-sections

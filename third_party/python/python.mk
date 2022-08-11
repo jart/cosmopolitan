@@ -3668,7 +3668,7 @@ o/$(MODE)/third_party/python/Modules/posixmodule.o:			\
 		third_party/python/Modules/clinic/posixmodule.inc
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
-$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
 		OVERRIDE_CFLAGS +=					\
 			-fwrapv						\
 			-ffunction-sections				\
@@ -3677,7 +3677,7 @@ $(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
 o/$(MODE)/third_party/python/Python/ceval.o				\
 o/$(MODE)/third_party/python/Objects/object.o				\
 o/$(MODE)/third_party/python/Python/graminit.o				\
-o/$(MODE)/third_party/python/Objects/abstract.o:			\
+o/$(MODE)/third_party/python/Objects/abstract.o: private		\
 		OVERRIDE_CFLAGS +=					\
 			-fno-function-sections				\
 			-fno-data-sections
@@ -3695,7 +3695,7 @@ o/$(MODE)/third_party/python/Modules/expat/xmltok.o			\
 o/$(MODE)/third_party/python/Objects/memoryobject.o			\
 o/$(MODE)/third_party/python/Objects/unicodeobject.o			\
 o/$(MODE)/third_party/python/Python/ast.o				\
-o/$(MODE)/third_party/python/Python/compile.o:				\
+o/$(MODE)/third_party/python/Python/compile.o: private			\
 		OVERRIDE_CFLAGS +=					\
 			-fpie
 
@@ -3724,61 +3724,61 @@ o//third_party/python/Objects/dictobject.o				\
 o//third_party/python/Objects/obmalloc.o				\
 o//third_party/python/Objects/funcobject.o				\
 o//third_party/python/Objects/pyhash.o					\
-o//third_party/python/Python/ceval.o:					\
+o//third_party/python/Python/ceval.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-O2
 
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
-$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
 		OVERRIDE_CPPFLAGS +=					\
 			-DPy_BUILD_CORE					\
 			-DMULTIARCH='"x86_64-cosmo"'
 
 ifneq ($(MODE),dbg)
 $(THIRD_PARTY_PYTHON_STAGE1_A_OBJS)					\
-$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS):					\
+$(THIRD_PARTY_PYTHON_STAGE2_A_OBJS): private				\
 		OVERRIDE_CPPFLAGS +=					\
 			-DNDEBUG
 endif
 
-o/$(MODE)/third_party/python/Python/sysmodule.o:			\
+o/$(MODE)/third_party/python/Python/sysmodule.o: private		\
 		OVERRIDE_CFLAGS +=					\
 			-DABIFLAGS='"m"'
 
 # NOTE: Care must be taken that the compiler doesn't try to "optimize"
 #       the indirect jumps by sharing them between all opcodes. Such
 #       optimizations can be disabled on gcc by using -fno-gcse.
-o/$(MODE)/third_party/python/Python/ceval.o:				\
+o/$(MODE)/third_party/python/Python/ceval.o: private			\
 		OVERRIDE_CFLAGS +=					\
 			-fno-gcse
 
 # Issue #23654: Turn off ICC's tail call optimization for the
 #               stack_overflow generator. ICC turns the recursive tail
 #               call into a loop. [Let's do GCC too, just to be safe.]
-o/$(MODE)/third_party/python/Modules/faulthandler.o:			\
+o/$(MODE)/third_party/python/Modules/faulthandler.o: private		\
 		OVERRIDE_CFLAGS +=					\
 			-fno-optimize-sibling-calls
 
-o/$(MODE)/third_party/python/Lib/mimetypes.o: PYFLAGS += -Y.python/mime.types
-o/$(MODE)/third_party/python/Lib/test/test_baseexception.o: PYFLAGS += -Y.python/test/exception_hierarchy.txt
-o/$(MODE)/third_party/python/Lib/test/test_cmath.o: PYFLAGS += -Y.python/test/ieee754.txt
-o/$(MODE)/third_party/python/Lib/test/test_difflib.o: PYFLAGS += -Y.python/test/test_difflib_expect.html
+o/$(MODE)/third_party/python/Lib/mimetypes.o: private PYFLAGS += -Y.python/mime.types
+o/$(MODE)/third_party/python/Lib/test/test_baseexception.o: private PYFLAGS += -Y.python/test/exception_hierarchy.txt
+o/$(MODE)/third_party/python/Lib/test/test_cmath.o: private PYFLAGS += -Y.python/test/ieee754.txt
+o/$(MODE)/third_party/python/Lib/test/test_difflib.o: private PYFLAGS += -Y.python/test/test_difflib_expect.html
 
-o/$(MODE)/third_party/python/Lib/test/test_cosmo.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_cosmo.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/hello.com
 
-o/$(MODE)/third_party/python/Lib/test/test_asdl_parser.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_asdl_parser.o: private	\
 		PYFLAGS +=						\
 			-Y.python/test/Python.asdl
 
-o/$(MODE)/third_party/python/Lib/test/test_math.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_math.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/ieee754.txt			\
 			-Y.python/test/math_testcases.txt		\
 			-Y.python/test/cmath_testcases.txt
 
-o/$(MODE)/third_party/python/Lib/test/audiotests.o:			\
+o/$(MODE)/third_party/python/Lib/test/audiotests.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/audiodata/pluck-alaw.aifc	\
 			-Y.python/test/audiodata/pluck-alaw.aifc	\
@@ -3790,25 +3790,25 @@ o/$(MODE)/third_party/python/Lib/test/audiotests.o:			\
 			-Y.python/test/audiodata/pluck-ulaw.aifc	\
 			-Y.python/test/Sine-1000Hz-300ms.aif
 
-o/$(MODE)/third_party/python/Lib/test/test_wave.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_wave.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/audiodata/pluck-pcm16.wav	\
 			-Y.python/test/audiodata/pluck-pcm24.wav	\
 			-Y.python/test/audiodata/pluck-pcm32.wav
 
-o/$(MODE)/third_party/python/Lib/test/test_sax.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_sax.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/xmltestdata/test.xml		\
 			-Y.python/test/xmltestdata/test.xml.out		\
 			-Y.python/test/xmltestdata/simple.xml		\
 			-Y.python/test/xmltestdata/simple-ns.xml
 
-o/$(MODE)/third_party/python/Lib/test/test_float.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_float.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/floating_points.txt		\
 			-Y.python/test/formatfloat_testcases.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_tarfile.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_tarfile.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/zipdir.zip			\
 			-Y.python/test/testtar.tar			\
@@ -3819,17 +3819,17 @@ o/$(MODE)/third_party/python/Lib/test/test_tarfile.o:			\
 			-Y.python/test/tokenize_tests-utf8-coding-cookie-and-no-utf8-bom-sig.txt \
 			-Y.python/test/tokenize_tests-utf8-coding-cookie-and-utf8-bom-sig.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_random.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_random.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/randv2_32.pck			\
 			-Y.python/test/randv2_64.pck			\
 			-Y.python/test/randv3.pck
 
-o/$(MODE)/third_party/python/Lib/test/test_pstats.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_pstats.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/pstats.pck
 
-o/$(MODE)/third_party/python/Lib/test/test_sunau.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_sunau.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/audiodata/pluck-alaw.aifc	\
 			-Y.python/test/audiodata/pluck-pcm16.aiff	\
@@ -3847,23 +3847,23 @@ o/$(MODE)/third_party/python/Lib/test/test_sunau.o:			\
 			-Y.python/test/audiodata/pluck-ulaw.aifc	\
 			-Y.python/test/audiodata/pluck-ulaw.au
 
-o/$(MODE)/third_party/python/Lib/test/test_py_compile.o:		\
+o/$(MODE)/third_party/python/Lib/test/test_py_compile.o: private	\
 		PYFLAGS +=						\
 			-Y.python/test/bad_coding2.py
 
-o/$(MODE)/third_party/python/Lib/test/test_tokenize.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_tokenize.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/bad_coding.py			\
 			-Y.python/test/bad_coding2.py
 
-o/$(MODE)/third_party/python/Lib/test/test_doctest.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_doctest.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/test_doctest.txt			\
 			-Y.python/test/test_doctest2.txt		\
 			-Y.python/test/test_doctest3.txt		\
 			-Y.python/test/test_doctest4.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_imghdr.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_imghdr.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/imghdrdata/			\
 			-Y.python/test/imghdrdata/python.bmp		\
@@ -3880,7 +3880,7 @@ o/$(MODE)/third_party/python/Lib/test/test_imghdr.o:			\
 			-Y.python/test/imghdrdata/python.webp		\
 			-Y.python/test/imghdrdata/python.xbm	
 
-o/$(MODE)/third_party/python/Lib/test/test_sndhdr.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_sndhdr.o: private		\
 		PYFLAGS +=						\
 			-Y.python/test/sndhdrdata/	\
 			-Y.python/test/sndhdrdata/sndhdr.8svx	\
@@ -3892,7 +3892,7 @@ o/$(MODE)/third_party/python/Lib/test/test_sndhdr.o:			\
 			-Y.python/test/sndhdrdata/sndhdr.voc	\
 			-Y.python/test/sndhdrdata/sndhdr.wav
 
-o/$(MODE)/third_party/python/Lib/test/test_email/test_email.o:		\
+o/$(MODE)/third_party/python/Lib/test/test_email/test_email.o: private	\
 		PYFLAGS +=						\
 			-Y.python/test/test_email/data/PyBanner048.gif	\
 			-Y.python/test/test_email/data/audiotest.au	\
@@ -3946,7 +3946,7 @@ o/$(MODE)/third_party/python/Lib/test/test_email/test_email.o:		\
 
 o/$(MODE)/third_party/python/Lib/test/test_xml_etree_c.o			\
 o/$(MODE)/third_party/python/Lib/test/test_minidom.o				\
-o/$(MODE)/third_party/python/Lib/test/test_pulldom.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_pulldom.o: private			\
 		PYFLAGS +=							\
 			-Y.python/test/xmltestdata/				\
 			-Y.python/test/xmltestdata/simple.xml			\
@@ -3955,7 +3955,7 @@ o/$(MODE)/third_party/python/Lib/test/test_pulldom.o:				\
 			-Y.python/test/xmltestdata/test.xml.out			\
 			-Y.python/test/xmltestdata/test.xml
 
-o/$(MODE)/third_party/python/Lib/test/test_decimal.o:					\
+o/$(MODE)/third_party/python/Lib/test/test_decimal.o: private				\
 		PYFLAGS +=								\
 			-Y.python/test/decimaltestdata/					\
 			-Y.python/test/decimaltestdata/nexttoward.decTest		\
@@ -4102,13 +4102,13 @@ o/$(MODE)/third_party/python/Lib/test/test_decimal.o:					\
 			-Y.python/test/decimaltestdata/ddMinMag.decTest			\
 			-Y.python/test/decimaltestdata/divide.decTest
 
-o/$(MODE)/third_party/python/Lib/test/test_codecmaps_cn.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_cn.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/EUC-CN.TXT					\
 			-Y.python/test/CP936.TXT					\
 			-Y.python/test/gb-18030-2000.ucm
 
-o/$(MODE)/third_party/python/Lib/test/test_codecmaps_jp.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_jp.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/CP932.TXT					\
 			-Y.python/test/EUC-JP.TXT					\
@@ -4116,28 +4116,28 @@ o/$(MODE)/third_party/python/Lib/test/test_codecmaps_jp.o:				\
 			-Y.python/test/EUC-JISX0213.TXT					\
 			-Y.python/test/SHIFT_JISX0213.TXT
 
-o/$(MODE)/third_party/python/Lib/test/test_codecmaps_hk.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_hk.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/BIG5HKSCS-2004.TXT
 
-o/$(MODE)/third_party/python/Lib/test/test_codecmaps_kr.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_kr.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/CP949.TXT					\
 			-Y.python/test/EUC-KR.TXT					\
 			-Y.python/test/JOHAB.TXT
 
-o/$(MODE)/third_party/python/Lib/test/test_codecmaps_tw.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecmaps_tw.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/BIG5.TXT						\
 			-Y.python/test/CP950.TXT
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_tw.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_tw.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/big5-utf8.txt			\
 			-Y.python/test/cjkencodings/big5.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_kr.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_kr.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/cp949-utf8.txt			\
@@ -4147,7 +4147,7 @@ o/$(MODE)/third_party/python/Lib/test/test_codecencodings_kr.o:				\
 			-Y.python/test/cjkencodings/johab-utf8.txt			\
 			-Y.python/test/cjkencodings/johab.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_jp.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_jp.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/euc_jisx0213-utf8.txt		\
@@ -4161,7 +4161,7 @@ o/$(MODE)/third_party/python/Lib/test/test_codecencodings_jp.o:				\
 			-Y.python/test/cjkencodings/shift_jisx0213-utf8.txt		\
 			-Y.python/test/cjkencodings/shift_jisx0213.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_iso2022.o:			\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_iso2022.o: private		\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/iso2022_jp-utf8.txt			\
@@ -4169,13 +4169,13 @@ o/$(MODE)/third_party/python/Lib/test/test_codecencodings_iso2022.o:			\
 			-Y.python/test/cjkencodings/iso2022_kr-utf8.txt			\
 			-Y.python/test/cjkencodings/iso2022_kr.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_hk.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_hk.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/big5hkscs-utf8.txt			\
 			-Y.python/test/cjkencodings/big5hkscs.txt
 
-o/$(MODE)/third_party/python/Lib/test/test_codecencodings_cn.o:				\
+o/$(MODE)/third_party/python/Lib/test/test_codecencodings_cn.o: private			\
 		PYFLAGS +=								\
 			-Y.python/test/cjkencodings/					\
 			-Y.python/test/cjkencodings/gb18030-utf8.txt			\
@@ -4187,13 +4187,13 @@ o/$(MODE)/third_party/python/Lib/test/test_codecencodings_cn.o:				\
 			-Y.python/test/cjkencodings/hz-utf8.txt				\
 			-Y.python/test/cjkencodings/hz.txt
 
-$(THIRD_PARTY_PYTHON_STAGE2_A_PYS_OBJS): PYFLAGS += -P.python -C3
-$(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
-$(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): PYFLAGS += -P.python -C3
-$(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STAGE2_A_PYS_OBJS): private PYFLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_STAGE2_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_PYTEST_A_PYS_OBJS): private PYFLAGS += -P.python -C3
+$(THIRD_PARTY_PYTHON_PYTEST_A_DATA_OBJS): private ZIPOBJ_FLAGS += -P.python -C3
 
-o/$(MODE)/third_party/python/Python/ceval.o: QUOTA = -C64 -M1024m -L300
-o/$(MODE)/third_party/python/Objects/unicodeobject.o: QUOTA += -C64 -M1024m -L300
+o/$(MODE)/third_party/python/Python/ceval.o: private QUOTA = -C64 -M1024m -L300
+o/$(MODE)/third_party/python/Objects/unicodeobject.o: private QUOTA += -C64 -M1024m -L300
 
 o/$(MODE)/third_party/python/Objects/unicodeobject.o:			\
 		third_party/python/Objects/unicodeobject.c		\
@@ -4228,36 +4228,36 @@ o/$(MODE)/third_party/python/Modules/_sre.o:				\
 		third_party/python/Modules/_sre.c			\
 		third_party/python/Modules/clinic/_sre.inc
 
-o/$(MODE)/third_party/python/Parser/asdl_c.o: PYFLAGS += -m
-$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): PYFLAGS += -t -P.python -C3
-$(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o): PYFLAGS += -t -P.python -C3
-o/$(MODE)/third_party/python/Lib/test/pystone.o: PYFLAGS += -m -O2 -P.python -C4
+o/$(MODE)/third_party/python/Parser/asdl_c.o: private PYFLAGS += -m
+$(THIRD_PARTY_PYTHON_PYTEST_PYMAINS_OBJS): private PYFLAGS += -t -P.python -C3
+$(THIRD_PARTY_PYTHON_PYTEST_TODOS:%.py=o/$(MODE)/%.o): private PYFLAGS += -t -P.python -C3
+o/$(MODE)/third_party/python/Lib/test/pystone.o: private PYFLAGS += -m -O2 -P.python -C4
 
-o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: QUOTA = -C64 -L180
-o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: QUOTA = -C64
-o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: QUOTA = -C64
-o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: QUOTA = -M512m -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: QUOTA = -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: QUOTA = -M1400m -L300
-o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: QUOTA = -C64 -L300
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: QUOTA = -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: QUOTA = -L300 -C64
-o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: QUOTA = -L120
-o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: QUOTA = -L120
-o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: QUOTA = -M512m
-o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: QUOTA = -C1000000
-o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: QUOTA = -C32 -M1024m
-o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: QUOTA = -L180
-o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_bytes.py.runs: QUOTA = -L300
-o/$(MODE)/third_party/python/Lib/test/test_urlparse.py.runs: QUOTA = -L300
-o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o: QUOTA = -L180
-o/$(MODE)/third_party/python/Modules/_sre.o: QUOTA = -L180
-o/dbg/third_party/python/Lib/test/test_set.py.runs: QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_long.py.runs: private QUOTA = -C64 -L180
+o/$(MODE)/third_party/python/Lib/test/test_hash.py.runs: private QUOTA = -C64
+o/$(MODE)/third_party/python/Lib/test/test_exceptions.py.runs: private QUOTA = -C64
+o/$(MODE)/third_party/python/Lib/test/test_tuple.py.runs: private QUOTA = -M512m
+o/$(MODE)/third_party/python/Lib/test/test_decimal.py.runs: private QUOTA = -M512m -C64 -L300
+o/$(MODE)/third_party/python/Lib/test/test_longexp.py.runs: private QUOTA = -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_unicode.py.runs: private QUOTA = -M1400m -L300
+o/$(MODE)/third_party/python/Lib/test/test_unicodedata.py.runs: private QUOTA = -C64 -L300
+o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
+o/$(MODE)/third_party/python/Lib/test/test_itertools.py.runs: private QUOTA = -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_tarfile.py.runs: private QUOTA = -L300 -C64
+o/$(MODE)/third_party/python/Lib/test/test_sqlite.py.runs: private QUOTA = -L120
+o/$(MODE)/third_party/python/Lib/test/test_gzip.py.runs: private QUOTA = -L120
+o/$(MODE)/third_party/python/Lib/test/test_logging.py.runs: private QUOTA = -M512m
+o/$(MODE)/third_party/python/Lib/test/test_resource.py.runs: private QUOTA = -C1000000
+o/$(MODE)/third_party/python/Lib/test/test_email/test_email.py.runs: private QUOTA = -C32 -M1024m
+o/$(MODE)/third_party/python/Lib/test/test_selectors.py.runs: private QUOTA = -L180
+o/$(MODE)/third_party/python/Lib/test/test_trace.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_multibytecodec.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_bz2.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_bytes.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Lib/test/test_urlparse.py.runs: private QUOTA = -L300
+o/$(MODE)/third_party/python/Modules/_decimal/libmpdec/mpdecimal.o: private QUOTA = -L180
+o/$(MODE)/third_party/python/Modules/_sre.o: private QUOTA = -L180
+o/dbg/third_party/python/Lib/test/test_set.py.runs: private QUOTA = -L300
 
 THIRD_PARTY_PYTHON_LIBS =						\
 	$(foreach x,$(THIRD_PARTY_PYTHON_ARTIFACTS),$($(x)))
@@ -4474,7 +4474,7 @@ o/$(MODE)/third_party/python/hello.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_PYTHON_HELLO_OBJS): PYFLAGS += -C2 -m
+$(THIRD_PARTY_PYTHON_HELLO_OBJS): private PYFLAGS += -C2 -m
 
 ################################################################################
 

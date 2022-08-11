@@ -152,7 +152,7 @@ o/$(MODE)/third_party/zip/zipfile.o		\
 o/$(MODE)/third_party/zip/zipfile_.o		\
 o/$(MODE)/third_party/zip/zipnote.o		\
 o/$(MODE)/third_party/zip/zipsplit.o		\
-o/$(MODE)/third_party/zip/zipup.o:		\
+o/$(MODE)/third_party/zip/zipup.o: private	\
 	OVERRIDE_CPPFLAGS +=			\
 		-DUNIX				\
 		-DMMAP				\
@@ -167,7 +167,7 @@ o/$(MODE)/third_party/zip/zipup.o:		\
 o/$(MODE)/third_party/zip/zip.o			\
 o/$(MODE)/third_party/zip/zipsplit.o		\
 o/$(MODE)/third_party/zip/fileio.o		\
-o/$(MODE)/third_party/zip/fileio_.o:		\
+o/$(MODE)/third_party/zip/fileio_.o: private	\
 	OVERRIDE_CPPFLAGS +=			\
 		-DSTACK_FRAME_UNLIMITED
 

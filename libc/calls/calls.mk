@@ -67,14 +67,14 @@ $(LIBC_CALLS_A).pkg:					\
 
 # we can't use asan because:
 #   ucontext_t memory is owned by xnu kernel
-o/$(MODE)/libc/calls/sigenter-xnu.o:			\
+o/$(MODE)/libc/calls/sigenter-xnu.o: private		\
 		OVERRIDE_COPTS +=			\
 			-ffreestanding			\
 			-fno-sanitize=address
 
 # we can't use asan because:
 #   vdso memory is owned by linux kernel
-o/$(MODE)/libc/calls/vdsofunc.greg.o:			\
+o/$(MODE)/libc/calls/vdsofunc.greg.o: private		\
 		OVERRIDE_COPTS +=			\
 			-ffreestanding			\
 			-fno-sanitize=address
@@ -82,7 +82,7 @@ o/$(MODE)/libc/calls/vdsofunc.greg.o:			\
 # we can't use asan because:
 #   asan guard pages haven't been allocated yet
 o/$(MODE)/libc/calls/directmap.o			\
-o/$(MODE)/libc/calls/directmap-nt.o:			\
+o/$(MODE)/libc/calls/directmap-nt.o: private		\
 		OVERRIDE_COPTS +=			\
 			-ffreestanding			\
 			-fno-sanitize=address
@@ -91,7 +91,7 @@ o/$(MODE)/libc/calls/directmap-nt.o:			\
 #   ntspawn allocates 128kb of heap memory via win32
 o/$(MODE)/libc/calls/ntspawn.o				\
 o/$(MODE)/libc/calls/mkntcmdline.o			\
-o/$(MODE)/libc/calls/mkntenvblock.o:			\
+o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 		OVERRIDE_COPTS +=			\
 			-ffreestanding			\
 			-fno-sanitize=address
@@ -99,7 +99,7 @@ o/$(MODE)/libc/calls/mkntenvblock.o:			\
 # we can't use sanitizers because:
 #   windows owns the data structure
 o/$(MODE)/libc/calls/wincrash.o				\
-o/$(MODE)/libc/calls/ntcontext2linux.o:			\
+o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=all
 
@@ -109,7 +109,7 @@ o/$(MODE)/libc/calls/sigenter-freebsd.o			\
 o/$(MODE)/libc/calls/sigenter-netbsd.o			\
 o/$(MODE)/libc/calls/sigenter-openbsd.o			\
 o/$(MODE)/libc/calls/sigenter-xnu.o			\
-o/$(MODE)/libc/calls/ntcontext2linux.o:			\
+o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 		OVERRIDE_COPTS +=			\
 			-O3
 
@@ -120,7 +120,7 @@ o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/execve-sysv.o			\
 o/$(MODE)/libc/calls/execve-nt.greg.o			\
-o/$(MODE)/libc/calls/mkntenvblock.o:			\
+o/$(MODE)/libc/calls/mkntenvblock.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
@@ -130,21 +130,21 @@ o/$(MODE)/libc/calls/copyfile.o				\
 o/$(MODE)/libc/calls/symlinkat-nt.o			\
 o/$(MODE)/libc/calls/readlinkat-nt.o			\
 o/$(MODE)/libc/calls/linkat-nt.o			\
-o/$(MODE)/libc/calls/renameat-nt.o:			\
+o/$(MODE)/libc/calls/renameat-nt.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
 o/$(MODE)/libc/calls/ioctl-siocgifconf.o		\
-o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o:		\
+o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o: private	\
 		OVERRIDE_COPTS +=			\
 			-ffunction-sections		\
 			-fdata-sections
 
 # we want small code size because:
 #   to keep .text.head under 4096 bytes
-o/$(MODE)/libc/calls/mman.greg.o:			\
+o/$(MODE)/libc/calls/mman.greg.o: private		\
 		OVERRIDE_COPTS +=			\
 			-Os
 
@@ -167,7 +167,7 @@ o//libc/calls/ioctl_tiocgwinsz-nt.o			\
 o//libc/calls/ioctl_tiocgwinsz.o			\
 o//libc/calls/ioctl_tiocswinsz-nt.o			\
 o//libc/calls/ioctl_tiocswinsz.o			\
-o//libc/calls/fcntl.o:					\
+o//libc/calls/fcntl.o: private				\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
@@ -175,7 +175,7 @@ o//libc/calls/fcntl.o:					\
 #   it's early runtime mandatory and quite huge without it
 o//libc/calls/getcwd.greg.o				\
 o//libc/calls/getcwd-nt.greg.o				\
-o//libc/calls/getcwd-xnu.greg.o:			\
+o//libc/calls/getcwd-xnu.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
@@ -184,12 +184,12 @@ o//libc/calls/getcwd-xnu.greg.o:			\
 o/$(MODE)/libc/calls/_timespec_tomillis.o		\
 o/$(MODE)/libc/calls/_timespec_tomicros.o		\
 o/$(MODE)/libc/calls/_timespec_frommillis.o		\
-o/$(MODE)/libc/calls/_timespec_frommicros.o:		\
+o/$(MODE)/libc/calls/_timespec_frommicros.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-O2
 
 o/$(MODE)/libc/calls/pledge-linux.o			\
-o/$(MODE)/libc/calls/unveil.o:				\
+o/$(MODE)/libc/calls/unveil.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
@@ -197,7 +197,7 @@ o/$(MODE)/libc/calls/unveil.o:				\
 #   it makes a big difference
 # we need pic because:
 #   so it can be an LD_PRELOAD payload
-o/$(MODE)/libc/calls/pledge-linux.o:			\
+o/$(MODE)/libc/calls/pledge-linux.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
 			-fPIC

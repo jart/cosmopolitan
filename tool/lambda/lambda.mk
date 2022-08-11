@@ -47,7 +47,7 @@ o/$(MODE)/tool/lambda/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/tool/lambda/tromp.o:					\
+o/$(MODE)/tool/lambda/tromp.o: private				\
 		OVERRIDE_CFLAGS +=				\
 			-w
 

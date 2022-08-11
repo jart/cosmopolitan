@@ -71,7 +71,7 @@ o/$(MODE)/test/libc/runtime/ape_test.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_LIBC_RUNTIME_OBJS):					\
+$(TEST_LIBC_RUNTIME_OBJS): private				\
 	DEFAULT_CCFLAGS +=					\
 		-fno-builtin
 
@@ -79,7 +79,7 @@ o/$(MODE)/test/libc/runtime/getenv_test.com.runs:		\
 		o/$(MODE)/test/libc/runtime/getenv_test.com
 	@HELLO=THERE build/runit $@ $<
 
-o/$(MODE)/test/libc/runtime/itsatrap_test.o:			\
+o/$(MODE)/test/libc/runtime/itsatrap_test.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-fno-sanitize=all			\
 			-ftrapv

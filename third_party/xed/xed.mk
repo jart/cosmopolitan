@@ -40,7 +40,7 @@ THIRD_PARTY_XED_A_DIRECTDEPS =				\
 THIRD_PARTY_XED_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_XED_A_DIRECTDEPS),$($(x))))
 
-o/$(MODE)/third_party/xed/x86ild.greg.o:		\
+o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-mstringop-strategy=unrolled_loop
 
@@ -53,7 +53,7 @@ $(THIRD_PARTY_XED_A).pkg:				\
 		$(THIRD_PARTY_XED_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_XED_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/third_party/xed/x86ild.greg.o:		\
+o/$(MODE)/third_party/xed/x86ild.greg.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-O3
 

@@ -47,15 +47,15 @@ o/$(MODE)/dsp/core/c1331.o			\
 o/$(MODE)/dsp/core/magikarp.o			\
 o/$(MODE)/dsp/core/c93654369.o			\
 o/$(MODE)/dsp/core/float2short.o		\
-o/$(MODE)/dsp/core/scalevolume.o:		\
+o/$(MODE)/dsp/core/scalevolume.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			$(MATHEMATICAL)
 
-o/tiny/dsp/core/scalevolume.o:			\
+o/tiny/dsp/core/scalevolume.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-Os
 
-o/$(MODE)/dsp/core/det3.o:			\
+o/$(MODE)/dsp/core/det3.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-ffast-math
 

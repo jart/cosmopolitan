@@ -63,7 +63,7 @@ o/$(MODE)/test/libc/str/str.pkg:					\
 		$(TEST_LIBC_STR_OBJS)					\
 		$(foreach x,$(TEST_LIBC_STR_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/test/libc/str/tpenc_test.o:					\
+o/$(MODE)/test/libc/str/tpenc_test.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			$(TRADITIONAL)
 
@@ -86,11 +86,11 @@ o/$(MODE)/test/libc/str/blake2.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_LIBC_STR_OBJS):							\
+$(TEST_LIBC_STR_OBJS): private						\
 	DEFAULT_CCFLAGS +=						\
 		-fno-builtin
 
-o/$(MODE)/test/libc/str/memmove_test.o:					\
+o/$(MODE)/test/libc/str/memmove_test.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-O2 -D_FORTIFY_SOURCE=2
 

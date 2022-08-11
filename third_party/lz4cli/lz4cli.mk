@@ -34,7 +34,7 @@ o/$(MODE)/third_party/lz4cli/lz4.o			\
 o/$(MODE)/third_party/lz4cli/lz4io.o			\
 o/$(MODE)/third_party/lz4cli/lz4hc.o			\
 o/$(MODE)/third_party/lz4cli/lz4frame.o			\
-o/$(MODE)/third_party/lz4cli/datagen.o:			\
+o/$(MODE)/third_party/lz4cli/datagen.o: private		\
 	DEFAULT_CPPFLAGS +=				\
 		-DSTACK_FRAME_UNLIMITED
 
@@ -48,7 +48,7 @@ THIRD_PARTY_LZ4CLI_DIRECTDEPS =				\
 THIRD_PARTY_LZ4CLI_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LZ4CLI_DIRECTDEPS),$($(x))))
 
-$(THIRD_PARTY_LZ4CLI_OBJS):				\
+$(THIRD_PARTY_LZ4CLI_OBJS): private			\
 	DEFAULT_CPPFLAGS +=				\
 		-isystem third_party/lz4cli
 

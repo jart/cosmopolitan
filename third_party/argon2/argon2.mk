@@ -44,7 +44,7 @@ $(THIRD_PARTY_ARGON2_A).pkg:					\
 
 # we can't use ubsan because:
 #   it's just too slow to be practical (like 6s vs. 13s)
-$(THIRD_PARTY_ARGON2_A_OBJS):					\
+$(THIRD_PARTY_ARGON2_A_OBJS): private				\
 		OVERRIDE_CFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections				\

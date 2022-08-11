@@ -55,7 +55,7 @@ o/$(MODE)/test/libc/alg/%.com.dbg:			\
 
 $(TEST_LIBC_ALG_OBJS): test/libc/alg/test.mk
 
-$(TEST_LIBC_ALG_OBJS):					\
+$(TEST_LIBC_ALG_OBJS): private				\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 

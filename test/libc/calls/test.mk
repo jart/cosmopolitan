@@ -17,7 +17,10 @@ TEST_LIBC_CALLS_COMS =							\
 
 TEST_LIBC_CALLS_BINS =							\
 	$(TEST_LIBC_CALLS_COMS)						\
-	$(TEST_LIBC_CALLS_COMS:%=%.dbg)
+	$(TEST_LIBC_CALLS_COMS:%=%.dbg)					\
+	o/$(MODE)/test/libc/calls/tiny64.elf				\
+	o/$(MODE)/test/libc/calls/life-nomod.com			\
+	o/$(MODE)/test/libc/calls/life-classic.com
 
 TEST_LIBC_CALLS_TESTS =							\
 	$(TEST_LIBC_CALLS_SRCS_TEST:%.c=o/$(MODE)/%.com.ok)
@@ -72,15 +75,6 @@ o/$(MODE)/test/libc/calls/%.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/calls/tiny64.elf.zip.o: test/libc/calls/tiny64.elf
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/test/libc/calls/life-nomod.com.zip.o: o/$(MODE)/test/libc/calls/life-nomod.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
-o/$(MODE)/test/libc/calls/life-classic.com.zip.o: o/$(MODE)/test/libc/calls/life-classic.com
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
-
 o/$(MODE)/test/libc/calls/life-classic.com.dbg:				\
 		$(LIBC_RUNTIME)						\
 		o/$(MODE)/test/libc/calls/life.o			\
@@ -94,6 +88,12 @@ o/$(MODE)/test/libc/calls/life-nomod.com.dbg:				\
 		$(CRT)							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/test/libc/calls/tiny64.elf.zip.o				\
+o/$(MODE)/test/libc/calls/life-nomod.com.zip.o				\
+o/$(MODE)/test/libc/calls/life-classic.com.zip.o: private		\
+		ZIPOBJ_FLAGS +=						\
+			-B
 
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\

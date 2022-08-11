@@ -55,8 +55,8 @@ $(DSP_TTY_A).pkg:				\
 		$(DSP_TTY_A_OBJS)		\
 		$(foreach x,$(DSP_TTY_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/dsp/tty/ttyraster.o:			\
-		OVERRIDE_CFLAGS +=		\
+o/$(MODE)/dsp/tty/ttyraster.o: private		\
+		OVERRIDE_CFLAGS +=	\
 			$(MATHEMATICAL)
 
 DSP_TTY_LIBS = $(foreach x,$(DSP_TTY_ARTIFACTS),$($(x)))

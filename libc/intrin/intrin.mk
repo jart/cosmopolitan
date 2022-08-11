@@ -46,12 +46,12 @@ $(LIBC_INTRIN_A).pkg:					\
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
-o/$(MODE)/libc/intrin/ubsan.o:				\
+o/$(MODE)/libc/intrin/ubsan.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
-o/$(MODE)/libc/intrin/asan.o:				\
+o/$(MODE)/libc/intrin/asan.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-O2				\
 			-finline			\
@@ -63,7 +63,7 @@ o/$(MODE)/libc/intrin/getmagnumstr.greg.o		\
 o/$(MODE)/libc/intrin/strerrno.greg.o			\
 o/$(MODE)/libc/intrin/strerrdoc.greg.o			\
 o/$(MODE)/libc/intrin/strerror_wr.greg.o		\
-o/$(MODE)/libc/intrin/kprintf.greg.o:			\
+o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fpie				\
 			-fwrapv				\
@@ -84,7 +84,7 @@ o/$(MODE)/libc/intrin/pthread_mutex_wake.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
 o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
 o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
-o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
+o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-fwrapv				\
 			-x-no-pg			\
@@ -97,7 +97,7 @@ o/$(MODE)/libc/intrin/_spinlock_debug_4.o:		\
 # we can't use asan because:
 #   global gone could be raised
 o/$(MODE)/libc/intrin/exit.o				\
-o/$(MODE)/libc/intrin/restorewintty.o:			\
+o/$(MODE)/libc/intrin/restorewintty.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
@@ -106,7 +106,7 @@ o/$(MODE)/libc/intrin/restorewintty.o:			\
 o/$(MODE)/libc/intrin/describeflags.o			\
 o/$(MODE)/libc/intrin/describeframe.o			\
 o/$(MODE)/libc/intrin/describemapflags.o		\
-o/$(MODE)/libc/intrin/describeprotflags.o:		\
+o/$(MODE)/libc/intrin/describeprotflags.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=address
 
@@ -145,7 +145,7 @@ o/$(MODE)/libc/intrin/createfilemapping.o		\
 o/$(MODE)/libc/intrin/createfilemappingnuma.o		\
 o/$(MODE)/libc/intrin/waitformultipleobjects.o		\
 o/$(MODE)/libc/intrin/generateconsolectrlevent.o	\
-o/$(MODE)/libc/intrin/wsawaitformultipleevents.o:	\
+o/$(MODE)/libc/intrin/wsawaitformultipleevents.o: private\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
 			-fwrapv				\
@@ -153,20 +153,20 @@ o/$(MODE)/libc/intrin/wsawaitformultipleevents.o:	\
 			-fno-stack-protector		\
 			-fno-sanitize=all
 
-o//libc/intrin/memmove.o:				\
+o//libc/intrin/memmove.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-toplevel-reorder
 
 o//libc/intrin/bzero.o					\
 o//libc/intrin/memcmp.o					\
 o//libc/intrin/memset.o					\
-o//libc/intrin/memmove.o:				\
+o//libc/intrin/memmove.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-O2 -finline
 
 o/$(MODE)/libc/intrin/bzero.o				\
 o/$(MODE)/libc/intrin/memcmp.o				\
-o/$(MODE)/libc/intrin/memmove.o:			\
+o/$(MODE)/libc/intrin/memmove.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fpie
 

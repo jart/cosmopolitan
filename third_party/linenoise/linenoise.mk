@@ -44,7 +44,7 @@ $(THIRD_PARTY_LINENOISE_A).pkg:					\
 		$(THIRD_PARTY_LINENOISE_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_LINENOISE_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_LINENOISE_A_OBJS):				\
+$(THIRD_PARTY_LINENOISE_A_OBJS): private			\
 		OVERRIDE_CFLAGS +=				\
 			-fno-jump-tables			\
 			-ffunction-sections			\

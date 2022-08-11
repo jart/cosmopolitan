@@ -58,7 +58,7 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_LIBC_INTRIN_OBJS):				\
+$(TEST_LIBC_INTRIN_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-builtin
 

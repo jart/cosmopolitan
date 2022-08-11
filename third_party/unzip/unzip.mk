@@ -51,7 +51,7 @@ o/$(MODE)/third_party/unzip/unzip.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(THIRD_PARTY_UNZIP_A_OBJS):							\
+$(THIRD_PARTY_UNZIP_A_OBJS): private						\
 		OVERRIDE_CPPFLAGS +=						\
 			-DUSE_BZIP2						\
 			-DUNICODE_SUPPORT					\

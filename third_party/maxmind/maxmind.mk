@@ -42,7 +42,7 @@ $(THIRD_PARTY_MAXMIND_A).pkg:						\
 		$(THIRD_PARTY_MAXMIND_A_OBJS)				\
 		$(foreach x,$(THIRD_PARTY_MAXMIND_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_MAXMIND_A_OBJS):						\
+$(THIRD_PARTY_MAXMIND_A_OBJS): private					\
 		OVERRIDE_CFLAGS +=					\
 			-fdata-sections					\
 			-ffunction-sections

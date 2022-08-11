@@ -54,8 +54,7 @@ o/$(MODE)/third_party/tidy/tidy.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/tidy/.tidyrc.zip.o: third_party/tidy/.tidyrc
-	@$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) -B $(OUTPUT_OPTION) $<
+o/$(MODE)/third_party/tidy/.tidyrc.zip.o: private ZIPOBJ_FLAGS += -B
 
 THIRD_PARTY_TIDY_COMS =								\
 	o/$(MODE)/third_party/tidy/tidy.com

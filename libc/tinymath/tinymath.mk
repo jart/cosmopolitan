@@ -44,7 +44,7 @@ $(LIBC_TINYMATH_A).pkg:					\
 o/$(MODE)/libc/tinymath/cpow.o \
 o/$(MODE)/libc/tinymath/cpowf.o \
 o/$(MODE)/libc/tinymath/cpowl.o \
-o/$(MODE)/libc/tinymath/powfin.o :			\
+o/$(MODE)/libc/tinymath/powfin.o : private		\
 		OVERRIDE_CFLAGS +=			\
 			-ffast-math
 

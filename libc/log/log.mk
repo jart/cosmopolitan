@@ -60,11 +60,11 @@ $(LIBC_LOG_A).pkg:					\
 		$(foreach x,$(LIBC_LOG_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/log/backtrace2.o				\
-o/$(MODE)/libc/log/backtrace3.o:			\
+o/$(MODE)/libc/log/backtrace3.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fno-sanitize=all
 
-o/$(MODE)/libc/log/checkfail.o:				\
+o/$(MODE)/libc/log/checkfail.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-mgeneral-regs-only
 
@@ -78,7 +78,7 @@ o/$(MODE)/libc/log/onkill.o				\
 o/$(MODE)/libc/log/startfatal.o				\
 o/$(MODE)/libc/log/startfatal_ndebug.o			\
 o/$(MODE)/libc/log/ubsan.o				\
-o/$(MODE)/libc/log/die.o:				\
+o/$(MODE)/libc/log/die.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)
 

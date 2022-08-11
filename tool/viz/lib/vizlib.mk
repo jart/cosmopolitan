@@ -51,7 +51,7 @@ TOOL_VIZ_LIB_A_DIRECTDEPS =				\
 TOOL_VIZ_LIB_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(TOOL_VIZ_LIB_A_DIRECTDEPS),$($(x))))
 
-o/$(MODE)/tool/viz/lib/pmaddubsw.o:			\
+o/$(MODE)/tool/viz/lib/pmaddubsw.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-fvect-cost-model=unlimited
 
@@ -71,12 +71,12 @@ o/$(MODE)/tool/viz/lib/emboss.o				\
 o/$(MODE)/tool/viz/lib/getxtermcodes.o			\
 o/$(MODE)/tool/viz/lib/lingamma.o			\
 o/$(MODE)/tool/viz/lib/perlin3.o			\
-o/$(MODE)/tool/viz/lib/resizegraphic.o:			\
+o/$(MODE)/tool/viz/lib/resizegraphic.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED		\
 			$(MATHEMATICAL)
 
-o/$(MODE)/tool/viz/lib/printmatrix.o:			\
+o/$(MODE)/tool/viz/lib/printmatrix.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			$(IEEE_MATH)
 

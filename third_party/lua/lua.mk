@@ -149,19 +149,19 @@ $(THIRD_PARTY_LUA_A).pkg:						\
 		$(foreach x,$(THIRD_PARTY_LUA_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/lua/lmathlib.o					\
-o//third_party/lua/lgc.o:						\
+o//third_party/lua/lgc.o: private					\
 		OVERRIDE_CFLAGS +=					\
 			-O2
 
-o/$(MODE)/third_party/lua/lvm.o:					\
+o/$(MODE)/third_party/lua/lvm.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-fno-gcse
 
-o/$(MODE)/third_party/lua/lauxlib.o:					\
+o/$(MODE)/third_party/lua/lauxlib.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
-$(THIRD_PARTY_LUA_A_OBJS):						\
+$(THIRD_PARTY_LUA_A_OBJS): private					\
 		OVERRIDE_CFLAGS +=					\
 			-ffunction-sections				\
 			-fdata-sections

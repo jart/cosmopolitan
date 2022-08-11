@@ -63,7 +63,7 @@ $(LIBC_RUNTIME_A).pkg:					\
 #   asan and ubsan can be function traced
 # we can't use function tracing because:
 #   this is the function tracing runtime
-o/$(MODE)/libc/runtime/ftracer.o:			\
+o/$(MODE)/libc/runtime/ftracer.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-x-no-pg			\
 			-mno-fentry			\
@@ -88,7 +88,7 @@ o/$(MODE)/libc/runtime/print.greg.o			\
 o/$(MODE)/libc/runtime/stackchkfail.o			\
 o/$(MODE)/libc/runtime/stackchkfaillocal.o		\
 o/$(MODE)/libc/runtime/winmain.greg.o			\
-o/$(MODE)/libc/runtime/opensymboltable.o:		\
+o/$(MODE)/libc/runtime/opensymboltable.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-Os				\
 			-ffreestanding			\
@@ -96,11 +96,11 @@ o/$(MODE)/libc/runtime/opensymboltable.o:		\
 
 # must use alloca()
 # can't use asan or any runtime services
-o/$(MODE)/libc/runtime/fork-nt.o:			\
+o/$(MODE)/libc/runtime/fork-nt.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/libc/runtime/qsort.o:				\
+o/$(MODE)/libc/runtime/qsort.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-Og
 
@@ -108,11 +108,11 @@ o/$(MODE)/libc/runtime/qsort.o:				\
 o//libc/runtime/mmap.o					\
 o//libc/runtime/munmap.o				\
 o//libc/runtime/memtrack.greg.o				\
-o//libc/runtime/opensymboltable.greg.o:			\
+o//libc/runtime/opensymboltable.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
-o/$(MODE)/libc/runtime/ftrace.greg.o:			\
+o/$(MODE)/libc/runtime/ftrace.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-mgeneral-regs-only
 

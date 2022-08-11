@@ -53,16 +53,16 @@ $(LIBC_TIME_A).pkg:				\
 		$(LIBC_TIME_A_OBJS)		\
 		$(foreach x,$(LIBC_TIME_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/time/strftime.o:			\
+o/$(MODE)/libc/time/strftime.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-fno-jump-tables
 
-o/$(MODE)/libc/time/localtime.o:		\
+o/$(MODE)/libc/time/localtime.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-fdata-sections		\
 			-ffunction-sections
 
-o/$(MODE)/libc/time/now.o:			\
+o/$(MODE)/libc/time/now.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 

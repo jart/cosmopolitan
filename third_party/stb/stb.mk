@@ -57,16 +57,16 @@ $(THIRD_PARTY_STB_A).pkg:				\
 		$(THIRD_PARTY_STB_A_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_STB_A_DIRECTDEPS),$($(x)_A).pkg)
 
-$(THIRD_PARTY_STB_A_OBJS):				\
+$(THIRD_PARTY_STB_A_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections		\
 			-fdata-sections
 
-$(THIRD_PARTY_STB_A_OBJS):				\
+$(THIRD_PARTY_STB_A_OBJS): private			\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/stb/stb_truetype.o:		\
+o/$(MODE)/third_party/stb/stb_truetype.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 

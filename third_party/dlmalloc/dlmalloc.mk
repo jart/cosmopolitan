@@ -53,20 +53,20 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 # README file recommends -O3
 # It does double performance in default mode
 o//third_party/dlmalloc/dlmalloc.o				\
-o/rel/third_party/dlmalloc/dlmalloc.o:				\
+o/rel/third_party/dlmalloc/dlmalloc.o: private			\
 		OVERRIDE_CFLAGS +=				\
 			-O3
 
 # we can't use address sanitizer because:
 #   address sanitizer depends on dlmalloc
-o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-ffreestanding				\
 			-fno-sanitize=address
 
 # we must segregate codegen because:
 #   file contains multiple independently linkable apis
-o/$(MODE)/third_party/dlmalloc/dlmalloc.o:			\
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections

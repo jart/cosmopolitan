@@ -65,7 +65,7 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-$(TEST_LIBC_STDIO_OBJS):				\
+$(TEST_LIBC_STDIO_OBJS): private			\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 

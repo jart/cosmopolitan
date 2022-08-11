@@ -139,11 +139,11 @@ o/$(MODE)/third_party/mbedtls/test/%.com: o/$(MODE)/third_party/mbedtls/test/%.c
 o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
 	@$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
 
-$(THIRD_PARTY_MBEDTLS_TEST_OBJS):										\
+$(THIRD_PARTY_MBEDTLS_TEST_OBJS): private									\
 		OVERRIDE_CFLAGS +=										\
 			-DSTACK_FRAME_UNLIMITED
 
-o/$(MODE)/third_party/mbedtls/test/lib.o:									\
+o/$(MODE)/third_party/mbedtls/test/lib.o: private								\
 			OVERRIDE_CFLAGS +=									\
 				-fdata-sections									\
 				-ffunction-sections
@@ -1363,4 +1363,4 @@ o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.runs: QUOTA = -M512m
+o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.runs: private QUOTA = -M512m

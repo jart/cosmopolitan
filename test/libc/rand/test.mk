@@ -57,7 +57,7 @@ o/$(MODE)/test/libc/rand/%.com.dbg:			\
 
 $(TEST_LIBC_RAND_OBJS): test/libc/rand/test.mk
 
-$(TEST_LIBC_RAND_OBJS):					\
+$(TEST_LIBC_RAND_OBJS): private				\
 	DEFAULT_CCFLAGS +=				\
 		-fno-builtin
 

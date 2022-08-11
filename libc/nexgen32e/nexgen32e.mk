@@ -42,7 +42,7 @@ $(LIBC_NEXGEN32E_A).pkg:				\
 		$(LIBC_NEXGEN32E_A_OBJS)		\
 		$(foreach x,$(LIBC_NEXGEN32E_A_DIRECTDEPS),$($(x)_A).pkg)
 
-o/$(MODE)/libc/nexgen32e/threaded.o:			\
+o/$(MODE)/libc/nexgen32e/threaded.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			$(NO_MAGIC)			\
 			-fno-sanitize=all

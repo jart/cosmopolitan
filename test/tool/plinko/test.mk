@@ -77,11 +77,11 @@ o/$(MODE)/test/tool/plinko/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/tool/plinko/plinko_test.com.runs:		\
+o/$(MODE)/test/tool/plinko/plinko_test.com.runs: private	\
 		QUOTA =	-M100g
 
-o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o: ZIPOBJ_FLAGS += -B
-o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o: ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/algebra_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
+o/$(MODE)/test/tool/plinko/library_test.lisp.zip.o: private ZIPOBJ_FLAGS += -B
 
 .PHONY: o/$(MODE)/test/tool/plinko
 o/$(MODE)/test/tool/plinko:					\

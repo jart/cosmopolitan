@@ -121,12 +121,12 @@ THIRD_PARTY_SQLITE3_FLAGS =						\
 	-DSQLITE_ENABLE_MATH_FUNCTIONS					\
 	-DSQLITE_ENABLE_JSON1						\
 
-$(THIRD_PARTY_SQLITE3_A_OBJS):						\
+$(THIRD_PARTY_SQLITE3_A_OBJS): private					\
 		OVERRIDE_CFLAGS +=					\
 			$(THIRD_PARTY_SQLITE3_FLAGS)			\
 			-DSQLITE_OMIT_UPDATE_HOOK
 
-$(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
+$(THIRD_PARTY_SQLITE3_SHELL_OBJS): private				\
 		OVERRIDE_CFLAGS +=					\
 			$(THIRD_PARTY_SQLITE3_FLAGS)			\
 			-DHAVE_READLINE=0				\
@@ -154,16 +154,16 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 o//third_party/sqlite3/parse.o						\
 o//third_party/sqlite3/select.o						\
 o//third_party/sqlite3/pragma.o						\
-o//third_party/sqlite3/vdbe.o:						\
+o//third_party/sqlite3/vdbe.o: private					\
 		OVERRIDE_CFLAGS +=					\
 			-Os
 
-o/$(MODE)/third_party/sqlite3/shell.o:					\
+o/$(MODE)/third_party/sqlite3/shell.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 
 $(THIRD_PARTY_SQLITE3_A_OBJS)						\
-$(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
+$(THIRD_PARTY_SQLITE3_SHELL_OBJS): private				\
 		OVERRIDE_CFLAGS +=					\
 			-fdata-sections					\
 			-ffunction-sections
@@ -171,15 +171,15 @@ $(THIRD_PARTY_SQLITE3_SHELL_OBJS):					\
 # use smaller relocations for indirect branches
 o/$(MODE)/third_party/sqlite3/expr.o					\
 o/$(MODE)/third_party/sqlite3/printf.o					\
-o/$(MODE)/third_party/sqlite3/parse.o:					\
+o/$(MODE)/third_party/sqlite3/parse.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-fpie
 
-o/$(MODE)/third_party/sqlite3/shell.o: QUOTA = -M512m -C16 -L180
-o/$(MODE)/third_party/sqlite3/vdbe.o: QUOTA = -M1024m
-o/$(MODE)/third_party/sqlite3/vdbe.shell.o: QUOTA = -M1024m
-o/$(MODE)/third_party/sqlite3/fts5.o: QUOTA = -M512m -C16
-o/$(MODE)/third_party/sqlite3/fts5.shell.o: QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/shell.o: private QUOTA = -M512m -C16 -L180
+o/$(MODE)/third_party/sqlite3/vdbe.o: private QUOTA = -M1024m
+o/$(MODE)/third_party/sqlite3/vdbe.shell.o: private QUOTA = -M1024m
+o/$(MODE)/third_party/sqlite3/fts5.o: private QUOTA = -M512m -C16
+o/$(MODE)/third_party/sqlite3/fts5.shell.o: private QUOTA = -M512m -C16 -L180
 
 o/$(MODE)/third_party/sqlite3/rtree.o:					\
 		third_party/sqlite3/rtree.c				\

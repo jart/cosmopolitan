@@ -74,7 +74,7 @@ o/$(MODE)/third_party/chibicc/test/%.o:						\
 		$(CHIBICC)
 	@$(COMPILE) -AOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
 
-o/$(MODE)/third_party/chibicc/test/int128_test.o: QUOTA = -M1024m
+o/$(MODE)/third_party/chibicc/test/int128_test.o: private QUOTA = -M1024m
 
 .PHONY: o/$(MODE)/third_party/chibicc/test
 o/$(MODE)/third_party/chibicc/test:						\
