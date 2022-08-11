@@ -88,7 +88,7 @@ o/$(MODE)/test/libc/release/smoke-chibicc.o:				\
 		test/libc/release/smoke.c				\
 		o/cosmopolitan.h					\
 		o/$(MODE)/third_party/chibicc/chibicc.com
-	@$(COMPILE) -ACHIBICC						\
+	@$(COMPILE) -wACHIBICC						\
 		o/$(MODE)/third_party/chibicc/chibicc.com		\
 		$(CHIBICC_FLAGS)					\
 		-o $@							\

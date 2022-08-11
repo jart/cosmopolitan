@@ -87,7 +87,7 @@ o/$(MODE)/tool/build/build.pkg:				\
 o/$(MODE)/%.ctest.ok:					\
 		%.ctest					\
 		$(TOOL_BUILD_CALCULATOR)
-	@$(COMPILE) -AMKWIDES -tT$@ $(TOOL_BUILD_CALCULATOR) $<
+	@$(COMPILE) -AMKWIDES -wtT$@ $(TOOL_BUILD_CALCULATOR) $<
 
 o/$(MODE)/tool/build/%.com.dbg:				\
 		$(TOOL_BUILD_DEPS)			\

@@ -65,7 +65,7 @@ o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com.ok:		\
 		o/$(MODE)/tool/build/runit.com			\
 		o/$(MODE)/tool/build/runitd.com			\
 		o/$(MODE)/test/libc/nexgen32e/stackrwx_test.com
-	@$(COMPILE) -ATEST -tT$@ $^ $(filter-out openbsd,$(HOSTS))
+	@$(COMPILE) -wATEST -tT$@ $^ $(filter-out openbsd,$(HOSTS))
 
 $(TEST_LIBC_NEXGEN32E_OBJS): private				\
 	DEFAULT_CCFLAGS +=					\

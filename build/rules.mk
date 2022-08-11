@@ -20,15 +20,12 @@ o/%.o: %.s                         ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(
 o/%.o: o/%.s                       ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
 o/%.s: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
 o/%.s: o/%.S                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/%.i: %.S                         ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
 o/%.o: %.S                         ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/%.o: o/%.S                       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
-o/%.s: %.i                         ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTPUT_OPTION) $<
-o/%.s: o/%.i                       ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTPUT_OPTION) $<
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/%.zip.o: o/%                     ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+o/%.zip.o: o/%                     ; @$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 o/$(MODE)/%.o: %.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
@@ -39,32 +36,21 @@ o/$(MODE)/%.o: %.f                 ; @$(COMPILE) -AOBJECTIFY.f $(OBJECTIFY.f) $(
 o/$(MODE)/%.o: %.F                 ; @$(COMPILE) -AOBJECTIFY.F $(OBJECTIFY.F) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ss: %.c                ; @$(COMPILE) -ACOMPILE.c $(COMPILE.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ss: o/$(MODE)/%.c      ; @$(COMPILE) -AOBJECTIFY.s $(COMPILE.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.i: %.S                 ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.i: %.c                 ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.i: %.cc                ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.i: o/$(MODE)/%.c       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.h: %.c                 ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 o/$(MODE)/%.h: o/$(MODE)/%.c       ; @$(COMPILE) -AAMALGAMATE $(PREPROCESS) $(OUTPUT_OPTION) -fdirectives-only -P $<
 o/$(MODE)/%.o: %.S                 ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: o/$(MODE)/%.S       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.s: %.i                 ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.s: o/$(MODE)/%.i       ; @$(COMPILE) -ACOMPILE.i $(COMPILE.i) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.cc                ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.lds: %.lds             ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.cxx.o: %.c             ; @$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) -xc++ $(OUTPUT_OPTION) $<
 o/$(MODE)/%.o: %.greg.c            ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.greg.o: %.greg.c       ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.ansi.o: %.ansi.c       ; @$(COMPILE) -AOBJECTIFY.ansi $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.ansi.o: %.c            ; @$(COMPILE) -AOBJECTIFY.ansi $(OBJECTIFY.ansi.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.c99.o: %.c99.c         ; @$(COMPILE) -AOBJECTIFY.c99 $(OBJECTIFY.c99.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.c11.o: %.c11.c         ; @$(COMPILE) -AOBJECTIFY.c11 $(OBJECTIFY.c11.c) $(OUTPUT_OPTION) $<
-o/$(MODE)/%.c2x.o: %.c2x.c         ; @$(COMPILE) -AOBJECTIFY.c2x $(OBJECTIFY.c2x.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.initabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
-o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -AZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
@@ -73,66 +59,66 @@ o/$(MODE)/%-clang.asm: CC = $(CLANG)
 
 o/%.o: %.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
-	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/%.o: o/%.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
-	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/$(MODE)/%.o: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
-	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/$(MODE)/%.o: o/$(MODE)/%.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) $(OUTPUT_OPTION) $<
-	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/$(MODE)/%.o: o/$(MODE)/%.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
-	@$(COMPILE) -AFIXUPOBJ -T$@ $(FIXUPOBJ) $@
+	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
 
 o/%.a:
 	$(file >$(TMPDIR)/$(subst /,_,$@),$^)
-	@$(COMPILE) -AARCHIVE -T$@ $(AR) $(ARFLAGS) $@ @$(TMPDIR)/$(subst /,_,$@)
+	@$(COMPILE) -AARCHIVE -wT$@ $(AR) $(ARFLAGS) $@ @$(TMPDIR)/$(subst /,_,$@)
 
 o/%.pkg:
 	$(file >$(TMPDIR)/$(subst /,_,$@).args,$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
+	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
 
 o/$(MODE)/%.pkg:
 	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -T$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
+	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
 
 o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
-	@$(COMPILE) -APYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
+	@$(COMPILE) -wAPYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
 
 o/$(MODE)/%.pyc: %.py o/$(MODE)/third_party/python/pycomp.com
-	@$(COMPILE) -APYCOMP o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
+	@$(COMPILE) -wAPYCOMP o/$(MODE)/third_party/python/pycomp.com $(PYCFLAGS) -o $@ $<
 
 o/$(MODE)/%.lua: %.lua o/$(MODE)/third_party/lua/luac.com
-	@$(COMPILE) -ALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
+	@$(COMPILE) -wALUAC o/$(MODE)/third_party/lua/luac.com -s -o $@ $<
 
 o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
-	@$(COMPILE) -ALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
+	@$(COMPILE) -wALUA -tT$@ o/$(MODE)/tool/net/redbean.com $(LUAFLAGS) -i $<
 
 o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com
-	@$(COMPILE) -ACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
-	@$(COMPILE) -AASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
+	@$(COMPILE) -wACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
+	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
 
 # TODO(jart): find a way to generate dependencies
 #             or alternatively disable sandboxing
 o/%.h.ok: %.h
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
 #	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 o/$(MODE)/%.h.ok: %.h
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
 #	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 o/$(MODE)/%.hh.ok: %.hh
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
 #	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/%.okk: %
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
 #	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 o/$(MODE)/%.okk: %
-	@$(COMPILE) -ACHECK.h -T$@ build/bootstrap/touch.com $@
+	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
 #	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<

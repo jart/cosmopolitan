@@ -132,12 +132,12 @@ THIRD_PARTY_QUICKJS_CHECKS =							\
 o/$(MODE)/third_party/quickjs/qjscalc.c:					\
 		third_party/quickjs/qjscalc.js					\
 		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
+	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -fbignum -o $@ -c $<
 
 o/$(MODE)/third_party/quickjs/repl.c:						\
 		third_party/quickjs/repl.js					\
 		o/$(MODE)/third_party/quickjs/qjsc.com
-	@$(COMPILE) -AQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
+	@$(COMPILE) -wAQJSC o/$(MODE)/third_party/quickjs/qjsc.com -o $@ -m -c $<
 
 o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		$(THIRD_PARTY_QUICKJS)						\

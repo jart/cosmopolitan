@@ -72,7 +72,7 @@ o/$(MODE)/third_party/chibicc/test/%.com.dbg:					\
 o/$(MODE)/third_party/chibicc/test/%.o:						\
 		third_party/chibicc/test/%.c					\
 		$(CHIBICC)
-	@$(COMPILE) -AOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
+	@$(COMPILE) -wAOBJECTIFY.c $(CHIBICC) $(CHIBICC_FLAGS) $(OUTPUT_OPTION) -c $<
 
 o/$(MODE)/third_party/chibicc/test/int128_test.o: private QUOTA = -M1024m
 

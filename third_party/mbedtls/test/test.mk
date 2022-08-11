@@ -137,7 +137,7 @@ o/$(MODE)/third_party/mbedtls/test/%.com: o/$(MODE)/third_party/mbedtls/test/%.c
 	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 
 o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
-	@$(COMPILE) -ACHECK -tT$@ $< $(TESTARGS)
+	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 
 $(THIRD_PARTY_MBEDTLS_TEST_OBJS): private									\
 		OVERRIDE_CFLAGS +=										\

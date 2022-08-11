@@ -1866,10 +1866,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
               errno = err;
             fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
             if (fd != -1)
-              {
-                futimens (fd, (struct timespec[2]){0});
-                close (fd);
-              }
+              close (fd);
             else if (errno == EEXIST)
               errno = err;
             else
