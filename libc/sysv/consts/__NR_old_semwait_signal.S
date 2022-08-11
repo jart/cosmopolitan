@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_old_semwait_signal,0xfff,0x2000172,0xfff,0xfff,0xfff,0xfff

@@ -26,6 +26,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/mem/io.h"
 #include "libc/runtime/gc.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/stdio.h"
@@ -72,6 +73,7 @@ static bool SupportsLandlock(void) {
 }
 
 void SetUpOnce(void) {
+  __enable_threads();
   if (!(IsLinux() && SupportsLandlock()) && !IsOpenbsd()) exit(0);
 }
 

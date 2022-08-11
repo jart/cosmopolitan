@@ -4448,7 +4448,7 @@ o/$(MODE)/third_party/python/chibicc.inc:				\
 		third_party/python/Include/warnings.h			\
 		third_party/python/Include/weakrefobject.h		\
 		third_party/python/pyconfig.h
-	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -E -P -fdirectives-only -dD -D__chibicc__ -o $@ $<
+	@$(COMPILE) -wACHECK.h $(COMPILE.c) -xc -E -P -fdirectives-only -dD -D__chibicc__ -o $@ $<
 
 ################################################################################
 # HELLO.COM

@@ -31,8 +31,7 @@
 bool gotsig;
 
 void SetUpOnce(void) {
-  pledge("stdio", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
 void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {

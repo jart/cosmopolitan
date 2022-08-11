@@ -21,6 +21,7 @@
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/runtime/runtime.h"

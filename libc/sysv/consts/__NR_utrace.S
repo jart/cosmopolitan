@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_utrace,0xfff,0xfff,0x014f,0x00d1,0x132,0xfff

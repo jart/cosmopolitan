@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pdgetpid,0xfff,0xfff,0x0208,0xfff,0xfff,0xfff

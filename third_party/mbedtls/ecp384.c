@@ -22,6 +22,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/ecp.h"
 #include "third_party/mbedtls/ecp_internal.h"

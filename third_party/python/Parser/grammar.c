@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/mem.h"
 #include "third_party/python/Include/grammar.h"
 #include "third_party/python/Include/objimpl.h"
 #include "third_party/python/Include/pgenheaders.h"

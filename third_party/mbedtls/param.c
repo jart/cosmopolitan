@@ -20,6 +20,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/platform.h"
 
 void mbedtls_param_failed(const char *msg, const char *file, int line) {

@@ -33,6 +33,7 @@
  *   - /tmp/
  *
  * This guarantees trailing slash.
+ * We also guarantee `kTmpPath` won't be longer than `PATH_MAX / 2`.
  */
 char kTmpPath[PATH_MAX];
 
@@ -46,7 +47,7 @@ __attribute__((__constructor__)) static void kTmpPathInit(void) {
   uint32_t n;
   char16_t path16[PATH_MAX];
 
-  if ((s = getenv("TMPDIR")) && (n = strlen(s)) < PATH_MAX) {
+  if ((s = getenv("TMPDIR")) && (n = strlen(s)) < PATH_MAX / 2) {
     memcpy(kTmpPath, s, n);
     if (n && kTmpPath[n - 1] != '/') {
       kTmpPath[n + 0] = '/';

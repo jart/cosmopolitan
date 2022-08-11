@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sem_wait,0xfff,0x200010f,0xfff,0xfff,0xfff,0xfff

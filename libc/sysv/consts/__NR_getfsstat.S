@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getfsstat,0xfff,0x200015b,0x022d,0x003e,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_clonefileat,0xfff,0x20001ce,0xfff,0xfff,0xfff,0xfff

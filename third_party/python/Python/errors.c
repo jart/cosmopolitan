@@ -5,6 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/mem/mem.h"
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/enum/lang.h"
 #include "libc/nt/memory.h"

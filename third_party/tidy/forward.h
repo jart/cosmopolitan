@@ -17,6 +17,7 @@
 */
 
 #include "third_party/tidy/tidyplatform.h"
+#include "libc/str/str.h"
 #include "third_party/tidy/tidy.h"
 
 /* Internal symbols are prefixed to avoid clashes with other libraries */

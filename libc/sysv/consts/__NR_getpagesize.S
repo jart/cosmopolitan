@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getpagesize,0xfff,0xfff,0x0040,0xfff,0xfff,0xfff

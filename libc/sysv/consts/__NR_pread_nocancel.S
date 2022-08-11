@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pread_nocancel,0xfff,0x200019e,0xfff,0xfff,0xfff,0xfff

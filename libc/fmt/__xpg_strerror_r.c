@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
 
 int __xpg_strerror_r(int a, char *b, size_t c) {
   return strerror_r(a, b, c);

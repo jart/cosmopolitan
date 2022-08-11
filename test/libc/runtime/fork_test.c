@@ -30,8 +30,7 @@
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  pledge("stdio proc", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
 }
 
 TEST(fork, testPipes) {

@@ -18,7 +18,6 @@ TEST_LIBC_CALLS_COMS =							\
 TEST_LIBC_CALLS_BINS =							\
 	$(TEST_LIBC_CALLS_COMS)						\
 	$(TEST_LIBC_CALLS_COMS:%=%.dbg)					\
-	o/$(MODE)/test/libc/calls/tiny64.elf				\
 	o/$(MODE)/test/libc/calls/life-nomod.com			\
 	o/$(MODE)/test/libc/calls/life-classic.com
 

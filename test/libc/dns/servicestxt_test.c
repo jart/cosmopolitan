@@ -25,11 +25,11 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dns/servicestxt.h"
-
 #include "libc/calls/calls.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/ent.h"
+#include "libc/dns/servicestxt.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 char testlib_enable_tmp_setup_teardown;

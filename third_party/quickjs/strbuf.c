@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include "libc/str/str.h"
 #include "third_party/quickjs/internal.h"
 #include "third_party/quickjs/libregexp.h"
 #include "third_party/quickjs/quickjs.h"

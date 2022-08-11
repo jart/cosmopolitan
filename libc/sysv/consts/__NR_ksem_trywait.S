@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_ksem_trywait,0xfff,0xfff,0x0193,0xfff,0xfff,0xfff

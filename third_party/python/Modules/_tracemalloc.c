@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/dictobject.h"
 #include "third_party/python/Include/fileutils.h"

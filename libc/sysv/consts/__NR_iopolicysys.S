@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_iopolicysys,0xfff,0x2000142,0xfff,0xfff,0xfff,0xfff

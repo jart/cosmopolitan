@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_obreak,0xfff,0xfff,0xfff,0x0011,0x011,0xfff

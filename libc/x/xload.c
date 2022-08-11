@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/log/check.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"
 #include "third_party/zlib/zlib.h"

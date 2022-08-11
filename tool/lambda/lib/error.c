@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 #include "tool/lambda/lib/blc.h"
 
 void Error(int rc, const char* s, ...) {

@@ -30,6 +30,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/ldebug.h"

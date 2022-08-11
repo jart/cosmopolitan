@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/likely.h"
 #include "libc/limits.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
 #include "net/http/escape.h"

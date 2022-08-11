@@ -345,6 +345,5 @@
 #define __NR_linux_process_mrelease        0x01c0
 #define __NR_linux_futex_waitv             0x01c1
 #define __NR_linux_set_mempolicy_home_node 0x01c2
-#define __NR_linux_sys_unveil              0x0fff
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_NRLINUX_H_ */

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_tfork,0xfff,0xfff,0xfff,0x0008,0xfff,0xfff

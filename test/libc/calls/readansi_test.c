@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"

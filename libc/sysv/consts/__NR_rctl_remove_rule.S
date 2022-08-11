@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_rctl_remove_rule,0xfff,0xfff,0x0211,0xfff,0xfff,0xfff

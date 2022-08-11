@@ -23,6 +23,8 @@
  * THE SOFTWARE.
  */
 #include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "third_party/quickjs/internal.h"
 #include "third_party/quickjs/libregexp.h"
 #include "third_party/quickjs/quickjs.h"

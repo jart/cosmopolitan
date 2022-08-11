@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_ksem_open,0xfff,0xfff,0x0195,0xfff,0xfff,0xfff

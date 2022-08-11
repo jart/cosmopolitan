@@ -3,6 +3,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/rand/rand.h"

@@ -20,6 +20,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/iconv.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(iconv, test) {

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_ntp_gettime,0xfff,0x2000210,0x00f8,0xfff,0x1c0,0xfff

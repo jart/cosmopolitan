@@ -20,6 +20,7 @@
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/bignum_internal.h"
 #include "third_party/mbedtls/common.h"

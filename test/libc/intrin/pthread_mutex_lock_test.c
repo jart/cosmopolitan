@@ -54,6 +54,11 @@ _Alignas(64) char slock;
 pthread_mutex_t mylock;
 struct spawn th[THREADS];
 
+void SetUpOnce(void) {
+  __enable_threads();
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
+}
+
 TEST(pthread_mutex_lock, normal) {
   pthread_mutex_t lock;
   pthread_mutexattr_t attr;

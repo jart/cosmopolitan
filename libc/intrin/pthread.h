@@ -1,7 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
-#include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
 
 #define PTHREAD_KEYS_MAX 64
 
@@ -84,7 +82,6 @@ int pthread_mutex_init(pthread_mutex_t *, const pthread_mutexattr_t *);
 int pthread_mutex_lock(pthread_mutex_t *);
 int pthread_mutex_unlock(pthread_mutex_t *);
 int pthread_mutex_trylock(pthread_mutex_t *);
-int pthread_mutex_timedlock(pthread_mutex_t *, const struct timespec *);
 int pthread_mutex_destroy(pthread_mutex_t *);
 int pthread_mutex_consistent(pthread_mutex_t *);
 int pthread_mutexattr_init(pthread_mutexattr_t *);
@@ -94,8 +91,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *, int);
 int pthread_cond_init(pthread_cond_t *, const pthread_condattr_t *);
 int pthread_cond_destroy(pthread_cond_t *);
 int pthread_cond_wait(pthread_cond_t *, pthread_mutex_t *);
-int pthread_cond_timedwait(pthread_cond_t *, pthread_mutex_t *,
-                           const struct timespec *);
 int pthread_cond_broadcast(pthread_cond_t *);
 int pthread_cancel(pthread_t);
 int pthread_cond_signal(pthread_cond_t *);
@@ -103,10 +98,8 @@ int pthread_rwlock_init(pthread_rwlock_t *, const pthread_rwlockattr_t *);
 int pthread_rwlock_destroy(pthread_rwlock_t *);
 int pthread_rwlock_rdlock(pthread_rwlock_t *);
 int pthread_rwlock_tryrdlock(pthread_rwlock_t *);
-int pthread_rwlock_timedrdlock(pthread_rwlock_t *, const struct timespec *);
 int pthread_rwlock_wrlock(pthread_rwlock_t *);
 int pthread_rwlock_trywrlock(pthread_rwlock_t *);
-int pthread_rwlock_timedwrlock(pthread_rwlock_t *, const struct timespec *);
 int pthread_rwlock_unlock(pthread_rwlock_t *);
 int pthread_key_create(pthread_key_t *, pthread_key_dtor);
 int pthread_key_delete(pthread_key_t);
@@ -139,8 +132,7 @@ void *pthread_getspecific(pthread_key_t);
 #define pthread_mutex_unlock(mutex)                              \
   ((mutex)->attr == PTHREAD_MUTEX_NORMAL                         \
        ? (__atomic_store_n(&(mutex)->lock, 0, __ATOMIC_RELAXED), \
-          ((IsLinux() || IsOpenbsd()) &&                         \
-           __atomic_load_n(&(mutex)->waits, __ATOMIC_RELAXED) && \
+          (__atomic_load_n(&(mutex)->waits, __ATOMIC_RELAXED) && \
            _pthread_mutex_wake(mutex)),                          \
           0)                                                     \
        : pthread_mutex_unlock(mutex))

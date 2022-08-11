@@ -8,6 +8,7 @@ struct timespec {
 };
 
 int sys_futex(int *, int, int, const struct timespec *, int *);
+int64_t _timespec_tonanos(struct timespec) pureconst;
 int64_t _timespec_tomicros(struct timespec) pureconst;
 int64_t _timespec_tomillis(struct timespec) pureconst;
 struct timespec _timespec_frommicros(int64_t) pureconst;

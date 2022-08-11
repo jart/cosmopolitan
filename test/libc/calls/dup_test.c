@@ -32,11 +32,6 @@
 
 char testlib_enable_tmp_setup_teardown;
 
-void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr proc exec", 0);
-  errno = 0;
-}
-
 static textstartup void TestInit(int argc, char **argv) {
   int fd;
   if (argc == 2 && !strcmp(argv[1], "boop")) {

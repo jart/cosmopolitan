@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_telemetry,0xfff,0x20001c3,0xfff,0xfff,0xfff,0xfff

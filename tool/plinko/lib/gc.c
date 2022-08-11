@@ -25,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsf.h"
+#include "libc/str/str.h"
 #include "tool/plinko/lib/cons.h"
 #include "tool/plinko/lib/gc.h"
 #include "tool/plinko/lib/histo.h"

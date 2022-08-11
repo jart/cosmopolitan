@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_quota,0xfff,0xfff,0x0095,0xfff,0xfff,0xfff

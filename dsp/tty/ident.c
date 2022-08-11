@@ -21,6 +21,7 @@
 #include "libc/bits/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

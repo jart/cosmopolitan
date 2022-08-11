@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 static inline int PutsImpl(const char *s, FILE *f) {
   size_t n, r;

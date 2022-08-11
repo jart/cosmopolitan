@@ -15,6 +15,7 @@
 #include "libc/sysv/consts/fio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/unicode/locale.h"
+#include "libc/unicode/unicode.h"
 #include "third_party/python/Include/bytesobject.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/fileutils.h"

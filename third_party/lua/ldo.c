@@ -32,6 +32,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "third_party/lua/lapi.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"

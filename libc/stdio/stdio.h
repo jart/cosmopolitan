@@ -1,10 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
-#include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/runtime/symbolic.h"
 
 #define _STDIO_H
 #define L_ctermid    20
@@ -130,9 +127,6 @@ int fwide(FILE *, int);
 │ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-void flockfile(FILE *) paramsnonnull();
-void funlockfile(FILE *) paramsnonnull();
-int ftrylockfile(FILE *) paramsnonnull();
 int getc_unlocked(FILE *) paramsnonnull();
 int getchar_unlocked(void);
 int putc_unlocked(int, FILE *) paramsnonnull();
@@ -179,16 +173,6 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 #define putc_unlocked(c, f)  fputc_unlocked(c, f)
 #define putwc_unlocked(c, f) fputwc_unlocked(c, f)
 
-#ifdef _NOPL1
-#define flockfile(f)    _NOPL1("__threadcalls", flockfile, f)
-#define funlockfile(f)  _NOPL1("__threadcalls", funlockfile, f)
-#define ftrylockfile(f) _NOPL1("__threadcalls", ftrylockfile, f)
-#else
-#define flockfile(f)    (__threaded ? flockfile(f) : 0)
-#define funlockfile(f)  (__threaded ? funlockfile(f) : 0)
-#define ftrylockfile(f) (__threaded ? ftrylockfile(f) : 0)
-#endif
-
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 /* clang-format off */
 #define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
@@ -203,10 +187,6 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 #define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
 /* clang-format on */
 #endif
-
-#define stdin  SYMBOLIC(stdin)
-#define stdout SYMBOLIC(stdout)
-#define stderr SYMBOLIC(stderr)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pthread_canceled,0xfff,0x200014d,0xfff,0xfff,0xfff,0xfff

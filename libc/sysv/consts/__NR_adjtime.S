@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_adjtime,0xfff,0x200008c,0x008c,0x008c,0x1a5,0xfff

@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
 #include "third_party/mbedtls/aes.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/base64.h"

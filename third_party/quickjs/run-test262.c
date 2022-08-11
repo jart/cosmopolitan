@@ -28,6 +28,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 #include "third_party/musl/ftw.h"

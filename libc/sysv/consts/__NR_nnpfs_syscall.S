@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_nnpfs_syscall,0xfff,0xfff,0x0153,0xfff,0xfff,0xfff

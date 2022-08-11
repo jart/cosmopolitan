@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_extattr_get_fd,0xfff,0xfff,0x0174,0xfff,0x16d,0xfff

@@ -17,6 +17,7 @@
 #include "third_party/zip/zip.h"
 #include "libc/str/str.h"
 #include "libc/fmt/fmt.h"
+#include "libc/runtime/runtime.h"
 #include "libc/fmt/conv.h"
 
 uch upper[256], lower[256];

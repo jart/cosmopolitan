@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_modfnext,0xfff,0xfff,0x012e,0xfff,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_socket_delegate,0xfff,0x20001c2,0xfff,0xfff,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pselect_nocancel,0xfff,0x200018b,0xfff,0xfff,0xfff,0xfff

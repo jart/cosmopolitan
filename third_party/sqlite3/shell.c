@@ -58,6 +58,7 @@
 #include "third_party/linenoise/linenoise.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
+#include "libc/runtime/runtime.h"
 #if SQLITE_USER_AUTHENTICATION
 #include "third_party/sqlite3/sqlite3userauth.inc"
 #endif

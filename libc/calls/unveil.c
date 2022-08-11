@@ -93,13 +93,15 @@ _Thread_local static struct {
 } State;
 
 static int unveil_final(void) {
-  int rc;
+  int e, rc;
   struct sock_fprog sandbox = {
       .filter = kUnveilBlacklist,
       .len = ARRAYLEN(kUnveilBlacklist),
   };
-  if ((rc = prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) != -1 &&
-      (rc = landlock_restrict_self(State.fd, 0)) != -1 &&
+  e = errno;
+  prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+  errno = e;
+  if ((rc = landlock_restrict_self(State.fd, 0)) != -1 &&
       (rc = sys_close(State.fd)) != -1 &&
       (rc = prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &sandbox)) != -1) {
     State.fd = 0;
@@ -117,9 +119,11 @@ static int err_close(int rc, int fd) {
 static int unveil_init(void) {
   int rc, fd;
   State.fs_mask = UNVEIL_READ | UNVEIL_WRITE | UNVEIL_EXEC | UNVEIL_CREATE;
-  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) <
-      0) {
-    if (errno == EOPNOTSUPP) errno = ENOSYS;
+  if ((rc = landlock_create_ruleset(0, 0, LANDLOCK_CREATE_RULESET_VERSION)) ==
+      -1) {
+    if (errno == EOPNOTSUPP) {
+      errno = ENOSYS;
+    }
     return -1;
   }
   if (rc < 2) {
@@ -250,7 +254,7 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 }
 
 /**
- * Restricts filesystem operations, e.g.
+ * Makes files accessible, e.g.
  *
  *     unveil(".", "r");     // current directory + children are visible
  *     unveil("/etc", "r");  // make /etc readable too
@@ -263,6 +267,10 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  * hidden. You then specify, by repeatedly calling unveil(), which paths
  * should become unhidden. When you're finished, you call `unveil(0,0)`
  * which commits your policy.
+ *
+ * This function requires OpenBSD or Linux 5.13+. We don't consider lack
+ * of system support to be an ENOSYS error, because the files will still
+ * become unveiled. Therefore we return 0 in such cases.
  *
  * There are some differences between unveil() on Linux versus OpenBSD.
  *
@@ -333,8 +341,6 @@ int sys_unveil_linux(const char *path, const char *permissions) {
  *       the pledge promise "cpath".
  *
  * @return 0 on success, or -1 w/ errno
- * @raise ENOSYS if host os isn't Linux or OpenBSD
- * @raise ENOSYS if Landlock isn't supported on this kernel
  * @raise EINVAL if one argument is set and the other is not
  * @raise EINVAL if an invalid character in `permissions` was found
  * @raise EPERM if unveil() is called after locking

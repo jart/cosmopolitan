@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_jail_set,0xfff,0xfff,0x01fb,0xfff,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sigsetmask,0xfff,0xfff,0x006e,0xfff,0xfff,0xfff

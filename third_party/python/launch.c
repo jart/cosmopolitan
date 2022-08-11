@@ -9,6 +9,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"

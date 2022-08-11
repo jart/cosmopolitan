@@ -26,6 +26,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/limits.h"
 #include "libc/mem/alloca.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/quickjs/cutils.h"

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/str/str.h"
 
 static int GetExponent(int c) {
   switch (c) {

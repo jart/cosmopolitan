@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_kevent,0xfff,0x2000171,0x0230,0x0048,0x1b3,0xfff

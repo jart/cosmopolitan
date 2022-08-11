@@ -25,10 +25,13 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/bits/safemacros.internal.h"
+#include "libc/dce.h"
 #include "libc/dns/prototxt.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 /**
  * Opens and searches /etc/protocols to find number for a given name.

@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/hoststxt.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/testlib/testlib.h"
 

@@ -23,7 +23,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/linux/mmap.h"
@@ -50,8 +49,7 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath proc", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath proc", 0));
 }
 
 TEST(mmap, zeroSize) {

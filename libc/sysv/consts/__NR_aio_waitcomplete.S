@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_aio_waitcomplete,0xfff,0xfff,0x0167,0xfff,0xfff,0xfff

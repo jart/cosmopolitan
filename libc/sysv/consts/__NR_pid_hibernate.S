@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pid_hibernate,0xfff,0x20001b3,0xfff,0xfff,0xfff,0xfff

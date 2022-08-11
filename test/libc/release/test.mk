@@ -9,7 +9,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:				\
 		o/$(MODE)/ape/ape-no-modify-self.o			\
 		o/$(MODE)/cosmopolitan.a				\
 		o/$(MODE)/third_party/zip/zip.com
-	@$(COMPILE) -AZIP -T$@						\
+	@$(COMPILE) -wAZIP -T$@						\
 		o/$(MODE)/third_party/zip/zip.com			\
 		-qj $@							\
 		o/cosmopolitan.h					\

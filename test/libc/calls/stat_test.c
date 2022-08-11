@@ -37,8 +37,7 @@ STATIC_YOINK("zip_uri_support");
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  pledge("stdio rpath wpath cpath fattr", 0);
-  errno = 0;
+  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
 }
 
 TEST(stat_010, testEmptyFile_sizeIsZero) {

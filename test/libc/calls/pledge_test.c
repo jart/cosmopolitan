@@ -82,6 +82,7 @@ int extract(const char *from, const char *to, int mode) {
 }
 
 void SetUp(void) {
+  __enable_threads();
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "life.elf", 0755));
   ASSERT_SYS(0, 0, extract("/zip/sock.elf", "sock.elf", 0755));

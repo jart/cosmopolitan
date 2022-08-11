@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_psynch_cvbroad,0xfff,0x200012f,0xfff,0xfff,0xfff,0xfff

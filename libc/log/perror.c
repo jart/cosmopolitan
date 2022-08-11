@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * Writes error messages to standard error.

@@ -23,7 +23,6 @@
 #include "libc/dce.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/interruptiblecall.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -165,36 +164,12 @@ static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
 }
 
 static char g_fsgs_once;
-static struct InterruptibleCall g_fsgs_icall;
 
 /**
  * Don't bother.
  */
 int arch_prctl(int code, int64_t addr) {
   void *fn = arch_prctl_fsgsbase;
-
-#if 0
-  if (!g_fsgs_once) {
-    g_fsgs_once = true;
-    if (X86_HAVE(FSGSBASE)) {
-      g_fsgs_icall.sig = SIGILL;
-      if (interruptiblecall(&g_fsgs_icall, fn, code, addr, 0, 0) != -1 &&
-          g_fsgs_icall.returnval != -1) {
-        /* ivybridge+ (2012) lets us change segment registers without
-           needing a 700ns system call. cpuid and /proc/cpuinfo will both
-           report it's available; unfortunately, operating systems have an
-           added ability to restrict this feature in %cr4, which we're not
-           even allowed to read lool */
-        g_fsgs_once = 2;
-        return 0;
-      }
-    }
-  }
-  if (g_fsgs_once == 2) {
-    return arch_prctl_fsgsbase(code, addr);
-  }
-#endif
-
   switch (__hostos) {
     case METAL:
       return arch_prctl_msr(code, addr);

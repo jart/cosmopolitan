@@ -1,5 +1,6 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
 #include "third_party/zlib/gz/gzguts.inc"
 // clang-format off
 

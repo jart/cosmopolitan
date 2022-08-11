@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_fchflags,0xfff,0x2000023,0x0023,0x0023,0x023,0xfff

@@ -15,6 +15,7 @@
 
 #include "third_party/libcxx/stdlib.h"
 #include "libc/mem/fmt.h"
+#include "libc/unicode/unicode.h"
 #include "third_party/libcxx/memory"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

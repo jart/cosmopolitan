@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_renameatx_np,0xfff,0x20001e8,0xfff,0xfff,0xfff,0xfff

@@ -27,6 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lobject_c
 #define LUA_CORE
+#include "libc/str/str.h"
 #include "third_party/lua/lctype.h"
 #include "third_party/lua/ldebug.h"
 #include "third_party/lua/ldo.h"

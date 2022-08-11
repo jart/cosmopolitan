@@ -22,6 +22,7 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
