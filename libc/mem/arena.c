@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/limits.h"

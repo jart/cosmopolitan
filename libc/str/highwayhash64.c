@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/str/highwayhash64.h"
 
 asm(".ident\t\"\\n\\n\

@@ -4,7 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/str/str.h"

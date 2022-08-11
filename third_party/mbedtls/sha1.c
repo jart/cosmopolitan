@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/sha.h"

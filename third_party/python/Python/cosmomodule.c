@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/bits/popcnt.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"

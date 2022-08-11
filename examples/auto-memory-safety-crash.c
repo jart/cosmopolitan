@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/dce.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

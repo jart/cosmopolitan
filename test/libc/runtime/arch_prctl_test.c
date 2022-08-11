@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/segmentation.h"
+#include "libc/intrin/segmentation.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/threaded.h"

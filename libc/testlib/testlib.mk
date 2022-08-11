@@ -94,7 +94,6 @@ LIBC_TESTLIB_A_OBJS =						\
 
 LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_ALG						\
-	LIBC_BITS						\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\

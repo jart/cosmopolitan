@@ -20,7 +20,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/log/log.h"
 #include "libc/rand/rand.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "third_party/mbedtls/test/test.inc"
 /*
  * *** THIS FILE WAS MACHINE GENERATED ***

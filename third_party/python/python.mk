@@ -442,7 +442,6 @@ THIRD_PARTY_PYTHON_STAGE1_A_SRCS =					\
 THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	DSP_SCALE							\
 	LIBC_ALG							\
-	LIBC_BITS							\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\
@@ -1123,7 +1122,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DATA =						\
 THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	DSP_CORE							\
 	LIBC_ALG							\
-	LIBC_BITS							\
 	LIBC_CALLS							\
 	LIBC_DNS							\
 	LIBC_FMT							\
@@ -4358,7 +4356,7 @@ o/$(MODE)/third_party/python/freeze.com.dbg:				\
 o/$(MODE)/third_party/python/chibicc.inc:				\
 		third_party/python/chibicc.inc				\
 		libc/assert.h						\
-		libc/bits/likely.h					\
+		libc/intrin/likely.h					\
 		libc/calls/struct/stat.h				\
 		libc/calls/struct/timespec.h				\
 		libc/dce.h						\

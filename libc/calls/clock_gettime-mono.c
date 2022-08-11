@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"

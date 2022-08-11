@@ -1,4 +1,4 @@
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/bignum.h"

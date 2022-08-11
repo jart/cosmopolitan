@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/popcnt.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"

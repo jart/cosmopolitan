@@ -34,7 +34,7 @@
 │  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/macros.internal.h"
 #include "libc/rand/rand.h"
 

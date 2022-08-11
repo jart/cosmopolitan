@@ -4,7 +4,7 @@
 #include "libc/calls/weirdtypes.h"
 
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
-#include "libc/bits/newbie.h"
+#include "libc/intrin/newbie.h"
 #include "libc/calls/typedef/u.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sock/select.h"

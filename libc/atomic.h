@@ -11,7 +11,7 @@ COSMOPOLITAN_C_START_
  * we only define a portability macro for the syntax `_Atomic(T)`.
  *
  * @see libc/integral/c.inc
- * @see libc/bits/atomic.h
+ * @see libc/intrin/atomic.h
  */
 
 #define atomic_bool           _Atomic(_Bool)

@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/critbit0.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/likely.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/log.h"
 #include "libc/log/rop.h"

@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_PLATFORM_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_PLATFORM_H_
 #include "libc/assert.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"

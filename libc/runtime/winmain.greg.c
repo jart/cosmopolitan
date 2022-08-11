@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"

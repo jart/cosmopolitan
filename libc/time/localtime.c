@@ -2,7 +2,7 @@
 │vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define LOCALTIME_IMPLEMENTATION
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"

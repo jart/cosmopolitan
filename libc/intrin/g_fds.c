@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/pthread.h"

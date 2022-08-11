@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BENCH_H_
 #define COSMOPOLITAN_LIBC_BENCH_H_
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/nexgen32e/bench.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

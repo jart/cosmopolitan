@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/bswap.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nexgen32e.h"

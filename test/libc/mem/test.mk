@@ -72,7 +72,7 @@ o/$(MODE)/test/libc/mem/prog/sock.o:					\
 		test/libc/mem/prog/sock.c			\
 		libc/errno.h					\
 		libc/sock/sock.h				\
-		libc/bits/bswap.h				\
+		libc/intrin/bswap.h				\
 		libc/sysv/consts/af.h				\
 		libc/runtime/symbolic.h				\
 		libc/sysv/consts/sock.h

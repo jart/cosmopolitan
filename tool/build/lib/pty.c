@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"

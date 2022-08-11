@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/unicode/unicode.h"
 #include "tool/viz/lib/formatstringtable.h"
 

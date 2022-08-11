@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/bits/smmintrin.internal.h"
+#include "libc/intrin/smmintrin.internal.h"
 #include "libc/macros.internal.h"
 
 //	Rounds to nearest integer.

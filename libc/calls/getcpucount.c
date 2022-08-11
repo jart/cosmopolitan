@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/popcnt.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"

@@ -20,7 +20,6 @@ TOOL_VIZ_DIRECTDEPS =				\
 	DSP_MPEG				\
 	DSP_SCALE				\
 	DSP_TTY					\
-	LIBC_BITS				\
 	LIBC_CALLS				\
 	LIBC_DNS				\
 	LIBC_FMT				\

@@ -5,9 +5,9 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/siginfo.h"

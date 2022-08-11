@@ -23,7 +23,6 @@ TEST_LIBC_STDIO_CHECKS =				\
 	$(TEST_LIBC_STDIO_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_STDIO_DIRECTDEPS =				\
-	LIBC_BITS					\
 	LIBC_CALLS					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\

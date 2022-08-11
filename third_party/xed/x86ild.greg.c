@@ -17,7 +17,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"

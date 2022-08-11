@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/mem/mem.h"

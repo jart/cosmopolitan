@@ -5,7 +5,7 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "third_party/zlib/chunkcopy.internal.h"
 #include "third_party/zlib/inffast.internal.h"
 #include "third_party/zlib/inflate.internal.h"

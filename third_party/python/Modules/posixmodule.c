@@ -7,7 +7,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "libc/alg/alg.h"
 #include "libc/assert.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/makedev.h"

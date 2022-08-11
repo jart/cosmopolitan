@@ -25,7 +25,7 @@
 #include "dsp/core/illumination.h"
 #include "dsp/core/q.h"
 #include "dsp/scale/scale.h"
-#include "libc/bits/xmmintrin.internal.h"
+#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/pmulhrsw.h"

@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/bits/xchg.internal.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/xchg.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"

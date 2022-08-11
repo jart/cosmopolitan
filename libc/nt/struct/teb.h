@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_NT_TEB_H_
 #define COSMOPOLITAN_LIBC_NT_TEB_H_
-#include "libc/bits/segmentation.h"
+#include "libc/intrin/segmentation.h"
 #include "libc/nt/struct/peb.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)

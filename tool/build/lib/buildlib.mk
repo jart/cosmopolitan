@@ -33,7 +33,6 @@ TOOL_BUILD_LIB_A_OBJS =					\
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
 	LIBC_ALG					\
-	LIBC_BITS					\
 	LIBC_CALLS					\
 	LIBC_ELF					\
 	LIBC_FMT					\

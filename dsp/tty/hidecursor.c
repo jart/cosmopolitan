@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/tty.h"
-#include "libc/bits/pushpop.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/dce.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"

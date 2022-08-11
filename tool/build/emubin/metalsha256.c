@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/xmmintrin.internal.h"
+#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/intrin/repstosb.h"
 #include "tool/build/emubin/metalsha256.h"
 

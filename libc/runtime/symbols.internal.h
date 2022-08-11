@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_SYMBOLS_H_
 #define COSMOPOLITAN_LIBC_SYMBOLS_H_
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

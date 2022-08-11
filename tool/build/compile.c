@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/ioctl.h"

@@ -19,7 +19,6 @@ THIRD_PARTY_ARGON2_A_DIRECTDEPS =				\
 	LIBC_CALLS						\
 	LIBC_FMT						\
 	LIBC_INTRIN						\
-	LIBC_BITS						\
 	LIBC_NEXGEN32E						\
 	LIBC_MEM						\
 	LIBC_SYSV						\

@@ -110,7 +110,6 @@ include libc/intrin/intrin.mk			# │  You can use the stack
 include libc/linux/linux.mk			# │  You can manipulate arrays
 include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
 include third_party/compiler_rt/compiler_rt.mk	# │
-include libc/bits/bits.mk			# │
 include libc/str/str.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
@@ -201,7 +200,6 @@ include test/libc/nexgen32e/test.mk
 include test/libc/runtime/test.mk
 include test/libc/thread/test.mk
 include test/libc/sock/test.mk
-include test/libc/bits/test.mk
 include test/libc/str/test.mk
 include test/libc/log/test.mk
 include test/libc/unicode/test.mk
@@ -301,7 +299,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_ALG		\
 	LIBC_MEM		\
 	THIRD_PARTY_DLMALLOC	\
-	LIBC_BITS		\
 	LIBC_RUNTIME		\
 	LIBC_ELF		\
 	LIBC_CALLS		\
@@ -331,7 +328,6 @@ COSMOPOLITAN_HEADERS =		\
 	APE			\
 	LIBC			\
 	LIBC_ALG		\
-	LIBC_BITS		\
 	LIBC_CALLS		\
 	LIBC_DNS		\
 	LIBC_ELF		\

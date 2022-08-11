@@ -2,8 +2,8 @@
 #define DSP_TTY_QUANT_H_
 #include "dsp/tty/ttyrgb.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/xmmintrin.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

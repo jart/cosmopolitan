@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_ROP_H_
 #define COSMOPOLITAN_LIBC_LOG_ROP_H_
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 
 #define RETURN_ON_ERROR(expr)     \
   do {                            \

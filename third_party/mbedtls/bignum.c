@@ -16,8 +16,8 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/bswap.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bswap.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

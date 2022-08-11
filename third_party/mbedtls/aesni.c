@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/aesni.h"
 #include "third_party/mbedtls/common.h"

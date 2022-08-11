@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/reverse.internal.h"
-#include "libc/bits/pushpop.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/fmt/fmt.h"

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/dce.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/fmt.h"

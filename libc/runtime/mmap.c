@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"

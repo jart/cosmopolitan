@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"

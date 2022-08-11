@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/safemacros.internal.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/nexgen32e/bsr.h"

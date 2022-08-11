@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist2.internal.h"
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"

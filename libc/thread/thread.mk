@@ -27,7 +27,6 @@ LIBC_THREAD_A_DIRECTDEPS =				\
 	LIBC_STUBS					\
 	LIBC_CALLS					\
 	LIBC_INTRIN					\
-	LIBC_BITS					\
 	LIBC_MEM					\
 	LIBC_RUNTIME					\
 	LIBC_SYSV					\

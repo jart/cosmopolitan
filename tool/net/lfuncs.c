@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/popcnt.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/stat.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/errors.h"

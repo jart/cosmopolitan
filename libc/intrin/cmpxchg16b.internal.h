@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_BITS_CMPXCHG16B_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_BITS_CMPXCHG16B_INTERNAL_H_
-#include "libc/bits/asmflag.h"
+#include "libc/intrin/asmflag.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

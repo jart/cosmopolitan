@@ -4,7 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "third_party/python/Include/pyerrors.h"
 #include "third_party/python/Include/pymem.h"
 #include "third_party/python/Modules/unicodedata.h"

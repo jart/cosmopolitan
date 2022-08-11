@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/weaken.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

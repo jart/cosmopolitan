@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/hilbert.h"
-#include "libc/bits/morton.h"
+#include "libc/intrin/hilbert.h"
+#include "libc/intrin/morton.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

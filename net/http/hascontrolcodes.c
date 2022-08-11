@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "net/http/escape.h"

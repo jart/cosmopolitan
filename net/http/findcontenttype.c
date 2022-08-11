@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/bswap.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "net/http/http.h"

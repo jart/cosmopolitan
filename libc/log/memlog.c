@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/atomic.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/weaken.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"

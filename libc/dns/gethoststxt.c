@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"

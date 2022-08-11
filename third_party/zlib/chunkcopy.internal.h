@@ -1,6 +1,6 @@
 #ifndef THIRD_PARTY_ZLIB_CHUNKCOPY_H
 #define THIRD_PARTY_ZLIB_CHUNKCOPY_H
-#include "libc/bits/emmintrin.internal.h"
+#include "libc/intrin/emmintrin.internal.h"
 #include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\

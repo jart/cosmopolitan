@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_ZIP_H_
 #define COSMOPOLITAN_LIBC_ZIP_H_
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"

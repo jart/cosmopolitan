@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/atomic.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"

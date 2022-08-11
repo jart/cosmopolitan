@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LZ4_H_
 #define COSMOPOLITAN_LIBC_LZ4_H_
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § lz4                                                       ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│─╝

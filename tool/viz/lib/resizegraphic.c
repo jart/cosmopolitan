@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/xmmintrin.internal.h"
+#include "libc/intrin/xmmintrin.internal.h"
 #include "libc/runtime/buffer.h"
 #include "tool/viz/lib/graphic.h"
 

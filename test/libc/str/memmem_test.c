@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/likely.h"
 #include "libc/mem/mem.h"
 #include "libc/rand/rand.h"
 #include "libc/str/internal.h"

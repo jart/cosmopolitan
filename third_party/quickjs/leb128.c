@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "third_party/quickjs/leb128.h"
 
 asm(".ident\t\"\\n\\n\

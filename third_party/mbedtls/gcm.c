@@ -15,8 +15,8 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/likely.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"

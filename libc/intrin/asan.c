@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/reverse.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"

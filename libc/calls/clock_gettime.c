@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/asmflag.h"
-#include "libc/bits/bits.h"
+#include "libc/intrin/asmflag.h"
+#include "libc/intrin/bits.h"
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/internal.h"

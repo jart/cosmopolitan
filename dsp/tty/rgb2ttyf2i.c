@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/quant.h"
-#include "libc/bits/xmmintrin.internal.h"
+#include "libc/intrin/xmmintrin.internal.h"
 
 struct TtyRgb rgb2ttyf2i_(__m128 rgb) {
   __v4si i4;

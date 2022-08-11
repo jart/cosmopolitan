@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_
-#include "libc/bits/asmflag.h"
+#include "libc/intrin/asmflag.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 

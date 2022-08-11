@@ -6,8 +6,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "libc/assert.h"
-#include "libc/bits/likely.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/countbranch.h"

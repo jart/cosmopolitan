@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
-#include "libc/bits/bswap.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/bswap.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"

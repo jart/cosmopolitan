@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_SMALLZ4_SMALLZ4_H_
 #define COSMOPOLITAN_THIRD_PARTY_SMALLZ4_SMALLZ4_H_
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "third_party/libcxx/vector"
 
 /**

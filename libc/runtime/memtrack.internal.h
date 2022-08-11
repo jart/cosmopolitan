@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "libc/assert.h"
-#include "libc/bits/midpoint.h"
+#include "libc/intrin/midpoint.h"
 #include "libc/dce.h"
 #include "libc/intrin/nopl.h"
 #include "libc/macros.internal.h"

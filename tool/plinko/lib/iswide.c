@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/midpoint.h"
+#include "libc/intrin/midpoint.h"
 #include "libc/macros.internal.h"
 #include "tool/plinko/lib/char.h"
 

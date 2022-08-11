@@ -1,6 +1,6 @@
 #ifndef Py_CEVAL_H
 #define Py_CEVAL_H
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/dce.h"
 #include "libc/runtime/stack.h"
 #include "third_party/python/Include/object.h"

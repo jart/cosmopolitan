@@ -43,7 +43,7 @@
 #include "libc/stdio/stdio.h"       /* fprintf, fopen, ftello */
 #include "libc/time/time.h"        /* clock_t, clock, CLOCKS_PER_SEC */
 #include "libc/assert.h"
-#include "libc/bits/initializer.internal.h"
+#include "libc/intrin/initializer.internal.h"
 #include "libc/runtime/runtime.h"      /* assert */
 
 #include "third_party/lz4cli/datagen.h"     /* RDG_genBuffer */

@@ -25,7 +25,6 @@ LIBC_SOCK_A_CHECKS =				\
 	$(LIBC_SOCK_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_SOCK_A_DIRECTDEPS =			\
-	LIBC_BITS				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/midpoint.h"
+#include "libc/intrin/midpoint.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"

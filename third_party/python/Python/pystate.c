@@ -4,7 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/runtime/dlfcn.h"
 #include "third_party/python/Include/ceval.h"
 #include "third_party/python/Include/dictobject.h"

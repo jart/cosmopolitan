@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_CUTILS_H_
-#include "libc/bits/bswap.h"
+#include "libc/intrin/bswap.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /* clang-format off */

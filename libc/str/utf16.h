@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_STR_UTF16_H_
 #define COSMOPOLITAN_LIBC_STR_UTF16_H_
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 
 #define UTF16_MASK 0xfc00
 #define UTF16_MOAR 0xd800 /* 0xD800..0xDBFF */

@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/itoa8.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/initializer.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/initializer.internal.h"
 #include "libc/str/str.h"
 
 struct Itoa8 kItoa8;

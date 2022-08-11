@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/arraylist.internal.h"
-#include "libc/bits/bits.h"
-#include "libc/bits/pushpop.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"

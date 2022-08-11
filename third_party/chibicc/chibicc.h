@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_CHIBICC_CHIBICC_H_
 #define COSMOPOLITAN_THIRD_PARTY_CHIBICC_CHIBICC_H_
 #include "libc/assert.h"
-#include "libc/bits/popcnt.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"

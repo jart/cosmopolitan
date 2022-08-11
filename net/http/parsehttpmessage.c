@@ -19,7 +19,7 @@
 #include "libc/alg/alg.h"
 #include "libc/alg/arraylist.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

@@ -44,7 +44,6 @@ THIRD_PARTY_SQLITE3_A_CHECKS =						\
 
 THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_ALG							\
-	LIBC_BITS							\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\

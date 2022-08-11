@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/countbranch.h"
 #include "third_party/python/Include/abstract.h"

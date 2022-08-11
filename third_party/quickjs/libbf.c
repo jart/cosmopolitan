@@ -22,8 +22,8 @@
  * THE SOFTWARE.
  */
 #include "libc/assert.h"
-#include "libc/bits/avxintrin.internal.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/avxintrin.internal.h"
+#include "libc/intrin/likely.h"
 #include "libc/inttypes.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"

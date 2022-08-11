@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
-#include "libc/bits/likely.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"

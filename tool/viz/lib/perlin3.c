@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
-#include "libc/bits/initializer.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/initializer.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "tool/viz/lib/graphic.h"

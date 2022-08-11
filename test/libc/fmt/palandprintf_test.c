@@ -24,8 +24,8 @@
 │ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN    │
 │ THE SOFTWARE.                                                                │
 └─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/pushpop.h"
-#include "libc/bits/safemacros.internal.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "libc/assert.h"
-#include "libc/bits/asmflag.h"
+#include "libc/intrin/asmflag.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"

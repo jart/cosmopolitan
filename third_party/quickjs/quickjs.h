@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_QUICKJS_QUICKJS_H_
 #define COSMOPOLITAN_THIRD_PARTY_QUICKJS_QUICKJS_H_
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "libc/math.h"
 #include "libc/stdio/stdio.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

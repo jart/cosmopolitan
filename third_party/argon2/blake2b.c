@@ -15,7 +15,7 @@
 │ - Apache 2.0        : https://www.apache.org/licenses/LICENSE-2.0            │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "third_party/argon2/blake2-impl.h"
 #include "third_party/argon2/blake2.h"

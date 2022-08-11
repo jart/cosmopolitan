@@ -94,7 +94,7 @@ TEST(tarjan, testHeaders) {
   };
   const char *const vertices[] = {
       [LIBC_STR_STR] = "libc/str/str.h",
-      [LIBC_BITS_BITS] = "libc/bits/bits.h",
+      [LIBC_BITS_BITS] = "libc/intrin/bits.h",
       [LIBC_INTEGRAL] = "libc/integral.h",
       [LIBC_KEYWORDS] = "libc/keywords.h",
       [LIBC_DCE] = "libc/dce.h",
@@ -118,6 +118,6 @@ TEST(tarjan, testHeaders) {
   EXPECT_STREQ("libc/keywords.h", vertices[sorted[2]]);
   EXPECT_STREQ("libc/macros-cpp.inc", vertices[sorted[3]]);
   EXPECT_STREQ("libc/macros.internal.h", vertices[sorted[4]]);
-  EXPECT_STREQ("libc/bits/bits.h", vertices[sorted[5]]);
+  EXPECT_STREQ("libc/intrin/bits.h", vertices[sorted[5]]);
   EXPECT_STREQ("libc/str/str.h", vertices[sorted[6]]);
 }

@@ -5,7 +5,7 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"

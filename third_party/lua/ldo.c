@@ -27,7 +27,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ldo_c
 #define LUA_CORE
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/internal.h"

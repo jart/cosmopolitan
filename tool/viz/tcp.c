@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/bits/bits.h"
+#include "libc/intrin/bits.h"
 #include "libc/stdio/stdio.h"
 // clang-format off
 

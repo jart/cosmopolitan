@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/alg/bisectcarleft.internal.h"
 #include "libc/assert.h"
-#include "libc/bits/weaken.h"
+#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"

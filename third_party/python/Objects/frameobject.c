@@ -4,7 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/cellobject.h"
 #include "third_party/python/Include/code.h"

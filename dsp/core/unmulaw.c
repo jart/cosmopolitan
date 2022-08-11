@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
-#include "libc/bits/likely.h"
+#include "libc/intrin/likely.h"
 
 /**
  * Expands μ-Law coded to audio sample.
