@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-unix.pledge("stdio")
+assert(unix.pledge("stdio"))
 
 assert(EncodeLua(assert(DecodeJson[[  0  ]])) ==  '0' )
 assert(EncodeLua(assert(DecodeJson[[ [1] ]])) == '{1}')

@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-unix.pledge("stdio")
+assert(unix.pledge("stdio"))
 
 assert(string.match("127.123.231.1", "%d+.%d+.%d+.%d+"))
 assert(re.search([[^\d{1,3}(\.\d{1,3}){3}$]], "127.123.231.1"))

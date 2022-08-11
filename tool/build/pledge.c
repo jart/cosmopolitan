@@ -79,6 +79,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -c PATH         call chroot()\n\
   -v [PERM:]PATH  call unveil(PATH, PERM[rwxc])\n\
   -V              disable unveiling (only pledge)\n\
+  -q              disable stderr violation logging\n\
   -k              kill process rather than eperm'ing\n\
   -n              set maximum niceness\n\
   -D              don't drop capabilities\n\
@@ -130,6 +131,7 @@ int g_uflag;
 int g_kflag;
 int g_hflag;
 bool g_nice;
+bool g_qflag;
 bool isdynamic;
 bool g_noclose;
 long g_cpuquota;
@@ -157,10 +159,13 @@ static void GetOpts(int argc, char *argv[]) {
   g_proquota = GetCpuCount() * 100;
   g_memquota = 4L * 1024 * 1024 * 1024;
   if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnkNVT:p:u:g:c:C:D:P:M:F:v:")) != -1) {
+  while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
+        break;
+      case 'q':
+        g_qflag = true;
         break;
       case 'k':
         g_kflag = true;
@@ -758,15 +763,18 @@ int main(int argc, char *argv[]) {
   // crash messages if we're not pledging exec, which is what this tool
   // always has to do currently.
   if (g_kflag) {
-    __pledge_mode = kPledgeModeKillProcess;
+    __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
   } else {
-    __pledge_mode = kPledgeModeErrno;
+    __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
   }
 
   // we need to be able to call execv and mmap the dso
   // it'll be pledged away once/if the dso gets loaded
   if (!(~ipromises & (1ul << PROMISE_EXEC))) {
     g_promises = xstrcat(g_promises, ' ', "exec");
+    if (!g_qflag) {
+      __pledge_mode |= PLEDGE_STDERR_LOGGING;
+    }
   }
   if (isdynamic) {
     g_promises = xstrcat(g_promises, ' ', "prot_exec");
@@ -774,8 +782,7 @@ int main(int argc, char *argv[]) {
 
   // pass arguments to pledge() inside the dso
   if (isdynamic) {
-    ksnprintf(buf, sizeof(buf), "_PLEDGE=%ld,%ld,%ld", ~ipromises,
-              __pledge_mode, false);
+    ksnprintf(buf, sizeof(buf), "_PLEDGE=%ld,%ld", ~ipromises, __pledge_mode);
     putenv(buf);
   }
 

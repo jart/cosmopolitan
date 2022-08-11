@@ -40,7 +40,7 @@ local function main()
    assert(unix.makedirs(tmpdir))
    unix.unveil(tmpdir, "rwc")
    unix.unveil(nil, nil)
-   unix.pledge("stdio rpath wpath cpath")
+   assert(unix.pledge("stdio rpath wpath cpath"))
    ok, err = pcall(SlurpTest)
    if ok then
       assert(unix.rmrf(tmpdir))

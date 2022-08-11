@@ -72,7 +72,7 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
     if (!IsWindows()) {
       rc = 0;
       if (IsLinux() && __execpromises && weaken(sys_pledge_linux)) {
-        rc = weaken(sys_pledge_linux)(__execpromises, __pledge_mode, false);
+        rc = weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
       }
       if (!rc) {
         rc = sys_execve(prog, argv, envp);

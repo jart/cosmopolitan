@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-unix.pledge("stdio")
+assert(unix.pledge("stdio"))
 
 -- test redbean lua language extensions
 assert(0b100 == 4)

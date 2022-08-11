@@ -903,15 +903,13 @@ static privileged int SigProcMask(int how, int64_t set, int64_t *old) {
 
 static privileged void KillThisProcess(void) {
   int ax;
-  struct sigaction dfl = {.sa_sigaction = SIG_DFL};
-  if (!SigAction(Sigabrt, &dfl, 0)) {
-    SigProcMask(Sig_Setmask, -1, 0);
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_linux_kill), "D"(GetPid()), "S"(Sigabrt)
-                 : "rcx", "r11", "memory");
-    SigProcMask(Sig_Setmask, 0, 0);
-  }
+  SigAction(Sigabrt, &(struct sigaction){0}, 0);
+  SigProcMask(Sig_Setmask, -1, 0);
+  asm volatile("syscall"
+               : "=a"(ax)
+               : "0"(__NR_linux_kill), "D"(GetPid()), "S"(Sigabrt)
+               : "rcx", "r11", "memory");
+  SigProcMask(Sig_Setmask, 0, 0);
   asm volatile("syscall"
                : "=a"(ax)
                : "0"(__NR_linux_exit_group), "D"(128 + Sigabrt)
@@ -920,15 +918,13 @@ static privileged void KillThisProcess(void) {
 
 static privileged void KillThisThread(void) {
   int ax;
-  struct sigaction dfl = {.sa_sigaction = SIG_DFL};
-  if (!SigAction(Sigabrt, &dfl, 0)) {
-    SigProcMask(Sig_Setmask, -1, 0);
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_linux_tkill), "D"(GetTid()), "S"(Sigabrt)
-                 : "rcx", "r11", "memory");
-    SigProcMask(Sig_Setmask, 0, 0);
-  }
+  SigAction(Sigabrt, &(struct sigaction){0}, 0);
+  SigProcMask(Sig_Setmask, -1, 0);
+  asm volatile("syscall"
+               : "=a"(ax)
+               : "0"(__NR_linux_tkill), "D"(GetTid()), "S"(Sigabrt)
+               : "rcx", "r11", "memory");
+  SigProcMask(Sig_Setmask, 0, 0);
   asm volatile("syscall"
                : /* no outputs */
                : "a"(__NR_linux_exit), "D"(128 + Sigabrt)
@@ -959,10 +955,9 @@ static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
 }
 
 static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
-  int i, ok;
   bool found;
   char ord[17], rip[17];
-  enum PledgeMode mode = si->si_errno;
+  int i, ok, mode = si->si_errno;
   ctx->uc_mcontext.rax = -Eperm;
   FixCpy(ord, si->si_syscall, 12);
   HexCpy(rip, ctx->uc_mcontext.rip);
@@ -978,11 +973,11 @@ static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
     Log("error: bad syscall (", GetSyscallName(si->si_syscall), " ord=", ord,
         " rip=", rip, ")\n", 0);
   }
-  switch (mode) {
-    case kPledgeModeKillProcess:
+  switch (mode & PLEDGE_PENALTY_MASK) {
+    case PLEDGE_PENALTY_KILL_PROCESS:
       KillThisProcess();
       // fallthrough
-    case kPledgeModeKillThread:
+    case PLEDGE_PENALTY_KILL_THREAD:
       KillThisThread();
       unreachable;
     default:
@@ -1016,6 +1011,7 @@ static privileged void AppendFilter(struct Filter *f, struct sock_filter *p,
 //   - kill(getpid(), SIGABRT) to abort process
 //   - tkill(gettid(), SIGABRT) to abort thread
 //   - sigaction(SIGABRT) to force default signal handler
+//   - sigreturn() to return from signal handler
 //   - sigprocmask() to force signal delivery
 //
 static privileged void AllowMonitor(struct Filter *f) {
@@ -1044,6 +1040,7 @@ static privileged void AllowMonitor(struct Filter *f) {
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, Sigabrt, 0, 1),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sigreturn, 1, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_sigprocmask, 0, 1),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
   };
@@ -1897,17 +1894,12 @@ static privileged void AppendPledge(struct Filter *f,   //
  * Installs SECCOMP BPF filter on Linux thread.
  *
  * @param ipromises is inverted integer bitmask of pledge() promises
- * @param mode configures the course of action on sandbox violations
- * @param want_msyscall if set will cause syscall origin checking to be
- *     enabled, but only if `exec` hasn't been pledged
  * @return 0 on success, or negative error number on error
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
  */
-privileged int sys_pledge_linux(unsigned long ipromises,  //
-                                enum PledgeMode mode,     //
-                                bool want_msyscall) {     //
+privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
   struct Filter f;
   int i, e, rc = -1;
   struct sock_filter sf[1] = {BPF_STMT(BPF_RET | BPF_K, 0)};
@@ -1921,9 +1913,6 @@ privileged int sys_pledge_linux(unsigned long ipromises,  //
     // when _Exit() gets called since we need to fallback to _Exit1()
     AppendFilter(&f, PLEDGE(kFilterIgnoreExitGroup));
   }
-  if (want_msyscall && !(~ipromises & (1ul << PROMISE_EXEC))) {
-    AppendOriginVerification(&f);
-  }
   AppendPledge(&f, PLEDGE(kPledgeDefault));
   for (i = 0; i < ARRAYLEN(kPledge); ++i) {
     if (~ipromises & (1ul << i)) {
@@ -1936,31 +1925,38 @@ privileged int sys_pledge_linux(unsigned long ipromises,  //
   }
 
   // now determine what we'll do on sandbox violations
-  if (~ipromises & (1ul << PROMISE_EXEC)) {
-    // our sigsys error message handler can't be inherited across
-    // execve() boundaries so if you've pledged exec then that'll
-    // mean no error messages for you.
-    switch (mode) {
-      case kPledgeModeKillThread:
-        sf[0].k = SECCOMP_RET_KILL_THREAD;
-        break;
-      case kPledgeModeKillProcess:
-        sf[0].k = SECCOMP_RET_KILL_PROCESS;
-        break;
-      case kPledgeModeErrno:
-        sf[0].k = SECCOMP_RET_ERRNO | Eperm;
-        break;
-      default:
-        unreachable;
-    }
-    AppendFilter(&f, PLEDGE(sf));
-  } else {
+  if (mode & PLEDGE_STDERR_LOGGING) {
+    // trapping mode
+    //
     // if we haven't pledged exec, then we can monitor SIGSYS
     // and print a helpful error message when things do break
     // to avoid tls / static memory, we embed mode within bpf
     MonitorSigSys();
     AllowMonitor(&f);
     sf[0].k = SECCOMP_RET_TRAP | (mode & SECCOMP_RET_DATA);
+    AppendFilter(&f, PLEDGE(sf));
+  } else {
+    // non-trapping mode
+    //
+    // 1. our sigsys error message handler can't be inherited across
+    //    execve() boundaries so if you've pledged exec then that'll
+    //    mean no error messages for you.
+    //
+    // 2. we do not trap pledge("", 0) because that would go against
+    //    its documented purpose of only permitted exit().
+    switch (mode & PLEDGE_PENALTY_MASK) {
+      case PLEDGE_PENALTY_KILL_THREAD:
+        sf[0].k = SECCOMP_RET_KILL_THREAD;
+        break;
+      case PLEDGE_PENALTY_KILL_PROCESS:
+        sf[0].k = SECCOMP_RET_KILL_PROCESS;
+        break;
+      case PLEDGE_PENALTY_RETURN_EPERM:
+        sf[0].k = SECCOMP_RET_ERRNO | Eperm;
+        break;
+      default:
+        unreachable;
+    }
     AppendFilter(&f, PLEDGE(sf));
   }
 

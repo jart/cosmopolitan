@@ -44,23 +44,8 @@
  * an error, because the specified operations will be permitted.
  *
  * The promises you give pledge() define which system calls are allowed.
- * Error messages are logged when sandbox violations occur that well you
- * which promise was needed, to stderr on Linux and /var/log/messages on
- * OpenBSD, and the unwatchable termination signal should be SIGABRT.
- *
- * Standard error logging can't happen on Linux if you use the `exec`
- * promise, since we polyfill logging in userspace which can't cross
- * execve() boundaries. However once you pledge away `exec` it works.
- * Another inconsistency that pledging `exec` causes, is your process
- * termination signal may become SIGSYS rather than SIGABRT.
- *
- * On Linux, our SECCOMP BPF polyfill offers more configurability in
- * terms of behavior. It's possible to choose different behaviors that
- * determine how sandbox violations are handled.
- *
- *     __pledge_mode = kPledgeModeKillThread;  // kill thread [default]
- *     __pledge_mode = kPledgeModeKillProcess; // kill all threads
- *     __pledge_mode = kPledgeModeErrno;       // just return EPERM
+ * Error messages are logged when sandbox violations occur, but how that
+ * happens depends on the `mode` parameter (see below).
  *
  * Timing is everything with pledge. It's designed to be a voluntary
  * self-imposed security model. That works best when programs perform
@@ -90,13 +75,6 @@
  *
  * User and group IDs can't be changed once pledge is in effect. OpenBSD
  * should ignore chown without crashing; whereas Linux will just EPERM.
- *
- * Memory functions won't permit creating executable code after pledge.
- * Restrictions on origin of SYSCALL instructions will become enforced
- * on Linux (cf. msyscall) after pledge too, which means the process
- * gets killed if SYSCALL is used outside the .privileged section. One
- * exception is if the "exec" group is specified, in which case these
- * restrictions need to be loosened.
  *
  * Using pledge is irreversible. On Linux it causes PR_SET_NO_NEW_PRIVS
  * to be set on your process; however, if "id" or "recvfd" are allowed
@@ -177,16 +155,13 @@
  *
  * - "settime" allows settimeofday and clock_adjtime.
  *
- * - "exec" allows execve, execveat. On Linux, using this promise will
- *   cause (1) system call origin verification to be disabled; (2) error
- *   logging will be disabled; and (3) your termination signals might
- *   become SIGSYS instead of SIGABRT. Another thing to note is that
- *   `exec` alone might not be enough by itself to let your executable
- *   be executed. For dynamic, interpreted, and ape binaries, you'll
- *   usually want `rpath` and `prot_exec` too. With APE it's possible to
- *   work around this requirement, by "assimilating" your binaries
- *   beforehand. See the assimilate.com program and `--assimilate` flag
- *   which can be used to turn APE binaries into static native binaries.
+ * - "exec" allows execve, execveat. Note that `exec` alone might not be
+ *   enough by itself to let your executable be executed. For dynamic,
+ *   interpreted, and ape binaries, you'll usually want `rpath` and
+ *   `prot_exec` too. With APE it's possible to work around this
+ *   requirement, by "assimilating" your binaries beforehand. See the
+ *   assimilate.com program and `--assimilate` flag which can be used to
+ *   turn APE binaries into static native binaries.
  *
  * - "prot_exec" allows mmap(PROT_EXEC) and mprotect(PROT_EXEC). This is
  *   needed to (1) code morph mutexes in __enable_threads(), and it's
@@ -218,6 +193,41 @@
  * has to do this before calling sys_execve(), the executed process will
  * be weakened to have execute permissions too.
  *
+ * `__pledge_mode` is available to improve the experience of pledge() on
+ * Linux. It should specify one of the following penalties:
+ *
+ * - `PLEDGE_PENALTY_KILL_THREAD` causes the violating thread to be
+ *   killed. This is the default on Linux. It's effectively the same as
+ *   killing the process, since redbean has no threads. The termination
+ *   signal can't be caught and will be either `SIGSYS` or `SIGABRT`.
+ *   Consider enabling stderr logging below so you'll know why your
+ *   program failed. Otherwise check the system log.
+ *
+ * - `PLEDGE_PENALTY_KILL_PROCESS` causes the process and all its
+ *   threads to be killed. This is always the case on OpenBSD.
+ *
+ * - `PLEDGE_PENALTY_RETURN_EPERM` causes system calls to just return an
+ *   `EPERM` error instead of killing. This is a gentler solution that
+ *   allows code to display a friendly warning. Please note this may
+ *   lead to weird behaviors if the software being sandboxed is lazy
+ *   about checking error results.
+ *
+ * `mode` may optionally bitwise or the following flags:
+ *
+ * - `PLEDGE_STDERR_LOGGING` enables friendly error message logging
+ *   letting you know which promises are needed whenever violations
+ *   occur. Without this, violations will be logged to `dmesg` on Linux
+ *   if the penalty is to kill the process. You would then need to
+ *   manually look up the system call number and then cross reference it
+ *   with the cosmopolitan libc pledge() documentation. You can also use
+ *   `strace -ff` which is easier. This is ignored OpenBSD, which
+ *   already has a good system log. Turning on stderr logging (which
+ *   uses SECCOMP trapping) also means that the `WTERMSIG()` on your
+ *   killed processes will always be `SIGABRT` on both Linux and
+ *   OpenBSD. Otherwise, Linux prefers to raise `SIGSYS`. Enabling this
+ *   option might not be a good idea if you're pledging `exec` because
+ *   subprocesses can't inherit the `SIGSYS` handler this installs.
+ *
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `execpromises` on Linux isn't a subset of `promises`
  * @raise EINVAL if `promises` allows exec and `execpromises` is null
@@ -240,7 +250,7 @@ int pledge(const char *promises, const char *execpromises) {
         STRACE("execpromises must be a subset of promises");
         rc = einval();
       } else {
-        rc = sys_pledge_linux(ipromises, __pledge_mode, true);
+        rc = sys_pledge_linux(ipromises, __pledge_mode);
         if (rc > -4096u) errno = -rc, rc = -1;
       }
     } else {

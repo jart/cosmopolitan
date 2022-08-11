@@ -61,7 +61,7 @@ void SetUp(void) {
 TEST(pledge, testSoftError) {
   if (IsOpenbsd()) return;
   SPAWN(fork);
-  __pledge_mode = kPledgeModeErrno;
+  __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
   _Exit(7);
@@ -70,7 +70,7 @@ TEST(pledge, testSoftError) {
 
 TEST(pledge, testKillThreadMode) {
   SPAWN(fork);
-  __pledge_mode = kPledgeModeKillThread;
+  __pledge_mode = PLEDGE_PENALTY_KILL_THREAD | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   TERMS(SIGABRT);
@@ -78,7 +78,7 @@ TEST(pledge, testKillThreadMode) {
 
 TEST(pledge, testKillProcessMode) {
   SPAWN(fork);
-  __pledge_mode = kPledgeModeKillProcess;
+  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   TERMS(SIGABRT);
@@ -90,7 +90,7 @@ TEST(pledge, testLogMessage_inSoftyMode) {
   char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));
   SPAWN(fork);
-  __pledge_mode = kPledgeModeErrno;
+  __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 2, dup2(fds[1], 2));
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
@@ -108,7 +108,7 @@ TEST(pledge, testLogMessage_onKillProcess) {
   char msg[256] = {0};
   ASSERT_SYS(0, 0, pipe(fds));
   SPAWN(fork);
-  __pledge_mode = kPledgeModeKillThread;
+  __pledge_mode = PLEDGE_PENALTY_KILL_THREAD | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 2, dup2(fds[1], 2));
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -121,25 +121,18 @@ TEST(pledge, testLogMessage_onKillProcess) {
   }
 }
 
-TEST(pledge, testNoLogOrAbrtsignoPossibleSadly_becausePledgedExec) {
-  int fds[2];
-  char msg[256] = {0};
-  ASSERT_SYS(0, 0, pipe(fds));
-  SPAWN(fork);
-  ASSERT_SYS(0, 2, dup2(fds[1], 2));
-  ASSERT_SYS(0, 0, pledge("stdio exec", "stdio exec"));
-  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  TERMS(IsOpenbsd() ? SIGABRT : SIGSYS);
-  close(fds[1]);
-  read(fds[0], msg, sizeof(msg));
-  close(fds[0]);
-  ASSERT_STREQ("", msg);
-}
-
 TEST(pledge, testDoublePledge_isFine) {
   SPAWN(fork);
-  __pledge_mode = kPledgeModeKillThread;
+  __pledge_mode = PLEDGE_PENALTY_KILL_THREAD;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   ASSERT_SYS(0, 0, pledge("stdio", 0));
   EXITS(0);
+}
+
+TEST(pledge, testEmptyPledge_doesntUseTrapping) {
+  SPAWN(fork);
+  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
+  ASSERT_SYS(0, 0, pledge("", 0));
+  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  TERMS(IsOpenbsd() ? SIGABRT : SIGSYS);
 }

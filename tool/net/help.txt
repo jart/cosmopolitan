@@ -3832,7 +3832,7 @@ UNIX MODULE
 
     See the unix.Rusage section below for details on returned fields.
 
-  unix.pledge([promises:str[, execpromises:str]])
+  unix.pledge([promises:str[, execpromises:str[, mode:int]]])
       ├─→ true
       └─→ nil, unix.Errno
 
@@ -3861,13 +3861,6 @@ UNIX MODULE
     User and group IDs also can't be changed once pledge is in effect.
     OpenBSD should ignore the chown functions without crashing. Linux
     will just EPERM.
-
-    Memory functions won't permit creating executable code after pledge.
-    Restrictions on origin of SYSCALL instructions will become enforced
-    on Linux (cf. msyscall) after pledge too, which means the process
-    gets killed if SYSCALL is used outside the .privileged section. One
-    exception is if the "exec" group is specified, in which case these
-    restrictions need to be loosened.
 
     `promises` is a string that may include any of the following groups
     delimited by spaces. This list has been curated to focus on the
@@ -3984,6 +3977,39 @@ UNIX MODULE
     wrapper for execve() will then apply its SECCOMP BPF filter later.
     Since Linux has to do this before calling sys_execve(), the executed
     process will be weakened to have execute permissions too.
+
+    `mode` if specified should specify one penalty:
+
+      - `unix.PLEDGE_PENALTY_KILL_THREAD` causes the violating thread to
+        be killed. This is the default on Linux. It's effectively the
+        same as killing the process, since redbean has no threads. The
+        termination signal can't be caught and will be either `SIGSYS`
+        or `SIGABRT`. Consider enabling stderr logging below so you'll
+        know why your program failed. Otherwise check the system log.
+
+      - `unix.PLEDGE_PENALTY_KILL_PROCESS` causes the process and all
+        its threads to be killed. This is always the case on OpenBSD.
+
+      - `unix.PLEDGE_PENALTY_RETURN_EPERM` causes system calls to just
+        return an `EPERM` error instead of killing. This is a gentler
+        solution that allows code to display a friendly warning. Please
+        note this may lead to weird behaviors if the software being
+        sandboxed is lazy about checking error results.
+
+    `mode` may optionally bitwise or the following flags:
+
+      - `unix.PLEDGE_STDERR_LOGGING` enables friendly error message
+        logging letting you know which promises are needed whenever
+        violations occur. Without this, violations will be logged to
+        `dmesg` on Linux if the penalty is to kill the process. You
+        would then need to manually look up the system call number and
+        then cross reference it with the cosmopolitan libc pledge()
+        documentation. You can also use `strace -ff` which is easier.
+        This is ignored OpenBSD, which already has a good system log.
+        Turning on stderr logging (which uses SECCOMP trapping) also
+        means that the `unix.WTERMSIG()` on your killed processes will
+        always be `unix.SIGABRT` on both Linux and OpenBSD. Otherwise,
+        Linux prefers to raise `unix.SIGSYS`.
 
   unix.unveil(path:str, permissions:str)
       ├─→ true

@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-unix.pledge('stdio')
+assert(unix.pledge('stdio'))
 
 local function test(s, b64)
     assert(EncodeBase64(s) == b64)

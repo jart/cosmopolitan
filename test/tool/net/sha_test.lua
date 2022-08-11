@@ -19,7 +19,7 @@
 --    5869).  As with RFC 4634, code to perform SHA-based Hashed Message
 --    Authentication Codes (HMACs) is also included.
 
-unix.pledge('stdio')
+assert(unix.pledge('stdio'))
 
 -- SHA-1
 assert(Sha1(nil) == nil)

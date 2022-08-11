@@ -375,7 +375,7 @@ TEST(unveil, usedTwice_forbidden_worksWithPledge) {
   ASSERT_NE(-1, wait(&ws));
   ASSERT_TRUE(*gotsome);
   ASSERT_TRUE(WIFSIGNALED(ws));
-  ASSERT_EQ(SIGABRT, WTERMSIG(ws));
+  ASSERT_EQ(IsOpenbsd() ? SIGABRT : SIGSYS, WTERMSIG(ws));
   EXPECT_SYS(0, 0, munmap(gotsome, FRAMESIZE));
 }
 

@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-unix.pledge("stdio")
+assert(unix.pledge("stdio"))
 
 assert("/usr/lib" == path.dirname("/usr/lib/foo.bar"))
 assert("/usr" == path.dirname("/usr/lib"))

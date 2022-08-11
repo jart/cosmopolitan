@@ -6588,7 +6588,7 @@ static void UnveilRedbean(void) {
 }
 
 static int EnableSandbox(void) {
-  __pledge_mode = kPledgeModeErrno;
+  __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM | PLEDGE_STDERR_LOGGING;
   switch (sandboxed) {
     case 0:
       return 0;

@@ -24,7 +24,7 @@
 
 /*
  * runs pledge at glibc executable load time, e.g.
- * strace -vff bash -c '_PLEDGE=4194303,0,1 LD_PRELOAD=$HOME/sandbox.so ls'
+ * strace -vff bash -c '_PLEDGE=4194303,0 LD_PRELOAD=$HOME/sandbox.so ls'
  */
 
 hidden uint8_t __privileged_start[1];
@@ -33,9 +33,9 @@ hidden uint8_t __privileged_end[1];
 __attribute__((__constructor__)) void init(void) {
   int c, i, j;
   const char *s;
-  uint64_t arg[3] = {0};
+  uint64_t arg[2] = {0};
   s = getenv("_PLEDGE");
-  for (i = j = 0; i < 3; ++i) {
+  for (i = j = 0; i < 2; ++i) {
     while ((c = s[j] & 255)) {
       ++j;
       if ('0' <= c & c <= '9') {
@@ -46,5 +46,5 @@ __attribute__((__constructor__)) void init(void) {
       }
     }
   }
-  sys_pledge_linux(~arg[0], arg[1], arg[2]);
+  sys_pledge_linux(~arg[0], arg[1]);
 }

@@ -13,7 +13,7 @@ struct Pledges {
 
 hidden extern const struct Pledges kPledge[PROMISE_LEN_];
 
-int sys_pledge_linux(unsigned long, enum PledgeMode, bool) hidden;
+int sys_pledge_linux(unsigned long, int) hidden;
 int ParsePromises(const char *, unsigned long *) hidden;
 
 COSMOPOLITAN_C_END_

@@ -86,7 +86,7 @@ void SetUp(void) {
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
   ASSERT_SYS(0, 0, extract("/zip/life.elf", "life.elf", 0755));
   ASSERT_SYS(0, 0, extract("/zip/sock.elf", "sock.elf", 0755));
-  __pledge_mode = kPledgeModeErrno;
+  __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
 }
 
 TEST(pledge, default_allowsExit) {
@@ -116,7 +116,7 @@ TEST(pledge, execpromises_notok) {
   int ws, pid;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    __pledge_mode = kPledgeModeErrno;
+    __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
     ASSERT_SYS(0, 0, pledge("stdio rpath exec", "stdio"));
     execl("sock.elf", "sock.elf", 0);
     _Exit(127);
@@ -158,7 +158,7 @@ TEST(pledge, stdio_forbidsOpeningPasswd1) {
 
 TEST(pledge, stdio_forbidsOpeningPasswd2) {
   int ws, pid;
-  __pledge_mode = kPledgeModeKillProcess;
+  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));

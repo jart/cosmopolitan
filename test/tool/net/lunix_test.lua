@@ -59,7 +59,7 @@ function UnixTest()
    -- fork
    -- basic subprocess creation
    if assert(unix.fork()) == 0 then
-      unix.pledge("")
+      assert(unix.pledge(""))
       unix.exit(42)
    end
    pid, ws = assert(unix.wait())
@@ -82,7 +82,7 @@ function UnixTest()
       unix.close(reader)
       pid, ws = assert(unix.wait())
       assert(unix.WIFSIGNALED(ws))
-      assert(unix.WTERMSIG(ws) == unix.SIGABRT)
+      assert(unix.WTERMSIG(ws) == unix.SIGSYS)
    elseif GetHostOs() == "OPENBSD" then
       if assert(unix.fork()) == 0 then
          assert(unix.pledge("stdio"))
@@ -160,7 +160,7 @@ function main()
    assert(unix.makedirs(tmpdir))
    unix.unveil(tmpdir, "rwc")
    unix.unveil(nil, nil)
-   unix.pledge("stdio rpath wpath cpath proc")
+   assert(unix.pledge("stdio rpath wpath cpath proc"))
    ok, err = pcall(UnixTest)
    if ok then
       assert(unix.rmrf(tmpdir))

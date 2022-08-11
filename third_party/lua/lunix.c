@@ -1377,12 +1377,12 @@ static int LuaUnixSiocgifconf(lua_State *L) {
   return 1;
 }
 
-// sandbox.pledge([promises:str[, execpromises:str]])
+// sandbox.pledge([promises:str[, execpromises:str[, mode:int]]])
 //     ├─→ true
 //     └─→ nil, unix.Errno
 static int LuaUnixPledge(lua_State *L) {
   int olderr = errno;
-  __pledge_mode = 0;
+  __pledge_mode = luaL_optinteger(L, 3, 0);
   return SysretBool(L, "pledge", olderr,
                     pledge(luaL_checkstring(L, 1), luaL_optstring(L, 2, 0)));
 }
@@ -2828,6 +2828,12 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "NSIG", _NSIG);
   LuaSetIntField(L, "PATH_MAX", _PATH_MAX);
   LuaSetIntField(L, "PIPE_BUF", PIPE_BUF);
+
+  // pledge() flags
+  LuaSetIntField(L, "PLEDGE_PENALTY_KILL_THREAD", PLEDGE_PENALTY_KILL_THREAD);
+  LuaSetIntField(L, "PLEDGE_PENALTY_KILL_PROCESS", PLEDGE_PENALTY_KILL_PROCESS);
+  LuaSetIntField(L, "PLEDGE_PENALTY_RETURN_EPERM", PLEDGE_PENALTY_RETURN_EPERM);
+  LuaSetIntField(L, "PLEDGE_STDERR_LOGGING", PLEDGE_STDERR_LOGGING);
 
   return 1;
 }
