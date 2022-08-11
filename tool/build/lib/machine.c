@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/abp.h"

@@ -25,7 +25,6 @@ TEST_DSP_CORE_DIRECTDEPS =					\
 	LIBC_TINYMATH						\
 	LIBC_LOG						\
 	LIBC_RUNTIME						\
-	LIBC_RAND						\
 	LIBC_TESTLIB						\
 	TOOL_VIZ_LIB						\
 	THIRD_PARTY_BLAS					\

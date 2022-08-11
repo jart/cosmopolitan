@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/bignum.h"
 

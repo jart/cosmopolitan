@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "third_party/libcxx/__config"
 #include "third_party/libcxx/random"
 #include "third_party/libcxx/system_error"

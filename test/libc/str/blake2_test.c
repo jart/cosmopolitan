@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/blake2.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"

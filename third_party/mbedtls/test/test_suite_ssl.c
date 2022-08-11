@@ -19,7 +19,7 @@
 #include "third_party/mbedtls/ssl_invasive.h"
 #include "libc/testlib/testlib.h"
 #include "libc/log/log.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "third_party/mbedtls/test/test.inc"
 /*

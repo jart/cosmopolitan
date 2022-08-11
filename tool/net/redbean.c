@@ -54,7 +54,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/thread.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"

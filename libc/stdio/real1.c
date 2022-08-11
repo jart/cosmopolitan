@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/rand.h"
-#include "libc/sysv/consts/grnd.h"
+#include "libc/stdio/rand.h"
 
 /**
- * Returns random seeding bytes, the XNU/OpenBSD way.
- * @see getrandom()
+ * Generates number on [0,1]-real-interval, e.g.
+ *
+ *     double x = _real1(lemur64())
+ *
+ * @see lemur64(), mt19937()
  */
-int getentropy(void *buf, size_t size) {
-  return getrandom(buf, size, GRND_RANDOM);
+double _real1(uint64_t x) {
+  return 1. / 9007199254740991. * (x >> 11);
 }

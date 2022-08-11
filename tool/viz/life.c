@@ -66,7 +66,7 @@
 #include "libc/nt/struct/windowplacement.h"
 #include "libc/nt/struct/wndclass.h"
 #include "libc/nt/windows.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"

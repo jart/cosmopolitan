@@ -56,7 +56,6 @@ THIRD_PARTY_SQLITE3_A_DIRECTDEPS =					\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
-	LIBC_RAND							\
 	LIBC_TINYMATH							\
 	LIBC_UNICODE							\
 	THIRD_PARTY_GDTOA						\

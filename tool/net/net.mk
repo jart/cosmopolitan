@@ -39,7 +39,6 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_NEXGEN32E								\
 	LIBC_NT_IPHLPAPI							\
 	LIBC_NT_KERNEL32							\
-	LIBC_RAND								\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\

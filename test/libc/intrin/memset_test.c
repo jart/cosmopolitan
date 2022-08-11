@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"

@@ -3,7 +3,7 @@
 #include "third_party/zip/zip.h"
 #include "third_party/zip/crypt.h"
 #include "third_party/zip/ttyio.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 

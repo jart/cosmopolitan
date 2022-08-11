@@ -11,7 +11,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"

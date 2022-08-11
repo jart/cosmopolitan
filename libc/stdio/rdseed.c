@@ -16,13 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/xorshift.h"
+#include "libc/intrin/asmflag.h"
+#include "libc/nexgen32e/x86feature.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/grnd.h"
 
-uint64_t MarsagliaXorshift64(uint64_t state[hasatleast 1]) {
-  uint64_t x = state[0];
-  x ^= x << 13;
-  x ^= x >> 7;
-  x ^= x << 17;
-  state[0] = x;
-  return x;
+/**
+ * Retrieves 64-bits of true random data from RDSEED instruction.
+ *
+ * If RDSEED isn't available, we'll try RDRAND (which we automatically
+ * disable for microarchitectures where it's known to be slow or buggy).
+ * If RDRAND isn't available then we try getrandom(), RtlGenRandom(), or
+ * sysctl(KERN_ARND). If those aren't available then we try /dev/urandom
+ * and if that fails, we use RDTSC and getpid().
+ *
+ * @note this function could block a nontrivial time on old computers
+ * @note this function is indeed intended for cryptography
+ * @note this function takes around 800 cycles
+ * @see rngset(), rdrand(), rand64()
+ * @asyncsignalsafe
+ * @vforksafe
+ */
+uint64_t rdseed(void) {
+  int i;
+  char cf;
+  uint64_t x;
+  if (X86_HAVE(RDSEED)) {
+    for (i = 0; i < 10; ++i) {
+      asm volatile(CFLAG_ASM("rdseed\t%1")
+                   : CFLAG_CONSTRAINT(cf), "=r"(x)
+                   : /* no inputs */
+                   : "cc");
+      if (cf) return x;
+      asm volatile("pause");
+    }
+  }
+  return rdrand();
 }

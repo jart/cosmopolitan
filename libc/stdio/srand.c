@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,39 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/math.h"
-#include "libc/rand/rand.h"
-#include "libc/str/str.h"
+#include "libc/stdio/rand.h"
+
+extern uint64_t g_rando;
 
 /**
- * Returns Shannon entropy of array.
- *
- * This gives you an idea of the density of information. Cryptographic
- * random should be in the ballpark of 7.9 whereas plaintext will be
- * more like 4.5.
- *
- * @param p is treated as binary octets
- * @param n should be at least 1000
- * @return number between 0 and 8
+ * Seeds random number generator that's used by rand().
  */
-double MeasureEntropy(const char *p, size_t n) {
-  size_t i;
-  double e, x;
-  long h[256];
-  e = 0;
-  if (n) {
-    bzero(h, sizeof(h));
-    for (i = 0; i < n; ++i) {
-      ++h[p[i] & 255];
-    }
-    for (i = 0; i < 256; i++) {
-      if (h[i]) {
-        x = h[i];
-        x /= n;
-        e += x * log(x);
-      }
-    }
-    e = -(e / M_LN2);
-  }
-  return e;
-}
+void(srand)(uint64_t seed) { g_rando = seed; }

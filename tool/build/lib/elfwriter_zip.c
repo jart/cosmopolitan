@@ -26,7 +26,7 @@
 #include "libc/log/check.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"

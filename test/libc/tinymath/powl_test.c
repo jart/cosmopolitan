@@ -23,7 +23,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/stdio/stdio.h"

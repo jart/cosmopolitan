@@ -32,7 +32,7 @@
 #include "libc/limits.h"
 #include "libc/literal.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/temp.h"
 #include "libc/sysv/consts/exit.h"

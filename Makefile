@@ -119,7 +119,6 @@ include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
-include libc/rand/rand.mk			# │
 include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
@@ -208,7 +207,6 @@ include test/libc/x/test.mk
 include test/libc/xed/test.mk
 include test/libc/fmt/test.mk
 include test/libc/dns/test.mk
-include test/libc/rand/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
 include test/libc/release/test.mk
@@ -302,7 +300,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_RUNTIME		\
 	LIBC_ELF		\
 	LIBC_CALLS		\
-	LIBC_RAND		\
 	LIBC_SYSV_CALLS		\
 	LIBC_NT_PSAPI		\
 	LIBC_NT_POWRPROF	\
@@ -337,7 +334,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_MEM		\
 	LIBC_NEXGEN32E		\
 	LIBC_NT			\
-	LIBC_RAND		\
 	LIBC_RUNTIME		\
 	LIBC_SOCK		\
 	LIBC_STDIO		\

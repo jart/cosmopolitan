@@ -1,4 +1,4 @@
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 /* clang-format off */
 

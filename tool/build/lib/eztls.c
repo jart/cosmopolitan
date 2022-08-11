@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"

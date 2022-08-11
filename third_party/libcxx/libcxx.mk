@@ -156,7 +156,6 @@ THIRD_PARTY_LIBCXX_A_DIRECTDEPS =				\
 	LIBC_INTRIN						\
 	LIBC_MEM						\
 	LIBC_NEXGEN32E						\
-	LIBC_RAND						\
 	LIBC_RUNTIME						\
 	LIBC_STDIO						\
 	LIBC_STR						\

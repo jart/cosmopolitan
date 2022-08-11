@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/log/gdb.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 
 /**

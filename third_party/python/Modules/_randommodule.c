@@ -7,7 +7,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/grnd.h"
 #include "third_party/python/Include/floatobject.h"

@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/rand/lcg.internal.h"
+#include "libc/stdio/lcg.internal.h"
 
 /**
  * Returns handles of windows pids being tracked.

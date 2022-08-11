@@ -21,7 +21,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/buffer.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

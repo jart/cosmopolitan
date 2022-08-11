@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/rand.h"
+#include "libc/intrin/bits.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/str.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Generates number on (0,1)-real-interval, e.g.
- *
- *     double x = _real3(lemur64())
- *
- * @see lemur64(), mt19937()
- */
-double _real3(uint64_t x) {
-  return 1. / 4503599627370496. * ((x >> 12) + .5);
+TEST(rand002, alwaysReturnsPositiveNumbers) {
+  for (unsigned i = 0; i < 100; ++i) {
+    ASSERT_GT(rand(), 0);
+  }
+}
+
+TEST(rand003, srandSmokeTest) {
+  srand(1);
+  ASSERT_EQ(908834774, rand());
+  srand(1);
+  ASSERT_EQ(908834774, rand());
+  srand(7);
+  ASSERT_EQ(1059165278, rand());
+}
+
+TEST(rand005, rand64SmokeTest) {
+  ASSERT_TRUE(rand64() != rand64() || rand64() != rand64());
+}
+
+TEST(rand64, test) {
+  char *p;
+  size_t i;
+  uint64_t x;
+  p = memcpy(malloc(kHyperionSize), kHyperion, kHyperionSize);
+  for (i = 0; i < kHyperionSize / 8; ++i) {
+    x = rand64();
+    WRITE64LE(p + i * 8, x);
+  }
+  free(p);
 }

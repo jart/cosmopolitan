@@ -55,7 +55,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/buffer.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"

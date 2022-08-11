@@ -16,28 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/kcpuids.h"
-#include "libc/nexgen32e/vendor.internal.h"
-#include "libc/nexgen32e/x86feature.h"
-#include "libc/nexgen32e/x86info.h"
-#include "libc/rand/rand.h"
+#include "libc/math.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/str.h"
 
-textstartup void rdrand_init(int argc, char **argv, char **envp,
-                             intptr_t *auxv) {
-  extern unsigned kMutableCpuids[KCPUIDS_LEN][4] asm("kCpuids");
-  /*
-   * Clear RDRAND on AMD models before Zen and then some
-   * since it's not only slow but can freeze after sleep
-   * https://bugzilla.redhat.com/show_bug.cgi?id=1150286
-   */
-  if ((X86_HAVE(RDRND) || X86_HAVE(RDSEED)) &&
-      (IsAuthenticAMD() &&
-       (kX86CpuFamily < 0x17 ||
-        (kX86CpuFamily == 0x17 &&
-         (0x70 <= kX86CpuModel && kX86CpuModel <= 0x7F))))) {
-    kMutableCpuids[KCPUIDS_1H][KCPUIDS_ECX] &= ~(1u << 30);
-    kMutableCpuids[KCPUIDS_7H][KCPUIDS_EBX] &= ~(1u << 18);
+/**
+ * Returns Shannon entropy of array.
+ *
+ * This gives you an idea of the density of information. Cryptographic
+ * random should be in the ballpark of 7.9 whereas plaintext will be
+ * more like 4.5.
+ *
+ * @param p is treated as binary octets
+ * @param n should be at least 1000
+ * @return number between 0 and 8
+ */
+double MeasureEntropy(const char *p, size_t n) {
+  size_t i;
+  double e, x;
+  long h[256];
+  e = 0;
+  if (n) {
+    bzero(h, sizeof(h));
+    for (i = 0; i < n; ++i) {
+      ++h[p[i] & 255];
+    }
+    for (i = 0; i < 256; i++) {
+      if (h[i]) {
+        x = h[i];
+        x /= n;
+        e += x * log(x);
+      }
+    }
+    e = -(e / M_LN2);
   }
+  return e;
 }
-
-const void *const g_rdrand_init[] initarray = {rdrand_init};

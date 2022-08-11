@@ -36,7 +36,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/likely.h"
 #include "libc/macros.internal.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 
 asm(".ident\t\"\\n\\n\
 mt19937 (BSD-3)\\n\

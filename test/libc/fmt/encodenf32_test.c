@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/nf32.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 
 TEST(EncodeNf32, test) {

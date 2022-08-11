@@ -25,8 +25,8 @@ TEST_DSP_TTY_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
-	LIBC_RAND					\
 	LIBC_RUNTIME					\
+	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_TINYMATH					\

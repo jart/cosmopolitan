@@ -22,7 +22,6 @@ THIRD_PARTY_MBEDTLS_A_DIRECTDEPS =					\
 	LIBC_INTRIN							\
 	LIBC_MEM							\
 	LIBC_NEXGEN32E							\
-	LIBC_RAND							\
 	LIBC_RUNTIME							\
 	LIBC_SOCK							\
 	LIBC_LOG							\

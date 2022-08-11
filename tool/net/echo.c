@@ -20,7 +20,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"

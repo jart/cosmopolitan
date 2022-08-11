@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 
 /**

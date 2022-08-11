@@ -16,27 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/internal.h"
-#include "libc/rand/lcg.internal.h"
-#include "libc/rand/rand.h"
+#include "libc/alg/shuffle.internal.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/str.h"
 
 /**
- * Returns 31-bit linear congruential pseudorandom number, e.g.
- *
- *     int x = rand();
- *     assert(x >= 0);
- *
- * This function always returns a positive number. If srand() isn't
- * called, then it'll return the same sequence each time your program
- * runs. Faster and more modern alternatives exist to this function.
- *
- * This function is not thread safe in the sense that multiple threads
- * might simultaneously generate the same random values.
- *
- * @note this function does well on bigcrush and practrand
- * @note this function is not intended for cryptography
- * @see lemur64(), rand64(), rdrand()
+ * Jumbles up string.
  */
-int rand(void) {
-  return KnuthLinearCongruentialGenerator(&g_rando) >> 33;
+char *strfry(char *s) {
+  shuffle(rand, s, strlen(s));
+  return s;
 }

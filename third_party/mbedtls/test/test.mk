@@ -101,7 +101,6 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_MEM												\
 	LIBC_NEXGEN32E												\
 	LIBC_NT_KERNEL32											\
-	LIBC_RAND												\
 	LIBC_RUNTIME												\
 	LIBC_STDIO												\
 	LIBC_STR												\

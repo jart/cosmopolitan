@@ -44,7 +44,7 @@
 **   *  Definitions of sqlite3_vfs objects for all locking methods
 **      plus implementations of sqlite3_os_init() and sqlite3_os_end().
 */
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/sysv/consts/lock.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/s.h"

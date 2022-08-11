@@ -16,19 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/str/str.h"
-#include "libc/testlib/testlib.h"
+#include "libc/stdio/xorshift.h"
 
-TEST(getrandom, test) {
-  void *A = gc(calloc(1, 8));
-  void *B = gc(calloc(1, 8));
-  EXPECT_EQ(8, getrandom(A, 8, 0));
-  EXPECT_EQ(8, getrandom(B, 8, 0));
-  EXPECT_BINNE(u"        ", A);
-  EXPECT_BINNE(u"        ", B);
-  EXPECT_NE(0, memcmp(A, B, 8));
+uint64_t MarsagliaXorshift64(uint64_t state[hasatleast 1]) {
+  uint64_t x = state[0];
+  x ^= x << 13;
+  x ^= x >> 7;
+  x ^= x << 17;
+  state[0] = x;
+  return x;
 }

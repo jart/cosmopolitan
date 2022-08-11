@@ -12,7 +12,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/nt/nt/process.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"

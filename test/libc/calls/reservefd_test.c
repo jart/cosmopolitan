@@ -28,7 +28,7 @@
 #include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"

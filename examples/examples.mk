@@ -56,7 +56,6 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_NT_USER32								\
 	LIBC_NT_WS2_32								\
 	LIBC_NT_ADVAPI32							\
-	LIBC_RAND								\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\

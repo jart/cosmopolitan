@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "net/https/https.h"
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {

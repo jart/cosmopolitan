@@ -19,7 +19,7 @@
 #include "libc/dns/dns.h"
 #include "libc/dns/dnsheader.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

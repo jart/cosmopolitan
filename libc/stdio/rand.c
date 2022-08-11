@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/rand.h"
+#include "libc/stdio/internal.h"
+#include "libc/stdio/lcg.internal.h"
+#include "libc/stdio/rand.h"
 
 /**
- * Generates number on [0,1]-real-interval, e.g.
+ * Returns 31-bit linear congruential pseudorandom number, e.g.
  *
- *     double x = _real1(lemur64())
+ *     int x = rand();
+ *     assert(x >= 0);
  *
- * @see lemur64(), mt19937()
+ * This function always returns a positive number. If srand() isn't
+ * called, then it'll return the same sequence each time your program
+ * runs. Faster and more modern alternatives exist to this function.
+ *
+ * This function is not thread safe in the sense that multiple threads
+ * might simultaneously generate the same random values.
+ *
+ * @note this function does well on bigcrush and practrand
+ * @note this function is not intended for cryptography
+ * @see lemur64(), rand64(), rdrand()
  */
-double _real1(uint64_t x) {
-  return 1. / 9007199254740991. * (x >> 11);
+int rand(void) {
+  return KnuthLinearCongruentialGenerator(&g_rando) >> 33;
 }

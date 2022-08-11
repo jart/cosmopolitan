@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,30 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
+#include "libc/sysv/consts/grnd.h"
 
 /**
- * Returns linear congruential deterministic pseudorandom data, e.g.
- *
- *     uint64_t x = lemur64();
- *
- * You can generate different types of numbers as follows:
- *
- *     int64_t x = lemur64() >> 1;    // make positive signed integer
- *     double x = _real1(lemur64());  // make float on [0,1]-interval
- *
- * If you want a fast pseudorandom number generator that seeds itself
- * automatically on startup and fork() then consider rand64(). If you
- * want true random data then consider rdseed, rdrand, and getrandom.
- *
- * @return 64 bits of pseudorandom data
- * @note this is Lemire's Lehmer generator
- * @note this function takes at minimum 1 cycle
- * @note this function passes bigcrush and practrand
- * @note this function is not intended for cryptography
- * @see rand64(), rngset(), _real1(), _real2(), _real3()
+ * Returns random seeding bytes, the XNU/OpenBSD way.
+ * @see getrandom()
  */
-uint64_t lemur64(void) {
-  static uint128_t s = 2131259787901769494;
-  return (s *= 15750249268501108917ull) >> 64;
+int getentropy(void *buf, size_t size) {
+  return getrandom(buf, size, GRND_RANDOM);
 }

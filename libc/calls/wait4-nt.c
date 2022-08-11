@@ -38,7 +38,7 @@
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/synchronization.h"
-#include "libc/rand/lcg.internal.h"
+#include "libc/stdio/lcg.internal.h"
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

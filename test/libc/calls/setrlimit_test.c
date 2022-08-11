@@ -27,7 +27,7 @@
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

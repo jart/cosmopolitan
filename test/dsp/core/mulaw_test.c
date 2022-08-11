@@ -21,7 +21,7 @@
 #include "libc/assert.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

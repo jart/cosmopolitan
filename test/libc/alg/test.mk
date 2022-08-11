@@ -28,7 +28,6 @@ TEST_LIBC_ALG_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
-	LIBC_RAND					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\

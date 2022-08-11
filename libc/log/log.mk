@@ -26,7 +26,6 @@ LIBC_LOG_A_CHECKS =					\
 	$(LIBC_LOG_A_HDRS:%=o/$(MODE)/%.ok)
 
 LIBC_LOG_A_DIRECTDEPS =					\
-	LIBC_ALG					\
 	LIBC_CALLS					\
 	LIBC_ELF					\
 	LIBC_FMT					\
@@ -35,7 +34,6 @@ LIBC_LOG_A_DIRECTDEPS =					\
 	LIBC_NEXGEN32E					\
 	LIBC_NT_KERNEL32				\
 	LIBC_NT_NTDLL					\
-	LIBC_RAND					\
 	LIBC_RUNTIME					\
 	LIBC_STDIO					\
 	LIBC_STR					\

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 
 uint64_t counter(void) {

@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/inttypes.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/highwayhash64.h"
 #include "libc/str/str.h"

@@ -29,8 +29,8 @@ LIBC_STDIO_A_DIRECTDEPS =				\
 	LIBC_INTRIN					\
 	LIBC_MEM					\
 	LIBC_NEXGEN32E					\
+	LIBC_NT_ADVAPI32				\
 	LIBC_NT_KERNEL32				\
-	LIBC_RAND					\
 	LIBC_RUNTIME					\
 	LIBC_STR					\
 	LIBC_STUBS					\
@@ -56,6 +56,10 @@ o/$(MODE)/libc/stdio/fputc.o: private			\
 o//libc/stdio/appendw.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-Os
+
+o/$(MODE)/libc/stdio/mt19937.o: private			\
+		OVERRIDE_CFLAGS +=			\
+			-ffunction-sections
 
 LIBC_STDIO_LIBS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)))
 LIBC_STDIO_SRCS = $(foreach x,$(LIBC_STDIO_ARTIFACTS),$($(x)_SRCS))

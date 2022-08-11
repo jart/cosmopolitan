@@ -20,7 +20,7 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"

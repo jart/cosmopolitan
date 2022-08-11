@@ -16,13 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/rand/xorshift.h"
+#include "libc/dce.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-uint32_t MarsagliaXorshift32(uint32_t state[hasatleast 1]) {
-  uint32_t x = state[0];
-  x ^= x << 13;
-  x ^= x >> 17;
-  x ^= x << 5;
-  state[0] = x;
-  return x;
+TEST(getrandom, test) {
+  void *A = gc(calloc(1, 8));
+  void *B = gc(calloc(1, 8));
+  EXPECT_EQ(8, getrandom(A, 8, 0));
+  EXPECT_EQ(8, getrandom(B, 8, 0));
+  EXPECT_BINNE(u"        ", A);
+  EXPECT_BINNE(u"        ", B);
+  EXPECT_NE(0, memcmp(A, B, 8));
 }

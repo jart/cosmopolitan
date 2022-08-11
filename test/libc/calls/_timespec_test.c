@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 
 TEST(_timespec_gte, test) {

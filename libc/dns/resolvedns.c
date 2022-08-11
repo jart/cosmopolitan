@@ -24,7 +24,7 @@
 #include "libc/dns/dnsquestion.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/mem/mem.h"
-#include "libc/rand/rand.h"
+#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"

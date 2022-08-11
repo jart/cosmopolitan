@@ -68,7 +68,6 @@ THIRD_PARTY_DOUBLECONVERSION_A_DIRECTDEPS =					\
 	LIBC_NEXGEN32E								\
 	LIBC_MEM								\
 	LIBC_RUNTIME								\
-	LIBC_RAND								\
 	LIBC_STDIO								\
 	LIBC_FMT								\
 	LIBC_SYSV								\
