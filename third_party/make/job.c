@@ -65,6 +65,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/audit.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/macros.internal.h"
+#include "libc/log/rop.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \
@@ -86,6 +88,8 @@ int batch_mode_shell = 0;
 #define WAIT_NOHANG(status)  waitpid (-1, (status), WNOHANG)
 
 #define WAIT_T int
+
+bool g_strict;
 
 /* Different systems have different requirements for pid_t.
    Plus we have to support gettext string translation... Argh.  */
@@ -1615,7 +1619,8 @@ start_waiting_jobs (void)
 }
 
 
-bool GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
+bool
+GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
 {
   int c, n;
   for (n = 0;;)
@@ -1641,36 +1646,68 @@ bool GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
 }
 
 /* Adds path to sandbox, returning true if found. */
-bool Unveil (const char *path, const char *perm)
+int
+Unveil (const char *path, const char *perm)
 {
   int e;
+  char *fp[2];
   char permprefix[5];
 
   /* if path is like `rwcx:o/tmp` then `rwcx` will override perm */
   if (path && GetPermPrefix (path, permprefix, &path))
     perm = permprefix;
 
+  fp[0] = 0;
+  fp[1] = 0;
+  if (path && path[0] == '~' &&
+      (fp[1] = tilde_expand ((fp[0] = xstrdup (path)))))
+    path = fp[1];
+
   e = errno;
   if (unveil (path, perm) != -1)
-    return true;
-
-  /* if we're not on openbsd or linux 5.13+ we assume it worked */
-  if (errno == ENOSYS)
     {
-      errno = e;
-      return true;
+      free(fp[0]);
+      free(fp[1]);
+      return 0;
     }
 
   /* path not found isn't really much of an error */
   if (errno == ENOENT)
     {
+      free(fp[0]);
+      free(fp[1]);
       errno = e;
-      return false;
+      return 0;
     }
 
   /* otherwise fail */
-  OSS (error, NILF, "%s: %s", path, strerror (errno));
-  return true;
+  OSS (error, NILF, "%s: unveil() failed %s", path, strerror (errno));
+  free(fp[0]);
+  free(fp[1]);
+  return -1;
+}
+
+int
+UnveilVariable (const struct variable *var)
+{
+  char *val, *tok, *state, *start;
+  if (!var) return 0;
+  start = val = xstrdup (variable_expand (var->value));
+  while (tok = strtok_r (start, " \t\r\n", &state))
+    {
+      RETURN_ON_ERROR (Unveil (tok, "r"));
+      start = 0;
+    }
+  free(val);
+  return 0;
+ OnError:
+  return -1;
+}
+
+bool
+Vartoi (const struct variable *var)
+{
+  return var && atoi (variable_expand (var->value));
 }
 
 /* POSIX:
@@ -1684,11 +1721,11 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   struct child *c;
   char pathbuf[PATH_MAX];
   char outpathbuf[PATH_MAX];
-  const struct variable *var;
   int fdout = FD_STDOUT;
   int fderr = FD_STDERR;
   pid_t pid;
-  int r;
+  int e, r;
+  char *s;
 
   /* Divert child output if we want to capture it.  */
   if (child->output.syncout)
@@ -1719,38 +1756,51 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (fderr != FD_STDERR)
     EINTRLOOP (r, dup2 (fderr, FD_STDERR));
 
+  g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE(".STRICT")));
+
   /* resolve command into executable path */
-  argv[0] = commandv (argv[0], pathbuf, sizeof (pathbuf));
+  if (!g_strict)
+    {
+      if ((s = commandv (argv[0], pathbuf, sizeof (pathbuf))))
+        argv[0] = s;
+      else
+        {
+          OSS (error, NILF, "%s: command not found on $PATH: %s",
+               argv[0], strerror (errno));
+          return -1;
+        }
+    }
 
   /* [jart] sandbox command based on prerequisites */
   intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
   if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
     c = (struct child *)child;
     errno = 0;
-    if (!lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
-                                 c->file->variables->set))
+    if (!Vartoi (lookup_variable (STRING_SIZE_TUPLE(".UNSANDBOXED"))) &&
+        !Vartoi (lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                                         c->file->variables->set)))
       {
-        if (argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
+        if (!g_strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
           {
             /*
              * weaken sandbox if user is using dynamic shared lolbjects
              */
-            Unveil ("/bin", "rx");
-            Unveil ("/lib", "rx");
-            Unveil ("/lib64", "rx");
-            Unveil ("/usr/bin", "rx");
-            Unveil ("/usr/lib", "rx");
-            Unveil ("/usr/lib64", "rx");
-            Unveil ("/usr/local/lib", "rx");
-            Unveil ("/usr/local/lib64", "rx");
-            Unveil ("/etc/ld-musl-x86_64.path", "r");
-            Unveil ("/etc/ld.so.conf", "r");
-            Unveil ("/etc/ld.so.cache", "r");
-            Unveil ("/etc/ld.so.conf.d", "r");
-            Unveil ("/etc/ld.so.preload", "r");
-            Unveil ("/usr/include", "r");
-            Unveil ("/usr/share/locale", "r");
-            Unveil ("/usr/share/locale-langpack", "r");
+            RETURN_ON_ERROR (Unveil ("/bin", "rx"));
+            RETURN_ON_ERROR (Unveil ("/lib", "rx"));
+            RETURN_ON_ERROR (Unveil ("/lib64", "rx"));
+            RETURN_ON_ERROR (Unveil ("/usr/bin", "rx"));
+            RETURN_ON_ERROR (Unveil ("/usr/lib", "rx"));
+            RETURN_ON_ERROR (Unveil ("/usr/lib64", "rx"));
+            RETURN_ON_ERROR (Unveil ("/usr/local/lib", "rx"));
+            RETURN_ON_ERROR (Unveil ("/usr/local/lib64", "rx"));
+            RETURN_ON_ERROR (Unveil ("/etc/ld-musl-x86_64.path", "r"));
+            RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf", "r"));
+            RETURN_ON_ERROR (Unveil ("/etc/ld.so.cache", "r"));
+            RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf.d", "r"));
+            RETURN_ON_ERROR (Unveil ("/etc/ld.so.preload", "r"));
+            RETURN_ON_ERROR (Unveil ("/usr/include", "r"));
+            RETURN_ON_ERROR (Unveil ("/usr/share/locale", "r"));
+            RETURN_ON_ERROR (Unveil ("/usr/share/locale-langpack", "r"));
           }
         else
           {
@@ -1763,41 +1813,41 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
              * will pass ape binaries directly to the ape loader, but
              * only if the ape loader exists on a well-known path.
              */
-            if (!Unveil ("/usr/bin/ape", "rx"))
+            e = errno;
+            if (unveil ("/usr/bin/ape", "rx") == -1)
               {
-                char *s;
+                char *s, *t;
+                errno = e;
                 if ((s = getenv ("TMPDIR")))
-                  Unveil (xjoinpaths (s, ".ape"), "rx");
+                  {
+                    t = xjoinpaths (s, ".ape");
+                    RETURN_ON_ERROR (Unveil (t, "rx"));
+                    free (t);
+                  }
                 if ((s = getenv ("HOME")))
-                  Unveil (xjoinpaths (s, ".ape"), "rx");
+                  {
+                    t = xjoinpaths (s, ".ape");
+                    RETURN_ON_ERROR (Unveil (t, "rx"));
+                    free (t);
+                  }
               }
           }
 
         /* unveil executable */
-        Unveil (argv[0], "rx");
+        RETURN_ON_ERROR (Unveil (argv[0], "rx"));
 
-        /* unveil essential paths */
-        Unveil ("/dev/zero", "r");
-        Unveil ("/dev/null", "rw");
-        Unveil ("/dev/full", "rw");
-        Unveil ("/dev/stdin", "rw");
-        Unveil ("/dev/stdout", "rw");
-        Unveil ("/dev/stderr", "rw");
-
-        /* unveil cosmopolitan build specific */
-        Unveil ("/tmp", "rwc");
-        Unveil ("o/tmp", "rwcx");
-        Unveil ("libc/integral", "r");
-        Unveil ("libc/disclaimer.inc", "r");
-        Unveil ("build/bootstrap", "rx");
-        Unveil ("o/third_party/gcc", "rx");
-
-        /* unveil cosmopolitan test specific */
-        Unveil ("/etc/hosts", "r");
-        Unveil (xjoinpaths (firstnonnull (getenv ("HOME"),
-                                          "."),
-                            ".runit.psk"),
-                "r");
+        if (!g_strict)
+          {
+            RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
+            RETURN_ON_ERROR (Unveil ("o/tmp", "rwcx"));
+            RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
+            RETURN_ON_ERROR (Unveil ("/dev/null", "rw"));
+            RETURN_ON_ERROR (Unveil ("/dev/full", "rw"));
+            RETURN_ON_ERROR (Unveil ("/dev/stdin", "rw"));
+            RETURN_ON_ERROR (Unveil ("/dev/stdout", "rw"));
+            RETURN_ON_ERROR (Unveil ("/dev/stderr", "rw"));
+            RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
+          }
 
         /*
          * unveils target output file
@@ -1823,37 +1873,44 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
             else if (errno == EEXIST)
               errno = err;
             else
-              OSS (error, NILF, "%s: touch target failed %s",
-                   c->file->name, strerror (errno));
+              {
+                OSS (error, NILF, "%s: touch target failed %s",
+                     c->file->name, strerror (errno));
+                return -1;
+              }
             if (unveil (c->file->name, "rwx") && errno != ENOSYS)
-              OSS (error, NILF, "%s: unveil target failed %s",
-                   c->file->name, strerror (errno));
+              {
+                OSS (error, NILF, "%s: unveil target failed %s",
+                     c->file->name, strerror (errno));
+                return -1;
+              }
           }
 
         /* unveil target prerequisites */
         for (d = c->file->deps; d; d = d->next)
           {
-            Unveil (d->file->name, "rx");
+            RETURN_ON_ERROR (Unveil (d->file->name, "rx"));
             if (endswith (d->file->name, ".com"))
-              Unveil (xstrcat (d->file->name, ".dbg"), "rx");
+              {
+                s = xstrcat (d->file->name, ".dbg");
+                RETURN_ON_ERROR (Unveil (s, "rx"));
+                free (s);
+              }
           }
 
         /* unveil explicit .UNVEIL entries */
-        if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE(".UNVEIL"),
-                                           c->file->variables->set)))
-          {
-            char *val, *tok, *state, *start;
-            start = val = strdup (variable_expand (var->value));
-            while (tok = strtok_r (start, " \t\r\n", &state))
-              {
-                Unveil (tok, "r");
-                start = 0;
-              }
-            free(val);
-          }
+        RETURN_ON_ERROR
+          (UnveilVariable
+           (lookup_variable
+            (STRING_SIZE_TUPLE (".UNVEIL"))));
+        RETURN_ON_ERROR
+          (UnveilVariable
+           (lookup_variable_in_set
+            (STRING_SIZE_TUPLE (".UNVEIL"),
+             c->file->variables->set)));
 
         /* commit sandbox */
-        Unveil (0, 0);
+        RETURN_ON_ERROR (Unveil (0, 0));
       }
   }
 
@@ -1861,9 +1918,12 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   exec_command (argv, child->environment);
 
   if (pid < 0)
-    OSS (error, NILF, "%s: %s", argv[0], strerror (r));
+    OSS (error, NILF, "%s: exec_command failed: %s",
+         argv[0], strerror (r));
 
   return pid;
+ OnError:
+  return -1;
 }
 
 
@@ -1880,8 +1940,9 @@ exec_command (char **argv, char **envp)
   execv (argv[0], argv);
 
   if(errno == ENOENT)
-    OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
-  else if(errno == ENOEXEC)
+    OSS (error, NILF, "%s: command doesn't exist: %s",
+         argv[0], strerror (errno));
+  else if(!g_strict && errno == ENOEXEC)
   {
     /* The file was not a program.  Try it as a shell script.  */
     const char *shell;
@@ -1908,10 +1969,12 @@ exec_command (char **argv, char **envp)
     }
 
     execvp (shell, new_argv);
-    OSS (error, NILF, "%s: %s", new_argv[0], strerror (errno));
+    OSS (error, NILF, "%s: execvp shell failed: %s",
+         new_argv[0], strerror (errno));
   }
 
-  OSS (error, NILF, "%s: %s", argv[0], strerror (errno));
+  OSS (error, NILF, "%s: execv failed: %s",
+       argv[0], strerror (errno));
 
   _exit (127);
 }

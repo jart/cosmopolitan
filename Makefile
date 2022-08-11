@@ -81,6 +81,19 @@ o/$(MODE):			\
 	o/$(MODE)/examples	\
 	o/$(MODE)/third_party
 
+.STRICT = 1
+.UNVEIL =			\
+	rwcx:o/tmp		\
+	libc/integral		\
+	libc/disclaimer.inc	\
+	rx:build/bootstrap	\
+	rx:o/third_party/gcc	\
+	/proc/self/status	\
+	rw:/dev/null		\
+	w:o/stack.log		\
+	/etc/hosts		\
+	~/.runit.psk
+
 PKGS =
 
 -include ~/.cosmo.mk
