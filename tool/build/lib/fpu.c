@@ -24,69 +24,68 @@
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/fpu.h"
+#include "tool/build/lib/ldbl.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
+#include "tool/build/lib/pun.h"
 #include "tool/build/lib/throw.h"
 #include "tool/build/lib/word.h"
 
 #define FPUREG 0
 #define MEMORY 1
 
-#define DISP(x, y, z) (((x)&0b111) << 4 | (y) << 3 | (z))
+#define DISP(x, y, z) ((7 & (x)) << 4 | (y) << 3 | (z))
 
 static void OnFpuStackOverflow(struct Machine *m) {
-  m->fpu.ie = true;
-  m->fpu.c1 = true;
-  m->fpu.sf = true;
+  m->fpu.sw |= kFpuSwIe | kFpuSwC1 | kFpuSwSf;
 }
 
-static long double OnFpuStackUnderflow(struct Machine *m) {
-  m->fpu.ie = true;
-  m->fpu.c1 = false;
-  m->fpu.sf = true;
+static double OnFpuStackUnderflow(struct Machine *m) {
+  m->fpu.sw |= kFpuSwIe | kFpuSwSf;
+  m->fpu.sw &= ~kFpuSwC1;
   return -NAN;
 }
 
-static long double St(struct Machine *m, int i) {
+static double St(struct Machine *m, int i) {
   if (FpuGetTag(m, i) == kFpuTagEmpty) OnFpuStackUnderflow(m);
   return *FpuSt(m, i);
 }
 
-static long double St0(struct Machine *m) {
+static double St0(struct Machine *m) {
   return St(m, 0);
 }
 
-static long double St1(struct Machine *m) {
+static double St1(struct Machine *m) {
   return St(m, 1);
 }
 
-static long double StRm(struct Machine *m) {
+static double StRm(struct Machine *m) {
   return St(m, ModrmRm(m->xedd->op.rde));
 }
 
 static void FpuClearRoundup(struct Machine *m) {
-  m->fpu.c1 = false;
+  m->fpu.sw &= ~kFpuSwC1;
 }
 
 static void FpuClearOutOfRangeIndicator(struct Machine *m) {
-  m->fpu.c2 = false;
+  m->fpu.sw &= ~kFpuSwC2;
 }
 
-static void FpuSetSt0(struct Machine *m, long double x) {
+static void FpuSetSt0(struct Machine *m, double x) {
   *FpuSt(m, 0) = x;
 }
 
-static void FpuSetStRm(struct Machine *m, long double x) {
+static void FpuSetStRm(struct Machine *m, double x) {
   *FpuSt(m, ModrmRm(m->xedd->op.rde)) = x;
 }
 
-static void FpuSetStPop(struct Machine *m, int i, long double x) {
+static void FpuSetStPop(struct Machine *m, int i, double x) {
   *FpuSt(m, i) = x;
   FpuPop(m);
 }
 
-static void FpuSetStRmPop(struct Machine *m, long double x) {
+static void FpuSetStRmPop(struct Machine *m, double x) {
   FpuSetStPop(m, ModrmRm(m->xedd->op.rde), x);
 }
 
@@ -106,156 +105,156 @@ static int64_t FpuGetMemoryLong(struct Machine *m) {
 }
 
 static float FpuGetMemoryFloat(struct Machine *m) {
-  float f;
-  uint8_t b[4];
-  memcpy(&f, Load(m, m->fpu.dp, 4, b), 4);
-  return f;
+  union FloatPun u;
+  u.i = FpuGetMemoryInt(m);
+  return u.f;
 }
 
 static double FpuGetMemoryDouble(struct Machine *m) {
-  double f;
-  uint8_t b[8];
-  memcpy(&f, Load(m, m->fpu.dp, 8, b), 8);
-  return f;
-}
-
-static long double FpuGetMemoryLongDouble(struct Machine *m) {
-  long double f;
-  uint8_t b[10];
-  memcpy(&f, Load(m, m->fpu.dp, 10, b), 10);
-  return f;
+  union DoublePun u;
+  u.i = FpuGetMemoryLong(m);
+  return u.f;
 }
 
 static void FpuSetMemoryShort(struct Machine *m, int16_t i) {
-  SetMemoryShort(m, m->fpu.dp, i);
+  void *p[2];
+  uint8_t b[2];
+  Write16(BeginStore(m, m->fpu.dp, 2, p, b), i);
+  EndStore(m, m->fpu.dp, 2, p, b);
 }
 
 static void FpuSetMemoryInt(struct Machine *m, int32_t i) {
-  SetMemoryInt(m, m->fpu.dp, i);
+  void *p[2];
+  uint8_t b[4];
+  Write32(BeginStore(m, m->fpu.dp, 4, p, b), i);
+  EndStore(m, m->fpu.dp, 4, p, b);
 }
 
 static void FpuSetMemoryLong(struct Machine *m, int64_t i) {
-  SetMemoryLong(m, m->fpu.dp, i);
+  void *p[2];
+  uint8_t b[8];
+  Write64(BeginStore(m, m->fpu.dp, 8, p, b), i);
+  EndStore(m, m->fpu.dp, 8, p, b);
 }
 
 static void FpuSetMemoryFloat(struct Machine *m, float f) {
-  SetMemoryFloat(m, m->fpu.dp, f);
+  union FloatPun u = {f};
+  FpuSetMemoryInt(m, u.i);
 }
 
 static void FpuSetMemoryDouble(struct Machine *m, double f) {
-  SetMemoryDouble(m, m->fpu.dp, f);
+  union DoublePun u = {f};
+  FpuSetMemoryLong(m, u.i);
 }
 
-static void FpuSetMemoryLdbl(struct Machine *m, long double f) {
-  SetMemoryLdbl(m, m->fpu.dp, f);
+static double FpuGetMemoryLdbl(struct Machine *m) {
+  uint8_t b[10];
+  return DeserializeLdbl(Load(m, m->fpu.dp, 10, b));
 }
 
-static long ltruncl(long double x) {
-  return x;
+static void FpuSetMemoryLdbl(struct Machine *m, double f) {
+  void *p[2];
+  uint8_t b[10], t[10];
+  SerializeLdbl(b, f);
+  memcpy(BeginStore(m, m->fpu.dp, 10, p, t), b, 10);
+  EndStore(m, m->fpu.dp, 10, p, t);
 }
 
-static int ClearC2(int sw) {
-  return sw & ~FPU_C2;
+static double f2xm1(double x) {
+  return exp2(x) - 1;
 }
 
-static long double f2xm1(long double x) {
-  return exp2l(x) - 1;
+static double fyl2x(double x, double y) {
+  return y * log2(x);
 }
 
-static long double fyl2x(long double x, long double y) {
-  return y * log2l(x);
+static double fyl2xp1(double x, double y) {
+  return y * log2(x + 1);
 }
 
-static long double fyl2xp1(long double x, long double y) {
-  return y * log2l(x + 1);
-}
-
-static long double fscale(long double significand, long double exponent) {
+static double fscale(double significand, double exponent) {
   if (isunordered(significand, exponent)) return NAN;
   return ldexp(significand, exponent);
 }
 
-static long double x87remainder(long double x, long double y, uint32_t *sw,
-                                long double rem(long double, long double),
-                                long rnd(long double)) {
+static double x87remainder(double x, double y, uint32_t *sw,
+                           double rem(double, double), double rnd(double)) {
   int s;
   long q;
-  long double r;
+  double r;
   s = 0;
   r = rem(x, y);
   q = rnd(x / y);
-  s &= ~FPU_C2; /* ty libm */
-  if (q & 0b001) s |= FPU_C1;
-  if (q & 0b010) s |= FPU_C3;
-  if (q & 0b100) s |= FPU_C0;
-  if (sw) *sw = s | (*sw & ~(FPU_C0 | FPU_C1 | FPU_C2 | FPU_C3));
+  s &= ~kFpuSwC2; /* ty libm */
+  if (q & 1) s |= kFpuSwC1;
+  if (q & 2) s |= kFpuSwC3;
+  if (q & 4) s |= kFpuSwC0;
+  if (sw) *sw = s | (*sw & ~(kFpuSwC0 | kFpuSwC1 | kFpuSwC2 | kFpuSwC3));
   return r;
 }
 
-static long double fprem(long double dividend, long double modulus,
-                         uint32_t *sw) {
-  return x87remainder(dividend, modulus, sw, fmodl, ltruncl);
+static double fprem(double dividend, double modulus, uint32_t *sw) {
+  return x87remainder(dividend, modulus, sw, fmod, trunc);
 }
 
-static long double fprem1(long double dividend, long double modulus,
-                          uint32_t *sw) {
-  return x87remainder(dividend, modulus, sw, remainderl, lrintl);
+static double fprem1(double dividend, double modulus, uint32_t *sw) {
+  return x87remainder(dividend, modulus, sw, remainder, rint);
 }
 
-static long double FpuAdd(struct Machine *m, long double x, long double y) {
+static double FpuAdd(struct Machine *m, double x, double y) {
   if (!isunordered(x, y)) {
     switch (isinf(y) << 1 | isinf(x)) {
-      case 0b00:
+      case 0:
         return x + y;
-      case 0b01:
+      case 1:
         return x;
-      case 0b10:
+      case 2:
         return y;
-      case 0b11:
+      case 3:
         if (signbit(x) == signbit(y)) {
           return x;
         } else {
-          m->fpu.ie = true;
+          m->fpu.sw |= kFpuSwIe;
           return copysign(NAN, x);
         }
       default:
-        unreachable;
+        for (;;) (void)0;
     }
   } else {
     return NAN;
   }
 }
 
-static long double FpuSub(struct Machine *m, long double x, long double y) {
+static double FpuSub(struct Machine *m, double x, double y) {
   if (!isunordered(x, y)) {
     switch (isinf(y) << 1 | isinf(x)) {
-      case 0b00:
+      case 0:
         return x - y;
-      case 0b01:
+      case 1:
         return -x;
-      case 0b10:
+      case 2:
         return y;
-      case 0b11:
+      case 3:
         if (signbit(x) == signbit(y)) {
-          m->fpu.ie = true;
+          m->fpu.sw |= kFpuSwIe;
           return copysign(NAN, x);
         } else {
           return y;
         }
       default:
-        unreachable;
+        for (;;) (void)0;
     }
   } else {
     return NAN;
   }
 }
 
-static long double FpuMul(struct Machine *m, long double x, long double y) {
+static double FpuMul(struct Machine *m, double x, double y) {
   if (!isunordered(x, y)) {
     if (!((isinf(x) && !y) || (isinf(y) && !x))) {
       return x * y;
     } else {
-      m->fpu.ie = true;
+      m->fpu.sw |= kFpuSwIe;
       return -NAN;
     }
   } else {
@@ -263,17 +262,17 @@ static long double FpuMul(struct Machine *m, long double x, long double y) {
   }
 }
 
-static long double FpuDiv(struct Machine *m, long double x, long double y) {
+static double FpuDiv(struct Machine *m, double x, double y) {
   if (!isunordered(x, y)) {
     if (x || y) {
       if (y) {
         return x / y;
       } else {
-        m->fpu.ze = true;
+        m->fpu.sw |= kFpuSwZe;
         return copysign(INFINITY, x);
       }
     } else {
-      m->fpu.ie = true;
+      m->fpu.sw |= kFpuSwIe;
       return copysign(NAN, x);
     }
   } else {
@@ -281,73 +280,58 @@ static long double FpuDiv(struct Machine *m, long double x, long double y) {
   }
 }
 
-static long double FpuRound(struct Machine *m, long double x) {
-  switch (m->fpu.rc) {
+static double FpuRound(struct Machine *m, double x) {
+  switch ((m->fpu.cw & kFpuCwRc) >> 10) {
     case 0:
-      return rintl(x);
+      return rint(x);
     case 1:
-      return floorl(x);
+      return floor(x);
     case 2:
-      return ceill(x);
+      return ceil(x);
     case 3:
-      return truncl(x);
+      return trunc(x);
     default:
-      unreachable;
+      for (;;) (void)0;
   }
 }
 
-static void FpuCompare(struct Machine *m, long double y) {
-  long double x = St0(m);
-  m->fpu.c1 = false;
+static void FpuCompare(struct Machine *m, double y) {
+  double x = St0(m);
+  m->fpu.sw &= ~(kFpuSwC0 | kFpuSwC1 | kFpuSwC2 | kFpuSwC3);
   if (!isunordered(x, y)) {
-    m->fpu.c0 = x < y;
-    m->fpu.c2 = false;
-    m->fpu.c3 = x == y;
+    if (x < y) m->fpu.sw |= kFpuSwC0;
+    if (x == y) m->fpu.sw |= kFpuSwC3;
   } else {
-    m->fpu.c0 = true;
-    m->fpu.c2 = true;
-    m->fpu.c3 = true;
-    m->fpu.ie = true;
+    m->fpu.sw |= kFpuSwC0 | kFpuSwC2 | kFpuSwC3 | kFpuSwIe;
   }
 }
 
 static void OpFxam(struct Machine *m) {
-  long double x;
+  double x;
   x = *FpuSt(m, 0);
-  m->fpu.c1 = !!signbit(x);
+  m->fpu.sw &= ~(kFpuSwC0 | kFpuSwC1 | kFpuSwC2 | kFpuSwC3);
+  if (signbit(x)) m->fpu.sw |= kFpuSwC1;
   if (FpuGetTag(m, 0) == kFpuTagEmpty) {
-    m->fpu.c0 = true;
-    m->fpu.c2 = false;
-    m->fpu.c3 = true;
+    m->fpu.sw |= kFpuSwC0 | kFpuSwC3;
   } else {
     switch (fpclassify(x)) {
       case FP_NAN:
-        m->fpu.c0 = true;
-        m->fpu.c2 = false;
-        m->fpu.c3 = false;
+        m->fpu.sw |= kFpuSwC0;
         break;
       case FP_INFINITE:
-        m->fpu.c0 = true;
-        m->fpu.c2 = true;
-        m->fpu.c3 = false;
+        m->fpu.sw |= kFpuSwC0 | kFpuSwC2;
         break;
       case FP_ZERO:
-        m->fpu.c0 = false;
-        m->fpu.c2 = false;
-        m->fpu.c3 = true;
+        m->fpu.sw |= kFpuSwC3;
         break;
       case FP_SUBNORMAL:
-        m->fpu.c0 = false;
-        m->fpu.c2 = true;
-        m->fpu.c3 = true;
+        m->fpu.sw |= kFpuSwC2 | kFpuSwC3;
         break;
       case FP_NORMAL:
-        m->fpu.c0 = false;
-        m->fpu.c2 = true;
-        m->fpu.c3 = false;
+        m->fpu.sw |= kFpuSwC2;
         break;
       default:
-        abort();
+        for (;;) (void)0;
     }
   }
 }
@@ -409,7 +393,7 @@ static void OpFchs(struct Machine *m) {
 }
 
 static void OpFabs(struct Machine *m) {
-  FpuSetSt0(m, fabsl(St0(m)));
+  FpuSetSt0(m, fabs(St0(m)));
 }
 
 static void OpF2xm1(struct Machine *m) {
@@ -426,31 +410,32 @@ static void OpFyl2xp1(struct Machine *m) {
 
 static void OpFcos(struct Machine *m) {
   FpuClearOutOfRangeIndicator(m);
-  FpuSetSt0(m, cosl(St0(m)));
+  FpuSetSt0(m, cos(St0(m)));
 }
 
 static void OpFsin(struct Machine *m) {
   FpuClearOutOfRangeIndicator(m);
-  FpuSetSt0(m, sinl(St0(m)));
+  FpuSetSt0(m, sin(St0(m)));
 }
 
 static void OpFptan(struct Machine *m) {
   FpuClearOutOfRangeIndicator(m);
-  FpuSetSt0(m, tanl(St0(m)));
+  FpuSetSt0(m, tan(St0(m)));
   FpuPush(m, 1);
 }
 
 static void OpFsincos(struct Machine *m) {
-  long double tsin, tcos;
+  double tsin, tcos;
   FpuClearOutOfRangeIndicator(m);
-  sincosl(St0(m), &tsin, &tcos);
+  tsin = sin(St0(m));
+  tcos = cos(St0(m));
   FpuSetSt0(m, tsin);
   FpuPush(m, tcos);
 }
 
 static void OpFpatan(struct Machine *m) {
   FpuClearRoundup(m);
-  FpuSetStPop(m, 1, atan2l(St1(m), St0(m)));
+  FpuSetStPop(m, 1, atan2(St1(m), St0(m)));
 }
 
 static void OpFcom(struct Machine *m) {
@@ -673,7 +658,7 @@ static void OpFidivrs(struct Machine *m) {
 
 static void OpFsqrt(struct Machine *m) {
   FpuClearRoundup(m);
-  FpuSetSt0(m, sqrtl(St0(m)));
+  FpuSetSt0(m, sqrt(St0(m)));
 }
 
 static void OpFrndint(struct Machine *m) {
@@ -694,17 +679,17 @@ static void OpFprem1(struct Machine *m) {
 }
 
 static void OpFdecstp(struct Machine *m) {
-  --m->fpu.sp;
+  m->fpu.sw = (m->fpu.sw & ~kFpuSwSp) | ((m->fpu.sw - (1 << 11)) & kFpuSwSp);
 }
 
 static void OpFincstp(struct Machine *m) {
-  ++m->fpu.sp;
+  m->fpu.sw = (m->fpu.sw & ~kFpuSwSp) | ((m->fpu.sw + (1 << 11)) & kFpuSwSp);
 }
 
 static void OpFxtract(struct Machine *m) {
-  long double x = St0(m);
-  FpuSetSt0(m, logbl(x));
-  FpuPush(m, significandl(x));
+  double x = St0(m);
+  FpuSetSt0(m, logb(x));
+  FpuPush(m, ldexp(x, -ilogb(x)));
 }
 
 static void OpFld(struct Machine *m) {
@@ -746,7 +731,7 @@ static void OpFstp(struct Machine *m) {
 }
 
 static void OpFxch(struct Machine *m) {
-  long double t = StRm(m);
+  double t = StRm(m);
   FpuSetStRm(m, St0(m));
   FpuSetSt0(m, t);
 }
@@ -756,43 +741,43 @@ static void OpFldcw(struct Machine *m) {
 }
 
 static void OpFldt(struct Machine *m) {
-  FpuPush(m, FpuGetMemoryLongDouble(m));
+  FpuPush(m, FpuGetMemoryLdbl(m));
 }
 
 static void OpFldl(struct Machine *m) {
   FpuPush(m, FpuGetMemoryDouble(m));
 }
 
-static long double Fld1(void) {
+static double Fld1(void) {
   return 1;
 }
 
-static long double Fldl2t(void) {
+static double Fldl2t(void) {
   return 0xd.49a784bcd1b8afep-2L; /* log₂10 */
 }
 
-static long double Fldl2e(void) {
+static double Fldl2e(void) {
   return 0xb.8aa3b295c17f0bcp-3L; /* log₂𝑒 */
 }
 
-static long double Fldpi(void) {
+static double Fldpi(void) {
   return 0x1.921fb54442d1846ap+1L; /* π */
 }
 
-static long double Fldlg2(void) {
+static double Fldlg2(void) {
   return 0x9.a209a84fbcff799p-5L; /* log₁₀2 */
 }
 
-static long double Fldln2(void) {
+static double Fldln2(void) {
   return 0xb.17217f7d1cf79acp-4L; /* logₑ2 */
 }
 
-static long double Fldz(void) {
+static double Fldz(void) {
   return 0;
 }
 
 static void OpFldConstant(struct Machine *m) {
-  long double x;
+  double x;
   switch (ModrmRm(m->xedd->op.rde)) {
     CASE(0, x = Fld1());
     CASE(1, x = Fldl2t());
@@ -863,7 +848,7 @@ static void OpFistps(struct Machine *m) {
 }
 
 static void OpFcomi(struct Machine *m) {
-  long double x, y;
+  double x, y;
   x = St0(m);
   y = StRm(m);
   if (!isunordered(x, y)) {
@@ -871,7 +856,7 @@ static void OpFcomi(struct Machine *m) {
     m->flags = SetFlag(m->flags, FLAGS_CF, x < y);
     m->flags = SetFlag(m->flags, FLAGS_PF, false);
   } else {
-    m->fpu.ie = true;
+    m->fpu.sw |= kFpuSwIe;
     m->flags = SetFlag(m->flags, FLAGS_ZF, true);
     m->flags = SetFlag(m->flags, FLAGS_CF, true);
     m->flags = SetFlag(m->flags, FLAGS_PF, true);
@@ -945,42 +930,32 @@ static void OpFldenv(struct Machine *m) {
 }
 
 static void OpFsave(struct Machine *m) {
-  long i;
+  int i;
   void *p[2];
-  long double x;
-  uint8_t *a, b[108];
+  uint8_t *a, b[108], t[16];
   a = BeginStore(m, m->fpu.dp, sizeof(b), p, b);
   SetFpuEnv(m, a);
+  memset(t, 0, sizeof(t));
   for (i = 0; i < 8; ++i) {
-    x = *FpuSt(m, i);
-    memcpy(a + 28 + i * 10, &x, 10);
+    SerializeLdbl(a + 28 + i * 10, *FpuSt(m, i));
   }
   EndStore(m, m->fpu.dp, sizeof(b), p, b);
   OpFinit(m);
 }
 
 static void OpFrstor(struct Machine *m) {
-  long i;
-  long double x;
+  int i;
   uint8_t *a, b[108];
   a = Load(m, m->fpu.dp, sizeof(b), b);
   GetFpuEnv(m, a);
   for (i = 0; i < 8; ++i) {
-    bzero(&x, sizeof(x));
-    memcpy(&x, a + 28 + i * 10, 10);
-    *FpuSt(m, i) = x;
+    *FpuSt(m, i) = DeserializeLdbl(a + 28 + i * 10);
   }
 }
 
 static void OpFnclex(struct Machine *m) {
-  m->fpu.ie = false;
-  m->fpu.de = false;
-  m->fpu.ze = false;
-  m->fpu.oe = false;
-  m->fpu.ue = false;
-  m->fpu.pe = false;
-  m->fpu.es = false;
-  m->fpu.bf = false;
+  m->fpu.sw &= ~(kFpuSwIe | kFpuSwDe | kFpuSwZe | kFpuSwOe | kFpuSwUe |
+                 kFpuSwPe | kFpuSwEs | kFpuSwSf | kFpuSwBf);
 }
 
 static void OpFnop(struct Machine *m) {
@@ -994,64 +969,64 @@ void OpFinit(struct Machine *m) {
 }
 
 void OpFwait(struct Machine *m, uint32_t rde) {
-  if ((m->fpu.ie & !m->fpu.im) | (m->fpu.de & !m->fpu.dm) |
-      (m->fpu.ze & !m->fpu.zm) | (m->fpu.oe & !m->fpu.om) |
-      (m->fpu.ue & !m->fpu.um) | (m->fpu.pe & !m->fpu.pm) |
-      (m->fpu.sf & !m->fpu.im)) {
+  int sw, cw;
+  sw = m->fpu.sw;
+  cw = m->fpu.cw;
+  if (((sw & kFpuSwIe) && !(cw & kFpuCwIm)) ||
+      ((sw & kFpuSwDe) && !(cw & kFpuCwDm)) ||
+      ((sw & kFpuSwZe) && !(cw & kFpuCwZm)) ||
+      ((sw & kFpuSwOe) && !(cw & kFpuCwOm)) ||
+      ((sw & kFpuSwUe) && !(cw & kFpuCwUm)) ||
+      ((sw & kFpuSwPe) && !(cw & kFpuCwPm)) ||
+      ((sw & kFpuSwSf) && !(cw & kFpuCwIm))) {
     HaltMachine(m, kMachineFpuException);
   }
-}
-
-long double *FpuSt(struct Machine *m, unsigned i) {
-  i += m->fpu.sp;
-  i &= 0b111;
-  return m->fpu.st + i;
 }
 
 int FpuGetTag(struct Machine *m, unsigned i) {
   unsigned t;
   t = m->fpu.tw;
-  i += m->fpu.sp;
-  i &= 0b111;
+  i += (m->fpu.sw & kFpuSwSp) >> 11;
+  i &= 7;
   i *= 2;
-  t &= 0b11 << i;
+  t &= 3 << i;
   t >>= i;
   return t;
 }
 
 void FpuSetTag(struct Machine *m, unsigned i, unsigned t) {
-  i += m->fpu.sp;
-  t &= 0b11;
-  i &= 0b111;
+  i += (m->fpu.sw & kFpuSwSp) >> 11;
+  t &= 3;
+  i &= 7;
   i *= 2;
-  m->fpu.tw &= ~(0b11 << i);
+  m->fpu.tw &= ~(3 << i);
   m->fpu.tw |= t << i;
 }
 
-void FpuPush(struct Machine *m, long double x) {
+void FpuPush(struct Machine *m, double x) {
   if (FpuGetTag(m, -1) != kFpuTagEmpty) OnFpuStackOverflow(m);
-  m->fpu.sp -= 1;
+  m->fpu.sw = (m->fpu.sw & ~kFpuSwSp) | ((m->fpu.sw - (1 << 11)) & kFpuSwSp);
   *FpuSt(m, 0) = x;
   FpuSetTag(m, 0, kFpuTagValid);
 }
 
-long double FpuPop(struct Machine *m) {
-  long double x;
+double FpuPop(struct Machine *m) {
+  double x;
   if (FpuGetTag(m, 0) != kFpuTagEmpty) {
     x = *FpuSt(m, 0);
     FpuSetTag(m, 0, kFpuTagEmpty);
   } else {
     x = OnFpuStackUnderflow(m);
   }
-  m->fpu.sp += 1;
+  m->fpu.sw = (m->fpu.sw & ~kFpuSwSp) | ((m->fpu.sw + (1 << 11)) & kFpuSwSp);
   return x;
 }
 
 void OpFpu(struct Machine *m, uint32_t rde) {
   unsigned op;
   bool ismemory;
-  op = m->xedd->op.opcode & 0b111;
-  ismemory = ModrmMod(rde) != 0b11;
+  op = m->xedd->op.opcode & 7;
+  ismemory = ModrmMod(rde) != 3;
   m->fpu.ip = m->ip - m->xedd->length;
   m->fpu.op = op << 8 | ModrmMod(rde) << 6 | ModrmReg(rde) << 3 | ModrmRm(rde);
   m->fpu.dp = ismemory ? ComputeAddress(m, rde) : 0;
@@ -1187,7 +1162,7 @@ void OpFpu(struct Machine *m, uint32_t rde) {
         CASE(6, OpFdecstp(m));
         CASE(7, OpFincstp(m));
         default:
-          unreachable;
+          for (;;) (void)0;
       }
       break;
     case DISP(0xD9, FPUREG, 7):
@@ -1201,7 +1176,7 @@ void OpFpu(struct Machine *m, uint32_t rde) {
         CASE(6, OpFsin(m));
         CASE(7, OpFcos(m));
         default:
-          unreachable;
+          for (;;) (void)0;
       }
       break;
     case DISP(0xDb, FPUREG, 4):

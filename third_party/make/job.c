@@ -67,6 +67,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/macros.internal.h"
 #include "libc/log/rop.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/sock/sock.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \

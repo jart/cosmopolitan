@@ -34,6 +34,7 @@ TEST_LIBC_SOCK_DIRECTDEPS =					\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
+	LIBC_SYSV_CALLS						\
 	LIBC_TESTLIB						\
 	LIBC_X							\
 	TOOL_DECODE_LIB

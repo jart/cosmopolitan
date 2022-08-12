@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/bpf.h"
@@ -25,6 +24,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
@@ -517,6 +517,7 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_migrate_pages,      //
     __NR_linux_sync_file_range,    //
     __NR_linux_set_tid_address,    //
+    __NR_linux_membarrier,         //
     __NR_linux_nanosleep,          //
     __NR_linux_pipe,               //
     __NR_linux_pipe2,              //

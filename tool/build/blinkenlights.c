@@ -20,8 +20,6 @@
 #include "dsp/tty/tty.h"
 #include "libc/alg/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/iovec.h"
@@ -30,14 +28,17 @@
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/pcmpeqb.h"
 #include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
@@ -46,11 +47,11 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/append.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -94,6 +95,7 @@
 #include "tool/build/lib/panel.h"
 #include "tool/build/lib/pml4t.h"
 #include "tool/build/lib/pty.h"
+#include "tool/build/lib/signal.h"
 #include "tool/build/lib/stats.h"
 #include "tool/build/lib/syscall.h"
 #include "tool/build/lib/throw.h"
@@ -1647,6 +1649,18 @@ static char *GetStatus(int m) {
   if (!first) {
     appendw(&b, ')');
   }
+  if (action & RESTART) appends(&b, " RESTART");
+  if (action & REDRAW) appends(&b, " REDRAW");
+  if (action & CONTINUE) appends(&b, " CONTINUE");
+  if (action & STEP) appends(&b, " STEP");
+  if (action & NEXT) appends(&b, " NEXT");
+  if (action & FINISH) appends(&b, " FINISH");
+  if (action & FAILURE) appends(&b, " FAILURE");
+  if (action & WINCHED) appends(&b, " WINCHED");
+  if (action & INT) appends(&b, " INT");
+  if (action & QUIT) appends(&b, " QUIT");
+  if (action & EXIT) appends(&b, " EXIT");
+  if (action & ALARM) appends(&b, " ALARM");
   return b;
 }
 
@@ -2023,7 +2037,7 @@ static int OnPtyFdTcsets(int fd, uint64_t request, struct termios *c) {
   return 0;
 }
 
-static int OnPtyFdIoctl(int fd, uint64_t request, void *memory) {
+static int OnPtyFdIoctl(int fd, int request, void *memory) {
   if (request == TIOCGWINSZ) {
     return OnPtyFdTiocgwinsz(fd, memory);
   } else if (request == TCGETS) {
@@ -2039,7 +2053,7 @@ static const struct MachineFdCb kMachineFdCbPty = {
     .close = OnPtyFdClose,
     .readv = OnPtyFdReadv,
     .writev = OnPtyFdWritev,
-    .ioctl = OnPtyFdIoctl,
+    .ioctl = (void *)OnPtyFdIoctl,
     .poll = OnPtyFdPoll,
 };
 
@@ -2808,6 +2822,9 @@ static void Exec(void) {
       tuimode = true;
       LoadInstruction(m);
       ExecuteInstruction(m);
+      if (m->signals.i < m->signals.n) {
+        ConsumeSignal(m);
+      }
       ++opcount;
       CheckFramePointer();
     } else {
@@ -2822,6 +2839,9 @@ static void Exec(void) {
           break;
         }
         ExecuteInstruction(m);
+        if (m->signals.i < m->signals.n) {
+          ConsumeSignal(m);
+        }
         ++opcount;
       KeepGoing:
         CheckFramePointer();
@@ -2960,6 +2980,9 @@ static void Tui(void) {
         if (!IsDebugBreak()) {
           UpdateXmmType(m, &xmmtype);
           ExecuteInstruction(m);
+          if (m->signals.i < m->signals.n) {
+            ConsumeSignal(m);
+          }
           ++opcount;
           if (!(action & CONTINUE) || interactive) {
             if (!(action & CONTINUE)) ReactiveDraw();
@@ -3102,7 +3125,12 @@ static void OnlyRunOnFirstCpu(void) {
   sched_setaffinity(0, sizeof(bs), &bs);
 }
 
+static void OnSignal(int sig, siginfo_t *si, ucontext_t *uc) {
+  EnqueueSignal(m, sig, si->si_code);
+}
+
 int main(int argc, char *argv[]) {
+  struct sigaction sa;
   if (!NoDebug()) {
     ShowCrashReports();
   }
@@ -3110,6 +3138,7 @@ int main(int argc, char *argv[]) {
   pty->conf |= kPtyNocanon;
   m = NewMachine();
   m->mode = XED_MACHINE_MODE_LONG_64;
+  m->redraw = Redraw;
   m->onbinbase = OnBinbase;
   m->onlongbranch = OnLongBranch;
   speed = 4;
@@ -3124,7 +3153,22 @@ int main(int argc, char *argv[]) {
     g_high.quote = 215;
   }
   GetOpts(argc, argv);
+  if (optind == argc) {
+    PrintUsage(EX_USAGE, stderr);
+  }
   xsigaction(SIGALRM, OnSigAlarm, 0, 0, 0);
-  if (optind == argc) PrintUsage(EX_USAGE, stderr);
+  memset(&sa, 0, sizeof(sa));
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags |= SA_SIGINFO;
+  sa.sa_sigaction = OnSignal;
+  sigaction(SIGHUP, &sa, 0);
+  sigaction(SIGQUIT, &sa, 0);
+  sigaction(SIGABRT, &sa, 0);
+  sigaction(SIGUSR1, &sa, 0);
+  sigaction(SIGUSR2, &sa, 0);
+  sigaction(SIGPIPE, &sa, 0);
+  sigaction(SIGTERM, &sa, 0);
+  sigaction(SIGCHLD, &sa, 0);
+  sigaction(SIGWINCH, &sa, 0);
   return Emulator(argc, argv);
 }

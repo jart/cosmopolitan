@@ -53,6 +53,8 @@ const char *DescribePersonalityFlags(char[128], int);
 const char *DescribePollFlags(char[64], int);
 const char *DescribePrctlOperation(int);
 const char *DescribeProtFlags(char[48], int);
+const char *DescribePtrace(char[12], int);
+const char *DescribePtraceEvent(char[32], int);
 const char *DescribeRemapFlags(char[48], int);
 const char *DescribeRlimit(char[64], int, const struct rlimit *);
 const char *DescribeRlimitName(char[20], int);
@@ -101,6 +103,8 @@ void DescribeIovNt(const struct NtIovec *, uint32_t, ssize_t);
 #define DescribePersonalityFlags(p)  DescribePersonalityFlags(alloca(128), p)
 #define DescribePollFlags(p)         DescribePollFlags(alloca(64), p)
 #define DescribeProtFlags(dirfd)     DescribeProtFlags(alloca(48), dirfd)
+#define DescribePtrace(i)            DescribePtrace(alloca(12), i)
+#define DescribePtraceEvent(x)       DescribePtraceEvent(alloca(32), x)
 #define DescribeRemapFlags(dirfd)    DescribeRemapFlags(alloca(48), dirfd)
 #define DescribeRlimit(rc, rl)       DescribeRlimit(alloca(64), rc, rl)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)

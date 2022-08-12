@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/testlib/testlib.h"
+#include "tool/build/lib/xlat.h"
 #include "tool/build/lib/xlaterrno.h"
 
 TEST(xlaterrno, test) {

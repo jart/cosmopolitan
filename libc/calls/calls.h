@@ -35,10 +35,11 @@
 #define WIFCONTINUED(s) ((s) == 0xffff)
 #define WIFEXITED(s)    (!WTERMSIG(s))
 #define WIFSIGNALED(s)  ((0xffff & (s)) - 1u < 0xffu)
-#define WIFSTOPPED(s)   ((short)(((0xffff & (s)) * 0x10001) >> 8) > 0x7f00)
-#define WSTOPSIG(s)     WEXITSTATUS(s)
-#define WTERMSIG(s)     (127 & (s))
-#define W_STOPCODE(s)   ((s) << 8 | 0177)
+#define WIFSTOPPED(s) \
+  ((short)(((0xffff & (unsigned)(s)) * 0x10001) >> 8) > 0x7f00)
+#define WSTOPSIG(s)   WEXITSTATUS(s)
+#define WTERMSIG(s)   (127 & (s))
+#define W_STOPCODE(s) ((s) << 8 | 0177)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -115,6 +116,7 @@ int getresuid(uint32_t *, uint32_t *, uint32_t *);
 int getsid(int) nosideeffect libcesque;
 int gettid(void) libcesque;
 int getuid(void) libcesque;
+int iopl(int);
 int ioprio_get(int, int);
 int ioprio_set(int, int, int);
 int issetugid(void);
@@ -178,6 +180,7 @@ int siginterrupt(int, int);
 int symlink(const char *, const char *);
 int symlinkat(const char *, int, const char *);
 int sync_file_range(int, int64_t, int64_t, unsigned);
+int sys_ptrace(int, ...);
 int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 int tgkill(int, int, int);
 int tkill(int, int);
@@ -194,7 +197,6 @@ int wait(int *);
 int waitpid(int, int *, int);
 intptr_t syscall(int, ...);
 long ptrace(int, ...);
-size_t GetFileSize(const char *);
 ssize_t copy_file_range(int, long *, int, long *, size_t, uint32_t);
 ssize_t copyfd(int, int64_t *, int, int64_t *, size_t, uint32_t);
 ssize_t getfiledescriptorsize(int);

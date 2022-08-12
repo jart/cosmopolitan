@@ -24,6 +24,7 @@ uint32_t inet_addr(const char *);
 int parseport(const char *);
 uint32_t *GetHostIps(void);
 
+int nointernet(void);
 int socket(int, int, int);
 int accept(int, void *, uint32_t *);
 int accept4(int, void *, uint32_t *, int);

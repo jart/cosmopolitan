@@ -16,18 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/consts.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/dnsheader.h"
 #include "libc/dns/dnsquestion.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -101,7 +101,6 @@ int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
             a4 = (struct sockaddr_in *)addr;
             a4->sin_family = AF_INET;
             memcpy(&a4->sin_addr.s_addr, p + 10, 4);
-            _firewall(a4, sizeof(struct sockaddr_in));
             break;
           }
           p += 10 + rdlength;

@@ -91,8 +91,6 @@ struct SockFd {
 
 errno_t __dos2errno(uint32_t) hidden;
 
-void _firewall(const void *, uint32_t) hidden;
-
 int32_t __sys_accept(int32_t, void *, uint32_t *, int) dontdiscard hidden;
 int32_t __sys_accept4(int32_t, void *, uint32_t *, int) dontdiscard hidden;
 int32_t __sys_bind(int32_t, const void *, uint32_t) hidden;

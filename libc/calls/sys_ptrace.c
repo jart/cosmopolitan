@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,20 +17,44 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/stat.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/limits.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/likely.h"
+
+#define IsPeek(request) (IsLinux() && (request)-1u < 3)
 
 /**
- * Returns the byte length of file by path.
+ * Traces process.
  *
- * @return number of bytes, or -1ul w/ errno
- * @see getfiledescriptorsize()
+ * @param op can be PTRACE_xxx
+ * @param pid is child process id
+ * @param addr points inside child address space
+ * @param data is address of output word when peeking
+ * @note de facto linux only
+ * @vforksafe
  */
-size_t GetFileSize(const char *pathname) {
-  struct stat st;
-  if (stat(pathname, &st) == -1) return SIZE_MAX;
-  return st.st_size;
+int sys_ptrace(int op, ...) {
+  va_list va;
+  int rc, pid;
+  long addr, *data;
+  va_start(va, op);
+  pid = va_arg(va, int);
+  addr = va_arg(va, long);
+  data = va_arg(va, long *);
+  va_end(va);
+  rc = __sys_ptrace(op, pid, addr, data);
+#ifdef SYSDEBUG
+  if (UNLIKELY(__strace > 0)) {
+    if (rc != -1 && IsPeek(op) && data) {
+      STRACE("sys_ptrace(%s, %d, %p, [%p]) → %p% m", DescribePtrace(op), pid,
+             addr, *data, rc);
+    } else {
+      STRACE("sys_ptrace(%s, %d, %p, %p) → %p% m", DescribePtrace(op), pid,
+             addr, data, rc);
+    }
+  }
+#endif
+  return rc;
 }

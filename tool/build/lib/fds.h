@@ -15,7 +15,7 @@ struct MachineFdCb {
   int (*close)(int);
   ssize_t (*readv)(int, const struct iovec *, int);
   ssize_t (*writev)(int, const struct iovec *, int);
-  int (*ioctl)(int, uint64_t, void *);
+  int (*ioctl)(int, int, ...);
   int (*poll)(struct pollfd *, uint64_t, int32_t);
 };
 

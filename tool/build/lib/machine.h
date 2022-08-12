@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_TOOL_BUILD_LIB_MACHINE_H_
 #include "libc/runtime/runtime.h"
 #include "third_party/xed/x86.h"
+#include "tool/build/lib/bits.h"
 #include "tool/build/lib/fds.h"
 
 #define kMachineHalt                 -1
@@ -138,6 +139,7 @@ struct Machine {
   uint64_t idt_base;
   uint16_t gdt_limit;
   uint16_t idt_limit;
+  uint32_t mxcsr;
   struct MachineRealFree {
     uint64_t i;
     uint64_t n;
@@ -161,12 +163,26 @@ struct Machine {
   jmp_buf onhalt;
   int64_t faultaddr;
   bool dlab;
+  bool isfork;
   bool ismetal;
   struct MachineFds fds;
   uint8_t stash[4096];
   uint8_t icache[1024][40];
   void (*onbinbase)(struct Machine *);
   void (*onlongbranch)(struct Machine *);
+  void (*redraw)(void);
+  struct sigaction_bits sighand[28];
+  uint8_t sigmask[8];
+  int sig;
+  uint64_t siguc;
+  uint64_t sigfp;
+  struct {
+    int i, n;
+    struct {
+      int sig;
+      int code;
+    } p[64];
+  } signals;
 } forcealign(64);
 
 struct Machine *NewMachine(void) dontdiscard;

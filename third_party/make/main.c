@@ -30,6 +30,21 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/log/log.h"
 #include "libc/log/log.h"
 #include "libc/log/log.h"
+#include "libc/sock/sock.h"
+#include "libc/dce.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/bpf.h"
+#include "libc/sysv/consts/audit.h"
+#include "libc/calls/struct/seccomp.h"
+#include "libc/sysv/consts/pr.h"
+#include "libc/calls/calls.h"
+#include "libc/macros.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/calls/struct/filter.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/make/getopt.h"
 
 STATIC_STACK_SIZE(0x200000);  // 2mb stack
@@ -963,16 +978,10 @@ main (int argc, char **argv, char **envp)
   unsigned int restarts = 0;
   unsigned int syncing = 0;
   int argv_slots;
-#ifdef WINDOWS32
-  const char *unix_path = NULL;
-  const char *windows32_path = NULL;
 
-  SetUnhandledExceptionFilter (handle_runtime_exceptions);
-
-  /* start off assuming we have no shell */
-  unixy_shell = 0;
-  no_default_sh_exe = 1;
-#endif
+  // block internet access
+  if (!getenv("MAKE_RESTARTS"))
+    nointernet ();
 
   /* Useful for attaching debuggers, etc.  */
   SPIN ("main-entry");

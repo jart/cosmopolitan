@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
@@ -31,6 +32,7 @@
 #include "libc/calls/struct/tms.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
@@ -56,10 +58,12 @@
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
@@ -72,19 +76,39 @@
 #include "libc/time/struct/timezone.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "third_party/mbedtls/endian.h"
+#include "tool/build/lib/bits.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/iovs.h"
 #include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/pml4t.h"
+#include "tool/build/lib/signal.h"
 #include "tool/build/lib/syscall.h"
 #include "tool/build/lib/throw.h"
+#include "tool/build/lib/xlat.h"
 #include "tool/build/lib/xlaterrno.h"
 
-#define SA_RESTORER 0x04000000
+#define TIOCGWINSZ_LINUX   0x5413
+#define TCGETS_LINUX       0x5401
+#define TCSETS_LINUX       0x5402
+#define TCSETSW_LINUX      0x5403
+#define TCSETSF_LINUX      0x5404
+#define ARCH_SET_GS_LINUX  0x1001
+#define ARCH_SET_FS_LINUX  0x1002
+#define ARCH_GET_FS_LINUX  0x1003
+#define ARCH_GET_GS_LINUX  0x1004
+#define SOCK_CLOEXEC_LINUX 0x080000
+#define O_CLOEXEC_LINUX    0x080000
+#define SA_RESTORER        0x04000000
+#define POLLIN_LINUX       0x01
+#define POLLPRI_LINUX      0x02
+#define POLLOUT_LINUX      0x04
+#define POLLERR_LINUX      0x08
+#define POLLHUP_LINUX      0x10
+#define POLLNVAL_LINUX     0x20
 
-#define AT_FDCWD_LINUX   -100
 #define TIOCGWINSZ_LINUX 0x5413
 #define TCGETS_LINUX     0x5401
 #define TCSETS_LINUX     0x5402
@@ -111,321 +135,15 @@ const struct MachineFdCb kMachineFdCbHost = {
     .ioctl = (void *)ioctl,
 };
 
-static int XlatSignal(int sig) {
-  switch (sig) {
-    XLAT(1, SIGHUP);
-    XLAT(2, SIGINT);
-    XLAT(3, SIGQUIT);
-    XLAT(4, SIGILL);
-    XLAT(5, SIGTRAP);
-    XLAT(6, SIGABRT);
-    XLAT(7, SIGBUS);
-    XLAT(8, SIGFPE);
-    XLAT(9, SIGKILL);
-    XLAT(10, SIGUSR1);
-    XLAT(11, SIGSEGV);
-    XLAT(13, SIGPIPE);
-    XLAT(14, SIGALRM);
-    XLAT(15, SIGTERM);
-    XLAT(21, SIGTTIN);
-    XLAT(22, SIGTTOU);
-    XLAT(24, SIGXCPU);
-    XLAT(25, SIGXFSZ);
-    XLAT(26, SIGVTALRM);
-    XLAT(27, SIGPROF);
-    XLAT(28, SIGWINCH);
-    XLAT(17, SIGCHLD);
-    XLAT(18, SIGCONT);
-    XLAT(29, SIGIO);
-    XLAT(19, SIGSTOP);
-    XLAT(31, SIGSYS);
-    XLAT(20, SIGTSTP);
-    XLAT(23, SIGURG);
-    XLAT(12, SIGUSR2);
-    XLAT(0x2000, SIGSTKSZ);
-    XLAT(30, SIGPWR);
-    XLAT(0x10, SIGSTKFLT);
-    default:
-      return einval();
-  }
-}
-
-static int XlatSig(int x) {
-  switch (x) {
-    XLAT(0, SIG_BLOCK);
-    XLAT(1, SIG_UNBLOCK);
-    XLAT(2, SIG_SETMASK);
-    default:
-      return einval();
-  }
-}
-
-static int XlatSocketFamily(int x) {
-  switch (x) {
-    XLAT(0, AF_INET);
-    XLAT(2, AF_INET);
-    default:
-      return epfnosupport();
-  }
-}
-
-static int XlatSocketType(int x) {
-  switch (x) {
-    XLAT(1, SOCK_STREAM);
-    XLAT(2, SOCK_DGRAM);
-    default:
-      return einval();
-  }
-}
-
-static int XlatSocketProtocol(int x) {
-  switch (x) {
-    XLAT(6, IPPROTO_TCP);
-    XLAT(17, IPPROTO_UDP);
-    default:
-      return einval();
-  }
-}
-
-static unsigned XlatSocketFlags(int flags) {
-  unsigned res = 0;
-  if (flags & 0x080000) res |= SOCK_CLOEXEC;
-  if (flags & 0x000800) res |= SOCK_NONBLOCK;
-  return res;
-}
-
-static int XlatSocketLevel(int x) {
-  switch (x) {
-    XLAT(0, SOL_IP);
-    XLAT(1, SOL_SOCKET);
-    XLAT(6, SOL_TCP);
-    XLAT(17, SOL_UDP);
-    default:
-      return einval();
-  }
-}
-
-static int XlatSocketOptname(int x) {
-  switch (x) {
-    XLAT(2, SO_REUSEADDR);
-    XLAT(15, SO_REUSEPORT);
-    XLAT(9, SO_KEEPALIVE);
-    XLAT(5, SO_DONTROUTE);
-    XLAT(7, SO_SNDBUF);
-    XLAT(8, SO_RCVBUF);
-    XLAT(1, TCP_NODELAY);
-    XLAT(12, TCP_QUICKACK);
-    XLAT(13, SO_LINGER);
-    XLAT(23, TCP_FASTOPEN);
-    XLAT(30, TCP_FASTOPEN_CONNECT);
-    default:
-      return einval();
-  }
-}
-
-static int XlatMapFlags(int x) {
-  unsigned res = 0;
-  if (x & 1) res |= MAP_SHARED;
-  if (x & 2) res |= MAP_PRIVATE;
-  if (x & 16) res |= MAP_FIXED;
-  if (x & 32) res |= MAP_ANONYMOUS;
-  if (x & 256) res |= MAP_GROWSDOWN;
-  return res;
-}
-
-static int XlatAccess(int x) {
-  unsigned res = F_OK;
-  if (x & 1) res |= X_OK;
-  if (x & 2) res |= W_OK;
-  if (x & 4) res |= R_OK;
-  return res;
-}
-
-static int XlatSigaction(int x) {
-  unsigned res = 0;
-  if (x & 0x00000001) res |= SA_NOCLDSTOP;
-  if (x & 0x00000002) res |= SA_NOCLDWAIT;
-  if (x & 0x00000004) res |= SA_SIGINFO;
-  if (x & 0x04000000) res |= SA_RESTORER;
-  if (x & 0x08000000) res |= SA_ONSTACK;
-  if (x & 0x10000000) res |= SA_RESTART;
-  if (x & 0x40000000) res |= SA_NODEFER;
-  if (x & 0x40000000) res |= SA_NOMASK;
-  if (x & 0x80000000) res |= SA_RESETHAND;
-  if (x & 0x80000000) res |= SA_ONESHOT;
-  return res;
-}
-
-static int XlatSo(int x) {
-  switch (x) {
-    XLAT(-1, SO_EXCLUSIVEADDRUSE);
-    XLAT(1, SO_DEBUG);
-    XLAT(2, SO_REUSEADDR);
-    XLAT(3, SO_TYPE);
-    XLAT(4, SO_ERROR);
-    XLAT(5, SO_DONTROUTE);
-    XLAT(6, SO_BROADCAST);
-    XLAT(7, SO_SNDBUF);
-    XLAT(8, SO_RCVBUF);
-    XLAT(9, SO_KEEPALIVE);
-    XLAT(10, SO_OOBINLINE);
-    XLAT(13, SO_LINGER);
-    XLAT(15, SO_REUSEPORT);
-    XLAT(17, SO_PEERCRED);
-    XLAT(18, SO_RCVLOWAT);
-    XLAT(19, SO_SNDLOWAT);
-    XLAT(20, SO_RCVTIMEO);
-    XLAT(21, SO_SNDTIMEO);
-    XLAT(29, SO_TIMESTAMP);
-    XLAT(30, SO_ACCEPTCONN);
-    XLAT(38, SO_PROTOCOL);
-    XLAT(39, SO_DOMAIN);
-    XLAT(47, SO_MAX_PACING_RATE);
-    default:
-      return x;
-  }
-}
-
-static int XlatClock(int x) {
-  switch (x) {
-    XLAT(0, CLOCK_REALTIME);
-    XLAT(4, CLOCK_MONOTONIC);
-    default:
-      return x;
-  }
-}
-
-static int XlatTcp(int x) {
-  switch (x) {
-    XLAT(1, TCP_NODELAY);
-    XLAT(2, TCP_MAXSEG);
-    XLAT(4, TCP_KEEPIDLE);
-    XLAT(5, TCP_KEEPINTVL);
-    XLAT(6, TCP_KEEPCNT);
-    XLAT(23, TCP_FASTOPEN);
-    default:
-      return x;
-  }
-}
-
-static int XlatFd(struct Machine *m, int fd) {
+static int GetFd(struct Machine *m, int fd) {
   if (!(0 <= fd && fd < m->fds.i)) return ebadf();
   if (!m->fds.p[fd].cb) return ebadf();
   return m->fds.p[fd].fd;
 }
 
-static int XlatAfd(struct Machine *m, int fd) {
-  if (fd == AT_FDCWD_LINUX) return AT_FDCWD;
-  return XlatFd(m, fd);
-}
-
-static int XlatAtf(int x) {
-  unsigned res = 0;
-  if (x & 0x0100) res |= AT_SYMLINK_NOFOLLOW;
-  if (x & 0x0200) res |= AT_REMOVEDIR;
-  if (x & 0x0400) res |= AT_SYMLINK_FOLLOW;
-  if (x & 0x1000) res |= AT_EMPTY_PATH;
-  return res;
-}
-
-static int XlatMsyncFlags(int x) {
-  unsigned res = 0;
-  if (x & 1) res |= MS_ASYNC;
-  if (x & 2) res |= MS_INVALIDATE;
-  if (x & 4) res |= MS_SYNC;
-  return res;
-}
-
-static unsigned XlatOpenMode(unsigned flags) {
-  switch (flags & 3) {
-    case 0:
-      return O_RDONLY;
-    case 1:
-      return O_WRONLY;
-    case 2:
-      return O_RDWR;
-    default:
-      unreachable;
-  }
-}
-
-static unsigned XlatOpenFlags(unsigned flags) {
-  unsigned res = 0;
-  res = XlatOpenMode(flags);
-  if (flags & 0x80000) res |= O_CLOEXEC;
-  if (flags & 0x400) res |= O_APPEND;
-  if (flags & 0x40) res |= O_CREAT;
-  if (flags & 0x80) res |= O_EXCL;
-  if (flags & 0x200) res |= O_TRUNC;
-  if (flags & 0x0800) res |= O_NDELAY;
-  if (flags & 0x4000) res |= O_DIRECT;
-  if (flags & 0x0800) res |= O_NONBLOCK;
-  if (flags & 0x1000) res |= O_DSYNC;
-  if (flags & 0x101000) res |= O_RSYNC;
-  if (flags & 0x040000) res |= O_NOATIME;
-  return res;
-}
-
-static int XlatFcntlCmd(int x) {
-  switch (x) {
-    XLAT(1, F_GETFD);
-    XLAT(2, F_SETFD);
-    XLAT(3, F_GETFL);
-    XLAT(4, F_SETFL);
-    default:
-      return einval();
-  }
-}
-
-static int XlatFcntlArg(int x) {
-  switch (x) {
-    XLAT(0, 0);
-    XLAT(1, FD_CLOEXEC);
-    XLAT(0x0800, O_NONBLOCK);
-    default:
-      return einval();
-  }
-}
-
-static int XlatAdvice(int x) {
-  switch (x) {
-    XLAT(0, MADV_NORMAL);
-    XLAT(1, MADV_RANDOM);
-    XLAT(2, MADV_SEQUENTIAL);
-    XLAT(3, MADV_WILLNEED);
-    XLAT(4, MADV_DONTNEED);
-    XLAT(8, MADV_FREE);
-    XLAT(12, MADV_MERGEABLE);
-    default:
-      return einval();
-  }
-}
-
-static int XlatLock(int x) {
-  unsigned res = 0;
-  if (x & 1) res |= LOCK_SH;
-  if (x & 2) res |= LOCK_EX;
-  if (x & 4) res |= LOCK_NB;
-  if (x & 8) res |= LOCK_UN;
-  return res;
-}
-
-static int XlatWait(int x) {
-  unsigned res = 0;
-  if (x & 1) res |= WNOHANG;
-  if (x & 2) res |= WUNTRACED;
-  if (x & 8) res |= WCONTINUED;
-  return res;
-}
-
-static int XlatRusage(int x) {
-  switch (x) {
-    XLAT(0, RUSAGE_SELF);
-    XLAT(-1, RUSAGE_CHILDREN);
-    XLAT(1, RUSAGE_THREAD);
-    default:
-      return einval();
-  }
+static int GetAfd(struct Machine *m, int fd) {
+  if (fd == -100) return AT_FDCWD;
+  return GetFd(m, fd);
 }
 
 static const char *GetSimulated(void) {
@@ -476,28 +194,6 @@ static int AppendIovsGuest(struct Machine *m, struct Iovs *iv, int64_t iovaddr,
     rc = eoverflow();
   }
   return rc;
-}
-
-static struct sigaction *CoerceSigactionToCosmo(
-    struct sigaction *dst, const struct sigaction_linux *src) {
-  if (!src) return NULL;
-  bzero(dst, sizeof(*dst));
-  ASSIGN(dst->sa_handler, src->sa_handler);
-  ASSIGN(dst->sa_restorer, src->sa_restorer);
-  ASSIGN(dst->sa_flags, src->sa_flags);
-  ASSIGN(dst->sa_mask, src->sa_mask);
-  return dst;
-}
-
-static struct sigaction_linux *CoerceSigactionToLinux(
-    struct sigaction_linux *dst, const struct sigaction *src) {
-  if (!dst) return NULL;
-  bzero(dst, sizeof(*dst));
-  ASSIGN(dst->sa_handler, src->sa_handler);
-  ASSIGN(dst->sa_restorer, src->sa_restorer);
-  ASSIGN(dst->sa_flags, src->sa_flags);
-  ASSIGN(dst->sa_mask, src->sa_mask);
-  return dst;
 }
 
 static int OpPrctl(struct Machine *m, int op, int64_t a, int64_t b, int64_t c,
@@ -565,7 +261,7 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
     if (!(prot & PROT_EXEC)) key |= PAGE_XD;
     if (flags & 256 /* MAP_GROWSDOWN */) key |= PAGE_GROD;
     flags = XlatMapFlags(flags);
-    if (fd != -1 && (fd = XlatFd(m, fd)) == -1) return -1;
+    if (fd != -1 && (fd = GetFd(m, fd)) == -1) return -1;
     if (!(flags & MAP_FIXED)) {
       if (!virt) {
         if ((virt = FindVirtual(m, m->brk, size)) == -1) return -1;
@@ -622,7 +318,7 @@ static int OpOpenat(struct Machine *m, int dirfd, int64_t pathaddr, int flags,
   int fd, i;
   const char *path;
   flags = XlatOpenFlags(flags);
-  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  if ((dirfd = GetAfd(m, dirfd)) == -1) return -1;
   if ((i = MachineFdAdd(&m->fds)) == -1) return -1;
   path = LoadStr(m, pathaddr);
   if ((fd = openat(dirfd, path, flags, mode)) != -1) {
@@ -661,7 +357,7 @@ static int OpPipe(struct Machine *m, int64_t pipefds_addr) {
 
 static int OpDup(struct Machine *m, int fd) {
   int i;
-  if ((fd = XlatFd(m, fd)) != -1) {
+  if ((fd = GetFd(m, fd)) != -1) {
     if ((i = MachineFdAdd(&m->fds)) != -1) {
       if ((fd = dup(fd)) != -1) {
         m->fds.p[i].cb = &kMachineFdCbHost;
@@ -676,7 +372,7 @@ static int OpDup(struct Machine *m, int fd) {
 
 static int OpDup2(struct Machine *m, int fd, int newfd) {
   int i, rc;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if ((0 <= newfd && newfd < m->fds.i)) {
     if ((rc = dup2(fd, m->fds.p[newfd].fd)) != -1) {
       m->fds.p[newfd].cb = &kMachineFdCbHost;
@@ -695,6 +391,34 @@ static int OpDup2(struct Machine *m, int fd, int newfd) {
   return rc;
 }
 
+static int OpDup3(struct Machine *m, int fd, int newfd, int flags) {
+  int i, rc;
+  if (!(flags & ~O_CLOEXEC_LINUX)) {
+    if ((fd = GetFd(m, fd)) == -1) return -1;
+    if ((0 <= newfd && newfd < m->fds.i)) {
+      if ((rc = dup2(fd, m->fds.p[newfd].fd)) != -1) {
+        if (flags & O_CLOEXEC_LINUX) {
+          fcntl(rc, F_SETFD, FD_CLOEXEC);
+        }
+        m->fds.p[newfd].cb = &kMachineFdCbHost;
+        m->fds.p[newfd].fd = rc;
+        rc = newfd;
+      }
+    } else if ((i = MachineFdAdd(&m->fds)) != -1) {
+      if ((rc = dup(fd)) != -1) {
+        m->fds.p[i].cb = &kMachineFdCbHost;
+        m->fds.p[i].fd = rc;
+        rc = i;
+      }
+    } else {
+      rc = -1;
+    }
+    return rc;
+  } else {
+    return einval();
+  }
+}
+
 static int OpSocket(struct Machine *m, int family, int type, int protocol) {
   int i, fd;
   if ((family = XlatSocketFamily(family)) == -1) return -1;
@@ -711,53 +435,61 @@ static int OpSocket(struct Machine *m, int family, int type, int protocol) {
   return fd;
 }
 
-static int OpAccept4(struct Machine *m, int fd, int64_t addraddr,
-                     int64_t addrsizeaddr, int flags) {
+static int OpAccept4(struct Machine *m, int fd, int64_t aa, int64_t asa,
+                     int flags) {
   int i, rc;
-  void *addr;
-  uint8_t b[4];
   uint32_t addrsize;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  VirtualSendRead(m, b, addrsizeaddr, 4);
-  addrsize = Read32(b);
-  if (!(addr = malloc(addrsize))) return -1;
-  if ((i = rc = MachineFdAdd(&m->fds)) != -1) {
-    if ((rc = accept4(fd, addr, &addrsize, XlatSocketFlags(flags))) != -1) {
-      Write32(b, addrsize);
-      VirtualRecv(m, addrsizeaddr, b, 4);
-      VirtualRecvWrite(m, addraddr, addr, addrsize);
-      m->fds.p[i].cb = &kMachineFdCbHost;
-      m->fds.p[i].fd = rc;
-      rc = i;
-    } else {
-      MachineFdRemove(&m->fds, i);
+  uint8_t gaddrsize[4];
+  struct sockaddr_in addr;
+  struct sockaddr_in_bits gaddr;
+  if (!(flags & ~SOCK_CLOEXEC_LINUX)) {
+    if ((fd = GetFd(m, fd)) == -1) return -1;
+    if (aa) {
+      VirtualSendRead(m, gaddrsize, asa, sizeof(gaddrsize));
+      if (Read32(gaddrsize) < sizeof(gaddr)) return einval();
     }
+    if ((i = rc = MachineFdAdd(&m->fds)) != -1) {
+      addrsize = sizeof(addr);
+      if ((rc = accept(fd, (struct sockaddr *)&addr, &addrsize)) != -1) {
+        if (flags & SOCK_CLOEXEC_LINUX) {
+          fcntl(fd, F_SETFD, FD_CLOEXEC);
+        }
+        if (aa) {
+          Write32(gaddrsize, sizeof(gaddr));
+          XlatSockaddrToLinux(&gaddr, &addr);
+          VirtualRecv(m, asa, gaddrsize, sizeof(gaddrsize));
+          VirtualRecvWrite(m, aa, &gaddr, sizeof(gaddr));
+        }
+        m->fds.p[i].cb = &kMachineFdCbHost;
+        m->fds.p[i].fd = rc;
+        rc = i;
+      } else {
+        MachineFdRemove(&m->fds, i);
+      }
+    }
+    return rc;
+  } else {
+    return einval();
   }
-  free(addr);
-  return rc;
 }
 
-static int OpConnectBind(struct Machine *m, int fd, intptr_t addraddr,
-                         uint32_t addrsize,
+static int OpConnectBind(struct Machine *m, int fd, int64_t aa, uint32_t as,
                          int impl(int, const void *, uint32_t)) {
-  int rc;
-  void *addr;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  if (!(addr = malloc(addrsize))) return -1;
-  VirtualSendRead(m, addr, addraddr, addrsize);
-  rc = impl(fd, addr, addrsize);
-  free(addr);
-  return rc;
+  struct sockaddr_in addr;
+  struct sockaddr_in_bits gaddr;
+  if (as != sizeof(gaddr)) return einval();
+  if ((fd = GetFd(m, fd)) == -1) return -1;
+  VirtualSendRead(m, &gaddr, aa, sizeof(gaddr));
+  XlatSockaddrToHost(&addr, &gaddr);
+  return impl(fd, (const struct sockaddr *)&addr, sizeof(addr));
 }
 
-static int OpBind(struct Machine *m, int fd, intptr_t addraddr,
-                  uint32_t addrsize) {
-  return OpConnectBind(m, fd, addraddr, addrsize, bind);
+static int OpBind(struct Machine *m, int fd, int64_t aa, uint32_t as) {
+  return OpConnectBind(m, fd, aa, as, bind);
 }
 
-static int OpConnect(struct Machine *m, int fd, int64_t addraddr,
-                     uint32_t addrsize) {
-  return OpConnectBind(m, fd, addraddr, addrsize, connect);
+static int OpConnect(struct Machine *m, int fd, int64_t aa, uint32_t as) {
+  return OpConnectBind(m, fd, aa, as, connect);
 }
 
 static int OpSetsockopt(struct Machine *m, int fd, int level, int optname,
@@ -765,8 +497,8 @@ static int OpSetsockopt(struct Machine *m, int fd, int level, int optname,
   int rc;
   void *optval;
   if ((level = XlatSocketLevel(level)) == -1) return -1;
-  if ((optname = XlatSocketOptname(optname)) == -1) return -1;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((optname = XlatSocketOptname(level, optname)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if (!(optval = malloc(optvalsize))) return -1;
   VirtualSendRead(m, optval, optvaladdr, optvalsize);
   rc = setsockopt(fd, level, optname, optval, optvalsize);
@@ -780,8 +512,8 @@ static int OpGetsockopt(struct Machine *m, int fd, int level, int optname,
   void *optval;
   uint32_t optsize;
   if ((level = XlatSocketLevel(level)) == -1) return -1;
-  if ((optname = XlatSocketOptname(optname)) == -1) return -1;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((optname = XlatSocketOptname(level, optname)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if (!optvaladdr) {
     rc = getsockopt(fd, level, optname, 0, 0);
   } else {
@@ -796,36 +528,32 @@ static int OpGetsockopt(struct Machine *m, int fd, int level, int optname,
   return rc;
 }
 
-static int OpGetsockname(struct Machine *m, int fd, int64_t addraddr,
-                         int64_t addrlenaddr) {
+static int OpSocketName(struct Machine *m, int fd, int64_t aa, int64_t asa,
+                        int SocketName(int, void *, socklen_t *)) {
   int rc;
-  void *addr;
-  uint32_t addrlen;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  VirtualSendRead(m, &addrlen, addrlenaddr, sizeof(addrlen));
-  if (!(addr = malloc(addrlen))) return -1;
-  if ((rc = getsockname(fd, addr, &addrlen)) != -1) {
-    VirtualRecvWrite(m, addraddr, addr, addrlen);
-    VirtualRecvWrite(m, addrlenaddr, &addrlen, sizeof(addrlen));
+  uint32_t addrsize;
+  uint8_t gaddrsize[4];
+  struct sockaddr_in addr;
+  struct sockaddr_in_bits gaddr;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
+  VirtualSendRead(m, gaddrsize, asa, sizeof(gaddrsize));
+  if (Read32(gaddrsize) < sizeof(gaddr)) return einval();
+  addrsize = sizeof(addr);
+  if ((rc = SocketName(fd, (struct sockaddr *)&addr, &addrsize)) != -1) {
+    Write32(gaddrsize, sizeof(gaddr));
+    XlatSockaddrToLinux(&gaddr, &addr);
+    VirtualRecv(m, asa, gaddrsize, sizeof(gaddrsize));
+    VirtualRecvWrite(m, aa, &gaddr, sizeof(gaddr));
   }
-  free(addr);
   return rc;
 }
 
-static int OpGetpeername(struct Machine *m, int fd, int64_t addraddr,
-                         int64_t addrlenaddr) {
-  int rc;
-  void *addr;
-  uint32_t addrlen;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
-  VirtualSendRead(m, &addrlen, addrlenaddr, sizeof(addrlen));
-  if (!(addr = malloc(addrlen))) return -1;
-  if ((rc = getpeername(fd, addr, &addrlen)) != -1) {
-    VirtualRecvWrite(m, addraddr, addr, addrlen);
-    VirtualRecvWrite(m, addrlenaddr, &addrlen, sizeof(addrlen));
-  }
-  free(addr);
-  return rc;
+static int OpGetsockname(struct Machine *m, int fd, int64_t aa, int64_t asa) {
+  return OpSocketName(m, fd, aa, asa, getsockname);
+}
+
+static int OpGetpeername(struct Machine *m, int fd, int64_t aa, int64_t asa) {
+  return OpSocketName(m, fd, aa, asa, getpeername);
 }
 
 static ssize_t OpRead(struct Machine *m, int fd, int64_t addr, size_t size) {
@@ -874,7 +602,7 @@ static ssize_t OpPread(struct Machine *m, int fd, int64_t addr, size_t size,
   ssize_t rc;
   struct Iovs iv;
   InitIovs(&iv);
-  if ((rc = XlatFd(m, fd)) != -1) {
+  if ((rc = GetFd(m, fd)) != -1) {
     fd = rc;
     if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
       if ((rc = preadv(fd, iv.p, iv.i, offset)) != -1) {
@@ -912,7 +640,7 @@ static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
   ssize_t rc;
   struct Iovs iv;
   InitIovs(&iv);
-  if ((rc = XlatFd(m, fd)) != -1) {
+  if ((rc = GetFd(m, fd)) != -1) {
     fd = rc;
     if ((rc = AppendIovsReal(m, &iv, addr, size)) != -1) {
       if ((rc = pwritev(fd, iv.p, iv.i, offset)) != -1) {
@@ -925,48 +653,40 @@ static ssize_t OpPwrite(struct Machine *m, int fd, int64_t addr, size_t size,
 }
 
 static int IoctlTiocgwinsz(struct Machine *m, int fd, int64_t addr,
-                           int (*fn)(int, uint64_t, void *)) {
+                           int fn(int, int, ...)) {
   int rc;
   struct winsize ws;
+  struct winsize_bits gws;
   if ((rc = fn(fd, TIOCGWINSZ, &ws)) != -1) {
-    VirtualRecvWrite(m, addr, &ws, sizeof(ws));
+    XlatWinsizeToLinux(&gws, &ws);
+    VirtualRecvWrite(m, addr, &gws, sizeof(gws));
   }
   return rc;
 }
 
 static int IoctlTcgets(struct Machine *m, int fd, int64_t addr,
-                       int (*fn)(int, uint64_t, void *)) {
+                       int fn(int, int, ...)) {
   int rc;
-  struct termios tio, tio2;
+  struct termios tio;
+  struct termios_bits gtio;
   if ((rc = fn(fd, TCGETS, &tio)) != -1) {
-    memcpy(&tio2, &tio, sizeof(tio));
-    tio2.c_iflag = 0;
-    if (tio.c_lflag & ISIG) tio2.c_lflag |= ISIG_LINUX;
-    if (tio.c_lflag & ICANON) tio2.c_lflag |= ICANON_LINUX;
-    if (tio.c_lflag & ECHO) tio2.c_lflag |= ECHO_LINUX;
-    tio2.c_oflag = 0;
-    if (tio.c_oflag & OPOST) tio2.c_oflag |= OPOST_LINUX;
-    VirtualRecvWrite(m, addr, &tio2, sizeof(tio2));
+    XlatTermiosToLinux(&gtio, &tio);
+    VirtualRecvWrite(m, addr, &gtio, sizeof(gtio));
   }
   return rc;
 }
 
 static int IoctlTcsets(struct Machine *m, int fd, int64_t request, int64_t addr,
-                       int (*fn)(int, uint64_t, void *)) {
-  struct termios tio, tio2;
-  VirtualSendRead(m, &tio, addr, sizeof(tio));
-  memcpy(&tio2, &tio, sizeof(tio));
-  tio2.c_iflag = 0;
-  if (tio.c_lflag & ISIG_LINUX) tio2.c_lflag |= ISIG;
-  if (tio.c_lflag & ICANON_LINUX) tio2.c_lflag |= ICANON;
-  if (tio.c_lflag & ECHO_LINUX) tio2.c_lflag |= ECHO;
-  tio2.c_oflag = 0;
-  if (tio.c_oflag & OPOST_LINUX) tio2.c_oflag |= OPOST;
-  return fn(fd, request, &tio2);
+                       int (*fn)(int, int, ...)) {
+  struct termios tio;
+  struct termios_bits gtio;
+  VirtualSendRead(m, &gtio, addr, sizeof(gtio));
+  XlatLinuxToTermios(&tio, &gtio);
+  return fn(fd, request, &tio);
 }
 
 static int OpIoctl(struct Machine *m, int fd, uint64_t request, int64_t addr) {
-  int (*fn)(int, uint64_t, void *);
+  int (*fn)(int, int, ...);
   if (!(0 <= fd && fd < m->fds.i) || !m->fds.p[fd].cb) return ebadf();
   fn = m->fds.p[fd].cb->ioctl;
   fd = m->fds.p[fd].fd;
@@ -1018,12 +738,12 @@ static ssize_t OpWritev(struct Machine *m, int fd, int64_t iovaddr,
 }
 
 static int64_t OpLseek(struct Machine *m, int fd, int64_t offset, int whence) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return lseek(fd, offset, whence);
 }
 
 static ssize_t OpFtruncate(struct Machine *m, int fd, int64_t size) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return ftruncate(fd, size);
 }
 
@@ -1031,7 +751,7 @@ static int OpFaccessat(struct Machine *m, int dirfd, int64_t path, int mode,
                        int flags) {
   flags = XlatAtf(flags);
   mode = XlatAccess(mode);
-  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  if ((dirfd = GetAfd(m, dirfd)) == -1) return -1;
   return faccessat(dirfd, LoadStr(m, path), mode, flags);
 }
 
@@ -1039,10 +759,12 @@ static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t staddr,
                      int flags) {
   int rc;
   struct stat st;
+  struct stat_bits gst;
   flags = XlatAtf(flags);
-  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  if ((dirfd = GetAfd(m, dirfd)) == -1) return -1;
   if ((rc = fstatat(dirfd, LoadStr(m, path), &st, flags)) != -1) {
-    VirtualRecvWrite(m, staddr, &st, sizeof(struct stat));
+    XlatStatToLinux(&gst, &st);
+    VirtualRecvWrite(m, staddr, &gst, sizeof(gst));
   }
   return rc;
 }
@@ -1050,54 +772,56 @@ static int OpFstatat(struct Machine *m, int dirfd, int64_t path, int64_t staddr,
 static int OpFstat(struct Machine *m, int fd, int64_t staddr) {
   int rc;
   struct stat st;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  struct stat_bits gst;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if ((rc = fstat(fd, &st)) != -1) {
-    VirtualRecvWrite(m, staddr, &st, sizeof(struct stat));
+    XlatStatToLinux(&gst, &st);
+    VirtualRecvWrite(m, staddr, &gst, sizeof(gst));
   }
   return rc;
 }
 
 static int OpListen(struct Machine *m, int fd, int backlog) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return listen(fd, backlog);
 }
 
 static int OpShutdown(struct Machine *m, int fd, int how) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return shutdown(fd, how);
 }
 
 static int OpFsync(struct Machine *m, int fd) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return fsync(fd);
 }
 
 static int OpFdatasync(struct Machine *m, int fd) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return fdatasync(fd);
 }
 
 static int OpFchmod(struct Machine *m, int fd, uint32_t mode) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return fchmod(fd, mode);
 }
 
 static int OpFcntl(struct Machine *m, int fd, int cmd, int arg) {
   if ((cmd = XlatFcntlCmd(cmd)) == -1) return -1;
   if ((arg = XlatFcntlArg(arg)) == -1) return -1;
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   return fcntl(fd, cmd, arg);
 }
 
 static int OpFadvise(struct Machine *m, int fd, uint64_t offset, uint64_t len,
                      int advice) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if ((advice = XlatAdvice(advice)) == -1) return -1;
   return fadvise(fd, offset, len, advice);
 }
 
 static int OpFlock(struct Machine *m, int fd, int lock) {
-  if ((fd = XlatFd(m, fd)) == -1) return -1;
+  if ((fd = GetFd(m, fd)) == -1) return -1;
   if ((lock = XlatLock(lock)) == -1) return -1;
   return flock(fd, lock);
 }
@@ -1111,7 +835,7 @@ static int OpMkdir(struct Machine *m, int64_t path, int mode) {
 }
 
 static int OpMkdirat(struct Machine *m, int dirfd, int64_t path, int mode) {
-  return mkdirat(XlatAfd(m, dirfd), LoadStr(m, path), mode);
+  return mkdirat(GetAfd(m, dirfd), LoadStr(m, path), mode);
 }
 
 static int OpMknod(struct Machine *m, int64_t path, uint32_t mode,
@@ -1128,7 +852,7 @@ static int OpUnlink(struct Machine *m, int64_t path) {
 }
 
 static int OpUnlinkat(struct Machine *m, int dirfd, int64_t path, int flags) {
-  return unlinkat(XlatAfd(m, dirfd), LoadStr(m, path), XlatAtf(flags));
+  return unlinkat(GetAfd(m, dirfd), LoadStr(m, path), XlatAtf(flags));
 }
 
 static int OpRename(struct Machine *m, int64_t src, int64_t dst) {
@@ -1137,7 +861,7 @@ static int OpRename(struct Machine *m, int64_t src, int64_t dst) {
 
 static int OpRenameat(struct Machine *m, int srcdirfd, int64_t src,
                       int dstdirfd, int64_t dst) {
-  return renameat(XlatAfd(m, srcdirfd), LoadStr(m, src), XlatAfd(m, dstdirfd),
+  return renameat(GetAfd(m, srcdirfd), LoadStr(m, src), GetAfd(m, dstdirfd),
                   LoadStr(m, dst));
 }
 
@@ -1158,7 +882,10 @@ static int OpChmod(struct Machine *m, int64_t path, uint32_t mode) {
 }
 
 static int OpFork(struct Machine *m) {
-  return enosys();
+  int pid;
+  pid = fork();
+  if (!pid) m->isfork = true;
+  return pid;
 }
 
 static int OpExecve(struct Machine *m, int64_t programaddr, int64_t argvaddr,
@@ -1166,18 +893,32 @@ static int OpExecve(struct Machine *m, int64_t programaddr, int64_t argvaddr,
   return enosys();
 }
 
+wontreturn static void OpExit(struct Machine *m, int rc) {
+  if (m->isfork) {
+    _Exit(rc);
+  } else {
+    HaltMachine(m, rc | 0x100);
+  }
+}
+
+_Noreturn static void OpExitGroup(struct Machine *m, int rc) {
+  OpExit(m, rc);
+}
+
 static int OpWait4(struct Machine *m, int pid, int64_t opt_out_wstatus_addr,
                    int options, int64_t opt_out_rusage_addr) {
   int rc;
   int32_t wstatus;
-  struct rusage rusage;
+  struct rusage hrusage;
+  struct rusage_bits grusage;
   if ((options = XlatWait(options)) == -1) return -1;
-  if ((rc = wait4(pid, &wstatus, options, &rusage)) != -1) {
+  if ((rc = wait4(pid, &wstatus, options, &hrusage)) != -1) {
     if (opt_out_wstatus_addr) {
       VirtualRecvWrite(m, opt_out_wstatus_addr, &wstatus, sizeof(wstatus));
     }
     if (opt_out_rusage_addr) {
-      VirtualRecvWrite(m, opt_out_rusage_addr, &rusage, sizeof(rusage));
+      XlatRusageToLinux(&grusage, &hrusage);
+      VirtualRecvWrite(m, opt_out_rusage_addr, &grusage, sizeof(grusage));
     }
   }
   return rc;
@@ -1185,10 +926,12 @@ static int OpWait4(struct Machine *m, int pid, int64_t opt_out_wstatus_addr,
 
 static int OpGetrusage(struct Machine *m, int resource, int64_t rusageaddr) {
   int rc;
-  struct rusage rusage;
+  struct rusage hrusage;
+  struct rusage_bits grusage;
   if ((resource = XlatRusage(resource)) == -1) return -1;
-  if ((rc = getrusage(resource, &rusage)) != -1) {
-    VirtualRecvWrite(m, rusageaddr, &rusage, sizeof(rusage));
+  if ((rc = getrusage(resource, &hrusage)) != -1) {
+    XlatRusageToLinux(&grusage, &hrusage);
+    VirtualRecvWrite(m, rusageaddr, &grusage, sizeof(grusage));
   }
   return rc;
 }
@@ -1202,7 +945,7 @@ static ssize_t OpReadlinkat(struct Machine *m, int dirfd, int64_t pathaddr,
   char *buf;
   ssize_t rc;
   const char *path;
-  if ((dirfd = XlatAfd(m, dirfd)) == -1) return -1;
+  if ((dirfd = GetAfd(m, dirfd)) == -1) return -1;
   path = LoadStr(m, pathaddr);
   if (!(buf = malloc(size))) return enomem();
   if ((rc = readlinkat(dirfd, path, buf, size)) != -1) {
@@ -1229,120 +972,231 @@ static int64_t OpGetcwd(struct Machine *m, int64_t bufaddr, size_t size) {
   return res;
 }
 
-static int OpSigaction(struct Machine *m, int sig, int64_t act, int64_t old) {
-  return 0;
-  int rc;
-  struct OpSigactionMemory {
-    struct sigaction act, old;
-    uint8_t b[sizeof(struct sigaction_linux)];
-    void *p[2];
-  } * mem;
-  if (!(mem = malloc(sizeof(*mem)))) return enomem();
-  if ((rc = sigaction(
-           XlatSignal(sig),
-           CoerceSigactionToCosmo(
-               &mem->act, LoadBuf(m, act, sizeof(struct sigaction_linux))),
-           &mem->old)) != -1) {
-    CoerceSigactionToLinux(BeginStoreNp(m, old, sizeof(mem->b), mem->p, mem->b),
-                           &mem->old);
-    EndStoreNp(m, old, sizeof(mem->b), mem->p, mem->b);
+static int OpSigaction(struct Machine *m, int sig, int64_t act, int64_t old,
+                       uint64_t sigsetsize) {
+  if ((sig = XlatSignal(sig) - 1) != -1 &&
+      (0 <= sig && sig < ARRAYLEN(m->sighand)) && sigsetsize == 8) {
+    if (old) VirtualRecvWrite(m, old, &m->sighand[sig], sizeof(m->sighand[0]));
+    if (act) VirtualSendRead(m, &m->sighand[sig], act, sizeof(m->sighand[0]));
+    return 0;
+  } else {
+    return einval();
   }
-  free(mem);
+}
+
+static int OpSigprocmask(struct Machine *m, int how, int64_t setaddr,
+                         int64_t oldsetaddr, uint64_t sigsetsize) {
+  uint8_t set[8];
+  if ((how = XlatSig(how)) != -1 && sigsetsize == sizeof(set)) {
+    if (oldsetaddr) {
+      VirtualRecvWrite(m, oldsetaddr, m->sigmask, sizeof(set));
+    }
+    if (setaddr) {
+      VirtualSendRead(m, set, setaddr, sizeof(set));
+      if (how == SIG_BLOCK) {
+        Write64(m->sigmask, Read64(m->sigmask) | Read64(set));
+      } else if (how == SIG_UNBLOCK) {
+        Write64(m->sigmask, Read64(m->sigmask) & ~Read64(set));
+      } else {
+        Write64(m->sigmask, Read64(set));
+      }
+    }
+    return 0;
+  } else {
+    return einval();
+  }
+}
+
+static int OpGetitimer(struct Machine *m, int which, int64_t curvaladdr) {
+  int rc;
+  struct itimerval it;
+  struct itimerval_bits git;
+  if ((rc = getitimer(which, &it)) != -1) {
+    XlatItimervalToLinux(&git, &it);
+    VirtualRecvWrite(m, curvaladdr, &git, sizeof(git));
+  }
+  return rc;
+}
+
+static int OpSetitimer(struct Machine *m, int which, int64_t neuaddr,
+                       int64_t oldaddr) {
+  int rc;
+  struct itimerval neu, old;
+  struct itimerval_bits git;
+  VirtualSendRead(m, &git, neuaddr, sizeof(git));
+  XlatLinuxToItimerval(&neu, &git);
+  if ((rc = setitimer(which, &neu, &old)) != -1) {
+    if (oldaddr) {
+      XlatItimervalToLinux(&git, &old);
+      VirtualRecvWrite(m, oldaddr, &git, sizeof(git));
+    }
+  }
   return rc;
 }
 
 static int OpNanosleep(struct Machine *m, int64_t req, int64_t rem) {
   int rc;
-  void *p[2];
-  uint8_t b[sizeof(struct timespec)];
-  if ((rc = nanosleep(LoadBuf(m, req, sizeof(b)),
-                      BeginStoreNp(m, rem, sizeof(b), p, b))) != -1) {
-    EndStoreNp(m, rem, sizeof(b), p, b);
+  struct timespec hreq, hrem;
+  struct timespec_bits gtimespec;
+  if (req) {
+    VirtualSendRead(m, &gtimespec, req, sizeof(gtimespec));
+    hreq.tv_sec = Read64(gtimespec.tv_sec);
+    hreq.tv_nsec = Read64(gtimespec.tv_nsec);
+  }
+  if ((rc = nanosleep(req ? &hreq : 0, rem ? &hrem : 0)) != -1) {
+    if (rem) {
+      Write64(gtimespec.tv_sec, hrem.tv_sec);
+      Write64(gtimespec.tv_nsec, hrem.tv_nsec);
+      VirtualRecvWrite(m, rem, &gtimespec, sizeof(gtimespec));
+    }
   }
   return rc;
 }
 
 static int OpSigsuspend(struct Machine *m, int64_t maskaddr) {
-  void *p;
   sigset_t mask;
-  if (!(p = LoadBuf(m, maskaddr, 8))) return efault();
-  bzero(&mask, sizeof(mask));
-  memcpy(&mask, p, 8);
+  uint8_t gmask[8];
+  VirtualSendRead(m, &gmask, maskaddr, 8);
+  XlatLinuxToSigset(&mask, gmask);
   return sigsuspend(&mask);
 }
 
 static int OpClockGettime(struct Machine *m, int clockid, int64_t ts) {
   int rc;
-  void *tsp[2];
-  uint8_t tsb[sizeof(struct timespec)];
-  if ((rc = clock_gettime(XlatClock(clockid),
-                          BeginStoreNp(m, ts, sizeof(tsb), tsp, tsb))) != -1) {
-    EndStoreNp(m, ts, sizeof(tsb), tsp, tsb);
+  struct timespec htimespec;
+  struct timespec_bits gtimespec;
+  if ((rc = clock_gettime(XlatClock(clockid), ts ? &htimespec : 0)) != -1) {
+    if (ts) {
+      Write64(gtimespec.tv_sec, htimespec.tv_sec);
+      Write64(gtimespec.tv_nsec, htimespec.tv_nsec);
+      VirtualRecvWrite(m, ts, &gtimespec, sizeof(gtimespec));
+    }
   }
   return rc;
 }
 
 static int OpGettimeofday(struct Machine *m, int64_t tv, int64_t tz) {
   int rc;
-  void *tvp[2], *tzp[2];
-  uint8_t tvb[sizeof(struct timeval)];
-  uint8_t tzb[sizeof(struct timezone)];
-  if ((rc = gettimeofday(BeginStoreNp(m, tv, sizeof(tvb), tvp, tvb),
-                         BeginStoreNp(m, tz, sizeof(tzb), tzp, tzb))) != -1) {
-    EndStoreNp(m, tv, sizeof(tvb), tvp, tvb);
-    EndStoreNp(m, tz, sizeof(tzb), tzp, tzb);
+  struct timeval htimeval;
+  struct timezone htimezone;
+  struct timeval_bits gtimeval;
+  struct timezone_bits gtimezone;
+  if ((rc = gettimeofday(&htimeval, tz ? &htimezone : 0)) != -1) {
+    Write64(gtimeval.tv_sec, htimeval.tv_sec);
+    Write64(gtimeval.tv_usec, htimeval.tv_usec);
+    VirtualRecvWrite(m, tv, &gtimeval, sizeof(gtimeval));
+    if (tz) {
+      Write32(gtimezone.tz_minuteswest, htimezone.tz_minuteswest);
+      Write32(gtimezone.tz_dsttime, htimezone.tz_dsttime);
+      VirtualRecvWrite(m, tz, &gtimezone, sizeof(gtimezone));
+    }
   }
   return rc;
+}
+
+static int OpUtimes(struct Machine *m, int64_t pathaddr, int64_t tvsaddr) {
+  const char *path;
+  struct timeval tvs[2];
+  struct timeval_bits gtvs[2];
+  path = LoadStr(m, pathaddr);
+  if (tvsaddr) {
+    VirtualSendRead(m, gtvs, tvsaddr, sizeof(gtvs));
+    tvs[0].tv_sec = Read64(gtvs[0].tv_sec);
+    tvs[0].tv_usec = Read64(gtvs[0].tv_usec);
+    tvs[1].tv_sec = Read64(gtvs[1].tv_sec);
+    tvs[1].tv_usec = Read64(gtvs[1].tv_usec);
+    return utimes(path, tvs);
+  } else {
+    return utimes(path, 0);
+  }
 }
 
 static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
                   int32_t timeout_ms) {
-  int count, i;
-  uint64_t fdssize;
-  struct pollfd *hostfds, *guestfds;
-  if (!__builtin_mul_overflow(nfds, sizeof(struct pollfd), &fdssize) &&
-      fdssize <= 0x7ffff000) {
-    hostfds = malloc(fdssize);
-    guestfds = malloc(fdssize);
-    if (hostfds && guestfds) {
-      VirtualSendRead(m, guestfds, fdsaddr, fdssize);
-      memcpy(hostfds, guestfds, fdssize);
-      for (i = 0; i < nfds; ++i) {
-        hostfds[i].fd = XlatFd(m, hostfds[i].fd);
-      }
-      if ((count = poll(hostfds, nfds, timeout_ms)) != -1) {
-        for (i = 0; i < count; ++i) {
-          hostfds[i].fd = guestfds[i].fd;
+  uint64_t gfdssize;
+  struct pollfd hfds[1];
+  int i, fd, rc, ev, count;
+  struct timespec ts1, ts2;
+  struct pollfd_bits *gfds;
+  int64_t wait, elapsed, timeout;
+  timeout = timeout_ms * 1000L;
+  if (!__builtin_mul_overflow(nfds, sizeof(struct pollfd_bits), &gfdssize) &&
+      gfdssize <= 0x7ffff000) {
+    if ((gfds = malloc(gfdssize))) {
+      rc = 0;
+      VirtualSendRead(m, gfds, fdsaddr, gfdssize);
+      ts1 = _timespec_mono();
+      for (;;) {
+        for (i = 0; i < nfds; ++i) {
+          fd = Read32(gfds[i].fd);
+          if ((0 <= fd && fd < m->fds.i) && m->fds.p[fd].cb) {
+            hfds[0].fd = m->fds.p[fd].fd;
+            ev = Read16(gfds[i].events);
+            hfds[0].events = (((ev & POLLIN_LINUX) ? POLLIN : 0) |
+                              ((ev & POLLOUT_LINUX) ? POLLOUT : 0) |
+                              ((ev & POLLPRI_LINUX) ? POLLPRI : 0));
+            switch (m->fds.p[fd].cb->poll(hfds, 1, 0)) {
+              case 0:
+                Write16(gfds[i].revents, 0);
+                break;
+              case 1:
+                ++rc;
+                ev = 0;
+                if (hfds[0].revents & POLLIN) ev |= POLLIN_LINUX;
+                if (hfds[0].revents & POLLPRI) ev |= POLLPRI_LINUX;
+                if (hfds[0].revents & POLLOUT) ev |= POLLOUT_LINUX;
+                if (hfds[0].revents & POLLERR) ev |= POLLERR_LINUX;
+                if (hfds[0].revents & POLLHUP) ev |= POLLHUP_LINUX;
+                if (hfds[0].revents & POLLNVAL) ev |= POLLERR_LINUX;
+                if (!ev) ev |= POLLERR_LINUX;
+                Write16(gfds[i].revents, ev);
+                break;
+              case -1:
+                ++rc;
+                Write16(gfds[i].revents, POLLERR_LINUX);
+                break;
+              default:
+                break;
+            }
+          } else {
+            Write16(gfds[i].revents, POLLNVAL_LINUX);
+          }
         }
-        VirtualRecvWrite(m, fdsaddr, hostfds, count * sizeof(struct pollfd));
+        if (rc || !timeout) break;
+        wait = __SIG_POLLING_INTERVAL_MS * 1000;
+        if (timeout < 0) {
+          if (usleep(wait)) {
+            errno = EINTR;
+            rc = -1;
+            goto Finished;
+          }
+        } else {
+          ts2 = _timespec_mono();
+          elapsed = _timespec_tomicros(_timespec_sub(ts2, ts1));
+          if (elapsed >= timeout) {
+            break;
+          }
+          if (timeout - elapsed < wait) {
+            wait = timeout - elapsed;
+          }
+          if (usleep(wait)) {
+            errno = EINTR;
+            rc = -1;
+            goto Finished;
+          }
+        }
       }
+      VirtualRecvWrite(m, fdsaddr, gfds, nfds * sizeof(*gfds));
     } else {
-      count = enomem();
+      errno = ENOMEM;
+      rc = -1;
     }
-    free(guestfds);
-    free(hostfds);
+  Finished:
+    free(gfds);
+    return rc;
   } else {
-    count = einval();
+    return einval();
   }
-  return count;
-}
-
-static int OpSigprocmask(struct Machine *m, int how, int64_t setaddr,
-                         int64_t oldsetaddr) {
-  int rc;
-  sigset_t *set, oldset, ss;
-  if (setaddr) {
-    set = &ss;
-    bzero(set, sizeof(ss));
-    VirtualSendRead(m, set, setaddr, 8);
-  } else {
-    set = NULL;
-  }
-  if ((rc = sigprocmask(XlatSig(how), set, &oldset)) != -1) {
-    if (setaddr) VirtualRecvWrite(m, setaddr, set, 8);
-    if (oldsetaddr) VirtualRecvWrite(m, oldsetaddr, &oldset, 8);
-  }
-  return rc;
 }
 
 static int OpGetPid(struct Machine *m) {
@@ -1353,11 +1207,11 @@ static int OpGetPpid(struct Machine *m) {
   return getppid();
 }
 
-static int OpKill(struct Machine *m, int pid, int sig) {
-  if (pid == getpid()) {
-    ThrowProtectionFault(m);
+static void OpKill(struct Machine *m, int pid, int sig) {
+  if (!pid || pid == getpid()) {
+    DeliverSignal(m, sig, SI_USER);
   } else {
-    return kill(pid, sig);
+    Write64(m->ax, -3);  // ESRCH
   }
 }
 
@@ -1386,7 +1240,7 @@ static int OpPause(struct Machine *m) {
 }
 
 static int DoOpen(struct Machine *m, int64_t path, int flags, int mode) {
-  return OpOpenat(m, AT_FDCWD_LINUX, path, flags, mode);
+  return OpOpenat(m, -100, path, flags, mode);
 }
 
 static int DoCreat(struct Machine *m, int64_t file, int mode) {
@@ -1394,24 +1248,26 @@ static int DoCreat(struct Machine *m, int64_t file, int mode) {
 }
 
 static int DoAccess(struct Machine *m, int64_t path, int mode) {
-  return OpFaccessat(m, AT_FDCWD_LINUX, path, mode, 0);
+  return OpFaccessat(m, -100, path, mode, 0);
 }
 
 static int DoStat(struct Machine *m, int64_t path, int64_t st) {
-  return OpFstatat(m, AT_FDCWD_LINUX, path, st, 0);
+  return OpFstatat(m, -100, path, st, 0);
 }
 
 static int DoLstat(struct Machine *m, int64_t path, int64_t st) {
-  return OpFstatat(m, AT_FDCWD_LINUX, path, st, 0x0400);
+  return OpFstatat(m, -100, path, st, 0x0400);
 }
 
-static int DoAccept(struct Machine *m, int fd, int64_t addraddr,
-                    int64_t addrsizeaddr) {
-  return OpAccept4(m, fd, addraddr, addrsizeaddr, 0);
+static int OpAccept(struct Machine *m, int fd, int64_t sa, int64_t sas) {
+  return OpAccept4(m, fd, sa, sas, 0);
 }
 
 void OpSyscall(struct Machine *m, uint32_t rde) {
   uint64_t i, ax, di, si, dx, r0, r8, r9;
+  if (m->redraw) {
+    m->redraw();
+  }
   ax = Read64(m->ax);
   if (m->ismetal) {
     WARNF("metal syscall 0x%03x", ax);
@@ -1437,8 +1293,8 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x00A, OpMprotect(m, di, si, dx));
     SYSCALL(0x00B, OpMunmap(m, di, si));
     SYSCALL(0x00C, OpBrk(m, di));
-    SYSCALL(0x00D, OpSigaction(m, di, si, dx));
-    SYSCALL(0x00E, OpSigprocmask(m, di, si, dx));
+    SYSCALL(0x00D, OpSigaction(m, di, si, dx, r0));
+    SYSCALL(0x00E, OpSigprocmask(m, di, si, dx, r0));
     SYSCALL(0x010, OpIoctl(m, di, si, dx));
     SYSCALL(0x011, OpPread(m, di, si, dx, r0));
     SYSCALL(0x012, OpPwrite(m, di, si, dx, r0));
@@ -1451,16 +1307,17 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x01C, OpMadvise(m, di, si, dx));
     SYSCALL(0x020, OpDup(m, di));
     SYSCALL(0x021, OpDup2(m, di, si));
+    SYSCALL(0x124, OpDup3(m, di, si, dx));
     SYSCALL(0x022, OpPause(m));
     SYSCALL(0x023, OpNanosleep(m, di, si));
-    SYSCALL(0x024, getitimer(di, PNN(si)));
+    SYSCALL(0x024, OpGetitimer(m, di, si));
     SYSCALL(0x025, OpAlarm(m, di));
-    SYSCALL(0x026, setitimer(di, PNN(si), P(dx)));
+    SYSCALL(0x026, OpSetitimer(m, di, si, dx));
     SYSCALL(0x027, OpGetPid(m));
     SYSCALL(0x028, sendfile(di, si, P(dx), r0));
     SYSCALL(0x029, OpSocket(m, di, si, dx));
     SYSCALL(0x02A, OpConnect(m, di, si, dx));
-    SYSCALL(0x02B, DoAccept(m, di, di, dx));
+    SYSCALL(0x02B, OpAccept(m, di, di, dx));
     SYSCALL(0x02C, sendto(di, PNN(si), dx, r0, P(r8), r9));
     SYSCALL(0x02D, recvfrom(di, P(si), dx, r0, P(r8), P(r9)));
     SYSCALL(0x030, OpShutdown(m, di, si));
@@ -1473,7 +1330,6 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x039, OpFork(m));
     SYSCALL(0x03B, OpExecve(m, di, si, dx));
     SYSCALL(0x03D, OpWait4(m, di, si, dx, r0));
-    SYSCALL(0x03E, OpKill(m, di, si));
     SYSCALL(0x03F, uname(P(di)));
     SYSCALL(0x048, OpFcntl(m, di, si, dx));
     SYSCALL(0x049, OpFlock(m, di, si));
@@ -1508,7 +1364,7 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x08D, setpriority(di, si, dx));
     SYSCALL(0x0A0, setrlimit(di, P(si)));
     SYSCALL(0x084, utime(PNN(di), PNN(si)));
-    SYSCALL(0x0EB, utimes(P(di), P(si)));
+    SYSCALL(0x0EB, OpUtimes(m, di, si));
     SYSCALL(0x09D, OpPrctl(m, di, si, dx, r0, r8));
     SYSCALL(0x09E, OpArchPrctl(m, di, si));
     SYSCALL(0x0BA, OpGetTid(m));
@@ -1518,8 +1374,8 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x0E4, OpClockGettime(m, di, si));
     SYSCALL(0x101, OpOpenat(m, di, si, dx, r0));
     SYSCALL(0x102, OpMkdirat(m, di, si, dx));
-    SYSCALL(0x104, fchownat(XlatAfd(m, di), P(si), dx, r0, XlatAtf(r8)));
-    SYSCALL(0x105, futimesat(XlatAfd(m, di), P(si), P(dx)));
+    SYSCALL(0x104, fchownat(GetAfd(m, di), P(si), dx, r0, XlatAtf(r8)));
+    SYSCALL(0x105, futimesat(GetAfd(m, di), P(si), P(dx)));
     SYSCALL(0x106, OpFstatat(m, di, si, dx, r0));
     SYSCALL(0x107, OpUnlinkat(m, di, si, dx));
     SYSCALL(0x108, OpRenameat(m, di, si, dx, r0));
@@ -1527,10 +1383,19 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x10D, OpFaccessat(m, di, si, dx, r0));
     SYSCALL(0x113, splice(di, P(si), dx, P(r0), r8, XlatAtf(r9)));
     SYSCALL(0x115, sync_file_range(di, si, dx, XlatAtf(r0)));
-    SYSCALL(0x118, utimensat(XlatAfd(m, di), P(si), P(dx), XlatAtf(r0)));
+    SYSCALL(0x118, utimensat(GetAfd(m, di), P(si), P(dx), XlatAtf(r0)));
     SYSCALL(0x120, OpAccept4(m, di, si, dx, r0));
     SYSCALL(0x177, vmsplice(di, P(si), dx, r0));
-    CASE(0xE7, HaltMachine(m, di | 0x100));
+    case 0x3C:
+      OpExit(m, di);
+    case 0xE7:
+      OpExitGroup(m, di);
+    case 0x00F:
+      OpRestore(m);
+      return;
+    case 0x03E:
+      OpKill(m, di, si);
+      return;
     default:
       WARNF("missing syscall 0x%03x", ax);
       ax = enosys();

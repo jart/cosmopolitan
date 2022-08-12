@@ -40,7 +40,6 @@
 int connect(int fd, const void *addr, uint32_t addrsize) {
   int rc;
   if (addr && !(IsAsan() && !__asan_is_valid(addr, addrsize))) {
-    _firewall(addr, addrsize);
     if (!IsWindows()) {
       rc = sys_connect(fd, addr, addrsize);
     } else if (__isfdkind(fd, kFdSocket)) {

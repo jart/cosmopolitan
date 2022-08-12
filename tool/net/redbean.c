@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.h"
@@ -37,8 +34,10 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -54,7 +53,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/thread.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
@@ -66,6 +64,7 @@
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/hex.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
 #include "libc/sysv/consts/af.h"

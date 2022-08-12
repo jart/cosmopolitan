@@ -13,11 +13,6 @@
 #define DEV_BSIZE      512
 #define NOGROUP        (-1)
 
-#undef MIN
-#undef MAX
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
