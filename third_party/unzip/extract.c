@@ -38,7 +38,7 @@
 #include "third_party/unzip/unzip.h"
 #include "third_party/unzip/globals.h"
 #include "third_party/unzip/crc32.h"
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/log/log.h"
 #include "third_party/unzip/crypt.h"
 

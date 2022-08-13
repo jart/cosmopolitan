@@ -16,27 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
-#include "libc/str/str.h"
+#include "libc/mem/reverse.internal.h"
+#include "libc/dce.h"
+#include "libc/macros.internal.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns non-zero iff 𝑢 ∈ 𝑡.
- * @param t tree
- * @param u NUL-terminated string
- * @note h/t djb and agl
- */
-bool critbit0_contains(struct critbit0 *t, const char *u) {
-  const unsigned char *ubytes = (void *)u;
-  const size_t ulen = strlen(u);
-  unsigned char *p = t->root;
-  if (!p) return 0;
-  while (1 & (intptr_t)p) {
-    struct CritbitNode *q = (void *)(p - 1);
-    unsigned char c = 0;
-    if (q->byte < ulen) c = ubytes[q->byte];
-    const int direction = (1 + (q->otherbits | c)) >> 8;
-    p = q->child[direction];
-  }
-  return 0 == strcmp(u, (const char *)p);
+TEST(reverse, test) {
+  /* this test gets DCE'd :) */
+  int A[3] = {1, 2, 3};
+  reverse(A, ARRAYLEN(A));
+  EXPECT_EQ(3, A[0]);
+  EXPECT_EQ(2, A[1]);
+  EXPECT_EQ(1, A[2]);
+}
+
+TEST(reverse, testEmpty) {
+  int A[3] = {1, 2, 3};
+  reverse(A, 0);
+  EXPECT_EQ(1, A[0]);
+  EXPECT_EQ(2, A[1]);
+  EXPECT_EQ(3, A[2]);
 }

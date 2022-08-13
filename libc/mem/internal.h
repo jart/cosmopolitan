@@ -3,6 +3,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct CritbitNode {
+  void *child[2];
+  uint32_t byte;
+  unsigned otherbits;
+};
+
 int PutEnvImpl(char *, bool) hidden;
 void __freeenv(void *) hidden;
 

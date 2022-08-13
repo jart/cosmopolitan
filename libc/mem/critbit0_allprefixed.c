@@ -16,24 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.internal.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
-#include "libc/testlib/testlib.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
+#include "libc/str/str.h"
 
-TEST(reverse, test) {
-  /* this test gets DCE'd :) */
-  int A[3] = {1, 2, 3};
-  reverse(A, ARRAYLEN(A));
-  EXPECT_EQ(3, A[0]);
-  EXPECT_EQ(2, A[1]);
-  EXPECT_EQ(1, A[2]);
+static intptr_t allprefixed_traverse(unsigned char *top,
+                                     intptr_t (*callback)(const char *, void *),
+                                     void *arg) {
+  if (1 & (intptr_t)top) {
+    struct CritbitNode *q = (void *)(top - 1);
+    for (int direction = 0; direction < 2; ++direction) {
+      intptr_t rc = allprefixed_traverse(q->child[direction], callback, arg);
+      if (rc) return rc;
+    }
+    return 0;
+  }
+  return callback((const char *)top, arg);
 }
 
-TEST(reverse, testEmpty) {
-  int A[3] = {1, 2, 3};
-  reverse(A, 0);
-  EXPECT_EQ(1, A[0]);
-  EXPECT_EQ(2, A[1]);
-  EXPECT_EQ(3, A[2]);
+/**
+ * Invokes callback for all items with prefix.
+ *
+ * @return 0 unless iteration was halted by CALLBACK returning
+ *     nonzero, in which case that value is returned
+ * @note h/t djb and agl
+ */
+intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
+                              intptr_t (*callback)(const char *elem, void *arg),
+                              void *arg) {
+  const unsigned char *ubytes = (void *)prefix;
+  const size_t ulen = strlen(prefix);
+  unsigned char *p = t->root;
+  unsigned char *top = p;
+  if (!p) return 0;
+  while (1 & (intptr_t)p) {
+    struct CritbitNode *q = (void *)(p - 1);
+    unsigned char c = 0;
+    if (q->byte < ulen) c = ubytes[q->byte];
+    const int direction = (1 + (q->otherbits | c)) >> 8;
+    p = q->child[direction];
+    if (q->byte < ulen) top = p;
+  }
+  for (size_t i = 0; i < ulen; ++i) {
+    if (p[i] != ubytes[i]) {
+      return 0;
+    }
+  }
+  return allprefixed_traverse(top, callback, arg);
 }

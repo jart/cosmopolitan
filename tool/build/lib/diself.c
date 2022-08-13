@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/sym.h"
 #include "libc/log/check.h"

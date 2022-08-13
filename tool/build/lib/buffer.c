@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"

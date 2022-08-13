@@ -16,45 +16,77 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 
 /**
- * Removes 𝑢 from 𝑡.
- * @param t tree
- * @param u NUL-terminated string
- * @return true if 𝑡 was mutated
+ * Inserts 𝑢 into 𝑡 without copying.
+ *
+ * @param t is critical bit tree
+ * @param u is nul-terminated string which must be 8+ byte aligned
+ *     and becomes owned by the tree afterwards
+ * @return true if 𝑡 was mutated, or -1 w/ errno
  * @note h/t djb and agl
  */
-bool critbit0_delete(struct critbit0 *t, const char *u) {
-  const unsigned char *ubytes = (void *)u;
-  const size_t ulen = strlen(u);
+int critbit0_emplace(struct critbit0 *t, char *u, size_t ulen) {
   unsigned char *p = t->root;
-  void **wherep = &t->root;
-  void **whereq = 0;
-  struct CritbitNode *q = 0;
-  int direction = 0;
-  if (!p) return false;
+  if (!p) {
+    t->root = u;
+    t->count = 1;
+    return 1;
+  }
+  const unsigned char *const ubytes = (void *)u;
   while (1 & (intptr_t)p) {
-    whereq = wherep;
-    q = (void *)(p - 1);
+    struct CritbitNode *q = (void *)(p - 1);
     unsigned char c = 0;
     if (q->byte < ulen) c = ubytes[q->byte];
-    direction = (1 + (q->otherbits | c)) >> 8;
-    wherep = q->child + direction;
-    p = *wherep;
+    const int direction = (1 + (q->otherbits | c)) >> 8;
+    p = q->child[direction];
   }
-  if (0 != strcmp(u, (const char *)p)) return false;
-  free(p), p = NULL;
-  if (!whereq) {
-    t->root = NULL;
-    t->count = 0;
-    return true;
+  uint32_t newbyte;
+  uint32_t newotherbits;
+  for (newbyte = 0; newbyte < ulen; ++newbyte) {
+    if (p[newbyte] != ubytes[newbyte]) {
+      newotherbits = p[newbyte] ^ ubytes[newbyte];
+      goto DifferentByteFound;
+    }
   }
-  *whereq = q->child[1 - direction];
-  free(q), q = NULL;
-  t->count--;
-  return true;
+  if (p[newbyte] != 0) {
+    newotherbits = p[newbyte];
+    goto DifferentByteFound;
+  }
+  return 0;
+DifferentByteFound:
+  newotherbits |= newotherbits >> 1;
+  newotherbits |= newotherbits >> 2;
+  newotherbits |= newotherbits >> 4;
+  newotherbits = (newotherbits & ~(newotherbits >> 1)) ^ 255;
+  unsigned char c = p[newbyte];
+  int newdirection = (1 + (newotherbits | c)) >> 8;
+  struct CritbitNode *newnode;
+  if ((newnode = malloc(sizeof(struct CritbitNode)))) {
+    newnode->byte = newbyte;
+    newnode->otherbits = newotherbits;
+    newnode->child[1 - newdirection] = (void *)ubytes;
+    void **wherep = &t->root;
+    for (;;) {
+      unsigned char *wp = *wherep;
+      if (!(1 & (intptr_t)wp)) break;
+      struct CritbitNode *q = (void *)(wp - 1);
+      if (q->byte > newbyte) break;
+      if (q->byte == newbyte && q->otherbits > newotherbits) break;
+      unsigned char c2 = 0;
+      if (q->byte < ulen) c2 = ubytes[q->byte];
+      const int direction = (1 + (q->otherbits | c2)) >> 8;
+      wherep = q->child + direction;
+    }
+    newnode->child[newdirection] = *wherep;
+    *wherep = (void *)(1 + (char *)newnode);
+    t->count++;
+    return 1;
+  } else {
+    return -1;
+  }
 }

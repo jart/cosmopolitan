@@ -23,7 +23,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/conv.h"
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/log/log.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/sysv/consts/sig.h"

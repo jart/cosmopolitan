@@ -56,7 +56,7 @@
 │  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"

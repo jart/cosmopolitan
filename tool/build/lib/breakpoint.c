@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
 #include "libc/log/log.h"
 #include "tool/build/lib/breakpoint.h"

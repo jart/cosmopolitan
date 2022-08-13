@@ -31,7 +31,6 @@ TEST_LIBC_STR_CHECKS =							\
 	$(TEST_LIBC_STR_SRCS_TEST_CC:%.cc=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_STR_DIRECTDEPS =						\
-	LIBC_ALG							\
 	LIBC_CALLS							\
 	LIBC_FMT							\
 	LIBC_INTRIN							\

@@ -16,14 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/alg/bisect.internal.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
+#include "libc/str/str.h"
 
 /**
- * Searches sorted array for exact item in logarithmic time.
- * @see bsearch_r(), bisectcarleft()
+ * Returns non-zero iff 𝑢 ∈ 𝑡.
+ * @param t tree
+ * @param u NUL-terminated string
+ * @note h/t djb and agl
  */
-void *bsearch(const void *key, const void *base, size_t nmemb, size_t size,
-              int cmp(const void *a, const void *b)) {
-  return bisect(key, base, nmemb, size, (void *)cmp, NULL);
+bool critbit0_contains(struct critbit0 *t, const char *u) {
+  const unsigned char *ubytes = (void *)u;
+  const size_t ulen = strlen(u);
+  unsigned char *p = t->root;
+  if (!p) return 0;
+  while (1 & (intptr_t)p) {
+    struct CritbitNode *q = (void *)(p - 1);
+    unsigned char c = 0;
+    if (q->byte < ulen) c = ubytes[q->byte];
+    const int direction = (1 + (q->otherbits | c)) >> 8;
+    p = q->child[direction];
+  }
+  return 0 == strcmp(u, (const char *)p);
 }

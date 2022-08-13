@@ -24,7 +24,6 @@ TEST_TOOL_VIZ_LIB_CHECKS =				\
 
 TEST_TOOL_VIZ_LIB_DIRECTDEPS =				\
 	DSP_MPEG					\
-	LIBC_ALG					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\

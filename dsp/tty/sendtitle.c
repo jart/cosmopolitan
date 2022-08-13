@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/x/x.h"
 

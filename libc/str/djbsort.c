@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/nexgen32e/bsr.h"

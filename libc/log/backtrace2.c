@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/alg/bisectcarleft.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/bisectcarleft.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"

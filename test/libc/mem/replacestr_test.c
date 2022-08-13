@@ -16,24 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
+#include "libc/mem/alg.h"
+#include "libc/errno.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Inserts 𝑢 into 𝑡.
- * @param t tree
- * @param u NUL-terminated string
- * @return true if 𝑡 was mutated, or -1 w/ errno
- * @note h/t djb and agl
- */
-int critbit0_insert(struct critbit0 *t, const char *u) {
-  char *p;
-  size_t n;
-  if ((p = malloc((n = strlen(u)) + 1))) {
-    return critbit0_emplace(t, memcpy(p, u, n + 1), n);
-  } else {
-    return -1;
-  }
+TEST(replacestr, demo) {
+  EXPECT_STREQ("hello friends",
+               gc(replacestr("hello world", "world", "friends")));
+  EXPECT_STREQ("bbbbbbbb", gc(replacestr("aaaa", "a", "bb")));
+}
+
+TEST(replacestr, emptyString) {
+  EXPECT_STREQ("", gc(replacestr("", "x", "y")));
+}
+
+TEST(replacestr, emptyNeedle) {
+  EXPECT_EQ(NULL, gc(replacestr("a", "", "a")));
+  EXPECT_EQ(EINVAL, errno);
+}
+
+TEST(replacestr, needleInReplacement_doesntExplode) {
+  EXPECT_STREQ("xxxxxxx", gc(replacestr("x", "x", "xxxxxxx")));
 }

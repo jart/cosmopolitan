@@ -16,49 +16,42 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/bisectcarleft.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Replaces all instances of NEEDLE in S with REPLACEMENT.
- *
- * @param needle can't be empty
- * @return newly allocated memory that must be free()'d or NULL w/ errno
- * @error ENOMEM, EINVAL
- */
-char *replacestr(const char *s, const char *needle, const char *replacement) {
-  char *p1, *p2, *res_p;
-  size_t left, nlen, rlen, res_i, res_n;
-  if (*needle) {
-    p1 = s;
-    left = strlen(s);
-    nlen = strlen(needle);
-    rlen = strlen(replacement);
-    res_i = 0;
-    res_n = MAX(left, 32);
-    if ((res_p = malloc(res_n * sizeof(char)))) {
-      do {
-        if (!(p2 = memmem(p1, left, needle, nlen))) break;
-        if (CONCAT(&res_p, &res_i, &res_n, p1, p2 - p1) == -1 ||
-            CONCAT(&res_p, &res_i, &res_n, replacement, rlen) == -1) {
-          goto oom;
-        }
-        p2 += nlen;
-        left -= p2 - p1;
-        p1 = p2;
-      } while (left);
-      if (CONCAT(&res_p, &res_i, &res_n, p1, left + 1) != -1) {
-        return res_p;
-      }
-    }
-  oom:
-    free(res_p);
-  } else {
-    einval();
-  }
-  return NULL;
+TEST(bisectcarleft, testEmpty) {
+  const int32_t cells[][2] = {};
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), 123));
+}
+
+TEST(bisectcarleft, testOneEntry) {
+  const int32_t cells[][2] = {{123, 31337}};
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), 122));
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), 123));
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), 124));
+}
+
+TEST(bisectcarleft, testNegativity_usesSignedBehavior) {
+  const int32_t cells[][2] = {{-2, 31337}};
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), -3));
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), -2));
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), -1));
+}
+
+TEST(bisectcarleft, testMultipleEntries) {
+  const int32_t cells[][2] = {{00, 0}, {11, 0}, {20, 0}, {33, 0}, {40, 0},
+                              {50, 0}, {60, 0}, {70, 0}, {80, 0}, {90, 0}};
+  EXPECT_EQ(0, bisectcarleft(cells, ARRAYLEN(cells), 10));
+  EXPECT_EQ(1, bisectcarleft(cells, ARRAYLEN(cells), 11));
+  EXPECT_EQ(1, bisectcarleft(cells, ARRAYLEN(cells), 12));
+  EXPECT_EQ(1, bisectcarleft(cells, ARRAYLEN(cells), 19));
+  EXPECT_EQ(2, bisectcarleft(cells, ARRAYLEN(cells), 20));
+  EXPECT_EQ(2, bisectcarleft(cells, ARRAYLEN(cells), 21));
+  EXPECT_EQ(2, bisectcarleft(cells, ARRAYLEN(cells), 32));
+  EXPECT_EQ(3, bisectcarleft(cells, ARRAYLEN(cells), 33));
+  EXPECT_EQ(3, bisectcarleft(cells, ARRAYLEN(cells), 34));
 }

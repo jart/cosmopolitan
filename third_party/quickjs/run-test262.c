@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/fmt/conv.h"

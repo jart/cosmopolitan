@@ -68,7 +68,7 @@
  *
  *     o/default/tool/build/runit.com             \
  *         o/default/tool/build/runitd.com        \
- *         o/default/test/libc/alg/qsort_test.com \
+ *         o/default/test/libc/mem/qsort_test.com \
  *         freebsd.test.:31337:22
  *
  * APE binaries are hermetic and embed dependent files within their zip

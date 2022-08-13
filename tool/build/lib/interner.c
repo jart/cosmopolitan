@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist.internal.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"

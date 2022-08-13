@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
+#include "libc/mem/critbit0.h"
 #include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"

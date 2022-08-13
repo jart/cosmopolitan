@@ -18,7 +18,6 @@ TEST_LIBC_FMT_CHECKS =					\
 	$(TEST_LIBC_FMT_SRCS_TEST:%.c=o/$(MODE)/%.com.runs)
 
 TEST_LIBC_FMT_DIRECTDEPS =				\
-	LIBC_ALG					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\

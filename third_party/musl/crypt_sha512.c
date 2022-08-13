@@ -25,7 +25,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"

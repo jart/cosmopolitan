@@ -22,7 +22,7 @@
 
 /* for realloc 2/6/2005 EG */
 #include "libc/mem/mem.h"
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/errno.h"
 
 /* for toupper() */

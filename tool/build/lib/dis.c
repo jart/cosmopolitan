@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/fmt.h"

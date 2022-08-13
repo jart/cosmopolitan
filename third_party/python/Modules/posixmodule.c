@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"

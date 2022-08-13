@@ -37,7 +37,6 @@ TOOL_BUILD_DIRECTDEPS =					\
 	DSP_CORE					\
 	DSP_SCALE					\
 	DSP_TTY						\
-	LIBC_ALG					\
 	LIBC_CALLS					\
 	LIBC_DNS					\
 	LIBC_ELF					\

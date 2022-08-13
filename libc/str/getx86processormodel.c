@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/bisect.internal.h"
+#include "libc/mem/bisect.internal.h"
 #include "libc/nexgen32e/x86info.h"
 
 static int CmpX86ProcModelKey(const struct X86ProcessorModel *a,

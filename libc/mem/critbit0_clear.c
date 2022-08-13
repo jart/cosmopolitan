@@ -16,26 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/testlib/testlib.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
+#include "libc/mem/mem.h"
 
-TEST(replacestr, demo) {
-  EXPECT_STREQ("hello friends",
-               gc(replacestr("hello world", "world", "friends")));
-  EXPECT_STREQ("bbbbbbbb", gc(replacestr("aaaa", "a", "bb")));
+static void critbit0_clear_traverse(void *top) {
+  unsigned char *p = top;
+  if (1 & (intptr_t)p) {
+    struct CritbitNode *q = (void *)(p - 1);
+    critbit0_clear_traverse(q->child[0]);
+    critbit0_clear_traverse(q->child[1]);
+    free(q), q = NULL;
+  } else {
+    free(p), p = NULL;
+  }
 }
 
-TEST(replacestr, emptyString) {
-  EXPECT_STREQ("", gc(replacestr("", "x", "y")));
-}
-
-TEST(replacestr, emptyNeedle) {
-  EXPECT_EQ(NULL, gc(replacestr("a", "", "a")));
-  EXPECT_EQ(EINVAL, errno);
-}
-
-TEST(replacestr, needleInReplacement_doesntExplode) {
-  EXPECT_STREQ("xxxxxxx", gc(replacestr("x", "x", "xxxxxxx")));
+/**
+ * Removes all items from 𝑡.
+ * @param t tree
+ * @note h/t djb and agl
+ */
+void critbit0_clear(struct critbit0 *t) {
+  if (t->root) {
+    critbit0_clear_traverse(t->root);
+    t->root = NULL;
+  }
+  t->count = 0;
 }

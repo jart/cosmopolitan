@@ -32,7 +32,6 @@ TOOL_BUILD_LIB_A_OBJS =					\
 	o/$(MODE)/tool/build/lib/apetest2.com.zip.o
 
 TOOL_BUILD_LIB_A_DIRECTDEPS =				\
-	LIBC_ALG					\
 	LIBC_CALLS					\
 	LIBC_ELF					\
 	LIBC_FMT					\

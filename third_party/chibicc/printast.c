@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "third_party/chibicc/chibicc.h"
 
 static const char kBoolStr[2][6] = {"false", "true"};

@@ -7,8 +7,8 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/alg/alg.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"

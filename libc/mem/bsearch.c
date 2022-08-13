@@ -16,31 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
-#include "libc/mem/mem.h"
-
-static void critbit0_clear_traverse(void *top) {
-  unsigned char *p = top;
-  if (1 & (intptr_t)p) {
-    struct CritbitNode *q = (void *)(p - 1);
-    critbit0_clear_traverse(q->child[0]);
-    critbit0_clear_traverse(q->child[1]);
-    free(q), q = NULL;
-  } else {
-    free(p), p = NULL;
-  }
-}
+#include "libc/mem/alg.h"
+#include "libc/mem/bisect.internal.h"
 
 /**
- * Removes all items from 𝑡.
- * @param t tree
- * @note h/t djb and agl
+ * Searches sorted array for exact item in logarithmic time.
+ * @see bsearch_r(), bisectcarleft()
  */
-void critbit0_clear(struct critbit0 *t) {
-  if (t->root) {
-    critbit0_clear_traverse(t->root);
-    t->root = NULL;
-  }
-  t->count = 0;
+void *bsearch(const void *key, const void *base, size_t nmemb, size_t size,
+              int cmp(const void *a, const void *b)) {
+  return bisect(key, base, nmemb, size, (void *)cmp, NULL);
 }

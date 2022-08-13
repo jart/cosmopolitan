@@ -18,7 +18,7 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "third_party/zip/crc32.h"
 #include "libc/fmt/fmt.h"
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/stdio/temp.h"
 #include "libc/time/time.h"
 #include "libc/time/struct/tm.h"

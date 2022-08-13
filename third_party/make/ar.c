@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 /**/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "third_party/make/dep.h"
 #include "third_party/make/filedef.h"
 #include "third_party/musl/fnmatch.h"

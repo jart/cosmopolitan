@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/reverse.internal.h"
+#include "libc/mem/reverse.internal.h"
 #include "libc/assert.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"

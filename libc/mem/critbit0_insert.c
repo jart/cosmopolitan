@@ -16,14 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
-#include "libc/alg/bisect.internal.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
 
 /**
- * Searches sorted array for exact item in logarithmic time.
- * @see bsearch(), bisectcarleft()
+ * Inserts 𝑢 into 𝑡.
+ * @param t tree
+ * @param u NUL-terminated string
+ * @return true if 𝑡 was mutated, or -1 w/ errno
+ * @note h/t djb and agl
  */
-void *bsearch_r(const void *key, const void *base, size_t nmemb, size_t size,
-                int cmp(const void *a, const void *b, void *arg), void *arg) {
-  return bisect(key, base, nmemb, size, cmp, arg);
+int critbit0_insert(struct critbit0 *t, const char *u) {
+  char *p;
+  size_t n;
+  if ((p = malloc((n = strlen(u)) + 1))) {
+    return critbit0_emplace(t, memcpy(p, u, n + 1), n);
+  } else {
+    return -1;
+  }
 }

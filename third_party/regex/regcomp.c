@@ -56,6 +56,7 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/alg.h"
 #include "third_party/regex/tre.inc"
 
 #define CHARCLASS_NAME_MAX 14

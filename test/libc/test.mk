@@ -3,8 +3,6 @@
 
 .PHONY:		o/$(MODE)/test/libc
 o/$(MODE)/test/libc:					\
-		o/$(MODE)/test/libc/alg			\
-		o/$(MODE)/test/libc/bits		\
 		o/$(MODE)/test/libc/calls		\
 		o/$(MODE)/test/libc/dns			\
 		o/$(MODE)/test/libc/fmt			\
@@ -12,7 +10,6 @@ o/$(MODE)/test/libc:					\
 		o/$(MODE)/test/libc/log			\
 		o/$(MODE)/test/libc/mem			\
 		o/$(MODE)/test/libc/nexgen32e		\
-		o/$(MODE)/test/libc/rand		\
 		o/$(MODE)/test/libc/release		\
 		o/$(MODE)/test/libc/runtime		\
 		o/$(MODE)/test/libc/sock		\

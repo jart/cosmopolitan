@@ -70,7 +70,6 @@ THIRD_PARTY_QUICKJS_A_OBJS =							\
 	$(THIRD_PARTY_QUICKJS_A_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_QUICKJS_A_DIRECTDEPS =						\
-	LIBC_ALG								\
 	LIBC_CALLS								\
 	LIBC_FMT								\
 	LIBC_INTRIN								\

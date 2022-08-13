@@ -4,7 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"

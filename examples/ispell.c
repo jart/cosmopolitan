@@ -7,9 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/alg/alg.h"
-#include "libc/alg/arraylist.internal.h"
-#include "libc/alg/critbit0.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist.internal.h"
+#include "libc/mem/critbit0.h"
 #include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"

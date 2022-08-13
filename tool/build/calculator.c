@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/morton.h"

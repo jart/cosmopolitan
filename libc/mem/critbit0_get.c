@@ -16,38 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
+#include "libc/mem/critbit0.h"
+#include "libc/mem/internal.h"
 #include "libc/str/str.h"
 
-static intptr_t allprefixed_traverse(unsigned char *top,
-                                     intptr_t (*callback)(const char *, void *),
-                                     void *arg) {
-  if (1 & (intptr_t)top) {
-    struct CritbitNode *q = (void *)(top - 1);
-    for (int direction = 0; direction < 2; ++direction) {
-      intptr_t rc = allprefixed_traverse(q->child[direction], callback, arg);
-      if (rc) return rc;
-    }
-    return 0;
-  }
-  return callback((const char *)top, arg);
-}
-
 /**
- * Invokes callback for all items with prefix.
- *
- * @return 0 unless iteration was halted by CALLBACK returning
- *     nonzero, in which case that value is returned
+ * Returns first item in 𝑡 with prefix 𝑢.
+ * @param t tree
+ * @param u NUL-terminated string
+ * @return item or NULL if not found
  * @note h/t djb and agl
  */
-intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
-                              intptr_t (*callback)(const char *elem, void *arg),
-                              void *arg) {
-  const unsigned char *ubytes = (void *)prefix;
-  const size_t ulen = strlen(prefix);
+char *critbit0_get(struct critbit0 *t, const char *u) {
+  const unsigned char *ubytes = (void *)u;
+  const size_t ulen = strlen(u);
   unsigned char *p = t->root;
-  unsigned char *top = p;
   if (!p) return 0;
   while (1 & (intptr_t)p) {
     struct CritbitNode *q = (void *)(p - 1);
@@ -55,12 +38,6 @@ intptr_t critbit0_allprefixed(struct critbit0 *t, const char *prefix,
     if (q->byte < ulen) c = ubytes[q->byte];
     const int direction = (1 + (q->otherbits | c)) >> 8;
     p = q->child[direction];
-    if (q->byte < ulen) top = p;
   }
-  for (size_t i = 0; i < ulen; ++i) {
-    if (p[i] != ubytes[i]) {
-      return 0;
-    }
-  }
-  return allprefixed_traverse(top, callback, arg);
+  return strncmp(u, (char *)p, ulen) == 0 ? (char *)p : NULL;
 }

@@ -26,7 +26,6 @@ THIRD_PARTY_STB_A_OBJS =				\
 
 THIRD_PARTY_STB_A_DIRECTDEPS =				\
 	DSP_CORE					\
-	LIBC_ALG					\
 	LIBC_FMT					\
 	LIBC_INTRIN					\
 	LIBC_LOG					\

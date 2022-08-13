@@ -29,10 +29,8 @@ LIBC_UNICODE_A_CHECKS =						\
 LIBC_UNICODE_A_DIRECTDEPS =					\
 	LIBC_INTRIN						\
 	LIBC_NEXGEN32E						\
-	LIBC_RUNTIME						\
 	LIBC_STR						\
-	LIBC_STUBS						\
-	LIBC_SYSV
+	LIBC_STUBS
 
 LIBC_UNICODE_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(LIBC_UNICODE_A_DIRECTDEPS),$($(x))))

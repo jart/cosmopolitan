@@ -25,7 +25,6 @@ DSP_TTY_A_CHECKS =				\
 
 DSP_TTY_A_DIRECTDEPS =				\
 	DSP_CORE				\
-	LIBC_ALG				\
 	LIBC_CALLS				\
 	LIBC_FMT				\
 	LIBC_INTRIN				\

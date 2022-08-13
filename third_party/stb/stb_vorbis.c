@@ -32,7 +32,7 @@
 //    manxorist@github   saga musix          github:infatum
 //    Timur Gagiev       Maxwell Koo
 //
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"

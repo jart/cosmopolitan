@@ -110,7 +110,7 @@
 │ cosmopolitan § the unbourne shell » macros                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#include "libc/alg/alg.h"
+#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"

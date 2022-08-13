@@ -16,28 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/alg/critbit0.h"
-#include "libc/alg/internal.h"
-#include "libc/str/str.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/bisect.internal.h"
 
 /**
- * Returns first item in 𝑡 with prefix 𝑢.
- * @param t tree
- * @param u NUL-terminated string
- * @return item or NULL if not found
- * @note h/t djb and agl
+ * Searches sorted array for exact item in logarithmic time.
+ * @see bsearch(), bisectcarleft()
  */
-char *critbit0_get(struct critbit0 *t, const char *u) {
-  const unsigned char *ubytes = (void *)u;
-  const size_t ulen = strlen(u);
-  unsigned char *p = t->root;
-  if (!p) return 0;
-  while (1 & (intptr_t)p) {
-    struct CritbitNode *q = (void *)(p - 1);
-    unsigned char c = 0;
-    if (q->byte < ulen) c = ubytes[q->byte];
-    const int direction = (1 + (q->otherbits | c)) >> 8;
-    p = q->child[direction];
-  }
-  return strncmp(u, (char *)p, ulen) == 0 ? (char *)p : NULL;
+void *bsearch_r(const void *key, const void *base, size_t nmemb, size_t size,
+                int cmp(const void *a, const void *b, void *arg), void *arg) {
+  return bisect(key, base, nmemb, size, cmp, arg);
 }

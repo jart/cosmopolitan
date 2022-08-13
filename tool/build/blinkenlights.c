@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "dsp/tty/tty.h"
-#include "libc/alg/arraylist2.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
