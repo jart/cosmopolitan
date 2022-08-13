@@ -99,6 +99,8 @@ cosmo:	push	%rbp
 	.init.start 304,_init_stack
 	testb	IsWindows()
 	jnz	9f
+	testb	IsMetal()
+	jnz	9f
 	push	%rdi
 	push	%rsi
 //	allocate stack
@@ -120,8 +122,9 @@ cosmo:	push	%rbp
 	leave
 	pop	%rcx
 	lea	(%rax,%r8),%rsp
-	sub	$ape_stack_align,%rsp		# openbsd:stackbound
-	mov	%rbp,(%rsp)
+	mov	$ape_stack_align,%eax		# openbsd:stackbound
+	neg	%rax
+	and	%rax,%rsp
 	push	%rcx
 	push	%rbp
 	mov	%rsp,%rbp
