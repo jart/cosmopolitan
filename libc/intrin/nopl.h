@@ -47,7 +47,7 @@
                  : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
                  : "rax", "rdi", "rsi", "rdx", "rcx", "r8", "r9", "r10",       \
                    "r11", "memory", "cc");                                     \
-    0;                                                                         \
+    (void)0;                                                                   \
   })
 
 #define _NOPL1(SECTION, FUNC, ARG)                                             \
@@ -64,7 +64,7 @@
                  : "X"(FUNC), "X"(IMAGE_BASE_VIRTUAL)                          \
                  : "rax", "rsi", "rdx", "rcx", "r8", "r9", "r10", "r11",       \
                    "memory", "cc");                                            \
-    0;                                                                         \
+    (void)0;                                                                   \
   })
 
 #endif /* !ASSEMBLER && !LINKER && GNUC && !CHIBICC && !LLVM && !ANSI */

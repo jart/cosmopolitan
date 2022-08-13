@@ -2,8 +2,8 @@
 │vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define LOCALTIME_IMPLEMENTATION
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
@@ -1417,8 +1417,7 @@ localtime_tzset_unlocked(void)
 void
 tzset(void)
 {
-	if (localtime_lock() != 0)
-		return;
+	localtime_lock();
 	localtime_tzset_unlocked();
 	localtime_unlock();
 }
@@ -1432,8 +1431,7 @@ static void
 localtime_gmtcheck(void)
 {
 	static bool gmt_is_set;
-	if (localtime_lock() != 0)
-		return;
+	localtime_lock();
 	if (! gmt_is_set) {
 		gmtptr = malloc(sizeof *gmtptr);
 		__cxa_atexit(FreeGmt, gmtptr, 0);
@@ -1545,11 +1543,7 @@ localsub(struct state const *sp, time_t const *timep, int_fast32_t setname,
 static struct tm *
 localtime_tzset(time_t const *timep, struct tm *tmp, bool setname)
 {
-	int err = localtime_lock();
-	if (err) {
-		errno = err;
-		return NULL;
-	}
+	localtime_lock();
 	if (setname || !lcl_is_set)
 		localtime_tzset_unlocked();
 	tmp = localsub(lclptr, timep, setname, tmp);
@@ -2160,11 +2154,7 @@ time_t
 mktime(struct tm *tmp)
 {
 	time_t t;
-	int err = localtime_lock();
-	if (err) {
-		errno = err;
-		return -1;
-	}
+	localtime_lock();
 	localtime_tzset_unlocked();
 	t = mktime_tzname(lclptr, tmp, true);
 	localtime_unlock();
