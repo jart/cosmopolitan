@@ -68,6 +68,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/log/rop.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/sock/sock.h"
+#include "libc/intrin/kprintf.h"
 #include "third_party/make/dep.h"
 
 #define GOTO_SLOW                                       \
@@ -1719,6 +1720,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 {
   const int fdin = good_stdin ? FD_STDIN : get_bad_stdin ();
   struct dep *d;
+  bool sandboxed;
   struct child *c;
   char pathbuf[PATH_MAX];
   char outpathbuf[PATH_MAX];
@@ -1759,8 +1761,22 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
   g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE(".STRICT")));
 
+  intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
+  if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
+    c = (struct child *)child;
+  } else {
+    c = 0;
+  }
+
+  sandboxed = (
+      !Vartoi (lookup_variable
+               (STRING_SIZE_TUPLE(".UNSANDBOXED"))) &&
+      (!c || !Vartoi (lookup_variable_in_set
+                      (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                       c->file->variables->set))));
+
   /* resolve command into executable path */
-  if (!g_strict)
+  if (!g_strict || !sandboxed)
     {
       if ((s = commandv (argv[0], pathbuf, sizeof (pathbuf))))
         argv[0] = s;
@@ -1773,144 +1789,141 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
     }
 
   /* [jart] sandbox command based on prerequisites */
-  intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
-  if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
-    c = (struct child *)child;
-    errno = 0;
-    if (!Vartoi (lookup_variable (STRING_SIZE_TUPLE(".UNSANDBOXED"))) &&
-        !Vartoi (lookup_variable_in_set (STRING_SIZE_TUPLE(".UNSANDBOXED"),
-                                         c->file->variables->set)))
-      {
-        if (!g_strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
-          {
-            /*
-             * weaken sandbox if user is using dynamic shared lolbjects
-             */
-            RETURN_ON_ERROR (Unveil ("/bin", "rx"));
-            RETURN_ON_ERROR (Unveil ("/lib", "rx"));
-            RETURN_ON_ERROR (Unveil ("/lib64", "rx"));
-            RETURN_ON_ERROR (Unveil ("/usr/bin", "rx"));
-            RETURN_ON_ERROR (Unveil ("/usr/lib", "rx"));
-            RETURN_ON_ERROR (Unveil ("/usr/lib64", "rx"));
-            RETURN_ON_ERROR (Unveil ("/usr/local/lib", "rx"));
-            RETURN_ON_ERROR (Unveil ("/usr/local/lib64", "rx"));
-            RETURN_ON_ERROR (Unveil ("/etc/ld-musl-x86_64.path", "r"));
-            RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf", "r"));
-            RETURN_ON_ERROR (Unveil ("/etc/ld.so.cache", "r"));
-            RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf.d", "r"));
-            RETURN_ON_ERROR (Unveil ("/etc/ld.so.preload", "r"));
-            RETURN_ON_ERROR (Unveil ("/usr/include", "r"));
-            RETURN_ON_ERROR (Unveil ("/usr/share/locale", "r"));
-            RETURN_ON_ERROR (Unveil ("/usr/share/locale-langpack", "r"));
-          }
-        else
-          {
-            /*
-             * permit launching actually portable executables
-             *
-             * we assume launching make.com already did the expensive
-             * work of extracting the ape loader program, via /bin/sh
-             * and we won't need to do that again, since sys_execve()
-             * will pass ape binaries directly to the ape loader, but
-             * only if the ape loader exists on a well-known path.
-             */
-            e = errno;
-            if (unveil ("/usr/bin/ape", "rx") == -1)
-              {
-                char *s, *t;
-                errno = e;
-                if ((s = getenv ("TMPDIR")))
-                  {
-                    t = xjoinpaths (s, ".ape");
-                    RETURN_ON_ERROR (Unveil (t, "rx"));
-                    free (t);
-                  }
-                if ((s = getenv ("HOME")))
-                  {
-                    t = xjoinpaths (s, ".ape");
-                    RETURN_ON_ERROR (Unveil (t, "rx"));
-                    free (t);
-                  }
-              }
-          }
+  if (c)
+    {
+      errno = 0;
+      if (sandboxed)
+        {
+          if (!g_strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
+            {
+              /*
+               * weaken sandbox if user is using dynamic shared lolbjects
+               */
+              RETURN_ON_ERROR (Unveil ("/bin", "rx"));
+              RETURN_ON_ERROR (Unveil ("/lib", "rx"));
+              RETURN_ON_ERROR (Unveil ("/lib64", "rx"));
+              RETURN_ON_ERROR (Unveil ("/usr/bin", "rx"));
+              RETURN_ON_ERROR (Unveil ("/usr/lib", "rx"));
+              RETURN_ON_ERROR (Unveil ("/usr/lib64", "rx"));
+              RETURN_ON_ERROR (Unveil ("/usr/local/lib", "rx"));
+              RETURN_ON_ERROR (Unveil ("/usr/local/lib64", "rx"));
+              RETURN_ON_ERROR (Unveil ("/etc/ld-musl-x86_64.path", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/ld.so.cache", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf.d", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/ld.so.preload", "r"));
+              RETURN_ON_ERROR (Unveil ("/usr/include", "r"));
+              RETURN_ON_ERROR (Unveil ("/usr/share/locale", "r"));
+              RETURN_ON_ERROR (Unveil ("/usr/share/locale-langpack", "r"));
+            }
+          else
+            {
+              /*
+               * permit launching actually portable executables
+               *
+               * we assume launching make.com already did the expensive
+               * work of extracting the ape loader program, via /bin/sh
+               * and we won't need to do that again, since sys_execve()
+               * will pass ape binaries directly to the ape loader, but
+               * only if the ape loader exists on a well-known path.
+               */
+              e = errno;
+              if (unveil ("/usr/bin/ape", "rx") == -1)
+                {
+                  char *s, *t;
+                  errno = e;
+                  if ((s = getenv ("TMPDIR")))
+                    {
+                      t = xjoinpaths (s, ".ape");
+                      RETURN_ON_ERROR (Unveil (t, "rx"));
+                      free (t);
+                    }
+                  if ((s = getenv ("HOME")))
+                    {
+                      t = xjoinpaths (s, ".ape");
+                      RETURN_ON_ERROR (Unveil (t, "rx"));
+                      free (t);
+                    }
+                }
+            }
 
-        /* unveil executable */
-        RETURN_ON_ERROR (Unveil (argv[0], "rx"));
+          /* unveil executable */
+          RETURN_ON_ERROR (Unveil (argv[0], "rx"));
 
-        if (!g_strict)
-          {
-            RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
-            RETURN_ON_ERROR (Unveil ("o/tmp", "rwcx"));
-            RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
-            RETURN_ON_ERROR (Unveil ("/dev/null", "rw"));
-            RETURN_ON_ERROR (Unveil ("/dev/full", "rw"));
-            RETURN_ON_ERROR (Unveil ("/dev/stdin", "rw"));
-            RETURN_ON_ERROR (Unveil ("/dev/stdout", "rw"));
-            RETURN_ON_ERROR (Unveil ("/dev/stderr", "rw"));
-            RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
-          }
+          if (!g_strict)
+            {
+              RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
+              RETURN_ON_ERROR (Unveil ("o/tmp", "rwcx"));
+              RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
+              RETURN_ON_ERROR (Unveil ("/dev/null", "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/full", "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/stdin", "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/stdout", "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/stderr", "rw"));
+              RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
+            }
 
-        /*
-         * unveils target output file
-         *
-         * landlock operates per inode so it can't whitelist missing
-         * paths. so we create the output file manually, and prevent
-         * creation so that it can't be deleted by the command which
-         * must truncate when writing its output.
-         */
-        if (!c->file->phony &&
-            strlen(c->file->name) < PATH_MAX)
-          {
-            int fd, rc, err = errno;
-            strcpy (outpathbuf, c->file->name);
-            if (makedirs (dirname (outpathbuf), 0777) == -1)
-              errno = err;
-            fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
-            if (fd != -1)
-              close (fd);
-            else if (errno == EEXIST)
-              errno = err;
-            else
-              {
-                OSS (error, NILF, "%s: touch target failed %s",
-                     c->file->name, strerror (errno));
-                return -1;
-              }
-            if (unveil (c->file->name, "rwx") && errno != ENOSYS)
-              {
-                OSS (error, NILF, "%s: unveil target failed %s",
-                     c->file->name, strerror (errno));
-                return -1;
-              }
-          }
+          /*
+           * unveils target output file
+           *
+           * landlock operates per inode so it can't whitelist missing
+           * paths. so we create the output file manually, and prevent
+           * creation so that it can't be deleted by the command which
+           * must truncate when writing its output.
+           */
+          if (!c->file->phony &&
+              strlen(c->file->name) < PATH_MAX)
+            {
+              int fd, rc, err = errno;
+              strcpy (outpathbuf, c->file->name);
+              if (makedirs (dirname (outpathbuf), 0777) == -1)
+                errno = err;
+              fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
+              if (fd != -1)
+                close (fd);
+              else if (errno == EEXIST)
+                errno = err;
+              else
+                {
+                  OSS (error, NILF, "%s: touch target failed %s",
+                       c->file->name, strerror (errno));
+                  return -1;
+                }
+              if (unveil (c->file->name, "rwx") && errno != ENOSYS)
+                {
+                  OSS (error, NILF, "%s: unveil target failed %s",
+                       c->file->name, strerror (errno));
+                  return -1;
+                }
+            }
 
-        /* unveil target prerequisites */
-        for (d = c->file->deps; d; d = d->next)
-          {
-            RETURN_ON_ERROR (Unveil (d->file->name, "rx"));
-            if (endswith (d->file->name, ".com"))
-              {
-                s = xstrcat (d->file->name, ".dbg");
-                RETURN_ON_ERROR (Unveil (s, "rx"));
-                free (s);
-              }
-          }
+          /* unveil target prerequisites */
+          for (d = c->file->deps; d; d = d->next)
+            {
+              RETURN_ON_ERROR (Unveil (d->file->name, "rx"));
+              if (endswith (d->file->name, ".com"))
+                {
+                  s = xstrcat (d->file->name, ".dbg");
+                  RETURN_ON_ERROR (Unveil (s, "rx"));
+                  free (s);
+                }
+            }
 
-        /* unveil explicit .UNVEIL entries */
-        RETURN_ON_ERROR
-          (UnveilVariable
-           (lookup_variable
-            (STRING_SIZE_TUPLE (".UNVEIL"))));
-        RETURN_ON_ERROR
-          (UnveilVariable
-           (lookup_variable_in_set
-            (STRING_SIZE_TUPLE (".UNVEIL"),
-             c->file->variables->set)));
+          /* unveil explicit .UNVEIL entries */
+          RETURN_ON_ERROR
+            (UnveilVariable
+             (lookup_variable
+              (STRING_SIZE_TUPLE (".UNVEIL"))));
+          RETURN_ON_ERROR
+            (UnveilVariable
+             (lookup_variable_in_set
+              (STRING_SIZE_TUPLE (".UNVEIL"),
+               c->file->variables->set)));
 
-        /* commit sandbox */
-        RETURN_ON_ERROR (Unveil (0, 0));
-      }
-  }
+          /* commit sandbox */
+          RETURN_ON_ERROR (Unveil (0, 0));
+        }
+    }
 
   /* Run the command.  */
   exec_command (argv, child->environment);

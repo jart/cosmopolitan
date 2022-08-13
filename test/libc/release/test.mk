@@ -1,22 +1,21 @@
 #-*-mode:makefile-gmake;indent-tabs-mode:t;tab-width:8;coding:utf-8-*-┐
 #───vi: set et ft=make ts=8 tw=8 fenc=utf-8 :vi───────────────────────┘
 
-o/$(MODE)/test/libc/release/cosmopolitan.zip:				\
-		o/cosmopolitan.h					\
-		o/$(MODE)/ape/ape.lds					\
-		o/$(MODE)/libc/crt/crt.o				\
-		o/$(MODE)/ape/ape.o					\
-		o/$(MODE)/ape/ape-no-modify-self.o			\
-		o/$(MODE)/cosmopolitan.a				\
-		o/$(MODE)/third_party/zip/zip.com
-	@$(COMPILE) -wAZIP -T$@						\
-		o/$(MODE)/third_party/zip/zip.com			\
-		-qj $@							\
-		o/cosmopolitan.h					\
-		o/$(MODE)/ape/ape.lds					\
-		o/$(MODE)/libc/crt/crt.o				\
-		o/$(MODE)/ape/ape.o					\
-		o/$(MODE)/ape/ape-no-modify-self.o			\
+o/$(MODE)/test/libc/release/cosmopolitan.zip: .UNSANDBOXED = 1
+o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
+		o/cosmopolitan.h				\
+		o/$(MODE)/ape/ape.lds				\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/ape/ape-no-modify-self.o		\
+		o/$(MODE)/cosmopolitan.a
+	mkdir -p $(@D)
+	zip -qj $@						\
+		o/cosmopolitan.h				\
+		o/$(MODE)/ape/ape.lds				\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a
 
 o/$(MODE)/test/libc/release/smoke.o:					\
