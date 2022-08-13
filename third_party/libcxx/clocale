@@ -36,6 +36,7 @@ lconv* localeconv();
 */
 
 #include "third_party/libcxx/__config"
+#include "libc/str/unicode.h"
 #include "libc/str/locale.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

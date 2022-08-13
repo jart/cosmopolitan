@@ -1,6 +1,7 @@
 #ifndef Py__SOCKET_H
 #define Py__SOCKET_H
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "third_party/python/Include/object.h"
 #include "third_party/python/Include/pytime.h"
 COSMOPOLITAN_C_START_

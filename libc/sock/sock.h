@@ -15,8 +15,6 @@ COSMOPOLITAN_C_START_
 #define ntohl(u32) bswap_32(u32)
 
 #define IFHWADDRLEN 6
-#define IF_NAMESIZE 16
-#define IFNAMSIZ    IF_NAMESIZE
 
 const char *inet_ntop(int, const void *, char *, uint32_t);
 int inet_pton(int, const char *, void *);

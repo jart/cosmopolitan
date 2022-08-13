@@ -13,6 +13,13 @@
 #include "third_party/libcxx/__config"
 #include "third_party/libcxx/cwctype"
 #include "third_party/libcxx/wchar.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/time/struct/tm.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/stdio.h"
+#include "libc/fmt/conv.h"
+#include "third_party/gdtoa/gdtoa.h"
 #include "libc/time/struct/tm.h"
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)

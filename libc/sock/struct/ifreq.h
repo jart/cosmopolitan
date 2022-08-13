@@ -4,6 +4,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define IF_NAMESIZE 16
+#define IFNAMSIZ    IF_NAMESIZE
+
 struct ifreq {
   union {
     char ifrn_name[IFNAMSIZ]; /* Interface name, e.g. "en0".  */

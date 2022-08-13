@@ -1,9 +1,7 @@
 #ifndef LIBC_ISYSTEM_TGMATH_H_
 #define LIBC_ISYSTEM_TGMATH_H_
-
 #include "libc/complex.h"
 #include "libc/math.h"
-
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if __STDC_VERSION__ + 0 >= 201112
 COSMOPOLITAN_C_START_
@@ -306,12 +304,14 @@ COSMOPOLITAN_C_START_
            : conj, complex long double \
            : conjl)(x)
 
+#undef creal
 #define creal(x)                        \
   _Generic((x), complex float           \
            : crealf, complex default    \
            : creal, complex long double \
            : creall)(x)
 
+#undef cimag
 #define cimag(x)                        \
   _Generic((x), complex float           \
            : cimagf, complex default    \
@@ -328,5 +328,4 @@ COSMOPOLITAN_C_END_
 
 #endif /* C11 */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-#endif
+#endif /* LIBC_ISYSTEM_TGMATH_H_ */

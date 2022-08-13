@@ -99,21 +99,3 @@ o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
 o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com
 	@$(COMPILE) -wACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
 	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
-
-# TODO(jart): find a way to generate dependencies
-#             or alternatively disable sandboxing
-o/%.h.ok: %.h
-	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
-o/$(MODE)/%.h.ok: %.h
-	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
-o/$(MODE)/%.hh.ok: %.hh
-	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
-o/%.okk: %
-	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
-o/$(MODE)/%.okk: %
-	@$(COMPILE) -wACHECK.h -T$@ build/bootstrap/touch.com $@
-#	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<

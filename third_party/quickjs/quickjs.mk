@@ -8,6 +8,7 @@ THIRD_PARTY_QUICKJS_BINS = $(THIRD_PARTY_QUICKJS_COMS) $(THIRD_PARTY_QUICKJS_COM
 THIRD_PARTY_QUICKJS = $(THIRD_PARTY_QUICKJS_A_DEPS) $(THIRD_PARTY_QUICKJS_A)
 THIRD_PARTY_QUICKJS_A = o/$(MODE)/third_party/quickjs/quickjs.a
 THIRD_PARTY_QUICKJS_HDRS = $(foreach x,$(THIRD_PARTY_QUICKJS_ARTIFACTS),$($(x)_HDRS))
+THIRD_PARTY_QUICKJS_INCS = $(foreach x,$(THIRD_PARTY_QUICKJS_ARTIFACTS),$($(x)_INCS))
 
 THIRD_PARTY_QUICKJS_A_SRCS =							\
 	third_party/quickjs/array.c						\
@@ -65,6 +66,13 @@ THIRD_PARTY_QUICKJS_A_HDRS =							\
 	third_party/quickjs/list.h						\
 	third_party/quickjs/quickjs-libc.h					\
 	third_party/quickjs/quickjs.h
+
+THIRD_PARTY_QUICKJS_A_INCS =							\
+	third_party/quickjs/libregexp-opcode.inc				\
+	third_party/quickjs/libunicode-table.inc				\
+	third_party/quickjs/quickjs-atom.inc					\
+	third_party/quickjs/quickjs-opcode.inc					\
+	third_party/quickjs/unicode_gen_def.inc
 
 THIRD_PARTY_QUICKJS_A_OBJS =							\
 	$(THIRD_PARTY_QUICKJS_A_SRCS:%.c=o/$(MODE)/%.o)

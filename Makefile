@@ -377,6 +377,17 @@ $(SRCS):					\
 	libc/integral/lp64arg.inc		\
 	libc/integral/lp64.inc
 
+o/%.h.ok: %.h $(HDRS) $(INCS)
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/$(MODE)/%.h.ok: %.h $(HDRS) $(INCS)
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+o/$(MODE)/%.hh.ok: %.hh $(HDRS) $(INCS)
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/%.okk: % $(HDRS) $(INCS)
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+o/$(MODE)/%.okk: % $(HDRS) $(INCS)
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #
 # A build rule must exist for all files that make needs to consider in

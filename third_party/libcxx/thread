@@ -34,9 +34,7 @@
 _LIBCPP_PUSH_MACROS
 #include "third_party/libcxx/__undef_macros"
 
-#ifdef _LIBCPP_HAS_NO_THREADS
-#error <thread> is not supported on this single threaded system
-#else // !_LIBCPP_HAS_NO_THREADS
+#ifndef _LIBCPP_HAS_NO_THREADS
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
