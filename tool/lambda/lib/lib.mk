@@ -29,7 +29,6 @@ TOOL_LAMBDA_LIB_A_DIRECTDEPS =				\
 	LIBC_LOG					\
 	LIBC_NEXGEN32E					\
 	LIBC_RUNTIME					\
-	LIBC_UNICODE					\
 	LIBC_MEM					\
 	LIBC_FMT					\
 	LIBC_SOCK					\

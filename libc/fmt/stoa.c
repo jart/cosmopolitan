@@ -27,7 +27,7 @@
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 
 typedef int (*out_f)(const char *, void *, size_t);
 typedef int (*emit_f)(out_f, void *, uint64_t);

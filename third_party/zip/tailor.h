@@ -259,7 +259,7 @@ IZ_IMP char *mktemp();
  */
 #ifdef UNICODE_SUPPORT
 # if defined( UNIX) || defined( VMS)
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 # endif /* defined( UNIX) || defined( VMS) */
 #include "libc/str/str.h"
 #endif /* def UNICODE_SUPPORT */

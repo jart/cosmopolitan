@@ -50,7 +50,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/w.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/glob.h"

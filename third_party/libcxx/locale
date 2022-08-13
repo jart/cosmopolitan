@@ -25,7 +25,7 @@
 #include "third_party/libcxx/ctime"
 #include "third_party/libcxx/cstdio"
 #ifdef _LIBCPP_HAS_CATOPEN
-# include "libc/unicode/locale.h"
+# include "libc/str/locale.h"
 # include "third_party/libcxx/nl_types.h"
 #endif
 

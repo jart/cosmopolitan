@@ -19,7 +19,7 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 
 TEST(kcp437, test) {
   long i;

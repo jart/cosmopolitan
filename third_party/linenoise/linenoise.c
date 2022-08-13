@@ -164,7 +164,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "net/http/escape.h"
 #include "third_party/linenoise/linenoise.h"
 #include "tool/build/lib/case.h"

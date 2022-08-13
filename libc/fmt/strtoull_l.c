@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 
 unsigned long long strtoull_l(const char *nptr, char **endptr, int base,
                               locale_t l) {

@@ -32,7 +32,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/stb/stb_image.h"
 
 #define SQR(X)    ((X) * (X))

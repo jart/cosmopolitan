@@ -80,7 +80,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/time/time.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
 

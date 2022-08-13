@@ -38,7 +38,6 @@ TEST_LIBC_STDIO_DIRECTDEPS =				\
 	LIBC_THREAD					\
 	LIBC_TIME					\
 	LIBC_LOG					\
-	LIBC_UNICODE					\
 	LIBC_X						\
 	LIBC_ZIPOS					\
 	THIRD_PARTY_GDTOA				\

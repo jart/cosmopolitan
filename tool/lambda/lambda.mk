@@ -21,7 +21,6 @@ TOOL_LAMBDA_DIRECTDEPS =					\
 	LIBC_MEM						\
 	LIBC_CALLS						\
 	LIBC_RUNTIME						\
-	LIBC_UNICODE						\
 	LIBC_FMT						\
 	LIBC_STR						\
 	LIBC_SYSV						\

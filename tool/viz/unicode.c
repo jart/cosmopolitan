@@ -21,7 +21,7 @@
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "libc/x/x.h"
 
 int a, b, w, i;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   char *line;
   size_t linesize;
   printf("\n\n\n\n\n                                UNICODE PLANES\n\n\n\n");
-  f = fopen("libc/unicode/blocks.txt", "r");
+  f = fopen("libc/str/blocks.txt", "r");
   line = NULL;
   linesize = 0;
   while (!feof(f)) {

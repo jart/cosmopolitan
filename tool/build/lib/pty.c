@@ -32,7 +32,7 @@
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/pty.h"
 

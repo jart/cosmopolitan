@@ -29,7 +29,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "libc/x/x.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/python/Include/abstract.h"

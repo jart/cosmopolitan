@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/calls/calls.h"
 #include "libc/str/str.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "libc/errno.h"
 #include "third_party/unzip/unzpriv.h"
 #include "libc/calls/calls.h"

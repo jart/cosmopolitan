@@ -29,7 +29,6 @@ THIRD_PARTY_MBEDTLS_A_DIRECTDEPS =					\
 	LIBC_STR							\
 	LIBC_SYSV							\
 	LIBC_TIME							\
-	LIBC_UNICODE							\
 	NET_HTTP							\
 	THIRD_PARTY_COMPILER_RT						\
 	THIRD_PARTY_GDTOA						\

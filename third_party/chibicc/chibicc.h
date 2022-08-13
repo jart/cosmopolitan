@@ -23,7 +23,7 @@
 #include "libc/str/str.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "tool/build/lib/javadown.h"

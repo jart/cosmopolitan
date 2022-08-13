@@ -24,7 +24,6 @@ THIRD_PARTY_TIDY_A_DIRECTDEPS =							\
 	LIBC_NEXGEN32E								\
 	LIBC_RUNTIME								\
 	LIBC_CALLS								\
-	LIBC_UNICODE								\
 	LIBC_STDIO								\
 	LIBC_SYSV								\
 	LIBC_STR								\

@@ -28,7 +28,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "third_party/getopt/getopt.h"
 
 #define kOneTrueTabWidth 8

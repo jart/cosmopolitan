@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 float strtof_l(const char *s, char **sp, locale_t l) {

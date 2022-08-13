@@ -107,7 +107,6 @@ THIRD_PARTY_MBEDTLS_TEST_DIRECTDEPS =										\
 	LIBC_SYSV												\
 	LIBC_TIME												\
 	LIBC_TESTLIB												\
-	LIBC_UNICODE												\
 	LIBC_X													\
 	LIBC_ZIPOS												\
 	THIRD_PARTY_COMPILER_RT											\

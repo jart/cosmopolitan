@@ -31,7 +31,7 @@
 #include "libc/stdio/iconv.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\

@@ -29,8 +29,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
-#include "libc/unicode/locale.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/locale.h"
+#include "libc/str/unicode.h"
 #include "third_party/python/Modules/_decimal/libmpdec/bits.h"
 #include "third_party/python/Modules/_decimal/libmpdec/constants.h"
 #include "third_party/python/Modules/_decimal/libmpdec/io.h"

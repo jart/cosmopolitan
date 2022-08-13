@@ -29,7 +29,7 @@
 │  THIS SOFTWARE.                                                              │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 /**

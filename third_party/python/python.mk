@@ -456,7 +456,6 @@ THIRD_PARTY_PYTHON_STAGE1_A_DIRECTDEPS =				\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
 	LIBC_TINYMATH							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	TOOL_BUILD_LIB							\
 	THIRD_PARTY_DLMALLOC						\
@@ -1136,7 +1135,6 @@ THIRD_PARTY_PYTHON_STAGE2_A_DIRECTDEPS =				\
 	LIBC_SYSV_CALLS							\
 	LIBC_TIME							\
 	LIBC_TINYMATH							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
 	NET_HTTPS							\
@@ -2056,7 +2054,6 @@ THIRD_PARTY_PYTHON_PYTEST_PYMAINS_DIRECTDEPS =				\
 	LIBC_INTRIN							\
 	LIBC_X								\
 	LIBC_STR							\
-	LIBC_UNICODE							\
 	LIBC_STDIO							\
 	LIBC_CALLS							\
 	LIBC_RUNTIME							\
@@ -4288,7 +4285,6 @@ THIRD_PARTY_PYTHON_PYTHON_DIRECTDEPS =					\
 	LIBC_STUBS							\
 	LIBC_LOG							\
 	LIBC_SYSV							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
 	THIRD_PARTY_GETOPT						\
@@ -4330,7 +4326,6 @@ THIRD_PARTY_PYTHON_FREEZE_DIRECTDEPS =					\
 	LIBC_STR							\
 	LIBC_STUBS							\
 	LIBC_SYSV							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	THIRD_PARTY_GETOPT						\
 	THIRD_PARTY_XED							\
@@ -4370,7 +4365,7 @@ o/$(MODE)/third_party/python/chibicc.inc:				\
 		libc/runtime/symbolic.h					\
 		libc/stdio/stdio.h					\
 		libc/str/str.h						\
-		libc/unicode/unicode.h					\
+		libc/str/unicode.h					\
 		third_party/python/Include/Python.h			\
 		third_party/python/Include/abstract.h			\
 		third_party/python/Include/bltinmodule.h		\

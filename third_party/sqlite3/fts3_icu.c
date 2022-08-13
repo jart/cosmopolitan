@@ -18,7 +18,7 @@
 
 #include "libc/assert.h"
 #include "libc/str/str.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "third_party/sqlite3/fts3_tokenizer.inc"
 
 typedef struct IcuTokenizer IcuTokenizer;

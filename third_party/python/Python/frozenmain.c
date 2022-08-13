@@ -6,7 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/python/Include/fileutils.h"
 #include "third_party/python/Include/import.h"
 #include "third_party/python/Include/pydebug.h"

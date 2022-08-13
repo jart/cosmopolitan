@@ -21,7 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.internal.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "tool/build/lib/buffer.h"
 #include "tool/build/lib/panel.h"
 

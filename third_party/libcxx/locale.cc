@@ -27,7 +27,7 @@
 #include "third_party/libcxx/cwctype"
 #include "third_party/libcxx/__sso_allocator"
 #include "third_party/libcxx/include/atomic_support.hh"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/libcxx/__undef_macros"
 
 // On Linux, wint_t and wchar_t have different signed-ness, and this causes

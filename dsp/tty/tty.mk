@@ -40,8 +40,7 @@ DSP_TTY_A_DIRECTDEPS =				\
 	LIBC_SYSV				\
 	LIBC_TINYMATH				\
 	LIBC_TIME				\
-	LIBC_X					\
-	LIBC_UNICODE
+	LIBC_X
 
 DSP_TTY_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(DSP_TTY_A_DIRECTDEPS),$($(x))))

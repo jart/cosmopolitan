@@ -45,7 +45,6 @@ TEST_LIBC_STR_DIRECTDEPS =						\
 	LIBC_SYSV							\
 	LIBC_SYSV_CALLS							\
 	LIBC_TESTLIB							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
 	THIRD_PARTY_MBEDTLS						\
@@ -74,19 +73,9 @@ o/$(MODE)/test/libc/str/%.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/test/libc/str/blake2.com.dbg:					\
-		$(TEST_LIBC_STR_DEPS)					\
-		o/$(MODE)/test/libc/str/blake2.o			\
-		o/$(MODE)/test/libc/str/blake2b256_tests.txt.zip.o	\
-		o/$(MODE)/test/libc/str/str.pkg				\
-		$(LIBC_TESTMAIN)					\
-		$(CRT)							\
-		$(APE_NO_MODIFY_SELF)
-	@$(APELINK)
-
 $(TEST_LIBC_STR_OBJS): private						\
-	DEFAULT_CCFLAGS +=						\
-		-fno-builtin
+		DEFAULT_CCFLAGS +=					\
+			-fno-builtin
 
 o/$(MODE)/test/libc/str/memmove_test.o: private				\
 		OVERRIDE_CFLAGS +=					\

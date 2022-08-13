@@ -29,8 +29,7 @@ TOOL_DECODE_LIB_A_DIRECTDEPS =				\
 	LIBC_STDIO					\
 	LIBC_STR					\
 	LIBC_STUBS					\
-	LIBC_SYSV					\
-	LIBC_UNICODE
+	LIBC_SYSV
 
 TOOL_DECODE_LIB_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(TOOL_DECODE_LIB_A_DIRECTDEPS),$($(x))))

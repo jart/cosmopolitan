@@ -85,7 +85,6 @@ THIRD_PARTY_QUICKJS_A_DIRECTDEPS =						\
 	LIBC_SYSV_CALLS								\
 	LIBC_TIME								\
 	LIBC_TINYMATH								\
-	LIBC_UNICODE								\
 	LIBC_X									\
 	THIRD_PARTY_COMPILER_RT							\
 	THIRD_PARTY_GDTOA							\

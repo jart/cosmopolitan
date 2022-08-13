@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/runtime/runtime.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 float wcstof(const wchar_t *nptr, wchar_t **endptr) {

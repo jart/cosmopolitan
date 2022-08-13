@@ -119,7 +119,6 @@ include libc/fmt/fmt.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
-include libc/unicode/unicode.mk			# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
 include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
@@ -199,7 +198,7 @@ include test/libc/thread/test.mk
 include test/libc/sock/test.mk
 include test/libc/str/test.mk
 include test/libc/log/test.mk
-include test/libc/unicode/test.mk
+include test/libc/str/test.mk
 include test/libc/calls/test.mk
 include test/libc/x/test.mk
 include test/libc/xed/test.mk
@@ -284,7 +283,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_X			\
 	THIRD_PARTY_GETOPT	\
 	LIBC_LOG		\
-	LIBC_UNICODE		\
 	LIBC_TIME		\
 	LIBC_ZIPOS		\
 	THIRD_PARTY_ZLIB	\
@@ -339,7 +337,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_THREAD		\
 	LIBC_TIME		\
 	LIBC_TINYMATH		\
-	LIBC_UNICODE		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
 	NET_HTTP		\

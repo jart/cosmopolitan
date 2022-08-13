@@ -36,7 +36,7 @@
 #include "libc/sysv/consts/exit.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lprefix.h"
 #include "third_party/lua/lua.h"

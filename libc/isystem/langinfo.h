@@ -1,5 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_
 #define COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_
-#include "libc/unicode/langinfo.h"
+#include "libc/str/langinfo.h"
 
 #endif /* COSMOPOLITAN_LIBC_ISYSTEM_LANGINFO_H_ */

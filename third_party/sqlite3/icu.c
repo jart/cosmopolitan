@@ -34,7 +34,7 @@
 
 /* Include ICU headers */
 #include "libc/assert.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 
 #ifndef SQLITE_CORE
 #include "third_party/sqlite3/sqlite3ext.h"

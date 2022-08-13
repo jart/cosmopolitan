@@ -48,7 +48,6 @@ TOOL_NET_DIRECTDEPS =								\
 	LIBC_TIME								\
 	LIBC_THREAD								\
 	LIBC_TINYMATH								\
-	LIBC_UNICODE								\
 	LIBC_X									\
 	LIBC_ZIPOS								\
 	NET_FINGER								\

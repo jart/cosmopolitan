@@ -14,7 +14,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/s.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 #include "libc/x/x.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"

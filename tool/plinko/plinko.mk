@@ -21,7 +21,6 @@ TOOL_PLINKO_DIRECTDEPS =					\
 	LIBC_MEM						\
 	LIBC_CALLS						\
 	LIBC_RUNTIME						\
-	LIBC_UNICODE						\
 	LIBC_SYSV						\
 	LIBC_STDIO						\
 	LIBC_X							\

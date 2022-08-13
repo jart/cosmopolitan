@@ -3,7 +3,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
-#include "libc/unicode/locale.h"
+#include "libc/str/locale.h"
 
 #define CTHREAD_CREATE_DETACHED 1
 #define CTHREAD_CREATE_JOINABLE 0

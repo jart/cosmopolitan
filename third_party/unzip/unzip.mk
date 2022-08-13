@@ -25,7 +25,6 @@ THIRD_PARTY_UNZIP_A_DIRECTDEPS =						\
 	LIBC_STUBS								\
 	LIBC_SYSV								\
 	LIBC_TIME								\
-	LIBC_UNICODE								\
 	LIBC_ZIPOS								\
 	THIRD_PARTY_BZIP2
 

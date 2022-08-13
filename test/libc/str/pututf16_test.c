@@ -22,7 +22,7 @@
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 
 unsigned n;
 size_t size;

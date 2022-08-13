@@ -46,7 +46,6 @@ TEST_LIBC_CALLS_DIRECTDEPS =						\
 	LIBC_THREAD							\
 	LIBC_TIME							\
 	LIBC_TESTLIB							\
-	LIBC_UNICODE							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
 	THIRD_PARTY_XED

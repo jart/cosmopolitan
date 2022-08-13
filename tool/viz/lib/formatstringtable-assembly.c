@@ -21,7 +21,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "libc/x/x.h"
 #include "tool/viz/lib/formatstringtable.h"
 

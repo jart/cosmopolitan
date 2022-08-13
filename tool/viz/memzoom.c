@@ -50,7 +50,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/time/time.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \

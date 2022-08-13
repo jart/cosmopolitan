@@ -21,7 +21,7 @@
 #include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/unicode/unicode.h"
+#include "libc/str/unicode.h"
 #include "tool/build/lib/buffer.h"
 #include "tool/build/lib/lines.h"
 #include "tool/build/lib/panel.h"

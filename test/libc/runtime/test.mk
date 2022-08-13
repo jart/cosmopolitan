@@ -37,7 +37,6 @@ TEST_LIBC_RUNTIME_DIRECTDEPS =					\
 	LIBC_THREAD						\
 	LIBC_TESTLIB						\
 	LIBC_TINYMATH						\
-	LIBC_UNICODE						\
 	LIBC_X							\
 	LIBC_ZIPOS						\
 	TOOL_BUILD_LIB						\

@@ -42,7 +42,6 @@ TEST_TOOL_NET_DIRECTDEPS =					\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TESTLIB						\
-	LIBC_UNICODE						\
 	LIBC_X							\
 	LIBC_ZIPOS						\
 	THIRD_PARTY_REGEX					\

@@ -66,7 +66,6 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_THREAD								\
 	LIBC_TIME								\
 	LIBC_TINYMATH								\
-	LIBC_UNICODE								\
 	LIBC_X									\
 	LIBC_ZIPOS								\
 	NET_HTTP								\
