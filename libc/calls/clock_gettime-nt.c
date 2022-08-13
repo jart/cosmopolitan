@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/clock_gettime.internal.h"
-#include "libc/calls/internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nt/struct/filetime.h"
 #include "libc/nt/synchronization.h"

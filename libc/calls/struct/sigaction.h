@@ -1,11 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_
+#include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/calls/typedef/sigaction_f.h"
-#include "libc/calls/typedef/sighandler_t.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/sig.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+typedef void (*sighandler_t)(int);
+typedef void (*sigaction_f)(int, struct siginfo *, struct ucontext *);
 
 struct sigaction { /* cosmo abi */
   union {
@@ -22,7 +26,6 @@ sighandler_t signal(int, sighandler_t);
 int sigaction(int, const struct sigaction *, struct sigaction *);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-COSMOPOLITAN_C_START_
 
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
@@ -75,6 +78,7 @@ void _check_sigwinch();
   })
 
 #endif /* GNU && !ANSI */
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_ */

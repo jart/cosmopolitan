@@ -1,10 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRACE_INTERNAL_H_
 #include "libc/intrin/likely.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/rlimit.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/runtime/runtime.h"
 
 #define _KERNTRACE 0 /* not configurable w/ flag yet */

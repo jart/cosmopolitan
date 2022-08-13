@@ -19,6 +19,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 
 /**
  * Returns parent process id.

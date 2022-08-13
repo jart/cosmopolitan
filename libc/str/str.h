@@ -175,14 +175,6 @@ typedef unsigned mbstate_t;
 
 axdx_t tprecode8to16(char16_t *, size_t, const char *);
 axdx_t tprecode16to8(char *, size_t, const char16_t *);
-int strcmp8to16(const char *, const char16_t *) strlenesque;
-int strncmp8to16(const char *, const char16_t *, size_t) strlenesque;
-int strcasecmp8to16(const char *, const char16_t *) strlenesque;
-int strncasecmp8to16(const char *, const char16_t *, size_t) strlenesque;
-int strcmp16to8(const char16_t *, const char *) strlenesque;
-int strncmp16to8(const char16_t *, const char *, size_t) strlenesque;
-int strcasecmp16to8(const char16_t *, const char *) strlenesque;
-int strncasecmp16to8(const char16_t *, const char *, size_t) strlenesque;
 wchar_t *wcsncpy(wchar_t *, const wchar_t *, size_t);
 int mbtowc(wchar_t *, const char *, size_t);
 size_t mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timeval.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/sysv/consts/at.h"

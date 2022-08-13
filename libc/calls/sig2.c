@@ -19,6 +19,8 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/spinlock.h"

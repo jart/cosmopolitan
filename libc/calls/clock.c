@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
+#include "libc/fmt/conv.h"
+#include "libc/nt/accounting.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
-#include "libc/dce.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/accounting.h"
-#include "libc/fmt/conv.h"
 
 /**
  * Returns how much CPU program has consumed on time-sharing system.
@@ -37,13 +37,15 @@ int64_t clock(void) {
   int64_t proc, total;
   // polyfill on Windows where CLOCK_PROCESS_CPUTIME_ID may be not available
   if (IsWindows() && CLOCK_PROCESS_CPUTIME_ID == -1) {
-     proc = GetCurrentProcess();
-     if (!GetProcessTimes(proc, &creation_time,
-                          &exit_time, &kernel_time, &user_time)) return -1;
-     total = ReadFileTime(kernel_time) + ReadFileTime(user_time);
-     ts = WindowsDurationToTimeSpec(total);
+    proc = GetCurrentProcess();
+    if (!GetProcessTimes(proc, &creation_time, &exit_time, &kernel_time,
+                         &user_time))
+      return -1;
+    total = ReadFileTime(kernel_time) + ReadFileTime(user_time);
+    ts = WindowsDurationToTimeSpec(total);
+  } else if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) {
+    return -1;
   }
-  else if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) return -1;
   return ts.tv_sec * CLOCKS_PER_SEC +
          ts.tv_nsec / (1000000000 / CLOCKS_PER_SEC);
 }

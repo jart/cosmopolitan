@@ -9,5 +9,7 @@ struct NtSecurityAttributes {
   bool32 bInheritHandle;
 };
 
+const char *DescribeNtSecurityAttributes(struct NtSecurityAttributes *);
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NT_STRUCT_SECURITYATTRIBUTES_H_ */

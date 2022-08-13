@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timeval.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/struct/utimbuf.h"
-#include "libc/time/time.h"
 
 /**
  * Changes last accessed/modified times on file.

@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SYSCALL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_SOCK_SYSCALL_INTERNAL_H_
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/struct/iovec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -15,7 +16,6 @@ int sys_listen_nt(struct Fd *, int) hidden;
 int sys_setsockopt_nt(struct Fd *, int, int, const void *, uint32_t) hidden;
 int sys_shutdown_nt(struct Fd *, int) hidden;
 ssize_t sys_recv_nt(struct Fd *, const struct iovec *, size_t, uint32_t) hidden;
-
 ssize_t sys_recvfrom_nt(struct Fd *, const struct iovec *, size_t, uint32_t,
                         void *, uint32_t *) hidden;
 

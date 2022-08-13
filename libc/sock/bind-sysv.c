@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/sockaddr.internal.h"
 
 int sys_bind(int fd, const void *addr, uint32_t addrsize) {
   union sockaddr_storage_bsd bsd;

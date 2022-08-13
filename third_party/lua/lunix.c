@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
@@ -26,6 +25,7 @@
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
@@ -39,6 +39,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/fmt.h"

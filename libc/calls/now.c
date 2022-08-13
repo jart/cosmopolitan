@@ -22,7 +22,6 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/clock_gettime.internal.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"

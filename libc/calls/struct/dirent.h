@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct dirent {      /* linux getdents64 abi */
   uint64_t d_ino;    /* inode number */
@@ -22,5 +23,6 @@ struct dirent *readdir(DIR *);
 void rewinddir(DIR *);
 void seekdir(DIR *, long);
 
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_DIRENT_H_ */

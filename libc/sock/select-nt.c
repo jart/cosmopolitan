@@ -19,9 +19,10 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/macros.internal.h"
-#include "libc/sock/internal.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/errfuns.h"
 

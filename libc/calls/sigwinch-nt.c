@@ -18,11 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/struct/winsize.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"

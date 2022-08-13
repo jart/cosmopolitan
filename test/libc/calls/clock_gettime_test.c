@@ -19,6 +19,7 @@
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"

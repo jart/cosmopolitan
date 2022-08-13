@@ -17,21 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
+#include "libc/str/utf16.h"
 
 /**
  * Returns monospace display width of UTF-16 or UCS-2 string.
  */
 int strnwidth16(const char16_t *p, size_t n, size_t o) {
   size_t l;
-  wint_t wc;
+  wint_t x, y;
   l = 0;
   if (n) {
-    while (*p) {
-      p += getutf16(p, &wc);
-      l += max(0, wcwidth(wc));
+    while ((x = *p++)) {
+      if (!IsUcs2(x)) {
+        if ((y = *p++)) {
+          x = MergeUtf16(x, y);
+        } else {
+          ++l;
+          break;
+        }
+      }
+      l += max(0, wcwidth(x));
     }
   }
   return l;

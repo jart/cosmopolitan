@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/pollfd.h"
 #include "libc/sysv/consts/poll.h"
 
 int sys_poll_metal(struct pollfd *fds, size_t nfds, unsigned timeout_ms) {

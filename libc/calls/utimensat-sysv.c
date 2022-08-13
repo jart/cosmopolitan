@@ -16,10 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/struct/timeval.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
 #include "libc/zipos/zipos.internal.h"

@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STAT_H_
 #include "libc/calls/struct/timespec.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct stat {              /* cosmo abi */
   uint64_t st_dev;         /* 0: id of device with file */
@@ -27,5 +28,6 @@ int lstat(const char *, struct stat *);
 int fstat(int, struct stat *);
 int fstatat(int, const char *, struct stat *, int);
 
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_STAT_H_ */

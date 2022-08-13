@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_FLOCK_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_FLOCK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct flock {      /* cosmopolitan abi */
   int16_t l_type;   /* F_RDLCK, F_WRLCK, F_UNLCK */
@@ -11,5 +12,6 @@ struct flock {      /* cosmopolitan abi */
   int32_t l_sysid;  /* remote system id or zero for local */
 };
 
+COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_FLOCK_H_ */

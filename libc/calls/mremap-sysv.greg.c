@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/asmflag.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/asmflag.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"
 #include "libc/sysv/errfuns.h"

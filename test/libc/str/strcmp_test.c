@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -319,13 +319,6 @@ TEST(wcscasecmp, testItWorksCase) {
   EXPECT_NE(0, wcscasecmp(L"hello", L"yello"));
 }
 
-TEST(strcasecmp8to16, testItWorksCase) {
-  EXPECT_EQ(0, strcasecmp8to16("hello", u"HELLO"));
-  EXPECT_EQ(0, strcasecmp8to16("hello", u"Hello"));
-  EXPECT_EQ(0, strcasecmp8to16("hello", u"hello"));
-  EXPECT_NE(0, strcasecmp8to16("hello", u"yello"));
-}
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ test/libc/str/strcmp_test.c § nontrivial length                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -607,6 +600,6 @@ BENCH(memcmp, bench) {
   EZBENCH2("memcmp big", donothing,
            EXPROPRIATE(memcmp(kHyperion, copy, kHyperionSize)));
   copy = gc(strdup("tough little ship"));
-  EZBENCH2("memcmp 19", donothing,
-           EXPROPRIATE(memcmp("tough little ship", copy, 19)));
+  EZBENCH2("memcmp 18", donothing,
+           EXPROPRIATE(memcmp("tough little ship", copy, 18)));
 }

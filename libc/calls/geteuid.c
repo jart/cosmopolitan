@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/dce.h"
 
 /**
  * Returns effective user ID of calling process.

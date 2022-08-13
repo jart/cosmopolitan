@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigval.h"
+#include "libc/calls/struct/sigval.internal.h"
+#include "libc/dce.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 

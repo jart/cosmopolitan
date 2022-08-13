@@ -19,6 +19,7 @@
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/sched_param.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/nexgen32e/threaded.h"

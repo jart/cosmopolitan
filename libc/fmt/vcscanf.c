@@ -16,14 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecodecb.internal.h"
+#include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -254,8 +255,13 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
               } else if (tpdecodecb((wint_t *)&c, c, (void *)callback, arg) !=
                          -1) {
                 if (charbytes == sizeof(char16_t)) {
-                  j += abs(pututf16(&((char16_t *)buf)[j], bufsize - j - 1, c,
-                                    false));
+                  size_t k = 0;
+                  unsigned w = EncodeUtf16(c);
+                  do {
+                    if ((j + 1) * 2 < bufsize) {
+                      ((char16_t *)buf)[j++] = w;
+                    }
+                  } while ((w >>= 16));
                 } else {
                   ((wchar_t *)buf)[j++] = (wchar_t)c;
                 }

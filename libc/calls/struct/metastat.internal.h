@@ -94,6 +94,8 @@ union metastat {
   struct stat_netbsd netbsd;
 };
 
+void __stat2cosmo(struct stat *restrict, const union metastat *) hidden;
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_METASTAT_H_ */

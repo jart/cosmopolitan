@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/clock_gettime.internal.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/timeval.internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 

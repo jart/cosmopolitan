@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/iphlpapi.h"

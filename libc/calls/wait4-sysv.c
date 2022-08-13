@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/rusage.internal.h"
 
 int sys_wait4(int pid, int *opt_out_wstatus, int options,
               struct rusage *opt_out_rusage) {

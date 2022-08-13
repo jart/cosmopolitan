@@ -19,6 +19,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/sigaltstack.h"
+#include "libc/calls/struct/sigaltstack.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"

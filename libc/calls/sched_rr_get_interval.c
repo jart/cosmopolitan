@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 
 int sys_sched_rr_get_interval(int, struct timespec *) hidden;

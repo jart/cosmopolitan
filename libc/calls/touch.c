@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/time/time.h"
 
 /**
  * Creates new file or changes modified time on existing one.

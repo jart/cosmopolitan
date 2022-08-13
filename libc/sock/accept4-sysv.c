@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.internal.h"
 
 int sys_accept4(int server, void *addr, uint32_t *addrsize, int flags) {
   if (!flags) return sys_accept(server, addr, addrsize);

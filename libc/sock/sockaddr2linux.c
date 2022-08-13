@@ -19,6 +19,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
+#include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/errfuns.h"

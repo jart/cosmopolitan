@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/clock.h"

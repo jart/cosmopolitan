@@ -4,6 +4,7 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/timeval.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "third_party/python/Include/abstract.h"
