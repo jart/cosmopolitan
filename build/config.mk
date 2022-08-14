@@ -15,7 +15,7 @@ CONFIG_CCFLAGS +=		\
 	$(BACKTRACES)		\
 	$(FTRACE)		\
 	-DSYSDEBUG		\
-	-Og
+	-O2
 TARGET_ARCH ?=			\
 	-msse3
 endif
