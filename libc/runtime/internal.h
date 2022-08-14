@@ -29,7 +29,6 @@ extern unsigned char _tls_content[];
 void _init(void) hidden;
 void __enable_tls(void);
 void __enable_threads(void) hidden;
-void __restorewintty(void) hidden;
 void *__cxa_finalize(void *) hidden;
 void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;

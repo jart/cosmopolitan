@@ -4,7 +4,6 @@
 #include "libc/log/log.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/time/time.h"
 #if 1
 
 #define START() \

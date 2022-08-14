@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
@@ -29,6 +30,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 

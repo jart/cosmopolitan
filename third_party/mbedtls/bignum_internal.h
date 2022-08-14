@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BIGNUM_INTERNAL_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_BIGNUM_INTERNAL_H_
-#include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/platform.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

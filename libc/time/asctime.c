@@ -1,5 +1,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/str/str.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
 #include "third_party/python/Include/object.h"

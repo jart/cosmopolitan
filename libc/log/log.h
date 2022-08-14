@@ -1,19 +1,14 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LOG_H_
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/likely.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § liblog                                                    ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define kLogFatal   0
 #define kLogError   1
@@ -65,9 +60,6 @@ void CheckForMemoryLeaks(void);
 
 #define showcrashreports() ShowCrashReports()
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § liblog » logging                                          ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 #ifndef __STRICT_ANSI__
 
 extern unsigned __log_level; /* log level for runtime check */
@@ -194,10 +186,6 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                                                \
   } while (0)
 
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § liblog » on error resume next                             ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
 #define LOGIFNEG1(FORM)                                           \
   ({                                                              \
     int e = errno;                                                \
@@ -223,10 +211,6 @@ extern unsigned __log_level; /* log level for runtime check */
     }                                        \
     Ax;                                      \
   })
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § liblog » implementation details                           ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 void __logerrno(const char *, int, const char *) relegated;
 

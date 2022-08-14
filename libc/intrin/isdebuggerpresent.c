@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"

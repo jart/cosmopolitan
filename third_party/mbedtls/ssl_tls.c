@@ -6142,7 +6142,7 @@ static int ssl_session_load( mbedtls_ssl_session *session,
     start = Read64be(p);
     p += 8;
 
-    session->start = (time_t) start;
+    session->start = (int64_t) start;
 #endif /* MBEDTLS_HAVE_TIME */
 
     /*

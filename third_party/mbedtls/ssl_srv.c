@@ -18,6 +18,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
+#include "libc/time/time.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/debug.h"
 #include "third_party/mbedtls/ecp.h"

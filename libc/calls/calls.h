@@ -192,6 +192,7 @@ int unlink(const char *);
 int unlink_s(const char **);
 int unlinkat(int, const char *, int);
 int unveil(const char *, const char *);
+int usleep(unsigned);
 int vfork(void) returnstwice;
 int wait(int *);
 int waitpid(int, int *, int);

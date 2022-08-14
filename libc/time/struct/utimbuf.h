@@ -8,6 +8,8 @@ struct utimbuf {
   int64_t modtime; /* modified time */
 };
 
+int utime(const char *, const struct utimbuf *);
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_TIME_STRUCT_UTIMBUF_H_ */

@@ -33,8 +33,6 @@ typedef struct mbedtls_chachapoly_context
 }
 mbedtls_chachapoly_context;
 
-#else /* !MBEDTLS_CHACHAPOLY_ALT */
-/* #include "third_party/mbedtls/chachapoly_alt.h" */
 #endif /* !MBEDTLS_CHACHAPOLY_ALT */
 
 /**

@@ -41,6 +41,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "third_party/finger/finger.h"
 // clang-format off

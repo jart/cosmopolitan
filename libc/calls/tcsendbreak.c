@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/time/time.h"
 
 int tcsendbreak(int fd, int len) {
   if (!IsBsd()) {

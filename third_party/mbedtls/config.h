@@ -1,12 +1,5 @@
 #ifndef MBEDTLS_CONFIG_H_
 #define MBEDTLS_CONFIG_H_
-#include "libc/dce.h"
-
-/* /\* uncomment for testing old cpu code paths *\/ */
-/* #include "libc/nexgen32e/x86feature.h" */
-/* #undef X86_HAVE */
-/* #define X86_HAVE(x) 0 */
-/* #undef __x86_64__ */
 
 /* protocols */
 #define MBEDTLS_SSL_PROTO_TLS1_2
@@ -146,7 +139,7 @@
 #define MBEDTLS_ZLIB_SUPPORT
 #endif
 
-#if IsModeDbg()
+#ifdef MODE_DBG
 #define MBEDTLS_CHECK_PARAMS
 #endif
 

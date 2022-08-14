@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -25,7 +24,9 @@
 #include "libc/elf/struct/rela.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

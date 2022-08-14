@@ -29,8 +29,6 @@ typedef struct {
     mbedtls_cipher_context_t cipher_ctx;    /*!< The cipher context used. */
 } mbedtls_nist_kw_context;
 
-#else  /* MBEDTLS_NIST_key wrapping_ALT */
-/* #include "third_party/mbedtls/nist_kw_alt.h" */
 #endif /* MBEDTLS_NIST_KW_ALT */
 
 /**

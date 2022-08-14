@@ -20,6 +20,7 @@
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
 textstartup static void strftime_test_init(void) {

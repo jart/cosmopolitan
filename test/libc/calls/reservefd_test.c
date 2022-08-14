@@ -28,9 +28,9 @@
 #include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/itimer.h"
@@ -43,6 +43,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
 STATIC_YOINK("zip_uri_support");

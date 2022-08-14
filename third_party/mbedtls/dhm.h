@@ -47,8 +47,6 @@ typedef struct mbedtls_dhm_context
 }
 mbedtls_dhm_context;
 
-#else /* MBEDTLS_DHM_ALT */
-/* #include "third_party/mbedtls/dhm_alt.h" */
 #endif /* MBEDTLS_DHM_ALT */
 
 /**

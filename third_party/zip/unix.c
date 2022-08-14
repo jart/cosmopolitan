@@ -7,6 +7,7 @@
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/calls/calls.h"
 #include "third_party/zip/osdep.h"
+#include "libc/time/struct/utimbuf.h"
 #include "libc/sysv/consts/dt.h"
 
 /*

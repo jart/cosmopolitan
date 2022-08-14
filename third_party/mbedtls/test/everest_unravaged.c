@@ -1,5 +1,6 @@
 #include "libc/intrin/bits.h"
 #include "libc/limits.h"
+#include "libc/time/time.h"
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/common.h"

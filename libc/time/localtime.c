@@ -12,6 +12,7 @@
 #include "libc/runtime/gc.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
 #include "libc/time/tzfile.internal.h"

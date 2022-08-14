@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_LOG_GDB_H_
 #include "libc/calls/calls.h"
 #include "libc/calls/wait4.h"
+#include "libc/dce.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/w.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

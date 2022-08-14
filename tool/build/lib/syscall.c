@@ -76,6 +76,7 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/struct/timezone.h"
+#include "libc/time/struct/utimbuf.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/mbedtls/endian.h"

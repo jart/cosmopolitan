@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_H_
 #define COSMOPOLITAN_THIRD_PARTY_MBEDTLS_ECP_H_
-#include "libc/log/backtrace.internal.h"
 #include "third_party/mbedtls/bignum.h"
 #include "third_party/mbedtls/config.h"
 COSMOPOLITAN_C_START_
@@ -233,8 +232,6 @@ mbedtls_ecp_group;
 
 /* \} name SECTION: Module settings */
 
-#else  /* MBEDTLS_ECP_ALT */
-/* #include "third_party/mbedtls/ecp_alt.h" */
 #endif /* MBEDTLS_ECP_ALT */
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)

@@ -99,3 +99,27 @@ o/$(MODE)/%.lua.runs: %.lua o/$(MODE)/tool/net/redbean.com
 o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/assimilate.com
 	@$(COMPILE) -wACP -T$@ o/$(MODE)/tool/build/cp.com $< $@
 	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
+
+################################################################################
+# strict header checking
+# these rules are unsandboxed since they're kind of a sandboxing test themselves
+
+o/%.h.ok: .UNSANDBOXED = 1
+o/%.h.ok: %.h
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+
+o/$(MODE)/%.h.ok: .UNSANDBOXED = 1
+o/$(MODE)/%.h.ok: %.h
+	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
+
+o/$(MODE)/%.hh.ok: .UNSANDBOXED = 1
+o/$(MODE)/%.hh.ok: %.hh
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+
+o/%.okk: .UNSANDBOXED = 1
+o/%.okk: %
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+
+o/$(MODE)/%.okk: .UNSANDBOXED = 1
+o/$(MODE)/%.okk: %
+	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<

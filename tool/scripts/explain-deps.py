@@ -5,17 +5,17 @@ import re
 import sys
 
 def GetDeps(path):
-  deps = set()
-  def Dive(path, depth):
-    if path in deps:
+  def Dive(path, depth, visited):
+    sys.stdout.write('%s%s' % ('\t' * depth, path))
+    if path in visited:
+      sys.stdout.write(' cycle\n')
       return
-    deps.add(path)
-    sys.stdout.write('%s%s\n' % ('\t' * depth, path))
+    sys.stdout.write('\n')
     with open(path) as f:
       code = f.read()
     for dep in re.findall(r'[.#]include "([^"]+)"', code):
-      Dive(dep, depth + 1)
-  Dive(path, 0)
+      Dive(dep, depth + 1, visited + [path])
+  Dive(path, 0, [])
   sys.stdout.write('\n')
 
 for arg in sys.argv[1:]:

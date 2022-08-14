@@ -30,6 +30,7 @@
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"

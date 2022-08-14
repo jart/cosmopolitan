@@ -29,8 +29,6 @@ typedef struct mbedtls_poly1305_context
 }
 mbedtls_poly1305_context;
 
-#else  /* MBEDTLS_POLY1305_ALT */
-/* #include "third_party/mbedtls/poly1305_alt.h" */
 #endif /* MBEDTLS_POLY1305_ALT */
 
 /**

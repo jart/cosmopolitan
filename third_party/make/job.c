@@ -1773,7 +1773,11 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                (STRING_SIZE_TUPLE(".UNSANDBOXED"))) &&
       (!c || !Vartoi (lookup_variable_in_set
                       (STRING_SIZE_TUPLE(".UNSANDBOXED"),
-                       c->file->variables->set))));
+                       c->file->variables->set))) &&
+      (!c || !c->file->pat_variables ||
+       !Vartoi (lookup_variable_in_set
+                (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                 c->file->pat_variables->set))));
 
   /* resolve command into executable path */
   if (!g_strict || !sandboxed)
@@ -1919,6 +1923,12 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
              (lookup_variable_in_set
               (STRING_SIZE_TUPLE (".UNVEIL"),
                c->file->variables->set)));
+          if (c->file->pat_variables)
+            RETURN_ON_ERROR
+              (UnveilVariable
+               (lookup_variable_in_set
+                (STRING_SIZE_TUPLE (".UNVEIL"),
+                 c->file->pat_variables->set)));
 
           /* commit sandbox */
           RETURN_ON_ERROR (Unveil (0, 0));

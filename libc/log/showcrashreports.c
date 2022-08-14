@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
+#include "libc/errno.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

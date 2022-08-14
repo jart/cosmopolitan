@@ -1,4 +1,5 @@
 #include "libc/calls/weirdtypes.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
 char *ctime(const time_t *timep) {
