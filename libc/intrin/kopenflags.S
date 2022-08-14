@@ -40,10 +40,10 @@ kOpenFlags:
 	.e	O_TRUNC,"TRUNC"			//
 	.e	O_CLOEXEC,"CLOEXEC"		//
 	.e	O_NONBLOCK,"NONBLOCK"		//
-	.e	O_DIRECTORY,"DIRECTORY"		//
+	.e	O_TMPFILE,"TMPFILE"		// linux, windows
+	.e	O_DIRECTORY,"DIRECTORY"		// order matters
 	.e	O_DIRECT,"DIRECT"		// no-op on xnu/openbsd
 	.e	O_APPEND,"APPEND"		// weird on nt
-	.e	O_TMPFILE,"TMPFILE"		// linux, windows
 	.e	O_NOFOLLOW,"NOFOLLOW"		// unix
 	.e	O_SYNC,"SYNC"			// unix
 	.e	O_ASYNC,"ASYNC"			// unix

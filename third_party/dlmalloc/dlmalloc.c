@@ -1,17 +1,17 @@
 #include "libc/assert.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -342,8 +342,8 @@ static int sys_trim(mstate m, size_t pad) {
             size_t newsize = sp->size - extra;
             (void)newsize; /* placate people compiling -Wunused-variable */
             /* Prefer mremap, fall back to munmap */
-            if ((CALL_MREMAP(sp->base, sp->size, newsize, 0) != MFAIL) ||
-                (CALL_MUNMAP(sp->base + newsize, extra) == 0)) {
+            if (CALL_MREMAP(sp->base, sp->size, newsize, 0) != MFAIL ||
+                (!extra || !CALL_MUNMAP(sp->base + newsize, extra))) {
               released = extra;
             }
           }

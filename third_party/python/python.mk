@@ -2082,6 +2082,20 @@ o/$(MODE)/third_party/python/pythontester.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+# if these files exist, then python will try to open them
+o/$(MODE)/third_party/python/Lib/test/test_robotparser.py.runs		\
+o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs: private	\
+		.UNVEIL +=						\
+			/etc/mime.types					\
+			/etc/httpd/mime.types				\
+			/etc/httpd/conf/mime.types			\
+			/etc/apache/mime.types				\
+			/etc/apache2/mime.types				\
+			/usr/local/etc/httpd/conf/mime.types		\
+			/usr/local/lib/netscape/mime.types		\
+			/usr/local/etc/httpd/conf/mime.types		\
+			/usr/local/etc/mime.types
+
 o/$(MODE)/third_party/python/Lib/test/test_grammar.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_grammar $(PYTESTARGS)

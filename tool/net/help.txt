@@ -2361,7 +2361,6 @@ UNIX MODULE
      - `O_NONBLOCK`   asks read/write to fail with EAGAIN rather than block
      - `O_DIRECT`     it's complicated (not supported on Apple and OpenBSD)
      - `O_DIRECTORY`  useful for stat'ing (hint on UNIX but required on NT)
-     - `O_TMPFILE`    try to make temp more secure (Linux and Windows only)
      - `O_NOFOLLOW`   fail if it's a symlink (zero on Windows)
      - `O_DSYNC`      it's complicated (zero on non-Linux/Apple)
      - `O_RSYNC`      it's complicated (zero on non-Linux/Apple)
@@ -4200,6 +4199,25 @@ UNIX MODULE
       └─→ nil, unix.Errno
 
     Returns cellular dimensions of pseudoteletypewriter display.
+
+  unix.tmpfd()
+      ├─→ fd:int
+      └─→ nil, unix.Errno
+
+    Returns file descriptor of open anonymous file.
+
+    This creates a secure temporary file inside `$TMPDIR`. If it isn't
+    defined, then `/tmp` is used on UNIX and GetTempPath() is used on
+    the New Technology. This resolution of `$TMPDIR` happens once in a
+    ctor, which is copied to the `kTmpDir` global.
+
+    Once close() is called, the returned file is guaranteed to be
+    deleted automatically. On UNIX the file is unlink()'d before this
+    function returns. On the New Technology it happens upon close().
+
+    On the New Technology, temporary files created by this function
+    should have better performance, because `kNtFileAttributeTemporary`
+    asks the kernel to more aggressively cache and reduce i/o ops.
 
 
 ────────────────────────────────────────────────────────────────────────────────

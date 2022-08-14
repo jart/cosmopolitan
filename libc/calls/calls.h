@@ -184,6 +184,7 @@ int sys_ptrace(int, ...);
 int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
 int tgkill(int, int, int);
 int tkill(int, int);
+int tmpfd(void);
 int touch(const char *, uint32_t);
 int truncate(const char *, uint64_t);
 int ttyname_r(int, char *, size_t);

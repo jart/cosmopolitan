@@ -948,6 +948,14 @@ static int LuaUnixOpen(lua_State *L) {
              luaL_optinteger(L, 2, O_RDONLY), luaL_optinteger(L, 3, 0)));
 }
 
+// unix.tmpfd()
+//     ├─→ fd:int
+//     └─→ nil, unix.Errno
+static int LuaUnixTmpfd(lua_State *L) {
+  int olderr = errno;
+  return SysretInteger(L, "tmpfd", olderr, tmpfd());
+}
+
 // unix.close(fd:int)
 //     ├─→ true
 //     └─→ nil, unix.Errno
@@ -2640,6 +2648,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"sync", LuaUnixSync},                // flushes files and disks
     {"syslog", LuaUnixSyslog},            // logs to system log
     {"tiocgwinsz", LuaUnixTiocgwinsz},    // pseudoteletypewriter dimensions
+    {"tmpfd", LuaUnixTmpfd},              // create anonymous file
     {"truncate", LuaUnixTruncate},        // shrink or extend file medium
     {"umask", LuaUnixUmask},              // set default file mask
     {"unlink", LuaUnixUnlink},            // remove file

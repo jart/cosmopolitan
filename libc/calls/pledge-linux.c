@@ -1939,12 +1939,9 @@ privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
   } else {
     // non-trapping mode
     //
-    // 1. our sigsys error message handler can't be inherited across
-    //    execve() boundaries so if you've pledged exec then that'll
-    //    mean no error messages for you.
-    //
-    // 2. we do not trap pledge("", 0) because that would go against
-    //    its documented purpose of only permitted exit().
+    // our sigsys error message handler can't be inherited across
+    // execve() boundaries so if you've pledged exec then that'll
+    // likely cause a SIGSYS in your child after the exec happens
     switch (mode & PLEDGE_PENALTY_MASK) {
       case PLEDGE_PENALTY_KILL_THREAD:
         sf[0].k = SECCOMP_RET_KILL_THREAD;

@@ -1753,7 +1753,7 @@ unveil_variable (const struct variable *var)
   char *val, *tok, *state, *start;
   if (!var) return 0;
   start = val = xstrdup (variable_expand (var->value));
-  while (tok = strtok_r (start, " \t\r\n", &state))
+  while ((tok = strtok_r (start, " \t\r\n", &state)))
     {
       RETURN_ON_ERROR (Unveil (tok, "r"));
       start = 0;
@@ -1808,15 +1808,6 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (stack_limit.rlim_cur)
     setrlimit (RLIMIT_STACK, &stack_limit);
 
-  /* For any redirected FD, dup2() it to the standard FD.
-     They are all marked close-on-exec already.  */
-  if (fdin >= 0 && fdin != FD_STDIN)
-    EINTRLOOP (r, dup2 (fdin, FD_STDIN));
-  if (fdout != FD_STDOUT)
-    EINTRLOOP (r, dup2 (fdout, FD_STDOUT));
-  if (fderr != FD_STDERR)
-    EINTRLOOP (r, dup2 (fderr, FD_STDERR));
-
   g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE (".STRICT")));
 
   intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
@@ -1846,7 +1837,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         {
           OSS (error, NILF, "%s: command not found on $PATH: %s",
                argv[0], strerror (errno));
-          return -1;
+          _Exit (127);
         }
     }
 
@@ -1955,7 +1946,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                 {
                   OSS (error, NILF, "%s: touch target failed %s",
                        c->file->name, strerror (errno));
-                  return -1;
+                  _Exit (127);
                 }
               DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
                             c->file->name, "rwx"));
@@ -1963,7 +1954,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                 {
                   OSS (error, NILF, "%s: unveil target failed %s",
                        c->file->name, strerror (errno));
-                  return -1;
+                  _Exit (127);
                 }
             }
 
@@ -2001,16 +1992,20 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         }
     }
 
+  /* For any redirected FD, dup2() it to the standard FD.
+     They are all marked close-on-exec already.  */
+  if (fdin >= 0 && fdin != FD_STDIN)
+    EINTRLOOP (r, dup2 (fdin, FD_STDIN));
+  if (fdout != FD_STDOUT)
+    EINTRLOOP (r, dup2 (fdout, FD_STDOUT));
+  if (fderr != FD_STDERR)
+    EINTRLOOP (r, dup2 (fderr, FD_STDERR));
+
   /* Run the command.  */
   exec_command (argv, child->environment);
 
-  if (pid < 0)
-    OSS (error, NILF, "%s: exec_command failed: %s",
-         argv[0], strerror (r));
-
-  return pid;
  OnError:
-  return -1;
+  _Exit (127);
 }
 
 
@@ -2029,7 +2024,7 @@ exec_command (char **argv, char **envp)
   if(errno == ENOENT)
     OSS (error, NILF, "%s: command doesn't exist: %s",
          argv[0], strerror (errno));
-  else if(!g_strict && errno == ENOEXEC)
+  else if(errno == ENOEXEC)
   {
     /* The file was not a program.  Try it as a shell script.  */
     const char *shell;
@@ -2063,7 +2058,7 @@ exec_command (char **argv, char **envp)
   OSS (error, NILF, "%s: execv failed: %s",
        argv[0], strerror (errno));
 
-  _exit (127);
+  _Exit (127);
 }
 
 
