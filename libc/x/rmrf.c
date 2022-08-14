@@ -58,6 +58,8 @@ static int rmrfdir(const char *dirpath) {
 
 /**
  * Recursively removes file or directory.
+ *
+ * @return 0 on success, or -1 w/ errno
  */
 int rmrf(const char *path) {
   int e;

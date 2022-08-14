@@ -1,4 +1,3 @@
-/* clang-format off */
 /* Job execution and handling for GNU Make.
 Copyright (C) 1988-2020 Free Software Foundation, Inc.
 This file is part of GNU Make.
@@ -21,55 +20,40 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/filedef.h"
 #include "third_party/make/job.h"
 /**/
-#include "third_party/make/commands.h"
-#include "third_party/make/os.h"
-#include "third_party/make/variable.h"
-#include "libc/log/log.h"
-#include "libc/runtime/stack.h"
-#include "libc/calls/calls.h"
-#include "libc/x/x.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/x/x.h"
-#include "libc/runtime/runtime.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/elf/struct/ehdr.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/elf/def.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/elf/struct/phdr.h"
-#include "libc/elf/def.h"
-#include "libc/elf/elf.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/calls/struct/timeval.h"
-#include "libc/x/x.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/time/time.h"
-#include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/assert.h"
-#include "libc/sysv/consts/pr.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
-#include "libc/calls/struct/filter.h"
-#include "libc/sysv/consts/pr.h"
-#include "libc/sysv/consts/pr.h"
-#include "libc/sysv/consts/audit.h"
-#include "libc/sysv/consts/nrlinux.h"
-#include "libc/macros.internal.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/elf/def.h"
+#include "libc/elf/elf.h"
+#include "libc/elf/struct/ehdr.h"
+#include "libc/elf/struct/phdr.h"
+#include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/log/log.h"
 #include "libc/log/rop.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/audit.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/nrlinux.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/pr.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/time/time.h"
+#include "libc/x/x.h"
+#include "third_party/make/commands.h"
 #include "third_party/make/dep.h"
+#include "third_party/make/os.h"
+#include "third_party/make/variable.h"
+// clang-format off
 
 #define GOTO_SLOW                                       \
   do {                                                  \
@@ -391,6 +375,134 @@ child_error (struct child *child,
 }
 
 
+/* [jart] manage temporary directories per rule */
+
+const char *
+get_tmpdir (struct file *file)
+{
+  const struct variable *var;
+  if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE("TMPDIR"),
+                                     file->variables->set)) ||
+      (file->pat_variables &&
+       (var = lookup_variable_in_set (STRING_SIZE_TUPLE("TMPDIR"),
+                                      file->pat_variables->set))) ||
+      (var = lookup_variable (STRING_SIZE_TUPLE("TMPDIR"))))
+    return variable_expand (var->value);
+  else
+    return kTmpPath;
+}
+
+char *
+new_tmpdir (const char *tmp, struct file *file)
+{
+  const char *s;
+  int c, e, i, j;
+  char *dir, *tmpdir;
+  char cwd[PATH_MAX];
+  char path[PATH_MAX];
+
+  /* create temporary directory in tmp */
+  i = 0;
+
+  /* ensure tmpdir will be absolute */
+  if (tmp[0] != '/')
+    {
+      if (getcwd(cwd, sizeof(cwd)))
+        {
+          for (j = 0; cwd[j]; ++j)
+            if (i < PATH_MAX)
+              path[i++] = cwd[j];
+          if (i && path[i - 1] != '/')
+            if (i < PATH_MAX)
+              path[i++] = '/';
+        }
+      else
+        DB (DB_JOBS, (_("Failed to get current directory\n")));
+    }
+
+  /* copy old tmpdir */
+  for (j = 0; tmp[j]; ++j)
+    if (i < PATH_MAX)
+      path[i++] = tmp[j];
+
+  /* append slash */
+  if (i && path[i - 1] != '/')
+    if (i < PATH_MAX)
+      path[i++] = '/';
+
+  /* append target name safely */
+  for (j = 0; (c = file->name[j]); ++j)
+    {
+      if (isalnum(c))
+        c = tolower(c);
+      else
+        c = '_';
+      if (i < PATH_MAX)
+        path[i++] = c;
+    }
+
+  /* copy random template */
+  s = ".XXXXXX";
+  for (j = 0; s[j]; ++j)
+    if (i < PATH_MAX)
+      path[i++] = s[j];
+
+  /* add nul terminator */
+  if (i + 11 < PATH_MAX)
+    path[i] = 0;
+  else
+    {
+      DB (DB_JOBS, (_("Creating TMPDIR in %s for %s is too long\n"),
+                    tmp, file->name));
+      return 0;
+    }
+
+  /* create temp directory with random data */
+  e = errno;
+  if (!(tmpdir = mkdtemp (path)) && errno == ENOENT)
+    {
+      /* create parent directories if necessary */
+      char *dir;
+      errno = e;
+      dir = xstrdup (path);
+      if (!makedirs (dirname (dir), 0700))
+        tmpdir = mkdtemp (path);
+      free (dir);
+    }
+
+  /* returned string must be free'd */
+  if (tmpdir)
+    {
+      tmpdir = xstrdup (tmpdir);
+      DB (DB_JOBS, (_("Created TMPDIR %s\n"), path));
+    }
+  else
+    DB (DB_JOBS, (_("Creating TMPDIR %s failed %s\n"),
+                  path, strerror (errno)));
+
+  return tmpdir;
+}
+
+void
+delete_tmpdir (struct child *c)
+{
+  if (!c->tmpdir) return;
+
+  DB (DB_JOBS, (_("Deleting TMPDIR %s\n"), c->tmpdir));
+
+  if (!isdirectory (c->tmpdir))
+    DB (DB_JOBS, (_("Warning TMPDIR %s doesn't exist\n"), c->tmpdir));
+
+  errno = 0;
+  if (rmrf (c->tmpdir))
+    DB (DB_JOBS, (_("Deleting TMPDIR %s failed %s\n"),
+                  c->tmpdir, strerror(errno)));
+
+  free (c->tmpdir);
+  c->tmpdir = 0;
+}
+
+
 /* Handle a dead child.  This handler may or may not ever be installed.
 
    If we're using the jobserver feature without pselect(), we need it.
@@ -642,6 +754,7 @@ reap_children (int block, int err)
             }
           if (exit_sig != 0 || delete_on_error)
             delete_child_targets (c);
+          delete_tmpdir (c);
         }
       else
         {
@@ -693,10 +806,13 @@ reap_children (int block, int err)
                 delete_child_targets (c);
             }
           else
-            /* There are no more commands.  We got through them all
-               without an unignored error.  Now the target has been
-               successfully updated.  */
-            c->file->update_status = us_success;
+            {
+              /* There are no more commands.  We got through them all
+                 without an unignored error.  Now the target has been
+                 successfully updated.  */
+              c->file->update_status = us_success;
+              delete_tmpdir (c);
+            }
         }
 
       /* When we get here, all the commands for c->file are finished.  */
@@ -800,6 +916,7 @@ free_child (struct child *child)
       free (child->environment);
     }
 
+  free (child->tmpdir);
   free (child->cmd_name);
   free (child);
 }
@@ -1133,10 +1250,12 @@ start_waiting_job (struct child *c)
 void
 new_job (struct file *file)
 {
+
   struct commands *cmds = file->cmds;
+  struct variable *var;
   struct child *c;
-  char **lines;
   unsigned int i;
+  char **lines;
 
   /* Let any previously decided-upon jobs that are waiting
      for the load to go down start before this new one.  */
@@ -1156,6 +1275,14 @@ new_job (struct file *file)
 
   c->file = file;
   c->sh_batch_file = NULL;
+
+  /* [jart] manage temporary directories per rule */
+  if ((c->tmpdir = new_tmpdir (get_tmpdir (file), file)))
+    {
+      var = define_variable_for_file ("TMPDIR", 6, c->tmpdir,
+                                      o_override, 0, file);
+      var->export = v_export;
+    }
 
   /* Cache dontcare flag because file->dontcare can be changed once we
      return. Check dontcare inheritance mechanism for details.  */
@@ -1473,82 +1600,11 @@ load_too_high (void)
      OK, I'm not sure exactly how to handle that, but for sure we need to
      clamp this value at the number of cores before this can be enabled.
    */
-#define PROC_FD_INIT -1
-  static int proc_fd = PROC_FD_INIT;
-
   double load, guess;
   time_t now;
 
-#ifdef WINDOWS32
-  /* sub_proc.c is limited in the number of objects it can wait for. */
-  if (process_table_full ())
-    return 1;
-#endif
-
   if (max_load_average < 0)
     return 0;
-
-  /* If we haven't tried to open /proc/loadavg, try now.  */
-#define LOADAVG "/proc/loadavg"
-  if (proc_fd == -2)
-    {
-      EINTRLOOP (proc_fd, open (LOADAVG, O_RDONLY));
-      if (proc_fd < 0)
-        DB (DB_JOBS, ("Using system load detection method.\n"));
-      else
-        {
-          DB (DB_JOBS, ("Using " LOADAVG " load detection method.\n"));
-          fd_noinherit (proc_fd);
-        }
-    }
-
-  /* Try to read /proc/loadavg if we managed to open it.  */
-  if (proc_fd >= 0)
-    {
-      int r;
-
-      EINTRLOOP (r, lseek (proc_fd, 0, SEEK_SET));
-      if (r >= 0)
-        {
-#define PROC_LOADAVG_SIZE 64
-          char avg[PROC_LOADAVG_SIZE+1];
-
-          EINTRLOOP (r, read (proc_fd, avg, PROC_LOADAVG_SIZE));
-          if (r >= 0)
-            {
-              const char *p;
-
-              /* The syntax of /proc/loadavg is:
-                    <1m> <5m> <15m> <running>/<total> <pid>
-                 The load is considered too high if there are more jobs
-                 running than the requested average.  */
-
-              avg[r] = '\0';
-              p = strchr (avg, ' ');
-              if (p)
-                p = strchr (p+1, ' ');
-              if (p)
-                p = strchr (p+1, ' ');
-
-              if (p && ISDIGIT(p[1]))
-                {
-                  int cnt = atoi (p+1);
-                  DB (DB_JOBS, ("Running: system = %d / make = %u (max requested = %f)\n",
-                                cnt, job_slots_used, max_load_average));
-                  return (double)cnt > max_load_average;
-                }
-
-              DB (DB_JOBS, ("Failed to parse " LOADAVG ": %s\n", avg));
-            }
-        }
-
-      /* If we 𝑔𝑜𝑡 𝑕𝑒𝑟𝑒, something went wrong.  Give up on this method.  */
-      if (r < 0)
-        DB (DB_JOBS, ("Failed to read " LOADAVG ": %s\n", strerror (errno)));
-
-      close (proc_fd);
-      proc_fd = -1;
-    }
 
   /* Find the real system load average.  */
   make_access ();
@@ -1622,7 +1678,7 @@ start_waiting_jobs (void)
 
 
 bool
-GetPermPrefix (const char *path, char out_perm[5], const char **out_path)
+get_perm_prefix (const char *path, char out_perm[5], const char **out_path)
 {
   int c, n;
   for (n = 0;;)
@@ -1656,7 +1712,7 @@ Unveil (const char *path, const char *perm)
   char permprefix[5];
 
   /* if path is like `rwcx:o/tmp` then `rwcx` will override perm */
-  if (path && GetPermPrefix (path, permprefix, &path))
+  if (path && get_perm_prefix (path, permprefix, &path))
     perm = permprefix;
 
   fp[0] = 0;
@@ -1664,6 +1720,8 @@ Unveil (const char *path, const char *perm)
   if (path && path[0] == '~' &&
       (fp[1] = tilde_expand ((fp[0] = xstrdup (path)))))
     path = fp[1];
+
+  DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"), path, perm));
 
   e = errno;
   if (unveil (path, perm) != -1)
@@ -1690,7 +1748,7 @@ Unveil (const char *path, const char *perm)
 }
 
 int
-UnveilVariable (const struct variable *var)
+unveil_variable (const struct variable *var)
 {
   char *val, *tok, *state, *start;
   if (!var) return 0;
@@ -1759,7 +1817,7 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (fderr != FD_STDERR)
     EINTRLOOP (r, dup2 (fderr, FD_STDERR));
 
-  g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE(".STRICT")));
+  g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE (".STRICT")));
 
   intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
   if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
@@ -1798,6 +1856,8 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
       errno = 0;
       if (sandboxed)
         {
+          DB (DB_JOBS, (_("Sandboxing %s\n"), c->file->name));
+
           if (!g_strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
             {
               /*
@@ -1854,10 +1914,14 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
           /* unveil executable */
           RETURN_ON_ERROR (Unveil (argv[0], "rx"));
 
+          /* unveil temporary directory */
+          if (c->tmpdir)
+            RETURN_ON_ERROR (Unveil (c->tmpdir, "rwcx"));
+
+          /* unveil lazy mode files */
           if (!g_strict)
             {
               RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
-              RETURN_ON_ERROR (Unveil ("o/tmp", "rwcx"));
               RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
               RETURN_ON_ERROR (Unveil ("/dev/null", "rw"));
               RETURN_ON_ERROR (Unveil ("/dev/full", "rw"));
@@ -1893,6 +1957,8 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                        c->file->name, strerror (errno));
                   return -1;
                 }
+              DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
+                            c->file->name, "rwx"));
               if (unveil (c->file->name, "rwx") && errno != ENOSYS)
                 {
                   OSS (error, NILF, "%s: unveil target failed %s",
@@ -1915,17 +1981,17 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
 
           /* unveil explicit .UNVEIL entries */
           RETURN_ON_ERROR
-            (UnveilVariable
+            (unveil_variable
              (lookup_variable
               (STRING_SIZE_TUPLE (".UNVEIL"))));
           RETURN_ON_ERROR
-            (UnveilVariable
+            (unveil_variable
              (lookup_variable_in_set
               (STRING_SIZE_TUPLE (".UNVEIL"),
                c->file->variables->set)));
           if (c->file->pat_variables)
             RETURN_ON_ERROR
-              (UnveilVariable
+              (unveil_variable
                (lookup_variable_in_set
                 (STRING_SIZE_TUPLE (".UNVEIL"),
                  c->file->pat_variables->set)));

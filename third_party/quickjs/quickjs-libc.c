@@ -615,24 +615,6 @@ static JSValue js_std_getenv(JSContext *ctx, JSValueConst this_val,
         return JS_NewString(ctx, str);
 }
 
-#if defined(_WIN32)
-static void setenv(const char *name, const char *value, int overwrite)
-{
-    char *str;
-    size_t name_len, value_len;
-    name_len = strlen(name);
-    value_len = strlen(value);
-    str = malloc(name_len + 1 + value_len + 1);
-    memcpy(str, name, name_len);
-    str[name_len] = '=';
-    memcpy(str + name_len + 1, value, value_len);
-    str[name_len + 1 + value_len] = '\0';
-    _putenv(str);
-    free(str);
-}
-
-#endif /* _WIN32 */
-
 static JSValue js_std_setenv(JSContext *ctx, JSValueConst this_val,
                            int argc, JSValueConst *argv)
 {

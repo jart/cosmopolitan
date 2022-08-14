@@ -83,7 +83,6 @@ o/$(MODE):			\
 
 .STRICT = 1
 .UNVEIL =			\
-	rwcx:o/tmp		\
 	libc/integral		\
 	libc/disclaimer.inc	\
 	rx:build/bootstrap	\

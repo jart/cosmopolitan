@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -29,8 +27,10 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
@@ -88,7 +88,7 @@ wontreturn void testlib_abort(void) {
 
 static void SetupTmpDir(void) {
   char *p = g_testlib_tmpdir;
-  p = stpcpy(p, "o/tmp/");
+  p = stpcpy(p, kTmpPath);
   p = stpcpy(p, program_invocation_short_name), *p++ = '.';
   p = FormatInt64(p, getpid()), *p++ = '.';
   p = FormatInt64(p, x++);

@@ -65,7 +65,6 @@ THIRD_PARTY_MAKE_SRCS_LIB =				\
 	third_party/make/fcntl.c			\
 	third_party/make/fd-hook.c			\
 	third_party/make/findprog-in.c			\
-	third_party/make/getloadavg.c			\
 	third_party/make/getprogname.c			\
 	third_party/make/stripslash.c			\
 	third_party/make/unistd.c			\

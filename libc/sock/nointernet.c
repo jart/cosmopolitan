@@ -249,19 +249,12 @@ static int WaitForTrace(int main) {
     // eintr isn't possible since we're blocking all signals
     ORDIE(pid = waitpid(-1, &ws, __WALL));
     LogProcessEvent(main, pid, ws);
-    // once main child exits or dies, we exit / die the same way. we're
-    // not currently tracking pids, so it's important that a child does
-    // not exit before its children. otherwise the grandchildren get in
-    // a permanently stopped state. to address that, we'll send sigterm
-    // to the process group which we defined earlier.
     if (WIFEXITED(ws)) {
       if (pid == main) {
-        kill(-getpid(), SIGTERM);
         _Exit(WEXITSTATUS(ws));
       }
     } else if (WIFSIGNALED(ws)) {
       if (pid == main) {
-        kill(-getpid(), SIGTERM);
         Raise(WTERMSIG(ws));
       }
     } else if (WIFSTOPPED(ws)) {
@@ -293,12 +286,6 @@ int nointernet(void) {
   if (!IsLinux() || !__is_linux_2_6_23()) {
     return enosys();
   }
-
-  // ensure we're at the root of a process group, so we're able to
-  // broadcast a termination signal later on that catches dangling
-  // subprocesss our child forgot to destroy. without calling this
-  // subprocesses could end up permanently stopped if monitor dies
-  setpgrp();
 
   // prevent crash handlers from intercepting sigsegv
   ORDIE(sigfillset(&set));

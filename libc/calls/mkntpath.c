@@ -103,6 +103,20 @@ textwindows int __mkntpath2(const char *path,
     q += 3;
     z -= 7;
     x = 7;
+  } else if (IsSlash(q[0]) && IsAlpha(q[1]) && !q[2]) {
+    z = MIN(32767, PATH_MAX);
+    // turn "\c" into "\\?\c:\"
+    p[0] = '\\';
+    p[1] = '\\';
+    p[2] = '?';
+    p[3] = '\\';
+    p[4] = q[1];
+    p[5] = ':';
+    p[6] = '\\';
+    p += 7;
+    q += 2;
+    z -= 7;
+    x = 7;
   } else if (IsSlash(q[0]) && IsAlpha(q[1]) && IsSlash(q[2])) {
     z = MIN(32767, PATH_MAX);
     // turn "c:\foo" into "\\?\c:\foo"

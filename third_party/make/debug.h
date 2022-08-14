@@ -15,6 +15,8 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#include "libc/intrin/likely.h"
+
 #define DB_NONE         (0x000)
 #define DB_BASIC        (0x001)
 #define DB_VERBOSE      (0x002)
@@ -26,7 +28,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 extern int db_level;
 
-#define ISDB(_l)    ((_l)&db_level)
+#define ISDB(_l)    UNLIKELY((_l)&db_level)
 
 /* When adding macros to this list be sure to update the value of
    XGETTEXT_OPTIONS in the po/Makevars file.  */

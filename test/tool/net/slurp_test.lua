@@ -13,7 +13,7 @@
 -- TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 -- PERFORMANCE OF THIS SOFTWARE.
 
-tmpdir = "o/tmp/lunix_test.%d" % {unix.getpid()}
+tmpdir = "%s/o/tmp/lunix_test.%d" % {os.getenv('TMPDIR'), unix.getpid()}
 
 local function Path(name)
    return tmpdir .. '/' .. name

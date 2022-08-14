@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -67,7 +67,19 @@ TEST(fmodf, test) {
   EXPECT_STREQ("8e+20", gc(xdtoaf(fmodf(8e20, 32e20))));
 }
 
+BENCH(fmodf, bench) {
+  EZBENCH2("fmodf eze", donothing, fmodf(8, 32));
+  EZBENCH2("fmodf big", donothing, fmodf(5.319372648326541e+255, M_2_PI));
+}
+
 BENCH(fmod, bench) {
-  EZBENCH2("fmod eze", donothing, fmodl(8, 32));
-  EZBENCH2("fmod big", donothing, fmodl(5.319372648326541e+255, M_2_PI));
+  // fmod-tiny.S goes slow in the average case, fast for big case
+  EZBENCH2("fmod eze", donothing, fmod(8, 32));
+  // fmod.c goes fast for the average case very slow for big case
+  EZBENCH2("fmod big", donothing, fmod(5.319372648326541e+255, M_2_PI));
+}
+
+BENCH(fmodl, bench) {
+  EZBENCH2("fmodl eze", donothing, fmodl(8, 32));
+  EZBENCH2("fmodl big", donothing, fmodl(5.319372648326541e+255, M_2_PI));
 }

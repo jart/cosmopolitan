@@ -408,6 +408,7 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_cipher.padding.com.dbg:						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.runs: private .UNVEIL += rwc:o/tmp
 o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com: o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.dbg
 o/$(MODE)/third_party/mbedtls/test/test_suite_ctr_drbg.com.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
@@ -586,6 +587,7 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_hkdf.com.dbg:							\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.runs: private .UNVEIL += rwc:o/tmp
 o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com: o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.dbg
 o/$(MODE)/third_party/mbedtls/test/test_suite_hmac_drbg.misc.com.dbg:						\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\
@@ -668,6 +670,7 @@ o/$(MODE)/third_party/mbedtls/test/test_suite_memory_buffer_alloc.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.runs: private .UNVEIL += rwc:o/tmp
 o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com: o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.dbg
 o/$(MODE)/third_party/mbedtls/test/test_suite_mpi.com.dbg:							\
 		$(THIRD_PARTY_MBEDTLS_TEST_DEPS)								\

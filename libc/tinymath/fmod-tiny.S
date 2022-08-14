@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#ifdef TINY
 
 //	fmod [sic] does (𝑥 rem 𝑦) w/ round()-style rounding.
 //
@@ -28,3 +29,5 @@
 fmod:	ezlea	fmodl,ax
 	jmp	_d2ld2
 	.endfn	fmod,globl
+
+#endif /* TINY */

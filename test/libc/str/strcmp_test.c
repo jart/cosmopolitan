@@ -534,8 +534,8 @@ void longstringislong_dupe(size_t size, char data[size], char dupe[size]) {
 BENCH(bench_00_strcmp, bench) {
   size_t size;
   char *dupe, *data;
-  size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
-                   PAGESIZE);
+
+  size = 14139;
   data = gc(malloc(size));
   dupe = gc(malloc(size));
 
@@ -576,8 +576,7 @@ BENCH(bench_00_strcmp, bench) {
 BENCH(bench_01_strcasecmp, bench) {
   size_t size;
   char *dupe, *data;
-  size = ROUNDDOWN(MAX(FRAMESIZE, getcachesize(kCpuCacheTypeData, 1)) / 2,
-                   PAGESIZE);
+  size = 141393;
   data = gc(malloc(size));
   dupe = gc(malloc(size));
 

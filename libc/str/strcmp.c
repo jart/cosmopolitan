@@ -17,11 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
-
-static inline noasan uint64_t UncheckedAlignedRead64(const char *p) {
-  return *(uint64_t *)p;
-}
 
 /**
  * Compares NUL-terminated strings.
@@ -31,7 +28,7 @@ static inline noasan uint64_t UncheckedAlignedRead64(const char *p) {
  * @return is <0, 0, or >0 based on uint8_t comparison
  * @asyncsignalsafe
  */
-int strcmp(const char *a, const char *b) {
+noasan int strcmp(const char *a, const char *b) {
   int c;
   size_t i = 0;
   uint64_t v, w, d;
@@ -44,16 +41,20 @@ int strcmp(const char *a, const char *b) {
       }
     }
     for (;; i += 8) {
-      v = UncheckedAlignedRead64(a + i);
-      w = UncheckedAlignedRead64(b + i);
+      v = *(uint64_t *)(a + i);
+      w = *(uint64_t *)(b + i);
       w = (v ^ w) | (~v & (v - 0x0101010101010101) & 0x8080808080808080);
       if (w) {
         i += (unsigned)__builtin_ctzll(w) >> 3;
-        return (a[i] & 255) - (b[i] & 255);
+        break;
       }
     }
   } else {
     while (a[i] == b[i] && b[i]) ++i;
-    return (a[i] & 255) - (b[i] & 255);
   }
+  if (IsAsan()) {
+    __asan_verify(a, i + 1);
+    __asan_verify(b, i + 1);
+  }
+  return (a[i] & 255) - (b[i] & 255);
 }

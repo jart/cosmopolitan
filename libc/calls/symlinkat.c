@@ -51,6 +51,6 @@ int symlinkat(const char *target, int newdirfd, const char *linkpath) {
     rc = sys_symlinkat_nt(target, newdirfd, linkpath);
   }
   STRACE("symlinkat(%#s, %s, %#s) → %d% m", target, DescribeDirfd(newdirfd),
-         linkpath);
+         linkpath, rc);
   return rc;
 }

@@ -45,6 +45,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/runtime.h"
+#include "libc/log/log.h"
+#include "libc/log/log.h"
 #include "third_party/make/getopt.h"
 
 STATIC_STACK_SIZE(0x200000);  // 2mb stack
@@ -355,6 +357,10 @@ static const char *const usage[] =
                               Consider FILE to be infinitely new.\n"),
     N_("\
   --warn-undefined-variables  Warn when an undefined variable is referenced.\n"),
+    N_("\
+  --strace                    Log system calls.\n"),
+    N_("\
+  --ftrace                    Log function calls.\n"),
     NULL
   };
 
@@ -1101,11 +1107,7 @@ main (int argc, char **argv, char **envp)
 
   /* Figure out where we are.  */
 
-#ifdef WINDOWS32
-  if (getcwd_fs (current_directory, GET_PATH_MAX) == 0)
-#else
   if (getcwd (current_directory, GET_PATH_MAX) == 0)
-#endif
     {
 #ifdef  HAVE_GETCWD
       perror_with_name ("getcwd", "");
@@ -2980,7 +2982,7 @@ print_version (void)
     /* Do it only once.  */
     return;
 
-  printf ("%sLandlock Make 1.0.1 (GNU Make %s)\n", precede, version_string);
+  printf ("%sLandlock Make 1.1.1 (GNU Make %s)\n", precede, version_string);
 
   if (!remote_description || *remote_description == '\0')
     printf (_("%sBuilt for %s\n"), precede, make_host);
@@ -2993,6 +2995,8 @@ print_version (void)
      year, and none of the rest of it should be translated (including the
      word "Copyright"), so it hardly seems worth it.  */
 
+  printf ("%sCopyright (C) 2022 Justine Alexandra Roberts Tunney\n",
+          precede);
   printf ("%sCopyright (C) 1988-2020 Free Software Foundation, Inc.\n",
           precede);
 

@@ -50,3 +50,8 @@ TEST(mkntpath, testRemoveDoubleSlash) {
   EXPECT_EQ(8, __mkntpath("\\\\?\\doge", p));
   EXPECT_STREQ(u"\\\\?\\doge", p);
 }
+
+TEST(mkntpath, testJustC) {
+  EXPECT_EQ(7, __mkntpath("/C", p));
+  EXPECT_STREQ(u"\\\\?\\C:\\", p);
+}
