@@ -301,7 +301,21 @@ pc:	cld
 //	@since	IBM Personal Computer XT
 dsknfo:	push	%bx
 1:	push	%dx
-	mov	$0x08,%ah		# get disk params
+	mov	$0x16,%ah		# make sure there is disk in drive,
+	int	$0x13			# by querying change-line status
+	jnc	2f
+	xor	%ax,%ax			# if error or change line active,
+	int	$0x13			# do a reset...
+	jc	9f
+	mov	$0x0201,%ax		# ...then do a read, to confirm that
+	mov	$0x0001,%cx		# there is disk in drive
+	mov	$0,%dh			# (verify (%ah = 4) does not work
+	mov	$IMAGE_BASE_REAL>>4,%bx	# under QEMU, which always returns
+	mov	%bx,%es			# success)
+	xor	%bx,%bx
+	int	$0x13
+	jc	9f
+2:	mov	$0x08,%ah		# get disk params
 	int	$0x13
 	jc	9f
 	mov	%cl,%bh
