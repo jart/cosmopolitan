@@ -38,10 +38,12 @@ cosmo:	push	%rbp
 	mov	%rsi,%r13
 	mov	%rdx,%r14
 	mov	%rcx,%r15
+
 #ifdef SYSDEBUG
 	call	__strace_init
 	mov	%eax,%r12d
 #endif /* SYSDEBUG */
+
 #ifdef __FAST_MATH__
 	push	%rax
 	stmxcsr	(%rsp)
@@ -49,7 +51,11 @@ cosmo:	push	%rbp
 	ldmxcsr	(%rsp)
 	pop	%rax
 #endif
+
+//	run assembly init
 	call	_init
+
+//	call constructors
 	ezlea	__init_array_start,ax		# static ctors in forward order
 	.weak	__init_array_start		# could be called multiple times
 	ezlea	__init_array_end,cx		# idempotency recommended
@@ -64,11 +70,14 @@ cosmo:	push	%rbp
 	pop	%rax
 	add	$8,%rax
 	jmp	1b
+
+//	call main()
 2:	call	.Largs
 	.weak	main
 	call	main
 	xchg	%eax,%edi
 	call	exit
+
 .Largs:	mov	%r12d,%edi
 	mov	%r13,%rsi
 	mov	%r14,%rdx
@@ -103,6 +112,7 @@ cosmo:	push	%rbp
 	jnz	9f
 	push	%rdi
 	push	%rsi
+
 //	allocate stack
 	movabs	$ape_stack_vaddr,%rdi
 	mov	$ape_stack_memsz,%esi
@@ -118,16 +128,22 @@ cosmo:	push	%rbp
 	pop	%rdi
 	cmp	$-1,%rax
 	je	9f
+
 //	switch stacks
+//
+//	we subtract 8 because the openbsd kernel always checks rsp
+//	is on a MAP_STACK interval non-inclusively of stack + size
 	leave
-	pop	%rcx
+	pop	%rcx			# return address
+	sub	$8,%r8d			# openbsd:stackbound
 	lea	(%rax,%r8),%rsp
-	mov	$ape_stack_align,%eax		# openbsd:stackbound
+	mov	$ape_stack_align,%eax
 	neg	%rax
 	and	%rax,%rsp
 	push	%rcx
 	push	%rbp
 	mov	%rsp,%rbp
+
 9:	nop
 	.init.end 304,_init_stack
 	.weak	ape_stack_prot
