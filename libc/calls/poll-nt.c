@@ -39,6 +39,7 @@
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
@@ -51,9 +52,11 @@
  * on both sockets and files at the same time. We also poll for signals
  * while poll is polling.
  */
-textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
+textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
+                            const sigset_t *sigmask) {
   bool ok;
   uint32_t avail;
+  sigset_t oldmask;
   struct sys_pollfd_nt pipefds[8];
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
@@ -61,6 +64,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms) {
   int i, sn, pn, failed, gotinvals, gotpipes, gotsocks, waitfor;
 
   // check for interrupts early before doing work
+  if (sigmask && __sig_mask(SIG_SETMASK, sigmask, &oldmask)) return -1;
   if (_check_interrupts(false, g_fds.p)) return eintr();
 
   // do the planning

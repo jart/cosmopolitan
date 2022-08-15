@@ -87,7 +87,8 @@ int sys_socketpair_nt_stream(int, int, int, int[2]) hidden;
 int sys_socketpair_nt_dgram(int, int, int, int[2]) hidden;
 */
 int sys_socketpair_nt(int, int, int, int[2]) hidden;
-int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *) hidden;
+int sys_select_nt(int, fd_set *, fd_set *, fd_set *, struct timeval *,
+                  const sigset_t *) hidden;
 
 size_t __iovec2nt(struct NtIovec[hasatleast 16], const struct iovec *,
                   size_t) hidden;

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -18,75 +18,74 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/likely.h"
 #include "libc/macros.internal.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
+#include "libc/sock/ppoll.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Waits for something to happen on multiple file descriptors at once.
  *
- * Warning: XNU has an inconsistency with other platforms. If you have
- * pollfds with fd≥0 and none of the meaningful events flags are added
- * e.g. POLLIN then XNU won't check for POLLNVAL. This matters because
- * one of the use-cases for poll() is quickly checking for open files.
+ * This function is the same as saying:
  *
- * Note: Polling works best on Windows for sockets. We're able to poll
- * input on named pipes. But for anything that isn't a socket, or pipe
- * with POLLIN, (e.g. regular file) then POLLIN/POLLOUT are always set
- * into revents if they're requested, provided they were opened with a
- * mode that permits reading and/or writing.
+ *     sigset_t old;
+ *     sigprocmask(SIG_SETMASK, sigmask, &old);
+ *     poll(fds, nfds, timeout);
+ *     sigprocmask(SIG_SETMASK, old, 0);
  *
- * Note: Windows has a limit of 64 file descriptors and ENOMEM with -1
- * is returned if that limit is exceeded. In practice the limit is not
- * this low. For example, pollfds with fd<0 don't count. So the caller
- * could flip the sign bit with a short timeout, to poll a larger set.
+ * Except it'll happen atomically if the kernel supports doing that. On
+ * kernel such as XNU and NetBSD which don't, this wrapper falls back to
+ * doing the thing described above.
  *
- * @param fds[𝑖].fd should be a socket, input pipe, or conosle input
- *     and if it's a negative number then the entry is ignored
- * @param fds[𝑖].events flags can have POLLIN, POLLOUT, POLLPRI,
- *     POLLRDNORM, POLLWRNORM, POLLRDBAND, POLLWRBAND as well as
- *     POLLERR, POLLHUP, and POLLNVAL although the latter are
- *     always implied (assuming fd≥0) so they're ignored here
- * @param timeout_ms if 0 means don't wait and -1 means wait forever
- * @return number of items fds whose revents field has been set to
- *     nonzero to describe its events, or 0 if the timeout elapsed,
- *     or -1 w/ errno
- * @return fds[𝑖].revents is always zero initializaed and then will
- *     be populated with POLL{IN,OUT,PRI,HUP,ERR,NVAL} if something
- *     was determined about the file descriptor
+ * @param timeout if null will block indefinitely
+ * @param sigmask may be null in which case no mask change happens
  * @asyncsignalsafe
  * @threadsafe
  * @norestart
  */
-int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
-  int i, rc;
+int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
+          const sigset_t *sigmask) {
+  int e, i, rc;
   uint64_t millis;
+  sigset_t oldmask;
 
-  if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
+  if (IsAsan() && (!__asan_is_valid(fds, nfds * sizeof(struct pollfd)) ||
+                   (timeout && !__asan_is_valid(timeout, sizeof(timeout))) ||
+                   (sigmask && !__asan_is_valid(sigmask, sizeof(sigmask))))) {
     rc = efault();
   } else if (!IsWindows()) {
-    if (!IsMetal()) {
-      rc = sys_poll(fds, nfds, timeout_ms);
-    } else {
-      rc = sys_poll_metal(fds, nfds, timeout_ms);
+    e = errno;
+    rc = sys_ppoll(fds, nfds, timeout, sigmask);
+    if (rc == -1 && errno == ENOSYS) {
+      errno = e;
+      if (!timeout ||
+          __builtin_add_overflow(timeout->tv_sec, timeout->tv_nsec / 1000000,
+                                 &millis)) {
+        millis = -1;
+      }
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      rc = poll(fds, nfds, millis);
+      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
-    millis = timeout_ms;
-    rc = sys_poll_nt(fds, nfds, &millis, 0);
+    if (!timeout || __builtin_add_overflow(
+                        timeout->tv_sec, timeout->tv_nsec / 1000000, &millis)) {
+      millis = -1;
+    }
+    rc = sys_poll_nt(fds, nfds, &millis, sigmask);
   }
 
 #if defined(SYSDEBUG) && _POLLTRACE
   if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "poll(");
+    kprintf(STRACE_PROLOGUE "ppoll(");
     if ((!IsAsan() && kisdangerous(fds)) ||
         (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd)))) {
       kprintf("%p", fds);
@@ -99,7 +98,8 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
       }
       kprintf("%s}]", i == 5 ? "..." : "");
     }
-    kprintf(", %'zu, %'d) → %d% lm\n", nfds, timeout_ms, rc);
+    kprintf(", %'zu, %s, %s) → %d% lm\n", nfds, DescribeTimeval(0, timeout),
+            DescribeSigset(0, sigmask), rc);
   }
 #endif
 

@@ -16,7 +16,11 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/makeint.inc"
 /**/
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "third_party/make/config.h"
 #include "third_party/make/debug.h"
 #include "third_party/make/job.h"
 #include "third_party/make/os.h"
@@ -293,11 +297,6 @@ static RETSIGTYPE job_noop(int sig UNUSED) {
 static void set_child_handler_action_flags(int set_handler, int set_alarm) {
   struct sigaction sa;
 
-#ifdef __EMX__
-  /* The child handler must be turned off here.  */
-  signal(SIGCHLD, SIG_DFL);
-#endif
-
   memset(&sa, '\0', sizeof sa);
   sa.sa_handler = child_handler;
   sa.sa_flags = set_handler ? 0 : SA_RESTART;
@@ -391,11 +390,8 @@ int get_bad_stdin(void) {
 /* Set file descriptors to be inherited / not inherited by subprocesses.  */
 
 #if !defined(F_SETFD) || !defined(F_GETFD)
-void fd_inherit(int fd) {
-}
-void fd_noinherit(int fd) {
-}
-
+void fd_inherit(int fd) {}
+void fd_noinherit(int fd) {}
 #else
 
 #ifndef FD_CLOEXEC

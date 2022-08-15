@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/select.h"
@@ -27,13 +28,11 @@
 #include "libc/sysv/errfuns.h"
 
 int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
-                  fd_set *exceptfds, struct timeval *timeout) {
+                  fd_set *exceptfds, struct timeval *timeout,
+                  const sigset_t *sigmask) {
   uint64_t millis;
   int i, pfds, events, fdcount;
   struct pollfd fds[64];
-
-  // check for interrupts early before doing work
-  if (_check_interrupts(false, g_fds.p)) return eintr();
 
   // convert bitsets to pollfd
   for (pfds = i = 0; i < nfds; ++i) {
@@ -60,7 +59,7 @@ int sys_select_nt(int nfds, fd_set *readfds, fd_set *writefds,
   }
 
   // call our nt poll implementation
-  fdcount = sys_poll_nt(fds, pfds, &millis);
+  fdcount = sys_poll_nt(fds, pfds, &millis, sigmask);
   if (fdcount == -1) return -1;
 
   // convert pollfd back to bitsets

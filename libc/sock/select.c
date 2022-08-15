@@ -19,9 +19,11 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Does what poll() does except with bitset API.
@@ -35,10 +37,18 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   int rc;
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
-  if (!IsWindows()) {
+  if (nfds < 0) {
+    rc = einval();
+  } else if (IsAsan() &&
+             ((readfds && !__asan_is_valid(readfds, FD_SIZE(nfds))) ||
+              (writefds && !__asan_is_valid(writefds, FD_SIZE(nfds))) ||
+              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))) ||
+              (timeout && !__asan_is_valid(timeout, sizeof(*timeout))))) {
+    rc = efault();
+  } else if (!IsWindows()) {
     rc = sys_select(nfds, readfds, writefds, exceptfds, timeout);
   } else {
-    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout);
+    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
   }
   POLLTRACE("select(%d, %p, %p, %p, [%s]) → %d% m", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(rc, timeout), rc);

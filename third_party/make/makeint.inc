@@ -14,7 +14,6 @@ A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/makedev.h"
@@ -31,11 +30,13 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
+#include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/o.h"
@@ -46,11 +47,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/utime.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
-#include "libc/str/locale.h"
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/musl/glob.h"

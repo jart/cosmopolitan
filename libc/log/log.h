@@ -36,6 +36,7 @@ COSMOPOLITAN_C_START_
 
 extern FILE *__log_file;
 
+int __watch(void *, size_t);
 void __die(void) relegated wontreturn; /* print backtrace and abort() */
 void meminfo(int);                     /* shows malloc statistics &c. */
 void memsummary(int);                  /* light version of same thing */

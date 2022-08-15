@@ -111,10 +111,6 @@ o//libc/runtime/opensymboltable.greg.o: private		\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
-o/$(MODE)/libc/runtime/ftrace.greg.o: private		\
-		OVERRIDE_CFLAGS +=			\
-			-mgeneral-regs-only
-
 LIBC_RUNTIME_LIBS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)))
 LIBC_RUNTIME_SRCS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_RUNTIME_HDRS = $(foreach x,$(LIBC_RUNTIME_ARTIFACTS),$($(x)_HDRS))

@@ -2097,13 +2097,13 @@ o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs: private	\
 			/usr/local/etc/mime.types
 
 o/$(MODE)/third_party/python/Lib/test/test_epoll.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath proc inet
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 o/$(MODE)/third_party/python/Lib/test/test_fcntl.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath proc flock
+		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 o/$(MODE)/third_party/python/Lib/test/test_signal.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath proc flock inet
+		private .PLEDGE = stdio rpath wpath cpath fattr proc flock inet
 o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs:		\
-		private .PLEDGE = stdio rpath wpath cpath proc inet
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 o/$(MODE)/third_party/python/Lib/test/test_grammar.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com

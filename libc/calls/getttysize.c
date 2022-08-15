@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
@@ -36,8 +36,8 @@
  */
 int getttysize(int fd, struct winsize *out) {
   if (__nocolor) {
-    out->ws_col = strtoimax(firstnonnull(getenv("COLUMNS"), "80"), NULL, 0);
-    out->ws_row = strtoimax(firstnonnull(getenv("ROWS"), "40"), NULL, 0);
+    out->ws_col = atoi(firstnonnull(getenv("COLUMNS"), "80"));
+    out->ws_row = atoi(firstnonnull(getenv("ROWS"), "40"));
     out->ws_xpixel = 0;
     out->ws_ypixel = 0;
     return 0;

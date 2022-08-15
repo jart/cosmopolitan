@@ -35,7 +35,7 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
   if (setrlimit(resource, &lim) == -1) {
     if (!getrlimit(resource, &old)) {
       lim.rlim_max = MIN(hard, old.rlim_max);
-      lim.rlim_cur = MIN(soft, lim.rlim_max);
+      lim.rlim_cur = MIN(soft, old.rlim_max);
       if (!setrlimit(resource, &lim)) {
         fprintf(stderr, "%sNOTE: SETRLIMIT(%s) DOWNGRADED TO {%,ld, %,ld}\n",
                 DescribeRlimitName(resource), lim.rlim_cur, lim.rlim_max);

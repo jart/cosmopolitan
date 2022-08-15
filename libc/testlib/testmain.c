@@ -105,7 +105,7 @@ static void EmptySignalMask(void) {
 }
 
 static void FixIrregularFds(void) {
-  int i, fd, maxfds;
+  int e, i, fd, maxfds;
   struct rlimit rlim;
   struct pollfd *pfds;
   for (i = 0; i < 3; ++i) {
@@ -118,6 +118,9 @@ static void FixIrregularFds(void) {
       }
     }
   }
+  e = errno;
+  if (!closefrom(3)) return;
+  errno = e;
   if (IsWindows()) {
     maxfds = 64;
   } else {

@@ -18,9 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Does what poll() does except with bitset API.
@@ -32,9 +36,30 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
             const struct timespec *timeout, const sigset_t *sigmask) {
   int rc;
   sigset_t oldmask;
-  rc = sys_pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
-  POLLTRACE("pselect(%d, %p, %p, %p, [%s], %s) → %d% m", nfds, readfds,
-            writefds, exceptfds, DescribeTimeval(rc, timeout),
-            DescribeSigset(0, sigmask), rc);
+  struct timeval tv, *tvp;
+  if (nfds < 0) {
+    rc = einval();
+  } else if (IsAsan() &&
+             ((readfds && !__asan_is_valid(readfds, FD_SIZE(nfds))) ||
+              (writefds && !__asan_is_valid(writefds, FD_SIZE(nfds))) ||
+              (exceptfds && !__asan_is_valid(exceptfds, FD_SIZE(nfds))) ||
+              (timeout && !__asan_is_valid(timeout, sizeof(*timeout))) ||
+              (sigmask && !__asan_is_valid(sigmask, sizeof(*sigmask))))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    rc = sys_pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+  } else {
+    if (timeout) {
+      tv.tv_sec = timeout->tv_sec;
+      tv.tv_usec = timeout->tv_nsec / 1000;
+      tvp = &tv;
+    } else {
+      tvp = 0;
+    }
+    rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
+  }
+  POLLTRACE("pselect(%d, %p, %p, %p, %s, %s) → %d% m", nfds, readfds, writefds,
+            exceptfds, DescribeTimeval(0, timeout), DescribeSigset(0, sigmask),
+            rc);
   return rc;
 }

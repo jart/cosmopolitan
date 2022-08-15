@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/pledge.h"
@@ -34,8 +32,10 @@
 #include "libc/elf/struct/ehdr.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/io.h"
@@ -56,6 +56,7 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/sysv/errfuns.h"
@@ -86,7 +87,8 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
   -N              don't normalize file descriptors\n\
   -C SECS         set cpu limit [default: inherited]\n\
   -M BYTES        set virtual memory limit [default: 4gb]\n\
-  -P PROCS        set process limit [default: GetCpuCount()*2]\n\
+  -O FILES        set file descriptor limit [default: 64]\n\
+  -P PROCS        set process limit [default: preexisting + cpus]\n\
   -F BYTES        set individual file size limit [default: 4gb]\n\
   -T pledge       exits 0 if pledge() is supported by host system\n\
   -T unveil       exits 0 if unveil() is supported by host system\n\
@@ -136,6 +138,7 @@ bool isdynamic;
 bool g_noclose;
 long g_cpuquota;
 long g_fszquota;
+long g_nfdquota;
 long g_memquota;
 long g_proquota;
 long g_dontdrop;
@@ -155,11 +158,16 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   struct sysinfo si;
   g_promises = 0;
+  g_nfdquota = 64;
   g_fszquota = 256 * 1000 * 1000;
-  g_proquota = GetCpuCount() * 100;
-  g_memquota = 4L * 1024 * 1024 * 1024;
-  if (!sysinfo(&si)) g_memquota = si.totalram;
-  while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:v:")) != -1) {
+  if (!sysinfo(&si)) {
+    g_memquota = si.totalram;
+    g_proquota = GetCpuCount() + si.procs;
+  } else {
+    g_proquota = GetCpuCount() * 100;
+    g_memquota = 4L * 1024 * 1024 * 1024;
+  }
+  while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:O:v:")) != -1) {
     switch (opt) {
       case 'n':
         g_nice = true;
@@ -197,11 +205,24 @@ static void GetOpts(int argc, char *argv[]) {
       case 'P':
         g_proquota = atoi(optarg);
         break;
-      case 'M':
-        g_memquota = sizetol(optarg, 1024);
+      case 'O':
+        g_nfdquota = atoi(optarg);
         break;
       case 'F':
+        errno = 0;
         g_fszquota = sizetol(optarg, 1000);
+        if (errno) {
+          kprintf("error: invalid size: -F %s\n", optarg);
+          exit(1);
+        }
+        break;
+      case 'M':
+        errno = 0;
+        g_memquota = sizetol(optarg, 1024);
+        if (errno) {
+          kprintf("error: invalid size: -F %s\n", optarg);
+          exit(1);
+        }
         break;
       case 'p':
         if (g_promises) {
@@ -231,10 +252,6 @@ static void GetOpts(int argc, char *argv[]) {
 const char *prog;
 char pathbuf[PATH_MAX];
 struct pollfd pfds[256];
-
-int GetBaseCpuFreqMhz(void) {
-  return KCPUIDS(16H, EAX) & 0x7fff;
-}
 
 static bool SupportsLandlock(void) {
   int e = errno;
@@ -290,61 +307,27 @@ void NormalizeFileDescriptors(void) {
   }
 }
 
-void SetCpuLimit(int secs) {
+int SetLimit(int r, long lo, long hi) {
+  struct rlimit old;
+  struct rlimit lim = {lo, hi};
+  if (r < 0 || r >= RLIM_NLIMITS) return 0;
+  if (!setrlimit(r, &lim)) return 0;
+  if (getrlimit(r, &old)) return -1;
+  lim.rlim_cur = MIN(lim.rlim_cur, old.rlim_max);
+  lim.rlim_max = MIN(lim.rlim_max, old.rlim_max);
+  return setrlimit(r, &lim);
+}
+
+int GetBaseCpuFreqMhz(void) {
+  return KCPUIDS(16H, EAX) & 0x7fff;
+}
+
+int SetCpuLimit(int secs) {
   int mhz, lim;
-  struct rlimit rlim;
-  if (secs <= 0) return;
-  if (!(mhz = GetBaseCpuFreqMhz())) return;
+  if (secs <= 0) return 0;
+  if (!(mhz = GetBaseCpuFreqMhz())) return eopnotsupp();
   lim = ceil(3100. / mhz * secs);
-  rlim.rlim_cur = lim;
-  rlim.rlim_max = lim + 1;
-  if (setrlimit(RLIMIT_CPU, &rlim) != -1) {
-    return;
-  } else if (getrlimit(RLIMIT_CPU, &rlim) != -1) {
-    if (lim < rlim.rlim_cur) {
-      rlim.rlim_cur = lim;
-      if (setrlimit(RLIMIT_CPU, &rlim) != -1) {
-        return;
-      }
-    }
-  }
-  kprintf("error: setrlimit(RLIMIT_CPU) failed: %m\n");
-  exit(20);
-}
-
-void SetFszLimit(long n) {
-  struct rlimit rlim;
-  if (n <= 0) return;
-  rlim.rlim_cur = n;
-  rlim.rlim_max = n << 1;
-  if (setrlimit(RLIMIT_FSIZE, &rlim) != -1) {
-    return;
-  } else if (getrlimit(RLIMIT_FSIZE, &rlim) != -1) {
-    rlim.rlim_cur = n;
-    if (setrlimit(RLIMIT_FSIZE, &rlim) != -1) {
-      return;
-    }
-  }
-  kprintf("error: setrlimit(RLIMIT_FSIZE) failed: %m\n");
-  exit(21);
-}
-
-void SetMemLimit(long n) {
-  struct rlimit rlim = {n, n};
-  if (n <= 0) return;
-  if (setrlimit(RLIMIT_AS, &rlim) == -1) {
-    kprintf("error: setrlimit(RLIMIT_AS) failed: %m\n");
-    exit(22);
-  }
-}
-
-void SetProLimit(long n) {
-  struct rlimit rlim = {n, n};
-  if (n <= 0) return;
-  if (setrlimit(RLIMIT_NPROC, &rlim) == -1) {
-    kprintf("error: setrlimit(RLIMIT_NPROC) failed: %m\n");
-    exit(22);
-  }
+  return SetLimit(RLIMIT_CPU, lim, lim);
 }
 
 bool PathExists(const char *path) {
@@ -610,10 +593,26 @@ int main(int argc, char *argv[]) {
 
   // set resource limits
   MakeProcessNice();
-  SetCpuLimit(g_cpuquota);
-  SetFszLimit(g_fszquota);
-  SetMemLimit(g_memquota);
-  SetProLimit(g_proquota);
+
+  if (SetCpuLimit(g_cpuquota) == -1) {
+    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_CPU");
+    exit(1);
+  }
+
+  if (SetLimit(RLIMIT_FSIZE, g_fszquota, g_fszquota * 1.5) == -1) {
+    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_FSIZE");
+    exit(1);
+  }
+
+  if (SetLimit(RLIMIT_AS, g_memquota, g_memquota) == -1) {
+    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_AS");
+    exit(1);
+  }
+
+  if (SetLimit(RLIMIT_NPROC, g_proquota, g_proquota) == -1) {
+    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_NPROC");
+    exit(1);
+  }
 
   // test for weird chmod bits
   usergid = getgid();
@@ -784,6 +783,11 @@ int main(int argc, char *argv[]) {
   if (isdynamic) {
     ksnprintf(buf, sizeof(buf), "_PLEDGE=%ld,%ld", ~ipromises, __pledge_mode);
     putenv(buf);
+  }
+
+  if (SetLimit(RLIMIT_NOFILE, g_nfdquota, g_nfdquota) == -1) {
+    kprintf("error: setrlimit(%s) failed: %m\n", "RLIMIT_NOFILE");
+    exit(1);
   }
 
   // apply sandbox

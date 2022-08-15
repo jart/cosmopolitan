@@ -16,9 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/ioctl.h"
@@ -32,12 +29,15 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -505,7 +505,7 @@ void SetFszLimit(long n) {
   if (n <= 0) return;
   if (IsWindows()) return;
   rlim.rlim_cur = n;
-  rlim.rlim_max = n << 1;
+  rlim.rlim_max = n + (n >> 1);
   if (setrlimit(RLIMIT_FSIZE, &rlim) == -1) {
     if (getrlimit(RLIMIT_FSIZE, &rlim) == -1) return;
     rlim.rlim_cur = n;
@@ -1191,7 +1191,10 @@ int main(int argc, char *argv[]) {
       if (!(exitcode = WEXITSTATUS(ws)) || exitcode == 254) {
         if (touchtarget && target) {
           makedirs(xdirname(target), 0755);
-          touch(target, 0644);
+          if (touch(target, 0644)) {
+            exitcode = 90;
+            appends(&output, "\nfailed to touch output file\n");
+          }
         }
         if (movepath) {
           if (!MovePreservingDestinationInode(tmpout, movepath)) {

@@ -2,116 +2,6 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 #include "libc/calls/calls.h"
 
-/* CPU and C ABI indicator */
-#ifndef __i386__
-/* #undef __i386__ */
-#endif
-#ifndef __x86_64_x32__
-/* #undef __x86_64_x32__ */
-#endif
-#ifndef __x86_64__
-#define __x86_64__ 1
-#endif
-#ifndef __alpha__
-/* #undef __alpha__ */
-#endif
-#ifndef __arm__
-/* #undef __arm__ */
-#endif
-#ifndef __armhf__
-/* #undef __armhf__ */
-#endif
-#ifndef __arm64_ilp32__
-/* #undef __arm64_ilp32__ */
-#endif
-#ifndef __arm64__
-/* #undef __arm64__ */
-#endif
-#ifndef __hppa__
-/* #undef __hppa__ */
-#endif
-#ifndef __hppa64__
-/* #undef __hppa64__ */
-#endif
-#ifndef __ia64_ilp32__
-/* #undef __ia64_ilp32__ */
-#endif
-#ifndef __ia64__
-/* #undef __ia64__ */
-#endif
-#ifndef __m68k__
-/* #undef __m68k__ */
-#endif
-#ifndef __mips__
-/* #undef __mips__ */
-#endif
-#ifndef __mipsn32__
-/* #undef __mipsn32__ */
-#endif
-#ifndef __mips64__
-/* #undef __mips64__ */
-#endif
-#ifndef __powerpc__
-/* #undef __powerpc__ */
-#endif
-#ifndef __powerpc64__
-/* #undef __powerpc64__ */
-#endif
-#ifndef __powerpc64_elfv2__
-/* #undef __powerpc64_elfv2__ */
-#endif
-#ifndef __riscv32__
-/* #undef __riscv32__ */
-#endif
-#ifndef __riscv64__
-/* #undef __riscv64__ */
-#endif
-#ifndef __riscv32_ilp32__
-/* #undef __riscv32_ilp32__ */
-#endif
-#ifndef __riscv32_ilp32f__
-/* #undef __riscv32_ilp32f__ */
-#endif
-#ifndef __riscv32_ilp32d__
-/* #undef __riscv32_ilp32d__ */
-#endif
-#ifndef __riscv64_ilp32__
-/* #undef __riscv64_ilp32__ */
-#endif
-#ifndef __riscv64_ilp32f__
-/* #undef __riscv64_ilp32f__ */
-#endif
-#ifndef __riscv64_ilp32d__
-/* #undef __riscv64_ilp32d__ */
-#endif
-#ifndef __riscv64_lp64__
-/* #undef __riscv64_lp64__ */
-#endif
-#ifndef __riscv64_lp64f__
-/* #undef __riscv64_lp64f__ */
-#endif
-#ifndef __riscv64_lp64d__
-/* #undef __riscv64_lp64d__ */
-#endif
-#ifndef __s390__
-/* #undef __s390__ */
-#endif
-#ifndef __s390x__
-/* #undef __s390x__ */
-#endif
-#ifndef __sh__
-/* #undef __sh__ */
-#endif
-#ifndef __sparc__
-/* #undef __sparc__ */
-#endif
-#ifndef __sparc64__
-/* #undef __sparc64__ */
-#endif
-
-/* Define if building universal (internal helper macro) */
-/* #undef AC_APPLE_UNIVERSAL_BUILD */
-
 /* Define to the number of bits in type 'ptrdiff_t'. */
 #define BITSIZEOF_PTRDIFF_T 64
 
@@ -401,7 +291,7 @@
 #define HAVE_POSIX_SPAWNATTR_SETSIGMASK 1
 
 /* Define to 1 if you have the `pselect' function. */
-/* #undef HAVE_PSELECT */
+#define HAVE_PSELECT 1
 
 /* Define to 1 if you have the `pstat_getdynamic' function. */
 /* #undef HAVE_PSTAT_GETDYNAMIC */
@@ -425,7 +315,7 @@
 #define HAVE_SETEUID 1
 
 /* Define to 1 if you have the `setlinebuf' function. */
-/* #undef HAVE_SETLINEBUF */
+#define HAVE_SETLINEBUF 1
 
 /* Define to 1 if you have the `setregid' function. */
 #define HAVE_SETREGID 1
@@ -450,12 +340,6 @@
 
 /* Define to 1 if 'wint_t' is a signed integer type. */
 /* #undef HAVE_SIGNED_WINT_T */
-
-/* Define to 1 if you have the `sigsetmask' function. */
-/* #undef HAVE_SIGSETMASK */
-
-/* Define to 1 if you have the `socket' function. */
-/* #undef HAVE_SOCKET */
 
 /* Define to 1 if you have the <spawn.h> header file. */
 #define HAVE_SPAWN_H 1
@@ -623,7 +507,11 @@
 #define MAKE_HOST "x86_64-cosmopolitan"
 
 /* Define to 1 to enable job server support in GNU make. */
-/* TODO(jart): make it work */
+/*
+ * TODO(jart): Why does job server not work? We don't need it, since the
+ *             last thing we'd ever want is a recursive make, however it
+ *             would be nice to confirm it's not a bug in our libc impl.
+ */
 /* #define MAKE_JOBSERVER 1 */
 
 /* Define to 1 to enable symbolic link timestamp checking. */

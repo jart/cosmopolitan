@@ -16,49 +16,72 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/formatmessageflags.h"
-#include "libc/nt/enum/lang.h"
-#include "libc/nt/process.h"
-#include "libc/str/str.h"
+#include "libc/log/backtrace.internal.h"
+#include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
+#include "libc/sysv/errfuns.h"
 
-/**
- * Converts errno value to string with explicit windows errno too.
- *
- * @param err is error number or zero if unknown
- * @return 0 on success, or error code
- */
-privileged int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
-  /* kprintf() weakly depends on this function */
-  int c, n;
-  bool wanting;
-  char16_t winmsg[256];
-  const char *sym, *msg;
-  wanting = false;
-  sym = firstnonnull(strerrno(err), (wanting = true, "EUNKNOWN"));
-  msg = firstnonnull(strerdoc(err), (wanting = true, "No error information"));
-  if (IsTiny()) {
-    if (!sym) sym = "EUNKNOWN";
-    for (; (c = *sym++); --size)
-      if (size > 1) *buf++ = c;
-    if (size) *buf = 0;
-  } else if (!IsWindows() || ((err == winerr || !winerr) && !wanting)) {
-    ksnprintf(buf, size, "%s/%d/%s", sym, err, msg);
-  } else {
-    if ((n = FormatMessage(
-             kNtFormatMessageFromSystem | kNtFormatMessageIgnoreInserts, 0,
-             winerr, MAKELANGID(kNtLangNeutral, kNtSublangDefault), winmsg,
-             ARRAYLEN(winmsg), 0))) {
-      while ((n && winmsg[n - 1] <= ' ') || winmsg[n - 1] == '.') --n;
-      ksnprintf(buf, size, "%s/%d/%s/%d/%.*hs", sym, err, msg, winerr, n,
-                winmsg);
-    } else {
-      ksnprintf(buf, size, "%s/%d/%s/%d", sym, err, msg, winerr);
+static bool __watch_busy;
+static void *__watch_addr;
+static size_t __watch_size;
+static char __watch_last[4096];
+
+void __watch_hook(void);
+
+static noinstrument inline void Copy(char *p, char *q, size_t n) {
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    p[i] = q[i];
+  }
+}
+
+static noinstrument inline int Cmp(char *p, char *q, size_t n) {
+  int c;
+  if (n == 8) return READ64LE(p) != READ64LE(q);
+  if (n == 4) return READ32LE(p) != READ32LE(q);
+  for (; n; ++p, ++q, --n) {
+    if (*p != *q) {
+      return 1;
     }
   }
+  return 0;
+}
+
+noinstrument void __watcher(void) {
+  if (__watch_busy) return;
+  __watch_busy = true;
+  if (Cmp(__watch_last, __watch_addr, __watch_size)) {
+    kprintf("watchpoint %p changed:\n"
+            "%#.*hhs\n"
+            "%#.*hhs\n",
+            __watch_addr,                //
+            __watch_size, __watch_last,  //
+            __watch_size, __watch_addr);
+    Copy(__watch_last, __watch_addr, __watch_size);
+    ShowBacktrace(2, __builtin_frame_address(0));
+  }
+  __watch_busy = false;
+}
+
+/**
+ * Watches memory address for changes.
+ *
+ * It's useful for situations when ASAN and GDB both aren't working.
+ */
+int __watch(void *addr, size_t size) {
+  static bool once;
+  if (__watch_busy) ebusy();
+  if (size > sizeof(__watch_last)) return einval();
+  if (!once) {
+    if (!GetSymbolTable()) return -1;
+    if (__hook(__watch_hook, GetSymbolTable()) == -1) return -1;
+    once = true;
+  }
+  __watch_addr = addr;
+  __watch_size = size;
+  Copy(__watch_last, __watch_addr, __watch_size);
   return 0;
 }

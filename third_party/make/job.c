@@ -55,6 +55,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "third_party/libcxx/math.h"
@@ -416,7 +418,7 @@ get_target_variable (const char *name,
 const char *
 get_tmpdir (struct file *file)
 {
-  return get_target_variable (STRING_SIZE_TUPLE("TMPDIR"), file, 0);
+  return get_target_variable (STRING_SIZE_TUPLE ("TMPDIR"), file, 0);
 }
 
 char *
@@ -1798,61 +1800,28 @@ get_base_cpu_freq_mhz (void)
   return KCPUIDS(16H, EAX) & 0x7fff;
 }
 
-void
+int
+set_limit (int r, long lo, long hi)
+{
+  struct rlimit old;
+  struct rlimit lim = {lo, hi};
+  if (!setrlimit (r, &lim))
+    return 0;
+  if (getrlimit (r, &old))
+    return -1;
+  lim.rlim_cur = MIN (lim.rlim_cur, old.rlim_max);
+  lim.rlim_max = MIN (lim.rlim_max, old.rlim_max);
+  return setrlimit (r, &lim);
+}
+
+int
 set_cpu_limit (int secs)
 {
   int mhz, lim;
-  struct rlimit rlim;
-  if (secs <= 0) return;
-  if (IsWindows()) return;
-  if (!(mhz = get_base_cpu_freq_mhz())) return;
+  if (secs <= 0) return 0;
+  if (!(mhz = get_base_cpu_freq_mhz())) return eopnotsupp();
   lim = ceil(3100. / mhz * secs);
-  rlim.rlim_cur = lim;
-  rlim.rlim_max = lim + 1;
-  if (setrlimit(RLIMIT_CPU, &rlim) == -1)
-    {
-      if (getrlimit(RLIMIT_CPU, &rlim) == -1)
-        return;
-      if (lim < rlim.rlim_cur)
-        {
-          rlim.rlim_cur = lim;
-          setrlimit(RLIMIT_CPU, &rlim);
-        }
-    }
-}
-
-void
-set_fsz_limit (long n)
-{
-  struct rlimit rlim;
-  if (n <= 0) return;
-  if (IsWindows()) return;
-  rlim.rlim_cur = n;
-  rlim.rlim_max = n << 1;
-  if (setrlimit(RLIMIT_FSIZE, &rlim) == -1)
-    {
-      if (getrlimit(RLIMIT_FSIZE, &rlim) == -1)
-        return;
-      rlim.rlim_cur = n;
-      setrlimit(RLIMIT_FSIZE, &rlim);
-    }
-}
-
-void
-set_mem_limit (long n)
-{
-  struct rlimit rlim = {n, n};
-  if (n <= 0) return;
-  if (IsWindows() || IsXnu()) return;
-  setrlimit(RLIMIT_AS, &rlim);
-}
-
-void
-set_pro_limit (long n)
-{
-  struct rlimit rlim = {n, n};
-  if (n <= 0) return;
-  setrlimit(RLIMIT_NPROC, &rlim);
+  return set_limit (RLIMIT_CPU, lim, lim + 1);
 }
 
 static struct sysinfo g_sysinfo;
@@ -1920,18 +1889,18 @@ child_execute_job (struct childbase *child,
   }
 
   internet = parse_bool (get_target_variable
-                         (STRING_SIZE_TUPLE(".INTERNET"),
+                         (STRING_SIZE_TUPLE (".INTERNET"),
                           c ? c->file : 0, "0"));
 
   unsandboxed = parse_bool (get_target_variable
-                            (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                            (STRING_SIZE_TUPLE (".UNSANDBOXED"),
                              c ? c->file : 0, "0"));
 
   if (c)
     {
       sandboxed = !unsandboxed;
       strict = parse_bool (get_target_variable
-                           (STRING_SIZE_TUPLE(".STRICT"),
+                           (STRING_SIZE_TUPLE (".STRICT"),
                             c->file, "0"));
     }
   else
@@ -1943,7 +1912,7 @@ child_execute_job (struct childbase *child,
   if (!unsandboxed)
     {
       promises = emptytonull (get_target_variable
-                              (STRING_SIZE_TUPLE(".PLEDGE"),
+                              (STRING_SIZE_TUPLE (".PLEDGE"),
                                c ? c->file : 0, 0));
       if (promises)
         promises = xstrdup (promises);
@@ -1968,52 +1937,158 @@ child_execute_job (struct childbase *child,
        internet ? " with internet access" : ""));
 
   /* [jart] Set cpu seconds quota.  */
-  if ((s = get_target_variable (STRING_SIZE_TUPLE(".CPU"),
+  if (RLIMIT_CPU < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".CPU"),
                                 c ? c->file : 0, 0)))
     {
       int secs;
       secs = atoi (s);
-      DB (DB_JOBS, (_("Setting cpu limit of %d seconds\n"), secs));
-      set_cpu_limit (secs);
+      if (!set_cpu_limit (secs))
+        DB (DB_JOBS, (_("Set cpu limit of %d seconds\n"), secs));
+      else
+        DB (DB_JOBS, (_("Failed to set CPU limit: %s\n"), strerror (errno)));
     }
 
   /* [jart] Set virtual memory quota.  */
-  if ((s = get_target_variable (STRING_SIZE_TUPLE(".MEMORY"),
+  if (RLIMIT_AS < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".MEMORY"),
                                 c ? c->file : 0, 0)))
     {
       long bytes;
       char buf[16];
+      errno = 0;
       if (!strchr (s, '%'))
         bytes = sizetol (s, 1024);
       else
         bytes = strtod (s, 0) / 100. * g_sysinfo.totalram;
-      DB (DB_JOBS, (_("Setting virtual memory limit of %s\n"),
-                    (FormatMemorySize (buf, bytes, 1024), buf)));
-      set_mem_limit (bytes);
+      if (bytes > 0)
+        {
+          if (!set_limit (RLIMIT_AS, bytes, bytes))
+            DB (DB_JOBS, (_("Set virtual memory limit of %s\n"),
+                          (FormatMemorySize (buf, bytes, 1024), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set virtual memory: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .MEMORY invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
     }
 
-  /* [jart] Set file size limit.  */
-  if ((s = get_target_variable (STRING_SIZE_TUPLE(".FSIZE"),
+  /* [jart] Set resident memory quota.  */
+  if (RLIMIT_RSS < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".RSS"),
                                 c ? c->file : 0, 0)))
     {
       long bytes;
       char buf[16];
-      bytes = sizetol (s, 1000);
-      DB (DB_JOBS, (_("Setting file size limit of %s\n"),
-                    (FormatMemorySize (buf, bytes, 1000), buf)));
-      set_fsz_limit (bytes);
+      errno = 0;
+      if (!strchr (s, '%'))
+        bytes = sizetol (s, 1024);
+      else
+        bytes = strtod (s, 0) / 100. * g_sysinfo.totalram;
+      if (bytes > 0)
+        {
+          if (!set_limit (RLIMIT_RSS, bytes, bytes))
+            DB (DB_JOBS, (_("Set resident memory limit of %s\n"),
+                          (FormatMemorySize (buf, bytes, 1024), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set resident memory: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .RSS invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
+    }
+
+  /* [jart] Set file size limit.  */
+  if (RLIMIT_FSIZE < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".FSIZE"),
+                                c ? c->file : 0, 0)))
+    {
+      long bytes;
+      char buf[16];
+      errno = 0;
+      if ((bytes = sizetol (s, 1000)) > 0)
+        {
+          if (!set_limit (RLIMIT_FSIZE, bytes, bytes * 1.5))
+            DB (DB_JOBS, (_("Set file size limit of %s\n"),
+                          (FormatMemorySize (buf, bytes, 1000), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set file size limit: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .FSIZE invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
+    }
+
+  /* [jart] Set core dump limit.  */
+  if (RLIMIT_CORE < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".MAXCORE"),
+                                c ? c->file : 0, 0)))
+    {
+      long bytes;
+      char buf[16];
+      errno = 0;
+      if ((bytes = sizetol (s, 1000)) > 0)
+        {
+          if (!set_limit (RLIMIT_CORE, bytes, bytes))
+            DB (DB_JOBS, (_("Set core dump limit of %s\n"),
+                          (FormatMemorySize (buf, bytes, 1000), buf)));
+          else
+            DB (DB_JOBS, (_("Failed to set core dump limit: %s\n"),
+                          strerror (errno)));
+        }
+      else if (errno)
+        {
+          OSS (error, NILF, "%s: .MAXCORE invalid: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
     }
 
   /* [jart] Set process limit.  */
-  if ((s = get_target_variable (STRING_SIZE_TUPLE(".NPROC"),
+  if (RLIMIT_NPROC < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".NPROC"),
                                 c ? c->file : 0, 0)))
     {
       int procs;
       if ((procs = atoi (s)) > 0)
         {
-          DB (DB_JOBS, (_("Setting process limit to %d + %d preexisting\n"),
-                        procs, g_sysinfo.procs));
-          set_pro_limit (procs + g_sysinfo.procs);
+          if (!set_limit (RLIMIT_NPROC,
+                          procs + g_sysinfo.procs,
+                          procs + g_sysinfo.procs))
+            DB (DB_JOBS, (_("Set process limit to %d + %d preexisting\n"),
+                          procs, g_sysinfo.procs));
+          else
+            DB (DB_JOBS, (_("Failed to set process limit: %s\n"),
+                          strerror (errno)));
+        }
+    }
+
+  /* [jart] Set file descriptor limit.  */
+  if (RLIMIT_NOFILE < RLIM_NLIMITS &&
+      (s = get_target_variable (STRING_SIZE_TUPLE (".NOFILE"),
+                                c ? c->file : 0, 0)))
+    {
+      int fds;
+      if ((fds = atoi (s)) > 0)
+        {
+          if (!set_limit (RLIMIT_NOFILE, fds, fds))
+            DB (DB_JOBS, (_("Set file descriptor limit to %d\n"), fds));
+          else
+            DB (DB_JOBS, (_("Failed to set process limit: %s\n"),
+                          strerror (errno)));
         }
     }
 

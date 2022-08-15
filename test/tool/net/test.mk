@@ -71,10 +71,10 @@ o/$(MODE)/test/tool/net/%.com.dbg:				\
 	@$(APELINK)
 
 o/$(MODE)/test/tool/net/redbean_test.com.runs:			\
-		private .PLEDGE = stdio rpath wpath cpath proc inet
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 o/$(MODE)/test/tool/net/sqlite_test.com.runs:			\
-		private .PLEDGE = stdio rpath wpath cpath proc flock
+		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 
 .PHONY: o/$(MODE)/test/tool/net
 o/$(MODE)/test/tool/net:					\
