@@ -17,19 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/core/core.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -99,7 +99,7 @@ TEST(setrlimit, testFileSizeLimit) {
     snprintf(tmpname, sizeof(tmpname), "%s/%s.%d",
              firstnonnull(getenv("TMPDIR"), "/tmp"),
              firstnonnull(program_invocation_short_name, "unknown"), getpid());
-    ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC)));
+    ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC, 0644)));
     rngset(junkdata, 512, rand64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {
       ASSERT_EQ(512, write(fd, junkdata, 512));

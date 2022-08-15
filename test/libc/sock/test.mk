@@ -55,6 +55,19 @@ o/$(MODE)/test/libc/sock/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/sock/unix_test.com.runs:			\
+		private .PLEDGE = stdio rpath wpath cpath proc unix
+
+o/$(MODE)/test/libc/sock/setsockopt_test.com.runs		\
+o/$(MODE)/test/libc/sock/sendfile_test.com.runs			\
+o/$(MODE)/test/libc/sock/poll_test.com.runs			\
+o/$(MODE)/test/libc/sock/pollfd_test.com.runs:			\
+		private .PLEDGE = stdio rpath wpath cpath proc inet
+
+o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs		\
+o/$(MODE)/test/libc/sock/nointernet_test.com.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath proc inet recvfd sendfd
+
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk
 
 .PHONY: o/$(MODE)/test/libc/sock

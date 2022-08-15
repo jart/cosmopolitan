@@ -70,6 +70,12 @@ o/$(MODE)/test/tool/net/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/tool/net/redbean_test.com.runs:			\
+		private .PLEDGE = stdio rpath wpath cpath proc inet
+
+o/$(MODE)/test/tool/net/sqlite_test.com.runs:			\
+		private .PLEDGE = stdio rpath wpath cpath proc flock
+
 .PHONY: o/$(MODE)/test/tool/net
 o/$(MODE)/test/tool/net:					\
 		$(TEST_TOOL_NET_BINS)				\

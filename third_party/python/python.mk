@@ -2096,6 +2096,15 @@ o/$(MODE)/third_party/python/Lib/test/test_wsgiref.py.runs: private	\
 			/usr/local/etc/httpd/conf/mime.types		\
 			/usr/local/etc/mime.types
 
+o/$(MODE)/third_party/python/Lib/test/test_epoll.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath proc inet
+o/$(MODE)/third_party/python/Lib/test/test_fcntl.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath proc flock
+o/$(MODE)/third_party/python/Lib/test/test_signal.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath proc flock inet
+o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath proc inet
+
 o/$(MODE)/third_party/python/Lib/test/test_grammar.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
 	@$(COMPILE) -ACHECK -wtT$@ $(PYHARNESSARGS) $< -m test.test_grammar $(PYTESTARGS)

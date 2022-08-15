@@ -92,6 +92,10 @@ o/$(MODE)/test/libc/calls/life-classic.com.zip.o: private		\
 		ZIPOBJ_FLAGS +=						\
 			-B
 
+# TODO(jart): Have pledge() support SIOCGIFCONF
+o/$(MODE)/test/libc/calls/ioctl_siocgifconf_test.com.runs:		\
+		private .PLEDGE =
+
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\
 		$(TEST_LIBC_CALLS_BINS)					\

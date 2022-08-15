@@ -85,7 +85,7 @@ GCC = o/third_party/gcc/bin/x86_64-pc-linux-gnu-gcc.exe
 STRIP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-strip.exe
 OBJCOPY = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objcopy.exe
 OBJDUMP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objdump.exe
-ADDR2LINE = $(shell build/bootstrap/pwd.com)/o/third_party/gcc/bin/x86_64-pc-linux-gnu-addr2line.exe
+ADDR2LINE = $(PWD)/o/third_party/gcc/bin/x86_64-pc-linux-gnu-addr2line.exe
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
 AS = o/third_party/gcc/bin/x86_64-linux-musl-as
@@ -98,7 +98,7 @@ GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
 STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
 OBJCOPY = o/third_party/gcc/bin/x86_64-linux-musl-objcopy
 OBJDUMP = o/third_party/gcc/bin/x86_64-linux-musl-objdump
-ADDR2LINE = $(shell build/bootstrap/pwd.com)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
+ADDR2LINE = $(PWD)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
 endif
 
 export ADDR2LINE

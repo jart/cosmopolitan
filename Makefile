@@ -82,6 +82,7 @@ o/$(MODE):			\
 	o/$(MODE)/third_party
 
 .STRICT = 1
+.PLEDGE = stdio rpath wpath cpath fattr proc
 .UNVEIL =			\
 	libc/integral		\
 	libc/disclaimer.inc	\
