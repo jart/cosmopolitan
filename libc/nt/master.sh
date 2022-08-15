@@ -15,7 +15,6 @@ imp	'ActivateActCtx'					ActivateActCtx						kernel32	0
 imp	'ActivateActCtxWorker'					ActivateActCtxWorker					kernel32	4
 imp	'AddAtom'						AddAtomW						kernel32	6
 imp	'AddConsoleAlias'					AddConsoleAliasW					kernel32	0
-imp	'AddConsoleAliasA'					AddConsoleAliasA					kernel32	0
 imp	'AddDllDirectory'					AddDllDirectory						kernel32	0
 imp	'AddIntegrityLabelToBoundaryDescriptor'			AddIntegrityLabelToBoundaryDescriptor			kernel32	10
 imp	'AddLocalAlternateComputerName'				AddLocalAlternateComputerNameW				kernel32	12
@@ -92,9 +91,7 @@ imp	'BasepSetFileEncryptionCompression'			BasepSetFileEncryptionCompression			ke
 imp	'Beep'							Beep							kernel32	0
 imp	'BeginUpdateResource'					BeginUpdateResourceW					kernel32	104
 imp	'BindIoCompletionCallback'				BindIoCompletionCallback				kernel32	105
-imp	'BuildCommDCBA'						BuildCommDCBA						kernel32	106
 imp	'BuildCommDCBAndTimeouts'				BuildCommDCBAndTimeoutsW				kernel32	108
-imp	'BuildCommDCBAndTimeoutsA'				BuildCommDCBAndTimeoutsA				kernel32	107
 imp	'BuildCommDCBW'						BuildCommDCBW						kernel32	109
 imp	'CallNamedPipe'						CallNamedPipeW						kernel32	0	7
 imp	'CallNamedPipeA'					CallNamedPipeA						kernel32	110	7
@@ -141,64 +138,37 @@ imp	'ConvertThreadToFiberEx'				ConvertThreadToFiberEx					kernel32	0
 imp	'CopyContext'						CopyContext						kernel32	0
 imp	'CopyFile'						CopyFileW						kernel32	0	3
 imp	'CopyFile2'						CopyFile2						kernel32	0
-imp	'CopyFileA'						CopyFileA						kernel32	168	3
 imp	'CopyFileEx'						CopyFileExW						kernel32	0
-imp	'CopyFileExA'						CopyFileExA						kernel32	169
 imp	'CopyFileTransacted'					CopyFileTransactedW					kernel32	172
-imp	'CopyFileTransactedA'					CopyFileTransactedA					kernel32	171
 imp	'CopyLZFile'						CopyLZFile						kernel32	174
 imp	'CreateActCtx'						CreateActCtxW						kernel32	0
-imp	'CreateActCtxA'						CreateActCtxA						kernel32	175
 imp	'CreateActCtxWWorker'					CreateActCtxWWorker					kernel32	177
 imp	'CreateBoundaryDescriptor'				CreateBoundaryDescriptorW				kernel32	0
-imp	'CreateBoundaryDescriptorA'				CreateBoundaryDescriptorA				kernel32	178
 imp	'CreateConsoleScreenBuffer'				CreateConsoleScreenBuffer				kernel32	0
-imp	'CreateDirectoryA'					CreateDirectoryA					kernel32	0	2
 imp	'CreateDirectoryEx'					CreateDirectoryExW					kernel32	0
-imp	'CreateDirectoryExA'					CreateDirectoryExA					kernel32	182
 imp	'CreateDirectoryTransacted'				CreateDirectoryTransactedW				kernel32	185
-imp	'CreateDirectoryTransactedA'				CreateDirectoryTransactedA				kernel32	184
 imp	'CreateEvent'						CreateEventW						kernel32	0	4
-imp	'CreateEventA'						CreateEventA						kernel32	0	4
 imp	'CreateEventEx'						CreateEventExW						kernel32	0	4
-imp	'CreateEventExA'					CreateEventExA						kernel32	0	4
 imp	'CreateFiber'						CreateFiber						kernel32	0
 imp	'CreateFiberEx'						CreateFiberEx						kernel32	0
 imp	'CreateFile2'						CreateFile2						kernel32	0
-imp	'CreateFileA'						CreateFileA						kernel32	0	7
-imp	'CreateFileMappingA'					CreateFileMappingA					kernel32	196	7
 imp	'CreateFileMappingFromApp'				CreateFileMappingFromApp				kernel32	0
-imp	'CreateFileMappingNumaA'				CreateFileMappingNumaA					kernel32	198	7
 imp	'CreateFileTransacted'					CreateFileTransactedW					kernel32	202
-imp	'CreateFileTransactedA'					CreateFileTransactedA					kernel32	201
 imp	'CreateHardLink'					CreateHardLinkW						kernel32	0	3
-imp	'CreateHardLinkA'					CreateHardLinkA						kernel32	0	3
 imp	'CreateHardLinkTransacted'				CreateHardLinkTransactedW				kernel32	206
-imp	'CreateHardLinkTransactedA'				CreateHardLinkTransactedA				kernel32	205
 imp	'CreateIoCompletionPort'				CreateIoCompletionPort					kernel32	0	4
 imp	'CreateJobObject'					CreateJobObjectW					kernel32	210
-imp	'CreateJobObjectA'					CreateJobObjectA					kernel32	209
 imp	'CreateJobSet'						CreateJobSet						kernel32	211
 imp	'CreateMailslot'					CreateMailslotW						kernel32	213
-imp	'CreateMailslotA'					CreateMailslotA						kernel32	212
 imp	'CreateMemoryResourceNotification'			CreateMemoryResourceNotification			kernel32	0
 imp	'CreateMutex'						CreateMutexW						kernel32	0
-imp	'CreateMutexA'						CreateMutexA						kernel32	0
 imp	'CreateMutexEx'						CreateMutexExW						kernel32	0
-imp	'CreateMutexExA'					CreateMutexExA						kernel32	0
-imp	'CreateNamedPipeA'					CreateNamedPipeA					kernel32	219	8
 imp	'CreatePrivateNamespace'				CreatePrivateNamespaceW					kernel32	0
-imp	'CreatePrivateNamespaceA'				CreatePrivateNamespaceA					kernel32	222
-imp	'CreateProcessA'					CreateProcessA						kernel32	0	10
 imp	'CreateRemoteThread'					CreateRemoteThread					kernel32	0
 imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					kernel32	0
 imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	0
-imp	'CreateSemaphoreA'					CreateSemaphoreA					kernel32	232
 imp	'CreateSemaphoreEx'					CreateSemaphoreExW					kernel32	0
-imp	'CreateSemaphoreExA'					CreateSemaphoreExA					kernel32	233
-imp	'CreateSymbolicLinkA'					CreateSymbolicLinkA					kernel32	0	3
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
-imp	'CreateSymbolicLinkTransactedA'				CreateSymbolicLinkTransactedA				kernel32	237
 imp	'CreateTapePartition'					CreateTapePartition					kernel32	240
 imp	'CreateThreadpool'					CreateThreadpool					kernel32	0
 imp	'CreateThreadpoolCleanupGroup'				CreateThreadpoolCleanupGroup				kernel32	0
@@ -212,9 +182,7 @@ imp	'CreateToolhelp32Snapshot'				CreateToolhelp32Snapshot				kernel32	0	2
 imp	'CreateUmsCompletionList'				CreateUmsCompletionList					kernel32	251
 imp	'CreateUmsThreadContext'				CreateUmsThreadContext					kernel32	252
 imp	'CreateWaitableTimer'					CreateWaitableTimerW					kernel32	0	3
-imp	'CreateWaitableTimerA'					CreateWaitableTimerA					kernel32	253	3
 imp	'CreateWaitableTimerEx'					CreateWaitableTimerExW					kernel32	0	4
-imp	'CreateWaitableTimerExA'				CreateWaitableTimerExA					kernel32	254	4
 imp	'DeactivateActCtx'					DeactivateActCtx					kernel32	0
 imp	'DeactivateActCtxWorker'				DeactivateActCtxWorker					kernel32	259
 imp	'DebugActiveProcess'					DebugActiveProcess					kernel32	0	1
@@ -222,14 +190,11 @@ imp	'DebugActiveProcessStop'				DebugActiveProcessStop					kernel32	0	1
 imp	'DebugBreakProcess'					DebugBreakProcess					kernel32	263	1
 imp	'DebugSetProcessKillOnExit'				DebugSetProcessKillOnExit				kernel32	264
 imp	'DefineDosDevice'					DefineDosDeviceW					kernel32	0
-imp	'DefineDosDeviceA'					DefineDosDeviceA					kernel32	267
 imp	'DeleteAtom'						DeleteAtom						kernel32	270
 imp	'DeleteBoundaryDescriptor'				DeleteBoundaryDescriptor				kernel32	0
 imp	'DeleteCriticalSection'					DeleteCriticalSection					kernel32	0	1
 imp	'DeleteFiber'						DeleteFiber						kernel32	0
-imp	'DeleteFileA'						DeleteFileA						kernel32	0	1
 imp	'DeleteFileTransacted'					DeleteFileTransactedW					kernel32	276
-imp	'DeleteFileTransactedA'					DeleteFileTransactedA					kernel32	275
 imp	'DeleteProcThreadAttributeList'				DeleteProcThreadAttributeList				kernel32	0	1
 imp	'DeleteSynchronizationBarrier'				DeleteSynchronizationBarrier				kernel32	279
 imp	'DeleteTimerQueue'					DeleteTimerQueue					kernel32	280
@@ -238,67 +203,46 @@ imp	'DeleteTimerQueueTimer'					DeleteTimerQueueTimer					kernel32	0
 imp	'DeleteUmsCompletionList'				DeleteUmsCompletionList					kernel32	283
 imp	'DeleteUmsThreadContext'				DeleteUmsThreadContext					kernel32	284
 imp	'DeleteVolumeMountPoint'				DeleteVolumeMountPointW					kernel32	0
-imp	'DeleteVolumeMountPointA'				DeleteVolumeMountPointA					kernel32	285
 imp	'DequeueUmsCompletionListItems'				DequeueUmsCompletionListItems				kernel32	287
 imp	'DisableThreadLibraryCalls'				DisableThreadLibraryCalls				kernel32	0
 imp	'DisableThreadProfiling'				DisableThreadProfiling					kernel32	290
 imp	'DiscardVirtualMemory'					DiscardVirtualMemory					kernel32	0
 imp	'DisconnectNamedPipe'					DisconnectNamedPipe					kernel32	0	1
 imp	'DnsHostnameToComputerName'				DnsHostnameToComputerNameW				kernel32	296
-imp	'DnsHostnameToComputerNameA'				DnsHostnameToComputerNameA				kernel32	294
 imp	'DosDateTimeToFileTime'					DosDateTimeToFileTime					kernel32	297
 imp	'DosPathToSessionPath'					DosPathToSessionPathW					kernel32	299
-imp	'DosPathToSessionPathA'					DosPathToSessionPathA					kernel32	298
 imp	'DuplicateConsoleHandle'				DuplicateConsoleHandle					kernel32	300
 imp	'DuplicateEncryptionInfoFileExt'			DuplicateEncryptionInfoFileExt				kernel32	301
 imp	'DuplicateHandle'					DuplicateHandle						kernel32	0	7
 imp	'EnableThreadProfiling'					EnableThreadProfiling					kernel32	303
 imp	'EndUpdateResource'					EndUpdateResourceW					kernel32	307
-imp	'EndUpdateResourceA'					EndUpdateResourceA					kernel32	306
 imp	'EnterCriticalSection'					EnterCriticalSection					kernel32	0	1
 imp	'EnterSynchronizationBarrier'				EnterSynchronizationBarrier				kernel32	0
 imp	'EnterUmsSchedulingMode'				EnterUmsSchedulingMode					kernel32	310
 imp	'EnumCalendarInfo'					EnumCalendarInfoW					kernel32	0
-imp	'EnumCalendarInfoA'					EnumCalendarInfoA					kernel32	311
 imp	'EnumCalendarInfoEx'					EnumCalendarInfoExW					kernel32	0
-imp	'EnumCalendarInfoExA'					EnumCalendarInfoExA					kernel32	312
 imp	'EnumCalendarInfoExEx'					EnumCalendarInfoExEx					kernel32	0
 imp	'EnumDateFormats'					EnumDateFormatsW					kernel32	0
-imp	'EnumDateFormatsA'					EnumDateFormatsA					kernel32	316
 imp	'EnumDateFormatsEx'					EnumDateFormatsExW					kernel32	0
-imp	'EnumDateFormatsExA'					EnumDateFormatsExA					kernel32	317
 imp	'EnumDateFormatsExEx'					EnumDateFormatsExEx					kernel32	0
 imp	'EnumLanguageGroupLocales'				EnumLanguageGroupLocalesW				kernel32	0
-imp	'EnumLanguageGroupLocalesA'				EnumLanguageGroupLocalesA				kernel32	321
 imp	'EnumResourceLanguages'					EnumResourceLanguagesW					kernel32	326
-imp	'EnumResourceLanguagesA'				EnumResourceLanguagesA					kernel32	323
 imp	'EnumResourceLanguagesEx'				EnumResourceLanguagesExW				kernel32	0
-imp	'EnumResourceLanguagesExA'				EnumResourceLanguagesExA				kernel32	0
 imp	'EnumResourceNames'					EnumResourceNamesW					kernel32	0
-imp	'EnumResourceNamesA'					EnumResourceNamesA					kernel32	327
 imp	'EnumResourceNamesEx'					EnumResourceNamesExW					kernel32	0
-imp	'EnumResourceNamesExA'					EnumResourceNamesExA					kernel32	0
 imp	'EnumResourceTypes'					EnumResourceTypesW					kernel32	334
-imp	'EnumResourceTypesA'					EnumResourceTypesA					kernel32	331
 imp	'EnumResourceTypesEx'					EnumResourceTypesExW					kernel32	0
-imp	'EnumResourceTypesExA'					EnumResourceTypesExA					kernel32	0
 imp	'EnumSystemCodePages'					EnumSystemCodePagesW					kernel32	0
-imp	'EnumSystemCodePagesA'					EnumSystemCodePagesA					kernel32	335
 imp	'EnumSystemFirmwareTables'				EnumSystemFirmwareTables				kernel32	0
 imp	'EnumSystemGeoID'					EnumSystemGeoID						kernel32	0
 imp	'EnumSystemGeoNames'					EnumSystemGeoNames					kernel32	318
 imp	'EnumSystemLanguageGroups'				EnumSystemLanguageGroupsW				kernel32	0
-imp	'EnumSystemLanguageGroupsA'				EnumSystemLanguageGroupsA				kernel32	340
 imp	'EnumSystemLocales'					EnumSystemLocalesW					kernel32	0
-imp	'EnumSystemLocalesA'					EnumSystemLocalesA					kernel32	0
 imp	'EnumSystemLocalesEx'					EnumSystemLocalesEx					kernel32	0
 imp	'EnumTimeFormats'					EnumTimeFormatsW					kernel32	0
-imp	'EnumTimeFormatsA'					EnumTimeFormatsA					kernel32	345
 imp	'EnumTimeFormatsEx'					EnumTimeFormatsEx					kernel32	0
 imp	'EnumUILanguages'					EnumUILanguagesW					kernel32	0
-imp	'EnumUILanguagesA'					EnumUILanguagesA					kernel32	348
 imp	'EnumerateLocalComputerNames'				EnumerateLocalComputerNamesW				kernel32	351
-imp	'EnumerateLocalComputerNamesA'				EnumerateLocalComputerNamesA				kernel32	350
 imp	'EraseTape'						EraseTape						kernel32	352
 imp	'EscapeCommFunction'					EscapeCommFunction					kernel32	0
 imp	'ExecuteUmsThread'					ExecuteUmsThread					kernel32	354
@@ -306,54 +250,38 @@ imp	'ExitProcess'						ExitProcess						kernel32	0	1	# a.k.a. RtlExitUserProcess
 imp	'ExitThread'						ExitThread						kernel32	0	1
 imp	'ExitVDM'						ExitVDM							kernel32	357
 imp	'ExpandEnvironmentStrings'				ExpandEnvironmentStringsW				kernel32	0
-imp	'ExpandEnvironmentStringsA'				ExpandEnvironmentStringsA				kernel32	0
 imp	'FatalAppExit'						FatalAppExitW						kernel32	0
-imp	'FatalAppExitA'						FatalAppExitA						kernel32	0
 imp	'FatalExit'						FatalExit						kernel32	364	1
 imp	'FileTimeToDosDateTime'					FileTimeToDosDateTime					kernel32	365
 imp	'FileTimeToLocalFileTime'				FileTimeToLocalFileTime					kernel32	0
 imp	'FileTimeToSystemTime'					FileTimeToSystemTime					kernel32	0
 imp	'FillConsoleOutputAttribute'				FillConsoleOutputAttribute				kernel32	0	5
 imp	'FillConsoleOutputCharacter'				FillConsoleOutputCharacterW				kernel32	0	5
-imp	'FillConsoleOutputCharacterA'				FillConsoleOutputCharacterA				kernel32	0	5
 imp	'FindActCtxSectionGuid'					FindActCtxSectionGuid					kernel32	0
 imp	'FindActCtxSectionGuidWorker'				FindActCtxSectionGuidWorker				kernel32	372
 imp	'FindActCtxSectionString'				FindActCtxSectionStringW				kernel32	0
-imp	'FindActCtxSectionStringA'				FindActCtxSectionStringA				kernel32	373
 imp	'FindActCtxSectionStringWWorker'			FindActCtxSectionStringWWorker				kernel32	375
 imp	'FindAtom'						FindAtomW						kernel32	377
-imp	'FindAtomA'						FindAtomA						kernel32	376
 imp	'FindCloseChangeNotification'				FindCloseChangeNotification				kernel32	0
 imp	'FindFirstChangeNotification'				FindFirstChangeNotificationW				kernel32	0
-imp	'FindFirstChangeNotificationA'				FindFirstChangeNotificationA				kernel32	0
-imp	'FindFirstFileA'					FindFirstFileA						kernel32	0	2
 imp	'FindFirstFileEx'					FindFirstFileExW					kernel32	0	6
-imp	'FindFirstFileExA'					FindFirstFileExA					kernel32	0	6
 imp	'FindFirstFileName'					FindFirstFileNameW					kernel32	0
 imp	'FindFirstFileNameTransacted'				FindFirstFileNameTransactedW				kernel32	385
 imp	'FindFirstFileTransacted'				FindFirstFileTransactedW				kernel32	388
-imp	'FindFirstFileTransactedA'				FindFirstFileTransactedA				kernel32	387
 imp	'FindFirstStream'					FindFirstStreamW					kernel32	0
 imp	'FindFirstStreamTransacted'				FindFirstStreamTransactedW				kernel32	390
 imp	'FindFirstVolume'					FindFirstVolumeW					kernel32	0	2
-imp	'FindFirstVolumeA'					FindFirstVolumeA					kernel32	392	2
 imp	'FindFirstVolumeMountPoint'				FindFirstVolumeMountPointW				kernel32	394
-imp	'FindFirstVolumeMountPointA'				FindFirstVolumeMountPointA				kernel32	393
 imp	'FindNLSString'						FindNLSString						kernel32	0
 imp	'FindNLSStringEx'					FindNLSStringEx						kernel32	0
 imp	'FindNextChangeNotification'				FindNextChangeNotification				kernel32	0
-imp	'FindNextFileA'						FindNextFileA						kernel32	0	2
 imp	'FindNextFileName'					FindNextFileNameW					kernel32	0
 imp	'FindNextStream'					FindNextStreamW						kernel32	0
 imp	'FindNextVolume'					FindNextVolumeW						kernel32	0	3
-imp	'FindNextVolumeA'					FindNextVolumeA						kernel32	403	3
 imp	'FindNextVolumeMountPoint'				FindNextVolumeMountPointW				kernel32	405
-imp	'FindNextVolumeMountPointA'				FindNextVolumeMountPointA				kernel32	404
 imp	'FindPackagesByPackageFamily'				FindPackagesByPackageFamily				kernel32	0
 imp	'FindResource'						FindResourceW						kernel32	0
-imp	'FindResourceA'						FindResourceA						kernel32	408
 imp	'FindResourceEx'					FindResourceExW						kernel32	0
-imp	'FindResourceExA'					FindResourceExA						kernel32	409
 imp	'FindStringOrdinal'					FindStringOrdinal					kernel32	0
 imp	'FindVolumeClose'					FindVolumeClose						kernel32	0	1
 imp	'FindVolumeMountPointClose'				FindVolumeMountPointClose				kernel32	414
@@ -364,13 +292,10 @@ imp	'FlsSetValue'						FlsSetValue						kernel32	0
 imp	'FlushConsoleInputBuffer'				FlushConsoleInputBuffer					kernel32	0	1
 imp	'FlushInstructionCache'					FlushInstructionCache					kernel32	0
 imp	'FoldString'						FoldStringW						kernel32	0
-imp	'FoldStringA'						FoldStringA						kernel32	424
 imp	'FormatApplicationUserModelId'				FormatApplicationUserModelId				kernel32	0
 imp	'FormatMessage'						FormatMessageW						kernel32	0	7
-imp	'FormatMessageA'					FormatMessageA						kernel32	0	7
 imp	'FreeConsole'						FreeConsole						kernel32	0	0
 imp	'FreeEnvironmentStrings'				FreeEnvironmentStringsW					kernel32	0	1
-imp	'FreeEnvironmentStringsA'				FreeEnvironmentStringsA					kernel32	0	1
 imp	'FreeLibrary'						FreeLibrary						kernel32	0	1
 imp	'FreeLibraryAndExitThread'				FreeLibraryAndExitThread				kernel32	0
 imp	'FreeMemoryJobObject'					FreeMemoryJobObject					kernel32	435
@@ -386,18 +311,14 @@ imp	'GetApplicationRestartSettings'				GetApplicationRestartSettings				kernel32
 imp	'GetApplicationRestartSettingsWorker'			GetApplicationRestartSettingsWorker			kernel32	447
 imp	'GetApplicationUserModelId'				GetApplicationUserModelId				kernel32	0
 imp	'GetAtomName'						GetAtomNameW						kernel32	450
-imp	'GetAtomNameA'						GetAtomNameA						kernel32	449
 imp	'GetBinaryType'						GetBinaryTypeW						kernel32	453
-imp	'GetBinaryTypeA'					GetBinaryTypeA						kernel32	452
 imp	'GetCPInfo'						GetCPInfo						kernel32	0
 imp	'GetCPInfoEx'						GetCPInfoExW						kernel32	0
-imp	'GetCPInfoExA'						GetCPInfoExA						kernel32	455
 imp	'GetCalendarDateFormat'					GetCalendarDateFormat					kernel32	458
 imp	'GetCalendarDateFormatEx'				GetCalendarDateFormatEx					kernel32	459
 imp	'GetCalendarDaysInMonth'				GetCalendarDaysInMonth					kernel32	460
 imp	'GetCalendarDifferenceInDays'				GetCalendarDifferenceInDays				kernel32	461
 imp	'GetCalendarInfo'					GetCalendarInfoW					kernel32	0
-imp	'GetCalendarInfoA'					GetCalendarInfoA					kernel32	462
 imp	'GetCalendarInfoEx'					GetCalendarInfoEx					kernel32	0
 imp	'GetCalendarMonthsInYear'				GetCalendarMonthsInYear					kernel32	465
 imp	'GetCalendarSupportedDateRange'				GetCalendarSupportedDateRange				kernel32	466
@@ -410,25 +331,15 @@ imp	'GetCommProperties'					GetCommProperties					kernel32	0
 imp	'GetCommState'						GetCommState						kernel32	0
 imp	'GetCommTimeouts'					GetCommTimeouts						kernel32	0
 imp	'GetCommandLine'					GetCommandLineW						kernel32	0	0
-imp	'GetCommandLineA'					GetCommandLineA						kernel32	0	0
 imp	'GetCompressedFileSize'					GetCompressedFileSizeW					kernel32	0	2
-imp	'GetCompressedFileSizeA'				GetCompressedFileSizeA					kernel32	0	2
 imp	'GetCompressedFileSizeTransacted'			GetCompressedFileSizeTransactedW			kernel32	479
-imp	'GetCompressedFileSizeTransactedA'			GetCompressedFileSizeTransactedA			kernel32	478
 imp	'GetComputerName'					GetComputerNameW					kernel32	484
-imp	'GetComputerNameA'					GetComputerNameA					kernel32	481
 imp	'GetComputerNameEx'					GetComputerNameExW					kernel32	0	3
-imp	'GetComputerNameExA'					GetComputerNameExA					kernel32	0	3
 imp	'GetConsoleAlias'					GetConsoleAliasW					kernel32	0
-imp	'GetConsoleAliasA'					GetConsoleAliasA					kernel32	0
 imp	'GetConsoleAliasExes'					GetConsoleAliasExesW					kernel32	0
-imp	'GetConsoleAliasExesA'					GetConsoleAliasExesA					kernel32	0
 imp	'GetConsoleAliasExesLength'				GetConsoleAliasExesLengthW				kernel32	0
-imp	'GetConsoleAliasExesLengthA'				GetConsoleAliasExesLengthA				kernel32	0
 imp	'GetConsoleAliases'					GetConsoleAliasesW					kernel32	0
-imp	'GetConsoleAliasesA'					GetConsoleAliasesA					kernel32	0
 imp	'GetConsoleAliasesLength'				GetConsoleAliasesLengthW				kernel32	0
-imp	'GetConsoleAliasesLengthA'				GetConsoleAliasesLengthA				kernel32	0
 imp	'GetConsoleCP'						GetConsoleCP						kernel32	0	0
 imp	'GetConsoleCharType'					GetConsoleCharType					kernel32	496
 imp	'GetConsoleCursorInfo'					GetConsoleCursorInfo					kernel32	0	2
@@ -440,21 +351,17 @@ imp	'GetConsoleHardwareState'				GetConsoleHardwareState					kernel32	506
 imp	'GetConsoleHistoryInfo'					GetConsoleHistoryInfo					kernel32	0
 imp	'GetConsoleInputWaitHandle'				GetConsoleInputWaitHandle				kernel32	510
 imp	'GetConsoleKeyboardLayoutName'				GetConsoleKeyboardLayoutNameW				kernel32	512
-imp	'GetConsoleKeyboardLayoutNameA'				GetConsoleKeyboardLayoutNameA				kernel32	511
 imp	'GetConsoleMode'					GetConsoleMode						kernel32	0	2
 imp	'GetConsoleNlsMode'					GetConsoleNlsMode					kernel32	514
 imp	'GetConsoleOriginalTitle'				GetConsoleOriginalTitleW				kernel32	0
-imp	'GetConsoleOriginalTitleA'				GetConsoleOriginalTitleA				kernel32	0
 imp	'GetConsoleOutputCP'					GetConsoleOutputCP					kernel32	0	0
 imp	'GetConsoleProcessList'					GetConsoleProcessList					kernel32	0
 imp	'GetConsoleScreenBufferInfo'				GetConsoleScreenBufferInfo				kernel32	0	2
 imp	'GetConsoleScreenBufferInfoEx'				GetConsoleScreenBufferInfoEx				kernel32	0	2
 imp	'GetConsoleSelectionInfo'				GetConsoleSelectionInfo					kernel32	0	1
 imp	'GetConsoleTitle'					GetConsoleTitleW					kernel32	0	2
-imp	'GetConsoleTitleA'					GetConsoleTitleA					kernel32	0	2
 imp	'GetConsoleWindow'					GetConsoleWindow					kernel32	0	0
 imp	'GetCurrencyFormat'					GetCurrencyFormatW					kernel32	0
-imp	'GetCurrencyFormatA'					GetCurrencyFormatA					kernel32	525
 imp	'GetCurrencyFormatEx'					GetCurrencyFormatEx					kernel32	0
 imp	'GetCurrentActCtx'					GetCurrentActCtx					kernel32	0
 imp	'GetCurrentActCtxWorker'				GetCurrentActCtxWorker					kernel32	529
@@ -462,7 +369,6 @@ imp	'GetCurrentApplicationUserModelId'			GetCurrentApplicationUserModelId			kern
 imp	'GetCurrentConsoleFont'					GetCurrentConsoleFont					kernel32	0
 imp	'GetCurrentConsoleFontEx'				GetCurrentConsoleFontEx					kernel32	0
 imp	'GetCurrentDirectory'					GetCurrentDirectoryW					kernel32	0	2
-imp	'GetCurrentDirectoryA'					GetCurrentDirectoryA					kernel32	0	2
 imp	'GetCurrentPackageFamilyName'				GetCurrentPackageFamilyName				kernel32	0
 imp	'GetCurrentPackageFullName'				GetCurrentPackageFullName				kernel32	0
 imp	'GetCurrentPackageId'					GetCurrentPackageId					kernel32	0
@@ -475,39 +381,27 @@ imp	'GetCurrentThreadId'					GetCurrentThreadId					kernel32	0	0
 imp	'GetCurrentThreadStackLimits'				GetCurrentThreadStackLimits				kernel32	0
 imp	'GetCurrentUmsThread'					GetCurrentUmsThread					kernel32	547
 imp	'GetDateFormat'						GetDateFormatW						kernel32	0
-imp	'GetDateFormatA'					GetDateFormatA						kernel32	0
 imp	'GetDateFormatAWorker'					GetDateFormatAWorker					kernel32	549
 imp	'GetDateFormatEx'					GetDateFormatEx						kernel32	0
 imp	'GetDateFormatWWorker'					GetDateFormatWWorker					kernel32	552
 imp	'GetDefaultCommConfig'					GetDefaultCommConfigW					kernel32	554
-imp	'GetDefaultCommConfigA'					GetDefaultCommConfigA					kernel32	553
 imp	'GetDevicePowerState'					GetDevicePowerState					kernel32	555
 imp	'GetDiskFreeSpace'					GetDiskFreeSpaceW					kernel32	0
-imp	'GetDiskFreeSpaceA'					GetDiskFreeSpaceA					kernel32	0
 imp	'GetDiskFreeSpaceEx'					GetDiskFreeSpaceExW					kernel32	0
-imp	'GetDiskFreeSpaceExA'					GetDiskFreeSpaceExA					kernel32	0
 imp	'GetDllDirectory'					GetDllDirectoryW					kernel32	561
-imp	'GetDllDirectoryA'					GetDllDirectoryA					kernel32	560
 imp	'GetDriveType'						GetDriveTypeW						kernel32	0
-imp	'GetDriveTypeA'						GetDriveTypeA						kernel32	0
 imp	'GetDurationFormat'					GetDurationFormat					kernel32	564
 imp	'GetDurationFormatEx'					GetDurationFormatEx					kernel32	0
 imp	'GetDynamicTimeZoneInformation'				GetDynamicTimeZoneInformation				kernel32	0
 imp	'GetEnabledXStateFeatures'				GetEnabledXStateFeatures				kernel32	0
 imp	'GetEncryptedFileVersionExt'				GetEncryptedFileVersionExt				kernel32	568
 imp	'GetEnvironmentStrings'					GetEnvironmentStringsW					kernel32	0	1
-imp	'GetEnvironmentStringsA'				GetEnvironmentStringsA					kernel32	0	1
 imp	'GetEnvironmentVariable'				GetEnvironmentVariableW					kernel32	0	3
-imp	'GetEnvironmentVariableA'				GetEnvironmentVariableA					kernel32	0	3
 imp	'GetErrorMode'						GetErrorMode						kernel32	0
 imp	'GetExitCodeThread'					GetExitCodeThread					kernel32	0	2
 imp	'GetExpandedName'					GetExpandedNameW					kernel32	579
-imp	'GetExpandedNameA'					GetExpandedNameA					kernel32	578
-imp	'GetFileAttributesA'					GetFileAttributesA					kernel32	0	1
 imp	'GetFileAttributesEx'					GetFileAttributesExW					kernel32	0	3
-imp	'GetFileAttributesExA'					GetFileAttributesExA					kernel32	0	3
 imp	'GetFileAttributesTransacted'				GetFileAttributesTransactedW				kernel32	584
-imp	'GetFileAttributesTransactedA'				GetFileAttributesTransactedA				kernel32	583
 imp	'GetFileBandwidthReservation'				GetFileBandwidthReservation				kernel32	586
 imp	'GetFileInformationByHandle'				GetFileInformationByHandle				kernel32	0	2
 imp	'GetFileInformationByHandleEx'				GetFileInformationByHandleEx				kernel32	0	4
@@ -518,7 +412,6 @@ imp	'GetFileSizeEx'						GetFileSizeEx						kernel32	0	2
 imp	'GetFileTime'						GetFileTime						kernel32	0	4
 imp	'GetFileType'						GetFileType						kernel32	0	1
 imp	'GetFinalPathNameByHandle'				GetFinalPathNameByHandleW				kernel32	0	4
-imp	'GetFinalPathNameByHandleA'				GetFinalPathNameByHandleA				kernel32	0	4
 imp	'GetFirmwareEnvironmentVariable'			GetFirmwareEnvironmentVariableW				kernel32	600
 imp	'GetFirmwareEnvironmentVariableEx'			GetFirmwareEnvironmentVariableExW			kernel32	599
 imp	'GetFirmwareType'					GetFirmwareType						kernel32	601
@@ -531,35 +424,27 @@ imp	'GetLargestConsoleWindowSize'				GetLargestConsoleWindowSize				kernel32	0	1
 imp	'GetLastError'						GetLastError						kernel32	0	0
 imp	'GetLocalTime'						GetLocalTime						kernel32	0
 imp	'GetLocaleInfo'						GetLocaleInfoW						kernel32	0
-imp	'GetLocaleInfoA'					GetLocaleInfoA						kernel32	0
 imp	'GetLocaleInfoEx'					GetLocaleInfoEx						kernel32	0
 imp	'GetLogicalDriveStrings'				GetLogicalDriveStringsW					kernel32	0
-imp	'GetLogicalDriveStringsA'				GetLogicalDriveStringsA					kernel32	617
 imp	'GetLogicalDrives'					GetLogicalDrives					kernel32	0	0
 imp	'GetLogicalProcessorInformation'			GetLogicalProcessorInformation				kernel32	0
 imp	'GetLogicalProcessorInformationEx'			GetLogicalProcessorInformationEx			kernel32	0
 imp	'GetLongPathName'					GetLongPathNameW					kernel32	0
-imp	'GetLongPathNameA'					GetLongPathNameA					kernel32	0
 imp	'GetLongPathNameTransacted'				GetLongPathNameTransactedW				kernel32	624
-imp	'GetLongPathNameTransactedA'				GetLongPathNameTransactedA				kernel32	623
 imp	'GetMailslotInfo'					GetMailslotInfo						kernel32	626
 imp	'GetMaximumProcessorCount'				GetMaximumProcessorCount				kernel32	627	1	# Windows 7+
 imp	'GetMaximumProcessorGroupCount'				GetMaximumProcessorGroupCount				kernel32	628
 imp	'GetMemoryErrorHandlingCapabilities'			GetMemoryErrorHandlingCapabilities			kernel32	0
 imp	'GetModuleFileName'					GetModuleFileNameW					kernel32	0	3
-imp	'GetModuleFileNameA'					GetModuleFileNameA					kernel32	0	3
 imp	'GetModuleHandle'					GetModuleHandleA					kernel32	0	1
 imp	'GetModuleHandleEx'					GetModuleHandleExW					kernel32	0	3
-imp	'GetModuleHandleExA'					GetModuleHandleExA					kernel32	0	3
 imp	'GetModuleHandleW'					GetModuleHandleW					kernel32	0	1
 imp	'GetNLSVersion'						GetNLSVersion						kernel32	0
 imp	'GetNLSVersionEx'					GetNLSVersionEx						kernel32	0
 imp	'GetNamedPipeClientComputerName'			GetNamedPipeClientComputerNameW				kernel32	0
-imp	'GetNamedPipeClientComputerNameA'			GetNamedPipeClientComputerNameA				kernel32	639
 imp	'GetNamedPipeClientProcessId'				GetNamedPipeClientProcessId				kernel32	641
 imp	'GetNamedPipeClientSessionId'				GetNamedPipeClientSessionId				kernel32	642
 imp	'GetNamedPipeHandleState'				GetNamedPipeHandleStateW				kernel32	0
-imp	'GetNamedPipeHandleStateA'				GetNamedPipeHandleStateA				kernel32	643
 imp	'GetNamedPipeInfo'					GetNamedPipeInfo					kernel32	0
 imp	'GetNamedPipeServerProcessId'				GetNamedPipeServerProcessId				kernel32	646
 imp	'GetNamedPipeServerSessionId'				GetNamedPipeServerSessionId				kernel32	647
@@ -577,7 +462,6 @@ imp	'GetNumaProcessorNodeEx'				GetNumaProcessorNodeEx					kernel32	658
 imp	'GetNumaProximityNode'					GetNumaProximityNode					kernel32	659
 imp	'GetNumaProximityNodeEx'				GetNumaProximityNodeEx					kernel32	0
 imp	'GetNumberFormat'					GetNumberFormatW					kernel32	0
-imp	'GetNumberFormatA'					GetNumberFormatA					kernel32	661
 imp	'GetNumberFormatEx'					GetNumberFormatEx					kernel32	0
 imp	'GetNumberOfConsoleFonts'				GetNumberOfConsoleFonts					kernel32	664
 imp	'GetNumberOfConsoleInputEvents'				GetNumberOfConsoleInputEvents				kernel32	0	2
@@ -596,15 +480,10 @@ imp	'GetPackagesByPackageFamily'				GetPackagesByPackageFamily				kernel32	0
 imp	'GetPhysicallyInstalledSystemMemory'			GetPhysicallyInstalledSystemMemory			kernel32	0
 imp	'GetPriorityClass'					GetPriorityClass					kernel32	0	1
 imp	'GetPrivateProfileInt'					GetPrivateProfileIntW					kernel32	681
-imp	'GetPrivateProfileIntA'					GetPrivateProfileIntA					kernel32	680
 imp	'GetPrivateProfileSection'				GetPrivateProfileSectionW				kernel32	685
-imp	'GetPrivateProfileSectionA'				GetPrivateProfileSectionA				kernel32	682
 imp	'GetPrivateProfileSectionNames'				GetPrivateProfileSectionNamesW				kernel32	684
-imp	'GetPrivateProfileSectionNamesA'			GetPrivateProfileSectionNamesA				kernel32	683
 imp	'GetPrivateProfileString'				GetPrivateProfileStringW				kernel32	687
-imp	'GetPrivateProfileStringA'				GetPrivateProfileStringA				kernel32	686
 imp	'GetPrivateProfileStruct'				GetPrivateProfileStructW				kernel32	689
-imp	'GetPrivateProfileStructA'				GetPrivateProfileStructA				kernel32	688
 imp	'GetProcAddress'					GetProcAddress						kernel32	0	2
 imp	'GetProcessAffinityMask'				GetProcessAffinityMask					kernel32	0	3
 imp	'GetProcessDEPPolicy'					GetProcessDEPPolicy					kernel32	692
@@ -628,24 +507,17 @@ imp	'GetProcessWorkingSetSizeEx'				GetProcessWorkingSetSizeEx				kernel32	0	4
 imp	'GetProcessorSystemCycleTime'				GetProcessorSystemCycleTime				kernel32	0
 imp	'GetProductInfo'					GetProductInfo						kernel32	0
 imp	'GetProfileInt'						GetProfileIntW						kernel32	713
-imp	'GetProfileIntA'					GetProfileIntA						kernel32	712
 imp	'GetProfileSection'					GetProfileSectionW					kernel32	715
-imp	'GetProfileSectionA'					GetProfileSectionA					kernel32	714
 imp	'GetProfileString'					GetProfileStringW					kernel32	717
-imp	'GetProfileStringA'					GetProfileStringA					kernel32	716
 imp	'GetQueuedCompletionStatus'				GetQueuedCompletionStatus				kernel32	0	5
 imp	'GetQueuedCompletionStatusEx'				GetQueuedCompletionStatusEx				kernel32	0	6
 imp	'GetShortPathName'					GetShortPathNameW					kernel32	0
-imp	'GetShortPathNameA'					GetShortPathNameA					kernel32	720
 imp	'GetStagedPackagePathByFullName'			GetStagedPackagePathByFullName				kernel32	0
 imp	'GetStartupInfo'					GetStartupInfoW						kernel32	0	1
-imp	'GetStartupInfoA'					GetStartupInfoA						kernel32	723	1
 imp	'GetStdHandle'						GetStdHandle						kernel32	0	1
 imp	'GetStringScripts'					GetStringScripts					kernel32	0
 imp	'GetStringType'						GetStringTypeW						kernel32	0
-imp	'GetStringTypeA'					GetStringTypeA						kernel32	0
 imp	'GetStringTypeEx'					GetStringTypeExW					kernel32	0
-imp	'GetStringTypeExA'					GetStringTypeExA					kernel32	729
 imp	'GetSystemCpuSetInformation'				GetSystemCpuSetInformation				kernel32	0
 imp	'GetSystemDEPPolicy'					GetSystemDEPPolicy					kernel32	734
 imp	'GetSystemDefaultLCID'					GetSystemDefaultLCID					kernel32	0
@@ -666,12 +538,10 @@ imp	'GetSystemTimeAsFileTime'				GetSystemTimeAsFileTime					kernel32	0	1
 imp	'GetSystemTimePreciseAsFileTime'			GetSystemTimePreciseAsFileTime				kernel32	0	1
 imp	'GetSystemTimes'					GetSystemTimes						kernel32	0	3
 imp	'GetSystemWindowsDirectory'				GetSystemWindowsDirectoryW				kernel32	0
-imp	'GetSystemWindowsDirectoryA'				GetSystemWindowsDirectoryA				kernel32	0
 imp	'GetTapeParameters'					GetTapeParameters					kernel32	756
 imp	'GetTapePosition'					GetTapePosition						kernel32	757
 imp	'GetTapeStatus'						GetTapeStatus						kernel32	758
 imp	'GetTempFileName'					GetTempFileNameW					kernel32	0
-imp	'GetTempFileNameA'					GetTempFileNameA					kernel32	0
 imp	'GetTempPath'						GetTempPathW						kernel32	0	2
 imp	'GetTempPathA'						GetTempPathA						kernel32	0	2
 imp	'GetThreadContext'					GetThreadContext					kernel32	0
@@ -692,7 +562,6 @@ imp	'GetThreadUILanguage'					GetThreadUILanguage					kernel32	0
 imp	'GetTickCount'						GetTickCount						kernel32	0
 imp	'GetTickCount64'					GetTickCount64						kernel32	0	0
 imp	'GetTimeFormat'						GetTimeFormatW						kernel32	0
-imp	'GetTimeFormatA'					GetTimeFormatA						kernel32	0
 imp	'GetTimeFormatAWorker'					GetTimeFormatAWorker					kernel32	782
 imp	'GetTimeFormatEx'					GetTimeFormatEx						kernel32	0
 imp	'GetTimeFormatWWorker'					GetTimeFormatWWorker					kernel32	785
@@ -710,34 +579,25 @@ imp	'GetUserPreferredUILanguages'				GetUserPreferredUILanguages				kernel32	0
 imp	'GetVDMCurrentDirectories'				GetVDMCurrentDirectories				kernel32	798
 imp	'GetVersion'						GetVersion						kernel32	0
 imp	'GetVersionEx'						GetVersionExW						kernel32	0	1
-imp	'GetVersionExA'						GetVersionExA						kernel32	0	1
 imp	'GetVolumeInformation'					GetVolumeInformationW					kernel32	0
-imp	'GetVolumeInformationA'					GetVolumeInformationA					kernel32	0
 imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	0
 imp	'GetVolumeNameForVolumeMountPoint'			GetVolumeNameForVolumeMountPointW			kernel32	0
-imp	'GetVolumeNameForVolumeMountPointA'			GetVolumeNameForVolumeMountPointA			kernel32	805
 imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	0	3
-imp	'GetVolumePathNameA'					GetVolumePathNameA					kernel32	807	3
 imp	'GetVolumePathNamesForVolumeName'			GetVolumePathNamesForVolumeNameW			kernel32	0
-imp	'GetVolumePathNamesForVolumeNameA'			GetVolumePathNamesForVolumeNameA			kernel32	809
 imp	'GetWindowsDirectory'					GetWindowsDirectoryW					kernel32	0	2
 imp	'GetWindowsDirectoryA'					GetWindowsDirectoryA					kernel32	0	2
 imp	'GetWriteWatch'						GetWriteWatch						kernel32	0
 imp	'GetXStateFeaturesMask'					GetXStateFeaturesMask					kernel32	0
 imp	'GlobalAddAtom'						GlobalAddAtomW						kernel32	818
-imp	'GlobalAddAtomA'					GlobalAddAtomA						kernel32	815
 imp	'GlobalAddAtomEx'					GlobalAddAtomExW					kernel32	817
-imp	'GlobalAddAtomExA'					GlobalAddAtomExA					kernel32	816
 imp	'GlobalAlloc'						GlobalAlloc						kernel32	0	2
 imp	'GlobalCompact'						GlobalCompact						kernel32	820
 imp	'GlobalDeleteAtom'					GlobalDeleteAtom					kernel32	821
 imp	'GlobalFindAtom'					GlobalFindAtomW						kernel32	823
-imp	'GlobalFindAtomA'					GlobalFindAtomA						kernel32	822
 imp	'GlobalFix'						GlobalFix						kernel32	824
 imp	'GlobalFlags'						GlobalFlags						kernel32	825
 imp	'GlobalFree'						GlobalFree						kernel32	0	1
 imp	'GlobalGetAtomName'					GlobalGetAtomNameW					kernel32	828
-imp	'GlobalGetAtomNameA'					GlobalGetAtomNameA					kernel32	827
 imp	'GlobalHandle'						GlobalHandle						kernel32	829
 imp	'GlobalLock'						GlobalLock						kernel32	830
 imp	'GlobalMemoryStatus'					GlobalMemoryStatus					kernel32	831
@@ -786,7 +646,6 @@ imp	'IsBadHugeReadPtr'					IsBadHugeReadPtr					kernel32	883
 imp	'IsBadHugeWritePtr'					IsBadHugeWritePtr					kernel32	884
 imp	'IsBadReadPtr'						IsBadReadPtr						kernel32	885
 imp	'IsBadStringPtr'					IsBadStringPtrW						kernel32	887
-imp	'IsBadStringPtrA'					IsBadStringPtrA						kernel32	886
 imp	'IsBadWritePtr'						IsBadWritePtr						kernel32	888
 imp	'IsCalendarLeapDay'					IsCalendarLeapDay					kernel32	889
 imp	'IsCalendarLeapMonth'					IsCalendarLeapMonth					kernel32	890
@@ -807,33 +666,8 @@ imp	'IsValidLanguageGroup'					IsValidLanguageGroup					kernel32	0
 imp	'IsValidLocale'						IsValidLocale						kernel32	0
 imp	'IsValidLocaleName'					IsValidLocaleName					kernel32	0
 imp	'IsValidNLSVersion'					IsValidNLSVersion					kernel32	0
-imp	'K32EmptyWorkingSet'					K32EmptyWorkingSet					kernel32	0
-imp	'K32EnumDeviceDrivers'					K32EnumDeviceDrivers					kernel32	0
-imp	'K32EnumPageFiles'					K32EnumPageFilesW					kernel32	0
-imp	'K32EnumPageFilesA'					K32EnumPageFilesA					kernel32	0
-imp	'K32EnumProcessModules'					K32EnumProcessModules					kernel32	0
-imp	'K32EnumProcessModulesEx'				K32EnumProcessModulesEx					kernel32	0
-imp	'K32EnumProcesses'					K32EnumProcesses					kernel32	0
-imp	'K32GetDeviceDriverBaseName'				K32GetDeviceDriverBaseNameW				kernel32	0
-imp	'K32GetDeviceDriverBaseNameA'				K32GetDeviceDriverBaseNameA				kernel32	0
-imp	'K32GetDeviceDriverFileName'				K32GetDeviceDriverFileNameW				kernel32	0
-imp	'K32GetDeviceDriverFileNameA'				K32GetDeviceDriverFileNameA				kernel32	0
-imp	'K32GetMappedFileName'					K32GetMappedFileNameW					kernel32	0
-imp	'K32GetMappedFileNameA'					K32GetMappedFileNameA					kernel32	0
-imp	'K32GetModuleBaseName'					K32GetModuleBaseNameW					kernel32	0
-imp	'K32GetModuleFileNameEx'				K32GetModuleFileNameExW					kernel32	0
-imp	'K32GetModuleInformation'				K32GetModuleInformation					kernel32	0
-imp	'K32GetPerformanceInfo'					K32GetPerformanceInfo					kernel32	0
-imp	'K32GetProcessImageFileName'				K32GetProcessImageFileNameW				kernel32	0
-imp	'K32GetProcessMemoryInfo'				K32GetProcessMemoryInfo					kernel32	0
-imp	'K32GetWsChanges'					K32GetWsChanges						kernel32	0
-imp	'K32GetWsChangesEx'					K32GetWsChangesEx					kernel32	0
-imp	'K32InitializeProcessForWsWatch'			K32InitializeProcessForWsWatch				kernel32	0
-imp	'K32QueryWorkingSet'					K32QueryWorkingSet					kernel32	0
-imp	'K32QueryWorkingSetEx'					K32QueryWorkingSetEx					kernel32	0
 imp	'LCIDToLocaleName'					LCIDToLocaleName					kernel32	0
 imp	'LCMapString'						LCMapStringW						kernel32	0
-imp	'LCMapStringA'						LCMapStringA						kernel32	0
 imp	'LCMapStringEx'						LCMapStringEx						kernel32	0
 imp	'LZClose'						LZClose							kernel32	945
 imp	'LZCloseFile'						LZCloseFile						kernel32	946
@@ -842,15 +676,12 @@ imp	'LZCreateFile'						LZCreateFileW						kernel32	948
 imp	'LZDone'						LZDone							kernel32	949
 imp	'LZInit'						LZInit							kernel32	950
 imp	'LZOpenFile'						LZOpenFileW						kernel32	952
-imp	'LZOpenFileA'						LZOpenFileA						kernel32	951
 imp	'LZRead'						LZRead							kernel32	953
 imp	'LZSeek'						LZSeek							kernel32	954
 imp	'LZStart'						LZStart							kernel32	955
 imp	'LeaveCriticalSection'					LeaveCriticalSection					kernel32	0	1
 imp	'LoadLibrary'						LoadLibraryW						kernel32	0	1
-imp	'LoadLibraryA'						LoadLibraryA						kernel32	0	1
 imp	'LoadLibraryEx'						LoadLibraryExW						kernel32	0	3
-imp	'LoadLibraryExA'					LoadLibraryExA						kernel32	0	3
 imp	'LoadModule'						LoadModule						kernel32	964
 imp	'LoadPackagedLibrary'					LoadPackagedLibrary					kernel32	0
 imp	'LoadResource'						LoadResource						kernel32	0	2
@@ -878,16 +709,11 @@ imp	'MapViewOfFileFromApp'					MapViewOfFileFromApp					kernel32	0
 imp	'Module32First'						Module32FirstW						kernel32	992
 imp	'Module32Next'						Module32NextW						kernel32	994
 imp	'MoveFile'						MoveFileW						kernel32	1000	2
-imp	'MoveFileA'						MoveFileA						kernel32	995	2
-imp	'MoveFileExA'						MoveFileExA						kernel32	996	3
 imp	'MoveFileTransacted'					MoveFileTransactedW					kernel32	999
-imp	'MoveFileTransactedA'					MoveFileTransactedA					kernel32	998
 imp	'MoveFileWithProgress'					MoveFileWithProgressW					kernel32	0
-imp	'MoveFileWithProgressA'					MoveFileWithProgressA					kernel32	1001
 imp	'MulDiv'						MulDiv							kernel32	0
 imp	'MultiByteToWideChar'					MultiByteToWideChar					kernel32	0	6
 imp	'NeedCurrentDirectoryForExePath'			NeedCurrentDirectoryForExePathW				kernel32	0
-imp	'NeedCurrentDirectoryForExePathA'			NeedCurrentDirectoryForExePathA				kernel32	0
 imp	'NormalizeString'					NormalizeString						kernel32	0
 imp	'NotifyUILanguageChange'				NotifyUILanguageChange					kernel32	1015
 imp	'OOBEComplete'						OOBEComplete						kernel32	1017
@@ -895,26 +721,18 @@ imp	'OfferVirtualMemory'					OfferVirtualMemory					kernel32	0	3
 imp	'OpenConsole'						OpenConsoleW						kernel32	1019
 imp	'OpenConsoleWStub'					OpenConsoleWStub					kernel32	1020
 imp	'OpenEvent'						OpenEventW						kernel32	0
-imp	'OpenEventA'						OpenEventA						kernel32	0
 imp	'OpenFile'						OpenFile						kernel32	1023
 imp	'OpenFileById'						OpenFileById						kernel32	0
 imp	'OpenFileMapping'					OpenFileMappingW					kernel32	0
-imp	'OpenFileMappingA'					OpenFileMappingA					kernel32	1025
 imp	'OpenJobObject'						OpenJobObjectW						kernel32	1028
-imp	'OpenJobObjectA'					OpenJobObjectA						kernel32	1027
 imp	'OpenMutex'						OpenMutexW						kernel32	0
-imp	'OpenMutexA'						OpenMutexA						kernel32	1029
 imp	'OpenPackageInfoByFullName'				OpenPackageInfoByFullName				kernel32	0
 imp	'OpenPrivateNamespace'					OpenPrivateNamespaceW					kernel32	0
-imp	'OpenPrivateNamespaceA'					OpenPrivateNamespaceA					kernel32	1032
 imp	'OpenProfileUserMapping'				OpenProfileUserMapping					kernel32	1036
 imp	'OpenSemaphore'						OpenSemaphoreW						kernel32	0
-imp	'OpenSemaphoreA'					OpenSemaphoreA						kernel32	1037
 imp	'OpenThread'						OpenThread						kernel32	0	3
 imp	'OpenWaitableTimer'					OpenWaitableTimerW					kernel32	0
-imp	'OpenWaitableTimerA'					OpenWaitableTimerA					kernel32	1043
 imp	'OutputDebugString'					OutputDebugStringW					kernel32	0
-imp	'OutputDebugStringA'					OutputDebugStringA					kernel32	0
 imp	'PackageFamilyNameFromFullName'				PackageFamilyNameFromFullName				kernel32	0
 imp	'PackageFamilyNameFromId'				PackageFamilyNameFromId					kernel32	0
 imp	'PackageFullNameFromId'					PackageFullNameFromId					kernel32	0
@@ -922,7 +740,6 @@ imp	'PackageIdFromFullName'					PackageIdFromFullName					kernel32	0
 imp	'PackageNameAndPublisherIdFromFamilyName'		PackageNameAndPublisherIdFromFamilyName			kernel32	0
 imp	'ParseApplicationUserModelId'				ParseApplicationUserModelId				kernel32	0
 imp	'PeekConsoleInput'					PeekConsoleInputW					kernel32	0	4
-imp	'PeekConsoleInputA'					PeekConsoleInputA					kernel32	0	4
 imp	'PeekNamedPipe'						PeekNamedPipe						kernel32	0	6
 imp	'PostQueuedCompletionStatus'				PostQueuedCompletionStatus				kernel32	0	4
 imp	'PowerClearRequest'					PowerClearRequest					kernel32	1057
@@ -954,9 +771,7 @@ imp	'QueryActCtxSettings'					QueryActCtxSettingsW					kernel32	0
 imp	'QueryActCtxSettingsWWorker'				QueryActCtxSettingsWWorker				kernel32	1085
 imp	'QueryActCtxWWorker'					QueryActCtxWWorker					kernel32	1087
 imp	'QueryDosDevice'					QueryDosDeviceW						kernel32	0
-imp	'QueryDosDeviceA'					QueryDosDeviceA						kernel32	1089
 imp	'QueryFullProcessImageName'				QueryFullProcessImageNameW				kernel32	0
-imp	'QueryFullProcessImageNameA'				QueryFullProcessImageNameA				kernel32	0
 imp	'QueryIdleProcessorCycleTime'				QueryIdleProcessorCycleTime				kernel32	0
 imp	'QueryIdleProcessorCycleTimeEx'				QueryIdleProcessorCycleTimeEx				kernel32	0
 imp	'QueryInformationJobObject'				QueryInformationJobObject				kernel32	1095
@@ -988,14 +803,10 @@ imp	'RaiseException'					RaiseException						kernel32	0
 imp	'RaiseFailFastException'				RaiseFailFastException					kernel32	0
 imp	'RaiseInvalid16BitExeError'				RaiseInvalid16BitExeError				kernel32	1122
 imp	'ReadConsole'						ReadConsoleW						kernel32	0	5
-imp	'ReadConsoleA'						ReadConsoleA						kernel32	0	5
 imp	'ReadConsoleInput'					ReadConsoleInputW					kernel32	0	4
-imp	'ReadConsoleInputA'					ReadConsoleInputA					kernel32	0	4
 imp	'ReadConsoleOutput'					ReadConsoleOutputW					kernel32	0	5
-imp	'ReadConsoleOutputA'					ReadConsoleOutputA					kernel32	0	5
 imp	'ReadConsoleOutputAttribute'				ReadConsoleOutputAttribute				kernel32	0	5
 imp	'ReadConsoleOutputCharacter'				ReadConsoleOutputCharacterW				kernel32	0	5
-imp	'ReadConsoleOutputCharacterA'				ReadConsoleOutputCharacterA				kernel32	0	5
 imp	'ReadDirectoryChanges'					ReadDirectoryChangesW					kernel32	0
 imp	'ReadFile'						ReadFile						kernel32	0	5
 imp	'ReadFileEx'						ReadFileEx						kernel32	0	5
@@ -1004,8 +815,6 @@ imp	'ReadProcessMemory'					ReadProcessMemory					kernel32	0
 imp	'ReadThreadProfilingData'				ReadThreadProfilingData					kernel32	1141
 imp	'ReclaimVirtualMemory'					ReclaimVirtualMemory					kernel32	0
 imp	'RegDisablePredefinedCacheEx'				RegDisablePredefinedCacheEx				kernel32	0
-imp	'RegLoadMUIStringA'					RegLoadMUIStringA					kernel32	0
-imp	'RegSaveKeyExA'						RegSaveKeyExA						kernel32	0
 imp	'RegisterApplicationRecoveryCallback'			RegisterApplicationRecoveryCallback			kernel32	1184
 imp	'RegisterApplicationRestart'				RegisterApplicationRestart				kernel32	1185
 imp	'RegisterBadMemoryNotification'				RegisterBadMemoryNotification				kernel32	0
@@ -1023,17 +832,13 @@ imp	'ReleaseMutex'						ReleaseMutex						kernel32	0	1
 imp	'ReleaseSRWLockExclusive'				ReleaseSRWLockExclusive					kernel32	0	1
 imp	'ReleaseSRWLockShared'					ReleaseSRWLockShared					kernel32	0	1
 imp	'ReleaseSemaphore'					ReleaseSemaphore					kernel32	0	3
-imp	'RemoveDirectoryA'					RemoveDirectoryA					kernel32	0	1
 imp	'RemoveDirectoryTransacted'				RemoveDirectoryTransactedW				kernel32	1206
-imp	'RemoveDirectoryTransactedA'				RemoveDirectoryTransactedA				kernel32	1205
 imp	'RemoveDllDirectory'					RemoveDllDirectory					kernel32	0
 imp	'RemoveLocalAlternateComputerName'			RemoveLocalAlternateComputerNameW			kernel32	1210
-imp	'RemoveLocalAlternateComputerNameA'			RemoveLocalAlternateComputerNameA			kernel32	1209
 imp	'RemoveSecureMemoryCacheCallback'			RemoveSecureMemoryCacheCallback				kernel32	1211
 imp	'RemoveVectoredContinueHandler'				RemoveVectoredContinueHandler				kernel32	0	1
 imp	'RemoveVectoredExceptionHandler'			RemoveVectoredExceptionHandler				kernel32	0	1
 imp	'ReplaceFile'						ReplaceFileW						kernel32	0
-imp	'ReplaceFileA'						ReplaceFileA						kernel32	1215
 imp	'ReplacePartitionUnit'					ReplacePartitionUnit					kernel32	1217
 imp	'RequestDeviceWakeup'					RequestDeviceWakeup					kernel32	1218
 imp	'RequestWakeupLatency'					RequestWakeupLatency					kernel32	1219
@@ -1044,11 +849,8 @@ imp	'ResolveDelayLoadsFromDll'				ResolveDelayLoadsFromDll				kernel32	0
 imp	'ResolveLocaleName'					ResolveLocaleName					kernel32	0
 imp	'ResumeThread'						ResumeThread						kernel32	0
 imp	'ScrollConsoleScreenBuffer'				ScrollConsoleScreenBufferW				kernel32	0
-imp	'ScrollConsoleScreenBufferA'				ScrollConsoleScreenBufferA				kernel32	0
 imp	'SearchPath'						SearchPathW						kernel32	0
-imp	'SearchPathA'						SearchPathA						kernel32	0
 imp	'SetCalendarInfo'					SetCalendarInfoW					kernel32	0
-imp	'SetCalendarInfoA'					SetCalendarInfoA					kernel32	1249
 imp	'SetComPlusPackageInstallStatus'			SetComPlusPackageInstallStatus				kernel32	1251
 imp	'SetCommBreak'						SetCommBreak						kernel32	0
 imp	'SetCommConfig'						SetCommConfig						kernel32	0
@@ -1056,9 +858,7 @@ imp	'SetCommMask'						SetCommMask						kernel32	0
 imp	'SetCommState'						SetCommState						kernel32	0
 imp	'SetCommTimeouts'					SetCommTimeouts						kernel32	0
 imp	'SetComputerName'					SetComputerNameW					kernel32	0
-imp	'SetComputerNameA'					SetComputerNameA					kernel32	0
 imp	'SetComputerNameEx'					SetComputerNameExW					kernel32	0
-imp	'SetComputerNameExA'					SetComputerNameExA					kernel32	0
 imp	'SetConsoleActiveScreenBuffer'				SetConsoleActiveScreenBuffer				kernel32	0	1	# TODO(jart): 6.2 and higher
 imp	'SetConsoleCP'						SetConsoleCP						kernel32	0	1	# TODO(jart): 6.2 and higher
 imp	'SetConsoleCtrlHandler'					SetConsoleCtrlHandler					kernel32	0	2
@@ -1084,29 +884,21 @@ imp	'SetConsoleScreenBufferInfoEx'				SetConsoleScreenBufferInfoEx				kernel32	0
 imp	'SetConsoleScreenBufferSize'				SetConsoleScreenBufferSize				kernel32	0	2
 imp	'SetConsoleTextAttribute'				SetConsoleTextAttribute					kernel32	0
 imp	'SetConsoleTitle'					SetConsoleTitleW					kernel32	0	1
-imp	'SetConsoleTitleA'					SetConsoleTitleA					kernel32	0	1
 imp	'SetConsoleWindowInfo'					SetConsoleWindowInfo					kernel32	0	3
 imp	'SetCriticalSectionSpinCount'				SetCriticalSectionSpinCount				kernel32	0	2
 imp	'SetCurrentConsoleFontEx'				SetCurrentConsoleFontEx					kernel32	0
-imp	'SetCurrentDirectoryA'					SetCurrentDirectoryA					kernel32	0	1
 imp	'SetDefaultCommConfig'					SetDefaultCommConfigW					kernel32	1298
-imp	'SetDefaultCommConfigA'					SetDefaultCommConfigA					kernel32	1297
 imp	'SetDefaultDllDirectories'				SetDefaultDllDirectories				kernel32	0	1	# Windows 8+, KB2533623 on Windows 7
 imp	'SetDllDirectory'					SetDllDirectoryW					kernel32	1301
-imp	'SetDllDirectoryA'					SetDllDirectoryA					kernel32	1300
 imp	'SetDynamicTimeZoneInformation'				SetDynamicTimeZoneInformation				kernel32	0
 imp	'SetEndOfFile'						SetEndOfFile						kernel32	0	1
-imp	'SetEnvironmentStringsA'				SetEnvironmentStringsA					kernel32	1304	1
 imp	'SetEnvironmentVariable'				SetEnvironmentVariableW					kernel32	0	2
-imp	'SetEnvironmentVariableA'				SetEnvironmentVariableA					kernel32	0	2
 imp	'SetErrorMode'						SetErrorMode						kernel32	0	1
 imp	'SetEvent'						SetEvent						kernel32	0	1
 imp	'SetFileApisToANSI'					SetFileApisToANSI					kernel32	0
 imp	'SetFileApisToOEM'					SetFileApisToOEM					kernel32	0
 imp	'SetFileAttributes'					SetFileAttributesW					kernel32	0	2
-imp	'SetFileAttributesA'					SetFileAttributesA					kernel32	0	2
 imp	'SetFileAttributesTransacted'				SetFileAttributesTransactedW				kernel32	1315
-imp	'SetFileAttributesTransactedA'				SetFileAttributesTransactedA				kernel32	1314
 imp	'SetFileBandwidthReservation'				SetFileBandwidthReservation				kernel32	1317
 imp	'SetFileCompletionNotificationModes'			SetFileCompletionNotificationModes			kernel32	1318	2
 imp	'SetFileInformationByHandle'				SetFileInformationByHandle				kernel32	0
@@ -1114,23 +906,18 @@ imp	'SetFileIoOverlappedRange'				SetFileIoOverlappedRange				kernel32	0
 imp	'SetFilePointer'					SetFilePointer						kernel32	0	4
 imp	'SetFilePointerEx'					SetFilePointerEx					kernel32	0	4
 imp	'SetFileShortName'					SetFileShortNameW					kernel32	1324
-imp	'SetFileShortNameA'					SetFileShortNameA					kernel32	1323
 imp	'SetFileTime'						SetFileTime						kernel32	0	4
 imp	'SetFileValidData'					SetFileValidData					kernel32	0	2
 imp	'SetFirmwareEnvironmentVariable'			SetFirmwareEnvironmentVariableW				kernel32	1330
-imp	'SetFirmwareEnvironmentVariableA'			SetFirmwareEnvironmentVariableA				kernel32	1327
 imp	'SetFirmwareEnvironmentVariableEx'			SetFirmwareEnvironmentVariableExW			kernel32	1329
-imp	'SetFirmwareEnvironmentVariableExA'			SetFirmwareEnvironmentVariableExA			kernel32	1328
 imp	'SetHandleCount'					SetHandleCount						kernel32	0	1
 imp	'SetHandleInformation'					SetHandleInformation					kernel32	0	3
 imp	'SetInformationJobObject'				SetInformationJobObject					kernel32	1333
 imp	'SetIoRateControlInformationJobObject'			SetIoRateControlInformationJobObject			kernel32	1334
 imp	'SetLastError'						SetLastError						kernel32	0	1
 imp	'SetLocalPrimaryComputerName'				SetLocalPrimaryComputerNameW				kernel32	1338
-imp	'SetLocalPrimaryComputerNameA'				SetLocalPrimaryComputerNameA				kernel32	1337
 imp	'SetLocalTime'						SetLocalTime						kernel32	0
 imp	'SetLocaleInfo'						SetLocaleInfoW						kernel32	0
-imp	'SetLocaleInfoA'					SetLocaleInfoA						kernel32	1340
 imp	'SetMailslotInfo'					SetMailslotInfo						kernel32	1342
 imp	'SetMessageWaitingIndicator'				SetMessageWaitingIndicator				kernel32	1343
 imp	'SetNamedPipeAttribute'					SetNamedPipeAttribute					kernel32	1344
@@ -1181,9 +968,7 @@ imp	'SetUnhandledExceptionFilter'				SetUnhandledExceptionFilter				kernel32	0	1
 imp	'SetUserGeoID'						SetUserGeoID						kernel32	0
 imp	'SetVDMCurrentDirectories'				SetVDMCurrentDirectories				kernel32	1399
 imp	'SetVolumeLabel'					SetVolumeLabelW						kernel32	1401
-imp	'SetVolumeLabelA'					SetVolumeLabelA						kernel32	1400
 imp	'SetVolumeMountPoint'					SetVolumeMountPointW					kernel32	1403
-imp	'SetVolumeMountPointA'					SetVolumeMountPointA					kernel32	1402
 imp	'SetVolumeMountPointWStub'				SetVolumeMountPointWStub				kernel32	1404
 imp	'SetWaitableTimer'					SetWaitableTimer					kernel32	0	6
 imp	'SetWaitableTimerEx'					SetWaitableTimerEx					kernel32	0
@@ -1213,7 +998,6 @@ imp	'TermsrvDeleteKey'					TermsrvDeleteKey					kernel32	1432
 imp	'TermsrvDeleteValue'					TermsrvDeleteValue					kernel32	1433
 imp	'TermsrvGetPreSetValue'					TermsrvGetPreSetValue					kernel32	1434
 imp	'TermsrvGetWindowsDirectory'				TermsrvGetWindowsDirectoryW				kernel32	1436
-imp	'TermsrvGetWindowsDirectoryA'				TermsrvGetWindowsDirectoryA				kernel32	1435
 imp	'TermsrvOpenRegEntry'					TermsrvOpenRegEntry					kernel32	1437
 imp	'TermsrvOpenUserClasses'				TermsrvOpenUserClasses					kernel32	1438
 imp	'TermsrvRestoreKey'					TermsrvRestoreKey					kernel32	1439
@@ -1253,15 +1037,12 @@ imp	'UnregisterWaitUntilOOBECompleted'			UnregisterWaitUntilOOBECompleted			kern
 imp	'UpdateCalendarDayOfWeek'				UpdateCalendarDayOfWeek					kernel32	1473
 imp	'UpdateProcThreadAttribute'				UpdateProcThreadAttribute				kernel32	0	7
 imp	'UpdateResource'					UpdateResourceW						kernel32	1476
-imp	'UpdateResourceA'					UpdateResourceA						kernel32	1475
 imp	'VDMConsoleOperation'					VDMConsoleOperation					kernel32	1477
 imp	'VDMOperationStarted'					VDMOperationStarted					kernel32	1478
 imp	'VerLanguageName'					VerLanguageNameW					kernel32	0
-imp	'VerLanguageNameA'					VerLanguageNameA					kernel32	0
 imp	'VerifyConsoleIoHandle'					VerifyConsoleIoHandle					kernel32	1482
 imp	'VerifyScripts'						VerifyScripts						kernel32	0
 imp	'VerifyVersionInfo'					VerifyVersionInfoW					kernel32	1485
-imp	'VerifyVersionInfoA'					VerifyVersionInfoA					kernel32	1484
 imp	'VirtualAlloc'						VirtualAlloc						kernel32	0	4
 imp	'VirtualAllocEx'					VirtualAllocEx						kernel32	0	5
 imp	'VirtualAllocExNuma'					VirtualAllocExNuma					kernel32	0
@@ -1278,7 +1059,6 @@ imp	'WaitForDebugEvent'					WaitForDebugEvent					kernel32	0
 imp	'WaitForMultipleObjectsEx'				WaitForMultipleObjectsEx				kernel32	0	5
 imp	'WaitForSingleObjectEx'					WaitForSingleObjectEx					kernel32	0	3
 imp	'WaitNamedPipe'						WaitNamedPipeW						kernel32	0
-imp	'WaitNamedPipeA'					WaitNamedPipeA						kernel32	1509	2
 imp	'WerGetFlags'						WerGetFlags						kernel32	0
 imp	'WerGetFlagsWorker'					WerGetFlagsWorker					kernel32	1514
 imp	'WerRegisterFile'					WerRegisterFile						kernel32	0
@@ -1303,30 +1083,20 @@ imp	'WerpNotifyUseStringResourceWorker'			WerpNotifyUseStringResourceWorker			ke
 imp	'WideCharToMultiByte'					WideCharToMultiByte					kernel32	1553    8
 imp	'WinExec'						WinExec							kernel32	1543
 imp	'WriteConsole'						WriteConsoleW						kernel32	0	5
-imp	'WriteConsoleA'						WriteConsoleA						kernel32	0	5
 imp	'WriteConsoleInput'					WriteConsoleInputW					kernel32	0	4
-imp	'WriteConsoleInputA'					WriteConsoleInputA					kernel32	0	4
-imp	'WriteConsoleInputVDMA'					WriteConsoleInputVDMA					kernel32	1553
 imp	'WriteConsoleInputVDMW'					WriteConsoleInputVDMW					kernel32	1554
 imp	'WriteConsoleOutput'					WriteConsoleOutputW					kernel32	0
-imp	'WriteConsoleOutputA'					WriteConsoleOutputA					kernel32	0
 imp	'WriteConsoleOutputAttribute'				WriteConsoleOutputAttribute				kernel32	0	5
 imp	'WriteConsoleOutputCharacter'				WriteConsoleOutputCharacterW				kernel32	0	5
-imp	'WriteConsoleOutputCharacterA'				WriteConsoleOutputCharacterA				kernel32	0	5
 imp	'WriteFile'						WriteFile						kernel32	0	5
 imp	'WriteFileEx'						WriteFileEx						kernel32	0	5
 imp	'WriteFileGather'					WriteFileGather						kernel32	0	5
 imp	'WritePrivateProfileSection'				WritePrivateProfileSectionW				kernel32	1566
-imp	'WritePrivateProfileSectionA'				WritePrivateProfileSectionA				kernel32	1565
 imp	'WritePrivateProfileString'				WritePrivateProfileStringW				kernel32	1568
-imp	'WritePrivateProfileStringA'				WritePrivateProfileStringA				kernel32	1567
 imp	'WritePrivateProfileStruct'				WritePrivateProfileStructW				kernel32	1570
-imp	'WritePrivateProfileStructA'				WritePrivateProfileStructA				kernel32	1569
 imp	'WriteProcessMemory'					WriteProcessMemory					kernel32	0
 imp	'WriteProfileSection'					WriteProfileSectionW					kernel32	1573
-imp	'WriteProfileSectionA'					WriteProfileSectionA					kernel32	1572
 imp	'WriteProfileString'					WriteProfileStringW					kernel32	1575
-imp	'WriteProfileStringA'					WriteProfileStringA					kernel32	1574
 imp	'WriteTapemark'						WriteTapemark						kernel32	1576
 imp	'ZombifyActCtx'						ZombifyActCtx						kernel32	0
 imp	'ZombifyActCtxWorker'					ZombifyActCtxWorker					kernel32	1578
@@ -1367,18 +1137,13 @@ imp	'__WaitForSingleObject'					WaitForSingleObject					kernel32	0	2
 #
 #	Name							Actual							DLL		Hint	Arity
 imp	'AbortSystemShutdown'					AbortSystemShutdownW					advapi32	1006
-imp	'AbortSystemShutdownA'					AbortSystemShutdownA					advapi32	1005
 imp	'AccessCheck'						AccessCheck						advapi32	0	8
 imp	'AccessCheckAndAuditAlarm'				AccessCheckAndAuditAlarmW				advapi32	0
-imp	'AccessCheckAndAuditAlarmA'				AccessCheckAndAuditAlarmA				advapi32	1008
 imp	'AccessCheckByType'					AccessCheckByType					advapi32	0
 imp	'AccessCheckByTypeAndAuditAlarm'			AccessCheckByTypeAndAuditAlarmW				advapi32	0
-imp	'AccessCheckByTypeAndAuditAlarmA'			AccessCheckByTypeAndAuditAlarmA				advapi32	1011
 imp	'AccessCheckByTypeResultList'				AccessCheckByTypeResultList				advapi32	0
 imp	'AccessCheckByTypeResultListAndAuditAlarm'		AccessCheckByTypeResultListAndAuditAlarmW		advapi32	0
-imp	'AccessCheckByTypeResultListAndAuditAlarmA'		AccessCheckByTypeResultListAndAuditAlarmA		advapi32	1014
 imp	'AccessCheckByTypeResultListAndAuditAlarmByHandle'	AccessCheckByTypeResultListAndAuditAlarmByHandleW	advapi32	0
-imp	'AccessCheckByTypeResultListAndAuditAlarmByHandleA'	AccessCheckByTypeResultListAndAuditAlarmByHandleA	advapi32	1015
 imp	'AddAccessAllowedAce'					AddAccessAllowedAce					advapi32	0
 imp	'AddAccessAllowedAceEx'					AddAccessAllowedAceEx					advapi32	0
 imp	'AddAccessAllowedObjectAce'				AddAccessAllowedObjectAce				advapi32	0
@@ -1389,10 +1154,9 @@ imp	'AddAce'						AddAce							advapi32	0
 imp	'AddAuditAccessAce'					AddAuditAccessAce					advapi32	0
 imp	'AddAuditAccessAceEx'					AddAuditAccessAceEx					advapi32	0
 imp	'AddAuditAccessObjectAce'				AddAuditAccessObjectAce					advapi32	0
-imp	'AddConditionalAce'					AddConditionalAce					advapi32	1028
+imp	'AddConditionalAce'					AddConditionalAce					advapi32	1028 # Windows 7+
 imp	'AddMandatoryAce'					AddMandatoryAce						advapi32	0
 imp	'AddUsersToEncryptedFile'				AddUsersToEncryptedFile					advapi32	1030
-imp	'AddUsersToEncryptedFileEx'				AddUsersToEncryptedFileEx				advapi32	1031
 imp	'AdjustTokenGroups'					AdjustTokenGroups					advapi32	0
 imp	'AdjustTokenPrivileges'					AdjustTokenPrivileges					advapi32	0	6
 imp	'AllocateAndInitializeSid'				AllocateAndInitializeSid				advapi32	0
@@ -1408,155 +1172,69 @@ imp	'AuditFree'						AuditFree						advapi32	1043
 imp	'AuditLookupCategoryGuidFromCategoryId'			AuditLookupCategoryGuidFromCategoryId			advapi32	1044
 imp	'AuditLookupCategoryIdFromCategoryGuid'			AuditLookupCategoryIdFromCategoryGuid			advapi32	1045
 imp	'AuditLookupCategoryName'				AuditLookupCategoryNameW				advapi32	1047
-imp	'AuditLookupCategoryNameA'				AuditLookupCategoryNameA				advapi32	1046
 imp	'AuditLookupSubCategoryName'				AuditLookupSubCategoryNameW				advapi32	1049
-imp	'AuditLookupSubCategoryNameA'				AuditLookupSubCategoryNameA				advapi32	1048
-imp	'AuditQueryGlobalSacl'					AuditQueryGlobalSaclW					advapi32	1051
-imp	'AuditQueryGlobalSaclA'					AuditQueryGlobalSaclA					advapi32	1050
 imp	'AuditQueryPerUserPolicy'				AuditQueryPerUserPolicy					advapi32	1052
 imp	'AuditQuerySecurity'					AuditQuerySecurity					advapi32	1053
 imp	'AuditQuerySystemPolicy'				AuditQuerySystemPolicy					advapi32	1054
-imp	'AuditSetGlobalSacl'					AuditSetGlobalSaclW					advapi32	1056
-imp	'AuditSetGlobalSaclA'					AuditSetGlobalSaclA					advapi32	1055
 imp	'AuditSetPerUserPolicy'					AuditSetPerUserPolicy					advapi32	1057
 imp	'AuditSetSecurity'					AuditSetSecurity					advapi32	1058
 imp	'AuditSetSystemPolicy'					AuditSetSystemPolicy					advapi32	1059
 imp	'BackupEventLog'					BackupEventLogW						advapi32	1061
-imp	'BackupEventLogA'					BackupEventLogA						advapi32	1060
-imp	'BaseRegCloseKey'					BaseRegCloseKey						advapi32	1062
-imp	'BaseRegCreateKey'					BaseRegCreateKey					advapi32	1063
-imp	'BaseRegDeleteKeyEx'					BaseRegDeleteKeyEx					advapi32	1064
-imp	'BaseRegDeleteValue'					BaseRegDeleteValue					advapi32	1065
-imp	'BaseRegFlushKey'					BaseRegFlushKey						advapi32	1066
-imp	'BaseRegGetVersion'					BaseRegGetVersion					advapi32	1067
-imp	'BaseRegLoadKey'					BaseRegLoadKey						advapi32	1068
-imp	'BaseRegOpenKey'					BaseRegOpenKey						advapi32	1069
-imp	'BaseRegRestoreKey'					BaseRegRestoreKey					advapi32	1070
-imp	'BaseRegSaveKeyEx'					BaseRegSaveKeyEx					advapi32	1071
-imp	'BaseRegSetKeySecurity'					BaseRegSetKeySecurity					advapi32	1072
-imp	'BaseRegSetValue'					BaseRegSetValue						advapi32	1073
-imp	'BaseRegUnLoadKey'					BaseRegUnLoadKey					advapi32	1074
 imp	'BuildExplicitAccessWithName'				BuildExplicitAccessWithNameW				advapi32	1076
-imp	'BuildExplicitAccessWithNameA'				BuildExplicitAccessWithNameA				advapi32	1075
 imp	'BuildImpersonateExplicitAccessWithName'		BuildImpersonateExplicitAccessWithNameW			advapi32	1078
-imp	'BuildImpersonateExplicitAccessWithNameA'		BuildImpersonateExplicitAccessWithNameA			advapi32	1077
 imp	'BuildImpersonateTrustee'				BuildImpersonateTrusteeW				advapi32	1080
-imp	'BuildImpersonateTrusteeA'				BuildImpersonateTrusteeA				advapi32	1079
 imp	'BuildSecurityDescriptor'				BuildSecurityDescriptorW				advapi32	1082
-imp	'BuildSecurityDescriptorA'				BuildSecurityDescriptorA				advapi32	1081
 imp	'BuildTrusteeWithName'					BuildTrusteeWithNameW					advapi32	1084
-imp	'BuildTrusteeWithNameA'					BuildTrusteeWithNameA					advapi32	1083
 imp	'BuildTrusteeWithObjectsAndName'			BuildTrusteeWithObjectsAndNameW				advapi32	1086
-imp	'BuildTrusteeWithObjectsAndNameA'			BuildTrusteeWithObjectsAndNameA				advapi32	1085
 imp	'BuildTrusteeWithObjectsAndSid'				BuildTrusteeWithObjectsAndSidW				advapi32	1088
-imp	'BuildTrusteeWithObjectsAndSidA'			BuildTrusteeWithObjectsAndSidA				advapi32	1087
 imp	'BuildTrusteeWithSid'					BuildTrusteeWithSidW					advapi32	1090
-imp	'BuildTrusteeWithSidA'					BuildTrusteeWithSidA					advapi32	1089
-imp	'CancelOverlappedAccess'				CancelOverlappedAccess					advapi32	1091
 imp	'ChangeServiceConfig'					ChangeServiceConfigW					advapi32	1095
-imp	'ChangeServiceConfig2A'					ChangeServiceConfig2A					advapi32	1092
 imp	'ChangeServiceConfig2W'					ChangeServiceConfig2W					advapi32	1093
-imp	'ChangeServiceConfigA'					ChangeServiceConfigA					advapi32	1094
-imp	'CheckForHiberboot'					CheckForHiberboot					advapi32	1096
 imp	'CheckTokenMembership'					CheckTokenMembership					advapi32	0
 imp	'ClearEventLog'						ClearEventLogW						advapi32	1099
-imp	'ClearEventLogA'					ClearEventLogA						advapi32	1098
-imp	'CloseCodeAuthzLevel'					CloseCodeAuthzLevel					advapi32	1100
 imp	'CloseEncryptedFileRaw'					CloseEncryptedFileRaw					advapi32	1101
 imp	'CloseEventLog'						CloseEventLog						advapi32	1102
 imp	'CloseServiceHandle'					CloseServiceHandle					advapi32	1103
 imp	'CloseThreadWaitChainSession'				CloseThreadWaitChainSession				advapi32	1104
 imp	'CloseTrace'						CloseTrace						advapi32	1105
-imp	'CommandLineFromMsiDescriptor'				CommandLineFromMsiDescriptor				advapi32	1106
-imp	'ComputeAccessTokenFromCodeAuthzLevel'			ComputeAccessTokenFromCodeAuthzLevel			advapi32	1107
 imp	'ControlService'					ControlService						advapi32	1108
 imp	'ControlServiceEx'					ControlServiceExW					advapi32	1110
-imp	'ControlServiceExA'					ControlServiceExA					advapi32	1109
 imp	'ControlTrace'						ControlTraceW						advapi32	1112
-imp	'ControlTraceA'						ControlTraceA						advapi32	1111
-imp	'ConvertAccessToSecurityDescriptor'			ConvertAccessToSecurityDescriptorW			advapi32	1114
-imp	'ConvertAccessToSecurityDescriptorA'			ConvertAccessToSecurityDescriptorA			advapi32	1113
-imp	'ConvertSDToStringSDDomain'				ConvertSDToStringSDDomainW				advapi32	1115
-imp	'ConvertSDToStringSDRootDomain'				ConvertSDToStringSDRootDomainW				advapi32	1117
-imp	'ConvertSDToStringSDRootDomainA'			ConvertSDToStringSDRootDomainA				advapi32	1116
-imp	'ConvertSecurityDescriptorToAccess'			ConvertSecurityDescriptorToAccessW			advapi32	1121
-imp	'ConvertSecurityDescriptorToAccessA'			ConvertSecurityDescriptorToAccessA			advapi32	1118
-imp	'ConvertSecurityDescriptorToAccessNamed'		ConvertSecurityDescriptorToAccessNamedW			advapi32	1120
-imp	'ConvertSecurityDescriptorToAccessNamedA'		ConvertSecurityDescriptorToAccessNamedA			advapi32	1119
 imp	'ConvertSecurityDescriptorToStringSecurityDescriptor'	ConvertSecurityDescriptorToStringSecurityDescriptorW	advapi32	1123
-imp	'ConvertSecurityDescriptorToStringSecurityDescriptorA'	ConvertSecurityDescriptorToStringSecurityDescriptorA	advapi32	1122
 imp	'ConvertSidToStringSid'					ConvertSidToStringSidW					advapi32	1125
-imp	'ConvertSidToStringSidA'				ConvertSidToStringSidA					advapi32	1124
 imp	'ConvertStringSDToSDDomain'				ConvertStringSDToSDDomainW				advapi32	1127
-imp	'ConvertStringSDToSDDomainA'				ConvertStringSDToSDDomainA				advapi32	1126
-imp	'ConvertStringSDToSDRootDomain'				ConvertStringSDToSDRootDomainW				advapi32	1129
-imp	'ConvertStringSDToSDRootDomainA'			ConvertStringSDToSDRootDomainA				advapi32	1128
 imp	'ConvertStringSecurityDescriptorToSecurityDescriptor'	ConvertStringSecurityDescriptorToSecurityDescriptorW	advapi32	1131
-imp	'ConvertStringSecurityDescriptorToSecurityDescriptorA'	ConvertStringSecurityDescriptorToSecurityDescriptorA	advapi32	1130
 imp	'ConvertStringSidToSid'					ConvertStringSidToSidW					advapi32	1133
-imp	'ConvertStringSidToSidA'				ConvertStringSidToSidA					advapi32	1132
 imp	'ConvertToAutoInheritPrivateObjectSecurity'		ConvertToAutoInheritPrivateObjectSecurity		advapi32	0
 imp	'CopySid'						CopySid							advapi32	0
-imp	'CreateCodeAuthzLevel'					CreateCodeAuthzLevel					advapi32	1136
 imp	'CreatePrivateObjectSecurity'				CreatePrivateObjectSecurity				advapi32	0
 imp	'CreatePrivateObjectSecurityEx'				CreatePrivateObjectSecurityEx				advapi32	0
 imp	'CreatePrivateObjectSecurityWithMultipleInheritance'	CreatePrivateObjectSecurityWithMultipleInheritance	advapi32	0
 imp	'CreateProcessAsUser'					CreateProcessAsUserW					advapi32	0	11
-imp	'CreateProcessAsUserA'					CreateProcessAsUserA					advapi32	0	11
 imp	'CreateProcessWithLogon'				CreateProcessWithLogonW					advapi32	1142
 imp	'CreateProcessWithToken'				CreateProcessWithTokenW					advapi32	1143
 imp	'CreateRestrictedToken'					CreateRestrictedToken					advapi32	0
 imp	'CreateService'						CreateServiceW						advapi32	1147
-imp	'CreateServiceA'					CreateServiceA						advapi32	1145
-imp	'CreateServiceEx'					CreateServiceEx						advapi32	1146
+imp	'CreateTraceInstanceId'					CreateTraceInstanceId					advapi32	0
 imp	'CreateWellKnownSid'					CreateWellKnownSid					advapi32	0
-imp	'CredBackupCredentials'					CredBackupCredentials					advapi32	1150
 imp	'CredDelete'						CredDeleteW						advapi32	1152
-imp	'CredDeleteA'						CredDeleteA						advapi32	1151
-imp	'CredEncryptAndMarshalBinaryBlob'			CredEncryptAndMarshalBinaryBlob				advapi32	1153
 imp	'CredEnumerate'						CredEnumerateW						advapi32	1155
-imp	'CredEnumerateA'					CredEnumerateA						advapi32	1154
 imp	'CredFindBestCredential'				CredFindBestCredentialW					advapi32	1157
-imp	'CredFindBestCredentialA'				CredFindBestCredentialA					advapi32	1156
 imp	'CredFree'						CredFree						advapi32	1158
 imp	'CredGetSessionTypes'					CredGetSessionTypes					advapi32	1159
 imp	'CredGetTargetInfo'					CredGetTargetInfoW					advapi32	1161
-imp	'CredGetTargetInfoA'					CredGetTargetInfoA					advapi32	1160
 imp	'CredIsMarshaledCredential'				CredIsMarshaledCredentialW				advapi32	1163
-imp	'CredIsMarshaledCredentialA'				CredIsMarshaledCredentialA				advapi32	1162
 imp	'CredIsProtected'					CredIsProtectedW					advapi32	1165
-imp	'CredIsProtectedA'					CredIsProtectedA					advapi32	1164
 imp	'CredMarshalCredential'					CredMarshalCredentialW					advapi32	1167
-imp	'CredMarshalCredentialA'				CredMarshalCredentialA					advapi32	1166
-imp	'CredProfileLoaded'					CredProfileLoaded					advapi32	1168
-imp	'CredProfileLoadedEx'					CredProfileLoadedEx					advapi32	1169
-imp	'CredProfileUnloaded'					CredProfileUnloaded					advapi32	1170
 imp	'CredProtect'						CredProtectW						advapi32	1172
-imp	'CredProtectA'						CredProtectA						advapi32	1171
 imp	'CredRead'						CredReadW						advapi32	1177
-imp	'CredReadA'						CredReadA						advapi32	1173
-imp	'CredReadByTokenHandle'					CredReadByTokenHandle					advapi32	1174
 imp	'CredReadDomainCredentials'				CredReadDomainCredentialsW				advapi32	1176
-imp	'CredReadDomainCredentialsA'				CredReadDomainCredentialsA				advapi32	1175
 imp	'CredRename'						CredRenameW						advapi32	1179
-imp	'CredRenameA'						CredRenameA						advapi32	1178
-imp	'CredRestoreCredentials'				CredRestoreCredentials					advapi32	1180
 imp	'CredUnmarshalCredential'				CredUnmarshalCredentialW				advapi32	1182
-imp	'CredUnmarshalCredentialA'				CredUnmarshalCredentialA				advapi32	1181
 imp	'CredUnprotect'						CredUnprotectW						advapi32	1184
-imp	'CredUnprotectA'					CredUnprotectA						advapi32	1183
 imp	'CredWrite'						CredWriteW						advapi32	1188
-imp	'CredWriteA'						CredWriteA						advapi32	1185
 imp	'CredWriteDomainCredentials'				CredWriteDomainCredentialsW				advapi32	1187
-imp	'CredWriteDomainCredentialsA'				CredWriteDomainCredentialsA				advapi32	1186
-imp	'CredpConvertCredential'				CredpConvertCredential					advapi32	1189
-imp	'CredpConvertOneCredentialSize'				CredpConvertOneCredentialSize				advapi32	1190
-imp	'CredpConvertTargetInfo'				CredpConvertTargetInfo					advapi32	1191
-imp	'CredpDecodeCredential'					CredpDecodeCredential					advapi32	1192
-imp	'CredpEncodeCredential'					CredpEncodeCredential					advapi32	1193
-imp	'CredpEncodeSecret'					CredpEncodeSecret					advapi32	1194
 imp	'CryptAcquireContext'					CryptAcquireContextW					advapi32	1196
-imp	'CryptAcquireContextA'					CryptAcquireContextA					advapi32	1195
 imp	'CryptContextAddRef'					CryptContextAddRef					advapi32	1197
 imp	'CryptCreateHash'					CryptCreateHash						advapi32	1198
 imp	'CryptDecrypt'						CryptDecrypt						advapi32	1199
@@ -1567,16 +1245,14 @@ imp	'CryptDuplicateHash'					CryptDuplicateHash					advapi32	1203
 imp	'CryptDuplicateKey'					CryptDuplicateKey					advapi32	1204
 imp	'CryptEncrypt'						CryptEncrypt						advapi32	1205
 imp	'CryptEnumProviderTypes'				CryptEnumProviderTypesW					advapi32	1207
-imp	'CryptEnumProviderTypesA'				CryptEnumProviderTypesA					advapi32	1206
 imp	'CryptEnumProviders'					CryptEnumProvidersW					advapi32	1209
-imp	'CryptEnumProvidersA'					CryptEnumProvidersA					advapi32	1208
 imp	'CryptExportKey'					CryptExportKey						advapi32	1210
 imp	'CryptGenKey'						CryptGenKey						advapi32	1211
 imp	'CryptGenRandom'					CryptGenRandom						advapi32	1212
 imp	'CryptGetDefaultProvider'				CryptGetDefaultProviderW				advapi32	1214
-imp	'CryptGetDefaultProviderA'				CryptGetDefaultProviderA				advapi32	1213
 imp	'CryptGetHashParam'					CryptGetHashParam					advapi32	1215
 imp	'CryptGetKeyParam'					CryptGetKeyParam					advapi32	1216
+imp	'CryptGetLocalKeyLimits'				CryptGetLocalKeyLimits					advapi32	0
 imp	'CryptGetProvParam'					CryptGetProvParam					advapi32	1217
 imp	'CryptGetUserKey'					CryptGetUserKey						advapi32	1218
 imp	'CryptHashData'						CryptHashData						advapi32	1219
@@ -1587,15 +1263,10 @@ imp	'CryptSetHashParam'					CryptSetHashParam					advapi32	1223
 imp	'CryptSetKeyParam'					CryptSetKeyParam					advapi32	1224
 imp	'CryptSetProvParam'					CryptSetProvParam					advapi32	1225
 imp	'CryptSetProvider'					CryptSetProviderW					advapi32	1229
-imp	'CryptSetProviderA'					CryptSetProviderA					advapi32	1226
 imp	'CryptSetProviderEx'					CryptSetProviderExW					advapi32	1228
-imp	'CryptSetProviderExA'					CryptSetProviderExA					advapi32	1227
 imp	'CryptSignHash'						CryptSignHashW						advapi32	1231
-imp	'CryptSignHashA'					CryptSignHashA						advapi32	1230
 imp	'CryptVerifySignature'					CryptVerifySignatureW					advapi32	1233
-imp	'CryptVerifySignatureA'					CryptVerifySignatureA					advapi32	1232
 imp	'DecryptFile'						DecryptFileW						advapi32	1236
-imp	'DecryptFileA'						DecryptFileA						advapi32	1235
 imp	'DeleteAce'						DeleteAce						advapi32	0
 imp	'DeleteService'						DeleteService						advapi32	1238
 imp	'DeregisterEventSource'					DeregisterEventSource					advapi32	1239    1
@@ -1603,41 +1274,14 @@ imp	'DestroyPrivateObjectSecurity'				DestroyPrivateObjectSecurity				advapi32	0
 imp	'DuplicateEncryptionInfoFile'				DuplicateEncryptionInfoFile				advapi32	1241
 imp	'DuplicateToken'					DuplicateToken						advapi32	0	3
 imp	'DuplicateTokenEx'					DuplicateTokenEx					advapi32	0	6
-imp	'ElfBackupEventLogFile'					ElfBackupEventLogFileW					advapi32	1245
-imp	'ElfBackupEventLogFileA'				ElfBackupEventLogFileA					advapi32	1244
-imp	'ElfChangeNotify'					ElfChangeNotify						advapi32	1246
-imp	'ElfClearEventLogFile'					ElfClearEventLogFileW					advapi32	1248
-imp	'ElfClearEventLogFileA'					ElfClearEventLogFileA					advapi32	1247
-imp	'ElfCloseEventLog'					ElfCloseEventLog					advapi32	1249
-imp	'ElfDeregisterEventSource'				ElfDeregisterEventSource				advapi32	1250
-imp	'ElfFlushEventLog'					ElfFlushEventLog					advapi32	1251
-imp	'ElfNumberOfRecords'					ElfNumberOfRecords					advapi32	1252
-imp	'ElfOldestRecord'					ElfOldestRecord						advapi32	1253
-imp	'ElfOpenBackupEventLog'					ElfOpenBackupEventLogW					advapi32	1255
-imp	'ElfOpenBackupEventLogA'				ElfOpenBackupEventLogA					advapi32	1254
-imp	'ElfOpenEventLog'					ElfOpenEventLogW					advapi32	1257
-imp	'ElfOpenEventLogA'					ElfOpenEventLogA					advapi32	1256
-imp	'ElfReadEventLog'					ElfReadEventLogW					advapi32	1259
-imp	'ElfReadEventLogA'					ElfReadEventLogA					advapi32	1258
-imp	'ElfRegisterEventSource'				ElfRegisterEventSourceW					advapi32	1261
-imp	'ElfRegisterEventSourceA'				ElfRegisterEventSourceA					advapi32	1260
-imp	'ElfReportEvent'					ElfReportEventW						advapi32	1264
-imp	'ElfReportEventA'					ElfReportEventA						advapi32	1262
-imp	'ElfReportEventAndSource'				ElfReportEventAndSourceW				advapi32	1263
 imp	'EnableTrace'						EnableTrace						advapi32	1265
 imp	'EnableTraceEx'						EnableTraceEx						advapi32	1266
-imp	'EnableTraceEx2'					EnableTraceEx2						advapi32	1267
+imp	'EnableTraceEx2'					EnableTraceEx2						advapi32	1267 # Windows 7+
 imp	'EncryptFile'						EncryptFileW						advapi32	1269
-imp	'EncryptFileA'						EncryptFileA						advapi32	1268
-imp	'EncryptedFileKeyInfo'					EncryptedFileKeyInfo					advapi32	1270
 imp	'EncryptionDisable'					EncryptionDisable					advapi32	1271
 imp	'EnumDependentServices'					EnumDependentServicesW					advapi32	1273
-imp	'EnumDependentServicesA'				EnumDependentServicesA					advapi32	1272
-imp	'EnumServiceGroup'					EnumServiceGroupW					advapi32	1275
 imp	'EnumServicesStatus'					EnumServicesStatusW					advapi32	1279
-imp	'EnumServicesStatusA'					EnumServicesStatusA					advapi32	1276
 imp	'EnumServicesStatusEx'					EnumServicesStatusExW					advapi32	1278
-imp	'EnumServicesStatusExA'					EnumServicesStatusExA					advapi32	1277
 imp	'EnumerateTraceGuids'					EnumerateTraceGuids					advapi32	1280
 imp	'EnumerateTraceGuidsEx'					EnumerateTraceGuidsEx					advapi32	1281
 imp	'EqualDomainSid'					EqualDomainSid						advapi32	0
@@ -1646,54 +1290,40 @@ imp	'EqualSid'						EqualSid						advapi32	0
 imp	'EventAccessControl'					EventAccessControl					advapi32	1285
 imp	'EventAccessQuery'					EventAccessQuery					advapi32	1286
 imp	'EventAccessRemove'					EventAccessRemove					advapi32	1287
+imp	'EventActivityIdControl'				EventActivityIdControl					advapi32	0
+imp	'EventEnabled'						EventEnabled						advapi32	0
+imp	'EventProviderEnabled'					EventProviderEnabled					advapi32	0
+imp	'EventRegister'						EventRegister						advapi32	0
+imp	'EventUnregister'					EventUnregister						advapi32	0
+imp	'EventWrite'						EventWrite						advapi32	0
+imp	'EventWriteEx'						EventWriteEx						advapi32	0
+imp	'EventWriteString'					EventWriteString					advapi32	0
+imp	'EventWriteTransfer'					EventWriteTransfer					advapi32	0
 imp	'FileEncryptionStatus'					FileEncryptionStatusW					advapi32	1301
-imp	'FileEncryptionStatusA'					FileEncryptionStatusA					advapi32	1300
 imp	'FindFirstFreeAce'					FindFirstFreeAce					advapi32	0
-imp	'FlushEfsCache'						FlushEfsCache						advapi32	1303
 imp	'FlushTrace'						FlushTraceW						advapi32	1305
-imp	'FlushTraceA'						FlushTraceA						advapi32	1304
-imp	'FreeEncryptedFileKeyInfo'				FreeEncryptedFileKeyInfo				advapi32	1306
-imp	'FreeEncryptedFileMetadata'				FreeEncryptedFileMetadata				advapi32	1307
 imp	'FreeEncryptionCertificateHashList'			FreeEncryptionCertificateHashList			advapi32	1308
 imp	'FreeInheritedFromArray'				FreeInheritedFromArray					advapi32	1309
 imp	'FreeSid'						FreeSid							advapi32	0
-imp	'GetAccessPermissionsForObject'				GetAccessPermissionsForObjectW				advapi32	1312
-imp	'GetAccessPermissionsForObjectA'			GetAccessPermissionsForObjectA				advapi32	1311
 imp	'GetAce'						GetAce							advapi32	0
 imp	'GetAclInformation'					GetAclInformation					advapi32	0
 imp	'GetAuditedPermissionsFromAcl'				GetAuditedPermissionsFromAclW				advapi32	1316
-imp	'GetAuditedPermissionsFromAclA'				GetAuditedPermissionsFromAclA				advapi32	1315
 imp	'GetCurrentHwProfile'					GetCurrentHwProfileW					advapi32	1318
-imp	'GetCurrentHwProfileA'					GetCurrentHwProfileA					advapi32	1317
 imp	'GetEffectiveRightsFromAcl'				GetEffectiveRightsFromAclW				advapi32	1321
-imp	'GetEffectiveRightsFromAclA'				GetEffectiveRightsFromAclA				advapi32	1320
-imp	'GetEncryptedFileMetadata'				GetEncryptedFileMetadata				advapi32	1322
 imp	'GetEventLogInformation'				GetEventLogInformation					advapi32	1323
 imp	'GetExplicitEntriesFromAcl'				GetExplicitEntriesFromAclW				advapi32	1325
-imp	'GetExplicitEntriesFromAclA'				GetExplicitEntriesFromAclA				advapi32	1324
 imp	'GetFileSecurity'					GetFileSecurityW					advapi32	0	5
-imp	'GetFileSecurityA'					GetFileSecurityA					advapi32	1326	5
-imp	'GetInformationCodeAuthzLevel'				GetInformationCodeAuthzLevelW				advapi32	1328
-imp	'GetInformationCodeAuthzPolicy'				GetInformationCodeAuthzPolicyW				advapi32	1329
 imp	'GetInheritanceSource'					GetInheritanceSourceW					advapi32	1331
-imp	'GetInheritanceSourceA'					GetInheritanceSourceA					advapi32	1330
 imp	'GetKernelObjectSecurity'				GetKernelObjectSecurity					advapi32	0
 imp	'GetLengthSid'						GetLengthSid						advapi32	0
-imp	'GetLocalManagedApplicationData'			GetLocalManagedApplicationData				advapi32	1334
 imp	'GetLocalManagedApplications'				GetLocalManagedApplications				advapi32	1335
 imp	'GetManagedApplicationCategories'			GetManagedApplicationCategories				advapi32	1336
 imp	'GetManagedApplications'				GetManagedApplications					advapi32	1337
 imp	'GetMultipleTrustee'					GetMultipleTrusteeW					advapi32	1341
-imp	'GetMultipleTrusteeA'					GetMultipleTrusteeA					advapi32	1338
 imp	'GetMultipleTrusteeOperation'				GetMultipleTrusteeOperationW				advapi32	1340
-imp	'GetMultipleTrusteeOperationA'				GetMultipleTrusteeOperationA				advapi32	1339
 imp	'GetNamedSecurityInfo'					GetNamedSecurityInfoW					advapi32	1345
-imp	'GetNamedSecurityInfoA'					GetNamedSecurityInfoA					advapi32	1342
-imp	'GetNamedSecurityInfoEx'				GetNamedSecurityInfoExW					advapi32	1344
-imp	'GetNamedSecurityInfoExA'				GetNamedSecurityInfoExA					advapi32	1343
 imp	'GetNumberOfEventLogRecords'				GetNumberOfEventLogRecords				advapi32	1346
 imp	'GetOldestEventLogRecord'				GetOldestEventLogRecord					advapi32	1347
-imp	'GetOverlappedAccessResults'				GetOverlappedAccessResults				advapi32	1348
 imp	'GetPrivateObjectSecurity'				GetPrivateObjectSecurity				advapi32	0
 imp	'GetSecurityDescriptorControl'				GetSecurityDescriptorControl				advapi32	0
 imp	'GetSecurityDescriptorDacl'				GetSecurityDescriptorDacl				advapi32	0
@@ -1703,33 +1333,22 @@ imp	'GetSecurityDescriptorOwner'				GetSecurityDescriptorOwner				advapi32	0
 imp	'GetSecurityDescriptorRMControl'			GetSecurityDescriptorRMControl				advapi32	0
 imp	'GetSecurityDescriptorSacl'				GetSecurityDescriptorSacl				advapi32	0
 imp	'GetSecurityInfo'					GetSecurityInfo						advapi32	1357
-imp	'GetSecurityInfoEx'					GetSecurityInfoExW					advapi32	1359
-imp	'GetSecurityInfoExA'					GetSecurityInfoExA					advapi32	1358
 imp	'GetServiceDisplayName'					GetServiceDisplayNameW					advapi32	1361
-imp	'GetServiceDisplayNameA'				GetServiceDisplayNameA					advapi32	1360
 imp	'GetServiceKeyName'					GetServiceKeyNameW					advapi32	1363
-imp	'GetServiceKeyNameA'					GetServiceKeyNameA					advapi32	1362
 imp	'GetSidIdentifierAuthority'				GetSidIdentifierAuthority				advapi32	0
 imp	'GetSidLengthRequired'					GetSidLengthRequired					advapi32	0
 imp	'GetSidSubAuthority'					GetSidSubAuthority					advapi32	0
 imp	'GetSidSubAuthorityCount'				GetSidSubAuthorityCount					advapi32	0
-imp	'GetStringConditionFromBinary'				GetStringConditionFromBinary				advapi32	1368
 imp	'GetThreadWaitChain'					GetThreadWaitChain					advapi32	1369
 imp	'GetTokenInformation'					GetTokenInformation					advapi32	0
+imp	'GetTraceEnableFlags'					GetTraceEnableFlags					advapi32	0
+imp	'GetTraceEnableLevel'					GetTraceEnableLevel					advapi32	0
+imp	'GetTraceLoggerHandle'					GetTraceLoggerHandle					advapi32	0
 imp	'GetTrusteeForm'					GetTrusteeFormW						advapi32	1375
-imp	'GetTrusteeFormA'					GetTrusteeFormA						advapi32	1374
 imp	'GetTrusteeName'					GetTrusteeNameW						advapi32	1377
-imp	'GetTrusteeNameA'					GetTrusteeNameA						advapi32	1376
 imp	'GetTrusteeType'					GetTrusteeTypeW						advapi32	1379
-imp	'GetTrusteeTypeA'					GetTrusteeTypeA						advapi32	1378
 imp	'GetUserName'						GetUserNameW						advapi32	1381	2
-imp	'GetUserNameA'						GetUserNameA						advapi32	1380	2
 imp	'GetWindowsAccountDomainSid'				GetWindowsAccountDomainSid				advapi32	0
-imp	'I_ScGetCurrentGroupState'				I_ScGetCurrentGroupStateW				advapi32	1001
-imp	'I_ScReparseServiceDatabase'				I_ScReparseServiceDatabase				advapi32	1388
-imp	'I_ScSetServiceBits'					I_ScSetServiceBitsW					advapi32	1392
-imp	'I_ScSetServiceBitsA'					I_ScSetServiceBitsA					advapi32	1391
-imp	'IdentifyCodeAuthzLevel'				IdentifyCodeAuthzLevelW					advapi32	1394
 imp	'ImpersonateAnonymousToken'				ImpersonateAnonymousToken				advapi32	0
 imp	'ImpersonateLoggedOnUser'				ImpersonateLoggedOnUser					advapi32	0
 imp	'ImpersonateNamedPipeClient'				ImpersonateNamedPipeClient				advapi32	0
@@ -1738,104 +1357,54 @@ imp	'InitializeAcl'						InitializeAcl						advapi32	0
 imp	'InitializeSecurityDescriptor'				InitializeSecurityDescriptor				advapi32	0
 imp	'InitializeSid'						InitializeSid						advapi32	0
 imp	'InitiateShutdown'					InitiateShutdownW					advapi32	1403	5
-imp	'InitiateShutdownA'					InitiateShutdownA					advapi32	1402	5
 imp	'InitiateSystemShutdown'				InitiateSystemShutdownW					advapi32	1407
-imp	'InitiateSystemShutdownA'				InitiateSystemShutdownA					advapi32	1404
 imp	'InitiateSystemShutdownEx'				InitiateSystemShutdownExW				advapi32	1406
-imp	'InitiateSystemShutdownExA'				InitiateSystemShutdownExA				advapi32	1405
 imp	'InstallApplication'					InstallApplication					advapi32	1408
 imp	'IsTextUnicode'						IsTextUnicode						advapi32	1409
 imp	'IsTokenRestricted'					IsTokenRestricted					advapi32	0
-imp	'IsTokenUntrusted'					IsTokenUntrusted					advapi32	1411
 imp	'IsValidAcl'						IsValidAcl						advapi32	0
 imp	'IsValidSecurityDescriptor'				IsValidSecurityDescriptor				advapi32	0
 imp	'IsValidSid'						IsValidSid						advapi32	0
 imp	'IsWellKnownSid'					IsWellKnownSid						advapi32	0
 imp	'LockServiceDatabase'					LockServiceDatabase					advapi32	1417
 imp	'LogonUser'						LogonUserW						advapi32	1422
-imp	'LogonUserA'						LogonUserA						advapi32	1418
 imp	'LogonUserEx'						LogonUserExW						advapi32	1421
-imp	'LogonUserExA'						LogonUserExA						advapi32	1419
 imp	'LogonUserExEx'						LogonUserExExW						advapi32	1420
 imp	'LookupAccountName'					LookupAccountNameW					advapi32	1424
-imp	'LookupAccountNameA'					LookupAccountNameA					advapi32	1423
 imp	'LookupAccountSid'					LookupAccountSidW					advapi32	1426
-imp	'LookupAccountSidA'					LookupAccountSidA					advapi32	1425
 imp	'LookupPrivilegeDisplayName'				LookupPrivilegeDisplayNameW				advapi32	1428
-imp	'LookupPrivilegeDisplayNameA'				LookupPrivilegeDisplayNameA				advapi32	1427
 imp	'LookupPrivilegeName'					LookupPrivilegeNameW					advapi32	1430
-imp	'LookupPrivilegeNameA'					LookupPrivilegeNameA					advapi32	1429
 imp	'LookupPrivilegeValue'					LookupPrivilegeValueW					advapi32	1432	3
-imp	'LookupPrivilegeValueA'					LookupPrivilegeValueA					advapi32	1431	3
 imp	'LookupSecurityDescriptorParts'				LookupSecurityDescriptorPartsW				advapi32	1434
-imp	'LookupSecurityDescriptorPartsA'			LookupSecurityDescriptorPartsA				advapi32	1433
 imp	'LsaAddAccountRights'					LsaAddAccountRights					advapi32	1435
-imp	'LsaAddPrivilegesToAccount'				LsaAddPrivilegesToAccount				advapi32	1436
-imp	'LsaClearAuditLog'					LsaClearAuditLog					advapi32	1437
 imp	'LsaClose'						LsaClose						advapi32	1438
-imp	'LsaCreateAccount'					LsaCreateAccount					advapi32	1439
-imp	'LsaCreateSecret'					LsaCreateSecret						advapi32	1440
 imp	'LsaCreateTrustedDomain'				LsaCreateTrustedDomain					advapi32	1441
 imp	'LsaCreateTrustedDomainEx'				LsaCreateTrustedDomainEx				advapi32	1442
-imp	'LsaDelete'						LsaDelete						advapi32	1443
 imp	'LsaDeleteTrustedDomain'				LsaDeleteTrustedDomain					advapi32	1444
 imp	'LsaEnumerateAccountRights'				LsaEnumerateAccountRights				advapi32	1445
-imp	'LsaEnumerateAccounts'					LsaEnumerateAccounts					advapi32	1446
 imp	'LsaEnumerateAccountsWithUserRight'			LsaEnumerateAccountsWithUserRight			advapi32	1447
-imp	'LsaEnumeratePrivileges'				LsaEnumeratePrivileges					advapi32	1448
-imp	'LsaEnumeratePrivilegesOfAccount'			LsaEnumeratePrivilegesOfAccount				advapi32	1449
 imp	'LsaEnumerateTrustedDomains'				LsaEnumerateTrustedDomains				advapi32	1450
 imp	'LsaEnumerateTrustedDomainsEx'				LsaEnumerateTrustedDomainsEx				advapi32	1451
 imp	'LsaFreeMemory'						LsaFreeMemory						advapi32	1452
-imp	'LsaGetAppliedCAPIDs'					LsaGetAppliedCAPIDs					advapi32	1453
-imp	'LsaGetQuotasForAccount'				LsaGetQuotasForAccount					advapi32	1454
-imp	'LsaGetRemoteUserName'					LsaGetRemoteUserName					advapi32	1455
-imp	'LsaGetSystemAccessAccount'				LsaGetSystemAccessAccount				advapi32	1456
-imp	'LsaGetUserName'					LsaGetUserName						advapi32	1457
-imp	'LsaICLookupNames'					LsaICLookupNames					advapi32	1458
-imp	'LsaICLookupNamesWithCreds'				LsaICLookupNamesWithCreds				advapi32	1459
-imp	'LsaICLookupSids'					LsaICLookupSids						advapi32	1460
-imp	'LsaICLookupSidsWithCreds'				LsaICLookupSidsWithCreds				advapi32	1461
 imp	'LsaLookupNames'					LsaLookupNames						advapi32	1462
 imp	'LsaLookupNames2'					LsaLookupNames2						advapi32	1463
-imp	'LsaLookupPrivilegeDisplayName'				LsaLookupPrivilegeDisplayName				advapi32	1464
-imp	'LsaLookupPrivilegeName'				LsaLookupPrivilegeName					advapi32	1465
-imp	'LsaLookupPrivilegeValue'				LsaLookupPrivilegeValue					advapi32	1466
 imp	'LsaLookupSids'						LsaLookupSids						advapi32	1467
-imp	'LsaLookupSids2'					LsaLookupSids2						advapi32	1468
-imp	'LsaManageSidNameMapping'				LsaManageSidNameMapping					advapi32	1469
 imp	'LsaNtStatusToWinError'					LsaNtStatusToWinError					advapi32	1470
-imp	'LsaOpenAccount'					LsaOpenAccount						advapi32	1471
 imp	'LsaOpenPolicy'						LsaOpenPolicy						advapi32	1472
-imp	'LsaOpenPolicySce'					LsaOpenPolicySce					advapi32	1473
-imp	'LsaOpenSecret'						LsaOpenSecret						advapi32	1474
-imp	'LsaOpenTrustedDomain'					LsaOpenTrustedDomain					advapi32	1475
 imp	'LsaOpenTrustedDomainByName'				LsaOpenTrustedDomainByName				advapi32	1476
-imp	'LsaQueryCAPs'						LsaQueryCAPs						advapi32	1477
 imp	'LsaQueryDomainInformationPolicy'			LsaQueryDomainInformationPolicy				advapi32	1478
 imp	'LsaQueryForestTrustInformation'			LsaQueryForestTrustInformation				advapi32	1479
-imp	'LsaQueryInfoTrustedDomain'				LsaQueryInfoTrustedDomain				advapi32	1480
 imp	'LsaQueryInformationPolicy'				LsaQueryInformationPolicy				advapi32	1481
-imp	'LsaQuerySecret'					LsaQuerySecret						advapi32	1482
-imp	'LsaQuerySecurityObject'				LsaQuerySecurityObject					advapi32	1483
 imp	'LsaQueryTrustedDomainInfo'				LsaQueryTrustedDomainInfo				advapi32	1484
 imp	'LsaQueryTrustedDomainInfoByName'			LsaQueryTrustedDomainInfoByName				advapi32	1485
 imp	'LsaRemoveAccountRights'				LsaRemoveAccountRights					advapi32	1486
-imp	'LsaRemovePrivilegesFromAccount'			LsaRemovePrivilegesFromAccount				advapi32	1487
 imp	'LsaRetrievePrivateData'				LsaRetrievePrivateData					advapi32	1488
-imp	'LsaSetCAPs'						LsaSetCAPs						advapi32	1489
 imp	'LsaSetDomainInformationPolicy'				LsaSetDomainInformationPolicy				advapi32	1490
 imp	'LsaSetForestTrustInformation'				LsaSetForestTrustInformation				advapi32	1491
 imp	'LsaSetInformationPolicy'				LsaSetInformationPolicy					advapi32	1492
-imp	'LsaSetInformationTrustedDomain'			LsaSetInformationTrustedDomain				advapi32	1493
-imp	'LsaSetQuotasForAccount'				LsaSetQuotasForAccount					advapi32	1494
-imp	'LsaSetSecret'						LsaSetSecret						advapi32	1495
-imp	'LsaSetSecurityObject'					LsaSetSecurityObject					advapi32	1496
-imp	'LsaSetSystemAccessAccount'				LsaSetSystemAccessAccount				advapi32	1497
 imp	'LsaSetTrustedDomainInfoByName'				LsaSetTrustedDomainInfoByName				advapi32	1498
 imp	'LsaSetTrustedDomainInformation'			LsaSetTrustedDomainInformation				advapi32	1499
 imp	'LsaStorePrivateData'					LsaStorePrivateData					advapi32	1500
-imp	'MIDL_user_free_Ext'					MIDL_user_free_Ext					advapi32	1507
 imp	'MSChapSrvChangePassword'				MSChapSrvChangePassword					advapi32	1508
 imp	'MSChapSrvChangePassword2'				MSChapSrvChangePassword2				advapi32	1509
 imp	'MakeAbsoluteSD'					MakeAbsoluteSD						advapi32	0
@@ -1843,56 +1412,28 @@ imp	'MakeSelfRelativeSD'					MakeSelfRelativeSD					advapi32	0
 imp	'MapGenericMask'					MapGenericMask						advapi32	0	2
 imp	'NotifyBootConfigStatus'				NotifyBootConfigStatus					advapi32	1514
 imp	'NotifyChangeEventLog'					NotifyChangeEventLog					advapi32	1515
+imp	'NotifyServiceStatusChange'				NotifyServiceStatusChange				advapi32	0
 imp	'NotifyServiceStatusChange'				NotifyServiceStatusChangeW				advapi32	1518
-imp	'NotifyServiceStatusChangeA'				NotifyServiceStatusChangeA				advapi32	1517
-imp	'NpGetUserName'						NpGetUserName						advapi32	1519
 imp	'ObjectCloseAuditAlarm'					ObjectCloseAuditAlarmW					advapi32	0
-imp	'ObjectCloseAuditAlarmA'				ObjectCloseAuditAlarmA					advapi32	1520
 imp	'ObjectDeleteAuditAlarm'				ObjectDeleteAuditAlarmW					advapi32	0
-imp	'ObjectDeleteAuditAlarmA'				ObjectDeleteAuditAlarmA					advapi32	1522
 imp	'ObjectOpenAuditAlarm'					ObjectOpenAuditAlarmW					advapi32	0
-imp	'ObjectOpenAuditAlarmA'					ObjectOpenAuditAlarmA					advapi32	1524
 imp	'ObjectPrivilegeAuditAlarm'				ObjectPrivilegeAuditAlarmW				advapi32	0
-imp	'ObjectPrivilegeAuditAlarmA'				ObjectPrivilegeAuditAlarmA				advapi32	1526
 imp	'OpenBackupEventLog'					OpenBackupEventLogW					advapi32	1529
-imp	'OpenBackupEventLogA'					OpenBackupEventLogA					advapi32	1528
 imp	'OpenEncryptedFileRaw'					OpenEncryptedFileRawW					advapi32	1531
-imp	'OpenEncryptedFileRawA'					OpenEncryptedFileRawA					advapi32	1530
 imp	'OpenEventLog'						OpenEventLogW						advapi32	1533
-imp	'OpenEventLogA'						OpenEventLogA						advapi32	1532
 imp	'OpenProcessToken'					OpenProcessToken					advapi32	0	3
 imp	'OpenSCManager'						OpenSCManagerW						advapi32	1536
-imp	'OpenSCManagerA'					OpenSCManagerA						advapi32	1535
 imp	'OpenService'						OpenServiceW						advapi32	1538
-imp	'OpenServiceA'						OpenServiceA						advapi32	1537
 imp	'OpenThreadToken'					OpenThreadToken						advapi32	0	4
 imp	'OpenThreadWaitChainSession'				OpenThreadWaitChainSession				advapi32	1540
 imp	'OpenTrace'						OpenTraceW						advapi32	1542
-imp	'OpenTraceA'						OpenTraceA						advapi32	1541
-imp	'OperationEnd'						OperationEnd						advapi32	1543
-imp	'OperationStart'					OperationStart						advapi32	1544
-imp	'PerfAddCounters'					PerfAddCounters						advapi32	1545
-imp	'PerfCloseQueryHandle'					PerfCloseQueryHandle					advapi32	1546
 imp	'PerfCreateInstance'					PerfCreateInstance					advapi32	0
 imp	'PerfDecrementULongCounterValue'			PerfDecrementULongCounterValue				advapi32	0
 imp	'PerfDecrementULongLongCounterValue'			PerfDecrementULongLongCounterValue			advapi32	0
-imp	'PerfDeleteCounters'					PerfDeleteCounters					advapi32	1550
 imp	'PerfDeleteInstance'					PerfDeleteInstance					advapi32	0
-imp	'PerfEnumerateCounterSet'				PerfEnumerateCounterSet					advapi32	1552
-imp	'PerfEnumerateCounterSetInstances'			PerfEnumerateCounterSetInstances			advapi32	1553
 imp	'PerfIncrementULongCounterValue'			PerfIncrementULongCounterValue				advapi32	0
 imp	'PerfIncrementULongLongCounterValue'			PerfIncrementULongLongCounterValue			advapi32	0
-imp	'PerfOpenQueryHandle'					PerfOpenQueryHandle					advapi32	1556
-imp	'PerfQueryCounterData'					PerfQueryCounterData					advapi32	1557
-imp	'PerfQueryCounterInfo'					PerfQueryCounterInfo					advapi32	1558
-imp	'PerfQueryCounterSetRegistrationInfo'			PerfQueryCounterSetRegistrationInfo			advapi32	1559
 imp	'PerfQueryInstance'					PerfQueryInstance					advapi32	0
-imp	'PerfRegCloseKey'					PerfRegCloseKey						advapi32	1561
-imp	'PerfRegEnumKey'					PerfRegEnumKey						advapi32	1562
-imp	'PerfRegEnumValue'					PerfRegEnumValue					advapi32	1563
-imp	'PerfRegQueryInfoKey'					PerfRegQueryInfoKey					advapi32	1564
-imp	'PerfRegQueryValue'					PerfRegQueryValue					advapi32	1565
-imp	'PerfRegSetValue'					PerfRegSetValue						advapi32	1566
 imp	'PerfSetCounterRefValue'				PerfSetCounterRefValue					advapi32	0
 imp	'PerfSetCounterSetInfo'					PerfSetCounterSetInfo					advapi32	0
 imp	'PerfSetULongCounterValue'				PerfSetULongCounterValue				advapi32	0
@@ -1902,129 +1443,77 @@ imp	'PerfStartProviderEx'					PerfStartProviderEx					advapi32	0
 imp	'PerfStopProvider'					PerfStopProvider					advapi32	0
 imp	'PrivilegeCheck'					PrivilegeCheck						advapi32	0
 imp	'PrivilegedServiceAuditAlarm'				PrivilegedServiceAuditAlarmW				advapi32	0
-imp	'PrivilegedServiceAuditAlarmA'				PrivilegedServiceAuditAlarmA				advapi32	1575
-imp	'ProcessIdleTasks'					ProcessIdleTasksW					advapi32	1578
 imp	'ProcessTrace'						ProcessTrace						advapi32	1579
 imp	'QueryAllTraces'					QueryAllTracesW						advapi32	1581
-imp	'QueryAllTracesA'					QueryAllTracesA						advapi32	1580
-imp	'QueryLocalUserServiceName'				QueryLocalUserServiceName				advapi32	1582
 imp	'QueryRecoveryAgentsOnEncryptedFile'			QueryRecoveryAgentsOnEncryptedFile			advapi32	1583
 imp	'QuerySecurityAccessMask'				QuerySecurityAccessMask					advapi32	0
 imp	'QueryServiceConfig'					QueryServiceConfigW					advapi32	1588
-imp	'QueryServiceConfig2A'					QueryServiceConfig2A					advapi32	1585
 imp	'QueryServiceConfig2W'					QueryServiceConfig2W					advapi32	1586
-imp	'QueryServiceConfigA'					QueryServiceConfigA					advapi32	1587
-imp	'QueryServiceDynamicInformation'			QueryServiceDynamicInformation				advapi32	1589
 imp	'QueryServiceLockStatus'				QueryServiceLockStatusW					advapi32	1591
-imp	'QueryServiceLockStatusA'				QueryServiceLockStatusA					advapi32	1590
 imp	'QueryServiceObjectSecurity'				QueryServiceObjectSecurity				advapi32	1592
 imp	'QueryServiceStatus'					QueryServiceStatus					advapi32	1593
 imp	'QueryServiceStatusEx'					QueryServiceStatusEx					advapi32	1594
 imp	'QueryTrace'						QueryTraceW						advapi32	1597
-imp	'QueryTraceA'						QueryTraceA						advapi32	1595
-imp	'QueryTraceProcessingHandle'				QueryTraceProcessingHandle				advapi32	1596
-imp	'QueryUserServiceName'					QueryUserServiceName					advapi32	1598
-imp	'QueryUserServiceNameForContext'			QueryUserServiceNameForContext				advapi32	1599
 imp	'QueryUsersOnEncryptedFile'				QueryUsersOnEncryptedFile				advapi32	1600
 imp	'ReadEncryptedFileRaw'					ReadEncryptedFileRaw					advapi32	1601
 imp	'ReadEventLog'						ReadEventLogW						advapi32	1603
-imp	'ReadEventLogA'						ReadEventLogA						advapi32	1602
 imp	'RegCloseKey'						RegCloseKey						advapi32	0	1
 imp	'RegConnectRegistry'					RegConnectRegistryW					advapi32	1608	3
-imp	'RegConnectRegistryA'					RegConnectRegistryA					advapi32	1605	3
-imp	'RegConnectRegistryEx'					RegConnectRegistryExW					advapi32	1607	4
-imp	'RegConnectRegistryExA'					RegConnectRegistryExA					advapi32	1606	4
 imp	'RegCopyTree'						RegCopyTreeW						advapi32	0
-imp	'RegCopyTreeA'						RegCopyTreeA						advapi32	1609
 imp	'RegCreateKey'						RegCreateKeyW						advapi32	1616	3
-imp	'RegCreateKeyA'						RegCreateKeyA						advapi32	1611	3
 imp	'RegCreateKeyEx'					RegCreateKeyExW						advapi32	0	9
-imp	'RegCreateKeyExA'					RegCreateKeyExA						advapi32	0	9
 imp	'RegCreateKeyTransacted'				RegCreateKeyTransactedW					advapi32	1615
-imp	'RegCreateKeyTransactedA'				RegCreateKeyTransactedA					advapi32	1614
 imp	'RegDeleteKey'						RegDeleteKeyW						advapi32	1624	2
-imp	'RegDeleteKeyA'						RegDeleteKeyA						advapi32	1617	2
 imp	'RegDeleteKeyEx'					RegDeleteKeyExW						advapi32	0	4
-imp	'RegDeleteKeyExA'					RegDeleteKeyExA						advapi32	0	4
 imp	'RegDeleteKeyTransacted'				RegDeleteKeyTransactedW					advapi32	1621
-imp	'RegDeleteKeyTransactedA'				RegDeleteKeyTransactedA					advapi32	1620
 imp	'RegDeleteKeyValue'					RegDeleteKeyValueW					advapi32	0
-imp	'RegDeleteKeyValueA'					RegDeleteKeyValueA					advapi32	0
 imp	'RegDeleteTree'						RegDeleteTreeW						advapi32	0	2
-imp	'RegDeleteTreeA'					RegDeleteTreeA						advapi32	0	2
 imp	'RegDeleteValue'					RegDeleteValueW						advapi32	0	2
-imp	'RegDeleteValueA'					RegDeleteValueA						advapi32	0	2
 imp	'RegDisablePredefinedCache'				RegDisablePredefinedCache				advapi32	1629	1
+imp	'RegDisablePredefinedCacheEx'				RegDisablePredefinedCacheEx				advapi32	0
 imp	'RegDisableReflectionKey'				RegDisableReflectionKey					advapi32	1631	1
 imp	'RegEnableReflectionKey'				RegEnableReflectionKey					advapi32	1632	1
 imp	'RegEnumKey'						RegEnumKeyW						advapi32	1636	4
-imp	'RegEnumKeyA'						RegEnumKeyA						advapi32	1633	4
 imp	'RegEnumKeyEx'						RegEnumKeyExW						advapi32	0	8
-imp	'RegEnumKeyExA'						RegEnumKeyExA						advapi32	0	8
 imp	'RegEnumValue'						RegEnumValueW						advapi32	0	8
-imp	'RegEnumValueA'						RegEnumValueA						advapi32	0	8
 imp	'RegFlushKey'						RegFlushKey						advapi32	0	1
 imp	'RegGetKeySecurity'					RegGetKeySecurity					advapi32	0	4
 imp	'RegGetValue'						RegGetValueW						advapi32	0	7
-imp	'RegGetValueA'						RegGetValueA						advapi32	0	7
 imp	'RegLoadAppKey'						RegLoadAppKeyW						advapi32	0
-imp	'RegLoadAppKeyA'					RegLoadAppKeyA						advapi32	0
 imp	'RegLoadKey'						RegLoadKeyW						advapi32	0	3
-imp	'RegLoadKeyA'						RegLoadKeyA						advapi32	0	3
 imp	'RegLoadMUIString'					RegLoadMUIStringW					advapi32	0
 imp	'RegNotifyChangeKeyValue'				RegNotifyChangeKeyValue					advapi32	0	5
 imp	'RegOpenCurrentUser'					RegOpenCurrentUser					advapi32	0	2
 imp	'RegOpenKey'						RegOpenKeyW						advapi32	1656
-imp	'RegOpenKeyA'						RegOpenKeyA						advapi32	1651	3
 imp	'RegOpenKeyEx'						RegOpenKeyExW						advapi32	0	5
-imp	'RegOpenKeyExA'						RegOpenKeyExA						advapi32	0	5
 imp	'RegOpenKeyTransacted'					RegOpenKeyTransactedW					advapi32	1655
-imp	'RegOpenKeyTransactedA'					RegOpenKeyTransactedA					advapi32	1654
 imp	'RegOpenUserClassesRoot'				RegOpenUserClassesRoot					advapi32	0	4
 imp	'RegOverridePredefKey'					RegOverridePredefKey					advapi32	1658	2
 imp	'RegQueryInfoKey'					RegQueryInfoKeyW					advapi32	0	12
-imp	'RegQueryInfoKeyA'					RegQueryInfoKeyA					advapi32	0	12
 imp	'RegQueryMultipleValues'				RegQueryMultipleValuesW					advapi32	0	5
-imp	'RegQueryMultipleValuesA'				RegQueryMultipleValuesA					advapi32	0	5
 imp	'RegQueryReflectionKey'					RegQueryReflectionKey					advapi32	1663	2
 imp	'RegQueryValue'						RegQueryValueW						advapi32	1667	4
-imp	'RegQueryValueA'					RegQueryValueA						advapi32	1664	4
 imp	'RegQueryValueEx'					RegQueryValueExW					advapi32	0	6
-imp	'RegQueryValueExA'					RegQueryValueExA					advapi32	0	6
-imp	'RegRenameKey'						RegRenameKey						advapi32	1668
 imp	'RegReplaceKey'						RegReplaceKeyW						advapi32	1670	4
-imp	'RegReplaceKeyA'					RegReplaceKeyA						advapi32	1669	4
 imp	'RegRestoreKey'						RegRestoreKeyW						advapi32	0	3
-imp	'RegRestoreKeyA'					RegRestoreKeyA						advapi32	0	3
 imp	'RegSaveKey'						RegSaveKeyW						advapi32	1676	3
-imp	'RegSaveKeyA'						RegSaveKeyA						advapi32	1673	3
 imp	'RegSaveKeyEx'						RegSaveKeyExW						advapi32	0
 imp	'RegSetKeySecurity'					RegSetKeySecurity					advapi32	0	3
 imp	'RegSetKeyValue'					RegSetKeyValueW						advapi32	0
-imp	'RegSetKeyValueA'					RegSetKeyValueA						advapi32	0
 imp	'RegSetValue'						RegSetValueW						advapi32	1683	5
-imp	'RegSetValueA'						RegSetValueA						advapi32	1680	5
 imp	'RegSetValueEx'						RegSetValueExW						advapi32	0	6
-imp	'RegSetValueExA'					RegSetValueExA						advapi32	0	6
 imp	'RegUnLoadKey'						RegUnLoadKeyW						advapi32	0	2
-imp	'RegUnLoadKeyA'						RegUnLoadKeyA						advapi32	0	2
 imp	'RegisterEventSource'					RegisterEventSourceW					advapi32	1687    2
-imp	'RegisterIdleTask'					RegisterIdleTask					advapi32	1688
 imp	'RegisterServiceCtrlHandler'				RegisterServiceCtrlHandlerW				advapi32	1692
 imp	'RegisterServiceCtrlHandlerEx'				RegisterServiceCtrlHandlerExW				advapi32	1691
+imp	'RegisterTraceGuids'					RegisterTraceGuidsW					advapi32	0
 imp	'RegisterWaitChainCOMCallback'				RegisterWaitChainCOMCallback				advapi32	1695
-imp	'RemoteRegEnumKeyWrapper'				RemoteRegEnumKeyWrapper					advapi32	1696
-imp	'RemoteRegEnumValueWrapper'				RemoteRegEnumValueWrapper				advapi32	1697
-imp	'RemoteRegQueryInfoKeyWrapper'				RemoteRegQueryInfoKeyWrapper				advapi32	1698
-imp	'RemoteRegQueryMultipleValues2Wrapper'			RemoteRegQueryMultipleValues2Wrapper			advapi32	1699
-imp	'RemoteRegQueryMultipleValuesWrapper'			RemoteRegQueryMultipleValuesWrapper			advapi32	1700
-imp	'RemoteRegQueryValueWrapper'				RemoteRegQueryValueWrapper				advapi32	1701
+imp	'RemoveTraceCallback'					RemoveTraceCallback					advapi32	0
 imp	'RemoveUsersFromEncryptedFile'				RemoveUsersFromEncryptedFile				advapi32	1703
 imp	'ReportEvent'						ReportEventW						advapi32	0	9
 imp	'ReportEventA'						ReportEventA						advapi32	0	9
 imp	'RevertToSelf'						RevertToSelf						advapi32	0	0
 imp	'RtlGenRandom'						SystemFunction036					advapi32	0	2
-imp	'SafeBaseRegGetKeySecurity'				SafeBaseRegGetKeySecurity				advapi32	1707
 imp	'SaferCloseLevel'					SaferCloseLevel						advapi32	1708
 imp	'SaferComputeTokenFromLevel'				SaferComputeTokenFromLevel				advapi32	1709
 imp	'SaferCreateLevel'					SaferCreateLevel					advapi32	1710
@@ -2032,26 +1521,12 @@ imp	'SaferGetLevelInformation'				SaferGetLevelInformation				advapi32	1711
 imp	'SaferGetPolicyInformation'				SaferGetPolicyInformation				advapi32	1712
 imp	'SaferIdentifyLevel'					SaferIdentifyLevel					advapi32	1713
 imp	'SaferRecordEventLogEntry'				SaferRecordEventLogEntry				advapi32	1714
-imp	'SaferSetLevelInformation'				SaferSetLevelInformation				advapi32	1715
-imp	'SaferSetPolicyInformation'				SaferSetPolicyInformation				advapi32	1716
-imp	'SaferiChangeRegistryScope'				SaferiChangeRegistryScope				advapi32	1717
-imp	'SaferiCompareTokenLevels'				SaferiCompareTokenLevels				advapi32	1718
-imp	'SaferiIsDllAllowed'					SaferiIsDllAllowed					advapi32	1719
 imp	'SaferiIsExecutableFileType'				SaferiIsExecutableFileType				advapi32	1720
-imp	'SaferiPopulateDefaultsInRegistry'			SaferiPopulateDefaultsInRegistry			advapi32	1721
-imp	'SaferiRecordEventLogEntry'				SaferiRecordEventLogEntry				advapi32	1722
-imp	'SaferiSearchMatchingHashRules'				SaferiSearchMatchingHashRules				advapi32	1723
 imp	'SetAclInformation'					SetAclInformation					advapi32	0
-imp	'SetEncryptedFileMetadata'				SetEncryptedFileMetadata				advapi32	1725
-imp	'SetEntriesInAccessList'				SetEntriesInAccessListW					advapi32	1727
 imp	'SetEntriesInAcl'					SetEntriesInAclW					advapi32	1729
-imp	'SetEntriesInAuditList'					SetEntriesInAuditListW					advapi32	1731
 imp	'SetFileSecurity'					SetFileSecurityW					advapi32	0
-imp	'SetInformationCodeAuthzLevel'				SetInformationCodeAuthzLevelW				advapi32	1734
-imp	'SetInformationCodeAuthzPolicy'				SetInformationCodeAuthzPolicyW				advapi32	1735
 imp	'SetKernelObjectSecurity'				SetKernelObjectSecurity					advapi32	0
 imp	'SetNamedSecurityInfo'					SetNamedSecurityInfoW					advapi32	1740
-imp	'SetNamedSecurityInfoEx'				SetNamedSecurityInfoExW					advapi32	1739
 imp	'SetPrivateObjectSecurity'				SetPrivateObjectSecurity				advapi32	0
 imp	'SetPrivateObjectSecurityEx'				SetPrivateObjectSecurityEx				advapi32	0
 imp	'SetSecurityAccessMask'					SetSecurityAccessMask					advapi32	0
@@ -2062,48 +1537,30 @@ imp	'SetSecurityDescriptorOwner'				SetSecurityDescriptorOwner				advapi32	0
 imp	'SetSecurityDescriptorRMControl'			SetSecurityDescriptorRMControl				advapi32	0
 imp	'SetSecurityDescriptorSacl'				SetSecurityDescriptorSacl				advapi32	0
 imp	'SetSecurityInfo'					SetSecurityInfo						advapi32	1750
-imp	'SetSecurityInfoEx'					SetSecurityInfoExW					advapi32	1752
 imp	'SetServiceBits'					SetServiceBits						advapi32	1753
 imp	'SetServiceObjectSecurity'				SetServiceObjectSecurity				advapi32	1754
 imp	'SetServiceStatus'					SetServiceStatus					advapi32	1755
 imp	'SetThreadToken'					SetThreadToken						advapi32	0
 imp	'SetTokenInformation'					SetTokenInformation					advapi32	0
+imp	'SetTraceCallback'					SetTraceCallback					advapi32	0
 imp	'SetUserFileEncryptionKey'				SetUserFileEncryptionKey				advapi32	1759
-imp	'SetUserFileEncryptionKeyEx'				SetUserFileEncryptionKeyEx				advapi32	1760
 imp	'StartService'						StartServiceW						advapi32	1764
 imp	'StartServiceCtrlDispatcher'				StartServiceCtrlDispatcherW				advapi32	1763
 imp	'StartTrace'						StartTraceW						advapi32	1766
 imp	'StopTrace'						StopTraceW						advapi32	1768
-imp	'SystemFunction017'					SystemFunction017					advapi32	1785
-imp	'SystemFunction019'					SystemFunction019					advapi32	1787
-imp	'TraceSetInformation'					TraceSetInformation					advapi32	1812
+imp	'SystemFunction040'					SystemFunction040					advapi32	0
+imp	'SystemFunction041'					SystemFunction041					advapi32	0
+imp	'TraceEvent'						TraceEvent						advapi32	0
+imp	'TraceEventInstance'					TraceEventInstance					advapi32	0
+imp	'TraceMessage'						TraceMessage						advapi32	0
+imp	'TraceMessageVa'					TraceMessageVa						advapi32	0
+imp	'TraceSetInformation'					TraceSetInformation					advapi32	1812 # Windows 7+
 imp	'TreeResetNamedSecurityInfo'				TreeResetNamedSecurityInfoW				advapi32	1814
 imp	'TreeSetNamedSecurityInfo'				TreeSetNamedSecurityInfoW				advapi32	1816
-imp	'TrusteeAccessToObject'					TrusteeAccessToObjectW					advapi32	1818
 imp	'UninstallApplication'					UninstallApplication					advapi32	1819
 imp	'UnlockServiceDatabase'					UnlockServiceDatabase					advapi32	1820
-imp	'UnregisterIdleTask'					UnregisterIdleTask					advapi32	1821
+imp	'UnregisterTraceGuids'					UnregisterTraceGuids					advapi32	0
 imp	'UpdateTrace'						UpdateTraceW						advapi32	1824
-imp	'UsePinForEncryptedFiles'				UsePinForEncryptedFilesW				advapi32	1826
-imp	'WaitServiceState'					WaitServiceState					advapi32	1827
-imp	'WmiCloseBlock'						WmiCloseBlock						advapi32	1828
-imp	'WmiDevInstToInstanceName'				WmiDevInstToInstanceNameW				advapi32	1830
-imp	'WmiEnumerateGuids'					WmiEnumerateGuids					advapi32	1831
-imp	'WmiExecuteMethod'					WmiExecuteMethodW					advapi32	1833
-imp	'WmiFileHandleToInstanceName'				WmiFileHandleToInstanceNameW				advapi32	1835
-imp	'WmiFreeBuffer'						WmiFreeBuffer						advapi32	1836
-imp	'WmiMofEnumerateResources'				WmiMofEnumerateResourcesW				advapi32	1838
-imp	'WmiNotificationRegistration'				WmiNotificationRegistrationW				advapi32	1840
-imp	'WmiOpenBlock'						WmiOpenBlock						advapi32	1841
-imp	'WmiQueryAllData'					WmiQueryAllDataW					advapi32	1845
-imp	'WmiQueryAllDataMultiple'				WmiQueryAllDataMultipleW				advapi32	1844
-imp	'WmiQueryGuidInformation'				WmiQueryGuidInformation					advapi32	1846
-imp	'WmiQuerySingleInstance'				WmiQuerySingleInstanceW					advapi32	1850
-imp	'WmiQuerySingleInstanceMultiple'			WmiQuerySingleInstanceMultipleW				advapi32	1849
-imp	'WmiReceiveNotifications'				WmiReceiveNotificationsW				advapi32	1852
-imp	'WmiSetSingleInstance'					WmiSetSingleInstanceW					advapi32	1854
-imp	'WmiSetSingleItem'					WmiSetSingleItemW					advapi32	1856
-imp	'WriteEncryptedFileRaw'					WriteEncryptedFileRaw					advapi32	1857
 
 # USER32.DLL
 #
