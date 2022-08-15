@@ -7104,7 +7104,7 @@ static void HandleShutdown(void) {
 }
 
 // this function coroutines with linenoise
-static int EventLoop(int ms) {
+int EventLoop(int ms) {
   struct timespec t;
   DEBUGF("(repl) event loop");
   while (!terminated) {

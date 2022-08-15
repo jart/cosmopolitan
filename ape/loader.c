@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/loader.h"
 
+#define SET_EXE_FILE    0 /* needs root ;_; */
 #define TROUBLESHOOT    0
 #define TROUBLESHOOT_OS LINUX
 
@@ -99,30 +100,32 @@
 #define IsOpenbsd() (SupportsOpenbsd() && os == OPENBSD)
 #define IsNetbsd()  (SupportsNetbsd() && os == NETBSD)
 
-#define O_RDONLY         0
-#define PROT_READ        1
-#define PROT_WRITE       2
-#define PROT_EXEC        4
-#define MAP_SHARED       1
-#define MAP_PRIVATE      2
-#define MAP_FIXED        16
-#define MAP_ANONYMOUS    (IsLinux() ? 32 : 4096)
-#define AT_EXECFN_LINUX  31
-#define AT_EXECFN_NETBSD 2014
-#define ELFCLASS64       2
-#define ELFDATA2LSB      1
-#define EM_NEXGEN32E     62
-#define ET_EXEC          2
-#define PT_LOAD          1
-#define PT_DYNAMIC       2
-#define EI_CLASS         4
-#define EI_DATA          5
-#define PF_X             1
-#define PF_W             2
-#define PF_R             4
-#define X_OK             1
-#define XCR0_SSE         2
-#define XCR0_AVX         4
+#define O_RDONLY           0
+#define PROT_READ          1
+#define PROT_WRITE         2
+#define PROT_EXEC          4
+#define MAP_SHARED         1
+#define MAP_PRIVATE        2
+#define MAP_FIXED          16
+#define MAP_ANONYMOUS      (IsLinux() ? 32 : 4096)
+#define AT_EXECFN_LINUX    31
+#define AT_EXECFN_NETBSD   2014
+#define ELFCLASS64         2
+#define ELFDATA2LSB        1
+#define EM_NEXGEN32E       62
+#define ET_EXEC            2
+#define PT_LOAD            1
+#define PT_DYNAMIC         2
+#define EI_CLASS           4
+#define EI_DATA            5
+#define PF_X               1
+#define PF_W               2
+#define PF_R               4
+#define X_OK               1
+#define XCR0_SSE           2
+#define XCR0_AVX           4
+#define PR_SET_MM          35
+#define PR_SET_MM_EXE_FILE 13
 
 #define Read32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -174,7 +177,10 @@ struct ElfPhdr {
   unsigned long p_align;
 };
 
+extern char ehdr[];
+extern char _end[];
 static void *syscall;
+static char relocated;
 static struct PathSearcher ps;
 extern char __syscall_loader[];
 
@@ -182,7 +188,7 @@ static int ToLower(int c) {
   return 'A' <= c && c <= 'Z' ? c + ('a' - 'A') : c;
 }
 
-static char *MemCpy(char *d, const char *s, unsigned long n) {
+char *MemCpy(char *d, const char *s, unsigned long n) {
   unsigned long i = 0;
   for (; i < n; ++i) d[i] = s[i];
   return d + n;
@@ -373,6 +379,26 @@ __attribute__((__noinline__)) static long Mmap(long addr, long size, int prot,
   return ax;
 }
 
+static int MunmapLinux(const void *addr, unsigned long size) {
+  int ax;
+  asm volatile("syscall"
+               : "=a"(ax)
+               : "0"(11), "D"(addr), "S"(size)
+               : "rcx", "r11", "memory");
+  return ax;
+}
+
+static int PrctlLinux(int op, long a, long b, long c, long d) {
+  int rc;
+  asm volatile("mov\t%5,%%r10\n\t"
+               "mov\t%6,%%r8\n\t"
+               "syscall"
+               : "=a"(rc)
+               : "0"(157), "D"(op), "S"(a), "d"(b), "g"(c), "g"(d)
+               : "rcx", "r8", "r10", "r11", "memory");
+  return rc;
+}
+
 static void Emit(int os, const char *s) {
   Write(2, s, StrLen(s), os);
 }
@@ -539,6 +565,23 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   if (!code) {
     Pexit(os, exe, 0, "ELF needs PT_LOAD phdr w/ PF_X");
   }
+
+#if SET_EXE_FILE
+  // change /proc/pid/exe to new executable path
+  if (IsLinux() && relocated) {
+    MunmapLinux((char *)0x200000, (long)(_end - ehdr));
+    PrctlLinux(PR_SET_MM, PR_SET_MM_EXE_FILE, fd, 0, 0);
+  }
+#endif
+
+  if (relocated) {
+    int ax;
+    asm volatile("syscall"
+                 : "=a"(ax)
+                 : "0"(1), "D"(1), "S"("hello\n"), "d"(6)
+                 : "rcx", "r11", "memory");
+  }
+
   Close(fd, os);
 
   // authorize only the loaded program to issue system calls. if this
@@ -584,7 +627,7 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
                                              struct ApeLoader *handoff) {
   int rc;
   long *auxv;
-  struct ElfEhdr *ehdr;
+  struct ElfEhdr *eh;
   int c, i, fd, os, argc;
   char *p, *exe, *prog, **argv, **envp, *page;
   static union {
@@ -630,7 +673,7 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
     fd = handoff->fd;
     exe = handoff->prog;
     page = handoff->page;
-    ehdr = (struct ElfEhdr *)handoff->page;
+    eh = (struct ElfEhdr *)handoff->page;
   } else {
 
     // detect openbsd
@@ -652,6 +695,20 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
     if (!os) {
       os = LINUX;
     }
+
+#if SET_EXE_FILE
+    if (IsLinux() && !relocated) {
+      char *b1 = (char *)0x200000;
+      char *b2 = (char *)0x300000;
+      void (*pApeLoader)(long, long *, char, struct ApeLoader *);
+      Mmap((long)b2, (long)(_end - ehdr), PROT_READ | PROT_WRITE | PROT_EXEC,
+           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0, os);
+      relocated = 1;
+      MemCpy(b2, b1, (long)(_end - ehdr));
+      pApeLoader = (void *)((char *)&ApeLoader - b1 + b2);
+      pApeLoader(di, sp, dl, handoff);
+    }
+#endif
 
     // we can load via shell, shebang, or binfmt_misc
     if (argc >= 3 && !StrCmp(argv[1], "-")) {
@@ -686,7 +743,7 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
     }
 
     page = u.p;
-    ehdr = &u.ehdr;
+    eh = &u.ehdr;
   }
 
 #if TROUBLESHOOT
@@ -726,7 +783,7 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
       page[i++] = c;
     }
     if (i >= 64 && Read32(page) == Read32("\177ELF")) {
-      Spawn(os, exe, fd, sp, page, ehdr);
+      Spawn(os, exe, fd, sp, page, eh);
     }
   }
 

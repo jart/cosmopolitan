@@ -7,9 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/intrin/bits.h"
 #include "libc/calls/internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/stdio/stdio.h"
@@ -30,7 +30,7 @@ uint64_t last;
 
 void plan2(uint64_t addr, uint64_t end, const char *name) {
   char sz[32];
-  FormatMemorySize(sz, end-addr+1);
+  FormatMemorySize(sz, end-addr+1, 1024);
   printf("%08x-%08x %-6s %s\n", addr>>16, end>>16, sz, name);
 }
 

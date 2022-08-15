@@ -35,7 +35,7 @@ void SetUpOnce(void) {
 TEST(setsockopt, SO_RCVTIMEO) {
   char buf[32];
   struct timeval tv = {0, 10000};
-  struct sockaddr_in sa = {AF_INET};
+  struct sockaddr_in sa = {AF_INET, 0, {htonl(0x7f000001)}};
   EXPECT_SYS(0, 3, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
   EXPECT_SYS(0, 0, setsockopt(3, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)));
   EXPECT_SYS(0, 0, bind(3, &sa, sizeof(struct sockaddr_in)));

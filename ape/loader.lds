@@ -32,7 +32,8 @@ SECTIONS {
     *(.bss)
     . = ALIGN(4096);
   }
-  memsz = . - ehdr;
+  _end = .;
+  memsz = _end - ehdr;
   /DISCARD/ : {
     *(.*)
   }

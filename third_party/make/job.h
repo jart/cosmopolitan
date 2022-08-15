@@ -71,7 +71,7 @@ void start_waiting_jobs (void);
 char **construct_command_argv (char *line, char **restp, struct file *file,
                                int cmd_flags, char** batch_file);
 
-pid_t child_execute_job (struct childbase *child, int good_stdin, char **argv);
+pid_t child_execute_job (struct childbase *, int, char **, bool);
 
 #ifdef _AMIGA
 void exec_command (char **argv) NORETURN;

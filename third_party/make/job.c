@@ -22,23 +22,31 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 /**/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
+#include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
+#include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/log.h"
 #include "libc/log/rop.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/audit.h"
@@ -49,6 +57,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/sysv/consts/prot.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "third_party/libcxx/math.h"
 #include "third_party/make/commands.h"
 #include "third_party/make/dep.h"
 #include "third_party/make/os.h"
@@ -74,8 +83,6 @@ int batch_mode_shell = 0;
 #define WAIT_NOHANG(status)  waitpid (-1, (status), WNOHANG)
 
 #define WAIT_T int
-
-bool g_strict;
 
 /* Different systems have different requirements for pid_t.
    Plus we have to support gettext string translation... Argh.  */
@@ -377,19 +384,39 @@ child_error (struct child *child,
 
 /* [jart] manage temporary directories per rule */
 
+bool
+parse_bool (const char *s)
+{
+  while (isspace (*s))
+    ++s;
+  if (isdigit (*s))
+    return !! atoi (s);
+  return startswithi (s, "true");
+}
+
+const char *
+get_target_variable (const char *name,
+                     size_t length,
+                     struct file *file,
+                     const char *dflt)
+{
+  const struct variable *var;
+  if ((file &&
+       ((var = lookup_variable_in_set (name, length,
+                                       file->variables->set)) ||
+        (file->pat_variables &&
+         (var = lookup_variable_in_set (name, length,
+                                        file->pat_variables->set))))) ||
+      (var = lookup_variable (name, length)))
+    return variable_expand (var->value);
+  else
+    return dflt;
+}
+
 const char *
 get_tmpdir (struct file *file)
 {
-  const struct variable *var;
-  if ((var = lookup_variable_in_set (STRING_SIZE_TUPLE("TMPDIR"),
-                                     file->variables->set)) ||
-      (file->pat_variables &&
-       (var = lookup_variable_in_set (STRING_SIZE_TUPLE("TMPDIR"),
-                                      file->pat_variables->set))) ||
-      (var = lookup_variable (STRING_SIZE_TUPLE("TMPDIR"))))
-    return variable_expand (var->value);
-  else
-    return kTmpPath;
+  return get_target_variable (STRING_SIZE_TUPLE("TMPDIR"), file, 0);
 }
 
 char *
@@ -1154,7 +1181,7 @@ start_job_command (struct child *child)
       parent_environ = environ;
       jobserver_pre_child (flags & COMMANDS_RECURSE);
       child->pid = child_execute_job ((struct childbase *)child,
-                                      child->good_stdin, argv);
+                                      child->good_stdin, argv, true);
       environ = parent_environ; /* Restore value child may have clobbered.  */
       jobserver_post_child (flags & COMMANDS_RECURSE);
     }
@@ -1277,7 +1304,8 @@ new_job (struct file *file)
   c->sh_batch_file = NULL;
 
   /* [jart] manage temporary directories per rule */
-  if ((c->tmpdir = new_tmpdir (get_tmpdir (file), file)))
+  if ((c->tmpdir = get_tmpdir (file)) &&
+      (c->tmpdir = new_tmpdir (c->tmpdir, file)))
     {
       var = define_variable_for_file ("TMPDIR", 6, c->tmpdir,
                                       o_override, 0, file);
@@ -1764,22 +1792,98 @@ unveil_variable (const struct variable *var)
   return -1;
 }
 
-bool
-Vartoi (const struct variable *var)
+int
+get_base_cpu_freq_mhz (void)
 {
-  return var && atoi (variable_expand (var->value));
+  return KCPUIDS(16H, EAX) & 0x7fff;
 }
+
+void
+set_cpu_limit (int secs)
+{
+  int mhz, lim;
+  struct rlimit rlim;
+  if (secs <= 0) return;
+  if (IsWindows()) return;
+  if (!(mhz = get_base_cpu_freq_mhz())) return;
+  lim = ceil(3100. / mhz * secs);
+  rlim.rlim_cur = lim;
+  rlim.rlim_max = lim + 1;
+  if (setrlimit(RLIMIT_CPU, &rlim) == -1)
+    {
+      if (getrlimit(RLIMIT_CPU, &rlim) == -1)
+        return;
+      if (lim < rlim.rlim_cur)
+        {
+          rlim.rlim_cur = lim;
+          setrlimit(RLIMIT_CPU, &rlim);
+        }
+    }
+}
+
+void
+set_fsz_limit (long n)
+{
+  struct rlimit rlim;
+  if (n <= 0) return;
+  if (IsWindows()) return;
+  rlim.rlim_cur = n;
+  rlim.rlim_max = n << 1;
+  if (setrlimit(RLIMIT_FSIZE, &rlim) == -1)
+    {
+      if (getrlimit(RLIMIT_FSIZE, &rlim) == -1)
+        return;
+      rlim.rlim_cur = n;
+      setrlimit(RLIMIT_FSIZE, &rlim);
+    }
+}
+
+void
+set_mem_limit (long n)
+{
+  struct rlimit rlim = {n, n};
+  if (n <= 0) return;
+  if (IsWindows() || IsXnu()) return;
+  setrlimit(RLIMIT_AS, &rlim);
+}
+
+void
+set_pro_limit (long n)
+{
+  struct rlimit rlim = {n, n};
+  if (n <= 0) return;
+  setrlimit(RLIMIT_NPROC, &rlim);
+}
+
+static struct sysinfo g_sysinfo;
+
+__attribute__((__constructor__)) static void
+get_sysinfo (void)
+{
+  int e = errno;
+  sysinfo (&g_sysinfo);
+  errno = e;
+}
+
+static bool internet;
+static char *promises;
 
 /* POSIX:
    Create a child process executing the command in ARGV.
    Returns the PID or -1.  */
 pid_t
-child_execute_job (struct childbase *child, int good_stdin, char **argv)
+child_execute_job (struct childbase *child,
+                   int good_stdin,
+                   char **argv,
+                   bool is_build_rule)
 {
   const int fdin = good_stdin ? FD_STDIN : get_bad_stdin ();
   struct dep *d;
+  bool strict;
   bool sandboxed;
+  bool unsandboxed;
   struct child *c;
+  unsigned long ipromises;
   char pathbuf[PATH_MAX];
   char outpathbuf[PATH_MAX];
   int fdout = FD_STDOUT;
@@ -1808,28 +1912,145 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
   if (stack_limit.rlim_cur)
     setrlimit (RLIMIT_STACK, &stack_limit);
 
-  g_strict = Vartoi (lookup_variable (STRING_SIZE_TUPLE (".STRICT")));
-
-  intptr_t loc = (intptr_t)child;  /* we can cast if it's on the heap ;_; */
-  if (!(GetStackAddr() < loc && loc < GetStackAddr() + GetStackSize())) {
+  /* Tell build rules apart from $(shell foo).  */
+  if (is_build_rule) {
     c = (struct child *)child;
   } else {
     c = 0;
   }
 
-  sandboxed = (
-      !Vartoi (lookup_variable
-               (STRING_SIZE_TUPLE(".UNSANDBOXED"))) &&
-      (!c || !Vartoi (lookup_variable_in_set
-                      (STRING_SIZE_TUPLE(".UNSANDBOXED"),
-                       c->file->variables->set))) &&
-      (!c || !c->file->pat_variables ||
-       !Vartoi (lookup_variable_in_set
-                (STRING_SIZE_TUPLE(".UNSANDBOXED"),
-                 c->file->pat_variables->set))));
+  internet = parse_bool (get_target_variable
+                         (STRING_SIZE_TUPLE(".INTERNET"),
+                          c ? c->file : 0, "0"));
 
-  /* resolve command into executable path */
-  if (!g_strict || !sandboxed)
+  unsandboxed = parse_bool (get_target_variable
+                            (STRING_SIZE_TUPLE(".UNSANDBOXED"),
+                             c ? c->file : 0, "0"));
+
+  if (c)
+    {
+      sandboxed = !unsandboxed;
+      strict = parse_bool (get_target_variable
+                           (STRING_SIZE_TUPLE(".STRICT"),
+                            c->file, "0"));
+    }
+  else
+    {
+      sandboxed = false;
+      strict = false;
+    }
+
+  if (!unsandboxed)
+    {
+      promises = emptytonull (get_target_variable
+                              (STRING_SIZE_TUPLE(".PLEDGE"),
+                               c ? c->file : 0, 0));
+      if (promises)
+        promises = xstrdup (promises);
+      if (ParsePromises (promises, &ipromises))
+        {
+          OSS (error, NILF, "%s: invalid .PLEDGE string: %s",
+               argv[0], strerror (errno));
+          _Exit (127);
+        }
+    }
+  else
+    {
+      promises = NULL;
+      ipromises = 0;
+    }
+
+  DB (DB_JOBS, 
+      (_("Executing %s for %s%s%s%s\n"),
+       argv[0], c ? c->file->name : "$(shell)",
+       sandboxed ? " with sandboxing" : " without sandboxing",
+       strict ? " in .STRICT mode" : "",
+       internet ? " with internet access" : ""));
+
+  /* [jart] Set cpu seconds quota.  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE(".CPU"),
+                                c ? c->file : 0, 0)))
+    {
+      int secs;
+      secs = atoi (s);
+      DB (DB_JOBS, (_("Setting cpu limit of %d seconds\n"), secs));
+      set_cpu_limit (secs);
+    }
+
+  /* [jart] Set virtual memory quota.  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE(".MEMORY"),
+                                c ? c->file : 0, 0)))
+    {
+      long bytes;
+      char buf[16];
+      if (!strchr (s, '%'))
+        bytes = sizetol (s, 1024);
+      else
+        bytes = strtod (s, 0) / 100. * g_sysinfo.totalram;
+      DB (DB_JOBS, (_("Setting virtual memory limit of %s\n"),
+                    (FormatMemorySize (buf, bytes, 1024), buf)));
+      set_mem_limit (bytes);
+    }
+
+  /* [jart] Set file size limit.  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE(".FSIZE"),
+                                c ? c->file : 0, 0)))
+    {
+      long bytes;
+      char buf[16];
+      bytes = sizetol (s, 1000);
+      DB (DB_JOBS, (_("Setting file size limit of %s\n"),
+                    (FormatMemorySize (buf, bytes, 1000), buf)));
+      set_fsz_limit (bytes);
+    }
+
+  /* [jart] Set process limit.  */
+  if ((s = get_target_variable (STRING_SIZE_TUPLE(".NPROC"),
+                                c ? c->file : 0, 0)))
+    {
+      int procs;
+      if ((procs = atoi (s)) > 0)
+        {
+          DB (DB_JOBS, (_("Setting process limit to %d + %d preexisting\n"),
+                        procs, g_sysinfo.procs));
+          set_pro_limit (procs + g_sysinfo.procs);
+        }
+    }
+
+  /* [jart] Prevent builds from talking to the Internet.  */
+  if (internet)
+    DB (DB_JOBS, (_("Allowing Internet access\n")));
+  else if (!(~ipromises & (1ul << PROMISE_INET)) &&
+           !(~ipromises & (1ul << PROMISE_DNS)))
+    DB (DB_JOBS, (_("Internet access will be blocked by pledge\n")));
+  else
+    {
+      e = errno;
+      if (!nointernet())
+        DB (DB_JOBS, (_("Blocked Internet access with seccomp ptrace\n")));
+      else
+        {
+          if (errno = EPERM)
+            {
+              errno = e;
+              DB (DB_JOBS, (_("Can't block Internet if already traced\n")));
+            }
+          else if (errno == ENOSYS)
+            {
+              errno = e;
+              DB (DB_JOBS, (_("Need SECCOMP ptrace() to block Internet\n")));
+            }
+          else
+            {
+              OSS (error, NILF, "%s: failed to block internet access: %s",
+                   argv[0], strerror (errno));
+              _Exit (127);
+            }
+        }
+    }
+
+  /* [jart] Resolve command into executable path.  */
+  if (!strict || !sandboxed)
     {
       if ((s = commandv (argv[0], pathbuf, sizeof (pathbuf))))
         argv[0] = s;
@@ -1841,15 +2062,13 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
         }
     }
 
-  /* [jart] sandbox command based on prerequisites */
+  /* [jart] Sandbox build rule commands based on prerequisites.  */
   if (c)
     {
       errno = 0;
       if (sandboxed)
         {
-          DB (DB_JOBS, (_("Sandboxing %s\n"), c->file->name));
-
-          if (!g_strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
+          if (!strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
             {
               /*
                * weaken sandbox if user is using dynamic shared lolbjects
@@ -1883,6 +2102,8 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                * only if the ape loader exists on a well-known path.
                */
               e = errno;
+              DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
+                            "/usr/bin/ape", "rx"));
               if (unveil ("/usr/bin/ape", "rx") == -1)
                 {
                   char *s, *t;
@@ -1902,15 +2123,15 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
                 }
             }
 
-          /* unveil executable */
+          /* Unveil executable.  */
           RETURN_ON_ERROR (Unveil (argv[0], "rx"));
 
-          /* unveil temporary directory */
+          /* Unveil temporary directory.  */
           if (c->tmpdir)
             RETURN_ON_ERROR (Unveil (c->tmpdir, "rwcx"));
 
-          /* unveil lazy mode files */
-          if (!g_strict)
+          /* Unveil lazy mode files.  */
+          if (!strict)
             {
               RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
               RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
@@ -1921,6 +2142,50 @@ child_execute_job (struct childbase *child, int good_stdin, char **argv)
               RETURN_ON_ERROR (Unveil ("/dev/stderr", "rw"));
               RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
             }
+
+          /* Unveil .PLEDGE = tmppath.  */
+          if (!strict && promises && (~ipromises & (1ul << PROMISE_TMPPATH)))
+            RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
+
+          /* Unveil .PLEDGE = vminfo.  */
+          if (promises && (~ipromises & (1ul << PROMISE_VMINFO)))
+            {
+              RETURN_ON_ERROR (Unveil ("/proc/stat", "r"));
+              RETURN_ON_ERROR (Unveil ("/proc/meminfo", "r"));
+              RETURN_ON_ERROR (Unveil ("/proc/cpuinfo", "r"));
+              RETURN_ON_ERROR (Unveil ("/proc/diskstats", "r"));
+              RETURN_ON_ERROR (Unveil ("/proc/self/maps", "r"));
+              RETURN_ON_ERROR (Unveil ("/sys/devices/system/cpu", "r"));
+            }
+
+          /* Unveil .PLEDGE = tty.  */
+          if (promises && (~ipromises & (1ul << PROMISE_TTY)))
+            {
+              RETURN_ON_ERROR (Unveil (ttyname(0), "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/tty", "rw"));
+              RETURN_ON_ERROR (Unveil ("/dev/console", "rw"));
+              RETURN_ON_ERROR (Unveil ("/etc/terminfo", "r"));
+              RETURN_ON_ERROR (Unveil ("/usr/lib/terminfo", "r"));
+              RETURN_ON_ERROR (Unveil ("/usr/share/terminfo", "r"));
+            }
+
+          /* Unveil .PLEDGE = dns.  */
+          if (promises && (~ipromises & (1ul << PROMISE_DNS)))
+            {
+              RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/hostname", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/services", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/protocols", "r"));
+              RETURN_ON_ERROR (Unveil ("/etc/resolv.conf", "r"));
+            }
+
+          /* Unveil .PLEDGE = inet.  */
+          if (promises && (~ipromises & (1ul << PROMISE_INET)))
+            RETURN_ON_ERROR (Unveil ("/etc/ssl/certs/ca-certificates.crt", "r"));
+
+          /* Unveil .PLEDGE = rpath.  */
+          if (promises && (~ipromises & (1ul << PROMISE_INET)))
+            RETURN_ON_ERROR (Unveil ("/proc/filesystems", "r"));
 
           /*
            * unveils target output file
@@ -2016,6 +2281,20 @@ exec_command (char **argv, char **envp)
 {
   /* Be the user, permanently.  */
   child_access ();
+
+  /* Restrict system calls.  */
+  if (promises)
+    {
+      __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
+      DB (DB_JOBS, (_("Pledging %s\n"), promises));
+      promises = xstrcat (promises, " prot_exec exec");
+      if (pledge (promises, promises))
+        {
+          OSS (error, NILF, "pledge(%s) failed: %s",
+               promises, strerror (errno));
+          _Exit (127);
+        }
+    }
 
   /* Run the program.  */
   environ = envp;

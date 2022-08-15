@@ -825,7 +825,7 @@ static privileged void *MemCpy(void *d, const void *s, unsigned long n) {
   return (char *)d + n;
 }
 
-static privileged char *FixCpy(char p[17], uint64_t x, uint8_t k) {
+static privileged char *FixCpy(char p[17], uint64_t x, int k) {
   while (k > 0) *p++ = "0123456789abcdef"[(x >> (k -= 4)) & 15];
   *p = '\0';
   return p;
@@ -868,7 +868,6 @@ static privileged void Log(const char *s, ...) {
 
 static privileged int Prctl(int op, long a, void *b, long c, long d) {
   int rc;
-  va_list va;
   asm volatile("mov\t%5,%%r10\n\t"
                "mov\t%6,%%r8\n\t"
                "syscall"

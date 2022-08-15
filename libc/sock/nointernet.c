@@ -158,7 +158,7 @@ static bool IsSockaddrAllowed(struct sockaddr_storage *addr) {
   }
   if (addr->ss_family == AF_INET) {
     ip = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
-    if (!IsPublicIp(ip)) {
+    if (IsPrivateIp(ip) || IsLoopbackIp(ip)) {
       return true;
     } else {
       kprintf("warning: attempted to communicate with public ip "

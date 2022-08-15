@@ -254,7 +254,9 @@ static int OpMunmap(struct Machine *m, int64_t virt, uint64_t size) {
 
 static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
                       int flags, int fd, int64_t offset) {
+  int e;
   void *tmp;
+  ssize_t rc;
   uint64_t key;
   VERBOSEF("MMAP%s %012lx %,ld %#x %#x %d %#lx", GetSimulated(), virt, size,
            prot, flags, fd, offset);
@@ -277,7 +279,13 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
       if (fd != -1 && !(flags & MAP_ANONYMOUS)) {
         /* TODO: lazy file mappings */
         CHECK_NOTNULL((tmp = malloc(size)));
-        CHECK_EQ(size, pread(fd, tmp, size, offset));
+        for (e = errno;;) {
+          rc = pread(fd, tmp, size, offset);
+          if (rc != -1) break;
+          CHECK_EQ(EINTR, errno);
+          errno = e;
+        }
+        CHECK_EQ(size, rc);
         VirtualRecvWrite(m, virt, tmp, size);
         free(tmp);
       }

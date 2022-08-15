@@ -1640,7 +1640,7 @@ func_shell_base (char *o, char **argv, int trim_newlines)
     child.output.err = errfd;
     child.environment = envp;
 
-    pid = child_execute_job (&child, 1, command_argv);
+    pid = child_execute_job (&child, 1, command_argv, false);
 
     free (child.cmd_name);
   }

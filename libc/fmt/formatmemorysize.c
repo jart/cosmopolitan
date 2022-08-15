@@ -19,26 +19,26 @@
 #include "libc/fmt/itoa.h"
 #include "libc/macros.internal.h"
 
-static const struct {
-  char suffix;
-  uint64_t size;
-} kUnits[] = {
-    {'e', 1024ULL * 1024 * 1024 * 1024 * 1024 * 1024},
-    {'p', 1024ULL * 1024 * 1024 * 1024 * 1024},
-    {'t', 1024ULL * 1024 * 1024 * 1024},
-    {'g', 1024ULL * 1024 * 1024},
-    {'m', 1024ULL * 1024},
-    {'k', 1024ULL},
-};
-
 /**
  * Represents size of memory readably.
  *
  * @param p is output buffer
+ * @param b should be 1024 or 1000
  * @return pointer to nul byte
  */
-char *FormatMemorySize(char *p, uint64_t x) {
+char *FormatMemorySize(char *p, uint64_t x, uint64_t b) {
   int i, suffix;
+  struct {
+    char suffix;
+    uint64_t size;
+  } kUnits[] = {
+      {'e', b * b * b * b * b * b},
+      {'p', b * b * b * b * b},
+      {'t', b * b * b * b},
+      {'g', b * b * b},
+      {'m', b * b},
+      {'k', b},
+  };
   for (suffix = i = 0; i < ARRAYLEN(kUnits); ++i) {
     if (x >= kUnits[i].size * 9) {
       x = (x + kUnits[i].size / 2) / kUnits[i].size;
