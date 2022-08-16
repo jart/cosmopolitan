@@ -61,7 +61,7 @@ i32 sys_ioctl(i32, u64, ...) hidden;
 i32 sys_issetugid(void) hidden;
 i32 sys_kill(i32, i32, i32) hidden;
 i32 sys_linkat(i32, const char *, i32, const char *, i32) hidden;
-i32 sys_lseek(i32, i64, i64, i64) hidden;
+i64 sys_lseek(i32, i64, i64, i64) hidden;
 i32 sys_madvise(void *, size_t, i32) hidden;
 i32 sys_memfd_create(const char *, u32) hidden;
 i32 sys_mincore(void *, u64, unsigned char *) hidden;
