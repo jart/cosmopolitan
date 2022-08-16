@@ -5783,11 +5783,7 @@ static void HandleHeartbeat(void) {
   Reindex();
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
-  if (IsHookDefined("OnServerHeartbeat")) {
-    CallSimpleHook("OnServerHeartbeat");
-  } else {
-    LuaRunAsset("/.heartbeat.lua", false);
-  }
+  CallSimpleHookIfDefined("OnServerHeartbeat");
   CollectGarbage();
 #endif
   for (i = 1; i < servers.n; ++i) {
