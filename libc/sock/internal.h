@@ -73,8 +73,8 @@ ssize_t sys_sendto(int, const void *, size_t, int, const void *,
                    uint32_t) hidden;
 int32_t sys_select(int32_t, fd_set *, fd_set *, fd_set *,
                    struct timeval *) hidden;
-int sys_pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
-                const sigset_t *);
+int sys_pselect(int, fd_set *, fd_set *, fd_set *, struct timespec *,
+                const void *) hidden;
 int sys_setsockopt(int, int, int, const void *, uint32_t) hidden;
 int32_t sys_epoll_create(int32_t) hidden;
 int32_t sys_epoll_ctl(int32_t, int32_t, int32_t, void *) hidden;

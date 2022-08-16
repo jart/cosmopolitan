@@ -354,8 +354,9 @@ static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
                                         int *ztid,                 // r8
                                         int *ptid) {               // r9
   int ax, dx;
-  ax = *tid;
-  *ptid = ax;
+  // TODO(jart): Why are we seeing flakes where *tid is zero?
+  // ax = *tid;
+  ax = sys_gettid();
   *ctid = ax;
   func(arg, ax);
   // we no longer use the stack after this point
@@ -402,6 +403,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   sp -= sizeof(int);
   sp = sp & -alignof(int);
   tid = (int *)sp;
+  *tid = 0;
 
   // align the stack
   sp = sp & -16;

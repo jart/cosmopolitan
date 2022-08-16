@@ -56,6 +56,7 @@
 #define Sa_Restart  0x10000000
 
 #define SPECIAL   0xf000
+#define SELF      0x8000
 #define ADDRLESS  0x2000
 #define INET      0x8000
 #define LOCK      0x4000
@@ -476,7 +477,6 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_sysinfo,            //
     __NR_linux_fdatasync,          //
     __NR_linux_ftruncate,          //
-    __NR_linux_getdents,           //
     __NR_linux_getrandom,          //
     __NR_linux_getgroups,          //
     __NR_linux_getpgid,            //
@@ -546,6 +546,8 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_sigprocmask,        //
     __NR_linux_sigsuspend,         //
     __NR_linux_sigpending,         //
+    __NR_linux_kill | SELF,        //
+    __NR_linux_tkill | SELF,       //
     __NR_linux_socketpair,         //
     __NR_linux_getrusage,          //
     __NR_linux_times,              //
@@ -581,6 +583,7 @@ static const uint16_t kPledgeRpath[] = {
     __NR_linux_readlinkat,         //
     __NR_linux_statfs,             //
     __NR_linux_fstatfs,            //
+    __NR_linux_getdents,           //
 };
 
 static const uint16_t kPledgeWpath[] = {
@@ -592,6 +595,7 @@ static const uint16_t kPledgeWpath[] = {
     __NR_linux_lstat,               //
     __NR_linux_fstatat,             //
     __NR_linux_access,              //
+    __NR_linux_truncate,            //
     __NR_linux_faccessat,           //
     __NR_linux_faccessat2,          //
     __NR_linux_readlinkat,          //
@@ -728,6 +732,13 @@ static const uint16_t kPledgeId[] = {
     __NR_linux_setfsgid,     //
 };
 
+static const uint16_t kPledgeChown[] = {
+    __NR_linux_chown,     //
+    __NR_linux_fchown,    //
+    __NR_linux_lchown,    //
+    __NR_linux_fchownat,  //
+};
+
 static const uint16_t kPledgeSettime[] = {
     __NR_linux_settimeofday,   //
     __NR_linux_clock_adjtime,  //
@@ -789,6 +800,7 @@ const struct Pledges kPledge[PROMISE_LEN_] = {
     [PROMISE_PROT_EXEC] = {"prot_exec", PLEDGE(kPledgeProtExec)},  //
     [PROMISE_VMINFO] = {"vminfo", PLEDGE(kPledgeVminfo)},          //
     [PROMISE_TMPPATH] = {"tmppath", PLEDGE(kPledgeTmppath)},       //
+    [PROMISE_CHOWN] = {"chown", PLEDGE(kPledgeChown)},             //
 };
 
 static const struct sock_filter kPledgeStart[] = {
@@ -993,7 +1005,7 @@ static privileged void MonitorSigSys(void) {
   };
   // we block changing sigsys once pledge is installed
   // so we aren't terribly concerned if this will fail
-  SigAction(Sigsys, &sa, 0);
+  if (SigAction(Sigsys, &sa, 0) == -1) asm("hlt");
 }
 
 static privileged void AppendFilter(struct Filter *f, struct sock_filter *p,
@@ -1003,6 +1015,36 @@ static privileged void AppendFilter(struct Filter *f, struct sock_filter *p,
   }
   MemCpy(f->p + f->n, p, n * sizeof(*f->p));
   f->n += n;
+}
+
+// The first argument of kill() must be
+//
+//   - getpid()
+//
+static privileged void AllowKillSelf(struct Filter *f) {
+  struct sock_filter fragment[] = {
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_kill, 0, 4),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, GetPid(), 0, 1),
+      BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+  };
+  AppendFilter(f, PLEDGE(fragment));
+}
+
+// The first argument of tkill() must be
+//
+//   - gettid()
+//
+static privileged void AllowTkillSelf(struct Filter *f) {
+  struct sock_filter fragment[] = {
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_tkill, 0, 4),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, GetTid(), 0, 1),
+      BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+  };
+  AppendFilter(f, PLEDGE(fragment));
 }
 
 // The following system calls are allowed:
@@ -1883,6 +1925,12 @@ static privileged void AppendPledge(struct Filter *f,   //
         break;
       case __NR_linux_prlimit | STDIO:
         AllowPrlimitStdio(f);
+        break;
+      case __NR_linux_kill | SELF:
+        AllowKillSelf(f);
+        break;
+      case __NR_linux_tkill | SELF:
+        AllowTkillSelf(f);
         break;
       default:
         AbortPledge("switch forgot to define a special ordinal");

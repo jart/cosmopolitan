@@ -98,6 +98,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - wpath: write path ops\n\
      - cpath: create path ops\n\
      - dpath: create special files\n\
+     - chown: allows file ownership changes\n\
      - flock: file locks\n\
      - tty: terminal ioctls\n\
      - recvfd: allow SCM_RIGHTS\n\
@@ -113,7 +114,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.6\n\
+pledge.com v1.7\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\

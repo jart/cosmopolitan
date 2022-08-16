@@ -17,7 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -39,8 +41,19 @@
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/pollnames.h"
 
+bool gotsig;
+
 void SetUpOnce(void) {
+  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 0, pledge("stdio proc inet", 0));
+}
+
+void SetUp(void) {
+  gotsig = false;
+}
+
+void OnSig(int sig) {
+  gotsig = true;
 }
 
 dontdiscard char *FormatPollFd(struct pollfd p[2]) {
@@ -50,8 +63,30 @@ dontdiscard char *FormatPollFd(struct pollfd p[2]) {
                    p[1].fd, gc(RecreateFlags(kPollNames, p[1].revents)));
 }
 
-TEST(poll, allZero_doesNothing_exceptValidateAndCheckForSignals) {
+TEST(poll, allZero_doesNothingPrettyMuch) {
   EXPECT_SYS(0, 0, poll(0, 0, 0));
+}
+
+TEST(ppoll, weCanProveItChecksForSignals) {
+  if (IsXnu()) return;
+  if (IsNetbsd()) return;
+  int pipefds[2];
+  sigset_t set, old;
+  struct sigaction oldss;
+  struct sigaction sa = {.sa_handler = OnSig};
+  EXPECT_SYS(0, 0, pipe(pipefds));
+  struct pollfd fds[] = {{pipefds[0], POLLIN}};
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldss));
+  ASSERT_SYS(0, 0, sigfillset(&set));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &set, &old));
+  EXPECT_SYS(0, 0, kill(getpid(), SIGUSR1));
+  EXPECT_FALSE(gotsig);
+  EXPECT_SYS(EINTR, -1, ppoll(fds, 1, 0, &old));
+  EXPECT_TRUE(gotsig);
+  EXPECT_SYS(0, 0, sigprocmask(SIG_SETMASK, &old, 0));
+  EXPECT_SYS(0, 0, sigaction(SIGUSR1, &oldss, 0));
+  EXPECT_SYS(0, 0, close(pipefds[0]));
+  EXPECT_SYS(0, 0, close(pipefds[1]));
 }
 
 TEST(poll, testNegativeOneFd_isIgnored) {

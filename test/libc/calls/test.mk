@@ -48,6 +48,7 @@ TEST_LIBC_CALLS_DIRECTDEPS =						\
 	LIBC_TESTLIB							\
 	LIBC_X								\
 	LIBC_ZIPOS							\
+	TOOL_DECODE_LIB							\
 	THIRD_PARTY_XED
 
 TEST_LIBC_CALLS_DEPS :=							\
@@ -95,6 +96,9 @@ o/$(MODE)/test/libc/calls/life-classic.com.zip.o: private		\
 # TODO(jart): Have pledge() support SIOCGIFCONF
 o/$(MODE)/test/libc/calls/ioctl_siocgifconf_test.com.runs:		\
 		private .PLEDGE =
+
+o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\

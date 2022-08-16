@@ -8,7 +8,7 @@ COSMOPOLITAN_C_START_
 
 int32_t sys_poll(struct pollfd *, uint64_t, signed) hidden;
 int sys_ppoll(struct pollfd *, size_t, const struct timespec *,
-              const sigset_t *);
+              const sigset_t *, size_t);
 int sys_poll_metal(struct pollfd *, size_t, unsigned);
 int sys_poll_nt(struct pollfd *, uint64_t, uint64_t *, const sigset_t *) hidden;
 

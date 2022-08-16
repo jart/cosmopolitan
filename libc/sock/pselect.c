@@ -29,6 +29,19 @@
 /**
  * Does what poll() does except with bitset API.
  *
+ * This function is the same as saying:
+ *
+ *     sigset_t old;
+ *     sigprocmask(SIG_SETMASK, sigmask, &old);
+ *     select(nfds, readfds, writefds, exceptfds, timeout);
+ *     sigprocmask(SIG_SETMASK, old, 0);
+ *
+ * Except it happens atomically.
+ *
+ * The Linux Kernel modifies the timeout parameter. This wrapper gives
+ * it a local variable due to POSIX requiring that `timeout` be const.
+ * If you need that information from the Linux Kernel use sys_pselect.
+ *
  * This system call is supported on all platforms. It's like select()
  * except that it atomically changes the sigprocmask() during the op.
  */
@@ -37,6 +50,11 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   int rc;
   sigset_t oldmask;
   struct timeval tv, *tvp;
+  struct timespec ts, *tsp;
+  struct {
+    sigset_t *s;
+    size_t n;
+  } ss;
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -46,6 +64,16 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
               (timeout && !__asan_is_valid(timeout, sizeof(*timeout))) ||
               (sigmask && !__asan_is_valid(sigmask, sizeof(*sigmask))))) {
     rc = efault();
+  } else if (IsLinux()) {
+    if (timeout) {
+      ts = *timeout;
+      tsp = &ts;
+    } else {
+      tsp = 0;
+    }
+    ss.s = sigmask;
+    ss.n = 8;
+    rc = sys_pselect(nfds, readfds, writefds, exceptfds, tsp, &ss);
   } else if (!IsWindows()) {
     rc = sys_pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
   } else {

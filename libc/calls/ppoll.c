@@ -25,7 +25,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/sock/ppoll.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/consts/sig.h"
@@ -41,9 +40,14 @@
  *     poll(fds, nfds, timeout);
  *     sigprocmask(SIG_SETMASK, old, 0);
  *
- * Except it'll happen atomically if the kernel supports doing that. On
- * kernel such as XNU and NetBSD which don't, this wrapper falls back to
- * doing the thing described above.
+ * Except it happens atomically when the kernel supports doing that. On
+ * kernel such as XNU and NetBSD which don't, this wrapper will fall
+ * back to using the example above. Consider using pselect() which is
+ * atomic on all supported platforms.
+ *
+ * The Linux Kernel modifies the timeout parameter. This wrapper gives
+ * it a local variable due to POSIX requiring that `timeout` be const.
+ * If you need that information from the Linux Kernel use sys_ppoll().
  *
  * @param timeout if null will block indefinitely
  * @param sigmask may be null in which case no mask change happens
@@ -56,6 +60,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
   int e, i, rc;
   uint64_t millis;
   sigset_t oldmask;
+  struct timespec ts, *tsp;
 
   if (IsAsan() && (!__asan_is_valid(fds, nfds * sizeof(struct pollfd)) ||
                    (timeout && !__asan_is_valid(timeout, sizeof(timeout))) ||
@@ -63,7 +68,13 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     rc = efault();
   } else if (!IsWindows()) {
     e = errno;
-    rc = sys_ppoll(fds, nfds, timeout, sigmask);
+    if (timeout) {
+      ts = *timeout;
+      tsp = &ts;
+    } else {
+      tsp = 0;
+    }
+    rc = sys_ppoll(fds, nfds, tsp, sigmask, 8);
     if (rc == -1 && errno == ENOSYS) {
       errno = e;
       if (!timeout ||
@@ -71,9 +82,9 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
                                  &millis)) {
         millis = -1;
       }
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, sigmask, &oldmask);
+      if (sigmask) sigprocmask(SIG_SETMASK, sigmask, &oldmask);
       rc = poll(fds, nfds, millis);
-      if (sigmask) sys_sigprocmask(SIG_SETMASK, &oldmask, 0);
+      if (sigmask) sigprocmask(SIG_SETMASK, &oldmask, 0);
     }
   } else {
     if (!timeout || __builtin_add_overflow(

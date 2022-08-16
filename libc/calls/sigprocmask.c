@@ -26,7 +26,6 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"

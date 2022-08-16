@@ -17,20 +17,47 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
 
+bool gotsig;
+
 void SetUpOnce(void) {
+  __pledge_mode = PLEDGE_PENALTY_KILL_PROCESS | PLEDGE_STDERR_LOGGING;
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-// TEST(select, allZero) {
-//  // todo: figure out how to test block until signal w/ select
-//  EXPECT_SYS(0, 0, select(0, 0, 0, 0, 0));
-// }
+void SetUp(void) {
+  gotsig = false;
+}
+
+void OnSig(int sig) {
+  gotsig = true;
+}
+
+TEST(select, allZero1) {
+  sigset_t set, old;
+  struct sigaction oldss;
+  struct sigaction sa = {.sa_handler = OnSig};
+  ASSERT_SYS(0, 0, sigaction(SIGQUIT, &sa, &oldss));
+  ASSERT_SYS(0, 0, sigfillset(&set));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &set, &old));
+  EXPECT_SYS(0, 0, kill(getpid(), SIGQUIT));
+  EXPECT_SYS(EINTR, -1, pselect(0, 0, 0, 0, 0, &old));
+  EXPECT_TRUE(gotsig);
+  EXPECT_SYS(0, 0, sigprocmask(SIG_SETMASK, &old, 0));
+  EXPECT_SYS(0, 0, sigaction(SIGQUIT, &oldss, 0));
+}
 
 TEST(select, pipe_hasInputFromSameProcess) {
   fd_set rfds;

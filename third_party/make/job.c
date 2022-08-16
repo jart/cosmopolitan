@@ -2259,7 +2259,7 @@ child_execute_job (struct childbase *child,
             RETURN_ON_ERROR (Unveil ("/etc/ssl/certs/ca-certificates.crt", "r"));
 
           /* Unveil .PLEDGE = rpath.  */
-          if (promises && (~ipromises & (1ul << PROMISE_INET)))
+          if (promises && (~ipromises & (1ul << PROMISE_RPATH)))
             RETURN_ON_ERROR (Unveil ("/proc/filesystems", "r"));
 
           /*

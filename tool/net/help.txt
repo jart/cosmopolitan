@@ -3880,7 +3880,7 @@ UNIX MODULE
       shutdown, sigaction, sigsuspend, sigprocmask, socketpair, umask,
       wait4, getrusage, ioctl(FIONREAD), ioctl(FIONBIO), ioctl(FIOCLEX),
       ioctl(FIONCLEX), fcntl(F_GETFD), fcntl(F_SETFD), fcntl(F_GETFL),
-      fcntl(F_SETFL).
+      fcntl(F_SETFL), raise, kill(getpid()).
 
     rpath
 
@@ -3942,6 +3942,10 @@ UNIX MODULE
     settime
 
       Allows settimeofday and clock_adjtime.
+
+    chown
+
+      Allows chown.
 
     unveil
 
