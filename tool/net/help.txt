@@ -4858,7 +4858,7 @@ UNIX MODULE
     Raised by accept, access, bind, chdir, chmod, chown, close, connect,
     copy_file_range, dup, fcntl, flock, fsync, futimesat, opendir,
     getpeername, getsockname, getsockopt, inotify_add_watch,
-    inotify_rm_watch, ioctl, link, listen, llseek, lseek, mkdir, mknod,
+    inotify_rm_watch, ioctl, link, listen, lseek, mkdir, mknod,
     mmap, open, prctl, read, readahead, readlink, recv, rename, select,
     send, shutdown, splice, stat, symlink, sync, sync_file_range,
     timerfd_create, truncate, unlink, utimensat, write.
