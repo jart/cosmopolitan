@@ -1964,8 +1964,8 @@ child_execute_job (struct childbase *child,
       if (bytes > 0)
         {
           if (!set_limit (RLIMIT_AS, bytes, bytes))
-            DB (DB_JOBS, (_("Set virtual memory limit of %s\n"),
-                          (FormatMemorySize (buf, bytes, 1024), buf)));
+            DB (DB_JOBS, (_("Set virtual memory limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1024), buf)));
           else
             DB (DB_JOBS, (_("Failed to set virtual memory: %s\n"),
                           strerror (errno)));
@@ -1993,8 +1993,8 @@ child_execute_job (struct childbase *child,
       if (bytes > 0)
         {
           if (!set_limit (RLIMIT_RSS, bytes, bytes))
-            DB (DB_JOBS, (_("Set resident memory limit of %s\n"),
-                          (FormatMemorySize (buf, bytes, 1024), buf)));
+            DB (DB_JOBS, (_("Set resident memory limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1024), buf)));
           else
             DB (DB_JOBS, (_("Failed to set resident memory: %s\n"),
                           strerror (errno)));
@@ -2018,8 +2018,8 @@ child_execute_job (struct childbase *child,
       if ((bytes = sizetol (s, 1000)) > 0)
         {
           if (!set_limit (RLIMIT_FSIZE, bytes, bytes * 1.5))
-            DB (DB_JOBS, (_("Set file size limit of %s\n"),
-                          (FormatMemorySize (buf, bytes, 1000), buf)));
+            DB (DB_JOBS, (_("Set file size limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1000), buf)));
           else
             DB (DB_JOBS, (_("Failed to set file size limit: %s\n"),
                           strerror (errno)));
@@ -2043,8 +2043,8 @@ child_execute_job (struct childbase *child,
       if ((bytes = sizetol (s, 1000)) > 0)
         {
           if (!set_limit (RLIMIT_CORE, bytes, bytes))
-            DB (DB_JOBS, (_("Set core dump limit of %s\n"),
-                          (FormatMemorySize (buf, bytes, 1000), buf)));
+            DB (DB_JOBS, (_("Set core dump limit of %sb\n"),
+                          (sizefmt (buf, bytes, 1000), buf)));
           else
             DB (DB_JOBS, (_("Failed to set core dump limit: %s\n"),
                           strerror (errno)));

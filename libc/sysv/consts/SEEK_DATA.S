@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon statfs,ST_IMMUTABLE,0x0200,0,0,0,0,0
+.syscon splice,SEEK_DATA,3,4,3,-1,-1,-1

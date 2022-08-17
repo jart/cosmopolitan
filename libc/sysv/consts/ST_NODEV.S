@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon statvfs,ST_NODEV,4,0,0,0,0x00000010,0
+.syscon statfs,ST_NODEV,4,16,0,16,16,0

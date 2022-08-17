@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/struct/sysinfo.h"
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
 #include "libc/stdio/stdio.h"
@@ -45,33 +46,33 @@ int main(int argc, char *argv[]) {
          1. / 65536 * si.loads[1],    //
          1. / 65536 * si.loads[2]);   //
 
-  FormatMemorySize(ibuf, si.totalram, 1024);
+  sizefmt(ibuf, si.totalram, 1024);
   printf("%-16s %s\n", "totalram", ibuf);
 
-  FormatMemorySize(ibuf, si.freeram, 1024);
+  sizefmt(ibuf, si.freeram, 1024);
   printf("%-16s %s\n", "freeram", ibuf);
 
-  FormatMemorySize(ibuf, si.sharedram, 1024);
+  sizefmt(ibuf, si.sharedram, 1024);
   printf("%-16s %s\n", "sharedram", ibuf);
 
-  FormatMemorySize(ibuf, si.bufferram, 1024);
+  sizefmt(ibuf, si.bufferram, 1024);
   printf("%-16s %s\n", "bufferram", ibuf);
 
-  FormatMemorySize(ibuf, si.totalswap, 1024);
+  sizefmt(ibuf, si.totalswap, 1024);
   printf("%-16s %s\n", "totalswap", ibuf);
 
-  FormatMemorySize(ibuf, si.freeswap, 1024);
+  sizefmt(ibuf, si.freeswap, 1024);
   printf("%-16s %s\n", "freeswap", ibuf);
 
   printf("%-16s %lu\n", "processes", si.procs);
 
-  FormatMemorySize(ibuf, si.totalhigh, 1024);
+  sizefmt(ibuf, si.totalhigh, 1024);
   printf("%-16s %s\n", "totalhigh", ibuf);
 
-  FormatMemorySize(ibuf, si.freehigh, 1024);
+  sizefmt(ibuf, si.freehigh, 1024);
   printf("%-16s %s\n", "freehigh", ibuf);
 
-  FormatMemorySize(ibuf, si.mem_unit, 1024);
+  sizefmt(ibuf, si.mem_unit, 1024);
   printf("%-16s %s\n", "mem_unit", ibuf);
 
   //

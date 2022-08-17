@@ -1,2 +1,2 @@
 #include "libc/sysv/consts/syscon.internal.h"
-.syscon statvfs,ST_NOEXEC,8,0,0,0,4,0
+.syscon statfs,ST_NOEXEC,8,4,4,4,4,0

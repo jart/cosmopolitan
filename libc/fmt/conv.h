@@ -33,6 +33,7 @@ long wcstol(const wchar_t *, wchar_t **, int);
 unsigned long wcstoul(const wchar_t *, wchar_t **, int);
 long strtol(const char *, char **, int) paramsnonnull((1)) libcesque;
 long sizetol(const char *, long) paramsnonnull() libcesque;
+char *sizefmt(char *, uint64_t, uint64_t);
 long long wcstoll(const wchar_t *, wchar_t **, int);
 unsigned long long wcstoull(const wchar_t *, wchar_t **, int);
 int wcscoll(const wchar_t *, const wchar_t *);

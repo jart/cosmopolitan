@@ -1,0 +1,16 @@
+#ifndef COSMOPOLITAN_LIBC_SYSV_CONSTS_SEEK_H_
+#define COSMOPOLITAN_LIBC_SYSV_CONSTS_SEEK_H_
+#include "libc/runtime/symbolic.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+extern const int SEEK_DATA;
+extern const int SEEK_HOLE;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define SEEK_DATA SYMBOLIC(SEEK_DATA)
+#define SEEK_HOLE SYMBOLIC(SEEK_HOLE)
+
+#endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_SEEK_H_ */

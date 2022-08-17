@@ -118,6 +118,8 @@ o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 o/$(MODE)/libc/calls/execl.o				\
 o/$(MODE)/libc/calls/execle.o				\
 o/$(MODE)/libc/calls/execlp.o				\
+o/$(MODE)/libc/calls/statfs.o				\
+o/$(MODE)/libc/calls/fstatfs.o				\
 o/$(MODE)/libc/calls/execve-sysv.o			\
 o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/mkntenvblock.o: private		\

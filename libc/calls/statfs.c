@@ -16,39 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/macros.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/statfs-meta.internal.h"
+#include "libc/calls/struct/statfs.internal.h"
+#include "libc/runtime/stack.h"
 
 /**
- * Represents size of memory readably.
- *
- * @param p is output buffer
- * @param b should be 1024 or 1000
- * @return pointer to nul byte
+ * Returns information about filesystem.
  */
-char *FormatMemorySize(char *p, uint64_t x, uint64_t b) {
-  int i, suffix;
-  struct {
-    char suffix;
-    uint64_t size;
-  } kUnits[] = {
-      {'e', b * b * b * b * b * b},
-      {'p', b * b * b * b * b},
-      {'t', b * b * b * b},
-      {'g', b * b * b},
-      {'m', b * b},
-      {'k', b},
-  };
-  for (suffix = i = 0; i < ARRAYLEN(kUnits); ++i) {
-    if (x >= kUnits[i].size * 9) {
-      x = (x + kUnits[i].size / 2) / kUnits[i].size;
-      suffix = kUnits[i].suffix;
-      break;
-    }
+int statfs(const char *path, struct statfs *sf) {
+  int rc;
+  union statfs_meta m;
+  CheckLargeStackAllocation(&m, sizeof(m));
+  if ((rc = sys_statfs(path, &m)) != -1) {
+    statfs2cosmo(sf, &m);
   }
-  p = FormatUint64(p, x);
-  if (suffix) *p++ = suffix;
-  *p++ = 'b';
-  *p = 0;
-  return p;
+  STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
+  return rc;
 }

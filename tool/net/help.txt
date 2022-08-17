@@ -5010,11 +5010,10 @@ UNIX MODULE
 
     Raised by accept, access, bind, chdir, chmod, chown, close, connect,
     copy_file_range, dup, fcntl, flock, fsync, futimesat, opendir,
-    getpeername, getsockname, getsockopt, inotify_add_watch,
-    inotify_rm_watch, ioctl, link, listen, llseek, lseek, mkdir, mknod,
-    mmap, open, prctl, read, readahead, readlink, recv, rename, select,
-    send, shutdown, splice, stat, symlink, sync, sync_file_range,
-    timerfd_create, truncate, unlink, utimensat, write.
+    getpeername, getsockname, getsockopt, ioctl, link, listen, lseek,
+    mkdir, mknod, mmap, open, prctl, read, readahead, readlink, recv,
+    rename, select, send, shutdown, splice, stat, symlink, sync,
+    sync_file_range, timerfd_create, truncate, unlink, utimensat, write.
 
   unix.EAGAIN
     Resource temporarily unavailable (e.g. SO_RCVTIMEO expired, too many
@@ -5042,28 +5041,27 @@ UNIX MODULE
     calls that accept a pathname.
 
     Raised by access, bind, chdir, chmod, chown, chroot, execve,
-    gethostname, inotify_add_watch, link, mkdir, mknod, open, readlink,
-    rename, rmdir, stat, symlink, truncate, unlink, utimensat.
+    gethostname, link, mkdir, mknod, open, readlink, rename, rmdir,
+    stat, symlink, truncate, unlink, utimensat.
 
   unix.EACCES
     Permission denied.
 
     Raised by access, bind, chdir, chmod, chown, chroot, clock_getres,
-    connect, execve, fcntl, getpriority, inotify_add_watch, link, mkdir,
-    mknod, mmap, mprotect, msgctl, open, prctl, ptrace, readlink,
-    rename, rmdir, semget, send, setpgid, socket, stat, symlink,
-    truncate, unlink, uselib, utime, utimensat.
+    connect, execve, fcntl, getpriority, link, mkdir, mknod, mmap,
+    mprotect, msgctl, open, prctl, ptrace, readlink, rename, rmdir,
+    semget, send, setpgid, socket, stat, symlink, truncate, unlink,
+    uselib, utime, utimensat.
 
   unix.ENOMEM
     We require more vespene gas.
 
     Raised by access, bind, chdir, chmod, chown, chroot, clone,
     copy_file_range, execve, fanotify_init, fork, getgroups, getrlimit,
-    inotify_add_watch, inotify_init, ioperm, link, mbind, mincore,
-    mkdir, mknod, mlock, mmap, mprotect, mremap, msync, open, poll,
-    readlink, recv, rename, rmdir, select, send, sigaltstack, splice,
-    stat, subpage_prot, swapon, symlink, sync_file_range, tee,
-    timer_create, timerfd_create, unlink.
+    link, mbind, mincore, mkdir, mknod, mlock, mmap, mprotect, mremap,
+    msync, open, poll, readlink, recv, rename, rmdir, select, send,
+    sigaltstack, splice, stat, subpage_prot, swapon, symlink,
+    sync_file_range, tee, timer_create, timerfd_create, unlink.
 
   unix.EPERM
     Operation not permitted.
@@ -5098,8 +5096,7 @@ UNIX MODULE
   unix.EEXIST
     File exists.
 
-    Raised by inotify_add_watch, link, mkdir, mknod, mmap, open, rename,
-    rmdir, symlink
+    Raised by link, mkdir, mknod, mmap, open, rename, rmdir, symlink
 
   unix.EXDEV
     Improper link.
@@ -5120,14 +5117,14 @@ UNIX MODULE
   unix.ENFILE
     Too many open files in system.
 
-    Raised by accept, execve, inotify_init, mmap, open, pipe, socket,
-    socketpair, swapon, timerfd_create, uselib, userfaultfd.
+    Raised by accept, execve, mmap, open, pipe, socket, socketpair,
+    swapon, timerfd_create, uselib, userfaultfd.
 
   unix.EMFILE
     Too many open files.
 
-    Raised by accept, dup, execve, fanotify_init, fcntl, inotify_init,
-    open, pipe, socket, socketpair, timerfd_create.
+    Raised by accept, dup, execve, fcntl, open, pipe, socket,
+    socketpair, timerfd_create.
 
   unix.ENOTTY
     Inappropriate i/o control operation.
@@ -5147,9 +5144,8 @@ UNIX MODULE
   unix.ENOSPC
     No space left on device.
 
-    Raised by copy_file_range, fsync, inotify_add_watch, link,
-    mkdir, mknod, open, rename, symlink, sync_file_range,
-    write.
+    Raised by copy_file_range, fsync, link, mkdir, mknod, open, rename,
+    symlink, sync_file_range, write.
 
   unix.EDQUOT
     Disk quota exceeded.

@@ -304,6 +304,12 @@ syscon	misc	SIG_UNBLOCK				1			2			2			2			2			1			# bsd consensus; faked nt
 syscon	misc	SIG_SETMASK				2			3			3			3			3			2			# bsd consensus; faked nt
 syscon	misc	SIG_ATOMIC_MIN				-2147483648		-2147483648		-9223372036854775808	-2147483648		-2147483648		0
 
+#	lseek() whence
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	splice	SEEK_HOLE				4			3			4			-1			-1			-1			#
+syscon	splice	SEEK_DATA				3			4			3			-1			-1			-1			#
+
 #	splice() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
@@ -1146,21 +1152,21 @@ syscon	ms	MS_SYNC					4			16			0			2			4			4			# faked nt
 syscon	ms	MS_ASYNC				1			1			1			1			1			1			# consensus (faked nt)
 syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 
-#	statvfs() flags
+#	statfs() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	statvfs	ST_RDONLY				1			1			1			1			1			0			# unix consensus
-syscon	statvfs	ST_NOSUID				2			2			2			2			2			0			# unix consensus
-syscon	statvfs	ST_NODEV				4			0			0			0			0x00000010		0
-syscon	statvfs	ST_NOEXEC				8			0			0			0			4			0
-syscon	statvfs	ST_SYNCHRONOUS				16			0			0			0			2			0
-syscon	statvfs	ST_APPEND				0x0100			0			0			0			0			0
-syscon	statvfs	ST_IMMUTABLE				0x0200			0			0			0			0			0
-syscon	statvfs	ST_MANDLOCK				0x0040			0			0			0			0			0
-syscon	statvfs	ST_NOATIME				0x0400			0			0			0x04000000		0			0
-syscon	statvfs	ST_NODIRATIME				0x0800			0			0			0			0			0
-syscon	statvfs	ST_WRITE				0x0080			0			0			0			0			0
-syscon	statvfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0
+syscon	statfs	ST_RDONLY				1			1			1			1			1			0			# MNT_RDONLY on BSD
+syscon	statfs	ST_NOSUID				2			8			8			8			8			0			# MNT_NOSUID on BSD
+syscon	statfs	ST_NODEV				4			16			0			16			16			0			# MNT_NODEV on BSD
+syscon	statfs	ST_NOEXEC				8			4			4			4			4			0			# MNT_NOEXEC on BSD
+syscon	statfs	ST_SYNCHRONOUS				16			2			2			2			2			0			# MNT_SYNCHRONOUS on BSD
+syscon	statfs	ST_NOATIME				0x0040			0x10000000		0x10000000		0x00008000		0x04000000		0			# MNT_NOATIME on BSD
+syscon	statfs	ST_RELATIME				0x1000			0			0			0			0x00020000		0			# MNT_RELATIME on NetBSD
+syscon	statfs	ST_APPEND				0x0100			0			0			0			0			0			#
+syscon	statfs	ST_IMMUTABLE				0x0200			0			0			0			0			0			#
+syscon	statfs	ST_MANDLOCK				0x0040			0			0			0			0			0			#
+syscon	statfs	ST_NODIRATIME				0x0800			0			0			0			0			0			#
+syscon	statfs	ST_WRITE				0x0080			0			0			0			0			0			#
 
 #	sendfile() flags
 #
