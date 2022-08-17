@@ -1268,14 +1268,14 @@ FUNCTIONS
           flag was used. If slurping large file into memory is a concern,
           then consider using ServeAsset which can serve directly off disk.
 
-  StoreAsset(path:str,data:str[,mode:int])
+  StoreAsset(path:str, data:str[, mode:int])
           Stores asset to executable's ZIP central directory. This
           currently happens in an append-only fashion and is still
           largely in the proof-of-concept stages. Currently only
           supported on Linux, XNU, and FreeBSD. In order to use this
           feature, the -* flag must be passed.
 
-  Log(level:int,message:str)
+  Log(level:int, message:str)
           Emits message string to log, if level is less than or equal to
           GetLogLevel. If redbean is running in interactive mode, then this
           will log to the console. If redbean is running as a daemon or the
@@ -1454,12 +1454,12 @@ FUNCTIONS
           only PSK ciphersuites. This function is not available in
           unsecure mode.
 
-  ProgramSslFetchVerify(enabled:str)
-          May be used to disable the the verification of certificates
-          for remote hosts when using the Fetch() API. This function is
-          not available in unsecure mode.
+  ProgramSslFetchVerify(enabled:bool)
+          May be used to disable the verification of certificates for
+          remote hosts when using the Fetch() API. This function is not
+          available in unsecure mode.
 
-  ProgramSslClientVerify(enabled:str)
+  ProgramSslClientVerify(enabled:bool)
           Enables the verification of certificates supplied by the HTTP
           clients that connect to your redbean. This has the same effect
           as the `-j` flag. Tuning this option alone does not preclude
@@ -1694,7 +1694,7 @@ FUNCTIONS
   GetCpuNode() → int
           Returns 0-indexed NUMA node on which process is currently scheduled.
 
-  Decimate(data) → int
+  Decimate(str) → str
           Shrinks byte buffer in half using John Costella's magic kernel.
           This downscales data 2x using an eight-tap convolution, e.g.
 
@@ -3879,7 +3879,7 @@ UNIX MODULE
 
     It's a good idea to not do too much work in a signal handler.
 
-  unix.sigsuspend([mask:Sigmask])
+  unix.sigsuspend([mask:unix.Sigset])
       └─→ nil, unix.Errno
 
     Waits for signal to be delivered.
@@ -4305,16 +4305,6 @@ UNIX MODULE
 
     Gets information about opened file descriptor.
 
-    `fd` should be a file descriptor that was opened using
-    `unix.open(path, O_RDONLY|O_DIRECTORY)`.
-
-    `flags` may have any of:
-
-    - `AT_SYMLINK_NOFOLLOW`: do not follow symbolic links.
-
-    `dirfd` defaults to to `unix.AT_FDCWD` and may optionally be set to
-    a directory file descriptor to which `path` is relative.
-
     A common use for fstat() is getting the size of a file. For example:
 
         fd = assert(unix.open("hello.txt", unix.O_RDONLY))
@@ -4345,14 +4335,21 @@ UNIX MODULE
     Opens directory for listing its contents, via an fd.
 
     `fd` should be created by `open(path, O_RDONLY|O_DIRECTORY)`. The
-    returned unix.Dir ownership takes ownership of the file descriptor
-    and will close it automatically when garbage collected.
+    returned unix.Dir takes ownership of the file descriptor and will
+    close it automatically when garbage collected.
 
   unix.isatty(fd:int)
       ├─→ true
       └─→ nil, unix.Errno
 
-    Returns true if file descriptor is a pseudoteletypewriter.
+    Returns true if file descriptor is a teletypewriter. Otherwise nil
+    with an Errno object holding one of the following values:
+
+    - `ENOTTY` if `fd` is valid but not a teletypewriter
+    - `EBADF` if `fd` isn't a valid file descriptor.
+    - `EPERM` if pledge() is used without `tty` in lenient mode
+
+    No other error numbers are possible.
 
   unix.tiocgwinsz(fd:int)
       ├─→ rows:int, cols:int
@@ -4402,7 +4399,7 @@ UNIX MODULE
 
     Reads entry from directory stream.
 
-    Returns `nil` if there are no more entries. Or error, `nil` will
+    Returns `nil` if there are no more entries. On error, `nil` will
     be returned and `errno` will be non-nil.
 
     `kind` can be any of:
@@ -4471,7 +4468,7 @@ UNIX MODULE
     On Windows NT this is collected from
     NtProcessMemoryCountersEx::PeakWorkingSetSize / 1024.
 
-  unid.Rusage:idrss()
+  unix.Rusage:idrss()
       └─→ integralkilobytes:int
 
     Returns integral private memory consumption w.r.t. scheduled ticks.
@@ -4499,7 +4496,7 @@ UNIX MODULE
 
     Currently only available on FreeBSD and NetBSD.
 
-  unis.Rusage:isrss()
+  unix.Rusage:isrss()
       └─→ integralkilobytes:int
 
     Returns integral stack memory consumption w.r.t. scheduled ticks.
@@ -4706,7 +4703,7 @@ UNIX MODULE
            print('thanks to file system compression')
         end
 
-    To tell whether or not compression is being used on a file,
+    To tell if compression is used on a file.
 
   unix.Stat:blksize()
       └─→ bytes:int
@@ -5046,7 +5043,7 @@ UNIX MODULE
 
     Raised by access, bind, chdir, chmod, chown, chroot, execve,
     gethostname, inotify_add_watch, link, mkdir, mknod, open, readlink,
-    rename, rmdir, stat, symlink, truncate, u unlink, utimensat.
+    rename, rmdir, stat, symlink, truncate, unlink, utimensat.
 
   unix.EACCES
     Permission denied.
@@ -5115,7 +5112,7 @@ UNIX MODULE
     Raised by arch_prctl, mmap, open, prctl, timerfd_create.
 
   unix.EISDIR
-    Is a a directory.
+    Is a directory.
 
     Raised by copy_file_range, execve, open, read, rename, truncate,
     unlink.
