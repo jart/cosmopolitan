@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -57,11 +57,13 @@ static void GrowEnviron(void) {
   size_t n, c;
   char **a, **b, **p;
   a = environ;
-  n = GetEnvironLen(a);
+  n = a ? GetEnvironLen(a) : 0;
   c = MAX(16ul, n) << 1;
   b = calloc(c, sizeof(char *));
-  for (p = b; *a;) {
-    *p++ = strdup(*a++);
+  if (a) {
+    for (p = b; *a;) {
+      *p++ = strdup(*a++);
+    }
   }
   __cxa_atexit(FreeEnviron, b, 0);
   environ = b;
@@ -75,6 +77,8 @@ int PutEnvImpl(char *s, bool overwrite) {
     __cxa_atexit(RestoreOriginalEnvironment, environ, 0);
     GrowEnviron();
     once = true;
+  } else if (!environ) {
+    GrowEnviron();
   }
   for (p = s; *p && *p != '='; ++p) {
     if (IsWindows()) {
