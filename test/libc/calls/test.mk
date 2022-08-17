@@ -100,6 +100,9 @@ o/$(MODE)/test/libc/calls/ioctl_siocgifconf_test.com.runs:		\
 o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
+o/$(MODE)/test/libc/calls/fcntl_test.com.runs:				\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
+
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\
 		$(TEST_LIBC_CALLS_BINS)					\

@@ -61,6 +61,7 @@ kOpenFlags:
 	.e	O_SEQUENTIAL,"SEQUENTIAL"	// windows
 	.e	O_COMPRESSED,"COMPRESSED"	// windows
 	.e	O_INDEXED,"INDEXED"		// windows
+	.e	O_LARGEFILE,"LARGEFILE"		//
 	.long	MAGNUM_TERMINATOR
 	.endobj	kOpenFlags,globl,hidden
 	.overrun

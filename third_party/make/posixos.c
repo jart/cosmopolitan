@@ -16,6 +16,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "third_party/make/makeint.inc"
 /**/
+#include "libc/sock/select.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/sa.h"
@@ -231,18 +232,16 @@ unsigned int jobserver_acquire(int timeout) {
     FD_SET(job_fds[0], &readfds);
 
     r = pselect(job_fds[0] + 1, &readfds, NULL, NULL, specp, &empty);
-    if (r < 0) switch (errno) {
-        case EINTR:
+    if (r < 0)
+      {
+        if (errno == EINTR)
           /* SIGCHLD will show up as an EINTR.  */
           return 0;
-
-        case EBADF:
+        if (errno == EBADF)
           /* Someone closed the jobs pipe.
              That shouldn't happen but if it does we're done.  */
           O(fatal, NILF, _("job server shut down"));
-
-        default:
-          pfatal_with_name(_("pselect jobs pipe"));
+        pfatal_with_name(_("pselect jobs pipe"));
       }
 
     if (r == 0) /* Timeout.  */

@@ -61,17 +61,22 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
   struct sys_pollfd_nt sockfds[64];
   int pipeindices[ARRAYLEN(pipefds)];
   int sockindices[ARRAYLEN(sockfds)];
-  int i, sn, pn, failed, gotinvals, gotpipes, gotsocks, waitfor;
+  int i, rc, sn, pn, gotinvals, gotpipes, gotsocks, waitfor;
 
   // check for interrupts early before doing work
-  if (sigmask && __sig_mask(SIG_SETMASK, sigmask, &oldmask)) return -1;
-  if (_check_interrupts(false, g_fds.p)) return eintr();
+  if (sigmask) {
+    __sig_mask(SIG_SETMASK, sigmask, &oldmask);
+  }
+  if (_check_interrupts(false, g_fds.p)) {
+    rc = eintr();
+    goto ReturnPath;
+  }
 
   // do the planning
   // we need to read static variables
   // we might need to spawn threads and open pipes
   __fds_lock();
-  for (gotinvals = failed = sn = pn = i = 0; i < nfds; ++i) {
+  for (gotinvals = rc = sn = pn = i = 0; i < nfds; ++i) {
     if (fds[i].fd < 0) continue;
     if (__isfdopen(fds[i].fd)) {
       if (__isfdkind(fds[i].fd, kFdSocket)) {
@@ -85,7 +90,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
           ++sn;
         } else {
           // too many socket fds
-          failed = enomem();
+          rc = enomem();
           break;
         }
       } else if (pn < ARRAYLEN(pipefds)) {
@@ -109,7 +114,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
         ++pn;
       } else {
         // too many non-socket fds
-        failed = enomem();
+        rc = enomem();
         break;
       }
     } else {
@@ -117,9 +122,9 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
     }
   }
   __fds_unlock();
-  if (failed) {
+  if (rc) {
     // failed to create a polling solution
-    return failed;
+    goto ReturnPath;
   }
 
   // perform the i/o and sleeping and looping
@@ -164,7 +169,8 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
       POLLTRACE("WSAPoll(%p, %u, %'d) out of %'lu", sockfds, sn, waitfor, *ms);
 #endif
       if ((gotsocks = WSAPoll(sockfds, sn, waitfor)) == -1) {
-        return __winsockerr();
+        rc = __winsockerr();
+        goto ReturnPath;
       }
       *ms -= waitfor;
     } else {
@@ -188,7 +194,8 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
     // otherwise loop limitlessly for timeout to elapse while
     // checking for signal delivery interrupts, along the way
     if (_check_interrupts(false, g_fds.p)) {
-      return eintr();
+      rc = eintr();
+      goto ReturnPath;
     }
   }
 
@@ -209,5 +216,11 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
   }
 
   // and finally return
-  return gotinvals + gotpipes + gotsocks;
+  rc = gotinvals + gotpipes + gotsocks;
+
+ReturnPath:
+  if (sigmask) {
+    __sig_mask(SIG_SETMASK, &oldmask, 0);
+  }
+  return rc;
 }

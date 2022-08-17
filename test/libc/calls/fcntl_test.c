@@ -17,7 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
@@ -25,14 +28,11 @@
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
 char testlib_enable_tmp_setup_teardown;
-
-void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
-}
 
 TEST(fcntl_getfl, testRemembersAccessMode) {
   int fd;
@@ -70,4 +70,150 @@ TEST(fcntl, getfd) {
   ASSERT_SYS(0, FD_CLOEXEC, fcntl(4, F_GETFD));
   ASSERT_SYS(0, 0, close(4));
   ASSERT_SYS(0, 0, close(3));
+}
+
+void OnSig(int sig) {
+}
+
+TEST(posixAdvisoryLocks, oneProcess_unlockedFromOwnPerspectiveHuh) {
+  struct flock lock;
+  ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 5, write(3, "hello", 5));
+
+  // set lock
+  lock.l_type = F_WRLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_start = 1;
+  lock.l_len = 3;
+  lock.l_pid = -2;
+  ASSERT_SYS(0, 0, fcntl(3, F_SETLK, &lock));
+  EXPECT_EQ(F_WRLCK, lock.l_type);
+  EXPECT_EQ(SEEK_SET, lock.l_whence);
+  EXPECT_EQ(1, lock.l_start);
+  EXPECT_EQ(3, lock.l_len);
+  EXPECT_EQ(-2, lock.l_pid);
+
+  ASSERT_SYS(0, 4, open("foo", O_RDWR));
+
+  // try lock
+  lock.l_type = F_WRLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_start = 0;
+  lock.l_len = 0;
+  lock.l_pid = -1;
+  ASSERT_SYS(0, 0, fcntl(4, F_SETLK, &lock));
+  EXPECT_EQ(F_WRLCK, lock.l_type);
+  EXPECT_EQ(SEEK_SET, lock.l_whence);
+  EXPECT_EQ(0, lock.l_start);
+  EXPECT_EQ(0, lock.l_len);
+  EXPECT_EQ(-1, lock.l_pid);
+
+  // get lock information
+  if (!IsWindows()) {
+    lock.l_type = F_RDLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0;
+    lock.l_pid = -7;
+    ASSERT_SYS(0, 0, fcntl(4, F_GETLK, &lock));
+    EXPECT_EQ(F_UNLCK, lock.l_type);
+    EXPECT_EQ(SEEK_SET, lock.l_whence);
+    EXPECT_EQ(0, lock.l_start);
+    EXPECT_EQ(0, lock.l_len);
+    EXPECT_EQ(-7, lock.l_pid);  // doesn't change due to F_UNLCK
+  }
+
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(posixAdvisoryLocks, twoProcesses) {
+  if (IsWindows()) return;  // due to signals
+
+  int ws, pid;
+  struct flock lock;
+  sigset_t ss, oldss;
+  struct sigaction oldsa;
+  struct sigaction sa = {.sa_handler = OnSig};
+  ASSERT_SYS(0, 0, sigemptyset(&ss));
+  ASSERT_SYS(0, 0, sigaddset(&ss, SIGUSR1));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &ss, &oldss));
+  ASSERT_SYS(0, 0, sigdelset(&ss, SIGUSR1));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
+    ASSERT_SYS(0, 5, write(3, "hello", 5));
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 1;
+    lock.l_len = 3;
+    lock.l_pid = -2;
+    ASSERT_SYS(0, 0, fcntl(3, F_SETLK, &lock));
+    EXPECT_EQ(F_WRLCK, lock.l_type);
+    EXPECT_EQ(SEEK_SET, lock.l_whence);
+    EXPECT_EQ(1, lock.l_start);
+    EXPECT_EQ(3, lock.l_len);
+    EXPECT_EQ(-2, lock.l_pid);
+    ASSERT_SYS(0, 0, kill(getppid(), SIGUSR1));
+    ASSERT_SYS(EINTR, -1, sigsuspend(&ss));
+    _Exit(0);
+  }
+  ASSERT_SYS(EINTR, -1, sigsuspend(&ss));
+  ASSERT_SYS(0, 3, open("foo", O_RDWR));
+
+  // try lock
+  lock.l_type = F_RDLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_start = 0;
+  lock.l_len = 0;
+  lock.l_pid = -1;
+  ASSERT_SYS(EAGAIN, -1, fcntl(3, F_SETLK, &lock));
+
+  // get lock information
+  lock.l_type = F_RDLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_start = 0;
+  lock.l_len = 0;
+  lock.l_pid = -1;
+  ASSERT_SYS(0, 0, fcntl(3, F_GETLK, &lock));
+  EXPECT_EQ(F_WRLCK, lock.l_type);
+  EXPECT_EQ(SEEK_SET, lock.l_whence);
+  EXPECT_EQ(1, lock.l_start);
+  EXPECT_EQ(3, lock.l_len);
+  EXPECT_EQ(pid, lock.l_pid);
+
+  // get lock information
+  lock.l_type = F_RDLCK;
+  lock.l_whence = SEEK_END;
+  lock.l_start = -3;
+  lock.l_len = 0;
+  lock.l_pid = -1;
+  ASSERT_SYS(0, 0, fcntl(3, F_GETLK, &lock));
+  EXPECT_EQ(F_WRLCK, lock.l_type);
+  EXPECT_EQ(SEEK_SET, lock.l_whence);
+  EXPECT_EQ(1, lock.l_start);
+  EXPECT_EQ(3, lock.l_len);
+  EXPECT_EQ(pid, lock.l_pid);
+
+  // get lock information
+  lock.l_type = F_RDLCK;
+  lock.l_whence = SEEK_END;
+  lock.l_start = -1;
+  lock.l_len = 0;
+  lock.l_pid = -1;
+  ASSERT_SYS(0, 0, fcntl(3, F_GETLK, &lock));
+  EXPECT_EQ(F_UNLCK, lock.l_type);
+  EXPECT_EQ(SEEK_END, lock.l_whence);
+  EXPECT_EQ(-1, lock.l_start);
+  EXPECT_EQ(0, lock.l_len);
+  EXPECT_EQ(-1, lock.l_pid);
+
+  ASSERT_SYS(0, 0, kill(pid, SIGUSR1));
+  EXPECT_NE(-1, wait(&ws));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(0, WEXITSTATUS(ws));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));
 }

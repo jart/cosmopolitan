@@ -195,23 +195,13 @@
                     (or (file-name-directory
                          (file-relative-name this root))
                         ""))))
-          ((eq kind 'run-win7)
-           (format
-            (cosmo-join
-             " && "
-             `("m=%s; f=o/$m/%s.com"
-               ,(concat "make -j12 -O $f MODE=$m")
-               "scp $f $f.dbg win7:"
-               "ssh win7 ./%s.com"))
-            mode name (file-name-nondirectory name)))
           ((eq kind 'run-win10)
            (format
             (cosmo-join
              " && "
              `("m=%s; f=o/$m/%s.com"
                ,(concat "make -j12 -O $f MODE=$m")
-               "scp $f $f.dbg win10:"
-               "ssh win10 ./%s.com"))
+               "scp $f $f.dbg win10:; ssh win10 ./%s.com"))
             mode name (file-name-nondirectory name)))
           ((eq kind 'run-xnu)
            (format
@@ -649,22 +639,6 @@
         (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
                (let* ((mode (cosmo--make-mode arg ""))
                       (compile-command (cosmo--compile-command this root 'test mode "" "" ".ok")))
-                 (compile compile-command)))
-              ('t
-               (error "cosmo-run: unknown major mode")))))))
-
-(defun cosmo-run-win7 (arg)
-  (interactive "P")
-  (let* ((this (or (buffer-file-name) dired-directory))
-         (proj (locate-dominating-file this "Makefile"))
-         (root (or proj default-directory))
-         (file (file-relative-name this root)))
-    (when root
-      (let ((default-directory root))
-        (save-buffer)
-        (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
-               (let* ((mode (cosmo--make-mode arg ""))
-                      (compile-command (cosmo--compile-command this root 'run-win7 mode "" "" "")))
                  (compile compile-command)))
               ('t
                (error "cosmo-run: unknown major mode")))))))

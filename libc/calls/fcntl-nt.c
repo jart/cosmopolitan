@@ -110,8 +110,9 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
   uint32_t flags;
   if (__isfdkind(fd, kFdFile) || __isfdkind(fd, kFdSocket)) {
     if (cmd == F_GETFL) {
-      return g_fds.p[fd].flags & (O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT |
-                                  O_NOATIME | O_NONBLOCK);
+      return g_fds.p[fd].flags &
+             (O_ACCMODE | O_APPEND | O_ASYNC | O_DIRECT | O_NOATIME |
+              O_NONBLOCK | O_RANDOM | O_SEQUENTIAL);
     } else if (cmd == F_SETFL) {
       // O_APPEND doesn't appear to be tunable at cursory glance
       // O_NONBLOCK might require we start doing all i/o in threads
@@ -131,7 +132,7 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
         g_fds.p[fd].flags &= ~O_CLOEXEC;
         return 0;
       }
-    } else if (cmd == F_SETLK || cmd == F_SETLKW) {
+    } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
       return sys_fcntl_nt_lock(g_fds.p + fd, cmd, arg);
     } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
       return sys_fcntl_nt_dupfd(fd, cmd, arg);

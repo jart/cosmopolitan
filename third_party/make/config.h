@@ -507,20 +507,10 @@
 #define MAKE_HOST "x86_64-cosmopolitan"
 
 /* Define to 1 to enable job server support in GNU make. */
-/*
- * TODO(jart): Why does job server not work? We don't need it, since the
- *             last thing we'd ever want is a recursive make, however it
- *             would be nice to confirm it's not a bug in our libc impl.
- */
-/* #define MAKE_JOBSERVER 1 */
+#define MAKE_JOBSERVER 1
 
 /* Define to 1 to enable symbolic link timestamp checking. */
 #define MAKE_SYMLINKS 1
-
-/* Use GNU style printf and scanf.  */
-#ifndef __USE_MINGW_ANSI_STDIO
-#define __USE_MINGW_ANSI_STDIO 1
-#endif
 
 /* Define to 1 if the nlist n_name member is a pointer */
 /* #undef N_NAME_POINTER */

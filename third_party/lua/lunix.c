@@ -24,6 +24,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
@@ -704,27 +705,64 @@ static int LuaUnixWait(lua_State *L) {
   }
 }
 
-// unix.fcntl(fd:int, cmd:int[, arg:int])
-//     ├─→ true, ...
+// unix.fcntl(fd:int, cmd:int[, ...])
+//     ├─→ ...
 //     └─→ nil, unix.Errno
 static int LuaUnixFcntl(lua_State *L) {
-  int olderr = errno;
-  return SysretBool(L, "fcntl", olderr,
-                    fcntl(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2),
-                          luaL_optinteger(L, 3, 0)));
+  struct flock lock;
+  int rc, fd, cmd, olderr = errno;
+  fd = luaL_checkinteger(L, 1);
+  cmd = luaL_checkinteger(L, 2);
+  if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
+    lock.l_type = luaL_optinteger(L, 3, F_RDLCK);
+    lock.l_start = luaL_optinteger(L, 4, 0);
+    lock.l_len = luaL_optinteger(L, 5, 0);
+    lock.l_whence = luaL_optinteger(L, 6, SEEK_SET);
+  }
+  if (cmd == F_SETLK || cmd == F_SETLKW) {
+    return SysretBool(L, "fcntl(F_SETLK*)", olderr, fcntl(fd, cmd, &lock));
+  } else if (cmd == F_GETLK) {
+    if (fcntl(fd, cmd, &lock) != -1) {
+      if (lock.l_type == F_UNLCK) {
+        lua_pushinteger(L, F_UNLCK);
+        return 1;
+      } else {
+        lua_pushinteger(L, lock.l_type);
+        lua_pushinteger(L, lock.l_start);
+        lua_pushinteger(L, lock.l_len);
+        lua_pushinteger(L, lock.l_whence);
+        lua_pushinteger(L, lock.l_pid);
+        return 5;
+      }
+    } else {
+      return LuaUnixSysretErrno(L, "fcntl(F_GETLK)", olderr);
+    }
+  } else {
+    return SysretBool(L, "fcntl", olderr,
+                      fcntl(fd, cmd, luaL_optinteger(L, 3, 0)));
+  }
 }
 
-// unix.dup(oldfd:int[, newfd:int[, flags:int]])
+// unix.dup(oldfd:int[, newfd:int[, flags:int[, lowest:int]]])
 //     ├─→ newfd:int
 //     └─→ nil, unix.Errno
 static int LuaUnixDup(lua_State *L) {
-  int rc, oldfd, newfd, flags, olderr;
+  int rc, oldfd, newfd, flags, lowno, olderr;
   olderr = errno;
   oldfd = luaL_checkinteger(L, 1);
   newfd = luaL_optinteger(L, 2, -1);
   flags = luaL_optinteger(L, 3, 0);
-  if (newfd == -1) {
-    rc = dup(oldfd);
+  lowno = luaL_optinteger(L, 4, 0);
+  if (newfd < 0) {
+    if (!flags && !lowno) {
+      rc = dup(oldfd);
+    } else if (!flags) {
+      rc = fcntl(oldfd, F_DUPFD, lowno);
+    } else if (flags == O_CLOEXEC) {
+      rc = fcntl(oldfd, F_DUPFD_CLOEXEC, lowno);
+    } else {
+      rc = einval();
+    }
   } else {
     rc = dup3(oldfd, newfd, flags);
   }
@@ -1444,15 +1482,27 @@ static int LuaUnixAccept(lua_State *L) {
   }
 }
 
-// unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
+// unix.poll({[fd:int]=events:int, ...}[, timeoutms:int[, mask:unix.Sigset]])
 //     ├─→ {[fd:int]=revents:int, ...}
 //     └─→ nil, unix.Errno
 static int LuaUnixPoll(lua_State *L) {
   size_t nfds;
+  struct sigset *mask;
+  struct timespec ts, *tsp;
   struct pollfd *fds, *fds2;
-  int i, fd, events, timeoutms, olderr = errno;
-  timeoutms = luaL_optinteger(L, 2, -1);
+  int i, fd, events, olderr = errno;
   luaL_checktype(L, 1, LUA_TTABLE);
+  if (!lua_isnoneornil(L, 2)) {
+    ts = _timespec_frommillis(luaL_checkinteger(L, 2));
+    tsp = &ts;
+  } else {
+    tsp = 0;
+  }
+  if (!lua_isnoneornil(L, 3)) {
+    mask = luaL_checkudata(L, 3, "unix.Sigset");
+  } else {
+    mask = 0;
+  }
   lua_pushnil(L);
   for (fds = 0, nfds = 0; lua_next(L, 1);) {
     if (lua_isinteger(L, -2)) {
@@ -1471,7 +1521,7 @@ static int LuaUnixPoll(lua_State *L) {
     lua_pop(L, 1);
   }
   olderr = errno;
-  if ((events = poll(fds, nfds, timeoutms)) != -1) {
+  if ((events = ppoll(fds, nfds, tsp, mask)) != -1) {
     lua_createtable(L, events, 0);
     for (i = 0; i < nfds; ++i) {
       if (fds[i].revents && fds[i].fd >= 0) {
@@ -2703,6 +2753,7 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "F_WRLCK", F_WRLCK);
   LuaSetIntField(L, "F_SETLK", F_SETLK);
   LuaSetIntField(L, "F_SETLKW", F_SETLKW);
+  LuaSetIntField(L, "F_GETLK", F_GETLK);
   LuaSetIntField(L, "FD_CLOEXEC", FD_CLOEXEC);
 
   // access() mode

@@ -2590,18 +2590,29 @@ UNIX MODULE
     `EAGAIN` is returned if you've enforced a max number of
     processes using `setrlimit(RLIMIT_NPROC)`.
 
-  unix.dup(oldfd:int[, newfd:int[, flags:int]])
+  unix.dup(oldfd:int[, newfd:int[, flags:int[, lowest:int]]])
       ├─→ newfd:int
       └─→ nil, unix.Errno
 
     Duplicates file descriptor.
 
-    `newfd` defaults to the lowest number available file descriptor.
-    If the new number is specified and it's already open, then it'll
-    be silently closed before the duplication happens.
+    `newfd` may be specified to choose a specific number for the new
+    file descriptor. If it's already open, then the preexisting one will
+    be silently closed. `EINVAL` is returned if `newfd` equals `oldfd`.
 
     `flags` can have `O_CLOEXEC` which means the returned file
     descriptors will be automatically closed upon execve().
+
+    `lowest` defaults to zero and defines the lowest numbered file
+    descriptor that's acceptable to use. If `newfd` is specified then
+    `lowest` is ignored. For example, if you wanted to duplicate
+    standard input, then:
+
+        stdin2 = assert(unix.dup(0, nil, unix.O_CLOEXEC, 3))
+
+    Will ensure that, in the rare event standard output or standard
+    error are closed, you won't accidentally duplicate standard input to
+    those numbers.
 
   unix.pipe([flags:int])
       ├─→ reader:int, writer:int
@@ -2992,18 +3003,147 @@ UNIX MODULE
 
     `path` is the file or directory path you wish to destroy.
 
-  unix.fcntl(fd:int, cmd:int, ...)
-      ├─→ ...
+  unix.fcntl(fd:int, unix.F_GETFD)
+      ├─→ flags:int
       └─→ nil, unix.Errno
 
-    Manipulates file descriptor.
+    Returns file descriptor flags.
 
-    Setting `cmd` to `F_GETFD`, `F_SETFD`, `F_GETFL` or `F_SETFL`
-    lets you query and/or change the status of file descriptors. For
-    example, it's possible using this to change `FD_CLOEXEC`.
+    The returned `flags` may include any of:
 
-    [work in progress] POSIX advisory locks can be controlled by setting
-    `cmd` to `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
+    - `unix.FD_CLOEXEC` if `fd` was opened with `unix.O_CLOEXEC`.
+
+    Returns `EBADF` if `fd` isn't open.
+
+  unix.fcntl(fd:int, unix.F_SETFD, flags:int)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Sets file descriptor flags.
+
+    `flags` may include any of:
+
+    - `unix.FD_CLOEXEC` to re-open `fd` with `unix.O_CLOEXEC`.
+
+    Returns `EBADF` if `fd` isn't open.
+
+  unix.fcntl(fd:int, unix.F_GETFL)
+      ├─→ flags:int
+      └─→ nil, unix.Errno
+
+    Returns file descriptor status flags.
+
+    `flags & unix.O_ACCMODE` includes one of:
+
+    - `O_RDONLY`
+    - `O_WRONLY`
+    - `O_RDWR`
+
+    Examples of values `flags & ~unix.O_ACCMODE` may include:
+
+    - `O_NONBLOCK`
+    - `O_APPEND`
+    - `O_SYNC`
+    - `O_ASYNC`
+    - `O_NOATIME` on Linux
+    - `O_RANDOM` on Windows
+    - `O_SEQUENTIAL` on Windows
+    - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
+
+    Examples of values `flags & ~unix.O_ACCMODE` won't include:
+
+    - `O_CREAT`
+    - `O_TRUNC`
+    - `O_EXCL`
+    - `O_NOCTTY`
+
+    Returns `EBADF` if `fd` isn't open.
+
+  unix.fcntl(fd:int, unix.F_SETFL, flags:int)
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Changes file descriptor status flags.
+
+    Examples of values `flags` may include:
+
+    - `O_NONBLOCK`
+    - `O_APPEND`
+    - `O_SYNC`
+    - `O_ASYNC`
+    - `O_NOATIME` on Linux
+    - `O_RANDOM` on Windows
+    - `O_SEQUENTIAL` on Windows
+    - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
+
+    These values should be ignored:
+
+    - `O_RDONLY`, `O_WRONLY`, `O_RDWR`
+    - `O_CREAT`, `O_TRUNC`, `O_EXCL`
+    - `O_NOCTTY`
+
+    Returns `EBADF` if `fd` isn't open.
+
+  unix.fcntl(fd:int, unix.F_SETLK[, type[, start[, len[, whence]]]])
+  unix.fcntl(fd:int, unix.F_SETLKW[, type[, start[, len[, whence]]]])
+      ├─→ true
+      └─→ nil, unix.Errno
+
+    Acquires lock on file interval.
+
+    POSIX Advisory Locks allow multiple processes to leave voluntary
+    hints to each other about which portions of a file they're using.
+
+    The command may be:
+
+    - `F_SETLK` to acquire lock if possible
+    - `F_SETLKW` to wait for lock if necessary
+
+    `fd` is file descriptor of open() file.
+
+    `type` may be one of:
+
+    - `F_RDLCK` for read lock (default)
+    - `F_WRLCK` for read/write lock
+    - `F_UNLCK` to unlock
+
+    `start` is 0-indexed byte offset into file. The default is zero.
+
+    `len` is byte length of interval. Zero is the default and it means
+    until the end of the file.
+
+    `whence` may be one of:
+
+    - `SEEK_SET` start from beginning (default)
+    - `SEEK_CUR` start from current position
+    - `SEEK_END` start from end
+
+    Returns `EAGAIN` if lock couldn't be acquired. POSIX says this
+    theoretically could also be `EACCES` but we haven't seen this
+    behavior on any of our supported platforms.
+
+    Returns `EBADF` if `fd` wasn't open.
+
+  unix.fcntl(fd:int, unix.F_GETLK[, type[, start[, len[, whence]]]])
+      ├─→ unix.F_UNLCK
+      ├─→ type, start, len, whence, pid
+      └─→ nil, unix.Errno
+
+    Acquires information about POSIX advisory lock on file.
+
+    This function accepts the same parameters as fcntl(F_SETLK) and
+    tells you if the lock acquisition would be successful for a given
+    range of bytes. If locking would have succeeded, then F_UNLCK is
+    returned. If the lock would not have succeeded, then information
+    about a conflicting lock is returned.
+
+    Returned `type` may be `F_RDLCK` or `F_WRLCK`.
+
+    Returned `pid` is the process id of the current lock owner.
+
+    This function is currently not supported on Windows.
+
+    Returns `EBADF` if `fd` wasn't open.
 
   unix.getsid(pid:int)
       ├─→ sid:int
@@ -3477,7 +3617,7 @@ UNIX MODULE
     `OnServerListen` hook to enable SYN saving in your Redbean. When the
     `TCP_SAVE_SYN` option isn't used, this may return empty string.
 
-  unix.poll({[fd:int]=events:int, ...}[, timeoutms:int])
+  unix.poll({[fd:int]=events:int, ...}[, timeoutms:int[, mask:unix.Sigset]])
       ├─→ {[fd:int]=revents:int, ...}
       └─→ nil, unix.Errno
 
@@ -3504,9 +3644,25 @@ UNIX MODULE
        peer closed its end of the channel.
     - `POLLNVAL` (revents): Invalid request.
 
-    `timeoutms` is the number of milliseconds to block. If this is set to
-    -1 then that means block as long as it takes until there's an event
-    or an interrupt. If the timeout expires, an empty table is returned.
+    `timeoutms` is the number of milliseconds to block. The default is
+    -1 which means block indefinitely until there's an event or an
+    interrupt. If the timeout elapses without any such events, an empty
+    table is returned. A timeout of zero means non-blocking.
+
+    `mask` serves the purpose of enabling poll to listen for both file
+    descriptor events and signals. It's equivalent to saying:
+
+        oldmask = unix.sigprocmask(unix.SIG_SETMASK, mask);
+        unix.poll(fds, timeout);
+        unix.sigprocmask(unix.SIG_SETMASK, oldmask);
+
+    Except it'll happen atomically on supported platforms. The only
+    exceptions are MacOS and NetBSD where this behavior is simulated by
+    the polyfill. Atomicity is helpful for unit testing signal behavior.
+
+    `EINTR` is returned if the kernel decided to deliver a signal to a
+    signal handler instead during your call. This is a @norestart system
+    call that always returns `EINTR` even if `SA_RESTART` is in play.
 
   unix.gethostname()
       ├─→ host:str

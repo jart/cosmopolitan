@@ -74,14 +74,12 @@ void flock2cosmo(uintptr_t memory) {
     l_pid = u->linux.l_pid;
     l_type = u->linux.l_type;
     l_whence = u->linux.l_whence;
-    l_sysid = 0;
   } else if (IsXnu()) {
     l_start = u->xnu.l_start;
     l_len = u->xnu.l_len;
     l_pid = u->xnu.l_pid;
     l_type = u->xnu.l_type;
     l_whence = u->xnu.l_whence;
-    l_sysid = 0;
   } else if (IsFreebsd()) {
     l_start = u->freebsd.l_start;
     l_len = u->freebsd.l_len;
@@ -89,20 +87,19 @@ void flock2cosmo(uintptr_t memory) {
     l_type = u->freebsd.l_type;
     l_whence = u->freebsd.l_whence;
     l_sysid = u->freebsd.l_sysid;
+    u->cosmo.l_sysid = l_sysid;
   } else if (IsOpenbsd()) {
     l_start = u->openbsd.l_start;
     l_len = u->openbsd.l_len;
     l_pid = u->openbsd.l_pid;
     l_type = u->openbsd.l_type;
     l_whence = u->openbsd.l_whence;
-    l_sysid = 0;
   } else if (IsNetbsd()) {
     l_start = u->netbsd.l_start;
     l_len = u->netbsd.l_len;
     l_pid = u->netbsd.l_pid;
     l_type = u->netbsd.l_type;
     l_whence = u->netbsd.l_whence;
-    l_sysid = 0;
   } else {
     return;
   }
@@ -111,7 +108,6 @@ void flock2cosmo(uintptr_t memory) {
   u->cosmo.l_pid = l_pid;
   u->cosmo.l_type = l_type;
   u->cosmo.l_whence = l_whence;
-  u->cosmo.l_sysid = l_sysid;
 }
 
 void cosmo2flock(uintptr_t memory) {

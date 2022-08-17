@@ -52,7 +52,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   struct timeval tv, *tvp;
   struct timespec ts, *tsp;
   struct {
-    sigset_t *s;
+    const sigset_t *s;
     size_t n;
   } ss;
   if (nfds < 0) {
