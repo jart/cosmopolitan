@@ -4312,6 +4312,23 @@ UNIX MODULE
         Log(kLogInfo, 'hello.txt is %d bytes in size' % {st:size()})
         unix.close(fd)
 
+  unix.statfs(path:str)
+      ├─→ unix.Statfs
+      └─→ nil, unix.Errno
+
+    Gets information about filesystem.
+
+    `path` is the path of a file or directory in the mounted filesystem.
+
+  unix.fstatfs(fd:int)
+      ├─→ unix.Statfs
+      └─→ nil, unix.Errno
+
+    Gets information about filesystem.
+
+    `fd` is an open() file descriptor of a file or directory in the
+    mounted filesystem.
+
   unix.opendir(path:str)
       ├─→ state:unix.Dir
       └─→ nil, unix.Errno
@@ -4742,6 +4759,123 @@ UNIX MODULE
     This value may be set to 0 or -1 for files that aren't devices,
     depending on the operating system. unix.major() and unix.minor()
     may be used to extract the device numbers.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ UNIX STATFS OBJECT
+
+  unix.Statfs objects are created by statfs() or fstatfs(). The
+  following accessor methods are available.
+
+  unix.Statfs:fstypename()
+      └─→ str
+
+    Type of filesystem.
+
+    Here's some examples of likely values:
+
+    - `"ext"` on Linux
+    - `"xfs"` on RHEL7
+    - `"apfs"` on Apple
+    - `"zfs"` on FreeBSD
+    - `"ffs"` on NetBSD and OpenBSD
+    - `"NTFS"` on Windows
+
+  unix.Statfs:type()
+      └─→ int
+
+    Type of filesystem.
+
+    This is a platform-specific magic number. Consider using the
+    unix.Statfs:fstypename() method instead. On Windows, this will
+    actually be a Knuth multiplicative hash of the name.
+
+  unix.Statfs:bsize()
+      └─→ int
+
+    Optimal transfer block size.
+
+    This field serves two purposes:
+
+      1. It tells you how to chunk i/o operations. For local disks,
+         it'll likely be any value between 512 and 4096 depending on the
+         operating system. For network filesystems it will likely be a
+         much larger value, e.g. 512kb.
+
+      2. It can be multiplied with the fields `blocks`, `bfree`, and
+         `bavail` to obtain a byte count.
+
+  unix.Statfs:blocks()
+      └─→ int
+
+    Total data blocks in filesystem.
+
+    The size of a block is measured as unix.Statfs:bsize().
+
+  unix.Statfs:bfree()
+      └─→ int
+
+    Total free blocks in filesystem.
+
+    The size of a block is measured as unix.Statfs:bsize().
+
+  unix.Statfs:bavail()
+      └─→ int
+
+    Total free blocks available in filesystem to unprivileged users.
+
+    The size of a block is measured as unix.Statfs:bsize().
+
+  unix.Statfs:files()
+      └─→ int
+
+    Total file nodes in filesystem.
+
+    On Windows this is always the maximum integer value.
+
+  unix.Statfs:ffree()
+      └─→ int
+
+    Total free file nodes in filesystem.
+
+    On Windows this is always the maximum integer value.
+
+  unix.Statfs:fsid()
+      └─→ int
+
+    Filesystem id.
+
+  unix.Statfs:namelen()
+      └─→ int
+
+    Maximum length of filename components in bytes.
+
+  unix.Statfs:flags()
+      └─→ int
+
+    Filesystem flags.
+
+    The following flags are defined:
+
+    - `ST_RDONLY`: Read-only filesystem (Linux/Windows/XNU/BSDs)
+    - `ST_NOSUID`: Setuid binaries forbidden (Linux/XNU/BSDs)
+    - `ST_NODEV`: Device files forbidden (Linux/XNU/BSDs)
+    - `ST_NOEXEC`: Execution forbidden (Linux/XNU/BSDs)
+    - `ST_SYNCHRONOUS`: Synchronous (Linux/XNU/BSDs)
+    - `ST_NOATIME`: No access time (Linux/XNU/BSDs)
+    - `ST_RELATIME`: Relative access time (Linux/NetBSD)
+    - `ST_APPEND`: Linux-only
+    - `ST_IMMUTABLE`: Linux-only
+    - `ST_MANDLOCK`: Linux-only
+    - `ST_NODIRATIME`: Linux-only
+    - `ST_WRITE`: Linux-only
+
+  unix.Statfs:owner()
+      └─→ int
+
+    User id of owner of filesystem mount.
+
+    On Linux this is always 0 for root. On Windows this is always 0.
 
 
 ────────────────────────────────────────────────────────────────────────────────

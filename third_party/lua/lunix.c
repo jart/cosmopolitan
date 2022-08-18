@@ -31,6 +31,7 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/statfs.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"
@@ -39,6 +40,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/log.h"
@@ -85,6 +87,7 @@
 #include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
+#include "libc/sysv/consts/st.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/consts/w.h"
@@ -151,6 +154,12 @@ static void LuaPushSigset(lua_State *L, struct sigset set) {
 static void LuaPushStat(lua_State *L, struct stat *st) {
   struct stat *stp = lua_newuserdatauv(L, sizeof(*stp), 1);
   luaL_setmetatable(L, "unix.Stat");
+  *stp = *st;
+}
+
+static void LuaPushStatfs(lua_State *L, struct statfs *st) {
+  struct statfs *stp = lua_newuserdatauv(L, sizeof(*stp), 1);
+  luaL_setmetatable(L, "unix.Statfs");
   *stp = *st;
 }
 
@@ -1112,6 +1121,34 @@ static int LuaUnixFstat(lua_State *L) {
   }
 }
 
+// unix.statfs(path:str)
+//     ├─→ unix.Statfs
+//     └─→ nil, unix.Errno
+static int LuaUnixStatfs(lua_State *L) {
+  struct statfs f;
+  int olderr = errno;
+  if (!statfs(luaL_checkstring(L, 1), &f)) {
+    LuaPushStatfs(L, &f);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "statfs", olderr);
+  }
+}
+
+// unix.fstatfs(fd:int)
+//     ├─→ unix.Stat
+//     └─→ nil, unix.Errno
+static int LuaUnixFstatfs(lua_State *L) {
+  struct statfs f;
+  int olderr = errno;
+  if (!fstatfs(luaL_checkinteger(L, 1), &f)) {
+    LuaPushStatfs(L, &f);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "fstatfs", olderr);
+  }
+}
+
 static bool IsSockoptBool(int l, int x) {
   if (l == SOL_SOCKET) {
     return x == SO_TYPE ||        //
@@ -2052,8 +2089,66 @@ static int LuaUnixStatFlags(lua_State *L) {
 }
 
 static int LuaUnixStatToString(lua_State *L) {
-  struct stat *st = GetUnixStat(L);
-  lua_pushstring(L, "unix.Stat()");
+  char ibuf[21];
+  luaL_Buffer b;
+  struct stat *st;
+  st = GetUnixStat(L);
+  luaL_buffinit(L, &b);
+  luaL_addstring(&b, "unix.Stat({size=");
+  FormatInt64(ibuf, st->st_size);
+  luaL_addstring(&b, ibuf);
+  if (st->st_mode) {
+    luaL_addstring(&b, ", mode=");
+    FormatOctal32(ibuf, st->st_mode, 1);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_ino) {
+    luaL_addstring(&b, ", ino=");
+    FormatUint64(ibuf, st->st_ino);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_nlink) {
+    luaL_addstring(&b, ", nlink=");
+    FormatUint64(ibuf, st->st_nlink);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_uid) {
+    luaL_addstring(&b, ", uid=");
+    FormatUint32(ibuf, st->st_uid);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_gid) {
+    luaL_addstring(&b, ", gid=");
+    FormatUint32(ibuf, st->st_gid);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_flags) {
+    luaL_addstring(&b, ", flags=");
+    FormatUint32(ibuf, st->st_flags);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_dev) {
+    luaL_addstring(&b, ", dev=");
+    FormatUint64(ibuf, st->st_dev);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_rdev) {
+    luaL_addstring(&b, ", rdev=");
+    FormatUint64(ibuf, st->st_rdev);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_blksize) {
+    luaL_addstring(&b, ", blksize=");
+    FormatInt64(ibuf, st->st_blksize);
+    luaL_addstring(&b, ibuf);
+  }
+  if (st->st_blocks) {
+    luaL_addstring(&b, ", blocks=");
+    FormatInt64(ibuf, st->st_blocks);
+    luaL_addstring(&b, ibuf);
+  }
+  luaL_addstring(&b, "})");
+  luaL_pushresult(&b);
   return 1;
 }
 
@@ -2079,6 +2174,7 @@ static const luaL_Reg kLuaUnixStatMeth[] = {
 
 static const luaL_Reg kLuaUnixStatMeta[] = {
     {"__tostring", LuaUnixStatToString},  //
+    {"__repr", LuaUnixStatToString},      //
     {0},                                  //
 };
 
@@ -2087,6 +2183,190 @@ static void LuaUnixStatObj(lua_State *L) {
   luaL_setfuncs(L, kLuaUnixStatMeta, 0);
   luaL_newlibtable(L, kLuaUnixStatMeth);
   luaL_setfuncs(L, kLuaUnixStatMeth, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// unix.Statfs object
+
+static struct statfs *GetUnixStatfs(lua_State *L) {
+  return luaL_checkudata(L, 1, "unix.Statfs");
+}
+
+// unix.Statfs:type()
+//     └─→ bytes:int
+static int LuaUnixStatfsType(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_type);
+}
+
+// unix.Statfs:bsize()
+//     └─→ bsize:int
+static int LuaUnixStatfsBsize(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_bsize);
+}
+
+// unix.Statfs:blocks()
+//     └─→ blocks:int
+static int LuaUnixStatfsBlocks(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_blocks);
+}
+
+// unix.Statfs:bfree()
+//     └─→ bfreedeint
+static int LuaUnixStatfsBfree(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_bfree);
+}
+
+// unix.Statfs:bavail()
+//     └─→ count:int
+static int LuaUnixStatfsBavail(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_bavail);
+}
+
+// unix.Statfs:files()
+//     └─→ files:int
+static int LuaUnixStatfsFiles(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_files);
+}
+
+// unix.Statfs:ffree()
+//     └─→ ffree:int
+static int LuaUnixStatfsFfree(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_ffree);
+}
+
+// unix.Statfs:fsid()
+//     └─→ fsid:int
+static int LuaUnixStatfsFsid(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_fsid);
+}
+
+// unix.Statfs:namelen()
+//     └─→ count:int
+static int LuaUnixStatfsNamelen(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_namelen);
+}
+
+// unix.Statfs:frsize()
+//     └─→ bytes:int
+static int LuaUnixStatfsFrsize(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_frsize);
+}
+
+// unix.Statfs:flags()
+//     └─→ bytes:int
+static int LuaUnixStatfsFlags(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_flags);
+}
+
+// unix.Statfs:owner()
+//     └─→ bytes:int
+static int LuaUnixStatfsOwner(lua_State *L) {
+  return ReturnInteger(L, GetUnixStatfs(L)->f_owner);
+}
+
+// unix.Statfs:fstypename()
+//     └─→ fstypename:str
+static int LuaUnixStatfsFstypename(lua_State *L) {
+  return ReturnString(L, GetUnixStatfs(L)->f_fstypename);
+}
+
+static int LuaUnixStatfsToString(lua_State *L) {
+  char ibuf[21];
+  luaL_Buffer b;
+  struct statfs *f;
+  f = GetUnixStatfs(L);
+  luaL_buffinit(L, &b);
+  luaL_addstring(&b, "unix.Statfs({type=");
+  FormatInt64(ibuf, f->f_type);
+  luaL_addstring(&b, ibuf);
+  luaL_addstring(&b, ", fstypename=\"");
+  luaL_addstring(&b, f->f_fstypename);
+  luaL_addstring(&b, "\"");
+  if (f->f_bsize) {
+    luaL_addstring(&b, ", bsize=");
+    FormatInt64(ibuf, f->f_bsize);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_blocks) {
+    luaL_addstring(&b, ", blocks=");
+    FormatInt64(ibuf, f->f_blocks);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_bfree) {
+    luaL_addstring(&b, ", bfree=");
+    FormatInt64(ibuf, f->f_bfree);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_bavail) {
+    luaL_addstring(&b, ", bavail=");
+    FormatInt64(ibuf, f->f_bavail);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_files) {
+    luaL_addstring(&b, ", files=");
+    FormatInt64(ibuf, f->f_files);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_ffree) {
+    luaL_addstring(&b, ", ffree=");
+    FormatInt64(ibuf, f->f_ffree);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_fsid) {
+    luaL_addstring(&b, ", fsid=");
+    FormatUint64(ibuf, f->f_fsid);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_namelen) {
+    luaL_addstring(&b, ", namelen=");
+    FormatUint64(ibuf, f->f_namelen);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_flags) {
+    luaL_addstring(&b, ", flags=");
+    FormatHex64(ibuf, f->f_flags, 2);
+    luaL_addstring(&b, ibuf);
+  }
+  if (f->f_owner) {
+    luaL_addstring(&b, ", owner=");
+    FormatUint32(ibuf, f->f_owner);
+    luaL_addstring(&b, ibuf);
+  }
+  luaL_addstring(&b, "})");
+  luaL_pushresult(&b);
+  return 1;
+}
+
+static const luaL_Reg kLuaUnixStatfsMeth[] = {
+    {"type", LuaUnixStatfsType},              //
+    {"bsize", LuaUnixStatfsBsize},            //
+    {"blocks", LuaUnixStatfsBlocks},          //
+    {"bfree", LuaUnixStatfsBfree},            //
+    {"bavail", LuaUnixStatfsBavail},          //
+    {"files", LuaUnixStatfsFiles},            //
+    {"ffree", LuaUnixStatfsFfree},            //
+    {"fsid", LuaUnixStatfsFsid},              //
+    {"namelen", LuaUnixStatfsNamelen},        //
+    {"frsize", LuaUnixStatfsFrsize},          //
+    {"flags", LuaUnixStatfsFlags},            //
+    {"owner", LuaUnixStatfsOwner},            //
+    {"fstypename", LuaUnixStatfsFstypename},  //
+    {0},                                      //
+};
+
+static const luaL_Reg kLuaUnixStatfsMeta[] = {
+    {"__tostring", LuaUnixStatfsToString},  //
+    {"__repr", LuaUnixStatfsToString},      //
+    {0},                                    //
+};
+
+static void LuaUnixStatfsObj(lua_State *L) {
+  luaL_newmetatable(L, "unix.Statfs");
+  luaL_setfuncs(L, kLuaUnixStatfsMeta, 0);
+  luaL_newlibtable(L, kLuaUnixStatfsMeth);
+  luaL_setfuncs(L, kLuaUnixStatfsMeth, 0);
   lua_setfield(L, -2, "__index");
   lua_pop(L, 1);
 }
@@ -2626,6 +2906,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"fdopendir", LuaUnixFdopendir},      // read directory entry list
     {"fork", LuaUnixFork},                // make child process via mitosis
     {"fstat", LuaUnixFstat},              // get file info from fd
+    {"fstatfs", LuaUnixFstatfs},          // get filesystem info from fd
     {"fsync", LuaUnixFsync},              // flush open file
     {"ftruncate", LuaUnixFtruncate},      // shrink or extend file medium
     {"futimens", LuaUnixFutimens},        // change access/modified time
@@ -2693,6 +2974,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"socket", LuaUnixSocket},            // create network communication fd
     {"socketpair", LuaUnixSocketpair},    // create bidirectional pipe
     {"stat", LuaUnixStat},                // get file info from path
+    {"statfs", LuaUnixStatfs},            // get filesystem info from path
     {"strsignal", LuaUnixStrsignal},      // turn signal into string
     {"symlink", LuaUnixSymlink},          // create symbolic link
     {"sync", LuaUnixSync},                // flushes files and disks
@@ -2724,6 +3006,7 @@ int LuaUnix(lua_State *L) {
   luaL_newlib(L, kLuaUnix);
   LuaUnixSigsetObj(L);
   LuaUnixRusageObj(L);
+  LuaUnixStatfsObj(L);
   LuaUnixErrnoObj(L);
   LuaUnixStatObj(L);
   LuaUnixDirObj(L);
@@ -2895,6 +3178,20 @@ int LuaUnix(lua_State *L) {
   LuaSetIntField(L, "PLEDGE_PENALTY_KILL_PROCESS", PLEDGE_PENALTY_KILL_PROCESS);
   LuaSetIntField(L, "PLEDGE_PENALTY_RETURN_EPERM", PLEDGE_PENALTY_RETURN_EPERM);
   LuaSetIntField(L, "PLEDGE_STDERR_LOGGING", PLEDGE_STDERR_LOGGING);
+
+  // statfs::f_flags
+  LuaSetIntField(L, "ST_RDONLY", ST_RDONLY);
+  LuaSetIntField(L, "ST_NOSUID", ST_NOSUID);
+  LuaSetIntField(L, "ST_NODEV", ST_NODEV);
+  LuaSetIntField(L, "ST_NOEXEC", ST_NOEXEC);
+  LuaSetIntField(L, "ST_SYNCHRONOUS", ST_SYNCHRONOUS);
+  LuaSetIntField(L, "ST_NOATIME", ST_NOATIME);
+  LuaSetIntField(L, "ST_RELATIME", ST_RELATIME);
+  LuaSetIntField(L, "ST_APPEND", ST_APPEND);
+  LuaSetIntField(L, "ST_IMMUTABLE", ST_IMMUTABLE);
+  LuaSetIntField(L, "ST_MANDLOCK", ST_MANDLOCK);
+  LuaSetIntField(L, "ST_NODIRATIME", ST_NODIRATIME);
+  LuaSetIntField(L, "ST_WRITE", ST_WRITE);
 
   return 1;
 }
