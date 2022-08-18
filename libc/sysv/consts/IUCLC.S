@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon termios,IUCLC,0b0000001000000000,0,0,0b0001000000000000,0,0b0000001000000000

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,SEGSIZE,0x0200,0x0200,0x0200,0x0200,0x0200,0

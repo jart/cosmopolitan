@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_msyscall,0xfff,0xfff,0xfff,0x0025,0xfff,0xfff

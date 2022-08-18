@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_setfsuid,0x007a,0xfff,0xfff,0xfff,0xfff,0xfff

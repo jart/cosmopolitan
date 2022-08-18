@@ -28,5 +28,5 @@ hook_calloc:
 	.hidden	dlcalloc
 	ezlea	dlcalloc,ax
 	stosq
-	yoink	free
+	.yoink	free
 	.init.end 202,_init_calloc

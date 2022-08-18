@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_open,0x0002,0x2000005,0x0005,0x0005,0x005,0xfff

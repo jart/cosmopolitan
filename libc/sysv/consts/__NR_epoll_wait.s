@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_epoll_wait,0x00e8,0xfff,0xfff,0xfff,0xfff,0xfff

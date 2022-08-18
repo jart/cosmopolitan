@@ -21,7 +21,7 @@
 /* clang-format off */
 
 .macro	.syscon	group:req name:req linux:req xnu:req freebsd:req openbsd:req netbsd:req windows:req
-	yoink	_init_systemfive
+	.yoink	_init_systemfive
 
 	.section .piro.bss.sort.syscon.2.\group\().\name,"aw",@nobits
 \name:	.quad	0

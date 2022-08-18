@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_readv,0x0013,0x2000078,0x0078,0x0078,0x078,0xfff

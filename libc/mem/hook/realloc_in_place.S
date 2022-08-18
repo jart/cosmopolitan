@@ -28,5 +28,5 @@ hook_realloc_in_place:
 	.hidden	dlrealloc_in_place
 	ezlea	dlrealloc_in_place,ax
 	stosq
-	yoink	free
+	.yoink	free
 	.init.end 202,_init_realloc_in_place

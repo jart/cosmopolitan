@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_get_mempolicy,0x00ef,0xfff,0xfff,0xfff,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,Q_QUOTAOFF,0x800003,0x0200,0x0200,0x0200,0x0200,0

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon mount,MNT_UPDATE,0x00000020,0x00010000,0x00010000,0x00010000,0x00010000,0x00000020

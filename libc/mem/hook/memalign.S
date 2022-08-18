@@ -28,5 +28,5 @@ hook_memalign:
 	.hidden	dlmemalign
 	ezlea	dlmemalign,ax
 	stosq
-	yoink	free
+	.yoink	free
 	.init.end 202,_init_memalign

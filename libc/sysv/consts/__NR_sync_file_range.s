@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_sync_file_range,0x0115,0xfff,0xfff,0xfff,0xfff,0xfff

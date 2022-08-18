@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon select,FD_SETSIZE,0x0400,0x0400,0x0400,0x0400,0x0400,0x0400

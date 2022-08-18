@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_CREAT,0x00000040,0x00000200,0x00000200,0x00000200,0x00000200,0x00000040

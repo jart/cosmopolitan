@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_set_tid_address,0x00da,0xfff,0xfff,0xfff,0xfff,0xfff

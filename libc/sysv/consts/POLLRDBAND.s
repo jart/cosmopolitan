@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon poll,POLLRDBAND,0x80,0x80,0x80,0x80,0x80,0x0200

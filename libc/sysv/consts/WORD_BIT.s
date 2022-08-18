@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon misc,WORD_BIT,0x20,0x20,0x20,0x20,0x20,0

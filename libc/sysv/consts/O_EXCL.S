@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon open,O_EXCL,0x00000080,0x00000800,0x00000800,0x00000800,0x00000800,0x00000080

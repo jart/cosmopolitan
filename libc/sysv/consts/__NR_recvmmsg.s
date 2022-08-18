@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_recvmmsg,0x012b,0xfff,0xfff,0xfff,0x1db,0xfff

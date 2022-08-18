@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon sio,SIOCSIFDSTADDR,0x8918,0x8020690e,0x8020690e,0x8020690e,0x8020690e,0

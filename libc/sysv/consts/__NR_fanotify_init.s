@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_fanotify_init,0x012c,0xfff,0xfff,0xfff,0xfff,0xfff

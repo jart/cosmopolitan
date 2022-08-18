@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_pwritev,0x0128,0xfff,0x0122,0x010c,0x122,0xfff

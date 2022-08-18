@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sched_setaffinity,0x00cb,0xfff,0xfff,0xfff,0xfff,0xfff

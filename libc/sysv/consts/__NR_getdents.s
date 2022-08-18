@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_getdents,0x00d9,0xfff,0x0110,0x0063,0x186,0xfff

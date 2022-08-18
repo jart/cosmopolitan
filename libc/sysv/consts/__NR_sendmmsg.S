@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sendmmsg,0x0133,0xfff,0xfff,0xfff,0x1dc,0xfff

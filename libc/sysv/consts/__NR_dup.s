@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_dup,0x0020,0x2000029,0x0029,0x0029,0x029,0xfff

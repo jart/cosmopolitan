@@ -10,10 +10,8 @@ TOOL_BUILD_EMUCRT =				\
 o/$(MODE)/tool/build/emucrt/emucrt.o:		\
 		tool/build/emucrt/emucrt.S	\
 		libc/macros.internal.h		\
-		libc/macros-cpp.internal.inc	\
 		libc/intrin/asancodes.h		\
-		ape/relocations.h		\
-		libc/macros.internal.inc
+		ape/relocations.h
 
 .PHONY: o/$(MODE)/tool/build/emucrt
 o/$(MODE)/tool/build/emucrt:			\

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_sched_setparam,0x008e,0xfff,0x0147,0xfff,0xfff,0xfff

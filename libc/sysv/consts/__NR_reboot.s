@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_reboot,0x00a9,0x2000037,0x0037,0x0037,0x0d0,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pause,0x0022,0xfff,0xfff,0xfff,0xfff,0xfff

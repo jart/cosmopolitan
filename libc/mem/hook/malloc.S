@@ -28,5 +28,5 @@ hook_malloc:
 	.hidden	dlmalloc
 	ezlea	dlmalloc,ax
 	stosq
-	yoink	free
+	.yoink	free
 	.init.end 202,_init_malloc

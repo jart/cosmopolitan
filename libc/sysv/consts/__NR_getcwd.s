@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_getcwd,0x004f,0xfff,0x0146,0x0130,0x128,0xfff

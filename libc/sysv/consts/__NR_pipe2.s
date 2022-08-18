@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_pipe2,0x0125,0xfff,0x021e,0x0065,0x1c5,0xfff

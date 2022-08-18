@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_mknod,0x0085,0x200000e,0x000e,0x000e,0x1c2,0xfff

@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_fadvise,0x00dd,0xfff,0x0213,0xfff,0xfff,0xfff

@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon ioctl,FIONREAD,0x541b,0x4004667f,0x4004667f,0x4004667f,0x4004667f,0x4004667f

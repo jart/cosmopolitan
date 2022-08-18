@@ -28,5 +28,5 @@ hook_malloc_trim:
 	.hidden	dlmalloc_trim
 	ezlea	dlmalloc_trim,ax
 	stosq
-	yoink	free
+	.yoink	free
 	.init.end 202,_init_malloc_trim

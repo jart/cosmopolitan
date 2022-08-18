@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_set_robust_list,0x0111,0xfff,0xfff,0xfff,0x0a7,0xfff

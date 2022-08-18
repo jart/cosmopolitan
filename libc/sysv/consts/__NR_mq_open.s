@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_mq_open,0x00f0,0xfff,0xfff,0xfff,0x101,0xfff

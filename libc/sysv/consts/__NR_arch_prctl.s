@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_arch_prctl,0x009e,0x3000003,0x00a5,0x149,0x13d,0xfff

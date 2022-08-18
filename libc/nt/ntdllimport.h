@@ -24,7 +24,7 @@
 /* clang-format off */
 
 .macro	.ntimp	fn:req
-	yoink	_init_ntdll
+	.yoink	_init_ntdll
 	.initbss 202,_init_ntdll.\fn
 __imp_\fn:
 	.quad	0

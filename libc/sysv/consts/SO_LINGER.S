@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon so,SO_LINGER,13,0x80,0x80,0x80,0x80,0x80

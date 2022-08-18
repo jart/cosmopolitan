@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_fchdir,0x0051,0x200000d,0x000d,0x000d,0x00d,0xfff

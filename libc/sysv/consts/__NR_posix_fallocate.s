@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_posix_fallocate,0xfff,0xfff,0x0212,0xfff,0x1df,0xfff

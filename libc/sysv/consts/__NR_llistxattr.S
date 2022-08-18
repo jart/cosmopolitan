@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_llistxattr,0x00c3,0xfff,0xfff,0xfff,0x17e,0xfff

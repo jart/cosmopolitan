@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon poll,POLLRDBAND,0x80,0x80,0x80,0x80,0x80,0x0200

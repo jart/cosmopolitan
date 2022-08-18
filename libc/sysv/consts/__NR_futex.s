@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_futex,0x00ca,0xfff,0xfff,0x0053,0x0a6,0xfff

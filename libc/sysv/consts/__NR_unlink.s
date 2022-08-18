@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_unlink,0x0057,0x200000a,0x000a,0x000a,0x00a,0xfff

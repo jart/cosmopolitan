@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_keyctl,0x00fa,0xfff,0xfff,0xfff,0xfff,0xfff

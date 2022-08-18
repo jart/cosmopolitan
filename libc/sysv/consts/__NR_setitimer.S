@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_setitimer,0x0026,0x2000053,0x0053,0x0045,0x1a9,0xfff

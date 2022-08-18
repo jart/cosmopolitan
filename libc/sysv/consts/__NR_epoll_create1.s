@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_epoll_create1,0x0123,0xfff,0xfff,0xfff,0xfff,0xfff

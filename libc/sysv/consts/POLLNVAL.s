@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon poll,POLLNVAL,0x20,0x20,0x20,0x20,0x20,0x0004

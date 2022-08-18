@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_mkfifoat,0xfff,0xfff,0x01f1,0x013f,0x1cb,0xfff

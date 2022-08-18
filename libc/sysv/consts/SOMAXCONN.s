@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon misc,SOMAXCONN,0x80,0x80,0x80,0x80,0x80,0x7fffffff

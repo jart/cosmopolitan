@@ -27,7 +27,7 @@ hook_free:
 	.init.start 202,_init_free
 	ezlea	dlfree,ax
 	stosq
-	yoink	realloc
+	.yoink	realloc
 	.init.end 202,_init_free
 
 	.hidden	dlfree

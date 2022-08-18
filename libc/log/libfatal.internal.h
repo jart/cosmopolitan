@@ -4,7 +4,6 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -103,14 +102,6 @@ forceinline int __sysv_getpid(void) {
   ax = syscall(__NR_getpid);
 #endif
   return ax;
-}
-
-forceinline int __getpid(void) {
-  if (!IsWindows()) {
-    return __sysv_getpid();
-  } else {
-    return GetCurrentProcessId();
-  }
 }
 
 forceinline ssize_t __write(const void *p, size_t n) {

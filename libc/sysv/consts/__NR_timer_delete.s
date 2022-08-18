@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_timer_delete,0x00e2,0xfff,0xfff,0xfff,0x0ec,0xfff

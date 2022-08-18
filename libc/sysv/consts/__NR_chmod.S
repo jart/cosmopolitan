@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_chmod,0x005a,0x200000f,0x000f,0x000f,0x00f,0xfff

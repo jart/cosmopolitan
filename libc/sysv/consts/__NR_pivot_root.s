@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_pivot_root,0x009b,0xfff,0xfff,0xfff,0xfff,0xfff

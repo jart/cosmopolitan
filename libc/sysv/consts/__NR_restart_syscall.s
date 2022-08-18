@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_restart_syscall,0x00db,0xfff,0xfff,0xfff,0xfff,0xfff

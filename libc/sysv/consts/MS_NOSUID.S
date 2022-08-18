@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon mount,MS_NOSUID,0x00000002,0x00000008,0x00000008,0x00000008,0x00000008,0x00000001

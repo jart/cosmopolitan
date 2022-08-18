@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_copy_file_range,0x0146,0xfff,0xfff,0xfff,0xfff,0xfff

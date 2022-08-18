@@ -142,8 +142,6 @@ o/libc/nt/ntdllimport.inc:				\
 		ape/relocations.h			\
 		libc/nt/ntdllimport.h			\
 		libc/macros.internal.h			\
-		libc/macros.internal.inc		\
-		libc/macros-cpp.internal.inc		\
 		libc/intrin/asancodes.h
 
 #───────────────────────────────────────────────────────────────────────────────
@@ -337,8 +335,6 @@ o/libc/nt/codegen.inc:					\
 		ape/macros.internal.h			\
 		ape/relocations.h			\
 		libc/macros.internal.h			\
-		libc/macros.internal.inc		\
-		libc/macros-cpp.internal.inc		\
 		libc/intrin/asancodes.h
 
 .PHONY:		o/$(MODE)/libc/nt

@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_pkey_alloc,0x014a,0xfff,0xfff,0xfff,0xfff,0xfff

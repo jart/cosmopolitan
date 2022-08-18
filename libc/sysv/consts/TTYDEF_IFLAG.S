@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,TTYDEF_IFLAG,0x2d22,0x2b02,0x2b02,0x2b02,0x2b02,0

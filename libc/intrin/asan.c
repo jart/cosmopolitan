@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/reverse.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -27,12 +24,13 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
-#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -40,6 +38,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/hook/hook.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/mem/reverse.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/stackframe.h"
 #include "libc/nt/enum/version.h"

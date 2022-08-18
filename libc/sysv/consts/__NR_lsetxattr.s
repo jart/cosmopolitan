@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_lsetxattr,0x00bd,0xfff,0xfff,0xfff,0x178,0xfff

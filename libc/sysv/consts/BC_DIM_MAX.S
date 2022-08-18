@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,BC_DIM_MAX,0x0800,0x0800,0x0800,0xffff,0xffff,0

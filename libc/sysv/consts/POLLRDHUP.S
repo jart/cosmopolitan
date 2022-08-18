@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon poll,POLLRDHUP,0x2000,0x10,0x10,0x10,0x10,2

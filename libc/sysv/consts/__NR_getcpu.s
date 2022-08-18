@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_getcpu,0x0135,0xfff,0xfff,0xfff,0xfff,0xfff

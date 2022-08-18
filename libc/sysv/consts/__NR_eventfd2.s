@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_eventfd2,0x0122,0xfff,0xfff,0xfff,0xfff,0xfff

@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_mount,0x00a5,0x20000a7,0x0015,0x0015,0x19a,0xfff

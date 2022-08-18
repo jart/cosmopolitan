@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_semget,0x0040,0x20000ff,0x00dd,0x00dd,0x0dd,0xfff

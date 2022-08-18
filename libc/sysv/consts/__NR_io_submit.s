@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_io_submit,0x00d1,0xfff,0xfff,0xfff,0xfff,0xfff

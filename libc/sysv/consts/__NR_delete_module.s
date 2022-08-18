@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_delete_module,0x00b0,0xfff,0xfff,0xfff,0xfff,0xfff

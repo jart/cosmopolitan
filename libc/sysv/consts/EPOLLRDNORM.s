@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon epoll,EPOLLRDNORM,0x40,0x40,0x40,0x40,0x40,0x40

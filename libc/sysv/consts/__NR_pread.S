@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_pread,0x0011,0x2000099,0x01db,0x00ad,0x0ad,0xfff

@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon nr,__NR_sched_getparam,0x008f,0xfff,0x0148,0xfff,0xfff,0xfff

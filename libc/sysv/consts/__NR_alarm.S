@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_alarm,0x0025,0xfff,0xfff,0xfff,0xfff,0xfff

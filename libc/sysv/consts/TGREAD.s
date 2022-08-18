@@ -1,0 +1,2 @@
+.include "o/libc/sysv/consts/syscon.internal.inc"
+.syscon misc,TGREAD,0x20,0x20,0x20,0x20,0x20,0

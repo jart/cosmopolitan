@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_getgid,0x0068,0x200002f,0x002f,0x002f,0x02f,0xfff

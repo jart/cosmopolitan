@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon nr,__NR_mremap,0x0019,0xfff,0xfff,0xfff,0x19b,0xfff

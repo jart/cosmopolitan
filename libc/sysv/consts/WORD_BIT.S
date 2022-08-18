@@ -1,2 +1,0 @@
-#include "libc/sysv/consts/syscon.internal.h"
-.syscon misc,WORD_BIT,0x20,0x20,0x20,0x20,0x20,0
