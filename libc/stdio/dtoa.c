@@ -335,10 +335,10 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
     case 'G':
     case 'g':
       if (!(flags & FLAGS_PRECISION)) prec = 6;
-      if (prec < 0) prec = 0;
+      if (prec < 1) prec = 1;
       if (!longdouble) {
         x = va_arg(va, double);
-        s = s0 = dtoa(x, prec ? 2 : 0, prec, &decpt, &fpb.sign, &se);
+        s = s0 = dtoa(x, 2, prec, &decpt, &fpb.sign, &se);
         if (decpt == 9999) {
           if (s && s[0] == 'N') {
             fpb.kind = STRTOG_NaN;
@@ -379,7 +379,7 @@ int __fmt_dtoa(int (*out)(const char *, void *, size_t), void *arg, int d,
       if (prec < 0) prec = 0;
       if (!longdouble) {
         x = va_arg(va, double);
-        s = s0 = dtoa(x, prec ? 2 : 0, prec + 1, &decpt, &fpb.sign, &se);
+        s = s0 = dtoa(x, 2, prec + 1, &decpt, &fpb.sign, &se);
         if (decpt == 9999) {
           if (s && s[0] == 'N') {
             fpb.kind = STRTOG_NaN;
