@@ -16,36 +16,77 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/sysinfo.internal.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/vmmeter-meta.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+#define CTL_KERN      1
+#define CTL_HW        6
+#define KERN_BOOTTIME 21
+#define HW_PHYSMEM    5
+
+static int64_t GetUptime(void) {
+  if (IsNetbsd()) return 0;  // TODO(jart): Why?
+  struct timeval x;
+  size_t n = sizeof(x);
+  int mib[] = {CTL_KERN, KERN_BOOTTIME};
+  if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  return _timespec_real().tv_sec - x.tv_sec;
+}
+
+static int64_t GetPhysmem(void) {
+  uint64_t x;
+  size_t n = sizeof(x);
+  int mib[] = {CTL_HW, HW_PHYSMEM};
+  if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  return x;
+}
+
+static int sys_sysinfo_bsd(struct sysinfo *info) {
+  info->uptime = GetUptime();
+  info->totalram = GetPhysmem();
+  return 0;
+}
+
 /**
  * Returns amount of system ram, cores, etc.
+ *
+ * Only the `totalram` field is supported on all platforms right now.
+ * Support is best on Linux. Fields will be set to zero when they're not
+ * known.
+ *
  * @return 0 on success or -1 w/ errno
- * @error ENOSYS, EFAULT
+ * @error EFAULT
  */
 int sysinfo(struct sysinfo *info) {
   int rc;
-  if (IsAsan()) {
-    if (info && !__asan_is_valid(info, sizeof(*info))) {
-      return efault();
+  struct sysinfo x = {0};
+  if (IsAsan() && info && !__asan_is_valid(info, sizeof(*info))) {
+    rc = efault();
+  } else if (!IsWindows()) {
+    if (IsLinux()) {
+      rc = sys_sysinfo(&x);
+    } else {
+      rc = sys_sysinfo_bsd(&x);
     }
-  }
-  bzero(info, sizeof(*info));
-  if (!IsWindows()) {
-    rc = sys_sysinfo(info);
   } else {
-    rc = sys_sysinfo_nt(info);
+    rc = sys_sysinfo_nt(&x);
   }
   if (rc != -1) {
-    info->procs = MAX(1, info->procs);
-    info->mem_unit = MAX(1, info->mem_unit);
-    info->totalram = MAX((8 * 1024 * 1024) / info->mem_unit, info->totalram);
+    x.procs = MAX(1, x.procs);
+    x.mem_unit = MAX(1, x.mem_unit);
+    x.totalram = MAX((8 * 1024 * 1024) / x.mem_unit, x.totalram);
+    memcpy(info, &x, sizeof(x));
   }
+  STRACE("sysinfo(%p) → %d% m", info, rc);
   return rc;
 }

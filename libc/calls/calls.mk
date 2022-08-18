@@ -185,6 +185,7 @@ o//libc/calls/getcwd-xnu.greg.o: private		\
 #   division is expensive if not optimized
 o/$(MODE)/libc/calls/_timespec_tomillis.o		\
 o/$(MODE)/libc/calls/_timespec_tomicros.o		\
+o/$(MODE)/libc/calls/_timespec_totimeval.o		\
 o/$(MODE)/libc/calls/_timespec_frommillis.o		\
 o/$(MODE)/libc/calls/_timespec_frommicros.o: private	\
 		OVERRIDE_CFLAGS +=			\
