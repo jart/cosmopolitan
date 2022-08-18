@@ -169,7 +169,7 @@ scall	mknodat			0x1cc14022fffff103	globl # FreeBSD 12+
 scall	sys_mkfifo		0x0840840842084fff	globl hidden
 scall	mkfifoat		0x1cb13f1f1fffffff	globl
 scall	sys_statfs		0x09d03f22b2159089	globl hidden
-scall	sys_fstatfs		0x09f04022c215a08a	globl hidden
+scall	sys_fstatfs		0x09e04022c215a08a	globl hidden
 scall	sys_getpriority		0x064064064206408c	globl hidden
 scall	sys_setpriority		0x060060060206008d	globl hidden # modern nice()
 scall	mlock			0x0cb0cb0cb20cb095	globl

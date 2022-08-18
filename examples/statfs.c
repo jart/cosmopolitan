@@ -8,8 +8,10 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/calls/struct/statfs.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"
+#include "libc/nt/enum/statfs.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/st.h"
 
@@ -44,41 +46,106 @@ dontinline void ShowIt(const char *path) {
          "maximum length of filenames");
 
   printf("f_flags   = %#x", sf.f_flags);
-  if (ST_RDONLY && (sf.f_flags & ST_RDONLY)) {
-    printf(" ST_RDONLY");
-  }
-  if (ST_NOSUID && (sf.f_flags & ST_NOSUID)) {
-    printf(" ST_NOSUID");
-  }
-  if (ST_NODEV && (sf.f_flags & ST_NODEV)) {
-    printf(" ST_NODEV");
-  }
-  if (ST_NOEXEC && (sf.f_flags & ST_NOEXEC)) {
-    printf(" ST_NOEXEC");
-  }
-  if (ST_SYNCHRONOUS && (sf.f_flags & ST_SYNCHRONOUS)) {
-    printf(" ST_SYNCHRONOUS");
-  }
-  if (ST_MANDLOCK && (sf.f_flags & ST_MANDLOCK)) {
-    printf(" ST_MANDLOCK");
-  }
-  if (ST_WRITE && (sf.f_flags & ST_WRITE)) {
-    printf(" ST_WRITE");
-  }
-  if (ST_APPEND && (sf.f_flags & ST_APPEND)) {
-    printf(" ST_APPEND");
-  }
-  if (ST_IMMUTABLE && (sf.f_flags & ST_IMMUTABLE)) {
-    printf(" ST_IMMUTABLE");
-  }
-  if (ST_NOATIME && (sf.f_flags & ST_NOATIME)) {
-    printf(" ST_NOATIME");
-  }
-  if (ST_NODIRATIME && (sf.f_flags & ST_NODIRATIME)) {
-    printf(" ST_NODIRATIME");
-  }
-  if (ST_RELATIME && (sf.f_flags & ST_RELATIME)) {
-    printf(" ST_RELATIME");
+
+  if (!IsWindows()) {
+    if (ST_RDONLY && (sf.f_flags & ST_RDONLY)) {
+      printf(" ST_RDONLY");
+    }
+    if (ST_NOSUID && (sf.f_flags & ST_NOSUID)) {
+      printf(" ST_NOSUID");
+    }
+    if (ST_NODEV && (sf.f_flags & ST_NODEV)) {
+      printf(" ST_NODEV");
+    }
+    if (ST_NOEXEC && (sf.f_flags & ST_NOEXEC)) {
+      printf(" ST_NOEXEC");
+    }
+    if (ST_SYNCHRONOUS && (sf.f_flags & ST_SYNCHRONOUS)) {
+      printf(" ST_SYNCHRONOUS");
+    }
+    if (ST_MANDLOCK && (sf.f_flags & ST_MANDLOCK)) {
+      printf(" ST_MANDLOCK");
+    }
+    if (ST_WRITE && (sf.f_flags & ST_WRITE)) {
+      printf(" ST_WRITE");
+    }
+    if (ST_APPEND && (sf.f_flags & ST_APPEND)) {
+      printf(" ST_APPEND");
+    }
+    if (ST_IMMUTABLE && (sf.f_flags & ST_IMMUTABLE)) {
+      printf(" ST_IMMUTABLE");
+    }
+    if (ST_NOATIME && (sf.f_flags & ST_NOATIME)) {
+      printf(" ST_NOATIME");
+    }
+    if (ST_NODIRATIME && (sf.f_flags & ST_NODIRATIME)) {
+      printf(" ST_NODIRATIME");
+    }
+    if (ST_RELATIME && (sf.f_flags & ST_RELATIME)) {
+      printf(" ST_RELATIME");
+    }
+
+  } else {
+    if (sf.f_flags & kNtFileCasePreservedNames) {
+      printf(" CasePreservedNames");
+    }
+    if (sf.f_flags & kNtFileCaseSensitiveSearch) {
+      printf(" CaseSensitiveSearch");
+    }
+    if (sf.f_flags & kNtFileFileCompression) {
+      printf(" FileCompression");
+    }
+    if (sf.f_flags & kNtFileNamedStreams) {
+      printf(" NamedStreams");
+    }
+    if (sf.f_flags & kNtFilePersistentAcls) {
+      printf(" PersistentAcls");
+    }
+    if (sf.f_flags & kNtFileReadOnlyVolume) {
+      printf(" ReadOnlyVolume");
+    }
+    if (sf.f_flags & kNtFileSequentialWriteOnce) {
+      printf(" SequentialWriteOnce");
+    }
+    if (sf.f_flags & kNtFileSupportsEncryption) {
+      printf(" SupportsEncryption");
+    }
+    if (sf.f_flags & kNtFileSupportsExtendedAttributes) {
+      printf(" SupportsExtendedAttributes");
+    }
+    if (sf.f_flags & kNtFileSupportsHardLinks) {
+      printf(" SupportsHardLinks");
+    }
+    if (sf.f_flags & kNtFileSupportsObjectIds) {
+      printf(" SupportsObjectIds");
+    }
+    if (sf.f_flags & kNtFileSupportsOpenByFileId) {
+      printf(" SupportsOpenByFileId");
+    }
+    if (sf.f_flags & kNtFileSupportsReparsePoints) {
+      printf(" SupportsReparsePoints");
+    }
+    if (sf.f_flags & kNtFileSupportsSparseFiles) {
+      printf(" SupportsSparseFiles");
+    }
+    if (sf.f_flags & kNtFileSupportsTransactions) {
+      printf(" SupportsTransactions");
+    }
+    if (sf.f_flags & kNtFileSupportsUsnJournal) {
+      printf(" SupportsUsnJournal");
+    }
+    if (sf.f_flags & kNtFileUnicodeOnDisk) {
+      printf(" UnicodeOnDisk");
+    }
+    if (sf.f_flags & kNtFileVolumeIsCompressed) {
+      printf(" VolumeIsCompressed");
+    }
+    if (sf.f_flags & kNtFileVolumeQuotas) {
+      printf(" VolumeQuotas");
+    }
+    if (sf.f_flags & kNtFileSupportsBlockRefcounting) {
+      printf(" SupportsBlockRefcounting");
+    }
   }
   printf("\n");
 

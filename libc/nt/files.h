@@ -219,6 +219,15 @@ bool32 GetVolumePathName(const char16_t *lpszFileName,
                          char16_t *lpszVolumePathName,
                          uint32_t cchBufferLength);
 
+bool32 GetVolumeInformationByHandle(int64_t hFile,
+                                    char16_t *opt_out_lpVolumeNameBuffer,
+                                    uint32_t nVolumeNameSize,
+                                    uint32_t *opt_out_lpVolumeSerialNumber,
+                                    uint32_t *opt_out_lpMaximumComponentLength,
+                                    uint32_t *opt_out_lpFileSystemFlags,
+                                    char16_t *opt_out_lpFileSystemNameBuffer,
+                                    uint32_t nFileSystemNameSize);
+
 #if ShouldUseMsabiAttribute()
 #include "libc/nt/thunk/files.inc"
 #endif /* ShouldUseMsabiAttribute() */

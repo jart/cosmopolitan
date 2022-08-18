@@ -297,7 +297,6 @@ DIR *opendir(const char *name) {
   } else {
     res = opendir_nt(name);
   }
-  STRACE("opendir(%#s) → %p% m", name, res);
   return res;
 }
 
@@ -317,7 +316,6 @@ DIR *fdopendir(int fd) {
   } else {
     dir = fdopendir_nt(fd);
   }
-  STRACE("fdopendir(%d) → %p% m", fd, dir);
   return dir;
 }
 
@@ -443,7 +441,6 @@ int closedir(DIR *dir) {
   } else {
     rc = 0;
   }
-  STRACE("closedir(%p) → %d% m", dir, rc);
   return rc;
 }
 
@@ -454,7 +451,6 @@ long telldir(DIR *dir) {
   long rc;
   _lockdir(dir);
   rc = dir->tell;
-  STRACE("telldir(%p) → %ld", dir, rc);
   _unlockdir(dir);
   return rc;
 }
@@ -472,7 +468,6 @@ int dirfd(DIR *dir) {
   } else {
     rc = dir->fd;
   }
-  STRACE("dirfd(%p) → %d% m", dir, rc);
   _unlockdir(dir);
   return rc;
 }
@@ -499,7 +494,6 @@ void rewinddir(DIR *dir) {
       dir->isdone = true;
     }
   }
-  STRACE("rewinddir(%p)", dir);
   _unlockdir(dir);
 }
 
@@ -521,6 +515,5 @@ void seekdir(DIR *dir, long off) {
     dir->buf_pos = dir->buf_end = 0;
   }
   dir->tell = i;
-  STRACE("seekdir(%p, %ld) → %ld", dir, off, i);
   _unlockdir(dir);
 }

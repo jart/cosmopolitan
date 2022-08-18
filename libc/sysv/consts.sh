@@ -1155,7 +1155,7 @@ syscon	ms	MS_INVALIDATE				2			2			2			4			2			0
 #	statfs() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	statfs	ST_RDONLY				1			1			1			1			1			0			# MNT_RDONLY on BSD
+syscon	statfs	ST_RDONLY				1			1			1			1			1			0x00080000		# MNT_RDONLY on BSD, kNtFileReadOnlyVolume on NT
 syscon	statfs	ST_NOSUID				2			8			8			8			8			0			# MNT_NOSUID on BSD
 syscon	statfs	ST_NODEV				4			16			0			16			16			0			# MNT_NODEV on BSD
 syscon	statfs	ST_NOEXEC				8			4			4			4			4			0			# MNT_NOEXEC on BSD

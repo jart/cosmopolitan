@@ -580,7 +580,7 @@ imp	'GetVDMCurrentDirectories'				GetVDMCurrentDirectories				kernel32	798
 imp	'GetVersion'						GetVersion						kernel32	0
 imp	'GetVersionEx'						GetVersionExW						kernel32	0	1
 imp	'GetVolumeInformation'					GetVolumeInformationW					kernel32	0
-imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	0
+imp	'GetVolumeInformationByHandle'				GetVolumeInformationByHandleW				kernel32	0	8
 imp	'GetVolumeNameForVolumeMountPoint'			GetVolumeNameForVolumeMountPointW			kernel32	0
 imp	'GetVolumePathName'					GetVolumePathNameW					kernel32	0	3
 imp	'GetVolumePathNamesForVolumeName'			GetVolumePathNamesForVolumeNameW			kernel32	0

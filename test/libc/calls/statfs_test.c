@@ -17,30 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/statfs-meta.internal.h"
-#include "libc/calls/struct/statfs.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/struct/statfs.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns information about filesystem.
- */
-int fstatfs(int fd, struct statfs *sf) {
-  int rc;
-  union statfs_meta m;
-  CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
-    if ((rc = sys_fstatfs(fd, &m)) != -1) {
-      statfs2cosmo(sf, &m);
-    }
-  } else if (__isfdopen(fd)) {
-    rc = sys_fstatfs_nt(g_fds.p[fd].handle, sf);
-  } else {
-    rc = ebadf();
-  }
-  STRACE("fstatfs(%d, [%s]) → %d% m", fd, DescribeStatfs(rc, sf));
-  return rc;
+char testlib_enable_tmp_setup_teardown;
+struct statfs f;
+
+TEST(statfs, testFile) {
+  EXPECT_SYS(0, 0, touch("foo", 0644));
+  EXPECT_SYS(0, 0, statfs("foo", &f));
+}
+
+TEST(statfs, testDirectory) {
+  EXPECT_SYS(0, 0, statfs(".", &f));
+}
+
+TEST(statfs, testFdDirectory) {
+  EXPECT_SYS(0, 3, open(".", O_RDONLY | O_DIRECTORY));
+  EXPECT_SYS(0, 0, fstatfs(3, &f));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(statfs, testFdFile) {
+  EXPECT_SYS(0, 0, touch("foo", 0644));
+  EXPECT_SYS(0, 3, open("foo", O_RDONLY));
+  EXPECT_SYS(0, 0, fstatfs(3, &f));
+  EXPECT_SYS(0, 0, close(3));
 }

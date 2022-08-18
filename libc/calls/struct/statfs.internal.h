@@ -8,6 +8,8 @@ COSMOPOLITAN_C_START_
 
 int sys_statfs(const char *, union statfs_meta *);
 int sys_fstatfs(int, union statfs_meta *);
+int sys_fstatfs_nt(int64_t, struct statfs *);
+int sys_statfs_nt(const char *, struct statfs *);
 
 const char *DescribeStatfs(char[300], int, const struct statfs *);
 #define DescribeStatfs(rc, sf) DescribeStatfs(alloca(300), rc, sf)

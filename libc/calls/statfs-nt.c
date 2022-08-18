@@ -16,31 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/statfs-meta.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/nt/createfile.h"
+#include "libc/nt/enum/accessmask.h"
+#include "libc/nt/enum/creationdisposition.h"
+#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filesharemode.h"
+#include "libc/nt/runtime.h"
 
-/**
- * Returns information about filesystem.
- */
-int fstatfs(int fd, struct statfs *sf) {
+textwindows int sys_statfs_nt(const char *path, struct statfs *sf) {
   int rc;
-  union statfs_meta m;
-  CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
-    if ((rc = sys_fstatfs(fd, &m)) != -1) {
-      statfs2cosmo(sf, &m);
-    }
-  } else if (__isfdopen(fd)) {
-    rc = sys_fstatfs_nt(g_fds.p[fd].handle, sf);
-  } else {
-    rc = ebadf();
-  }
-  STRACE("fstatfs(%d, [%s]) → %d% m", fd, DescribeStatfs(rc, sf));
+  int64_t h;
+  char16_t path16[PATH_MAX];
+  if (__mkntpath(path, path16) == -1) return -1;
+  h = __fix_enotdir(
+      CreateFile(path16, kNtFileGenericRead,
+                 kNtFileShareRead | kNtFileShareWrite | kNtFileShareDelete,
+                 &kNtIsInheritable, kNtOpenExisting,
+                 kNtFileAttributeNormal | kNtFileFlagBackupSemantics, 0),
+      path16);
+  if (h == -1) return -1;
+  rc = sys_fstatfs_nt(h, sf);
+  CloseHandle(h);
   return rc;
 }
