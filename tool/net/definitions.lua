@@ -538,15 +538,21 @@ SPECIAL PATHS
 
 -- HOOKS
 
+--- Hooks HTTP message handling.
+---
 --- If this function is defined in the global scope by your `/.init.lua`
 --- then redbean will call it at the earliest possible moment to
 --- hand over control for all messages (with the exception of `OPTIONS--*`
 --- See functions like `Route` which asks redbean to do its default
 --- thing from the handler.
+---
 function OnHttpRequest() end
 
+--- Hooks client connection creation.
+---
 --- If this function is defined it'll be called from the main process
 --- each time redbean accepts a new client connection.
+---
 ---@param ip uint32
 ---@param port uint16
 ---@param serverip uint32
@@ -554,14 +560,19 @@ function OnHttpRequest() end
 ---@return boolean # If it returns `true`, redbean will close the connection without calling `fork`.
 function OnClientConnection(ip, port, serverip, serverport) end
 
+--- Hook latency logging.
+---
 --- If this function is defined it'll be called from the main process
 --- each time redbean completes handling of a request, but before the
 --- response is sent. The handler received the time (in µs) since the
 --- request handling and connection handling started.
+---
 ---@param reqtimeus integer
 ---@param contimeus integer
 function OnLogLatency(reqtimeus, contimeus) end
 
+--- Hooks process creation.
+---
 --- If this function is defined it'll be called from the main process
 --- each time redbean forks a connection handler worker process. The
 --- ip/port of the remote client is provided, along with the ip/port
@@ -569,6 +580,7 @@ function OnLogLatency(reqtimeus, contimeus) end
 --- be used to create a server activity dashboard, in which case the
 --- data provider handler should set `SetHeader('Connection','Close')`.
 --- This won't be called in uniprocess mode.
+---
 ---@param pid integer
 ---@param ip uint32
 ---@param port uint16
@@ -640,34 +652,50 @@ function OnWorkerStop() end
 -- FUNCTIONS
 
 --- Appends data to HTTP response payload buffer.
+---
 --- This is buffered independently of headers.
+---
 ---@param data string
 function Write(data) end
 
 --- Starts an HTTP response, specifying the parameters on its first line.
+---
+--- This method will reset the response and is therefore mutually
+--- exclusive with `ServeAsset` and other `Serve*` functions. If a
+--- status setting function isn't called, then the default behavior is
+--- to send `200 OK`.
+---
 ---@param code integer
 ---@param reason? string is optional since redbean can fill in the appropriate text for well-known magic numbers, e.g. `200`, `404`, etc.
---- This method will reset the response and is therefore mutually exclusive with
---- `ServeAsset` and other `Serve*` functions. If a status setting function isn't
---- called, then the default behavior is to send `200 OK`.
 function SetStatus(code, reason) end
 
 --- Appends HTTP header to response header buffer.
+---
+--- Leading and trailing whitespace is trimmed automatically. Overlong
+--- characters are canonicalized. C0 and C1 control codes are forbidden,
+--- with the exception of tab. This function automatically calls
+--- `SetStatus(200, "OK")` if a status has not yet been set. As
+--- `SetStatus` and `Serve*` functions reset the response, `SetHeader`
+--- needs to be called after `SetStatus` and `Serve*` functions are
+--- called. The header buffer is independent of the payload buffer.
+--- Neither is written to the wire until the Lua Server Page has
+--- finished executing. This function disallows the setting of certain
+--- headers such as and Content-Range which are abstracted by the
+--- transport layer. In such cases, consider calling `ServeAsset`.
+---
 ---@param name string is case-insensitive and restricted to non-space ASCII
 ---@param value string is a UTF-8 string that must be encodable as ISO-8859-1.
----Leading and trailing whitespace is trimmed automatically. Overlong characters
----are canonicalized. C0 and C1 control codes are forbidden, with the exception of
----tab. This function automatically calls `SetStatus(200, "OK")` if a status has
----not yet been set. As `SetStatus` and `Serve*` functions reset the response,
----`SetHeader` needs to be called after `SetStatus` and `Serve*` functions are
----called. The header buffer is independent of the payload buffer. Neither is
----written to the wire until the Lua Server Page has finished executing. This
----function disallows the setting of certain headers such as and Content-Range
----which are abstracted by the transport layer. In such cases, consider calling
----`ServeAsset`.
 function SetHeader(name, value) end
 
---- Appends Set-Cookie HTTP header to the response header buffer. Several Set-Cookie headers can be added to the same response. `__Host-` and `__Secure-` prefixes are supported and may set or overwrite some of the options (for example, specifying `__Host-` prefix sets the Secure option to `true`, sets the path to `"/"`, and removes the Domain option). The following options can be used (their lowercase equivalents are supported as well):
+--- Appends Set-Cookie HTTP header to the response header buffer.
+---
+--- Several Set-Cookie headers can be added to the same response.
+--- `__Host-` and `__Secure-` prefixes are supported and may set or
+--- overwrite some of the options (for example, specifying `__Host-`
+--- prefix sets the Secure option to `true`, sets the path to `"/"`, and
+--- removes the Domain option). The following options can be used (their
+--- lowercase equivalents are supported as well):
+---
 --- - `Expires` sets the maximum lifetime of the cookie as an HTTP-date timestamp. Can be specified as a Date in the RFC1123 (string) format or as a UNIX timestamp (number of seconds).
 --- - `MaxAge` sets number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. If both Expires and MaxAge are set, MaxAge has precedence.
 --- - `Domain` sets the host to which the cookie will be sent.
@@ -675,6 +703,7 @@ function SetHeader(name, value) end
 --- - `Secure` (boolean) requests the cookie to be only send to the server when a request is made with the https: scheme.
 --- - `HttpOnly` (boolean) forbids JavaScript from accessing the cookie.
 --- - `SameSite` (Strict, Lax, or None) controls whether a cookie is sent with cross-origin requests, providing some protection against cross-site request forgery attacks.
+---
 ---@param name string
 ---@param value string
 ---@param options { Expires: string|integer?, MaxAge: integer?, Domain: string?, Path: string?, Secure: boolean?, HttpOnly: boolean?, SameSite: "Strict"|"Lax"|"None"? }?
@@ -701,13 +730,19 @@ function LaunchBrowser(path) end
 ---@nodiscard
 function CategorizeIp(ip) end
 
---- Turns ASCII into binary, in a permissive way that ignores characters outside the base64 alphabet, such as whitespace. See `decodebase64.c`.
+--- Decodes binary data encoded as base64.
+---
+--- This turns ASCII into binary, in a permissive way that ignores
+--- characters outside the base64 alphabet, such as whitespace. See
+--- `decodebase64.c`.
+---
 ---@param ascii string
 ---@return string binary
 ---@nodiscard
 function DecodeBase64(ascii) end
 
 --- Turns ISO-8859-1 string into UTF-8.
+---
 ---@param iso_8859_1 string
 ---@return string UTF8
 ---@nodiscard
@@ -1612,7 +1647,7 @@ function ProgramSslPresharedKey(key, identity) end
 --- May be used to disable the verification of certificates
 --- for remote hosts when using the Fetch() API. This function is
 --- not available in unsecure mode.
----@param enabled string
+---@param enabled boolean
 function ProgramSslFetchVerify(enabled) end
 
 --- Enables the verification of certificates supplied by the HTTP clients that
@@ -1620,7 +1655,7 @@ function ProgramSslFetchVerify(enabled) end
 --- option alone does not preclude the possibility of unsecured HTTP clients, which
 --- can be disabled using ProgramSslRequired(). This function can only be called
 --- from `.init.lua`. This function is not available in unsecure mode.
----@param enabled string
+---@param enabled boolean
 function ProgramSslClientVerify(enabled) end
 
 --- Enables the blocking of HTTP so that all inbound clients and must use the TLS
@@ -2425,10 +2460,10 @@ function Database:isopen() end
 --- value returned reverts to the last value inserted before the trigger fired.
 function Database:last_insert_rowid() end
 
---- Creates an iterator that returns the successive rows selected by the SQL
---- statement given in string `sql`. Each call to the iterator returns a table in
---- which the named fields correspond to the columns in the database.
---- Here is an example:
+--- Creates an iterator that returns the successive rows selected by the
+--- SQL statement given in string `sql`. Each call to the iterator
+--- returns a table in which the named fields correspond to the columns
+--- in the database. Here is an example:
 ---
 ---     db:exec[=[
 ---         CREATE TABLE numbers(num1,num2);
@@ -2500,17 +2535,19 @@ function Database:rows(sql) end
 --- is completed by calling either `stmt:reset()` or `stmt:finalize()`.
 function Database:total_changes() end
 
---- This function installs an update_hook Data Change Notification Callback handler.
---- See: db:commit_hook and db:rollback_hook
+--- This function installs an update_hook Data Change Notification
+--- Callback handler. See: db:commit_hook and db:rollback_hook
 ---
----@param func function a Lua function that is invoked by SQLite3 whenever a row is updated, inserted or deleted.
---- This callback receives five arguments: the first is the `udata` argument used
---- when the callback was installed; the second is an integer indicating the
---- operation that caused the callback to be invoked (one of `lsqlite3.UPDATE`,
---- `lsqlite3.INSERT`, or `lsqlite3.DELETE`). The third and fourth arguments are
---- the database and table name containing the affected row. The final callback
---- parameter is the rowid of the row. In the case of an update, this is the rowid
---- after the update takes place.
+---@param func function a Lua function that is invoked by SQLite3
+---     whenever a row is updated, inserted or deleted. This callback
+---     receives five arguments: the first is the `udata` argument used
+---     when the callback was installed; the second is an integer
+---     indicating the operation that caused the callback to be invoked
+---     (one of `lsqlite3.UPDATE`, `lsqlite3.INSERT`, or
+---     `lsqlite3.DELETE`). The third and fourth arguments are the
+---     database and table name containing the affected row. The final
+---     callback parameter is the rowid of the row. In the case of an
+---     update, this is the rowid after the update takes place.
 function Database:update_hook(func, udata) end
 
 --- Creates an iterator that returns the successive rows selected by the SQL
@@ -2542,24 +2579,29 @@ function Database:urows(sql) end
 --- object should be used for all further calls in connection with that statement.
 Statement = nil
 
---- Binds `value` to statement parameter `n`. If the type of `value` is string it is
---- bound as text. If the type of value is number, it is bound as an integer or double
---- depending on its subtype using `lua_isinteger`. If `value` is a boolean then
---- it is bound as `0` for `false` or `1` for `true`. If `value` is `nil` or missing,
---- any previous binding is removed.
+--- Binds `value` to statement parameter `n`. If the type of `value` is
+--- string it is bound as text. If the type of value is number, it is
+--- bound as an integer or double depending on its subtype using
+--- `lua_isinteger`. If `value` is a boolean then it is bound as `0` for
+--- `false` or `1` for `true`. If `value` is `nil` or missing, any
+--- previous binding is removed.
+---
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
 ---@param value string|number|boolean|nil
 function Statement:bind(n, value) end
 
---- Binds string `blob` (which can be a binary string) as a blob to statement parameter `n`.
+--- Binds string `blob` (which can be a binary string) as a blob to
+--- statement parameter `n`.
+---
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
 function Statement:bind_blob(n, blob) end
 
---- Binds the values in `nametable` to statement parameters. If the statement
---- parameters are named (i.e., of the form `":AAA"` or `"$AAA"`) then this
---- function looks for appropriately named fields in nametable; if the statement
---- parameters are not named, it looks for numerical fields 1 to the number of
---- statement parameters.
+--- Binds the values in `nametable` to statement parameters. If the
+--- statement parameters are named (i.e., of the form `":AAA"` or
+--- `"$AAA"`) then this function looks for appropriately named fields in
+--- nametable; if the statement parameters are not named, it looks for
+--- numerical fields 1 to the number of statement parameters.
+---
 ---@return integer `lsqlite3.OK` on success or else a numerical error code,
 ---@param nametable table
 ---@return integer
@@ -2853,9 +2895,11 @@ function re.search(regex, text, flags) end
 --- - `re.NEWLINE`
 --- - `re.NOSUB`
 ---
---- This has an O(2^𝑛) cost. Consider compiling regular expressions once from your `/.init.lua` file.
+--- This has an O(2^𝑛) cost. Consider compiling regular expressions once
+--- from your `/.init.lua` file.
 ---
---- If regex is an untrusted user value, then `unix.setrlimit` should be used to impose cpu and memory quotas for security.
+--- If regex is an untrusted user value, then `unix.setrlimit` should be
+--- used to impose cpu and memory quotas for security.
 ---
 --- This uses POSIX extended syntax by default.
 ---@return re.Regex
@@ -2863,12 +2907,12 @@ function re.search(regex, text, flags) end
 ---@overload fun(regex: string, flags?: integer): nil, error: re.Errno
 function re.compile(regex, flags) end
 
----The path module may be used to manipulate unix paths.
+--- The path module may be used to manipulate unix paths.
 ---
----Note that we use unix paths on Windows. For example, if you have a path like
----`C:\foo\bar` then it should be `/c/foo/bar` with redbean. It should also be
---- noted the unix module is more permissive when using Windows paths, where
---- translation to win32 is very light.
+--- Note that we use unix paths on Windows. For example, if you have a
+--- path like `C:\foo\bar` then it should be `/c/foo/bar` with redbean.
+--- It should also be noted the unix module is more permissive when
+--- using Windows paths, where translation to win32 is very light.
 path = {}
 
 --- Strips final component of path, e.g.
@@ -3291,11 +3335,12 @@ unix = {
     E2BIG = nil,
     --- @type integer Permission denied.
     ---
-    --- Raised by `access`, `bind`, `chdir`, `chmod`, `chown`, `chroot`, `clock_getres`,
-    --- `connect`, `execve`, `fcntl`, `getpriority`, `inotify_add_watch`, `link`, `mkdir`,
-    --- `mknod`, `mmap`, `mprotect`, `msgctl`, `open`, `prctl`, `ptrace`, `readlink`,
-    --- `rename`, `rmdir`, `semget`, `send`, `setpgid`, `socket`, `stat`, `symlink`,
-    --- `truncate`, `unlink`, `uselib`, `utime`, `utimensat`.
+    --- Raised by `access`, `bind`, `chdir`, `chmod`, `chown`, `chroot`,
+    --- `clock_getres`, `connect`, `execve`, `fcntl`, `getpriority`,
+    --- `link`, `mkdir`, `mknod`, `mmap`, `mprotect`, `msgctl`, `open`,
+    --- `prctl`, `ptrace`, `readlink`, `rename`, `rmdir`, `semget`,
+    --- `send`, `setpgid`, `socket`, `stat`, `symlink`, `truncate`,
+    --- `unlink`, `uselib`, `utime`, `utimensat`.
     EACCES = nil,
     --- @type integer Address already in use. Raised by `bind`, `connect`, `listen`.
     EADDRINUSE = nil,
@@ -3308,21 +3353,23 @@ unix = {
     --- processes, too much memory locked, read or write with O_NONBLOCK
     --- needs polling, etc.).
     ---
-    --- Raised by accept, connect, fcntl, fork, getrandom, mincore, mlock,
-    --- mmap, mremap, poll, read, select, send, setresuid, setreuid, setuid,
-    --- sigwaitinfo, splice, tee, timer_create, timerfd_create, tkill,
-    --- write,
+    --- Raised by `accept`, `connect`, `fcntl`, `fork`, `getrandom`,
+    --- `mincore`, `mlock`, `mmap`, `mremap`, `poll`, `read`, `select`,
+    --- `send`, `setresuid`, `setreuid`, `setuid`, `sigwaitinfo`,
+    --- `splice`, `tee`, `timer_create`, `timerfd_create`, `tkill`,
+    --- `write`,
     EAGAIN = nil,
     --- @type integer Connection already in progress. Raised by `connect`, `send`.
     EALREADY = nil,
     --- @type integer Bad file descriptor; cf. EBADFD.
     ---
-    --- Raised by `accept`, `access`, `bind`, `chdir`, `chmod`, `chown`, `close`, `connect`,
-    --- `copy_file_range`, `dup`, `fcntl`, `flock`, `fsync`, `futimesat`, `opendir`,
-    --- `getpeername`, `getsockname`, `getsockopt`, `inotify_add_watch`,
-    --- `inotify_rm_watch`, `ioctl`, `link`, `listen`, `llseek`, `lseek`, `mkdir`, `mknod`,
-    --- `mmap`, `open`, `prctl`, `read`, `readahead`, `readlink`, `recv`, `rename`, `select`,
-    --- `send`, `shutdown`, `splice`, `stat`, `symlink`, `sync`, `sync_file_range`,
+    --- Raised by `accept`, `access`, `bind`, `chdir`, `chmod`, `chown`,
+    --- `close`, `connect`, `copy_file_range`, `dup`, `fcntl`, `flock`,
+    --- `fsync`, `futimesat`, `opendir`, `getpeername`, `getsockname`,
+    --- `getsockopt`, `ioctl`, `link`, `listen`, `lseek`, `mkdir`,
+    --- `mknod`, `mmap`, `open`, `prctl`, `read`, `readahead`,
+    --- `readlink`, `recv`, `rename`, `select`, `send`, `shutdown`,
+    --- `splice`, `stat`, `symlink`, `sync`, `sync_file_range`,
     --- `timerfd_create`, `truncate`, `unlink`, `utimensat`, `write`.
     EBADF = nil,
     --- @type integer
@@ -3364,7 +3411,7 @@ unix = {
     EDQUOT = nil,
     --- @type integer File exists.
     ---
-    --- Raised by `inotify_add_watch`, `link`, `mkdir`, `mknod`, `mmap`, `open`, `rename`,
+    --- Raised by `link`, `mkdir`, `mknod`, `mmap`, `open`, `rename`,
     --- `rmdir`, `symlink`.
     EEXIST = nil,
     --- @type integer
@@ -3414,7 +3461,7 @@ unix = {
     ELOOP = nil,
     --- @type integer Too many open files.
     ---
-    --- Raised by `accept`, `dup`, `execve`, `fanotify_init`, `fcntl`, `inotify_init`,
+    --- Raised by `accept`, `dup`, `execve`, `fanotify_init`, `fcntl`,
     --- `open`, `pipe`, `socket`, `socketpair`, `timerfd_create`.
     EMFILE = nil,
     --- @type integer Too many links;
@@ -3428,9 +3475,10 @@ unix = {
     --- wrappers like realpath. On Windows NT it's observed by all system
     --- calls that accept a pathname.
     ---
-    --- Raised by `access`, `bind`, `chdir`, `chmod`, `chown`, `chroot`, `execve`,
-    --- `gethostname`, `inotify_add_watch`, `link`, `mkdir`, `mknod`, `open`, `readlink`,
-    --- `rename`, `rmdir`, `stat`, `symlink`, `truncate`, `unlink`, `utimensat`.
+    --- Raised by `access`, `bind`, `chdir`, `chmod`, `chown`, `chroot`,
+    --- `execve`, `gethostname`, `link`, `mkdir`, `mknod`, `open`,
+    --- `readlink`, `rename`, `rmdir`, `stat`, `symlink`, `truncate`,
+    --- `unlink`, `utimensat`.
     ENAMETOOLONG = nil,
     --- @type integer Network is down. Raised by `accept`.
     ENETDOWN = nil,
@@ -3440,8 +3488,9 @@ unix = {
     ENETUNREACH = nil,
     --- @type integer Too many open files in system.
     ---
-    --- Raised by accept, execve, inotify_init, mmap, open, pipe, socket,
-    --- socketpair, swapon, timerfd_create, uselib, userfaultfd.
+    --- Raised by `accept`, `execve`, `mmap`, `open`, `pipe`, `socket`,
+    --- `socketpair`, `swapon`, `timerfd_create`, `uselib`,
+    --- `userfaultfd`.
     ENFILE = nil,
     --- @type integer No buffer space available;
     ---
@@ -3458,8 +3507,8 @@ unix = {
     --- @type integer No such file or directory.
     ---
     --- Raised by `access`, `bind`, `chdir`, `chmod`, `chown`, `chroot`,
-    --- `clock_getres`, `execve`, `opendir`, `inotify_add_watch`, `link`, `mkdir`,
-    --- `mknod`, `open`, `readlink`, `rename`, `rmdir`, `stat`, `swapon`,
+    --- `clock_getres`, `execve`, `opendir`, `link`, `mkdir`, `mknod`,
+    --- `open`, `readlink`, `rename`, `rmdir`, `stat`, `swapon`,
     --- `symlink`, `truncate`, `unlink`, `utime`, `utimensat`.
     ENOENT = nil,
     --- @type integer Exec format error. Raised by `execve`, `uselib`.
@@ -3476,13 +3525,13 @@ unix = {
     ENOPROTOOPT = nil,
     --- @type integer No space left on device.
     ---
-    --- Raised by copy_file_range, fsync, inotify_add_watch, link,
-    --- mkdir, mknod, open, rename, symlink, sync_file_range,
-    --- write.
+    --- Raised by `copy_file_range`, `fsync`, `link`, `mkdir`, `mknod`,
+    --- `open`, `rename`, `symlink`, `sync_file_range`, `write`.
     ENOSPC = nil,
-    --- @type integer System call not available on this platform. On Windows this
-    --- is raised by `chroot`, `setuid`, `setgid`, `getsid`, `setsid`, and others
-    --- we're doing our best to document.
+    --- @type integer System call not available on this platform. On
+    ---     Windows this is raised by `chroot`, `setuid`, `setgid`,
+    ---     `getsid`, `setsid`, and others we're doing our best to
+    ---     document.
     ENOSYS = nil,
     --- @type integer Block device required. Raised by `umount`.
     ENOTBLK = nil,
@@ -3490,14 +3539,15 @@ unix = {
     ---
     --- Raised by `getpeername`, `recv`, `send`, `shutdown`.
     ENOTCONN = nil,
-    --- @type integer Not a directory. This means that a directory component in a supplied
-    --- path *existed* but wasn't a directory. For example, if you try to
-    --- `open("foo/bar")` and `foo` is a regular file, then `ENOTDIR` will
-    --- be returned.
+    --- @type integer Not a directory. This means that a directory
+    ---     component in a supplied path *existed* but wasn't a
+    ---     directory. For example, if you try to `open("foo/bar")` and
+    ---     `foo` is a regular file, then `ENOTDIR` will be returned.
     ---
-    --- Raised by `open`, `access`, `chdir`, `chroot`, `execve`, `link`, `mkdir`, `mknod`,
-    --- `opendir`, `readlink`, `rename`, `rmdir`, `stat`, `symlink`, `truncate`, `unlink`,
-    --- `utimensat`, `bind`, `chmod`, `chown`, `fcntl`, `futimesat`, `inotify_add_watch`.
+    --- Raised by `open`, `access`, `chdir`, `chroot`, `execve`, `link`,
+    --- `mkdir`, `mknod`, `opendir`, `readlink`, `rename`, `rmdir`,
+    --- `stat`, `symlink`, `truncate`, `unlink`, `utimensat`, `bind`,
+    --- `chmod`, `chown`, `fcntl`, `futimesat`.
     ENOTDIR = nil,
     --- @type integer Directory not empty. Raised by `rmdir`.
     ENOTEMPTY = nil,
@@ -3505,8 +3555,9 @@ unix = {
     ENOTRECOVERABLE = nil,
     --- @type integer Not a socket.
     ---
-    --- Raised by `accept`, `bind`, `connect`, `getpeername`, `getsockname`,
-    --- `getsockopt`, `listen`, `recv`, `send`, `shutdown`.
+    --- Raised by `accept`, `bind`, `connect`, `getpeername`,
+    --- `getsockname`, `getsockopt`, `listen`, `recv`, `send`,
+    --- `shutdown`.
     ENOTSOCK = nil,
     --- @type integer Operation not supported.
     ---
@@ -3529,21 +3580,26 @@ unix = {
     EOWNERDEAD = nil,
     --- @type integer Operation not permitted.
     ---
-    --- Raised by `accept`, `chmod`, `chown`, `chroot`, `copy_file_range`, `execve`,
-    --- `fallocate`, `fanotify_init`, `fcntl`, `futex`, `get_robust_list`,
-    --- `getdomainname`, `getgroups`, `gethostname`, `getpriority`, `getrlimit`,
-    --- `getsid`, `gettimeofday`, `idle`, `init_module`, `io_submit`, `ioctl_console`,
-    --- `ioctl_ficlonerange`, `ioctl_fideduperange`, `ioperm`, `iopl`, `ioprio_set`,
-    --- `keyctl`, `kill`, `link`, `lookup_dcookie`, `madvise`, `mbind`, `membarrier`,
-    --- `migrate_pages`, `mkdir`, `mknod`, `mlock`, `mmap`, `mount`, `move_pages`, `msgctl`,
-    --- `nice`, `open`, `open_by_handle_at`, `pciconfig_read`, `perf_event_open`,
-    --- `pidfd_getfd`, `pidfd_send_signal`, `pivot_root`, `prctl`, `process_vm_readv`,
-    --- `ptrace`, `quotactl`, `reboot`, `rename`, `request_key`, `rmdir`,
-    --- `rt_sigqueueinfo`, `sched_setaffinity`, `sched_setattr`, `sched_setparam`,
-    --- `sched_setscheduler`, `seteuid`, `setfsgid`, `setfsuid`, `setgid`, `setns`,
-    --- `setpgid`, `setresuid`, `setreuid`, `setsid`, `setuid`, `setup`, `setxattr`,
-    --- `sigaltstack`, `spu_create`, `stime`, `swapon`, `symlink`, `syslog`, `truncate`,
-    --- `unlink`, `utime`, `utimensat`, `write`.
+    --- Raised by `accept`, `chmod`, `chown`, `chroot`,
+    --- `copy_file_range`, `execve`, `fallocate`, `fanotify_init`,
+    --- `fcntl`, `futex`, `get_robust_list`, `getdomainname`,
+    --- `getgroups`, `gethostname`, `getpriority`, `getrlimit`,
+    --- `getsid`, `gettimeofday`, `idle`, `init_module`, `io_submit`,
+    --- `ioctl_console`, `ioctl_ficlonerange`, `ioctl_fideduperange`,
+    --- `ioperm`, `iopl`, `ioprio_set`, `keyctl`, `kill`, `link`,
+    --- `lookup_dcookie`, `madvise`, `mbind`, `membarrier`,
+    --- `migrate_pages`, `mkdir`, `mknod`, `mlock`, `mmap`, `mount`,
+    --- `move_pages`, `msgctl`, `nice`, `open`, `open_by_handle_at`,
+    --- `pciconfig_read`, `perf_event_open`, `pidfd_getfd`,
+    --- `pidfd_send_signal`, `pivot_root`, `prctl`, `process_vm_readv`,
+    --- `ptrace`, `quotactl`, `reboot`, `rename`, `request_key`,
+    --- `rmdir`, `rt_sigqueueinfo`, `sched_setaffinity`,
+    --- `sched_setattr`, `sched_setparam`, `sched_setscheduler`,
+    --- `seteuid`, `setfsgid`, `setfsuid`, `setgid`, `setns`, `setpgid`,
+    --- `setresuid`, `setreuid`, `setsid`, `setuid`, `setup`,
+    --- `setxattr`, `sigaltstack`, `spu_create`, `stime`, `swapon`,
+    --- `symlink`, `syslog`, `truncate`, `unlink`, `utime`, `utimensat`,
+    --- `write`.
     EPERM = nil,
     --- @type integer Protocol family not supported.
     EPFNOSUPPORT = nil,
@@ -4086,14 +4142,14 @@ unix = {
 ---
 ---  There are three regular combinations for the above flags:
 ---
----  - `O_RDONLY`: Opens existing file for reading. If it doesn't
----    exist then nil is returned and errno will be `ENOENT` (or in
----    some other cases `ENOTDIR`).
+---  - `O_RDONLY`: Opens existing file for reading. If it doesn't exist
+---    then nil is returned and errno will be `ENOENT` (or in some other
+---    cases `ENOTDIR`).
 ---
----  - `O_WRONLY|O_CREAT|O_TRUNC`: Creates file. If it already
----    exists, then the existing copy is destroyed and the opened
----    file will start off with a length of zero. This is the
----    behavior of the traditional creat() system call.
+---  - `O_WRONLY|O_CREAT|O_TRUNC`: Creates file. If it already exists,
+---    then the existing copy is destroyed and the opened file will
+---    start off with a length of zero. This is the behavior of the
+---    traditional creat() system call.
 ---
 ---  - `O_WRONLY|O_CREAT|O_EXCL`: Create file only if doesn't exist
 ---    already. If it does exist then `nil` is returned along with
@@ -4318,19 +4374,31 @@ function unix.execve(prog, args, env) end
 
 --- Duplicates file descriptor.
 ---
---- `newfd` defaults to the lowest number available file descriptor.
---- If the new number is specified and it's already open, then it'll
---- be silently closed before the duplication happens.
+--- `newfd` may be specified to choose a specific number for the new
+--- file descriptor. If it's already open, then the preexisting one will
+--- be silently closed. `EINVAL` is returned if `newfd` equals `oldfd`.
 ---
 --- `flags` can have `O_CLOEXEC` which means the returned file
---- descriptors will be automatically closed upon `execve()`.
+--- descriptors will be automatically closed upon execve().
+---
+--- `lowest` defaults to zero and defines the lowest numbered file
+--- descriptor that's acceptable to use. If `newfd` is specified then
+--- `lowest` is ignored. For example, if you wanted to duplicate
+--- standard input, then:
+---
+---     stdin2 = assert(unix.dup(0, nil, unix.O_CLOEXEC, 3))
+---
+--- Will ensure that, in the rare event standard output or standard
+--- error are closed, you won't accidentally duplicate standard input to
+--- those numbers.
 ---
 ---@param oldfd integer
 ---@param newfd integer?
 ---@param flags integer?
+---@param lowest integer?
 ---@return integer newfd
----@overload fun(oldfd: integer, newfd?: integer, flags?: integer): nil, error: unix.Errno
-function unix.dup(oldfd, newfd, flags) end
+---@overload fun(oldfd: integer, newfd?: integer, flags?: integer, lowest?: integer): nil, error: unix.Errno
+function unix.dup(oldfd, newfd, flags, lowest) end
 
 --- Creates fifo which enables communication between processes.
 ---
@@ -4775,18 +4843,177 @@ function unix.rmrf(path) end
 
 --- Manipulates file descriptor.
 ---
---- Setting `cmd` to `F_GETFD`, `F_SETFD`, `F_GETFL` or `F_SETFL`
---- lets you query and/or change the status of file descriptors. For
---- example, it's possible using this to change `FD_CLOEXEC`.
+--- `cmd` may be one of:
 ---
---- [work in progress] POSIX advisory locks can be controlled by setting
---- `cmd` to `F_UNLCK`, `F_RDLCK`, `F_WRLCK`, `F_SETLK`, or `F_SETLKW`.
+--- - `unix.F_GETFD` Returns file descriptor flags.
+--- - `unix.F_SETFD` Sets file descriptor flags.
+--- - `unix.F_GETFL` Returns file descriptor status flags.
+--- - `unix.F_SETFL` Sets file descriptor status flags.
+--- - `unix.F_SETLK` Acquires lock on file interval.
+--- - `unix.F_SETLKW` Waits for lock on file interval.
+--- - `unix.F_GETLK` Acquires information about lock.
+---
+--- unix.fcntl(fd:int, unix.F_GETFD)
+---     ├─→ flags:int
+---     └─→ nil, unix.Errno
+---
+---   Returns file descriptor flags.
+---
+---   The returned `flags` may include any of:
+---
+---   - `unix.FD_CLOEXEC` if `fd` was opened with `unix.O_CLOEXEC`.
+---
+---   Returns `EBADF` if `fd` isn't open.
+---
+--- unix.fcntl(fd:int, unix.F_SETFD, flags:int)
+---     ├─→ true
+---     └─→ nil, unix.Errno
+---
+---   Sets file descriptor flags.
+---
+---   `flags` may include any of:
+---
+---   - `unix.FD_CLOEXEC` to re-open `fd` with `unix.O_CLOEXEC`.
+---
+---   Returns `EBADF` if `fd` isn't open.
+---
+--- unix.fcntl(fd:int, unix.F_GETFL)
+---     ├─→ flags:int
+---     └─→ nil, unix.Errno
+---
+---   Returns file descriptor status flags.
+---
+---   `flags & unix.O_ACCMODE` includes one of:
+---
+---   - `O_RDONLY`
+---   - `O_WRONLY`
+---   - `O_RDWR`
+---
+---   Examples of values `flags & ~unix.O_ACCMODE` may include:
+---
+---   - `O_NONBLOCK`
+---   - `O_APPEND`
+---   - `O_SYNC`
+---   - `O_ASYNC`
+---   - `O_NOATIME` on Linux
+---   - `O_RANDOM` on Windows
+---   - `O_SEQUENTIAL` on Windows
+---   - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
+---
+---   Examples of values `flags & ~unix.O_ACCMODE` won't include:
+---
+---   - `O_CREAT`
+---   - `O_TRUNC`
+---   - `O_EXCL`
+---   - `O_NOCTTY`
+---
+---   Returns `EBADF` if `fd` isn't open.
+---
+--- unix.fcntl(fd:int, unix.F_SETFL, flags:int)
+---     ├─→ true
+---     └─→ nil, unix.Errno
+---
+---   Changes file descriptor status flags.
+---
+---   Examples of values `flags` may include:
+---
+---   - `O_NONBLOCK`
+---   - `O_APPEND`
+---   - `O_SYNC`
+---   - `O_ASYNC`
+---   - `O_NOATIME` on Linux
+---   - `O_RANDOM` on Windows
+---   - `O_SEQUENTIAL` on Windows
+---   - `O_DIRECT` on Linux/FreeBSD/NetBSD/Windows
+---
+---   These values should be ignored:
+---
+---   - `O_RDONLY`, `O_WRONLY`, `O_RDWR`
+---   - `O_CREAT`, `O_TRUNC`, `O_EXCL`
+---   - `O_NOCTTY`
+---
+---   Returns `EBADF` if `fd` isn't open.
+---
+--- unix.fcntl(fd:int, unix.F_SETLK[, type[, start[, len[, whence]]]])
+--- unix.fcntl(fd:int, unix.F_SETLKW[, type[, start[, len[, whence]]]])
+---     ├─→ true
+---     └─→ nil, unix.Errno
+---
+---   Acquires lock on file interval.
+---
+---   POSIX Advisory Locks allow multiple processes to leave voluntary
+---   hints to each other about which portions of a file they're using.
+---
+---   The command may be:
+---
+---   - `F_SETLK` to acquire lock if possible
+---   - `F_SETLKW` to wait for lock if necessary
+---
+---   `fd` is file descriptor of open() file.
+---
+---   `type` may be one of:
+---
+---   - `F_RDLCK` for read lock (default)
+---   - `F_WRLCK` for read/write lock
+---   - `F_UNLCK` to unlock
+---
+---   `start` is 0-indexed byte offset into file. The default is zero.
+---
+---   `len` is byte length of interval. Zero is the default and it means
+---   until the end of the file.
+---
+---   `whence` may be one of:
+---
+---   - `SEEK_SET` start from beginning (default)
+---   - `SEEK_CUR` start from current position
+---   - `SEEK_END` start from end
+---
+---   Returns `EAGAIN` if lock couldn't be acquired. POSIX says this
+---   theoretically could also be `EACCES` but we haven't seen this
+---   behavior on any of our supported platforms.
+---
+---   Returns `EBADF` if `fd` wasn't open.
+---
+--- unix.fcntl(fd:int, unix.F_GETLK[, type[, start[, len[, whence]]]])
+---     ├─→ unix.F_UNLCK
+---     ├─→ type, start, len, whence, pid
+---     └─→ nil, unix.Errno
+---
+---   Acquires information about POSIX advisory lock on file.
+---
+---   This function accepts the same parameters as fcntl(F_SETLK) and
+---   tells you if the lock acquisition would be successful for a given
+---   range of bytes. If locking would have succeeded, then F_UNLCK is
+---   returned. If the lock would not have succeeded, then information
+---   about a conflicting lock is returned.
+---
+---   Returned `type` may be `F_RDLCK` or `F_WRLCK`.
+---
+---   Returned `pid` is the process id of the current lock owner.
+---
+---   This function is currently not supported on Windows.
+---
+---   Returns `EBADF` if `fd` wasn't open.
 ---
 ---@param fd integer
 ---@param cmd integer
 ---@param ... any
 ---@return any ...
----@overload fun(fd: integer, cmd: integer, ...): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_GETFD: integer): flags: integer
+---@overload fun(fd: integer, unix.F_GETFD: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_SETFD: integer, flags: integer): true
+---@overload fun(fd: integer, unix.F_SETFD: integer, flags: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_GETFL: integer): flags: integer
+---@overload fun(fd: integer, unix.F_GETFL: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_SETFL: integer, flags: integer): true
+---@overload fun(fd: integer, unix.F_SETFL: integer, flags: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_SETLK: integer, type?: integer, start?: integer, len?: integer, whence?: integer): true
+---@overload fun(fd: integer, unix.F_SETLK: integer, type?: integer, start?: integer, len?: integer, whence?: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_SETLKW: integer, type?: integer, start?: integer, len?: integer, whence?: integer): true
+---@overload fun(fd: integer, unix.F_SETLKW: integer, type?: integer, start?: integer, len?: integer, whence?: integer): nil, error: unix.Errno
+---@overload fun(fd: integer, unix.F_GETLK: integer, type?: integer, start?: integer, len?: integer, whence?: integer): unix.F_UNLCK: integer
+---@overload fun(fd: integer, unix.F_GETLK: integer, type?: integer, start?: integer, len?: integer, whence?: integer): type: integer, start: integer, len: integer, whence: integer, pid: integer
+---@overload fun(fd: integer, unix.F_GETLK: integer, type?: integer, start?: integer, len?: integer, whence?: integer): nil, error: unix.Errno
 function unix.fcntl(fd, cmd, ...) end
 
 ---Gets session id.
@@ -6114,8 +6341,17 @@ function unix.opendir(path) end
 ---@overload fun(fd: integer): nil, error: unix.Errno
 function unix.fdopendir(fd) end
 
+--- Returns true if file descriptor is a teletypewriter. Otherwise nil
+--- with an Errno object holding one of the following values:
+---
+--- - `ENOTTY` if `fd` is valid but not a teletypewriter
+--- - `EBADF` if `fd` isn't a valid file descriptor.
+--- - `EPERM` if pledge() is used without `tty` in lenient mode
+---
+--- No other error numbers are possible.
+---
 ---@param fd integer
----@return boolean # `true` if file descriptor is a pseudoteletypewriter
+---@return true
 ---@nodiscard
 ---@overload fun(fd: integer): nil, error: unix.Errno
 function unix.isatty(fd) end
