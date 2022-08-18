@@ -6,7 +6,7 @@ HidePath('/usr/share/zoneinfo/')
 HidePath('/usr/share/ssl/')
 
 -- open a browser tab using explorer/open/xdg-open
--- LaunchBrowser('/tool/net/demo/index.html')
+LaunchBrowser('/tool/net/demo/index.html')
 
 -- sql database (see sql.lua)
 db = sqlite3.open_memory()
