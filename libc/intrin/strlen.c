@@ -31,7 +31,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
  */
 noasan size_t strlen(const char *s) {
   size_t n;
-  xmm_t v, z = {0};
+  xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;
   const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
   if (IsAsan()) __asan_verify(s, 1);
