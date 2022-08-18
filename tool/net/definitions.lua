@@ -441,7 +441,12 @@ LUA ENHANCEMENTS
 ---     arg[ 0] = 'script.lua'
 ---     arg[ 1] = 'arg1'
 ---     arg[ 2] = 'arg2'
-argv = arg
+---@type string[]
+arg = nil
+
+---@deprecated Use `arg` instead.
+argv = nil
+
 
 --[[
 ────────────────────────────────────────────────────────────────────────────────
