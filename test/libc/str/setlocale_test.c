@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Gavin Arthur Hayes                                            │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/str/locale.h"
-#include "libc/str/str.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Sets program locale.
- *
- * Cosmopolitan only supports the C or POSIX locale.
- *
- * "You can have any locale you want as long as it's C." -- Henry Ford
- */
-char *setlocale(int category, const char *locale) {
-  if (!locale || (*locale == '\0')) return "C";
-  if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
-    return locale;
-  } else {
-    return NULL;
-  }
+TEST(setlocale, test) {
+  EXPECT_STREQ("C", setlocale(LC_ALL, NULL));
+  EXPECT_STREQ("C", setlocale(LC_ALL, "C"));
+  EXPECT_STREQ("C", setlocale(LC_ALL, NULL));
+  EXPECT_STREQ("POSIX", setlocale(LC_ALL, "POSIX"));
+  EXPECT_STREQ("C", setlocale(LC_ALL, ""));
+  EXPECT_EQ(0, setlocale(LC_ALL, "ja_JP.PCK"));
+  EXPECT_STREQ("C", setlocale(LC_ALL, NULL));
 }
