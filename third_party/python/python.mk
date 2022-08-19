@@ -2104,6 +2104,8 @@ o/$(MODE)/third_party/python/Lib/test/test_signal.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock inet
 o/$(MODE)/third_party/python/Lib/test/test_timeout.py.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+o/$(MODE)/third_party/python/Lib/test/test_ioctl.py.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc tty
 
 o/$(MODE)/third_party/python/Lib/test/test_grammar.py.runs: \
 		o/$(MODE)/third_party/python/pythontester.com
