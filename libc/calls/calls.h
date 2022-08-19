@@ -182,6 +182,7 @@ int symlinkat(const char *, int, const char *);
 int sync_file_range(int, int64_t, int64_t, unsigned);
 int sys_ptrace(int, ...);
 int sysctl(const int *, unsigned, void *, size_t *, void *, size_t);
+int sysctlbyname(const char *, size_t, void *, size_t *, void *, size_t);
 int tgkill(int, int, int);
 int tkill(int, int);
 int tmpfd(void);

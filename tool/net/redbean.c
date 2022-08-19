@@ -7174,8 +7174,32 @@ static int WindowsReplThread(void *arg, int tid) {
   return 0;
 }
 
+static int IsRosetta() {
+  if(!IsXnu()) {
+    return 0;
+  }
+
+  int ret = 0;
+  size_t size = sizeof(ret);
+
+  if(sysctlbyname("sysctl.proc_translated", sizeof("sysctl.proc_translated"), &ret, &size, NULL, 0) == -1) {
+    if(errno == ENOENT)
+      return 0;
+    return -1;
+  }
+
+  return ret;
+}
+
 static void InstallSignalHandler(int sig, void *handler) {
   struct sigaction sa = {.sa_sigaction = handler};
+
+  if(IsRosetta()) {
+    // mitigate Rosetta signal handling strangeness
+    // https://github.com/jart/cosmopolitan/issues/455
+    sa.sa_flags = SA_SIGINFO;
+  }
+
   CHECK_NE(-1, sigaction(sig, &sa, 0));
 }
 
