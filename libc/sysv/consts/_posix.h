@@ -52,8 +52,4 @@
 #define _POSIX2_LINE_MAX           2048
 #define _POSIX2_RE_DUP_MAX         255
 
-#define _XOPEN_IOV_MAX  16
-#define _XOPEN_NAME_MAX 255
-#define _XOPEN_PATH_MAX 1024
-
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS__POSIX_H_ */

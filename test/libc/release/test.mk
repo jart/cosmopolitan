@@ -7,6 +7,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/ape/ape-copy-self.o			\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a
 	mkdir -p $(@D)
@@ -15,6 +16,7 @@ o/$(MODE)/test/libc/release/cosmopolitan.zip:			\
 		o/$(MODE)/ape/ape.lds				\
 		o/$(MODE)/libc/crt/crt.o			\
 		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/ape/ape-copy-self.o			\
 		o/$(MODE)/ape/ape-no-modify-self.o		\
 		o/$(MODE)/cosmopolitan.a
 

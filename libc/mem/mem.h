@@ -23,7 +23,7 @@ void *valloc(size_t) attributeallocsize((1)) vallocesque;
 void *pvalloc(size_t) vallocesque;
 char *strdup(const char *) paramsnonnull() mallocesque;
 char *strndup(const char *, size_t) paramsnonnull() mallocesque;
-void *aligned_alloc(size_t, size_t) attributeallocsize((1))
+void *aligned_alloc(size_t, size_t) attributeallocalign((1))
     attributeallocsize((2)) returnspointerwithnoaliases libcesque dontdiscard;
 int posix_memalign(void **, size_t, size_t);
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
