@@ -183,6 +183,10 @@ static int __sigaction(int sig, const struct sigaction *act,
       if (IsXnu()) {
         ap->sa_restorer = (void *)&__sigenter_xnu;
         ap->sa_handler = (void *)&__sigenter_xnu;
+
+        // mitigate Rosetta signal handling strangeness
+        // https://github.com/jart/cosmopolitan/issues/455
+        ap->sa_flags |= SA_SIGINFO;
       } else if (IsLinux()) {
         if (!(ap->sa_flags & SA_RESTORER)) {
           ap->sa_flags |= SA_RESTORER;
