@@ -11,3 +11,5 @@ __pycache__
 /TAGS
 /bx_enh_dbg.ini
 /tool/emacs/*.elc
+/perf.data
+/perf.data.old

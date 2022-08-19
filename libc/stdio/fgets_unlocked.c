@@ -16,8 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
  * Reads line from stream.
@@ -33,20 +37,33 @@
  *     zero characters have been read
  */
 char *fgets_unlocked(char *s, int size, FILE *f) {
-  int c;
-  char *p;
+  int c, n;
+  char *p, *b, *t;
   p = s;
   if (size > 0) {
     while (--size > 0) {
-      if ((c = fgetc_unlocked(f)) == -1) {
-        if (ferror_unlocked(f) == EINTR) {
-          continue;
-        } else {
-          break;
+      if (!IsTiny() && f->beg < f->end) {
+        b = f->buf + f->beg;
+        n = MIN(f->end - f->beg, size);
+        if ((t = memchr(b, '\n', n))) {
+          n = t + 1 - b;
         }
+        memcpy(p, b, n);
+        f->beg += n;
+        size -= n - 1;
+        p += n;
+        if (t) break;
+      } else {
+        if ((c = fgetc_unlocked(f)) == -1) {
+          if (ferror_unlocked(f) == EINTR) {
+            continue;
+          } else {
+            break;
+          }
+        }
+        *p++ = c & 255;
+        if (c == '\n') break;
       }
-      *p++ = c & 255;
-      if (c == '\n') break;
     }
     *p = '\0';
   }

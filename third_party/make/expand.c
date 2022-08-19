@@ -441,7 +441,8 @@ expand_argument (const char *str, const char *end)
 
   r = allocated_variable_expand (tmp);
 
-  free (alloc);
+  if (alloc)
+    free (alloc);
 
   return r;
 }

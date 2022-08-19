@@ -19,6 +19,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
@@ -30,4 +31,20 @@ TEST(fgets, test) {
   ASSERT_STREQ("am\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("John Keats\n", fgets(buf, sizeof(buf), f));
   fclose(f);
+}
+
+void Benchmark(void) {
+  FILE *f;
+  char *line;
+  char buf[512];
+  f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
+  for (;;) {
+    line = fgets(buf, sizeof(buf), f);
+    if (!line) break;
+  }
+  fclose(f);
+}
+
+BENCH(fgets, bench) {
+  EZBENCH2("fgets", donothing, Benchmark());
 }

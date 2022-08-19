@@ -520,6 +520,7 @@ fatal_error_signal (int sig)
   if (sig == SIGTERM || sig == SIGINT
     || sig == SIGHUP
     || sig == SIGQUIT
+    || sig == SIGPIPE
     )
     {
       struct child *c;
