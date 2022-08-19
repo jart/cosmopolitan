@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
@@ -27,10 +24,13 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -233,12 +233,12 @@ int main(int argc, char *argv[]) {
   for (i = 0;; ++i) {
   TryAgain:
     if (!(arg = getargs_next(&ga))) break;
+    if (endswith(arg, "/")) goto TryAgain;
+    if (endswith(arg, ".pkg")) goto TryAgain;
+    CHECK_NE(-1, stat(arg, st), "%s", arg);
+    if (!st->st_size || S_ISDIR(st->st_mode)) goto TryAgain;
     CHECK_NE(-1, (fd = open(arg, O_RDONLY)), "%s", arg);
-    CHECK_NE(-1, fstat(fd, st));
     CHECK_LT(st->st_size, 0x7ffff000);
-    if (!st->st_size || S_ISDIR(st->st_mode) || endswith(arg, ".pkg")) {
-      goto TryAgain;
-    }
     AppendArg(&args, xstrdup(arg));
     AppendInt(&names, filenames.i);
     AppendInt(&sizes, st->st_size);

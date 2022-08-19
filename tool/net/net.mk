@@ -286,6 +286,15 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/tool/net/demo/.lua/.zip.o:						\
+		tool/net/demo/.lua
+o/$(MODE)/tool/net/demo/.zip.o:							\
+		tool/net/demo
+o/$(MODE)/tool/net/.zip.o:							\
+		tool/net
+o/$(MODE)/tool/.zip.o:								\
+		tool
+
 .PHONY: o/$(MODE)/tool/net
 o/$(MODE)/tool/net:								\
 		$(TOOL_NET_BINS)						\

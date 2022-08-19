@@ -45,7 +45,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/getopt.h"
 // clang-format off
 
-STATIC_STACK_SIZE(0x200000);  // 2mb stack
+STATIC_STACK_SIZE(0x00800000);  // 8mb stack
 
 #define HAVE_WAIT_NOHANG
 
@@ -1034,6 +1034,7 @@ main (int argc, char **argv, char **envp)
   FATAL_SIG (SIGTERM);
   FATAL_SIG (SIGXCPU);
   FATAL_SIG (SIGXFSZ);
+  FATAL_SIG (SIGPIPE); /* [jart] handle case of piped into less */
 
 #undef  FATAL_SIG
 

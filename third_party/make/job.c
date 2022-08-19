@@ -512,6 +512,18 @@ new_tmpdir (const char *tmp, struct file *file)
   return tmpdir;
 }
 
+bool
+get_file_timestamp (struct file *file)
+{
+  int e;
+  struct stat st;
+  EINTRLOOP (e, stat (file->name, &st));
+  if (e == 0)
+    return FILE_TIMESTAMP_STAT_MODTIME (file->name, st);
+  else
+    return NONEXISTENT_MTIME;
+}
+
 void
 delete_tmpdir (struct child *c)
 {
@@ -782,8 +794,16 @@ reap_children (int block, int err)
               delete_on_error = f != 0 && f->is_target;
             }
           if (exit_sig != 0 || delete_on_error)
-            delete_child_targets (c);
-          delete_tmpdir (c);
+            {
+              delete_child_targets (c);
+              delete_tmpdir (c);
+            }
+          else if (c->file->touched &&
+                   c->file->touched != get_file_timestamp (c->file))
+            /* If file was created just so it could be sandboxed, then
+               delete that file even if .DELETE_ON_ERROR isn't used,
+               but only if the command hasn't modified it.  */
+            unlink (c->file->name);
         }
       else
         {
@@ -831,8 +851,11 @@ reap_children (int block, int err)
                 }
 
               if (c->file->update_status != us_success)
-                /* We failed to start the commands.  */
-                delete_child_targets (c);
+                {
+                  /* We failed to start the commands.  */
+                  delete_child_targets (c);
+                  delete_tmpdir (c);
+                }
             }
           else
             {
@@ -2273,20 +2296,25 @@ child_execute_job (struct childbase *child,
           if (!c->file->phony &&
               strlen(c->file->name) < PATH_MAX)
             {
-              int fd, rc, err = errno;
-              strcpy (outpathbuf, c->file->name);
-              if (makedirs (dirname (outpathbuf), 0777) == -1)
-                errno = err;
-              fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
-              if (fd != -1)
-                close (fd);
-              else if (errno == EEXIST)
-                errno = err;
-              else
+              int fd, rc, err;
+              if (c->file->last_mtime == NONEXISTENT_MTIME)
                 {
-                  OSS (error, NILF, "%s: touch target failed %s",
-                       c->file->name, strerror (errno));
-                  _Exit (127);
+                  strcpy (outpathbuf, c->file->name);
+                  err = errno;
+                  if (makedirs (dirname (outpathbuf), 0777) == -1)
+                    errno = err;
+                  fd = open (c->file->name, O_RDWR | O_CREAT, 0777);
+                  if (fd != -1)
+                    close (fd);
+                  else if (errno == EEXIST)
+                    errno = err;
+                  else
+                    {
+                      OSS (error, NILF, "%s: touch target failed %s",
+                           c->file->name, strerror (errno));
+                      _Exit (127);
+                    }
+                  c->file->touched = get_file_timestamp (c->file);
                 }
               DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
                             c->file->name, "rwx"));
@@ -2298,11 +2326,26 @@ child_execute_job (struct childbase *child,
                 }
             }
 
-          /* unveil target prerequisites */
+          /*
+           * unveil target prerequisites
+           *
+           * directories get special treatment:
+           *
+           *   - libc/nt
+           *     shall unveil everything beneath dir
+           *
+           *   - libc/nt/
+           *     no sandboxing due to trailing slash
+           *     intended to be timestamp check only
+           */
           for (d = c->file->deps; d; d = d->next)
             {
+              size_t n;
+              n = strlen (d->file->name);
+              if (n && d->file->name[n - 1] == '/')
+                continue;
               RETURN_ON_ERROR (Unveil (d->file->name, "rx"));
-              if (endswith (d->file->name, ".com"))
+              if (n > 4 && READ32LE(d->file->name + n - 4) == READ32LE(".com"))
                 {
                   s = xstrcat (d->file->name, ".dbg");
                   RETURN_ON_ERROR (Unveil (s, "rx"));

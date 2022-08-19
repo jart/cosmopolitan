@@ -25,7 +25,6 @@ o/%.o: o/%.S                       ; @$(COMPILE) -AOBJECTIFY.S $(OBJECTIFY.S) $(
 o/%.lds: %.lds                     ; @$(COMPILE) -APREPROCESS $(PREPROCESS.lds) $(OUTPUT_OPTION) $<
 o/%.inc: %.h                       ; @$(COMPILE) -APREPROCESS $(PREPROCESS) $(OUTPUT_OPTION) -D__ASSEMBLER__ -P $<
 o/%.greg.o: %.greg.c               ; @$(COMPILE) -AOBJECTIFY.greg $(OBJECTIFY.greg.c) $(OUTPUT_OPTION) $<
-o/%.zip.o: o/%                     ; @$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%: o/$(MODE)/%.dbg       ; @$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
 o/$(MODE)/%.o: %.s                 ; @$(COMPILE) -AOBJECTIFY.s $(OBJECTIFY.s) $(OUTPUT_OPTION) $<
@@ -45,7 +44,6 @@ o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncab
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
-o/$(MODE)/%.zip.o: %               ; @$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
@@ -101,8 +99,35 @@ o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/as
 	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
 
 ################################################################################
+# elf zip files
+#
+# zipobj.com lets us do fast incremental linking of compressed data.
+# it's nice because if we link a hundred binaries that use the time zone
+# database, then that database only needs to be DEFLATE'd once.
+
+o/%.zip.o: o/%
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%.zip.o: %
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%.zip.o: %
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+
+# an issue with sandboxing arises when creating directory entries in the
+# zip file. we need the trailing slash (e.g. o//foo/.zip.o) but Landlock
+# Make avoids sandboxing directory names that have a trailing slash (so
+# they can be used to watch for deleted files, without creating overly
+# broad unveiling). such rules need to be written more explicitly.
+o/$(MODE)%/.zip.o: %
+	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
+
+################################################################################
 # strict header checking
-# these rules are unsandboxed since they're kind of a sandboxing test themselves
+#
+# these rules are unsandboxed since they're already a sandboxing test,
+# and it would be too costly in terms of make latency to have every
+# header file depend on $(HDRS) and $(INCS).
 
 o/%.h.ok: .UNSANDBOXED = 1
 o/%.h.ok: %.h

@@ -4490,6 +4490,29 @@ o/$(MODE)/third_party/python/hello.com.dbg:				\
 
 $(THIRD_PARTY_PYTHON_HELLO_OBJS): private PYFLAGS += -C2 -m
 
+# these need to be explictly defined because landlock make won't sandbox
+# prerequisites with a trailing slash.
+o/$(MODE)/third_party/python/Lib/pydoc_data/.zip.o:			\
+		third_party/python/Lib/pydoc_data
+o/$(MODE)/third_party/python/Lib/test/xmltestdata/.zip.o:		\
+		third_party/python/Lib/test/xmltestdata
+o/$(MODE)/third_party/python/Lib/test/sndhdrdata/.zip.o:		\
+		third_party/python/Lib/test/sndhdrdata
+o/$(MODE)/third_party/python/Lib/test/imghdrdata/.zip.o:		\
+		third_party/python/Lib/test/imghdrdata
+o/$(MODE)/third_party/python/Lib/test/decimaltestdata/.zip.o:		\
+		third_party/python/Lib/test/decimaltestdata
+o/$(MODE)/third_party/python/Lib/test/dtracedata/.zip.o:		\
+		third_party/python/Lib/test/dtracedata
+o/$(MODE)/third_party/python/Lib/test/cjkencodings/.zip.o:		\
+		third_party/python/Lib/test/cjkencodings
+o/$(MODE)/third_party/python/Modules/.zip.o:				\
+		third_party/python/Modules
+o/$(MODE)/third_party/python/Objects/.zip.o:				\
+		third_party/python/Objects
+o/$(MODE)/third_party/python/Lib/test/.zip.o:				\
+		third_party/python/Lib/test
+
 ################################################################################
 
 .PHONY: o/$(MODE)/third_party/python

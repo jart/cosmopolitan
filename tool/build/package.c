@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/mem/arraylist.internal.h"
-#include "libc/intrin/bswap.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"
 #include "libc/elf/struct/shdr.h"
 #include "libc/elf/struct/sym.h"
+#include "libc/intrin/bswap.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -134,8 +134,10 @@ struct Package *LoadPackage(const char *path) {
   CHECK(fileexists(path), "%s: %s: %s\n", "error", path, "not found");
   CHECK_NE(-1, (fd = open(path, O_RDONLY)), "%s", path);
   CHECK_NE(-1, fstat(fd, &st));
-  CHECK_NE(MAP_FAILED, (pkg = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE,
-                                   MAP_PRIVATE, fd, 0)));
+  CHECK_NE(MAP_FAILED,
+           (pkg = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
+                       fd, 0)),
+           "path=%s", path);
   CHECK_NE(-1, close(fd));
   CHECK_EQ(PACKAGE_MAGIC, pkg->magic, "corrupt package: %`'s", path);
   pkg->strings.p = (char *)((intptr_t)pkg->strings.p + (intptr_t)pkg);

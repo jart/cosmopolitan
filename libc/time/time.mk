@@ -66,6 +66,9 @@ o/$(MODE)/libc/time/now.o: private		\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 
+o/$(MODE)/usr/share/zoneinfo/.zip.o:		\
+	usr/share/zoneinfo
+
 LIBC_TIME_LIBS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)))
 LIBC_TIME_SRCS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)_SRCS))
 LIBC_TIME_HDRS = $(foreach x,$(LIBC_TIME_ARTIFACTS),$($(x)_HDRS))

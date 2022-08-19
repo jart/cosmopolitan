@@ -48,6 +48,9 @@ $(NET_HTTPS_A).pkg:				\
 		$(NET_HTTPS_A_OBJS)		\
 		$(foreach x,$(NET_HTTPS_A_DIRECTDEPS),$($(x)_A).pkg)
 
+o/$(MODE)/usr/share/ssl/root/.zip.o:		\
+		usr/share/ssl/root
+
 NET_HTTPS_LIBS = $(foreach x,$(NET_HTTPS_ARTIFACTS),$($(x)))
 NET_HTTPS_SRCS = $(foreach x,$(NET_HTTPS_ARTIFACTS),$($(x)_SRCS))
 NET_HTTPS_HDRS = $(foreach x,$(NET_HTTPS_ARTIFACTS),$($(x)_HDRS))

@@ -531,7 +531,10 @@ fatal_error_signal (int sig)
           (void) remote_kill (c->pid, sig);
 
       for (c = children; c != 0; c = c->next)
-        delete_child_targets (c);
+        {
+          delete_child_targets (c);
+          delete_tmpdir (c);
+        }
 
       /* Clean up the children.  We don't just use the call below because
          we don't want to print the "Waiting for children" message.  */

@@ -1365,3 +1365,18 @@ o/$(MODE)/third_party/mbedtls/test/secp384r1_test.com.dbg:							\
 	@$(APELINK)
 
 o/$(MODE)/third_party/mbedtls/test/test_suite_asn1parse.com.runs: private QUOTA = -M512m
+
+# these need to be explictly defined because landlock make won't sandbox
+# prerequisites with a trailing slash.
+o/$(MODE)/third_party/mbedtls/test/data/.zip.o:									\
+		third_party/mbedtls/test/data
+o/$(MODE)/third_party/mbedtls/test/data/dir-maxpath/.zip.o:							\
+		third_party/mbedtls/test/data/dir-maxpath
+o/$(MODE)/third_party/mbedtls/test/data/dir1/.zip.o:								\
+		third_party/mbedtls/test/data/dir1
+o/$(MODE)/third_party/mbedtls/test/data/dir2/.zip.o:								\
+		third_party/mbedtls/test/data/dir2
+o/$(MODE)/third_party/mbedtls/test/data/dir3/.zip.o:								\
+		third_party/mbedtls/test/data/dir3
+o/$(MODE)/third_party/mbedtls/test/data/dir4/.zip.o:								\
+		third_party/mbedtls/test/data/dir4
