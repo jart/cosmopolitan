@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/limits.h"
-#include "libc/log/log.h"
 #include "tool/build/lib/divmul.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/flags.h"

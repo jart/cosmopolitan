@@ -16,25 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
+#include "libc/elf/def.h"
 #include "libc/log/check.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/fmt.h"
-#include "libc/mem/mem.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/mremap.h"
 #include "libc/sysv/consts/msync.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/elfwriter.h"
-#include "tool/build/lib/interner.h"
 
 static const Elf64_Ehdr kObjHeader = {
     .e_ident = {ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3, ELFCLASS64, ELFDATA2LSB, 1,

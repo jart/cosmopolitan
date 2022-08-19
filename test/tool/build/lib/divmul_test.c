@@ -19,6 +19,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/log/check.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/str/str.h"
-#include "third_party/zlib/zlib.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/high.h"
 #include "tool/build/lib/modrm.h"

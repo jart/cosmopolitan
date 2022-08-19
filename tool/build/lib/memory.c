@@ -16,20 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/log/check.h"
-#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nt/struct/importobjectheader.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
-#include "libc/x/x.h"
-#include "tool/build/lib/endian.h"
-#include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
-#include "tool/build/lib/pml4t.h"
-#include "tool/build/lib/stats.h"
 #include "tool/build/lib/throw.h"
 
 void SetReadAddr(struct Machine *m, int64_t addr, uint32_t size) {

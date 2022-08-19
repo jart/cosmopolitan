@@ -17,20 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/pc.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/nt/struct/importobjectheader.internal.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/case.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/flags.h"
 #include "tool/build/lib/fpu.h"
 #include "tool/build/lib/ldbl.h"
-#include "tool/build/lib/machine.h"
 #include "tool/build/lib/memory.h"
 #include "tool/build/lib/modrm.h"
 #include "tool/build/lib/pun.h"
 #include "tool/build/lib/throw.h"
-#include "tool/build/lib/word.h"
 
 #define FPUREG 0
 #define MEMORY 1

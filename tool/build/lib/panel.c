@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/tpdecode.internal.h"

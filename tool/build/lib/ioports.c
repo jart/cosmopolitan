@@ -16,11 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/iovec.h"
-#include "libc/dce.h"
-#include "libc/log/log.h"
 #include "libc/nexgen32e/uart.internal.h"
-#include "libc/sock/sock.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/poll.h"
 #include "tool/build/lib/ioports.h"

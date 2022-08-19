@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
@@ -43,8 +42,8 @@ void PrintMessageBox(int fd, const char *msg, long tyn, long txn) {
   AppendLines(lines, msg);
   h = 3 + lines->n + 3;
   w = 4 + GetWidthOfLongestLine(lines) + 4;
-  x = lrint(txn / 2. - w / 2.);
-  y = lrint(tyn / 2. - h / 2.);
+  x = (txn / 2. - w / 2.) + .5;
+  y = (tyn / 2. - h / 2.) + .5;
   bzero(&b, sizeof(b));
   AppendFmt(&b, "\e[%d;%dH", y++, x);
   for (i = 0; i < w; ++i) AppendStr(&b, " ");

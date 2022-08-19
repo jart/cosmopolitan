@@ -16,23 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist2.internal.h"
-#include "libc/assert.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/str/unicode.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
 #include "tool/build/lib/pty.h"
 
@@ -1178,8 +1172,7 @@ ssize_t PtyWriteInput(struct Pty *pty, const void *data, size_t n) {
   m = pty->input.n;
   if (i + n * 2 + 1 > m) {
     m = MAX(m, 8);
-    do
-      m += m >> 1;
+    do m += m >> 1;
     while (i + n * 2 + 1 > m);
     if (!(p = realloc(p, m))) {
       return -1;

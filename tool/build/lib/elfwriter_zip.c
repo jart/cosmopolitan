@@ -16,21 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/dos.h"
-#include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"
-#include "libc/time/time.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "third_party/zlib/zlib.h"

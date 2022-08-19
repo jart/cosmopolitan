@@ -18,22 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
-#include "libc/errno.h"
-#include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/stdio/rand.h"
-#include "libc/sock/sock.h"
+#include "libc/macros.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
 #include "net/https/https.h"
-#include "third_party/mbedtls/ctr_drbg.h"
-#include "third_party/mbedtls/ecp.h"
-#include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/net_sockets.h"
-#include "third_party/mbedtls/platform.h"
 #include "third_party/mbedtls/ssl.h"
 #include "tool/build/lib/eztls.h"
-#include "tool/build/lib/psk.h"
 
 struct EzTlsBio ezbio;
 mbedtls_ssl_config ezconf;

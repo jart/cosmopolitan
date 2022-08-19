@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/x/x.h"
 #include "tool/build/lib/fds.h"
 
 int MachineFdAdd(struct MachineFds *mf) {

@@ -525,13 +525,13 @@
 
 .macro	.underrun
 #ifdef __SANITIZE_ADDRESS__
-	.poison	__BASE_FILE__, kAsanGlobalUnderrun
+	.poison	__BASE_FILE__, -20  # kAsanGlobalUnderrun
 #endif
 .endm
 
 .macro	.overrun
 #ifdef __SANITIZE_ADDRESS__
-	.poison	__BASE_FILE__, kAsanGlobalUnderrun
+	.poison	__BASE_FILE__, -21  # kAsanGlobalOverrun
 #endif
 .endm
 

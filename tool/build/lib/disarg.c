@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"

@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/str/str.h"

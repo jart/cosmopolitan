@@ -16,21 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/mem/arraylist2.internal.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/bing.internal.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/str/tpenc.h"
 #include "third_party/xed/x86.h"
-#include "tool/build/lib/case.h"
 #include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"
 #include "tool/build/lib/endian.h"

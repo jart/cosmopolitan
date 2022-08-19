@@ -105,4 +105,5 @@ TOOL_BUILD_LIB_TESTS = $(foreach x,$(TOOL_BUILD_LIB_ARTIFACTS),$($(x)_TESTS))
 .PHONY: o/$(MODE)/tool/build/lib
 o/$(MODE)/tool/build/lib:				\
 		$(TOOL_BUILD_LIB_COMS)			\
-		$(TOOL_BUILD_LIB_CHECKS)
+		$(TOOL_BUILD_LIB_CHECKS)		\
+		$(TOOL_BUILD_LIB_A)

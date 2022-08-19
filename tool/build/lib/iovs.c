@@ -16,8 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/macros.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/iovs.h"
+
+void InitIovs(struct Iovs *ib) {
+  ib->p = ib->init;
+  ib->i = 0;
+  ib->n = ARRAYLEN(ib->init);
+}
+
+void FreeIovs(struct Iovs *ib) {
+  if (ib->p != ib->init) {
+    free(ib->p);
+  }
+}
 
 /**
  * Appends memory region to i/o vector builder.

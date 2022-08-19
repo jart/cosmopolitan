@@ -16,21 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/log/check.h"
-#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/pc.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
-#include "tool/build/lib/buffer.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/machine.h"
-#include "tool/build/lib/memory.h"
-#include "tool/build/lib/pml4t.h"
 
 struct Machine *NewMachine(void) {
   struct Machine *m;

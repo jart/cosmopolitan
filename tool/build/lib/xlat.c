@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/clock.h"

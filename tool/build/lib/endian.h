@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_TOOL_BUILD_LIB_ENDIAN_H_
 #define COSMOPOLITAN_TOOL_BUILD_LIB_ENDIAN_H_
-#include "libc/str/str.h"
 
 static inline uint8_t Read8(const uint8_t *p) {
   return p[0];
@@ -13,7 +12,7 @@ static inline void Write8(uint8_t *p, uint8_t v) {
 static inline uint16_t Read16(const uint8_t *p) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   uint16_t v;
-  memcpy(&v, p, sizeof(v));
+  __builtin_memcpy(&v, p, sizeof(v));
   return v;
 #else
   return p[1] << 8 | p[0];
@@ -22,7 +21,7 @@ static inline uint16_t Read16(const uint8_t *p) {
 
 static inline void Write16(uint8_t *p, uint16_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-  memcpy(p, &v, sizeof(v));
+  __builtin_memcpy(p, &v, sizeof(v));
 #else
   p[0] = (0x00FF & v) >> 000;
   p[1] = (0xFF00 & v) >> 010;
@@ -32,7 +31,7 @@ static inline void Write16(uint8_t *p, uint16_t v) {
 static inline uint32_t Read32(const uint8_t *p) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   uint32_t v;
-  memcpy(&v, p, sizeof(v));
+  __builtin_memcpy(&v, p, sizeof(v));
   return v;
 #else
   return ((uint32_t)p[0] << 000 | (uint32_t)p[1] << 010 |
@@ -42,7 +41,7 @@ static inline uint32_t Read32(const uint8_t *p) {
 
 static inline void Write32(uint8_t *p, uint32_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-  memcpy(p, &v, sizeof(v));
+  __builtin_memcpy(p, &v, sizeof(v));
 #else
   p[0] = (0x000000FF & v) >> 000;
   p[1] = (0x0000FF00 & v) >> 010;
@@ -54,7 +53,7 @@ static inline void Write32(uint8_t *p, uint32_t v) {
 static inline uint64_t Read64(const uint8_t *p) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
   uint64_t v;
-  memcpy(&v, p, sizeof(v));
+  __builtin_memcpy(&v, p, sizeof(v));
   return v;
 #else
   return ((uint64_t)p[0] << 000 | (uint64_t)p[1] << 010 |
@@ -66,7 +65,7 @@ static inline uint64_t Read64(const uint8_t *p) {
 
 static inline void Write64(uint8_t *p, uint64_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-  memcpy(p, &v, sizeof(v));
+  __builtin_memcpy(p, &v, sizeof(v));
 #else
   p[0] = (0x00000000000000FF & v) >> 000;
   p[1] = (0x000000000000FF00 & v) >> 010;

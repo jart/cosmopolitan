@@ -19,15 +19,13 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/errno.h"
-#include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/x/x.h"
 #include "tool/build/lib/getargs.h"
 
 /**
