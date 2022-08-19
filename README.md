@@ -23,12 +23,12 @@ If you're doing your development work on Linux or BSD then you need just
 five files to get started. Here's what you do on Linux:
 
 ```sh
-wget https://justine.lol/cosmopolitan/cosmopolitan.zip
-unzip cosmopolitan.zip
+wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-2.0.zip
+unzip cosmopolitan-amalgamation-2.0.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
   -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs \
-  -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds \
+  -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds -Wl,--gc-sections \
   -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
 ```
