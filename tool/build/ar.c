@@ -25,7 +25,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"

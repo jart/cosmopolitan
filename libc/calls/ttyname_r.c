@@ -26,7 +26,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"

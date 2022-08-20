@@ -22,7 +22,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"

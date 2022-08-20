@@ -103,6 +103,12 @@ o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
 o/$(MODE)/test/libc/calls/fcntl_test.com.runs:				\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 
+# TODO(jart): Update nointernet() to allow AF_INET6
+o/$(MODE)/test/libc/calls/pledge_test.com.runs:				\
+		private .INTERNET = 1
+o/$(MODE)/test/libc/calls/pledge_test.com.runs:				\
+		private .PLEDGE =
+
 .PHONY: o/$(MODE)/test/libc/calls
 o/$(MODE)/test/libc/calls:						\
 		$(TEST_LIBC_CALLS_BINS)					\

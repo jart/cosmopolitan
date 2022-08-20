@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/pledge.h"
+#include "libc/calls/pledge.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/seccomp.h"
@@ -126,8 +127,6 @@ inspired by the design of openbsd's pledge() system call. Visit\n\
 the https://justine.lol/pledge/ page for online documentation.\n\
 \n\
 "
-
-int ParsePromises(const char *, unsigned long *);
 
 int g_gflag;
 int g_uflag;

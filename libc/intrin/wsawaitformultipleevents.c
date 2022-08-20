@@ -19,7 +19,6 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 

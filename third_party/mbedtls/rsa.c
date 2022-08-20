@@ -16,9 +16,8 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "third_party/mbedtls/common.h"
 #include "third_party/mbedtls/error.h"
 #include "third_party/mbedtls/md.h"

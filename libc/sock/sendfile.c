@@ -23,7 +23,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"

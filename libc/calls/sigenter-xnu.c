@@ -24,7 +24,6 @@
 #include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/repstosb.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"

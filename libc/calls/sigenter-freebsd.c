@@ -25,7 +25,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext-freebsd.internal.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"

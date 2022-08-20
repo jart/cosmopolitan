@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 
 // TODO(jart): Fork this function into ASAN and non-ASAN versions.
 const char *DescribeFlags(char *p, size_t n, struct DescribeFlags *d, size_t m,

@@ -379,7 +379,7 @@ __attribute__((__noinline__)) static long Mmap(long addr, long size, int prot,
   return ax;
 }
 
-static int MunmapLinux(const void *addr, unsigned long size) {
+int MunmapLinux(const void *addr, unsigned long size) {
   int ax;
   asm volatile("syscall"
                : "=a"(ax)
@@ -388,7 +388,7 @@ static int MunmapLinux(const void *addr, unsigned long size) {
   return ax;
 }
 
-static int PrctlLinux(int op, long a, long b, long c, long d) {
+int PrctlLinux(int op, long a, long b, long c, long d) {
   int rc;
   asm volatile("mov\t%5,%%r10\n\t"
                "mov\t%6,%%r8\n\t"

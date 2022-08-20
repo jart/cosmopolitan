@@ -24,7 +24,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"

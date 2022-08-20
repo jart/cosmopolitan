@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/kprintf.h"
-#include "libc/log/log.h"
 #include "libc/nexgen32e/threaded.h"
-#include "libc/stdio/stdio.h"
 #include "tool/plinko/lib/plinko.h"
 
 STATIC_YOINK("__zipos_get");

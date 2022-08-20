@@ -17,16 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-
-static void PrintMemory(void *p) {
-  kprintf("%#.*hhs%n", malloc_usable_size(p), p);
-}
 
 TEST(vappendf, test) {
   char *b = 0;

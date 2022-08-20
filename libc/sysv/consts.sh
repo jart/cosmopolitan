@@ -951,8 +951,11 @@ syscon	iproto	IPPROTO_BEETPH				94			-1			-1			-1			-1			-1
 syscon	iproto	IPPROTO_COMP				108			-1			-1			-1			-1			-1
 syscon	iproto	IPPROTO_DCCP				33			-1			-1			-1			-1			-1
 
+#	socket ioctl()
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0x40047307		# use sockatmark(); determines if oob is available; bsd consensus
 syscon	sio	SIOCADDMULTI				0x8931			0x80206931		0x80206931		0x80206931		0x80206931		0			# bsd consensus
-syscon	sio	SIOCATMARK				0x8905			0x40047307		0x40047307		0x40047307		0x40047307		0			# bsd consensus
 syscon	sio	SIOCDELMULTI				0x8932			0x80206932		0x80206932		0x80206932		0x80206932		0			# bsd consensus
 syscon	sio	SIOCDIFADDR				0x8936			0x80206919		0x80206919		0x80206919		0x80206919		0			# bsd consensus
 syscon	sio	SIOCGIFADDR				0x8915			0xc0206921		0xc0206921		0xc0206921		0xc0206921		0			# bsd consensus

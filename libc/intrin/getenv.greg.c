@@ -20,7 +20,6 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 

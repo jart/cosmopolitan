@@ -25,7 +25,6 @@
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -117,6 +116,8 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       // O_APPEND doesn't appear to be tunable at cursory glance
       // O_NONBLOCK might require we start doing all i/o in threads
       // O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
+      // O_DIRECT | O_RANDOM | O_SEQUENTIAL | O_NDELAY possible but
+      // not worth it.
       return einval();
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {

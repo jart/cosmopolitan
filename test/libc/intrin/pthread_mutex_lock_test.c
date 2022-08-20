@@ -22,7 +22,6 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"

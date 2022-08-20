@@ -23,7 +23,6 @@
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/macros.internal.h"
@@ -58,7 +57,7 @@
 #define SPECIAL   0xf000
 #define SELF      0x8000
 #define ADDRLESS  0x2000
-#define INET      0x8000
+#define INET      0x2000
 #define LOCK      0x4000
 #define NOEXEC    0x8000
 #define EXEC      0x4000
@@ -440,7 +439,7 @@ static const uint16_t kPledgeDefault[] = {
     __NR_linux_exit,  // thread return / exit()
 };
 
-// the stdio contains all the benign system calls. openbsd makes the
+// stdio contains all the benign system calls. openbsd makes the
 // assumption that preexisting file descriptors are trustworthy. we
 // implement checking for these as a simple linear scan rather than
 // binary search, since there doesn't appear to be any measurable
@@ -645,6 +644,7 @@ static const uint16_t kPledgeInet[] = {
     __NR_linux_connect,                //
     __NR_linux_accept,                 //
     __NR_linux_accept4,                //
+    __NR_linux_ioctl | INET,           //
     __NR_linux_getsockopt | RESTRICT,  //
     __NR_linux_setsockopt | RESTRICT,  //
     __NR_linux_getpeername,            //
@@ -1171,6 +1171,22 @@ static privileged void AllowIoctlStdio(struct Filter *f) {
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5421, 2, 0),
       /*L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5451, 1, 0),
       /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5450, 0, 1),
+      /*L6*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      /*L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /*L8*/ /* next filter */
+  };
+  AppendFilter(f, PLEDGE(fragment));
+}
+
+// The second argument of ioctl() must be one of:
+//
+//   - SIOCATMARK (0x8905)
+//
+static privileged void AllowIoctlInet(struct Filter *f) {
+  static const struct sock_filter fragment[] = {
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 4),
+      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      /*L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x8905, 0, 1),
       /*L6*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       /*L7*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
       /*L8*/ /* next filter */
@@ -1907,6 +1923,9 @@ static privileged void AppendPledge(struct Filter *f,   //
         break;
       case __NR_linux_ioctl | TTY:
         AllowIoctlTty(f);
+        break;
+      case __NR_linux_ioctl | INET:
+        AllowIoctlInet(f);
         break;
       case __NR_linux_socket | INET:
         AllowSocketInet(f);

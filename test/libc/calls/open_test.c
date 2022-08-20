@@ -19,7 +19,6 @@
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
@@ -107,14 +106,16 @@ TEST(open, testOpenExistingForReadWrite_seeksToStart) {
 }
 
 TEST(open, testOpenExistingForAppendWriteOnly_seeksToEnd) {
-  char buf[8] = {0};
+  char buf[16] = {0};
   ASSERT_SYS(0, 0, xbarf("hello.txt", "hell", -1));
   ASSERT_SYS(0, 3, open("hello.txt", O_WRONLY | O_APPEND));
   EXPECT_SYS(0, 1, write(3, "o", 1));
+  EXPECT_SYS(0, 0, lseek(3, 0, SEEK_SET));
+  EXPECT_SYS(0, 1, write(3, "!", 1));
   EXPECT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, open("hello.txt", O_RDONLY));
-  EXPECT_SYS(0, 5, read(3, buf, 7));
-  EXPECT_STREQ("hello", buf);
+  EXPECT_SYS(0, 6, read(3, buf, 8));
+  EXPECT_STREQ("hello!", buf);
   EXPECT_SYS(0, 0, close(3));
 }
 

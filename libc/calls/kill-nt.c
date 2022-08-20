@@ -20,7 +20,6 @@
 #include "libc/calls/getconsolectrlevent.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/ctrlevent.h"

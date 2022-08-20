@@ -20,7 +20,6 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"

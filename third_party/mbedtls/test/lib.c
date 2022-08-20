@@ -20,7 +20,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/check.h"

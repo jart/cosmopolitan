@@ -16,11 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"

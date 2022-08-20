@@ -2,7 +2,6 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"

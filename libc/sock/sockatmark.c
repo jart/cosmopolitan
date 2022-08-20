@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,55 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/str.h"
+#include "libc/nt/winsock.h"
+#include "libc/sock/sock.h"
+#include "libc/sysv/consts/sio.h"
+
+static textwindows int sockatmark_nt(int64_t fd) {
+  bool32 res;
+  uint32_t bytes;
+  if (WSAIoctl(fd, SIOCATMARK, 0, 0, &res, sizeof(res), &bytes, 0, 0) != -1) {
+    return !res;
+  } else {
+    return -1;
+  }
+}
 
 /**
- * Reads line from stream.
+ * Returns true if out of band data is available on socket for reading.
  *
- * This function is similar to getline() except it'll truncate lines
- * exceeding size. The line ending marker is included and may be removed
- * using _chomp().
- *
- * @param s is output buffer
- * @param size is capacity of s
- * @param f is non-null file object stream pointer
- * @return s on success, NULL on error, or NULL if EOF happens when
- *     zero characters have been read
+ * @return 1 if OOB'd, 0 if not, or -1 w/ errno
  */
-char *fgets_unlocked(char *s, int size, FILE *f) {
-  int c, n;
-  char *p, *b, *t;
-  p = s;
-  if (size > 0) {
-    while (--size > 0) {
-      if (!IsTiny() && f->beg < f->end) {
-        b = f->buf + f->beg;
-        n = MIN(f->end - f->beg, size);
-        if ((t = memchr(b, '\n', n))) {
-          n = t + 1 - b;
-        }
-        memcpy(p, b, n);
-        f->beg += n;
-        size -= n - 1;
-        p += n;
-        if (t) break;
-      } else {
-        if ((c = fgetc_unlocked(f)) == -1) {
-          if (ferror_unlocked(f) == EINTR) {
-            continue;
-          } else {
-            break;
-          }
-        }
-        *p++ = c & 255;
-        if (c == '\n') break;
-      }
+int sockatmark(int fd) {
+  int rc;
+  if (!IsWindows()) {
+    if (sys_ioctl(fd, SIOCATMARK, &rc) == -1) {
+      rc = -1;
     }
-    *p = '\0';
+  } else {
+    rc = sockatmark_nt(fd);
   }
-  return p > s ? s : NULL;
+  STRACE("sockatmark(%d) → %d% m", fd, rc);
+  return rc;
 }

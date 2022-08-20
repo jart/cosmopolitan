@@ -23,7 +23,6 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"

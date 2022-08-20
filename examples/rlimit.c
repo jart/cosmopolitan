@@ -12,7 +12,6 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/color.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/stdio/stdio.h"

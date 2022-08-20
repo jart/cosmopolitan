@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/elf/scalar.h"
@@ -26,7 +25,7 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/elf/struct/verdaux.h"
 #include "libc/elf/struct/verdef.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/bits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 

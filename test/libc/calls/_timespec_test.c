@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 

@@ -40,6 +40,7 @@ int getsockopt(int, int, int, void *, uint32_t *);
 int setsockopt(int, int, int, const void *, uint32_t);
 int socketpair(int, int, int, int[2]);
 ssize_t sendto(int, const void *, size_t, uint32_t, const void *, uint32_t);
+int sockatmark(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

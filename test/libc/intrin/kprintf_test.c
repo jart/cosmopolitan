@@ -16,19 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -43,8 +43,7 @@
  */
 static uint64_t Rando(void) {
   uint64_t x;
-  do
-    x = lemur64();
+  do x = lemur64();
   while (((x ^ READ64LE("!!!!!!!!")) - 0x0101010101010101) &
          ~(x ^ READ64LE("!!!!!!!!")) & 0x8080808080808080);
   return x;
@@ -250,7 +249,6 @@ TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   EXPECT_SYS(0, 3, dup(2));
   EXPECT_SYS(0, 0, close(2));
   n = __syscount;
-  kprintf("hello%n");
   EXPECT_EQ(n, __syscount);
   EXPECT_EQ(0, errno);
   EXPECT_SYS(0, 2, dup2(3, 2));

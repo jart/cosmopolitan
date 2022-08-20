@@ -14,7 +14,6 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"

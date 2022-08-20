@@ -21,7 +21,6 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"

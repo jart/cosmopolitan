@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/testlib.h"

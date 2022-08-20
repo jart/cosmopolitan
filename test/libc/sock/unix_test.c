@@ -20,7 +20,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

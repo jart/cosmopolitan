@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/elf/elf.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 
 void CheckElfAddress(const Elf64_Ehdr *elf, size_t mapsize, intptr_t addr,

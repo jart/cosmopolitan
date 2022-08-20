@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"

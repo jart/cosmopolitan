@@ -23,7 +23,6 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/nt/console.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/process.h"

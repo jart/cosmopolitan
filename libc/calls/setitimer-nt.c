@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -26,7 +25,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"

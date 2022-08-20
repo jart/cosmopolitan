@@ -22,7 +22,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/mem/io.h"
 #include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"

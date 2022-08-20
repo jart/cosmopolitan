@@ -16,30 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/runtime/internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
 _Thread_local int x;
 _Thread_local int y = 40;
 int z = 2;
-
-void PrintInfo(void) {
-  kprintf("_tdata_size  = %d\n", _tdata_size);
-  kprintf("_tls_size    = %d\n", _tls_size);
-  kprintf("_tls_content = %d\n", _tls_content);
-  kprintf("__data_start = %p\n", __data_start);
-  kprintf("__data_end   = %p\n", __data_end);
-  kprintf("_tdata_start = %p\n", _tdata_start);
-  kprintf("_tdata_end   = %p\n", _tdata_end);
-  kprintf("_tbss_start  = %p\n", _tbss_start);
-  kprintf("_tbss_end    = %p\n", _tbss_end);
-  kprintf("&y           = %p\n", &y);
-  kprintf("__bss_start  = %p\n", __bss_start);
-  kprintf("__bss_end    = %p\n", __bss_end);
-}
 
 TEST(tls, test) {
   EXPECT_EQ(42, x + y + z);

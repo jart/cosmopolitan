@@ -16,17 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/str/str.h"
 
 /**
  * Obtains memory mapping directly from system.

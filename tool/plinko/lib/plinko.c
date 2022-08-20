@@ -16,12 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/log/countbranch.h"
 #include "libc/log/countexpr.h"
 #include "libc/log/log.h"

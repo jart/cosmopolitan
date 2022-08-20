@@ -25,7 +25,6 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"

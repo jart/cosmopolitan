@@ -21,7 +21,6 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

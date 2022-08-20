@@ -2,10 +2,6 @@
 #define COSMOPOLITAN_LIBC_INTRIN_SPINLOCK_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § spinlocks                                                 ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│─╝
-  fast tiny inline synchronization routines */
 
 #ifdef TINY
 #define _spinlock(lock) _spinlock_tiny(lock)
@@ -31,24 +27,6 @@ COSMOPOLITAN_C_START_
   })
 
 #define _spinlock_cooperative(lock)                  \
-  ({                                                 \
-    char __x;                                        \
-    unsigned __tries = 0;                            \
-    char *__lock = (lock);                           \
-    for (;;) {                                       \
-      __atomic_load(__lock, &__x, __ATOMIC_RELAXED); \
-      if (!__x && !_trylock(__lock)) {               \
-        break;                                       \
-      } else if (++__tries & 7) {                    \
-        __builtin_ia32_pause();                      \
-      } else {                                       \
-        _spinlock_yield();                           \
-      }                                              \
-    }                                                \
-    0;                                               \
-  })
-
-#define _spinlock_cooperative_(lock)                 \
   ({                                                 \
     char __x;                                        \
     volatile int __i;                                \

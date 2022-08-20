@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/memtrack.internal.h"
 
 noasan bool AreMemoryIntervalsOk(const struct MemoryIntervals *mm) {

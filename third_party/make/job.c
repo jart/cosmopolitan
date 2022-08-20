@@ -38,7 +38,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/backtrace.internal.h"
@@ -65,12 +64,6 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/os.h"
 #include "third_party/make/variable.h"
 // clang-format off
-
-#define GOTO_SLOW                                       \
-  do {                                                  \
-    kprintf("%s:%d: goto slow\n", __FILE__, __LINE__);  \
-    goto slow;                                          \
-  } while (0)
 
 #ifdef WINDOWS32
 const char *default_shell = "sh.exe";

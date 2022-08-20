@@ -1,7 +1,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/x/x.h"

@@ -29,7 +29,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/io.h"
 #include "libc/mem/mem.h"
@@ -37,6 +36,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -110,7 +110,6 @@ TEST(pledge, default_allowsExit) {
   EXPECT_SYS(0, 0, munmap(job, FRAMESIZE));
 }
 
-#if 0
 TEST(pledge, execpromises_notok) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
@@ -167,7 +166,7 @@ TEST(pledge, stdio_forbidsOpeningPasswd2) {
   }
   EXPECT_NE(-1, wait(&ws));
   EXPECT_TRUE(WIFSIGNALED(ws));
-  EXPECT_EQ(SIGABRT, WTERMSIG(ws));
+  EXPECT_EQ(IsOpenbsd() ? SIGABRT : SIGSYS, WTERMSIG(ws));
 }
 
 TEST(pledge, multipleCalls_canOnlyBecomeMoreRestrictive1) {
@@ -375,24 +374,6 @@ TEST(pledge, mmapProtExec) {
   EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
 }
 
-TEST(pledge, msyscall) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
-  int ax, ws, pid;
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio", 0));
-    // now issue authorized syscall where rip isn't privileged
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_linux_dup), "D"(2)
-                 : "rcx", "r11", "memory");
-    _Exit(1);
-  }
-  EXPECT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFSIGNALED(ws));
-  EXPECT_EQ(SIGSYS, WTERMSIG(ws));
-}
-
 TEST(pledge, chmod_ignoresDangerBits) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
   int ws, pid;
@@ -461,21 +442,6 @@ TEST(pledge, open_cpath) {
     ASSERT_EQ(0100644, st.st_mode);
     // make sure open() can't apply the setuid bit
     ASSERT_SYS(EPERM, -1, open("bar", O_WRONLY | O_TRUNC | O_CREAT, 04644));
-    _Exit(0);
-  }
-  EXPECT_NE(-1, wait(&ws));
-  EXPECT_TRUE(WIFEXITED(ws) && !WEXITSTATUS(ws));
-}
-
-TEST(pledge, sigaction_isFineButForbidsSigsys) {
-  if (IsOpenbsd()) return;  // b/c testing linux bpf
-  int ws, pid;
-  ASSERT_NE(-1, (pid = fork()));
-  if (!pid) {
-    ASSERT_SYS(0, 0, pledge("stdio", 0));
-    struct sigaction sa = {.sa_handler = OnSig};
-    ASSERT_SYS(0, 0, sigaction(SIGINT, &sa, 0));
-    ASSERT_SYS(EPERM, -1, sigaction(SIGSYS, &sa, 0));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));
@@ -618,7 +584,7 @@ TEST(pledge, threadWithLocks_canCodeMorph) {
 TEST(pledge, everything) {
   int ws, pid;
   if (!fork()) {
-    // contains 548 bpf instructions [2022-07-24]
+    // contains 591 bpf instructions [2022-07-24]
     ASSERT_SYS(0, 0,
                pledge("stdio rpath wpath cpath dpath "
                       "flock fattr inet unix dns tty "
@@ -665,4 +631,3 @@ BENCH(pledge, bench) {
   }
   wait(0);
 }
-#endif

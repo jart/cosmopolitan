@@ -29,7 +29,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"

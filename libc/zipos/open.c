@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -26,8 +25,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/crc32.h"

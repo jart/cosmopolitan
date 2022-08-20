@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"

@@ -45,22 +45,20 @@ TEST(fcntl_getfl, testRemembersAccessMode) {
 }
 
 TEST(fcntl_setfl, testChangeAppendStatus) {
-  if (IsWindows()) {
-    // no obvious way to do fcntl(fd, F_SETFL, O_APPEND)
-    return;
-  }
-  int fd;
+  if (IsWindows()) return;  // Can't ReOpenFile() w/ O_APPEND
   char buf[8] = {0};
-  ASSERT_NE(-1, (fd = open("foo", O_CREAT | O_RDWR, 0644)));
-  EXPECT_EQ(3, write(fd, "foo", 3));
-  EXPECT_NE(-1, lseek(fd, 0, SEEK_SET));
-  EXPECT_NE(-1, fcntl(fd, F_SETFL, O_APPEND));
-  EXPECT_EQ(3, write(fd, "bar", 3));
-  EXPECT_NE(-1, lseek(fd, 0, SEEK_SET));
-  EXPECT_NE(-1, fcntl(fd, F_SETFL, 0));
-  EXPECT_EQ(6, read(fd, buf, 6));
+  ASSERT_SYS(0, 3, open("foo", O_CREAT | O_WRONLY, 0644));
+  EXPECT_SYS(0, 3, write(3, "foo", 3));
+  EXPECT_SYS(0, 0, lseek(3, 0, SEEK_SET));
+  EXPECT_SYS(0, 0, fcntl(3, F_SETFL, O_APPEND));
+  EXPECT_SYS(0, 3, write(3, "bar", 3));
+  EXPECT_SYS(0, 0, lseek(3, 0, SEEK_SET));
+  EXPECT_SYS(0, 0, fcntl(3, F_SETFL, 0));
+  EXPECT_SYS(0, 0, close(3));
+  ASSERT_SYS(0, 3, open("foo", 0));
+  EXPECT_SYS(0, 6, read(3, buf, 6));
   EXPECT_STREQ("foobar", buf);
-  EXPECT_NE(-1, close(fd));
+  EXPECT_SYS(0, 0, close(3));
 }
 
 TEST(fcntl, getfd) {

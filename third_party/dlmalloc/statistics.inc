@@ -1,4 +1,5 @@
 // clang-format off
+#include "libc/intrin/kprintf.h"
 
 /* ----------------------------- statistics ------------------------------ */
 
