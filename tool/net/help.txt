@@ -564,8 +564,7 @@ HOOKS
   OnServerHeartbeat()
           If this function is defined it'll be called from the main process
           on each server heartbeat. The heartbeat interval is configurable
-          with ProgramHeartbeatInterval. If this hook is defined, then
-          `/.heartbeat.lua` is not called.
+          with ProgramHeartbeatInterval.
 
   OnServerListen(socketdescriptor:int,serverip:int,serverport:int) → bool
           If this function is defined it'll be called from the main process
