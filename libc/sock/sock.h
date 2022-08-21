@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
-#include "libc/intrin/bswap.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -8,13 +7,19 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define INET_ADDRSTRLEN 22
+#define IFHWADDRLEN     6
 
-#define htons(u16) bswap_16(u16)
-#define ntohs(u16) bswap_16(u16)
-#define htonl(u32) bswap_32(u32)
-#define ntohl(u32) bswap_32(u32)
+uint16_t htons(uint16_t);
+uint16_t ntohs(uint16_t);
+uint32_t htonl(uint32_t);
+uint32_t ntohl(uint32_t);
 
-#define IFHWADDRLEN 6
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#define htons(x) __builtin_bswap16(x)
+#define ntohs(x) __builtin_bswap16(x)
+#define htonl(x) __builtin_bswap32(x)
+#define ntohl(x) __builtin_bswap32(x)
+#endif
 
 const char *inet_ntop(int, const void *, char *, uint32_t);
 int inet_pton(int, const char *, void *);

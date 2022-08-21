@@ -14,12 +14,14 @@ LIBC_TESTLIB_A_CHECKS = $(LIBC_TESTLIB_A).pkg
 
 LIBC_TESTLIB_A_ASSETS =						\
 	libc/testlib/blocktronics.txt				\
+	libc/testlib/viewables.txt				\
 	libc/testlib/hyperion.txt				\
 	libc/testlib/moby.txt
 
 LIBC_TESTLIB_A_HDRS =						\
 	libc/testlib/bench.h					\
 	libc/testlib/blocktronics.h				\
+	libc/testlib/viewables.h				\
 	libc/testlib/ezbench.h					\
 	libc/testlib/fastrandomstring.h				\
 	libc/testlib/hyperion.h					\
@@ -29,6 +31,7 @@ LIBC_TESTLIB_A_HDRS =						\
 LIBC_TESTLIB_A_SRCS_S =						\
 	libc/testlib/bench.S					\
 	libc/testlib/blocktronics.S				\
+	libc/testlib/viewables.S				\
 	libc/testlib/combo.S					\
 	libc/testlib/fixture.S					\
 	libc/testlib/hyperion.S					\
@@ -126,6 +129,7 @@ $(LIBC_TESTLIB_A).pkg:						\
 		$(foreach x,$(LIBC_TESTLIB_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/libc/testlib/blocktronics.o: libc/testlib/blocktronics.txt
+o/$(MODE)/libc/testlib/viewables.o: libc/testlib/viewables.txt
 o/$(MODE)/libc/testlib/hyperion.o: libc/testlib/hyperion.txt
 o/$(MODE)/libc/testlib/moby.o: libc/testlib/moby.txt
 

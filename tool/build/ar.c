@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
   }
 
   // write output archive
-  CHECK_NE(-1, (outfd = open(outpath, O_WRONLY | O_TRUNC | O_CREAT, 0644)));
+  CHECK_NE(-1, (outfd = creat(outpath, 0644)));
   ftruncate(outfd, outsize);
   if ((outsize = writev(outfd, iov, ARRAYLEN(iov))) == -1) {
     reason = "writev1 failed";

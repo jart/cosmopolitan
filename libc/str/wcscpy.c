@@ -23,12 +23,11 @@
  *
  * 𝑑 and 𝑠 must not overlap unless 𝑑 ≤ 𝑠.
  *
- * @param 𝑑 is destination memory
- * @param 𝑠 is a NUL-terminated string
- * @return original dest
+ * @param d is destination memory
+ * @param s is a NUL-terminated string
+ * @return original d
  * @asyncsignalsafe
  */
 wchar_t *wcscpy(wchar_t *d, const wchar_t *s) {
-  memcpy(d, s, (wcslen(s) + 1) * sizeof(wchar_t));
-  return d;
+  return memcpy(d, s, (wcslen(s) + 1) * sizeof(wchar_t));
 }

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
@@ -87,7 +87,7 @@ TEST(sscanf, testStringBuffer_gothicUtf8ToUtf8_roundTrips) {
   EXPECT_STREQ("𐌴𐌵𐌶𐌷", s2);
 }
 
-TEST(sscanf, testStringBuffer_gothicUtf8ToUtf16) {
+TEST(sscanf, testStringBuffer_gothicUtf8to16) {
   char16_t s1[64], s2[64];
   ASSERT_EQ(2, sscanf("𐌰𐌱𐌲𐌳 𐌴𐌵𐌶𐌷", "%63hs %63hs", s1, s2));
   EXPECT_STREQ(u"𐌰𐌱𐌲𐌳", s1);

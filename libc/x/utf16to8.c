@@ -16,77 +16,76 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/bits.h"
+#include "libc/intrin/packsswb.h"
+#include "libc/intrin/pandn.h"
 #include "libc/intrin/pcmpgtb.h"
+#include "libc/intrin/pcmpgtw.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/intrin/punpckhbw.h"
-#include "libc/intrin/punpckhwd.h"
 #include "libc/intrin/punpcklbw.h"
-#include "libc/intrin/punpcklwd.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
+#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"
 
+static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
+
 /**
- * Transcodes UTF-8 to UTF-32.
+ * Transcodes UTF-16 to UTF-8.
  *
  * @param p is input value
  * @param n if -1 implies strlen
  * @param z if non-NULL receives output length
  */
-wchar_t *utf8toutf32(const char *p, size_t n, size_t *z) {
-  size_t i;
-  unsigned m, j;
-  wint_t x, a, b;
-  wchar_t *r, *q;
-  uint8_t v1[16], v2[16], v3[16], v4[16], vz[16];
+char *utf16to8(const char16_t *p, size_t n, size_t *z) {
+  char *r, *q;
+  wint_t x, y;
+  unsigned m, j, w;
+  const char16_t *e;
+  int16_t v1[8], v2[8], v3[8], vz[8];
   if (z) *z = 0;
-  if (n == -1) n = p ? strlen(p) : 0;
-  if ((q = r = malloc(n * sizeof(wchar_t) + sizeof(wchar_t)))) {
-    for (i = 0; i < n;) {
-      if (i + 16 < n) { /* 10x speedup for ascii */
+  if (n == -1) n = p ? strlen16(p) : 0;
+  if ((q = r = malloc(n * 4 + 8 + 1))) {
+    for (e = p + n; p < e;) {
+      if (p + 8 < e) { /* 17x ascii */
         bzero(vz, 16);
         do {
-          memcpy(v1, p + i, 16);
-          pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
-          if (pmovmskb(v2) != 0xFFFF) break;
-          punpcklbw(v3, v1, vz);
-          punpckhbw(v1, v1, vz);
-          punpcklwd((void *)v4, (void *)v3, (void *)vz);
-          punpckhwd((void *)v3, (void *)v3, (void *)vz);
-          punpcklwd((void *)v2, (void *)v1, (void *)vz);
-          punpckhwd((void *)v1, (void *)v1, (void *)vz);
-          memcpy(q + 0, v4, 16);
-          memcpy(q + 4, v3, 16);
-          memcpy(q + 8, v2, 16);
-          memcpy(q + 12, v1, 16);
-          i += 16;
-          q += 16;
-        } while (i + 16 < n);
+          memcpy(v1, p, 16);
+          pcmpgtw(v2, v1, vz);
+          pcmpgtw(v3, v1, kDel16);
+          pandn((void *)v2, (void *)v3, (void *)v2);
+          if (pmovmskb((void *)v2) != 0xFFFF) break;
+          packsswb((void *)v1, v1, v1);
+          memcpy(q, v1, 8);
+          p += 8;
+          q += 8;
+        } while (p + 8 < e);
       }
-      x = p[i++] & 0xff;
-      if (x >= 0300) {
-        a = ThomPikeByte(x);
-        m = ThomPikeLen(x) - 1;
-        if (i + m <= n) {
-          for (j = 0;;) {
-            b = p[i + j] & 0xff;
-            if (!ThomPikeCont(b)) break;
-            a = ThomPikeMerge(a, b);
-            if (++j == m) {
-              x = a;
-              i += j;
-              break;
-            }
-          }
+      x = *p++ & 0xffff;
+      if (!IsUcs2(x)) {
+        if (p < e) {
+          y = *p++ & 0xffff;
+          x = MergeUtf16(x, y);
+        } else {
+          x = 0xFFFD;
         }
       }
-      *q++ = x;
+      if (x < 0200) {
+        *q++ = x;
+      } else {
+        w = tpenc(x);
+        WRITE64LE(q, w);
+        q += bsr(w) >> 3;
+        q += 1;
+      }
     }
     if (z) *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, (q - r) * sizeof(wchar_t)))) r = q;
+    if ((q = realloc(r, (q - r) * 1))) r = q;
   }
   return r;
 }

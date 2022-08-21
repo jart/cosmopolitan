@@ -23,31 +23,21 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-TEST(utf8toutf32, test) {
-  EXPECT_STREQ(L"", gc(utf8toutf32(0, 0, 0)));
-  EXPECT_STREQ(L"", gc(utf8toutf32("", -1, 0)));
-  EXPECT_STREQ(L"hello", gc(utf8toutf32("hello", -1, 0)));
+TEST(utf16to8, test) {
+  EXPECT_STREQ("hello☻♥", gc(utf16to8(u"hello☻♥", -1, 0)));
+  EXPECT_STREQ("hello☻♥hello☻♥h", gc(utf16to8(u"hello☻♥hello☻♥h", -1, 0)));
+  EXPECT_STREQ("hello☻♥hello☻♥hi", gc(utf16to8(u"hello☻♥hello☻♥hi", -1, 0)));
+  EXPECT_STREQ("hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥",
+               gc(utf16to8(u"hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥", -1, 0)));
+  EXPECT_STREQ("hello--hello--h", gc(utf16to8(u"hello--hello--h", -1, 0)));
+  EXPECT_STREQ("hello--hello--hi", gc(utf16to8(u"hello--hello--hi", -1, 0)));
+  EXPECT_STREQ("hello--hello--hello--hello--hello--",
+               gc(utf16to8(u"hello--hello--hello--hello--hello--", -1, 0)));
 }
 
-TEST(utf8toutf32, testLargeAscii) {
-  EXPECT_STREQ(L"hellohellohelloz", gc(utf8toutf32("hellohellohelloz", -1, 0)));
-  EXPECT_STREQ(L"hellohellohellozhellohellohelloz",
-               gc(utf8toutf32("hellohellohellozhellohellohelloz", -1, 0)));
-}
-
-TEST(utf8toutf32, testLargeThompsonPikeEncoded) {
-  EXPECT_STREQ(L"hellohellohello𝑧hellohellohelloz",
-               gc(utf8toutf32("hellohellohello𝑧hellohellohelloz", -1, 0)));
-  EXPECT_STREQ(L"hellohellohelloh𝑧ellohellohelloz",
-               gc(utf8toutf32("hellohellohelloh𝑧ellohellohelloz", -1, 0)));
-  EXPECT_STREQ(
-      L"𝑕𝑒𝑙𝑙𝑜𝑕𝑒𝑙𝑙𝑜𝑕𝑒𝑙𝑙𝑜𝑧",
-      gc(utf8toutf32(
-          "𝑕𝑒𝑙𝑙𝑜𝑕𝑒𝑙𝑙𝑜𝑕𝑒𝑙𝑙𝑜𝑧",
-          -1, 0)));
-}
-
-BENCH(utf8toutf32, bench) {
-  EZBENCH2("utf8toutf32", donothing,
-           free(utf8toutf32(kHyperion, kHyperionSize, 0)));
+BENCH(utf16to8, bench) {
+  size_t n;
+  char16_t *h;
+  h = gc(utf8to16(kHyperion, kHyperionSize, &n));
+  EZBENCH2("utf16to8", donothing, free(utf16to8(h, n, 0)));
 }

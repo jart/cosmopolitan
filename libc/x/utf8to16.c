@@ -16,28 +16,72 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
-
-typedef wchar_t xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
+#include "libc/str/thompike.h"
+#include "libc/str/utf16.h"
+#include "libc/x/x.h"
 
 /**
- * Returns length of NUL-terminated wide string.
+ * Transcodes UTF-8 to UTF-16.
  *
- * @param s is non-null NUL-terminated wide string pointer
- * @return number of wide characters (excluding NUL)
- * @asyncsignalsafe
+ * @param p is input value
+ * @param n if -1 implies strlen
+ * @param z if non-NULL receives output length
  */
-noasan size_t wcslen(const wchar_t *s) {
-  size_t n;
-  xmm_t z = {0};
-  unsigned m, k = (uintptr_t)s & 15;
-  const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
-  if (IsAsan()) __asan_verify(s, 4);
-  m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
-  while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
-  n = (const wchar_t *)p + (__builtin_ctzl(m) >> 2) - s;
-  if (IsAsan()) __asan_verify(s, n);
-  return n;
+char16_t *utf8to16(const char *p, size_t n, size_t *z) {
+  size_t i;
+  wint_t x, a, b;
+  char16_t *r, *q;
+  unsigned m, j, w;
+  if (z) *z = 0;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if ((q = r = malloc((n + 16) * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
+    for (i = 0; i < n;) {
+#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
+      if (i + 16 < n) {
+        typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
+        xmm_t vi, vz = {0};
+        do {
+          vi = *(const xmm_t *)(p + i);
+          *(xmm_t *)(q + 0) = __builtin_ia32_punpcklbw128(vi, vz);
+          *(xmm_t *)(q + 8) = __builtin_ia32_punpckhbw128(vi, vz);
+          if (!(m = __builtin_ia32_pmovmskb128(vi > vz) ^ 0xffff)) {
+            i += 16;
+            q += 16;
+          } else {
+            m = __builtin_ctzl(m);
+            i += m;
+            q += m;
+            break;
+          }
+        } while (i + 16 < n);
+      }
+#endif
+      x = p[i++] & 0xff;
+      if (x >= 0300) {
+        a = ThomPikeByte(x);
+        m = ThomPikeLen(x) - 1;
+        if (i + m <= n) {
+          for (j = 0;;) {
+            b = p[i + j] & 0xff;
+            if (!ThomPikeCont(b)) break;
+            a = ThomPikeMerge(a, b);
+            if (++j == m) {
+              x = a;
+              i += j;
+              break;
+            }
+          }
+        }
+      }
+      w = EncodeUtf16(x);
+      *q++ = w;
+      if ((w >>= 16)) *q++ = w;
+    }
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, (q - r) * sizeof(char16_t)))) r = q;
+  }
+  return r;
 }

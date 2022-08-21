@@ -3399,7 +3399,7 @@ os__getfinalpathname_impl(PyObject *module, PyObject *path)
     int result_length;
     PyObject *result;
     if (!(path_utf8 = PyUnicode_AsUTF8String(path))) return 0;
-    path_utf16 = gc(utf8toutf16(PyBytes_AS_STRING(path_utf8), PyBytes_GET_SIZE(path_utf8), 0));
+    path_utf16 = gc(utf8to16(PyBytes_AS_STRING(path_utf8), PyBytes_GET_SIZE(path_utf8), 0));
     Py_DECREF(path_utf8);
     if (!path_utf16) return PyErr_NoMemory();
     Py_BEGIN_ALLOW_THREADS
@@ -3439,7 +3439,7 @@ os__getfinalpathname_impl(PyObject *module, PyObject *path)
         buf_size = result_length;
         target_path = tmp;
     }
-    final8 = gc(utf16toutf8(target_path, result_length, &final8z));
+    final8 = gc(utf16to8(target_path, result_length, &final8z));
     result = PyUnicode_FromStringAndSize(final8, final8z);
 cleanup:
     if (target_path != buf) {
@@ -3537,7 +3537,7 @@ os__getvolumepathname_impl(PyObject *module, PyObject *path)
     size_t buflen;
     bool32 ret;
     if (!(path_utf8 = PyUnicode_AsUTF8String(path))) return 0;
-    path_utf16 = gc(utf8toutf16(PyBytes_AS_STRING(path_utf8), PyBytes_GET_SIZE(path_utf8), &buflen));
+    path_utf16 = gc(utf8to16(PyBytes_AS_STRING(path_utf8), PyBytes_GET_SIZE(path_utf8), &buflen));
     Py_DECREF(path_utf8);
     if (!path_utf16) return PyErr_NoMemory();
     buflen += 1;
@@ -3554,7 +3554,7 @@ os__getvolumepathname_impl(PyObject *module, PyObject *path)
                             Py_SAFE_DOWNCAST(buflen, size_t, uint32_t));
     Py_END_ALLOW_THREADS
     if (ret) {
-        mountpath8 = gc(utf16toutf8(mountpath, -1, &buflen));
+        mountpath8 = gc(utf16to8(mountpath, -1, &buflen));
         result = PyUnicode_FromStringAndSize(mountpath8, buflen);
     } else {
         result = win32_error_object("_getvolumepathname", path);

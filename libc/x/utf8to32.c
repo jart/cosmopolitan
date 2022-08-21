@@ -16,6 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/likely.h"
+#include "libc/intrin/pcmpgtb.h"
+#include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/punpckhbw.h"
+#include "libc/intrin/punpckhwd.h"
+#include "libc/intrin/punpcklbw.h"
+#include "libc/intrin/punpcklwd.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -23,41 +30,44 @@
 #include "libc/x/x.h"
 
 /**
- * Transcodes UTF-8 to UTF-16.
+ * Transcodes UTF-8 to UTF-32.
  *
  * @param p is input value
  * @param n if -1 implies strlen
  * @param z if non-NULL receives output length
  */
-char16_t *utf8toutf16(const char *p, size_t n, size_t *z) {
+wchar_t *utf8to32(const char *p, size_t n, size_t *z) {
+  int e;
   size_t i;
+  unsigned m, j;
   wint_t x, a, b;
-  char16_t *r, *q;
-  unsigned m, j, w;
+  wchar_t *r, *q;
+  uint8_t v1[16], v2[16], v3[16], v4[16], vz[16];
   if (z) *z = 0;
   if (n == -1) n = p ? strlen(p) : 0;
-  if ((q = r = malloc((n + 16) * sizeof(char16_t) * 2 + sizeof(char16_t)))) {
+  if ((q = r = malloc(n * sizeof(wchar_t) + sizeof(wchar_t)))) {
     for (i = 0; i < n;) {
-#if defined(__SSE2__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)
-      if (i + 16 < n) {
-        typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
-        xmm_t vi, vz = {0};
+      if (!((uintptr_t)(p + i) & 15) && i + 16 < n) {
+        /* 10x speedup for ascii */
+        bzero(vz, 16);
         do {
-          vi = *(const xmm_t *)(p + i);
-          *(xmm_t *)(q + 0) = __builtin_ia32_punpcklbw128(vi, vz);
-          *(xmm_t *)(q + 8) = __builtin_ia32_punpckhbw128(vi, vz);
-          if (!(m = __builtin_ia32_pmovmskb128(vi > vz) ^ 0xffff)) {
-            i += 16;
-            q += 16;
-          } else {
-            m = __builtin_ctzl(m);
-            i += m;
-            q += m;
-            break;
-          }
+          memcpy(v1, p + i, 16);
+          pcmpgtb((int8_t *)v2, (int8_t *)v1, (int8_t *)vz);
+          if (pmovmskb(v2) != 0xFFFF) break;
+          punpcklbw(v3, v1, vz);
+          punpckhbw(v1, v1, vz);
+          punpcklwd((void *)v4, (void *)v3, (void *)vz);
+          punpckhwd((void *)v3, (void *)v3, (void *)vz);
+          punpcklwd((void *)v2, (void *)v1, (void *)vz);
+          punpckhwd((void *)v1, (void *)v1, (void *)vz);
+          memcpy(q + 0, v4, 16);
+          memcpy(q + 4, v3, 16);
+          memcpy(q + 8, v2, 16);
+          memcpy(q + 12, v1, 16);
+          i += 16;
+          q += 16;
         } while (i + 16 < n);
       }
-#endif
       x = p[i++] & 0xff;
       if (x >= 0300) {
         a = ThomPikeByte(x);
@@ -75,13 +85,11 @@ char16_t *utf8toutf16(const char *p, size_t n, size_t *z) {
           }
         }
       }
-      w = EncodeUtf16(x);
-      *q++ = w;
-      if ((w >>= 16)) *q++ = w;
+      *q++ = x;
     }
     if (z) *z = q - r;
     *q++ = '\0';
-    if ((q = realloc(r, (q - r) * sizeof(char16_t)))) r = q;
+    if ((q = realloc(r, (q - r) * sizeof(wchar_t)))) r = q;
   }
   return r;
 }

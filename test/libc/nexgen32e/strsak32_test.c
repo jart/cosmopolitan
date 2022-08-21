@@ -32,7 +32,7 @@ TEST(strsak32, test) {
 
 BENCH(strsak32, bench) {
   size_t wcslen_(const wchar_t *) asm("wcslen");
-  wchar_t *p = gc(utf8toutf32(kHyperion, kHyperionSize, 0));
+  wchar_t *p = gc(utf8to32(kHyperion, kHyperionSize, 0));
   EZBENCH_N("wcslen", kHyperionSize, wcslen_(p));
   for (int i = 128; i >= 2; i /= 2) {
     p[i - 0] = 0;

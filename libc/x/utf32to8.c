@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,25 +17,35 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/hyperion.h"
-#include "libc/testlib/testlib.h"
+#include "libc/str/str.h"
+#include "libc/str/tpenc.h"
 #include "libc/x/x.h"
 
-TEST(utf8toutf16, test) {
-  EXPECT_STREQ(u"hello☻♥", gc(utf8toutf16("hello☻♥", -1, 0)));
-  EXPECT_STREQ(u"hello☻♥hello☻♥h", gc(utf8toutf16("hello☻♥hello☻♥h", -1, 0)));
-  EXPECT_STREQ(u"hello☻♥hello☻♥hi", gc(utf8toutf16("hello☻♥hello☻♥hi", -1, 0)));
-  EXPECT_STREQ(u"hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥",
-               gc(utf8toutf16("hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥", -1, 0)));
-  EXPECT_STREQ(u"hello--hello--h", gc(utf8toutf16("hello--hello--h", -1, 0)));
-  EXPECT_STREQ(u"hello--hello--hi", gc(utf8toutf16("hello--hello--hi", -1, 0)));
-  EXPECT_STREQ(u"hello--hello--hello--hello--hello--",
-               gc(utf8toutf16("hello--hello--hello--hello--hello--", -1, 0)));
-}
-
-BENCH(utf8toutf16, bench) {
-  EZBENCH2("utf8toutf16", donothing,
-           free(utf8toutf16(kHyperion, kHyperionSize, 0)));
+/**
+ * Transcodes UTF-32 to UTF-8.
+ *
+ * @param p is input value
+ * @param n if -1 implies wcslen
+ * @param z if non-NULL receives output length
+ */
+char *utf32to8(const wchar_t *p, size_t n, size_t *z) {
+  size_t i;
+  wint_t x;
+  uint64_t w;
+  char *r, *q;
+  if (z) *z = 0;
+  if (n == -1) n = p ? wcslen(p) : 0;
+  if ((q = r = malloc(n * 6 + 1))) {
+    for (i = 0; i < n; ++i) {
+      x = p[i];
+      w = tpenc(x);
+      do {
+        *q++ = w;
+      } while ((w >>= 8));
+    }
+    if (z) *z = q - r;
+    *q++ = '\0';
+    if ((q = realloc(r, q - r))) r = q;
+  }
+  return r;
 }

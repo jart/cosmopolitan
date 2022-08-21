@@ -664,7 +664,7 @@ Py_GetProgramFullPath(void)
 {
     static bool once;
     if (_cmpxchg(&once, false, true)) {
-        progpath = utf8toutf32(GetProgramExecutableName(), -1, 0);
+        progpath = utf8to32(GetProgramExecutableName(), -1, 0);
         __cxa_atexit(free, progpath, 0);
     }
     return progpath;

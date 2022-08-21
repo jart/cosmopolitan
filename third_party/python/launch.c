@@ -125,7 +125,7 @@ main(int argc, char *argv[])
     Py_LimitedPath();
     if (!(a = PyList_New(argc))) return 127;
     for (i = 0; i < argc; ++i) {
-        if (!(w = utf8toutf32(argv[i], -1, &n))) return 126;
+        if (!(w = utf8to32(argv[i], -1, &n))) return 126;
         if (!(s = PyUnicode_FromWideChar(w, n))) return 125;
         PyList_SetItem(a, i, s);
         free(w);

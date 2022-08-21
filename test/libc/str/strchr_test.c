@@ -167,6 +167,22 @@ TEST(rawmemchr, fuzz) {
   free(p);
 }
 
+/*
+ *     strchr 0            l:        10c         3ns   m:        38c        12ns
+ *     strchr 5            l:        13c         4ns   m:        42c        14ns
+ *     strchr 8            l:        14c         5ns   m:        44c        14ns
+ *     strchr 17           l:        13c         4ns   m:        45c        15ns
+ *     strchr 34           l:        16c         5ns   m:        48c        16ns
+ *     strchr z            l:       369c       119ns   m:       408c       132ns
+ *     rawmemchr z         l:       236c        76ns   m:       391c       126ns
+ *     memchr z            l:       357c       115ns   m:       423c       137ns
+ *     strchr Z            l:     1,872c       605ns   m:     1,911c       617ns
+ *     rawmemchr \0        l:     1,184c       382ns   m:     1,880c       607ns
+ *     strlen              l:     1,174c       379ns   m:     1,237c       400ns
+ *     memchr Z            l:     1,866c       603ns   m:     1,945c       628ns
+ *     strchrnul z         l:       365c       118ns   m:       408c       132ns
+ *     strchrnul Z         l:     1,871c       604ns   m:     1,914c       618ns
+ */
 BENCH(strchr, bench2) {
   char *strchr_(const char *, int) asm("strchr");
   char *strchrnul_(const char *, int) asm("strchrnul");

@@ -65,14 +65,6 @@ wcsnlen_s:
 	.leafepilogue
 	.endfn	wcsnlen_s,globl
 
-//	Returns length of NUL-terminated wchar_t string.
-//
-//	@param	rdi is non-null NUL-terminated wchar_t string pointer
-//	@return	rax is the number of chars, excluding the NUL
-//	@asyncsignalsafe
-wcslen:	or	$-1,%rsi
-//	fallthrough
-
 //	Returns length of NUL-terminated memory, with limit.
 //
 //	@param	rdi is non-null memory
@@ -176,6 +168,5 @@ wcssak:	lea	-4(%rdi),%rax
 	.endfn	wmemchr,globl
 	.endfn	rawwmemchr,globl
 	.endfn	wcsnlen,globl
-	.endfn	wcslen,globl
 	.endfn	wcschr,globl
 	.endfn	wcschrnul,globl

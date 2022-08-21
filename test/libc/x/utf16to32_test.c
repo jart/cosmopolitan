@@ -51,6 +51,6 @@ TEST(utf16to32, testAstralPlanesGothic) {
 BENCH(utf16to8, bench) {
   size_t n;
   char16_t *h;
-  h = gc(utf8toutf16(kHyperion, kHyperionSize, &n));
-  EZBENCH2("utf16toutf8", donothing, free(utf16to32(h, n, 0)));
+  h = gc(utf8to16(kHyperion, kHyperionSize, &n));
+  EZBENCH2("utf16to32", donothing, free(utf16to32(h, n, 0)));
 }

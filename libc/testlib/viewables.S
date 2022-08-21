@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,18 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/str/str.h"
+#include "libc/macros.internal.h"
+.rodata
 
-/**
- * Copies NUL-terminated UCS-2 or UTF-16 string.
- *
- * 𝑑 and 𝑠 must not overlap unless 𝑑 ≤ 𝑠.
- *
- * @param d is dination memory
- * @param s is a NUL-terminated 16-bit string
- * @return original d
- * @asyncsignalsafe
- */
-char16_t *strcpy16(char16_t *d, const char16_t *s) {
-  return memcpy(d, s, (strlen16(s) + 1) * sizeof(char16_t));
-}
+//	Nontrivial NUL-terminated string test vector.
+	.underrun
+kViewables:
+0:	.incbin	"libc/testlib/viewables.txt"
+1:	.byte	0
+	.endobj	kViewables,globl
+	.overrun
+
+	.align	8
+kViewablesSize:
+	.quad	1b-0b
+	.endobj	kViewablesSize,globl

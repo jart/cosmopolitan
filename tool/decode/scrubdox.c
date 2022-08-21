@@ -162,14 +162,14 @@ int main(int argc, char *argv[]) {
   }
   xn += 1000;
   L = xmalloc((yn + 2) * sizeof(*L));
-  L[0] = utf8toutf16(gc(xasprintf(" %*s ", xn, " ")), -1, 0);
+  L[0] = utf8to16(gc(xasprintf(" %*s ", xn, " ")), -1, 0);
   for (y = 0; y < yn; ++y) {
     s = xasprintf(" %s%*s ", T[y], xn - n, " ");
-    L[y + 1] = utf8toutf16(s, -1, 0);
+    L[y + 1] = utf8to16(s, -1, 0);
     free(T[y]);
     free(s);
   }
-  L[yn + 2 - 1] = utf8toutf16(gc(xasprintf(" %*s ", xn, " ")), -1, 0);
+  L[yn + 2 - 1] = utf8to16(gc(xasprintf(" %*s ", xn, " ")), -1, 0);
   free(T);
   V = xcalloc((yn + 1) * (xn + 1), 1);
   for (y = 1; y <= yn; ++y) {
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     }
   }
   for (y = 1; y + 1 < yn; ++y) {
-    s = utf16toutf8(L[y], -1, 0);
+    s = utf16to8(L[y], -1, 0);
     n = strlen(s);
     while (n && s[n - 1] == ' ') s[n - 1] = 0, --n;
     puts(s + 1);

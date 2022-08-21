@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/dce.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"

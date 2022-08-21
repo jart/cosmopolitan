@@ -16,76 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/packsswb.h"
-#include "libc/intrin/pandn.h"
-#include "libc/intrin/pcmpgtb.h"
-#include "libc/intrin/pcmpgtw.h"
-#include "libc/intrin/pmovmskb.h"
-#include "libc/intrin/punpckhbw.h"
-#include "libc/intrin/punpcklbw.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
-#include "libc/str/str.h"
-#include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
-#include "libc/str/utf16.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-static const int16_t kDel16[8] = {127, 127, 127, 127, 127, 127, 127, 127};
+TEST(utf8to16, test) {
+  EXPECT_STREQ(u"hello☻♥", gc(utf8to16("hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥h", gc(utf8to16("hello☻♥hello☻♥h", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hi", gc(utf8to16("hello☻♥hello☻♥hi", -1, 0)));
+  EXPECT_STREQ(u"hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥",
+               gc(utf8to16("hello☻♥hello☻♥hello☻♥hello☻♥hello☻♥", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--h", gc(utf8to16("hello--hello--h", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hi", gc(utf8to16("hello--hello--hi", -1, 0)));
+  EXPECT_STREQ(u"hello--hello--hello--hello--hello--",
+               gc(utf8to16("hello--hello--hello--hello--hello--", -1, 0)));
+}
 
-/**
- * Transcodes UTF-16 to UTF-8.
- *
- * @param p is input value
- * @param n if -1 implies strlen
- * @param z if non-NULL receives output length
- */
-char *utf16toutf8(const char16_t *p, size_t n, size_t *z) {
-  char *r, *q;
-  wint_t x, y;
-  unsigned m, j, w;
-  const char16_t *e;
-  int16_t v1[8], v2[8], v3[8], vz[8];
-  if (z) *z = 0;
-  if (n == -1) n = p ? strlen16(p) : 0;
-  if ((q = r = malloc(n * 4 + 8 + 1))) {
-    for (e = p + n; p < e;) {
-      if (p + 8 < e) { /* 17x ascii */
-        bzero(vz, 16);
-        do {
-          memcpy(v1, p, 16);
-          pcmpgtw(v2, v1, vz);
-          pcmpgtw(v3, v1, kDel16);
-          pandn((void *)v2, (void *)v3, (void *)v2);
-          if (pmovmskb((void *)v2) != 0xFFFF) break;
-          packsswb((void *)v1, v1, v1);
-          memcpy(q, v1, 8);
-          p += 8;
-          q += 8;
-        } while (p + 8 < e);
-      }
-      x = *p++ & 0xffff;
-      if (!IsUcs2(x)) {
-        if (p < e) {
-          y = *p++ & 0xffff;
-          x = MergeUtf16(x, y);
-        } else {
-          x = 0xFFFD;
-        }
-      }
-      if (x < 0200) {
-        *q++ = x;
-      } else {
-        w = tpenc(x);
-        WRITE64LE(q, w);
-        q += bsr(w) >> 3;
-        q += 1;
-      }
-    }
-    if (z) *z = q - r;
-    *q++ = '\0';
-    if ((q = realloc(r, (q - r) * 1))) r = q;
-  }
-  return r;
+BENCH(utf8to16, bench) {
+  EZBENCH2("utf8to16", donothing, free(utf8to16(kHyperion, kHyperionSize, 0)));
 }

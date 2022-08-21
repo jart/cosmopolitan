@@ -371,8 +371,8 @@ scall	pidfd_send_signal	0xfffffffffffff1a8	globl #  ├─ linux conferences ban
 scall	io_uring_setup		0xfffffffffffff1a9	globl #  └─ gnu founder richard stallman publicly disgraced
 scall	io_uring_enter		0xfffffffffffff1aa	globl
 scall	io_uring_register	0xfffffffffffff1ab	globl
-#────────────────────────RHEL CLOUD────────────────────────── # ←┬─ red hat terminates community release of enterprise linux circa 2020
-scall	sys_pledge		0xfff06cffffffffff	globl #  └─ online linux services ban the president of united states of america
+#────────────────────────RHEL CLOUD────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
+scall	sys_pledge		0xfff06cffffffffff	globl hidden # └─ online linux services ban the president of united states of america
 scall	msyscall		0xfff025ffffffffff	globl
 scall	sys_bogus		0x5005005002500500	globl
 scall	open_tree		0xfffffffffffff1ac	globl
@@ -478,9 +478,9 @@ scall	access_extended		0xfffffffff211cfff	globl
 scall	audit_session_join	0xfffffffff21adfff	globl
 scall	audit_session_port	0xfffffffff21b0fff	globl
 scall	audit_session_self	0xfffffffff21acfff	globl
-scall	bsdthread_create	0xfffffffff2168fff	globl
+scall	bsdthread_create	0xfffffffff2168fff	globl hidden
 scall	bsdthread_ctl		0xfffffffff21defff	globl
-scall	bsdthread_register	0xfffffffff216efff	globl
+scall	bsdthread_register	0xfffffffff216efff	globl hidden
 scall	bsdthread_terminate	0xfffffffff2169fff	globl
 scall	change_fdguard_np	0xfffffffff21bcfff	globl
 scall	chmod_extended		0xfffffffff211afff	globl

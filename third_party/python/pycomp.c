@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/gc.internal.h"
@@ -125,7 +125,7 @@ main(int argc, char *argv[])
     Py_IgnoreEnvironmentFlag++;
     Py_FrozenFlag++;
     /* Py_VerboseFlag++; */
-    Py_SetProgramName(gc(utf8toutf32(argv[0], -1, 0)));
+    Py_SetProgramName(gc(utf8to32(argv[0], -1, 0)));
     _Py_InitializeEx_Private(1, 0);
     name = gc(xjoinpaths("/zip/.python", StripComponents(inpath, 3)));
     code = Py_CompileStringExFlags(p, name, Py_file_input, NULL, optimize);

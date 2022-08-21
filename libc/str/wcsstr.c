@@ -19,15 +19,24 @@
 #include "libc/str/str.h"
 
 /**
- * Copies NUL-terminated UCS-2 or UTF-16 string.
+ * Searches for substring.
  *
- * 𝑑 and 𝑠 must not overlap unless 𝑑 ≤ 𝑠.
- *
- * @param d is dination memory
- * @param s is a NUL-terminated 16-bit string
- * @return original d
+ * @param haystack is the search area, as a NUL-terminated string
+ * @param needle is the desired substring, also NUL-terminated
+ * @return pointer to first substring within haystack, or NULL
  * @asyncsignalsafe
+ * @see memmem()
  */
-char16_t *strcpy16(char16_t *d, const char16_t *s) {
-  return memcpy(d, s, (strlen16(s) + 1) * sizeof(char16_t));
+wchar_t *wcsstr(const wchar_t *haystack, const wchar_t *needle) {
+  size_t i;
+  for (;;) {
+    for (i = 0;;) {
+      if (!needle[i]) return (/*unconst*/ wchar_t *)haystack;
+      if (!haystack[i]) break;
+      if (needle[i] != haystack[i]) break;
+      ++i;
+    }
+    if (!*haystack++) break;
+  }
+  return NULL;
 }

@@ -50,7 +50,7 @@ static noasan axdx_t tprecode16to8_sse2(char *dst, size_t dstsize,
  * Transcodes UTF-16 to UTF-8.
  *
  * This is a low-level function intended for the core runtime. Use
- * utf16toutf8() for a much better API that uses malloc().
+ * utf16to8() for a much better API that uses malloc().
  *
  * @param dst is output buffer
  * @param dstsize is bytes in dst
