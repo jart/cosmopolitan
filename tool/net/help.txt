@@ -1067,9 +1067,13 @@ FUNCTIONS
           IsPrivateIp or IsLoopbackIp return true. When multiple addresses
           are present in the header, the last/right-most address is used.
 
-  GetResponseBody() → str
-          Returns the response message body if present or an empty string.
-          Also returns an empty string during streaming.
+  GetResponseBody()
+      ├─→ body:str
+      └─→ nil, error:str
+          Returns the (uncompressed) response message body if present or an
+          empty string. May also return a partial or empty string during
+          streaming, as the full content may not be known at the call time.
+          Returns an error when decompression fails.
 
   GetClientAddr() → ip:uint32,port:uint16
           Returns client socket ip4 address and port, e.g. 0x01020304,31337
