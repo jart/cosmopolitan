@@ -26,6 +26,7 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -36,6 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "third_party/getopt/getopt.h"
+#include "third_party/xed/x86.h"
 
 /**
  * @fileoverview GCC Codegen Fixer-Upper.
@@ -151,6 +153,41 @@ void OptimizeRelocations(Elf64_Ehdr *elf, size_t elfsize) {
   }
 }
 
+void CheckForTlsInPrivileged(const char *path, Elf64_Ehdr *elf,
+                             size_t elfsize) {
+  int err;
+  size_t m;
+  Elf64_Half i;
+  struct Op *op;
+  Elf64_Shdr *shdr;
+  unsigned char *p, *e;
+  Elf64_Xword symcount;
+  struct XedDecodedInst xedd;
+  for (i = 0; i < elf->e_shnum; ++i) {
+    shdr = GetElfSectionHeaderAddress(elf, elfsize, i);
+    if (shdr->sh_type == SHT_PROGBITS &&
+        startswith(GetElfSectionName(elf, elfsize, shdr), ".privileged")) {
+      p = (unsigned char *)((uintptr_t)elf + shdr->sh_offset);
+      e = p + shdr->sh_size;
+      for (; p < e; p += m) {
+        xed_decoded_inst_zero_set_mode(&xedd, XED_MACHINE_MODE_LONG_64);
+        err = xed_instruction_length_decode(&xedd, p, e - p);
+        if (err == XED_ERROR_NONE) {
+          m = xedd.length;
+          if (xedd.op.seg_ovd == XED_SEG_FS) {
+            kprintf("%s: thread local storage not allowed in privileged "
+                    "functions\n",
+                    path);
+            exit(1);
+          }
+        } else {
+          m = 1;
+        }
+      }
+    }
+  }
+}
+
 void RewriteObject(const char *path) {
   int fd;
   struct stat st;
@@ -166,6 +203,7 @@ void RewriteObject(const char *path) {
                     0)) == MAP_FAILED) {
       SysExit(__COUNTER__ + 1, "mmap", path);
     }
+    CheckForTlsInPrivileged(path, elf, st.st_size);
     OptimizeRelocations(elf, st.st_size);
     if (msync(elf, st.st_size, MS_ASYNC | MS_INVALIDATE)) {
       SysExit(__COUNTER__ + 1, "msync", path);

@@ -88,6 +88,7 @@ static inline textwindows ssize_t ForkIo(int64_t h, char *p, size_t n,
 static dontinline textwindows bool ForkIo2(int64_t h, void *buf, size_t n,
                                            bool32 (*fn)(), const char *sf) {
   ssize_t rc = ForkIo(h, buf, n, fn);
+  __tls_enabled = false;  // prevent tls crash in kprintf
   NTTRACE("%s(%ld, %p, %'zu) → %'zd% m", sf, h, buf, n, rc);
   return rc != -1;
 }
@@ -217,6 +218,9 @@ textwindows void WinMainForked(void) {
   if (!CloseHandle(reader)) {
     AbortFork("CloseHandle");
   }
+
+  // turn tls back on
+  __enable_tls();
 
   // rewrap the stdin named pipe hack
   // since the handles closed on fork

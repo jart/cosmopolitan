@@ -27,6 +27,13 @@
 #define XED_HINT_TAKEN  4
 #define XED_HINT_ALTER  6
 
+#define XED_SEG_ES 1
+#define XED_SEG_CS 2
+#define XED_SEG_SS 3
+#define XED_SEG_DS 4
+#define XED_SEG_FS 5
+#define XED_SEG_GS 6
+
 #define xed_modrm_mod(M)           (((M)&0xff) >> 6)
 #define xed_modrm_reg(M)           (((M)&0b00111000) >> 3)
 #define xed_modrm_rm(M)            ((M)&7)
