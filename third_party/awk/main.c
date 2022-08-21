@@ -1,39 +1,48 @@
-/****************************************************************
-Copyright (C) Lucent Technologies 1997
-All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appear in all
-copies and that both that the copyright notice and this
-permission notice and warranty disclaimer appear in supporting
-documentation, and that the name Lucent Technologies or any of
-its entities not be used in advertising or publicity pertaining
-to distribution of the software without specific, written prior
-permission.
-
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-****************************************************************/
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Copyright (C) Lucent Technologies 1997                                       │
+│ All Rights Reserved                                                          │
+│                                                                              │
+│ Permission to use, copy, modify, and distribute this software and            │
+│ its documentation for any purpose and without fee is hereby                  │
+│ granted, provided that the above copyright notice appear in all              │
+│ copies and that both that the copyright notice and this                      │
+│ permission notice and warranty disclaimer appear in supporting               │
+│ documentation, and that the name Lucent Technologies or any of               │
+│ its entities not be used in advertising or publicity pertaining              │
+│ to distribution of the software without specific, written prior              │
+│ permission.                                                                  │
+│                                                                              │
+│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
+│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
+│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
+│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
+│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
+│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
+│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
+│ THIS SOFTWARE.                                                               │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#define DEBUG
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sock/struct/sockaddr.internal.h"
+#include "libc/stdio/rand.h"
+#include "libc/str/locale.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "third_party/awk/awk.h"
+#include "tool/args/args.h"
+// clang-format off
 
 const char	*version = "version 20220530";
-
-#define DEBUG
-#include <stdio.h>
-#include <ctype.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include "awk.h"
-
-extern	char	**environ;
 extern	int	nfields;
 
 int	dbg	= 0;
@@ -41,7 +50,6 @@ Awkfloat	srand_seed = 1;
 char	*cmdname;	/* gets argv[0] for error messages */
 extern	FILE	*yyin;	/* lex input file */
 char	*lexprog;	/* points to program argument if it exists */
-extern	int errorflag;	/* non-zero if any syntax errors; set by yyerror */
 enum compile_states	compile_time = ERROR_PRINTING;
 
 static char	**pfile;	/* program filenames from -f's */
@@ -51,31 +59,21 @@ static size_t	curpfile;	/* current filename */
 
 bool	safe = false;	/* true => "safe" mode */
 
-static noreturn void fpecatch(int n
-#ifdef SA_SIGINFO
-	, siginfo_t *si, void *uc
-#endif
-)
+static wontreturn void fpecatch(int n, siginfo_t *si, ucontext_t *uc)
 {
-#ifdef SA_SIGINFO
-	static const char *emsg[] = {
-		[0] = "Unknown error",
-		[FPE_INTDIV] = "Integer divide by zero",
-		[FPE_INTOVF] = "Integer overflow",
-		[FPE_FLTDIV] = "Floating point divide by zero",
-		[FPE_FLTOVF] = "Floating point overflow",
-		[FPE_FLTUND] = "Floating point underflow",
-		[FPE_FLTRES] = "Floating point inexact result",
-		[FPE_FLTINV] = "Invalid Floating point operation",
-		[FPE_FLTSUB] = "Subscript out of range",
-	};
-#endif
-	FATAL("floating point exception"
-#ifdef SA_SIGINFO
-		": %s", (size_t)si->si_code < sizeof(emsg) / sizeof(emsg[0]) &&
-		emsg[si->si_code] ? emsg[si->si_code] : emsg[0]
-#endif
-	    );
+	const char *emsg[10];
+        emsg[0] = "Unknown error";
+        emsg[FPE_INTDIV] = "Integer divide by zero";
+        emsg[FPE_INTOVF] = "Integer overflow";
+        emsg[FPE_FLTDIV] = "Floating point divide by zero";
+        emsg[FPE_FLTOVF] = "Floating point overflow";
+        emsg[FPE_FLTUND] = "Floating point underflow";
+        emsg[FPE_FLTRES] = "Floating point inexact result";
+        emsg[FPE_FLTINV] = "Invalid Floating point operation";
+        emsg[FPE_FLTSUB] = "Subscript out of range";
+	FATAL("floating point exception: %s",
+              (size_t)si->si_code < sizeof(emsg) / sizeof(emsg[0]) &&
+              emsg[si->si_code] ? emsg[si->si_code] : emsg[0]);
 }
 
 /* Can this work with recursive calls?  I don't think so.
@@ -112,6 +110,7 @@ int main(int argc, char *argv[])
 	const char *fs = NULL;
 	char *fn, *vn;
 
+	LoadZipArgs(&argc, &argv);
 	setlocale(LC_CTYPE, "");
 	setlocale(LC_NUMERIC, "C"); /* for parsing cmdline & prog */
 	cmdname = argv[0];
@@ -121,7 +120,6 @@ int main(int argc, char *argv[])
 		  cmdname);
 		exit(1);
 	}
-#ifdef SA_SIGINFO
 	{
 		struct sigaction sa;
 		sa.sa_sigaction = fpecatch;
@@ -129,9 +127,6 @@ int main(int argc, char *argv[])
 		sigemptyset(&sa.sa_mask);
 		(void)sigaction(SIGFPE, &sa, NULL);
 	}
-#else
-	(void)signal(SIGFPE, fpecatch);
-#endif
 	/*signal(SIGSEGV, segvcatch); experiment */
 
 	/* Set and keep track of the random seed */
@@ -209,11 +204,6 @@ int main(int argc, char *argv[])
 	if (!safe)
 		envinit(environ);
 	yyparse();
-#if 0
-	// Doing this would comply with POSIX, but is not compatible with
-	// other awks and with what most users expect. So comment it out.
-	setlocale(LC_NUMERIC, ""); /* back to whatever it is locally */
-#endif
 	if (fs)
 		*FS = qstring(fs, '\0');
 	DPRINTF("errorflag=%d\n", errorflag);

@@ -654,7 +654,8 @@ typedef struct {
 
 #ifndef __STRICT_ANSI__
 #if defined(__GNUC__) || defined(__llvm__)
-#pragma GCC diagnostic ignored "-Wundef" /* complaints about __ASSEMBLER__/__LINKER__  */
+#pragma GCC diagnostic ignored \
+    "-Wundef" /* complaints about __ASSEMBLER__/__LINKER__  */
 #pragma GCC diagnostic ignored "-Wsign-compare" /* lint needs to change  */
 #pragma GCC diagnostic ignored "-Wtype-limits" /* makes macros unsafe  */
 #pragma GCC diagnostic ignored "-Woverflow" /* also breaks macros  */
@@ -733,7 +734,6 @@ typedef struct {
 #pragma GCC diagnostic error "-Wwrite-strings"
 #pragma GCC diagnostic error "-Wtrampolines"
 #pragma GCC diagnostic error "-Wmaybe-uninitialized"
-#pragma GCC diagnostic error "-Wredundant-decls"
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
 #if defined(COSMO) && !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)

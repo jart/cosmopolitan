@@ -6,6 +6,7 @@
 #define _STDIO_H
 #define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
+#define FOPEN_MAX    1000
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

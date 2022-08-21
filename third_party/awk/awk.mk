@@ -7,6 +7,7 @@ THIRD_PARTY_AWK_SRCS = $(THIRD_PARTY_AWK_A_SRCS)
 THIRD_PARTY_AWK_HDRS = $(THIRD_PARTY_AWK_A_HDRS)
 THIRD_PARTY_AWK_INCS = $(THIRD_PARTY_AWK_A_INCS)
 THIRD_PARTY_AWK_BINS = $(THIRD_PARTY_AWK_COMS) $(THIRD_PARTY_AWK_COMS:%=%.dbg)
+THIRD_PARTY_AWK_COMS = o/$(MODE)/third_party/awk/awk.com
 
 THIRD_PARTY_AWK_ARTIFACTS += THIRD_PARTY_AWK_A
 THIRD_PARTY_AWK = $(THIRD_PARTY_AWK_A_DEPS) $(THIRD_PARTY_AWK_A)
@@ -27,7 +28,10 @@ THIRD_PARTY_AWK_A_DIRECTDEPS =				\
 	LIBC_STDIO					\
 	LIBC_SYSV					\
 	LIBC_STR					\
-	LIBC_STUBS
+	LIBC_STUBS					\
+	LIBC_TINYMATH					\
+	TOOL_ARGS					\
+	THIRD_PARTY_GDTOA
 
 THIRD_PARTY_AWK_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x))))
@@ -47,13 +51,10 @@ $(THIRD_PARTY_AWK_A).pkg:				\
 
 o/$(MODE)/third_party/awk/awk.com.dbg:			\
 		$(THIRD_PARTY_AWK)			\
-		o/$(MODE)/third_party/awk/awk.o		\
+		o/$(MODE)/third_party/awk/main.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
-
-THIRD_PARTY_AWK_COMS =					\
-	o/$(MODE)/third_party/awk/awk.com
 
 THIRD_PARTY_AWK_LIBS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)))
 THIRD_PARTY_AWK_SRCS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)_SRCS))

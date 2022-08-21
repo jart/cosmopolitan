@@ -1,0 +1,275 @@
+
+AWK(1)                       General Commands Manual                      AWK(1)
+
+
+
+𝐍𝐀𝐌𝐄
+       awk - pattern-directed scanning and processing language
+
+𝐒𝐘𝐍𝐎𝐏𝐒𝐈𝐒
+       𝗮𝘄𝗸 [ -𝐅 f̲s̲ ] [ -𝘃 v̲a̲r̲=̲v̲a̲l̲u̲e̲ ] [ '̲p̲r̲o̲g̲'̲ | -𝗳 p̲r̲o̲g̲f̲i̲l̲e̲ ] [ f̲i̲l̲e̲ .̲.̲.̲  ]
+
+𝐃𝐄𝐒𝐂𝐑𝐈𝐏𝐓𝐈𝐎𝐍
+       A̲w̲k̲  scans  each input f̲i̲l̲e̲ for lines that match any of a set of patterns
+       specified literally in p̲r̲o̲g̲ or in one or more files specified as -𝗳 p̲r̲o̲g̲‐̲
+       f̲i̲l̲e̲.   With  each pattern there can be an associated action that will be
+       performed when a line of a  f̲i̲l̲e̲  matches  the  pattern.   Each  line  is
+       matched  against  the  pattern portion of every pattern-action statement;
+       the associated action is performed for each matched  pattern.   The  file
+       name  -  means  the  standard  input.   Any f̲i̲l̲e̲ of the form v̲a̲r̲=̲v̲a̲l̲u̲e̲ is
+       treated as an assignment, not a filename, and is executed at the time  it
+       would  have been opened if it were a filename.  The option -𝘃 followed by
+       v̲a̲r̲=̲v̲a̲l̲u̲e̲ is an assignment to be done before p̲r̲o̲g̲ is executed; any number
+       of  -𝘃  options may be present.  The -𝐅 f̲s̲ option defines the input field
+       separator to be the regular expression f̲s̲.
+
+       An input line is normally made up of fields separated by white space,  or
+       by  the regular expression 𝐅𝐒.  The fields are denoted $𝟭, $𝟮, ..., while
+       $𝟬 refers to the entire line.  If 𝐅𝐒 is null, the  input  line  is  split
+       into one field per character.
+
+       A pattern-action statement has the form:
+
+              p̲a̲t̲t̲e̲r̲n̲ { a̲c̲t̲i̲o̲n̲ }
+
+       A  missing  {  a̲c̲t̲i̲o̲n̲  }  means  print the line; a missing pattern always
+       matches.  Pattern-action statements are separated by  newlines  or  semi‐
+       colons.
+
+       An  action  is  a  sequence of statements.  A statement can be one of the
+       following:
+
+              if( e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ) s̲t̲a̲t̲e̲m̲e̲n̲t̲ [ else s̲t̲a̲t̲e̲m̲e̲n̲t̲ ]
+              while( e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ) s̲t̲a̲t̲e̲m̲e̲n̲t̲
+              for( e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ; e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ; e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ) s̲t̲a̲t̲e̲m̲e̲n̲t̲
+              for( v̲a̲r̲ in a̲r̲r̲a̲y̲ ) s̲t̲a̲t̲e̲m̲e̲n̲t̲
+              do s̲t̲a̲t̲e̲m̲e̲n̲t̲ while( e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ )
+              break
+              continue
+              { [ s̲t̲a̲t̲e̲m̲e̲n̲t̲ .̲.̲.̲ ] }
+              e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲              # commonly v̲a̲r̲ =̲ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲
+              print [ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲-̲l̲i̲s̲t̲ ] [ > e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ]
+              printf f̲o̲r̲m̲a̲t̲ [ , e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲-̲l̲i̲s̲t̲ ] [ > e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ]
+              return [ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ]
+              next                    # skip remaining patterns on this input line
+              nextfile                # skip rest of this file, open next, start at top
+              delete a̲r̲r̲a̲y̲[ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ]# delete an array element
+              delete a̲r̲r̲a̲y̲            # delete all elements of array
+              exit [ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ ]     # exit immediately; status is e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲
+
+       Statements are terminated by semicolons, newlines or  right  braces.   An
+       empty  e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲-̲l̲i̲s̲t̲  stands  for $𝟬.  String constants are quoted " ",
+       with the usual C escapes recognized within.  Expressions take  on  string
+       or numeric values as appropriate, and are built using the operators + - *
+       / % ^ (exponentiation), and concatenation  (indicated  by  white  space).
+       The  operators  !  ++  --  +=  -= *= /= %= ^= > >= < <= == != ?: are also
+       available in expressions.  Variables may be scalars, array elements  (de‐
+       noted  x̲[i̲])  or  fields.   Variables are initialized to the null string.
+       Array subscripts may be any string, not necessarily numeric; this  allows
+       for  a  form  of associative memory.  Multiple subscripts such as [𝗶,𝗷,𝗸]
+       are permitted; the constituents are concatenated, separated by the  value
+       of 𝐒𝐔𝐁𝐒𝐄𝐏.
+
+       The  𝗽𝗿𝗶𝗻𝘁 statement prints its arguments on the standard output (or on a
+       file if > f̲i̲l̲e̲ or >> f̲i̲l̲e̲ is present or on a pipe if | c̲m̲d̲  is  present),
+       separated  by  the  current output field separator, and terminated by the
+       output record separator.  f̲i̲l̲e̲ and c̲m̲d̲ may be literal names or  parenthe‐
+       sized expressions; identical string values in different statements denote
+       the same open file.  The 𝗽𝗿𝗶𝗻𝘁𝗳 statement formats its expression list ac‐
+       cording to the f̲o̲r̲m̲a̲t̲ (see p̲r̲i̲n̲t̲f̲(3)).  The built-in function 𝗰𝗹𝗼𝘀𝗲(e̲x̲p̲r̲)
+       closes the file or pipe e̲x̲p̲r̲.  The built-in function 𝗳𝗳𝗹𝘂𝘀𝗵(e̲x̲p̲r̲) flushes
+       any buffered output for the file or pipe e̲x̲p̲r̲.
+
+       The  mathematical functions 𝗮𝘁𝗮𝗻𝟮, 𝗰𝗼𝘀, 𝗲𝘅𝗽, 𝗹𝗼𝗴, 𝘀𝗶𝗻, and 𝘀𝗾𝗿𝘁 are built
+       in.  Other built-in functions:
+
+
+       𝗹𝗲𝗻𝗴𝘁𝗵  the length of its argument taken as a string, number of  elements
+               in  an  array  for an array argument, or length of $𝟬 if no argu‐
+               ment.
+       𝗿𝗮𝗻𝗱    random number on [0,1).
+       𝘀𝗿𝗮𝗻𝗱   sets seed for 𝗿𝗮𝗻𝗱 and returns the previous seed.
+       𝗶𝗻𝘁     truncates to an integer value.
+       𝘀𝘂𝗯𝘀𝘁𝗿(s̲, m̲ [, n̲])
+               the n̲-character substring of s̲ that begins at position m̲  counted
+               from 1.  If no n̲, use the rest of the string.
+       𝗶𝗻𝗱𝗲𝘅(s̲, t̲)
+               the position in s̲ where the string t̲ occurs, or 0 if it does not.
+       𝗺𝗮𝘁𝗰𝗵(s̲, r̲)
+               the  position in s̲ where the regular expression r̲ occurs, or 0 if
+               it does not.  The variables 𝐑𝐒𝐓𝐀𝐑𝐓 and 𝐑𝐋𝐄𝐍𝐆𝐓𝐇 are set to the po‐
+               sition and length of the matched string.
+       𝘀𝗽𝗹𝗶𝘁(s̲, a̲ [, f̲s̲])
+               splits  the  string  s̲ into array elements a̲[𝟭], a̲[𝟮], ..., a̲[n̲],
+               and returns n̲.  The separation is done with the  regular  expres‐
+               sion  f̲s̲  or  with the field separator 𝐅𝐒 if f̲s̲ is not given.  An
+               empty string as field separator splits the string into one  array
+               element per character.
+       𝘀𝘂𝗯(r̲, t̲ [, s̲])
+               substitutes  t̲ for the first occurrence of the regular expression
+               r̲ in the string s̲.  If s̲ is not given, $𝟬 is used.
+       𝗴𝘀𝘂𝗯(r̲, t̲ [, s̲])
+               same as 𝘀𝘂𝗯 except that all occurrences of the regular expression
+               are replaced; 𝘀𝘂𝗯 and 𝗴𝘀𝘂𝗯 return the number of replacements.
+       𝘀𝗽𝗿𝗶𝗻𝘁𝗳(f̲m̲t̲, e̲x̲p̲r̲, .̲.̲.̲)
+               the  string  resulting from formatting e̲x̲p̲r̲ .̲.̲.̲  according to the
+               p̲r̲i̲n̲t̲f̲(3) format f̲m̲t̲.
+       𝘀𝘆𝘀𝘁𝗲𝗺(c̲m̲d̲)
+               executes c̲m̲d̲ and returns its exit status. This will  be  -1  upon
+               error,  c̲m̲d̲'s  exit  status  upon  a  normal exit, 256 + s̲i̲g̲ upon
+               death-by-signal, where s̲i̲g̲ is the number of the murdering signal,
+               or 512 + s̲i̲g̲ if there was a core dump.
+       𝘁𝗼𝗹𝗼𝘄𝗲𝗿(s̲t̲r̲)
+               returns  a  copy of s̲t̲r̲ with all upper-case characters translated
+               to their corresponding lower-case equivalents.
+       𝘁𝗼𝘂𝗽𝗽𝗲𝗿(s̲t̲r̲)
+               returns a copy of s̲t̲r̲ with all lower-case  characters  translated
+               to their corresponding upper-case equivalents.
+
+       The  ``function''  𝗴𝗲𝘁𝗹𝗶𝗻𝗲 sets $𝟬 to the next input record from the cur‐
+       rent input file; 𝗴𝗲𝘁𝗹𝗶𝗻𝗲 < f̲i̲l̲e̲ sets $𝟬 to the  next  record  from  f̲i̲l̲e̲.
+       𝗴𝗲𝘁𝗹𝗶𝗻𝗲 x̲ sets variable x̲ instead.  Finally, c̲m̲d̲ | 𝗴𝗲𝘁𝗹𝗶𝗻𝗲 pipes the out‐
+       put of c̲m̲d̲ into 𝗴𝗲𝘁𝗹𝗶𝗻𝗲; each call of 𝗴𝗲𝘁𝗹𝗶𝗻𝗲 returns the  next  line  of
+       output from c̲m̲d̲.  In all cases, 𝗴𝗲𝘁𝗹𝗶𝗻𝗲 returns 1 for a successful input,
+       0 for end of file, and -1 for an error.
+
+       Patterns are arbitrary Boolean combinations (with ! || &&) of regular ex‐
+       pressions  and  relational  expressions.   Regular  expressions are as in
+       e̲g̲r̲e̲p̲; see g̲r̲e̲p̲(1).  Isolated regular expressions in a pattern  apply  to
+       the  entire  line.   Regular expressions may also occur in relational ex‐
+       pressions, using the operators ~ and !~.  /r̲e̲/ is a constant regular  ex‐
+       pression;  any string (constant or variable) may be used as a regular ex‐
+       pression, except in the position of an isolated regular expression  in  a
+       pattern.
+
+       A pattern may consist of two patterns separated by a comma; in this case,
+       the action is performed for all lines from an  occurrence  of  the  first
+       pattern though an occurrence of the second.
+
+       A relational expression is one of the following:
+
+              e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ m̲a̲t̲c̲h̲o̲p̲ r̲e̲g̲u̲l̲a̲r̲-̲e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲
+              e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ r̲e̲l̲o̲p̲ e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲
+              e̲x̲p̲r̲e̲s̲s̲i̲o̲n̲ 𝗶𝗻 a̲r̲r̲a̲y̲-̲n̲a̲m̲e̲
+              (e̲x̲p̲r̲,e̲x̲p̲r̲,̲.̲.̲.̲) 𝗶𝗻 a̲r̲r̲a̲y̲-̲n̲a̲m̲e̲
+
+       where  a r̲e̲l̲o̲p̲ is any of the six relational operators in C, and a m̲a̲t̲c̲h̲o̲p̲
+       is either ~ (matches) or !~ (does not match).  A conditional is an arith‐
+       metic  expression,  a  relational expression, or a Boolean combination of
+       these.
+
+       The special patterns 𝐁𝐄𝐆𝐈𝐍 and 𝐄𝐍𝐃 may be used to capture control  before
+       the  first  input  line is read and after the last.  𝐁𝐄𝐆𝐈𝐍 and 𝐄𝐍𝐃 do not
+       combine with other patterns.  They may appear multiple times in a program
+       and execute in the order they are read by a̲w̲k̲.
+
+       Variable names with special meanings:
+
+
+       𝐀𝐑𝐆𝐂      argument count, assignable.
+       𝐀𝐑𝐆𝐕      argument array, assignable; non-null members are taken as file‐
+                 names.
+       𝐂𝐎𝐍𝐕𝐅𝐌𝐓   conversion format used when converting numbers (default %.𝟲𝗴).
+       𝐄𝐍𝐕𝐈𝐑𝐎𝐍   array of environment variables; subscripts are names.
+       𝐅𝐈𝐋𝐄𝐍𝐀𝐌𝐄  the name of the current input file.
+       𝐅𝐍𝐑       ordinal number of the current record in the current file.
+       𝐅𝐒        regular expression used to separate fields;  also  settable  by
+                 option -𝐅f̲s̲.
+       𝐍𝐅        number of fields in the current record.
+       𝐍𝐑        ordinal number of the current record.
+       𝐎𝐅𝐌𝐓      output format for numbers (default %.𝟲𝗴).
+       𝐎𝐅𝐒       output field separator (default space).
+       𝐎𝐑𝐒       output record separator (default newline).
+       𝐑𝐋𝐄𝐍𝐆𝐓𝐇   the length of a string matched by 𝗺𝗮𝘁𝗰𝗵.
+       𝐑𝐒        input  record  separator  (default  newline).   If empty, blank
+                 lines separate records.  If more than one character long, 𝐑𝐒 is
+                 treated  as  a regular expression, and records are separated by
+                 text matching the expression.
+       𝐑𝐒𝐓𝐀𝐑𝐓    the start position of a string matched by 𝗺𝗮𝘁𝗰𝗵.
+       𝐒𝐔𝐁𝐒𝐄𝐏    separates multiple subscripts (default 034).
+
+       Functions may be defined (at the position of a pattern-action  statement)
+       thus:
+
+              𝗳𝘂𝗻𝗰𝘁𝗶𝗼𝗻 𝗳𝗼𝗼(𝗮, 𝗯, 𝗰) { ...; 𝗿𝗲𝘁𝘂𝗿𝗻 𝘅 }
+
+       Parameters  are passed by value if scalar and by reference if array name;
+       functions may be called recursively.  Parameters are local to  the  func‐
+       tion;  all  other variables are global.  Thus local variables may be cre‐
+       ated by providing excess parameters in the function definition.
+
+𝐄𝐍𝐕𝐈𝐑𝐎𝐍𝐌𝐄𝐍𝐓 𝐕𝐀𝐑𝐈𝐀𝐁𝐋𝐄𝐒
+       If 𝐏𝐎𝐒𝐈𝐗𝐋𝐘_𝐂𝐎𝐑𝐑𝐄𝐂𝐓 is set in the environment, then a̲w̲k̲ follows the  POSIX
+       rules for 𝘀𝘂𝗯 and 𝗴𝘀𝘂𝗯 with respect to consecutive backslashes and amper‐
+       sands.
+
+𝐄𝐗𝐀𝐌𝐏𝐋𝐄𝐒
+       length($0) > 72
+              Print lines longer than 72 characters.
+
+       { print $2, $1 }
+              Print first two fields in opposite order.
+
+       BEGIN { FS = ",[ \t]*|[ \t]+" }
+             { print $2, $1 }
+              Same, with input fields separated by comma and/or spaces and tabs.
+
+            { s += $1 }
+       END  { print "sum is", s, " average is", s/NR }
+              Add up first column, print sum and average.
+
+       /start/, /stop/
+              Print all lines between start/stop pairs.
+
+       BEGIN     {    # Simulate echo(1)
+            for (i = 1; i < ARGC; i++) printf "%s ", ARGV[i]
+            printf "\n"
+            exit }
+
+𝐒𝐄𝐄 𝐀𝐋𝐒𝐎
+       g̲r̲e̲p̲(1), l̲e̲x̲(1), s̲e̲d̲(1)
+       A. V. Aho, B. W. Kernighan, P. J. Weinberger, T̲h̲e̲  A̲W̲K̲  P̲r̲o̲g̲r̲a̲m̲m̲i̲n̲g̲  L̲a̲n̲‐̲
+       g̲u̲a̲g̲e̲, Addison-Wesley, 1988.  ISBN 0-201-07981-X.
+
+𝐁𝐔𝐆𝐒
+       There  are no explicit conversions between numbers and strings.  To force
+       an expression to be treated as a number add 0 to it; to force  it  to  be
+       treated as a string concatenate "" to it.
+
+       The  scope  rules  for  variables in functions are a botch; the syntax is
+       worse.
+
+       Only eight-bit characters sets are handled correctly.
+
+𝐔𝐍𝐔𝐒𝐔𝐀𝐋 𝐅𝐋𝐎𝐀𝐓𝐈𝐍𝐆-𝐏𝐎𝐈𝐍𝐓 𝐕𝐀𝐋𝐔𝐄𝐒
+       A̲w̲k̲ was designed before IEEE 754 arithmetic  defined  Not-A-Number  (NaN)
+       and  Infinity  values,  which  are supported by all modern floating-point
+       hardware.
+
+       Because a̲w̲k̲ uses s̲t̲r̲t̲o̲d̲(3) and a̲t̲o̲f̲(3) to convert string values  to  dou‐
+       ble-precision  floating-point  values,  modern  C  libraries also convert
+       strings starting with 𝗶𝗻𝗳 and 𝗻𝗮𝗻 into infinity and  NaN  values  respec‐
+       tively.  This led to strange results, with something like this:
+
+       echo nancy | awk '{ print $1 + 0 }'
+
+       printing 𝗻𝗮𝗻 instead of zero.
+
+       A̲w̲k̲  now  follows GNU AWK, and prefilters string values before attempting
+       to convert them to numbers, as follows:
+
+       H̲e̲x̲a̲d̲e̲c̲i̲m̲a̲l̲ v̲a̲l̲u̲e̲s̲
+              Hexadecimal values (allowed since C99) convert to  zero,  as  they
+              did prior to C99.
+
+       N̲a̲N̲ v̲a̲l̲u̲e̲s̲
+              The  two  strings +𝗻𝗮𝗻 and -𝗻𝗮𝗻 (case independent) convert to NaN.
+              No others do.  (NaNs can have signs.)
+
+       I̲n̲f̲i̲n̲i̲t̲y̲ v̲a̲l̲u̲e̲s̲
+              The two strings +𝗶𝗻𝗳 and -𝗶𝗻𝗳 (case independent) convert to  posi‐
+              tive and negative infinity, respectively.  No others do.
+
+
+
+                                                                          AWK(1)

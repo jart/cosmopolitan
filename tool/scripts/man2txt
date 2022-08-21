@@ -1,0 +1,5 @@
+#!/bin/sh
+for x; do
+  nroff -mandoc -rLL=80n -rLT=80n -Tutf8 <"$x" |
+    o//tool/viz/ascii2utf8.com
+done

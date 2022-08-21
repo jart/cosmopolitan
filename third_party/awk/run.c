@@ -1,44 +1,46 @@
-/****************************************************************
-Copyright (C) Lucent Technologies 1997
-All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appear in all
-copies and that both that the copyright notice and this
-permission notice and warranty disclaimer appear in supporting
-documentation, and that the name Lucent Technologies or any of
-its entities not be used in advertising or publicity pertaining
-to distribution of the software without specific, written prior
-permission.
-
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-****************************************************************/
-
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Copyright (C) Lucent Technologies 1997                                       │
+│ All Rights Reserved                                                          │
+│                                                                              │
+│ Permission to use, copy, modify, and distribute this software and            │
+│ its documentation for any purpose and without fee is hereby                  │
+│ granted, provided that the above copyright notice appear in all              │
+│ copies and that both that the copyright notice and this                      │
+│ permission notice and warranty disclaimer appear in supporting               │
+│ documentation, and that the name Lucent Technologies or any of               │
+│ its entities not be used in advertising or publicity pertaining              │
+│ to distribution of the software without specific, written prior              │
+│ permission.                                                                  │
+│                                                                              │
+│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
+│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
+│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
+│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
+│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
+│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
+│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
+│ THIS SOFTWARE.                                                               │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
 #define DEBUG
-#include <stdio.h>
-#include <ctype.h>
-#include <errno.h>
-#include <wchar.h>
-#include <wctype.h>
-#include <fcntl.h>
-#include <setjmp.h>
-#include <limits.h>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "awk.h"
-#include "awkgram.tab.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/fmt/conv.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/time/time.h"
+#include "third_party/awk/awk.h"
+#include "third_party/awk/awkgram.tab.h"
+#include "third_party/libcxx/math.h"
+// clang-format off
 
 static void stdinit(void);
 static void flush_all(void);
@@ -56,23 +58,7 @@ void tempfree(Cell *p) {
 }
 #endif
 
-/* do we really need these? */
-/* #ifdef _NFILE */
-/* #ifndef FOPEN_MAX */
-/* #define FOPEN_MAX _NFILE */
-/* #endif */
-/* #endif */
-/*  */
-/* #ifndef	FOPEN_MAX */
-/* #define	FOPEN_MAX	40 */	/* max number of open files */
-/* #endif */
-/*  */
-/* #ifndef RAND_MAX */
-/* #define RAND_MAX	32767 */	/* all that ansi guarantees */
-/* #endif */
-
 jmp_buf env;
-extern	int	pairstack[];
 extern	Awkfloat	srand_seed;
 
 Node	*winner = NULL;	/* root of parse tree */
@@ -1659,10 +1645,8 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 				u = WEXITSTATUS(status);
 			} else if (WIFSIGNALED(status)) {
 				u = WTERMSIG(status) + 256;
-#ifdef WCOREDUMP
 				if (WCOREDUMP(status))
 					u += 256;
-#endif
 			} else	/* something else?!? */
 				u = 0;
 		}

@@ -1,38 +1,39 @@
-/****************************************************************
-Copyright (C) Lucent Technologies 1997
-All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appear in all
-copies and that both that the copyright notice and this
-permission notice and warranty disclaimer appear in supporting
-documentation, and that the name Lucent Technologies or any of
-its entities not be used in advertising or publicity pertaining
-to distribution of the software without specific, written prior
-permission.
-
-LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY
-SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
-IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-****************************************************************/
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+╚──────────────────────────────────────────────────────────────────────────────╝
+│                                                                              │
+│ Copyright (C) Lucent Technologies 1997                                       │
+│ All Rights Reserved                                                          │
+│                                                                              │
+│ Permission to use, copy, modify, and distribute this software and            │
+│ its documentation for any purpose and without fee is hereby                  │
+│ granted, provided that the above copyright notice appear in all              │
+│ copies and that both that the copyright notice and this                      │
+│ permission notice and warranty disclaimer appear in supporting               │
+│ documentation, and that the name Lucent Technologies or any of               │
+│ its entities not be used in advertising or publicity pertaining              │
+│ to distribution of the software without specific, written prior              │
+│ permission.                                                                  │
+│                                                                              │
+│ LUCENT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,                │
+│ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.             │
+│ IN NO EVENT SHALL LUCENT OR ANY OF ITS ENTITIES BE LIABLE FOR ANY            │
+│ SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES                    │
+│ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER              │
+│ IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,               │
+│ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF               │
+│ THIS SOFTWARE.                                                               │
+│                                                                              │
+╚─────────────────────────────────────────────────────────────────────────────*/
+#define DEBUG
+#include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
+#include "libc/str/str.h"
+#include "third_party/awk/awk.h"
+#include "third_party/awk/awkgram.tab.h"
+// clang-format off
 
 /* lasciate ogne speranza, voi ch'intrate. */
-
-#define	DEBUG
-
-#include <ctype.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "awk.h"
-#include "awkgram.tab.h"
 
 #define MAXLIN 22
 
@@ -866,25 +867,6 @@ Node *unary(Node *np)
  * must be less than twice the size of their full name.
  */
 
-/* Because isblank doesn't show up in any of the header files on any
- * system i use, it's defined here.  if some other locale has a richer
- * definition of "blank", define HAS_ISBLANK and provide your own
- * version.
- * the parentheses here are an attempt to find a path through the maze
- * of macro definition and/or function and/or version provided.  thanks
- * to nelson beebe for the suggestion; let's see if it works everywhere.
- */
-
-/* #define HAS_ISBLANK */
-#ifndef HAS_ISBLANK
-
-int (xisblank)(int c)
-{
-	return c==' ' || c=='\t';
-}
-
-#endif
-
 static const struct charclass {
 	const char *cc_name;
 	int cc_namelen;
@@ -892,11 +874,7 @@ static const struct charclass {
 } charclasses[] = {
 	{ "alnum",	5,	isalnum },
 	{ "alpha",	5,	isalpha },
-#ifndef HAS_ISBLANK
-	{ "blank",	5,	xisblank },
-#else
 	{ "blank",	5,	isblank },
-#endif
 	{ "cntrl",	5,	iscntrl },
 	{ "digit",	5,	isdigit },
 	{ "graph",	5,	isgraph },
