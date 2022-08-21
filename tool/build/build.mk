@@ -93,6 +93,14 @@ o/$(MODE)/tool/build/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/tool/build/blinkenlights.com:				\
+		o/$(MODE)/tool/build/blinkenlights.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com		\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/tool/build/emulator.o: private		\
 		OVERRIDE_COPTS +=			\
 			-fno-sanitize=pointer-overflow

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,38 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-nt.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/weaken.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/zipos/zipos.internal.h"
+#include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-/**
- * Changes current position of file descriptor/handle.
- *
- * @param fd is a number returned by open()
- * @param offset is the relative byte count
- * @param whence can be SEEK_SET, SEEK_CUR, or SEEK_END
- * @return new position relative to beginning, or -1 on error
- * @asyncsignalsafe
- */
-int64_t lseek(int fd, int64_t offset, unsigned whence) {
-  int64_t rc;
-  if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    rc = weaken(__zipos_lseek)(
-        (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
-  } else if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
-    rc = sys_lseek(fd, offset, whence, 0);
-  } else if (IsOpenbsd() || IsNetbsd()) {
-    rc = sys_lseek(fd, offset, offset, whence);
-  } else {
-    rc = sys_lseek_nt(fd, offset, whence);
-  }
-  STRACE("lseek(%d, %'ld, %s) → %'ld% m", fd, offset, DescribeWhence(whence),
-         rc);
-  return rc;
+char testlib_enable_tmp_setup_teardown;
+
+TEST(fseeko, test) {
+  FILE *f;
+  EXPECT_SYS(0, 0, xbarf("foo", "hello!", 6));
+  EXPECT_NE(NULL, (f = fopen("foo", "r")));
+  EXPECT_EQ(0, fseeko(f, -3, SEEK_END));
+  EXPECT_EQ('l', fgetc(f));
+  EXPECT_EQ('o', fgetc(f));
+  EXPECT_EQ(0, fseeko(f, 3, SEEK_SET));
+  EXPECT_EQ('l', fgetc(f));
+  EXPECT_EQ('o', fgetc(f));
+  EXPECT_EQ(0, fclose(f));
 }

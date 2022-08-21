@@ -45,6 +45,14 @@ o/$(MODE)/tool/plinko/%.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/tool/plinko/plinko.com:				\
+		o/$(MODE)/tool/plinko/plinko.com.dbg		\
+		o/$(MODE)/third_party/zip/zip.com		\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/tool/plinko/plinko.com.zip.o:				\
 		o/$(MODE)/tool/plinko/plinko.com
 

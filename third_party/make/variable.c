@@ -750,6 +750,8 @@ define_automatic_variables (void)
            ? "" : "-",
            (remote_description == 0 || remote_description[0] == '\0')
            ? "" : remote_description);
+  define_variable_cname ("LANDLOCKMAKE_VERSION",
+                         LANDLOCKMAKE_VERSION, o_default, 0);
   define_variable_cname ("MAKE_VERSION", buf, o_default, 0);
   define_variable_cname ("MAKE_HOST", make_host, o_default, 0);
 
@@ -757,11 +759,6 @@ define_automatic_variables (void)
      isn't one there.  */
   v = define_variable_cname ("SHELL", default_shell, o_default, 0);
 
-  /* On MSDOS we do use SHELL from environment, since it isn't a standard
-     environment variable on MSDOS, so whoever sets it, does that on purpose.
-     On OS/2 we do not use SHELL from environment but we have already handled
-     that problem above. */
-#if !defined(__MSDOS__) && !defined(__EMX__)
   /* Don't let SHELL come from the environment.  */
   if (*v->value == '\0' || v->origin == o_env || v->origin == o_env_override)
     {
@@ -769,7 +766,6 @@ define_automatic_variables (void)
       v->origin = o_file;
       v->value = xstrdup (default_shell);
     }
-#endif
 
   /* Make sure MAKEFILES gets exported if it is set.  */
   v = define_variable_cname ("MAKEFILES", "", o_default, 0);
@@ -777,24 +773,6 @@ define_automatic_variables (void)
 
   /* Define the magic D and F variables in terms of
      the automatic variables they are variations of.  */
-
-#if defined(__MSDOS__) || defined(WINDOWS32)
-  /* For consistency, remove the trailing backslash as well as slash.  */
-  define_variable_cname ("@D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $@)))",
-                         o_automatic, 1);
-  define_variable_cname ("%D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $%)))",
-                         o_automatic, 1);
-  define_variable_cname ("*D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $*)))",
-                         o_automatic, 1);
-  define_variable_cname ("<D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $<)))",
-                         o_automatic, 1);
-  define_variable_cname ("?D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $?)))",
-                         o_automatic, 1);
-  define_variable_cname ("^D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $^)))",
-                         o_automatic, 1);
-  define_variable_cname ("+D", "$(patsubst %/,%,$(patsubst %\\,%,$(dir $+)))",
-                         o_automatic, 1);
-#else  /* not __MSDOS__, not WINDOWS32 */
   define_variable_cname ("@D", "$(patsubst %/,%,$(dir $@))", o_automatic, 1);
   define_variable_cname ("%D", "$(patsubst %/,%,$(dir $%))", o_automatic, 1);
   define_variable_cname ("*D", "$(patsubst %/,%,$(dir $*))", o_automatic, 1);
@@ -802,7 +780,6 @@ define_automatic_variables (void)
   define_variable_cname ("?D", "$(patsubst %/,%,$(dir $?))", o_automatic, 1);
   define_variable_cname ("^D", "$(patsubst %/,%,$(dir $^))", o_automatic, 1);
   define_variable_cname ("+D", "$(patsubst %/,%,$(dir $+))", o_automatic, 1);
-#endif
   define_variable_cname ("@F", "$(notdir $@)", o_automatic, 1);
   define_variable_cname ("%F", "$(notdir $%)", o_automatic, 1);
   define_variable_cname ("*F", "$(notdir $*)", o_automatic, 1);
@@ -929,21 +906,11 @@ target_environment (struct file *file)
             && v->origin != o_env && v->origin != o_env_override)
           {
             char *value = recursively_expand_for_file (v, file);
-#ifdef WINDOWS32
-            if (strcmp (v->name, "Path") == 0 ||
-                strcmp (v->name, "PATH") == 0)
-              convert_Path_to_windows32 (value, ';');
-#endif
             *result++ = xstrdup (concat (3, v->name, "=", value));
             free (value);
           }
         else
           {
-#ifdef WINDOWS32
-            if (strcmp (v->name, "Path") == 0 ||
-                strcmp (v->name, "PATH") == 0)
-              convert_Path_to_windows32 (v->value, ';');
-#endif
             *result++ = xstrdup (concat (3, v->name, "=", v->value));
           }
       }

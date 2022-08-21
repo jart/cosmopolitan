@@ -75,12 +75,12 @@ o/%.a:
 	@$(COMPILE) -AARCHIVE -wT$@ $(AR) $(ARFLAGS) $@ @$(TMPDIR)/$(subst /,_,$@)
 
 o/%.pkg:
-	$(file >$(TMPDIR)/$(subst /,_,$@).args,$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
+	$(file >$(TMPSAFE).args,$(filter %.o,$^))
+	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPSAFE).args
 
 o/$(MODE)/%.pkg:
-	$(file >$(TMPDIR)/$(subst /,_,$@),$(filter %.o,$^))
-	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPDIR)/$(subst /,_,$@)
+	$(file >$(TMPSAFE).args,$(filter %.o,$^))
+	@$(COMPILE) -APACKAGE -wT$@ $(PKG) $(OUTPUT_OPTION) $(addprefix -d,$(filter %.pkg,$^)) @$(TMPSAFE).args
 
 o/$(MODE)/%.o: %.py o/$(MODE)/third_party/python/pyobj.com
 	@$(COMPILE) -wAPYOBJ o/$(MODE)/third_party/python/pyobj.com $(PYFLAGS) -o $@ $<
@@ -148,3 +148,24 @@ o/%.okk: %
 o/$(MODE)/%.okk: .UNSANDBOXED = 1
 o/$(MODE)/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
+
+################################################################################
+# executable helpers
+
+MAKE_OBJCOPY =					\
+	$(COMPILE) -AOBJCOPY -T$@		\
+	$(OBJCOPY) -S -O binary $< $@
+
+MAKE_SYMTAB_CREATE =				\
+	$(COMPILE) -wASYMTAB			\
+	o/$(MODE)/tool/build/symtab.com		\
+	-o $(TMPSAFE)/.symtab			\
+	$<
+
+MAKE_SYMTAB_ZIP =				\
+	$(COMPILE) -AZIP -T$@			\
+	o/$(MODE)/third_party/zip/zip.com	\
+	-b$(TMPDIR)				\
+	-9qj					\
+	$@					\
+	$(TMPSAFE)/.symtab

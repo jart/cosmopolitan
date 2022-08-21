@@ -17,6 +17,7 @@
 #include "third_party/zip/zip.h"
 #include "third_party/zip/revision.h"
 #ifdef UNICODE_SUPPORT
+#include "libc/stdio/lock.h"
 #include "third_party/zip/crc32.h"
 #endif
 
@@ -2957,7 +2958,8 @@ local int find_next_signature(f)
 
   /* look for P K ? ? signature */
 
-  m = getc(f);
+  flockfile(f);
+  m = getc_unlocked(f);
 
   /*
   here = zftello(f);
@@ -2969,20 +2971,20 @@ local int find_next_signature(f)
       /* found a P */
       sigbuf[0] = (char) m;
 
-      if ((m = getc(f)) == EOF)
+      if ((m = getc_unlocked(f)) == EOF)
         break;
       if (m != 0x4b /*'K' except EBCDIC*/) {
         /* not a signature */
-        ungetc(m, f);
+        ungetc_unlocked(m, f);
       } else {
         /* found P K */
         sigbuf[1] = (char) m;
 
-        if ((m = getc(f)) == EOF)
+        if ((m = getc_unlocked(f)) == EOF)
           break;
         if (m == 0x50 /*'P' except EBCDIC*/) {
           /* not a signature but maybe start of new one */
-          ungetc(m, f);
+          ungetc_unlocked(m, f);
           continue;
         } else if (m >= 16) {
           /* last 2 chars expect < 16 for signature */
@@ -2990,11 +2992,11 @@ local int find_next_signature(f)
         }
         sigbuf[2] = (char) m;
 
-        if ((m = getc(f)) == EOF)
+        if ((m = getc_unlocked(f)) == EOF)
           break;
         if (m == 0x50 /*'P' except EBCDIC*/) {
           /* not a signature but maybe start of new one */
-          ungetc(m, f);
+          ungetc_unlocked(m, f);
           continue;
         } else if (m >= 16) {
           /* last 2 chars expect < 16 */
@@ -3003,16 +3005,15 @@ local int find_next_signature(f)
         sigbuf[3] = (char) m;
 
         /* found possible signature */
+        funlockfile(f);
         return 1;
       }
     }
-    m = getc(f);
-  }
-  if (ferror(f)) {
-    return 0;
+    m = getc_unlocked(f);
   }
 
   /* found nothing */
+  funlockfile(f);
   return 0;
 }
 
@@ -4069,6 +4070,7 @@ local int scanzipf_regnew()
      bytes (=65557 bytes) from the end of the file.
      We back up 128k, to allow some junk being appended to a Zip file.
    */
+  int e = errno;
   if ((zfseeko(in_file, -0x20000L, SEEK_END) != 0) ||
       /* Some fseek() implementations (e.g. MSC 8.0 16-bit) fail to signal
          an error when seeking before the beginning of the file.
@@ -4076,6 +4078,7 @@ local int scanzipf_regnew()
          for the error value -1.
        */
       (zftello(in_file) == (zoff_t)-1L)) {
+    errno = e;
     /* file is less than 128 KB so back up to beginning */
     if (zfseeko(in_file, 0L, SEEK_SET) != 0) {
       fclose(in_file);
@@ -5119,28 +5122,12 @@ int readzipfile()
   zipfile_exists = 0;
 
   /* If zip file exists, read headers and check structure */
-#ifdef VMS
-  if (zipfile == NULL || !(*zipfile) || !strcmp(zipfile, "-"))
-    return ZE_OK;
-  {
-    int rtype;
-
-    if ((VMSmunch(zipfile, GET_RTYPE, (char *)&rtype) == RMS$_NORMAL) &&
-        (rtype == FAT$C_VARIABLE)) {
-      fprintf(mesg,
-     "\n     Error:  zipfile is in variable-length record format.  Please\n\
-     run \"bilf b %s\" to convert the zipfile to fixed-length\n\
-     record format.\n\n", zipfile);
-      return ZE_FORM;
-    }
-  }
-  readable = ((f = zfopen(zipfile, FOPR)) != NULL);
-#else /* !VMS */
   readable = (zipfile != NULL && *zipfile && strcmp(zipfile, "-"));
   if (readable) {
+    int e = errno;
     readable = ((f = zfopen(zipfile, FOPR)) != NULL);
+    errno = e;
   }
-#endif /* ?VMS */
 
   /* skip check if streaming */
   if (!readable) {
@@ -5155,62 +5142,8 @@ int readzipfile()
     zipfile_exists = 1;
   }
 
-#ifdef MVS
-  /* Very nasty special case for MVS.  Just because the zipfile has been
-   * opened for reading does not mean that we can actually read the data.
-   * Typical JCL to create a zipfile is
-   *
-   * //ZIPFILE  DD  DISP=(NEW,CATLG),DSN=prefix.ZIP,
-   * //             SPACE=(CYL,(10,10))
-   *
-   * That creates a VTOC entry with an end of file marker (DS1LSTAR) of zero.
-   * Alas the VTOC end of file marker is only used when the file is opened in
-   * append mode.  When a file is opened in read mode, the "other" end of file
-   * marker is used, a zero length data block signals end of file when reading.
-   * With a brand new file which has not been written to yet, it is undefined
-   * what you read off the disk.  In fact you read whatever data was in the same
-   * disk tracks before the zipfile was allocated.  You would be amazed at the
-   * number of application programmers who still do not understand this.  Makes
-   * for interesting and semi-random errors, GIGO.
-   *
-   * Newer versions of SMS will automatically write a zero length block when a
-   * file is allocated.  However not all sites run SMS or they run older levels
-   * so we cannot rely on that.  The only safe thing to do is close the file,
-   * open in append mode (we already know that the file exists), close it again,
-   * reopen in read mode and try to read a data block.  Opening and closing in
-   * append mode will write a zero length block where DS1LSTAR points, making
-   * sure that the VTOC and internal end of file markers are in sync.  Then it
-   * is safe to read data.  If we cannot read one byte of data after all that,
-   * it is a brand new zipfile and must not be read.
-   */
-  if (readable)
-  {
-    char c;
-    fclose(f);
-    /* append mode */
-    if ((f = zfopen(zipfile, "ab")) == NULL) {
-      ZIPERR(ZE_OPEN, zipfile);
-    }
-    fclose(f);
-    /* read mode again */
-    if ((f = zfopen(zipfile, FOPR)) == NULL) {
-      ZIPERR(ZE_OPEN, zipfile);
-    }
-    if (fread(&c, 1, 1, f) != 1) {
-      /* no actual data */
-      readable = 0;
-      fclose(f);
-    }
-    else{
-      fseek(f, 0, SEEK_SET);  /* at least one byte in zipfile, back to the start */
-    }
-  }
-#endif /* MVS */
-
   /* ------------------------ */
   /* new file read */
-
-
 
 #ifndef UTIL
   if (fix == 2) {

@@ -154,6 +154,14 @@ o/$(MODE)/third_party/quickjs/qjs.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/quickjs/qjs.com:						\
+		o/$(MODE)/third_party/quickjs/qjs.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/third_party/quickjs/qjsc.com.dbg:					\
 		$(THIRD_PARTY_QUICKJS)						\
 		o/$(MODE)/third_party/quickjs/qjsc.o				\

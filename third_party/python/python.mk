@@ -4332,6 +4332,14 @@ o/$(MODE)/third_party/python/python.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/python/python.com:				\
+		o/$(MODE)/third_party/python/python.com.dbg		\
+		o/$(MODE)/third_party/zip/zip.com			\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 ################################################################################
 # FREEZE.COM
 

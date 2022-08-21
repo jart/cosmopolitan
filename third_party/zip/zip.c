@@ -35,16 +35,9 @@
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/x/x.h"
 #include "third_party/bzip2/bzlib.h"
 
 #define MAXCOM 256      /* Maximum one-line comment size */
-
-static char *EnsureDirs(char *path) {
-  makedirs(gc(xdirname(path)), 0755);
-  return path;
-}
 
 /* Local option flags */
 #ifndef DELETE
@@ -2204,15 +2197,6 @@ char **argv;            /* command line tokens */
   }
 #endif
 
-#ifdef RISCOS
-  set_prefix();
-#endif
-
-#ifdef __human68k__
-  fflush(stderr);
-  setbuf(stderr, NULL);
-#endif
-
 /* Re-initialize global variables to make the zip dll re-entrant. It is
  * possible that we could get away with not re-initializing all of these
  * but better safe than sorry.
@@ -2591,25 +2575,6 @@ char **argv;            /* command line tokens */
   {
     switch (option)
     {
-#ifdef EBCDIC
-      case 'a':
-        aflag = ASCII;
-        printf("Translating to ASCII...\n");
-        break;
-#endif /* EBCDIC */
-#ifdef CMS_MVS
-        case 'B':
-          bflag = 1;
-          printf("Using binary mode...\n");
-          break;
-#endif /* CMS_MVS */
-#ifdef TANDEM
-        case 'B':
-          nskformatopt(value);
-          free(value);
-          break;
-#endif
-
         case '0':
           method = STORE; level = 0; break;
         case '1':  case '2':  case '3':  case '4':
@@ -2645,11 +2610,6 @@ char **argv;            /* command line tokens */
           }
           action = DELETE;
           break;
-#ifdef MACOS
-        case o_df:
-          MacZip.DataForkOnly = true;
-          break;
-#endif /* MACOS */
         case o_db:
           if (negated)
             display_bytes = 0;
@@ -3835,7 +3795,7 @@ char **argv;            /* command line tokens */
       }
       strcat(tempzip, "ziXXXXXX");
 
-      if ((yd = mkstemp(EnsureDirs(gc(xjoinpaths(kTmpPath, tempzip))))) == EOF) {
+      if ((yd = mkstemp(tempzip)) == EOF) {
         ZIPERR(ZE_TEMP, tempzip);
       }
       if ((y = fdopen(yd, FOPW_TMP)) == NULL) {
@@ -4838,7 +4798,7 @@ char **argv;            /* command line tokens */
       }
       strcat(tempzip, "ziXXXXXX");
 
-      if ((yd = mkstemp(EnsureDirs(gc(xjoinpaths(kTmpPath, tempzip))))) == EOF) {
+      if ((yd = mkstemp(tempzip)) == EOF) {
         ZIPERR(ZE_TEMP, tempzip);
       }
       if ((y = fdopen(yd, FOPW_TMP)) == NULL) {

@@ -22,10 +22,7 @@
 #include "libc/stdio/temp.h"
 #include "libc/time/time.h"
 #include "libc/time/struct/tm.h"
-#include "libc/fmt/fmt.h"
-#include "libc/x/x.h"
-#include "libc/x/x.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/limits.h"
 
 #ifdef NO_MKTIME
@@ -1178,7 +1175,6 @@ ulg dostime;            /* DOS time to convert */
 #endif /* ZP_NEED_GEN_D2U_TIME */
 
 
-#ifndef MACOS
 int destroy(f)
   char *f;             /* file to delete */
 /* Delete the file *f, returning non-zero on failure. */
@@ -1195,68 +1191,31 @@ char *d, *s;            /* destination and source file names */
  */
 {
   z_stat t;         /* results of stat() */
-#if defined(CMS_MVS)
-  /* cmsmvs.h defines FOPW_TEMP as memory(hiperspace).  Since memory is
-   * lost at end of run, always do copy instead of rename.
-   */
-  int copy = 1;
-#else
   int copy = 0;
-#endif
   int d_exists;
 
-#if defined(VMS) || defined(CMS_MVS)
-  /* stat() is broken on VMS remote files (accessed through Decnet).
-   * This patch allows creation of remote zip files, but is not sufficient
-   * to update them or compress remote files */
-  unlink(d);
-#else /* !(VMS || CMS_MVS) */
   d_exists = (LSTAT(d, &t) == 0);
   if (d_exists)
   {
     /*
      * respect existing soft and hard links!
      */
-    if (t.st_nlink > 1
-# ifdef S_IFLNK
-        || (t.st_mode & S_IFMT) == S_IFLNK
-# endif
-        )
+    if (t.st_nlink > 1 || (t.st_mode & S_IFMT) == S_IFLNK)
        copy = 1;
     else if (unlink(d))
        return ZE_CREAT;                 /* Can't erase zip file--give up */
   }
-#endif /* ?(VMS || CMS_MVS) */
-#ifndef CMS_MVS
   if (!copy) {
       if (rename(s, d)) {               /* Just move s on top of d */
           copy = 1;                     /* failed ? */
-#if !defined(VMS) && !defined(ATARI) && !defined(AZTEC_C)
-#if !defined(CMS_MVS) && !defined(RISCOS) && !defined(QDOS)
-    /* For VMS, ATARI, AMIGA Aztec, VM_CMS, MVS, RISCOS,
-       always assume that failure is EXDEV */
-          if (errno != EXDEV
-#  ifdef THEOS
-           && errno != EEXIST
-#  else
-#    ifdef ENOTSAM
-           && errno != ENOTSAM /* Used at least on Turbo C */
-#    endif
-#  endif
-              ) return ZE_CREAT;
-#endif /* !CMS_MVS && !RISCOS */
-#endif /* !VMS && !ATARI && !AZTEC_C */
+          if (errno != EXDEV)
+            return ZE_CREAT;
       }
   }
-#endif /* !CMS_MVS */
 
   if (copy) {
     FILE *f, *g;        /* source and destination files */
     int r;              /* temporary variable */
-
-#ifdef RISCOS
-    if (SWI_OS_FSControl_26(s,d,0xA1)!=NULL) {
-#endif
 
     /* Use zfopen for almost all opens where fopen is used.  For
        most OS that support large files we use the 64-bit file
@@ -1280,13 +1239,9 @@ char *d, *s;            /* destination and source file names */
       return r ? (r == ZE_TEMP ? ZE_WRITE : r) : ZE_WRITE;
     }
     unlink(s);
-#ifdef RISCOS
-    }
-#endif
   }
   return ZE_OK;
 }
-#endif /* !MACOS */
 
 
 int getfileattr(f)
@@ -1326,24 +1281,12 @@ int a;                  /* attributes returned by getfileattr() */
 
 #ifndef VMS /* VMS-specific function is in VMS.C. */
 
-static char *EnsureDirs(char *path) {
-  makedirs(gc(xdirname(path)), 0755);
-  return path;
-}
-
 char *tempname(zip)
   char *zip;              /* path name of zip file to generate temp name for */
 
 /* Return a temporary file name in its own malloc'ed space, using tempath. */
 {
   char *t = zip;   /* malloc'ed space for name (use zip to avoid warning) */
-
-#ifdef __COSMOPOLITAN__
-  t = malloc(PATH_MAX);
-  snprintf(t, PATH_MAX, "%szip.XXXXXX", kTmpPath);
-  mkstemp(EnsureDirs(t));
-  return t;
-#endif
 
 # ifdef CMS_MVS
   if ((t = malloc(strlen(tempath) + L_tmpnam + 2)) == NULL)

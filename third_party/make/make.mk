@@ -150,6 +150,14 @@ o/$(MODE)/third_party/make/make.com.dbg:		\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/make/make.com:			\
+		o/$(MODE)/third_party/make/make.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com	\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/third_party/make/strcache.o			\
 o/$(MODE)/third_party/make/expand.o			\
 o/$(MODE)/third_party/make/read.o: private		\

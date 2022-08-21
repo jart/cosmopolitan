@@ -38,7 +38,6 @@ TOOL_VIZ_DIRECTDEPS =				\
 	LIBC_STUBS				\
 	LIBC_SYSV				\
 	LIBC_SYSV_CALLS				\
-	LIBC_TESTLIB				\
 	LIBC_TIME				\
 	LIBC_TINYMATH				\
 	LIBC_X					\
@@ -78,6 +77,22 @@ o/$(MODE)/tool/viz/printimage.com.dbg:		\
 		$(CRT)				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/tool/viz/printimage.com:			\
+		o/$(MODE)/tool/viz/printimage.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com	\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
+o/$(MODE)/tool/viz/printvideo.com:			\
+		o/$(MODE)/tool/viz/printvideo.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com	\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/tool/viz/derasterize.o: private	\
 		OVERRIDE_CFLAGS +=		\

@@ -53,6 +53,14 @@ o/$(MODE)/third_party/tidy/tidy.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/tidy/tidy.com:						\
+		o/$(MODE)/third_party/tidy/tidy.com.dbg				\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/third_party/tidy/.tidyrc.zip.o: private ZIPOBJ_FLAGS += -B
 
 THIRD_PARTY_TIDY_COMS =								\

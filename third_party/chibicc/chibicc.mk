@@ -83,6 +83,14 @@ o/$(MODE)/third_party/chibicc/chibicc.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A).pkg
 	@$(APELINK)
 
+o/$(MODE)/third_party/chibicc/chibicc.com:				\
+		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
+		o/$(MODE)/third_party/zip/zip.com			\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 o/$(MODE)/third_party/chibicc/as.com.dbg:				\
 		$(THIRD_PARTY_CHIBICC_A_DEPS)				\
 		$(THIRD_PARTY_CHIBICC_A)				\

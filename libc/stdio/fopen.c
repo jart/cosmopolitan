@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -68,6 +67,5 @@ FILE *fopen(const char *pathname, const char *mode) {
       close(fd);
     }
   }
-  STRACE("fopen(%#s, %#s) → %p% m", pathname, mode, f);
   return f;
 }

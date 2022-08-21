@@ -74,6 +74,14 @@ o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/third_party/sqlite3/sqlite3.com:				\
+		o/$(MODE)/third_party/sqlite3/sqlite3.com.dbg		\
+		o/$(MODE)/third_party/zip/zip.com			\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 $(THIRD_PARTY_SQLITE3_A):						\
 		third_party/sqlite3/					\
 		$(THIRD_PARTY_SQLITE3_A).pkg				\

@@ -110,10 +110,11 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 
 o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -wASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
-	@$(COMPILE) -wAZIP -T$@ $@ -A $(SYMTAB)
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
 
 # REDBEAN-DEMO.COM
 #
@@ -223,10 +224,11 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 
 o/$(MODE)/tool/net/redbean-demo.com:						\
 		o/$(MODE)/tool/net/redbean-demo.com.dbg				\
+		o/$(MODE)/third_party/zip/zip.com				\
 		o/$(MODE)/tool/build/symtab.com
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-	@$(COMPILE) -wASYMTAB o/$(MODE)/tool/build/symtab.com -o $(SYMTAB) $<
-	@$(COMPILE) -wAZIP -T$@ $@ -A $(SYMTAB)
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
 
 # REDBEAN-STATIC.COM
 #
@@ -243,6 +245,14 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/tool/net/redbean-static.com:						\
+		o/$(MODE)/tool/net/redbean-static.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
 
 # REDBEAN-UNSECURE.COM
 #
@@ -269,6 +279,14 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/tool/net/redbean-unsecure.com:					\
+		o/$(MODE)/tool/net/redbean-unsecure.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
 # REDBEAN-ORIGINAL.COM
 #
 # Passing the -DSTATIC and -DUNSECURE flags together w/ MODE=tiny will
@@ -285,6 +303,14 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/tool/net/redbean-original.com:					\
+		o/$(MODE)/tool/net/redbean-original.com.dbg			\
+		o/$(MODE)/third_party/zip/zip.com				\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
 
 o/$(MODE)/tool/net/demo/.lua/.zip.o:						\
 		tool/net/demo/.lua

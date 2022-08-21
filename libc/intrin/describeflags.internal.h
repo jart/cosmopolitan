@@ -51,14 +51,15 @@ const char *DescribeSockOptname(char[32], int, int);
 const char *DescribeSocketFamily(char[12], int);
 const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
+const char *DescribeWhence(char[12], int);
 
 #define DescribeCapability(x)        DescribeCapability(alloca(20), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
-#define DescribeDirfd(dirfd)         DescribeDirfd(alloca(12), dirfd)
+#define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
 #define DescribeFutexResult(x)       DescribeFutexResult(alloca(12), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
-#define DescribeMapFlags(dirfd)      DescribeMapFlags(alloca(64), dirfd)
+#define DescribeMapFlags(x)          DescribeMapFlags(alloca(64), x)
 #define DescribeMapping(x, y)        DescribeMapping(alloca(8), x, y)
 #define DescribeNtConsoleInFlags(x)  DescribeNtConsoleInFlags(alloca(256), x)
 #define DescribeNtConsoleOutFlags(x) DescribeNtConsoleOutFlags(alloca(128), x)
@@ -77,10 +78,10 @@ const char *DescribeSocketType(char[64], int);
 #define DescribeOpenFlags(x)         DescribeOpenFlags(alloca(128), x)
 #define DescribePersonalityFlags(p)  DescribePersonalityFlags(alloca(128), p)
 #define DescribePollFlags(p)         DescribePollFlags(alloca(64), p)
-#define DescribeProtFlags(dirfd)     DescribeProtFlags(alloca(48), dirfd)
+#define DescribeProtFlags(x)         DescribeProtFlags(alloca(48), x)
 #define DescribePtrace(i)            DescribePtrace(alloca(12), i)
 #define DescribePtraceEvent(x)       DescribePtraceEvent(alloca(32), x)
-#define DescribeRemapFlags(dirfd)    DescribeRemapFlags(alloca(48), dirfd)
+#define DescribeRemapFlags(x)        DescribeRemapFlags(alloca(48), x)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
 #define DescribeSockLevel(x)         DescribeSockLevel(alloca(12), x)
@@ -88,6 +89,7 @@ const char *DescribeSocketType(char[64], int);
 #define DescribeSocketFamily(x)      DescribeSocketFamily(alloca(12), x)
 #define DescribeSocketProtocol(x)    DescribeSocketProtocol(alloca(12), x)
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
+#define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

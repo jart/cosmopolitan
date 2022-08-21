@@ -131,9 +131,6 @@ o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/mbedtls/test/%.com: o/$(MODE)/third_party/mbedtls/test/%.com.dbg
-	@$(COMPILE) -AOBJCOPY -T$@ $(OBJCOPY) -S -O binary $< $@
-
 o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
 	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 

@@ -65,7 +65,6 @@ ZIPOBJ = build/bootstrap/zipobj.com
 FIXUPOBJ = build/bootstrap/fixupobj.com
 MKDIR = build/bootstrap/mkdir.com -p
 COMPILE = build/bootstrap/compile.com -V9 -P4096 $(QUOTA)
-SYMTAB = $(TMPDIR)/$(subst /,_,$@).symtab
 
 COMMA := ,
 PWD := $(shell build/bootstrap/pwd.com)
@@ -107,6 +106,12 @@ export MKDIR
 export MODE
 export SOURCE_DATE_EPOCH
 export TMPDIR
+
+ifeq ($(LANDLOCKMAKE_VERSION),)
+TMPSAFE = $(TMPDIR)/$(subst /,_,$@)
+else
+TMPSAFE = $(TMPDIR)/
+endif
 
 FTRACE =								\
 	-pg
