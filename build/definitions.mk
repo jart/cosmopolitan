@@ -108,7 +108,7 @@ export SOURCE_DATE_EPOCH
 export TMPDIR
 
 ifeq ($(LANDLOCKMAKE_VERSION),)
-TMPSAFE = $(TMPDIR)/$(subst /,_,$@)
+TMPSAFE = $(TMPDIR)/$(subst /,_,$@).tmp
 else
 TMPSAFE = $(TMPDIR)/
 endif
