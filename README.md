@@ -196,7 +196,7 @@ For further details, see [//build/config.mk](build/config.mk).
 
 Here's the recommended `~/.gdbinit` config:
 
-```
+```gdb
 set host-charset UTF-8
 set target-charset UTF-8
 set target-wide-charset UTF-8
