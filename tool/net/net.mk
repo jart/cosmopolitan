@@ -88,22 +88,32 @@ o/$(MODE)/tool/net/%.com.dbg:							\
 #
 # The little web server that could!
 
+TOOL_NET_REDBEAN_LUA_MODULES =							\
+	o/$(MODE)/tool/net/lfuncs.o						\
+	o/$(MODE)/tool/net/lpath.o						\
+	o/$(MODE)/tool/net/lfinger.o						\
+	o/$(MODE)/tool/net/lre.o						\
+	o/$(MODE)/tool/net/ljson.o						\
+	o/$(MODE)/tool/net/lmaxmind.o						\
+	o/$(MODE)/tool/net/lsqlite3.o						\
+	o/$(MODE)/tool/net/largon2.o
+
+TOOL_NET_REDBEAN_STANDARD_ASSETS =						\
+	tool/net/.init.lua							\
+	tool/net/favicon.ico							\
+	tool/net/redbean.png							\
+	tool/net/help.txt
+
+TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP =						\
+	$(COMPILE) -AZIP -T$@							\
+	o/$(MODE)/third_party/zip/zip.com -b$(TMPDIR) -9qj $@			\
+	$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+
 o/$(MODE)/tool/net/redbean.com.dbg:						\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
-		o/$(MODE)/tool/net/lfuncs.o					\
-		o/$(MODE)/tool/net/lpath.o					\
-		o/$(MODE)/tool/net/lfinger.o					\
-		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/ljson.o					\
-		o/$(MODE)/tool/net/lmaxmind.o					\
-		o/$(MODE)/tool/net/lsqlite3.o					\
-		o/$(MODE)/tool/net/largon2.o					\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)					\
 		o/$(MODE)/tool/net/net.pkg					\
-		o/$(MODE)/tool/net/help.txt.zip.o				\
-		o/$(MODE)/tool/net/.init.lua.zip.o				\
-		o/$(MODE)/tool/net/favicon.ico.zip.o				\
-		o/$(MODE)/tool/net/redbean.png.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -111,10 +121,12 @@ o/$(MODE)/tool/net/redbean.com.dbg:						\
 o/$(MODE)/tool/net/redbean.com:							\
 		o/$(MODE)/tool/net/redbean.com.dbg				\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
+	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 # REDBEAN-DEMO.COM
 #
@@ -172,14 +184,7 @@ o/$(MODE)/tool/net/demo/virtualbean.html.zip.o: private				\
 o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean.o					\
-		o/$(MODE)/tool/net/lfuncs.o					\
-		o/$(MODE)/tool/net/lpath.o					\
-		o/$(MODE)/tool/net/lfinger.o					\
-		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/ljson.o					\
-		o/$(MODE)/tool/net/lmaxmind.o					\
-		o/$(MODE)/tool/net/lsqlite3.o					\
-		o/$(MODE)/tool/net/largon2.o					\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)					\
 		o/$(MODE)/tool/net/net.pkg					\
 		o/$(MODE)/tool/net/demo/sql.lua.zip.o				\
 		o/$(MODE)/tool/net/demo/unix-unix.lua.zip.o			\
@@ -239,9 +244,6 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-static.o				\
 		o/$(MODE)/tool/net/net.pkg					\
-		o/$(MODE)/tool/net/favicon.ico.zip.o				\
-		o/$(MODE)/tool/net/redbean.png.zip.o				\
-		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -249,10 +251,12 @@ o/$(MODE)/tool/net/redbean-static.com.dbg:					\
 o/$(MODE)/tool/net/redbean-static.com:						\
 		o/$(MODE)/tool/net/redbean-static.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
+	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 # REDBEAN-UNSECURE.COM
 #
@@ -263,18 +267,8 @@ o/$(MODE)/tool/net/redbean-static.com:						\
 o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-unsecure.o				\
-		o/$(MODE)/tool/net/lfuncs.o					\
-		o/$(MODE)/tool/net/lpath.o					\
-		o/$(MODE)/tool/net/lfinger.o					\
-		o/$(MODE)/tool/net/lre.o					\
-		o/$(MODE)/tool/net/ljson.o					\
-		o/$(MODE)/tool/net/lmaxmind.o					\
-		o/$(MODE)/tool/net/lsqlite3.o					\
-		o/$(MODE)/tool/net/largon2.o					\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)					\
 		o/$(MODE)/tool/net/net.pkg					\
-		o/$(MODE)/tool/net/favicon.ico.zip.o				\
-		o/$(MODE)/tool/net/redbean.png.zip.o				\
-		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -282,10 +276,12 @@ o/$(MODE)/tool/net/redbean-unsecure.com.dbg:					\
 o/$(MODE)/tool/net/redbean-unsecure.com:					\
 		o/$(MODE)/tool/net/redbean-unsecure.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
+	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 # REDBEAN-ORIGINAL.COM
 #
@@ -297,9 +293,6 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 		$(TOOL_NET_DEPS)						\
 		o/$(MODE)/tool/net/redbean-original.o				\
 		o/$(MODE)/tool/net/net.pkg					\
-		o/$(MODE)/tool/net/favicon.ico.zip.o				\
-		o/$(MODE)/tool/net/redbean.png.zip.o				\
-		o/$(MODE)/tool/net/help.txt.zip.o				\
 		$(CRT)								\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
@@ -307,10 +300,12 @@ o/$(MODE)/tool/net/redbean-original.com.dbg:					\
 o/$(MODE)/tool/net/redbean-original.com:					\
 		o/$(MODE)/tool/net/redbean-original.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com				\
-		o/$(MODE)/tool/build/symtab.com
+		o/$(MODE)/tool/build/symtab.com					\
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
 	@$(MAKE_OBJCOPY)
 	@$(MAKE_SYMTAB_CREATE)
 	@$(MAKE_SYMTAB_ZIP)
+	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 o/$(MODE)/tool/net/demo/.lua/.zip.o:						\
 		tool/net/demo/.lua
