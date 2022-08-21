@@ -1,0 +1,17 @@
+DESCRIPTION
+
+  The One True Awk
+
+  This is the version of awk described in The AWK Programming Language,
+  by Al Aho, Brian Kernighan, and Peter Weinberger (Addison-Wesley,
+  1988, ISBN 0-201-07981-X).
+
+SOURCE
+
+  https://github.com/onetrueawk/awk
+
+  commit b92d8cecd132ce8e02a373e28dd42e6be34d3d59
+  Author: ozan yigit <ozan.yigit@gmail.com>
+  Date:   Mon May 30 11:34:52 2022 -0400
+
+    added YACC definition for byacc.
