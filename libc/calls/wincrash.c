@@ -29,11 +29,11 @@
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
 
-unsigned __wincrash(struct NtExceptionPointers *ep) {
+privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   int64_t rip;
   int sig, code;
   ucontext_t ctx;
-  STRACE("__wincrash rip=%lx", ep->ContextRecord->Rip);
+  STRACE("__wincrash");
 
   switch (ep->ExceptionRecord->ExceptionCode) {
     case kNtSignalBreakpoint:
