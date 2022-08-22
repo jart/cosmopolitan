@@ -1,0 +1,12 @@
+DESCRIPTION
+
+  sed is a stream editor program
+
+ORIGIN
+
+  https://github.com/netbsd/src
+  6348f192439798ea49b672bb9a00490240376889
+
+LOCAL CHANGES
+
+  None.
