@@ -152,7 +152,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020010
+#define VERSION          0x020011
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
