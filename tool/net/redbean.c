@@ -356,7 +356,6 @@ typedef ssize_t (*writer_f)(int, struct iovec *, int);
 
 struct ClearedPerMessage {
   bool istext;
-  bool gzipped;
   bool branded;
   bool hascontenttype;
   bool gotcachecontrol;
@@ -366,6 +365,7 @@ struct ClearedPerMessage {
   int isyielding;
   char *outbuf;
   char *content;
+  size_t gzipped;
   size_t contentlength;
   char *luaheaderp;
   const char *referrerpolicy;
@@ -2336,7 +2336,7 @@ static char *CommitOutput(char *p) {
         p = stpcpy(p, "Vary: Accept-Encoding\r\n");
       }
       if (!IsTiny() && !IsSslCompressed() && ClientAcceptsGzip()) {
-        cpm.gzipped = true;
+        cpm.gzipped = outbuflen;
         crc = crc32_z(0, cpm.outbuf, outbuflen);
         WRITE32LE(gzip_footer + 0, crc);
         WRITE32LE(gzip_footer + 4, outbuflen);
@@ -2568,7 +2568,7 @@ static char *ServeAssetCompressed(struct Asset *a) {
   } else {
     dg.z = 65536;
   }
-  cpm.gzipped = true;
+  cpm.gzipped = -1;  // signal generator usage with the exact size unknown
   cpm.generator = DeflateGenerator;
   bzero(&dg.s, sizeof(dg.s));
   CHECK_EQ(Z_OK, deflateInit2(&dg.s, 4, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL,
@@ -2661,9 +2661,9 @@ static inline char *ServeAssetPrecompressed(struct Asset *a) {
   uint32_t crc;
   DEBUGF("(srvr) ServeAssetPrecompressed()");
   LockInc(&shared->c.precompressedresponses);
-  cpm.gzipped = true;
   crc = ZIP_CFILE_CRC32(zbase + a->cf);
   size = GetZipCfileUncompressedSize(zbase + a->cf);
+  cpm.gzipped = size;
   WRITE32LE(gzip_footer + 0, crc);
   WRITE32LE(gzip_footer + 4, size);
   return SetStatus(200, "OK");
@@ -3988,8 +3988,18 @@ static int LuaGetBody(lua_State *L) {
 }
 
 static int LuaGetResponseBody(lua_State *L) {
+  char *s = "";
+  // response can be gzipped (>0), text (=0), or generator (<0)
+  int size = cpm.gzipped > 0 ? cpm.gzipped  // original size
+           : cpm.gzipped == 0 ? cpm.contentlength : 0;
   OnlyCallDuringRequest(L, "GetResponseBody");
-  lua_pushlstring(L, cpm.content, cpm.contentlength);
+  if (cpm.gzipped > 0 &&
+     (!(s = FreeLater(malloc(cpm.gzipped))) ||
+      !Inflate(s, cpm.gzipped, cpm.content, cpm.contentlength))) {
+    return LuaNilError(L, "failed to decompress response");
+  }
+  lua_pushlstring(L, cpm.gzipped > 0 ? s  // return decompressed
+                   : cpm.gzipped == 0 ? cpm.content : "", size);
   return 1;
 }
 
