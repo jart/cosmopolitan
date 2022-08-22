@@ -5727,7 +5727,7 @@ static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
 static bool IsNotModified(struct Asset *a) {
   if (cpm.msg.version < 10) return false;
   if (!HasHeader(kHttpIfModifiedSince)) return false;
-  return a->lastmodified <
+  return a->lastmodified <=
          ParseHttpDateTime(HeaderData(kHttpIfModifiedSince),
                            HeaderLength(kHttpIfModifiedSince));
 }
