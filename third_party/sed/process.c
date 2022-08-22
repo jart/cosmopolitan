@@ -1,3 +1,4 @@
+// clang-format off
 /*	$NetBSD: process.c,v 1.53 2020/05/15 22:39:54 christos Exp $	*/
 
 /*-
@@ -33,40 +34,71 @@
  * SUCH DAMAGE.
  */
 
-#if HAVE_NBTOOL_CONFIG_H
-#include "nbtool_config.h"
-#endif
+#include "libc/calls/makedev.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/intrin/newbie.h"
+#include "libc/calls/typedef/u.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sock/select.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/time/time.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/modem.h"
+#include "libc/sysv/consts/pty.h"
+#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/consts/termios.h"
+#include "libc/str/unicode.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/calls/calls.h"
 
-#include <sys/cdefs.h>
-__RCSID("$NetBSD: process.c,v 1.53 2020/05/15 22:39:54 christos Exp $");
-#ifdef __FBSDID
-__FBSDID("$FreeBSD: head/usr.bin/sed/process.c 192732 2009-05-25 06:45:33Z brian $");
-#endif
+#include "libc/str/str.h"
+#include "libc/log/bsd.h"
+#include "libc/errno.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "third_party/regex/regex.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/lock.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/mem/alg.h"
+#include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/temp.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "libc/mem/alg.h"
+#include "libc/str/str.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "third_party/getopt/getopt.h"
+#include "libc/str/str.h"
+#include "libc/time/time.h"
+#include "libc/str/str.h"
 
-#if 0
-static const char sccsid[] = "@(#)process.c	8.6 (Berkeley) 4/20/94";
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/uio.h>
-
-#include <ctype.h>
-#include <err.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <regex.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <wchar.h>
-#include <wctype.h>
-
-#include "defs.h"
-#include "extern.h"
+#include "third_party/sed/defs.h"
+#include "third_party/sed/extern.h"
 
 static SPACE HS, PS, SS, YS;
 #define	pd		PS.deleted
@@ -554,7 +586,7 @@ flush_appends(void)
 {
 	FILE *f;
 	size_t count, i;
-	char buf[8 * 1024];
+	char *buf = gc(malloc(8 * 1024));
 
 	for (i = 0; i < appendx; i++)
 		switch (appends[i].type) {

@@ -1,3 +1,4 @@
+// clang-format off
 /*	$NetBSD: misc.c,v 1.15 2014/06/26 02:14:32 christos Exp $	*/
 
 /*-
@@ -33,31 +34,36 @@
  * SUCH DAMAGE.
  */
 
-#if HAVE_NBTOOL_CONFIG_H
-#include "nbtool_config.h"
-#endif
+#include "libc/calls/makedev.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/intrin/newbie.h"
+#include "libc/calls/typedef/u.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sock/select.h"
+#include "libc/sysv/consts/endian.h"
 
-#include <sys/cdefs.h>
-__RCSID("$NetBSD: misc.c,v 1.15 2014/06/26 02:14:32 christos Exp $");
-#ifdef __FBSDID
-__FBSDID("$FreeBSD: head/usr.bin/sed/misc.c 200462 2009-12-13 03:14:06Z delphij $");
-#endif
+#include "libc/log/bsd.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "third_party/regex/regex.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/lock.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/mem/alg.h"
+#include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/temp.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "libc/mem/alg.h"
+#include "libc/str/str.h"
 
-#if 0
-static const char sccsid[] = "@(#)misc.c	8.1 (Berkeley) 6/6/93";
-#endif
-
-#include <sys/types.h>
-
-#include <err.h>
-#include <limits.h>
-#include <regex.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "defs.h"
-#include "extern.h"
+#include "third_party/sed/defs.h"
+#include "third_party/sed/extern.h"
 
 /*
  * malloc with result test

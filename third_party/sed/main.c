@@ -1,3 +1,4 @@
+// clang-format off
 /*	$NetBSD: main.c,v 1.36 2020/05/15 22:39:54 christos Exp $	*/
 
 /*-
@@ -34,46 +35,84 @@
  * SUCH DAMAGE.
  */
 
-#if HAVE_NBTOOL_CONFIG_H
-#include "nbtool_config.h"
-#endif
+#include "libc/calls/makedev.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/intrin/newbie.h"
+#include "libc/calls/typedef/u.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sock/select.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mlock.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/madv.h"
+#include "libc/sysv/consts/mfd.h"
+#include "libc/sysv/consts/mremap.h"
+#include "libc/intrin/newbie.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/sysparam.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
+#include "libc/time/time.h"
 
-#include <sys/cdefs.h>
-__RCSID("$NetBSD: main.c,v 1.36 2020/05/15 22:39:54 christos Exp $");
-#ifdef __FBSDID
-__FBSDID("$FreeBSD: head/usr.bin/sed/main.c 252231 2013-06-26 04:14:19Z pfg $");
-#endif
+#include "libc/log/bsd.h"
+#include "libc/errno.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+// MISSING #include <libgen.h>
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/str/locale.h"
+#include "third_party/regex/regex.h"
 
-#ifndef lint
-__COPYRIGHT("@(#) Copyright (c) 1992, 1993\
-	The Regents of the University of California.  All rights reserved.");
-#endif
-
-#if 0
-static const char sccsid[] = "@(#)main.c	8.2 (Berkeley) 1/3/94";
-#endif
-
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-
-#include <err.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <libgen.h>
-#include <limits.h>
-#include <locale.h>
-#include <regex.h>
-#include <stddef.h>
 #define _WITH_GETLINE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/lock.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/mem/alg.h"
+#include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/temp.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "libc/mem/alg.h"
+#include "libc/str/str.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/fileno.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "third_party/getopt/getopt.h"
 
-#include "defs.h"
-#include "extern.h"
+#include "third_party/sed/defs.h"
+#include "third_party/sed/extern.h"
 
 /*
  * Linked list of units (strings and files) to be compiled
@@ -127,7 +166,7 @@ u_long linenum;
 
 static void add_compunit(enum e_cut, char *);
 static void add_file(char *);
-static void usage(void) __dead;
+static void usage(void) wontreturn;
 
 int
 main(int argc, char *argv[])
@@ -135,7 +174,6 @@ main(int argc, char *argv[])
 	int c, fflag;
 	char *temp_arg;
 
-	setprogname(argv[0]);
 	(void) setlocale(LC_ALL, "");
 
 	fflag = 0;
@@ -148,7 +186,7 @@ main(int argc, char *argv[])
 			rflags = REG_EXTENDED;
 			break;
 		case 'I':
-			inplace = optarg ? optarg : __UNCONST("");
+			inplace = optarg ? optarg : (/*unconst*/char *)"";
 			ispan = 1;	/* span across input files */
 			break;
 		case 'a':
@@ -166,7 +204,7 @@ main(int argc, char *argv[])
 			add_compunit(CU_FILE, optarg);
 			break;
 		case 'i':
-			inplace = optarg ? optarg : __UNCONST("");
+			inplace = optarg ? optarg : (/*unconst*/char *)"";
 			ispan = 0;	/* don't span across input files */
 			break;
 		case 'l':
@@ -225,7 +263,8 @@ usage(void)
 	(void)fprintf(stderr,
 	    "Usage:  %s [-aElnru] command [file ...]\n"
 	    "\t%s [-aElnru] [-e command] [-f command_file] [-I[extension]]\n"
-	    "\t    [-i[extension]] [file ...]\n", getprogname(), getprogname());
+	    "\t    [-i[extension]] [file ...]\n", program_invocation_name,
+	    program_invocation_name);
 	exit(1);
 }
 

@@ -1,0 +1,386 @@
+
+SED(1)                     BSD General Commands Manual                    SED(1)
+
+𝐍𝐀𝐌𝐄
+     𝘀𝗲𝗱 — stream editor
+
+𝐒𝐘𝐍𝐎𝐏𝐒𝐈𝐒
+     𝘀𝗲𝗱 [-𝗮𝐄𝗹𝗻𝗿𝘂] c̲o̲m̲m̲a̲n̲d̲ [f̲i̲l̲e̲ .̲.̲.̲]
+     𝘀𝗲𝗱 [-𝗮𝐄𝗹𝗻𝗿𝘂] [-𝗲 c̲o̲m̲m̲a̲n̲d̲] [-𝗳 c̲o̲m̲m̲a̲n̲d̲_f̲i̲l̲e̲] [-𝐈[e̲x̲t̲e̲n̲s̲i̲o̲n̲]]
+         [-𝗶[e̲x̲t̲e̲n̲s̲i̲o̲n̲]] [f̲i̲l̲e̲ .̲.̲.̲]
+
+𝐃𝐄𝐒𝐂𝐑𝐈𝐏𝐓𝐈𝐎𝐍
+     The 𝘀𝗲𝗱 utility reads the specified files, or the standard input if no
+     files are specified, modifying the input as specified by a list of com‐
+     mands.  The input is then written to the standard output.
+
+     A single command may be specified as the first argument to 𝘀𝗲𝗱.  Multiple
+     commands may be specified by using the -𝗲 or -𝗳 options.  All commands are
+     applied to the input in the order they are specified regardless of their
+     origin.
+
+     The following options are available:
+
+     -𝗮      The files listed as parameters for the “w” functions are created
+             (or truncated) before any processing begins, by default.  The -𝗮
+             option causes 𝘀𝗲𝗱 to delay opening each file until a command con‐
+             taining the related “w” function is applied to a line of input.
+
+     -𝐄      Interpret regular expressions as extended (modern) regular expres‐
+             sions rather than basic regular expressions (BRE's).  The
+             re_format(7) manual page fully describes both formats.
+
+     -𝗲 c̲o̲m̲m̲a̲n̲d̲
+             Append the editing commands specified by the c̲o̲m̲m̲a̲n̲d̲ argument to
+             the list of commands.
+
+     -𝗳 c̲o̲m̲m̲a̲n̲d̲_f̲i̲l̲e̲
+             Append the editing commands found in the file c̲o̲m̲m̲a̲n̲d̲_f̲i̲l̲e̲ to the
+             list of commands.  The editing commands should each be listed on a
+             separate line.
+
+     -𝐈[e̲x̲t̲e̲n̲s̲i̲o̲n̲]
+             Edit files in-place, saving backups with the specified e̲x̲t̲e̲n̲s̲i̲o̲n̲.
+             If no e̲x̲t̲e̲n̲s̲i̲o̲n̲ is given, no backup will be saved.  It is not rec‐
+             ommended to give a zero-length e̲x̲t̲e̲n̲s̲i̲o̲n̲ when in-place editing
+             files, as you risk corruption or partial content in situations
+             where disk space is exhausted, etc.
+
+             Note that in-place editing with -𝐈 still takes place in a single
+             continuous line address space covering all files, although each
+             file preserves its individuality instead of forming one output
+             stream.  The line counter is never reset between files, address
+             ranges can span file boundaries, and the “$” address matches only
+             the last line of the last file.  (See S̲e̲d̲ A̲d̲d̲r̲e̲s̲s̲e̲s̲.)  That can
+             lead to unexpected results in many cases of in-place editing, where
+             using -𝗶 is desired.
+
+     -𝗶[e̲x̲t̲e̲n̲s̲i̲o̲n̲]
+             Edit files in-place similarly to -𝐈, but treat each file indepen‐
+             dently from other files.  In particular, line numbers in each file
+             start at 1, the “$” address matches the last line of the current
+             file, and address ranges are limited to the current file.  (See S̲e̲d̲
+             A̲d̲d̲r̲e̲s̲s̲e̲s̲.)  The net result is as though each file were edited by a
+             separate 𝘀𝗲𝗱 instance.
+
+     -𝗹      Make output line buffered.
+
+     -𝗻      By default, each line of input is echoed to the standard output af‐
+             ter all of the commands have been applied to it.  The -𝗻 option
+             suppresses this behavior.
+
+     -𝗿      Same as -𝐄 for compatibility with GNU sed.
+
+     -𝘂      Make output unbuffered.
+
+     The form of a 𝘀𝗲𝗱 command is as follows:
+
+           [address[,address]]function[arguments]
+
+     Whitespace may be inserted before the first address and the function por‐
+     tions of the command.
+
+     Normally, 𝘀𝗲𝗱 cyclically copies a line of input, not including its termi‐
+     nating newline character, into a p̲a̲t̲t̲e̲r̲n̲ s̲p̲a̲c̲e̲, (unless there is something
+     left after a “D” function), applies all of the commands with addresses that
+     select that pattern space, copies the pattern space to the standard output,
+     appending a newline, and deletes the pattern space.
+
+     Some of the functions use a h̲o̲l̲d̲ s̲p̲a̲c̲e̲ to save all or part of the pattern
+     space for subsequent retrieval.
+
+   𝐒𝗲𝗱 𝐀𝗱𝗱𝗿𝗲𝘀𝘀𝗲𝘀
+     An address is not required, but if specified must have one of the following
+     formats:
+
+           •   a number that counts input lines cumulatively across input files
+               (or in each file independently if a -𝗶 option is in effect);
+
+           •   a dollar (“$”) character that addresses the last line of input
+               (or the last line of the current file if a -𝗶 option was speci‐
+               fied);
+
+           •   a context address that consists of a regular expression preceded
+               and followed by a delimiter.  The closing delimiter can also op‐
+               tionally be followed by the “i” character, to indicate that the
+               regular expression is to be matched in a case-insensitive way.
+
+     A command line with no addresses selects every pattern space.
+
+     A command line with one address selects all of the pattern spaces that
+     match the address.
+
+     A command line with two addresses selects an inclusive range.  This range
+     starts with the first pattern space that matches the first address.  The
+     end of the range is the next following pattern space that matches the sec‐
+     ond address.  If the second address is a number less than or equal to the
+     line number first selected, only that line is selected.  The number in the
+     second address may be prefixed with a (“+”) to specify the number of lines
+     to match after the first pattern.  In the case when the second address is a
+     context address, 𝘀𝗲𝗱 does not re-match the second address against the pat‐
+     tern space that matched the first address.  Starting at the first line fol‐
+     lowing the selected range, 𝘀𝗲𝗱 starts looking again for the first address.
+
+     Editing commands can be applied to non-selected pattern spaces by use of
+     the exclamation character (“!”) function.
+
+   𝐒𝗲𝗱 𝐑𝗲𝗴𝘂𝗹𝗮𝗿 𝐄𝘅𝗽𝗿𝗲𝘀𝘀𝗶𝗼𝗻𝘀
+     The regular expressions used in 𝘀𝗲𝗱, by default, are basic regular expres‐
+     sions (BREs, see re_format(7) for more information), but extended (modern)
+     regular expressions can be used instead if the -𝐄 flag is given.  In addi‐
+     tion, 𝘀𝗲𝗱 has the following two additions to regular expressions:
+
+     1.   In a context address, any character other than a backslash (“\”) or
+          newline character may be used to delimit the regular expression.  The
+          opening delimiter needs to be preceded by a backslash unless it is a
+          slash.  For example, the context address \xabcx is equivalent to
+          /abc/.  Also, putting a backslash character before the delimiting
+          character within the regular expression causes the character to be
+          treated literally.  For example, in the context address \xabc\xdefx,
+          the RE delimiter is an “x” and the second “x” stands for itself, so
+          that the regular expression is “abcxdef”.
+
+     2.   The escape sequence \n matches a newline character embedded in the
+          pattern space.  You cannot, however, use a literal newline character
+          in an address or in the substitute command.
+
+     One special feature of 𝘀𝗲𝗱 regular expressions is that they can default to
+     the last regular expression used.  If a regular expression is empty, i.e.,
+     just the delimiter characters are specified, the last regular expression
+     encountered is used instead.  The last regular expression is defined as the
+     last regular expression used as part of an address or substitute command,
+     and at run-time, not compile-time.  For example, the command “/abc/s//XXX/”
+     will substitute “XXX” for the pattern “abc”.
+
+   𝐒𝗲𝗱 𝐅𝘂𝗻𝗰𝘁𝗶𝗼𝗻𝘀
+     In the following list of commands, the maximum number of permissible ad‐
+     dresses for each command is indicated by [0addr], [1addr], or [2addr], rep‐
+     resenting zero, one, or two addresses.
+
+     The argument t̲e̲x̲t̲ consists of one or more lines.  To embed a newline in the
+     text, precede it with a backslash.  Other backslashes in text are deleted
+     and the following character taken literally.
+
+     The “r” and “w” functions take an optional file parameter, which should be
+     separated from the function letter by white space.  Each file given as an
+     argument to 𝘀𝗲𝗱 is created (or its contents truncated) before any input
+     processing begins.
+
+     The “b”, “r”, “s”, “t”, “w”, “y”, “!”, and “:” functions all accept addi‐
+     tional arguments.  The following synopses indicate which arguments have to
+     be separated from the function letters by white space characters.
+
+     Two of the functions take a function-list.  This is a list of 𝘀𝗲𝗱 functions
+     separated by newlines, as follows:
+
+           { function
+             function
+             ...
+             function
+           }
+
+     The “{” can be preceded by white space and can be followed by white space.
+     The function can be preceded by white space.  The terminating “}” must be
+     preceded by a newline, and may also be preceded by white space.
+
+     [2addr] function-list
+             Execute function-list only when the pattern space is selected.
+
+     [1addr]a\
+     text    Write t̲e̲x̲t̲ to standard output immediately before each attempt to
+             read a line of input, whether by executing the “N” function or by
+             beginning a new cycle.
+
+     [2addr]b[label]
+             Branch to the “:” function with the specified label.  If the label
+             is not specified, branch to the end of the script.
+
+     [2addr]c\
+     text    Delete the pattern space.  With 0 or 1 address or at the end of a
+             2-address range, t̲e̲x̲t̲ is written to the standard output.
+
+     [2addr]d
+             Delete the pattern space and start the next cycle.
+
+     [2addr]D
+             Delete the initial segment of the pattern space through the first
+             newline character and start the next cycle.
+
+     [2addr]g
+             Replace the contents of the pattern space with the contents of the
+             hold space.
+
+     [2addr]G
+             Append a newline character followed by the contents of the hold
+             space to the pattern space.
+
+     [2addr]h
+             Replace the contents of the hold space with the contents of the
+             pattern space.
+
+     [2addr]H
+             Append a newline character followed by the contents of the pattern
+             space to the hold space.
+
+     [1addr]i\
+     text    Write t̲e̲x̲t̲ to the standard output.
+
+     [2addr]l
+             (The letter ell.)  Write the pattern space to the standard output
+             in a visually unambiguous form.  This form is as follows:
+
+                   backslash          \\
+                   alert              \a
+                   form-feed          \f
+                   carriage-return    \r
+                   tab                \t
+                   vertical tab       \v
+
+             Nonprintable characters are written as three-digit octal numbers
+             (with a preceding backslash) for each byte in the character (most
+             significant byte first).  Long lines are folded, with the point of
+             folding indicated by displaying a backslash followed by a newline.
+             The end of each line is marked with a “$”.
+
+     [2addr]n
+             Write the pattern space to the standard output if the default out‐
+             put has not been suppressed, and replace the pattern space with the
+             next line of input.
+
+     [2addr]N
+             Append the next line of input to the pattern space, using an embed‐
+             ded newline character to separate the appended material from the
+             original contents.  Note that the current line number changes.
+
+     [2addr]p
+             Write the pattern space to standard output.
+
+     [2addr]P
+             Write the pattern space, up to the first newline character to the
+             standard output.
+
+     [1addr]q
+             Branch to the end of the script and quit without starting a new cy‐
+             cle.
+
+     [1addr]r file
+             Copy the contents of f̲i̲l̲e̲ to the standard output immediately before
+             the next attempt to read a line of input.  If f̲i̲l̲e̲ cannot be read
+             for any reason, it is silently ignored and no error condition is
+             set.
+
+     [2addr]s/regular expression/replacement/flags
+             Substitute the replacement string for the first instance of the
+             regular expression in the pattern space.  Any character other than
+             backslash or newline can be used instead of a slash to delimit the
+             RE and the replacement.  Within the RE and the replacement, the RE
+             delimiter itself can be used as a literal character if it is pre‐
+             ceded by a backslash.
+
+             An ampersand (“&”) appearing in the replacement is replaced by the
+             string matching the RE.  The special meaning of “&” in this context
+             can be suppressed by preceding it by a backslash.  The string “\#”,
+             where “#” is a digit, is replaced by the text matched by the corre‐
+             sponding backreference expression (see re_format(7)).
+
+             A line can be split by substituting a newline character into it.
+             To specify a newline character in the replacement string, precede
+             it with a backslash.
+
+             The value of f̲l̲a̲g̲s̲ in the substitute function is zero or more of
+             the following:
+
+                   N̲       Make the substitution only for the N̲'th occurrence of
+                           the regular expression in the pattern space.
+
+                   g       Make the substitution for all non-overlapping matches
+                           of the regular expression, not just the first one.
+
+                   p       Write the pattern space to standard output if a re‐
+                           placement was made.  If the replacement string is
+                           identical to that which it replaces, it is still con‐
+                           sidered to have been a replacement.
+
+                   w f̲i̲l̲e̲  Append the pattern space to f̲i̲l̲e̲ if a replacement was
+                           made.  If the replacement string is identical to that
+                           which it replaces, it is still considered to have
+                           been a replacement.
+
+                   i or I  Match the regular expression in a case-insensitive
+                           way.
+
+     [2addr]t [label]
+             Branch to the “:” function bearing the label if any substitutions
+             have been made since the most recent reading of an input line or
+             execution of a “t” function.  If no label is specified, branch to
+             the end of the script.
+
+     [2addr]w f̲i̲l̲e̲
+             Append the pattern space to the f̲i̲l̲e̲.
+
+     [2addr]x
+             Swap the contents of the pattern and hold spaces.
+
+     [2addr]y/string1/string2/
+             Replace all occurrences of characters in s̲t̲r̲i̲n̲g̲1̲ in the pattern
+             space with the corresponding characters from s̲t̲r̲i̲n̲g̲2̲.  Any charac‐
+             ter other than a backslash or newline can be used instead of a
+             slash to delimit the strings.  Within s̲t̲r̲i̲n̲g̲1̲ and s̲t̲r̲i̲n̲g̲2̲, a back‐
+             slash followed by any character other than a newline is that lit‐
+             eral character, and a backslash followed by an ``n'' is replaced by
+             a newline character.
+
+     [2addr]!function
+     [2addr]!function-list
+             Apply the function or function-list only to the lines that are n̲o̲t̲
+             selected by the address(es).
+
+     [0addr]:label
+             This function does nothing; it bears a label to which the “b” and
+             “t” commands may branch.
+
+     [1addr]=
+             Write the line number to the standard output followed by a newline
+             character.
+
+     [0addr]
+             Empty lines are ignored.
+
+     [0addr]#
+             The “#” and the remainder of the line are ignored (treated as a
+             comment), with the single exception that if the first two charac‐
+             ters in the file are “#n”, the default output is suppressed.  This
+             is the same as specifying the -𝗻 option on the command line.
+
+𝐄𝐍𝐕𝐈𝐑𝐎𝐍𝐌𝐄𝐍𝐓
+     The COLUMNS, LANG, LC_ALL, LC_CTYPE and LC_COLLATE environment variables
+     affect the execution of 𝘀𝗲𝗱 as described in environ(7).
+
+𝐄𝐗𝐈𝐓 𝐒𝐓𝐀𝐓𝐔𝐒
+     The 𝘀𝗲𝗱 utility exits 0 on success, and >0 if an error occurs.
+
+𝐒𝐄𝐄 𝐀𝐋𝐒𝐎
+     awk(1), ed(1), grep(1), regex(3), re_format(7)
+
+𝐒𝐓𝐀𝐍𝐃𝐀𝐑𝐃𝐒
+     The 𝘀𝗲𝗱 utility is expected to be a superset of the IEEE Std 1003.2
+     (“POSIX.2”) specification.
+
+     The -𝗮, -𝐄, -𝐈, and -𝗶 options, the prefixing “+” in the second member of
+     an address range, as well as the “I” flag to the address regular expression
+     and substitution command are non-standard FreeBSD extensions and may not be
+     available on other operating systems.
+
+𝐇𝐈𝐒𝐓𝐎𝐑𝐘
+     A 𝘀𝗲𝗱 command, written by L. E. McMahon, appeared in Version 7 AT&T UNIX.
+
+𝐀𝐔𝐓𝐇𝐎𝐑𝐒
+     Diomidis D. Spinellis <dds@FreeBSD.org>
+
+𝐁𝐔𝐆𝐒
+     Multibyte characters containing a byte with value 0x5C (ASCII ‘\’) may be
+     incorrectly treated as line continuation characters in arguments to the
+     “a”, “c” and “i” commands.  Multibyte characters cannot be used as delim‐
+     iters with the “s” and “y” commands.
+
+BSD                               June 18, 2014                              BSD

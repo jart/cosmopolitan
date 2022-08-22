@@ -108,26 +108,32 @@ getarg(int *argc, char ***argv, const char *msg)
 int main(int argc, char *argv[])
 {
 	const char *fs = NULL;
+	struct sigaction sa;
 	char *fn, *vn;
 
 	LoadZipArgs(&argc, &argv);
+
 	setlocale(LC_CTYPE, "");
 	setlocale(LC_NUMERIC, "C"); /* for parsing cmdline & prog */
 	cmdname = argv[0];
+
+	if (pledge("stdio rpath wpath cpath proc exec", NULL) == -1) {
+		fprintf(stderr, "%s: pledge: incorrect arguments\n",
+		    cmdname);
+		exit(1);
+	}
+
 	if (argc == 1) {
 		fprintf(stderr,
 		  "usage: %s [-F fs] [-v var=value] [-f progfile | 'prog'] [file ...]\n",
 		  cmdname);
 		exit(1);
 	}
-	{
-		struct sigaction sa;
-		sa.sa_sigaction = fpecatch;
-		sa.sa_flags = SA_SIGINFO;
-		sigemptyset(&sa.sa_mask);
-		(void)sigaction(SIGFPE, &sa, NULL);
-	}
-	/*signal(SIGSEGV, segvcatch); experiment */
+
+	sa.sa_sigaction = fpecatch;
+	sa.sa_flags = SA_SIGINFO;
+	sigemptyset(&sa.sa_mask);
+	(void)sigaction(SIGFPE, &sa, NULL);
 
 	/* Set and keep track of the random seed */
 	srand_seed = 1;

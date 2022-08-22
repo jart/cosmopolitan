@@ -1,3 +1,4 @@
+// clang-format off
 /*	$NetBSD: compile.c,v 1.48 2019/10/05 20:23:55 christos Exp $	*/
 
 /*-
@@ -33,36 +34,53 @@
  * SUCH DAMAGE.
  */
 
-#if HAVE_NBTOOL_CONFIG_H
-#include "nbtool_config.h"
-#endif
+#include "libc/calls/makedev.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/intrin/newbie.h"
+#include "libc/calls/typedef/u.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sock/select.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/utime.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/time/time.h"
 
-#include <sys/cdefs.h>
-__RCSID("$NetBSD: compile.c,v 1.48 2019/10/05 20:23:55 christos Exp $");
-#ifdef __FBSDID
-__FBSDID("$FreeBSD: head/usr.bin/sed/compile.c 259132 2013-12-09 18:57:20Z eadler $");
-#endif
+#include "libc/str/str.h"
+#include "libc/log/bsd.h"
+#include "libc/errno.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/_posix.h"
+#include "third_party/regex/regex.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/fmt.h"
+#include "libc/stdio/lock.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "libc/mem/alg.h"
+#include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/rand.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/temp.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "libc/mem/alg.h"
+#include "libc/str/str.h"
+#include "libc/str/str.h"
+#include "libc/time/time.h"
 
-#if 0
-static const char sccsid[] = "@(#)compile.c	8.1 (Berkeley) 6/6/93";
-#endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <ctype.h>
-#include <err.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <regex.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <wchar.h>
-
-#include "defs.h"
-#include "extern.h"
+#include "third_party/sed/defs.h"
+#include "third_party/sed/extern.h"
 
 #define LHSZ	128
 #define	LHMASK	(LHSZ - 1)
@@ -163,7 +181,7 @@ compile_stream(struct s_command **link)
 	static char lbuf[_POSIX2_LINE_MAX + 1];	/* To save stack */
 	struct s_command *cmd, *cmd2, *stack;
 	struct s_format *fp;
-	char re[_POSIX2_LINE_MAX + 1];
+	char *re = gc(malloc(_POSIX2_LINE_MAX + 1));
 	int naddr;				/* Number of addresses */
 
 	stack = 0;
@@ -548,8 +566,14 @@ unescape(char **pp, char **spp)
 	case 'r':
 		*sp = '\r';
 		break;
+	case 't':
+		*sp = '\t';
+		break;
 	case 'v':
 		*sp = '\v';
+		break;
+	case 'e':
+		*sp = '\e';
 		break;
 	default:
 		return 0;
@@ -791,8 +815,8 @@ compile_tr(char *p, struct s_tr **py)
 	struct s_tr *y;
 	size_t i;
 	const char *op, *np;
-	char old[_POSIX2_LINE_MAX + 1];
-	char new[_POSIX2_LINE_MAX + 1];
+	char *old = gc(malloc(_POSIX2_LINE_MAX + 1));
+	char *new = gc(malloc(_POSIX2_LINE_MAX + 1));
 	size_t oclen, oldlen, nclen, newlen;
 	mbstate_t mbs1, mbs2;
 
@@ -816,11 +840,11 @@ compile_tr(char *p, struct s_tr **py)
 	op = old;
 	oldlen = mbsrtowcs(NULL, &op, 0, NULL);
 	if (oldlen == (size_t)-1)
-		err(1, NULL);
+		err(1, "");
 	np = new;
 	newlen = mbsrtowcs(NULL, &np, 0, NULL);
 	if (newlen == (size_t)-1)
-		err(1, NULL);
+		err(1, "");
 	if (newlen != oldlen)
 		errx(1, "%lu: %s: transform strings are not the same length",
 				linenum, fname);
@@ -848,10 +872,10 @@ compile_tr(char *p, struct s_tr **py)
 		while (*op != '\0') {
 			oclen = mbrlen(op, MB_LEN_MAX, &mbs1);
 			if (oclen == (size_t)-1 || oclen == (size_t)-2)
-				errc(1, EILSEQ, NULL);
+				err(1, "EILSEQ");
 			nclen = mbrlen(np, MB_LEN_MAX, &mbs2);
 			if (nclen == (size_t)-1 || nclen == (size_t)-2)
-				errc(1, EILSEQ, NULL);
+				err(1, "EILSEQ");
 			if (oclen == 1 && nclen == 1)
 				y->bytetab[(u_char)*op] = (u_char)*np;
 			else {

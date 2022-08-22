@@ -25,6 +25,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/regex		\
 	o/$(MODE)/third_party/smallz4		\
 	o/$(MODE)/third_party/sqlite3		\
+	o/$(MODE)/third_party/sed		\
 	o/$(MODE)/third_party/stb		\
 	o/$(MODE)/third_party/tidy		\
 	o/$(MODE)/third_party/unzip		\

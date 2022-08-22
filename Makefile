@@ -158,6 +158,7 @@ include third_party/maxmind/maxmind.mk
 include net/finger/finger.mk
 include third_party/double-conversion/double-conversion.mk
 include third_party/lua/lua.mk
+include third_party/sed/sed.mk
 include third_party/awk/awk.mk
 include third_party/make/make.mk
 include third_party/finger/finger.mk
