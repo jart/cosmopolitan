@@ -17,7 +17,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 /**/
 #include "libc/assert.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/likely.h"
+#include "libc/log/check.h"
 #include "libc/nexgen32e/bsr.h"
 #include "third_party/make/hash.h"
 /* clang-format off */
@@ -442,27 +444,35 @@ jhash_string(unsigned const char *k)
   /* Set up the internal state */
   a = b = c = JHASH_INITVAL;
 
+  for (; klen > 12; k += 12, klen -= 12)
+    {
+      a += READ32LE (k + 0);
+      b += READ32LE (k + 4);
+      c += READ32LE (k + 8);
+      jhash_mix (a, b, c);
+    }
+
   /* All but the last block: affect some 32 bits of (a,b,c) */
   for (;;) {
     sum_up_to_nul(a, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    assert (klen >= UINTSZ);
+    DCHECK (klen >= UINTSZ);
     klen -= UINTSZ;
 
     sum_up_to_nul(b, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    assert (klen >= UINTSZ);
+    DCHECK (klen >= UINTSZ);
     klen -= UINTSZ;
 
     sum_up_to_nul(c, k, klen, have_nul);
     if (have_nul)
       break;
     k += UINTSZ;
-    assert (klen >= UINTSZ);
+    DCHECK (klen >= UINTSZ);
     klen -= UINTSZ;
     jhash_mix(a, b, c);
   }
