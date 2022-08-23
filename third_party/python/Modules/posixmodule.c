@@ -13,12 +13,14 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/statvfs.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/tms.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/sysparam.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
@@ -49,6 +51,7 @@
 #include "libc/sysv/consts/prio.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/seek.h"
 #include "libc/sysv/consts/sf.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/st.h"
@@ -121,14 +124,6 @@ module os
 /*[clinic end generated code: output=da39a3ee5e6b4b0d input=94a0f0f978acae17]*/
 
 #define NAMLEN(dirent) strlen((dirent)->d_name)
-
-#ifndef MAXPATHLEN
-#if defined(PATH_MAX) && PATH_MAX > 1024 /* TODO: wut? */
-#define MAXPATHLEN PATH_MAX
-#else
-#define MAXPATHLEN 1024
-#endif
-#endif /* MAXPATHLEN */
 
 #ifdef UNION_WAIT
 /* Emulate some macros on systems that have a union instead of macros */

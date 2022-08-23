@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_XNU_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_XNU_INTERNAL_H_
+#include "libc/calls/struct/fsid.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -11,7 +12,7 @@ struct statfs_xnu {
   uint64_t f_bavail;        /* free blocks avail to non-superuser */
   uint64_t f_files;         /* total file nodes in file system */
   uint64_t f_ffree;         /* free file nodes in fs */
-  uint64_t f_fsid;          /* file system id (endian 32 matters) */
+  fsid_t f_fsid;            /* file system id */
   uint32_t f_owner;         /* user that mounted the filesystem */
   uint32_t f_type;          /* type of filesystem */
   uint32_t f_flags;         /* copy of mount exported flags */

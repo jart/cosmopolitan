@@ -2237,9 +2237,12 @@ static int LuaUnixStatfsFfree(lua_State *L) {
 }
 
 // unix.Statfs:fsid()
-//     └─→ fsid:int
+//     └─→ x:int, y:int
 static int LuaUnixStatfsFsid(lua_State *L) {
-  return ReturnInteger(L, GetUnixStatfs(L)->f_fsid);
+  struct statfs *f = GetUnixStatfs(L);
+  lua_pushinteger(L, f->f_fsid.__val[0]);
+  lua_pushinteger(L, f->f_fsid.__val[1]);
+  return 2;
 }
 
 // unix.Statfs:namelen()
@@ -2314,10 +2317,14 @@ static int LuaUnixStatfsToString(lua_State *L) {
     FormatInt64(ibuf, f->f_ffree);
     luaL_addstring(&b, ibuf);
   }
-  if (f->f_fsid) {
-    luaL_addstring(&b, ", fsid=");
-    FormatUint64(ibuf, f->f_fsid);
+  if (f->f_fsid.__val[0] || f->f_fsid.__val[1]) {
+    luaL_addstring(&b, ", fsid={");
+    FormatUint64(ibuf, f->f_fsid.__val[0]);
     luaL_addstring(&b, ibuf);
+    luaL_addstring(&b, ", ");
+    FormatUint64(ibuf, f->f_fsid.__val[1]);
+    luaL_addstring(&b, ibuf);
+    luaL_addstring(&b, "}");
   }
   if (f->f_namelen) {
     luaL_addstring(&b, ", namelen=");

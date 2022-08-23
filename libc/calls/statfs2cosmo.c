@@ -197,7 +197,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
   int64_t f_bavail;
   int64_t f_files;
   int64_t f_ffree;
-  int64_t f_fsid;
+  fsid_t f_fsid;
   int64_t f_namelen;
   int64_t f_frsize;
   int64_t f_flags;
@@ -217,6 +217,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_frsize = m->linux.f_frsize;
     f_flags = m->linux.f_flags;
     f_owner = 0;
+    bzero(f_fstypename, 16);
     strcpy(f_fstypename, DescribeStatfsTypeLinux(m->linux.f_type));
 
   } else if (IsFreebsd()) {
@@ -232,7 +233,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_frsize = m->freebsd.f_bsize;
     f_flags = m->freebsd.f_flags;
     f_owner = m->freebsd.f_owner;
-    strcpy(f_fstypename, m->freebsd.f_fstypename);
+    memcpy(f_fstypename, m->freebsd.f_fstypename, 16);
 
   } else if (IsXnu()) {
     f_type = m->xnu.f_type;
@@ -247,7 +248,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_frsize = m->xnu.f_bsize;
     f_flags = m->xnu.f_flags;
     f_owner = m->xnu.f_owner;
-    strcpy(f_fstypename, m->xnu.f_fstypename);
+    memcpy(f_fstypename, m->xnu.f_fstypename, 16);
 
   } else if (IsOpenbsd()) {
     f_type = f->f_type;
@@ -262,7 +263,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_frsize = m->openbsd.f_bsize;
     f_flags = m->openbsd.f_flags;
     f_owner = m->openbsd.f_owner;
-    strcpy(f_fstypename, m->openbsd.f_fstypename);
+    memcpy(f_fstypename, m->openbsd.f_fstypename, 16);
 
   } else if (IsNetbsd()) {
     f_type = m->netbsd.f_type;
@@ -277,7 +278,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     f_frsize = m->netbsd.f_bsize;
     f_flags = m->netbsd.f_flags;
     f_owner = m->netbsd.f_owner;
-    strcpy(f_fstypename, m->netbsd.f_fstypename);
+    memcpy(f_fstypename, m->netbsd.f_fstypename, 16);
 
   } else {
     asm("hlt");
@@ -295,5 +296,5 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
   f->f_namelen = f_namelen;
   f->f_frsize = f_frsize;
   f->f_flags = f_flags;
-  strcpy(f->f_fstypename, f_fstypename);
+  memcpy(f->f_fstypename, f_fstypename, 16);
 }

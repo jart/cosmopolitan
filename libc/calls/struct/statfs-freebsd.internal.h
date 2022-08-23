@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_FREEBSD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_FREEBSD_INTERNAL_H_
+#include "libc/calls/struct/fsid.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -21,7 +22,7 @@ struct statfs_freebsd {
   uint64_t f_spare[10];     /* unused spare */
   uint32_t f_namemax;       /* maximum filename length */
   uint32_t f_owner;         /* user that mounted the filesystem */
-  uint64_t f_fsid;          /* filesystem id (endian 32 matters) */
+  fsid_t f_fsid;            /* filesystem id */
   char f_charspare[80];     /* spare string space */
   char f_fstypename[16];    /* filesystem type name */
   char f_mntfromname[1024]; /* mounted filesystem */

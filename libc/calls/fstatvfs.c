@@ -17,30 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/statfs-meta.internal.h"
+#include "libc/calls/struct/statfs.h"
 #include "libc/calls/struct/statfs.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/consts/at.h"
+#include "libc/calls/struct/statvfs.h"
 
 /**
  * Returns information about filesystem.
  * @return 0 on success, or -1 w/ errno
+ * @note consider using fstatfs()
  */
-int statfs(const char *path, struct statfs *sf) {
-  int rc;
-  union statfs_meta m;
-  CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
-    if ((rc = sys_statfs(path, &m)) != -1) {
-      statfs2cosmo(sf, &m);
-    }
+int fstatvfs(int fd, struct statvfs *sv) {
+  struct statfs sf;
+  if (fstatfs(fd, &sf) != -1) {
+    statfs2statvfs(sv, &sf);
+    return 0;
   } else {
-    rc = sys_statfs_nt(path, sf);
+    return -1;
   }
-  STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
-  return rc;
 }

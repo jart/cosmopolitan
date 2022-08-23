@@ -142,8 +142,8 @@
 #define HAVE_FSYNC         1
 #define HAVE_GETENTROPY    1
 #define HAVE_GETLOADAVG    1
+#define HAVE_FSTATVFS      1
 /* #undef HAVE_FEXECVE */
-/* #undef HAVE_FSTATVFS */
 /* #undef HAVE_FTIME */
 /* #define HAVE_GETGROUPS    1 */
 /* #define HAVE_SETGROUPS    1 */
@@ -205,8 +205,8 @@
 
 #define HAVE_GETLOGIN 1
 #define HAVE_LCHOWN   1
+#define HAVE_LCHMOD   1
 /* #undef HAVE_LCHFLAGS */
-/* #undef HAVE_LCHMOD */
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 /* #undef HAVE_LIBDL */
@@ -311,6 +311,7 @@
 #define HAVE_WAIT3            1
 #define HAVE_WAIT4            1
 #define HAVE_WAITPID          1
+#define HAVE_STATVFS          1
 
 /* #define HAVE_MREMAP 1 */
 /* #undef HAVE_PLOCK */
@@ -320,7 +321,6 @@
 /* #undef HAVE_TMPNAM */
 /* #undef HAVE_TMPNAM_R */
 /* #undef HAVE_SETPGRP */
-/* #undef HAVE_STATVFS */
 /* #undef HAVE_STAT_TV_NSEC2 */
 /* #undef HAVE_SIGPENDING */
 /* #undef HAVE_SIGRELSE */
@@ -513,7 +513,7 @@
 /* #define _Py_MEMORY_SANITIZER */
 
 /* #define HAVE_DEV_PTMX 1 */
-/* #define HAVE_OPENPTY 1 */
+/* #define HAVE_OPENPTY  1 */
 /* #undef HAVE__GETPTY */
 /* #undef HAVE_DEV_PTC */
 /* #define HAVE_FORKPTY 1 */

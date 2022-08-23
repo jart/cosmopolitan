@@ -4,7 +4,7 @@
 #define MAXSYMLINKS    20
 #define MAXHOSTNAMELEN 64
 #define MAXNAMLEN      255
-#define MAXPATHLEN     4096
+#define MAXPATHLEN     PATH_MAX
 #define NBBY           8
 #define NGROUPS        32
 #define CANBSIZ        255

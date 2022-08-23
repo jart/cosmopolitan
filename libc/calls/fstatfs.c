@@ -27,6 +27,7 @@
 
 /**
  * Returns information about filesystem.
+ * @return 0 on success, or -1 w/ errno
  */
 int fstatfs(int fd, struct statfs *sf) {
   int rc;

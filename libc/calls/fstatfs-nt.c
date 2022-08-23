@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fsid.h"
 #include "libc/calls/struct/statfs.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -69,7 +70,7 @@ textwindows int sys_fstatfs_nt(int64_t handle, struct statfs *f) {
   }
   f->f_fstypename[j] = 0;
   f->f_type = h;
-  f->f_fsid = VolumeSerialNumber;
+  f->f_fsid = (fsid_t){{VolumeSerialNumber}};
   f->f_flags = FileSystemFlags;
   f->f_bsize = fs.BytesPerSector;
   f->f_bsize *= fs.SectorsPerAllocationUnit;

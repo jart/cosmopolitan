@@ -16,31 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/statfs-meta.internal.h"
-#include "libc/calls/struct/statfs.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/consts/at.h"
+#include "libc/calls/struct/statfs.h"
+#include "libc/calls/struct/statvfs.h"
+#include "libc/str/str.h"
 
-/**
- * Returns information about filesystem.
- * @return 0 on success, or -1 w/ errno
- */
-int statfs(const char *path, struct statfs *sf) {
-  int rc;
-  union statfs_meta m;
-  CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
-    if ((rc = sys_statfs(path, &m)) != -1) {
-      statfs2cosmo(sf, &m);
-    }
-  } else {
-    rc = sys_statfs_nt(path, sf);
-  }
-  STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
-  return rc;
+void statfs2statvfs(struct statvfs *sv, const struct statfs *sf) {
+  bzero(sv, sizeof(*sv));
+  sv->f_bsize = sf->f_bsize;
+  sv->f_frsize = sf->f_frsize ? sf->f_frsize : sf->f_bsize;
+  sv->f_blocks = sf->f_blocks;
+  sv->f_bfree = sf->f_bfree;
+  sv->f_bavail = sf->f_bavail;
+  sv->f_files = sf->f_files;
+  sv->f_ffree = sf->f_ffree;
+  sv->f_favail = sf->f_ffree;
+  sv->f_fsid = sf->f_fsid.__val[0];
+  sv->f_flag = sf->f_flags;
+  sv->f_namemax = sf->f_namelen;
 }

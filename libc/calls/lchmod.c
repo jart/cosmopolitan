@@ -17,30 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/statfs-meta.internal.h"
-#include "libc/calls/struct/statfs.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/runtime/stack.h"
 #include "libc/sysv/consts/at.h"
 
 /**
- * Returns information about filesystem.
+ * Changes mode of pathname, w/o dereferencing symlinks.
+ *
+ * @param uid is user id, or -1u to not change
+ * @param gid is group id, or -1u to not change
  * @return 0 on success, or -1 w/ errno
+ * @see chown() which dereferences symbolic links
+ * @see /etc/passwd for user ids
+ * @see /etc/group for group ids
  */
-int statfs(const char *path, struct statfs *sf) {
-  int rc;
-  union statfs_meta m;
-  CheckLargeStackAllocation(&m, sizeof(m));
-  if (!IsWindows()) {
-    if ((rc = sys_statfs(path, &m)) != -1) {
-      statfs2cosmo(sf, &m);
-    }
-  } else {
-    rc = sys_statfs_nt(path, sf);
-  }
-  STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
-  return rc;
+int lchmod(const char *pathname, uint32_t mode) {
+  return fchmodat(AT_FDCWD, pathname, mode, AT_SYMLINK_NOFOLLOW);
 }

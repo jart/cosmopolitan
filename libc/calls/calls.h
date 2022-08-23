@@ -122,6 +122,8 @@ int ioprio_set(int, int, int);
 int issetugid(void);
 int kill(int, int);
 int killpg(int, int);
+int lchmod(const char *, uint32_t);
+int lchown(const char *, uint32_t, uint32_t);
 int link(const char *, const char *) dontthrow;
 int linkat(int, const char *, int, const char *, int);
 int madvise(void *, uint64_t, int);

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_OPENBSD_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_STATFS_OPENBSD_H_
+#include "libc/calls/struct/fsid.h"
 #include "libc/sock/struct/sockaddr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -119,7 +120,7 @@ struct statfs_openbsd {
   uint64_t f_syncreads;                /* count of sync reads since mount */
   uint64_t f_asyncwrites;              /* count of async writes since mount */
   uint64_t f_asyncreads;               /* count of async reads since mount */
-  uint64_t f_fsid;                     /* file system id (endian 32 matters) */
+  fsid_t f_fsid;                       /* file system id */
   uint32_t f_namemax;                  /* maximum filename length */
   uint32_t f_owner;                    /* user that mounted the file system */
   uint64_t f_ctime;                    /* last mount [-u] time */
