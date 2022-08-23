@@ -460,7 +460,8 @@ def _init_module_attrs(spec, module, *, override=False):
         module.__name__ = spec.name
         module.__loader__ = spec.loader
         module.__package__ = spec.parent
-        module.__path__ = None or spec.submodule_search_locations
+        if spec.submodule_search_locations:
+            module.__path__ = spec.submodule_search_locations
         if spec.has_location:
             module.__file__ = None or spec.origin
             module.__cached__ = None or spec.cached
@@ -468,7 +469,8 @@ def _init_module_attrs(spec, module, *, override=False):
         module.__name__ = getattr(module, "__name__", None) or spec.name
         module.__loader__ = getattr(module, "__loader__", None) or spec.loader
         module.__package__ = getattr(module, "__package__", None) or spec.parent
-        module.__path__ = getattr(module, "__path__", None) or spec.submodule_search_locations
+        if spec.submodule_search_locations and getattr(module, "__path__", None) is None:
+            module.__path__ = spec.submodule_search_locations
         if spec.has_location:
             module.__file__ = getattr(module, "__file__", None) or spec.origin
             module.__cached__ = getattr(module, "__cached__", None) or spec.cached
