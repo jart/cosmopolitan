@@ -21,3 +21,12 @@ assert(0200 == 128)
 assert("\e" == "\x1b")
 assert("hi" * 3 == "hihihi")
 assert("hello %d" % {123} == "hello 123")
+
+-- test MapContentType
+assert(MapContentType("txt") == "text/plain")
+assert(MapContentType("htm") == "text/html")
+assert(MapContentType("abc.htm") == "text/html")
+assert(MapContentType("1") == nil)
+MapContentType("1", "text/x-foo")
+assert(MapContentType("1"), "text/x-foo")
+assert(MapContentType("file.1"), "text/x-foo")
