@@ -52,9 +52,14 @@ $(THIRD_PARTY_AWK_A).pkg:				\
 o/$(MODE)/third_party/awk/awk.com.dbg:			\
 		$(THIRD_PARTY_AWK)			\
 		o/$(MODE)/third_party/awk/main.o	\
+		o/$(MODE)/third_party/awk/README.zip.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/third_party/awk/README.zip.o:			\
+		ZIPOBJ_FLAGS =				\
+			-B
 
 THIRD_PARTY_AWK_LIBS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)))
 THIRD_PARTY_AWK_SRCS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)_SRCS))
