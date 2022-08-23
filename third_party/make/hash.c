@@ -17,6 +17,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "third_party/make/makeint.inc"
 /**/
 #include "libc/assert.h"
+#include "libc/intrin/likely.h"
+#include "libc/nexgen32e/bsr.h"
 #include "third_party/make/hash.h"
 /* clang-format off */
 
@@ -317,18 +319,8 @@ hash_dump (struct hash_table *ht, void **vector_0, qsort_cmp_t compare)
 static unsigned long
 round_up_2 (unsigned long n)
 {
-  n |= (n >> 1);
-  n |= (n >> 2);
-  n |= (n >> 4);
-  n |= (n >> 8);
-  n |= (n >> 16);
-
-#if !defined(HAVE_LIMITS_H) || ULONG_MAX > 4294967295
-  /* We only need this on systems where unsigned long is >32 bits.  */
-  n |= (n >> 32);
-#endif
-
-  return n + 1;
+  if (UNLIKELY(!n)) return 1;
+  return 2ul << bsrl(n);
 }
 
 #define rol32(v, n) \
@@ -421,8 +413,10 @@ jhash(unsigned const char *k, int length)
   do {                                               \
     unsigned int val = 0;                            \
     size_t pn = (plen);                              \
-    size_t n = pn < UINTSZ ? pn : UINTSZ;            \
-    memcpy (&val, (p), n);                           \
+    if (pn >= UINTSZ)                                \
+      memcpy(&val, (p), UINTSZ);                     \
+    else                                             \
+      memcpy(&val, (p), pn);                         \
     flag = ((val - 0x01010101) & ~val) & 0x80808080; \
     if (!flag)                                       \
       r += val;                                      \
