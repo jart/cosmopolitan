@@ -463,6 +463,7 @@ static const char *serverheader;
 static struct Strings stagedirs;
 static struct Strings hidepaths;
 static const char *launchbrowser;
+static const char ctIdx = 'c';  // a pseudo variable to get address of
 
 static struct spawn replth;
 static struct spawn monitorth;
@@ -4608,6 +4609,50 @@ static int LuaIsAssetCompressed(lua_State *L) {
   return 1;
 }
 
+static const char *GetContentTypeExt(const char *path, size_t n) {
+  char *r, *e;
+  int top;
+  lua_State *L = GL;
+  if ((r = FindContentType(path, n))) return r;
+
+  // extract the last .; use the entire path if none is present
+  if (e = strrchr(path, '.')) path = e + 1;
+  top = lua_gettop(L);
+  lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
+  CHECK_EQ(lua_gettable(L, LUA_REGISTRYINDEX), LUA_TTABLE);
+
+  lua_pushstring(L, path);
+  if (lua_gettable(L, -2) == LUA_TSTRING)
+    r = FreeLater(strdup(lua_tostring(L, -1)));
+  lua_settop(L, top);
+  return r;
+}
+
+static int LuaMapContentType(lua_State *L) {
+  const char *ext = luaL_checkstring(L, 1);
+  const char *ct;
+  int n = lua_gettop(L);
+
+  lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
+  CHECK_EQ(lua_gettable(L, LUA_REGISTRYINDEX), LUA_TTABLE);
+
+  if (n == 1) {
+    ext = FreeLater(xasprintf(".%s", ext));
+    if ((ct = GetContentTypeExt(ext, strlen(ext)))) {
+      lua_pushstring(L, ct);
+    } else {
+      lua_pushnil(L);
+    }
+    return 1;
+  } else {
+    ct = luaL_checkstring(L, 2);
+    lua_pushstring(L, ext);
+    lua_pushstring(L, ct);
+    lua_settable(L, -3);  // table[ext] = ct
+    return 0;
+  }
+}
+
 static int LuaIsDaemon(lua_State *L) {
   lua_pushboolean(L, daemonize);
   return 1;
@@ -4822,6 +4867,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Lemur64", LuaLemur64},                                    //
     {"LoadAsset", LuaLoadAsset},                                //
     {"Log", LuaLog},                                            //
+    {"MapContentType", LuaMapContentType},                      //
     {"Md5", LuaMd5},                                            //
     {"MeasureEntropy", LuaMeasureEntropy},                      //
     {"ParseHost", LuaParseHost},                                //
@@ -4966,6 +5012,10 @@ static void LuaStart(void) {
   LuaSetConstant(L, "kLogWarn", kLogWarn);
   LuaSetConstant(L, "kLogError", kLogError);
   LuaSetConstant(L, "kLogFatal", kLogFatal);
+  // create a list of custom content types
+  lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
+  lua_newtable(L);
+  lua_settable(L, LUA_REGISTRYINDEX);  // registry[&ctIdx] = {}
 #endif
 }
 
@@ -5724,13 +5774,13 @@ static char *HandleAsset(struct Asset *a, const char *path, size_t pathlen) {
 
 static const char *GetContentType(struct Asset *a, const char *path, size_t n) {
   const char *r;
-  if (a->file && (r = FindContentType(a->file->path.s, a->file->path.n))) {
+  if (a->file && (r = GetContentTypeExt(a->file->path.s, a->file->path.n))) {
     return r;
   }
   return firstnonnull(
-      FindContentType(path, n),
-      firstnonnull(FindContentType(ZIP_CFILE_NAME(zbase + a->cf),
-                                   ZIP_CFILE_NAMESIZE(zbase + a->cf)),
+      GetContentTypeExt(path, n),
+      firstnonnull(GetContentTypeExt(ZIP_CFILE_NAME(zbase + a->cf),
+                                     ZIP_CFILE_NAMESIZE(zbase + a->cf)),
                    a->istext ? "text/plain" : "application/octet-stream"));
 }
 
