@@ -5012,6 +5012,10 @@ static void LuaStart(void) {
   LuaSetConstant(L, "kLogWarn", kLogWarn);
   LuaSetConstant(L, "kLogError", kLogError);
   LuaSetConstant(L, "kLogFatal", kLogFatal);
+  // create a list of custom content types
+  lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
+  lua_newtable(L);
+  lua_settable(L, LUA_REGISTRYINDEX);  // registry[&ctIdx] = {}
 #endif
 }
 
@@ -5171,12 +5175,6 @@ static void LuaInit(void) {
 #ifndef STATIC
   lua_State *L = GL;
   LuaSetArgv(L);
-
-  // create a list of custom content types
-  lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
-  lua_newtable(L);
-  lua_settable(L, LUA_REGISTRYINDEX);  // registry[&ctIdx] = {}
-
   if (interpretermode) {
     int rc = LuaInterpreter(L);
     LuaDestroy();
