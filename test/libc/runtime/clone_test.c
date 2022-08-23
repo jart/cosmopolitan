@@ -173,6 +173,6 @@ BENCH(clone, bench) {
   char *volatile tp;
   errno_t *volatile ep;
   EZBENCH2("__errno_location", donothing, (ep = __errno_location()));
-  EZBENCH2("__get_tls_privileged", donothing, (tp = __get_tls_privileged()));
+  EZBENCH2("__get_tls_priv", donothing, (tp = __get_tls_privileged()));
   EZBENCH2("__get_tls", donothing, (tp = __get_tls()));
 }

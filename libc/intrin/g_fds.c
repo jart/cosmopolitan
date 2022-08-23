@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pushpop.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/pthread.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
@@ -39,6 +39,15 @@ void(__fds_unlock)(void) {
   pthread_mutex_unlock(&__fds_lock_obj);
 }
 
+static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
+  int64_t h;
+  h = GetStdHandle(x);
+  if (!h || h == -1) return;
+  fds->__init_p[i].kind = pushpop(kFdFile);
+  fds->__init_p[i].handle = h;
+  fds->f = i + 1;
+}
+
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   fds = VEIL("r", &g_fds);
@@ -54,15 +63,10 @@ textstartup void InitializeFileDescriptors(void) {
     fds->__init_p[1].handle = VEIL("r", 0x3F8ull);
     fds->__init_p[2].handle = VEIL("r", 0x3F8ull);
   } else if (IsWindows()) {
-    pushmov(&fds->f, 3ull);
-    fds->__init_p[0].kind = pushpop(kFdFile);
-    fds->__init_p[1].kind = pushpop(kFdFile);
-    fds->__init_p[2].kind = pushpop(kFdFile);
-    fds->__init_p[0].handle = GetStdHandle(pushpop(kNtStdInputHandle));
-    fds->__init_p[1].handle = GetStdHandle(pushpop(kNtStdOutputHandle));
-    fds->__init_p[2].handle = GetStdHandle(pushpop(kNtStdErrorHandle));
+    SetupWinStd(fds, 0, kNtStdInputHandle);
+    SetupWinStd(fds, 1, kNtStdOutputHandle);
+    SetupWinStd(fds, 2, kNtStdErrorHandle);
   }
-  fds->__init_p[0].flags = O_RDONLY;
   fds->__init_p[1].flags = O_WRONLY | O_APPEND;
   fds->__init_p[2].flags = O_WRONLY | O_APPEND;
 }

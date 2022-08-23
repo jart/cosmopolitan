@@ -539,14 +539,6 @@ func_notdir_suffix (char *o, char **argv, const char *funcname)
             continue;
           o = variable_buffer_output (o, p, len - (p - p2));
         }
-#ifdef HAVE_DOS_PATHS
-      /* Handle the case of "d:foo/bar".  */
-      else if (is_notdir && p2[0] && p2[1] == ':')
-        {
-          p = p2 + 2;
-          o = variable_buffer_output (o, p, len - (p - p2));
-        }
-#endif
       else if (is_notdir)
         o = variable_buffer_output (o, p2, len);
 
@@ -587,11 +579,6 @@ func_basename_dir (char *o, char **argv, const char *funcname)
         o = variable_buffer_output (o, p2, ++p - p2);
       else if (p >= p2 && (*p == '.'))
         o = variable_buffer_output (o, p2, p - p2);
-#ifdef HAVE_DOS_PATHS
-      /* Handle the "d:foobar" case */
-      else if (p2[0] && p2[1] == ':' && is_dir)
-        o = variable_buffer_output (o, p2, 2);
-#endif
       else if (is_dir)
         o = variable_buffer_output (o, "./", 2);
       else
@@ -1458,140 +1445,6 @@ shell_completed (int exit_code, int exit_sig)
   define_variable_cname (".SHELLSTATUS", buf, o_override, 0);
 }
 
-#ifdef WINDOWS32
-/*untested*/
-
-// #include "sub_proc.h"
-
-
-int
-windows32_openpipe (int *pipedes, int errfd, pid_t *pid_p, char **command_argv, char **envp)
-{
-  SECURITY_ATTRIBUTES saAttr;
-  HANDLE hIn = INVALID_HANDLE_VALUE;
-  HANDLE hErr = INVALID_HANDLE_VALUE;
-  HANDLE hChildOutRd;
-  HANDLE hChildOutWr;
-  HANDLE hProcess, tmpIn, tmpErr;
-  DWORD e;
-
-  /* Set status for return.  */
-  pipedes[0] = pipedes[1] = -1;
-  *pid_p = (pid_t)-1;
-
-  saAttr.nLength = sizeof (SECURITY_ATTRIBUTES);
-  saAttr.bInheritHandle = TRUE;
-  saAttr.lpSecurityDescriptor = NULL;
-
-  /* Standard handles returned by GetStdHandle can be NULL or
-     INVALID_HANDLE_VALUE if the parent process closed them.  If that
-     happens, we open the null device and pass its handle to
-     process_begin below as the corresponding handle to inherit.  */
-  tmpIn = GetStdHandle (STD_INPUT_HANDLE);
-  if (DuplicateHandle (GetCurrentProcess (), tmpIn,
-                       GetCurrentProcess (), &hIn,
-                       0, TRUE, DUPLICATE_SAME_ACCESS) == FALSE)
-    {
-      e = GetLastError ();
-      if (e == ERROR_INVALID_HANDLE)
-        {
-          tmpIn = CreateFile ("NUL", GENERIC_READ,
-                              FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-          if (tmpIn != INVALID_HANDLE_VALUE
-              && DuplicateHandle (GetCurrentProcess (), tmpIn,
-                                  GetCurrentProcess (), &hIn,
-                                  0, TRUE, DUPLICATE_SAME_ACCESS) == FALSE)
-            CloseHandle (tmpIn);
-        }
-      if (hIn == INVALID_HANDLE_VALUE)
-        {
-          ON (error, NILF,
-              _("windows32_openpipe: DuplicateHandle(In) failed (e=%ld)\n"), e);
-          return -1;
-        }
-    }
-  tmpErr = (HANDLE)_get_osfhandle (errfd);
-  if (DuplicateHandle (GetCurrentProcess (), tmpErr,
-                       GetCurrentProcess (), &hErr,
-                       0, TRUE, DUPLICATE_SAME_ACCESS) == FALSE)
-    {
-      e = GetLastError ();
-      if (e == ERROR_INVALID_HANDLE)
-        {
-          tmpErr = CreateFile ("NUL", GENERIC_WRITE,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-          if (tmpErr != INVALID_HANDLE_VALUE
-              && DuplicateHandle (GetCurrentProcess (), tmpErr,
-                                  GetCurrentProcess (), &hErr,
-                                  0, TRUE, DUPLICATE_SAME_ACCESS) == FALSE)
-            CloseHandle (tmpErr);
-        }
-      if (hErr == INVALID_HANDLE_VALUE)
-        {
-          ON (error, NILF,
-              _("windows32_openpipe: DuplicateHandle(Err) failed (e=%ld)\n"), e);
-          return -1;
-        }
-    }
-
-  if (! CreatePipe (&hChildOutRd, &hChildOutWr, &saAttr, 0))
-    {
-      ON (error, NILF, _("CreatePipe() failed (e=%ld)\n"), GetLastError());
-      return -1;
-    }
-
-  hProcess = process_init_fd (hIn, hChildOutWr, hErr);
-
-  if (!hProcess)
-    {
-      O (error, NILF, _("windows32_openpipe(): process_init_fd() failed\n"));
-      return -1;
-    }
-
-  /* make sure that CreateProcess() has Path it needs */
-  sync_Path_environment ();
-  /* 'sync_Path_environment' may realloc 'environ', so take note of
-     the new value.  */
-  envp = environ;
-
-  if (! process_begin (hProcess, command_argv, envp, command_argv[0], NULL))
-    {
-      /* register process for wait */
-      process_register (hProcess);
-
-      /* set the pid for returning to caller */
-      *pid_p = (pid_t) hProcess;
-
-      /* set up to read data from child */
-      pipedes[0] = _open_osfhandle ((intptr_t) hChildOutRd, O_RDONLY);
-
-      /* this will be closed almost right away */
-      pipedes[1] = _open_osfhandle ((intptr_t) hChildOutWr, O_APPEND);
-      return 0;
-    }
-  else
-    {
-      /* reap/cleanup the failed process */
-      process_cleanup (hProcess);
-
-      /* close handles which were duplicated, they weren't used */
-      if (hIn != INVALID_HANDLE_VALUE)
-        CloseHandle (hIn);
-      if (hErr != INVALID_HANDLE_VALUE)
-        CloseHandle (hErr);
-
-      /* close pipe handles, they won't be used */
-      CloseHandle (hChildOutRd);
-      CloseHandle (hChildOutWr);
-
-      return -1;
-    }
-}
-#endif
-
-
 
 /*
   Do shell spawning, with the naughty bits for different OSes.
@@ -1607,26 +1460,13 @@ func_shell_base (char *o, char **argv, int trim_newlines)
   int pipedes[2];
   pid_t pid;
 
-#ifndef __MSDOS__
-#ifdef WINDOWS32
-  /* Reset just_print_flag.  This is needed on Windows when batch files
-     are used to run the commands, because we normally refrain from
-     creating batch files under -n.  */
-  int j_p_f = just_print_flag;
-  just_print_flag = 0;
-#endif
-
   /* Construct the argument list.  */
   command_argv = construct_command_argv (argv[0], NULL, NULL, 0,
                                          &batch_filename);
   if (command_argv == 0)
     {
-#ifdef WINDOWS32
-      just_print_flag = j_p_f;
-#endif
       return o;
     }
-#endif /* !__MSDOS__ */
 
   /* Using a target environment for 'shell' loses in cases like:
        export var = $(shell echo foobie)
@@ -1648,21 +1488,6 @@ func_shell_base (char *o, char **argv, int trim_newlines)
   errfd = (output_context && output_context->err >= 0
            ? output_context->err : FD_STDERR);
 
-#if defined(WINDOWS32)
-  windows32_openpipe (pipedes, errfd, &pid, command_argv, envp);
-  /* Restore the value of just_print_flag.  */
-  just_print_flag = j_p_f;
-
-  if (pipedes[0] < 0)
-    {
-      /* Open of the pipe failed, mark as failed execution.  */
-      shell_completed (127, 0);
-      OS (error, reading_file, "pipe: %s", strerror (errno));
-      pid = -1;
-      goto done;
-    }
-
-#else
   if (pipe (pipedes) < 0)
     {
       OS (error, reading_file, "pipe: %s", strerror (errno));
@@ -1692,7 +1517,6 @@ func_shell_base (char *o, char **argv, int trim_newlines)
       shell_completed (127, 0);
       goto done;
     }
-#endif
 
   {
     char *buffer;
@@ -1798,7 +1622,6 @@ func_eq (char *o, char **argv, char *funcname UNUSED)
   return o;
 }
 
-
 /*
   string-boolean not operator.
  */
@@ -1815,17 +1638,8 @@ func_not (char *o, char **argv, char *funcname UNUSED)
 #endif
 
 
-#ifdef HAVE_DOS_PATHS
-# ifdef __CYGWIN__
-#  define IS_ABSOLUTE(n) ((n[0] && n[1] == ':') || STOP_SET (n[0], MAP_DIRSEP))
-# else
-#  define IS_ABSOLUTE(n) (n[0] && n[1] == ':')
-# endif
-# define ROOT_LEN 3
-#else
-# define IS_ABSOLUTE(n) (n[0] == '/')
-# define ROOT_LEN 1
-#endif
+#define IS_ABSOLUTE(n) (n[0] == '/')
+#define ROOT_LEN 1
 
 /* Return the absolute name of file NAME which does not contain any '.',
    '..' components nor any repeated path separators ('/').   */
@@ -1849,52 +1663,15 @@ abspath (const char *name, char *apath)
         return NULL;
 
       strcpy (apath, starting_directory);
-
-#ifdef HAVE_DOS_PATHS
-      if (STOP_SET (name[0], MAP_DIRSEP))
-        {
-          if (STOP_SET (name[1], MAP_DIRSEP))
-            {
-              /* A UNC.  Don't prepend a drive letter.  */
-              apath[0] = name[0];
-              apath[1] = name[1];
-              root_len = 2;
-            }
-          /* We have /foo, an absolute file name except for the drive
-             letter.  Assume the missing drive letter is the current
-             drive, which we can get if we remove from starting_directory
-             everything past the root directory.  */
-          apath[root_len] = '\0';
-        }
-#endif
-
       dest = strchr (apath, '\0');
     }
   else
     {
-#if defined(__CYGWIN__) && defined(HAVE_DOS_PATHS)
-      if (STOP_SET (name[0], MAP_DIRSEP))
-        root_len = 1;
-#endif
       memcpy (apath, name, root_len);
       apath[root_len] = '\0';
       dest = apath + root_len;
       /* Get past the root, since we already copied it.  */
       name += root_len;
-#ifdef HAVE_DOS_PATHS
-      if (! STOP_SET (apath[root_len - 1], MAP_DIRSEP))
-        {
-          /* Convert d:foo into d:./foo and increase root_len.  */
-          apath[2] = '.';
-          apath[3] = '/';
-          dest++;
-          root_len++;
-          /* strncpy above copied one character too many.  */
-          name--;
-        }
-      else
-        apath[root_len - 1] = '/'; /* make sure it's a forward slash */
-#endif
     }
 
   for (start = end = name; *start != '\0'; start = end)
