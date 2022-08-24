@@ -4630,7 +4630,7 @@ static const char *GetContentTypeExt(const char *path, size_t n) {
   return r;
 }
 
-static int LuaMapContentType(lua_State *L) {
+static int LuaProgramContentType(lua_State *L) {
   const char *ext = luaL_checkstring(L, 1);
   const char *ct;
   int n = lua_gettop(L);
@@ -4869,7 +4869,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Lemur64", LuaLemur64},                                    //
     {"LoadAsset", LuaLoadAsset},                                //
     {"Log", LuaLog},                                            //
-    {"MapContentType", LuaMapContentType},                      //
     {"Md5", LuaMd5},                                            //
     {"MeasureEntropy", LuaMeasureEntropy},                      //
     {"ParseHost", LuaParseHost},                                //
@@ -4881,6 +4880,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramAddr", LuaProgramAddr},                            //
     {"ProgramBrand", LuaProgramBrand},                          //
     {"ProgramCache", LuaProgramCache},                          //
+    {"ProgramContentType", LuaProgramContentType},              //
     {"ProgramDirectory", LuaProgramDirectory},                  //
     {"ProgramGid", LuaProgramGid},                              //
     {"ProgramHeader", LuaProgramHeader},                        //

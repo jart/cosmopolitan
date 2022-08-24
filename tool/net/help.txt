@@ -1271,9 +1271,6 @@ FUNCTIONS
           flag was used. If slurping large file into memory is a concern,
           then consider using ServeAsset which can serve directly off disk.
 
-  MapContentType(ext:str[, contenttype:str]) → str
-          Sets or returns content type associated with a file extension.
-
   StoreAsset(path:str, data:str[, mode:int])
           Stores asset to executable's ZIP central directory. This
           currently happens in an append-only fashion and is still
@@ -1374,6 +1371,9 @@ FUNCTIONS
           ProgramCertificate(LoadAsset("/.sign.crt")) for zip loading or
           ProgramCertificate(Slurp("/etc/letsencrypt.lol/fullchain.pem")) for
           local file system only.
+
+  ProgramContentType(ext:str[, contenttype:str]) → str
+          Sets or returns content type associated with a file extension.
 
   ProgramHeader(name:str,value:str)
           Appends HTTP header to the header buffer for all responses (whereas
