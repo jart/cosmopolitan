@@ -1076,7 +1076,9 @@ static bool LuaEvalCode(const char *code) {
 }
 
 static bool LuaEvalFile(const char *path) {
-  return LuaEvalCode(gc(xslurp(path, 0)));
+  char *f = gc(xslurp(path, 0));
+  if (!f) FATALF("(cfg) error: failed to read file %`'s", path);
+  return LuaEvalCode(f);
 }
 
 static bool LuaOnClientConnection(void) {
