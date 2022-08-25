@@ -376,10 +376,6 @@ SECTIONS {
     KEEP(*(.piro.pad.data))
     KEEP(*(.dataepilogue))
 /*END: NT FORK COPYING */
-    HIDDEN(_edata = .);
-    PROVIDE_HIDDEN(edata = .);
-    KEEP(*(SORT_BY_NAME(.zip.*)))
-    HIDDEN(_ezip = .);
   } :Ram
 
   .tdata . : {
@@ -388,13 +384,9 @@ SECTIONS {
     *(SORT_BY_ALIGNMENT(.tdata.*))
     . = ALIGN(16);
     _tdata_end = .;
-    . = ALIGN(PAGESIZE);
-  } :Tls
-  . = ALIGN(PAGESIZE);
+  } :Tls :Ram
 
-/*END:   file content that's loaded by o/s */
 /*BEGIN: bss memory void */
-
   .tbss . : {
     _tbss_start = .;
     *(SORT_BY_ALIGNMENT(.tbss))
@@ -403,8 +395,20 @@ SECTIONS {
     /* the %fs register is based on this location */
     _tbss_end = .;
   } :Tls
+/*END:   bss memory void */
 
+  .data1 . : {
+    *(.data1)
+    HIDDEN(_edata = .);
+    PROVIDE_HIDDEN(edata = .);
+    KEEP(*(SORT_BY_NAME(.zip.*)))
+    HIDDEN(_ezip = .);
+    . = ALIGN(PAGESIZE);
+  } :Ram
+
+/*END:   file content that's loaded by o/s */
 /*END:   file content */
+
 /*BEGIN: bss memory that's addressable */
 
   .bss ALIGN(64) : {
@@ -504,7 +508,7 @@ HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
 HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = SIZEOF(.data) + SIZEOF(.tdata));
+HIDDEN(ape_ram_filesz = SIZEOF(.data) + SIZEOF(.tdata) + SIZEOF(.data1));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
@@ -561,9 +565,6 @@ SHSTUB2(ape_loader_dd_count,
 HIDDEN(v_ape_realsectors =
            MIN(0x70000 - IMAGE_BASE_REAL,
                ROUNDUP(RVA(_edata), 4096)) / 512);
-HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
-HIDDEN(v_ape_highsectors =
-           (ROUNDUP(RVA(_edata), 512) / 512) - v_ape_realsectors);
 #endif
 
 /* ZIP End of Central Directory header */
