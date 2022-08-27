@@ -389,7 +389,7 @@ SECTIONS {
     . = ALIGN(16);
     _tdata_end = .;
     . = ALIGN(PAGESIZE);
-  } :Tls
+  } :Tls :Ram
   . = ALIGN(PAGESIZE);
 
 /*END:   file content that's loaded by o/s */
