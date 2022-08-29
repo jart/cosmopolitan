@@ -326,6 +326,7 @@ static struct dirent *readdir_impl(DIR *dir) {
   uint8_t *s, *p;
   struct Zipos *zip;
   struct dirent *ent;
+  struct dirent *lastent;
   struct dirent_bsd *bsd;
   struct dirent_netbsd *nbsd;
   struct dirent_openbsd *obsd;
@@ -351,6 +352,20 @@ static struct dirent *readdir_impl(DIR *dir) {
           ent->d_type = S_ISDIR(mode) ? DT_DIR : DT_REG;
           memcpy(ent->d_name, s, ent->d_reclen);
           ent->d_name[ent->d_reclen] = 0;
+        } else {
+          lastent = (struct dirent *)dir->buf;
+          n = p - s;
+          n = MIN(n, 255);
+          if (!lastent->d_ino || (n != lastent->d_reclen) ||
+              memcmp(lastent->d_name, s, n)) {
+            ent = lastent;
+            ent->d_ino++;
+            ent->d_off = -1;
+            ent->d_reclen = n;
+            ent->d_type = DT_DIR;
+            memcpy(ent->d_name, s, ent->d_reclen);
+            ent->d_name[ent->d_reclen] = 0;
+          }
         }
       }
       dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);

@@ -28,6 +28,9 @@
 ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
   const char *zname;
   size_t i, n, c, znamesize;
+  if (!name->len) {
+    return 0;
+  }
   c = GetZipCdirOffset(zipos->cdir);
   n = GetZipCdirRecords(zipos->cdir);
   for (i = 0; i < n; ++i, c += ZIP_CFILE_HDRSIZE(zipos->map + c)) {
@@ -38,6 +41,13 @@ ssize_t __zipos_find(struct Zipos *zipos, const struct ZiposUri *name) {
         (name->len + 1 == znamesize && !memcmp(name->path, zname, name->len) &&
          zname[name->len] == '/')) {
       return c;
+    } else if ((name->len < znamesize &&
+                !memcmp(name->path, zname, name->len) &&
+                zname[name->len - 1] == '/') ||
+               (name->len + 1 < znamesize &&
+                !memcmp(name->path, zname, name->len) &&
+                zname[name->len] == '/')) {
+      return 0;
     }
   }
   return -1;

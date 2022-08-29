@@ -20,9 +20,9 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
@@ -55,6 +55,35 @@ TEST(opendir, enoent) {
 TEST(opendir, enotdir) {
   ASSERT_SYS(0, 0, close(creat("yo", 0644)));
   ASSERT_SYS(ENOTDIR, NULL, opendir("yo/there"));
+}
+
+TEST(opendir, zipTest_fake) {
+  ASSERT_NE(NULL, (dir = opendir("/zip")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("echo", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("usr", ent->d_name);
+  EXPECT_EQ(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
+  ASSERT_NE(NULL, (dir = opendir("/zip/")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("echo", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("usr", ent->d_name);
+  EXPECT_EQ(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
+  ASSERT_NE(NULL, (dir = opendir("/zip/usr")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("share", ent->d_name);
+  EXPECT_EQ(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
+  ASSERT_NE(NULL, (dir = opendir("/zip/usr/")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ("share", ent->d_name);
+  EXPECT_EQ(NULL, (ent = readdir(dir)));
+  EXPECT_EQ(0, closedir(dir));
+  EXPECT_EQ(NULL, (dir = opendir("/zip/us")));
+  EXPECT_EQ(NULL, (dir = opendir("/zip/us/")));
 }
 
 TEST(dirstream, testDots) {
