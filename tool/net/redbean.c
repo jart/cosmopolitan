@@ -2767,8 +2767,7 @@ static void LaunchBrowser(const char *path) {
   if (*path != '/') path = gc(xasprintf("/%s", path));
   if ((prog = commandv(GetSystemUrlLauncherCommand(), gc(malloc(PATH_MAX)),
                        PATH_MAX))) {
-    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port,
-                     gc(EscapePath(path, -1, 0))));
+    u = gc(xasprintf("http://%s:%d%s", inet_ntoa(addr), port, path));
     DEBUGF("(srvr) opening browser with command %`'s %s", prog, u);
     ignore.sa_flags = 0;
     ignore.sa_handler = SIG_IGN;
