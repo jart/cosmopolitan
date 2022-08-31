@@ -27,7 +27,7 @@
 static const char kEscapeLiteral[128] = {
     9, 9, 9, 9, 9, 9, 9, 9, 9, 1, 2, 9, 4, 3, 9, 9,  // 0x00
     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,  // 0x10
-    0, 0, 7, 0, 0, 0, 9, 8, 0, 0, 0, 0, 0, 0, 0, 6,  // 0x20
+    0, 0, 7, 0, 0, 0, 9, 9, 0, 0, 0, 0, 0, 0, 0, 6,  // 0x20
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 0,  // 0x30
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0x40
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0,  // 0x50
@@ -39,6 +39,8 @@ static const char kEscapeLiteral[128] = {
  * Escapes UTF-8 data for JavaScript or JSON string literal.
  *
  * HTML entities and forward slash are escaped too for added safety.
+ * Single quote (`'`) is \uxxxx-encoded for consistency, as it's
+ * allowed in JavaScript, but not in JSON strings.
  *
  * We assume the UTF-8 is well-formed and can be represented as UTF-16.
  * Things that can't be decoded will fall back to binary. Things that

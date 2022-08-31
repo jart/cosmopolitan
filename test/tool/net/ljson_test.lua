@@ -37,12 +37,18 @@ assert(EncodeJson(assert(DecodeJson[[ true ]])) == 'true')
 assert(EncodeJson(assert(DecodeJson[[ [] ]])) == '[]')
 assert(EncodeJson(assert(DecodeJson[[ {} ]])) == '{}')
 
+for c = 0, 127 do
+  assert(DecodeJson(assert(EncodeJson(string.char(c)))) == string.char(c))
+end
+
 assert(assert(DecodeJson[["\f"]]) == '\f')                        -- c0
 assert(assert(DecodeJson[["\t"]]) == '\t')                        -- c0
 assert(assert(DecodeJson[["\n"]]) == '\n')                        -- c0
 assert(assert(DecodeJson[["\r"]]) == '\r')                        -- c0
 assert(assert(DecodeJson[["\\"]]) == '\\')                        -- c0
 assert(assert(DecodeJson[["\""]]) == '\"')                        -- c0
+assert(DecodeJson(EncodeJson"it's wonderful") == "it's wonderful")
+assert(EncodeJson"it's wonderful" == '"it\\u0027s wonderful"')
 assert(assert(DecodeJson[["\u0100"]]) == 'Ā')                     -- latin-1
 assert(assert(DecodeJson[["\ud800\udf30\ud800\udf30"]]) == '𐌰𐌰')  -- utf-16 astral planes gothic
 assert(assert(DecodeJson[["\uD800"]]) == '\\uD800')               -- utf-16 invalid (keep utf-8 well-formed)
