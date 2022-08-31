@@ -44,7 +44,7 @@ assert(EncodeJson("\r") == [["\r"]])
 assert(EncodeJson("\n") == [["\n"]])
 assert(EncodeJson("\f") == [["\f"]])
 assert(EncodeJson("\"") == [["\""]])
-assert(EncodeJson("\'") == [["\'"]])
+assert(EncodeJson("\'") == [["\u0027"]])
 assert(EncodeJson("\\") == [["\\"]])
 
 assert(EncodeJson(
