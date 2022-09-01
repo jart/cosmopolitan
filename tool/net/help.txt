@@ -672,7 +672,9 @@ FUNCTIONS
 
   LaunchBrowser([path:str])
           Launches web browser on local machine with URL to this redbean
-          server. This function may be called from your /.init.lua.
+          server. It is the responsibility of the caller to escape the path
+          with EscapePath if needed, as it's not escaped automatically.
+          This function may be called from /.init.lua.
 
   CategorizeIp(ip:uint32) → str
           Returns a string describing an IP address. This is currently Class
