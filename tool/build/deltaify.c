@@ -32,7 +32,7 @@
 
 static int pid;
 
-static void RelaySig(int sig, struct siginfo *si, struct ucontext *uc) {
+static void RelaySig(int sig, struct siginfo *si, void *uc) {
   kill(pid, sig);
 }
 

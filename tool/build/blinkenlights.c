@@ -3127,7 +3127,7 @@ static void OnlyRunOnFirstCpu(void) {
   sched_setaffinity(0, sizeof(bs), &bs);
 }
 
-static void OnSignal(int sig, siginfo_t *si, ucontext_t *uc) {
+static void OnSignal(int sig, siginfo_t *si, void *uc) {
   EnqueueSignal(m, sig, si->si_code);
 }
 

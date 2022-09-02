@@ -1687,7 +1687,7 @@ static int LuaUnixSigprocmask(lua_State *L) {
   }
 }
 
-static void LuaUnixOnSignal(int sig, siginfo_t *si, ucontext_t *ctx) {
+static void LuaUnixOnSignal(int sig, siginfo_t *si, void *ctx) {
   int type;
   lua_State *L = GL;
   STRACE("LuaUnixOnSignal(%G)", sig);

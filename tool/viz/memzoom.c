@@ -219,11 +219,11 @@ static void OnExit(void) {
   ioctl(out, TCSETS, &oldterm);
 }
 
-static void OnSigInt(int sig, struct siginfo *sa, struct ucontext *uc) {
+static void OnSigInt(int sig, struct siginfo *sa, void *uc) {
   action |= INTERRUPTED;
 }
 
-static void OnSigWinch(int sig, struct siginfo *sa, struct ucontext *uc) {
+static void OnSigWinch(int sig, struct siginfo *sa, void *uc) {
   action |= RESIZED;
 }
 

@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
@@ -41,8 +41,7 @@ static const int sigs[] = {
     SIGTERM /* kill (default signal) */
 };
 
-textexit static void __onkill(int sig, struct siginfo *si,
-                              struct ucontext *context) {
+textexit static void __onkill(int sig, struct siginfo *si, void *context) {
   /* https://www.tldp.org/LDP/abs/html/exitcodes.html */
   exit(128 + sig);
   unreachable;

@@ -111,7 +111,8 @@ TEST(sigaction, testPingPongParentChildWithSigint) {
 
 volatile int trapeax;
 
-void OnTrap(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnTrap(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   trapeax = ctx->uc_mcontext.rax;
 }
@@ -136,7 +137,8 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
   ctx->uc_mcontext.rip += xedd.length;
 }
 
-void OnFpe(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnFpe(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
   CheckStackIsAligned();
   SkipOverFaultingInstruction(ctx);
   ctx->uc_mcontext.rax = 42;

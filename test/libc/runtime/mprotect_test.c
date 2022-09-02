@@ -47,12 +47,14 @@ void SkipOverFaultingInstruction(struct ucontext *ctx) {
   ctx->uc_mcontext.rip += xedd.length;
 }
 
-void OnSigSegv(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnSigSegv(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
   gotsegv = true;
   SkipOverFaultingInstruction(ctx);
 }
 
-void OnSigBus(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnSigBus(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
   gotbusted = true;
   SkipOverFaultingInstruction(ctx);
 #if 0
