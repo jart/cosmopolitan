@@ -74,7 +74,7 @@ TEST(reservefd, testGrowthOfFdsDataStructure) {
   }
 }
 
-void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnSigAlrm(int sig, siginfo_t *si, void *ctx) {
   int rc, fd;
   char buf[64];
   ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));

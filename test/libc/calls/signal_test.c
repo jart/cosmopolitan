@@ -43,7 +43,7 @@ TEST(signal, test) {
 ////////////////////////////////////////////////////////////////////////////////
 // signal round-trip delivery takes about 1µs
 
-void OnSigTrap(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnSigTrap(int sig, struct siginfo *si, void *ctx) {
 }
 
 void TrapBench(int n) {
@@ -72,7 +72,8 @@ BENCH(signal, trapBenchSiginfo) {
   sigaction(SIGTRAP, &old, 0);
 }
 
-void OnSigHlt(int sig, struct siginfo *si, struct ucontext *ctx) {
+void OnSigHlt(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
   ctx->uc_mcontext.rip += 1;
 }
 

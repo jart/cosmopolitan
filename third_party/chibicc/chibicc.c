@@ -681,7 +681,7 @@ static void run_linker(StringArray *inputs, char *output) {
   handle_exit(run_subprocess(arr.data));
 }
 
-static void OnCtrlC(int sig, siginfo_t *si, ucontext_t *ctx) {
+static void OnCtrlC(int sig, siginfo_t *si, void *ctx) {
   exit(1);
 }
 

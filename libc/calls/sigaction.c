@@ -251,7 +251,7 @@ static int __sigaction(int sig, const struct sigaction *act,
 /**
  * Installs handler for kernel interrupt to thread, e.g.:
  *
- *     void GotCtrlC(int sig, siginfo_t *si, ucontext_t *ctx);
+ *     void GotCtrlC(int sig, siginfo_t *si, void *ctx);
  *     struct sigaction sa = {.sa_sigaction = GotCtrlC,
  *                            .sa_flags = SA_RESETHAND|SA_RESTART|SA_SIGINFO};
  *     CHECK_NE(-1, sigaction(SIGINT, &sa, NULL));
@@ -259,10 +259,11 @@ static int __sigaction(int sig, const struct sigaction *act,
  * The following flags are supported across platforms:
  *
  * - `SA_SIGINFO`: Causes the `siginfo_t` and `ucontext_t` parameters to
- *   be passed. This not only gives you more information about the
- *   signal, but also allows your signal handler to change the CPU
- *   registers. That's useful for recovering from crashes. If you don't
- *   use this attribute, then signal delivery will go a little faster.
+ *   be passed. `void *ctx` actually refers to `struct ucontext *`.
+ *   This not only gives you more information about the signal, but also
+ *   allows your signal handler to change the CPU registers. That's
+ *   useful for recovering from crashes. If you don't use this attribute,
+ *   then signal delivery will go a little faster.
  *
  * - `SA_RESTART`: Enables BSD signal handling semantics. Normally i/o
  *   entrypoints check for pending signals to deliver. If one gets
@@ -371,7 +372,8 @@ static int __sigaction(int sig, const struct sigaction *act,
  *       ctx->uc_mcontext.rip += xedd.length;
  *     }
  *
- *     void OnCrash(int sig, struct siginfo *si, struct ucontext *ctx) {
+ *     void OnCrash(int sig, struct siginfo *si, void *vctx) {
+ *       struct ucontext *ctx = vctx;
  *       SkipOverFaultingInstruction(ctx);
  *       ContinueOnCrash();  // reinstall here in case *rip faults
  *     }

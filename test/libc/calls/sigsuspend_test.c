@@ -31,7 +31,7 @@ volatile bool gotsig1;
 volatile bool gotsig2;
 volatile bool finished;
 
-void OnSigQueuing(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnSigQueuing(int sig, siginfo_t *si, void *ctx) {
   if (!finished) {
     EXPECT_EQ(SIGUSR2, sig);
     EXPECT_EQ(SIGUSR2, si->si_signo);

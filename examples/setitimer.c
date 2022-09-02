@@ -21,7 +21,7 @@
 
 volatile bool gotalrm;
 
-void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnSigAlrm(int sig, siginfo_t *si, void *ctx) {
   gotalrm = true;
 }
 

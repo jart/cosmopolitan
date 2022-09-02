@@ -269,7 +269,7 @@ void OnAlrm(int sig) {
   ++gotalrm;
 }
 
-void OnChld(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnChld(int sig, siginfo_t *si, void *ctx) {
   if (!gotchld++) {
     clock_gettime(CLOCK_MONOTONIC, &signalled);
   }

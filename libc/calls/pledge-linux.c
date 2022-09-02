@@ -966,10 +966,11 @@ static privileged int HasSyscall(struct Pledges *p, uint16_t n) {
   return 0;
 }
 
-static privileged void OnSigSys(int sig, siginfo_t *si, ucontext_t *ctx) {
+static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
   bool found;
   char ord[17], rip[17];
   int i, ok, mode = si->si_errno;
+  ucontext_t *ctx = vctx;
   ctx->uc_mcontext.rax = -Eperm;
   FixCpy(ord, si->si_syscall, 12);
   HexCpy(rip, ctx->uc_mcontext.rip);

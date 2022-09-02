@@ -32,7 +32,7 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio proc", 0));
 }
 
-void OnSig(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnSig(int sig, siginfo_t *si, void *ctx) {
   ++n;
 }
 

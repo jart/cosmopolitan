@@ -82,7 +82,7 @@ static size_t	curpfile;	/* current filename */
 
 bool	safe = false;	/* true => "safe" mode */
 
-static wontreturn void fpecatch(int n, siginfo_t *si, ucontext_t *uc)
+static wontreturn void fpecatch(int n, siginfo_t *si, void *uc)
 {
 	const char *emsg[10];
         emsg[0] = "Unknown error";

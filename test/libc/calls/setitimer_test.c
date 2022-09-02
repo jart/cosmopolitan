@@ -35,7 +35,7 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-void OnSigAlrm(int sig, siginfo_t *si, ucontext_t *ctx) {
+void OnSigAlrm(int sig, siginfo_t *si, void *ctx) {
   EXPECT_EQ(SIGALRM, sig);
   EXPECT_EQ(SIGALRM, si->si_signo);
   gotsig = true;

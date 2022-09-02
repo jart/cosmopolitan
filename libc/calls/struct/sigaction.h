@@ -9,7 +9,8 @@
 COSMOPOLITAN_C_START_
 
 typedef void (*sighandler_t)(int);
-typedef void (*sigaction_f)(int, struct siginfo *, struct ucontext *);
+typedef void (*sigaction_f)(int, struct siginfo *,
+                            void * /*struct ucontext **/);
 
 struct sigaction { /* cosmo abi */
   union {
