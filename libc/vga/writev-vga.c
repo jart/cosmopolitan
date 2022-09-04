@@ -41,9 +41,7 @@ typedef struct {
 
 typedef char_cell_t char_row_t[WIDTH];
 
-const char vga_console[0];
-
-static unsigned short height = 25, curr_row = 12, curr_col = 0;
+static unsigned short height = 25, curr_row, curr_col;
 static uint8_t curr_attr = 0x07;
 
 static void scroll(void) {
@@ -71,8 +69,6 @@ static void updatexy_vga(void) {
 }
 
 static void writec_vga(char c) {
-  /* TODO: ensure screen in a known mode (text or graphics), at rlinit time */
-  /* TODO: use our own font, rather than rely on BIOS's CP437 font */
   /* TODO: handle UTF-8 multi-bytes */
   /* TODO: handle VT102 escape sequences */
   /* TODO: maybe make BEL (\a) character code emit an alarm of some sort */
@@ -126,4 +122,14 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   }
   updatexy_vga();
   return wrote;
+}
+
+__attribute__((__constructor__)) static textstartup void _vga_init(void) {
+  /* Get the initial cursor position from the BIOS data area. */
+  typedef struct {
+    unsigned char col, row;
+  } bios_curs_pos_t;
+  bios_curs_pos_t pos = *(bios_curs_pos_t *)(BANE + 0x0450ull);
+  curr_row = pos.row;
+  curr_col = pos.col;
 }
