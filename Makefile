@@ -111,6 +111,7 @@ include libc/linux/linux.mk			# │  You can manipulate arrays
 include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
 include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/str/str.mk				# │
+include libc/vga/vga.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/elf/elf.mk				# │
@@ -316,7 +317,8 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_SYSV		\
 	LIBC_INTRIN		\
 	LIBC_NT_KERNEL32	\
-	LIBC_NEXGEN32E
+	LIBC_NEXGEN32E		\
+	LIBC_VGA
 
 COSMOPOLITAN_HEADERS =		\
 	APE			\
@@ -341,6 +343,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_TINYMATH		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
+	LIBC_VGA		\
 	NET_HTTP		\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_GDTOA	\
