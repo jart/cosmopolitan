@@ -380,7 +380,9 @@ SECTIONS {
     PROVIDE_HIDDEN(edata = .);
     KEEP(*(SORT_BY_NAME(.zip.*)))
     HIDDEN(_ezip = .);
+    . = ALIGN(PAGESIZE);
   } :Ram
+  . = ALIGN(PAGESIZE);
 
   .tdata . : {
     _tdata_start = .;
@@ -389,7 +391,7 @@ SECTIONS {
     . = ALIGN(16);
     _tdata_end = .;
     . = ALIGN(PAGESIZE);
-  } :Tls
+  } :Tls :Ram
   . = ALIGN(PAGESIZE);
 
 /*END:   file content that's loaded by o/s */

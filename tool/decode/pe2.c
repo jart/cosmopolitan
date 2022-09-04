@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"
@@ -205,15 +206,46 @@ static void showpeoptionalheader(struct NtImageOptionalHeader *opt) {
   }
 }
 
-static void ShowIat(struct NtImageNtHeaders *pe, int64_t *iat, size_t n) {
+static void ShowIlt(int64_t *ilt) {
   printf("\n");
-  showtitle(basename(path), "windows", "import address table (iat)", NULL,
-            NULL);
+  showtitle(basename(path), "windows", "import lookup table (ilt)", 0, 0);
+  do {
+    printf("\n");
+    show(".quad", format(b1, "%#lx", *ilt),
+         gc(xasprintf("@%#lx", (intptr_t)ilt - (intptr_t)mz)));
+    if (*ilt) {
+      char *hint = (char *)((intptr_t)mz + *ilt);
+      printf("/\t.short\t%d\t\t\t# @%#lx\n", READ16LE(hint),
+             (intptr_t)hint - (intptr_t)mz);
+      char *name = (char *)((intptr_t)mz + *ilt + 2);
+      printf("/\t.asciz\t%`'s\n", name);
+      printf("/\t.align\t2\n");
+    }
+  } while (*ilt++);
+}
+
+static void ShowIat(char *iat, size_t size) {
+  char *p, *e;
   printf("\n");
-  size_t i;
-  for (i = 0; i < n; ++i) {
-    show(".quad", format(b1, "%#lX", iat[i]),
-         gc(xasprintf("iat[%zu] @%#x", i, (intptr_t)(iat + i) - (intptr_t)pe)));
+  showtitle(basename(path), "windows", "import address table (iat)", 0, 0);
+  for (p = iat, e = iat + size; p + 20 <= e; p += 20) {
+    printf("\n");
+    show(".long", format(b1, "%#x", READ32LE(p)),
+         gc(xasprintf("ImportLookupTable RVA @%#lx",
+                      (intptr_t)p - (intptr_t)mz)));
+    show(".long", format(b1, "%#x", READ32LE(p + 4)), "TimeDateStamp");
+    show(".long", format(b1, "%#x", READ32LE(p + 8)), "ForwarderChain");
+    show(".long", format(b1, "%#x", READ32LE(p + 12)),
+         READ32LE(p + 12)
+             ? gc(xasprintf("DllName RVA (%s)", (char *)mz + READ32LE(p + 12)))
+             : "DllName RVA");
+    show(".long", format(b1, "%#x", READ32LE(p + 16)),
+         "ImportAddressTable RVA");
+  }
+  for (p = iat, e = iat + size; p + 20 <= e; p += 20) {
+    if (READ32LE(p)) {
+      ShowIlt((void *)((intptr_t)mz + READ32LE(p)));
+    }
   }
 }
 
@@ -242,11 +274,10 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
   showpeoptionalheader(pecheckaddress(mz, mzsize, &pe->OptionalHeader,
                                       pe->FileHeader.SizeOfOptionalHeader));
   ShowIat(
-      pe,
-      (void *)((intptr_t)pe +
+      (void *)((intptr_t)mz +
                pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]
                    .VirtualAddress),
-      pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport].Size / 8);
+      pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport].Size);
 }
 
 static void showall(void) {
