@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -29,6 +28,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
 #include "libc/log/internal.h"
@@ -283,7 +283,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   int me, owner;
   int gdbpid, err;
   static int sync;
-  static bool notpossible;
+  static bool _notpossible;
   __tls_enabled = false;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   --__ftrace;
@@ -322,7 +322,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
     goto ItsATrap;
   } else if (owner == me) {
     // we crashed while generating a crash report
-    if (_lockcmpxchg(&notpossible, false, true)) {
+    if (_lockcmpxchg(&_notpossible, false, true)) {
       __minicrash(sig, si, ctx, "WHILE CRASHING");
     } else {
       // somehow __minicrash() crashed not possible
