@@ -304,9 +304,9 @@ static int LuaFetch(lua_State *L) {
           goto TransportError;
         }
         if (rc) {
-          WARNF("(ftch) content-length is %`'.*s",
-                FetchHeaderLength(kHttpContentLength),
-                FetchHeaderData(kHttpContentLength));
+          DEBUGF("(ftch) content-length is %`'.*s",
+                 FetchHeaderLength(kHttpContentLength),
+                 FetchHeaderData(kHttpContentLength));
           hdrsize = rc;
           if (logmessages) {
             LogMessage("received", inbuf.p, hdrsize);
