@@ -66,8 +66,7 @@
   do {                                                        \
     if (UNLIKELY((x) == -1)) {                                \
       DEBUG("%s:%d: %s failed %m\n", __FILE__, __LINE__, #x); \
-      asm("hlt");                                             \
-      unreachable;                                            \
+      notpossible;                                            \
     }                                                         \
   } while (0)
 

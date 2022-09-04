@@ -531,5 +531,5 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
                : "=a"(ax)
                : "0"(0x20000b8 /* sigreturn */), "D"(xnuctx), "S"(infostyle)
                : "rcx", "r11", "memory", "cc");
-  unreachable;
+  notpossible;
 }

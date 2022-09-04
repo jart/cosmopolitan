@@ -61,6 +61,7 @@
            "reallocesque"
            "nullterminated"
            "unreachable"
+           "notpossible"
            "hidden"
            "privileged"
            "hasatleast"

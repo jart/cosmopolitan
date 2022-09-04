@@ -591,6 +591,12 @@ typedef struct {
 #endif
 #endif
 
+#define notpossible \
+  do {              \
+    asm("hlt");     \
+    unreachable;    \
+  } while (0)
+
 #define donothing \
   do {            \
   } while (0)

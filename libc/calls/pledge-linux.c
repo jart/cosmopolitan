@@ -74,12 +74,6 @@
 #define PLEDGE(pledge) pledge, ARRAYLEN(pledge)
 #define OFF(f)         offsetof(struct seccomp_data, f)
 
-#define AbortPledge(reason) \
-  do {                      \
-    asm("hlt");             \
-    unreachable;            \
-  } while (0)
-
 struct Filter {
   size_t n;
   struct sock_filter p[700];
@@ -992,7 +986,7 @@ static privileged void OnSigSys(int sig, siginfo_t *si, void *vctx) {
       // fallthrough
     case PLEDGE_PENALTY_KILL_THREAD:
       KillThisThread();
-      unreachable;
+      notpossible;
     default:
       break;
   }
@@ -1006,14 +1000,14 @@ static privileged void MonitorSigSys(void) {
   };
   // we block changing sigsys once pledge is installed
   // so we aren't terribly concerned if this will fail
-  if (SigAction(Sigsys, &sa, 0) == -1) asm("hlt");
+  if (SigAction(Sigsys, &sa, 0) == -1) {
+    notpossible;
+  }
 }
 
 static privileged void AppendFilter(struct Filter *f, struct sock_filter *p,
                                     size_t n) {
-  if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) {
-    AbortPledge("need to increase array size");
-  }
+  if (UNLIKELY(f->n + n > ARRAYLEN(f->p))) notpossible;
   MemCpy(f->p + f->n, p, n * sizeof(*f->p));
   f->n += n;
 }
@@ -1857,7 +1851,7 @@ static privileged void AppendPledge(struct Filter *f,   //
       };
       AppendFilter(f, PLEDGE(fragment));
     } else {
-      AbortPledge("list of ordinals exceeds max displacement");
+      notpossible;
     }
   }
 
@@ -1953,7 +1947,7 @@ static privileged void AppendPledge(struct Filter *f,   //
         AllowTkillSelf(f);
         break;
       default:
-        AbortPledge("switch forgot to define a special ordinal");
+        notpossible;
     }
   }
 }
@@ -1987,7 +1981,7 @@ privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
       if (kPledge[i].len) {
         AppendPledge(&f, kPledge[i].syscalls, kPledge[i].len);
       } else {
-        AbortPledge("bad ipromises");
+        notpossible;
       }
     }
   }
@@ -2020,7 +2014,7 @@ privileged int sys_pledge_linux(unsigned long ipromises, int mode) {
         sf[0].k = SECCOMP_RET_ERRNO | Eperm;
         break;
       default:
-        unreachable;
+        return -Einval;
     }
     AppendFilter(&f, PLEDGE(sf));
   }

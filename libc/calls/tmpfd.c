@@ -98,8 +98,7 @@ int tmpfd(void) {
                    0600)) != -1) {
       if (!IsWindows()) {
         if (unlink(path)) {
-          asm("hlt");
-          unreachable;
+          notpossible;
         }
       }
       return fd;

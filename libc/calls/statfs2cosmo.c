@@ -281,8 +281,7 @@ void statfs2cosmo(struct statfs *f, const union statfs_meta *m) {
     memcpy(f_fstypename, m->netbsd.f_fstypename, 16);
 
   } else {
-    asm("hlt");
-    unreachable;
+    notpossible;
   }
 
   f->f_type = f_type;

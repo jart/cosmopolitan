@@ -40,6 +40,5 @@ wontreturn void abort(void) {
   raise(SIGABRT);
   signal(SIGABRT, SIG_DFL);
   raise(SIGABRT);
-  asm("hlt");
-  unreachable;
+  notpossible;
 }
