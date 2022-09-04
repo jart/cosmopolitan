@@ -25,7 +25,6 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-#if 0
 TEST(abort, sysv) {
   if (IsWindows()) return;
   SPAWN(fork);
@@ -85,7 +84,6 @@ TEST(abort, ign_stillTerminates_windows) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#endif
 
 void Ignore(int sig) {
 }
