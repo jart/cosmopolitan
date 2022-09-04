@@ -21,7 +21,7 @@
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/vga/vga.h"
+#include "libc/vga/vga.internal.h"
 
 ssize_t sys_writev_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
   switch (fd->kind) {

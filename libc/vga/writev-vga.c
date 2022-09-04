@@ -27,7 +27,7 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
-#include "libc/vga/vga.h"
+#include "libc/vga/vga.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 

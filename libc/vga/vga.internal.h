@@ -1,5 +1,5 @@
-#ifndef COSMOPOLITAN_LIBC_VGA_VGA_H_
-#define COSMOPOLITAN_LIBC_VGA_VGA_H_
+#ifndef COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
+#define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #include "libc/calls/struct/fd.internal.h"

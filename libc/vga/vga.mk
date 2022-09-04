@@ -19,7 +19,7 @@ LIBC_VGA_A_SRCS =					\
 	$(LIBC_VGA_A_SRCS_C)
 
 LIBC_VGA_A_OBJS =					\
-	$(LIBC_VGA_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
+	$(LIBC_VGA_A_SRCS_S:%.S=o/$(MODE)/%.o)		\
 	$(LIBC_VGA_A_SRCS_C:%.c=o/$(MODE)/%.o)
 
 LIBC_VGA_A_CHECKS =					\
