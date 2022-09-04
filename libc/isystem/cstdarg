@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CSTDARG_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CSTDARG_
+#include "third_party/libcxx/cstdarg"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CSTDARG_ */

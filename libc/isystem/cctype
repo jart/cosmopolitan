@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CCTYPE_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CCTYPE_
+#include "third_party/libcxx/cctype"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CCTYPE_ */

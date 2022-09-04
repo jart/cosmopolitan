@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CSTRING_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CSTRING_
+#include "third_party/libcxx/cstring"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CSTRING_ */

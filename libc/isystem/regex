@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_REGEX_
+#define COSMOPOLITAN_LIBC_ISYSTEM_REGEX_
+#include "third_party/libcxx/regex"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_REGEX_ */

@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CSTDIO_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CSTDIO_
+#include "third_party/libcxx/cstdio"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CSTDIO_ */

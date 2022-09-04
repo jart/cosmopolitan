@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SET_
+#define COSMOPOLITAN_LIBC_ISYSTEM_SET_
+#include "third_party/libcxx/set"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SET_ */

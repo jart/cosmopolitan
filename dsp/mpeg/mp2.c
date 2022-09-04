@@ -277,7 +277,7 @@ void plm_audio_read_samples(plm_audio_t *self, int ch, int sb, int part);
 void plm_audio_matrix_transform(int s[32][3], int ss, float *d, int dp);
 
 plm_audio_t *plm_audio_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
-	plm_audio_t *self = (plm_audio_t *)memalign(alignof(plm_audio_t), sizeof(plm_audio_t));
+	plm_audio_t *self = (plm_audio_t *)memalign(_Alignof(plm_audio_t), sizeof(plm_audio_t));
 	memset(self, 0, sizeof(plm_audio_t));
 
 	self->samples.count = PLM_AUDIO_SAMPLES_PER_FRAME;

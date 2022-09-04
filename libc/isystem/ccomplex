@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CCOMPLEX_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CCOMPLEX_
+#include "third_party/libcxx/ccomplex"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CCOMPLEX_ */

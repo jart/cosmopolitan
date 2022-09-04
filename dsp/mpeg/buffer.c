@@ -67,7 +67,7 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 
 plm_buffer_t *plm_buffer_create_with_memory(unsigned char *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *b;
-	b = memalign(alignof(plm_buffer_t), sizeof(plm_buffer_t));
+	b = memalign(_Alignof(plm_buffer_t), sizeof(plm_buffer_t));
 	memset(b, 0, sizeof(plm_buffer_t));
 	b->capacity = length;
 	b->length = length;
@@ -79,7 +79,7 @@ plm_buffer_t *plm_buffer_create_with_memory(unsigned char *bytes, size_t length,
 
 plm_buffer_t * plm_buffer_create_with_capacity(size_t capacity) {
 	plm_buffer_t *b;
-	b = memalign(alignof(plm_buffer_t), sizeof(plm_buffer_t));
+	b = memalign(_Alignof(plm_buffer_t), sizeof(plm_buffer_t));
 	memset(b, 0, sizeof(plm_buffer_t));
 	b->capacity = capacity;
 	b->free_when_done = true;

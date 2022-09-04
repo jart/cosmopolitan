@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_RANDOM_
+#define COSMOPOLITAN_LIBC_ISYSTEM_RANDOM_
+#include "third_party/libcxx/random"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_RANDOM_ */

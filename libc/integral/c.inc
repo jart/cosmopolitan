@@ -26,7 +26,6 @@
 #define _Alignof(x) alignof(x)
 #endif /* C++11 */
 #else  /* __cplusplus */
-#define alignof(x) _Alignof(x)
 #if __STDC_VERSION__ + 0 < 201112
 #if __GNUC__ + _MSC_VER + 0 && !defined(__STRICT_ANSI__)
 #define _Alignof(x) __alignof(x)

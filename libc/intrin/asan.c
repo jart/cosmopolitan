@@ -898,7 +898,7 @@ static size_t __asan_user_size(size_t n) {
 
 static size_t __asan_heap_size(size_t n) {
   if (n < 0x7fffffff0000) {
-    n = ROUNDUP(n, alignof(struct AsanExtra));
+    n = ROUNDUP(n, _Alignof(struct AsanExtra));
     return __asan_roundup2pow(n + sizeof(struct AsanExtra));
   } else {
     return -1;
@@ -990,7 +990,7 @@ static struct AsanExtra *__asan_get_extra(const void *p, size_t *c) {
       (LIKELY(f == (int)((x - 1) >> 16)) || !kisdangerous((void *)(x - 1))) &&
       (LIKELY(f == (int)((x = x - sizeof(*e)) >> 16)) ||
        __asan_is_mapped(x >> 16)) &&
-      !(x & (alignof(struct AsanExtra) - 1))) {
+      !(x & (_Alignof(struct AsanExtra) - 1))) {
     *c = n;
     return (struct AsanExtra *)x;
   } else {

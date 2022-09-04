@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_LIMITS_
+#define COSMOPOLITAN_LIBC_ISYSTEM_LIMITS_
+#include "third_party/libcxx/limits"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_LIMITS_ */

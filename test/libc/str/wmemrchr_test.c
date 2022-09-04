@@ -31,6 +31,4 @@ TEST(wmemrchr, test) {
 BENCH(wmemrchr, bench) {
   EZBENCH2("wmemrchr", donothing,
            EXPROPRIATE(wmemrchr(L"yo.hi.there", '.', 11)));
-  EZBENCH2("wmemrchr hyperion", donothing,
-           EXPROPRIATE(wmemrchr(kHyperion, '.', kHyperionSize / 4)));
 }

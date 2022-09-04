@@ -10,7 +10,6 @@ extern const uint64_t kSha512[80];
 extern const unsigned char kTensIndex[64];
 
 void imapxlatab(void *);
-void insertionsort(int32_t *, size_t);
 void CheckStackIsAligned(void);
 
 COSMOPOLITAN_C_END_

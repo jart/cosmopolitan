@@ -31,6 +31,7 @@
 #include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/nrlinux.h"
 #include "libc/thread/thread.h"

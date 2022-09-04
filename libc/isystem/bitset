@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_BITSET_
+#define COSMOPOLITAN_LIBC_ISYSTEM_BITSET_
+#include "third_party/libcxx/bitset"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_BITSET_ */

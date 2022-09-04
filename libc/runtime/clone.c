@@ -33,6 +33,7 @@
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/futex.h"

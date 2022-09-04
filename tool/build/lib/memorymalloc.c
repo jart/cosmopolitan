@@ -27,7 +27,7 @@
 
 struct Machine *NewMachine(void) {
   struct Machine *m;
-  m = xmemalignzero(alignof(struct Machine), sizeof(struct Machine));
+  m = xmemalignzero(_Alignof(struct Machine), sizeof(struct Machine));
   ResetCpu(m);
   ResetMem(m);
   return m;

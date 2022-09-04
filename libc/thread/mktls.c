@@ -27,7 +27,7 @@
 #define _TLSZ ((intptr_t)_tls_size)
 #define _TLDZ ((intptr_t)_tdata_size)
 #define _TIBZ sizeof(struct cthread_descriptor_t)
-#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct cthread_descriptor_t))
+#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, _Alignof(struct cthread_descriptor_t))
 
 /**
  * Allocates thread-local storage memory for new thread.

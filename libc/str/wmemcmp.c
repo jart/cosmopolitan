@@ -1,40 +1,38 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ This is free and unencumbered software released into the public domain.      │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
-│ Anyone is free to copy, modify, publish, use, compile, sell, or              │
-│ distribute this software, either in source code form or as a compiled        │
-│ binary, for any purpose, commercial or non-commercial, and by any            │
-│ means.                                                                       │
+│ Permission to use, copy, modify, and/or distribute this software for         │
+│ any purpose with or without fee is hereby granted, provided that the         │
+│ above copyright notice and this permission notice appear in all copies.      │
 │                                                                              │
-│ In jurisdictions that recognize copyright laws, the author or authors        │
-│ of this software dedicate any and all copyright interest in the              │
-│ software to the public domain. We make this dedication for the benefit       │
-│ of the public at large and to the detriment of our heirs and                 │
-│ successors. We intend this dedication to be an overt act of                  │
-│ relinquishment in perpetuity of all present and future rights to this        │
-│ software under copyright law.                                                │
-│                                                                              │
-│ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,              │
-│ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF           │
-│ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.       │
-│ IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR            │
-│ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,        │
-│ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
-│ OTHER DEALINGS IN THE SOFTWARE.                                              │
-│                                                                              │
+│ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL                │
+│ WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED                │
+│ WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE             │
+│ AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL         │
+│ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR        │
+│ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER               │
+│ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
+│ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
 /**
- * Compares NUL-terminated wide strings w/ limit.
+ * Compares arrays of 32-bit signed integers.
  *
- * @param a is first non-null NUL-terminated string pointer
- * @param b is second non-null NUL-terminated string pointer
- * @return is <0, 0, or >0 based on uint8_t comparison
+ * @param a is first memory array
+ * @param b is second memory array
+ * @param n is number of elements in `a` and `b` to consider
+ * @return is <0, 0, or >0 based on int32_t comparison
  * @asyncsignalsafe
  */
 int wmemcmp(const wchar_t *a, const wchar_t *b, size_t n) {
-  return wcsncmp(a, b, n);
+  size_t i;
+  for (i = 0; i < n; ++i) {
+    if (a[i] != b[i]) {
+      return a[i] - b[i];
+    }
+  }
+  return 0;
 }

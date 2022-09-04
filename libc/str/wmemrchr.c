@@ -64,10 +64,14 @@ noasan static inline const wchar_t *wmemrchr_sse(const wchar_t *s, wchar_t c,
  * @return is pointer to first instance of c or NULL if not found
  * @asyncsignalsafe
  */
-void *wmemrchr(const void *s, wchar_t c, size_t n) {
+void *wmemrchr(const wchar_t *s, wchar_t c, size_t n) {
+  size_t bytes;
   const void *r;
   if (!IsTiny() && X86_HAVE(SSE)) {
-    if (IsAsan()) __asan_verify(s, n * 4);
+    if (IsAsan()) {
+      if (__builtin_mul_overflow(n, sizeof(wchar_t), &bytes)) bytes = -1;
+      __asan_verify(s, bytes);
+    }
     r = wmemrchr_sse(s, c, n);
   } else {
     r = wmemrchr_pure(s, c, n);

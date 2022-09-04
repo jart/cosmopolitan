@@ -13,8 +13,6 @@
 #define TRUE  1
 #define FALSE 0
 
-#define alignas(x) _Alignas(x)
-
 #define IS2POW(X)           (!((X) & ((X)-1)))
 #define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
 #define ROUNDDOWN(X, K)     ((X) & -(K))

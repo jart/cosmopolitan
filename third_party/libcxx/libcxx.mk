@@ -7,8 +7,6 @@ THIRD_PARTY_LIBCXX_ARTIFACTS += THIRD_PARTY_LIBCXX_A
 THIRD_PARTY_LIBCXX = $(THIRD_PARTY_LIBCXX_A_DEPS) $(THIRD_PARTY_LIBCXX_A)
 THIRD_PARTY_LIBCXX_A = o/$(MODE)/third_party/libcxx/libcxx.a
 
-#	third_party/libcxx/__functional_base_03			\
-
 THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/__bit_reference			\
 	third_party/libcxx/__bsd_locale_fallbacks.h		\
@@ -30,28 +28,41 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/__tuple				\
 	third_party/libcxx/__undef_macros			\
 	third_party/libcxx/algorithm				\
+	third_party/libcxx/any					\
 	third_party/libcxx/array				\
 	third_party/libcxx/atomic				\
 	third_party/libcxx/atomic_support.hh			\
 	third_party/libcxx/bit					\
 	third_party/libcxx/bitset				\
 	third_party/libcxx/cassert				\
+	third_party/libcxx/ccomplex				\
 	third_party/libcxx/cctype				\
 	third_party/libcxx/cerrno				\
+	third_party/libcxx/cfenv				\
+	third_party/libcxx/cfloat				\
 	third_party/libcxx/charconv				\
 	third_party/libcxx/chrono				\
+	third_party/libcxx/cinttypes				\
+	third_party/libcxx/ciso646				\
 	third_party/libcxx/climits				\
 	third_party/libcxx/clocale				\
 	third_party/libcxx/cmath				\
 	third_party/libcxx/codecvt				\
+	third_party/libcxx/compare				\
+	third_party/libcxx/complex				\
 	third_party/libcxx/condition_variable			\
 	third_party/libcxx/config_elast.h			\
+	third_party/libcxx/countof.internal.hh			\
+	third_party/libcxx/csetjmp				\
+	third_party/libcxx/csignal				\
 	third_party/libcxx/cstdarg				\
+	third_party/libcxx/cstdbool				\
 	third_party/libcxx/cstddef				\
 	third_party/libcxx/cstdint				\
 	third_party/libcxx/cstdio				\
 	third_party/libcxx/cstdlib				\
 	third_party/libcxx/cstring				\
+	third_party/libcxx/ctgmath				\
 	third_party/libcxx/ctime				\
 	third_party/libcxx/ctype.h				\
 	third_party/libcxx/cwchar				\
@@ -61,11 +72,16 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/exception				\
 	third_party/libcxx/exception_fallback.hh		\
 	third_party/libcxx/exception_pointer_unimplemented.hh	\
+	third_party/libcxx/execution				\
 	third_party/libcxx/experimental/__config		\
+	third_party/libcxx/filesystem				\
+	third_party/libcxx/forward_list				\
+	third_party/libcxx/fstream				\
 	third_party/libcxx/functional				\
 	third_party/libcxx/include/atomic_support.hh		\
 	third_party/libcxx/include/config_elast.hh		\
 	third_party/libcxx/initializer_list			\
+	third_party/libcxx/iomanip				\
 	third_party/libcxx/ios					\
 	third_party/libcxx/iosfwd				\
 	third_party/libcxx/iostream				\
@@ -90,6 +106,8 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/random				\
 	third_party/libcxx/ratio				\
 	third_party/libcxx/refstring.hh				\
+	third_party/libcxx/regex				\
+	third_party/libcxx/scoped_allocator			\
 	third_party/libcxx/set					\
 	third_party/libcxx/sstream				\
 	third_party/libcxx/stack				\
@@ -101,14 +119,17 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/string				\
 	third_party/libcxx/string.h				\
 	third_party/libcxx/string_view				\
+	third_party/libcxx/strstream				\
 	third_party/libcxx/system_error				\
 	third_party/libcxx/thread				\
 	third_party/libcxx/tuple				\
 	third_party/libcxx/type_traits				\
+	third_party/libcxx/typeindex				\
 	third_party/libcxx/typeinfo				\
 	third_party/libcxx/unordered_map			\
 	third_party/libcxx/unordered_set			\
 	third_party/libcxx/utility				\
+	third_party/libcxx/valarray				\
 	third_party/libcxx/variant				\
 	third_party/libcxx/vector				\
 	third_party/libcxx/version				\
@@ -126,15 +147,21 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/hash.cc				\
 	third_party/libcxx/ios.cc				\
 	third_party/libcxx/iostream.cc				\
-	third_party/libcxx/locale.cc				\
+	third_party/libcxx/locale1.cc				\
+	third_party/libcxx/locale2.cc				\
+	third_party/libcxx/locale3.cc				\
+	third_party/libcxx/locale4.cc				\
 	third_party/libcxx/memory.cc				\
 	third_party/libcxx/mutex.cc				\
 	third_party/libcxx/new.cc				\
 	third_party/libcxx/optional.cc				\
 	third_party/libcxx/random.cc				\
+	third_party/libcxx/regex.cc				\
 	third_party/libcxx/stdexcept.cc				\
 	third_party/libcxx/string.cc				\
+	third_party/libcxx/strstream.cc				\
 	third_party/libcxx/system_error.cc			\
+	third_party/libcxx/valarray.cc				\
 	third_party/libcxx/vector.cc
 
 THIRD_PARTY_LIBCXX_A_SRCS =					\
@@ -181,8 +208,6 @@ $(THIRD_PARTY_LIBCXX_A_OBJS): private				\
 		OVERRIDE_CXXFLAGS +=				\
 			-ffunction-sections			\
 			-fdata-sections
-
-o/$(MODE)/third_party/libcxx/locale.o: private QUOTA = -C32 -M1024m
 
 THIRD_PARTY_LIBCXX_LIBS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)))
 THIRD_PARTY_LIBCXX_SRCS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_SRCS))

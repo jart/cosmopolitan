@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_BIT_
+#define COSMOPOLITAN_LIBC_ISYSTEM_BIT_
+#include "third_party/libcxx/bit"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_BIT_ */

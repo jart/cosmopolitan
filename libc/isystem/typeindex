@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_TYPEINDEX_
+#define COSMOPOLITAN_LIBC_ISYSTEM_TYPEINDEX_
+#include "third_party/libcxx/typeindex"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_TYPEINDEX_ */

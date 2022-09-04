@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SYSTEM_ERROR_
+#define COSMOPOLITAN_LIBC_ISYSTEM_SYSTEM_ERROR_
+#include "third_party/libcxx/system_error"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SYSTEM_ERROR_ */

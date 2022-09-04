@@ -19,5 +19,7 @@
 #include "libc/str/str.h"
 
 wchar_t *wmempcpy(wchar_t *dest, const wchar_t *src, size_t count) {
-  return mempcpy(dest, src, count * sizeof(wchar_t));
+  size_t bytes;
+  if (__builtin_mul_overflow(count, sizeof(wchar_t), &bytes)) bytes = -1;
+  return mempcpy(dest, src, bytes);
 }

@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CTGMATH_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CTGMATH_
+#include "third_party/libcxx/ctgmath"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CTGMATH_ */

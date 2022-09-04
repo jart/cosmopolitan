@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_ITERATOR_
+#define COSMOPOLITAN_LIBC_ISYSTEM_ITERATOR_
+#include "third_party/libcxx/iterator"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_ITERATOR_ */

@@ -225,7 +225,7 @@
                       ;; "nm -C --size o/$m/%s.o | sort -r"
                       "echo"
                       "size -A o/$m/$n.o | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-                      "objdump %s -wzCd o/$m/$n%s.o"))
+                      "objdump %s -wzCd o/$m/$n%s.o | c++filt"))
                    mode name suffix objdumpflags suffix))
           ((eq kind 'run)
            (format
@@ -249,7 +249,7 @@
                ;; "nm -C --size $f | sort -r"
                "echo"
                "size -A $f | grep '^[.T]' | grep -v 'debug\\|command.line\\|stack' | sort -rnk2"
-               "objdump %s -wzCd $f"))
+               "objdump %s -wzCd $f | c++filt"))
             mode name suffix objdumpflags)))))
 
 (defun cosmo-compile (arg)
@@ -781,7 +781,8 @@
 (progn
   (define-key prog-mode-map (kbd "C-c C-h") 'cosmo-add-include)
   (define-key asm-mode-map (kbd "C-c C-h") 'cosmo-add-include)
-  (define-key c-mode-base-map (kbd "C-c C-h") 'cosmo-add-include))
+  (define-key c-mode-base-map (kbd "C-c C-h") 'cosmo-add-include)
+  (define-key c++-mode-map (kbd "C-c C-h") 'cosmo-add-include))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

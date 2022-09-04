@@ -1,0 +1,29 @@
+// -*- C++ -*-
+// clang-format off
+//===--------------------------- ccomplex ---------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP_CCOMPLEX
+#define _LIBCPP_CCOMPLEX
+
+/*
+    ccomplex synopsis
+
+#include "third_party/libcxx/complex"
+
+*/
+
+#include "third_party/libcxx/complex"
+
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#pragma GCC system_header
+#endif
+
+// hh 080623 Created
+
+#endif  // _LIBCPP_CCOMPLEX

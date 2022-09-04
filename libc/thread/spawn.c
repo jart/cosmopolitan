@@ -25,6 +25,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"

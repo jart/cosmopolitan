@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_VARIANT_
+#define COSMOPOLITAN_LIBC_ISYSTEM_VARIANT_
+#include "third_party/libcxx/variant"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_VARIANT_ */

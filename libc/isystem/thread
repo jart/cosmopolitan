@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_THREAD_
+#define COSMOPOLITAN_LIBC_ISYSTEM_THREAD_
+#include "third_party/libcxx/thread"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_THREAD_ */

@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_CHRONO_
+#define COSMOPOLITAN_LIBC_ISYSTEM_CHRONO_
+#include "third_party/libcxx/chrono"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_CHRONO_ */

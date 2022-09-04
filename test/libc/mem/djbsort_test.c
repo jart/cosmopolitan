@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -34,6 +34,20 @@ void djbsort_avx2(int32_t *, long);
 
 size_t n;
 int32_t *a, *b, *c;
+
+void insertionsort(int32_t *a, size_t n) {
+  int t;
+  unsigned i, j;
+  for (i = 1; i < n; ++i) {
+    j = i;
+    t = a[i];
+    while (j > 0 && t < a[j - 1]) {
+      a[j] = a[j - 1];
+      --j;
+    }
+    a[j] = t;
+  }
+}
 
 TEST(djbsort, test4) {
   static const int kA[] = {4, 3, 2, 1};

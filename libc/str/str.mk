@@ -49,6 +49,8 @@ o/$(MODE)/libc/str/memmem.o: private				\
 		OVERRIDE_CPPFLAGS +=				\
 			-DSTACK_FRAME_UNLIMITED
 
+o/$(MODE)/libc/str/wmemset.o					\
+o/$(MODE)/libc/str/memset16.o					\
 o/$(MODE)/libc/str/dosdatetimetounix.o: private			\
 		OVERRIDE_CFLAGS +=				\
 			-O3

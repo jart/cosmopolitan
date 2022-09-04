@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_OSTREAM_
+#define COSMOPOLITAN_LIBC_ISYSTEM_OSTREAM_
+#include "third_party/libcxx/ostream"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_OSTREAM_ */

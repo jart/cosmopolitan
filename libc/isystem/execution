@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_EXECUTION_
+#define COSMOPOLITAN_LIBC_ISYSTEM_EXECUTION_
+#include "third_party/libcxx/execution"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_EXECUTION_ */

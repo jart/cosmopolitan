@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_IOSFWD_
+#define COSMOPOLITAN_LIBC_ISYSTEM_IOSFWD_
+#include "third_party/libcxx/iosfwd"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_IOSFWD_ */

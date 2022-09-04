@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_LOCALE_
+#define COSMOPOLITAN_LIBC_ISYSTEM_LOCALE_
+#include "third_party/libcxx/locale"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_LOCALE_ */
