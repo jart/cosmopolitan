@@ -43,7 +43,6 @@ o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.in
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%.runs: o/$(MODE)/%      ; @$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
@@ -99,7 +98,48 @@ o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/as
 	@$(COMPILE) -wAASSIMILATE -T$@ o/$(MODE)/tool/build/assimilate.com $@
 
 ################################################################################
-# elf zip files
+# LOCAL UNIT TESTS
+#
+# We always run unit tests as part of the normal `make` invocation. you
+# may override the $(TESTARGS) variable to do things such as enable the
+# benchmarking feature. For example:
+#
+#     TESTARGS = -b
+#
+# May be specified in your ~/.cosmo.mk file. You can also use this to
+# enable things like function tracing. For example:
+#
+#     TESTARGS = --ftrace
+#     .PLEDGE += prot_exec
+#
+# You could then run a command like:
+#
+#     make -j8 o//test/libc/calls/openbsd_test.com.runs
+#
+# You need PROT_EXEC permission since ftrace morphs the binary. It's
+# also worth mentioning that the pledge.com command can simulate what
+# Landlock Make does:
+#
+#     o//tool/build/pledge.com \
+#       -v. -p 'stdio rpath wpath cpath tty prot_exec' \
+#       o//test/libc/calls/openbsd_test.com \
+#       ----ftrace
+#
+# This is useful in the event a test binary should run by itself, but
+# fails to run beneath Landlock Make. It's also useful sometimes to
+# override the verbosity when running tests:
+#
+#     make V=5 TESTARGS=-b o//test/libc/calls/openbsd_test.com.runs
+#
+# This way, if for some reason a test should fail but calls exit(0),
+# then the stdout/stderr output, which would normally be suppressed,
+# will actually be displayed.
+
+o/$(MODE)/%.runs: o/$(MODE)/%
+	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
+
+################################################################################
+# ELF ZIP FILES
 #
 # zipobj.com lets us do fast incremental linking of compressed data.
 # it's nice because if we link a hundred binaries that use the time zone
@@ -123,7 +163,7 @@ o/$(MODE)%/.zip.o: %
 	@$(COMPILE) -wAZIPOBJ $(ZIPOBJ) $(ZIPOBJ_FLAGS) $(OUTPUT_OPTION) $<
 
 ################################################################################
-# strict header checking
+# STRICT HEADER CHECKING
 #
 # these rules are unsandboxed since they're already a sandboxing test,
 # and it would be too costly in terms of make latency to have every
@@ -150,7 +190,7 @@ o/$(MODE)/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
 ################################################################################
-# executable helpers
+# EXECUTABLE HELPERS
 
 MAKE_OBJCOPY =					\
 	$(COMPILE) -AOBJCOPY -T$@		\

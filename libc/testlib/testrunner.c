@@ -83,7 +83,7 @@ void testlib_error_leave(void) {
 wontreturn void testlib_abort(void) {
   testlib_finish();
   __restorewintty();
-  _Exit(MIN(255, g_testlib_failed));
+  _Exit(MAX(1, MIN(255, g_testlib_failed)));
 }
 
 static void SetupTmpDir(void) {

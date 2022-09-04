@@ -39,6 +39,7 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
@@ -46,20 +47,6 @@
 STATIC_YOINK("zip_uri_support");
 
 #define EACCES_OR_ENOENT (IsOpenbsd() ? ENOENT : EACCES)
-
-#define SPAWN(METHOD)                \
-  {                                  \
-    int ws, pid;                     \
-    ASSERT_NE(-1, (pid = METHOD())); \
-    if (!pid) {
-
-#define EXITS(rc)                 \
-  _Exit(0);                       \
-  }                               \
-  ASSERT_NE(-1, wait(&ws));       \
-  ASSERT_TRUE(WIFEXITED(ws));     \
-  ASSERT_EQ(rc, WEXITSTATUS(ws)); \
-  }
 
 char testlib_enable_tmp_setup_teardown;
 

@@ -29,29 +29,8 @@
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-
-#define SPAWN(METHOD)                \
-  {                                  \
-    int ws, pid;                     \
-    ASSERT_NE(-1, (pid = METHOD())); \
-    if (!pid) {
-
-#define EXITS(rc)                 \
-  _Exit(0);                       \
-  }                               \
-  ASSERT_NE(-1, wait(&ws));       \
-  ASSERT_TRUE(WIFEXITED(ws));     \
-  ASSERT_EQ(rc, WEXITSTATUS(ws)); \
-  }
-
-#define TERMS(sig)              \
-  _Exit(0);                     \
-  }                             \
-  ASSERT_NE(-1, wait(&ws));     \
-  ASSERT_TRUE(WIFSIGNALED(ws)); \
-  ASSERT_EQ(sig, WTERMSIG(ws)); \
-  }
 
 void SetUp(void) {
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);

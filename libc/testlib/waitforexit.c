@@ -17,39 +17,49 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/pledge.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
-#include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/testlib/subprocess.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-char testlib_enable_tmp_setup_teardown;
+STATIC_YOINK("strsignal");
 
-void CheckPlatform(void) {
-  if (IsOpenbsd()) return;
-  if (__is_linux_2_6_23()) return;
-  kprintf("skipping openbsd_test\n");
-  exit(0);
-}
-
-void SetUp(void) {
-  CheckPlatform();
-}
-
-TEST(pledge, promisedSyscallsCanBeCalled_ieEnosysIsIgnored) {
-  SPAWN(fork);
-  EXPECT_SYS(0, 0, pledge("stdio", 0));
-  EXPECT_SYS(0, 0, read(0, 0, 0));
-  EXITS(0);
-}
-
-TEST(unveil, pathBecomeVisible_ieEnosysIsIgnored) {
-  SPAWN(fork);
-  EXPECT_SYS(0, 0, touch("foo", 0644));
-  EXPECT_SYS(0, 0, unveil("foo", "r"));
-  EXPECT_SYS(0, 0, unveil(0, 0));
-  EXPECT_SYS(0, 3, open("foo", O_RDONLY));
-  EXITS(0);
+void testlib_waitforexit(const char *file, int line, const char *code, int rc,
+                         int pid) {
+  int ws;
+  char host[64];
+  ASSERT_NE(-1, wait(&ws));
+  if (WIFEXITED(ws)) {
+    if (WEXITSTATUS(ws) == rc) {
+      return;
+    }
+    kprintf("%s:%d: test failed\n"
+            "\tEXITS(%s)\n"
+            "\t  want WEXITSTATUS(%d)\n"
+            "\t   got WEXITSTATUS(%d)\n",
+            file, line, code, rc, WEXITSTATUS(ws));
+  } else if (WIFSIGNALED(ws)) {
+    kprintf("%s:%d: test failed\n"
+            "\tEXITS(%s)\n"
+            "\t  want _Exit(%d)\n"
+            "\t   got WTERMSIG(%G)\n",
+            file, line, code, rc, WTERMSIG(ws));
+  } else if (WIFSTOPPED(ws)) {
+    kprintf("%s:%d: test failed\n"
+            "\tEXITS(%s)\n"
+            "\t  want _Exit(%d)\n"
+            "\t   got WSTOPSIG(%G)\n",
+            file, line, code, rc, WSTOPSIG(ws));
+  } else {
+    kprintf("%s:%d: test failed\n"
+            "\tEXITS(%s)\n"
+            "\t  want _Exit(%d)\n"
+            "\t   got ws=%#x\n",
+            file, line, code, rc, ws);
+  }
+  if (gethostname(host, sizeof(host))) {
+    strcpy(host, "unknown");
+  }
+  kprintf("\t%s\n", host);
+  exit(1);
 }
