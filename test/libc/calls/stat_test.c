@@ -64,6 +64,10 @@ TEST(stat, zipos) {
              stat("/zip/.python/test/"
                   "tokenize_tests-latin1-coding-cookie-and-utf8-bom-sig.txt",
                   &st));
+  EXPECT_SYS(0, 0, stat("/zip", &st));
+  EXPECT_SYS(0, 0, stat("/zip/", &st));
+  EXPECT_SYS(0, 0, stat("/zip/.python", &st));
+  EXPECT_SYS(0, 0, stat("/zip/.python/", &st));
 }
 
 static long Stat(const char *path, struct stat *st) {
