@@ -12,8 +12,10 @@
 #include "libc/stdio/stdio.h"
 
 int main(int argc, char *argv[]) {
-  char hostname[254];
-  CHECK_NE(-1, gethostname(hostname, sizeof(hostname)));
-  puts(hostname);
+  char name[254];
+  CHECK_NE(-1, gethostname(name, sizeof(name)));
+  printf("gethostname() → %`'s\n", name);
+  CHECK_NE(-1, getdomainname(name, sizeof(name)));
+  printf("getdomainname() → %`'s\n", name);
   return 0;
 }

@@ -16,30 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/computernameformat.h"
-#include "libc/nt/systeminfo.h"
+#include "libc/calls/struct/utsname-linux.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-// Guarantees NUL-terminator, if zero is returned.
-// Mutates on ENAMETOOLONG without nul-terminator.
-textwindows int gethostname_nt(char *name, size_t len, int kind) {
-  uint32_t nSize;
-  char name8[256];
-  char16_t name16[256];
-  nSize = ARRAYLEN(name16);
-  if (GetComputerNameEx(kind, name16, &nSize)) {
-    tprecode16to8(name8, sizeof(name8), name16);
-    if (memccpy(name, name8, '\0', len)) {
+int getdomainname_linux(char *name, size_t len) {
+  struct utsname_linux uts;
+  if (!sys_uname_linux(&uts)) {
+    if (memccpy(name, uts.domainname, '\0', len)) {
       return 0;
     } else {
       return enametoolong();
     }
-    return 0;
-  } else {
-    return __winerr();
   }
+  return -1;
 }

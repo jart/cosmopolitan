@@ -17,29 +17,60 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/computernameformat.h"
 #include "libc/sysv/errfuns.h"
 
+#define KERN_HOSTNAME 10
+
 /**
- * Returns name of host system, e.g.
+ * Returns name of current host.
  *
- *     pheidippides.domain.example
- *     ^^^^^^^^^^^^
+ * For example, if the fully-qualified hostname is "host.domain.example"
+ * then this SHOULD return "host" however that might not be the case; it
+ * depends on how the host machine is configured. It's fair to say if it
+ * has a dot, it's a FQDN, otherwise it's a node.
  *
- * @return 0 on success or -1 w/ errno
+ * The nul / mutation semantics are tricky. Here is some safe copypasta:
+ *
+ *     char host[254];
+ *     if (gethostname(host, sizeof(host))) {
+ *       strcpy(host, "localhost");
+ *     }
+ *
+ * On Linux this is the same as `/proc/sys/kernel/hostname`.
+ *
+ * @param name receives output name, which is guaranteed to be complete
+ *     and have a nul-terminator if this function return zero
+ * @param len is size of `name` consider using `DNS_NAME_MAX + 1` (254)
+ * @raise EINVAL if `len` is negative
+ * @raise EFAULT if `name` is an invalid address
+ * @raise ENAMETOOLONG if the underlying system call succeeded, but the
+ *     returned hostname had a length equal to or greater than `len` in
+ *     which case this error is raised and the buffer is modified, with
+ *     as many bytes of hostname as possible excluding a nul-terminator
+ * @return 0 on success, or -1 w/ errno
  */
 int gethostname(char *name, size_t len) {
-  if (len < 1) return einval();
-  if (!name) return efault();
-  if (!IsWindows()) {
-    if (!IsBsd()) {
-      return gethostname_linux(name, len);
-    } else {
-      return gethostname_bsd(name, len);
-    }
+  int rc;
+  if (len < 0) {
+    rc = einval();
+  } else if (!len) {
+    rc = 0;
+  } else if (!name) {
+    rc = efault();
+  } else if (IsLinux()) {
+    rc = gethostname_linux(name, len);
+  } else if (IsBsd()) {
+    rc = gethostname_bsd(name, len, KERN_HOSTNAME);
+  } else if (IsWindows()) {
+    rc = gethostname_nt(name, len, kNtComputerNamePhysicalDnsHostname);
   } else {
-    return gethostname_nt(name, len, kNtComputerNamePhysicalDnsHostname);
+    rc = enosys();
   }
+  STRACE("gethostname([%#.*s], %'zu) → %d% m", len, name, len, rc);
+  return rc;
 }

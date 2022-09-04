@@ -16,15 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/utsname.h"
+#include "libc/calls/struct/utsname-linux.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
 int gethostname_linux(char *name, size_t len) {
-  struct utsname u;
-  if (uname(&u) == -1) return -1;
-  memccpy(name, u.nodename, '\0', len);
-  name[len - 1] = '\0';
-  return 0;
+  struct utsname_linux uts;
+  if (!sys_uname_linux(&uts)) {
+    if (memccpy(name, uts.nodename, '\0', len)) {
+      return 0;
+    } else {
+      return enametoolong();
+    }
+  }
+  return -1;
 }

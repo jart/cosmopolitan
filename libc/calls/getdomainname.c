@@ -17,37 +17,65 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/utsname.h"
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/calls/strace.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"
-#include "libc/nt/errors.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/systeminfo.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
+#define KERN_DOMAINNAME 22
+
+/**
+ * Returns domain of current host.
+ *
+ * For example, if the fully-qualified hostname is "host.domain.example"
+ * then this SHOULD return "domain.example" however, it might not be the
+ * case; it depends on how the host machine is configured.
+ *
+ * The nul / mutation semantics are tricky. Here is some safe copypasta:
+ *
+ *     char domain[254];
+ *     if (getdomainname(domain, sizeof(domain))) {
+ *       strcpy(domain, "(none)");
+ *     }
+ *
+ * On Linux this is the same as `/proc/sys/kernel/domainname`. However,
+ * we turn the weird `"(none)"` string into empty string.
+ *
+ * @param name receives output name, which is guaranteed to be complete
+ *     and have a nul-terminator if this function return zero
+ * @param len is size of `name` consider using `DNS_NAME_MAX + 1` (254)
+ * @raise EINVAL if `len` is negative
+ * @raise EFAULT if `name` is an invalid address
+ * @raise ENAMETOOLONG if the underlying system call succeeded, but the
+ *     returned hostname had a length equal to or greater than `len` in
+ *     which case this error is raised and the buffer is modified, with
+ *     as many bytes of hostname as possible excluding a nul-terminator
+ * @return 0 on success, or -1 w/ errno
+ */
 int getdomainname(char *name, size_t len) {
-  uint32_t nSize;
-  struct utsname u;
-  char16_t name16[256];
-  if (len < 1) return einval();
-  if (!name) return efault();
-  if (!IsWindows()) {
-    if (uname(&u) == -1) return -1;
-    if (!memccpy(name, u.domainname[0] ? u.domainname : u.nodename, '\0',
-                 len)) {
-      name[len - 1] = '\0';
-    }
-    return 0;
+  int rc;
+  if (len < 0) {
+    rc = einval();
+  } else if (!len) {
+    rc = 0;
+  } else if (!name) {
+    rc = efault();
+  } else if (IsLinux()) {
+    rc = getdomainname_linux(name, len);
+  } else if (IsBsd()) {
+    rc = gethostname_bsd(name, len, KERN_DOMAINNAME);
+  } else if (IsWindows()) {
+    rc = gethostname_nt(name, len, kNtComputerNamePhysicalDnsDomain);
   } else {
-    nSize = ARRAYLEN(name16);
-    if (GetComputerNameEx(kNtComputerNameDnsFullyQualified, name16, &nSize)) {
-      tprecode16to8(name, len, name16);
-      return 0;
-    } else {
-      return __winerr();
-    }
+    rc = enosys();
   }
+  if (!rc && len && !strcmp(name, "(none)")) {
+    name[0] = 0;
+  }
+  STRACE("getdomainname([%#.*s], %'zu) → %d% m", len, name, len, rc);
+  return rc;
 }

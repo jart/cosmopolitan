@@ -16,93 +16,171 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/utsname-netbsd.internal.h"
+#include "libc/calls/struct/utsname-linux.internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"
 #include "libc/nt/struct/teb.h"
+#include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-static inline textwindows noasan int NtGetMajorVersion(void) {
+#define CTL_KERN        1
+#define KERN_OSTYPE     1
+#define KERN_OSRELEASE  2
+#define KERN_VERSION    4
+#define KERN_HOSTNAME   10
+#define KERN_DOMAINNAME 22
+
+#define CTL_HW     6
+#define HW_MACHINE 1
+
+// Gets BSD sysctl() string, guaranteeing NUL-terminator.
+// We ignore errors since this syscall mutates on ENOMEM.
+// In that case, sysctl() doesn't guarantee the nul term.
+static void GetBsdStr(int c0, int c1, char *s) {
+  char *p;
+  int e = errno;
+  size_t n = SYS_NMLN;
+  int cmd[2] = {c0, c1};
+  bzero(s, n), --n;
+  sysctl(cmd, 2, s, &n, NULL, 0);
+  errno = e;
+  // sysctl kern.version is too verbose for uname
+  if ((p = strchr(s, '\n'))) {
+    *p = 0;
+  }
+}
+
+// Gets NT name ignoring errors with guaranteed NUL-terminator.
+static textwindows void GetNtName(char *name, int kind) {
+  uint32_t n = SYS_NMLN;
+  char16_t name16[256];
+  uint32_t size = ARRAYLEN(name16);
+  if (GetComputerNameEx(kind, name16, &size)) {
+    tprecode16to8(name, SYS_NMLN, name16);
+  } else {
+    name[0] = 0;
+  }
+}
+
+static inline textwindows noasan int GetNtMajorVersion(void) {
   return NtGetPeb()->OSMajorVersion;
 }
 
-static inline textwindows noasan int NtGetMinorVersion(void) {
+static inline textwindows noasan int GetNtMinorVersion(void) {
   return NtGetPeb()->OSMinorVersion;
 }
 
-static inline textwindows noasan int NtGetBuildNumber(void) {
+static inline textwindows noasan int GetNtBuildNumber(void) {
   return NtGetPeb()->OSBuildNumber;
 }
 
+static textwindows void GetNtVersion(char *p) {
+  p = FormatUint32(p, GetNtMajorVersion()), *p++ = '.';
+  p = FormatUint32(p, GetNtMinorVersion()), *p++ = '-';
+  p = FormatUint32(p, GetNtBuildNumber());
+}
+
+static const char *Str(int rc, const char *s) {
+  return !rc ? s : "n/a";
+}
+
 /**
- * Asks kernel to give us the `uname -a` data.
+ * Asks kernel to give us `uname -a` data.
+ *
+ * - `machine` should be one of:
+ *
+ *   - `x86_64`
+ *   - `amd64`
+ *
+ * - `sysname` should be one of:
+ *
+ *   - `Linux`
+ *   - `FreeBSD`
+ *   - `NetBSD`
+ *   - `OpenBSD`
+ *   - `Darwin`
+ *   - `Windows`
+ *
+ * - `version` contains the distro name, version, and release date. On
+ *   FreeBSD/NetBSD/OpenBSD this may contain newline characters, which
+ *   this polyfill hides by setting the first newline character to nul
+ *   although the information can be restored by putting newline back.
+ *   BSDs usually repeat the `sysname` and `release` in the `version`.
+ *
+ * - `nodename` *may* be the first label of the fully qualified hostname
+ *   of the current host. This is equivalent to gethostname(), except we
+ *   guarantee a NUL-terminator here with truncation, which should never
+ *   happen unless the machine violates the DNS standard. If it has dots
+ *   then it's fair to assume it's an FQDN. On Linux this is the same as
+ *   the content of `/proc/sys/kernel/hostname`.
+ *
+ * - `domainname` *may* be the higher-order labels of the FQDN for this
+ *   host. This is equivalent to getdomainname(), except we guarantee a
+ *   NUL-terminator here with truncation, which should never happen w/o
+ *   violating the DNS standard. If this field is not present, it'll be
+ *   coerced to empty string. On Linux, this is the same as the content
+ *   of `/proc/sys/kernel/domainname`.
+ *
+ * The returned fields are guaranteed to be nul-terminated.
+ *
  * @return 0 on success, or -1 w/ errno
+ * @raise EFAULT if `buf` isn't valid
+ * @raise ENOSYS on metal
  */
-int uname(struct utsname *lool) {
+int uname(struct utsname *uts) {
   int rc;
-  char *out, *p;
-  size_t i, j, len;
-  if (!lool) return efault();
-  if (!lool || (IsAsan() && !__asan_is_valid(lool, sizeof(*lool)))) {
+  if (!uts || (IsAsan() && !__asan_is_valid(uts, sizeof(*uts)))) {
     rc = efault();
-  } else {
-    if (!IsWindows()) {
-      if (IsLinux() || IsFreebsd()) {
-        char tmp[sizeof(struct utsname)];
-        bzero(tmp, sizeof(tmp));
-        if ((rc = sys_uname(tmp)) != -1) {
-          out = (char *)lool;
-          for (i = j = 0;;) {
-            len = strlen(&tmp[j]);
-            if (len >= sizeof(struct utsname) - i) break;
-            memcpy(&out[i], &tmp[j], len + 1);
-            i += SYS_NMLN;
-            j += len;
-            while (j < sizeof(tmp) && tmp[j] == '\0') ++j;
-            if (j == sizeof(tmp)) break;
-          }
-        }
-      } else if (IsXnu()) {
-        strcpy(lool->sysname, "XNU's Not UNIX!");
-        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
-        rc = 0;
-      } else if (IsOpenbsd()) {
-        strcpy(lool->sysname, "OpenBSD");
-        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
-        rc = 0;
-      } else if (IsNetbsd()) {
-        strcpy(lool->sysname, "NetBSD");
-        gethostname_bsd(lool->nodename, sizeof(lool->nodename));
-        rc = 0;
-      } else {
-        rc = enosys();
+  } else if (IsLinux()) {
+    struct utsname_linux linux;
+    if (!(rc = sys_uname_linux(&linux))) {
+      stpcpy(uts->sysname, linux.sysname);
+      stpcpy(uts->nodename, linux.nodename);
+      stpcpy(uts->release, linux.release);
+      stpcpy(uts->version, linux.version);
+      stpcpy(uts->machine, linux.machine);
+      stpcpy(uts->domainname, linux.domainname);
+      if (!strcmp(uts->domainname, "(none)")) {
+        uts->domainname[0] = 0;
       }
-    } else {
-      p = lool->release;
-      p = FormatUint32(p, NtGetMajorVersion()), *p++ = '.';
-      p = FormatUint32(p, NtGetMinorVersion()), *p++ = '-';
-      p = FormatUint32(p, NtGetBuildNumber());
-      strcpy(lool->sysname, "The New Technology");
-      strcpy(lool->machine, "x86_64");
-      rc = gethostname_nt(lool->nodename, sizeof(lool->nodename),
-                          kNtComputerNamePhysicalDnsHostname);
-      rc |= gethostname_nt(lool->domainname, sizeof(lool->domainname),
-                           kNtComputerNamePhysicalDnsDomain);
     }
+  } else if (IsBsd()) {
+    GetBsdStr(CTL_KERN, KERN_OSTYPE, uts->sysname);
+    GetBsdStr(CTL_KERN, KERN_HOSTNAME, uts->nodename);
+    GetBsdStr(CTL_KERN, KERN_DOMAINNAME, uts->domainname);
+    GetBsdStr(CTL_KERN, KERN_OSRELEASE, uts->release);
+    GetBsdStr(CTL_KERN, KERN_VERSION, uts->version);
+    GetBsdStr(CTL_HW, HW_MACHINE, uts->machine);
+    rc = 0;
+  } else if (IsWindows()) {
+    stpcpy(uts->sysname, "Windows");
+    stpcpy(uts->machine, "x86_64");
+    GetNtVersion(stpcpy(uts->version, "Windows "));
+    GetNtVersion(uts->release);
+    GetNtName(uts->nodename, kNtComputerNamePhysicalDnsHostname);
+    GetNtName(uts->domainname, kNtComputerNamePhysicalDnsDomain);
+    rc = 0;
+  } else {
+    rc = enosys();
   }
-  STRACE("uname([%s, %s, %s, %s, %s, %s]) → %d% m", lool->sysname,
-         lool->nodename, lool->release, lool->version, lool->machine,
-         lool->domainname, rc);
+  STRACE("uname([{%#s, %#s, %#s, %#s, %#s, %#s}]) → %d% m",
+         Str(rc, uts->sysname), Str(rc, uts->nodename), Str(rc, uts->release),
+         Str(rc, uts->version), Str(rc, uts->machine), Str(rc, uts->domainname),
+         rc);
   return rc;
 }

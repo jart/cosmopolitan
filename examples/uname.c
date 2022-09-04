@@ -14,11 +14,11 @@
 int main(int argc, char *argv[]) {
   struct utsname names;
   if (uname(&names)) return 1;
-  printf("%-10s %s\n", "sysname", names.sysname);
-  printf("%-10s %s\n", "nodename", names.nodename);
-  printf("%-10s %s\n", "release", names.release);
-  printf("%-10s %s\n", "version", names.version);
-  printf("%-10s %s\n", "machine", names.machine);
-  printf("%-10s %s\n", "domainname", names.domainname);
+  printf("%-10s %`'s\n", "sysname", names.sysname);
+  printf("%-10s %`'s\n", "release", names.release);
+  printf("%-10s %`'s\n", "version", names.version);
+  printf("%-10s %`'s\n", "machine", names.machine);
+  printf("%-10s %`'s\n", "nodename", names.nodename);
+  printf("%-10s %`'s\n", "domainname", names.domainname);
   return 0;
 }
