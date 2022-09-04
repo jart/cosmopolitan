@@ -182,8 +182,11 @@ static int __sigaction(int sig, const struct sigaction *act,
       ap = &copy;
       if (IsXnu()) {
         ap->sa_restorer = (void *)&__sigenter_xnu;
-        ap->sa_handler = (void *)&__sigenter_xnu;
-
+        if (rva < kSigactionMinRva) {
+          ap->sa_sigaction = (void *)(intptr_t)rva;
+        } else {
+          ap->sa_sigaction = (void *)&__sigenter_xnu;
+        }
         // mitigate Rosetta signal handling strangeness
         // https://github.com/jart/cosmopolitan/issues/455
         ap->sa_flags |= SA_SIGINFO;
@@ -193,11 +196,23 @@ static int __sigaction(int sig, const struct sigaction *act,
           ap->sa_restorer = &__restore_rt;
         }
       } else if (IsNetbsd()) {
-        ap->sa_sigaction = (sigaction_f)__sigenter_netbsd;
+        if (rva < kSigactionMinRva) {
+          ap->sa_sigaction = (void *)(intptr_t)rva;
+        } else {
+          ap->sa_sigaction = (sigaction_f)__sigenter_netbsd;
+        }
       } else if (IsFreebsd()) {
-        ap->sa_sigaction = (sigaction_f)__sigenter_freebsd;
+        if (rva < kSigactionMinRva) {
+          ap->sa_sigaction = (void *)(intptr_t)rva;
+        } else {
+          ap->sa_sigaction = (sigaction_f)__sigenter_freebsd;
+        }
       } else if (IsOpenbsd()) {
-        ap->sa_sigaction = (sigaction_f)__sigenter_openbsd;
+        if (rva < kSigactionMinRva) {
+          ap->sa_sigaction = (void *)(intptr_t)rva;
+        } else {
+          ap->sa_sigaction = (sigaction_f)__sigenter_openbsd;
+        }
       } else {
         return enosys();
       }

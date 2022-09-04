@@ -109,7 +109,7 @@ o/$(MODE)/%: o/$(MODE)/%.com o/$(MODE)/tool/build/cp.com o/$(MODE)/tool/build/as
 # May be specified in your ~/.cosmo.mk file. You can also use this to
 # enable things like function tracing. For example:
 #
-#     TESTARGS = --ftrace
+#     TESTARGS = ----ftrace
 #     .PLEDGE += prot_exec
 #
 # You could then run a command like:

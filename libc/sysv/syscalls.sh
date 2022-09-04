@@ -98,7 +98,7 @@ scall	__sys_wait4		0x1c100b007200703d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0x092fff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
-scall	sys_tkill		0x13e0771b121690c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; bsdthread_terminate() on XNU which only has 1 arg
+scall	sys_tkill		0x13e0771b121480c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; __pthread_kill() on XNU
 scall	sys_futex		0x0a6053fffffff0ca	globl hidden # raises SIGSYS on NetBSD
 scall	set_robust_list		0x0a7ffffffffff111	globl
 scall	get_robust_list		0x0a8ffffffffff112	globl

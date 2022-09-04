@@ -17,30 +17,29 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/dce.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
  * Terminates program abnormally.
  *
- * This function first tries to trigger your SIGABRT handler. If
- * there isn't one or execution resumes, then abort() terminates
- * the program using an escalating variety methods of increasing
- * brutality.
+ * This function first tries to trigger your SIGABRT handler. If the
+ * signal handler returns, then `signal(SIGABRT, SIG_DFL)` is called
+ * before SIGABRT is raised again.
  *
  * @asyncsignalsafe
  * @noreturn
  */
-privileged void abort(void) {
-  sigset_t sm;
-  sigfillset(&sm);
-  sigdelset(&sm, SIGABRT);
-  sigprocmask(SIG_SETMASK, &sm, 0);
+wontreturn void abort(void) {
+  sigset_t m;
+  sigemptyset(&m);
+  sigaddset(&m, SIGABRT);
+  sigprocmask(SIG_UNBLOCK, &m, 0);
   raise(SIGABRT);
-  __restorewintty();
-  _Exit(128 + SIGABRT);
+  signal(SIGABRT, SIG_DFL);
+  raise(SIGABRT);
+  asm("hlt");
+  unreachable;
 }

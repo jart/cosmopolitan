@@ -533,7 +533,7 @@ syscon	sicode	SI_TKILL				-6			0x80000000		0x010007		-1			-5			-6			# sent by tk
 syscon	sicode	SI_MESGQ				-3			0x010005		0x010005		0x80000000		-4			-3			# sent by mq_notify(2); lool
 syscon	sicode	SI_ASYNCIO				-4			0x010004		0x010004		0x80000000		-3			-4			# aio completion; no thank you
 syscon	sicode	SI_ASYNCNL				-60			0x80000000		0x80000000		0x80000000		0x80000000		0x80000000		# aio completion for dns; the horror
-syscon	sicode	SI_KERNEL				0x80			0x80000000		0x010006		0x80000000		0x80000000		0x80			# wut; openbsd defines as si_code>0
+syscon	sicode	SI_KERNEL				128			0x80000000		0x010006		0x80000000		0x80000000		0x80			# wut; openbsd defines as si_code>0
 syscon	sicode	SI_NOINFO				32767			0x80000000		0			32767			32767			32767			# no signal specific info available
 syscon	sicode	CLD_EXITED				1			1			1			1			1			1			# SIGCHLD; child exited; unix consensus
 syscon	sicode	CLD_KILLED				2			2			2			2			2			2			# SIGCHLD; child terminated w/o core; unix consensus

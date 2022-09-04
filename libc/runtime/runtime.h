@@ -65,7 +65,7 @@ void _exit(int) libcesque wontreturn;
 void _Exit(int) libcesque wontreturn;
 void _Exit1(int) libcesque wontreturn;
 void quick_exit(int) wontreturn;
-void abort(void) wontreturn noinstrument;
+void abort(void) wontreturn;
 int __cxa_atexit(void *, void *, void *) libcesque;
 int atfork(void *, void *) libcesque;
 int atexit(void (*)(void)) libcesque;

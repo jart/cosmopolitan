@@ -12,6 +12,7 @@ int bsdthread_create(void *func, void *func_arg, void *stack, void *pthread,
                      uint32_t flags);
 int bsdthread_terminate(void *stackaddr, size_t freesize, uint32_t port,
                         uint32_t sem);
+int __pthread_kill(uint32_t port, int sig);
 int bsdthread_register(
     void (*threadstart)(void *pthread, int machport, void *(*func)(void *),
                         void *arg, intptr_t *, unsigned),
