@@ -40,6 +40,21 @@ You now have a portable program.
 bash -c './hello.com'  # zsh/fish workaround (we patched them in 2021)
 ```
 
+If `./hello.com` executed on Linux throws an error about not finding an
+interpreter, it should be fixed by running the following command (although
+note that it may not survive a system restart):
+
+```sh
+sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+```
+
+If the same command produces puzzling errors on WSL or WINE when using
+Redbean 2.x, they may be fixed by disabling binfmt_misc:
+
+```sh
+sudo sh -c 'echo -1 >/proc/sys/fs/binfmt_misc/status'
+```
+
 Since we used the `ape-no-modify-self.o` bootloader (rather than
 `ape.o`) your executable will not modify itself when it's run. What
 it'll instead do, is extract a 4kb program to `${TMPDIR:-${HOME:-.}}`
