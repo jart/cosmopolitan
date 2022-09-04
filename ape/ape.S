@@ -250,6 +250,7 @@ pc:	cld
 	xor	%cx,%cx				# current cylinder
 	xor	%dh,%dh				# current head
 	mov	$v_ape_realsectors,%di		# total sectors
+	sub	$v_ape_realslacksectors,%di
 3:	call	pcread
 	dec	%di
 	jnz	3b
@@ -1567,6 +1568,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.ldsvar	_end
 	.ldsvar	_etext
 	.ldsvar	v_ape_realsectors
+	.ldsvar	v_ape_realslacksectors
 	.ldsvar	v_ape_highsectors
 	.ldsvar	ape_idata_ro
 	.ldsvar	ape_pad_rodata
