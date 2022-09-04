@@ -103,12 +103,10 @@ static const char *Str(int rc, const char *s) {
  * Asks kernel to give us `uname -a` data.
  *
  * - `machine` should be one of:
- *
  *   - `x86_64`
  *   - `amd64`
  *
  * - `sysname` should be one of:
- *
  *   - `Linux`
  *   - `FreeBSD`
  *   - `NetBSD`

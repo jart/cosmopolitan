@@ -132,11 +132,6 @@ char *EscapeJsStringLiteral(char **r, size_t *y, const char *p, size_t n,
           q[1] = '"';
           q += 2;
           break;
-        case 8:
-          q[0] = '\\';
-          q[1] = '\'';
-          q += 2;
-          break;
         case 9:
           w = EncodeUtf16(x);
           do {

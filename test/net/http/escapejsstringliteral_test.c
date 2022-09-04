@@ -17,13 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/log/check.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 #include "net/http/escape.h"
 
 char *o;
@@ -69,7 +72,7 @@ void makefile1(void) {
   char *p;
   size_t n;
   p = EscapeJsStringLiteral(&o, &y, kHyperion, kHyperionSize, &n);
-  f = fopen("/tmp/a", "wb");
+  f = tmpfile();
   fwrite(p, n, 1, f);
   fclose(f);
 }
@@ -79,7 +82,7 @@ void makefile2(void) {
   char *p;
   size_t n;
   p = EscapeJsStringLiteral(&o, &y, kHyperion, kHyperionSize, &n);
-  fd = creat("/tmp/a", 0644);
+  fd = tmpfd();
   write(fd, p, n);
   close(fd);
 }

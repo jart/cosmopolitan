@@ -152,7 +152,7 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define REDBEAN "redbean"
 #endif
 
-#define VERSION          0x020011
+#define VERSION          0x020012
 #define HASH_LOAD_FACTOR /* 1. / */ 4
 #define MONITOR_MICROS   150000
 #define READ(F, P, N)    readv(F, &(struct iovec){P, N}, 1)
@@ -3992,16 +3992,20 @@ static int LuaGetBody(lua_State *L) {
 static int LuaGetResponseBody(lua_State *L) {
   char *s = "";
   // response can be gzipped (>0), text (=0), or generator (<0)
-  int size = cpm.gzipped > 0 ? cpm.gzipped  // original size
-           : cpm.gzipped == 0 ? cpm.contentlength : 0;
+  int size = cpm.gzipped > 0    ? cpm.gzipped  // original size
+             : cpm.gzipped == 0 ? cpm.contentlength
+                                : 0;
   OnlyCallDuringRequest(L, "GetResponseBody");
   if (cpm.gzipped > 0 &&
-     (!(s = FreeLater(malloc(cpm.gzipped))) ||
-      !Inflate(s, cpm.gzipped, cpm.content, cpm.contentlength))) {
+      (!(s = FreeLater(malloc(cpm.gzipped))) ||
+       !Inflate(s, cpm.gzipped, cpm.content, cpm.contentlength))) {
     return LuaNilError(L, "failed to decompress response");
   }
-  lua_pushlstring(L, cpm.gzipped > 0 ? s  // return decompressed
-                   : cpm.gzipped == 0 ? cpm.content : "", size);
+  lua_pushlstring(L,
+                  cpm.gzipped > 0    ? s  // return decompressed
+                  : cpm.gzipped == 0 ? cpm.content
+                                     : "",
+                  size);
   return 1;
 }
 
