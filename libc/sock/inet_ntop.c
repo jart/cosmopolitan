@@ -27,7 +27,7 @@
  * @param af can be AF_INET or AF_INET6
  * @param src is the binary-encoded address, e.g. &addr->sin_addr
  * @param dst is the output string buffer
- * @param size needs to be 16+ for IPv4 and 72+ for IPv6
+ * @param size needs to be 16+ for IPv4 and 46+ for IPv6
  * @return dst on success or NULL w/ errno
  */
 const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
@@ -52,7 +52,7 @@ const char *inet_ntop(int af, const void *src, char *dst, uint32_t size) {
         enospc();
       }
     } else if (af == AF_INET6) {
-      if (size >= 16 * 4 + 8) {
+      if (size >= 46) {
         t = 0;
         i = 0;
         for (i = 0; i < 16; i += 2) {
