@@ -97,8 +97,8 @@ static relegated void ttyraw_onsig(int sig, struct siginfo *info,
   }
   for (i = 0; i < ARRAYLEN(g_ttyraw.sigs); ++i) {
     if (g_ttyraw.sigs[i] == sig) {
-      if (g_ttyraw.next[i] != SIG_IGN) {
-        if (g_ttyraw.next[i] != SIG_DFL) {
+      if (g_ttyraw.next[i] != (void *)SIG_IGN) {
+        if (g_ttyraw.next[i] != (void *)SIG_DFL) {
           if (g_ttyraw.next[i]) {
             g_ttyraw.next[i](sig, info, ctx);
           }
@@ -117,7 +117,7 @@ static textstartup void ttyraw_initsig(int sig, unsigned flags, unsigned mask) {
   struct sigaction old;
   g_ttyraw.next[i] = xsigaction(sig, ttyraw_onsig, flags, mask, &old) != -1
                          ? old.sa_sigaction
-                         : SIG_DFL;
+                         : (void *)SIG_DFL;
   g_ttyraw.sigs[i++] = sig;
 }
 

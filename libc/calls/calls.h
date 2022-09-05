@@ -17,8 +17,8 @@
 #define __WCLONE 0x80000000 /* Wait only on non-SIGCHLD children */
 
 #define SIG_ERR ((void (*)(int))(-1))
-#define SIG_DFL ((void *)0)
-#define SIG_IGN ((void *)1)
+#define SIG_DFL ((void (*)(int))0)
+#define SIG_IGN ((void (*)(int))1)
 
 #define MAP_FAILED ((void *)-1)
 
