@@ -20,7 +20,6 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/once.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/symboliclink.h"

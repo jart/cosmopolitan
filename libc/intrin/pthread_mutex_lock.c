@@ -50,11 +50,6 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
 /**
  * Locks mutex.
  *
- *     spin                l:   181,570c    58,646ns
- *     mutex normal        l:   297,965c    96,241ns
- *     mutex recursive     l: 1,112,166c   359,223ns
- *     mutex errorcheck    l: 1,449,723c   468,252ns
- *
  * Here's an example of using a normal mutex:
  *
  *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -90,19 +85,40 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
  *     // do work...
  *     pthread_mutex_unlock(&lock);
  *
+ * Microbenchmarks for single-threaded lock + unlock:
+ *
+ *     pthread_spinlock_t          :    12c (    4ns)
+ *     PTHREAD_MUTEX_NORMAL        :    37c (   12ns)
+ *     PTHREAD_MUTEX_RECURSIVE     :    22c (    7ns)
+ *     PTHREAD_MUTEX_ERRORCHECK    :    27c (    9ns)
+ *
+ * Microbenchmarks for multi-threaded lock + unlock:
+ *
+ *     pthread_spinlock_t          : 6,162c (1,990ns)
+ *     PTHREAD_MUTEX_NORMAL        :   780c (  252ns)
+ *     PTHREAD_MUTEX_RECURSIVE     : 1,047c (  338ns)
+ *     PTHREAD_MUTEX_ERRORCHECK    : 1,044c (  337ns)
+ *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock
  */
-int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
-  int me, owner, tries;
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
+  int c, me, owner, tries;
   switch (mutex->attr) {
     case PTHREAD_MUTEX_NORMAL:
-      for (tries = 0;;) {
-        if (!atomic_load_explicit(&mutex->lock, memory_order_relaxed) &&
-            !atomic_exchange_explicit(&mutex->lock, 1, memory_order_acquire)) {
-          break;
+      // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
+      // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
+      c = 0;
+      if (!atomic_compare_exchange_strong_explicit(&mutex->lock, &c, 1,
+                                                   memory_order_acquire,
+                                                   memory_order_relaxed)) {
+        if (c != 2) {
+          c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
         }
-        tries = pthread_mutex_lock_spin(mutex, 1, tries);
+        while (c) {
+          _futex_wait_private(&mutex->lock, 2, 0);
+          c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
+        }
       }
       return 0;
     case PTHREAD_MUTEX_RECURSIVE:

@@ -23,7 +23,6 @@
  *
  * Unlike pthread_spin_lock() this function won't block, and instead
  * returns an error immediately if the spinlock couldn't be acquired
- * furthermore this function doesn't define any error conditions now
  *
  * @return 0 on success, or errno on error
  * @raise EBUSY if lock is already held

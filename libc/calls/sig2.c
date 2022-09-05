@@ -23,7 +23,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/lockcmpxchg.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"

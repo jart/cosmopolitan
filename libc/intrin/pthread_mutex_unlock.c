@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
 
 /**
@@ -28,9 +29,18 @@
  * @return 0 on success or error number on failure
  * @raises EPERM if in error check mode and not owned by caller
  */
-int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
-  int me, owner;
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+  int c, me, owner;
   switch (mutex->attr) {
+    case PTHREAD_MUTEX_NORMAL:
+      // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
+      // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
+      if ((c = atomic_fetch_sub_explicit(&mutex->lock, 1,
+                                         memory_order_release)) != 1) {
+        atomic_store_explicit(&mutex->lock, 0, memory_order_release);
+        _futex_wake_private(&mutex->lock, 1);
+      }
+      return 0;
     case PTHREAD_MUTEX_ERRORCHECK:
       me = gettid();
       owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
@@ -41,8 +51,6 @@ int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
       // fallthrough
     case PTHREAD_MUTEX_RECURSIVE:
       if (--mutex->reent) return 0;
-      // fallthrough
-    case PTHREAD_MUTEX_NORMAL:
       atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
       if (atomic_load_explicit(&mutex->waits, memory_order_relaxed) > 0) {
         _pthread_mutex_wake(mutex);

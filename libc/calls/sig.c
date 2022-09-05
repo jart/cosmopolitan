@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"

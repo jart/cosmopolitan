@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/sysv/consts/futex.h"
 
 int _futex(void *, int, int, struct timespec *) hidden;
@@ -30,17 +31,21 @@ int _futex(void *, int, int, struct timespec *) hidden;
 static dontinline int _futex_wait_impl(void *addr, int expect,
                                        struct timespec *timeout, int private) {
   int op, ax;
-  op = FUTEX_WAIT | private;
-  ax = _futex(addr, op, expect, timeout);
-  if (SupportsLinux() && private && ax == -ENOSYS) {
-    // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
-    op = FUTEX_WAIT;
+  if (IsLinux() || IsOpenbsd()) {
+    op = FUTEX_WAIT | private;
     ax = _futex(addr, op, expect, timeout);
+    if (SupportsLinux() && private && ax == -ENOSYS) {
+      // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
+      op = FUTEX_WAIT;
+      ax = _futex(addr, op, expect, timeout);
+    }
+    if (IsOpenbsd() && ax > 0) ax = -ax;  // yes openbsd does this w/o cf
+    STRACE("futex(%t, %s, %d, %s) → %s", addr, DescribeFutexOp(op), expect,
+           DescribeTimespec(0, timeout), DescribeFutexResult(ax));
+    return ax;
+  } else {
+    return pthread_yield();
   }
-  if (IsOpenbsd() && ax > 0) ax = -ax;  // yes openbsd does this w/o cf
-  STRACE("futex(%t, %s, %d, %s) → %s", addr, DescribeFutexOp(op), expect,
-         DescribeTimespec(0, timeout), DescribeFutexResult(ax));
-  return ax;
 }
 
 int _futex_wait_public(void *addr, int expect, struct timespec *timeout) {

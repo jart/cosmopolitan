@@ -24,7 +24,6 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

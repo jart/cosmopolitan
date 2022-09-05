@@ -20,7 +20,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/intrin/pthread.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/runtime/sysconf.h"
@@ -29,14 +29,14 @@
 
 static int cpus;
 static double load;
-_Alignas(64) static char lock;
+static pthread_spinlock_t lock;
 static struct NtFileTime idle1, kern1, user1;
 
 textwindows int sys_getloadavg_nt(double *a, int n) {
   int i, rc;
   uint64_t elapsed, used;
   struct NtFileTime idle, kern, user;
-  _spinlock(&lock);
+  pthread_spin_lock(&lock);
   if (GetSystemTimes(&idle, &kern, &user)) {
     elapsed = (FT(kern) - FT(kern1)) + (FT(user) - FT(user1));
     if (elapsed) {
@@ -52,7 +52,7 @@ textwindows int sys_getloadavg_nt(double *a, int n) {
   } else {
     rc = __winerr();
   }
-  _spunlock(&lock);
+  pthread_spin_unlock(&lock);
   return rc;
 }
 

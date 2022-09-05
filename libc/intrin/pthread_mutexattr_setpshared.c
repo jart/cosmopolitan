@@ -16,40 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/internal.h"
-#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/stdio/lcg.internal.h"
 
 /**
- * Returns handles of windows pids being tracked.
+ * Sets mutex process sharing.
  *
- * We return 64 at most because Windows can't await on a larger number
- * of things at the same time. If we have a lot of subprocesses, then we
- * choose a subgroup to monitor at random.
- *
- * @return number of items returned in pids and handles
+ * @param pshared can be one of
+ *     - `PTHREAD_PROCESS_SHARED`
+ *     - `PTHREAD_PROCESS_PRIVATE`
+ * @return 0 on success, or error on failure
+ * @raises EINVAL if `pshared` is invalid
  */
-textwindows int __sample_pids(int pids[hasatleast 64],
-                              int64_t handles[hasatleast 64],
-                              bool exploratory) {
-  static uint64_t rando = 1;
-  static pthread_spinlock_t lock;
-  uint32_t i, j, base, count;
-  if (__threaded) pthread_spin_lock(&lock);
-  base = KnuthLinearCongruentialGenerator(&rando) >> 32;
-  pthread_spin_unlock(&lock);
-  for (count = i = 0; i < g_fds.n; ++i) {
-    j = (base + i) % g_fds.n;
-    if (g_fds.p[j].kind == kFdProcess && (!exploratory || !g_fds.p[j].zombie)) {
-      pids[count] = j;
-      handles[count] = g_fds.p[j].handle;
-      if (++count == 64) {
-        break;
-      }
-    }
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
+  switch (pshared) {
+    case PTHREAD_PROCESS_SHARED:
+    case PTHREAD_PROCESS_PRIVATE:
+      *attr = pshared;
+      return 0;
+    default:
+      return EINVAL;
   }
-  return count;
 }

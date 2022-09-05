@@ -16,42 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
 #include "libc/calls/clock_gettime.internal.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/clockstonanos.internal.h"
-#include "libc/time/time.h"
 
 static struct {
-  bool once;
-  char lock;
+  pthread_once_t once;
   uint64_t base;
   struct timespec mono;
 } g_mono;
+
+static void sys_clock_gettime_mono_init(void) {
+  clock_gettime(CLOCK_REALTIME, &g_mono.mono);
+  g_mono.base = rdtsc();
+  g_mono.once = true;
+}
 
 int sys_clock_gettime_mono(struct timespec *ts) {
   // this routine stops being monotonic after 194 years of uptime
   uint64_t nanos;
   struct timespec res;
   if (X86_HAVE(INVTSC)) {
-    if (__threaded) {
-      _spinlock(&g_mono.lock);
-    }
-    if (UNLIKELY(!g_mono.once)) {
-      clock_gettime(CLOCK_REALTIME, &g_mono.mono);
-      g_mono.base = rdtsc();
-      g_mono.once = true;
-    }
+    pthread_once(&g_mono.once, sys_clock_gettime_mono_init);
     nanos = ClocksToNanos(rdtsc(), g_mono.base);
     res = g_mono.mono;
     res.tv_sec += nanos / 1000000000;
     res.tv_nsec += nanos % 1000000000;
-    _spunlock(&g_mono.lock);
     *ts = res;
     return 0;
   } else {

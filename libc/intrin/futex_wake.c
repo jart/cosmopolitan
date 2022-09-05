@@ -27,16 +27,20 @@ int _futex(void *, int, int) hidden;
 
 static dontinline int _futex_wake_impl(void *addr, int count, int private) {
   int op, ax;
-  op = FUTEX_WAKE | private;
-  ax = _futex(addr, op, count);
-  if (SupportsLinux() && private && ax == -ENOSYS) {
-    // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
-    op = FUTEX_WAKE;
+  if (IsLinux() || IsOpenbsd()) {
+    op = FUTEX_WAKE | private;
     ax = _futex(addr, op, count);
+    if (SupportsLinux() && private && ax == -ENOSYS) {
+      // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
+      op = FUTEX_WAKE;
+      ax = _futex(addr, op, count);
+    }
+    STRACE("futex(%t, %s, %d) → %s", addr, DescribeFutexOp(op), count,
+           DescribeFutexResult(ax));
+    return ax;
+  } else {
+    return 0;
   }
-  STRACE("futex(%t, %s, %d) → %s", addr, DescribeFutexOp(op), count,
-         DescribeFutexResult(ax));
-  return ax;
 }
 
 int _futex_wake_public(void *addr, int count) {

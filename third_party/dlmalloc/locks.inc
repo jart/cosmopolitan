@@ -1,5 +1,6 @@
 // clang-format off
 #include "libc/calls/calls.h"
+#include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/threaded.h"
 
 /* --------------------------- Lock preliminaries ------------------------ */
@@ -49,6 +50,15 @@
 /* #define RELEASE_LOCK(lk)  ... */
 /* #define TRY_LOCK(lk) ... */
 /* static MLOCK_T malloc_global_mutex = ... */
+
+#define MLOCK_T               pthread_mutex_t
+#define ACQUIRE_LOCK(lk)      (__threaded && pthread_mutex_lock(lk), 0)
+#define RELEASE_LOCK(lk)      (__threaded && pthread_mutex_unlock(lk), 0)
+#define TRY_LOCK(lk)          (__threaded ? !pthread_mutex_trylock(lk) : 1)
+#define INITIAL_LOCK(lk)      pthread_mutex_init(lk, 0)
+#define DESTROY_LOCK(lk)      pthread_mutex_destroy(lk)
+
+static MLOCK_T malloc_global_mutex;
 
 #elif USE_SPIN_LOCKS
 

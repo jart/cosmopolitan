@@ -25,7 +25,6 @@
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"

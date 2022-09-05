@@ -16,25 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
 
 /**
- * Tries to acquire mutex.
+ * Locks mutex if it isn't locked already.
+ *
+ * Unlike pthread_mutex_lock() this function won't block and instead
+ * returns an error immediately if the lock couldn't be acquired.
+ *
+ * @return 0 on success, or errno on error
+ * @raise EBUSY if lock is already held
+ * @raise ENOTRECOVERABLE if `mutex` is corrupted
  */
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int rc, me, owner;
-  me = gettid();
-  owner = 0;
-  if (!atomic_compare_exchange_strong(&mutex->lock, &owner, me) &&
-      owner == me) {
-    rc = 0;
-    ++mutex->reent;
-  } else {
-    rc = EBUSY;
+  int c, me, owner;
+  switch (mutex->attr) {
+    case PTHREAD_MUTEX_NORMAL:
+      c = 0;
+      if (atomic_compare_exchange_strong_explicit(&mutex->lock, &c, 1,
+                                                  memory_order_acquire,
+                                                  memory_order_relaxed)) {
+        return 0;
+      } else {
+        return EBUSY;
+      }
+    case PTHREAD_MUTEX_RECURSIVE:
+    case PTHREAD_MUTEX_ERRORCHECK:
+      owner = 0;
+      me = gettid();
+      if (!atomic_compare_exchange_strong_explicit(&mutex->lock, &owner, me,
+                                                   memory_order_acquire,
+                                                   memory_order_relaxed)) {
+        if (owner == me) {
+          if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK) {
+            return EBUSY;
+          }
+        } else {
+          return EBUSY;
+        }
+      }
+      ++mutex->reent;
+      return 0;
+    default:
+      assert(!"badlock");
+      return ENOTRECOVERABLE;
   }
-  return rc;
 }

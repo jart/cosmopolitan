@@ -111,6 +111,8 @@ int pthread_mutexattr_init(pthread_mutexattr_t *);
 int pthread_mutexattr_destroy(pthread_mutexattr_t *);
 int pthread_mutexattr_gettype(const pthread_mutexattr_t *, int *);
 int pthread_mutexattr_settype(pthread_mutexattr_t *, int);
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int);
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *, int *);
 int pthread_mutex_init(pthread_mutex_t *, const pthread_mutexattr_t *);
 int pthread_mutex_lock(pthread_mutex_t *);
 int pthread_mutex_unlock(pthread_mutex_t *);
@@ -206,22 +208,6 @@ extern const errno_t EBUSY;
     };                                            \
     0;                                            \
   })
-#endif
-
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
-#define pthread_mutex_lock(mutex)                              \
-  (((mutex)->attr == PTHREAD_MUTEX_NORMAL &&                   \
-    !__atomic_load_n(&(mutex)->lock, __ATOMIC_RELAXED) &&      \
-    !__atomic_exchange_n(&(mutex)->lock, 1, __ATOMIC_SEQ_CST)) \
-       ? 0                                                     \
-       : pthread_mutex_lock(mutex))
-#define pthread_mutex_unlock(mutex)                              \
-  ((mutex)->attr == PTHREAD_MUTEX_NORMAL                         \
-       ? (__atomic_store_n(&(mutex)->lock, 0, __ATOMIC_RELAXED), \
-          (__atomic_load_n(&(mutex)->waits, __ATOMIC_RELAXED) && \
-           _pthread_mutex_wake(mutex)),                          \
-          0)                                                     \
-       : pthread_mutex_unlock(mutex))
 #endif
 
 #define pthread_condattr_init(pAttr)                 (*(pAttr) = PTHREAD_PROCESS_DEFAULT, 0)

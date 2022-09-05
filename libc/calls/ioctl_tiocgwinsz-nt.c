@@ -25,7 +25,6 @@
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/nt/console.h"

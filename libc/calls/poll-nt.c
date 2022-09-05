@@ -24,7 +24,6 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

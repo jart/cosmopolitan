@@ -220,12 +220,3 @@ TEST(pthread_spin_lock, test) {
   EXPECT_EQ(THREADS * ITERATIONS, count);
   EXPECT_EQ(0, pthread_spin_destroy(&slock));
 }
-
-BENCH(pthread_mutex_lock, bench) {
-  char schar = 0;
-  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-  EZBENCH2("spin", donothing, pthread_spin_lock_test());
-  EZBENCH2("normal", donothing, pthread_mutex_lock_contention());
-  EZBENCH2("recursive", donothing, pthread_mutex_lock_rcontention());
-  EZBENCH2("errorcheck", donothing, pthread_mutex_lock_econtention());
-}

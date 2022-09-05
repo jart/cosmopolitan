@@ -24,7 +24,6 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"

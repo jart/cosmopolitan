@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "libc/runtime/sysconf.h"
 #include "third_party/libcxx/__config"
 #ifndef _LIBCPP_HAS_NO_THREADS
 
