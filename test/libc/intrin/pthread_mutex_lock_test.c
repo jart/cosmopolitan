@@ -49,8 +49,8 @@
 int count;
 _Atomic(int) started;
 _Atomic(int) finished;
-_Alignas(64) char slock;
 pthread_mutex_t mylock;
+pthread_spinlock_t slock;
 struct spawn th[THREADS];
 
 void SetUpOnce(void) {
@@ -188,19 +188,27 @@ int SpinlockWorker(void *p, int tid) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
-    _spinlock(&slock);
+    pthread_spin_lock(&slock);
     ++count;
-    _spunlock(&slock);
+    pthread_spin_unlock(&slock);
   }
   ++finished;
+  STRACE("SpinlockWorker Finished %d", tid);
   return 0;
 }
 
-TEST(_spinlock, contention) {
+TEST(pthread_spin_lock, test) {
   int i;
   count = 0;
   started = 0;
   finished = 0;
+  EXPECT_EQ(0, pthread_spin_init(&slock, 0));
+  EXPECT_EQ(0, pthread_spin_trylock(&slock));
+  EXPECT_EQ(EBUSY, pthread_spin_trylock(&slock));
+  EXPECT_EQ(0, pthread_spin_unlock(&slock));
+  EXPECT_EQ(0, pthread_spin_lock(&slock));
+  EXPECT_EQ(EBUSY, pthread_spin_trylock(&slock));
+  EXPECT_EQ(0, pthread_spin_unlock(&slock));
   for (i = 0; i < THREADS; ++i) {
     ASSERT_NE(-1, _spawn(SpinlockWorker, (void *)(intptr_t)i, th + i));
   }
@@ -210,12 +218,13 @@ TEST(_spinlock, contention) {
   EXPECT_EQ(THREADS, started);
   EXPECT_EQ(THREADS, finished);
   EXPECT_EQ(THREADS * ITERATIONS, count);
+  EXPECT_EQ(0, pthread_spin_destroy(&slock));
 }
 
 BENCH(pthread_mutex_lock, bench) {
   char schar = 0;
   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-  EZBENCH2("_spinlock", donothing, _spinlock_contention());
+  EZBENCH2("spin", donothing, pthread_spin_lock_test());
   EZBENCH2("normal", donothing, pthread_mutex_lock_contention());
   EZBENCH2("recursive", donothing, pthread_mutex_lock_rcontention());
   EZBENCH2("errorcheck", donothing, pthread_mutex_lock_econtention());

@@ -44,8 +44,8 @@
 #define THREADS 8
 #define ENTRIES 1024
 
-int ready;
 volatile uint64_t A[THREADS * ENTRIES];
+pthread_barrier_t barrier = PTHREAD_BARRIER_INITIALIZER;
 
 void SetUpOnce(void) {
   __enable_threads();
@@ -62,9 +62,7 @@ dontinline void Generate(int i) {
 
 int Thrasher(void *arg, int tid) {
   int i, id = (intptr_t)arg;
-  while (!atomic_load(&ready)) {
-    cthread_memory_wait32(&ready, 0, 0);
-  }
+  pthread_barrier_wait(&barrier);
   for (i = 0; i < ENTRIES; ++i) {
     Generate(id * ENTRIES + i);
   }
@@ -97,12 +95,10 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
-  ready = false;
+  pthread_barrier_init(&barrier, 0, THREADS);
   for (i = 0; i < THREADS; ++i) {
     ASSERT_SYS(0, 0, _spawn(Thrasher, (void *)(intptr_t)i, th + i));
   }
-  atomic_store(&ready, 1);
-  cthread_memory_wake32(&ready, INT_MAX);
   for (i = 0; i < THREADS; ++i) {
     ASSERT_SYS(0, 0, _join(th + i));
   }

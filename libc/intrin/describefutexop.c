@@ -17,21 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/enum/consolemodeflags.h"
 #include "libc/sysv/consts/futex.h"
 
-const char *DescribeNtFutexOp(int x) {
-  const struct DescribeFlags kFutexOp[] = {
-      {FUTEX_WAIT_PRIVATE, "WAIT_PRIVATE"},        //
-      {FUTEX_WAKE_PRIVATE, "WAKE_PRIVATE"},        //
-      {FUTEX_REQUEUE_PRIVATE, "REQUEUE_PRIVATE"},  //
-      {FUTEX_PRIVATE_FLAG, "PRIVATE_FLAG"},        //
-      {FUTEX_REQUEUE, "REQUEUE"},                  //
-      {FUTEX_WAIT, "WAIT"},                        //
-      {FUTEX_WAKE, "WAKE"},                        //
-  };
-  _Alignas(char) static char futexop[32];
-  return DescribeFlags(futexop, sizeof(futexop), kFutexOp, ARRAYLEN(kFutexOp),
-                       "FUTEX_", x);
+const char *DescribeFutexOp(int x) {
+  if (x == FUTEX_WAIT) return "FUTEX_WAIT";
+  if (x == FUTEX_WAKE) return "FUTEX_WAKE";
+  if (x == FUTEX_REQUEUE) return "FUTEX_REQUEUE";
+  // order matters (the private bit might be zero)
+  if (x == FUTEX_WAIT_PRIVATE) return "FUTEX_WAIT_PRIVATE";
+  if (x == FUTEX_WAKE_PRIVATE) return "FUTEX_WAKE_PRIVATE";
+  if (x == FUTEX_REQUEUE_PRIVATE) return "FUTEX_REQUEUE_PRIVATE";
+  return "FUTEX_???";
 }

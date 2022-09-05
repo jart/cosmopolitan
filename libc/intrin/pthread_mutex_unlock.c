@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/pthread.h"
 
 /**
  * Releases mutex.
+ *
  * @return 0 on success or error number on failure
  * @raises EPERM if in error check mode and not owned by caller
  */
@@ -35,7 +35,7 @@ int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
       me = gettid();
       owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
       if (owner != me) {
-        assert(!"perm lock");
+        assert(!"permlock");
         return EPERM;
       }
       // fallthrough
@@ -49,7 +49,7 @@ int(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
       }
       return 0;
     default:
-      assert(!"inva lock");
+      assert(!"badlock");
       return EINVAL;
   }
 }

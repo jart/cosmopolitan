@@ -16,33 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/pthread.h"
 
+#define INIT     0
+#define CALLING  1
+#define FINISHED 2
+
+/**
+ * Ensures initialization function is called exactly once, e.g.
+ *
+ *     static void *g_factory;
+ *
+ *     static void InitFactory(void) {
+ *       g_factory = expensive();
+ *     }
+ *
+ *     void *GetFactory(void) {
+ *       static pthread_once_t once = PTHREAD_ONCE_INIT;
+ *       pthread_once(&once, InitFactory);
+ *       return g_factory;
+ *     }
+ *
+ * @return 0 on success, or errno on error
+ */
 int pthread_once(pthread_once_t *once, void init(void)) {
-  int x;
-  unsigned tries;
-  switch ((x = atomic_load(once))) {
-    case 0:
-      if (atomic_compare_exchange_strong(once, &x, 1)) {
+  char old;
+  switch ((old = atomic_load_explicit(once, memory_order_relaxed))) {
+    case INIT:
+      if (atomic_compare_exchange_strong_explicit(once, &old, CALLING,
+                                                  memory_order_acquire,
+                                                  memory_order_relaxed)) {
         init();
-        atomic_store(once, 2);
+        atomic_store(once, FINISHED);
         break;
       }
       // fallthrough
-    case 1:
-      tries = 0;
+    case CALLING:
       do {
-        if (++tries & 7) {
-          __builtin_ia32_pause();
-        } else {
-          sched_yield();
-        }
-      } while (atomic_load(once) == 1);
+        pthread_yield();
+      } while (atomic_load_explicit(once, memory_order_relaxed) == CALLING);
+      break;
+    case FINISHED:
       break;
     default:
-      break;
+      assert(!"bad once");
+      return EINVAL;
   }
   return 0;
 }

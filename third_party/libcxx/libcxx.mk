@@ -78,6 +78,7 @@ THIRD_PARTY_LIBCXX_A_HDRS =					\
 	third_party/libcxx/forward_list				\
 	third_party/libcxx/fstream				\
 	third_party/libcxx/functional				\
+	third_party/libcxx/future				\
 	third_party/libcxx/include/atomic_support.hh		\
 	third_party/libcxx/include/config_elast.hh		\
 	third_party/libcxx/initializer_list			\
@@ -144,6 +145,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/condition_variable_destructor.cc	\
 	third_party/libcxx/exception.cc				\
 	third_party/libcxx/functional.cc			\
+	third_party/libcxx/future.cc				\
 	third_party/libcxx/hash.cc				\
 	third_party/libcxx/ios.cc				\
 	third_party/libcxx/iostream.cc				\
@@ -161,6 +163,7 @@ THIRD_PARTY_LIBCXX_A_SRCS_CC =					\
 	third_party/libcxx/string.cc				\
 	third_party/libcxx/strstream.cc				\
 	third_party/libcxx/system_error.cc			\
+	third_party/libcxx/thread.cc				\
 	third_party/libcxx/valarray.cc				\
 	third_party/libcxx/vector.cc
 
@@ -189,6 +192,7 @@ THIRD_PARTY_LIBCXX_A_DIRECTDEPS =				\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
 	LIBC_TIME						\
+	LIBC_THREAD						\
 	LIBC_TINYMATH						\
 	THIRD_PARTY_GDTOA
 

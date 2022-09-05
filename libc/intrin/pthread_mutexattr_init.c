@@ -23,6 +23,5 @@
  * @return 0 on success, or error number on failure
  */
 int(pthread_mutexattr_init)(pthread_mutexattr_t *attr) {
-  attr->attr = PTHREAD_MUTEX_DEFAULT;
-  return 0;
+  return pthread_mutexattr_init(attr);
 }

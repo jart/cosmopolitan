@@ -92,7 +92,9 @@ o/$(MODE):			\
 	rw:/dev/null		\
 	w:o/stack.log		\
 	/etc/hosts		\
-	~/.runit.psk
+	~/.runit.psk		\
+	/proc/self/status	\
+	/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
 PKGS =
 

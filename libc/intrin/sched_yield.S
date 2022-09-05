@@ -22,7 +22,8 @@
 .privileged
 
 //	Asks kernel to let other threads be scheduled.
-//	@return	0 on success, or non-zero on failure
+//
+//	@return	0 on success, or -1 w/ errno
 //	@norestart
 sched_yield:
 	push	%rbp

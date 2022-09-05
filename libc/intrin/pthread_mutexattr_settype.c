@@ -30,12 +30,12 @@
  * @return 0 on success, or error on failure
  * @raises EINVAL if `type` is invalid
  */
-int(pthread_mutexattr_settype)(pthread_mutexattr_t *attr, int type) {
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
   switch (type) {
     case PTHREAD_MUTEX_NORMAL:
     case PTHREAD_MUTEX_RECURSIVE:
     case PTHREAD_MUTEX_ERRORCHECK:
-      attr->attr = type;
+      *attr = type;
       return 0;
     default:
       return EINVAL;

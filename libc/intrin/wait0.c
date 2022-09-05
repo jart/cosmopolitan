@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/linux/futex.h"
 
@@ -34,16 +35,17 @@
 void _wait0(const int *ctid) {
   int x;
   for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_acquire))) {
+    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
       break;
     } else if (IsLinux() || IsOpenbsd()) {
-      _futex_wait(ctid, x, &(struct timespec){2});
+      _futex_wait_public(ctid, x, &(struct timespec){2});
     } else {
-      sched_yield();
+      pthread_yield();
     }
   }
   if (IsOpenbsd()) {
-    // TODO(jart): whyyyy do we need it
-    sched_yield();
+    // TODO(jart): Why do we need it? It's not even perfect.
+    //             What's up with all these OpenBSD flakes??
+    pthread_yield();
   }
 }

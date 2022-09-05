@@ -41,8 +41,8 @@ def FixQuotedPath(path, incl):
     return os.path.normpath(p2)
 
 def FixThirdParty(path):
-  if not path.endswith(EXTENSIONS):
-    return
+  # if not path.endswith(EXTENSIONS):
+  #   return
 
   print(path)
   with open(path) as f:

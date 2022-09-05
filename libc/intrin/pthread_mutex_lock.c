@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/asmflag.h"
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asmflag.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/spinlock.h"
@@ -39,10 +39,10 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
     tries++;
   } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&mutex->waits, 1);
-    _futex_wait(&mutex->lock, expect, &(struct timespec){1});
+    _futex_wait_private(&mutex->lock, expect, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);
   } else {
-    sched_yield();
+    pthread_yield();
   }
   return tries;
 }
@@ -50,12 +50,48 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
 /**
  * Locks mutex.
  *
- *     _spinlock()         l:   181,570c    58,646ns
+ *     spin                l:   181,570c    58,646ns
  *     mutex normal        l:   297,965c    96,241ns
  *     mutex recursive     l: 1,112,166c   359,223ns
  *     mutex errorcheck    l: 1,449,723c   468,252ns
  *
+ * Here's an example of using a normal mutex:
+ *
+ *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+ *     pthread_mutex_lock(&lock);
+ *     // do work...
+ *     pthread_mutex_unlock(&lock);
+ *     pthread_mutex_destroy(&lock);
+ *
+ * Cosmopolitan permits succinct notation for normal mutexes:
+ *
+ *     pthread_mutex_t lock = {0};
+ *     pthread_mutex_lock(&lock);
+ *     // do work...
+ *     pthread_mutex_unlock(&lock);
+ *
+ * Here's an example of the proper way to do recursive mutexes:
+ *
+ *     pthread_mutex_t lock;
+ *     pthread_mutexattr_t attr;
+ *     pthread_mutexattr_init(&attr);
+ *     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+ *     pthread_mutex_init(&lock, &attr);
+ *     pthread_mutexattr_destroy(&attr);
+ *     pthread_mutex_lock(&lock);
+ *     // do work...
+ *     pthread_mutex_unlock(&lock);
+ *     pthread_mutex_destroy(&lock);
+ *
+ * Alternatively, Cosmopolitan lets you do the folllowing instead:
+ *
+ *     pthread_mutex_t lock = {PTHREAD_MUTEX_RECURSIVE};
+ *     pthread_mutex_lock(&lock);
+ *     // do work...
+ *     pthread_mutex_unlock(&lock);
+ *
  * @return 0 on success, or error number on failure
+ * @see pthread_spin_lock
  */
 int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   int me, owner, tries;
@@ -81,7 +117,7 @@ int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
           if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
             break;
           } else {
-            assert(!"dead lock");
+            assert(!"deadlock");
             return EDEADLK;
           }
         }
@@ -90,7 +126,7 @@ int(pthread_mutex_lock)(pthread_mutex_t *mutex) {
       ++mutex->reent;
       return 0;
     default:
-      assert(!"inva lock");
+      assert(!"badlock");
       return EINVAL;
   }
 }

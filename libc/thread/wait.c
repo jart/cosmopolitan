@@ -16,26 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
 
 int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
   size_t size;
-  if (IsLinux() /* || IsOpenbsd() */) {
-    return _futex_wait(addr, val, timeout);
+  if (IsLinux() || IsOpenbsd()) {
+    return _futex_wait_public(addr, val, timeout);
   } else {
     return sched_yield();
   }
 }
 
 int cthread_memory_wake32(int* addr, int n) {
-  if (IsLinux() /* || IsOpenbsd() */) {
-    return _futex_wake(addr, n);
+  if (IsLinux() || IsOpenbsd()) {
+    return _futex_wake_public(addr, n);
   } else {
     return 0;
   }

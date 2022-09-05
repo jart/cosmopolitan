@@ -23,6 +23,5 @@
  * @return 0 on success, or error number on failure
  */
 int(pthread_mutexattr_destroy)(pthread_mutexattr_t *attr) {
-  attr->attr = 0;
-  return 0;
+  return pthread_mutexattr_destroy(attr);
 }

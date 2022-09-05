@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
 
 /**
@@ -30,6 +29,5 @@
  * @return 0 on success, or error on failure
  */
 int(pthread_mutexattr_gettype)(const pthread_mutexattr_t *attr, int *type) {
-  *type = attr->attr;
-  return 0;
+  return pthread_mutexattr_gettype(attr, type);
 }

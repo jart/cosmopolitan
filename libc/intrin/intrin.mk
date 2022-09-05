@@ -73,6 +73,7 @@ o/$(MODE)/libc/intrin/kprintf.greg.o: private		\
 			-fno-sanitize=all		\
 			-fno-stack-protector
 
+# TODO(jart): Do we really need these?
 # synchronization primitives are intended to be magic free
 o/$(MODE)/libc/intrin/futex_wait.o			\
 o/$(MODE)/libc/intrin/futex_wake.o			\

@@ -19,20 +19,18 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/str/str.h"
 
 /**
  * Destroys mutex.
+ *
  * @return 0 on success, or error number on failure
+ * @raise EINVAL if mutex is locked in our implementation
  */
 int pthread_mutex_destroy(pthread_mutex_t *mutex) {
-  int rc;
-  if (!mutex->lock && !mutex->waits) {
-    rc = 0;
-  } else {
-    assert(!"dead lock");
-    rc = EDEADLK;
+  if (mutex->lock || mutex->waits) {
+    assert(!"deadlock");
+    return EINVAL;
   }
-  bzero(mutex, sizeof(*mutex));
+  *mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
   return 0;
 }

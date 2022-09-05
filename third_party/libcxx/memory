@@ -25,7 +25,7 @@
 #include "third_party/libcxx/stdexcept"
 #include "third_party/libcxx/cstring"
 #if !defined(_LIBCPP_HAS_NO_ATOMIC_HEADER)
-#  include "third_party/libcxx/atomic"
+#include "third_party/libcxx/atomic"
 #endif
 #include "third_party/libcxx/version"
 
@@ -1736,7 +1736,7 @@ struct _LIBCPP_TEMPLATE_VIS allocator_traits
             ptrdiff_t _Np = __end1 - __begin1;
             __end2 -= _Np;
             if (_Np > 0)
-                _VSTD::memcpy(__end2, __begin1, _Np * sizeof(_Tp));
+                _VSTD::memcpy((void *)__end2, __begin1, _Np * sizeof(_Tp));
         }
 
 private:

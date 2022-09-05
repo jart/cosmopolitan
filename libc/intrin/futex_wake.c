@@ -17,14 +17,32 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/sysv/consts/futex.h"
 
 int _futex(void *, int, int) hidden;
-int _futex_wake(void *addr, int count) {
-  int ax = _futex(addr, FUTEX_WAKE, count);
-  STRACE("futex(%t, FUTEX_WAKE, %d) → %s", addr, count,
+
+static dontinline int _futex_wake_impl(void *addr, int count, int private) {
+  int op, ax;
+  op = FUTEX_WAKE | private;
+  ax = _futex(addr, op, count);
+  if (SupportsLinux() && private && ax == -ENOSYS) {
+    // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
+    op = FUTEX_WAKE;
+    ax = _futex(addr, op, count);
+  }
+  STRACE("futex(%t, %s, %d) → %s", addr, DescribeFutexOp(op), count,
          DescribeFutexResult(ax));
   return ax;
+}
+
+int _futex_wake_public(void *addr, int count) {
+  return _futex_wake_impl(addr, count, 0);
+}
+
+int _futex_wake_private(void *addr, int count) {
+  return _futex_wake_impl(addr, count, FUTEX_PRIVATE_FLAG);
 }

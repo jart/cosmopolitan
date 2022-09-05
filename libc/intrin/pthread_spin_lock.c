@@ -16,18 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
 
 /**
- * Yields current thread's remaining timeslice to operating system.
- * @return 0 on success, or error number on failure
+ * Acquires spin lock.
+ *
+ *     spin                l:   181,570c    58,646ns
+ *     mutex normal        l:   297,965c    96,241ns
+ *     mutex recursive     l: 1,112,166c   359,223ns
+ *     mutex errorcheck    l: 1,449,723c   468,252ns
+ *
+ * If the lock is already held, this function will wait for it to become
+ * available. No genuine error conditions are currently defined. This is
+ * similar to pthread_mutex_lock() except spin locks are much simpler so
+ * this API is able to offer a performance advantage in situations where
+ * scalable contention handling isn't necessary. Spinlocks are also very
+ * small especially in MODE=tiny where a lock needs 16 bytes of code and
+ * unlocking needs just 5 bytes. The lock object also only takes 1 byte.
+ *
+ * The posixly correct way to use this API is as follows:
+ *
+ *     pthread_spinlock_t lock;
+ *     pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
+ *     pthread_spin_lock(&lock);
+ *     // do work...
+ *     pthread_spin_unlock(&lock);
+ *     pthread_spin_destroy(&lock);
+ *
+ * Cosmopolitan permits succinct notation for spin locks:
+ *
+ *     pthread_spinlock_t lock = 0;
+ *     pthread_spin_lock(&lock);
+ *     // do work...
+ *     pthread_spin_unlock(&lock);
+ *
+ * @return 0 on success, or errno on error
+ * @see pthread_spin_trylock
+ * @see pthread_spin_unlock
+ * @see pthread_spin_init
  */
-int pthread_yield(void) {
-  if (sched_yield() != -1) {
-    return 0;
-  } else {
-    return errno;
-  }
+int(pthread_spin_lock)(pthread_spinlock_t *spin) {
+  return pthread_spin_lock(spin);
 }

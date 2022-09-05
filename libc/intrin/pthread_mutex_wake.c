@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
 
 int _pthread_mutex_wake(pthread_mutex_t *mutex) {
   if ((IsLinux() || IsOpenbsd()) &&
       atomic_load_explicit(&mutex->waits, memory_order_relaxed)) {
-    return _futex_wake(&mutex->lock, 1);
+    return _futex_wake_private(&mutex->lock, 1);
   } else {
     return 0;
   }

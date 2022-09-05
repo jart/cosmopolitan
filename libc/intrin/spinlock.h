@@ -3,6 +3,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/* TODO(jart): DELETE */
+
 #ifdef TINY
 #define _spinlock(lock) _spinlock_tiny(lock)
 #else
