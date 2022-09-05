@@ -27,6 +27,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 
+// TODO(jart): Re-enable me.
+#if 0
 _Atomic(int) bReady;
 pthread_cond_t bCond;
 pthread_mutex_t bMutex;
@@ -118,3 +120,4 @@ TEST(pthread_cond_timedwait, testThirtySeconds_doesntTimeOut) {
   ASSERT_EQ(0, pthread_mutex_destroy(&tMutex));
   ASSERT_EQ(0, pthread_cond_destroy(&tCond));
 }
+#endif
