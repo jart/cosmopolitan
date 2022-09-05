@@ -43,12 +43,6 @@ o/$(MODE)/%.initabi.o: %.initabi.c ; @$(COMPILE) -AOBJECTIFY.init $(OBJECTIFY.in
 o/$(MODE)/%.ncabi.o: %.ncabi.c     ; @$(COMPILE) -AOBJECTIFY.nc $(OBJECTIFY.ncabi.c) $(OUTPUT_OPTION) $<
 o/$(MODE)/%.real.o: %.c            ; @$(COMPILE) -AOBJECTIFY.real $(OBJECTIFY.real.c) $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-gcc.asm: %.c           ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
-o/$(MODE)/%-gcc.asm: %.cc          ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
-o/$(MODE)/%-clang.asm: %.c         ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
-o/$(MODE)/%-clang.asm: %.cc        ; @$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
-o/$(MODE)/%-clang.asm: CC = $(CLANG)
-
 o/%.o: %.cc
 	@$(COMPILE) -AOBJECTIFY.cxx $(OBJECTIFY.cxx) $(OUTPUT_OPTION) $<
 	@$(COMPILE) -AFIXUPOBJ -wT$@ $(FIXUPOBJ) $@
@@ -209,3 +203,23 @@ MAKE_SYMTAB_ZIP =				\
 	-9qj					\
 	$@					\
 	$(TMPSAFE)/.symtab
+
+################################################################################
+# EMACS ASSEMBLY GENERATION
+
+o/$(MODE)/%-gcc.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: %.c
+	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%-gcc.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: %.cc
+	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%-clang.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: %.c
+	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
+
+o/$(MODE)/%-clang.asm: CC = $(CLANG)
+o/$(MODE)/%-clang.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: %.cc
+	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
