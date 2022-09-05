@@ -24,11 +24,11 @@
 │ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN    │
 │ THE SOFTWARE.                                                                │
 └─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pushpop.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -541,14 +541,14 @@ TEST(sprintf, test_snprintf) {
   EXPECT_STREQ("-1", buffer);
 }
 
-testonly void vsnprintf_builder_1(char *buf, ...) {
+void vsnprintf_builder_1(char *buf, ...) {
   va_list args;
   va_start(args, buf);
   vsnprintf(buf, 100U, "%d", args);
   va_end(args);
 }
 
-testonly void vsnprintf_builder_3(char *buf, ...) {
+void vsnprintf_builder_3(char *buf, ...) {
   va_list args;
   va_start(args, buf);
   vsnprintf(buf, 100U, "%d %d %s", args);

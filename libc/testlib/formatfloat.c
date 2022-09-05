@@ -22,6 +22,6 @@
 #include "libc/x/x.h"
 #include "third_party/gdtoa/gdtoa.h"
 
-testonly char *testlib_formatfloat(long double x) {
+char *testlib_formatfloat(long double x) {
   return xasprintf("%.15Lg", x);
 }

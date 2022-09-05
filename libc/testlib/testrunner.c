@@ -193,8 +193,7 @@ static void CheckForZombies(void) {
 /**
  * Runs all test case functions in sorted order.
  */
-testonly void testlib_runtestcases(testfn_t *start, testfn_t *end,
-                                   testfn_t warmup) {
+void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
   /*
    * getpid() calls are inserted to help visually see tests in traces
    * which can be performed on Linux, FreeBSD, OpenBSD, and XNU:

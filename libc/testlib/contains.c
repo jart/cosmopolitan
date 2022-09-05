@@ -19,7 +19,7 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-testonly bool testlib_contains(size_t cw, const void *s, const void *needle) {
+bool testlib_contains(size_t cw, const void *s, const void *needle) {
   if (s == needle) return true;
   if (!s || !needle) return false;
   return sizeof(cw) == sizeof(char16_t) ? !!strstr16(s, needle)

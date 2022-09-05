@@ -72,7 +72,7 @@ COSMOPOLITAN_C_START_
 #define __TEST_PROTOTYPE(S, N, A, K)               \
   void S##_##N(void);                              \
   testfn_t S##_##N##_ptr[] A(S##_##N) = {S##_##N}; \
-  testonly K void S##_##N(void)
+  K void S##_##N(void)
 
 #define __TEST_SECTION(NAME, CONTENT) \
   ".section " NAME "\n" CONTENT "\n\t.previous\n"
@@ -89,7 +89,7 @@ COSMOPOLITAN_C_START_
                     "\t.quad\t" STRINGIFY(GROUP##_##ENTRY)) \
           __ROSTR("1:\t.asciz\t" STRINGIFY(#GROUP))         \
               __ROSTR("2:\t.asciz\t" STRINGIFY(#ENTRY)));   \
-  testonly void GROUP##_##ENTRY(void)
+  void GROUP##_##ENTRY(void)
 
 /**
  * Enables setup and teardown of test directories.

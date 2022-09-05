@@ -19,11 +19,10 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-testonly bool testlib_startswith(size_t cw, const void *s, const void *prefix) {
+bool testlib_startswith(size_t cw, const void *s, const void *prefix) {
   if (s == prefix) return true;
   if (!s || !prefix) return false;
-  return cw == sizeof(wchar_t)
-             ? wcsstartswith(s, prefix)
-             : cw == sizeof(char16_t) ? startswith16(s, prefix)
-                                      : startswith(s, prefix);
+  return cw == sizeof(wchar_t)    ? wcsstartswith(s, prefix)
+         : cw == sizeof(char16_t) ? startswith16(s, prefix)
+                                  : startswith(s, prefix);
 }

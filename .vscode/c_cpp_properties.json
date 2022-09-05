@@ -43,7 +43,6 @@
 				"forcealignargpointer=",
 				"noasan=",
 				"noubsan=",
-				"testonly=",
 				"donothing=",
 				"nosideeffect=",
 				"unreachable=",,

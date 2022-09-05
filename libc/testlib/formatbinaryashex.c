@@ -21,9 +21,8 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-testonly void testlib_formatbinaryashex(const char *want, const void *got,
-                                        size_t n, char **out_v1,
-                                        char **out_v2) {
+void testlib_formatbinaryashex(const char *want, const void *got, size_t n,
+                               char **out_v1, char **out_v2) {
   size_t i;
   uint8_t b;
   char *gothex;

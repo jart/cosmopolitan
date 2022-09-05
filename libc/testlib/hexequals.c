@@ -26,7 +26,7 @@
  *
  * @see unhexstr()
  */
-testonly bool testlib_hexequals(const char *want, const void *got, size_t n) {
+bool testlib_hexequals(const char *want, const void *got, size_t n) {
   size_t i;
   const unsigned char *p = (const unsigned char *)got;
   if (!got) return false;

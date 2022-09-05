@@ -28,7 +28,7 @@
  * @see libc/testlib/testlib.h
  * @see ape/ape.lds
  */
-testonly void testlib_runalltests(void) {
+void testlib_runalltests(void) {
   if ((intptr_t)__testcase_end > (intptr_t)__testcase_start) {
     if (testlib_countfixtures(__combo_start, __combo_end)) {
       testlib_runcombos(__testcase_start, __testcase_end, __combo_start,

@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -35,9 +35,9 @@ const char *testlib_showerror_isfatal;
 const char *testlib_showerror_macro;
 const char *testlib_showerror_symbol;
 
-testonly void testlib_showerror(const char *file, int line, const char *func,
-                                const char *method, const char *symbol,
-                                const char *code, char *v1, char *v2) {
+void testlib_showerror(const char *file, int line, const char *func,
+                       const char *method, const char *symbol, const char *code,
+                       char *v1, char *v2) {
   char *p;
   char hostname[128];
   __stpcpy(hostname, "unknown");
@@ -56,9 +56,9 @@ testonly void testlib_showerror(const char *file, int line, const char *func,
 }
 
 /* TODO(jart): Pay off tech debt re duplication */
-testonly void testlib_showerror_(int line, const char *wantcode,
-                                 const char *gotcode, char *FREED_want,
-                                 char *FREED_got, const char *fmt, ...) {
+void testlib_showerror_(int line, const char *wantcode, const char *gotcode,
+                        char *FREED_want, char *FREED_got, const char *fmt,
+                        ...) {
   int e;
   va_list va;
   char hostname[128];

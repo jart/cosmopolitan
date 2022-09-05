@@ -21,7 +21,7 @@
 
 #define EPSILON 0.00000001L
 
-testonly bool testlib_almostequallongdouble(long double x, long double y) {
+bool testlib_almostequallongdouble(long double x, long double y) {
   /* TODO(jart): This algorithm has to be binary. */
   if (isnan(x) || isnan(y)) return false;
   return fabsl(x - y) <= EPSILON;

@@ -26,7 +26,6 @@
            "offsetof"
            "microarchitecture"
            "targetclones"
-           "testonly"
            "forcealignargpointer"
            "textexit"
            "externinline"

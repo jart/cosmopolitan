@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -33,7 +33,7 @@ struct ComboProduct {
   struct ComboGroup groups[];
 };
 
-mallocesque testonly struct ComboProduct *testlib_setupcomboproduct(
+mallocesque struct ComboProduct *testlib_setupcomboproduct(
     const struct TestFixture *start, const struct TestFixture *end) {
   unsigned i, j, entrycount;
   struct ComboProduct *product;
@@ -54,8 +54,8 @@ mallocesque testonly struct ComboProduct *testlib_setupcomboproduct(
   return product;
 }
 
-static testonly void testlib_describecombo(struct ComboProduct *product,
-                                           const struct TestFixture *combos) {
+static void testlib_describecombo(struct ComboProduct *product,
+                                  const struct TestFixture *combos) {
   char *p = &g_fixturename[0];
   char *pe = p + sizeof(g_fixturename);
   for (unsigned i = 0; i < product->n && p < pe; ++i) {
@@ -66,10 +66,9 @@ static testonly void testlib_describecombo(struct ComboProduct *product,
   }
 }
 
-static testonly void testlib_callcombos(struct ComboProduct *product,
-                                        const struct TestFixture *combos,
-                                        testfn_t *test_start,
-                                        testfn_t *test_end) {
+static void testlib_callcombos(struct ComboProduct *product,
+                               const struct TestFixture *combos,
+                               testfn_t *test_start, testfn_t *test_end) {
   for (;;) {
     testlib_describecombo(product, combos);
     for (unsigned i = 0; i < product->n; ++i) {
@@ -89,9 +88,9 @@ static testonly void testlib_callcombos(struct ComboProduct *product,
  * @see ape/ape.lds
  * @see libc/testlib/testlib.h
  */
-testonly void testlib_runcombos(testfn_t *test_start, testfn_t *test_end,
-                                const struct TestFixture *combo_start,
-                                const struct TestFixture *combo_end) {
+void testlib_runcombos(testfn_t *test_start, testfn_t *test_end,
+                       const struct TestFixture *combo_start,
+                       const struct TestFixture *combo_end) {
   struct ComboProduct *product;
   product = testlib_setupcomboproduct(combo_start, combo_end);
   testlib_callcombos(product, combo_start, test_start, test_end);

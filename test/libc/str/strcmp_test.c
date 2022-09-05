@@ -489,14 +489,14 @@ TEST(wcsncmp, testTwosComplementBane) {
 │ test/libc/str/strcmp_test.c § benchmarks                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-testonly dontinline int strcmp_pure(const char *a, const char *b) {
+dontinline int strcmp_pure(const char *a, const char *b) {
   for (; *a == *b; a++, b++) {
     if (!*a) break;
   }
   return (*a & 0xff) - (*b & 0xff);
 }
 
-testonly dontinline int strcasecmp_pure(const char *a, const char *b) {
+dontinline int strcasecmp_pure(const char *a, const char *b) {
   for (; *a && *b; a++, b++) {
     if (!(*a == *b || tolower(*a & 0xff) == tolower(*b & 0xff))) {
       break;

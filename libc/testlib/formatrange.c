@@ -19,6 +19,6 @@
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
-dontdiscard testonly char *testlib_formatrange(intptr_t beg, intptr_t end) {
+dontdiscard char *testlib_formatrange(intptr_t beg, intptr_t end) {
   return xasprintf("[%#ld,%#ld]", beg, end);
 }

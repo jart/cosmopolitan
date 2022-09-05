@@ -602,7 +602,6 @@ typedef struct {
   } while (0)
 
 #ifndef __STRICT_ANSI__
-#define testonly    dontinline _Section(".test")
 #define textstartup _Section(".text.startup") noinstrument
 #define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
@@ -610,7 +609,6 @@ typedef struct {
 #define textwindows _Section(".text.windows")
 #define antiquity   _Section(".text.antiquity")
 #else
-#define testonly
 #define textstartup
 #define textexit
 #define textreal

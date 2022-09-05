@@ -26,7 +26,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-testonly void OnUsr1(int sig) {
+void OnUsr1(int sig) {
   _exit(0);
 }
 

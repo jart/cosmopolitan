@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/critbit0.h"
 #include "libc/intrin/bits.h"
+#include "libc/mem/critbit0.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -29,25 +29,25 @@ struct Bog {
   const char *p[];
 };
 
-static testonly dontdiscard struct Bog *NewBog(unsigned n) {
+static dontdiscard struct Bog *NewBog(unsigned n) {
   struct Bog *res = malloc(sizeof(struct Bog) + sizeof(const char *) * n);
   res->i = 0;
   res->n = n;
   return res;
 }
 
-static testonly void ClearBog(struct Bog *bog) {
+static void ClearBog(struct Bog *bog) {
   bog->i = 0;
 }
 
-static testonly void FreeBog(struct Bog **bog) {
+static void FreeBog(struct Bog **bog) {
   free(*bog), *bog = NULL;
 }
 
 static const char *const elems[] = {"a",   "aa",  "aaz", "abz",
                                     "bba", "bbc", "bbd", NULL};
 
-testonly static void MakeTree(struct critbit0 *tree) {
+static void MakeTree(struct critbit0 *tree) {
   memset(tree, 0, sizeof(*tree));
   for (unsigned i = 0; elems[i]; ++i) {
     ASSERT_EQ(true, critbit0_insert(tree, elems[i]));
@@ -84,7 +84,7 @@ TEST(critbit0, testDelete) {
   critbit0_clear(&tree);
 }
 
-static testonly intptr_t allprefixed_cb(const char *elem, void *arg) {
+static intptr_t allprefixed_cb(const char *elem, void *arg) {
   struct Bog *bog = arg;
   ASSERT_LT(bog->i, bog->n);
   bog->p[bog->i++] = elem;
@@ -110,7 +110,7 @@ TEST(critbit0, testAllPrefixed) {
   FreeBog(&a);
 }
 
-static testonly intptr_t allprefixed_cb_halt(const char *elem, void *arg) {
+static intptr_t allprefixed_cb_halt(const char *elem, void *arg) {
   struct Bog *bog = arg;
   ASSERT_LT(bog->i, bog->n);
   bog->p[bog->i++] = elem;
