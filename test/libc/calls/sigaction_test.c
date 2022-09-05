@@ -156,3 +156,22 @@ noubsan void ubsanTrumpsSystemsEngineering(void) {
 TEST(sigaction, sigFpe_handlerCanEditProcessStateAndRecoverExecution) {
   ubsanTrumpsSystemsEngineering();
 }
+
+static unsigned OnSignalCnt = 0;
+void OnSignal(int sig, siginfo_t *si, void *ctx) {
+  OnSignalCnt++;
+}
+
+TEST(sigaction, ignoringSignalDiscardsSignal) {
+  struct sigaction sa = {.sa_sigaction = OnSignal, .sa_flags = SA_SIGINFO};
+  ASSERT_EQ(0, sigaction(SIGUSR1, &sa, NULL));
+  sigset_t blocked;
+  sigemptyset(&blocked);
+  sigaddset(&blocked, SIGUSR1);
+  ASSERT_EQ(0, sigprocmask(SIG_SETMASK, &blocked, NULL));
+  ASSERT_EQ(0, raise(SIGUSR1));
+  ASSERT_NE(SIG_ERR, signal(SIGUSR1, SIG_IGN));
+  ASSERT_EQ(0, sigaction(SIGUSR1, &sa, NULL));
+  ASSERT_EQ(0, sigprocmask(SIG_UNBLOCK, &blocked, NULL));
+  EXPECT_EQ(0, OnSignalCnt);
+}

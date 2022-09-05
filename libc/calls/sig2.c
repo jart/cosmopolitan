@@ -246,7 +246,7 @@ textwindows int __sig_add(int sig, int si_code) {
 }
 
 /**
- * Enqueues generic signal for delivery on New Technology.
+ * Checks for unblocked signals and delivers them on New Technology.
  *
  * @param restartable is for functions like read() but not poll()
  * @return true if EINTR should be returned by caller
@@ -263,4 +263,39 @@ textwindows bool __sig_check(bool restartable) {
     __sig_free(sig);
   }
   return delivered;
+}
+
+/**
+ * Determines if a signal should be ignored and if so discards existing
+ * instances of said signal on New Technology.
+ *
+ * Even blocked signals are discarded.
+ *
+ * @param sig the signal number to remove
+ * @threadsafe
+ */
+textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
+  struct Signal *cur, *prev, *next;
+  if (rva != (unsigned)(intptr_t)SIG_IGN &&
+      (rva != (unsigned)(intptr_t)SIG_DFL || __sig_isfatal(sig))) {
+    return;
+  }
+  if (__sig.queue) {
+    __sig_lock();
+    for (prev = 0, cur = __sig.queue; cur; cur = next) {
+      next = cur->next;
+      if (sig == cur->sig) {
+        if (cur == __sig.queue) {
+          __sig.queue = cur->next;
+        } else if (prev) {
+          prev->next = cur->next;
+        }
+        __sig_handle(false, cur->sig, cur->si_code, 0);
+        __sig_free(cur);
+      } else {
+        prev = cur;
+      }
+    }
+    __sig_unlock();
+  }
 }

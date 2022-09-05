@@ -258,6 +258,7 @@ static int __sigaction(int sig, const struct sigaction *act,
     if (act) {
       __sighandrvas[sig] = rva;
       __sighandflags[sig] = act->sa_flags;
+      __sig_check_ignore(sig, rva);
     }
   }
   return rc;
