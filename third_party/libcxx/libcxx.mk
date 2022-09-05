@@ -221,5 +221,7 @@ THIRD_PARTY_LIBCXX_CHECKS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_C
 THIRD_PARTY_LIBCXX_OBJS = $(foreach x,$(THIRD_PARTY_LIBCXX_ARTIFACTS),$($(x)_OBJS))
 
 .PHONY: o/$(MODE)/third_party/libcxx
-o/$(MODE)/third_party/libcxx: $(THIRD_PARTY_LIBCXX_CHECKS)
+o/$(MODE)/third_party/libcxx: \
+	$(THIRD_PARTY_LIBCXX_CHECKS)	\
+	$(THIRD_PARTY_LIBCXX_A)
 
