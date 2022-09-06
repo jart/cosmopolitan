@@ -1379,7 +1379,6 @@ void OpSyscall(struct Machine *m, uint32_t rde) {
     SYSCALL(0x09D, OpPrctl(m, di, si, dx, r0, r8));
     SYSCALL(0x09E, OpArchPrctl(m, di, si));
     SYSCALL(0x0BA, OpGetTid(m));
-    SYSCALL(0x0CB, sched_setaffinity(di, si, P(dx)));
     SYSCALL(0x0D9, OpGetdents(m, di, si, dx));
     SYSCALL(0x0DD, OpFadvise(m, di, si, dx, r0));
     SYSCALL(0x0E4, OpClockGettime(m, di, si));

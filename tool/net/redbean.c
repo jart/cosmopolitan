@@ -67,6 +67,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
+#include "libc/str/strwidth.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"

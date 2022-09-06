@@ -16,19 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist.internal.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/strwidth.h"
+#include "libc/str/unicode.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
-#include "libc/str/unicode.h"
 #include "third_party/getopt/getopt.h"
 
 #define kOneTrueTabWidth 8

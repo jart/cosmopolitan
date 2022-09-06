@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Closes user accounting database.
+//	Reads next entry in user accounting database.
 //	@note	unsupported
-endutxent:
+getutxent:
+	xor	%eax,%eax
 	ret
-	.endfn	endutxent,globl
-	.alias	endutxent,endutent
+	.endfn	getutxent,globl

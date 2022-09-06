@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,39 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/cpuset.h"
-#include "libc/dce.h"
-#include "libc/intrin/popcnt.h"
-#include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
-#include "libc/testlib/testlib.h"
+#include "libc/macros.internal.h"
 
-void SetUp(void) {
-  if (!IsLinux()) {
-    exit(0);
-  }
-}
-
-TEST(sched_getaffinity, firstOnly) {
-  cpu_set_t x, y;
-  CPU_ZERO(&x);
-  CPU_SET(0, &x);
-  ASSERT_SYS(0, 0, sched_setaffinity(0, sizeof(x), &x));
-  ASSERT_SYS(0, 0, sched_getaffinity(0, sizeof(y), &y));
-  EXPECT_EQ(1, CPU_COUNT(&y));
-  EXPECT_TRUE(CPU_ISSET(0, &y));
-  EXPECT_FALSE(CPU_ISSET(1, &y));
-}
-
-TEST(sched_getaffinity, secondOnly) {
-  if (GetCpuCount() < 2) return;
-  cpu_set_t x, y;
-  CPU_ZERO(&x);
-  CPU_SET(1, &x);
-  ASSERT_SYS(0, 0, sched_setaffinity(0, sizeof(x), &x));
-  ASSERT_SYS(0, 0, sched_getaffinity(0, sizeof(y), &y));
-  EXPECT_EQ(1, CPU_COUNT(&y));
-  EXPECT_FALSE(CPU_ISSET(0, &y));
-  EXPECT_TRUE(CPU_ISSET(1, &y));
-}
+updwtmp:
+	xor	%eax,%eax
+	ret
+	.endfn	updwtmp,globl

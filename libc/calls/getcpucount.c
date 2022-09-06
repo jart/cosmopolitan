@@ -17,10 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/struct/systeminfo.h"
@@ -36,7 +37,7 @@
 static unsigned GetCpuCountLinux(void) {
   uint64_t s[16];
   unsigned i, c, n;
-  if (!sched_getaffinity(0, sizeof(s), s)) {
+  if (!sys_sched_getaffinity(0, sizeof(s), s)) {
     for (c = i = 0; i < ARRAYLEN(s); ++i) {
       c += popcnt(s[i]);
     }

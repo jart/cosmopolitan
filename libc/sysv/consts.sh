@@ -302,7 +302,6 @@ syscon	mremap	MREMAP_FIXED				2			2			2			2			2			2			# faked non-linux (b/c lin
 syscon	misc	SIG_BLOCK				0			1			1			1			1			0			# bsd consensus; faked nt
 syscon	misc	SIG_UNBLOCK				1			2			2			2			2			1			# bsd consensus; faked nt
 syscon	misc	SIG_SETMASK				2			3			3			3			3			2			# bsd consensus; faked nt
-syscon	misc	SIG_ATOMIC_MIN				-2147483648		-2147483648		-9223372036854775808	-2147483648		-2147483648		0
 
 #	lseek() whence
 #

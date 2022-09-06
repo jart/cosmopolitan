@@ -3,6 +3,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/utime.h"

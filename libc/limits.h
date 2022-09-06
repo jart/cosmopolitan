@@ -87,4 +87,7 @@
   ((uint128_t)0xffffffffffffffff << 64 | (uint128_t)0xffffffffffffffff)
 #endif /* GCC 4.6+ */
 
+#define SIG_ATOMIC_MIN INT32_MIN
+#define SIG_ATOMIC_MAX INT32_MAX
+
 #endif /* COSMOPOLITAN_LIBC_LIMITS_H_ */

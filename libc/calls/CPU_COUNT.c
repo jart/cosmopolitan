@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/cpuset.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
 
-//	Rewinds the user accounting database.
-//	@note	unsupported
-setutxent:
-	ret
-	.endfn	setutxent,globl
-	.alias	setutxent,setutent
+int CPU_COUNT(cpu_set_t *set) {
+  int i, c;
+  for (c = i = 0; i < ARRAYLEN(set->__bits); ++i) {
+    c += popcnt(set->__bits[i]);
+  }
+  return c;
+}

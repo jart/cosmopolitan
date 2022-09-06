@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/str/unicode.h"
+#include "libc/str/strwidth.h"
 #include "tool/viz/lib/formatstringtable.h"
 
 void *FreeStringTableCells(long yn, long xn, char *T[yn][xn]) {

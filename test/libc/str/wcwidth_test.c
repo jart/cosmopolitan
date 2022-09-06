@@ -18,9 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
 #include "libc/str/str.h"
+#include "libc/str/strwidth.h"
+#include "libc/str/unicode.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/str/unicode.h"
 
 TEST(wcwidth, test) {
   ASSERT_EQ(0, wcwidth(0));

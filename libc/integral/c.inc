@@ -718,7 +718,6 @@ typedef struct {
 #pragma GCC diagnostic error "-Wpointer-arith"
 #pragma GCC diagnostic error "-Wnonnull"
 #pragma GCC diagnostic error "-Wunused-result"
-#pragma GCC diagnostic error "-Wuninitialized"
 #pragma GCC diagnostic error "-Wstrict-aliasing"
 #pragma GCC diagnostic error "-Wshift-negative-value"
 #ifndef __cplusplus
@@ -737,7 +736,6 @@ typedef struct {
 #if defined(__GNUC__) && !defined(__llvm__)
 #pragma GCC diagnostic error "-Wwrite-strings"
 #pragma GCC diagnostic error "-Wtrampolines"
-#pragma GCC diagnostic error "-Wmaybe-uninitialized"
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
 #if defined(COSMO) && !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)

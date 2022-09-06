@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/cpuset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/nt/enum/processaccess.h"
 #include "libc/nt/enum/threadaccess.h"
@@ -30,6 +31,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
 static textwindows dontinline int sys_sched_setaffinity_nt(int pid,
                                                            uint64_t bitsetsize,
@@ -67,16 +69,18 @@ static textwindows dontinline int sys_sched_setaffinity_nt(int pid,
  * Asks kernel to only schedule process on particular CPUs.
  *
  * @param tid is the process or thread id (or 0 for caller)
- * @param bitsetsize is byte length of bitset
+ * @param bitsetsize is byte length of bitset, which should be 128
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS if not Linux or Windows
  */
-int sched_setaffinity(int tid, uint64_t bitsetsize, const void *bitset) {
+int sched_setaffinity(int tid, size_t bitsetsize, const cpu_set_t *bitset) {
   int rc;
-  if (!IsWindows()) {
-    rc = sys_sched_setaffinity(tid, bitsetsize, bitset);
-  } else {
+  if (bitsetsize != 128) {
+    rc = einval();
+  } else if (IsWindows()) {
     rc = sys_sched_setaffinity_nt(tid, bitsetsize, bitset);
+  } else {
+    rc = sys_sched_setaffinity(tid, bitsetsize, bitset);
   }
   STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", tid, bitsetsize, bitset);
   return rc;

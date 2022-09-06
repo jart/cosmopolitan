@@ -18,10 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Searches forward in the user accounting database.
-//	@note	unsupported
-getutxid:
+endutent:
 	xor	%eax,%eax
 	ret
-	.endfn	getutxid,globl
-	.alias	getutxid,getutid
+	.endfn	endutent,globl

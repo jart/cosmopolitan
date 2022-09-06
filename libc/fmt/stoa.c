@@ -17,17 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/fmt/fmt.internal.h"
+#include "libc/fmt/internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/fmt/fmt.internal.h"
-#include "libc/fmt/internal.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
+#include "libc/str/strwidth.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpenc.h"
-#include "libc/str/utf16.h"
 #include "libc/str/unicode.h"
+#include "libc/str/utf16.h"
 
 typedef int (*out_f)(const char *, void *, size_t);
 typedef int (*emit_f)(out_f, void *, uint64_t);

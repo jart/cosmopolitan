@@ -18,9 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Does something to the user accounting database.
-//	@note	unsupported
-updwtmpx:
+getutent:
+	xor	%eax,%eax
 	ret
-	.endfn	updwtmpx,globl
-	.alias	updwtmpx,updwtmp
+	.endfn	getutent,globl

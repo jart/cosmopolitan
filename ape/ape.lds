@@ -279,6 +279,7 @@ SECTIONS {
     KEEP(*(.keep.text))
     *(.text .stub .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
+    *(.subrs)
 
     KEEP(*(.ape.pad.test));
     *(.test.unlikely)

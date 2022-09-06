@@ -21,6 +21,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/cpuset.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/sigaction.h"
@@ -56,11 +57,11 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/strwidth.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpdecode.internal.h"
 #include "libc/str/tpenc.h"
 #include "libc/str/tpencode.internal.h"
-#include "libc/str/unicode.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -3123,7 +3124,9 @@ int Emulator(int argc, char *argv[]) {
 }
 
 static void OnlyRunOnFirstCpu(void) {
-  uint64_t bs = 1;
+  cpu_set_t bs;
+  CPU_ZERO(&bs);
+  CPU_SET(0, &bs);
   sched_setaffinity(0, sizeof(bs), &bs);
 }
 

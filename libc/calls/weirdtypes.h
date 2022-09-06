@@ -9,8 +9,7 @@
 #define blkcnt_t      int64_t
 #define blksize_t     int64_t /* int32_t on xnu */
 #define cc_t          uint8_t
-#define clock_t       int64_t /* uint64_t on xnu */
-#define cpu_set_t     uint64_t
+#define clock_t       int64_t  /* uint64_t on xnu */
 #define dev_t         uint64_t /* int32_t on xnu */
 #define fsblkcnt_t    int64_t
 #define fsfilcnt_t    int64_t /* uint32_t on xnu */

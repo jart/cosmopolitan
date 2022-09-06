@@ -43,6 +43,7 @@
 #include "libc/sock/sock.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
+#include "libc/str/strwidth.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/o.h"

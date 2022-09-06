@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
-#include "libc/str/unicode.h"
+#include "libc/str/strwidth.h"
 
 /**
  * Returns monospace display width of UTF-16 or UCS-2 string.
