@@ -21,6 +21,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/mem/io.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/o.h"

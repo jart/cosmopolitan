@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/str/str.h"
+#include "libc/str/errfun.h"
 
 const char *(DescribeFutexResult)(char buf[12], int ax) {
   const char *s;

@@ -36,6 +36,7 @@
 #define INTMAX_MAX    __INTMAX_MAX__
 #define UINTMAX_MAX   __UINTMAX_MAX__
 
+extern int __got_long_min;
 #define SCHAR_MIN     (-SCHAR_MAX - 1)
 #define SHRT_MIN      (-SHRT_MAX - 1)
 #define INT_MIN       (-INT_MAX - 1)
@@ -89,5 +90,22 @@
 
 #define SIG_ATOMIC_MIN INT32_MIN
 #define SIG_ATOMIC_MAX INT32_MAX
+
+#define FILESIZEBITS   64
+#define SYMLOOP_MAX    40
+#define TTY_NAME_MAX   32
+#define HOST_NAME_MAX  255
+#define TZNAME_MAX     6
+#define WORD_BIT       32
+#define SEM_VALUE_MAX  0x7fffffff
+#define SEM_NSEMS_MAX  256
+#define DELAYTIMER_MAX 0x7fffffff
+#define MQ_PRIO_MAX    32768
+#define LOGIN_NAME_MAX 256
+
+#define NL_ARGMAX  9
+#define NL_MSGMAX  32767
+#define NL_SETMAX  255
+#define NL_TEXTMAX 2048
 
 #endif /* COSMOPOLITAN_LIBC_LIMITS_H_ */

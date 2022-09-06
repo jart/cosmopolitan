@@ -16,32 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
-#include "libc/str/str.h"
+#include "libc/limits.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/sysv/consts/_posix.h"
+#include "libc/sysv/consts/limits.h"
+#include "libc/sysv/errfuns.h"
 
-/**
- * @fileoverview Command for updating timestamps on files.
- */
+long fpathconf(int fd, int name) {
+  if (name == _PC_LINK_MAX) return _POSIX_LINK_MAX;
+  if (name == _PC_MAX_CANON) return _POSIX_MAX_CANON;
+  if (name == _PC_MAX_INPUT) return _POSIX_MAX_INPUT;
+  if (name == _PC_NAME_MAX) return NAME_MAX;
+  if (name == _PC_PATH_MAX) return PATH_MAX;
+  if (name == _PC_PIPE_BUF) return PIPE_BUF;
+  if (name == _PC_CHOWN_RESTRICTED) return 1;
+  if (name == _PC_NO_TRUNC) return 1;
+  if (name == _PC_VDISABLE) return 0;
+  if (name == _PC_SYNC_IO) return 1;
+  if (name == _PC_ASYNC_IO) return -1;
+  if (name == _PC_PRIO_IO) return -1;
+  if (name == _PC_SOCK_MAXBUF) return -1;
+  if (name == _PC_FILESIZEBITS) return FILESIZEBITS;
+  if (name == _PC_REC_INCR_XFER_SIZE) return 4096;
+  if (name == _PC_REC_MAX_XFER_SIZE) return 4096;
+  if (name == _PC_REC_MIN_XFER_SIZE) return 4096;
+  if (name == _PC_REC_XFER_ALIGN) return 4096;
+  if (name == _PC_ALLOC_SIZE_MIN) return 4096;
+  if (name == _PC_SYMLINK_MAX) return -1;
+  if (name == _PC_2_SYMLINKS) return 1;
+  return einval();
+}
 
-int main(int argc, char *argv[]) {
-  int i;
-  const char *s, *prog;
-  prog = argc > 0 ? argv[0] : "touch.com";
-  for (i = 1; i < argc; ++i) {
-    if (touch(argv[i], 0666) == -1) {
-      s = strerdoc(errno);
-      fputs(prog, stderr);
-      fputs(": cannot touch '", stderr);
-      fputs(argv[i], stderr);
-      fputs("': ", stderr);
-      fputs(s, stderr);
-      fputs("\n", stderr);
-      exit(1);
-    }
-  }
-  return 0;
+long pathconf(const char *path, int name) {
+  return fpathconf(-1, name);
 }

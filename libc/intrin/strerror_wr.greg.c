@@ -24,6 +24,7 @@
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/enum/lang.h"
 #include "libc/nt/process.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 /**

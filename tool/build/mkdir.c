@@ -12,6 +12,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/x/x.h"

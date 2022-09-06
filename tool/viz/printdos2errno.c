@@ -19,6 +19,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/dos2errno.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 // note: these are supplementary errno magnum mappings

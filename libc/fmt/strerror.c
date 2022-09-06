@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 /**

@@ -37,6 +37,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/dlfcn.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/pathconf.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sendfile.internal.h"
 #include "libc/sock/sock.h"

@@ -82,8 +82,6 @@ int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
 void *sbrk(intptr_t);
 int brk(void *);
-long fpathconf(int, int);
-long pathconf(const char *, int);
 int getgroups(int, uint32_t[]);
 long gethostid(void);
 int sethostid(long);

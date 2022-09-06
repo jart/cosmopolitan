@@ -58,6 +58,7 @@
 #include "libc/sock/syslog.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/errfun.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"

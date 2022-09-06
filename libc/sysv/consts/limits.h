@@ -4,19 +4,21 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+extern const int NGROUPS_MAX;
 extern const int PIPE_BUF;
 extern const int _ARG_MAX;
 extern const int _NAME_MAX;
-extern const int _PATH_MAX;
 extern const int _NSIG;
+extern const int _PATH_MAX;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define PIPE_BUF  SYMBOLIC(PIPE_BUF)
-#define _ARG_MAX  SYMBOLIC(_ARG_MAX)
-#define _NAME_MAX SYMBOLIC(_NAME_MAX)
-#define _PATH_MAX SYMBOLIC(_PATH_MAX)
-#define _NSIG     SYMBOLIC(_NSIG)
+#define NGROUPS_MAX SYMBOLIC(NGROUPS_MAX)
+#define PIPE_BUF    SYMBOLIC(PIPE_BUF)
+#define _ARG_MAX    SYMBOLIC(_ARG_MAX)
+#define _NAME_MAX   SYMBOLIC(_NAME_MAX)
+#define _NSIG       SYMBOLIC(_NSIG)
+#define _PATH_MAX   SYMBOLIC(_PATH_MAX)
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_LIMITS_H_ */

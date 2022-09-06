@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/str/str.h"
+#include "libc/str/errfun.h"
 
 /**
  * Converts errno value to symbolic name.
