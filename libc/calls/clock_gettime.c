@@ -66,8 +66,8 @@ int clock_gettime(int clock, struct timespec *ts) {
   }
 #if SYSDEBUG
   if (!__time_critical) {
-    STRACE("clock_gettime(%d, [%s]) → %d% m", clock, DescribeTimespec(rc, ts),
-           rc);
+    STRACE("clock_gettime(%s, [%s]) → %d% m", DescribeClockName(clock),
+           DescribeTimespec(rc, ts), rc);
   }
 #endif
   return rc;

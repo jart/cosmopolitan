@@ -1,5 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_TIME_TIME_H_
 #define COSMOPOLITAN_LIBC_TIME_TIME_H_
+
+#define TIME_UTC       1
+#define CLOCKS_PER_SEC 1000000L
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -10,7 +14,6 @@ hidden extern const char kMonthName[12][10];
 hidden extern const unsigned short kMonthYearDay[2][12];
 
 extern char *tzname[2];
-extern long CLOCKS_PER_SEC;
 extern long timezone;
 extern int daylight;
 

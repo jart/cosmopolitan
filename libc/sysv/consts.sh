@@ -1615,8 +1615,6 @@ syscon	iff	IFF_MASTER				0x0400			0			0			0			0			0
 syscon	iff	IFF_PORTSEL				0x2000			0			0			0			0			0
 syscon	iff	IFF_SLAVE				0x0800			0			0			0			0			0
 
-syscon	misc	CLOCKS_PER_SEC				1000000			1000000			0x80			100			100			10000000
-
 syscon	sock	SOCK_STREAM				1			1			1			1			1			1			# consensus
 syscon	sock	SOCK_DGRAM				2			2			2			2			2			2			# consensus
 syscon	sock	SOCK_RAW				3			3			3			3			3			3			# consensus

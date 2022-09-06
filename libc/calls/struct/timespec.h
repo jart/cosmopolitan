@@ -14,6 +14,8 @@ int futimens(int, const struct timespec[2]);
 int nanosleep(const struct timespec *, struct timespec *);
 int sys_futex(int *, int, int, const struct timespec *, int *);
 int utimensat(int, const char *, const struct timespec[2], int);
+int timespec_get(struct timespec *, int);
+int timespec_getres(struct timespec *, int);
 
 bool _timespec_eq(struct timespec, struct timespec) pureconst;
 bool _timespec_gte(struct timespec, struct timespec) pureconst;
@@ -21,6 +23,7 @@ int64_t _timespec_tomicros(struct timespec) pureconst;
 int64_t _timespec_tomillis(struct timespec) pureconst;
 int64_t _timespec_tonanos(struct timespec) pureconst;
 struct timespec _timespec_add(struct timespec, struct timespec) pureconst;
+struct timespec _timespec_fromnanos(int64_t) pureconst;
 struct timespec _timespec_frommicros(int64_t) pureconst;
 struct timespec _timespec_frommillis(int64_t) pureconst;
 struct timespec _timespec_mono(void);

@@ -33,19 +33,38 @@ static int PosixThread(void *arg, int tid) {
     ((cthread_t)__get_tls())->pthread = pt;
     pt->rc = pt->start_routine(pt->arg);
   }
-  if (atomic_load_explicit(&pt->status, memory_order_relaxed) ==
+  if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {
     atomic_store_explicit(&pt->status, kPosixThreadZombie,
-                          memory_order_relaxed);
+                          memory_order_release);
   } else {
     atomic_store_explicit(&pt->status, kPosixThreadTerminated,
-                          memory_order_relaxed);
+                          memory_order_release);
   }
   return 0;
 }
 
 /**
  * Creates thread.
+ *
+ * Here's the OSI model of threads in Cosmopolitan:
+ *
+ *              ┌──────────────────┐
+ *              │ pthread_create() │       - Standard
+ *              └─────────┬────────┘         Abstraction
+ *              ┌─────────┴────────┐
+ *              │     _spawn()     │       - Cosmopolitan
+ *              └─────────┬────────┘         Abstraction
+ *              ┌─────────┴────────┐
+ *              │     clone()      │       - Polyfill
+ *              └─────────┬────────┘
+ *            ┌────────┬──┴──┬─┬─────────┐ - Kernel
+ *      ┌─────┴─────┐  │     │┌┴──────┐  │   Interfaces
+ *      │ sys_clone │  │     ││ tfork │  │
+ *      └───────────┘  │     │└───────┘ ┌┴─────────────┐
+ *     ┌───────────────┴──┐ ┌┴────────┐ │ CreateThread │
+ *     │ bsdthread_create │ │ thr_new │ └──────────────┘
+ *     └──────────────────┘ └─────────┘
  *
  * @return 0 on success, or errno on error
  */

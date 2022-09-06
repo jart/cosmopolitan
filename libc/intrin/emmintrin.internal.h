@@ -158,6 +158,9 @@ struct thatispacked mayalias __usi128ma {
 #define _mm_srli_si128(M128I, IMM) \
   ((__m128i)__builtin_ia32_psrldqi128((__v2di)(__m128i)(M128I), (int)(IMM)*8))
 
+#define _mm_cmpeq_epi8(a, b) ((__m128i)((__v16qi)(a) == (__v16qi)(b)))
+#define _mm_movemask_epi8(a) __builtin_ia32_pmovmskb128((__v16qi)(a))
+
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § it's a trap! » sse2 » scalar ops                          ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -218,19 +221,18 @@ struct thatispacked mayalias __usi128ma {
 #define _mm_cmpunord_sd(M128D_0, M128D_1) \
   __builtin_ia32_cmpunordsd((__v2df)(M128D_0), (__v2df)(M128D_1))
 
-#define _mm_SSE2(op, A, B)	\
-  ({				\
-      __m128i R = A;		\
-      asm(#op " %1, %0"		\
-          : "+x"(R) : "xm"(B));	\
-      R;			\
+#define _mm_SSE2(op, A, B)                  \
+  ({                                        \
+    __m128i R = A;                          \
+    asm(#op " %1, %0" : "+x"(R) : "xm"(B)); \
+    R;                                      \
   })
-#define _mm_mul_epu32(A, B)		_mm_SSE2(pmuludq, A, B)
-#define _mm_add_epi64(A, B)		_mm_SSE2(paddq, A, B)
-#define _mm_srli_epi64(A, B)		_mm_SSE2(psrlq, A, B)
-#define _mm_slli_epi64(A, B)		_mm_SSE2(psllq, A, B)
-#define _mm_unpacklo_epi64(A, B)	_mm_SSE2(punpcklqdq, A, B)
-#define _mm_unpackhi_epi64(A, B)	_mm_SSE2(punpckhqdq, A, B)
+#define _mm_mul_epu32(A, B)      _mm_SSE2(pmuludq, A, B)
+#define _mm_add_epi64(A, B)      _mm_SSE2(paddq, A, B)
+#define _mm_srli_epi64(A, B)     _mm_SSE2(psrlq, A, B)
+#define _mm_slli_epi64(A, B)     _mm_SSE2(psllq, A, B)
+#define _mm_unpacklo_epi64(A, B) _mm_SSE2(punpcklqdq, A, B)
+#define _mm_unpackhi_epi64(A, B) _mm_SSE2(punpckhqdq, A, B)
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § it's a trap! » sse2 » miscellaneous                       ─╬─│┼

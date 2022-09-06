@@ -5,6 +5,10 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+/**
+ * @fileoverview Cosmopolitan POSIX Thread Internals
+ */
+
 enum PosixThreadStatus {
   kPosixThreadStarted,
   kPosixThreadDetached,

@@ -17,10 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
-#include "libc/intrin/bits.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -28,11 +24,15 @@
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
@@ -53,7 +53,6 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/time/clockstonanos.internal.h"
 
 extern hidden struct SymbolTable *__symtab;
 
@@ -306,7 +305,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           continue;
 
         case 'T':
-          x = ClocksToNanos(rdtsc(), kStartTsc) % 86400000000000;
+          x = (rdtsc() - kStartTsc) / 3 % 86400000000000;
           goto FormatUnsigned;
 
         case 'P':

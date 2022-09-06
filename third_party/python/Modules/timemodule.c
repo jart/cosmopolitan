@@ -110,7 +110,6 @@ PyDoc_STRVAR(time_ns_doc,
 Return the current time in nanoseconds since the Epoch.");
 
 #ifdef HAVE_CLOCK
-#define CLOCKS_PER_SEC CLK_TCK
 static PyObject *
 floatclock(_Py_clock_info_t *info)
 {

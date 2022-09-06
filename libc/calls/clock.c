@@ -16,36 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
-#include "libc/fmt/conv.h"
-#include "libc/nt/accounting.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 
 /**
- * Returns how much CPU program has consumed on time-sharing system.
+ * Returns sum of CPU time consumed by current process since birth.
  *
- * @return value that can be divided by CLOCKS_PER_SEC, or -1 w/ errno
- * @see clock_gettime()
+ * This function provides a basic idea of how computationally expensive
+ * your program is, in terms of both the userspace and kernel processor
+ * resources it's hitherto consumed. Here's an example of how you might
+ * display this information:
+ *
+ *     printf("consumed %g seconds of cpu time\n",
+ *            (double)clock() / CLOCKS_PER_SEC);
+ *
+ * This function offers at best microsecond accuracy on all supported
+ * platforms. Please note the reported values might be a bit chunkier
+ * depending on the kernel scheduler sampling interval see `CLK_TCK`.
+ *
+ * @return units of CPU time consumed, where each unit's time length
+ *     should be `1./CLOCKS_PER_SEC` seconds; Cosmopolitan currently
+ *     returns the unit count in microseconds, i.e. `CLOCKS_PER_SEC`
+ *     is hard-coded as 1000000. On failure this returns -1 / errno.
+ * @raise ENOSYS should be returned currently if run on Bare Metal
+ * @see clock_gettime() which polyfills this on Linux and BSDs
+ * @see getrusage() which polyfills this on XNU and NT
  */
 int64_t clock(void) {
+  int e;
+  struct rusage ru;
   struct timespec ts;
-  struct NtFileTime creation_time, exit_time, kernel_time, user_time;
-  int64_t proc, total;
-  // polyfill on Windows where CLOCK_PROCESS_CPUTIME_ID may be not available
-  if (IsWindows() && CLOCK_PROCESS_CPUTIME_ID == -1) {
-    proc = GetCurrentProcess();
-    if (!GetProcessTimes(proc, &creation_time, &exit_time, &kernel_time,
-                         &user_time))
+  e = errno;
+  if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) {
+    errno = e;
+    if (getrusage(RUSAGE_SELF, &ru) != -1) {
+      ts = _timeval_totimespec(_timeval_add(ru.ru_utime, ru.ru_stime));
+    } else {
       return -1;
-    total = ReadFileTime(kernel_time) + ReadFileTime(user_time);
-    ts = WindowsDurationToTimeSpec(total);
-  } else if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) {
-    return -1;
+    }
   }
-  return ts.tv_sec * CLOCKS_PER_SEC +
-         ts.tv_nsec / (1000000000 / CLOCKS_PER_SEC);
+  // convert nanoseconds to microseconds w/ ceil rounding
+  // this would need roughly ~7,019,309 years to overflow
+  return ts.tv_sec * 1000000 + (ts.tv_nsec + 999) / 1000;
 }

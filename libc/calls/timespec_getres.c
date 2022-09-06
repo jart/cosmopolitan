@@ -16,54 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/asan.internal.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/struct/timespec.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
-static int sys_clock_getres_poly(int clock, struct timespec *ts, int64_t real) {
-  if (clock == CLOCK_REALTIME) {
-    ts->tv_sec = 0;
-    ts->tv_nsec = real;
-    return 0;
-  } else if (clock == CLOCK_MONOTONIC) {
-    ts->tv_sec = 0;
-    ts->tv_nsec = 1;
-    return 0;
-  } else {
-    return einval();
-  }
-}
-
-static int sys_clock_getres_nt(int clock, struct timespec *ts) {
-  return sys_clock_getres_poly(clock, ts, 100);
-}
-
-static int sys_clock_getres_xnu(int clock, struct timespec *ts) {
-  return sys_clock_getres_poly(clock, ts, 1000);
-}
-
 /**
- * Returns granularity of clock.
+ * Returns high-precision timestamp granularity, the C23 way.
+ *
+ * @param ts receives granularity as a relative timestamp
+ * @param base must be `TIME_UTC`
+ * @return `base` on success, or `0` on failure
  */
-int clock_getres(int clock, struct timespec *ts) {
-  int rc;
-  if (!ts || (IsAsan() && !__asan_is_valid_timespec(ts))) {
-    rc = efault();
-  } else if (clock == 127) {
-    rc = einval();  // 127 is used by consts.sh to mean unsupported
-  } else if (IsWindows()) {
-    rc = sys_clock_getres_nt(clock, ts);
-  } else if (IsXnu()) {
-    rc = sys_clock_getres_xnu(clock, ts);
+int timespec_getres(struct timespec *ts, int base) {
+  if (base == TIME_UTC && !clock_getres(CLOCK_REALTIME, ts)) {
+    return base;
   } else {
-    rc = sys_clock_getres(clock, ts);
+    return 0;
   }
-  STRACE("clock_getres(%s, [%s]) → %d% m", DescribeClockName(clock),
-         DescribeTimespec(rc, ts), rc);
-  return rc;
 }
