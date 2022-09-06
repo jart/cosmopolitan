@@ -31,7 +31,8 @@ LIBC_VGA_A_DIRECTDEPS =					\
 	LIBC_SYSV					\
 	LIBC_STR					\
 	LIBC_INTRIN					\
-	LIBC_STUBS
+	LIBC_STUBS					\
+	LIBC_FMT
 
 LIBC_VGA_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_VGA_A_DIRECTDEPS),$($(x))))

@@ -51,8 +51,7 @@ LIBC_CALLS_A_DIRECTDEPS =				\
 	LIBC_STR					\
 	LIBC_STUBS					\
 	LIBC_SYSV_CALLS					\
-	LIBC_SYSV					\
-	LIBC_VGA
+	LIBC_SYSV
 
 LIBC_CALLS_A_DEPS :=					\
 	$(call uniq,$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x))))

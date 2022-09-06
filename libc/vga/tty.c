@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -107,7 +108,7 @@ void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
   if (SetWcs(tty, wcs)) {
     size_t n = (size_t)yn * xn, i;
     for (i = 0; i < n; ++i)
-      wcs[i] = kCp437[ccs[i].ch];
+      wcs[i] = bing(ccs[i].ch, 0);
   }
   _TtyResetOutputMode(tty);
 }
@@ -361,20 +362,6 @@ static void TtyAdvance(struct Tty *tty) {
   }
 }
 
-/*
- * FIXME(tkchia): use something more efficient and flexible like unbing(),
- * but without creating a circular library dependency.
- */
-static int TtyUnBing(wint_t wc) {
-  uint8_t c;
-  if (wc >= 0x20 && wc <= 0x7E)
-    return (int)(uint8_t)wc;
-  for (c = 0x7F; c != 0x20; ++c)
-    if (kCp437[c] == wc)
-      return c;
-  return -1;
-}
-
 static void TtyWriteGlyph(struct Tty *tty, wint_t wc, int w) {
   uint8_t attr = TtyGetVgaAttr(tty);
   size_t i;
@@ -385,7 +372,7 @@ static void TtyWriteGlyph(struct Tty *tty, wint_t wc, int w) {
     TtyAdvance(tty);
   }
   i = tty->y * Xn(tty) + tty->x;
-  c = TtyUnBing(wc);
+  c = unbing(wc);
   if (c == -1)
     c = 0xFE;
   tty->ccs[i] = (struct VgaTextCharCell){ c, attr };

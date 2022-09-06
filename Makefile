@@ -111,12 +111,12 @@ include libc/linux/linux.mk			# │  You can manipulate arrays
 include libc/tinymath/tinymath.mk		# │  You can issue raw system calls
 include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/str/str.mk				# │
-include libc/vga/vga.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
-include libc/fmt/fmt.mk				#─┘
+include libc/fmt/fmt.mk				# │
+include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
