@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -50,11 +51,39 @@ TEST(qsort, test) {
 }
 
 BENCH(qsort, bench) {
+  size_t i;
   size_t n = 1000;
   long *p1 = gc(malloc(n * sizeof(long)));
   long *p2 = gc(malloc(n * sizeof(long)));
-  rngset(p1, n * sizeof(long), 0, 0);
-  EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(long)),
+
+  printf("\n");
+  for (i = 0; i < n; ++i) p1[i] = i + ((lemur64() % 3) - 1);
+  EZBENCH2("qsort nearly", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
-  EZBENCH2("longsort", memcpy(p2, p1, n * sizeof(long)), longsort(p2, n));
+  EZBENCH2("smoothsort nearly", memcpy(p2, p1, n * sizeof(long)),
+           smoothsort(p2, n, sizeof(long), CompareLong));
+
+  printf("\n");
+  for (i = 0; i < n; ++i) p1[i] = n - i;
+  EZBENCH2("qsort reverse", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("smoothsort reverse", memcpy(p2, p1, n * sizeof(long)),
+           smoothsort(p2, n, sizeof(long), CompareLong));
+
+  printf("\n");
+  rngset(p1, n * sizeof(long), 0, 0);
+  EZBENCH2("qsort random", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("smoothsort random", memcpy(p2, p1, n * sizeof(long)),
+           smoothsort(p2, n, sizeof(long), CompareLong));
+
+  printf("\n");
+  for (i = 0; i < n / 2; ++i) {
+    p1[i] = i;
+    p1[n - i - 1] = i;
+  }
+  EZBENCH2("qsort 2n", memcpy(p2, p1, n * sizeof(long)),
+           qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("smoothsort 2n", memcpy(p2, p1, n * sizeof(long)),
+           smoothsort(p2, n, sizeof(long), CompareLong));
 }

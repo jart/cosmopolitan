@@ -2,22 +2,22 @@
 #define COSMOPOLITAN_LIBC_ALG_ALG_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § algorithms                                                ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
 
 void *bsearch(const void *, const void *, size_t, size_t,
-              int cmp(const void *, const void *))
+              int (*)(const void *, const void *))
     paramsnonnull() dontthrow nosideeffect;
 void *bsearch_r(const void *, const void *, size_t, size_t,
-                int cmp(const void *, const void *, void *), void *)
+                int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) dontthrow nosideeffect;
 void djbsort(int32_t *, size_t);
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
     paramsnonnull();
 void qsort_r(void *, size_t, size_t,
-             int cmp(const void *, const void *, void *), void *arg)
+             int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 4));
+void smoothsort(void *, size_t, size_t, int (*)(const void *, const void *));
+void smoothsort_r(void *, size_t, size_t,
+                  int (*)(const void *, const void *, void *), void *);
 int tarjan(int, const int (*)[2], int, int[], int[], int *)
     paramsnonnull((2, 4)) nocallback dontthrow;
 
