@@ -16,9 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
 
-int pthread_attr_setdetachstate(pthread_attr_t *a, int x) {
-  a->detachstate = x;
-  return 0;
+/**
+ * Sets thread detachable attribute, e.g.
+ *
+ *     pthread_attr_t attr;
+ *     pthread_attr_init(&attr);
+ *     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+ *     pthread_create(0, &attr, func, 0);
+ *     pthread_attr_destroy(&attr);
+ *
+ * @param detachstate can be one of
+ *     - `PTHREAD_CREATE_JOINABLE` (default)
+ *     - `PTHREAD_CREATE_DETACHED`
+ * @return 0 on success, or error on failure
+ * @raises EINVAL if `detachstate` is invalid
+ */
+int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
+  switch (detachstate) {
+    case PTHREAD_CREATE_JOINABLE:
+    case PTHREAD_CREATE_DETACHED:
+      attr->detachstate = detachstate;
+      return 0;
+    default:
+      return EINVAL;
+  }
 }

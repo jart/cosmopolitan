@@ -34,7 +34,7 @@
  */
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   int c, me, owner;
-  switch (mutex->attr) {
+  switch (mutex->type) {
     case PTHREAD_MUTEX_NORMAL:
       c = 0;
       if (atomic_compare_exchange_strong_explicit(&mutex->lock, &c, 1,
@@ -52,7 +52,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
                                                    memory_order_acquire,
                                                    memory_order_relaxed)) {
         if (owner == me) {
-          if (mutex->attr == PTHREAD_MUTEX_ERRORCHECK) {
+          if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
             return EBUSY;
           }
         } else {

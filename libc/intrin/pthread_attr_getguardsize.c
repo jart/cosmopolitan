@@ -18,7 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
 
-int pthread_attr_getguardsize(const pthread_attr_t *a, size_t *x) {
-  *x = a->guardsize;
+/**
+ * Returns size of unmapped pages at bottom of stack.
+ *
+ * @param guardsize will be set to guard size in bytes
+ * @return 0 on success, or errno on error
+ */
+int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize) {
+  *guardsize = attr->guardsize;
   return 0;
 }

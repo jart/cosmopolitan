@@ -36,10 +36,10 @@ int pthread_detach(pthread_t thread) {
     if (status == kPosixThreadDetached || status == kPosixThreadZombie) {
       break;
     } else if (status == kPosixThreadTerminated) {
-      _join(&pt->spawn);
-      free(pt);
+      pthread_wait(pt);
+      pthread_free(pt);
       break;
-    } else if (status == kPosixThreadStarted &&
+    } else if (status == kPosixThreadJoinable &&
                atomic_compare_exchange_weak_explicit(
                    &pt->status, &status, kPosixThreadDetached,
                    memory_order_acquire, memory_order_relaxed)) {

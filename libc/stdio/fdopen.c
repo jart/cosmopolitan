@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/intrin/pthread.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
@@ -37,6 +38,7 @@ FILE *fdopen(int fd, const char *mode) {
     f->fd = fd;
     f->bufmode = ischardev(fd) ? _IOLBF : _IOFBF;
     f->iomode = fopenflags(mode);
+    f->lock.type = PTHREAD_MUTEX_RECURSIVE;
     f->size = BUFSIZ;
     if ((f->buf = malloc(f->size))) {
       if ((f->iomode & O_ACCMODE) != O_RDONLY) {

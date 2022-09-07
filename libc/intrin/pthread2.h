@@ -3,6 +3,7 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/pthread.h"
+#include "libc/runtime/stack.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

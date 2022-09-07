@@ -3,7 +3,7 @@
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ $OpenBSD: ecvt.c,v 1.11 2019/01/25 00:19:25 millert Exp $                    │
 │                                                                              │
-│ Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>          │
+│ Copyright (c) 2002, 2006 Todd C. Miller <millert@openbsd.org>                │
 │                                                                              │
 │ Permission to use, copy, modify, and distribute this software for any        │
 │ purpose with or without fee is hereby granted, provided that the above       │
@@ -25,7 +25,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/unicode.h"
 #include "third_party/gdtoa/gdtoa.h"
 
 asm(".ident\t\"\\n\\n\
@@ -34,97 +33,78 @@ Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
-#define DEFPREC	6
+static char *
+__cvt(double value, int ndigit, int *decpt, int *sign, int fmode, int pad)
+{
+	static char *s;
+	char *p, *rve, c;
+	size_t siz;
+
+	if (ndigit == 0) {
+		*sign = value < 0.0;
+		*decpt = 0;
+		return ("");
+	}
+
+	free(s);
+	s = NULL;
+
+	if (ndigit < 0)
+		siz = -ndigit + 1;
+	else
+		siz = ndigit + 1;
+
+
+	/* __dtoa() doesn't allocate space for 0 so we do it by hand */
+	if (value == 0.0) {
+		*decpt = 1 - fmode;	/* 1 for 'e', 0 for 'f' */
+		*sign = 0;
+		if ((rve = s = malloc(siz)) == NULL)
+			return(NULL);
+		*rve++ = '0';
+		*rve = '\0';
+	} else {
+		p = dtoa(value, fmode + 2, ndigit, decpt, sign, &rve);
+		if (p == NULL)
+			return (NULL);
+		if (*decpt == 9999) {
+			/* Infinity or Nan, convert to inf or nan like printf */
+			*decpt = 0;
+			c = *p;
+			freedtoa(p);
+			return(c == 'I' ? "inf" : "nan");
+		}
+		/* Make a local copy and adjust rve to be in terms of s */
+		if (pad && fmode)
+			siz += *decpt;
+		if ((s = malloc(siz)) == NULL) {
+			freedtoa(p);
+			return(NULL);
+		}
+		(void) strlcpy(s, p, siz);
+		rve = s + (rve - p);
+		freedtoa(p);
+	}
+
+	/* Add trailing zeros */
+	if (pad) {
+		siz -= rve - s;
+		while (--siz)
+			*rve++ = '0';
+		*rve = '\0';
+	}
+
+	return(s);
+}
 
 char *
-gcvt(double value, int ndigit, char *buf)
+ecvt(double value, int ndigit, int *decpt, int *sign)
 {
-	char *digits, *dst, *src;
-	int i, decpt, sign;
-	struct lconv *lconv;
+	return(__cvt(value, ndigit, decpt, sign, 0, 1));
+}
 
-	lconv = localeconv();
-	if (ndigit <= 0) {
-		/* Match printf(3) behavior. */
-		ndigit = ndigit ? DEFPREC : 1;
-	}
-
-	digits = dtoa(value, 2, ndigit, &decpt, &sign, NULL);
-	if (digits == NULL)
-		return (NULL);
-	if (decpt == 9999) {
-		/*
-		 * Infinity or NaN, convert to inf or nan with sign.
-		 * We can't infer buffer size based on ndigit.
-		 * We have to assume it is at least 5 chars.
-		 */
-		snprintf(buf, 5, "%s%s", sign ? "-" : "",
-		    *digits == 'I' ? "inf" : "nan");
-		freedtoa(digits);
-		return (buf);
-	}
-
-	dst = buf;
-	if (sign)
-		*dst++ = '-';
-
-	/* Match printf(3) behavior for exponential vs. regular fomatting. */
-	if (decpt <= -4 || decpt > ndigit) {
-		/* exponential format (e.g. 1.2345e+13) */
-		if (--decpt < 0) {
-			sign = 1;
-			decpt = -decpt;
-		} else
-			sign = 0;
-		src = digits;
-		*dst++ = *src++;
-		if (*src != '\0') {
-			*dst++ = *lconv->decimal_point;
-			do {
-				*dst++ = *src++;
-			} while (*src != '\0');
-		}
-		*dst++ = 'e';
-		if (sign)
-			*dst++ = '-';
-		else
-			*dst++ = '+';
-		if (decpt < 10) {
-			*dst++ = '0';
-			*dst++ = '0' + decpt;
-			*dst = '\0';
-		} else {
-			/* XXX - optimize */
-			for (sign = decpt, i = 0; (sign /= 10) != 0; i++)
-				continue;
-			dst[i + 1] = '\0';
-			while (decpt != 0) {
-				dst[i--] = '0' + decpt % 10;
-				decpt /= 10;
-			}
-		}
-	} else {
-		/* standard format */
-		for (i = 0, src = digits; i < decpt; i++) {
-			if (*src != '\0')
-				*dst++ = *src++;
-			else
-				*dst++ = '0';
-		}
-		if (*src != '\0') {
-			if (src == digits)
-				*dst++ = '0';	/* zero before decimal point */
-			*dst++ = *lconv->decimal_point;
-			while (decpt < 0) {
-				*dst++ = '0';
-				decpt++;
-			}
-			for (i = decpt; digits[i] != '\0'; i++) {
-				*dst++ = digits[i];
-			}
-		}
-		*dst = '\0';
-	}
-	freedtoa(digits);
-	return (buf);
+char *
+fcvt(double value, int ndigit, int *decpt, int *sign)
+{
+	return(__cvt(value, ndigit, decpt, sign, 1, 1));
 }

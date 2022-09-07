@@ -17,18 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
-/**
- * Initializes mutex.
- *
- * @param attr may be null
- * @return 0 on success, or error number on failure
- */
-int pthread_mutex_init(pthread_mutex_t *mutex,
-                       const pthread_mutexattr_t *attr) {
-  *mutex = (pthread_mutex_t){
-      attr ? attr->type : PTHREAD_MUTEX_DEFAULT,
-      attr ? attr->pshared : PTHREAD_PROCESS_DEFAULT,
-  };
+int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
+  struct PosixThread *pt = thread;
+  memcpy(attr, &pt->attr, sizeof(pt->attr));
   return 0;
 }

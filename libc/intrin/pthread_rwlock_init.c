@@ -24,7 +24,8 @@
  * @param attr may be null
  * @return 0 on success, or error number on failure
  */
-int(pthread_rwlock_init)(pthread_rwlock_t *rwlock,
-                         const pthread_rwlockattr_t *attr) {
-  return pthread_rwlock_init(rwlock, attr);
+int pthread_rwlock_init(pthread_rwlock_t *rwlock,
+                        const pthread_rwlockattr_t *attr) {
+  *rwlock = (pthread_rwlock_t){attr ? *attr : PTHREAD_PROCESS_DEFAULT};
+  return 0;
 }

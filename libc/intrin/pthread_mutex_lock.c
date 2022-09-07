@@ -39,7 +39,7 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
     tries++;
   } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&mutex->waits, 1);
-    _futex_wait_private(&mutex->lock, expect, &(struct timespec){1});
+    _futex_wait(&mutex->lock, expect, mutex->pshared, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);
   } else {
     pthread_yield();
@@ -87,24 +87,24 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
  *
  * Microbenchmarks for single-threaded lock + unlock:
  *
- *     pthread_spinlock_t          :    12c (    4ns)
- *     PTHREAD_MUTEX_NORMAL        :    37c (   12ns)
- *     PTHREAD_MUTEX_RECURSIVE     :    22c (    7ns)
- *     PTHREAD_MUTEX_ERRORCHECK    :    27c (    9ns)
+ *     pthread_spinlock_t          :    12c (  4ns)
+ *     PTHREAD_MUTEX_NORMAL        :    37c ( 12ns)
+ *     PTHREAD_MUTEX_RECURSIVE     :    22c (  7ns)
+ *     PTHREAD_MUTEX_ERRORCHECK    :    27c (  9ns)
  *
  * Microbenchmarks for multi-threaded lock + unlock:
  *
- *     pthread_spinlock_t          : 6,162c (1,990ns)
- *     PTHREAD_MUTEX_NORMAL        :   780c (  252ns)
- *     PTHREAD_MUTEX_RECURSIVE     : 1,047c (  338ns)
- *     PTHREAD_MUTEX_ERRORCHECK    : 1,044c (  337ns)
+ *     pthread_spinlock_t          : 2,396c (774ns)
+ *     PTHREAD_MUTEX_NORMAL        :   535c (173ns)
+ *     PTHREAD_MUTEX_RECURSIVE     : 1,045c (338ns)
+ *     PTHREAD_MUTEX_ERRORCHECK    :   917c (296ns)
  *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int c, me, owner, tries;
-  switch (mutex->attr) {
+  switch (mutex->type) {
     case PTHREAD_MUTEX_NORMAL:
       // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
       // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
@@ -116,7 +116,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
           c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
         }
         while (c) {
-          _futex_wait_private(&mutex->lock, 2, 0);
+          _futex_wait(&mutex->lock, 2, mutex->pshared, 0);
           c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
         }
       }
@@ -130,7 +130,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
                           memory_order_relaxed)) {
           break;
         } else if (owner == me) {
-          if (mutex->attr != PTHREAD_MUTEX_ERRORCHECK) {
+          if (mutex->type != PTHREAD_MUTEX_ERRORCHECK) {
             break;
           } else {
             assert(!"deadlock");

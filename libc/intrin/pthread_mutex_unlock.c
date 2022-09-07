@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
@@ -31,14 +32,14 @@
  */
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int c, me, owner;
-  switch (mutex->attr) {
+  switch (mutex->type) {
     case PTHREAD_MUTEX_NORMAL:
       // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
       // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
       if ((c = atomic_fetch_sub_explicit(&mutex->lock, 1,
                                          memory_order_release)) != 1) {
         atomic_store_explicit(&mutex->lock, 0, memory_order_release);
-        _futex_wake_private(&mutex->lock, 1);
+        _futex_wake(&mutex->lock, 1, mutex->pshared);
       }
       return 0;
     case PTHREAD_MUTEX_ERRORCHECK:
@@ -52,8 +53,9 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     case PTHREAD_MUTEX_RECURSIVE:
       if (--mutex->reent) return 0;
       atomic_store_explicit(&mutex->lock, 0, memory_order_relaxed);
-      if (atomic_load_explicit(&mutex->waits, memory_order_relaxed) > 0) {
-        _pthread_mutex_wake(mutex);
+      if ((IsLinux() || IsOpenbsd()) &&
+          atomic_load_explicit(&mutex->waits, memory_order_relaxed) > 0) {
+        return _futex_wake(&mutex->lock, 1, mutex->pshared);
       }
       return 0;
     default:

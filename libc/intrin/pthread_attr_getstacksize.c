@@ -17,8 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
+#include "libc/runtime/stack.h"
 
+/**
+ * Returns size of thread stack.
+ *
+ * This defaults to GetStackSize().
+ *
+ * @param x will be set to stack size in bytes
+ * @return 0 on success, or errno on error
+ * @see pthread_attr_setstacksize()
+ */
 int pthread_attr_getstacksize(const pthread_attr_t *a, size_t *x) {
-  *x = a->stacksize;
+  if (a->stacksize) {
+    *x = a->stacksize;
+  } else {
+    *x = GetStackSize();
+  }
   return 0;
 }

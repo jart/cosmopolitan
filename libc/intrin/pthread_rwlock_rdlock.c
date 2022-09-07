@@ -30,7 +30,7 @@ static int pthread_rwlock_rdlock_spin(pthread_rwlock_t *rwlock, int expect,
     tries++;
   } else if (IsLinux() || IsOpenbsd()) {
     atomic_fetch_add(&rwlock->waits, 1);
-    _futex_wait_private(&rwlock->lock, expect, &(struct timespec){1});
+    _futex_wait(&rwlock->lock, expect, rwlock->pshared, &(struct timespec){1});
     atomic_fetch_sub(&rwlock->waits, 1);
   } else {
     pthread_yield();

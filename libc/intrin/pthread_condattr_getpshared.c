@@ -26,6 +26,7 @@
  *     - `PTHREAD_PROCESS_PRIVATE`
  * @return 0 on success, or error on failure
  */
-int(pthread_condattr_getpshared)(const pthread_condattr_t *attr, int *pshared) {
-  return pthread_condattr_getpshared(attr, pshared);
+int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared) {
+  *pshared = *attr;
+  return 0;
 }

@@ -22,6 +22,5 @@
  * Releases lock on stdio object.
  */
 void(funlockfile)(FILE *f) {
-  f->lock.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&f->lock);
 }

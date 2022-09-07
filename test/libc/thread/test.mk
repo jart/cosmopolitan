@@ -52,6 +52,10 @@ o/$(MODE)/test/libc/thread/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/thread/pthread_create_test.o:	\
+		private OVERRIDE_CPPFLAGS +=		\
+			-DSTACK_FRAME_UNLIMITED
+
 .PHONY: o/$(MODE)/test/libc/thread
 o/$(MODE)/test/libc/thread:				\
 		$(TEST_LIBC_THREAD_BINS)		\

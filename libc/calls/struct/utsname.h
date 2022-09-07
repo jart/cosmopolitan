@@ -6,7 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct utsname {
+struct utsname {             /* cosmo abi */
   char sysname[SYS_NMLN];    /* name of os */
   char nodename[SYS_NMLN];   /* name of network node */
   char release[SYS_NMLN];    /* release level */

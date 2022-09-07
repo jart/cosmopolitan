@@ -32,7 +32,7 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
   switch (pshared) {
     case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:
-      *attr = pshared;
+      attr->pshared = pshared;
       return 0;
     default:
       return EINVAL;

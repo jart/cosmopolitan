@@ -43,11 +43,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
                                                 memory_order_acquire,
                                                 memory_order_relaxed)) {
         if (waits && (IsLinux() || IsOpenbsd())) {
-          if (rwlock->attr == PTHREAD_PROCESS_SHARED) {
-            _futex_wake_public(&rwlock->lock, 1);
-          } else {
-            _futex_wake_private(&rwlock->lock, 1);
-          }
+          _futex_wake(&rwlock->lock, 1, rwlock->pshared);
         }
         return 0;
       }

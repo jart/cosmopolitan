@@ -18,7 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
 
-int pthread_attr_getdetachstate(const pthread_attr_t *a, int *x) {
-  *x = a->detachstate;
+/**
+ * Gets thread detachable attribute.
+ *
+ * @param detachstate is set to one of the following
+ *     - `PTHREAD_CREATE_JOINABLE` (default)
+ *     - `PTHREAD_CREATE_DETACHED`
+ * @return 0 on success, or error on failure
+ */
+int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
+  *detachstate = attr->detachstate;
   return 0;
 }

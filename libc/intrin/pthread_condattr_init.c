@@ -23,6 +23,7 @@
  *
  * @return 0 on success, or error on failure
  */
-int(pthread_condattr_init)(pthread_condattr_t *attr) {
-  return pthread_condattr_init(attr);
+int pthread_condattr_init(pthread_condattr_t *attr) {
+  *attr = PTHREAD_PROCESS_DEFAULT;
+  return 0;
 }

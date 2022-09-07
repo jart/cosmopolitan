@@ -23,6 +23,7 @@
  *
  * @return 0 on success, or error on failure
  */
-int(pthread_rwlockattr_init)(pthread_rwlockattr_t *attr) {
-  return pthread_rwlockattr_init(attr);
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr) {
+  *attr = PTHREAD_PROCESS_DEFAULT;
+  return 0;
 }

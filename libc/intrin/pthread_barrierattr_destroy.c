@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys barrier attributes.
  *
  * @return 0 on success, or error on failure
  */
-int(pthread_barrierattr_destroy)(pthread_barrierattr_t *attr) {
-  return pthread_barrierattr_destroy(attr);
+int pthread_barrierattr_destroy(pthread_barrierattr_t *attr) {
+  memset(attr, -1, sizeof(*attr));
+  return 0;
 }

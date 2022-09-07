@@ -38,7 +38,7 @@ void _wait0(const int *ctid) {
     if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
       break;
     } else if (IsLinux() || IsOpenbsd()) {
-      _futex_wait_public(ctid, x, &(struct timespec){2});
+      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
     } else {
       pthread_yield();
     }

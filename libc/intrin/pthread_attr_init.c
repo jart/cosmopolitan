@@ -17,12 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
-#include "libc/str/str.h"
+#include "libc/runtime/stack.h"
 
 /**
  * Initializes pthread attributes.
+ *
+ * @return 0 on success, or errno on error
  */
 int pthread_attr_init(pthread_attr_t *attr) {
-  bzero(attr, sizeof(*attr));
+  *attr = (pthread_attr_t){
+      .detachstate = PTHREAD_CREATE_JOINABLE,
+      .stacksize = GetStackSize(),
+      .guardsize = PAGESIZE,
+  };
   return 0;
 }

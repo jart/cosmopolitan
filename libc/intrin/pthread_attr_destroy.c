@@ -23,6 +23,6 @@
  * Destroys pthread attributes.
  */
 int pthread_attr_destroy(pthread_attr_t *attr) {
-  bzero(attr, sizeof(*attr));
+  memset(attr, -1, sizeof(*attr));
   return 0;
 }

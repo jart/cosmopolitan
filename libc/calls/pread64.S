@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,19 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread.h"
+#include "libc/macros.internal.h"
 
-/**
- * Initializes mutex.
- *
- * @param attr may be null
- * @return 0 on success, or error number on failure
- */
-int pthread_mutex_init(pthread_mutex_t *mutex,
-                       const pthread_mutexattr_t *attr) {
-  *mutex = (pthread_mutex_t){
-      attr ? attr->type : PTHREAD_MUTEX_DEFAULT,
-      attr ? attr->pshared : PTHREAD_PROCESS_DEFAULT,
-  };
-  return 0;
-}
+pread64:
+	jmp	pread
+	.endfn	pread64,globl

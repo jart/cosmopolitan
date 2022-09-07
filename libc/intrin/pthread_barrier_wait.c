@@ -42,11 +42,7 @@ int pthread_barrier_wait(pthread_barrier_t *barrier) {
       atomic_store(&barrier->popped, 1);
       do {
         if (IsLinux() || IsOpenbsd()) {
-          if (barrier->attr == PTHREAD_PROCESS_SHARED) {
-            _futex_wake_public(&barrier->popped, INT_MAX);
-          } else {
-            _futex_wake_private(&barrier->popped, INT_MAX);
-          }
+          _futex_wake(&barrier->popped, INT_MAX, barrier->pshared);
         } else {
           pthread_yield();
         }
@@ -59,11 +55,7 @@ int pthread_barrier_wait(pthread_barrier_t *barrier) {
   }
   do {
     if (IsLinux() || IsOpenbsd()) {
-      if (barrier->attr == PTHREAD_PROCESS_SHARED) {
-        _futex_wait_public(&barrier->popped, 0, 0);
-      } else {
-        _futex_wait_private(&barrier->popped, 0, 0);
-      }
+      _futex_wait(&barrier->popped, 0, barrier->pshared, 0);
     } else {
       pthread_yield();
     }

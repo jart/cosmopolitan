@@ -22,12 +22,13 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/thread/thread.h"
 
 int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
   size_t size;
   if (IsLinux() || IsOpenbsd()) {
-    return _futex_wait_public(addr, val, timeout);
+    return _futex_wait(addr, val, PTHREAD_PROCESS_SHARED, timeout);
   } else {
     return sched_yield();
   }
@@ -35,7 +36,7 @@ int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
 
 int cthread_memory_wake32(int* addr, int n) {
   if (IsLinux() || IsOpenbsd()) {
-    return _futex_wake_public(addr, n);
+    return _futex_wake(addr, n, PTHREAD_PROCESS_SHARED);
   } else {
     return 0;
   }

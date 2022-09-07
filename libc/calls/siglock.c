@@ -22,11 +22,13 @@
 static pthread_mutex_t __sig_lock_obj;
 
 void(__sig_lock)(void) {
-  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&__sig_lock_obj);
 }
 
 void(__sig_unlock)(void) {
-  __sig_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&__sig_lock_obj);
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  __sig_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
 }

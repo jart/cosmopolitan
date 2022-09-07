@@ -27,5 +27,5 @@
 int pthread_equal(pthread_t t1, pthread_t t2) {
   struct PosixThread *a = t1;
   struct PosixThread *b = t2;
-  return a->tid == b->tid;
+  return a->spawn.ptid == b->spawn.ptid;
 }

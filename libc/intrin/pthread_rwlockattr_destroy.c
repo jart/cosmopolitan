@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys read-write lock attributes.
  *
  * @return 0 on success, or error on failure
  */
-int(pthread_rwlockattr_destroy)(pthread_rwlockattr_t *attr) {
-  return pthread_rwlockattr_destroy(attr);
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
+  memset(attr, -1, sizeof(*attr));
+  return 0;
 }

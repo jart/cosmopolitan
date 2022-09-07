@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
+#include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/spawn.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -10,7 +11,7 @@ COSMOPOLITAN_C_START_
  */
 
 enum PosixThreadStatus {
-  kPosixThreadStarted,
+  kPosixThreadJoinable,
   kPosixThreadDetached,
   kPosixThreadTerminated,
   kPosixThreadZombie,
@@ -19,16 +20,19 @@ enum PosixThreadStatus {
 struct PosixThread {
   struct spawn spawn;
   void *(*start_routine)(void *);
-  void *arg;
-  void *rc;
-  int tid;
+  void *arg;  // start_routine's parameter
+  void *rc;   // start_routine's return value
   _Atomic(enum PosixThreadStatus) status;
   jmp_buf exiter;
+  size_t stacksize;
+  pthread_attr_t attr;
 };
 
-void pthread_zombies_add(struct PosixThread *);
-void pthread_zombies_decimate(void);
-void pthread_zombies_harvest(void);
+void pthread_free(struct PosixThread *) hidden;
+void pthread_wait(struct PosixThread *) hidden;
+void pthread_zombies_add(struct PosixThread *) hidden;
+void pthread_zombies_decimate(void) hidden;
+void pthread_zombies_harvest(void) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

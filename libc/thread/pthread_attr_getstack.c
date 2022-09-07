@@ -17,18 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
+#include "libc/runtime/stack.h"
 
 /**
- * Initializes mutex.
+ * Returns configuration for thread stack.
  *
- * @param attr may be null
- * @return 0 on success, or error number on failure
+ * This is a getter for a configuration attribute. By default, zeros are
+ * returned. If pthread_attr_setstack() was called earlier, then this'll
+ * return those earlier supplied values.
+ *
+ * @param stackaddr will be set to stack address in bytes
+ * @return 0 on success, or errno on error
+ * @see pthread_attr_setstacksize()
  */
-int pthread_mutex_init(pthread_mutex_t *mutex,
-                       const pthread_mutexattr_t *attr) {
-  *mutex = (pthread_mutex_t){
-      attr ? attr->type : PTHREAD_MUTEX_DEFAULT,
-      attr ? attr->pshared : PTHREAD_PROCESS_DEFAULT,
-  };
+int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
+                          size_t *stacksize) {
+  *stackaddr = attr->stackaddr;
+  *stacksize = attr->stacksize;
   return 0;
 }

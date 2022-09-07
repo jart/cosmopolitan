@@ -26,7 +26,8 @@
  *     - `PTHREAD_PROCESS_PRIVATE`
  * @return 0 on success, or error on failure
  */
-int(pthread_mutexattr_getpshared)(const pthread_mutexattr_t *attr,
-                                  int *pshared) {
-  return pthread_mutexattr_getpshared(attr, pshared);
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
+                                 int *pshared) {
+  *pshared = attr->pshared;
+  return 0;
 }

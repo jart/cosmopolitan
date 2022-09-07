@@ -28,13 +28,14 @@
 
 int _futex(void *, int, int, struct timespec *) hidden;
 
-static dontinline int _futex_wait_impl(void *addr, int expect,
-                                       struct timespec *timeout, int private) {
-  int op, ax;
+int _futex_wait(void *addr, int expect, char pshared,
+                struct timespec *timeout) {
+  int op, ax, pf;
   if (IsLinux() || IsOpenbsd()) {
-    op = FUTEX_WAIT | private;
+    pf = pshared == PTHREAD_PROCESS_PRIVATE ? FUTEX_PRIVATE_FLAG : 0;
+    op = FUTEX_WAIT | pf;
     ax = _futex(addr, op, expect, timeout);
-    if (SupportsLinux() && private && ax == -ENOSYS) {
+    if (SupportsLinux() && pf && ax == -ENOSYS) {
       // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
       op = FUTEX_WAIT;
       ax = _futex(addr, op, expect, timeout);
@@ -46,12 +47,4 @@ static dontinline int _futex_wait_impl(void *addr, int expect,
   } else {
     return pthread_yield();
   }
-}
-
-int _futex_wait_public(void *addr, int expect, struct timespec *timeout) {
-  return _futex_wait_impl(addr, expect, timeout, 0);
-}
-
-int _futex_wait_private(void *addr, int expect, struct timespec *timeout) {
-  return _futex_wait_impl(addr, expect, timeout, FUTEX_PRIVATE_FLAG);
 }

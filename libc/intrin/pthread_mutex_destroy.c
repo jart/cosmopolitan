@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys mutex.
@@ -31,6 +32,6 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex) {
     assert(!"deadlock");
     return EINVAL;
   }
-  *mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+  memset(mutex, -1, sizeof(*mutex));
   return 0;
 }

@@ -31,12 +31,10 @@ struct Fds g_fds;
 static pthread_mutex_t __fds_lock_obj;
 
 void(__fds_lock)(void) {
-  __fds_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&__fds_lock_obj);
 }
 
 void(__fds_unlock)(void) {
-  __fds_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&__fds_lock_obj);
 }
 
@@ -51,6 +49,7 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
 
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
+  __fds_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
   fds = VEIL("r", &g_fds);
   pushmov(&fds->n, ARRAYLEN(fds->__init_p));
   fds->f = 3;

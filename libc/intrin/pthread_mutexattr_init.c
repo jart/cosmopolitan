@@ -22,6 +22,10 @@
  * Initializes mutex attr.
  * @return 0 on success, or error number on failure
  */
-int(pthread_mutexattr_init)(pthread_mutexattr_t *attr) {
-  return pthread_mutexattr_init(attr);
+int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
+  *attr = (pthread_mutexattr_t){
+      PTHREAD_MUTEX_DEFAULT,
+      PTHREAD_PROCESS_DEFAULT,
+  };
+  return 0;
 }

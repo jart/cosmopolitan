@@ -23,6 +23,7 @@
  *
  * @return 0 on success, or error on failure
  */
-int(pthread_barrierattr_init)(pthread_barrierattr_t *attr) {
-  return pthread_barrierattr_init(attr);
+int pthread_barrierattr_init(pthread_barrierattr_t *attr) {
+  *attr = PTHREAD_PROCESS_DEFAULT;
+  return 0;
 }

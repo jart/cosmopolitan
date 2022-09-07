@@ -26,11 +26,7 @@ static dontinline int pthread_cond_signal_impl(pthread_cond_t *cond, int n) {
   if (atomic_load_explicit(&cond->waits, memory_order_relaxed)) {
     atomic_fetch_add(&cond->seq, 1);
     if (IsLinux() || IsOpenbsd()) {
-      if (cond->attr == PTHREAD_PROCESS_SHARED) {
-        _futex_wake_public(&cond->seq, n);
-      } else {
-        _futex_wake_private(&cond->seq, n);
-      }
+      _futex_wake(&cond->seq, n, cond->pshared);
     }
   }
   return 0;

@@ -16,11 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/pthread.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/stack.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
+
+#define MAP_ANON_OPENBSD  0x1000
+#define MAP_STACK_OPENBSD 0x4000
 
 /**
- * Sets size of thread stack.
+ * Configures custom allocated stack for thread, e.g.
+ *
+ *     pthread_t id;
+ *     pthread_attr_t attr;
+ *     pthread_attr_init(&attr);
+ *     pthread_attr_setstack(&attr, gc(malloc(GetStackSize())),
+ *                           GetStackSize());
+ *     pthread_create(&id, &attr, func, 0);
+ *     pthread_attr_destroy(&attr);
+ *     pthread_join(id, 0);
  *
  * Your stack must have at least `PTHREAD_STACK_MIN` bytes, which
  * Cosmpolitan Libc defines as `GetStackSize()`. It's a link-time
@@ -33,21 +53,54 @@
  * aligned to that two-power. Conformance isn't required since we
  * say caveat emptor to those who don't maintain these invariants
  *
- * Unlike pthread_attr_setstack() this function should be used if
- * you want the Cosmopolitan Libc runtime to allocate a stack for
- * you. Since the runtime uses mmap(MAP_STACK) to do that, you'll
- * need to choose a multiple of FRAMESIZE, due to Windows.
+ * Unlike pthread_attr_setstacksize(), this function permits just
+ * about any parameters and will change the values and allocation
+ * as needed to conform to the mandatory requirements of the host
+ * operating system.
  *
- * If this function isn't called it'll default to GetStackSize().
- *
- * @param x contains stack size in bytes
+ * @param stackaddr is address of stack allocated by caller, and
+ *     may be NULL in which case default behavior is restored
+ * @param stacksize is size of caller allocated stack
  * @return 0 on success, or errno on error
- * @raise EINVAL if `x` is less than `PTHREAD_STACK_MIN`
+ * @raise EINVAL if parameters were unacceptable
+ * @see pthread_attr_setstacksize()
  */
-int pthread_attr_setstacksize(pthread_attr_t *a, size_t x) {
-  if (x < PTHREAD_STACK_MIN) return EINVAL;
-  if (x & (FRAMESIZE - 1)) return EINVAL;
-  if (x < FRAMESIZE) return EINVAL;
-  a->stacksize = x;
+int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
+                          size_t stacksize) {
+  if (!stackaddr) {
+    attr->stackaddr = 0;
+    attr->stacksize = 0;
+    return 0;
+  }
+  if (stacksize < PTHREAD_STACK_MIN ||
+      (IsAsan() && !__asan_is_valid(stackaddr, stacksize))) {
+    return EINVAL;
+  }
+  if (IsOpenbsd()) {
+    // OpenBSD: Only permits RSP to occupy memory that's been explicitly
+    // defined as stack memory. We need to squeeze the provided interval
+    // in order to successfully call mmap(), which will return EINVAL if
+    // these calculations should overflow.
+    size_t n;
+    int e, rc;
+    uintptr_t x, y;
+    n = stacksize;
+    x = (uintptr_t)stackaddr;
+    y = ROUNDUP(x, PAGESIZE);
+    n -= y - x;
+    n = ROUNDDOWN(n, PAGESIZE);
+    stackaddr = (void *)y;
+    stacksize = n;
+    e = errno;
+    if (__sys_mmap(stackaddr, stacksize, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD, -1, 0,
+                   0) == MAP_FAILED) {
+      rc = errno;
+      errno = e;
+      return rc;
+    }
+  }
+  attr->stackaddr = stackaddr;
+  attr->stacksize = stacksize;
   return 0;
 }

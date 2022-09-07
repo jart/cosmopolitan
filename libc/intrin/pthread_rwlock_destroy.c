@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys read-write lock.
@@ -31,6 +32,6 @@ int pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
     assert(!"deadlock");
     return EINVAL;
   }
-  *rwlock = (pthread_rwlock_t)PTHREAD_RWLOCK_INITIALIZER;
+  memset(rwlock, -1, sizeof(*rwlock));
   return 0;
 }

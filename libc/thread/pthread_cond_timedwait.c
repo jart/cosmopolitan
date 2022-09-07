@@ -78,11 +78,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
       tsp = &rel;
     }
     if (IsLinux() || IsOpenbsd()) {
-      if (cond->attr == PTHREAD_PROCESS_SHARED) {
-        _futex_wait_public(&cond->seq, seq, tsp);
-      } else {
-        _futex_wait_private(&cond->seq, seq, tsp);
-      }
+      _futex_wait(&cond->seq, seq, cond->pshared, tsp);
     } else {
       sched_yield();
     }

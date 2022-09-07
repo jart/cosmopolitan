@@ -50,7 +50,7 @@ TEST(qsort, test) {
   free(M);
 }
 
-BENCH(qsort, equivalence_random) {
+TEST(qsort, equivalence_random) {
   size_t i;
   size_t n = 1000;
   long *a = gc(malloc(n * sizeof(long)));
@@ -68,7 +68,7 @@ BENCH(qsort, equivalence_random) {
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
 }
 
-BENCH(qsort, equivalence_reverse) {
+TEST(qsort, equivalence_reverse) {
   size_t i;
   size_t n = 1000;
   long *a = gc(malloc(n * sizeof(long)));

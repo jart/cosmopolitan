@@ -44,9 +44,9 @@ void pthread_zombies_add(struct PosixThread *pt) {
   }
 }
 
-void pthread_zombies_destroy(struct Zombie *z) {
-  _join(&z->pt->spawn);
-  free(z->pt);
+static void pthread_zombies_collect(struct Zombie *z) {
+  pthread_wait(z->pt);
+  pthread_free(z->pt);
   free(z);
 }
 
@@ -55,7 +55,7 @@ void pthread_zombies_decimate(void) {
   while ((z = atomic_load(&pthread_zombies)) &&
          atomic_load(&z->pt->status) == kPosixThreadZombie) {
     if (atomic_compare_exchange_strong(&pthread_zombies, &z, z->next)) {
-      pthread_zombies_destroy(z);
+      pthread_zombies_collect(z);
     }
   }
 }
@@ -64,7 +64,7 @@ void pthread_zombies_harvest(void) {
   struct Zombie *z;
   while ((z = atomic_load(&pthread_zombies))) {
     if (atomic_compare_exchange_weak(&pthread_zombies, &z, z->next)) {
-      pthread_zombies_destroy(z);
+      pthread_zombies_collect(z);
     }
   }
 }

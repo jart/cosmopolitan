@@ -16,24 +16,85 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/intrin/pthread.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/stack.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-pthread_t thread;
-
-static void *ReturnArg(void *arg) {
-  return arg;
+static void *Increment(void *arg) {
+  ASSERT_EQ(gettid(), pthread_getthreadid_np());
+  return (void *)((uintptr_t)arg + 1);
 }
 
 TEST(pthread_create, testCreateReturnJoin) {
-  void *exitcode;
-  ASSERT_EQ(0, pthread_create(&thread, 0, ReturnArg, ReturnArg));
-  ASSERT_EQ(0, pthread_join(thread, &exitcode));
-  ASSERT_EQ(ReturnArg, exitcode);
+  void *rc;
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, Increment, (void *)1));
+  ASSERT_EQ(0, pthread_join(id, &rc));
+  ASSERT_EQ((void *)2, rc);
+}
+
+static void *IncExit(void *arg) {
+  pthread_exit((void *)((uintptr_t)arg + 1));
+}
+
+TEST(pthread_create, testCreateExitJoin) {
+  void *rc;
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, IncExit, (void *)2));
+  ASSERT_EQ(0, pthread_join(id, &rc));
+  ASSERT_EQ((void *)3, rc);
 }
 
 TEST(pthread_detach, testCreateReturn) {
-  ASSERT_EQ(0, pthread_create(&thread, 0, ReturnArg, ReturnArg));
-  ASSERT_EQ(0, pthread_detach(thread));
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
+  ASSERT_EQ(0, pthread_detach(id));
+}
+
+TEST(pthread_detach, testDetachUponCreation) {
+  pthread_attr_t attr;
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
+  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+}
+
+static void *CheckStack(void *arg) {
+  char buf[1024 * 1024];
+  CheckLargeStackAllocation(buf, 1024 * 1024);
+  return 0;
+}
+
+TEST(pthread_detach, testBigStack) {
+  pthread_t id;
+  pthread_attr_t attr;
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setstacksize(&attr, 2 * 1024 * 1024));
+  ASSERT_EQ(0, pthread_create(&id, &attr, CheckStack, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
+}
+
+TEST(pthread_detach, testCustomStack_withReallySmallSize) {
+  char *stk;
+  size_t siz;
+  pthread_t id;
+  pthread_attr_t attr;
+  siz = PTHREAD_STACK_MIN;
+  stk = malloc(siz);
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setstack(&attr, stk, siz));
+  ASSERT_EQ(0, pthread_create(&id, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
+  // we still own the stack memory
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setstack(&attr, stk, siz));
+  ASSERT_EQ(0, pthread_create(&id, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
+  free(stk);
 }

@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys barrier.
@@ -31,6 +32,6 @@ int pthread_barrier_destroy(pthread_barrier_t *barrier) {
     assert(!"deadlock");
     return EINVAL;
   }
-  *barrier = (pthread_barrier_t)PTHREAD_BARRIER_INITIALIZER;
+  memset(barrier, -1, sizeof(*barrier));
   return 0;
 }

@@ -4,7 +4,7 @@
 #define PTHREAD_ONCE_INIT 0
 
 #define PTHREAD_KEYS_MAX              64
-#define PTHREAD_STACK_MIN             2048
+#define PTHREAD_STACK_MIN             FRAMESIZE
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
 #define PTHREAD_BARRIER_SERIAL_THREAD 31337
@@ -20,60 +20,70 @@
 #define PTHREAD_PROCESS_PRIVATE 0
 #define PTHREAD_PROCESS_SHARED  1
 
+#define PTHREAD_CREATE_JOINABLE 0
+#define PTHREAD_CREATE_DETACHED 1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 /* clang-format off */
-#define PTHREAD_MUTEX_INITIALIZER {PTHREAD_MUTEX_DEFAULT}
 #define PTHREAD_COND_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
 #define PTHREAD_BARRIER_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
 #define PTHREAD_RWLOCK_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
+#define PTHREAD_MUTEX_INITIALIZER {PTHREAD_MUTEX_DEFAULT, \
+                                   PTHREAD_PROCESS_DEFAULT}
 /* clang-format on */
 
 typedef void *pthread_t;
 typedef int pthread_id_np_t;
-typedef int pthread_condattr_t;
-typedef int pthread_mutexattr_t;
-typedef int pthread_rwlockattr_t;
-typedef int pthread_barrierattr_t;
+typedef char pthread_condattr_t;
+typedef char pthread_rwlockattr_t;
+typedef char pthread_barrierattr_t;
 typedef unsigned pthread_key_t;
 typedef _Atomic(char) pthread_once_t;
 typedef _Atomic(char) pthread_spinlock_t;
 typedef void (*pthread_key_dtor)(void *);
 
-typedef struct {
-  int attr;
+typedef struct pthread_mutex_s {
+  char type;
+  char pshared;
   int reent;
   _Atomic(int) lock;
   _Atomic(int) waits;
 } pthread_mutex_t;
 
-typedef struct {
-  int attr;
+typedef struct pthread_mutexattr_s {
+  char type;
+  char pshared;
+} pthread_mutexattr_t;
+
+typedef struct pthread_cond_s {
+  char pshared;
   _Atomic(int) waits;
   _Atomic(unsigned) seq;
 } pthread_cond_t;
 
-typedef struct {
-  int attr;
+typedef struct pthread_barrier_s {
+  char pshared;
   int count;
   _Atomic(int) waits;
   _Atomic(int) popped;
 } pthread_barrier_t;
 
-typedef struct {
-  int attr;
+typedef struct pthread_rwlock_s {
+  char pshared;
   _Atomic(int) lock;
   _Atomic(int) waits;
 } pthread_rwlock_t;
 
-typedef struct {
+typedef struct pthread_attr_s {
+  char detachstate;
+  size_t stacksize;
+  size_t guardsize;
+  void *stackaddr;
   int scope;
   int schedpolicy;
-  int detachstate;
   int inheritsched;
-  size_t guardsize;
-  size_t stacksize;
 } pthread_attr_t;
 
 int pthread_yield(void);
@@ -81,6 +91,7 @@ void pthread_exit(void *) wontreturn;
 pthread_t pthread_self(void) pureconst;
 pthread_id_np_t pthread_getthreadid_np(void);
 int64_t pthread_getunique_np(pthread_t);
+int pthread_getattr_np(pthread_t, pthread_attr_t *);
 int pthread_attr_init(pthread_attr_t *);
 int pthread_attr_destroy(pthread_attr_t *);
 int pthread_attr_getdetachstate(const pthread_attr_t *, int *);
@@ -156,7 +167,6 @@ int pthread_barrier_init(pthread_barrier_t *, const pthread_barrierattr_t *,
 
 #define pthread_spin_init(pSpin, multiprocess) (*(pSpin) = 0)
 #define pthread_spin_destroy(pSpin)            (*(pSpin) = 0)
-
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
 extern const errno_t EBUSY;
 #define pthread_spin_unlock(pSpin) \
@@ -164,18 +174,18 @@ extern const errno_t EBUSY;
 #define pthread_spin_trylock(pSpin) \
   (__atomic_test_and_set(pSpin, __ATOMIC_SEQ_CST) ? EBUSY : 0)
 #ifdef TINY
-#define pthread_spin_lock(pSpin) __pthread_spin_lock_tiny(pSpin)
+#define pthread_spin_lock(pSpin) _pthread_spin_lock_tiny(pSpin)
 #else
-#define pthread_spin_lock(pSpin) __pthread_spin_lock_cooperative(pSpin)
+#define pthread_spin_lock(pSpin) _pthread_spin_lock_cooperative(pSpin)
 #endif
-#define __pthread_spin_lock_tiny(pSpin)                      \
+#define _pthread_spin_lock_tiny(pSpin)                       \
   ({                                                         \
     while (__atomic_test_and_set(pSpin, __ATOMIC_SEQ_CST)) { \
       __builtin_ia32_pause();                                \
     }                                                        \
     0;                                                       \
   })
-#define __pthread_spin_lock_cooperative(pSpin)                        \
+#define _pthread_spin_lock_cooperative(pSpin)                         \
   ({                                                                  \
     char __x;                                                         \
     volatile int __i;                                                 \
@@ -196,59 +206,6 @@ extern const errno_t EBUSY;
     0;                                                                \
   })
 #endif /* GCC 4.7+ */
-
-#define pthread_mutexattr_init(pAttr)           (*(pAttr) = PTHREAD_MUTEX_DEFAULT, 0)
-#define pthread_mutexattr_destroy(pAttr)        (*(pAttr) = 0)
-#define pthread_mutexattr_gettype(pAttr, pType) (*(pType) = *(pAttr), 0)
-
-#ifdef __GNUC__
-#define pthread_mutex_init(mutex, pAttr)          \
-  ({                                              \
-    pthread_mutexattr_t *_pAttr = (pAttr);        \
-    *(mutex) = (pthread_mutex_t){                 \
-        _pAttr ? *_pAttr : PTHREAD_MUTEX_DEFAULT, \
-    };                                            \
-    0;                                            \
-  })
-#endif
-
-#define pthread_condattr_init(pAttr)                 (*(pAttr) = PTHREAD_PROCESS_DEFAULT, 0)
-#define pthread_condattr_destroy(pAttr)              (*(pAttr) = 0)
-#define pthread_condattr_getpshared(pAttr, pPshared) (*(pPshared) = *(pAttr), 0)
-
-#ifdef __GNUC__
-#define pthread_cond_init(cond, pAttr)              \
-  ({                                                \
-    pthread_condattr_t *_pAttr = (pAttr);           \
-    *(cond) = (pthread_cond_t){                     \
-        _pAttr ? *_pAttr : PTHREAD_PROCESS_DEFAULT, \
-    };                                              \
-    0;                                              \
-  })
-#endif
-
-#define pthread_barrierattr_init(pAttr)    (*(pAttr) = PTHREAD_PROCESS_DEFAULT, 0)
-#define pthread_barrierattr_destroy(pAttr) (*(pAttr) = 0)
-#define pthread_barrierattr_getpshared(pAttr, pPshared) \
-  (*(pPshared) = *(pAttr), 0)
-
-#define pthread_rwlockattr_init(pAttr)    (*(pAttr) = PTHREAD_PROCESS_DEFAULT, 0)
-#define pthread_rwlockattr_destroy(pAttr) (*(pAttr) = 0)
-#define pthread_rwlockattr_getpshared(pAttr, pPshared) \
-  (*(pPshared) = *(pAttr), 0)
-
-#ifdef __GNUC__
-#define pthread_rwlock_init(rwlock, pAttr)          \
-  ({                                                \
-    pthread_rwlockattr_t *_pAttr = (pAttr);         \
-    *(rwlock) = (pthread_rwlock_t){                 \
-        _pAttr ? *_pAttr : PTHREAD_PROCESS_DEFAULT, \
-    };                                              \
-    0;                                              \
-  })
-#endif
-
-int _pthread_mutex_wake(pthread_mutex_t *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

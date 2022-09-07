@@ -21,16 +21,18 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/sysv/consts/futex.h"
 
 int _futex(void *, int, int) hidden;
 
-static dontinline int _futex_wake_impl(void *addr, int count, int private) {
-  int op, ax;
+int _futex_wake(void *addr, int count, char pshared) {
+  int op, ax, pf;
   if (IsLinux() || IsOpenbsd()) {
-    op = FUTEX_WAKE | private;
+    pf = pshared == PTHREAD_PROCESS_PRIVATE ? FUTEX_PRIVATE_FLAG : 0;
+    op = FUTEX_WAKE | pf;
     ax = _futex(addr, op, count);
-    if (SupportsLinux() && private && ax == -ENOSYS) {
+    if (SupportsLinux() && pf && ax == -ENOSYS) {
       // RHEL5 doesn't support FUTEX_PRIVATE_FLAG
       op = FUTEX_WAKE;
       ax = _futex(addr, op, count);
@@ -41,12 +43,4 @@ static dontinline int _futex_wake_impl(void *addr, int count, int private) {
   } else {
     return 0;
   }
-}
-
-int _futex_wake_public(void *addr, int count) {
-  return _futex_wake_impl(addr, count, 0);
-}
-
-int _futex_wake_private(void *addr, int count) {
-  return _futex_wake_impl(addr, count, FUTEX_PRIVATE_FLAG);
 }

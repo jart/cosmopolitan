@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/pthread.h"
+#include "libc/str/str.h"
 
 /**
  * Destroys condition.
@@ -31,6 +32,6 @@ int pthread_cond_destroy(pthread_cond_t *cond) {
     assert(!"deadlock");
     return EINVAL;
   }
-  *cond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
+  memset(cond, -1, sizeof(*cond));
   return 0;
 }

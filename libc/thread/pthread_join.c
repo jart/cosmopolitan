@@ -36,10 +36,10 @@ int pthread_join(pthread_t thread, void **value_ptr) {
     assert(!"badjoin");
     return EDEADLK;
   }
-  _join(&pt->spawn);
+  pthread_wait(pt);
   if (value_ptr) {
     *value_ptr = pt->rc;
   }
-  free(pt);
+  pthread_free(pt);
   return 0;
 }

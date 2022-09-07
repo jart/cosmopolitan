@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist.internal.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/pushpop.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/pthread.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/fflush.internal.h"
@@ -34,12 +34,10 @@
 static pthread_mutex_t __fflush_lock_obj;
 
 void(__fflush_lock)(void) {
-  __fflush_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_lock(&__fflush_lock_obj);
 }
 
 void(__fflush_unlock)(void) {
-  __fflush_lock_obj.attr = PTHREAD_MUTEX_RECURSIVE;
   pthread_mutex_unlock(&__fflush_lock_obj);
 }
 
