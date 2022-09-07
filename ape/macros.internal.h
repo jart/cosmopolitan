@@ -221,9 +221,12 @@
 /**
  * Binary coded decimal support.
  *
- * <p>This allows linker scripts to generate dd commands. Leading spaces
- * need to be inserted so Mac doesn't consider them octal; therefore,
- * parameters must be quoted; and eight digits should be good enough.
+ * <p>This allows linker scripts to generate dd commands, e.g. ape.lds.
+ * There are a few ways to pad each number to the necessary 8 bytes.
+ * Spaces cannot be prepended because busybox refuses to parse them.
+ * Zeros cannot be prepended because Mac will take numbers as octal.
+ * That leaves appending spaces. The user's shell ought to treat any
+ * unquoted run of spaces as if there was only one, so this is safe.
  */
 #define SHSTUB2(SYM, X)             \
   HIDDEN(SYM##_bcs0 = BCD_LEFT(X)); \
