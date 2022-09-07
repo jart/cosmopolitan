@@ -298,3 +298,25 @@ textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
     __sig_unlock();
   }
 }
+
+/**
+ * Determines the pending signals on New Technology.
+ *
+ * @param pending is to hold the pending signals
+ * @threadsafe
+ */
+textwindows void __sig_pending(sigset_t *pending) {
+  struct Signal *cur;
+  sigemptyset(pending);
+  if (__sig.queue) {
+    __sig_lock();
+    for (cur = __sig.queue; cur; cur = cur->next) {
+      if (__sighandrvas[cur->sig] != (unsigned)(intptr_t)SIG_IGN) {
+        pending->__bits[(cur->sig - 1) >> 6] |= (1ull << ((cur->sig - 1) & 63));
+      } else {
+        STRACE("%G is ignored", cur->sig);
+      }
+    }
+    __sig_unlock();
+  }
+}
