@@ -161,7 +161,7 @@ scall	sys_setresuid		0xfff11a137ffff075	globl hidden # polyfilled for xnu
 scall	sys_setresgid		0xfff11c138ffff077	globl hidden # polyfilled for xnu
 scall	sys_getresuid		0xfff119168ffff076	globl hidden # semantics aren't well-defined
 scall	sys_getresgid		0xfff11b169ffff078	globl hidden # semantics aren't well-defined
-scall	sigpending		0x124034034203407f	globl # a.k.a. rt_sigpending on linux
+scall	sys_sigpending		0x124034157203407f	globl hidden # a.k.a. rt_sigpending on linux
 scall	sys_sigsuspend		0x12606f155206f082	globl hidden # a.k.a. rt_sigsuspend on Linux; openbsd:byvalue, sigsuspend_nocancel on XNU
 scall	sys_sigaltstack		0x1191200352035083	globl hidden
 scall	sys_mknod		0x1c200e00e200e085	globl hidden

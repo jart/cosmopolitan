@@ -32,6 +32,7 @@ int __sig_add(int, int) hidden;
 int __sig_mask(int, const sigset_t *, sigset_t *) hidden;
 int __sig_raise(int, int) hidden;
 void __sig_check_ignore(const int, const unsigned) hidden;
+void __sig_pending(sigset_t *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

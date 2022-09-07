@@ -14,6 +14,7 @@ int sigfillset(sigset_t *) paramsnonnull();
 int sigismember(const sigset_t *, int) paramsnonnull() nosideeffect;
 int sigprocmask(int, const sigset_t *, sigset_t *);
 int sigsuspend(const sigset_t *);
+int sigpending(sigset_t *) paramsnonnull() nosideeffect;
 int pthread_sigmask(int, const sigset_t *, sigset_t *);
 
 COSMOPOLITAN_C_END_
