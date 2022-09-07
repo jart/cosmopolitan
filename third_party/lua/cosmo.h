@@ -22,15 +22,6 @@ struct Serializer {
   size_t strbuflen;
 };
 
-struct SerializerJoin {
-  struct Serializer *z;
-  char **buf;
-  bool multi;
-  int depth;
-  int i;
-  const char *indent;
-};
-
 bool LuaHasMultipleItems(lua_State *);
 char *LuaFormatStack(lua_State *) dontdiscard;
 int LuaCallWithTrace(lua_State *, int, int, lua_State *);
