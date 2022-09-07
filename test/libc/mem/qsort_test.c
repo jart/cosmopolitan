@@ -50,6 +50,42 @@ TEST(qsort, test) {
   free(M);
 }
 
+BENCH(qsort, equivalence_random) {
+  size_t i;
+  size_t n = 1000;
+  long *a = gc(malloc(n * sizeof(long)));
+  long *b = gc(malloc(n * sizeof(long)));
+  long *c = gc(malloc(n * sizeof(long)));
+  for (i = 0; i < n; ++i) a[i] = lemur64();
+  memcpy(b, a, n * sizeof(long));
+  memcpy(c, a, n * sizeof(long));
+  qsort(b, n, sizeof(long), CompareLong);
+  heapsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  mergesort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  smoothsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+}
+
+BENCH(qsort, equivalence_reverse) {
+  size_t i;
+  size_t n = 1000;
+  long *a = gc(malloc(n * sizeof(long)));
+  long *b = gc(malloc(n * sizeof(long)));
+  long *c = gc(malloc(n * sizeof(long)));
+  for (i = 0; i < n; ++i) a[n - i - 1] = i;
+  memcpy(b, a, n * sizeof(long));
+  memcpy(c, a, n * sizeof(long));
+  qsort(b, n, sizeof(long), CompareLong);
+  heapsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  mergesort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  smoothsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+}
+
 BENCH(qsort, bench) {
   size_t i;
   size_t n = 1000;
@@ -60,6 +96,10 @@ BENCH(qsort, bench) {
   for (i = 0; i < n; ++i) p1[i] = i + ((lemur64() % 3) - 1);
   EZBENCH2("qsort nearly", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("heapsort nearly", memcpy(p2, p1, n * sizeof(long)),
+           heapsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("mergesort nearly", memcpy(p2, p1, n * sizeof(long)),
+           mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort nearly", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
 
@@ -67,6 +107,10 @@ BENCH(qsort, bench) {
   for (i = 0; i < n; ++i) p1[i] = n - i;
   EZBENCH2("qsort reverse", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("heapsort reverse", memcpy(p2, p1, n * sizeof(long)),
+           heapsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("mergesort reverse", memcpy(p2, p1, n * sizeof(long)),
+           mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort reverse", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
 
@@ -74,6 +118,10 @@ BENCH(qsort, bench) {
   rngset(p1, n * sizeof(long), 0, 0);
   EZBENCH2("qsort random", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("heapsort random", memcpy(p2, p1, n * sizeof(long)),
+           heapsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("mergesort random", memcpy(p2, p1, n * sizeof(long)),
+           mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort random", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
 
@@ -84,6 +132,10 @@ BENCH(qsort, bench) {
   }
   EZBENCH2("qsort 2n", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("heapsort 2n", memcpy(p2, p1, n * sizeof(long)),
+           heapsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("mergesort 2n", memcpy(p2, p1, n * sizeof(long)),
+           mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort 2n", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
 }

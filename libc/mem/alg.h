@@ -10,6 +10,8 @@ void *bsearch_r(const void *, const void *, size_t, size_t,
                 int (*)(const void *, const void *, void *), void *)
     paramsnonnull((1, 2, 5)) dontthrow nosideeffect;
 void djbsort(int32_t *, size_t);
+void qsort3(void *, size_t, size_t, int (*)(const void *, const void *))
+    paramsnonnull();
 void qsort(void *, size_t, size_t, int (*)(const void *, const void *))
     paramsnonnull();
 void qsort_r(void *, size_t, size_t,
@@ -18,6 +20,12 @@ void qsort_r(void *, size_t, size_t,
 void smoothsort(void *, size_t, size_t, int (*)(const void *, const void *));
 void smoothsort_r(void *, size_t, size_t,
                   int (*)(const void *, const void *, void *), void *);
+int heapsort(void *, size_t, size_t, int (*)(const void *, const void *));
+int heapsort_r(void *, size_t, size_t,
+               int (*)(const void *, const void *, void *), void *);
+int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
+int mergesort_r(void *, size_t, size_t,
+                int (*)(const void *, const void *, void *), void *);
 int tarjan(int, const int (*)[2], int, int[], int[], int *)
     paramsnonnull((2, 4)) nocallback dontthrow;
 
