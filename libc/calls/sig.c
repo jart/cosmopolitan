@@ -29,6 +29,8 @@
 
 struct Signals __sig;  // TODO(jart): Need TLS
 
+#define GetSigBit(XXSIG) (1ull << (((XXSIG)-1) & 63))
+
 /**
  * Changes signal mask for main thread.
  * @return 0 on success, or -1 w/ errno
@@ -51,7 +53,7 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
           __sig.mask.__bits[i] = neu->__bits[i];
         }
       }
-      __sig.mask.__bits[0] &= ~(SIGKILL | SIGSTOP);
+      __sig.mask.__bits[0] &= ~(GetSigBit(SIGKILL) | GetSigBit(SIGSTOP));
     }
     __sig_unlock();
     return 0;
@@ -59,3 +61,5 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
     return einval();
   }
 }
+
+#undef GetSigBit
