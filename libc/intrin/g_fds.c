@@ -21,6 +21,7 @@
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/spinlock.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
@@ -55,10 +56,17 @@ textstartup void InitializeFileDescriptors(void) {
   fds->f = 3;
   fds->p = fds->__init_p;
   if (IsMetal()) {
+    extern const char vga_console[];
     pushmov(&fds->f, 3ull);
-    fds->__init_p[0].kind = pushpop(kFdSerial);
-    fds->__init_p[1].kind = pushpop(kFdSerial);
-    fds->__init_p[2].kind = pushpop(kFdSerial);
+    if (weaken(vga_console)) {
+      fds->__init_p[0].kind = pushpop(kFdConsole);
+      fds->__init_p[1].kind = pushpop(kFdConsole);
+      fds->__init_p[2].kind = pushpop(kFdConsole);
+    } else {
+      fds->__init_p[0].kind = pushpop(kFdSerial);
+      fds->__init_p[1].kind = pushpop(kFdSerial);
+      fds->__init_p[2].kind = pushpop(kFdSerial);
+    }
     fds->__init_p[0].handle = VEIL("r", 0x3F8ull);
     fds->__init_p[1].handle = VEIL("r", 0x3F8ull);
     fds->__init_p[2].handle = VEIL("r", 0x3F8ull);

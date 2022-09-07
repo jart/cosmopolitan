@@ -10,6 +10,8 @@
 #include "libc/math.h"
 #include "libc/stdio/stdio.h"
 
+STATIC_YOINK("vga_console");
+
 int main(int argc, char *argv[]) {
   volatile long double x = -.5;
   volatile long double y = 1.5;

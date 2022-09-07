@@ -117,7 +117,8 @@ include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
-include libc/fmt/fmt.mk				#─┘
+include libc/fmt/fmt.mk				# │
+include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
@@ -318,7 +319,8 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_SYSV		\
 	LIBC_INTRIN		\
 	LIBC_NT_KERNEL32	\
-	LIBC_NEXGEN32E
+	LIBC_NEXGEN32E		\
+	LIBC_VGA
 
 COSMOPOLITAN_HEADERS =		\
 	APE			\
@@ -343,6 +345,7 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_TINYMATH		\
 	LIBC_X			\
 	LIBC_ZIPOS		\
+	LIBC_VGA		\
 	NET_HTTP		\
 	THIRD_PARTY_DLMALLOC	\
 	THIRD_PARTY_GDTOA	\
