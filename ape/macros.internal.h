@@ -231,36 +231,31 @@
 #define SHSTUB2(SYM, X)             \
   HIDDEN(SYM##_bcs0 = BCD_LEFT(X)); \
   HIDDEN(SYM##_bcs1 = BCD_RIGHT(X))
-#define BCD_HELPER(X)                          \
-  (((X)) < 10    ? 0x20202030 +                \
-                   (X) % 10                    \
-   : (X) < 100   ? 0x20203030 +                \
-                   ((X) / 10) % 10 +           \
-                   (X) % 10 * 0x100            \
-   : (X) < 1000  ? 0x20303030 +                \
-                   ((X) / 100) % 10 +          \
-                   ((X) / 10) % 10 * 0x100 +   \
-                   (X) % 10 * 0x10000          \
-   : (X) < 10000 ? 0x30303030 +                \
-                   ((X) / 1000) % 10 +         \
-                   ((X) / 100) % 10 * 0x100 +  \
-                   ((X) / 10) % 10 * 0x10000 + \
-                   (X) % 10 * 0x1000000        \
-   : 0xffffffffffffffff)
-#define BCD_LEFT(X)                            \
-  (((X)) < 10000     ? BCD_HELPER(X)           \
-   : (X) < 100000    ? BCD_HELPER((X) / 10)    \
-   : (X) < 1000000   ? BCD_HELPER((X) / 100)   \
-   : (X) < 10000000  ? BCD_HELPER((X) / 1000)  \
-   : (X) < 100000000 ? BCD_HELPER((X) / 10000) \
-   : 0xffffffffffffffff)
-#define BCD_RIGHT(X)                           \
-  (((X)) < 10000     ? 0x20202020              \
-   : (X) < 100000    ? BCD_HELPER((X) % 10)    \
-   : (X) < 1000000   ? BCD_HELPER((X) % 100)   \
-   : (X) < 10000000  ? BCD_HELPER((X) % 1000)  \
-   : (X) < 100000000 ? BCD_HELPER((X) % 10000) \
-   : 0xffffffffffffffff)
+#define BCD_SMEAR(X) ((X) + (X) * 10000)
+#define BCD_LEFT(X)                                      \
+  (((X)) < 10000     ? BCD_RIGHT(BCD_SMEAR(X)) | 0x10    \
+   : (X) < 100000    ? BCD_RIGHT(BCD_SMEAR((X) / 10))    \
+   : (X) < 1000000   ? BCD_RIGHT(BCD_SMEAR((X) / 100))   \
+   : (X) < 10000000  ? BCD_RIGHT(BCD_SMEAR((X) / 1000))  \
+   : (X) < 100000000 ? BCD_RIGHT(BCD_SMEAR((X) / 10000)) \
+                     : 0xffffffffffffffff)
+#define BCD_RIGHT(X) \
+  (((X)) < 10000     ? 0x20202020                  \
+   : (X) < 100000    ? 0x20202030 +                \
+                       (X) % 10                    \
+   : (X) < 1000000   ? 0x20203030 +                \
+                       ((X) / 10) % 10 +           \
+                       (X) % 10 * 0x100            \
+   : (X) < 10000000  ? 0x20303030 +                \
+                       ((X) / 100) % 10 +          \
+                       ((X) / 10) % 10 * 0x100 +   \
+                       (X) % 10 * 0x10000          \
+   : (X) < 100000000 ? 0x30303030 +                \
+                       ((X) / 1000) % 10 +         \
+                       ((X) / 100) % 10 * 0x100 +  \
+                       ((X) / 10) % 10 * 0x10000 + \
+                       (X) % 10 * 0x1000000        \
+                     : 0xffffffffffffffff)
 
 #endif /* __ASSEMBLER__ */
 #endif /* APE_MACROS_H_ */
