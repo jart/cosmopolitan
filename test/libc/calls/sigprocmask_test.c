@@ -78,3 +78,18 @@ TEST(sigprocmask, testMultipleBlockedDeliveriesOfSameSignal) {
     EXPECT_EQ(1, n);
   }
 }
+
+TEST(sigprocmask, testBlockingSIGINT) {
+  sigset_t neu, old;
+  struct sigaction oldsigint;
+  struct sigaction sa = {.sa_sigaction = OnSig, .sa_flags = SA_SIGINFO};
+  n = 0;
+  sigemptyset(&neu);
+  sigaddset(&neu, SIGINT);
+  EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &neu, &old));
+  ASSERT_EQ(0, sigaction(SIGINT, &sa, &oldsigint));
+  ASSERT_EQ(0, raise(SIGINT));
+  EXPECT_EQ(0, n);
+  EXPECT_EQ(0, sigprocmask(SIG_SETMASK, &old, NULL));
+  EXPECT_EQ(0, sigaction(SIGINT, &oldsigint, 0));
+}
