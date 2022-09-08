@@ -22,6 +22,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -62,9 +63,14 @@ TEST(qsort, equivalence_random) {
   qsort(b, n, sizeof(long), CompareLong);
   heapsort(c, n, sizeof(long), CompareLong);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
   mergesort(c, n, sizeof(long), CompareLong);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
   smoothsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
+  longsort(c, n);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
 }
 
@@ -80,9 +86,14 @@ TEST(qsort, equivalence_reverse) {
   qsort(b, n, sizeof(long), CompareLong);
   heapsort(c, n, sizeof(long), CompareLong);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
   mergesort(c, n, sizeof(long), CompareLong);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
   smoothsort(c, n, sizeof(long), CompareLong);
+  ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
+  memcpy(c, a, n * sizeof(long));
+  longsort(c, n);
   ASSERT_EQ(0, memcmp(b, c, n * sizeof(long)));
 }
 
@@ -102,6 +113,8 @@ BENCH(qsort, bench) {
            mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort nearly", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("longsort nearly", memcpy(p2, p1, n * sizeof(long)),
+           longsort(p2, n));
 
   printf("\n");
   for (i = 0; i < n; ++i) p1[i] = n - i;
@@ -113,6 +126,8 @@ BENCH(qsort, bench) {
            mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort reverse", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("longsort reverse", memcpy(p2, p1, n * sizeof(long)),
+           longsort(p2, n));
 
   printf("\n");
   rngset(p1, n * sizeof(long), 0, 0);
@@ -124,6 +139,8 @@ BENCH(qsort, bench) {
            mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort random", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("longsort random", memcpy(p2, p1, n * sizeof(long)),
+           longsort(p2, n));
 
   printf("\n");
   for (i = 0; i < n / 2; ++i) {
@@ -138,4 +155,5 @@ BENCH(qsort, bench) {
            mergesort(p2, n, sizeof(long), CompareLong));
   EZBENCH2("smoothsort 2n", memcpy(p2, p1, n * sizeof(long)),
            smoothsort(p2, n, sizeof(long), CompareLong));
+  EZBENCH2("longsort 2n", memcpy(p2, p1, n * sizeof(long)), longsort(p2, n));
 }

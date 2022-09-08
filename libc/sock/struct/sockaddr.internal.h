@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_SOCK_STRUCT_SOCKADDR_INTERNAL_H_
 #include "libc/mem/alloca.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/sock/struct/sockaddr6-bsd.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -29,12 +30,14 @@ struct sockaddr_un_bsd {
 union sockaddr_storage_bsd {
   struct sockaddr_bsd sa;
   struct sockaddr_in_bsd sin;
+  struct sockaddr_in6_bsd sin6;
   struct sockaddr_un_bsd sun;
 };
 
 union sockaddr_storage_linux {
   struct sockaddr sa;
   struct sockaddr_in sin;
+  struct sockaddr_in6 sin6;
   struct sockaddr_un sun;
 };
 

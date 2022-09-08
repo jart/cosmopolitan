@@ -38,6 +38,12 @@ OpenBSD Sorting (BSD-3)\\n\
 Copyright 1993 The Regents of the University of California\"");
 asm(".include \"libc/disclaimer.inc\"");
 
+#define SWAPTYPE_BYTEV	1
+#define SWAPTYPE_INTV	2
+#define SWAPTYPE_LONGV	3
+#define SWAPTYPE_INT	4
+#define SWAPTYPE_LONG	5
+
 #define CMPPAR		int (*cmp)(const void *, const void *, void *),void *arg
 #define CMPARG		cmp, arg
 #define CMP(a, b)	cmp(a, b, arg)
@@ -45,30 +51,6 @@ asm(".include \"libc/disclaimer.inc\"");
 
 static inline char	*med3(char *, char *, char *, CMPPAR);
 static inline void	 swapfunc(char *, char *, size_t, int);
-
-/*
- * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
- *
- * This version differs from Bentley & McIlroy in the following ways:
- *   1. The partition value is swapped into a[0] instead of being
- *	stored out of line.
- *
- *   2. The swap function can swap 32-bit aligned elements on 64-bit
- *	platforms instead of swapping them as byte-aligned.
- *
- *   3. It uses David Musser's introsort algorithm to fall back to
- *	heapsort(3) when the recursion depth reaches 2*lg(n + 1).
- *	This avoids quicksort's quadratic behavior for pathological
- *	input without appreciably changing the average run time.
- *
- *   4. Tail recursion is eliminated when sorting the larger of two
- *	subpartitions to save stack space.
- */
-#define SWAPTYPE_BYTEV	1
-#define SWAPTYPE_INTV	2
-#define SWAPTYPE_LONGV	3
-#define SWAPTYPE_INT	4
-#define SWAPTYPE_LONG	5
 
 #define TYPE_ALIGNED(TYPE, a, es)			\
 	(((char *)a - (char *)0) % sizeof(TYPE) == 0 && es % sizeof(TYPE) == 0)

@@ -18,7 +18,6 @@
 #define in_addr_t     uint32_t
 #define in_addr_t     uint32_t
 #define in_port_t     uint16_t
-#define in_port_t     uint16_t
 #define ino_t         uint64_t
 #define key_t         int32_t
 #define loff_t        int64_t
