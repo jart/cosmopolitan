@@ -18,13 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asmflag.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
 
+__msabi extern typeof(ExitThread) *const __imp_ExitThread;
+
 /**
  * Terminates thread with raw system call.
+ *
+ * If this is the main thread, or an orphaned child thread, then this
+ * function is equivalent to exiting the process; however, `rc` shall
+ * only be reported to the parent process on Linux, FreeBSD & Windows
+ * whereas on other platforms, it'll be silently coerced to zero.
  *
  * @param rc only works on Linux and Windows
  * @see cthread_exit()
@@ -32,24 +40,34 @@
  * @noreturn
  */
 privileged wontreturn void _Exit1(int rc) {
-  struct WinThread *wt;
+  char cf;
+  int ax, dx, di, si;
   STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {
-    if (IsOpenbsd() && !PLEDGED(STDIO)) {
+    // exit() on Linux
+    // thr_exit() on FreeBSD
+    // __threxit() on OpenBSD
+    // __lwp_exit() on NetBSD
+    // __bsdthread_terminate() on XNU
+    asm volatile(CFLAG_ASM("xor\t%%r10d,%%r10d\n\t"
+                           "syscall")
+                 : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx), "=D"(di), "=S"(si)
+                 : "1"(__NR_exit), "3"(IsLinux() ? rc : 0), "4"(0), "2"(0)
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
+    if ((IsFreebsd() && !cf && !ax) || (SupportsFreebsd() && IsTiny())) {
+      // FreeBSD checks if this is either the main thread by itself, or
+      // the last running child thread in which case thr_exit() returns
+      // zero with an error. In that case we'll exit the whole process.
+      // FreeBSD thr_exit() can even clobber registers, like r8 and r9!
       asm volatile("syscall"
                    : /* no outputs */
-                   : "a"(__NR_exit), "D"(rc)
+                   : "a"(__NR_exit_group), "D"(rc)
                    : "rcx", "r11", "memory");
+      unreachable;
     }
-    asm volatile("xor\t%%r10d,%%r10d\n\t"
-                 "syscall"
-                 : /* no outputs */
-                 : "a"(__NR_exit), "D"(IsLinux() ? rc : 0), "S"(0), "d"(0)
-                 : "rcx", "r10", "r11", "memory");
   } else if (IsWindows()) {
-    ExitThread(rc);
+    __imp_ExitThread(rc);
+    unreachable;
   }
-  for (;;) {
-    asm("ud2");
-  }
+  notpossible;
 }

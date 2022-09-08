@@ -32,14 +32,15 @@
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
   struct PosixThread *pt = thread;
-  if (pt->status == kPosixThreadDetached) {
+  if (pt->status == kPosixThreadDetached ||  //
+      pt->status == kPosixThreadZombie) {
     assert(!"badjoin");
     return EDEADLK;
   }
-  pthread_wait(pt);
+  _pthread_wait(pt);
   if (value_ptr) {
     *value_ptr = pt->rc;
   }
-  pthread_free(pt);
+  _pthread_free(pt);
   return 0;
 }

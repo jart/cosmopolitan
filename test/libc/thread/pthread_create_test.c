@@ -17,12 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/pthread.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
+#if 0
 static void *Increment(void *arg) {
   ASSERT_EQ(gettid(), pthread_getthreadid_np());
   return (void *)((uintptr_t)arg + 1);
@@ -97,4 +100,18 @@ TEST(pthread_detach, testCustomStack_withReallySmallSize) {
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   ASSERT_EQ(0, pthread_join(id, 0));
   free(stk);
+}
+#endif
+
+TEST(pthread_exit, mainThreadWorks) {
+  // _Exit1() can't set process exit code on XNU/NetBSD/OpenBSD.
+  if (IsLinux() || IsFreebsd() || IsWindows()) {
+    SPAWN(fork);
+    pthread_exit((void *)2);
+    EXITS(2);
+  } else {
+    SPAWN(fork);
+    pthread_exit((void *)0);
+    EXITS(0);
+  }
 }

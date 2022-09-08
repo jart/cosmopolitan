@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/pthread.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
@@ -29,46 +30,46 @@
 static struct Zombie {
   struct Zombie *next;
   struct PosixThread *pt;
-} * pthread_zombies;
+} * _pthread_zombies;
 
-void pthread_zombies_add(struct PosixThread *pt) {
+void _pthread_zombies_add(struct PosixThread *pt) {
   struct Zombie *z;
   if ((z = malloc(sizeof(struct Zombie)))) {
     z->pt = pt;
-    z->next = atomic_load(&pthread_zombies);
+    z->next = atomic_load(&_pthread_zombies);
     for (;;) {
-      if (atomic_compare_exchange_weak(&pthread_zombies, &z->next, z)) {
+      if (atomic_compare_exchange_weak(&_pthread_zombies, &z->next, z)) {
         break;
       }
     }
   }
 }
 
-static void pthread_zombies_collect(struct Zombie *z) {
-  pthread_wait(z->pt);
-  pthread_free(z->pt);
+static void _pthread_zombies_collect(struct Zombie *z) {
+  _pthread_wait(z->pt);
+  _pthread_free(z->pt);
   free(z);
 }
 
-void pthread_zombies_decimate(void) {
+void _pthread_zombies_decimate(void) {
   struct Zombie *z;
-  while ((z = atomic_load(&pthread_zombies)) &&
+  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed)) &&
          atomic_load(&z->pt->status) == kPosixThreadZombie) {
-    if (atomic_compare_exchange_strong(&pthread_zombies, &z, z->next)) {
-      pthread_zombies_collect(z);
+    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
+      _pthread_zombies_collect(z);
     }
   }
 }
 
-void pthread_zombies_harvest(void) {
+void _pthread_zombies_harvest(void) {
   struct Zombie *z;
-  while ((z = atomic_load(&pthread_zombies))) {
-    if (atomic_compare_exchange_weak(&pthread_zombies, &z, z->next)) {
-      pthread_zombies_collect(z);
+  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed))) {
+    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
+      _pthread_zombies_collect(z);
     }
   }
 }
 
 __attribute__((__constructor__)) static void init(void) {
-  atexit(pthread_zombies_harvest);
+  atexit(_pthread_zombies_harvest);
 }

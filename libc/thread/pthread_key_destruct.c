@@ -25,6 +25,7 @@ void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
   uint64_t x;
   void *value;
   pthread_key_dtor dtor;
+  if (!key) key = _pthread_keys;
 StartOver:
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
     x = _pthread_key_usage[i];

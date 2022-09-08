@@ -41,7 +41,7 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
 }
 
 static textexit void _pthread_key_atexit(void) {
-  _pthread_key_destruct(_pthread_keys);
+  _pthread_key_destruct(0);
 }
 
 __attribute__((__constructor__)) static textstartup void _pthread_key_init() {

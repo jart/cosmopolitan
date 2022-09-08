@@ -593,7 +593,7 @@ typedef struct {
 
 #define notpossible \
   do {              \
-    asm("hlt");     \
+    asm("ud2");     \
     unreachable;    \
   } while (0)
 

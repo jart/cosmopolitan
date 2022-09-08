@@ -100,7 +100,7 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
  *     PTHREAD_MUTEX_ERRORCHECK    :   917c (296ns)
  *
  * @return 0 on success, or error number on failure
- * @see pthread_spin_lock
+ * @see pthread_spin_lock()
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int c, me, owner, tries;

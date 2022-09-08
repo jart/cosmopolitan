@@ -34,17 +34,24 @@ int pthread_detach(pthread_t thread) {
   for (;;) {
     status = atomic_load_explicit(&pt->status, memory_order_relaxed);
     if (status == kPosixThreadDetached || status == kPosixThreadZombie) {
+      // these two states indicate the thread was already detached, in
+      // which case it's already listed under _pthread_zombies.
       break;
     } else if (status == kPosixThreadTerminated) {
-      pthread_wait(pt);
-      pthread_free(pt);
+      // thread was joinable and finished running. since pthread_join
+      // won't be called, it's safe to free the thread resources now.
+      _pthread_wait(pt);
+      _pthread_free(pt);
       break;
-    } else if (status == kPosixThreadJoinable &&
-               atomic_compare_exchange_weak_explicit(
-                   &pt->status, &status, kPosixThreadDetached,
-                   memory_order_acquire, memory_order_relaxed)) {
-      pthread_zombies_add(pt);
-      break;
+    } else if (status == kPosixThreadJoinable) {
+      if (atomic_compare_exchange_weak_explicit(
+              &pt->status, &status, kPosixThreadDetached, memory_order_acquire,
+              memory_order_relaxed)) {
+        _pthread_zombies_add(pt);
+        break;
+      }
+    } else {
+      notpossible;
     }
   }
   return 0;

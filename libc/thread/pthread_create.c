@@ -22,21 +22,23 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/wait0.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
-void pthread_wait(struct PosixThread *pt) {
+void _pthread_wait(struct PosixThread *pt) {
   _wait0(pt->spawn.ctid);
 }
 
-void pthread_free(struct PosixThread *pt) {
+void _pthread_free(struct PosixThread *pt) {
   free(pt->spawn.tls);
   if (pt->stacksize) {
     munmap(&pt->spawn.stk, pt->stacksize);
@@ -50,6 +52,9 @@ static int PosixThread(void *arg, int tid) {
   if (!setjmp(pt->exiter)) {
     ((cthread_t)__get_tls())->pthread = pt;
     pt->rc = pt->start_routine(pt->arg);
+  }
+  if (weaken(_pthread_key_destruct)) {
+    weaken(_pthread_key_destruct)(0);
   }
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {
@@ -71,18 +76,18 @@ static int PosixThread(void *arg, int tid) {
  *              │ pthread_create() │       - Standard
  *              └─────────┬────────┘         Abstraction
  *              ┌─────────┴────────┐
- *              │     _spawn()     │       - Cosmopolitan
- *              └─────────┬────────┘         Abstraction
- *              ┌─────────┴────────┐
  *              │     clone()      │       - Polyfill
  *              └─────────┬────────┘
- *            ┌────────┬──┴──┬─┬─────────┐ - Kernel
- *      ┌─────┴─────┐  │     │┌┴──────┐  │   Interfaces
- *      │ sys_clone │  │     ││ tfork │  │
- *      └───────────┘  │     │└───────┘ ┌┴─────────────┐
- *     ┌───────────────┴──┐ ┌┴────────┐ │ CreateThread │
- *     │ bsdthread_create │ │ thr_new │ └──────────────┘
- *     └──────────────────┘ └─────────┘
+ *            ┌────────┬──┴┬─┬─┬─────────┐ - Kernel
+ *      ┌─────┴─────┐  │   │ │┌┴──────┐  │   Interfaces
+ *      │ sys_clone │  │   │ ││ tfork │ ┌┴─────────────┐
+ *      └───────────┘  │   │ │└───────┘ │ CreateThread │
+ *     ┌───────────────┴──┐│┌┴────────┐ └──────────────┘
+ *     │ bsdthread_create │││ thr_new │
+ *     └──────────────────┘│└─────────┘
+ *                 ┌───────┴──────┐
+ *                 │ _lwp_create  │
+ *                 └──────────────┘
  *
  * @param thread if non-null is used to output the thread id
  *     upon successful completion
@@ -96,13 +101,14 @@ static int PosixThread(void *arg, int tid) {
  * @raise EINVAL if `attr` was supplied and had unnaceptable data
  * @raise EPERM if scheduling policy was requested and user account
  *     isn't authorized to use it
+ * @threadsafe
  */
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                    void *(*start_routine)(void *), void *arg) {
   int rc, e = errno;
   struct PosixThread *pt;
   pthread_attr_t default_attr;
-  pthread_zombies_decimate();
+  _pthread_zombies_decimate();
 
   // default attributes
   if (!attr) {
@@ -140,7 +146,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
       pt->stacksize = attr->stacksize;
     } else {
       rc = errno;
-      pthread_free(pt);
+      _pthread_free(pt);
       errno = e;
       if (rc == EINVAL || rc == EOVERFLOW) {
         return EINVAL;
@@ -170,7 +176,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     }
   }
 
-  // save the attributes for descriptive purposes
+  // we only need to save this to support pthread_getattr_np()
   pt->attr = *attr;
 
   // set initial status
@@ -180,10 +186,10 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
       break;
     case PTHREAD_CREATE_DETACHED:
       pt->status = kPosixThreadDetached;
-      pthread_zombies_add(pt);
+      _pthread_zombies_add(pt);
       break;
     default:
-      pthread_free(pt);
+      _pthread_free(pt);
       return EINVAL;
   }
 
@@ -195,7 +201,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                 CLONE_CHILD_CLEARTID,
             pt, &pt->spawn.ptid, pt->spawn.tib, pt->spawn.ctid) == -1) {
     rc = errno;
-    pthread_free(pt);
+    _pthread_free(pt);
     errno = e;
     if (rc == EINVAL) {
       return EINVAL;

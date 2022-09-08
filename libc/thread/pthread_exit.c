@@ -24,10 +24,22 @@
 
 /**
  * Terminates current POSIX thread.
+ *
+ * If this function is called from the main thread, or a thread created
+ * with clone() or _spawn(), then this function is the same as _Exit1()
+ * in which case `rc` is coerced to a `uint8_t` exit status, which will
+ * only be reported to the parent process on Linux, FreeBSD and Windows
+ *
+ * @param rc is reported later to pthread_join()
+ * @threadsafe
+ * @noreturn
  */
-void pthread_exit(void *rc) {
+wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
-  pt = ((cthread_t)__get_tls())->pthread;
-  pt->rc = rc;
-  longjmp(pt->exiter, 1);
+  if ((pt = ((cthread_t)__get_tls())->pthread)) {
+    pt->rc = rc;
+    longjmp(pt->exiter, 1);
+  } else {
+    _Exit1((int)(intptr_t)rc);
+  }
 }
