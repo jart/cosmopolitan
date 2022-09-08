@@ -26,6 +26,40 @@
  * @see lkml.kernel.org/lkml/204888.1529277815@turing-police.cc.vt.edu/T/
  */
 #undef VGA_USE_WCS
+/**
+ * The VGA hardware can be configured — via the IBM BIOS, or via port I/O —
+ * to either support blinking characters, or support the use of bright
+ * background colors, but not both.  There is a hardware setting that
+ * controls whether the attribute byte for each plotted character is
+ * interpreted as
+ *
+ *           foreground────┐
+ * foreground intensity──┐ │
+ *           background┐ │ │
+ *             blinking│ │ │
+ *                   │┌┴┐│┌┴┐
+ *                   76543210
+ *
+ * or as
+ *
+ *           foreground────┐
+ * foreground intensity──┐ │
+ *           background┐ │ │
+ * background intensity│ │ │
+ *                   │┌┴┐│┌┴┐
+ *                   76543210
+ *
+ * (NOTE: QEMU 6.2.0 does not emulate the VGA blinking feature.  However,
+ * VirtualBox 6.1 does.)
+ *
+ * If VGA_USE_BLINK is defined, our VGA code will use the former mode, &
+ * will support blinking characters.  If VGA_USE_BLINK is undefined, the
+ * VGA code will instead implement bright background colors.
+ *
+ * @see Ralf Brown's Interrupt List, int 0x10, ax = 0x1003
+ *      (https://www.delorie.com/djgpp/doc/rbinter/id/22/1.html)
+ */
+#undef VGA_USE_BLINK
 
 #define kTtyFg      0x0001
 #define kTtyBg      0x0002

@@ -25,6 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/vga/vga.internal.h"
 
 //	Code snippet for initializing the VGA video mode for bare metal.
 //
@@ -57,6 +58,13 @@
 	mov	$0x0500,%ax		# just make sure we are on display
 					# page 0
 2:	int	$0x10			# otherwise, change the video mode
+	mov	$0x1003,%ax		# enable/disable VGA text blinking
+#ifdef VGA_USE_BLINK
+	mov	$1,%bx
+#else
+	xor	%bx,%bx
+#endif
+	int	$0x10
 	.previous
 	.code64
 	.section .rodata,"a",@progbits

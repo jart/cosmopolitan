@@ -263,8 +263,10 @@ static uint8_t TtyGetVgaAttr(struct Tty *tty)
   uint8_t attr = tty->fg | tty->bg << 4;
   if ((tty->pr & kTtyBold) != 0)
     attr |= 0x08;
+#ifdef VGA_USE_BLINK
   if ((tty->pr & kTtyBlink) != 0)
     attr |= 0x80;
+#endif
   return attr;
 }
 
@@ -637,14 +639,25 @@ static void TtyCsiN(struct Tty *tty) {
 
 /**
  * Map the given (R, G, B) triplet to one of the 16 basic foreground colors
- * or one of the 8 background colors.
+ * or one of the 8 (or 16) background colors.
  *
+ * @see VGA_USE_BLINK macro (libc/vga/vga.internal.h)
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
 static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b, bool as_fg)
 {
   uint8_t hue = 0;
-  if (as_fg) {
+#ifdef VGA_USE_BLINK
+  if (!as_fg) {
+    if (r >= 128)
+      hue |= 4;
+    if (g >= 128)
+      hue |= 2;
+    if (b >= 128)
+      hue |= 1;
+  } else
+#endif
+  {
     uint8_t max = MAX(MAX(r, g), b);
     if (r > max / 2)
       hue |= 4;
@@ -656,13 +669,6 @@ static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b, bool as_fg)
       hue = 8;
     else if (max > 0xaa)
       hue |= 8;
-  } else {
-    if (r >= 128)
-      hue |= 4;
-    if (g >= 128)
-      hue |= 2;
-    if (b >= 128)
-      hue |= 1;
   }
   return hue;
 }
@@ -816,6 +822,13 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
                 break;
               case 100 ... 107:
                 code[0] -= 100 - 40;
+#ifndef VGA_USE_BLINK
+                /*
+                 * If blinking is not enabled in VGA text mode, then we can
+                 * use bright background colors.
+                 */
+                code[0] += 8;
+#endif
                 /* fallthrough */
               case 40 ... 47:
                 tty->bg = code[0] - 40;
