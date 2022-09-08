@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,52 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/weaken.h"
+#include "libc/intrin/pthread.h"
 #include "libc/mem/mem.h"
-#include "libc/str/str.h"
+#include "libc/runtime/gc.internal.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 
-static int MakeDirs(const char *path, unsigned mode, int e) {
-  int rc;
-  char *dir;
-  if (!mkdir(path, mode) || errno == EEXIST) {
-    errno = e;
-    return 0;
-  }
-  if (errno != ENOENT) {
-    return -1;
-  }
-  dir = xdirname(path);
-  if (strcmp(dir, path)) {
-    rc = MakeDirs(dir, mode, e);
-  } else {
-    rc = -1;
-  }
-  free(dir);
-  if (rc == -1) return -1;
-  errno = e;
-  if (!mkdir(path, mode) || errno == EEXIST) {
-    errno = e;
-    return 0;
-  } else {
-    return -1;
-  }
+#define DIR                                                                    \
+  "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/A/B/C/D/E/F/G/H/I/J/K/" \
+  "L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z"
+
+pthread_barrier_t barrier;
+char testlib_enable_tmp_setup_teardown;
+
+int Worker(void *arg, int tid) {
+  pthread_barrier_wait(&barrier);
+  ASSERT_EQ(0, makedirs(DIR, 0755));
+  return 0;
 }
 
-/**
- * Recursively creates directory a.k.a. folder.
- *
- * This function won't fail if the directory already exists.
- *
- * @param path is a UTF-8 string, preferably relative w/ forward slashes
- * @param mode can be, for example, 0755
- * @return 0 on success or -1 w/ errno
- * @threadsafe
- */
-int makedirs(const char *path, unsigned mode) {
-  return MakeDirs(path, mode, errno);
+TEST(makedirs, test) {
+  int i, n = 8;
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
+  ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
 }

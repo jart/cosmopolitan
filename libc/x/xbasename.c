@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/conv.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/x/x.h"
 
@@ -24,5 +25,9 @@
  * Returns base portion of path.
  */
 char *xbasename(const char *path) {
-  return xstrdup(basename(gc(xstrdup(path))));
+  char *base;
+  path = xstrdup(path);
+  base = xstrdup(basename(path));
+  free(path);
+  return base;
 }

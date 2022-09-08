@@ -47,6 +47,7 @@
 #include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
@@ -576,20 +577,37 @@ char *AddShellQuotes(const char *s) {
   return p;
 }
 
+void MakeDirs(const char *path, int mode) {
+  if (makedirs(path, mode)) {
+    kprintf("error: makedirs(%#s) failed\n", path);
+    exit(1);
+  }
+}
+
 int Launch(void) {
   size_t got;
   ssize_t rc;
   int ws, pid;
   uint64_t us;
   gotchld = 0;
-  if (pipe2(pipefds, O_CLOEXEC) == -1) exit(errno);
+
+  if (pipe2(pipefds, O_CLOEXEC) == -1) {
+    kprintf("pipe2 failed: %s\n", strerrno(errno));
+    exit(1);
+  }
+
   clock_gettime(CLOCK_MONOTONIC, &start);
   if (timeout > 0) {
     timer.it_value.tv_sec = timeout;
     timer.it_interval.tv_sec = timeout;
     setitimer(ITIMER_REAL, &timer, 0);
   }
+
   pid = vfork();
+  if (pid == -1) {
+    kprintf("vfork failed: %s\n", strerrno(errno));
+    exit(1);
+  }
 
 #if 0
   int fd;
@@ -611,9 +629,11 @@ int Launch(void) {
     dup2(pipefds[1], 2);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     execve(cmd, args.p, env.p);
+    kprintf("execve(%#s) failed: %s\n", cmd, strerrno(errno));
     _Exit(127);
   }
   close(pipefds[1]);
+
   for (;;) {
     if (gotchld) {
       rc = 0;
@@ -1139,7 +1159,7 @@ int main(int argc, char *argv[]) {
   if (outpath) {
     outdir = xdirname(outpath);
     if (!isdirectory(outdir)) {
-      makedirs(outdir, 0755);
+      MakeDirs(outdir, 0755);
     }
   }
 
@@ -1190,7 +1210,7 @@ int main(int argc, char *argv[]) {
     if (WIFEXITED(ws)) {
       if (!(exitcode = WEXITSTATUS(ws)) || exitcode == 254) {
         if (touchtarget && target) {
-          makedirs(xdirname(target), 0755);
+          MakeDirs(xdirname(target), 0755);
           if (touch(target, 0644)) {
             exitcode = 90;
             appends(&output, "\nfailed to touch output file\n");
