@@ -1696,7 +1696,6 @@ class CANTest(ThreadedCANSocketTest):
 class BasicRDSTest(unittest.TestCase):
 
     def testCrucialConstants(self):
-        socket.AF_RDS
         socket.PF_RDS
 
     def testCreateSocket(self):

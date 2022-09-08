@@ -66,8 +66,16 @@
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
 
+/* TODO(jart): Remove this in favor of GetStackSize() */
+#if defined(COSMO) && defined(MODE_DBG)
+#define STACKSIZE 0x20000 /* 128kb stack */
+#elif defined(COSMO)
+#define STACKSIZE 0x10000 /* 64kb stack */
+#else
+#define STACKSIZE 0x800000 /* 8mb stack */
+#endif
+
 #define BIGPAGESIZE 0x200000
-#define STACKSIZE   0x20000
 #define FRAMESIZE   0x10000 /* 8086 */
 #define PAGESIZE    0x1000  /* i386+ */
 #define BUFSIZ      0x1000  /* best stdio default */

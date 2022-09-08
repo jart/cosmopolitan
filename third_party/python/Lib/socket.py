@@ -769,7 +769,6 @@ if __name__ == 'PYOBJ.COM':
     AF_NETROM = 0
     AF_PACKET = 0
     AF_PPPOX = 0
-    AF_RDS = 0
     AF_ROSE = 0
     AF_ROUTE = 0
     AF_SECURITY = 0

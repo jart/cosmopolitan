@@ -72,6 +72,22 @@ o/$(MODE)/ape/ape.lds:				\
 		libc/str/str.h			\
 		libc/zip.h
 
+o/$(MODE)/ape/public/ape.lds: OVERRIDE_CPPFLAGS += -UCOSMO
+o/$(MODE)/ape/public/ape.lds:			\
+		ape/public/ape.lds		\
+		ape/ape.lds			\
+		ape/macros.internal.h		\
+		ape/relocations.h		\
+		libc/intrin/bits.h		\
+		libc/calls/struct/timespec.h	\
+		libc/dce.h			\
+		libc/elf/def.h			\
+		libc/elf/pf2prot.internal.h	\
+		libc/macros.internal.h		\
+		libc/nt/pedef.internal.h	\
+		libc/str/str.h			\
+		libc/zip.h
+
 o/ape/idata.inc:				\
 		ape/idata.internal.h		\
 		ape/relocations.h
@@ -159,6 +175,7 @@ o/$(MODE)/ape/ape.macho.dbg:			\
 o/$(MODE)/ape:	$(APE_CHECKS)			\
 		o/$(MODE)/ape/ape.o		\
 		o/$(MODE)/ape/ape.lds		\
+		o/$(MODE)/ape/public/ape.lds	\
 		o/$(MODE)/ape/ape.elf		\
 		o/$(MODE)/ape/ape.macho		\
 		o/$(MODE)/ape/ape-copy-self.o	\

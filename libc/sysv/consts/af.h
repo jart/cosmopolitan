@@ -38,7 +38,6 @@ extern const int AF_NFC;
 extern const int AF_PACKET;
 extern const int AF_PHONET;
 extern const int AF_PPPOX;
-extern const int AF_RDS;
 extern const int AF_ROSE;
 extern const int AF_ROUTE;
 extern const int AF_RXRPC;
@@ -88,7 +87,6 @@ COSMOPOLITAN_C_END_
 #define AF_PACKET     SYMBOLIC(AF_PACKET)
 #define AF_PHONET     SYMBOLIC(AF_PHONET)
 #define AF_PPPOX      SYMBOLIC(AF_PPPOX)
-#define AF_RDS        SYMBOLIC(AF_RDS)
 #define AF_ROSE       SYMBOLIC(AF_ROSE)
 #define AF_ROUTE      SYMBOLIC(AF_ROUTE)
 #define AF_RXRPC      SYMBOLIC(AF_RXRPC)

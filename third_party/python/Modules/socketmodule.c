@@ -77,7 +77,6 @@ PYTHON_PROVIDE("_socket.AF_NETBEUI");
 PYTHON_PROVIDE("_socket.AF_NETROM");
 PYTHON_PROVIDE("_socket.AF_PACKET");
 PYTHON_PROVIDE("_socket.AF_PPPOX");
-PYTHON_PROVIDE("_socket.AF_RDS");
 PYTHON_PROVIDE("_socket.AF_ROSE");
 PYTHON_PROVIDE("_socket.AF_ROUTE");
 PYTHON_PROVIDE("_socket.AF_SECURITY");
@@ -6666,7 +6665,6 @@ PyInit__socket(void)
 
     if (AF_CAN) PyModule_AddIntMacro(m, AF_CAN); /* Controller Area Network */
     if (PF_CAN) PyModule_AddIntMacro(m, PF_CAN);
-    if (AF_RDS) PyModule_AddIntMacro(m, AF_RDS); /* Reliable Datagram Sockets */
     if (PF_RDS) PyModule_AddIntMacro(m, PF_RDS);
     if (AF_PACKET) PyModule_AddIntMacro(m, AF_PACKET);
     if (PF_PACKET) PyModule_AddIntMacro(m, PF_PACKET);

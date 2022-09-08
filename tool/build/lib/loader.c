@@ -204,7 +204,7 @@ void LoadProgram(struct Machine *m, const char *prog, char **args, char **vars,
     sp = 0x800000000000;
     Write64(m->sp, sp);
     m->cr3 = AllocateLinearPage(m);
-    CHECK_NE(-1, ReserveVirtual(m, sp - STACKSIZE, STACKSIZE,
+    CHECK_NE(-1, ReserveVirtual(m, sp - 0x800000, 0x800000,
                                 PAGE_V | PAGE_RW | PAGE_U | PAGE_RSRV));
     LoadArgv(m, prog, args, vars);
     if (memcmp(elf->map, "\177ELF", 4) == 0) {

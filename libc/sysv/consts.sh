@@ -1230,6 +1230,7 @@ syscon	mount	MNT_SNAPSHOT				0			0x40000000		0x01000000		0			0			0			# confusing
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	limits	PIPE_BUF				4096			512			512			512			512			4096			# bsd consensus
 syscon	limits	NGROUPS_MAX				65536			16			1023			16			16			0			#
+syscon	limits	SOMAXCONN				4096			128			128			128			128			2147483647		# maximum backlog for listen()
 syscon	limits	_ARG_MAX				128*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
 syscon	limits	_NAME_MAX				255			255			255			255			511			255			# probably higher on windows?
 syscon	limits	_PATH_MAX				4096			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
@@ -2292,7 +2293,6 @@ syscon	misc	SET_WINDOW				36			0			0			0			0			0
 syscon	misc	SFD_CLOEXEC				0x080000		0			0			0			0			0
 syscon	misc	SFD_NONBLOCK				0x0800			0			0			0			0			0
 
-syscon	misc	SOMAXCONN				0x80			0x80			0x80			0x80			0x80			0x7fffffff		# unix consensus
 syscon	misc	SUBCMDMASK				255			255			255			255			255			0			# unix consensus
 syscon	misc	SUBCMDSHIFT				8			8			8			8			8			0			# unix consensus
 syscon	misc	SYMTYPE					50			50			50			50			50			0			# unix consensus
