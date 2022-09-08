@@ -23,6 +23,6 @@
  * Returns thread id of POSIX thread.
  */
 int64_t pthread_getunique_np(pthread_t thread) {
-  struct PosixThread *pt = thread;
+  struct PosixThread *pt = (struct PosixThread *)thread;
   return pt->spawn.ptid;
 }

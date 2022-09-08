@@ -25,7 +25,7 @@
  * Returns process id.
  *
  * This function does not need to issue a system call. The PID is
- * tracked by a global variable which is updated atfork(). The only
+ * tracked by a global variable which is updated at fork(). The only
  * exception is when the process is vfork()'d in which case a system
  * call shall be issued.
  *

@@ -28,7 +28,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/lockcmpxchg.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"

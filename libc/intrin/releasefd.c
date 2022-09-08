@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 
 void __releasefd(int fd) {

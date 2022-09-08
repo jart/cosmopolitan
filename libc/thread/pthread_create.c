@@ -53,7 +53,7 @@ static int PosixThread(void *arg, int tid) {
   struct PosixThread *pt = arg;
   enum PosixThreadStatus status;
   if (!setjmp(pt->exiter)) {
-    ((cthread_t)__get_tls())->pthread = pt;
+    ((cthread_t)__get_tls())->pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);
   }
   if (weaken(_pthread_key_destruct)) {
@@ -72,7 +72,20 @@ static int PosixThread(void *arg, int tid) {
 }
 
 /**
- * Creates thread.
+ * Creates thread, e.g.
+ *
+ *     void *worker(void *arg) {
+ *       fputs(arg, stdout);
+ *       return "there\n";
+ *     }
+ *
+ *     int main() {
+ *       void *result;
+ *       pthread_t id;
+ *       pthread_create(&id, 0, worker, "hi ");
+ *       pthread_join(id, &result);
+ *       fputs(result, stdout);
+ *     }
  *
  * Here's the OSI model of threads in Cosmopolitan:
  *
@@ -216,7 +229,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   if (thread) {
-    *thread = pt;
+    *thread = (pthread_t)pt;
   }
   return 0;
 }

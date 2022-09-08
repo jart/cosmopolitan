@@ -36,8 +36,8 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -343,7 +343,7 @@ static struct Shared {
 #include "tool/net/counters.inc"
 #undef C
   } c;
-  _Alignas(64) char montermlock;
+  pthread_spinlock_t montermlock;
 } * shared;
 
 static const char kCounterNames[] =
@@ -6257,7 +6257,7 @@ static int MemoryMonitor(void *arg, int tid) {
   sigaddset(&ss, SIGUSR2);
   sigprocmask(SIG_BLOCK, &ss, 0);
 
-  _spinlock(&shared->montermlock);
+  pthread_spin_lock(&shared->montermlock);
   if (!id) {
     if ((tty = open(monitortty, O_RDWR | O_NOCTTY)) != -1) {
       ioctl(tty, TCGETS, &oldterm);
@@ -6273,7 +6273,7 @@ static int MemoryMonitor(void *arg, int tid) {
       WRITE(tty, "\e[?25l", 6);
     }
   }
-  _spunlock(&shared->montermlock);
+  pthread_spin_unlock(&shared->montermlock);
 
   if (tty != -1) {
     for (gen = 0, mi = 0, b = 0; !terminatemonitor;) {
@@ -6355,11 +6355,11 @@ static int MemoryMonitor(void *arg, int tid) {
                 " GEN=%ld\e[J",
                 id, getpid(), ws.ws_col, ws.ws_row, workers, gen);
 
-        _spinlock(&shared->montermlock);
+        pthread_spin_lock(&shared->montermlock);
         WRITE(tty, b, appendz(b).i);
         appendr(&b, 0);
         usleep(MONITOR_MICROS);
-        _spunlock(&shared->montermlock);
+        pthread_spin_unlock(&shared->montermlock);
       } else {
         // running out of memory temporarily is a real possibility here
         // the right thing to do, is stand aside and let lua try to fix

@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"

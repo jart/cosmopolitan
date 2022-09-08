@@ -30,7 +30,7 @@
  */
 int pthread_detach(pthread_t thread) {
   enum PosixThreadStatus status;
-  struct PosixThread *pt = thread;
+  struct PosixThread *pt = (struct PosixThread *)thread;
   for (;;) {
     status = atomic_load_explicit(&pt->status, memory_order_relaxed);
     if (status == kPosixThreadDetached || status == kPosixThreadZombie) {

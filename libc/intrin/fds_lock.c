@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
-#include "libc/thread/thread.h"
+#include "libc/calls/state.internal.h"
+#include "libc/intrin/pthread.h"
 
-/**
- * Returns thread descriptor of the current thread.
- */
-cthread_t(cthread_self)(void) {
-  return (cthread_t)__get_tls();
+void(__fds_lock)(void) {
+  pthread_mutex_lock(&__fds_lock_obj);
+}
+
+void(__fds_unlock)(void) {
+  pthread_mutex_unlock(&__fds_lock_obj);
 }

@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/once.h"
+#include "libc/intrin/pthread.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/symboliclink.h"
@@ -35,17 +35,20 @@
 
 __msabi extern typeof(GetFileAttributes) *const __imp_GetFileAttributesW;
 
-static bool AllowedToCreateSymlinks(void) {
+static _Bool g_winlink_allowed;
+static pthread_once_t g_winlink_once;
+
+static textwindows void InitializeWinlink(void) {
   int64_t tok;
   struct NtLuid id;
   struct NtTokenPrivileges tp;
-  if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAllAccess, &tok)) return 0;
-  if (!LookupPrivilegeValue(0, u"SeCreateSymbolicLinkPrivilege", &id)) return 0;
+  if (!OpenProcessToken(GetCurrentProcess(), kNtTokenAllAccess, &tok)) return;
+  if (!LookupPrivilegeValue(0, u"SeCreateSymbolicLinkPrivilege", &id)) return;
   tp.PrivilegeCount = 1;
   tp.Privileges[0].Luid = id;
   tp.Privileges[0].Attributes = kNtSePrivilegeEnabled;
-  if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0)) return 0;
-  return GetLastError() != kNtErrorNotAllAssigned;
+  if (!AdjustTokenPrivileges(tok, 0, &tp, sizeof(tp), 0, 0)) return;
+  g_winlink_allowed = GetLastError() != kNtErrorNotAllAssigned;
 }
 
 textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
@@ -79,7 +82,8 @@ textwindows int sys_symlinkat_nt(const char *target, int newdirfd,
 
   // windows only lets administrators do this
   // even then we're required to ask for permission
-  if (!_once(AllowedToCreateSymlinks())) {
+  pthread_once(&g_winlink_once, InitializeWinlink);
+  if (!g_winlink_allowed) {
     return eperm();
   }
 

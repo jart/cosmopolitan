@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,28 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
-#include "libc/thread/thread.h"
 
-int cthread_memory_wait32(int* addr, int val, const struct timespec* timeout) {
-  size_t size;
-  if (IsLinux() || IsOpenbsd()) {
-    return _futex_wait(addr, val, PTHREAD_PROCESS_SHARED, timeout);
-  } else {
-    return sched_yield();
-  }
-}
-
-int cthread_memory_wake32(int* addr, int n) {
-  if (IsLinux() || IsOpenbsd()) {
-    return _futex_wake(addr, n, PTHREAD_PROCESS_SHARED);
-  } else {
-    return 0;
-  }
-}
+pthread_mutex_t __mmi_lock_obj;  // recursive :'(

@@ -38,7 +38,6 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

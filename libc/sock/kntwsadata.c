@@ -16,11 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/winsock.h"

@@ -19,7 +19,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"

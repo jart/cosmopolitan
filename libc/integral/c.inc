@@ -84,7 +84,7 @@
 #endif
 
 #ifndef __cplusplus
-#define HAVE_STDBOOL_H
+#define HAVE_STDBOOL_H 1
 #if __STDC_VERSION__ + 0 >= 201112
 typedef _Bool bool;
 #define true ((bool)+1)

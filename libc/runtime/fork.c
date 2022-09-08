@@ -16,18 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/internal.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Creates new process.
@@ -37,14 +36,17 @@
  */
 int fork(void) {
   axdx_t ad;
+  sigset_t old, all;
   int ax, dx, parent;
+  sigfillset(&all);
+  sigprocmask(SIG_BLOCK, &all, &old);
   if (!IsWindows()) {
     ad = sys_fork();
     ax = ad.ax;
     dx = ad.dx;
     if (IsXnu() && ax != -1) {
-      /* eax always returned with childs pid */
-      /* edx is 0 for parent and 1 for child */
+      // eax always returned with childs pid
+      // edx is 0 for parent and 1 for child
       ax &= dx - 1;
     }
   } else {
@@ -62,11 +64,10 @@ int fork(void) {
       *(int *)(__get_tls() + 0x38) = IsLinux() ? dx : sys_gettid();
     }
     STRACE("fork() → 0 (child of %d)", parent);
-    if (weaken(__onfork)) {
-      weaken(__onfork)();
-    }
+    sigprocmask(SIG_SETMASK, &old, 0);
   } else {
     STRACE("fork() → %d% m", ax);
+    sigprocmask(SIG_SETMASK, &old, 0);
   }
   return ax;
 }

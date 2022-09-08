@@ -6,7 +6,6 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/nopl.h"
 #include "libc/intrin/pthread.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/gc.h"

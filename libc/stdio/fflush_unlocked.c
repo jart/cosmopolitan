@@ -21,7 +21,6 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/pushpop.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"

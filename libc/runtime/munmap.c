@@ -24,7 +24,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/libfatal.internal.h"

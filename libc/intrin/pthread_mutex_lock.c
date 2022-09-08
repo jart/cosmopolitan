@@ -24,7 +24,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/linux/futex.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/sysv/consts/futex.h"
@@ -84,20 +83,6 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
  *     pthread_mutex_lock(&lock);
  *     // do work...
  *     pthread_mutex_unlock(&lock);
- *
- * Microbenchmarks for single-threaded lock + unlock:
- *
- *     pthread_spinlock_t          :    12c (  4ns)
- *     PTHREAD_MUTEX_NORMAL        :    37c ( 12ns)
- *     PTHREAD_MUTEX_RECURSIVE     :    22c (  7ns)
- *     PTHREAD_MUTEX_ERRORCHECK    :    27c (  9ns)
- *
- * Microbenchmarks for multi-threaded lock + unlock:
- *
- *     pthread_spinlock_t          : 2,396c (774ns)
- *     PTHREAD_MUTEX_NORMAL        :   535c (173ns)
- *     PTHREAD_MUTEX_RECURSIVE     : 1,045c (338ns)
- *     PTHREAD_MUTEX_ERRORCHECK    :   917c (296ns)
  *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock()

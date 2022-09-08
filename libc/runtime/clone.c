@@ -23,7 +23,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/intrin/pthread.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/gettls.h"
@@ -63,7 +63,7 @@ struct CloneArgs {
     uint32_t utid;
     int64_t tid64;
   };
-  char lock;
+  pthread_spinlock_t lock;
   int *ptid;
   int *ctid;
   int *ztid;
@@ -163,7 +163,7 @@ XnuThreadMain(void *pthread,                    // rdi
   wt->tid = tid;
   *wt->ptid = tid;
   *wt->ctid = tid;
-  _spunlock(&wt->lock);
+  pthread_spin_unlock(&wt->lock);
 
   if (wt->tls) {
     // XNU uses the same 0x30 offset as the WIN32 TIB x64. They told the
@@ -216,11 +216,11 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  wt->lock = 1;
+  wt->lock.lock = 1;
   if ((rc = bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
-    _spinlock(&wt->lock);
+    pthread_spin_lock(&wt->lock);
     rc = wt->tid;
-    _spunlock(&wt->lock);
+    pthread_spin_unlock(&wt->lock);
   }
   return rc;
 }

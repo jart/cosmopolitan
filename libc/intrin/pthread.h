@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_PTHREAD_H_
 
-#define PTHREAD_ONCE_INIT 0
-
 #define PTHREAD_KEYS_MAX              64
 #define PTHREAD_STACK_MIN             FRAMESIZE
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
@@ -27,6 +25,7 @@
 COSMOPOLITAN_C_START_
 
 /* clang-format off */
+#define PTHREAD_ONCE_INIT {0}
 #define PTHREAD_COND_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
 #define PTHREAD_BARRIER_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
 #define PTHREAD_RWLOCK_INITIALIZER {PTHREAD_PROCESS_DEFAULT}
@@ -34,15 +33,21 @@ COSMOPOLITAN_C_START_
                                    PTHREAD_PROCESS_DEFAULT}
 /* clang-format on */
 
-typedef void *pthread_t;
+typedef uintptr_t pthread_t;
 typedef int pthread_id_np_t;
 typedef char pthread_condattr_t;
 typedef char pthread_rwlockattr_t;
 typedef char pthread_barrierattr_t;
 typedef unsigned pthread_key_t;
-typedef _Atomic(char) pthread_once_t;
-typedef _Atomic(char) pthread_spinlock_t;
 typedef void (*pthread_key_dtor)(void *);
+
+typedef struct pthread_once_s {
+  _Atomic(char) lock;
+} pthread_once_t;
+
+typedef struct pthread_spinlock_s {
+  _Atomic(char) lock;
+} pthread_spinlock_t;
 
 typedef struct pthread_mutex_s {
   char type;
@@ -167,45 +172,26 @@ int pthread_barrier_destroy(pthread_barrier_t *);
 int pthread_barrier_init(pthread_barrier_t *, const pthread_barrierattr_t *,
                          unsigned);
 
-#define pthread_spin_init(pSpin, multiprocess) (*(pSpin) = 0)
-#define pthread_spin_destroy(pSpin)            (*(pSpin) = 0)
+#define pthread_spin_init(pSpin, multiprocess) ((pSpin)->lock = 0, 0)
+#define pthread_spin_destroy(pSpin)            ((pSpin)->lock = -1, 0)
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
 extern const errno_t EBUSY;
-#define pthread_spin_unlock(pSpin) \
-  (__atomic_store_n(pSpin, 0, __ATOMIC_RELAXED), 0)
-#define pthread_spin_trylock(pSpin) \
-  (__atomic_test_and_set(pSpin, __ATOMIC_SEQ_CST) ? EBUSY : 0)
-#ifdef TINY
-#define pthread_spin_lock(pSpin) _pthread_spin_lock_tiny(pSpin)
-#else
-#define pthread_spin_lock(pSpin) _pthread_spin_lock_cooperative(pSpin)
-#endif
-#define _pthread_spin_lock_tiny(pSpin)                       \
-  ({                                                         \
-    while (__atomic_test_and_set(pSpin, __ATOMIC_SEQ_CST)) { \
-      __builtin_ia32_pause();                                \
-    }                                                        \
-    0;                                                       \
+#define pthread_spin_lock(pSpin)                                          \
+  ({                                                                      \
+    pthread_spinlock_t *_s = pSpin;                                       \
+    while (__atomic_test_and_set(&_s->lock, __ATOMIC_SEQ_CST)) donothing; \
+    0;                                                                    \
   })
-#define _pthread_spin_lock_cooperative(pSpin)                         \
-  ({                                                                  \
-    char __x;                                                         \
-    volatile int __i;                                                 \
-    unsigned __tries = 0;                                             \
-    pthread_spinlock_t *__lock = pSpin;                               \
-    for (;;) {                                                        \
-      __atomic_load(__lock, &__x, __ATOMIC_RELAXED);                  \
-      if (!__x && !__atomic_test_and_set(__lock, __ATOMIC_SEQ_CST)) { \
-        break;                                                        \
-      } else if (__tries < 7) {                                       \
-        for (__i = 0; __i != 1 << __tries; __i++) {                   \
-        }                                                             \
-        __tries++;                                                    \
-      } else {                                                        \
-        pthread_yield();                                              \
-      }                                                               \
-    }                                                                 \
-    0;                                                                \
+#define pthread_spin_unlock(pSpin)                    \
+  ({                                                  \
+    pthread_spinlock_t *_s = pSpin;                   \
+    __atomic_store_n(&_s->lock, 0, __ATOMIC_RELAXED); \
+    0;                                                \
+  })
+#define pthread_spin_trylock(pSpin)                                 \
+  ({                                                                \
+    pthread_spinlock_t *_s = pSpin;                                 \
+    __atomic_test_and_set(&_s->lock, __ATOMIC_SEQ_CST) ? EBUSY : 0; \
   })
 #endif /* GCC 4.7+ */
 

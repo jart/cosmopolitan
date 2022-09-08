@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
@@ -72,10 +71,7 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
     if (!(g = malloc(sizeof(struct Garbages)))) notpossible;
     g->i = 0;
     g->n = 4;
-    if (!(g->p = malloc(g->n * sizeof(struct Garbage)))) {
-      kprintf("malloc failed\n");
-      notpossible;
-    }
+    if (!(g->p = malloc(g->n * sizeof(struct Garbage)))) notpossible;
     tls->garbages = g;
   } else if (UNLIKELY(g->i == g->n)) {
     p2 = g->p;

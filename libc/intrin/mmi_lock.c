@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,54 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/runtime/stack.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
+#include "libc/runtime/memtrack.internal.h"
 
-#define MIN_STACKSIZE (8 * PAGESIZE)  // includes guard, rounds up to FRAMESIZE
-#define MIN_GUARDSIZE PAGESIZE
+extern pthread_mutex_t __mmi_lock_obj;
 
-// CTOR/DTOR
-int cthread_attr_init(cthread_attr_t* attr) {
-  attr->stacksize = GetStackSize();
-  attr->guardsize = PAGESIZE;
-  attr->mode = CTHREAD_CREATE_JOINABLE;
-  return 0;
-}
-int cthread_attr_destroy(cthread_attr_t* attr) {
-  (void)attr;
-  return 0;
+void(__mmi_lock)(void) {
+  pthread_mutex_lock(&__mmi_lock_obj);
 }
 
-// stacksize
-int cthread_attr_setstacksize(cthread_attr_t* attr, size_t size) {
-  if (size & (PAGESIZE - 1)) return EINVAL;
-  if (size < MIN_STACKSIZE) return EINVAL;
-  attr->stacksize = size;
-  return 0;
-}
-size_t cthread_attr_getstacksize(const cthread_attr_t* attr) {
-  return attr->stacksize;
-}
-
-// guardsize
-int cthread_attr_setguardsize(cthread_attr_t* attr, size_t size) {
-  if (size & (PAGESIZE - 1)) return EINVAL;
-  if (size < MIN_GUARDSIZE) return EINVAL;
-  attr->guardsize = size;
-  return 0;
-}
-size_t cthread_attr_getguardsize(const cthread_attr_t* attr) {
-  return attr->guardsize;
-}
-
-// detachstate
-int cthread_attr_setdetachstate(cthread_attr_t* attr, int mode) {
-  if (mode & ~(CTHREAD_CREATE_JOINABLE | CTHREAD_CREATE_DETACHED))
-    return EINVAL;
-  attr->mode = mode;
-  return 0;
-}
-int cthread_attr_getdetachstate(const cthread_attr_t* attr) {
-  return attr->mode;
+void(__mmi_unlock)(void) {
+  pthread_mutex_unlock(&__mmi_lock_obj);
 }

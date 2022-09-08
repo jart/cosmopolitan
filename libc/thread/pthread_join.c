@@ -31,7 +31,7 @@
  * @raise EDEADLK if thread is detached
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
-  struct PosixThread *pt = thread;
+  struct PosixThread *pt = (struct PosixThread *)thread;
   if (pt->status == kPosixThreadDetached ||  //
       pt->status == kPosixThreadZombie) {
     assert(!"badjoin");

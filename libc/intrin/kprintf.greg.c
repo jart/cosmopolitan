@@ -31,7 +31,6 @@
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/internal.h"

@@ -17,10 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/pushpop.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
@@ -28,15 +27,7 @@
 STATIC_YOINK("_init_g_fds");
 
 struct Fds g_fds;
-static pthread_mutex_t __fds_lock_obj;
-
-void(__fds_lock)(void) {
-  pthread_mutex_lock(&__fds_lock_obj);
-}
-
-void(__fds_unlock)(void) {
-  pthread_mutex_unlock(&__fds_lock_obj);
-}
+pthread_mutex_t __fds_lock_obj;
 
 static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
   int64_t h;

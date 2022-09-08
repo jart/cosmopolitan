@@ -21,11 +21,6 @@
 /**
  * Acquires spin lock.
  *
- *     spin                l:   181,570c    58,646ns
- *     mutex normal        l:   297,965c    96,241ns
- *     mutex recursive     l: 1,112,166c   359,223ns
- *     mutex errorcheck    l: 1,449,723c   468,252ns
- *
  * If the lock is already held, this function will wait for it to become
  * available. No genuine error conditions are currently defined. This is
  * similar to pthread_mutex_lock() except spin locks are much simpler so
@@ -45,7 +40,7 @@
  *
  * Cosmopolitan permits succinct notation for spin locks:
  *
- *     pthread_spinlock_t lock = 0;
+ *     pthread_spinlock_t lock = {0};
  *     pthread_spin_lock(&lock);
  *     // do work...
  *     pthread_spin_unlock(&lock);

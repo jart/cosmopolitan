@@ -109,7 +109,7 @@ void BenchLockUnlock(pthread_mutex_t *m) {
 
 BENCH(pthread_mutex_lock, bench_uncontended) {
   {
-    pthread_spinlock_t s = 0;
+    pthread_spinlock_t s = {0};
     EZBENCH2("spin 1x", donothing, BenchSpinUnspin(&s));
   }
   {
@@ -161,7 +161,7 @@ int MutexContentionWorker(void *arg, int tid) {
 BENCH(pthread_mutex_lock, bench_contended) {
   struct spawn t;
   {
-    pthread_spinlock_t s = 0;
+    pthread_spinlock_t s = {0};
     struct SpinContentionArgs a = {&s};
     _spawn(SpinContentionWorker, &a, &t);
     while (!a.ready) sched_yield();

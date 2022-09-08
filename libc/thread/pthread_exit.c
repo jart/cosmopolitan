@@ -37,7 +37,7 @@
  */
 wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
-  if ((pt = ((cthread_t)__get_tls())->pthread)) {
+  if ((pt = (struct PosixThread *)((cthread_t)__get_tls())->pthread)) {
     pt->rc = rc;
     _gclongjmp(pt->exiter, 1);
   } else {

@@ -45,20 +45,21 @@
  */
 int pthread_once(pthread_once_t *once, void init(void)) {
   char old;
-  switch ((old = atomic_load_explicit(once, memory_order_relaxed))) {
+  switch ((old = atomic_load_explicit(&once->lock, memory_order_relaxed))) {
     case INIT:
-      if (atomic_compare_exchange_strong_explicit(once, &old, CALLING,
+      if (atomic_compare_exchange_strong_explicit(&once->lock, &old, CALLING,
                                                   memory_order_acquire,
                                                   memory_order_relaxed)) {
         init();
-        atomic_store(once, FINISHED);
+        atomic_store(&once->lock, FINISHED);
         break;
       }
       // fallthrough
     case CALLING:
       do {
         pthread_yield();
-      } while (atomic_load_explicit(once, memory_order_relaxed) == CALLING);
+      } while (atomic_load_explicit(&once->lock, memory_order_relaxed) ==
+               CALLING);
       break;
     case FINISHED:
       break;

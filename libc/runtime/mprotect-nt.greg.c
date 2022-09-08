@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/spinlock.h"
 #include "libc/nt/memory.h"
 #include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"

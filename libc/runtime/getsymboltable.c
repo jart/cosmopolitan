@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/intrin/spinlock.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -32,7 +32,7 @@
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/zlib/puff.h"
 
-static int g_lock;
+static pthread_spinlock_t g_lock;
 hidden struct SymbolTable *__symtab;  // for kprintf
 
 /**
@@ -125,7 +125,7 @@ static struct SymbolTable *GetSymbolTableFromElf(void) {
  */
 struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
-  if (_trylock(&g_lock)) return 0;
+  if (pthread_spin_trylock(&g_lock)) return 0;
   if (!__symtab && !__isworker) {
     if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
       if ((__symtab = GetSymbolTableFromZip(z))) {
@@ -139,7 +139,7 @@ struct SymbolTable *GetSymbolTable(void) {
       __symtab = GetSymbolTableFromElf();
     }
   }
-  _spunlock(&g_lock);
+  pthread_spin_unlock(&g_lock);
   return __symtab;
 }
 

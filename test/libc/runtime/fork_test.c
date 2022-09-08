@@ -18,9 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
@@ -28,10 +31,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-
-void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio proc", 0));
-}
 
 TEST(fork, testPipes) {
   int a, b;
@@ -142,5 +141,5 @@ void ForkInSerial(void) {
 }
 
 BENCH(fork, bench) {
-  EZBENCH2("fork", donothing, ForkInSerial());
+  EZBENCH2("fork a", donothing, ForkInSerial());
 }

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/_getauxval.internal.h"
 #include "libc/intrin/pthread.h"
-#include "libc/intrin/spinlock.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
