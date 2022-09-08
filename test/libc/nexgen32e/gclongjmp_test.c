@@ -20,12 +20,14 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/gc.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 
 #define GC(x) _defer(Free, x)
@@ -75,6 +77,45 @@ TEST(gclongjmp, test) {
   free(z);
   free(y);
   free(x);
+}
+
+void crawl(const char *path) {
+  const char *dir;
+  if (!strcmp(path, "/") || !strcmp(path, ".")) return;
+  crawl(_gc(xdirname(path)));
+}
+
+int Worker(void *arg, int tid) {
+  crawl("a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d");
+  return 0;
+}
+
+TEST(gc, torture) {
+  int i, n = 32;
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+}
+
+void crawl2(jmp_buf jb, const char *path) {
+  const char *dir;
+  if (!strcmp(path, "/") || !strcmp(path, ".")) _gclongjmp(jb, 1);
+  crawl2(jb, _gc(xdirname(path)));
+}
+
+int Worker2(void *arg, int tid) {
+  jmp_buf jb;
+  if (!setjmp(jb)) {
+    crawl2(jb, "a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d/a/b/c/d");
+  }
+  return 0;
+}
+
+TEST(_gclongjmp, torture) {
+  int i, n = 32;
+  struct spawn *t = gc(malloc(sizeof(struct spawn) * n));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker2, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
 }
 
 dontinline void F1(void) {

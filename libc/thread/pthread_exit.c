@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pthread.h"
 #include "libc/nexgen32e/gettls.h"
+#include "libc/runtime/gc.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
@@ -38,7 +39,7 @@ wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
   if ((pt = ((cthread_t)__get_tls())->pthread)) {
     pt->rc = rc;
-    longjmp(pt->exiter, 1);
+    _gclongjmp(pt->exiter, 1);
   } else {
     _Exit1((int)(intptr_t)rc);
   }

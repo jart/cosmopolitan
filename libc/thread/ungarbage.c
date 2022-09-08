@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,27 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/log.h"
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/stdio/stdio.h"
-/* clang-format off */
+#include "libc/nexgen32e/gettls.h"
+#include "libc/thread/thread.h"
 
-/**
- * Prints list of deferred operations on shadow stack w/o symbols.
- */
-void PrintGarbageNumeric(FILE *f) {
-  size_t i;
-  f = stderr;
-  fprintf(f, "\n");
-  fprintf(f, "                          SHADOW STACK @ 0x%016lx\n", __builtin_frame_address(0));
-  fprintf(f, " garbage entry  parent frame     original ret        callback              arg        \n");
-  fprintf(f, "-------------- -------------- ------------------ ------------------ ------------------\n");
-  for (i = __garbage.i; i--;) {
-    fprintf(f, "0x%012lx 0x%012lx 0x%016lx 0x%016lx 0x%016lx\n",
-            __garbage.p + i,
-            __garbage.p[i].frame,
-            __garbage.p[i].ret,
-            __garbage.p[i].fn,
-            __garbage.p[i].arg);
+void cthread_ungarbage(void) {
+  struct Garbages *g;
+  if ((g = ((cthread_t)__get_tls())->garbages)) {
+    // _pthread_exit() uses _gclongjmp() so if this assertion fails,
+    // then the likely cause is the thread used gc() with longjmp().
+    assert(!g->i);
+    free(g->p);
+    free(g);
   }
 }

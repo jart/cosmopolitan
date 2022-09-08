@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/log/check.h"

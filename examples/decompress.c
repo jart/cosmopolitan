@@ -8,6 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"

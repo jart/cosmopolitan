@@ -28,7 +28,7 @@ struct FtraceTls {  /* 16 */
 struct cthread_descriptor_t {
   struct cthread_descriptor_t *self;  /* 0x00 */
   struct FtraceTls ftrace;            /* 0x08 */
-  void *garbages;                     /* 0x10 */
+  void *garbages;                     /* 0x18 */
   locale_t locale;                    /* 0x20 */
   pthread_t pthread;                  /* 0x28 */
   struct cthread_descriptor_t *self2; /* 0x30 */
@@ -64,6 +64,7 @@ int cthread_sem_wait(cthread_sem_t *, int, const struct timespec *);
 int cthread_sem_signal(cthread_sem_t *);
 int cthread_memory_wait32(int *, int, const struct timespec *);
 int cthread_memory_wake32(int *, int);
+void cthread_ungarbage(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

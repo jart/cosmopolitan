@@ -12,12 +12,9 @@ struct Garbage {
 };
 
 struct Garbages {
-  size_t i, n;
+  int i, n;
   struct Garbage *p;
-  struct Garbage initmem[1];
 };
-
-extern struct Garbages __garbage;
 
 int64_t __gc(void);
 

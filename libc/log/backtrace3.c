@@ -16,21 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/bisectcarleft.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/bisectcarleft.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 #define LIMIT 100
 
@@ -54,7 +57,7 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   struct Garbages *garbage;
   const struct StackFrame *frame;
   if (!bp) bp = __builtin_frame_address(0);
-  garbage = weaken(__garbage);
+  garbage = __tls_enabled ? ((cthread_t)__get_tls())->garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
     if (++i == LIMIT) {

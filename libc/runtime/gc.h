@@ -1,27 +1,24 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_GC_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_GC_H_
-#include "libc/calls/calls.h"
-#include "libc/nexgen32e/stackframe.h"
-#include "libc/runtime/runtime.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void *_gc(void *) hidden;
-void *_defer(void *, void *) hidden;
-void __defer(struct StackFrame *, void *, void *) hidden;
-void __deferer(struct StackFrame *, void *, void *) hidden;
-void _gclongjmp(jmp_buf, int) dontthrow wontreturn;
+void *_gc(void *);
+void *_defer(void *, void *);
+void __defer(void *, void *, void *);
+void _gclongjmp(void *, int) dontthrow wontreturn;
+void _gc_free(void *);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define _gc(THING) _defer((void *)_weakfree, (void *)(THING))
-#define _defer(FN, ARG)                                                \
-  ({                                                                   \
-    autotype(ARG) Arg = (ARG);                                         \
-    /* prevent weird opts like tail call */                            \
-    asm volatile("" : "+g"(Arg) : : "memory");                         \
-    __defer((struct StackFrame *)__builtin_frame_address(0), FN, Arg); \
-    asm volatile("" : "+g"(Arg) : : "memory");                         \
-    Arg;                                                               \
+#define _gc(THING) _defer((void *)_gc_free, (void *)(THING))
+#define _defer(FN, ARG)                           \
+  ({                                              \
+    autotype(ARG) Arg = (ARG);                    \
+    /* prevent weird opts like tail call */       \
+    asm volatile("" : "+g"(Arg) : : "memory");    \
+    __defer(__builtin_frame_address(0), FN, Arg); \
+    asm volatile("" : "+g"(Arg) : : "memory");    \
+    Arg;                                          \
   })
 #endif /* defined(__GNUC__) && !defined(__STRICT_ANSI__) */
 

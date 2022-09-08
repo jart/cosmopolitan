@@ -21,6 +21,7 @@
 #include "dsp/scale/scale.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/winsize.h"

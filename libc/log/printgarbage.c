@@ -20,8 +20,11 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
-/* clang-format off */
+#include "libc/thread/thread.h"
+// clang-format off
 
 /**
  * Prints list of deferred operations on shadow stack.
@@ -30,24 +33,25 @@ void PrintGarbage(void) {
   size_t i;
   char name[19];
   const char *symbol;
+  struct Garbages *g;
   kprintf("\n");
   kprintf("                         SHADOW STACK @ %p\n", __builtin_frame_address(0));
   kprintf("garbage ent. parent frame     original ret        callback              arg        \n");
   kprintf("------------ ------------ ------------------ ------------------ ------------------\n");
-  if (__garbage.i) {
-    for (i = __garbage.i; i--;) {
-      symbol = __get_symbol_by_addr(__garbage.p[i].ret);
+  if ((g = __tls_enabled ? ((cthread_t)__get_tls())->garbages:0) && g->i) {
+    for (i = g->i; i--;) {
+      symbol = __get_symbol_by_addr(g->p[i].ret);
       if (symbol) {
         ksnprintf(name, sizeof(name), "%s", symbol);
       } else {
-        ksnprintf(name, sizeof(name), "%#014lx", __garbage.p[i].ret);
+        ksnprintf(name, sizeof(name), "%#014lx", g->p[i].ret);
       }
       kprintf("%12lx %12lx %18s %18s %#18lx\n",
-              __garbage.p + i,
-              __garbage.p[i].frame,
+              g->p + i,
+              g->p[i].frame,
               name,
-              __get_symbol_by_addr(__garbage.p[i].fn),
-              __garbage.p[i].arg);
+              __get_symbol_by_addr(g->p[i].fn),
+              g->p[i].arg);
     }
   } else {
     kprintf("%12s %12s %18s %18s %18s\n","empty","-","-","-","-");

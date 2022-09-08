@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
@@ -53,6 +54,20 @@
 #define _TLDZ ((intptr_t)_tdata_size)
 #define _TIBZ sizeof(struct cthread_descriptor_t)
 #define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct cthread_descriptor_t))
+
+struct spawner {
+  int (*fun)(void *, int);
+  void *arg;
+};
+
+static int Spawner(void *arg, int tid) {
+  int rc;
+  struct spawner *spawner = arg;
+  rc = spawner->fun(spawner->arg, tid);
+  cthread_ungarbage();
+  free(spawner);
+  return 0;
+}
 
 /**
  * Spawns thread, e.g.
@@ -78,6 +93,9 @@
  */
 int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   struct spawn *th, ths;
+  struct spawner *spawner;
+  TlsIsRequired();
+  if (!fun) return einval();
 
   // we need to to clobber the output memory before calling clone, since
   // there's no guarantee clone() won't suspend the parent, and focus on
@@ -102,11 +120,14 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
     return -1;
   }
 
-  if (clone(fun, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
+  spawner = malloc(sizeof(struct spawner));
+  spawner->fun = fun;
+  spawner->arg = arg;
+  if (clone(Spawner, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
-            arg, &th->ptid, th->tib, th->ctid) == -1) {
+            spawner, &th->ptid, th->tib, th->ctid) == -1) {
     _freestack(th->stk);
     free(th->tls);
     return -1;

@@ -28,29 +28,33 @@
 //	@param	esi is returned by setjmp() invocation (coerced nonzero)
 //	@assume	system five nexgen32e abi conformant
 //	@see	examples/ctrlc.c
+//	@threadsafe
 //	@noreturn
 _gclongjmp:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
-	lea	__garbage(%rip),%r12
-	mov	(%r12),%r13			# garbage.i
-	test	%r13,%r13
+	mov	%fs:0,%r12			# __get_tls()
+	mov	0x18(%r12),%r12			# cthread_t::garbages
+	test	%r12,%r12
+	jz	0f
+	movl	(%r12),%r13d			# garbages.i
+	test	%r13d,%r13d
 	jnz	.L.unwind.destructors
 0:	jmp	longjmp
 .L.unwind.destructors:
 	push	%rdi
 	push	%rsi
-	mov	16(%r12),%r14			# garbage.p
+	mov	8(%r12),%r14			# garbages.p
 	mov	(%rdi),%r15			# jmp_buf[0] is new %rsp
 	shl	$5,%r13				# log2(sizeof(struct Garbage))
 1:	sub	$32,%r13			# 𝑖--
 	js	2f
-	cmp	(%r14,%r13),%r15		# new %rsp > garbage.p[𝑖].frame
+	cmp	(%r14,%r13),%r15		# new %rsp > garbages.p[𝑖].frame
 	jbe	2f
-	mov	16(%r14,%r13),%rdi		# garbage.p[𝑖].arg
-	callq	*8(%r14,%r13)			# garbage.p[𝑖].fn
-	decq	(%r12)				# garbage.i--
+	mov	16(%r14,%r13),%rdi		# garbages.p[𝑖].arg
+	callq	*8(%r14,%r13)			# garbages.p[𝑖].fn
+	decl	(%r12)				# garbages.i--
 	jmp	1b
 2:	pop	%rsi
 	pop	%rdi

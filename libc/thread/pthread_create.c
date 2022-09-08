@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
@@ -24,7 +25,9 @@
 #include "libc/intrin/wait0.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
@@ -56,6 +59,7 @@ static int PosixThread(void *arg, int tid) {
   if (weaken(_pthread_key_destruct)) {
     weaken(_pthread_key_destruct)(0);
   }
+  cthread_ungarbage();
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {
     atomic_store_explicit(&pt->status, kPosixThreadZombie,
@@ -108,6 +112,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   int rc, e = errno;
   struct PosixThread *pt;
   pthread_attr_t default_attr;
+  TlsIsRequired();
   _pthread_zombies_decimate();
 
   // default attributes

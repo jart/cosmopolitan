@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/elf/def.h"
 #include "libc/log/check.h"
 #include "libc/mem/arraylist2.internal.h"

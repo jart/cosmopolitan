@@ -591,10 +591,10 @@ typedef struct {
 #endif
 #endif
 
-#define notpossible \
-  do {              \
-    asm("ud2");     \
-    unreachable;    \
+#define notpossible  \
+  do {               \
+    asm("ud2\nnop"); \
+    unreachable;     \
   } while (0)
 
 #define donothing \

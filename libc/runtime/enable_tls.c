@@ -230,7 +230,7 @@ privileged void __enable_tls(void) {
 
       // we're checking for the following expression:
       //   0144 == p[0] &&           // %fs
-      //   0110 == p[1] &&           // rex.w (64-bit operand size)
+      //   0110 == (p[1] & 0373) &&  // rex.w (and ignore rex.r)
       //   (0213 == p[2] ||          // mov reg/mem → reg (word-sized)
       //   0003 == p[2]) &&          // add reg/mem → reg (word-sized)
       //   0004 == (p[3] & 0307) &&  // mod/rm (4,reg,0) means sib → reg
@@ -239,7 +239,7 @@ privileged void __enable_tls(void) {
       //   0000 == p[6] &&           // displacement
       //   0000 == p[7] &&           // displacement
       //   0000 == p[8]              // displacement
-      w = READ64LE(p) & READ64LE("\377\377\377\307\377\377\377\377");
+      w = READ64LE(p) & READ64LE("\377\373\377\307\377\377\377\377");
       if ((w == READ64LE("\144\110\213\004\045\000\000\000") ||
            w == READ64LE("\144\110\003\004\045\000\000\000")) &&
           !p[8]) {

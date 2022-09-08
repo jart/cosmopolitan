@@ -20,8 +20,6 @@
 #include "libc/dce.h"
 #include "libc/notice.inc"
 
-#define INITIAL_CAPACITY 4
-
 	nop
 
 //	Invokes deferred function calls.
@@ -34,9 +32,12 @@
 //
 //	@param	rax,rdx,xmm0,xmm1,st0,st1 is return value
 //	@see	test/libc/runtime/gc_test.c
-__gc:	decq	__garbage(%rip)
-	mov	__garbage(%rip),%r8
-	mov	__garbage+16(%rip),%r9
+//	@threadsafe
+__gc:	mov	%fs:0,%rcx			# __get_tls()
+	mov	0x18(%rcx),%rcx			# cthread_t::garbages
+	decl	(%rcx)				# ++g->i
+	mov	(%rcx),%r8d			# r8 = g->i
+	mov	8(%rcx),%r9			# r9 = g->p
 	js	9f
 	shl	$5,%r8
 	lea	(%r9,%r8),%r8
@@ -55,25 +56,5 @@ __gc:	decq	__garbage(%rip)
 	mov	-8(%rbp),%rax
 	leave
 	ret
-9:	hlt
+9:	ud2
 	.endfn	__gc,globl,hidden
-
-	.bss
-	.align	8
-__garbage:
-	.quad	0				# garbage.i
-	.quad	0				# garbage.n
-	.quad	0				# garbage.p
-	.rept	INITIAL_CAPACITY
-	.quad	0				# garbage.p[𝑖].frame
-	.quad	0				# garbage.p[𝑖].fn
-	.quad	0				# garbage.p[𝑖].arg
-	.quad	0				# garbage.p[𝑖].ret
-	.endr
-	.endobj	__garbage,globl,hidden
-	.previous
-
-	.init.start 100,_init_garbage
-	movb	$INITIAL_CAPACITY,__garbage+8(%rip)
-	movl	$__garbage+24,__garbage+16(%rip)
-	.init.end 100,_init_garbage

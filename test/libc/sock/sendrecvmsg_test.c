@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"

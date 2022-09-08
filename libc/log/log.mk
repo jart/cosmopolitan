@@ -69,6 +69,7 @@ o/$(MODE)/libc/log/watch.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-ffreestanding
 
+o/$(MODE)/libc/log/watch.o				\
 o/$(MODE)/libc/log/attachdebugger.o			\
 o/$(MODE)/libc/log/checkaligned.o			\
 o/$(MODE)/libc/log/checkfail.o				\

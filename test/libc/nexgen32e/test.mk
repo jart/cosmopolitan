@@ -36,6 +36,7 @@ TEST_LIBC_NEXGEN32E_DIRECTDEPS =				\
 	LIBC_STR						\
 	LIBC_STUBS						\
 	LIBC_SYSV						\
+	LIBC_THREAD						\
 	LIBC_TESTLIB						\
 	LIBC_X							\
 	TOOL_VIZ_LIB						\

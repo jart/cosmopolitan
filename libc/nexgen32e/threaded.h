@@ -7,6 +7,7 @@ extern int __threaded;
 extern bool __tls_enabled;
 extern unsigned __tls_index;
 
+void TlsIsRequired(void);
 void *__initialize_tls(char[64]);
 void __install_tls(char[64]);
 
