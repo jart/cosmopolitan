@@ -49,3 +49,14 @@ TEST(logb, yolo) {
   EXPECT_EQ(2, (int)logbl(4));
   EXPECT_EQ(63, (int)logbl(1e19));
 }
+
+TEST(ilogb, NANandZero) {
+  EXPECT_EQ(FP_ILOGB0, ilogb(0.0));
+  EXPECT_EQ(FP_ILOGBNAN, ilogb(NAN));
+  EXPECT_EQ(FP_ILOGB0, (int)ilogb(0));
+  EXPECT_EQ(FP_ILOGBNAN, (int)ilogb(NAN));
+  EXPECT_EQ(FP_ILOGB0, ilogbf(0));
+  EXPECT_EQ(FP_ILOGBNAN, ilogbf(NAN));
+  EXPECT_EQ(FP_ILOGB0, ilogbl(0));
+  EXPECT_EQ(FP_ILOGBNAN, ilogbl(NAN));
+}

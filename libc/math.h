@@ -64,6 +64,8 @@
 #define FP_ZERO      2
 #define FP_SUBNORMAL 3
 #define FP_NORMAL    4
+#define FP_ILOGB0    (-2147483647-1)
+#define FP_ILOGBNAN  (-2147483647-1)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
