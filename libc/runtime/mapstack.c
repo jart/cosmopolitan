@@ -37,7 +37,7 @@
  * The top 16 bytes of a stack can't be used due to openbsd:stackbound
  * and those bytes are also poisoned under ASAN build modes.
  *
- * @return stack bottom address on success, or null w/ errrno
+ * @return stack bottom address on success, or null w/ errno
  */
 void *_mapstack(void) {
   char *p;

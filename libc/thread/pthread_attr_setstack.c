@@ -35,12 +35,13 @@
  *
  *     pthread_t id;
  *     pthread_attr_t attr;
+ *     char *stk = _mapstack();
  *     pthread_attr_init(&attr);
- *     pthread_attr_setstack(&attr, gc(malloc(GetStackSize())),
- *                           GetStackSize());
+ *     pthread_attr_setstack(&attr, stk, GetStackSize());
  *     pthread_create(&id, &attr, func, 0);
  *     pthread_attr_destroy(&attr);
  *     pthread_join(id, 0);
+ *     _freestack(stk);
  *
  * Your stack must have at least `PTHREAD_STACK_MIN` bytes, which
  * Cosmpolitan Libc defines as `GetStackSize()`. It's a link-time
@@ -52,11 +53,16 @@
  * (e.g. kprintf) assumes that stack sizes are two-powers and are
  * aligned to that two-power. Conformance isn't required since we
  * say caveat emptor to those who don't maintain these invariants
+ * please consider using _mapstack() which always does it perfect
+ * or use `mmap(0, GetStackSize() << 1, ...)` for a bigger stack.
  *
  * Unlike pthread_attr_setstacksize(), this function permits just
  * about any parameters and will change the values and allocation
  * as needed to conform to the mandatory requirements of the host
- * operating system.
+ * operating system even if it doesn't meet the stricter needs of
+ * Cosmopolitan Libc userspace libraries. For example with malloc
+ * allocations, things like page size alignment, shall be handled
+ * automatically for compatibility with existing codebases.
  *
  * @param stackaddr is address of stack allocated by caller, and
  *     may be NULL in which case default behavior is restored

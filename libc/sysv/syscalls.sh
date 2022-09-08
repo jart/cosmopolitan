@@ -798,6 +798,24 @@ scall	setrtable		0xfff136ffffffffff	globl
 scall	swapctl			0x10f0c1ffffffffff	globl
 scall	thrkill			0xfff077ffffffffff	globl
 scall	sys_unveil		0xfff072ffffffffff	globl hidden
+#──────────────────────────NETBSD────────────────────────────
+#scall	_lwp_create		0x135fffffffffffff	globl # int _lwp_create(const struct ucontext_netbsd *ucp, uint64_t flags, int *new_lwp)
+#scall	_lwp_exit		0x136fffffffffffff	globl # int _lwp_exit(void)
+#scall	_lwp_self		0x137fffffffffffff	globl # int _lwp_self(void)
+#scall	_lwp_wait		0x138fffffffffffff	globl # int _lwp_wait(int wait_for, int *departed)
+#scall	_lwp_suspend		0x139fffffffffffff	globl # int _lwp_suspend(int target)
+#scall	_lwp_continue		0x13afffffffffffff	globl # int _lwp_continue(int target)
+#scall	_lwp_wakeup		0x13bfffffffffffff	globl # int _lwp_wakeup(int target)
+#scall	_lwp_getprivate		0x13cfffffffffffff	globl # void *_lwp_getprivate(void)
+#scall	_lwp_setprivate		0x13dfffffffffffff	globl # int _lwp_setprivate(void *ptr)
+#scall	_lwp_kill		0x13efffffffffffff	globl # int _lwp_kill(int target, int signo)
+#scall	_lwp_detach		0x13ffffffffffffff	globl # int _lwp_park(int clock_id, int flags, struct timespec *ts, int unpark, const void *hint, const void *unparkhint)
+#scall	_lwp_park		0x1defffffffffffff	globl # int _lwp_park(int clock_id, int flags, struct timespec *ts, int unpark, const void *hint, const void *unparkhint)
+#scall	_lwp_unpark		0x141fffffffffffff	globl # int _lwp_unpark_all(int target, const void *hint)
+#scall	_lwp_unpark_all		0x142fffffffffffff	globl # int _lwp_unpark_all(const int *targets, size_t ntargets, const void *hint)
+#scall	_lwp_setname		0x143fffffffffffff	globl # int _lwp_setname(int target, const char *name)
+#scall	_lwp_getname		0x144fffffffffffff	globl # int _lwp_getname(int target, char *name, size_t len)
+#scall	_lwp_ctl		0x145fffffffffffff	globl # int _lwp_ctl(int features, struct lwpctl **address)
 
 #	The Fifth Bell System Interface, Community Edition
 #	» beyond the pale
