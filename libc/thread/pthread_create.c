@@ -196,6 +196,15 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
   // we only need to save this to support pthread_getattr_np()
   pt->attr = *attr;
+  // if attr->stackaddr == 0,
+  // the stack is managed by cosmo, 
+  // pt->spawn.stk is from a successful mmap,
+  // and so pt->attr.stackaddr = pt->spawn.stk
+  pt->attr.stackaddr = pt->spawn.stk;
+  // if attr->stackaddr != 0,
+  // then stack is not managed by cosmo
+  // pt->attr.stackaddr = pt->spawn.stk = attr->stackaddr
+  // so the above line is a no-op.
 
   // set initial status
   switch (attr->detachstate) {
