@@ -3887,6 +3887,12 @@ UNIX MODULE
 
     It's a good idea to not do too much work in a signal handler.
 
+  unix.sigpending()
+      ├─→ mask:unix.Sigset
+      └─→ nil, unix.Errno
+
+    Returns the set of signals that are pending for delivery.
+
   unix.sigsuspend([mask:unix.Sigset])
       └─→ nil, unix.Errno
 
