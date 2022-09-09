@@ -121,8 +121,7 @@ void ShowCrashReports(void) {
     ss.ss_size = GetStackSize();
     // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
     // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
-    if ((sp = mmap(0, GetStackSize(), PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)) != MAP_FAILED) {
+    if ((sp = _mapanon(GetStackSize()))) {
       ss.ss_sp = sp;
       if (!sigaltstack(&ss, &g_oldsigaltstack)) {
         __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);

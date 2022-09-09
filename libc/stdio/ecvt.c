@@ -24,6 +24,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 
@@ -33,10 +34,24 @@ Copyright (c) 2002, 2006, 2010 Todd C. Miller <millert@openbsd.org>\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+static char *s;
+
+static void
+__cvt_atexit(void)
+{
+	free(s);
+	s = 0;
+}
+
+static void __attribute__((__constructor__))
+__cvt_init(void)
+{
+	atexit(__cvt_atexit);
+}
+
 static char *
 __cvt(double value, int ndigit, int *decpt, int *sign, int fmode, int pad)
 {
-	static char *s;
 	char *p, *rve, c;
 	size_t siz;
 

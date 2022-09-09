@@ -226,9 +226,9 @@ textwindows void WinMainForked(void) {
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
   struct Fds *fds = VEIL("r", &g_fds);
-  fds->p[0].handle = fds->__init_p[0].handle = GetStdHandle(kNtStdInputHandle);
-  fds->p[1].handle = fds->__init_p[1].handle = GetStdHandle(kNtStdOutputHandle);
-  fds->p[2].handle = fds->__init_p[2].handle = GetStdHandle(kNtStdErrorHandle);
+  fds->p[0].handle = GetStdHandle(kNtStdInputHandle);
+  fds->p[1].handle = GetStdHandle(kNtStdOutputHandle);
+  fds->p[2].handle = GetStdHandle(kNtStdErrorHandle);
 
   // untrack children of parent since we specify with both
   // CreateProcess() and CreateThread() as non-inheritable

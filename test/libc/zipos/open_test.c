@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,57 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/extend.internal.h"
-#include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/pushpop.h"
-#include "libc/intrin/weaken.h"
-#include "libc/nt/runtime.h"
+#include "libc/calls/calls.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/gc.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/testlib/hyperion.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/spawn.h"
+#include "libc/zipos/zipos.h"
 
-STATIC_YOINK("_init_g_fds");
+STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("libc/testlib/hyperion.txt");
+/* STATIC_YOINK("inflate"); */
+/* STATIC_YOINK("inflateInit2"); */
+/* STATIC_YOINK("inflateEnd"); */
 
-struct Fds g_fds;
-pthread_mutex_t __fds_lock_obj;
-
-static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
-  int64_t h;
-  h = GetStdHandle(x);
-  if (!h || h == -1) return;
-  fds->p[i].kind = pushpop(kFdFile);
-  fds->p[i].handle = h;
-  fds->f = i + 1;
+int Worker(void *arg, int tid) {
+  int i, fd;
+  char *data;
+  for (i = 0; i < 20; ++i) {
+    ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
+    data = malloc(kHyperionSize);
+    ASSERT_EQ(kHyperionSize, read(fd, data, kHyperionSize));
+    ASSERT_EQ(0, memcmp(data, kHyperion, kHyperionSize));
+    ASSERT_SYS(0, 0, close(fd));
+    free(data);
+  }
+  return 0;
 }
 
-textstartup void InitializeFileDescriptors(void) {
-  struct Fds *fds;
-  __fds_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
-  fds = VEIL("r", &g_fds);
-  fds->p = fds->e = (void *)0x6fe000040000;
-  fds->n = 4;
-  fds->f = 3;
-  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, 0x6ff000000000);
-  if (IsMetal()) {
-    extern const char vga_console[];
-    pushmov(&fds->f, 3ull);
-    if (weaken(vga_console)) {
-      fds->p[0].kind = pushpop(kFdConsole);
-      fds->p[1].kind = pushpop(kFdConsole);
-      fds->p[2].kind = pushpop(kFdConsole);
-    } else {
-      fds->p[0].kind = pushpop(kFdSerial);
-      fds->p[1].kind = pushpop(kFdSerial);
-      fds->p[2].kind = pushpop(kFdSerial);
-    }
-    fds->p[0].handle = VEIL("r", 0x3F8ull);
-    fds->p[1].handle = VEIL("r", 0x3F8ull);
-    fds->p[2].handle = VEIL("r", 0x3F8ull);
-  } else if (IsWindows()) {
-    SetupWinStd(fds, 0, kNtStdInputHandle);
-    SetupWinStd(fds, 1, kNtStdOutputHandle);
-    SetupWinStd(fds, 2, kNtStdErrorHandle);
-  }
-  fds->p[1].flags = O_WRONLY | O_APPEND;
-  fds->p[2].flags = O_WRONLY | O_APPEND;
+TEST(zipos, test) {
+  int i, n = 16;
+  struct spawn *t = _gc(malloc(sizeof(struct spawn) * n));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
+  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  /* __print_maps(); */
 }

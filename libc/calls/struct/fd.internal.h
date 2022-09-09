@@ -25,10 +25,9 @@ struct Fd {
 };
 
 struct Fds {
-  int f;    /* lowest free slot */
-  size_t n; /* monotonic capacity */
-  struct Fd *p;
-  struct Fd __init_p[OPEN_MAX];
+  int f; /* lowest free slot */
+  size_t n;
+  struct Fd *p, *e;
 };
 
 COSMOPOLITAN_C_END_

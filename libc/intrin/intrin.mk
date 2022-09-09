@@ -43,6 +43,20 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
+# we can't use asan because:
+#   asan guard pages haven't been allocated yet
+o/$(MODE)/libc/intrin/directmap.o			\
+o/$(MODE)/libc/intrin/directmap-nt.o: private		\
+		OVERRIDE_COPTS +=			\
+			-ffreestanding			\
+			-fno-sanitize=address
+
+# we want small code size because:
+#   to keep .text.head under 4096 bytes
+o/$(MODE)/libc/intrin/mman.greg.o: private		\
+		OVERRIDE_COPTS +=			\
+			-Os
+
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\

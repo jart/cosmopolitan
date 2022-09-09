@@ -61,7 +61,6 @@ void PullSomeZipFilesIntoLinkage(void) {
 TEST(reservefd, testGrowthOfFdsDataStructure) {
   int i, n;
   struct rlimit rlim;
-  ASSERT_EQ(g_fds.n, OPEN_MAX);
   n = 1700;  // pe '2**16/40' → 1638 (likely value of g_fds.n)
   if (!getrlimit(RLIMIT_NOFILE, &rlim)) n = MIN(n, rlim.rlim_cur - 3);
   for (i = 0; i < n; ++i) {

@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
@@ -46,33 +47,11 @@ static volatile size_t mapsize;
  * @asyncsignalsafe
  */
 int __ensurefds_unlocked(int fd) {
-  uint64_t addr;
-  int prot, flags;
-  size_t size, chunk;
-  struct DirectMap dm;
+  bool relocate;
   if (fd < g_fds.n) return fd;
-  STRACE("__ensurefds(%d) extending", fd);
-  size = mapsize;
-  chunk = FRAMESIZE;
-  if (IsAsan()) chunk *= 8;
-  addr = kMemtrackFdsStart + size;
-  prot = PROT_READ | PROT_WRITE;
-  flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
-  dm = sys_mmap((char *)addr, chunk, prot, flags, -1, 0);
-  TrackMemoryInterval(&_mmi, addr >> 16, (addr + chunk - 1) >> 16, dm.maphandle,
-                      prot, flags, false, false, 0, chunk);
-  if (IsAsan()) {
-    addr = (addr >> 3) + 0x7fff8000;
-    dm = sys_mmap((char *)addr, FRAMESIZE, prot, flags, -1, 0);
-    TrackMemoryInterval(&_mmi, addr >> 16, addr >> 16, dm.maphandle, prot,
-                        flags, false, false, 0, FRAMESIZE);
-  }
-  if (!size) {
-    g_fds.p = memcpy((char *)kMemtrackFdsStart, g_fds.__init_p,
-                     sizeof(g_fds.__init_p));
-  }
-  g_fds.n = (size + chunk) / sizeof(*g_fds.p);
-  mapsize = size + chunk;
+  g_fds.n = fd + 1;
+  g_fds.e =
+      _extend(g_fds.p, g_fds.n * sizeof(*g_fds.p), g_fds.e, 0x6ff000000000);
   return fd;
 }
 

@@ -1,9 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
-#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/nr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -206,7 +204,7 @@ forceinline char *__fixcpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
 }
 
 forceinline char *__hexcpy(char p[hasatleast 17], uint64_t x) {
-  return __fixcpy(p, x, ROUNDUP(x ? bsrl(x) + 1 : 1, 4));
+  return __fixcpy(p, x, ROUNDUP(x ? (__builtin_clzll(x) ^ 63) + 1 : 1, 4));
 }
 
 forceinline const void *__memchr(const void *s, unsigned char c, size_t n) {

@@ -16,16 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/bits.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/prot.h"
 
 /**
  * Rewrites code in memory to hook function calls.

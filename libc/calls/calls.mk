@@ -80,14 +80,6 @@ o/$(MODE)/libc/calls/vdsofunc.greg.o: private		\
 			-fno-sanitize=address
 
 # we can't use asan because:
-#   asan guard pages haven't been allocated yet
-o/$(MODE)/libc/calls/directmap.o			\
-o/$(MODE)/libc/calls/directmap-nt.o: private		\
-		OVERRIDE_COPTS +=			\
-			-ffreestanding			\
-			-fno-sanitize=address
-
-# we can't use asan because:
 #   ntspawn allocates 128kb of heap memory via win32
 o/$(MODE)/libc/calls/ntspawn.o				\
 o/$(MODE)/libc/calls/mkntcmdline.o			\
@@ -143,12 +135,6 @@ o/$(MODE)/libc/calls/ioctl-siocgifconf-nt.o: private	\
 		OVERRIDE_COPTS +=			\
 			-ffunction-sections		\
 			-fdata-sections
-
-# we want small code size because:
-#   to keep .text.head under 4096 bytes
-o/$(MODE)/libc/calls/mman.greg.o: private		\
-		OVERRIDE_COPTS +=			\
-			-Os
 
 # we always want -Os because:
 #   va_arg codegen is very bloated in default mode

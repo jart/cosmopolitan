@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
 #define COSMOPOLITAN_LIBC_ZIPOS_ZIPOS_H_
-#include "libc/calls/calls.h"
 #include "libc/intrin/nopl.h"
 #include "libc/nexgen32e/threaded.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

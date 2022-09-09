@@ -211,6 +211,7 @@ include test/libc/fmt/test.mk
 include test/libc/dns/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
+include test/libc/zipos/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
 include test/net/http/test.mk

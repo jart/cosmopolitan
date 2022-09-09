@@ -1810,7 +1810,7 @@
 6fb00000-6fbfffff 64gb   free
 6fc00000-6fcfffff 64gb   free
 6fd00000-6fdfffff 64gb   zipos
-6fe00000-6fefffff 64gb   g_fds
+6fe00004-6feffffc 64gb   g_fds
 6ff00000-6ffffffd 64gb   free
 6ffffffe-6fffffff 128kb  winargs
 

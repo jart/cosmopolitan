@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -42,47 +43,19 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
-static volatile size_t maptotal;
-
-static pureconst size_t __zipos_granularity(void) {
-  return FRAMESIZE * (IsAsan() ? 8 : 1);
-}
+static char *mapend;
+static size_t maptotal;
 
 static void *__zipos_mmap(size_t mapsize) {
+  char *start;
   size_t offset;
-  struct DirectMap dm;
-  int rc, prot, flags;
-  uint64_t addr, addr2, addr3;
   assert(mapsize);
-  do offset = maptotal;
-  while (!_cmpxchg(&maptotal, offset, maptotal + mapsize));
-  if (offset + mapsize <= kMemtrackZiposSize) {
-    prot = PROT_READ | PROT_WRITE;
-    flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
-    addr = kMemtrackZiposStart + offset;
-    if ((dm = sys_mmap((void *)addr, mapsize, prot, flags, -1, 0)).addr !=
-        MAP_FAILED) {
-      rc = TrackMemoryInterval(&_mmi, addr >> 16, (addr + mapsize - 1) >> 16,
-                               dm.maphandle, prot, flags, false, false, 0,
-                               mapsize);
-      assert(!rc);
-      if (IsAsan()) {
-        addr2 = (addr >> 3) + 0x7fff8000;
-        addr3 = ((addr + mapsize) >> 3) + 0x7fff8000;
-        assert(!(addr2 & (FRAMESIZE - 1)));
-        assert(!(addr3 & (FRAMESIZE - 1)));
-        dm = sys_mmap((void *)addr2, mapsize >> 3, prot, flags, -1, 0);
-        assert(dm.addr != MAP_FAILED);
-        rc = TrackMemoryInterval(&_mmi, addr2 >> 16, (addr3 >> 16) - 1,
-                                 dm.maphandle, prot, flags, false, false, 0,
-                                 mapsize >> 3);
-        assert(!rc);
-      }
-      return (void *)addr;
-    }
-  }
-  enomem();
-  return 0;
+  offset = maptotal;
+  maptotal += mapsize;
+  start = (char *)0x6fd000040000;
+  if (!mapend) mapend = start;
+  mapend = _extend(start, maptotal, mapend, 0x6fdfffff0000);
+  return start + offset;
 }
 
 static struct ZiposHandle *__zipos_alloc(struct Zipos *zipos, size_t size) {
@@ -90,7 +63,7 @@ static struct ZiposHandle *__zipos_alloc(struct Zipos *zipos, size_t size) {
   struct ZiposHandle *h, **ph;
   __zipos_lock();
   mapsize = sizeof(struct ZiposHandle) + size;
-  mapsize = ROUNDUP(mapsize, __zipos_granularity());
+  mapsize = ROUNDUP(mapsize, 4096);
 StartOver:
   ph = &zipos->freelist;
   while ((h = *ph)) {
