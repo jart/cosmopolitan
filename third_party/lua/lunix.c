@@ -1797,6 +1797,20 @@ static int LuaUnixSigsuspend(lua_State *L) {
   return LuaUnixSysretErrno(L, "sigsuspend", olderr);
 }
 
+// unix.sigpending()
+//     ├─→ mask:unix.Sigset
+//     └─→ nil, unix.Errno
+static int LuaUnixSigpending(lua_State *L) {
+  int olderr = errno;
+  struct sigset mask;
+  if (!sigpending(&mask)) {
+    LuaPushSigset(L, mask);
+    return 1;
+  } else {
+    return LuaUnixSysretErrno(L, "sigpending", olderr);
+  }
+}
+
 // unix.setitimer(which[, intervalsec, intns, valuesec, valuens])
 //     ├─→ intervalsec:int, intervalns:int, valuesec:int, valuens:int
 //     └─→ nil, unix.Errno
@@ -2977,6 +2991,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"shutdown", LuaUnixShutdown},        // make socket half empty or full
     {"sigaction", LuaUnixSigaction},      // install signal handler
     {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
+    {"sigpending", LuaUnixSigpending},    // get pending signals
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
     {"socket", LuaUnixSocket},            // create network communication fd
