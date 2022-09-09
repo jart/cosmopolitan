@@ -3047,14 +3047,25 @@ static char *ServeStatusz(void) {
 }
 
 static char *RedirectSlash(void) {
-  size_t n;
+  size_t n, i;
   char *p, *e;
   LockInc(&shared->c.redirects);
   p = SetStatus(307, "Temporary Redirect");
   p = stpcpy(p, "Location: ");
   e = EscapePath(url.path.p, url.path.n, &n);
   p = mempcpy(p, e, n);
-  p = stpcpy(p, "/\r\n");
+  p = stpcpy(p, "/");
+
+  for (i = 0; i < url.params.n; ++i) {
+    p = stpcpy(p, i == 0 ? "?" : "&");
+    p = mempcpy(p, url.params.p[i].key.p, url.params.p[i].key.n);
+    if (url.params.p[i].val.p) {
+      p = stpcpy(p, "=");
+      p = mempcpy(p, url.params.p[i].val.p, url.params.p[i].val.n);
+    }
+  }
+
+  p = stpcpy(p, "\r\n");
   free(e);
   return p;
 }
