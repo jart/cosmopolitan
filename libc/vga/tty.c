@@ -93,7 +93,7 @@ static wchar_t *Wcs(struct Tty *tty)
 
 void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
                unsigned short starty, unsigned short startx,
-               void *vccs, wchar_t *wcs) {
+               unsigned char chr_ht, void *vccs, wchar_t *wcs) {
   struct VgaTextCharCell *ccs = vccs;
   memset(tty, 0, sizeof(struct Tty));
   SetYn(tty, yn);
@@ -103,8 +103,11 @@ void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
     starty = yn - 1;
   if (startx >= xn)
     startx = xn - 1;
+  if (chr_ht > 32)
+    chr_ht = 32;
   tty->y = starty;
   tty->x = startx;
+  tty->chr_ht = chr_ht;
   if (SetWcs(tty, wcs)) {
     size_t n = (size_t)yn * xn, i;
     for (i = 0; i < n; ++i)
@@ -1081,10 +1084,17 @@ static void TtyEscAppend(struct Tty *tty, char c) {
 }
 
 static void TtyUpdateHwCursor(struct Tty *tty) {
+  unsigned char start = tty->chr_ht - 2, end = tty->chr_ht - 1;
   unsigned short pos = tty->y * Xn(tty) + tty->x;
-  outb(CRTPORT, 0x0e);
+  if ((tty->conf & kTtyNocursor))
+    start |= 1 << 5;
+  outb(CRTPORT, 0x0A);
+  outb(CRTPORT + 1, start);
+  outb(CRTPORT, 0x0B);
+  outb(CRTPORT + 1, end);
+  outb(CRTPORT, 0x0E);
   outb(CRTPORT + 1, (unsigned char)(pos >> 8));
-  outb(CRTPORT, 0x0f);
+  outb(CRTPORT, 0x0F);
   outb(CRTPORT + 1, (unsigned char)pos);
 }
 
