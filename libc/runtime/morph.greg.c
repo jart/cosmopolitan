@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
 #include "libc/assert.h"
-#include "libc/intrin/asmflag.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asmflag.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
@@ -50,7 +50,7 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
                            "syscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                  : "1"(__NR_mprotect), "D"(addr), "S"(size), "2"(prot)
-                 : "rcx", "r11", "memory");
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
 #ifndef NDEBUG
     if (cf) ax = -ax;
     if (ax == -EPERM) {
@@ -58,6 +58,7 @@ static privileged void __morph_mprotect(void *addr, size_t size, int prot,
       _Exit(26);
     }
 #endif
+    if (ax) notpossible;
   } else {
     __imp_VirtualProtect(addr, size, ntprot, &op);
   }
@@ -81,15 +82,15 @@ privileged void __morph_begin(void) {
                    : "=a"(ax), "=d"(dx)
                    : "0"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(&ss),
                      "1"(&oldss)
-                   : "rcx", "r10", "r11", "memory", "cc");
-      assert(!ax);
+                   : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+      if (ax) notpossible;
     } else {
       asm volatile(CFLAG_ASM("syscall")
                    : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                    : "1"(__NR_sigprocmask), "D"(SIG_BLOCK), "S"(-1u)
-                   : "rcx", "r11", "memory");
+                   : "rcx", "r8", "r9", "r10", "r11", "memory");
       oldss.__bits[0] = ax & 0xffffffff;
-      assert(!cf);
+      if (cf) notpossible;
     }
   }
   __morph_mprotect(_base, __privileged_addr - _base, PROT_READ | PROT_WRITE,
@@ -112,15 +113,15 @@ privileged void __morph_end(void) {
                    : "=a"(ax), "=d"(dx)
                    : "0"(__NR_sigprocmask), "D"(SIG_SETMASK), "S"(&oldss),
                      "1"(0)
-                   : "rcx", "r10", "r11", "memory", "cc");
-      assert(!ax);
+                   : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+      if (ax) notpossible;
     } else {
       asm volatile(CFLAG_ASM("syscall")
                    : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                    : "1"(__NR_sigprocmask), "D"(SIG_SETMASK),
                      "S"(oldss.__bits[0])
-                   : "rcx", "r11", "memory");
-      assert(!cf);
+                   : "rcx", "r8", "r9", "r10", "r11", "memory");
+      if (cf) notpossible;
     }
   }
   STRACE("__morph_end()");

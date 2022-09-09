@@ -17,30 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-/**
- * @fileoverview Memory segmentation system calls.
- *
- * This whole file basically does:
- *
- *     mov foo,%fs
- *     mov foo,%gs
- *     mov %fs,foo
- *     mov %gs,foo
- *
- * Which is nontrivial due to the limitless authoritarianism of
- * operating systems.
- */
 
 #define rdmsr(msr)                                         \
   ({                                                       \
@@ -58,24 +47,7 @@
                    "d"((uint32_t)(val_ >> 32)));  \
   } while (0)
 
-static inline int arch_prctl_fsgsbase(int code, int64_t addr) {
-  switch (code) {
-    case ARCH_SET_GS:
-      asm volatile("wrgsbase\t%0" : /* no outputs */ : "r"(addr));
-      return 0;
-    case ARCH_SET_FS:
-      asm volatile("wrfsbase\t%0" : /* no outputs */ : "r"(addr));
-      return 0;
-    case ARCH_GET_GS:
-      asm volatile("rdgsbase\t%0" : "=r"(*(int64_t *)addr));
-      return 0;
-    case ARCH_GET_FS:
-      asm volatile("rdfsbase\t%0" : "=r"(*(int64_t *)addr));
-      return 0;
-    default:
-      return einval();
-  }
-}
+int sys_enable_tls();
 
 static int arch_prctl_msr(int code, int64_t addr) {
   switch (code) {
@@ -99,29 +71,52 @@ static int arch_prctl_msr(int code, int64_t addr) {
 static int arch_prctl_freebsd(int code, int64_t addr) {
   switch (code) {
     case ARCH_GET_FS:
+      // sysarch(AMD64_GET_FSBASE)
       return sys_arch_prctl(128, addr);
     case ARCH_SET_FS:
-      return sys_arch_prctl(129, addr);
+      // sysarch(AMD64_SET_FSBASE)
+      return sys_arch_prctl(129, (intptr_t)&addr);
     case ARCH_GET_GS:
+      // sysarch(AMD64_GET_GSBASE)
       return sys_arch_prctl(130, addr);
     case ARCH_SET_GS:
-      return sys_arch_prctl(131, addr);
+      // sysarch(AMD64_SET_GSBASE)
+      return sys_arch_prctl(131, (intptr_t)&addr);
     default:
       return einval();
   }
 }
 
-static privileged dontinline int arch_prctl_xnu(int code, int64_t addr) {
-  int ax;
-  bool failed;
+static int arch_prctl_netbsd(int code, int64_t addr) {
+  switch (code) {
+    case ARCH_GET_FS:
+      // sysarch(X86_GET_FSBASE)
+      return sys_arch_prctl(15, addr);
+    case ARCH_SET_FS:
+      // we use _lwp_setprivate() instead of sysarch(X86_SET_FSBASE)
+      // because the latter has a bug where signal handlers cause it
+      // to be clobbered. please note, this doesn't apply to %gs :-)
+      return sys_enable_tls(addr);
+    case ARCH_GET_GS:
+      // sysarch(X86_GET_GSBASE)
+      return sys_arch_prctl(14, addr);
+    case ARCH_SET_GS:
+      // sysarch(X86_SET_GSBASE)
+      return sys_arch_prctl(16, (intptr_t)&addr);
+    default:
+      return einval();
+  }
+}
+
+static int arch_prctl_xnu(int code, int64_t addr) {
+  int e;
   switch (code) {
     case ARCH_SET_GS:
-      asm volatile(CFLAG_ASM("syscall")
-                   : CFLAG_CONSTRAINT(failed), "=a"(ax)
-                   : "1"(0x3000003), "D"(addr - 0x30)
-                   : "rcx", "r11", "memory", "cc");
-      if (failed) errno = ax, ax = -1;
-      return ax;
+      // thread_fast_set_cthread_self has a weird ABI
+      e = errno;
+      sys_enable_tls(addr);
+      errno = e;
+      return 0;
     case ARCH_GET_FS:
     case ARCH_SET_FS:
     case ARCH_GET_GS:
@@ -139,7 +134,8 @@ static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
       asm volatile(CFLAG_ASM("syscall")
                    : CFLAG_CONSTRAINT(failed), "=a"(rax)
                    : "1"(0x014a /* __get_tcb */)
-                   : "rcx", "r11", "cc", "memory");
+                   : "rcx", "rdx", "rdi", "rsi", "r8", "r9", "r10", "r11", "cc",
+                     "memory");
       if (failed) {
         errno = rax;
         return -1;
@@ -150,7 +146,8 @@ static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
       asm volatile(CFLAG_ASM("syscall")
                    : CFLAG_CONSTRAINT(failed), "=a"(rax)
                    : "1"(0x0149 /* __set_tcb */), "D"(addr)
-                   : "rcx", "r11", "cc", "memory");
+                   : "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "cc",
+                     "memory");
       if (failed) {
         errno = rax;
         rax = -1;
@@ -164,27 +161,80 @@ static privileged dontinline int arch_prctl_openbsd(int code, int64_t addr) {
   }
 }
 
-static char g_fsgs_once;
-
 /**
- * Don't bother.
+ * Changes x86 segment registers.
+ *
+ * Support for segment registers is spotty across platforms. See the
+ * table of tested combinations below.
+ *
+ * This wrapper has the same weird ABI as the Linux Kernel. The type
+ * Cosmopolitan type signature of the prototype for this function is
+ * variadic, so no value safety checking will be performed w/o asan.
+ *
+ * Cosmopolitan Libc initializes your process by default, to use the
+ * segment register %fs, for thread-local storage. To safely disable
+ * this TLS you need to either set `__tls_enabled` to 0, or you must
+ * follow the same memory layout assumptions as your C library. When
+ * TLS is disabled you can't use threads unless you call clone() and
+ * that's not really a good idea since `errno` won't be thread-safe.
+ *
+ * Please note if you're only concerned about running on Linux, then
+ * consider using Cosmopolitan's fsgsbase macros which don't need to
+ * issue system calls to change %fs and %gs. See _have_fsgsbase() to
+ * learn more.
+ *
+ * @param code may be
+ *     - `ARCH_SET_FS` works on Linux, FreeBSD, NetBSD, OpenBSD, Metal
+ *     - `ARCH_GET_FS` works on Linux, FreeBSD, NetBSD, OpenBSD, Metal
+ *     - `ARCH_SET_GS` works on Linux, FreeBSD, NetBSD, XNU, Metal
+ *     - `ARCH_GET_GS` works on Linux, FreeBSD, NetBSD, Metal
+ * @param addr is treated as `intptr_t` when setting a register, and
+ *     is an output parameter (i.e. `intptr_t *`) when reading one
+ * @raise ENOSYS if operating system didn't support changing `code`
+ * @raise EINVAL if `code` wasn't valid
+ * @raise EFAULT if `ARCH_SET_FS` or `ARCH_SET_GS` was used and memory
+ *     pointed to by `addr` was invalid
+ * @see _have_fsgsbase()
  */
 int arch_prctl(int code, int64_t addr) {
-  void *fn = arch_prctl_fsgsbase;
-  switch (__hostos) {
-    case METAL:
-      return arch_prctl_msr(code, addr);
-    case FREEBSD:
-      // TODO(jart): this should use sysarch()
-      return arch_prctl_freebsd(code, addr);
-    case OPENBSD:
-      return arch_prctl_openbsd(code, addr);
-    case LINUX:
-      return sys_arch_prctl(code, addr);
-    case XNU:
-      /* probably won't work */
-      return arch_prctl_xnu(code, addr);
-    default:
-      return enosys();
+  int rc;
+  if (IsAsan() &&               //
+      (code == ARCH_GET_FS ||   //
+       code == ARCH_GET_GS) &&  //
+      !__asan_is_valid((int64_t *)addr, 8)) {
+    rc = efault();
+  } else {
+    switch (__hostos) {
+      case METAL:
+        rc = arch_prctl_msr(code, addr);
+        break;
+      case FREEBSD:
+        rc = arch_prctl_freebsd(code, addr);
+        break;
+      case NETBSD:
+        rc = arch_prctl_netbsd(code, addr);
+        break;
+      case OPENBSD:
+        rc = arch_prctl_openbsd(code, addr);
+        break;
+      case LINUX:
+        rc = sys_arch_prctl(code, addr);
+        break;
+      case XNU:
+        rc = arch_prctl_xnu(code, addr);
+        break;
+      default:
+        rc = enosys();
+        break;
+    }
   }
+#ifdef SYSDEBUG
+  if (!rc && (code == ARCH_GET_FS || code == ARCH_GET_GS)) {
+    STRACE("arch_prctl(%s, [%p]) → %d% m", DescribeArchPrctlCode(code),
+           *(int64_t *)addr, rc);
+  } else {
+    STRACE("arch_prctl(%s, %p) → %d% m", DescribeArchPrctlCode(code), addr, rc);
+  }
+#endif
+  return rc;
 }

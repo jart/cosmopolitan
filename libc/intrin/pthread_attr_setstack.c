@@ -16,19 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/pthread.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/stack.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
-
-#define MAP_ANON_OPENBSD  0x1000
-#define MAP_STACK_OPENBSD 0x4000
 
 /**
  * Configures custom allocated stack for thread, e.g.
@@ -81,30 +72,6 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
   if (stacksize < PTHREAD_STACK_MIN ||
       (IsAsan() && !__asan_is_valid(stackaddr, stacksize))) {
     return EINVAL;
-  }
-  if (IsOpenbsd()) {
-    // OpenBSD: Only permits RSP to occupy memory that's been explicitly
-    // defined as stack memory. We need to squeeze the provided interval
-    // in order to successfully call mmap(), which will return EINVAL if
-    // these calculations should overflow.
-    size_t n;
-    int e, rc;
-    uintptr_t x, y;
-    n = stacksize;
-    x = (uintptr_t)stackaddr;
-    y = ROUNDUP(x, PAGESIZE);
-    n -= y - x;
-    n = ROUNDDOWN(n, PAGESIZE);
-    stackaddr = (void *)y;
-    stacksize = n;
-    e = errno;
-    if (__sys_mmap(stackaddr, stacksize, PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD, -1, 0,
-                   0) == MAP_FAILED) {
-      rc = errno;
-      errno = e;
-      return rc;
-    }
   }
   attr->stackaddr = stackaddr;
   attr->stacksize = stacksize;

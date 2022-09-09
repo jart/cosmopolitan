@@ -38,24 +38,24 @@ privileged int sys_gettid(void) {
     asm("syscall"              // xnu/osfmk/kern/ipc_tt.c
         : "=a"(tid)            // assume success
         : "0"(0x1000000 | 27)  // Mach thread_self_trap()
-        : "rcx", "r11", "memory", "cc");
+        : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   } else if (IsOpenbsd()) {
     asm("syscall"
         : "=a"(tid)  // man says always succeeds
         : "0"(299)   // getthrid()
-        : "rcx", "r11", "memory", "cc");
+        : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   } else if (IsNetbsd()) {
     asm("syscall"
         : "=a"(tid)  // man says always succeeds
         : "0"(311)   // _lwp_self()
-        : "rcx", "rdx", "r11", "memory", "cc");
+        : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
   } else if (IsFreebsd()) {
     asm("syscall"
         : "=a"(tid),  // only fails w/ EFAULT, which isn't possible
           "=m"(wut)   // must be 64-bit
         : "0"(432),   // thr_self()
           "D"(&wut)   // but not actually 64-bit
-        : "rcx", "r11", "memory", "cc");
+        : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
     tid = wut;
   } else {
     tid = __pid;

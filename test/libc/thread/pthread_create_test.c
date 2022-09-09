@@ -18,14 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-#if 0
 static void *Increment(void *arg) {
   ASSERT_EQ(gettid(), pthread_getthreadid_np());
   return (void *)((uintptr_t)arg + 1);
@@ -75,7 +79,7 @@ TEST(pthread_detach, testBigStack) {
   pthread_t id;
   pthread_attr_t attr;
   ASSERT_EQ(0, pthread_attr_init(&attr));
-  ASSERT_EQ(0, pthread_attr_setstacksize(&attr, 2 * 1024 * 1024));
+  ASSERT_EQ(0, pthread_attr_setstacksize(&attr, 2 * 1000 * 1000));
   ASSERT_EQ(0, pthread_create(&id, &attr, CheckStack, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   ASSERT_EQ(0, pthread_join(id, 0));
@@ -101,7 +105,6 @@ TEST(pthread_detach, testCustomStack_withReallySmallSize) {
   ASSERT_EQ(0, pthread_join(id, 0));
   free(stk);
 }
-#endif
 
 TEST(pthread_exit, mainThreadWorks) {
   // _Exit1() can't set process exit code on XNU/NetBSD/OpenBSD.
@@ -114,4 +117,32 @@ TEST(pthread_exit, mainThreadWorks) {
     pthread_exit((void *)0);
     EXITS(0);
   }
+}
+
+static void CreateJoin(void) {
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
+  ASSERT_EQ(0, pthread_join(id, 0));
+}
+
+// this is de facto the same as create+join
+static void CreateDetach(void) {
+  pthread_t id;
+  ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
+  ASSERT_EQ(0, pthread_detach(id));
+}
+
+// this is really fast
+static void CreateDetached(void) {
+  pthread_attr_t attr;
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
+  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+}
+
+BENCH(pthread_create, bench) {
+  EZBENCH2("CreateJoin", donothing, CreateJoin());
+  EZBENCH2("CreateDetach", donothing, CreateDetach());
+  EZBENCH2("CreateDetached", donothing, CreateDetached());
 }

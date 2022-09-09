@@ -25,6 +25,7 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/spawn.h"
 
 int THREADS = 16;
 int ITERATIONS = 100;

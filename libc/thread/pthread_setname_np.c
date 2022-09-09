@@ -56,7 +56,7 @@ int pthread_setname_np(pthread_t thread, const char *name) {
   char path[128], *p;
   int e, fd, rc, tid, len;
 
-  tid = ((struct PosixThread *)thread)->spawn.ptid;
+  tid = ((struct PosixThread *)thread)->tid;
   len = strlen(name);
 
   if (IsLinux()) {
@@ -100,7 +100,7 @@ int pthread_setname_np(pthread_t thread, const char *name) {
     asm volatile(CFLAG_ASM("syscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                  : "1"(323 /* thr_set_name */), "D"(tid), "S"(name)
-                 : "rcx", "r11", "memory");
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
     return !cf ? 0 : ax;
 
   } else if (IsNetbsd()) {
@@ -109,7 +109,7 @@ int pthread_setname_np(pthread_t thread, const char *name) {
     asm volatile(CFLAG_ASM("syscall")
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                  : "1"(323 /* _lwp_setname */), "D"(tid), "S"(name)
-                 : "rcx", "r11", "memory");
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
     return !cf ? 0 : ax;
 
   } else {

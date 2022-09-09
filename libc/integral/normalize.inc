@@ -68,11 +68,11 @@
 
 /* TODO(jart): Remove this in favor of GetStackSize() */
 #if defined(COSMO) && defined(MODE_DBG)
-#define STACKSIZE 0x20000 /* 128kb stack */
+#define STACKSIZE 131072 /* 128kb stack */
 #elif defined(COSMO)
-#define STACKSIZE 0x10000 /* 64kb stack */
+#define STACKSIZE 65536 /* 64kb stack */
 #else
-#define STACKSIZE 0x800000 /* 8mb stack */
+#define STACKSIZE 8388608 /* 8mb stack */
 #endif
 
 #define BIGPAGESIZE 0x200000

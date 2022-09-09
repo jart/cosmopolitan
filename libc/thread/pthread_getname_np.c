@@ -50,7 +50,7 @@ int pthread_getname_np(pthread_t thread, char *name, size_t size) {
 
   if (!size) return 0;
   bzero(name, size);
-  tid = ((struct PosixThread *)thread)->spawn.ptid;
+  tid = ((struct PosixThread *)thread)->tid;
 
   if (IsLinux()) {
     // TASK_COMM_LEN is 16 on Linux so we're just being paranoid.
@@ -99,7 +99,7 @@ int pthread_getname_np(pthread_t thread, char *name, size_t size) {
                  : CFLAG_CONSTRAINT(cf), "=a"(ax), "=d"(dx)
                  : "1"(324 /* _lwp_getname */), "D"(tid), "S"(name),
                    "d"(size - 1)
-                 : "rcx", "r11", "memory");
+                 : "rcx", "r8", "r9", "r10", "r11", "memory");
     if (!cf) {
       // if size + our nul + kernel's nul is the buffer size, then we
       // can't say with absolute confidence truncation didn't happen.

@@ -2,7 +2,6 @@
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
-#include "libc/thread/spawn.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -54,13 +53,16 @@ enum PosixThreadStatus {
 };
 
 struct PosixThread {
-  struct spawn spawn;
   void *(*start_routine)(void *);
   void *arg;  // start_routine's parameter
   void *rc;   // start_routine's return value
+  bool ownstack;
+  int tid;
+  int *ctid;
+  char *tls;
+  char *tib;
   _Atomic(enum PosixThreadStatus) status;
   jmp_buf exiter;
-  size_t stacksize;
   pthread_attr_t attr;
 };
 

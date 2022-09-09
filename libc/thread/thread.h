@@ -6,7 +6,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-struct FtraceTls {  /* 16 */
+struct Ftrace {     /* 16 */
   bool once;        /*  0 */
   bool noreentry;   /*  1 */
   int skew;         /*  4 */
@@ -15,7 +15,7 @@ struct FtraceTls {  /* 16 */
 
 struct cthread_descriptor_t {
   struct cthread_descriptor_t *self;  /* 0x00 */
-  struct FtraceTls ftrace;            /* 0x08 */
+  struct Ftrace ftrace;               /* 0x08 */
   void *garbages;                     /* 0x18 */
   locale_t locale;                    /* 0x20 */
   pthread_t pthread;                  /* 0x28 */

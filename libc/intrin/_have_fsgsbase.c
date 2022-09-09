@@ -16,49 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/ucontext.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/fsgsbase.h"
+#include "libc/nexgen32e/x86feature.h"
 
-int x;
-bool ok1;
-bool ok2;
-ucontext_t context;
-
-void func(void) {
-  x++;
-  setcontext(&context);
-  abort();
-}
-
-void test(void) {
-  getcontext(&context);
-  if (!x) {
-    ok1 = true;
-    func();
+/**
+ * Returns true if FSGSBASE ISA can be used.
+ *
+ * If this function returns true (Linux 5.9+ or FreeBSD) then you should
+ * be able to read/write to the %gs / %fs x86 segment registers in about
+ * one or two clock cycles which gives you a free addition operation for
+ * all assembly ops that reference memory.
+ *
+ * The FSGSBASE ISA was introduced by Intel with Ivybridge (c. 2012) but
+ * the Linux Kernel didn't authorize us to use it until 2020, once Intel
+ * had to start backdooring customer kernels so that they could have it.
+ * AMD introduced support for the FSGSBASE ISA in Excavator, aka bdver4.
+ *
+ * @return boolean indicating if feature can be used
+ * @see _rdfsbase()
+ * @see _rdgsbase()
+ * @see _wrfsbase()
+ * @see _wrgsbase()
+ */
+privileged int _have_fsgsbase(void) {
+  // Linux 5.9 (c. 2020) introduced close_range() and fsgsbase support.
+  // it's cheaper to test for close_range() than handle an op crashing.
+  // Windows lets us use these instructions but they don't really work.
+  int ax;
+  if (X86_HAVE(FSGSBASE)) {
+    if (IsLinux()) {
+      asm volatile("syscall"
+                   : "=a"(ax)
+                   : "0"(436 /* close_range */), "D"(-1), "S"(-2), "d"(0)
+                   : "rcx", "r11", "memory");
+      return ax == -22;  // EINVAL
+    } else if (IsFreebsd()) {
+      return 1;
+    } else {
+      return 0;
+    }
   } else {
-    ok2 = true;
+    return 0;
   }
-}
-
-TEST(getcontext, test) {
-  test();
-  ASSERT_TRUE(ok1);
-  ASSERT_TRUE(ok2);
-}
-
-void SetGetContext(void) {
-  static int a;
-  a = 0;
-  getcontext(&context);
-  if (!a) {
-    a = 1;
-    setcontext(&context);
-  }
-}
-
-BENCH(getcontext, bench) {
-  EZBENCH2("get/setcontext", donothing, SetGetContext());
 }

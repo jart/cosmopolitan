@@ -16,21 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
 #include "libc/intrin/pthread.h"
-#include "libc/macros.internal.h"
 
 /**
  * Sets size of unmapped pages at bottom of stack.
- *
- * Cosmopolitan Libc stack guards always default to 4096 bytes. Setting
- * `guardsize` to zero will disable automatic creation of guard pages.
- * Your `guardsize` will be rounded up to `PAGESIZE`.
  *
  * @param guardsize contains guard size in bytes
  * @return 0 on success, or errno on error
  */
 int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
-  attr->guardsize = ROUNDUP(guardsize, PAGESIZE);
+  attr->guardsize = guardsize;
   return 0;
 }

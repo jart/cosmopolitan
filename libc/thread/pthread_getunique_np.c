@@ -24,5 +24,5 @@
  */
 int64_t pthread_getunique_np(pthread_t thread) {
   struct PosixThread *pt = (struct PosixThread *)thread;
-  return pt->spawn.ptid;
+  return pt->tid;
 }

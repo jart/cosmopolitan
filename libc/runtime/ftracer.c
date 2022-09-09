@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
@@ -24,6 +25,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
@@ -42,6 +44,7 @@
 void ftrace_hook(void);
 
 static int g_stackdigs;
+static struct Ftrace g_ftrace;
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
@@ -52,7 +55,7 @@ static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-static privileged inline int GetNestingLevel(struct FtraceTls *ft,
+static privileged inline int GetNestingLevel(struct Ftrace *ft,
                                              struct StackFrame *sf) {
   int nesting;
   nesting = GetNestingLevelImpl(sf);
@@ -70,9 +73,13 @@ static privileged inline int GetNestingLevel(struct FtraceTls *ft,
  */
 privileged void ftracer(void) {
   long stackuse;
-  struct FtraceTls *ft;
+  struct Ftrace *ft;
   struct StackFrame *sf;
-  ft = (struct FtraceTls *)(__get_tls_privileged() + 0x08);
+  if (__tls_enabled) {
+    ft = (struct Ftrace *)(__get_tls_privileged() + 0x08);
+  } else {
+    ft = &g_ftrace;
+  }
   if (_cmpxchg(&ft->once, false, true)) {
     ft->lastaddr = -1;
     ft->skew = GetNestingLevelImpl(__builtin_frame_address(0));

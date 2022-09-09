@@ -18,17 +18,22 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/pthread.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -37,14 +42,19 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
+#define MAP_ANON_OPENBSD  0x1000
+#define MAP_STACK_OPENBSD 0x4000
+
 void _pthread_wait(struct PosixThread *pt) {
-  _wait0(pt->spawn.ctid);
+  _wait0(pt->ctid);
 }
 
 void _pthread_free(struct PosixThread *pt) {
-  free(pt->spawn.tls);
-  if (pt->stacksize) {
-    munmap(&pt->spawn.stk, pt->stacksize);
+  free(pt->tls);
+  if (pt->ownstack &&        //
+      pt->attr.stackaddr &&  //
+      pt->attr.stackaddr != MAP_FAILED) {
+    munmap(&pt->attr.stackaddr, pt->attr.stacksize);
   }
   free(pt);
 }
@@ -69,6 +79,36 @@ static int PosixThread(void *arg, int tid) {
                           memory_order_release);
   }
   return 0;
+}
+
+static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
+  // OpenBSD: Only permits RSP to occupy memory that's been explicitly
+  // defined as stack memory. We need to squeeze the provided interval
+  // in order to successfully call mmap(), which will return EINVAL if
+  // these calculations should overflow.
+  size_t n;
+  int e, rc;
+  uintptr_t x, y;
+  n = attr->stacksize;
+  x = (uintptr_t)attr->stackaddr;
+  y = ROUNDUP(x, PAGESIZE);
+  n -= y - x;
+  n = ROUNDDOWN(n, PAGESIZE);
+  e = errno;
+  if (__sys_mmap((void *)y, n, PROT_READ | PROT_WRITE,
+                 MAP_PRIVATE | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD, -1, 0,
+                 0) != MAP_FAILED) {
+    attr->stackaddr = (void *)y;
+    attr->stacksize = n;
+    return 0;
+  } else {
+    rc = errno;
+    errno = e;
+    if (rc == EOVERFLOW) {
+      rc = EINVAL;
+    }
+    return rc;
+  }
 }
 
 /**
@@ -124,15 +164,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                    void *(*start_routine)(void *), void *arg) {
   int rc, e = errno;
   struct PosixThread *pt;
-  pthread_attr_t default_attr;
   TlsIsRequired();
   _pthread_zombies_decimate();
-
-  // default attributes
-  if (!attr) {
-    pthread_attr_init(&default_attr);
-    attr = &default_attr;
-  }
 
   // create posix thread object
   if (!(pt = calloc(1, sizeof(struct PosixThread)))) {
@@ -143,26 +176,48 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   pt->arg = arg;
 
   // create thread local storage memory
-  if (!(pt->spawn.tls = _mktls(&pt->spawn.tib))) {
+  if (!(pt->tls = _mktls(&pt->tib))) {
     free(pt);
     errno = e;
     return EAGAIN;
   }
 
   // child thread id is also a condition variable
-  pt->spawn.ctid = (int *)(pt->spawn.tib + 0x38);
+  pt->ctid = (int *)(pt->tib + 0x38);
 
-  // create stack
-  if (attr && attr->stackaddr) {
-    // caller is responsible for creating stacks
-    pt->spawn.stk = attr->stackaddr;
+  // setup attributes
+  if (attr) {
+    pt->attr = *attr;
+    attr = 0;
   } else {
-    // cosmo posix threads is managing the stack
-    pt->spawn.stk = mmap(0, attr->stacksize, PROT_READ | PROT_WRITE,
-                         MAP_STACK | MAP_ANONYMOUS, -1, 0);
-    if (pt->spawn.stk != MAP_FAILED) {
-      pt->stacksize = attr->stacksize;
-    } else {
+    pthread_attr_init(&pt->attr);
+  }
+
+  // setup stack
+  if (pt->attr.stackaddr) {
+    // caller supplied their own stack
+    // assume they know what they're doing as much as possible
+    if (IsOpenbsd()) {
+      if ((rc = FixupCustomStackOnOpenbsd(&pt->attr))) {
+        _pthread_free(pt);
+        return rc;
+      }
+    }
+  } else {
+    // cosmo is managing the stack
+    // 1. in mono repo optimize for tiniest stack possible
+    // 2. in public world optimize to *work* regardless of memory
+    pt->ownstack = true;
+    pt->attr.stacksize = MAX(pt->attr.stacksize, GetStackSize());
+    pt->attr.stacksize = roundup2pow(pt->attr.stacksize);
+    pt->attr.guardsize = ROUNDUP(pt->attr.guardsize, PAGESIZE);
+    if (pt->attr.guardsize + PAGESIZE >= pt->attr.stacksize) {
+      _pthread_free(pt);
+      return EINVAL;
+    }
+    pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
+                              MAP_STACK | MAP_ANONYMOUS, -1, 0);
+    if (pt->attr.stackaddr == MAP_FAILED) {
       rc = errno;
       _pthread_free(pt);
       errno = e;
@@ -173,41 +228,31 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
       }
     }
     // mmap(MAP_STACK) creates a 4096 guard by default
-    if (attr->guardsize != PAGESIZE) {
-      // user requested special guard size
-      if (attr->guardsize) {
-        rc = mprotect(pt->spawn.stk, attr->guardsize, PROT_NONE);
+    if (pt->attr.guardsize != PAGESIZE) {
+      if (pt->attr.guardsize) {
+        // user requested special guard size
+        rc = mprotect(pt->attr.stackaddr, pt->attr.guardsize, PROT_NONE);
       } else {
-        rc = mprotect(pt->spawn.stk, PAGESIZE, PROT_READ | PROT_WRITE);
+        // user explicitly disabled guard page
+        rc = mprotect(pt->attr.stackaddr, PAGESIZE, PROT_READ | PROT_WRITE);
       }
       if (rc) {
         notpossible;
       }
     }
     if (IsAsan()) {
-      if (attr->guardsize) {
-        __asan_poison(pt->spawn.stk, attr->guardsize, kAsanStackOverflow);
+      if (pt->attr.guardsize) {
+        __asan_poison(pt->attr.stackaddr, pt->attr.guardsize,
+                      kAsanStackOverflow);
       }
-      __asan_poison(
-          pt->spawn.stk + attr->stacksize - 16 /* openbsd:stackbound */, 16,
-          kAsanStackOverflow);
+      __asan_poison((char *)pt->attr.stackaddr + pt->attr.stacksize -
+                        16 /* openbsd:stackbound */,
+                    16, kAsanStackOverflow);
     }
   }
 
-  // we only need to save this to support pthread_getattr_np()
-  pt->attr = *attr;
-  // if attr->stackaddr == 0,
-  // the stack is managed by cosmo, 
-  // pt->spawn.stk is from a successful mmap,
-  // and so pt->attr.stackaddr = pt->spawn.stk
-  pt->attr.stackaddr = pt->spawn.stk;
-  // if attr->stackaddr != 0,
-  // then stack is not managed by cosmo
-  // pt->attr.stackaddr = pt->spawn.stk = attr->stackaddr
-  // so the above line is a no-op.
-
   // set initial status
-  switch (attr->detachstate) {
+  switch (pt->attr.detachstate) {
     case PTHREAD_CREATE_JOINABLE:
       pt->status = kPosixThreadJoinable;
       break;
@@ -221,20 +266,16 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   // launch PosixThread(pt) in new thread
-  if (clone(PosixThread, pt->spawn.stk,
-            attr->stacksize - 16 /* openbsd:stackbound */,
+  if (clone(PosixThread, pt->attr.stackaddr,
+            pt->attr.stacksize - 16 /* openbsd:stackbound */,
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
-            pt, &pt->spawn.ptid, pt->spawn.tib, pt->spawn.ctid) == -1) {
+            pt, &pt->tid, pt->tib, pt->ctid) == -1) {
     rc = errno;
     _pthread_free(pt);
     errno = e;
-    if (rc == EINVAL) {
-      return EINVAL;
-    } else {
-      return EAGAIN;
-    }
+    return rc;
   }
 
   if (thread) {

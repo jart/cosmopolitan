@@ -1,9 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_NETBSD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_NETBSD_INTERNAL_H_
+#include "libc/calls/ucontext.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 // clang-format off
-#include "libc/calls/ucontext.h"
 
 #define __UCONTEXT_SIZE 784
 #define _UC_SIGMASK     0x01

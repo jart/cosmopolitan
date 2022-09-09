@@ -20,34 +20,14 @@
 #include "libc/intrin/pthread.h"
 
 /**
- * Sets size of thread stack.
+ * Defines minimum stack size for thread.
  *
- * Your stack must have at least `PTHREAD_STACK_MIN` bytes, which
- * Cosmpolitan Libc defines as `GetStackSize()`. It's a link-time
- * constant used by Actually Portable Executable that's 128 kb by
- * default. See libc/runtime/stack.h for docs on your stack limit
- * since the APE ELF phdrs are the one true source of truth here.
- *
- * Cosmpolitan Libc runtime magic (e.g. ftrace) and memory safety
- * (e.g. kprintf) assumes that stack sizes are two-powers and are
- * aligned to that two-power. Conformance isn't required since we
- * say caveat emptor to those who don't maintain these invariants
- *
- * Unlike pthread_attr_setstack() this function should be used if
- * you want the Cosmopolitan Libc runtime to allocate a stack for
- * you. Since the runtime uses mmap(MAP_STACK) to do that, you'll
- * need to choose a multiple of FRAMESIZE, due to Windows.
- *
- * If this function isn't called it'll default to GetStackSize().
- *
- * @param x contains stack size in bytes
+ * @param stacksize contains stack size in bytes
  * @return 0 on success, or errno on error
- * @raise EINVAL if `x` is less than `PTHREAD_STACK_MIN`
+ * @raise EINVAL if `stacksize` is less than `PTHREAD_STACK_MIN`
  */
-int pthread_attr_setstacksize(pthread_attr_t *a, size_t x) {
-  if (x < PTHREAD_STACK_MIN) return EINVAL;
-  if (x & (FRAMESIZE - 1)) return EINVAL;
-  if (x < FRAMESIZE) return EINVAL;
-  a->stacksize = x;
+int pthread_attr_setstacksize(pthread_attr_t *a, size_t stacksize) {
+  if (stacksize < PTHREAD_STACK_MIN) return EINVAL;
+  a->stacksize = stacksize;
   return 0;
 }

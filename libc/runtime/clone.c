@@ -172,7 +172,7 @@ XnuThreadMain(void *pthread,                    // rdi
     asm volatile("syscall"
                  : "=a"(ax)
                  : "0"(__NR_thread_fast_set_cthread_self), "D"(wt->tls - 0x30)
-                 : "rcx", "r11", "memory", "cc");
+                 : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
   }
 
   func(arg, tid);
@@ -388,7 +388,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
     asm volatile(CFLAG_ASM("syscall")
                  : CFLAG_CONSTRAINT(failed), "=a"(ax)
                  : "1"(__NR_getcontext_netbsd), "D"(&netbsd_clone_template)
-                 : "rcx", "rdx", "r11", "memory");
+                 : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory");
     if (failed) {
       broken = ax;
     }
@@ -443,7 +443,7 @@ static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,
   asm volatile(CFLAG_ASM("syscall")
                : CFLAG_CONSTRAINT(failed), "=a"(ax), "=d"(dx)
                : "1"(__NR__lwp_create), "D"(ctx), "S"(LWP_DETACHED), "2"(tid)
-               : "rcx", "r11", "memory");
+               : "rcx", "r8", "r9", "r10", "r11", "memory");
   if (!failed) {
     return *tid;
   } else {

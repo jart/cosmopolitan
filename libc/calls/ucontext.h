@@ -65,7 +65,7 @@ struct MachineContext {
     };
     gregset_t gregs;
   };
-  struct FpuState *fpregs;
+  struct FpuState *fpregs; /* zero when no fpu context */
   uint64_t __pad1[8];
 };
 
@@ -77,6 +77,7 @@ struct ucontext {
   stack_t uc_stack;
   mcontext_t uc_mcontext; /* use this */
   sigset_t uc_sigmask;
+  uint64_t __pad;
   struct FpuState __fpustate; /* for cosmo on non-linux */
 };
 

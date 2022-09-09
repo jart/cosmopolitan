@@ -51,6 +51,8 @@
 #define _TLDZ ((intptr_t)_tdata_size)
 #define _TIBZ sizeof(struct cthread_descriptor_t)
 
+int sys_enable_tls();
+
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 __msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
@@ -136,34 +138,21 @@ privileged void __enable_tls(void) {
     assert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_sysarch), "D"(AMD64_SET_FSBASE), "S"(tib)
-                 : "rcx", "r11", "memory", "cc");
+    sys_enable_tls(AMD64_SET_FSBASE, tib);
+  } else if (IsLinux()) {
+    sys_enable_tls(ARCH_SET_FS, tib);
   } else if (IsNetbsd()) {
     // netbsd has sysarch(X86_SET_FSBASE) but we can't use that because
-    // signal handlers will cause it to be reset due to net setting the
+    // signal handlers will cause it to be reset due to not setting the
     // _mc_tlsbase field in struct mcontext_netbsd.
-    asm volatile("syscall"
-                 : "=a"(ax), "=d"(dx)
-                 : "0"(__NR__lwp_setprivate), "D"(tib)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsXnu()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_thread_fast_set_cthread_self),
-                   "D"((intptr_t)tib - 0x30)
-                 : "rcx", "r11", "memory", "cc");
+    sys_enable_tls(tib);
   } else if (IsOpenbsd()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR___set_tcb), "D"(tib)
-                 : "rcx", "r11", "memory", "cc");
-  } else if (IsLinux()) {
-    asm volatile("syscall"
-                 : "=a"(ax)
-                 : "0"(__NR_linux_arch_prctl), "D"(ARCH_SET_FS), "S"(tib)
-                 : "rcx", "r11", "memory");
+    sys_enable_tls(tib);
+  } else if (IsXnu()) {
+    // thread_fast_set_cthread_self has a weird ABI
+    int e = errno;
+    sys_enable_tls((intptr_t)tib - 0x30);
+    errno = e;
   } else {
     uint64_t val = (uint64_t)tib;
     asm volatile("wrmsr"

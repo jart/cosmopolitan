@@ -16,49 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/ucontext.h"
-#include "libc/runtime/runtime.h"
-#include "libc/testlib/ezbench.h"
-#include "libc/testlib/testlib.h"
+#include "libc/intrin/fsgsbase.h"
 
-int x;
-bool ok1;
-bool ok2;
-ucontext_t context;
-
-void func(void) {
-  x++;
-  setcontext(&context);
-  abort();
-}
-
-void test(void) {
-  getcontext(&context);
-  if (!x) {
-    ok1 = true;
-    func();
-  } else {
-    ok2 = true;
-  }
-}
-
-TEST(getcontext, test) {
-  test();
-  ASSERT_TRUE(ok1);
-  ASSERT_TRUE(ok2);
-}
-
-void SetGetContext(void) {
-  static int a;
-  a = 0;
-  getcontext(&context);
-  if (!a) {
-    a = 1;
-    setcontext(&context);
-  }
-}
-
-BENCH(getcontext, bench) {
-  EZBENCH2("get/setcontext", donothing, SetGetContext());
+/**
+ * Changes `%fs` base address.
+ *
+ * @see _have_fsgsbase()
+ */
+void *(_wrfsbase)(void *p) {
+  return _wrfsbase(p);
 }
