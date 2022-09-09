@@ -16,33 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/sched-sysv.internal.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/errno.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
-/**
- * Blocks until memory location becomes zero.
- *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
- */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
+int _pthread_reschedule(struct PosixThread *pt) {
+  int rc, e = errno;
+  struct sched_param param = {pt->attr.schedparam};
+  if (IsNetbsd()) {
+    rc = sys_sched_setparam_netbsd(0, pt->tid, pt->attr.schedpolicy, &param);
+  } else if (IsLinux()) {
+    rc = sys_sched_setscheduler(pt->tid, pt->attr.schedpolicy, &param);
+  } else if (IsFreebsd()) {
+    rc = _pthread_setschedparam_freebsd(pt->tid, pt->attr.schedpolicy, &param);
+  } else {
+    rc = enosys();
   }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
-  }
+  rc = rc != -1 ? 0 : errno;
+  errno = e;
+  return rc;
 }

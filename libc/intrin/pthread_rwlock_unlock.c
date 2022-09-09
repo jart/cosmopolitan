@@ -21,7 +21,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/intrin.h"
 #include "libc/intrin/pthread.h"
 
 /**

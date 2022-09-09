@@ -16,33 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/calls/struct/sched_param.h"
+#include "libc/errno.h"
+#include "libc/intrin/pthread2.h"
 
 /**
- * Blocks until memory location becomes zero.
+ * Sets thread scheduler parameter attribute, e.g.
  *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
+ *     pthread_t id;
+ *     pthread_attr_t attr;
+ *     pthread_attr_init(&attr);
+ *     struct sched_param pri = {sched_get_priority_min(SCHED_OTHER)};
+ *     pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+ *     pthread_attr_setschedpolicy(&attr, SCHED_OTHER);
+ *     pthread_attr_setschedparam(&attr, &pri);
+ *     pthread_create(&id, &attr, func, 0);
+ *     pthread_attr_destroy(&attr);
+ *     pthread_join(id, 0);
+ *
+ * @param param specifies priority on scheduling policies that need it
+ * @see pthread_attr_setschedpolicy()
+ * @see sched_get_priority_min()
+ * @see sched_get_priority_max()
+ * @see sched_setparam()
  */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
-  }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
-  }
+int pthread_attr_setschedparam(pthread_attr_t *attr,
+                               const struct sched_param *param) {
+  if (!param) return EINVAL;
+  attr->schedparam = param->sched_priority;
+  return 0;
 }

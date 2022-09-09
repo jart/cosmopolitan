@@ -16,12 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/intrin.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
 #include "libc/limits.h"
 
@@ -39,13 +35,9 @@
 int pthread_barrier_wait(pthread_barrier_t *barrier) {
   if (atomic_fetch_add(&barrier->waits, 1) + 1 == barrier->count) {
     if (atomic_fetch_add(&barrier->waits, 1) + 1 < barrier->count * 2) {
-      atomic_store(&barrier->popped, 1);
+      atomic_store_explicit(&barrier->popped, 1, memory_order_relaxed);
       do {
-        if (IsLinux() || IsOpenbsd()) {
-          _futex_wake(&barrier->popped, INT_MAX, barrier->pshared);
-        } else {
-          pthread_yield();
-        }
+        _futex_wake(&barrier->popped, INT_MAX, barrier->pshared);
       } while (atomic_load_explicit(&barrier->waits, memory_order_relaxed) <
                barrier->count * 2);
       atomic_store_explicit(&barrier->popped, 0, memory_order_relaxed);
@@ -54,11 +46,7 @@ int pthread_barrier_wait(pthread_barrier_t *barrier) {
     return PTHREAD_BARRIER_SERIAL_THREAD;
   }
   do {
-    if (IsLinux() || IsOpenbsd()) {
-      _futex_wait(&barrier->popped, 0, barrier->pshared, 0);
-    } else {
-      pthread_yield();
-    }
+    _futex_wait(&barrier->popped, 0, barrier->pshared, 0);
   } while (atomic_load_explicit(&barrier->waits, memory_order_relaxed) <
            barrier->count);
   atomic_fetch_add(&barrier->waits, 1);

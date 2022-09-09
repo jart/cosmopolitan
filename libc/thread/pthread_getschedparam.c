@@ -16,33 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/intrin/pthread2.h"
+#include "libc/thread/posixthread.internal.h"
 
 /**
- * Blocks until memory location becomes zero.
- *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
+ * Gets most recently set scheduling of thread.
  */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
-  }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
-  }
+int pthread_getschedparam(pthread_t thread, int *policy,
+                          struct sched_param *param) {
+  struct PosixThread *pt = (struct PosixThread *)thread;
+  *policy = pt->attr.schedpolicy;
+  *param = (struct sched_param){pt->attr.schedparam};
+  return 0;
 }

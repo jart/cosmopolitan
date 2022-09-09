@@ -16,33 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/errno.h"
+#include "libc/intrin/pthread2.h"
+#include "libc/thread/posixthread.internal.h"
 
 /**
- * Blocks until memory location becomes zero.
+ * Changes scheduling of thread, e.g.
  *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
+ *     struct sched_param p = {sched_get_priority_min(SCHED_OTHER)};
+ *     pthread_setschedparam(thread, SCHED_OTHER, &p);
+ *
+ * @param policy may be one of:
+ *     - `SCHED_OTHER` the default policy
+ *     - `SCHED_FIFO` for real-time scheduling (usually needs root)
+ *     - `SCHED_RR` for round-robin scheduling (usually needs root)
+ *     - `SCHED_IDLE` for lowest effort (Linux and FreeBSD only)
+ *     - `SCHED_BATCH` for "batch" style execution of processes if
+ *       supported (Linux), otherwise it's treated as `SCHED_OTHER`
+ * @raise ENOSYS on XNU, Windows, OpenBSD
+ * @raise EPERM if not authorized to use scheduler in question (e.g.
+ *     trying to use a real-time scheduler as non-root on Linux) or
+ *     possibly because pledge() was used and isn't allowing this
+ * @see sched_get_priority_min()
+ * @see sched_get_priority_max()
+ * @see sched_setscheduler()
  */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
-  }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
-  }
+int pthread_setschedparam(pthread_t thread, int policy,
+                          const struct sched_param *param) {
+  struct PosixThread *pt = (struct PosixThread *)thread;
+  if (!param) return EINVAL;
+  pt->attr.schedpolicy = policy;
+  pt->attr.schedparam = param->sched_priority;
+  return _pthread_reschedule(pt);
 }

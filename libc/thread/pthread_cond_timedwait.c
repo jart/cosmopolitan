@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
@@ -77,11 +76,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
       rel = _timespec_sub(*abstime, now);
       tsp = &rel;
     }
-    if (IsLinux() || IsOpenbsd()) {
-      _futex_wait(&cond->seq, seq, cond->pshared, tsp);
-    } else {
-      sched_yield();
-    }
+    _futex_wait(&cond->seq, seq, cond->pshared, tsp);
   } while (seq == atomic_load_explicit(&cond->seq, memory_order_relaxed));
 
   atomic_fetch_sub(&cond->waits, 1);

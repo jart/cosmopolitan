@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/assert.h"
-#include "libc/intrin/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
@@ -17,7 +16,9 @@
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -110,7 +111,7 @@ _Atomic(int) connections;
 _Atomic(int) closingtime;
 const char *volatile status;
 
-int Worker(void *id, int tid) {
+void *Worker(void *id) {
   int server, yes = 1;
 
   // load balance incoming connections for port 8080 across all threads
@@ -276,8 +277,8 @@ void PrintStatus(void) {
 }
 
 int main(int argc, char *argv[]) {
-  int i;
-  struct spawn *th;
+  int i, rc;
+  pthread_t *th;
   uint32_t *hostips;
   // ShowCrashReports();
 
@@ -298,7 +299,7 @@ int main(int argc, char *argv[]) {
 
   threads = argc > 1 ? atoi(argv[1]) : GetCpuCount();
   if (!(1 <= threads && threads <= 100000)) {
-    kprintf("error: invalid number of threads\n");
+    kprintf("error: invalid number of threads: %d\n", threads);
     exit(1);
   }
 
@@ -309,12 +310,12 @@ int main(int argc, char *argv[]) {
   pledge("stdio inet", 0);
 
   // spawn over 9,000 worker threads
-  th = calloc(threads, sizeof(*th));
+  th = calloc(threads, sizeof(pthread_t));
   for (i = 0; i < threads; ++i) {
     ++workers;
-    if (_spawn(Worker, (void *)(intptr_t)i, th + i) == -1) {
+    if ((rc = pthread_create(th + i, 0, Worker, (void *)(intptr_t)i))) {
       --workers;
-      kprintf("error: _spawn(%d) failed %m\n", i);
+      kprintf("error: pthread_create(%d) failed %s\n", i, strerror(rc));
     }
     if (!(i % 500)) {
       PrintStatus();
@@ -332,7 +333,7 @@ int main(int argc, char *argv[]) {
 
   // join the workers
   for (i = 0; i < threads; ++i) {
-    _join(th + i);
+    pthread_join(th[i], 0);
   }
 
   // clean up memory

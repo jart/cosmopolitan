@@ -41,7 +41,7 @@ static textwindows int sys_sched_getaffinity_nt(int tid, size_t size,
 }
 
 /**
- * Gets CPU affinity for current thread.
+ * Gets CPU affinity for thread.
  *
  * While Windows allows us to change the thread affinity mask, it's only
  * possible to read the process affinity mask. Therefore this function

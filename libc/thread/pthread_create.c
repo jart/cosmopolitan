@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -37,6 +38,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
@@ -62,6 +64,9 @@ void _pthread_free(struct PosixThread *pt) {
 static int PosixThread(void *arg, int tid) {
   struct PosixThread *pt = arg;
   enum PosixThreadStatus status;
+  if (pt->attr.inheritsched == PTHREAD_EXPLICIT_SCHED) {
+    _pthread_reschedule(pt);
+  }
   if (!setjmp(pt->exiter)) {
     ((cthread_t)__get_tls())->pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);

@@ -66,7 +66,7 @@ static textwindows dontinline int sys_sched_setaffinity_nt(int pid,
 }
 
 /**
- * Asks kernel to only schedule process on particular CPUs.
+ * Asks kernel to only schedule thread on particular CPUs.
  *
  * @param tid is the process or thread id (or 0 for caller)
  * @param bitsetsize is byte length of bitset, which should be 128

@@ -16,12 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
+#include "libc/calls/struct/cpuset.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
-#include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/struct/systeminfo.h"
@@ -35,13 +34,9 @@
 #define ALL_PROCESSOR_GROUPS  0xffff
 
 static unsigned GetCpuCountLinux(void) {
-  uint64_t s[16];
-  unsigned i, c, n;
-  if (!sys_sched_getaffinity(0, sizeof(s), s)) {
-    for (c = i = 0; i < ARRAYLEN(s); ++i) {
-      c += popcnt(s[i]);
-    }
-    return c;
+  cpu_set_t s = {0};
+  if (sys_sched_getaffinity(0, sizeof(s), &s) != -1) {
+    return CPU_COUNT(&s);
   } else {
     return 0;
   }
@@ -78,15 +73,7 @@ static textwindows unsigned GetCpuCountWindows(void) {
   }
 }
 
-/**
- * Returns number of CPUs in system.
- *
- * On Intel systems with HyperThreading this will return the number of
- * cores multiplied by two.
- *
- * @return cpu count or 0 if it couldn't be determined
- */
-unsigned GetCpuCount(void) {
+static unsigned GetCpuCountImpl(void) {
   if (!IsWindows()) {
     if (!IsBsd()) {
       return GetCpuCountLinux();
@@ -96,4 +83,23 @@ unsigned GetCpuCount(void) {
   } else {
     return GetCpuCountWindows();
   }
+}
+
+static int g_cpucount;
+
+// precompute because process affinity on linux may change later
+__attribute__((__constructor__)) static void init(void) {
+  g_cpucount = GetCpuCountImpl();
+}
+
+/**
+ * Returns number of CPUs in system.
+ *
+ * On Intel systems with HyperThreading this will return the number of
+ * cores multiplied by two.
+ *
+ * @return cpu count or 0 if it couldn't be determined
+ */
+unsigned GetCpuCount(void) {
+  return g_cpucount;
 }

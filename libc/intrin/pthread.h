@@ -21,6 +21,9 @@
 #define PTHREAD_CREATE_JOINABLE 0
 #define PTHREAD_CREATE_DETACHED 1
 
+#define PTHREAD_INHERIT_SCHED  0
+#define PTHREAD_EXPLICIT_SCHED 1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -83,12 +86,13 @@ typedef struct pthread_rwlock_s {
 
 typedef struct pthread_attr_s {
   char detachstate;
-  size_t stacksize;
-  size_t guardsize;
-  char *stackaddr;
-  int scope;
+  char inheritsched;
+  int schedparam;
   int schedpolicy;
-  int inheritsched;
+  int scope;
+  unsigned guardsize;
+  unsigned stacksize;
+  char *stackaddr;
 } pthread_attr_t;
 
 int pthread_yield(void);

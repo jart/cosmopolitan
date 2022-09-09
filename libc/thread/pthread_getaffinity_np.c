@@ -16,33 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/calls/struct/cpuset.h"
+#include "libc/errno.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 /**
- * Blocks until memory location becomes zero.
+ * Gets CPU affinity for thread.
  *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
+ * While Windows allows us to change the thread affinity mask, it's only
+ * possible to read the process affinity mask. Therefore this function
+ * won't reflect the changes made by psched_setaffinity_np() on Windows.
+ *
+ * @param bitsetsize is byte length of bitset, which should be 128
+ * @return 0 on success, or errno on error
+ * @raise ENOSYS if not Linux or Windows
  */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
-  }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
+int pthread_getaffinity_np(pthread_t thread, size_t bitsetsize,
+                           cpu_set_t *bitset) {
+  int rc, e = errno;
+  struct PosixThread *pt = (struct PosixThread *)thread;
+  if (!sched_getaffinity(pt->tid, bitsetsize, bitset)) {
+    return 0;
+  } else {
+    rc = errno;
+    errno = e;
+    return rc;
   }
 }

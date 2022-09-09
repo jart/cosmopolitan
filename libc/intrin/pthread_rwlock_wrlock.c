@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/intrin/pthread.h"
@@ -28,12 +27,10 @@ static int pthread_rwlock_wrlock_spin(pthread_rwlock_t *rwlock, int expect,
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux() || IsOpenbsd()) {
+  } else {
     atomic_fetch_add(&rwlock->waits, 1);
     _futex_wait(&rwlock->lock, expect, rwlock->pshared, &(struct timespec){1});
     atomic_fetch_sub(&rwlock->waits, 1);
-  } else {
-    pthread_yield();
   }
   return tries;
 }

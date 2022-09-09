@@ -7,19 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/calls.h"
-#include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/sysconf.h"
-#include "libc/stdio/stdio.h"
 
-int main(int argc, char *argv[]) {
-  int c, n;
-  char a[22], *p;
-  if ((c = GetCpuCount())) {
-    p = FormatInt64(a, c);
-    *p++ = '\n';
-    return write(1, a, p - a) == p - a ? 0 : 1;
-  } else {
-    return 1;
-  }
+int main() {
+  kprintf("%d\n", GetCpuCount());
 }

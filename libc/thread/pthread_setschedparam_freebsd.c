@@ -16,33 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/wait0.internal.h"
-#include "libc/linux/futex.h"
+#include "libc/calls/struct/sched_param.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/thread/freebsd.internal.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
-/**
- * Blocks until memory location becomes zero.
- *
- * This is intended to be used on the child thread id, which is updated
- * by the _spawn() system call when a thread terminates. The purpose of
- * this operation is to know when it's safe to munmap() a threads stack
- */
-void _wait0(const int *ctid) {
-  int x;
-  for (;;) {
-    if (!(x = atomic_load_explicit(ctid, memory_order_relaxed))) {
-      break;
-    } else {
-      _futex_wait(ctid, x, PTHREAD_PROCESS_SHARED, &(struct timespec){2});
-    }
+#define RTP_SET_FREEBSD       1
+#define PRI_REALTIME_FREEBSD  2
+#define RTP_PRIO_MAX_FREEBSD  31
+#define PRI_FIFO_BIT_FREEBSD  8
+#define PRI_FIFO_FREEBSD      (PRI_REALTIME_FREEBSD | PRI_FIFO_BIT_FREEBSD)
+#define PRI_TIMESHARE_FREEBSD 3
+
+int rtprio_thread(int fun, int tid, struct rtprio *inout_rtp);
+
+int _pthread_setschedparam_freebsd(int tid, int policy,
+                                   const struct sched_param *param) {
+  struct rtprio rtp;
+  if (policy == SCHED_RR) {
+    rtp.type = PRI_REALTIME_FREEBSD;
+    rtp.prio = RTP_PRIO_MAX_FREEBSD - param->sched_priority;
+  } else if (policy == SCHED_FIFO) {
+    rtp.type = PRI_FIFO_FREEBSD;
+    rtp.prio = RTP_PRIO_MAX_FREEBSD - param->sched_priority;
+  } else {
+    rtp.type = PRI_TIMESHARE_FREEBSD;
+    rtp.prio = 0;
   }
-  if (IsOpenbsd()) {
-    // TODO(jart): Why do we need it? It's not even perfect.
-    //             What's up with all these OpenBSD flakes??
-    pthread_yield();
-  }
+  return rtprio_thread(RTP_SET_FREEBSD, tid, &rtp);
 }

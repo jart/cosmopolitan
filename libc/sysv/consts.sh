@@ -1336,7 +1336,7 @@ syscon	sched	SCHED_OTHER				0			127			2			127			0			127			# standard round-robin
 syscon	sched	SCHED_FIFO				1			127			1			127			1			127			# [real-time] first-in, first-out policy
 syscon	sched	SCHED_RR				2			127			3			127			2			127			# [real-time] round-robin policy
 syscon	sched	SCHED_BATCH				3			127			2			127			0			127			# for "batch" style execution of processes; polyfilled as SCHED_OTHER on non-Linux
-syscon	sched	SCHED_IDLE				5			127			2			127			0			127			# for running very low priority background jobs; polyfilled as SCHED_OTHER on non-Linux
+𝔰𝔶𝔰𝔠𝔬𝔫	sched	SCHED_IDLE				5			127			2			127			0			127			# for running very low priority background jobs; polyfilled as SCHED_OTHER on non-Linux
 syscon	sched	SCHED_DEADLINE				6			127			127			127			127			127			# can only be set by sched_setattr()
 syscon	sched	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0			# Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork(); no-op on non-Linux
 

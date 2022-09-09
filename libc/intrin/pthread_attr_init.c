@@ -26,7 +26,6 @@
  */
 int pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){
-      .detachstate = PTHREAD_CREATE_JOINABLE,
       .stacksize = GetStackSize(),
       .guardsize = PAGESIZE,
   };

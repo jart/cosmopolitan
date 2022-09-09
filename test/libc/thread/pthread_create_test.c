@@ -17,16 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
+#include "libc/intrin/pthread2.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sched.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
@@ -87,6 +91,33 @@ TEST(pthread_detach, testDetachUponCreation) {
   ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
   ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
+}
+
+static void *CheckSchedule(void *arg) {
+  int rc, policy;
+  struct sched_param prio;
+  ASSERT_EQ(0, pthread_getschedparam(pthread_self(), &policy, &prio));
+  ASSERT_EQ(SCHED_OTHER, policy);
+  ASSERT_EQ(sched_get_priority_min(SCHED_OTHER), prio.sched_priority);
+  if (IsWindows() || IsXnu() || IsOpenbsd()) {
+    ASSERT_EQ(ENOSYS, pthread_setschedparam(pthread_self(), policy, &prio));
+  } else {
+    ASSERT_EQ(0, pthread_setschedparam(pthread_self(), policy, &prio));
+  }
+  return 0;
+}
+
+TEST(pthread_detach, scheduling) {
+  pthread_t id;
+  pthread_attr_t attr;
+  struct sched_param pri = {sched_get_priority_min(SCHED_OTHER)};
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED));
+  ASSERT_EQ(0, pthread_attr_setschedpolicy(&attr, SCHED_OTHER));
+  ASSERT_EQ(0, pthread_attr_setschedparam(&attr, &pri));
+  ASSERT_EQ(0, pthread_create(&id, &attr, CheckSchedule, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
 }
 
 static void *CheckStack(void *arg) {

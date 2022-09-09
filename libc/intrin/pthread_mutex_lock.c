@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
@@ -36,12 +35,10 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
     for (i = 0; i != 1 << tries; i++) {
     }
     tries++;
-  } else if (IsLinux() || IsOpenbsd()) {
+  } else {
     atomic_fetch_add(&mutex->waits, 1);
     _futex_wait(&mutex->lock, expect, mutex->pshared, &(struct timespec){1});
     atomic_fetch_sub(&mutex->waits, 1);
-  } else {
-    pthread_yield();
   }
   return tries;
 }
