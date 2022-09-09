@@ -21,9 +21,9 @@
 
 	.macro	.e e s
 	.long	\e - kTcpOptnames
-	.long	1f - kTcpOptnames
+	.long	.L\@ - kTcpOptnames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 

@@ -21,9 +21,9 @@
 
 	.macro	.e e
 	.long	\e - kErrnoNames
-	.long	1f - kErrnoNames
+	.long	.L\@ - kErrnoNames
 	.rodata.str1.1
-1:	.string	"\e"
+.L\@:	.string	"\e"
 	.previous
 	.endm
 

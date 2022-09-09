@@ -21,14 +21,14 @@
 
 	.macro	.e e s
 	.long	\e - kSockOptnames
-	.long	1f - kSockOptnames
+	.long	.L\@ - kSockOptnames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kSockOptnames:
 	.e	SO_DEBUG,"DEBUG"			# bool32

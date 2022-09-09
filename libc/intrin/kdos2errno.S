@@ -28,6 +28,7 @@
 	.endm
 
 	.section .rodata,"a",@progbits
+	.align	4
 	.underrun
 kDos2Errno:
 //	.e	kNtErrorInvalidFunction,ENOSYS		# in consts.sh

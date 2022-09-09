@@ -174,7 +174,8 @@ int pthread_barrier_init(pthread_barrier_t *, const pthread_barrierattr_t *,
 
 #define pthread_spin_init(pSpin, multiprocess) ((pSpin)->lock = 0, 0)
 #define pthread_spin_destroy(pSpin)            ((pSpin)->lock = -1, 0)
-#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407
+#if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
+    !defined(__STRICT_ANSI__)
 extern const errno_t EBUSY;
 #define pthread_spin_lock(pSpin)                                          \
   ({                                                                      \

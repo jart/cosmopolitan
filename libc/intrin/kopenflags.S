@@ -21,9 +21,9 @@
 
 	.macro	.e e s
 	.long	\e - kOpenFlags
-	.long	1f - kOpenFlags
+	.long	.L\@ - kOpenFlags
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 

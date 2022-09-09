@@ -21,14 +21,14 @@
 
 	.macro	.e e s
 	.long	\e - kSignalNames
-	.long	1f - kSignalNames
+	.long	.L\@ - kSignalNames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kSignalNames:
 	.e	SIGHUP,"SIGHUP"

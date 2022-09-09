@@ -4,20 +4,35 @@
 # Default Mode
 #
 #   - `make`
+#   - Optimized
 #   - Backtraces
+#   - Debuggable
 #   - Syscall tracing
 #   - Function tracing
 #   - Reasonably small
-#   - Reasonably optimized
-#   - Reasonably debuggable
+#
 ifeq ($(MODE),)
-CONFIG_CCFLAGS +=		\
-	$(BACKTRACES)		\
-	$(FTRACE)		\
-	-DSYSDEBUG		\
-	-O2
-TARGET_ARCH ?=			\
-	-msse3
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2
+CONFIG_CPPFLAGS += -DSYSDEBUG
+TARGET_ARCH ?= -msse3
+endif
+
+# Fast Build Mode
+#
+#   - `make MODE=fastbuild`
+#   - No debugging
+#   - Syscall tracing
+#   - Function tracing
+#   - Some optimizations
+#   - Limited Backtraces
+#   - Compiles 28% faster
+#
+ifeq ($(MODE),fastbuild)
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O
+CONFIG_CPPFLAGS += -DSYSDEBUG
+CONFIG_OFLAGS += -g0
+CONFIG_LDFLAGS += -S
+TARGET_ARCH ?= -msse3
 endif
 
 # Optimized Mode
@@ -31,19 +46,11 @@ endif
 #   - No memory corruption detection
 #   - assert() / CHECK_xx() may leak code into binary for debuggability
 #   - GCC 8+ hoists check fails into .text.cold, thus minimizing impact
+#
 ifeq ($(MODE), opt)
-CONFIG_CPPFLAGS +=		\
-	-DNDEBUG		\
-	-msse2avx		\
-	-Wa,-msse2avx
-CONFIG_CCFLAGS +=		\
-	$(BACKTRACES)		\
-	$(FTRACE)		\
-	-DSYSDEBUG		\
-	-O3			\
-	-fmerge-all-constants
-TARGET_ARCH ?=			\
-	-march=native
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG -msse2avx -Wa,-msse2avx
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O3 -fmerge-all-constants
+TARGET_ARCH ?= -march=native
 endif
 
 # Optimized Linux Mode
@@ -54,18 +61,12 @@ endif
 #   - Turns off function tracing
 #   - Turns off support for older cpu models
 #   - Turns off support for other operating systems
+#
 ifeq ($(MODE), optlinux)
-CONFIG_CPPFLAGS +=		\
-	-DNDEBUG		\
-	-msse2avx		\
-	-Wa,-msse2avx		\
-	-DSUPPORT_VECTOR=1
-CONFIG_CCFLAGS +=		\
-	-O3 -fmerge-all-constants
-DEFAULT_COPTS +=		\
-	-mred-zone
-TARGET_ARCH ?=			\
-	-march=native
+CONFIG_CPPFLAGS += -DNDEBUG -msse2avx -Wa,-msse2avx -DSUPPORT_VECTOR=1
+CONFIG_CCFLAGS += -O3 -fmerge-all-constants
+DEFAULT_COPTS += -mred-zone
+TARGET_ARCH ?= -march=native
 endif
 
 # Release Mode
@@ -81,16 +82,12 @@ endif
 #   - DCHECK_xx() statements removed
 #   - No memory corruption detection
 #   - CHECK_xx() won't leak strings into binary
+#
 ifeq ($(MODE), rel)
-CONFIG_CPPFLAGS +=		\
-	-DNDEBUG
-CONFIG_CCFLAGS +=		\
-	$(BACKTRACES)		\
-	-O2
-TARGET_ARCH ?=			\
-	-msse3
-PYFLAGS +=			\
-	-O1
+CONFIG_CPPFLAGS += -DNDEBUG
+CONFIG_CCFLAGS += $(BACKTRACES) -O2
+TARGET_ARCH ?= -msse3
+PYFLAGS += -O1
 endif
 
 # Asan Mode
@@ -103,14 +100,11 @@ endif
 #   - Backtraces
 #   - Debuggability
 #   - Larger binaries
+#
 ifeq ($(MODE), asan)
-CONFIG_CCFLAGS +=		\
-	$(BACKTRACES)		\
-	-O2
-CONFIG_COPTS +=			\
-	-fsanitize=address
-TARGET_ARCH ?=			\
-	-msse3
+CONFIG_CCFLAGS += $(BACKTRACES) -O2
+CONFIG_COPTS += -fsanitize=address
+TARGET_ARCH ?= -msse3
 endif
 
 # Debug Mode
@@ -122,22 +116,13 @@ endif
 #   - Stack canaries
 #   - No optimization (TODO)
 #   - Enormous binaries
+#
 ifeq ($(MODE), dbg)
-CONFIG_CPPFLAGS +=		\
-	-DMODE_DBG
-CONFIG_CCFLAGS +=		\
-	$(BACKTRACES)		\
-	$(FTRACE)		\
-	-DSYSDEBUG		\
-	-O2			\
-	-fno-inline
-CONFIG_COPTS +=			\
-	-fsanitize=address	\
-	-fsanitize=undefined
-TARGET_ARCH ?=			\
-	-msse3
-OVERRIDE_CCFLAGS +=		\
-	-fno-pie
+CONFIG_CPPFLAGS += -DMODE_DBG
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O -fno-inline
+CONFIG_COPTS += -fsanitize=address -fsanitize=undefined
+TARGET_ARCH ?= -msse3
+OVERRIDE_CCFLAGS += -fno-pie
 endif
 
 # Tiny Mode
@@ -151,6 +136,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+#
 ifeq ($(MODE), tiny)
 CONFIG_CPPFLAGS +=			\
 	-DTINY				\
@@ -185,6 +171,7 @@ endif
 #   - No portability
 #   - No algorithmics
 #   - YOLO
+#
 ifeq ($(MODE), tinylinux)
 CONFIG_CPPFLAGS +=			\
 	-DTINY				\
@@ -216,6 +203,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+#
 ifeq ($(MODE), tinylinuxbsd)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -246,6 +234,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+#
 ifeq ($(MODE), tinysysv)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\
@@ -276,6 +265,7 @@ endif
 #   - No backtraces
 #   - No algorithmics
 #   - YOLO
+#
 ifeq ($(MODE), tinynowin)
 CONFIG_CPPFLAGS +=		\
 	-DTINY			\

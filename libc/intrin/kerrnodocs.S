@@ -21,9 +21,9 @@
 
 	.macro	.e e s
 	.long	\e - kErrnoDocs
-	.long	1f - kErrnoDocs
+	.long	.L\@ - kErrnoDocs
 	.rodata.str1.1
-1:	.asciz	"\s"
+.L\@:	.asciz	"\s"
 	.previous
 	.endm
 

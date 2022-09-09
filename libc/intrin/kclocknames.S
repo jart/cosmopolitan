@@ -21,13 +21,13 @@
 
 	.macro	.e e s
 	.long	\e - kClockNames
-	.long	1f - kClockNames
+	.long	.L\@ - kClockNames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 
-	.section .rodata
+	.section .rodata,"a",@progbits
 	.align 4
 	.underrun
 kClockNames:

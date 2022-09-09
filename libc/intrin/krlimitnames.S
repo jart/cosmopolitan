@@ -21,14 +21,14 @@
 
 	.macro	.e e s
 	.long	\e - kRlimitNames
-	.long	1f - kRlimitNames
+	.long	.L\@ - kRlimitNames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 
 	.section .rodata
-	.align 4
+	.align	4
 	.underrun
 kRlimitNames:
 	.e	RLIMIT_AS,"AS"

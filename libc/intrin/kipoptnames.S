@@ -21,9 +21,9 @@
 
 	.macro	.e e s
 	.long	\e - kIpOptnames
-	.long	1f - kIpOptnames
+	.long	.L\@ - kIpOptnames
 	.rodata.str1.1
-1:	.string	"\s"
+.L\@:	.string	"\s"
 	.previous
 	.endm
 
