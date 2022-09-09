@@ -85,7 +85,7 @@ typedef struct pthread_attr_s {
   char detachstate;
   size_t stacksize;
   size_t guardsize;
-  void *stackaddr;
+  char *stackaddr;
   int scope;
   int schedpolicy;
   int inheritsched;

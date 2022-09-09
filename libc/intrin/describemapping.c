@@ -49,7 +49,6 @@ const char *(DescribeMapping)(char p[8], int prot, int flags) {
   DescribeProt(p, prot);
   p[3] = DescribeMapType(flags);
   p[4] = (flags & MAP_ANONYMOUS) ? 'a' : '-';
-  p[5] = (flags & MAP_GROWSDOWN) ? 'G' : '-';
   p[6] = (flags & MAP_FIXED) ? 'F' : '-';
   p[7] = 0;
   return p;

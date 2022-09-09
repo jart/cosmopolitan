@@ -372,7 +372,6 @@ int XlatMapFlags(int x) {
   if (x & 2) r |= MAP_PRIVATE;
   if (x & 16) r |= MAP_FIXED;
   if (x & 32) r |= MAP_ANONYMOUS;
-  if (x & 256) r |= MAP_GROWSDOWN;
   return r;
 }
 

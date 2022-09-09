@@ -52,10 +52,6 @@
 #include "third_party/getopt/getopt.h"
 #endif // defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__CloudABI__) || defined(__Fuchsia__) || defined(__wasi__)
 
-#if defined(__NetBSD__)
-#pragma weak pthread_create // Do not create libpthread dependency
-#endif
-
 #if defined(_LIBCPP_WIN32API)
 #include "libc/nt/accounting.h"
 #include "libc/nt/automation.h"

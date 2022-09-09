@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/pthread.h"
@@ -25,13 +26,31 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
+void OnTrap(int sig, struct siginfo *si, void *vctx) {
+  struct ucontext *ctx = vctx;
+}
+
+void SetUp(void) {
+  struct sigaction sig = {.sa_sigaction = OnTrap, .sa_flags = SA_SIGINFO};
+  sigaction(SIGTRAP, &sig, 0);
+}
+
+void TriggerSignal(void) {
+  sched_yield();
+  DebugBreak();
+  sched_yield();
+}
+
 static void *Increment(void *arg) {
   ASSERT_EQ(gettid(), pthread_getthreadid_np());
+  TriggerSignal();
   return (void *)((uintptr_t)arg + 1);
 }
 
@@ -44,6 +63,7 @@ TEST(pthread_create, testCreateReturnJoin) {
 }
 
 static void *IncExit(void *arg) {
+  TriggerSignal();
   pthread_exit((void *)((uintptr_t)arg + 1));
 }
 
@@ -71,6 +91,7 @@ TEST(pthread_detach, testDetachUponCreation) {
 
 static void *CheckStack(void *arg) {
   char buf[1024 * 1024];
+  TriggerSignal();
   CheckLargeStackAllocation(buf, 1024 * 1024);
   return 0;
 }
@@ -81,6 +102,24 @@ TEST(pthread_detach, testBigStack) {
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setstacksize(&attr, 2 * 1000 * 1000));
   ASSERT_EQ(0, pthread_create(&id, &attr, CheckStack, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  ASSERT_EQ(0, pthread_join(id, 0));
+}
+
+static void *CheckStack2(void *arg) {
+  char buf[57244];
+  TriggerSignal();
+  CheckLargeStackAllocation(buf, sizeof(buf));
+  return 0;
+}
+
+TEST(pthread_detach, testBiggerGuardSize) {
+  pthread_t id;
+  pthread_attr_t attr;
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setstacksize(&attr, 65536));
+  ASSERT_EQ(0, pthread_attr_setguardsize(&attr, 8192));
+  ASSERT_EQ(0, pthread_create(&id, &attr, CheckStack2, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   ASSERT_EQ(0, pthread_join(id, 0));
 }

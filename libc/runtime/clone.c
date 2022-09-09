@@ -595,9 +595,7 @@ int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
              ((flags & CLONE_VM) && (stksz < PAGESIZE || (stksz & 15)))) {
     rc = einval();
   } else if (IsAsan() &&
-             ((stksz > PAGESIZE &&
-               !__asan_is_valid((char *)stk + PAGESIZE, stksz - PAGESIZE)) ||
-              ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, 64)) ||
+             (((flags & CLONE_SETTLS) && !__asan_is_valid(tls, 64)) ||
               ((flags & CLONE_SETTLS) && !__asan_is_valid(tls, sizeof(long))) ||
               ((flags & CLONE_PARENT_SETTID) &&
                !__asan_is_valid(ptid, sizeof(*ptid))) ||

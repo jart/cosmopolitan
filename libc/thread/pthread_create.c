@@ -96,8 +96,8 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   n = ROUNDDOWN(n, PAGESIZE);
   e = errno;
   if (__sys_mmap((void *)y, n, PROT_READ | PROT_WRITE,
-                 MAP_PRIVATE | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD, -1, 0,
-                 0) != MAP_FAILED) {
+                 MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
+                 -1, 0, 0) == (void *)y) {
     attr->stackaddr = (void *)y;
     attr->stacksize = n;
     return 0;
@@ -215,8 +215,28 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
       _pthread_free(pt);
       return EINVAL;
     }
-    pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
-                              MAP_STACK | MAP_ANONYMOUS, -1, 0);
+    if (pt->attr.guardsize == PAGESIZE) {
+      // user is wisely using smaller stacks with default guard size
+      pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
+                                MAP_STACK | MAP_ANONYMOUS, -1, 0);
+    } else {
+      // user is tuning things, performance may suffer
+      pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
+                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if (pt->attr.stackaddr != MAP_FAILED) {
+        if (IsOpenbsd() &&
+            __sys_mmap(
+                pt->attr.stackaddr, pt->attr.stacksize, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
+                -1, 0, 0) != pt->attr.stackaddr) {
+          notpossible;
+        }
+        if (pt->attr.guardsize && !IsWindows() &&
+            mprotect(pt->attr.stackaddr, pt->attr.guardsize, PROT_NONE)) {
+          notpossible;
+        }
+      }
+    }
     if (pt->attr.stackaddr == MAP_FAILED) {
       rc = errno;
       _pthread_free(pt);
@@ -227,27 +247,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
         return EAGAIN;
       }
     }
-    // mmap(MAP_STACK) creates a 4096 guard by default
-    if (pt->attr.guardsize != PAGESIZE) {
-      if (pt->attr.guardsize) {
-        // user requested special guard size
-        rc = mprotect(pt->attr.stackaddr, pt->attr.guardsize, PROT_NONE);
-      } else {
-        // user explicitly disabled guard page
-        rc = mprotect(pt->attr.stackaddr, PAGESIZE, PROT_READ | PROT_WRITE);
-      }
-      if (rc) {
-        notpossible;
-      }
-    }
-    if (IsAsan()) {
-      if (pt->attr.guardsize) {
-        __asan_poison(pt->attr.stackaddr, pt->attr.guardsize,
-                      kAsanStackOverflow);
-      }
-      __asan_poison((char *)pt->attr.stackaddr + pt->attr.stacksize -
-                        16 /* openbsd:stackbound */,
-                    16, kAsanStackOverflow);
+    if (IsAsan() && pt->attr.guardsize) {
+      __asan_poison(pt->attr.stackaddr, pt->attr.guardsize, kAsanStackOverflow);
     }
   }
 
@@ -267,7 +268,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
   // launch PosixThread(pt) in new thread
   if (clone(PosixThread, pt->attr.stackaddr,
-            pt->attr.stacksize - 16 /* openbsd:stackbound */,
+            pt->attr.stacksize - (IsOpenbsd() ? 16 : 0),
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,

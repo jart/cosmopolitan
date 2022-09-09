@@ -30,8 +30,5 @@ int pthread_attr_init(pthread_attr_t *attr) {
       .stacksize = GetStackSize(),
       .guardsize = PAGESIZE,
   };
-  if (attr->stacksize >= 1048576) {
-    attr->guardsize = FRAMESIZE;
-  }
   return 0;
 }
