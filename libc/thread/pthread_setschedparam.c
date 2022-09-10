@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/pthread2.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread2.h"
 
 /**
  * Changes scheduling of thread, e.g.

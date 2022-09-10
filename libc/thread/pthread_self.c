@@ -16,13 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * Returns current POSIX thread.
  */
 pthread_t pthread_self(void) {
-  return ((cthread_t)__get_tls())->pthread;
+  return __get_tls()->tib_pthread;
 }

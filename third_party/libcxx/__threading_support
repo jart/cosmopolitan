@@ -13,7 +13,7 @@
 #include "third_party/libcxx/__config"
 #include "third_party/libcxx/chrono"
 #include "third_party/libcxx/iosfwd"
-#include "libc/intrin/pthread2.h"
+#include "libc/thread/thread2.h"
 #include "third_party/libcxx/errno.h"
 
 #ifndef _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
@@ -25,7 +25,7 @@
 #elif !defined(_LIBCPP_HAS_NO_THREADS)
 
 #if defined(_LIBCPP_HAS_THREAD_API_PTHREAD)
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/sysv/consts/sched.h"

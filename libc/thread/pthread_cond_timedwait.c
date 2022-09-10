@@ -22,8 +22,8 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
-#include "libc/intrin/pthread2.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread2.h"
 
 /**
  * Waits for condition with optional time limit, e.g.

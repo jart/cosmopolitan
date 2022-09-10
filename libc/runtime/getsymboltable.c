@@ -20,7 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"

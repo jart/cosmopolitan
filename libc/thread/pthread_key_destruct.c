@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/nexgen32e/bsr.h"
 #include "libc/thread/internal.h"
-#include "libc/thread/thread.h"
 
 void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
   int i, j;

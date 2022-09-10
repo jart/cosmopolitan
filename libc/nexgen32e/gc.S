@@ -34,7 +34,7 @@
 //	@see	test/libc/runtime/gc_test.c
 //	@threadsafe
 __gc:	mov	%fs:0,%rcx			# __get_tls()
-	mov	0x18(%rcx),%rcx			# cthread_t::garbages
+	mov	0x18(%rcx),%rcx			# tls::garbages
 	decl	(%rcx)				# ++g->i
 	mov	(%rcx),%r8d			# r8 = g->i
 	mov	8(%rcx),%r9			# r9 = g->p

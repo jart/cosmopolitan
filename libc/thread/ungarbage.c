@@ -19,12 +19,11 @@
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-void cthread_ungarbage(void) {
+void _pthread_ungarbage(void) {
   struct Garbages *g;
-  if ((g = ((cthread_t)__get_tls())->garbages)) {
+  if ((g = __get_tls()->tib_garbages)) {
     // _pthread_exit() uses _gclongjmp() so if this assertion fails,
     // then the likely cause is the thread used gc() with longjmp().
     assert(!g->i);

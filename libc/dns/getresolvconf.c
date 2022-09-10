@@ -20,7 +20,7 @@
 #include "libc/dce.h"
 #include "libc/dns/resolvconf.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"

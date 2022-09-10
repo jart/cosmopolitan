@@ -27,11 +27,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/stdio/iconv.h"
-#include "libc/str/str.h"
-#include "libc/thread/thread.h"
 #include "libc/str/locale.h"
+#include "libc/str/str.h"
+#include "libc/thread/tls.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -283,7 +282,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **restri
 	int err;
 	unsigned char type = map[-1];
 	unsigned char totype = tomap[-1];
-	locale_t *ploc = &((cthread_t)__get_tls())->locale;
+	locale_t *ploc = (locale_t *)&__get_tls()->tib_locale;
         locale_t loc = *ploc;
 
 	if (!in || !*in || !*inb) return 0;

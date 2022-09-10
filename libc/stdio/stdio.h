@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 #define _STDIO_H
 #define L_ctermid    20

@@ -16,6 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 pthread_mutex_t __mmi_lock_obj;  // recursive :'(

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 static pthread_mutex_t __sig_lock_obj;
 

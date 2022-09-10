@@ -20,7 +20,6 @@
 #include "libc/sysv/consts/sched.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 
 #define RTP_SET_FREEBSD       1
 #define PRI_REALTIME_FREEBSD  2

@@ -23,7 +23,7 @@
 #include "libc/dce.h"
 #include "libc/dns/hoststxt.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/runtime/runtime.h"

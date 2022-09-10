@@ -1,7 +1,7 @@
 // clang-format off
 #include "libc/calls/calls.h"
-#include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /* --------------------------- Lock preliminaries ------------------------ */
 

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread2.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread2.h"
 
 /**
  * Gets most recently set scheduling of thread.

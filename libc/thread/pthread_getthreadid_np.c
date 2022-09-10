@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 /**
  * Returns thread id of current POSIX thread.

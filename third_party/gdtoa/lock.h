@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_GDTOA_LOCK_H_
 #define COSMOPOLITAN_THIRD_PARTY_GDTOA_LOCK_H_
 #include "libc/intrin/nopl.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -28,7 +28,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
 #include "libc/log/internal.h"

@@ -31,7 +31,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

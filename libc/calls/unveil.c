@@ -30,7 +30,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"

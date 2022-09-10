@@ -24,7 +24,7 @@
 #include "libc/intrin/fsgsbase.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/segmentation.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/nt/version.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"

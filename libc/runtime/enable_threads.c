@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/runtime/runtime.h"
 
 extern int __threadcalls_end[];

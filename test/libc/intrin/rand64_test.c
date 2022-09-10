@@ -25,7 +25,6 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/rand.h"

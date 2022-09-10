@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/pthread.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 

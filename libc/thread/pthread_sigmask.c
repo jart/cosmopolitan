@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
-#include "libc/thread/thread.h"
 
 /**
  * Examines and/or changes blocked signals on current thread.

@@ -21,7 +21,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/sysv/consts/futex.h"
 
 int _futex(void *, int, int) hidden;

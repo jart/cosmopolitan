@@ -19,7 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/symboliclink.h"

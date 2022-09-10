@@ -18,10 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/nexgen32e/bsr.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/internal.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * Allocates TLS slot.

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/sysv/consts/clock.h"

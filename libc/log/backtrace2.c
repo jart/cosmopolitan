@@ -37,8 +37,6 @@
 #include "libc/mem/alg.h"
 #include "libc/mem/bisectcarleft.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -49,7 +47,7 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/x/x.h"
 
 #define kBacktraceMaxFrames 128
@@ -109,7 +107,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   argv[i++] = "-a"; /* filter out w/ shell script wrapper for old versions */
   argv[i++] = "-pCife";
   argv[i++] = debugbin;
-  garbage = __tls_enabled ? ((cthread_t)__get_tls())->garbages : 0;
+  garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
     addr = frame->addr;

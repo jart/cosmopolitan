@@ -25,14 +25,11 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/pthread.h"
 #include "libc/intrin/wait0.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
@@ -43,6 +40,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
@@ -68,13 +66,13 @@ static int PosixThread(void *arg, int tid) {
     _pthread_reschedule(pt);
   }
   if (!setjmp(pt->exiter)) {
-    ((cthread_t)__get_tls())->pthread = (pthread_t)pt;
+    __get_tls()->tib_pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);
   }
   if (weaken(_pthread_key_destruct)) {
     weaken(_pthread_key_destruct)(0);
   }
-  cthread_ungarbage();
+  _pthread_ungarbage();
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {
     atomic_store_explicit(&pt->status, kPosixThreadZombie,
@@ -169,7 +167,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                    void *(*start_routine)(void *), void *arg) {
   int rc, e = errno;
   struct PosixThread *pt;
-  TlsIsRequired();
+  __require_tls();
   _pthread_zombies_decimate();
 
   // create posix thread object

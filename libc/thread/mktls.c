@@ -22,12 +22,12 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define _TLSZ ((intptr_t)_tls_size)
 #define _TLDZ ((intptr_t)_tdata_size)
-#define _TIBZ sizeof(struct cthread_descriptor_t)
-#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, _Alignof(struct cthread_descriptor_t))
+#define _TIBZ sizeof(struct CosmoTib)
+#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, _Alignof(struct CosmoTib))
 
 /**
  * Allocates thread-local storage memory for new thread.
@@ -35,18 +35,18 @@
  */
 char *_mktls(char **out_tib) {
   char *tls;
-  cthread_t tib;
+  struct CosmoTib *tib;
 
   // Allocate enough TLS memory for all the GNU Linuker (_tls_size)
   // organized _Thread_local data, as well as Cosmpolitan Libc (64)
   if (!(tls = calloc(1, _MEMZ))) return 0;
 
   // set up thread information block
-  tib = (cthread_t)(tls + _MEMZ - _TIBZ);
-  tib->self = tib;
-  tib->self2 = tib;
-  tib->err = 0;
-  tib->tid = -1;
+  tib = (struct CosmoTib *)(tls + _MEMZ - _TIBZ);
+  tib->tib_self = tib;
+  tib->tib_self2 = tib;
+  tib->tib_errno = 0;
+  tib->tib_tid = -1;
   memmove(tls, _tdata_start, _TLDZ);
 
   if (out_tib) {

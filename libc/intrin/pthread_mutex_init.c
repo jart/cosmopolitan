@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 /**
  * Initializes mutex.
@@ -27,8 +27,8 @@
 int pthread_mutex_init(pthread_mutex_t *mutex,
                        const pthread_mutexattr_t *attr) {
   *mutex = (pthread_mutex_t){
-      attr ? attr->type : PTHREAD_MUTEX_DEFAULT,
-      attr ? attr->pshared : PTHREAD_PROCESS_DEFAULT,
+      attr ? attr->type : 0,
+      attr ? attr->pshared : 0,
   };
   return 0;
 }

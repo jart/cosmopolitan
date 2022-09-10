@@ -27,7 +27,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/lockcmpxchgp.h"
 #include "libc/intrin/weaken.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 
 textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
   bool res;

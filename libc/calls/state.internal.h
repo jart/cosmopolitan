@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STATE_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STATE_INTERNAL_H_
 #include "libc/intrin/nopl.h"
-#include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

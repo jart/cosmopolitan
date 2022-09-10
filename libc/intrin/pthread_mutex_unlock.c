@@ -22,7 +22,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 /**
  * Releases mutex.

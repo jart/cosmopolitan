@@ -5,7 +5,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/nopl.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"

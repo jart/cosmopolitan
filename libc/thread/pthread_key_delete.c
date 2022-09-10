@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/thread/internal.h"
-#include "libc/thread/thread.h"
 
 /**
  * Deletes TLS slot.

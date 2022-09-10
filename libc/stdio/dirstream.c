@@ -26,7 +26,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/nopl.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"

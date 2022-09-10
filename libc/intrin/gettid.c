@@ -21,8 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/nexgen32e/gettls.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 
 /**
  * Returns current thread id.
@@ -30,22 +29,6 @@
  * On Linux, and Linux only, this is guaranteed to be equal to getpid()
  * if this is the main thread. On NetBSD, gettid() for the main thread
  * is always 1.
- *
- * This function issues a system call. That stops being the case as soon
- * as __install_tls() is called.  That'll happen automatically, when you
- * call clone() and provide the TLS parameter. We assume that when a TLS
- * block exists, then
- *
- *     *(int *)(__get_tls() + 0x38)
- *
- * will contain the thread id. Therefore when issuing clone() calls, the
- * `CLONE_CHILD_SETTID` and `CLONE_CHILD_CLEARTID` flags should use that
- * index as its `ctid` memory.
- *
- *     gettid (single threaded) l:       126𝑐        41𝑛𝑠
- *     gettid (tls enabled)     l:         2𝑐         1𝑛𝑠
- *
- * The TLS convention is important for reentrant lock performance.
  *
  * @return thread id greater than zero or -1 w/ errno
  * @asyncsignalsafe
@@ -55,7 +38,7 @@
 int gettid(void) {
   int tid;
   if (__tls_enabled && !__vforked) {
-    tid = *(int *)(__get_tls() + 0x38);
+    tid = __get_tls()->tib_tid;
     if (tid > 0) {
       return tid;
     }

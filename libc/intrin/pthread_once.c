@@ -20,7 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 #define INIT     0
 #define CALLING  1

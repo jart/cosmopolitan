@@ -1,6 +1,6 @@
 #ifndef LIBC_ISYSTEM_LIMITS_H_
 #define LIBC_ISYSTEM_LIMITS_H_
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/limits.h"
 #include "libc/sysv/consts/_posix.h"
 #include "libc/sysv/consts/iov.h"

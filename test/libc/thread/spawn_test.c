@@ -26,7 +26,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/thread.h"
 
 _Atomic(int) itworked;
 _Thread_local int var;

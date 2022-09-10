@@ -35,7 +35,7 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"

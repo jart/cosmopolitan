@@ -20,7 +20,7 @@
 #include "libc/calls/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"

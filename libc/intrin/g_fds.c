@@ -19,7 +19,7 @@
 #include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"

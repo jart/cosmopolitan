@@ -22,9 +22,9 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/linux/futex.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/nr.h"
 

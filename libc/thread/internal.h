@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_INTERNAL_H_
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

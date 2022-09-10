@@ -35,9 +35,7 @@
 #include "libc/limits.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/nexgen32e/uart.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
@@ -52,6 +50,8 @@
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/tls.h"
+#include "libc/thread/tls2.h"
 
 extern hidden struct SymbolTable *__symtab;
 
@@ -312,7 +312,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             if (!__tls_enabled) {
               x = __pid;
             } else {
-              x = *(int *)(__get_tls_privileged() + 0x38);
+              x = __get_tls_privileged()->tib_tid;
             }
           } else {
             x = 666;

@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #include "libc/calls/struct/sched_param.h"
-#include "libc/intrin/pthread.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -67,13 +67,14 @@ struct PosixThread {
   pthread_attr_t attr;
 };
 
-void _pthread_free(struct PosixThread *) hidden;
-void _pthread_wait(struct PosixThread *) hidden;
 int _pthread_reschedule(struct PosixThread *) hidden;
+int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
+void _pthread_free(struct PosixThread *) hidden;
+void _pthread_ungarbage(void) hidden;
+void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;
 void _pthread_zombies_decimate(void) hidden;
 void _pthread_zombies_harvest(void) hidden;
-int _pthread_setschedparam_freebsd(int, int, const struct sched_param *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

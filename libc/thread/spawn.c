@@ -21,7 +21,6 @@
 #include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -31,8 +30,9 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * @fileoverview Simple threading API
@@ -52,8 +52,8 @@
 
 #define _TLSZ ((intptr_t)_tls_size)
 #define _TLDZ ((intptr_t)_tdata_size)
-#define _TIBZ sizeof(struct cthread_descriptor_t)
-#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct cthread_descriptor_t))
+#define _TIBZ sizeof(struct CosmoTib)
+#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, alignof(struct CosmoTib))
 
 struct spawner {
   int (*fun)(void *, int);
@@ -64,7 +64,7 @@ static int Spawner(void *arg, int tid) {
   int rc;
   struct spawner *spawner = arg;
   rc = spawner->fun(spawner->arg, tid);
-  cthread_ungarbage();
+  _pthread_ungarbage();
   free(spawner);
   return 0;
 }
@@ -94,7 +94,7 @@ static int Spawner(void *arg, int tid) {
 int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   struct spawn *th, ths;
   struct spawner *spawner;
-  TlsIsRequired();
+  __require_tls();
   if (!fun) return einval();
 
   // we need to to clobber the output memory before calling clone, since

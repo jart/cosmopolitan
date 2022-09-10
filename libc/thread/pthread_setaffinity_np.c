@@ -19,7 +19,6 @@
 #include "libc/calls/struct/cpuset.h"
 #include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
 
 /**
  * Asks kernel to only schedule thread on particular CPUs.

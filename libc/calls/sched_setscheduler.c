@@ -22,7 +22,7 @@
 #include "libc/calls/struct/sched_param.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 

@@ -93,11 +93,6 @@ o/$(MODE)/libc/intrin/futex_wait.o			\
 o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
-o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
-o/$(MODE)/libc/intrin/pthread_mutex_wait.o		\
-o/$(MODE)/libc/intrin/pthread_mutex_wake.o		\
-o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
-o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
 o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
 o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 		OVERRIDE_CFLAGS +=			\

@@ -26,14 +26,12 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/bisectcarleft.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define LIMIT 100
 
@@ -57,7 +55,7 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   struct Garbages *garbage;
   const struct StackFrame *frame;
   if (!bp) bp = __builtin_frame_address(0);
-  garbage = __tls_enabled ? ((cthread_t)__get_tls())->garbages : 0;
+  garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
     if (++i == LIMIT) {

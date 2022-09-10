@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "third_party/gdtoa/lock.h"
 
 static pthread_mutex_t __gdtoa_lock_obj;

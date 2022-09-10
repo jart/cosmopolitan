@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 
 void(__fds_lock)(void) {
   pthread_mutex_lock(&__fds_lock_obj);

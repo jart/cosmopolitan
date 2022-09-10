@@ -29,7 +29,7 @@
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nt2sysv.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/tls.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"

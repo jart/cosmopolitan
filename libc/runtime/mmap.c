@@ -28,7 +28,7 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/pthread.h"
+#include "libc/thread/thread.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"

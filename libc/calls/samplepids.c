@@ -19,8 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/pthread.h"
-#include "libc/nexgen32e/threaded.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/stdio/lcg.internal.h"
 
 /**

@@ -28,7 +28,6 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/pthread.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
@@ -39,9 +38,7 @@
 #include "libc/mem/mem.h"
 #include "libc/mem/reverse.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/enum/version.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
@@ -58,6 +55,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 STATIC_YOINK("_init_asan");
@@ -938,7 +936,7 @@ static void __asan_trace(struct AsanTrace *bt, const struct StackFrame *bp) {
   size_t i, gi;
   intptr_t addr;
   struct Garbages *garbage;
-  garbage = __tls_enabled ? ((cthread_t)__get_tls())->garbages : 0;
+  garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (f1 = -1, i = 0; bp && i < ARRAYLEN(bt->p); ++i, bp = bp->next) {
     if (f1 != (f2 = ((intptr_t)bp >> 16))) {

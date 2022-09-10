@@ -35,7 +35,7 @@ _gclongjmp:
 	mov	%rsp,%rbp
 	.profilable
 	mov	%fs:0,%r12			# __get_tls()
-	mov	0x18(%r12),%r12			# cthread_t::garbages
+	mov	0x18(%r12),%r12			# Tls::garbages
 	test	%r12,%r12
 	jz	0f
 	movl	(%r12),%r13d			# garbages.i
