@@ -16,6 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -24,10 +27,9 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
 
-#define _TLSZ ((intptr_t)_tls_size)
-#define _TLDZ ((intptr_t)_tdata_size)
-#define _TIBZ sizeof(struct CosmoTib)
-#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, _Alignof(struct CosmoTib))
+#define I(x) ((intptr_t)x)
+
+void Bzero(void *, size_t) asm("bzero");  // gcc bug
 
 /**
  * Allocates thread-local storage memory for new thread.
@@ -37,17 +39,25 @@ char *_mktls(char **out_tib) {
   char *tls;
   struct CosmoTib *tib;
 
-  // Allocate enough TLS memory for all the GNU Linuker (_tls_size)
-  // organized _Thread_local data, as well as Cosmpolitan Libc (64)
-  if (!(tls = calloc(1, _MEMZ))) return 0;
+  // allocate memory for tdata, tbss, and tib
+  tls = memalign(TLS_ALIGNMENT, I(_tls_size) + sizeof(struct CosmoTib));
+  if (!tls) return 0;
+
+  // poison memory between tdata and tbss
+  if (IsAsan()) {
+    __asan_poison(tls + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
+                  kAsanProtected);
+  }
+
+  // initialize tdata and clear tbss
+  memmove(tls, _tdata_start, I(_tdata_size));
+  Bzero(tls + I(_tbss_offset), I(_tbss_size) + sizeof(struct CosmoTib));
 
   // set up thread information block
-  tib = (struct CosmoTib *)(tls + _MEMZ - _TIBZ);
+  tib = (struct CosmoTib *)(tls + I(_tls_size));
   tib->tib_self = tib;
   tib->tib_self2 = tib;
-  tib->tib_errno = 0;
   tib->tib_tid = -1;
-  memmove(tls, _tdata_start, _TLDZ);
 
   if (out_tib) {
     *out_tib = (char *)tib;

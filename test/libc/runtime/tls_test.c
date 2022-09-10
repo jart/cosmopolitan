@@ -16,12 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-_Thread_local int x;
-_Thread_local int y = 40;
-int z = 2;
+#define A TLS_ALIGNMENT
+
+long z = 2;
+pthread_t t;
+_Thread_local long x;
+_Thread_local long y[1] = {40};
+_Alignas(A) _Thread_local long a;
+
+noubsan void *Worker(void *arg) {
+  ASSERT_EQ(42, x + y[0] + z);
+  ASSERT_EQ(0, (intptr_t)&a & (A - 1));
+  if (IsAsan()) {
+    ASSERT_EQ(kAsanProtected, __asan_check(y + 1, sizeof(long)).kind);
+  }
+  return 0;
+}
 
 TEST(tls, test) {
-  EXPECT_EQ(42, x + y + z);
+  ASSERT_EQ(A, _Alignof(a));
+  ASSERT_EQ(0, sizeof(struct CosmoTib) % A);
+  ASSERT_EQ(0, (intptr_t)__get_tls() & (A - 1));
+  EXPECT_EQ(42, x + y[0] + z);
+  y[0] = 666;
+  ASSERT_EQ(0, (intptr_t)&a & (A - 1));
+  ASSERT_EQ(0, pthread_create(&t, 0, Worker, 0));
+  ASSERT_EQ(0, pthread_join(t, 0));
+  if (IsAsan()) {
+    ASSERT_EQ(kAsanProtected, __asan_check(y + 1, sizeof(long)).kind);
+  }
 }

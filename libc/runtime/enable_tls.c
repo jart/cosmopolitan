@@ -21,6 +21,8 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
@@ -57,7 +59,7 @@ __msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
 
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
-_Alignas(long) static char __static_tls[5008];
+_Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
 
 /**
  * Enables thread local storage for main process.
@@ -103,7 +105,6 @@ privileged void __enable_tls(void) {
     // if tls requirement is small then use the static tls block
     // which helps avoid a system call for appes with little tls
     // this is crucial to keeping life.com 16 kilobytes in size!
-    _Static_assert(alignof(__static_tls) >= alignof(struct CosmoTib));
     mem = __static_tls;
   } else {
     // if this binary needs a hefty tls block then we'll bank on
@@ -114,6 +115,12 @@ privileged void __enable_tls(void) {
     siz = ROUNDUP(siz, FRAMESIZE);
     mem = weaken(_mapanon)(siz);
     assert(mem);
+  }
+  if (IsAsan()) {
+    // poison the space between .tdata and .tbss
+    __asan_poison(mem + (intptr_t)_tdata_size,
+                  (intptr_t)_tbss_offset - (intptr_t)_tdata_size,
+                  kAsanProtected);
   }
   tib = (struct CosmoTib *)(mem + siz - _TIBZ);
   tls = mem + siz - _TIBZ - _TLSZ;

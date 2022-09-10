@@ -180,6 +180,7 @@
 #include "libc/elf/def.h"
 #include "libc/elf/pf2prot.internal.h"
 #include "libc/nt/pedef.internal.h"
+#include "libc/thread/tls.h"
 #include "libc/zip.h"
 
 ENTRY(_start)
@@ -383,17 +384,14 @@ SECTIONS {
     HIDDEN(_ezip = .);
     . = ALIGN(PAGESIZE);
   } :Ram
-  . = ALIGN(PAGESIZE);
 
   .tdata . : {
     _tdata_start = .;
     *(SORT_BY_ALIGNMENT(.tdata))
     *(SORT_BY_ALIGNMENT(.tdata.*))
-    . = ALIGN(16);
     _tdata_end = .;
     . = ALIGN(PAGESIZE);
   } :Tls :Ram
-  . = ALIGN(PAGESIZE);
 
 /*END:   file content that's loaded by o/s */
 /*BEGIN: bss memory void */
@@ -402,7 +400,7 @@ SECTIONS {
     _tbss_start = .;
     *(SORT_BY_ALIGNMENT(.tbss))
     *(SORT_BY_ALIGNMENT(.tbss.*))
-    . = ALIGN(16);
+    . = ALIGN(TLS_ALIGNMENT);
     /* the %fs register is based on this location */
     _tbss_end = .;
   } :Tls
@@ -488,8 +486,10 @@ PFSTUB4(ape_elf_phnum, (ape_phdrs_end - ape_phdrs) / 56);
 PFSTUB4(ape_elf_shnum, 0);
 PFSTUB4(ape_elf_shstrndx, 0);
 
-HIDDEN(_tdata_size = _tdata_end - _tdata_start);
 HIDDEN(_tls_size = _tbss_end - _tdata_start);
+HIDDEN(_tdata_size = _tdata_end - _tdata_start);
+HIDDEN(_tbss_size = _tbss_end - _tbss_start);
+HIDDEN(_tbss_offset = _tbss_start - _tdata_start);
 HIDDEN(_tls_content = (_tdata_end - _tdata_start) + (_tbss_end - _tbss_start));
 
 HIDDEN(__privileged_addr = ROUNDDOWN(__privileged_start, PAGESIZE));
@@ -716,6 +716,9 @@ ASSERT(IS2POW(ape_stack_memsz),
 
 ASSERT(!(ape_stack_vaddr & (ape_stack_memsz - 1)),
        "ape_stack_vaddr must have ape_stack_memsz alignment; try using STATIC_STACK_ADDR(0x700000000000 - ape_stack_memsz);");
+
+ASSERT(ALIGNOF(.tdata) <= TLS_ALIGNMENT && ALIGNOF(.tbss) <= TLS_ALIGNMENT,
+       "_Thread_local _Alignof can't exceed TLS_ALIGNMENT");
 
 /* Let's not be like Knight Capital. */
 /* NOCROSSREFS_TO(.test .text) */
