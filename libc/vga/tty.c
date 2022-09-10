@@ -146,66 +146,27 @@ static wchar_t *GetXlatLineDrawing(void) {
   return xlat;
 }
 
-static void XlatAlphabet(wchar_t xlat[128], int a, int b) {
-  unsigned i;
-  for (i = 0; i < 128; ++i) {
-    if ('a' <= i && i <= 'z') {
-      xlat[i] = i - 'a' + a;
-    } else if ('A' <= i && i <= 'Z') {
-      xlat[i] = i - 'A' + b;
-    } else {
-      xlat[i] = i;
-    }
-  }
-}
-
 static wchar_t *GetXlatItalic(void) {
-  static bool once;
-  static wchar_t xlat[128];
-  if (!once) {
-    XlatAlphabet(xlat, L'𝑎', L'𝐴');
-    once = true;
-  }
-  return xlat;
+  /* Unimplemented.  Simply output normal non-italicized characters for now. */
+  return GetXlatAscii();
 }
 
 static wchar_t *GetXlatBoldItalic(void) {
-  static bool once;
-  static wchar_t xlat[128];
-  if (!once) {
-    XlatAlphabet(xlat, L'𝒂', L'𝑨');
-    once = true;
-  }
-  return xlat;
+  /*
+   * Unimplemented.  Simply output high-intensity non-italicized characters
+   * for now.
+   */
+  return GetXlatAscii();
 }
 
 static wchar_t *GetXlatBoldFraktur(void) {
-  static bool once;
-  static wchar_t xlat[128];
-  if (!once) {
-    XlatAlphabet(xlat, L'𝖆', L'𝕬');
-    once = true;
-  }
-  return xlat;
+  /* Unimplemented. */
+  return GetXlatAscii();
 }
 
 static wchar_t *GetXlatFraktur(void) {
-  unsigned i;
-  static bool once;
-  static wchar_t xlat[128];
-  if (!once) {
-    for (i = 0; i < ARRAYLEN(xlat); ++i) {
-      if ('A' <= i && i <= 'Z') {
-        xlat[i] = L"𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ"[i - 'A'];
-      } else if ('a' <= i && i <= 'z') {
-        xlat[i] = i - 'a' + L'𝔞';
-      } else {
-        xlat[i] = i;
-      }
-    }
-    once = true;
-  }
-  return xlat;
+  /* Unimplemented. */
+  return GetXlatAscii();
 }
 
 static wchar_t *GetXlatDoubleWidth(void) {
