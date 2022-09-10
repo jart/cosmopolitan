@@ -14,7 +14,7 @@ struct ApeLoader {
   int os;
   char *prog;
   char *page;
-  void *syscall;
+  void *systemcall;
 };
 
 #endif /* COSMOPOLITAN_APE_LOADER_H_ */

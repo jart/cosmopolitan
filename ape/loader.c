@@ -659,8 +659,8 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
   }
 
   // get syscall function pointer
-  if (handoff && handoff->syscall) {
-    syscall = handoff->syscall;
+  if (handoff && handoff->systemcall) {
+    syscall = handoff->systemcall;
   } else {
     syscall = __syscall_loader;
   }

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_LOG_LIBFATAL_INTERNAL_H_
+#include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
