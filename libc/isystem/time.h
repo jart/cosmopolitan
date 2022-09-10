@@ -3,6 +3,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/sched.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"

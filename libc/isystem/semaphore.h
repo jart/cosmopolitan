@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_SEMAPHORE_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_SEMAPHORE_H_
+#include "libc/calls/semaphore.internal.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_SEMAPHORE_H_ */

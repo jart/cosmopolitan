@@ -48,7 +48,7 @@
  */
 int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                            const struct timespec *abstime) {
-  int rc, err, seq;
+  int c, rc, err, seq;
   struct timespec now, rel, *tsp;
 
   if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000)) {
@@ -56,11 +56,16 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
     return EINVAL;
   }
 
-  if ((err = pthread_mutex_unlock(mutex))) {
-    return err;
+  if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
+    c = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+    if ((c & 0x000fffff) != gettid()) {
+      assert(!"permlock");
+      return EPERM;
+    }
   }
 
   atomic_fetch_add(&cond->waits, 1);
+  if (pthread_mutex_unlock(mutex)) notpossible;
 
   rc = 0;
   seq = atomic_load_explicit(&cond->seq, memory_order_relaxed);
@@ -79,11 +84,8 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
     _futex_wait(&cond->seq, seq, cond->pshared, tsp);
   } while (seq == atomic_load_explicit(&cond->seq, memory_order_relaxed));
 
+  if (pthread_mutex_lock(mutex)) notpossible;
   atomic_fetch_sub(&cond->waits, 1);
-
-  if ((err = pthread_mutex_lock(mutex))) {
-    return err;
-  }
 
   return rc;
 }

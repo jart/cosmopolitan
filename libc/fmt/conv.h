@@ -118,7 +118,8 @@ imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
 #define lldiv(num, den) ((lldiv_t){(num) / (den), (num) % (den)})
 #endif
 
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)
+#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 406 || defined(__llvm__)) && \
+    !defined(__STRICT_ANSI__)
 int128_t i128abs(int128_t) libcesque pureconst;
 int128_t strtoi128(const char *, char **, int) paramsnonnull((1));
 uint128_t strtou128(const char *, char **, int) paramsnonnull((1));
