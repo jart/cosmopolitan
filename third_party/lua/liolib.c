@@ -30,7 +30,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
-#include "libc/stdio/lock.h"
+#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"

@@ -4,7 +4,7 @@
 #define LOCALTIME_IMPLEMENTATION
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/nopl.h"
+#include "libc/intrin/nopl.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/mem/mem.h"
 #include "libc/thread/tls.h"

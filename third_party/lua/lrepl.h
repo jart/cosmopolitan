@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_LUA_LREPL_H_
 #define COSMOPOLITAN_THIRD_PARTY_LUA_LREPL_H_
-#include "libc/intrin/nopl.h"
+#include "libc/intrin/nopl.internal.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/lauxlib.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

@@ -36,7 +36,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
-#include "libc/stdio/lock.h"
+#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"

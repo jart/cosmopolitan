@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/lock.h"
+#include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/errfuns.h"
 

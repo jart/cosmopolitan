@@ -1,14 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_LOCK_H_
 #define COSMOPOLITAN_LIBC_STDIO_LOCK_H_
-#include "libc/intrin/nopl.h"
-#include "libc/thread/tls.h"
+#include "libc/intrin/nopl.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-void flockfile(FILE *) paramsnonnull();
-void funlockfile(FILE *) paramsnonnull();
-int ftrylockfile(FILE *) paramsnonnull();
 
 #ifdef _NOPL1
 #define flockfile(f)    _NOPL1("__threadcalls", flockfile, f)

@@ -4,8 +4,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-bool _cmpxchg(void *, intptr_t, intptr_t, size_t);
-
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86__)
 #define _cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                       \
   ({                                                                          \
@@ -19,9 +17,6 @@ bool _cmpxchg(void *, intptr_t, intptr_t, size_t);
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
-#else
-#define _cmpxchg(MEM, CMP, VAL) \
-  _cmpxchg(MEM, (intptr_t)(CMP), (intptr_t)(VAL), sizeof(*(MEM)))
 #endif /* GNUC && !ANSI && x86 */
 
 COSMOPOLITAN_C_END_

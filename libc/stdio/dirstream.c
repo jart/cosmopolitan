@@ -25,7 +25,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/nopl.h"
+#include "libc/intrin/nopl.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"

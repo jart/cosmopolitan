@@ -3,7 +3,7 @@
 #include "libc/assert.h"
 #include "libc/intrin/midpoint.h"
 #include "libc/dce.h"
-#include "libc/intrin/nopl.h"
+#include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/thread/tls.h"
 #include "libc/nt/version.h"

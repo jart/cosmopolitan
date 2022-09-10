@@ -17,7 +17,7 @@
 #include "third_party/zip/zip.h"
 #include "third_party/zip/revision.h"
 #ifdef UNICODE_SUPPORT
-#include "libc/stdio/lock.h"
+#include "libc/stdio/lock.internal.h"
 #include "third_party/zip/crc32.h"
 #endif
 
