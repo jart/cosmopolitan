@@ -109,7 +109,7 @@ struct Tty {
   uint32_t u8;
   uint32_t n8;
   uint32_t pr;
-  uint8_t fg, bg;
+  uint8_t fg, bg, chr_ht;
   uint32_t conf;
   unsigned short savey, savex;
   struct VgaTextCharCell *ccs;
@@ -134,7 +134,8 @@ struct Tty {
 };
 
 void _StartTty(struct Tty *, unsigned short, unsigned short,
-               unsigned short, unsigned short, void *, wchar_t *);
+               unsigned short, unsigned short, unsigned char,
+               void *, wchar_t *);
 ssize_t _TtyRead(struct Tty *, void *, size_t);
 ssize_t _TtyWrite(struct Tty *, const void *, size_t);
 ssize_t _TtyWriteInput(struct Tty *, const void *, size_t);
