@@ -270,7 +270,11 @@ static void TtySetCodepage(struct Tty *tty, char id) {
  */
 static uint8_t TtyGetVgaAttr(struct Tty *tty)
 {
-  uint8_t attr = tty->fg | tty->bg << 4;
+  uint8_t attr;
+  if ((tty->pr & kTtyFlip) == 0)
+    attr = tty->fg | tty->bg << 4;
+  else
+    attr = tty->bg | tty->fg << 4;
 #ifdef VGA_USE_BLINK
   /*
    * If blinking is enabled, we can only have the 8 dark background color
