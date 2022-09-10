@@ -27,7 +27,6 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -38,8 +37,9 @@
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/thread.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 #define THREADS    8
 #define ITERATIONS 512

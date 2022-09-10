@@ -560,7 +560,7 @@ TEST(pledge_openbsd, bigSyscalls) {
 
 int LockWorker(void *arg, int tid) {
   flockfile(stdout);
-  ASSERT_EQ(gettid(), stdout->lock.lock);
+  ASSERT_EQ(gettid(), stdout->lock.lock & 0x000fffff);
   funlockfile(stdout);
   return 0;
 }

@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/thread/internal.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 /**
  * Sets value of TLS slot for current thread.

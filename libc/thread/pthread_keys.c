@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/internal.h"
+#include "libc/thread/posixthread.internal.h"
 
 // tls value slots for pthread keys api
 _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];

@@ -33,36 +33,31 @@
  * @raise ENOTRECOVERABLE if `mutex` is corrupted
  */
 int pthread_mutex_trylock(pthread_mutex_t *mutex) {
-  int c, me, owner;
-  switch (mutex->type) {
-    case PTHREAD_MUTEX_NORMAL:
-      c = 0;
-      if (atomic_compare_exchange_strong_explicit(&mutex->lock, &c, 1,
-                                                  memory_order_acquire,
-                                                  memory_order_relaxed)) {
-        return 0;
-      } else {
-        return EBUSY;
-      }
-    case PTHREAD_MUTEX_RECURSIVE:
-    case PTHREAD_MUTEX_ERRORCHECK:
-      owner = 0;
-      me = gettid();
-      if (!atomic_compare_exchange_strong_explicit(&mutex->lock, &owner, me,
-                                                   memory_order_acquire,
-                                                   memory_order_relaxed)) {
-        if (owner == me) {
-          if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
-            return EBUSY;
-          }
-        } else {
-          return EBUSY;
-        }
-      }
-      ++mutex->reent;
+  int c, d, t;
+
+  if (mutex->type == PTHREAD_MUTEX_NORMAL) {
+    c = 0;
+    if (atomic_compare_exchange_strong_explicit(
+            &mutex->lock, &c, 1, memory_order_acquire, memory_order_relaxed)) {
       return 0;
-    default:
-      assert(!"badlock");
-      return ENOTRECOVERABLE;
+    } else {
+      return EBUSY;
+    }
   }
+
+  c = 0;
+  t = gettid();
+  d = 0x10100000 | t;
+  if (!atomic_compare_exchange_strong_explicit(
+          &mutex->lock, &c, d, memory_order_acquire, memory_order_relaxed)) {
+    if ((c & 0x000fffff) != t || mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
+      return EBUSY;
+    }
+    if ((c & 0x0ff00000) == 0x0ff00000) {
+      return EAGAIN;
+    }
+    atomic_fetch_add_explicit(&mutex->lock, 0x00100000, memory_order_relaxed);
+  }
+
+  return 0;
 }

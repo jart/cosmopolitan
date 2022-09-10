@@ -17,7 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/thread/internal.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 /**
  * Deletes TLS slot.

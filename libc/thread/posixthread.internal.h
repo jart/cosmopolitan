@@ -67,6 +67,10 @@ struct PosixThread {
   pthread_attr_t attr;
 };
 
+hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
+hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
+hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
+
 int _pthread_reschedule(struct PosixThread *) hidden;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
 void _pthread_free(struct PosixThread *) hidden;
@@ -75,6 +79,7 @@ void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;
 void _pthread_zombies_decimate(void) hidden;
 void _pthread_zombies_harvest(void) hidden;
+void _pthread_key_destruct(void *[PTHREAD_KEYS_MAX]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

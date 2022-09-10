@@ -20,11 +20,14 @@
 #include "libc/macros.internal.h"
 .privileged
 
-_futex:	mov	%rcx,%r10
+_futex:	push	%rbp
+	mov	%rsp,%rbp
+	mov	%rcx,%r10
 	mov	__NR_futex,%eax
 	clc
 	syscall
 	jnc	1f
 	neg	%eax
-1:	ret
+1:	pop	%rbp
+	ret
 	.endfn	_futex,globl,hidden

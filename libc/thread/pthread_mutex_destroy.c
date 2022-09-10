@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
-#include "libc/thread/thread.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 /**
  * Destroys mutex.
@@ -28,7 +28,7 @@
  * @raise EINVAL if mutex is locked in our implementation
  */
 int pthread_mutex_destroy(pthread_mutex_t *mutex) {
-  if (mutex->lock || mutex->waits) {
+  if (mutex->lock) {
     assert(!"deadlock");
     return EINVAL;
   }

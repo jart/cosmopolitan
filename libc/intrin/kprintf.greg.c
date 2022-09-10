@@ -181,19 +181,22 @@ privileged static void klog(const char *b, size_t n) {
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
                  : "0"(__NR_write), "1"(2), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
+    if (rax < 0) {
+      notpossible;
+    }
   }
 }
 
 privileged static size_t kformat(char *b, size_t n, const char *fmt,
                                  va_list va) {
-  int si;
+  int si, y;
   wint_t t, u;
   const char *abet;
   signed char type;
   const char *s, *f;
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
-  char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, z[128];
+  char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, ansi, z[128];
   if (kistextpointer(b) || kisdangerous(b)) n = 0;
   if (!kistextpointer(fmt)) fmt = "!!WONTFMT";
   p = b;
@@ -313,6 +316,16 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
               x = __pid;
             } else {
               x = __get_tls_privileged()->tib_tid;
+            }
+            if (!__nocolor && p + 7 <= e) {
+              *p++ = '\e';
+              *p++ = '[';
+              *p++ = '1';
+              *p++ = ';';
+              *p++ = '3';
+              *p++ = '0' + x % 8;
+              *p++ = 'm';
+              ansi = true;
             }
           } else {
             x = 666;
@@ -689,6 +702,15 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             }
           }
           break;
+      }
+      if (ansi) {
+        if (p + 4 <= e) {
+          *p++ = '\e';
+          *p++ = '[';
+          *p++ = '0';
+          *p++ = 'm';
+        }
+        ansi = false;
       }
       break;
     }

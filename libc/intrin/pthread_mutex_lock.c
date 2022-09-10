@@ -19,29 +19,9 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/intrin/asmflag.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/linux/futex.h"
-#include "libc/thread/tls.h"
-#include "libc/sysv/consts/futex.h"
-#include "libc/sysv/consts/nr.h"
-
-static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
-                                   int tries) {
-  if (tries < 7) {
-    volatile int i;
-    for (i = 0; i != 1 << tries; i++) {
-    }
-    tries++;
-  } else {
-    atomic_fetch_add(&mutex->waits, 1);
-    _futex_wait(&mutex->lock, expect, mutex->pshared, &(struct timespec){1});
-    atomic_fetch_sub(&mutex->waits, 1);
-  }
-  return tries;
-}
 
 /**
  * Locks mutex.
@@ -74,57 +54,68 @@ static int pthread_mutex_lock_spin(pthread_mutex_t *mutex, int expect,
  *     pthread_mutex_unlock(&lock);
  *     pthread_mutex_destroy(&lock);
  *
- * Alternatively, Cosmopolitan lets you do the folllowing instead:
- *
- *     pthread_mutex_t lock = {PTHREAD_MUTEX_RECURSIVE};
- *     pthread_mutex_lock(&lock);
- *     // do work...
- *     pthread_mutex_unlock(&lock);
- *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock()
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
-  int c, me, owner, tries;
-  switch (mutex->type) {
-    case PTHREAD_MUTEX_NORMAL:
-      // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
-      // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
-      c = 0;
-      if (!atomic_compare_exchange_strong_explicit(&mutex->lock, &c, 1,
-                                                   memory_order_acquire,
-                                                   memory_order_relaxed)) {
-        if (c != 2) {
-          c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
-        }
-        while (c) {
-          _futex_wait(&mutex->lock, 2, mutex->pshared, 0);
-          c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
-        }
+  int c, d, t;
+
+  if (mutex->type == PTHREAD_MUTEX_NORMAL) {
+    // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
+    // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
+    c = 0;
+    if (!atomic_compare_exchange_strong_explicit(
+            &mutex->lock, &c, 1, memory_order_acquire, memory_order_relaxed)) {
+      if (c != 2) {
+        c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
       }
-      return 0;
-    case PTHREAD_MUTEX_RECURSIVE:
-    case PTHREAD_MUTEX_ERRORCHECK:
-      for (tries = 0, me = gettid();;) {
-        owner = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
-        if (!owner && atomic_compare_exchange_weak_explicit(
-                          &mutex->lock, &owner, me, memory_order_acquire,
-                          memory_order_relaxed)) {
-          break;
-        } else if (owner == me) {
-          if (mutex->type != PTHREAD_MUTEX_ERRORCHECK) {
-            break;
-          } else {
-            assert(!"deadlock");
-            return EDEADLK;
-          }
-        }
-        tries = pthread_mutex_lock_spin(mutex, owner, tries);
+      while (c) {
+        _futex_wait(&mutex->lock, 2, mutex->pshared, 0);
+        c = atomic_exchange_explicit(&mutex->lock, 2, memory_order_acquire);
       }
-      ++mutex->reent;
-      return 0;
-    default:
-      assert(!"badlock");
-      return EINVAL;
+    }
+    return 0;
   }
+
+  t = gettid();
+  if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
+    c = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+    if ((c & 0x000fffff) == t) {
+      assert(!"deadlock");
+      return EDEADLK;
+    }
+  }
+
+  for (;;) {
+    c = 0;
+    d = 0x10100000 | t;
+    if (atomic_compare_exchange_weak_explicit(
+            &mutex->lock, &c, d, memory_order_acquire, memory_order_relaxed)) {
+      break;
+    } else {
+      if ((c & 0x000fffff) == t) {
+        if ((c & 0x0ff00000) < 0x0ff00000) {
+          c = atomic_fetch_add_explicit(&mutex->lock, 0x00100000,
+                                        memory_order_relaxed);
+          break;
+        } else {
+          assert(!"recurse");
+          return EAGAIN;
+        }
+      }
+      if ((c & 0xf0000000) == 0x10000000) {
+        d = 0x20000000 | c;
+        if (atomic_compare_exchange_weak_explicit(&mutex->lock, &c, d,
+                                                  memory_order_acquire,
+                                                  memory_order_relaxed)) {
+          c = d;
+        }
+      }
+      if ((c & 0xf0000000) == 0x20000000) {
+        _futex_wait(&mutex->lock, c, mutex->pshared, 0);
+      }
+    }
+  }
+
+  return 0;
 }

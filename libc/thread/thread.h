@@ -53,9 +53,7 @@ typedef struct pthread_spinlock_s {
 typedef struct pthread_mutex_s {
   char type;
   char pshared;
-  int reent;
   _Atomic(int) lock;
-  _Atomic(int) waits;
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
