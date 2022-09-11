@@ -16,8 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
@@ -28,10 +26,6 @@
  * @raise EINVAL if mutex is locked in our implementation
  */
 int pthread_mutex_destroy(pthread_mutex_t *mutex) {
-  if (mutex->lock) {
-    assert(!"deadlock");
-    return EINVAL;
-  }
   memset(mutex, -1, sizeof(*mutex));
   return 0;
 }

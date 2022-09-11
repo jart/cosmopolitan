@@ -10,7 +10,7 @@ extern const int SS_DISABLE;
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define SIGSTKSZ    STACKSIZE
+#define SIGSTKSZ    FRAMESIZE
 #define MINSIGSTKSZ 32768
 #define SS_ONSTACK  1
 #define SS_DISABLE  SS_DISABLE

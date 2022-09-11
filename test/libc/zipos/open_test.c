@@ -29,9 +29,9 @@
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("libc/testlib/hyperion.txt");
-/* STATIC_YOINK("inflate"); */
-/* STATIC_YOINK("inflateInit2"); */
-/* STATIC_YOINK("inflateEnd"); */
+STATIC_YOINK("inflate");
+STATIC_YOINK("inflateInit2");
+STATIC_YOINK("inflateEnd");
 
 int Worker(void *arg, int tid) {
   int i, fd;

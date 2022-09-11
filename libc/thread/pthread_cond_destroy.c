@@ -16,10 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
-#include "libc/thread/thread.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 /**
  * Destroys condition.
@@ -28,10 +26,6 @@
  * @raise EINVAL if threads are still waiting on condition
  */
 int pthread_cond_destroy(pthread_cond_t *cond) {
-  if (cond->waits) {
-    assert(!"deadlock");
-    return EINVAL;
-  }
   memset(cond, -1, sizeof(*cond));
   return 0;
 }

@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/weaken.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/once.h"
 
 #define INIT     0
 #define CALLING  1
@@ -44,28 +45,30 @@
  * @return 0 on success, or errno on error
  */
 int pthread_once(pthread_once_t *once, void init(void)) {
-  char old;
-  switch ((old = atomic_load_explicit(&once->lock, memory_order_relaxed))) {
+  uint32_t old;
+  if (weaken(nsync_run_once)) {
+    weaken(nsync_run_once)((nsync_once *)once, init);
+    return 0;
+  }
+  switch ((old = atomic_load_explicit(&once->_lock, memory_order_relaxed))) {
     case INIT:
-      if (atomic_compare_exchange_strong_explicit(&once->lock, &old, CALLING,
+      if (atomic_compare_exchange_strong_explicit(&once->_lock, &old, CALLING,
                                                   memory_order_acquire,
                                                   memory_order_relaxed)) {
         init();
-        atomic_store(&once->lock, FINISHED);
-        break;
+        atomic_store(&once->_lock, FINISHED);
+        return 0;
       }
       // fallthrough
     case CALLING:
       do {
         pthread_yield();
-      } while (atomic_load_explicit(&once->lock, memory_order_relaxed) ==
+      } while (atomic_load_explicit(&once->_lock, memory_order_relaxed) ==
                CALLING);
-      break;
+      return 0;
     case FINISHED:
-      break;
+      return 0;
     default:
-      assert(!"bad once");
       return EINVAL;
   }
-  return 0;
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.h"
@@ -36,7 +37,6 @@
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
@@ -48,7 +48,6 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/thread/tls.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/thread.h"
@@ -91,6 +90,8 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "net/http/escape.h"
@@ -418,8 +419,8 @@ static bool hasonprocessdestroy;
 static bool loggednetworkorigin;
 static bool ishandlingconnection;
 static bool hasonclientconnection;
+static atomic_bool terminatemonitor;
 static bool evadedragnetsurveillance;
-static _Atomic(bool) terminatemonitor;
 
 static int zfd;
 static int gmtoff;

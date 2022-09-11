@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -39,4 +40,4 @@
  * though under normal circumstances, `__ftrace` should only be either
  * zero or one.
  */
-_Atomic(int) __ftrace;
+atomic_int __ftrace;

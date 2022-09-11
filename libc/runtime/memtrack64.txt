@@ -1808,7 +1808,7 @@
 6f900000-6f9fffff 64gb   free
 6fa00000-6fafffff 64gb   free
 6fb00000-6fbfffff 64gb   free
-6fc00000-6fcfffff 64gb   free
+6fc00004-6fcfffff 64gb   nsync
 6fd00000-6fdfffff 64gb   zipos
 6fe00004-6feffffc 64gb   g_fds
 6ff00000-6ffffffd 64gb   free

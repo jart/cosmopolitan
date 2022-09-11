@@ -23,8 +23,8 @@
  * Sets mutex process sharing.
  *
  * @param pshared can be one of
+ *     - `PTHREAD_PROCESS_PRIVATE` (default)
  *     - `PTHREAD_PROCESS_SHARED`
- *     - `PTHREAD_PROCESS_PRIVATE`
  * @return 0 on success, or error on failure
  * @raises EINVAL if `pshared` is invalid
  */
@@ -32,7 +32,7 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
   switch (pshared) {
     case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:
-      attr->pshared = pshared;
+      attr->_pshared = pshared;
       return 0;
     default:
       return EINVAL;

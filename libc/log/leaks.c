@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/strace.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/mem/mem.h"
@@ -37,7 +38,7 @@ static bool hasleaks;
 static noasan void CheckLeak(void *x, void *y, size_t n, void *a) {
   if (n) {
     if (IsAsan()) {
-      if (__asan_get_heap_size(x)) {
+      if (__asan_get_heap_size(x) && !__asan_is_leaky(x)) {
         hasleaks = true;
       }
     } else {
@@ -53,9 +54,10 @@ static noasan void OnMemory(void *x, void *y, size_t n, void *a) {
       if (i < MAXLEAKS) {
         ++i;
         kprintf("%p %,lu bytes [dlmalloc]", x, n);
-        if (IsAsan()) {
-          __asan_print_trace(x);
+        if (__asan_is_leaky(x)) {
+          kprintf(" [leaky]");
         }
+        __asan_print_trace(x);
         kprintf("\n");
       } else if (i == MAXLEAKS) {
         ++i;
@@ -79,6 +81,7 @@ static noasan bool HasLeaks(void) {
  */
 noasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
+  if (!IsAsan()) return;  // we need traces to exclude leaky
   if (!_lockcmpxchg(&once, false, true)) {
     kprintf("CheckForMemoryLeaks() may only be called once\n");
     exit(1);

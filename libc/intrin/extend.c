@@ -37,11 +37,12 @@ static void _mapframe(void *p) {
   if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr != p) {
     notpossible;
   }
-  if (TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16,
-                          ((uintptr_t)p + G - 1) >> 16, dm.maphandle, prot,
-                          flags, false, false, 0, G)) {
+  __mmi_lock();
+  if (TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
+                          dm.maphandle, prot, flags, false, false, 0, G)) {
     notpossible;
   }
+  __mmi_unlock();
 }
 
 /**
@@ -80,5 +81,6 @@ noasan void *_extend(void *p, size_t n, void *e, intptr_t h) {
       *SHADOW(q) = 0;
     }
   }
+  asm("mfence");
   return q;
 }

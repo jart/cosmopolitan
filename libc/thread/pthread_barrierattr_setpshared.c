@@ -23,14 +23,13 @@
  * Sets barrier process sharing.
  *
  * @param pshared can be one of
- *     - `PTHREAD_PROCESS_SHARED`
- *     - `PTHREAD_PROCESS_PRIVATE`
+ *     - `PTHREAD_PROCESS_PRIVATE` (default)
+ *     - `PTHREAD_PROCESS_SHARED` (unsupported)
  * @return 0 on success, or error on failure
  * @raises EINVAL if `pshared` is invalid
  */
 int pthread_barrierattr_setpshared(pthread_barrierattr_t *attr, int pshared) {
   switch (pshared) {
-    case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:
       *attr = pshared;
       return 0;

@@ -17,6 +17,7 @@ int utimensat(int, const char *, const struct timespec[2], int);
 int timespec_get(struct timespec *, int);
 int timespec_getres(struct timespec *, int);
 
+int _timespec_cmp(struct timespec, struct timespec) pureconst;
 bool _timespec_eq(struct timespec, struct timespec) pureconst;
 bool _timespec_gte(struct timespec, struct timespec) pureconst;
 int64_t _timespec_tomicros(struct timespec) pureconst;

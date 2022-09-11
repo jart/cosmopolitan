@@ -22,12 +22,12 @@
  * Gets mutex process sharing.
  *
  * @param pshared is set to one of the following
+ *     - `PTHREAD_PROCESS_PRIVATE` (default)
  *     - `PTHREAD_PROCESS_SHARED`
- *     - `PTHREAD_PROCESS_PRIVATE`
  * @return 0 on success, or error on failure
  */
 int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
                                  int *pshared) {
-  *pshared = attr->pshared;
+  *pshared = attr->_pshared;
   return 0;
 }

@@ -25,6 +25,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/leaky.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
@@ -170,7 +171,7 @@ struct ReportOriginHeap {
 };
 
 static int __asan_noreentry;
-static pthread_mutex_t __asan_lock;
+static pthread_spinlock_t __asan_lock;
 static struct AsanMorgue __asan_morgue;
 
 #define __asan_unreachable()   \
@@ -867,25 +868,25 @@ dontdiscard __asan_die_f *__asan_report_memory_fault(void *addr, int size,
 void *__asan_morgue_add(void *p) {
   int i;
   void *r;
-  if (__threaded) pthread_mutex_lock(&__asan_lock);
+  if (__threaded) pthread_spin_lock(&__asan_lock);
   i = __asan_morgue.i++ & (ARRAYLEN(__asan_morgue.p) - 1);
   r = __asan_morgue.p[i];
   __asan_morgue.p[i] = p;
-  if (__threaded) pthread_mutex_unlock(&__asan_lock);
+  if (__threaded) pthread_spin_unlock(&__asan_lock);
   return r;
 }
 
 static void __asan_morgue_flush(void) {
   int i;
   void *p;
-  if (__threaded) pthread_mutex_lock(&__asan_lock);
+  if (__threaded) pthread_spin_lock(&__asan_lock);
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     if (__asan_morgue.p[i] && weaken(dlfree)) {
       weaken(dlfree)(__asan_morgue.p[i]);
     }
     __asan_morgue.p[i] = 0;
   }
-  if (__threaded) pthread_mutex_unlock(&__asan_lock);
+  if (__threaded) pthread_spin_unlock(&__asan_lock);
 }
 
 static size_t __asan_user_size(size_t n) {
@@ -1048,6 +1049,30 @@ int __asan_print_trace(void *p) {
             weaken(__get_symbol_by_addr)
                 ? weaken(__get_symbol_by_addr)(e->bt.p[i])
                 : "please STATIC_YOINK(\"__get_symbol_by_addr\")");
+  }
+  return 0;
+}
+
+// Returns true if `p` was allocated by an IGNORE_LEAKS(function).
+int __asan_is_leaky(void *p) {
+  int sym;
+  size_t c, i, n;
+  intptr_t f, *l;
+  struct AsanExtra *e;
+  struct SymbolTable *st;
+  if (!weaken(GetSymbolTable)) notpossible;
+  if (!(e = __asan_get_extra(p, &c))) return 0;
+  if (!__asan_read48(e->size, &n)) return 0;
+  if (!__asan_is_mapped((((intptr_t)p >> 3) + 0x7fff8000) >> 16)) return 0;
+  if (!(st = GetSymbolTable())) return 0;
+  for (i = 0; i < ARRAYLEN(e->bt.p) && e->bt.p[i]; ++i) {
+    if ((sym = weaken(__get_symbol)(st, e->bt.p[i])) == -1) continue;
+    f = st->addr_base + st->symbols[sym].x;
+    for (l = _leaky_start; l < _leaky_end; ++l) {
+      if (f == *l) {
+        return 1;
+      }
+    }
   }
   return 0;
 }

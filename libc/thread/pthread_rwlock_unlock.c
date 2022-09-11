@@ -16,12 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/mu.h"
 
 /**
  * Unlocks read-write lock.
@@ -30,26 +26,11 @@
  * @raise EINVAL if lock is in a bad state
  */
 int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
-  int old, waits;
-  for (;;) {
-    old = atomic_load_explicit(&rwlock->lock, memory_order_relaxed);
-    if (!old || old < -1) {
-      assert(!"badlock");
-      return EINVAL;
-    } else if (old == -1 || old == 1) {
-      waits = atomic_load_explicit(&rwlock->waits, memory_order_relaxed);
-      if (atomic_compare_exchange_weak_explicit(&rwlock->lock, &old, 0,
-                                                memory_order_acquire,
-                                                memory_order_relaxed)) {
-        if (waits && (IsLinux() || IsOpenbsd())) {
-          _futex_wake(&rwlock->lock, 1, rwlock->pshared);
-        }
-        return 0;
-      }
-    } else if (atomic_compare_exchange_weak_explicit(
-                   &rwlock->lock, &old, old - 1, memory_order_acquire,
-                   memory_order_relaxed)) {
-      return 0;
-    }
+  if (rwlock->_iswrite) {
+    rwlock->_iswrite = 0;
+    nsync_mu_unlock((nsync_mu *)rwlock);
+  } else {
+    nsync_mu_runlock((nsync_mu *)rwlock);
   }
+  return 0;
 }

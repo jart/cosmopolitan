@@ -16,10 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/errno.h"
-#include "libc/limits.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/counter.h"
 
 /**
  * Initializes barrier.
@@ -28,15 +27,14 @@
  * @param count is how many threads need to call pthread_barrier_wait()
  *     before the barrier is released, which must be greater than zero
  * @return 0 on success, or error number on failure
- * @raise EINVAL if `count` isn't greater than zero or overflows
+ * @raise EINVAL if `count` isn't greater than zero
+ * @raise ENOMEM if insufficient memory exists
  */
 int pthread_barrier_init(pthread_barrier_t *barrier,
                          const pthread_barrierattr_t *attr, unsigned count) {
-  if (count && count < INT_MAX / 2) {
-    *barrier = (pthread_barrier_t){attr ? *attr : 0, count};
-    return 0;
-  } else {
-    assert(!"bad count");
-    return EINVAL;
-  }
+  nsync_counter c;
+  if (!count) return EINVAL;
+  if (!(c = nsync_counter_new(count))) return ENOMEM;
+  *barrier = (pthread_barrier_t){._nsync = c};
+  return 0;
 }

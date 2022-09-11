@@ -25,6 +25,6 @@
  * @return 0 on success, or error number on failure
  */
 int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
-  *cond = (pthread_cond_t){attr ? *attr : 0};
+  *cond = (pthread_cond_t){0};
   return 0;
 }

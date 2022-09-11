@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.h"
 #include "libc/testlib/testlib.h"
@@ -26,17 +27,17 @@
 #define READERS    8
 #define WRITERS    2
 
-_Atomic(int) reads;
-_Atomic(int) writes;
+atomic_int reads;
+atomic_int writes;
 pthread_rwlock_t lock;
 pthread_barrier_t barrier;
 
 int Reader(void *arg, int tid) {
   pthread_barrier_wait(&barrier);
   for (int i = 0; i < ITERATIONS; ++i) {
-    pthread_rwlock_rdlock(&lock);
+    ASSERT_EQ(0, pthread_rwlock_rdlock(&lock));
     ++reads;
-    pthread_rwlock_unlock(&lock);
+    ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
   }
   return 0;
 }
@@ -44,9 +45,9 @@ int Reader(void *arg, int tid) {
 int Writer(void *arg, int tid) {
   pthread_barrier_wait(&barrier);
   for (int i = 0; i < ITERATIONS; ++i) {
-    pthread_rwlock_wrlock(&lock);
+    ASSERT_EQ(0, pthread_rwlock_wrlock(&lock));
     ++writes;
-    pthread_rwlock_unlock(&lock);
+    ASSERT_EQ(0, pthread_rwlock_unlock(&lock));
   }
   return 0;
 }
@@ -54,7 +55,7 @@ int Writer(void *arg, int tid) {
 TEST(pthread_rwlock_rdlock, test) {
   int i;
   struct spawn *t = _gc(malloc(sizeof(struct spawn) * (READERS + WRITERS)));
-  pthread_barrier_init(&barrier, 0, READERS + WRITERS);
+  ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, READERS + WRITERS));
   for (i = 0; i < READERS + WRITERS; ++i) {
     ASSERT_SYS(0, 0, _spawn(i < READERS ? Reader : Writer, 0, t + i));
   }
@@ -63,4 +64,5 @@ TEST(pthread_rwlock_rdlock, test) {
   }
   EXPECT_EQ(READERS * ITERATIONS, reads);
   EXPECT_EQ(WRITERS * ITERATIONS, writes);
+  ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

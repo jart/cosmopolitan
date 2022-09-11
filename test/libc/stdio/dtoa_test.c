@@ -20,7 +20,6 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
-#include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -35,6 +34,7 @@
 #include "libc/sysv/consts/sched.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/wait0.internal.h"
 #include "libc/x/x.h"
 
 #define DUB(i) (union Dub){i}.x

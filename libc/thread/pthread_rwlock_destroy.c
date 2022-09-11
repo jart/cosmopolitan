@@ -16,10 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
-#include "libc/thread/thread.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 /**
  * Destroys read-write lock.
@@ -28,10 +26,6 @@
  * @raise EINVAL if any threads still hold the lock
  */
 int pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
-  if (rwlock->lock) {
-    assert(!"deadlock");
-    return EINVAL;
-  }
   memset(rwlock, -1, sizeof(*rwlock));
   return 0;
 }

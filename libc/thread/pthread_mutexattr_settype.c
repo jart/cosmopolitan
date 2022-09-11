@@ -35,7 +35,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
     case PTHREAD_MUTEX_NORMAL:
     case PTHREAD_MUTEX_RECURSIVE:
     case PTHREAD_MUTEX_ERRORCHECK:
-      attr->type = type;
+      attr->_type = type;
       return 0;
     default:
       return EINVAL;

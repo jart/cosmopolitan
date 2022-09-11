@@ -23,9 +23,7 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/rand.h"
@@ -41,6 +39,8 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/tls.h"
+#include "libc/thread/wait0.internal.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 

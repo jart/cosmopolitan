@@ -579,7 +579,7 @@ syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall
 #	sigaltstack() values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlaid with STACKSIZE; you need to #undef SIGSTKSZ to access this symbol
+syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlaid with FRAMESIZE; you need to #undef SIGSTKSZ to access this symbol
 syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlaid with 32768; you need to #undef MINSIGSTKSZ to access this symbol
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
@@ -1316,9 +1316,9 @@ syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	futex	FUTEX_WAIT				0			0			0			1			0			0
-syscon	futex	FUTEX_WAKE				1			0			0			2			1			0
-syscon	futex	FUTEX_REQUEUE				3			0			0			3			3			0
-syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			128			0
+syscon	futex	FUTEX_WAKE				1			0			0			2			0			0
+syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
+syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			0			0
 
 #	lio_listio() magnums
 #
@@ -1336,7 +1336,7 @@ syscon	sched	SCHED_OTHER				0			127			2			127			0			127			# standard round-robin
 syscon	sched	SCHED_FIFO				1			127			1			127			1			127			# [real-time] first-in, first-out policy
 syscon	sched	SCHED_RR				2			127			3			127			2			127			# [real-time] round-robin policy
 syscon	sched	SCHED_BATCH				3			127			2			127			0			127			# for "batch" style execution of processes; polyfilled as SCHED_OTHER on non-Linux
-𝔰𝔶𝔰𝔠𝔬𝔫	sched	SCHED_IDLE				5			127			2			127			0			127			# for running very low priority background jobs; polyfilled as SCHED_OTHER on non-Linux
+syscon	sched	SCHED_IDLE				5			127			2			127			0			127			# for running very low priority background jobs; polyfilled as SCHED_OTHER on non-Linux
 syscon	sched	SCHED_DEADLINE				6			127			127			127			127			127			# can only be set by sched_setattr()
 syscon	sched	SCHED_RESET_ON_FORK			0x40000000		0			0			0			0			0			# Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork(); no-op on non-Linux
 
@@ -1847,7 +1847,7 @@ syscon	nr	__NR_kill				0x003e			0x2000025		0x0025			0x007a			0x025			0xfff
 syscon	nr	__NR_killpg				0xfff			0xfff			0x0092			0xfff			0xfff			0xfff
 syscon	nr	__NR_clone				0x0038			0xfff			0xfff			0xfff			0x11f			0xfff
 syscon	nr	__NR_tkill				0x00c8			0xfff			0xfff			0xfff			0xfff			0xfff
-syscon	nr	__NR_futex				0x00ca			0xfff			0xfff			0x0053			0x0a6			0xfff
+syscon	nr	__NR_futex				0x00ca			0xfff			0xfff			0x0053			0xfff			0xfff
 syscon	nr	__NR_set_robust_list			0x0111			0xfff			0xfff			0xfff			0x0a7			0xfff
 syscon	nr	__NR_get_robust_list			0x0112			0xfff			0xfff			0xfff			0x0a8			0xfff
 syscon	nr	__NR_uname				0x003f			0xfff			0x00a4			0xfff			0xfff			0xfff

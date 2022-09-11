@@ -166,7 +166,7 @@ imp	'CreateMutexEx'						CreateMutexExW						kernel32	0
 imp	'CreatePrivateNamespace'				CreatePrivateNamespaceW					kernel32	0
 imp	'CreateRemoteThread'					CreateRemoteThread					kernel32	0
 imp	'CreateRemoteThreadEx'					CreateRemoteThreadEx					kernel32	0
-imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	0
+imp	'CreateSemaphore'					CreateSemaphoreW					kernel32	0	4
 imp	'CreateSemaphoreEx'					CreateSemaphoreExW					kernel32	0
 imp	'CreateSymbolicLinkTransacted'				CreateSymbolicLinkTransactedW				kernel32	238
 imp	'CreateTapePartition'					CreateTapePartition					kernel32	240

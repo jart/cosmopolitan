@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
+#include "libc/thread/thread.h"
+#include "third_party/nsync/counter.h"
+#include "third_party/nsync/futex.internal.h"
+#include "third_party/nsync/time.h"
 
 /**
  * Waits for all threads to arrive at barrier.
@@ -33,22 +36,10 @@
  *     thread which was the last arrival, or an errno on error
  */
 int pthread_barrier_wait(pthread_barrier_t *barrier) {
-  if (atomic_fetch_add(&barrier->waits, 1) + 1 == barrier->count) {
-    if (atomic_fetch_add(&barrier->waits, 1) + 1 < barrier->count * 2) {
-      atomic_store_explicit(&barrier->popped, 1, memory_order_relaxed);
-      do {
-        _futex_wake(&barrier->popped, INT_MAX, barrier->pshared);
-      } while (atomic_load_explicit(&barrier->waits, memory_order_relaxed) <
-               barrier->count * 2);
-      atomic_store_explicit(&barrier->popped, 0, memory_order_relaxed);
-    }
-    atomic_store_explicit(&barrier->waits, 0, memory_order_relaxed);
+  if (nsync_counter_add(barrier->_nsync, -1)) {
+    nsync_counter_wait(barrier->_nsync, nsync_time_no_deadline);
+    return 0;
+  } else {
     return PTHREAD_BARRIER_SERIAL_THREAD;
   }
-  do {
-    _futex_wait(&barrier->popped, 0, barrier->pshared, 0);
-  } while (atomic_load_explicit(&barrier->waits, memory_order_relaxed) <
-           barrier->count);
-  atomic_fetch_add(&barrier->waits, 1);
-  return 0;
 }

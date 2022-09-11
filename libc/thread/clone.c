@@ -215,7 +215,7 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   wt->ctid = flags & CLONE_CHILD_SETTID ? ctid : &wt->tid;
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
-  wt->lock.lock = 1;
+  wt->lock._lock = 1;
   if ((rc = bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
     pthread_spin_lock(&wt->lock);
     rc = wt->tid;

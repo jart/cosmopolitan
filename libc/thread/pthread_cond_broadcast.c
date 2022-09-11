@@ -16,72 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/limits.h"
-
-static dontinline int pthread_cond_signal_impl(pthread_cond_t *cond, int n) {
-  if (atomic_load_explicit(&cond->waits, memory_order_relaxed)) {
-    atomic_fetch_add(&cond->seq, 1);
-    if (IsLinux() || IsOpenbsd()) {
-      _futex_wake(&cond->seq, n, cond->pshared);
-    }
-  }
-  return 0;
-}
-
-/**
- * Wakes at least one thread waiting on condition, e.g.
- *
- *     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
- *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
- *
- *     // thread pool waiters
- *     pthread_mutex_lock(&lock);
- *     pthread_cond_wait(&cond, &lock);
- *     pthread_mutex_unlock(&lock);
- *
- *     // waker upper
- *     pthread_mutex_lock(&lock);
- *     pthread_cond_signal(&cond);
- *     pthread_mutex_unlock(&lock);
- *
- * This function has no effect if there aren't any threads currently
- * waiting on the condition.
- *
- * @return 0 on success, or errno on error
- * @see pthread_cond_broadcast
- * @see pthread_cond_wait
- */
-int pthread_cond_signal(pthread_cond_t *cond) {
-  return pthread_cond_signal_impl(cond, 1);
-}
+#include "third_party/nsync/cv.h"
 
 /**
  * Wakes all threads waiting on condition, e.g.
  *
- *     pthread_mutex_t lock;
- *     pthread_mutexattr_t mattr;
- *     pthread_mutexattr_init(&mattr);
- *     pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
- *     pthread_mutex_init(&lock, &mattr);
- *
- *     pthread_cond_t cond;
- *     pthread_condattr_t cattr;
- *     pthread_condattr_init(&cattr);
- *     pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED);
- *     pthread_cond_init(&cond, &cattr);
- *
- *     // waiting threads
- *     CHECK_EQ(0, pthread_mutex_lock(&lock));
- *     CHECK_EQ(0, pthread_cond_wait(&cond, &lock));
- *     pthread_mutex_unlock(&lock);
- *
- *     // notifying thread
- *     CHECK_EQ(0, pthread_mutex_lock(&lock));
- *     pthread_cond_broadcast(&cond);
+ *     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+ *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+ *     // ...
+ *     pthread_mutex_lock(&lock);
+ *     pthread_cond_broadcast(&cond, &lock);
  *     pthread_mutex_unlock(&lock);
  *
  * This function has no effect if there aren't any threads currently
@@ -92,5 +37,6 @@ int pthread_cond_signal(pthread_cond_t *cond) {
  * @see pthread_cond_wait
  */
 int pthread_cond_broadcast(pthread_cond_t *cond) {
-  return pthread_cond_signal_impl(cond, INT_MAX);
+  nsync_cv_broadcast((nsync_cv *)cond);
+  return 0;
 }

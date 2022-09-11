@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/mem/mem.h"
@@ -26,7 +27,7 @@
 #include "libc/thread/thread.h"
 
 int i, n;
-_Atomic(int) p, w;
+atomic_int p, w;
 pthread_barrier_t barrier;
 
 int Worker(void *arg, int tid) {
@@ -36,9 +37,6 @@ int Worker(void *arg, int tid) {
   ASSERT_GE(rc, 0);
   if (rc == PTHREAD_BARRIER_SERIAL_THREAD) {
     atomic_fetch_add(&p, 1);
-    ASSERT_EQ(0, barrier.popped);
-    ASSERT_EQ(0, barrier.waits);
-    ASSERT_EQ(n, barrier.count);
   }
   return 0;
 }

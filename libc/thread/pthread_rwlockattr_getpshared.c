@@ -22,8 +22,8 @@
  * Gets read-write lock process sharing.
  *
  * @param pshared is set to one of the following
- *     - `PTHREAD_PROCESS_SHARED`
- *     - `PTHREAD_PROCESS_PRIVATE`
+ *     - `PTHREAD_PROCESS_PRIVATE` (default)
+ *     - `PTHREAD_PROCESS_SHARED` (unsupported)
  * @return 0 on success, or error on failure
  */
 int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *attr,

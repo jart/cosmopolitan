@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -201,6 +201,9 @@ int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
   unsigned i;
 #if IsModeDbg()
   assert(y >= x);
+  if (!AreMemoryIntervalsOk(mm)) {
+    PrintMemoryIntervals(2, mm);
+  }
   assert(AreMemoryIntervalsOk(mm));
 #endif
 

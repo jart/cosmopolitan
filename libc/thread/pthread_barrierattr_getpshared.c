@@ -22,8 +22,8 @@
  * Gets barrier process sharing.
  *
  * @param pshared is set to one of the following
- *     - `PTHREAD_PROCESS_SHARED`
- *     - `PTHREAD_PROCESS_PRIVATE`
+ *     - `PTHREAD_PROCESS_PRIVATE` (default)
+ *     - `PTHREAD_PROCESS_SHARED` (unsupported)
  * @return 0 on success, or error on failure
  */
 int pthread_barrierattr_getpshared(const pthread_barrierattr_t *attr,

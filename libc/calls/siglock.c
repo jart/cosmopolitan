@@ -30,5 +30,5 @@ void(__sig_unlock)(void) {
 }
 
 __attribute__((__constructor__)) static void init(void) {
-  __sig_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
+  __sig_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
 }

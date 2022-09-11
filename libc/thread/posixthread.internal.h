@@ -62,11 +62,13 @@ struct PosixThread {
   int *ctid;
   char *tls;
   char *tib;
+  char *altstack;
   _Atomic(enum PosixThreadStatus) status;
   jmp_buf exiter;
   pthread_attr_t attr;
 };
 
+hidden extern pthread_spinlock_t _pthread_keys_lock;
 hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
 hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
 hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];

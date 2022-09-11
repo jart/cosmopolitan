@@ -3,6 +3,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
+#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -29,6 +30,7 @@ struct AsanFault __asan_check(const void *, long) nosideeffect;
 
 void __asan_free(void *);
 void *__asan_malloc(size_t);
+int __asan_is_leaky(void *);
 int __asan_malloc_trim(size_t);
 int __asan_print_trace(void *);
 void *__asan_calloc(size_t, size_t);

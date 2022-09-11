@@ -16,24 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
-
-static int pthread_rwlock_wrlock_spin(pthread_rwlock_t *rwlock, int expect,
-                                      int tries) {
-  if (tries < 7) {
-    volatile int i;
-    for (i = 0; i != 1 << tries; i++) {
-    }
-    tries++;
-  } else {
-    atomic_fetch_add(&rwlock->waits, 1);
-    _futex_wait(&rwlock->lock, expect, rwlock->pshared, &(struct timespec){1});
-    atomic_fetch_sub(&rwlock->waits, 1);
-  }
-  return tries;
-}
+#include "third_party/nsync/mu.h"
 
 /**
  * Acquires write lock on read-write lock.
@@ -41,17 +25,7 @@ static int pthread_rwlock_wrlock_spin(pthread_rwlock_t *rwlock, int expect,
  * @return 0 on success, or errno on error
  */
 int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
-  int old, tries;
-  for (tries = 0;;) {
-    if (!(old = atomic_load_explicit(&rwlock->lock, memory_order_relaxed))) {
-      do {
-        if (atomic_compare_exchange_weak_explicit(&rwlock->lock, &old, -1,
-                                                  memory_order_acquire,
-                                                  memory_order_relaxed)) {
-          return 0;
-        }
-      } while (!old);
-    }
-    tries = pthread_rwlock_wrlock_spin(rwlock, old, tries);
-  }
+  nsync_mu_lock((nsync_mu *)rwlock);
+  rwlock->_iswrite = 1;
+  return 0;
 }

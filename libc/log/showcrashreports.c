@@ -105,6 +105,7 @@ static void FreeSigAltStack(void *p) {
 void ShowCrashReports(void) {
   char *sp;
   struct sigaltstack ss;
+  _wantcrashreports = true;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   kCrashSigs[0] = SIGQUIT; /* ctrl+\ aka ctrl+break */
   kCrashSigs[1] = SIGFPE;  /* 1 / 0 */

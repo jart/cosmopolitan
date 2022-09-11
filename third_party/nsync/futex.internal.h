@@ -1,0 +1,15 @@
+#ifndef NSYNC_FUTEX_INTERNAL_H_
+#define NSYNC_FUTEX_INTERNAL_H_
+#include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+extern bool FUTEX_TIMEOUT_IS_ABSOLUTE;
+
+int nsync_futex_wake_(int *, int, char);
+int nsync_futex_wait_(int *, int, char, struct timespec *);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* NSYNC_FUTEX_INTERNAL_H_ */

@@ -7,6 +7,7 @@ COSMOPOLITAN_C_START_
 
 extern hidden bool __nocolor;
 extern hidden int kCrashSigs[8];
+extern hidden bool _wantcrashreports;
 extern hidden bool g_isrunningundermake;
 
 void __start_fatal(const char *, int) hidden;

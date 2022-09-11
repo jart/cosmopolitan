@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/ucontext.h"
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -28,15 +30,16 @@
 
 jmp_buf jb;
 
-void EscapeSegfault(int sig) {
+void EscapeSegfault(int sig, struct siginfo *si, void *vctx) {
   longjmp(jb, 666);
 }
 
 TEST(xstack, test) {
+  if (IsXnu()) return;  // TODO(jart): what's up with xnu in MODE=tiny?
   struct sigaction old[2];
   struct sigaction sa = {
-      .sa_handler = EscapeSegfault,
-      .sa_flags = SA_NODEFER,
+      .sa_sigaction = EscapeSegfault,
+      .sa_flags = SA_SIGINFO,
   };
   sigaction(SIGSEGV, &sa, old + 0);
   sigaction(SIGBUS, &sa, old + 1);

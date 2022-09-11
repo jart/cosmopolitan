@@ -16,12 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/futex.internal.h"
-#include "libc/intrin/wait0.internal.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -43,10 +42,11 @@
 #include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
+#include "libc/thread/wait0.internal.h"
 #include "libc/time/time.h"
 
 int x, me, tid;
-_Atomic(int) thechilde;
+atomic_int thechilde;
 
 void SetUpOnce(void) {
   __enable_threads();
@@ -109,7 +109,7 @@ TEST(clone, test1) {
 ////////////////////////////////////////////////////////////////////////////////
 // TEST THREADS CAN ISSUE SYSTEM CALLS WITH INDEPENDENT ERRNOS
 
-_Atomic(int) sysbarrier;
+atomic_int sysbarrier;
 
 int CloneTestSys(void *arg, int tid) {
   int i, id = (intptr_t)arg;

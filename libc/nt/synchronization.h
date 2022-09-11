@@ -82,6 +82,10 @@ bool32 SetWaitableTimer(int64_t hTimer, const int64_t *lpDueTimeAsFtOrNegRela,
                         int32_t opt_lPeriodMs, NtTimerapcroutine opt_callback,
                         void *lpArgToCallback, bool32 fUnsleepSystem);
 
+int64_t CreateSemaphore(struct NtSecurityAttributes *opt_lpSemaphoreAttributes,
+                        uint32_t lInitialCount, uint32_t lMaximumCount,
+                        const char16_t *opt_lpName);
+
 int32_t SetEvent(int64_t hEvent);
 int32_t ResetEvent(int64_t hEvent);
 int32_t PulseEvent(int64_t hEvent);

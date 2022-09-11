@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -115,7 +115,7 @@ struct Trace {
         EK_KILLED,  // ret is signal code
       } kind;
       unsigned char arity;
-      unsigned char syscall;
+      unsigned char syscall_;
       bool is_interrupted;
       int us;
       int elap;
@@ -675,7 +675,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
       return;
     } else if (isalpha(*p) && (q = strchr(p, '('))) {
       t->events.p[event].kind = EK_CALL;
-      CHECK_NE(-1, (t->events.p[event].syscall = GetSyscall(p, q - p)), DEBUG);
+      CHECK_NE(-1, (t->events.p[event].syscall_ = GetSyscall(p, q - p)), DEBUG);
       p = q + 1;
     }
   }
@@ -825,8 +825,8 @@ static void PrintEvent(FILE *f, struct Trace *t, long ev) {
       fprintf(f, "%d", t->events.p[ev].ret);
       break;
     case EK_CALL:
-      CHECK_LT(t->events.p[ev].syscall, ARRAYLEN(kSyscalls));
-      fprintf(f, "(b%`'s,%ld,", kSyscalls[t->events.p[ev].syscall].name,
+      CHECK_LT(t->events.p[ev].syscall_, ARRAYLEN(kSyscalls));
+      fprintf(f, "(b%`'s,%ld,", kSyscalls[t->events.p[ev].syscall_].name,
               t->events.p[ev].ret);
       fprintf(f, "%c",
               t->events.p[ev].arity && t->events.p[ev].arg[0].name != -1 ? '{'

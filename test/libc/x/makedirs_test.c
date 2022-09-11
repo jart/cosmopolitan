@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
 #define DIR                                                                    \
@@ -42,4 +42,5 @@ TEST(makedirs, test) {
   ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
+  ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

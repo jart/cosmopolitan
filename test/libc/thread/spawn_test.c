@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/atomic.h"
@@ -27,7 +28,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 
-_Atomic(int) itworked;
+atomic_int itworked;
 _Thread_local int var;
 
 void SetUpOnce(void) {

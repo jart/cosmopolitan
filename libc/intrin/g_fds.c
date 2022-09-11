@@ -19,11 +19,11 @@
 #include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/thread/thread.h"
 
 STATIC_YOINK("_init_g_fds");
 
@@ -41,7 +41,7 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
 
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
-  __fds_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
+  __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
   fds = VEIL("r", &g_fds);
   fds->p = fds->e = (void *)0x6fe000040000;
   fds->n = 4;

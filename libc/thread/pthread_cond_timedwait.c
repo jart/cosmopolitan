@@ -16,14 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
+#include "third_party/nsync/common.internal.h"
+#include "third_party/nsync/cv.h"
+#include "third_party/nsync/time.h"
 
 /**
  * Waits for condition with optional time limit, e.g.
@@ -48,44 +46,13 @@
  */
 int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                            const struct timespec *abstime) {
-  int c, rc, err, seq;
-  struct timespec now, rel, *tsp;
-
   if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000)) {
-    assert(!"bad abstime");
     return EINVAL;
   }
-
-  if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
-    c = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
-    if ((c & 0x000fffff) != gettid()) {
-      assert(!"permlock");
-      return EPERM;
-    }
+  if (mutex->_type != PTHREAD_MUTEX_NORMAL) {
+    nsync_panic_("pthread cond needs normal mutex\n");
   }
-
-  atomic_fetch_add(&cond->waits, 1);
-  if (pthread_mutex_unlock(mutex)) notpossible;
-
-  rc = 0;
-  seq = atomic_load_explicit(&cond->seq, memory_order_relaxed);
-  do {
-    if (!abstime) {
-      tsp = 0;
-    } else {
-      now = _timespec_mono();
-      if (_timespec_gte(now, *abstime)) {
-        rc = ETIMEDOUT;
-        break;
-      }
-      rel = _timespec_sub(*abstime, now);
-      tsp = &rel;
-    }
-    _futex_wait(&cond->seq, seq, cond->pshared, tsp);
-  } while (seq == atomic_load_explicit(&cond->seq, memory_order_relaxed));
-
-  if (pthread_mutex_lock(mutex)) notpossible;
-  atomic_fetch_sub(&cond->waits, 1);
-
-  return rc;
+  return nsync_cv_wait_with_deadline(
+      (nsync_cv *)cond, (nsync_mu *)mutex,
+      abstime ? *abstime : nsync_time_no_deadline, 0);
 }

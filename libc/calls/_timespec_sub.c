@@ -21,12 +21,12 @@
 /**
  * Subtracts two nanosecond timestamps.
  */
-struct timespec _timespec_sub(struct timespec x, struct timespec y) {
-  x.tv_sec -= y.tv_sec;
-  x.tv_nsec -= y.tv_nsec;
-  if (x.tv_nsec < 0) {
-    x.tv_nsec += 1000000000;
-    x.tv_sec -= 1;
+struct timespec _timespec_sub(struct timespec a, struct timespec b) {
+  a.tv_sec -= b.tv_sec;
+  if (a.tv_nsec < b.tv_nsec) {
+    a.tv_nsec += 1000000000;
+    a.tv_sec--;
   }
-  return x;
+  a.tv_nsec -= b.tv_nsec;
+  return a;
 }

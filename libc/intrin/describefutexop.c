@@ -16,16 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/futex.h"
 
-const char *DescribeFutexOp(int x) {
-  if (x == FUTEX_WAIT) return "FUTEX_WAIT";
-  if (x == FUTEX_WAKE) return "FUTEX_WAKE";
-  if (x == FUTEX_REQUEUE) return "FUTEX_REQUEUE";
-  // order matters (the private bit might be zero)
-  if (x == FUTEX_WAIT_PRIVATE) return "FUTEX_WAIT_PRIVATE";
-  if (x == FUTEX_WAKE_PRIVATE) return "FUTEX_WAKE_PRIVATE";
-  if (x == FUTEX_REQUEUE_PRIVATE) return "FUTEX_REQUEUE_PRIVATE";
-  return "FUTEX_???";
+const char *(DescribeFutexOp)(char buf[64], int x) {
+
+  bool priv = false;
+  if (x & FUTEX_PRIVATE_FLAG) {
+    priv = true;
+    x &= ~FUTEX_PRIVATE_FLAG;
+  }
+
+  bool real = false;
+  if (x & FUTEX_CLOCK_REALTIME) {
+    real = true;
+    x &= ~FUTEX_CLOCK_REALTIME;
+  }
+
+  char *p = buf;
+
+  if (x == FUTEX_WAIT) {
+    p = stpcpy(p, "FUTEX_WAIT");
+  } else if (x == FUTEX_WAKE) {
+    p = stpcpy(p, "FUTEX_WAKE");
+  } else if (x == FUTEX_REQUEUE) {
+    p = stpcpy(p, "FUTEX_REQUEUE");
+  } else if (x == FUTEX_WAIT_BITSET) {
+    p = stpcpy(p, "FUTEX_WAIT_BITSET");
+  } else {
+    p = stpcpy(p, "FUTEX_");
+    p = FormatUint32(p, x);
+  }
+
+  if (priv) {
+    p = stpcpy(p, "_PRIVATE");
+  }
+
+  if (real) {
+    p = stpcpy(p, "|FUTEX_CLOCK_REALTIME");
+  }
+
+  return buf;
 }

@@ -179,7 +179,7 @@ struct ElfPhdr {
 
 extern char ehdr[];
 extern char _end[];
-static void *syscall;
+static void *syscall_;
 static char relocated;
 static struct PathSearcher ps;
 extern char __syscall_loader[];
@@ -275,7 +275,7 @@ __attribute__((__noreturn__)) static void Exit(int rc, int os) {
   asm volatile("call\t*%2"
                : /* no outputs */
                : "a"((IsLinux() ? 60 : 1) | (IsXnu() ? 0x2000000 : 0)), "D"(rc),
-                 "rm"(syscall)
+                 "rm"(syscall_)
                : "memory");
   __builtin_unreachable();
 }
@@ -285,7 +285,7 @@ static void Close(int fd, int os) {
   asm volatile("call\t*%4"
                : "=a"(ax), "=D"(di)
                : "0"((IsLinux() ? 3 : 6) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
-                 "rm"(syscall)
+                 "rm"(syscall_)
                : "rcx", "rdx", "rsi", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
@@ -295,7 +295,7 @@ static int Read(int fd, void *data, int size, int os) {
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"((IsLinux() ? 0 : 3) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
-                 "2"(data), "3"(size), "rm"(syscall)
+                 "2"(data), "3"(size), "rm"(syscall_)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   return ax;
 }
@@ -306,7 +306,7 @@ static void Write(int fd, const void *data, int size, int os) {
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"((IsLinux() ? 1 : 4) | (IsXnu() ? 0x2000000 : 0)), "1"(fd),
-                 "2"(data), "3"(size), "rm"(syscall)
+                 "2"(data), "3"(size), "rm"(syscall_)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
@@ -315,7 +315,7 @@ static void Execve(const char *prog, char **argv, char **envp, int os) {
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"(59 | (IsXnu() ? 0x2000000 : 0)), "1"(prog), "2"(argv),
-                 "3"(envp), "rm"(syscall)
+                 "3"(envp), "rm"(syscall_)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
 }
 
@@ -325,7 +325,7 @@ static int Access(const char *path, int mode, int os) {
   asm volatile("call\t*%7"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"((IsLinux() ? 21 : 33) | (IsXnu() ? 0x2000000 : 0)),
-                 "1"(path), "2"(mode), "rm"(syscall)
+                 "1"(path), "2"(mode), "rm"(syscall_)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
 }
@@ -338,7 +338,7 @@ static int Msyscall(long p, long n, int os) {
   } else {
     asm volatile("call\t*%6"
                  : "=a"(ax), "=D"(di), "=S"(si)
-                 : "0"(37), "1"(p), "2"(n), "rm"(syscall)
+                 : "0"(37), "1"(p), "2"(n), "rm"(syscall_)
                  : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory", "cc");
     return ax;
   }
@@ -350,7 +350,7 @@ static int Open(const char *path, int flags, int mode, int os) {
   asm volatile("call\t*%8"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx)
                : "0"((IsLinux() ? 2 : 5) | (IsXnu() ? 0x2000000 : 0)),
-                 "1"(path), "2"(flags), "3"(mode), "rm"(syscall)
+                 "1"(path), "2"(flags), "3"(mode), "rm"(syscall_)
                : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
   return ax;
 }
@@ -369,7 +369,7 @@ __attribute__((__noinline__)) static long Mmap(long addr, long size, int prot,
                "pop\t%%r9"
                : "=a"(ax), "=D"(di), "=S"(si), "=d"(dx), "+r"(flags_),
                  "+r"(fd_), "+r"(off_)
-               : "rm"(syscall),
+               : "rm"(syscall_),
                  "0"((IsLinux()     ? 9
                       : IsFreebsd() ? 477
                                     : 197) |
@@ -589,7 +589,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   // since it probably means a userspace program executed this loader
   // and passed us a custom syscall function earlier.
   if (Msyscall(code, codesize, os) != -1) {
-    syscall = 0;
+    syscall_ = 0;
   }
 
 #if TROUBLESHOOT
@@ -600,7 +600,7 @@ __attribute__((__noreturn__)) static void Spawn(int os, const char *exe, int fd,
   // to extend the behavior of this loader in the future. we don't need
   // to clear the xmm registers since the ape loader should be compiled
   // with the -mgeneral-regs-only flag.
-  register void *r8 asm("r8") = syscall;
+  register void *r8 asm("r8") = syscall_;
   asm volatile("xor\t%%eax,%%eax\n\t"
                "xor\t%%r9d,%%r9d\n\t"
                "xor\t%%r10d,%%r10d\n\t"
@@ -660,9 +660,9 @@ __attribute__((__noreturn__)) void ApeLoader(long di, long *sp, char dl,
 
   // get syscall function pointer
   if (handoff && handoff->systemcall) {
-    syscall = handoff->systemcall;
+    syscall_ = handoff->systemcall;
   } else {
-    syscall = __syscall_loader;
+    syscall_ = __syscall_loader;
   }
 
   if (handoff) {

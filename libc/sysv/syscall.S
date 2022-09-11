@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/macros.internal.h"
 .privileged
 
@@ -32,12 +33,52 @@
 //	@param	%rsi,%rdx,%rcx,%r8,%r9 may supply parameters 1 through 5
 //	@param	sixth is optionally pushed on the stack before call
 //	@return	%rax has result, or -1 w/ errno on failure
-syscall:mov	%rdi,%rax
-	mov	%rsi,%rdi
-	mov	%rdx,%rsi
-	mov	%rcx,%rdx
-	mov	%r8,%rcx		# ← intended
-	mov	%r9,%r8
-	mov	8(%rsp),%r9
-	jmp	*__systemfive(%rip)
+syscall:
+	push	%rbp
+	mov	%rsp,%rbp
+	.profilable
+
+//	slide arguments into their right places
+	mov	%rdi,%rax		# nr
+	mov	%rsi,%rdi		# arg 1
+	mov	%rdx,%rsi		# arg 2
+	mov	%rcx,%rdx		# arg 3
+	mov	%r8,%rcx		# arg 4
+	mov	%r9,%r8			# arg 5
+	mov	16(%rbp),%r9		# arg 6
+	push	32(%rbp)		# arg 8
+	push	24(%rbp)		# arg 7
+
+//	convert from consts.sh to syscalls.sh encoding
+	push	%rcx
+	mov	__hostos(%rip),%cl
+	test	$LINUX,%cl
+	jnz	2f
+1:	test	$FREEBSD,%cl
+	jz	1f
+	shl	$4*7,%rax
+	jmp	2f
+1:	test	$OPENBSD,%cl
+	jz	1f
+	shl	$4*10,%rax
+	jmp	2f
+1:	test	$NETBSD,%cl
+	jz	1f
+	shl	$4*13,%rax
+	jmp	2f
+1:	test	$XNU,%cl
+	jz	2f
+	mov	%eax,%ecx
+	and	$0x0f000000,%ecx
+	and	$0x00000fff,%eax
+	shl	$4*3,%eax
+	or	%ecx,%eax
+2:	pop	%rcx
+
+//	trigger the system call
+	call	*__systemfive(%rip)
+
+//	clean up stack and return
+	leave
+	ret
 	.endfn	syscall,globl

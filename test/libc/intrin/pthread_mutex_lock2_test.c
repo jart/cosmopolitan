@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/atomic.h"
@@ -26,13 +27,14 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/mu.h"
 
 int THREADS = 16;
 int ITERATIONS = 100;
 
 int count;
-_Atomic(int) started;
-_Atomic(int) finished;
+atomic_int started;
+atomic_int finished;
 pthread_mutex_t lock;
 pthread_mutexattr_t attr;
 
@@ -108,29 +110,50 @@ void BenchLockUnlock(pthread_mutex_t *m) {
   pthread_mutex_unlock(m);
 }
 
+void BenchLockUnlockNsync(nsync_mu *m) {
+  nsync_mu_lock(m);
+  nsync_mu_unlock(m);
+}
+
 BENCH(pthread_mutex_lock, bench_uncontended) {
   {
     pthread_spinlock_t s = {0};
     EZBENCH2("spin 1x", donothing, BenchSpinUnspin(&s));
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_NORMAL};
+    nsync_mu m = {0};
+    EZBENCH2("nsync 1x", donothing, BenchLockUnlockNsync(&m));
+  }
+  {
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+    pthread_mutex_init(&m, &attr);
     EZBENCH2("normal 1x", donothing, BenchLockUnlock(&m));
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_RECURSIVE};
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&m, &attr);
     EZBENCH2("recursive 1x", donothing, BenchLockUnlock(&m));
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_ERRORCHECK};
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutex_init(&m, &attr);
     EZBENCH2("errorcheck 1x", donothing, BenchLockUnlock(&m));
   }
 }
 
 struct SpinContentionArgs {
   pthread_spinlock_t *spin;
-  _Atomic(char) done;
-  _Atomic(char) ready;
+  atomic_char done;
+  atomic_char ready;
 };
 
 int SpinContentionWorker(void *arg, int tid) {
@@ -145,8 +168,8 @@ int SpinContentionWorker(void *arg, int tid) {
 
 struct MutexContentionArgs {
   pthread_mutex_t *mutex;
-  _Atomic(char) done;
-  _Atomic(char) ready;
+  atomic_char done;
+  atomic_char ready;
 };
 
 int MutexContentionWorker(void *arg, int tid) {
@@ -155,6 +178,22 @@ int MutexContentionWorker(void *arg, int tid) {
     pthread_mutex_lock(a->mutex);
     atomic_store_explicit(&a->ready, 1, memory_order_relaxed);
     pthread_mutex_unlock(a->mutex);
+  }
+  return 0;
+}
+
+struct NsyncContentionArgs {
+  nsync_mu *nsync;
+  atomic_char done;
+  atomic_char ready;
+};
+
+int NsyncContentionWorker(void *arg, int tid) {
+  struct NsyncContentionArgs *a = arg;
+  while (!atomic_load_explicit(&a->done, memory_order_relaxed)) {
+    nsync_mu_lock(a->nsync);
+    atomic_store_explicit(&a->ready, 1, memory_order_relaxed);
+    nsync_mu_unlock(a->nsync);
   }
   return 0;
 }
@@ -171,7 +210,20 @@ BENCH(pthread_mutex_lock, bench_contended) {
     _join(&t);
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_NORMAL};
+    nsync_mu m = {0};
+    struct NsyncContentionArgs a = {&m};
+    _spawn(NsyncContentionWorker, &a, &t);
+    while (!a.ready) sched_yield();
+    EZBENCH2("nsync 2x", donothing, BenchLockUnlockNsync(&m));
+    a.done = true;
+    _join(&t);
+  }
+  {
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+    pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     _spawn(MutexContentionWorker, &a, &t);
     while (!a.ready) sched_yield();
@@ -180,7 +232,11 @@ BENCH(pthread_mutex_lock, bench_contended) {
     _join(&t);
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_RECURSIVE};
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     _spawn(MutexContentionWorker, &a, &t);
     while (!a.ready) sched_yield();
@@ -189,7 +245,11 @@ BENCH(pthread_mutex_lock, bench_contended) {
     _join(&t);
   }
   {
-    pthread_mutex_t m = {PTHREAD_MUTEX_ERRORCHECK};
+    pthread_mutex_t m;
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutex_init(&m, &attr);
     struct MutexContentionArgs a = {&m};
     _spawn(MutexContentionWorker, &a, &t);
     while (!a.ready) sched_yield();

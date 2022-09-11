@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/futex.internal.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
+#include "third_party/nsync/mu.h"
 
 /**
  * Releases mutex.
@@ -32,30 +34,28 @@
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int c, t;
 
-  if (mutex->type == PTHREAD_MUTEX_NORMAL) {
-    // From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
-    // Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
-    if ((c = atomic_fetch_sub(&mutex->lock, 1)) != 1) {
-      atomic_store_explicit(&mutex->lock, 0, memory_order_release);
-      _futex_wake(&mutex->lock, 1, mutex->pshared);
-    }
+  if (LIKELY(__tls_enabled &&                               //
+             mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
+             mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
+             weaken(nsync_mu_unlock))) {
+    weaken(nsync_mu_unlock)((nsync_mu *)mutex);
     return 0;
   }
 
   t = gettid();
-  if (mutex->type == PTHREAD_MUTEX_ERRORCHECK) {
-    c = atomic_load_explicit(&mutex->lock, memory_order_relaxed);
+  if (mutex->_type == PTHREAD_MUTEX_ERRORCHECK) {
+    c = atomic_load_explicit(&mutex->_lock, memory_order_relaxed);
     if ((c & 0x000fffff) != t) {
-      assert(!"permlock");
       return EPERM;
     }
   }
 
-  c = atomic_fetch_sub(&mutex->lock, 0x00100000);
+  c = atomic_fetch_sub(&mutex->_lock, 0x00100000);
   if ((c & 0x0ff00000) == 0x00100000) {
-    atomic_store_explicit(&mutex->lock, 0, memory_order_release);
+    atomic_store_explicit(&mutex->_lock, 0, memory_order_release);
     if ((c & 0xf0000000) == 0x20000000) {
-      _futex_wake(&mutex->lock, 1, mutex->pshared);
+      // _futex_wake(&mutex->_lock, 1, mutex->_pshared);
+      pthread_yield();
     }
   }
 

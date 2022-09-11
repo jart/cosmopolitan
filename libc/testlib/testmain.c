@@ -182,13 +182,13 @@ noasan int main(int argc, char *argv[]) {
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
     weaken(testlib_runallbenchmarks)();
-    if (!g_testlib_failed) {
+    if (IsAsan() && !g_testlib_failed) {
       CheckForMemoryLeaks();
     }
     if (!g_testlib_failed && IsRunningUnderMake()) {
       return 254;  // compile.com considers this 0 and propagates output
     }
-  } else if (!g_testlib_failed) {
+  } else if (IsAsan() && !g_testlib_failed) {
     CheckForMemoryLeaks();
   }
 

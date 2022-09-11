@@ -17,8 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -33,6 +31,7 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/tls.h"
+#include "libc/thread/wait0.internal.h"
 
 /**
  * @fileoverview Simple threading API

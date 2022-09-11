@@ -43,7 +43,7 @@
 #define ENTRIES 1024
 
 volatile uint64_t A[THREADS * ENTRIES];
-pthread_barrier_t barrier = PTHREAD_BARRIER_INITIALIZER;
+pthread_barrier_t barrier;
 
 void SetUpOnce(void) {
   __enable_threads();
@@ -93,7 +93,7 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
   sigemptyset(&ss);
   sigaddset(&ss, SIGCHLD);
   EXPECT_EQ(0, sigprocmask(SIG_BLOCK, &ss, &oldss));
-  pthread_barrier_init(&barrier, 0, THREADS);
+  ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, THREADS));
   for (i = 0; i < THREADS; ++i) {
     ASSERT_SYS(0, 0, _spawn(Thrasher, (void *)(intptr_t)i, th + i));
   }
@@ -109,4 +109,5 @@ TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
       EXPECT_NE(A[i], A[j], "i=%d j=%d", i, j);
     }
   }
+  ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

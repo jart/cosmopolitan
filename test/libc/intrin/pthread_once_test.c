@@ -16,17 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/intrin/atomic.h"
-#include "libc/thread/thread.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
 
 int i, n;
 struct spawn *t;
-_Atomic(int) x, y;
+atomic_int x, y;
 pthread_barrier_t b;
+static pthread_once_t once = PTHREAD_ONCE_INIT;
 
 void InitFactory(void) {
   ASSERT_EQ(0, atomic_load(&x));
@@ -34,7 +36,6 @@ void InitFactory(void) {
 }
 
 int Worker(void *arg, int tid) {
-  static pthread_once_t once = PTHREAD_ONCE_INIT;
   pthread_barrier_wait(&b);
   ASSERT_EQ(0, pthread_once(&once, InitFactory));
   ASSERT_EQ(1, atomic_load(&y));
@@ -45,10 +46,11 @@ int Worker(void *arg, int tid) {
 TEST(pthread_once, test) {
   n = 32;
   x = y = 0;
-  pthread_barrier_init(&b, 0, n);
+  ASSERT_EQ(0, pthread_barrier_init(&b, 0, n));
   t = gc(malloc(sizeof(struct spawn) * n));
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
   ASSERT_EQ(n, atomic_load(&x));
   ASSERT_EQ(1, atomic_load(&y));
+  ASSERT_EQ(0, pthread_barrier_destroy(&b));
 }

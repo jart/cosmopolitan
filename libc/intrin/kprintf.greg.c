@@ -24,6 +24,8 @@
 #include "libc/errno.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/asancodes.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"

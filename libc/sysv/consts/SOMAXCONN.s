@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon misc,SOMAXCONN,0x80,0x80,0x80,0x80,0x80,0x7fffffff
+.syscon limits,SOMAXCONN,4096,128,128,128,128,2147483647

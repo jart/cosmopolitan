@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/testlib/testlib.h"
@@ -62,7 +63,7 @@ TEST(pthread_setname_np, GetDefaultName_IsEmptyString) {
   ASSERT_EQ(0, pthread_join(id, 0));
 }
 
-_Atomic(char) sync1, sync2;
+atomic_char sync1, sync2;
 
 static void *GetNameOfOtherThreadWorker(void *arg) {
   pthread_setname_np(pthread_self(), "justine");
