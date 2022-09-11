@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 struct mman {
   int64_t pdp;                           /* 0x0500 */
   int32_t pdpi;                          /* 0x0508 */
-  int32_t e820n;                         /* 0x050a */
+  int32_t e820n;                         /* 0x050c */
   struct SmapEntry e820[256];            /* 0x0510 */
   char pc_drive_base_table[11];          /* 0x1d10 */
   unsigned char pc_drive_type;           /* 0x1d1b */
@@ -17,6 +17,7 @@ struct mman {
   unsigned char pc_drive_last_head;      /* 0x1d20 */
   unsigned char pc_drive;                /* 0x1d21 */
   char bad_idt[6];                       /* 0x1d22 */
+  unsigned use_bane : 1, : 31;           /* 0x1d28 */
 };
 
 COSMOPOLITAN_C_END_
