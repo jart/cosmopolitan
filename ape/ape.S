@@ -329,7 +329,7 @@ dsknfo:	push	%bx
 	movpp	%es,%ds
 	xor	%si,%si
 	mov	%si,%es
-	mov	$0x1510,%si		# mman::pc_drive_base_table
+	mov	$0x1d10,%si		# mman::pc_drive_base_table
 	xchg	%si,%di
 	movsw	#→ headunloadtime, headloadtime
 	movsw	#→ shutofftime, bytespersector
@@ -382,11 +382,11 @@ pcread:	push	%ax
 	add	$512>>4,%si
 	mov	%si,%es
 	inc	%al			# ++sector
-	cmp	0x151c,%al		# mman::pc_drive_last_sector
+	cmp	0x1d1c,%al		# mman::pc_drive_last_sector
 	jbe	2f
 	mov	$1,%al
 	inc	%dh			# ++head
-	cmp	0x1520,%dh		# mman::pc_drive_last_head
+	cmp	0x1d20,%dh		# mman::pc_drive_last_head
 	jbe	2f
 	xor	%dh,%dh
 	inc	%cx			# ++cylinder
@@ -1291,27 +1291,38 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 //	Gets memory map from BIOS.
 e820:	mov	$0x0510>>4,%di		# mman::e820
 	mov	%di,%es
-	xor	%edi,%edi		# es:di is destination buffer
+	xor	%di,%di			# es:di is destination buffer
 	xor	%ebx,%ebx		# ebx is an api state tracker
 1:	mov	$0xE820,%eax		# magic
 	mov	$8+8+4+4,%ecx		# sizeof(struct SmapEntry)
 	mov	$0x534d4150,%edx	# magic number
+	movl	$1,8+8+4/*SmapEntry::acpi3*/(%di) # prefill ACPI attributes;
+					# apparently some buggy BIOSes say
+					# that they return this field, yet
+					# do not fill it correctly
 	int	$0x15			# ax,bx,cx,dx,di → ax,bx,cx
 	jc	9f			# cf = unsupported or abuse
 	cmp	%edx,%eax		# more magic means success
 	jne	9f
 	test	%cx,%cx			# discard empty results
 	jz	5f
+	mov	8/*LODWORD(SmapEntry::size)*/(%di),%eax
+	or	8+4/*HIDWORD(SmapEntry::size)*/(%di),%eax
+	jz	5f
 	cmp	$8+8+4+1,%cx		# discard if ignore flag
 	jb	4f
-	testb	$1/*ignore*/,8+8+4/*SmapEntry::__acpi3*/(%di)
-	jnz	5f
+	testb	$1/*don't ignore*/,8+8+4/*SmapEntry::acpi3*/(%di)
+	jz	5f
 4:	add	$8+8+4+4,%di		# keep entry
 5:	test	%ebx,%ebx		# last entry?
 	jz	8f
-	cmp	$0x1000,%di
+	cmp	$(256-1)*(8+8+4+4),%di
 	jb	1b
-8:	ret
+8:	xor	%ax,%ax			# add a blank sentinel entry
+	mov	$(8+8)/2,%cx
+	cld
+	rep stosw
+	ret
 9:	mov	$REAL(str.e820),%di
 	call	rldie
 	.endfn	e820
@@ -1407,7 +1418,7 @@ pinit:	push	%ds
 //
 //	@see	Intel Manual V3A §4.1.2
 golong:	cli
-	lidt	0x1522					# mman::bad_idt
+	lidt	0x1d22					# mman::bad_idt
 	mov	%cr4,%eax
 	or	$CR4_PAE|CR4_PGE|CR4_OSFXSR,%eax
 	mov	%eax,%cr4
