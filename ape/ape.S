@@ -1392,9 +1392,16 @@ a20:	cli
 
 //	Initializes long mode paging.
 pinit:	push	%ds
+	push	%es
 #define	SEG 0x79000
 	mov	$SEG>>4,%ax
 	mov	%ax,%ds
+	mov	%ax,%es
+	xor	%di,%di
+	xor	%ax,%ax
+	mov	$(0x7f000-SEG)/2,%cx
+	cld
+	rep stosw
 	movl	$0x7d000+PAGE_V+PAGE_RW,0x7e000-SEG	# PDPT←PML4T (+)
 	movl	$0x7c000+PAGE_V+PAGE_RW,0x7e800-SEG	# PDPT←PML4T (-)
 	movl	$0x7b000+PAGE_V+PAGE_RW,0x7d000-SEG	# PDT←PDPT   (+)
@@ -1403,13 +1410,14 @@ pinit:	push	%ds
 	movl	$0x79000+PAGE_V+PAGE_RW,0x7a000-SEG	# PD←PDT     (-)
 	mov	$512,%cx				# PD±2MB
 	mov	$PAGE_V+PAGE_RW,%eax
-	xor	%si,%si
-0:	mov	%eax,(%si)
+	xor	%di,%di
+0:	stosl
 	add	$0x1000,%eax
-	add	$8,%si
+	scasl						# di += 4
 	loop	0b
 	mov	$0x7e000,%eax				# PML4T←CR3
 	mov	%eax,%cr3
+	pop	%es
 	pop	%ds
 	ret
 	.endfn	pinit
