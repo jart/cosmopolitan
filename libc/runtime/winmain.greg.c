@@ -166,8 +166,8 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   char outflagsbuf[128];
   const char16_t *env16;
   int i, prot, count, version;
+  size_t allocsize, stacksize;
   intptr_t stackaddr, allocaddr;
-  size_t allocsize, argsize, stacksize;
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
@@ -190,15 +190,14 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
               rc);
     }
   }
+  _Static_assert(sizeof(struct WinArgs) % FRAMESIZE == 0, "");
   _mmi.p = _mmi.s;
   _mmi.n = ARRAYLEN(_mmi.s);
-  argsize = ROUNDUP(sizeof(struct WinArgs), FRAMESIZE);
   stackaddr = GetStaticStackAddr(0);
   stacksize = GetStackSize();
-  allocsize = argsize + stacksize;
-  allocaddr = stackaddr - argsize;
-  NTTRACE("WinMainNew() mapping %'zu byte arg block + stack at %p", allocsize,
-          allocaddr);
+  allocaddr = stackaddr;
+  allocsize = stacksize + sizeof(struct WinArgs);
+  NTTRACE("WinMainNew() mapping %'zu byte stack at %p", allocsize, allocaddr);
   MapViewOfFileEx(
       (_mmi.p[0].h =
            CreateFileMapping(-1, &kNtIsInheritable, kNtPageExecuteReadwrite,
@@ -209,12 +208,12 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
     VirtualProtect((void *)allocaddr, allocsize, kNtPageReadwrite, &oldprot);
   }
   _mmi.p[0].x = allocaddr >> 16;
-  _mmi.p[0].y = (allocaddr >> 16) + ((allocsize >> 16) - 1);
+  _mmi.p[0].y = (allocaddr >> 16) + ((allocsize - 1) >> 16);
   _mmi.p[0].prot = prot;
   _mmi.p[0].flags = 0x00000026;  // stack+anonymous
   _mmi.p[0].size = allocsize;
   _mmi.i = 1;
-  wa = (struct WinArgs *)allocaddr;
+  wa = (struct WinArgs *)(allocaddr + stacksize);
   NTTRACE("WinMainNew() loading arg block");
   count = GetDosArgv(cmdline, wa->argblock, ARRAYLEN(wa->argblock), wa->argv,
                      ARRAYLEN(wa->argv));

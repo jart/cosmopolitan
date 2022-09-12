@@ -55,4 +55,3 @@ $(THIRD_PARTY_NSYNC_OBJS): third_party/nsync/nsync.mk
 
 .PHONY: o/$(MODE)/third_party/nsync
 o/$(MODE)/third_party/nsync: $(THIRD_PARTY_NSYNC_CHECKS)
-

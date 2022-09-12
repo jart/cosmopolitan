@@ -3,8 +3,8 @@
 
 00000000-0000001f 2048kb null
 00000020-0000003f 2048kb loader
-00000040-00004fff 1276mb image
-00005000-00007ffd 768mb  arena
+00000040-00004ffb 1276mb image
+00005004-00007ffb 768mb  arena
 00007ffe-00007ffe 64kb   free
 
 # address sanitizer shadow memory
@@ -264,10 +264,10 @@
 0fd00000-0fdfffff 64gb   asan
 0fe00000-0fefffff 64gb   asan
 0ff00000-0fffffff 64gb   asan
-10000000-10007fff 2048mb asan
+10000000-10008003 2048mb asan
 
 # memory dedicated to mmap(NULL, ...) automation, e.g. malloc()
-10008000-100fffff 62gb   automap
+10008004-100fffff 62gb   automap
 10100000-101fffff 64gb   automap
 10200000-102fffff 64gb   automap
 10300000-103fffff 64gb   automap
@@ -521,13 +521,13 @@
 1fb00000-1fbfffff 64gb   automap
 1fc00000-1fcfffff 64gb   automap
 1fd00000-1fdfffff 64gb   automap
-1fe00000-1fe7ffff 32gb   automap
+1fe00000-1fe7fffb 32gb   automap
 
 1fe7fffc-1fefffff 32gb   _mmi
 1ff00000-1ffffffb 64gb   _mmi
-1ffffffc-1fffffff 256kb  free
+1ffffffc-20000003 256kb  free
 
-20000000-200fffff 64gb   free
+20000004-200fffff 64gb   free
 20100000-201fffff 64gb   free
 20200000-202fffff 64gb   free
 20300000-203fffff 64gb   free
@@ -782,10 +782,10 @@
 2fc00000-2fcfffff 64gb   free
 2fd00000-2fdfffff 64gb   free
 2fe00000-2fefffff 64gb   free
-2ff00000-2fffffff 64gb   free
+2ff00000-30000003 64gb   free
 
 # memory recommended for application MAP_FIXED usage
-30000000-300fffff 64gb   fixedmap
+30000004-300fffff 64gb   fixedmap
 30100000-301fffff 64gb   fixedmap
 30200000-302fffff 64gb   fixedmap
 30300000-303fffff 64gb   fixedmap
@@ -1040,9 +1040,9 @@
 3fc00000-3fcfffff 64gb   fixedmap
 3fd00000-3fdfffff 64gb   fixedmap
 3fe00000-3fefffff 64gb   fixedmap
-3ff00000-3fffffff 64gb   fixedmap
+3ff00000-40000003 64gb   fixedmap
 
-40000000-400fffff 64gb   free
+40000004-400fffff 64gb   free
 40100000-401fffff 64gb   free
 40200000-402fffff 64gb   free
 40300000-403fffff 64gb   free
@@ -1808,14 +1808,14 @@
 6f900000-6f9fffff 64gb   free
 6fa00000-6fafffff 64gb   free
 6fb00000-6fbfffff 64gb   free
-6fc00004-6fcfffff 64gb   nsync
-6fd00000-6fdfffff 64gb   zipos
-6fe00004-6feffffc 64gb   g_fds
-6ff00000-6ffffffd 64gb   free
-6ffffffe-6fffffff 128kb  winargs
+6fc00004-6fcffffb 64gb   nsync
+6fd00004-6fdffffb 64gb   zipos
+6fe00004-6feffffb 64gb   g_fds
+6ff00004-70000003 64gb   free
 
-70000000-70000001 128kb  stack
-70000002-700fffff 64gb   free
+70000004-70000004 64kb   stack
+70000005-70000006 128kb  winargs
+70000005-700fffff 64gb   free
 70100000-701fffff 64gb   free
 70200000-702fffff 64gb   free
 70300000-703fffff 64gb   free

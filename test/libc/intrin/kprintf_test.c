@@ -49,6 +49,10 @@ static uint64_t Rando(void) {
   return x;
 }
 
+void SetUp(void) {
+  __print_maps();
+}
+
 static const struct {
   const char *want;
   const char *fmt;

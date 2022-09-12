@@ -1,45 +1,33 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #include "libc/assert.h"
-#include "libc/intrin/midpoint.h"
 #include "libc/dce.h"
+#include "libc/intrin/midpoint.h"
 #include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/thread/tls.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kAutomapStart _kMem(0x100080000000, 0x000010000000)
-#define kAutomapSize                                             \
-  _kMem(0x200000000000 - 0x100080000000 - _kMmi(0x800000000000), \
-        0x000040000000 - 0x000010000000 - _kMmi(0x000080000000))
-#define kMemtrackStart                                      \
-  (ROUNDDOWN(_kMem(0x200000000000 - _kMmi(0x800000000000),  \
-                   0x000040000000 - _kMmi(0x000080000000)), \
-             FRAMESIZE * 8) -                               \
-   0x8000 * 8 /* so frame aligned after adding 0x7fff8000 */)
-#define kMemtrackSize  _kMem(_kMmi(0x800000000000), _kMmi(0x000080000000))
-#define kMemtrackGran  (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
-#define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
-#define kFixedmapSize \
-  _kMem(0x400000000000 - 0x300000000000, 0x000070000000 - 0x000040000000)
-#define kMemtrackFdsStart _kMemVista(0x6fe000040000, 0x5e000040000)
-#define kMemtrackFdsSize  \
+#define kAutomapStart       0x100080040000
+#define kAutomapSize        (kMemtrackStart - kAutomapStart)
+#define kMemtrackStart      0x1fe7fffc0000
+#define kMemtrackSize       (0x1ffffffc0000 - kMemtrackStart)
+#define kFixedmapStart      0x300000040000
+#define kFixedmapSize       (0x400000040000 - kFixedmapStart)
+#define kMemtrackFdsStart   _kMemVista(0x6fe000040000, 0x5e000040000)
+#define kMemtrackFdsSize    \
   (_kMemVista(0x6feffffc0000, 0x5effffc0000) - kMemtrackFdsStart)
 #define kMemtrackZiposStart _kMemVista(0x6fd000040000, 0x5d000040000)
-#define kMemtrackZiposSize \
+#define kMemtrackZiposSize  \
   (_kMemVista(0x6fdffffc0000, 0x5dffffc0000) - kMemtrackZiposStart)
 #define kMemtrackNsyncStart _kMemVista(0x6fc000040000, 0x5c000040000)
-#define kMemtrackNsyncSize \
+#define kMemtrackNsyncSize  \
   (_kMemVista(0x6fcffffc0000, 0x5cffffc0000 - kMemtrackNsyncStart)
-#define _kMmi(VSPACE)                                                   \
-  ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
-          FRAMESIZE)
-#define _kMem(NORMAL, WIN7) \
-  (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
+#define kMemtrackGran       (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
 #define _kMemVista(NORMAL, WINVISTA) \
   (!IsWindows() || IsAtleastWindows8p1() ? NORMAL : WINVISTA)
 
@@ -93,21 +81,36 @@ forceinline pureconst bool IsLegalSize(size_t n) {
 }
 
 forceinline pureconst bool IsAutoFrame(int x) {
-  return (kAutomapStart >> 16) <= x &&
-         x <= ((kAutomapStart + (kAutomapSize - 1)) >> 16);
+  return (int)(kAutomapStart >> 16) <= x &&
+         x <= (int)((kAutomapStart + kAutomapSize - 1) >> 16);
 }
 
 forceinline pureconst bool IsMemtrackFrame(int x) {
-  return (kAutomapStart >> 16) <= x &&
-         x <= ((kAutomapStart + (kAutomapSize - 1)) >> 16);
+  return (int)(kAutomapStart >> 16) <= x &&
+         x <= (int)((kAutomapStart + kAutomapSize - 1) >> 16);
 }
 
-forceinline pureconst bool IsArenaFrame(int x) {
-  return 0x5000 <= x && x < 0x7ffe;
+forceinline pureconst bool IsGfdsFrame(int x) {
+  return (int)(kMemtrackFdsStart >> 16) <= x &&
+         x <= (int)((kMemtrackFdsStart + kMemtrackFdsSize - 1) >> 16);
+}
+
+forceinline pureconst bool IsZiposFrame(int x) {
+  return (int)(kMemtrackZiposStart >> 16) <= x &&
+         x <= (int)((kMemtrackZiposStart + kMemtrackZiposSize - 1) >> 16);
+}
+
+forceinline pureconst bool IsNsyncFrame(int x) {
+  return (int)(kMemtrackNsyncStart >> 16) <= x &&
+         x <= (int)((kMemtrackNsyncStart + kMemtrackNsyncSize - 1) >> 16);
 }
 
 forceinline pureconst bool IsShadowFrame(int x) {
   return 0x7fff <= x && x < 0x10008000;
+}
+
+forceinline pureconst bool IsArenaFrame(int x) {
+  return 0x5004 <= x && x <= 0x7ffb;
 }
 
 forceinline pureconst bool IsKernelFrame(int x) {
@@ -128,15 +131,12 @@ forceinline pureconst bool IsStackFrame(int x) {
          x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
-forceinline pureconst bool IsSigAltStackFrame(int x) {
-  intptr_t stack = GetStackAddr();
-  return (int)(stack >> 16) <= x &&
-         x <= (int)((stack + (SIGSTKSZ - FRAMESIZE)) >> 16);
-}
-
 forceinline pureconst bool IsOldStackFrame(int x) {
-  intptr_t old = ROUNDDOWN(__oldstack, STACKSIZE);
-  return (old >> 16) <= x && x <= ((old + (STACKSIZE - FRAMESIZE)) >> 16);
+  /* openbsd uses 4mb stack by default */
+  /* freebsd uses 512mb stack by default */
+  /* most systems use 8mb stack by default */
+  intptr_t old = ROUNDDOWN(__oldstack, GetStackSize());
+  return (old >> 16) <= x && x <= ((old + (GetStackSize() - FRAMESIZE)) >> 16);
 }
 
 forceinline pureconst bool IsFixedFrame(int x) {

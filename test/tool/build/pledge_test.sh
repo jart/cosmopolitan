@@ -10,6 +10,7 @@ if [ $# = 0 ]; then
          o//examples/life.com \
          o//examples/hello.com \
          o//examples/printargs.com \
+         o//tool/build/assimilate.com \
          o//tool/build/pledge.com || exit
     make -j16 MODE=$m \
          o/$m/examples/ls.com \
@@ -17,6 +18,7 @@ if [ $# = 0 ]; then
          o/$m/examples/life.com \
          o/$m/examples/hello.com \
          o/$m/examples/printargs.com \
+         o/$m/tool/build/assimilate.com \
          o/$m/tool/build/pledge.com || exit
     test/tool/build/pledge_test.sh ape_binfmt_test_suite || exit
     test/tool/build/pledge_test.sh ape_loader_test_suite || exit

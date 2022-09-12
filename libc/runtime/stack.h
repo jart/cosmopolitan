@@ -107,18 +107,14 @@ extern char ape_stack_align[] __attribute__((__weak__));
  * problematic, since MODE=tiny doesn't use any of the runtime codes
  * which want the stack to be cheaply knowable, e.g. ftrace, kprintf
  */
-#define GetStaticStackAddr(ADDEND)              \
-  ({                                            \
-    intptr_t vAddr;                             \
-    if (!IsWindows() || IsAtLeastWindows10()) { \
-      __asm__(".weak\tape_stack_vaddr\n\t"      \
-              "movabs\t%1+ape_stack_vaddr,%0"   \
-              : "=r"(vAddr)                     \
-              : "i"(ADDEND));                   \
-    } else {                                    \
-      vAddr = 0x100000000 - GetStackSize();     \
-    }                                           \
-    vAddr;                                      \
+#define GetStaticStackAddr(ADDEND)          \
+  ({                                        \
+    intptr_t vAddr;                         \
+    __asm__(".weak\tape_stack_vaddr\n\t"    \
+            "movabs\t%1+ape_stack_vaddr,%0" \
+            : "=r"(vAddr)                   \
+            : "i"(ADDEND));                 \
+    vAddr;                                  \
   })
 
 /**

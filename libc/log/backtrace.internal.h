@@ -10,7 +10,6 @@ forceinline pureconst bool IsValidStackFramePointer(struct StackFrame *x) {
   /* assumes __mmi_lock() is held */
   return IsLegalPointer(x) && !((uintptr_t)x & 15) &&
          (IsStaticStackFrame((uintptr_t)x >> 16) ||
-          IsSigAltStackFrame((uintptr_t)x >> 16) ||
           IsOldStackFrame((uintptr_t)x >> 16) ||
           /* lua coroutines need this */
           IsMemtracked((uintptr_t)x >> 16, (uintptr_t)x >> 16));

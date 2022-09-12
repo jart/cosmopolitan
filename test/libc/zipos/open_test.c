@@ -52,5 +52,5 @@ TEST(zipos, test) {
   struct spawn *t = _gc(malloc(sizeof(struct spawn) * n));
   for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
   for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
-  /* __print_maps(); */
+  __print_maps();
 }
