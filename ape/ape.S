@@ -1425,8 +1425,8 @@ golong:	cli
 
 //	Long mode is long.
 	.code64
-long:	push	$GDT_LONG_DATA
-	pop	%rax
+long:	xor	%eax,%eax
+	mov	$GDT_LONG_DATA,%al
 	mov	%eax,%ds
 	mov	%eax,%ss
 	mov	%eax,%es
