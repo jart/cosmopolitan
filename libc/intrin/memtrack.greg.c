@@ -37,11 +37,20 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#if IsModeDbg()
+#define ASSERT_MEMTRACK()          \
+  if (!AreMemoryIntervalsOk(mm)) { \
+    PrintMemoryIntervals(2, mm);   \
+    notpossible;                   \
+  }
+#else
+#define ASSERT_MEMTRACK()
+#endif
+
 static void *MoveMemoryIntervals(struct MemoryInterval *d,
                                  const struct MemoryInterval *s, int n) {
-  // asan runtime depends on this function
   int i;
-  assert(n >= 0);
+  if (n < 0) unreachable;
   if (d > s) {
     for (i = n; i--;) {
       d[i] = s[i];
@@ -55,9 +64,8 @@ static void *MoveMemoryIntervals(struct MemoryInterval *d,
 }
 
 static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
-  // asan runtime depends on this function
-  assert(i >= 0);
-  assert(i + n <= mm->i);
+  if (i < 0) unreachable;
+  if (i + n > mm->i) unreachable;
   MoveMemoryIntervals(mm->p + i, mm->p + i + n, mm->i - (i + n));
   mm->i -= n;
 }
@@ -96,19 +104,14 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
     if (!dm.addr) return false;
     mm->n = (size + gran) / sizeof(*mm->p);
   }
-#if IsModeDbg()
-  assert(AreMemoryIntervalsOk(mm));
-#endif
+  ASSERT_MEMTRACK();
   return true;
 }
 
 int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
-  // asan runtime depends on this function
-  int rc;
-  rc = 0;
-  assert(i >= 0);
-  assert(i <= mm->i);
-  assert(mm->n >= 0);
+  if (i < 0) unreachable;
+  if (i > mm->i) unreachable;
+  if (mm->n < 0) unreachable;
   if (UNLIKELY(mm->i == mm->n) && !ExtendMemoryIntervals(mm)) return enomem();
   MoveMemoryIntervals(mm->p + i + 1, mm->p + i, mm->i++ - i);
   return 0;
@@ -126,12 +129,9 @@ static int PunchHole(struct MemoryIntervals *mm, int x, int y, int i) {
 int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
                            void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
-#if IsModeDbg()
-  assert(y >= x);
-  assert(AreMemoryIntervalsOk(mm));
-#endif
+  ASSERT_MEMTRACK();
+  if (y < x) unreachable;
   if (!mm->i) return 0;
-
   // binary search for the lefthand side
   l = FindMemoryInterval(mm, x);
   if (l == mm->i) return 0;
@@ -140,8 +140,8 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // binary search for the righthand side
   r = FindMemoryInterval(mm, y);
   if (r == mm->i || (r > l && y < mm->p[r].x)) --r;
-  assert(r >= l);
-  assert(x <= mm->p[r].y);
+  if (r < l) unreachable;
+  if (x > mm->p[r].y) unreachable;
 
   // remove the middle of an existing map
   //
@@ -162,11 +162,11 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // ----|mmmm|----------------- after
   //
   if (x > mm->p[l].x && x <= mm->p[l].y) {
-    assert(y >= mm->p[l].y);
+    if (y < mm->p[l].y) unreachable;
     if (IsWindows()) return einval();
     mm->p[l].size -= (size_t)(mm->p[l].y - (x - 1)) * FRAMESIZE;
     mm->p[l].y = x - 1;
-    assert(mm->p[l].x <= mm->p[l].y);
+    if (mm->p[l].x > mm->p[l].y) unreachable;
     ++l;
   }
 
@@ -177,11 +177,11 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // ---------------|mm|-------- after
   //
   if (y >= mm->p[r].x && y < mm->p[r].y) {
-    assert(x <= mm->p[r].x);
+    if (x > mm->p[r].x) unreachable;
     if (IsWindows()) return einval();
     mm->p[r].size -= (size_t)((y + 1) - mm->p[r].x) * FRAMESIZE;
     mm->p[r].x = y + 1;
-    assert(mm->p[r].x <= mm->p[r].y);
+    if (mm->p[r].x > mm->p[r].y) unreachable;
     --r;
   }
 
@@ -197,16 +197,9 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
 int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
                         int prot, int flags, bool readonlyfile, bool iscow,
                         long offset, long size) {
-  // asan runtime depends on this function
   unsigned i;
-#if IsModeDbg()
-  assert(y >= x);
-  if (!AreMemoryIntervalsOk(mm)) {
-    PrintMemoryIntervals(2, mm);
-  }
-  assert(AreMemoryIntervalsOk(mm));
-#endif
-
+  ASSERT_MEMTRACK();
+  if (y < x) unreachable;
   i = FindMemoryInterval(mm, x);
 
   // try to extend the righthand side of the lefthand entry
@@ -249,5 +242,6 @@ int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
     mm->p[i].iscow = iscow;
     mm->p[i].readonlyfile = readonlyfile;
   }
+
   return 0;
 }

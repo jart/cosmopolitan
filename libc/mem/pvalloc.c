@@ -20,7 +20,10 @@
 #include "libc/mem/mem.h"
 
 /**
- * Equivalent to memalign(PAGESIZE, ROUNDUP(n, PAGESIZE)).
+ * Allocates granular aligned memory of granular size, i.e.
+ *
+ *      memalign(sysconf(_SC_PAGESIZE),
+ *               ROUNDUP(n, sysconf(_SC_PAGESIZE)));
  *
  * @param n number of bytes needed
  * @return memory address, or NULL w/ errno
@@ -28,5 +31,5 @@
  * @threadsafe
  */
 void *pvalloc(size_t n) {
-  return memalign(PAGESIZE, ROUNDUP(n, PAGESIZE));
+  return memalign(FRAMESIZE, ROUNDUP(n, FRAMESIZE));
 }

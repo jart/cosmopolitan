@@ -36,7 +36,6 @@
 #define INTMAX_MAX    __INTMAX_MAX__
 #define UINTMAX_MAX   __UINTMAX_MAX__
 
-extern int __got_long_min;
 #define SCHAR_MIN     (-SCHAR_MAX - 1)
 #define SHRT_MIN      (-SHRT_MAX - 1)
 #define INT_MIN       (-INT_MAX - 1)
@@ -107,5 +106,23 @@ extern int __got_long_min;
 #define NL_MSGMAX  32767
 #define NL_SETMAX  255
 #define NL_TEXTMAX 2048
+
+#define UINT_FAST64_MAX __UINT_FAST64_MAX__
+#define UINT_FAST8_MAX  __UINT_FAST8_MAX__
+#define INT_FAST32_MAX  __INT_FAST32_MAX__
+#define INT_FAST16_MAX  __INT_FAST16_MAX__
+#define UINT_FAST32_MAX __UINT_FAST32_MAX__
+#define INT_FAST8_MAX   __INT_FAST8_MAX__
+#define INT_FAST64_MAX  __INT_FAST64_MAX__
+#define UINT_FAST16_MAX __UINT_FAST16_MAX__
+
+#define UINT_FAST64_MIN (-UINT_FAST64_MAX - 1)
+#define UINT_FAST8_MIN  (-UINT_FAST8_MAX - 1)
+#define INT_FAST32_MIN  (-INT_FAST32_MAX - 1)
+#define INT_FAST16_MIN  (-INT_FAST16_MAX - 1)
+#define UINT_FAST32_MIN (-UINT_FAST32_MAX - 1)
+#define INT_FAST8_MIN   (-INT_FAST8_MAX - 1)
+#define INT_FAST64_MIN  (-INT_FAST64_MAX - 1)
+#define UINT_FAST16_MIN (-UINT_FAST16_MAX - 1)
 
 #endif /* COSMOPOLITAN_LIBC_LIMITS_H_ */

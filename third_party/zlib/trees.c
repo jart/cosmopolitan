@@ -5,6 +5,7 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/deflate.internal.h"
@@ -128,10 +129,10 @@ static void gen_trees_header(void);
 /* Send a code of the given tree. c and tree must not have side effects */
 
 #else /* !ZLIB_DEBUG */
-#define send_code(s, c, tree)                             \
-  {                                                       \
-    if (z_verbose > 2) fprintf(stderr, "\ncd %3d ", (c)); \
-    send_bits(s, tree[c].Code, tree[c].Len);              \
+#define send_code(s, c, tree)                     \
+  {                                               \
+    if (z_verbose > 2) kprintf("\ncd %3d ", (c)); \
+    send_bits(s, tree[c].Code, tree[c].Len);      \
   }
 #endif
 
@@ -151,7 +152,7 @@ static void gen_trees_header(void);
  */
 #ifdef ZLIB_DEBUG
 static void send_bits(struct DeflateState *s, int value, int length) {
-  Tracevv((stderr, " l %2d v %4x ", length, value));
+  Tracevv((" l %2d v %4x ", length, value));
   Assert(length > 0 && length <= 15, "invalid length");
   s->bits_sent += (uint64_t)length;
   /* If not enough room in bi_buf, use (valid) bits from bi_buf and
@@ -466,7 +467,7 @@ static void gen_bitlen(struct DeflateState *s, tree_desc *desc) {
   }
   if (overflow == 0) return;
 
-  Tracev((stderr, "\nbit length overflow\n"));
+  Tracev(("\nbit length overflow\n"));
   /* This happens for example on obj2 and pic of the Calgary corpus */
 
   /* Find the first bit length which could increase: */
@@ -493,7 +494,7 @@ static void gen_bitlen(struct DeflateState *s, tree_desc *desc) {
       m = s->heap[--h];
       if (m > max_code) continue;
       if ((unsigned)tree[m].Len != (unsigned)bits) {
-        Tracev((stderr, "code %d bits %d->%d\n", m, tree[m].Len, bits));
+        Tracev(("code %d bits %d->%d\n", m, tree[m].Len, bits));
         s->opt_len += ((uint64_t)bits - tree[m].Len) * tree[m].Freq;
         tree[m].Len = (uint16_t)bits;
       }
@@ -531,7 +532,7 @@ static void gen_codes(ct_data *tree, int max_code, uint16_t *bl_count) {
    */
   Assert(code + bl_count[MAX_BITS] - 1 == (1 << MAX_BITS) - 1,
          "inconsistent bit counts");
-  Tracev((stderr, "\ngen_codes: max_code %d ", max_code));
+  Tracev(("\ngen_codes: max_code %d ", max_code));
 
   for (n = 0; n <= max_code; n++) {
     int len = tree[n].Len;
@@ -540,8 +541,8 @@ static void gen_codes(ct_data *tree, int max_code, uint16_t *bl_count) {
     tree[n].Code = (uint16_t)bi_reverse(next_code[len]++, len);
 
     Tracecv(tree != kZlibStaticLtree,
-            (stderr, "\nn %3d %c l %2d c %4x (%x) ", n, (isgraph(n) ? n : ' '),
-             len, tree[n].Code, next_code[len] - 1));
+            ("\nn %3d %c l %2d c %4x (%x) ", n, (isgraph(n) ? n : ' '), len,
+             tree[n].Code, next_code[len] - 1));
   }
 }
 
@@ -614,8 +615,8 @@ static void build_tree(struct DeflateState *s, tree_desc *desc) {
     tree[n].Dad = tree[m].Dad = (uint16_t)node;
 #ifdef DUMP_BL_TREE
     if (tree == s->bl_tree) {
-      fprintf(stderr, "\nnode %d(%d), sons %d(%d) %d(%d)", node,
-              tree[node].Freq, n, tree[n].Freq, m, tree[m].Freq);
+      kprintf("\nnode %d(%d), sons %d(%d) %d(%d)", node, tree[node].Freq, n,
+              tree[n].Freq, m, tree[m].Freq);
     }
 #endif
     /* and insert the new node in the heap */
@@ -765,7 +766,7 @@ static int build_bl_tree(struct DeflateState *s) {
   }
   /* Update opt_len to include the bit length tree and counts */
   s->opt_len += 3 * ((uint64_t)max_blindex + 1) + 5 + 5 + 4;
-  Tracev((stderr, "\ndyn trees: dyn %ld, stat %ld", s->opt_len, s->static_len));
+  Tracev(("\ndyn trees: dyn %ld, stat %ld", s->opt_len, s->static_len));
 
   return max_blindex;
 }
@@ -782,21 +783,21 @@ static void send_all_trees(struct DeflateState *s, int lcodes, int dcodes,
   Assert(lcodes >= 257 && dcodes >= 1 && blcodes >= 4, "not enough codes");
   Assert(lcodes <= L_CODES && dcodes <= D_CODES && blcodes <= BL_CODES,
          "too many codes");
-  Tracev((stderr, "\nbl counts: "));
+  Tracev(("\nbl counts: "));
   send_bits(s, lcodes - 257, 5); /* not +255 as stated in appnote.txt */
   send_bits(s, dcodes - 1, 5);
   send_bits(s, blcodes - 4, 4); /* not -3 as stated in appnote.txt */
   for (rank = 0; rank < blcodes; rank++) {
-    Tracev((stderr, "\nbl code %2d ", bl_order[rank]));
+    Tracev(("\nbl code %2d ", bl_order[rank]));
     send_bits(s, s->bl_tree[bl_order[rank]].Len, 3);
   }
-  Tracev((stderr, "\nbl tree: sent %ld", s->bits_sent));
+  Tracev(("\nbl tree: sent %ld", s->bits_sent));
 
   send_tree(s, (ct_data *)s->dyn_ltree, lcodes - 1); /* literal tree */
-  Tracev((stderr, "\nlit tree: sent %ld", s->bits_sent));
+  Tracev(("\nlit tree: sent %ld", s->bits_sent));
 
   send_tree(s, (ct_data *)s->dyn_dtree, dcodes - 1); /* distance tree */
-  Tracev((stderr, "\ndist tree: sent %ld", s->bits_sent));
+  Tracev(("\ndist tree: sent %ld", s->bits_sent));
 }
 
 /**
@@ -860,12 +861,10 @@ void _tr_flush_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
 
     /* Construct the literal and distance trees */
     build_tree(s, (tree_desc *)(&(s->l_desc)));
-    Tracev(
-        (stderr, "\nlit data: dyn %ld, stat %ld", s->opt_len, s->static_len));
+    Tracev(("\nlit data: dyn %ld, stat %ld", s->opt_len, s->static_len));
 
     build_tree(s, (tree_desc *)(&(s->d_desc)));
-    Tracev(
-        (stderr, "\ndist data: dyn %ld, stat %ld", s->opt_len, s->static_len));
+    Tracev(("\ndist data: dyn %ld, stat %ld", s->opt_len, s->static_len));
     /* At this point, opt_len and static_len are the total bit lengths of
      * the compressed block data, excluding the tree representations.
      */
@@ -879,7 +878,7 @@ void _tr_flush_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
     opt_lenb = (s->opt_len + 3 + 7) >> 3;
     static_lenb = (s->static_len + 3 + 7) >> 3;
 
-    Tracev((stderr, "\nopt %lu(%lu) stat %lu(%lu) stored %lu lit %u ", opt_lenb,
+    Tracev(("\nopt %lu(%lu) stat %lu(%lu) stored %lu lit %u ", opt_lenb,
             s->opt_len, static_lenb, s->static_len, stored_len,
             s->sym_next / 3));
 
@@ -937,7 +936,7 @@ void _tr_flush_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
     s->compressed_len += 7; /* align on byte boundary */
 #endif
   }
-  Tracev((stderr, "\ncomprlen %lu(%lu) ", s->compressed_len >> 3,
+  Tracev(("\ncomprlen %lu(%lu) ", s->compressed_len >> 3,
           s->compressed_len - 7 * last));
 }
 
@@ -987,7 +986,7 @@ static void compress_block(struct DeflateState *s, const ct_data *ltree,
       lc = s->sym_buf[sx++];
       if (dist == 0) {
         send_code(s, lc, ltree); /* send a literal byte */
-        Tracecv(isgraph(lc), (stderr, " '%c' ", lc));
+        Tracecv(isgraph(lc), (" '%c' ", lc));
       } else {
         /* Here, lc is the match length - MIN_MATCH */
         code = kZlibLengthCode[lc];

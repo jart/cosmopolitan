@@ -27,7 +27,7 @@ static const uint16_t kZlibDeflateLbase[31] = {
 /* Length codes 257..285 extra */
 static const uint16_t kZlibDeflateLext[31] = {
     16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18,
-    19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 77, 202};
+    19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 76, 202};
 
 /* Distance codes 0..29 base */
 static const uint16_t kZlibDeflateDbase[32] = {

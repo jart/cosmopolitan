@@ -5,6 +5,9 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "third_party/zlib/zutil.internal.h"
 
@@ -117,9 +120,10 @@ uLong zlibCompileFlags() {
 #endif
 int z_verbose hidden = verbose;
 
-void z_error(char *m) {
-  fprintf(stderr, "%s\n", m);
-  exit(1);
+void z_error(const char *file, int line, char *m) {
+  kprintf("%s:%d: zlib panic: %s\n", file, line, m);
+  if (weaken(__die)) weaken(__die)();
+  _Exit(1);
 }
 #endif
 
