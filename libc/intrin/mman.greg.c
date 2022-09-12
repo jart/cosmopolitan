@@ -74,10 +74,7 @@ noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
     if (!(*e & PAGE_V)) {
       if (!maketables) return NULL;
       if (!(p = __new_page(mm))) return NULL;
-      if (mm->use_bane)
-        __clear_page(BANE + p);
-      else
-        __clear_page(p);
+      __clear_page(BANE + p);
       *e = p | PAGE_V | PAGE_RW;
     }
     t = (uint64_t *)(BANE + (*e & PAGE_TA));
@@ -127,12 +124,10 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
         *m = p | PAGE_V | PAGE_RW;
       }
     }
-    mm->use_bane = 1;
   }
 }
 
 noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
-  mm->use_bane = 0;
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }

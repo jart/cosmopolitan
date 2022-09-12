@@ -17,7 +17,6 @@ struct mman {
   unsigned char pc_drive_last_head;      /* 0x1d20 */
   unsigned char pc_drive;                /* 0x1d21 */
   char bad_idt[6];                       /* 0x1d22 */
-  unsigned use_bane : 1, : 31;           /* 0x1d28 */
 };
 
 COSMOPOLITAN_C_END_
