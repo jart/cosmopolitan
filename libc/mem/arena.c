@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
@@ -35,8 +35,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
-#define BASE 0x50000000
-#define SIZE 0x2ffe0000
+#define BASE 0x50040000
+#define SIZE 0x2ff80000
 #define P(i) ((void *)(intptr_t)(i))
 #define EXCHANGE(HOOK, SLOT) \
   __arena_hook((intptr_t *)weaken(HOOK), (intptr_t *)(&(SLOT)))

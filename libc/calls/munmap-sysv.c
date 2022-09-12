@@ -38,7 +38,7 @@ int sys_munmap(void *p, size_t n) {
   } else {
     rc = sys_munmap_metal(p, n);
   }
-  KERNTRACE("sys_munmap(%p%s, %'zu) → %d", p, DescribeFrame((intptr_t)p >> 16),
-            n, rc);
+  KERNTRACE("sys_munmap(%p /* %s */, %'zu) → %d", p,
+            DescribeFrame((intptr_t)p >> 16), n, rc);
   return rc;
 }

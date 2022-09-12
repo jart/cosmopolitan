@@ -17,6 +17,8 @@
            "__SIZE_TYPE__"
            "__PTRDIFF_TYPE__"
            "__WCHAR_TYPE__"
+           "__CHAR16_TYPE__"
+           "__CHAR32_TYPE__"
            "__WINT_TYPE__"
            "__INTMAX_TYPE__"
            "__DEPRECATED"

@@ -46,8 +46,9 @@ struct DirectMap sys_mmap(void *addr, size_t size, int prot, int flags, int fd,
   } else {
     d = sys_mmap_nt(addr, size, prot, flags, fd, off);
   }
-  KERNTRACE("sys_mmap(%.12p%s, %'zu, %s, %s, %d, %'ld) → {%.12p, %p}% m", addr,
-            DescribeFrame((intptr_t)addr >> 16), size, DescribeProtFlags(prot),
-            DescribeMapFlags(flags), fd, off, d.addr, d.maphandle);
+  KERNTRACE("sys_mmap(%.12p /* %s */, %'zu, %s, %s, %d, %'ld) → {%.12p, %p}% m",
+            addr, DescribeFrame((intptr_t)addr >> 16), size,
+            DescribeProtFlags(prot), DescribeMapFlags(flags), fd, off, d.addr,
+            d.maphandle);
   return d;
 }

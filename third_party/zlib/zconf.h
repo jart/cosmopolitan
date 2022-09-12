@@ -7,6 +7,10 @@
 #define DEF_MEM_LEVEL 8
 #define MAX_WBITS     15 /* 32K LZ77 window */
 
+#ifdef MODE_DBG
+#define ZLIB_DEBUG
+#endif
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 typedef unsigned char Byte;

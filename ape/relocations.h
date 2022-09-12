@@ -36,8 +36,8 @@
  */
 #define REAL(x) ((x) - (IMAGE_BASE_VIRTUAL - IMAGE_BASE_REAL))
 
-#if IMAGE_BASE_VIRTUAL % 0x200000 != 0
-#error "IMAGE_BASE_VIRTUAL must be 2mb aligned"
+#if IMAGE_BASE_VIRTUAL % 0x1000 != 0
+#error "IMAGE_BASE_VIRTUAL must be 4kb aligned"
 #endif
 #if IMAGE_BASE_PHYSICAL % 0x1000 != 0
 #error "IMAGE_BASE_PHYSICAL must be 4kb aligned"

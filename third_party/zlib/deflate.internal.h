@@ -280,15 +280,15 @@ void _tr_stored_block(struct DeflateState *s, charf *buf, uint64_t stored_len,
 #define d_code(dist) \
   ((dist) < 256 ? kZlibDistCode[dist] : kZlibDistCode[256 + ((dist) >> 7)])
 
-#ifndef ZLIB_DEBUG
-/* Inline versions of _tr_tally for speed: */
-
 extern const ct_data kZlibStaticDtree[D_CODES] hidden;
 extern const ct_data kZlibStaticLtree[L_CODES + 2] hidden;
 extern const int kZlibBaseDist[D_CODES] hidden;
 extern const int kZlibBaseLength[LENGTH_CODES] hidden;
 extern const uint8_t kZlibDistCode[DIST_CODE_LEN] hidden;
 extern const uint8_t kZlibLengthCode[MAX_MATCH - MIN_MATCH + 1] hidden;
+
+#ifndef ZLIB_DEBUG
+/* Inline versions of _tr_tally for speed: */
 
 #define _tr_tally_lit(s, c, flush)       \
   {                                      \

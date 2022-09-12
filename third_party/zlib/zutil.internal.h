@@ -1,5 +1,6 @@
 #ifndef ZUTIL_H
 #define ZUTIL_H
+#include "libc/intrin/kprintf.h"
 #include "third_party/zlib/zlib.h"
 
 /* default windowBits for decompression. MAX_WBITS is for compression only */
@@ -46,32 +47,33 @@ extern const char *const z_errmsg[10] hidden; /* indexed by 2-zlib_error */
 
 /* Diagnostic functions */
 #ifdef ZLIB_DEBUG
-#include "libc/stdio/stdio.h"
 extern int z_verbose hidden;
-extern void z_error(char *m) hidden;
-#define Assert(cond, msg)      \
-  {                            \
-    if (!(cond)) z_error(msg); \
+extern void z_error(const char *, int, char *) hidden;
+#define Assert(cond, msg)               \
+  {                                     \
+    if (!(cond)) {                      \
+      z_error(__FILE__, __LINE__, msg); \
+    }                                   \
   }
 #define Trace(x)                   \
   {                                \
-    if (z_verbose >= 0) fprintf x; \
+    if (z_verbose >= 0) kprintf x; \
   }
 #define Tracev(x)                 \
   {                               \
-    if (z_verbose > 0) fprintf x; \
+    if (z_verbose > 0) kprintf x; \
   }
 #define Tracevv(x)                \
   {                               \
-    if (z_verbose > 1) fprintf x; \
+    if (z_verbose > 1) kprintf x; \
   }
 #define Tracec(c, x)                     \
   {                                      \
-    if (z_verbose > 0 && (c)) fprintf x; \
+    if (z_verbose > 0 && (c)) kprintf x; \
   }
 #define Tracecv(c, x)                    \
   {                                      \
-    if (z_verbose > 1 && (c)) fprintf x; \
+    if (z_verbose > 1 && (c)) kprintf x; \
   }
 #else
 #define Assert(cond, msg)

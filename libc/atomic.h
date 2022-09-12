@@ -1,22 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_ATOMIC_H_
 #define COSMOPOLITAN_LIBC_ATOMIC_H_
-#include "libc/inttypes.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-/**
- * @fileoverview C11 Atomic Types
- *
- * We supoprt C++ and old C compilers. It's recommended you use macros
- * like `_Atomic(int)` rather than `_Atomic int` or `atomic_int` since
- * we only define a portability macro for the syntax `_Atomic(T)`.
- *
- * @see libc/integral/c.inc
- * @see libc/intrin/atomic.h
- */
 
 #define atomic_bool           _Atomic(_Bool)
-#define atomic_bool32         atomic_int32
+#define atomic_bool32         _Atomic(__INT32_TYPE__)
 #define atomic_char           _Atomic(char)
 #define atomic_schar          _Atomic(signed char)
 #define atomic_uchar          _Atomic(unsigned char)
@@ -28,29 +14,29 @@ COSMOPOLITAN_C_START_
 #define atomic_ulong          _Atomic(unsigned long)
 #define atomic_llong          _Atomic(long long)
 #define atomic_ullong         _Atomic(unsigned long long)
-#define atomic_char16_t       _Atomic(char16_t)
-#define atomic_char32_t       _Atomic(char32_t)
-#define atomic_wchar_t        _Atomic(wchar_t)
-#define atomic_intptr_t       _Atomic(intptr_t)
-#define atomic_uintptr_t      _Atomic(uintptr_t)
-#define atomic_size_t         _Atomic(size_t)
-#define atomic_ptrdiff_t      _Atomic(ptrdiff_t)
-#define atomic_int_fast8_t    _Atomic(int_fast8_t)
-#define atomic_uint_fast8_t   _Atomic(uint_fast8_t)
-#define atomic_int_fast16_t   _Atomic(int_fast16_t)
-#define atomic_uint_fast16_t  _Atomic(uint_fast16_t)
-#define atomic_int_fast32_t   _Atomic(int_fast32_t)
-#define atomic_uint_fast32_t  _Atomic(uint_fast32_t)
-#define atomic_int_fast64_t   _Atomic(int_fast64_t)
-#define atomic_uint_fast64_t  _Atomic(uint_fast64_t)
-#define atomic_int_least8_t   _Atomic(int_least8_t)
-#define atomic_uint_least8_t  _Atomic(uint_least8_t)
-#define atomic_int_least16_t  _Atomic(int_least16_t)
-#define atomic_uint_least16_t _Atomic(uint_least16_t)
-#define atomic_int_least32_t  _Atomic(int_least32_t)
-#define atomic_uint_least32_t _Atomic(uint_least32_t)
-#define atomic_int_least64_t  _Atomic(int_least64_t)
-#define atomic_uint_least64_t _Atomic(uint_least64_t)
+#define atomic_char16_t       _Atomic(__CHAR16_TYPE__)
+#define atomic_char32_t       _Atomic(__CHAR32_TYPE__)
+#define atomic_wchar_t        _Atomic(__WCHAR_TYPE__)
+#define atomic_intptr_t       _Atomic(__INTPTR_TYPE__)
+#define atomic_uintptr_t      _Atomic(__UINTPTR_TYPE__)
+#define atomic_size_t         _Atomic(__SIZE_TYPE__)
+#define atomic_ptrdiff_t      _Atomic(__PTRDIFF_TYPE__)
+#define atomic_int_fast8_t    _Atomic(__INT_FAST8_TYPE__)
+#define atomic_uint_fast8_t   _Atomic(__UINT_FAST8_TYPE__)
+#define atomic_int_fast16_t   _Atomic(__INT_FAST16_TYPE__)
+#define atomic_uint_fast16_t  _Atomic(__UINT_FAST16_TYPE__)
+#define atomic_int_fast32_t   _Atomic(__INT_FAST32_TYPE__)
+#define atomic_uint_fast32_t  _Atomic(__UINT_FAST32_TYPE__)
+#define atomic_int_fast64_t   _Atomic(__INT_FAST64_TYPE__)
+#define atomic_uint_fast64_t  _Atomic(__UINT_FAST64_TYPE__)
+#define atomic_int_least8_t   _Atomic(__INT_LEAST8_TYPE__)
+#define atomic_uint_least8_t  _Atomic(__UINT_LEAST8_TYPE__)
+#define atomic_int_least16_t  _Atomic(__INT_LEAST16_TYPE__)
+#define atomic_uint_least16_t _Atomic(__UINT_LEAST16_TYPE__)
+#define atomic_int_least32_t  _Atomic(__INT_LEAST32_TYPE__)
+#define atomic_uint_least32_t _Atomic(__UINT_LEAST32_TYPE__)
+#define atomic_int_least64_t  _Atomic(__INT_LEAST64_TYPE__)
+#define atomic_uint_least64_t _Atomic(__UINT_LEAST64_TYPE__)
 
 #ifdef __CLANG_ATOMIC_BOOL_LOCK_FREE
 #define ATOMIC_BOOL_LOCK_FREE     __CLANG_ATOMIC_BOOL_LOCK_FREE
@@ -76,6 +62,4 @@ COSMOPOLITAN_C_START_
 #define ATOMIC_POINTER_LOCK_FREE  __GCC_ATOMIC_POINTER_LOCK_FREE
 #endif
 
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ATOMIC_H_ */

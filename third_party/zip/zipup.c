@@ -27,6 +27,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/fmt/fmt.h"
 #include "libc/stdio/stdio.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/runtime/runtime.h"
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
@@ -537,17 +539,17 @@ struct zlist far *z;    /* zip entry to compress */
       if (window != NULL)
         free(window);  /* window can't be a mapped file here */
       window_size = (ulg)q + MIN_LOOKAHEAD;
-      remain = window_size & (FRAMESIZE-1);
+      remain = window_size & (sysconf(_SC_PAGESIZE)-1);
       /* If we can't touch the page beyond the end of file, we must
        * allocate an extra page.
        */
       if (remain > MIN_LOOKAHEAD) {
         window = (uch*)mmap(0, window_size, PROT_READ, MAP_PRIVATE, ifile, 0);
       } else {
-        window = (uch*)valloc(window_size - remain + FRAMESIZE);
+        window = (uch*)pvalloc(window_size - remain + sysconf(_SC_PAGESIZE));
         if (window != NULL) {
           window = (uch*)mmap((char*)window, window_size - remain, PROT_READ,
-                        MAP_PRIVATE | MAP_FIXED, ifile, 0);
+                              MAP_PRIVATE | MAP_FIXED, ifile, 0);
         } else {
           window = (uch*)(-1);
         }

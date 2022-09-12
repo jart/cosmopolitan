@@ -5,8 +5,9 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
@@ -119,7 +120,7 @@ Invented 1990 Phillip Walter Katz\"");
         (uint64_t)((long)s->strstart - s->block_start), (last));              \
     s->block_start = s->strstart;                                             \
     flush_pending(s->strm);                                                   \
-    Tracev((stderr, "[FLUSH]"));                                              \
+    Tracev(("[FLUSH]"));                                                      \
   }
 
 /**
@@ -1275,9 +1276,17 @@ static uInt longest_match(struct DeflateState *s, IPos cur_match) {
      * are always equal when the other bytes match, given that
      * the hash keys are equal and that HASH_BITS >= 8.
      */
-    Assert(*scan == *match || scan[1] != match[1], "match[2]??");
     scan += 2, match++;
-    Assert(*scan == *match, "match[2]?");
+    if (1 /* !s->chromium_zlib_hash */) {
+      Assert(*scan == *match, "match[2]?");
+    } else {
+      /* When using CRC hashing, scan[2] and match[2] may mismatch, but in
+       * that case at least one of the other hashed bytes will mismatch
+       * also. Bytes 0 and 1 were already checked above, and we know there
+       * are at least four bytes to check otherwise the mismatch would have
+       * been found by the scan_end comparison above, so: */
+      Assert(*scan == *match || scan[1] != match[1], "match[2]??");
+    }
     /* We check for insufficient lookahead only every 8th comparison;
      * the 256th check will be made at strstart+258.
      */
@@ -1362,17 +1371,17 @@ static uInt longest_match(struct DeflateState *s, IPos cur_match) {
 static void check_match(struct DeflateState *s, IPos start, IPos match,
                         int length) {
   /* check that the match is indeed a match */
-  if (zmemcmp(s->window + match, s->window + start, length) != EQUAL) {
-    fprintf(stderr, " start %u, match %u, length %d\n", start, match, length);
+  if (memcmp(s->window + match, s->window + start, length) != EQUAL) {
+    kprintf(" start %u, match %u, length %d\n", start, match, length);
     do {
-      fprintf(stderr, "%c%c", s->window[match++], s->window[start++]);
+      kprintf("%c%c", s->window[match++], s->window[start++]);
     } while (--length != 0);
-    z_error("invalid match");
+    z_error(__FILE__, __LINE__, "invalid match");
   }
   if (z_verbose > 1) {
-    fprintf(stderr, "\\[%d,%d]", start - match, length);
+    kprintf("\\[%d,%d]", start - match, length);
     do {
-      putc(s->window[start++], stderr);
+      kprintf("%c", s->window[start++]);
     } while (--length != 0);
   }
 }
@@ -1640,7 +1649,7 @@ static block_state deflate_fast(struct DeflateState *s, int flush) {
       }
     } else {
       /* No match, output a literal byte */
-      Tracevv((stderr, "%c", s->window[s->strstart]));
+      Tracevv(("%c", s->window[s->strstart]));
       _tr_tally_lit(s, s->window[s->strstart], bflush);
       s->lookahead--;
       s->strstart++;
@@ -1755,7 +1764,7 @@ static block_state deflate_slow(struct DeflateState *s, int flush) {
        * single literal. If there was a match but the current match
        * is longer, truncate the previous match to a single literal.
        */
-      Tracevv((stderr, "%c", s->window[s->strstart - 1]));
+      Tracevv(("%c", s->window[s->strstart - 1]));
       _tr_tally_lit(s, s->window[s->strstart - 1], bflush);
       if (bflush) {
         FLUSH_BLOCK_ONLY(s, 0);
@@ -1774,7 +1783,7 @@ static block_state deflate_slow(struct DeflateState *s, int flush) {
   }
   Assert(flush != Z_NO_FLUSH, "no flush?");
   if (s->match_available) {
-    Tracevv((stderr, "%c", s->window[s->strstart - 1]));
+    Tracevv(("%c", s->window[s->strstart - 1]));
     _tr_tally_lit(s, s->window[s->strstart - 1], bflush);
     s->match_available = 0;
   }
@@ -1839,7 +1848,7 @@ static block_state deflate_rle(struct DeflateState *s, int flush) {
       s->match_length = 0;
     } else {
       /* No match, output a literal byte */
-      Tracevv((stderr, "%c", s->window[s->strstart]));
+      Tracevv(("%c", s->window[s->strstart]));
       _tr_tally_lit(s, s->window[s->strstart], bflush);
       s->lookahead--;
       s->strstart++;
@@ -1873,7 +1882,7 @@ static block_state deflate_huff(struct DeflateState *s, int flush) {
     }
     /* Output a literal byte */
     s->match_length = 0;
-    Tracevv((stderr, "%c", s->window[s->strstart]));
+    Tracevv(("%c", s->window[s->strstart]));
     _tr_tally_lit(s, s->window[s->strstart], bflush);
     s->lookahead--;
     s->strstart++;

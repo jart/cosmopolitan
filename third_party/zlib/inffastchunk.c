@@ -147,8 +147,7 @@ void inflate_fast_chunk(z_streamp strm, unsigned start) {
     bits -= op;
     op = (unsigned)(here.op);
     if (op == 0) { /* literal */
-      Tracevv((stderr,
-               here.val >= 0x20 && here.val < 0x7f
+      Tracevv((here.val >= 0x20 && here.val < 0x7f
                    ? "inflate:         literal '%c'\n"
                    : "inflate:         literal 0x%02x\n",
                here.val));
@@ -166,7 +165,7 @@ void inflate_fast_chunk(z_streamp strm, unsigned start) {
         hold >>= op;
         bits -= op;
       }
-      Tracevv((stderr, "inflate:         length %u\n", len));
+      Tracevv(("inflate:         length %u\n", len));
       if (bits < 15) {
         hold |= READ64LE(in) << bits;
         in += 6;
@@ -196,7 +195,7 @@ void inflate_fast_chunk(z_streamp strm, unsigned start) {
 #endif
         hold >>= op;
         bits -= op;
-        Tracevv((stderr, "inflate:         distance %u\n", dist));
+        Tracevv(("inflate:         distance %u\n", dist));
         op = (unsigned)(out - beg); /* max distance in output */
         if (dist > op) {            /* see if copy from window */
           op = dist - op;           /* distance back in window */
@@ -283,7 +282,7 @@ void inflate_fast_chunk(z_streamp strm, unsigned start) {
       here = lcode[here.val + (hold & ((1U << op) - 1))];
       goto dolen;
     } else if (op & 32) { /* end-of-block */
-      Tracevv((stderr, "inflate:         end of block\n"));
+      Tracevv(("inflate:         end of block\n"));
       state->mode = TYPE;
       break;
     } else {

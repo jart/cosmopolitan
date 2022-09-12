@@ -31,8 +31,8 @@ uintptr_t __break;
  *
  * This can be used to allocate and deallocate memory. It won't
  * conflict with malloc() and mmap(NULL, ...) allocations since
- * APE binaries load the image at 0x400000 and does allocations
- * starting at 0x100080000000. You should consult _end, or call
+ * APE binaries load the image at 0x440000 and does allocations
+ * starting at 0x100080040000. You should consult _end, or call
  * sbrk(NULL), to figure out where the existing break is first.
  *
  * @return 0 on success or -1 w/ errno

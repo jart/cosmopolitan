@@ -46,7 +46,7 @@ int inflateBackInit(z_streamp strm, int windowBits, unsigned char *window) {
   }
   state = (struct InflateState *)ZALLOC(strm, 1, sizeof(struct InflateState));
   if (state == Z_NULL) return Z_MEM_ERROR;
-  Tracev((stderr, "inflate: allocated\n"));
+  Tracev(("inflate: allocated\n"));
   strm->state = (struct DeflateState *)state;
   state->dmax = 32768U;
   state->wbits = (uInt)windowBits;
@@ -54,6 +54,7 @@ int inflateBackInit(z_streamp strm, int windowBits, unsigned char *window) {
   state->window = window;
   state->wnext = 0;
   state->whave = 0;
+  state->sane = 0;
   return Z_OK;
 }
 
@@ -97,7 +98,7 @@ static void fixedtables(struct InflateState *state) {
   }
   state->lencode = lenfix;
   state->distcode = distfix;
-#else  /* !BUILDFIXED */
+#else /* !BUILDFIXED */
   state->lencode = kZlibLenfix;
   state->distcode = kZlibDistfix;
 #endif /* BUILDFIXED */
@@ -277,18 +278,18 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
         DROPBITS(1);
         switch (BITS(2)) {
           case 0: /* stored block */
-            Tracev((stderr, "inflate:     stored block%s\n",
+            Tracev(("inflate:     stored block%s\n",
                     state->last ? " (last)" : ""));
             state->mode = STORED;
             break;
           case 1: /* fixed block */
             fixedtables(state);
-            Tracev((stderr, "inflate:     fixed codes block%s\n",
+            Tracev(("inflate:     fixed codes block%s\n",
                     state->last ? " (last)" : ""));
             state->mode = LEN; /* decode codes */
             break;
           case 2: /* dynamic block */
-            Tracev((stderr, "inflate:     dynamic codes block%s\n",
+            Tracev(("inflate:     dynamic codes block%s\n",
                     state->last ? " (last)" : ""));
             state->mode = TABLE;
             break;
@@ -309,7 +310,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           break;
         }
         state->length = (unsigned)hold & 0xffff;
-        Tracev((stderr, "inflate:       stored length %u\n", state->length));
+        Tracev(("inflate:       stored length %u\n", state->length));
         INITBITS();
 
         /* copy stored block from input to output */
@@ -326,7 +327,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           put += copy;
           state->length -= copy;
         }
-        Tracev((stderr, "inflate:       stored end\n"));
+        Tracev(("inflate:       stored end\n"));
         state->mode = TYPE;
         break;
 
@@ -346,7 +347,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           break;
         }
 #endif
-        Tracev((stderr, "inflate:       table sizes ok\n"));
+        Tracev(("inflate:       table sizes ok\n"));
 
         /* get code length code lengths (not a typo) */
         state->have = 0;
@@ -366,7 +367,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           state->mode = BAD;
           break;
         }
-        Tracev((stderr, "inflate:       code lengths ok\n"));
+        Tracev(("inflate:       code lengths ok\n"));
 
         /* get length and distance code code lengths */
         state->have = 0;
@@ -445,7 +446,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           state->mode = BAD;
           break;
         }
-        Tracev((stderr, "inflate:       codes ok\n"));
+        Tracev(("inflate:       codes ok\n"));
         state->mode = LEN;
 
       case LEN:
@@ -479,8 +480,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
 
         /* process literal */
         if (here.op == 0) {
-          Tracevv((stderr,
-                   here.val >= 0x20 && here.val < 0x7f
+          Tracevv((here.val >= 0x20 && here.val < 0x7f
                        ? "inflate:         literal '%c'\n"
                        : "inflate:         literal 0x%02x\n",
                    here.val));
@@ -493,7 +493,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
 
         /* process end of block */
         if (here.op & 32) {
-          Tracevv((stderr, "inflate:         end of block\n"));
+          Tracevv(("inflate:         end of block\n"));
           state->mode = TYPE;
           break;
         }
@@ -512,7 +512,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           state->length += BITS(state->extra);
           DROPBITS(state->extra);
         }
-        Tracevv((stderr, "inflate:         length %u\n", state->length));
+        Tracevv(("inflate:         length %u\n", state->length));
 
         /* get distance code */
         for (;;) {
@@ -551,7 +551,7 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
           state->mode = BAD;
           break;
         }
-        Tracevv((stderr, "inflate:         distance %u\n", state->offset));
+        Tracevv(("inflate:         distance %u\n", state->offset));
 
         /* copy match from window to output */
         do {
@@ -574,25 +574,27 @@ int inflateBack(z_streamp strm, in_func in, void *in_desc, out_func out,
         break;
 
       case DONE:
-        /* inflate stream terminated properly -- write leftover output */
+        /* inflate stream terminated properly */
         ret = Z_STREAM_END;
-        if (left < state->wsize) {
-          if (out(out_desc, state->window, state->wsize - left))
-            ret = Z_BUF_ERROR;
-        }
         goto inf_leave;
 
       case BAD:
         ret = Z_DATA_ERROR;
         goto inf_leave;
 
-      default: /* can't happen, but makes compilers happy */
+      default:
+        /* can't happen, but makes compilers happy */
         ret = Z_STREAM_ERROR;
         goto inf_leave;
     }
 
-  /* Return unused input */
+  /* Write leftover output and return unused input */
 inf_leave:
+  if (left < state->wsize) {
+    if (out(out_desc, state->window, state->wsize - left) &&
+        ret == Z_STREAM_END)
+      ret = Z_BUF_ERROR;
+  }
   strm->next_in = next;
   strm->avail_in = have;
   return ret;
@@ -603,6 +605,6 @@ int inflateBackEnd(z_streamp strm) {
     return Z_STREAM_ERROR;
   ZFREE(strm, strm->state);
   strm->state = Z_NULL;
-  Tracev((stderr, "inflate: end\n"));
+  Tracev(("inflate: end\n"));
   return Z_OK;
 }

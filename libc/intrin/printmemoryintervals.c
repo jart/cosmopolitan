@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -34,28 +35,26 @@ static bool IsNoteworthyHole(unsigned i, const struct MemoryIntervals *mm) {
 }
 
 void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
-  char *p, mappingbuf[8], framebuf[32];
-  long i, w, frames, maptally = 0, gaptally = 0;
+  char *p, mappingbuf[8], framebuf[64], sb[16];
+  long i, w, frames, maptally = 0;
   for (w = i = 0; i < mm->i; ++i) {
     w = MAX(w, LengthInt64Thousands(mm->p[i].y + 1 - mm->p[i].x));
   }
   for (i = 0; i < mm->i; ++i) {
     frames = mm->p[i].y + 1 - mm->p[i].x;
     maptally += frames;
-    kprintf("%08x-%08x %s %'*ldx%s", mm->p[i].x, mm->p[i].y,
+    kprintf("%08x-%08x %s %'*ldx %s", mm->p[i].x, mm->p[i].y,
             (DescribeMapping)(mappingbuf, mm->p[i].prot, mm->p[i].flags), w,
             frames, (DescribeFrame)(framebuf, mm->p[i].x));
     if (mm->p[i].iscow) kprintf(" cow");
     if (mm->p[i].readonlyfile) kprintf(" readonlyfile");
-    if (mm->p[i].size !=
-        (size_t)(mm->p[i].y - mm->p[i].x) * FRAMESIZE + FRAMESIZE) {
-      kprintf(" size=%'zu", mm->p[i].size);
-    }
+    sizefmt(sb, mm->p[i].size, 1024);
+    kprintf(" %sB", sb);
     if (i + 1 < mm->i) {
       frames = mm->p[i + 1].x - mm->p[i].y - 1;
       if (frames && IsNoteworthyHole(i, mm)) {
-        gaptally += frames;
-        kprintf(" w/ %'ld frame hole", frames);
+        sizefmt(sb, frames * FRAMESIZE, 1024);
+        kprintf(" w/ %sB hole", sb);
       }
     }
     if (mm->p[i].h != -1) {
@@ -63,5 +62,6 @@ void PrintMemoryIntervals(int fd, const struct MemoryIntervals *mm) {
     }
     kprintf("\n");
   }
-  kprintf("# %ld frames mapped w/ %'ld frames gapped\n", maptally, gaptally);
+  sizefmt(sb, maptally * FRAMESIZE, 1024);
+  kprintf("# %sB total mapped memory\n", sb);
 }
