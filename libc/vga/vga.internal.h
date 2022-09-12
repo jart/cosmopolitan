@@ -60,6 +60,14 @@
  *      (https://www.delorie.com/djgpp/doc/rbinter/id/22/1.html)
  */
 #undef VGA_USE_BLINK
+/**
+ * If VGA_PERSNICKETY_STATUS is defined, then when deciding how to return
+ * status response codes (e.g. "\e[0n"), the tty code will pay attention to
+ * the terminal's termios mode (TODO).  If undefined, the tty code will
+ * simply return any response strings immediately, & will not echo them —
+ * per the common use case.
+ */
+#undef VGA_PERSNICKETY_STATUS
 
 #define kTtyFg      0x0001
 #define kTtyBg      0x0002
@@ -146,6 +154,9 @@ void _TtyErase(struct Tty *, size_t, size_t);
 void _TtySetY(struct Tty *, unsigned short);
 void _TtySetX(struct Tty *, unsigned short);
 
+extern struct Tty _vga_tty;
+
+ssize_t sys_readv_vga(struct Fd *, const struct iovec *, int);
 ssize_t sys_writev_vga(struct Fd *, const struct iovec *, int);
 
 COSMOPOLITAN_C_END_
