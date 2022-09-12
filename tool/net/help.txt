@@ -792,7 +792,7 @@ FUNCTIONS
           The following options may be used:
 
             - useoutput: (bool=false) encodes the result directly to the
-              output buffer and returns `nil` value. This option is
+              output buffer and returns `true` value. This option is
               ignored if used outside of request handling code.
 
             - sorted: (bool=true) Lua uses hash tables so the order of
@@ -801,13 +801,13 @@ FUNCTIONS
               don't care about ordering then setting `sorted=false`
               should yield a performance boost in serialization.
 
-            - pretty: (bool=false) Setting this option to true will
+            - pretty: (bool=false) Setting this option to `true` will
               cause tables with more than one entry to be formatted
               across multiple lines for readability.
 
             - indent: (str=" ") This option controls the indentation of
               pretty formatting. This field is ignored if `pretty` isn't
-              true.
+              `true`.
 
             - maxdepth: (int=64) This option controls the maximum amount
               of recursion the serializer is allowed to perform. The max
@@ -863,7 +863,7 @@ FUNCTIONS
           The following options may be used:
 
             - useoutput: (bool=false) encodes the result directly to the
-              output buffer and returns `nil` value. This option is
+              output buffer and returns `true` value. This option is
               ignored if used outside of request handling code.
 
             - sorted: (bool=true) Lua uses hash tables so the order of
@@ -872,13 +872,13 @@ FUNCTIONS
               don't care about ordering then setting `sorted=false`
               should yield a performance boost in serialization.
 
-            - pretty: (bool=false) Setting this option to true will
+            - pretty: (bool=false) Setting this option to `true` will
               cause tables with more than one entry to be formatted
               across multiple lines for readability.
 
             - indent: (str=" ") This option controls the indentation of
               pretty formatting. This field is ignored if `pretty` isn't
-              true.
+              `true`.
 
             - maxdepth: (int=64) This option controls the maximum amount
               of recursion the serializer is allowed to perform. The max
