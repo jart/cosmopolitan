@@ -485,19 +485,19 @@ ape.mbrpad:
 ape_disk:
 	.stub	ape.diskid,quad
 	.org	0x1be,0x00
-	.macro	.partn	x
-	.stub	ape.part\x\().status,byte	# 0=absent / 0x80=present
-	.stub	ape.part\x\().first.head,byte	# in low 6 bits
-	.stub	ape.part\x\().first.cylinder,byte
-	.stub	ape.part\x\().first.sector,byte
-	.stub	ape.part\x\().filesystem,byte
-	.stub	ape.part\x\().last.head,byte
-	.stub	ape.part\x\().last.cylinder,byte
-	.stub	ape.part\x\().last.sector,byte
-	.stub	ape.part\x\().lba,long          # c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
-	.stub	ape.part\x\().sector.count,long # sectors are 512 bytes
+	.macro	.partn	x:req sta h0 s0 c0 fs h9 s9 c9 lba0 nsec
+	.stub	ape.part\x\().status,byte,\sta	# 0=non-boot / 0x80=active
+	.stub	ape.part\x\().first.head,byte,\h0
+	.stub	ape.part\x\().first.sector,byte,\s0 # in low 6 bits
+	.stub	ape.part\x\().first.cylinder,byte,\c0
+	.stub	ape.part\x\().filesystem,byte,\fs
+	.stub	ape.part\x\().last.head,byte,\h9
+	.stub	ape.part\x\().last.sector,byte,\s9
+	.stub	ape.part\x\().last.cylinder,byte,\c9
+	.stub	ape.part\x\().lba,long,\lba0	# c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
+	.stub	ape.part\x\().sector.count,long,\nsec # sectors are 512 bytes
 	.endm
-	.partn	1
+	.partn	1,0x80,0,1,0,0x7f,0xff,0xff,0xff,0,0xffffffff
 	.partn	2
 	.partn	3
 	.partn	4
