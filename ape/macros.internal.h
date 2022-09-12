@@ -221,44 +221,41 @@
 /**
  * Binary coded decimal support.
  *
- * <p>This allows linker scripts to generate dd commands. Leading spaces
- * need to be inserted so Mac doesn't consider them octal; therefore,
- * parameters must be quoted; and eight digits should be good enough.
+ * <p>This allows linker scripts to generate dd commands, e.g. ape.lds.
+ * There are a few ways to pad each number to the necessary 8 bytes.
+ * Spaces cannot be prepended because busybox refuses to parse them.
+ * Zeros cannot be prepended because Mac will take numbers as octal.
+ * That leaves appending spaces. The user's shell ought to treat any
+ * unquoted run of spaces as if there was only one, so this is safe.
  */
-#define SHSTUB2(SYM, X)           \
-  HIDDEN(SYM##_bcs0 = BCD10K(X)); \
-  HIDDEN(SYM##_bcs1 = BCD(X))
-#define BCD(X)                                                                 \
-  ((X) == 0                                                                    \
-       ? 0x20202030                                                            \
-       : (X) < 10 ? 0x30202020 + (((X) % 10) << 24)                            \
-                  : (X) < 100 ? 0x30302020 + (((X) % 10) << 24) +              \
-                                    (((X) / 10 % 10) << 16)                    \
-                              : (X) < 1000 ? 0x30303020 + (((X) % 10) << 24) + \
-                                                 (((X) / 10 % 10) << 16) +     \
-                                                 (((X) / 100 % 10) << 8)       \
-                                           : 0x30303030 + (((X) % 10) << 24) + \
-                                                 (((X) / 10 % 10) << 16) +     \
-                                                 (((X) / 100 % 10) << 8) +     \
-                                                 (((X) / 1000 % 10) << 0))
-#define BCD10K(X)                                                          \
-  ((X) < 10000                                                             \
-       ? 0x20202020                                                        \
-       : (X) < 100000                                                      \
-             ? 0x30202020 + (((X) / 10000 % 10) << 24)                     \
-             : (X) < 1000000                                               \
-                   ? 0x30302020 + (((X) / 10000 % 10) << 24) +             \
-                         (((X) / 100000 % 10) << 16)                       \
-                   : (X) < 10000000                                        \
-                         ? 0x30303020 + (((X) / 10000 % 10) << 24) +       \
-                               (((X) / 100000 % 10) << 16) +               \
-                               (((X) / 1000000 % 10) << 8)                 \
-                         : (X) < 100000000                                 \
-                               ? 0x30303030 + (((X) / 10000 % 10) << 24) + \
-                                     (((X) / 100000 % 10) << 16) +         \
-                                     (((X) / 1000000 % 10) << 8) +         \
-                                     (((X) / 10000000 % 10) << 0)          \
-                               : 0xffffffffffffffff)
+#define SHSTUB2(SYM, X)             \
+  HIDDEN(SYM##_bcs0 = BCD_LEFT(X)); \
+  HIDDEN(SYM##_bcs1 = BCD_RIGHT(X))
+#define BCD_SMEAR(X) ((X) + (X) * 10000)
+#define BCD_LEFT(X)                                      \
+  (((X)) < 10000     ? BCD_RIGHT(BCD_SMEAR(X)) | 0x10    \
+   : (X) < 100000    ? BCD_RIGHT(BCD_SMEAR((X) / 10))    \
+   : (X) < 1000000   ? BCD_RIGHT(BCD_SMEAR((X) / 100))   \
+   : (X) < 10000000  ? BCD_RIGHT(BCD_SMEAR((X) / 1000))  \
+   : (X) < 100000000 ? BCD_RIGHT(BCD_SMEAR((X) / 10000)) \
+                     : 0xffffffffffffffff)
+#define BCD_RIGHT(X) \
+  (((X)) < 10000     ? 0x20202020                  \
+   : (X) < 100000    ? 0x20202030 +                \
+                       (X) % 10                    \
+   : (X) < 1000000   ? 0x20203030 +                \
+                       ((X) / 10) % 10 +           \
+                       (X) % 10 * 0x100            \
+   : (X) < 10000000  ? 0x20303030 +                \
+                       ((X) / 100) % 10 +          \
+                       ((X) / 10) % 10 * 0x100 +   \
+                       (X) % 10 * 0x10000          \
+   : (X) < 100000000 ? 0x30303030 +                \
+                       ((X) / 1000) % 10 +         \
+                       ((X) / 100) % 10 * 0x100 +  \
+                       ((X) / 10) % 10 * 0x10000 + \
+                       (X) % 10 * 0x1000000        \
+                     : 0xffffffffffffffff)
 
 #endif /* __ASSEMBLER__ */
 #endif /* APE_MACROS_H_ */

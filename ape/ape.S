@@ -569,11 +569,11 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	  "t=\"${TMPDIR:-${HOME:-.}}/.ape\"\n"
 	.ascii	  "[ -x \"$t\" ] || {\n"
 	.ascii	    "mkdir -p \"${t%/*}\" &&\n"
-	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip=\""
+	.ascii	    "dd if=\"$o\" of=\"$t.$$\" skip="
 	.shstub	      ape_loader_dd_skip,2
-	.ascii	      "\" count=\""
+	.ascii	      " count="
 	.shstub	      ape_loader_dd_count,2
-	.ascii	      "\" bs=64 2>/dev/null\n"
+	.ascii	      " bs=64 2>/dev/null\n"
 #if SupportsXnu()
 	.ascii	    "[ -d /Applications ] && "
 	.ascii	      "dd if=\"$t.$$\""
@@ -637,11 +637,11 @@ apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
 	.ascii	  "dd if=\"$o\""
 	.ascii	    " of=\"$o\""
 	.ascii	    " bs=8"
-	.ascii	    " skip=\""
+	.ascii	    " skip="
 	.shstub	    ape_macho_dd_skip,2
-	.ascii	    "\" count=\""
+	.ascii	    " count="
 	.shstub	    ape_macho_dd_count,2
-	.ascii	    "\" conv=notrunc 2>/dev/null\n"
+	.ascii	    " conv=notrunc 2>/dev/null\n"
 #endif /* XNU */
 	.ascii	"[ x\"$1\" = x--assimilate ] && exit 0\n"
 #ifndef APE_NO_MODIFY_SELF
