@@ -20,6 +20,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/cv.h"
 #include "third_party/nsync/dll.h"
+#include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 #include "third_party/nsync/waiter.h"
 

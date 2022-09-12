@@ -159,6 +159,8 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
   }
 }
 
+#pragma weak main
+
 /**
  * Generic test program main function.
  */

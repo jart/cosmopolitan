@@ -20,6 +20,7 @@
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/dll.h"
 #include "third_party/nsync/mu_semaphore.h"
+#include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
 
 asm(".ident\t\"\\n\\n\
