@@ -16,12 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#define EZBENCH_COUNT 10000
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/intrin/atomic.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/posixthread.internal.h"
@@ -175,9 +176,9 @@ struct MutexContentionArgs {
 int MutexContentionWorker(void *arg, int tid) {
   struct MutexContentionArgs *a = arg;
   while (!atomic_load_explicit(&a->done, memory_order_relaxed)) {
-    pthread_mutex_lock(a->mutex);
+    if (pthread_mutex_lock(a->mutex)) notpossible;
     atomic_store_explicit(&a->ready, 1, memory_order_relaxed);
-    pthread_mutex_unlock(a->mutex);
+    if (pthread_mutex_unlock(a->mutex)) notpossible;
   }
   return 0;
 }

@@ -111,7 +111,6 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   if (!(th->tls = _mktls(&th->tib))) {
     return -1;
   }
-  th->ctid = (int *)(th->tib + 0x38);
 
   // we must use _mapstack() to allocate the stack because OpenBSD has
   // very strict requirements for what's allowed to be used for stacks
@@ -127,7 +126,7 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
-            spawner, &th->ptid, th->tib, th->ctid) == -1) {
+            spawner, &th->ptid, th->tib, &th->tib->tib_tid) == -1) {
     _freestack(th->stk);
     free(th->tls);
     return -1;
@@ -143,9 +142,9 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
  */
 int _join(struct spawn *th) {
   int rc;
-  if (th->ctid) {
+  if (th->tib) {
     // wait for ctid to become zero
-    _wait0(th->ctid);
+    _wait0(&th->tib->tib_tid);
     // free thread memory
     free(th->tls);
     rc = munmap(th->stk, GetStackSize());

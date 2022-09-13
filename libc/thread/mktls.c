@@ -35,7 +35,7 @@ void Bzero(void *, size_t) asm("bzero");  // gcc bug
  * Allocates thread-local storage memory for new thread.
  * @return buffer that must be released with free()
  */
-char *_mktls(char **out_tib) {
+char *_mktls(struct CosmoTib **out_tib) {
   char *tls;
   struct CosmoTib *tib;
 
@@ -60,7 +60,7 @@ char *_mktls(char **out_tib) {
   tib->tib_tid = -1;
 
   if (out_tib) {
-    *out_tib = (char *)tib;
+    *out_tib = tib;
   }
   return tls;
 }

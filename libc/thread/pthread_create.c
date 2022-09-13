@@ -53,7 +53,7 @@ STATIC_YOINK("nsync_mu_unlock");
 #define MAP_STACK_OPENBSD 0x4000
 
 void _pthread_wait(struct PosixThread *pt) {
-  _wait0(pt->ctid);
+  _wait0(&pt->tib->tib_tid);
 }
 
 void _pthread_free(struct PosixThread *pt) {
@@ -206,9 +206,6 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     return EAGAIN;
   }
 
-  // child thread id is also a condition variable
-  pt->ctid = (int *)(pt->tib + 0x38);
-
   // setup attributes
   if (attr) {
     pt->attr = *attr;
@@ -301,7 +298,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,
-            pt, &pt->tid, pt->tib, pt->ctid) == -1) {
+            pt, &pt->tid, pt->tib, &pt->tib->tib_tid) == -1) {
     rc = errno;
     _pthread_free(pt);
     errno = e;

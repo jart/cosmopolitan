@@ -65,6 +65,7 @@ o/$(MODE)/ape/ape.lds:				\
 		libc/intrin/bits.h		\
 		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\
+		libc/thread/thread.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/elf/pf2prot.internal.h	\
@@ -82,6 +83,7 @@ o/$(MODE)/ape/public/ape.lds:			\
 		libc/intrin/bits.h		\
 		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\
+		libc/thread/thread.h		\
 		libc/dce.h			\
 		libc/elf/def.h			\
 		libc/elf/pf2prot.internal.h	\

@@ -66,6 +66,9 @@ TEST(pthread_mutex_lock, normal) {
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_init(&lock, 0));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
+  ASSERT_EQ(0, pthread_mutex_trylock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
@@ -81,6 +84,8 @@ TEST(pthread_mutex_lock, recursive) {
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
+  ASSERT_EQ(0, pthread_mutex_trylock(&lock));
+  ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
@@ -91,7 +96,6 @@ TEST(pthread_mutex_lock, recursive) {
 TEST(pthread_mutex_lock, errorcheck) {
   pthread_mutex_t lock;
   pthread_mutexattr_t attr;
-  __assert_disable = true;
   ASSERT_EQ(0, pthread_mutexattr_init(&attr));
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
@@ -99,19 +103,21 @@ TEST(pthread_mutex_lock, errorcheck) {
   ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&lock));
+  ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
   ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
-  __assert_disable = false;
 }
 
 int MutexWorker(void *p, int tid) {
   int i;
   ++started;
   for (i = 0; i < ITERATIONS; ++i) {
-    pthread_mutex_lock(&mylock);
+    if (pthread_mutex_lock(&mylock)) {
+      ASSERT_EQ(0, pthread_mutex_lock(&mylock));
+    }
     ++count;
-    pthread_mutex_unlock(&mylock);
+    ASSERT_EQ(0, pthread_mutex_unlock(&mylock));
   }
   ++finished;
   return 0;

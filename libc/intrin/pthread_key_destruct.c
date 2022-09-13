@@ -28,7 +28,7 @@ void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
   pthread_key_dtor dtor;
   if (!__tls_enabled) return;
   pthread_spin_lock(&_pthread_keys_lock);
-  if (!key) key = _pthread_keys;
+  if (!key) key = __get_tls()->tib_keys;
 StartOver:
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
     x = _pthread_key_usage[i];

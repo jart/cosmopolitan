@@ -25,6 +25,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/clone.internal.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
@@ -48,22 +49,6 @@
  * scalable. They use a lot of CPU if you have lots of threads. But
  * they're wicked fast and free of bloat if your app is tiny.
  */
-
-// RAW means without *NSYNC
-// TLS means gettid() is fast
-
-// PTHREAD_MUTEX_NORMAL RAW TLS took 6ns
-// PTHREAD_MUTEX_RECURSIVE RAW TLS took 12ns
-// PTHREAD_MUTEX_ERRORCHECK RAW TLS took 13ns
-// PTHREAD_MUTEX_NORMAL RAW TLS contended took 16ns (!!)
-// PTHREAD_MUTEX_RECURSIVE RAW TLS contended took 205ns
-// PTHREAD_MUTEX_ERRORCHECK RAW TLS contended took 219ns
-// PTHREAD_MUTEX_NORMAL RAW took 6ns
-// PTHREAD_MUTEX_RECURSIVE RAW took 236ns
-// PTHREAD_MUTEX_ERRORCHECK RAW took 233ns
-// PTHREAD_MUTEX_NORMAL RAW contended took 20ns (!!)
-// PTHREAD_MUTEX_RECURSIVE RAW contended took 421ns
-// PTHREAD_MUTEX_ERRORCHECK RAW contended took 435ns
 
 atomic_int ready;
 atomic_int counter;

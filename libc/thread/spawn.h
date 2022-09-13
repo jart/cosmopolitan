@@ -1,19 +1,19 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_SPAWN_H_
 #define COSMOPOLITAN_LIBC_THREAD_SPAWN_H_
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
 struct spawn {
   int ptid;
-  int *ctid;
   char *stk;
   char *tls;
-  char *tib;
+  struct CosmoTib *tib;
 };
 
 int _spawn(int (*)(void *, int), void *, struct spawn *) hidden;
 int _join(struct spawn *) hidden;
-char *_mktls(char **) hidden;
+char *_mktls(struct CosmoTib **) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

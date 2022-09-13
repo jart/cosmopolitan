@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 #define COSMOPOLITAN_LIBC_THREAD_THREAD_H_
 
-#define PTHREAD_KEYS_MAX              64
+#define PTHREAD_KEYS_MAX              128
 #define PTHREAD_STACK_MIN             FRAMESIZE
 #define PTHREAD_DESTRUCTOR_ITERATIONS 4
 
@@ -51,8 +51,10 @@ typedef struct pthread_spinlock_s {
 
 typedef struct pthread_mutex_s {
   _Atomic(int32_t) _lock;
-  uint16_t _type;
-  uint16_t _pshared;
+  unsigned _type : 2;
+  unsigned _pshared : 1;
+  unsigned _depth : 8;
+  unsigned _owner : 21;
   void *_nsync;
 } pthread_mutex_t;
 

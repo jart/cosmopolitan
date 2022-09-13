@@ -21,9 +21,6 @@
 
 pthread_spinlock_t _pthread_keys_lock;
 
-// tls value slots for pthread keys api
-_Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
-
 // bitset of tls key registrations
 uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
 

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_TLS_H_
 #define COSMOPOLITAN_LIBC_THREAD_TLS_H_
+#include "libc/thread/thread.h"
 
 #define TLS_ALIGNMENT 64
 
@@ -22,6 +23,15 @@ struct CosmoTib {
   struct CosmoTib *tib_self2;    /* 0x30 */
   _Atomic(int32_t) tib_tid;      /* 0x38 */
   int32_t tib_errno;             /* 0x3c */
+  void *tib_nsync;
+  void *tib_reserved1;
+  void *tib_reserved2;
+  void *tib_reserved3;
+  void *tib_reserved4;
+  void *tib_reserved5;
+  void *tib_reserved6;
+  void *tib_reserved7;
+  void *tib_keys[PTHREAD_KEYS_MAX];
 };
 
 extern int __threaded;

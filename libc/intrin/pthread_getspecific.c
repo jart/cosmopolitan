@@ -18,13 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * Gets value of TLS slot for current thread.
  */
 void *pthread_getspecific(pthread_key_t key) {
   if (0 <= key && key < PTHREAD_KEYS_MAX) {
-    return _pthread_keys[key];
+    return __get_tls()->tib_keys[key];
   } else {
     return 0;
   }

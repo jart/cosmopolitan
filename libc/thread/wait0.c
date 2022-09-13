@@ -16,17 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
+#include "libc/atomic.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/wait0.internal.h"
 
-int _futex(int *, int, int, const struct timespec *);
+int _futex(atomic_int *, int, int, const struct timespec *);
 
 /**
  * Blocks until memory location becomes zero.
@@ -35,7 +36,7 @@ int _futex(int *, int, int, const struct timespec *);
  * by the _spawn() system call when a thread terminates. The purpose of
  * this operation is to know when it's safe to munmap() a threads stack
  */
-void _wait0(const int *ctid) {
+void _wait0(const atomic_int *ctid) {
   int x, rc;
   char buf[12];
   for (;;) {

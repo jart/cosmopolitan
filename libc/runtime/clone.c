@@ -488,11 +488,8 @@ static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
  *       return 0;
  *     }
  *
- *     struct CosmoTib tib = {
- *         .tib_self = &tib,
- *         .tib_self2 = &tib,
- *         .tib_tid = -1,
- *     };
+ *     // NOTE: See _mktls() for _Thread_local support.
+ *     struct CosmoTib tib = {.tib_self = &tib, .tib_tid = -1};
  *     char *stk = _mapstack();
  *     tid = clone(worker, stk, GetStackSize() - 16,
  *                 CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
@@ -589,7 +586,6 @@ static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
 int clone(void *func, void *stk, size_t stksz, int flags, void *arg, int *ptid,
           void *tls, void *ctid) {
   int rc;
-  struct CloneArgs *wt;
 
   if (flags & CLONE_THREAD) {
     __enable_threads();

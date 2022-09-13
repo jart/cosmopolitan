@@ -18,6 +18,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
@@ -150,7 +151,7 @@ static nsync_dll_list_ free_waiters = NULL;
 /* free_waiters points to a doubly-linked list of free waiter structs. */
 static nsync_atomic_uint32_ free_waiters_mu; /* spinlock; protects free_waiters */
 
-static _Thread_local waiter *waiter_for_thread;
+#define waiter_for_thread __get_tls()->tib_nsync
 
 static void waiter_destroy (void *v) {
 	waiter *w = (waiter *) v;

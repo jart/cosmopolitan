@@ -11,6 +11,7 @@
 *************************************************************************
 ** This file contains the C functions that implement mutexes for pthreads
 */
+#include "libc/thread/thread.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
@@ -22,8 +23,6 @@
 ** supports recursive mutexes.
 */
 #ifdef SQLITE_MUTEX_PTHREADS
-
-#include <pthread.h>
 
 /*
 ** The sqlite3_mutex.id, sqlite3_mutex.nRef, and sqlite3_mutex.owner fields

@@ -19,13 +19,14 @@
 #include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * Sets value of TLS slot for current thread.
  */
 int pthread_setspecific(pthread_key_t key, void *val) {
   if (0 <= key && key < PTHREAD_KEYS_MAX) {
-    _pthread_keys[key] = val;
+    __get_tls()->tib_keys[key] = val;
     return 0;
   } else {
     return EINVAL;

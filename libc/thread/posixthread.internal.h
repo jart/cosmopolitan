@@ -3,6 +3,7 @@
 #include "libc/calls/struct/sched_param.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -61,8 +62,8 @@ struct PosixThread {
   int tid;
   int *ctid;
   char *tls;
-  char *tib;
   char *altstack;
+  struct CosmoTib *tib;
   _Atomic(enum PosixThreadStatus) status;
   jmp_buf exiter;
   pthread_attr_t attr;
