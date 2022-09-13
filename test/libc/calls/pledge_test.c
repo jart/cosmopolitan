@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.internal.h"
@@ -30,7 +31,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
-#include "libc/calls/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -64,7 +64,7 @@ void OnSig(int sig) {
   // do nothing
 }
 
-int memfd_secret(unsigned int);  // our ENOSYS threshold
+int sys_memfd_secret(unsigned int);  // our ENOSYS threshold
 
 int extract(const char *from, const char *to, int mode) {
   int fdin, fdout;
@@ -549,7 +549,7 @@ TEST(pledge_openbsd, bigSyscalls) {
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio", 0));
-    ASSERT_SYS(ENOSYS, -1, memfd_secret(0));
+    ASSERT_SYS(ENOSYS, -1, sys_memfd_secret(0));
     ASSERT_SYS(ENOSYS, -1, sys_bogus());
     _Exit(0);
   }

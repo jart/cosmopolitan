@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/_getauxval.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/_getauxval.internal.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
@@ -49,7 +49,7 @@ static dontinline int __clk_tck_init(void) {
     cmd[0] = 1;   // CTL_KERN
     cmd[1] = 12;  // KERN_CLOCKRATE
     len = sizeof(clock);
-    if (sysctl(cmd, 2, &clock, &len, NULL, 0) != -1) {
+    if (sys_sysctl(cmd, 2, &clock, &len, NULL, 0) != -1) {
       x = clock.hz;
     } else {
       x = -1;

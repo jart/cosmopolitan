@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
@@ -200,7 +200,7 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   static int broken;
   struct CloneArgs *wt;
   if (!once) {
-    if (bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) == -1) {
+    if (sys_bsdthread_register(XnuThreadThunk, 0, 0, 0, 0, 0, 0) == -1) {
       broken = errno;
     }
     once = true;
@@ -217,7 +217,8 @@ static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
   wt->ztid = flags & CLONE_CHILD_CLEARTID ? ctid : &wt->tid;
   wt->tls = flags & CLONE_SETTLS ? tls : 0;
   wt->lock._lock = 1;
-  if ((rc = bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) != -1) {
+  if ((rc = sys_bsdthread_create(fn, arg, wt, 0, PTHREAD_START_CUSTOM_XNU)) !=
+      -1) {
     pthread_spin_lock(&wt->lock);
     rc = wt->tid;
     pthread_spin_unlock(&wt->lock);

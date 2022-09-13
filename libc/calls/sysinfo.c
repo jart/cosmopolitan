@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -25,6 +24,7 @@
 #include "libc/calls/struct/vmmeter-meta.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -39,7 +39,7 @@ static int64_t GetUptime(void) {
   struct timeval x;
   size_t n = sizeof(x);
   int mib[] = {CTL_KERN, KERN_BOOTTIME};
-  if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
   return _timespec_real().tv_sec - x.tv_sec;
 }
 
@@ -47,7 +47,7 @@ static int64_t GetPhysmem(void) {
   uint64_t x;
   size_t n = sizeof(x);
   int mib[] = {CTL_HW, HW_PHYSMEM};
-  if (sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
+  if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;
   return x;
 }
 

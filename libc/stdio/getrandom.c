@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -25,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/vendor.internal.h"
@@ -99,7 +99,7 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
       cmd[1] = 81; /* KERN_ARND */
     }
     m = n;
-    if ((rc = sysctl(cmd, 2, p, &m, 0, 0)) != -1) {
+    if ((rc = sys_sysctl(cmd, 2, p, &m, 0, 0)) != -1) {
       rc = m;
     }
   } else if (have_getrandom) {
