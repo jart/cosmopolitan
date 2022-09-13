@@ -637,7 +637,7 @@
       (let ((default-directory root))
         (save-buffer)
         (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
-               (let* ((mode (cosmo--make-mode arg ""))
+               (let* ((mode (cosmo--make-mode arg "fastbuild"))
                       (compile-command (cosmo--compile-command this root 'test mode "" "" ".ok")))
                  (compile compile-command)))
               ('t
@@ -653,7 +653,7 @@
       (let ((default-directory root))
         (save-buffer)
         (cond ((memq major-mode '(c-mode c++-mode asm-mode fortran-mode))
-               (let* ((mode (cosmo--make-mode arg ""))
+               (let* ((mode (cosmo--make-mode arg "fastbuild"))
                       (compile-command (cosmo--compile-command this root 'run-win10 mode "" "" "")))
                  (compile compile-command)))
               ('t

@@ -19,11 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -106,10 +107,13 @@ static ssize_t sendfile_linux2bsd(int outfd, int infd,
   if (IsFreebsd()) {
     rc = sys_sendfile_freebsd(infd, outfd, offset, uptobytes, 0, &sbytes, 0);
   } else {
+    sbytes = uptobytes;
     rc = sys_sendfile_xnu(infd, outfd, offset, &sbytes, 0, 0);
   }
   if (rc != -1) {
-    if (inout_opt_inoffset) *inout_opt_inoffset += sbytes;
+    if (inout_opt_inoffset) {
+      *inout_opt_inoffset += sbytes;
+    }
     return sbytes;
   } else {
     return -1;
@@ -131,15 +135,25 @@ static ssize_t sendfile_linux2bsd(int outfd, int infd,
  */
 ssize_t sendfile(int outfd, int infd, int64_t *inout_opt_inoffset,
                  size_t uptobytes) {
-  if (!uptobytes) return einval();
-  if (uptobytes > 0x7ffffffe /* Microsoft's off-by-one */) return eoverflow();
-  if (IsLinux()) {
-    return sys_sendfile(outfd, infd, inout_opt_inoffset, uptobytes);
+  int rc;
+  if (!uptobytes) {
+    rc = einval();
+  } else if (IsAsan() && inout_opt_inoffset &&
+             !__asan_is_valid(inout_opt_inoffset,
+                              sizeof(*inout_opt_inoffset))) {
+    rc = efault();
+  } else if (uptobytes > 0x7ffffffe /* Microsoft's off-by-one */) {
+    rc = eoverflow();
+  } else if (IsLinux()) {
+    rc = sys_sendfile(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsFreebsd() || IsXnu()) {
-    return sendfile_linux2bsd(outfd, infd, inout_opt_inoffset, uptobytes);
+    rc = sendfile_linux2bsd(outfd, infd, inout_opt_inoffset, uptobytes);
   } else if (IsWindows()) {
-    return sendfile_linux2nt(outfd, infd, inout_opt_inoffset, uptobytes);
+    rc = sendfile_linux2nt(outfd, infd, inout_opt_inoffset, uptobytes);
   } else {
-    return copyfd(infd, inout_opt_inoffset, outfd, NULL, uptobytes, 0);
+    rc = copyfd(infd, inout_opt_inoffset, outfd, NULL, uptobytes, 0);
   }
+  STRACE("sendfile(%d, %d, %p, %'zu) → %ld% m", outfd, infd, inout_opt_inoffset,
+         uptobytes, rc);
+  return rc;
 }
