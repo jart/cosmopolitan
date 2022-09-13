@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
+#include "libc/intrin/dos2errno.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/nt/errors.h"
 #include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
-#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
 TEST(__dos2errno, test) {

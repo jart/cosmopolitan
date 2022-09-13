@@ -36,7 +36,7 @@ privileged errno_t __dos2errno(uint32_t error) {
   if (error) {
     for (i = 0; kDos2Errno[i].doscode; ++i) {
       if (error == kDos2Errno[i].doscode) {
-        return *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv);
+        return *(const int *)((intptr_t)kDos2Errno[i].systemv);
       }
     }
   }

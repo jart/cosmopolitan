@@ -43,7 +43,8 @@ LIBC_SYSV_A_FILES :=					\
 	libc/sysv/strace.greg.c				\
 	libc/sysv/describeos.greg.c			\
 	$(wildcard libc/sysv/consts/*)			\
-	$(wildcard libc/sysv/errfuns/*)
+	$(wildcard libc/sysv/errfuns/*)			\
+	$(wildcard libc/sysv/dos2errno/*)
 
 LIBC_SYSV_A_SRCS =					\
 	$(LIBC_SYSV_A_SRCS_A)				\

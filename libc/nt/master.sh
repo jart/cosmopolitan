@@ -983,7 +983,7 @@ imp	'SleepConditionVariableSRW'				SleepConditionVariableSRW				kernel32	0
 imp	'SleepEx'						SleepEx							kernel32	0	2
 imp	'SortCloseHandle'					SortCloseHandle						kernel32	1416
 imp	'SortGetHandle'						SortGetHandle						kernel32	1417
-imp	'SuspendThread'						SuspendThread						kernel32	0
+imp	'SuspendThread'						SuspendThread						kernel32	0	1
 imp	'SwitchToFiber'						SwitchToFiber						kernel32	0
 imp	'SwitchToThread'					SwitchToThread						kernel32	0
 imp	'SystemTimeToFileTime'					SystemTimeToFileTime					kernel32	0	2

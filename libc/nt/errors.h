@@ -89,7 +89,7 @@
 #define kNtErrorBufferOverflow 111
 #define kNtErrorDiskFull 112 /* ENOSPC */
 #define kNtErrorNoMoreSearchHandles 113
-#define kNtErrorInvalidTargetHandle 114
+#define kNtErrorInvalidTargetHandle 114 /* EBADF */
 #define kNtErrorInvalidCategory 117
 #define kNtErrorInvalidVerifySwitch 118
 #define kNtErrorBadDriverLevel 119
@@ -103,7 +103,7 @@
 #define kNtErrorProcNotFound 127
 #define kNtErrorWaitNoChildren 128 /* ECHILD */
 #define kNtErrorChildNotComplete 129
-#define kNtErrorDirectAccessHandle 130
+#define kNtErrorDirectAccessHandle 130 /* EBADF */
 #define kNtErrorNegativeSeek 131
 #define kNtErrorSeekOnDevice 132
 #define kNtErrorIsJoinTarget 133
