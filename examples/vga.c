@@ -7,12 +7,29 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/math.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/isystem/unistd.h"
-#include "libc/str/str.h"
+#include "libc/math.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
+
+/**
+ * @fileoverview Bare Metal VGA TTY demo.
+ *
+ * This program can boot as an operating system. Try it out:
+ *
+ *     make -j8 o//examples/vga.com
+ *     qemu-system-x86_64 -hda o//examples/vga.com -serial stdio
+ *
+ * Please note that, by default, APE binaries only use the serial port
+ * for stdio. To get the VGA console as an added bonus:
+ *
+ *     STATIC_YOINK("vga_console");
+ *
+ * Should be added to the top of your main() program source file.
+ */
 
 STATIC_YOINK("vga_console");
 
@@ -20,7 +37,7 @@ int main(int argc, char *argv[]) {
   volatile long double x = -.5;
   volatile long double y = 1.5;
   struct termios tio;
-  char buf[4];
+  char buf[16];
   ssize_t res;
   if (tcgetattr(0, &tio) != -1) {
     tio.c_lflag &= ~(ECHO | ICANON);
@@ -33,5 +50,11 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   printf("Hello World! %.19Lg\n", atan2l(x, y));
-  return 0;
+
+  // read/print loop so machine doesn't reset on metal
+  for (;;) {
+    if ((res = readansi(0, buf, 16)) > 0) {
+      printf("got %`'.*s\r\n", res, buf);
+    }
+  }
 }
