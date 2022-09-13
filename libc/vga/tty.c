@@ -536,15 +536,18 @@ static void TtyDeleteLines(struct Tty *tty) {
 }
 
 static void TtyReportDeviceStatus(struct Tty *tty) {
-  _TtyWriteInput(tty, "\e[0n", 4);
+  static const char report[] = "\e[0n";
+  _TtyWriteInput(tty, report, strlen(report));
 }
 
 static void TtyReportPreferredVtType(struct Tty *tty) {
-  _TtyWriteInput(tty, "\e[?1;0c", 4);
+  static const char report[] = "\e[?1;0c";
+  _TtyWriteInput(tty, report, strlen(report));
 }
 
 static void TtyReportPreferredVtIdentity(struct Tty *tty) {
-  _TtyWriteInput(tty, "\e/Z", 4);
+  static const char report[] = "\e/Z";
+  _TtyWriteInput(tty, report, strlen(report));
 }
 
 static void TtyBell(struct Tty *tty) {
@@ -1148,9 +1151,11 @@ ssize_t _TtyWriteInput(struct Tty *tty, const void *data, size_t n) {
   if (cr && i < sizeof tty->input.p) {
     p[i++] = '\n';
   }
+#ifdef VGA_PERSNICKETY_STATUS
   if (!(tty->conf & kTtyNoecho)) {
     _TtyWrite(tty, p + tty->input.i, i - tty->input.i);
   }
+#endif
   tty->input.i = i;
   return n;
 }
@@ -1159,6 +1164,7 @@ ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
   char *p;
   size_t n;
   n = MIN(size, tty->input.i);
+#ifdef VGA_PERSNICKETY_STATUS
   if (!(tty->conf & kTtyNocanon)) {
     if ((p = memchr(tty->input.p, '\n', n))) {
       n = MIN(n, tty->input.p - p + 1);
@@ -1166,6 +1172,7 @@ ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
       n = 0;
     }
   }
+#endif
   memcpy(buf, tty->input.p, n);
   memcpy(tty->input.p, tty->input.p + n, tty->input.i - n);
   tty->input.i -= n;

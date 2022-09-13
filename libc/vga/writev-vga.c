@@ -31,20 +31,21 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 
-static struct Tty vga_tty;
 #ifdef VGA_USE_WCS
 static wchar_t vga_wcs[VGA_TTY_HEIGHT * VGA_TTY_WIDTH];
 #else
 static wchar_t * const vga_wcs = NULL;
 #endif
 
+struct Tty _vga_tty;
+
 ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, wrote = 0;
   ssize_t res = 0;
   for (i = 0; i < iovlen; ++i) {
-    void *input = iov[i].iov_base;
+    void *output = iov[i].iov_base;
     size_t len = iov[i].iov_len;
-    res = _TtyWrite(&vga_tty, input, len);
+    res = _TtyWrite(&_vga_tty, output, len);
     if (res < 0)
       break;
     wrote += res;
@@ -75,6 +76,6 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
    * Initialize our tty structure from the current screen contents, current
    * cursor position, & character height.
    */
-  _StartTty(&vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
+  _StartTty(&_vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
             chr_ht, vid_buf, vga_wcs);
 }
