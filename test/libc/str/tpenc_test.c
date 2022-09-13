@@ -20,7 +20,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -28,34 +28,34 @@ STATIC_YOINK("strwidth");
 
 volatile uint64_t v;
 
-TEST(tpenc, test) {
-  EXPECT_EQ(0, tpenc(0));
-  EXPECT_EQ(1, tpenc(1));
-  EXPECT_EQ(' ', tpenc(' '));
-  EXPECT_EQ(0x7f, tpenc(0x7f));
-  EXPECT_EQ(0x008496E2, tpenc(L'▄'));
-  EXPECT_EQ(0x8080808080FEul, tpenc(INT_MIN));
+TEST(_tpenc, test) {
+  EXPECT_EQ(0, _tpenc(0));
+  EXPECT_EQ(1, _tpenc(1));
+  EXPECT_EQ(' ', _tpenc(' '));
+  EXPECT_EQ(0x7f, _tpenc(0x7f));
+  EXPECT_EQ(0x008496E2, _tpenc(L'▄'));
+  EXPECT_EQ(0x8080808080FEul, _tpenc(INT_MIN));
 }
 
-TEST(tpenc, theimp) {
-  ASSERT_EQ(0x88989FF0, tpenc(L'😈'));
+TEST(_tpenc, theimp) {
+  ASSERT_EQ(0x88989FF0, _tpenc(L'😈'));
 }
 
-TEST(tpenc, testBeyondTheStandard) {
-  ASSERT_EQ(0xBFBFBFBFBFFF, tpenc(-1));
+TEST(_tpenc, testBeyondTheStandard) {
+  ASSERT_EQ(0xBFBFBFBFBFFF, _tpenc(-1));
 }
 
-uint64_t Tpenc(int x) {
-  return (v = EXPROPRIATE(tpenc(VEIL("r", x))));
+uint64_t _Tpenc(int x) {
+  return (v = EXPROPRIATE(_tpenc(VEIL("r", x))));
 }
 
-BENCH(tpenc, bench) {
-  EZBENCH(donothing, Tpenc(0));
-  EZBENCH(donothing, Tpenc(1));
-  EZBENCH(donothing, Tpenc(' '));
-  EZBENCH(donothing, Tpenc(0x7f));
-  EZBENCH(donothing, Tpenc(L'▄'));
-  EZBENCH(donothing, Tpenc(-1));
-  EZBENCH(donothing, Tpenc(INT_MIN));
+BENCH(_tpenc, bench) {
+  EZBENCH(donothing, _Tpenc(0));
+  EZBENCH(donothing, _Tpenc(1));
+  EZBENCH(donothing, _Tpenc(' '));
+  EZBENCH(donothing, _Tpenc(0x7f));
+  EZBENCH(donothing, _Tpenc(L'▄'));
+  EZBENCH(donothing, _Tpenc(-1));
+  EZBENCH(donothing, _Tpenc(INT_MIN));
   fprintf(stderr, "\n");
 }

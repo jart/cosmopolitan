@@ -1009,14 +1009,14 @@ PyObject *PyCodec_NameReplaceErrors(PyObject *exc)
             return NULL;
         for (i = start, ressize = 0; i < end; ++i) {
             /* object is guaranteed to be "ready" */
-            if (!weaken(_PyUnicode_GetUcName)) {
+            if (!_weaken(_PyUnicode_GetUcName)) {
                 PyErr_SetString(
                     PyExc_UnicodeError,
                     "_PyUnicode_GetUcName() not available");
                 return NULL;
             }
             c = PyUnicode_READ_CHAR(object, i);
-            if (weaken(_PyUnicode_GetUcName)(NULL, c, buffer, sizeof(buffer), 1)) {
+            if (_weaken(_PyUnicode_GetUcName)(NULL, c, buffer, sizeof(buffer), 1)) {
                 replsize = 1+1+1+(int)strlen(buffer)+1;
             }
             else if (c >= 0x10000) {

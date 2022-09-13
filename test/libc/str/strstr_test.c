@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/str/internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"

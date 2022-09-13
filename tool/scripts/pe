@@ -1,0 +1,9 @@
+#!/bin/sh
+echo "# -*- coding: utf-8 -*-
+import os
+import sys
+from math import *
+s = str($*)
+sys.stdout.write(s)
+" >/tmp/pe
+exec python.com /tmp/pe

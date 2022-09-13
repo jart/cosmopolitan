@@ -21,7 +21,7 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/msghdr.h"
 #include "libc/sock/struct/sockaddr.h"

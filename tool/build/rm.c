@@ -20,7 +20,6 @@
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -74,7 +73,7 @@ void Remove(const char *path) {
   return;
 OnFail:
   if (force && errno == ENOENT) return;
-  s = strerdoc(errno);
+  s = _strerdoc(errno);
   fputs(prog, stderr);
   fputs(": cannot remove '", stderr);
   fputs(path, stderr);

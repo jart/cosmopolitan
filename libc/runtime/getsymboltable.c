@@ -17,16 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
@@ -127,7 +127,7 @@ struct SymbolTable *GetSymbolTable(void) {
   struct Zipos *z;
   if (pthread_spin_trylock(&g_lock)) return 0;
   if (!__symtab && !__isworker) {
-    if (weaken(__zipos_get) && (z = weaken(__zipos_get)())) {
+    if (_weaken(__zipos_get) && (z = _weaken(__zipos_get)())) {
       if ((__symtab = GetSymbolTableFromZip(z))) {
         __symtab->names =
             (uint32_t *)((char *)__symtab + __symtab->names_offset);

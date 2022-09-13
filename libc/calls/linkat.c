@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -43,7 +43,7 @@ int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath,
   if (IsAsan() &&
       (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
     rc = efault();
-  } else if (weaken(__zipos_notat) &&
+  } else if (_weaken(__zipos_notat) &&
              ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||
               (rc = __zipos_notat(newdirfd, newpath)) == -1)) {
     STRACE("zipos fchownat not supported yet");

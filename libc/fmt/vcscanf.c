@@ -231,9 +231,9 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
         if (discard) {
           buf = NULL;
         } else if (ismalloc) {
-          buf = weaken(malloc)(bufsize * charbytes);
+          buf = _weaken(malloc)(bufsize * charbytes);
           struct FreeMe *entry;
-          if (buf && (entry = weaken(calloc)(1, sizeof(struct FreeMe)))) {
+          if (buf && (entry = _weaken(calloc)(1, sizeof(struct FreeMe)))) {
             entry->ptr = buf;
             entry->next = freeme;
             freeme = entry;
@@ -245,7 +245,7 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
           size_t j = 0;
           for (;;) {
             if (ismalloc && !width && j + 2 + 1 >= bufsize &&
-                !weaken(__grow)(&buf, &bufsize, charbytes, 0)) {
+                !_weaken(__grow)(&buf, &bufsize, charbytes, 0)) {
               width = bufsize - 1;
             }
             if (c != -1 && j + !rawmode < bufsize && (rawmode || !isspace(c))) {
@@ -298,11 +298,11 @@ int vcscanf(int callback(void *), int unget(int, void *), void *arg,
     }
   }
 Done:
-  while (freeme && weaken(free)) {
+  while (freeme && _weaken(free)) {
     struct FreeMe *entry = freeme;
     freeme = entry->next;
-    if (items == -1) weaken(free)(entry->ptr);
-    weaken(free)(entry);
+    if (items == -1) _weaken(free)(entry->ptr);
+    _weaken(free)(entry);
   }
   return items;
 }

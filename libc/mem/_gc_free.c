@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 
 void _gc_free(void *p) {
   free(p);

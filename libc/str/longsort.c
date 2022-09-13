@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
-static void longsorter(long *A, size_t n) {
+static void _longsorter(long *A, size_t n) {
   long t, p;
   size_t i, j;
   if (n < 2) return;
@@ -31,8 +31,8 @@ static void longsorter(long *A, size_t n) {
     A[i] = A[j];
     A[j] = t;
   }
-  longsorter(A, i);
-  longsorter(A + i, n - i);
+  _longsorter(A, i);
+  _longsorter(A + i, n - i);
 }
 
 /**
@@ -42,9 +42,9 @@ static void longsorter(long *A, size_t n) {
  *                               -Lord Capulet
  *
  */
-void longsort(long *A, size_t n) {
-  longsorter(A, n);
+void _longsort(long *A, size_t n) {
+  _longsorter(A, n);
   if (n > 1000) {
-    STRACE("longsort(%p, %'zu)", A, n);
+    STRACE("_longsort(%p, %'zu)", A, n);
   }
 }

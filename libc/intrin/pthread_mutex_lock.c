@@ -65,8 +65,15 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
   if (LIKELY(__tls_enabled &&                               //
              mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
              mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
-             weaken(nsync_mu_lock))) {
-    weaken(nsync_mu_lock)((nsync_mu *)mutex);
+             _weaken(nsync_mu_lock))) {
+    _weaken(nsync_mu_lock)((nsync_mu *)mutex);
+    return 0;
+  }
+
+  if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
+    while (atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
+      pthread_yield();
+    }
     return 0;
   }
 

@@ -21,6 +21,6 @@
 /**
  * Reverses bits in 8-bit word.
  */
-int bitreverse8(int x) {
-  return BITREVERSE8(x);
+int _bitreverse8(int x) {
+  return kReverseBits[255 & x];
 }

@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 
 #define W sizeof(size_t)
 

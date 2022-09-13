@@ -8,32 +8,32 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "dsp/tty/tty.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/morton.h"
-#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/morton.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/limits.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/tinymath/emodl.h"
-#include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 
@@ -339,7 +339,7 @@ void OpMeminfo(void) {
   OpCr();
   OpCr();
   fflush(stdout);
-  meminfo(fileno(stdout));
+  _meminfo(fileno(stdout));
 }
 
 void Glue2f(FLOAT fn(FLOAT, FLOAT)) {
@@ -470,7 +470,7 @@ void ConsumeToken(void) {
   token.i = 0;
   if (history.i) history.p[history.i - 1].i = 0;
   if (comment) return;
-  if (startswith(token.p, "#!")) return;
+  if (_startswith(token.p, "#!")) return;
   switch (setjmp(thrower)) {
     default:
       if (CallFunction(token.p)) return;

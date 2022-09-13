@@ -21,9 +21,9 @@
 #include "third_party/zlib/zutil.internal.h"
 
 void *zcalloc(void *opaque, uInt items, uInt size) {
-  return weaken(malloc)(items * size);
+  return _weaken(malloc)(items * size);
 }
 
 void zcfree(void *opaque, void *ptr) {
-  weaken(free)(ptr);
+  _weaken(free)(ptr);
 }

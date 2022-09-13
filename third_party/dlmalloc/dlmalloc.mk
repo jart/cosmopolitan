@@ -49,12 +49,15 @@ $(THIRD_PARTY_DLMALLOC_A).pkg:					\
 		$(THIRD_PARTY_DLMALLOC_A_OBJS)			\
 		$(foreach x,$(THIRD_PARTY_DLMALLOC_A_DIRECTDEPS),$($(x)_A).pkg)
 
+ifneq ($(MODE),tiny)
+ifneq ($(MODE),tinylinux)
 # README file recommends -O3
 # It does double performance in default mode
-o//third_party/dlmalloc/dlmalloc.o				\
-o/rel/third_party/dlmalloc/dlmalloc.o: private			\
+o/$(MODE)/third_party/dlmalloc/dlmalloc.o: private		\
 		OVERRIDE_CFLAGS +=				\
 			-O3
+endif
+endif
 
 # we can't use address sanitizer because:
 #   address sanitizer depends on dlmalloc

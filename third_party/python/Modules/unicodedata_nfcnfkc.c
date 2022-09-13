@@ -115,10 +115,10 @@ _PyUnicode_NfcNfkc(PyObject *self, PyObject *input, int k)
           }
           index = f * UNIDATA_TOTAL_LAST + l;
           index1 = _PyUnicode_CompIndex[index >> _PyUnicode_CompShift];
-          code = bextra(_PyUnicode_CompData,
-                        (index1 << _PyUnicode_CompShift)+
-                        (index & ((1 << _PyUnicode_CompShift) - 1)),
-                        _PyUnicode_CompDataBits);
+          code = _bextra(_PyUnicode_CompData,
+                         (index1 << _PyUnicode_CompShift)+
+                         (index & ((1 << _PyUnicode_CompShift) - 1)),
+                         _PyUnicode_CompDataBits);
           if (code == 0)
               goto not_combinable;
           /* Replace the original character. */

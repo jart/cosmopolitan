@@ -21,6 +21,6 @@
 /**
  * Reverses bits in 16-bit word.
  */
-int bitreverse16(int x) {
-  return BITREVERSE16(x);
+int _bitreverse16(int x) {
+  return kReverseBits[0x00FF & x] << 8 | kReverseBits[(0xFF00 & x) >> 8];
 }

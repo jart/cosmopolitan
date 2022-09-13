@@ -1,6 +1,10 @@
 #!/bin/sh
-exec /usr/bin/grep      \
-     --exclude-dir=o    \
-     --exclude-dir=gcc  \
-     --exclude-dir=.git \
+exec grep                       \
+     --exclude=TAGS             \
+     --exclude=HTAGS            \
+     --exclude=*.com            \
+     --exclude-dir=o            \
+     --exclude-dir=gcc          \
+     --exclude-dir=.git         \
+     --exclude=archive-contents \
      "$@"

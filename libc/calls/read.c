@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -48,7 +48,7 @@ ssize_t read(int fd, void *buf, size_t size) {
     if (IsAsan() && !__asan_is_valid(buf, size)) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = weaken(__zipos_read)(
+      rc = _weaken(__zipos_read)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle,
           &(struct iovec){buf, size}, 1, -1);
     } else if (!IsWindows() && !IsMetal()) {

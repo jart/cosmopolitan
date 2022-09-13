@@ -31,7 +31,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/stack.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"

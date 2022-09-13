@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 
-bool startswithi(const char *s, const char *prefix) {
+bool _startswithi(const char *s, const char *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

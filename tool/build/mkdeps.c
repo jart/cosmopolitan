@@ -33,14 +33,14 @@
 #include "libc/mem/arraylist.internal.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/bisectcarleft.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/ezmap.internal.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/sysconf.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
@@ -166,8 +166,8 @@ void Crunch(void) {
   free(sources.p);
   sources.p = 0;
   sources.i = j;
-  longsort((const long *)sauces, sources.i);
-  longsort((const long *)edges.p, edges.i);
+  _longsort((const long *)sauces, sources.i);
+  _longsort((const long *)edges.p, edges.i);
 }
 
 void Rehash(void) {
@@ -221,7 +221,7 @@ unsigned GetSourceId(const char *name, size_t len) {
 bool ShouldSkipSource(const char *src) {
   unsigned j;
   for (j = 0; j < ARRAYLEN(kIgnorePrefixes); ++j) {
-    if (startswith(src, kIgnorePrefixes[j])) {
+    if (_startswith(src, kIgnorePrefixes[j])) {
       return true;
     }
   }
@@ -345,7 +345,7 @@ const char *StripExt(char pathbuf[PATH_MAX], const char *s) {
 bool IsObjectSource(const char *name) {
   int i;
   for (i = 0; i < ARRAYLEN(kSourceExts); ++i) {
-    if (endswith(name, kSourceExts[i])) return true;
+    if (_endswith(name, kSourceExts[i])) return true;
   }
   return false;
 }
@@ -390,7 +390,7 @@ int Diver(void *arg, int tid) {
     path = strings.p + sauces[i].name;
     if (!IsObjectSource(path)) continue;
     appendw(&bout, '\n');
-    if (!startswith(path, "o/")) {
+    if (!_startswith(path, "o/")) {
       appends(&bout, buildroot);
     }
     appends(&bout, StripExt(pathbuf, path));

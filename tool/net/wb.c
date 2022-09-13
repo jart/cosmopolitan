@@ -25,12 +25,12 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
 #include "libc/str/str.h"
@@ -45,6 +45,7 @@
 #include "libc/sysv/consts/tcp.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 #include "net/http/http.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
@@ -400,8 +401,8 @@ int main(int argc, char *argv[]) {
   /*
    * Parse URL.
    */
-  gc(ParseUrl(urlarg, -1, &url));
-  gc(url.params.p);
+  _gc(ParseUrl(urlarg, -1, &url));
+  _gc(url.params.p);
   usessl = false;
   if (url.scheme.n) {
     if (url.scheme.n == 5 && !memcasecmp(url.scheme.p, "https", 5)) {
@@ -411,9 +412,9 @@ int main(int argc, char *argv[]) {
     }
   }
   if (url.host.n) {
-    host = gc(strndup(url.host.p, url.host.n));
+    host = _gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
-      port = gc(strndup(url.port.p, url.port.n));
+      port = _gc(strndup(url.port.p, url.port.n));
     } else {
       port = usessl ? "443" : "80";
     }
@@ -429,7 +430,7 @@ int main(int argc, char *argv[]) {
   url.host.p = 0, url.host.n = 0;
   url.port.p = 0, url.port.n = 0;
   if (!url.path.n || url.path.p[0] != '/') {
-    char *p = gc(xmalloc(1 + url.path.n));
+    char *p = _gc(xmalloc(1 + url.path.n));
     mempcpy(mempcpy(p, "/", 1), url.path.p, url.path.n);
     url.path.p = p;
     ++url.path.n;

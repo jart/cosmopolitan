@@ -24,7 +24,7 @@
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
@@ -138,7 +138,7 @@ void ProcessFile(struct ElfWriter *elf, const char *path) {
   }
   if (S_ISDIR(st.st_mode)) {
     st.st_size = 0;
-    if (!endswith(name, "/")) {
+    if (!_endswith(name, "/")) {
       name = gc(xstrcat(name, '/'));
     }
   }
@@ -160,7 +160,7 @@ void PullEndOfCentralDirectoryIntoLinkage(struct ElfWriter *elf) {
 void CheckFilenameKosher(const char *path) {
   CHECK_LE(kZipCfileHdrMinSize + strlen(path),
            kZipCdirHdrLinkableSizeBootstrap);
-  CHECK(!startswith(path, "/"));
+  CHECK(!_startswith(path, "/"));
   CHECK(!strstr(path, ".."));
 }
 

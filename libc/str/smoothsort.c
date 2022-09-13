@@ -23,7 +23,7 @@
 └─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/mem/alg.h"
-#include "libc/nexgen32e/bsf.h"
+#include "libc/intrin/bsf.h"
 #include "libc/str/str.h"
 
 asm(".ident\t\"\\n\\n\

@@ -23,7 +23,6 @@
 #include "libc/fmt/itoa.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
@@ -59,12 +58,12 @@ void Execute(char *argv[]) {
 
 int Visit(const char *fpath, const struct stat *sb, int tflag,
           struct FTW *ftwbuf) {
-  if (tflag == FTW_F && endswith(fpath, ".gz")) {
+  if (tflag == FTW_F && _endswith(fpath, ".gz")) {
     Execute((char *[]){"build/bootstrap/gzip.com", "-d", fpath, 0});
     strcpy(binpath, fpath);
     binpath[strlen(binpath) - 3] = 0;
     chmod(binpath, 0755);
-  } else if (tflag == FTW_F && endswith(fpath, ".sym")) {
+  } else if (tflag == FTW_F && _endswith(fpath, ".sym")) {
     strcpy(binpath, fpath);
     binpath[strlen(binpath) - 4] = 0;
     symlink(xslurp(fpath, 0), binpath);
@@ -83,7 +82,7 @@ int main(int argc, char *argv[]) {
   if (nftw(tmpdir, Visit, 20, 0) == -1) {
     fputs(prog, stderr);
     fputs(": nftw failed: ", stderr);
-    fputs(strerdoc(errno), stderr);
+    fputs(_strerdoc(errno), stderr);
     fputs("\n", stderr);
     exit(1);
   }

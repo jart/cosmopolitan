@@ -17,25 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(cbrt, test) {
-  EXPECT_STREQ("0", gc(xasprintf("%.15g", cbrt(0.))));
-  EXPECT_STREQ("-0", gc(xasprintf("%.15g", cbrt(-0.))));
-  EXPECT_STREQ("0.7937005259841", gc(xasprintf("%.15g", cbrt(.5))));
-  EXPECT_STREQ("-0.7937005259841", gc(xasprintf("%.15g", cbrt(-.5))));
-  EXPECT_STREQ("1", gc(xasprintf("%.15g", cbrt(1.))));
-  EXPECT_STREQ("-1", gc(xasprintf("%.15g", cbrt(-1.))));
-  EXPECT_STREQ("1.14471424255333", gc(xasprintf("%.15g", cbrt(1.5))));
-  EXPECT_STREQ("-1.14471424255333", gc(xasprintf("%.15g", cbrt(-1.5))));
-  EXPECT_STREQ("nan", gc(xasprintf("%.15g", cbrt(NAN))));
-  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", cbrt(-NAN))));
-  EXPECT_STREQ("inf", gc(xasprintf("%.15g", cbrt(INFINITY))));
-  EXPECT_STREQ("-inf", gc(xasprintf("%.15g", cbrt(-INFINITY))));
+  EXPECT_STREQ("0", _gc(xasprintf("%.15g", cbrt(0.))));
+  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", cbrt(-0.))));
+  EXPECT_STREQ("0.7937005259841", _gc(xasprintf("%.15g", cbrt(.5))));
+  EXPECT_STREQ("-0.7937005259841", _gc(xasprintf("%.15g", cbrt(-.5))));
+  EXPECT_STREQ("1", _gc(xasprintf("%.15g", cbrt(1.))));
+  EXPECT_STREQ("-1", _gc(xasprintf("%.15g", cbrt(-1.))));
+  EXPECT_STREQ("1.14471424255333", _gc(xasprintf("%.15g", cbrt(1.5))));
+  EXPECT_STREQ("-1.14471424255333", _gc(xasprintf("%.15g", cbrt(-1.5))));
+  EXPECT_STREQ("nan", _gc(xasprintf("%.15g", cbrt(NAN))));
+  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", cbrt(-NAN))));
+  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", cbrt(INFINITY))));
+  EXPECT_STREQ("-inf", _gc(xasprintf("%.15g", cbrt(-INFINITY))));
   EXPECT_STREQ("2.81264428523626e-103",
-               gc(xasprintf("%.15g", cbrt(__DBL_MIN__))));
+               _gc(xasprintf("%.15g", cbrt(__DBL_MIN__))));
   EXPECT_STREQ("5.64380309412236e+102",
-               gc(xasprintf("%.15g", cbrt(__DBL_MAX__))));
+               _gc(xasprintf("%.15g", cbrt(__DBL_MAX__))));
 }

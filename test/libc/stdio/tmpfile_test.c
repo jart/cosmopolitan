@@ -21,14 +21,14 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 char testlib_enable_tmp_setup_teardown;
 char oldtmpdir[PATH_MAX];
@@ -82,7 +82,7 @@ TEST(tmpfile, renameToRealFile) {
   f = tmpfile();
   ASSERT_EQ(2, fputs("hi", f));
   ASSERT_SYS(0, 0,
-             linkat(AT_FDCWD, gc(xasprintf("/proc/self/fd/%d", fileno(f))),
+             linkat(AT_FDCWD, _gc(xasprintf("/proc/self/fd/%d", fileno(f))),
                     AT_FDCWD, "real", AT_SYMLINK_FOLLOW));
   ASSERT_EQ(0, fclose(f));
   ASSERT_NE(NULL, (f = fopen("real", "r")));

@@ -19,17 +19,19 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dns/dns.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/ipclassify.internal.h"
 #include "libc/stdio/stdio.h"
@@ -42,9 +44,11 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/zlib/zlib.h"
@@ -142,7 +146,7 @@ void Connect(void) {
   int rc, err, expo;
   long double t1, t2;
   struct addrinfo *ai;
-  if ((rc = getaddrinfo(g_hostname, gc(xasprintf("%hu", g_runitdport)),
+  if ((rc = getaddrinfo(g_hostname, _gc(xasprintf("%hu", g_runitdport)),
                         &kResolvHints, &ai)) != 0) {
     FATALF("%s:%hu: EAI_%s %m", g_hostname, g_runitdport, gai_strerror(rc));
     unreachable;
@@ -199,7 +203,7 @@ bool Send(int tmpfd, const void *output, size_t outputsize) {
   static bool once;
   static z_stream zs;
   zsize = 32768;
-  zbuf = gc(malloc(zsize));
+  zbuf = _gc(malloc(zsize));
   if (!once) {
     CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, MAX_WBITS, DEF_MEM_LEVEL,
                                 Z_DEFAULT_STRATEGY));
@@ -241,7 +245,7 @@ bool SendRequest(int tmpfd) {
   CHECK_NE(MAP_FAILED, (p = mmap(0, st.st_size, PROT_READ, MAP_SHARED, fd, 0)));
   CHECK_LE((namesize = strlen((name = basename(g_prog)))), PATH_MAX);
   CHECK_LE((progsize = st.st_size), INT_MAX);
-  CHECK_NOTNULL((hdr = gc(calloc(1, (hdrsize = 17 + namesize)))));
+  CHECK_NOTNULL((hdr = _gc(calloc(1, (hdrsize = 17 + namesize)))));
   crc = crc32_z(0, p, st.st_size);
   q = hdr;
   q = WRITE32BE(q, RUNITD_MAGIC);
@@ -261,7 +265,7 @@ bool SendRequest(int tmpfd) {
 
 void RelayRequest(void) {
   int i, rc, have, transferred;
-  char *buf = gc(malloc(PIPE_BUF));
+  char *buf = _gc(malloc(PIPE_BUF));
   for (transferred = 0;;) {
     rc = read(13, buf, PIPE_BUF);
     CHECK_NE(-1, rc);
@@ -381,7 +385,7 @@ int SpawnSubprocesses(int argc, char *argv[]) {
 
   // create compressed network request ahead of time
   CHECK_NE(-1, (tmpfd = open(
-                    (tpath = gc(xasprintf(
+                    (tpath = _gc(xasprintf(
                          "%s/runit.%d", firstnonnull(getenv("TMPDIR"), "/tmp"),
                          getpid()))),
                     O_WRONLY | O_CREAT | O_TRUNC, 0755)));

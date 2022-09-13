@@ -17,22 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/rand.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 double acos_(double) asm("acos");
 #define acos acos_
 
 TEST(acos, test) {
-  EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", acos(0.))));
-  EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", acos(-0.))));
-  EXPECT_STREQ("1.0471975511966", gc(xasprintf("%.15g", acos(.5))));
-  EXPECT_STREQ("2.0943951023932", gc(xasprintf("%.15g", acos(-.5))));
-  EXPECT_STREQ("0", gc(xasprintf("%.15g", acos(1.))));
-  EXPECT_STREQ("3.14159265358979", gc(xasprintf("%.15g", acos(-1.))));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(0.))));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(-0.))));
+  EXPECT_STREQ("1.0471975511966", _gc(xasprintf("%.15g", acos(.5))));
+  EXPECT_STREQ("2.0943951023932", _gc(xasprintf("%.15g", acos(-.5))));
+  EXPECT_STREQ("0", _gc(xasprintf("%.15g", acos(1.))));
+  EXPECT_STREQ("3.14159265358979", _gc(xasprintf("%.15g", acos(-1.))));
   EXPECT_TRUE(isnan(acos(1.5)));
   EXPECT_TRUE(isnan(acos(-1.5)));
   EXPECT_TRUE(isnan(acos(2.)));
@@ -40,7 +40,7 @@ TEST(acos, test) {
   EXPECT_TRUE(isnan(acos(-NAN)));
   EXPECT_TRUE(isnan(acos(INFINITY)));
   EXPECT_TRUE(isnan(acos(-INFINITY)));
-  EXPECT_STREQ("1.5707963267949", gc(xasprintf("%.15g", acos(__DBL_MIN__))));
+  EXPECT_STREQ("1.5707963267949", _gc(xasprintf("%.15g", acos(__DBL_MIN__))));
   EXPECT_TRUE(isnan(acos(__DBL_MAX__)));
 }
 

@@ -48,7 +48,6 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"
@@ -114,27 +113,27 @@ privileged static inline bool kischarmisaligned(const char *p, signed char t) {
 }
 
 privileged static inline bool kismemtrackhosed(void) {
-  return !((weaken(_mmi)->i <= weaken(_mmi)->n) &&
-           (weaken(_mmi)->p == weaken(_mmi)->s ||
-            weaken(_mmi)->p == (struct MemoryInterval *)kMemtrackStart));
+  return !((_weaken(_mmi)->i <= _weaken(_mmi)->n) &&
+           (_weaken(_mmi)->p == _weaken(_mmi)->s ||
+            _weaken(_mmi)->p == (struct MemoryInterval *)kMemtrackStart));
 }
 
 privileged static bool kismapped(int x) {
   // xxx: we can't lock because no reentrant locks yet
   size_t m, r, l = 0;
-  if (!weaken(_mmi)) return true;
+  if (!_weaken(_mmi)) return true;
   if (kismemtrackhosed()) return false;
-  r = weaken(_mmi)->i;
+  r = _weaken(_mmi)->i;
   while (l < r) {
     m = (l + r) >> 1;
-    if (weaken(_mmi)->p[m].y < x) {
+    if (_weaken(_mmi)->p[m].y < x) {
       l = m + 1;
     } else {
       r = m;
     }
   }
-  if (l < weaken(_mmi)->i && x >= weaken(_mmi)->p[l].x) {
-    return !!(weaken(_mmi)->p[l].prot & PROT_READ);
+  if (l < _weaken(_mmi)->i && x >= _weaken(_mmi)->p[l].x) {
+    return !!(_weaken(_mmi)->p[l].prot & PROT_READ);
   } else {
     return false;
   }
@@ -462,16 +461,16 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           unixerr = errno;
           winerr = 0;
           if (IsWindows()) {
-            if (type == 1 && weaken(WSAGetLastError)) {
-              winerr = weaken(WSAGetLastError)();
-            } else if (weaken(GetLastError)) {
-              winerr = weaken(GetLastError)();
+            if (type == 1 && _weaken(WSAGetLastError)) {
+              winerr = _weaken(WSAGetLastError)();
+            } else if (_weaken(GetLastError)) {
+              winerr = _weaken(GetLastError)();
             }
           }
           if (!unixerr && sign == ' ') {
             break;
-          } else if (weaken(strerror_wr) &&
-                     !weaken(strerror_wr)(unixerr, winerr, z, sizeof(z))) {
+          } else if (_weaken(strerror_wr) &&
+                     !_weaken(strerror_wr)(unixerr, winerr, z, sizeof(z))) {
             s = z;
             type = 0;
             goto FormatString;
@@ -493,7 +492,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'G':
           x = va_arg(va, int);
-          if (weaken(strsignal) && (s = weaken(strsignal)(x))) {
+          if (_weaken(strsignal) && (s = _weaken(strsignal)(x))) {
             goto FormatString;
           } else {
             goto FormatDecimal;
@@ -508,11 +507,11 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           // can be manually consulted to look up the faulting code.
           int idx;
           x = va_arg(va, intptr_t);
-          if (weaken(__symtab) && *weaken(__symtab) &&
-              (idx = weaken(__get_symbol)(0, x)) != -1) {
+          if (_weaken(__symtab) && *_weaken(__symtab) &&
+              (idx = _weaken(__get_symbol)(0, x)) != -1) {
             if (p + 1 <= e) *p++ = '&';
-            s = (*weaken(__symtab))->name_base +
-                (*weaken(__symtab))->names[idx];
+            s = (*_weaken(__symtab))->name_base +
+                (*_weaken(__symtab))->names[idx];
             goto FormatString;
           }
           base = 4;
@@ -651,8 +650,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           EmitChar:
             if (t <= 0x7f) goto EmitByte;
             if (uppr) {
-              if (weaken(towupper)) {
-                t = weaken(towupper)(t);
+              if (_weaken(towupper)) {
+                t = _weaken(towupper)(t);
               } else if (uppr && 'a' <= t && t <= 'z') {
                 t -= 'a' - 'A';
               }

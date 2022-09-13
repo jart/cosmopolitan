@@ -1,5 +1,5 @@
+#include "libc/intrin/bsf.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/chibicc/chibicc.h"
@@ -679,7 +679,7 @@ static void convert_universal_chars(char *p) {
           p += 16;
           q += 16;
         } else {
-          m = bsf(m);
+          m = _bsf(m);
           memmove(q, p, m);
           p += m;
           q += m;

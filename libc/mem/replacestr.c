@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
@@ -30,7 +30,7 @@
  * @return newly allocated memory that must be free()'d or NULL w/ errno
  * @error ENOMEM, EINVAL
  */
-char *replacestr(const char *s, const char *needle, const char *replacement) {
+char *_replacestr(const char *s, const char *needle, const char *replacement) {
   char *p1, *p2, *res_p;
   size_t left, nlen, rlen, res_i, res_n;
   if (*needle) {

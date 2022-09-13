@@ -2,11 +2,11 @@
 #
 # OVERVIEW
 #
-#   Micro-experiment assembler.
+#   Micro-Experiment Assembler
 #
 # EXAMPLES
 #
-#     asmexpr 'mov $-4096,%rax' 'not %rax' 'bsr %rax,%rax'
+#     asmexpr 'mov $8,%rax' 'bsr %rax,%rax'
 #     asmexpr 'mov $0,%ecx' 'vmovd %ecx,%xmm1' 'vpbroadcastb %xmm1,%ymm1' 'mov $0x20202032489001ff,%rax' 'vmovq %rax,%xmm0' 'vpcmpgtb %ymm1,%ymm0,%ymm2'
 
 c=/tmp/asmexpr.c

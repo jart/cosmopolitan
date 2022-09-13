@@ -247,7 +247,7 @@
 .macro	.optfn	fn:req
 	.globl	"\fn"
 	.weak	"\fn"
-	.equ	"\fn",missingno
+	.equ	"\fn",_missingno
 	.type	"\fn",@function
 .endm
 

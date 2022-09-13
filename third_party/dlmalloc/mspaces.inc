@@ -208,8 +208,8 @@ void* mspace_malloc(mspace msp, size_t bytes) {
 
     mem = sys_alloc(ms, nb);
     POSTACTION(ms);
-    if (mem == MAP_FAILED && weaken(__oom_hook)) {
-      weaken(__oom_hook)(bytes);
+    if (mem == MAP_FAILED && _weaken(__oom_hook)) {
+      _weaken(__oom_hook)(bytes);
     }
     return mem;
 

@@ -23,7 +23,7 @@
 //	@param	edi is int to encode
 //	@return	rax is word-encoded byte buffer
 //	@note	invented on a napkin in a new jersey diner
-tpenc:	.leafprologue
+_tpenc:	.leafprologue
 	.profilable
 	mov	%edi,%edi
 	xor	%eax,%eax
@@ -42,7 +42,7 @@ tpenc:	.leafprologue
 2:	or	%ch,%al
 3:	or	%rdi,%rax
 	.leafepilogue
-	.endfn	tpenc,globl
+	.endfn	_tpenc,globl
 
 	.rodata
 	.align	4

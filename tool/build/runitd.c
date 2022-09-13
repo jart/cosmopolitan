@@ -16,18 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nexgen32e/crc32.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -52,6 +53,7 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/mbedtls/ssl.h"
@@ -220,7 +222,7 @@ void StartTcpServer(void) {
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
   CHECK_NE(-1, getsockname(g_servfd, &g_servaddr, &asize));
-  INFOF("%s:%s", "listening on tcp", gc(DescribeAddress(&g_servaddr)));
+  INFOF("%s:%s", "listening on tcp", _gc(DescribeAddress(&g_servaddr)));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
     fflush(stdout);
@@ -382,8 +384,8 @@ void HandleClient(void) {
   EzFd(g_clifd);
   INFOF("EzHandshake");
   EzHandshake();
-  addrstr = gc(DescribeAddress(&addr));
-  DEBUGF("%s %s %s", gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
+  addrstr = _gc(DescribeAddress(&addr));
+  DEBUGF("%s %s %s", _gc(DescribeAddress(&g_servaddr)), "accepted", addrstr);
 
   Recv(msg, sizeof(msg));
   CHECK_EQ(RUNITD_MAGIC, READ32BE(msg));
@@ -391,9 +393,9 @@ void HandleClient(void) {
   namesize = READ32BE(msg + 5);
   filesize = READ32BE(msg + 9);
   crc = READ32BE(msg + 13);
-  exename = gc(calloc(1, namesize + 1));
+  exename = _gc(calloc(1, namesize + 1));
   Recv(exename, namesize);
-  g_exepath = gc(xasprintf("o/%d.%s", getpid(), basename(exename)));
+  g_exepath = _gc(xasprintf("o/%d.%s", getpid(), basename(exename)));
   INFOF("%s asked we run %`'s (%,u bytes @ %`'s)", addrstr, exename, filesize,
         g_exepath);
 
@@ -567,7 +569,6 @@ int main(int argc, char *argv[]) {
   } else {
     CHECK_EQ(3, (g_bogusfd = open("/dev/zero", O_RDONLY | O_CLOEXEC)));
   }
-  defer(close_s, &g_bogusfd);
   if (!isdirectory("o")) CHECK_NE(-1, mkdir("o", 0700));
   if (g_daemonize) Daemonize();
   return Serve();

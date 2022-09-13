@@ -1,0 +1,17 @@
+#!/bin/sh
+exec python.com -c "
+# -*- coding: utf-8 -*-
+import sys
+from math import *
+x = $*
+s = x < 0
+x = abs(x)
+b = str(hex(x))[2:].replace('L', '')
+n = len(b)
+if   n <=  2: n =  2
+elif n <=  4: n =  4
+elif n <=  8: n =  8
+elif n <= 12: n = 12
+elif n <= 16: n = 16
+sys.stdout.write(('%%s0x%%0%dx' % n) % ('-' if s else '', int(b,16)))
+"

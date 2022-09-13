@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bsf.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
@@ -42,10 +42,10 @@ void __cxa_printexits(FILE *f, void *pred) {
     do {
       mask = b->mask;
       while (mask) {
-        i = bsf(mask);
+        i = _bsf(mask);
         mask &= ~(1u << i);
         if (!pred || pred == b->p[i].pred) {
-          symbol = __get_symbol_by_addr((intptr_t)b->p[i].fp);
+          symbol = GetSymbolByAddr((intptr_t)b->p[i].fp);
           if (symbol) {
             snprintf(name, sizeof(name), "%s", symbol);
           } else {

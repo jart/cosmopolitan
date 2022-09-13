@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -33,7 +33,7 @@ StartOver:
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
     x = _pthread_key_usage[i];
     while (x) {
-      j = bsrl(x);
+      j = _bsrl(x);
       if ((value = key[i * 64 + j]) && (dtor = _pthread_key_dtor[i * 64 + j])) {
         key[i * 64 + j] = 0;
         pthread_spin_unlock(&_pthread_keys_lock);

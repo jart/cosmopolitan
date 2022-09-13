@@ -84,7 +84,7 @@ struct SslCache *CreateSslCache(const char *path, size_t bytes, int lifetime) {
   struct SslCache *c;
   if (!bytes) bytes = 10 * 1024 * 1024;
   if (lifetime <= 0) lifetime = 24 * 60 * 60;
-  ents = rounddown2pow(MAX(2, bytes / sizeof(struct SslCacheEntry)));
+  ents = _rounddown2pow(MAX(2, bytes / sizeof(struct SslCacheEntry)));
   size = sizeof(struct SslCache) + sizeof(struct SslCacheEntry) * ents;
   size = ROUNDUP(size, FRAMESIZE);
   c = OpenSslCache(path, size);

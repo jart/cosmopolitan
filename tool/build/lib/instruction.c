@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/bsf.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/str/str.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/address.h"
@@ -33,7 +33,7 @@ static bool IsOpcodeEqual(struct XedDecodedInst *xedd, uint8_t *a) {
   if (xedd->length) {
     if (xedd->length <= 7) {
       w = Read64(a) ^ Read64(xedd->bytes);
-      return !w || bsfl(w) >= (xedd->length << 3);
+      return !w || _bsfl(w) >= (xedd->length << 3);
     } else {
       return memcmp(a, xedd->bytes, xedd->length) == 0;
     }

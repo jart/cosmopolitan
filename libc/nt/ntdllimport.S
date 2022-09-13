@@ -39,7 +39,7 @@ kNtdllProcRvas:
 	.init.start 202,_init_ntdll
 	push	%r12
 	push	%r13
-	lea	ntdllmissingno(%rip),%r13
+	lea	_ntdllmissingno(%rip),%r13
 	sub	$32,%rsp
 	loadstr	"ntdll.dll",cx
 	call	*__imp_GetModuleHandleA(%rip)
@@ -61,7 +61,7 @@ kNtdllProcRvas:
 	.init.end 202,_init_ntdll,globl,hidden
 
 	.text.windows
-ntdllmissingno:
+_ntdllmissingno:
 	mov	$kNtStatusDllNotFound,%eax
 	ret
 	.previous

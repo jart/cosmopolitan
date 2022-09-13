@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/nt/enum/exceptionhandleractions.h"

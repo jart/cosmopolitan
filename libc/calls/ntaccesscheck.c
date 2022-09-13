@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/accessmask.h"
@@ -109,7 +109,7 @@ TryAgain:
   } else {
     e = GetLastError();
     if (!IsTiny() && e == kNtErrorInsufficientBuffer) {
-      if (!freeme && weaken(malloc) && (freeme = weaken(malloc)(secsize))) {
+      if (!freeme && _weaken(malloc) && (freeme = _weaken(malloc)(secsize))) {
         s = freeme;
         goto TryAgain;
       } else {
@@ -122,7 +122,7 @@ TryAgain:
       rc = -1;
     }
   }
-  if (freeme && weaken(free)) weaken(free)(freeme);
+  if (freeme && _weaken(free)) _weaken(free)(freeme);
   if (hImpersonatedToken != -1) CloseHandle(hImpersonatedToken);
   if (hToken != -1) CloseHandle(hToken);
   return rc;

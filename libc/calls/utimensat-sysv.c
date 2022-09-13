@@ -21,7 +21,6 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
-#include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/time/time.h"
 #include "libc/zipos/zipos.internal.h"

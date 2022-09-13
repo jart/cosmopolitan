@@ -1,0 +1,98 @@
+#!/bin/sh
+
+rm -f /tmp/wut-linux
+
+(
+  grep -R "$1" ~/dox/susv4-2018/ | sed '
+    /meta.idx/d
+  ' >/tmp/wut-posix
+) &
+
+(
+  grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/linux/include/ | sed '
+    /\/asm-/ {
+      /asm-\(x86\|generic\)/!d
+    }
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >>/tmp/wut-linux
+) &
+
+(
+  grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/linux-2.6.18/include/ | sed '
+    /\/asm-/ {
+      /asm-\(x86\|generic\)/!d
+    }
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/2.6.18\t\1/
+  ' >>/tmp/wut-linux
+) &
+
+(
+  grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/xnu/ | sed '
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >/tmp/wut-xnu
+) &
+
+(
+  {
+    if ! grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/freebsd/sys/; then
+      grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/freebsd/lib/libc/
+    fi
+  } | sed '
+    /\/contrib\//d
+    /\/linux\//d
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >/tmp/wut-freebsd
+) &
+
+(
+  {
+    if ! grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/openbsd/sys/; then
+      grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/openbsd/lib/libc/
+    fi
+  } | sed '
+    /\/linux\//d
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >/tmp/wut-openbsd
+) &
+
+(
+  {
+    if ! grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/netbsd/sys/; then
+      grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/netbsd/lib/libc/
+    fi
+  } | sed '
+    /\/linux\//d
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >/tmp/wut-netbsd
+) &
+
+(
+  grep -R "#define[[:blank:]]\+$1[[:blank:]]" ~/vendor/10.0.18362.0/um/ | sed '
+    s/\([^:]*\):\(.*\)/\2\t\t\t\1\t\1/
+    s/\(.*\)\/home\/jart\/vendor\/\([^\/]*\)\/[^[:blank:]]*/\2\t\1/
+  ' >/tmp/wut-windows
+) &
+
+wait
+
+f() {
+  if [ $(ls -lH /tmp/wut-$1 | awk5) -gt 0 ]; then
+    cat /tmp/wut-$1
+  else
+    echo $1 says nothing
+  fi
+}
+
+f linux
+f xnu
+f freebsd
+f openbsd
+f netbsd
+f windows
+f posix

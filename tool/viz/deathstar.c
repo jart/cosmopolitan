@@ -1,29 +1,21 @@
-#include "dsp/tty/tty.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/termios.h"
-#include "libc/log/check.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
-#include "libc/math.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "third_party/libcxx/math.h"
 
 /**
  * @fileoverview demo code borrowed from Rosetta Code.
  */
 
 #define FRAMERATE 23.976
-#define WRITE(s)  write(STDOUT_FILENO, s, strlen(s))
+#define WRITE(s)  write(1, s, strlen(s))
 
 struct Sphere {
-  long double cx, cy, cz, r;
+  double cx, cy, cz, r;
 };
 
 static const char *kShades[] = {
@@ -36,7 +28,7 @@ static const char *kShades[] = {
 };
 
 static jmp_buf jb_;
-static long double light_[3] = {-50, 0, 50};
+static double light_[3] = {-50, 0, 50};
 static struct Sphere pos_ = {11, 11, 11, 11};
 static struct Sphere neg_ = {1, 1, -4, 11};
 
@@ -44,42 +36,41 @@ static void OnCtrlC(int sig) {
   longjmp(jb_, 1);
 }
 
-static void Normalize(long double v[3]) {
-  long double len;
-  len = 1 / sqrtl(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+static void Normalize(double v[3]) {
+  double len;
+  len = 1 / sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   v[0] *= len;
   v[1] *= len;
   v[2] *= len;
 }
 
-static long double Dot(const long double x[3], const long double y[3]) {
-  return fabsl(x[0] * y[0] + x[1] * y[1] + x[2] * y[2]);
+static double Dot(const double x[3], const double y[3]) {
+  return fabs(x[0] * y[0] + x[1] * y[1] + x[2] * y[2]);
 }
 
 /* check if a ray (x,y, -inf)->(x, y, inf) hits a sphere; if so, return
    the intersecting z values.  z1 is closer to the eye */
-static int HitSphere(struct Sphere *s, long double x, long double y,
-                     long double z[2]) {
-  long double zsq;
+static int HitSphere(struct Sphere *s, double x, double y, double z[2]) {
+  double zsq;
   x -= s->cx;
   y -= s->cy;
   zsq = s->r * s->r - (x * x + y * y);
   if (zsq < 0) {
     return 0;
   } else {
-    zsq = sqrtl(zsq);
+    zsq = sqrt(zsq);
     z[0] = s->cz - zsq;
     z[1] = s->cz + zsq;
     return 1;
   }
 }
 
-static void DrawSphere(long double k, long double ambient) {
+static void DrawSphere(double k, double ambient) {
   int i, j, hit_result;
-  long double x, y, vec[3], zb[2], zs[2];
-  for (i = floorl(pos_.cy - pos_.r); i <= ceill(pos_.cy + pos_.r); i++) {
+  double x, y, vec[3], zb[2], zs[2];
+  for (i = floor(pos_.cy - pos_.r); i <= ceil(pos_.cy + pos_.r); i++) {
     y = i + .5L;
-    for (j = floorl(pos_.cx - 2 * pos_.r); j <= ceill(pos_.cx + 2 * pos_.r);
+    for (j = floor(pos_.cx - 2 * pos_.r); j <= ceil(pos_.cx + 2 * pos_.r);
          j++) {
       x = .5L * (j - pos_.cx) + .5L + pos_.cx;
       if (!HitSphere(&pos_, x, y, zb)) {
@@ -117,10 +108,10 @@ static void DrawSphere(long double k, long double ambient) {
           break;
       }
       Normalize(vec);
-      WRITE(kShades[min(
-          ARRAYLEN(kShades) - 1,
-          max(0, lroundl((1 - (powl(Dot(light_, vec), k) + ambient)) *
-                         (ARRAYLEN(kShades) - 1))))]);
+      WRITE(
+          kShades[min(ARRAYLEN(kShades) - 1,
+                      max(0, lround((1 - (pow(Dot(light_, vec), k) + ambient)) *
+                                    (ARRAYLEN(kShades) - 1))))]);
     }
     WRITE("\e[0m\n");
   }
@@ -128,16 +119,16 @@ static void DrawSphere(long double k, long double ambient) {
 }
 
 int main() {
-  long double ang;
+  double ang;
   struct termios old;
   WRITE("\e[?25l");
   if (!setjmp(jb_)) {
-    xsigaction(SIGINT, OnCtrlC, 0, 0, NULL);
+    signal(SIGINT, OnCtrlC);
     ang = 0;
     for (;;) {
       WRITE("\e[H");
       light_[1] = cosl(ang * 2);
-      sincosl(ang, &light_[0], &light_[2]);
+      sincos(ang, &light_[0], &light_[2]);
       Normalize(light_);
       ang += .05L;
       DrawSphere(1.5L, .01L);

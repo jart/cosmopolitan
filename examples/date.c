@@ -7,9 +7,9 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/stdio.h"
-#include "libc/x/x.h"
+#include "libc/x/xiso8601.h"
 
 /**
  * @fileoverview ISO-8601 international high-precision timestamp printer.

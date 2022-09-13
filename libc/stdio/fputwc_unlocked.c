@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/tpenc.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/tpenc.h"
 
 /**
  * Writes wide character to stream.
@@ -29,7 +29,7 @@
 wint_t fputwc_unlocked(wchar_t wc, FILE *f) {
   uint64_t w;
   if (wc != -1) {
-    w = tpenc(wc);
+    w = _tpenc(wc);
     do {
       if (fputc_unlocked(w, f) == -1) {
         return -1;

@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
 #define ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
@@ -57,7 +57,7 @@ static textwindows noasan noinstrument axdx_t Recode16to8(char *dst,
         x = ToUpper(x);
       }
     }
-    w = tpenc(x);
+    w = _tpenc(x);
     do {
       if (r.ax + 1 < dstsize) {
         dst[r.ax++] = w;

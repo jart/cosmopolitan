@@ -24,8 +24,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/mem/io.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -43,6 +43,7 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 #define EACCES_OR_ENOENT (IsOpenbsd() ? ENOENT : EACCES)
 

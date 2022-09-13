@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/dce.h"
+#include "libc/intrin/bsr.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/str/str.h"
 
 #define W sizeof(size_t)
@@ -55,7 +55,7 @@ ssize_t appendr(char **b, size_t i) {
   z = appendz((p = *b));
   if (i != z.i || !p) {
     n = ROUNDUP(i + 1, 8) + W;
-    if (n > z.n || bsrl(n) < bsrl(z.n)) {
+    if (n > z.n || _bsrl(n) < _bsrl(z.n)) {
       if ((p = realloc(p, n))) {
         z.n = malloc_usable_size(p);
         assert(!(z.n & (W - 1)));

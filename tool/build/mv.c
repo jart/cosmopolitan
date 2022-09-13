@@ -21,10 +21,9 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/ex.h"
@@ -117,7 +116,7 @@ int Visit(const char *fpath, const struct stat *sb, int tflag,
   strcpy(srcfile, fpath);
   src = srcfile + striplen;
   strcpy(dstfile, dstdir);
-  if (!endswith(dstfile, "/")) {
+  if (!_endswith(dstfile, "/")) {
     strcat(dstfile, "/");
   }
   strcat(dstfile, src);
@@ -177,7 +176,7 @@ void Mv(char *src, char *dst) {
     if (nftw(src, Visit, 20, 0) == -1) {
       fputs(prog, stderr);
       fputs(": nftw failed: ", stderr);
-      fputs(strerdoc(errno), stderr);
+      fputs(_strerdoc(errno), stderr);
       fputs("\n", stderr);
       exit(1);
     }
@@ -198,7 +197,7 @@ void Mv(char *src, char *dst) {
   }
   return;
 OnFail:
-  s = strerdoc(errno);
+  s = _strerdoc(errno);
   fputs(prog, stderr);
   fputs(": ", stderr);
   fputs(src, stderr);

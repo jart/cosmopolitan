@@ -19,10 +19,11 @@
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 float b32;
 double b64;
@@ -33,41 +34,41 @@ int128_t x;
 
 void int2float(const char *s) {
   x = strtoi128(s, NULL, 0);
-  if ((0 <= x && x <= UINT32_MAX) && !startswith(s, "-") &&
-      (!endswith(s, "l") && !endswith(s, "L"))) {
+  if ((0 <= x && x <= UINT32_MAX) && !_startswith(s, "-") &&
+      (!_endswith(s, "l") && !_endswith(s, "L"))) {
     u32 = x;
     memcpy(&b32, &u32, 4);
-    s = gc(xdtoa(b32));
-    if (!strchr(s, '.')) s = gc(xasprintf("%s.", s));
-    s = gc(xasprintf("%sf", s));
+    s = _gc(xdtoa(b32));
+    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
+    s = _gc(xasprintf("%sf", s));
     puts(s);
-  } else if ((0 <= x && x <= UINT64_MAX) && !startswith(s, "-")) {
+  } else if ((0 <= x && x <= UINT64_MAX) && !_startswith(s, "-")) {
     u64 = x;
     memcpy(&b64, &u64, 8);
-    s = gc(xdtoa(b64));
-    if (!strchr(s, '.')) s = gc(xasprintf("%s.", s));
+    s = _gc(xdtoa(b64));
+    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
     puts(s);
   } else if ((INT32_MIN <= x && x <= 0) &&
-             (!endswith(s, "l") && !endswith(s, "L"))) {
+             (!_endswith(s, "l") && !_endswith(s, "L"))) {
     u32 = ABS(x);
     memcpy(&b32, &u32, 4);
     b32 = -b32;
-    s = gc(xdtoa(b32));
-    if (!strchr(s, '.')) s = gc(xasprintf("%s.", s));
-    s = gc(xasprintf("%sf", s));
+    s = _gc(xdtoa(b32));
+    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
+    s = _gc(xasprintf("%sf", s));
     puts(s);
   } else if (INT64_MIN <= x && x <= 0) {
     u64 = ABS(x);
     memcpy(&b64, &u64, 8);
     b64 = -b64;
-    s = gc(xdtoa(b64));
-    if (!strchr(s, '.')) s = gc(xasprintf("%s.", s));
+    s = _gc(xdtoa(b64));
+    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
     puts(s);
   } else {
     memcpy(&b80, &x, 16);
-    s = gc(xdtoa(b80));
-    if (!strchr(s, '.')) s = gc(xasprintf("%s.", s));
-    s = gc(xasprintf("%sL", s));
+    s = _gc(xdtoa(b80));
+    if (!strchr(s, '.')) s = _gc(xasprintf("%s.", s));
+    s = _gc(xasprintf("%sL", s));
     puts(s);
   }
 }

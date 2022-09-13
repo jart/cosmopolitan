@@ -17,39 +17,40 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(atan2l, test) {
   volatile double a = -.9816175436063843;
   volatile double b = -.1908585813741899;
-  EXPECT_STREQ("-2.95", gc(xasprintf("%.2f", atan2f(b, a))));
-  EXPECT_STREQ("-2.95", gc(xasprintf("%.2f", atan2(b, a))));
-  EXPECT_STREQ("-2.95", gc(xasprintf("%.2Lf", atan2l(b, a))));
+  EXPECT_STREQ("-2.95", _gc(xasprintf("%.2f", atan2f(b, a))));
+  EXPECT_STREQ("-2.95", _gc(xasprintf("%.2f", atan2(b, a))));
+  EXPECT_STREQ("-2.95", _gc(xasprintf("%.2Lf", atan2l(b, a))));
 }
 
 TEST(atan2, testSpecialCases) {
-  ASSERT_STREQ("NAN", gc(xdtoa(atan2(NAN, 0))));
-  ASSERT_STREQ("NAN", gc(xdtoa(atan2(0, NAN))));
-  ASSERT_STREQ("0", gc(xdtoa(atan2(+0., +0.))));
-  ASSERT_STREQ("0", gc(xdtoa(atan2(+0., +1.))));
-  ASSERT_STREQ("0", gc(xdtoa(atan2(+0., +2.))));
-  ASSERT_STREQ("0", gc(xdtoa(atan2(1, INFINITY))));
-  ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -0.))));
-  ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -1.))));
-  ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(+0., -2.))));
-  ASSERT_STREQ("-1.570796326794897", gc(xdtoal(atan2(-1., -0.))));
-  ASSERT_STREQ("-1.570796326794897", gc(xdtoal(atan2(-1., +0.))));
-  ASSERT_STREQ("-1.570796326794897", gc(xdtoal(atan2(-2., -0.))));
-  ASSERT_STREQ("-1.570796326794897", gc(xdtoal(atan2(-2., +0.))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(+1., -0.))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(+1., +0.))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(+2., -0.))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(+2., +0.))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(INFINITY, 1))));
-  ASSERT_STREQ("1.570796326794897", gc(xdtoal(atan2(INFINITY, -1))));
-  ASSERT_STREQ("3.141592653589793", gc(xdtoal(atan2(1, -INFINITY))));
-  ASSERT_STREQ("2.356194490192345", gc(xdtoal(atan2(INFINITY, -INFINITY))));
-  ASSERT_STREQ(".7853981633974483", gc(xdtoal(atan2(INFINITY, INFINITY))));
+  ASSERT_STREQ("NAN", _gc(xdtoa(atan2(NAN, 0))));
+  ASSERT_STREQ("NAN", _gc(xdtoa(atan2(0, NAN))));
+  ASSERT_STREQ("0", _gc(xdtoa(atan2(+0., +0.))));
+  ASSERT_STREQ("0", _gc(xdtoa(atan2(+0., +1.))));
+  ASSERT_STREQ("0", _gc(xdtoa(atan2(+0., +2.))));
+  ASSERT_STREQ("0", _gc(xdtoa(atan2(1, INFINITY))));
+  ASSERT_STREQ("3.141592653589793", _gc(xdtoal(atan2(+0., -0.))));
+  ASSERT_STREQ("3.141592653589793", _gc(xdtoal(atan2(+0., -1.))));
+  ASSERT_STREQ("3.141592653589793", _gc(xdtoal(atan2(+0., -2.))));
+  ASSERT_STREQ("-1.570796326794897", _gc(xdtoal(atan2(-1., -0.))));
+  ASSERT_STREQ("-1.570796326794897", _gc(xdtoal(atan2(-1., +0.))));
+  ASSERT_STREQ("-1.570796326794897", _gc(xdtoal(atan2(-2., -0.))));
+  ASSERT_STREQ("-1.570796326794897", _gc(xdtoal(atan2(-2., +0.))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(+1., -0.))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(+1., +0.))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(+2., -0.))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(+2., +0.))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(INFINITY, 1))));
+  ASSERT_STREQ("1.570796326794897", _gc(xdtoal(atan2(INFINITY, -1))));
+  ASSERT_STREQ("3.141592653589793", _gc(xdtoal(atan2(1, -INFINITY))));
+  ASSERT_STREQ("2.356194490192345", _gc(xdtoal(atan2(INFINITY, -INFINITY))));
+  ASSERT_STREQ(".7853981633974483", _gc(xdtoal(atan2(INFINITY, INFINITY))));
 }

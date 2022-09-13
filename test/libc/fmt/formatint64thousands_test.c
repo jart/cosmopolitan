@@ -21,7 +21,6 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/stdio/stdio.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"

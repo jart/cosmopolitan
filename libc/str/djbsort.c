@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
+#include "libc/mem/alg.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 
@@ -65,7 +65,7 @@ void djbsort(int32_t *a, size_t n) {
     if (X86_HAVE(AVX2)) {
       djbsort_avx2(a, n);
     } else {
-      intsort(a, n, 1ul << bsrl(n - 1));
+      intsort(a, n, 1ul << _bsrl(n - 1));
     }
   }
 }

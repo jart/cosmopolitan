@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/errno.h"
@@ -25,9 +24,10 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
@@ -97,13 +97,13 @@ void Visit(const char *path) {
   char *map;
   size_t size;
   bool isheader;
-  if (!endswith(path, ".h") && !endswith(path, ".inc")) return;
-  if (endswith(path, ".internal.h")) return;
-  if (endswith(path, "/internal.h")) return;
-  if (endswith(path, ".internal.inc")) return;
-  if (endswith(path, "/internal.inc")) return;
-  if (startswith(path, "libc/isystem/")) return;
-  isheader = endswith(path, ".h");
+  if (!_endswith(path, ".h") && !_endswith(path, ".inc")) return;
+  if (_endswith(path, ".internal.h")) return;
+  if (_endswith(path, "/internal.h")) return;
+  if (_endswith(path, ".internal.inc")) return;
+  if (_endswith(path, "/internal.inc")) return;
+  if (_startswith(path, "libc/isystem/")) return;
+  isheader = _endswith(path, ".h");
   if (isheader && isinterned(visited, path)) return;
   appends(&output, "\n\f\n/*!BEGIN ");
   appends(&output, path);

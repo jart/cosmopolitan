@@ -33,7 +33,7 @@ const char kConsoleHandles[3] = {
 /**
  * Puts cmd.exe gui back the way it was.
  */
-noinstrument void __restorewintty(void) {
+noinstrument void _restorewintty(void) {
   int i;
   if (!IsWindows()) return;
   if (GetCurrentProcessId() == __winmainpid) {

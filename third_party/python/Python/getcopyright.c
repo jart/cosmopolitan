@@ -4,9 +4,9 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/stdio/append.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/pylifecycle.h"
 /* clang-format off */
@@ -32,7 +32,7 @@ Py_GetCopyright(void)
     static char *res;
     if (_cmpxchg(&once, 0, 1)) {
         appends(&res, "");
-        for (p = *weaken(kLegalNotices); *p; p += strlen(p) + 1) {
+        for (p = *_weaken(kLegalNotices); *p; p += strlen(p) + 1) {
             appends(&res, p);
         }
     }

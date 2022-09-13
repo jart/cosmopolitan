@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "net/http/escape.h"
 
 /**
@@ -109,7 +109,7 @@ char *VisualizeControlCodes(const char *data, size_t size, size_t *out_size) {
         } else if (x == 0x7F) {
           x = 0x2421;
         }
-        w = tpenc(x);
+        w = _tpenc(x);
         do {
           *q++ = w;
         } while ((w >>= 8));

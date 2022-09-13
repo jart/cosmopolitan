@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -28,7 +27,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
 #include "libc/log/internal.h"
@@ -45,6 +44,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
 
 static int x;
@@ -81,8 +81,7 @@ void testlib_error_leave(void) {
 
 wontreturn void testlib_abort(void) {
   testlib_finish();
-  __restorewintty();
-  _Exit(MAX(1, MIN(255, g_testlib_failed)));
+  _Exitr(MAX(1, MIN(255, g_testlib_failed)));
 }
 
 static void SetupTmpDir(void) {
@@ -155,7 +154,7 @@ static void CheckForFileDescriptors(void) {
   // TODO: race condition on fd cleanup :'(
   int i;
   struct pollfd pfds[16];
-  if (!weaken(open) && !weaken(socket)) return;
+  if (!_weaken(open) && !_weaken(socket)) return;
   for (i = 0; i < ARRAYLEN(pfds); ++i) {
     pfds[i].fd = i + 3;
     pfds[i].events = POLLIN;
@@ -176,7 +175,7 @@ static void CheckForZombies(void) {
   sigset_t ss, oldss;
   struct sigaction oldsa;
   struct sigaction ignore = {.sa_handler = DoNothing};
-  if (!weaken(fork)) return;
+  if (!_weaken(fork)) return;
   for (;;) {
     if ((pid = wait(0)) == -1) {
       CHECK_EQ(ECHILD, errno);
@@ -210,17 +209,17 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
    */
   const testfn_t *fn;
   CopySignalHandlers();
-  if (weaken(testlib_enable_tmp_setup_teardown) ||
-      weaken(testlib_enable_tmp_setup_teardown_once)) {
+  if (_weaken(testlib_enable_tmp_setup_teardown) ||
+      _weaken(testlib_enable_tmp_setup_teardown_once)) {
     CHECK_NOTNULL(getcwd(g_testlib_olddir, sizeof(g_testlib_olddir)));
   }
-  if (weaken(testlib_enable_tmp_setup_teardown_once)) {
+  if (_weaken(testlib_enable_tmp_setup_teardown_once)) {
     SetupTmpDir();
   }
-  if (weaken(SetUpOnce)) weaken(SetUpOnce)();
+  if (_weaken(SetUpOnce)) _weaken(SetUpOnce)();
   for (x = 0, fn = start; fn != end; ++fn) {
-    if (weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
-    if (weaken(SetUp)) weaken(SetUp)();
+    if (_weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
+    if (_weaken(SetUp)) _weaken(SetUp)();
     errno = 0;
     SetLastError(0);
     if (!IsWindows()) sys_getpid();
@@ -228,16 +227,16 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
     testlib_clearxmmregisters();
     (*fn)();
     if (!IsWindows()) sys_getpid();
-    if (weaken(TearDown)) weaken(TearDown)();
-    if (weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
+    if (_weaken(TearDown)) _weaken(TearDown)();
+    if (_weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();
     CheckForFileDescriptors();
     CheckForSignalHandlers();
     CheckForZombies();
   }
-  if (weaken(TearDownOnce)) {
-    weaken(TearDownOnce)();
+  if (_weaken(TearDownOnce)) {
+    _weaken(TearDownOnce)();
   }
-  if (weaken(testlib_enable_tmp_setup_teardown_once)) {
+  if (_weaken(testlib_enable_tmp_setup_teardown_once)) {
     TearDownTmpDir();
   }
 }

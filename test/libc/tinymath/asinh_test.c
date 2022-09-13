@@ -17,36 +17,37 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 #define asinhl(x) asinhl(VEIL("t", (long double)(x)))
 #define asinh(x)  asinh(VEIL("x", (double)(x)))
 #define asinhf(x) asinhf(VEIL("x", (float)(x)))
 
 TEST(asinh, test) {
-  EXPECT_STREQ(".481211825059603", gc(xdtoa(asinh(+.5))));
-  EXPECT_STREQ("-.481211825059603", gc(xdtoa(asinh(-.5))));
-  EXPECT_STREQ("0", gc(xdtoa(asinh(0))));
-  EXPECT_STREQ("NAN", gc(xdtoa(asinh(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(asinh(INFINITY))));
+  EXPECT_STREQ(".481211825059603", _gc(xdtoa(asinh(+.5))));
+  EXPECT_STREQ("-.481211825059603", _gc(xdtoa(asinh(-.5))));
+  EXPECT_STREQ("0", _gc(xdtoa(asinh(0))));
+  EXPECT_STREQ("NAN", _gc(xdtoa(asinh(NAN))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoa(asinh(INFINITY))));
   EXPECT_STREQ("-2.1073424255447e-08",
-               gc(xasprintf("%.15g", asinh(-2.1073424255447e-08))));
+               _gc(xasprintf("%.15g", asinh(-2.1073424255447e-08))));
 }
 
 TEST(asinhf, test) {
-  EXPECT_STREQ(".481212", gc(xdtoaf(asinhf(+.5))));
-  EXPECT_STREQ("-.481212", gc(xdtoaf(asinhf(-.5))));
-  EXPECT_STREQ("0", gc(xdtoaf(asinhf(0))));
-  EXPECT_STREQ("NAN", gc(xdtoaf(asinhf(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(asinhf(INFINITY))));
+  EXPECT_STREQ(".481212", _gc(xdtoaf(asinhf(+.5))));
+  EXPECT_STREQ("-.481212", _gc(xdtoaf(asinhf(-.5))));
+  EXPECT_STREQ("0", _gc(xdtoaf(asinhf(0))));
+  EXPECT_STREQ("NAN", _gc(xdtoaf(asinhf(NAN))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoaf(asinhf(INFINITY))));
 }
 
 TEST(asinhl, test) {
-  EXPECT_STREQ(".4812118250596034", gc(xdtoal(asinhl(+.5))));
-  EXPECT_STREQ("-.4812118250596034", gc(xdtoal(asinhl(-.5))));
-  EXPECT_STREQ("0", gc(xdtoal(asinhl(0))));
-  EXPECT_STREQ("NAN", gc(xdtoal(asinhl(NAN))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(asinhl(INFINITY))));
+  EXPECT_STREQ(".4812118250596034", _gc(xdtoal(asinhl(+.5))));
+  EXPECT_STREQ("-.4812118250596034", _gc(xdtoal(asinhl(-.5))));
+  EXPECT_STREQ("0", _gc(xdtoal(asinhl(0))));
+  EXPECT_STREQ("NAN", _gc(xdtoal(asinhl(NAN))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoal(asinhl(INFINITY))));
 }

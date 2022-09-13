@@ -28,7 +28,7 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xgetline.h"
 
 static int pid;
 

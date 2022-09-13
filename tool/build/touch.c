@@ -20,7 +20,6 @@
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 /**
@@ -33,7 +32,7 @@ int main(int argc, char *argv[]) {
   prog = argc > 0 ? argv[0] : "touch.com";
   for (i = 1; i < argc; ++i) {
     if (touch(argv[i], 0666) == -1) {
-      s = strerdoc(errno);
+      s = _strerdoc(errno);
       fputs(prog, stderr);
       fputs(": cannot touch '", stderr);
       fputs(argv[i], stderr);

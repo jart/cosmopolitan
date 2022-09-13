@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/weaken.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -48,7 +48,7 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
   ssize_t bytes;
   if ((IsAsan() && !__asan_is_valid(buf, bufsiz)) || (bufsiz && !buf)) {
     bytes = efault();
-  } else if (weaken(__zipos_notat) &&
+  } else if (_weaken(__zipos_notat) &&
              (bytes = __zipos_notat(dirfd, path)) == -1) {
     STRACE("TODO: zipos support for readlinkat");
   } else if (!IsWindows()) {

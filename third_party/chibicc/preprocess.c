@@ -26,6 +26,7 @@
 #include "libc/mem/arena.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 #include "third_party/chibicc/kw.h"
 

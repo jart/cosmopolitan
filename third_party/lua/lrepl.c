@@ -26,20 +26,20 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define lua_c
-#include "libc/mem/alg.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/nomultics.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
+#include "libc/thread/thread.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
@@ -148,7 +148,7 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
     while (lua_next(L, -2)) {
       if (lua_type(L, -2) == LUA_TSTRING) {
         name = lua_tolstring(L, -2, &n);
-        if (startswithi(name, a) && (s = malloc(a - p + n + 1))) {
+        if (_startswithi(name, a) && (s = malloc(a - p + n + 1))) {
           memcpy(s, p, a - p);
           memcpy(s + (a - p), name, n + 1);
           lua_readline_addcompletion(c, s);
@@ -161,7 +161,7 @@ void lua_readline_completions (const char *p, linenoiseCompletions *c) {
   lua_pop(L, 1); // pop table
 
   for (i = 0; i < ARRAYLEN(kKeywordHints); ++i) {
-    if (startswithi(kKeywordHints[i], p)) {
+    if (_startswithi(kKeywordHints[i], p)) {
       if ((s = strdup(kKeywordHints[i]))) {
         lua_readline_addcompletion(c, s);
       }

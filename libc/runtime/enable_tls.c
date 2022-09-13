@@ -111,9 +111,9 @@ privileged void __enable_tls(void) {
     // malloc() being linked, which links _mapanon().  otherwise
     // if you exceed this, you need to STATIC_YOINK("_mapanon").
     // please note that it's probably too early to call calloc()
-    assert(weaken(_mapanon));
+    assert(_weaken(_mapanon));
     siz = ROUNDUP(siz, FRAMESIZE);
-    mem = weaken(_mapanon)(siz);
+    mem = _weaken(_mapanon)(siz);
     assert(mem);
   }
   if (IsAsan()) {

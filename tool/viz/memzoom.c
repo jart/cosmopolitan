@@ -17,10 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/hilbert.h"
-#include "libc/intrin/morton.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/sigaction.h"
@@ -32,15 +28,20 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bsf.h"
+#include "libc/intrin/hilbert.h"
+#include "libc/intrin/morton.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
+#include "libc/str/unicode.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/map.h"
@@ -50,7 +51,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/time/time.h"
-#include "libc/str/unicode.h"
 #include "third_party/getopt/getopt.h"
 
 #define USAGE \
@@ -191,11 +191,11 @@ static void GetTtySize(void) {
   struct winsize wsize;
   wsize.ws_row = tyn + 1;
   wsize.ws_col = txn;
-  getttysize(out, &wsize);
+  _getttysize(out, &wsize);
   tyn = MAX(2, wsize.ws_row) - 1;
   txn = MAX(17, wsize.ws_col) - 16;
-  tyn = rounddown2pow(tyn);
-  txn = rounddown2pow(txn);
+  tyn = _rounddown2pow(tyn);
+  txn = _rounddown2pow(txn);
   tyn = MIN(tyn, txn);
 }
 
@@ -747,7 +747,7 @@ static void Render(void) {
         p = FormatInt64(p, fg);
         *p++ = 'm';
       }
-      w = tpenc(kCp437[c]);
+      w = _tpenc(kCp437[c]);
       do {
         *p++ = w & 0xff;
         w >>= 8;

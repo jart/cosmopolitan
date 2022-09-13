@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/alg.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -33,23 +33,23 @@ int CompareLong(const void *a, const void *b) {
   return 0;
 }
 
-TEST(longsort, test) {
+TEST(_longsort, test) {
   size_t n = 5000;
   long *a = gc(calloc(n, sizeof(long)));
   long *b = gc(calloc(n, sizeof(long)));
   rngset(a, n * sizeof(long), 0, 0);
   memcpy(b, a, n * sizeof(long));
   qsort(a, n, sizeof(long), CompareLong);
-  longsort(b, n);
+  _longsort(b, n);
   ASSERT_EQ(0, memcmp(b, a, n * sizeof(long)));
 }
 
-BENCH(longsort, bench) {
+BENCH(_longsort, bench) {
   size_t n = 1000;
   long *p1 = gc(malloc(n * sizeof(long)));
   long *p2 = gc(malloc(n * sizeof(long)));
   rngset(p1, n * sizeof(long), 0, 0);
-  EZBENCH2("longsort", memcpy(p2, p1, n * sizeof(long)), longsort(p2, n));
+  EZBENCH2("_longsort", memcpy(p2, p1, n * sizeof(long)), _longsort(p2, n));
   EZBENCH2("qsort", memcpy(p2, p1, n * sizeof(long)),
            qsort(p2, n, sizeof(long), CompareLong));
 }

@@ -29,7 +29,7 @@ int tolower(int);
 int ispunct(int);
 int toupper(int);
 int hextoint(int);
-int cescapec(int);
+int _cescapec(int);
 
 int iswalnum(wint_t);
 int iswalpha(wint_t);
@@ -141,13 +141,13 @@ char *strtok_r(char *, const char *, char **) paramsnonnull((2, 3));
 wchar_t *wcstok(wchar_t *, const wchar_t *, wchar_t **) paramsnonnull((2, 3));
 char *wstrtrunc(uint16_t *) memcpyesque;
 char *wstrntrunc(uint16_t *, size_t) memcpyesque;
-bool startswith(const char *, const char *) strlenesque;
-bool startswithi(const char *, const char *) strlenesque;
-bool startswith16(const char16_t *, const char16_t *) strlenesque;
-bool wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
-bool endswith(const char *, const char *) strlenesque;
-bool endswith16(const char16_t *, const char16_t *) strlenesque;
-bool wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
+bool _startswith(const char *, const char *) strlenesque;
+bool _startswithi(const char *, const char *) strlenesque;
+bool _startswith16(const char16_t *, const char16_t *) strlenesque;
+bool _wcsstartswith(const wchar_t *, const wchar_t *) strlenesque;
+bool _endswith(const char *, const char *) strlenesque;
+bool _endswith16(const char16_t *, const char16_t *) strlenesque;
+bool _wcsendswith(const wchar_t *, const wchar_t *) strlenesque;
 const char *IndexDoubleNulString(const char *, unsigned) strlenesque;
 int strverscmp(const char *, const char *);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t) memcpyesque;
@@ -213,6 +213,8 @@ char *strsignal(int) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;
 int strerror_r(int, char *, size_t) dontthrow nocallback;
 int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;
+char *_strerrno(int) nosideeffect libcesque;
+char *_strerdoc(int) nosideeffect libcesque;
 int __xpg_strerror_r(int, char *, size_t) dontthrow nocallback;
 
 COSMOPOLITAN_C_END_

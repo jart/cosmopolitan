@@ -110,8 +110,8 @@ static int sys_copyfile(const char *src, const char *dst, int flags) {
  * @param flags may have COPYFILE_PRESERVE_TIMESTAMPS, COPYFILE_NOCLOBBER
  * @return 0 on success, or -1 w/ errno
  */
-int copyfile(const char *src, const char *dst, int flags) {
-  if (!IsWindows() || startswith(src, "/zip/") || startswith(dst, "/zip/")) {
+int _copyfile(const char *src, const char *dst, int flags) {
+  if (!IsWindows() || _startswith(src, "/zip/") || _startswith(dst, "/zip/")) {
     return sys_copyfile(src, dst, flags);
   } else {
     return sys_copyfile_nt(src, dst, flags);

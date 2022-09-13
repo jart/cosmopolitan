@@ -30,6 +30,6 @@
 	ezlea	__stdin_buf,cx
 	mov	%rcx,0x18(%rax)				#→ f.buf
 	movl	$BUFSIZ,0x20(%rax)			#→ f.size
-	movb	$PTHREAD_MUTEX_RECURSIVE,0x38+16(%rax)	#→ f.lock.attr
+	movb	$PTHREAD_MUTEX_RECURSIVE,0x38+4(%rax)	#→ f.lock._type
 	mov	%rax,stdin(%rip)
 	.init.end 400,_init_stdin,globl,hidden

@@ -16,24 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-TEST(roundup2log, test) {
-  EXPECT_EQ(0, roundup2log(0));
-  EXPECT_EQ(1, roundup2log(1));
-  EXPECT_EQ(1, roundup2log(2));
-  EXPECT_EQ(2, roundup2log(3));
-  EXPECT_EQ(2, roundup2log(4));
-  EXPECT_EQ(12, roundup2log(PAGESIZE - 1));
-  EXPECT_EQ(12, roundup2log(PAGESIZE));
-  EXPECT_EQ(13, roundup2log(PAGESIZE + 1));
-  EXPECT_EQ(12, roundup2log(PAGESIZE - 1));
-  EXPECT_EQ(12, roundup2log(PAGESIZE));
-  EXPECT_EQ(13, roundup2log(PAGESIZE + 1));
+TEST(_roundup2log, test) {
+  EXPECT_EQ(0, _roundup2log(0));
+  EXPECT_EQ(1, _roundup2log(1));
+  EXPECT_EQ(1, _roundup2log(2));
+  EXPECT_EQ(2, _roundup2log(3));
+  EXPECT_EQ(2, _roundup2log(4));
+  EXPECT_EQ(12, _roundup2log(PAGESIZE - 1));
+  EXPECT_EQ(12, _roundup2log(PAGESIZE));
+  EXPECT_EQ(13, _roundup2log(PAGESIZE + 1));
+  EXPECT_EQ(12, _roundup2log(PAGESIZE - 1));
+  EXPECT_EQ(12, _roundup2log(PAGESIZE));
+  EXPECT_EQ(13, _roundup2log(PAGESIZE + 1));
 }

@@ -23,7 +23,7 @@
  * Converts errno value to descriptive sentence.
  * @return non-null rodata string or null if not found
  */
-privileged char *strerdoc(int x) {
+privileged char *_strerdoc(int x) {
   if (x) {
     return GetMagnumStr(kErrnoDocs, x);
   } else {

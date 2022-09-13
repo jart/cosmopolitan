@@ -22,11 +22,11 @@
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 /**
  * @fileoverview Tool for generating rldecode'd character sets, e.g.
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < argc; ++i) {
     if (i) printf(" ");
     printf("%s", !ArgNeedsShellQuotes(argv[i]) ? argv[i]
-                                               : gc(AddShellQuotes(argv[i])));
+                                               : _gc(AddShellQuotes(argv[i])));
   }
   printf("\n");
 
@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
     } else {
       if (runcount) {
         printf("\t.byte\t%-24s# %02x-%02x %hc-%hc\n",
-               gc(xasprintf("%3d,%d", runcount, runchar)), runstart,
+               _gc(xasprintf("%3d,%d", runcount, runchar)), runstart,
                runstart + runcount - 1, Bing(runstart),
                Bing(runstart + runcount - 1));
         thetally += 2;

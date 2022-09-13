@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -61,7 +61,7 @@ int fcntl(int fd, int cmd, ...) {
   va_end(va);
   if (fd >= 0) {
     if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = weaken(__zipos_fcntl)(fd, cmd, arg);
+      rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
     } else if (!IsWindows()) {
       rc = sys_fcntl(fd, cmd, arg);
     } else {

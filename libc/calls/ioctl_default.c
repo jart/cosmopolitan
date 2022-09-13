@@ -38,10 +38,10 @@ int ioctl_default(int fd, uint64_t request, ...) {
   } else if (__isfdopen(fd)) {
     if (g_fds.p[fd].kind == kFdSocket) {
       handle = __getfdhandleactual(fd);
-      if ((rc = weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
+      if ((rc = _weaken(__sys_ioctlsocket_nt)(handle, request, arg)) != -1) {
         return rc;
       } else {
-        return weaken(__winsockerr)();
+        return _weaken(__winsockerr)();
       }
     } else {
       return eopnotsupp();

@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/log/check.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "third_party/xed/x86.h"
 #include "tool/build/lib/demangle.h"
 #include "tool/build/lib/dis.h"
@@ -151,7 +151,7 @@ static char *DisLineData(struct Dis *d, char *p, const uint8_t *b, size_t n) {
   *p++ = '#';
   *p++ = ' ';
   for (i = 0; i < n; ++i) {
-    w = tpenc(bing(b[i], 0));
+    w = _tpenc(bing(b[i], 0));
     do {
       *p++ = w;
     } while ((w >>= 8));

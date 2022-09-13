@@ -20,7 +20,7 @@ struct CosmoTib {
   intptr_t tib_locale;           /* 0x20 */
   intptr_t tib_pthread;          /* 0x28 */
   struct CosmoTib *tib_self2;    /* 0x30 */
-  int32_t tib_tid;               /* 0x38 */
+  _Atomic(int32_t) tib_tid;      /* 0x38 */
   int32_t tib_errno;             /* 0x3c */
 };
 

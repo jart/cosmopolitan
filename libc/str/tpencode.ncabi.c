@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/tpenc.h"
 #include "libc/str/internal.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/tpencode.internal.h"
 
 /* TODO: DELETE */
@@ -47,7 +47,7 @@ unsigned(tpencode)(char *p, size_t size, wint_t wc, bool32 awesome) {
     return 2;
   }
   i = 0;
-  w = tpenc(wc);
+  w = _tpenc(wc);
   do {
     if (!size--) break;
     p[i++] = w & 0xff;

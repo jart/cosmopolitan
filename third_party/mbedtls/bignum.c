@@ -22,7 +22,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsf.h"
+#include "libc/intrin/bsf.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"

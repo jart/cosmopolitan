@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
 struct DosArgv {
@@ -49,7 +49,7 @@ textwindows noasan void DecodeDosArgv(int ignore, struct DosArgv *st) {
 
 static textwindows noasan void AppendDosArgv(wint_t wc, struct DosArgv *st) {
   uint64_t w;
-  w = tpenc(wc);
+  w = _tpenc(wc);
   do {
     if (st->p >= st->pe) break;
     *st->p++ = w & 0xff;

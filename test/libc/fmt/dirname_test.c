@@ -20,7 +20,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(dirname, test) {

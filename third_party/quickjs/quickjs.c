@@ -47,6 +47,7 @@
 #include "third_party/quickjs/internal.h"
 #include "libc/str/str.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/quickjs/libbf.h"
 
 asm(".ident\t\"\\n\\n\

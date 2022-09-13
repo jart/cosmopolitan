@@ -124,12 +124,9 @@
 │ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.         │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/termios.h"
@@ -139,21 +136,25 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/version.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
+#include "libc/str/unicode.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -164,7 +165,6 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
-#include "libc/str/unicode.h"
 #include "net/http/escape.h"
 #include "third_party/linenoise/linenoise.h"
 #include "tool/build/lib/case.h"
@@ -368,7 +368,7 @@ static wint_t Capitalize(wint_t c) {
 static struct rune DecodeUtf8(int c) {
   struct rune r;
   if (c < 252) {
-    r.n = bsr(255 & ~c);
+    r.n = _bsr(255 & ~c);
     r.c = c & (((1 << r.n) - 1) | 3);
     r.n = 6 - r.n;
   } else {
@@ -644,7 +644,7 @@ static void abAppendw(struct abuf *a, unsigned long long w) {
   p[5] = (0x0000ff0000000000 & w) >> 050;
   p[6] = (0x00ff000000000000 & w) >> 060;
   p[7] = (0xff00000000000000 & w) >> 070;
-  a->len += w ? (bsrll(w) >> 3) + 1 : 1;
+  a->len += w ? (_bsrll(w) >> 3) + 1 : 1;
   p[8] = 0;
 }
 
@@ -1221,7 +1221,7 @@ StartOver:
     } else {
       flipit = hasflip && (i == flip[0] || i == flip[1]);
       if (flipit) abAppendw(&ab, READ32LE("\e[1m"));
-      abAppendw(&ab, tpenc(rune.c));
+      abAppendw(&ab, _tpenc(rune.c));
       if (flipit) abAppendw(&ab, READ64LE("\e[22m\0\0"));
     }
     t = wcwidth(rune.c);
@@ -1470,7 +1470,7 @@ static void linenoiseEditXlatWord(struct linenoiseState *l,
     r = GetUtf8(l->buf + j, l->len - j);
     if (iswseparator(r.c)) break;
     if ((c = xlat(r.c)) != r.c) {
-      abAppendw(&ab, tpenc(c));
+      abAppendw(&ab, _tpenc(c));
     } else { /* avoid canonicalization */
       abAppend(&ab, l->buf + j, r.n);
     }
@@ -1634,7 +1634,7 @@ static size_t linenoiseEscape(char *d, const char *s, size_t n) {
         break;
     }
     WRITE32LE(p, w);
-    p += (bsr(w) >> 3) + 1;
+    p += (_bsr(w) >> 3) + 1;
     l = w;
   }
   return p - d;
@@ -1724,7 +1724,7 @@ static void linenoiseEditBarf(struct linenoiseState *l) {
   /* now move the text */
   r = GetUtf8(l->buf + end, l->len - end);
   memmove(l->buf + pos + r.n, l->buf + pos, end - pos);
-  w = tpenc(r.c);
+  w = _tpenc(r.c);
   for (i = 0; i < r.n; ++i) {
     l->buf[pos + i] = w;
     w >>= 8;
@@ -2238,7 +2238,7 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
               uint64_t w;
               struct rune rune;
               rune = GetUtf8(seq, rc);
-              w = tpenc(xlatCallback(rune.c));
+              w = _tpenc(xlatCallback(rune.c));
               rc = 0;
               do {
                 seq[rc++] = w;
@@ -2383,7 +2383,7 @@ char *linenoiseGetHistoryPath(const char *prog) {
   if (*a) {
     abAppends(&path, a);
     abAppends(&path, b);
-    if (!endswith(path.b, "/") && !endswith(path.b, "\\")) {
+    if (!_endswith(path.b, "/") && !_endswith(path.b, "\\")) {
       abAppendw(&path, '/');
     }
   }

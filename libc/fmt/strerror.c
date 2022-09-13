@@ -19,7 +19,6 @@
 #include "libc/dce.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 /**
@@ -28,7 +27,7 @@
  */
 char *strerror(int err) {
   if (IsTiny()) {
-    return firstnonnull(strerrno(err), "EUNKNOWN");
+    return firstnonnull(_strerrno(err), "EUNKNOWN");
   } else {
     _Alignas(1) static char buf[512];
     strerror_r(err, buf, sizeof(buf));

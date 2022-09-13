@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 
@@ -44,7 +44,7 @@ void bf(int fd) {
   char ibuf[W], obuf[12 + 1 + W * 6 + 1 + W * (2 + 11) + 11 + 1];
   o = 0;
   if (fstat(fd, &st) != -1 && S_ISREG(st.st_mode) && st.st_size) {
-    bits = bsr(roundup2pow(st.st_size));
+    bits = _bsr(_roundup2pow(st.st_size));
     bits = ROUNDUP(bits, 4);
   } else {
     bits = 48;
@@ -58,7 +58,7 @@ void bf(int fd) {
       obuf[n++] = ' ';
       for (i = 0; i < rc; ++i) {
         c = ibuf[i] & 0xff;
-        w = tpenc(kCp437[c]);
+        w = _tpenc(kCp437[c]);
         do {
           obuf[n++] = w;
         } while ((w >>= 8));

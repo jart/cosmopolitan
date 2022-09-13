@@ -18,9 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -110,7 +112,7 @@ TEST(readlinkat, realpathReturnsLongPath) {
   struct stat st;
   char buf[PATH_MAX];
   if (!IsWindows()) return;
-  if (!startswith(getcwd(buf, PATH_MAX), "/c/")) return;
+  if (!_startswith(getcwd(buf, PATH_MAX), "/c/")) return;
   ASSERT_SYS(0, 0, touch("froot", 0644));
   ASSERT_STARTSWITH("/c/", realpath("froot", buf));
 }

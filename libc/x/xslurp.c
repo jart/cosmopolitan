@@ -37,7 +37,8 @@ void *xslurp(const char *path, size_t *opt_out_size) {
   ssize_t rc, size;
   res = NULL;
   if ((fd = open(path, O_RDONLY)) != -1) {
-    if ((size = getfiledescriptorsize(fd)) != -1 && (res = valloc(size + 1))) {
+    if ((size = getfiledescriptorsize(fd)) != -1 &&
+        (res = memalign(PAGESIZE, size + 1))) {
       if (size > 2 * 1024 * 1024) {
         fadvise(fd, 0, size, MADV_SEQUENTIAL);
       }

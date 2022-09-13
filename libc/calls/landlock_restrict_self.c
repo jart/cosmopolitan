@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/landlock.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 
 int sys_landlock_restrict_self(int, uint32_t);
 

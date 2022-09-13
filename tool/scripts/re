@@ -1,0 +1,4 @@
+#!/bin/sh
+readelf -Wa "$1" |
+  c++filt |
+  exec less

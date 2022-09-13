@@ -42,8 +42,8 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   if (LIKELY(__tls_enabled &&                               //
              mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
              mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
-             weaken(nsync_mu_trylock))) {
-    if (weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
+             _weaken(nsync_mu_trylock))) {
+    if (_weaken(nsync_mu_trylock)((nsync_mu *)mutex)) {
       return 0;
     } else {
       return EBUSY;
@@ -51,9 +51,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
   }
 
   if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
-    c = 0;
-    if (atomic_compare_exchange_strong_explicit(
-            &mutex->_lock, &c, 1, memory_order_acquire, memory_order_relaxed)) {
+    if (!atomic_exchange_explicit(&mutex->_lock, 1, memory_order_acquire)) {
       return 0;
     } else {
       return EBUSY;

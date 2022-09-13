@@ -1,0 +1,6 @@
+#!/bin/bash
+echo $(( $(find ape dsp libc examples net test third_party tool -name \*.c  | xargs cat | wc -l) +
+         $(find ape dsp libc examples net test third_party tool -name \*.h  | xargs cat | wc -l) +
+         $(find ape dsp libc examples net test third_party tool -name \*.S  | xargs cat | wc -l) +
+         $(find ape dsp libc examples net test third_party tool -name \*.el | xargs cat | wc -l) +
+         $(find ape dsp libc examples net test third_party tool -name \*.mk | xargs cat | wc -l) ))

@@ -9,7 +9,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/version.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/locale.h"

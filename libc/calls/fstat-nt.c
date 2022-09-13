@@ -17,12 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bsr.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
 #include "libc/nt/enum/filetype.h"
@@ -33,7 +34,6 @@
 #include "libc/nt/struct/filecompressioninfo.h"
 #include "libc/nt/struct/reparsedatabuffer.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -61,7 +61,7 @@ static textwindows uint32_t GetSizeOfReparsePoint(int64_t fh) {
           x = 0xfffd;
         }
       }
-      z += x < 0200 ? 1 : bsrl(tpenc(x)) >> 3;
+      z += x < 0200 ? 1 : _bsrl(_tpenc(x)) >> 3;
     }
   } else {
     STRACE("%s failed %m", "GetSizeOfReparsePoint");

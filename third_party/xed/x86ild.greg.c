@@ -17,10 +17,10 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/xed/avx.h"
@@ -775,7 +775,7 @@ privileged static void xed_evex_scanner(struct XedDecodedInst *d) {
 }
 
 privileged static uint64_t xed_read_number(uint8_t *p, size_t n, bool s) {
-  switch (s << 2 | bsr(n)) {
+  switch (s << 2 | _bsr(n)) {
     case 0b000:
       return *p;
     case 0b100:

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 dontdiscard char *testlib_formatrange(intptr_t beg, intptr_t end) {
   return xasprintf("[%#ld,%#ld]", beg, end);

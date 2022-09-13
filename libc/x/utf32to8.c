@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/x/x.h"
 
 /**
@@ -38,7 +38,7 @@ char *utf32to8(const wchar_t *p, size_t n, size_t *z) {
   if ((q = r = malloc(n * 6 + 1))) {
     for (i = 0; i < n; ++i) {
       x = p[i];
-      w = tpenc(x);
+      w = _tpenc(x);
       do {
         *q++ = w;
       } while ((w >>= 8));

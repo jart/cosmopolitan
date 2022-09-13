@@ -21,7 +21,7 @@
 /**
  * Extracts bit field from array.
  */
-unsigned bextra(const unsigned *p, size_t i, char b) {
+unsigned _bextra(const unsigned *p, size_t i, char b) {
   unsigned k, r, w;
   w = sizeof(unsigned) * CHAR_BIT;
   if (b) {

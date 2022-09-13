@@ -23,6 +23,7 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/ffs.h"
 #include "libc/testlib/testlib.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 #include "third_party/chibicc/kw.h"
 

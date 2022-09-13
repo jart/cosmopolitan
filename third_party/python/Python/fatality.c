@@ -6,6 +6,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/pyerrors.h"
@@ -159,6 +160,6 @@ exit:
 #if defined(MS_WINDOWS) && defined(_DEBUG)
     DebugBreak();
 #endif
-    if (weaken(__die)) weaken(__die)();
+    if (_weaken(__die)) _weaken(__die)();
     abort();
 }

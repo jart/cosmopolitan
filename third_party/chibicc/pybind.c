@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/str/str.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 
 static void AppendStringLiteral(char **b, const char *s, const char *indent) {
@@ -537,7 +537,7 @@ const struct _inittab _PyImport_Inittab_%s = {\n\
 };\n\
 ",
           module, module,
-          tok->file->javadown ? gc(xasprintf("pb_%s_doc", module)) : "0",
+          tok->file->javadown ? _gc(xasprintf("pb_%s_doc", module)) : "0",
           module, module, module, module, module, module);
   CHECK_NE(-1, (fd = creat(path, 0644)));
   CHECK_NE(-1, xwrite(fd, b, appendz(b).i));

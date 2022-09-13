@@ -17,31 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(tgamma, test) {
-  EXPECT_STREQ("inf", gc(xasprintf("%.15g", tgamma(0.))));
-  EXPECT_STREQ("-inf", gc(xasprintf("%.15g", tgamma(-0.))));
-  EXPECT_STREQ("9.51350769866873", gc(xasprintf("%.15g", tgamma(.1))));
-  EXPECT_STREQ("-10.6862870211932", gc(xasprintf("%.15g", tgamma(-.1))));
-  EXPECT_STREQ("1.77245385090552", gc(xasprintf("%.15g", tgamma(.5))));
-  EXPECT_STREQ("-3.54490770181103", gc(xasprintf("%.15g", tgamma(-.5))));
-  EXPECT_STREQ("1", gc(xasprintf("%.15g", tgamma(1.))));
+  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", tgamma(0.))));
+  EXPECT_STREQ("-inf", _gc(xasprintf("%.15g", tgamma(-0.))));
+  EXPECT_STREQ("9.51350769866873", _gc(xasprintf("%.15g", tgamma(.1))));
+  EXPECT_STREQ("-10.6862870211932", _gc(xasprintf("%.15g", tgamma(-.1))));
+  EXPECT_STREQ("1.77245385090552", _gc(xasprintf("%.15g", tgamma(.5))));
+  EXPECT_STREQ("-3.54490770181103", _gc(xasprintf("%.15g", tgamma(-.5))));
+  EXPECT_STREQ("1", _gc(xasprintf("%.15g", tgamma(1.))));
   EXPECT_TRUE(isnan(tgamma(-1.)));
-  EXPECT_STREQ("0.886226925452758", gc(xasprintf("%.15g", tgamma(1.5))));
-  EXPECT_STREQ("2.36327180120735", gc(xasprintf("%.15g", tgamma(-1.5))));
-  EXPECT_STREQ("1", gc(xasprintf("%.15g", tgamma(2.))));
+  EXPECT_STREQ("0.886226925452758", _gc(xasprintf("%.15g", tgamma(1.5))));
+  EXPECT_STREQ("2.36327180120735", _gc(xasprintf("%.15g", tgamma(-1.5))));
+  EXPECT_STREQ("1", _gc(xasprintf("%.15g", tgamma(2.))));
   EXPECT_TRUE(isnan(tgamma(NAN)));
   EXPECT_TRUE(isnan(tgamma(-NAN)));
-  EXPECT_STREQ("inf", gc(xasprintf("%.15g", tgamma(INFINITY))));
+  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", tgamma(INFINITY))));
   EXPECT_TRUE(isnan(tgamma(-INFINITY)));
   EXPECT_STREQ("4.49423283715579e+307",
-               gc(xasprintf("%.15g", tgamma(__DBL_MIN__))));
-  EXPECT_STREQ("inf", gc(xasprintf("%.15g", tgamma(__DBL_MAX__))));
+               _gc(xasprintf("%.15g", tgamma(__DBL_MIN__))));
+  EXPECT_STREQ("inf", _gc(xasprintf("%.15g", tgamma(__DBL_MAX__))));
   EXPECT_STREQ("4.5035996273705e+15",
-               gc(xasprintf("%.14g", tgamma(-1.0000000000000002))));
+               _gc(xasprintf("%.14g", tgamma(-1.0000000000000002))));
   EXPECT_STREQ("-47453133.3893415",
-               gc(xasprintf("%.15g", tgamma(-2.1073424255447e-08))));
+               _gc(xasprintf("%.15g", tgamma(-2.1073424255447e-08))));
 }

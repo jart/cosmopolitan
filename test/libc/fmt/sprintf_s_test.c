@@ -16,16 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/fmt/fmt.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 static char buffer[128];
 
-#define Format(...) gc(xasprintf(__VA_ARGS__))
+#define Format(...) _gc(xasprintf(__VA_ARGS__))
 
 /**
  * @fileoverview String formatting tests.

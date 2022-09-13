@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/log/gdb.h"
 #include "libc/log/log.h"
@@ -2113,8 +2113,8 @@ static unsigned char *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y,
 }
 
 static dontinline void *stbi__jpeg_load(stbi__context *s, int *x, int *y,
-                                      int *comp, int req_comp,
-                                      stbi__result_info *ri) {
+                                        int *comp, int req_comp,
+                                        stbi__result_info *ri) {
   unsigned char *result;
   stbi__jpeg *j = (stbi__jpeg *)malloc(sizeof(stbi__jpeg));
   j->s = s;
@@ -2178,19 +2178,11 @@ typedef struct {
   uint16_t value[288];
 } stbi__zhuffman;
 
-forceinline int stbi__bitreverse16(int n) {
-  n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);
-  n = ((n & 0xCCCC) >> 2) | ((n & 0x3333) << 2);
-  n = ((n & 0xF0F0) >> 4) | ((n & 0x0F0F) << 4);
-  n = ((n & 0xFF00) >> 8) | ((n & 0x00FF) << 8);
-  return n;
-}
-
 forceinline int stbi__bit_reverse(int v, int bits) {
   assert(bits <= 16);
   // to bit reverse n bits, reverse 16 and shift
   // e.g. 11 bits, bit reverse and shift away 5
-  return stbi__bitreverse16(v) >> (16 - bits);
+  return _bitreverse16(v) >> (16 - bits);
 }
 
 static int stbi__zbuild_huffman(stbi__zhuffman *z,
@@ -3414,8 +3406,8 @@ static void *stbi__do_png(stbi__png *p, int *x, int *y, int *n, int req_comp,
 }
 
 static dontinline void *stbi__png_load(stbi__context *s, int *x, int *y,
-                                     int *comp, int req_comp,
-                                     stbi__result_info *ri) {
+                                       int *comp, int req_comp,
+                                       stbi__result_info *ri) {
   stbi__png p;
   p.s = s;
   return stbi__do_png(&p, x, y, comp, req_comp, ri);
@@ -3917,8 +3909,8 @@ static void *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y,
 }
 
 static dontinline void *stbi__gif_load(stbi__context *s, int *x, int *y,
-                                     int *comp, int req_comp,
-                                     stbi__result_info *ri) {
+                                       int *comp, int req_comp,
+                                       stbi__result_info *ri) {
   unsigned char *u = 0;
   stbi__gif *g;
   g = calloc(1, sizeof(stbi__gif));
@@ -3970,8 +3962,8 @@ static int stbi__pnm_test(stbi__context *s) {
 }
 
 static dontinline void *stbi__pnm_load(stbi__context *s, int *x, int *y,
-                                     int *comp, int req_comp,
-                                     stbi__result_info *ri) {
+                                       int *comp, int req_comp,
+                                       stbi__result_info *ri) {
   unsigned char *out;
   if (!stbi__pnm_info(s, (int *)&s->img_x, (int *)&s->img_y,
                       (int *)&s->img_n)) {

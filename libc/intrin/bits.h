@@ -13,23 +13,19 @@ extern const uint8_t kReverseBits[256];
 
 uint32_t gray(uint32_t) pureconst;
 uint32_t ungray(uint32_t) pureconst;
-int bitreverse8(int) libcesque pureconst;
-int bitreverse16(int) libcesque pureconst;
-uint32_t bitreverse32(uint32_t) libcesque pureconst;
-uint64_t bitreverse64(uint64_t) libcesque pureconst;
-unsigned long roundup2pow(unsigned long) libcesque pureconst;
-unsigned long roundup2log(unsigned long) libcesque pureconst;
-unsigned long rounddown2pow(unsigned long) libcesque pureconst;
-unsigned long hamming(unsigned long, unsigned long) pureconst;
-unsigned bextra(const unsigned *, size_t, char);
+int _bitreverse8(int) libcesque pureconst;
+int _bitreverse16(int) libcesque pureconst;
+uint32_t _bitreverse32(uint32_t) libcesque pureconst;
+uint64_t _bitreverse64(uint64_t) libcesque pureconst;
+unsigned long _roundup2pow(unsigned long) libcesque pureconst;
+unsigned long _roundup2log(unsigned long) libcesque pureconst;
+unsigned long _rounddown2pow(unsigned long) libcesque pureconst;
+unsigned long _hamming(unsigned long, unsigned long) pureconst;
+unsigned _bextra(const unsigned *, size_t, char);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § bits » no assembly required                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define BITREVERSE8(X) (kReverseBits[255 & (X)])
-#define BITREVERSE16(X) \
-  (kReverseBits[0x00FF & (X)] << 8 | kReverseBits[(0xFF00 & (X)) >> 8])
 
 #ifdef __STRICT_ANSI__
 #define READ16LE(S) ((255 & (S)[1]) << 8 | (255 & (S)[0]))

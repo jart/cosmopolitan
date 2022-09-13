@@ -10,8 +10,6 @@ COSMOPOLITAN_C_START_
 
 #define __ToUpper(c) ((c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-extern char __fatalbuf[];
-
 forceinline long __sysv_exit(long rc) {
   long ax;
 #if defined(__MNO_RED_ZONE__) && defined(__GNUC__) && !defined(__STRICT_ANSI__)

@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -51,10 +51,10 @@ char *getcwd(char *buf, size_t size) {
       STRACE("getcwd(%p, %'zu) %m", buf, size);
       return 0;
     }
-  } else if (weaken(malloc)) {
+  } else if (_weaken(malloc)) {
     assert(!__vforked);
     if (!size) size = PATH_MAX;
-    if (!(p = weaken(malloc)(size))) {
+    if (!(p = _weaken(malloc)(size))) {
       STRACE("getcwd(%p, %'zu) %m", buf, size);
       return 0;
     }
@@ -79,12 +79,12 @@ char *getcwd(char *buf, size_t size) {
   }
   if (!buf) {
     if (!r) {
-      if (weaken(free)) {
-        weaken(free)(p);
+      if (_weaken(free)) {
+        _weaken(free)(p);
       }
     } else {
-      if (weaken(realloc)) {
-        if ((p = weaken(realloc)(r, strlen(r) + 1))) {
+      if (_weaken(realloc)) {
+        if ((p = _weaken(realloc)(r, strlen(r) + 1))) {
           r = p;
         }
       }

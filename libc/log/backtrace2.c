@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -30,18 +29,19 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/bisectcarleft.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -111,10 +111,10 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
     addr = frame->addr;
-    if (addr == weakaddr("__gc")) {
+    if (addr == _weakaddr("__gc")) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
+      } while ((addr = garbage->p[gi].ret) == _weakaddr("__gc"));
     }
     argv[i++] = buf + j;
     buf[j++] = '0';

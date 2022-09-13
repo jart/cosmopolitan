@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"

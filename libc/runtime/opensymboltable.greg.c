@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
@@ -164,7 +164,7 @@ struct SymbolTable *OpenSymbolTable(const char *filename) {
     x = sym->st_value - t->addr_base;
     stp[m++] = (unsigned long)x << 32 | i;
   }
-  longsort(stp, m);
+  _longsort(stp, m);
   for (j = i = 0; i < m; ++i) {
     sym = symtab + (stp[i] & 0x7fffffff);
     x = stp[i] >> 32;

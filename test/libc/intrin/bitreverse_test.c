@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -25,25 +25,19 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-TEST(bitreverse, test) {
-  EXPECT_EQ(0xde, BITREVERSE8(123));
-  EXPECT_EQ(0xde, bitreverse8(123));
-  EXPECT_EQ(0xde00, BITREVERSE16(123));
-  EXPECT_EQ(0xde00, bitreverse16(123));
-  EXPECT_EQ(0xde000000u, bitreverse32(123));
-  EXPECT_EQ(0xde00000000000000ul, bitreverse64(123));
-  EXPECT_EQ(0x482d96c305f7c697ul, bitreverse64(0xe963efa0c369b412));
+TEST(_bitreverse, test) {
+  EXPECT_EQ(0xde, _bitreverse8(123));
+  EXPECT_EQ(0xde00, _bitreverse16(123));
+  EXPECT_EQ(0xde000000u, _bitreverse32(123));
+  EXPECT_EQ(0xde00000000000000ul, _bitreverse64(123));
+  EXPECT_EQ(0x482d96c305f7c697ul, _bitreverse64(0xe963efa0c369b412));
 }
 
-BENCH(bitreverse, bench) {
-  EZBENCH2("BITREVERSE8", donothing,
-           EXPROPRIATE(BITREVERSE8(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse8", donothing,
-           EXPROPRIATE(bitreverse8(CONCEAL("r", 123))));
-  EZBENCH2("BITREVERSE16", donothing,
-           EXPROPRIATE(BITREVERSE16(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse32", donothing,
-           EXPROPRIATE(bitreverse32(CONCEAL("r", 123))));
-  EZBENCH2("bitreverse64", donothing,
-           EXPROPRIATE(bitreverse64(CONCEAL("r", 123))));
+BENCH(_bitreverse, bench) {
+  EZBENCH2("_bitreverse8", donothing,
+           EXPROPRIATE(_bitreverse8(CONCEAL("r", 123))));
+  EZBENCH2("_bitreverse32", donothing,
+           EXPROPRIATE(_bitreverse32(CONCEAL("r", 123))));
+  EZBENCH2("_bitreverse64", donothing,
+           EXPROPRIATE(_bitreverse64(CONCEAL("r", 123))));
 }

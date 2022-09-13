@@ -37,8 +37,13 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   if (LIKELY(__tls_enabled &&                               //
              mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
              mutex->_pshared == PTHREAD_PROCESS_PRIVATE &&  //
-             weaken(nsync_mu_unlock))) {
-    weaken(nsync_mu_unlock)((nsync_mu *)mutex);
+             _weaken(nsync_mu_unlock))) {
+    _weaken(nsync_mu_unlock)((nsync_mu *)mutex);
+    return 0;
+  }
+
+  if (mutex->_type == PTHREAD_MUTEX_NORMAL) {
+    atomic_store_explicit(&mutex->_lock, 0, memory_order_release);
     return 0;
   }
 

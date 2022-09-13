@@ -21,7 +21,6 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -171,7 +170,7 @@ void Compress(const char *inpath) {
   if (!output) {
     fputs(outpath, stderr);
     fputs(": gzopen() failed\n", stderr);
-    fputs(strerdoc(errno), stderr);
+    fputs(_strerdoc(errno), stderr);
     fputs("\n", stderr);
     exit(1);
   }
@@ -181,7 +180,7 @@ void Compress(const char *inpath) {
       errnum = 0;
       fputs(inpath, stderr);
       fputs(": read failed: ", stderr);
-      fputs(strerdoc(ferror(input)), stderr);
+      fputs(_strerdoc(ferror(input)), stderr);
       fputs("\n", stderr);
       _Exit(1);
     }
@@ -226,14 +225,14 @@ void Decompress(const char *inpath) {
   if (!input) {
     fputs(inpath, stderr);
     fputs(": gzopen() failed\n", stderr);
-    fputs(strerdoc(errno), stderr);
+    fputs(_strerdoc(errno), stderr);
     fputs("\n", stderr);
     exit(1);
   }
   if (opt_usestdout) {
     output = stdout;
     outpath = "/dev/stdout";
-  } else if (endswith(inpath, ".gz")) {
+  } else if (_endswith(inpath, ".gz")) {
     n = strlen(inpath);
     if (n - 3 + 1 > PATH_MAX) _Exit(2);
     memcpy(pathbuf, inpath, n - 3);
@@ -242,7 +241,7 @@ void Decompress(const char *inpath) {
     if (!(output = fopen(outpath, opt_append ? "wa" : "wb"))) {
       fputs(outpath, stderr);
       fputs(": open failed: ", stderr);
-      fputs(strerdoc(errno), stderr);
+      fputs(_strerdoc(errno), stderr);
       fputs("\n", stderr);
       _Exit(1);
     }
@@ -264,7 +263,7 @@ void Decompress(const char *inpath) {
     if (fwrite(databuf, rc, 1, output) != 1) {
       fputs(outpath, stderr);
       fputs(": write failed: ", stderr);
-      fputs(strerdoc(ferror(output)), stderr);
+      fputs(_strerdoc(ferror(output)), stderr);
       fputs("\n", stderr);
       _Exit(1);
     }

@@ -1,0 +1,14 @@
+#!/bin/sh
+exec python.com -c "
+import sys
+from math import *
+s = str(oct($*).replace('o',''))
+if len(s) > 1: s = s[1:]
+b = s.replace('L', '')
+n = len(b)
+if   n <=  3: n =  3
+elif n <=  6: n =  6
+elif n <= 11: n = 11
+elif n <= 22: n = 22
+sys.stdout.write(('0%%0%dd' % n) % int(b))
+"
