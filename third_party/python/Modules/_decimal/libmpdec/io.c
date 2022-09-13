@@ -38,6 +38,10 @@
 #include "third_party/python/Modules/_decimal/libmpdec/typearith.h"
 /* clang-format off */
 
+#if __GNUC__ >= 11
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+
 asm(".ident\t\"\\n\\n\
 libmpdec (BSD-2)\\n\
 Copyright 2008-2016 Stefan Krah\"");

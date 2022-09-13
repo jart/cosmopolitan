@@ -427,7 +427,9 @@ eval_makefile (const char *filename, unsigned short flags)
   fclose (ebuf.fp);
 
   free (ebuf.bufstart);
-  alloca (0);
+
+  /* [jart] breaks gcc11 (also wat) */
+  void *volatile wat = alloca (0);
 
   errno = 0;
   return deps;
@@ -469,7 +471,8 @@ eval_buffer (char *buffer, const floc *flocp)
 
   reading_file = curfile;
 
-  alloca (0);
+  /* [jart] breaks gcc11 (also wat) */
+  void *volatile wat = alloca (0);
 }
 
 /* Check LINE to see if it's a variable assignment or undefine.
@@ -2495,7 +2498,8 @@ find_percent_cached (const char **string)
         if (! new)
           {
             slen = strlen (*string);
-            new = alloca (slen + 1);
+            /* [jart] can't prove alloca() isn't returned; let's just leak */
+            new = malloc (slen + 1);
             memcpy (new, *string, slen + 1);
             p = new + (p - *string);
             *string = new;

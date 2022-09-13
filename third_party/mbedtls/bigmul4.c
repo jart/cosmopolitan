@@ -29,7 +29,7 @@
  * @note words are host endian while array is little endian
  * @mayalias
  */
-void (*Mul4x4)(uint64_t C[8], const uint64_t A[4], const uint64_t B[4]);
+void (*Mul4x4)(uint64_t C[16], const uint64_t A[8], const uint64_t B[8]);
 
 static textstartup void Mul4x4Init()
 {
@@ -38,7 +38,7 @@ static textstartup void Mul4x4Init()
 
 const void *const Mul4x4Ctor[] initarray = {Mul4x4Init};
 
-void Mul4x4Pure(uint64_t C[8], const uint64_t A[4], const uint64_t B[4])
+void Mul4x4Pure(uint64_t C[16], const uint64_t A[8], const uint64_t B[8])
 {
     uint128_t t;
     uint64_t h, c1, c2, c3;

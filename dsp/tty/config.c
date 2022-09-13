@@ -30,7 +30,7 @@
  * @see ttyconfig(), ttyrestore()
  */
 int ttyconfig(int ttyfd, ttyconf_f fn, int64_t arg,
-              const struct termios *opt_out_oldconf) {
+              struct termios *opt_out_oldconf) {
   struct termios conf[2];
   if (tcgetattr(ttyfd, &conf[0]) != -1 &&
       fn(memcpy(&conf[1], &conf[0], sizeof(conf[0])), arg) != -1 &&

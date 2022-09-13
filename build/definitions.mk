@@ -148,6 +148,7 @@ DEFAULT_CCFLAGS =							\
 
 DEFAULT_OFLAGS =							\
 	-g								\
+	-gdwarf-4							\
 	-gdescribe-dies
 
 DEFAULT_COPTS =								\

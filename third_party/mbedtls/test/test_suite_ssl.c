@@ -2699,7 +2699,7 @@ void test_ssl_message_queue_insufficient_buffer_wrapper( void ** params )
 void test_ssl_message_mock_uninitialized( )
 {
     enum { MSGLEN = 10 };
-    unsigned char message[MSGLEN], received[MSGLEN];
+    unsigned char message[MSGLEN] = {0}, received[MSGLEN];
     mbedtls_mock_socket client, server;
     mbedtls_test_message_queue server_queue, client_queue;
     mbedtls_test_message_socket_context server_context, client_context;

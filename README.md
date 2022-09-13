@@ -27,7 +27,7 @@ wget https://justine.lol/cosmopolitan/cosmopolitan-amalgamation-2.0.1.zip
 unzip cosmopolitan-amalgamation-2.0.1.zip
 printf 'main() { printf("hello world\\n"); }\n' >hello.c
 gcc -g -Os -static -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone \
-  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs \
+  -fno-omit-frame-pointer -pg -mnop-mcount -mno-tls-direct-seg-refs -gdwarf-4 \
   -o hello.com.dbg hello.c -fuse-ld=bfd -Wl,-T,ape.lds -Wl,--gc-sections \
   -include cosmopolitan.h crt.o ape-no-modify-self.o cosmopolitan.a
 objcopy -S -O binary hello.com.dbg hello.com
@@ -100,7 +100,7 @@ heavyweight features like tracing to your binaries by default. In that
 case, you may want to consider using our build system:
 
 ```sh
-make -j8 MODE=tiny
+make m=tiny
 ```
 
 Which will cause programs such as `hello.com` and `life.com` to shrink
@@ -155,7 +155,7 @@ cd cosmopolitan
 This will build the entire repository and run all the tests:
 
 ```sh
-build/bootstrap/make.com -j16
+build/bootstrap/make.com
 o//examples/hello.com
 find o -name \*.com | xargs ls -rShal | less
 ```
@@ -174,7 +174,7 @@ having minimal deterministic builds. For example, if you wanted to build
 only hello.com then you could do that as follows:
 
 ```sh
-build/bootstrap/make.com -j16 o//examples/hello.com
+build/bootstrap/make.com o//examples/hello.com
 ```
 
 Sometimes it's desirable to build a subset of targets, without having to
@@ -183,7 +183,7 @@ directory name. For example, if you wanted to build only the targets and
 subtargets of the chibicc package including its tests, you would say:
 
 ```sh
-build/bootstrap/make.com -j16 o//third_party/chibicc
+build/bootstrap/make.com o//third_party/chibicc
 o//third_party/chibicc/chibicc.com --help
 ```
 
@@ -191,18 +191,19 @@ Cosmopolitan provides a variety of build modes. For example, if you want
 really tiny binaries (as small as 12kb in size) then you'd say:
 
 ```sh
-build/bootstrap/make.com -j16 MODE=tiny
+build/bootstrap/make.com m=tiny
 ```
 
 Here's some other build modes you can try:
 
 ```sh
-build/bootstrap/make.com -j16 MODE=dbg       # asan + ubsan + debug
-build/bootstrap/make.com -j16 MODE=asan      # production memory safety
-build/bootstrap/make.com -j16 MODE=opt       # -march=native optimizations
-build/bootstrap/make.com -j16 MODE=rel       # traditional release binaries
-build/bootstrap/make.com -j16 MODE=optlinux  # optimal linux-only performance
-build/bootstrap/make.com -j16 MODE=tinylinux # tiniest linux-only 4kb binaries
+build/bootstrap/make.com m=dbg       # asan + ubsan + debug
+build/bootstrap/make.com m=asan      # production memory safety
+build/bootstrap/make.com m=opt       # -march=native optimizations
+build/bootstrap/make.com m=rel       # traditional release binaries
+build/bootstrap/make.com m=optlinux  # optimal linux-only performance
+build/bootstrap/make.com m=fastbuild # build 28% faster w/o debugging
+build/bootstrap/make.com m=tinylinux # tiniest linux-only 4kb binaries
 ```
 
 For further details, see [//build/config.mk](build/config.mk).

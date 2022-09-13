@@ -44,7 +44,7 @@ int ttysendtitle(int, const char *, const struct TtyIdent *);
 int ttyident(struct TtyIdent *, int, int);
 void ttyidentclear(struct TtyIdent *);
 char *ttydescribe(char *, size_t, const struct TtyIdent *);
-int ttyconfig(int, ttyconf_f, int64_t, const struct termios *);
+int ttyconfig(int, ttyconf_f, int64_t, struct termios *);
 int ttyrestore(int, const struct termios *);
 int ttysetrawdeadline(struct termios *, int64_t);
 int ttysetrawmode(struct termios *, int64_t);

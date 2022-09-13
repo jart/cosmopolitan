@@ -75,6 +75,10 @@
 #include "third_party/unzip/unzvers.h"
 #include "third_party/unzip/globals.h"
 
+#if __GNUC__ >= 11 /* [jart] worth looking into */
+#pragma GCC diagnostic ignored "-Wrestrict"
+#endif
+
 #ifndef WINDLL          /* The WINDLL port uses windll/windll.c instead... */
 
 /***************************/

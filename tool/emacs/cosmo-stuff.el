@@ -169,7 +169,7 @@
         ((eq arg 8) "llvm")
         (default default)
         ((cosmo-intest) "dbg")
-        (t "")))
+        (t "fastbuild")))
 
 (defun cosmo--make-suffix (arg)
   (cond ((eq arg 9) ".chibicc")

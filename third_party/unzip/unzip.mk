@@ -59,6 +59,10 @@ $(THIRD_PARTY_UNZIP_A_OBJS): private						\
 			-DHAVE_TERMIOS_H					\
 			-DNO_LCHMOD
 
+$(THIRD_PARTY_UNZIP_A_OBJS): private						\
+		OVERRIDE_CFLAGS +=						\
+			$(OLD_CODE)
+
 THIRD_PARTY_UNZIP_COMS = o/$(MODE)/third_party/unzip/unzip.com
 THIRD_PARTY_UNZIP_BINS = $(THIRD_PARTY_UNZIP_COMS) $(THIRD_PARTY_UNZIP_COMS:%=%.dbg)
 THIRD_PARTY_UNZIP_LIBS = $(foreach x,$(THIRD_PARTY_UNZIP_ARTIFACTS),$($(x)))

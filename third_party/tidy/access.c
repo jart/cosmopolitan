@@ -891,7 +891,7 @@ static Bool CompareColors( const int rgbBG[3], const int rgbFG[3] )
 * blue = 5.
 *********************************************************************/
 
-static Bool GetRgb( ctmbstr color, int rgb[] )
+static Bool GetRgb( ctmbstr color, int rgb[3] )
 {
     uint x;
 

@@ -21,7 +21,7 @@
 #include "libc/testlib/testlib.h"
 
 bool testlib_strequals(size_t cw, const void *s1, const void *s2) {
-  return testlib_strnequals(cw, s1, s2, SIZE_MAX);
+  return testlib_strnequals(cw, s1, s2, LONG_MAX);
 }
 
 bool testlib_strnequals(size_t cw, const void *s1, const void *s2, size_t n) {

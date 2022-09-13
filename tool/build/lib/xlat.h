@@ -46,7 +46,7 @@ void XlatLinuxToTermios(struct termios *, const struct termios_bits *);
 void XlatTermiosToLinux(struct termios_bits *, const struct termios *);
 void XlatWinsizeToLinux(struct winsize_bits *, const struct winsize *);
 void XlatSigsetToLinux(uint8_t[8], const sigset_t *);
-void XlatLinuxToSigset(sigset_t *, const uint8_t[]);
+void XlatLinuxToSigset(sigset_t *, const uint8_t[8]);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

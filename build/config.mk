@@ -282,6 +282,28 @@ TARGET_ARCH ?=			\
 	-msse3
 endif
 
+# GCC11 Mode
+# https://justine.lol/compilers/x86_64-linux-musl__x86_64-linux-musl__g++-11.2.0.tar.xz
+ifeq ($(MODE), gcc11)
+.UNVEIL += rx:/opt/gcc11
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -DSYSDEBUG -O2
+AS = /opt/gcc11/bin/x86_64-linux-musl-as
+CC = /opt/gcc11/bin/x86_64-linux-musl-gcc
+CXX = /opt/gcc11/bin/x86_64-linux-musl-g++
+CXXFILT = /opt/gcc11/bin/x86_64-linux-musl-c++filt
+LD = /opt/gcc11/bin/x86_64-linux-musl-ld.bfd
+NM = /opt/gcc11/bin/x86_64-linux-musl-nm
+GCC = /opt/gcc11/bin/x86_64-linux-musl-gcc
+STRIP = /opt/gcc11/bin/x86_64-linux-musl-strip
+OBJCOPY = /opt/gcc11/bin/x86_64-linux-musl-objcopy
+OBJDUMP = /opt/gcc11/bin/x86_64-linux-musl-objdump
+ADDR2LINE = /opt/gcc11/bin/x86_64-linux-musl-addr2line
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2 -Wno-stringop-overread
+CONFIG_CFLAGS += -Wno-old-style-definition
+CONFIG_CPPFLAGS += -DNDEBUG -DSYSDEBUG
+TARGET_ARCH ?= -msse3
+endif
+
 # LLVM Mode
 ifeq ($(MODE), llvm)
 TARGET_ARCH ?= -msse3

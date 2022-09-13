@@ -69,7 +69,7 @@
 static char	buf_asctime[MAX_ASCTIME_BUF_SIZE];
 
 char *
-asctime_r(register const struct tm *timeptr, char *buf)
+asctime_r(register const struct tm *timeptr, char buf[hasatleast 26])
 {
 	register const char *	wn;
 	register const char *	mn;

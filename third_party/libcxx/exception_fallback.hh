@@ -14,23 +14,25 @@
 namespace std {
 
 _LIBCPP_SAFE_STATIC static std::terminate_handler __terminate_handler;
-_LIBCPP_SAFE_STATIC static std::unexpected_handler __unexpected_handler;
 
+#if _LIBCPP_STD_VER <= 14 ||                                                   \
+    defined(_LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS) ||              \
+    defined(_LIBCPP_BUILDING_LIBRARY)
+_LIBCPP_SAFE_STATIC static std::unexpected_handler __unexpected_handler;
 // libcxxrt provides implementations of these functions itself.
 unexpected_handler set_unexpected(unexpected_handler func) _NOEXCEPT {
   return __libcpp_atomic_exchange(&__unexpected_handler, func);
 }
-
 unexpected_handler get_unexpected() _NOEXCEPT {
   return __libcpp_atomic_load(&__unexpected_handler);
 }
-
 _LIBCPP_NORETURN
 void unexpected() {
   (*get_unexpected())();
   // unexpected handler should not return
   terminate();
 }
+#endif
 
 terminate_handler set_terminate(terminate_handler func) _NOEXCEPT {
   return __libcpp_atomic_exchange(&__terminate_handler, func);

@@ -61,12 +61,18 @@
 
 SHELL      = build/bootstrap/cocmd.com
 HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 win10 xnu
-MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += -j --no-builtin-rules
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
 .FEATURES: output-sync
 .PHONY: all o bins check test depend tags
+
+ifneq ($(m),)
+ifeq ($(MODE),)
+MODE := $(m)
+endif
+endif
 
 all:	o
 o:	o/$(MODE)

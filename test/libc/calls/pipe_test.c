@@ -29,7 +29,7 @@ char buf[6] = {0};
 struct rlimit rlim = {0, 10};
 
 TEST(pipe, efault) {
-  EXPECT_SYS(EFAULT, -1, pipe(0));
+  EXPECT_SYS(EFAULT, -1, pipe(VEIL("r", (void *)0)));
 }
 
 TEST(pipe, einval) {

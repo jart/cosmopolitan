@@ -14,6 +14,10 @@
 #include "libc/fmt/fmt.h"
 #include "third_party/tidy/utf8.h"
 
+#if __GNUC__ >= 11 /* [jart] this one looks legit */
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+
 /*
  Bind attribute types to procedures to check values.
  You can add new procedures for better validation

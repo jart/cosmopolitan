@@ -55,8 +55,10 @@ template unsigned __sort5<__less<long double>&, long double*>(long double*, long
 #ifndef _LIBCPP_HAS_NO_THREADS
 _LIBCPP_SAFE_STATIC static __libcpp_mutex_t __rs_mut = _LIBCPP_MUTEX_INITIALIZER;
 #endif
-unsigned __rs_default::__c_ = 0;
 
+#if _LIBCPP_STD_VER <= 14 || defined(_LIBCPP_ENABLE_CXX17_REMOVED_RANDOM_SHUFFLE) \
+  || defined(_LIBCPP_BUILDING_LIBRARY)
+unsigned __rs_default::__c_ = 0;
 __rs_default::__rs_default()
 {
 #ifndef _LIBCPP_HAS_NO_THREADS
@@ -64,12 +66,10 @@ __rs_default::__rs_default()
 #endif
     __c_ = 1;
 }
-
 __rs_default::__rs_default(const __rs_default&)
 {
     ++__c_;
 }
-
 __rs_default::~__rs_default()
 {
 #ifndef _LIBCPP_HAS_NO_THREADS
@@ -79,13 +79,13 @@ __rs_default::~__rs_default()
     --__c_;
 #endif
 }
-
 __rs_default::result_type
 __rs_default::operator()()
 {
     static mt19937 __rs_g;
     return __rs_g();
 }
+#endif
 
 __rs_default
 __rs_get()
