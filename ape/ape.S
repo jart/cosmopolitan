@@ -328,7 +328,7 @@ dsknfo:	push	%bx
 	movpp	%es,%ds
 	xor	%si,%si
 	mov	%si,%es
-	mov	$0x1510,%si		# mman::pc_drive_base_table
+	mov	$0x1d10,%si		# mman::pc_drive_base_table
 	xchg	%si,%di
 	movsw	#→ headunloadtime, headloadtime
 	movsw	#→ shutofftime, bytespersector
@@ -381,11 +381,11 @@ pcread:	push	%ax
 	add	$512>>4,%si
 	mov	%si,%es
 	inc	%al			# ++sector
-	cmp	0x151c,%al		# mman::pc_drive_last_sector
+	cmp	0x1d1c,%al		# mman::pc_drive_last_sector
 	jbe	2f
 	mov	$1,%al
 	inc	%dh			# ++head
-	cmp	0x1520,%dh		# mman::pc_drive_last_head
+	cmp	0x1d20,%dh		# mman::pc_drive_last_head
 	jbe	2f
 	xor	%dh,%dh
 	inc	%cx			# ++cylinder
@@ -484,19 +484,19 @@ ape.mbrpad:
 ape_disk:
 	.stub	ape.diskid,quad
 	.org	0x1be,0x00
-	.macro	.partn	x
-	.stub	ape.part\x\().status,byte	# 0=absent / 0x80=present
-	.stub	ape.part\x\().first.head,byte	# in low 6 bits
-	.stub	ape.part\x\().first.cylinder,byte
-	.stub	ape.part\x\().first.sector,byte
-	.stub	ape.part\x\().filesystem,byte
-	.stub	ape.part\x\().last.head,byte
-	.stub	ape.part\x\().last.cylinder,byte
-	.stub	ape.part\x\().last.sector,byte
-	.stub	ape.part\x\().lba,long          # c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
-	.stub	ape.part\x\().sector.count,long # sectors are 512 bytes
+	.macro	.partn	x:req sta h0 s0 c0 fs h9 s9 c9 lba0 nsec
+	.stub	ape.part\x\().status,byte,\sta	# 0=non-boot / 0x80=active
+	.stub	ape.part\x\().first.head,byte,\h0
+	.stub	ape.part\x\().first.sector,byte,\s0 # in low 6 bits
+	.stub	ape.part\x\().first.cylinder,byte,\c0
+	.stub	ape.part\x\().filesystem,byte,\fs
+	.stub	ape.part\x\().last.head,byte,\h9
+	.stub	ape.part\x\().last.sector,byte,\s9
+	.stub	ape.part\x\().last.cylinder,byte,\c9
+	.stub	ape.part\x\().lba,long,\lba0	# c₀*Cₙ + h₀*Hₙ + s₀*Sₙ
+	.stub	ape.part\x\().sector.count,long,\nsec # sectors are 512 bytes
 	.endm
-	.partn	1
+	.partn	1,0x80,0,1,0,0x7f,0xff,0xff,0xff,0,0xffffffff
 	.partn	2
 	.partn	3
 	.partn	4
@@ -1290,27 +1290,38 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 //	Gets memory map from BIOS.
 e820:	mov	$0x0510>>4,%di		# mman::e820
 	mov	%di,%es
-	xor	%edi,%edi		# es:di is destination buffer
+	xor	%di,%di			# es:di is destination buffer
 	xor	%ebx,%ebx		# ebx is an api state tracker
 1:	mov	$0xE820,%eax		# magic
 	mov	$8+8+4+4,%ecx		# sizeof(struct SmapEntry)
 	mov	$0x534d4150,%edx	# magic number
+	movl	$1,8+8+4/*SmapEntry::acpi3*/(%di) # prefill ACPI attributes;
+					# apparently some buggy BIOSes say
+					# that they return this field, yet
+					# do not fill it correctly
 	int	$0x15			# ax,bx,cx,dx,di → ax,bx,cx
 	jc	9f			# cf = unsupported or abuse
 	cmp	%edx,%eax		# more magic means success
 	jne	9f
 	test	%cx,%cx			# discard empty results
 	jz	5f
+	mov	8/*LODWORD(SmapEntry::size)*/(%di),%eax
+	or	8+4/*HIDWORD(SmapEntry::size)*/(%di),%eax
+	jz	5f
 	cmp	$8+8+4+1,%cx		# discard if ignore flag
 	jb	4f
-	testb	$1/*ignore*/,8+8+4/*SmapEntry::__acpi3*/(%di)
-	jnz	5f
+	testb	$1/*don't ignore*/,8+8+4/*SmapEntry::acpi3*/(%di)
+	jz	5f
 4:	add	$8+8+4+4,%di		# keep entry
 5:	test	%ebx,%ebx		# last entry?
 	jz	8f
-	cmp	$0x1000,%di
+	cmp	$(256-1)*(8+8+4+4),%di
 	jb	1b
-8:	ret
+8:	xor	%ax,%ax			# add a blank sentinel entry
+	mov	$(8+8)/2,%cx
+	cld
+	rep stosw
+	ret
 9:	mov	$REAL(str.e820),%di
 	call	rldie
 	.endfn	e820
@@ -1380,9 +1391,16 @@ a20:	cli
 
 //	Initializes long mode paging.
 pinit:	push	%ds
+	push	%es
 #define	SEG 0x79000
 	mov	$SEG>>4,%ax
 	mov	%ax,%ds
+	mov	%ax,%es
+	xor	%di,%di
+	xor	%ax,%ax
+	mov	$(0x7f000-SEG)/2,%cx
+	cld
+	rep stosw
 	movl	$0x7d000+PAGE_V+PAGE_RW,0x7e000-SEG	# PDPT←PML4T (+)
 	movl	$0x7c000+PAGE_V+PAGE_RW,0x7e800-SEG	# PDPT←PML4T (-)
 	movl	$0x7b000+PAGE_V+PAGE_RW,0x7d000-SEG	# PDT←PDPT   (+)
@@ -1391,13 +1409,14 @@ pinit:	push	%ds
 	movl	$0x79000+PAGE_V+PAGE_RW,0x7a000-SEG	# PD←PDT     (-)
 	mov	$512,%cx				# PD±2MB
 	mov	$PAGE_V+PAGE_RW,%eax
-	xor	%si,%si
-0:	mov	%eax,(%si)
+	xor	%di,%di
+0:	stosl
 	add	$0x1000,%eax
-	add	$8,%si
+	scasl						# di += 4
 	loop	0b
 	mov	$0x7e000,%eax				# PML4T←CR3
 	mov	%eax,%cr3
+	pop	%es
 	pop	%ds
 	ret
 	.endfn	pinit
@@ -1406,7 +1425,7 @@ pinit:	push	%ds
 //
 //	@see	Intel Manual V3A §4.1.2
 golong:	cli
-	lidt	0x1522					# mman::bad_idt
+	lidt	0x1d22					# mman::bad_idt
 	mov	%cr4,%eax
 	or	$CR4_PAE|CR4_PGE|CR4_OSFXSR,%eax
 	mov	%eax,%cr4

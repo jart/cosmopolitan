@@ -74,6 +74,7 @@ noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
     if (!(*e & PAGE_V)) {
       if (!maketables) return NULL;
       if (!(p = __new_page(mm))) return NULL;
+      __clear_page(BANE + p);
       *e = p | PAGE_V | PAGE_RW;
     }
     t = (uint64_t *)(BANE + (*e & PAGE_TA));
@@ -117,7 +118,7 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   uint64_t i, j, *m, p, pe;
   for (i = 0; i < mm->e820n; ++i) {
     for (p = mm->e820[i].addr, pe = mm->e820[i].addr + mm->e820[i].size;
-         p + 0x200000 < pe; p += 4096) {
+         p != pe + 0x200000; p += 4096) {
       m = __get_virtual(mm, pml4t, BANE + p, true);
       if (m && !(*m & PAGE_V)) {
         *m = p | PAGE_V | PAGE_RW;
@@ -150,7 +151,7 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b) {
           v = b + p->p_offset + i;
           m = MAX(m, v);
         } else {
-          v = __clear_page(__new_page(mm));
+          v = __clear_page(BANE + __new_page(mm));
         }
         *__get_virtual(mm, pml4t, p->p_vaddr + i, true) = (v & PAGE_TA) | f;
       }
