@@ -163,15 +163,15 @@ o/$(MODE)%/.zip.o: %
 # and it would be too costly in terms of make latency to have every
 # header file depend on $(HDRS) and $(INCS).
 
-o/%.h.ok: .UNSANDBOXED = 1
+o/%.h.ok: private .UNSANDBOXED = 1
 o/%.h.ok: %.h
 	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 
-o/$(MODE)/%.h.ok: .UNSANDBOXED = 1
+o/$(MODE)/%.h.ok: private .UNSANDBOXED = 1
 o/$(MODE)/%.h.ok: %.h
 	@$(COMPILE) -ACHECK.h $(COMPILE.c) -xc -g0 -o $@ $<
 
-o/$(MODE)/%.hh.ok: .UNSANDBOXED = 1
+o/$(MODE)/%.hh.ok: private .UNSANDBOXED = 1
 o/$(MODE)/%.hh.ok: %.hh
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
@@ -179,7 +179,7 @@ o/%.okk: .UNSANDBOXED = 1
 o/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
-o/$(MODE)/%.okk: .UNSANDBOXED = 1
+o/$(MODE)/%.okk: private .UNSANDBOXED = 1
 o/$(MODE)/%.okk: %
 	@$(COMPILE) -ACHECK.h $(COMPILE.cxx) -xc++ -g0 -o $@ $<
 
@@ -207,19 +207,19 @@ MAKE_SYMTAB_ZIP =				\
 ################################################################################
 # EMACS ASSEMBLY GENERATION
 
-o/$(MODE)/%-gcc.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: private .UNSANDBOXED = 1
 o/$(MODE)/%-gcc.asm: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-gcc.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-gcc.asm: private .UNSANDBOXED = 1
 o/$(MODE)/%-gcc.asm: %.cc
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<
 
-o/$(MODE)/%-clang.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: private .UNSANDBOXED = 1
 o/$(MODE)/%-clang.asm: %.c
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.c) -S -g0 $(OUTPUT_OPTION) $<
 
 o/$(MODE)/%-clang.asm: CC = $(CLANG)
-o/$(MODE)/%-clang.asm: .UNSANDBOXED = 1
+o/$(MODE)/%-clang.asm: private .UNSANDBOXED = 1
 o/$(MODE)/%-clang.asm: %.cc
 	@$(COMPILE) -AOBJECTIFY.c $(OBJECTIFY.cxx) -S -g0 $(OUTPUT_OPTION) $<

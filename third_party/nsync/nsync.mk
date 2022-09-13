@@ -11,10 +11,16 @@ THIRD_PARTY_NSYNC = $(THIRD_PARTY_NSYNC_A_DEPS) $(THIRD_PARTY_NSYNC_A)
 THIRD_PARTY_NSYNC_A = o/$(MODE)/third_party/nsync/nsync.a
 THIRD_PARTY_NSYNC_A_FILES := $(wildcard third_party/nsync/*)
 THIRD_PARTY_NSYNC_A_HDRS = $(filter %.h,$(THIRD_PARTY_NSYNC_A_FILES))
-THIRD_PARTY_NSYNC_A_SRCS = $(filter %.c,$(THIRD_PARTY_NSYNC_A_FILES))
+THIRD_PARTY_NSYNC_A_SRCS_C = $(filter %.c,$(THIRD_PARTY_NSYNC_A_FILES))
+THIRD_PARTY_NSYNC_A_SRCS_S = $(filter %.S,$(THIRD_PARTY_NSYNC_A_FILES))
+
+THIRD_PARTY_NSYNC_A_SRCS =				\
+	$(THIRD_PARTY_NSYNC_A_SRCS_S)			\
+	$(THIRD_PARTY_NSYNC_A_SRCS_C)
 
 THIRD_PARTY_NSYNC_A_OBJS =				\
-	$(THIRD_PARTY_NSYNC_A_SRCS:%.c=o/$(MODE)/%.o)
+	$(THIRD_PARTY_NSYNC_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	$(THIRD_PARTY_NSYNC_A_SRCS_S:%.S=o/$(MODE)/%.o)
 
 THIRD_PARTY_NSYNC_A_DIRECTDEPS =			\
 	LIBC_CALLS					\
@@ -54,4 +60,6 @@ THIRD_PARTY_NSYNC_OBJS = $(foreach x,$(THIRD_PARTY_NSYNC_ARTIFACTS),$($(x)_OBJS)
 $(THIRD_PARTY_NSYNC_OBJS): third_party/nsync/nsync.mk
 
 .PHONY: o/$(MODE)/third_party/nsync
-o/$(MODE)/third_party/nsync: $(THIRD_PARTY_NSYNC_CHECKS)
+o/$(MODE)/third_party/nsync:				\
+	o/$(MODE)/third_party/nsync/mem			\
+	$(THIRD_PARTY_NSYNC_CHECKS)

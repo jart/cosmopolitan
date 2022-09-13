@@ -1,7 +1,12 @@
 # *NSYNC
 
-The `THIRD_PARTY_NSYNC` and `LIBC_THREAD` packages include source code
-from *NSYNC. Here's the latest upstream synchronization point:
+*NSYNC is a library providing scalable synchronization primitives. The
+following packages are provided:
+
+  - `THIRD_PARTY_NSYNC` has `nsync_mu` which doesn't depend on malloc().
+  - `THIRD_PARTY_NSYNC_MEM` has the rest of *NSYNC, e.g. `nsync_cv`.
+
+The origin of this code is here:
 
     git@github.com:google/nsync
     ac5489682760393fe21bd2a8e038b528442412a7 (1.25.0)

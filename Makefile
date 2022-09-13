@@ -128,6 +128,7 @@ include libc/mem/mem.mk				#─┐
 include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
 include third_party/gdtoa/gdtoa.mk		# │  You can now use stdio
 include libc/time/time.mk			# │  You can finally call malloc()
+include third_party/nsync/mem/mem.mk		# │
 include libc/thread/thread.mk			# │
 include libc/stdio/stdio.mk			# │
 include third_party/libcxx/libcxx.mk		# │
@@ -265,98 +266,101 @@ o/$(MODE)/srcs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(SRCS
 o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS) $(INCS),$(dir $(x))))
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
-TAGS: .UNSANDBOXED = 1
+TAGS: private .UNSANDBOXED = 1
 TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
 	@$(RM) $@
 	@$(TAGS) $(TAGSFLAGS) -L $< -o $@
 
-HTAGS: .UNSANDBOXED = 1
+HTAGS: private .UNSANDBOXED = 1
 HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
 	@$(RM) $@
 	@build/htags -L $< -o $@
 
-loc: .UNSANDBOXED = 1
+loc: private .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy.com
 	find -name \*.h -or -name \*.c -or -name \*.S | \
 	$(XARGS) wc -l | grep total | awk '{print $$1}' | $<
 
-COSMOPOLITAN_OBJECTS =		\
-	NET_HTTP		\
-	LIBC_DNS		\
-	LIBC_SOCK		\
-	LIBC_NT_WS2_32		\
-	LIBC_NT_IPHLPAPI	\
-	LIBC_NT_MSWSOCK		\
-	LIBC_X			\
-	THIRD_PARTY_GETOPT	\
-	LIBC_LOG		\
-	LIBC_TIME		\
-	LIBC_ZIPOS		\
-	THIRD_PARTY_ZLIB	\
-	THIRD_PARTY_MUSL	\
-	LIBC_STDIO		\
-	THIRD_PARTY_GDTOA	\
-	THIRD_PARTY_REGEX	\
-	LIBC_MEM		\
-	THIRD_PARTY_DLMALLOC	\
-	LIBC_RUNTIME		\
-	THIRD_PARTY_NSYNC	\
-	LIBC_ELF		\
-	LIBC_CALLS		\
-	LIBC_SYSV_CALLS		\
-	LIBC_NT_PSAPI		\
-	LIBC_NT_POWRPROF	\
-	LIBC_NT_PDH		\
-	LIBC_NT_GDI32		\
-	LIBC_NT_COMDLG32	\
-	LIBC_NT_URL		\
-	LIBC_NT_USER32		\
-	LIBC_NT_NTDLL		\
-	LIBC_NT_ADVAPI32	\
-	LIBC_FMT		\
-	THIRD_PARTY_COMPILER_RT	\
-	LIBC_THREAD		\
-	LIBC_TINYMATH		\
-	THIRD_PARTY_XED		\
-	LIBC_STR		\
-	LIBC_SYSV		\
-	LIBC_INTRIN		\
-	LIBC_NT_KERNEL32	\
-	LIBC_NEXGEN32E		\
-	LIBC_VGA
+# PLEASE: MAINTAIN TOPOLOGICAL ORDER
+# FROM HIGHEST LEVEL TO LOWEST LEVEL
+COSMOPOLITAN_OBJECTS =			\
+	NET_HTTP			\
+	LIBC_DNS			\
+	LIBC_SOCK			\
+	LIBC_NT_WS2_32			\
+	LIBC_NT_IPHLPAPI		\
+	LIBC_NT_MSWSOCK			\
+	LIBC_X				\
+	THIRD_PARTY_GETOPT		\
+	LIBC_LOG			\
+	LIBC_TIME			\
+	LIBC_ZIPOS			\
+	THIRD_PARTY_ZLIB		\
+	THIRD_PARTY_MUSL		\
+	LIBC_STDIO			\
+	THIRD_PARTY_GDTOA		\
+	THIRD_PARTY_REGEX		\
+	LIBC_THREAD			\
+	THIRD_PARTY_NSYNC_MALLOC	\
+	LIBC_MEM			\
+	THIRD_PARTY_DLMALLOC		\
+	LIBC_RUNTIME			\
+	THIRD_PARTY_NSYNC		\
+	LIBC_ELF			\
+	LIBC_CALLS			\
+	LIBC_SYSV_CALLS			\
+	LIBC_VGA			\
+	LIBC_NT_PSAPI			\
+	LIBC_NT_POWRPROF		\
+	LIBC_NT_PDH			\
+	LIBC_NT_GDI32			\
+	LIBC_NT_COMDLG32		\
+	LIBC_NT_URL			\
+	LIBC_NT_USER32			\
+	LIBC_NT_NTDLL			\
+	LIBC_NT_ADVAPI32		\
+	LIBC_FMT			\
+	THIRD_PARTY_COMPILER_RT		\
+	LIBC_TINYMATH			\
+	THIRD_PARTY_XED			\
+	LIBC_STR			\
+	LIBC_SYSV			\
+	LIBC_INTRIN			\
+	LIBC_NT_KERNEL32		\
+	LIBC_NEXGEN32E
 
-COSMOPOLITAN_HEADERS =		\
-	APE			\
-	LIBC			\
-	LIBC_CALLS		\
-	LIBC_DNS		\
-	LIBC_ELF		\
-	LIBC_FMT		\
-	LIBC_INTRIN		\
-	LIBC_LOG		\
-	LIBC_MEM		\
-	LIBC_NEXGEN32E		\
-	LIBC_NT			\
-	LIBC_RUNTIME		\
-	LIBC_SOCK		\
-	LIBC_STDIO		\
-	THIRD_PARTY_NSYNC	\
-	THIRD_PARTY_XED		\
-	LIBC_STR		\
-	LIBC_SYSV		\
-	LIBC_THREAD		\
-	LIBC_TIME		\
-	LIBC_TINYMATH		\
-	LIBC_X			\
-	LIBC_ZIPOS		\
-	LIBC_VGA		\
-	NET_HTTP		\
-	THIRD_PARTY_DLMALLOC	\
-	THIRD_PARTY_GDTOA	\
-	THIRD_PARTY_GETOPT	\
-	THIRD_PARTY_MUSL	\
-	THIRD_PARTY_ZLIB	\
-	THIRD_PARTY_ZLIB_GZ	\
+COSMOPOLITAN_HEADERS =			\
+	APE				\
+	LIBC				\
+	LIBC_CALLS			\
+	LIBC_DNS			\
+	LIBC_ELF			\
+	LIBC_FMT			\
+	LIBC_INTRIN			\
+	LIBC_LOG			\
+	LIBC_MEM			\
+	LIBC_NEXGEN32E			\
+	LIBC_NT				\
+	LIBC_RUNTIME			\
+	LIBC_SOCK			\
+	LIBC_STDIO			\
+	THIRD_PARTY_NSYNC		\
+	THIRD_PARTY_XED			\
+	LIBC_STR			\
+	LIBC_SYSV			\
+	LIBC_THREAD			\
+	LIBC_TIME			\
+	LIBC_TINYMATH			\
+	LIBC_X				\
+	LIBC_ZIPOS			\
+	LIBC_VGA			\
+	NET_HTTP			\
+	THIRD_PARTY_DLMALLOC		\
+	THIRD_PARTY_GDTOA		\
+	THIRD_PARTY_GETOPT		\
+	THIRD_PARTY_MUSL		\
+	THIRD_PARTY_ZLIB		\
+	THIRD_PARTY_ZLIB_GZ		\
 	THIRD_PARTY_REGEX
 
 o/$(MODE)/cosmopolitan.a:	\
@@ -370,7 +374,7 @@ o/cosmopolitan.h:							\
 	$(file >$(TMPDIR)/$(subst /,_,$@),libc/integral/normalize.inc $(foreach x,$(COSMOPOLITAN_HEADERS),$($(x)_HDRS)))
 	@$(COMPILE) -AROLLUP -T$@ o/$(MODE)/tool/build/rollup.com @$(TMPDIR)/$(subst /,_,$@) >$@
 
-o/cosmopolitan.html: .UNSANDBOXED = 1
+o/cosmopolitan.html: private .UNSANDBOXED = 1
 o/cosmopolitan.html:							\
 		o/$(MODE)/third_party/chibicc/chibicc.com.dbg		\
 		$(filter-out %.s,$(foreach x,$(COSMOPOLITAN_OBJECTS),$($(x)_SRCS)))	\

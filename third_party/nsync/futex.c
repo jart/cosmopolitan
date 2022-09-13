@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
@@ -34,30 +34,15 @@
 int _futex (int *, int, int, const struct timespec *, int *, int);
 
 static int FUTEX_WAIT_;
-static int FUTEX_WAKE_;
 static int FUTEX_PRIVATE_FLAG_;
 static bool FUTEX_IS_SUPPORTED;
 bool FUTEX_TIMEOUT_IS_ABSOLUTE;
 
-__attribute__((__constructor__)) static void sync_futex_init_ (void) {
+__attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	int x = 0;
 
-	FUTEX_WAKE_ = FUTEX_WAKE;
-
-	if (IsLinux () && 
-	    _futex (&x, FUTEX_WAIT_BITSET, 1, 0, 0,
-		    FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
-		FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
-	} else {
-		FUTEX_WAIT_ = FUTEX_WAIT;
-	}
-
-	if (IsOpenbsd () ||
-	    (IsLinux () && 
-	     !_futex (&x, FUTEX_WAKE_PRIVATE, 1, 0, 0, 0))) {
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-	}
+        if (!(FUTEX_IS_SUPPORTED = IsLinux() || IsOpenbsd()))
+		return;
 
 	// In our testing, we found that the monotonic clock on various
 	// popular systems (such as Linux, and some BSD variants) was no
@@ -72,10 +57,23 @@ __attribute__((__constructor__)) static void sync_futex_init_ (void) {
 	if (IsLinux () &&
 	    _futex (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
 		    1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
-		FUTEX_WAIT_ |= FUTEX_CLOCK_REALTIME;
+		FUTEX_WAIT_ = FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME;
+		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+	} else if (IsLinux () && 
+		   _futex (&x, FUTEX_WAIT_BITSET, 1, 0, 0,
+			   FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
+		FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
+		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+	} else if (IsOpenbsd () ||
+		   (IsLinux () && 
+		    !_futex (&x, FUTEX_WAKE_PRIVATE, 1, 0, 0, 0))) {
+		FUTEX_WAIT_ = FUTEX_WAIT;
+		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+	} else {
+		FUTEX_WAIT_ = FUTEX_WAIT;
 	}
-
-        FUTEX_IS_SUPPORTED = IsLinux() || IsOpenbsd();
 }
 
 int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout) {
@@ -108,7 +106,7 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 	int rc, op;
 	int wake (void *, int, int) asm ("_futex");
 	if (FUTEX_IS_SUPPORTED) {
-		op = FUTEX_WAKE_;
+		op = FUTEX_WAKE;
 		if (pshare == PTHREAD_PROCESS_PRIVATE) {
 			op |= FUTEX_PRIVATE_FLAG_;
 		}
