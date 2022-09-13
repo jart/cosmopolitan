@@ -27,6 +27,7 @@
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
+#include "libc/dce.h"
 #include "libc/vga/vga.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
@@ -58,24 +59,26 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
 }
 
 __attribute__((__constructor__)) static textstartup void _vga_init(void) {
-  void * const vid_buf = (void *)(BANE + 0xb8000ull);
-  /*
-   * Get the initial cursor position from the BIOS data area.  Also get
-   * the height (in scan lines) of each character; this is used to set the
-   * cursor shape.
-   */
-  typedef struct {
-    unsigned char col, row;
-  } bios_curs_pos_t;
-  bios_curs_pos_t pos = *(bios_curs_pos_t *)(BANE + 0x0450ull);
-  uint8_t chr_ht = *(uint8_t *)(BANE + 0x0485ull),
-          chr_ht_hi = *(uint8_t *)(BANE + 0x0486ull);
-  if (chr_ht_hi != 0 || chr_ht > 32)
-    chr_ht = 32;
-  /*
-   * Initialize our tty structure from the current screen contents, current
-   * cursor position, & character height.
-   */
-  _StartTty(&_vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
-            chr_ht, vid_buf, vga_wcs);
+  if (IsMetal()) {
+    void * const vid_buf = (void *)(BANE + 0xb8000ull);
+    /*
+     * Get the initial cursor position from the BIOS data area.  Also get
+     * the height (in scan lines) of each character; this is used to set the
+     * cursor shape.
+     */
+    typedef struct {
+      unsigned char col, row;
+    } bios_curs_pos_t;
+    bios_curs_pos_t pos = *(bios_curs_pos_t *)(BANE + 0x0450ull);
+    uint8_t chr_ht = *(uint8_t *)(BANE + 0x0485ull),
+            chr_ht_hi = *(uint8_t *)(BANE + 0x0486ull);
+    if (chr_ht_hi != 0 || chr_ht > 32)
+      chr_ht = 32;
+    /*
+     * Initialize our tty structure from the current screen contents,
+     * current cursor position, & character height.
+     */
+    _StartTty(&_vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
+              chr_ht, vid_buf, vga_wcs);
+  }
 }
