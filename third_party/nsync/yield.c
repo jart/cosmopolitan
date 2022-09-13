@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "third_party/nsync/common.internal.h"
 // clang-format off
 

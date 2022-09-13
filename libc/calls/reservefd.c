@@ -18,14 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/weaken.h"
+#include "libc/intrin/extend.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/directmap.internal.h"
@@ -50,8 +49,8 @@ int __ensurefds_unlocked(int fd) {
   bool relocate;
   if (fd < g_fds.n) return fd;
   g_fds.n = fd + 1;
-  g_fds.e =
-      _extend(g_fds.p, g_fds.n * sizeof(*g_fds.p), g_fds.e, 0x6ff000000000);
+  g_fds.e = _extend(g_fds.p, g_fds.n * sizeof(*g_fds.p), g_fds.e,
+                    kMemtrackFdsStart + kMemtrackFdsSize);
   return fd;
 }
 

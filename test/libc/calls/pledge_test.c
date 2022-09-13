@@ -30,7 +30,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/io.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

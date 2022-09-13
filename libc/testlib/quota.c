@@ -51,8 +51,7 @@ static relegated void DieBecauseOfQuota(int rc, const char *message) {
   gethostname(hostname, sizeof(hostname));
   kprintf("%s on %s pid %d\n", message, hostname, (long)getpid());
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
-  __restorewintty();
-  _Exit(rc);
+  _Exitr(rc);
 }
 
 static relegated void OnXcpu(int sig) {
@@ -76,7 +75,7 @@ relegated void __oom_hook(size_t request) {
   if (IsRunningUnderMake()) {
     newlim = toto + request;
     newlim += newlim >> 1;
-    newlim = roundup2pow(newlim);
+    newlim = _roundup2pow(newlim);
     kprintf("FIX CODE OR TUNE QUOTA += -M%dm\n", newlim / (1024 * 1024));
   }
   kprintf("\n");
@@ -84,8 +83,7 @@ relegated void __oom_hook(size_t request) {
   kprintf("\nTHE STRAW THAT BROKE THE CAMEL'S BACK\n");
   PrintBacktraceUsingSymbols(2, 0, GetSymbolTable());
   PrintSystemMappings(2);
-  __restorewintty();
-  _Exit(42);
+  _Exitr(42);
 }
 
 static textstartup void InstallQuotaHandlers(void) {

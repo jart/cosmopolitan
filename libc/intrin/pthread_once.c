@@ -46,8 +46,8 @@
  */
 int pthread_once(pthread_once_t *once, void init(void)) {
   uint32_t old;
-  if (weaken(nsync_run_once)) {
-    weaken(nsync_run_once)((nsync_once *)once, init);
+  if (_weaken(nsync_run_once)) {
+    _weaken(nsync_run_once)((nsync_once *)once, init);
     return 0;
   }
   switch ((old = atomic_load_explicit(&once->_lock, memory_order_relaxed))) {

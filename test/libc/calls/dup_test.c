@@ -28,7 +28,7 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xspawn.h"
 
 char testlib_enable_tmp_setup_teardown;
 

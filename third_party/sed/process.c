@@ -58,7 +58,7 @@
 #include "libc/sysv/consts/sio.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/str/unicode.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/calls/calls.h"
 
 #include "libc/str/str.h"

@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"

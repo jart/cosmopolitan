@@ -17,27 +17,28 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(tan, test) {
-  EXPECT_STREQ("0", gc(xasprintf("%.15g", tan(0.))));
-  EXPECT_STREQ("-0", gc(xasprintf("%.15g", tan(-0.))));
-  EXPECT_STREQ("0.54630248984379", gc(xasprintf("%.15g", tan(.5))));
-  EXPECT_STREQ("-0.54630248984379", gc(xasprintf("%.15g", tan(-.5))));
-  EXPECT_STREQ("1.5574077246549", gc(xasprintf("%.15g", tan(1.))));
-  EXPECT_STREQ("-1.5574077246549", gc(xasprintf("%.15g", tan(-1.))));
-  EXPECT_STREQ("14.1014199471717", gc(xasprintf("%.15g", tan(1.5))));
-  EXPECT_STREQ("-14.1014199471717", gc(xasprintf("%.15g", tan(-1.5))));
-  EXPECT_STREQ("nan", gc(xasprintf("%.15g", tan(NAN))));
-  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(-NAN))));
-  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(INFINITY))));
-  EXPECT_STREQ("-nan", gc(xasprintf("%.15g", tan(-INFINITY))));
+  EXPECT_STREQ("0", _gc(xasprintf("%.15g", tan(0.))));
+  EXPECT_STREQ("-0", _gc(xasprintf("%.15g", tan(-0.))));
+  EXPECT_STREQ("0.54630248984379", _gc(xasprintf("%.15g", tan(.5))));
+  EXPECT_STREQ("-0.54630248984379", _gc(xasprintf("%.15g", tan(-.5))));
+  EXPECT_STREQ("1.5574077246549", _gc(xasprintf("%.15g", tan(1.))));
+  EXPECT_STREQ("-1.5574077246549", _gc(xasprintf("%.15g", tan(-1.))));
+  EXPECT_STREQ("14.1014199471717", _gc(xasprintf("%.15g", tan(1.5))));
+  EXPECT_STREQ("-14.1014199471717", _gc(xasprintf("%.15g", tan(-1.5))));
+  EXPECT_STREQ("nan", _gc(xasprintf("%.15g", tan(NAN))));
+  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(-NAN))));
+  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(INFINITY))));
+  EXPECT_STREQ("-nan", _gc(xasprintf("%.15g", tan(-INFINITY))));
   EXPECT_STREQ("2.2250738585072e-308",
-               gc(xasprintf("%.15g", tan(__DBL_MIN__))));
-  EXPECT_STREQ("-0.0049620158744449", gc(xasprintf("%.15g", tan(__DBL_MAX__))));
+               _gc(xasprintf("%.15g", tan(__DBL_MIN__))));
+  EXPECT_STREQ("-0.0049620158744449",
+               _gc(xasprintf("%.15g", tan(__DBL_MAX__))));
 }
 
 BENCH(tan, bench) {

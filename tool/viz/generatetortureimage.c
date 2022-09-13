@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/stb/stb_image_write.h"
 
 #define YN (1080 / YM)
@@ -53,10 +54,10 @@ void *GenerateTortureImage(unsigned char RGB[YN][YM][XN][XM][3]) {
 
 int main(int argc, char *argv[]) {
   stbi_write_png(
-      gc(xasprintf("maxwell_%dx%d_%dx%d.png", XN * XM, YN * YM, XM, YM)),
+      _gc(xasprintf("maxwell_%dx%d_%dx%d.png", XN * XM, YN * YM, XM, YM)),
       XN * XM, YN * YM, 3,
       GenerateTortureImage(
-          gc(xmemalign(32, sizeof(unsigned char) * XN * XM * YN * YM * 3))),
+          _gc(xmemalign(32, sizeof(unsigned char) * XN * XM * YN * YM * 3))),
       XN * XM * 3);
   return 0;
 }

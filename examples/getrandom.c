@@ -7,20 +7,21 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
-#include "libc/stdio/xorshift.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/xorshift.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"

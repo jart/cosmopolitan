@@ -22,7 +22,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
@@ -107,7 +106,7 @@ int main(int argc, char *argv[]) {
   mode = strtol(argv[optind], 0, 8) & 07777;
   for (i = optind + 1; i < argc; ++i) {
     if (chmod(argv[i], mode) == -1) {
-      const char *s = strerdoc(errno);
+      const char *s = _strerdoc(errno);
       fputs(prog, stderr);
       fputs(": ", stderr);
       fputs(argv[i], stderr);

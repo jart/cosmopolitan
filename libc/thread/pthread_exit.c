@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"

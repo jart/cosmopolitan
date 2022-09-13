@@ -17,30 +17,30 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(sincos, test) {
   double sine, cosine;
   sincos(.1, &sine, &cosine);
-  EXPECT_STREQ("0.0998334166468282", gc(xasprintf("%.15g", sine)));
-  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15g", cosine)));
+  EXPECT_STREQ("0.0998334166468282", _gc(xasprintf("%.15g", sine)));
+  EXPECT_STREQ("0.995004165278026", _gc(xasprintf("%.15g", cosine)));
 }
 
 TEST(sincosf, test) {
   float sine, cosine;
   sincosf(.1, &sine, &cosine);
-  EXPECT_STREQ("0.0998334", gc(xasprintf("%.6g", sine)));
-  EXPECT_STREQ("0.995004", gc(xasprintf("%.6g", cosine)));
+  EXPECT_STREQ("0.0998334", _gc(xasprintf("%.6g", sine)));
+  EXPECT_STREQ("0.995004", _gc(xasprintf("%.6g", cosine)));
 }
 
 TEST(sincosl, test) {
   long double sine, cosine;
   sincosl(.1, &sine, &cosine);
-  EXPECT_STREQ("0.0998334166468282", gc(xasprintf("%.15Lg", sine)));
-  EXPECT_STREQ("0.995004165278026", gc(xasprintf("%.15Lg", cosine)));
+  EXPECT_STREQ("0.0998334166468282", _gc(xasprintf("%.15Lg", sine)));
+  EXPECT_STREQ("0.995004165278026", _gc(xasprintf("%.15Lg", cosine)));
 }
 
 #define NUM .123

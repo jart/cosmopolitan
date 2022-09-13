@@ -30,8 +30,8 @@ static void onmemchunk(void *start, void *end, size_t used_bytes, void *arg) {
 /**
  * Prints memory mappings.
  */
-void meminfo(int fd) {
-  memsummary(fd);
+void _meminfo(int fd) {
+  _memsummary(fd);
   (dprintf)(fd, "%*s   %*s   %*s   %*s\n", POINTER_XDIGITS, "start",
             POINTER_XDIGITS, "end", 8, "used", 8, "size");
   malloc_inspect_all(onmemchunk, &fd);

@@ -115,7 +115,7 @@ char *Demangle(char *p, const char *symbol, size_t n) {
   char *r;
   size_t sn;
   sn = strlen(symbol);
-  if (startswith(symbol, "_Z")) {
+  if (_startswith(symbol, "_Z")) {
     if ((r = DemangleCxxFilt(p, n, symbol, sn))) return r;
   }
   return CopySymbol(p, n, symbol, sn);

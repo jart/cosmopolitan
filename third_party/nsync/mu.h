@@ -50,6 +50,7 @@ struct nsync_dll_element_s_;
 */
 typedef struct nsync_mu_s_ {
   nsync_atomic_uint32_ word;            /* internal use only */
+  int _zero;                            /* c pthread_mutex_t */
   struct nsync_dll_element_s_ *waiters; /* internal use only */
 } nsync_mu;
 

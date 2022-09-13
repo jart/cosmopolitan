@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -34,6 +34,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/file.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "tool/build/lib/elfwriter.h"
@@ -479,11 +480,11 @@ static void ReadFlags(struct As *a, int argc, char *argv[]) {
   for (i = 1; i < argc; ++i) {
     if (!strcmp(argv[i], "-o")) {
       a->outpath = StrDup(a, argv[++i]);
-    } else if (startswith(argv[i], "-o")) {
+    } else if (_startswith(argv[i], "-o")) {
       a->outpath = StrDup(a, argv[i] + 2);
     } else if (!strcmp(argv[i], "-I")) {
       SaveString(&a->incpaths, strdup(argv[++i]));
-    } else if (startswith(argv[i], "-I")) {
+    } else if (_startswith(argv[i], "-I")) {
       SaveString(&a->incpaths, strdup(argv[i] + 2));
     } else if (!strcmp(argv[i], "-Z")) {
       a->inhibiterr = true;
@@ -1667,13 +1668,13 @@ static int GrabSection(struct As *a, int name, int flags, int type, int group,
 static void OnSection(struct As *a, struct Slice s) {
   int name, flags, type, group = -1, comdat = -1;
   name = SliceDup(a, GetSlice(a));
-  if (startswith(a->strings.p[name], ".text")) {
+  if (_startswith(a->strings.p[name], ".text")) {
     flags = SHF_ALLOC | SHF_EXECINSTR;
     type = SHT_PROGBITS;
-  } else if (startswith(a->strings.p[name], ".data")) {
+  } else if (_startswith(a->strings.p[name], ".data")) {
     flags = SHF_ALLOC | SHF_WRITE;
     type = SHT_PROGBITS;
-  } else if (startswith(a->strings.p[name], ".bss")) {
+  } else if (_startswith(a->strings.p[name], ".bss")) {
     flags = SHF_ALLOC | SHF_WRITE;
     type = SHT_NOBITS;
   } else {
@@ -2025,7 +2026,7 @@ static int ParseModrm(struct As *a, int *disp) {
         if (((reg & 070) >> 3) == 2) modrm |= HASASZ;  // asz
         if (IsComma(a)) {
           ++a->i;
-          modrm |= (bsr(GetInt(a)) & 3) << 6;
+          modrm |= (_bsr(GetInt(a)) & 3) << 6;
         }
       }
       ConsumePunct(a, ')');
@@ -2607,8 +2608,8 @@ static bool HasXmmOnLine(struct As *a) {
   int i;
   for (i = 0; !IsPunct(a, a->i + i, ';'); ++i) {
     if (IsSlice(a, a->i + i) && a->slices.p[a->things.p[a->i + i].i].n >= 4 &&
-        (startswith(a->slices.p[a->things.p[a->i + i].i].p, "xmm") ||
-         startswith(a->slices.p[a->things.p[a->i + i].i].p, "%xmm"))) {
+        (_startswith(a->slices.p[a->things.p[a->i + i].i].p, "xmm") ||
+         _startswith(a->slices.p[a->things.p[a->i + i].i].p, "%xmm"))) {
       return true;
     }
   }

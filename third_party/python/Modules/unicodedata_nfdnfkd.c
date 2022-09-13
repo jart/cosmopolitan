@@ -97,9 +97,9 @@ _PyUnicode_NfdNfkd(PyObject *self, PyObject *input, int k)
             /* Copy decomposition onto the stack, in reverse
                order.  */
             while(count) {
-                code = bextra(_PyUnicode_Decomp,
-                              index + (--count),
-                              _PyUnicode_DecompBits);
+                code = _bextra(_PyUnicode_Decomp,
+                               index + (--count),
+                               _PyUnicode_DecompBits);
                 stack[stackptr++] = code;
             }
         }

@@ -32,6 +32,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
@@ -89,8 +90,8 @@ static int PosixThread(void *arg, int tid) {
     __get_tls()->tib_pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);
   }
-  if (weaken(_pthread_key_destruct)) {
-    weaken(_pthread_key_destruct)(0);
+  if (_weaken(_pthread_key_destruct)) {
+    _weaken(_pthread_key_destruct)(0);
   }
   _pthread_ungarbage();
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
@@ -232,7 +233,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     // 2. in public world optimize to *work* regardless of memory
     pt->ownstack = true;
     pt->attr.stacksize = MAX(pt->attr.stacksize, GetStackSize());
-    pt->attr.stacksize = roundup2pow(pt->attr.stacksize);
+    pt->attr.stacksize = _roundup2pow(pt->attr.stacksize);
     pt->attr.guardsize = ROUNDUP(pt->attr.guardsize, PAGESIZE);
     if (pt->attr.guardsize + PAGESIZE >= pt->attr.stacksize) {
       _pthread_free(pt);

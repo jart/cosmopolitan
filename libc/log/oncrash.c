@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -28,6 +27,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/gdb.h"
@@ -35,11 +35,11 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/stackframe.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/thread/tls.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -199,7 +199,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   char host[64];
   struct utsname names;
   static char buf[4096];
-  if (weaken(ShowCrashReportHook)) {
+  if (_weaken(ShowCrashReportHook)) {
     ShowCrashReportHook(2, err, sig, si, ctx);
   }
   names.sysname[0] = 0;
@@ -258,8 +258,7 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
           kind, sig, __argv[0], ctx ? ctx->uc_mcontext.rip : 0,
           ctx ? ctx->uc_mcontext.rsp : 0, ctx ? ctx->uc_mcontext.rbp : 0, __pid,
           sys_gettid());
-  __restorewintty();
-  _Exit(119);
+  _Exitr(119);
 }
 
 /**
@@ -309,8 +308,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
       if (!(gdbpid > 0 && (sig == SIGTRAP || sig == SIGQUIT))) {
         __restore_tty();
         ShowCrashReport(err, sig, si, ctx);
-        __restorewintty();
-        _Exit(128 + sig);
+        _Exitr(128 + sig);
       }
       sync = 0;
     } else {

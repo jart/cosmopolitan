@@ -9,9 +9,11 @@
 #endif
 #include "libc/dce.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "third_party/getopt/getopt.h"
@@ -43,15 +45,15 @@ void PrintImg(const char *path) {
   size_t n;
   int opt, i, yn, xn, cn, w, h;
   void *img, *pix, *src, *mime;
-  if (!(img = gc(xslurp(path, &n)))) exit(2);
-  if (!(pix = gc(stbi_load_from_memory(img, n, &xn, &yn, &cn, 0)))) exit(3);
+  if (!(img = _gc(xslurp(path, &n)))) exit(2);
+  if (!(pix = _gc(stbi_load_from_memory(img, n, &xn, &yn, &cn, 0)))) exit(3);
   if (linktag) {
     printf("<a href=\"%s\"\n  >", path);
   }
   src = path;
   if (datauri) {
     src = xasprintf("data:%s;base64,%s", FindContentType(path, -1),
-                    gc(EncodeBase64(img, n, &n)));
+                    _gc(EncodeBase64(img, n, &n)));
   }
   w = (xn + (1 << scale) / 2) >> scale;
   h = (yn + (1 << scale) / 2) >> scale;

@@ -17,10 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/alloca.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ok.h"

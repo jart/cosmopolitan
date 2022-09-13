@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"

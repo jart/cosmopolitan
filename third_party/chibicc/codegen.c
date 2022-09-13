@@ -1,3 +1,4 @@
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 
 #define GP_MAX 6
@@ -984,7 +985,7 @@ static bool gen_builtin_funcall(Node *node, const char *name) {
     char regprefix;
     gen_expr(node->args);
     emitlin("\tor\t$-1,%edi");
-    regprefix = endswith(name, "l") ? 'r' : 'e';
+    regprefix = _endswith(name, "l") ? 'r' : 'e';
     println("\tbsf\t%%%cax,%%%cax", regprefix, regprefix);
     emitlin("\tcmovz\t%edi,%eax");
     emitlin("\tinc\t%eax");
@@ -1432,7 +1433,7 @@ void gen_expr(Node *node) {
     case ND_FUNCALL: {
       const char *funcname = NULL;
       if (node->lhs->kind == ND_VAR) {
-        if (startswith(nameof(node->lhs->var), "__builtin_")) {
+        if (_startswith(nameof(node->lhs->var), "__builtin_")) {
           funcname = nameof(node->lhs->var) + 10;
           if (gen_builtin_funcall(node, funcname)) {
             return;

@@ -5,7 +5,7 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "third_party/python/Include/errcode.h"
 #include "third_party/python/Include/node.h"
 #include "third_party/python/Include/objimpl.h"
@@ -32,7 +32,7 @@ fancy_roundup(int x)
     /* Round up to the closest power of 2 >= n. */
     int r;
     assert(x > 128);
-    r = 1u << (bsr(x - 1) + 1); /* hacker's delight */
+    r = 1u << (_bsr(x - 1) + 1); /* hacker's delight */
     return r > 0 ? r : -1;
 }
 

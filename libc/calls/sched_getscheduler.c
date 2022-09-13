@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sched-sysv.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"

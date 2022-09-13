@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -112,7 +112,7 @@ TEST(plinko, worksOrPrintsNiceError) {
   EXPECT_NE(-1, close(pfds[1][0]));
   EXPECT_NE(-1, waitpid(pid, &wstatus, 0));
   EXPECT_TRUE(WIFEXITED(wstatus));
-  if (!startswith(buf, "error: ")) {
+  if (!_startswith(buf, "error: ")) {
     EXPECT_STREQ("OKCOMPUTER\n", buf);
     EXPECT_EQ(0, WEXITSTATUS(wstatus));
   } else {

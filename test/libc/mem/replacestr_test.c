@@ -16,26 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 
-TEST(replacestr, demo) {
+TEST(_replacestr, demo) {
   EXPECT_STREQ("hello friends",
-               gc(replacestr("hello world", "world", "friends")));
-  EXPECT_STREQ("bbbbbbbb", gc(replacestr("aaaa", "a", "bb")));
+               _gc(_replacestr("hello world", "world", "friends")));
+  EXPECT_STREQ("bbbbbbbb", _gc(_replacestr("aaaa", "a", "bb")));
 }
 
-TEST(replacestr, emptyString) {
-  EXPECT_STREQ("", gc(replacestr("", "x", "y")));
+TEST(_replacestr, emptyString) {
+  EXPECT_STREQ("", _gc(_replacestr("", "x", "y")));
 }
 
-TEST(replacestr, emptyNeedle) {
-  EXPECT_EQ(NULL, gc(replacestr("a", "", "a")));
+TEST(_replacestr, emptyNeedle) {
+  EXPECT_EQ(NULL, _gc(_replacestr("a", "", "a")));
   EXPECT_EQ(EINVAL, errno);
 }
 
-TEST(replacestr, needleInReplacement_doesntExplode) {
-  EXPECT_STREQ("xxxxxxx", gc(replacestr("x", "x", "xxxxxxx")));
+TEST(_replacestr, needleInReplacement_doesntExplode) {
+  EXPECT_STREQ("xxxxxxx", _gc(_replacestr("x", "x", "xxxxxxx")));
 }

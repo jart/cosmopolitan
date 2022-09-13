@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_PMMINTRIN_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_PMMINTRIN_H_
+#include "libc/intrin/pmmintrin.internal.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_PMMINTRIN_H_ */

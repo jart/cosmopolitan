@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/bsr.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 
 static inline int PickGoodWidth(unsigned x, char z) {
   if (z) {
@@ -48,7 +48,7 @@ char *FormatHex64(char p[hasatleast 19], uint64_t x, char z) {
       *p++ = '0';
       *p++ = 'x';
     }
-    i = PickGoodWidth(bsrl(x), z);
+    i = PickGoodWidth(_bsrl(x), z);
     do {
       *p++ = "0123456789abcdef"[(x >> (i -= 4)) & 15];
     } while (i);

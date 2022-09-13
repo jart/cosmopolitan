@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/_getauxval.internal.h"
+#include "libc/intrin/_getauxval.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/thread/tls.h"

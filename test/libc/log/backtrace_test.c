@@ -25,19 +25,19 @@
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
-#include "libc/mem/io.h"
+#include "libc/mem/gc.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "net/http/escape.h"
 
 STATIC_YOINK("zip_uri_support");
@@ -128,14 +128,14 @@ TEST(ShowCrashReports, testMemoryLeakCrash) {
   EXPECT_EQ(78, WEXITSTATUS(ws));
   if (!strstr(output, "UNFREED MEMORY")) {
     fprintf(stderr, "ERROR: crash report didn't report leak\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   if (IsAsan()) {
     if (!OutputHasSymbol(output, "strdup") ||
         !OutputHasSymbol(output, "MemoryLeakCrash")) {
       fprintf(stderr, "ERROR: crash report didn't backtrace allocation\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -206,7 +206,7 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
   /* NULL is stopgap until we can copy symbol tablces into binary */
   if (!OutputHasSymbol(output, "StackOverrunCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   if (strstr(output, "'int' index 10 into 'char [10]' out of bounds")) {
@@ -215,12 +215,12 @@ TEST(ShowCrashReports, testStackOverrunCrash) {
     // asan nailed it
     if (!strstr(output, "☺☻♥♦♣♠•◘○")) {
       fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "stack overrun")) {
       fprintf(stderr, "ERROR: crash report misclassified stack overrun\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -315,7 +315,7 @@ TEST(ShowCrashReports, testDivideByZero) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "FpuCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif
@@ -323,29 +323,29 @@ TEST(ShowCrashReports, testDivideByZero) {
     // UBSAN handled it
   } else {
     // ShowCrashReports() handled it
-    if (!strstr(output, gc(xasprintf("%d", pid)))) {
+    if (!strstr(output, _gc(xasprintf("%d", pid)))) {
       fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "SIGFPE")) {
       fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "3.141")) {
       fprintf(stderr, "ERROR: crash report didn't have fpu register\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "0f0e0d0c0b0a09080706050403020100")) {
       fprintf(stderr, "ERROR: crash report didn't have sse register\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
     if (!strstr(output, "3133731337")) {
       fprintf(stderr, "ERROR: crash report didn't have general register\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -393,31 +393,31 @@ TEST(ShowCrashReports, testStackOverflow) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "StackOverflow")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif
   // ShowCrashReports() handled it
-  if (!strstr(output, gc(xasprintf("%d", pid)))) {
+  if (!strstr(output, _gc(xasprintf("%d", pid)))) {
     fprintf(stderr, "ERROR: crash report didn't have pid\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   if (!strstr(output, "SIGSEGV")) {
     fprintf(stderr, "ERROR: crash report didn't have signal name\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   if (!IsTiny()) {
     if (!strstr(output, "Stack Overflow")) {
       fprintf(stderr, "ERROR: crash report didn't have 'Stack Overflow'\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   } else {
     if (!strstr(output, "SEGV_MAPERR")) {
       fprintf(stderr, "ERROR: crash report didn't have 'SEGV_MAPERR'\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -508,14 +508,14 @@ TEST(ShowCrashReports, testBssOverrunCrash) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "BssOverrunCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif
   if (!strstr(output, "'int' index 10 into 'char [10]' out of bounds") &&
       (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone"))) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   free(output);
@@ -585,13 +585,13 @@ TEST(ShowCrashReports, testNpeCrash) {
   /* NULL is stopgap until we can copy symbol tables into binary */
   if (!strstr(output, "null pointer")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "NpeCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif
@@ -601,7 +601,7 @@ TEST(ShowCrashReports, testNpeCrash) {
     // asan nailed it
     if (!strstr(output, "∅∅∅∅")) {
       fprintf(stderr, "ERROR: crash report didn't have shadow diagram\n%s\n",
-              gc(IndentLines(output, -1, 0, 4)));
+              _gc(IndentLines(output, -1, 0, 4)));
       __die();
     }
   }
@@ -645,14 +645,14 @@ TEST(ShowCrashReports, testDataOverrunCrash) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "DataOverrunCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif
   if (!strstr(output, "'int' index 10 into 'char [10]' out of bounds") &&
       (!strstr(output, "☺☻♥♦♣♠•◘○") || !strstr(output, "global redzone"))) {
     fprintf(stderr, "ERROR: crash report didn't have memory diagram\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
   free(output);
@@ -699,13 +699,13 @@ TEST(ShowCrashReports, testNpeCrashAfterFinalize) {
   /* NULL is stopgap until we can copy symbol tables into binary */
   if (!strstr(output, IsAsan() ? "null pointer" : "Uncaught SIGSEGV (SEGV_")) {
     fprintf(stderr, "ERROR: crash report didn't diagnose the problem\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #ifdef __FNO_OMIT_FRAME_POINTER__
   if (!OutputHasSymbol(output, "NpeCrash")) {
     fprintf(stderr, "ERROR: crash report didn't have backtrace\n%s\n",
-            gc(IndentLines(output, -1, 0, 4)));
+            _gc(IndentLines(output, -1, 0, 4)));
     __die();
   }
 #endif

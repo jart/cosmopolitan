@@ -15,6 +15,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"

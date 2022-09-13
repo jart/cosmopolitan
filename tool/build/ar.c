@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/elf.h"
@@ -30,7 +31,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arraylist2.internal.h"
-#include "libc/mem/io.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -232,8 +232,8 @@ int main(int argc, char *argv[]) {
   for (i = 0;; ++i) {
   TryAgain:
     if (!(arg = getargs_next(&ga))) break;
-    if (endswith(arg, "/")) goto TryAgain;
-    if (endswith(arg, ".pkg")) goto TryAgain;
+    if (_endswith(arg, "/")) goto TryAgain;
+    if (_endswith(arg, ".pkg")) goto TryAgain;
     CHECK_NE(-1, stat(arg, st), "%s", arg);
     if (!st->st_size || S_ISDIR(st->st_mode)) goto TryAgain;
     CHECK_NE(-1, (fd = open(arg, O_RDONLY)), "%s", arg);

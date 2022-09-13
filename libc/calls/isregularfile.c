@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
@@ -51,9 +51,9 @@ bool isregularfile(const char *path) {
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     efault();
     res = false;
-  } else if (weaken(__zipos_open) &&
-             weaken(__zipos_parseuri)(path, &zipname) != -1) {
-    if (weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
+  } else if (_weaken(__zipos_open) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    if (_weaken(__zipos_stat)(&zipname, &st.cosmo) != -1) {
       res = !!S_ISREG(st.cosmo.st_mode);
     } else {
       res = false;

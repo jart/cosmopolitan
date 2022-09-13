@@ -14,8 +14,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 
 const struct itimerval kHertz = {
     {1, 0},

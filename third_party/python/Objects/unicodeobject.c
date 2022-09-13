@@ -6,10 +6,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "libc/assert.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/countbranch.h"
 #include "libc/str/str.h"
 #include "third_party/python/Include/abstract.h"
@@ -6029,7 +6029,7 @@ _PyUnicode_DecodeUnicodeEscape(const char *s,
 
             /* \N{name} */
         case 'N':
-            if (!weaken(_PyUnicode_GetCode)) {
+            if (!_weaken(_PyUnicode_GetCode)) {
                 PyErr_SetString(
                     PyExc_UnicodeError,
                     "\\N escapes not supported "
@@ -6049,7 +6049,7 @@ _PyUnicode_DecodeUnicodeEscape(const char *s,
                     s++;
                     ch = 0xffffffff; /* in case 'getcode' messes up */
                     if (namelen <= INT_MAX &&
-                        weaken(_PyUnicode_GetCode)(NULL, start, (int)namelen, &ch, 0)) {
+                        _weaken(_PyUnicode_GetCode)(NULL, start, (int)namelen, &ch, 0)) {
                         assert(ch <= MAX_UNICODE);
                         WRITE_CHAR(ch);
                         continue;

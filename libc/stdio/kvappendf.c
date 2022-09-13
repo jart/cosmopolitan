@@ -21,7 +21,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 
 #define W sizeof(size_t)
 

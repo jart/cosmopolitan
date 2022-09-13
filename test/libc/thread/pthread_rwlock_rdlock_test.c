@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"

@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"

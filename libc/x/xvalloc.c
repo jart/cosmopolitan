@@ -20,7 +20,7 @@
 #include "libc/x/x.h"
 
 /**
- * Allocates page-aligned memory, or dies.
+ * Allocates frame-aligned memory, or dies.
  */
 void *xvalloc(size_t size) {
   void *res = valloc(size);

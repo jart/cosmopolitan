@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/errno.h"
@@ -26,6 +25,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
@@ -57,7 +57,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = weaken(__zipos_write)(
+      rc = _weaken(__zipos_write)(
           (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, -1);
     } else if (!IsWindows() && !IsMetal()) {
       if (iovlen == 1) {

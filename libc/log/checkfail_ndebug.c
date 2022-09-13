@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
@@ -48,7 +48,6 @@ relegated wontreturn void __check_fail_ndebug(uint64_t want, uint64_t got,
     va_end(va);
   }
   kprintf("\n");
-  if (weaken(__die)) weaken(__die)();
-  __restorewintty();
-  _Exit(68);
+  if (_weaken(__die)) _weaken(__die)();
+  _Exitr(68);
 }

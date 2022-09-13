@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 
 /**
  * Returns 𝑥 rounded up to next two power.
  *
  * @define (𝑥>0→2^⌈log₂x⌉, x=0→0, 𝑇→⊥)
- * @see rounddown2pow()
+ * @see _rounddown2pow()
  */
-unsigned long roundup2pow(unsigned long x) {
-  return x > 1 ? 2ul << bsrl(x - 1) : x ? 1 : 0;
+unsigned long _roundup2pow(unsigned long x) {
+  return x > 1 ? 2ul << _bsrl(x - 1) : x ? 1 : 0;
 }

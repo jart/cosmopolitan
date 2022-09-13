@@ -28,7 +28,6 @@
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -125,7 +124,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
   int d, w, n, sign, prec, flags, width, lasterr;
 
   lasterr = errno;
-  out = fn ? fn : (void *)missingno;
+  out = fn ? fn : (void *)_missingno;
 
   while (*format) {
     if (*format != '%') {
@@ -347,7 +346,7 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
           break;
         }
       case 'm':
-        p = weaken(strerror) ? weaken(strerror)(lasterr) : "?";
+        p = _weaken(strerror) ? _weaken(strerror)(lasterr) : "?";
         signbit = 0;
         goto FormatString;
       case 'r':
@@ -381,15 +380,15 @@ hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
       case 'E':
       case 'a':
       case 'A':
-        if (!weaken(__fmt_dtoa)) {
+        if (!_weaken(__fmt_dtoa)) {
           p = "?";
           prec = 0;
           flags &= ~(FLAGS_PRECISION | FLAGS_PLUS | FLAGS_SPACE);
           goto FormatString;
         }
-        if (weaken(__fmt_dtoa)(out, arg, d, flags, prec, sign, width,
-                               longdouble, qchar, signbit, alphabet,
-                               va) == -1) {
+        if (_weaken(__fmt_dtoa)(out, arg, d, flags, prec, sign, width,
+                                longdouble, qchar, signbit, alphabet,
+                                va) == -1) {
           return -1;
         }
         break;

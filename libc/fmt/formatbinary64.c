@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 
 static inline int PickGoodWidth(unsigned x) {
   if (x < 16) {
@@ -45,7 +45,7 @@ char *FormatBinary64(char p[hasatleast 67], uint64_t x, char z) {
       *p++ = '0';
       *p++ = 'b';
     }
-    i = PickGoodWidth(bsrl(x));
+    i = PickGoodWidth(_bsrl(x));
     do {
       b = 1;
       b <<= i;

@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pushpop.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"

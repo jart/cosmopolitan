@@ -122,7 +122,7 @@ static void SplitLines(struct Lines *lines, char *p) {
 static bool ConsumeFileOverview(struct Lines *lines) {
   int i;
   if (lines->n && lines->p[0].n >= strlen(FILEOVERVIEW) &&
-      startswith(lines->p[0].p, FILEOVERVIEW)) {
+      _startswith(lines->p[0].p, FILEOVERVIEW)) {
     lines->p[0].p += strlen(FILEOVERVIEW);
     lines->p[0].n -= strlen(FILEOVERVIEW);
     while (lines->p[0].n &&

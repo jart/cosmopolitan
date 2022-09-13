@@ -38,6 +38,7 @@
 
 #include "libc/str/str.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/zip/osdep.h"
 
 

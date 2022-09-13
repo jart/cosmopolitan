@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
@@ -27,6 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
@@ -65,7 +65,7 @@ Flags:\n\
 \n"
 
 STATIC_YOINK("__die");
-STATIC_YOINK("__get_symbol_by_addr");
+STATIC_YOINK("GetSymbolByAddr");
 STATIC_YOINK("testlib_quota_handlers");
 STATIC_YOINK("stack_usage_logging");
 
@@ -182,8 +182,9 @@ noasan int main(int argc, char *argv[]) {
   if (!IsWindows()) sys_getpid();  // make strace easier to read
   testlib_clearxmmregisters();
   testlib_runalltests();
-  if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
-    weaken(testlib_runallbenchmarks)();
+  if (!g_testlib_failed && runbenchmarks_ &&
+      _weaken(testlib_runallbenchmarks)) {
+    _weaken(testlib_runallbenchmarks)();
     if (IsAsan() && !g_testlib_failed) {
       CheckForMemoryLeaks();
     }

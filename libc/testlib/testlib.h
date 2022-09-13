@@ -5,7 +5,6 @@ COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § testing library                                           ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
-#include "libc/macros.internal.h"
 
 /**
  * Declares test case function.
@@ -82,13 +81,16 @@ COSMOPOLITAN_C_START_
 
 #define __ROSTR(STR) __TEST_SECTION(".rodata.str1.1,\"aSM\",@progbits,1", STR)
 
-#define __FIXTURE(KIND, GROUP, ENTRY)                       \
-  asm(__RELOSECTION("." KIND ".2." #GROUP #ENTRY,           \
-                    "\t.quad\t1f\n"                         \
-                    "\t.quad\t2f\n"                         \
-                    "\t.quad\t" STRINGIFY(GROUP##_##ENTRY)) \
-          __ROSTR("1:\t.asciz\t" STRINGIFY(#GROUP))         \
-              __ROSTR("2:\t.asciz\t" STRINGIFY(#ENTRY)));   \
+#define TESTLIB_STRINGIFY(A)  _TESTLIB_STRINGIFY(A)
+#define _TESTLIB_STRINGIFY(A) #A
+
+#define __FIXTURE(KIND, GROUP, ENTRY)                               \
+  asm(__RELOSECTION("." KIND ".2." #GROUP #ENTRY,                   \
+                    "\t.quad\t1f\n"                                 \
+                    "\t.quad\t2f\n"                                 \
+                    "\t.quad\t" TESTLIB_STRINGIFY(GROUP##_##ENTRY)) \
+          __ROSTR("1:\t.asciz\t" TESTLIB_STRINGIFY(#GROUP))         \
+              __ROSTR("2:\t.asciz\t" TESTLIB_STRINGIFY(#ENTRY)));   \
   void GROUP##_##ENTRY(void)
 
 /**

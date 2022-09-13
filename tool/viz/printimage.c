@@ -30,7 +30,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/ex.h"

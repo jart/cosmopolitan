@@ -19,8 +19,9 @@
 #include "libc/assert.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "tool/viz/lib/formatstringtable.h"
 #include "tool/viz/lib/stringbuilder.h"
 
@@ -44,7 +45,7 @@ void FormatMatrixShort(long yn, long xn, const short M[yn][xn], int emit(),
       yn, xn,
       formatter(yn, xn,
                 ConvertShortMatrixToStringTable(
-                    yn, xn, gc(xcalloc(yn * xn, sizeof(char *))), M),
+                    yn, xn, _gc(xcalloc(yn * xn, sizeof(char *))), M),
                 emit, arg, param1, param2, param3));
 }
 

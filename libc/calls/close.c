@@ -20,10 +20,10 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -59,7 +59,7 @@ int close(int fd) {
     // file descriptors the way __zipos_open() does need to retry if
     // there's indication this race condition happened.
     if (__isfdkind(fd, kFdZip)) {
-      rc = weaken(__zipos_close)(fd);
+      rc = _weaken(__zipos_close)(fd);
     } else {
       if (!IsWindows() && !IsMetal()) {
         rc = sys_close(fd);
@@ -67,9 +67,9 @@ int close(int fd) {
         rc = 0;
       } else {
         if (__isfdkind(fd, kFdEpoll)) {
-          rc = weaken(sys_close_epoll_nt)(fd);
+          rc = _weaken(sys_close_epoll_nt)(fd);
         } else if (__isfdkind(fd, kFdSocket)) {
-          rc = weaken(sys_closesocket_nt)(g_fds.p + fd);
+          rc = _weaken(sys_closesocket_nt)(g_fds.p + fd);
         } else if (__isfdkind(fd, kFdFile) ||     //
                    __isfdkind(fd, kFdConsole) ||  //
                    __isfdkind(fd, kFdProcess)) {  //

@@ -386,7 +386,7 @@ parse_bool (const char *s)
     ++s;
   if (isdigit (*s))
     return !! atoi (s);
-  return startswithi (s, "true");
+  return _startswithi (s, "true");
 }
 
 const char *

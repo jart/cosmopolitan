@@ -228,21 +228,21 @@ void IndexSections(struct Object *obj) {
     CHECK_NOTNULL((shdr = GetElfSectionHeaderAddress(obj->elf, obj->size, i)));
     if (shdr->sh_type != SHT_NULL) {
       CHECK_NOTNULL((name = GetElfSectionName(obj->elf, obj->size, shdr)));
-      if (startswith(name, ".sort.")) name += 5;
+      if (_startswith(name, ".sort.")) name += 5;
       if ((strcmp(name, ".piro.relo") == 0 ||
-           startswith(name, ".piro.relo.")) ||
+           _startswith(name, ".piro.relo.")) ||
           (strcmp(name, ".data.rel.ro") == 0 ||
-           startswith(name, ".data.rel.ro."))) {
+           _startswith(name, ".data.rel.ro."))) {
         sect.kind = kPiroRelo;
       } else if (strcmp(name, ".piro.data") == 0 ||
-                 startswith(name, ".piro.data.")) {
+                 _startswith(name, ".piro.data.")) {
         sect.kind = kPiroData;
       } else if (strcmp(name, ".piro.bss") == 0 ||
-                 startswith(name, ".piro.bss.")) {
+                 _startswith(name, ".piro.bss.")) {
         sect.kind = kPiroBss;
-      } else if (strcmp(name, ".data") == 0 || startswith(name, ".data.")) {
+      } else if (strcmp(name, ".data") == 0 || _startswith(name, ".data.")) {
         sect.kind = kData;
-      } else if (strcmp(name, ".bss") == 0 || startswith(name, ".bss.")) {
+      } else if (strcmp(name, ".bss") == 0 || _startswith(name, ".bss.")) {
         sect.kind = kBss;
       } else {
         sect.kind = kText;

@@ -26,7 +26,7 @@
 //
 //	@param	dil contains byte to escape
 //	@see	libc/nexgen32e/cescapec.c
-cescapec:
+_cescapec:
 	.leafprologue
 	.profilable
 	movzbl	%dil,%edi
@@ -35,7 +35,7 @@ cescapec:
 	ja	1f
 	mov	$'\\',%eax
 	movzbl	%cl,%ecx
-	jmp	*cescapectab(,%rcx,8)
+	jmp	*_cescapectab(,%rcx,8)
 .Lanchorpoint:
 .LBEL:	mov	$'a',%ah
 	.leafepilogue
@@ -78,10 +78,10 @@ cescapec:
 	lea	(%rdi,%rax,4),%eax
 	add	$'0'<<030|'0'<<020|'0'<<010|'\\',%eax
 	.leafepilogue
-	.endfn	cescapec,globl
+	.endfn	_cescapec,globl
 
 	.initro 300,_init_cescapec
-cescapectab.ro:
+_cescapectab.ro:
 	.byte	1,.LBEL-.Lanchorpoint
 	.byte	1,.LBS-.Lanchorpoint
 	.byte	1,.LHT-.Lanchorpoint
@@ -97,22 +97,22 @@ cescapectab.ro:
 	.byte	1,.LQM-.Lanchorpoint
 	.byte	'\\'-'?'-1,1b-.Lanchorpoint
 	.byte	1,.LBSL-.Lanchorpoint
-	.equ	.Lcescapectab.ro.size,.-cescapectab.ro
-	.org	8 - .Lcescapectab.ro.size % 8 + .
-	.endobj	cescapectab.ro,globl,hidden
+	.equ	.L_cescapectab.ro.size,.-_cescapectab.ro
+	.org	8 - .L_cescapectab.ro.size % 8 + .
+	.endobj	_cescapectab.ro,globl,hidden
 	.previous
 
 	.initbss 300,_init_cescapec
-cescapectab:
+_cescapectab:
 	.rept	'\\'-7+1
 	.quad	0
 	.endr
-	.endobj	cescapectab
+	.endobj	_cescapectab
 	.previous
 
 	.init.start 300,_init_cescapec
 	ezlea	.Lanchorpoint,dx
-	mov	$.Lcescapectab.ro.size/2,%ch
+	mov	$.L_cescapectab.ro.size/2,%ch
 0:	xor	%eax,%eax
 	lodsb
 	mov	%al,%cl
@@ -123,7 +123,7 @@ cescapectab:
 	jnz	1b
 	dec	%ch
 	jnz	0b
-	.if	.Lcescapectab.ro.size % 8
-	add	$(8-.Lcescapectab.ro.size%8),%rsi
+	.if	.L_cescapectab.ro.size % 8
+	add	$(8-.L_cescapectab.ro.size%8),%rsi
 	.endif
 	.init.end 300,_init_cescapec

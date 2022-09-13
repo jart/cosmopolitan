@@ -122,7 +122,7 @@ int z_verbose hidden = verbose;
 
 void z_error(const char *file, int line, char *m) {
   kprintf("%s:%d: zlib panic: %s\n", file, line, m);
-  if (weaken(__die)) weaken(__die)();
+  if (_weaken(__die)) _weaken(__die)();
   _Exit(1);
 }
 #endif

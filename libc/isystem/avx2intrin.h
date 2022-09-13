@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_AVX2INTRIN_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_AVX2INTRIN_H_
+#include "libc/intrin/avx2intrin.internal.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_AVX2INTRIN_H_ */

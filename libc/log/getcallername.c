@@ -26,6 +26,6 @@
 const char *GetCallerName(const struct StackFrame *bp) {
   struct SymbolTable *st;
   if (!bp && (bp = __builtin_frame_address(0))) bp = bp->next;
-  if (bp) return __get_symbol_by_addr(bp->addr);
+  if (bp) return GetSymbolByAddr(bp->addr);
   return 0;
 }

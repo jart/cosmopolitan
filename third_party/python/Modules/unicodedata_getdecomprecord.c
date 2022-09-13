@@ -31,7 +31,7 @@ _PyUnicode_GetDecompRecord(PyObject *self,
     }
     /* high byte is number of hex bytes (usually one or two), low byte
        is prefix code (from*/
-    decomp = bextra(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
+    decomp = _bextra(_PyUnicode_Decomp, *index, _PyUnicode_DecompBits);
     *count = decomp >> 8;
     *prefix = decomp & 255;
     (*index)++;

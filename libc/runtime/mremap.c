@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/directmap.internal.h"
@@ -152,8 +152,8 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
     if (TrackMemoryInterval(&_mmi, ((uintptr_t)p + n) >> 16,
                             ((uintptr_t)p + m - FRAMESIZE) >> 16, dm.maphandle,
                             prot, flags, false, false, 0, m - n) != -1) {
-      if (weaken(__asan_map_shadow)) {
-        weaken(__asan_map_shadow)((uintptr_t)dm.addr, m - n);
+      if (_weaken(__asan_map_shadow)) {
+        _weaken(__asan_map_shadow)((uintptr_t)dm.addr, m - n);
       }
       return p;
     } else {
@@ -186,12 +186,12 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
                                ((uintptr_t)p + n - FRAMESIZE) >> 16, 0) != -1 &&
         TrackMemoryInterval(&_mmi, a, b, -1, prot, flags, false, false, 0, m) !=
             -1) {
-      if (weaken(__asan_poison)) {
+      if (_weaken(__asan_poison)) {
         if (!OverlapsShadowSpace(p, n)) {
-          weaken(__asan_poison)((intptr_t)p, n, kAsanUnmapped);
+          _weaken(__asan_poison)((intptr_t)p, n, kAsanUnmapped);
         }
         if (!OverlapsShadowSpace(q, m)) {
-          weaken(__asan_map_shadow)((intptr_t)q, m);
+          _weaken(__asan_map_shadow)((intptr_t)q, m);
         }
       }
       return (void *)ADDR(a);

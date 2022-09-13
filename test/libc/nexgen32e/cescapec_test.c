@@ -19,15 +19,15 @@
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-TEST(cescapec, test) {
-  EXPECT_EQ(' ', cescapec(0x20));
-  EXPECT_EQ('~', cescapec(0x7E));
-  EXPECT_EQ('\\' | 'r' << 8, cescapec('\r'));
-  EXPECT_EQ('\\' | 'n' << 8, cescapec('\n'));
-  EXPECT_EQ('\\' | '0' << 8 | '0' << 16 | '0' << 24, cescapec(0));
-  EXPECT_EQ('\\' | '0' << 8 | '3' << 16 | '3' << 24, cescapec('\e'));
-  EXPECT_EQ('\\' | '1' << 8 | '7' << 16 | '7' << 24, cescapec(0x7F));
-  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec(0xFF));
-  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec(0xFFFF));
-  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec(-1));
+TEST(_cescapec, test) {
+  EXPECT_EQ(' ', _cescapec(0x20));
+  EXPECT_EQ('~', _cescapec(0x7E));
+  EXPECT_EQ('\\' | 'r' << 8, _cescapec('\r'));
+  EXPECT_EQ('\\' | 'n' << 8, _cescapec('\n'));
+  EXPECT_EQ('\\' | '0' << 8 | '0' << 16 | '0' << 24, _cescapec(0));
+  EXPECT_EQ('\\' | '0' << 8 | '3' << 16 | '3' << 24, _cescapec('\e'));
+  EXPECT_EQ('\\' | '1' << 8 | '7' << 16 | '7' << 24, _cescapec(0x7F));
+  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, _cescapec(0xFF));
+  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, _cescapec(0xFFFF));
+  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, _cescapec(-1));
 }

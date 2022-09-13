@@ -20,7 +20,7 @@
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"

@@ -28,9 +28,9 @@ int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
   if (strcmp(file, "ape.com")) return enoent();
-  if (!weaken(calloc)) return enomem();
+  if (!_weaken(calloc)) return enomem();
   if ((fd = __reservefd(-1)) == -1) return -1;
-  state = weaken(calloc)(1, sizeof(struct MetalFile));
+  state = _weaken(calloc)(1, sizeof(struct MetalFile));
   state->base = (char *)_base;
   state->size = _end - _base;
   g_fds.p[fd].kind = kFdFile;

@@ -22,7 +22,7 @@
 /**
  * Reverses bits in 64-bit word.
  */
-uint64_t bitreverse64(uint64_t x) {
+uint64_t _bitreverse64(uint64_t x) {
   x = bswap_64(x);
   x = (x & 0xaaaaaaaaaaaaaaaa) >> 1 | (x & 0x5555555555555555) << 1;
   x = (x & 0xcccccccccccccccc) >> 2 | (x & 0x3333333333333333) << 2;

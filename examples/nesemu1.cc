@@ -10,21 +10,21 @@
 #include "dsp/tty/itoa8.h"
 #include "dsp/tty/quant.h"
 #include "dsp/tty/tty.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/inttypes.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
@@ -39,7 +39,8 @@
 #include "libc/sysv/consts/poll.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
+#include "libc/x/xsigaction.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 #include "third_party/getopt/getopt.h"
@@ -286,7 +287,7 @@ void GetTermSize(void) {
   struct winsize wsize_;
   wsize_.ws_row = 25;
   wsize_.ws_col = 80;
-  getttysize(STDIN_FILENO, &wsize_);
+  _getttysize(0, &wsize_);
   FreeSamplingSolution(ssy_);
   FreeSamplingSolution(ssx_);
   tyn_ = wsize_.ws_row * 2;

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -28,6 +27,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
+#include "libc/intrin/extend.internal.h"
 #include "libc/intrin/lockcmpxchg.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/directmap.internal.h"
@@ -52,9 +52,10 @@ static void *__zipos_mmap(size_t mapsize) {
   assert(mapsize);
   offset = maptotal;
   maptotal += mapsize;
-  start = (char *)0x6fd000040000;
+  start = (char *)kMemtrackZiposStart;
   if (!mapend) mapend = start;
-  mapend = _extend(start, maptotal, mapend, 0x6fdfffff0000);
+  mapend = _extend(start, maptotal, mapend,
+                   kMemtrackZiposStart + kMemtrackZiposSize);
   return start + offset;
 }
 

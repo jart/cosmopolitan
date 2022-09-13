@@ -17,18 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xgetline.h"
 
 TEST(fgetln, test) {
   FILE *f;
-  f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
+  f = fmemopen(_gc(strdup(kHyperion)), kHyperionSize, "r+");
   EXPECT_STREQ("The fall of Hyperion - a Dream\n", fgetln(f, 0));
   EXPECT_STREQ("John Keats\n", fgetln(f, 0));
   EXPECT_STREQ("\n", fgetln(f, 0));
@@ -81,7 +81,7 @@ TEST(fgetln, testReadingFromStdin_doesntLeakMemory) {
 }
 
 BENCH(fgetln, bench) {
-  FILE *f = fmemopen(gc(strdup(kHyperion)), kHyperionSize, "r+");
+  FILE *f = fmemopen(_gc(strdup(kHyperion)), kHyperionSize, "r+");
   EZBENCH2("fgetln", donothing, fgetln(f, 0));
   EZBENCH2("xgetline", donothing, free(xgetline(f)));
   fclose(f);

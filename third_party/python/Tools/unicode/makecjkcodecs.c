@@ -21,7 +21,7 @@
 #include "libc/log/check.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/x/x.h"
 #include "third_party/zlib/zlib.h"

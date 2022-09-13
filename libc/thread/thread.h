@@ -50,10 +50,10 @@ typedef struct pthread_spinlock_s {
 } pthread_spinlock_t;
 
 typedef struct pthread_mutex_s {
-  _Atomic(int) _lock;
+  _Atomic(int32_t) _lock;
+  uint16_t _type;
+  uint16_t _pshared;
   void *_nsync;
-  char _type;
-  char _pshared;
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
@@ -85,6 +85,9 @@ typedef struct pthread_attr_s {
   char *stackaddr;
 } pthread_attr_t;
 
+int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
+                   void *);
+
 int pthread_yield(void);
 void pthread_exit(void *) wontreturn;
 pthread_t pthread_self(void) pureconst;
@@ -109,8 +112,6 @@ int pthread_attr_getstack(const pthread_attr_t *, void **, size_t *);
 int pthread_attr_setstack(pthread_attr_t *, void *, size_t);
 int pthread_attr_getstacksize(const pthread_attr_t *, size_t *);
 int pthread_attr_setstacksize(pthread_attr_t *, size_t);
-int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
-                   void *);
 int pthread_detach(pthread_t);
 int pthread_cancel(pthread_t);
 int pthread_join(pthread_t, void **);

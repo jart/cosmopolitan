@@ -53,10 +53,10 @@ struct HostAdapterInfoNode {
 /* Frees all the nodes of the _hostInfo */
 static void freeHostInfo(void) {
   struct HostAdapterInfoNode *next, *node = __hostInfo;
-  if (weaken(free)) {
+  if (_weaken(free)) {
     while (node) {
       next = node->next;
-      weaken(free)(node);
+      _weaken(free)(node);
       node = next;
     }
   }
@@ -103,7 +103,7 @@ struct HostAdapterInfoNode *appendHostInfo(
   struct sockaddr_in *a;
   int attemptNum;
 
-  if (!weaken(calloc) || !(node = weaken(calloc)(1, sizeof(*node)))) {
+  if (!_weaken(calloc) || !(node = _weaken(calloc)(1, sizeof(*node)))) {
     errno = ENOMEM;
     return NULL;
   }
@@ -143,8 +143,8 @@ struct HostAdapterInfoNode *appendHostInfo(
 
   if (attemptNum == MAX_NAME_CLASH) {
     /* Cannot resolve the conflict */
-    if (weaken(free)) {
-      weaken(free)(node);
+    if (_weaken(free)) {
+      _weaken(free)(node);
     }
     errno = EEXIST;
     return NULL;
@@ -315,8 +315,8 @@ static int readAdapterAddresses(void) {
     goto err;
   }
 
-  if (!weaken(malloc) ||
-      !(aa = (struct NtIpAdapterAddresses *)weaken(malloc)(size))) {
+  if (!_weaken(malloc) ||
+      !(aa = (struct NtIpAdapterAddresses *)_weaken(malloc)(size))) {
     enomem();
     goto err;
   }
@@ -336,14 +336,14 @@ static int readAdapterAddresses(void) {
     goto err;
   }
 
-  if (weaken(free)) {
-    weaken(free)(aa);
+  if (_weaken(free)) {
+    _weaken(free)(aa);
   }
   return 0;
 
 err:
-  if (weaken(free)) {
-    weaken(free)(aa);
+  if (_weaken(free)) {
+    _weaken(free)(aa);
   }
   freeHostInfo();
   return -1;

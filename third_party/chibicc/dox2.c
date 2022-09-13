@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/intrin/bits.h"
+#include "libc/mem/alg.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 
 #define APPEND(L) L.p = realloc(L.p, ++L.n * sizeof(*L.p))
@@ -282,7 +283,7 @@ static int CompareDoxIndexEntry(const void *p1, const void *p2, void *arg) {
 
 static void IndexDox(struct Dox *dox) {
   size_t i, j, n;
-  dox->names.n = roundup2pow(dox->objects.n + dox->macros.n) << 1;
+  dox->names.n = _roundup2pow(dox->objects.n + dox->macros.n) << 1;
   dox->names.p = calloc(dox->names.n, sizeof(*dox->names.p));
   n = 0;
   for (i = 0; i < dox->objects.n; ++i) {
@@ -773,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function () {\n\
               prefix = xasprintf("%s ", o->params.p[j].name);
               for (k = 0; k < o->javadown->tags.n; ++k) {
                 if (!strcmp(o->javadown->tags.p[k].tag, "param") &&
-                    startswith(o->javadown->tags.p[k].text, prefix)) {
+                    _startswith(o->javadown->tags.p[k].text, prefix)) {
                   fprintf(f, "<dd>");
                   PrintText(f, o->javadown->tags.p[k].text + strlen(prefix));
                   fprintf(f, "\n");
@@ -907,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function () {\n\
               prefix = xasprintf("%s ", m->params.p[j].name);
               for (k = 0; k < m->javadown->tags.n; ++k) {
                 if (!strcmp(m->javadown->tags.p[k].tag, "param") &&
-                    startswith(m->javadown->tags.p[k].text, prefix)) {
+                    _startswith(m->javadown->tags.p[k].text, prefix)) {
                   fprintf(f, "<dd>");
                   PrintText(f, m->javadown->tags.p[k].text + strlen(prefix));
                   fprintf(f, "\n");

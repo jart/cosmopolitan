@@ -30,7 +30,6 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msync.h"
@@ -66,7 +65,7 @@ wontreturn void SysExit(int rc, const char *call, const char *thing) {
   const char *estr;
   err = errno;
   FormatInt32(ibuf, err);
-  estr = strerdoc(err);
+  estr = _strerdoc(err);
   if (!estr) estr = "EUNKNOWN";
   Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
   exit(rc);

@@ -22,12 +22,13 @@
 #include "libc/log/check.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nt/enum/fileflagandattributes.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/time/struct/tm.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "libc/zip.h"
 #include "third_party/zlib/zlib.h"
 #include "tool/build/lib/elfwriter.h"
@@ -166,7 +167,7 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   /* emit embedded file content w/ pkzip local file header */
   elfwriter_align(elf, 1, 0);
   elfwriter_startsection(elf,
-                         gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)),
+                         _gc(xasprintf("%s%s", ZIP_LOCALFILE_SECTION, name)),
                          SHT_PROGBITS, SHF_ALLOC);
   if (method == kZipCompressionDeflate) {
     CHECK_EQ(Z_OK, deflateInit2(memset(&zs, 0, sizeof(zs)),
@@ -195,9 +196,9 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   EmitZipLfileHdr(lfile, name, namesize, crc, era, gflags, method, mtime, mdate,
                   compsize, uncompsize);
   elfwriter_commit(elf, lfilehdrsize + compsize);
-  lfilesym = elfwriter_appendsym(elf, gc(xasprintf("%s%s", "zip+lfile:", name)),
-                                 ELF64_ST_INFO(STB_LOCAL, STT_OBJECT),
-                                 STV_DEFAULT, 0, lfilehdrsize);
+  lfilesym = elfwriter_appendsym(
+      elf, _gc(xasprintf("%s%s", "zip+lfile:", name)),
+      ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0, lfilehdrsize);
   elfwriter_appendsym(elf, symbol, ELF64_ST_INFO(STB_GLOBAL, STT_OBJECT),
                       STV_DEFAULT, lfilehdrsize, compsize);
   elfwriter_finishsection(elf);
@@ -205,13 +206,13 @@ void elfwriter_zip(struct ElfWriter *elf, const char *symbol, const char *name,
   /* emit central directory record */
   elfwriter_align(elf, 1, 0);
   elfwriter_startsection(elf,
-                         gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
+                         _gc(xasprintf("%s%s", ZIP_DIRECTORY_SECTION, name)),
                          SHT_PROGBITS, SHF_ALLOC);
   EmitZipCdirHdr(
       (cfile = elfwriter_reserve(elf, kZipCdirHdrLinkableSizeBootstrap)), name,
       namesize, crc, era, gflags, method, mtime, mdate, iattrs, dosmode, mode,
       compsize, uncompsize, commentsize, mtim, atim, ctim);
-  elfwriter_appendsym(elf, gc(xasprintf("%s%s", "zip+cdir:", name)),
+  elfwriter_appendsym(elf, _gc(xasprintf("%s%s", "zip+cdir:", name)),
                       ELF64_ST_INFO(STB_LOCAL, STT_OBJECT), STV_DEFAULT, 0,
                       kZipCdirHdrLinkableSizeBootstrap);
   elfwriter_appendrela(elf, kZipCfileOffsetOffset, lfilesym, R_X86_64_32,

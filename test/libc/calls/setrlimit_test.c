@@ -38,7 +38,8 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
+#include "libc/x/xspawn.h"
 
 #define MEM (64 * 1024 * 1024)
 

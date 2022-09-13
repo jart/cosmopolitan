@@ -31,15 +31,15 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/math.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 char buffer[1000];
-/* #define Format(...) gc(xasprintf(__VA_ARGS__)) */
+/* #define Format(...) _gc(xasprintf(__VA_ARGS__)) */
 #define Format(...) (snprintf(buffer, sizeof(buffer), __VA_ARGS__), buffer)
 
 TEST(sprintf, test_space_flag) {
@@ -572,13 +572,13 @@ TEST(xasprintf, hugeNtoa) {
   ASSERT_STREQ(
       "0b1111111111111111111111111111111111111111111111111111111111111111111111"
       "1111111111111111111111111111111111111111111111111111111111",
-      gc(xasprintf("%#jjb", UINT128_MAX)));
+      _gc(xasprintf("%#jjb", UINT128_MAX)));
 }
 
 TEST(xasprintf, twosBane) {
-  ASSERT_STREQ("-2147483648", gc(xasprintf("%d", 0x80000000)));
+  ASSERT_STREQ("-2147483648", _gc(xasprintf("%d", 0x80000000)));
   ASSERT_STREQ("-9223372036854775808",
-               gc(xasprintf("%ld", 0x8000000000000000)));
+               _gc(xasprintf("%ld", 0x8000000000000000)));
 }
 
 TEST(snprintf, testFixedWidthString_wontOverrunInput) {
@@ -611,8 +611,8 @@ TEST(snprintf, twosBaneWithTypePromotion) {
 }
 
 TEST(snprintf, formatStringLiteral) {
-  EXPECT_EQ('\\' | 'n' << 8, cescapec('\n'));
-  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, cescapec('\377'));
+  EXPECT_EQ('\\' | 'n' << 8, _cescapec('\n'));
+  EXPECT_EQ('\\' | '3' << 8 | '7' << 16 | '7' << 24, _cescapec('\377'));
   EXPECT_STREQ("\"hi\\n\"", Format("%`'s", "hi\n"));
   EXPECT_STREQ("\"\\000\"", Format("%`'.*s", 1, "\0"));
 }

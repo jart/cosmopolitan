@@ -18,8 +18,8 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/stdio/stdio.h"
@@ -30,6 +30,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/linenoise/linenoise.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/ceval.h"
@@ -95,7 +96,7 @@ CompleteModule(const char *s, const char *p, linenoiseCompletions *c)
     PyObject *m, *f, *g, *i, *v, *n;
     plen = strlen(p);
     for (it = PyImport_Inittab; it->name; ++it) {
-        if (startswithi(it->name, p)) {
+        if (_startswithi(it->name, p)) {
             AddCompletion(c, xasprintf("%s%s", s, it->name + plen));
         }
     }
@@ -169,7 +170,7 @@ Complete(const char *p, linenoiseCompletions *c)
 {
     PyObject *o, *t, *i;
     const char *q, *s, *b;
-    if (startswith(p, "import ")) {
+    if (_startswith(p, "import ")) {
         for (q = p + 7; *q; ++q) {
             if (!isalnum(*q) && *q != '_') {
                 return;
@@ -279,7 +280,7 @@ RunPythonModule(int argc, char **argv)
     int i, res;
     char *oldloc;
 
-    if (argc == 1 && weaken(kLaunchPythonModuleName)) {
+    if (argc == 1 && _weaken(kLaunchPythonModuleName)) {
         launchargs[0] = argv[0];
         launchargs[1] = strdup("-m");
         launchargs[2] = strdup(kLaunchPythonModuleName);

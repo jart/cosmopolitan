@@ -25,19 +25,19 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/leb128.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsf.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/bench.h"
-#include "libc/nexgen32e/bsf.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
@@ -316,7 +316,7 @@ int LuaPopcnt(lua_State *L) {
 int LuaBsr(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsrl(x));
+    lua_pushinteger(L, _bsrl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");
@@ -327,7 +327,7 @@ int LuaBsr(lua_State *L) {
 int LuaBsf(lua_State *L) {
   long x;
   if ((x = luaL_checkinteger(L, 1))) {
-    lua_pushinteger(L, bsfl(x));
+    lua_pushinteger(L, _bsfl(x));
     return 1;
   } else {
     luaL_argerror(L, 1, "zero");

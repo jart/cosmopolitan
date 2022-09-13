@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/utsname-linux.internal.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -27,7 +26,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/weaken.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/computernameformat.h"

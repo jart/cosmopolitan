@@ -19,7 +19,7 @@
 #include "libc/fmt/leb128.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(zleb64, testZero) {

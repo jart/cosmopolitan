@@ -15,7 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "third_party/mbedtls/common.h"

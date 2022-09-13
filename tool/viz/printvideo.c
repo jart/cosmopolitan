@@ -34,6 +34,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dns/dns.h"
@@ -55,8 +56,7 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/console.h"
 #include "libc/nt/runtime.h"
-#include "libc/runtime/buffer.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/runtime/buffer.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
@@ -91,7 +91,7 @@
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/stb/stb_image_resize.h"
 #include "tool/viz/lib/graphic.h"
@@ -428,7 +428,7 @@ static void DimensionDisplay(void) {
       wsize_.ws_row = 25;
       wsize_.ws_col = 80;
       wsize_ = (struct winsize){.ws_row = 40, .ws_col = 80};
-      if (getttysize(outfd_, &wsize_) == -1) getttysize(0, &wsize_);
+      if (_getttysize(outfd_, &wsize_) == -1) _getttysize(0, &wsize_);
       dh_ = wsize_.ws_row * 2;
       dw_ = wsize_.ws_col * 2;
     }
@@ -1397,8 +1397,8 @@ static void OnExit(void) {
   YCbCrFree(&ycbcr_);
   RestoreTty();
   ttyidentclear(&ti_);
-  close_s(&infd_);
-  close_s(&outfd_);
+  close(infd_), infd_ = -1;
+  close(outfd_), outfd_ = -1;
   bfree(&graphic_[0].b);
   bfree(&graphic_[1].b);
   bfree(&vtframe_[0].b);

@@ -19,6 +19,8 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/bsf.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -26,8 +28,6 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/arena.h"
 #include "libc/mem/hook/hook.internal.h"
-#include "libc/nexgen32e/bsf.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -39,7 +39,7 @@
 #define SIZE 0x2ff80000
 #define P(i) ((void *)(intptr_t)(i))
 #define EXCHANGE(HOOK, SLOT) \
-  __arena_hook((intptr_t *)weaken(HOOK), (intptr_t *)(&(SLOT)))
+  __arena_hook((intptr_t *)_weaken(HOOK), (intptr_t *)(&(SLOT)))
 
 static struct Arena {
   bool once;
@@ -58,7 +58,7 @@ static struct Arena {
 } __arena;
 
 static wontreturn void __arena_die(void) {
-  if (weaken(__die)) weaken(__die)();
+  if (_weaken(__die)) _weaken(__die)();
   _exit(83);
 }
 
@@ -120,8 +120,8 @@ static dontinline bool __arena_grow(size_t offset, size_t request) {
   } else {
     enomem();
   }
-  if (weaken(__oom_hook)) {
-    weaken(__oom_hook)(request);
+  if (_weaken(__oom_hook)) {
+    _weaken(__oom_hook)(request);
   }
   return false;
 }
@@ -165,7 +165,7 @@ static void *__arena_memalign(size_t a, size_t n) {
   if (a <= sizeof(size_t)) {
     return __arena_alloc(8, n);
   } else {
-    return __arena_alloc(2ul << bsrl(a - 1), n);
+    return __arena_alloc(2ul << _bsrl(a - 1), n);
   }
 }
 
@@ -190,7 +190,7 @@ static void *__arena_realloc(void *p, size_t n) {
         if ((m = __arena_get_size(p)) >= n) {
           return p;
         } else if (n <= SIZE) {
-          z = 2ul << bsrl(n - 1);
+          z = 2ul << _bsrl(n - 1);
           if (__arena.offset[__arena.depth] - m == (o = (intptr_t)p - BASE)) {
             if (UNLIKELY(o + z > __arena.size)) {
               if (o + z <= SIZE) {
@@ -205,7 +205,7 @@ static void *__arena_realloc(void *p, size_t n) {
             __arena.offset[__arena.depth] = o + z;
             *(size_t *)((char *)p - sizeof(size_t)) = z;
             return p;
-          } else if ((q = __arena_alloc(1ul << bsfl((intptr_t)p), z))) {
+          } else if ((q = __arena_alloc(1ul << _bsfl((intptr_t)p), z))) {
             memmove(q, p, m);
             return q;
           } else {
@@ -225,7 +225,7 @@ static void *__arena_realloc(void *p, size_t n) {
     if (n <= 16) {
       n = 16;
     } else {
-      n = 2ul << bsrl(n - 1);
+      n = 2ul << _bsrl(n - 1);
     }
     return __arena_alloc(16, n);
   }

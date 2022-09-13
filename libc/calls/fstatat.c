@@ -19,13 +19,13 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/mem/alloca.h"
@@ -59,10 +59,10 @@ int fstatat(int dirfd, const char *path, struct stat *st, int flags) {
   if (__isfdkind(dirfd, kFdZip)) {
     STRACE("zipos dirfd not supported yet");
     rc = einval();
-  } else if (weaken(__zipos_stat) &&
-             weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  } else if (_weaken(__zipos_stat) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     if (!__vforked) {
-      rc = weaken(__zipos_stat)(&zipname, st);
+      rc = _weaken(__zipos_stat)(&zipname, st);
     } else {
       rc = enotsup();
     }

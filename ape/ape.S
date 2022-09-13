@@ -39,7 +39,6 @@
 #include "libc/elf/def.h"
 #include "libc/macho.internal.h"
 #include "libc/nexgen32e/uart.internal.h"
-#include "libc/nexgen32e/vidya.internal.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/sysv/consts/prot.h"

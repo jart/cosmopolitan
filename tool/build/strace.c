@@ -35,8 +35,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.internal.h"
-#include "libc/str/errfun.h"
+#include "libc/stdio/append.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/ptrace.h"
@@ -660,7 +659,7 @@ static void Flush(void) {
 static const char *GetErrnoName(int x) {
   const char *s;
   static char buf[16];
-  if ((s = strerrno(x))) return s;
+  if ((s = _strerrno(x))) return s;
   FormatInt64(buf, x);
   return buf;
 }

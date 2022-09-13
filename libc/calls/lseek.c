@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/zipos/zipos.internal.h"
@@ -39,7 +39,7 @@
 int64_t lseek(int fd, int64_t offset, unsigned whence) {
   int64_t rc;
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-    rc = weaken(__zipos_lseek)(
+    rc = _weaken(__zipos_lseek)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, offset, whence);
   } else if (!IsWindows() && !IsOpenbsd() && !IsNetbsd()) {
     rc = sys_lseek(fd, offset, whence, 0);

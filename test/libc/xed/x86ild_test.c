@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "test/libc/xed/lib.h"

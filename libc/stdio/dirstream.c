@@ -19,14 +19,13 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/nopl.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/enum/fileflagandattributes.h"
@@ -38,6 +37,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -262,11 +262,11 @@ DIR *opendir(const char *name) {
   if (!name || (IsAsan() && !__asan_is_valid(name, 1))) {
     efault();
     res = 0;
-  } else if (weaken(__zipos_get) &&
-             weaken(__zipos_parseuri)(name, &zipname) != -1) {
-    if (weaken(__zipos_stat)(&zipname, &st) != -1) {
+  } else if (_weaken(__zipos_get) &&
+             _weaken(__zipos_parseuri)(name, &zipname) != -1) {
+    if (_weaken(__zipos_stat)(&zipname, &st) != -1) {
       if (S_ISDIR(st.st_mode)) {
-        zip = weaken(__zipos_get)();
+        zip = _weaken(__zipos_get)();
         res = calloc(1, sizeof(DIR));
         res->iszip = true;
         res->fd = -1;
@@ -332,7 +332,7 @@ static struct dirent *readdir_impl(DIR *dir) {
   struct dirent_openbsd *obsd;
   if (dir->iszip) {
     ent = 0;
-    zip = weaken(__zipos_get)();
+    zip = _weaken(__zipos_get)();
     while (!ent && dir->tell < dir->zip.records) {
       assert(ZIP_CFILE_MAGIC(zip->map + dir->zip.offset) == kZipCfileHdrMagic);
       s = ZIP_CFILE_NAME(zip->map + dir->zip.offset);
@@ -494,7 +494,7 @@ void rewinddir(DIR *dir) {
   _lockdir(dir);
   if (dir->iszip) {
     dir->tell = 0;
-    dir->zip.offset = GetZipCdirOffset(weaken(__zipos_get)()->cdir);
+    dir->zip.offset = GetZipCdirOffset(_weaken(__zipos_get)()->cdir);
   } else if (!IsWindows()) {
     if (!lseek(dir->fd, 0, SEEK_SET)) {
       dir->buf_pos = dir->buf_end = 0;
@@ -519,9 +519,9 @@ void seekdir(DIR *dir, long off) {
   long i;
   struct Zipos *zip;
   _lockdir(dir);
-  zip = weaken(__zipos_get)();
+  zip = _weaken(__zipos_get)();
   if (dir->iszip) {
-    dir->zip.offset = GetZipCdirOffset(weaken(__zipos_get)()->cdir);
+    dir->zip.offset = GetZipCdirOffset(_weaken(__zipos_get)()->cdir);
     for (i = 0; i < off && i < dir->zip.records; ++i) {
       dir->zip.offset += ZIP_CFILE_HDRSIZE(zip->map + dir->zip.offset);
     }

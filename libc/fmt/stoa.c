@@ -20,13 +20,13 @@
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/intrin/weaken.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/unicode.h"
 #include "libc/str/utf16.h"
 
@@ -40,27 +40,27 @@ static int __fmt_stoa_byte(out_f out, void *a, uint64_t c) {
 
 static int __fmt_stoa_wide(out_f out, void *a, uint64_t w) {
   char buf[8];
-  if (!isascii(w)) w = tpenc(w);
+  if (!isascii(w)) w = _tpenc(w);
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);
 }
 
 static int __fmt_stoa_bing(out_f out, void *a, uint64_t w) {
   char buf[8];
-  w = tpenc(kCp437[w & 0xFF]);
+  w = _tpenc(kCp437[w & 0xFF]);
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);
 }
 
 static int __fmt_stoa_quoted(out_f out, void *a, uint64_t w) {
   char buf[8];
   if (isascii(w)) {
-    w = cescapec(w);
+    w = _cescapec(w);
   } else {
-    w = tpenc(w);
+    w = _tpenc(w);
   }
   WRITE64LE(buf, w);
-  return out(buf, a, w ? (bsr(w) >> 3) + 1 : 1);
+  return out(buf, a, w ? (_bsr(w) >> 3) + 1 : 1);
 }
 
 /**
@@ -102,7 +102,7 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
     } else {
       emit = __fmt_stoa_wide;
     }
-  } else if ((flags & FLAGS_HASH) && weaken(kCp437)) {
+  } else if ((flags & FLAGS_HASH) && _weaken(kCp437)) {
     justdobytes = true;
     emit = __fmt_stoa_bing;
     ignorenul = flags & FLAGS_PRECISION;
@@ -129,15 +129,15 @@ int __fmt_stoa(int out(const char *, void *, size_t), void *arg, void *data,
   if (width) {
     w = precision;
     if (signbit == 63) {
-      if (weaken(wcsnwidth)) {
-        w = weaken(wcsnwidth)((const wchar_t *)p, precision, 0);
+      if (_weaken(wcsnwidth)) {
+        w = _weaken(wcsnwidth)((const wchar_t *)p, precision, 0);
       }
     } else if (signbit == 15) {
-      if (weaken(strnwidth16)) {
-        w = weaken(strnwidth16)((const char16_t *)p, precision, 0);
+      if (_weaken(strnwidth16)) {
+        w = _weaken(strnwidth16)((const char16_t *)p, precision, 0);
       }
-    } else if (weaken(strnwidth)) {
-      w = weaken(strnwidth)(p, precision, 0);
+    } else if (_weaken(strnwidth)) {
+      w = _weaken(strnwidth)(p, precision, 0);
     }
     if (!(flags & FLAGS_NOQUOTE) && (flags & FLAGS_REPR)) {
       w += 2 + (signbit == 63) + (signbit == 15);

@@ -21,13 +21,13 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
 #include "libc/calls/pledge.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
@@ -43,6 +43,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/fmt.h"
@@ -56,9 +57,8 @@
 #include "libc/sock/struct/linger.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/syslog.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/path.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -2585,11 +2585,11 @@ static int LuaUnixErrnoWinerr(lua_State *L) {
 }
 
 static int LuaUnixErrnoName(lua_State *L) {
-  return ReturnString(L, strerrno(GetUnixErrno(L)->errno_));
+  return ReturnString(L, _strerrno(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoDoc(lua_State *L) {
-  return ReturnString(L, strerdoc(GetUnixErrno(L)->errno_));
+  return ReturnString(L, _strerdoc(GetUnixErrno(L)->errno_));
 }
 
 static int LuaUnixErrnoCall(lua_State *L) {
@@ -2604,7 +2604,7 @@ static int LuaUnixErrnoToString(lua_State *L) {
     strerror_wr(e->errno_, e->winerr, msg, sizeof(msg));
     lua_pushfstring(L, "%s() failed: %s", e->call, msg);
   } else {
-    lua_pushstring(L, strerrno(e->errno_));
+    lua_pushstring(L, _strerrno(e->errno_));
   }
   return 1;
 }

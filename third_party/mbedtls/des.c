@@ -16,7 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/common.h"

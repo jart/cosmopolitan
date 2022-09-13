@@ -21,7 +21,7 @@
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 
-void memsummary(int fd) {
+void _memsummary(int fd) {
   struct mallinfo mi;
   mi = mallinfo();
   (dprintf)(fd,

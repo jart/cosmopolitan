@@ -25,7 +25,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/fileno.h"
@@ -33,6 +33,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 
 /* TODO(jart): DELETE */
 

@@ -9,7 +9,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
 #include "third_party/python/Include/code.h"

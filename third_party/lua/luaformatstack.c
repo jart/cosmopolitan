@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lauxlib.h"
 

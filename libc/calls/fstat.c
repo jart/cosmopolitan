@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/stat.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
@@ -39,7 +39,7 @@
 int fstat(int fd, struct stat *st) {
   int rc;
   if (__isfdkind(fd, kFdZip)) {
-    rc = weaken(__zipos_fstat)(
+    rc = _weaken(__zipos_fstat)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, st);
   } else if (!IsWindows() && !IsMetal()) {
     rc = sys_fstat(fd, st);

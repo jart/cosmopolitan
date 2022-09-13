@@ -5,8 +5,8 @@
 │ Use of this source code is governed by the BSD-style licenses that can       │
 │ be found in the third_party/zlib/LICENSE file.                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/dce.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "third_party/zlib/deflate.internal.h"
@@ -19,22 +19,22 @@ Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
 asm(".include \"libc/disclaimer.inc\"");
 
 void crc_reset(struct DeflateState *const s) {
-  if (X86_HAVE(PCLMUL) && weaken(crc_fold_init)) {
-    weaken(crc_fold_init)(s);
+  if (X86_HAVE(PCLMUL) && _weaken(crc_fold_init)) {
+    _weaken(crc_fold_init)(s);
     return;
   }
   s->strm->adler = crc32(0L, Z_NULL, 0);
 }
 
 void crc_finalize(struct DeflateState *const s) {
-  if (X86_HAVE(PCLMUL) && weaken(crc_fold_512to32)) {
-    s->strm->adler = weaken(crc_fold_512to32)(s);
+  if (X86_HAVE(PCLMUL) && _weaken(crc_fold_512to32)) {
+    s->strm->adler = _weaken(crc_fold_512to32)(s);
   }
 }
 
 void copy_with_crc(z_streamp strm, Bytef *dst, long size) {
-  if (X86_HAVE(PCLMUL) && weaken(crc_fold_copy)) {
-    weaken(crc_fold_copy)(strm->state, dst, strm->next_in, size);
+  if (X86_HAVE(PCLMUL) && _weaken(crc_fold_copy)) {
+    _weaken(crc_fold_copy)(strm->state, dst, strm->next_in, size);
     return;
   }
   memcpy(dst, strm->next_in, size);

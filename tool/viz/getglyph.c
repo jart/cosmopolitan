@@ -16,16 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/struct/sigaction.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
 #include "third_party/getopt/getopt.h"
@@ -84,7 +85,7 @@ static char *Raster(int yn, int xn, unsigned char Y[yn][xn], int *dw) {
           bs = s;
         }
       }
-      appendw(&r, tpenc(kBlocks[bi].c));
+      appendw(&r, _tpenc(kBlocks[bi].c));
       ++w;
     }
     if (w > *dw) *dw = w;
@@ -109,9 +110,8 @@ int main(int argc, char *argv[]) {
   unsigned char **ttf;
   stbtt_fontinfo *font;
   int c, i, j, m, o, dw, maxw, *w, *h, s = 40 * 4;
-  struct sigaction sa = {.sa_handler = OnSig};
   ShowCrashReports();
-  sigaction(SIGPIPE, &sa, 0);
+  signal(SIGPIPE, OnSig);
   start = 0;
   end = 0x10FFFD;
   while ((o = getopt(argc, argv, "vdc:s:e:S:")) != -1) {
@@ -139,14 +139,14 @@ int main(int argc, char *argv[]) {
     }
   }
   m = argc - optind;
-  w = gc(calloc(m, sizeof(*w)));
-  h = gc(calloc(m, sizeof(*h)));
-  ttf = gc(calloc(m, sizeof(*ttf)));
-  font = gc(calloc(m, sizeof(*font)));
-  rasters = gc(calloc(m, sizeof(*rasters)));
-  fasters = gc(calloc(m, sizeof(*fasters)));
+  w = _gc(calloc(m, sizeof(*w)));
+  h = _gc(calloc(m, sizeof(*h)));
+  ttf = _gc(calloc(m, sizeof(*ttf)));
+  font = _gc(calloc(m, sizeof(*font)));
+  rasters = _gc(calloc(m, sizeof(*rasters)));
+  fasters = _gc(calloc(m, sizeof(*fasters)));
   for (j = 0; j < m; ++j) {
-    ttf[j] = gc(xslurp(argv[optind + j], &ttfsize));
+    ttf[j] = _gc(xslurp(argv[optind + j], &ttfsize));
     if (!ttf[j]) {
       fprintf(stderr, "%s: not found\n", argv[optind + j]);
       exit(1);

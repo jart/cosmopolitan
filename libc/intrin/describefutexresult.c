@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/str/errfun.h"
+#include "libc/str/str.h"
 
 const char *(DescribeFutexResult)(char buf[12], int ax) {
   const char *s;
-  if (ax > -4095u && (s = strerrno(-ax))) {
+  if (ax > -4095u && (s = _strerrno(-ax))) {
     return s;
   } else {
     FormatInt32(buf, ax);

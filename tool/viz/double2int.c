@@ -19,7 +19,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/x/x.h"

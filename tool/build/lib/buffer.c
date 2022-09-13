@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "tool/build/lib/buffer.h"
 
 /* TODO(jart): replace with new append*() library */
@@ -55,7 +55,7 @@ void AppendWide(struct Buffer *b, wint_t wc) {
   uint64_t wb;
   char buf[8];
   i = 0;
-  wb = tpenc(wc);
+  wb = _tpenc(wc);
   do {
     buf[i++] = wb & 0xFF;
     wb >>= 8;

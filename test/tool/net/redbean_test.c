@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"

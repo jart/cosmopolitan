@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/sock/internal.h"

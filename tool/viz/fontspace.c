@@ -20,12 +20,12 @@
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bsr.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -50,7 +50,7 @@ void PrintBar(unsigned char *p, size_t n) {
   }
   for (i = 0; i < j; ++i) {
     if (p[i]) {
-      fputwc(u"░░▒▒▓▓██"[bsr(p[i])], stdout);
+      fputwc(u"░░▒▒▓▓██"[_bsr(p[i])], stdout);
     } else {
       fputc(' ', stdout);
     }
@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
   }
   n = end + 1 - start;
   m = ROUNDUP(n, 16);
-  present = gc(malloc(m));
-  intotal = gc(calloc(1, m));
+  present = _gc(malloc(m));
+  intotal = _gc(calloc(1, m));
   if (optind < argc) {
     for (arg = optind; arg < argc; ++arg) {
       ttf = xslurp(argv[arg], &ttfsize);

@@ -22,7 +22,6 @@
 #include "libc/log/log.h"
 #include "libc/runtime/stack.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/lua/cosmo.h"

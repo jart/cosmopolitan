@@ -21,7 +21,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"

@@ -38,7 +38,7 @@ void PrintGarbage(void) {
   kprintf("------------ ------------ ------------------ ------------------ ------------------\n");
   if ((g = __tls_enabled ? __get_tls()->tib_garbages:0) && g->i) {
     for (i = g->i; i--;) {
-      symbol = __get_symbol_by_addr(g->p[i].ret);
+      symbol = GetSymbolByAddr(g->p[i].ret);
       if (symbol) {
         ksnprintf(name, sizeof(name), "%s", symbol);
       } else {
@@ -48,7 +48,7 @@ void PrintGarbage(void) {
               g->p + i,
               g->p[i].frame,
               name,
-              __get_symbol_by_addr(g->p[i].fn),
+              GetSymbolByAddr(g->p[i].fn),
               g->p[i].arg);
     }
   } else {

@@ -19,7 +19,7 @@
 #include "libc/dce.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 

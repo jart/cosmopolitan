@@ -23,7 +23,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"

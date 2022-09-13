@@ -22,8 +22,8 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -60,7 +60,7 @@ void OnSigBus(int sig, struct siginfo *si, void *vctx) {
 #if 0
   kprintf("SIGBUS%n");
   kprintf("si->si_signo = %G%n", si->si_signo);
-  kprintf("si->si_errno = %s (%d)%n", strerrno(si->si_errno),
+  kprintf("si->si_errno = %s (%d)%n", _strerrno(si->si_errno),
           si->si_errno);
   kprintf("si->si_code = %s (%d)%n", GetSiCodeName(sig, si->si_code),
           si->si_code);
@@ -111,7 +111,7 @@ TEST(mprotect, testSegfault_writeToReadOnlyAnonymous) {
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_READ));
-  missingno(p[0]);
+  _missingno(p[0]);
   EXPECT_FALSE(gotsegv);
   EXPECT_FALSE(gotbusted);
   p[0] = 2;
@@ -139,7 +139,7 @@ TEST(mprotect, testProtNone_cantEvenRead) {
   volatile char *p;
   p = gc(memalign(PAGESIZE, PAGESIZE));
   EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_NONE));
-  missingno(p[0]);
+  _missingno(p[0]);
   EXPECT_TRUE(gotsegv | gotbusted);
   EXPECT_NE(-1, mprotect(p, PAGESIZE, PROT_READ | PROT_WRITE));
 }

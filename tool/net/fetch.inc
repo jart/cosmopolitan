@@ -64,7 +64,7 @@ static int LuaFetch(lua_State *L) {
             return LuaNilError(L, "invalid header name: %s", key);
 
           val = lua_tolstring(L, -1, &vallen);
-          if (!(hdr = gc(EncodeHttpHeaderValue(val, vallen, 0))))
+          if (!(hdr = _gc(EncodeHttpHeaderValue(val, vallen, 0))))
             return LuaNilError(L, "invalid header %s value encoding", key);
 
           // Content-Length and Connection will be overwritten;
@@ -101,14 +101,14 @@ static int LuaFetch(lua_State *L) {
   if (bodylen > 0 || !(methodidx == kHttpGet || methodidx == kHttpHead ||
                        methodidx == kHttpTrace || methodidx == kHttpDelete ||
                        methodidx == kHttpConnect)) {
-    conlenhdr = gc(xasprintf("Content-Length: %zu\r\n", bodylen));
+    conlenhdr = _gc(xasprintf("Content-Length: %zu\r\n", bodylen));
   }
 
   /*
    * Parse URL.
    */
-  gc(ParseUrl(urlarg, urlarglen, &url));
-  gc(url.params.p);
+  _gc(ParseUrl(urlarg, urlarglen, &url));
+  _gc(url.params.p);
   usingssl = false;
   if (url.scheme.n) {
 #ifndef UNSECURE
@@ -127,9 +127,9 @@ static int LuaFetch(lua_State *L) {
 #endif
 
   if (url.host.n) {
-    host = gc(strndup(url.host.p, url.host.n));
+    host = _gc(strndup(url.host.p, url.host.n));
     if (url.port.n) {
-      port = gc(strndup(url.port.p, url.port.n));
+      port = _gc(strndup(url.port.p, url.port.n));
 #ifndef UNSECURE
     } else if (usingssl) {
       port = "443";
@@ -146,7 +146,7 @@ static int LuaFetch(lua_State *L) {
   if (!IsAcceptableHost(host, -1)) {
     return LuaNilError(L, "invalid host");
   }
-  if (!hosthdr) hosthdr = gc(xasprintf("%s:%s", host, port));
+  if (!hosthdr) hosthdr = _gc(xasprintf("%s:%s", host, port));
 
   url.fragment.p = 0, url.fragment.n = 0;
   url.scheme.p = 0, url.scheme.n = 0;
@@ -155,7 +155,7 @@ static int LuaFetch(lua_State *L) {
   url.host.p = 0, url.host.n = 0;
   url.port.p = 0, url.port.n = 0;
   if (!url.path.n || url.path.p[0] != '/') {
-    p = gc(xmalloc(1 + url.path.n));
+    p = _gc(xmalloc(1 + url.path.n));
     mempcpy(mempcpy(p, "/", 1), url.path.p, url.path.n);
     url.path.p = p;
     ++url.path.n;
@@ -164,14 +164,14 @@ static int LuaFetch(lua_State *L) {
   /*
    * Create HTTP message.
    */
-  request = gc(xasprintf("%s %s HTTP/1.1\r\n"
-                         "Host: %s\r\n"
-                         "Connection: close\r\n"
-                         "User-Agent: %s\r\n"
-                         "%s%s"
-                         "\r\n%s",
-                         method, gc(EncodeUrl(&url, 0)), hosthdr, agenthdr,
-                         conlenhdr, headers ? headers : "", body));
+  request = _gc(xasprintf("%s %s HTTP/1.1\r\n"
+                          "Host: %s\r\n"
+                          "Connection: close\r\n"
+                          "User-Agent: %s\r\n"
+                          "%s%s"
+                          "\r\n%s",
+                          method, _gc(EncodeUrl(&url, 0)), hosthdr, agenthdr,
+                          conlenhdr, headers ? headers : "", body));
   requestlen = strlen(request);
 
   /*
@@ -211,7 +211,7 @@ static int LuaFetch(lua_State *L) {
     if (!evadedragnetsurveillance) {
       mbedtls_ssl_set_hostname(&sslcli, host);
     }
-    bio = gc(malloc(sizeof(struct TlsBio)));
+    bio = _gc(malloc(sizeof(struct TlsBio)));
     bio->fd = sock;
     bio->a = 0;
     bio->b = 0;
@@ -443,7 +443,7 @@ VerifyFailed:
   LockInc(&shared->c.sslverifyfailed);
   close(sock);
   return LuaNilTlsError(
-      L, gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
+      L, _gc(DescribeSslVerifyFailure(sslcli.session_negotiate->verify_result)),
       ret);
 #endif
 #undef ssl
