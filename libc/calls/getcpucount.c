@@ -54,7 +54,7 @@ static unsigned GetCpuCountBsd(void) {
   } else {
     cmd[1] = HW_NCPU;
   }
-  if (!sysctl(cmd, 2, &c, &n, 0, 0)) {
+  if (!sys_sysctl(cmd, 2, &c, &n, 0, 0)) {
     return c;
   } else {
     return 0;

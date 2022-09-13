@@ -113,7 +113,7 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
     }
     u.cmd[3] = -1;  // current process
     n = e - p;
-    if (sysctl(u.cmd, ARRAYLEN(u.cmd), p, &n, 0, 0) != -1) {
+    if (sys_sysctl(u.cmd, ARRAYLEN(u.cmd), p, &n, 0, 0) != -1) {
       return;
     }
   }

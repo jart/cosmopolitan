@@ -28,7 +28,7 @@
 #define PRI_FIFO_FREEBSD      (PRI_REALTIME_FREEBSD | PRI_FIFO_BIT_FREEBSD)
 #define PRI_TIMESHARE_FREEBSD 3
 
-int rtprio_thread(int fun, int tid, struct rtprio *inout_rtp);
+int sys_rtprio_thread(int fun, int tid, struct rtprio *inout_rtp);
 
 int _pthread_setschedparam_freebsd(int tid, int policy,
                                    const struct sched_param *param) {
@@ -43,5 +43,5 @@ int _pthread_setschedparam_freebsd(int tid, int policy,
     rtp.type = PRI_TIMESHARE_FREEBSD;
     rtp.prio = 0;
   }
-  return rtprio_thread(RTP_SET_FREEBSD, tid, &rtp);
+  return sys_rtprio_thread(RTP_SET_FREEBSD, tid, &rtp);
 }

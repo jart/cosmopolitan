@@ -51,6 +51,8 @@
  * has been done for five platforms, having a remarkably tiny footprint.
  */
 
+int sys_getdents(unsigned, void *, unsigned, long *);
+
 /**
  * Directory stream object.
  */
@@ -375,8 +377,8 @@ static struct dirent *readdir_impl(DIR *dir) {
   } else if (!IsWindows()) {
     if (dir->buf_pos >= dir->buf_end) {
       basep = dir->tell; /* TODO(jart): what does xnu do */
-      rc = getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
-      STRACE("getdents(%d) → %d% m", dir->fd, rc);
+      rc = sys_getdents(dir->fd, dir->buf, sizeof(dir->buf) - 256, &basep);
+      STRACE("sys_getdents(%d) → %d% m", dir->fd, rc);
       if (!rc || rc == -1) return NULL;
       dir->buf_pos = 0;
       dir->buf_end = rc;
