@@ -335,7 +335,6 @@ int GetTerminalWidth(void) {
   } else {
     ws.ws_col = 0;
     ioctl(2, TIOCGWINSZ, &ws);
-    if (!ws.ws_col) ws.ws_col = 80;
     return ws.ws_col;
   }
 }
@@ -1301,24 +1300,21 @@ int main(int argc, char *argv[]) {
       if (!outpath) outpath = shortened;
       n = strlen(action);
       appends(&command, action);
-      if (n < 15) {
-        while (n++ < 15) {
-          appendw(&command, ' ');
-        }
-      } else {
-        appendw(&command, ' ');
-        ++n;
-      }
+      do appendw(&command, ' '), ++n;
+      while (n < 15);
       appends(&command, outpath);
       n += strlen(outpath);
-      appendw(&command, '\r');
       m = GetTerminalWidth();
       if (m > 3 && n > m) {
         appendd(&output, command, m - 3);
         appendw(&output, READ32LE("..."));
       } else {
+        if (n < m && (__nocolor || !ischardev(2))) {
+          while (n < m) appendw(&command, ' '), ++n;
+        }
         appendd(&output, command, n);
       }
+      appendw(&output, m > 0 ? '\r' : '\n');
     } else {
       n = 0;
       if (verbose >= 3) {
