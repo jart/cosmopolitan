@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -31,7 +31,7 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
   pthread_spin_lock(&_pthread_keys_lock);
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
     if (~_pthread_key_usage[i]) {
-      j = bsrl(~_pthread_key_usage[i]);
+      j = _bsrl(~_pthread_key_usage[i]);
       _pthread_key_usage[i] |= 1ul << j;
       _pthread_key_dtor[i * 64 + j] = dtor;
       *key = i * 64 + j;

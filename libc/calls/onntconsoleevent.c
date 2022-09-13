@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nt/enum/ctrlevent.h"
 #include "libc/sysv/consts/sicode.h"

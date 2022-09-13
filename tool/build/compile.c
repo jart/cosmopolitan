@@ -17,14 +17,17 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -33,21 +36,20 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
+#include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
-#include "libc/mem/io.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/clock.h"
@@ -394,16 +396,16 @@ bool IsGccOnlyFlag(const char *s) {
       return true;
     }
   }
-  if (startswith(s, "-ffixed-")) return true;
-  if (startswith(s, "-fcall-saved")) return true;
-  if (startswith(s, "-fcall-used")) return true;
-  if (startswith(s, "-fgcse-")) return true;
-  if (startswith(s, "-fvect-cost-model=")) return true;
-  if (startswith(s, "-fsimd-cost-model=")) return true;
-  if (startswith(s, "-fopt-info")) return true;
-  if (startswith(s, "-mstringop-strategy=")) return true;
-  if (startswith(s, "-mpreferred-stack-boundary=")) return true;
-  if (startswith(s, "-Wframe-larger-than=")) return true;
+  if (_startswith(s, "-ffixed-")) return true;
+  if (_startswith(s, "-fcall-saved")) return true;
+  if (_startswith(s, "-fcall-used")) return true;
+  if (_startswith(s, "-fgcse-")) return true;
+  if (_startswith(s, "-fvect-cost-model=")) return true;
+  if (_startswith(s, "-fsimd-cost-model=")) return true;
+  if (_startswith(s, "-fopt-info")) return true;
+  if (_startswith(s, "-mstringop-strategy=")) return true;
+  if (_startswith(s, "-mpreferred-stack-boundary=")) return true;
+  if (_startswith(s, "-Wframe-larger-than=")) return true;
   return false;
 }
 
@@ -436,7 +438,7 @@ void AddEnv(char *s) {
 }
 
 char *StripPrefix(char *s, char *p) {
-  if (startswith(s, p)) {
+  if (_startswith(s, p)) {
     return s + strlen(p);
   } else {
     return s;
@@ -454,18 +456,18 @@ void AddArg(char *s) {
     appendw(&shortened, ' ');
     if ((isar || isbfd || ispkg) &&
         (strcmp(args.p[args.n - 1], "-o") &&
-         (endswith(s, ".o") || endswith(s, ".pkg") ||
-          (endswith(s, ".a") && !isar)))) {
+         (_endswith(s, ".o") || _endswith(s, ".pkg") ||
+          (_endswith(s, ".a") && !isar)))) {
       appends(&shortened, basename(s));
     } else {
       appends(&shortened, s);
     }
   } else if (/*
               * a in ('-', '--') or
-              * a.startswith('-o') or
+              * a._startswith('-o') or
               * c == 'ld' and a == '-T' or
-              * c == 'cc' and a.startswith('-O') or
-              * c == 'cc' and a.startswith('-x') or
+              * c == 'cc' and a._startswith('-O') or
+              * c == 'cc' and a._startswith('-x') or
               * c == 'cc' and a in ('-c', '-E', '-S')
               */
              s[0] == '-' && (!s[1] || s[1] == 'o' || (s[1] == '-' && !s[2]) ||
@@ -592,7 +594,7 @@ int Launch(void) {
   gotchld = 0;
 
   if (pipe2(pipefds, O_CLOEXEC) == -1) {
-    kprintf("pipe2 failed: %s\n", strerrno(errno));
+    kprintf("pipe2 failed: %s\n", _strerrno(errno));
     exit(1);
   }
 
@@ -605,7 +607,7 @@ int Launch(void) {
 
   pid = vfork();
   if (pid == -1) {
-    kprintf("vfork failed: %s\n", strerrno(errno));
+    kprintf("vfork failed: %s\n", _strerrno(errno));
     exit(1);
   }
 
@@ -629,7 +631,7 @@ int Launch(void) {
     dup2(pipefds[1], 2);
     sigprocmask(SIG_SETMASK, &savemask, 0);
     execve(cmd, args.p, env.p);
-    kprintf("execve(%#s) failed: %s\n", cmd, strerrno(errno));
+    kprintf("execve(%#s) failed: %s\n", cmd, _strerrno(errno));
     _Exit(127);
   }
   close(pipefds[1]);
@@ -956,7 +958,7 @@ int main(int argc, char *argv[]) {
     /*
      * capture flags
      */
-    if (startswith(argv[i], "-o")) {
+    if (_startswith(argv[i], "-o")) {
       if (!strcmp(argv[i], "-o")) {
         outpath = argv[++i];
       } else {
@@ -1040,25 +1042,25 @@ int main(int argc, char *argv[]) {
       if (isgcc && ccversion >= 6) no_sanitize_alignment = true;
     } else if (!strcmp(argv[i], "-fno-sanitize=pointer-overflow")) {
       if (isgcc && ccversion >= 6) no_sanitize_pointer_overflow = true;
-    } else if (startswith(argv[i], "-fsanitize=implicit") &&
+    } else if (_startswith(argv[i], "-fsanitize=implicit") &&
                strstr(argv[i], "integer")) {
       if (isgcc) AddArg(argv[i]);
-    } else if (startswith(argv[i], "-fvect-cost") ||
-               startswith(argv[i], "-mstringop") ||
-               startswith(argv[i], "-gz") ||
+    } else if (_startswith(argv[i], "-fvect-cost") ||
+               _startswith(argv[i], "-mstringop") ||
+               _startswith(argv[i], "-gz") ||
                strstr(argv[i], "stack-protector") ||
                strstr(argv[i], "sanitize") ||
-               startswith(argv[i], "-fvect-cost") ||
-               startswith(argv[i], "-fvect-cost")) {
+               _startswith(argv[i], "-fvect-cost") ||
+               _startswith(argv[i], "-fvect-cost")) {
       if (isgcc && ccversion >= 6) {
         AddArg(argv[i]);
       }
-    } else if (startswith(argv[i], "-fdiagnostic-color=")) {
+    } else if (_startswith(argv[i], "-fdiagnostic-color=")) {
       colorflag = argv[i];
-    } else if (startswith(argv[i], "-R") ||
+    } else if (_startswith(argv[i], "-R") ||
                !strcmp(argv[i], "-fsave-optimization-record")) {
       if (isclang) AddArg(argv[i]);
-    } else if (isclang && startswith(argv[i], "--debug-prefix-map")) {
+    } else if (isclang && _startswith(argv[i], "--debug-prefix-map")) {
       /* llvm doesn't provide a gas interface so simulate w/ clang */
       AddArg(xstrcat("-f", argv[i] + 2));
     } else if (isgcc && (!strcmp(argv[i], "-Os") || !strcmp(argv[i], "-O2") ||
@@ -1143,7 +1145,7 @@ int main(int argc, char *argv[]) {
    * scrub environment for determinism and great justice
    */
   for (envp = environ; *envp; ++envp) {
-    if (startswith(*envp, "MODE=")) {
+    if (_startswith(*envp, "MODE=")) {
       mode = *envp + 5;
     }
     if (IsSafeEnv(*envp)) {

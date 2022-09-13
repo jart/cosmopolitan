@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 void testlib_formatbinaryasglyphs(const char16_t *want, const void *got,
                                   size_t n, char **out_v1, char **out_v2) {

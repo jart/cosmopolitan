@@ -19,12 +19,12 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/log/check.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/unicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/x/x.h"
@@ -1359,7 +1359,7 @@ int PtyAppendLine(struct Pty *pty, struct Buffer *buf, unsigned y) {
         u = wc;
         w = 1;
       } else {
-        u = tpenc(wc);
+        u = _tpenc(wc);
         w = max(1, wcwidth(wc));
       }
     } else {
@@ -1370,7 +1370,7 @@ int PtyAppendLine(struct Pty *pty, struct Buffer *buf, unsigned y) {
       if (u != ' ') {
         np ^= kPtyFlip;
       } else {
-        u = tpenc(u'▂');
+        u = _tpenc(u'▂');
         if (pty->conf & kPtyBlinkcursor) {
           np |= kPtyBlink;
         }

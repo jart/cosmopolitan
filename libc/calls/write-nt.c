@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/runtime.h"
@@ -48,13 +48,12 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     //   return edquot(); /* handled by consts.sh */
     case kNtErrorBrokenPipe:  // broken pipe
     case kNtErrorNoData:      // closing named pipe
-      if (weaken(__sig_raise)) {
-        weaken(__sig_raise)(SIGPIPE, SI_KERNEL);
+      if (_weaken(__sig_raise)) {
+        _weaken(__sig_raise)(SIGPIPE, SI_KERNEL);
         return epipe();
       } else {
         STRACE("broken pipe");
-        __restorewintty();
-        _Exit(128 + EPIPE);
+        _Exitr(128 + EPIPE);
       }
     case kNtErrorAccessDenied:  // write doesn't return EACCESS
       return ebadf();           //

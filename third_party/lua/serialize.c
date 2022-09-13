@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/rop.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "third_party/lua/cosmo.h"
 #include "third_party/lua/lua.h"
 

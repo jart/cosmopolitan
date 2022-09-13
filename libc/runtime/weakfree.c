@@ -24,7 +24,7 @@
  * Thunks free() if it's linked, otherwise do nothing.
  */
 void _weakfree(void *p) {
-  if (weaken(free)) {
-    weaken(free)(p);
+  if (_weaken(free)) {
+    _weaken(free)(p);
   }
 }

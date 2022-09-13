@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 
 /**
@@ -130,9 +130,9 @@ static bool TarjanConnect(struct Tarjan *t, int v) {
  * @error ENOMEM
  * @note Tarjan's Algorithm is O(|V|+|E|)
  */
-int tarjan(int vertex_count, const int (*edges)[2], int edge_count,
-           int out_sorted[], int out_opt_components[],
-           int *out_opt_componentcount) {
+int _tarjan(int vertex_count, const int (*edges)[2], int edge_count,
+            int out_sorted[], int out_opt_components[],
+            int *out_opt_componentcount) {
   int i, rc, v, e;
   struct Tarjan *t;
   assert(0 <= edge_count && edge_count <= INT_MAX);

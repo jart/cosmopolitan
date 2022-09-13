@@ -19,11 +19,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
@@ -170,8 +170,7 @@ bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
     case (intptr_t)SIG_DFL:
       if (__sig_isfatal(sig)) {
         STRACE("terminating on %G", sig);
-        __restorewintty();
-        _Exit(128 + sig);
+        _Exitr(128 + sig);
       }
       // fallthrough
     case (intptr_t)SIG_IGN:

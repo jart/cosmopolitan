@@ -8,7 +8,7 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/stdio.h"
 
 /**

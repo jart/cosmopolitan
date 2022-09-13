@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/nt/enum/fileinfobyhandleclass.h"
@@ -52,7 +52,7 @@ ssize_t getfiledescriptorsize(int fd) {
   struct NtFileStandardInformation info;
   e = errno;
   if (__isfdkind(fd, kFdZip)) {
-    if (weaken(__zipos_fstat)(
+    if (_weaken(__zipos_fstat)(
             (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, &st.cosmo) !=
         -1) {
       rc = st.cosmo.st_size;

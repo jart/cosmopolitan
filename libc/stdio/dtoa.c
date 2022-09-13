@@ -28,7 +28,7 @@
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "libc/str/str.h"
 #include "third_party/gdtoa/gdtoa.h"
 

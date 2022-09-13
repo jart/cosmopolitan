@@ -19,7 +19,6 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -28,8 +27,8 @@
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
-#include "libc/thread/thread.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
@@ -49,6 +48,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 #define MAP_ANONYMOUS_linux   0x00000020
 #define MAP_ANONYMOUS_openbsd 0x00001000
@@ -64,10 +64,9 @@
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
 
 static wontreturn void OnUnrecoverableMmapError(const char *s) {
-  if (weaken(__die)) weaken(__die)();
+  if (_weaken(__die)) _weaken(__die)();
   STRACE("%s %m", s);
-  __restorewintty();
-  _Exit(199);
+  _Exitr(199);
 }
 
 static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
@@ -165,8 +164,8 @@ static noasan void *FinishMemory(void *addr, size_t size, int prot, int flags,
     }
     return MAP_FAILED;
   }
-  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
-    weaken(__asan_map_shadow)((intptr_t)addr, size);
+  if (_weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
+    _weaken(__asan_map_shadow)((intptr_t)addr, size);
   }
   return addr;
 }
@@ -227,8 +226,8 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
       OnUnrecoverableMmapError("MapMemories unrecoverable #2");
     }
   }
-  if (weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
-    weaken(__asan_map_shadow)((intptr_t)addr, size);
+  if (_weaken(__asan_map_shadow) && !OverlapsShadowSpace(addr, size)) {
+    _weaken(__asan_map_shadow)((intptr_t)addr, size);
   }
   return addr;
 }
@@ -323,7 +322,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  a = max(1, rounddown2pow(size) >> 16);
+  a = max(1, _rounddown2pow(size) >> 16);
 
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {

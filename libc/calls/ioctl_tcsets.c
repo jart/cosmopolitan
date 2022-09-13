@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/nomultics.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
@@ -72,9 +72,9 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
   va_start(va, request);
   tio = va_arg(va, const struct termios *);
   va_end(va);
-  if (weaken(__on_ioctl_tcsets)) {
+  if (_weaken(__on_ioctl_tcsets)) {
     if (!once) {
-      weaken(__on_ioctl_tcsets)();
+      _weaken(__on_ioctl_tcsets)();
       once = true;
     }
   }

@@ -32,13 +32,13 @@
 //    manxorist@github   saga musix          github:infatum
 //    Timur Gagiev       Maxwell Koo
 //
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/math.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
@@ -649,7 +649,7 @@ static int compute_codewords(Codebook *c, uint8 *len, int n, uint32 *values) {
     res = available[z];
     assert(z >= 0 && z < 32);
     available[z] = 0;
-    add_entry(c, bitreverse32(res), i, m++, len[i], values);
+    add_entry(c, _bitreverse32(res), i, m++, len[i], values);
     // propagate availability up the tree
     if (z != len[i]) {
       assert(len[i] >= 0 && len[i] < 32);
@@ -675,7 +675,7 @@ static void compute_accelerated_huffman(Codebook *c) {
   for (i = 0; i < len; ++i) {
     if (c->codeword_lengths[i] <= STB_VORBIS_FAST_HUFFMAN_LENGTH) {
       uint32 z =
-          c->sparse ? bitreverse32(c->sorted_codewords[i]) : c->codewords[i];
+          c->sparse ? _bitreverse32(c->sorted_codewords[i]) : c->codewords[i];
       // set table entries for all bit combinations in the higher bits
       while (z < FAST_HUFFMAN_TABLE_SIZE) {
         c->fast_huffman[z] = i;
@@ -720,11 +720,11 @@ static void compute_sorted_huffman(Codebook *c, uint8 *lengths,
     int k = 0;
     for (i = 0; i < c->entries; ++i)
       if (include_in_sort(c, lengths[i]))
-        c->sorted_codewords[k++] = bitreverse32(c->codewords[i]);
+        c->sorted_codewords[k++] = _bitreverse32(c->codewords[i]);
     assert(k == c->sorted_entries);
   } else {
     for (i = 0; i < c->sorted_entries; ++i)
-      c->sorted_codewords[i] = bitreverse32(c->codewords[i]);
+      c->sorted_codewords[i] = _bitreverse32(c->codewords[i]);
   }
 
   qsort(c->sorted_codewords, c->sorted_entries, sizeof(c->sorted_codewords[0]),
@@ -740,7 +740,7 @@ static void compute_sorted_huffman(Codebook *c, uint8 *lengths,
   for (i = 0; i < len; ++i) {
     int huff_len = c->sparse ? lengths[values[i]] : lengths[i];
     if (include_in_sort(c, huff_len)) {
-      uint32 code = bitreverse32(c->codewords[i]);
+      uint32 code = _bitreverse32(c->codewords[i]);
       int x = 0, n = c->sorted_entries;
       while (n > 1) {
         // invariant: sc[x] <= code < sc[x+n]
@@ -808,7 +808,7 @@ static void compute_window(int n, float *window) {
 static void compute_bitreverse(int n, uint16 *rev) {
   int ld = ilog(n) - 1;  // ilog is off-by-one from normal definitions
   int i, n8 = n >> 3;
-  for (i = 0; i < n8; ++i) rev[i] = (bitreverse32(i) >> (32 - ld + 3)) << 2;
+  for (i = 0; i < n8; ++i) rev[i] = (_bitreverse32(i) >> (32 - ld + 3)) << 2;
 }
 
 static int init_blocksize(vorb *f, int b, int n) {
@@ -1182,7 +1182,7 @@ static int codebook_decode_scalar_raw(vorb *f, Codebook *c) {
   //                             sorted_codewords && c->entries > 8
   if (c->entries > 8 ? c->sorted_codewords != NULL : !c->codewords) {
     // binary search
-    uint32 code = bitreverse32(f->acc);
+    uint32 code = _bitreverse32(f->acc);
     int x = 0, n = c->sorted_entries, len;
 
     while (n > 1) {
@@ -2560,7 +2560,7 @@ void inverse_mdct_naive(float *buffer, int n)
 
    // step 4
    for (i=0; i < n8; ++i) {
-      int j = bitreverse32(i) >> (32-ld+3);
+      int j = _bitreverse32(i) >> (32-ld+3);
       assert(j < n8);
       if (i == j) {
          // paper bug: original code probably swapped in place; if copying,

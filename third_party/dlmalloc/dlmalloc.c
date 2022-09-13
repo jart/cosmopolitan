@@ -2,11 +2,11 @@
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
@@ -696,8 +696,8 @@ void* dlmalloc(size_t bytes) {
 
     mem = sys_alloc(gm, nb);
     POSTACTION(gm);
-    if (mem == MAP_FAILED && weaken(__oom_hook)) {
-      weaken(__oom_hook)(bytes);
+    if (mem == MAP_FAILED && _weaken(__oom_hook)) {
+      _weaken(__oom_hook)(bytes);
     }
     return mem;
 
@@ -919,7 +919,7 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
   if (alignment <  MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
     alignment = MIN_CHUNK_SIZE;
   /* alignment is 32+ bytes rounded up to nearest two power */
-  alignment = 2ul << bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
+  alignment = 2ul << _bsrl(MAX(MIN_CHUNK_SIZE, alignment) - 1);
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0)  { /* Test isn't needed but avoids compiler warning */
       MALLOC_FAILURE_ACTION;

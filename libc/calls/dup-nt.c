@@ -80,9 +80,9 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     g_fds.p[newfd].mode = g_fds.p[oldfd].mode;
     g_fds.p[newfd].flags = g_fds.p[oldfd].flags & ~O_CLOEXEC;
     if (flags & O_CLOEXEC) g_fds.p[newfd].flags |= O_CLOEXEC;
-    if (g_fds.p[oldfd].kind == kFdSocket && weaken(_dupsockfd)) {
+    if (g_fds.p[oldfd].kind == kFdSocket && _weaken(_dupsockfd)) {
       g_fds.p[newfd].extra =
-          (intptr_t)weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
+          (intptr_t)_weaken(_dupsockfd)((struct SockFd *)g_fds.p[oldfd].extra);
     } else {
       g_fds.p[newfd].extra = g_fds.p[oldfd].extra;
     }

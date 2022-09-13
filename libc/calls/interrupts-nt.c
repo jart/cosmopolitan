@@ -20,12 +20,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/thread/tls.h"
 
@@ -33,9 +33,9 @@ textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
   bool res;
   if (__time_critical) return false;
   if (__threaded && __threaded != gettid()) return false;
-  if (weaken(_check_sigalrm)) weaken(_check_sigalrm)();
-  if (weaken(_check_sigchld)) weaken(_check_sigchld)();
-  if (fd && weaken(_check_sigwinch)) weaken(_check_sigwinch)(fd);
-  res = weaken(__sig_check) && weaken(__sig_check)(restartable);
+  if (_weaken(_check_sigalrm)) _weaken(_check_sigalrm)();
+  if (_weaken(_check_sigchld)) _weaken(_check_sigchld)();
+  if (fd && _weaken(_check_sigwinch)) _weaken(_check_sigwinch)(fd);
+  res = _weaken(__sig_check) && _weaken(__sig_check)(restartable);
   return res;
 }

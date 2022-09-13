@@ -24,7 +24,7 @@
 #include "libc/dns/servicestxt.h"
 #include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/sock/sock.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"

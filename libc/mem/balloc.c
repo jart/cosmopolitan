@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
-#include "libc/runtime/buffer.h"
+#include "libc/runtime/buffer.internal.h"
 
 /* TODO(jart): delete */
 

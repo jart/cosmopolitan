@@ -19,7 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/buffer.h"
+#include "libc/runtime/buffer.internal.h"
 
 /**
  * Frees memory return by balloc().

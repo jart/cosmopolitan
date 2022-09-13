@@ -52,7 +52,9 @@ static void _mapframe(void *p) {
  *
  *     !(p & 0xffff) && !(((p >> 3) + 0x7fff8000) & 0xffff)
  *
- * which must be the case when selecting a starting address.
+ * which must be the case when selecting a starting address. We also
+ * make the assumption that allocations can only grow monotonically.
+ * Furthermore allocations shall never be removed or relocated.
  *
  * @param p points to start of memory region
  * @param n specifies how many bytes are needed
@@ -81,6 +83,5 @@ noasan void *_extend(void *p, size_t n, void *e, intptr_t h) {
       *SHADOW(q) = 0;
     }
   }
-  asm("mfence");
   return q;
 }

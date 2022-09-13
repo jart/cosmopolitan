@@ -16,18 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/likely.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -75,8 +75,8 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
 #endif
     if (!IsWindows()) {
       rc = 0;
-      if (IsLinux() && __execpromises && weaken(sys_pledge_linux)) {
-        rc = weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
+      if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {
+        rc = _weaken(sys_pledge_linux)(__execpromises, __pledge_mode);
       }
       if (!rc) {
         rc = sys_execve(prog, argv, envp);

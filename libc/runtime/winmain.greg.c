@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/pf2prot.internal.h"
@@ -27,10 +26,10 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/pushpop.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
@@ -57,7 +56,6 @@
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 
 #if IsTiny()
@@ -281,7 +279,7 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
 #endif
   NTTRACE("WinMain()");
   MakeLongDoubleLongAgain();
-  if (weaken(WinSockInit)) weaken(WinSockInit)();
-  if (weaken(WinMainForked)) weaken(WinMainForked)();
+  if (_weaken(WinSockInit)) _weaken(WinSockInit)();
+  if (_weaken(WinMainForked)) _weaken(WinMainForked)();
   WinMainNew(cmdline);
 }

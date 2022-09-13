@@ -16,19 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchg.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/testlib/testlib.h"
 
-STATIC_YOINK("__get_symbol_by_addr");
+STATIC_YOINK("GetSymbolByAddr");
 
 #define MAXLEAKS 1000
 
@@ -115,7 +115,6 @@ noasan void CheckForMemoryLeaks(void) {
     /* __print_maps(); */
     /* PrintSystemMappings(2); */
     /* PrintGarbage(); */
-    __restorewintty();
-    _Exit(78);
+    _Exitr(78);
   }
 }

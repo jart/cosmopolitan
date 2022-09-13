@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/reverse.internal.h"
-#include "libc/intrin/pushpop.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
+#include "libc/mem/reverse.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -200,8 +200,7 @@ static void __ubsan_exit(void) {
   kprintf("your ubsan runtime needs\n"
           "\tSTATIC_YOINK(\"__die\");\n"
           "in order to show you backtraces\n");
-  __restorewintty();
-  _Exit(99);
+  _Exitr(99);
 }
 
 static char *__ubsan_stpcpy(char *d, const char *s) {
@@ -214,8 +213,8 @@ static char *__ubsan_stpcpy(char *d, const char *s) {
 }
 
 dontdiscard static __ubsan_die_f *__ubsan_die(void) {
-  if (weaken(__die)) {
-    return weaken(__die);
+  if (_weaken(__die)) {
+    return _weaken(__die);
   } else {
     return __ubsan_exit;
   }

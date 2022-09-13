@@ -74,7 +74,7 @@ _start:
 //	make win32 imps noop
 	.weak	ape_idata_iat
 	.weak	ape_idata_iatend
-	ezlea	missingno,ax
+	ezlea	_missingno,ax
 	ezlea	ape_idata_iat,di
 	ezlea	ape_idata_iatend,cx
 	sub	%rdi,%rcx

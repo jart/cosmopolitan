@@ -24,7 +24,7 @@
  * @param s is a NUL-terminated string
  * @param prefix is also NUL-terminated
  */
-bool wcsstartswith(const wchar_t *s, const wchar_t *prefix) {
+bool _wcsstartswith(const wchar_t *s, const wchar_t *prefix) {
   for (;;) {
     if (!*prefix) return true;
     if (!*s) return false;

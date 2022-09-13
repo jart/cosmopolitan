@@ -18,10 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
+#include "libc/errno.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
 #include "net/https/https.h"
 #include "third_party/mbedtls/net_sockets.h"
 #include "third_party/mbedtls/ssl.h"

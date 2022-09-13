@@ -18,12 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/fenv.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/double-conversion/wrapper.h"
 #include "third_party/gdtoa/gdtoa.h"
 
@@ -379,19 +379,19 @@ TEST(strtod, test) {
 TEST(strtod, testNearest) {
   fesetround(FE_TONEAREST);
   EXPECT_STREQ("-1.79769313486231e+308",
-               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testDownward) {
   fesetround(FE_DOWNWARD);
   EXPECT_STREQ("-1.79769313486232e+308",
-               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testUpward) {
   fesetround(FE_UPWARD);
   EXPECT_STREQ("-1.7976931348623e+308",
-               gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
+               _gc(xasprintf("%.15g", strtod("-1.79769313486231e+308", NULL))));
 }
 
 TEST(strtod, testTowardzero) {

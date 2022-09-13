@@ -9,18 +9,21 @@
 #endif
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/log/appendresourcereport.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
@@ -151,7 +154,7 @@ int main(int argc, char *argv[]) {
   while ((line = linenoiseWithHistory(prompt, "cmd"))) {
     n = 0;
     start = line;
-    if (startswith(start, "time ")) {
+    if (_startswith(start, "time ")) {
       timeit = true;
       start += 5;
     } else {

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -106,10 +106,10 @@ unsigned P[] = {
 TEST(bextra, 9bit) {
   int i;
   for (i = 4; i < 257; ++i) {
-    ASSERT_EQ(i, bextra(P, i, 9));
+    ASSERT_EQ(i, _bextra(P, i, 9));
   }
 }
 
 BENCH(bextra, bench) {
-  EZBENCH2("bextra 1/31", donothing, bextra(P, 1, 31));
+  EZBENCH2("bextra 1/31", donothing, _bextra(P, 1, 31));
 }

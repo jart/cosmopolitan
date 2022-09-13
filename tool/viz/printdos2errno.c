@@ -19,7 +19,6 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/dos2errno.internal.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 // note: these are supplementary errno magnum mappings
@@ -28,11 +27,11 @@
 int main(int argc, char *argv[]) {
   int i;
   for (i = 0; kDos2Errno[i].doscode; ++i) {
-    kprintf(
-        "dos error %10hu maps to rva %10d errno %10d which is %s%n",
-        kDos2Errno[i].doscode, kDos2Errno[i].systemv,
-        *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv),
-        strerrno(*(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv)));
+    kprintf("dos error %10hu maps to rva %10d errno %10d which is %s%n",
+            kDos2Errno[i].doscode, kDos2Errno[i].systemv,
+            *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv),
+            _strerrno(
+                *(const int *)((intptr_t)kDos2Errno + kDos2Errno[i].systemv)));
   }
   return 0;
 }

@@ -29,7 +29,7 @@ textwindows ssize_t sys_readv_nt(struct Fd *fd, const struct iovec *iov,
     case kFdConsole:
       return sys_read_nt(fd, iov, iovlen, -1);
     case kFdSocket:
-      return weaken(sys_recv_nt)(fd, iov, iovlen, 0);
+      return _weaken(sys_recv_nt)(fd, iov, iovlen, 0);
     default:
       return ebadf();
   }

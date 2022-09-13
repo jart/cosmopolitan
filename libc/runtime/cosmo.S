@@ -20,7 +20,7 @@
 #include "libc/notice.inc"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/dce.h"
 .text.startup

@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/extend.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/intrin/extend.internal.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
@@ -48,11 +48,11 @@ textstartup void InitializeFileDescriptors(void) {
   fds->n = 4;
   fds->f = 3;
   fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e,
-                   kMemtrackFdsStart + kMemtrackFdsSize);;
+                   kMemtrackFdsStart + kMemtrackFdsSize);
   if (IsMetal()) {
     extern const char vga_console[];
     pushmov(&fds->f, 3ull);
-    if (weaken(vga_console)) {
+    if (_weaken(vga_console)) {
       fds->p[0].kind = pushpop(kFdConsole);
       fds->p[1].kind = pushpop(kFdConsole);
       fds->p[2].kind = pushpop(kFdConsole);

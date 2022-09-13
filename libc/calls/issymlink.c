@@ -16,9 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -26,6 +24,8 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/files.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/s.h"
@@ -54,8 +54,8 @@ bool issymlink(const char *path) {
   if (IsAsan() && !__asan_is_valid(path, 1)) {
     efault();
     res = false;
-  } else if (weaken(__zipos_open) &&
-             weaken(__zipos_parseuri)(path, &zipname) != -1) {
+  } else if (_weaken(__zipos_open) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
     res = false;
   } else if (IsMetal()) {
     res = false;

@@ -26,7 +26,7 @@
 void __check_fail_aligned(unsigned bytes, uint64_t ptr, const char *file,
                           int line, const char *fmt, ...) {
   fflush(stderr);
-  if (!IsTiny()) memsummary(fileno(stderr));
+  if (!IsTiny()) _memsummary(fileno(stderr));
   kprintf("%s:%d: error: pointer not %d-byte aligned: %p\n", file, line, bytes,
           ptr);
   __die();

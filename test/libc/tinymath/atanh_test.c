@@ -17,46 +17,47 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/math.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 #define atanhl(x) atanhl(VEIL("t", (long double)(x)))
 #define atanh(x)  atanh(VEIL("x", (double)(x)))
 #define atanhf(x) atanhf(VEIL("x", (float)(x)))
 
 TEST(atanh, test) {
-  EXPECT_STREQ("0", gc(xdtoa(atanh(0))));
-  EXPECT_STREQ("-0", gc(xdtoa(atanh(-0.))));
-  EXPECT_STREQ(".549306144334055", gc(xdtoa(atanh(.5))));
-  EXPECT_STREQ("-.549306144334055", gc(xdtoa(atanh(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoa(atanh(+1))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoa(atanh(-1))));
+  EXPECT_STREQ("0", _gc(xdtoa(atanh(0))));
+  EXPECT_STREQ("-0", _gc(xdtoa(atanh(-0.))));
+  EXPECT_STREQ(".549306144334055", _gc(xdtoa(atanh(.5))));
+  EXPECT_STREQ("-.549306144334055", _gc(xdtoa(atanh(-.5))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoa(atanh(+1))));
+  EXPECT_STREQ("-INFINITY", _gc(xdtoa(atanh(-1))));
   EXPECT_TRUE(isnan(atanh(+1.1)));
   EXPECT_TRUE(isnan(atanh(-1.1)));
   EXPECT_STREQ("-2.1073424255447e-08",
-               gc(xasprintf("%.15g", atanh(-2.1073424255447e-08))));
+               _gc(xasprintf("%.15g", atanh(-2.1073424255447e-08))));
 }
 
 TEST(atanhl, test) {
-  EXPECT_STREQ("0", gc(xdtoal(atanhl(0))));
-  EXPECT_STREQ("-0", gc(xdtoal(atanhl(-0.))));
-  EXPECT_STREQ(".5493061443340548", gc(xdtoal(atanhl(.5))));
-  EXPECT_STREQ("-.5493061443340548", gc(xdtoal(atanhl(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoal(atanhl(+1))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoal(atanhl(-1))));
+  EXPECT_STREQ("0", _gc(xdtoal(atanhl(0))));
+  EXPECT_STREQ("-0", _gc(xdtoal(atanhl(-0.))));
+  EXPECT_STREQ(".5493061443340548", _gc(xdtoal(atanhl(.5))));
+  EXPECT_STREQ("-.5493061443340548", _gc(xdtoal(atanhl(-.5))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoal(atanhl(+1))));
+  EXPECT_STREQ("-INFINITY", _gc(xdtoal(atanhl(-1))));
   EXPECT_TRUE(isnan(atanhl(+1.1)));
   EXPECT_TRUE(isnan(atanhl(-1.1)));
 }
 
 TEST(atanhf, test) {
-  EXPECT_STREQ("0", gc(xdtoaf(atanhf(0))));
-  EXPECT_STREQ("-0", gc(xdtoaf(atanhf(-0.))));
-  EXPECT_STREQ(".549306", gc(xdtoaf(atanhf(.5))));
-  EXPECT_STREQ("-.549306", gc(xdtoaf(atanhf(-.5))));
-  EXPECT_STREQ("INFINITY", gc(xdtoaf(atanhf(+1))));
-  EXPECT_STREQ("-INFINITY", gc(xdtoaf(atanhf(-1))));
+  EXPECT_STREQ("0", _gc(xdtoaf(atanhf(0))));
+  EXPECT_STREQ("-0", _gc(xdtoaf(atanhf(-0.))));
+  EXPECT_STREQ(".549306", _gc(xdtoaf(atanhf(.5))));
+  EXPECT_STREQ("-.549306", _gc(xdtoaf(atanhf(-.5))));
+  EXPECT_STREQ("INFINITY", _gc(xdtoaf(atanhf(+1))));
+  EXPECT_STREQ("-INFINITY", _gc(xdtoaf(atanhf(-1))));
   EXPECT_TRUE(isnan(atanhf(+1.1)));
   EXPECT_TRUE(isnan(atanhf(-1.1)));
 }

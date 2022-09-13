@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/files.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
@@ -62,7 +62,7 @@ textwindows char *sys_getcwd_nt(char *buf, size_t size) {
           }
           w = x;
         } else {
-          w = tpenc(x);
+          w = _tpenc(x);
         }
         do {
           if (j < size) {

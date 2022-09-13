@@ -1,0 +1,4 @@
+#!/bin/sh
+PROG="$1"
+shift
+exec gdb "$PROG" -ex "set args $*" -ex run

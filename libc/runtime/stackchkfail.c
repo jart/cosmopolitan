@@ -21,6 +21,5 @@
 
 privileged noasan noinstrument void __stack_chk_fail(void) {
   kprintf("stack smashed\n");
-  __restorewintty();
-  _Exit(207);
+  _Exitr(207);
 }

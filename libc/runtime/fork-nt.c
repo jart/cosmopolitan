@@ -19,17 +19,16 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nt2sysv.h"
-#include "libc/thread/tls.h"
 #include "libc/nt/console.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/accessmask.h"
@@ -53,6 +52,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/tls.h"
 
 STATIC_YOINK("_check_sigchld");
 
@@ -243,14 +243,14 @@ textwindows void WinMainForked(void) {
 #ifdef SYSDEBUG
   RemoveVectoredExceptionHandler(oncrash);
 #endif
-  if (weaken(__wincrash_nt)) {
+  if (_weaken(__wincrash_nt)) {
     if (!IsTiny()) {
       RemoveVectoredExceptionHandler(__wincrashearly);
     }
-    AddVectoredExceptionHandler(1, (void *)weaken(__wincrash_nt));
+    AddVectoredExceptionHandler(1, (void *)_weaken(__wincrash_nt));
   }
-  if (weaken(__onntconsoleevent_nt)) {
-    SetConsoleCtrlHandler(weaken(__onntconsoleevent_nt), 1);
+  if (_weaken(__onntconsoleevent_nt)) {
+    SetConsoleCtrlHandler(_weaken(__onntconsoleevent_nt), 1);
   }
 
   // jump back into function below

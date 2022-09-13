@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/unicode.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 int a, b, w, i;
 char name[512];
@@ -65,7 +65,7 @@ void DisplayUnicodeBlock(void) {
   printf("\n\n%-60s%20s\n"
          "──────────────────────────────────────────────"
          "──────────────────────────────────\n",
-         name, gc(xasprintf("%04x .. %04x", a, b)));
+         name, _gc(xasprintf("%04x .. %04x", a, b)));
   w = 0;
   for (i = a; i <= b; ++i) {
     DisplayUnicodeCharacter();

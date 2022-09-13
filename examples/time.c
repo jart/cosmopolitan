@@ -12,10 +12,11 @@
 #include "libc/fmt/itoa.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/time/time.h"
-#include "libc/x/x.h"
+#include "libc/x/xspawn.h"
 
 /**
  * @fileoverview command for showing how long a command takes

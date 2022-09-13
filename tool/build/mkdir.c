@@ -12,7 +12,6 @@
 #include "libc/fmt/conv.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/x/x.h"
@@ -73,7 +72,7 @@ int main(int argc, char *argv[]) {
       fputs(": cannot create directory '", stderr);
       fputs(argv[i], stderr);
       fputs("' ", stderr);
-      fputs(strerdoc(errno), stderr);
+      fputs(_strerdoc(errno), stderr);
       fputc('\n', stderr);
       exit(1);
     }

@@ -110,12 +110,11 @@
 │ cosmopolitan § the unbourne shell » macros                               ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/tms.h"
@@ -124,9 +123,11 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/alloca.h"
 #include "libc/mem/mem.h"
 #include "libc/paths.h"

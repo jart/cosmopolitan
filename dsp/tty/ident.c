@@ -83,10 +83,11 @@ int ttyident(struct TtyIdent *ti, int ttyinfd, int ttyoutfd) {
       if (ttyident_probe(ti, ttyinfd, ttyoutfd, "\e[>c") != -1) {
         rc = 0;
         memset(&outer, 0, sizeof(outer));
-        if (ti->id == 83 /* GNU Screen */ && (ti->next || weaken(malloc)) &&
+        if (ti->id == 83 /* GNU Screen */ && (ti->next || _weaken(malloc)) &&
             ttyident_probe(&outer, ttyinfd, ttyoutfd, "\eP\e[>c\e\\") != -1 &&
-            (ti->next = (ti->next ? ti->next
-                                  : weaken(malloc)(sizeof(struct TtyIdent))))) {
+            (ti->next =
+                 (ti->next ? ti->next
+                           : _weaken(malloc)(sizeof(struct TtyIdent))))) {
           memcpy(ti->next, &outer, sizeof(outer));
         } else {
           free_s(&ti->next);

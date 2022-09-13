@@ -19,7 +19,16 @@
 #include "libc/thread/thread.h"
 
 /**
- * Initializes mutex.
+ * Initializes mutex, e.g.
+ *
+ *     pthread_mutex_t lock;
+ *     pthread_mutexattr_t attr;
+ *     pthread_mutexattr_init(&attr);
+ *     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
+ *     pthread_mutex_init(&lock, &attr);
+ *     pthread_mutexattr_destroy(&attr);
+ *     // ...
+ *     pthread_mutex_destroy(&lock);
  *
  * @param attr may be null
  * @return 0 on success, or error number on failure

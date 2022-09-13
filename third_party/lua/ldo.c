@@ -29,7 +29,7 @@
 #define LUA_CORE
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
-#include "libc/runtime/gc.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -153,9 +153,8 @@ l_noret luaD_throw (lua_State *L, int errcode) {
         lua_unlock(L);
         g->panic(L);  /* call panic function (last chance to jump out) */
       }
-      if (weaken(__die)) weaken(__die)();
-      __restorewintty();
-      _Exit(41);
+      if (_weaken(__die)) _weaken(__die)();
+      _Exitr(41);
     }
   }
 }

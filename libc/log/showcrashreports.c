@@ -37,7 +37,7 @@ STATIC_YOINK("ShowBacktrace");               // for backtracing
 STATIC_YOINK("GetSymbolTable");              // for backtracing
 STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
 STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
-STATIC_YOINK("__get_symbol_by_addr");        // for asan memory origin
+STATIC_YOINK("GetSymbolByAddr");             // for asan memory origin
 
 extern const unsigned char __oncrash_thunks[8][11];
 static struct sigaltstack g_oldsigaltstack;
@@ -99,8 +99,6 @@ static void FreeSigAltStack(void *p) {
  * Another trick this function enables, is you can press CTRL+\ to open
  * the debugger GUI at any point while the program is running. It can be
  * useful, for example, if a program is caught in an infinite loop.
- *
- * @see callexitontermination()
  */
 void ShowCrashReports(void) {
   char *sp;

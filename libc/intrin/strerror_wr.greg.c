@@ -24,7 +24,6 @@
 #include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/enum/lang.h"
 #include "libc/nt/process.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 
 /**
@@ -40,8 +39,8 @@ privileged int strerror_wr(int err, uint32_t winerr, char *buf, size_t size) {
   char16_t winmsg[256];
   const char *sym, *msg;
   wanting = false;
-  sym = firstnonnull(strerrno(err), (wanting = true, "EUNKNOWN"));
-  msg = firstnonnull(strerdoc(err), (wanting = true, "No error information"));
+  sym = firstnonnull(_strerrno(err), (wanting = true, "EUNKNOWN"));
+  msg = firstnonnull(_strerdoc(err), (wanting = true, "No error information"));
   if (IsTiny()) {
     if (!sym) sym = "EUNKNOWN";
     for (; (c = *sym++); --size)

@@ -1,0 +1,5 @@
+#!/bin/sh
+nm -C --size "$@" |
+  sort -r |
+  grep ' [bBtTRr] ' |
+  exec less

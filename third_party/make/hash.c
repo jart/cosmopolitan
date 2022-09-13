@@ -18,9 +18,9 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 /**/
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/likely.h"
 #include "libc/log/check.h"
-#include "libc/nexgen32e/bsr.h"
 #include "third_party/make/hash.h"
 /* clang-format off */
 
@@ -322,7 +322,7 @@ static unsigned long
 round_up_2 (unsigned long n)
 {
   if (UNLIKELY(!n)) return 1;
-  return 2ul << bsrl(n);
+  return 2ul << _bsrl(n);
 }
 
 #define rol32(v, n) \

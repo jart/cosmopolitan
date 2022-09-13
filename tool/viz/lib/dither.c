@@ -24,7 +24,7 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/str/str.h"
 #include "tool/viz/lib/graphic.h"
 #include "tool/viz/lib/knobs.h"

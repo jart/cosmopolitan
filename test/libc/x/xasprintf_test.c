@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 TEST(xasprintf, test) {
-  EXPECT_STREQ("hi.there", gc(xasprintf("%s.%s", "hi", "there")));
+  EXPECT_STREQ("hi.there", _gc(xasprintf("%s.%s", "hi", "there")));
 }

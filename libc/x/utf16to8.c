@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/packsswb.h"
 #include "libc/intrin/pandn.h"
 #include "libc/intrin/pcmpgtb.h"
@@ -24,11 +25,10 @@
 #include "libc/intrin/pmovmskb.h"
 #include "libc/intrin/punpckhbw.h"
 #include "libc/intrin/punpcklbw.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/x/x.h"
 
@@ -77,9 +77,9 @@ char *utf16to8(const char16_t *p, size_t n, size_t *z) {
       if (x < 0200) {
         *q++ = x;
       } else {
-        w = tpenc(x);
+        w = _tpenc(x);
         WRITE64LE(q, w);
-        q += bsr(w) >> 3;
+        q += _bsr(w) >> 3;
         q += 1;
       }
     }

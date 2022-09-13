@@ -20,13 +20,13 @@
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -40,6 +40,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
+#include "third_party/nsync/mu.h"
 
 #define THREADS    8
 #define ITERATIONS 512

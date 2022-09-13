@@ -24,8 +24,8 @@
 #include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -35,7 +35,8 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
+#include "libc/x/xgetline.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/getopt/getopt.h"
 
@@ -635,7 +636,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
   CHECK_EQ('.', *p++, DEBUG);
   us = strtol(p, &p, 10);
   CHECK_EQ(' ', *p++, DEBUG);
-  if (startswith(p, "<... ")) {
+  if (_startswith(p, "<... ")) {
     CHECK_NOTNULL((p = strchr(p, '>')));
     ++p;
     for (event = t->events.n; event--;) {
@@ -655,18 +656,18 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
     t->events.p[event].sec = sec;
     t->events.p[event].us = us;
     t->events.p[event].lineno = lineno;
-    if (startswith(p, "+++ exited with ")) {
+    if (_startswith(p, "+++ exited with ")) {
       p += strlen("+++ exited with ");
       t->events.p[event].kind = EK_EXIT;
       t->events.p[event].ret = atoi(p);
       return;
-    } else if (startswith(p, "+++ killed by ")) {
+    } else if (_startswith(p, "+++ killed by ")) {
       p += strlen("+++ killed by ");
       CHECK((q = strchr(p, ' ')), DEBUG);
       t->events.p[event].kind = EK_KILLED;
       t->events.p[event].ret = GetSignal(p, q - p);
       return;
-    } else if (startswith(p, "--- ")) {
+    } else if (_startswith(p, "--- ")) {
       p += 4;
       CHECK(isalpha(*p), DEBUG);
       CHECK((q = strchr(p, ' ')), DEBUG);
@@ -683,7 +684,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
     if (*p == ',') ++p;
     while (*p == ' ') ++p;
     CHECK(*p, DEBUG);
-    if (startswith(p, "<unfinished ...>")) {
+    if (_startswith(p, "<unfinished ...>")) {
       t->events.p[event].is_interrupted = true;
       break;
     } else if (*p == ')') {
@@ -703,7 +704,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
       break;
     }
     CHECK_LT((arg = t->events.p[event].arity++), 6);
-    if (isalpha(*p) && !startswith(p, "NULL")) {
+    if (isalpha(*p) && !_startswith(p, "NULL")) {
       bzero(&b, sizeof(b));
       for (; isalpha(*p) || *p == '_'; ++p) {
         AppendSlice(&b, *p);
@@ -713,7 +714,7 @@ static void Parse(struct Trace *t, const char *line, long lineno) {
     } else {
       t->events.p[event].arg[arg].name = -1;
     }
-    if (startswith(p, "NULL")) {
+    if (_startswith(p, "NULL")) {
       p += 4;
       t->events.p[event].arg[arg].kind = AK_LONG;
       t->events.p[event].arg[arg].x = 0;

@@ -20,10 +20,12 @@
 #include "libc/calls/struct/stat.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "tool/build/lib/psk.h"
 
 /**
@@ -33,7 +35,7 @@ void *GetRunitPsk(void) {
   int fd;
   char *r, *p;
   struct stat st;
-  p = gc(xasprintf("%s/.runit.psk", gc(xhomedir())));
+  p = _gc(xasprintf("%s/.runit.psk", _gc(xhomedir())));
   if (stat(p, &st) == -1 || st.st_size != 32) {
     fprintf(stderr, "need o//examples/getrandom.com -bn32 >~/.runit.psk\n");
     exit(1);

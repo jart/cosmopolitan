@@ -1,4 +1,14 @@
 #!/usr/bin/env python.com
+#
+# OVERVIEW
+#
+#   One-Off Makefile Rule Generator
+#
+# EXAMPLES
+#
+#     tool/scripts/get-deps.py examples/hello.c
+#     asmexpr 'mov $0,%ecx' 'vmovd %ecx,%xmm1' 'vpbroadcastb %xmm1,%ymm1' 'mov $0x20202032489001ff,%rax' 'vmovq %rax,%xmm0' 'vpcmpgtb %ymm1,%ymm0,%ymm2'
+#
 
 import os
 import re

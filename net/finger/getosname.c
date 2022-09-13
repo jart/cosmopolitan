@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "net/finger/finger.h"
 
 const char *GetOsName(int os) {
   if (os) {
-    switch (bsr(os)) {
+    switch (_bsr(os)) {
       case 0:
         return "LINUX";
       case 1:

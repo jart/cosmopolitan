@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/creationdisposition.h"
@@ -28,7 +29,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/reparsedatabuffer.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
 
@@ -78,7 +78,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
             }
             w = x;
           } else {
-            w = tpenc(x);
+            w = _tpenc(x);
           }
           do {
             if (j < bufsiz) {

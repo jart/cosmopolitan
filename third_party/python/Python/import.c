@@ -4,15 +4,15 @@
 │ Python 3                                                                     │
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/stat.macros.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/x/x.h"
@@ -887,7 +887,7 @@ PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co,
         // cpathobj != NULL means cpathname != NULL
         size_t cpathlen = strlen(cpathname);
         char *pathname2 = _gc(strdup(cpathname));
-        if (endswith(pathname2, ".pyc"))
+        if (_endswith(pathname2, ".pyc"))
         {
             pathname2[cpathlen-2] = '\0'; // so now ends with .py
             if(!stat(pathname2, &stinfo) && (stinfo.st_mode & S_IFMT) == S_IFREG)
@@ -2370,7 +2370,7 @@ static PyObject *_imp_source_from_cache(PyObject *module, PyObject *arg) {
   Py_ssize_t pathlen = 0;
   if (!PyArg_Parse(PyOS_FSPath(arg), "z#:source_from_cache", &path, &pathlen))
     return NULL;
-  if (!path || !endswith(path, ".pyc")) {
+  if (!path || !_endswith(path, ".pyc")) {
     PyErr_Format(PyExc_ValueError, "%s does not end in .pyc", path);
     return NULL;
   }
@@ -2666,7 +2666,7 @@ static PyObject *SFLObject_is_package(SourcelessFileLoader *self,
                  self->name, name);
     return NULL;
   }
-  if (startswith(basename(self->path), "__init__")) {
+  if (_startswith(basename(self->path), "__init__")) {
     Py_RETURN_TRUE;
   }
   Py_RETURN_FALSE;

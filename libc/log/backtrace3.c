@@ -63,10 +63,10 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
       break;
     }
     addr = frame->addr;
-    if (addr == weakaddr("__gc")) {
+    if (addr == _weakaddr("__gc")) {
       do {
         --gi;
-      } while ((addr = garbage->p[gi].ret) == weakaddr("__gc"));
+      } while ((addr = garbage->p[gi].ret) == _weakaddr("__gc"));
     }
     /*
      * we subtract one to handle the case of noreturn functions with a

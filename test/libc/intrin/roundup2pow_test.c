@@ -16,28 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
-#include "libc/log/check.h"
-#include "libc/macros.internal.h"
-#include "libc/math.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-TEST(roundup2pow, test) {
-  EXPECT_EQ(0, roundup2pow(0));
-  EXPECT_EQ(1, roundup2pow(1));
-  EXPECT_EQ(2, roundup2pow(2));
-  EXPECT_EQ(4, roundup2pow(3));
-  EXPECT_EQ(4, roundup2pow(4));
-  EXPECT_EQ(PAGESIZE, roundup2pow(PAGESIZE - 1));
-  EXPECT_EQ(PAGESIZE, roundup2pow(PAGESIZE));
-  EXPECT_EQ(PAGESIZE * 2, roundup2pow(PAGESIZE + 1));
-  EXPECT_EQ(PAGESIZE, roundup2pow(PAGESIZE - 1));
-  EXPECT_EQ(PAGESIZE, roundup2pow(PAGESIZE));
-  EXPECT_EQ(PAGESIZE * 2, roundup2pow(PAGESIZE + 1));
+TEST(_roundup2pow, test) {
+  EXPECT_EQ(0, _roundup2pow(0));
+  EXPECT_EQ(1, _roundup2pow(1));
+  EXPECT_EQ(2, _roundup2pow(2));
+  EXPECT_EQ(4, _roundup2pow(3));
+  EXPECT_EQ(4, _roundup2pow(4));
+  EXPECT_EQ(PAGESIZE, _roundup2pow(PAGESIZE - 1));
+  EXPECT_EQ(PAGESIZE, _roundup2pow(PAGESIZE));
+  EXPECT_EQ(PAGESIZE * 2, _roundup2pow(PAGESIZE + 1));
+  EXPECT_EQ(PAGESIZE, _roundup2pow(PAGESIZE - 1));
+  EXPECT_EQ(PAGESIZE, _roundup2pow(PAGESIZE));
+  EXPECT_EQ(PAGESIZE * 2, _roundup2pow(PAGESIZE + 1));
 }

@@ -17,12 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/lockcmpxchgp.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/internal.h"
@@ -43,20 +43,19 @@ relegated void __assert_fail(const char *expr, const char *file, int line) {
     kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
     if (__vforked || _lockcmpxchgp(&sync, &owner, me)) {
       __restore_tty();
-      if (weaken(ShowBacktrace)) {
-        weaken(ShowBacktrace)(2, __builtin_frame_address(0));
-      } else if (weaken(PrintBacktraceUsingSymbols) && weaken(GetSymbolTable)) {
-        weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
-                                           weaken(GetSymbolTable)());
+      if (_weaken(ShowBacktrace)) {
+        _weaken(ShowBacktrace)(2, __builtin_frame_address(0));
+      } else if (_weaken(PrintBacktraceUsingSymbols) &&
+                 _weaken(GetSymbolTable)) {
+        _weaken(PrintBacktraceUsingSymbols)(2, __builtin_frame_address(0),
+                                            _weaken(GetSymbolTable)());
       } else {
         kprintf("can't backtrace b/c `ShowCrashReports` not linked\n");
       }
-      __restorewintty();
-      _Exit(23);
+      _Exitr(23);
     } else if (owner == me) {
       kprintf("assert failed while failing\n");
-      __restorewintty();
-      _Exit(24);
+      _Exitr(24);
     } else {
       _Exit1(25);
     }

@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/dce.h"
@@ -30,7 +30,7 @@
  * Raise SIGALRM every 1.5s:
  *
  *     CHECK_NE(-1, sigaction(SIGALRM,
- *                            &(struct sigaction){.sa_sigaction = missingno},
+ *                            &(struct sigaction){.sa_sigaction = _missingno},
  *                            NULL));
  *     CHECK_NE(-1, setitimer(ITIMER_REAL,
  *                            &(const struct itimerval){{1, 500000},
@@ -40,7 +40,7 @@
  * Set single-shot 50ms timer callback to interrupt laggy connect():
  *
  *     CHECK_NE(-1, sigaction(SIGALRM,
- *                            &(struct sigaction){.sa_sigaction = missingno,
+ *                            &(struct sigaction){.sa_sigaction = _missingno,
  *                                                .sa_flags = SA_RESETHAND},
  *                            NULL));
  *     CHECK_NE(-1, setitimer(ITIMER_REAL,

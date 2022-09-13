@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/bsr.h"
+#include "libc/intrin/bsr.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "tool/build/lib/clmul.h"
 #include "tool/build/lib/endian.h"
@@ -33,7 +33,7 @@ struct clmul {
 static struct clmul clmul(uint64_t a, uint64_t b) {
   uint64_t t, x = 0, y = 0;
   if (a && b) {
-    if (bsrl(a) < bsrl(b)) t = a, a = b, b = t;
+    if (_bsrl(a) < _bsrl(b)) t = a, a = b, b = t;
     for (t = 0; b; a <<= 1, b >>= 1) {
       if (b & 1) x ^= a, y ^= t;
       t = t << 1 | a >> 63;

@@ -11,7 +11,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/log/check.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/str/str.h"
 
 /**

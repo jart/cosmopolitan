@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -34,8 +34,8 @@ void *_mapshared(size_t size) {
   if (m != MAP_FAILED) {
     return m;
   }
-  if (errno == ENOMEM && weaken(__oom_hook)) {
-    weaken(__oom_hook)(size);
+  if (errno == ENOMEM && _weaken(__oom_hook)) {
+    _weaken(__oom_hook)(size);
   }
   return 0;
 }

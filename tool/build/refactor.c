@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
@@ -115,7 +115,7 @@ void RefactorDir(const char *dpath) {
   char *path = gc(xmalloc(4096));
   CHECK_NOTNULL(dir = opendir(firstnonnull(dpath, ".")));
   while ((ent = readdir(dir))) {
-    if (startswith(ent->d_name, ".")) continue;
+    if (_startswith(ent->d_name, ".")) continue;
     if (strcmp(ent->d_name, "o") == 0) continue;
     snprintf(path, 4096, "%s%s%s", dpath ? dpath : "", dpath ? "/" : "",
              ent->d_name);

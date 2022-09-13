@@ -8,7 +8,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int copyfile(const char *, const char *, int) paramsnonnull();
+int _copyfile(const char *, const char *, int) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

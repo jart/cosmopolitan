@@ -19,11 +19,11 @@
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/errfuns.h"
@@ -63,7 +63,7 @@ int utimensat(int dirfd, const char *path, const struct timespec ts[2],
     rc = einval();  // unsupported flag
   } else if (!path && flags) {
     rc = einval();  // futimens() doesn't take flags
-  } else if ((path || __isfdkind(dirfd, kFdZip)) && weaken(__zipos_notat) &&
+  } else if ((path || __isfdkind(dirfd, kFdZip)) && _weaken(__zipos_notat) &&
              (rc = __zipos_notat(dirfd, path)) == -1) {
     STRACE("zipos utimensat not supported yet");
   } else if (!IsWindows()) {

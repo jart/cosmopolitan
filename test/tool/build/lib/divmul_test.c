@@ -17,17 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigaction.h"
-#include "libc/log/check.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xsigaction.h"
+#include "third_party/xed/x86.h"
 #include "tool/build/lib/divmul.h"
 #include "tool/build/lib/endian.h"
 #include "tool/build/lib/flags.h"
+#include "tool/build/lib/machine.h"
 
 #define CX     1
 #define OSZ    00000000040
@@ -47,12 +48,12 @@ void OnSigFpe(void) {
 
 void SetUp(void) {
   m->xedd = xedd;
-  CHECK_NE(-1, xsigaction(SIGFPE, OnSigFpe, SA_NODEFER, 0, oldsigfpe));
+  ASSERT_NE(-1, xsigaction(SIGFPE, OnSigFpe, SA_NODEFER, 0, oldsigfpe));
 }
 
 void TearDown(void) {
   m->xedd = xedd;
-  CHECK_NE(-1, sigaction(SIGFPE, oldsigfpe, NULL));
+  ASSERT_NE(-1, sigaction(SIGFPE, oldsigfpe, NULL));
 }
 
 TEST(imul8, test) {

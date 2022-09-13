@@ -26,12 +26,12 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/mem/mem.h"
@@ -60,7 +60,7 @@ static size_t GetSlashLen(const char *s)
 
 static char *ResolvePath(char *d, const char *s, size_t n)
 {
-	if (d || (weaken(malloc) && (d = weaken(malloc)(n+1)))) {
+	if (d || (_weaken(malloc) && (d = _weaken(malloc)(n+1)))) {
 		return memmove(d, s, n+1);
 	} else {
 		enomem();

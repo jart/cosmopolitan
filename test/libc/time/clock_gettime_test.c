@@ -19,7 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/fmt/conv.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/testlib/testlib.h"

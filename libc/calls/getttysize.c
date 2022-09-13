@@ -16,13 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/termios.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/internal.h"
-#include "libc/log/log.h"
-#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/termios.h"
 
 /**
@@ -34,7 +32,7 @@
  * @param out stores determined dimensions, only on success
  * @returns -1 on error or something else on success
  */
-int getttysize(int fd, struct winsize *out) {
+int _getttysize(int fd, struct winsize *out) {
   if (__nocolor) {
     out->ws_col = atoi(firstnonnull(getenv("COLUMNS"), "80"));
     out->ws_row = atoi(firstnonnull(getenv("ROWS"), "40"));

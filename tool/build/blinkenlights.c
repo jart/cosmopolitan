@@ -41,6 +41,7 @@
 #include "libc/intrin/pcmpeqb.h"
 #include "libc/intrin/pmovmskb.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
@@ -49,18 +50,17 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/arraylist2.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/str/thompike.h"
 #include "libc/str/tpdecode.internal.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/tpencode.internal.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/ex.h"
@@ -77,6 +77,8 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
+#include "libc/x/xsigaction.h"
 #include "third_party/gdtoa/gdtoa.h"
 #include "third_party/getopt/getopt.h"
 #include "tool/build/lib/address.h"
@@ -589,14 +591,14 @@ static void ToggleMouseTracking(void) {
 }
 
 static void LeaveScreen(void) {
-  TtyWriteString(gc(xasprintf("\e[%d;%dH\e[S\r\n", tyn, txn)));
+  TtyWriteString(_gc(xasprintf("\e[%d;%dH\e[S\r\n", tyn, txn)));
 }
 
 static void GetTtySize(int fd) {
   struct winsize wsize;
   wsize.ws_row = tyn;
   wsize.ws_col = txn;
-  getttysize(fd, &wsize);
+  _getttysize(fd, &wsize);
   tyn = wsize.ws_row;
   txn = wsize.ws_col;
 }
@@ -760,7 +762,7 @@ void TuiSetup(void) {
   static bool once;
   report = false;
   if (!once) {
-    INFOF("loaded program %s\n%s", codepath, gc(FormatPml4t(m)));
+    INFOF("loaded program %s\n%s", codepath, _gc(FormatPml4t(m)));
     CommonSetup();
     ioctl(ttyout, TCGETS, &oldterm);
     xsigaction(SIGINT, OnSigInt, 0, 0, oldsig + 3);
@@ -776,7 +778,7 @@ void TuiSetup(void) {
     DrainInput(ttyin);
     y = 0;
     if (GetCursorPosition(&y, NULL) != -1) {
-      TtyWriteString(gc(xasprintf("\e[%dS", y)));
+      TtyWriteString(_gc(xasprintf("\e[%dS", y)));
     }
   }
 }
@@ -1686,7 +1688,7 @@ static void DrawStatus(struct Panel *p) {
   rw += AppendStat(s, "freed", a->freed, a->freed != b->freed);
   rw += AppendStat(s, "tables", a->pagetables, a->pagetables != b->pagetables);
   rw += AppendStat(s, "fds", m->fds.i, false);
-  AppendFmt(&p->lines[0], "\e[7m%-*s%s\e[0m", xn - rw, gc(GetStatus(xn - rw)),
+  AppendFmt(&p->lines[0], "\e[7m%-*s%s\e[0m", xn - rw, _gc(GetStatus(xn - rw)),
             s->p);
   free(s->p);
   free(s);
@@ -2258,7 +2260,7 @@ static void OnVidyaServiceWriteCharacter(void) {
   p = buf;
   p += FormatCga(m->bx[0], p);
   p = stpcpy(p, "\e7");
-  w = tpenc(GetVidyaByte(m->ax[0]));
+  w = _tpenc(GetVidyaByte(m->ax[0]));
   do {
     *p++ = w;
   } while ((w >>= 8));
@@ -2286,7 +2288,7 @@ static void OnVidyaServiceTeletypeOutput(void) {
   uint64_t w;
   char buf[12];
   n = 0 /* FormatCga(m->bx[0], buf) */;
-  w = tpenc(VidyaServiceXlatTeletype(m->ax[0]));
+  w = _tpenc(VidyaServiceXlatTeletype(m->ax[0]));
   do buf[n++] = w;
   while ((w >>= 8));
   PtyWrite(pty, buf, n);

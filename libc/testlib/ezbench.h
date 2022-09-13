@@ -1,12 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
 #define COSMOPOLITAN_LIBC_TESTLIB_EZBENCH_H_
-#include "libc/macros.internal.h"
 #include "libc/nexgen32e/bench.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/sysv/consts/clock.h"
 #include "libc/testlib/bench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/time/time.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

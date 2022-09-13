@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -31,9 +31,9 @@
 wontreturn void quick_exit(int exitcode) {
   const uintptr_t *p;
   STRACE("quick_exit(%d)", exitcode);
-  __restorewintty();
-  if (weaken(fflush)) {
-    weaken(fflush)(0);
+  _restorewintty();
+  if (_weaken(fflush)) {
+    _weaken(fflush)(0);
   }
   for (p = __fini_array_end; p > __fini_array_start;) {
     ((void (*)(void))(*--p))();

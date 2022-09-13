@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/chibicc.h"
 #include "tool/build/lib/asmdown.h"
 
@@ -107,15 +108,15 @@ static char *DescribeType(struct Type *ty) {
     case TY_LDOUBLE:
       return DescribeScalar(ty, "long double");
     case TY_FUNC:
-      return xasprintf("%s(*)()", gc(DescribeType(ty->return_ty)));
+      return xasprintf("%s(*)()", _gc(DescribeType(ty->return_ty)));
     case TY_PTR:
       if (ty->base->kind == TY_FUNC) {
         return DescribeType(ty->base);
       } else {
-        return xasprintf("%s*", gc(DescribeType(ty->base)));
+        return xasprintf("%s*", _gc(DescribeType(ty->base)));
       }
     case TY_ARRAY:
-      return xasprintf("%s[%d]", gc(DescribeType(ty->base)), ty->array_len);
+      return xasprintf("%s[%d]", _gc(DescribeType(ty->base)), ty->array_len);
     case TY_ENUM:
       if (ty->name) {
         return xasprintf("enum %.*s", ty->name->len, ty->name->loc);
@@ -283,7 +284,7 @@ static void LoadPublicDefinitions(struct DoxWriter *dox, Obj *prog) {
     if (!obj->javadown) {
       if (*obj->name == '_') continue;
       if (strchr(obj->name, '$')) continue;
-      if (startswith(obj->name, "__gdtoa_")) continue;
+      if (_startswith(obj->name, "__gdtoa_")) continue;
       if (obj->visibility && !strcmp(obj->visibility, "hidden")) continue;
       if (!obj->is_definition && (!obj->is_function || !obj->params ||
                                   !obj->params->name || !*obj->params->name)) {
@@ -292,7 +293,7 @@ static void LoadPublicDefinitions(struct DoxWriter *dox, Obj *prog) {
     }
     if (obj->is_static) continue;
     if (obj->is_string_literal) continue;
-    if (obj->section && startswith(obj->section, ".init_array")) continue;
+    if (obj->section && _startswith(obj->section, ".init_array")) continue;
     APPEND(dox->objects);
     dox->objects.p[dox->objects.n - 1] = obj;
   }

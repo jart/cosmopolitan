@@ -26,7 +26,7 @@
 #include "libc/nexgen32e/kompressor.h"
 #include "libc/nexgen32e/lz4.h"
 #include "libc/runtime/ezmap.internal.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"

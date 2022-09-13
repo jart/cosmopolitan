@@ -58,14 +58,14 @@ Contact: antirez@gmail.com\"\n\
 #endif
 #define _GNU_SOURCE
 
-#include "libc/mem/alg.h"
-#include "libc/mem/arraylist2.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/log/log.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
@@ -355,7 +355,7 @@ int getCursorPosition(int64_t ifd, int64_t ofd, int *rows, int *cols) {
  * Returns 0 on success, -1 on error. */
 int getWindowSize(int64_t ifd, int64_t ofd, int *rows, int *cols) {
   struct winsize ws;
-  if (getttysize(STDOUT_FILENO, &ws) == -1 || ws.ws_col == 0) {
+  if (_getttysize(1, &ws) == -1 || ws.ws_col == 0) {
     /* ioctl() failed. Try to query the terminal itself. */
     int orig_row, orig_col, retval;
 

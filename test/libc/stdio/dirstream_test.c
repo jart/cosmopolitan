@@ -20,13 +20,14 @@
 #include "libc/calls/struct/dirent.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/runtime/gc.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
+#include "libc/x/xiso8601.h"
 
 STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("usr/share/zoneinfo/New_York");
@@ -110,9 +111,9 @@ TEST(dirstream, test) {
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
-  file1 = gc(xasprintf("%s/%s", dpath, "foo"));
-  file2 = gc(xasprintf("%s/%s", dpath, "bar"));
+  dpath = _gc(xasprintf("%s.%d", "dirstream", rand()));
+  file1 = _gc(xasprintf("%s/%s", dpath, "foo"));
+  file2 = _gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));
@@ -151,9 +152,9 @@ TEST(rewinddir, test) {
   bool hasfoo = false;
   bool hasbar = false;
   char *dpath, *file1, *file2;
-  dpath = gc(xasprintf("%s.%d", "dirstream", rand()));
-  file1 = gc(xasprintf("%s/%s", dpath, "foo"));
-  file2 = gc(xasprintf("%s/%s", dpath, "bar"));
+  dpath = _gc(xasprintf("%s.%d", "dirstream", rand()));
+  file1 = _gc(xasprintf("%s/%s", dpath, "foo"));
+  file2 = _gc(xasprintf("%s/%s", dpath, "bar"));
   EXPECT_NE(-1, mkdir(dpath, 0755));
   EXPECT_NE(-1, touch(file1, 0644));
   EXPECT_NE(-1, touch(file2, 0644));

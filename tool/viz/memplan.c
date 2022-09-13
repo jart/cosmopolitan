@@ -24,7 +24,7 @@ struct WinArgs {
   char envblock[ARG_MAX / 2];
 };
 
-//#define INCREMENT roundup2pow(kAutomapSize/16)
+//#define INCREMENT _roundup2pow(kAutomapSize/16)
 #define INCREMENT (64L*1024*1024*1024)
 
 uint64_t last;

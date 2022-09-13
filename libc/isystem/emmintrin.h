@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_EMMINTRIN_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_EMMINTRIN_H_
+#include "libc/intrin/emmintrin.internal.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_EMMINTRIN_H_ */

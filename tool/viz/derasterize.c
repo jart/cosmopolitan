@@ -24,18 +24,18 @@
 #include "libc/calls/termios.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/str/tpenc.h"
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/exit.h"
 #include "libc/sysv/consts/fileno.h"
@@ -104,7 +104,7 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define Mode BEST
 
 #if Mode == BEST
-#define MC 9u  /* log2(#) of color combos to consider */
+#define MC 9u /* log2(#) of color combos to consider */
 #define GN 35u /* # of glyphs to consider */
 #elif Mode == FAST
 #define MC 6u
@@ -114,10 +114,10 @@ int y_; /* -y HEIGHT [in flexidecimal] */
 #define GN 25u
 #endif
 
-#define CN 3u        /* # channels (rgb) */
-#define YS 8u        /* row stride -or- block height */
-#define XS 4u        /* column stride -or- block width */
-#define GT 44u       /* total glyphs */
+#define CN 3u /* # channels (rgb) */
+#define YS 8u /* row stride -or- block height */
+#define XS 4u /* column stride -or- block width */
+#define GT 44u /* total glyphs */
 #define BN (YS * XS) /* # scalars in block/glyph plane */
 
 #define PHIPRIME 0x9E3779B1u
@@ -138,7 +138,7 @@ extern const char16_t kRunes[];
  */
 static char *tptoa(char *p, wchar_t x) {
   unsigned long w;
-  for (w = tpenc(x); w; w >>= 010) *p++ = w & 0xff;
+  for (w = _tpenc(x); w; w >>= 010) *p++ = w & 0xff;
   return p;
 }
 

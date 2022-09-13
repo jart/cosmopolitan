@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/intrin/bsf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
@@ -24,7 +25,6 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsf.h"
 #include "libc/str/str.h"
 #include "tool/plinko/lib/cons.h"
 #include "tool/plinko/lib/gc.h"
@@ -93,7 +93,7 @@ int Census(struct Gc *G) {
     if (!~G->M[j]) {
       l += DWBITS;
     } else {
-      l += bsfl(~G->M[j]);
+      l += _bsfl(~G->M[j]);
       break;
     }
   }
@@ -124,7 +124,7 @@ void Sweep(struct Gc *G) {
   for (; i < G->n; ++i) {
     m = G->M[i];
     if (~m) {
-      j = bsfl(~m);
+      j = _bsfl(~m);
       m >>= j;
       m <<= j;
       d -= j;
@@ -136,7 +136,7 @@ void Sweep(struct Gc *G) {
   }
   for (; i < G->n; b -= DWBITS, m = G->M[++i]) {
     for (; m; m &= ~((dword)1 << j)) {
-      a = b + ~(j = bsfl(m));
+      a = b + ~(j = _bsfl(m));
       Set(--d, MAKE(Relocate(G, LO(Get(a))), Relocate(G, HI(Get(a)))));
       SetShadow(d, MAKE(LO(GetShadow(a)), Relocate(G, HI(GetShadow(a)))));
     }

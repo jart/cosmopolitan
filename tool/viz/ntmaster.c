@@ -21,7 +21,7 @@
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/x/x.h"
+#include "libc/x/xgetline.h"
 
 #define DLL "iphlpapi"
 

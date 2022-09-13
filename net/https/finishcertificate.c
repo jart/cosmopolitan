@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/log.h"
-#include "libc/runtime/gc.internal.h"
-#include "libc/x/x.h"
+#include "libc/mem/gc.h"
+#include "libc/x/xasprintf.h"
 #include "net/https/https.h"
 
 struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
@@ -37,8 +37,8 @@ struct Cert FinishCertificate(struct Cert *ca, mbedtls_x509write_cert *wcert,
   if ((rc = mbedtls_pk_check_pair(&cert->pk, key))) {
     FATALF("generate key (grep -0x%04x)", -rc);
   }
-  LogCertificate(
-      gc(xasprintf("generated %s certificate", mbedtls_pk_get_name(&cert->pk))),
-      cert);
+  LogCertificate(_gc(xasprintf("generated %s certificate",
+                               mbedtls_pk_get_name(&cert->pk))),
+                 cert);
   return (struct Cert){cert, key};
 }

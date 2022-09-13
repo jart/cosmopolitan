@@ -18,13 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/libfatal.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/nt/synchronization.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -36,6 +37,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 #include "third_party/chibicc/test/test.h"
 #include "tool/decode/lib/flagger.h"
 #include "tool/decode/lib/pollnames.h"
@@ -58,8 +60,8 @@ void OnSig(int sig) {
 dontdiscard char *FormatPollFd(struct pollfd p[2]) {
   return xasprintf("fd:%d revents:%s\n"
                    "fd:%d revents:%s\n",
-                   p[0].fd, gc(RecreateFlags(kPollNames, p[0].revents)),
-                   p[1].fd, gc(RecreateFlags(kPollNames, p[1].revents)));
+                   p[0].fd, _gc(RecreateFlags(kPollNames, p[0].revents)),
+                   p[1].fd, _gc(RecreateFlags(kPollNames, p[1].revents)));
 }
 
 TEST(poll, allZero_doesNothingPrettyMuch) {
@@ -97,7 +99,7 @@ TEST(poll, testNegativeOneFd_isIgnored) {
   EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));
   EXPECT_STREQ("fd:-1 revents:0\n"
                "fd:3 revents:0\n",
-               gc(FormatPollFd(&fds[0])));
+               _gc(FormatPollFd(&fds[0])));
   ASSERT_SYS(0, 0, close(3));
 }
 

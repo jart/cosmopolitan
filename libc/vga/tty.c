@@ -23,7 +23,6 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "libc/str/unicode.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
@@ -40,7 +39,7 @@
 
 #define DEFAULT_FG 7
 #define DEFAULT_BG 0
-#define CRTPORT 0x3d4
+#define CRTPORT    0x3d4
 
 static void SetYn(struct Tty *tty, unsigned short yn) {
 #ifndef VGA_TTY_HEIGHT
@@ -54,8 +53,7 @@ static void SetXn(struct Tty *tty, unsigned short xn) {
 #endif
 }
 
-static wchar_t * SetWcs(struct Tty *tty, wchar_t *wcs)
-{
+static wchar_t *SetWcs(struct Tty *tty, wchar_t *wcs) {
 #ifdef VGA_USE_WCS
   tty->wcs = wcs;
   return wcs;
@@ -64,8 +62,7 @@ static wchar_t * SetWcs(struct Tty *tty, wchar_t *wcs)
 #endif
 }
 
-static size_t Yn(struct Tty *tty)
-{
+static size_t Yn(struct Tty *tty) {
 #ifdef VGA_TTY_HEIGHT
   return VGA_TTY_HEIGHT;
 #else
@@ -73,8 +70,7 @@ static size_t Yn(struct Tty *tty)
 #endif
 }
 
-static size_t Xn(struct Tty *tty)
-{
+static size_t Xn(struct Tty *tty) {
 #ifdef VGA_TTY_WIDTH
   return VGA_TTY_WIDTH;
 #else
@@ -82,8 +78,7 @@ static size_t Xn(struct Tty *tty)
 #endif
 }
 
-static wchar_t *Wcs(struct Tty *tty)
-{
+static wchar_t *Wcs(struct Tty *tty) {
 #ifdef VGA_USE_WCS
   return tty->wcs;
 #else
@@ -99,19 +94,15 @@ void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
   SetYn(tty, yn);
   SetXn(tty, xn);
   tty->ccs = ccs;
-  if (starty >= yn)
-    starty = yn - 1;
-  if (startx >= xn)
-    startx = xn - 1;
-  if (chr_ht > 32)
-    chr_ht = 32;
+  if (starty >= yn) starty = yn - 1;
+  if (startx >= xn) startx = xn - 1;
+  if (chr_ht > 32) chr_ht = 32;
   tty->y = starty;
   tty->x = startx;
   tty->chr_ht = chr_ht;
   if (SetWcs(tty, wcs)) {
     size_t n = (size_t)yn * xn, i;
-    for (i = 0; i < n; ++i)
-      wcs[i] = bing(ccs[i].ch, 0);
+    for (i = 0; i < n; ++i) wcs[i] = bing(ccs[i].ch, 0);
   }
   _TtyResetOutputMode(tty);
 }
@@ -229,8 +220,7 @@ static void TtySetCodepage(struct Tty *tty, char id) {
  * @see VGA_USE_BLINK macro (libc/vga/vga.internal.h)
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyGetVgaAttr(struct Tty *tty)
-{
+static uint8_t TtyGetVgaAttr(struct Tty *tty) {
   uint8_t attr;
   if ((tty->pr & kTtyFlip) == 0)
     attr = tty->fg | tty->bg << 4;
@@ -244,11 +234,9 @@ static uint8_t TtyGetVgaAttr(struct Tty *tty)
    * simplistic than what Linux does, but should be enough.
    */
   attr &= ~0x80;
-  if ((tty->pr & kTtyBlink) != 0)
-    attr |= 0x80;
+  if ((tty->pr & kTtyBlink) != 0) attr |= 0x80;
 #endif
-  if ((tty->pr & kTtyBold) != 0)
-    attr |= 0x08;
+  if ((tty->pr & kTtyBold) != 0) attr |= 0x08;
   return attr;
 }
 
@@ -256,15 +244,13 @@ void _TtyErase(struct Tty *tty, size_t dst, size_t n) {
   uint8_t attr = TtyGetVgaAttr(tty);
   size_t i;
   for (i = 0; i < n; ++i)
-    tty->ccs[dst + i] = (struct VgaTextCharCell){ ' ', attr };
-  if (Wcs(tty))
-    wmemset(Wcs(tty) + dst, L' ', n);
+    tty->ccs[dst + i] = (struct VgaTextCharCell){' ', attr};
+  if (Wcs(tty)) wmemset(Wcs(tty) + dst, L' ', n);
 }
 
 void _TtyMemmove(struct Tty *tty, size_t dst, size_t src, size_t n) {
   memmove(tty->ccs + dst, tty->ccs + src, n * sizeof(struct VgaTextCharCell));
-  if (Wcs(tty))
-    wmemmove(Wcs(tty) + dst, Wcs(tty) + src, n);
+  if (Wcs(tty)) wmemmove(Wcs(tty) + dst, Wcs(tty) + src, n);
 }
 
 void _TtyResetOutputMode(struct Tty *tty) {
@@ -350,18 +336,15 @@ static void TtyWriteGlyph(struct Tty *tty, wint_t wc, int w) {
   uint8_t attr = TtyGetVgaAttr(tty);
   size_t i;
   int c;
-  if (w < 1)
-    wc = L' ', w = 1;
+  if (w < 1) wc = L' ', w = 1;
   if ((tty->conf & kTtyRedzone) || tty->x + w > Xn(tty)) {
     TtyAdvance(tty);
   }
   i = tty->y * Xn(tty) + tty->x;
   c = unbing(wc);
-  if (c == -1)
-    c = 0xFE;
-  tty->ccs[i] = (struct VgaTextCharCell){ c, attr };
-  if (Wcs(tty))
-    Wcs(tty)[i] = wc;
+  if (c == -1) c = 0xFE;
+  tty->ccs[i] = (struct VgaTextCharCell){c, attr};
+  if (Wcs(tty)) Wcs(tty)[i] = wc;
   if ((tty->x += w) >= Xn(tty)) {
     tty->x = Xn(tty) - 1;
     tty->conf |= kTtyRedzone;
@@ -376,7 +359,7 @@ static void TtyWriteTab(struct Tty *tty) {
   }
   x2 = MIN(Xn(tty), ROUNDUP(tty->x + 1, 8));
   for (x = tty->x; x < x2; ++x) {
-    tty->ccs[tty->y * Xn(tty) + x] = (struct VgaTextCharCell){ ' ', attr };
+    tty->ccs[tty->y * Xn(tty) + x] = (struct VgaTextCharCell){' ', attr};
   }
   if (Wcs(tty)) {
     for (x = tty->x; x < x2; ++x) {
@@ -628,15 +611,11 @@ static void TtyCsiN(struct Tty *tty) {
  *
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b)
-{
+static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b) {
   uint8_t hue = 0, max = MAX(MAX(r, g), b);
-  if (r > max / 2)
-    hue |= 4;
-  if (g > max / 2)
-    hue |= 2;
-  if (b > max / 2)
-    hue |= 1;
+  if (r > max / 2) hue |= 4;
+  if (g > max / 2) hue |= 2;
+  if (b > max / 2) hue |= 1;
   if (hue == 7 && max <= 0x55)
     hue = 8;
   else if (max > 0xaa)
@@ -650,8 +629,7 @@ static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b)
  *
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyMapXtermColor(uint8_t color)
-{
+static uint8_t TtyMapXtermColor(uint8_t color) {
   uint8_t r, g, b;
   if (color < 8) {
     r = (color & 1) ? 0xaa : 0;
@@ -945,10 +923,8 @@ static void TtyCsi(struct Tty *tty) {
 static void TtyScreenAlignmentDisplay(struct Tty *tty) {
   uint8_t attr = TtyGetVgaAttr(tty);
   size_t n = Yn(tty) * Xn(tty), i;
-  for (i = 0; i < n; ++i)
-    tty->ccs[i] = (struct VgaTextCharCell){ 'E', attr };
-  if (Wcs(tty))
-    wmemset(Wcs(tty), L'E', n);
+  for (i = 0; i < n; ++i) tty->ccs[i] = (struct VgaTextCharCell){'E', attr};
+  if (Wcs(tty)) wmemset(Wcs(tty), L'E', n);
 }
 
 static void TtyEscHash(struct Tty *tty) {
@@ -1048,8 +1024,7 @@ static void TtyEscAppend(struct Tty *tty, char c) {
 static void TtyUpdateHwCursor(struct Tty *tty) {
   unsigned char start = tty->chr_ht - 2, end = tty->chr_ht - 1;
   unsigned short pos = tty->y * Xn(tty) + tty->x;
-  if ((tty->conf & kTtyNocursor))
-    start |= 1 << 5;
+  if ((tty->conf & kTtyNocursor)) start |= 1 << 5;
   outb(CRTPORT, 0x0A);
   outb(CRTPORT + 1, start);
   outb(CRTPORT, 0x0B);

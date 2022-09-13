@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/pcmpgtb.h"
 #include "libc/intrin/pmovmskb.h"
+#include "libc/intrin/tpenc.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
-#include "libc/str/tpenc.h"
 #include "net/http/escape.h"
 
 /**
@@ -72,7 +72,7 @@ char *Underlong(const char *p, size_t n, size_t *z) {
           }
         }
       }
-      w = tpenc(x);
+      w = _tpenc(x);
       do {
         *q++ = w;
       } while ((w >>= 8));

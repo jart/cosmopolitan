@@ -23,7 +23,6 @@
 #include "libc/limits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/str/errfun.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 
@@ -36,7 +35,7 @@ wontreturn void SysFail(const char *func, const char *file) {
   fputs(" failed: ", stderr);
   fputs(file, stderr);
   fputs(": ", stderr);
-  fputs(nulltoempty(strerdoc(e)), stderr);
+  fputs(nulltoempty(_strerdoc(e)), stderr);
   fputs("\n", stderr);
   exit(__COUNTER__ + 1);
 }

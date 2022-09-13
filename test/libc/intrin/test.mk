@@ -58,6 +58,15 @@ o/$(MODE)/test/libc/intrin/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+# Test what happens when *NSYNC isn't linked.
+o/$(MODE)/test/libc/intrin/lock_test.com.dbg:		\
+		$(TEST_LIBC_INTRIN_DEPS)		\
+		o/$(MODE)/test/libc/intrin/lock_test.o	\
+		o/$(MODE)/test/libc/intrin/intrin.pkg	\
+		$(CRT)					\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 $(TEST_LIBC_INTRIN_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-fno-builtin

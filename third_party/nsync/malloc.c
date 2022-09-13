@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
-#include "libc/calls/extend.internal.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/extend.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/malloc.internal.h"
 // clang-format off
@@ -40,10 +41,11 @@ void *nsync_malloc_ (size_t size) {
 	while (atomic_exchange (&nsync_malloc_lock_, 1)) nsync_yield_ ();
 	offset = nsync_malloc_total_;
 	nsync_malloc_total_ += size;
-	start = (char *) 0x6fc000040000;
+	start = (char *) kMemtrackNsyncStart;
 	if (!nsync_malloc_endptr_) nsync_malloc_endptr_ = start;
-	nsync_malloc_endptr_ = _extend (start, nsync_malloc_total_,
-					nsync_malloc_endptr_, 0x6fcfffff0000);
+	nsync_malloc_endptr_ =
+		_extend (start, nsync_malloc_total_, nsync_malloc_endptr_,
+			 kMemtrackNsyncStart + kMemtrackNsyncSize);
 	atomic_store_explicit (&nsync_malloc_lock_, 0, memory_order_relaxed);
 	return start + offset;
 }

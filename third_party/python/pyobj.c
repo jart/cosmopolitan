@@ -17,19 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.internal.h"
+#include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/o.h"
@@ -354,7 +354,7 @@ GetModName(bool *ispkg)
 {
     char *mod;
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    if ((*ispkg = endswith(mod, ".__init__"))) {
+    if ((*ispkg = _endswith(mod, ".__init__"))) {
         mod[strlen(mod) - strlen(".__init__")] = 0;
     }
     return mod;
@@ -385,7 +385,7 @@ GetParent2(void)
 {
     char *p, *mod;
     mod = Dotify(xstripexts(StripComponents(pyfile, strip_components)));
-    if (endswith(mod, ".__init__")) mod[strlen(mod) - strlen(".__init__")] = 0;
+    if (_endswith(mod, ".__init__")) mod[strlen(mod) - strlen(".__init__")] = 0;
     if ((p = strrchr(mod, '.'))) *p = 0;
     return mod;
 }

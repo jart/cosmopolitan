@@ -28,10 +28,10 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/bsr.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/madv.h"
@@ -241,7 +241,7 @@ static void ProcessImageVerbatim(LONG yn, LONG xn,
                                  unsigned char img[yn][xn][4]) {
   CHAR w;
   void *R, *G, *B, *A;
-  w = roundup2log(MAX(yn, xn));
+  w = _roundup2log(MAX(yn, xn));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
   B = xvalloc((1u << w) * (1u << w));
@@ -256,7 +256,7 @@ static void ProcessImageVerbatim(LONG yn, LONG xn,
 static void ProcessImageDouble(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
   CHAR w;
   void *t, *R, *G, *B, *A;
-  w = roundup2log(MAX(yn, xn)) + 1;
+  w = _roundup2log(MAX(yn, xn)) + 1;
   t = xvalloc((1u << w) * (1u << w));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
@@ -277,7 +277,7 @@ static void ProcessImageDouble(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
 static void ProcessImageHalf(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
   CHAR w;
   void *R, *G, *B, *A;
-  w = roundup2log(MAX(yn, xn));
+  w = _roundup2log(MAX(yn, xn));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
   B = xvalloc((1u << w) * (1u << w));
@@ -300,7 +300,7 @@ static void ProcessImageHalf(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
 static void ProcessImageHalfY(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
   CHAR w;
   void *R, *G, *B, *A;
-  w = roundup2log(MAX(yn, xn));
+  w = _roundup2log(MAX(yn, xn));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
   B = xvalloc((1u << w) * (1u << w));
@@ -322,7 +322,7 @@ static void ProcessImageHalfLanczos(LONG yn, LONG xn,
   void *t, *R, *G, *B, *A;
   t = xvalloc((yn >> 1) * (xn >> 1) * 4);
   lanczos1b(yn >> 1, xn >> 1, t, yn, xn, &img[0][0][0]);
-  w = roundup2log(MAX(yn >> 1, xn >> 1));
+  w = _roundup2log(MAX(yn >> 1, xn >> 1));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
   B = xvalloc((1u << w) * (1u << w));
@@ -338,7 +338,7 @@ static void ProcessImageHalfLanczos(LONG yn, LONG xn,
 static void ProcessImageWash(LONG yn, LONG xn, unsigned char img[yn][xn][4]) {
   long w;
   void *R, *G, *B, *A, *t;
-  w = roundup2log(MAX(yn, xn)) + 1;
+  w = _roundup2log(MAX(yn, xn)) + 1;
   t = xvalloc((1u << w) * (1u << w));
   R = xvalloc((1u << w) * (1u << w));
   G = xvalloc((1u << w) * (1u << w));
@@ -443,7 +443,7 @@ static void ProcessImageMagikarp(LONG syn, LONG sxn,
   LONG dyn, dxn;
   dyn = syn >> 1;
   dxn = sxn >> 1;
-  sw = roundup2log(MAX(syn, sxn));
+  sw = _roundup2log(MAX(syn, sxn));
   ProcessImageMagikarpImpl(sw, gc(xvalloc((1u << sw) * (1u << sw) * 5)), syn,
                            sxn, img, dyn, dxn);
 }

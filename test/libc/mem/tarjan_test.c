@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/testlib/testlib.h"
 
 STATIC_YOINK("realloc");
@@ -27,7 +27,7 @@ TEST(tarjan, empty_doesNothing) {
   int edges[][2] = {{0, 0}};
   int vertex_count = 0;
   int edge_count = 0;
-  tarjan(vertex_count, (void *)edges, edge_count, sorted_vertices, NULL, NULL);
+  _tarjan(vertex_count, (void *)edges, edge_count, sorted_vertices, NULL, NULL);
   ASSERT_EQ(-1, sorted_vertices[0]);
 }
 
@@ -53,8 +53,8 @@ TEST(tarjan, topologicalSort_noCycles) {
     A
   */
   int sorted[4], components[4], componentcount;
-  ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
-                      sorted, components, &componentcount));
+  ASSERT_EQ(0, _tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
+                       sorted, components, &componentcount));
   EXPECT_EQ(C, sorted[0]);
   EXPECT_EQ(D, sorted[1]);
   EXPECT_EQ(B, sorted[2]);
@@ -76,8 +76,8 @@ TEST(tarjan, testOneBigCycle_isDetected_weDontCareAboutOrderInsideTheCycle) {
                     {C /* depends on → */, D /* which must come before C */},
                     {D /* depends on → */, A /* which must come before D */}};
   int sorted[4], components[4], componentcount;
-  ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
-                      sorted, components, &componentcount));
+  ASSERT_EQ(0, _tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
+                       sorted, components, &componentcount));
   ASSERT_EQ(1, componentcount);
   EXPECT_EQ(4, components[0]);
 }
@@ -110,8 +110,8 @@ TEST(tarjan, testHeaders) {
   int sorted[ARRAYLEN(vertices)];
   int components[ARRAYLEN(vertices)];
   int componentcount;
-  ASSERT_EQ(0, tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
-                      sorted, components, &componentcount));
+  ASSERT_EQ(0, _tarjan(ARRAYLEN(vertices), (void *)edges, ARRAYLEN(edges),
+                       sorted, components, &componentcount));
   ASSERT_EQ(ARRAYLEN(vertices), componentcount);
   EXPECT_STREQ("libc/dce.h", vertices[sorted[0]]);
   EXPECT_STREQ("libc/integral.h", vertices[sorted[1]]);

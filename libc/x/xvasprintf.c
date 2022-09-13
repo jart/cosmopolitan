@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/fmt.h"
-#include "libc/mem/mem.h"
 #include "libc/x/x.h"
+#include "libc/x/xasprintf.h"
 
 /**
  * Returns dynamically formatted string.

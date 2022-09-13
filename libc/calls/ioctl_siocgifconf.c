@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/ioctl.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -63,9 +63,9 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   uint32_t bufLen, ip;
   size_t numReq, bufMax;
   if (IsLinux()) return sys_ioctl(fd, SIOCGIFCONF, ifc);
-  if (!weaken(malloc)) return enomem();
+  if (!_weaken(malloc)) return enomem();
   bufMax = 15000; /* conservative guesstimate */
-  if (!(b = weaken(malloc)(bufMax))) return enomem();
+  if (!(b = _weaken(malloc)(bufMax))) return enomem();
   memcpy(ifcBsd, &bufMax, 8);                /* ifc_len */
   memcpy(ifcBsd + (IsXnu() ? 4 : 8), &b, 8); /* ifc_buf */
   if ((rc = sys_ioctl(fd, SIOCGIFCONF, &ifcBsd)) != -1) {
@@ -92,7 +92,7 @@ static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
     }
     ifc->ifc_len = (char *)req - ifc->ifc_buf; /* Adjust len */
   }
-  if (weaken(free)) weaken(free)(b);
+  if (_weaken(free)) _weaken(free)(b);
   return rc;
 }
 

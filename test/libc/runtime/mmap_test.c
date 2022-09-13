@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
@@ -27,8 +28,8 @@
 #include "libc/linux/mmap.h"
 #include "libc/linux/munmap.h"
 #include "libc/log/log.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
-#include "libc/runtime/gc.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
@@ -42,7 +43,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
-#include "libc/x/x.h"
+#include "libc/x/xspawn.h"
 #include "third_party/xed/x86.h"
 
 char testlib_enable_tmp_setup_teardown;
@@ -206,15 +207,15 @@ TEST(isheap, nullPtr) {
 }
 
 TEST(isheap, malloc) {
-  ASSERT_TRUE(_isheap(gc(malloc(1))));
+  ASSERT_TRUE(_isheap(_gc(malloc(1))));
 }
 
 TEST(isheap, emptyMalloc) {
-  ASSERT_TRUE(_isheap(gc(malloc(0))));
+  ASSERT_TRUE(_isheap(_gc(malloc(0))));
 }
 
 TEST(isheap, mallocOffset) {
-  char *p = gc(malloc(131072));
+  char *p = _gc(malloc(131072));
   ASSERT_TRUE(_isheap(p + 100000));
 }
 

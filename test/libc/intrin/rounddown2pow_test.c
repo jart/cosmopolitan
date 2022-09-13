@@ -16,24 +16,24 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/bits.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio", 0));
 }
 
-TEST(rounddown2pow, test) {
-  EXPECT_EQ(0, rounddown2pow(0));
-  EXPECT_EQ(1, rounddown2pow(1));
-  EXPECT_EQ(2, rounddown2pow(2));
-  EXPECT_EQ(2, rounddown2pow(3));
-  EXPECT_EQ(4, rounddown2pow(4));
-  EXPECT_EQ(PAGESIZE / 2, rounddown2pow(PAGESIZE - 1));
-  EXPECT_EQ(PAGESIZE, rounddown2pow(PAGESIZE));
-  EXPECT_EQ(PAGESIZE, rounddown2pow(PAGESIZE + 1));
-  EXPECT_EQ(PAGESIZE / 2, rounddown2pow(PAGESIZE - 1));
-  EXPECT_EQ(PAGESIZE, rounddown2pow(PAGESIZE));
-  EXPECT_EQ(PAGESIZE, rounddown2pow(PAGESIZE + 1));
+TEST(_rounddown2pow, test) {
+  EXPECT_EQ(0, _rounddown2pow(0));
+  EXPECT_EQ(1, _rounddown2pow(1));
+  EXPECT_EQ(2, _rounddown2pow(2));
+  EXPECT_EQ(2, _rounddown2pow(3));
+  EXPECT_EQ(4, _rounddown2pow(4));
+  EXPECT_EQ(PAGESIZE / 2, _rounddown2pow(PAGESIZE - 1));
+  EXPECT_EQ(PAGESIZE, _rounddown2pow(PAGESIZE));
+  EXPECT_EQ(PAGESIZE, _rounddown2pow(PAGESIZE + 1));
+  EXPECT_EQ(PAGESIZE / 2, _rounddown2pow(PAGESIZE - 1));
+  EXPECT_EQ(PAGESIZE, _rounddown2pow(PAGESIZE));
+  EXPECT_EQ(PAGESIZE, _rounddown2pow(PAGESIZE + 1));
 }

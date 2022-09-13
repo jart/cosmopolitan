@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+FROM="${1?from}"
+TO="${2?to}"
+
+if [ -f "$TO" ]; then
+  rm -f "$FROM" || exit
+else
+  mv "$FROM" "$TO" || exit
+fi
+
+sed -i -e "s/$(echo "${FROM//\//_}" | sed 's/\./_/' | tr a-z A-Z)_H_/$(echo "${TO//\//_}" | sed 's/\./_/' | tr a-z A-Z)_H_/" "$TO" || exit
+
+tool/scripts/grep -nH -RPie "\"$FROM\"" |
+  tool/scripts/awk1 -F: |
+  xargs sed -i -e "s/${FROM//\//\\/}/${TO//\//\\/}/"

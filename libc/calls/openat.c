@@ -19,12 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/str/str.h"
@@ -58,10 +58,10 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_end(va);
   if (file && (!IsAsan() || __asan_is_valid(file, 1))) {
     if (!__isfdkind(dirfd, kFdZip)) {
-      if (weaken(__zipos_open) &&
-          weaken(__zipos_parseuri)(file, &zipname) != -1) {
+      if (_weaken(__zipos_open) &&
+          _weaken(__zipos_parseuri)(file, &zipname) != -1) {
         if (!__vforked && dirfd == AT_FDCWD) {
-          rc = weaken(__zipos_open)(&zipname, flags, mode);
+          rc = _weaken(__zipos_open)(&zipname, flags, mode);
         } else {
           rc = eopnotsupp(); /* TODO */
         }
