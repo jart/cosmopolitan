@@ -2,9 +2,9 @@
 #define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 
 /*
- * VGA_TTY_HEIGHT, VGA_TTY_WIDTH, & VGA_USE_WCS are configuration knobs
- * which can potentially be used to tweak the features to be compiled into
- * our VGA teletypewriter support.
+ * VGA_TTY_HEIGHT, VGA_TTY_WIDTH, VGA_USE_WCS, & VGA_PERSNICKETY_STATUS are
+ * configuration knobs which can potentially be used to tweak the features
+ * to be compiled into our VGA teletypewriter support.
  */
 
 /**
@@ -20,8 +20,14 @@
 /**
  * If VGA_USE_WCS is defined, the tty code can maintain an array of the
  * Unicode characters "underlying" the 8-bit (or 9-bit) characters that are
- * actually displayed on the text screen.  This can be used to implement
- * something similar to Linux's /dev/vcsu* facility.
+ * actually displayed on the text screen.  This Unicode character
+ * information is not used in Cosmopolitan as of now (Sep 2022).  A Linux
+ * mailing list post suggests that such information could be of use to
+ * applications such as screen readers.
+ *
+ * If VGA_USE_WCS is undefined, then the Unicode character information is
+ * not maintained, & we arrange for the relevant logic to be optimized away
+ * by the compiler.
  *
  * @see lkml.kernel.org/lkml/204888.1529277815@turing-police.cc.vt.edu/T/
  */

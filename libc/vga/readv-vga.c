@@ -30,7 +30,15 @@
 #include "libc/vga/vga.internal.h"
 
 ssize_t sys_readv_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
-  /* NOTE: this routine is always non-blocking. */
+  /*
+   * NOTE: this routine is always non-blocking.
+   *
+   * sys_readv_metal() calls here to ask if the VGA teletypewriter has any
+   * "status reports" escape sequences to send out.
+   *
+   * If there are no such status reports, then immediately return ≤ 0.
+   * sysv_readv_metal() will then try to read from an actual input device.
+   */
   size_t i, redd = 0;
   ssize_t res = 0;
   for (i = 0; i < iovlen; ++i) {
