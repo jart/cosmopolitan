@@ -5,6 +5,8 @@
 │ https://docs.python.org/3/license.html                                       │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/libfatal.internal.h"
