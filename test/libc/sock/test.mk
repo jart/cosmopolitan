@@ -73,6 +73,9 @@ o/$(MODE)/test/libc/sock/socket_test.com.runs: .INTERNET = 1  # todo: ipv6 filte
 o/$(MODE)/test/libc/sock/socket_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
 
+o/$(MODE)/test/libc/sock/shutdown_test.com.runs:		\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+
 $(TEST_LIBC_SOCK_OBJS): test/libc/sock/test.mk
 
 .PHONY: o/$(MODE)/test/libc/sock

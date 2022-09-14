@@ -1374,7 +1374,7 @@ syscon	termios	TIOCCONS				0x541d			0x80047462		0x80047462		0x80047462		0x800474
 syscon	termios	TIOCGETD				0x5424			0x4004741a		0x4004741a		0x4004741a		0x4004741a		0			# boop
 syscon	termios	TIOCNOTTY				0x5422			0x20007471		0x20007471		0x20007471		0x20007471		0			# boop
 syscon	termios	TIOCNXCL				0x540d			0x2000740e		0x2000740e		0x2000740e		0x2000740e		0			# boop
-syscon	termios	TIOCSCTTY				0x540e			0x20007461		0x20007461		0x20007461		0x20007461		0			# boop
+syscon	termios	TIOCSCTTY				0x540e			0x20007461		0x20007461		0x20007461		0x20007461		0			# makes terminal controlling terminal of calling process (see login_tty)
 syscon	termios	TIOCSETD				0x5423			0x8004741b		0x8004741b		0x8004741b		0x8004741b		0			# boop
 syscon	termios	TIOCSIG					0x40045436		0x2000745f		0x2004745f		0x8004745f		0x8004745f		0			# boop
 syscon	termios	TIOCSTI					0x5412			0x80017472		0x80017472		0			0			0			# boop
@@ -1409,6 +1409,10 @@ syscon	termios	TIOCSFLAGS				0			0			0			0x8004745c		0x8004745c		0			# boop
 syscon	termios	TIOCSTSTAMP				0			0			0			0x8008745a		0x8008745a		0			# boop
 syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			0			# boop
 syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			0			# boop
+syscon	termios	TIOCPTYGRANT				0			0x20007454		0			0			0			0			# xnu grantpt()
+syscon	termios	TIOCPTYUNLK				0			0x20007452		0			0			0			0			# xnu grantpt()
+syscon	termios	TIOCPTYGNAME				0			0x40807453		0			0			0			0			# xnu grantpt()
+syscon	termios	FIODGNAME				0			0			0x80106678		0			0			0			# freebsd ptsname_r()
 syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			0			# boop
 syscon	termios	H4DISC					0			0			0x7			0			0			0			# boop
 

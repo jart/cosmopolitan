@@ -1,0 +1,100 @@
+SCRIPT(1)            Cosmopolitan General Commands Manual              SCRIPT(1)
+
+𝐍𝐀𝐌𝐄
+     𝘀𝗰𝗿𝗶𝗽𝘁 — make typescript of terminal session
+
+𝐒𝐘𝐍𝐎𝐏𝐒𝐈𝐒
+     𝘀𝗰𝗿𝗶𝗽𝘁 [-𝗮𝗱𝗲𝗳𝗸𝗽𝗾𝗿] [-𝐅 p̲i̲p̲e̲] [-𝘁 t̲i̲m̲e̲] [f̲i̲l̲e̲ [c̲o̲m̲m̲a̲n̲d̲ .̲.̲.̲]]
+
+𝐃𝐄𝐒𝐂𝐑𝐈𝐏𝐓𝐈𝐎𝐍
+     The 𝘀𝗰𝗿𝗶𝗽𝘁 utility makes a typescript of everything printed on your termi‐
+     nal.  It is useful for students who need a hardcopy record of an interac‐
+     tive session as proof of an assignment, as the typescript file can be
+     printed out later with lpr(1).
+
+     If the argument f̲i̲l̲e̲ is given, 𝘀𝗰𝗿𝗶𝗽𝘁 saves all dialogue in f̲i̲l̲e̲.  If no
+     file name is given, the typescript is saved in the file t̲y̲p̲e̲s̲c̲r̲i̲p̲t̲.
+
+     If the argument c̲o̲m̲m̲a̲n̲d̲ is given, 𝘀𝗰𝗿𝗶𝗽𝘁 will run the specified command
+     with an optional argument vector instead of an interactive shell.
+
+     The following options are available:
+
+     -𝗮      Append the output to f̲i̲l̲e̲ or t̲y̲p̲e̲s̲c̲r̲i̲p̲t̲, retaining the prior con‐
+             tents.
+
+     -𝗱      When playing back a session with the -𝗽 flag, do not sleep between
+             records when playing back a timestamped session.
+
+     -𝗲      Accepted for compatibility with u̲t̲i̲l̲-̲l̲i̲n̲u̲x̲ 𝘀𝗰𝗿𝗶𝗽𝘁.  The child com‐
+             mand exit status is always the exit status of 𝘀𝗰𝗿𝗶𝗽𝘁.
+
+     -𝐅 p̲i̲p̲e̲
+             Immediately flush output after each write.  This will allow a user
+             to create a named pipe using mkfifo(1) and another user may watch
+             the live session using a utility like cat(1).
+
+     -𝗸      Log keys sent to the program as well as output.
+
+     -𝗽      Play back a session recorded with the -𝗿 flag in real time.
+
+     -𝗾      Run in quiet mode, omit the start, stop and command status mes‐
+             sages.
+
+     -𝗿      Record a session with input, output, and timestamping.
+
+     -𝘁 t̲i̲m̲e̲
+             Specify the interval at which the script output file will be
+             flushed to disk, in seconds.  A value of 0 causes 𝘀𝗰𝗿𝗶𝗽𝘁 to flush
+             after every character I/O event.  The default interval is 30 sec‐
+             onds.
+
+     The script ends when the forked shell (or command) exits (a c̲o̲n̲t̲r̲o̲l̲-̲D̲ to
+     exit the Bourne shell (sh(1)), and e̲x̲i̲t̲, l̲o̲g̲o̲u̲t̲ or c̲o̲n̲t̲r̲o̲l̲-̲D̲ (if i̲g̲n̲o̲r̲e̲e̲o̲f̲
+     is not set) for the C-shell, csh(1)).
+
+     Certain interactive commands, such as vi(1), create garbage in the type‐
+     script file.  The 𝘀𝗰𝗿𝗶𝗽𝘁 utility works best with commands that do not ma‐
+     nipulate the screen.  The results are meant to emulate a hardcopy terminal,
+     not an addressable one.
+
+𝐄𝐍𝐕𝐈𝐑𝐎𝐍𝐌𝐄𝐍𝐓
+     The following environment variables are utilized by 𝘀𝗰𝗿𝗶𝗽𝘁:
+
+     SCRIPT
+            The SCRIPT environment variable is added to the sub-shell.  If
+            SCRIPT already existed in the users environment, its value is over‐
+            written within the sub-shell.  The value of SCRIPT is the name of
+            the t̲y̲p̲e̲s̲c̲r̲i̲p̲t̲ file.
+
+     SHELL  If the variable SHELL exists, the shell forked by 𝘀𝗰𝗿𝗶𝗽𝘁 will be
+            that shell.  If SHELL is not set, the Bourne shell is assumed.
+            (Most shells set this variable automatically).
+
+𝐒𝐄𝐄 𝐀𝐋𝐒𝐎
+     csh(1) (for the h̲i̲s̲t̲o̲r̲y̲ mechanism)
+
+𝐇𝐈𝐒𝐓𝐎𝐑𝐘
+     The 𝘀𝗰𝗿𝗶𝗽𝘁 command appeared in 3.0BSD.
+
+     The -𝗱, -𝗽 and -𝗿 options first appeared in NetBSD 2.0 and were ported to
+     FreeBSD 9.2.
+
+𝐁𝐔𝐆𝐒
+     The 𝘀𝗰𝗿𝗶𝗽𝘁 utility places 𝗲𝘃𝗲𝗿𝘆𝘁𝗵𝗶𝗻𝗴 in the log file, including linefeeds
+     and backspaces.  This is not what the naive user expects.
+
+     It is not possible to specify a command without also naming the script file
+     because of argument parsing compatibility issues.
+
+     When running in -𝗸 mode, echo cancelling is far from ideal.  The slave ter‐
+     minal mode is checked for ECHO mode to check when to avoid manual echo log‐
+     ging.  This does not work when the terminal is in a raw mode where the pro‐
+     gram being run is doing manual echo.
+
+     If 𝘀𝗰𝗿𝗶𝗽𝘁 reads zero bytes from the terminal, it switches to a mode when it
+     only attempts to read once a second until there is data to read.  This pre‐
+     vents 𝘀𝗰𝗿𝗶𝗽𝘁 from spinning on zero-byte reads, but might cause a 1-second
+     delay in processing of user input.
+
+BSD                             September 1, 2020                            BSD

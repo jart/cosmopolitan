@@ -17,23 +17,69 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/paths.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-errno_t ptsname_r(int fd, char *buf, size_t size) {
-  int pty;
-  char tb[32];
-  if (size) {
-    if (!buf) return einval();
-    if (ioctl(fd, TIOCGPTN, &pty) == -1) return errno;
-    FormatInt32(stpcpy(tb, "/dev/pts/"), pty);
-    if (strlen(tb) + 1 >= size) return (errno = ERANGE);
-    stpcpy(buf, tb);
-    /* TODO(jart): OpenBSD OMG */
+struct fiodgname_arg {
+  int len;
+  void *buf;
+};
+
+static int PtsName(int fd, char *buf, size_t size) {
+  if (size < 9 + 12) return erange();
+  if (_isptmaster(fd)) return -1;
+
+  if (IsLinux()) {
+    int pty;
+    if (sys_ioctl(fd, TIOCGPTN, &pty)) return -1;
+    buf[0] = '/', buf[1] = 'd', buf[2] = 'e', buf[3] = 'v';
+    buf[4] = '/', buf[5] = 'p', buf[6] = 't', buf[7] = 's';
+    buf[8] = '/', FormatInt32(buf + 9, pty);
+    return 0;
   }
-  return 0;
+
+  if (IsFreebsd()) {
+    struct fiodgname_arg fgn = {size - 5, buf + 5};
+    buf[0] = '/', buf[1] = 'd';
+    buf[2] = 'e', buf[3] = 'v';
+    buf[4] = '/', buf[5] = 0;
+    if (sys_ioctl(fd, FIODGNAME, &fgn) == -1) {
+      if (errno == EINVAL) errno = ERANGE;
+      return -1;
+    }
+    return 0;
+  }
+
+  if (IsXnu()) {
+    char b2[128];
+    if (sys_ioctl(fd, TIOCPTYGNAME, b2)) return -1;
+    if (strlen(b2) + 1 > size) return erange();
+    strcpy(buf, b2);
+    return 0;
+  }
+
+  return enosys();
+}
+
+/**
+ * Gets name subordinate pseudoteletypewriter.
+ *
+ * @return 0 on success, or errno on error
+ */
+errno_t ptsname_r(int fd, char *buf, size_t size) {
+  int rc, e = errno;
+  if (!PtsName(fd, buf, size)) {
+    rc = 0;
+  } else {
+    rc = errno;
+    errno = e;
+  }
+  return rc;
 }

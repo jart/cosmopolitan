@@ -116,6 +116,7 @@ i64 sys_readlinkat(int, const char *, char *, u64) hidden;
 i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_write(i32, const void *, u64) hidden;
+int _isptmaster(int);
 u32 sys_getegid(void) hidden;
 u32 sys_geteuid(void) hidden;
 u32 sys_getgid(void) hidden;

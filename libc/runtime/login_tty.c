@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,15 +16,37 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/bsd.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
+#include "libc/runtime/utmp.h"
+#include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
-void(vwarnx)(const char *fmt, va_list va) {
-  fprintf(stderr, "%s: %s%s%s: ", program_invocation_name, SUBTLE, "WARNING",
-          RESET);
-  if (fmt) (vfprintf)(stderr, fmt, va);
-  fprintf(stderr, "\n");
+/**
+ * Prepares terminal for login.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise ENOSYS on Windows and Metal
+ * @raise EPERM if terminal is already controlling another sid
+ */
+int login_tty(int fd) {
+  int rc;
+  if (IsLinux() || IsBsd()) {
+    setsid();
+    if (!sys_ioctl(fd, TIOCSCTTY, 0)) {
+      for (int i = 0; i < 3; ++i) dup2(fd, i);
+      if (fd > 2) close(fd);
+      rc = 0;
+    } else {
+      rc = -1;
+    }
+  } else {
+    rc = enosys();
+  }
+  STRACE("login_tty(%d) → %d% m", fd, rc);
+  return rc;
 }

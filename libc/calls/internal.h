@@ -12,13 +12,6 @@ COSMOPOLITAN_C_START_
 
 #define kIoMotion ((const int8_t[3]){1, 0, 0})
 
-struct IoctlPtmGet {
-  int theduxfd;
-  int workerfd;
-  char theduxname[16];
-  char workername[16];
-};
-
 hidden extern struct Fds g_fds;
 hidden extern const struct Fd kEmptyFd;
 

@@ -55,17 +55,16 @@ enum PosixThreadStatus {
 };
 
 struct PosixThread {
-  void *(*start_routine)(void *);
-  void *arg;  // start_routine's parameter
-  void *rc;   // start_routine's return value
-  bool ownstack;
-  int tid;
-  int *ctid;
-  char *tls;
-  char *altstack;
-  struct CosmoTib *tib;
   _Atomic(enum PosixThreadStatus) status;
-  jmp_buf exiter;
+  void *(*start_routine)(void *);
+  void *arg;             // start_routine's parameter
+  void *rc;              // start_routine's return value
+  bool ownstack;         // should we free it
+  int tid;               // clone parent tid
+  char *altstack;        // thread sigaltstack
+  char *tls;             // bottom of tls allocation
+  struct CosmoTib *tib;  // middle of tls allocation
+  jmp_buf exiter;        // for pthread_exit
   pthread_attr_t attr;
 };
 
@@ -82,7 +81,7 @@ void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;
 void _pthread_zombies_decimate(void) hidden;
 void _pthread_zombies_harvest(void) hidden;
-void _pthread_key_destruct(void *[PTHREAD_KEYS_MAX]);
+void _pthread_key_destruct(void *[PTHREAD_KEYS_MAX]) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

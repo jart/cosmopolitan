@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
 static const int kCp437iMultimappings[] = {
@@ -76,7 +77,7 @@ static textstartup void g_cp437i_init() {
   unsigned i;
   for (i = 0; i < 256; ++i) g_cp437i[i] = kCp437[i] << 8 | i;
   memcpy(g_cp437i + 256, kCp437iMultimappings, sizeof(kCp437iMultimappings));
-  djbsort(g_cp437i, ARRAYLEN(g_cp437i));
+  _intsort(g_cp437i, ARRAYLEN(g_cp437i));
 }
 
 const void *const g_cp437i_ctor[] initarray = {g_cp437i_init};

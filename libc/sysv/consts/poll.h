@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_POLL_H_
 #include "libc/runtime/symbolic.h"
 
+#define INFTIM     (-1)
 #define POLLERR    SYMBOLIC(POLLERR)
 #define POLLHUP    SYMBOLIC(POLLHUP)
 #define POLLIN     SYMBOLIC(POLLIN)

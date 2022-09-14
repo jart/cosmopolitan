@@ -16,43 +16,35 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/pty.h"
-#include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Opens new pseudo teletypewriter.
  *
+ * @return fd of master pty, or -1 w/ errno
  * @params flags is usually O_RDWR|O_NOCTTY
  * @return file descriptor, or -1 w/ errno
  */
 int posix_openpt(int flags) {
-  int fd, ilduce;
-  struct IoctlPtmGet ptm;
-  if ((flags & O_ACCMODE) != O_RDWR) return einval();
-  if (SupportsFreebsd() &&
-      ((fd = sys_posix_openpt(flags)) != -1 || errno != ENOSYS)) {
-    return fd;
-  } else if ((fd = open("/dev/ptmx", flags)) != -1 || errno != ENOENT) {
-    return fd;
-  } else if (SupportsOpenbsd() &&
-             ((fd = open("/dev/ptm", flags)) != -1 || errno != ENOENT)) {
-    if (ioctl(fd, PTMGET, &ptm) != -1) {
-      close(ptm.workerfd);
-      ilduce = ptm.theduxfd;
-    } else {
-      ilduce = -1;
-    }
-    close(fd);
-    return ilduce;
+  int rc;
+  if ((flags & O_ACCMODE) != O_RDWR) {
+    rc = einval();
+  } else if (IsLinux() || IsXnu()) {
+    rc = sys_open("/dev/ptmx", flags, 0);
+  } else if (IsOpenbsd()) {
+    rc = sys_open("/dev/ptm", flags, 0);
+  } else if (IsFreebsd()) {
+    rc = sys_posix_openpt(flags);
+    if (rc == -1 && errno == ENOSPC) errno = EAGAIN;
   } else {
-    return enosys();
+    rc = enosys();
   }
+  STRACE("posix_openpt(%#o) → %d% m", flags, rc);
+  return rc;
 }

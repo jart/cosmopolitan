@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,16 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/log/bsd.h"
-#include "libc/log/color.internal.h"
-#include "libc/log/internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/termios.h"
 
-wontreturn void(verrx)(int eval, const char *fmt, va_list va) {
-  fprintf(stderr, "%s: %s%s%s: ", program_invocation_name, RED2, "ERROR",
-          RESET);
-  if (fmt) (vfprintf)(stderr, fmt, va);
-  fprintf(stderr, "\n");
-  exit(eval);
+int _isptmaster(int fd) {
+  if (IsFreebsd()) {
+    if (!sys_ioctl(fd, TIOCPTMASTER)) {
+      return 0;
+    } else {
+      if (errno != EBADF) {
+        errno = EINVAL;
+      }
+      return -1;
+    }
+  } else {
+    return 0;
+  }
 }

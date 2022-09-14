@@ -18,12 +18,23 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/winsize.h"
 #include "libc/calls/termios.h"
-#include "libc/fmt/itoa.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/log/rop.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pty.h"
 #include "libc/sysv/consts/termios.h"
-#include "libc/sysv/errfuns.h"
+
+struct IoctlPtmGet {
+  int m;
+  int s;
+  char mname[16];
+  char sname[16];
+};
 
 /**
  * Opens new pseudo teletypewriter.
@@ -37,24 +48,29 @@
  */
 int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
             const struct winsize *wsz) {
-  int m, s, n;
-  char buf[20];
-  if ((m = open("/dev/ptmx", O_RDWR | O_NOCTTY)) != -1) {
-    n = 0;
-    if (!ioctl(m, TIOCSPTLCK, &n) && !ioctl(m, TIOCGPTN, &n)) {
-      if (!name) name = buf;
-      name[0] = '/', name[1] = 'd', name[2] = 'e', name[3] = 'v';
-      name[4] = '/', name[5] = 'p', name[6] = 't', name[7] = 's';
-      name[8] = '/', FormatInt32(name + 9, n);
-      if ((s = open(name, O_RDWR | O_NOCTTY)) != -1) {
-        if (tio) ioctl(s, TCSETS, tio);
-        if (wsz) ioctl(s, TIOCSWINSZ, wsz);
-        *mfd = m;
-        *sfd = s;
-        return 0;
-      }
-    }
+  int m, s, p;
+  const char *t;
+  struct IoctlPtmGet ptm;
+  RETURN_ON_ERROR((m = posix_openpt(O_RDWR | O_NOCTTY)));
+  if (!IsOpenbsd()) {
+    RETURN_ON_ERROR(grantpt(m));
+    RETURN_ON_ERROR(unlockpt(m));
+    if (!(t = ptsname(m))) goto OnError;
+    RETURN_ON_ERROR((s = open(t, O_RDWR)));
+  } else {
+    RETURN_ON_ERROR(ioctl(m, PTMGET, &ptm));
     close(m);
+    m = ptm.m;
+    s = ptm.s;
+    t = ptm.sname;
   }
+  *mfd = m;
+  *sfd = s;
+  if (name) strcpy(name, t);
+  if (tio) ioctl(s, TCSETSF, tio);
+  if (wsz) ioctl(s, TIOCSWINSZ, wsz);
+  return 0;
+OnError:
+  if (m != -1) close(m);
   return -1;
 }
