@@ -43,7 +43,6 @@ void setgrent(void);
 struct group *fgetgrent(struct FILE *);
 int putgrent(const struct group *, struct FILE *);
 int getgrouplist(const char *, gid_t, gid_t *, int *);
-int setgroups(size_t, const int32_t *);
 int initgroups(const char *, int32_t);
 
 COSMOPOLITAN_C_END_

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,68 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
-#include "libc/nt/accounting.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 
-static uint32_t KnuthMultiplicativeHash32(const void *buf, size_t size) {
-  size_t i;
-  uint32_t h;
-  const uint32_t kPhiPrime = 0x9e3779b1;
-  const unsigned char *p = (const unsigned char *)buf;
-  for (h = i = 0; i < size; i++) h = (p[i] + h) * kPhiPrime;
-  return h;
-}
+#define N 128
 
-static textwindows dontinline uint32_t GetUserNameHash(void) {
-  char16_t buf[257];
-  uint32_t size = ARRAYLEN(buf);
-  GetUserName(&buf, &size);
-  return KnuthMultiplicativeHash32(buf, size >> 1);
-}
-
-/**
- * Returns real user id of process.
- *
- * This never fails. On Windows, which doesn't really have this concept,
- * we return a deterministic value that's likely to work.
- *
- * @asyncsignalsafe
- * @vforksafe
- */
-uint32_t getuid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_getuid();
-  } else {
-    rc = GetUserNameHash();
+const char *(DescribeGidList)(char buf[N], int rc, int size,
+                              const uint32_t list[]) {
+  if ((rc == -1) || (size < 0)) return "n/a";
+  if (!size) return "{}";
+  if (!list) return "NULL";
+  if ((!IsAsan() && kisdangerous(list)) ||
+      (IsAsan() && !__asan_is_valid(list, size * sizeof(list[0])))) {
+    ksnprintf(buf, N, "%p", list);
+    return buf;
   }
-
-  STRACE("%s() → %u% m", "getuid", rc);
-  return rc;
-}
-
-/**
- * Returns real group id of process.
- *
- * This never fails. On Windows, which doesn't really have this concept,
- * we return a deterministic value that's likely to work.
- *
- * @asyncsignalsafe
- * @vforksafe
- */
-uint32_t getgid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_getgid();
-  } else {
-    rc = GetUserNameHash();
+  int i = 0, n = N;
+  i += ksnprintf(buf + i, MAX(0, n - i), "{");
+  unsigned c;
+  for (c = 0; c < size && MAX(0, n - i) > 0; c++) {
+    i += ksnprintf(buf + i, MAX(0, n - i), "%u, ", list[c]);
   }
-  STRACE("%s() → %u% m", "getgid", rc);
-  return rc;
+  if (c == size) {
+    if (buf[i - 1] == ' ') i--;
+    if (buf[i - 1] == ',') i--;
+    i += ksnprintf(buf + i, MAX(0, n - i), "}");
+  }
+  return buf;
 }

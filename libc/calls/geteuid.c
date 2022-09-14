@@ -17,21 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Returns effective user ID of calling process.
  * @return user id
  */
-int geteuid(void) {
-  int rc;
+uint32_t geteuid(void) {
+  uint32_t rc;
   if (!IsWindows()) {
     rc = sys_geteuid();
   } else {
     rc = getuid();
   }
-  STRACE("%s() → %d% m", "geteuid", rc);
+  STRACE("%s() → %u% m", "geteuid", rc);
   return rc;
 }

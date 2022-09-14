@@ -17,22 +17,22 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
  * Returns effective group ID of calling process.
  * @return group id
  */
-int getegid(void) {
-  int rc;
+uint32_t getegid(void) {
+  uint32_t rc;
   if (!IsWindows()) {
     rc = sys_getegid();
   } else {
     rc = getgid();
   }
-  STRACE("%s() → %d% m", "getegid", rc);
+  STRACE("%s() → %u% m", "getegid", rc);
   return rc;
 }
