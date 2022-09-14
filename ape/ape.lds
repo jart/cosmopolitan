@@ -458,6 +458,7 @@ SECTIONS {
   .debug_line        0 : { *(.debug_line .debug_line.* .debug_line_end ) }
   .debug_frame       0 : { *(.debug_frame) }
   .debug_str         0 : { *(.debug_str) }
+  .debug_line_str    0 : { *(.debug_line_str) }
   .debug_loc         0 : { *(.debug_loc) }
   .debug_macinfo     0 : { *(.debug_macinfo) }
   .debug_weaknames   0 : { *(.debug_weaknames) }
@@ -466,6 +467,7 @@ SECTIONS {
   .debug_varnames    0 : { *(.debug_varnames) }
   .debug_pubtypes    0 : { *(.debug_pubtypes) }
   .debug_ranges      0 : { *(.debug_ranges) }
+  .debug_rnglists    0 : { *(.debug_rnglists) }
   .debug_macro       0 : { *(.debug_macro) }
   .debug_addr        0 : { *(.debug_addr) }
   .gnu.attributes    0 : { KEEP(*(.gnu.attributes)) }
