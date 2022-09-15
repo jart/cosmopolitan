@@ -24,16 +24,18 @@
 #include "libc/sysv/errfuns.h"
 
 int32_t sys_pipe2(int pipefd[hasatleast 2], unsigned flags) {
-  int rc, olderr;
+  int e, rc;
   if (!flags) goto OldSkool;
-  olderr = errno;
+  e = errno;
   rc = __sys_pipe2(pipefd, flags);
   if (rc == -1 && errno == ENOSYS) {
-    errno = olderr;
+    errno = e;
   OldSkool:
     if ((rc = sys_pipe(pipefd)) != -1) {
-      __fixupnewfd(pipefd[0], flags);
-      __fixupnewfd(pipefd[1], flags);
+      if (flags) {
+        __fixupnewfd(pipefd[0], flags);
+        __fixupnewfd(pipefd[1], flags);
+      }
     }
   }
   return rc;

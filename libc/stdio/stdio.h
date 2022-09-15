@@ -1,9 +1,7 @@
-#ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
-#define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
-#include "libc/fmt/pflink.h"
-#include "libc/thread/thread.h"
-
+#ifndef _STDIO_H
 #define _STDIO_H
+#include "libc/fmt/pflink.h"
+
 #define L_ctermid    20
 #define FILENAME_MAX PATH_MAX
 #define FOPEN_MAX    1000
@@ -17,19 +15,19 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef struct FILE {
-  uint8_t bufmode;      /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
-  bool noclose;         /* 0x01 for fake dup() todo delete! */
-  uint32_t iomode;      /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
-  int32_t state;        /* 0x08 0=OK, -1=EOF, >0=errno */
-  int fd;               /* 0x0c ≥0=fd, -1=closed|buffer */
-  uint32_t beg;         /* 0x10 */
-  uint32_t end;         /* 0x14 */
-  char *buf;            /* 0x18 */
-  uint32_t size;        /* 0x20 */
-  uint32_t nofree;      /* 0x24 */
-  int pid;              /* 0x28 */
-  char *getln;          /* 0x30 */
-  pthread_mutex_t lock; /* 0x38 */
+  uint8_t bufmode; /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
+  bool noclose;    /* 0x01 for fake dup() todo delete! */
+  uint32_t iomode; /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
+  int32_t state;   /* 0x08 0=OK, -1=EOF, >0=errno */
+  int fd;          /* 0x0c ≥0=fd, -1=closed|buffer */
+  uint32_t beg;    /* 0x10 */
+  uint32_t end;    /* 0x14 */
+  char *buf;       /* 0x18 */
+  uint32_t size;   /* 0x20 */
+  uint32_t nofree; /* 0x24 */
+  int pid;         /* 0x28 */
+  char *getln;     /* 0x30 */
+  char lock[16];   /* 0x38 */
 } FILE;
 
 extern FILE *stdin;
@@ -91,9 +89,9 @@ char *ctermid(char *);
 void perror(const char *) relegated;
 
 typedef uint64_t fpos_t;
-compatfn char *gets(char *) paramsnonnull();
-compatfn int fgetpos(FILE *, fpos_t *) paramsnonnull();
-compatfn int fsetpos(FILE *, const fpos_t *) paramsnonnull();
+char *gets(char *) paramsnonnull();
+int fgetpos(FILE *, fpos_t *) paramsnonnull();
+int fsetpos(FILE *, const fpos_t *) paramsnonnull();
 
 int system(const char *);
 int systemexec(const char *);
@@ -195,4 +193,4 @@ int vfprintf_unlocked(FILE *, const char *, va_list)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#endif /* COSMOPOLITAN_LIBC_STDIO_STDIO_H_ */
+#endif /* _STDIO_H */

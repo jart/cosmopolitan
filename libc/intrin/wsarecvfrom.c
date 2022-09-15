@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describentoverlapped.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 
@@ -57,9 +58,10 @@ textwindows int WSARecvFrom(
     kprintf(STRACE_PROLOGUE "WSARecvFrom(%lu, [", s);
     DescribeIovNt(inout_lpBuffers, dwBufferCount,
                   rc != -1 ? NumberOfBytesRecvd : 0);
-    kprintf("], %u, [%'u], %p, %p, %p, %p, %p) → %d% lm\n", dwBufferCount,
+    kprintf("], %u, [%'u], %p, %p, %p, %s, %p) → %d% lm\n", dwBufferCount,
             NumberOfBytesRecvd, opt_out_fromsockaddr, opt_inout_fromsockaddrlen,
-            inout_lpFlags, opt_inout_lpOverlapped, opt_lpCompletionRoutine, rc);
+            inout_lpFlags, DescribeNtOverlapped(opt_inout_lpOverlapped),
+            opt_lpCompletionRoutine, rc);
   }
 #else
   rc = __imp_WSARecvFrom(s, inout_lpBuffers, dwBufferCount,

@@ -24,42 +24,47 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/cmpxchg.h"
-#include "libc/macros.internal.h"
-#include "libc/nt/createfile.h"
-#include "libc/nt/enum/accessmask.h"
-#include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/intrin/weaken.h"
+#include "libc/log/backtrace.internal.h"
 #include "libc/nt/enum/filelockflags.h"
-#include "libc/nt/enum/filesharemode.h"
-#include "libc/nt/enum/formatmessageflags.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
-#include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
-#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
+bool __force_sqlite_to_work_until_we_can_fix_it;
+
 static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
+  if (start < 0) return einval();
   return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
 }
 
 static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
+  int e;
   struct flock *l;
   uint32_t flags, err;
-  struct NtOverlapped ov;
   int64_t pos, off, len, size;
   struct NtByHandleFileInformation info;
-  if (!GetFileInformationByHandle(f->handle, &info)) return __winerr();
-  if (!SetFilePointerEx(f->handle, 0, &pos, SEEK_CUR)) return __winerr();
+
+  if (!GetFileInformationByHandle(f->handle, &info)) {
+    return __winerr();
+  }
+
+  pos = 0;
+  if (!SetFilePointerEx(f->handle, 0, &pos, SEEK_CUR)) {
+    return __winerr();
+  }
+
   l = (struct flock *)arg;
   len = l->l_len;
   off = l->l_start;
   size = (uint64_t)info.nFileSizeHigh << 32 | info.nFileSizeLow;
+
   switch (l->l_whence) {
     case SEEK_SET:
       break;
@@ -72,37 +77,60 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
     default:
       return einval();
   }
-  if (!len) len = size - off;
-  if (off < 0 || len < 0) return einval();
-  _offset2overlap(f->handle, off, &ov);
-  if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
-    flags = 0;
-    if (cmd == F_SETLK) flags |= kNtLockfileFailImmediately;
-    /* TODO: How can we make SQLite locks on Windows to work? */
-    /* if (l->l_type == F_WRLCK) flags |= kNtLockfileExclusiveLock; */
-    if (LockFileEx(f->handle, flags, 0, len, len >> 32, &ov)) {
-      return 0;
-    } else {
-      err = GetLastError();
-      if (err == kNtErrorLockViolation) err = EAGAIN;
-      errno = err;
-      return -1;
-    }
-  } else if (l->l_type == F_UNLCK) {
-    if (UnlockFileEx(f->handle, 0, len, len >> 32, &ov)) {
-      return 0;
-    } else {
-      err = GetLastError();
-      if (err == kNtErrorNotLocked) {
-        return 0;
-      } else {
-        errno = err;
-        return -1;
-      }
-    }
-  } else {
+
+  if (!len) {
+    len = size - off;
+  }
+
+  if (off < 0 || len < 0) {
     return einval();
   }
+
+  bool32 ok;
+  struct NtOverlapped ov = {.hEvent = f->handle,
+                            .Pointer = (void *)(uintptr_t)off};
+
+  if (l->l_type == F_RDLCK || l->l_type == F_WRLCK) {
+    flags = 0;
+    if (cmd != F_SETLKW) {
+      flags |= kNtLockfileFailImmediately;
+    }
+    if (l->l_type == F_WRLCK) {
+      flags |= kNtLockfileExclusiveLock;
+    }
+    ok = LockFileEx(f->handle, flags, 0, len, len >> 32, &ov);
+    if (cmd == F_GETLK) {
+      if (ok) {
+        l->l_type = F_UNLCK;
+        if (!UnlockFileEx(f->handle, 0, len, len >> 32, &ov)) {
+          notpossible;
+        }
+      } else {
+        l->l_pid = -1;
+        ok = true;
+      }
+    }
+    if (ok || __force_sqlite_to_work_until_we_can_fix_it) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+
+  if (l->l_type == F_UNLCK) {
+    if (cmd == F_GETLK) return einval();
+    e = errno;
+    if (UnlockFileEx(f->handle, 0, len, len >> 32, &ov)) {
+      return 0;
+    } else if (errno == ENOLCK) {
+      errno = e;
+      return 0;
+    } else {
+      return 0;
+    }
+  }
+
+  return einval();
 }
 
 textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {

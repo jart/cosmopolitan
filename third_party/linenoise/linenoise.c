@@ -154,6 +154,7 @@
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/str/unicode.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/map.h"

@@ -17,28 +17,49 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/nt/enum/filelockflags.h"
 #include "libc/nt/files.h"
-#include "libc/nt/runtime.h"
 #include "libc/nt/struct/byhandlefileinformation.h"
 #include "libc/nt/struct/overlapped.h"
-#include "libc/str/str.h"
-#include "libc/sysv/consts/lock.h"
 #include "libc/sysv/errfuns.h"
 
+#define _LOCK_SH 0
+#define _LOCK_EX kNtLockfileExclusiveLock
+#define _LOCK_NB kNtLockfileFailImmediately
+#define _LOCK_UN 8
+
 textwindows int sys_flock_nt(int fd, int op) {
-  struct NtOverlapped ov;
+  int64_t h;
   struct NtByHandleFileInformation info;
   if (!__isfdkind(fd, kFdFile)) return ebadf();
-  bzero(&ov, sizeof(ov));
-  if (GetFileInformationByHandle(g_fds.p[fd].handle, &info) &&
-      ((!(op & LOCK_UN) &&
-        LockFileEx(g_fds.p[fd].handle, op, 0, info.nFileSizeLow,
-                   info.nFileSizeHigh, &ov)) ||
-       ((op & LOCK_UN) && UnlockFileEx(g_fds.p[fd].handle, 0, info.nFileSizeLow,
-                                       info.nFileSizeHigh, &ov)))) {
+  h = g_fds.p[fd].handle;
+  struct NtOverlapped ov = {.hEvent = h};
+
+  if (!GetFileInformationByHandle(h, &info)) {
+    return __winerr();
+  }
+
+  if (op & _LOCK_UN) {
+    if (op & ~_LOCK_UN) {
+      return einval();
+    }
+    if (UnlockFileEx(h, 0, info.nFileSizeLow, info.nFileSizeHigh, &ov)) {
+      return 0;
+    } else {
+      return -1;
+    }
+  }
+
+  if (op & ~(_LOCK_SH | _LOCK_EX | _LOCK_NB)) {
+    return einval();
+  }
+
+  if (LockFileEx(h, op, 0, info.nFileSizeLow, info.nFileSizeHigh, &ov)) {
     return 0;
   } else {
-    return __winerr();
+    return -1;
   }
 }

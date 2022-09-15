@@ -48,6 +48,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/prot.h"

@@ -33,6 +33,7 @@
 #line 1 "gethttpmethod.gperf"
 
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "net/http/http.h"
 #define GPERF_DOWNCASE
 #line 12 "gethttpmethod.gperf"

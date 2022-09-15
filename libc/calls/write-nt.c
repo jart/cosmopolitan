@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/iovec.h"
@@ -26,6 +28,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/errors.h"
+#include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -35,12 +38,25 @@
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
+  int64_t h, p;
   uint32_t err, sent;
   struct NtOverlapped overlap;
-  if (WriteFile(g_fds.p[fd].handle, data, _clampio(size), &sent,
-                _offset2overlap(g_fds.p[fd].handle, offset, &overlap))) {
+
+  h = g_fds.p[fd].handle;
+
+  if (offset != -1) {
+    // windows changes the file pointer even if overlapped is passed
+    _npassert(SetFilePointerEx(h, 0, &p, SEEK_CUR));
+  }
+
+  if (WriteFile(h, data, _clampio(size), &sent,
+                _offset2overlap(h, offset, &overlap))) {
+    if (offset != -1) {
+      _npassert(SetFilePointerEx(h, p, 0, SEEK_SET));
+    }
     return sent;
   }
+
   switch (GetLastError()) {
     // case kNtErrorInvalidHandle:
     //   return ebadf(); /* handled by consts.sh */
@@ -68,6 +84,7 @@ textwindows ssize_t sys_write_nt(int fd, const struct iovec *iov, size_t iovlen,
   size_t i, total;
   uint32_t size, wrote;
   struct NtOverlapped overlap;
+  if (opt_offset < -1) return einval();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {
     for (total = i = 0; i < iovlen; ++i) {

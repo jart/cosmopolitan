@@ -700,7 +700,6 @@ imp	'LocalUnlock'						LocalUnlock						kernel32	0
 imp	'LocaleNameToLCID'					LocaleNameToLCID					kernel32	0
 imp	'LocateXStateFeature'					LocateXStateFeature					kernel32	0
 imp	'LockFile'						LockFile						kernel32	0	5
-imp	'LockFileEx'						LockFileEx						kernel32	0	6
 imp	'LockResource'						LockResource						kernel32	0	1
 imp	'MapUserPhysicalPages'					MapUserPhysicalPages					kernel32	0
 imp	'MapUserPhysicalPagesScatter'				MapUserPhysicalPagesScatter				kernel32	986
@@ -1024,7 +1023,6 @@ imp	'UTUnRegister'						UTUnRegister						kernel32	1459
 imp	'UmsThreadYield'					UmsThreadYield						kernel32	1460
 imp	'UnhandledExceptionFilter'				UnhandledExceptionFilter				kernel32	0
 imp	'UnlockFile'						UnlockFile						kernel32	0	5
-imp	'UnlockFileEx'						UnlockFileEx						kernel32	0	5
 imp	'UnmapViewOfFile2'					UnmapViewOfFile2					kernel32	0	2
 imp	'UnmapViewOfFileEx'					UnmapViewOfFileEx					kernel32	0	3
 imp	'UnregisterApplicationRecoveryCallback'			UnregisterApplicationRecoveryCallback			kernel32	1466
@@ -1120,6 +1118,7 @@ imp	'__FlushViewOfFile'					FlushViewOfFile						kernel32	0	2
 imp	'__GenerateConsoleCtrlEvent'				GenerateConsoleCtrlEvent				kernel32	0	2
 imp	'__GetExitCodeProcess'					GetExitCodeProcess					kernel32	0	2
 imp	'__GetFileAttributes'					GetFileAttributesW					kernel32	0	1
+imp	'__LockFileEx'						LockFileEx						kernel32	0	6
 imp	'__MapViewOfFileEx'					MapViewOfFileEx						kernel32	0	6
 imp	'__MapViewOfFileExNuma'					MapViewOfFileExNuma					kernel32	0	7
 imp	'__MoveFileEx'						MoveFileExW						kernel32	0	3
@@ -1128,6 +1127,7 @@ imp	'__ReOpenFile'						ReOpenFile						kernel32	0	4	# TODO(jart): 6.2 and highe
 imp	'__RemoveDirectory'					RemoveDirectoryW					kernel32	0	1
 imp	'__SetCurrentDirectory'					SetCurrentDirectoryW					kernel32	0	1
 imp	'__TerminateProcess'					TerminateProcess					kernel32	0	2
+imp	'__UnlockFileEx'					UnlockFileEx						kernel32	0	5
 imp	'__UnmapViewOfFile'					UnmapViewOfFile						kernel32	0	1
 imp	'__VirtualProtect'					VirtualProtect						kernel32	0	4
 imp	'__WaitForMultipleObjects'				WaitForMultipleObjects					kernel32	0	4

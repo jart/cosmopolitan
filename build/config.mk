@@ -152,6 +152,10 @@ CONFIG_CCFLAGS +=			\
 	-fomit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
 	-foptimize-sibling-calls
+CONFIG_OFLAGS +=			\
+	-g0
+CONFIG_LDFLAGS +=			\
+	-S
 TARGET_ARCH ?=				\
 	-msse3
 PYFLAGS +=				\
@@ -180,6 +184,10 @@ CONFIG_CPPFLAGS +=			\
 	-DSUPPORT_VECTOR=1
 DEFAULT_COPTS +=			\
 	-mred-zone
+CONFIG_OFLAGS +=			\
+	-g0
+CONFIG_LDFLAGS +=			\
+	-S
 CONFIG_CCFLAGS +=			\
 	-Os				\
 	-fno-align-functions		\
@@ -212,6 +220,10 @@ CONFIG_CPPFLAGS +=		\
 	-DSUPPORT_VECTOR=113
 DEFAULT_COPTS +=		\
 	-mred-zone
+CONFIG_OFLAGS +=		\
+	-g0
+CONFIG_LDFLAGS +=		\
+	-S
 CONFIG_CCFLAGS +=		\
 	-Os			\
 	-fno-align-functions	\
@@ -249,6 +261,10 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
+CONFIG_OFLAGS +=		\
+	-g0
+CONFIG_LDFLAGS +=		\
+	-S
 TARGET_ARCH ?=			\
 	-msse3
 endif
@@ -278,6 +294,10 @@ CONFIG_CCFLAGS +=		\
 	-fno-align-jumps	\
 	-fno-align-labels	\
 	-fno-align-loops
+CONFIG_OFLAGS +=		\
+	-g0
+CONFIG_LDFLAGS +=		\
+	-S
 TARGET_ARCH ?=			\
 	-msse3
 endif

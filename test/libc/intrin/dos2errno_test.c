@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/dos2errno.internal.h"
 #include "libc/intrin/kprintf.h"
@@ -28,4 +29,8 @@ TEST(__dos2errno, test) {
   EXPECT_EQ(0, __dos2errno(0));
   EXPECT_EQ(EACCES, __dos2errno(kNtErrorSectorNotFound));
   EXPECT_EQ(EADDRNOTAVAIL, __dos2errno(kNtErrorInvalidNetname));
+  EXPECT_EQ(EAGAIN, __dos2errno(33));
+  if (IsWindows()) {
+    EXPECT_EQ(ENOLCK, __dos2errno(kNtErrorNotLocked));
+  }
 }

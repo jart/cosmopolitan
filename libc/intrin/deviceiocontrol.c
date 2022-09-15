@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/describentoverlapped.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/files.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/thunk/msabi.h"
@@ -40,8 +41,9 @@ textwindows bool32 DeviceIoControl(int64_t hDevice, uint32_t dwIoControlCode,
                              nInBufferSize, lpOutBuffer, nOutBufferSize,
                              lpBytesReturned, lpOverlapped);
   if (!ok) __winerr();
-  NTTRACE("DeviceIoControl(%ld, %#x, %p, %'zu, %p, %'zu, %p, %p) → %hhhd% m",
+  NTTRACE("DeviceIoControl(%ld, %#x, %p, %'zu, %p, %'zu, %p, %s) → %hhhd% m",
           hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer,
-          nOutBufferSize, lpBytesReturned, lpOverlapped, ok);
+          nOutBufferSize, lpBytesReturned, DescribeNtOverlapped(lpOverlapped),
+          ok);
   return ok;
 }

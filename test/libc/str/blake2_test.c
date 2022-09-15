@@ -21,6 +21,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/str/blake2.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"

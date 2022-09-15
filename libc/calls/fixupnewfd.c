@@ -16,19 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 
-/**
- * Applies file descriptor fixups on XNU or old Linux.
- * @see __fixupnewsockfd() for socket file descriptors
- */
+// Applies file descriptor fixups on XNU or old Linux.
+// See __fixupnewsockfd() for socket file descriptors.
 int __fixupnewfd(int fd, int flags) {
   if (fd != -1) {
     if (flags & O_CLOEXEC) {
-      __sys_fcntl(fd, F_SETFD, FD_CLOEXEC);
+      _npassert(!__sys_fcntl(fd, F_SETFD, FD_CLOEXEC));
     }
   }
   return fd;

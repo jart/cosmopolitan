@@ -21,6 +21,7 @@
 #include "libc/fmt/strtol.internal.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 /**
  * Decodes intmax_t from ASCII string.

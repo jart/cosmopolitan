@@ -23,6 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/str/tpdecodecb.internal.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"

@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sched-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Gets scheduler policy for `pid`.
@@ -40,7 +40,8 @@
 int sched_getscheduler(int pid) {
   int rc;
   if (IsNetbsd()) {
-    rc = sys_sched_getscheduler_netbsd(pid);
+    struct sched_param p;
+    rc = sys_sched_getscheduler_netbsd(pid, &p);
   } else {
     rc = sys_sched_getscheduler(pid);
   }

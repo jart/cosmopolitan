@@ -131,7 +131,7 @@
 #define kNtErrorTooManyTcbs 155
 #define kNtErrorSignalRefused 156
 #define kNtErrorDiscarded 157
-#define kNtErrorNotLocked 158
+#define kNtErrorNotLocked 158 /* ENOLCK */
 #define kNtErrorBadThreadidAddr 159
 #define kNtErrorBadArguments 160
 #define kNtErrorBadPathname 161
@@ -1531,7 +1531,7 @@
 #define kNtErrorLogSectorParityInvalid 6601
 #define kNtErrorLogSectorRemapped 6602
 #define kNtErrorLogBlockIncomplete 6603
-#define kNtErrorLogInvalidRange 6604
+#define kNtErrorLogInvalidRange 6604 /* ERANGE */
 #define kNtErrorLogBlocksExhausted 6605
 #define kNtErrorLogReadContextInvalid 6606
 #define kNtErrorLogRestartInvalid 6607

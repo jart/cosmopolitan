@@ -54,7 +54,7 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   f->end = size;
   f->size = size;
   f->iomode = fopenflags(mode);
-  f->lock._type = PTHREAD_MUTEX_RECURSIVE;
+  ((pthread_mutex_t *)f->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
   if (f->iomode & O_APPEND) {
     if ((p = memchr(buf, '\0', size))) {
       f->beg = p - (char *)buf;

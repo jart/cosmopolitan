@@ -116,13 +116,13 @@ bool32 DeviceIoControl(int64_t hDevice, uint32_t dwIoControlCode,
 bool32 LockFile(int64_t hFile, uint32_t dwFileOffsetLow,
                 uint32_t dwFileOffsetHigh, uint32_t nNumberOfBytesToLockLow,
                 uint32_t nNumberOfBytesToLockHigh);
+bool32 UnlockFile(int64_t hFile, uint32_t dwFileOffsetLow,
+                  uint32_t dwFileOffsetHigh, uint32_t nNumberOfBytesToUnlockLow,
+                  uint32_t nNumberOfBytesToUnlockHigh);
 bool32 LockFileEx(int64_t hFile, uint32_t dwFlags, uint32_t dwReserved,
                   uint32_t nNumberOfBytesToLockLow,
                   uint32_t nNumberOfBytesToLockHigh,
                   struct NtOverlapped *lpOverlapped) paramsnonnull();
-bool32 UnlockFile(int64_t hFile, uint32_t dwFileOffsetLow,
-                  uint32_t dwFileOffsetHigh, uint32_t nNumberOfBytesToUnlockLow,
-                  uint32_t nNumberOfBytesToUnlockHigh);
 bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
                     uint32_t nNumberOfBytesToUnlockLow,
                     uint32_t nNumberOfBytesToUnlockHigh,

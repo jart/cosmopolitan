@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(16)));
 

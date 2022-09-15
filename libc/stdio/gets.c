@@ -19,6 +19,6 @@
 #include "libc/limits.h"
 #include "libc/stdio/stdio.h"
 
-compatfn char *gets(char *s) {
+char *gets(char *s) {
   return fgets(s, INT_MAX, stdin);
 }

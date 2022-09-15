@@ -20,6 +20,7 @@
 #include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "tool/build/lib/isnocompressext.h"
 
 static const char kNoCompressExts[][8] = {

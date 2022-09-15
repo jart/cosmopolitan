@@ -17,14 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sched-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sched_param.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/thread/tls.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 /**
  * Sets scheduling policy of process, e.g.
@@ -94,9 +94,10 @@
  */
 int sched_setscheduler(int pid, int policy, const struct sched_param *param) {
   int rc, old;
+  struct sched_param p;
 
   if (IsNetbsd()) {
-    rc = sys_sched_getscheduler_netbsd(pid);
+    rc = sys_sched_getscheduler_netbsd(pid, &p);
   } else {
     rc = sys_sched_getscheduler(pid);
   }

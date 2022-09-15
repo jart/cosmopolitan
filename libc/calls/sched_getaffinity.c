@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/macros.internal.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/thread.h"
@@ -52,7 +54,7 @@ static textwindows int sys_sched_getaffinity_nt(int tid, size_t size,
  * @param bitset receives bitset and should be uint64_t[16] in order to
  *     work on older versions of Linux
  * @return 0 on success, or -1 w/ errno
- * @raise ENOSYS on non-Linux
+ * @raise ENOSYS if not Linux, NetBSD, or Windows
  */
 int sched_getaffinity(int tid, size_t size, cpu_set_t *bitset) {
   int rc;
@@ -60,6 +62,12 @@ int sched_getaffinity(int tid, size_t size, cpu_set_t *bitset) {
     rc = einval();
   } else if (IsWindows()) {
     rc = sys_sched_getaffinity_nt(tid, size, bitset);
+  } else if (IsNetbsd()) {
+    if (!sys_sched_getaffinity_netbsd(0, tid, MIN(size, 32), bitset)) {
+      rc = MIN(size, 32);
+    } else {
+      rc = -1;
+    }
   } else {
     rc = sys_sched_getaffinity(tid, size, bitset);
   }

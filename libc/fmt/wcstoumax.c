@@ -19,6 +19,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/strtol.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 /**
  * Decodes uintmax_t from wide string.

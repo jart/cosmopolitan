@@ -129,7 +129,7 @@ dos	kNtErrorInvalidFunction         EINVAL
 dos	kNtErrorInvalidNetname          EADDRNOTAVAIL
 dos	kNtErrorInvalidUserBuffer	EMSGSIZE
 dos	kNtErrorIoPending               EINPROGRESS
-dos	kNtErrorLockViolation           EACCES
+dos	kNtErrorLockViolation           EAGAIN
 dos	kNtErrorMoreData                EMSGSIZE
 dos	kNtErrorNetnameDeleted          ECONNABORTED
 dos	kNtErrorNetworkAccessDenied	EACCES
@@ -139,7 +139,6 @@ dos	kNtErrorNonpagedSystemResources	ENOMEM
 dos	kNtErrorNotEnoughMemory         ENOMEM
 dos	kNtErrorNotEnoughQuota          ENOMEM
 dos	kNtErrorNotFound                ENOENT
-dos	kNtErrorNotLocked               EACCES
 dos	kNtErrorNotReady                EACCES
 dos	kNtErrorNotSupported            ENOTSUP
 dos	kNtErrorNoMoreFiles             ENOENT

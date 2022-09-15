@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/intrin/bits.h"
@@ -26,6 +25,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
 #include "libc/str/strwidth.h"
+#include "libc/str/tab.internal.h"
 #include "libc/str/thompike.h"
 #include "libc/str/unicode.h"
 #include "libc/str/utf16.h"

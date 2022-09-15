@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/bits.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 /**
  * Compares memory case-insensitively.

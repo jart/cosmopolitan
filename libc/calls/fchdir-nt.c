@@ -23,20 +23,12 @@
 #include "libc/nt/files.h"
 #include "libc/sysv/errfuns.h"
 
+int sys_chdir_nt_impl(char16_t[hasatleast PATH_MAX], uint32_t);
+
 textwindows int sys_fchdir_nt(int dirfd) {
-  uint32_t len;
   char16_t dir[PATH_MAX];
   if (!__isfdkind(dirfd, kFdFile)) return ebadf();
-  len = GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
-                                 kNtFileNameNormalized | kNtVolumeNameDos);
-  if (len + 1 + 1 > ARRAYLEN(dir)) return enametoolong();
-  if (dir[len - 1] != u'\\') {
-    dir[len + 0] = u'\\';
-    dir[len + 1] = u'\0';
-  }
-  if (SetCurrentDirectory(dir)) {
-    return 0;
-  } else {
-    return __winerr();
-  }
+  return sys_chdir_nt_impl(
+      dir, GetFinalPathNameByHandle(g_fds.p[dirfd].handle, dir, ARRAYLEN(dir),
+                                    kNtFileNameNormalized | kNtVolumeNameDos));
 }

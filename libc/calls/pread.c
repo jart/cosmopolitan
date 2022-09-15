@@ -46,8 +46,11 @@
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;
-  if (fd == -1 || offset < 0) return einval();
-  if (IsAsan() && !__asan_is_valid(buf, size)) {
+  if (offset < 0) {
+    rc = einval();
+  } else if (fd < 0) {
+    rc = ebadf();
+  } else if (IsAsan() && !__asan_is_valid(buf, size)) {
     rc = efault();
   } else if (__isfdkind(fd, kFdZip)) {
     rc = _weaken(__zipos_read)(
@@ -60,7 +63,7 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   } else {
     rc = ebadf();
   }
-  assert(rc == -1 || (size_t)rc <= size);
+  _npassert(rc == -1 || (size_t)rc <= size);
   DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;

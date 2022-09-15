@@ -20,10 +20,9 @@
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/sched_param.h"
 
-int sys_sched_getscheduler_netbsd(int pid) {
+int sys_sched_getscheduler_netbsd(int pid, struct sched_param *sp) {
   int policy;
-  struct sched_param sp;
-  if (sys_sched_getparam_netbsd(pid, P_ALL_LWPS, &policy, &sp) != -1) {
+  if (sys_sched_getparam_netbsd(pid, P_ALL_LWPS, &policy, sp) != -1) {
     return policy;
   } else {
     return -1;

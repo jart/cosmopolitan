@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 /**
  * Compares NUL-terminated strings case-insensitively w/ limit.

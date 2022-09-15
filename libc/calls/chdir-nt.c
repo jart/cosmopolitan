@@ -26,35 +26,36 @@
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
 
-textwindows int sys_chdir_nt(const char *path) {
+textwindows int sys_chdir_nt_impl(char16_t path[hasatleast PATH_MAX],
+                                  uint32_t len) {
   uint32_t n;
-  int e, ms, err, len;
-  char16_t path16[PATH_MAX], var[4];
-  if ((len = __mkntpath(path, path16)) == -1) return -1;
-  if (!len) return enoent();
-  if (len && path16[len - 1] != u'\\') {
+  int e, ms, err;
+  char16_t var[4];
+
+  if (len && path[len - 1] != u'\\') {
     if (len + 2 > PATH_MAX) return enametoolong();
-    path16[len + 0] = u'\\';
-    path16[len + 1] = u'\0';
+    path[len + 0] = u'\\';
+    path[len + 1] = u'\0';
   }
+
   /*
    * chdir() seems flaky on windows 7
    * in a similar way to rmdir() sigh
    */
   for (err = errno, ms = 1;; ms *= 2) {
-    if (SetCurrentDirectory(path16)) {
+    if (SetCurrentDirectory(path)) {
       /*
        * Now we need to set a magic environment variable.
        */
-      if ((n = GetCurrentDirectory(ARRAYLEN(path16), path16))) {
-        if (n < ARRAYLEN(path16)) {
-          if (!((path16[0] == '/' && path16[1] == '/') ||
-                (path16[0] == '\\' && path16[1] == '\\'))) {
+      if ((n = GetCurrentDirectory(PATH_MAX, path))) {
+        if (n < PATH_MAX) {
+          if (!((path[0] == '/' && path[1] == '/') ||
+                (path[0] == '\\' && path[1] == '\\'))) {
             var[0] = '=';
-            var[1] = path16[0];
+            var[1] = path[0];
             var[2] = ':';
             var[3] = 0;
-            if (!SetEnvironmentVariable(var, path16)) {
+            if (!SetEnvironmentVariable(var, path)) {
               return __winerr();
             }
           }
@@ -77,5 +78,13 @@ textwindows int sys_chdir_nt(const char *path) {
       }
     }
   }
-  return __fix_enotdir(-1, path16);
+  return __fix_enotdir(-1, path);
+}
+
+textwindows int sys_chdir_nt(const char *path) {
+  int len;
+  char16_t path16[PATH_MAX];
+  if ((len = __mkntpath(path, path16)) == -1) return -1;
+  if (!len) return enoent();
+  return sys_chdir_nt_impl(path16, len);
 }

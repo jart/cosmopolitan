@@ -16,41 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
+#include "libc/assert.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 #define F_DUP2FD         10
 #define F_DUP2FD_CLOEXEC 18
 
-int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
-  static bool once;
-  static bool demodernize;
-  int olderr, how, fd;
-  if (!once) {
-    olderr = errno;
-    fd = __sys_dup3(oldfd, newfd, flags);
-    if (fd == -1 && errno == ENOSYS) {
-      STRACE("demodernizing %s() due to %s", "dup3", "RHEL5:CVE-2010-3301");
-      demodernize = true;
-      once = true;
-      errno = olderr;
-    } else {
-      once = true;
-      return fd;
-    }
-  } else if (!demodernize) {
-    return __sys_dup3(oldfd, newfd, flags);
+static struct Dup3 {
+  pthread_once_t once;
+  bool demodernize;
+} g_dup3;
+
+static void sys_dup3_test(void) {
+  int e = errno;
+  __sys_dup3(-1, -1, 0);
+  if ((g_dup3.demodernize = errno == ENOSYS)) {
+    STRACE("demodernizing %s() due to %s", "dup3", "ENOSYS");
   }
-  if (oldfd == newfd) return einval();
-  if (flags & ~O_CLOEXEC) return einval();
+  errno = e;
+}
+
+int32_t sys_dup3(int32_t oldfd, int32_t newfd, int flags) {
+  int how;
+  _unassert(oldfd >= 0);
+  _unassert(newfd >= 0);
+  _unassert(!(flags & ~O_CLOEXEC));
+
   if (IsFreebsd()) {
-    how = flags & O_CLOEXEC ? F_DUP2FD_CLOEXEC : F_DUP2FD;
+    if (flags & O_CLOEXEC) {
+      how = F_DUP2FD_CLOEXEC;
+    } else {
+      how = F_DUP2FD;
+    }
     return __sys_fcntl(oldfd, how, newfd);
+  }
+
+  pthread_once(&g_dup3.once, sys_dup3_test);
+
+  if (!g_dup3.demodernize) {
+    return __sys_dup3(oldfd, newfd, flags);
   } else {
     return __fixupnewfd(sys_dup2(oldfd, newfd), flags);
   }

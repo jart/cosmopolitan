@@ -37,11 +37,9 @@
  *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD,         3)), 3);
  *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD_CLOEXEC, 3)), 3);
  *
- * This function implements POSIX Advisory Locks, e.g.
- *
- *     CHECK_NE(-1, fcntl(zfd, F_SETLKW, &(struct flock){F_WRLCK}));
- *     // ...
- *     CHECK_NE(-1, fcntl(zfd, F_SETLK, &(struct flock){F_UNLCK}));
+ * This function implements POSIX Advisory Locks, which let independent
+ * processes (and on Windows, threads too!) read/write lock byte ranges
+ * of files. See `test/libc/calls/lock_test.c` for an example.
  *
  * Please be warned that locks currently do nothing on Windows since
  * figuring out how to polyfill them correctly is a work in progress.

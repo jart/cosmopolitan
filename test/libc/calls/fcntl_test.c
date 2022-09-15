@@ -30,7 +30,28 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 #include "libc/x/x.h"
+
+int Lock(int fd, int type, long start, long len) {
+  int e;
+  struct flock lock = {
+      .l_type = type,
+      .l_whence = SEEK_SET,
+      .l_start = start,
+      .l_len = len,
+  };
+  e = errno;
+  while (fcntl(fd, F_SETLK, &lock)) {
+    if (errno == EAGAIN || errno == EACCES) {
+      errno = e;
+      continue;
+    } else {
+      return -1;
+    }
+  }
+  return 0;
+}
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -70,59 +91,15 @@ TEST(fcntl, getfd) {
   ASSERT_SYS(0, 0, close(3));
 }
 
-void OnSig(int sig) {
+TEST(fcntl, F_DUPFD_CLOEXEC) {
+  ASSERT_SYS(0, 3, open("/dev/null", O_RDWR));
+  ASSERT_SYS(0, 5, fcntl(3, F_DUPFD_CLOEXEC, 5));
+  ASSERT_SYS(0, FD_CLOEXEC, fcntl(5, F_GETFD));
+  ASSERT_SYS(0, 0, close(5));
+  ASSERT_SYS(0, 0, close(3));
 }
 
-TEST(posixAdvisoryLocks, oneProcess_unlockedFromOwnPerspectiveHuh) {
-  struct flock lock;
-  ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
-  ASSERT_SYS(0, 5, write(3, "hello", 5));
-
-  // set lock
-  lock.l_type = F_WRLCK;
-  lock.l_whence = SEEK_SET;
-  lock.l_start = 1;
-  lock.l_len = 3;
-  lock.l_pid = -2;
-  ASSERT_SYS(0, 0, fcntl(3, F_SETLK, &lock));
-  EXPECT_EQ(F_WRLCK, lock.l_type);
-  EXPECT_EQ(SEEK_SET, lock.l_whence);
-  EXPECT_EQ(1, lock.l_start);
-  EXPECT_EQ(3, lock.l_len);
-  EXPECT_EQ(-2, lock.l_pid);
-
-  ASSERT_SYS(0, 4, open("foo", O_RDWR));
-
-  // try lock
-  lock.l_type = F_WRLCK;
-  lock.l_whence = SEEK_SET;
-  lock.l_start = 0;
-  lock.l_len = 0;
-  lock.l_pid = -1;
-  ASSERT_SYS(0, 0, fcntl(4, F_SETLK, &lock));
-  EXPECT_EQ(F_WRLCK, lock.l_type);
-  EXPECT_EQ(SEEK_SET, lock.l_whence);
-  EXPECT_EQ(0, lock.l_start);
-  EXPECT_EQ(0, lock.l_len);
-  EXPECT_EQ(-1, lock.l_pid);
-
-  // get lock information
-  if (!IsWindows()) {
-    lock.l_type = F_RDLCK;
-    lock.l_whence = SEEK_SET;
-    lock.l_start = 0;
-    lock.l_len = 0;
-    lock.l_pid = -7;
-    ASSERT_SYS(0, 0, fcntl(4, F_GETLK, &lock));
-    EXPECT_EQ(F_UNLCK, lock.l_type);
-    EXPECT_EQ(SEEK_SET, lock.l_whence);
-    EXPECT_EQ(0, lock.l_start);
-    EXPECT_EQ(0, lock.l_len);
-    EXPECT_EQ(-7, lock.l_pid);  // doesn't change due to F_UNLCK
-  }
-
-  ASSERT_SYS(0, 0, close(4));
-  ASSERT_SYS(0, 0, close(3));
+void OnSig(int sig) {
 }
 
 TEST(posixAdvisoryLocks, twoProcesses) {

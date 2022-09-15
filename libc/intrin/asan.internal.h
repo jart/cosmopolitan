@@ -3,7 +3,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
-#include "libc/thread/thread.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

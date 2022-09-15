@@ -16,8 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/nexgen32e/nexgen32e.h"
-#include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(kBase36, test) {

@@ -20,12 +20,14 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 int sys_fcntl(int fd, int cmd, uintptr_t arg) {
-  int rc;
+  int e, rc;
   bool islock;
   if ((islock = cmd == F_GETLK ||  //
                 cmd == F_SETLK ||  //
@@ -37,9 +39,13 @@ int sys_fcntl(int fd, int cmd, uintptr_t arg) {
     }
     cosmo2flock(arg);
   }
+  e = errno;
   rc = __sys_fcntl(fd, cmd, arg);
   if (islock) {
     flock2cosmo(arg);
+  } else if (rc == -1 && cmd == F_DUPFD_CLOEXEC && errno == EINVAL) {
+    errno = e;
+    rc = __fixupnewfd(__sys_fcntl(fd, F_DUPFD, arg), O_CLOEXEC);
   }
   return rc;
 }

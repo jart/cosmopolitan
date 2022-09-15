@@ -13,9 +13,7 @@ kDos2Errno.EACCES:
 	.e	kNtErrorCannotMake,EACCES
 	.e	kNtErrorCrc,EACCES
 	.e	kNtErrorGenFailure,EACCES
-	.e	kNtErrorLockViolation,EACCES
 	.e	kNtErrorNetworkAccessDenied,EACCES
-	.e	kNtErrorNotLocked,EACCES
 	.e	kNtErrorNotReady,EACCES
 	.e	kNtErrorOutOfPaper,EACCES
 	.e	kNtErrorSectorNotFound,EACCES

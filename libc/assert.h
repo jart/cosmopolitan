@@ -7,15 +7,28 @@ extern bool __assert_disable;
 void __assert_fail(const char *, const char *, int) hidden relegated;
 
 #ifdef NDEBUG
-#define assert(EXPR) ((void)0)
+#define assert(x) ((void)0)
 #else
-#define assert(EXPR) \
-  ((void)((EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
+#define assert(x) ((void)((x) || (__assert_fail(#x, __FILE__, __LINE__), 0)))
 #endif
 
 #ifndef __cplusplus
 #define static_assert _Static_assert
 #endif
+
+#define _unassert(x)                 \
+  do {                               \
+    if (__builtin_expect(!(x), 0)) { \
+      unreachable;                   \
+    }                                \
+  } while (0)
+
+#define _npassert(x)                 \
+  do {                               \
+    if (__builtin_expect(!(x), 0)) { \
+      notpossible;                   \
+    }                                \
+  } while (0)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

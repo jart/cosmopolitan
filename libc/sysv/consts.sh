@@ -57,11 +57,11 @@ syscon	errno	ESPIPE					29			29			29			29			29			25			# invalid seek; unix conse
 syscon	errno	EROFS					30			30			30			30			30			6009			# read-only filesystem; unix consensus; kNtErrorFileReadOnly; raised by access(2), acct(2), bind(2), chmod(2), chown(2), link(2), mkdir(2), mknod(2), mount(2), open(2), rename(2), rmdir(2), symlink(2), truncate(2), unlink(2), utime(2), utimensat(2)
 syscon	errno	EMLINK					31			31			31			31			31			1142			# too many links; unix consensus; kNtErrorTooManyLinks; raised by link(2), mkdir(2), rename(2)
 syscon	errno	EPIPE					32			32			32			32			32			109			# broken pipe; unix consensus; kNtErrorBrokenPipe; raised by send(2), write(2), tcp(7), unix(7), ip(7)
-syscon	errno	EDOM					33			33			33			33			33			33			# mathematics argument out of domain of function; bsd consensus; fudged on NT; returned by cos(3), fmod(3), log1p(3), sin(3), tan(3), tgamma(3)
-syscon	errno	ERANGE					34			34			34			34			34			34			# result too large; bsd consensus; fudged on NT; raised by getxattr(2), listxattr(2), lookup_dcookie(2), prctl(2), quotactl(2), semctl(2), semop(2), setxattr(2)
+syscon	errno	EDOM					33			33			33			33			33			20000			# mathematics argument out of domain of function; bsd consensus; made up on NT; returned by cos(3), fmod(3), log1p(3), sin(3), tan(3), tgamma(3)
+syscon	errno	ERANGE					34			34			34			34			34			6604			# result too large; bsd consensus; kNtErrorLogInvalidRange; raised by getxattr(2), listxattr(2), lookup_dcookie(2), prctl(2), quotactl(2), semctl(2), semop(2), setxattr(2)
 syscon	errno	EDEADLK					35			11			11			11			11			1131			# resource deadlock avoided; bsd consensus; kNtErrorPossibleDeadlock; raised by fcntl(2), keyctl(2)
 syscon	errno	ENAMETOOLONG				36			63			63			63			63			10063			# filename too long; bsd consensus; WSAENAMETOOLONG; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), execve(2), gethostname(2), inotify_add_watch(2), link(2), lookup_dcookie(2), mkdir(2), mknod(2), mount(2), open(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), umount(2), unlink(2), utimensat(2)
-syscon	errno	ENOLCK					37			77			77			77			77			0			# no locks available; bsd consensus; raised by fcntl(2), flock(2)
+syscon	errno	ENOLCK					37			77			77			77			77			158			# no locks available; kNtErrorNotLocked; bsd consensus; raised by fcntl(2), flock(2)
 syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 10066); raised by rmdir(2)
 syscon	errno	ELOOP					40			62			62			62			62			1921			# too many levels of symbolic links; bsd consensus; kNtErrorCantResolveFilename; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
 syscon	errno	ENOMSG					42			91			83			90			83			0			# raised by msgop(2)
@@ -328,10 +328,10 @@ syscon	access	R_OK					4			4			4			4			4			0x80000000		# unix consensus and kNtG
 #	flock() flags
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	lock	LOCK_SH					1			1			1			1			1			0			# shared [unix consensus]
+syscon	lock	LOCK_SH					1			1			1			1			1			0			# shared [unix consensus]; hard-coded into flock-nt.c too
 syscon	lock	LOCK_EX					2			2			2			2			2			2			# exclusive [consensus!] a.k.a. kNtLockfileExclusiveLock
 syscon	lock	LOCK_NB					4			4			4			4			4			1			# non-blocking [unix consensus] a.k.a. kNtLockfileFailImmediately
-syscon	lock	LOCK_UN					8			8			8			8			8			8			# unlock [unix consensus & faked NT]
+syscon	lock	LOCK_UN					8			8			8			8			8			8			# unlock [unix consensus & faked NT]; hard-coded into flock-nt.c too
 
 #	waitpid() / wait4() options
 #

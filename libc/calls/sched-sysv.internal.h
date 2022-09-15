@@ -18,7 +18,7 @@ int sys_sched_setscheduler(int, int, const struct sched_param *);
 int sys_sched_yield(void) hidden;
 int64_t sys_sched_getaffinity(int, uint64_t, void *) hidden;
 
-int sys_sched_getscheduler_netbsd(int);
+int sys_sched_getscheduler_netbsd(int, struct sched_param *);
 int sys_sched_setparam_netbsd(int, int, int, const struct sched_param *)  //
     asm("sys_sched_setparam");
 int sys_sched_getparam_netbsd(int, int, int *, struct sched_param *)  //

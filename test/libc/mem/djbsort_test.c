@@ -20,10 +20,11 @@
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/alg.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/mem/gc.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -52,9 +53,9 @@ void insertionsort(int32_t *a, size_t n) {
 TEST(djbsort, test4) {
   static const int kA[] = {4, 3, 2, 1};
   n = ARRAYLEN(kA);
-  a = memcpy(gc(malloc(n * 4)), kA, n * 4);
-  b = memcpy(gc(malloc(n * 4)), kA, n * 4);
-  c = memcpy(gc(malloc(n * 4)), kA, n * 4);
+  a = memcpy(_gc(malloc(n * 4)), kA, n * 4);
+  b = memcpy(_gc(malloc(n * 4)), kA, n * 4);
+  c = memcpy(_gc(malloc(n * 4)), kA, n * 4);
   insertionsort(a, n);
   djbsort_avx2(b, n);
   djbsort(c, n);
@@ -79,9 +80,9 @@ TEST(djbsort, test64) {
       -1323943608, -1219421355, -582289873,  1062699814,
   };
   n = ARRAYLEN(kA);
-  a = memcpy(gc(malloc(n * 4)), kA, n * 4);
-  b = memcpy(gc(malloc(n * 4)), kA, n * 4);
-  c = memcpy(gc(malloc(n * 4)), kA, n * 4);
+  a = memcpy(_gc(malloc(n * 4)), kA, n * 4);
+  b = memcpy(_gc(malloc(n * 4)), kA, n * 4);
+  c = memcpy(_gc(malloc(n * 4)), kA, n * 4);
   insertionsort(a, n);
   djbsort(c, n);
   ASSERT_EQ(0, memcmp(a, c, n * 4));
@@ -91,10 +92,19 @@ TEST(djbsort, test64) {
   }
 }
 
+static int CompareInt(const void *a, const void *b) {
+  if (*(const int *)a < *(const int *)b) return -1;
+  if (*(const int *)a > *(const int *)b) return +1;
+  return 0;
+}
+
 BENCH(djbsort, bench) {
   n = 256;
-  a = gc(memalign(32, n * 4));
+  a = _gc(memalign(32, n * 4));
   EZBENCH2("insertionsort[255]", rngset(a, n * 4, rand64, -1),
            insertionsort(a, n));
   EZBENCH2("djbsort[255]", rngset(a, n * 4, rand64, -1), djbsort(a, n));
+  EZBENCH2("_intsort[255]", rngset(a, n * 4, rand64, -1), _intsort(a, n));
+  EZBENCH2("qsort[255]", rngset(a, n * 4, rand64, -1),
+           qsort(a, n, sizeof(int), CompareInt));
 }

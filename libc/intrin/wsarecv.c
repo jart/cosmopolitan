@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/describentoverlapped.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
 
@@ -55,8 +56,9 @@ textwindows int WSARecv(
     kprintf(STRACE_PROLOGUE "WSARecv(%lu, [", s);
     DescribeIovNt(inout_lpBuffers, dwBufferCount,
                   rc != -1 ? NumberOfBytesRecvd : 0);
-    kprintf("], %u, [%'u], %p, %p, %p) → %d% lm\n", dwBufferCount,
-            NumberOfBytesRecvd, inout_lpFlags, opt_inout_lpOverlapped,
+    kprintf("], %u, [%'u], %p, %s, %p) → %d% lm\n", dwBufferCount,
+            NumberOfBytesRecvd, inout_lpFlags,
+            DescribeNtOverlapped(opt_inout_lpOverlapped),
             opt_lpCompletionRoutine, rc);
   }
 #else

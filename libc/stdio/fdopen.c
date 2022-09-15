@@ -38,7 +38,7 @@ FILE *fdopen(int fd, const char *mode) {
     f->fd = fd;
     f->bufmode = ischardev(fd) ? _IOLBF : _IOFBF;
     f->iomode = fopenflags(mode);
-    f->lock._type = PTHREAD_MUTEX_RECURSIVE;
+    ((pthread_mutex_t *)f->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
     f->size = BUFSIZ;
     if ((f->buf = malloc(f->size))) {
       if ((f->iomode & O_ACCMODE) != O_RDONLY) {

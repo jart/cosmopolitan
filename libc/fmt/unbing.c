@@ -21,6 +21,7 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 
 static const int kCp437iMultimappings[] = {
     u'\n' << 8 | '\n',   // NEWLINE

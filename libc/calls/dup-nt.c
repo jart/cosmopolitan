@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -32,10 +33,9 @@
  */
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   int64_t rc, proc, handle;
-
-  // validate the api usage
-  if (oldfd < 0) return ebadf();
-  if (flags & ~O_CLOEXEC) return einval();
+  _unassert(oldfd >= 0);
+  _unassert(newfd >= -1);
+  _unassert(!(flags & ~O_CLOEXEC));
 
   __fds_lock();
 

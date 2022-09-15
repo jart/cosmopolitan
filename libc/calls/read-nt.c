@@ -16,14 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
@@ -35,8 +37,10 @@
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
+  int64_t p;
   uint32_t got, avail;
   struct NtOverlapped overlap;
+
   if (GetFileType(fd->handle) == kNtFileTypePipe) {
     for (;;) {
       if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
@@ -52,10 +56,20 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     }
     POLLTRACE("sys_read_nt ready to read");
   }
+
+  if (offset != -1) {
+    // windows changes the file pointer even if overlapped is passed
+    _npassert(SetFilePointerEx(fd->handle, 0, &p, SEEK_CUR));
+  }
+
   if (ReadFile(fd->handle, data, _clampio(size), &got,
                _offset2overlap(fd->handle, offset, &overlap))) {
+    if (offset != -1) {
+      _npassert(SetFilePointerEx(fd->handle, p, 0, SEEK_SET));
+    }
     return got;
   }
+
   switch (GetLastError()) {
     case kNtErrorBrokenPipe:    // broken pipe
     case kNtErrorNoData:        // closing named pipe
@@ -73,6 +87,7 @@ textwindows ssize_t sys_read_nt(struct Fd *fd, const struct iovec *iov,
   ssize_t rc;
   uint32_t size;
   size_t i, total;
+  if (opt_offset < -1) return einval();
   if (_check_interrupts(true, fd)) return eintr();
   while (iovlen && !iov[0].iov_len) iov++, iovlen--;
   if (iovlen) {

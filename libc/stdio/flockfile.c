@@ -23,5 +23,5 @@
  * Acquires reentrant lock on stdio object, blocking if needed.
  */
 void(flockfile)(FILE *f) {
-  pthread_mutex_lock(&f->lock);
+  pthread_mutex_lock((pthread_mutex_t *)f->lock);
 }

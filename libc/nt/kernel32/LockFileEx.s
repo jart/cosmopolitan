@@ -2,11 +2,11 @@
 .imp	kernel32,__imp_LockFileEx,LockFileEx,0
 
 	.text.windows
-LockFileEx:
+__LockFileEx:
 	push	%rbp
 	mov	%rsp,%rbp
 	.profilable
 	mov	__imp_LockFileEx(%rip),%rax
 	jmp	__sysv2nt6
-	.endfn	LockFileEx,globl
+	.endfn	__LockFileEx,globl
 	.previous

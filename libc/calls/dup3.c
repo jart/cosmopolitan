@@ -18,10 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -46,14 +47,14 @@
  */
 int dup3(int oldfd, int newfd, int flags) {
   int rc;
-  if (__isfdkind(oldfd, kFdZip)) {
+  if (oldfd == newfd || (flags & ~O_CLOEXEC)) {
+    rc = einval();  // NetBSD doesn't do this
+  } else if (oldfd < 0 || newfd < 0) {
+    rc = ebadf();
+  } else if (__isfdkind(oldfd, kFdZip)) {
     rc = eopnotsupp();
-  } else if (oldfd == newfd) {
-    rc = einval();
   } else if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, flags);
-  } else if (newfd < 0) {
-    rc = ebadf();
   } else {
     rc = sys_dup_nt(oldfd, newfd, flags, -1);
   }
