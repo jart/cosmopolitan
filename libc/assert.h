@@ -17,6 +17,20 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
 #define static_assert _Static_assert
 #endif
 
+#define _unassert(x)                 \
+  do {                               \
+    if (__builtin_expect(!(x), 0)) { \
+      unreachable;                   \
+    }                                \
+  } while (0)
+
+#define _npassert(x)                 \
+  do {                               \
+    if (__builtin_expect(!(x), 0)) { \
+      notpossible;                   \
+    }                                \
+  } while (0)
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_ASSERT_H_ */
