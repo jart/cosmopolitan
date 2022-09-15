@@ -93,8 +93,9 @@ static noasan textreal void __normalize_e820(struct mman *mm) {
     x = mm->e820[n].addr;
     y = mm->e820[n].addr + mm->e820[n].size;
     a = ROUNDUP(x, 4096);
-    b = ROUNDDOWN(y, 4096) - a;
-    if (b > 0 && mm->e820[i].type == kMemoryUsable) {
+    b = ROUNDDOWN(y, 4096);
+    if (b > a && mm->e820[i].type == kMemoryUsable) {
+      b -= a;
       mm->e820[n].addr = a;
       mm->e820[n].size = b;
       ++n;
