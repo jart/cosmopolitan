@@ -54,6 +54,11 @@ typedef void (*NtTimerapcroutine)(void *lpArgToCompletionRoutine,
 typedef void (*NtWaitOrTimerCallback)(void *lpParameter,
                                       bool32 TimerOrWaitFired);
 
+void WakeByAddressAll(void *Address);
+void WakeByAddressSingle(void *Address);
+bool32 WaitOnAddress(volatile void *Address, void *CompareAddress,
+                     size_t AddressSize, uint32_t opt_dwMilliseconds);
+
 void Sleep(uint32_t dwMilliseconds);
 uint32_t SleepEx(uint32_t dwMilliseconds, bool32 bAlertable);
 

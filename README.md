@@ -245,11 +245,11 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | :---            | ---:        | ---:  |
 | AMD             | K8 Venus    | 2005  |
 | Intel           | Core        | 2006  |
-| Windows         | Vista       | 2006  |
 | Linux           | 2.6.18      | 2007  |
+| Windows         | 8           | 2012  |
 | Mac OS X        | 15.6        | 2018  |
-| FreeBSD         | 13          | 2020  |
 | OpenBSD         | 6.4         | 2018  |
+| FreeBSD         | 13          | 2020  |
 | NetBSD          | 9.2         | 2021  |
 
 ## Special Thanks

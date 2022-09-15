@@ -94,7 +94,7 @@ syscon	errno	EISCONN					106			56			56			56			56			10056			# socket is connected
 syscon	errno	ENOTCONN				107			57			57			57			57			10057			# socket is not connected; bsd consensus; WSAENOTCONN; raised by getpeername(2), recv(2), send(2), shutdown(2), ip(7)
 syscon	errno	ESHUTDOWN				108			58			58			58			58			10058			# cannot send after transport endpoint shutdown; note that shutdown write is an EPIPE; bsd consensus; WSAESHUTDOWN
 syscon	errno	ETOOMANYREFS				109			59			59			59			59			10059			# too many references: cannot splice; bsd consensus; WSAETOOMANYREFS; raised by sendmsg(2), unix(7)
-syscon	errno	ETIMEDOUT				110			60			60			60			60			10060			# connection timed out; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
+syscon	errno	ETIMEDOUT				110			60			60			60			60			1460			# connection timed out; kNtErrorTimeout; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
 syscon	errno	ECONNREFUSED				111			61			61			61			61			10061			# bsd consensus; WSAECONNREFUSED; raised by connect(2), listen(2), recv(2), unix(7), udp(7)system-imposed limit on the number of threads was encountered.
 syscon	errno	EHOSTDOWN				112			64			64			64			64			10064			# bsd consensus; WSAEHOSTDOWN; raised by accept(2)
 syscon	errno	EHOSTUNREACH				113			65			65			65			65			10065			# bsd consensus; WSAEHOSTUNREACH; raised by accept(2), ip(7)
@@ -1316,7 +1316,7 @@ syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	futex	FUTEX_WAIT				0			0			0			1			0			0
-syscon	futex	FUTEX_WAKE				1			0			0			2			0			0
+syscon	futex	FUTEX_WAKE				1			0			0			2			0			1
 syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
 syscon	futex	FUTEX_PRIVATE_FLAG			128			0			0			128			0			0
 

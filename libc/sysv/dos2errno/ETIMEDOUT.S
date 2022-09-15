@@ -9,3 +9,4 @@
 	.type	kDos2Errno.ETIMEDOUT,@object
 kDos2Errno.ETIMEDOUT:
 	.e	kNtErrorSemTimeout,ETIMEDOUT
+	.e	WSAETIMEDOUT,ETIMEDOUT

@@ -17,14 +17,19 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
+#include "third_party/nsync/mu_semaphore.internal.h"
 // clang-format off
 
 /* futex() polyfill w/ sched_yield() fallback */
@@ -41,8 +46,18 @@ bool FUTEX_TIMEOUT_IS_ABSOLUTE;
 __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	int x = 0;
 
-        if (!(FUTEX_IS_SUPPORTED = IsLinux() || IsOpenbsd()))
+	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
+		FUTEX_IS_SUPPORTED = true;
+		FUTEX_WAIT_ = FUTEX_WAIT;
 		return;
+	}
+
+        if (!(FUTEX_IS_SUPPORTED = IsLinux () || IsOpenbsd ())) {
+		// we're using sched_yield() so let's
+		// avoid needless clock_gettime calls
+		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+		return;
+	}
 
 	// In our testing, we found that the monotonic clock on various
 	// popular systems (such as Linux, and some BSD variants) was no
@@ -78,8 +93,30 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 
 int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout) {
 	int rc, op;
-	if (FUTEX_IS_SUPPORTED) {
-		op = FUTEX_WAIT_;
+	uint32_t ms;
+
+	if (!FUTEX_IS_SUPPORTED) {
+		nsync_yield_ ();
+		if (timeout) {
+			return -EINTR;
+		} else {
+			return 0;
+		}
+	}
+
+	op = FUTEX_WAIT_;
+	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
+		if (timeout) {
+			ms = _timespec_tomillis (*timeout);
+		} else {
+			ms = -1;
+		}
+		if (WaitOnAddress (p, &expect, sizeof(int), ms)) {
+			rc = 0;
+		} else {
+			rc = -GetLastError ();
+		}
+	} else {
 		if (pshare == PTHREAD_PROCESS_PRIVATE) {
 			op |= FUTEX_PRIVATE_FLAG_;
 		}
@@ -88,35 +125,45 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 			// [jart] openbsd does this without setting carry flag
 			rc = -rc;
 		}
-		STRACE("futex(%t, %s, %d, %s) → %s",
-		       p, DescribeFutexOp(op), expect,
-		       DescribeTimespec(0, timeout), DescribeFutexResult(rc));
-	} else {
-		nsync_yield_ ();
-		if (timeout) {
-			rc = -ETIMEDOUT;
-		} else {
-			rc = 0;
-		}
 	}
+
+	STRACE("futex(%t, %s, %d, %s) → %s",
+	       p, DescribeFutexOp (op), expect,
+	       DescribeTimespec (0, timeout),
+	       DescribeFutexResult (rc));
+
 	return rc;
 }
 
 int nsync_futex_wake_ (int *p, int count, char pshare) {
 	int rc, op;
 	int wake (void *, int, int) asm ("_futex");
-	if (FUTEX_IS_SUPPORTED) {
-		op = FUTEX_WAKE;
+
+	ASSERT (count == 1 || count == INT_MAX);
+
+	if (!FUTEX_IS_SUPPORTED) {
+		nsync_yield_ ();
+		return 0;
+	}
+
+	op = FUTEX_WAKE;
+	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
+		if (count == 1) {
+			WakeByAddressSingle (p);
+		} else {
+			WakeByAddressAll (p);
+		}
+		rc = 0;
+	} else {
 		if (pshare == PTHREAD_PROCESS_PRIVATE) {
 			op |= FUTEX_PRIVATE_FLAG_;
 		}
 		rc = wake (p, op, count);
-		STRACE("futex(%t, %s, %d) → %s", p,
-		       DescribeFutexOp(op),
-		       count, DescribeFutexResult(rc));
-	} else {
-		nsync_yield_ ();
-		rc = 0;
 	}
+
+	STRACE("futex(%t, %s, %d) → %s", p,
+	       DescribeFutexOp(op),
+	       count, DescribeFutexResult(rc));
+
 	return rc;
 }

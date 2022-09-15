@@ -3554,6 +3554,13 @@ imp	'InetIsOffline'						InetIsOffline						url		106
 imp	'MIMEAssociationDialog'					MIMEAssociationDialogW					url		108
 imp	'MailToProtocolHandler'					MailToProtocolHandler					url		109
 
+# API-MS-Win-Core-Synch-l1-2-0.dll (Windows 8+)
+#
+#	Name							Actual							DLL					Hint	Arity
+imp	'WaitOnAddress'						WaitOnAddress						API-MS-Win-Core-Synch-l1-2-0		111	4
+imp	'WakeByAddressAll'					WakeByAddressAll					API-MS-Win-Core-Synch-l1-2-0		113	1
+imp	'WakeByAddressSingle'					WakeByAddressSingle					API-MS-Win-Core-Synch-l1-2-0		116	1
+
 # NTDLL.DLL
 # BEYOND THE PALE
 #

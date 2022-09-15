@@ -84,7 +84,7 @@ dir=libc/sysv/dos2errno
 # dos	WSAENOTCONN                     ENOTCONN	# in consts.sh
 # dos	WSAESHUTDOWN                    ESHUTDOWN	# in consts.sh
 # dos	WSAETOOMANYREFS                 ETOOMANYREFS	# in consts.sh
-# dos	WSAETIMEDOUT                    ETIMEDOUT	# in consts.sh
+# dos	kNtErrorTimeout                 ETIMEDOUT	# in consts.sh
 # dos	WSAECONNREFUSED                 ECONNREFUSED	# in consts.sh
 # dos	WSAEHOSTDOWN                    EHOSTDOWN	# in consts.sh
 # dos	WSAEHOSTUNREACH                 EHOSTUNREACH	# in consts.sh
@@ -170,3 +170,4 @@ dos	WSAEPROCLIM                     ENOMEM
 dos	WSANOTINITIALISED               ENETDOWN
 dos	WSASYSNOTREADY                  ENETDOWN
 dos	WSAVERNOTSUPPORTED              ENOSYS
+dos	WSAETIMEDOUT			ETIMEDOUT

@@ -992,7 +992,7 @@
 #define kNtErrorInvalidKeyboardHandle 1457
 #define kNtErrorHookTypeNotAllowed 1458
 #define kNtErrorRequiresInteractiveWindowstation 1459
-#define kNtErrorTimeout 1460
+#define kNtErrorTimeout 1460 /* ETIMEDOUT */
 #define kNtErrorInvalidMonitorHandle 1461
 #define kNtErrorIncorrectSize 1462
 #define kNtErrorSymlinkClassDisabled 1463

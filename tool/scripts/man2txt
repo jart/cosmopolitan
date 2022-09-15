@@ -1,5 +1,9 @@
 #!/bin/sh
+
+ASCII2UTF8=$(command -v ascii2utf8.com 2>/dev/null) || {
+  ASCII2UTF8=$(ls -1 o/*/tool/viz/ascii2utf8.com | head -n1)
+}
+
 for x; do
-  nroff -mandoc -rLL=80n -rLT=80n -Tutf8 <"$x" |
-    o//tool/viz/ascii2utf8.com
+  nroff -mandoc -rLL=80n -rLT=80n -Tutf8 <"$x" | $ASCII2UTF8
 done

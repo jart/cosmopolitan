@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/state.internal.h"
 #include "libc/errno.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/synchronization.h"
@@ -32,14 +33,14 @@ https://github.com/google/nsync\"");
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init_win32 (nsync_semaphore *s) {
 	int64_t *h = (int64_t *) s;
-	*h = CreateSemaphore(NULL, 0, 1, NULL);
+	*h = CreateSemaphore (&kNtIsInheritable, 0, 1, NULL);
 	if (!*h) notpossible;
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
 void nsync_mu_semaphore_p_win32 (nsync_semaphore *s) {
 	int64_t *h = (int64_t *) s;
-	WaitForSingleObject(*h, -1u);
+	WaitForSingleObject (*h, -1u);
 }
 
 /* Wait until one of:
@@ -50,7 +51,7 @@ int nsync_mu_semaphore_p_with_deadline_win32 (nsync_semaphore *s, nsync_time abs
 	int result;
 
 	if (nsync_time_cmp (abs_deadline, nsync_time_no_deadline) == 0) {
-		result = WaitForSingleObject(*h, -1u);
+		result = WaitForSingleObject (*h, -1u);
 	} else {
 		nsync_time now;
 		now = nsync_time_now ();

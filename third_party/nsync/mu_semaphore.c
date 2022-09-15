@@ -23,7 +23,7 @@
 
 /* Initialize *s; the initial value is 0. */
 void nsync_mu_semaphore_init (nsync_semaphore *s) {
-	if (!IsWindows ())
+	if (NSYNC_FUTEX_WIN32 || !IsWindows ())
 		nsync_mu_semaphore_init_futex (s);
 	else
 		nsync_mu_semaphore_init_win32 (s);
@@ -31,7 +31,7 @@ void nsync_mu_semaphore_init (nsync_semaphore *s) {
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
 void nsync_mu_semaphore_p (nsync_semaphore *s) {
-	if (!IsWindows ())
+	if (NSYNC_FUTEX_WIN32 || !IsWindows ())
 		nsync_mu_semaphore_p_futex (s);
 	else
 		nsync_mu_semaphore_p_win32 (s);
@@ -41,7 +41,7 @@ void nsync_mu_semaphore_p (nsync_semaphore *s) {
    the count of *s is non-zero, in which case decrement *s and return 0;
    or abs_deadline expires, in which case return ETIMEDOUT. */
 int nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
-	if (!IsWindows ())
+	if (NSYNC_FUTEX_WIN32 || !IsWindows ())
 		return nsync_mu_semaphore_p_with_deadline_futex (s, abs_deadline);
 	else
 		return nsync_mu_semaphore_p_with_deadline_win32 (s, abs_deadline);
@@ -49,7 +49,7 @@ int nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadl
 
 /* Ensure that the count of *s is at least 1. */
 void nsync_mu_semaphore_v (nsync_semaphore *s) {
-	if (!IsWindows ())
+	if (NSYNC_FUTEX_WIN32 || !IsWindows ())
 		nsync_mu_semaphore_v_futex (s);
 	else
 		nsync_mu_semaphore_v_win32 (s);

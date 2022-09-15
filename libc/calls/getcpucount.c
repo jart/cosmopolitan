@@ -22,6 +22,7 @@
 #include "libc/calls/weirdtypes.h"
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
+#include "libc/nt/accounting.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/struct/systeminfo.h"
 #include "libc/nt/systeminfo.h"
@@ -61,18 +62,6 @@ static unsigned GetCpuCountBsd(void) {
   }
 }
 
-static textwindows unsigned GetCpuCountWindows(void) {
-  struct NtSystemInfo si;
-  uint32_t (*f)(uint16_t);
-  if ((f = GetProcAddress(GetModuleHandle("KERNEL32"),
-                          "GetMaximumProcessorCount"))) {
-    return f(ALL_PROCESSOR_GROUPS);
-  } else {
-    GetSystemInfo(&si);
-    return si.dwNumberOfProcessors;
-  }
-}
-
 static unsigned GetCpuCountImpl(void) {
   if (!IsWindows()) {
     if (!IsBsd()) {
@@ -81,7 +70,7 @@ static unsigned GetCpuCountImpl(void) {
       return GetCpuCountBsd();
     }
   } else {
-    return GetCpuCountWindows();
+    return GetMaximumProcessorCount(ALL_PROCESSOR_GROUPS);
   }
 }
 

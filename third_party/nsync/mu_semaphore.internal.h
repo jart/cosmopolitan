@@ -2,6 +2,11 @@
 #define NSYNC_MU_SEMAPHORE_INTERNAL_H_
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/time.h"
+
+#ifndef NSYNC_FUTEX_WIN32
+#define NSYNC_FUTEX_WIN32 1
+#endif
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
