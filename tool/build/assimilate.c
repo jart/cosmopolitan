@@ -160,8 +160,8 @@ void GetMachoPayload(const char *image, size_t imagesize, int *out_offset,
   script += 6;
   DCHECK_EQ(REG_OK, regcomp(&rx,
                             "bs=([ [:digit:]]+) "
-                            "skip=\"([ [:digit:]]+)\" "
-                            "count=\"([ [:digit:]]+)\"",
+                            "skip=\"?([ [:digit:]]+)\"? "
+                            "count=\"?([ [:digit:]]+)\"?",
                             REG_EXTENDED));
   rc = regexec(&rx, script, 4, rm, 0);
   if (rc != REG_OK) {
