@@ -30,6 +30,7 @@ const char *DescribeNtFileFlagAttr(char[256], uint32_t);
 const char *DescribeNtFileMapFlags(char[64], uint32_t);
 const char *DescribeNtFileShareFlags(char[64], uint32_t);
 const char *DescribeNtFiletypeFlags(char[64], uint32_t);
+const char *DescribeNtLockFileFlags(char[64], uint32_t);
 const char *DescribeNtMovFileInpFlags(char[256], uint32_t);
 const char *DescribeNtPageFlags(char[64], uint32_t);
 const char *DescribeNtPipeModeFlags(char[64], uint32_t);
@@ -72,6 +73,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeNtFileMapFlags(x)    DescribeNtFileMapFlags(alloca(64), x)
 #define DescribeNtFileShareFlags(x)  DescribeNtFileShareFlags(alloca(64), x)
 #define DescribeNtFiletypeFlags(x)   DescribeNtFiletypeFlags(alloca(64), x)
+#define DescribeNtLockFileFlags(x)   DescribeNtLockFileFlags(alloca(64), x)
 #define DescribeNtMovFileInpFlags(x) DescribeNtMovFileInpFlags(alloca(256), x)
 #define DescribeNtPageFlags(x)       DescribeNtPageFlags(alloca(64), x)
 #define DescribeNtPipeModeFlags(x)   DescribeNtPipeModeFlags(alloca(64), x)

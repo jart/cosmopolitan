@@ -3105,6 +3105,10 @@ static int openDatabase(
   char *zErrMsg = 0;              /* Error message from sqlite3ParseUri() */
   int i;                          /* Loop counter */
 
+  // TODO(jart): Fix SQLite.
+  extern bool __force_sqlite_to_work_until_we_can_fix_it;
+  __force_sqlite_to_work_until_we_can_fix_it = true;
+
 #ifdef SQLITE_ENABLE_API_ARMOR
   if( ppDb==0 ) return SQLITE_MISUSE_BKPT;
 #endif
