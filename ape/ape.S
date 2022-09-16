@@ -235,8 +235,9 @@ pc:	cld
 #endif
 	ljmp	$0,$REAL(1f)
 1:	mov	%cx,%ds
-	mov	$IMAGE_BASE_REAL-0x0500,%cx	# clears bss
-	mov	$0x0500>>4,%ax			# struct mman
+	.set	mm,0x0500			# struct mman
+	mov	$IMAGE_BASE_REAL-mm,%cx		# clears bss
+	mov	$mm>>4,%ax
 	mov	%ax,%es
 	xor	%ax,%ax
 	xor	%di,%di
@@ -328,7 +329,7 @@ dsknfo:	push	%bx
 	movpp	%es,%ds
 	xor	%si,%si
 	mov	%si,%es
-	mov	$0x1d10,%si		# mman::pc_drive_base_table
+	mov	$mm+"struct mman::pc_drive_base_table",%si
 	xchg	%si,%di
 	movsw	#→ headunloadtime, headloadtime
 	movsw	#→ shutofftime, bytespersector
@@ -381,11 +382,11 @@ pcread:	push	%ax
 	add	$512>>4,%si
 	mov	%si,%es
 	inc	%al			# ++sector
-	cmp	0x1d1c,%al		# mman::pc_drive_last_sector
+	cmp	mm+"struct mman::pc_drive_last_sector",%al
 	jbe	2f
 	mov	$1,%al
 	inc	%dh			# ++head
-	cmp	0x1d20,%dh		# mman::pc_drive_last_head
+	cmp	mm+"struct mman::pc_drive_last_head",%dh
 	jbe	2f
 	xor	%dh,%dh
 	inc	%cx			# ++cylinder
@@ -1288,10 +1289,9 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	.endfn	lcheck
 
 //	Gets memory map from BIOS.
-e820:	mov	$0x0510>>4,%di		# mman::e820
-	mov	%di,%es
-	xor	%di,%di			# es:di is destination buffer
-	xor	%ebx,%ebx		# ebx is an api state tracker
+e820:	xor	%ebx,%ebx		# %ebx is an api state tracker
+	mov	%bx,%es
+	mov	$mm+"struct mman::e820",%di # es:di is destination buffer
 1:	mov	$0xE820,%eax		# magic
 	mov	$8+8+4+4,%ecx		# sizeof(struct SmapEntry)
 	mov	$0x534d4150,%edx	# magic number
@@ -1315,7 +1315,7 @@ e820:	mov	$0x0510>>4,%di		# mman::e820
 4:	add	$8+8+4+4,%di		# keep entry
 5:	test	%ebx,%ebx		# last entry?
 	jz	8f
-	cmp	$(256-1)*(8+8+4+4),%di
+	cmp	$mm+"struct mman::e820_end"-(8+8+4+4),%di
 	jb	1b
 8:	xor	%ax,%ax			# add a blank sentinel entry
 	mov	$(8+8)/2,%cx
@@ -1425,7 +1425,7 @@ pinit:	push	%ds
 //
 //	@see	Intel Manual V3A §4.1.2
 golong:	cli
-	lidt	0x1d22					# mman::bad_idt
+	lidt	mm+"struct mman::bad_idt"
 	mov	%cr4,%eax
 	or	$CR4_PAE|CR4_PGE|CR4_OSFXSR,%eax
 	mov	%eax,%cr4
@@ -1458,7 +1458,7 @@ long:	xor	%eax,%eax
 	xor	%ebx,%ebx
 	xor	%ebp,%ebp
 	push	%rbp
-	mov	$0x0500,%rdi			# mman
+	mov	$mm,%rdi
 	mov	%cr3,%rsi
 	mov	$IMAGE_BASE_REAL,%edx
 	call	__map_phdrs
