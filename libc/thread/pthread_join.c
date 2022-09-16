@@ -16,13 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/errno.h"
-#include "libc/thread/thread.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 /**
  * Waits for thread to terminate.
@@ -31,11 +28,14 @@
  * @raise EDEADLK if thread is detached
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  if (pt->status == kPosixThreadDetached ||  //
-      pt->status == kPosixThreadZombie) {
-    assert(!"badjoin");
+  struct PosixThread *pt;
+  if (thread == __get_tls()->tib_pthread) {
     return EDEADLK;
+  }
+  if (!(pt = (struct PosixThread *)thread) ||  //
+      pt->status == kPosixThreadZombie ||      //
+      pt->status == kPosixThreadDetached) {
+    return EINVAL;
   }
   _pthread_wait(pt);
   if (value_ptr) {

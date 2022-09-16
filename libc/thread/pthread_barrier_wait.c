@@ -16,13 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/limits.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/counter.h"
-#include "third_party/nsync/futex.internal.h"
-#include "third_party/nsync/time.h"
 
 /**
  * Waits for all threads to arrive at barrier.

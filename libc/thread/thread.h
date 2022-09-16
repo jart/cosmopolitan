@@ -177,19 +177,19 @@ extern const errno_t EBUSY;
 #define pthread_spin_lock(pSpin)                                           \
   ({                                                                       \
     pthread_spinlock_t *_s = pSpin;                                        \
-    while (__atomic_test_and_set(&_s->_lock, __ATOMIC_SEQ_CST)) donothing; \
+    while (__atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE)) donothing; \
     0;                                                                     \
   })
 #define pthread_spin_unlock(pSpin)                     \
   ({                                                   \
     pthread_spinlock_t *_s = pSpin;                    \
-    __atomic_store_n(&_s->_lock, 0, __ATOMIC_RELAXED); \
+    __atomic_store_n(&_s->_lock, 0, __ATOMIC_RELEASE); \
     0;                                                 \
   })
 #define pthread_spin_trylock(pSpin)                                  \
   ({                                                                 \
     pthread_spinlock_t *_s = pSpin;                                  \
-    __atomic_test_and_set(&_s->_lock, __ATOMIC_SEQ_CST) ? EBUSY : 0; \
+    __atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE) ? EBUSY : 0; \
   })
 #endif /* GCC 4.7+ */
 

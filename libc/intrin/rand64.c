@@ -17,18 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/_getauxval.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/nexgen32e/rdtsc.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 static struct {
   int thepid;
   uint128_t thepool;
-  pthread_mutex_t lock;
+  pthread_spinlock_t lock;
 } g_rand64;
 
 /**
@@ -49,7 +49,7 @@ static struct {
 uint64_t rand64(void) {
   void *p;
   uint128_t s;
-  if (__threaded) pthread_mutex_lock(&g_rand64.lock);
+  if (__threaded) pthread_spin_lock(&g_rand64.lock);
   if (__pid == g_rand64.thepid) {
     s = g_rand64.thepool;  // normal path
   } else {
@@ -70,6 +70,6 @@ uint64_t rand64(void) {
     g_rand64.thepid = __pid;
   }
   g_rand64.thepool = (s *= 15750249268501108917ull);  // lemur64
-  if (__threaded) pthread_mutex_unlock(&g_rand64.lock);
+  pthread_spin_unlock(&g_rand64.lock);
   return s >> 64;
 }

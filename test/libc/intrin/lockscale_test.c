@@ -81,7 +81,7 @@ BENCH(lock, scalability) {
   pthread_barrier_destroy(&barrier);
   pthread_mutex_destroy(&lock);
   t2 = _timespec_real();
-  printf("consumed %10g seconds monotonic time and %10g seconds cpu time\n",
-         _timespec_tonanos(_timespec_sub(t2, t1)) / 1000000000.,
+  printf("consumed %10g seconds real time and %10g seconds cpu time\n",
+         _timespec_tonanos(_timespec_sub(t2, t1)) / 1e9,
          (double)clock() / CLOCKS_PER_SEC);
 }

@@ -26,6 +26,7 @@
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/nt/thread.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/runtime/clone.internal.h"
@@ -56,6 +57,7 @@
 
 __msabi extern typeof(TlsSetValue) *const __imp_TlsSetValue;
 __msabi extern typeof(ExitThread) *const __imp_ExitThread;
+__msabi extern typeof(WakeByAddressAll) *const __imp_WakeByAddressAll;
 
 struct CloneArgs {
   union {
@@ -106,6 +108,7 @@ WinThreadEntry(int rdi,                                 // rcx
   // we can now clear ctid directly since we're no longer using our own
   // stack memory, which can now be safely free'd by the parent thread.
   *wt->ztid = 0;
+  __imp_WakeByAddressAll(wt->ztid);
   // since we didn't indirect this function through NT2SYSV() it's not
   // safe to simply return, and as such, we just call ExitThread().
   __imp_ExitThread(rc);

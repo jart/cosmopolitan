@@ -50,6 +50,7 @@ extern bool __isworker;
 
 void mcount(void);
 int _freestack(void *);
+void _bt(const char *, ...);
 unsigned long getauxval(unsigned long);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;

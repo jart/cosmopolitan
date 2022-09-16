@@ -54,9 +54,14 @@ void TriggerSignal(void) {
 }
 
 static void *Increment(void *arg) {
+  ASSERT_EQ(EDEADLK, pthread_join(pthread_self(), 0));
   ASSERT_EQ(gettid(), pthread_getthreadid_np());
   TriggerSignal();
   return (void *)((uintptr_t)arg + 1);
+}
+
+TEST(pthread_create, joinSelfDeadlocks) {
+  ASSERT_EQ(EDEADLK, pthread_join(pthread_self(), 0));
 }
 
 TEST(pthread_create, testCreateReturnJoin) {

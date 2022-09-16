@@ -19,10 +19,10 @@
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -71,10 +71,10 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
     rem->tv_nsec = 0;
   }
 
-#if defined(SYSDEBUG) && _POLLTRACE
+#ifdef SYSDEBUG
   if (!__time_critical) {
-    POLLTRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
-              DescribeTimespec(rc, rem), rc);
+    STRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
+           DescribeTimespec(rc, rem), rc);
   }
 #endif
 

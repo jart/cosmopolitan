@@ -102,7 +102,7 @@ endif
 #   - Larger binaries
 #
 ifeq ($(MODE), asan)
-CONFIG_CCFLAGS += $(BACKTRACES) -O2
+CONFIG_CCFLAGS += $(BACKTRACES) -O2 -DSYSDEBUG
 CONFIG_COPTS += -fsanitize=address
 TARGET_ARCH ?= -msse3
 endif

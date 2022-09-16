@@ -16,16 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
+#include "libc/errno.h"
+#include "libc/intrin/intrin.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
+#include "libc/log/backtrace.internal.h"
 
 /**
- * Gets value of TLS slot for current thread.
+ * Shows backtrace if crash reporting facilities are linked.
  */
-void *pthread_getspecific(pthread_key_t key) {
-  if (0 <= key && key < PTHREAD_KEYS_MAX) {
-    return __get_tls()->tib_keys[key];
+void _bt(const char *fmt, ...) {
+  int e;
+  va_list va;
+  if (fmt) {
+    va_start(va, fmt);
+    kvprintf(fmt, va);
+    va_end(va);
+  }
+  if (_weaken(ShowBacktrace)) {
+    e = errno;
+    _weaken(ShowBacktrace)(2, __builtin_frame_address(0));
+    errno = e;
   } else {
-    return 0;
+    kprintf("_bt() can't show backtrace because you need:\n"
+            "\tSTATIC_YOINK(\"ShowBacktrace\");\n"
+            "to be linked.\n");
   }
 }
