@@ -36,6 +36,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bsr.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -331,6 +332,14 @@ static struct Assets {
     } * file;
   } * p;
 } assets;
+
+static struct ProxyIps {
+  size_t n;
+  struct ProxyIp {
+    uint32_t ip;
+    uint32_t mask;
+  } * p;
+} proxyips;
 
 static struct Shared {
   int workers;
@@ -859,6 +868,28 @@ static void ProgramRedirectArg(int code, const char *s) {
   ProgramRedirect(code, s, p - s, p + 1, n - (p - s + 1));
 }
 
+static void TrustProxy(uint32_t ip, int cidr) {
+  uint32_t mask;
+  mask = 0xffffffffu << (32 - cidr);
+  proxyips.p = xrealloc(proxyips.p, ++proxyips.n * sizeof(*proxyips.p));
+  proxyips.p[proxyips.n - 1].ip = ip;
+  proxyips.p[proxyips.n - 1].mask = mask;
+}
+
+static bool IsTrustedProxy(uint32_t ip) {
+  int i;
+  if (proxyips.n) {
+    for (i = 0; i < proxyips.n; ++i) {
+      if ((ip & proxyips.p[i].mask) == proxyips.p[i].ip) {
+        return true;
+      }
+    }
+    return false;
+  } else {
+    return IsPrivateIp(ip) || IsLoopbackIp(ip);
+  }
+}
+
 static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
   char *p;
   const char *s;
@@ -872,34 +903,56 @@ static void DescribeAddress(char buf[40], uint32_t addr, uint16_t port) {
   assert(p - buf < 40);
 }
 
-static inline void GetServerAddr(uint32_t *ip, uint16_t *port) {
+static inline int GetServerAddr(uint32_t *ip, uint16_t *port) {
   *ip = ntohl(serveraddr->sin_addr.s_addr);
   if (port) *port = ntohs(serveraddr->sin_port);
+  return 0;
 }
 
-static inline void GetClientAddr(uint32_t *ip, uint16_t *port) {
+static inline int GetClientAddr(uint32_t *ip, uint16_t *port) {
   *ip = ntohl(clientaddr.sin_addr.s_addr);
   if (port) *port = ntohs(clientaddr.sin_port);
+  return 0;
 }
 
-static inline void GetRemoteAddr(uint32_t *ip, uint16_t *port) {
+static inline int GetRemoteAddr(uint32_t *ip, uint16_t *port) {
+  char str[40];
   GetClientAddr(ip, port);
-  if (HasHeader(kHttpXForwardedFor) &&
-      (IsPrivateIp(*ip) || IsLoopbackIp(*ip))) {
-    if (ParseForwarded(HeaderData(kHttpXForwardedFor),
-                       HeaderLength(kHttpXForwardedFor), ip, port) == -1)
-      WARNF("(srvr) invalid X-Forwarded-For value: %`'.*s",
-            HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor));
+  if (HasHeader(kHttpXForwardedFor)) {
+    if (IsTrustedProxy(*ip)) {
+      if (ParseForwarded(HeaderData(kHttpXForwardedFor),
+                         HeaderLength(kHttpXForwardedFor), ip, port) == -1) {
+        VERBOSEF("could not parse x-forwarded-for %`'.*s len=%ld",
+                 HeaderLength(kHttpXForwardedFor),
+                 HeaderData(kHttpXForwardedFor),
+                 HeaderLength(kHttpXForwardedFor));
+        return -1;
+      }
+    } else {
+      WARNF(
+          "%hhu.%hhu.%hhu.%hhu isn't authorized to send x-forwarded-for %`'.*s",
+          *ip >> 24, *ip >> 16, *ip >> 8, *ip, HeaderLength(kHttpXForwardedFor),
+          HeaderData(kHttpXForwardedFor));
+    }
   }
+  return 0;
 }
 
 static char *DescribeClient(void) {
-  uint32_t ip;
+  char str[40];
   uint16_t port;
-  static char clientaddrstr[40];
-  GetRemoteAddr(&ip, &port);
-  DescribeAddress(clientaddrstr, ip, port);
-  return clientaddrstr;
+  uint32_t client;
+  static char description[128];
+  GetClientAddr(&client, &port);
+  if (HasHeader(kHttpXForwardedFor) && IsTrustedProxy(client)) {
+    DescribeAddress(str, client, port);
+    snprintf(description, sizeof(description), "%'.*s via %s",
+             HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor),
+             str);
+  } else {
+    DescribeAddress(description, client, port);
+  }
+  return description;
 }
 
 static char *DescribeServer(void) {
@@ -2225,10 +2278,8 @@ static bool Verify(void *data, size_t size, uint32_t crc) {
 
 static void *Deflate(const void *data, size_t size, size_t *out_size) {
   void *res;
-  z_stream zs;
+  z_stream zs = {0};
   LockInc(&shared->c.deflates);
-  zs.zfree = 0;
-  zs.zalloc = 0;
   CHECK_EQ(Z_OK, deflateInit2(&zs, 4, Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL,
                               Z_DEFAULT_STRATEGY));
   zs.next_in = data;
@@ -3093,8 +3144,7 @@ static bool ShouldServeCrashReportDetails(void) {
   if (leakcrashreports) {
     return true;
   } else {
-    GetRemoteAddr(&ip, &port);
-    return IsLoopbackIp(ip) || IsPrivateIp(ip);
+    return !GetRemoteAddr(&ip, &port) && (IsLoopbackIp(ip) || IsPrivateIp(ip));
   }
 }
 
@@ -3351,6 +3401,42 @@ static int LuaRoute(lua_State *L) {
   host = LuaCheckHost(L, 1, &hostlen);
   path = LuaCheckPath(L, 2, &pathlen);
   lua_pushboolean(L, !!(cpm.luaheaderp = Route(host, hostlen, path, pathlen)));
+  return 1;
+}
+
+static int LuaTrustProxy(lua_State *L) {
+  lua_Integer ip, cidr;
+  uint32_t ip32, imask;
+  ip = luaL_checkinteger(L, 1);
+  cidr = luaL_optinteger(L, 2, 32);
+  if (!(0 <= ip && ip <= 0xffffffff)) {
+    luaL_argerror(L, 1, "ip out of range");
+    unreachable;
+  }
+  if (!(0 <= cidr && cidr <= 32)) {
+    luaL_argerror(L, 2, "cidr should be 0 .. 32");
+    unreachable;
+  }
+  ip32 = ip;
+  imask = ~(0xffffffffu << (32 - cidr));
+  if (ip32 & imask) {
+    luaL_argerror(L, 1,
+                  "ip address isn't the network address; "
+                  "it has bits masked by the cidr");
+    unreachable;
+  }
+  TrustProxy(ip, cidr);
+  return 0;
+}
+
+static int LuaIsTrustedProxy(lua_State *L) {
+  lua_Integer ip;
+  ip = luaL_checkinteger(L, 1);
+  if (!(0 <= ip && ip <= 0xffffffff)) {
+    luaL_argerror(L, 1, "ip out of range");
+    unreachable;
+  }
+  lua_pushboolean(L, IsTrustedProxy(ip));
   return 1;
 }
 
@@ -3781,13 +3867,17 @@ static int LuaGetMethod(lua_State *L) {
   return 1;
 }
 
-static int LuaGetAddr(lua_State *L, void GetAddr(uint32_t *, uint16_t *)) {
+static int LuaGetAddr(lua_State *L, int GetAddr(uint32_t *, uint16_t *)) {
   uint32_t ip;
   uint16_t port;
-  GetAddr(&ip, &port);
-  lua_pushinteger(L, ip);
-  lua_pushinteger(L, port);
-  return 2;
+  if (!GetAddr(&ip, &port)) {
+    lua_pushinteger(L, ip);
+    lua_pushinteger(L, port);
+    return 2;
+  } else {
+    lua_pushnil(L);
+    return 1;
+  }
 }
 
 static int LuaGetServerAddr(lua_State *L) {
@@ -4881,6 +4971,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsPrivateIp", LuaIsPrivateIp},                            //
     {"IsPublicIp", LuaIsPublicIp},                              //
     {"IsReasonablePath", LuaIsReasonablePath},                  //
+    {"IsTrustedProxy", LuaIsTrustedProxy},                      // undocumented
     {"IsValidHttpToken", LuaIsValidHttpToken},                  //
     {"LaunchBrowser", LuaLaunchBrowser},                        //
     {"Lemur64", LuaLemur64},                                    //
@@ -4906,13 +4997,13 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramLogMessages", LuaProgramLogMessages},              //
     {"ProgramLogPath", LuaProgramLogPath},                      //
     {"ProgramMaxPayloadSize", LuaProgramMaxPayloadSize},        //
+    {"ProgramMaxWorkers", LuaProgramMaxWorkers},                //
     {"ProgramPidPath", LuaProgramPidPath},                      //
     {"ProgramPort", LuaProgramPort},                            //
     {"ProgramRedirect", LuaProgramRedirect},                    //
     {"ProgramTimeout", LuaProgramTimeout},                      //
     {"ProgramUid", LuaProgramUid},                              //
     {"ProgramUniprocess", LuaProgramUniprocess},                //
-    {"ProgramMaxWorkers", LuaProgramMaxWorkers},                //
     {"Rand64", LuaRand64},                                      //
     {"Rdrand", LuaRdrand},                                      //
     {"Rdseed", LuaRdseed},                                      //
@@ -4939,6 +5030,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sleep", LuaSleep},                                        //
     {"Slurp", LuaSlurp},                                        //
     {"StoreAsset", LuaStoreAsset},                              //
+    {"TrustProxy", LuaTrustProxy},                              // undocumented
     {"Uncompress", LuaUncompress},                              //
     {"Underlong", LuaUnderlong},                                //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
@@ -5584,9 +5676,8 @@ static void ParseRequestParameters(void) {
   FreeLater(ParseRequestUri(inbuf.p + cpm.msg.uri.a,
                             cpm.msg.uri.b - cpm.msg.uri.a, &url));
   if (!url.host.p) {
-    GetRemoteAddr(&ip, 0);
-    if (HasHeader(kHttpXForwardedHost) &&
-        (IsPrivateIp(ip) || IsLoopbackIp(ip))) {
+    if (HasHeader(kHttpXForwardedHost) &&  //
+        !GetRemoteAddr(&ip, 0) && IsTrustedProxy(ip)) {
       FreeLater(ParseHost(HeaderData(kHttpXForwardedHost),
                           HeaderLength(kHttpXForwardedHost), &url));
     } else if (HasHeader(kHttpHost)) {
@@ -5689,7 +5780,6 @@ static char *Route(const char *host, size_t hostlen, const char *path,
   // this function (as it always serves something); otherwise
   // successful RoutePath and Route may fail with "508 loop detected"
   cpm.loops.n = 0;
-  if (logmessages) LogMessage("received", inbuf.p, hdrsize);
   if (hostlen && (p = RouteHost(host, hostlen, path, pathlen))) {
     return p;
   }
@@ -6002,6 +6092,9 @@ static bool HandleMessageActual(void) {
   if ((rc = ParseHttpMessage(&cpm.msg, inbuf.p, amtread)) != -1) {
     if (!rc) return false;
     hdrsize = rc;
+    if (logmessages) {
+      LogMessage("received", inbuf.p, hdrsize);
+    }
     p = HandleRequest();
   } else {
     LockInc(&shared->c.badmessages);

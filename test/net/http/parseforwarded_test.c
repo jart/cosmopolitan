@@ -56,5 +56,5 @@ BENCH(ParseForwarded, bench) {
   uint32_t ip;
   uint16_t port;
   EZBENCH2("ParseForwarded 80", donothing,
-           ParseForwarded("203.0.113.42:31337", 20, &ip, &port));
+           ParseForwarded("203.0.113.42:31337", 18, &ip, &port));
 }

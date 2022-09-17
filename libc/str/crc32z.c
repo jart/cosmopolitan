@@ -25,13 +25,6 @@
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 
-static inline noasan uint64_t WildRead64(const signed char *p) {
-  return (uint64_t)(255 & p[7]) << 070 | (uint64_t)(255 & p[6]) << 060 |
-         (uint64_t)(255 & p[5]) << 050 | (uint64_t)(255 & p[4]) << 040 |
-         (uint64_t)(255 & p[3]) << 030 | (uint64_t)(255 & p[2]) << 020 |
-         (uint64_t)(255 & p[1]) << 010 | (uint64_t)(255 & p[0]) << 000;
-}
-
 /**
  * Computes Phil Katz CRC-32 used by zip/zlib/gzip/etc.
  *

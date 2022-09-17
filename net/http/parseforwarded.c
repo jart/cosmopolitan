@@ -43,16 +43,18 @@ int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
   if (n == -1) n = s ? strlen(s) : 0;
   if (n) {
     t = x = i = 0;
-    if ((r = strrchr(s, ','))) {
+    if ((r = memrchr(s, ',', n))) {
       i = r - s;
-      if ((s[++i] & 255) == ' ') ++i; // skip optional space
+      if ((s[++i] & 255) == ' ') ++i;  // skip optional space
     }
     do {
       c = s[i++] & 255;
       if (isdigit(c)) {
         t *= 10;
         t += c - '0';
-        if (t > 255) return -1;
+        if (t > 255) {
+          return -1;
+        }
       } else if (c == '.') {
         x <<= 8;
         x |= t;
@@ -72,7 +74,9 @@ int ParseForwarded(const char *s, size_t n, uint32_t *ip, uint16_t *port) {
         if (isdigit(c)) {
           t *= 10;
           t += c - '0';
-          if (t > 65535) return -1;
+          if (t > 65535) {
+            return -1;
+          }
         } else {
           return -1;
         }

@@ -16,14 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/intrin/weaken.h"
+#include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "third_party/zlib/zutil.internal.h"
 
 void *zcalloc(void *opaque, uInt items, uInt size) {
-  return _weaken(malloc)(items * size);
+  size_t res;
+  if (__builtin_mul_overflow(items, size, &res)) return 0;
+  if (res > INT_MAX) return 0;
+  _npassert(_weaken(malloc));
+  return _weaken(malloc)(res);
 }
 
 void zcfree(void *opaque, void *ptr) {
+  _npassert(_weaken(free));
   _weaken(free)(ptr);
 }

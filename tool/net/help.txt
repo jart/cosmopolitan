@@ -255,7 +255,45 @@ SECURITY
     -VVV     log ssl informational messages too
     -VVVV    log ssl verbose details too
 
-  Redbean supports sandboxing flags on Linux and OpenBSD.
+  redbean provides hardened ASAN (Address Sanitizer) builds that
+  proactively guard against any potential memory weaknesses that may be
+  discovered, such as buffer overruns, use after free, etc. MDOE=asan is
+  recomended when serving on the public Internet.
+
+  redbean also supports robust sandboxing on Linux Kernel 5.13+ and
+  OpenBSD. The recommended way to harden your redbean is to call the
+  pledge() and unveil() functions. For example, if you have a SQLite app
+  then the key to using these features is to connect to the db first:
+
+      function OnWorkerStart()
+          db = sqlite3.open("db.sqlite3")
+          db:busy_timeout(1000)
+          db:exec[[PRAGMA journal_mode=WAL]]
+          db:exec[[PRAGMA synchronous=NORMAL]]
+          db:exec[[SELECT x FROM warmup WHERE x = 1]]
+          assert(unix.setrlimit(unix.RLIMIT_RSS, 100 * 1024 * 1024))
+          assert(unix.setrlimit(unix.RLIMIT_CPU, 4))
+          assert(unix.unveil("/var/tmp", "rwc"))
+          assert(unix.unveil("/tmp", "rwc"))
+          assert(unix.unveil(nil, nil))
+          assert(unix.pledge("stdio flock rpath wpath cpath", nil,
+                             unix.PLEDGE_PENALTY_RETURN_EPERM))
+      end
+
+  What makes this technique interesting is redbean doesn't have file
+  system access to the database file, and instead uses an inherited file
+  descriptor that was opened beforehand. With SQLite the tmp access is
+  only needed to support things like covering indexes. The -Z flag is
+  also helpful to see where things go wrong, so you know which promises
+  are needed to support your use case.
+
+  pledge() will work on all Linux kernels since RHEL6 since it uses
+  SECCOMP BPF filtering. On the other hand, unveil() requires Landlock
+  LSM which was only introduced in 2021. If you need unveil() then be
+  sure to test the restrictions work. Most environments don't support
+  unveil(), so it's designed to be a no-op in unsupported environments.
+
+  Alternatively, there's CLI flags which make it simple to get started:
 
     -S (online policy)
 

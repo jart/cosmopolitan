@@ -1,6 +1,7 @@
 #ifndef ZUTIL_H
 #define ZUTIL_H
 #include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
 #include "third_party/zlib/zlib.h"
 
 /* default windowBits for decompression. MAX_WBITS is for compression only */
@@ -96,6 +97,32 @@ extern void z_error(const char *, int, char *) hidden;
 #define ZSWAP32(q)                                                      \
   ((((q) >> 24) & 0xff) + (((q) >> 8) & 0xff00) + (((q)&0xff00) << 8) + \
    (((q)&0xff) << 24))
+
+typedef unsigned char uch;
+typedef uch uchf;
+typedef unsigned short ush;
+typedef ush ushf;
+typedef unsigned long ulg;
+
+#ifdef HAVE_HIDDEN
+#define ZLIB_INTERNAL __attribute__((__visibility__("hidden")))
+#else
+#define ZLIB_INTERNAL
+#endif
+
+#ifndef local
+#define local static
+#endif
+
+#if !defined(Z_U8) && !defined(Z_SOLO) && defined(STDC)
+#if (ULONG_MAX == 0xffffffffffffffff)
+#define Z_U8 unsigned long
+#elif (ULLONG_MAX == 0xffffffffffffffff)
+#define Z_U8 unsigned long long
+#elif (UINT_MAX == 0xffffffffffffffff)
+#define Z_U8 unsigned
+#endif
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

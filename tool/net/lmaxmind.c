@@ -206,7 +206,14 @@ static int LuaMaxmindResultGet(lua_State *L) {
     for (i = 0; i < n; ++i) path[i] = lua_tostring(L, 2 + i);
     err = MMDB_aget_value(&(*ur)->mmlr.entry, &edata, path);
     free(path);
-    if (err) LuaThrowMaxmindIpError(L, "getpath", (*ur)->ip, err);
+    if (err) {
+      if (err == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
+        lua_pushnil(L);
+        return 1;
+      } else {
+        LuaThrowMaxmindIpError(L, "getpath", (*ur)->ip, err);
+      }
+    }
     if (!edata.offset) {
       lua_pushnil(L);
       return 1;

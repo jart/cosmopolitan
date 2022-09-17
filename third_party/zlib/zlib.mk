@@ -50,9 +50,7 @@ o/$(MODE)/third_party/zlib/crcfold.o: private		\
 			-mpclmul			\
 			-mssse3
 
-o/$(MODE)/third_party/zlib/deflate.o			\
-o/$(MODE)/third_party/zlib/inflate.o			\
-o/$(MODE)/third_party/zlib/adler32.o: private		\
+$(THIRD_PARTY_ZLIB_A_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections		\
 			-fdata-sections
