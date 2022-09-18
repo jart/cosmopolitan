@@ -4,14 +4,14 @@ t=/tmp/pledge-test
 
 if [ $# = 0 ]; then
   if ! [ $(id -u) = 0 ]; then
-    make -j16 MODE= \
-         o//examples/ls.com \
-         o//examples/curl.com \
-         o//examples/life.com \
-         o//examples/hello.com \
-         o//examples/printargs.com \
-         o//tool/build/assimilate.com \
-         o//tool/build/pledge.com || exit
+    make -j16 MODE=fastbuild \
+         o/fastbuild/examples/ls.com \
+         o/fastbuild/examples/curl.com \
+         o/fastbuild/examples/life.com \
+         o/fastbuild/examples/hello.com \
+         o/fastbuild/examples/printargs.com \
+         o/fastbuild/tool/build/assimilate.com \
+         o/fastbuild/tool/build/pledge.com || exit
     make -j16 MODE=$m \
          o/$m/examples/ls.com \
          o/$m/examples/curl.com \
@@ -67,16 +67,16 @@ elif [ "$1" = ape_binfmt_test_suite ]; then
   ape/apeinstall.sh >/dev/null 2>&1
 
   startit ape binfmt life.com
-  o//tool/build/pledge.com -p 'stdio rpath prot_exec' o//examples/life.com
+  o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/life.com
   [ $? = 42 ]
   checkem
 
   startit ape binfmt hello.com
-  [ "$(o//tool/build/pledge.com -p 'stdio rpath prot_exec' o//examples/hello.com)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/hello.com)" = "hello world" ]
   checkem
 
   startit ape binfmt curl.com
-  [ "$(o//tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o//examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
 elif [ "$1" = ape_loader_test_suite ]; then
@@ -84,16 +84,16 @@ elif [ "$1" = ape_loader_test_suite ]; then
   ape/apeuninstall.sh >/dev/null 2>&1
 
   startit ape loader life.com
-  o//tool/build/pledge.com -p 'stdio rpath prot_exec' o//examples/life.com
+  o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/life.com
   [ $? = 42 ]
   checkem
 
   startit ape loader hello.com
-  [ "$(o//tool/build/pledge.com -p 'stdio rpath prot_exec' o//examples/hello.com)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio rpath prot_exec' o/fastbuild/examples/hello.com)" = "hello world" ]
   checkem
 
   startit ape loader curl.com
-  [ "$(o//tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o//examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
+  [ "$(o/fastbuild/tool/build/pledge.com -p 'stdio inet dns rpath prot_exec' o/fastbuild/examples/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 
   ape/apeinstall.sh >/dev/null 2>&1
@@ -103,21 +103,21 @@ elif [ "$1" = ape_assimilated_test_suite ]; then
   mkdir -p $t/assimilated
 
   startit ape assimilated life.com
-  cp o//examples/life.com $t/assimilated
-  o//tool/build/assimilate.com $t/assimilated/life.com
+  cp o/fastbuild/examples/life.com $t/assimilated
+  o/fastbuild/tool/build/assimilate.com $t/assimilated/life.com
   o/$m/tool/build/pledge.com -p 'stdio' $t/assimilated/life.com
   [ $? = 42 ]
   checkem
 
   startit ape assimilated hello.com
-  cp o//examples/hello.com $t/assimilated
-  o//tool/build/assimilate.com $t/assimilated/hello.com
+  cp o/fastbuild/examples/hello.com $t/assimilated
+  o/fastbuild/tool/build/assimilate.com $t/assimilated/hello.com
   [ "$(o/$m/tool/build/pledge.com -p 'stdio' $t/assimilated/hello.com)" = "hello world" ]
   checkem
 
   startit ape assimilated curl.com
-  cp o//examples/curl.com $t/assimilated
-  o//tool/build/assimilate.com $t/assimilated/curl.com
+  cp o/fastbuild/examples/curl.com $t/assimilated
+  o/fastbuild/tool/build/assimilate.com $t/assimilated/curl.com
   [ "$(o/$m/tool/build/pledge.com -p 'stdio rpath inet dns' $t/assimilated/curl.com https://justine.lol/hello.txt)" = "hello world" ]
   checkem
 

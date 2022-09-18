@@ -49,7 +49,9 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/so.h"
 #include "libc/sysv/consts/sock.h"
+#include "libc/sysv/consts/sol.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
@@ -310,7 +312,7 @@ TEST(pledge, wpath_doesNotImplyRpath) {
 
 TEST(pledge, inet_forbidsOtherSockets) {
   if (IsOpenbsd()) return;  // b/c testing linux bpf
-  int ws, pid;
+  int ws, pid, yes = 1;
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
     ASSERT_SYS(0, 0, pledge("stdio inet", 0));
@@ -319,10 +321,12 @@ TEST(pledge, inet_forbidsOtherSockets) {
     ASSERT_SYS(0, 5, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
     ASSERT_SYS(0, 6, socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP));
     ASSERT_SYS(0, 7, socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP));
+    ASSERT_SYS(0, 0, setsockopt(3, SOL_SOCKET, SO_BROADCAST, &yes, 4));
     ASSERT_SYS(EPERM, -1, socket(AF_UNIX, SOCK_STREAM, 0));
     ASSERT_SYS(EPERM, -1, socket(AF_BLUETOOTH, SOCK_DGRAM, IPPROTO_UDP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_RAW, IPPROTO_UDP));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_RAW));
+    ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
     struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
     ASSERT_SYS(0, 0, bind(4, &sin, sizeof(sin)));
     uint32_t az = sizeof(sin);

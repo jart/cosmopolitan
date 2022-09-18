@@ -660,15 +660,16 @@ static const uint16_t kPledgeUnix[] = {
 };
 
 static const uint16_t kPledgeDns[] = {
-    __NR_linux_socket | INET,      //
-    __NR_linux_bind,               //
-    __NR_linux_sendto,             //
-    __NR_linux_connect,            //
-    __NR_linux_recvfrom,           //
-    __NR_linux_fstatat,            //
-    __NR_linux_openat | READONLY,  //
-    __NR_linux_read,               //
-    __NR_linux_close,              //
+    __NR_linux_socket | INET,          //
+    __NR_linux_bind,                   //
+    __NR_linux_sendto,                 //
+    __NR_linux_connect,                //
+    __NR_linux_recvfrom,               //
+    __NR_linux_setsockopt | RESTRICT,  //
+    __NR_linux_fstatat,                //
+    __NR_linux_openat | READONLY,      //
+    __NR_linux_read,                   //
+    __NR_linux_close,                  //
 };
 
 static const uint16_t kPledgeTty[] = {
@@ -1160,7 +1161,7 @@ static privileged void AllowCloneThread(struct Filter *f) {
 //
 static privileged void AllowIoctlStdio(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 8 - 1),
+      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 7),
       /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /*L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x541b, 3, 0),
       /*L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5421, 2, 0),
@@ -1206,7 +1207,7 @@ static privileged void AllowIoctlInet(struct Filter *f) {
 //
 static privileged void AllowIoctlTty(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 16 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_ioctl, 0, 15),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5401, 11, 0),
       /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5402, 10, 0),
@@ -1232,6 +1233,7 @@ static privileged void AllowIoctlTty(struct Filter *f) {
 //   - SOL_IP     (0)
 //   - SOL_SOCKET (1)
 //   - SOL_TCP    (6)
+//   - SOL_IPV6   (41)
 //
 // The optname argument of setsockopt() must be one of:
 //
@@ -1242,6 +1244,7 @@ static privileged void AllowIoctlTty(struct Filter *f) {
 //   - SO_TYPE              (0x03)
 //   - SO_ERROR             (0x04)
 //   - SO_DONTROUTE         (0x05)
+//   - SO_BROADCAST         (0x06)
 //   - SO_REUSEPORT         (0x0f)
 //   - SO_REUSEADDR         (0x02)
 //   - SO_KEEPALIVE         (0x09)
@@ -1251,33 +1254,36 @@ static privileged void AllowIoctlTty(struct Filter *f) {
 //   - IP_RECVERR           (0x0b)
 //   - TCP_FASTOPEN         (0x17)
 //   - TCP_FASTOPEN_CONNECT (0x1e)
+//   - IPV6_V6ONLY          (0x1a)
 //
 static privileged void AllowSetsockoptRestrict(struct Filter *f) {
-  static const int nr = __NR_linux_setsockopt;
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 21 - 1),
-      /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 2, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
-      /* L4*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 20 - 5),
-      /* L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 13, 0),
-      /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 12, 0),
-      /* L7*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 11, 0),
-      /* L8*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 10, 0),
-      /* L9*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 9, 0),
-      /*L10*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 8, 0),
-      /*L11*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 7, 0),
-      /*L12*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 6, 0),
-      /*L13*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0b, 5, 0),
-      /*L14*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 4, 0),
-      /*L15*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 3, 0),
-      /*L16*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x17, 2, 0),
-      /*L17*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1e, 1, 0),
-      /*L18*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
-      /*L19*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L20*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L21*/ /* next filter */
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 24),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 41, 3, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 2, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 18),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1a, 15, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 14, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 13, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 12, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 11, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x13, 10, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x02, 9, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x09, 8, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x14, 7, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x01, 6, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0b, 5, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 4, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 3, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x17, 2, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1e, 1, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x15, 0, 1),
+      BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /* next filter */
   };
   AppendFilter(f, PLEDGE(fragment));
 }
@@ -1300,10 +1306,10 @@ static privileged void AllowSetsockoptRestrict(struct Filter *f) {
 static privileged void AllowGetsockoptRestrict(struct Filter *f) {
   static const int nr = __NR_linux_getsockopt;
   static const struct sock_filter fragment[] = {
-      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 14 - 1),
+      /* L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, nr, 0, 13),
       /* L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       /* L2*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
-      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 13 - 4),
+      /* L3*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 9),
       /* L4*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
       /* L5*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x03, 6, 0),
       /* L6*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x04, 5, 0),
