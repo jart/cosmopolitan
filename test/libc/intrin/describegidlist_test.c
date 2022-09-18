@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Gavin Arthur Hayes                                            │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/dce.h"
+#include "libc/calls/groups.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns effective user ID of calling process.
- * @return user id
- */
-uint32_t geteuid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_geteuid();
-  } else {
-    rc = getuid();
-  }
-  STRACE("%s() → %u% m", "geteuid", rc);
-  return rc;
+TEST(DescribeGidList, test) {
+  uint32_t list[] = {8, 67, 530, 9};
+  uint32_t biglist[] = {8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9,
+                     8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9,
+                     8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9};
+  EXPECT_STREQ("n/a",
+               DescribeGidList(-1, sizeof(list) / sizeof(list[0]), list));
+  EXPECT_STREQ("n/a", DescribeGidList(0, -1, list));
+  EXPECT_STREQ("{}", DescribeGidList(0, 0, list));
+  EXPECT_STREQ("NULL", DescribeGidList(0, 9001, NULL));
+  EXPECT_STREQ("{8, 67, 530, 9}",
+               DescribeGidList(0, sizeof(list) / sizeof(list[0]), list));
+  EXPECT_STREQ("{8, 67, 530}",
+               DescribeGidList(0, sizeof(list) / sizeof(list[0]) - 1, list));
+  EXPECT_STREQ(
+      "{8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9, 8, 67, "
+      "530, 9, 8, 67, 530, 9, 8, 67, 530, 9, 8, 67, 530, 9, 8, ...",
+      DescribeGidList(0, sizeof(biglist) / sizeof(biglist[0]), biglist));
 }

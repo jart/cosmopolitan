@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/popcnt.h"
+#include "libc/macros.internal.h"
+#include "libc/str/str.h"
 
-/**
- * Returns effective user ID of calling process.
- * @return user id
- */
-uint32_t geteuid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_geteuid();
-  } else {
-    rc = getuid();
+#define N 128
+
+const char *(DescribeGidList)(char buf[N], int rc, int size,
+                              const uint32_t list[]) {
+  if ((rc == -1) || (size < 0)) return "n/a";
+  if (!size) return "{}";
+  if (!list) return "NULL";
+  if ((!IsAsan() && kisdangerous(list)) ||
+      (IsAsan() && !__asan_is_valid(list, size * sizeof(list[0])))) {
+    ksnprintf(buf, N, "%p", list);
+    return buf;
   }
-  STRACE("%s() → %u% m", "geteuid", rc);
-  return rc;
+  int i = 0, n = N;
+  i += ksnprintf(buf + i, MAX(0, n - i), "{");
+  unsigned c;
+  for (c = 0; c < size && MAX(0, n - i) > 0; c++) {
+    i += ksnprintf(buf + i, MAX(0, n - i), "%u, ", list[c]);
+  }
+  if (c == size) {
+    if (buf[i - 1] == ' ') i--;
+    if (buf[i - 1] == ',') i--;
+    i += ksnprintf(buf + i, MAX(0, n - i), "}");
+  }
+  return buf;
 }

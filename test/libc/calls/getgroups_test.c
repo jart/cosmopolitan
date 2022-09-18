@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Gavin Arthur Hayes                                            │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,21 +17,31 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Returns effective user ID of calling process.
- * @return user id
- */
-uint32_t geteuid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_geteuid();
+TEST(getgroups, test) {
+  int rc;
+  uint32_t res[1000];
+  rc = getgroups(0, NULL);
+  if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
+    EXPECT_NE(-1, rc);
+    EXPECT_NE(-1, getgroups(sizeof(res) / sizeof(res[0]), res));
   } else {
-    rc = getuid();
+    EXPECT_EQ(-1, rc);
+    EXPECT_EQ(ENOSYS, errno);
   }
-  STRACE("%s() → %u% m", "geteuid", rc);
-  return rc;
+}
+
+TEST(setgroups, test) {
+  int rc;
+  uint32_t src[5];
+  EXPECT_EQ(-1, setgroups(0, NULL));
+  if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
+    EXPECT_EQ(EPERM, errno);
+    EXPECT_EQ(-1, setgroups(sizeof(src) / sizeof(src[0]), src));
+  } else {
+    EXPECT_EQ(ENOSYS, errno);
+  }
 }

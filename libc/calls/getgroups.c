@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,21 +17,29 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/strace.internal.h"
-#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Returns effective user ID of calling process.
- * @return user id
+ * Get list of supplementary group IDs
+ *
+ * @param size - maximum number of items that can be stored in list
+ * @param list - buffer to store output gid_t
+ * @return -1 w/ EFAULT
  */
-uint32_t geteuid(void) {
-  uint32_t rc;
-  if (!IsWindows()) {
-    rc = sys_geteuid();
+int getgroups(int size, uint32_t list[]) {
+  int rc;
+  if (IsAsan() && size && !__asan_is_valid(list, size * sizeof(list[0]))) {
+    rc = efault();
+  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
+    rc = sys_getgroups(size, list);
   } else {
-    rc = getuid();
+    rc = enosys();
   }
-  STRACE("%s() → %u% m", "geteuid", rc);
+  STRACE("getgroups(%d, %s) → %d% m", size, DescribeGidList(rc, rc, list), rc);
   return rc;
 }
