@@ -26,4 +26,5 @@ ORIGIN
 LOCAL CHANGES
 
   - Changed Trace() calls to use kprintf()
+  - Use X86_HAVE() for runtime dispatching
   - We use our own crc32() implementation from LIBC_STR

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_THIRD_PARTY_ZLIB_INSERT_STRING_H_
 #define COSMOPOLITAN_THIRD_PARTY_ZLIB_INSERT_STRING_H_
+#include "libc/nexgen32e/x86feature.h"
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/zutil.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -16,7 +17,7 @@ COSMOPOLITAN_C_START_
 
 // clang-format off
 #if defined(CRC32_SIMD_SSE42_PCLMUL)
-  #include <smmintrin.h>  /* Required to make MSVC bot build pass. */
+//  #include <smmintrin.h>  /* Required to make MSVC bot build pass. */
 
   #if defined(__clang__) || defined(__GNUC__)
     #define TARGET_CPU_WITH_CRC __attribute__((target("sse4.2")))
@@ -50,7 +51,6 @@ COSMOPOLITAN_C_START_
 
 #if defined(TARGET_CPU_WITH_CRC)
 
-TARGET_CPU_WITH_CRC
 local INLINE Pos insert_string_simd(deflate_state* const s, const Pos str) {
   Pos ret;
   unsigned *ip, val, h = 0;
@@ -61,7 +61,7 @@ local INLINE Pos insert_string_simd(deflate_state* const s, const Pos str) {
   if (s->level >= 6) val &= 0xFFFFFF;
 
   /* Compute hash from the CRC32C of |val|. */
-  h = _cpu_crc32c_hash_u32(h, val);
+  asm("crc32\t%1,%0" : "+r"(h) : "rm"(val));
 
   ret = s->head[h & s->hash_mask];
   s->head[h & s->hash_mask] = str;
@@ -129,7 +129,7 @@ local INLINE Pos insert_string(deflate_state* const s, const Pos str) {
  * the Rabin-Karp hash instead.
  */ /* FALLTHROUGH Rabin-Karp */
 #elif defined(TARGET_CPU_WITH_CRC) && defined(CRC32_SIMD_SSE42_PCLMUL)
-  if (x86_cpu_enable_simd) return insert_string_simd(s, str);
+  if (X86_HAVE(SSE4_2)) return insert_string_simd(s, str);
 #elif defined(TARGET_CPU_WITH_CRC) && defined(CRC32_ARMV8_CRC32)
   if (arm_cpu_enable_crc32) return insert_string_simd(s, str);
 #endif

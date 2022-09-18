@@ -108,12 +108,6 @@ forceinline pureconst bool IsArenaFrame(int x) {
   return 0x5004 <= x && x <= 0x7ffb;
 }
 
-forceinline pureconst bool IsKernelFrame(int x) {
-  intptr_t stack = GetStaticStackAddr(0);
-  return (int)(stack >> 16) <= x &&
-         x <= (int)((stack + (GetStackSize() - FRAMESIZE)) >> 16);
-}
-
 forceinline pureconst bool IsStaticStackFrame(int x) {
   intptr_t stack = GetStaticStackAddr(0);
   return (int)(stack >> 16) <= x &&

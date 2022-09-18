@@ -243,14 +243,6 @@ int ZEXPORT deflateInit2(strm, level, method, windowBits, memLevel, strategy)
     deflate_state *s;
     int wrap = 1;
 
-    // Needed to activate optimized insert_string() that helps compression
-    // for all wrapper formats (e.g. RAW, ZLIB, GZIP).
-    // Feature detection is not triggered while using RAW mode (i.e. we never
-    // call crc32() with a NULL buffer).
-#if defined(CRC32_ARMV8_CRC32) || defined(CRC32_SIMD_SSE42_PCLMUL)
-    cpu_check_features();
-#endif
-
     if (strm == Z_NULL) return Z_STREAM_ERROR;
 
     strm->msg = Z_NULL;
@@ -306,7 +298,7 @@ int ZEXPORT deflateInit2(strm, level, method, windowBits, memLevel, strategy)
     s->chromium_zlib_hash = 0;
 #if !defined(USE_ZLIB_RABIN_KARP_ROLLING_HASH)
   #if defined(TARGET_CPU_WITH_CRC) && defined(CRC32_SIMD_SSE42_PCLMUL)
-    if (x86_cpu_enable_simd)
+    if (X86_HAVE(SSE4_2))
       s->chromium_zlib_hash = 1;
   #elif defined(TARGET_CPU_WITH_CRC) && defined(CRC32_ARMV8_CRC32)
     if (arm_cpu_enable_crc32)
