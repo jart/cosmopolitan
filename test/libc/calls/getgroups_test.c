@@ -18,30 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/testlib/testlib.h"
 
 TEST(getgroups, test) {
-  int rc;
-  uint32_t res[1000];
-  rc = getgroups(0, NULL);
-  if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    EXPECT_NE(-1, rc);
-    EXPECT_NE(-1, getgroups(sizeof(res) / sizeof(res[0]), res));
-  } else {
-    EXPECT_EQ(-1, rc);
-    EXPECT_EQ(ENOSYS, errno);
-  }
-}
-
-TEST(setgroups, test) {
-  int rc;
-  uint32_t src[5];
-  EXPECT_EQ(-1, setgroups(0, NULL));
-  if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    EXPECT_EQ(EPERM, errno);
-    EXPECT_EQ(-1, setgroups(sizeof(src) / sizeof(src[0]), src));
-  } else {
-    EXPECT_EQ(ENOSYS, errno);
-  }
+  int n;
+  if (IsWindows()) return;
+  uint32_t G[500];
+  EXPECT_GT((n = getgroups(ARRAYLEN(G), G)), 0);
+  if (getuid()) return;  // this needs root
+  EXPECT_SYS(0, 0, setgroups(n, G));
 }

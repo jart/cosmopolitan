@@ -25,7 +25,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Get list of supplementary group IDs
+ * Gets list of supplementary group IDs
  *
  * @param size - maximum number of items that can be stored in list
  * @param list - buffer to store output gid_t
