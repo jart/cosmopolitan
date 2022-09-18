@@ -3413,7 +3413,7 @@ UNIX MODULE
 
     This function goes fastest on Linux and Windows.
 
-  unix.nanosleep(seconds:int, nanos:int)
+  unix.nanosleep(seconds:int[, nanos:int])
       ├─→ remseconds:int, remnanos:int
       └─→ nil, unix.Errno
 

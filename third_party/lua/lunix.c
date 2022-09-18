@@ -950,7 +950,7 @@ static int LuaUnixGettime(lua_State *L) {
   }
 }
 
-// unix.nanosleep(seconds:int, nanos:int)
+// unix.nanosleep(seconds:int[, nanos:int])
 //     ├─→ remseconds:int, remnanos:int
 //     └─→ nil, unix.Errno
 static int LuaUnixNanosleep(lua_State *L) {
