@@ -151,8 +151,8 @@ scall	sys_getpgid		0x0cf0cf0cf2097079	globl hidden
 scall	sys_setpgid		0x052052052205206d	globl hidden
 scall	sys_geteuid		0x019019019201906b	globl hidden
 scall	sys_getegid		0x02b02b02b202b06c	globl hidden
-scall	sys_getgroups		0x04f04f04f204f073	globl # no wrapper
-scall	sys_setgroups		0x0500500502050074	globl # no wrapper
+scall	sys_getgroups		0x04f04f04f204f073	globl hidden
+scall	sys_setgroups		0x0500500502050074	globl hidden
 scall	sys_setreuid		0x07e07e07e207e071	globl hidden
 scall	sys_setregid		0x07f07f07f207f072	globl hidden
 scall	sys_setuid		0x0170170172017069	globl hidden

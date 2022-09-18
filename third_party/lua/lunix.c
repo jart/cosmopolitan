@@ -325,6 +325,10 @@ static dontinline int LuaUnixGetid(lua_State *L, int f(void)) {
   return ReturnInteger(L, f());
 }
 
+static dontinline int LuaUnixGetUnsignedid(lua_State *L, unsigned f(void)) {
+  return ReturnInteger(L, f());
+}
+
 // unix.getpid()
 //     └─→ pid:int
 static int LuaUnixGetpid(lua_State *L) {
@@ -340,25 +344,25 @@ static int LuaUnixGetppid(lua_State *L) {
 // unix.getuid()
 //     └─→ uid:int
 static int LuaUnixGetuid(lua_State *L) {
-  return LuaUnixGetid(L, getuid);
+  return LuaUnixGetUnsignedid(L, getuid);
 }
 
 // unix.getgid()
 //     └─→ gid:int
 static int LuaUnixGetgid(lua_State *L) {
-  return LuaUnixGetid(L, getgid);
+  return LuaUnixGetUnsignedid(L, getgid);
 }
 
 // unix.geteuid()
 //     └─→ uid:int
 static int LuaUnixGeteuid(lua_State *L) {
-  return LuaUnixGetid(L, geteuid);
+  return LuaUnixGetUnsignedid(L, geteuid);
 }
 
 // unix.getegid()
 //     └─→ gid:int
 static int LuaUnixGetegid(lua_State *L) {
-  return LuaUnixGetid(L, getegid);
+  return LuaUnixGetUnsignedid(L, getegid);
 }
 
 // unix.umask(newmask:int)

@@ -84,7 +84,6 @@ int mprotect(void *, uint64_t, int) privileged;
 int msync(void *, size_t, int);
 void *sbrk(intptr_t);
 int brk(void *);
-int getgroups(int, uint32_t[]);
 long gethostid(void);
 int sethostid(long);
 char *getlogin(void);
