@@ -606,6 +606,36 @@ static void TtyCsiN(struct Tty *tty) {
 }
 
 /**
+ * Map the given ECMA-48 / VT100 SGR color code to a color code for a VGA
+ * character attribute.  More precisely, map
+ *
+ *       red──┐
+ *     green─┐│
+ *      blue┐││
+ * intensity│││
+ *         ││││
+ *         3210
+ *
+ * to
+ *
+ *      blue──┐
+ *     green─┐│
+ *       red┐││
+ * intensity│││
+ *         ││││
+ *         3210
+ */
+static uint8_t TtyMapEcma48Color(uint8_t color)
+{
+  switch (color & 0b101) {
+    case 0b100:
+    case 0b001:
+      color ^= 0b101;
+  }
+  return color;
+}
+
+/**
  * Map the given (R, G, B) triplet to one of the 16 basic foreground colors
  * or one of the 16 background colors.
  *
@@ -765,7 +795,7 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
                 code[0] += 8;
                 /* fallthrough */
               case 30 ... 37:
-                tty->fg = code[0] - 30;
+                tty->fg = TtyMapEcma48Color(code[0] - 30);
                 tty->pr |= kTtyFg;
                 tty->pr &= ~kTtyTrue;
                 break;
@@ -774,7 +804,7 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
                 code[0] += 8;
                 /* fallthrough */
               case 40 ... 47:
-                tty->bg = code[0] - 40;
+                tty->bg = TtyMapEcma48Color(code[0] - 40);
                 tty->pr |= kTtyBg;
                 tty->pr &= ~kTtyTrue;
                 break;
