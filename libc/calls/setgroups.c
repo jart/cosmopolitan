@@ -25,10 +25,16 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Set list of supplementary group IDs
+ * Sets list of supplementary group IDs.
  *
- * @param size - number of items in list
- * @param list - input set of gid_t to set
+ * On recent versions of Linux only, it's possible to say:
+ *
+ *     setgroups(0, NULL);
+ *
+ * Which will cause subsequent calls to `EPERM`.
+ *
+ * @param size number of items in list
+ * @param list input set of gid_t to set
  * @return -1 w/ EFAULT
  */
 int setgroups(size_t size, const uint32_t list[]) {
