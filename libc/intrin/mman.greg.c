@@ -128,7 +128,26 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   }
 }
 
+/**
+ * Exports information about the offset of a field within a structure type,
+ * so that assembly language routines can use it.  This macro can be invoked
+ * from inside a function whose code is known to be emitted.
+ */
+#define export_offsetof(type, member)                       \
+    do {                                                    \
+      asm volatile(".globl \"" #type "::" #member "\"\n\t"  \
+                   ".set \"" #type "::" #member "\",%c0"    \
+                   : /* no outputs */                       \
+                   : "i" (offsetof(type, member)));         \
+    } while (0)
+
 noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
+  export_offsetof(struct mman, pc_drive_base_table);
+  export_offsetof(struct mman, pc_drive_last_sector);
+  export_offsetof(struct mman, pc_drive_last_head);
+  export_offsetof(struct mman, e820);
+  export_offsetof(struct mman, e820_end);
+  export_offsetof(struct mman, bad_idt);
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }
