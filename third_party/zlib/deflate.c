@@ -6,6 +6,7 @@
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/insert_string.internal.h"
 #include "third_party/zlib/internal.h"
+#include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
 inflate 1.2.12.1 (zlib License)\\n\
@@ -1521,18 +1522,18 @@ local void check_match(s, start, match, length)
     int length;
 {
     /* check that the match is indeed a match */
-    if (zmemcmp(s->window + match,
-                s->window + start, length) != EQUAL) {
-        fprintf(stderr, " start %u, match %u, length %d\n",
+    if (memcmp(s->window + match,
+               s->window + start, length) != EQUAL) {
+        kprintf(" start %u, match %u, length %d\n",
                 start, match, length);
         do {
-            fprintf(stderr, "%c%c", s->window[match++], s->window[start++]);
+            kprintf("%c%c", s->window[match++], s->window[start++]);
         } while (--length != 0);
-        z_error("invalid match");
+        z_error(__FILE__, __LINE__, "invalid match");
     }
     if (z_verbose > 1) {
-        fprintf(stderr,"\\[%d,%d]", start-match, length);
-        do { putc(s->window[start++], stderr); } while (--length != 0);
+        kprintf("\\[%d,%d]", start-match, length);
+        do { kprintf("%c", s->window[start++]); } while (--length != 0);
     }
 }
 #else
@@ -1696,7 +1697,7 @@ local void fill_window(s)
                 (last)); \
    s->block_start = s->strstart; \
    flush_pending(s->strm); \
-   Tracev((stderr,"[FLUSH]")); \
+   Tracev(("[FLUSH]")); \
 }
 
 /* Same but force premature exit if necessary. */
@@ -1995,7 +1996,7 @@ local block_state deflate_fast(s, flush)
             }
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window[s->strstart]));
+            Tracevv(("%c", s->window[s->strstart]));
             _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
@@ -2116,7 +2117,7 @@ local block_state deflate_slow(s, flush)
              * single literal. If there was a match but the current match
              * is longer, truncate the previous match to a single literal.
              */
-            Tracevv((stderr,"%c", s->window[s->strstart-1]));
+            Tracevv(("%c", s->window[s->strstart-1]));
             _tr_tally_lit(s, s->window[s->strstart-1], bflush);
             if (bflush) {
                 FLUSH_BLOCK_ONLY(s, 0);
@@ -2135,7 +2136,7 @@ local block_state deflate_slow(s, flush)
     }
     Assert (flush != Z_NO_FLUSH, "no flush?");
     if (s->match_available) {
-        Tracevv((stderr,"%c", s->window[s->strstart-1]));
+        Tracevv(("%c", s->window[s->strstart-1]));
         _tr_tally_lit(s, s->window[s->strstart-1], bflush);
         s->match_available = 0;
     }
@@ -2207,7 +2208,7 @@ local block_state deflate_rle(s, flush)
             s->match_length = 0;
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window[s->strstart]));
+            Tracevv(("%c", s->window[s->strstart]));
             _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
@@ -2247,7 +2248,7 @@ local block_state deflate_huff(s, flush)
 
         /* Output a literal byte */
         s->match_length = 0;
-        Tracevv((stderr,"%c", s->window[s->strstart]));
+        Tracevv(("%c", s->window[s->strstart]));
         _tr_tally_lit (s, s->window[s->strstart], bflush);
         s->lookahead--;
         s->strstart++;
