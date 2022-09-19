@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/limits.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
 
@@ -64,14 +65,20 @@ TEST(_timespec_frommicros, test) {
 
 TEST(_timespec_tomillis, test) {
   EXPECT_EQ(2123, _timespec_tomillis((struct timespec){2, 123000000}));
+  EXPECT_EQ(INT64_MAX, _timespec_tomillis((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, _timespec_tomillis((struct timespec){INT64_MIN, 0}));
 }
 
 TEST(_timespec_tomicros, test) {
   EXPECT_EQ(2000123, _timespec_tomicros((struct timespec){2, 123000}));
+  EXPECT_EQ(INT64_MAX, _timespec_tomicros((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, _timespec_tomicros((struct timespec){INT64_MIN, 0}));
 }
 
 TEST(_timespec_tonanos, test) {
   EXPECT_EQ(2000123000, _timespec_tonanos((struct timespec){2, 123000}));
+  EXPECT_EQ(INT64_MAX, _timespec_tonanos((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, _timespec_tonanos((struct timespec){INT64_MIN, 0}));
 }
 
 static long mod(long x, long y) {

@@ -27,6 +27,8 @@ int64_t _timespec_tomillis(struct timespec x) {
   if (!__builtin_mul_overflow(x.tv_sec, 1000ul, &ms) &&
       !__builtin_add_overflow(ms, x.tv_nsec / 1000000, &ms)) {
     return ms;
+  } else if (x.tv_sec < 0) {
+    return INT64_MIN;
   } else {
     return INT64_MAX;
   }

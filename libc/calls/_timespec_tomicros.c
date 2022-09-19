@@ -27,6 +27,8 @@ int64_t _timespec_tomicros(struct timespec x) {
   if (!__builtin_mul_overflow(x.tv_sec, 1000000ul, &us) &&
       !__builtin_add_overflow(us, x.tv_nsec / 1000, &us)) {
     return us;
+  } else if (x.tv_sec < 0) {
+    return INT64_MIN;
   } else {
     return INT64_MAX;
   }

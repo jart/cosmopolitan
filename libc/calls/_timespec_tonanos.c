@@ -27,6 +27,8 @@ int64_t _timespec_tonanos(struct timespec x) {
   if (!__builtin_mul_overflow(x.tv_sec, 1000000000ul, &ns) &&
       !__builtin_add_overflow(ns, x.tv_nsec, &ns)) {
     return ns;
+  } else if (x.tv_sec < 0) {
+    return INT64_MIN;
   } else {
     return INT64_MAX;
   }

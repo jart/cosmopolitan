@@ -19,13 +19,9 @@
 #include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/sysv/consts/nr.h"
-#include "libc/time/time.h"
 
 struct timespec _timespec_mono(void) {
-  int ax, dx;
   struct timespec ts;
-  ax = clock_gettime(CLOCK_MONOTONIC_FAST, &ts);
-  assert(!ax);
+  _npassert(!clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
   return ts;
 }
