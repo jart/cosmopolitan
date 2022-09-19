@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfd.internal.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/itimerval.h"
@@ -755,14 +755,14 @@ bool MovePreservingDestinationInode(const char *from, const char *to) {
     rc = copy_file_range(fdin, 0, fdout, 0, remain, 0);
     if (rc != -1) {
       remain -= rc;
-    } else if (errno == EXDEV) {
+    } else if (errno == EXDEV || errno == ENOSYS) {
       if (lseek(fdin, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek after exdev\n", from);
+        kprintf("%s: failed to lseek\n", from);
         res = false;
         break;
       }
       if (lseek(fdout, 0, SEEK_SET) == -1) {
-        kprintf("%s: failed to lseek after exdev\n", to);
+        kprintf("%s: failed to lseek\n", to);
         res = false;
         break;
       }

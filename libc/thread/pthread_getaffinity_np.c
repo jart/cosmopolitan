@@ -31,8 +31,8 @@
  * @return 0 on success, or errno on error
  * @raise ENOSYS if not Linux or Windows
  */
-int pthread_getaffinity_np(pthread_t thread, size_t bitsetsize,
-                           cpu_set_t *bitset) {
+errno_t pthread_getaffinity_np(pthread_t thread, size_t bitsetsize,
+                               cpu_set_t *bitset) {
   int rc, e = errno;
   struct PosixThread *pt = (struct PosixThread *)thread;
   if (!sched_getaffinity(pt->tid, bitsetsize, bitset)) {

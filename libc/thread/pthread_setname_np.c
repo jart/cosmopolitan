@@ -51,7 +51,7 @@
  * @raise ENOSYS on MacOS, Windows, and OpenBSD
  * @see pthread_getname_np()
  */
-int pthread_setname_np(pthread_t thread, const char *name) {
+errno_t pthread_setname_np(pthread_t thread, const char *name) {
   char path[128], *p;
   int e, fd, rc, tid, len;
 

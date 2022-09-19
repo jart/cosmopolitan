@@ -16,8 +16,52 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-nt.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
-int(posix_fadvise)(int fd, uint64_t offset, uint64_t len, int advice) {
-  return fadvise(fd, offset, len, advice);
+int sys_fadvise_netbsd(int, int, int64_t, int64_t, int) asm("sys_fadvise");
+
+/**
+ * Drops hints to O/S about intended I/O behavior.
+ *
+ * It makes a huge difference. For example, when copying a large file,
+ * it can stop the system from persisting GBs of useless memory content.
+ *
+ * @param len 0 means until end of file
+ * @param advice can be POSIX_FADV_SEQUENTIAL, POSIX_FADV_RANDOM, etc.
+ * @return 0 on success, or errno on error
+ * @raise EBADF if `fd` isn't a valid file descriptor
+ * @raise EINVAL if `advice` is invalid or `len` is huge
+ * @raise ESPIPE if `fd` refers to a pipe
+ * @raise ENOSYS on XNU and OpenBSD
+ */
+errno_t posix_fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
+  int rc, e = errno;
+  if (IsLinux()) {
+    rc = sys_fadvise(fd, offset, len, advice);
+  } else if (IsFreebsd()) {
+    rc = sys_fadvise(fd, offset, len, advice);
+    _unassert(rc >= 0);
+  } else if (IsNetbsd()) {
+    rc = sys_fadvise_netbsd(fd, offset, offset, len, advice);
+    _unassert(rc >= 0);
+  } else if (IsWindows()) {
+    rc = sys_fadvise_nt(fd, offset, len, advice);
+  } else {
+    rc = enosys();
+  }
+  if (rc == -1) {
+    rc = errno;
+    errno = e;
+  }
+  STRACE("posix_fadvise(%d, %'lu, %'lu, %d) → %s", fd, offset, len, advice,
+         !rc ? "0" : _strerrno(rc));
+  return rc;
 }

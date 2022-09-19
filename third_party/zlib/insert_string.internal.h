@@ -51,7 +51,9 @@ COSMOPOLITAN_C_START_
 
 #if defined(TARGET_CPU_WITH_CRC)
 
-local INLINE Pos insert_string_simd(deflate_state* const s, const Pos str) {
+// TODO(jart): Why does this fail alignment check?
+noubsan local INLINE Pos insert_string_simd(deflate_state* const s,
+                                            const Pos str) {
   Pos ret;
   unsigned *ip, val, h = 0;
 

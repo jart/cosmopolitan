@@ -62,8 +62,8 @@
  * @raise EINVAL if parameters were unacceptable
  * @see pthread_attr_setstacksize()
  */
-int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
-                          size_t stacksize) {
+errno_t pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
+                              size_t stacksize) {
   if (!stackaddr) {
     attr->stackaddr = 0;
     attr->stacksize = 0;

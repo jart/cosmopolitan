@@ -20,8 +20,10 @@ void *__vdsosym(const char *, const char *) hidden;
 void __onfork(void) hidden;
 void __restore_rt() hidden;
 void __restore_rt_netbsd(void) hidden;
-void cosmo2flock(uintptr_t);
-void flock2cosmo(uintptr_t);
+void cosmo2flock(uintptr_t) hidden;
+void flock2cosmo(uintptr_t) hidden;
+int _ptsname(int, char *, size_t) hidden;
+int _isptmaster(int) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

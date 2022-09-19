@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
@@ -26,7 +27,6 @@
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
 #include "libc/mem/gc.h"
-#include "libc/calls/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"

@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/errno.h"
-#include "libc/limits.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Closes inclusive range of file descriptors, e.g.
@@ -32,33 +32,27 @@
  *       }
  *     }
  *
- * This is supported on Linux 5.9+, FreeBSD, and OpenBSD. On FreeBSD,
- * `flags` must be zero. On OpenBSD, we call closefrom(int) so `last`
- * should be `-1` in order to get OpenBSD support, otherwise `ENOSYS`
- * will be returned. We also polyfill closefrom on FreeBSD since it's
- * available on older kernels.
+ * The following flags are available:
  *
- * On Linux, the following flags are supported:
+ * - `CLOSE_RANGE_UNSHARE` (Linux-only)
+ * - `CLOSE_RANGE_CLOEXEC` (Linux-only)
  *
- * - CLOSE_RANGE_UNSHARE
- * - CLOSE_RANGE_CLOEXEC
+ * This is only supported on Linux 5.9+ and FreeBSD 13+. Consider using
+ * closefrom() which will work on OpenBSD too.
  *
  * @return 0 on success, or -1 w/ errno
- * @error ENOSYS if not Linux 5.9+ / FreeBSD / OpenBSD
- * @error EBADF on OpenBSD if `first` is greater than highest fd
  * @error EINVAL if flags are bad or first is greater than last
  * @error EMFILE if a weird race condition happens on Linux
- * @error EINTR possibly on OpenBSD
+ * @error ENOSYS if not Linux 5.9+ or FreeBSD 13+
  * @error ENOMEM on Linux maybe
+ * @see closefrom()
  */
 int close_range(unsigned int first, unsigned int last, unsigned int flags) {
-  int rc, err;
-  err = errno;
-  if ((rc = sys_close_range(first, last, flags)) == -1) {
-    if (errno == ENOSYS && first <= INT_MAX && last == UINT_MAX && !flags) {
-      errno = err;
-      rc = sys_closefrom(first);
-    }
+  int rc;
+  if (IsLinux() || IsFreebsd()) {
+    rc = sys_close_range(first, last, flags);
+  } else {
+    rc = enosys();
   }
   STRACE("close_range(%d, %d, %#x) → %d% m", first, last, flags, rc);
   return rc;

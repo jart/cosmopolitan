@@ -39,7 +39,9 @@
  */
 int setgroups(size_t size, const uint32_t list[]) {
   int rc;
-  if (IsAsan() && size && !__asan_is_valid(list, size * sizeof(list[0]))) {
+  size_t n;
+  if (IsAsan() && (__builtin_mul_overflow(size, sizeof(list[0]), &n) ||
+                   !__asan_is_valid(list, n))) {
     rc = efault();
   } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
     rc = sys_setgroups(size, list);

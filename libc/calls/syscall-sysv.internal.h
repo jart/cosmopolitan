@@ -53,9 +53,9 @@ i32 sys_getpgid(i32) hidden;
 i32 sys_getpgrp(void) hidden;
 i32 sys_getppid(void) hidden;
 i32 sys_getpriority(i32, u32) hidden;
-i32 sys_getresgid(u32 *, u32 *, u32 *);
-i32 sys_getresuid(u32 *, u32 *, u32 *);
-i32 sys_getsid(int) hidden;
+i32 sys_getresgid(u32 *, u32 *, u32 *) hidden;
+i32 sys_getresuid(u32 *, u32 *, u32 *) hidden;
+i32 sys_getsid(i32) hidden;
 i32 sys_gettid(void) hidden;
 i32 sys_ioctl(i32, u64, ...) hidden;
 i32 sys_issetugid(void) hidden;
@@ -112,11 +112,10 @@ i64 sys_pread(i32, void *, u64, i64, i64) hidden;
 i64 sys_pwrite(i32, const void *, u64, i64, i64) hidden;
 i64 sys_read(i32, void *, u64) hidden;
 i64 sys_readlink(const char *, char *, u64) hidden;
-i64 sys_readlinkat(int, const char *, char *, u64) hidden;
+i64 sys_readlinkat(i32, const char *, char *, u64) hidden;
 i64 sys_sendfile(i32, i32, i64 *, u64) hidden;
 i64 sys_splice(i32, i64 *, i32, i64 *, u64, u32) hidden;
 i64 sys_write(i32, const void *, u64) hidden;
-int _isptmaster(int);
 u32 sys_getegid(void) hidden;
 u32 sys_geteuid(void) hidden;
 u32 sys_getgid(void) hidden;
@@ -124,7 +123,7 @@ u32 sys_getuid(void) hidden;
 u32 sys_umask(u32) hidden;
 void *__sys_mmap(void *, u64, u32, u32, i64, i64, i64) hidden;
 void *sys_mremap(void *, u64, u64, i32, void *) hidden;
-void sys_exit(int) hidden;
+void sys_exit(i32) hidden;
 
 #undef i32
 #undef i64

@@ -184,8 +184,8 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
  *     isn't authorized to use it
  * @threadsafe
  */
-int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-                   void *(*start_routine)(void *), void *arg) {
+errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                       void *(*start_routine)(void *), void *arg) {
   int rc, e = errno;
   struct PosixThread *pt;
   __require_tls();

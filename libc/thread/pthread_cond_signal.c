@@ -36,7 +36,7 @@
  * @see pthread_cond_broadcast
  * @see pthread_cond_wait
  */
-int pthread_cond_signal(pthread_cond_t *cond) {
+errno_t pthread_cond_signal(pthread_cond_t *cond) {
   nsync_cv_signal((nsync_cv *)cond);
   return 0;
 }

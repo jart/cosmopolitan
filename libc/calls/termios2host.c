@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/groups.internal.h"
+#include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sysv/errfuns.h"
 
-/**
- * Gets list of supplementary group IDs
- *
- * @param size - maximum number of items that can be stored in list
- * @param list - buffer to store output gid_t
- * @return -1 w/ EFAULT
- */
-int getgroups(int size, uint32_t list[]) {
-  int rc;
-  size_t n;
-  if (IsAsan() && (__builtin_mul_overflow(size, sizeof(list[0]), &n) ||
-                   !__asan_is_valid(list, n))) {
-    rc = efault();
-  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    rc = sys_getgroups(size, list);
+void *__termios2host(union metatermios *mt, const struct termios *lt) {
+  if (!IsXnu() && !IsFreebsd() && !IsOpenbsd() && !IsNetbsd()) {
+    return (/*unconst*/ void *)lt;
+  } else if (IsXnu()) {
+    COPY_TERMIOS(&mt->xnu, lt);
+    return &mt->xnu;
   } else {
-    rc = enosys();
+    COPY_TERMIOS(&mt->bsd, lt);
+    return &mt->bsd;
   }
-  STRACE("getgroups(%d, %s) → %d% m", size, DescribeGidList(rc, rc, list), rc);
-  return rc;
 }

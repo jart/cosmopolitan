@@ -249,7 +249,7 @@ scall	sys_getdents		0x18606311020c40d9	globl hidden # use opendir/readdir; four 
 scall	sys_set_tid_address	0xfffffffffffff0da	globl # no wrapper
 scall	sys_restart_syscall	0xfffffffffffff0db	globl # no wrapper
 scall	sys_semtimedop		0xfffffffffffff0dc	globl # no wrapper
-scall	sys_fadvise		0xffffff213ffff0dd	globl hidden
+scall	sys_fadvise		0x1a0fff213ffff0dd	globl hidden
 scall	sys_timer_create	0x0ebffffffffff0de	globl # no wrapper
 scall	sys_timer_settime	0x1beffffffffff0df	globl # no wrapper
 scall	sys_timer_gettime	0x1bfffffffffff0e0	globl # no wrapper
@@ -383,7 +383,7 @@ scall	sys_fsmount		0xfffffffffffff1b0	globl # no wrapper
 scall	sys_fspick		0xfffffffffffff1b1	globl # no wrapper
 scall	sys_pidfd_open		0xfffffffffffff1b2	globl # no wrapper
 scall	sys_clone3		0xfffffffffffff1b3	globl # no wrapper
-scall	sys_close_range		0xffffff23fffff1b4	globl hidden # linux 5.9
+scall	sys_close_range		0xffffff23fffff1b4	globl hidden # Linux 5.9
 scall	sys_openat2		0xfffffffffffff1b5	globl hidden # Linux 5.6
 scall	sys_pidfd_getfd		0xfffffffffffff1b6	globl # no wrapper
 scall	sys_faccessat2		0xfffffffffffff1b7	globl hidden

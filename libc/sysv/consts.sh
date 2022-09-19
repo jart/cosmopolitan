@@ -1410,8 +1410,9 @@ syscon	termios	TIOCSTSTAMP				0			0			0			0x8008745a		0x8008745a		0			# boop
 syscon	termios	ENDRUNDISC				0			0			0			0x9			0x9			0			# boop
 syscon	termios	TIOCPTMASTER				0			0			0x2000741c		0			0			0			# boop
 syscon	termios	TIOCPTYGRANT				0			0x20007454		0			0			0			0			# xnu grantpt()
-syscon	termios	TIOCPTYUNLK				0			0x20007452		0			0			0			0			# xnu grantpt()
-syscon	termios	TIOCPTYGNAME				0			0x40807453		0			0			0			0			# xnu grantpt()
+syscon	termios	TIOCPTYUNLK				0			0x20007452		0			0			0			0			# xnu unlockpt()
+syscon	termios	TIOCPTYGNAME				0			0x40807453		0			0			0			0			# xnu ptyname()
+syscon	termios	TIOCPTSNAME				0			0			0			0			0x48087448		0			# netbsd ptyname()
 syscon	termios	FIODGNAME				0			0			0x80106678		0			0			0			# freebsd ptsname_r()
 syscon	termios	NETGRAPHDISC				0			0			0x6			0			0			0			# boop
 syscon	termios	H4DISC					0			0			0x7			0			0			0			# boop

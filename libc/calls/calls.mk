@@ -97,6 +97,7 @@ o/$(MODE)/libc/calls/ntcontext2linux.o: private		\
 
 # we always want -O3 because:
 #   it makes the code size smaller too
+o/$(MODE)/libc/calls/termios2host.o			\
 o/$(MODE)/libc/calls/sigenter-freebsd.o			\
 o/$(MODE)/libc/calls/sigenter-netbsd.o			\
 o/$(MODE)/libc/calls/sigenter-openbsd.o			\

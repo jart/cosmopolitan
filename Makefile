@@ -94,7 +94,7 @@ o/$(MODE):			\
 	libc/disclaimer.inc	\
 	rx:build/bootstrap	\
 	rx:o/third_party/gcc	\
-	/proc/self/status	\
+	/proc/stat		\
 	rw:/dev/null		\
 	w:o/stack.log		\
 	/etc/hosts		\

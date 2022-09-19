@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
 #include "libc/runtime/stack.h"
+#include "libc/thread/thread.h"
 
 /**
  * Initializes pthread attributes.
  *
  * @return 0 on success, or errno on error
  */
-int pthread_attr_init(pthread_attr_t *attr) {
+errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){
       .stacksize = GetStackSize(),
       .guardsize = PAGESIZE,

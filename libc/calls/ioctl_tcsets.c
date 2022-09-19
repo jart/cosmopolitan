@@ -29,25 +29,12 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-void __on_ioctl_tcsets(void);
+void __on_ioctl_tcsets(int);
 int ioctl_tcsets_nt(int, uint64_t, const struct termios *);
 
 static int ioctl_tcsets_metal(int fd, uint64_t request,
                               const struct termios *tio) {
   return 0;
-}
-
-static inline void *__termios2host(union metatermios *mt,
-                                   const struct termios *lt) {
-  if (!IsXnu() && !IsFreebsd() && !IsOpenbsd() && !IsNetbsd()) {
-    return (/*unconst*/ void *)lt;
-  } else if (IsXnu()) {
-    COPY_TERMIOS(&mt->xnu, lt);
-    return &mt->xnu;
-  } else {
-    COPY_TERMIOS(&mt->bsd, lt);
-    return &mt->bsd;
-  }
 }
 
 static int ioctl_tcsets_sysv(int fd, uint64_t request,
@@ -72,9 +59,9 @@ int ioctl_tcsets(int fd, uint64_t request, ...) {
   va_start(va, request);
   tio = va_arg(va, const struct termios *);
   va_end(va);
-  if (_weaken(__on_ioctl_tcsets)) {
+  if (0 <= fd && fd <= 2 && _weaken(__on_ioctl_tcsets)) {
     if (!once) {
-      _weaken(__on_ioctl_tcsets)();
+      _weaken(__on_ioctl_tcsets)(fd);
       once = true;
     }
   }

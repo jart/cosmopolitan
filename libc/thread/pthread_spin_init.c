@@ -27,6 +27,6 @@
  * @see pthread_spin_destroy
  * @see pthread_spin_lock
  */
-int(pthread_spin_init)(pthread_spinlock_t *spin, int pshared) {
+errno_t(pthread_spin_init)(pthread_spinlock_t *spin, int pshared) {
   return pthread_spin_init(spin, pshared);
 }

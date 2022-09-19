@@ -20,6 +20,7 @@
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
@@ -35,7 +36,7 @@ int posix_openpt(int flags) {
   int rc;
   if ((flags & O_ACCMODE) != O_RDWR) {
     rc = einval();
-  } else if (IsLinux() || IsXnu()) {
+  } else if (IsLinux() || IsXnu() || IsNetbsd()) {
     rc = sys_open("/dev/ptmx", flags, 0);
   } else if (IsOpenbsd()) {
     rc = sys_open("/dev/ptm", flags, 0);
@@ -45,6 +46,6 @@ int posix_openpt(int flags) {
   } else {
     rc = enosys();
   }
-  STRACE("posix_openpt(%#o) → %d% m", flags, rc);
+  STRACE("posix_openpt(%s) → %d% m", DescribeOpenFlags(flags), rc);
   return rc;
 }

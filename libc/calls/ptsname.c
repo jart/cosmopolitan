@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/errno.h"
 #include "libc/intrin/strace.internal.h"
 
-static char g_ptsname[256];
+static char g_ptsname[16];
 
 /**
  * Gets name subordinate pseudoteletypewriter.
@@ -29,13 +30,11 @@ static char g_ptsname[256];
  */
 char *ptsname(int fd) {
   char *res;
-  errno_t e;
-  if (!(e = ptsname_r(fd, g_ptsname, sizeof(g_ptsname)))) {
+  if (!_ptsname(fd, g_ptsname, sizeof(g_ptsname))) {
     res = g_ptsname;
   } else {
-    errno = e;
     res = 0;
   }
-  STRACE("ptsname(%d) → %s% m", fd, res);
+  STRACE("ptsname(%d) → %#s% m", fd, res);
   return res;
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/groups.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
+#include "libc/errno.h"
+#include "libc/fmt/itoa.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sysv/errfuns.h"
 
-/**
- * Gets list of supplementary group IDs
- *
- * @param size - maximum number of items that can be stored in list
- * @param list - buffer to store output gid_t
- * @return -1 w/ EFAULT
- */
-int getgroups(int size, uint32_t list[]) {
-  int rc;
-  size_t n;
-  if (IsAsan() && (__builtin_mul_overflow(size, sizeof(list[0]), &n) ||
-                   !__asan_is_valid(list, n))) {
-    rc = efault();
-  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    rc = sys_getgroups(size, list);
+const char *(DescribeInOutInt64)(char buf[23], ssize_t rc, int64_t *x) {
+  if (!x) return "NULL";
+  char *p = buf;
+  if (rc != -1) *p++ = '[';
+  if (rc == -1 && errno == EFAULT) {
+    *p++ = '!';
+    *p++ = '!';
+    *p++ = '!';
   } else {
-    rc = enosys();
+    p = FormatInt64(p, *x);
   }
-  STRACE("getgroups(%d, %s) → %d% m", size, DescribeGidList(rc, rc, list), rc);
-  return rc;
+  if (rc != -1) *p++ = ']';
+  *p = 0;
+  return buf;
 }

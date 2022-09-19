@@ -27,6 +27,6 @@
  * @return 0 on success, or errno on error
  * @raise EBUSY if lock is already held
  */
-int(pthread_spin_trylock)(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_trylock)(pthread_spinlock_t *spin) {
   return pthread_spin_trylock(spin);
 }

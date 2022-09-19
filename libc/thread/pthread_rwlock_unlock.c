@@ -25,7 +25,7 @@
  * @return 0 on success, or errno on error
  * @raise EINVAL if lock is in a bad state
  */
-int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
+errno_t pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
   if (rwlock->_iswrite) {
     rwlock->_iswrite = 0;
     nsync_mu_unlock((nsync_mu *)rwlock);

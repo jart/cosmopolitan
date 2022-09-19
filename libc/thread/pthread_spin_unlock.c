@@ -24,6 +24,6 @@
  * @return 0 on success, or errno on error
  * @see pthread_spin_lock
  */
-int(pthread_spin_unlock)(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_unlock)(pthread_spinlock_t *spin) {
   return pthread_spin_unlock(spin);
 }

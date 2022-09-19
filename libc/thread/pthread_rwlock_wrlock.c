@@ -24,7 +24,7 @@
  *
  * @return 0 on success, or errno on error
  */
-int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
+errno_t pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
   nsync_mu_lock((nsync_mu *)rwlock);
   rwlock->_iswrite = 1;
   return 0;

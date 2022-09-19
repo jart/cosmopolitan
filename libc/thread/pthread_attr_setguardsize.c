@@ -24,7 +24,7 @@
  * @param guardsize contains guard size in bytes
  * @return 0 on success, or errno on error
  */
-int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
+errno_t pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
   attr->guardsize = guardsize;
   return 0;
 }

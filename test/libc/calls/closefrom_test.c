@@ -21,6 +21,7 @@
 #include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
 void SetUp(void) {
@@ -32,6 +33,10 @@ void SetUp(void) {
       exit(0);
     }
   }
+}
+
+TEST(closefrom, ebadf) {
+  ASSERT_SYS(EBADF, -1, closefrom(-2));
 }
 
 TEST(closefrom, test) {
@@ -48,14 +53,23 @@ TEST(closefrom, test) {
 }
 
 TEST(close_range, test) {
-  ASSERT_SYS(0, 3, dup(2));
-  ASSERT_SYS(0, 4, dup(2));
-  ASSERT_SYS(0, 5, dup(2));
-  ASSERT_SYS(0, 6, dup(2));
-  EXPECT_SYS(0, 0, close_range(3, -1, 0));
-  ASSERT_SYS(0, 0, fcntl(2, F_GETFD));
-  ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFD));
-  ASSERT_SYS(EBADF, -1, fcntl(4, F_GETFD));
-  ASSERT_SYS(EBADF, -1, fcntl(5, F_GETFD));
-  ASSERT_SYS(EBADF, -1, fcntl(6, F_GETFD));
+  if (IsLinux() || IsFreebsd()) {
+    ASSERT_SYS(0, 3, dup(2));
+    ASSERT_SYS(0, 4, dup(2));
+    ASSERT_SYS(0, 5, dup(2));
+    ASSERT_SYS(0, 6, dup(2));
+    EXPECT_SYS(0, 0, close_range(3, -1, 0));
+    ASSERT_SYS(0, 0, fcntl(2, F_GETFD));
+    ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFD));
+    ASSERT_SYS(EBADF, -1, fcntl(4, F_GETFD));
+    ASSERT_SYS(EBADF, -1, fcntl(5, F_GETFD));
+    ASSERT_SYS(EBADF, -1, fcntl(6, F_GETFD));
+  } else {
+    EXPECT_SYS(ENOSYS, -1, close_range(3, -1, 0));
+  }
+}
+
+TEST(close_range, ignoresNonexistantRanges) {
+  if (!IsLinux() && !IsFreebsd()) return;
+  EXPECT_SYS(0, 0, close_range(-2, -1, 0));
 }

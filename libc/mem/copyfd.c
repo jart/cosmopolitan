@@ -25,17 +25,6 @@
 /**
  * Copies data between fds the old fashioned way.
  *
- * Even though Cosmopolitan polyfills copy_file_range() to fallback to
- * doing this, it's useful to call this function in cases where you know
- * it'd be more helpful to get the larger buffer size with read/write.
- *
- * Reads are allowed to be interrupted. Writes are uninterruptible. If
- * we get an interrupt when partial data was written, we return the
- * partial amount. Therefore the file descriptors are guaranteed to
- * remain in a consistent state, provided EINTR is the only error.
- *
- * If n is 0 then 0 is returned and no i/o operations are performed.
- *
  * @return bytes successfully exchanged
  */
 ssize_t _copyfd(int infd, int outfd, size_t n) {

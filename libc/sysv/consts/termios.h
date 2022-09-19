@@ -178,10 +178,6 @@ extern const uint8_t VTIME;
 extern const uint8_t VWERASE;
 extern const uint32_t XCASE;
 extern const uint32_t XTABS;
-extern const uint32_t FIODGNAME;
-extern const uint32_t TIOCPTYGRANT;
-extern const uint32_t TIOCPTYUNLK;
-extern const uint32_t TIOCPTYGNAME;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -254,7 +250,6 @@ COSMOPOLITAN_C_END_
 #define EXTA             SYMBOLIC(EXTA)
 #define EXTB             SYMBOLIC(EXTB)
 #define EXTPROC          SYMBOLIC(EXTPROC)
-#define FIODGNAME        SYMBOLIC(FIODGNAME)
 #define FLUSHO           SYMBOLIC(FLUSHO)
 #define H4DISC           SYMBOLIC(H4DISC)
 #define HUPCL            SYMBOLIC(HUPCL)
@@ -324,9 +319,6 @@ COSMOPOLITAN_C_END_
 #define TIOCNXCL         SYMBOLIC(TIOCNXCL)
 #define TIOCOUTQ         SYMBOLIC(TIOCOUTQ)
 #define TIOCPTMASTER     SYMBOLIC(TIOCPTMASTER)
-#define TIOCPTYGNAME     SYMBOLIC(TIOCPTYGNAME)
-#define TIOCPTYGRANT     SYMBOLIC(TIOCPTYGRANT)
-#define TIOCPTYUNLK      SYMBOLIC(TIOCPTYUNLK)
 #define TIOCREMOTE       SYMBOLIC(TIOCREMOTE)
 #define TIOCSBRK         SYMBOLIC(TIOCSBRK)
 #define TIOCSCTTY        SYMBOLIC(TIOCSCTTY)

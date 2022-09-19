@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
@@ -57,12 +57,14 @@
  */
 int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
           const sigset_t *sigmask) {
+  size_t n;
   int e, i, rc;
   uint64_t millis;
   sigset_t oldmask;
   struct timespec ts, *tsp;
 
-  if (IsAsan() && (!__asan_is_valid(fds, nfds * sizeof(struct pollfd)) ||
+  if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
+                   !__asan_is_valid(fds, n) ||
                    (timeout && !__asan_is_valid(timeout, sizeof(timeout))) ||
                    (sigmask && !__asan_is_valid(sigmask, sizeof(sigmask))))) {
     rc = efault();

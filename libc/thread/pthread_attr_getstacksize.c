@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
 #include "libc/runtime/stack.h"
+#include "libc/thread/thread.h"
 
 /**
  * Returns size of thread stack.
@@ -28,7 +28,7 @@
  * @return 0 on success, or errno on error
  * @see pthread_attr_setstacksize()
  */
-int pthread_attr_getstacksize(const pthread_attr_t *a, size_t *x) {
+errno_t pthread_attr_getstacksize(const pthread_attr_t *a, size_t *x) {
   if (a->stacksize) {
     *x = a->stacksize;
   } else {

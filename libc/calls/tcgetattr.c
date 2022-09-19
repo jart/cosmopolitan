@@ -51,7 +51,7 @@
  *
  * @param fd open file descriptor that isatty()
  * @param tio is where result is stored
- * @return -1 w/ errno on error
+ * @return 0 on success, or -1 w/ errno
  * @asyncsignalsafe
  */
 int(tcgetattr)(int fd, struct termios *tio) {

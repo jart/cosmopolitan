@@ -21,6 +21,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/createfile.h"
 #include "libc/nt/enum/fileflagandattributes.h"
+#include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/madv.h"
@@ -33,6 +34,7 @@ textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
   int rc, flags, mode;
   uint32_t perm, share, attr;
 
+  if ((int64_t)len < 0) return einval();
   if (!__isfdkind(fd, kFdFile)) return ebadf();
   h1 = g_fds.p[fd].handle;
   mode = g_fds.p[fd].mode;
@@ -55,6 +57,10 @@ textwindows int sys_fadvise_nt(int fd, uint64_t offset, uint64_t len,
 
   if (GetNtOpenFlags(flags, mode, &perm, &share, 0, &attr) == -1) {
     return -1;
+  }
+
+  if (GetFileType(h1) == kNtFileTypePipe) {
+    return espipe();
   }
 
   // MSDN says only these are allowed, otherwise it returns EINVAL.

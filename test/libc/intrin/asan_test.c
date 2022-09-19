@@ -21,8 +21,8 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/log/log.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -33,6 +33,7 @@ TEST(asan, test) {
   char *p;
   if (!IsAsan()) return;
   p = gc(malloc(3));
+  EXPECT_TRUE(__asan_is_valid(0, 0));
   EXPECT_TRUE(__asan_is_valid(p, 3));
   EXPECT_FALSE(__asan_is_valid(p, 4));
   EXPECT_TRUE(__asan_is_valid(p + 1, 2));

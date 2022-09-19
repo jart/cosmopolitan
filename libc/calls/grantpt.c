@@ -17,10 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/sysv/consts/termios.h"
+
+extern const unsigned TIOCPTYGRANT;
 
 /**
  * Grants access to subordinate pseudoteletypewriter.

@@ -44,7 +44,7 @@
  *
  * @return 0 on success, or errno on error
  */
-int pthread_once(pthread_once_t *once, void init(void)) {
+errno_t pthread_once(pthread_once_t *once, void init(void)) {
   uint32_t old;
   if (_weaken(nsync_run_once)) {
     _weaken(nsync_run_once)((nsync_once *)once, init);

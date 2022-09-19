@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfd.internal.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"

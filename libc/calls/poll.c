@@ -17,13 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
@@ -68,10 +68,12 @@
  * @norestart
  */
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
+  size_t n;
   int i, rc;
   uint64_t millis;
 
-  if (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd))) {
+  if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
+                   !__asan_is_valid(fds, n))) {
     rc = efault();
   } else if (!IsWindows()) {
     if (!IsMetal()) {

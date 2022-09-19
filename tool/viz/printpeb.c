@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/log/log.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/nt/dll.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/enum/startf.h"
@@ -56,7 +57,7 @@ int NextBestThing(void) {
   int64_t fd = open("/proc/self/maps", O_RDONLY);
   posix_fadvise(fd, 0, 0, MADV_SEQUENTIAL);
   ssize_t wrote;
-  while ((wrote = copyfd(fd, NULL, 1, NULL, 1024 * 64, 0)) != -1) {
+  while ((wrote = _copyfd(fd, 1, -1)) != -1) {
     if (wrote == 0) break;
   }
   close(fd);

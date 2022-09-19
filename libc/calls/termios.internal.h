@@ -27,4 +27,6 @@
     (TO)->c_ospeed = c_ospeed;                            \
   } while (0)
 
+void *__termios2host(union metatermios *, const struct termios *);
+
 #endif /* COSMOPOLITAN_LIBC_CALLS_TERMIOS_INTERNAL_H_ */

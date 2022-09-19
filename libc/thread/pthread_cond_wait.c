@@ -37,6 +37,6 @@
  * @see pthread_cond_broadcast
  * @see pthread_cond_signal
  */
-int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+errno_t pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
   return pthread_cond_timedwait(cond, mutex, 0);
 }

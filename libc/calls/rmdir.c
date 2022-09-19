@@ -22,7 +22,7 @@
 /**
  * Deletes empty directory.
  *
- * @return 0 on success or -1 w/ errno on error
+ * @return 0 on success, or -1 w/ errno
  */
 int rmdir(const char *path) {
   return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);

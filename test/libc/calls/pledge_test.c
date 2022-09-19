@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfd.internal.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.internal.h"

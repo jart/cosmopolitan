@@ -40,7 +40,7 @@
  * @return 0 on success, or errno on error
  * @raise EINVAL on bad value
  */
-int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched) {
+errno_t pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched) {
   switch (inheritsched) {
     case PTHREAD_INHERIT_SCHED:
     case PTHREAD_EXPLICIT_SCHED:

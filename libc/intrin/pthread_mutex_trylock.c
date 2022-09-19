@@ -34,7 +34,7 @@
  * @raise EBUSY if lock is already held
  * @raise ENOTRECOVERABLE if `mutex` is corrupted
  */
-int pthread_mutex_trylock(pthread_mutex_t *mutex) {
+errno_t pthread_mutex_trylock(pthread_mutex_t *mutex) {
   int c, d, t;
 
   if (__tls_enabled &&                               //

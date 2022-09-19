@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 
@@ -34,26 +35,27 @@
  *     }
  *
  * @return 0 on success, or -1 w/ errno
- * @error ENOSYS if not Linux 5.9+ / FreeBSD / OpenBSD
+ * @error EBADF if `first` is negative
  * @error EBADF on OpenBSD if `first` is greater than highest fd
  * @error EINVAL if flags are bad or first is greater than last
  * @error EMFILE if a weird race condition happens on Linux
+ * @error ENOSYS if not Linux 5.9+, FreeBSD 8+, or OpenBSD
  * @error EINTR possibly on OpenBSD
  * @error ENOMEM on Linux maybe
- * @note supported on Linux 5.9+, FreeBSD 8+, and OpenBSD
  */
 int closefrom(int first) {
   int rc, err;
-  if (first >= 0) {
-    err = errno;
-    if ((rc = sys_close_range(first, -1, 0)) == -1) {
-      if (errno == ENOSYS) {
-        errno = err;
-        rc = sys_closefrom(first);
-      }
-    }
-  } else {
+  if (IsNetbsd() || IsWindows() || IsMetal()) {
+    rc = enosys();
+  } else if (first < 0) {
+    // consistent with openbsd
+    // freebsd allows this but it's dangerous
+    // necessary on linux due to type signature
     rc = ebadf();
+  } else if (IsLinux()) {
+    rc = sys_close_range(first, 0xffffffffu, 0);
+  } else {
+    rc = sys_closefrom(first);
   }
   STRACE("closefrom(%d) → %d% m", first, rc);
   return rc;

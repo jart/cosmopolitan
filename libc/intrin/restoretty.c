@@ -40,10 +40,10 @@ static bool __isrestorable;
 static union metatermios __oldtermios;
 
 // called weakly by libc/calls/ioctl_tcsets.c to avoid pledge("tty")
-void __on_ioctl_tcsets(void) {
+void __on_ioctl_tcsets(int fd) {
   int e;
   e = errno;
-  if (sys_ioctl(0, TCGETS, &__oldtermios) != -1) {
+  if (sys_ioctl(fd, TCGETS, &__oldtermios) != -1) {
     __isrestorable = true;
   }
   errno = e;

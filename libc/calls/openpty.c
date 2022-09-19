@@ -16,18 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
+#include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/struct/winsize.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/calls/termios.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/rop.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pty.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 struct IoctlPtmGet {
   int m;
@@ -49,28 +56,37 @@ struct IoctlPtmGet {
 int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
             const struct winsize *wsz) {
   int m, s, p;
-  const char *t;
-  struct IoctlPtmGet ptm;
+  union metatermios mt;
+  struct IoctlPtmGet t;
+  if (IsWindows() || IsMetal()) {
+    return enosys();
+  }
+  if (IsAsan() && (!__asan_is_valid(mfd, sizeof(int)) ||
+                   !__asan_is_valid(sfd, sizeof(int)) ||
+                   (name && !__asan_is_valid(name, 16)) ||
+                   (tio && !__asan_is_valid(tio, sizeof(*tio))) ||
+                   (wsz && !__asan_is_valid(wsz, sizeof(*wsz))))) {
+    return efault();
+  }
   RETURN_ON_ERROR((m = posix_openpt(O_RDWR | O_NOCTTY)));
   if (!IsOpenbsd()) {
     RETURN_ON_ERROR(grantpt(m));
     RETURN_ON_ERROR(unlockpt(m));
-    if (!(t = ptsname(m))) goto OnError;
-    RETURN_ON_ERROR((s = open(t, O_RDWR)));
+    RETURN_ON_ERROR(_ptsname(m, t.sname, sizeof(t.sname)));
+    RETURN_ON_ERROR((s = sys_open(t.sname, O_RDWR, 0)));
   } else {
-    RETURN_ON_ERROR(ioctl(m, PTMGET, &ptm));
+    RETURN_ON_ERROR(sys_ioctl(m, PTMGET, &t));
     close(m);
-    m = ptm.m;
-    s = ptm.s;
-    t = ptm.sname;
+    m = t.m;
+    s = t.s;
   }
   *mfd = m;
   *sfd = s;
-  if (name) strcpy(name, t);
-  if (tio) ioctl(s, TCSETSF, tio);
-  if (wsz) ioctl(s, TIOCSWINSZ, wsz);
+  if (name) strcpy(name, t.sname);
+  if (tio) _npassert(!sys_ioctl(s, TCSETSF, __termios2host(&mt, tio)));
+  if (wsz) _npassert(!sys_ioctl(s, TIOCGWINSZ, wsz));
   return 0;
 OnError:
-  if (m != -1) close(m);
+  if (m != -1) sys_close(m);
   return -1;
 }

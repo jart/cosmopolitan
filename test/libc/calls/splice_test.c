@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,31 +17,65 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/groups.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/errno.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Gets list of supplementary group IDs
- *
- * @param size - maximum number of items that can be stored in list
- * @param list - buffer to store output gid_t
- * @return -1 w/ EFAULT
- */
-int getgroups(int size, uint32_t list[]) {
-  int rc;
-  size_t n;
-  if (IsAsan() && (__builtin_mul_overflow(size, sizeof(list[0]), &n) ||
-                   !__asan_is_valid(list, n))) {
-    rc = efault();
-  } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
-    rc = sys_getgroups(size, list);
-  } else {
-    rc = enosys();
+char testlib_enable_tmp_setup_teardown;
+
+void SetUp(void) {
+  int e = errno;
+  if (splice(-1, 0, -1, 0, 0, 0) == -1 && errno == ENOSYS) {
+    exit(0);
   }
-  STRACE("getgroups(%d, %s) → %d% m", size, DescribeGidList(rc, rc, list), rc);
-  return rc;
+  errno = e;
+}
+
+TEST(splice, einval) {
+  ASSERT_SYS(0, 0, splice(0, 0, 1, 0, 0, -1));
+}
+
+TEST(splice, espipe) {
+  int64_t x;
+  int fds[2];
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 0, splice(0, 0, 4, &x, 0, 0));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(splice, noOffsets_usesFilePointer) {
+  // this test fails on rhel5 and rhel7
+  int fds[2];
+  char buf[16] = {0};
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 5, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 5, pwrite(5, "hello", 5, 0));
+  ASSERT_SYS(0, 5, splice(5, 0, 4, 0, 5, 0));
+  ASSERT_SYS(0, 5, splice(3, 0, 5, 0, 5, 0));
+  ASSERT_SYS(0, 10, pread(5, buf, sizeof(buf), 0));
+  ASSERT_STREQ("hellohello", buf);
+  ASSERT_SYS(0, 0, close(5));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(splice, offsets_doesntChangePointerAndIsReadOnly) {
+  int fds[2];
+  int64_t x = 0;
+  char buf[16] = {0};
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 5, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 5, pwrite(5, "hello", 5, 0));
+  ASSERT_SYS(0, 5, splice(5, &x, 4, 0, 5, 0));
+  ASSERT_EQ(5, x);
+  ASSERT_SYS(0, 5, splice(3, 0, 5, &x, 5, 0));
+  ASSERT_EQ(10, x);
+  ASSERT_SYS(0, 10, read(5, buf, sizeof(buf)));
+  ASSERT_STREQ("hellohello", buf);
+  ASSERT_SYS(0, 0, close(5));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
 }

@@ -50,6 +50,6 @@
  * @see pthread_spin_unlock
  * @see pthread_spin_init
  */
-int(pthread_spin_lock)(pthread_spinlock_t *spin) {
+errno_t(pthread_spin_lock)(pthread_spinlock_t *spin) {
   return pthread_spin_lock(spin);
 }

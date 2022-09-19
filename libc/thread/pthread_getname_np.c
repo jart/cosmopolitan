@@ -44,7 +44,7 @@
  *     result will still be returned truncated if possible
  * @raise ENOSYS on MacOS, Windows, FreeBSD, and OpenBSD
  */
-int pthread_getname_np(pthread_t thread, char *name, size_t size) {
+errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
   int e, fd, rc, tid, len;
 
   if (!size) return 0;

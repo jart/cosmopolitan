@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,32 +17,34 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/mem/alloca.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 
-static struct Splice {
+static struct CopyFileRange {
   pthread_once_t once;
   bool ok;
-} g_splice;
+} g_copy_file_range;
 
-static bool HasSplice(void) {
+static bool HasCopyFileRange(void) {
   bool ok;
   int e, rc;
   e = errno;
   if (IsLinux()) {
-    // Our testing indicates splice() doesn't work as documneted on
-    // RHEL5 and RHEL7 so let's require a modern kernel to be safe.
-    // We choose close_range() for this since it's listed by pledge
+    // We modernize our detection by a few years for simplicity.
+    // This system call is chosen since it's listed by pledge().
+    // https://www.cygwin.com/bugzilla/show_bug.cgi?id=26338
     ok = sys_close_range(-1, -2, 0) == -1 && errno == EINVAL;
+  } else if (IsFreebsd()) {
+    ok = sys_copy_file_range(-1, 0, -1, 0, 0, 0) == -1 && errno == EBADF;
   } else {
     ok = false;
   }
@@ -50,35 +52,52 @@ static bool HasSplice(void) {
   return ok;
 }
 
-static void splice_init(void) {
-  g_splice.ok = HasSplice();
+static void copy_file_range_init(void) {
+  g_copy_file_range.ok = HasCopyFileRange();
 }
 
 /**
- * Transfers data to/from pipe.
+ * Transfers data between files.
  *
- * @param flags can have SPLICE_F_{MOVE,NONBLOCK,MORE,GIFT}
- * @param opt_in_out_inoffset may be specified if `infd` isn't a pipe and is
- *     used as both an input and output parameter for pread() behavior
- * @param opt_in_out_outoffset may be specified if `outfd` isn't a pipe and is
- *     used as both an input and output parameter for pwrite() behavior
- * @return number of bytes transferred, 0 on input end, or -1 w/ errno
+ * If this system call is available (Linux c. 2018 or FreeBSD c. 2021)
+ * and the file system supports it (e.g. ext4) and the source and dest
+ * files are on the same file system, then this system call shall make
+ * copies go about 2x faster.
+ *
+ * This implementation requires Linux 5.9+ even though the system call
+ * was introduced in Linux 4.5. That's to ensure ENOSYS works reliably
+ * due to a faulty backport, that happened in RHEL7. FreeBSD detection
+ * on the other hand will work fine.
+ *
+ * @param infd is source file, which should be on same file system
+ * @param opt_in_out_inoffset may be specified for pread() behavior
+ * @param outfd should be a writable file, but not `O_APPEND`
+ * @param opt_in_out_outoffset may be specified for pwrite() behavior
+ * @param uptobytes is maximum number of bytes to transfer
+ * @param flags is reserved for future use and must be zero
+ * @return number of bytes transferred, or -1 w/ errno
+ * @raise EXDEV if source and destination are on different filesystems
  * @raise EBADF if `infd` or `outfd` aren't open files or append-only
- * @raise ESPIPE if an offset arg was specified for a pipe fd
- * @raise EINVAL if offset was given for non-seekable device
- * @raise EINVAL if file system doesn't support splice()
+ * @raise EPERM if `fdout` refers to an immutable file on Linux
+ * @raise EINVAL if ranges overlap or `flags` is non-zero
+ * @raise EFBIG if `setrlimit(RLIMIT_FSIZE)` is exceeded
  * @raise EFAULT if one of the pointers memory is bad
- * @raise EINVAL if `flags` is invalid
- * @raise ENOSYS if not Linux 5.9+
- * @see copy_file_range() for file ↔ file
+ * @raise ERANGE if overflow happens computing ranges
+ * @raise ENOSPC if file system has run out of space
+ * @raise ETXTBSY if source or dest is a swap file
+ * @raise EINTR if a signal was delivered instead
+ * @raise EISDIR if source or dest is a directory
+ * @raise ENOSYS if not Linux 5.9+ or FreeBSD 13+
+ * @raise EIO if a low-level i/o error happens
  * @see sendfile() for seekable → socket
+ * @see splice() for fd ↔ pipe
  */
-ssize_t splice(int infd, int64_t *opt_in_out_inoffset, int outfd,
-               int64_t *opt_in_out_outoffset, size_t uptobytes,
-               uint32_t flags) {
+ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
+                        int64_t *opt_in_out_outoffset, size_t uptobytes,
+                        uint32_t flags) {
   ssize_t rc;
-  pthread_once(&g_splice.once, splice_init);
-  if (!g_splice.ok) {
+  pthread_once(&g_copy_file_range.once, copy_file_range_init);
+  if (!g_copy_file_range.ok) {
     rc = enosys();
   } else if (IsAsan() && ((opt_in_out_inoffset &&
                            !__asan_is_valid(opt_in_out_inoffset, 8)) ||
@@ -86,10 +105,10 @@ ssize_t splice(int infd, int64_t *opt_in_out_inoffset, int outfd,
                            !__asan_is_valid(opt_in_out_outoffset, 8)))) {
     rc = efault();
   } else {
-    rc = sys_splice(infd, opt_in_out_inoffset, outfd, opt_in_out_outoffset,
-                    uptobytes, flags);
+    rc = sys_copy_file_range(infd, opt_in_out_inoffset, outfd,
+                             opt_in_out_outoffset, uptobytes, flags);
   }
-  STRACE("splice(%d, %s, %d, %s, %'zu, %#x) → %'ld% m", infd,
+  STRACE("copy_file_range(%d, %s, %d, %s, %'zu, %#x) → %'ld% m", infd,
          DescribeInOutInt64(rc, opt_in_out_inoffset), outfd,
          DescribeInOutInt64(rc, opt_in_out_outoffset), uptobytes, flags);
   return rc;

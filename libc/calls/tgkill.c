@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
- * Kills thread group.
+ * Kills thread, the Linux way.
  *
+ * @param tgid is thread group id, which on Linux means process id
+ * @param tid is thread id
  * @raises ENOSYS on non-Linux
  * @see tkill()
  */

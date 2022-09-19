@@ -30,7 +30,7 @@
  * @return 0 on success, `PTHREAD_BARRIER_SERIAL_THREAD` to one lucky
  *     thread which was the last arrival, or an errno on error
  */
-int pthread_barrier_wait(pthread_barrier_t *barrier) {
+errno_t pthread_barrier_wait(pthread_barrier_t *barrier) {
   if (nsync_counter_add(barrier->_nsync, -1)) {
     nsync_counter_wait(barrier->_nsync, nsync_time_no_deadline);
     return 0;

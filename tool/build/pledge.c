@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/copyfd.internal.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"

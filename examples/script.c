@@ -40,7 +40,6 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bswap.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/log/bsd.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"

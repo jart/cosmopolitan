@@ -44,8 +44,8 @@
  * @see pthread_cond_broadcast
  * @see pthread_cond_signal
  */
-int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
-                           const struct timespec *abstime) {
+errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
+                               const struct timespec *abstime) {
   if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000)) {
     return EINVAL;
   }

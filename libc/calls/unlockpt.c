@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/pty.h"
 #include "libc/sysv/errfuns.h"
+
+extern const uint32_t TIOCPTYUNLK;
 
 /**
  * Unlocks pseudoteletypewriter pair.
@@ -32,13 +35,12 @@
  * @raise EINVAL if fd is valid but not associated with pty
  */
 int unlockpt(int fd) {
-  int rc;
-  if (IsFreebsd() || IsOpenbsd()) {
+  int rc, unlock = 0;
+  if (IsFreebsd() || IsOpenbsd() || IsNetbsd()) {
     rc = _isptmaster(fd);
   } else if (IsXnu()) {
     rc = sys_ioctl(fd, TIOCPTYUNLK);
   } else if (IsLinux()) {
-    int unlock = 0;
     rc = sys_ioctl(fd, TIOCSPTLCK, &unlock);
   } else {
     rc = enosys();
