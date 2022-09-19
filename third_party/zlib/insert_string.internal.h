@@ -63,7 +63,7 @@ noubsan local INLINE Pos insert_string_simd(deflate_state* const s,
   if (s->level >= 6) val &= 0xFFFFFF;
 
   /* Compute hash from the CRC32C of |val|. */
-  asm("crc32\t%1,%0" : "+r"(h) : "rm"(val));
+  asm("crc32l\t%1,%0" : "+r"(h) : "rm"(val));
 
   ret = s->head[h & s->hash_mask];
   s->head[h & s->hash_mask] = str;
