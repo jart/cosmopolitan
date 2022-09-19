@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/pledge.internal.h"
@@ -26,11 +25,14 @@
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/seccomp.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -53,6 +55,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/sol.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/time/time.h"
@@ -141,6 +144,37 @@ TEST(pledge, withThreadMemory) {
   ASSERT_SYS(0, 0, _spawn(Enclave, job, &worker));  // create worker
   ASSERT_SYS(0, 0, _join(&worker));                 // wait for exit
   EXPECT_EQ(4, job[0]);                             // check result
+}
+
+bool gotusr1;
+
+void OnUsr1(int sig) {
+  gotusr1 = true;
+}
+
+int TgkillWorker(void *arg, int tid) {
+  sigset_t mask;
+  signal(SIGUSR1, OnUsr1);
+  sigemptyset(&mask);
+  ASSERT_SYS(EINTR, -1, sigsuspend(&mask));
+  ASSERT_TRUE(gotusr1);
+  return 0;
+}
+
+TEST(pledge, tgkill) {
+  // https://github.com/jart/cosmopolitan/issues/628
+  if (!IsLinux()) return;
+  sigset_t mask;
+  struct spawn worker;
+  SPAWN(fork);
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGUSR1);
+  sigprocmask(SIG_BLOCK, &mask, 0);
+  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  ASSERT_SYS(0, 0, _spawn(TgkillWorker, 0, &worker));
+  ASSERT_SYS(0, 0, tgkill(getpid(), worker.ptid, SIGUSR1));
+  ASSERT_SYS(0, 0, _join(&worker));
+  EXITS(0);
 }
 
 TEST(pledge, stdio_forbidsOpeningPasswd1) {

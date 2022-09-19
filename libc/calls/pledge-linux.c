@@ -540,7 +540,8 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_sigsuspend,         //
     __NR_linux_sigpending,         //
     __NR_linux_kill | SELF,        //
-    __NR_linux_tkill | SELF,       //
+    __NR_linux_tkill,              //
+    __NR_linux_tgkill | SELF,      //
     __NR_linux_socketpair,         //
     __NR_linux_getrusage,          //
     __NR_linux_times,              //
@@ -691,6 +692,7 @@ static const uint16_t kPledgeProc[] = {
     __NR_linux_vfork,                   //
     __NR_linux_clone | RESTRICT,        //
     __NR_linux_kill,                    //
+    __NR_linux_tgkill,                  //
     __NR_linux_setsid,                  //
     __NR_linux_setpgid,                 //
     __NR_linux_prlimit,                 //
@@ -707,8 +709,6 @@ static const uint16_t kPledgeProc[] = {
     __NR_linux_sched_setaffinity,       //
     __NR_linux_sched_getparam,          //
     __NR_linux_sched_setparam,          //
-    __NR_linux_tkill,                   //
-    __NR_linux_tgkill,                  //
 };
 
 static const uint16_t kPledgeId[] = {
@@ -1028,15 +1028,15 @@ static privileged void AllowKillSelf(struct Filter *f) {
   AppendFilter(f, PLEDGE(fragment));
 }
 
-// The first argument of tkill() must be
+// The first argument of tgkill() must be
 //
-//   - gettid()
+//   - getpid()
 //
-static privileged void AllowTkillSelf(struct Filter *f) {
+static privileged void AllowTgkillSelf(struct Filter *f) {
   struct sock_filter fragment[] = {
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_tkill, 0, 4),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_tgkill, 0, 4),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[0])),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, GetTid(), 0, 1),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, GetPid(), 0, 1),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
   };
@@ -1949,8 +1949,8 @@ static privileged void AppendPledge(struct Filter *f,   //
       case __NR_linux_kill | SELF:
         AllowKillSelf(f);
         break;
-      case __NR_linux_tkill | SELF:
-        AllowTkillSelf(f);
+      case __NR_linux_tgkill | SELF:
+        AllowTgkillSelf(f);
         break;
       default:
         notpossible;
