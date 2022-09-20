@@ -20,10 +20,10 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/log/check.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -89,7 +89,8 @@ void TcpServer(void) {
           ip, ntohs(addr2.sin_port));
   for (;;) {
     addrsize2 = sizeof(struct sockaddr_in);
-    CHECK_NE(-1, (client = accept(sock, &addr2, &addrsize2)));
+    CHECK_NE(-1,
+             (client = accept(sock, (struct sockaddr *)&addr2, &addrsize2)));
     ip = ntohl(addr2.sin_addr.s_addr);
     kprintf("got client %hhu.%hhu.%hhu.%hhu %hu%n", ip >> 24, ip >> 16, ip >> 8,
             ip, ntohs(addr2.sin_port));

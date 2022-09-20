@@ -167,7 +167,7 @@ void *Worker(void *id) {
 
     // wait for client connection
     clientaddrsize = sizeof(clientaddr);
-    client = accept(server, &clientaddr, &clientaddrsize);
+    client = accept(server, (struct sockaddr *)&clientaddr, &clientaddrsize);
 
     // accept() can raise a very diverse number of errors but none of
     // them are really true showstoppers that would necessitate us to

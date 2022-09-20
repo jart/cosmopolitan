@@ -69,7 +69,7 @@ TEST(sendfile, testSeeking) {
   ASSERT_SYS(0, 0, getsockname(3, &addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, 1));
   if (!fork()) {
-    ASSERT_SYS(0, 4, accept(3, &addr, &addrsize));
+    ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
     ASSERT_SYS(0, 5, open("hyperion.txt", O_RDONLY));
     ASSERT_SYS(0, 12, sendfile(4, 5, &inoffset, 12));
     ASSERT_EQ(0, GetFileOffset(5));
@@ -116,7 +116,7 @@ TEST(sendfile, testPositioning) {
   ASSERT_SYS(0, 0, listen(3, 1));
   if (!fork()) {
     signal(SIGPIPE, SIG_IGN);
-    ASSERT_SYS(0, 4, accept(3, &addr, &addrsize));
+    ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
     ASSERT_SYS(0, 5, open("hyperion.txt", O_RDONLY));
     ASSERT_SYS(0, 6, sendfile(4, 5, 0, 6));
     ASSERT_EQ(6, GetFileOffset(5));
