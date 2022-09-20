@@ -1,0 +1,70 @@
+#!/bin/sh
+# replacement for c++ command
+#
+# we assume you run the following beforehand
+#
+#     sudo chmod 1777 /opt
+#     cd /opt
+#     git clone https://github.com/jart/cosmopolitan cosmo
+#     cd cosmo
+#     make -j
+#
+# you can then use it to build open source projects, e.g.
+#
+#     export CC=cosmocc
+#     export CXX=cosmoc++
+#     export LD=cosmoc++
+#     ./configure --prefix=/opt/cosmos
+#     make -j
+#     make install
+#
+
+if [ "$1" = "--version" ]; then
+cat <<'EOF'
+x86_64-unknown-cosmo-g++ (GCC) 9.2.0
+Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+EOF
+exit 0
+fi
+
+CXX="/opt/cosmo/o/third_party/gcc/bin/x86_64-linux-musl-g++"
+CCFLAGS="-O2 -fno-omit-frame-pointer -fdata-sections -ffunction-sections -fno-pie -pg -mnop-mcount -mno-tls-direct-seg-refs"
+CXXFLAGS="-fno-exceptions -fuse-cxa-atexit -fno-threadsafe-statics"
+CPPFLAGS="-DNDEBUG -nostdinc -iquote /opt/cosmo -isystem /opt/cosmos/include -isystem /opt/cosmo/libc/isystem -include libc/integral/normalize.inc"
+LDFLAGS="-static -no-pie -nostdlib -fuse-ld=bfd -Wl,-melf_x86_64 -Wl,--gc-sections -Wl,-z,max-page-size=0x1000 -L/opt/cosmos/lib -Wl,-T,/opt/cosmo/o/ape/public/ape.lds /opt/cosmo/o/ape/ape-no-modify-self.o /opt/cosmo/o/libc/crt/crt.o"
+LDLIBS="/opt/cosmo/o/third_party/libcxx/libcxx.a /opt/cosmo/o/cosmopolitan.a"
+
+HAS_C=0
+HAS_O=0
+HAS_E=0
+FIRST=1
+for x; do
+  if [ $FIRST -eq 1 ]; then
+    set --
+    FIRST=0
+  fi
+  if [ "$x" = "-c" ]; then
+    HAS_C=1
+  fi
+  if [ "$x" = "-E" ]; then
+    HAS_E=1
+  fi
+  if [ "$x" = "-o" ] || [ "${x#-o}" != "$x" ]; then
+    HAS_O=1
+  fi
+  set -- "$@" "$x"
+done
+
+if [ "$HAS_E" = "1" ]; then
+  set -- $CPPFLAGS "$@"
+elif [ "$HAS_C" = "1" ]; then
+  set -- $CCFLAGS $CXXFLAGS $CPPFLAGS "$@"
+else
+  set -- $LDFLAGS $CPPFLAGS "$@" $LDLIBS
+fi
+
+set -- "$CXX" "$@"
+printf '(cd %s; %s)\n' "$PWD" "$*" >>/tmp/build.log
+exec "$@"
