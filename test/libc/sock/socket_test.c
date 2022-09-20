@@ -41,7 +41,7 @@ TEST(ipv4, test) {
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 4, accept(3, &addr, &addrsize));
+    ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
     ASSERT_SYS(0, 5, send(4, "hello", 5, 0));
     ASSERT_SYS(0, 0, close(4));
     ASSERT_SYS(0, 0, close(3));
@@ -75,7 +75,7 @@ TEST(ipv6, test) {
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
-    ASSERT_SYS(0, 4, accept(3, &addr, &addrsize));
+    ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
     ASSERT_SYS(0, 5, send(4, "hello", 5, 0));
     ASSERT_SYS(0, 0, close(4));
     ASSERT_SYS(0, 0, close(3));

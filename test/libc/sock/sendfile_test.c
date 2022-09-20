@@ -54,7 +54,7 @@ TEST(sendfile, test) {
   ASSERT_SYS(0, 0, listen(3, 1));
   if (!fork()) {
     inoffset = 0;
-    ASSERT_SYS(0, 4, accept(3, &addr, &addrsize));
+    ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
     ASSERT_SYS(0, 5, open("hyperion.txt", O_RDONLY));
     ASSERT_SYS(0, 512, sendfile(4, 5, &inoffset, 512));
     EXPECT_EQ(512, inoffset);
