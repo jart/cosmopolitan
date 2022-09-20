@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
   struct Url url;
   char *host, *port;
   bool usessl = false;
-  _gc(ParseUrl(urlarg, -1, &url));
+  _gc(ParseUrl(urlarg, -1, &url, kUrlPlus));
   _gc(url.params.p);
   if (url.scheme.n) {
     if (url.scheme.n == 5 && !memcasecmp(url.scheme.p, "https", 5)) {

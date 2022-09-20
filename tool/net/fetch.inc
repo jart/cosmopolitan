@@ -107,7 +107,7 @@ static int LuaFetch(lua_State *L) {
   /*
    * Parse URL.
    */
-  _gc(ParseUrl(urlarg, urlarglen, &url));
+  _gc(ParseUrl(urlarg, urlarglen, &url, true));
   _gc(url.params.p);
   usingssl = false;
   if (url.scheme.n) {

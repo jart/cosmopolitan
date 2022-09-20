@@ -99,6 +99,7 @@
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
+#include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/lua/cosmo.h"
@@ -5123,6 +5124,8 @@ static void LuaStart(void) {
   LuaSetConstant(L, "kLogWarn", kLogWarn);
   LuaSetConstant(L, "kLogError", kLogError);
   LuaSetConstant(L, "kLogFatal", kLogFatal);
+  LuaSetConstant(L, "kUrlPlus", kUrlPlus);
+  LuaSetConstant(L, "kUrlLatin1", kUrlLatin1);
   // create a list of custom content types
   lua_pushlightuserdata(L, (void *)&ctIdx);  // push address as unique key
   lua_newtable(L);
@@ -5673,8 +5676,8 @@ static char *SynchronizeStream(void) {
 
 static void ParseRequestParameters(void) {
   uint32_t ip;
-  FreeLater(ParseRequestUri(inbuf.p + cpm.msg.uri.a,
-                            cpm.msg.uri.b - cpm.msg.uri.a, &url));
+  FreeLater(ParseUrl(inbuf.p + cpm.msg.uri.a, cpm.msg.uri.b - cpm.msg.uri.a,
+                     &url, kUrlPlus | kUrlLatin1));
   if (!url.host.p) {
     if (HasHeader(kHttpXForwardedHost) &&  //
         !GetRemoteAddr(&ip, 0) && IsTrustedProxy(ip)) {

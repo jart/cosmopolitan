@@ -36,12 +36,14 @@ static void LuaSetUrlView(lua_State *L, struct UrlView *v, const char *k) {
 }
 
 int LuaParseUrl(lua_State *L) {
+  int f;
   void *m;
   size_t n;
   struct Url h;
   const char *p;
   p = luaL_checklstring(L, 1, &n);
-  m = ParseUrl(p, n, &h);
+  f = luaL_optinteger(L, 2, 0);
+  m = ParseUrl(p, n, &h, f);
   lua_newtable(L);
   LuaSetUrlView(L, &h.scheme, "scheme");
   LuaSetUrlView(L, &h.user, "user");

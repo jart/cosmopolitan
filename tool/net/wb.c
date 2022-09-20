@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
   /*
    * Parse URL.
    */
-  _gc(ParseUrl(urlarg, -1, &url));
+  _gc(ParseUrl(urlarg, -1, &url, kUrlPlus));
   _gc(url.params.p);
   usessl = false;
   if (url.scheme.n) {

@@ -1335,28 +1335,50 @@ FUNCTIONS
           Converts RFC1123 string that looks like this: Mon, 29 Mar 2021
           15:37:13 GMT to a UNIX timestamp. See parsehttpdatetime.c.
 
-  ParseUrl(str) → URL
-          Parses URL, returning object having the following fields: scheme,
-          user, pass, host, port, path, params, fragment. This parser is
-          charset agnostic. Percent encoded bytes are decoded for all
-          fields. Returned values might contain things like NUL characters,
-          spaces, control codes, and non-canonical encodings. Absent can be
-          discerned from empty by checking if the pointer is set. There's no
-          failure condition for this routine. This is a permissive parser.
-          This doesn't normalize path segments like `.` or `..` so use
-          IsAcceptablePath() to check for those. No restrictions are imposed
-          beyond that which is strictly necessary for parsing. All the data
-          that is provided will be consumed to the one of the fields. Strict
-          conformance is enforced on some fields more than others, like
-          scheme, since it's the most non-deterministically defined field of
-          them all. Please note this is a URL parser, not a URI parser.
-          Which means we support everything everything the URI spec says we
-          should do except for the things we won't do, like tokenizing path
-          segments into an array and then nesting another array beneath each
-          of those for storing semicolon parameters. So this parser won't
-          make SIP easy. What it can do is parse HTTP URLs and most URIs
-          like data:opaque, better in fact than most things which claim to
-          be URI parsers.
+  ParseUrl(url:str[, flags:int]) → URL
+
+          Parses URL.
+
+          An object containing the following fields is returned:
+
+          - `scheme` is a string, e.g. `"http"`
+          - `user` is the username string, or nil if absent
+          - `pass` is the password string, or nil if absent
+          - `host` is the hostname string, or nil if `url` was a path
+          - `port` is the port string, or nil if absent
+          - `path` is the path string, or nil if absent
+          - `params` is the URL paramaters, e.g. `/?a=b&c` would be
+            represented as the data structure `{{"a", "b"}, {"c"}, ...}`
+          - `fragment` is the stuff after the `#` character
+
+          `flags` may have:
+
+          - `kUrlPlus` to turn `+` into space
+          - `kUrlLatin1` to transcode ISO-8859-1 input into UTF-8
+
+          This parser is charset agnostic. Percent encoded bytes are
+          decoded for all fields. Returned values might contain things
+          like NUL characters, spaces, control codes, and non-canonical
+          encodings. Absent can be discerned from empty by checking if
+          the pointer is set.
+
+          There's no failure condition for this routine. This is a
+          permissive parser. This doesn't normalize path segments like
+          `.` or `..` so use IsAcceptablePath() to check for those. No
+          restrictions are imposed beyond that which is strictly
+          necessary for parsing. All the data that is provided will be
+          consumed to the one of the fields. Strict conformance is
+          enforced on some fields more than others, like scheme, since
+          it's the most non-deterministically defined field of them all.
+
+          Please note this is a URL parser, not a URI parser. Which
+          means we support everything everything the URI spec says we
+          should do except for the things we won't do, like tokenizing
+          path segments into an array and then nesting another array
+          beneath each of those for storing semicolon parameters. So
+          this parser won't make SIP easy. What it can do is parse HTTP
+          URLs and most URIs like data:opaque, better in fact than most
+          things which claim to be URI parsers.
 
   IsAcceptablePath(str) → bool
           Returns true if path doesn't contain ".", ".." or "//" segments

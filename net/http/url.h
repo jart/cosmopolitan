@@ -1,5 +1,10 @@
 #ifndef COSMOPOLITAN_NET_HTTP_URL_H_
 #define COSMOPOLITAN_NET_HTTP_URL_H_
+
+#define kUrlPlus   1
+#define kUrlLatin1 2
+#define kUrlOpaque 4
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -28,9 +33,8 @@ struct Url {
 };
 
 char *EncodeUrl(struct Url *, size_t *);
-char *ParseUrl(const char *, size_t, struct Url *);
+char *ParseUrl(const char *, size_t, struct Url *, int);
 char *ParseParams(const char *, size_t, struct UrlParams *);
-char *ParseRequestUri(const char *, size_t, struct Url *);
 char *ParseHost(const char *, size_t, struct Url *);
 char *EscapeUrlView(char *, struct UrlView *, const char[256]);
 
