@@ -28,6 +28,6 @@
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-int accept(int fd, void *out_addr, uint32_t *inout_addrsize) {
+int accept(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize) {
   return accept4(fd, out_addr, inout_addrsize, 0);
 }

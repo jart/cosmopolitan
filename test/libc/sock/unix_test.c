@@ -89,7 +89,7 @@ void StreamServer(void) {
   ASSERT_SYS(0, 0, listen(3, 10));
   bzero(&addr, sizeof(addr));
   len = sizeof(addr);
-  ASSERT_SYS(0, 4, accept(3, &addr, &len));
+  ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &len));
   ASSERT_EQ(AF_UNIX, addr.sun_family);
   EXPECT_STREQ("", addr.sun_path);
   ASSERT_SYS(0, 5, read(4, buf, 256));
