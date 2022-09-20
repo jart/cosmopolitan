@@ -25,6 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/runtime/mman.internal.h"
 #include "libc/vga/vga.internal.h"
 
 //	Code snippet for initializing the VGA video mode for bare metal.
@@ -42,6 +43,8 @@
 //	@see	sys_writev_vga (libc/vga/writev-vga.c)
 	.section .sort.text.real.init.2,"ax",@progbits
 	.code16
+	call	_rlinit_vesafb
+	jnc	9f
 	mov	$0x4f03,%ax		# get current video mode via VESA
 	int	$0x10
 	cmp	$0x004f,%ax		# is VESA a thing here?
@@ -58,13 +61,27 @@
 	mov	$0x0500,%ax		# just make sure we are on display
 					# page 0
 2:	int	$0x10			# otherwise, change the video mode
-	mov	$0x1003,%ax		# enable/disable VGA text blinking
+	.set	mm,0x0500		# note down video mode parameters
+	movb	$PC_VIDEO_TEXT,mm+"struct mman::pc_video_type"
+	mov	$80,%ax
+	movw	%ax,mm+"struct mman::pc_video_scan_width"
+	movw	%ax,mm+"struct mman::pc_video_width"
+	movw	$25,mm+"struct mman::pc_video_height"
+	movl	$0xb8000,mm+"struct mman::pc_video_framebuffer"
+	movl	$8*(80*25*2),mm+"struct mman::pc_video_framebuffer_size"
+9:	mov	$0x1003,%ax		# enable/disable VGA text blinking
 #ifdef VGA_USE_BLINK
 	mov	$1,%bx
 #else
 	xor	%bx,%bx
 #endif
 	int	$0x10
+	.previous
+	.real
+_rlinit_vesafb_stub:
+	stc
+	ret
+	.alias	_rlinit_vesafb_stub,_rlinit_vesafb
 	.previous
 	.code64
 	.section .rodata,"a",@progbits

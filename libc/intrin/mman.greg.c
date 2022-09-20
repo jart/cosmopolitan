@@ -148,6 +148,12 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, e820);
   export_offsetof(struct mman, e820_end);
   export_offsetof(struct mman, bad_idt);
+  export_offsetof(struct mman, pc_video_type);
+  export_offsetof(struct mman, pc_video_scan_width);
+  export_offsetof(struct mman, pc_video_width);
+  export_offsetof(struct mman, pc_video_height);
+  export_offsetof(struct mman, pc_video_framebuffer);
+  export_offsetof(struct mman, pc_video_framebuffer_size);
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }
