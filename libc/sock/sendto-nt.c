@@ -23,12 +23,6 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Performs datagram socket send on the New Technology.
- *
- * @param fd must be a socket
- * @return number of bytes handed off, or -1 w/ errno
- */
 textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
                                   size_t iovlen, uint32_t flags,
                                   void *opt_in_addr, uint32_t in_addrsize) {

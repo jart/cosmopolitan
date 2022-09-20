@@ -23,7 +23,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Supports stat(), lstat(), fstatat(), etc. implementations.
+ * Performs fstatat() on System Five.
  * @asyncsignalsafe
  */
 int32_t sys_fstatat(int32_t dirfd, const char *path, struct stat *st,

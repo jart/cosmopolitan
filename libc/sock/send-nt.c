@@ -23,12 +23,6 @@
 #include "libc/sock/internal.h"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Performs stream socket send on the New Technology.
- *
- * @param fd must be a socket
- * @return number of bytes handed off, or -1 w/ errno
- */
 textwindows ssize_t sys_send_nt(int fd, const struct iovec *iov, size_t iovlen,
                                 uint32_t flags) {
   ssize_t rc;

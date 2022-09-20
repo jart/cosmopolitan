@@ -28,9 +28,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/ok.h"
 
-/**
- * Flushes all open file handles and, if possible, all disk drives.
- */
+// Flushes all open file handles and, if possible, all disk drives.
 textwindows int sys_sync_nt(void) {
   unsigned i;
   int64_t volume;

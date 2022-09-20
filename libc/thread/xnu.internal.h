@@ -3,9 +3,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
+/*
  * XNU thread system calls.
- * @see darwin-libpthread/kern/kern_support.c
+ * See darwin-libpthread/kern/kern_support.c
  */
 
 int sys_bsdthread_create(void *func, void *func_arg, void *stack, void *pthread,

@@ -25,12 +25,6 @@
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Performs datagram receive on New Technology.
- *
- * @param fd must be a socket
- * @return number of bytes received, or -1 w/ errno
- */
 textwindows ssize_t sys_recvfrom_nt(struct Fd *fd, const struct iovec *iov,
                                     size_t iovlen, uint32_t flags,
                                     void *opt_out_srcaddr,

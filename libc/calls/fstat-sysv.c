@@ -24,7 +24,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Supports fstat(), etc. implementations.
+ * Forms fstat() on System Five.
  * @asyncsignalsafe
  */
 int32_t sys_fstat(int32_t fd, struct stat *st) {

@@ -17,22 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/errno.h"
-#include "libc/intrin/likely.h"
+#include "libc/nt/struct/iovec.h"
 #include "libc/nt/struct/overlapped.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Performs stream socket receive on New Technology.
- *
- * @param fd must be a socket
- * @return number of bytes received, or -1 w/ errno
- */
 textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
                                 size_t iovlen, uint32_t flags) {
   int err;

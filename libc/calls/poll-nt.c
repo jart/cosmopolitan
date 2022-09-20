@@ -42,7 +42,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
-/**
+/*
  * Polls on the New Technology.
  *
  * This function is used to implement poll() and select(). You may poll

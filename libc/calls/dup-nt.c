@@ -28,9 +28,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-/**
- * Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
- */
+// Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   int64_t rc, proc, handle;
   _unassert(oldfd >= 0);
