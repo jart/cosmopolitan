@@ -2,21 +2,11 @@
 #define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 
 /*
- * VGA_TTY_HEIGHT, VGA_TTY_WIDTH, VGA_USE_WCS, & VGA_PERSNICKETY_STATUS are
- * configuration knobs which can potentially be used to tweak the features
- * to be compiled into our VGA teletypewriter support.
+ * VGA_USE_WCS, VGA_USE_BLINK, & VGA_PERSNICKETY_STATUS are configuration
+ * knobs which can potentially be used to tweak the features to be compiled
+ * into our VGA teletypewriter support.
  */
 
-/**
- * Height of the video screen, in character units.  Undefine if the height
- * may vary at runtime.
- */
-#define VGA_TTY_HEIGHT 25
-/**
- * Width of the video screen, in character units.  Undefine if the width may
- * vary at runtime.
- */
-#define VGA_TTY_WIDTH 80
 /**
  * If VGA_USE_WCS is defined, the tty code can maintain an array of the
  * Unicode characters "underlying" the 8-bit (or 9-bit) characters that are
@@ -114,12 +104,7 @@ struct VgaTextCharCell {
 
 struct Tty {
   unsigned short y, x;
-#ifndef VGA_TTY_HEIGHT
-  unsigned short yn;
-#endif
-#ifndef VGA_TTY_WIDTH
-  unsigned short xn;
-#endif
+  unsigned short yn, xn;
   uint32_t u8;
   uint32_t n8;
   uint32_t pr;

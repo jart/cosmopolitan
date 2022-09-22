@@ -25,6 +25,7 @@
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
+#include "libc/runtime/mman.internal.h"
 #include "libc/vga/vga.internal.h"
 
 //	Code snippet for initializing the VGA video mode for bare metal.
@@ -58,6 +59,13 @@
 	mov	$0x0500,%ax		# just make sure we are on display
 					# page 0
 2:	int	$0x10			# otherwise, change the video mode
+	.set	mm,0x0500		# note down video mode parameters
+	movb	$PC_VIDEO_TEXT,mm+"struct mman::pc_video_type"
+	movw	$160,mm+"struct mman::pc_video_stride"
+	movw	$80,mm+"struct mman::pc_video_width"
+	movw	$25,mm+"struct mman::pc_video_height"
+	movl	$0xb8000,mm+"struct mman::pc_video_framebuffer"
+	movl	$0x8000,mm+"struct mman::pc_video_framebuffer_size"
 	mov	$0x1003,%ax		# enable/disable VGA text blinking
 #ifdef VGA_USE_BLINK
 	mov	$1,%bx
