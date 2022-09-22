@@ -60,6 +60,7 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
 
 __attribute__((__constructor__)) static textstartup void _vga_init(void) {
   if (IsMetal()) {
+    struct mman *mm = (struct mman *)(BANE + 0x0500);
     void * const vid_buf = (void *)(BANE + 0xb8000ull);
     /*
      * Get the initial cursor position from the BIOS data area.  Also get
@@ -74,6 +75,9 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
             chr_ht_hi = *(uint8_t *)(BANE + 0x0486ull);
     if (chr_ht_hi != 0 || chr_ht > 32)
       chr_ht = 32;
+    /* Make sure the video buffer is mapped into virtual memory. */
+    __invert_memory_area(mm, __get_pml4t(), (uint64_t)vid_buf,
+                         2 * VGA_TTY_HEIGHT * VGA_TTY_WIDTH, PAGE_RW);
     /*
      * Initialize our tty structure from the current screen contents,
      * current cursor position, & character height.
