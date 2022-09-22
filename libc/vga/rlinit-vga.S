@@ -43,6 +43,8 @@
 //	@see	sys_writev_vga (libc/vga/writev-vga.c)
 	.section .sort.text.real.init.2,"ax",@progbits
 	.code16
+	call	_rlinit_vesa
+	jnc	9f
 	mov	$0x4f03,%ax		# get current video mode via VESA
 	int	$0x10
 	cmp	$0x004f,%ax		# is VESA a thing here?
@@ -76,6 +78,7 @@
 	xor	%bx,%bx
 #endif
 	int	$0x10
+9:
 	.previous
 	.code64
 	.section .rodata,"a",@progbits
