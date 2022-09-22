@@ -63,7 +63,6 @@ o/$(MODE)/ape/ape.lds:				\
 		ape/macros.internal.h		\
 		ape/relocations.h		\
 		libc/intrin/bits.h		\
-		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\
 		libc/dce.h			\
 		libc/elf/def.h			\
@@ -80,7 +79,6 @@ o/$(MODE)/ape/public/ape.lds:			\
 		ape/macros.internal.h		\
 		ape/relocations.h		\
 		libc/intrin/bits.h		\
-		libc/thread/tls.h		\
 		libc/calls/struct/timespec.h	\
 		libc/dce.h			\
 		libc/elf/def.h			\

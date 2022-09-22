@@ -22,10 +22,11 @@
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/thread/tls.h"
 
 /**
  * Creates new process.
@@ -60,7 +61,7 @@ int fork(void) {
     parent = __pid;
     __pid = dx;
     if (__tls_enabled) {
-      __get_tls()->tib_tid = IsLinux() ? dx : sys_gettid();
+      *(int *)(__get_tls() + 0x38) = IsLinux() ? dx : sys_gettid();
     }
     STRACE("fork() → 0 (child of %d)", parent);
     sigprocmask(SIG_SETMASK, &old, 0);

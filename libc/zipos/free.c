@@ -23,6 +23,11 @@
 #include "libc/str/str.h"
 #include "libc/zipos/zipos.internal.h"
 
+/**
+ * Frees ZipOS handle.
+ * @asyncsignalsafe
+ * @threadsafe
+ */
 void __zipos_free(struct Zipos *z, struct ZiposHandle *h) {
   if (IsAsan()) {
     __asan_poison((char *)h + sizeof(struct ZiposHandle),

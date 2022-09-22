@@ -23,7 +23,9 @@
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/rand.h"
@@ -39,8 +41,6 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 
@@ -61,6 +61,7 @@ void PullSomeZipFilesIntoLinkage(void) {
 TEST(reservefd, testGrowthOfFdsDataStructure) {
   int i, n;
   struct rlimit rlim;
+  ASSERT_EQ(g_fds.n, OPEN_MAX);
   n = 1700;  // pe '2**16/40' → 1638 (likely value of g_fds.n)
   if (!getrlimit(RLIMIT_NOFILE, &rlim)) n = MIN(n, rlim.rlim_cur - 3);
   for (i = 0; i < n; ++i) {

@@ -18,23 +18,23 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/msr.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/nrlinux.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/thread.h"
 #include "third_party/xed/x86.h"
 
 #define __NR_sysarch     0x000000a5  // freebsd+netbsd
@@ -49,7 +49,7 @@
 
 #define _TLSZ ((intptr_t)_tls_size)
 #define _TLDZ ((intptr_t)_tdata_size)
-#define _TIBZ sizeof(struct CosmoTib)
+#define _TIBZ sizeof(struct cthread_descriptor_t)
 
 int sys_enable_tls();
 
@@ -59,7 +59,7 @@ __msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
 
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
-_Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
+_Alignas(long) static char __static_tls[5008];
 
 /**
  * Enables thread local storage for main process.
@@ -98,13 +98,14 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
  */
 privileged void __enable_tls(void) {
   size_t siz;
-  struct CosmoTib *tib;
+  cthread_t tib;
   char *mem, *tls;
   siz = ROUNDUP(_TLSZ + _TIBZ, alignof(__static_tls));
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
     // which helps avoid a system call for appes with little tls
     // this is crucial to keeping life.com 16 kilobytes in size!
+    _Static_assert(alignof(__static_tls) >= alignof(cthread_t));
     mem = __static_tls;
   } else {
     // if this binary needs a hefty tls block then we'll bank on
@@ -116,23 +117,17 @@ privileged void __enable_tls(void) {
     mem = weaken(_mapanon)(siz);
     assert(mem);
   }
-  if (IsAsan()) {
-    // poison the space between .tdata and .tbss
-    __asan_poison(mem + (intptr_t)_tdata_size,
-                  (intptr_t)_tbss_offset - (intptr_t)_tdata_size,
-                  kAsanProtected);
-  }
-  tib = (struct CosmoTib *)(mem + siz - _TIBZ);
+  tib = (cthread_t)(mem + siz - _TIBZ);
   tls = mem + siz - _TIBZ - _TLSZ;
-  tib->tib_self = tib;
-  tib->tib_self2 = tib;
-  tib->tib_errno = __errno;
+  tib->self = tib;
+  tib->self2 = tib;
+  tib->err = __errno;
   if (IsLinux()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
-    tib->tib_tid = __pid;
+    tib->tid = __pid;
   } else {
-    tib->tib_tid = sys_gettid();
+    tib->tid = sys_gettid();
   }
   __repmovsb(tls, _tdata_start, _TLDZ);
 

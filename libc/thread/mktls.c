@@ -16,20 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/thread.h"
 
-#define I(x) ((intptr_t)x)
-
-void Bzero(void *, size_t) asm("bzero");  // gcc bug
+#define _TLSZ ((intptr_t)_tls_size)
+#define _TLDZ ((intptr_t)_tdata_size)
+#define _TIBZ sizeof(struct cthread_descriptor_t)
+#define _MEMZ ROUNDUP(_TLSZ + _TIBZ, _Alignof(struct cthread_descriptor_t))
 
 /**
  * Allocates thread-local storage memory for new thread.
@@ -37,27 +35,19 @@ void Bzero(void *, size_t) asm("bzero");  // gcc bug
  */
 char *_mktls(char **out_tib) {
   char *tls;
-  struct CosmoTib *tib;
+  cthread_t tib;
 
-  // allocate memory for tdata, tbss, and tib
-  tls = memalign(TLS_ALIGNMENT, I(_tls_size) + sizeof(struct CosmoTib));
-  if (!tls) return 0;
-
-  // poison memory between tdata and tbss
-  if (IsAsan()) {
-    __asan_poison(tls + I(_tdata_size), I(_tbss_offset) - I(_tdata_size),
-                  kAsanProtected);
-  }
-
-  // initialize tdata and clear tbss
-  memmove(tls, _tdata_start, I(_tdata_size));
-  Bzero(tls + I(_tbss_offset), I(_tbss_size) + sizeof(struct CosmoTib));
+  // Allocate enough TLS memory for all the GNU Linuker (_tls_size)
+  // organized _Thread_local data, as well as Cosmpolitan Libc (64)
+  if (!(tls = calloc(1, _MEMZ))) return 0;
 
   // set up thread information block
-  tib = (struct CosmoTib *)(tls + I(_tls_size));
-  tib->tib_self = tib;
-  tib->tib_self2 = tib;
-  tib->tib_tid = -1;
+  tib = (cthread_t)(tls + _MEMZ - _TIBZ);
+  tib->self = tib;
+  tib->self2 = tib;
+  tib->err = 0;
+  tib->tid = -1;
+  memmove(tls, _tdata_start, _TLDZ);
 
   if (out_tib) {
     *out_tib = (char *)tib;

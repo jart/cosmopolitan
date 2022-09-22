@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 
 // TODO(jart): These should be _Thread_local but doing that currently
 //             causes a regression with runitd.com on Windows.

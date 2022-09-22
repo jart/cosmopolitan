@@ -31,21 +31,20 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 
+static struct Tty vga_tty;
 #ifdef VGA_USE_WCS
 static wchar_t vga_wcs[VGA_TTY_HEIGHT * VGA_TTY_WIDTH];
 #else
 static wchar_t * const vga_wcs = NULL;
 #endif
 
-struct Tty _vga_tty;
-
 ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   size_t i, wrote = 0;
   ssize_t res = 0;
   for (i = 0; i < iovlen; ++i) {
-    void *output = iov[i].iov_base;
+    void *input = iov[i].iov_base;
     size_t len = iov[i].iov_len;
-    res = _TtyWrite(&_vga_tty, output, len);
+    res = _TtyWrite(&vga_tty, input, len);
     if (res < 0)
       break;
     wrote += res;
@@ -59,23 +58,15 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
 
 __attribute__((__constructor__)) static textstartup void _vga_init(void) {
   void * const vid_buf = (void *)(BANE + 0xb8000ull);
-  /*
-   * Get the initial cursor position from the BIOS data area.  Also get
-   * the height (in scan lines) of each character; this is used to set the
-   * cursor shape.
-   */
+  /* Get the initial cursor position from the BIOS data area. */
   typedef struct {
     unsigned char col, row;
   } bios_curs_pos_t;
   bios_curs_pos_t pos = *(bios_curs_pos_t *)(BANE + 0x0450ull);
-  uint8_t chr_ht = *(uint8_t *)(BANE + 0x0485ull),
-          chr_ht_hi = *(uint8_t *)(BANE + 0x0486ull);
-  if (chr_ht_hi != 0 || chr_ht > 32)
-    chr_ht = 32;
   /*
-   * Initialize our tty structure from the current screen contents, current
-   * cursor position, & character height.
+   * Initialize our tty structure from the current screen contents & current
+   * cursor position.
    */
-  _StartTty(&_vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
-            chr_ht, vid_buf, vga_wcs);
+  _StartTty(&vga_tty, VGA_TTY_HEIGHT, VGA_TTY_WIDTH, pos.row, pos.col,
+            vid_buf, vga_wcs);
 }

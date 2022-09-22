@@ -16,15 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -36,89 +33,74 @@
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/iov.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
 static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
-  int e, i;
-  size_t got;
-  bool masked;
-  ssize_t rc, toto;
-  sigset_t mask, oldmask;
+  static bool once, demodernize;
+  int i, err;
+  ssize_t rc;
+  size_t got, toto;
 
-  if (fd < 0) {
-    return ebadf();
-  }
-
-  if (iovlen < 0) {
-    return einval();
-  }
-
-  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
-    return efault();
-  }
-
+  if (fd < 0) return einval();
+  if (iovlen < 0) return einval();
+  if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) return efault();
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     return weaken(__zipos_read)(
         (struct ZiposHandle *)(intptr_t)g_fds.p[fd].handle, iov, iovlen, off);
-  }
-
-  if (IsMetal()) {
-    return espipe();  // must be serial or console if not zipos
-  }
-
-  if (IsWindows()) {
+  } else if (IsWindows()) {
     if (fd < g_fds.n) {
       return sys_read_nt(g_fds.p + fd, iov, iovlen, off);
     } else {
       return ebadf();
     }
-  }
-
-  while (iovlen && !iov->iov_len) {
-    --iovlen;
-    ++iov;
-  }
-
-  if (!iovlen) {
-    return sys_pread(fd, 0, 0, off, off);
+  } else if (IsMetal()) {
+    return enosys();
   }
 
   if (iovlen == 1) {
-    return sys_pread(fd, iov->iov_base, iov->iov_len, off, off);
+    return sys_pread(fd, iov[0].iov_base, iov[0].iov_len, off, off);
   }
 
-  e = errno;
-  rc = sys_preadv(fd, iov, iovlen, off, off);
-  if (rc != -1 || errno != ENOSYS) return rc;
-  errno = e;
+  /*
+   * NT, 2018-era XNU, and 2007-era Linux don't support this system call
+   */
+  if (!__vforked && !once) {
+    err = errno;
+    rc = sys_preadv(fd, iov, iovlen, off, off);
+    if (rc == -1 && errno == ENOSYS) {
+      errno = err;
+      once = true;
+      demodernize = true;
+      STRACE("demodernizing %s() due to %s", "preadv", "ENOSYS");
+    } else {
+      once = true;
+      return rc;
+    }
+  }
+
+  if (!demodernize) {
+    return sys_preadv(fd, iov, iovlen, off, off);
+  }
+
+  if (!iovlen) {
+    return sys_pread(fd, NULL, 0, off, off);
+  }
 
   for (toto = i = 0; i < iovlen; ++i) {
     rc = sys_pread(fd, iov[i].iov_base, iov[i].iov_len, off, off);
     if (rc == -1) {
-      if (!toto) {
-        toto = -1;
+      if (toto && (errno == EINTR || errno == EAGAIN)) {
+        return toto;
+      } else {
+        return -1;
       }
-      break;
     }
-
     got = rc;
     toto += got;
-    off += got;
     if (got != iov[i].iov_len) {
       break;
     }
-
-    if (!masked) {
-      sigfillset(&mask);
-      _npassert(!sys_sigprocmask(SIG_SETMASK, &mask, &oldmask));
-      masked = true;
-    }
-  }
-
-  if (masked) {
-    _npassert(!sys_sigprocmask(SIG_SETMASK, &oldmask, 0));
   }
 
   return toto;

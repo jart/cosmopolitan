@@ -22,6 +22,7 @@
 #include "libc/errno.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 int _pthread_reschedule(struct PosixThread *pt) {
   int rc, e = errno;

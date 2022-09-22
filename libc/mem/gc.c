@@ -20,10 +20,12 @@
 #include "libc/intrin/likely.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/thread.h"
 
 static inline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
                                                      struct StackFrame *parent,
@@ -34,11 +36,11 @@ static inline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
 
 static void TeardownGc(void) {
   int i;
+  cthread_t tls;
   struct Garbages *g;
-  struct CosmoTib *t;
   if (__tls_enabled) {
-    t = __get_tls();
-    if ((g = t->tib_garbages)) {
+    tls = (cthread_t)__get_tls();
+    if ((g = tls->garbages)) {
       // exit() currently doesn't use _gclongjmp() like pthread_exit()
       // so we need to run the deferred functions manually.
       while (g->i) {
@@ -59,18 +61,18 @@ __attribute__((__constructor__)) static void InitializeGc(void) {
 // then rewrite caller's return address on stack.
 static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
   int n2;
+  cthread_t tls;
   struct Garbage *p2;
   struct Garbages *g;
-  struct CosmoTib *t;
-  __require_tls();
-  t = __get_tls();
-  g = t->tib_garbages;
+  TlsIsRequired();
+  tls = (cthread_t)__get_tls();
+  g = tls->garbages;
   if (UNLIKELY(!g)) {
     if (!(g = malloc(sizeof(struct Garbages)))) notpossible;
     g->i = 0;
     g->n = 4;
     if (!(g->p = malloc(g->n * sizeof(struct Garbage)))) notpossible;
-    t->tib_garbages = g;
+    tls->garbages = g;
   } else if (UNLIKELY(g->i == g->n)) {
     p2 = g->p;
     n2 = g->n + (g->n >> 1);

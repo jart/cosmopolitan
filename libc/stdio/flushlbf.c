@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 #include "libc/stdio/fflush.internal.h"
-#include "libc/stdio/lock.internal.h"
+#include "libc/stdio/lock.h"
 #include "libc/stdio/stdio.h"
 #include "libc/stdio/stdio_ext.h"
 

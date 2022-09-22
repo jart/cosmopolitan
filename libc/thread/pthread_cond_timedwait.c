@@ -16,12 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/thread2.h"
-#include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/cv.h"
-#include "third_party/nsync/time.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/pthread2.h"
 
 /**
  * Waits for condition with optional time limit, e.g.
@@ -46,13 +48,42 @@
  */
 int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                            const struct timespec *abstime) {
+  int rc, err, seq;
+  struct timespec now, rel, *tsp;
+
   if (abstime && !(0 <= abstime->tv_nsec && abstime->tv_nsec < 1000000000)) {
+    assert(!"bad abstime");
     return EINVAL;
   }
-  if (mutex->_type != PTHREAD_MUTEX_NORMAL) {
-    nsync_panic_("pthread cond needs normal mutex\n");
+
+  if ((err = pthread_mutex_unlock(mutex))) {
+    return err;
   }
-  return nsync_cv_wait_with_deadline(
-      (nsync_cv *)cond, (nsync_mu *)mutex,
-      abstime ? *abstime : nsync_time_no_deadline, 0);
+
+  atomic_fetch_add(&cond->waits, 1);
+
+  rc = 0;
+  seq = atomic_load_explicit(&cond->seq, memory_order_relaxed);
+  do {
+    if (!abstime) {
+      tsp = 0;
+    } else {
+      now = _timespec_mono();
+      if (_timespec_gte(now, *abstime)) {
+        rc = ETIMEDOUT;
+        break;
+      }
+      rel = _timespec_sub(*abstime, now);
+      tsp = &rel;
+    }
+    _futex_wait(&cond->seq, seq, cond->pshared, tsp);
+  } while (seq == atomic_load_explicit(&cond->seq, memory_order_relaxed));
+
+  atomic_fetch_sub(&cond->waits, 1);
+
+  if ((err = pthread_mutex_lock(mutex))) {
+    return err;
+  }
+
+  return rc;
 }

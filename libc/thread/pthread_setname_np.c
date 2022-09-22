@@ -27,6 +27,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 /**
  * Registers custom name of thread with system, e.g.

@@ -16,10 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pthread.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/thread/thread.h"
-
-// this lock currently needs to be (1) recursive and (2) not nsync
 
 extern pthread_mutex_t __mmi_lock_obj;
 

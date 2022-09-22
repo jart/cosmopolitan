@@ -20,8 +20,10 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/stdio/stdio.h"
-#include "libc/thread/tls.h"
+#include "libc/thread/thread.h"
 // clang-format off
 
 /**
@@ -36,7 +38,7 @@ void PrintGarbage(void) {
   kprintf("                         SHADOW STACK @ %p\n", __builtin_frame_address(0));
   kprintf("garbage ent. parent frame     original ret        callback              arg        \n");
   kprintf("------------ ------------ ------------------ ------------------ ------------------\n");
-  if ((g = __tls_enabled ? __get_tls()->tib_garbages:0) && g->i) {
+  if ((g = __tls_enabled ? ((cthread_t)__get_tls())->garbages:0) && g->i) {
     for (i = g->i; i--;) {
       symbol = __get_symbol_by_addr(g->p[i].ret);
       if (symbol) {

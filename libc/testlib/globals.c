@@ -16,9 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
 #include "libc/testlib/testlib.h"
 
 char g_fixturename[256];
-atomic_uint g_testlib_ran;
-atomic_uint g_testlib_failed;
+_Atomic(unsigned) g_testlib_ran;
+_Atomic(unsigned) g_testlib_failed;

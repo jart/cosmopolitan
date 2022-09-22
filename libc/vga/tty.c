@@ -93,7 +93,7 @@ static wchar_t *Wcs(struct Tty *tty)
 
 void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
                unsigned short starty, unsigned short startx,
-               unsigned char chr_ht, void *vccs, wchar_t *wcs) {
+               void *vccs, wchar_t *wcs) {
   struct VgaTextCharCell *ccs = vccs;
   memset(tty, 0, sizeof(struct Tty));
   SetYn(tty, yn);
@@ -103,11 +103,8 @@ void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
     starty = yn - 1;
   if (startx >= xn)
     startx = xn - 1;
-  if (chr_ht > 32)
-    chr_ht = 32;
   tty->y = starty;
   tty->x = startx;
-  tty->chr_ht = chr_ht;
   if (SetWcs(tty, wcs)) {
     size_t n = (size_t)yn * xn, i;
     for (i = 0; i < n; ++i)
@@ -146,27 +143,66 @@ static wchar_t *GetXlatLineDrawing(void) {
   return xlat;
 }
 
+static void XlatAlphabet(wchar_t xlat[128], int a, int b) {
+  unsigned i;
+  for (i = 0; i < 128; ++i) {
+    if ('a' <= i && i <= 'z') {
+      xlat[i] = i - 'a' + a;
+    } else if ('A' <= i && i <= 'Z') {
+      xlat[i] = i - 'A' + b;
+    } else {
+      xlat[i] = i;
+    }
+  }
+}
+
 static wchar_t *GetXlatItalic(void) {
-  /* Unimplemented.  Simply output normal non-italicized characters for now. */
-  return GetXlatAscii();
+  static bool once;
+  static wchar_t xlat[128];
+  if (!once) {
+    XlatAlphabet(xlat, L'𝑎', L'𝐴');
+    once = true;
+  }
+  return xlat;
 }
 
 static wchar_t *GetXlatBoldItalic(void) {
-  /*
-   * Unimplemented.  Simply output high-intensity non-italicized characters
-   * for now.
-   */
-  return GetXlatAscii();
+  static bool once;
+  static wchar_t xlat[128];
+  if (!once) {
+    XlatAlphabet(xlat, L'𝒂', L'𝑨');
+    once = true;
+  }
+  return xlat;
 }
 
 static wchar_t *GetXlatBoldFraktur(void) {
-  /* Unimplemented. */
-  return GetXlatAscii();
+  static bool once;
+  static wchar_t xlat[128];
+  if (!once) {
+    XlatAlphabet(xlat, L'𝖆', L'𝕬');
+    once = true;
+  }
+  return xlat;
 }
 
 static wchar_t *GetXlatFraktur(void) {
-  /* Unimplemented. */
-  return GetXlatAscii();
+  unsigned i;
+  static bool once;
+  static wchar_t xlat[128];
+  if (!once) {
+    for (i = 0; i < ARRAYLEN(xlat); ++i) {
+      if ('A' <= i && i <= 'Z') {
+        xlat[i] = L"𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ"[i - 'A'];
+      } else if ('a' <= i && i <= 'z') {
+        xlat[i] = i - 'a' + L'𝔞';
+      } else {
+        xlat[i] = i;
+      }
+    }
+    once = true;
+  }
+  return xlat;
 }
 
 static wchar_t *GetXlatDoubleWidth(void) {
@@ -222,33 +258,15 @@ static void TtySetCodepage(struct Tty *tty, char id) {
   }
 }
 
-/**
- * Map the currently active foreground & background colors & terminal
- * configuration to a VGA text character attribute byte.
- *
- * @see VGA_USE_BLINK macro (libc/vga/vga.internal.h)
- * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
- */
 static uint8_t TtyGetVgaAttr(struct Tty *tty)
 {
-  uint8_t attr;
-  if ((tty->pr & kTtyFlip) == 0)
-    attr = tty->fg | tty->bg << 4;
-  else
-    attr = tty->bg | tty->fg << 4;
+  uint8_t attr = tty->fg | tty->bg << 4;
+  if ((tty->pr & kTtyBold) != 0)
+    attr |= 0x08;
 #ifdef VGA_USE_BLINK
-  /*
-   * If blinking is enabled, we can only have the 8 dark background color
-   * codes (0 to 7).  Simply map any bright background color (8 to 15) to
-   * its corresponding dark color, & call it a day.  This is a bit more
-   * simplistic than what Linux does, but should be enough.
-   */
-  attr &= ~0x80;
   if ((tty->pr & kTtyBlink) != 0)
     attr |= 0x80;
 #endif
-  if ((tty->pr & kTtyBold) != 0)
-    attr |= 0x08;
   return attr;
 }
 
@@ -553,18 +571,15 @@ static void TtyDeleteLines(struct Tty *tty) {
 }
 
 static void TtyReportDeviceStatus(struct Tty *tty) {
-  static const char report[] = "\e[0n";
-  _TtyWriteInput(tty, report, strlen(report));
+  _TtyWriteInput(tty, "\e[0n", 4);
 }
 
 static void TtyReportPreferredVtType(struct Tty *tty) {
-  static const char report[] = "\e[?1;0c";
-  _TtyWriteInput(tty, report, strlen(report));
+  _TtyWriteInput(tty, "\e[?1;0c", 4);
 }
 
 static void TtyReportPreferredVtIdentity(struct Tty *tty) {
-  static const char report[] = "\e/Z";
-  _TtyWriteInput(tty, report, strlen(report));
+  _TtyWriteInput(tty, "\e/Z", 4);
 }
 
 static void TtyBell(struct Tty *tty) {
@@ -624,23 +639,37 @@ static void TtyCsiN(struct Tty *tty) {
 
 /**
  * Map the given (R, G, B) triplet to one of the 16 basic foreground colors
- * or one of the 16 background colors.
+ * or one of the 8 (or 16) background colors.
  *
+ * @see VGA_USE_BLINK macro (libc/vga/vga.internal.h)
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b)
+static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b, bool as_fg)
 {
-  uint8_t hue = 0, max = MAX(MAX(r, g), b);
-  if (r > max / 2)
-    hue |= 4;
-  if (g > max / 2)
-    hue |= 2;
-  if (b > max / 2)
-    hue |= 1;
-  if (hue == 7 && max <= 0x55)
-    hue = 8;
-  else if (max > 0xaa)
-    hue |= 8;
+  uint8_t hue = 0;
+#ifdef VGA_USE_BLINK
+  if (!as_fg) {
+    if (r >= 128)
+      hue |= 4;
+    if (g >= 128)
+      hue |= 2;
+    if (b >= 128)
+      hue |= 1;
+  } else
+#endif
+  {
+    uint8_t max = MAX(MAX(r, g), b);
+    if (r > max / 2)
+      hue |= 4;
+    if (g > max / 2)
+      hue |= 2;
+    if (b > max / 2)
+      hue |= 1;
+    if (hue == 7 && max <= 0x55)
+      hue = 8;
+    else if (max > 0xaa)
+      hue |= 8;
+  }
   return hue;
 }
 
@@ -650,7 +679,7 @@ static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b)
  *
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyMapXtermColor(uint8_t color)
+static uint8_t TtyMapXtermColor(uint8_t color, bool as_fg)
 {
   uint8_t r, g, b;
   if (color < 8) {
@@ -670,7 +699,7 @@ static uint8_t TtyMapXtermColor(uint8_t color)
     r = color * 0x55 / 2;
   } else
     r = g = b = (unsigned)color * 10 - 2312;
-  return TtyMapTrueColor(r, g, b);
+  return TtyMapTrueColor(r, g, b, as_fg);
 }
 
 static void TtySelectGraphicsRendition(struct Tty *tty) {
@@ -793,7 +822,13 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
                 break;
               case 100 ... 107:
                 code[0] -= 100 - 40;
+#ifndef VGA_USE_BLINK
+                /*
+                 * If blinking is not enabled in VGA text mode, then we can
+                 * use bright background colors.
+                 */
                 code[0] += 8;
+#endif
                 /* fallthrough */
               case 40 ... 47:
                 tty->bg = code[0] - 40;
@@ -820,7 +855,7 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
             if (++code[3] == 3) {
               code[3] = 0;
               t = kSgr;
-              tty->fg = TtyMapTrueColor(code[0], code[1], code[2]);
+              tty->fg = TtyMapTrueColor(code[0], code[1], code[2], true);
               tty->pr |= kTtyFg;
               tty->pr |= kTtyTrue;
             }
@@ -829,20 +864,20 @@ static void TtySelectGraphicsRendition(struct Tty *tty) {
             if (++code[3] == 3) {
               code[3] = 0;
               t = kSgr;
-              tty->bg = TtyMapTrueColor(code[0], code[1], code[2]);
+              tty->bg = TtyMapTrueColor(code[0], code[1], code[2], false);
               tty->pr |= kTtyBg;
               tty->pr |= kTtyTrue;
             }
             break;
           case kSgrFgXterm:
             t = kSgr;
-            tty->fg = TtyMapXtermColor(code[0]);
+            tty->fg = TtyMapXtermColor(code[0], true);
             tty->pr |= kTtyFg;
             tty->pr &= ~kTtyTrue;
             break;
           case kSgrBgXterm:
             t = kSgr;
-            tty->bg = TtyMapXtermColor(code[0]);
+            tty->bg = TtyMapXtermColor(code[0], false);
             tty->pr |= kTtyBg;
             tty->pr &= ~kTtyTrue;
             break;
@@ -1046,17 +1081,10 @@ static void TtyEscAppend(struct Tty *tty, char c) {
 }
 
 static void TtyUpdateHwCursor(struct Tty *tty) {
-  unsigned char start = tty->chr_ht - 2, end = tty->chr_ht - 1;
   unsigned short pos = tty->y * Xn(tty) + tty->x;
-  if ((tty->conf & kTtyNocursor))
-    start |= 1 << 5;
-  outb(CRTPORT, 0x0A);
-  outb(CRTPORT + 1, start);
-  outb(CRTPORT, 0x0B);
-  outb(CRTPORT + 1, end);
-  outb(CRTPORT, 0x0E);
+  outb(CRTPORT, 0x0e);
   outb(CRTPORT + 1, (unsigned char)(pos >> 8));
-  outb(CRTPORT, 0x0F);
+  outb(CRTPORT, 0x0f);
   outb(CRTPORT + 1, (unsigned char)pos);
 }
 
@@ -1176,11 +1204,9 @@ ssize_t _TtyWriteInput(struct Tty *tty, const void *data, size_t n) {
   if (cr && i < sizeof tty->input.p) {
     p[i++] = '\n';
   }
-#ifdef VGA_PERSNICKETY_STATUS
   if (!(tty->conf & kTtyNoecho)) {
     _TtyWrite(tty, p + tty->input.i, i - tty->input.i);
   }
-#endif
   tty->input.i = i;
   return n;
 }
@@ -1189,7 +1215,6 @@ ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
   char *p;
   size_t n;
   n = MIN(size, tty->input.i);
-#ifdef VGA_PERSNICKETY_STATUS
   if (!(tty->conf & kTtyNocanon)) {
     if ((p = memchr(tty->input.p, '\n', n))) {
       n = MIN(n, tty->input.p - p + 1);
@@ -1197,7 +1222,6 @@ ssize_t _TtyRead(struct Tty *tty, void *buf, size_t size) {
       n = 0;
     }
   }
-#endif
   memcpy(buf, tty->input.p, n);
   memcpy(tty->input.p, tty->input.p + n, tty->input.i - n);
   tty->input.i -= n;

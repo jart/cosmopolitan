@@ -7,7 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 #include "libc/stdio/stdio.h"
 
 /**

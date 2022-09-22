@@ -72,4 +72,3 @@ vga_console:
 	.endobj	vga_console,globl,hidden
 	.previous
 	.yoink	sys_writev_vga
-	.yoink	sys_readv_vga

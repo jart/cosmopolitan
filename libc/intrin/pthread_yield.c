@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/strace.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 
 /**
  * Yields current thread's remaining timeslice to operating system.

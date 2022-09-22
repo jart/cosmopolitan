@@ -159,8 +159,6 @@ static void SetLimit(int resource, uint64_t soft, uint64_t hard) {
   }
 }
 
-#pragma weak main
-
 /**
  * Generic test program main function.
  */
@@ -184,13 +182,13 @@ noasan int main(int argc, char *argv[]) {
   testlib_runalltests();
   if (!g_testlib_failed && runbenchmarks_ && weaken(testlib_runallbenchmarks)) {
     weaken(testlib_runallbenchmarks)();
-    if (IsAsan() && !g_testlib_failed) {
+    if (!g_testlib_failed) {
       CheckForMemoryLeaks();
     }
     if (!g_testlib_failed && IsRunningUnderMake()) {
       return 254;  // compile.com considers this 0 and propagates output
     }
-  } else if (IsAsan() && !g_testlib_failed) {
+  } else if (!g_testlib_failed) {
     CheckForMemoryLeaks();
   }
 

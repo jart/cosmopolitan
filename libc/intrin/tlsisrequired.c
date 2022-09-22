@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/tls.h"
+#include "libc/nexgen32e/threaded.h"
 
-void __require_tls(void) {
+void TlsIsRequired(void) {
   if (!__tls_enabled) {
     notpossible;
   }

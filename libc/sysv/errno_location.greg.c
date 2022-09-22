@@ -17,12 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/thread/tls2.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 
 /**
  * Returns address of errno variable.
+ *
+ * @see __initialize_tls()
+ * @see __install_tls()
  */
 privileged nocallersavedregisters errno_t *(__errno_location)(void) {
   if (!__tls_enabled) return &__errno;
-  return &__get_tls_privileged()->tib_errno;
+  return (errno_t *)(__get_tls_privileged() + 0x3c);
 }

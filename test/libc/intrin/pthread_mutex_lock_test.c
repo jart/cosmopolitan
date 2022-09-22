@@ -17,15 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/futex.internal.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/gc.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -38,15 +41,13 @@
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 
 #define THREADS    8
 #define ITERATIONS 512
 
 int count;
-atomic_int started;
-atomic_int finished;
+_Atomic(int) started;
+_Atomic(int) finished;
 pthread_mutex_t mylock;
 pthread_spinlock_t slock;
 struct spawn th[THREADS];

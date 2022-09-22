@@ -1,7 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
 #include "libc/fmt/pflink.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 
 #define _STDIO_H
 #define L_ctermid    20
@@ -50,9 +50,6 @@ int fileno(FILE *) paramsnonnull() nosideeffect;
 int fputc(int, FILE *) paramsnonnull();
 int fputs(const char *, FILE *) paramsnonnull();
 int fputws(const wchar_t *, FILE *) paramsnonnull();
-void flockfile(FILE *) paramsnonnull();
-void funlockfile(FILE *) paramsnonnull();
-int ftrylockfile(FILE *) paramsnonnull();
 char *fgets(char *, int, FILE *) paramsnonnull();
 wchar_t *fgetws(wchar_t *, int, FILE *) paramsnonnull();
 wint_t putwc(wchar_t, FILE *) paramsnonnull();

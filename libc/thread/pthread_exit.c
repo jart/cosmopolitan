@@ -16,11 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/pthread.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/runtime/gc.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 /**
  * Terminates current POSIX thread.
@@ -36,7 +37,7 @@
  */
 wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
-  if ((pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+  if ((pt = (struct PosixThread *)((cthread_t)__get_tls())->pthread)) {
     pt->rc = rc;
     _gclongjmp(pt->exiter, 1);
   } else {

@@ -122,7 +122,6 @@ include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
-include third_party/nsync/nsync.mk		# │
 include third_party/dlmalloc/dlmalloc.mk	#─┘
 include libc/mem/mem.mk				#─┐
 include libc/zipos/zipos.mk			# ├──DYNAMIC RUNTIME
@@ -212,7 +211,6 @@ include test/libc/fmt/test.mk
 include test/libc/dns/test.mk
 include test/libc/time/test.mk
 include test/libc/stdio/test.mk
-include test/libc/zipos/test.mk
 include test/libc/release/test.mk
 include test/libc/test.mk
 include test/net/http/test.mk
@@ -300,7 +298,6 @@ COSMOPOLITAN_OBJECTS =		\
 	LIBC_MEM		\
 	THIRD_PARTY_DLMALLOC	\
 	LIBC_RUNTIME		\
-	THIRD_PARTY_NSYNC	\
 	LIBC_ELF		\
 	LIBC_CALLS		\
 	LIBC_SYSV_CALLS		\
@@ -340,7 +337,6 @@ COSMOPOLITAN_HEADERS =		\
 	LIBC_RUNTIME		\
 	LIBC_SOCK		\
 	LIBC_STDIO		\
-	THIRD_PARTY_NSYNC	\
 	THIRD_PARTY_XED		\
 	LIBC_STR		\
 	LIBC_SYSV		\

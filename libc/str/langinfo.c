@@ -25,10 +25,11 @@
 │  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                      │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/nexgen32e/gettls.h"
+#include "libc/thread/thread.h"
 #include "libc/str/langinfo.h"
 #include "libc/str/locale.h"
 #include "libc/str/nltypes.h"
-#include "libc/thread/tls.h"
 
 asm(".ident\t\"\\n\\n\
 Musl libc (MIT License)\\n\
@@ -100,5 +101,5 @@ char *nl_langinfo_l(nl_item item, locale_t loc)
 
 char *nl_langinfo(nl_item item)
 {
-	return nl_langinfo_l(item, (locale_t)__get_tls()->tib_locale);
+	return nl_langinfo_l(item, ((cthread_t)__get_tls())->locale);
 }

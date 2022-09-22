@@ -21,14 +21,15 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/nopl.internal.h"
+#include "libc/intrin/nopl.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/gettls.h"
 #include "libc/nexgen32e/stackframe.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/tls2.h"
+#include "libc/thread/thread.h"
 
 #define MAX_NESTING 512
 
@@ -43,7 +44,7 @@
 void ftrace_hook(void);
 
 static int g_stackdigs;
-static struct CosmoFtrace g_ftrace;
+static struct Ftrace g_ftrace;
 
 static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   int nesting = -2;
@@ -54,12 +55,12 @@ static privileged inline int GetNestingLevelImpl(struct StackFrame *frame) {
   return MAX(0, nesting);
 }
 
-static privileged inline int GetNestingLevel(struct CosmoFtrace *ft,
+static privileged inline int GetNestingLevel(struct Ftrace *ft,
                                              struct StackFrame *sf) {
   int nesting;
   nesting = GetNestingLevelImpl(sf);
-  if (nesting < ft->ft_skew) ft->ft_skew = nesting;
-  nesting -= ft->ft_skew;
+  if (nesting < ft->skew) ft->skew = nesting;
+  nesting -= ft->skew;
   return MIN(MAX_NESTING, nesting);
 }
 
@@ -72,27 +73,27 @@ static privileged inline int GetNestingLevel(struct CosmoFtrace *ft,
  */
 privileged void ftracer(void) {
   long stackuse;
-  struct CosmoFtrace *ft;
+  struct Ftrace *ft;
   struct StackFrame *sf;
   if (__tls_enabled) {
-    ft = &__get_tls_privileged()->tib_ftrace;
+    ft = (struct Ftrace *)(__get_tls_privileged() + 0x08);
   } else {
     ft = &g_ftrace;
   }
-  if (_cmpxchg(&ft->ft_once, false, true)) {
-    ft->ft_lastaddr = -1;
-    ft->ft_skew = GetNestingLevelImpl(__builtin_frame_address(0));
+  if (_cmpxchg(&ft->once, false, true)) {
+    ft->lastaddr = -1;
+    ft->skew = GetNestingLevelImpl(__builtin_frame_address(0));
   }
-  if (_cmpxchg(&ft->ft_noreentry, false, true)) {
+  if (_cmpxchg(&ft->noreentry, false, true)) {
     sf = __builtin_frame_address(0);
     sf = sf->next;
-    if (sf->addr != ft->ft_lastaddr) {
+    if (sf->addr != ft->lastaddr) {
       stackuse = GetStackAddr() + GetStackSize() - (intptr_t)sf;
       kprintf("%rFUN %6P %'13T %'*ld %*s%t\n", g_stackdigs, stackuse,
               GetNestingLevel(ft, sf) * 2, "", sf->addr);
-      ft->ft_lastaddr = sf->addr;
+      ft->lastaddr = sf->addr;
     }
-    ft->ft_noreentry = false;
+    ft->noreentry = false;
   }
 }
 

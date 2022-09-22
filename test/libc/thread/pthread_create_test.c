@@ -22,9 +22,10 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/pthread2.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/prot.h"
@@ -35,21 +36,19 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/thread2.h"
 
-void OnUsr1(int sig, struct siginfo *si, void *vctx) {
+void OnTrap(int sig, struct siginfo *si, void *vctx) {
   struct ucontext *ctx = vctx;
 }
 
 void SetUp(void) {
-  struct sigaction sig = {.sa_sigaction = OnUsr1, .sa_flags = SA_SIGINFO};
-  sigaction(SIGUSR1, &sig, 0);
+  struct sigaction sig = {.sa_sigaction = OnTrap, .sa_flags = SA_SIGINFO};
+  sigaction(SIGTRAP, &sig, 0);
 }
 
 void TriggerSignal(void) {
   sched_yield();
-  /* kprintf("raising at %p\n", __builtin_frame_address(0)); */
-  raise(SIGUSR1);
+  DebugBreak();
   sched_yield();
 }
 
@@ -68,7 +67,6 @@ TEST(pthread_create, testCreateReturnJoin) {
 }
 
 static void *IncExit(void *arg) {
-  CheckStackIsAligned();
   TriggerSignal();
   pthread_exit((void *)((uintptr_t)arg + 1));
 }

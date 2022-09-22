@@ -641,18 +641,15 @@ static void PtyDeleteLines(struct Pty *pty) {
 }
 
 static void PtyReportDeviceStatus(struct Pty *pty) {
-  static const char report[] = "\e[0n";
-  PtyWriteInput(pty, report, strlen(report));
+  PtyWriteInput(pty, "\e[0n", 4);
 }
 
 static void PtyReportPreferredVtType(struct Pty *pty) {
-  static const char report[] = "\e[?1;0c";
-  PtyWriteInput(pty, report, strlen(report));
+  PtyWriteInput(pty, "\e[?1;0c", 4);
 }
 
 static void PtyReportPreferredVtIdentity(struct Pty *pty) {
-  static const char report[] = "\e/Z";
-  PtyWriteInput(pty, report, strlen(report));
+  PtyWriteInput(pty, "\e/Z", 4);
 }
 
 static void PtyBell(struct Pty *pty) {

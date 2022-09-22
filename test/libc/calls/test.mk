@@ -103,9 +103,6 @@ o/$(MODE)/test/libc/calls/poll_test.com.runs:				\
 o/$(MODE)/test/libc/calls/fcntl_test.com.runs:				\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
 
-o/$(MODE)/test/libc/calls/lock_test.com.runs:				\
-		private .PLEDGE = stdio rpath wpath cpath fattr proc flock
-
 o/$(MODE)/test/libc/calls/openbsd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unveil
 

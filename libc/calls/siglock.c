@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/pthread.h"
 
 static pthread_mutex_t __sig_lock_obj;
 
@@ -30,5 +30,5 @@ void(__sig_unlock)(void) {
 }
 
 __attribute__((__constructor__)) static void init(void) {
-  __sig_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+  __sig_lock_obj.type = PTHREAD_MUTEX_RECURSIVE;
 }

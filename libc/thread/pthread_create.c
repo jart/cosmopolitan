@@ -19,34 +19,30 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
-#include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/gettls.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/internal.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
-
-STATIC_YOINK("nsync_mu_lock");
-STATIC_YOINK("nsync_mu_unlock");
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
@@ -60,12 +56,7 @@ void _pthread_free(struct PosixThread *pt) {
   if (pt->ownstack &&        //
       pt->attr.stackaddr &&  //
       pt->attr.stackaddr != MAP_FAILED) {
-    if (munmap(pt->attr.stackaddr, pt->attr.stacksize)) {
-      notpossible;
-    }
-  }
-  if (pt->altstack) {
-    free(pt->altstack);
+    munmap(&pt->attr.stackaddr, pt->attr.stacksize);
   }
   free(pt);
 }
@@ -73,26 +64,17 @@ void _pthread_free(struct PosixThread *pt) {
 static int PosixThread(void *arg, int tid) {
   struct PosixThread *pt = arg;
   enum PosixThreadStatus status;
-  struct sigaltstack ss;
-  if (pt->altstack) {
-    ss.ss_flags = 0;
-    ss.ss_size = SIGSTKSZ;
-    ss.ss_sp = pt->altstack;
-    if (sigaltstack(&ss, 0)) {
-      notpossible;
-    }
-  }
   if (pt->attr.inheritsched == PTHREAD_EXPLICIT_SCHED) {
     _pthread_reschedule(pt);
   }
   if (!setjmp(pt->exiter)) {
-    __get_tls()->tib_pthread = (pthread_t)pt;
+    ((cthread_t)__get_tls())->pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);
   }
   if (weaken(_pthread_key_destruct)) {
     weaken(_pthread_key_destruct)(0);
   }
-  _pthread_ungarbage();
+  cthread_ungarbage();
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {
     atomic_store_explicit(&pt->status, kPosixThreadZombie,
@@ -187,7 +169,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                    void *(*start_routine)(void *), void *arg) {
   int rc, e = errno;
   struct PosixThread *pt;
-  __require_tls();
+  TlsIsRequired();
   _pthread_zombies_decimate();
 
   // create posix thread object
@@ -273,11 +255,6 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     if (IsAsan() && pt->attr.guardsize) {
       __asan_poison(pt->attr.stackaddr, pt->attr.guardsize, kAsanStackOverflow);
     }
-  }
-
-  // setup signal handler stack
-  if (_wantcrashreports && !IsWindows()) {
-    pt->altstack = malloc(SIGSTKSZ);
   }
 
   // set initial status

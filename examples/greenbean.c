@@ -8,7 +8,6 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/assert.h"
-#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
@@ -19,11 +18,14 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/pthread.h"
+#include "libc/intrin/wait0.internal.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/threaded.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -46,9 +48,6 @@
 #include "libc/sysv/consts/sol.h"
 #include "libc/sysv/consts/tcp.h"
 #include "libc/thread/spawn.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "net/http/http.h"
@@ -105,11 +104,11 @@
   "Cache-Control: private; max-age=0\r\n"
 
 int threads;
-atomic_int workers;
-atomic_int messages;
-atomic_int listening;
-atomic_int connections;
-atomic_int closingtime;
+_Atomic(int) workers;
+_Atomic(int) messages;
+_Atomic(int) listening;
+_Atomic(int) connections;
+_Atomic(int) closingtime;
 const char *volatile status;
 
 void *Worker(void *id) {

@@ -16,17 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
-#include "libc/thread/thread2.h"
+#include "libc/intrin/pthread2.h"
 
 /**
  * Waits for condition, e.g.
  *
  *     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
  *     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
- *     // ...
+ *
+ *     // waiting threads
  *     pthread_mutex_lock(&lock);
  *     pthread_cond_wait(&cond, &lock);
+ *     pthread_mutex_unlock(&lock);
+ *
+ *     // notifying thread
+ *     pthread_mutex_lock(&lock);
+ *     pthread_cond_broadcast(&cond);
  *     pthread_mutex_unlock(&lock);
  *
  * @param mutex needs to be held by thread when calling this function

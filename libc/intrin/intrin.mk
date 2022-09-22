@@ -43,20 +43,6 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(LIBC_INTRIN_A_OBJS)			\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
-# we can't use asan because:
-#   asan guard pages haven't been allocated yet
-o/$(MODE)/libc/intrin/directmap.o			\
-o/$(MODE)/libc/intrin/directmap-nt.o: private		\
-		OVERRIDE_COPTS +=			\
-			-ffreestanding			\
-			-fno-sanitize=address
-
-# we want small code size because:
-#   to keep .text.head under 4096 bytes
-o/$(MODE)/libc/intrin/mman.greg.o: private		\
-		OVERRIDE_COPTS +=			\
-			-Os
-
 # we can't use asan and ubsan because:
 #   this is asan and ubsan
 o/$(MODE)/libc/intrin/asan.o				\
@@ -93,6 +79,11 @@ o/$(MODE)/libc/intrin/futex_wait.o			\
 o/$(MODE)/libc/intrin/futex_wake.o			\
 o/$(MODE)/libc/intrin/gettid.greg.o			\
 o/$(MODE)/libc/intrin/sys_gettid.greg.o			\
+o/$(MODE)/libc/intrin/pthread_mutex_lock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_wait.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_wake.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_unlock.o		\
+o/$(MODE)/libc/intrin/pthread_mutex_trylock.o		\
 o/$(MODE)/libc/intrin/_trylock_debug_4.o		\
 o/$(MODE)/libc/intrin/_spinlock_debug_4.o: private	\
 		OVERRIDE_CFLAGS +=			\
