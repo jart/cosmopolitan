@@ -159,17 +159,17 @@ _rlinit_vesa:
 	mov	%al,%cl
 	and	$0b00001011,%al		# also skip if mode is unusable, or
 	cmp	$0b00001011,%al		# extra information unavailable, or
-	jnz	.fail3			# is monochrome
+	jnz	.fail3			# is monochrome, or is graphics w/o
+	mov	%cl,%al			# linear frame buffer
+	and	$0b10010000,%al
+	cmp	$0b00010000,%al
+	jz	.fail3
 	call	.putsp			# echo mode information
 	call	.putsp
 	test	$0b00010000,%cl		# first, echo mode attributes
 	setnz	%al
-	imul	$'g'-'t',%ax,%ax	# - 'g': graphics; 't': text mode
-	add	$'t',%al
-	shl	%cl			# - turn 'g' into 'G' if linear
-	sbb	%cl,%cl			#   frame buffer supported
-	and	$'G'-'g',%cl
-	add	%cl,%al
+	imul	$'G'-'T',%ax,%ax	# - 'G': graphics; 'T': text mode
+	add	$'T',%al
 	call	.putc
 	call	.putsp
 	xchg	%ax,%si			# then output
