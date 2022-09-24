@@ -16,9 +16,18 @@
 #define IS2POW(X)           (!((X) & ((X)-1)))
 #define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
 #define ROUNDDOWN(X, K)     ((X) & -(K))
+#ifndef __ASSEMBLER__
 #define ABS(X)              ((X) >= 0 ? (X) : -(X))
 #define MIN(X, Y)           ((Y) > (X) ? (X) : (Y))
 #define MAX(X, Y)           ((Y) < (X) ? (X) : (Y))
+#else
+// The GNU assembler does not grok the ?: ternary operator; furthermore,
+// boolean expressions yield -1 and 0 for "true" and "false", not 1 and 0.
+#define __MAPBOOL(P)        (!!(P) / (!!(P) + !(P)))
+#define __IFELSE(P, X, Y)   (__MAPBOOL(P) * (X) + __MAPBOOL(!(P)) * (Y))
+#define MIN(X, Y)           (__IFELSE((Y) > (X), (X), (Y)))
+#define MAX(X, Y)           (__IFELSE((Y) < (X), (X), (Y)))
+#endif
 #define PASTE(A, B)         __PASTE(A, B)
 #define STRINGIFY(A)        __STRINGIFY(A)
 #define EQUIVALENT(X, Y)    (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))

@@ -28,6 +28,10 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 
+#if SupportsMetal()
+STATIC_YOINK("_idt");
+#endif
+
 /**
  * Aborts process after printing a backtrace.
  *
