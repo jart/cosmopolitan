@@ -1137,12 +1137,17 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 	.endobj	sconf,global,hidden
 
 //	Global Descriptor Table
-//
-//	@note address portion only concern legacy modes
 	.align	8
-gdt:	.short	2f-1f		# table byte length
-	.long	REAL(1f),0	# table address
-	.zero	2
+_gdtrphy:
+	.short	2f-1f-1		# table byte length
+	.long	REAL(1f)	# table address (physical space)
+	.endobj	_gdtrphy,global,hidden
+_gdtr:
+	.short	2f-1f-1		# table byte length
+	.quad	1f		# table address (final virtual space)
+	.endobj	_gdtr,global,hidden
+	.align	8
+_gdt:
 1:
 //	          ┌G:granularity (1 → limit *= 0x1000)
 //	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
@@ -1172,7 +1177,9 @@ gdt:	.short	2f-1f		# table byte length
 .quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
 .quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
 .quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
-2:	.endobj	gdt,global,hidden
+.tssdescstub _tss							#56,64
+2:
+	.endobj	_gdt,global,hidden
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
@@ -1433,7 +1440,7 @@ golong:	cli
 	rdmsr
 	or	$EFER_LME|EFER_SCE,%eax
 	wrmsr
-	lgdt	REAL(gdt)
+	lgdt	REAL(_gdtrphy)
 	mov	%cr0,%eax
 	or	$CR0_PE|CR0_PG|CR0_MP,%eax
 	and	$~CR0_EM,%eax
@@ -1451,6 +1458,8 @@ long:	xor	%eax,%eax
 	mov	%eax,%fs
 	mov	%eax,%gs
 	mov	$0x80000,%esp
+	mov	$GDT_LONG_TSS,%al
+	ltr	%ax
 	xor	%r12d,%r12d
 	xor	%r13d,%r13d
 	xor	%r14d,%r14d
@@ -1464,6 +1473,8 @@ long:	xor	%eax,%eax
 	call	__map_phdrs
 	push	$0x037f
 	fldcw	(%rsp)
+	lgdt	_gdtr					# reload GDTR for
+							# virtual memory space
 	movabs	$kernel,%rax
 	jmp	*%rax
 	.endfn	long
