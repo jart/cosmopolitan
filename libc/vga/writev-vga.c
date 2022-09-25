@@ -62,7 +62,8 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
   if (IsMetal()) {
     struct mman *mm = (struct mman *)(BANE + 0x0500);
     unsigned short height = mm->pc_video_height, width = mm->pc_video_width;
-    void * vid_buf = (void *)(BANE + mm->pc_video_framebuffer);
+    uint64_t vid_buf_phy = mm->pc_video_framebuffer;
+    void *vid_buf = (void *)(BANE + vid_buf_phy);
     size_t vid_buf_sz = mm->pc_video_framebuffer_size;
     /*
      * Get the initial cursor position from the BIOS data area.  Also get
@@ -78,8 +79,7 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
     if (chr_ht_hi != 0 || chr_ht > 32)
       chr_ht = 32;
     /* Make sure the video buffer is mapped into virtual memory. */
-    __invert_memory_area(mm, __get_pml4t(), (uint64_t)vid_buf, vid_buf_sz,
-                         PAGE_RW);
+    __invert_memory_area(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz, PAGE_RW);
     /*
      * Initialize our tty structure from the current screen contents,
      * current cursor position, & character height.

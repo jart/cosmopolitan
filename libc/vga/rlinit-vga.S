@@ -66,6 +66,9 @@
 	movw	$25,mm+"struct mman::pc_video_height"
 	movl	$0xb8000,mm+"struct mman::pc_video_framebuffer"
 	movl	$0x8000,mm+"struct mman::pc_video_framebuffer_size"
+	xor	%eax,%eax
+	mov	%eax,mm+"struct mman::pc_video_framebuffer"+4
+	mov	%eax,mm+"struct mman::pc_video_framebuffer_size"+4
 	mov	$0x1003,%ax		# enable/disable VGA text blinking
 #ifdef VGA_USE_BLINK
 	mov	$1,%bx

@@ -26,8 +26,9 @@ struct mman {
                                                      or pixels (graphics) */
   unsigned short pc_video_height;        /* 0x1d2e — height in chars. (text)
                                                      or pixels (graphics) */
-  uint32_t pc_video_framebuffer;         /* 0x1d30 */
-  uint32_t pc_video_framebuffer_size;    /* 0x1d34 */
+  uint64_t pc_video_framebuffer;         /* 0x1d30 — physical address of
+                                                     video frame buffer */
+  uint64_t pc_video_framebuffer_size;    /* 0x1d38 */
 };
 
 COSMOPOLITAN_C_END_
