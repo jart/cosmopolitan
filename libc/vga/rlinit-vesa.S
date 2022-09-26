@@ -29,6 +29,12 @@
 #include "libc/runtime/mman.internal.h"
 #include "libc/vga/vga.internal.h"
 
+#define VGA_PREFER_GRAPH_HEIGHT \
+	(VGA_PREFER_TTY_HEIGHT * VGA_ASSUME_CHAR_HEIGHT_PX)
+#define VGA_PREFER_GRAPH_WIDTH  \
+	(VGA_PREFER_TTY_WIDTH * VGA_ASSUME_CHAR_WIDTH_PX)
+#define MAX_VESA_MODES_TO_TRACK 64
+
 //	Routine to activate additional VESA functionality if the user holds
 //	down a magic key, when booting from bare metal.  Currently this just
 //	dumps a list of all usable VESA VBE video modes on the console.
@@ -59,27 +65,121 @@ _rlinit_vesa:
 	jnz	.doit2
 	cmpb	$0,%es:(%bx)
 	jz	.wait
+	stc
 .done:	pop	%ax
 	pop	%es
-	stc
 	ret
 .doit2:	mov	$0x8301,%ax		# we got the magic key; cancel the
 	int	$0x15			# wait timer
-.doit:	call	.dump_vesa_modes	# we got the magic key; do stuff
-	push	%si
-	mov	$REAL(str.cont),%si	# say we are continuing
+.doit:	pop	%ax			# we got the magic key; do stuff
+	pop	%es
+	// fall through
+	.endfn	_rlinit_vesa,globl,hidden
+
+.do_vesa_rlinit:
+	push	%eax
+	push	%bx
+	push	%cx
+	push	%edx
+	push	%esi
+	push	%bp
+	push	%es
+	sub	$2+MAX_VESA_MODES_TO_TRACK*14,%sp
+	mov	%sp,%bp
+	call	.gather_vesa_modes	# gather list of VESA modes
+	jc	8f
+	mov	(%bp),%cx		# loop through VESA modes & find one
+	test	%cx,%cx			# which we like
+	jz	6f
+	inc	%bp
+	inc	%bp
+	or	$-1,%esi		# %esi = best fit screen size
+	xor	%bx,%bx			# %bx = pointer to best info. struct.
+					# (start with NULL)
+1:	cmpb	$PC_VIDEO_BGR565,(%bp)
+	jnz	2f
+	movzwl	2(%bp),%eax
+	cmp	$VGA_PREFER_GRAPH_WIDTH,%ax
+	jb	2f
+	movzwl	4(%bp),%edx
+	cmp	$VGA_PREFER_GRAPH_HEIGHT,%dx
+	jb	2f
+	imul	%edx,%eax
+	cmp	%esi,%edx
+	jnb	2f
+	mov	%edx,%esi
+	mov	%bp,%bx
+2:	add	$14,%bp
+	loop	1b
+3:	test	%bx,%bx			# if no good video mode found,
+	jz	6f			# bail out
+	movw	%bx,%bp			# otherwise...
+	mov	$REAL(str.use_mode),%si
 	call	.puts
-	pop	%si
+	mov	6(%bp),%ax
+	mov	%ax,%bx
+	call	.putx
+	call	.putnl
+	call	.snooze
+	mov	$0x4f02,%ax
+	int	$0x10
+	cmp	$0x004f,%ax
+	jnz	9f
+	mov	(%bp),%al
+	.set	mm,0x0500
+	mov	%al,mm+"struct mman::pc_video_type"
+	mov	2(%bp),%ax
+	mov	%ax,mm+"struct mman::pc_video_width"
+	mov	4(%bp),%ax
+	movzwl	%ax,%edx
+	mov	%ax,mm+"struct mman::pc_video_height"
+	mov	10(%bp),%eax
+	mov	%eax,mm+"struct mman::pc_video_framebuffer"
+	movzwl	8(%bp),%eax
+	mov	%ax,mm+"struct mman::pc_video_stride"
+	imul	%edx,%eax
+	mov	%eax,mm+"struct mman::pc_video_framebuffer_size"
+	xor	%eax,%eax
+	mov	%eax,mm+"struct mman::pc_video_framebuffer"+4
+	mov	%eax,mm+"struct mman::pc_video_framebuffer_size"+4
+	clc
+5:	lahf
+	add	$2+MAX_VESA_MODES_TO_TRACK*14,%sp
+	sahf
+	pop	%es
+	pop	%bp
+	pop	%esi
+	pop	%edx
+	pop	%cx
+	pop	%bx
+	pop	%eax
+	ret
+6:	mov	$REAL(str.no_mode),%si
+7:	call	.puts
+8:	call	.snooze
+	stc
+	jmp	5b
+9:	mov	$REAL(str.bad_mode),%si
+	jmp	7b
+
+.snooze:
+	push	%ax
+	push	%cx
+	push	%dx
 	mov	$0x86,%ah		# do a(nother) short few-second wait
 	mov	$(2000000>>16),%cx
 	mov	$(2000000&0xffff),%dx
 	int	$0x15
-	jmp	.done
-	.endfn	_rlinit_vesa,globl,hidden
+	pop	%dx
+	pop	%cx
+	pop	%ax
+	ret
+	.endfn	.snooze
 
 //	Dump a list of all the VESA VBE video modes that are usable on the
-//	target machine.
-.dump_vesa_modes:
+//	target machine.  Also gather a list of video modes and basic
+//	information about these modes at %ss:(%bp).
+.gather_vesa_modes:
 	push	%ds
 	push	%es
 	push	%si
@@ -97,10 +197,11 @@ _rlinit_vesa:
 	movl	$/*"VBE2"*/0x32454256,%es:(%di)
 	int	$0x10
 	cmp	$0x004f,%ax		# if this fails, complain
-	jnz	.fail
+	jnz	.fail2
 	mov	$REAL(str.mode_list_start),%si
 	call	.puts			# otherwise start iterating through
 	lds	%es:0xe(%di),%si	# the returned video mode list
+	movw	$0,(%bp)
 	cld
 .iter1:	lodsw
 	inc	%ax
@@ -123,25 +224,30 @@ _rlinit_vesa:
 	call	.putnl
 	jmp	.iter1			# ...and so on
 .nl:	call	.putnl
+	clc
 .done2:	add	$0x200,%sp		# OK, we are finally done
 	pop	%di
 	pop	%si
 	pop	%es
 	pop	%ds
 	ret
-.fail:	mov	$REAL(str.no_vesa),%si
+.fail2:	mov	$REAL(str.no_vesa),%si
 	call	.puts
+	stc
 	jmp	.done2
-	.endfn	.dump_vesa_modes
+	.endfn	.gather_vesa_modes
 
-//	Process one video mode number, which should be in ax.  Assume that
-//	es = ss.
+//	Display information on one video mode number, which should be in %ax.
+//	If %ax is a mode which we can use, also update the mode information
+//	buffer at %ss:(%bp).  Assume %es = %ss.
 //
 //	@return	CF = 0 if video mode is usable, CF = 1 otherwise
 .munge:	push	%ax
+	push	%bx
 	push	%cx
 	push	%si
 	push	%di
+	or	$1<<14,%ax		# force frame buffer mode
 	xchg	%ax,%si			# remember mode number
 	sub	$0x100,%sp		# allocate 0x100 stack bytes for
 	mov	$0x100/2,%cx		# information on this mode; clear
@@ -164,7 +270,17 @@ _rlinit_vesa:
 	and	$0b10010000,%al
 	cmp	$0b00010000,%al
 	jz	.fail3
-	call	.putsp			# echo mode information
+	call	.video_type		# check if we know about the video
+	jc	.fail3			# buffer type, & what exact type it is
+	mov	(%bp),%bx		# if we are already tracking too
+	cmp	$MAX_VESA_MODES_TO_TRACK,%bx # VESA modes, also skip
+	jnb	.fail3
+	inc	%bx			# otherwise start noting down mode
+	mov	%bx,(%bp)		# information...
+	imul	$14,%bx
+	lea	2-14(%ebp,%ebx),%bx
+	mov	%al,%ss:(%bx)		# ...starting from frame buffer type
+	call	.putsp			# echo and remember mode information
 	call	.putsp
 	test	$0b00010000,%cl		# first, echo mode attributes
 	setnz	%al
@@ -172,24 +288,71 @@ _rlinit_vesa:
 	add	$'T',%al
 	call	.putc
 	call	.putsp
-	xchg	%ax,%si			# then output
-	call	.putx			# - mode number
+	xchg	%ax,%si			# then process
+	mov	%ax,%ss:6(%bx)		# - mode number
+	call	.putx
 	mov	%es:0x12(%di),%ax	# - mode width
+	mov	%ax,%ss:2(%bx)
 	call	.putd
 	mov	%es:0x14(%di),%ax	# - mode height
+	mov	%ax,%ss:4(%bx)
 	call	.putd
 	mov	%es:0x19(%di),%al	# - bits per pixel
+	mov	%al,%ss:1(%bx)
 	call	.putdb
+	mov	%es:0x10(%di),%ax	# - mode stride
+	mov	%ax,%ss:8(%bx)
+	mov	%es:0x28(%di),%eax	# - frame buffer address
+	mov	%eax,%ss:10(%bx)
 	clc
 .done3:	lea	0x100(%esp),%sp
 	pop	%di
 	pop	%si
 	pop	%cx
+	pop	%bx
 	pop	%ax
 	ret
 .fail3:	stc
 	jmp	.done3
 	.endfn	.munge
+
+//	Check if the given video mode information uses a video buffer type
+//	we know about, and say what type of video buffer it is.
+//
+//	@param	%es:(%di) = video mode information from int 0x10, %ax = 0x4f01
+//	@param	%cl = low byte of video mode attributes (= %es:(%di))
+//	@return	%al = video buffer type (for mman::pc_video_type)
+//	@return	CF = 0 if video mode is usable, CF = 1 otherwise
+.video_type:
+	push	%bx
+	push	%cx
+	push	%edx
+	mov	$PC_VIDEO_TEXT,%al	# if text mode, simply say so
+	test	$0b00010000,%cl
+	jz	.ok4
+	cmp	$6,%es:0x1b(%di)	# if graphics mode, check if direct
+	jnz	.fail4			# color; bail out if not
+	mov	%es:0x19(%di),%cl	# check actual color fields & bits
+	mov	%es:0x1f(%di),%ax	# per pixel, against a list
+	mov	%es:0x21(%di),%edx
+	mov	$REAL(.type_list),%bx
+.iter4:	cmp	%edx,%cs:4(%bx)
+	jnz	.next
+	cmp	%cl,%cs:1(%bx)
+	jnz	.next
+	cmp	%ax,%cs:2(%bx)
+	jz	.found
+.next:	add	$8,%bx
+	cmp	$REAL(.type_list_end),%bx
+	jnz	.iter4
+.fail4:	stc				# unsupported mode; return failure
+	jmp	.done4
+.found:	mov	%cs:(%bx),%al		# this mode is supported; return the
+.ok4:	clc				# corresponding type code
+.done4:	pop	%edx
+	pop	%cx
+	pop	%bx
+	ret
 
 //	Output a string via BIOS.
 .puts:	cld
@@ -319,12 +482,35 @@ _rlinit_vesa:
 str.no_vesa:
 	.asciz	"info: no VESA\r\n"
 	.endobj	str.no_vesa
+str.no_mode:
+	.asciz	"info: no usable video mode\r\n"
+	.endobj	str.no_mode
+str.use_mode:
+	.asciz	"info: switching to video mode "
+	.endobj	str.use_mode
+str.bad_mode:
+	.asciz	"info: mode switch fail\r\n"
+	.endobj	str.bad_mode
 str.mode_list_start:
 	.ascii	"info: VESA video modes:\r\n"
 	.ascii	"     mode#   wid    ht bpp"
 	.ascii	"     mode#   wid    ht bpp"
 	.asciz	"     mode#   wid    ht bpp\r\n"
 	.endobj	str.mode_list_start
-str.cont:
-	.asciz	"info: continuing\r\n"
-	.endobj	str.cont
+
+.type_list:
+//		              ┌value to use for mman::pc_video_type
+//		              │    ┌bits per pixel
+//		              │    │  ┌red field size (in bits)
+//		              │    │  │  ┌red field position (bits)
+//		              │    │  │  │  ┌green field size
+//		              │    │  │  │  │  ┌green field position
+//		              │    │  │  │  │  │  ┌blue field size
+//		              │    │  │  │  │  │  │  ┌blue field position
+//		              │    │  │  │  │  │  │  │
+	.byte	PC_VIDEO_BGR565,  16, 5,11, 6, 5, 5, 0
+	.byte	PC_VIDEO_BGR555,  15, 5,10, 5, 5, 5, 0
+	.byte	PC_VIDEO_BGR555,  16, 5,10, 5, 5, 5, 0
+	.byte	PC_VIDEO_RGBX8888,32, 8, 0, 8, 8, 8,16
+	.byte	PC_VIDEO_BGRX8888,32, 8,16, 8, 8, 8, 0
+.type_list_end:

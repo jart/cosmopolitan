@@ -1,6 +1,15 @@
 #ifndef COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 
+/** Preferred width of the video screen, in character units. */
+#define VGA_PREFER_TTY_HEIGHT 30
+/** Preferred width of the video screen, in character units. */
+#define VGA_PREFER_TTY_WIDTH 80
+/** Assumed height of each character in pixels, in graphics modes. */
+#define VGA_ASSUME_CHAR_HEIGHT_PX 16
+/** Assumed width of each character in pixels, in graphics modes. */
+#define VGA_ASSUME_CHAR_WIDTH_PX 8
+
 /*
  * VGA_USE_WCS, VGA_USE_BLINK, & VGA_PERSNICKETY_STATUS are configuration
  * knobs which can potentially be used to tweak the features to be compiled
