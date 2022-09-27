@@ -35,6 +35,16 @@
 	(VGA_PREFER_TTY_WIDTH * VGA_ASSUME_CHAR_WIDTH_PX)
 #define MAX_VESA_MODES_TO_TRACK 64
 
+//	Mode information data structure, used internally.
+	.set	"mi::type",0
+	.set	"mi::bpp",1
+	.set	"mi::width",2
+	.set	"mi::height",4
+	.set	"mi::mode_num",6
+	.set	"mi::stride",8
+	.set	"mi::fb",10
+	.set	"mi::sizeof",14
+
 //	Routine to activate additional VESA functionality if the user holds
 //	down a magic key, when booting from bare metal.  Currently this just
 //	dumps a list of all usable VESA VBE video modes on the console.
@@ -84,7 +94,7 @@ _rlinit_vesa:
 	push	%esi
 	push	%bp
 	push	%es
-	sub	$2+MAX_VESA_MODES_TO_TRACK*14,%sp
+	sub	$2+MAX_VESA_MODES_TO_TRACK*"mi::sizeof",%sp
 	mov	%sp,%bp
 	call	.gather_vesa_modes	# gather list of VESA modes
 	jc	8f
@@ -96,27 +106,27 @@ _rlinit_vesa:
 	or	$-1,%esi		# %esi = best fit screen size
 	xor	%bx,%bx			# %bx = pointer to best info. struct.
 					# (start with NULL)
-1:	cmpb	$PC_VIDEO_BGR565,(%bp)
+1:	cmpb	$PC_VIDEO_BGR565,"mi::type"(%bp)
 	jnz	2f
-	movzwl	2(%bp),%eax
+	movzwl	"mi::width"(%bp),%eax
 	cmp	$VGA_PREFER_GRAPH_WIDTH,%ax
 	jb	2f
-	movzwl	4(%bp),%edx
+	movzwl	"mi::height"(%bp),%edx
 	cmp	$VGA_PREFER_GRAPH_HEIGHT,%dx
 	jb	2f
 	imul	%edx,%eax
-	cmp	%esi,%edx
+	cmp	%esi,%eax
 	jnb	2f
-	mov	%edx,%esi
+	mov	%eax,%esi
 	mov	%bp,%bx
-2:	add	$14,%bp
+2:	add	$"mi::sizeof",%bp
 	loop	1b
 3:	test	%bx,%bx			# if no good video mode found,
 	jz	6f			# bail out
 	movw	%bx,%bp			# otherwise...
 	mov	$REAL(str.use_mode),%si
 	call	.puts
-	mov	6(%bp),%ax
+	mov	"mi::mode_num"(%bp),%ax
 	mov	%ax,%bx
 	call	.putx
 	call	.putnl
@@ -125,17 +135,16 @@ _rlinit_vesa:
 	int	$0x10
 	cmp	$0x004f,%ax
 	jnz	9f
-	mov	(%bp),%al
+	mov	"mi::type"(%bp),%al
 	.set	mm,0x0500
 	mov	%al,mm+"struct mman::pc_video_type"
-	mov	2(%bp),%ax
+	mov	"mi::width"(%bp),%ax
 	mov	%ax,mm+"struct mman::pc_video_width"
-	mov	4(%bp),%ax
-	movzwl	%ax,%edx
-	mov	%ax,mm+"struct mman::pc_video_height"
-	mov	10(%bp),%eax
+	movzwl	"mi::height"(%bp),%edx
+	mov	%dx,mm+"struct mman::pc_video_height"
+	mov	"mi::fb"(%bp),%eax
 	mov	%eax,mm+"struct mman::pc_video_framebuffer"
-	movzwl	8(%bp),%eax
+	movzwl	"mi::stride"(%bp),%eax
 	mov	%ax,mm+"struct mman::pc_video_stride"
 	imul	%edx,%eax
 	mov	%eax,mm+"struct mman::pc_video_framebuffer_size"
@@ -144,7 +153,7 @@ _rlinit_vesa:
 	mov	%eax,mm+"struct mman::pc_video_framebuffer_size"+4
 	clc
 5:	lahf
-	add	$2+MAX_VESA_MODES_TO_TRACK*14,%sp
+	add	$2+MAX_VESA_MODES_TO_TRACK*"mi::sizeof",%sp
 	sahf
 	pop	%es
 	pop	%bp
@@ -277,9 +286,9 @@ _rlinit_vesa:
 	jnb	.fail3
 	inc	%bx			# otherwise start noting down mode
 	mov	%bx,(%bp)		# information...
-	imul	$14,%bx
-	lea	2-14(%ebp,%ebx),%bx
-	mov	%al,%ss:(%bx)		# ...starting from frame buffer type
+	imul	$"mi::sizeof",%bx
+	lea	2-"mi::sizeof"(%ebp,%ebx),%bx
+	mov	%al,%ss:("mi::type")(%bx) # ...starting from frame buffer type
 	call	.putsp			# echo and remember mode information
 	call	.putsp
 	test	$0b00010000,%cl		# first, echo mode attributes
@@ -289,21 +298,21 @@ _rlinit_vesa:
 	call	.putc
 	call	.putsp
 	xchg	%ax,%si			# then process
-	mov	%ax,%ss:6(%bx)		# - mode number
+	mov	%ax,%ss:("mi::mode_num")(%bx) # - mode number
 	call	.putx
 	mov	%es:0x12(%di),%ax	# - mode width
-	mov	%ax,%ss:2(%bx)
+	mov	%ax,%ss:("mi::width")(%bx)
 	call	.putd
 	mov	%es:0x14(%di),%ax	# - mode height
-	mov	%ax,%ss:4(%bx)
+	mov	%ax,%ss:("mi::height")(%bx)
 	call	.putd
 	mov	%es:0x19(%di),%al	# - bits per pixel
-	mov	%al,%ss:1(%bx)
+	mov	%al,%ss:("mi::bpp")(%bx)
 	call	.putdb
 	mov	%es:0x10(%di),%ax	# - mode stride
-	mov	%ax,%ss:8(%bx)
+	mov	%ax,%ss:("mi::stride")(%bx)
 	mov	%es:0x28(%di),%eax	# - frame buffer address
-	mov	%eax,%ss:10(%bx)
+	mov	%eax,%ss:("mi::fb")(%bx)
 	clc
 .done3:	lea	0x100(%esp),%sp
 	pop	%di
