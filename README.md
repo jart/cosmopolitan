@@ -258,9 +258,10 @@ Funding for this project is crowdsourced using
 [GitHub Sponsors](https://github.com/sponsors/jart) and
 [Patreon](https://www.patreon.com/jart). Your support is what makes this
 project possible. Thank you! We'd also like to give special thanks to
-the following individuals:
+the following groups and individuals:
 
 - [Joe Drumgoole](https://github.com/jdrumgoole)
 - [Rob Figueiredo](https://github.com/robfig)
+- [Wasmer](https://wasmer.io/)
 
 For publicly sponsoring our work at the highest tier.
