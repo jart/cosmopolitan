@@ -261,5 +261,6 @@ project possible. Thank you! We'd also like to give special thanks to
 the following individuals:
 
 - [Joe Drumgoole](https://github.com/jdrumgoole)
+- [Rob Figueiredo](https://github.com/robfig)
 
 For publicly sponsoring our work at the highest tier.
