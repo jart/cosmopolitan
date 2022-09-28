@@ -565,10 +565,7 @@ SHSTUB2(ape_loader_dd_count,
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =
            MIN(0x70000 - IMAGE_BASE_REAL,
-               ROUNDUP(RVA(_edata), 4096)) / 512);
-HIDDEN(v_ape_realslacksectors =
-           v_ape_realsectors - MIN(0x70000 - IMAGE_BASE_REAL,
-                                   ROUNDUP(RVA(_edata), 512)) / 512);
+               ROUNDUP(RVA(_edata), 512)) / 512);
 HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
            (ROUNDUP(RVA(_edata), 512) / 512) - v_ape_realsectors);
