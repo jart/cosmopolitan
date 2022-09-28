@@ -89,48 +89,18 @@ _rlinit_vesa:
 .do_vesa_rlinit:
 	push	%eax
 	push	%bx
-	push	%cx
 	push	%edx
-	push	%esi
 	push	%bp
-	push	%es
 	sub	$2+MAX_VESA_MODES_TO_TRACK*"mi::sizeof",%sp
 	mov	%sp,%bp
 	call	.gather_vesa_modes	# gather list of VESA modes
 	jc	8f
-	mov	(%bp),%cx		# loop through VESA modes & find one
-	test	%cx,%cx			# which we like
-	jz	6f
-	inc	%bp
-	inc	%bp
-	or	$-1,%esi		# %esi = best fit screen size
-	xor	%bx,%bx			# %bx = pointer to best info. struct.
-					# (start with NULL)
-1:	cmpb	$PC_VIDEO_BGR565,"mi::type"(%bp)
-	jnz	2f
-	movzwl	"mi::width"(%bp),%eax
-	cmp	$VGA_PREFER_GRAPH_WIDTH,%ax
-	jb	2f
-	movzwl	"mi::height"(%bp),%edx
-	cmp	$VGA_PREFER_GRAPH_HEIGHT,%dx
-	jb	2f
-	imul	%edx,%eax
-	cmp	%esi,%eax
-	jnb	2f
-	mov	%eax,%esi
-	mov	%bp,%bx
-2:	add	$"mi::sizeof",%bp
-	loop	1b
-3:	test	%bx,%bx			# if no good video mode found,
-	jz	6f			# bail out
-	movw	%bx,%bp			# otherwise...
-	mov	$REAL(str.use_mode),%si
-	call	.puts
-	mov	"mi::mode_num"(%bp),%ax
-	mov	%ax,%bx
-	call	.putx
-	call	.putnl
+	call	.get_default_mode	# choose a default mode to use
+	jc	6f
+	call	.choose_mode		# allow user to select different mode
+	movw	%bx,%bp
 	call	.snooze
+	mov	"mi::mode_num"(%bp),%bx
 	mov	$0x4f02,%ax
 	int	$0x10
 	cmp	$0x004f,%ax
@@ -155,11 +125,8 @@ _rlinit_vesa:
 5:	lahf
 	add	$2+MAX_VESA_MODES_TO_TRACK*"mi::sizeof",%sp
 	sahf
-	pop	%es
 	pop	%bp
-	pop	%esi
 	pop	%edx
-	pop	%cx
 	pop	%bx
 	pop	%eax
 	ret
@@ -170,6 +137,116 @@ _rlinit_vesa:
 	jmp	5b
 9:	mov	$REAL(str.bad_mode),%si
 	jmp	7b
+	.endfn	.do_vesa_rlinit
+
+//	Preliminarily choose a "default" VESA screen mode from a list of
+//	gathered screen modes.
+//
+//	@return	%bx is such that %ss:(%bx) = internal struc. for default mode
+//	@return	CF = 1 if no available modes, CF = 0 otherwise
+.get_default_mode:
+	push	%eax
+	push	%cx
+	push	%edx
+	push	%edi
+	push	%bp
+	mov	(%bp),%cx
+	jcxz	8f
+	inc	%bp
+	inc	%bp
+	or	$-1,%esi		# %esi = best fit screen size + penalty
+					# (to be recalculated later)
+	mov	%bp,%bx			# %bx = pointer to best info. struct.
+1:	mov	"mi::type"(%bp),%ax	# load mode type & bits per pixel
+	ror	%ah			# convert bpp into penalty value:
+	movzbl	%ah,%edi		# fewer bpp are better, but prefer
+					# 16 bpp over 15 bpp
+	cmp	$PC_VIDEO_TEXT,%al	# handle text modes specially
+	jz	9f
+	movzwl	"mi::width"(%bp),%eax
+	jz	9f
+	cmp	$VGA_PREFER_GRAPH_WIDTH,%ax # calculate screen size
+	jb	3f
+	movzwl	"mi::height"(%bp),%edx
+	cmp	$VGA_PREFER_GRAPH_HEIGHT,%dx
+	jb	3f
+	imul	%edx,%eax
+2:	add	%edi,%eax
+	jc	3f
+	cmp	%esi,%eax
+	jnb	3f
+	mov	%eax,%esi
+	mov	%bp,%bx
+3:	add	$"mi::sizeof",%bp
+	loop	1b
+	clc
+7:	pop	%bp
+	pop	%edi
+	pop	%edx
+	pop	%cx
+	pop	%eax
+	ret
+8:	stc
+	jmp	7b
+9:	imul	$VGA_ASSUME_CHAR_WIDTH_PX,%eax
+	cmp	$VGA_PREFER_GRAPH_WIDTH,%eax
+	jb	2b
+	movzwl	"mi::height"(%bp),%edx
+	imul	$VGA_ASSUME_CHAR_HEIGHT_PX,%edx
+	cmp	$VGA_PREFER_GRAPH_HEIGHT,%edx
+	jb	3b
+	imul	%edx,%eax
+	jo	3b
+	mov	$1<<31,%edi		# severely disparage text modes
+	jmp	2b
+	.endfn	.get_default_mode
+
+//	Allow the user to choose a VESA screen mode to use.
+//
+//	@return	%bx is such that ss:(%bx) = internal struc. for chosen mode
+.choose_mode:
+	push	%ax
+	push	%si
+	push	%di
+	mov	(%bp),%di
+	imul	$"mi::sizeof",%di
+	lea	2(%bp,%di),%di
+1:	mov	$REAL(str.choose_mode),%si
+	call	.puts
+	mov	%ss:("mi::mode_num")(%bx),%ax
+	call	.putx
+	mov	%ss:("mi::width")(%bx),%ax
+	call	.putd
+	mov	%ss:("mi::height")(%bx),%ax
+	call	.putd
+	mov	%ss:("mi::bpp")(%bx),%al
+	call	.putdb
+	mov	$0,%ah
+	int	$0x16
+#define UPSCN 0x48
+#define DNSCN 0x50
+#define CRSCN 0x1c
+	cmp	$DNSCN,%ah
+	jz	3f
+	cmp	$CRSCN,%ah
+	jz	4f
+	cmp	$UPSCN,%ah
+	jnz	1b
+	lea	2(%bp),%ax		# up arrow pressed
+	cmp	%ax,%bx
+	jz	1b
+2:	sub	$"mi::sizeof",%bx
+	jmp	1b
+3:	add	$"mi::sizeof",%bx	# down arrow pressed
+	cmp	%di,%bx
+	jnz	1b
+	jmp	2b
+4:	call	.putnl			# Enter pressed
+	pop	%di
+	pop	%si
+	pop	%ax
+	ret
+	.endfn	.choose_mode
 
 .snooze:
 	push	%ax
@@ -311,8 +388,10 @@ _rlinit_vesa:
 	call	.putdb
 	mov	%es:0x10(%di),%ax	# - mode stride
 	mov	%ax,%ss:("mi::stride")(%bx)
-	mov	%es:0x28(%di),%eax	# - frame buffer address
-	mov	%eax,%ss:("mi::fb")(%bx)
+	testb	$0b00010000,%cl
+	jz	.txt
+	mov	%es:0x28(%di),%eax
+.fb:	mov	%eax,%ss:("mi::fb")(%bx) # - frame buffer address
 	clc
 .done3:	lea	0x100(%esp),%sp
 	pop	%di
@@ -323,6 +402,9 @@ _rlinit_vesa:
 	ret
 .fail3:	stc
 	jmp	.done3
+.txt:	movzwl	%es:8(%di),%eax		# for text mode, use window A as
+	shl	$4,%eax			# frame buffer
+	jmp	.fb
 	.endfn	.munge
 
 //	Check if the given video mode information uses a video buffer type
@@ -491,12 +573,16 @@ _rlinit_vesa:
 str.no_vesa:
 	.asciz	"info: no VESA\r\n"
 	.endobj	str.no_vesa
+str.choose_mode:
+#define UPGLYPH "\x18"
+#define DNGLYPH "\x19"
+#define CRGLYPH "\x1b\xd9"
+	.ascii	"\rchoose video mode (",UPGLYPH," ",DNGLYPH," ",CRGLYPH
+	.asciz	"): "
+	.endobj	str.choose_mode
 str.no_mode:
 	.asciz	"info: no usable video mode\r\n"
 	.endobj	str.no_mode
-str.use_mode:
-	.asciz	"info: switching to video mode "
-	.endobj	str.use_mode
 str.bad_mode:
 	.asciz	"info: mode switch fail\r\n"
 	.endobj	str.bad_mode
