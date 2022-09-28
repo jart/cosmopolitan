@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 
 /**
  * Creates client socket file descriptor for incoming connection.

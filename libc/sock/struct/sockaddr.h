@@ -35,6 +35,7 @@ struct sockaddr_storage {
 
 int inet_aton(const char *, struct in_addr *);
 char *inet_ntoa(struct in_addr);
+int accept(int, struct sockaddr *, uint32_t *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

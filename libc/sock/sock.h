@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_SOCK_SOCK_H_
 #define COSMOPOLITAN_LIBC_SOCK_SOCK_H_
-#include "libc/sock/struct/sockaddr.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
@@ -30,7 +29,6 @@ uint32_t *GetHostIps(void);
 
 int nointernet(void);
 int socket(int, int, int);
-int accept(int, struct sockaddr *, uint32_t *);
 int accept4(int, void *, uint32_t *, int);
 int bind(int, const void *, uint32_t);
 int connect(int, const void *, uint32_t);

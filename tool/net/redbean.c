@@ -687,17 +687,6 @@ static void InternCertificate(mbedtls_x509_crt *cert, mbedtls_x509_crt *prev) {
           _gc(FormatX509Name(&cert->subject)));
   }
   for (i = 0; i < certs.n; ++i) {
-    if (!certs.p[i].cert) continue;
-    if (mbedtls_pk_get_type(&cert->pk) ==
-            mbedtls_pk_get_type(&certs.p[i].cert->pk) &&
-        !mbedtls_x509_name_cmp(&cert->subject, &certs.p[i].cert->subject)) {
-      VERBOSEF("(ssl) %s %`'s is already loaded",
-               mbedtls_pk_get_name(&cert->pk),
-               _gc(FormatX509Name(&cert->subject)));
-      return;
-    }
-  }
-  for (i = 0; i < certs.n; ++i) {
     if (!certs.p[i].cert && certs.p[i].key &&
         !mbedtls_pk_check_pair(&cert->pk, certs.p[i].key)) {
       certs.p[i].cert = cert;
