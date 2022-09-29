@@ -120,6 +120,7 @@
 #define GDT_LEGACY_DATA 32
 #define GDT_LONG_CODE   40
 #define GDT_LONG_DATA   48
+#define GDT_LONG_TSS    56
 
 #define PIC1         0x20 /* IO base address for master PIC */
 #define PIC2         0xA0 /* IO base address for slave PIC */

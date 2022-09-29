@@ -180,6 +180,12 @@
  .stub	\name\()_bcs\n,long
 .endm
 
+//	Task State Segment Descriptor Entries.
+.macro	.tssdescstub name:req
+ .stub	\name\()_desc_ent0,quad
+ .stub	\name\()_desc_ent1,quad
+.endm
+
 /* clang-format on */
 #elif defined(__LINKER__)
 
@@ -256,6 +262,23 @@
                        ((X) / 10) % 10 * 0x10000 + \
                        (X) % 10 * 0x1000000        \
                      : 0xffffffffffffffff)
+
+/**
+ * Laying out the GDT entries for a TSS for bare metal operation.
+ */
+#define TSSDESCSTUB2(SYM, BASE, LIM)                 \
+  HIDDEN(SYM##_desc_ent0 = TSSDESC_ENT0(BASE, LIM)); \
+  HIDDEN(SYM##_desc_ent1 = TSSDESC_ENT1(BASE));      \
+  ASSERT((LIM) >= 0 && (LIM) <= 0xffff, "bare metal TSS is suspiciously fat")
+#define TSSDESC_ENT0(BASE, LIM)                \
+  (((LIM)        <<  0 & 0x000000000000ffff) | \
+   ((BASE)       << 16 & 0x000000ffffff0000) | \
+    0x89         << 40                       | \
+   ((LIM)  >> 16 << 48 & 0x000f000000000000) | \
+    0x2          << 52                       | \
+   ((BASE) >> 24 << 56 & 0xff00000000000000))
+#define TSSDESC_ENT1(BASE)                     \
+   ((BASE) >> 32 <<  0 & 0x00000000ffffffff)
 
 #endif /* __ASSEMBLER__ */
 #endif /* APE_MACROS_H_ */
