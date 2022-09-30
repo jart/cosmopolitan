@@ -58,10 +58,191 @@ ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
   return wrote;
 }
 
+static void _vga_init_test(void *vid_buf, unsigned char vid_type,
+                           size_t stride) {
+  switch (vid_type) {
+    case PC_VIDEO_TEXT:
+      break;
+    case PC_VIDEO_BGR565:
+      {
+        char *row_buf = (char *)vid_buf + stride * 100;
+        uint16_t *row_pix = (uint16_t *)row_buf;
+        unsigned i;
+        row_pix[0] = 0x0000;
+        row_pix[1] = 0x0000;
+        row_pix[2] = 0x07fc;
+        row_pix[3] = 0x07fc;
+        row_pix[4] = 0x07fc;
+        row_pix[5] = 0x0000;
+        row_pix[6] = 0x0000;
+        row_pix[7] = 0x0000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x0000;
+        row_pix[1] = 0x07fc;
+        row_pix[2] = 0x07fc;
+        row_pix[3] = 0x07fc;
+        row_pix[4] = 0x07fc;
+        row_pix[5] = 0x07fc;
+        row_pix[6] = 0x0000;
+        row_pix[7] = 0x0000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x07fc;
+        row_pix[1] = 0x07fc;
+        row_pix[2] = 0x0000;
+        row_pix[3] = 0x0000;
+        row_pix[4] = 0x0000;
+        row_pix[5] = 0x07fc;
+        row_pix[6] = 0x07fc;
+        row_pix[7] = 0x0000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x07fc;
+        row_pix[1] = 0x07fc;
+        row_pix[2] = 0x07fc;
+        row_pix[3] = 0x07fc;
+        row_pix[4] = 0x07fc;
+        row_pix[5] = 0x07fc;
+        row_pix[6] = 0x07fc;
+        row_pix[7] = 0x0000;
+        for (i = 0; i < 4; ++i) {
+          row_buf += stride;
+          row_pix = (uint16_t *)row_buf;
+          row_pix[0] = 0xf81f;
+          row_pix[1] = 0xf81f;
+          row_pix[2] = 0x0000;
+          row_pix[3] = 0x0000;
+          row_pix[4] = 0x0000;
+          row_pix[5] = 0xf81f;
+          row_pix[6] = 0xf81f;
+          row_pix[7] = 0x0000;
+        }
+      }
+      break;
+    case PC_VIDEO_BGR555:
+      {
+        char *row_buf = (char *)vid_buf + stride * 100;
+        uint16_t *row_pix = (uint16_t *)row_buf;
+        unsigned i;
+        row_pix[0] = 0x8000;
+        row_pix[1] = 0x8000;
+        row_pix[2] = 0x83fc;
+        row_pix[3] = 0x83fc;
+        row_pix[4] = 0x83fc;
+        row_pix[5] = 0x8000;
+        row_pix[6] = 0x8000;
+        row_pix[7] = 0x8000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x8000;
+        row_pix[1] = 0x83fc;
+        row_pix[2] = 0x83fc;
+        row_pix[3] = 0x83fc;
+        row_pix[4] = 0x83fc;
+        row_pix[5] = 0x83fc;
+        row_pix[6] = 0x8000;
+        row_pix[7] = 0x8000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x83fc;
+        row_pix[1] = 0x83fc;
+        row_pix[2] = 0x8000;
+        row_pix[3] = 0x8000;
+        row_pix[4] = 0x8000;
+        row_pix[5] = 0x83fc;
+        row_pix[6] = 0x83fc;
+        row_pix[7] = 0x8000;
+        row_buf += stride;
+        row_pix = (uint16_t *)row_buf;
+        row_pix[0] = 0x83fc;
+        row_pix[1] = 0x83fc;
+        row_pix[2] = 0x83fc;
+        row_pix[3] = 0x83fc;
+        row_pix[4] = 0x83fc;
+        row_pix[5] = 0x83fc;
+        row_pix[6] = 0x83fc;
+        row_pix[7] = 0x8000;
+        for (i = 0; i < 4; ++i) {
+          row_buf += stride;
+          row_pix = (uint16_t *)row_buf;
+          row_pix[0] = 0xfc1f;
+          row_pix[1] = 0xfc1f;
+          row_pix[2] = 0x8000;
+          row_pix[3] = 0x8000;
+          row_pix[4] = 0x8000;
+          row_pix[5] = 0xfc1f;
+          row_pix[6] = 0xfc1f;
+          row_pix[7] = 0x8000;
+        }
+      }
+      break;
+    default:
+      {
+        char *row_buf = (char *)vid_buf + stride * 100;
+        uint32_t *row_pix = (uint32_t *)row_buf;
+        unsigned i;
+        row_pix[0] = 0xff000000;
+        row_pix[1] = 0xff000000;
+        row_pix[2] = 0xff00ffe0;
+        row_pix[3] = 0xff00ffe0;
+        row_pix[4] = 0xff00ffe0;
+        row_pix[5] = 0xff000000;
+        row_pix[6] = 0xff000000;
+        row_pix[7] = 0xff000000;
+        row_buf += stride;
+        row_pix = (uint32_t *)row_buf;
+        row_pix[0] = 0xff000000;
+        row_pix[1] = 0xff00ffe0;
+        row_pix[2] = 0xff00ffe0;
+        row_pix[3] = 0xff00ffe0;
+        row_pix[4] = 0xff00ffe0;
+        row_pix[5] = 0xff00ffe0;
+        row_pix[6] = 0xff000000;
+        row_pix[7] = 0xff000000;
+        row_buf += stride;
+        row_pix = (uint32_t *)row_buf;
+        row_pix[0] = 0xff00ffe0;
+        row_pix[1] = 0xff00ffe0;
+        row_pix[2] = 0xff000000;
+        row_pix[3] = 0xff000000;
+        row_pix[4] = 0xff000000;
+        row_pix[5] = 0xff00ffe0;
+        row_pix[6] = 0xff00ffe0;
+        row_pix[7] = 0xff000000;
+        row_buf += stride;
+        row_pix = (uint32_t *)row_buf;
+        row_pix[0] = 0xff00ffe0;
+        row_pix[1] = 0xff00ffe0;
+        row_pix[2] = 0xff00ffe0;
+        row_pix[3] = 0xff00ffe0;
+        row_pix[4] = 0xff00ffe0;
+        row_pix[5] = 0xff00ffe0;
+        row_pix[6] = 0xff00ffe0;
+        row_pix[7] = 0xff000000;
+        for (i = 0; i < 4; ++i) {
+          row_buf += stride;
+          row_pix = (uint32_t *)row_buf;
+          row_pix[0] = 0xffff00ff;
+          row_pix[1] = 0xffff00ff;
+          row_pix[2] = 0xff000000;
+          row_pix[3] = 0xff000000;
+          row_pix[4] = 0xff000000;
+          row_pix[5] = 0xffff00ff;
+          row_pix[6] = 0xffff00ff;
+          row_pix[7] = 0xff000000;
+        }
+      }
+      break;
+  }
+}
+
 __attribute__((__constructor__)) static textstartup void _vga_init(void) {
   if (IsMetal()) {
     struct mman *mm = (struct mman *)(BANE + 0x0500);
-    unsigned short height = mm->pc_video_height, width = mm->pc_video_width;
+    unsigned char vid_type = mm->pc_video_type;
+    unsigned short height = mm->pc_video_height, width = mm->pc_video_width,
+                   stride = mm->pc_video_stride;
     uint64_t vid_buf_phy = mm->pc_video_framebuffer;
     void *vid_buf = (void *)(BANE + vid_buf_phy);
     size_t vid_buf_sz = mm->pc_video_framebuffer_size;
@@ -80,6 +261,10 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
       chr_ht = 32;
     /* Make sure the video buffer is mapped into virtual memory. */
     __invert_memory_area(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz, PAGE_RW);
+#if 1
+    /* Test video frame buffer output. */
+    _vga_init_test(vid_buf, vid_type, stride);
+#endif
     /*
      * Initialize our tty structure from the current screen contents,
      * current cursor position, & character height.
