@@ -588,9 +588,9 @@ str.bad_mode:
 	.endobj	str.bad_mode
 str.mode_list_start:
 	.ascii	"info: VESA video modes:\r\n"
-	.ascii	"     mode#   wid    ht bpp"
-	.ascii	"     mode#   wid    ht bpp"
-	.asciz	"     mode#   wid    ht bpp\r\n"
+	.ascii	"     mode#     X     Y bpp"
+	.ascii	"     mode#     X     Y bpp"
+	.asciz	"     mode#     X     Y bpp\r\n"
 	.endobj	str.mode_list_start
 
 .type_list:
