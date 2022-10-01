@@ -112,8 +112,22 @@ struct VgaTextCharCell {
 };
 
 struct Tty {
+  /**
+   * Cursor position.  (y, x) = (0, 0) means the cursor is on the top left
+   * character cell of the terminal.
+   */
   unsigned short y, x;
+  /** Height and width of terminal, in character units. */
   unsigned short yn, xn;
+  /** Height and width of terminal, in pixels (if in graphics video mode). */
+  unsigned short yp, xp;
+  /**
+   * Number of bytes (NOTE) occupied by each row of pixels, including any
+   * invisible "pixels".
+   */
+  unsigned short xs;
+  /** Type of video buffer (from mman::pc_video_type). */
+  unsigned char type;
   uint32_t u8;
   uint32_t n8;
   uint32_t pr;
@@ -149,8 +163,10 @@ ssize_t _TtyWrite(struct Tty *, const void *, size_t);
 ssize_t _TtyWriteInput(struct Tty *, const void *, size_t);
 void _TtyResetOutputMode(struct Tty *);
 void _TtyFullReset(struct Tty *);
-void _TtyMemmove(struct Tty *, size_t, size_t, size_t);
-void _TtyErase(struct Tty *, size_t, size_t);
+void _TtyMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t, size_t);
+void _TtyMoveLines(struct Tty *, size_t, size_t, size_t);
+void _TtyEraseLineCells(struct Tty *, size_t, size_t, size_t);
+void _TtyEraseLines(struct Tty *, size_t, size_t);
 void _TtySetY(struct Tty *, unsigned short);
 void _TtySetX(struct Tty *, unsigned short);
 

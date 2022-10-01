@@ -32,12 +32,6 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 
-#ifdef VGA_USE_WCS
-static wchar_t vga_wcs[VGA_TTY_HEIGHT * VGA_TTY_WIDTH];
-#else
-static wchar_t * const vga_wcs = NULL;
-#endif
-
 struct Tty _vga_tty;
 
 ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
@@ -266,10 +260,10 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
     _vga_init_test(vid_buf, vid_type, stride);
 #endif
     /*
-     * Initialize our tty structure from the current screen contents,
-     * current cursor position, & character height.
+     * Initialize our tty structure from the current screen geometry,
+     * screen contents, cursor position, & character height.
      */
     _StartTty(&_vga_tty, height, width, pos.row, pos.col, chr_ht,
-              vid_buf, vga_wcs);
+              vid_buf, NULL);
   }
 }
