@@ -32,6 +32,11 @@
 /**
  * Launches program with system command interpreter.
  *
+ * Warning: Caution is very much advised on Windows where this function
+ * currently delegates to CMD.EXE, which has notoriously mysterious and
+ * insecure escaping rules. Much better idea is to not use this at all,
+ * favoring instead explicit execve() invocations without using shells.
+ *
  * @param cmdline is an interpreted Turing-complete command
  * @return -1 if child process couldn't be created, otherwise a wait
  *     status that can be accessed using macros like WEXITSTATUS(s)

@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntmagicpaths.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
 #include "libc/str/oldutf16.internal.h"
@@ -173,5 +173,24 @@ textwindows int __mkntpath2(const char *path,
   p[j] = 0;
   n = j;
 
-  return x + m + n;
+  // our path is now stored at `path16` with length `n`
+  n = x + m + n;
+
+  // To avoid toil like this:
+  //
+  //     CMD.EXE was started with the above path as the current directory.
+  //     UNC paths are not supported.  Defaulting to Windows directory.
+  //     Access is denied.
+  //
+  // Remove \\?\ prefix if we're within 260 character limit.
+  if (n > 4 && n < 260 &&   //
+      path16[0] == '\\' &&  //
+      path16[1] == '\\' &&  //
+      path16[2] == '?' &&   //
+      path16[3] == '\\') {
+    memmove(path16, path16 + 4, (n - 4 + 1) * sizeof(char16_t));
+    n -= 4;
+  }
+
+  return n;
 }

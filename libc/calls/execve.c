@@ -35,6 +35,12 @@
 /**
  * Replaces current process with program.
  *
+ * Warning: Our implementation of argument escaping on Windows hasn't
+ * been security reviewed for optimal handling of malicious arguments
+ * when interoperating with commonly used software. We make an effort
+ * to follow the same conventions as other FOSS software, e.g. PuTTY,
+ * however each WIN32 app is permitted to tokenize args how it wants.
+ *
  * @param program will not be PATH searched, see commandv()
  * @param argv[0] is the name of the program to run
  * @param argv[1,n-2] optionally specify program arguments

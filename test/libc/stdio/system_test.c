@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,32 +17,39 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/macros.internal.h"
+#include "libc/mem/copyfd.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/str/str.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
+#include "libc/x/x.h"
 
-// Support code for system() and popen().
-// TODO(jart): embed cocmd instead of using /bin/sh and cmd.exe
-int systemexec(const char *cmdline) {
-  size_t n, m;
-  char *a, *b, *argv[4], comspec[PATH_MAX];
-  if (!IsWindows()) {
-    argv[0] = _PATH_BSHELL;
-    argv[1] = "-c";
-  } else {
-    b = "cmd.exe";
-    a = kNtSystemDirectory;
-    if ((n = strlen(a)) + (m = strlen(b)) >= ARRAYLEN(comspec)) {
-      return enametoolong();
-    }
-    memcpy(mempcpy(comspec, a, n), b, m + 1);
-    argv[0] = comspec;
-    argv[1] = "/C";
-  }
-  argv[2] = cmdline;
-  argv[3] = NULL;
-  return execv(argv[0], argv);
+char testlib_enable_tmp_setup_teardown;
+
+TEST(system, testStdoutRedirect) {
+  int ws;
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
+  setenv("PATH", ".", true);   // avoid / vs. \ until cocmd.com is ready
+  _PATH_BSHELL = "cocmd.com";  // cmd.exe shall still be used on windows
+  ASSERT_TRUE(system(0));
+  ws = system("echo.com hello >hello.txt");
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+  EXPECT_STREQ("hello\n", _gc(xslurp("hello.txt", 0)));
+}
+
+TEST(system, testStdoutRedirect_withSpacesInFilename) {
+  int ws;
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
+  setenv("PATH", ".", true);   // avoid / vs. \ until cocmd.com is ready
+  _PATH_BSHELL = "cocmd.com";  // cmd.exe shall still be used on windows
+  ASSERT_TRUE(system(0));
+  ws = system("echo.com hello >\"hello there.txt\"");
+  ASSERT_TRUE(WIFEXITED(ws));
+  ASSERT_EQ(0, WEXITSTATUS(ws));
+  EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
 }

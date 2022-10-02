@@ -66,25 +66,23 @@ static textwindows noasan int Count(int c, struct DosArgv *st) {
   return n;
 }
 
-/**
- * Tokenizes and transcodes Windows NT CLI args, thus avoiding
- * CommandLineToArgv() schlepping in forty megs of dependencies.
- *
- * @param s is the command line string provided by the executive
- * @param buf is where we'll store double-NUL-terminated decoded args
- * @param size is how many bytes are available in buf
- * @param argv is where we'll store the decoded arg pointer array, which
- *     is guaranteed to be NULL-terminated if max>0
- * @param max specifies the item capacity of argv, or 0 to do scanning
- * @return number of args written, excluding the NULL-terminator; or,
- *     if the output buffer wasn't passed, or was too short, then the
- *     number of args that *would* have been written is returned; and
- *     there are currently no failure conditions that would have this
- *     return -1 since it doesn't do system calls
- * @see test/libc/dosarg_test.c
- * @see libc/runtime/ntspawn.c
- * @note kudos to Simon Tatham for figuring out quoting behavior
- */
+// Tokenizes and transcodes Windows NT CLI args, thus avoiding
+// CommandLineToArgv() schlepping in forty megs of dependencies.
+//
+// @param s is the command line string provided by the executive
+// @param buf is where we'll store double-NUL-terminated decoded args
+// @param size is how many bytes are available in buf
+// @param argv is where we'll store the decoded arg pointer array, which
+//     is guaranteed to be NULL-terminated if max>0
+// @param max specifies the item capacity of argv, or 0 to do scanning
+// @return number of args written, excluding the NULL-terminator; or,
+//     if the output buffer wasn't passed, or was too short, then the
+//     number of args that *would* have been written is returned; and
+//     there are currently no failure conditions that would have this
+//     return -1 since it doesn't do system calls
+// @see test/libc/dosarg_test.c
+// @see libc/runtime/ntspawn.c
+// @note kudos to Simon Tatham for figuring out quoting behavior
 textwindows noasan int GetDosArgv(const char16_t *cmdline, char *buf,
                                   size_t size, char **argv, size_t max) {
   bool inquote;

@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/errno.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
@@ -61,12 +61,6 @@ TEST(mkntcmdline, justSlash) {
   EXPECT_STREQ(u"\\", cmdline);
 }
 
-TEST(mkntcmdline, basicQuoting) {
-  char *argv[] = {"a\"b c", "d", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, argv[0], argv));
-  EXPECT_STREQ(u"\"a\\\"b c\" d" /* "a\"b c" d */, cmdline);
-}
-
 TEST(mkntcmdline, testUnicode) {
   char *argv1[] = {
       gc(strdup("(╯°□°)╯")),
@@ -82,12 +76,12 @@ TEST(mkntcmdline, fixAsBestAsWeCanForNow1) {
   char *argv1[] = {
       "/C/WINDOWS/system32/cmd.exe",
       "/C",
-      "more < \"/C/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
+      "more <\"/C/Users/jart/AppData/Local/Temp/tmplquaa_d6\"",
       NULL,
   };
   EXPECT_NE(-1, mkntcmdline(cmdline, argv1[0], argv1));
-  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more < "
-               u"\\\"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\\\"\"",
+  EXPECT_STREQ(u"C:\\WINDOWS\\system32\\cmd.exe /C \"more <"
+               u"\"\"\"C:/Users/jart/AppData/Local/Temp/tmplquaa_d6\"\"\"\"",
                cmdline);
 }
 
