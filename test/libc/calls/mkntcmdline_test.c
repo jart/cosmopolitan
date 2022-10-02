@@ -100,6 +100,6 @@ TEST(mkntcmdline, fixAsBestAsWeCanForNow2) {
 
 TEST(mkntcmdline, testWut) {
   char *argv[] = {"redbean.com", "--strace", NULL};
-  EXPECT_NE(-1, mkntcmdline(cmdline, "C:\\Users\\jart\\redbean.com", argv));
-  EXPECT_STREQ(u"C:\\Users\\jart\\redbean.com --strace", cmdline);
+  EXPECT_NE(-1, mkntcmdline(cmdline, "C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com", argv));
+  EXPECT_STREQ(u"C:\\Users\\jart\\𝑟𝑒𝑑𝑏𝑒𝑎𝑛.com --strace", cmdline);
 }

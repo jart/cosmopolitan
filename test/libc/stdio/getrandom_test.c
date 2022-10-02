@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/x86feature.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/lcg.internal.h"
 #include "libc/stdio/rand.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/grnd.h"
 #include "libc/testlib/ezbench.h"
@@ -240,4 +241,8 @@ TEST(getrandom, sanityTest) {
       }
     }
   }
+}
+
+TEST(getrandom, badflags_einval) {
+  ASSERT_SYS(EINVAL, -1, getrandom(0, 0, -1));
 }
