@@ -25,7 +25,9 @@
 #include "libc/limits.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/futex.h"
+#include "libc/thread/freebsd.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/futex.internal.h"
@@ -52,6 +54,14 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 		return;
 	}
 
+	if (IsFreebsd ()) {
+		FUTEX_IS_SUPPORTED = true;
+		FUTEX_WAIT_ = FUTEX_WAIT;
+		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+		return;
+	}
+
         if (!(FUTEX_IS_SUPPORTED = IsLinux () || IsOpenbsd ())) {
 		// we're using sched_yield() so let's
 		// avoid needless clock_gettime calls
@@ -75,14 +85,14 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 		FUTEX_WAIT_ = FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
-	} else if (IsLinux () && 
+	} else if (!IsTiny () && IsLinux () &&
 		   _futex (&x, FUTEX_WAIT_BITSET, 1, 0, 0,
 			   FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
 		FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 	} else if (IsOpenbsd () ||
-		   (IsLinux () && 
+		   (!IsTiny () && IsLinux () &&
 		    !_futex (&x, FUTEX_WAKE_PRIVATE, 1, 0, 0, 0))) {
 		FUTEX_WAIT_ = FUTEX_WAIT;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
@@ -92,8 +102,9 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 }
 
 int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout) {
-	int rc, op;
+	size_t size;
 	uint32_t ms;
+	int rc, op, fop;
 
 	if (!FUTEX_IS_SUPPORTED) {
 		nsync_yield_ ();
@@ -105,6 +116,10 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 	}
 
 	op = FUTEX_WAIT_;
+	if (pshare == PTHREAD_PROCESS_PRIVATE) {
+		op |= FUTEX_PRIVATE_FLAG_;
+	}
+
 	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
 		if (timeout) {
 			ms = _timespec_tomillis (*timeout);
@@ -116,10 +131,25 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 		} else {
 			rc = -GetLastError ();
 		}
-	} else {
-		if (pshare == PTHREAD_PROCESS_PRIVATE) {
-			op |= FUTEX_PRIVATE_FLAG_;
+	} else if (IsFreebsd ()) {
+		struct _umtx_time *put, ut;
+		if (!timeout) {
+			put = 0;
+			size = 0;
+		} else {
+			ut._flags = UMTX_ABSTIME;
+			ut._clockid = CLOCK_REALTIME;
+			ut._timeout = *timeout;
+			put = &ut;
+			size = sizeof(ut);
 		}
+		if (pshare) {
+			fop = UMTX_OP_WAIT_UINT;
+		} else {
+			fop = UMTX_OP_WAIT_UINT_PRIVATE;
+		}
+		rc = sys_umtx_op (p, fop, 0, &size, put);
+	} else {
 		rc = _futex (p, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
 		if (IsOpenbsd() && rc > 0) {
 			// [jart] openbsd does this without setting carry flag
@@ -136,7 +166,7 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 }
 
 int nsync_futex_wake_ (int *p, int count, char pshare) {
-	int rc, op;
+	int rc, op, fop;
 	int wake (void *, int, int) asm ("_futex");
 
 	ASSERT (count == 1 || count == INT_MAX);
@@ -147,6 +177,10 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 	}
 
 	op = FUTEX_WAKE;
+	if (pshare == PTHREAD_PROCESS_PRIVATE) {
+		op |= FUTEX_PRIVATE_FLAG_;
+	}
+
 	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
 		if (count == 1) {
 			WakeByAddressSingle (p);
@@ -154,10 +188,14 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 			WakeByAddressAll (p);
 		}
 		rc = 0;
-	} else {
-		if (pshare == PTHREAD_PROCESS_PRIVATE) {
-			op |= FUTEX_PRIVATE_FLAG_;
+	} else if (IsFreebsd ()) {
+		if (pshare) {
+			fop = UMTX_OP_WAKE;
+		} else {
+			fop = UMTX_OP_WAKE_PRIVATE;
 		}
+		rc = sys_umtx_op (p, fop, count, 0, 0);
+	} else {
 		rc = wake (p, op, count);
 	}
 

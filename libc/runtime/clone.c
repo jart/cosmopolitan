@@ -112,7 +112,7 @@ WinThreadEntry(int rdi,                                 // rcx
   // since we didn't indirect this function through NT2SYSV() it's not
   // safe to simply return, and as such, we just call ExitThread().
   __imp_ExitThread(rc);
-  unreachable;
+  notpossible;
 }
 
 static textwindows int CloneWindows(int (*func)(void *, int), char *stk,
@@ -192,7 +192,7 @@ XnuThreadMain(void *pthread,                    // rdi
                : "=m"(*wt->ztid)
                : "a"(0x2000000 | 361), "D"(0), "S"(0), "d"(0)
                : "rcx", "r10", "r11", "memory");
-  unreachable;
+  notpossible;
 }
 
 static int CloneXnu(int (*fn)(void *), char *stk, size_t stksz, int flags,
@@ -239,12 +239,15 @@ static wontreturn void FreebsdThreadMain(void *p) {
   wt->func(wt->arg, wt->tid);
   // we no longer use the stack after this point
   // void thr_exit(%rdi = long *state);
-  asm volatile("movl\t$0,%0\n\t"  // *wt->ztid = 0
-               "syscall"          // thr_exit()
+  asm volatile("movl\t$0,%0\n\t"       // *wt->ztid = 0
+               "syscall\n\t"           // _umtx_op()
+               "movl\t$431,%%eax\n\t"  // thr_exit()
+               "xor\t%%edi,%%edi\n\t"
+               "syscall"
                : "=m"(*wt->ztid)
-               : "a"(431), "D"(0)
-               : "rcx", "r11", "memory");
-  unreachable;
+               : "a"(454), "D"(wt->ztid), "S"(UMTX_OP_WAKE)
+               : "rcx", "r8", "r9", "r10", "r11", "memory");
+  notpossible;
 }
 
 static int CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
@@ -318,7 +321,7 @@ noasan static wontreturn void OpenbsdThreadMain(void *p) {
                : "a"(83), "m"(oldrsp), "D"(wt->ztid), "S"(FUTEX_WAKE),
                  "d"(INT_MAX)
                : "rcx", "r11", "memory");
-  unreachable;
+  notpossible;
 }
 
 static int CloneOpenbsd(int (*func)(void *, int), char *stk, size_t stksz,
@@ -372,7 +375,7 @@ static wontreturn void NetbsdThreadMain(void *arg,                 // rdi
                : "=a"(ax), "=d"(dx), "=m"(*ztid)
                : "0"(310)
                : "rcx", "r11", "memory");
-  unreachable;
+  notpossible;
 }
 
 static int CloneNetbsd(int (*func)(void *, int), char *stk, size_t stksz,

@@ -29,6 +29,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/futex.h"
+#include "libc/thread/freebsd.internal.h"
 #include "libc/thread/wait0.internal.h"
 
 int _futex(atomic_int *, int, int, const struct timespec *);
@@ -64,6 +65,8 @@ static void _wait0_futex(const atomic_int *a, int e) {
     } else {
       rc = -GetLastError();
     }
+  } else if (IsFreebsd()) {
+    rc = sys_umtx_op(a, UMTX_OP_WAIT_UINT, 0, 0, 0);
   } else {
     rc = _futex(a, op, e, 0);
     if (IsOpenbsd() && rc > 0) {

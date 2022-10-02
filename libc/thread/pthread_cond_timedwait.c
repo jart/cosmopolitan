@@ -27,14 +27,14 @@
  * Waits for condition with optional time limit, e.g.
  *
  *     struct timespec ts;  // one second timeout
- *     ts = _timespec_add(_timespec_mono(), _timespec_frommillis(1000));
+ *     ts = _timespec_add(_timespec_real(), _timespec_frommillis(1000));
  *     if (pthread_cond_timedwait(cond, mutex, &ts) == ETIMEDOUT) {
  *       // handle timeout...
  *     }
  *
  * @param mutex needs to be held by thread when calling this function
  * @param abstime may be null to wait indefinitely and should contain
- *     some arbitrary interval added to a `CLOCK_MONOTONIC` timestamp
+ *     some arbitrary interval added to a `CLOCK_REALTIME` timestamp
  * @return 0 on success, or errno on error
  * @raise ETIMEDOUT if `abstime` was specified and the current time
  *     exceeded its value

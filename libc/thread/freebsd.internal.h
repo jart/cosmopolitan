@@ -1,8 +1,8 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_FREEBSD_INTERNAL_H_
-#include "libc/intrin/asmflag.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
+#include "libc/intrin/asmflag.h"
 
 /**
  * @fileoverview FreeBSD Threading
@@ -11,9 +11,12 @@
  *     maximum legal range is PID_MAX + 2 (100001) through INT_MAX
  */
 
-#define UMTX_OP_MUTEX_WAIT 17
-#define UMTX_OP_MUTEX_WAKE 18
-#define UMTX_ABSTIME       1
+#define UMTX_OP_WAIT              2
+#define UMTX_OP_WAIT_UINT         11
+#define UMTX_OP_WAIT_UINT_PRIVATE 15
+#define UMTX_OP_WAKE              3
+#define UMTX_OP_WAKE_PRIVATE      16
+#define UMTX_ABSTIME              1
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -42,7 +45,7 @@ struct _umtx_time {
   uint32_t _clockid;
 };
 
-int _umtx_op(void *, int, unsigned long, void *, void *);
+int sys_umtx_op(void *, int, unsigned long, void *, void *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
