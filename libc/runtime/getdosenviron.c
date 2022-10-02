@@ -104,16 +104,14 @@ textwindows noinstrument noasan void FixPath(char *path) {
   }
 }
 
-/**
- * Transcodes NT environment variable block from UTF-16 to UTF-8.
- *
- * @param env is a double NUL-terminated block of key=values
- * @param buf is the new environment which gets double-nul'd
- * @param size is the byte capacity of buf
- * @param envp stores NULL-terminated string pointer list (optional)
- * @param max is the pointer count capacity of envp
- * @return number of variables decoded, excluding NULL-terminator
- */
+// Transcodes NT environment variable block from UTF-16 to UTF-8.
+//
+// @param env is a double NUL-terminated block of key=values
+// @param buf is the new environment which gets double-nul'd
+// @param size is the byte capacity of buf
+// @param envp stores NULL-terminated string pointer list (optional)
+// @param max is the pointer count capacity of envp
+// @return number of variables decoded, excluding NULL-terminator
 textwindows noasan noinstrument int GetDosEnviron(const char16_t *env,
                                                   char *buf, size_t size,
                                                   char **envp, size_t max) {

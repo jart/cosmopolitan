@@ -34,8 +34,15 @@
 static bool NeedsQuotes(const char *s) {
   if (!*s) return true;
   do {
-    if (*s == ' ' || *s == '\t') {
-      return true;
+    switch (*s) {
+      case '"':
+      case ' ':
+      case '\t':
+      case '\v':
+      case '\n':
+        return true;
+      default:
+        break;
     }
   } while (*s++);
   return false;
@@ -45,19 +52,21 @@ static inline int IsAlpha(int c) {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 
-/**
- * Converts System V argv to Windows-style command line.
- *
- * Escaping is performed and it's designed to round-trip with
- * GetDosArgv() or GetDosArgv(). This function does NOT escape
- * command interpreter syntax, e.g. $VAR (sh), %VAR% (cmd).
- *
- * @param cmdline is output buffer
- * @param prog is used as argv[0]
- * @param argv is an a NULL-terminated array of UTF-8 strings
- * @return freshly allocated lpCommandLine or NULL w/ errno
- * @see libc/runtime/dosargv.c
- */
+// Converts System V argv to Windows-style command line.
+//
+// Escaping is performed and it's designed to round-trip with
+// GetDosArgv() or GetDosArgv(). This function does NOT escape
+// command interpreter syntax, e.g. $VAR (sh), %VAR% (cmd).
+//
+// TODO(jart): this needs fuzzing and security review
+//
+// @param cmdline is output buffer
+// @param prog is frontloaded as argv[0]
+// @param argv is an a NULL-terminated array of UTF-8 strings
+// @return 0 on success, or -1 w/ errno
+// @raise E2BIG if everything is too huge
+// @see "Everyone quotes command line arguments the wrong way" MSDN
+// @see libc/runtime/getdosargv.c
 textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
                             char *const argv[]) {
   char *arg;
@@ -102,8 +111,8 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
         } else {
           // turn stuff like `less /c/...`
           //            into `less c:/...`
-          // turn stuff like `more <\\\"/c/...\\\"`
-          //            into `more <\\\"c:/...\\\"`
+          // turn stuff like `more <"/c/..."`
+          //            into `more <"c:/..."`
           if (k > 3 && IsAlpha(cmdline[k - 1]) &&
               (cmdline[k - 2] == '/' || cmdline[k - 2] == '\\') &&
               (cmdline[k - 3] == '"' || cmdline[k - 3] == ' ')) {
@@ -115,11 +124,8 @@ textwindows int mkntcmdline(char16_t cmdline[ARG_MAX / 2], const char *prog,
       if (x == '\\') {
         ++slashes;
       } else if (x == '"') {
-        for (s = 0; s < slashes * 2; ++s) {
-          APPEND(u'\\');
-        }
-        slashes = 0;
-        APPEND(u'\\');
+        APPEND(u'"');
+        APPEND(u'"');
         APPEND(u'"');
       } else {
         for (s = 0; s < slashes; ++s) {
