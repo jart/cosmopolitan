@@ -175,11 +175,11 @@ TEST(GetDosArgv, cmdToil) {
   size_t size = ARG_MAX / 2;
   char *buf = malloc(size * sizeof(char));
   char **argv = malloc(max * sizeof(char *));
-  EXPECT_EQ(3, GetDosArgv(u"cmd.exe /C \"echo hi >\"\"\"foo bar.txt\"\"\"\"",
+  EXPECT_EQ(3, GetDosArgv(u"cmd.exe /C \"echo hi >\"\"\"𝑓𝑜𝑜 bar.txt\"\"\"\"",
                           buf, size, argv, max));
   EXPECT_STREQ("cmd.exe", argv[0]);
   EXPECT_STREQ("/C", argv[1]);
-  EXPECT_STREQ("echo hi >\"foo bar.txt\"", argv[2]);
+  EXPECT_STREQ("echo hi >\"𝑓𝑜𝑜 bar.txt\"", argv[2]);
   EXPECT_EQ(NULL, argv[3]);
   free(argv);
   free(buf);
