@@ -36,6 +36,7 @@
 
 #define STATE_SHELL 0
 #define STATE_STR   1
+#define STATE_QUO   2
 
 char *p;
 char *q;
@@ -113,8 +114,8 @@ void Pipe(void) {
 }
 
 char *Tokenize(void) {
-  int t;
   char *r;
+  int c, t;
   while (*p == ' ' || *p == '\t' || *p == '\n' ||
          (p[0] == '\\' && p[1] == '\n')) {
     ++p;
@@ -131,6 +132,8 @@ char *Tokenize(void) {
         if (!*p || *p == ' ' || *p == '\t') {
           *q++ = 0;
           return r;
+        } else if (*p == '"') {
+          t = STATE_QUO;
         } else if (*p == '\'') {
           t = STATE_STR;
         } else if (*p == '\\') {
@@ -151,11 +154,39 @@ char *Tokenize(void) {
 
       case STATE_STR:
         if (!*p) {
-          Write("cmd: error: unterminated string\n", 0);
+          Write("cmd: error: unterminated single string\n", 0);
           exit(6);
         }
         if (*p == '\'') {
           t = STATE_SHELL;
+        } else {
+          *q++ = *p;
+        }
+        break;
+
+      case STATE_QUO:
+        if (!*p) {
+          Write("cmd: error: unterminated quoted string\n", 0);
+          exit(6);
+        }
+        if (*p == '"') {
+          t = STATE_SHELL;
+        } else if (p[0] == '\\') {
+          switch ((c = *++p)) {
+            case 0:
+              UnsupportedSyntax('\\');
+            case '\n':
+              break;
+            case '$':
+            case '`':
+            case '"':
+              *q++ = c;
+              break;
+            default:
+              *q++ = '\\';
+              *q++ = c;
+              break;
+          }
         } else {
           *q++ = *p;
         }
@@ -188,7 +219,6 @@ int main(int argc, char *argv[]) {
   unsupported['{'] = true;
   unsupported['}'] = true;
   unsupported[';'] = true;
-  unsupported['"'] = true;
   unsupported['?'] = true;
   unsupported['!'] = true;
 
