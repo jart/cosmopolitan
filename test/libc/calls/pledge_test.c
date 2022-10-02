@@ -61,8 +61,6 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-STATIC_YOINK("zip_uri_support");
-
 char testlib_enable_tmp_setup_teardown;
 
 void OnSig(int sig) {
@@ -71,26 +69,11 @@ void OnSig(int sig) {
 
 int sys_memfd_secret(unsigned int);  // our ENOSYS threshold
 
-int extract(const char *from, const char *to, int mode) {
-  int fdin, fdout;
-  if ((fdin = open(from, O_RDONLY)) == -1) return -1;
-  if ((fdout = creat(to, mode)) == -1) {
-    close(fdin);
-    return -1;
-  }
-  if (_copyfd(fdin, fdout, -1) == -1) {
-    close(fdout);
-    close(fdin);
-    return -1;
-  }
-  return close(fdout) | close(fdin);
-}
-
 void SetUp(void) {
   __enable_threads();
   if (!__is_linux_2_6_23() && !IsOpenbsd()) exit(0);
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "life.elf", 0755));
-  ASSERT_SYS(0, 0, extract("/zip/sock.elf", "sock.elf", 0755));
+  testlib_extract("/zip/life.elf", "life.elf", 0755);
+  testlib_extract("/zip/sock.elf", "sock.elf", 0755);
   __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
 }
 

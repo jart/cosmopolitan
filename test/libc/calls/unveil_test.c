@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/struct/dirent.h"
 #include "libc/calls/struct/stat.h"
@@ -25,6 +24,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
@@ -44,8 +44,6 @@
 #include "libc/thread/spawn.h"
 #include "libc/x/x.h"
 #include "libc/x/xasprintf.h"
-
-STATIC_YOINK("zip_uri_support");
 
 #define EACCES_OR_ENOENT (IsOpenbsd() ? ENOENT : EACCES)
 
@@ -68,21 +66,6 @@ void SetUpOnce(void) {
 void SetUp(void) {
   // make sure zipos maps executable into memory early
   ASSERT_SYS(0, 0, stat("/zip/life.elf", &st));
-}
-
-int extract(const char *from, const char *to, int mode) {
-  int fdin, fdout;
-  if ((fdin = open(from, O_RDONLY)) == -1) return -1;
-  if ((fdout = creat(to, mode)) == -1) {
-    close(fdin);
-    return -1;
-  }
-  if (_copyfd(fdin, fdout, -1) == -1) {
-    close(fdout);
-    close(fdin);
-    return -1;
-  }
-  return close(fdout) | close(fdin);
 }
 
 TEST(unveil, api_differences) {
@@ -111,7 +94,7 @@ TEST(unveil, api_differences) {
 TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   ASSERT_SYS(0, 0, unveil("folder", "rx"));
   ASSERT_SYS(0, 0, unveil(0, 0));
   SPAWN(fork);
@@ -125,7 +108,7 @@ TEST(unveil, rx_readOnlyPreexistingExecutable_worksFine) {
 TEST(unveil, r_noExecutePreexistingExecutable_raisesEacces) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   ASSERT_SYS(0, 0, unveil("folder", "r"));
   ASSERT_SYS(0, 0, unveil(0, 0));
   SPAWN(fork);
@@ -156,7 +139,7 @@ TEST(unveil, rwc_createExecutableFile_isAllowedButCantBeRun) {
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwc"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   ASSERT_SYS(EACCES, -1, execl("folder/life.elf", "folder/life.elf", 0));
@@ -169,7 +152,7 @@ TEST(unveil, rwcx_createExecutableFile_canAlsoBeRun) {
   ASSERT_SYS(0, 0, mkdir("folder", 0755));
   ASSERT_SYS(0, 0, unveil("folder", "rwcx"));
   ASSERT_SYS(0, 0, unveil(0, 0));
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "folder/life.elf", 0755));
+  testlib_extract("/zip/life.elf", "folder/life.elf", 0755);
   SPAWN(fork);
   ASSERT_SYS(0, 0, stat("folder/life.elf", &st));
   execl("folder/life.elf", "folder/life.elf", 0);
@@ -206,7 +189,7 @@ TEST(unveil, mostRestrictivePolicy) {
 TEST(unveil, overlappingDirectories_inconsistentBehavior) {
   SPAWN(fork);
   ASSERT_SYS(0, 0, makedirs("f1/f2", 0755));
-  ASSERT_SYS(0, 0, extract("/zip/life.elf", "f1/f2/life.elf", 0755));
+  testlib_extract("/zip/life.elf", "f1/f2/life.elf", 0755);
   ASSERT_SYS(0, 0, unveil("f1", "x"));
   ASSERT_SYS(0, 0, unveil("f1/f2", "r"));
   ASSERT_SYS(0, 0, unveil(0, 0));

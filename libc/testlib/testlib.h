@@ -398,6 +398,7 @@ bool testlib_strcaseequals(size_t, const void *, const void *) nosideeffect;
 bool testlib_strncaseequals(size_t, const void *, const void *,
                             size_t) nosideeffect;
 void testlib_free(void *);
+void testlib_extract(const char *, const char *, int);
 bool testlib_binequals(const char16_t *, const void *, size_t) nosideeffect;
 bool testlib_hexequals(const char *, const void *, size_t) nosideeffect;
 bool testlib_startswith(size_t, const void *, const void *) nosideeffect;
