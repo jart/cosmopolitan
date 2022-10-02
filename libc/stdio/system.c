@@ -32,10 +32,14 @@
 /**
  * Launches program with system command interpreter.
  *
- * Warning: Caution is very much advised on Windows where this function
- * currently delegates to CMD.EXE, which has notoriously mysterious and
- * insecure escaping rules. Much better idea is to not use this at all,
- * favoring instead explicit execve() invocations without using shells.
+ * This embeds the cocmd.com shell interpreter which supports a limited
+ * subset of the bourne shell that's significantly faster:
+ *
+ * - pipelines
+ * - single quotes
+ * - double quotes
+ * - input redirection, e.g. `<path`
+ * - output redirection, e.g. `>path`, `>>append`, `2>err.txt, `2>&1`
  *
  * @param cmdline is an interpreted Turing-complete command
  * @return -1 if child process couldn't be created, otherwise a wait
@@ -45,11 +49,7 @@ int system(const char *cmdline) {
   int pid, wstatus;
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
-  if (!cmdline) {
-    if (IsWindows()) return 1;
-    if (!access(_PATH_BSHELL, X_OK)) return 1;
-    return 0;
-  }
+  if (!cmdline) return 1;
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   sigemptyset(&ignore.sa_mask);

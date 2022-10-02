@@ -29,6 +29,16 @@
 
 /**
  * Spawns subprocess and returns pipe stream.
+ *
+ * This embeds the cocmd.com shell interpreter which supports a limited
+ * subset of the bourne shell that's significantly faster:
+ *
+ * - pipelines
+ * - single quotes
+ * - double quotes
+ * - input redirection, e.g. `<path`
+ * - output redirection, e.g. `>path`, `>>append`, `2>err.txt, `2>&1`
+ *
  * @see pclose()
  */
 FILE *popen(const char *cmdline, const char *mode) {
