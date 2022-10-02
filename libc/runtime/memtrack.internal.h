@@ -7,6 +7,7 @@
 #include "libc/macros.internal.h"
 #include "libc/thread/tls.h"
 #include "libc/nt/version.h"
+#include "libc/nt/enum/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -26,17 +27,19 @@ COSMOPOLITAN_C_START_
 #define kFixedmapStart _kMem(0x300000000000, 0x000040000000)
 #define kFixedmapSize \
   _kMem(0x400000000000 - 0x300000000000, 0x000070000000 - 0x000040000000)
-#define kMemtrackFdsStart \
-  (ROUNDDOWN(_kMem(0x6fe000000000, 0x68000000), FRAMESIZE * 8) - 0x8000 * 8)
-#define kMemtrackFdsSize _kMem(0x001000000000, 0x04000000)
-#define kMemtrackZiposStart \
-  (ROUNDDOWN(_kMem(0x6fd000000000, 0x6c000000), FRAMESIZE * 8) - 0x8000 * 8)
-#define kMemtrackZiposSize _kMem(0x001000000000, 0x10000000)
+#define kMemtrackFdsStart _kMemVista(0x6fe000040000, 0x5e000040000)
+#define kMemtrackFdsSize  \
+  (_kMemVista(0x6feffffc0000, 0x5effffc0000) - kMemtrackFdsStart)
+#define kMemtrackZiposStart _kMemVista(0x6fd000040000, 0x5d000040000)
+#define kMemtrackZiposSize \
+  (_kMemVista(0x6fdffffc0000, 0x5dffffc0000) - kMemtrackZiposStart)
 #define _kMmi(VSPACE)                                                   \
   ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
           FRAMESIZE)
 #define _kMem(NORMAL, WIN7) \
   (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
+#define _kMemVista(NORMAL, WINVISTA) \
+  (!IsWindows() || NtGetVersion() >= kNtVersionWindows81 ? NORMAL : WINVISTA)
 
 struct MemoryInterval {
   int x;

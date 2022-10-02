@@ -22,6 +22,7 @@
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
+#include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
 
@@ -43,10 +44,11 @@ textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
   fds = VEIL("r", &g_fds);
-  fds->p = fds->e = (void *)0x6fe000040000;
+  fds->p = fds->e = (void *)kMemtrackFdsStart;
   fds->n = 4;
   fds->f = 3;
-  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, 0x6ff000000000);
+  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e,
+                   kMemtrackFdsStart + kMemtrackFdsSize);;
   if (IsMetal()) {
     extern const char vga_console[];
     pushmov(&fds->f, 3ull);
