@@ -186,6 +186,8 @@ struct IdtDescriptor {
 uint64_t *__get_virtual(struct mman *, uint64_t *, int64_t, bool);
 uint64_t __clear_page(uint64_t);
 uint64_t __new_page(struct mman *);
+void __invert_memory_area(struct mman *, uint64_t *, uint64_t, uint64_t,
+                          uint64_t);
 void __map_phdrs(struct mman *, uint64_t *, uint64_t);
 
 forceinline unsigned char inb(unsigned short port) {

@@ -1,22 +1,21 @@
 #ifndef COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_VGA_VGA_INTERNAL_H_
 
+/** Preferred width of the video screen, in character units. */
+#define VGA_PREFER_TTY_HEIGHT 30
+/** Preferred width of the video screen, in character units. */
+#define VGA_PREFER_TTY_WIDTH 80
+/** Assumed height of each character in pixels, in graphics modes. */
+#define VGA_ASSUME_CHAR_HEIGHT_PX 16
+/** Assumed width of each character in pixels, in graphics modes. */
+#define VGA_ASSUME_CHAR_WIDTH_PX 8
+
 /*
- * VGA_TTY_HEIGHT, VGA_TTY_WIDTH, VGA_USE_WCS, & VGA_PERSNICKETY_STATUS are
- * configuration knobs which can potentially be used to tweak the features
- * to be compiled into our VGA teletypewriter support.
+ * VGA_USE_WCS, VGA_USE_BLINK, & VGA_PERSNICKETY_STATUS are configuration
+ * knobs which can potentially be used to tweak the features to be compiled
+ * into our VGA teletypewriter support.
  */
 
-/**
- * Height of the video screen, in character units.  Undefine if the height
- * may vary at runtime.
- */
-#define VGA_TTY_HEIGHT 25
-/**
- * Width of the video screen, in character units.  Undefine if the width may
- * vary at runtime.
- */
-#define VGA_TTY_WIDTH 80
 /**
  * If VGA_USE_WCS is defined, the tty code can maintain an array of the
  * Unicode characters "underlying" the 8-bit (or 9-bit) characters that are
@@ -113,13 +112,22 @@ struct VgaTextCharCell {
 };
 
 struct Tty {
+  /**
+   * Cursor position.  (y, x) = (0, 0) means the cursor is on the top left
+   * character cell of the terminal.
+   */
   unsigned short y, x;
-#ifndef VGA_TTY_HEIGHT
-  unsigned short yn;
-#endif
-#ifndef VGA_TTY_WIDTH
-  unsigned short xn;
-#endif
+  /** Height and width of terminal, in character units. */
+  unsigned short yn, xn;
+  /** Height and width of terminal, in pixels (if in graphics video mode). */
+  unsigned short yp, xp;
+  /**
+   * Number of bytes (NOTE) occupied by each row of pixels, including any
+   * invisible "pixels".
+   */
+  unsigned short xs;
+  /** Type of video buffer (from mman::pc_video_type). */
+  unsigned char type;
   uint32_t u8;
   uint32_t n8;
   uint32_t pr;
@@ -155,8 +163,10 @@ ssize_t _TtyWrite(struct Tty *, const void *, size_t);
 ssize_t _TtyWriteInput(struct Tty *, const void *, size_t);
 void _TtyResetOutputMode(struct Tty *);
 void _TtyFullReset(struct Tty *);
-void _TtyMemmove(struct Tty *, size_t, size_t, size_t);
-void _TtyErase(struct Tty *, size_t, size_t);
+void _TtyMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t, size_t);
+void _TtyMoveLines(struct Tty *, size_t, size_t, size_t);
+void _TtyEraseLineCells(struct Tty *, size_t, size_t, size_t);
+void _TtyEraseLines(struct Tty *, size_t, size_t);
 void _TtySetY(struct Tty *, unsigned short);
 void _TtySetX(struct Tty *, unsigned short);
 

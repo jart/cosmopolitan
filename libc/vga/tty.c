@@ -240,7 +240,7 @@ static uint8_t TtyGetVgaAttr(struct Tty *tty) {
   return attr;
 }
 
-void _TtyErase(struct Tty *tty, size_t dst, size_t n) {
+static void TtyErase(struct Tty *tty, size_t dst, size_t n) {
   uint8_t attr = TtyGetVgaAttr(tty);
   size_t i;
   for (i = 0; i < n; ++i)
@@ -248,9 +248,30 @@ void _TtyErase(struct Tty *tty, size_t dst, size_t n) {
   if (Wcs(tty)) wmemset(Wcs(tty) + dst, L' ', n);
 }
 
-void _TtyMemmove(struct Tty *tty, size_t dst, size_t src, size_t n) {
+void _TtyEraseLineCells(struct Tty *tty, size_t dsty, size_t dstx, size_t n) {
+  size_t xn = Xn(tty);
+  TtyErase(tty, dsty * xn + dstx, n);
+}
+
+void _TtyEraseLines(struct Tty *tty, size_t dsty, size_t n) {
+  size_t xn = Xn(tty);
+  TtyErase(tty, dsty * xn, n * xn);
+}
+
+static void TtyMemmove(struct Tty *tty, size_t dst, size_t src, size_t n) {
   memmove(tty->ccs + dst, tty->ccs + src, n * sizeof(struct VgaTextCharCell));
   if (Wcs(tty)) wmemmove(Wcs(tty) + dst, Wcs(tty) + src, n);
+}
+
+void _TtyMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx,
+                       size_t srcy, size_t srcx, size_t n) {
+  size_t xn = Xn(tty);
+  TtyMemmove(tty, dsty * xn + dstx, srcy * xn + srcx, n);
+}
+
+void _TtyMoveLines(struct Tty *tty, size_t dsty, size_t srcy, size_t n) {
+  size_t xn = Xn(tty);
+  TtyMemmove(tty, dsty * xn, srcy * xn, n * xn);
 }
 
 void _TtyResetOutputMode(struct Tty *tty) {
@@ -272,7 +293,7 @@ void _TtyFullReset(struct Tty *tty) {
   _TtyResetOutputMode(tty);
   tty->y = 0;
   tty->x = 0;
-  _TtyErase(tty, 0, Yn(tty) * Xn(tty));
+  _TtyEraseLines(tty, 0, Yn(tty));
 }
 
 void _TtySetY(struct Tty *tty, unsigned short y) {
@@ -286,13 +307,13 @@ void _TtySetX(struct Tty *tty, unsigned short x) {
 }
 
 static void TtyScroll(struct Tty *tty) {
-  _TtyMemmove(tty, 0, Xn(tty), Xn(tty) * (Yn(tty) - 1));
-  _TtyErase(tty, Xn(tty) * (Yn(tty) - 1), Xn(tty));
+  _TtyMoveLines(tty, 0, 1, Yn(tty) - 1);
+  _TtyEraseLines(tty, Yn(tty) - 1, 1);
 }
 
 static void TtyReverse(struct Tty *tty) {
-  _TtyMemmove(tty, Xn(tty), 0, Xn(tty) * (Yn(tty) - 1));
-  _TtyErase(tty, 0, Xn(tty));
+  _TtyMoveLines(tty, 1, 0, Yn(tty) - 1);
+  _TtyEraseLines(tty, 0, 1);
 }
 
 static void TtyIndex(struct Tty *tty) {
@@ -464,15 +485,16 @@ static void TtyRestoreCursorPosition(struct Tty *tty) {
 static void TtyEraseDisplay(struct Tty *tty) {
   switch (TtyAtoi(tty->esc.s, NULL)) {
     case 0:
-      _TtyErase(tty, tty->y * Xn(tty) + tty->x,
-                Yn(tty) * Xn(tty) - (tty->y * Xn(tty) + tty->x));
+      _TtyEraseLineCells(tty, tty->y, tty->x, Xn(tty) - tty->x);
+      _TtyEraseLines(tty, tty->y + 1, Yn(tty) - tty->y - 1);
       break;
     case 1:
-      _TtyErase(tty, 0, tty->y * Xn(tty) + tty->x);
+      _TtyEraseLines(tty, 0, tty->y);
+      _TtyEraseLineCells(tty, tty->y, 0, tty->x);
       break;
     case 2:
     case 3:
-      _TtyErase(tty, 0, Yn(tty) * Xn(tty));
+      _TtyEraseLines(tty, 0, Yn(tty));
       break;
     default:
       break;
@@ -482,13 +504,13 @@ static void TtyEraseDisplay(struct Tty *tty) {
 static void TtyEraseLine(struct Tty *tty) {
   switch (TtyAtoi(tty->esc.s, NULL)) {
     case 0:
-      _TtyErase(tty, tty->y * Xn(tty) + tty->x, Xn(tty) - tty->x);
+      _TtyEraseLineCells(tty, tty->y, tty->x, Xn(tty) - tty->x);
       break;
     case 1:
-      _TtyErase(tty, tty->y * Xn(tty), tty->x);
+      _TtyEraseLineCells(tty, tty->y, 0, tty->x);
       break;
     case 2:
-      _TtyErase(tty, tty->y * Xn(tty), Xn(tty));
+      _TtyEraseLines(tty, tty->y, 1);
       break;
     default:
       break;
@@ -496,11 +518,23 @@ static void TtyEraseLine(struct Tty *tty) {
 }
 
 static void TtyEraseCells(struct Tty *tty) {
-  int i, n, x;
-  i = tty->y * Xn(tty) + tty->x;
-  n = Yn(tty) * Xn(tty);
-  x = min(max(TtyAtoi(tty->esc.s, NULL), 1), n - i);
-  _TtyErase(tty, i, x);
+  int yn, xn, yi, xi, n, left;
+  yn = Yn(tty);
+  xn = Xn(tty);
+  yi = tty->y;
+  xi = tty->x;
+  left = min(max(TtyAtoi(tty->esc.s, NULL), 1), yn * xn - (yi * xn + xi));
+  while (left) {
+    if (left >= xn - xi) {
+      _TtyEraseLineCells(tty, yi, xi, xn - xi);
+      left -= xn - xi;
+      ++yi;
+      xi = 0;
+    } else {
+      _TtyEraseLineCells(tty, yi, xi, left);
+      left = 0;
+    }
+  }
 }
 
 static int TtyArg1(struct Tty *tty) {
@@ -509,30 +543,28 @@ static int TtyArg1(struct Tty *tty) {
 
 static void TtyInsertCells(struct Tty *tty) {
   int n = min(Xn(tty) - tty->x, TtyArg1(tty));
-  _TtyMemmove(tty, tty->y * Xn(tty) + tty->x + n, tty->y * Xn(tty) + tty->x,
-              Xn(tty) - (tty->x + n));
-  _TtyErase(tty, tty->y * Xn(tty) + tty->x, n);
+  _TtyMoveLineCells(tty, tty->y, tty->x + n, tty->y, tty->x,
+                    Xn(tty) - (tty->x + n));
+  _TtyEraseLineCells(tty, tty->y, tty->x, n);
 }
 
 static void TtyInsertLines(struct Tty *tty) {
   int n = min(Yn(tty) - tty->y, TtyArg1(tty));
-  _TtyMemmove(tty, (tty->y + n) * Xn(tty), tty->y * Xn(tty),
-              (Yn(tty) - tty->y - n) * Xn(tty));
-  _TtyErase(tty, tty->y * Xn(tty), n * Xn(tty));
+  _TtyMoveLines(tty, tty->y + n, tty->y, Yn(tty) - tty->y - n);
+  _TtyEraseLines(tty, tty->y, n);
 }
 
 static void TtyDeleteCells(struct Tty *tty) {
   int n = min(Xn(tty) - tty->x, TtyArg1(tty));
-  _TtyMemmove(tty, tty->y * Xn(tty) + tty->x, tty->y * Xn(tty) + tty->x + n,
-              Xn(tty) - (tty->x + n));
-  _TtyErase(tty, tty->y * Xn(tty) + tty->x, n);
+  _TtyMoveLineCells(tty, tty->y, tty->x, tty->y, tty->x + n,
+                    Xn(tty) - (tty->x + n));
+  _TtyEraseLineCells(tty, tty->y, tty->x, n);
 }
 
 static void TtyDeleteLines(struct Tty *tty) {
   int n = min(Yn(tty) - tty->y, TtyArg1(tty));
-  _TtyMemmove(tty, tty->y * Xn(tty), (tty->y + n) * Xn(tty),
-              (Yn(tty) - tty->y - n) * Xn(tty));
-  _TtyErase(tty, (tty->y + n) * Xn(tty), n * Xn(tty));
+  _TtyMoveLines(tty, tty->y, tty->y + n, Yn(tty) - tty->y - n);
+  _TtyEraseLines(tty, tty->y + n, n);
 }
 
 static void TtyReportDeviceStatus(struct Tty *tty) {

@@ -113,18 +113,33 @@ static noasan textreal void __normalize_e820(struct mman *mm) {
 }
 
 /**
+ * Identity maps an area of physical memory to its negative address.
+ */
+noasan textreal void __invert_memory_area(struct mman *mm, uint64_t *pml4t,
+                                          uint64_t ps, uint64_t size,
+                                          uint64_t pte_flags) {
+  uint64_t pe = ps + size, p, *m;
+  ps = ROUNDDOWN(ps, 4096);
+  pe = ROUNDUP(pe, 4096);
+  for (p = ps; p != pe; p += 4096) {
+    m = __get_virtual(mm, pml4t, BANE + p, true);
+    if (m && !(*m & PAGE_V)) {
+      *m = p | PAGE_V | pte_flags;
+    }
+  }
+}
+
+/**
  * Identity maps all usable physical memory to its negative address.
  */
 static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   uint64_t i, j, *m, p, pe;
   for (i = 0; i < mm->e820n; ++i) {
-    for (p = mm->e820[i].addr, pe = mm->e820[i].addr + mm->e820[i].size;
-         p != pe + 0x200000; p += 4096) {
-      m = __get_virtual(mm, pml4t, BANE + p, true);
-      if (m && !(*m & PAGE_V)) {
-        *m = p | PAGE_V | PAGE_RW;
-      }
-    }
+    uint64_t ps = mm->e820[i].addr, size = mm->e820[i].size;
+    /* ape/ape.S has already mapped the first 2 MiB of physical memory. */
+    if (ps < 0x200000 && ps + size <= 0x200000)
+      continue;
+    __invert_memory_area(mm, pml4t, ps, size, PAGE_RW);
   }
 }
 
@@ -148,6 +163,12 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, e820);
   export_offsetof(struct mman, e820_end);
   export_offsetof(struct mman, bad_idt);
+  export_offsetof(struct mman, pc_video_type);
+  export_offsetof(struct mman, pc_video_stride);
+  export_offsetof(struct mman, pc_video_width);
+  export_offsetof(struct mman, pc_video_height);
+  export_offsetof(struct mman, pc_video_framebuffer);
+  export_offsetof(struct mman, pc_video_framebuffer_size);
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }
