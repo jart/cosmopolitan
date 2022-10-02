@@ -62,6 +62,8 @@ static int LuaReSearchImpl(lua_State *L, regex_t *r, const char *s, int f) {
   luaL_Buffer tmp;
   n = 1 + r->re_nsub;
   m = (regmatch_t *)luaL_buffinitsize(L, &tmp, n * sizeof(regmatch_t));
+  m->rm_so = 0;
+  m->rm_eo = 0;
   if ((rc = regexec(r, s, n, m, f >> 8)) == REG_OK) {
     for (i = 0; i < n; ++i) {
       lua_pushlstring(L, s + m[i].rm_so, m[i].rm_eo - m[i].rm_so);
