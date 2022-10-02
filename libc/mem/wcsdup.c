@@ -25,6 +25,6 @@
  */
 wchar_t *wcsdup(const wchar_t *s) {
   size_t len = wcslen(s);
-  char *s2 = malloc(len * sizeof(wchar_t) + 1);
-  return s2 ? memcpy(s2, s, len * sizeof(wchar_t) + 1) : NULL;
+  char *s2 = malloc((len + 1) * sizeof(wchar_t));
+  return s2 ? memcpy(s2, s, (len + 1) * sizeof(wchar_t)) : NULL;
 }
