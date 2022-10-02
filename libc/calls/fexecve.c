@@ -17,39 +17,62 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/testlib/hyperion.h"
-#include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
+#include "libc/sysv/errfuns.h"
 
-STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("libc/testlib/hyperion.txt");
-STATIC_YOINK("inflate");
-STATIC_YOINK("inflateInit2");
-STATIC_YOINK("inflateEnd");
+int sys_fexecve(int, char *const[], char *const[]);
 
-int Worker(void *arg, int tid) {
-  int i, fd;
-  char *data;
-  for (i = 0; i < 20; ++i) {
-    ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
-    data = malloc(kHyperionSize);
-    ASSERT_EQ(kHyperionSize, read(fd, data, kHyperionSize));
-    ASSERT_EQ(0, memcmp(data, kHyperion, kHyperionSize));
-    ASSERT_SYS(0, 0, close(fd));
-    free(data);
+/**
+ * Executes binary executable at file descriptor.
+ *
+ * This is only supported on Linux and FreeBSD. APE binaries currently
+ * aren't supported.
+ *
+ * @param fd is opened executable and current file position is ignored
+ * @return doesn't return on success, otherwise -1 w/ errno
+ * @raise ENOEXEC if file at `fd` isn't an assimilated ELF executable
+ * @raise ENOSYS on Windows, XNU, OpenBSD, NetBSD, and Metal
+ */
+int fexecve(int fd, char *const argv[], char *const envp[]) {
+  int rc;
+  size_t i;
+  if (!argv || !envp ||
+      (IsAsan() &&
+       (!__asan_is_valid_strlist(argv) || !__asan_is_valid_strlist(envp)))) {
+    rc = efault();
+  } else {
+#ifdef SYSDEBUG
+    if (UNLIKELY(__strace > 0)) {
+      kprintf(STRACE_PROLOGUE "fexecve(%d, {", fd);
+      for (i = 0; argv[i]; ++i) {
+        if (i) kprintf(", ");
+        kprintf("%#s", argv[i]);
+      }
+      kprintf("}, {");
+      for (i = 0; envp[i]; ++i) {
+        if (i) kprintf(", ");
+        kprintf("%#s", envp[i]);
+      }
+      kprintf("})\n");
+    }
+#endif
+    if (IsLinux()) {
+      char path[14 + 12];
+      FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);
+      rc = __sys_execve(path, argv, envp);
+    } else if (IsFreebsd()) {
+      rc = sys_fexecve(fd, argv, envp);
+    } else {
+      rc = enosys();
+    }
   }
-  return 0;
-}
-
-TEST(zipos, test) {
-  int i, n = 16;
-  struct spawn *t = _gc(malloc(sizeof(struct spawn) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
-  __print_maps();
+  STRACE("fexecve(%d) failed %d% m", fd, rc);
+  return rc;
 }

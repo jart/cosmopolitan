@@ -673,7 +673,7 @@ scall	sys_bsdthread_register	0xfffffffff216efff	globl hidden
 #scall	extattr_set_file	0x169fff164fffffff	globl
 #scall	extattr_set_link	0x16ffff19cfffffff	globl
 #scall	extattrctl		0x168fff163fffffff	globl
-#scall	fexecve			0x1d1fff1ecfffffff	globl
+scall	sys_fexecve		0xffffff1ecfffffff	globl hidden
 #scall	ffclock_getcounter	0xffffff0f1fffffff	globl
 #scall	ffclock_getestimate	0xffffff0f3fffffff	globl
 #scall	ffclock_setestimate	0xffffff0f2fffffff	globl

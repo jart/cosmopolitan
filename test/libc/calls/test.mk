@@ -88,6 +88,16 @@ o/$(MODE)/test/libc/calls/life-nomod.com.dbg:				\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/calls/fexecve_test.com.dbg:				\
+		$(TEST_LIBC_CALLS_DEPS)					\
+		o/$(MODE)/test/libc/calls/fexecve_test.o		\
+		o/$(MODE)/test/libc/calls/calls.pkg			\
+		o/$(MODE)/tool/build/echo.zip.o				\
+		$(LIBC_TESTMAIN)					\
+		$(CRT)							\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 o/$(MODE)/test/libc/calls/tiny64.elf.zip.o				\
 o/$(MODE)/test/libc/calls/life-nomod.com.zip.o				\
 o/$(MODE)/test/libc/calls/life-classic.com.zip.o: private		\

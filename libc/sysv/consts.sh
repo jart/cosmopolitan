@@ -204,7 +204,7 @@ syscon	open	O_NOFOLLOW_ANY				0			0x20000000		0			0			0			0			#
 syscon	open	O_SYNC					0x00101000		0x00000080		0x00000080		0x00000080		0x00000080		0			# bsd consensus
 syscon	open	O_NOCTTY				0x00000100		0x00020000		0x00008000		0x00008000		0x00008000		0			# used for remote viewing (default behavior on freebsd)
 syscon	open	O_NOATIME				0x00040000		0			0			0			0			0			# optimize away access time update
-syscon	open	O_EXEC					0			0			0x00040000		0			0x04000000		0			# it's specified by posix what does it mean
+syscon	open	O_EXEC					0x00200000		0			0x00040000		0			0x04000000		0			# open only for executing (POSIX.1 hack for when file mode is 0111); see fexecve(); O_PATH on Linux
 syscon	open	O_SEARCH				0			0			0x00040000		0			0x00800000		0			# it's specified by posix what does it mean
 syscon	open	O_DSYNC					0x00001000		0x00400000		0			0x00000080		0x00010000		0			#
 syscon	open	O_RSYNC					0x00101000		0			0			0x00000080		0x00020000		0			#

@@ -17,39 +17,50 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/gc.h"
-#include "libc/mem/mem.h"
+#include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/testlib/hyperion.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
-#include "libc/thread/spawn.h"
 
-STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("libc/testlib/hyperion.txt");
-STATIC_YOINK("inflate");
-STATIC_YOINK("inflateInit2");
-STATIC_YOINK("inflateEnd");
+int fds[2];
+char buf[8];
+char testlib_enable_tmp_setup_teardown;
 
-int Worker(void *arg, int tid) {
-  int i, fd;
-  char *data;
-  for (i = 0; i < 20; ++i) {
-    ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
-    data = malloc(kHyperionSize);
-    ASSERT_EQ(kHyperionSize, read(fd, data, kHyperionSize));
-    ASSERT_EQ(0, memcmp(data, kHyperion, kHyperionSize));
-    ASSERT_SYS(0, 0, close(fd));
-    free(data);
-  }
-  return 0;
+TEST(execve, elfIsUnreadable_mayBeExecuted) {
+  if (IsWindows() || IsXnu()) return;
+  testlib_extract("/zip/echo", "echo", 0111);
+  ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
+  SPAWN(vfork);
+  ASSERT_SYS(0, 1, dup2(4, 1));
+  ASSERT_SYS(
+      0, 0,
+      execve("echo", (char *const[]){"echo", "hi", 0}, (char *const[]){0}));
+  notpossible;
+  EXITS(0);
+  bzero(buf, 8);
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 3, read(3, buf, 7));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_STREQ("hi\n", buf);
 }
 
-TEST(zipos, test) {
-  int i, n = 16;
-  struct spawn *t = _gc(malloc(sizeof(struct spawn) * n));
-  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, _spawn(Worker, 0, t + i));
-  for (i = 0; i < n; ++i) EXPECT_SYS(0, 0, _join(t + i));
-  __print_maps();
+TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
+  if (!IsLinux() && !IsFreebsd()) return;
+  testlib_extract("/zip/echo", "echo", 0111);
+  ASSERT_SYS(0, 0, pipe2(fds, O_CLOEXEC));
+  SPAWN(vfork);
+  ASSERT_SYS(0, 1, dup2(4, 1));
+  ASSERT_SYS(0, 5, open("echo", O_EXEC | O_CLOEXEC));
+  if (IsFreebsd()) ASSERT_SYS(0, 1, lseek(5, 1, SEEK_SET));
+  ASSERT_SYS(0, 0,
+             fexecve(5, (char *const[]){"echo", "hi", 0}, (char *const[]){0}));
+  notpossible;
+  EXITS(0);
+  bzero(buf, 8);
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 3, read(3, buf, 7));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_STREQ("hi\n", buf);
 }

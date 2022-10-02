@@ -84,6 +84,7 @@ int execv(const char *, char *const[]);
 int execve(const char *, char *const[], char *const[]);
 int execvp(const char *, char *const[]);
 int execvpe(const char *, char *const[], char *const[]);
+int fexecve(int, char *const[], char *const[]);
 int faccessat(int, const char *, int, uint32_t);
 int fadvise(int, uint64_t, uint64_t, int);
 int fchdir(int);
