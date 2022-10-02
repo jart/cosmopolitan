@@ -21,8 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: support ape bins
-        run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+      - name: support ape bins 1
+        run: sudo cp build/bootstrap/ape.elf /usr/bin/ape
+
+      - name: support ape bins 2
+        run: sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
 
       - name: make matrix
         run: V=0 make -j2 MODE=${{ matrix.mode }}
