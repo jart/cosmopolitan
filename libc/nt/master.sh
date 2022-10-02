@@ -3567,7 +3567,7 @@ imp	'WakeByAddressSingle'					WakeByAddressSingle					API-MS-Win-Core-Synch-l1-2
 #  “The functions and structures in [for these APIs] are internal to
 #   the operating system and subject to change from one release of
 #   Windows to the next, and possibly even between service packs for
-#   each release.” ──Quoth MSDN */
+#   each release.” ──Quoth MSDN
 #
 #	Name							Actual							DLL		Hint	Arity
 imp	'AlpcAdjustCompletionListConcurrencyCount'		AlpcAdjustCompletionListConcurrencyCount		ntdll		12

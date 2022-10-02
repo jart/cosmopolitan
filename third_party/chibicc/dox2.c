@@ -506,12 +506,9 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 <!doctype html>\n\
 <html lang=\"en\">\n\
 <meta charset=\"utf-8\">\n\
-<script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-43182592-5\"></script>\n\
-<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'UA-43182592-5');</script>\n\
 <title>Cosmopolitan C Library</title>\n\
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
 <link rel=\"canonical\" href=\"https://justine.lol/cosmopolitan/documentation.html\">\n\
-<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto&family=Roboto+Mono&display=swap\">\n\
 <link rel=\"stylesheet\" href=\"style.css\">\n\
 <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">\n\
 <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\">\n\
@@ -626,7 +623,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
 \n\
 <header>\n\
   <img width=\"196\" height=\"105\"\n\
-       src=\"//storage.googleapis.com/justine/cosmopolitan/cosmopolitan.png\"\n\
+       src=\"//worker.jart.workers.dev/cosmopolitan/cosmopolitan.png\"\n\
        title=\"cosmopolitan honeybadger\"\n\
        alt=\"honeybadger\">\n\
   <h1>cosmopolitan libc</h1>\n\
@@ -637,6 +634,7 @@ static void PrintDox(struct Dox *dox, FILE *f) {
   <ul>\n\
     <li><a href=\"index.html\">Intro</a>\n\
     <li><a href=\"download.html\">Download</a>\n\
+    <li><a href=\"functions.html\">Functions</a>\n\
     <li><a class=\"active\" href=\"documentation.html\">Documentation</a>\n\
     <li><a href=\"tutorials.html\">Tutorials</a>\n\
     <li><a href=\"https://github.com/jart/cosmopolitan\">GitHub</a>\n\

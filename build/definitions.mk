@@ -73,32 +73,24 @@ IMAGE_BASE_VIRTUAL ?= 0x400000
 IGNORE := $(shell $(ECHO) -2 ♥cosmo)
 IGNORE := $(shell $(MKDIR) o/tmp)
 
-ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-as.exe)","")
-AS = o/third_party/gcc/bin/x86_64-pc-linux-gnu-as.exe
-CC = o/third_party/gcc/bin/x86_64-pc-linux-gnu-gcc.exe
-CXX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-g++.exe
-CXXFILT = o/third_party/gcc/bin/x86_64-pc-linux-gnu-c++filt.exe
-LD = o/third_party/gcc/bin/x86_64-pc-linux-gnu-ld.bfd.exe
-NM = o/third_party/gcc/bin/x86_64-pc-linux-gnu-nm.exe
-GCC = o/third_party/gcc/bin/x86_64-pc-linux-gnu-gcc.exe
-STRIP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-strip.exe
-OBJCOPY = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objcopy.exe
-OBJDUMP = o/third_party/gcc/bin/x86_64-pc-linux-gnu-objdump.exe
-ADDR2LINE = $(PWD)/o/third_party/gcc/bin/x86_64-pc-linux-gnu-addr2line.exe
+ifneq ("$(wildcard o/third_party/gcc/bin/x86_64-pc-linux-gnu-*)","")
+PREFIX = o/third_party/gcc/bin/x86_64-pc-linux-gnu-
 else
 IGNORE := $(shell build/bootstrap/unbundle.com)
-AS = o/third_party/gcc/bin/x86_64-linux-musl-as
-CC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
-CXX = o/third_party/gcc/bin/x86_64-linux-musl-g++
-CXXFILT = o/third_party/gcc/bin/x86_64-linux-musl-c++filt
-LD = o/third_party/gcc/bin/x86_64-linux-musl-ld.bfd
-NM = o/third_party/gcc/bin/x86_64-linux-musl-nm
-GCC = o/third_party/gcc/bin/x86_64-linux-musl-gcc
-STRIP = o/third_party/gcc/bin/x86_64-linux-musl-strip
-OBJCOPY = o/third_party/gcc/bin/x86_64-linux-musl-objcopy
-OBJDUMP = o/third_party/gcc/bin/x86_64-linux-musl-objdump
-ADDR2LINE = $(PWD)/o/third_party/gcc/bin/x86_64-linux-musl-addr2line
+PREFIX = o/third_party/gcc/bin/x86_64-linux-musl-
 endif
+
+AS = $(PREFIX)as
+CC = $(PREFIX)gcc
+CXX = $(PREFIX)g++
+CXXFILT = $(PREFIX)c++filt
+LD = $(PREFIX)ld.bfd
+NM = $(PREFIX)nm
+GCC = $(PREFIX)gcc
+STRIP = $(PREFIX)strip
+OBJCOPY = $(PREFIX)objcopy
+OBJDUMP = $(PREFIX)objdump
+ADDR2LINE = $(PWD)/$(PREFIX)addr2line
 
 export ADDR2LINE
 export LC_ALL

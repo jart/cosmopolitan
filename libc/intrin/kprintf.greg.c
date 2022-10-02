@@ -43,6 +43,7 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
+#include "libc/runtime/brk.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -103,8 +104,17 @@ privileged static inline bool kistextpointer(const void *p) {
   return _base <= (const unsigned char *)p && (const unsigned char *)p < _etext;
 }
 
+privileged static inline unsigned char *kend(void) {
+  unsigned char *p;
+  if (_weaken(__brk) && (p = _weaken(__brk)->p)) {
+    return p;
+  } else {
+    return _end;
+  }
+}
+
 privileged static inline bool kisimagepointer(const void *p) {
-  return _base <= (const unsigned char *)p && (const unsigned char *)p < _end;
+  return _base <= (const unsigned char *)p && (const unsigned char *)p < kend();
 }
 
 privileged static inline bool kischarmisaligned(const char *p, signed char t) {

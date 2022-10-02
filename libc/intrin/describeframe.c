@@ -19,7 +19,9 @@
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/brk.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/winargs.internal.h"
@@ -27,6 +29,11 @@
 #define ADDR(x)     ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define UNSHADOW(x) ((int64_t)(MAX(0, (x)-0x7fff8000)) << 3)
 #define FRAME(x)    ((int)((x) >> 16))
+
+forceinline pureconst bool IsBrkFrame(int x) {
+  unsigned char *p = (unsigned char *)((intptr_t)((uintptr_t)x << 32) >> 16);
+  return _weaken(__brk) && p >= _end && p < _weaken(__brk)->p;
+}
 
 static const char *GetFrameName(int x) {
   if (!x) {
@@ -41,6 +48,8 @@ static const char *GetFrameName(int x) {
     return "arena";
   } else if (IsStaticStackFrame(x)) {
     return "stack";
+  } else if (IsBrkFrame(x)) {
+    return "brk";
   } else if (IsGfdsFrame(x)) {
     return "g_fds";
   } else if (IsZiposFrame(x)) {
@@ -68,7 +77,7 @@ static const char *GetFrameName(int x) {
 const char *(DescribeFrame)(char buf[32], int x) {
   char *p;
   if (IsShadowFrame(x)) {
-    ksnprintf(buf, 64, "%s %s %.8x", GetFrameName(x),
+    ksnprintf(buf, 32, "%s %s %.8x", GetFrameName(x),
               GetFrameName(FRAME(UNSHADOW(ADDR(x)))), FRAME(UNSHADOW(ADDR(x))));
     return buf;
   } else {

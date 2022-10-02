@@ -76,6 +76,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/globals.c					\
 	libc/testlib/hexequals.c				\
 	libc/testlib/incrementfailed.c				\
+	libc/testlib/memoryexists.c				\
 	libc/testlib/quota.c					\
 	libc/testlib/seterrno.c					\
 	libc/testlib/shoulddebugbreak.c				\
@@ -117,7 +118,8 @@ LIBC_TESTLIB_A_DIRECTDEPS =					\
 	LIBC_X							\
 	LIBC_ZIPOS						\
 	THIRD_PARTY_DLMALLOC					\
-	THIRD_PARTY_GDTOA
+	THIRD_PARTY_GDTOA					\
+	THIRD_PARTY_XED
 
 LIBC_TESTLIB_A_DEPS :=						\
 	$(call uniq,$(foreach x,$(LIBC_TESTLIB_A_DIRECTDEPS),$($(x))))

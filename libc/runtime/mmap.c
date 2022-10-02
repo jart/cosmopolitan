@@ -71,7 +71,7 @@ static wontreturn void OnUnrecoverableMmapError(const char *s) {
 
 static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
   int a, b, i;
-  assert(n > 0);
+  _unassert(n > 0);
   a = FRAME(p);
   b = FRAME(p + (n - 1));
   i = FindMemoryInterval(&_mmi, a);
@@ -86,7 +86,7 @@ static noasan inline bool OverlapsExistingMapping(char *p, size_t n) {
 static noasan bool ChooseMemoryInterval(int x, int n, int align, int *res) {
   // TODO: improve performance
   int i, start, end;
-  assert(align > 0);
+  _unassert(align > 0);
   if (_mmi.i) {
 
     // find the start of the automap memory region
@@ -202,8 +202,8 @@ static textwindows dontinline noasan void *MapMemories(char *addr, size_t size,
   struct DirectMap dm;
   bool iscow, readonlyfile;
   m = (size_t)(n - 1) << 16;
-  assert(m < size);
-  assert(m + FRAMESIZE >= size);
+  _unassert(m < size);
+  _unassert(m + FRAMESIZE >= size);
   oi = fd == -1 ? 0 : off + m;
   sz = size - m;
   dm = sys_mmap(addr + m, sz, prot, f, fd, oi);

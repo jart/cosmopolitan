@@ -21,11 +21,13 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/nt/struct/imagedosheader.internal.h"
 #include "libc/nt/struct/imagentheaders.internal.h"
 #include "libc/nt/struct/imageoptionalheader.internal.h"
-#include "libc/mem/gc.h"
+#include "libc/nt/struct/imagesectionheader.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -249,6 +251,47 @@ static void ShowIat(char *iat, size_t size) {
   }
 }
 
+static void ShowSection(struct NtImageSectionHeader *s) {
+  char name[9] = {0};
+  memcpy(name, s->Name, 8);
+  printf("\n");
+  printf("\t.ascin\t\"%'s\",8\n", name);
+  printf("\t.long\t%#x\t\t# VirtualSize\n", s->Misc.VirtualSize);
+  printf("\t.long\t%#x\t\t# VirtualAddress\n", s->VirtualAddress);
+  printf("\t.long\t%#x\t\t# SizeOfRawData\n", s->SizeOfRawData);
+  printf("\t.long\t%#x\t\t# PointerToRawData\n", s->PointerToRawData);
+  printf("\t.long\t%#x\t\t# PointerToRelocations\n", s->PointerToRelocations);
+  printf("\t.long\t%#x\t\t# PointerToLinenumbers\n", s->PointerToLinenumbers);
+  printf("\t.short\t%#x\t\t# NumberOfRelocations\n", s->NumberOfRelocations);
+  printf("\t.short\t%#x\t\t# NumberOfLinenumbers\n", s->NumberOfLinenumbers);
+
+  printf("\
+//	          ┌31:Writeable                        ┌─────────────────────────┐\n\
+//	          │┌30:Readable                        │ PE Section Flags        │\n\
+//	          ││┌29:Executable                     ├─────────────────────────┤\n\
+//	          │││┌28:Shareable                     │ o │ for object files    │\n\
+//	          ││││┌27:Unpageable                   │ r │ reserved            │\n\
+//	          │││││┌26:Uncacheable                 └───┴─────────────────────┘\n\
+//	          ││││││┌25:Discardable\n\
+//	          │││││││┌24:Contains Extended Relocations\n\
+//	          ││││││││        ┌15:Contains Global Pointer (GP) Relative Data\n\
+//	          ││││││││        │       ┌7:Contains Uninitialized Data\n\
+//	          ││││││││        │       │┌6:Contains Initialized Data\n\
+//	          ││││││││ o      │       ││┌5:Contains Code\n\
+//	          ││││││││┌┴─┐rrrr│  ooror│││rorrr\n\
+\t.long\t0b%.32b\t\t# Characteristics\n",
+         s->Characteristics);
+}
+
+static void ShowSections(struct NtImageSectionHeader *s, size_t n) {
+  size_t i;
+  printf("\n");
+  showtitle(basename(path), "windows", "sections", 0, 0);
+  for (i = 0; i < n; ++i) {
+    ShowSection(s + i);
+  }
+}
+
 static void showpeheader(struct NtImageNtHeaders *pe) {
   showtitle(basename(path), "windows", "pe header", NULL, NULL);
   printf("\n");
@@ -273,6 +316,10 @@ static void showpeheader(struct NtImageNtHeaders *pe) {
   printf("\n");
   showpeoptionalheader(pecheckaddress(mz, mzsize, &pe->OptionalHeader,
                                       pe->FileHeader.SizeOfOptionalHeader));
+  ShowSections(pecheckaddress(mz, mzsize, pe + 1,
+                              pe->FileHeader.NumberOfSections *
+                                  sizeof(struct NtImageSectionHeader)),
+               pe->FileHeader.NumberOfSections);
   ShowIat(
       (void *)((intptr_t)mz +
                pe->OptionalHeader.DataDirectory[kNtImageDirectoryEntryImport]

@@ -427,7 +427,7 @@ SECTIONS {
 
     KEEP(*(.bssepilogue))
 /*END: NT FORK COPYING */
-    . = ALIGN(FRAMESIZE); /* for brk()/sbrk() allocation */
+    . = ALIGN(PAGESIZE);
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
   } :Bss

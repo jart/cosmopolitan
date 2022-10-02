@@ -1,10 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESECTIONHEADER_H_
 #define COSMOPOLITAN_LIBC_NT_STRUCT_IMAGESECTIONHEADER_H_
-#include "libc/nt/pedef.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
 struct NtImageSectionHeader {
-  uint8_t Name[kNtImageSizeofShortName];
+  uint8_t Name[8];
   union {
     uint32_t PhysicalAddress;
     uint32_t VirtualSize;

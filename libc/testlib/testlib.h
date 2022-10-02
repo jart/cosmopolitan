@@ -382,6 +382,7 @@ void testlib_seterrno(int);
 void testlib_runalltests(void);
 const char *testlib_strerror(void);
 void testlib_runallbenchmarks(void);
+bool testlib_memoryexists(const void *);
 void testlib_runtestcases(testfn_t *, testfn_t *, testfn_t);
 void testlib_runcombos(testfn_t *, testfn_t *, const struct TestFixture *,
                        const struct TestFixture *);

@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigset.h"
@@ -31,6 +30,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/cpuid4.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -139,8 +139,8 @@ static noasan void PrintDependencies(const char *prologue) {
   do {
     const struct NtLdrDataTableEntry *dll =
         (const struct NtLdrDataTableEntry *)ldr;
-    PRINT(" ☼ %.*!hs (%'zukb)", dll->FullDllName.Length, dll->FullDllName.Data,
-          dll->SizeOfImage / 1024);
+    PRINT(" ☼ %.*!hs (%'zukb @ %p)", dll->FullDllName.Length,
+          dll->FullDllName.Data, dll->SizeOfImage / 1024, dll->DllBase);
   } while ((ldr = ldr->Next) && ldr != head);
 }
 

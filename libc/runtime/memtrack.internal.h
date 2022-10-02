@@ -1,8 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
-#include "libc/assert.h"
 #include "libc/dce.h"
-#include "libc/intrin/midpoint.h"
 #include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/version.h"
@@ -31,9 +29,9 @@ struct MemoryInterval {
   int y;
   long h;
   long size;
-  int prot;
-  int flags;
   long offset;
+  int flags;
+  char prot;
   bool iscow;
   bool readonlyfile;
 };
@@ -44,20 +42,21 @@ struct MemoryIntervals {
   struct MemoryInterval s[OPEN_MAX];
 };
 
-extern hidden struct MemoryIntervals _mmi;
+extern struct MemoryIntervals _mmi;
 
-void __mmi_lock(void) hidden;
-void __mmi_unlock(void) hidden;
-bool IsMemtracked(int, int) hidden;
-void PrintSystemMappings(int) hidden;
-bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect hidden;
-void PrintMemoryIntervals(int, const struct MemoryIntervals *) hidden;
+void __mmi_lock(void);
+void __mmi_unlock(void);
+bool IsMemtracked(int, int);
+void PrintSystemMappings(int);
+unsigned FindMemoryInterval(const struct MemoryIntervals *, int) nosideeffect;
+bool AreMemoryIntervalsOk(const struct MemoryIntervals *) nosideeffect;
+void PrintMemoryIntervals(int, const struct MemoryIntervals *);
 int TrackMemoryInterval(struct MemoryIntervals *, int, int, long, int, int,
-                        bool, bool, long, long) hidden;
+                        bool, bool, long, long);
 int ReleaseMemoryIntervals(struct MemoryIntervals *, int, int,
-                           void (*)(struct MemoryIntervals *, int, int)) hidden;
-void ReleaseMemoryNt(struct MemoryIntervals *, int, int) hidden;
-int UntrackMemoryIntervals(void *, size_t) hidden;
+                           void (*)(struct MemoryIntervals *, int, int));
+void ReleaseMemoryNt(struct MemoryIntervals *, int, int);
+int UntrackMemoryIntervals(void *, size_t);
 size_t GetMemtrackSize(struct MemoryIntervals *);
 
 #ifdef _NOPL0
@@ -170,23 +169,6 @@ forceinline pureconst bool OverlapsShadowSpace(const void *p, size_t n) {
   } else {
     return 0;
   }
-}
-
-forceinline unsigned FindMemoryInterval(const struct MemoryIntervals *mm,
-                                        int x) {
-  unsigned l, m, r;
-  l = 0;
-  r = mm->i;
-  while (l < r) {
-    m = _midpoint(l, r);
-    if (mm->p[m].y < x) {
-      l = m + 1;
-    } else {
-      r = m;
-    }
-  }
-  assert(l == mm->i || x <= mm->p[l].y);
-  return l;
 }
 
 COSMOPOLITAN_C_END_
