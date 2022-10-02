@@ -40,24 +40,15 @@
 #include "libc/x/x.h"
 #include "net/http/escape.h"
 
-STATIC_YOINK("zip_uri_support");
 STATIC_YOINK("backtrace.com");
 STATIC_YOINK("backtrace.com.dbg");
 
 char testlib_enable_tmp_setup_teardown_once;
 
-void Extract(const char *from, const char *to, int mode) {
-  ASSERT_SYS(0, 3, open(from, O_RDONLY));
-  ASSERT_SYS(0, 4, creat(to, mode));
-  ASSERT_NE(-1, _copyfd(3, 4, -1));
-  EXPECT_SYS(0, 0, close(4));
-  EXPECT_SYS(0, 0, close(3));
-}
-
 void SetUpOnce(void) {
   ASSERT_NE(-1, mkdir("bin", 0755));
-  Extract("/zip/backtrace.com", "bin/backtrace.com", 0755);
-  Extract("/zip/backtrace.com.dbg", "bin/backtrace.com.dbg", 0755);
+  testlib_extract("/zip/backtrace.com", "bin/backtrace.com", 0755);
+  testlib_extract("/zip/backtrace.com.dbg", "bin/backtrace.com.dbg", 0755);
 }
 
 static bool OutputHasSymbol(const char *output, const char *s) {
