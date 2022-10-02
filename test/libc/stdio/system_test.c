@@ -23,6 +23,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -31,11 +32,8 @@ char testlib_enable_tmp_setup_teardown;
 TEST(system, testStdoutRedirect) {
   int ws;
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
-  setenv("PATH", ".", true);   // avoid / vs. \ until cocmd.com is ready
-  _PATH_BSHELL = "cocmd.com";  // cmd.exe shall still be used on windows
   ASSERT_TRUE(system(0));
-  ws = system("echo.com hello >hello.txt");
+  ws = system("./echo.com hello >hello.txt");
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
   EXPECT_STREQ("hello\n", _gc(xslurp("hello.txt", 0)));
@@ -44,12 +42,14 @@ TEST(system, testStdoutRedirect) {
 TEST(system, testStdoutRedirect_withSpacesInFilename) {
   int ws;
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  testlib_extract("/zip/cocmd.com", "cocmd.com", 0755);
-  setenv("PATH", ".", true);   // avoid / vs. \ until cocmd.com is ready
-  _PATH_BSHELL = "cocmd.com";  // cmd.exe shall still be used on windows
   ASSERT_TRUE(system(0));
-  ws = system("echo.com hello >\"hello there.txt\"");
+  ws = system("./echo.com hello >\"hello there.txt\"");
   ASSERT_TRUE(WIFEXITED(ws));
   ASSERT_EQ(0, WEXITSTATUS(ws));
   EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
+}
+
+BENCH(system, bench) {
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  EZBENCH2("system", donothing, system("./echo.com hi >/dev/null"));
 }

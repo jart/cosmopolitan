@@ -1,17 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_PATHS_H_
 #define COSMOPOLITAN_LIBC_PATHS_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const char *_PATH_BSHELL;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 #define _PATH_DEFPATH "/usr/local/bin:/bin:/usr/bin"
 #define _PATH_STDPATH "/bin:/usr/bin:/sbin:/usr/sbin"
 
-#define _PATH_BSHELL   _PATH_BSHELL
+#define _PATH_BSHELL   "/bin/sh"
 #define _PATH_CONSOLE  "/dev/console"
 #define _PATH_DEVNULL  "/dev/null"
 #define _PATH_KLOG     "/proc/kmsg"
