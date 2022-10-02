@@ -125,6 +125,7 @@ ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
 	.org	0x24			# MZ: bytes reserved for you
 	.ascii	"JT"			# MZ: OEM identifier
 	.short	0			# MZ: OEM information
+	.ascii	"' <<'@'\n"
 	.org	0x40-4			# MZ: bytes reserved for you
 #if SupportsWindows() || SupportsMetal()
 	.long	RVA(ape_pe)		# PE: the new technology
@@ -250,7 +251,6 @@ pc:	cld
 	xor	%cx,%cx				# current cylinder
 	xor	%dh,%dh				# current head
 	mov	$v_ape_realsectors,%di		# total sectors
-	sub	$v_ape_realslacksectors,%di
 3:	call	pcread
 	dec	%di
 	jnz	3b
@@ -549,7 +549,7 @@ ape_disk:
 	the bourne executable & linkable format */
 
 #if SupportsWindows() || SupportsMetal() || SupportsXnu()
-apesh:	.ascii	"'\n#'\"\n"			# sixth edition shebang
+apesh:	.ascii	"\n@\n#'\"\n"			# sixth edition shebang
 //	Until all operating systems can be updated to support APE,
 //	we have a beautiful, yet imperfect workaround, which is to
 //	modify the binary to follow the local system's convention.
@@ -1597,7 +1597,6 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.ldsvar	_end
 	.ldsvar	_etext
 	.ldsvar	v_ape_realsectors
-	.ldsvar	v_ape_realslacksectors
 	.ldsvar	v_ape_highsectors
 	.ldsvar	ape_idata_ro
 	.ldsvar	ape_pad_rodata
