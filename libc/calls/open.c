@@ -22,16 +22,17 @@
 /**
  * Opens file.
  *
- * @param file is a UTF-8 string, preferably relative w/ forward slashes
- * @param flags should be O_RDONLY, O_WRONLY, or O_RDWR, and can be or'd
- *     with O_CREAT, O_TRUNC, O_APPEND, O_EXCL, O_CLOEXEC, O_TMPFILE
- * @param mode is an octal user/group/other permission signifier, that's
- *     ignored if O_CREAT or O_TMPFILE weren't passed
- * @return number needing close(), or -1 w/ errno
- * @asyncsignalsafe (zip files may have issues)
- * @vforksafe (raises error if zip file)
+ * This is equivalent to saying:
+ *
+ *     int fd = openat(AT_FDCWD, file, flags, ...);
+ *
+ * @param file specifies filesystem path to open
+ * @return file descriptor, or -1 w/ errno
+ * @see openat() for further documentation
+ * @asyncsignalsafe
  * @restartable
  * @threadsafe
+ * @vforksafe
  */
 int open(const char *file, int flags, ...) {
   va_list va;

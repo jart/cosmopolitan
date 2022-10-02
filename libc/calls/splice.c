@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -64,6 +65,7 @@ static void splice_init(void) {
  *     used as both an input and output parameter for pwrite() behavior
  * @return number of bytes transferred, 0 on input end, or -1 w/ errno
  * @raise EBADF if `infd` or `outfd` aren't open files or append-only
+ * @raise ENOTSUP if `infd` or `outfd` is a zip file descriptor
  * @raise ESPIPE if an offset arg was specified for a pipe fd
  * @raise EINVAL if offset was given for non-seekable device
  * @raise EINVAL if file system doesn't support splice()
@@ -85,6 +87,8 @@ ssize_t splice(int infd, int64_t *opt_in_out_inoffset, int outfd,
                           (opt_in_out_outoffset &&
                            !__asan_is_valid(opt_in_out_outoffset, 8)))) {
     rc = efault();
+  } else if (__isfdkind(infd, kFdZip) || __isfdkind(outfd, kFdZip)) {
+    rc = enotsup();
   } else {
     rc = sys_splice(infd, opt_in_out_inoffset, outfd, opt_in_out_outoffset,
                     uptobytes, flags);

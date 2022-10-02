@@ -32,17 +32,25 @@
 /**
  * Closes file descriptor.
  *
- * This function may be used for file descriptors returned by functions
- * like open, socket, accept, epoll_create, and landlock_create_ruleset.
+ * This function releases resources returned by functions such as:
  *
- * This function should never be called twice for the same file
- * descriptor, regardless of whether or not an error happened. However
- * that doesn't mean the error should be ignored.
+ * - openat()
+ * - socket()
+ * - accept()
+ * - epoll_create()
+ * - landlock_create_ruleset()
+ *
+ * This function should never be reattempted if an error is returned;
+ * however, that doesn't mean the error should be ignored. This goes
+ * against the conventional wisdom of looping on `EINTR`.
  *
  * @return 0 on success, or -1 w/ errno
- * @error EINTR means a signal was received while closing in which case
- *     close() does not need to be called again, since the fd will close
- *     in the background
+ * @raise EINTR if signal was delivered; do *not* retry
+ * @raise EBADF if `fd` is negative or not open; however, an exception
+ *     is made by Cosmopolitan Libc for `close(-1)` which returns zero
+ *     and does nothing, in order to assist with code that may wish to
+ *     close the same resource multiple times without dirtying `errno`
+ * @raise EIO if a low-level i/o error occurred
  * @asyncsignalsafe
  * @vforksafe
  */
@@ -51,7 +59,7 @@ int close(int fd) {
   if (fd == -1) {
     rc = 0;
   } else if (fd < 0) {
-    rc = einval();
+    rc = ebadf();
   } else {
     // for performance reasons we want to avoid holding __fds_lock()
     // while sys_close() is happening. this leaves the kernel / libc

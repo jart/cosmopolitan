@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,13 +17,51 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/sysv/consts/prio.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/sysv/consts/ok.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zip.h"
+#include "libc/zipos/zipos.internal.h"
 
-textwindows int sys_getsetpriority_nt(int which, unsigned who, int value,
-                                      int (*impl)(int)) {
-  if (which != PRIO_PROCESS && which != PRIO_PGRP) return einval();
-  if (who && who != getpid() && who != gettid()) return esrch();
-  return impl(value);
+// TODO: this should check parent directory components
+
+/**
+ * Checks access metadata in αcτµαlly pδrταblε εxεcµταblε object store.
+ *
+ * @param uri is obtained via __zipos_parseuri()
+ * @asyncsignalsafe
+ */
+int __zipos_access(const struct ZiposUri *name, int amode) {
+  ssize_t cf;
+  int rc, mode;
+  struct Zipos *z;
+  if ((z = __zipos_get()) && (cf = __zipos_find(z, name)) != -1) {
+    mode = GetZipCfileMode(z->map + cf);
+    if (amode == F_OK) {
+      rc = 0;
+    } else if (amode == R_OK) {
+      if (mode & 0444) {
+        rc = 0;
+      } else {
+        rc = eacces();
+      }
+    } else if (amode == W_OK) {
+      if (mode & 0222) {
+        rc = 0;
+      } else {
+        rc = eacces();
+      }
+    } else if (amode == X_OK) {
+      if (mode & 0111) {
+        rc = 0;
+      } else {
+        rc = eacces();
+      }
+    } else {
+      rc = einval();
+    }
+  } else {
+    rc = enoent();
+  }
+  return rc;
 }

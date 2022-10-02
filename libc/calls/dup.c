@@ -32,15 +32,16 @@
  *
  * @param fd remains open afterwards
  * @return some arbitrary new number for fd
- * @raise EOPNOTSUPP if zipos file
- * @raise EBADF if fd isn't open
+ * @raise EPERM if pledge() is in play without stdio
+ * @raise ENOTSUP if `fd` is a zip file descriptor
+ * @raise EBADF if `fd` is negative or not open
  * @asyncsignalsafe
  * @vforksafe
  */
 int dup(int fd) {
   int rc;
   if (__isfdkind(fd, kFdZip)) {
-    rc = eopnotsupp();
+    rc = enotsup();
   } else if (!IsWindows()) {
     rc = sys_dup(fd);
   } else {

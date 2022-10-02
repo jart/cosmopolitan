@@ -38,11 +38,13 @@
  * @param flags may have O_CLOEXEC which is needed to preserve the
  *     close-on-execve() state after file descriptor duplication
  * @return newfd on success, or -1 w/ errno
- * @raise EINVAL if flags has unsupported bits
- * @raise EINVAL if newfd equals oldfd
- * @raise EBADF is oldfd isn't open
- * @raise EBADF is newfd negative or too big
+ * @raise ENOTSUP if `oldfd` is a zip file descriptor
+ * @raise EPERM if pledge() is in play without stdio
+ * @raise EINVAL if `flags` has unsupported bits
  * @raise EINTR if a signal handler was called
+ * @raise EBADF is `newfd` negative or too big
+ * @raise EINVAL if `newfd` equals oldfd
+ * @raise EBADF is `oldfd` isn't open
  * @see dup(), dup2()
  */
 int dup3(int oldfd, int newfd, int flags) {
@@ -52,7 +54,7 @@ int dup3(int oldfd, int newfd, int flags) {
   } else if (oldfd < 0 || newfd < 0) {
     rc = ebadf();
   } else if (__isfdkind(oldfd, kFdZip)) {
-    rc = eopnotsupp();
+    rc = enotsup();
   } else if (!IsWindows()) {
     rc = sys_dup3(oldfd, newfd, flags);
   } else {

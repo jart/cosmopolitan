@@ -37,6 +37,7 @@ void __zipos_free(struct Zipos *, struct ZiposHandle *) hidden;
 ssize_t __zipos_parseuri(const char *, struct ZiposUri *) hidden;
 ssize_t __zipos_find(struct Zipos *, const struct ZiposUri *);
 int __zipos_open(const struct ZiposUri *, unsigned, int) hidden;
+int __zipos_access(const struct ZiposUri *, int) hidden;
 int __zipos_stat(const struct ZiposUri *, struct stat *) hidden;
 int __zipos_fstat(const struct ZiposHandle *, struct stat *) hidden;
 int __zipos_stat_impl(struct Zipos *, size_t, struct stat *) hidden;

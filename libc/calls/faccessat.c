@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -35,33 +36,42 @@
  * @param dirfd is normally AT_FDCWD but if it's an open directory and
  *     file is a relative path, then file is opened relative to dirfd
  * @param path is a filename or directory
- * @param mode can be R_OK, W_OK, X_OK, F_OK
- * @param flags can have AT_EACCESS, AT_SYMLINK_NOFOLLOW
- * @note on Linux flags is only supported on Linux 5.8+
+ * @param amode can be `R_OK`, `W_OK`, `X_OK`, or `F_OK`
+ * @param flags can have `AT_EACCESS` and/or `AT_SYMLINK_NOFOLLOW`
  * @return 0 if ok, or -1 and sets errno
+ * @raise EINVAL if `mode` has bad value
+ * @raise EPERM if pledge() is in play without rpath promise
+ * @raise EACCES if access for requested `mode` would be denied
+ * @raise ENOTDIR if a directory component in `path` exists as non-directory
+ * @raise ENOENT if component of `path` doesn't exist or `path` is empty
+ * @raise ENOTSUP if `path` is a zip file and `dirfd` isn't `AT_FDCWD`
+ * @note on Linux `flags` is only supported on Linux 5.8+
  * @asyncsignalsafe
  */
-int faccessat(int dirfd, const char *path, int mode, uint32_t flags) {
+int faccessat(int dirfd, const char *path, int amode, uint32_t flags) {
   int e, rc;
-  if (IsAsan() && !__asan_is_valid(path, 1)) {
+  struct ZiposUri zipname;
+  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
     rc = efault();
-  } else if (_weaken(__zipos_notat) &&
-             _weaken(__zipos_notat)(dirfd, path) == -1) {
-    rc = -1; /* TODO(jart): implement me */
+  } else if (__isfdkind(dirfd, kFdZip)) {
+    rc = enotsup();
+  } else if (_weaken(__zipos_open) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    rc = _weaken(__zipos_access)(&zipname, amode);
   } else if (!IsWindows()) {
     e = errno;
     if (!flags) goto NoFlags;
-    if ((rc = sys_faccessat2(dirfd, path, mode, flags)) == -1) {
+    if ((rc = sys_faccessat2(dirfd, path, amode, flags)) == -1) {
       if (errno == ENOSYS) {
         errno = e;
       NoFlags:
-        rc = sys_faccessat(dirfd, path, mode, flags);
+        rc = sys_faccessat(dirfd, path, amode, flags);
       }
     }
   } else {
-    rc = sys_faccessat_nt(dirfd, path, mode, flags);
+    rc = sys_faccessat_nt(dirfd, path, amode, flags);
   }
   STRACE("faccessat(%s, %#s, %#o, %#x) → %d% m", DescribeDirfd(dirfd), path,
-         mode, flags, rc);
+         amode, flags, rc);
   return rc;
 }

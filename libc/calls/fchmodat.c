@@ -37,6 +37,7 @@
  * @param path must exist
  * @param mode contains octal flags (base 8)
  * @param flags can have `AT_SYMLINK_NOFOLLOW`
+ * @raise ENOTSUP if `dirfd` or `path` use zip file system
  * @errors ENOENT, ENOTDIR, ENOSYS
  * @asyncsignalsafe
  * @see fchmod()
@@ -47,7 +48,7 @@ int fchmodat(int dirfd, const char *path, uint32_t mode, int flags) {
     rc = efault();
   } else if (_weaken(__zipos_notat) &&
              (rc = __zipos_notat(dirfd, path)) == -1) {
-    rc = eopnotsupp();
+    rc = enotsup();
   } else if (!IsWindows()) {
     rc = sys_fchmodat(dirfd, path, mode, flags);
   } else {
