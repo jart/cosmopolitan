@@ -85,6 +85,6 @@ int sched_setaffinity(int tid, size_t size, const cpu_set_t *bitset) {
   } else {
     rc = sys_sched_setaffinity(tid, size, bitset);
   }
-  STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset);
+  STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset, rc);
   return rc;
 }

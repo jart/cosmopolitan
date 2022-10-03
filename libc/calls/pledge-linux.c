@@ -554,6 +554,8 @@ static const uint16_t kPledgeStdio[] = {
     __NR_linux_set_robust_list,    //
     __NR_linux_get_robust_list,    //
     __NR_linux_prlimit | STDIO,    //
+    __NR_linux_sched_getaffinity,  //
+    __NR_linux_sched_setaffinity,  //
 };
 
 static const uint16_t kPledgeFlock[] = {
@@ -705,8 +707,6 @@ static const uint16_t kPledgeProc[] = {
     __NR_linux_sched_setscheduler,      //
     __NR_linux_sched_get_priority_min,  //
     __NR_linux_sched_get_priority_max,  //
-    __NR_linux_sched_getaffinity,       //
-    __NR_linux_sched_setaffinity,       //
     __NR_linux_sched_getparam,          //
     __NR_linux_sched_setparam,          //
 };

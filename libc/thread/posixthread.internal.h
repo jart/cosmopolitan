@@ -52,6 +52,9 @@ enum PosixThreadStatus {
   // - kPosixThreadZombie -> _pthread_free() will happen whenever
   //   convenient, e.g. pthread_create() entry or atexit handler.
   kPosixThreadZombie,
+
+  // special main thread
+  kPosixThreadMain,
 };
 
 struct PosixThread {

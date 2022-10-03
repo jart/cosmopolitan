@@ -29,7 +29,7 @@
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
   struct PosixThread *pt;
-  if (thread == __get_tls()->tib_pthread) {
+  if (thread == pthread_self()) {
     return EDEADLK;
   }
   if (!(pt = (struct PosixThread *)thread) ||  //

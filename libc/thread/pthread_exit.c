@@ -36,7 +36,8 @@
  */
 wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
-  if ((pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+  pt = (struct PosixThread *)pthread_self();
+  if (pt->status != kPosixThreadMain) {
     pt->rc = rc;
     _gclongjmp(pt->exiter, 1);
   } else {

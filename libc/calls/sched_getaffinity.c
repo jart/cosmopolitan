@@ -77,6 +77,6 @@ int sched_getaffinity(int tid, size_t size, cpu_set_t *bitset) {
     }
     rc = 0;
   }
-  STRACE("sched_getaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset);
+  STRACE("sched_getaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset, rc);
   return rc;
 }

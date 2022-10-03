@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
@@ -24,4 +26,11 @@
  */
 pthread_t pthread_self(void) {
   return __get_tls()->tib_pthread;
+}
+
+static struct PosixThread pthread_main;
+__attribute__((__constructor__)) static void pthread_self_init(void) {
+  pthread_main.tid = gettid();
+  pthread_main.status = kPosixThreadMain;
+  __get_tls()->tib_pthread = (pthread_t)&pthread_main;
 }

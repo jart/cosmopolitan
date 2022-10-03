@@ -19,11 +19,11 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/pledge.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
@@ -110,7 +110,7 @@
  *   fcntl(F_SETFD), fcntl(F_GETFL), fcntl(F_SETFL), sched_yield,
  *   epoll_create, epoll_create1, epoll_ctl, epoll_wait, epoll_pwait,
  *   epoll_pwait2, clone(CLONE_THREAD), futex, set_robust_list,
- *   get_robust_list, sigpending.
+ *   get_robust_list, setaffinity, sigpending.
  *
  * - "rpath" (read-only path ops) allows chdir, getcwd, open(O_RDONLY),
  *   openat(O_RDONLY), stat, fstat, lstat, fstatat, access, faccessat,
