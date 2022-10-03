@@ -19,6 +19,7 @@ int timespec_getres(struct timespec *, int);
 
 int _timespec_cmp(struct timespec, struct timespec) pureconst;
 bool _timespec_eq(struct timespec, struct timespec) pureconst;
+bool _timespec_gt(struct timespec, struct timespec) pureconst;
 bool _timespec_gte(struct timespec, struct timespec) pureconst;
 int64_t _timespec_tomicros(struct timespec) pureconst;
 int64_t _timespec_tomillis(struct timespec) pureconst;

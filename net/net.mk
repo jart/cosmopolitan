@@ -4,4 +4,5 @@
 .PHONY: 	o/$(MODE)/net
 o/$(MODE)/net:	o/$(MODE)/net/finger	\
 		o/$(MODE)/net/http	\
-		o/$(MODE)/net/https
+		o/$(MODE)/net/https	\
+		o/$(MODE)/net/turfwar

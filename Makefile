@@ -202,6 +202,7 @@ include tool/hash/hash.mk
 include tool/net/net.mk
 include tool/viz/viz.mk
 include tool/tool.mk
+include net/turfwar/turfwar.mk
 include test/libc/tinymath/test.mk
 include test/libc/intrin/test.mk
 include test/libc/mem/test.mk

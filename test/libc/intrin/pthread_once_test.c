@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
@@ -53,4 +54,12 @@ TEST(pthread_once, test) {
   ASSERT_EQ(n, atomic_load(&x));
   ASSERT_EQ(1, atomic_load(&y));
   ASSERT_EQ(0, pthread_barrier_destroy(&b));
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  // try to test both the nsync and non-nsync versions with regular builds
+  if (!IsTiny()) {
+    pthread_cond_t c = {0};
+    pthread_cond_broadcast(&c);
+  }
 }

@@ -17,15 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/thread.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 

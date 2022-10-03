@@ -5766,6 +5766,7 @@ static const char *unixTempFileDir(void){
 static int unixGetTempname(int nBuf, char *zBuf){
   const char *zDir;
   int iLimit = 0;
+  int e = errno; // [jart] don't pollute strace logs
 
   /* It's odd to simulate an io-error here, but really this is just
   ** using the io-error infrastructure to test that SQLite handles this
@@ -5785,6 +5786,7 @@ static int unixGetTempname(int nBuf, char *zBuf){
                      zDir, r, 0);
     if( zBuf[nBuf-2]!=0 || (iLimit++)>10 ) return SQLITE_ERROR;
   }while( osAccess(zBuf,0)==0 );
+  errno = e; // [jart] don't pollute strace logs
   return SQLITE_OK;
 }
 
@@ -6317,8 +6319,10 @@ static int unixAccess(
 
   if( flags==SQLITE_ACCESS_EXISTS ){
     struct stat buf;
+    int e = errno; // [jart] don't clobber errno
     *pResOut = 0==osStat(zPath, &buf) &&
                 (!S_ISREG(buf.st_mode) || buf.st_size>0);
+    errno = e; // [jart] don't clobber errno
   }else{
     *pResOut = osAccess(zPath, W_OK|R_OK)==0;
   }
