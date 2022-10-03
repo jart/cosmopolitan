@@ -652,7 +652,6 @@ bool ReloadAsset(struct Asset *a) {
     FormatUnixHttpDateTime(lastmod, st.st_mtim.tv_sec);
     CHECK_SYS((rc = read(fd, data.p, st.st_size)));
     if (rc != st.st_size) goto OnError;
-    close(fd);
     gzip = Gzip(data);
     //!//!//!//!//!//!//!//!//!//!//!//!//!/
     nsync_mu_lock(&a->lock);
@@ -667,6 +666,7 @@ bool ReloadAsset(struct Asset *a) {
     free(f[0]);
     free(f[1]);
   }
+  close(fd);
   return true;
 OnError:
   free(data.p);
