@@ -32,6 +32,9 @@ COSMOPOLITAN_C_START_
 #define kMemtrackZiposStart _kMemVista(0x6fd000040000, 0x5d000040000)
 #define kMemtrackZiposSize \
   (_kMemVista(0x6fdffffc0000, 0x5dffffc0000) - kMemtrackZiposStart)
+#define kMemtrackNsyncStart _kMemVista(0x6fc000040000, 0x5c000040000)
+#define kMemtrackNsyncSize \
+  (_kMemVista(0x6fcffffc0000, 0x5cffffc0000 - kMemtrackNsyncStart)
 #define _kMmi(VSPACE)                                                   \
   ROUNDUP(VSPACE / FRAMESIZE * (intptr_t)sizeof(struct MemoryInterval), \
           FRAMESIZE)
