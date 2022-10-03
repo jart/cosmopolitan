@@ -37,36 +37,36 @@
 #define STATE_STR   1
 #define STATE_QUO   2
 
-char *p;
-char *q;
-size_t n;
-char *cmd;
-char *args[8192];
-const char *prog;
-char argbuf[ARG_MAX];
-bool unsupported[256];
+static char *p;
+static char *q;
+static size_t n;
+static char *cmd;
+static char *args[8192];
+static const char *prog;
+static char argbuf[ARG_MAX];
+static bool unsupported[256];
 
-void Write(const char *s, ...) {
+static wontreturn void Wexit(int rc, const char *s, ...) {
   va_list va;
   va_start(va, s);
   do {
     write(2, s, strlen(s));
   } while ((s = va_arg(va, const char *)));
   va_end(va);
+  exit(rc);
 }
 
-wontreturn void UnsupportedSyntax(unsigned char c) {
+static wontreturn void UnsupportedSyntax(unsigned char c) {
   char cbuf[2];
   char ibuf[13];
   cbuf[0] = c;
   cbuf[1] = 0;
   FormatOctal32(ibuf, c, true);
-  Write(prog, ": unsupported shell syntax '", cbuf, "' (", ibuf, "): ", cmd,
+  Wexit(4, prog, ": unsupported shell syntax '", cbuf, "' (", ibuf, "): ", cmd,
         "\n", 0);
-  exit(4);
 }
 
-wontreturn void SysExit(int rc, const char *call, const char *thing) {
+static wontreturn void SysExit(int rc, const char *call, const char *thing) {
   int err;
   char ibuf[12];
   const char *estr;
@@ -74,11 +74,10 @@ wontreturn void SysExit(int rc, const char *call, const char *thing) {
   FormatInt32(ibuf, err);
   estr = _strerdoc(err);
   if (!estr) estr = "EUNKNOWN";
-  Write(thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
-  exit(rc);
+  Wexit(rc, thing, ": ", call, "() failed: ", estr, " (", ibuf, ")\n", 0);
 }
 
-void Open(const char *path, int fd, int flags) {
+static void Open(const char *path, int fd, int flags) {
   const char *err;
   close(fd);
   if (open(path, flags, 0644) == -1) {
@@ -86,17 +85,16 @@ void Open(const char *path, int fd, int flags) {
   }
 }
 
-wontreturn void Exec(void) {
+static wontreturn void Exec(void) {
   const char *s;
   if (!n) {
-    Write(prog, ": error: too few args\n", 0);
-    exit(5);
+    Wexit(5, prog, ": error: too few args\n", 0);
   }
-  execv(args[0], args);
+  execvp(args[0], args);
   SysExit(127, "execve", args[0]);
 }
 
-void Pipe(void) {
+static void Pipe(void) {
   int pid, pfds[2];
   if (pipe2(pfds, O_CLOEXEC)) {
     SysExit(8, "pipe2", prog);
@@ -112,7 +110,7 @@ void Pipe(void) {
   n = 0;
 }
 
-char *Tokenize(void) {
+static char *Tokenize(void) {
   char *r;
   int c, t;
   while (*p == ' ' || *p == '\t' || *p == '\n' ||
@@ -153,8 +151,7 @@ char *Tokenize(void) {
 
       case STATE_STR:
         if (!*p) {
-          Write("cmd: error: unterminated single string\n", 0);
-          exit(6);
+          Wexit(6, "cmd: error: unterminated single string\n", 0);
         }
         if (*p == '\'') {
           t = STATE_SHELL;
@@ -165,8 +162,7 @@ char *Tokenize(void) {
 
       case STATE_QUO:
         if (!*p) {
-          Write("cmd: error: unterminated quoted string\n", 0);
-          exit(6);
+          Wexit(6, "cmd: error: unterminated quoted string\n", 0);
         }
         if (*p == '"') {
           t = STATE_SHELL;
@@ -197,6 +193,16 @@ char *Tokenize(void) {
   }
 }
 
+static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
+  if (arg[n]) {
+    return arg + n;
+  } else if ((arg = Tokenize())) {
+    return arg;
+  } else {
+    Wexit(14, prog, ": error: redirect missing path\n", 0);
+  }
+}
+
 int cocmd(int argc, char *argv[]) {
   char *arg;
   size_t i, j;
@@ -222,19 +228,16 @@ int cocmd(int argc, char *argv[]) {
   unsupported['!'] = true;
 
   if (argc != 3) {
-    Write(prog, ": error: wrong number of args\n", 0);
-    exit(10);
+    Wexit(10, prog, ": error: wrong number of args\n", 0);
   }
 
   if (strcmp(argv[1], "-c")) {
-    Write(prog, ": error: argv[1] should -c\n", 0);
-    exit(11);
+    Wexit(11, prog, ": error: argv[1] should -c\n", 0);
   }
 
   p = cmd = argv[2];
   if (strlen(cmd) >= ARG_MAX) {
-    Write(prog, ": error: cmd too long: ", cmd, "\n", 0);
-    exit(12);
+    Wexit(12, prog, ": error: cmd too long: ", cmd, "\n", 0);
   }
 
   n = 0;
@@ -247,22 +250,23 @@ int cocmd(int argc, char *argv[]) {
       } else if (arg[0] == '>' && arg[1] == '&' && isdigit(arg[2])) {
         dup2(arg[2] - '0', 1);
       } else if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '>') {
-        Open(arg + 3, arg[0] - '0', O_WRONLY | O_CREAT | O_APPEND);
+        Open(GetRedirectArg(prog, arg, 3), arg[0] - '0',
+             O_WRONLY | O_CREAT | O_APPEND);
       } else if (arg[0] == '>' && arg[1] == '>') {
-        Open(arg + 2, 1, O_WRONLY | O_CREAT | O_APPEND);
+        Open(GetRedirectArg(prog, arg, 2), 1, O_WRONLY | O_CREAT | O_APPEND);
       } else if (isdigit(arg[0]) && arg[1] == '>') {
-        Open(arg + 2, arg[0] - '0', O_WRONLY | O_CREAT | O_TRUNC);
+        Open(GetRedirectArg(prog, arg, 2), arg[0] - '0',
+             O_WRONLY | O_CREAT | O_TRUNC);
       } else if (arg[0] == '>') {
-        Open(arg + 1, 1, O_WRONLY | O_CREAT | O_TRUNC);
+        Open(GetRedirectArg(prog, arg, 1), 1, O_WRONLY | O_CREAT | O_TRUNC);
       } else if (arg[0] == '<') {
-        Open(arg + 1, 0, O_RDONLY);
+        Open(GetRedirectArg(prog, arg, 1), 0, O_RDONLY);
       } else {
         args[n++] = arg;
         args[n] = 0;
       }
     } else {
-      Write(prog, ": error: too many args\n", 0);
-      exit(13);
+      Wexit(13, prog, ": error: too many args\n", 0);
     }
   }
 
