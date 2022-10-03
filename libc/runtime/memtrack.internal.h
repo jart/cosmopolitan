@@ -7,7 +7,6 @@
 #include "libc/macros.internal.h"
 #include "libc/thread/tls.h"
 #include "libc/nt/version.h"
-#include "libc/nt/enum/version.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/ss.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
@@ -39,7 +38,7 @@ COSMOPOLITAN_C_START_
 #define _kMem(NORMAL, WIN7) \
   (!IsWindows() || IsAtLeastWindows10() ? NORMAL : WIN7)
 #define _kMemVista(NORMAL, WINVISTA) \
-  (!IsWindows() || NtGetVersion() >= kNtVersionWindows81 ? NORMAL : WINVISTA)
+  (!IsWindows() || IsAtleastWindows8p1() ? NORMAL : WINVISTA)
 
 struct MemoryInterval {
   int x;
