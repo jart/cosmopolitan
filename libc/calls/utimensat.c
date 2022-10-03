@@ -30,54 +30,43 @@
 #include "libc/zipos/zipos.internal.h"
 
 /**
- * Sets atime/mtime on file, the modern way.
+ * Sets access/modified time on file, the modern way.
  *
- * This is two functions in one. If `path` is null then this function
- * becomes the same as `futimens(dirfd, ts)`.
+ * XNU only has microsecond (1e-6) accuracy and there's no
+ * `dirfd`-relative support. Windows only has hectonanosecond (1e-7)
+ * accuracy. RHEL5 is somewhat broken so utimes() is recommended if
+ * portability to old versions of Linux is desired.
  *
- * XNU and RHEL5 only have microsecond accuracy and there's no `dirfd`
- * relative support.
- *
- * @param dirfd should AT_FDCWD
- * @param ts is atime/mtime, or null for current time
- * @param flags can have AT_SYMLINK_NOFOLLOW
- * @raise ENOSYS on RHEL5 if path is NULL
- * @raise EINVAL if flags had unrecognized bits
- * @raise EINVAL if path is NULL and flags has AT_SYMLINK_NOFOLLOW
- * @raise EBADF if dirfd isn't a valid fd or AT_FDCWD
- * @raise EFAULT if path or ts memory was invalid
- * @raise EROFS if file system is read-only
- * @raise ENAMETOOLONG
- * @raise EPERM
+ * @param dirfd is usually `AT_FDCWD`
+ * @param path is filename whose timestamps should be modified
+ * @param ts is {access, modified} timestamps, or null for current time
+ * @param flags can have `AT_SYMLINK_NOFOLLOW` when `path` is specified
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `flags` had an unrecognized value
+ * @raise EPERM if pledge() is in play without `fattr` promise
+ * @raise EACCES if unveil() is in play and `path` isn't unveiled
+ * @raise ENOTSUP if `path` is a zip filesystem path or `dirfd` is zip
+ * @raise EINVAL if `ts` specifies a nanosecond value that's out of range
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EBADF if `dirfd` isn't a valid fd or `AT_FDCWD`
+ * @raise EFAULT if `path` or `ts` memory was invalid
+ * @raise EROFS if `path` is on read-only filesystem
+ * @raise ENOSYS on bare metal
  * @see futimens()
  * @asyncsignalsafe
+ * @threadsafe
  */
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
   int rc;
-  if (IsAsan() && ((dirfd == AT_FDCWD && !__asan_is_valid(path, 1)) ||
-                   (ts && (!__asan_is_valid_timespec(ts + 0) ||
-                           !__asan_is_valid_timespec(ts + 1))))) {
-    rc = efault();  // bad memory
-  } else if ((flags & ~AT_SYMLINK_NOFOLLOW)) {
-    rc = einval();  // unsupported flag
-  } else if (!path && flags) {
-    rc = einval();  // futimens() doesn't take flags
-  } else if ((path || __isfdkind(dirfd, kFdZip)) && _weaken(__zipos_notat) &&
-             (rc = __zipos_notat(dirfd, path)) == -1) {
-    STRACE("zipos utimensat not supported yet");
-  } else if (!IsWindows()) {
-    rc = sys_utimensat(dirfd, path, ts, flags);
+  if (!path) {
+    rc = efault();  // linux kernel abi behavior isn't supported
   } else {
-    rc = sys_utimensat_nt(dirfd, path, ts, flags);
+    rc = __utimens(dirfd, path, ts, flags);
   }
-  if (ts) {
-    STRACE("utimensat(%s, %#s, {{%,ld, %,ld}, {%,ld, %,ld}}, %#b) → %d% m",
-           DescribeDirfd(dirfd), path, ts[0].tv_sec, ts[0].tv_nsec,
-           ts[1].tv_sec, ts[1].tv_nsec, flags, rc);
-  } else {
-    STRACE("utimensat(%s, %#s, 0, %#b) → %d% m", DescribeDirfd(dirfd), path,
-           flags, rc);
-  }
+  STRACE("utimensat(%s, %#s, {%s, %s}, %#o) → %d% m", DescribeDirfd(dirfd),
+         path, DescribeTimespec(0, ts), DescribeTimespec(0, ts ? ts + 1 : 0),
+         flags, rc);
   return rc;
 }

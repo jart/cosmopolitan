@@ -28,13 +28,51 @@
 #include "libc/zipos/zipos.internal.h"
 
 /**
- * Changes current position of file descriptor/handle.
+ * Changes current position of file descriptor, e.g.
+ *
+ *     int fd = open("hello.bin", O_RDONLY);
+ *     lseek(fd, 100, SEEK_SET);  // set position to 100th byte
+ *     read(fd, buf, 8);          // read bytes 100 through 107
+ *
+ * This function may be used to inspect the current position:
+ *
+ *     int64_t pos = lseek(fd, 0, SEEK_CUR);
+ *
+ * You may seek past the end of file. If a write happens afterwards
+ * then the gap leading up to it will be filled with zeroes. Please
+ * note that lseek() by itself will not extend the physical medium.
+ *
+ * If dup() is used then the current position will be shared across
+ * multiple file descriptors. If you seek in one it will implicitly
+ * seek the other too.
+ *
+ * The current position of a file descriptor is shared between both
+ * processes and threads. For example, if an fd is inherited across
+ * fork(), and both the child and parent want to read from it, then
+ * changes made by one are observable to the other.
+ *
+ * The pread() and pwrite() functions obfuscate the need for having
+ * global shared file position state. Consider using them, since it
+ * helps avoid the gotchas of this interface described above.
+ *
+ * This function is supported by all OSes within our support vector
+ * and our unit tests demonstrate the behaviors described above are
+ * consistent across platforms.
  *
  * @param fd is a number returned by open()
- * @param offset is the relative byte count
- * @param whence can be SEEK_SET, SEEK_CUR, or SEEK_END
- * @return new position relative to beginning, or -1 on error
+ * @param offset is 0-indexed byte count w.r.t. `whence`
+ * @param whence can be one of:
+ *     - `SEEK_SET`: Sets the file position to `offset` [default]
+ *     - `SEEK_CUR`: Sets the file position to `position + offset`
+ *     - `SEEK_END`: Sets the file position to `filesize + offset`
+ * @return new position relative to beginning, or -1 w/ errno
+ * @raise ESPIPE if `fd` is a pipe, socket, or fifo
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EINVAL if resulting offset would be negative
+ * @raise EINVAL if `whence` isn't valid
  * @asyncsignalsafe
+ * @threadsafe
+ * @vforksafe
  */
 int64_t lseek(int fd, int64_t offset, unsigned whence) {
   int64_t rc;

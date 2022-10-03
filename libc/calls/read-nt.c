@@ -37,10 +37,12 @@
 
 static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
                                             size_t size, ssize_t offset) {
+  bool32 ok;
   int64_t p;
   uint32_t got, avail;
   struct NtOverlapped overlap;
 
+  // our terrible polling mechanism
   if (GetFileType(fd->handle) == kNtFileTypePipe) {
     for (;;) {
       if (!PeekNamedPipe(fd->handle, 0, 0, 0, &avail, 0)) break;
@@ -62,11 +64,15 @@ static textwindows ssize_t sys_read_nt_impl(struct Fd *fd, void *data,
     _npassert(SetFilePointerEx(fd->handle, 0, &p, SEEK_CUR));
   }
 
-  if (ReadFile(fd->handle, data, _clampio(size), &got,
-               _offset2overlap(fd->handle, offset, &overlap))) {
-    if (offset != -1) {
-      _npassert(SetFilePointerEx(fd->handle, p, 0, SEEK_SET));
-    }
+  ok = ReadFile(fd->handle, data, _clampio(size), &got,
+                _offset2overlap(fd->handle, offset, &overlap));
+
+  if (offset != -1) {
+    // windows clobbers file pointer even on error
+    _npassert(SetFilePointerEx(fd->handle, p, 0, SEEK_SET));
+  }
+
+  if (ok) {
     return got;
   }
 

@@ -38,6 +38,7 @@
 
 static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
                                              ssize_t offset) {
+  bool32 ok;
   int64_t h, p;
   uint32_t err, sent;
   struct NtOverlapped overlap;
@@ -49,11 +50,15 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
     _npassert(SetFilePointerEx(h, 0, &p, SEEK_CUR));
   }
 
-  if (WriteFile(h, data, _clampio(size), &sent,
-                _offset2overlap(h, offset, &overlap))) {
-    if (offset != -1) {
-      _npassert(SetFilePointerEx(h, p, 0, SEEK_SET));
-    }
+  ok = WriteFile(h, data, _clampio(size), &sent,
+                 _offset2overlap(h, offset, &overlap));
+
+  if (offset != -1) {
+    // windows clobbers file pointer even on error
+    _npassert(SetFilePointerEx(h, p, 0, SEEK_SET));
+  }
+
+  if (ok) {
     return sent;
   }
 
@@ -72,7 +77,7 @@ static textwindows ssize_t sys_write_nt_impl(int fd, void *data, size_t size,
         _Exitr(128 + EPIPE);
       }
     case kNtErrorAccessDenied:  // write doesn't return EACCESS
-      return ebadf();           //
+      return ebadf();
     default:
       return __winerr();
   }

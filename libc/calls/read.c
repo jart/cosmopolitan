@@ -33,6 +33,9 @@
 /**
  * Reads data from file descriptor.
  *
+ * This function changes the current file position. For documentation
+ * on file position behaviors and gotchas, see the lseek() function.
+ *
  * @param fd is something open()'d earlier
  * @param buf is copied into, cf. copy_file_range(), sendfile(), etc.
  * @param size in range [1..0x7ffff000] is reasonable
@@ -41,6 +44,7 @@
  * @see write(), pread(), readv()
  * @asyncsignalsafe
  * @restartable
+ * @vforksafe
  */
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;

@@ -21,10 +21,10 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
 #include "libc/nt/enum/accessmask.h"
@@ -149,8 +149,7 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
 textwindows int sys_wait4_nt(int pid, int *opt_out_wstatus, int options,
                              struct rusage *opt_out_rusage) {
   int rc;
-  sigset_t mask, oldmask;
-  sigemptyset(&mask);
+  sigset_t oldmask, mask = {0};
   sigaddset(&mask, SIGCHLD);
   __sig_mask(SIG_BLOCK, &mask, &oldmask);
   rc = sys_wait4_nt_impl(pid, opt_out_wstatus, options, opt_out_rusage);

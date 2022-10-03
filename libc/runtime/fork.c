@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sig.h"
@@ -30,7 +30,9 @@
 /**
  * Creates new process.
  *
- * @return 0 to child, child pid to parent, or -1 on error
+ * @return 0 to child, child pid to parent, or -1 w/ errno
+ * @raise EAGAIN if `RLIMIT_NPROC` was exceeded or system lacked resources
+ * @raise ENOMEM if we require more vespene gas
  * @asyncsignalsafe
  */
 int fork(void) {
@@ -62,11 +64,11 @@ int fork(void) {
     if (__tls_enabled) {
       __get_tls()->tib_tid = IsLinux() ? dx : sys_gettid();
     }
+    sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → 0 (child of %d)", parent);
-    sigprocmask(SIG_SETMASK, &old, 0);
   } else {
-    STRACE("fork() → %d% m", ax);
     sigprocmask(SIG_SETMASK, &old, 0);
+    STRACE("fork() → %d% m", ax);
   }
   return ax;
 }

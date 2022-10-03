@@ -20,7 +20,6 @@
 #include "libc/calls/asan.internal.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
@@ -30,6 +29,7 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/mem/alloca.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
@@ -48,12 +48,30 @@
  *     __clock_gettime     l:        35𝑐        11𝑛𝑠
  *     sys_clock_gettime   l:       220𝑐        71𝑛𝑠
  *
- * @param clock can be CLOCK_REALTIME, CLOCK_MONOTONIC, etc.
+ * @param clock can be one of:
+ *     - `CLOCK_REALTIME`: universally supported
+ *     - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
+ *     - `CLOCK_MONOTONIC`: universally supported
+ *     - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
+ *     - `CLOCK_MONOTONIC_RAW`: nearly universally supported
+ *     - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
+ *     - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
+ *     - `CLOCK_REALTIME_COARSE`: : linux and openbsd
+ *     - `CLOCK_MONOTONIC_COARSE`: linux
+ *     - `CLOCK_PROF`: linux and netbsd
+ *     - `CLOCK_BOOTTIME`: linux and openbsd
+ *     - `CLOCK_REALTIME_ALARM`: linux-only
+ *     - `CLOCK_BOOTTIME_ALARM`: linux-only
+ *     - `CLOCK_TAI`: linux-only
  * @param ts is where the result is stored
  * @return 0 on success, or -1 w/ errno
- * @error EINVAL if clock isn't supported on this system
+ * @error EPERM if pledge() is in play without stdio promise
+ * @error EINVAL if `clock` isn't supported on this system
+ * @error EFAULT if `ts` points to bad memory
  * @see strftime(), gettimeofday()
  * @asyncsignalsafe
+ * @threadsafe
+ * @vforksafe
  */
 int clock_gettime(int clock, struct timespec *ts) {
   int rc;

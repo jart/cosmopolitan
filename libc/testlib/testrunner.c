@@ -51,7 +51,7 @@ static int x;
 char g_testlib_olddir[PATH_MAX];
 char g_testlib_tmpdir[PATH_MAX];
 struct sigaction wanthandlers[31];
-static pthread_spinlock_t testlib_error_lock;
+static pthread_mutex_t testlib_error_lock;
 
 void testlib_finish(void) {
   if (g_testlib_failed) {
@@ -63,7 +63,7 @@ void testlib_finish(void) {
 void testlib_error_enter(const char *file, const char *func) {
   atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed);
   atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed);
-  if (!__vforked) pthread_spin_lock(&testlib_error_lock);
+  if (!__vforked) pthread_mutex_lock(&testlib_error_lock);
   if (!IsWindows()) sys_getpid(); /* make strace easier to read */
   if (!IsWindows()) sys_getpid();
   if (g_testlib_shoulddebugbreak) {
@@ -76,7 +76,7 @@ void testlib_error_enter(const char *file, const char *func) {
 void testlib_error_leave(void) {
   atomic_fetch_add_explicit(&__ftrace, 1, memory_order_relaxed);
   atomic_fetch_add_explicit(&__strace, 1, memory_order_relaxed);
-  pthread_spin_unlock(&testlib_error_lock);
+  pthread_mutex_unlock(&testlib_error_lock);
 }
 
 wontreturn void testlib_abort(void) {

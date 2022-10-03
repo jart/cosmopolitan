@@ -17,17 +17,43 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Changes root directory.
  *
+ * Please consider using unveil() instead of chroot(). If you use this
+ * system call then consider using both chdir() and closefrom() before
+ * calling this function. Otherwise there's a small risk that fchdir()
+ * could be used to escape the chroot() environment. Cosmopolitan Libc
+ * focuses on static binaries which make chroot() infinitely easier to
+ * use since you don't need to construct an entire userspace each time
+ * however unveil() is still better to use on modern Linux and OpenBSD
+ * because it doesn't require root privileges.
+ *
+ * @param path shall become the new root directory
+ * @return 0 on success, or -1 w/ errno
+ * @raise EACCES if we don't have permission to search a component of `path`
+ * @raise ENOTDIR if a directory component in `path` exists as non-directory
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EPERM if not root or pledge() is in play
+ * @raise EIO if a low-level i/o error occurred
+ * @raise EFAULT if `path` is bad memory
+ * @raise ENOENT if `path` doesn't exist
  * @raise ENOSYS on Windows
  */
 int chroot(const char *path) {
   int rc;
-  rc = sys_chroot(path);
+  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+    rc = efault();
+  } else {
+    rc = sys_chroot(path);
+  }
   STRACE("chroot(%s) → %d% m", path, rc);
   return rc;
 }

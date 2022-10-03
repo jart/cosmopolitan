@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/runtime/internal.h"
 
 /**
@@ -32,16 +33,19 @@
  * programs that mix fork() with threads. In that case, apps should
  * consider using `sys_getpid().ax` instead to force a system call.
  *
- * On Linux, and only Linux, the process id is guaranteed to be the same
- * as gettid() for the main thread.
+ * On Linux, and only Linux, getpid() is guaranteed to equal gettid()
+ * for the main thread.
  *
+ * @return process id (always successful)
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe
  */
 int getpid(void) {
   int rc;
-  if (!__vforked) {
+  if (IsMetal()) {
+    rc = 1;
+  } else if (!__vforked) {
     rc = __pid;
   } else {
     rc = sys_getpid().ax;

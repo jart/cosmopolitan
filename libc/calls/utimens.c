@@ -16,25 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/calls/struct/timeval.h"
+#include "libc/assert.h"
+#include "libc/calls/asan.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
-/**
- * Sets atime/mtime on file descriptor.
- *
- * @param ts is atime/mtime, or null for current time
- * @note better than microsecond precision on most platforms
- * @see fstat() for reading timestamps
- */
-int futimes(int fd, const struct timeval tv[hasatleast 2]) {
-  struct timespec ts[2];
-  if (tv) {
-    ts[0].tv_sec = tv[0].tv_sec;
-    ts[0].tv_nsec = tv[0].tv_usec * 1000;
-    ts[1].tv_sec = tv[1].tv_sec;
-    ts[1].tv_nsec = tv[1].tv_usec * 1000;
-    return utimensat(fd, NULL, ts, 0);
+int __utimens(int fd, const char *path, const struct timespec ts[2],
+              int flags) {
+  int rc;
+  struct ZiposUri zipname;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (IsAsan() && ((fd == AT_FDCWD && !__asan_is_valid(path, 1)) ||
+                          (ts && (!__asan_is_valid_timespec(ts + 0) ||
+                                  !__asan_is_valid_timespec(ts + 1))))) {
+    rc = efault();  // bad memory
+  } else if ((flags & ~AT_SYMLINK_NOFOLLOW)) {
+    rc = einval();  // unsupported flag
+  } else if (__isfdkind(fd, kFdZip) ||
+             (path && (_weaken(__zipos_parseuri) &&
+                       _weaken(__zipos_parseuri)(path, &zipname) != -1))) {
+    rc = enotsup();
+  } else if (!IsWindows()) {
+    rc = sys_utimensat(fd, path, ts, flags);
   } else {
-    return utimensat(fd, NULL, NULL, 0);
+    rc = sys_utimensat_nt(fd, path, ts, flags);
   }
+  return rc;
 }

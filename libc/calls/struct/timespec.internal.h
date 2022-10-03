@@ -6,6 +6,7 @@
 COSMOPOLITAN_C_START_
 
 int __sys_utimensat(int, const char *, const struct timespec[2], int) hidden;
+int __utimens(int, const char *, const struct timespec[2], int) hidden;
 int sys_clock_getres(int, struct timespec *) hidden;
 int sys_clock_gettime(int, struct timespec *) hidden;
 int sys_clock_gettime_nt(int, struct timespec *) hidden;

@@ -18,10 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
 
@@ -31,18 +34,73 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr proc", 0));
 }
 
-TEST(lseek, wat) {
-  int fd, pid;
+TEST(lseek, ebadf) {
+  ASSERT_SYS(EBADF, -1, lseek(-1, 0, SEEK_SET));
+  ASSERT_SYS(EBADF, -1, lseek(+3, 0, SEEK_SET));
+}
+
+TEST(lseek, badWhence_einval) {
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(EINVAL, -1, lseek(3, 0, -1));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, negativeComputedOffset_einval) {
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(EINVAL, -1, lseek(3, -1, SEEK_SET));
+  ASSERT_SYS(EINVAL, -1, lseek(3, -1, SEEK_CUR));
+  ASSERT_SYS(EINVAL, -1, lseek(3, -1, SEEK_END));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, 64bit) {
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(0, 0x100000001, lseek(3, 0x100000001, SEEK_SET));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, nonSeekableFd_espipe) {
+  int fds[2];
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(ESPIPE, -1, lseek(3, 0, SEEK_SET));
+  EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, filePositionChanges_areObservableAcrossDup) {
+  ASSERT_SYS(0, 3, creat("wut", 0644));
+  ASSERT_SYS(0, 4, dup(3));
+  ASSERT_SYS(0, 0, lseek(3, 0, SEEK_CUR));
+  ASSERT_SYS(0, 1, lseek(4, 1, SEEK_SET));
+  ASSERT_SYS(0, 1, lseek(3, 0, SEEK_CUR));
+  EXPECT_SYS(0, 0, close(4));
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, filePositionChanges_areObservableAcrossProcesses) {
   char buf[8] = {0};
-  ASSERT_NE(-1, (fd = open("wut", O_RDWR | O_CREAT, 0644)));
-  ASSERT_EQ(3, write(fd, "wut", 3));
-  ASSERT_NE(-1, lseek(fd, 0, SEEK_SET));
-  if (!(pid = fork())) {
-    lseek(fd, 1, SEEK_SET);
-    _exit(0);
-  }
-  EXPECT_NE(-1, waitpid(pid, 0, 0));
-  EXPECT_EQ(1, read(fd, buf, 1));
-  EXPECT_EQ('u', buf[0]); /* wat?! */
-  EXPECT_NE(-1, close(fd));
+  ASSERT_SYS(0, 3, open("wut", O_RDWR | O_CREAT, 0644));
+  ASSERT_SYS(0, 3, write(3, "wut", 3));
+  ASSERT_SYS(0, 0, lseek(3, 0, SEEK_SET));
+  SPAWN(fork);
+  ASSERT_SYS(0, 1, lseek(3, 1, SEEK_SET));
+  EXITS(0);
+  EXPECT_SYS(0, 1, read(3, buf, 1));
+  EXPECT_EQ('u', buf[0]);
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(lseek, beyondEndOfFile_isZeroExtendedUponSubsequentWrite) {
+  char buf[8] = {1, 1};
+  ASSERT_SYS(0, 3, open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644));
+  ASSERT_SYS(0, 2, lseek(3, 2, SEEK_SET));
+  ASSERT_SYS(0, 2, lseek(3, 0, SEEK_CUR));
+  ASSERT_SYS(0, 0, pread(3, buf, 8, 0));  // lseek() alone doesn't extend
+  ASSERT_SYS(0, 2, write(3, buf, 2));     // does extend once i/o happens
+  ASSERT_SYS(0, 4, pread(3, buf, 8, 0));
+  ASSERT_EQ(0, buf[0]);
+  ASSERT_EQ(0, buf[1]);
+  ASSERT_EQ(1, buf[2]);
+  ASSERT_EQ(1, buf[3]);
+  ASSERT_SYS(0, 0, close(3));
 }

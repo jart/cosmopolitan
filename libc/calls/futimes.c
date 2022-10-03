@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,11 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/cocmd.internal.h"
-#include "libc/stdio/stdio.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 
-// Support code for system() and popen().
-int systemexec(const char *cmdline) {
-  _Exit(cocmd(3, (char *[]){"cocmd.com", "-c", cmdline, 0}));
+/**
+ * Sets atime/mtime on file descriptor.
+ *
+ * @param ts is atime/mtime, or null for current time
+ * @note better than microsecond precision on most platforms
+ * @see fstat() for reading timestamps
+ */
+int futimes(int fd, const struct timeval tv[2]) {
+  // TODO(jart): does this work on rhel5? what's up with this?
+  struct timespec ts[2];
+  if (tv) {
+    ts[0].tv_sec = tv[0].tv_sec;
+    ts[0].tv_nsec = tv[0].tv_usec * 1000;
+    ts[1].tv_sec = tv[1].tv_sec;
+    ts[1].tv_nsec = tv[1].tv_usec * 1000;
+    return utimensat(fd, NULL, ts, 0);
+  } else {
+    return utimensat(fd, NULL, NULL, 0);
+  }
 }

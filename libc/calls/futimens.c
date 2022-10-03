@@ -16,16 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Sets atime/mtime on file descriptor.
+ * Changes access/modified time on open file, the modern way.
  *
- * This function is the same as `utimensat(fd, 0, ts, 0)`.
+ * XNU only has microsecond (1e-6) accuracy. Windows only has
+ * hectonanosecond (1e-7) accuracy. RHEL5 is somewhat broken so utimes()
+ * is recommended if portability to old versions of Linux is desired.
  *
- * @param ts is atime/mtime, or null for current time
- * @raise ENOSYS on RHEL5
+ * @param fd is file descriptor of file whose timestamps will change
+ * @param ts is {access, modified} timestamps, or null for current time
+ * @return 0 on success, or -1 w/ errno
+ * @raise ENOTSUP if `fd` is on the zip filesystem
+ * @raise EINVAL if `flags` had an unrecognized value
+ * @raise EPERM if pledge() is in play without `fattr` promise
+ * @raise EINVAL if `ts` specifies a nanosecond value that's out of range
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EFAULT if `ts` memory was invalid
+ * @raise ENOSYS on RHEL5 or bare metal
+ * @asyncsignalsafe
+ * @threadsafe
  */
 int futimens(int fd, const struct timespec ts[2]) {
-  return utimensat(fd, 0, ts, 0);
+  int rc;
+  rc = __utimens(fd, 0, ts, 0);
+  STRACE("futimens(%d, {%s, %s}) → %d% m", fd, DescribeTimespec(0, ts),
+         DescribeTimespec(0, ts ? ts + 1 : 0), rc);
+  return rc;
 }

@@ -31,6 +31,9 @@
 /**
  * Writes data to file descriptor.
  *
+ * This function changes the current file position. For documentation
+ * on file position behaviors and gotchas, see the lseek() function.
+ *
  * @param fd is something open()'d earlier
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
  * @param size in range [1..0x7ffff000] is reasonable
@@ -39,6 +42,7 @@
  * @see read(), pwrite(), writev(), SIGPIPE
  * @asyncsignalsafe
  * @restartable
+ * @vforksafe
  */
 ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;

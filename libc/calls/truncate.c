@@ -17,25 +17,65 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 /**
- * Reduces or extends underlying physical medium of file.
+ * Changes size of file.
  *
- * If file was originally larger, content >length is lost.
+ * If the file size is increased, the extended area shall appear as if
+ * it were zero-filled. If your file size is decreased, the extra data
+ * shall be lost.
  *
- * @param path must exist
- * @return 0 on success or -1 w/ errno
+ * Some operating systems implement an optimization, where `length` is
+ * treated as a logical size and the requested physical space won't be
+ * allocated until non-zero values get written into it. Our tests show
+ * this happens on Linux (usually with 4096 byte granularity), FreeBSD
+ * (which favors 512-byte granularity), and MacOS (prefers 4096 bytes)
+ * however Windows, OpenBSD, and NetBSD always reserve physical space.
+ * This may be inspected using stat() then consulting stat::st_blocks.
+ *
+ * @param path is name of file that shall be resized
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `length` is negative
+ * @raise EINTR if signal was delivered instead
+ * @raise EFBIG or EINVAL if `length` is too huge
+ * @raise EFAULT if `path` points to invalid memory
+ * @raise ENOTSUP if `path` is a zip filesystem path
+ * @raise EACCES if we don't have permission to search a component of `path`
+ * @raise ENOTDIR if a directory component in `path` exists as non-directory
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise ELOOP if a loop was detected resolving components of `path`
+ * @raise ENOENT if `path` doesn't exist or is an empty string
+ * @raise ETXTBSY if `path` is an executable being executed
+ * @raise EROFS if `path` is on a read-only filesystem
+ * @raise ENOSYS on bare metal
  * @see ftruncate()
- * @error ENOENT
+ * @threadsafe
  */
 int truncate(const char *path, uint64_t length) {
   int rc;
-  if (!IsWindows()) {
+  struct ZiposUri zipname;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+    rc = efault();
+  } else if (_weaken(__zipos_parseuri) &&
+             _weaken(__zipos_parseuri)(path, &zipname) != -1) {
+    rc = enotsup();
+  } else if (!IsWindows()) {
     rc = sys_truncate(path, length, length);
+    if (IsNetbsd() && rc == -1 && errno == ENOSPC) {
+      errno = EFBIG;  // POSIX doesn't specify ENOSPC for truncate()
+    }
   } else {
     rc = sys_truncate_nt(path, length);
   }

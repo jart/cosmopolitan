@@ -11,3 +11,4 @@ kDos2Errno.EINVAL:
 	.e	kNtErrorNotAReparsePoint,EINVAL
 	.e	kNtErrorInvalidFunction,EINVAL
 	.e	WSAEINVAL,EINVAL
+	.e	kNtErrorNegativeSeek,EINVAL

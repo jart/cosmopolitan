@@ -46,7 +46,7 @@
 int sigsuspend(const sigset_t *ignore) {
   int rc;
   long ms, totoms;
-  sigset_t save, mask, *arg;
+  sigset_t save, *arg, mask = {0};
   STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
@@ -63,7 +63,6 @@ int sigsuspend(const sigset_t *ignore) {
     if (ignore) {
       arg = ignore;
     } else {
-      sigemptyset(&mask);
       arg = &mask;
     }
     if (!IsWindows()) {

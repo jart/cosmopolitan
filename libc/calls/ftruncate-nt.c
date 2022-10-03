@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/nt/enum/filemovemethod.h"
+#include "libc/nt/errors.h"
 #include "libc/nt/files.h"
+#include "libc/nt/runtime.h"
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
@@ -28,7 +31,13 @@ textwindows int sys_ftruncate_nt(int64_t handle, uint64_t length) {
   if ((ok = SetFilePointerEx(handle, 0, &tell, kNtFileCurrent))) {
     ok = SetFilePointerEx(handle, length, NULL, kNtFileBegin) &&
          SetEndOfFile(handle);
-    SetFilePointerEx(handle, tell, NULL, kNtFileBegin);
+    _npassert(SetFilePointerEx(handle, tell, NULL, kNtFileBegin));
   }
-  return ok ? 0 : __winerr();
+  if (ok) {
+    return 0;
+  } else if (GetLastError() == kNtErrorAccessDenied) {
+    return einval();  // ftruncate() doesn't raise EACCES
+  } else {
+    return __winerr();
+  }
 }

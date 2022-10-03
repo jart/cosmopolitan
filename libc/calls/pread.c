@@ -32,7 +32,9 @@
 #include "libc/zipos/zipos.internal.h"
 
 /**
- * Reads from file at offset, thus avoiding superfluous lseek().
+ * Reads from file at offset.
+ *
+ * This function never changes the current position of `fd`.
  *
  * @param fd is something open()'d earlier, noting pipes might not work
  * @param buf is copied into, cf. copy_file_range(), sendfile(), etc.
@@ -40,8 +42,14 @@
  * @param offset is bytes from start of file at which read begins
  * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
  *     exception of size==0, in which case return zero means no error
+ * @raise ESPIPE if `fd` isn't seekable
+ * @raise EINVAL if `offset` is negative
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EIO if a complicated i/o error happened
+ * @raise EINTR if signal was delivered instead
  * @see pwrite(), write()
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {

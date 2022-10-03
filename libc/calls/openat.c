@@ -135,6 +135,7 @@
  * @raise ENOMEM if insufficient memory was available
  * @raise EMFILE if `RLIMIT_NOFILE` has been reached
  * @raise EOPNOTSUPP if `file` names a named socket
+ * @raise EFAULT if `file` points to invalid memory
  * @raise ETXTBSY if writing is requested on `file` that's being executed
  * @raise ELOOP if `flags` had `O_NOFOLLOW` and `file` is a symbolic link
  * @raise ELOOP if a loop was detected resolving components of `file`

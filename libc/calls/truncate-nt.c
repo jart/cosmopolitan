@@ -27,7 +27,6 @@
 
 textwindows int sys_truncate_nt(const char *path, uint64_t length) {
   int rc;
-  bool32 ok;
   int64_t fh;
   uint16_t path16[PATH_MAX];
   if (__mkntpath(path, path16) == -1) return -1;

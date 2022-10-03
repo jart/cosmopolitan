@@ -29,7 +29,9 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Writes to file at offset, thus avoiding superfluous lseek().
+ * Writes to file at offset.
+ *
+ * This function never changes the current position of `fd`.
  *
  * @param fd is something open()'d earlier, noting pipes might not work
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
@@ -41,6 +43,7 @@
  *     impossible unless size was passed as zero to do an error check
  * @see pread(), write()
  * @asyncsignalsafe
+ * @threadsafe
  * @vforksafe
  */
 ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {

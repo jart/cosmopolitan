@@ -48,10 +48,9 @@
  * @vforksafe
  */
 int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
-  sigset_t old;
   int res, rc, arg1;
+  sigset_t old = {0};
   const sigset_t *arg2;
-  sigemptyset(&old);
   if (IsAsan() &&
       ((opt_set && !__asan_is_valid(opt_set, sizeof(*opt_set))) ||
        (opt_out_oldset &&

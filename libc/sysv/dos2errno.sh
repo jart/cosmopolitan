@@ -126,6 +126,7 @@ dos	kNtErrorNoaccess                EFAULT
 dos	kNtErrorInvalidAddress          EADDRNOTAVAIL
 dos	kNtErrorNotAReparsePoint	EINVAL
 dos	kNtErrorInvalidFunction         EINVAL
+dos	kNtErrorNegativeSeek		EINVAL
 dos	kNtErrorInvalidNetname          EADDRNOTAVAIL
 dos	kNtErrorInvalidUserBuffer	EMSGSIZE
 dos	kNtErrorIoPending               EINPROGRESS

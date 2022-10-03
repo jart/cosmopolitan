@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/asan.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
@@ -49,6 +49,12 @@ static int sys_clock_getres_xnu(int clock, struct timespec *ts) {
 
 /**
  * Returns granularity of clock.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @error EPERM if pledge() is in play without stdio promise
+ * @error EINVAL if `clock` isn't supported on this system
+ * @error EFAULT if `ts` points to bad memory
+ * @threadsafe
  */
 int clock_getres(int clock, struct timespec *ts) {
   int rc;

@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/cocmd.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
@@ -50,7 +51,7 @@ FILE *popen(const char *cmdline, const char *mode) {
   } else if ((flags & O_ACCMODE) == O_WRONLY) {
     dir = 1;
   } else {
-    errno = EINVAL;
+    einval();
     return NULL;
   }
   if (pipe(pipefds) == -1) return NULL;
@@ -59,8 +60,7 @@ FILE *popen(const char *cmdline, const char *mode) {
     switch ((pid = fork())) {
       case 0:
         dup2(pipefds[!dir], !dir);
-        systemexec(cmdline);
-        _exit(127);
+        _Exit(cocmd(3, (char *[]){"popen", "-c", cmdline, 0}));
       default:
         f->pid = pid;
         close(pipefds[!dir]);

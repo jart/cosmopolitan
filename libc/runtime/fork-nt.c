@@ -21,6 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
@@ -52,6 +53,7 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/tls.h"
 
 STATIC_YOINK("_check_sigchld");
@@ -337,6 +339,9 @@ textwindows int sys_fork_nt(void) {
     }
     if (reader != -1) CloseHandle(reader);
     if (writer != -1) CloseHandle(writer);
+    if (rc == -1 && errno != ENOMEM) {
+      eagain();  // posix fork() only specifies two errors
+    }
   } else {
     rc = 0;
   }

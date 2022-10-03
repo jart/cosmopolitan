@@ -83,7 +83,6 @@ void setlinebuf(FILE *);
 void setbuf(FILE *, char *);
 void setbuffer(FILE *, char *, size_t);
 int setvbuf(FILE *, char *, int, size_t);
-FILE *popen(const char *, const char *);
 int pclose(FILE *);
 char *ctermid(char *);
 void perror(const char *) relegated;
@@ -94,7 +93,7 @@ int fgetpos(FILE *, fpos_t *) paramsnonnull();
 int fsetpos(FILE *, const fpos_t *) paramsnonnull();
 
 int system(const char *);
-int systemexec(const char *);
+FILE *popen(const char *, const char *);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » formatting                                 ─╬─│┼
