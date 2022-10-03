@@ -579,8 +579,6 @@ syscon	sicode	SYS_USER_DISPATCH			2			-1			-1			-1			-1			-1			# SIGSYS; syscall
 #	sigaltstack() values
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ss	SIGSTKSZ				8192			131072			34816			28672			28672			8192			# overlaid with FRAMESIZE; you need to #undef SIGSTKSZ to access this symbol
-syscon	ss	MINSIGSTKSZ				2048			32768			2048			12288			8192			2048			# overlaid with 32768; you need to #undef MINSIGSTKSZ to access this symbol
 syscon	ss	SS_ONSTACK				1			1			1			1			1			1			# unix consensus
 syscon	ss	SS_DISABLE				2			4			4			4			4			2			# bsd consensus
 

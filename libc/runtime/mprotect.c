@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/prot.h"
 

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
 privileged void __stracef(const char *fmt, ...) {

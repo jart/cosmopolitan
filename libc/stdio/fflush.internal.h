@@ -1,8 +1,9 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_FFLUSH_H_
 #define COSMOPOLITAN_LIBC_STDIO_FFLUSH_H_
 #include "libc/intrin/nopl.internal.h"
-#include "libc/thread/thread.h"
 #include "libc/stdio/stdio.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

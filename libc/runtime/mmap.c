@@ -361,6 +361,10 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
       f |= MAP_STACK_openbsd;
       needguard = true;
     } else if (IsLinux()) {
+      // make sure there's no existing stuff existing between our stack
+      // starting page and the bottom guard page, since that would stop
+      // our stack page from growing down.
+      _npassert(!sys_munmap(p, size));
       // by default MAP_GROWSDOWN will auto-allocate 10mb of pages. it's
       // supposed to stop growing if an adjacent allocation exists, to
       // prevent your stacks from overlapping on each other. we're not
@@ -376,8 +380,9 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
               .addr == MAP_FAILED) {
         return MAP_FAILED;
       }
-      sys_mmap(p, PAGESIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-               -1, 0);
+      _npassert(sys_mmap(p, PAGESIZE, PROT_NONE,
+                         MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+                    .addr == p);
       dm.addr = p;
       return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
     } else {
