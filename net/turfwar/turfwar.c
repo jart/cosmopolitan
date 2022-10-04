@@ -1194,8 +1194,8 @@ StartOver:
                               "ON CONFLICT (ip) DO\n"
                               "UPDATE SET (nick, created) = (?2, ?3)\n"
                               "WHERE nick != ?2\n"
-                              "  AND (created IS NULL\n"
-                              "   OR  (?3 - created) > 3600)",
+                              "   OR created IS NULL\n"
+                              "   OR ?3 - created > 3600",
                               -1, &stmt, 0));
   LOG("ClaimWorker started\n");
   while ((n = GetClaims(&g_claims, v, BATCH_MAX, nsync_time_no_deadline))) {
