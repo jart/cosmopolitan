@@ -2887,7 +2887,7 @@ zvoid *memset(buf, init, len)
 /* Function memcmp() */
 /*********************/
 
-int memcmp(b1, b2, len)
+int memcmp_(b1, b2, len)
     register ZCONST zvoid *b1;
     register ZCONST zvoid *b2;
     register unsigned int len;
@@ -2908,7 +2908,7 @@ int memcmp(b1, b2, len)
 /* Function memcpy() */
 /*********************/
 
-zvoid *memcpy(dst, src, len)
+zvoid *memcpy_(dst, src, len)
     register zvoid *dst;
     register ZCONST zvoid *src;
     register unsigned int len;
