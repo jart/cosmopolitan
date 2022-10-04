@@ -124,13 +124,13 @@ Usage: turfwar.com [-dv] ARGS...\n\
    !memcmp(inbuf + msg->uri.a, S, strlen(S)))
 
 #if 1
-#define LOG(...) kprintf(__VA_ARGS__)
+#define LOG(...) kprintf("\r\e[K" __VA_ARGS__)
 #else
 #define LOG(...) (void)0
 #endif
 
 #if 0
-#define DEBUG(...) kprintf(__VA_ARGS__)
+#define DEBUG(...) kprintf("\r\e[K" __VA_ARGS__)
 #else
 #define DEBUG(...) (void)0
 #endif
@@ -193,6 +193,7 @@ int g_workers = WORKERS;
 int g_keepalive = KEEPALIVE_MS;
 
 nsync_note g_shutdown;
+nsync_note g_terminate;
 
 struct Recent {
   nsync_mu mu;
@@ -326,7 +327,7 @@ int GetClaims(struct Claims *q, struct Claim *out, int len, nsync_time dead) {
   int got = 0;
   nsync_mu_lock(&q->mu);
   while (!q->count) {
-    if (nsync_cv_wait_with_deadline(&q->non_empty, &q->mu, dead, g_shutdown)) {
+    if (nsync_cv_wait_with_deadline(&q->non_empty, &q->mu, dead, g_terminate)) {
       break;  // must be ETIMEDOUT or ECANCELED
     }
   }
@@ -756,6 +757,7 @@ void FreeAsset(struct Asset *a) {
 }
 
 void OnCtrlC(int sig) {
+  LOG("Got ctrl-c...\n");
   nsync_note_notify(g_shutdown);
 }
 
@@ -973,8 +975,9 @@ void *ClaimWorker(void *arg) {
   sqlite3 *db = 0;
   sqlite3_stmt *stmt = 0;
   struct Claim *v = _gc(xcalloc(BATCH_MAX, sizeof(struct Claim)));
-  OnlyRunOnCpu(0);
   pthread_setname_np(pthread_self(), "ClaimWorker");
+  LOG("ClaimWorker started\n");
+  OnlyRunOnCpu(0);
 StartOver:
   CHECK_SQL(sqlite3_open("db.sqlite3", &db));
   CHECK_SQL(sqlite3_exec(db, "PRAGMA journal_mode=WAL", 0, 0, 0));
@@ -1004,13 +1007,14 @@ StartOver:
   }
   CHECK_DB(sqlite3_finalize(stmt));
   CHECK_SQL(sqlite3_close(db));
+  LOG("ClaimWorker exiting\n");
   return 0;
 OnError:
   sqlite3_finalize(stmt);
   sqlite3_close(db);
   stmt = 0;
   db = 0;
-  usleep(1000 * 1000);
+  usleep(100 * 1000);
   goto StartOver;
 }
 
@@ -1049,12 +1053,13 @@ void *AssetWorker(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-  // ShowCrashReports();
+  ShowCrashReports();
   GetOpts(argc, argv);
 
   __enable_threads();
   sqlite3_initialize();
   g_shutdown = nsync_note_new(0, nsync_time_no_deadline);
+  g_terminate = nsync_note_new(0, nsync_time_no_deadline);
 
   CHECK_EQ(0, chdir("/opt/turfwar"));
   putenv("TMPDIR=/opt/turfwar/tmp");
@@ -1082,6 +1087,7 @@ int main(int argc, char *argv[]) {
   CHECK_EQ(0, pthread_create(&nower, 0, NowWorker, 0));
   pthread_t *httper = _gc(xcalloc(g_workers, sizeof(pthread_t)));
   for (intptr_t i = 0; i < g_workers; ++i) {
+    LOG("Starting http worker #%d", i);
     CHECK_EQ(0, pthread_create(httper + i, 0, HttpWorker, (void *)i));
   }
 
@@ -1090,24 +1096,35 @@ int main(int argc, char *argv[]) {
   sigaction(SIGHUP, &sa, 0);
   sigaction(SIGINT, &sa, 0);
   sigaction(SIGTERM, &sa, 0);
+  LOG("Server is ready\n");
   AssetWorker(0);
 
-  // wait for threads to finish
+  // wait for producers to finish
+  LOG("Waiting for workers to finish...\n");
   for (int i = 0; i < g_workers; ++i) {
     CHECK_EQ(0, pthread_join(httper[i], 0));
   }
-  CHECK_EQ(0, pthread_join(claimer, 0));
   CHECK_EQ(0, pthread_join(recentr, 0));
   CHECK_EQ(0, pthread_join(scorer, 0));
   CHECK_EQ(0, pthread_join(nower, 0));
 
+  // wait for consumers to finish
+  LOG("Waiting for queue to empty...\n");
+  nsync_note_notify(g_terminate);
+  CHECK_EQ(0, pthread_join(claimer, 0));
+  CHECK_EQ(0, g_claims.count);
+
   // free memory
+  LOG("Freeing memory...\n");
   FreeAsset(&g_asset.user);
   FreeAsset(&g_asset.about);
   FreeAsset(&g_asset.index);
   FreeAsset(&g_asset.score);
   FreeAsset(&g_asset.recent);
   FreeAsset(&g_asset.favicon);
+  nsync_note_free(g_terminate);
   nsync_note_free(g_shutdown);
   // CheckForMemoryLeaks();
+
+  LOG("Goodbye\n");
 }

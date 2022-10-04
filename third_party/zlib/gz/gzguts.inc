@@ -1,7 +1,9 @@
 #include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/str/str.h"
+#include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zlib.h"
+#include "third_party/zlib/zutil.internal.h"
 // clang-format off
 
 /* gzguts.h -- zlib internal header definitions for gz* operations
@@ -18,7 +20,6 @@
 #  endif
 #endif
 
-#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
 #define _POSIX_SOURCE
 
 #if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550)
@@ -81,14 +82,15 @@ typedef struct {
     int direct;             /* 0 if processing gzip, 1 if transparent */
         /* just for reading */
     int how;                /* 0: get header, 1: copy, 2: decompress */
-    int64_t start;        /* where the gzip data started, for rewinding */
+    z_off64_t start;        /* where the gzip data started, for rewinding */
     int eof;                /* true if end of input file reached */
     int past;               /* true if read requested past end */
         /* just for writing */
     int level;              /* compression level */
     int strategy;           /* compression strategy */
+    int reset;              /* true if a reset is pending after a Z_FINISH */
         /* seek request */
-    int64_t skip;         /* amount to skip (already rewound if backwards) */
+    z_off64_t skip;         /* amount to skip (already rewound if backwards) */
     int seek;               /* true if seek request pending */
         /* error information */
     int err;                /* error code */
@@ -96,20 +98,20 @@ typedef struct {
         /* zlib inflate or deflate stream */
     z_stream strm;          /* stream structure in-place (not a pointer) */
 } gz_state;
-typedef gz_state *gz_statep;
+typedef gz_state FAR *gz_statep;
 
 /* shared functions */
-void ZLIB_INTERNAL gz_error (gz_statep, int, const char *);
+void ZLIB_INTERNAL gz_error OF((gz_statep, int, const char *));
 #if defined UNDER_CE
-char ZLIB_INTERNAL *gz_strwinerror (DWORD error);
+char ZLIB_INTERNAL *gz_strwinerror OF((DWORD error));
 #endif
 
-/* GT_OFF(x), where x is an unsigned value, is true if x > maximum int64_t
-   value -- needed when comparing unsigned to int64_t, which is signed
-   (possible int64_t types off_t, off64_t, and long are all signed) */
+/* GT_OFF(x), where x is an unsigned value, is true if x > maximum z_off64_t
+   value -- needed when comparing unsigned to z_off64_t, which is signed
+   (possible z_off64_t types off_t, off64_t, and long are all signed) */
 #ifdef INT_MAX
-#  define GT_OFF(x) (sizeof(int) == sizeof(int64_t) && (x) > INT_MAX)
+#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > INT_MAX)
 #else
-unsigned ZLIB_INTERNAL gz_intmax (void);
-#  define GT_OFF(x) (sizeof(int) == sizeof(int64_t) && (x) > gz_intmax())
+unsigned ZLIB_INTERNAL gz_intmax OF((void));
+#  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > gz_intmax())
 #endif

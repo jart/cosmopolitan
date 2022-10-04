@@ -24,6 +24,10 @@
 
 #define OS_CODE 3 /* assume Unix */
 
+#if defined(STDC) && !defined(HAVE_MEMCPY) && !defined(NO_MEMCPY)
+#define HAVE_MEMCPY
+#endif
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

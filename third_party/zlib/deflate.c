@@ -1,3 +1,6 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╚─────────────────────────────────────────────────────────────────────────────*/
 /* deflate.c -- compress data using the deflation algorithm
  * Copyright (C) 1995-2022 Jean-loup Gailly and Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -9,7 +12,7 @@
 #include "third_party/zlib/zutil.internal.h"
 
 asm(".ident\t\"\\n\\n\
-inflate 1.2.12.1 (zlib License)\\n\
+deflate 1.2.12.1 (zlib License)\\n\
 Copyright 1995-2022 Jean-loup Gailly and Mark Adler\\n\
 Invented 1990 Phillip Walter Katz\"");
 // clang-format off
@@ -318,14 +321,19 @@ int ZEXPORT deflateInit2(strm, level, method, windowBits, memLevel, strategy)
     s->window = (Bytef *) ZALLOC(strm,
                                  s->w_size + window_padding,
                                  2*sizeof(Byte));
+
     /* Avoid use of unitialized values in the window, see crbug.com/1137613 and
      * crbug.com/1144420 */
-    zmemzero(s->window, (s->w_size + window_padding) * (2 * sizeof(Byte)));
+    if (s->window) { /* [jart] fix regression in malloc failure checking */
+      zmemzero(s->window, (s->w_size + window_padding) * (2 * sizeof(Byte)));
+    }
     s->prev   = (Posf *)  ZALLOC(strm, s->w_size, sizeof(Pos));
     /* Avoid use of uninitialized value, see:
      * https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=11360
      */
-    zmemzero(s->prev, s->w_size * sizeof(Pos));
+    if (s->prev) { /* [jart] fix regression in malloc failure checking */
+        zmemzero(s->prev, s->w_size * sizeof(Pos));
+    }
     s->head   = (Posf *)  ZALLOC(strm, s->hash_size, sizeof(Pos));
 
     s->high_water = 0;      /* nothing written to s->window yet */

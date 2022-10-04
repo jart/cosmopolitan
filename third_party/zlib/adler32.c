@@ -1,3 +1,6 @@
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=4 sts=4 sw=4 fenc=utf-8                                :vi│
+╚─────────────────────────────────────────────────────────────────────────────*/
 /* adler32.c -- compute the Adler-32 checksum of a data stream
  * Copyright (C) 1995-2011, 2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
@@ -6,10 +9,14 @@
 #include "third_party/zlib/macros.internal.h"
 #include "third_party/zlib/zconf.h"
 #include "third_party/zlib/zutil.internal.h"
+
+asm(".ident\t\"\\n\\n\
+zlib (zlib License)\\n\
+Copyright 1995-2017 Jean-loup Gailly and Mark Adler\"");
+asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
 /* @(#) $Id$ */
-
 
 local uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 
