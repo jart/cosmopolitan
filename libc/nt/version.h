@@ -9,11 +9,21 @@ bool32 GetVersionEx(struct NtOsVersionInfo *lpVersionInformation);
 
 #if defined(__GCC_ASM_FLAG_OUTPUTS__) && !defined(__STRICT_ANSI__)
 #define IsAtLeastWindows10() (GetNtMajorVersion() >= 10)
+#define IsAtleastWindows8p1() \
+  (GetNtMajorVersion() > 6 || (GetNtMajorVersion() == 6 && GetNtMinorVersion() == 3))
 #define GetNtMajorVersion()    \
   ({                           \
     uintptr_t __x;             \
     asm("mov\t%%gs:96,%q0\r\n" \
         "mov\t280(%q0),%b0"    \
+        : "=q"(__x));          \
+    (unsigned char)__x;        \
+  })
+#define GetNtMinorVersion()    \
+  ({                           \
+    uintptr_t __x;             \
+    asm("mov\t%%gs:96,%q0\r\n" \
+        "mov\t284(%q0),%b0"    \
         : "=q"(__x));          \
     (unsigned char)__x;        \
   })

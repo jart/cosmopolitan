@@ -52,9 +52,10 @@ static void *__zipos_mmap(size_t mapsize) {
   assert(mapsize);
   offset = maptotal;
   maptotal += mapsize;
-  start = (char *)0x6fd000040000;
+  start = (char *)kMemtrackZiposStart;
   if (!mapend) mapend = start;
-  mapend = _extend(start, maptotal, mapend, 0x6fdfffff0000);
+    mapend = _extend(start, maptotal, mapend,
+                   kMemtrackZiposStart + kMemtrackZiposSize);;
   return start + offset;
 }
 
