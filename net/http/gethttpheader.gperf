@@ -94,7 +94,13 @@ Accept-Ranges,                    kHttpAcceptRanges
 Set-Cookie,                       kHttpSetCookie
 Sec-CH-UA,                        kHttpSecChUa
 Sec-CH-UA-Mobile,                 kHttpSecChUaMobile
+Sec-CH-UA-Platform,               kHttpSecChUaPlatform
 Sec-Fetch-Site,                   kHttpSecFetchSite
 Sec-Fetch-Mode,                   kHttpSecFetchMode
 Sec-Fetch-User,                   kHttpSecFetchUser
 Sec-Fetch-Dest,                   kHttpSecFetchDest
+CF-RAY,                           kHttpCfRay
+CF-Visitor,                       kHttpCfVisitor
+CF-Connecting-IP,                 kHttpCfConnectingIp
+CF-IPCountry,                     kHttpCfIpcountry
+CDN-Loop,                         kHttpCdnLoop

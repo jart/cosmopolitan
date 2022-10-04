@@ -194,6 +194,18 @@ const char *GetHttpHeaderName(int h) {
       return "Sec-Fetch-User";
     case kHttpSecFetchDest:
       return "Sec-Fetch-Dest";
+    case kHttpCfRay:
+      return "CF-RAY";
+    case kHttpCfVisitor:
+      return "CF-Visitor";
+    case kHttpCfConnectingIp:
+      return "CF-Connecting-IP";
+    case kHttpCfIpcountry:
+      return "CF-IPCountry";
+    case kHttpCdnLoop:
+      return "CDN-Loop";
+    case kHttpSecChUaPlatform:
+      return "Sec-CH-UA-Platform";
     default:
       return NULL;
   }

@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
-#include "libc/mem/arraylist.internal.h"
 #include "libc/assert.h"
 #include "libc/intrin/bits.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
+#include "libc/mem/arraylist.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -86,7 +86,6 @@ void DestroyHttpMessage(struct HttpMessage *r) {
  */
 int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
   int c, h, i;
-  struct HttpHeader *x;
   for (n = MIN(n, LIMIT); r->i < n; ++r->i) {
     c = p[r->i] & 0xff;
     switch (r->t) {
@@ -232,14 +231,25 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
                 (!r->headers[h].a || !kHttpRepeatable[h])) {
               r->headers[h].a = r->a;
               r->headers[h].b = i;
-            } else if ((x = realloc(
-                            r->xheaders.p,
-                            (r->xheaders.n + 1) * sizeof(*r->xheaders.p)))) {
-              x[r->xheaders.n].k = r->k;
-              x[r->xheaders.n].v.a = r->a;
-              x[r->xheaders.n].v.b = i;
-              r->xheaders.p = x;
-              ++r->xheaders.n;
+            } else {
+              if (r->xheaders.n == r->xheaders.c) {
+                unsigned c2;
+                struct HttpHeader *p1, *p2;
+                p1 = r->xheaders.p;
+                c2 = r->xheaders.c + 2;
+                c2 = c2 >> 1;
+                if ((p2 = realloc(p1, c2 * sizeof(*p1)))) {
+                  r->xheaders.p = p2;
+                  r->xheaders.c = c2;
+                }
+              }
+              if (r->xheaders.n < r->xheaders.c) {
+                r->xheaders.p[r->xheaders.n].k = r->k;
+                r->xheaders.p[r->xheaders.n].v.a = r->a;
+                r->xheaders.p[r->xheaders.n].v.b = i;
+                r->xheaders.p = r->xheaders.p;
+                ++r->xheaders.n;
+              }
             }
             r->t = c == '\r' ? kHttpStateCr : kHttpStateLf1;
             break;

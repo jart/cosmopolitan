@@ -140,7 +140,13 @@
 #define kHttpSecFetchMode                  84
 #define kHttpSecFetchUser                  85
 #define kHttpSecFetchDest                  86
-#define kHttpHeadersMax                    87
+#define kHttpCfRay                         87
+#define kHttpCfVisitor                     88
+#define kHttpCfConnectingIp                89
+#define kHttpCfIpcountry                   90
+#define kHttpSecChUaPlatform               91
+#define kHttpCdnLoop                       92
+#define kHttpHeadersMax                    93
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -155,7 +161,7 @@ struct HttpHeader {
 };
 
 struct HttpHeaders {
-  unsigned n;
+  unsigned n, c;
   struct HttpHeader *p;
 };
 

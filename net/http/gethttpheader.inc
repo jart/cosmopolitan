@@ -1,7 +1,7 @@
 /* ANSI-C code produced by gperf version 3.1 */
 /* Command-line: gperf gethttpheader.gperf  */
 /* Computed positions: -k'5,10-11,22,$' */
-/* clang-format off */
+// clang-format off
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -39,12 +39,12 @@
 #line 12 "gethttpheader.gperf"
 struct thatispacked HttpHeaderSlot { char *name; char code; };
 
-#define TOTAL_KEYWORDS 87
+#define TOTAL_KEYWORDS 93
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 32
 #define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 198
-/* maximum key range = 196, duplicates = 0 */
+#define MAX_HASH_VALUE 181
+/* maximum key range = 179, duplicates = 0 */
 
 #ifndef GPERF_DOWNCASE
 #define GPERF_DOWNCASE 1
@@ -98,37 +98,37 @@ __inline
 inline
 #endif
 #endif
-static unsigned int
+static inline unsigned int
 hash (register const char *str, register size_t len)
 {
   static const unsigned char asso_values[] =
     {
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199,  55, 199, 199, 199, 199,
-      199, 199, 199,  20, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199,  15, 199,  30,  35,  10,
-       25,  15,   0,  70, 199,  55,  25,  40,   0,  45,
-       15,  20,  50,   0,   0,   5, 199,   0, 199,  20,
-      199, 199, 199, 199, 199, 199, 199,  15, 199,  30,
-       35,  10,  25,  15,   0,  70, 199,  55,  25,  40,
-        0,  45,  15,  20,  50,   0,   0,   5, 199,   0,
-      199,  20, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199, 199, 199, 199, 199,
-      199, 199, 199, 199, 199, 199
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182,  35, 182, 182, 182, 182,
+      182, 182, 182,   5, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182,  15, 182,  30,  60,  10,
+        5,  40,   0,  40, 182,  80,  40,  90,   0,  45,
+        5,   0,  45,   0,   0,   0, 182,   0, 182,  45,
+      182, 182, 182, 182, 182, 182, 182,  15, 182,  30,
+       60,  10,   5,  40,   0,  40, 182,  80,  40,  90,
+        0,  45,   5,   0,  45,   0,   0,   0, 182,   0,
+      182,  45, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182, 182, 182, 182, 182,
+      182, 182, 182, 182, 182, 182
     };
   register unsigned int hval = len;
 
@@ -168,7 +168,7 @@ hash (register const char *str, register size_t len)
   return hval + asso_values[(unsigned char)str[len - 1]];
 }
 
-static const struct thatispacked HttpHeaderSlot *
+static inline const struct thatispacked HttpHeaderSlot *
 LookupHttpHeader (register const char *str, register size_t len)
 {
   static const struct thatispacked HttpHeaderSlot wordlist[] =
@@ -183,7 +183,9 @@ LookupHttpHeader (register const char *str, register size_t len)
       {""}, {""},
 #line 73 "gethttpheader.gperf"
       {"Location",                         kHttpLocation},
-      {""}, {""}, {""},
+      {""}, {""},
+#line 17 "gethttpheader.gperf"
+      {"Accept",                           kHttpAccept},
 #line 80 "gethttpheader.gperf"
       {"TE",                               kHttpTe},
 #line 58 "gethttpheader.gperf"
@@ -193,17 +195,13 @@ LookupHttpHeader (register const char *str, register size_t len)
       {""}, {""}, {""},
 #line 86 "gethttpheader.gperf"
       {"Via",                              kHttpVia},
-#line 45 "gethttpheader.gperf"
-      {"ETag",                             kHttpEtag},
+      {""},
 #line 16 "gethttpheader.gperf"
       {"Connection",                       kHttpConnection},
-#line 17 "gethttpheader.gperf"
-      {"Accept",                           kHttpAccept},
-      {""},
+      {""}, {""},
 #line 67 "gethttpheader.gperf"
       {"If-Match",                         kHttpIfMatch},
-#line 39 "gethttpheader.gperf"
-      {"Vary",                             kHttpVary},
+      {""},
 #line 36 "gethttpheader.gperf"
       {"Range",                            kHttpRange},
 #line 92 "gethttpheader.gperf"
@@ -223,7 +221,8 @@ LookupHttpHeader (register const char *str, register size_t len)
       {"If-Range",                         kHttpIfRange},
 #line 37 "gethttpheader.gperf"
       {"Content-Length",                   kHttpContentLength},
-      {""},
+#line 88 "gethttpheader.gperf"
+      {"X-Frame-Options",                  kHttpXFrameOptions},
 #line 66 "gethttpheader.gperf"
       {"Expect",                           kHttpExpect},
 #line 90 "gethttpheader.gperf"
@@ -234,161 +233,171 @@ LookupHttpHeader (register const char *str, register size_t len)
       {""},
 #line 85 "gethttpheader.gperf"
       {"WWW-Authenticate",                 kHttpWwwAuthenticate},
-#line 82 "gethttpheader.gperf"
-      {"Transfer-Encoding",                kHttpTransferEncoding},
-#line 93 "gethttpheader.gperf"
-      {"Accept-Ranges",                    kHttpAcceptRanges},
-#line 29 "gethttpheader.gperf"
-      {"From",                             kHttpFrom},
-#line 88 "gethttpheader.gperf"
-      {"X-Frame-Options",                  kHttpXFrameOptions},
-#line 77 "gethttpheader.gperf"
-      {"Proxy-Connection",                 kHttpProxyConnection},
+      {""}, {""},
+#line 45 "gethttpheader.gperf"
+      {"ETag",                             kHttpEtag},
+#line 20 "gethttpheader.gperf"
+      {"User-Agent",                       kHttpUserAgent},
+#line 23 "gethttpheader.gperf"
+      {"Origin",                           kHttpOrigin},
 #line 60 "gethttpheader.gperf"
       {"Content-Base",                     kHttpContentBase},
 #line 47 "gethttpheader.gperf"
       {"Content-Range",                    kHttpContentRange},
-      {""},
+#line 39 "gethttpheader.gperf"
+      {"Vary",                             kHttpVary},
 #line 24 "gethttpheader.gperf"
       {"Upgrade-Insecure-Requests",        kHttpUpgradeInsecureRequests},
 #line 63 "gethttpheader.gperf"
       {"Content-Language",                 kHttpContentLanguage},
-#line 28 "gethttpheader.gperf"
-      {"Sec-GPC",                          kHttpSecGpc},
-      {""},
-#line 95 "gethttpheader.gperf"
-      {"Sec-CH-UA",                        kHttpSecChUa},
-#line 18 "gethttpheader.gperf"
-      {"Accept-Language",                  kHttpAcceptLanguage},
-#line 54 "gethttpheader.gperf"
-      {"Access-Control-Method",            kHttpAccessControlMethod},
 #line 42 "gethttpheader.gperf"
       {"Expires",                          kHttpExpires},
-#line 75 "gethttpheader.gperf"
-      {"Proxy-Authenticate",               kHttpProxyAuthenticate},
-#line 72 "gethttpheader.gperf"
-      {"Link",                             kHttpLink},
+#line 106 "gethttpheader.gperf"
+      {"CDN-Loop",                         kHttpCdnLoop},
+#line 95 "gethttpheader.gperf"
+      {"Sec-CH-UA",                        kHttpSecChUa},
+      {""},
+#line 26 "gethttpheader.gperf"
+      {"Cookie",                           kHttpCookie},
+#line 89 "gethttpheader.gperf"
+      {"X-Content-Type-Options",           kHttpXContentTypeOptions},
+#line 93 "gethttpheader.gperf"
+      {"Accept-Ranges",                    kHttpAcceptRanges},
+#line 35 "gethttpheader.gperf"
+      {"Save-Data",                        kHttpSaveData},
 #line 94 "gethttpheader.gperf"
       {"Set-Cookie",                       kHttpSetCookie},
-#line 25 "gethttpheader.gperf"
-      {"Pragma",                           kHttpPragma},
+#line 41 "gethttpheader.gperf"
+      {"Server",                           kHttpServer},
 #line 49 "gethttpheader.gperf"
       {"Access-Control-Allow-Credentials", kHttpAccessControlAllowCredentials},
       {""},
-#line 56 "gethttpheader.gperf"
-      {"Access-Control-Request-Method",    kHttpAccessControlRequestMethod},
-#line 20 "gethttpheader.gperf"
-      {"User-Agent",                       kHttpUserAgent},
-#line 41 "gethttpheader.gperf"
-      {"Server",                           kHttpServer},
-#line 38 "gethttpheader.gperf"
-      {"Content-Type",                     kHttpContentType},
-#line 51 "gethttpheader.gperf"
-      {"Access-Control-Allow-Methods",     kHttpAccessControlAllowMethods},
-      {""}, {""},
-#line 43 "gethttpheader.gperf"
-      {"Content-Encoding",                 kHttpContentEncoding},
+#line 98 "gethttpheader.gperf"
+      {"Sec-Fetch-Site",                   kHttpSecFetchSite},
+#line 71 "gethttpheader.gperf"
+      {"Keep-Alive",                       kHttpKeepAlive},
+#line 102 "gethttpheader.gperf"
+      {"CF-RAY",                           kHttpCfRay},
+#line 82 "gethttpheader.gperf"
+      {"Transfer-Encoding",                kHttpTransferEncoding},
+      {""},
+#line 62 "gethttpheader.gperf"
+      {"Content-Disposition",              kHttpContentDisposition},
+#line 18 "gethttpheader.gperf"
+      {"Accept-Language",                  kHttpAcceptLanguage},
+#line 77 "gethttpheader.gperf"
+      {"Proxy-Connection",                 kHttpProxyConnection},
 #line 52 "gethttpheader.gperf"
       {"Access-Control-Allow-Origin",      kHttpAccessControlAllowOrigin},
 #line 68 "gethttpheader.gperf"
       {"If-None-Match",                    kHttpIfNoneMatch},
-      {""}, {""},
-#line 23 "gethttpheader.gperf"
-      {"Origin",                           kHttpOrigin},
-#line 89 "gethttpheader.gperf"
-      {"X-Content-Type-Options",           kHttpXContentTypeOptions},
+#line 70 "gethttpheader.gperf"
+      {"If-Unmodified-Since",              kHttpIfUnmodifiedSince},
       {""},
-#line 35 "gethttpheader.gperf"
-      {"Save-Data",                        kHttpSaveData},
-      {""},
-#line 31 "gethttpheader.gperf"
-      {"X-Requested-With",                 kHttpXRequestedWith},
-#line 81 "gethttpheader.gperf"
-      {"Trailer",                          kHttpTrailer},
-      {""},
-#line 76 "gethttpheader.gperf"
-      {"Proxy-Authorization",              kHttpProxyAuthorization},
-#line 71 "gethttpheader.gperf"
-      {"Keep-Alive",                       kHttpKeepAlive},
-#line 26 "gethttpheader.gperf"
-      {"Cookie",                           kHttpCookie},
-      {""}, {""}, {""}, {""}, {""},
-#line 84 "gethttpheader.gperf"
-      {"Warning",                          kHttpWarning},
+#line 78 "gethttpheader.gperf"
+      {"Public",                           kHttpPublic},
+#line 28 "gethttpheader.gperf"
+      {"Sec-GPC",                          kHttpSecGpc},
       {""},
 #line 48 "gethttpheader.gperf"
       {"Accept-Charset",                   kHttpAcceptCharset},
       {""},
+#line 54 "gethttpheader.gperf"
+      {"Access-Control-Method",            kHttpAccessControlMethod},
+#line 38 "gethttpheader.gperf"
+      {"Content-Type",                     kHttpContentType},
+#line 75 "gethttpheader.gperf"
+      {"Proxy-Authenticate",               kHttpProxyAuthenticate},
+#line 72 "gethttpheader.gperf"
+      {"Link",                             kHttpLink},
+      {""},
+#line 31 "gethttpheader.gperf"
+      {"X-Requested-With",                 kHttpXRequestedWith},
+#line 84 "gethttpheader.gperf"
+      {"Warning",                          kHttpWarning},
+      {""},
+#line 56 "gethttpheader.gperf"
+      {"Access-Control-Request-Method",    kHttpAccessControlRequestMethod},
+      {""},
 #line 65 "gethttpheader.gperf"
       {"Content-MD5",                      kHttpContentMd5},
+#line 81 "gethttpheader.gperf"
+      {"Trailer",                          kHttpTrailer},
       {""},
-#line 15 "gethttpheader.gperf"
-      {"Cache-Control",                    kHttpCacheControl},
-#line 62 "gethttpheader.gperf"
-      {"Content-Disposition",              kHttpContentDisposition},
+#line 29 "gethttpheader.gperf"
+      {"From",                             kHttpFrom},
       {""},
-#line 64 "gethttpheader.gperf"
-      {"Content-Location",                 kHttpContentLocation},
-      {""}, {""},
-#line 97 "gethttpheader.gperf"
-      {"Sec-Fetch-Site",                   kHttpSecFetchSite},
-      {""},
-#line 78 "gethttpheader.gperf"
-      {"Public",                           kHttpPublic},
+#line 43 "gethttpheader.gperf"
+      {"Content-Encoding",                 kHttpContentEncoding},
 #line 21 "gethttpheader.gperf"
       {"Referer",                          kHttpReferer},
-      {""}, {""}, {""},
-#line 32 "gethttpheader.gperf"
-      {"X-Forwarded-Host",                 kHttpXForwardedHost},
-      {""}, {""}, {""}, {""}, {""},
-#line 30 "gethttpheader.gperf"
-      {"If-Modified-Since",                kHttpIfModifiedSince},
-      {""}, {""},
-#line 19 "gethttpheader.gperf"
-      {"Accept-Encoding",                  kHttpAcceptEncoding},
-      {""},
-#line 74 "gethttpheader.gperf"
-      {"Max-Forwards",                     kHttpMaxForwards},
-      {""},
-#line 70 "gethttpheader.gperf"
-      {"If-Unmodified-Since",              kHttpIfUnmodifiedSince},
-      {""}, {""},
-#line 34 "gethttpheader.gperf"
-      {"X-CSRF-Token",                     kHttpXCsrfToken},
 #line 59 "gethttpheader.gperf"
       {"Authorization",                    kHttpAuthorization},
 #line 100 "gethttpheader.gperf"
-      {"Sec-Fetch-Dest",                   kHttpSecFetchDest},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"Sec-Fetch-User",                   kHttpSecFetchUser},
       {""},
-#line 87 "gethttpheader.gperf"
-      {"Strict-Transport-Security",        kHttpStrictTransportSecurity},
-#line 79 "gethttpheader.gperf"
-      {"Retry-After",                      kHttpRetryAfter},
+#line 64 "gethttpheader.gperf"
+      {"Content-Location",                 kHttpContentLocation},
+      {""}, {""}, {""}, {""},
+#line 104 "gethttpheader.gperf"
+      {"CF-Connecting-IP",                 kHttpCfConnectingIp},
+#line 105 "gethttpheader.gperf"
+      {"CF-IPCountry",                     kHttpCfIpcountry},
+#line 15 "gethttpheader.gperf"
+      {"Cache-Control",                    kHttpCacheControl},
+#line 76 "gethttpheader.gperf"
+      {"Proxy-Authorization",              kHttpProxyAuthorization},
+      {""},
+#line 25 "gethttpheader.gperf"
+      {"Pragma",                           kHttpPragma},
       {""}, {""},
-#line 98 "gethttpheader.gperf"
+#line 101 "gethttpheader.gperf"
+      {"Sec-Fetch-Dest",                   kHttpSecFetchDest},
+      {""}, {""}, {""},
+#line 51 "gethttpheader.gperf"
+      {"Access-Control-Allow-Methods",     kHttpAccessControlAllowMethods},
+      {""}, {""}, {""},
+#line 74 "gethttpheader.gperf"
+      {"Max-Forwards",                     kHttpMaxForwards},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+#line 32 "gethttpheader.gperf"
+      {"X-Forwarded-Host",                 kHttpXForwardedHost},
+      {""}, {""}, {""},
+#line 19 "gethttpheader.gperf"
+      {"Accept-Encoding",                  kHttpAcceptEncoding},
+      {""}, {""}, {""}, {""},
+#line 103 "gethttpheader.gperf"
+      {"CF-Visitor",                       kHttpCfVisitor},
+      {""},
+#line 30 "gethttpheader.gperf"
+      {"If-Modified-Since",                kHttpIfModifiedSince},
+      {""}, {""}, {""}, {""},
+#line 34 "gethttpheader.gperf"
+      {"X-CSRF-Token",                     kHttpXCsrfToken},
+      {""}, {""}, {""}, {""}, {""},
+#line 44 "gethttpheader.gperf"
+      {"Last-Modified",                    kHttpLastModified},
+#line 99 "gethttpheader.gperf"
       {"Sec-Fetch-Mode",                   kHttpSecFetchMode},
 #line 91 "gethttpheader.gperf"
       {"Referrer-Policy",                  kHttpReferrerPolicy},
+#line 79 "gethttpheader.gperf"
+      {"Retry-After",                      kHttpRetryAfter},
       {""}, {""}, {""},
-#line 99 "gethttpheader.gperf"
-      {"Sec-Fetch-User",                   kHttpSecFetchUser},
-      {""},
-#line 96 "gethttpheader.gperf"
-      {"Sec-CH-UA-Mobile",                 kHttpSecChUaMobile},
+#line 87 "gethttpheader.gperf"
+      {"Strict-Transport-Security",        kHttpStrictTransportSecurity},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""},
-#line 33 "gethttpheader.gperf"
-      {"X-Forwarded-Proto",                kHttpXForwardedProto},
-      {""}, {""},
 #line 22 "gethttpheader.gperf"
       {"X-Forwarded-For",                  kHttpXForwardedFor},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
-#line 44 "gethttpheader.gperf"
-      {"Last-Modified",                    kHttpLastModified}
+#line 33 "gethttpheader.gperf"
+      {"X-Forwarded-Proto",                kHttpXForwardedProto},
+#line 97 "gethttpheader.gperf"
+      {"Sec-CH-UA-Platform",               kHttpSecChUaPlatform},
+      {""}, {""},
+#line 96 "gethttpheader.gperf"
+      {"Sec-CH-UA-Mobile",                 kHttpSecChUaMobile}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
