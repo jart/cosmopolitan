@@ -7,6 +7,7 @@
  */
 #include "libc/assert.h"
 #include "libc/intrin/weaken.h"
+#include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "third_party/zlib/internal.h"
 #include "third_party/zlib/zutil.internal.h"
