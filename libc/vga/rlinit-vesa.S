@@ -62,9 +62,13 @@ _rlinit_vesa:
 	testb	$0b00000011,0x0417	# read keyboard shift state (as
 	jnz	.doit			# given by BIOS's IRQ 1); if Shift
 					# key pressed, activate code below
+	push	%si			# display brief message on magic key
+	mov	$REAL(str.inform),%si
+	call	.puts
+	pop	%si
 	mov	$0x8300,%ax		# wait for the magic key for a short
-	mov	$(250000>>16),%cx	# period of time...
-	mov	$(250000&0xffff),%dx
+	mov	$(1000000>>16),%cx	# period of time...
+	mov	$(1000000&0xffff),%dx
 	push	%ss
 	pop	%es
 	mov	%sp,%bx
@@ -75,12 +79,14 @@ _rlinit_vesa:
 	jnz	.doit2
 	cmpb	$0,%es:(%bx)
 	jz	.wait
+	call	.done_inform
 	stc
 .done:	pop	%ax
 	pop	%es
 	ret
 .doit2:	mov	$0x8301,%ax		# we got the magic key; cancel the
-	int	$0x15			# wait timer
+	int	$0x15			# wait timer, & erase message
+	call	.done_inform
 .doit:	pop	%ax			# we got the magic key; do stuff
 	pop	%es
 	// fall through
@@ -138,6 +144,14 @@ _rlinit_vesa:
 9:	mov	$REAL(str.bad_mode),%si
 	jmp	7b
 	.endfn	.do_vesa_rlinit
+
+//	Clear the informational message on the magic key.
+.done_inform:
+	mov	$0x0a00|' ',%ax
+	mov	$7,%bx
+	mov	$str.inform.end-str.inform-1,%cx
+	int	$0x10
+	ret
 
 //	Preliminarily choose a "default" VESA screen mode from a list of
 //	gathered screen modes.
@@ -570,6 +584,12 @@ _rlinit_vesa:
 	.endfn	.putnl
 	.previous
 
+str.inform:
+#define SHGLYPH	"\x7f"
+	.ascii	"\rinfo: press ",SHGLYPH,"Shift "
+	.asciz	"to switch video mode\r"
+str.inform.end:
+	.endobj	str.inform
 str.no_vesa:
 	.asciz	"info: no VESA\r\n"
 	.endobj	str.no_vesa
