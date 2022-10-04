@@ -448,6 +448,16 @@ typedef struct {
 #endif
 #endif
 
+#ifndef unrollloops
+#if !defined(__STRICT_ANSI__) &&                           \
+    ((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 || \
+     __has_attribute(__optimize__))
+#define unrollloops __attribute__((__optimize__("unroll-loops")))
+#else
+#define unrollloops
+#endif
+#endif
+
 #ifndef returnstwice
 #if !defined(__STRICT_ANSI__) &&           \
     (__has_attribute(__returns_twice__) || \

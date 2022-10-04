@@ -20,10 +20,13 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
 #include "libc/str/unicode.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/vga/vga.internal.h"
 
@@ -37,45 +40,58 @@
  * @see tool/build/lib/pty.c
  */
 
-#define DEFAULT_FG 7
-#define DEFAULT_BG 0
+#define DEFAULT_FG ((TtyCanvasColor) \
+                    {.bgr.r = 0xaa, .bgr.g = 0xaa, .bgr.b = 0xaa, \
+                     .bgr.x = 0xff})
+#define DEFAULT_BG ((TtyCanvasColor) \
+                    {.bgr.r = 0, .bgr.g = 0, .bgr.b = 0, .bgr.x = 0xff})
 #define CRTPORT    0x3d4
 
 static void SetYn(struct Tty *tty, unsigned short yn) {
-#ifndef VGA_TTY_HEIGHT
   tty->yn = yn;
-#endif
 }
 
 static void SetXn(struct Tty *tty, unsigned short xn) {
-#ifndef VGA_TTY_WIDTH
   tty->xn = xn;
-#endif
 }
 
-static wchar_t *SetWcs(struct Tty *tty, wchar_t *wcs) {
+static void SetYp(struct Tty *tty, unsigned short yp) {
+  tty->yp = yp;
+}
+
+static void SetXp(struct Tty *tty, unsigned short xp) {
+  tty->xp = xp;
+}
+
+static void SetXsFb(struct Tty *tty, unsigned short xsfb) {
+  tty->xsfb = xsfb;
+}
+
+static bool SetWcs(struct Tty *tty, bool alloc_wcs) {
 #ifdef VGA_USE_WCS
-  tty->wcs = wcs;
-  return wcs;
+  struct DirectMap dm;
+  if (!alloc_wcs)
+    return false;
+  dm = sys_mmap_metal(NULL, Yn(tty) * Xn(tty) * sizeof(wchar_t),
+                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                      -1, 0);
+  if (dm.addr == (void *)-1) {
+    tty->wcs = NULL;
+    return false;
+  }
+  tty->wcs = dm.addr;
+  return true;
 #else
-  return NULL;
+  return false;
 #endif
 }
 
 static size_t Yn(struct Tty *tty) {
-#ifdef VGA_TTY_HEIGHT
-  return VGA_TTY_HEIGHT;
-#else
   return tty->yn;
-#endif
 }
 
 static size_t Xn(struct Tty *tty) {
-#ifdef VGA_TTY_WIDTH
-  return VGA_TTY_WIDTH;
-#else
   return tty->xn;
-#endif
 }
 
 static wchar_t *Wcs(struct Tty *tty) {
@@ -86,23 +102,82 @@ static wchar_t *Wcs(struct Tty *tty) {
 #endif
 }
 
-void _StartTty(struct Tty *tty, unsigned short yn, unsigned short xn,
+static void TtyTextDrawChar(struct Tty *, size_t, size_t, wchar_t);
+static void TtyTextEraseLineCells(struct Tty *, size_t, size_t, size_t);
+static void TtyTextMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
+                                 size_t);
+
+static void TtySetType(struct Tty *tty, unsigned char type) {
+  tty->type = type;
+  switch (type) {
+    case PC_VIDEO_BGR565:
+      tty->update = _TtyBgr565Update;
+      goto graphics_mode;
+    case PC_VIDEO_BGR555:
+      tty->update = _TtyBgr555Update;
+      goto graphics_mode;
+    case PC_VIDEO_BGRX8888:
+      tty->update = _TtyBgrxUpdate;
+      goto graphics_mode;
+    case PC_VIDEO_RGBX8888:
+      tty->update = _TtyRgbxUpdate;
+    graphics_mode:
+      tty->drawchar = _TtyGraphDrawChar;
+      tty->eraselinecells = _TtyGraphEraseLineCells;
+      tty->movelinecells = _TtyGraphMoveLineCells;
+      break;
+    default:
+      tty->drawchar = TtyTextDrawChar;
+      tty->eraselinecells = TtyTextEraseLineCells;
+      tty->movelinecells = TtyTextMoveLineCells;
+  }
+}
+
+void _StartTty(struct Tty *tty, unsigned char type,
+               unsigned short yp, unsigned short xp, unsigned short xsfb,
                unsigned short starty, unsigned short startx,
-               unsigned char chr_ht, void *vccs, wchar_t *wcs) {
-  struct VgaTextCharCell *ccs = vccs;
+               unsigned char yc, unsigned char xc, void *fb, bool alloc_wcs) {
+  unsigned short yn, xn, xs = xp * sizeof(TtyCanvasColor);
+  struct DirectMap dm;
   memset(tty, 0, sizeof(struct Tty));
+  SetYp(tty, yp);
+  SetXp(tty, xp);
+  SetXsFb(tty, xsfb);
+  tty->xs = xs;
+  if (type == PC_VIDEO_TEXT) {
+    yn = yp;
+    xn = xp;
+    tty->canvas = fb;
+  } else {
+    yn = yp / yc;
+    xn = xp / xc;
+    dm = sys_mmap_metal(NULL, (size_t)yp * xs, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (dm.addr == (void *)-1) {
+      /* We are a bit low on memory.  Try to go on anyway. */
+      tty->canvas = fb;
+      starty = startx = 0;
+    } else
+      tty->canvas = dm.addr;
+  }
   SetYn(tty, yn);
   SetXn(tty, xn);
-  tty->ccs = ccs;
+  tty->yc = yc;
+  tty->xc = xc;
+  tty->fb = fb;
   if (starty >= yn) starty = yn - 1;
   if (startx >= xn) startx = xn - 1;
-  if (chr_ht > 32) chr_ht = 32;
   tty->y = starty;
   tty->x = startx;
-  tty->chr_ht = chr_ht;
-  if (SetWcs(tty, wcs)) {
+  TtySetType(tty, type);
+  if (SetWcs(tty, alloc_wcs)) {
+    wchar_t *wcs = Wcs(tty);
     size_t n = (size_t)yn * xn, i;
-    for (i = 0; i < n; ++i) wcs[i] = bing(ccs[i].ch, 0);
+    if (type == PC_VIDEO_TEXT) {
+      struct VgaTextCharCell *ccs = fb;
+      for (i = 0; i < n; ++i) wcs[i] = bing(ccs[i].ch, 0);
+    } else
+      wmemset(wcs, L' ', n);
   }
   _TtyResetOutputMode(tty);
 }
@@ -214,18 +289,38 @@ static void TtySetCodepage(struct Tty *tty, char id) {
 }
 
 /**
+ * Map the given direct color value to one of the 16 basic foreground colors
+ * or one of the 16 background colors.
+ *
+ * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
+ */
+static uint8_t TtyGetTextColor(TtyCanvasColor color) {
+  uint8_t r = color.bgr.r, g = color.bgr.g, b = color.bgr.b;
+  uint8_t hue = 0, max = MAX(MAX(r, g), b);
+  if (r > max / 2) hue |= 4;
+  if (g > max / 2) hue |= 2;
+  if (b > max / 2) hue |= 1;
+  if (hue == 7 && max <= 0x55)
+    hue = 8;
+  else if (max > 0xaa)
+    hue |= 8;
+  return hue;
+}
+
+/**
  * Map the currently active foreground & background colors & terminal
  * configuration to a VGA text character attribute byte.
  *
  * @see VGA_USE_BLINK macro (libc/vga/vga.internal.h)
  * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
  */
-static uint8_t TtyGetVgaAttr(struct Tty *tty) {
+static uint8_t TtyGetTextAttr(struct Tty *tty) {
+  uint8_t fg = TtyGetTextColor(tty->fg), bg = TtyGetTextColor(tty->bg);
   uint8_t attr;
   if ((tty->pr & kTtyFlip) == 0)
-    attr = tty->fg | tty->bg << 4;
+    attr = fg | bg << 4;
   else
-    attr = tty->bg | tty->fg << 4;
+    attr = bg | fg << 4;
 #ifdef VGA_USE_BLINK
   /*
    * If blinking is enabled, we can only have the 8 dark background color
@@ -240,41 +335,73 @@ static uint8_t TtyGetVgaAttr(struct Tty *tty) {
   return attr;
 }
 
-static void TtyErase(struct Tty *tty, size_t dst, size_t n) {
-  uint8_t attr = TtyGetVgaAttr(tty);
-  size_t i;
+static void TtyTextDrawChar(struct Tty *tty, size_t y, size_t x, wchar_t wc) {
+  uint8_t attr = TtyGetTextAttr(tty);
+  struct VgaTextCharCell *ccs = (struct VgaTextCharCell *)tty->canvas;
+  size_t i = tty->y * Xn(tty) + tty->x;
+  int c = unbing(wc);
+  if (c == -1) c = 0xFE;
+  ccs[i] = (struct VgaTextCharCell){c, attr};
+}
+
+static void TtyTextEraseLineCells(struct Tty *tty, size_t dsty, size_t dstx,
+                                  size_t n) {
+  uint8_t attr = TtyGetTextAttr(tty);
+  struct VgaTextCharCell *ccs = (struct VgaTextCharCell *)tty->canvas;
+  size_t dst = dsty * Xn(tty) + dstx, i;
   for (i = 0; i < n; ++i)
-    tty->ccs[dst + i] = (struct VgaTextCharCell){' ', attr};
-  if (Wcs(tty)) wmemset(Wcs(tty) + dst, L' ', n);
+    ccs[dst + i] = (struct VgaTextCharCell){' ', attr};
 }
 
 void _TtyEraseLineCells(struct Tty *tty, size_t dsty, size_t dstx, size_t n) {
-  size_t xn = Xn(tty);
-  TtyErase(tty, dsty * xn + dstx, n);
+  tty->eraselinecells(tty, dsty, dstx, n);
+  if (Wcs(tty)) {
+    size_t i = dsty * Xn(tty) + dstx;
+    wmemset(Wcs(tty) + i, L' ', n);
+  }
 }
 
 void _TtyEraseLines(struct Tty *tty, size_t dsty, size_t n) {
-  size_t xn = Xn(tty);
-  TtyErase(tty, dsty * xn, n * xn);
+  size_t xn = Xn(tty), y;
+  y = dsty;
+  while (n-- != 0) {
+    _TtyEraseLineCells(tty, y, 0, xn);
+    ++y;
+  }
 }
 
-static void TtyMemmove(struct Tty *tty, size_t dst, size_t src, size_t n) {
-  memmove(tty->ccs + dst, tty->ccs + src, n * sizeof(struct VgaTextCharCell));
-  if (Wcs(tty)) wmemmove(Wcs(tty) + dst, Wcs(tty) + src, n);
+static void TtyTextMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx,
+                                 size_t srcy, size_t srcx, size_t n) {
+  size_t xn = Xn(tty);
+  size_t dst = dsty * xn + dstx, src = srcy * xn + srcx;
+  struct VgaTextCharCell *ccs = (struct VgaTextCharCell *)tty->canvas;
+  memmove(ccs + dst, ccs + src, n * sizeof(struct VgaTextCharCell));
 }
 
 void _TtyMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx,
                        size_t srcy, size_t srcx, size_t n) {
   size_t xn = Xn(tty);
-  TtyMemmove(tty, dsty * xn + dstx, srcy * xn + srcx, n);
+  size_t dst = dsty * xn + dstx, src = srcy * xn + srcx;
+  tty->movelinecells(tty, dsty, dstx, srcy, srcx, n);
+  if (Wcs(tty)) wmemmove(Wcs(tty) + dst, Wcs(tty) + src, n);
 }
 
 void _TtyMoveLines(struct Tty *tty, size_t dsty, size_t srcy, size_t n) {
   size_t xn = Xn(tty);
-  TtyMemmove(tty, dsty * xn, srcy * xn, n * xn);
+  if (dsty < srcy) {
+    while (n-- != 0) {
+      _TtyMoveLineCells(tty, dsty, 0, srcy, 0, xn);
+      ++dsty;
+      ++srcy;
+    }
+  } else if (dsty > srcy) {
+    while (n-- != 0)
+      _TtyMoveLineCells(tty, dsty + n, 0, srcy + n, 0, xn);
+  }
 }
 
 void _TtyResetOutputMode(struct Tty *tty) {
+  tty->updy1 = tty->updx1 = tty->updy2 = tty->updx2 = 0;
   tty->pr = 0;
   tty->fg = DEFAULT_FG;
   tty->bg = DEFAULT_BG;
@@ -354,18 +481,12 @@ static void TtyAdvance(struct Tty *tty) {
 }
 
 static void TtyWriteGlyph(struct Tty *tty, wint_t wc, int w) {
-  uint8_t attr = TtyGetVgaAttr(tty);
-  size_t i;
-  int c;
   if (w < 1) wc = L' ', w = 1;
   if ((tty->conf & kTtyRedzone) || tty->x + w > Xn(tty)) {
     TtyAdvance(tty);
   }
-  i = tty->y * Xn(tty) + tty->x;
-  c = unbing(wc);
-  if (c == -1) c = 0xFE;
-  tty->ccs[i] = (struct VgaTextCharCell){c, attr};
-  if (Wcs(tty)) Wcs(tty)[i] = wc;
+  tty->drawchar(tty, tty->y, tty->x, wc);
+  if (Wcs(tty)) Wcs(tty)[tty->y * Xn(tty) + tty->x] = wc;
   if ((tty->x += w) >= Xn(tty)) {
     tty->x = Xn(tty) - 1;
     tty->conf |= kTtyRedzone;
@@ -373,14 +494,13 @@ static void TtyWriteGlyph(struct Tty *tty, wint_t wc, int w) {
 }
 
 static void TtyWriteTab(struct Tty *tty) {
-  uint8_t attr = TtyGetVgaAttr(tty);
   unsigned x, x2;
   if (tty->conf & kTtyRedzone) {
     TtyAdvance(tty);
   }
   x2 = MIN(Xn(tty), ROUNDUP(tty->x + 1, 8));
   for (x = tty->x; x < x2; ++x) {
-    tty->ccs[tty->y * Xn(tty) + x] = (struct VgaTextCharCell){' ', attr};
+    tty->eraselinecells(tty, tty->y, x, 1);
   }
   if (Wcs(tty)) {
     for (x = tty->x; x < x2; ++x) {
@@ -637,61 +757,13 @@ static void TtyCsiN(struct Tty *tty) {
   }
 }
 
-/**
- * Map the given ECMA-48 / VT100 SGR color code to a color code for a VGA
- * character attribute.  More precisely, map
- *
- *       red──┐
- *     green─┐│
- *      blue┐││
- * intensity│││
- *         ││││
- *         3210
- *
- * to
- *
- *      blue──┐
- *     green─┐│
- *       red┐││
- * intensity│││
- *         ││││
- *         3210
- */
-static uint8_t TtyMapEcma48Color(uint8_t color)
-{
-  switch (color & 0b101) {
-    case 0b100:
-    case 0b001:
-      color ^= 0b101;
-  }
-  return color;
+/** Create a direct color pixel value. */
+static TtyCanvasColor TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b) {
+  return (TtyCanvasColor){.bgr.r = r, .bgr.g = g, .bgr.b = b, .bgr.x = 0xff};
 }
 
-/**
- * Map the given (R, G, B) triplet to one of the 16 basic foreground colors
- * or one of the 16 background colors.
- *
- * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
- */
-static uint8_t TtyMapTrueColor(uint8_t r, uint8_t g, uint8_t b) {
-  uint8_t hue = 0, max = MAX(MAX(r, g), b);
-  if (r > max / 2) hue |= 4;
-  if (g > max / 2) hue |= 2;
-  if (b > max / 2) hue |= 1;
-  if (hue == 7 && max <= 0x55)
-    hue = 8;
-  else if (max > 0xaa)
-    hue |= 8;
-  return hue;
-}
-
-/**
- * Map the given 256-color code one of the 16 basic foreground colors or one
- * of the 8 background colors.
- *
- * @see drivers/tty/vt/vt.c in Linux 5.9.14 source code
- */
-static uint8_t TtyMapXtermColor(uint8_t color) {
+/** Map the given 256-color code to a direct color. */
+static TtyCanvasColor TtyMapXtermColor(uint8_t color) {
   uint8_t r, g, b;
   if (color < 8) {
     r = (color & 1) ? 0xaa : 0;
@@ -711,6 +783,12 @@ static uint8_t TtyMapXtermColor(uint8_t color) {
   } else
     r = g = b = (unsigned)color * 10 - 2312;
   return TtyMapTrueColor(r, g, b);
+}
+
+/** Map the given ECMA-48 / VT100 SGR color code to a direct color. */
+static TtyCanvasColor TtyMapEcma48Color(uint8_t color)
+{
+  return TtyMapXtermColor(color % 16);
 }
 
 static void TtySelectGraphicsRendition(struct Tty *tty) {
@@ -983,10 +1061,10 @@ static void TtyCsi(struct Tty *tty) {
 }
 
 static void TtyScreenAlignmentDisplay(struct Tty *tty) {
-  uint8_t attr = TtyGetVgaAttr(tty);
-  size_t n = Yn(tty) * Xn(tty), i;
-  for (i = 0; i < n; ++i) tty->ccs[i] = (struct VgaTextCharCell){'E', attr};
-  if (Wcs(tty)) wmemset(Wcs(tty), L'E', n);
+  size_t yn = Yn(tty), xn = Xn(tty), y, x;
+  for (y = 0; y < yn; ++y)
+    for (x = 0; x < xn; ++x) tty->drawchar(tty, y, x, 'E');
+  if (Wcs(tty)) wmemset(Wcs(tty), L'E', yn * xn);
 }
 
 static void TtyEscHash(struct Tty *tty) {
@@ -1083,18 +1161,21 @@ static void TtyEscAppend(struct Tty *tty, char c) {
   tty->esc.s[tty->esc.i - 0] = 0;
 }
 
-static void TtyUpdateHwCursor(struct Tty *tty) {
-  unsigned char start = tty->chr_ht - 2, end = tty->chr_ht - 1;
-  unsigned short pos = tty->y * Xn(tty) + tty->x;
-  if ((tty->conf & kTtyNocursor)) start |= 1 << 5;
-  outb(CRTPORT, 0x0A);
-  outb(CRTPORT + 1, start);
-  outb(CRTPORT, 0x0B);
-  outb(CRTPORT + 1, end);
-  outb(CRTPORT, 0x0E);
-  outb(CRTPORT + 1, (unsigned char)(pos >> 8));
-  outb(CRTPORT, 0x0F);
-  outb(CRTPORT + 1, (unsigned char)pos);
+static void TtyUpdate(struct Tty *tty) {
+  if (tty->type == PC_VIDEO_TEXT) {
+    unsigned char start = tty->yc - 2, end = tty->yc - 1;
+    unsigned short pos = tty->y * Xn(tty) + tty->x;
+    if ((tty->conf & kTtyNocursor)) start |= 1 << 5;
+    outb(CRTPORT, 0x0A);
+    outb(CRTPORT + 1, start);
+    outb(CRTPORT, 0x0B);
+    outb(CRTPORT + 1, end);
+    outb(CRTPORT, 0x0E);
+    outb(CRTPORT + 1, (unsigned char)(pos >> 8));
+    outb(CRTPORT, 0x0F);
+    outb(CRTPORT + 1, (unsigned char)pos);
+  } else
+    tty->update(tty);
 }
 
 ssize_t _TtyWrite(struct Tty *tty, const void *data, size_t n) {
@@ -1184,7 +1265,7 @@ ssize_t _TtyWrite(struct Tty *tty, const void *data, size_t n) {
         unreachable;
     }
   }
-  TtyUpdateHwCursor(tty);
+  TtyUpdate(tty);
   return n;
 }
 
