@@ -169,6 +169,8 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, pc_video_height);
   export_offsetof(struct mman, pc_video_framebuffer);
   export_offsetof(struct mman, pc_video_framebuffer_size);
+  export_offsetof(struct mman, pc_video_curs_info);
+  export_offsetof(struct mman, pc_video_char_height);
   __normalize_e820(mm);
   __invert_memory(mm, pml4t);
 }

@@ -40,21 +40,15 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
     uint64_t vid_buf_phy = mm->pc_video_framebuffer;
     void *vid_buf = (void *)(BANE + vid_buf_phy);
     size_t vid_buf_sz = mm->pc_video_framebuffer_size;
-    /*
-     * Get the initial cursor position from the BIOS data area.  Also get
-     * the height (in scan lines) of each character; this is used to set the
-     * cursor shape.
-     */
-    typedef struct {
-      unsigned char col, row;
-    } bios_curs_pos_t;
-    bios_curs_pos_t pos = *(bios_curs_pos_t *)(BANE + 0x0450ull);
-    uint8_t chr_ht, chr_ht_hi, chr_wid;
+    unsigned short starty = mm->pc_video_curs_info.y,
+                   startx = mm->pc_video_curs_info.x;
+    uint8_t chr_ht, chr_wid;
     if (vid_type == PC_VIDEO_TEXT) {
-      chr_ht = *(uint8_t *)(BANE + 0x0485ull),
-      chr_ht_hi = *(uint8_t *)(BANE + 0x0486ull);
-      if (chr_ht_hi != 0 || chr_ht > 32 || chr_ht < 2)
+      unsigned short chr_ht_val = mm->pc_video_char_height;
+      if (chr_ht_val > 32 || chr_ht_val < 2)
         chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
+      else
+        chr_ht = chr_ht_val;
     } else
       chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
     chr_wid = VGA_ASSUME_CHAR_WIDTH_PX;
@@ -64,7 +58,7 @@ __attribute__((__constructor__)) static textstartup void _vga_init(void) {
      * Initialize our tty structure from the current screen geometry,
      * screen contents, cursor position, & character dimensions.
      */
-    _StartTty(&_vga_tty, vid_type, height, width, stride, pos.row, pos.col,
+    _StartTty(&_vga_tty, vid_type, height, width, stride, starty, startx,
               chr_ht, chr_wid, vid_buf, false);
   }
 }
