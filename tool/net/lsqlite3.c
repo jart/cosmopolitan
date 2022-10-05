@@ -119,7 +119,9 @@ static const char *const sqlite_meta      = ":sqlite3";
 static const char *const sqlite_vm_meta   = ":sqlite3:vm";
 static const char *const sqlite_bu_meta   = ":sqlite3:bu";
 static const char *const sqlite_ctx_meta  = ":sqlite3:ctx";
+static const char *const sqlite_ses_meta  = ":sqlite3:ses";
 static int sqlite_ctx_meta_ref;
+static int sqlite_ses_meta_ref;
 
 /*
 ** =======================================================
@@ -1730,6 +1732,104 @@ static int db_deserialize(lua_State *L) {
 
 /*
 ** =======================================================
+** Session functions
+** =======================================================
+*/
+
+typedef struct {
+    sqlite3_session *ses;
+} lsession;
+
+static lsession *lsqlite_makesession(lua_State *L, sqlite3_session *ses) {
+    lsession *lses = (lsession*)lua_newuserdata(L, sizeof(lsession));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_ses_meta_ref);
+    lua_setmetatable(L, -2);
+    lses->ses = ses;
+    return lses;
+}
+
+static lsession *lsqlite_getsession(lua_State *L, int index) {
+    return (lsession *)luaL_checkudata(L, index, sqlite_ses_meta);
+}
+
+static lsession *lsqlite_checksession(lua_State *L, int index) {
+    lsession *lses = lsqlite_getsession(L, index);
+    if (lses->ses == NULL) luaL_argerror(L, index, "invalid sqlite session");
+    return lses;
+}
+
+static int lsession_attach(lua_State *L) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    const char *zTab = luaL_optstring(L, 2, NULL);
+
+    if (sqlite3session_attach(lses->ses, zTab) != SQLITE_OK) {
+        lua_pushnil(L);
+    } else {
+        lua_pushboolean(L, 1);
+    }
+    return 1;
+}
+
+static int lsession_isempty(lua_State *L) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    lua_pushboolean(L, sqlite3session_isempty(lses->ses));
+    return 1;
+}
+
+static int lsession_changeset(lua_State *L) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    int size;
+    void *buf;
+    if (sqlite3session_changeset(lses->ses, &size, &buf) != SQLITE_OK) {
+        lua_pushnil(L);
+    } else {
+        lua_pushlstring(L, buf, size);
+        sqlite3_free(buf);
+    }
+    return 1;
+}
+
+static int lsession_tostring(lua_State *L) {
+    char buff[30];
+    lsession *lses = lsqlite_getsession(L, 1);
+    if (lses->ses == NULL)
+        strcpy(buff, "closed");
+    else
+        sprintf(buff, "%p", lses->ses);
+    lua_pushfstring(L, "sqlite session (%s)", buff);
+    return 1;
+}
+
+static int lsession_delete(lua_State *L) {
+    lsession *lses = lsqlite_getsession(L, 1);
+    if (lses->ses != NULL) {
+      sqlite3session_delete(lses->ses);
+      lses->ses = NULL;
+    }
+    return 0;
+}
+
+static int lsession_gc(lua_State *L) {
+    return lsession_delete(L);
+}
+
+static int db_create_session(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    const char *zDb = luaL_optstring(L, 2, "main");
+    sqlite3_session *ses;
+
+    if (sqlite3session_create(db->db, zDb, &ses) != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, sqlite3_errcode(db->db));
+        return 2;
+    }
+
+    (void)lsqlite_makesession(L, ses);
+    return 1;
+}
+
+/*
+** =======================================================
 ** General library functions
 ** =======================================================
 */
@@ -1859,6 +1959,19 @@ static const struct {
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
 
+    /* session constants */
+    SC(CHANGESETSTART_INVERT)
+    SC(CHANGESETAPPLY_NOSAVEPOINT)
+    SC(CHANGESETAPPLY_INVERT)
+    SC(CHANGESET_DATA)
+    SC(CHANGESET_NOTFOUND)
+    SC(CHANGESET_CONFLICT)
+    SC(CHANGESET_CONSTRAINT)
+    SC(CHANGESET_FOREIGN_KEY)
+    SC(CHANGESET_OMIT)
+    SC(CHANGESET_REPLACE)
+    SC(CHANGESET_ABORT)
+
     /* terminator */
     { NULL, 0 }
 };
@@ -1899,6 +2012,8 @@ static const luaL_Reg dblib[] = {
 
     {"serialize",           db_serialize            },
     {"deserialize",         db_deserialize          },
+
+    {"create_session",      db_create_session       },
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
@@ -1973,6 +2088,17 @@ static const luaL_Reg ctxlib[] = {
     {NULL, NULL}
 };
 
+static const luaL_Reg seslib[] = {
+    {"attach",                  lsession_attach                 },
+    {"changeset",               lsession_changeset              },
+    {"isempty",                 lsession_isempty                },
+    {"delete",                  lsession_delete                 },
+
+    {"__tostring",              lsession_tostring               },
+    {"__gc",                	lsession_gc                     },
+    {NULL, NULL}
+};
+
 static const luaL_Reg sqlitelib[] = {
     {"lversion",        lsqlite_lversion        },
     {"version",         lsqlite_version         },
@@ -2002,9 +2128,13 @@ LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     create_meta(L, sqlite_meta, dblib);
     create_meta(L, sqlite_vm_meta, vmlib);
     create_meta(L, sqlite_ctx_meta, ctxlib);
+    create_meta(L, sqlite_ses_meta, seslib);
 
     luaL_getmetatable(L, sqlite_ctx_meta);
     sqlite_ctx_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    luaL_getmetatable(L, sqlite_ses_meta);
+    sqlite_ses_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     /* register (local) sqlite metatable */
     luaL_register(L, "sqlite3", sqlitelib);
