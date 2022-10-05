@@ -66,6 +66,9 @@ char *nl_langinfo_l(nl_item item, locale_t loc)
 	int idx = item & 65535;
 	const char *str;
 
+	if (!loc)
+		return "";
+
 	if (item == CODESET) return loc->cat[LC_CTYPE] ? "UTF-8" : "ASCII";
 
 	/* _NL_LOCALE_NAME extension */
