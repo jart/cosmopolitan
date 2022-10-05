@@ -49,12 +49,12 @@ int main(int argc, char *argv[]) {
     printf("res = %d?\n", res);
     return -1;
   }
-  printf("Hello World! %.19Lg\n", atan2l(x, y));
+  printf("\e[92;44mHello World!\e[0m %.19Lg\n", atan2l(x, y));
 
   // read/print loop so machine doesn't reset on metal
   for (;;) {
     if ((res = readansi(0, buf, 16)) > 0) {
-      printf("got %`'.*s\r\n", res, buf);
+      printf("got \e[97m%`'.*s\e[0m\r\n", res, buf);
     }
   }
 }
