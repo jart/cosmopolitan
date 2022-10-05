@@ -1695,6 +1695,39 @@ static int db_gc(lua_State *L) {
     return 0;
 }
 
+static int db_serialize(lua_State *L) {
+    sdb *db = lsqlite_getdb(L, 1);
+    sqlite_int64 size = 0;
+
+    if (db->db == NULL) /* ignore closed databases */
+        return 0;
+    
+    char *buffer = (char *)sqlite3_serialize(db->db, "main", &size, 0);
+    if (buffer == NULL) /* ignore failed database serialization */
+        return 0;
+
+    lua_pushlstring(L, buffer, size);
+    free(buffer);
+    return 1;
+}
+
+static int db_deserialize(lua_State *L) {
+    sdb *db = lsqlite_getdb(L, 1);
+    size_t size = 0;
+
+    if (db->db == NULL) /* ignore closed databases */
+        return 0;
+
+
+    const char *buffer = luaL_checklstring(L, 2, &size);
+    if (buffer == NULL || size == 0) /* ignore empty database content */
+        return 0;
+
+    sqlite3_deserialize(db->db, "main", buffer, size, size, 0);
+    free(buffer);
+    return 0;
+}
+
 /*
 ** =======================================================
 ** General library functions
@@ -1863,6 +1896,9 @@ static const luaL_Reg dblib[] = {
     {"execute",             db_exec                 },
     {"close",               db_close                },
     {"close_vm",            db_close_vm             },
+
+    {"serialize",           db_serialize            },
+    {"deserialize",         db_deserialize          },
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
