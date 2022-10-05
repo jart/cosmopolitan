@@ -26,7 +26,7 @@ COSMOPOLITAN_C_START_
   (_kMemVista(0x6fdffffc0000, 0x5dffffc0000) - kMemtrackZiposStart)
 #define kMemtrackNsyncStart _kMemVista(0x6fc000040000, 0x5c000040000)
 #define kMemtrackNsyncSize  \
-  (_kMemVista(0x6fcffffc0000, 0x5cffffc0000 - kMemtrackNsyncStart)
+  (_kMemVista(0x6fcffffc0000, 0x5cffffc0000) - kMemtrackNsyncStart)
 #define kMemtrackGran       (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
 #define _kMemVista(NORMAL, WINVISTA) \
   (!IsWindows() || IsAtleastWindows8p1() ? NORMAL : WINVISTA)

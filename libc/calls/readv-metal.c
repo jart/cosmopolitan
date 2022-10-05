@@ -37,8 +37,8 @@ ssize_t sys_readv_metal(struct Fd *fd, const struct iovec *iov, int iovlen) {
        * escape sequences, in response to requests sent to it via write().
        * Read & return these if they are available.
        */
-      if (weaken(sys_readv_vga)) {
-        ssize_t res = weaken(sys_readv_vga)(fd, iov, iovlen);
+      if (_weaken(sys_readv_vga)) {
+        ssize_t res = _weaken(sys_readv_vga)(fd, iov, iovlen);
         if (res > 0) return res;
       }
       /* fall through */

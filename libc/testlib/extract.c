@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/io.h"
+#include "libc/calls/copyfd.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
