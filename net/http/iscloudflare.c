@@ -16,47 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/enum/threadaccess.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
-#include "libc/sysv/errfuns.h"
-
-static textwindows int sys_tkill_nt(int tid, int sig) {
-  int rc;
-  int64_t hand;
-  if ((hand = OpenThread(kNtThreadTerminate, false, tid))) {
-    if (TerminateThread(hand, 128 + sig)) {
-      rc = 0;
-    } else {
-      rc = __winerr();
-    }
-    CloseHandle(hand);
-  } else {
-    rc = esrch();
-  }
-  return rc;
-}
+#include "net/http/ip.h"
 
 /**
- * Kills thread.
+ * Returns true if `x` is Cloudflare IPv4 address.
  *
- * @param tid is thread id
- * @param sig does nothing on xnu
- * @return 0 on success, or -1 w/ errno
- * @asyncsignalsafe
+ * @see https://www.cloudflare.com/ips/ (April 8, 2021)
  */
-int tkill(int tid, int sig) {
-  int rc;
-  if (!IsWindows()) {
-    rc = sys_tkill(tid, sig, 0);
-  } else {
-    rc = sys_tkill_nt(tid, sig);
-  }
-  STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
-  return rc;
+bool IsCloudflareIp(uint32_t x) {
+  return (x & 0xfffffc00) == 0x6715f400 ||  // 103.21.244.0/22
+         (x & 0xfffffc00) == 0x6716c800 ||  // 103.22.200.0/22
+         (x & 0xfffffc00) == 0x671f0400 ||  // 103.31.4.0/22
+         (x & 0xfff80000) == 0x68100000 ||  // 104.16.0.0/13
+         (x & 0xfffc0000) == 0x68180000 ||  // 104.24.0.0/14
+         (x & 0xffffc000) == 0x6ca2c000 ||  // 108.162.192.0/18
+         (x & 0xfffffc00) == 0x83004800 ||  // 131.0.72.0/22
+         (x & 0xffffc000) == 0x8d654000 ||  // 141.101.64.0/18
+         (x & 0xfffe0000) == 0xa29e0000 ||  // 162.158.0.0/15
+         (x & 0xfff80000) == 0xac400000 ||  // 172.64.0.0/13
+         (x & 0xfffff000) == 0xadf53000 ||  // 173.245.48.0/20
+         (x & 0xfffff000) == 0xbc726000 ||  // 188.114.96.0/20
+         (x & 0xfffff000) == 0xbe5df000 ||  // 190.93.240.0/20
+         (x & 0xfffffc00) == 0xc5eaf000 ||  // 197.234.240.0/22
+         (x & 0xffff8000) == 0xc6298000;    // 198.41.128.0/17
 }

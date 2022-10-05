@@ -50,7 +50,6 @@
  * @restartable
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
-  int i;
   ssize_t rc;
 
   if (fd >= 0 && iovlen >= 0) {
@@ -72,6 +71,8 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     } else {
       rc = sys_writev_nt(fd, iov, iovlen);
     }
+  } else if (fd < 0) {
+    rc = ebadf();
   } else {
     rc = einval();
   }

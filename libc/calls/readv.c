@@ -46,8 +46,8 @@
  * @restartable
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
-  int i;
   ssize_t rc;
+
   if (fd >= 0 && iovlen >= 0) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
       rc = efault();
@@ -67,9 +67,12 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     } else {
       rc = sys_readv_nt(g_fds.p + fd, iov, iovlen);
     }
+  } else if (fd < 0) {
+    rc = ebadf();
   } else {
     rc = einval();
   }
+
 #if defined(SYSDEBUG) && _DATATRACE
   if (UNLIKELY(__strace > 0)) {
     if (rc == -1 && errno == EFAULT) {
@@ -81,5 +84,6 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     }
   }
 #endif
+
   return rc;
 }

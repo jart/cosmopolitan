@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/rlimit.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/errfuns.h"
 
@@ -43,6 +43,8 @@
  * - `RLIMIT_FSIZE` causes `SIGXFSZ` to sent to the process when the
  *   soft limit on file size is exceeded and the process is destroyed
  *   when the hard limit is exceeded. It works everywhere but Windows
+ *   and it also causes `EFBIG` to be returned by i/o functions after
+ *   the `SIGXFSZ` signal is delivered or ignored
  *
  * - `RLIMIT_NPROC` limits the number of simultaneous processes and it
  *   should work on all platforms except Windows. Please be advised it

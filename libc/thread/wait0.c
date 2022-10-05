@@ -100,4 +100,7 @@ void _wait0(const atomic_int *ctid) {
       _wait0_poll(&ts);
     }
   }
+  if (IsOpenbsd()) {
+    sched_yield();  // TODO(jart): whhhy?
+  }
 }

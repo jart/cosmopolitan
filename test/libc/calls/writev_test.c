@@ -20,12 +20,15 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sysv/consts/auxv.h"
+#include "libc/sysv/consts/iov.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/testlib.h"
 
@@ -33,6 +36,32 @@ char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
+}
+
+TEST(writev, negativeFd_ebadf) {
+  ASSERT_SYS(EBADF, -1, writev(-1, 0, 0));
+}
+
+TEST(writev, negativeCount_einval) {
+  ASSERT_SYS(EINVAL, -1, writev(1, 0, -1));
+}
+
+TEST(writev, negative_einvalOrEfault) {
+  struct iovec v[] = {{"", -1}};
+  ASSERT_EQ(-1, writev(1, v, 1));
+  ASSERT_TRUE(errno == EINVAL || errno == EFAULT);
+  errno = 0;
+}
+
+TEST(writev, exceedsIovMax_einval) {
+  if (IsWindows()) return;  // it's complicated
+  int i, n = IOV_MAX + 1;
+  struct iovec *v = _gc(malloc(sizeof(struct iovec) * n));
+  for (i = 0; i < n; ++i) {
+    v[i].iov_base = "x";
+    v[i].iov_len = 1;
+  }
+  ASSERT_SYS(EINVAL, -1, writev(1, v, n));
 }
 
 TEST(writev, test) {

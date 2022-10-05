@@ -20,12 +20,80 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sock/internal.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+
+char testlib_enable_tmp_setup_teardown;
+
+TEST(write, notOpen_ebadf) {
+  ASSERT_SYS(EBADF, -1, write(-1, 0, 0));
+  ASSERT_SYS(EBADF, -1, write(+3, 0, 0));
+}
+
+TEST(write, readOnlyFd_ebadf) {
+  ASSERT_SYS(0, 0, touch("foo", 0644));
+  ASSERT_SYS(0, 3, open("foo", O_RDONLY));
+  ASSERT_SYS(EBADF, -1, write(3, "x", 1));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+TEST(write, badMemory_efault) {
+  ASSERT_SYS(EFAULT, -1, write(1, 0, 1));
+  if (!IsAsan()) return;
+  ASSERT_SYS(EFAULT, -1, write(1, (void *)1, 1));
+}
+
+TEST(write, brokenPipe_sigpipeIgnored_returnsEpipe) {
+  int fds[2];
+  SPAWN(fork);
+  signal(SIGPIPE, SIG_IGN);
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 1, write(4, "x", 1));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(EPIPE, -1, write(4, "x", 1));
+  ASSERT_SYS(0, 0, close(4));
+  EXITS(0);
+}
+
+TEST(write, brokenPipe_sigpipeBlocked_returnsEpipe) {
+  int fds[2];
+  sigset_t mask;
+  SPAWN(fork);
+  signal(SIGPIPE, SIG_DFL);
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGPIPE);
+  sigprocmask(SIG_BLOCK, &mask, 0);
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_SYS(0, 0, close(3));
+  ASSERT_SYS(EPIPE, -1, write(4, "x", 1));
+  ASSERT_SYS(0, 0, close(4));
+  EXITS(0);
+}
+
+TEST(write, rlimitFsizeExceeded_raisesEfbig) {
+  if (IsWindows()) return;  // not supported
+  struct rlimit rl = {1, 10};
+  SPAWN(fork);
+  signal(SIGXFSZ, SIG_IGN);
+  ASSERT_SYS(0, 0, setrlimit(RLIMIT_FSIZE, &rl));
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(0, 1, write(3, "x", 1));
+  ASSERT_SYS(EFBIG, -1, write(3, "x", 1));
+  ASSERT_SYS(0, 0, close(3));
+  EXITS(0);
+}
 
 static long Write(long fd, const void *data, unsigned long size) {
   long ax, di, si, dx;

@@ -34,12 +34,27 @@
  * This function changes the current file position. For documentation
  * on file position behaviors and gotchas, see the lseek() function.
  *
- * @param fd is something open()'d earlier
+ * @param fd is open file descriptor
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.
- * @param size in range [1..0x7ffff000] is reasonable
  * @return [1..size] bytes on success, or -1 w/ errno; noting zero is
  *     impossible unless size was passed as zero to do an error check
- * @see read(), pwrite(), writev(), SIGPIPE
+ * @raise EBADF if `fd` is negative or not an open file descriptor
+ * @raise EBADF if `fd` wasn't opened with `O_WRONLY` or `O_RDWR`
+ * @raise EPIPE if `fd` is a pipe whose other reader end was closed,
+ *     after the `SIGPIPE` signal was delivered, blocked, or ignored
+ * @raise EFBIG if `RLIMIT_FSIZE` soft limit was exceeded, after the
+ *     `SIGXFSZ` signal was either delivered, blocked, or ignored
+ * @raise EFAULT if `size` is nonzero and `buf` points to bad memory
+ * @raise EPERM if pledge() is in play without the stdio promise
+ * @raise ENOSPC if device containing `fd` is full
+ * @raise EIO if low-level i/o error happened
+ * @raise EINTR if signal was delivered instead
+ * @raise EAGAIN if `O_NONBLOCK` is in play and write needs to block
+ * @raise ENOBUFS if kernel lacked internal resources; which FreeBSD
+ *     and XNU say could happen with sockets, and OpenBSD documents it
+ *     as a general possibility; whereas other system don't specify it
+ * @raise ENXIO is specified only by POSIX and XNU when a request is
+ *     made of a nonexistent device or outside device capabilities
  * @asyncsignalsafe
  * @restartable
  * @vforksafe
@@ -47,7 +62,7 @@
 ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;
   if (fd >= 0) {
-    if (IsAsan() && !__asan_is_valid(buf, size)) {
+    if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
       rc = _weaken(__zipos_write)(
@@ -63,7 +78,7 @@ ssize_t write(int fd, const void *buf, size_t size) {
       rc = sys_writev_nt(fd, &(struct iovec){buf, size}, 1);
     }
   } else {
-    rc = einval();
+    rc = ebadf();
   }
   DATATRACE("write(%d, %#.*hhs%s, %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
             buf, rc > 40 ? "..." : "", size, rc);

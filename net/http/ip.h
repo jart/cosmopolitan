@@ -39,6 +39,7 @@ bool IsMulticastIp(uint32_t);
 bool IsAnonymousIp(uint32_t);
 int CategorizeIp(uint32_t);
 const char *GetIpCategoryName(int);
+bool IsCloudflareIp(uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -488,13 +488,11 @@ static int CloneLinux(int (*func)(void *arg, int tid), char *stk, size_t stksz,
 // COSMOPOLITAN
 
 /**
- * Creates thread without malloc being linked, e.g.
+ * Creates thread without malloc being linked.
  *
- *     int worker(void *arg) {
- *       return 0;
- *     }
+ * If you use clone() you're on you're own, e.g.
  *
- *     // NOTE: See _mktls() for _Thread_local support.
+ *     int worker(void *arg) { return 0; }
  *     struct CosmoTib tib = {.tib_self = &tib, .tib_tid = -1};
  *     char *stk = _mapstack();
  *     tid = clone(worker, stk, GetStackSize() - 16,

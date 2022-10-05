@@ -41,7 +41,6 @@
  * @param size in range [1..0x7ffff000] is reasonable
  * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
  *     exception of size==0, in which case return zero means no error
- * @see write(), pread(), readv()
  * @asyncsignalsafe
  * @restartable
  * @vforksafe
@@ -49,7 +48,7 @@
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;
   if (fd >= 0) {
-    if (IsAsan() && !__asan_is_valid(buf, size)) {
+    if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
     } else if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
       rc = _weaken(__zipos_read)(
@@ -65,7 +64,7 @@ ssize_t read(int fd, void *buf, size_t size) {
       rc = sys_readv_nt(g_fds.p + fd, &(struct iovec){buf, size}, 1);
     }
   } else {
-    rc = einval();
+    rc = ebadf();
   }
   DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
             buf, rc > 40 ? "..." : "", size, rc);
