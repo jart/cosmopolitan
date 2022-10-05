@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/describentoverlapped.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/files.h"
-#include "libc/nt/struct/overlapped.h"
+#include "libc/str/str.h"
 
 __msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
 
@@ -35,10 +37,13 @@ bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
                     uint32_t nNumberOfBytesToUnlockHigh,
                     struct NtOverlapped *lpOverlapped) {
   bool32 ok;
+  STRACE("UnlockFileEx(%ld, %#x, %'zu, %s) → ...", hFile, dwReserved,
+         (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
+         DescribeNtOverlapped(lpOverlapped));
   ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
                           nNumberOfBytesToUnlockHigh, lpOverlapped);
   if (!ok) __winerr();
-  STRACE("UnlockFileEx(%ld, %#x, %'zu, %s) → %hhhd% m", hFile, dwReserved,
+  STRACE("UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
          (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
          DescribeNtOverlapped(lpOverlapped), ok);
   return ok;
