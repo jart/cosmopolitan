@@ -75,6 +75,16 @@
  */
 #undef VGA_PERSNICKETY_STATUS
 
+/* Flags which are passed to _StartTty(). */
+#define kTtyAllocWcs  0x01              /* allocate Unicode character array
+                                           (if VGA_USE_WCS also defined) */
+#define kTtyKlog      0x02              /* the system might be in an abnormal
+                                           state, & we are setting up the tty
+                                           to show system messages */
+
+/**
+ * Flags for Tty::pr.  These govern properties of individual character cells.
+ */
 #define kTtyFg      0x0001
 #define kTtyBg      0x0002
 #define kTtyBold    0x0004
@@ -89,6 +99,10 @@
 #define kTtyStrike  0x0800
 #define kTtyConceal 0x1000
 
+/**
+ * Flags for Tty::conf.  These govern the current state of the teletypewriter
+ * as a whole.
+ */
 #define kTtyBell        0x001
 #define kTtyRedzone     0x002
 #define kTtyNocursor    0x004
@@ -181,14 +195,15 @@ struct Tty {
    * Canvas to draw into.  In text modes, this is simply the frame buffer
    * itself.  In graphics modes, this should be separate from the frame
    * buffer, & possibly allocated from main memory; we must arrange to
-   * update the frame buffer from the canvas every now & then.  In general
-   * the canvas's pixel format — given by _TtyCanvasType() — may be
-   * different from the frame buffer's.
+   * update the frame buffer from the canvas every now & then.
+   *
+   * During normal operation, the canvas's pixel format is given by
+   * _TtyCanvasType(), & may be different from the frame buffer's.
    */
   char *canvas;
   /**
    * Which portions of the canvas have been updated & should later be drawn
-   * to screen with tty->update().
+   * to screen with Tty::update().
    */
   unsigned short updy1, updx1, updy2, updx2;
 #ifdef VGA_USE_WCS
@@ -219,6 +234,15 @@ forceinline unsigned char _TtyCanvasType(struct Tty *tty) {
   return tty->type == PC_VIDEO_TEXT ? PC_VIDEO_TEXT : PC_VIDEO_BGRX8888;
 }
 
+forceinline unsigned short _TtyGetY(struct Tty *tty) {
+  return tty->y;
+}
+
+forceinline unsigned short _TtyGetX(struct Tty *tty) {
+  return tty->x;
+}
+
+/* Routines that implement normal graphical console output. */
 void _TtyBgrxUpdate(struct Tty *);
 void _TtyRgbxUpdate(struct Tty *);
 void _TtyBgr565Update(struct Tty *);
@@ -228,9 +252,25 @@ void _TtyGraphEraseLineCells(struct Tty *, size_t, size_t, size_t);
 void _TtyGraphMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
                                           size_t);
 
+/*
+ * Routines that implement emergency or system console output in graphical
+ * video modes.
+ */
+void _TtyKlog16Update(struct Tty *);
+void _TtyKlog16DrawChar(struct Tty *, size_t, size_t, wchar_t);
+void _TtyKlog16EraseLineCells(struct Tty *, size_t, size_t, size_t);
+void _TtyKlog16MoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
+                                           size_t);
+void _TtyKlog32Update(struct Tty *);
+void _TtyKlog32DrawChar(struct Tty *, size_t, size_t, wchar_t);
+void _TtyKlog32EraseLineCells(struct Tty *, size_t, size_t, size_t);
+void _TtyKlog32MoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
+                                           size_t);
+
+/* High-level teletypewriter routines. */
 void _StartTty(struct Tty *, unsigned char, unsigned short, unsigned short,
                unsigned short, unsigned short, unsigned short,
-               unsigned char, unsigned char, void *, bool);
+               unsigned char, unsigned char, void *, unsigned);
 ssize_t _TtyRead(struct Tty *, void *, size_t);
 ssize_t _TtyWrite(struct Tty *, const void *, size_t);
 ssize_t _TtyWriteInput(struct Tty *, const void *, size_t);
@@ -246,6 +286,8 @@ void _TtySetX(struct Tty *, unsigned short);
 extern const uint8_t _vga_font_default_direct[95][13];
 extern struct Tty _vga_tty;
 
+void _vga_reinit(struct Tty *, unsigned short, unsigned short, unsigned);
+void _klog_vga(const char *, size_t);
 ssize_t sys_readv_vga(struct Fd *, const struct iovec *, int);
 ssize_t sys_writev_vga(struct Fd *, const struct iovec *, int);
 

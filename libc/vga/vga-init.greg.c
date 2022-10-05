@@ -31,34 +31,40 @@
 
 struct Tty _vga_tty;
 
+void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
+                 unsigned init_flags) {
+  struct mman *mm = (struct mman *)(BANE + 0x0500);
+  unsigned char vid_type = mm->pc_video_type;
+  unsigned short height = mm->pc_video_height, width = mm->pc_video_width,
+                 stride = mm->pc_video_stride;
+  uint64_t vid_buf_phy = mm->pc_video_framebuffer;
+  void *vid_buf = (void *)(BANE + vid_buf_phy);
+  size_t vid_buf_sz = mm->pc_video_framebuffer_size;
+  uint8_t chr_ht, chr_wid;
+  if (vid_type == PC_VIDEO_TEXT) {
+    unsigned short chr_ht_val = mm->pc_video_char_height;
+    if (chr_ht_val > 32 || chr_ht_val < 2)
+      chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
+    else
+      chr_ht = chr_ht_val;
+  } else
+    chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
+  chr_wid = VGA_ASSUME_CHAR_WIDTH_PX;
+  /* Make sure the video buffer is mapped into virtual memory. */
+  __invert_memory_area(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz, PAGE_RW);
+  /*
+   * Initialize our tty structure from the current screen geometry, screen
+   * contents, cursor position, & character dimensions.
+   */
+  _StartTty(tty, vid_type, height, width, stride, starty, startx,
+            chr_ht, chr_wid, vid_buf, init_flags);
+}
+
 __attribute__((__constructor__)) static textstartup void _vga_init(void) {
   if (IsMetal()) {
     struct mman *mm = (struct mman *)(BANE + 0x0500);
-    unsigned char vid_type = mm->pc_video_type;
-    unsigned short height = mm->pc_video_height, width = mm->pc_video_width,
-                   stride = mm->pc_video_stride;
-    uint64_t vid_buf_phy = mm->pc_video_framebuffer;
-    void *vid_buf = (void *)(BANE + vid_buf_phy);
-    size_t vid_buf_sz = mm->pc_video_framebuffer_size;
     unsigned short starty = mm->pc_video_curs_info.y,
                    startx = mm->pc_video_curs_info.x;
-    uint8_t chr_ht, chr_wid;
-    if (vid_type == PC_VIDEO_TEXT) {
-      unsigned short chr_ht_val = mm->pc_video_char_height;
-      if (chr_ht_val > 32 || chr_ht_val < 2)
-        chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
-      else
-        chr_ht = chr_ht_val;
-    } else
-      chr_ht = VGA_ASSUME_CHAR_HEIGHT_PX;
-    chr_wid = VGA_ASSUME_CHAR_WIDTH_PX;
-    /* Make sure the video buffer is mapped into virtual memory. */
-    __invert_memory_area(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz, PAGE_RW);
-    /*
-     * Initialize our tty structure from the current screen geometry,
-     * screen contents, cursor position, & character dimensions.
-     */
-    _StartTty(&_vga_tty, vid_type, height, width, stride, starty, startx,
-              chr_ht, chr_wid, vid_buf, false);
+    _vga_reinit(&_vga_tty, starty, startx, 0);
   }
 }

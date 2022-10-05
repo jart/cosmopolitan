@@ -26,28 +26,69 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/newbie.h"
 #include "libc/macros.internal.h"
+#include "libc/runtime/mman.internal.h"
 #include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
-/**
- * @fileoverview Instantiation of routines for normal console output in
- * graphical video modes.
+/*
+ * @fileoverview Instantiation of routines for emergency or system console
+ * output in graphical video modes.
  *
  * @see libc/vga/tty-graph.inc
  */
 
-#undef KLOGTTY
+#define KLOGTTY
 
-#define COLOR          TtyCanvasColor
-#define BPP            32
-#define MAPCOLOR       TtyGraphMapColor
-#define DIRTY          TtyGraphDirty
-#undef UPDATE
-#define RESETDIRTY     TtyGraphResetDirty
-#define DRAWBITMAP     TtyGraphDrawBitmap
-#define FILLRECT       TtyGraphFillRect
-#define MOVERECT       TtyGraphMoveRect
-#define DRAWCHAR       _TtyGraphDrawChar
-#define ERASELINECELLS _TtyGraphEraseLineCells
-#define MOVELINECELLS  _TtyGraphMoveLineCells
+/* Instantiate output routines for 16-bit pixel formats. */
+#define COLOR          uint16_t
+#define BPP            16
+#define MAPCOLOR       TtyKlog16MapColor
+#define DIRTY          TtyKlog16Dirty
+#define UPDATE         _TtyKlog16Update
+#define RESETDIRTY     TtyKlog16ResetDirty
+#define DRAWBITMAP     TtyKlog16DrawBitmap
+#define FILLRECT       TtyKlog16FillRect
+#define MOVERECT       TtyKlog16MoveRect
+#define DRAWCHAR       _TtyKlog16DrawChar
+#define ERASELINECELLS _TtyKlog16EraseLineCells
+#define MOVELINECELLS  _TtyKlog16MoveLineCells
 #include "libc/vga/tty-graph.inc"
+
+#undef COLOR
+#undef BPP
+#undef MAPCOLOR
+#undef BG
+#undef DIRTY
+#undef UPDATE
+#undef RESETDIRTY
+#undef DRAWBITMAP
+#undef FILLRECT
+#undef MOVERECT
+#undef DRAWCHAR
+#undef ERASELINECELLS
+#undef MOVELINECELLS
+
+/* Instantiate output routines for 32-bit pixel formats. */
+#define COLOR          uint32_t
+#define BPP            32
+#define MAPCOLOR       TtyKlog32MapColor
+#define DIRTY          TtyKlog32Dirty
+#define UPDATE         _TtyKlog32Update
+#define RESETDIRTY     TtyKlog32ResetDirty
+#define DRAWBITMAP     TtyKlog32DrawBitmap
+#define FILLRECT       TtyKlog32FillRect
+#define MOVERECT       TtyKlog32MoveRect
+#define DRAWCHAR       _TtyKlog32DrawChar
+#define ERASELINECELLS _TtyKlog32EraseLineCells
+#define MOVELINECELLS  _TtyKlog32MoveLineCells
+#include "libc/vga/tty-graph.inc"
+
+static unsigned short klog_y = 0, klog_x = 0;
+
+privileged void _klog_vga(const char *b, size_t n) {
+  struct Tty tty;
+  _vga_reinit(&tty, klog_y, klog_x, kTtyKlog);
+  _TtyWrite(&tty, b, n);
+  klog_y = _TtyGetY(&tty);
+  klog_x = _TtyGetX(&tty);
+}
