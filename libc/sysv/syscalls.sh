@@ -71,6 +71,7 @@ scall	sys_dup			0x0290290292029020	globl hidden
 scall	sys_dup2		0x05a05a05a205a021	globl hidden
 scall	sys_pause		0xfffffffffffff022	globl hidden
 scall	sys_nanosleep		0x1ae05b0f0ffff023	globl hidden
+scall	sys_clock_nanosleep	0x1ddfff0f4ffff0e6	globl hidden
 scall	sys_getitimer		0x1aa0460562056024	globl hidden
 scall	sys_setitimer		0x1a90450532053026	globl hidden
 scall	sys_alarm		0xfffffffffffff025	globl hidden
@@ -264,7 +265,6 @@ scall	sys_ktimer_settime	0xffffff0edfffffff	globl # no wrapper
 scall	sys_clock_settime	0x1ac0580e9ffff0e3	globl # no wrapper
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	globl hidden
-scall	sys_clock_nanosleep	0x1ddfff0f4ffff0e6	globl # no wrapper
 scall	sys_tgkill		0xfffffffffffff0ea	globl hidden
 scall	sys_mbind		0xfffffffffffff0ed	globl # no wrapper; numa numa yeah
 scall	set_mempolicy		0xfffffffffffff0ee	globl

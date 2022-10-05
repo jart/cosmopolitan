@@ -39,8 +39,8 @@ int sys_utimensat(int dirfd, const char *path, const struct timespec ts[2],
       if (rc == -1 && errno == ENOSYS && path) {
         errno = olderr;
         if (ts) {
-          tv[0] = _timespec2timeval(ts[0]);
-          tv[1] = _timespec2timeval(ts[1]);
+          tv[0] = _timespec_totimeval(ts[0]);
+          tv[1] = _timespec_totimeval(ts[1]);
           rc = sys_utimes(path, tv);
         } else {
           rc = sys_utimes(path, NULL);

@@ -20,14 +20,24 @@
 #include "libc/limits.h"
 
 /**
- * Converts timespec interval to microseconds.
+ * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
  */
-int64_t _timespec_tomicros(struct timespec x) {
+int64_t _timespec_tomicros(struct timespec ts) {
   int64_t us;
-  if (!__builtin_mul_overflow(x.tv_sec, 1000000ul, &us) &&
-      !__builtin_add_overflow(us, x.tv_nsec / 1000, &us)) {
+  // reduce precision from nanos to micros
+  if (ts.tv_nsec <= 999999000) {
+    ts.tv_nsec = (ts.tv_nsec + 999) / 1000;
+  } else {
+    ts.tv_nsec = 0;
+    if (ts.tv_sec < INT64_MAX) {
+      ts.tv_sec += 1;
+    }
+  }
+  // convert to scalar result
+  if (!__builtin_mul_overflow(ts.tv_sec, 1000000ul, &us) &&
+      !__builtin_add_overflow(us, ts.tv_nsec, &us)) {
     return us;
-  } else if (x.tv_sec < 0) {
+  } else if (ts.tv_sec < 0) {
     return INT64_MIN;
   } else {
     return INT64_MAX;

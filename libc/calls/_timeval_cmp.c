@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/time/time.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Sleeps for particular number of microseconds.
- *
- * @return 0 on success, or -1 w/ errno
- * @raise EINTR if a signal was delivered while sleeping
- * @see clock_nanosleep()
- * @norestart
+ * Compares microseconds timestamps.
  */
-int usleep(uint32_t micros) {
-  struct timespec ts;
-  ts = _timespec_frommicros(micros);
-  return nanosleep(&ts, 0);
+int _timeval_cmp(struct timeval a, struct timeval b) {
+  int cmp;
+  if (!(cmp = (a.tv_sec > b.tv_sec) - (a.tv_sec < b.tv_sec))) {
+    cmp = (a.tv_usec > b.tv_usec) - (a.tv_usec < b.tv_usec);
+  }
+  return cmp;
 }

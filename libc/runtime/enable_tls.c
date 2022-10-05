@@ -111,10 +111,10 @@ privileged void __enable_tls(void) {
     // malloc() being linked, which links _mapanon().  otherwise
     // if you exceed this, you need to STATIC_YOINK("_mapanon").
     // please note that it's probably too early to call calloc()
-    assert(_weaken(_mapanon));
+    _npassert(_weaken(_mapanon));
     siz = ROUNDUP(siz, FRAMESIZE);
     mem = _weaken(_mapanon)(siz);
-    assert(mem);
+    _npassert(mem);
   }
   if (IsAsan()) {
     // poison the space between .tdata and .tbss
@@ -140,7 +140,7 @@ privileged void __enable_tls(void) {
   int ax, dx;
   if (IsWindows()) {
     __tls_index = __imp_TlsAlloc();
-    assert(0 <= __tls_index && __tls_index < 64);
+    _npassert(0 <= __tls_index && __tls_index < 64);
     asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tib));
   } else if (IsFreebsd()) {
     sys_enable_tls(AMD64_SET_FSBASE, tib);

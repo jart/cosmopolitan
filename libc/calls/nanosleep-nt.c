@@ -20,8 +20,9 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
@@ -52,10 +53,7 @@ textwindows int sys_nanosleep_nt(const struct timespec *req,
   }
 
   // convert timespec to milliseconds
-  if (__builtin_mul_overflow(req->tv_sec, 1000, &ms) ||
-      __builtin_add_overflow(ms, (req->tv_nsec + 999999) / 1000000, &ms)) {
-    ms = INT64_MAX;
-  }
+  ms = _timespec_tomillis(*req);
 
   for (toto = ms;;) {
 

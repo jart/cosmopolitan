@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,19 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/time/time.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Sleeps for particular number of microseconds.
- *
- * @return 0 on success, or -1 w/ errno
- * @raise EINTR if a signal was delivered while sleeping
- * @see clock_nanosleep()
- * @norestart
+ * Returns true if timeval `x` is greater than `y`.
  */
-int usleep(uint32_t micros) {
-  struct timespec ts;
-  ts = _timespec_frommicros(micros);
-  return nanosleep(&ts, 0);
+bool _timeval_gt(struct timeval x, struct timeval y) {
+  if (x.tv_sec > y.tv_sec) {
+    return true;
+  }
+  if (x.tv_sec == y.tv_sec) {
+    if (x.tv_usec > y.tv_usec) {
+      return true;
+    }
+  }
+  return false;
 }

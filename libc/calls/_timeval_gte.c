@@ -16,30 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
-#include "libc/fmt/conv.h"
-
-// we don't want instrumentation because:
-// - nanosleep() depends on this and ftrace can take microsecs
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Converts `struct timespec` to `struct timeval`.
- *
- * This divides ts.tv_nsec by 1000 with upward rounding and overflow
- * handling. Your ts.tv_nsec must be on the interval `[0,1000000000)`
- * otherwise `{-1, -1}` is returned.
- *
- * @return converted timeval whose tv_usec will be -1 on error
+ * Checks if 𝑥 ≥ 𝑦.
  */
-noinstrument struct timeval _timespec2timeval(struct timespec ts) {
-  if (0 <= ts.tv_nsec && ts.tv_nsec < 1000000000) {
-    if (0 <= ts.tv_nsec && ts.tv_nsec < 1000000000 - 999) {
-      return (struct timeval){ts.tv_sec, (ts.tv_nsec + 999) / 1000};
-    } else {
-      return (struct timeval){ts.tv_sec + 1, 0};
-    }
-  } else {
-    return (struct timeval){-1, -1};
-  }
+bool _timeval_gte(struct timeval x, struct timeval y) {
+  if (x.tv_sec > y.tv_sec) return true;
+  if (x.tv_sec < y.tv_sec) return false;
+  return x.tv_usec >= y.tv_usec;
 }

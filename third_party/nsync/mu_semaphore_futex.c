@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
@@ -30,12 +31,16 @@ Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
 // clang-format off
 
+#ifdef TINY
+#define ASSERT(x) _unassert(x)
+#else
+#define ASSERT(x) _npassert(x)
+#endif
+
 /* Check that atomic operations on nsync_atomic_uint32_ can be applied to int. */
 static const int assert_int_size = 1 /
 	(sizeof (assert_int_size) == sizeof (uint32_t) &&
 	 sizeof (nsync_atomic_uint32_) == sizeof (uint32_t));
-
-#define ASSERT(x) do { if (!(x)) { *(volatile int *)0 = 0; } } while (0)
 
 struct futex {
 	int i;  /* lo half=count; hi half=waiter count */

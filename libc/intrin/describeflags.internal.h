@@ -50,6 +50,7 @@ const char *DescribeRemapFlags(char[48], int);
 const char *DescribeRlimitName(char[20], int);
 const char *DescribeSchedPolicy(char[48], int);
 const char *DescribeSeccompOperation(int);
+const char *DescribeSleepFlags(char[16], int);
 const char *DescribeSockLevel(char[12], int);
 const char *DescribeSockOptname(char[32], int, int);
 const char *DescribeSocketFamily(char[12], int);
@@ -92,6 +93,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeRemapFlags(x)        DescribeRemapFlags(alloca(48), x)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
+#define DescribeSleepFlags(x)        DescribeSleepFlags(alloca(16), x)
 #define DescribeSockLevel(x)         DescribeSockLevel(alloca(12), x)
 #define DescribeSockOptname(x, y)    DescribeSockOptname(alloca(32), x, y)
 #define DescribeSocketFamily(x)      DescribeSocketFamily(alloca(12), x)

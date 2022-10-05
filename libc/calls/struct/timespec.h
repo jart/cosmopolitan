@@ -10,6 +10,7 @@ struct timespec {
 
 int clock_getres(int, struct timespec *);
 int clock_gettime(int, struct timespec *);
+int clock_nanosleep(int, int, const struct timespec *, struct timespec *);
 int futimens(int, const struct timespec[2]);
 int nanosleep(const struct timespec *, struct timespec *);
 int sys_futex(int *, int, int, const struct timespec *, int *);

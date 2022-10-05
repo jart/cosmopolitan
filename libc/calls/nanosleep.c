@@ -23,25 +23,23 @@
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
 
 /**
- * Sleeps for a particular amount of time.
+ * Sleeps for relative amount of time.
  *
  * @param req is the duration of time we should sleep
  * @param rem if non-NULL will receive the amount of time that wasn't
  *     slept because a signal was delivered. If no signal's delivered
  *     then this value will be set to `{0, 0}`. It's also fine to set
- *     this value to the same pointer as `req`.
+ *     this value to the same pointer as `req`
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
  * @raise EINTR if a signal was delivered, and `rem` is updated
  * @raise EFAULT if `req` is NULL or `req` / `rem` is a bad pointer
  * @raise ENOSYS on bare metal
- * @note POSIX.1 specifies nanosleep() measures against `CLOCK_REALTIME`
- *     however Linux measures uses  `CLOCK_MONOTONIC`. This shouldn't
- *     matter, since POSIX.1 further specifies that discontinuous
- *     changes in `CLOCK_REALTIME` shouldn't impact nanosleep()
+ * @see clock_nanosleep()
  * @norestart
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {
@@ -53,7 +51,9 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
   } else if (req->tv_sec < 0 ||
              !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
     rc = einval();
-  } else if (!IsWindows() && !IsMetal() && !IsXnu()) {
+  } else if (IsLinux()) {
+    rc = sys_clock_nanosleep(CLOCK_REALTIME, 0, req, rem);
+  } else if (IsOpenbsd() || IsFreebsd() || IsNetbsd()) {
     rc = sys_nanosleep(req, rem);
   } else if (IsXnu()) {
     rc = sys_nanosleep_xnu(req, rem);

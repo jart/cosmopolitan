@@ -43,7 +43,6 @@ size_t wcsxfrm(wchar_t *, const wchar_t *, size_t);
 │ cosmopolitan § conversion » time                                         ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-struct timeval _timespec2timeval(struct timespec);
 int64_t DosDateTimeToUnix(unsigned, unsigned) libcesque nosideeffect;
 struct timeval WindowsTimeToTimeVal(int64_t) libcesque nosideeffect;
 struct timespec WindowsTimeToTimeSpec(int64_t) libcesque nosideeffect;

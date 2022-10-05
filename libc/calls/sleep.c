@@ -28,7 +28,7 @@
  *     was delivered, in which case the errno condition is ignored, and
  *     this function shall return the number of unslept seconds rounded
  *     using the ceiling function
- * @see nanosleep(), usleep()
+ * @see clock_nanosleep()
  * @asyncsignalsafe
  * @norestart
  */

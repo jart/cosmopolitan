@@ -1,5 +1,6 @@
 #ifndef NSYNC_COMMON_H_
 #define NSYNC_COMMON_H_
+#include "libc/assert.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/cv.h"
@@ -220,12 +221,12 @@ static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
 #define WAITER_IN_USE 0x2 /* waiter in use by a thread */
 
 #define CONTAINER(t_, f_, p_) ((t_ *)(((char *)(p_)) - offsetof(t_, f_)))
-#define ASSERT(x)             \
-  do {                        \
-    if (!(x)) {               \
-      *(volatile int *)0 = 0; \
-    }                         \
-  } while (0)
+
+#ifdef TINY
+#define ASSERT(x) _unassert(x)
+#else
+#define ASSERT(x) _npassert(x)
+#endif
 
 /* Return a pointer to the nsync_waiter_s containing nsync_dll_element_ *e. */
 #define DLL_NSYNC_WAITER(e)                 \

@@ -34,11 +34,11 @@
  * @raise EPERM if terminal is already controlling another sid
  */
 int login_tty(int fd) {
-  int rc;
+  int i, rc;
   if (IsLinux() || IsBsd()) {
     setsid();
     if (!sys_ioctl(fd, TIOCSCTTY, 0)) {
-      for (int i = 0; i < 3; ++i) dup2(fd, i);
+      for (i = 0; i < 3; ++i) dup2(fd, i);
       if (fd > 2) close(fd);
       rc = 0;
     } else {

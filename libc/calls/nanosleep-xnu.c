@@ -19,40 +19,34 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timeval.internal.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
 #include "libc/sock/internal.h"
-#include "libc/sysv/consts/clock.h"
 
+// nanosleep() on xnu: a bloodbath of a polyfill
+// consider using clock_nanosleep(TIMER_ABSTIME)
 int sys_nanosleep_xnu(const struct timespec *req, struct timespec *rem) {
   int rc;
-  axdx_t axdx;
-  struct timeval tv;
-  struct timespec begin, end, elapsed;
-
-  if (rem) {
-    if (sys_clock_gettime_xnu(CLOCK_MONOTONIC, &begin) == -1) {
-      return -1;
-    }
-  }
-
-  tv = _timespec2timeval(*req);
-  rc = sys_select(0, 0, 0, 0, &tv);
-
+  struct timeval wt, t1, t2, td;
+  if (rem) sys_gettimeofday_xnu(&t1, 0, 0);
+  wt = _timespec_totimeval(*req);  // rounds up
+  rc = sys_select(0, 0, 0, 0, &wt);
   if (rem) {
     if (!rc) {
       rem->tv_sec = 0;
       rem->tv_nsec = 0;
     } else if (rc == -1 && errno == EINTR) {
-      sys_clock_gettime_xnu(CLOCK_MONOTONIC, &end);
-      elapsed = _timespec_sub(end, begin);
-      *rem = _timespec_sub(*req, elapsed);
-      if (rem->tv_sec < 0) {
+      // xnu select() doesn't modify timeout
+      // so we need, yet another system call
+      sys_gettimeofday_xnu(&t2, 0, 0);
+      td = _timeval_sub(t2, t1);
+      if (_timeval_gte(td, wt)) {
         rem->tv_sec = 0;
         rem->tv_nsec = 0;
+      } else {
+        *rem = _timeval_totimespec(_timeval_sub(wt, td));
       }
     }
   }
-
   return rc;
 }

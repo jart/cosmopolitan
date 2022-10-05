@@ -19,7 +19,7 @@
 #include "libc/calls/struct/timespec.h"
 
 /**
- * Compares two nanosecond timestamps.
+ * Compares nanosecond timestamps.
  */
 int _timespec_cmp(struct timespec a, struct timespec b) {
   int cmp;

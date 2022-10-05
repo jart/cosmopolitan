@@ -1402,6 +1402,7 @@ void *RecentWorker(void *arg) {
   pthread_setname_np(pthread_self(), "RecentWorker");
   LOG("RecentWorker started\n");
 StartOver:
+  db = 0;
   stmt = 0;
   bzero(&t, sizeof(t));
   CHECK_SQL(DbOpen("db.sqlite3", &db));
@@ -1429,6 +1430,7 @@ StartOver:
                       &sb, &sblen, (void *)sqlite3_column_text(stmt, 1), -1, 0),
                   sqlite3_column_int64(stmt, 2)));
     }
+    CHECK_SQL(sqlite3_reset(stmt));
     CHECK_SQL(sqlite3_exec(db, "END TRANSACTION", 0, 0, 0));
     CHECK_SYS(appends(&t.data.p, "]}\n"));
     t.data.n = appendz(t.data.p).i;
@@ -1478,15 +1480,17 @@ OnError:
 // single thread for inserting batched claims into the database
 // this helps us avoid over 9000 threads having fcntl bloodbath
 void *ClaimWorker(void *arg) {
+  sqlite3 *db;
   int i, n, rc;
-  sqlite3 *db = 0;
-  sqlite3_stmt *stmt = 0;
+  sqlite3_stmt *stmt;
   bool warmedup = false;
   struct Claim *v = _gc(xcalloc(BATCH_MAX, sizeof(struct Claim)));
   BlockSignals();
   pthread_setname_np(pthread_self(), "ClaimWorker");
   LOG("ClaimWorker started\n");
 StartOver:
+  db = 0;
+  stmt = 0;
   CHECK_SQL(DbOpen("db.sqlite3", &db));
   CHECK_DB(DbPrepare(db, &stmt,
                      "INSERT INTO land (ip, nick, created)\n"
@@ -1525,8 +1529,6 @@ StartOver:
 OnError:
   sqlite3_finalize(stmt);
   sqlite3_close(db);
-  stmt = 0;
-  db = 0;
   goto StartOver;
 }
 

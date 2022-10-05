@@ -18,6 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
 
+/**
+ * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
+ */
 struct timeval _timespec_totimeval(struct timespec ts) {
-  return (struct timeval){ts.tv_sec, ts.tv_nsec / 1000};
+  if (ts.tv_nsec < 1000000000 - 999) {
+    return (struct timeval){ts.tv_sec, (ts.tv_nsec + 999) / 1000};
+  } else {
+    return (struct timeval){ts.tv_sec + 1, 0};
+  }
 }
