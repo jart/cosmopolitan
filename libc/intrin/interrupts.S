@@ -70,9 +70,11 @@ __excep0_isr:
 	push	%rcx			# preserve registers which we will
 	push	%rdx			# use to call kprintf
 	push	%r8
-	mov	40(%rsp),%rcx		# edx:rcx = "caller" cs:rip
-	mov	48(%rsp),%edx
-	mov	32(%rsp),%r8		# r8 = error code
+	push	%r9
+	mov	48(%rsp),%rcx		# edx:rcx = "caller" cs:rip
+	mov	56(%rsp),%edx
+	mov	40(%rsp),%r8		# r8 = error code
+	mov	%cr2,%r9		# r9 = cr2, in case it is useful
 	push	%rax			# preserve other call-used registers
 	push	%rdi
 	push	%r9
@@ -141,7 +143,8 @@ isr_init:
 //	String constants.
 	.rodata.str1.1
 .excep_msg:
-	.asciz	"CPU exception %d @ %#llx:%#llx err code %#llx\n"
+	.ascii	"\033[1;31mCPU exception %d @ %#llx:%#llx err code %#llx "
+	.asciz	"cr2 %#llx\33[0m\n"
 	.previous
 
 //	IDTR value.
