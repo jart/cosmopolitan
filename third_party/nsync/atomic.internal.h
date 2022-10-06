@@ -1,6 +1,7 @@
 #ifndef NSYNC_ATOMIC_INTERNAL_H_
 #define NSYNC_ATOMIC_INTERNAL_H_
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/cmpxchg.h"
 #include "third_party/nsync/atomic.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

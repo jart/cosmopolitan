@@ -106,7 +106,7 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 	uint32_t ms;
 	int rc, op, fop;
 
-	if (!FUTEX_IS_SUPPORTED) {
+	if (!FUTEX_IS_SUPPORTED || (IsWindows() && pshare)) {
 		nsync_yield_ ();
 		if (timeout) {
 			return -EINTR;
@@ -166,12 +166,12 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 }
 
 int nsync_futex_wake_ (int *p, int count, char pshare) {
-	int rc, op, fop;
+	int e, rc, op, fop;
 	int wake (void *, int, int) asm ("_futex");
 
 	ASSERT (count == 1 || count == INT_MAX);
 
-	if (!FUTEX_IS_SUPPORTED) {
+	if (!FUTEX_IS_SUPPORTED || (IsWindows() && pshare)) {
 		nsync_yield_ ();
 		return 0;
 	}

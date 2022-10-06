@@ -23,6 +23,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
 
@@ -47,7 +48,7 @@ textstartup void InitializeFileDescriptors(void) {
   fds->p = fds->e = (void *)kMemtrackFdsStart;
   fds->n = 4;
   fds->f = 3;
-  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e,
+  fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
                    kMemtrackFdsStart + kMemtrackFdsSize);
   if (IsMetal()) {
     extern const char vga_console[];

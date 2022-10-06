@@ -21,7 +21,7 @@
 #include "libc/macros.internal.h"
 .privileged
 
-//	Asks kernel to let other threads be scheduled.
+//	Relinquishes scheduled quantum.
 //
 //	@return	0 on success, or -1 w/ errno
 //	@norestart

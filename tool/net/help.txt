@@ -4467,6 +4467,255 @@ UNIX MODULE
     should have better performance, because `kNtFileAttributeTemporary`
     asks the kernel to more aggressively cache and reduce i/o ops.
 
+  unix.sched_yield()
+
+    Relinquishes scheduled quantum.
+
+  unix.mapshared(size:int)
+      └─→ unix.Memory()
+
+    Creates interprocess shared memory mapping.
+
+    This function allocates special memory that'll be inherited across
+    fork in a shared way. By default all memory in Redbean is "private"
+    memory that's only viewable and editable to the process that owns
+    it. When unix.fork() happens, memory is copied appropriately so
+    that changes to memory made in the child process, don't clobber
+    the memory at those same addresses in the parent process. If you
+    don't want that to happen, and you want the memory to be shared
+    similar to how it would be shared if you were using threads, then
+    you can use this function to achieve just that.
+
+    The memory object this function returns may be accessed using its
+    methods, which support atomics and futexes. It's very low-level.
+    For example, you can use it to implement scalable mutexes:
+
+        mem = unix.mapshared(8000 * 8)
+
+        LOCK = 0 -- pick an arbitrary word index for lock
+
+        -- From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
+        -- Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
+        function Lock()
+            local ok, old = mem:cmpxchg(LOCK, 0, 1)
+            if not ok then
+                if old == 1 then
+                    old = mem:xchg(LOCK, 2)
+                end
+                while old > 0 do
+                    mem:wait(LOCK, 2)
+                    old = mem:xchg(LOCK, 2)
+                end
+            end
+        end
+        function Unlock()
+            old = mem:add(LOCK, -1)
+            if old == 2 then
+                mem:store(LOCK, 0)
+                mem:wake(LOCK, 1)
+            end
+        end
+
+    It's possible to accomplish the same thing as unix.mapshared()
+    using files and unix.fcntl() advisory locks. However this goes
+    significantly faster. For example, that's what SQLite does and
+    we recommend using SQLite for IPC in redbean. But, if your app
+    has thousands of forked processes fighting for a file lock you
+    might need something lower level than file locks, to implement
+    things like throttling. Shared memory is a good way to do that
+    since there's nothing that's faster.
+
+    The `size` parameter needs to be a multiple of 8. The returned
+    memory is zero initialized. When allocating shared memory, you
+    should try to get as much use out of it as possible, since the
+    overhead of allocating a single shared mapping is 500 words of
+    resident memory and 8000 words of virtual memory. It's because
+    the Cosmopolitan Libc mmap() granularity is 2**16.
+
+    This system call does not fail. An exception is instead thrown
+    if sufficient memory isn't available.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ UNIX MEMORY OBJECT
+
+  unix.Memory encapsulates memory that's shared across fork() and
+  this module provides the fundamental synchronization primitives
+
+  Redbean memory maps may be used in two ways:
+
+    1. as an array of bytes a.k.a. a string
+    2. as an array of words a.k.a. integers
+
+  They're aliased, union, or overlapped views of the same memory.
+  For example if you write a string to your memory region, you'll
+  be able to read it back as an integer.
+
+  Reads, writes, and word operations will throw an exception if a
+  memory boundary error or overflow occurs.
+
+  unix.Memory:read([offset:int[, bytes:int]])
+      └─→ str
+
+    `offset` is the starting byte index from which memory is copied,
+    which defaults to zero.
+
+    If `bytes` is none or nil, then the nul-terminated string at
+    `offset` is returned. You may specify `bytes` to safely read
+    binary data.
+
+    This operation happens atomically. Each shared mapping has a
+    single lock which is used to synchronize reads and writes to
+    that specific map. To make it scale, create additional maps.
+
+  unix.Memory:write(data:str[, offset:int[, bytes:int]])
+
+    Writes bytes to memory region.
+
+    `offset` is the starting byte index to which memory is copied,
+    which defaults to zero.
+
+    If `bytes` is none or nil, then an implicit nil-terminator
+    will be included after your `data` so things like json can
+    be easily serialized to shared memory.
+
+    This operation happens atomically. Each shared mapping has a
+    single lock which is used to synchronize reads and writes to
+    that specific map. To make it scale, create additional maps.
+
+  unix.Memory:load(word_index:int)
+      └─→ int
+
+    Loads word from memory region.
+
+    This operation is atomic and has relaxed barrier semantics.
+
+  unix.Memory:store(word_index:int, value:int)
+
+    Stores word from memory region.
+
+    This operation is atomic and has relaxed barrier semantics.
+
+  unix.Memory:xchg(word_index:int, value:int)
+      └─→ int
+
+    Exchanges value.
+
+    This sets word at `word_index` to `value` and returns the value
+    previously held in by the word.
+
+    This operation is atomic and provides the same memory barrier
+    semantics as the aligned x86 LOCK XCHG instruction.
+
+  unix.Memory:cmpxchg(word_index:int, old:int, new:int)
+      └─→ success:bool, old:int
+
+    Compares and exchanges value.
+
+    This inspects the word at `word_index` and if its value is the same
+    as `old` then it'll be replaced by the value `new`, in which case
+    `true, old` shall be returned. If a different value was held at
+    word, then `false` shall be returned along with the word.
+
+    This operation happens atomically and provides the same memory
+    barrier semantics as the aligned x86 LOCK CMPXCHG instruction.
+
+  unix.Memory:add(word_index:int, value:int)
+      └─→ old:int
+
+    Fetches then adds value.
+
+    This method modifies the word at `word_index` to contain the sum of
+    value and the `value` paremeter. This method then returns the value
+    as it existed before the addition was performed.
+
+    This operation is atomic and provides the same memory barrier
+    semantics as the aligned x86 LOCK XADD instruction.
+
+  unix.Memory:and(word_index:int, value:int)
+      └─→ int
+
+    Fetches and bitwise ands value.
+
+    This operation happens atomically and provides the same memory
+    barrier ordering semantics as its x86 implementation.
+
+  unix.Memory:or(word_index:int, value:int)
+      └─→ int
+
+    Fetches and bitwise ors value.
+
+    This operation happens atomically and provides the same memory
+    barrier ordering semantics as its x86 implementation.
+
+  unix.Memory:xor(word_index:int, value:int)
+      └─→ int
+
+    Fetches and bitwise xors value.
+
+    This operation happens atomically and provides the same memory
+    barrier ordering semantics as its x86 implementation.
+
+  unix.Memory:wait(word_index:int, expect:int[, abs_deadline:int[, nanos:int]])
+      ├─→ 0
+      ├─→ nil, unix.Errno(unix.EINTR)
+      ├─→ nil, unix.Errno(unix.EAGAIN)
+      └─→ nil, unix.Errno(unix.ETIMEDOUT)
+
+    Waits for word to have a different value.
+
+    This method asks the kernel to suspend the process until either the
+    absolute deadline expires or we're woken up by another process that
+    calls unix.Memory:wake().
+
+    The `expect` parameter is used only upon entry to synchronize the
+    transition to kernelspace. The kernel doesn't actually poll the
+    memory location. It uses `expect` to make sure the process doesn't
+    get added to the wait list unless it's sure that it needs to wait,
+    since the kernel can only control the ordering of wait / wake calls
+    across processes.
+
+    The default behavior is to wait until the heat death of the universe
+    if necessary. You may alternatively specify an absolute deadline. If
+    it's less than or equal to the value returned by clock_gettime, then
+    this routine is non-blocking. Otherwise we'll block at most until
+    the current time reaches the absolute deadline.
+
+    Futexes are currently supported on Linux, FreeBSD, OpenBSD. On other
+    platforms this method calls sched_yield() and will either (1) return
+    unix.EINTR if a deadline is specified, otherwise (2) 0 is returned.
+    This means futexes will *work* on Windows, Mac, and NetBSD but they
+    won't be scalable in terms of CPU usage when many processes wait on
+    one process that holds a lock for a long time. In the future we may
+    polyfill futexes in userspace for these platforms to improve things
+    for folks who've adopted this api. If lock scalability is something
+    you need on Windows and MacOS today, then consider fcntl() which is
+    well-supported on all supported platforms but requires using files.
+    Please test your use case though, because it's kind of an edge case
+    to have the scenario above, and chances are this op will work fine.
+
+    `EINTR` if a signal is delivered while waiting on deadline. Callers
+    should use futexes inside a loop that is able to cope with spurious
+    wakeups. We don't actually guarantee the value at word has in fact
+    changed when this returns.
+
+    `EAGAIN` is raised if, upon entry, the word at `word_index` had a
+    different value than what's specified at `expect`.
+
+    `ETIMEDOUT` is raised when the absolute deadline expires.
+
+  unix.Memory:wake(index:int[, count:int])
+      └─→ woken:int
+
+    Wakes other processes waiting on word.
+
+    This method may be used to signal or broadcast to waiters. The
+    `count` specifies the number of processes that should be woken,
+    which defaults to `INT_MAX`.
+
+    The return value is the number of processes that were actually woken
+    as a result of the system call. No failure conditions are defined.
+
 
 ────────────────────────────────────────────────────────────────────────────────
  UNIX DIR OBJECT

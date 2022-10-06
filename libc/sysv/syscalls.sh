@@ -642,7 +642,7 @@ scall	sys_bsdthread_register	0xfffffffff216efff	globl hidden
 #scall	write_nocancel		0xfffffffff218dfff	globl
 #scall	writev_nocancel		0xfffffffff219cfff	globl
 #──────────────────────────FREEBSD───────────────────────────
-scall	sys_umtx_op		0xffffff1c6fffffff	globl
+#scall	sys_umtx_op		0xffffff1c6fffffff	globl
 #scall	abort2			0xffffff1cffffffff	globl
 #scall	afs3_syscall		0xffffff179fffffff	globl
 #scall	bindat			0xffffff21afffffff	globl

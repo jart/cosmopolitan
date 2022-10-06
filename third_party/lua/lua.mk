@@ -200,9 +200,11 @@ THIRD_PARTY_LUA_UNIX_DIRECTDEPS =					\
 	LIBC_STR							\
 	LIBC_STUBS							\
 	LIBC_SYSV							\
+	LIBC_THREAD							\
 	LIBC_TIME							\
 	LIBC_X								\
-	THIRD_PARTY_LUA
+	THIRD_PARTY_LUA							\
+	THIRD_PARTY_NSYNC
 
 THIRD_PARTY_LUA_UNIX_DEPS :=						\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_LUA_UNIX_DIRECTDEPS),$($(x))))

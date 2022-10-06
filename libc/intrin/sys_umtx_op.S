@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
-│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,37 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/intrin/atomic.h"
-#include "libc/intrin/extend.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/runtime/memtrack.internal.h"
-#include "libc/sysv/consts/map.h"
-#include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/malloc.internal.h"
-// clang-format off
+.privileged
 
-static char *nsync_malloc_endptr_;
-static size_t nsync_malloc_total_;
-static atomic_char nsync_malloc_lock_;
-
-/* nsync_malloc_() is a malloc-like routine used by mutex and condition
-   variable code to allocate waiter structs. This allows *NSYNC mutexes
-   to be used by malloc(), by providing another, simpler allocator here.
-   The intent is that the implicit NULL value here can be overridden by
-   a client declaration that uses an initializer. */
-void *nsync_malloc_ (size_t size) {
-	char *start;
-	size_t offset;
-	size = ROUNDUP (size, __BIGGEST_ALIGNMENT__);
-	while (atomic_exchange (&nsync_malloc_lock_, 1)) nsync_yield_ ();
-	offset = nsync_malloc_total_;
-	nsync_malloc_total_ += size;
-	start = (char *) kMemtrackNsyncStart;
-	if (!nsync_malloc_endptr_) nsync_malloc_endptr_ = start;
-	nsync_malloc_endptr_ =
-		_extend (start, nsync_malloc_total_, nsync_malloc_endptr_,
-			 MAP_PRIVATE, kMemtrackNsyncStart + kMemtrackNsyncSize);
-	atomic_store_explicit (&nsync_malloc_lock_, 0, memory_order_relaxed);
-	return start + offset;
-}
+//	Calls FreeBSD's futex() API.
+//	Normalizes return value to Linux ABI -errno convention.
+sys_umtx_op:
+	mov	$0x1c6,%eax
+	syscall
+	jc	1f
+	ret
+1:	neg	%eax
+	ret
+	.endfn	sys_umtx_op,globl,hidden

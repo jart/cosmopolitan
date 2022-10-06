@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
@@ -36,22 +37,27 @@
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/ucontext.h"
+#include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/nt/runtime.h"
+#include "libc/nt/synchronization.h"
 #include "libc/runtime/clktck.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/linger.h"
@@ -72,11 +78,13 @@
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/log.h"
+#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/msg.h"
 #include "libc/sysv/consts/nr.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/poll.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/rlim.h"
 #include "libc/sysv/consts/rlimit.h"
 #include "libc/sysv/consts/rusage.h"
@@ -93,6 +101,7 @@
 #include "libc/sysv/consts/utime.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
@@ -102,6 +111,7 @@
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
 #include "third_party/lua/lunix.h"
+#include "third_party/nsync/futex.internal.h"
 #include "tool/net/luacheck.h"
 
 /**
@@ -1855,7 +1865,7 @@ static int LuaUnixStrsignal(lua_State *L) {
 // unix.WIFEXITED(wstatus)
 //     └─→ bool
 static int LuaUnixWifexited(lua_State *L) {
-  return ReturnBoolean(L, WIFEXITED(luaL_checkinteger(L, 1)));
+  return ReturnBoolean(L, !!WIFEXITED(luaL_checkinteger(L, 1)));
 }
 
 // unix.WEXITSTATUS(wstatus)
@@ -1867,7 +1877,7 @@ static int LuaUnixWexitstatus(lua_State *L) {
 // unix.WIFSIGNALED(wstatus)
 //     └─→ bool
 static int LuaUnixWifsignaled(lua_State *L) {
-  return ReturnBoolean(L, WIFSIGNALED(luaL_checkinteger(L, 1)));
+  return ReturnBoolean(L, !!WIFSIGNALED(luaL_checkinteger(L, 1)));
 }
 
 // unix.WTERMSIG(wstatus)
@@ -1996,6 +2006,12 @@ static int LuaUnixTiocgwinsz(lua_State *L) {
   } else {
     return LuaUnixSysretErrno(L, "tiocgwinsz", olderr);
   }
+}
+
+// unix.sched_yield()
+static int LuaUnixSchedYield(lua_State *L) {
+  sched_yield();
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2637,6 +2653,302 @@ static void LuaUnixErrnoObj(lua_State *L) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// unix.Memory object
+
+struct Memory {
+  union {
+    char *bytes;
+    atomic_long *words;
+  } u;
+  size_t size;
+  void *map;
+  size_t mapsize;
+  pthread_mutex_t *lock;
+};
+
+// unix.Memory:read([offset:int[, bytes:int]])
+//     └─→ str
+static int LuaUnixMemoryRead(lua_State *L) {
+  size_t i, n;
+  struct Memory *m;
+  m = luaL_checkudata(L, 1, "unix.Memory");
+  i = luaL_optinteger(L, 2, 0);
+  if (lua_isnoneornil(L, 3)) {
+    // unix.Memory:read([offset:int])
+    // extracts nul-terminated string
+    if (i > m->size) {
+      luaL_error(L, "out of range");
+      unreachable;
+    }
+    n = strnlen(m->u.bytes + i, m->size - i);
+  } else {
+    // unix.Memory:read(offset:int, bytes:int)
+    // read binary data with boundary checking
+    n = luaL_checkinteger(L, 3);
+    if (i > m->size || n >= m->size || i + n > m->size) {
+      luaL_error(L, "out of range");
+      unreachable;
+    }
+  }
+  pthread_mutex_lock(m->lock);
+  lua_pushlstring(L, m->u.bytes + i, n);
+  pthread_mutex_unlock(m->lock);
+  return 1;
+}
+
+// unix.Memory:write(data:str[, offset:int[, bytes:int]])
+static int LuaUnixMemoryWrite(lua_State *L) {
+  const char *s;
+  size_t i, n, j;
+  struct Memory *m;
+  m = luaL_checkudata(L, 1, "unix.Memory");
+  s = luaL_checklstring(L, 2, &n);
+  i = luaL_optinteger(L, 3, 0);
+  if (i > m->size) {
+    luaL_error(L, "out of range");
+    unreachable;
+  }
+  if (lua_isnoneornil(L, 4)) {
+    // unix.Memory:write(data:str[, offset:int])
+    // writes binary data, plus a nul terminator
+    if (i < n < m->size) {
+      // include lua string's implicit nul so this round trips with
+      // unix.Memory:read(offset:int) even when we're overwriting a
+      // larger string that was previously inserted
+      n += 1;
+    } else {
+      // there's no room to include the implicit nul-terminator so
+      // leave it out which is safe b/c Memory:read() uses strnlen
+    }
+  } else {
+    // unix.Memory:write(data:str, offset:int, bytes:int])
+    // writes binary data without including nul-terminator
+    j = luaL_checkinteger(L, 4);
+    if (j > n) {
+      luaL_argerror(L, 4, "bytes is more than what's in data");
+      unreachable;
+    }
+    n = j;
+  }
+  if (i + n > m->size) {
+    luaL_error(L, "out of range");
+    unreachable;
+  }
+  pthread_mutex_lock(m->lock);
+  memcpy(m->u.bytes + i, s, n);
+  pthread_mutex_unlock(m->lock);
+  return 0;
+}
+
+static atomic_long *GetWord(lua_State *L) {
+  size_t i;
+  struct Memory *m;
+  m = luaL_checkudata(L, 1, "unix.Memory");
+  i = luaL_checkinteger(L, 2);
+  if (i >= m->size / sizeof(*m->u.words)) {
+    luaL_error(L, "out of range");
+    unreachable;
+  }
+  return m->u.words + i;
+}
+
+// unix.Memory:load(word_index:int)
+//     └─→ int
+static int LuaUnixMemoryLoad(lua_State *L) {
+  lua_pushinteger(L, atomic_load_explicit(GetWord(L), memory_order_relaxed));
+  return 1;
+}
+
+// unix.Memory:store(word_index:int, value:int)
+static int LuaUnixMemoryStore(lua_State *L) {
+  atomic_store_explicit(GetWord(L), luaL_checkinteger(L, 3),
+                        memory_order_relaxed);
+  return 0;
+}
+
+// unix.Memory:xchg(word_index:int, value:int)
+//     └─→ int
+static int LuaUnixMemoryXchg(lua_State *L) {
+  lua_pushinteger(L, atomic_exchange(GetWord(L), luaL_checkinteger(L, 3)));
+  return 1;
+}
+
+// unix.Memory:cmpxchg(word_index:int, old:int, new:int)
+//     └─→ success:bool, old:int
+static int LuaUnixMemoryCmpxchg(lua_State *L) {
+  long old = luaL_checkinteger(L, 3);
+  lua_pushboolean(L, atomic_compare_exchange_strong(GetWord(L), &old,
+                                                    luaL_checkinteger(L, 4)));
+  lua_pushinteger(L, old);
+  return 2;
+}
+
+// unix.Memory:add(word_index:int, value:int)
+//     └─→ old:int
+static int LuaUnixMemoryAdd(lua_State *L) {
+  lua_pushinteger(L, atomic_fetch_add(GetWord(L), luaL_checkinteger(L, 3)));
+  return 1;
+}
+
+// unix.Memory:and(word_index:int, value:int)
+//     └─→ old:int
+static int LuaUnixMemoryAnd(lua_State *L) {
+  lua_pushinteger(L, atomic_fetch_and(GetWord(L), luaL_checkinteger(L, 3)));
+  return 1;
+}
+
+// unix.Memory:or(word_index:int, value:int)
+//     └─→ old:int
+static int LuaUnixMemoryOr(lua_State *L) {
+  lua_pushinteger(L, atomic_fetch_or(GetWord(L), luaL_checkinteger(L, 3)));
+  return 1;
+}
+
+// unix.Memory:xor(word_index:int, value:int)
+//     └─→ old:int
+static int LuaUnixMemoryXor(lua_State *L) {
+  lua_pushinteger(L, atomic_fetch_xor(GetWord(L), luaL_checkinteger(L, 3)));
+  return 1;
+}
+
+// unix.Memory:wait(word_index:int, expect:int[, abs_deadline:int[, nanos:int]])
+//     ├─→ 0
+//     ├─→ nil, unix.Errno(unix.EINTR)
+//     ├─→ nil, unix.Errno(unix.EAGAIN)
+//     └─→ nil, unix.Errno(unix.ETIMEDOUT)
+static int LuaUnixMemoryWait(lua_State *L) {
+  lua_Integer expect;
+  int rc, olderr = errno;
+  struct timespec ts, now, *deadline;
+  expect = luaL_checkinteger(L, 3);
+  if (!(INT32_MIN <= expect && expect <= INT32_MAX)) {
+    luaL_argerror(L, 3, "must be an int32_t");
+    unreachable;
+  }
+  if (lua_isnoneornil(L, 4)) {
+    deadline = 0;  // wait forever
+  } else {
+    ts.tv_sec = luaL_checkinteger(L, 4);
+    ts.tv_nsec = luaL_optinteger(L, 5, 0);
+    if (!FUTEX_TIMEOUT_IS_ABSOLUTE) {
+      now = _timespec_real();
+      if (_timespec_gt(now, ts)) {
+        ts = (struct timespec){0};
+      } else {
+        ts = _timespec_sub(ts, now);
+      }
+    }
+    deadline = &ts;
+  }
+  rc = nsync_futex_wait_((int *)GetWord(L), expect, PTHREAD_PROCESS_SHARED,
+                         deadline);
+  if (rc < 0) errno = -rc, rc = -1;
+  return SysretInteger(L, "futex_wait", olderr, rc);
+}
+
+// unix.Memory:wake(index:int[, count:int])
+//     └─→ woken:int
+static int LuaUnixMemoryWake(lua_State *L) {
+  int count, woken;
+  count = luaL_optinteger(L, 3, INT_MAX);
+  woken = nsync_futex_wake_((int *)GetWord(L), count, PTHREAD_PROCESS_SHARED);
+  _npassert(woken >= 0);
+  return ReturnInteger(L, woken);
+}
+
+static int LuaUnixMemoryTostring(lua_State *L) {
+  char s[128];
+  struct Memory *m;
+  m = luaL_checkudata(L, 1, "unix.Memory");
+  snprintf(s, sizeof(s), "unix.Memory(%zu)", m->size);
+  lua_pushstring(L, s);
+  return 1;
+}
+
+static int LuaUnixMemoryGc(lua_State *L) {
+  struct Memory *m;
+  m = luaL_checkudata(L, 1, "unix.Memory");
+  if (m->u.bytes) {
+    _npassert(!munmap(m->map, m->mapsize));
+    m->u.bytes = 0;
+  }
+  return 0;
+}
+
+static const luaL_Reg kLuaUnixMemoryMeth[] = {
+    {"read", LuaUnixMemoryRead},        //
+    {"write", LuaUnixMemoryWrite},      //
+    {"load", LuaUnixMemoryLoad},        //
+    {"store", LuaUnixMemoryStore},      //
+    {"xchg", LuaUnixMemoryXchg},        //
+    {"cmpxchg", LuaUnixMemoryCmpxchg},  //
+    {"add", LuaUnixMemoryAdd},          //
+    {"and", LuaUnixMemoryAnd},          //
+    {"or", LuaUnixMemoryOr},            //
+    {"xor", LuaUnixMemoryXor},          //
+    {"wait", LuaUnixMemoryWait},        //
+    {"wake", LuaUnixMemoryWake},        //
+    {0},                                //
+};
+
+static const luaL_Reg kLuaUnixMemoryMeta[] = {
+    {"__tostring", LuaUnixMemoryTostring},  //
+    {"__repr", LuaUnixMemoryTostring},      //
+    {"__gc", LuaUnixMemoryGc},              //
+    {0},                                    //
+};
+
+static void LuaUnixMemoryObj(lua_State *L) {
+  luaL_newmetatable(L, "unix.Memory");
+  luaL_setfuncs(L, kLuaUnixMemoryMeta, 0);
+  luaL_newlibtable(L, kLuaUnixMemoryMeth);
+  luaL_setfuncs(L, kLuaUnixMemoryMeth, 0);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+}
+
+static int LuaUnixMapshared(lua_State *L) {
+  char *p;
+  size_t n, c, g;
+  struct Memory *m;
+  pthread_mutexattr_t mattr;
+  n = luaL_checkinteger(L, 1);
+  if (!n) {
+    luaL_error(L, "can't map empty region");
+    unreachable;
+  }
+  if (n % sizeof(long)) {
+    luaL_error(L, "size must be multiple of word size");
+    unreachable;
+  }
+  if (!IsLegalSize(n)) {
+    luaL_error(L, "map size too big");
+    unreachable;
+  }
+  c = n;
+  c += sizeof(*m->lock);
+  g = sysconf(_SC_PAGESIZE);
+  c = ROUNDUP(c, g);
+  if (!(p = _mapshared(c))) {
+    luaL_error(L, "out of memory");
+    unreachable;
+  }
+  m = lua_newuserdatauv(L, sizeof(*m), 1);
+  luaL_setmetatable(L, "unix.Memory");
+  m->u.bytes = p + sizeof(*m->lock);
+  m->size = n;
+  m->map = p;
+  m->mapsize = c;
+  m->lock = (pthread_mutex_t *)p;
+  pthread_mutexattr_init(&mattr);
+  pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+  pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+  pthread_mutex_init(m->lock, &mattr);
+  pthread_mutexattr_destroy(&mattr);
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // unix.Sigset object
 
 // unix.Sigset(sig:int, ...)
@@ -2961,6 +3273,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"lseek", LuaUnixLseek},              // seek in file
     {"major", LuaUnixMajor},              // extract device info
     {"makedirs", LuaUnixMakedirs},        // make directory and parents too
+    {"mapshared", LuaUnixMapshared},      // mmap(MAP_SHARED) w/ mutex+atomics
     {"minor", LuaUnixMinor},              // extract device info
     {"mkdir", LuaUnixMkdir},              // make directory
     {"nanosleep", LuaUnixNanosleep},      // sleep w/ nano precision
@@ -2978,6 +3291,7 @@ static const luaL_Reg kLuaUnix[] = {
     {"rename", LuaUnixRename},            // rename file or directory
     {"rmdir", LuaUnixRmdir},              // remove empty directory
     {"rmrf", LuaUnixRmrf},                // remove file recursively
+    {"sched_yield", LuaUnixSchedYield},   // relinquish scheduled quantum
     {"send", LuaUnixSend},                // send tcp to some address
     {"sendto", LuaUnixSendto},            // send udp to some address
     {"setfsgid", LuaUnixSetfsgid},        // set/get group id for fs ops
@@ -2994,8 +3308,8 @@ static const luaL_Reg kLuaUnix[] = {
     {"setuid", LuaUnixSetuid},            // set real user id of process
     {"shutdown", LuaUnixShutdown},        // make socket half empty or full
     {"sigaction", LuaUnixSigaction},      // install signal handler
-    {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigpending", LuaUnixSigpending},    // get pending signals
+    {"sigprocmask", LuaUnixSigprocmask},  // change signal mask
     {"sigsuspend", LuaUnixSigsuspend},    // wait for signal
     {"siocgifconf", LuaUnixSiocgifconf},  // get list of network interfaces
     {"socket", LuaUnixSocket},            // create network communication fd
@@ -3034,6 +3348,7 @@ int LuaUnix(lua_State *L) {
   LuaUnixSigsetObj(L);
   LuaUnixRusageObj(L);
   LuaUnixStatfsObj(L);
+  LuaUnixMemoryObj(L);
   LuaUnixErrnoObj(L);
   LuaUnixStatObj(L);
   LuaUnixDirObj(L);

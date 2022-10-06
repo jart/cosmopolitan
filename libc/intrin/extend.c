@@ -29,11 +29,11 @@
 
 #define G FRAMESIZE
 
-static void _mapframe(void *p) {
+static void _mapframe(void *p, int f) {
   int prot, flags;
   struct DirectMap dm;
   prot = PROT_READ | PROT_WRITE;
-  flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
+  flags = f | MAP_ANONYMOUS | MAP_FIXED;
   if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr != p) {
     notpossible;
   }
@@ -60,9 +60,10 @@ static void _mapframe(void *p) {
  * @param n specifies how many bytes are needed
  * @param e points to end of memory that's allocated
  * @param h is highest address to which `e` may grow
+ * @param f should be `MAP_PRIVATE` or `MAP_SHARED`
  * @return new value for `e`
  */
-noasan void *_extend(void *p, size_t n, void *e, intptr_t h) {
+noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
 #ifndef NDEBUG
   if ((uintptr_t)SHADOW(p) & (G - 1)) notpossible;
@@ -71,10 +72,10 @@ noasan void *_extend(void *p, size_t n, void *e, intptr_t h) {
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
       if (q + G > (char *)h) notpossible;
-      _mapframe(q);
+      _mapframe(q, f);
       if (IsAsan()) {
         if (!((uintptr_t)SHADOW(q) & (G - 1))) {
-          _mapframe(SHADOW(q));
+          _mapframe(SHADOW(q), f);
           __asan_poison(q, G << kAsanScale, kAsanProtected);
         }
       }
