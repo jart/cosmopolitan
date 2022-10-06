@@ -57,7 +57,7 @@ local function main()
 
    Write('<dt>Payload\r\n')
    Write('<dd><p>')
-   Write(EscapeHtml(VisualizeControlCodes(GetPayload())))
+   Write(EscapeHtml(VisualizeControlCodes(GetBody())))
    Write('\r\n')
 
    Write('</dl>\r\n')

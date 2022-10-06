@@ -72,11 +72,11 @@ local function main()
    -- redbean command line arguments
    -- these come *after* the c getopt server arguments
    Write('<h3>command line arguments</h3>\r\n')
-   if #argv > 0 then
+   if #arg > 0 then
       Write('<ul>\r\n')
-      for i = 1,#argv do
+      for i = 1,#arg do
          Write('<li>')
-         Write(EscapeHtml(VisualizeControlCodes(argv[i])))
+         Write(EscapeHtml(VisualizeControlCodes(arg[i])))
          Write('\r\n')
       end
       Write('</ul>\r\n')
@@ -333,9 +333,9 @@ local function main()
          Write('Size: ')
          Write(tostring(GetAssetSize(paths[i])))
          Write('<br>\r\n')
-         if GetComment(paths[i]) then
+         if GetAssetComment(paths[i]) then
             Write('Comment: ')
-            Write(EscapeHtml(VisualizeControlCodes(GetComment(paths[i]))))
+            Write(EscapeHtml(VisualizeControlCodes(GetAssetComment(paths[i]))))
             Write('<br>\r\n')
          end
          Write('\r\n')
