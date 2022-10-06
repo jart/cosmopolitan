@@ -45,15 +45,21 @@ ok, old = mem:cmpxchg(0, 0, 1)
 assert(ok and old == 0)
 ok, old = mem:cmpxchg(0, 666, 777)
 assert(not ok and old == 1)
-assert(mem:add(0, 3) == 1)
-assert(mem:load(0) == 4)
+assert(mem:fetch_add(0, 3) == 1)
+assert(mem:load(0) ==  0b00000100)
+assert(mem:fetch_xor(0,0b00000110) == 0b00000100)
+assert(mem:load(0) ==  0b00000010)
+assert(mem:fetch_and(0,0b00000110) == 0b00000010)
+assert(mem:load(0) ==  0b00000010)
+assert(mem:fetch_or(0, 0b00000110) == 0b00000010)
+assert(mem:load(0) ==  0b00000110)
 
 --------------------------------------------------------------------------------
 -- test atomic addition across concurrent processes
 
 function Worker()
     for i = 1,iterations do
-        mem:add(0, 1)
+        mem:fetch_add(0, 1)
     end
 end
 

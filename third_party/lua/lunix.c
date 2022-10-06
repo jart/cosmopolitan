@@ -2882,10 +2882,10 @@ static const luaL_Reg kLuaUnixMemoryMeth[] = {
     {"store", LuaUnixMemoryStore},      //
     {"xchg", LuaUnixMemoryXchg},        //
     {"cmpxchg", LuaUnixMemoryCmpxchg},  //
-    {"add", LuaUnixMemoryAdd},          //
-    {"and", LuaUnixMemoryAnd},          //
-    {"or", LuaUnixMemoryOr},            //
-    {"xor", LuaUnixMemoryXor},          //
+    {"fetch_add", LuaUnixMemoryAdd},    //
+    {"fetch_and", LuaUnixMemoryAnd},    //
+    {"fetch_or", LuaUnixMemoryOr},      //
+    {"fetch_xor", LuaUnixMemoryXor},    //
     {"wait", LuaUnixMemoryWait},        //
     {"wake", LuaUnixMemoryWake},        //
     {0},                                //

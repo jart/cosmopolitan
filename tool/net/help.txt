@@ -4620,7 +4620,7 @@ UNIX MODULE
     This operation happens atomically and provides the same memory
     barrier semantics as the aligned x86 LOCK CMPXCHG instruction.
 
-  unix.Memory:add(word_index:int, value:int)
+  unix.Memory:fetch_add(word_index:int, value:int)
       └─→ old:int
 
     Fetches then adds value.
@@ -4632,7 +4632,7 @@ UNIX MODULE
     This operation is atomic and provides the same memory barrier
     semantics as the aligned x86 LOCK XADD instruction.
 
-  unix.Memory:and(word_index:int, value:int)
+  unix.Memory:fetch_and(word_index:int, value:int)
       └─→ int
 
     Fetches and bitwise ands value.
@@ -4640,7 +4640,7 @@ UNIX MODULE
     This operation happens atomically and provides the same memory
     barrier ordering semantics as its x86 implementation.
 
-  unix.Memory:or(word_index:int, value:int)
+  unix.Memory:fetch_or(word_index:int, value:int)
       └─→ int
 
     Fetches and bitwise ors value.
@@ -4648,7 +4648,7 @@ UNIX MODULE
     This operation happens atomically and provides the same memory
     barrier ordering semantics as its x86 implementation.
 
-  unix.Memory:xor(word_index:int, value:int)
+  unix.Memory:fetch_xor(word_index:int, value:int)
       └─→ int
 
     Fetches and bitwise xors value.

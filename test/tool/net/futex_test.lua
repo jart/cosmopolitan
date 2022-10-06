@@ -54,7 +54,7 @@ function Lock()
     end
 end
 function Unlock()
-    local old = mem:add(LOCK, -1)
+    local old = mem:fetch_add(LOCK, -1)
     if old == 2 then
         mem:store(LOCK, 0)
         mem:wake(LOCK, 1)
