@@ -67,10 +67,10 @@ static void SetXsFb(struct Tty *tty, unsigned short xsfb) {
   tty->xsfb = xsfb;
 }
 
-static bool SetWcs(struct Tty *tty, bool alloc_wcs) {
+static bool SetWcs(struct Tty *tty, unsigned init_flags) {
 #ifdef VGA_USE_WCS
   struct DirectMap dm;
-  if (!alloc_wcs)
+  if (!(init_flags & kTtyAllocWcs))
     return false;
   dm = sys_mmap_metal(NULL, Yn(tty) * Xn(tty) * sizeof(wchar_t),
                       PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
@@ -102,48 +102,75 @@ static wchar_t *Wcs(struct Tty *tty) {
 #endif
 }
 
+static void TtyNoopUpdate(struct Tty *);
 static void TtyTextDrawChar(struct Tty *, size_t, size_t, wchar_t);
 static void TtyTextEraseLineCells(struct Tty *, size_t, size_t, size_t);
 static void TtyTextMoveLineCells(struct Tty *, size_t, size_t, size_t, size_t,
                                  size_t);
 
-static void TtySetType(struct Tty *tty, unsigned char type) {
+static void TtySetType(struct Tty *tty, unsigned char type,
+                       unsigned init_flags) {
   tty->type = type;
-  switch (type) {
-    case PC_VIDEO_BGR565:
-      tty->update = _TtyBgr565Update;
-      goto graphics_mode;
-    case PC_VIDEO_BGR555:
-      tty->update = _TtyBgr555Update;
-      goto graphics_mode;
-    case PC_VIDEO_BGRX8888:
-      tty->update = _TtyBgrxUpdate;
-      goto graphics_mode;
-    case PC_VIDEO_RGBX8888:
-      tty->update = _TtyRgbxUpdate;
-    graphics_mode:
-      tty->drawchar = _TtyGraphDrawChar;
-      tty->eraselinecells = _TtyGraphEraseLineCells;
-      tty->movelinecells = _TtyGraphMoveLineCells;
-      break;
-    default:
-      tty->drawchar = TtyTextDrawChar;
-      tty->eraselinecells = TtyTextEraseLineCells;
-      tty->movelinecells = TtyTextMoveLineCells;
+  if ((init_flags & kTtyKlog) == 0) {
+    switch (type) {
+      case PC_VIDEO_BGR565:
+        tty->update = _TtyBgr565Update;
+        goto graphics_mode;
+      case PC_VIDEO_BGR555:
+        tty->update = _TtyBgr555Update;
+        goto graphics_mode;
+      case PC_VIDEO_BGRX8888:
+        tty->update = _TtyBgrxUpdate;
+        goto graphics_mode;
+      case PC_VIDEO_RGBX8888:
+        tty->update = _TtyRgbxUpdate;
+      graphics_mode:
+        tty->drawchar = _TtyGraphDrawChar;
+        tty->eraselinecells = _TtyGraphEraseLineCells;
+        tty->movelinecells = _TtyGraphMoveLineCells;
+        break;
+      default:
+        tty->update = TtyNoopUpdate;
+        tty->drawchar = TtyTextDrawChar;
+        tty->eraselinecells = TtyTextEraseLineCells;
+        tty->movelinecells = TtyTextMoveLineCells;
+    }
+  } else {
+    switch (type) {
+      case PC_VIDEO_BGR565:
+      case PC_VIDEO_BGR555:
+        tty->update = _TtyKlog16Update;
+        tty->drawchar = _TtyKlog16DrawChar;
+        tty->eraselinecells = _TtyKlog16EraseLineCells;
+        tty->movelinecells = _TtyKlog16MoveLineCells;
+        break;
+      case PC_VIDEO_BGRX8888:
+      case PC_VIDEO_RGBX8888:
+        tty->update = _TtyKlog32Update;
+        tty->drawchar = _TtyKlog32DrawChar;
+        tty->eraselinecells = _TtyKlog32EraseLineCells;
+        tty->movelinecells = _TtyKlog32MoveLineCells;
+        break;
+      default:
+        tty->update = TtyNoopUpdate;
+        tty->drawchar = TtyTextDrawChar;
+        tty->eraselinecells = TtyTextEraseLineCells;
+        tty->movelinecells = TtyTextMoveLineCells;
+    }
   }
 }
 
 void _StartTty(struct Tty *tty, unsigned char type,
                unsigned short yp, unsigned short xp, unsigned short xsfb,
                unsigned short starty, unsigned short startx,
-               unsigned char yc, unsigned char xc, void *fb, bool alloc_wcs) {
+               unsigned char yc, unsigned char xc, void *fb,
+               unsigned init_flags) {
   unsigned short yn, xn, xs = xp * sizeof(TtyCanvasColor);
   struct DirectMap dm;
   memset(tty, 0, sizeof(struct Tty));
   SetYp(tty, yp);
   SetXp(tty, xp);
   SetXsFb(tty, xsfb);
-  tty->xs = xs;
   if (type == PC_VIDEO_TEXT) {
     yn = yp;
     xn = xp;
@@ -151,14 +178,23 @@ void _StartTty(struct Tty *tty, unsigned char type,
   } else {
     yn = yp / yc;
     xn = xp / xc;
-    dm = sys_mmap_metal(NULL, (size_t)yp * xs, PROT_READ | PROT_WRITE,
-                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (dm.addr == (void *)-1) {
-      /* We are a bit low on memory.  Try to go on anyway. */
+    if ((init_flags & kTtyKlog) != 0) {
       tty->canvas = fb;
-      starty = startx = 0;
-    } else
-      tty->canvas = dm.addr;
+      xs = xsfb;
+    } else {
+      dm = sys_mmap_metal(NULL, (size_t)yp * xs, PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if (dm.addr == (void *)-1) {
+        /*
+         * We are a bit low on memory.  Try to go on anyway, & initialize
+         * our tty as an emergency console.
+         */
+        init_flags |= kTtyKlog;
+        tty->canvas = fb;
+        xs = xsfb;
+      } else
+        tty->canvas = dm.addr;
+    }
   }
   SetYn(tty, yn);
   SetXn(tty, xn);
@@ -169,8 +205,10 @@ void _StartTty(struct Tty *tty, unsigned char type,
   if (startx >= xn) startx = xn - 1;
   tty->y = starty;
   tty->x = startx;
-  TtySetType(tty, type);
-  if (SetWcs(tty, alloc_wcs)) {
+  if ((init_flags & kTtyKlog) != 0) init_flags &= ~kTtyAllocWcs;
+  tty->xs = xs;
+  TtySetType(tty, type, init_flags);
+  if (SetWcs(tty, init_flags)) {
     wchar_t *wcs = Wcs(tty);
     size_t n = (size_t)yn * xn, i;
     if (type == PC_VIDEO_TEXT) {
@@ -333,6 +371,9 @@ static uint8_t TtyGetTextAttr(struct Tty *tty) {
 #endif
   if ((tty->pr & kTtyBold) != 0) attr |= 0x08;
   return attr;
+}
+
+static void TtyNoopUpdate(struct Tty *tty) {
 }
 
 static void TtyTextDrawChar(struct Tty *tty, size_t y, size_t x, wchar_t wc) {

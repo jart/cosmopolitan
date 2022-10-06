@@ -29,6 +29,12 @@ struct mman {
   uint64_t pc_video_framebuffer;         /* 0x1d30 — physical address of
                                                      video frame buffer */
   uint64_t pc_video_framebuffer_size;    /* 0x1d38 */
+  struct {                               /* 0x1d40 — starting cursor pos. */
+    unsigned short y, x;
+  } pc_video_curs_info;
+  unsigned short pc_video_char_height;   /* 0x1d44 — character height (useful
+                                                     for setting cursor shape
+                                                     in text mode) */
 };
 
 COSMOPOLITAN_C_END_

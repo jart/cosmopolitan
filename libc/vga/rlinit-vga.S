@@ -78,7 +78,13 @@
 	xor	%bx,%bx
 #endif
 	int	$0x10
-9:
+9:	mov	0x0450,%dx		# note down cursor position
+	movzbw	%dh,%ax
+	mov	%ax,mm+"struct mman::pc_video_curs_info"
+	mov	%dl,%al
+	mov	%ax,mm+"struct mman::pc_video_curs_info"+2
+	mov	0x0486,%ax		# ...& character height
+	mov	%ax,mm+"struct mman::pc_video_char_height"
 	.previous
 	.code64
 	.section .rodata,"a",@progbits

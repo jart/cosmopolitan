@@ -24,26 +24,74 @@
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/fd.internal.h"
-#include "libc/calls/struct/iovec.h"
-#include "libc/calls/struct/iovec.internal.h"
-#include "libc/dce.h"
+#include "libc/intrin/newbie.h"
+#include "libc/macros.internal.h"
+#include "libc/runtime/mman.internal.h"
+#include "libc/str/str.h"
 #include "libc/vga/vga.internal.h"
 
-ssize_t sys_writev_vga(struct Fd *fd, const struct iovec *iov, int iovlen) {
-  size_t i, wrote = 0;
-  ssize_t res = 0;
-  for (i = 0; i < iovlen; ++i) {
-    void *output = iov[i].iov_base;
-    size_t len = iov[i].iov_len;
-    res = _TtyWrite(&_vga_tty, output, len);
-    if (res < 0)
-      break;
-    wrote += res;
-    if (res != len)
-      return wrote;
-  }
-  if (!wrote)
-    return res;
-  return wrote;
+/*
+ * @fileoverview Instantiation of routines for emergency or system console
+ * output in graphical video modes.
+ *
+ * @see libc/vga/tty-graph.inc
+ */
+
+#pragma GCC optimize("s")
+
+#define KLOGTTY
+#define MAYUNROLLLOOPS /* do not unroll loops; keep the code small! */
+
+/* Instantiate output routines for 16-bit pixel formats. */
+#define COLOR          uint16_t
+#define BPP            16
+#define MAPCOLOR       TtyKlog16MapColor
+#define DIRTY          TtyKlog16Dirty
+#define UPDATE         _TtyKlog16Update
+#define RESETDIRTY     TtyKlog16ResetDirty
+#define DRAWBITMAP     TtyKlog16DrawBitmap
+#define FILLRECT       TtyKlog16FillRect
+#define MOVERECT       TtyKlog16MoveRect
+#define DRAWCHAR       _TtyKlog16DrawChar
+#define ERASELINECELLS _TtyKlog16EraseLineCells
+#define MOVELINECELLS  _TtyKlog16MoveLineCells
+#include "libc/vga/tty-graph.inc"
+
+#undef COLOR
+#undef BPP
+#undef MAPCOLOR
+#undef BG
+#undef DIRTY
+#undef UPDATE
+#undef RESETDIRTY
+#undef DRAWBITMAP
+#undef FILLRECT
+#undef MOVERECT
+#undef DRAWCHAR
+#undef ERASELINECELLS
+#undef MOVELINECELLS
+
+/* Instantiate output routines for 32-bit pixel formats. */
+#define COLOR          uint32_t
+#define BPP            32
+#define MAPCOLOR       TtyKlog32MapColor
+#define DIRTY          TtyKlog32Dirty
+#define UPDATE         _TtyKlog32Update
+#define RESETDIRTY     TtyKlog32ResetDirty
+#define DRAWBITMAP     TtyKlog32DrawBitmap
+#define FILLRECT       TtyKlog32FillRect
+#define MOVERECT       TtyKlog32MoveRect
+#define DRAWCHAR       _TtyKlog32DrawChar
+#define ERASELINECELLS _TtyKlog32EraseLineCells
+#define MOVELINECELLS  _TtyKlog32MoveLineCells
+#include "libc/vga/tty-graph.inc"
+
+static unsigned short klog_y = 0, klog_x = 0;
+
+privileged void _klog_vga(const char *b, size_t n) {
+  struct Tty tty;
+  _vga_reinit(&tty, klog_y, klog_x, kTtyKlog);
+  _TtyWrite(&tty, b, n);
+  klog_y = _TtyGetY(&tty);
+  klog_x = _TtyGetX(&tty);
 }

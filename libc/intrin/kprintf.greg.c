@@ -55,6 +55,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/tls2.h"
+#include "libc/vga/vga.internal.h"
 
 extern hidden struct SymbolTable *__symtab;
 
@@ -188,6 +189,7 @@ privileged static void klog(const char *b, size_t n) {
                    : /* no inputs */
                    : "a"(b[i]), "dN"(dx));
     }
+    if (_weaken(_klog_vga)) _weaken(_klog_vga)(b, n);
   } else {
     asm volatile("syscall"
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
