@@ -39,8 +39,10 @@ noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
   size = ROUNDUP(size, 4096);
   addr = (uint64_t)paddr;
   if (!(flags & MAP_FIXED)) {
+    if (!addr)
+      addr = 4096;
     for (i = 0; i < size; i += 4096) {
-      pte = __get_virtual(mm, pml4t, addr, false);
+      pte = __get_virtual(mm, pml4t, addr + i, false);
       if (pte && (*pte & PAGE_V)) {
         addr = MAX(addr, sys_mmap_metal_break) + i + 4096;
         i = 0;
