@@ -87,7 +87,7 @@
  */
 
 #define PORT              8080   // default server listening port
-#define WORKERS           9001   // size of http client thread pool
+#define WORKERS           1001   // size of http client thread pool
 #define SUPERVISE_MS      1000   // how often to stat() asset files
 #define KEEPALIVE_MS      60000  // max time to keep idle conn open
 #define MELTALIVE_MS      2000   // panic keepalive under heavy load
@@ -642,7 +642,7 @@ void *HttpWorker(void *arg) {
   struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(g_port)};
 
   BlockSignals();
-  DontRunOnFirstCpus(2);
+  DontRunOnFirstCpus(1);
   CHECK_NE(-1, (server = socket(AF_INET, SOCK_STREAM, 0)));
   pthread_setname_np(pthread_self(), _gc(xasprintf("HTTP #%d", id)));
   setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));

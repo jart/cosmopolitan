@@ -195,9 +195,6 @@ privileged static void klog(const char *b, size_t n) {
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)
                  : "0"(__NR_write), "1"(2), "2"(b), "3"(n)
                  : "rcx", "r8", "r9", "r10", "r11", "memory", "cc");
-    if (rax < 0) {
-      notpossible;
-    }
   }
 }
 
