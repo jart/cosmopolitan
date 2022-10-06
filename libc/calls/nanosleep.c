@@ -30,13 +30,11 @@
  * Sleeps for relative amount of time.
  *
  * @param req is the duration of time we should sleep
- * @param rem if non-NULL will receive the amount of time that wasn't
- *     slept because a signal was delivered. If no signal's delivered
- *     then this value will be set to `{0, 0}`. It's also fine to set
- *     this value to the same pointer as `req`
+ * @param rem if non-null will be updated with the remainder of unslept
+ *     time when -1 w/ `EINTR` is returned otherwise `rem` is undefined
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
- * @raise EINTR if a signal was delivered, and `rem` is updated
+ * @raise EINTR if a signal was delivered and `rem` is updated
  * @raise EFAULT if `req` is NULL or `req` / `rem` is a bad pointer
  * @raise ENOSYS on bare metal
  * @see clock_nanosleep()
@@ -58,17 +56,9 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
   } else if (IsXnu()) {
     rc = sys_nanosleep_xnu(req, rem);
   } else if (IsMetal()) {
-    rc = enosys(); /* TODO: Sleep on Metal */
+    rc = enosys();
   } else {
     rc = sys_nanosleep_nt(req, rem);
-  }
-
-  // Linux Kernel doesn't change the remainder value on success, but
-  // some kernels like OpenBSD will. POSIX doesn't specify the Linux
-  // behavior. So we polyfill it here.
-  if (!rc && rem) {
-    rem->tv_sec = 0;
-    rem->tv_nsec = 0;
   }
 
 #ifdef SYSDEBUG

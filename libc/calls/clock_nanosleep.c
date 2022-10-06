@@ -65,14 +65,10 @@
  *     of your preferred platforms to see what other clocks might work
  * @param flags can be 0 for relative and `TIMER_ABSTIME` for absolute
  * @param req can be a relative or absolute time, depending on `flags`
- * @param rem will be updated with the unslept time only when `flags`
- *     is zero, otherwise `rem` is ignored; when this call completes,
- *     that means `rem` will be set to `{0, 0}`, and shall only have
- *     something else when -1 is returned with `EINTR`, which means
- *     there was a signal delivery that happened mid-sleep and `rem`
- *     reflects (poorly) how much remaining time was left over, in
- *     case the caller wishes to retry the sleep operation, noting
- *     this isn't recommended since relative timestamps can drift
+ * @param rem shall be updated with the remainder of unslept time when
+ *     (1) it's non-null; (2) `flags` is 0; and (3) -1 w/ `EINTR` is
+ *     returned; if this function returns 0 then `rem` is undefined;
+ *     if flags is `TIMER_ABSTIME` then `rem` is ignored
  * @return 0 on success, or -1 w/ errno
  * @raise EINTR when a signal got delivered while we were waiting
  * @raise ENOTSUP if `clock` is known but we can't use it here
@@ -105,14 +101,6 @@ int clock_nanosleep(int clock, int flags, const struct timespec *req,
     rc = enosys();
   } else {
     rc = sys_clock_nanosleep_nt(clock, flags, req, rem);
-  }
-
-  // Linux Kernel doesn't change the remainder value on success, but
-  // some kernels like OpenBSD will. POSIX doesn't specify the Linux
-  // behavior. So we polyfill it here.
-  if (!rc && !flags && rem) {
-    rem->tv_sec = 0;
-    rem->tv_nsec = 0;
   }
 
   STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %d% m", DescribeClockName(clock),

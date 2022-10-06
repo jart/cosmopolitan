@@ -21,6 +21,17 @@
 
 /**
  * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
+ *
+ * This function uses ceiling rounding. For example, if `ts` is one
+ * nanosecond, then one microsecond will be returned. Ceil rounding
+ * is needed by many interfaces, e.g. setitimer(), because the zero
+ * timestamp has a special meaning.
+ *
+ * This function also detects overflow in which case `INT64_MAX` or
+ * `INT64_MIN` may be returned. The `errno` variable isn't changed.
+ *
+ * @return 64-bit scalar holding microseconds since epoch
+ * @see _timespec_totimeval()
  */
 int64_t _timespec_tomicros(struct timespec ts) {
   int64_t us;

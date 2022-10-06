@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
@@ -29,28 +29,28 @@
  *
  * Raise SIGALRM every 1.5s:
  *
- *     CHECK_NE(-1, sigaction(SIGALRM,
- *                            &(struct sigaction){.sa_sigaction = _missingno},
- *                            NULL));
- *     CHECK_NE(-1, setitimer(ITIMER_REAL,
- *                            &(const struct itimerval){{1, 500000},
- *                                                      {1, 500000}},
- *                            NULL));
+ *     sigaction(SIGALRM,
+ *               &(struct sigaction){.sa_sigaction = _missingno},
+ *               NULL);
+ *     setitimer(ITIMER_REAL,
+ *               &(const struct itimerval){{1, 500000},
+ *                                         {1, 500000}},
+ *               NULL);
  *
  * Set single-shot 50ms timer callback to interrupt laggy connect():
  *
- *     CHECK_NE(-1, sigaction(SIGALRM,
- *                            &(struct sigaction){.sa_sigaction = _missingno,
- *                                                .sa_flags = SA_RESETHAND},
- *                            NULL));
- *     CHECK_NE(-1, setitimer(ITIMER_REAL,
- *                            &(const struct itimerval){{0, 0}, {0, 50000}},
- *                            NULL));
+ *     sigaction(SIGALRM,
+ *               &(struct sigaction){.sa_sigaction = _missingno,
+ *                                   .sa_flags = SA_RESETHAND},
+ *               NULL);
+ *     setitimer(ITIMER_REAL,
+ *               &(const struct itimerval){{0, 0}, {0, 50000}},
+ *               NULL);
  *     if (connect(...) == -1 && errno == EINTR) { ... }
  *
  * Disarm timer:
  *
- *     CHECK_NE(-1, setitimer(ITIMER_REAL, &(const struct itimerval){0}, NULL));
+ *     setitimer(ITIMER_REAL, &(const struct itimerval){0}, NULL);
  *
  * Be sure to check for EINTR on your i/o calls, for best low latency.
  *
@@ -81,6 +81,7 @@ int setitimer(int which, const struct itimerval *newvalue,
     rc = sys_setitimer_nt(which, newvalue, oldvalue);
   }
 
+#ifdef SYSDEBUG
   if (newvalue && oldvalue) {
     STRACE("setitimer(%d, "
            "{{%'ld, %'ld}, {%'ld, %'ld}}, "
@@ -100,6 +101,7 @@ int setitimer(int which, const struct itimerval *newvalue,
   } else {
     STRACE("setitimer(%d, NULL, NULL) → %d% m", which, rc);
   }
+#endif
 
   return rc;
 }

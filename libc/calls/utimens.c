@@ -21,6 +21,8 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/struct/timeval.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
@@ -46,6 +48,8 @@ int __utimens(int fd, const char *path, const struct timespec ts[2],
              (path && (_weaken(__zipos_parseuri) &&
                        _weaken(__zipos_parseuri)(path, &zipname) != -1))) {
     rc = enotsup();
+  } else if (IsLinux() && !__is_linux_2_6_23() && fd == AT_FDCWD && !flags) {
+    rc = sys_utimes(path, (void *)ts);  // rhel5 truncates to seconds
   } else if (!IsWindows()) {
     rc = sys_utimensat(fd, path, ts, flags);
   } else {

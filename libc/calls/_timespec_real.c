@@ -20,6 +20,15 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
 
+/**
+ * Returns current time.
+ *
+ * This function uses a `CLOCK_REALTIME` clock and never fails. Unlike
+ * clock_gettime() or timespec_real() this interface avoids the use of
+ * pointers which lets time handling code become more elegant.
+ *
+ * @see _timespec_mono()
+ */
 struct timespec _timespec_real(void) {
   struct timespec ts;
   _npassert(!clock_gettime(CLOCK_REALTIME_FAST, &ts));

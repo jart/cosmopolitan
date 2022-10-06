@@ -19,8 +19,10 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/utime.h"
@@ -31,6 +33,50 @@ char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath wpath cpath fattr", 0));
+}
+
+TEST(utimes, test) {
+  struct stat st;
+  struct timeval tv[2] = {
+      {1655455857, 1},  // atim: Fri Jun 17 2022 08:50:57 GMT+0000
+      {827727928, 2},   // mtim: Mon Mar 25 1996 04:25:28 GMT+0000
+  };
+  EXPECT_SYS(0, 0, touch("boop", 0644));
+  EXPECT_SYS(0, 0, utimes("boop", tv));
+  EXPECT_SYS(0, 0, stat("boop", &st));
+  EXPECT_EQ(1655455857, st.st_atim.tv_sec);
+  EXPECT_EQ(827727928, st.st_mtim.tv_sec);
+  if (IsLinux() && !__is_linux_2_6_23()) {
+    // rhel5 only seems to have second granularity
+    EXPECT_EQ(0, st.st_atim.tv_nsec);
+    EXPECT_EQ(0, st.st_mtim.tv_nsec);
+  } else {
+    EXPECT_EQ(1000, st.st_atim.tv_nsec);
+    EXPECT_EQ(2000, st.st_mtim.tv_nsec);
+  }
+}
+
+TEST(futimes, test) {
+  if (IsLinux() && !__is_linux_2_6_23()) return;
+  struct stat st;
+  struct timeval tv[2] = {{1655455857, 1}, {827727928, 2}};
+  EXPECT_SYS(0, 3, creat("boop", 0644));
+  EXPECT_SYS(0, 0, futimes(3, tv));
+  EXPECT_SYS(0, 0, fstat(3, &st));
+  EXPECT_EQ(1655455857, st.st_atim.tv_sec);
+  EXPECT_EQ(827727928, st.st_mtim.tv_sec);
+  EXPECT_EQ(1000, st.st_atim.tv_nsec);
+  EXPECT_EQ(2000, st.st_mtim.tv_nsec);
+  EXPECT_SYS(0, 0, close(3));
+}
+
+TEST(futimes, rhel5_enosys) {
+  if (IsLinux() && !__is_linux_2_6_23()) {
+    struct timeval tv[2] = {{1655455857}, {827727928}};
+    EXPECT_SYS(0, 3, creat("boop", 0644));
+    EXPECT_SYS(ENOSYS, -1, futimes(3, tv));
+    EXPECT_SYS(0, 0, close(3));
+  }
 }
 
 TEST(utimensat, test) {

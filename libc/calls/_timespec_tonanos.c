@@ -20,7 +20,12 @@
 #include "libc/limits.h"
 
 /**
- * Converts timespec interval to nanoseconds.
+ * Converts timespec to scalar.
+ *
+ * This function will detect overflow in which case `INT64_MAX` or
+ * `INT64_MIN` may be returned. The `errno` variable isn't changed.
+ *
+ * @return 64-bit integer holding nanoseconds since epoch
  */
 int64_t _timespec_tonanos(struct timespec x) {
   int64_t ns;

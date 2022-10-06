@@ -22,6 +22,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
@@ -41,11 +42,16 @@ TEST(nanosleep, testInvalid) {
   EXPECT_SYS(EINVAL, -1, nanosleep(&ts, 0));
 }
 
-TEST(nanosleep, testNoSignalIsDelivered_remIsSetToZero) {
+TEST(nanosleep, testNoSignalIsDelivered) {
   struct timespec ts = {0, 1};
   ASSERT_SYS(0, 0, nanosleep(&ts, &ts));
-  EXPECT_EQ(0, ts.tv_sec);
-  EXPECT_EQ(0, ts.tv_nsec);
+  ASSERT_SYS(0, 0, nanosleep(&ts, 0));
+}
+
+TEST(clock_nanosleep, testNoSignalIsDelivered) {
+  struct timespec ts = {0, 1};
+  ASSERT_SYS(0, 0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, &ts));
+  ASSERT_SYS(0, 0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0));
 }
 
 TEST(nanosleep, testInterrupt_remIsUpdated) {

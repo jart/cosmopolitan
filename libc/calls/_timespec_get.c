@@ -26,6 +26,7 @@
  * @param ts receives `CLOCK_REALTIME` timestamp
  * @param base must be `TIME_UTC`
  * @return `base` on success, or `0` on failure
+ * @see _timespec_real()
  */
 int timespec_get(struct timespec *ts, int base) {
   if (base == TIME_UTC && !clock_gettime(CLOCK_REALTIME, ts)) {

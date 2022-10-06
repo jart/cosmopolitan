@@ -64,12 +64,19 @@ TEST(_timespec_frommicros, test) {
 }
 
 TEST(_timespec_tomillis, test) {
+  EXPECT_EQ(0, _timespec_tomillis((struct timespec){0, 0}));
+  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 1}));
+  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 999999}));
+  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 1000000}));
+  EXPECT_EQ(1000, _timespec_tomillis((struct timespec){0, 999999999}));
   EXPECT_EQ(2123, _timespec_tomillis((struct timespec){2, 123000000}));
   EXPECT_EQ(INT64_MAX, _timespec_tomillis((struct timespec){INT64_MAX, 0}));
   EXPECT_EQ(INT64_MIN, _timespec_tomillis((struct timespec){INT64_MIN, 0}));
 }
 
 TEST(_timespec_tomicros, test) {
+  EXPECT_EQ(0, _timespec_tomicros((struct timespec){0, 0}));
+  EXPECT_EQ(1, _timespec_tomicros((struct timespec){0, 1}));
   EXPECT_EQ(2000123, _timespec_tomicros((struct timespec){2, 123000}));
   EXPECT_EQ(INT64_MAX, _timespec_tomicros((struct timespec){INT64_MAX, 0}));
   EXPECT_EQ(INT64_MIN, _timespec_tomicros((struct timespec){INT64_MIN, 0}));

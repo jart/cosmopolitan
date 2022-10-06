@@ -34,10 +34,13 @@
  *
  * XNU only has microsecond (1e-6) accuracy and there's no
  * `dirfd`-relative support. Windows only has hectonanosecond (1e-7)
- * accuracy. RHEL5 is somewhat broken so utimes() is recommended if
- * portability to old versions of Linux is desired.
+ * accuracy. RHEL5 doesn't support `dirfd` or `flags` and will truncate
+ * timestamps to seconds.
  *
- * @param dirfd is usually `AT_FDCWD`
+ * If you'd rather specify an open file descriptor rather than its
+ * filesystem path, then consider using futimens().
+ *
+ * @param dirfd can be `AT_FDCWD` or an open directory
  * @param path is filename whose timestamps should be modified
  * @param ts is {access, modified} timestamps, or null for current time
  * @param flags can have `AT_SYMLINK_NOFOLLOW` when `path` is specified
@@ -52,21 +55,23 @@
  * @raise EBADF if `dirfd` isn't a valid fd or `AT_FDCWD`
  * @raise EFAULT if `path` or `ts` memory was invalid
  * @raise EROFS if `path` is on read-only filesystem
- * @raise ENOSYS on bare metal
- * @see futimens()
+ * @raise ENOSYS on bare metal or on rhel5 when `dirfd` or `flags` is used
  * @asyncsignalsafe
  * @threadsafe
  */
 int utimensat(int dirfd, const char *path, const struct timespec ts[2],
               int flags) {
   int rc;
+
   if (!path) {
     rc = efault();  // linux kernel abi behavior isn't supported
   } else {
     rc = __utimens(dirfd, path, ts, flags);
   }
+
   STRACE("utimensat(%s, %#s, {%s, %s}, %#o) → %d% m", DescribeDirfd(dirfd),
          path, DescribeTimespec(0, ts), DescribeTimespec(0, ts ? ts + 1 : 0),
          flags, rc);
+
   return rc;
 }

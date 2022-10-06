@@ -26,8 +26,8 @@
  * Changes access/modified time on open file, the modern way.
  *
  * XNU only has microsecond (1e-6) accuracy. Windows only has
- * hectonanosecond (1e-7) accuracy. RHEL5 is somewhat broken so utimes()
- * is recommended if portability to old versions of Linux is desired.
+ * hectonanosecond (1e-7) accuracy. RHEL5 (Linux c. 2007) doesn't
+ * support this system call.
  *
  * @param fd is file descriptor of file whose timestamps will change
  * @param ts is {access, modified} timestamps, or null for current time

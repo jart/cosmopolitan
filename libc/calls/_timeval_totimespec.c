@@ -18,6 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timeval.h"
 
+/**
+ * Coerces `tv` from 1e-6 to 1e-9 granularity.
+ */
 struct timespec _timeval_totimespec(struct timeval tv) {
   return (struct timespec){tv.tv_sec, tv.tv_usec * 1000};
 }

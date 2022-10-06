@@ -20,6 +20,14 @@
 
 /**
  * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
+ *
+ * This function uses ceiling rounding. For example, if `ts` is one
+ * nanosecond, then one microsecond will be returned. Ceil rounding
+ * is needed by many interfaces, e.g. setitimer(), because the zero
+ * timestamp has a special meaning.
+ *
+ * @return microseconds since epoch
+ * @see _timespec_tomicros()
  */
 struct timeval _timespec_totimeval(struct timespec ts) {
   if (ts.tv_nsec < 1000000000 - 999) {

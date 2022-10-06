@@ -130,7 +130,7 @@ microarchitecture("avx") static void bzero_avx(char *p, size_t n) {
  * @return p
  * @asyncsignalsafe
  */
-void(bzero)(void *p, size_t n) {
+void bzero(void *p, size_t n) {
   char *b;
   uint64_t x;
   b = p;

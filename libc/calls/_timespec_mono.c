@@ -20,6 +20,13 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/sysv/consts/clock.h"
 
+/**
+ * Returns current monotonic time.
+ *
+ * This function uses a `CLOCK_MONOTONIC` clock and never fails.
+ *
+ * @see _timespec_real()
+ */
 struct timespec _timespec_mono(void) {
   struct timespec ts;
   _npassert(!clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
