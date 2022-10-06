@@ -1,6 +1,6 @@
 ---@meta
 error("Tried to evaluate definition file.")
---Documents redbean 2.0.16, lsqlite3 0.9.4
+--Documents redbean 2.0.19, lsqlite3 0.9.4
 
 --[[
 
@@ -630,14 +630,15 @@ function OnWorkerStop() end
 -- DATATYPES
 
 ---@class Url
----@field scheme string?
----@field user string?
----@field pass string?
----@field host string?
----@field port string?
----@field path string?
----@field params string?
----@field fragment string?
+---@field scheme string e.g. `"http"`
+---@field user string? the username string, or nil if absent
+---@field pass string? the password string, or nil if absent
+---@field host string? the hostname string, or nil if `url` was a path
+---@field port string? the port string, or nil if absent
+---@field path string? the path string, or nil if absent
+---@field params string[][]? the URL paramaters e.g. `/?a=b&c` would be
+--- represented as the data structure `{{"a", "b"}, {"c"}, ...}`
+---@field fragment string? the stuff after the `#` character
 
 ---@alias uint32 integer Unsigned 32-bit integer
 ---@alias uint16 integer Unsigned 16-bit integer
@@ -1392,27 +1393,52 @@ function Log(level, message) end
 ---@nodiscard
 function ParseHttpDateTime(rfc1123) end
 
---- Parses URL, returning object having the following fields: scheme, user, pass,
---- host, port, path, params, fragment. This parser is charset agnostic. Percent
---- encoded bytes are decoded for all fields. Returned values might contain things
---- like NUL characters, spaces, control codes, and non-canonical encodings. Absent
---- can be discerned from empty by checking if the pointer is set. There's no
---- failure condition for this routine. This is a permissive parser. This doesn't
---- normalize path segments like `.` or `..` so use `IsAcceptablePath()` to check
---- for those. No restrictions are imposed beyond that which is strictly necessary
---- for parsing. All the data that is provided will be consumed to the one of the
---- fields. Strict conformance is enforced on some fields more than others, like
---- scheme, since it's the most non-deterministically defined field of them all.
---- Please note this is a URL parser, not a URI parser. Which means we support
---- everything everything the URI spec says we should do except for the things
---- we won't do, like tokenizing path segments into an array and then nesting
---- another array beneath each of those for storing semicolon parameters. So this
---- parser won't make SIP easy. What it can do is parse HTTP URLs and most URIs
---- like data:opaque, better in fact than most things which claim to be URI parsers.
+--- Parses URL.
+--- 
+---@return Url url An object containing the following fields is returned:
+--- 
+--- - `scheme` is a string, e.g. `"http"`
+--- - `user` is the username string, or nil if absent
+--- - `pass` is the password string, or nil if absent
+--- - `host` is the hostname string, or nil if `url` was a path
+--- - `port` is the port string, or nil if absent
+--- - `path` is the path string, or nil if absent
+--- - `params` is the URL paramaters, e.g. `/?a=b&c` would be
+---   represented as the data structure `{{"a", "b"}, {"c"}, ...}`
+--- - `fragment` is the stuff after the `#` character
+--- 
 ---@param url string
----@return Url url
+---@param flags integer? may have:
+--- 
+--- - `kUrlPlus` to turn `+` into space
+--- - `kUrlLatin1` to transcode ISO-8859-1 input into UTF-8
+--- 
+--- This parser is charset agnostic. Percent encoded bytes are
+--- decoded for all fields. Returned values might contain things
+--- like NUL characters, spaces, control codes, and non-canonical
+--- encodings. Absent can be discerned from empty by checking if
+--- the pointer is set.
+--- 
+--- There's no failure condition for this routine. This is a
+--- permissive parser. This doesn't normalize path segments like
+--- `.` or `..` so use IsAcceptablePath() to check for those. No 
+--- restrictions are imposed beyond that which is strictly
+--- necessary for parsing. All the data that is provided will be
+--- consumed to the one of the fields. Strict conformance is
+--- enforced on some fields more than others, like scheme, since
+--- it's the most non-deterministically defined field of them all.
+--- 
+--- Please note this is a URL parser, not a URI parser. Which
+--- means we support everything everything the URI spec says we
+--- should do except for the things we won't do, like tokenizing
+--- path segments into an array and then nesting another array
+--- beneath each of those for storing semicolon parameters. So
+--- this parser won't make SIP easy. What it can do is parse HTTP
+--- URLs and most URIs like data:opaque, better in fact than most
+--- things which claim to be URI parsers.
+---
 ---@nodiscard
-function ParseUrl(url) end
+function ParseUrl(url, flags) end
 
 ---@param str string
 ---@return boolean # `true` if path doesn't contain ".", ".." or "//" segments See `isacceptablepath.c`
@@ -2387,7 +2413,7 @@ Database.errcode = Database.error_code
 
 ---@return string message an error message for the most recent failed call associated with database `db`.
 ---@nodiscard
-function Database.error_message() end
+function Database:error_message() end
 
 Database.errmsg = Database.error_message
 
@@ -5247,8 +5273,9 @@ function unix.clock_gettime(clock) end
 ---
 --- Returns `EINTR` if a signal was received while waiting.
 ---@param seconds integer
----@param nanos integer
----@return integer|nil remseconds, integer|unix.Errno remnanos `remseconds, remnanos` or `nil, error`
+---@param nanos integer?
+---@return integer remseconds, integer remnanos
+---@overload fun(seconds: integer, nanos?: integer): nil, error: unix.Errno
 function unix.nanosleep(seconds, nanos) end
 
 --- These functions are used to make programs slower by asking the
@@ -6361,6 +6388,290 @@ function unix.isatty(fd) end
 ---@nodiscard
 ---@overload fun(fd: integer): nil, error: unix.Errno
 function unix.tiocgwinsz(fd) end
+
+--- Returns file descriptor of open anonymous file.
+--- 
+--- This creates a secure temporary file inside `$TMPDIR`. If it isn't
+--- defined, then `/tmp` is used on UNIX and GetTempPath() is used on
+--- the New Technology. This resolution of `$TMPDIR` happens once in a
+--- ctor, which is copied to the `kTmpDir` global.
+--- 
+--- Once close() is called, the returned file is guaranteed to be
+--- deleted automatically. On UNIX the file is unlink()'d before this
+--- function returns. On the New Technology it happens upon close().
+--- 
+--- On the New Technology, temporary files created by this function
+--- should have better performance, because `kNtFileAttributeTemporary`
+--- asks the kernel to more aggressively cache and reduce i/o ops.
+---@return integer fd
+---@overload fun(): nil, error: unix.Errno
+function unix.tmpfd() end
+
+
+--- Relinquishes scheduled quantum.
+function unix.sched_yield() end
+
+--- Creates interprocess shared memory mapping.
+--- 
+--- This function allocates special memory that'll be inherited across
+--- fork in a shared way. By default all memory in Redbean is "private"
+--- memory that's only viewable and editable to the process that owns
+--- it. When unix.fork() happens, memory is copied appropriately so
+--- that changes to memory made in the child process, don't clobber
+--- the memory at those same addresses in the parent process. If you
+--- don't want that to happen, and you want the memory to be shared
+--- similar to how it would be shared if you were using threads, then
+--- you can use this function to achieve just that.
+--- 
+--- The memory object this function returns may be accessed using its
+--- methods, which support atomics and futexes. It's very low-level.
+--- For example, you can use it to implement scalable mutexes:
+--- 
+---     mem = unix.mapshared(8000 * 8)
+--- 
+---     LOCK = 0 -- pick an arbitrary word index for lock
+--- 
+---     -- From Futexes Are Tricky Version 1.1 § Mutex, Take 3;
+---     -- Ulrich Drepper, Red Hat Incorporated, June 27, 2004.
+---     function Lock()
+---         local ok, old = mem:cmpxchg(LOCK, 0, 1)
+---         if not ok then
+---             if old == 1 then
+---                 old = mem:xchg(LOCK, 2)
+---             end
+---             while old > 0 do
+---                 mem:wait(LOCK, 2)
+---                 old = mem:xchg(LOCK, 2)
+---             end
+---         end
+---     end
+---     function Unlock()
+---         old = mem:add(LOCK, -1)
+---         if old == 2 then
+---             mem:store(LOCK, 0)
+---             mem:wake(LOCK, 1)
+---         end
+---     end
+--- 
+--- It's possible to accomplish the same thing as unix.mapshared()
+--- using files and unix.fcntl() advisory locks. However this goes
+--- significantly faster. For example, that's what SQLite does and
+--- we recommend using SQLite for IPC in redbean. But, if your app
+--- has thousands of forked processes fighting for a file lock you
+--- might need something lower level than file locks, to implement
+--- things like throttling. Shared memory is a good way to do that
+--- since there's nothing that's faster.
+--- 
+---@param size integer
+--- The `size` parameter needs to be a multiple of 8. The returned
+--- memory is zero initialized. When allocating shared memory, you
+--- should try to get as much use out of it as possible, since the
+--- overhead of allocating a single shared mapping is 500 words of
+--- resident memory and 8000 words of virtual memory. It's because
+--- the Cosmopolitan Libc mmap() granularity is 2**16.
+--- 
+--- This system call does not fail. An exception is instead thrown
+--- if sufficient memory isn't available.
+---
+---@return unix.Memory
+function unix.mapshared(size) end
+
+---@class unix.Memory
+--- unix.Memory encapsulates memory that's shared across fork() and
+--- this module provides the fundamental synchronization primitives
+--- 
+--- Redbean memory maps may be used in two ways:
+--- 
+--- 1. as an array of bytes a.k.a. a string
+--- 2. as an array of words a.k.a. integers
+--- 
+--- They're aliased, union, or overlapped views of the same memory.
+--- For example if you write a string to your memory region, you'll
+--- be able to read it back as an integer.
+--- 
+--- Reads, writes, and word operations will throw an exception if a
+--- memory boundary error or overflow occurs.
+unix.Memory = {}
+
+---@param offset integer?
+--- The starting byte index from which memory is copied, which defaults to zero.
+---
+---@param bytes integer?
+--- If `bytes` is none or nil, then the nul-terminated string at
+--- `offset` is returned. You may specify `bytes` to safely read
+--- binary data.
+--- 
+--- This operation happens atomically. Each shared mapping has a
+--- single lock which is used to synchronize reads and writes to
+--- that specific map. To make it scale, create additional maps.
+---@return string
+---@nodiscard
+function unix.Memory:read(offset, bytes) end
+
+--- Writes bytes to memory region.
+--- 
+---@param data string
+---@param offset integer?
+--- `offset` is the starting byte index to which memory is copied,
+--- which defaults to zero.
+---
+---@param bytes integer?
+--- If `bytes` is none or nil, then an implicit nil-terminator
+--- will be included after your `data` so things like json can
+--- be easily serialized to shared memory.
+--- 
+--- This operation happens atomically. Each shared mapping has a
+--- single lock which is used to synchronize reads and writes to
+--- that specific map. To make it scale, create additional maps.
+function unix.Memory:write(data, offset, bytes) end
+
+
+--- Loads word from memory region.
+--- 
+--- This operation is atomic and has relaxed barrier semantics.
+---@param word_index integer
+---@return integer
+---@nodiscard
+function unix.Memory:load(word_index) end
+
+--- Stores word from memory region.
+--- 
+--- This operation is atomic and has relaxed barrier semantics.
+---@param word_index integer
+---@param value integer
+function unix.Memory:store(word_index, value) end
+
+
+--- Exchanges value.
+--- 
+--- This sets word at `word_index` to `value` and returns the value
+--- previously held in by the word.
+--- 
+--- This operation is atomic and provides the same memory barrier
+--- semantics as the aligned x86 LOCK XCHG instruction.
+---@param word_index integer
+---@param value integer
+---@return integer
+function unix.Memory:xchg(word_index, value) end
+
+--- Compares and exchanges value.
+--- 
+--- This inspects the word at `word_index` and if its value is the same
+--- as `old` then it'll be replaced by the value `new`, in which case
+--- `true, old` shall be returned. If a different value was held at
+--- word, then `false` shall be returned along with the word.
+--- 
+--- This operation happens atomically and provides the same memory
+--- barrier semantics as the aligned x86 LOCK CMPXCHG instruction.
+---@param word_index integer
+---@param old integer
+---@param new integer
+---@return boolean success, integer old
+function unix.Memory:cmpxchg(word_index, old, new) end
+
+--- Fetches then adds value.
+--- 
+--- This method modifies the word at `word_index` to contain the sum of
+--- value and the `value` paremeter. This method then returns the value
+--- as it existed before the addition was performed.
+--- 
+--- This operation is atomic and provides the same memory barrier
+--- semantics as the aligned x86 LOCK XADD instruction.
+---@param word_index integer
+---@param value integer
+---@return integer old
+function unix.Memory:fetch_add(word_index, value) end
+
+--- Fetches and bitwise ands value.
+--- 
+--- This operation happens atomically and provides the same memory
+--- barrier ordering semantics as its x86 implementation.
+---@param word_index integer
+---@param value integer
+---@return integer
+function unix.Memory:fetch_and(word_index, value) end
+
+--- Fetches and bitwise ors value.
+--- 
+--- This operation happens atomically and provides the same memory
+--- barrier ordering semantics as its x86 implementation.
+---@param word_index integer
+---@param value integer
+---@return integer
+function unix.Memory:fetch_or(word_index, value) end
+
+--- Fetches and bitwise xors value.
+--- 
+--- This operation happens atomically and provides the same memory
+--- barrier ordering semantics as its x86 implementation.
+---@param word_index integer
+---@param value integer
+---@return integer
+function unix.Memory:fetch_xor(word_index, value) end
+
+--- Waits for word to have a different value.
+--- 
+--- This method asks the kernel to suspend the process until either the
+--- absolute deadline expires or we're woken up by another process that
+--- calls `unix.Memory:wake()`.
+--- 
+--- The `expect` parameter is used only upon entry to synchronize the
+--- transition to kernelspace. The kernel doesn't actually poll the
+--- memory location. It uses `expect` to make sure the process doesn't
+--- get added to the wait list unless it's sure that it needs to wait,
+--- since the kernel can only control the ordering of wait / wake calls
+--- across processes.
+--- 
+--- The default behavior is to wait until the heat death of the universe
+--- if necessary. You may alternatively specify an absolute deadline. If
+--- it's less than or equal to the value returned by clock_gettime, then
+--- this routine is non-blocking. Otherwise we'll block at most until
+--- the current time reaches the absolute deadline.
+--- 
+--- Futexes are currently supported on Linux, FreeBSD, OpenBSD. On other
+--- platforms this method calls sched_yield() and will either (1) return
+--- unix.EINTR if a deadline is specified, otherwise (2) 0 is returned.
+--- This means futexes will *work* on Windows, Mac, and NetBSD but they
+--- won't be scalable in terms of CPU usage when many processes wait on
+--- one process that holds a lock for a long time. In the future we may
+--- polyfill futexes in userspace for these platforms to improve things
+--- for folks who've adopted this api. If lock scalability is something
+--- you need on Windows and MacOS today, then consider fcntl() which is
+--- well-supported on all supported platforms but requires using files.
+--- Please test your use case though, because it's kind of an edge case
+--- to have the scenario above, and chances are this op will work fine.
+--- 
+---@return 0
+---@overload fun(self, word_index: integer, expect: integer, abs_deadline?: integer, nanos?: integer): nil, error: unix.Errno
+---
+--- `EINTR` if a signal is delivered while waiting on deadline. Callers
+--- should use futexes inside a loop that is able to cope with spurious
+--- wakeups. We don't actually guarantee the value at word has in fact
+--- changed when this returns.
+--- 
+--- `EAGAIN` is raised if, upon entry, the word at `word_index` had a
+--- different value than what's specified at `expect`.
+--- 
+--- `ETIMEDOUT` is raised when the absolute deadline expires.
+---
+---@param word_index integer
+---@param expect integer
+---@param abs_deadline integer?
+---@param nanos integer?
+function unix.Memory:wait(word_index, expect, abs_deadline, nanos) end
+
+--- Wakes other processes waiting on word.
+--- 
+--- This method may be used to signal or broadcast to waiters. The
+--- `count` specifies the number of processes that should be woken,
+--- which defaults to `INT_MAX`.
+--- 
+--- The return value is the number of processes that were actually woken
+--- as a result of the system call. No failure conditions are defined.
+---@param index integer
+---@param count integer?
+---@return integer woken
+function unix.Memory:wake(index, count) end
 
 ---@class unix.Dir
 --- `unix.Dir` objects are created by `opendir()` or `fdopendir()`.
