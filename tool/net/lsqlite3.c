@@ -1789,17 +1789,6 @@ static int lsession_changeset(lua_State *L) {
     return 1;
 }
 
-static int lsession_tostring(lua_State *L) {
-    char buff[30];
-    lsession *lses = lsqlite_getsession(L, 1);
-    if (lses->ses == NULL)
-        strcpy(buff, "closed");
-    else
-        sprintf(buff, "%p", lses->ses);
-    lua_pushfstring(L, "sqlite session (%s)", buff);
-    return 1;
-}
-
 static int lsession_delete(lua_State *L) {
     lsession *lses = lsqlite_getsession(L, 1);
     if (lses->ses != NULL) {
@@ -1811,6 +1800,17 @@ static int lsession_delete(lua_State *L) {
 
 static int lsession_gc(lua_State *L) {
     return lsession_delete(L);
+}
+
+static int lsession_tostring(lua_State *L) {
+    char buff[30];
+    lsession *lses = lsqlite_getsession(L, 1);
+    if (lses->ses == NULL)
+        strcpy(buff, "closed");
+    else
+        sprintf(buff, "%p", lses->ses);
+    lua_pushfstring(L, "sqlite session (%s)", buff);
+    return 1;
 }
 
 static int db_create_session(lua_State *L) {
@@ -1825,6 +1825,73 @@ static int db_create_session(lua_State *L) {
     }
 
     (void)lsqlite_makesession(L, ses);
+    return 1;
+}
+
+static int changeset_conflict_cb = LUA_NOREF;
+static int changeset_conflict_udata = LUA_NOREF;
+
+static int db_changeset_conflict_callback(
+        void *user,               /* Copy of sixth arg to _apply_v2() */
+        int eConflict,            /* DATA, MISSING, CONFLICT, CONSTRAINT */
+        sqlite3_changeset_iter *p /* Handle describing change and conflict */
+) {
+    // return REPLACE code if no conflict callback is provided
+    if (changeset_conflict_cb == LUA_NOREF) return SQLITE_CHANGESET_REPLACE;
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    int result, isint;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb);    /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_udata); /* get callback user data */
+    lua_pushinteger(L, eConflict);
+
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
+
+    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
+    if (!isint) {
+        lua_pushliteral(L, "non-integer returned from conflict callback");
+        return lua_error(L);
+    }
+
+    lua_settop(L, top);
+    return result;
+}
+
+static int db_apply_changeset(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    const char *cset = luaL_checkstring(L, 2);
+    int nset = lua_rawlen(L, 2);
+    int rc;
+
+    // TBD: does this *also* need to be done in cleanupvm?
+    if (changeset_conflict_cb != LUA_NOREF) {
+        luaL_unref(L, LUA_REGISTRYINDEX, changeset_conflict_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, changeset_conflict_udata);
+
+        changeset_conflict_cb =
+        changeset_conflict_udata = LUA_NOREF;
+    }
+
+    if (lua_gettop(L) >= 3 && !lua_isnil(L, 3)) {
+        luaL_checktype(L, 3, LUA_TFUNCTION);
+        lua_settop(L, 4);
+        changeset_conflict_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        changeset_conflict_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    rc = sqlite3changeset_apply_v2(db->db, nset, cset, NULL,
+                                   db_changeset_conflict_callback,
+                                   db, 0, 0, 0);
+
+    if (rc != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, sqlite3_errcode(db->db));
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
     return 1;
 }
 
@@ -2014,6 +2081,7 @@ static const luaL_Reg dblib[] = {
     {"deserialize",         db_deserialize          },
 
     {"create_session",      db_create_session       },
+    {"apply_changeset",     db_apply_changeset      },
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
@@ -2095,7 +2163,7 @@ static const luaL_Reg seslib[] = {
     {"delete",                  lsession_delete                 },
 
     {"__tostring",              lsession_tostring               },
-    {"__gc",                	lsession_gc                     },
+    {"__gc",                    lsession_gc                     },
     {NULL, NULL}
 };
 
