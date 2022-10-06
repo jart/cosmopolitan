@@ -17,59 +17,79 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/macros.internal.h"
+#include "libc/nt/enum/processaccess.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows int sys_sched_getaffinity_nt(int tid, size_t size,
-                                                cpu_set_t *bitset) {
-  uint64_t ProcessAffinityMask, SystemAffinityMask;
-  if (GetProcessAffinityMask(GetCurrentProcess(), &ProcessAffinityMask,
-                             &SystemAffinityMask)) {
-    bzero(bitset, size);
-    bitset->__bits[0] = ProcessAffinityMask;
-    return 0;
+static dontinline textwindows int sys_sched_getaffinity_nt(int pid, size_t size,
+                                                           cpu_set_t *bitset) {
+  int rc;
+  int64_t h, closeme = -1;
+  uint64_t SystemAffinityMask;
+
+  if (!pid || pid == getpid()) {
+    h = GetCurrentProcess();
+  } else if (__isfdkind(pid, kFdProcess)) {
+    h = g_fds.p[pid].handle;
   } else {
-    return __winerr();
+    h = OpenProcess(kNtProcessQueryInformation, false, pid);
+    if (!h) return __winerr();
+    closeme = h;
   }
+
+  if (GetProcessAffinityMask(h, bitset->__bits, &SystemAffinityMask)) {
+    rc = 8;
+  } else {
+    rc = __winerr();
+  }
+
+  if (closeme != -1) {
+    CloseHandle(closeme);
+  }
+
+  return rc;
 }
 
 /**
- * Gets CPU affinity for thread.
+ * Gets CPU affinity for process.
  *
- * While Windows allows us to change the thread affinity mask, it's only
- * possible to read the process affinity mask. Therefore this function
- * won't reflect the changes made by sched_setaffinity() on Windows.
- *
- * @param pid is the process or thread id (or 0 for caller)
- * @param size is byte length of bitset, which should 128
+ * @param pid is the process id (or 0 for caller)
+ * @param size is bytes in bitset, which should be `sizeof(cpuset_t)`
  * @param bitset receives bitset and should be uint64_t[16] in order to
  *     work on older versions of Linux
  * @return 0 on success, or -1 w/ errno
- * @raise ENOSYS if not Linux, NetBSD, or Windows
+ * @raise ENOSYS if not Linux, FreeBSD, NetBSD, or Windows
+ * @see pthread_getaffinity_np() for threads
  */
-int sched_getaffinity(int tid, size_t size, cpu_set_t *bitset) {
+int sched_getaffinity(int pid, size_t size, cpu_set_t *bitset) {
   int rc;
-  if (size != 128) {
+  if (size != sizeof(cpu_set_t)) {
     rc = einval();
   } else if (IsWindows()) {
-    rc = sys_sched_getaffinity_nt(tid, size, bitset);
+    rc = sys_sched_getaffinity_nt(pid, size, bitset);
+  } else if (IsFreebsd()) {
+    if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_PID, pid, 32,
+                                       bitset)) {
+      rc = 32;
+    } else {
+      rc = -1;
+    }
   } else if (IsNetbsd()) {
-    if (!sys_sched_getaffinity_netbsd(0, tid, MIN(size, 32), bitset)) {
-      rc = MIN(size, 32);
+    if (!sys_sched_getaffinity_netbsd(P_ALL_LWPS, pid, 32, bitset)) {
+      rc = 32;
     } else {
       rc = -1;
     }
   } else {
-    rc = sys_sched_getaffinity(tid, size, bitset);
+    rc = sys_sched_getaffinity(pid, size, bitset);
   }
   if (rc > 0) {
     if (rc < size) {
@@ -77,6 +97,6 @@ int sched_getaffinity(int tid, size_t size, cpu_set_t *bitset) {
     }
     rc = 0;
   }
-  STRACE("sched_getaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset, rc);
+  STRACE("sched_getaffinity(%d, %'zu, %p) → %d% m", pid, size, bitset, rc);
   return rc;
 }

@@ -1,12 +1,18 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_SCHED_SYSV_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_SCHED_SYSV_INTERNAL_H_
 #include "libc/calls/struct/sched_param.h"
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
 
 #define MAXCPUS_NETBSD  256
+#define MAXCPUS_FREEBSD 256
 #define MAXCPUS_OPENBSD 64
 #define P_ALL_LWPS      0 /* for effect on all threads in pid */
+
+#define CPU_LEVEL_WHICH 3
+#define CPU_WHICH_TID   1
+#define CPU_WHICH_PID   2
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 int sys_sched_get_priority_max(int);
 int sys_sched_get_priority_min(int);
@@ -27,6 +33,12 @@ int sys_sched_setaffinity_netbsd(int, int, size_t, const void *)  //
     asm("sys_sched_setaffinity");
 int sys_sched_getaffinity_netbsd(int, int, size_t, void *)  //
     asm("sys_sched_setaffinity");
+
+int sys_sched_setaffinity_freebsd(
+    int level, int which, int id, size_t setsize,
+    const void *mask) asm("sys_sched_setaffinity");
+int sys_sched_getaffinity_freebsd(int level, int which, int id, size_t setsize,
+                                  void *mask) asm("sys_sched_getaffinity");
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

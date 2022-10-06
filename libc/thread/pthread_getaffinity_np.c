@@ -16,30 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 
 /**
  * Gets CPU affinity for thread.
  *
- * While Windows allows us to change the thread affinity mask, it's only
- * possible to read the process affinity mask. Therefore this function
- * won't reflect the changes made by psched_setaffinity_np() on Windows.
- *
- * @param bitsetsize is byte length of bitset, which should be 128
+ * @param size is bytes in bitset, which should be `sizeof(cpu_set_t)`
  * @return 0 on success, or errno on error
- * @raise ENOSYS if not Linux or Windows
+ * @raise EINVAL if `size` or `bitset` is invalid
+ * @raise ENOSYS if not Linux, FreeBSD, or NetBSD
  */
-errno_t pthread_getaffinity_np(pthread_t thread, size_t bitsetsize,
+errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
                                cpu_set_t *bitset) {
-  int rc, e = errno;
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  if (!sched_getaffinity(pt->tid, bitsetsize, bitset)) {
-    return 0;
+  int tid, rc, e = errno;
+  tid = ((struct PosixThread *)thread)->tid;
+
+  if (size != sizeof(cpu_set_t)) {
+    rc = einval();
+  } else if (IsWindows() || IsMetal() || IsOpenbsd()) {
+    rc = enosys();
+  } else if (IsFreebsd()) {
+    if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
+                                       bitset)) {
+      rc = 32;
+    } else {
+      rc = -1;
+    }
+  } else if (IsNetbsd()) {
+    if (!sys_sched_getaffinity_netbsd(tid, 0, 32, bitset)) {
+      rc = 32;
+    } else {
+      rc = -1;
+    }
   } else {
-    rc = errno;
-    errno = e;
-    return rc;
+    rc = sys_sched_getaffinity(tid, size, bitset);
   }
+  if (rc > 0) {
+    if (rc < size) {
+      bzero((char *)bitset + rc, size - rc);
+    }
+    rc = 0;
+  }
+
+  STRACE("pthread_getaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,
+         DescribeErrnoResult(rc));
+  return rc;
 }

@@ -16,75 +16,69 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
-#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/limits.h"
-#include "libc/macros.internal.h"
 #include "libc/nt/enum/processaccess.h"
-#include "libc/nt/enum/threadaccess.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
-#include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-static textwindows dontinline int sys_sched_setaffinity_nt(int pid,
-                                                           uint64_t size,
-                                                           const void *bitset) {
+static dontinline textwindows int sys_sched_setaffinity_nt(
+    int pid, uint64_t size, const cpu_set_t *bitset) {
   int rc;
-  int64_t handle;
-  uintptr_t mask;
-  typeof(SetThreadAffinityMask) *SetAffinityMask = SetThreadAffinityMask;
-  mask = 0;
-  memcpy(&mask, bitset, min(size, sizeof(uintptr_t)));
-  handle = 0;
-  if (!pid) pid = GetCurrentThreadId();
-  if (0 < pid && pid <= UINT32_MAX) {
-    if (pid == GetCurrentProcessId()) {
-      pid = GetCurrentProcess();
-      SetAffinityMask = SetProcessAffinityMask;
-    } else if (pid == GetCurrentThreadId()) {
-      pid = GetCurrentThread();
-    } else {
-      handle = OpenThread(kNtThreadSetInformation | kNtThreadQueryInformation,
-                          false, pid);
-      if (!handle) {
-        handle = OpenProcess(
-            kNtProcessSetInformation | kNtProcessQueryInformation, false, pid);
-        SetAffinityMask = SetProcessAffinityMask;
-      }
-    }
+  int64_t h, closeme = -1;
+
+  if (!pid /* || pid == getpid() */) {
+    h = GetCurrentProcess();
+  } else if (__isfdkind(pid, kFdProcess)) {
+    h = g_fds.p[pid].handle;
+  } else {
+    h = OpenProcess(kNtProcessSetInformation | kNtProcessQueryInformation,
+                    false, pid);
+    if (!h) return __winerr();
+    closeme = h;
   }
-  rc = SetAffinityMask(handle ? handle : pid, mask) ? 0 : __winerr();
-  if (handle) CloseHandle(handle);
+
+  if (SetProcessAffinityMask(h, bitset->__bits[0])) {
+    rc = 0;
+  } else {
+    rc = __winerr();
+  }
+
+  if (closeme != -1) {
+    CloseHandle(closeme);
+  }
+
   return rc;
 }
 
 /**
- * Asks kernel to only schedule thread on particular CPUs.
+ * Asks kernel to only schedule process on particular CPUs.
  *
- * @param tid is the process or thread id (or 0 for caller)
- * @param size is byte length of bitset, which should be 128
+ * @param pid is the process or process id (or 0 for caller)
+ * @param size is bytes in bitset, which should be `sizeof(cpuset_t)`
  * @return 0 on success, or -1 w/ errno
- * @raise ENOSYS if not Linux, NetBSD, or Windows
+ * @raise ENOSYS if not Linux, FreeBSD, NetBSD, or Windows
+ * @see pthread_getaffinity_np() for threads
  */
-int sched_setaffinity(int tid, size_t size, const cpu_set_t *bitset) {
+int sched_setaffinity(int pid, size_t size, const cpu_set_t *bitset) {
   int rc;
-  if (size != 128) {
+  if (size != sizeof(cpu_set_t)) {
     rc = einval();
   } else if (IsWindows()) {
-    rc = sys_sched_setaffinity_nt(tid, size, bitset);
+    rc = sys_sched_setaffinity_nt(pid, size, bitset);
+  } else if (IsFreebsd()) {
+    rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_PID, pid, 32,
+                                       bitset);
   } else if (IsNetbsd()) {
-    rc = sys_sched_setaffinity_netbsd(0, tid, MIN(size, 32), bitset);
+    rc = sys_sched_setaffinity_netbsd(P_ALL_LWPS, pid, 32, bitset);
   } else {
-    rc = sys_sched_setaffinity(tid, size, bitset);
+    rc = sys_sched_setaffinity(pid, size, bitset);
   }
-  STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", tid, size, bitset, rc);
+  STRACE("sched_setaffinity(%d, %'zu, %p) → %d% m", pid, size, bitset, rc);
   return rc;
 }

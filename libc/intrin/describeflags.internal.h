@@ -16,9 +16,9 @@ const char *DescribeArchPrctlCode(char[12], int);
 const char *DescribeCapability(char[20], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
+const char *DescribeErrnoResult(char[12], int);
 const char *DescribeFrame(char[32], int);
 const char *DescribeFutexOp(char[64], int);
-const char *DescribeFutexResult(char[12], int);
 const char *DescribeHow(char[12], int);
 const char *DescribeInOutInt64(char[23], ssize_t, int64_t *);
 const char *DescribeMapFlags(char[64], int);
@@ -62,9 +62,9 @@ const char *DescribeWhence(char[12], int);
 #define DescribeCapability(x)        DescribeCapability(alloca(20), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
+#define DescribeErrnoResult(x)       DescribeErrnoResult(alloca(12), x)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
 #define DescribeFutexOp(x)           DescribeFutexOp(alloca(64), x)
-#define DescribeFutexResult(x)       DescribeFutexResult(alloca(12), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
 #define DescribeInOutInt64(rc, x)    DescribeInOutInt64(alloca(23), rc, x)
 #define DescribeMapFlags(x)          DescribeMapFlags(alloca(64), x)

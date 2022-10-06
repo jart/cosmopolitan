@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_sched_getaffinity,0x15dffffffffff0cc,globl,hidden
+.scall sys_sched_getaffinity,0x15dfff1e7ffff0cc,globl,hidden

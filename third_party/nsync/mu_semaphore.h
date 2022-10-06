@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 typedef struct nsync_semaphore_s_ {
-  void *sem_space[1]; /* [jart] reduced to 8 bytes */
+  void *sem_space[32]; /* internal storage */
 } nsync_semaphore;
 
 /* Initialize *s; the initial value is 0. */

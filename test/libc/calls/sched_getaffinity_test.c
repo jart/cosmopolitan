@@ -23,9 +23,11 @@
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/thread2.h"
 
 void SetUp(void) {
-  if (!IsLinux()) {
+  if (!IsLinux() && !IsFreebsd() && !IsWindows()) {
     exit(0);
   }
 }
@@ -51,4 +53,27 @@ TEST(sched_getaffinity, secondOnly) {
   EXPECT_EQ(1, CPU_COUNT(&y));
   EXPECT_FALSE(CPU_ISSET(0, &y));
   EXPECT_TRUE(CPU_ISSET(1, &y));
+}
+
+TEST(sched_getaffinity, getpid) {
+  cpu_set_t x, y;
+  CPU_ZERO(&x);
+  CPU_SET(0, &x);
+  ASSERT_SYS(0, 0, sched_setaffinity(getpid(), sizeof(x), &x));
+  ASSERT_SYS(0, 0, sched_getaffinity(getpid(), sizeof(y), &y));
+  EXPECT_EQ(1, CPU_COUNT(&y));
+  EXPECT_TRUE(CPU_ISSET(0, &y));
+  EXPECT_FALSE(CPU_ISSET(1, &y));
+}
+
+TEST(pthread_getaffinity, getpid) {
+  cpu_set_t x, y;
+  CPU_ZERO(&x);
+  CPU_SET(0, &x);
+  ASSERT_SYS(0, 0, pthread_setaffinity_np(pthread_self(), sizeof(x), &x));
+  if (IsWindows()) return;  // win32 doesn't define GetThreadAffinityMask ;_;
+  ASSERT_SYS(0, 0, pthread_getaffinity_np(pthread_self(), sizeof(y), &y));
+  EXPECT_EQ(1, CPU_COUNT(&y));
+  EXPECT_TRUE(CPU_ISSET(0, &y));
+  EXPECT_FALSE(CPU_ISSET(1, &y));
 }

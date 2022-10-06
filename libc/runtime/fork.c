@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -39,9 +40,9 @@ int fork(void) {
   axdx_t ad;
   sigset_t old, all;
   int ax, dx, parent;
-  sigfillset(&all);
-  sigprocmask(SIG_BLOCK, &all, &old);
   if (!IsWindows()) {
+    sigfillset(&all);
+    sys_sigprocmask(SIG_BLOCK, &all, &old);
     ad = sys_fork();
     ax = ad.ax;
     dx = ad.dx;
@@ -64,10 +65,10 @@ int fork(void) {
     if (__tls_enabled) {
       __get_tls()->tib_tid = IsLinux() ? dx : sys_gettid();
     }
-    sigprocmask(SIG_SETMASK, &old, 0);
+    if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
-    sigprocmask(SIG_SETMASK, &old, 0);
+    if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → %d% m", ax);
   }
   return ax;

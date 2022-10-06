@@ -74,7 +74,7 @@ static void _wait0_futex(const atomic_int *a, int e) {
     }
   }
   STRACE("futex(%t, %s, %d, %s) → %s", a, DescribeFutexOp(op), e, "NULL",
-         DescribeFutexResult(rc));
+         DescribeErrnoResult(rc));
   _npassert(rc == 0 ||           //
             rc == -EINTR ||      //
             rc == -ETIMEDOUT ||  //

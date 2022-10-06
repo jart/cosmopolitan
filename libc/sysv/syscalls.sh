@@ -202,12 +202,10 @@ scall	sys_sched_setparam	0x15afff147ffff08e	globl hidden
 scall	sys_sched_getparam	0x15bfff148ffff08f	globl hidden
 scall	sys_sched_setscheduler	0xffffff149ffff090	globl hidden
 scall	sys_sched_getscheduler	0xffffff14affff091	globl hidden
-scall	sys_sched_setaffinity	0x15cffffffffff0cb	globl hidden
-scall	sys_sched_getaffinity	0x15dffffffffff0cc	globl hidden # returns bytes written on success. we polyfill bad posix designs like nice() returning 0, but we won't polyfill a bad unilateral redesign that's just glibc
+scall	sys_sched_setaffinity	0x15cfff1e8ffff0cb	globl hidden # hairy; cpuset_setaffinity on FreeBSD
+scall	sys_sched_getaffinity	0x15dfff1e7ffff0cc	globl hidden # hairy; cpuset_getaffinity on FreeBSD
 scall	sys_sched_get_priority_max 0xffffff14cffff092	globl hidden
 scall	sys_sched_get_priority_min 0xffffff14dffff093	globl hidden
-scall	sys_cpuset_getaffinity	0xffffff1e7fffffff	globl # no wrapper
-scall	sys_cpuset_setaffinity	0xffffff1e8fffffff	globl # no wrapper
 scall	sys_sched_rr_get_interval 0xffffff14effff094	globl hidden
 scall	sys_vhangup		0xfffffffffffff099	globl # no wrapper
 scall	sys_modify_ldt		0xfffffffffffff09a	globl # no wrapper

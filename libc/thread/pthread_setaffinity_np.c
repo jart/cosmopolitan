@@ -16,26 +16,61 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
+#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/nt/enum/threadaccess.h"
+#include "libc/nt/runtime.h"
+#include "libc/nt/thread.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
+
+static dontinline textwindows int sys_pthread_setaffinity_nt(
+    int tid, uint64_t size, const cpu_set_t *bitset) {
+  int rc;
+  int64_t h;
+  h = OpenThread(kNtThreadSetInformation | kNtThreadQueryInformation, false,
+                 tid);
+  if (!h) return __winerr();
+  rc = SetThreadAffinityMask(h, bitset->__bits[0]) ? 0 : __winerr();
+  CloseHandle(h);
+  return rc;
+}
 
 /**
  * Asks kernel to only schedule thread on particular CPUs.
  *
- * @param bitsetsize is byte length of bitset, which should be 128
+ * @param size is bytes in bitset, which should be `sizeof(cpu_set_t)`
  * @return 0 on success, or errno on error
- * @raise ENOSYS if not Linux or Windows
+ * @raise EINVAL if `size` or `bitset` is invalid
+ * @raise ENOSYS if not Linux, FreeBSD, NetBSD, or Windows
+ * @see sched_setaffinity() for processes
  */
-errno_t pthread_setaffinity_np(pthread_t thread, size_t bitsetsize,
+errno_t pthread_setaffinity_np(pthread_t thread, size_t size,
                                const cpu_set_t *bitset) {
-  int rc, e = errno;
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  if (!sched_setaffinity(pt->tid, bitsetsize, bitset)) {
-    return 0;
+  int tid, rc, e = errno;
+  tid = ((struct PosixThread *)thread)->tid;
+  if (size != sizeof(cpu_set_t)) {
+    rc = einval();
+  } else if (IsWindows()) {
+    rc = sys_pthread_setaffinity_nt(tid, size, bitset);
+  } else if (IsFreebsd()) {
+    rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
+                                       bitset);
+  } else if (IsNetbsd()) {
+    rc = sys_sched_setaffinity_netbsd(tid, 0, 32, bitset);
   } else {
+    rc = sys_sched_setaffinity(tid, size, bitset);
+  }
+  if (rc == -1) {
     rc = errno;
     errno = e;
-    return rc;
   }
+  STRACE("pthread_setaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,
+         DescribeErrnoResult(rc));
+  return rc;
 }

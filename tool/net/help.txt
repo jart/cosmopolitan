@@ -4602,7 +4602,7 @@ UNIX MODULE
     Exchanges value.
 
     This sets word at `word_index` to `value` and returns the value
-    previously held in by the word.
+    previously held within that word.
 
     This operation is atomic and provides the same memory barrier
     semantics as the aligned x86 LOCK XCHG instruction.
@@ -4614,8 +4614,8 @@ UNIX MODULE
 
     This inspects the word at `word_index` and if its value is the same
     as `old` then it'll be replaced by the value `new`, in which case
-    `true, old` shall be returned. If a different value was held at
-    word, then `false` shall be returned along with the word.
+    true shall be returned alongside `old`. If a different value was
+    held at word, then `false` shall be returned along with its value.
 
     This operation happens atomically and provides the same memory
     barrier semantics as the aligned x86 LOCK CMPXCHG instruction.
@@ -4626,8 +4626,8 @@ UNIX MODULE
     Fetches then adds value.
 
     This method modifies the word at `word_index` to contain the sum of
-    value and the `value` paremeter. This method then returns the value
-    as it existed before the addition was performed.
+    its value and the `value` paremeter. This method then returns the
+    value as it existed before the addition was performed.
 
     This operation is atomic and provides the same memory barrier
     semantics as the aligned x86 LOCK XADD instruction.

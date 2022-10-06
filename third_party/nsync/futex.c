@@ -160,7 +160,7 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 	STRACE("futex(%t, %s, %d, %s) → %s",
 	       p, DescribeFutexOp (op), expect,
 	       DescribeTimespec (0, timeout),
-	       DescribeFutexResult (rc));
+	       DescribeErrnoResult (rc));
 
 	return rc;
 }
@@ -201,7 +201,7 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 
 	STRACE("futex(%t, %s, %d) → %s", p,
 	       DescribeFutexOp(op),
-	       count, DescribeFutexResult(rc));
+	       count, DescribeErrnoResult(rc));
 
 	return rc;
 }

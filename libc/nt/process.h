@@ -61,7 +61,7 @@ int32_t SetEnvironmentStrings(char16_t *NewEnvironment);
 bool32 GetProcessAffinityMask(int64_t hProcess, uint64_t *lpProcessAffinityMask,
                               uint64_t *lpSystemAffinityMask);
 uint64_t /*bool32*/ SetProcessAffinityMask(int64_t hProcess,
-                                           uintptr_t dwProcessAffinityMask);
+                                           uint64_t dwProcessAffinityMask);
 
 /* e.g. kNtAboveNormalPriorityClass, kNtHighPriorityClass */
 uint32_t GetPriorityClass(int64_t hProcess);
