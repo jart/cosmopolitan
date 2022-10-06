@@ -258,8 +258,9 @@ static void DRAWBITMAP(struct Tty *tty, size_t gy, size_t gx,
   DIRTY(tty, gy, gx, gy + bm_ht, gx + bm_wid);
 }
 
-static unrollloops void FILLRECT(struct Tty *tty, size_t gy, size_t gx,
-                                 size_t fill_ht, size_t fill_wid, COLOR bg) {
+static MAYUNROLLLOOPS void FILLRECT(struct Tty *tty, size_t gy, size_t gx,
+                                    size_t fill_ht, size_t fill_wid,
+                                    COLOR bg) {
   size_t xs = tty->xs;
   char *cplotter = tty->canvas + gy * xs + gx * sizeof(COLOR);
   size_t yleft = fill_ht, xleft;

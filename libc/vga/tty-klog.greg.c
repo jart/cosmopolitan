@@ -37,7 +37,10 @@
  * @see libc/vga/tty-graph.inc
  */
 
+#pragma GCC optimize("s")
+
 #define KLOGTTY
+#define MAYUNROLLLOOPS /* do not unroll loops; keep the code small! */
 
 /* Instantiate output routines for 16-bit pixel formats. */
 #define COLOR          uint16_t

@@ -37,6 +37,7 @@
  */
 
 #undef KLOGTTY
+#define MAYUNROLLLOOPS unrollloops
 
 #define COLOR          TtyCanvasColor
 #define BPP            32
