@@ -60,7 +60,7 @@ void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
             chr_ht, chr_wid, vid_buf, init_flags);
 }
 
-__attribute__((__constructor__)) static textstartup void _vga_init(void) {
+textstartup void _vga_init(void) {
   if (IsMetal()) {
     struct mman *mm = (struct mman *)(BANE + 0x0500);
     unsigned short starty = mm->pc_video_curs_info.y,
