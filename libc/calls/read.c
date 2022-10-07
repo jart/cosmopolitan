@@ -35,12 +35,27 @@
  *
  * This function changes the current file position. For documentation
  * on file position behaviors and gotchas, see the lseek() function.
+ * This function may be used on socket file descriptors, including on
+ * Windows.
  *
  * @param fd is something open()'d earlier
  * @param buf is copied into, cf. copy_file_range(), sendfile(), etc.
  * @param size in range [1..0x7ffff000] is reasonable
  * @return [1..size] bytes on success, 0 on EOF, or -1 w/ errno; with
  *     exception of size==0, in which case return zero means no error
+ * @raise EBADF if `fd` is negative or not an open file descriptor
+ * @raise EBADF if `fd` is open in `O_WRONLY` mode
+ * @raise EFAULT if `size` is nonzero and `buf` points to bad memory
+ * @raise EPERM if pledge() is in play without the stdio promise
+ * @raise EIO if low-level i/o error happened
+ * @raise EINTR if signal was delivered instead
+ * @raise ENOTCONN if `fd` is a socket and it isn't connected
+ * @raise ECONNRESET if socket peer forcibly closed connection
+ * @raise ETIMEDOUT if socket transmission timeout occurred
+ * @raise EAGAIN if `O_NONBLOCK` is in play and read needs to block,
+ *     or `SO_RCVTIMEO` is in play and the time interval elapsed
+ * @raise ENOBUFS is specified by POSIX
+ * @raise ENXIO is specified by POSIX
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

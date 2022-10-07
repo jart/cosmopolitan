@@ -33,6 +33,8 @@
  *
  * This function changes the current file position. For documentation
  * on file position behaviors and gotchas, see the lseek() function.
+ * This function may be used on socket file descriptors, including on
+ * Windows.
  *
  * @param fd is open file descriptor
  * @param buf is copied from, cf. copy_file_range(), sendfile(), etc.

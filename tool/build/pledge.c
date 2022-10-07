@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/landlock.h"
 #include "libc/calls/pledge.h"
 #include "libc/calls/pledge.internal.h"
@@ -40,6 +39,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
@@ -115,7 +115,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
      - vminfo: allows /proc/stat, /proc/self/maps, etc.\n\
      - tmppath: allows /tmp, $TMPPATH, lstat, unlink\n\
 \n\
-pledge.com v1.7\n\
+pledge.com v1.8\n\
 copyright 2022 justine alexandra roberts tunney\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
