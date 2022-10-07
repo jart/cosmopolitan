@@ -50,6 +50,9 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/runtime/runtime.h"
 #include "libc/calls/struct/timeval.h"
+#include "third_party/sqlite3/sqlite3.h"
+#include "third_party/sqlite3/mutex.internal.h"
+#include "third_party/sqlite3/mutex.internal.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
 

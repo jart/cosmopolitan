@@ -18,6 +18,7 @@
 */
 /* clang-format off */
 
+#include "libc/fmt/conv.h"
 #include "third_party/sqlite3/fts3Int.inc"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 

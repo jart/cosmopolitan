@@ -32,7 +32,7 @@
 #include "libc/sysv/errfuns.h"
 
 /**
- * Blocks until SIG ∉ MASK is delivered to process.
+ * Blocks until SIG ∉ MASK is delivered to thread.
  *
  * This temporarily replaces the signal mask until a signal that it
  * doesn't contain is delivered.

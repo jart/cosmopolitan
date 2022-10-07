@@ -4626,7 +4626,7 @@ UNIX MODULE
     Fetches then adds value.
 
     This method modifies the word at `word_index` to contain the sum of
-    its value and the `value` paremeter. This method then returns the
+    its value and the `value` parameter. This method then returns the
     value as it existed before the addition was performed.
 
     This operation is atomic and provides the same memory barrier

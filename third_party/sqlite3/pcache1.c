@@ -80,6 +80,8 @@
 ** show that method (3) with N==100 provides about a 5% performance boost for
 ** common workloads.
 */
+#include "libc/assert.h"
+#include "third_party/sqlite3/sqlite3.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 /* clang-format off */
 
