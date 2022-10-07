@@ -112,10 +112,11 @@
 #define INBUF_SIZE  PAGESIZE
 #define OUTBUF_SIZE 8192
 
-#define GETOPTS "dvp:w:k:"
+#define GETOPTS "idvp:w:k:"
 #define USAGE \
   "\
 Usage: turfwar.com [-dv] ARGS...\n\
+  -i          integrity check and vacuum at startup\n\
   -d          daemonize\n\
   -v          verbosity\n\
   -p INT      port\n\
@@ -227,6 +228,7 @@ struct Asset {
 };
 
 // cli flags
+bool g_integrity;
 bool g_daemonize;
 int g_port = PORT;
 int g_workers = WORKERS;
@@ -1277,6 +1279,9 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
+      case 'i':
+        g_integrity = true;
+        break;
       case 'd':
         g_daemonize = true;
         break;
@@ -1692,8 +1697,28 @@ void *Supervisor(void *arg) {
   return 0;
 }
 
+void CheckDatabase(void) {
+  int rc;
+  sqlite3 *db;
+  if (g_integrity) {
+    CHECK_SQL(DbOpen("db.sqlite3", &db));
+    LOG("Checking database integrity...\n");
+    CHECK_SQL(sqlite3_exec(db, "PRAGMA integrity_check", 0, 0, 0));
+    LOG("Vacuuming database...\n");
+    CHECK_SQL(sqlite3_exec(db, "VACUUM", 0, 0, 0));
+    CHECK_SQL(sqlite3_close(db));
+  }
+  return;
+OnError:
+  exit(1);
+}
+
 int main(int argc, char *argv[]) {
-  // ShowCrashReports();
+  ShowCrashReports();
+
+  // we don't have proper futexes on these platforms
+  // so choose a smaller number of workers
+  g_workers = MIN(g_workers, 4);
 
   // user interface
   GetOpts(argc, argv);
@@ -1722,6 +1747,7 @@ int main(int argc, char *argv[]) {
   // library init
   __enable_threads();
   sqlite3_initialize();
+  CheckDatabase();
 
   // server lifecycle locks
   g_started = _timespec_real();

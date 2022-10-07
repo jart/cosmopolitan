@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/fmt/bing.internal.h"
-#include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 
 /**
@@ -56,6 +55,6 @@
  * @see unbing() for inverse
  */
 int bing(int b, int intent) {
-  assert(0 <= b && b < 256);
-  return kCp437[b & 0xff]; /* TODO(jart): multimappings */
+  _unassert(0 <= b && b < 256);
+  return kCp437[b & 0xff];
 }
