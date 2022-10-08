@@ -91,5 +91,12 @@
 vga_console:
 	.endobj	vga_console,globl,hidden
 	.previous
+	.init.start 305,_init_vga
+	push	%rdi
+	push	%rsi
+	call	_vga_init
+	pop	%rsi
+	pop	%rdi
+	.init.end 305,_init_vga
 	.yoink	sys_writev_vga
 	.yoink	sys_readv_vga
