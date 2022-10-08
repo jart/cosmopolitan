@@ -29,7 +29,7 @@ assert(mem:read() == 'hello')
 mem:write('hi')
 assert(mem:read() == 'hi')
 assert(mem:read(0, 5) == 'hi\0lo')
-mem:write('H', 0, 1)
+mem:write(0, 'H', 1)
 assert(mem:read(0, 5) == 'Hi\0lo')
 assert(mem:read(1, 1) == 'i')
 

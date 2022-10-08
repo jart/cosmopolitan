@@ -4509,7 +4509,7 @@ UNIX MODULE
             end
         end
         function Unlock()
-            old = mem:add(LOCK, -1)
+            old = mem:fetch_add(LOCK, -1)
             if old == 2 then
                 mem:store(LOCK, 0)
                 mem:wake(LOCK, 1)
@@ -4568,7 +4568,7 @@ UNIX MODULE
     single lock which is used to synchronize reads and writes to
     that specific map. To make it scale, create additional maps.
 
-  unix.Memory:write(data:str[, offset:int[, bytes:int]])
+  unix.Memory:write([offset:int,] data:str[, bytes:int]])
 
     Writes bytes to memory region.
 

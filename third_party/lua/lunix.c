@@ -2696,19 +2696,29 @@ static int LuaUnixMemoryRead(lua_State *L) {
   return 1;
 }
 
-// unix.Memory:write(data:str[, offset:int[, bytes:int]])
+// unix.Memory:write([offset:int,] data:str[, bytes:int])
 static int LuaUnixMemoryWrite(lua_State *L) {
+  int b;
   const char *s;
   size_t i, n, j;
   struct Memory *m;
   m = luaL_checkudata(L, 1, "unix.Memory");
-  s = luaL_checklstring(L, 2, &n);
-  i = luaL_optinteger(L, 3, 0);
+  if (!lua_isnumber(L, 2)) {
+    // unix.Memory:write(data:str[, bytes:int])
+    i = 0;
+    s = luaL_checklstring(L, 2, &n);
+    b = 3;
+  } else {
+    // unix.Memory:write(offset:int, data:str[, bytes:int])
+    i = luaL_checkinteger(L, 2);
+    s = luaL_checklstring(L, 3, &n);
+    b = 4;
+  }
   if (i > m->size) {
     luaL_error(L, "out of range");
     unreachable;
   }
-  if (lua_isnoneornil(L, 4)) {
+  if (lua_isnoneornil(L, b)) {
     // unix.Memory:write(data:str[, offset:int])
     // writes binary data, plus a nul terminator
     if (i < n < m->size) {
@@ -2723,9 +2733,9 @@ static int LuaUnixMemoryWrite(lua_State *L) {
   } else {
     // unix.Memory:write(data:str, offset:int, bytes:int])
     // writes binary data without including nul-terminator
-    j = luaL_checkinteger(L, 4);
+    j = luaL_checkinteger(L, b);
     if (j > n) {
-      luaL_argerror(L, 4, "bytes is more than what's in data");
+      luaL_argerror(L, b, "bytes is more than what's in data");
       unreachable;
     }
     n = j;

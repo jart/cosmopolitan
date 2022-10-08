@@ -154,6 +154,7 @@ o/$(MODE)/tool/net/demo/store-asset.lua.zip.o					\
 o/$(MODE)/tool/net/demo/maxmind.lua.zip.o					\
 o/$(MODE)/tool/net/demo/redbean.lua.zip.o					\
 o/$(MODE)/tool/net/demo/opensource.lua.zip.o					\
+o/$(MODE)/tool/net/demo/hitcounter.lua.zip.o					\
 o/$(MODE)/tool/net/demo/binarytrees.lua.zip.o					\
 o/$(MODE)/tool/net/demo/crashreport.lua.zip.o					\
 o/$(MODE)/tool/net/demo/closedsource.lua.zip.o					\
@@ -205,6 +206,7 @@ o/$(MODE)/tool/net/redbean-demo.com.dbg:					\
 		o/$(MODE)/tool/net/demo/redbean.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/maxmind.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/opensource.lua.zip.o			\
+		o/$(MODE)/tool/net/demo/hitcounter.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/binarytrees.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/crashreport.lua.zip.o			\
 		o/$(MODE)/tool/net/demo/closedsource.lua.zip.o			\
