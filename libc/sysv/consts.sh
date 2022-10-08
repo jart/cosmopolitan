@@ -1314,7 +1314,7 @@ syscon	rusage	RUSAGE_BOTH				-2			99			99			99			99			99			# woop
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	futex	FUTEX_WAIT				0			0			0			1			0			0
-syscon	futex	FUTEX_WAKE				1			0			1			2			0			1
+syscon	futex	FUTEX_WAKE				1			0			1			2			1			1
 syscon	futex	FUTEX_REQUEUE				3			0			0			3			0			0
 syscon	futex	FUTEX_PRIVATE_FLAG			128			0			128			128			0			0
 

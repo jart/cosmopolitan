@@ -17,17 +17,21 @@ COSMOPOLITAN_C_START_
 typedef struct timespec nsync_time;
 
 /* A deadline infinitely far in the future. */
-extern const nsync_time nsync_time_no_deadline;
+#define nsync_time_no_deadline _timespec_max
 
 /* The zero delay, or an expired deadline. */
-extern const nsync_time nsync_time_zero;
+#define nsync_time_zero _timespec_zero
 
 /* Return the current time since the epoch.  */
 #define nsync_time_now() _timespec_real()
 
 /* Sleep for the specified delay. Returns the unslept time which may be
    non-zero if the call was interrupted. */
-nsync_time nsync_time_sleep(nsync_time delay);
+#define nsync_time_sleep(a) _timespec_sleep(a)
+
+/* Sleep until the specified time.  Returns 0 on success, and EINTR
+   if the call was interrupted. */
+#define nsync_time_sleep_until(a) _timespec_sleep_until(a)
 
 /* Return a+b */
 #define nsync_time_add(a, b) _timespec_add(a, b)
@@ -43,6 +47,9 @@ nsync_time nsync_time_sleep(nsync_time delay);
 
 /* Return the specified number of microseconds as a time. */
 #define nsync_time_us(a) _timespec_frommicros(a)
+
+/* Return the specified number of nanoseconds as a time. */
+#define nsync_time_ns(a) _timespec_fromnanos(a)
 
 /* Return an nsync_time constructed from second and nanosecond
    components */

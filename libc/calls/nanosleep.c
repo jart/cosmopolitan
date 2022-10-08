@@ -16,18 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/asan.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/state.internal.h"
-#include "libc/calls/struct/timespec.internal.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/sysv/errfuns.h"
-
-// TODO(jart): Just delegate to clock_nanosleep()
 
 /**
  * Sleeps for relative amount of time.
@@ -45,32 +36,10 @@
  */
 int nanosleep(const struct timespec *req, struct timespec *rem) {
   int rc;
-
-  if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
-                            (rem && !__asan_is_valid_timespec(rem))))) {
-    rc = efault();
-  } else if (req->tv_sec < 0 ||
-             !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
-    rc = einval();
-  } else if (IsLinux() || IsFreebsd() || IsNetbsd()) {
-    rc = sys_clock_nanosleep(CLOCK_REALTIME, 0, req, rem);
-    if (rc > 0) errno = rc, rc = -1;
-  } else if (IsOpenbsd()) {
-    rc = sys_nanosleep(req, rem);
-  } else if (IsXnu()) {
-    rc = sys_nanosleep_xnu(req, rem);
-  } else if (IsMetal()) {
-    rc = enosys();
+  if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, req, rem))) {
+    return 0;
   } else {
-    rc = sys_nanosleep_nt(req, rem);
+    errno = rc;
+    return -1;
   }
-
-#ifdef SYSDEBUG
-  if (!__time_critical) {
-    STRACE("nanosleep(%s, [%s]) → %d% m", DescribeTimespec(rc, req),
-           DescribeTimespec(rc, rem), rc);
-  }
-#endif
-
-  return rc;
 }

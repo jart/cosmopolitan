@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/itimerval.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
@@ -26,7 +25,9 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 #include "libc/time/struct/timezone.h"
 
 typedef axdx_t gettimeofday_f(struct timeval *, struct timezone *, void *);
@@ -62,7 +63,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
     rc = __gettimeofday(tv, tz, 0).ax;
   }
 #if SYSDEBUG
-  if (!__time_critical) {
+  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("gettimeofday([%s], %p) → %d% m", DescribeTimeval(rc, tv), tz, rc);
   }
 #endif

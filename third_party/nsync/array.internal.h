@@ -1,5 +1,5 @@
-#ifndef NSYNC_TESTING_ARRAY_H_
-#define NSYNC_TESTING_ARRAY_H_
+#ifndef NSYNC_ARRAY_H_
+#define NSYNC_ARRAY_H_
 /* clang-format off */
 
 /* Return the number of elements in a C array a.
@@ -58,4 +58,4 @@ struct a_hdr_ {
                        (a)->a_ = NULL; (a)->h_.max_ = 0; (a)->h_.len_ = 0; \
 		  } while (0)
 
-#endif /*NSYNC_TESTING_ARRAY_H_*/
+#endif /*NSYNC_ARRAY_H_*/

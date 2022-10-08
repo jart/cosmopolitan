@@ -29,6 +29,7 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 /**
  * Sleeps for particular amount of time.
@@ -112,7 +113,7 @@ errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
   }
 
 #if SYSDEBUG
-  if (!__time_critical) {
+  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
            DescribeSleepFlags(flags), DescribeTimespec(0, req),
            DescribeTimespec(rc, rem), DescribeErrnoResult(rc));

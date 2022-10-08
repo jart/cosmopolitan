@@ -41,3 +41,11 @@ nsync_time_ms:
 nsync_time_us:
 	jmp	_timespec_frommicros
 	.endfn	nsync_time_us,globl
+
+nsync_time_sleep:
+	jmp	_timespec_sleep
+	.endfn	nsync_time_us,globl
+
+nsync_time_sleep_until:
+	jmp	_timespec_sleep_until
+	.endfn	nsync_time_us,globl

@@ -4,6 +4,8 @@
 
 #define TLS_ALIGNMENT 64
 
+#define TIB_FLAG_TIME_CRITICAL 1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -24,7 +26,7 @@ struct CosmoTib {
   _Atomic(int32_t) tib_tid;      /* 0x38 */
   int32_t tib_errno;             /* 0x3c */
   void *tib_nsync;
-  void *tib_reserved1;
+  uint64_t tib_flags;
   void *tib_reserved2;
   void *tib_reserved3;
   void *tib_reserved4;

@@ -17,11 +17,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/fmt/fmt.h"
 #include "libc/str/str.h"
+#include "third_party/nsync/array.internal.h"
+#include "third_party/nsync/heap.internal.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"
-#include "third_party/nsync/testing/array.h"
 #include "third_party/nsync/testing/closure.h"
-#include "third_party/nsync/testing/heap.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 #include "third_party/nsync/testing/time_extra.h"

@@ -16,5 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/timer.h"
 
-bool __time_critical;
+/**
+ * Sleeps until the specified time.
+ *
+ * @return 0 on success, or EINTR if interrupted
+ */
+int _timespec_sleep_until(struct timespec abs_deadline) {
+  int rc;
+  rc = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs_deadline, 0);
+  _npassert(!rc || rc == EINTR);
+  return rc;
+}

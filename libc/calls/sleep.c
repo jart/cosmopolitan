@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/errno.h"
 #include "libc/limits.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
 
 /**
@@ -33,12 +33,9 @@
  * @norestart
  */
 unsigned sleep(unsigned seconds) {
-  int err;
   unsigned unslept;
   struct timespec tv = {seconds};
-  err = errno;
-  nanosleep(&tv, &tv);
-  errno = err;
+  if (!clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv)) return 0;
   unslept = tv.tv_sec;
   if (tv.tv_nsec && unslept < UINT_MAX) {
     ++unslept;

@@ -17,20 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/initializer.internal.h"
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/clock_gettime.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/initializer.internal.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/thread/tls.h"
 #include "libc/time/time.h"
 
 static clock_gettime_f *__gettime;
@@ -53,11 +54,9 @@ static long double GetTimeSample(void) {
 }
 
 static long double MeasureNanosPerCycle(void) {
-  bool tc;
   int i, n;
   long double avg, samp;
-  tc = __time_critical;
-  __time_critical = true;
+  __get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
   if (IsWindows()) {
     n = 10;
   } else {
@@ -67,7 +66,7 @@ static long double MeasureNanosPerCycle(void) {
     samp = GetTimeSample();
     avg += (samp - avg) / i;
   }
-  __time_critical = tc;
+  __get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
   STRACE("MeasureNanosPerCycle cpn*1000=%d", (long)(avg * 1000));
   return avg;
 }

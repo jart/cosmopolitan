@@ -17,7 +17,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
-#include "third_party/nsync/testing/array.h"
+#include "third_party/nsync/array.internal.h"
 // clang-format off
 
 void a_ensure_ (void *v, int delta, int sz) {

@@ -41,20 +41,6 @@ char *nsync_time_str (nsync_time t, int decimals) {
 	return (smprintf ("%.*f%s", decimals, s/scale[i].multiplier, scale[i].suffix));
 }
 
-int nsync_time_sleep_until (nsync_time abs_deadline) {
-	int result = 0;
-	nsync_time now;
-	now = nsync_time_now ();
-	if (nsync_time_cmp (abs_deadline, now) > 0) {
-		nsync_time remaining;
-		remaining = nsync_time_sleep (nsync_time_sub (abs_deadline, now));
-		if (nsync_time_cmp (remaining, nsync_time_zero) > 0) {
-			result = EINTR;
-		}
-	}
-	return (result);
-}
-
 double nsync_time_to_dbl (nsync_time t) {
 	return (((double) NSYNC_TIME_SEC (t)) + ((double) NSYNC_TIME_NSEC (t) * 1e-9));
 }

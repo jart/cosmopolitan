@@ -6,10 +6,6 @@
    "decimals" decimal places.  */
 char *nsync_time_str(nsync_time t, int decimals);
 
-/* Sleep until the specified time.  Returns 0 on success, and EINTR
-   if the call was interrupted. */
-int nsync_time_sleep_until(nsync_time abs_deadline);
-
 /* Return t as a double. */
 double nsync_time_to_dbl(nsync_time t);
 

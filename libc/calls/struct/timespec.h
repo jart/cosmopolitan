@@ -3,6 +3,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+#define _timespec_zero ((struct timespec){0})
+#define _timespec_max  ((struct timespec){0x7fffffffffffffff, 999999999})
+
 struct timespec {
   int64_t tv_sec;
   int64_t tv_nsec; /* nanoseconds */
@@ -29,8 +32,10 @@ struct timespec _timespec_add(struct timespec, struct timespec) pureconst;
 struct timespec _timespec_fromnanos(int64_t) pureconst;
 struct timespec _timespec_frommicros(int64_t) pureconst;
 struct timespec _timespec_frommillis(int64_t) pureconst;
-struct timespec _timespec_mono(void);
 struct timespec _timespec_real(void);
+struct timespec _timespec_mono(void);
+struct timespec _timespec_sleep(struct timespec);
+int _timespec_sleep_until(struct timespec);
 struct timespec _timespec_sub(struct timespec, struct timespec) pureconst;
 
 COSMOPOLITAN_C_END_

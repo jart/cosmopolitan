@@ -18,8 +18,8 @@
 #include "libc/fmt/fmt.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
+#include "third_party/nsync/array.internal.h"
 #include "third_party/nsync/dll.h"
-#include "third_party/nsync/testing/array.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
 // clang-format off

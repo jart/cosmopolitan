@@ -17,6 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/time/time.h"
 
 /**
@@ -28,7 +30,7 @@
  * @norestart
  */
 int usleep(uint32_t micros) {
-  struct timespec ts;
-  ts = _timespec_frommicros(micros);
-  return nanosleep(&ts, 0);
+  struct timespec ts = _timespec_frommicros(micros);
+  if (clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0)) return eintr();
+  return 0;
 }

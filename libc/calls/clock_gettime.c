@@ -33,6 +33,7 @@
 #include "libc/mem/alloca.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 /**
  * Returns nanosecond time.
@@ -83,7 +84,7 @@ int clock_gettime(int clock, struct timespec *ts) {
     rc = __clock_gettime(clock, ts);
   }
 #if SYSDEBUG
-  if (!__time_critical) {
+  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("clock_gettime(%s, [%s]) → %d% m", DescribeClockName(clock),
            DescribeTimespec(rc, ts), rc);
   }

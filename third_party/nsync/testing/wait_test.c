@@ -16,9 +16,9 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "third_party/nsync/array.internal.h"
 #include "third_party/nsync/counter.h"
 #include "third_party/nsync/note.h"
-#include "third_party/nsync/testing/array.h"
 #include "third_party/nsync/testing/closure.h"
 #include "third_party/nsync/testing/smprintf.h"
 #include "third_party/nsync/testing/testing.h"
