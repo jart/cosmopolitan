@@ -120,8 +120,10 @@ static const char *const sqlite_vm_meta   = ":sqlite3:vm";
 static const char *const sqlite_bu_meta   = ":sqlite3:bu";
 static const char *const sqlite_ctx_meta  = ":sqlite3:ctx";
 static const char *const sqlite_ses_meta  = ":sqlite3:ses";
+static const char *const sqlite_reb_meta  = ":sqlite3:reb";
 static int sqlite_ctx_meta_ref;
 static int sqlite_ses_meta_ref;
+static int sqlite_reb_meta_ref;
 
 /*
 ** =======================================================
@@ -1897,6 +1899,71 @@ static int db_apply_changeset(lua_State *L) {
 
 /*
 ** =======================================================
+** Rebaser functions (for session support)
+** =======================================================
+*/
+
+typedef struct {
+    sqlite3_rebaser *reb;
+} lrebaser;
+
+static lrebaser *lsqlite_makerebaser(lua_State *L, sqlite3_rebaser *reb) {
+    lrebaser *lreb = (lrebaser*)lua_newuserdata(L, sizeof(lrebaser));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_reb_meta_ref);
+    lua_setmetatable(L, -2);
+    lreb->reb = reb;
+    return lreb;
+}
+
+static lrebaser *lsqlite_getrebaser(lua_State *L, int index) {
+    return (lrebaser *)luaL_checkudata(L, index, sqlite_reb_meta);
+}
+
+static lrebaser *lsqlite_checkrebaser(lua_State *L, int index) {
+    lrebaser *lreb = lsqlite_getrebaser(L, index);
+    if (lreb->reb == NULL) luaL_argerror(L, index, "invalid sqlite rebaser");
+    return lreb;
+}
+
+static int lrebaser_delete(lua_State *L) {
+    lrebaser *lreb = lsqlite_getrebaser(L, 1);
+    if (lreb->reb != NULL) {
+      sqlite3rebaser_delete(lreb->reb);
+      lreb->reb = NULL;
+    }
+    return 0;
+}
+
+static int lrebaser_gc(lua_State *L) {
+    return lrebaser_delete(L);
+}
+
+static int lrebaser_tostring(lua_State *L) {
+    char buff[30];
+    lrebaser *lreb = lsqlite_getrebaser(L, 1);
+    if (lreb->reb == NULL)
+        strcpy(buff, "closed");
+    else
+        sprintf(buff, "%p", lreb->reb);
+    lua_pushfstring(L, "sqlite rebaser (%s)", buff);
+    return 1;
+}
+
+static int db_create_rebaser(lua_State *L) {
+    sqlite3_rebaser *reb;
+
+    if (sqlite3rebaser_create(&reb) != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, SQLITE_NOMEM);
+        return 2;
+    }
+
+    (void)lsqlite_makerebaser(L, reb);
+    return 1;
+}
+
+/*
+** =======================================================
 ** General library functions
 ** =======================================================
 */
@@ -2081,6 +2148,7 @@ static const luaL_Reg dblib[] = {
     {"deserialize",         db_deserialize          },
 
     {"create_session",      db_create_session       },
+    {"create_rebaser",      db_create_rebaser       },
     {"apply_changeset",     db_apply_changeset      },
 
     {"__tostring",          db_tostring             },
@@ -2167,6 +2235,14 @@ static const luaL_Reg seslib[] = {
     {NULL, NULL}
 };
 
+static const luaL_Reg reblib[] = {
+    {"delete",                  lrebaser_delete                 },
+
+    {"__tostring",              lrebaser_tostring               },
+    {"__gc",                    lrebaser_gc                     },
+    {NULL, NULL}
+};
+
 static const luaL_Reg sqlitelib[] = {
     {"lversion",        lsqlite_lversion        },
     {"version",         lsqlite_version         },
@@ -2197,12 +2273,16 @@ LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     create_meta(L, sqlite_vm_meta, vmlib);
     create_meta(L, sqlite_ctx_meta, ctxlib);
     create_meta(L, sqlite_ses_meta, seslib);
+    create_meta(L, sqlite_reb_meta, reblib);
 
     luaL_getmetatable(L, sqlite_ctx_meta);
     sqlite_ctx_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     luaL_getmetatable(L, sqlite_ses_meta);
     sqlite_ses_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    luaL_getmetatable(L, sqlite_reb_meta);
+    sqlite_reb_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     /* register (local) sqlite metatable */
     luaL_register(L, "sqlite3", sqlitelib);
