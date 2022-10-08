@@ -66,7 +66,6 @@ syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; 
 syscon	errno	ELOOP					40			62			62			62			62			1921			# too many levels of symbolic links; bsd consensus; kNtErrorCantResolveFilename; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
 syscon	errno	ENOMSG					42			91			83			90			83			0			# raised by msgop(2)
 syscon	errno	EIDRM					43			90			82			89			82			0			# identifier removed; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
-syscon	errno	ETIME					62			101			60			60			92			0			# timer expired; timer expired; raised by connect(2), futex(2), keyctl(2), mq_receive(2), mq_send(2), rtime(2), sem_wait(2)
 syscon	errno	EPROTO					71			100			92			95			96			0			# raised by accept(2), connect(2), socket(2), socketpair(2)
 syscon	errno	EOVERFLOW				75			84			84			87			84			0			# raised by aio_read(2), copy_file_range(2), ctime(2), fanotify_init(2), lseek(2), mmap(2), open(2), open_by_handle_at(2), sem_post(2), sendfile(2), shmctl(2), stat(2), statfs(2), statvfs(2), time(2), timegm(2)
 syscon	errno	EILSEQ					84			92			86			84			85			0			# returned by fgetwc(3), fputwc(3), getwchar(3), putwchar(3), scanf(3), ungetwc(3)
@@ -95,6 +94,7 @@ syscon	errno	ENOTCONN				107			57			57			57			57			10057			# socket is not conne
 syscon	errno	ESHUTDOWN				108			58			58			58			58			10058			# cannot send after transport endpoint shutdown; note that shutdown write is an EPIPE; bsd consensus; WSAESHUTDOWN
 syscon	errno	ETOOMANYREFS				109			59			59			59			59			10059			# too many references: cannot splice; bsd consensus; WSAETOOMANYREFS; raised by sendmsg(2), unix(7)
 syscon	errno	ETIMEDOUT				110			60			60			60			60			1460			# connection timed out; kNtErrorTimeout; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
+syscon	errno	ETIME					62			101			60			60			92			0			# timer expired (POSIX.1 XSI STREAMS)
 syscon	errno	ECONNREFUSED				111			61			61			61			61			10061			# bsd consensus; WSAECONNREFUSED; raised by connect(2), listen(2), recv(2), unix(7), udp(7)system-imposed limit on the number of threads was encountered.
 syscon	errno	EHOSTDOWN				112			64			64			64			64			10064			# bsd consensus; WSAEHOSTDOWN; raised by accept(2)
 syscon	errno	EHOSTUNREACH				113			65			65			65			65			10065			# bsd consensus; WSAEHOSTUNREACH; raised by accept(2), ip(7)

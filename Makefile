@@ -160,6 +160,7 @@ include net/https/https.mk			# │
 include third_party/regex/regex.mk		#─┘
 include third_party/tidy/tidy.mk
 include third_party/third_party.mk
+include third_party/nsync/testing/testing.mk
 include libc/testlib/testlib.mk
 include tool/viz/lib/vizlib.mk
 include tool/args/args.mk

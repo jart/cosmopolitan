@@ -21,10 +21,13 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
+
+// TODO(jart): Just delegate to clock_nanosleep()
 
 /**
  * Sleeps for relative amount of time.
@@ -49,9 +52,10 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
   } else if (req->tv_sec < 0 ||
              !(0 <= req->tv_nsec && req->tv_nsec <= 999999999)) {
     rc = einval();
-  } else if (IsLinux()) {
+  } else if (IsLinux() || IsFreebsd() || IsNetbsd()) {
     rc = sys_clock_nanosleep(CLOCK_REALTIME, 0, req, rem);
-  } else if (IsOpenbsd() || IsFreebsd() || IsNetbsd()) {
+    if (rc > 0) errno = rc, rc = -1;
+  } else if (IsOpenbsd()) {
     rc = sys_nanosleep(req, rem);
   } else if (IsXnu()) {
     rc = sys_nanosleep_xnu(req, rem);

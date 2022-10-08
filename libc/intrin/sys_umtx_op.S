@@ -23,6 +23,7 @@
 //	Normalizes return value to Linux ABI -errno convention.
 sys_umtx_op:
 	mov	$0x1c6,%eax
+	mov	%rcx,%r10
 	syscall
 	jc	1f
 	ret

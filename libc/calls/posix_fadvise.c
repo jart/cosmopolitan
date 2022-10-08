@@ -41,6 +41,8 @@ int sys_fadvise_netbsd(int, int, int64_t, int64_t, int) asm("sys_fadvise");
  * @raise EINVAL if `advice` is invalid or `len` is huge
  * @raise ESPIPE if `fd` refers to a pipe
  * @raise ENOSYS on XNU and OpenBSD
+ * @returnserrno
+ * @threadsafe
  */
 errno_t posix_fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
   int rc, e = errno;

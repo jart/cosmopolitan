@@ -17,9 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/stdio/rand.h"
 #include "libc/testlib/testlib.h"
+#include "third_party/nsync/time.h"
 
 TEST(_timespec_gte, test) {
   EXPECT_FALSE(_timespec_gte((struct timespec){1}, (struct timespec){2}));
@@ -72,6 +74,8 @@ TEST(_timespec_tomillis, test) {
   EXPECT_EQ(2123, _timespec_tomillis((struct timespec){2, 123000000}));
   EXPECT_EQ(INT64_MAX, _timespec_tomillis((struct timespec){INT64_MAX, 0}));
   EXPECT_EQ(INT64_MIN, _timespec_tomillis((struct timespec){INT64_MIN, 0}));
+  EXPECT_EQ(INT64_MAX, _timespec_tomillis(
+                           (struct timespec){0x7fffffffffffffff, 999999999}));
 }
 
 TEST(_timespec_tomicros, test) {

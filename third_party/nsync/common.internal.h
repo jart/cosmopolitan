@@ -202,6 +202,7 @@ struct wait_condition_s {
     nsync_mu_semaphore_v (&w.sem); */
 typedef struct {
   uint32_t tag; /* debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND */
+  int flags;    /* see WAITER_* bits below */
   nsync_semaphore sem;       /* Thread waits on this semaphore. */
   struct nsync_waiter_s nw;  /* An embedded nsync_waiter_s. */
   struct nsync_mu_s_ *cv_mu; /* pointer to nsync_mu associated with a cv wait */
@@ -211,7 +212,6 @@ typedef struct {
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
   nsync_dll_element_ same_condition; /* Links neighbours in nw.q with same
                                         non-nil condition. */
-  int flags;                         /* see WAITER_* bits below */
 } waiter;
 static const uint32_t WAITER_TAG = 0x0590239f;
 static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;

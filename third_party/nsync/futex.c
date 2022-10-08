@@ -16,10 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
@@ -27,10 +30,10 @@
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/futex.h"
+#include "libc/sysv/consts/timer.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/common.internal.h"
-#include "third_party/nsync/futex.internal.h"
 #include "third_party/nsync/mu_semaphore.internal.h"
 // clang-format off
 
@@ -57,8 +60,8 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	if (IsFreebsd ()) {
 		FUTEX_IS_SUPPORTED = true;
 		FUTEX_WAIT_ = FUTEX_WAIT;
-		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		return;
 	}
 
@@ -101,18 +104,58 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	}
 }
 
+static int nsync_futex_polyfill_ (int *p, int expect, struct timespec *timeout) {
+	int rc;
+	atomic_int *w;
+	int64_t max, nanos;
+	struct timespec ts, deadline;
+
+	w = (atomic_int *)p;
+	if (atomic_load_explicit (p, memory_order_relaxed) != expect) {
+		return -EAGAIN;
+	}
+
+	ts = _timespec_real ();
+	if (!timeout) {
+		deadline = nsync_time_no_deadline;
+	} else if (FUTEX_TIMEOUT_IS_ABSOLUTE) {
+		deadline = *timeout;
+	} else {
+		deadline = _timespec_add (ts, *timeout);
+	}
+
+	nanos = 100;
+	max = __SIG_POLLING_INTERVAL_MS * 1000L * 1000;
+	while (_timespec_gt (deadline, ts)) {
+		if (atomic_load_explicit (p, memory_order_relaxed) != expect) {
+			return 0;
+		}
+		ts = _timespec_add (ts, _timespec_fromnanos (nanos));
+		if (_timespec_gt (ts, deadline)) {
+			ts = deadline;
+		}
+		rc = clock_nanosleep (CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0);
+		if (rc) {
+			ASSERT (rc == EINTR);
+			return -EINTR;
+		}
+		if (nanos < max) {
+			nanos <<= 1;
+			if (nanos > max) {
+				nanos = max;
+			}
+		}
+	}
+
+	return -ETIMEDOUT;
+}
+
 int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout) {
-	size_t size;
 	uint32_t ms;
 	int rc, op, fop;
 
-	if (!FUTEX_IS_SUPPORTED || (IsWindows() && pshare)) {
-		nsync_yield_ ();
-		if (timeout) {
-			return -EINTR;
-		} else {
-			return 0;
-		}
+	if (!FUTEX_IS_SUPPORTED) {
+		return nsync_futex_polyfill_ (p, expect, timeout);
 	}
 
 	op = FUTEX_WAIT_;
@@ -121,6 +164,10 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 	}
 
 	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
+		// Windows 8 futexes don't support multiple processes :(
+		if (pshare) {
+			return nsync_futex_polyfill_ (p, expect, timeout);
+		}
 		if (timeout) {
 			ms = _timespec_tomillis (*timeout);
 		} else {
@@ -132,23 +179,7 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 			rc = -GetLastError ();
 		}
 	} else if (IsFreebsd ()) {
-		struct _umtx_time *put, ut;
-		if (!timeout) {
-			put = 0;
-			size = 0;
-		} else {
-			ut._flags = UMTX_ABSTIME;
-			ut._clockid = CLOCK_REALTIME;
-			ut._timeout = *timeout;
-			put = &ut;
-			size = sizeof(ut);
-		}
-		if (pshare) {
-			fop = UMTX_OP_WAIT_UINT;
-		} else {
-			fop = UMTX_OP_WAIT_UINT_PRIVATE;
-		}
-		rc = sys_umtx_op (p, fop, 0, &size, put);
+		rc = sys_umtx_timedwait_uint (p, expect, pshare, timeout);
 	} else {
 		rc = _futex (p, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
 		if (IsOpenbsd() && rc > 0) {
@@ -157,10 +188,10 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 		}
 	}
 
-	STRACE("futex(%t, %s, %d, %s) → %s",
-	       p, DescribeFutexOp (op), expect,
-	       DescribeTimespec (0, timeout),
-	       DescribeErrnoResult (rc));
+	STRACE ("futex(%t, %s, %d, %s) → %s",
+		p, DescribeFutexOp (op), expect,
+		DescribeTimespec (0, timeout),
+		DescribeErrnoResult (rc));
 
 	return rc;
 }
@@ -171,7 +202,7 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 
 	ASSERT (count == 1 || count == INT_MAX);
 
-	if (!FUTEX_IS_SUPPORTED || (IsWindows() && pshare)) {
+	if (!FUTEX_IS_SUPPORTED) {
 		nsync_yield_ ();
 		return 0;
 	}
@@ -182,6 +213,10 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 	}
 
 	if (NSYNC_FUTEX_WIN32 && IsWindows ()) {
+		if (pshare) {
+			nsync_yield_ ();
+			return 0;
+		}
 		if (count == 1) {
 			WakeByAddressSingle (p);
 		} else {
@@ -199,9 +234,9 @@ int nsync_futex_wake_ (int *p, int count, char pshare) {
 		rc = wake (p, op, count);
 	}
 
-	STRACE("futex(%t, %s, %d) → %s", p,
-	       DescribeFutexOp(op),
-	       count, DescribeErrnoResult(rc));
+	STRACE ("futex(%t, %s, %d) → %s", p,
+		DescribeFutexOp(op),
+		count, DescribeErrnoResult(rc));
 
 	return rc;
 }

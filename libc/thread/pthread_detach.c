@@ -29,6 +29,8 @@
  *
  * @return 0 on success, or errno with error
  * @raise EINVAL if thread is null or already detached
+ * @returnserrno
+ * @threadsafe
  */
 int pthread_detach(pthread_t thread) {
   struct PosixThread *pt;

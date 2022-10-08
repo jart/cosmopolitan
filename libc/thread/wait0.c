@@ -25,6 +25,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -66,7 +67,7 @@ static void _wait0_futex(const atomic_int *a, int e) {
       rc = -GetLastError();
     }
   } else if (IsFreebsd()) {
-    rc = sys_umtx_op(a, UMTX_OP_WAIT_UINT, 0, 0, 0);
+    rc = sys_umtx_op(a, UMTX_OP_WAIT_UINT, e, 0, 0);
   } else {
     rc = _futex(a, op, e, 0);
     if (IsOpenbsd() && rc > 0) {

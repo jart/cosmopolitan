@@ -17,11 +17,13 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/asan.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/calls/struct/timeval.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
@@ -69,7 +71,7 @@
  *     (1) it's non-null; (2) `flags` is 0; and (3) -1 w/ `EINTR` is
  *     returned; if this function returns 0 then `rem` is undefined;
  *     if flags is `TIMER_ABSTIME` then `rem` is ignored
- * @return 0 on success, or -1 w/ errno
+ * @return 0 on success, or errno on error
  * @raise EINTR when a signal got delivered while we were waiting
  * @raise ENOTSUP if `clock` is known but we can't use it here
  * @raise EINVAL if `clock` is unknown to current platform
@@ -77,11 +79,12 @@
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
  * @raise EFAULT if bad memory was passed
  * @raise ENOSYS on bare metal
+ * @returnserrno
  * @norestart
  */
-int clock_nanosleep(int clock, int flags, const struct timespec *req,
-                    struct timespec *rem) {
-  int rc;
+errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
+                        struct timespec *rem) {
+  int rc, e = errno;
 
   if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
                             (rem && !__asan_is_valid_timespec(rem))))) {
@@ -103,9 +106,18 @@ int clock_nanosleep(int clock, int flags, const struct timespec *req,
     rc = sys_clock_nanosleep_nt(clock, flags, req, rem);
   }
 
-  STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %d% m", DescribeClockName(clock),
-         DescribeSleepFlags(flags), flags, DescribeTimespec(0, req),
-         DescribeTimespec(rc, rem), rc);
+  if (rc == -1) {
+    rc = errno;
+    errno = e;
+  }
+
+#if SYSDEBUG
+  if (!__time_critical) {
+    STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
+           DescribeSleepFlags(flags), DescribeTimespec(0, req),
+           DescribeTimespec(rc, rem), DescribeErrnoResult(rc));
+  }
+#endif
 
   return rc;
 }

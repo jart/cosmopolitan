@@ -26,6 +26,8 @@
  *
  * @return 0 on success, or errno with error
  * @raise EDEADLK if thread is detached
+ * @returnserrno
+ * @threadsafe
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
   struct PosixThread *pt;

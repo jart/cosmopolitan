@@ -4668,12 +4668,10 @@ UNIX MODULE
     absolute deadline expires or we're woken up by another process that
     calls unix.Memory:wake().
 
-    The `expect` parameter is used only upon entry to synchronize the
-    transition to kernelspace. The kernel doesn't actually poll the
-    memory location. It uses `expect` to make sure the process doesn't
-    get added to the wait list unless it's sure that it needs to wait,
-    since the kernel can only control the ordering of wait / wake calls
-    across processes.
+    The `expect` parameter is the value you expect the word to have and
+    this function will return if that's not the case.  Please note this
+    parameter doesn't imply the kernel will poll the value for you, and
+    you still need to call wake() when you know the memory's changed.
 
     The default behavior is to wait until the heat death of the universe
     if necessary. You may alternatively specify an absolute deadline. If
@@ -4681,18 +4679,11 @@ UNIX MODULE
     this routine is non-blocking. Otherwise we'll block at most until
     the current time reaches the absolute deadline.
 
-    Futexes are currently supported on Linux, FreeBSD, OpenBSD. On other
-    platforms this method calls sched_yield() and will either (1) return
-    unix.EINTR if a deadline is specified, otherwise (2) 0 is returned.
-    This means futexes will *work* on Windows, Mac, and NetBSD but they
-    won't be scalable in terms of CPU usage when many processes wait on
-    one process that holds a lock for a long time. In the future we may
-    polyfill futexes in userspace for these platforms to improve things
-    for folks who've adopted this api. If lock scalability is something
-    you need on Windows and MacOS today, then consider fcntl() which is
-    well-supported on all supported platforms but requires using files.
-    Please test your use case though, because it's kind of an edge case
-    to have the scenario above, and chances are this op will work fine.
+    Futexes are supported natively on Linux, FreeBSD, and OpenBSD. When
+    this interface is used on other platforms this method will manually
+    poll the memory location with exponential backoff. Doing this works
+    well enough that we're passing the *NSYNC unit tests, but is not as
+    low latency as having kernel supported futexes.
 
     `EINTR` if a signal is delivered while waiting on deadline. Callers
     should use futexes inside a loop that is able to cope with spurious

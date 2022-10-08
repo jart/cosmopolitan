@@ -17,7 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 
-int posix_madvise(void *addr, uint64_t len, int advice) {
-  return madvise(addr, len, advice);
+/**
+ * Advises kernel about memory intentions, the POSIX way.
+ *
+ * @return 0 on success, or errno on error
+ * @returnserrno
+ * @threadsafe
+ */
+errno_t posix_madvise(void *addr, uint64_t len, int advice) {
+  int rc, e = errno;
+  rc = madvise(addr, len, advice);
+  if (rc == -1) {
+    rc = errno;
+    errno = e;
+  }
+  return rc;
 }

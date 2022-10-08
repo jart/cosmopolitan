@@ -182,6 +182,7 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
  * @raise EINVAL if `attr` was supplied and had unnaceptable data
  * @raise EPERM if scheduling policy was requested and user account
  *     isn't authorized to use it
+ * @returnserrno
  * @threadsafe
  */
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,

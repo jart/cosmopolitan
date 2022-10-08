@@ -48,12 +48,6 @@ TEST(nanosleep, testNoSignalIsDelivered) {
   ASSERT_SYS(0, 0, nanosleep(&ts, 0));
 }
 
-TEST(clock_nanosleep, testNoSignalIsDelivered) {
-  struct timespec ts = {0, 1};
-  ASSERT_SYS(0, 0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, &ts));
-  ASSERT_SYS(0, 0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0));
-}
-
 TEST(nanosleep, testInterrupt_remIsUpdated) {
   struct sigaction sa = {
       .sa_handler = OnAlrm,
@@ -64,6 +58,27 @@ TEST(nanosleep, testInterrupt_remIsUpdated) {
   ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, 0));
   struct timespec ts = {500, 0};
   ASSERT_SYS(EINTR, -1, nanosleep(&ts, &ts));
+  ASSERT_LT(ts.tv_sec, 500);
+  ASSERT_GT(ts.tv_sec, 400);
+  ASSERT_NE(0, ts.tv_nsec);
+}
+
+TEST(clock_nanosleep, testNoSignalIsDelivered) {
+  struct timespec ts = {0, 1};
+  ASSERT_EQ(0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, &ts));
+  ASSERT_EQ(0, clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0));
+}
+
+TEST(clock_nanosleep, testInterrupt_remIsUpdated) {
+  struct sigaction sa = {
+      .sa_handler = OnAlrm,
+      .sa_flags = SA_RESETHAND,
+  };
+  ASSERT_SYS(0, 0, sigaction(SIGALRM, &sa, 0));
+  struct itimerval it = {{0, 0}, {0, 10000}};  // 10ms singleshot
+  ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, 0));
+  struct timespec ts = {500, 0};
+  ASSERT_EQ(EINTR, clock_nanosleep(CLOCK_REALTIME, 0, &ts, &ts));
   ASSERT_LT(ts.tv_sec, 500);
   ASSERT_GT(ts.tv_sec, 400);
   ASSERT_NE(0, ts.tv_nsec);

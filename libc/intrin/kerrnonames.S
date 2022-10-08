@@ -74,7 +74,6 @@ kErrnoNames:
 	.e	ELOOP
 	.e	ENOMSG
 	.e	EIDRM
-	.e	ETIME
 	.e	EPROTO
 	.e	EOVERFLOW
 	.e	EILSEQ
@@ -103,6 +102,7 @@ kErrnoNames:
 	.e	ESHUTDOWN
 	.e	ETOOMANYREFS
 	.e	ETIMEDOUT
+	.e	ETIME
 	.e	ECONNREFUSED
 	.e	EHOSTDOWN
 	.e	EHOSTUNREACH
