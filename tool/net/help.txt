@@ -4557,6 +4557,8 @@ UNIX MODULE
   unix.Memory:read([offset:int[, bytes:int]])
       └─→ str
 
+    Reads bytes from memory region
+
     `offset` is the starting byte index from which memory is copied,
     which defaults to zero.
 
