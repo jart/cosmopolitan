@@ -26,6 +26,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/symbols.internal.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/thread/thread.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 
 /**

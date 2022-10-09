@@ -77,15 +77,22 @@ typedef struct pthread_barrier_s {
 } pthread_barrier_t;
 
 typedef struct pthread_attr_s {
-  char detachstate;
-  char inheritsched;
-  int schedparam;
-  int schedpolicy;
-  int scope;
-  unsigned guardsize;
-  unsigned stacksize;
-  char *stackaddr;
+  char __detachstate;
+  char __inheritsched;
+  int __schedparam;
+  int __schedpolicy;
+  int __scope;
+  unsigned __guardsize;
+  unsigned __stacksize;
+  char *__stackaddr;
 } pthread_attr_t;
+
+struct _pthread_cleanup_buffer {
+  void (*__routine)(void *);
+  void *__arg;
+  int __canceltype;
+  struct _pthread_cleanup_buffer *__prev;
+};
 
 int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);
@@ -168,6 +175,18 @@ int pthread_barrier_wait(pthread_barrier_t *);
 int pthread_barrier_destroy(pthread_barrier_t *);
 int pthread_barrier_init(pthread_barrier_t *, const pthread_barrierattr_t *,
                          unsigned);
+void _pthread_cleanup_pop(struct _pthread_cleanup_buffer *, int);
+void _pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *),
+                           void *);
+
+#define pthread_cleanup_push(routine, arg)  \
+  {                                         \
+    struct _pthread_cleanup_buffer _buffer; \
+    _pthread_cleanup_push(&_buffer, (routine), (arg));
+
+#define pthread_cleanup_pop(execute)         \
+  _pthread_cleanup_pop(&_buffer, (execute)); \
+  }
 
 #define pthread_spin_init(pSpin, multiprocess) ((pSpin)->_lock = 0, 0)
 #define pthread_spin_destroy(pSpin)            ((pSpin)->_lock = -1, 0)

@@ -44,7 +44,7 @@ errno_t pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched) {
   switch (inheritsched) {
     case PTHREAD_INHERIT_SCHED:
     case PTHREAD_EXPLICIT_SCHED:
-      attr->inheritsched = inheritsched;
+      attr->__inheritsched = inheritsched;
       return 0;
     default:
       assert(!"badval");

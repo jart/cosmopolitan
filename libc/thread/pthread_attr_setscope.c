@@ -19,6 +19,6 @@
 #include "libc/thread/thread.h"
 
 int pthread_attr_setscope(pthread_attr_t *a, int x) {
-  a->scope = x;
+  a->__scope = x;
   return 0;
 }

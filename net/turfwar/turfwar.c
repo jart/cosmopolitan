@@ -1714,7 +1714,7 @@ OnError:
 }
 
 int main(int argc, char *argv[]) {
-  ShowCrashReports();
+  // ShowCrashReports();
 
   // we don't have proper futexes on these platforms
   // so choose a smaller number of workers

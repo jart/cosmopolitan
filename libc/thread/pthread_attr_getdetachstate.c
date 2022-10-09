@@ -27,6 +27,6 @@
  * @return 0 on success, or error on failure
  */
 int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
-  *detachstate = attr->detachstate;
+  *detachstate = attr->__detachstate;
   return 0;
 }

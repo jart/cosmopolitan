@@ -45,7 +45,7 @@ int pthread_setschedparam(pthread_t thread, int policy,
                           const struct sched_param *param) {
   struct PosixThread *pt = (struct PosixThread *)thread;
   if (!param) return EINVAL;
-  pt->attr.schedpolicy = policy;
-  pt->attr.schedparam = param->sched_priority;
+  pt->attr.__schedpolicy = policy;
+  pt->attr.__schedparam = param->sched_priority;
   return _pthread_reschedule(pt);
 }

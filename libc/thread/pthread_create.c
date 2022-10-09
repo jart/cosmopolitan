@@ -57,11 +57,12 @@ void _pthread_wait(struct PosixThread *pt) {
 }
 
 void _pthread_free(struct PosixThread *pt) {
+  if (pt->flags & PT_MAINTHREAD) return;
   free(pt->tls);
-  if (pt->ownstack &&        //
-      pt->attr.stackaddr &&  //
-      pt->attr.stackaddr != MAP_FAILED) {
-    if (munmap(pt->attr.stackaddr, pt->attr.stacksize)) {
+  if ((pt->flags & PT_OWNSTACK) &&  //
+      pt->attr.__stackaddr &&       //
+      pt->attr.__stackaddr != MAP_FAILED) {
+    if (munmap(pt->attr.__stackaddr, pt->attr.__stacksize)) {
       notpossible;
     }
   }
@@ -83,25 +84,19 @@ static int PosixThread(void *arg, int tid) {
       notpossible;
     }
   }
-  if (pt->attr.inheritsched == PTHREAD_EXPLICIT_SCHED) {
+  if (pt->attr.__inheritsched == PTHREAD_EXPLICIT_SCHED) {
     _pthread_reschedule(pt);
   }
+  // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
     pt->rc = pt->start_routine(pt->arg);
+    // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
+    _npassert(!pt->cleanup);
   }
-  if (_weaken(_pthread_key_destruct)) {
-    _weaken(_pthread_key_destruct)(0);
-  }
-  _pthread_ungarbage();
-  if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
-      kPosixThreadDetached) {
-    atomic_store_explicit(&pt->status, kPosixThreadZombie,
-                          memory_order_release);
-  } else {
-    atomic_store_explicit(&pt->status, kPosixThreadTerminated,
-                          memory_order_release);
-  }
+  // run garbage collector, call key destructors, and set change state
+  _pthread_cleanup(pt);
+  // return to clone polyfill which clears tid, wakes futex, and exits
   return 0;
 }
 
@@ -113,8 +108,8 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   size_t n;
   int e, rc;
   uintptr_t x, y;
-  n = attr->stacksize;
-  x = (uintptr_t)attr->stackaddr;
+  n = attr->__stacksize;
+  x = (uintptr_t)attr->__stackaddr;
   y = ROUNDUP(x, PAGESIZE);
   n -= y - x;
   n = ROUNDDOWN(n, PAGESIZE);
@@ -122,8 +117,8 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   if (__sys_mmap((void *)y, n, PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
                  -1, 0, 0) == (void *)y) {
-    attr->stackaddr = (void *)y;
-    attr->stacksize = n;
+    attr->__stackaddr = (void *)y;
+    attr->__stacksize = n;
     return 0;
   } else {
     rc = errno;
@@ -216,7 +211,7 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   // setup stack
-  if (pt->attr.stackaddr) {
+  if (pt->attr.__stackaddr) {
     // caller supplied their own stack
     // assume they know what they're doing as much as possible
     if (IsOpenbsd()) {
@@ -229,37 +224,40 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     // cosmo is managing the stack
     // 1. in mono repo optimize for tiniest stack possible
     // 2. in public world optimize to *work* regardless of memory
-    pt->ownstack = true;
-    pt->attr.stacksize = MAX(pt->attr.stacksize, GetStackSize());
-    pt->attr.stacksize = _roundup2pow(pt->attr.stacksize);
-    pt->attr.guardsize = ROUNDUP(pt->attr.guardsize, PAGESIZE);
-    if (pt->attr.guardsize + PAGESIZE >= pt->attr.stacksize) {
+    pt->flags = PT_OWNSTACK;
+    pt->attr.__stacksize = MAX(pt->attr.__stacksize, GetStackSize());
+    pt->attr.__stacksize = _roundup2pow(pt->attr.__stacksize);
+    pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, PAGESIZE);
+    if (pt->attr.__guardsize + PAGESIZE >= pt->attr.__stacksize) {
       _pthread_free(pt);
       return EINVAL;
     }
-    if (pt->attr.guardsize == PAGESIZE) {
+    if (pt->attr.__guardsize == PAGESIZE) {
       // user is wisely using smaller stacks with default guard size
-      pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
-                                MAP_STACK | MAP_ANONYMOUS, -1, 0);
+      pt->attr.__stackaddr =
+          mmap(0, pt->attr.__stacksize, PROT_READ | PROT_WRITE,
+               MAP_STACK | MAP_ANONYMOUS, -1, 0);
     } else {
       // user is tuning things, performance may suffer
-      pt->attr.stackaddr = mmap(0, pt->attr.stacksize, PROT_READ | PROT_WRITE,
-                                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if (pt->attr.stackaddr != MAP_FAILED) {
+      pt->attr.__stackaddr =
+          mmap(0, pt->attr.__stacksize, PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if (pt->attr.__stackaddr != MAP_FAILED) {
         if (IsOpenbsd() &&
             __sys_mmap(
-                pt->attr.stackaddr, pt->attr.stacksize, PROT_READ | PROT_WRITE,
+                pt->attr.__stackaddr, pt->attr.__stacksize,
+                PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_FIXED | MAP_ANON_OPENBSD | MAP_STACK_OPENBSD,
-                -1, 0, 0) != pt->attr.stackaddr) {
+                -1, 0, 0) != pt->attr.__stackaddr) {
           notpossible;
         }
-        if (pt->attr.guardsize && !IsWindows() &&
-            mprotect(pt->attr.stackaddr, pt->attr.guardsize, PROT_NONE)) {
+        if (pt->attr.__guardsize && !IsWindows() &&
+            mprotect(pt->attr.__stackaddr, pt->attr.__guardsize, PROT_NONE)) {
           notpossible;
         }
       }
     }
-    if (pt->attr.stackaddr == MAP_FAILED) {
+    if (pt->attr.__stackaddr == MAP_FAILED) {
       rc = errno;
       _pthread_free(pt);
       errno = e;
@@ -269,8 +267,9 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
         return EAGAIN;
       }
     }
-    if (IsAsan() && pt->attr.guardsize) {
-      __asan_poison(pt->attr.stackaddr, pt->attr.guardsize, kAsanStackOverflow);
+    if (IsAsan() && pt->attr.__guardsize) {
+      __asan_poison(pt->attr.__stackaddr, pt->attr.__guardsize,
+                    kAsanStackOverflow);
     }
   }
 
@@ -280,7 +279,7 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   // set initial status
-  switch (pt->attr.detachstate) {
+  switch (pt->attr.__detachstate) {
     case PTHREAD_CREATE_JOINABLE:
       pt->status = kPosixThreadJoinable;
       break;
@@ -294,8 +293,8 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   // launch PosixThread(pt) in new thread
-  if (clone(PosixThread, pt->attr.stackaddr,
-            pt->attr.stacksize - (IsOpenbsd() ? 16 : 0),
+  if (clone(PosixThread, pt->attr.__stackaddr,
+            pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
                 CLONE_CHILD_CLEARTID,

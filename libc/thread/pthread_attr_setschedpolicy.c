@@ -42,6 +42,6 @@
  * @see sched_setscheduler()
  */
 int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
-  attr->schedpolicy = policy;
+  attr->__schedpolicy = policy;
   return 0;
 }

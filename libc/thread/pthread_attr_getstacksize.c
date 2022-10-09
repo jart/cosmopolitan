@@ -29,8 +29,8 @@
  * @see pthread_attr_setstacksize()
  */
 errno_t pthread_attr_getstacksize(const pthread_attr_t *a, size_t *x) {
-  if (a->stacksize) {
-    *x = a->stacksize;
+  if (a->__stacksize) {
+    *x = a->__stacksize;
   } else {
     *x = GetStackSize();
   }

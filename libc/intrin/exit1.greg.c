@@ -16,18 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/promises.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
+#include "libc/thread/tls.h"
 
 __msabi extern typeof(ExitThread) *const __imp_ExitThread;
 
 /**
  * Terminates thread with raw system call.
+ *
+ * The function you want is pthread_exit(). If you call this function
+ * whilst using the pthreads then your joiners might not get woken up
+ * on non-Linux platforms where we zero __get_tls()->tib_tid manually
  *
  * If this is the main thread, or an orphaned child thread, then this
  * function is equivalent to exiting the process; however, `rc` shall

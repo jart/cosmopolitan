@@ -38,7 +38,7 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
   switch (detachstate) {
     case PTHREAD_CREATE_JOINABLE:
     case PTHREAD_CREATE_DETACHED:
-      attr->detachstate = detachstate;
+      attr->__detachstate = detachstate;
       return 0;
     default:
       return EINVAL;

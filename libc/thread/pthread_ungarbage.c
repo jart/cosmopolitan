@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/gc.internal.h"
 #include "libc/thread/tls.h"
 
 void _pthread_ungarbage(void) {
+  int i;
   struct Garbages *g;
   if ((g = __get_tls()->tib_garbages)) {
-    // _pthread_exit() uses _gclongjmp() so if this assertion fails,
-    // then the likely cause is the thread used gc() with longjmp().
-    assert(!g->i);
+    for (i = g->i; i--;) {
+      ((void (*)(intptr_t))g->p[i].fn)(g->p[i].arg);
+    }
     free(g->p);
     free(g);
   }

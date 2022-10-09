@@ -19,6 +19,8 @@
 #include "libc/macros.internal.h"
 
 //	Returns granularity of memory manager.
+//
+//	@see	sysconf(_SC_PAGE_SIZE) which is portable
 getpagesize:
 	.leafprologue
 	.profilable

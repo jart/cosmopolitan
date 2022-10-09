@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/internal.h"
@@ -71,9 +71,6 @@ relegated void __check_fail(const char *suffix, const char *opstr,
     kprintf(" %s", __argv[i]);
   }
   kprintf("%s\n", RESET);
-  if (!IsTiny() && e == ENOMEM) {
-    __print_maps();
-  }
   __die();
   unreachable;
 }

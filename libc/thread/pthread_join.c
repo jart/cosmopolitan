@@ -24,14 +24,16 @@
 /**
  * Waits for thread to terminate.
  *
+ * @param value_ptr if non-null will receive pthread_exit() argument
  * @return 0 on success, or errno with error
- * @raise EDEADLK if thread is detached
+ * @raise EDEADLK if `thread` is the current thread
+ * @raise EINVAL if `thread` is detached
  * @returnserrno
  * @threadsafe
  */
 int pthread_join(pthread_t thread, void **value_ptr) {
   struct PosixThread *pt;
-  if (thread == pthread_self()) {
+  if (thread == __get_tls()->tib_pthread) {
     return EDEADLK;
   }
   if (!(pt = (struct PosixThread *)thread) ||  //

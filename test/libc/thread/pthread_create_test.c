@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/runtime.h"
@@ -48,7 +49,6 @@ void SetUp(void) {
 
 void TriggerSignal(void) {
   sched_yield();
-  /* kprintf("raising at %p\n", __builtin_frame_address(0)); */
   raise(SIGUSR1);
   sched_yield();
 }
@@ -183,18 +183,89 @@ TEST(pthread_detach, testCustomStack_withReallySmallSize) {
   free(stk);
 }
 
-TEST(pthread_exit, mainThreadWorks) {
-  // _Exit1() can't set process exit code on XNU/NetBSD/OpenBSD.
-  if (IsLinux() || IsFreebsd() || IsWindows()) {
-    SPAWN(fork);
-    pthread_exit((void *)2);
-    EXITS(2);
-  } else {
-    SPAWN(fork);
-    pthread_exit((void *)0);
-    EXITS(0);
-  }
+void *JoinMainWorker(void *arg) {
+  void *rc;
+  pthread_t main_thread = (pthread_t)arg;
+  _gc(malloc(32));
+  _gc(malloc(32));
+  ASSERT_EQ(0, pthread_join(main_thread, &rc));
+  ASSERT_EQ(123, (intptr_t)rc);
+  return 0;
 }
+
+TEST(pthread_join, mainThread) {
+  pthread_t id;
+  _gc(malloc(32));
+  _gc(malloc(32));
+  SPAWN(fork);
+  ASSERT_EQ(0, pthread_create(&id, 0, JoinMainWorker, (void *)pthread_self()));
+  pthread_exit((void *)123);
+  EXITS(0);
+}
+
+TEST(pthread_join, mainThreadDelayed) {
+  pthread_t id;
+  _gc(malloc(32));
+  _gc(malloc(32));
+  SPAWN(fork);
+  ASSERT_EQ(0, pthread_create(&id, 0, JoinMainWorker, (void *)pthread_self()));
+  usleep(10000);
+  pthread_exit((void *)123);
+  EXITS(0);
+}
+
+TEST(pthread_exit, fromMainThread_whenNoThreadsWereCreated) {
+  SPAWN(fork);
+  pthread_exit((void *)123);
+  EXITS(0);
+}
+
+atomic_bool g_cleanup1;
+atomic_bool g_cleanup2;
+
+void OnCleanup(void *arg) {
+  *(atomic_bool *)arg = true;
+}
+
+void *CleanupExit(void *arg) {
+  pthread_cleanup_push(OnCleanup, &g_cleanup1);
+  pthread_cleanup_push(OnCleanup, &g_cleanup2);
+  pthread_cleanup_pop(false);
+  pthread_exit(0);
+  pthread_cleanup_pop(false);
+  return 0;
+}
+
+TEST(pthread_cleanup, pthread_exit_alwaysCallsCallback) {
+  pthread_t id;
+  g_cleanup1 = false;
+  g_cleanup2 = false;
+  ASSERT_EQ(0, pthread_create(&id, 0, CleanupExit, 0));
+  ASSERT_EQ(0, pthread_join(id, 0));
+  ASSERT_TRUE(g_cleanup1);
+  ASSERT_FALSE(g_cleanup2);
+}
+
+void *CleanupNormal(void *arg) {
+  pthread_cleanup_push(OnCleanup, &g_cleanup1);
+  pthread_cleanup_push(OnCleanup, &g_cleanup2);
+  pthread_cleanup_pop(true);
+  pthread_cleanup_pop(true);
+  return 0;
+}
+
+TEST(pthread_cleanup, pthread_normal) {
+  pthread_t id;
+  g_cleanup1 = false;
+  g_cleanup2 = false;
+  ASSERT_EQ(0, pthread_create(&id, 0, CleanupNormal, 0));
+  ASSERT_EQ(0, pthread_join(id, 0));
+  ASSERT_TRUE(g_cleanup1);
+  ASSERT_TRUE(g_cleanup2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// BENCHMARKS
 
 static void CreateJoin(void) {
   pthread_t id;

@@ -23,6 +23,6 @@
  */
 int pthread_attr_getinheritsched(const pthread_attr_t *attr,
                                  int *inheritsched) {
-  *inheritsched = attr->inheritsched;
+  *inheritsched = attr->__inheritsched;
   return 0;
 }

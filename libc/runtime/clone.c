@@ -240,12 +240,14 @@ static wontreturn void FreebsdThreadMain(void *p) {
   // we no longer use the stack after this point
   // void thr_exit(%rdi = long *state);
   asm volatile("movl\t$0,%0\n\t"       // *wt->ztid = 0
-               "syscall\n\t"           // _umtx_op()
-               "movl\t$431,%%eax\n\t"  // thr_exit()
-               "xor\t%%edi,%%edi\n\t"
-               "syscall"
+               "syscall\n\t"           // _umtx_op(wt->ztid, WAKE, INT_MAX)
+               "movl\t$431,%%eax\n\t"  // thr_exit(long *nonzeroes_and_wake)
+               "xor\t%%edi,%%edi\n\t"  // sad we can't use this free futex op
+               "syscall\n\t"           // exit1() fails if thread is orphaned
+               "movl\t$1,%%eax\n\t"    // exit()
+               "syscall"               //
                : "=m"(*wt->ztid)
-               : "a"(454), "D"(wt->ztid), "S"(UMTX_OP_WAKE)
+               : "a"(454), "D"(wt->ztid), "S"(UMTX_OP_WAKE), "d"(INT_MAX)
                : "rcx", "r8", "r9", "r10", "r11", "memory");
   notpossible;
 }
@@ -289,15 +291,6 @@ static int CloneFreebsd(int (*func)(void *, int), char *stk, size_t stksz,
 ////////////////////////////////////////////////////////////////////////////////
 // OPEN BESIYATA DISHMAYA
 
-static void *oldrsp;
-
-__attribute__((__constructor__)) static void OpenbsdGetSafeRsp(void) {
-  // main thread stack should never be freed during process lifetime. we
-  // won't actually change this stack below. we just need need a place
-  // where threads can park RSP for a few instructions while dying.
-  oldrsp = __builtin_frame_address(0);
-}
-
 // we can't use address sanitizer because:
 //   1. __asan_handle_no_return wipes stack [todo?]
 noasan static wontreturn void OpenbsdThreadMain(void *p) {
@@ -305,21 +298,15 @@ noasan static wontreturn void OpenbsdThreadMain(void *p) {
   *wt->ptid = wt->tid;
   *wt->ctid = wt->tid;
   wt->func(wt->arg, wt->tid);
-  // we no longer use the stack after this point. however openbsd
-  // validates the rsp register too so a race condition can still
-  // happen if the parent tries to free the stack. we'll solve it
-  // by simply changing rsp back to the old value before exiting!
-  // although ideally there should be a better solution.
-  //
-  // void __threxit(%rdi = int32_t *notdead);
-  asm volatile("mov\t%2,%%rsp\n\t"
-               "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0
-               "syscall\n\t"           // futex()
-               "mov\t$302,%%eax\n\t"   // threxit()
+  asm volatile("mov\t%2,%%rsp\n\t"     // so syscall can validate stack exists
+               "movl\t$0,(%%rdi)\n\t"  // *wt->ztid = 0 (old stack now free'd)
+               "syscall\n\t"           // futex(int*, op, val) will wake wait0
+               "xor\t%%edi,%%edi\n\t"  // so kernel doesn't write to old stack
+               "mov\t$302,%%eax\n\t"   // __threxit(int *notdead) doesn't wake
                "syscall"
                : "=m"(*wt->ztid)
-               : "a"(83), "m"(oldrsp), "D"(wt->ztid), "S"(FUTEX_WAKE),
-                 "d"(INT_MAX)
+               : "a"(83), "m"(__oldstack), "D"(wt->ztid),
+                 "S"(2 /* FUTEX_WAKE */), "d"(INT_MAX)
                : "rcx", "r11", "memory");
   notpossible;
 }

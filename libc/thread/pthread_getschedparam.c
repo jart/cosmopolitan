@@ -25,7 +25,7 @@
 int pthread_getschedparam(pthread_t thread, int *policy,
                           struct sched_param *param) {
   struct PosixThread *pt = (struct PosixThread *)thread;
-  *policy = pt->attr.schedpolicy;
-  *param = (struct sched_param){pt->attr.schedparam};
+  *policy = pt->attr.__schedpolicy;
+  *param = (struct sched_param){pt->attr.__schedparam};
   return 0;
 }

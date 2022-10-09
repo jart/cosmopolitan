@@ -26,8 +26,8 @@
  */
 errno_t pthread_attr_init(pthread_attr_t *attr) {
   *attr = (pthread_attr_t){
-      .stacksize = GetStackSize(),
-      .guardsize = PAGESIZE,
+      .__stacksize = GetStackSize(),
+      .__guardsize = PAGESIZE,
   };
   return 0;
 }

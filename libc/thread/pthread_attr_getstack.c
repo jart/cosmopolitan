@@ -32,7 +32,7 @@
  */
 errno_t pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr,
                               size_t *stacksize) {
-  *stackaddr = attr->stackaddr;
-  *stacksize = attr->stacksize;
+  *stackaddr = attr->__stackaddr;
+  *stacksize = attr->__stacksize;
   return 0;
 }

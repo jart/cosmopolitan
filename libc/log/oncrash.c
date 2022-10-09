@@ -223,10 +223,10 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
           host, getpid(), gettid(), program_invocation_name, names.sysname,
           names.version, names.nodename, names.release);
   if (ctx) {
-    kprintf("\n");
-    ShowFunctionCalls(ctx);
     ShowGeneralRegisters(ctx);
     ShowSseRegisters(ctx);
+    kprintf("\n");
+    ShowFunctionCalls(ctx);
   }
   kprintf("\n");
   __print_maps();

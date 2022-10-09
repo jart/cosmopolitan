@@ -19,6 +19,6 @@
 #include "libc/thread/thread.h"
 
 int pthread_attr_getscope(const pthread_attr_t *a, int *x) {
-  *x = a->scope;
+  *x = a->__scope;
   return 0;
 }

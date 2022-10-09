@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
+#include "libc/thread/thread.h"
 
 /**
  * Acquires reentrant lock on stdio object, blocking if needed.

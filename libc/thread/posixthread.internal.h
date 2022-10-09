@@ -4,6 +4,10 @@
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+
+#define PT_OWNSTACK   1
+#define PT_MAINTHREAD 2
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -52,9 +56,6 @@ enum PosixThreadStatus {
   // - kPosixThreadZombie -> _pthread_free() will happen whenever
   //   convenient, e.g. pthread_create() entry or atexit handler.
   kPosixThreadZombie,
-
-  // special main thread
-  kPosixThreadMain,
 };
 
 struct PosixThread {
@@ -62,15 +63,17 @@ struct PosixThread {
   void *(*start_routine)(void *);
   void *arg;             // start_routine's parameter
   void *rc;              // start_routine's return value
-  bool ownstack;         // should we free it
+  int flags;             // see PT_* constants
   int tid;               // clone parent tid
   char *altstack;        // thread sigaltstack
   char *tls;             // bottom of tls allocation
   struct CosmoTib *tib;  // middle of tls allocation
   jmp_buf exiter;        // for pthread_exit
   pthread_attr_t attr;
+  struct _pthread_cleanup_buffer *cleanup;
 };
 
+extern struct PosixThread _pthread_main;
 hidden extern pthread_spinlock_t _pthread_keys_lock;
 hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
 hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
@@ -79,6 +82,7 @@ hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
 int _pthread_reschedule(struct PosixThread *) hidden;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
 void _pthread_free(struct PosixThread *) hidden;
+void _pthread_cleanup(struct PosixThread *) hidden;
 void _pthread_ungarbage(void) hidden;
 void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;

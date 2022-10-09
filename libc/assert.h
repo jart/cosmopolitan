@@ -2,6 +2,7 @@
 #define COSMOPOLITAN_LIBC_ASSERT_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+#include "libc/intrin/kprintf.h"
 
 extern bool __assert_disable;
 void __assert_fail(const char *, const char *, int) hidden relegated;
@@ -23,11 +24,12 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
     }                                \
   } while (0)
 
-#define _npassert(x)                 \
-  do {                               \
-    if (__builtin_expect(!(x), 0)) { \
-      notpossible;                   \
-    }                                \
+#define _npassert(x)                                  \
+  do {                                                \
+    if (__builtin_expect(!(x), 0)) {                  \
+      kprintf("%s:%d: oh no!\n", __FILE__, __LINE__); \
+      notpossible;                                    \
+    }                                                 \
   } while (0)
 
 COSMOPOLITAN_C_END_

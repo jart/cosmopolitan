@@ -25,13 +25,14 @@
 
 int _pthread_reschedule(struct PosixThread *pt) {
   int rc, e = errno;
-  struct sched_param param = {pt->attr.schedparam};
+  int policy = pt->attr.__schedpolicy;
+  struct sched_param param = {pt->attr.__schedparam};
   if (IsNetbsd()) {
-    rc = sys_sched_setparam_netbsd(0, pt->tid, pt->attr.schedpolicy, &param);
+    rc = sys_sched_setparam_netbsd(0, pt->tid, policy, &param);
   } else if (IsLinux()) {
-    rc = sys_sched_setscheduler(pt->tid, pt->attr.schedpolicy, &param);
+    rc = sys_sched_setscheduler(pt->tid, policy, &param);
   } else if (IsFreebsd()) {
-    rc = _pthread_setschedparam_freebsd(pt->tid, pt->attr.schedpolicy, &param);
+    rc = _pthread_setschedparam_freebsd(pt->tid, policy, &param);
   } else {
     rc = enosys();
   }

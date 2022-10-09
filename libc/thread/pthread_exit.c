@@ -16,19 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/limits.h"
 #include "libc/mem/gc.h"
+#include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/nsync/futex.internal.h"
+
+STATIC_YOINK("_pthread_main");
 
 /**
  * Terminates current POSIX thread.
  *
- * If this function is called from the main thread, or a thread created
- * with clone() or _spawn(), then this function is the same as _Exit1()
- * in which case `rc` is coerced to a `uint8_t` exit status, which will
- * only be reported to the parent process on Linux, FreeBSD and Windows
+ * For example, a thread could terminate early as follows:
+ *
+ *     pthread_exit((void *)123);
+ *
+ * The result value could then be obtained when joining the thread:
+ *
+ *     void *rc;
+ *     pthread_join(id, &rc);
+ *     assert((intptr_t)rc == 123);
+ *
+ * Under normal circumstances a thread can exit by simply returning from
+ * the callback function that was supplied to pthread_create(). This may
+ * be used if the thread wishes to exit at any other point in the thread
+ * lifecycle, in which case this function is responsible for ensuring we
+ * invoke _gc(), _defer(), and pthread_cleanup_push() callbacks, as well
+ * as pthread_key_create() destructors.
+ *
+ * If the current thread is an orphaned thread, or is the main thread
+ * when no other threads were created, then this will terminated your
+ * process with an exit code of zero. It's not possible to supply a
+ * non-zero exit status to wait4() via this function.
+ *
+ * Once a thread has exited, access to its stack memory is undefined.
+ * The behavior of calling pthread_exit() from cleanup handlers and key
+ * destructors is also undefined.
  *
  * @param rc is reported later to pthread_join()
  * @threadsafe
@@ -36,11 +62,32 @@
  */
 wontreturn void pthread_exit(void *rc) {
   struct PosixThread *pt;
-  pt = (struct PosixThread *)pthread_self();
-  if (pt->status != kPosixThreadMain) {
-    pt->rc = rc;
-    _gclongjmp(pt->exiter, 1);
+  struct _pthread_cleanup_buffer *cb;
+  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  pt->rc = rc;
+  // the memory of pthread cleanup objects lives on the stack
+  // so we need to harvest them before calling longjmp()
+  while ((cb = pt->cleanup)) {
+    pt->cleanup = cb->__prev;
+    cb->__routine(cb->__arg);
+  }
+  if (~pt->flags & PT_MAINTHREAD) {
+    // this thread was created by pthread_create()
+    // garbage collector memory exists on a shadow stack. we don't need
+    // to use _gclongjmp() since _pthread_ungarbage() will collect them
+    // at the setjmp() site.
+    longjmp(pt->exiter, 1);
   } else {
-    _Exit1((int)(intptr_t)rc);
+    // this is the main thread
+    // release as much resources and possible and mark it terminated
+    _pthread_cleanup(pt);
+    // it's kind of irregular for a child thread to join the main thread
+    // so we don't bother freeing the main thread's stack since it makes
+    // this implementation so much simpler for example we want't to call
+    // set_tid_address() upon every program startup which isn't possible
+    // on non-linux platforms anyway.
+    __get_tls()->tib_tid = 0;
+    nsync_futex_wake_((int *)&__get_tls()->tib_tid, INT_MAX, !IsWindows());
+    _Exit1(0);
   }
 }

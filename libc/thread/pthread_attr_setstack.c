@@ -65,15 +65,15 @@
 errno_t pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr,
                               size_t stacksize) {
   if (!stackaddr) {
-    attr->stackaddr = 0;
-    attr->stacksize = 0;
+    attr->__stackaddr = 0;
+    attr->__stacksize = 0;
     return 0;
   }
   if (stacksize < PTHREAD_STACK_MIN ||
       (IsAsan() && !__asan_is_valid(stackaddr, stacksize))) {
     return EINVAL;
   }
-  attr->stackaddr = stackaddr;
-  attr->stacksize = stacksize;
+  attr->__stackaddr = stackaddr;
+  attr->__stacksize = stacksize;
   return 0;
 }

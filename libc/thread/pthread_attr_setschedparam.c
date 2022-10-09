@@ -43,6 +43,6 @@
 int pthread_attr_setschedparam(pthread_attr_t *attr,
                                const struct sched_param *param) {
   if (!param) return EINVAL;
-  attr->schedparam = param->sched_priority;
+  attr->__schedparam = param->sched_priority;
   return 0;
 }
