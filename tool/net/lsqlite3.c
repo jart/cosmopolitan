@@ -1831,7 +1831,8 @@ static int db_create_session(lua_State *L) {
 }
 
 static int changeset_conflict_cb = LUA_NOREF;
-static int changeset_conflict_udata = LUA_NOREF;
+static int changeset_filter_cb = LUA_NOREF;
+static int changeset_cb_udata = LUA_NOREF;
 
 static int db_changeset_conflict_callback(
         void *user,               /* Copy of sixth arg to _apply_v2() */
@@ -1846,7 +1847,7 @@ static int db_changeset_conflict_callback(
     int result, isint;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb);    /* get callback */
-    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_udata); /* get callback user data */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
     lua_pushinteger(L, eConflict);
 
     if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
@@ -1861,31 +1862,82 @@ static int db_changeset_conflict_callback(
     return result;
 }
 
+static int db_changeset_filter_callback(
+        void *user,      /* Copy of sixth arg to _apply_v2() */
+        const char *zTab /* Table name */
+) {
+    // allow the table if no conflict callback is provided
+    if (changeset_filter_cb == LUA_NOREF || changeset_filter_cb == LUA_REFNIL) return 1;
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    int result, isint;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_filter_cb); /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
+    lua_pushstring(L, zTab);
+
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
+
+    // allow 0/1 and false/true to be returned
+    // returning 0/false skips the table
+    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
+    if (!isint && !lua_isboolean(L, -1)) {
+        lua_pushliteral(L, "non-integer and non-boolean returned from filter callback");
+        return lua_error(L);
+    }
+    if (!isint) result = lua_toboolean(L, -1);
+
+    lua_settop(L, top);
+    return result;
+}
+
 static int db_apply_changeset(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     const char *cset = luaL_checkstring(L, 2);
     int nset = lua_rawlen(L, 2);
+    int top = lua_gettop(L);
     int rc;
+    int flags = 0;
+
+    // parameters: db, changeset[[, filter cb], conflict cb[, udata[, rebaser[, flags]]]]
 
     // TBD: does this *also* need to be done in cleanupvm?
-    if (changeset_conflict_cb != LUA_NOREF) {
+    if (changeset_cb_udata != LUA_NOREF) {
         luaL_unref(L, LUA_REGISTRYINDEX, changeset_conflict_cb);
-        luaL_unref(L, LUA_REGISTRYINDEX, changeset_conflict_udata);
+        luaL_unref(L, LUA_REGISTRYINDEX, changeset_filter_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, changeset_cb_udata);
 
         changeset_conflict_cb =
-        changeset_conflict_udata = LUA_NOREF;
+        changeset_filter_cb =
+        changeset_cb_udata = LUA_NOREF;
     }
 
-    if (lua_gettop(L) >= 3 && !lua_isnil(L, 3)) {
+    // check for conflict/filter callback type if provided
+    if (top >= 3) {
         luaL_checktype(L, 3, LUA_TFUNCTION);
-        lua_settop(L, 4);
-        changeset_conflict_udata = luaL_ref(L, LUA_REGISTRYINDEX);
-        changeset_conflict_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+        // if no filter callback, insert a dummy one to simplify stack handling
+        if (lua_type(L, 4) != LUA_TFUNCTION) {
+            lua_pushnil(L);
+            lua_insert(L, 3);
+            top = lua_gettop(L);
+        }
     }
 
-    rc = sqlite3changeset_apply_v2(db->db, nset, cset, NULL,
+    if (top >= 7) flags = luaL_checkinteger(L, 7);
+
+    if (top >= 4) {  // two callback are guaranteed to be on the stack in this case
+        // shorten stack or extend to set udata to `nil` if not provided
+        lua_settop(L, 5);
+        changeset_cb_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        changeset_conflict_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+        changeset_filter_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    rc = sqlite3changeset_apply_v2(db->db, nset, cset,
+                                   db_changeset_filter_callback,
                                    db_changeset_conflict_callback,
-                                   db, 0, 0, 0);
+                                   db, 0, 0, flags);
 
     if (rc != SQLITE_OK) {
         lua_pushnil(L);
