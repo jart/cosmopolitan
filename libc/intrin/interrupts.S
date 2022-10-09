@@ -52,7 +52,7 @@
 	.rept	30
 	push	%rsi			# preserve rsi
 	mov	$i,%sil			# rsi = exception number
-1:	jmp	1f			# 🦘
+1:	jmp	1f			# kangeroo
 	i = i - 1
 	.endr
 __excep1_isr:
@@ -71,7 +71,7 @@ __excep0_isr:
 	push	%rdx			# use to call kprintf
 	push	%r8
 	push	%r9
-	mov	48(%rsp),%rcx		# edx:rcx = "caller" cs:rip
+	mov	48(%rsp),%rcx		# edx:rcx = 'caller' cs:rip
 	mov	56(%rsp),%edx
 	mov	40(%rsp),%r8		# r8 = error code
 	mov	%cr2,%r9		# r9 = cr2, in case it is useful
@@ -91,10 +91,14 @@ __excep0_isr:
 	mov	%eax,%ds
 	mov	%eax,%es
 	ezlea	.excep_msg,di		# stack should be 16-byte aligned now
-	xor	%eax,%eax		# kprintf is variadic; remember to
+	xor	%eax,%eax		# kprintf is variadic, remember to
 					# pass no. of vector regs. used (= 0)
-	call	kprintf			# print error message
-	cli
+	.weak	kprintf			# weakly link kprintf() because this
+	ezlea	kprintf,bx		# module is a mandatory dependency
+	test	%ebx,%ebx		# and we want to keep life.com tiny
+	jz	8f
+	call	*%rbx			# print error message
+8:	cli
 9:	hlt
 	jmp	9b
 	/* TODO: link up with sigaction etc. */
@@ -105,7 +109,7 @@ __excep0_isr:
 isr_init:
 	testb	IsMetal()
 	jz	9f
-	ezlea	_tss+0x24,di		# fill up TSS; we already loaded
+	ezlea	_tss+0x24,di		# fill up TSS, we already loaded
 					# task register in ape/ape.S
 	ezlea	_isr_stk_1+ISR_STK_SZ,ax
 	and	$-ISR_STK_ALIGN,%al	# be paranoid & enforce correct

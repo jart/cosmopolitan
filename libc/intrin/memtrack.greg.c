@@ -49,7 +49,7 @@
 static void *MoveMemoryIntervals(struct MemoryInterval *d,
                                  const struct MemoryInterval *s, int n) {
   int i;
-  if (n < 0) unreachable;
+  _unassert(n >= 0);
   if (d > s) {
     for (i = n; i--;) {
       d[i] = s[i];
@@ -63,8 +63,8 @@ static void *MoveMemoryIntervals(struct MemoryInterval *d,
 }
 
 static void RemoveMemoryIntervals(struct MemoryIntervals *mm, int i, int n) {
-  if (i < 0) unreachable;
-  if (i + n > mm->i) unreachable;
+  _unassert(i >= 0);
+  _unassert(i + n <= mm->i);
   MoveMemoryIntervals(mm->p + i, mm->p + i + n, mm->i - (i + n));
   mm->i -= n;
 }
@@ -108,9 +108,9 @@ static bool ExtendMemoryIntervals(struct MemoryIntervals *mm) {
 }
 
 int CreateMemoryInterval(struct MemoryIntervals *mm, int i) {
-  if (i < 0) unreachable;
-  if (i > mm->i) unreachable;
-  if (mm->n < 0) unreachable;
+  _unassert(i >= 0);
+  _unassert(i <= mm->i);
+  _unassert(mm->n >= 0);
   if (UNLIKELY(mm->i == mm->n) && !ExtendMemoryIntervals(mm)) return enomem();
   MoveMemoryIntervals(mm->p + i + 1, mm->p + i, mm->i++ - i);
   return 0;
@@ -129,7 +129,7 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
                            void wf(struct MemoryIntervals *, int, int)) {
   unsigned l, r;
   ASSERT_MEMTRACK();
-  if (y < x) unreachable;
+  _unassert(y >= x);
   if (!mm->i) return 0;
   // binary search for the lefthand side
   l = FindMemoryInterval(mm, x);
@@ -139,8 +139,8 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // binary search for the righthand side
   r = FindMemoryInterval(mm, y);
   if (r == mm->i || (r > l && y < mm->p[r].x)) --r;
-  if (r < l) unreachable;
-  if (x > mm->p[r].y) unreachable;
+  _unassert(r >= l);
+  _unassert(x <= mm->p[r].y);
 
   // remove the middle of an existing map
   //
@@ -161,11 +161,11 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // ----|mmmm|----------------- after
   //
   if (x > mm->p[l].x && x <= mm->p[l].y) {
-    if (y < mm->p[l].y) unreachable;
+    _unassert(y >= mm->p[l].y);
     if (IsWindows()) return einval();
     mm->p[l].size -= (size_t)(mm->p[l].y - (x - 1)) * FRAMESIZE;
     mm->p[l].y = x - 1;
-    if (mm->p[l].x > mm->p[l].y) unreachable;
+    _unassert(mm->p[l].x <= mm->p[l].y);
     ++l;
   }
 
@@ -176,11 +176,11 @@ int ReleaseMemoryIntervals(struct MemoryIntervals *mm, int x, int y,
   // ---------------|mm|-------- after
   //
   if (y >= mm->p[r].x && y < mm->p[r].y) {
-    if (x > mm->p[r].x) unreachable;
+    _unassert(x <= mm->p[r].x);
     if (IsWindows()) return einval();
     mm->p[r].size -= (size_t)((y + 1) - mm->p[r].x) * FRAMESIZE;
     mm->p[r].x = y + 1;
-    if (mm->p[r].x > mm->p[r].y) unreachable;
+    _unassert(mm->p[r].x <= mm->p[r].y);
     --r;
   }
 
@@ -198,7 +198,7 @@ int TrackMemoryInterval(struct MemoryIntervals *mm, int x, int y, long h,
                         long offset, long size) {
   unsigned i;
   ASSERT_MEMTRACK();
-  if (y < x) unreachable;
+  _unassert(y >= x);
   i = FindMemoryInterval(mm, x);
 
   // try to extend the righthand side of the lefthand entry

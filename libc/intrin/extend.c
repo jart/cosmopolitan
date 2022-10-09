@@ -34,14 +34,11 @@ static void _mapframe(void *p, int f) {
   struct DirectMap dm;
   prot = PROT_READ | PROT_WRITE;
   flags = f | MAP_ANONYMOUS | MAP_FIXED;
-  if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr != p) {
-    notpossible;
-  }
+  _npassert((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p);
   __mmi_lock();
-  if (TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
-                          dm.maphandle, prot, flags, false, false, 0, G)) {
-    notpossible;
-  }
+  _npassert(!TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
+                                 dm.maphandle, prot, flags, false, false, 0,
+                                 G));
   __mmi_unlock();
 }
 
@@ -65,13 +62,11 @@ static void _mapframe(void *p, int f) {
  */
 noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
-#ifndef NDEBUG
-  if ((uintptr_t)SHADOW(p) & (G - 1)) notpossible;
-  if ((uintptr_t)p + (G << kAsanScale) > h) notpossible;
-#endif
+  _npassert(!((uintptr_t)SHADOW(p) & (G - 1)));
+  _npassert((uintptr_t)p + (G << kAsanScale) <= h);
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
-      if (q + G > (char *)h) notpossible;
+      _npassert(q + G <= (char *)h);
       _mapframe(q, f);
       if (IsAsan()) {
         if (!((uintptr_t)SHADOW(q) & (G - 1))) {

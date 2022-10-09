@@ -30,11 +30,7 @@ Copyright 2016 Google, Inc.\\n\
 https://github.com/google/nsync\"");
 // clang-format off
 
-#ifdef TINY
-#define ASSERT(x) _unassert(x)
-#else
 #define ASSERT(x) _npassert(x)
-#endif
 
 /* Check that atomic operations on nsync_atomic_uint32_ can be applied to int. */
 static const int assert_int_size = 1 /
