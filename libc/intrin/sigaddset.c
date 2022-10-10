@@ -23,7 +23,7 @@
  * Adds signal to set.
  *
  * @return 0 on success, or -1 w/ errno
- * @raises EINVAL if `1 ≤ sig ≤ NSIG` isn't the case
+ * @raise EINVAL if `1 ≤ sig ≤ NSIG` isn't the case
  * @asyncsignalsafe
  */
 int sigaddset(sigset_t *set, int sig) {

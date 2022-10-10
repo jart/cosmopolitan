@@ -22,67 +22,64 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/kprintf.h"
 
-const char *(DescribeStat)(char buf[300], int rc, const struct stat *st) {
-  int i, n;
+#define N 300
+
+#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
+
+const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
+  int i = 0;
 
   if (rc == -1) return "n/a";
   if (!st) return "NULL";
   if ((!IsAsan() && kisdangerous(st)) ||
       (IsAsan() && !__asan_is_valid(st, sizeof(*st)))) {
-    ksnprintf(buf, 300, "%p", st);
+    ksnprintf(buf, N, "%p", st);
     return buf;
   }
 
-  i = 0;
-  n = 300;
-
-  i += ksnprintf(buf + i, n - i, "{.st_%s=%'ld", "size", st->st_size);
+  append("{.st_%s=%'ld", "size", st->st_size);
 
   if (st->st_blocks) {
-    i +=
-        ksnprintf(buf + i, n - i, ", .st_blocks=%'lu/512", st->st_blocks * 512);
+    append(", .st_blocks=%'lu/512", st->st_blocks * 512);
   }
 
   if (st->st_mode) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%#o", "mode", st->st_mode);
+    append(", .st_%s=%#o", "mode", st->st_mode);
   }
 
   if (st->st_nlink != 1) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "nlink", st->st_nlink);
+    append(", .st_%s=%'lu", "nlink", st->st_nlink);
   }
 
   if (st->st_uid) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "uid", st->st_uid);
+    append(", .st_%s=%lu", "uid", st->st_uid);
   }
 
   if (st->st_gid) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "gid", st->st_gid);
+    append(", .st_%s=%lu", "gid", st->st_gid);
   }
 
   if (st->st_ino) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%lu", "ino", st->st_ino);
+    append(", .st_%s=%lu", "ino", st->st_ino);
   }
 
   if (st->st_gen) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "gen", st->st_gen);
+    append(", .st_%s=%'lu", "gen", st->st_gen);
   }
 
   if (st->st_flags) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%lx", "flags", st->st_flags);
+    append(", .st_%s=%lx", "flags", st->st_flags);
   }
 
   if (st->st_rdev) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "rdev", st->st_rdev);
+    append(", .st_%s=%'lu", "rdev", st->st_rdev);
   }
 
   if (st->st_blksize != PAGESIZE) {
-    i += ksnprintf(buf + i, n - i, ", .st_%s=%'lu", "blksize", st->st_blksize);
+    append(", .st_%s=%'lu", "blksize", st->st_blksize);
   }
 
-  if (n - i >= 2) {
-    buf[i + 0] = '}';
-    buf[i + 1] = 0;
-  }
+  append("}");
 
   return buf;
 }

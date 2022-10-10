@@ -16,6 +16,7 @@ const char *DescribeArchPrctlCode(char[12], int);
 const char *DescribeCapability(char[20], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
+const char *DescribeErrno(char[12], int);
 const char *DescribeErrnoResult(char[12], int);
 const char *DescribeFrame(char[32], int);
 const char *DescribeFutexOp(char[64], int);
@@ -50,6 +51,7 @@ const char *DescribeRemapFlags(char[48], int);
 const char *DescribeRlimitName(char[20], int);
 const char *DescribeSchedPolicy(char[48], int);
 const char *DescribeSeccompOperation(int);
+const char *DescribeSiCode(char[17], int, int);
 const char *DescribeSleepFlags(char[16], int);
 const char *DescribeSockLevel(char[12], int);
 const char *DescribeSockOptname(char[32], int, int);
@@ -63,6 +65,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeCapability(x)        DescribeCapability(alloca(20), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
+#define DescribeErrno(x)             DescribeErrno(alloca(12), x)
 #define DescribeErrnoResult(x)       DescribeErrnoResult(alloca(12), x)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
 #define DescribeFutexOp(x)           DescribeFutexOp(alloca(64), x)
@@ -94,6 +97,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeRemapFlags(x)        DescribeRemapFlags(alloca(48), x)
 #define DescribeRlimitName(rl)       DescribeRlimitName(alloca(20), rl)
 #define DescribeSchedPolicy(x)       DescribeSchedPolicy(alloca(48), x)
+#define DescribeSiCode(x, y)         DescribeSiCode(alloca(17), x, y)
 #define DescribeSleepFlags(x)        DescribeSleepFlags(alloca(16), x)
 #define DescribeSockLevel(x)         DescribeSockLevel(alloca(12), x)
 #define DescribeSockOptname(x, y)    DescribeSockOptname(alloca(32), x, y)

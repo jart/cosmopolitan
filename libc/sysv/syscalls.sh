@@ -192,7 +192,7 @@ scall	sys_setfsuid		0xfffffffffffff07a	globl hidden
 scall	sys_setfsgid		0xfffffffffffff07b	globl hidden
 scall	sys_capget		0xfffffffffffff07d	globl # no wrapper
 scall	sys_capset		0xfffffffffffff07e	globl # no wrapper
-scall	sys_sigtimedwait	0xffffff159ffff080	globl # no wrapper
+scall	sys_sigtimedwait	0x1affff159ffff080	globl hidden
 scall	sys_sigqueue		0xffffff1c8fffffff	globl hidden
 scall	sys_sigqueueinfo	0x0f5ffffffffff081	globl hidden # a.k.a. rt_sigqueueinfo on linux
 scall	sys_personality		0xfffffffffffff087	globl # no wrapper

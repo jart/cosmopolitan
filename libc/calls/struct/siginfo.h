@@ -12,11 +12,13 @@ struct siginfo {
     struct {
       union {
         struct {
+          /* signals sent by kill() and sigqueue() set these */
           int32_t si_pid;
           uint32_t si_uid;
         };
         struct {
-          int32_t si_timerid; /* SIGALRM */
+          /* SIGALRM sets these */
+          int32_t si_timerid;
           int32_t si_overrun;
         };
       };

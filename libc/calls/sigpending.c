@@ -17,37 +17,44 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Determines the blocked pending signals
  *
  * @param pending is where the bitset of pending signals is returned,
- *     may not be NULL.
- * @return -1 w/ EFAULT
+ *     which may not be null
+ * @return 0 on success, or -1 w/ errno
+ * @raise EFAULT if `pending` points to invalid memory
  * @asyncsignalsafe
  */
 int sigpending(sigset_t *pending) {
   int rc;
-  if (IsAsan() && !__asan_is_valid(pending, sizeof(*pending))) {
+  if (!pending || (IsAsan() && !__asan_is_valid(pending, sizeof(*pending)))) {
     rc = efault();
   } else if (IsLinux() || IsNetbsd() || IsOpenbsd() || IsFreebsd() || IsXnu()) {
+    // 128 signals on NetBSD and FreeBSD, 64 on Linux, 32 on OpenBSD and XNU
     rc = sys_sigpending(pending, 8);
-    // 128 signals on NetBSD and FreeBSD, 64 on Linux, 32 on OpenBSD and XNU.
+    // OpenBSD passes signal sets in words rather than pointers
     if (IsOpenbsd()) {
       pending->__bits[0] = (unsigned)rc;
       rc = 0;
-    } else if (IsXnu()) {
-      pending->__bits[0] &= 0xFFFFFFFF;
     }
-    if (IsLinux() || IsOpenbsd() || IsXnu()) {
-      pending->__bits[1] = 0;
+    // only modify memory on success
+    if (!rc) {
+      // clear unsupported bits
+      if (IsXnu()) {
+        pending->__bits[0] &= 0xFFFFFFFF;
+      }
+      if (IsLinux() || IsOpenbsd() || IsXnu()) {
+        pending->__bits[1] = 0;
+      }
     }
   } else if (IsWindows()) {
     sigemptyset(pending);

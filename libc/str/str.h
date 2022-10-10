@@ -203,6 +203,7 @@ wctrans_t wctrans(const char *);
 wint_t towctrans(wint_t, wctrans_t);
 
 char *strsignal(int) returnsnonnull libcesque;
+char *strsignal_r(int, char[hasatleast 15]) returnsnonnull libcesque;
 char *strerror(int) returnsnonnull dontthrow nocallback;
 int strerror_r(int, char *, size_t) dontthrow nocallback;
 int strerror_wr(int, uint32_t, char *, size_t) dontthrow nocallback;

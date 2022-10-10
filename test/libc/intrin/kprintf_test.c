@@ -49,10 +49,6 @@ static uint64_t Rando(void) {
   return x;
 }
 
-void SetUp(void) {
-  __print_maps();
-}
-
 static const struct {
   const char *want;
   const char *fmt;
@@ -354,6 +350,30 @@ TEST(ksnprintf, badUtf16) {
     EXPECT_EQ(strlen(V[i].want), ksnprintf(b, 16, V[i].fmt, V[i].arg));
     EXPECT_STREQ(V[i].want, b);
   }
+}
+
+TEST(ksnprintf, negativeOverflowIdiom_isSafe) {
+  int i, n;
+  char golden[11];
+  struct {
+    char underflow[11];
+    char buf[11];
+    char overflow[11];
+  } u;
+  memset(golden, -1, 11);
+  memset(u.underflow, -1, 11);
+  memset(u.overflow, -1, 11);
+  i = 0;
+  n = 11;
+  i += ksnprintf(u.buf + i, n - i, "hello");
+  ASSERT_STREQ("hello", u.buf);
+  i += ksnprintf(u.buf + i, n - i, " world");
+  ASSERT_STREQ("hello w...", u.buf);
+  i += ksnprintf(u.buf + i, n - i, " i love you");
+  ASSERT_STREQ("hello w...", u.buf);
+  ASSERT_EQ(i, 5 + 6 + 11);
+  ASSERT_EQ(0, memcmp(golden, u.underflow, 11));
+  ASSERT_EQ(0, memcmp(golden, u.overflow, 11));
 }
 
 TEST(ksnprintf, truncation) {

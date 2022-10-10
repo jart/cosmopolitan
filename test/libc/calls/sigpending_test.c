@@ -20,27 +20,27 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/errno.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
 static unsigned OnSignalCnt = 0;
+
 void OnSignal(int sig, siginfo_t *si, void *ctx) {
   OnSignalCnt++;
   EXPECT_EQ(SIGUSR1, sig);
+}
+
+TEST(sigpending, efault) {
+  ASSERT_SYS(EFAULT, -1, sigpending(0));
 }
 
 TEST(sigpending, test) {
   sigset_t pending;
   sigfillset(&pending);
   EXPECT_EQ(0, sigpending(&pending));
-  unsigned cnt = 0;
-  for (unsigned sig = 1; sig < NSIG; sig++) {
-    if (sigismember(&pending, sig)) {
-      cnt++;
-    }
-  }
-  EXPECT_EQ(0, cnt);
+  EXPECT_EQ(0, sigcountset(&pending));
 
   struct sigaction sa = {.sa_sigaction = OnSignal, .sa_flags = SA_SIGINFO};
   ASSERT_EQ(0, sigaction(SIGUSR1, &sa, NULL));
@@ -51,47 +51,23 @@ TEST(sigpending, test) {
   ASSERT_EQ(0, raise(SIGUSR1));
   sigfillset(&pending);
   EXPECT_EQ(0, sigpending(&pending));
-  cnt = 0;
-  for (unsigned sig = 1; sig < NSIG; sig++) {
-    if (sigismember(&pending, sig)) {
-      cnt++;
-    }
-  }
-  EXPECT_EQ(1, cnt);
+  EXPECT_EQ(1, sigcountset(&pending));
   EXPECT_EQ(1, sigismember(&pending, SIGUSR1));
 
   ASSERT_NE(SIG_ERR, signal(SIGUSR1, SIG_IGN));
   sigemptyset(&pending);
   EXPECT_EQ(0, sigpending(&pending));
-  cnt = 0;
-  for (unsigned sig = 1; sig < NSIG; sig++) {
-    if (sigismember(&pending, sig)) {
-      cnt++;
-    }
-  }
-  EXPECT_EQ(0, cnt);
+  EXPECT_EQ(0, sigcountset(&pending));
 
   ASSERT_EQ(0, sigaction(SIGUSR1, &sa, NULL));
   ASSERT_EQ(0, raise(SIGUSR1));
   EXPECT_EQ(0, sigpending(&pending));
-  cnt = 0;
-  for (unsigned sig = 1; sig < NSIG; sig++) {
-    if (sigismember(&pending, sig)) {
-      cnt++;
-    }
-  }
-  EXPECT_EQ(1, cnt);
+  EXPECT_EQ(1, sigcountset(&pending));
   EXPECT_EQ(1, sigismember(&pending, SIGUSR1));
 
   sigemptyset(&blocked);
   ASSERT_EQ(0, sigprocmask(SIG_SETMASK, &blocked, NULL));
   EXPECT_EQ(0, sigpending(&pending));
-  cnt = 0;
-  for (unsigned sig = 1; sig < NSIG; sig++) {
-    if (sigismember(&pending, sig)) {
-      cnt++;
-    }
-  }
-  EXPECT_EQ(0, cnt);
+  EXPECT_EQ(0, sigcountset(&pending));
   EXPECT_EQ(1, OnSignalCnt);
 }

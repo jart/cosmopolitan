@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,51 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/popcnt.h"
+#include "libc/fmt/itoa.h"
+#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
-#define N 128
-
-#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
-
-const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
-  int i, sig;
-  bool gotsome;
-  sigset_t sigset;
-
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
-  if ((!IsAsan() && kisdangerous(ss)) ||
-      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
-    ksnprintf(buf, N, "%p", ss);
-    return buf;
+/**
+ * Returns string describing signal code.
+ *
+ * This returns `"0"` for 0 which is the empty value. Symbolic names
+ * should be available for signals 1 through 32. If the system supports
+ * real-time signals, they're returned as `SIGRTMIN+%d`. For all other
+ * 32-bit signed integer, a plain integer representation is returned.
+ *
+ * @param sig is signal number which should be in range 1 through 128
+ * @param buf may be used to store output having at least 15 bytes
+ * @return pointer to .rodata string, or to `buf` after mutating
+ * @see sigaction()
+ * @threadsafe
+ */
+char *strsignal_r(int sig, char buf[hasatleast 15]) {
+  int i;
+  char *p;
+  const char *s;
+  if (!sig) return "0";
+  if ((s = GetMagnumStr(kSignalNames, sig))) return s;
+  if (SIGRTMIN <= sig && sig <= SIGRTMAX) {
+    sig -= SIGRTMIN;
+    buf[0] = 'S';
+    buf[1] = 'I';
+    buf[2] = 'G';
+    buf[3] = 'R';
+    buf[4] = 'T';
+    buf[5] = 'M';
+    buf[6] = 'I';
+    buf[7] = 'N';
+    buf[8] = '+';
+    FormatInt32(buf + 9, sig);
+  } else {
+    FormatInt32(buf, sig);
   }
-
-  i = 0;
-  sigset = *ss;
-  gotsome = false;
-  if (popcnt(sigset.__bits[0] & 0xffffffff) > 16) {
-    append("~");
-    sigset.__bits[0] = ~sigset.__bits[0];
-    sigset.__bits[1] = ~sigset.__bits[1];
-  }
-  append("{");
-  for (sig = 1; sig < 32; ++sig) {
-    if (sigismember(&sigset, sig)) {
-      if (gotsome) {
-        append(",");
-      } else {
-        gotsome = true;
-      }
-      append("%s", strsignal(sig) + 3);
-    }
-  }
-  append("}");
-
   return buf;
 }

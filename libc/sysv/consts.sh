@@ -168,11 +168,11 @@ syscon	sig	SIGPROF					27			27			27			27			27			27			# profiling timer expired; 
 syscon	sig	SIGWINCH				28			28			28			28			28			28			# terminal resized; unix consensus & faked on nt
 syscon	sig	SIGIO					29			23			23			23			23			29			# bsd consensus
 syscon	sig	SIGSYS					31			12			12			12			12			31			# wut; bsd consensus
-syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
-syscon	sig	SIGRTMAX				64			0			126			0			63			0
-syscon	sig	SIGRTMIN				32			0			65			0			33			0
 syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	sig	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
+syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
+syscon	sig	SIGRTMIN				32			0			65			0			33			32
+syscon	sig	SIGRTMAX				64			0			126			0			63			64
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO
 syscon	compat	SIGIOT					6			6			6			6			6			6			# PDP-11 feature; same as SIGABRT
 
@@ -1232,7 +1232,7 @@ syscon	limits	SOMAXCONN				4096			128			128			128			128			2147483647		# maximum 
 syscon	limits	_ARG_MAX				128*1024		1024*1024		512*1024		512*1024		256*1024		32767*2			# bsd consensus
 syscon	limits	_NAME_MAX				255			255			255			255			511			255			# probably higher on windows?
 syscon	limits	_PATH_MAX				4096			1024			1024			1024			1024			512			# cosmopolitan libc imposes a lower 512 limit; nt theoretically goes up to 32767
-syscon	limits	_NSIG					64			32			128			32			64			32			# _SIG_MAXSIG on FreeBSD
+syscon	limits	_NSIG					64			32			128			32			64			64			# _SIG_MAXSIG on FreeBSD
 
 #	unmount() flags
 #	a.k.a. umount2() on linux

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,51 +16,60 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/calls/sigtimedwait.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/siginfo.internal.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/popcnt.h"
-#include "libc/str/str.h"
+#include "libc/errno.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
 
-#define N 128
+void SetUp(void) {
+  if (IsXnu()) exit(0);
+  if (IsMetal()) exit(0);
+  if (IsWindows()) exit(0);
+  if (IsOpenbsd()) exit(0);
+}
 
-#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
+TEST(sigtimedwait, nullSet_efault) {
+  ASSERT_SYS(EFAULT, -1, sigtimedwait(0, 0, 0));
+}
 
-const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
-  int i, sig;
-  bool gotsome;
-  sigset_t sigset;
+TEST(sigtimedwait, emptySet_timesOut) {
+  sigset_t ss = {0};
+  struct timespec ts = {0, 0};
+  ASSERT_SYS(EAGAIN, -1, sigtimedwait(&ss, 0, &ts));
+}
 
-  if (rc == -1) return "n/a";
-  if (!ss) return "NULL";
-  if ((!IsAsan() && kisdangerous(ss)) ||
-      (IsAsan() && !__asan_is_valid(ss, sizeof(*ss)))) {
-    ksnprintf(buf, N, "%p", ss);
-    return buf;
+TEST(sigtimedwait, badTimestamp_einval) {
+  sigset_t ss = {0};
+  struct timespec ts = {0, -1};
+  ASSERT_SYS(EINVAL, -1, sigtimedwait(&ss, 0, &ts));
+}
+
+TEST(sigtimedwait, test) {
+  int pid, ws;
+  siginfo_t info;
+  sigset_t ss, oldss;
+  struct timespec ts = {1, 0};
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGUSR1);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_BLOCK, &ss, &oldss));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    ASSERT_SYS(0, SIGUSR1, sigtimedwait(&ss, &info, &ts));
+    ASSERT_EQ(SIGUSR1, info.si_signo);
+    ASSERT_EQ(SI_USER, info.si_code);
+    ASSERT_EQ(getuid(), info.si_uid);
+    _Exit(0);
   }
-
-  i = 0;
-  sigset = *ss;
-  gotsome = false;
-  if (popcnt(sigset.__bits[0] & 0xffffffff) > 16) {
-    append("~");
-    sigset.__bits[0] = ~sigset.__bits[0];
-    sigset.__bits[1] = ~sigset.__bits[1];
-  }
-  append("{");
-  for (sig = 1; sig < 32; ++sig) {
-    if (sigismember(&sigset, sig)) {
-      if (gotsome) {
-        append(",");
-      } else {
-        gotsome = true;
-      }
-      append("%s", strsignal(sig) + 3);
-    }
-  }
-  append("}");
-
-  return buf;
+  ASSERT_SYS(0, 0, kill(pid, SIGUSR1));
+  ASSERT_SYS(0, pid, wait(&ws));
+  ASSERT_EQ(0, ws);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));
 }

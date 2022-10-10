@@ -24,8 +24,12 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/sysv/consts/st.h"
 
-const char *(DescribeStatfs)(char buf[300], int rc, const struct statfs *f) {
-  int i, n;
+#define N 300
+
+#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
+
+const char *(DescribeStatfs)(char buf[N], int rc, const struct statfs *f) {
+  int i = 0;
   char ibuf[21];
   int64_t flags;
 
@@ -33,90 +37,82 @@ const char *(DescribeStatfs)(char buf[300], int rc, const struct statfs *f) {
   if (!f) return "NULL";
   if ((!IsAsan() && kisdangerous(f)) ||
       (IsAsan() && !__asan_is_valid(f, sizeof(*f)))) {
-    ksnprintf(buf, 300, "%p", f);
+    ksnprintf(buf, N, "%p", f);
     return buf;
   }
 
-  i = 0;
-  n = 300;
-
-  i += ksnprintf(buf + i, n - i, "{.f_type=%#lx /* %s */", f->f_type,
-                 f->f_fstypename);
+  append("{.f_type=%#lx /* %s */", f->f_type, f->f_fstypename);
 
   sizefmt(ibuf, f->f_bsize, 1024);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%sb", "bsize", ibuf);
+  append(", .f_%s=%sb", "bsize", ibuf);
 
   sizefmt(ibuf, f->f_blocks * f->f_bsize, 1024);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%sb", "blocks", ibuf);
+  append(", .f_%s=%sb", "blocks", ibuf);
 
   sizefmt(ibuf, f->f_bfree * f->f_bsize, 1024);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%sb", "bfree", ibuf);
+  append(", .f_%s=%sb", "bfree", ibuf);
 
   sizefmt(ibuf, f->f_bavail * f->f_bsize, 1024);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%sb", "bavail", ibuf);
+  append(", .f_%s=%sb", "bavail", ibuf);
 
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%'zu", "files", f->f_files);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%'zu", "ffree", f->f_ffree);
-  i += ksnprintf(buf + i, n - i, ", .f_fsid=%#lx", f->f_fsid);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%'zu", "namelen", f->f_namelen);
-  i += ksnprintf(buf + i, n - i, ", .f_%s=%d", "owner", f->f_owner);
+  append(", .f_%s=%'zu", "files", f->f_files);
+  append(", .f_%s=%'zu", "ffree", f->f_ffree);
+  append(", .f_fsid=%#lx", f->f_fsid);
+  append(", .f_%s=%'zu", "namelen", f->f_namelen);
+  append(", .f_%s=%d", "owner", f->f_owner);
 
   flags = f->f_flags;
-  i += ksnprintf(buf + i, n - i, ", .f_flags=");
+  append(", .f_flags=");
   if (ST_RDONLY && (flags & ST_RDONLY)) {
-    i += ksnprintf(buf + i, n - i, "ST_RDONLY|");
+    append("ST_RDONLY|");
     flags &= ~ST_RDONLY;
   }
   if (ST_NOSUID && (flags & ST_NOSUID)) {
-    i += ksnprintf(buf + i, n - i, "ST_NOSUID|");
+    append("ST_NOSUID|");
     flags &= ~ST_NOSUID;
   }
   if (ST_NODEV && (flags & ST_NODEV)) {
-    i += ksnprintf(buf + i, n - i, "ST_NODEV|");
+    append("ST_NODEV|");
     flags &= ~ST_NODEV;
   }
   if (ST_NOEXEC && (flags & ST_NOEXEC)) {
-    i += ksnprintf(buf + i, n - i, "ST_NOEXEC|");
+    append("ST_NOEXEC|");
     flags &= ~ST_NOEXEC;
   }
   if (ST_SYNCHRONOUS && (flags & ST_SYNCHRONOUS)) {
-    i += ksnprintf(buf + i, n - i, "ST_SYNCHRONOUS|");
+    append("ST_SYNCHRONOUS|");
     flags &= ~ST_SYNCHRONOUS;
   }
   if (ST_MANDLOCK && (flags & ST_MANDLOCK)) {
-    i += ksnprintf(buf + i, n - i, "ST_MANDLOCK|");
+    append("ST_MANDLOCK|");
     flags &= ~ST_MANDLOCK;
   }
   if (ST_WRITE && (flags & ST_WRITE)) {
-    i += ksnprintf(buf + i, n - i, "ST_WRITE|");
+    append("ST_WRITE|");
     flags &= ~ST_WRITE;
   }
   if (ST_APPEND && (flags & ST_APPEND)) {
-    i += ksnprintf(buf + i, n - i, "ST_APPEND|");
+    append("ST_APPEND|");
     flags &= ~ST_APPEND;
   }
   if (ST_IMMUTABLE && (flags & ST_IMMUTABLE)) {
-    i += ksnprintf(buf + i, n - i, "ST_IMMUTABLE|");
+    append("ST_IMMUTABLE|");
     flags &= ~ST_IMMUTABLE;
   }
   if (ST_NOATIME && (flags & ST_NOATIME)) {
-    i += ksnprintf(buf + i, n - i, "ST_NOATIME|");
+    append("ST_NOATIME|");
     flags &= ~ST_NOATIME;
   }
   if (ST_NODIRATIME && (flags & ST_NODIRATIME)) {
-    i += ksnprintf(buf + i, n - i, "ST_NODIRATIME|");
+    append("ST_NODIRATIME|");
     flags &= ~ST_NODIRATIME;
   }
   if (ST_RELATIME && (flags & ST_RELATIME)) {
-    i += ksnprintf(buf + i, n - i, "ST_RELATIME|");
+    append("ST_RELATIME|");
     flags &= ~ST_RELATIME;
   }
-  i += ksnprintf(buf + i, n - i, "%#lx", flags);
 
-  if (n - i >= 2) {
-    buf[i + 0] = '}';
-    buf[i + 1] = 0;
-  }
+  append("%#lx}", flags);
 
   return buf;
 }

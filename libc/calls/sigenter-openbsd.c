@@ -21,6 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo-openbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext-openbsd.internal.h"
@@ -44,17 +45,8 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
     if (~flags & SA_SIGINFO) {
       ((sigaction_f)(_base + rva))(sig, 0, 0);
     } else {
-      __repstosb(&g, 0, sizeof(g));
-      g.si.si_signo = openbsdinfo->si_signo;
-      g.si.si_code = openbsdinfo->si_code;
-      g.si.si_errno = openbsdinfo->si_errno;
-      if (openbsdinfo->si_pid) {
-        g.si.si_pid = openbsdinfo->si_pid;
-        g.si.si_uid = openbsdinfo->si_uid;
-      } else {
-        g.si.si_addr = (void *)openbsdinfo->si_addr;
-      }
-      g.si.si_value = openbsdinfo->si_value;
+      __repstosb(&g.uc, 0, sizeof(g.uc));
+      __siginfo2cosmo(&g.si, (void *)openbsdinfo);
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
       __repmovsb(&g.uc.uc_sigmask, &ctx->sc_mask,
                  MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->sc_mask)));

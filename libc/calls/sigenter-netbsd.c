@@ -21,6 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo-netbsd.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext-netbsd.internal.h"
@@ -43,13 +44,7 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       ((sigaction_f)(_base + rva))(sig, 0, 0);
     } else {
       __repstosb(&uc, 0, sizeof(uc));
-      __repstosb(&si2, 0, sizeof(si2));
-      si2.si_signo = si->si_signo;
-      si2.si_code = si->si_code;
-      si2.si_errno = si->si_errno;
-      si2.si_pid = si->si_pid;
-      si2.si_uid = si->si_uid;
-      si2.si_value = si->si_value;
+      __siginfo2cosmo(&si2, (void *)si);
       uc.uc_mcontext.fpregs = &uc.__fpustate;
       uc.uc_flags = ctx->uc_flags;
       uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;

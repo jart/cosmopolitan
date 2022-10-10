@@ -66,6 +66,13 @@ $(LIBC_CALLS_A).pkg:					\
 		$(foreach x,$(LIBC_CALLS_A_DIRECTDEPS),$($(x)_A).pkg)
 
 # we can't use asan because:
+#   siginfo_t memory is owned by kernels
+o/$(MODE)/libc/calls/siginfo2cosmo.o: private		\
+		OVERRIDE_COPTS +=			\
+			-ffreestanding			\
+			-fno-sanitize=address
+
+# we can't use asan because:
 #   ucontext_t memory is owned by xnu kernel
 o/$(MODE)/libc/calls/sigenter-xnu.o: private		\
 		OVERRIDE_COPTS +=			\

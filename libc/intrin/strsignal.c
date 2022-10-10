@@ -16,52 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/magnumstrs.internal.h"
 #include "libc/str/str.h"
 
-static char g_strsignal[12];
+static char g_strsignal[15];
 
 /**
  * Returns string describing signal code.
  *
- * This returns SIGZERO for 0 which is the empty value. Textual names
- * should be available for signals 1 through 32. Signals in the range 33
- * and 128 are returned as a `SIG%03d` string. Everything else is SIGWUT
+ * This returns `"0"` for 0 which is the empty value. Symbolic names
+ * should be available for signals 1 through 32. If the system supports
+ * real-time signals, they're returned as `SIGRTMIN+%d`. For all other
+ * 32-bit signed integer, a plain integer representation is returned.
  *
  * This function is thread safe when `sig` is a known signal magnum.
  * Otherwise a pointer to static memory is returned which is unsafe.
  *
  * @param sig is signal number which should be in range 1 through 128
- * @return pointer to static memory that mutates on subsequent calls
+ * @return string which is valid code describing signal
+ * @see strsignal_r() for better thread safety
  * @see sigaction()
- * @threadsafe
  */
 char *strsignal(int sig) {
-  char *p;
-  const char *s;
-  if (!sig) return "0";
-  if ((s = GetMagnumStr(kSignalNames, sig))) return s;
-  p = g_strsignal;
-  p[0] = 'S';
-  p[1] = 'I';
-  p[2] = 'G';
-  p[3] = 0;
-  if (!sig) {
-    p[3] = 'Z';
-    p[4] = 'E';
-    p[5] = 'R';
-    p[6] = 'O';
-    p[7] = 0;
-  } else if (1 <= sig && sig <= 128) {
-    p[3] = '0' + sig / 100;
-    p[4] = '0' + sig / 10 % 10;
-    p[5] = '0' + sig % 10;
-    p[6] = 0;
-  } else {
-    p[3] = 'W';
-    p[4] = 'U';
-    p[5] = 'T';
-    p[6] = 0;
-  }
-  return g_strsignal;
+  return strsignal_r(sig, g_strsignal);
 }

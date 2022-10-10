@@ -21,6 +21,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/ucontext.h"
@@ -492,16 +493,7 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
         }
       }
       if (xnuinfo) {
-        g.si.si_signo = xnuinfo->si_signo;
-        g.si.si_errno = xnuinfo->si_errno;
-        g.si.si_code = xnuinfo->si_code;
-        if (xnuinfo->si_pid) {
-          g.si.si_pid = xnuinfo->si_pid;
-          g.si.si_uid = xnuinfo->si_uid;
-        } else {
-          g.si.si_addr = (void *)xnuinfo->si_addr;
-        }
-        g.si.si_value = xnuinfo->si_value;
+        __siginfo2cosmo(&g.si, (void *)xnuinfo);
       }
       ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
       if (xnuctx) {

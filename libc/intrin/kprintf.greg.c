@@ -212,7 +212,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
   if (!kistextpointer(fmt)) fmt = "!!WONTFMT";
   p = b;
   f = fmt;
-  e = p + n;
+  e = p + n;  // assume if n was negative e < p will be the case
   for (;;) {
     for (;;) {
       if (!(c = *f++) || c == '%') break;
@@ -502,7 +502,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
 
         case 'G':
           x = va_arg(va, int);
-          if (_weaken(strsignal) && (s = _weaken(strsignal)(x))) {
+          if (_weaken(strsignal_r) && (s = _weaken(strsignal_r)(x, z))) {
             goto FormatString;
           } else {
             goto FormatDecimal;

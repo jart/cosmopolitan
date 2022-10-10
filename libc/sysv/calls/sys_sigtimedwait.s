@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_sigtimedwait,0xffffff159ffff080,globl
+.scall sys_sigtimedwait,0x1affff159ffff080,globl,hidden

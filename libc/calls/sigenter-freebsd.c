@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo-freebsd.internal.h"
+#include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/ucontext-freebsd.internal.h"
 #include "libc/calls/ucontext.h"
@@ -75,16 +76,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_mcontext.err = ctx->uc_mcontext.mc_err;
       g.uc.uc_mcontext.trapno = ctx->uc_mcontext.mc_trapno;
       __repmovsb(&g.uc.__fpustate, &ctx->uc_mcontext.mc_fpstate, 512);
-      g.si.si_signo = freebsdinfo->si_signo;
-      g.si.si_errno = freebsdinfo->si_errno;
-      g.si.si_code = freebsdinfo->si_code;
-      if (freebsdinfo->si_pid) {
-        g.si.si_pid = freebsdinfo->si_pid;
-        g.si.si_uid = freebsdinfo->si_uid;
-      } else {
-        g.si.si_addr = (void *)freebsdinfo->si_addr;
-      }
-      g.si.si_value = freebsdinfo->si_value;
+      __siginfo2cosmo(&g.si, (void *)freebsdinfo);
       ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
       ctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
       ctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
