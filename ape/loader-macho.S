@@ -90,7 +90,7 @@ macho:	.long	0xFEEDFACE+1
 510:	.quad	0				# rax
 	.quad	0				# rbx
 	.quad	0				# rcx
-	.quad	XNU				# rdx
+	.quad	_HOSTXNU			# rdx
 	.quad	0				# rdi
 	.quad	0				# rsi
 	.quad	0				# rbp
@@ -121,7 +121,7 @@ _start:
 	jne	0f
 	cmp	$+1,%edx
 	jne	0f
-	mov	$XNU,%dl
+	mov	$_HOSTXNU,%dl
 	xor	%ecx,%ecx
 
 0:	mov	%rsp,%rsi

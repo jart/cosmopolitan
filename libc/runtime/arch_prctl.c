@@ -205,22 +205,22 @@ int arch_prctl(int code, int64_t addr) {
     rc = efault();
   } else {
     switch (__hostos) {
-      case METAL:
+      case _HOSTMETAL:
         rc = arch_prctl_msr(code, addr);
         break;
-      case FREEBSD:
+      case _HOSTFREEBSD:
         rc = arch_prctl_freebsd(code, addr);
         break;
-      case NETBSD:
+      case _HOSTNETBSD:
         rc = arch_prctl_netbsd(code, addr);
         break;
-      case OPENBSD:
+      case _HOSTOPENBSD:
         rc = arch_prctl_openbsd(code, addr);
         break;
-      case LINUX:
+      case _HOSTLINUX:
         rc = sys_arch_prctl(code, addr);
         break;
-      case XNU:
+      case _HOSTXNU:
         rc = arch_prctl_xnu(code, addr);
         break;
       default:

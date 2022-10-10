@@ -38,7 +38,7 @@ _start:
 	jne	0f
 	cmp	$+1,%edx
 	jne	0f
-	mov	$XNU,%cl
+	mov	$_HOSTXNU,%cl
 	xor	%edi,%edi
 0:
 #endif
@@ -48,7 +48,7 @@ _start:
 	test	%rdi,%rdi
 	cmovnz	%rdi,%rsp
 	jz	0f
-	movb	$FREEBSD,%cl
+	movb	$_HOSTFREEBSD,%cl
 0:
 #endif
 

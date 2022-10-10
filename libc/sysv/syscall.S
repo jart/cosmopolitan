@@ -52,21 +52,21 @@ syscall:
 //	convert from consts.sh to syscalls.sh encoding
 	push	%rcx
 	mov	__hostos(%rip),%cl
-	test	$LINUX,%cl
+	test	$_HOSTLINUX,%cl
 	jnz	2f
-1:	test	$FREEBSD,%cl
+1:	test	$_HOSTFREEBSD,%cl
 	jz	1f
 	shl	$4*7,%rax
 	jmp	2f
-1:	test	$OPENBSD,%cl
+1:	test	$_HOSTOPENBSD,%cl
 	jz	1f
 	shl	$4*10,%rax
 	jmp	2f
-1:	test	$NETBSD,%cl
+1:	test	$_HOSTNETBSD,%cl
 	jz	1f
 	shl	$4*13,%rax
 	jmp	2f
-1:	test	$XNU,%cl
+1:	test	$_HOSTXNU,%cl
 	jz	2f
 	mov	%eax,%ecx
 	and	$0x0f000000,%ecx

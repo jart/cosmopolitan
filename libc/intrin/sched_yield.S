@@ -32,7 +32,7 @@ sched_yield:
 	mov	__hostos(%rip),%dl
 
 #if SupportsMetal()
-	testb	$METAL,%dl
+	testb	$_HOSTMETAL,%dl
 	jnz	9f
 #endif
 
@@ -46,7 +46,7 @@ sched_yield:
 //	threads ready to run and no user APCs are queued, the function
 //	returns immediately, and the thread continues execution.
 //	                                  ──Quoth MSDN
-	testb	$WINDOWS,%dl
+	testb	$_HOSTWINDOWS,%dl
 	jz	1f
 	xor	%ecx,%ecx
 	xor	%edx,%edx

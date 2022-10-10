@@ -874,7 +874,7 @@ ape_macho:
 	.long	(520f-510f)/4			# count
 510:	.quad	0				# rax
 	.quad	IMAGE_BASE_VIRTUAL		# rbx
-	.quad	XNU				# rcx
+	.quad	_HOSTXNU			# rcx
 	.quad	0				# rdx
 	.quad	0				# rdi
 	.quad	0				# rsi
@@ -1555,7 +1555,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
-	push	$METAL				# sets __hostos in crt.S
+	push	$_HOSTMETAL			# sets __hostos in crt.S
 	pop	%rcx
 	push	$0
 	mov	%rsp,%rbp
