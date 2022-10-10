@@ -118,7 +118,7 @@ TEST(memchr, fuzz) {
   p = malloc(64);
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
-      rngset(p, 64, rand64, -1);
+      rngset(p, 64, _rand64, -1);
       ASSERT_EQ(memchr(p + j, i, 64 - j), memchr_pure(p + j, i, 64 - j));
     }
   }
@@ -139,7 +139,7 @@ TEST(strchrnul, fuzz) {
   p = calloc(1, 64);
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
-      rngset(p, 63, rand64, -1);
+      rngset(p, 63, _rand64, -1);
       ASSERT_EQ(strchrnul(p + j, i), strchrnul_pure(p + j, i));
     }
   }
@@ -159,7 +159,7 @@ TEST(rawmemchr, fuzz) {
   p = malloc(64);
   for (i = -2; i < 257; ++i) {
     for (j = 0; j < 17; ++j) {
-      rngset(p, 63, rand64, -1);
+      rngset(p, 63, _rand64, -1);
       p[63] = i;
       ASSERT_EQ(rawmemchr(p + j, i), rawmemchr_pure(p + j, i));
     }

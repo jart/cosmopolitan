@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -65,7 +65,7 @@ TEST(memcmp, fuzz) {
   int i, o, n, g;
   char a[256], b[256];
   for (i = 0; i < 100000; ++i) {
-    rngset(a, sizeof(a), rand64, -1);
+    rngset(a, sizeof(a), _rand64, -1);
     memcpy(b, a, sizeof(a));
     if (rand() & 1) {
       a[rand() % sizeof(a)] += rand();

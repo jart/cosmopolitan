@@ -144,7 +144,7 @@ void MeatyReadWriteTest(void) {
   char *mem, *buf;
   n = 8 * 1024 * 1024;
   buf = gc(malloc(n));
-  mem = rngset(gc(malloc(n)), n, rand64, -1);
+  mem = rngset(gc(malloc(n)), n, _rand64, -1);
   ASSERT_NE(NULL, (f = fopen(PATH, "wb")));
   setbuffer(f, gc(malloc(4 * 1000 * 1000)), 4 * 1000 * 1000);
   EXPECT_EQ(n, fwrite(mem, 1, n, f));

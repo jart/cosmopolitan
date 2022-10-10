@@ -101,10 +101,10 @@
 #include "libc/intrin/pxor.h"
 #include "libc/limits.h"
 #include "libc/log/check.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/stdio/lcg.internal.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -2105,8 +2105,8 @@ TEST(pdep, fuzz) {
   int i;
   uint64_t x, y;
   for (i = 0; i < 1000; ++i) {
-    x = rand64();
-    y = rand64();
+    x = _rand64();
+    y = _rand64();
     ASSERT_EQ(pdep(x, y), (pdep)(x, y));
   }
 }
@@ -2115,8 +2115,8 @@ TEST(pext, fuzz) {
   int i;
   uint64_t x, y;
   for (i = 0; i < 1000; ++i) {
-    x = rand64();
-    y = rand64();
+    x = _rand64();
+    y = _rand64();
     ASSERT_EQ(pext(x, y), (pext)(x, y));
   }
 }

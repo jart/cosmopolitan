@@ -114,7 +114,7 @@ TEST(strlen, fuzz) {
   char *b;
   size_t n, n1, n2;
   for (n = 2; n < 1026; ++n) {
-    b = rngset(calloc(1, n), n - 1, rand64, -1);
+    b = rngset(calloc(1, n), n - 1, _rand64, -1);
     n1 = strlen(b);
     n2 = strlen_pure(b);
     ASSERT_EQ(n1, n2, "%#.*s", n, b);

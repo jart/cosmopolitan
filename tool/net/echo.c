@@ -70,7 +70,7 @@ void UdpClient(void) {
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
   CHECK_NE(-1, connect(sock, &addr, addrsize));
   for (;;) {
-    rngset(buf, sizeof(buf), rand64, -1);
+    rngset(buf, sizeof(buf), _rand64, -1);
     CHECK_NE(-1, write(sock, &addr, addrsize));
   }
 }
@@ -106,7 +106,7 @@ void TcpClient(void) {
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
   CHECK_NE(-1, connect(sock, &addr, addrsize));
   for (;;) {
-    rngset(buf, sizeof(buf), rand64, -1);
+    rngset(buf, sizeof(buf), _rand64, -1);
     CHECK_NE(-1, write(sock, buf, sizeof(buf)));
     CHECK_NE(-1, read(sock, buf, sizeof(buf)));
   }

@@ -86,7 +86,7 @@ int tmpfd(void) {
     *p++ = '.';
   }
   for (i = 0; i < 10; ++i) {
-    x = rand64();
+    x = _rand64();
     for (j = 0; j < 6; ++j) {
       p[j] = "0123456789abcdefghijklmnopqrstuvwxyz"[x % 36];
       x /= 36;

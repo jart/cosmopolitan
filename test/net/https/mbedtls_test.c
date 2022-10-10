@@ -65,12 +65,12 @@ uint64_t rng[12];
 mbedtls_ecp_group grp;
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, rand64, -1);
+  rngset(p, n, _rand64, -1);
   return 0;
 }
 
 void SetUp(void) {
-  rngset(rng, sizeof(rng), rand64, -1);
+  rngset(rng, sizeof(rng), _rand64, -1);
 }
 
 #ifdef MBEDTLS_SELF_TEST
@@ -169,7 +169,7 @@ BENCH(p256, bench) {
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
   mbedtls_mpi x = {1, 8, _gc(calloc(8, 8))};
-  rngset(x.p, 8 * 8, rand64, -1);
+  rngset(x.p, 8 * 8, _rand64, -1);
   EZBENCH2("P-256 modulus MbedTLS MPI lib", donothing, P256_MPI(&x));
   EZBENCH2("P-256 modulus Justine rewrite", donothing, P256_JUSTINE(&x));
   mbedtls_ecp_group_free(&grp);
@@ -704,7 +704,7 @@ TEST(ShiftRightAvx, test1) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[1] = {rand64()};
+    uint64_t mem[1] = {_rand64()};
     uint64_t want[1];
     uint64_t got[1];
     memcpy(want, mem, sizeof(mem));
@@ -719,7 +719,7 @@ TEST(ShiftRightAvx, test2) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[2] = {rand64(), rand64()};
+    uint64_t mem[2] = {_rand64(), _rand64()};
     uint64_t want[2];
     uint64_t got[2];
     memcpy(want, mem, sizeof(mem));
@@ -735,7 +735,7 @@ TEST(ShiftRightAvx, test3) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[3] = {rand64(), rand64(), rand64()};
+    uint64_t mem[3] = {_rand64(), _rand64(), _rand64()};
     uint64_t want[3];
     uint64_t got[3];
     memcpy(want, mem, sizeof(mem));
@@ -752,7 +752,7 @@ TEST(ShiftRightAvx, test4) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[4] = {rand64(), rand64(), rand64(), rand64()};
+    uint64_t mem[4] = {_rand64(), _rand64(), _rand64(), _rand64()};
     uint64_t want[4];
     uint64_t got[4];
     memcpy(want, mem, sizeof(mem));
@@ -770,8 +770,8 @@ TEST(ShiftRightAvx, test8) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[8] = {rand64(), rand64(), rand64(), rand64(),
-                       rand64(), rand64(), rand64(), rand64()};
+    uint64_t mem[8] = {_rand64(), _rand64(), _rand64(), _rand64(),
+                       _rand64(), _rand64(), _rand64(), _rand64()};
     uint64_t want[8];
     uint64_t got[8];
     memcpy(want, mem, sizeof(mem));
@@ -793,8 +793,8 @@ TEST(ShiftRightAvx, test9) {
   if (!X86_HAVE(AVX)) return;
   int i;
   for (i = 0; i < 10; ++i) {
-    uint64_t mem[9] = {rand64(), rand64(), rand64(), rand64(), rand64(),
-                       rand64(), rand64(), rand64(), rand64()};
+    uint64_t mem[9] = {_rand64(), _rand64(), _rand64(), _rand64(), _rand64(),
+                       _rand64(), _rand64(), _rand64(), _rand64()};
     uint64_t want[9];
     uint64_t got[9];
     memcpy(want, mem, sizeof(mem));
@@ -811,7 +811,7 @@ TEST(ShiftRightAvx, test9) {
 BENCH(ShiftRight, bench) {
   if (!X86_HAVE(AVX)) return;
   uint64_t x[64];
-  rngset(x, sizeof(x), rand64, -1);
+  rngset(x, sizeof(x), _rand64, -1);
   EZBENCH2("ShiftRight", donothing, ShiftRight(x, 64, 1));
   EZBENCH2("ShiftRightAvx", donothing, ShiftRightAvx(x, 64, 1));
   EZBENCH2("ShiftRightPure", donothing, ShiftRightPure(x, 64, 1));
@@ -819,7 +819,7 @@ BENCH(ShiftRight, bench) {
 
 BENCH(Zeroize, bench) {
   uint64_t x[64];
-  rngset(x, sizeof(x), rand64, -1);
+  rngset(x, sizeof(x), _rand64, -1);
   EZBENCH2("memset (64)", donothing, memset(x, 0, sizeof(x)));
   EZBENCH2("Zeroize (64)", donothing, mbedtls_platform_zeroize(x, 64));
 }

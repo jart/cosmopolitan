@@ -77,7 +77,7 @@ static uint64_t g_mkostemps_reseed;
 dontdiscard int mkostempsm(char *template, int suffixlen, unsigned flags,
                            int mode) {
   int fd;
-  if (g_mkostemps_reseed++ % RESEED == 0) g_mkostemps_rand = rand64();
+  if (g_mkostemps_reseed++ % RESEED == 0) g_mkostemps_rand = _rand64();
   fd = mkostempsmi(template, suffixlen, flags, &g_mkostemps_rand, mode, open);
   STRACE("mkostempsm([%#s], %'d, %#x, %#o) → %d% m", template, suffixlen, flags,
          mode, fd);

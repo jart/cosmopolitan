@@ -29,7 +29,7 @@
  *     double x = _real1(lemur64());  // make float on [0,1]-interval
  *
  * If you want a fast pseudorandom number generator that seeds itself
- * automatically on startup and fork() then consider rand64(). If you
+ * automatically on startup and fork(), then consider _rand64. If you
  * want true random data then consider rdseed, rdrand, and getrandom.
  *
  * @return 64 bits of pseudorandom data
@@ -37,7 +37,7 @@
  * @note this function takes at minimum 1 cycle
  * @note this function passes bigcrush and practrand
  * @note this function is not intended for cryptography
- * @see rand64(), rngset(), _real1(), _real2(), _real3()
+ * @see _rand64(), rngset(), _real1(), _real2(), _real3()
  */
 uint64_t lemur64(void) {
   static uint128_t s = 2131259787901769494;

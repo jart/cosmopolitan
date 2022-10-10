@@ -32,7 +32,7 @@
 int ecp_mod_p384_old(mbedtls_mpi *);
 
 int GetEntropy(void *c, unsigned char *p, size_t n) {
-  rngset(p, n, rand64, -1);
+  rngset(p, n, _rand64, -1);
   return 0;
 }
 

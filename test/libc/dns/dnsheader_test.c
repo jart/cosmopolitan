@@ -18,9 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dns/dns.h"
 #include "libc/dns/dnsheader.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/rand.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
@@ -39,8 +39,8 @@ TEST(SerializeDnsHeader, test) {
 TEST(SerializeDnsHeader, fuzzSymmetry) {
   uint8_t buf[12];
   struct DnsHeader in, out;
-  rngset(&in, sizeof(in), rand64, -1);
-  rngset(&out, sizeof(out), rand64, -1);
+  rngset(&in, sizeof(in), _rand64, -1);
+  rngset(&out, sizeof(out), _rand64, -1);
   SerializeDnsHeader(buf, &in);
   DeserializeDnsHeader(&out, buf);
   ASSERT_EQ(0, memcmp(&in, &out, 12), "%#.*s\n\t%#.*s", 12, in, 12, buf);

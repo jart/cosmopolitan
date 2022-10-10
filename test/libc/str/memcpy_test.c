@@ -30,8 +30,8 @@ TEST(memcpy, test) {
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1, memcpy(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n, b2);
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -40,8 +40,8 @@ TEST(memcpy, test) {
   for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1, memcpy(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n, b2);
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -54,8 +54,8 @@ TEST(mempcpy, test) {
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1 + n, mempcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -64,8 +64,8 @@ TEST(mempcpy, test) {
   for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1 + n, mempcpy(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -78,8 +78,8 @@ TEST(memcpy, direct) {
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1, (memcpy)(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n,
               b2);
     ASSERT_EQ(0, memcmp(b1, b2, n));
@@ -89,8 +89,8 @@ TEST(memcpy, direct) {
   for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1, (memcpy)(b1, b2, n), "%ld\n\t%#.*s\n\t%#.*s", n, n, b1, n,
               b2);
     ASSERT_EQ(0, memcmp(b1, b2, n));
@@ -104,8 +104,8 @@ TEST(mempcpy, direct) {
   for (unsigned n = 0; n < 1026; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1 + n, (mempcpy)(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -114,8 +114,8 @@ TEST(mempcpy, direct) {
   for (unsigned n = kHalfCache3 - 1; n < kHalfCache3 + 2; ++n) {
     b1 = malloc(n);
     b2 = malloc(n);
-    rngset(b1, n, rand64, -1);
-    rngset(b2, n, rand64, -1);
+    rngset(b1, n, _rand64, -1);
+    rngset(b2, n, _rand64, -1);
     ASSERT_EQ(b1 + n, (mempcpy)(b1, b2, n));
     ASSERT_EQ(0, memcmp(b1, b2, n));
     free(b2);
@@ -162,8 +162,8 @@ TEST(memcpy, testBackwardsOverlap3) {
 
 #define B(F, N)                                              \
   do {                                                       \
-    char *d = rngset(malloc(N), N, rand64, -1);              \
-    char *s = rngset(malloc(N), N, rand64, -1);              \
+    char *d = rngset(malloc(N), N, _rand64, -1);             \
+    char *s = rngset(malloc(N), N, _rand64, -1);             \
     EZBENCH2(#F " " #N, donothing,                           \
              EXPROPRIATE(F(VEIL("r", d), VEIL("r", s), N))); \
     free(d);                                                 \

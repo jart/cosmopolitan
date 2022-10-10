@@ -98,4 +98,4 @@ M(1, f, "fpclassify", Fpclassify, fpclassify(x),
   "nan=0,inf=1,zero=2,subnorm=3,normal=4")
 
 M(0, i, "rand", Rand, rand(), "deterministic random number")
-M(0, i, "rand64", Rand64, rand64(), "64-bit random number")
+M(0, i, "rand64", _Rand64, _rand64(), "64-bit random number")

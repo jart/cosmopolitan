@@ -44,7 +44,7 @@ void OnChld(int sig) {
 }
 
 dontinline void Generate(int i) {
-  A[i] = rand64();
+  A[i] = _rand64();
 }
 
 int Thrasher(void *arg, int tid) {
@@ -56,11 +56,11 @@ int Thrasher(void *arg, int tid) {
   return 0;
 }
 
-TEST(rand64, testLcg_doesntProduceIdenticalValues) {
+TEST(_rand64, testLcg_doesntProduceIdenticalValues) {
   int i, j;
   bzero(A, sizeof(A));
   for (i = 0; i < ARRAYLEN(A); ++i) {
-    A[i] = rand64();
+    A[i] = _rand64();
   }
   for (i = 0; i < ARRAYLEN(A); ++i) {
     EXPECT_NE(0, A[i], "i=%d", i);
@@ -71,7 +71,7 @@ TEST(rand64, testLcg_doesntProduceIdenticalValues) {
   }
 }
 
-TEST(rand64, testThreadSafety_doesntProduceIdenticalValues) {
+TEST(_rand64, testThreadSafety_doesntProduceIdenticalValues) {
   int i, j, rc, ws;
   sigset_t ss, oldss;
   struct sigaction oldsa;

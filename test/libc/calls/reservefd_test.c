@@ -95,7 +95,7 @@ int Worker(void *p, int tid) {
   int i, rc, fd;
   for (i = 0; i < 64; ++i) {
     ASSERT_NE(-1, (fd = open("/zip/libc/testlib/hyperion.txt", O_RDONLY)));
-    usleep(rand64() % 100);
+    usleep(_rand64() % 100);
     for (;;) {
       rc = read(fd, buf, 64);
       if (rc != -1) {

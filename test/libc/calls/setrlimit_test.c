@@ -101,7 +101,7 @@ TEST(setrlimit, testFileSizeLimit) {
              firstnonnull(getenv("TMPDIR"), "/tmp"),
              firstnonnull(program_invocation_short_name, "unknown"), getpid());
     ASSERT_NE(-1, (fd = open(tmpname, O_RDWR | O_CREAT | O_TRUNC, 0644)));
-    rngset(junkdata, 512, rand64, -1);
+    rngset(junkdata, 512, _rand64, -1);
     for (i = 0; i < 5 * 1024 * 1024 / 512; ++i) {
       ASSERT_EQ(512, write(fd, junkdata, 512));
     }
@@ -143,7 +143,7 @@ TEST(setrlimit, testMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _exit(0);
       }
-      rngset(p, PAGESIZE, rand64, -1);
+      rngset(p, PAGESIZE, _rand64, -1);
     }
     _exit(1);
   }
@@ -171,7 +171,7 @@ TEST(setrlimit, testVirtualMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _exit(0);
       }
-      rngset(p, PAGESIZE, rand64, -1);
+      rngset(p, PAGESIZE, _rand64, -1);
     }
     _exit(1);
   }
@@ -201,7 +201,7 @@ TEST(setrlimit, testDataMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _exit(0);
       }
-      rngset(p, PAGESIZE, rand64, -1);
+      rngset(p, PAGESIZE, _rand64, -1);
     }
     _exit(1);
   }

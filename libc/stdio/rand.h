@@ -23,7 +23,7 @@ long random(void);
 void srandom(unsigned);
 
 uint64_t lemur64(void);
-uint64_t rand64(void);
+uint64_t _rand64(void);
 uint64_t vigna(void);
 uint64_t vigna_r(uint64_t[hasatleast 1]);
 void svigna(uint64_t);

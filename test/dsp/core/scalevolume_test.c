@@ -22,8 +22,8 @@
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/buffer.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
@@ -146,7 +146,7 @@ TEST(scalevolume, testSmallestScale_justSaturates) {
 //   - ~200ns w/ -O3 -march=skylake MODE=rel
 
 void randomizeaudio(void) {
-  rngset(pcm, sizeof(pcm), rand64, -1);
+  rngset(pcm, sizeof(pcm), _rand64, -1);
 }
 
 void scalevolume_pure(int amt) {

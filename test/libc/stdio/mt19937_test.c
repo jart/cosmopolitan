@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/grnd.h"
 #include "libc/testlib/ezbench.h"
@@ -157,14 +157,14 @@ TEST(mt19937, test) {
 BENCH(mt19937, bench8) {
   volatile uint64_t x;
   EZBENCH2("lemur64", donothing, x = lemur64());
-  EZBENCH2("rand64", donothing, x = rand64());
+  EZBENCH2("_rand64", donothing, x = _rand64());
   EZBENCH2("vigna", donothing, x = vigna());
   EZBENCH2("vigna_r", donothing, vigna_r(&x));
   EZBENCH2("xorshift", donothing, x = xorshift());
   EZBENCH2("knuth", donothing, x = knuth());
   EZBENCH2("random", donothing, x = urandom());
   EZBENCH2("mt19937", donothing, x = _mt19937());
-  EZBENCH2("rand64char", donothing, x = rand64());
+  EZBENCH2("rand64char", donothing, x = _rand64());
   size_t i = 0;
   volatile uint8_t *p = gc(malloc(3 * 2048 * 2 * 8));
   EZBENCH3("rdrand", 2048, donothing, p[i++] = rdrand());
@@ -174,7 +174,7 @@ BENCH(mt19937, bench8) {
 
 BENCH(mt19937, bench32k) {
   volatile char *p = gc(malloc(32768));
-  EZBENCH_N("rngset(rand64,-1)", 32768, rngset(p, 32768, rand64, -1));
+  EZBENCH_N("rngset(_rand64,-1)", 32768, rngset(p, 32768, _rand64, -1));
   EZBENCH_N("rngset(rdseed,512)", 32768, rngset(p, 32768, rdseed, 512));
   EZBENCH_N("ctrdrbg+rdseed [blk]", 32768, ctrdrbg1(p, 32768));
   EZBENCH_N("getrandom [block]", 32768, GetRandom(p, 32768));
@@ -183,7 +183,7 @@ BENCH(mt19937, bench32k) {
   EZBENCH_N("knuth [word]", 32768, knutha(p, 32768));
   EZBENCH_N("random [word]", 32768, rngset(p, 32768, urandom, 0));
   EZBENCH_N("mt19937 [word]", 32768, rngset(p, 32768, _mt19937, 0));
-  EZBENCH_N("rand64 [word]", 32768, rngset(p, 32768, rand64, 0));
+  EZBENCH_N("_rand64 [word]", 32768, rngset(p, 32768, _rand64, 0));
   EZBENCH_N("rdrand [word]", 32768, rngset(p, 32768, rdrand, 0));
   EZBENCH_N("rdseed [word]", 32768, rngset(p, 32768, rdseed, 0));
 }

@@ -402,6 +402,15 @@ $(SRCS):					\
 	libc/integral/lp64arg.inc		\
 	libc/integral/lp64.inc
 
+.PHONY: toolchain
+toolchain:	o/cosmopolitan.h				\
+		o/$(MODE)/ape/public/ape.lds			\
+		o/$(MODE)/libc/crt/crt.o			\
+		o/$(MODE)/ape/ape.o				\
+		o/$(MODE)/ape/ape-copy-self.o			\
+		o/$(MODE)/ape/ape-no-modify-self.o		\
+		o/$(MODE)/cosmopolitan.a
+
 # UNSPECIFIED PREREQUISITES TUTORIAL
 #
 # A build rule must exist for all files that make needs to consider in

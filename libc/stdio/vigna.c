@@ -46,7 +46,7 @@ static uint64_t g_vigna;
  *     rngset(buf, sizeof(buf), vigna, 0);
  *
  * If you want a fast pseudorandom number generator that seeds itself
- * automatically on startup and fork() then consider rand64(). If you
+ * automatically on startup and fork(), then consider _rand64. If you
  * want true random data then consider rdseed, rdrand, and getrandom.
  *
  * @return 64 bits of pseudorandom data

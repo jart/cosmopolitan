@@ -42,7 +42,7 @@ TEST(MemMove, overlapping) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
-        b0 = rngset(malloc(N), N, rand64, -1);
+        b0 = rngset(malloc(N), N, _rand64, -1);
         b1 = memcpy(malloc(N), b0, N);
         b2 = memcpy(malloc(N), b0, N);
         ASSERT_EQ(b1 + j, memmove(b1 + j, b1 + i, n));
@@ -66,7 +66,7 @@ TEST(MemCpy, overlapping) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
         if (j <= i) {
-          b0 = rngset(malloc(N), N, rand64, -1);
+          b0 = rngset(malloc(N), N, _rand64, -1);
           b1 = memcpy(malloc(N), b0, N);
           b2 = memcpy(malloc(N), b0, N);
           ASSERT_EQ(b1 + j, memcpy(b1 + j, b1 + i, n));
@@ -90,7 +90,7 @@ TEST(MemMove, overlappingDirect) {
   for (i = 0; i < N; i += S) {
     for (j = 0; j < N; j += S) {
       for (n = MIN(N - i, N - j) + 1; n--;) {
-        b0 = rngset(malloc(N), N, rand64, -1);
+        b0 = rngset(malloc(N), N, _rand64, -1);
         b1 = memcpy(malloc(N), b0, N);
         b2 = memcpy(malloc(N), b0, N);
         ASSERT_EQ(b1 + j, (memmove)(b1 + j, b1 + i, n));

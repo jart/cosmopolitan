@@ -34,7 +34,7 @@
  * @note this function could block a nontrivial time on old computers
  * @note this function is indeed intended for cryptography
  * @note this function takes around 800 cycles
- * @see rngset(), rdrand(), rand64()
+ * @see rngset(), rdrand(), _rand64()
  * @asyncsignalsafe
  * @vforksafe
  */

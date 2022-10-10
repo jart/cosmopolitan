@@ -20,10 +20,10 @@
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/cachesize.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -506,7 +506,7 @@ dontinline int strcasecmp_pure(const char *a, const char *b) {
 }
 
 char *randomize_buf2str(size_t size, char data[size]) {
-  rngset(data, size, rand64, -1);
+  rngset(data, size, _rand64, -1);
   data[size - 1] = '\0';
   return data;
 }

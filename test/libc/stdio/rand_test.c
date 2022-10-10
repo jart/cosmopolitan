@@ -39,16 +39,16 @@ TEST(rand003, srandSmokeTest) {
 }
 
 TEST(rand005, rand64SmokeTest) {
-  ASSERT_TRUE(rand64() != rand64() || rand64() != rand64());
+  ASSERT_TRUE(_rand64() != _rand64() || _rand64() != _rand64());
 }
 
-TEST(rand64, test) {
+TEST(_rand64, test) {
   char *p;
   size_t i;
   uint64_t x;
   p = memcpy(malloc(kHyperionSize), kHyperion, kHyperionSize);
   for (i = 0; i < kHyperionSize / 8; ++i) {
-    x = rand64();
+    x = _rand64();
     WRITE64LE(p + i * 8, x);
   }
   free(p);

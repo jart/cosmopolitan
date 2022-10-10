@@ -96,7 +96,7 @@ TEST(highwayhash64, test) {
 
 BENCH(highwayhash64, newbench) {
   char fun[256];
-  rngset(fun, 256, rand64, -1);
+  rngset(fun, 256, _rand64, -1);
   EZBENCH_N("highwayhash64", 0, HighwayHash64(0, 0, kTestKey1));
   EZBENCH_N("highwayhash64", 8, HighwayHash64("helloooo", 8, kTestKey1));
   EZBENCH_N("highwayhash64", 31, HighwayHash64(fun, 31, kTestKey1));

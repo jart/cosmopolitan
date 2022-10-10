@@ -63,7 +63,7 @@ int ResolveDns(const struct ResolvConf *resolvconf, int af, const char *name,
   if (!resolvconf->nameservers.i) return 0;
   bzero(&h, sizeof(h));
   rc = ebadmsg();
-  h.id = rand64();
+  h.id = _rand64();
   h.bf1 = 1; /* recursion desired */
   h.qdcount = 1;
   q.qname = name;

@@ -101,10 +101,10 @@ static int CompareInt(const void *a, const void *b) {
 BENCH(djbsort, bench) {
   n = 256;
   a = _gc(memalign(32, n * 4));
-  EZBENCH2("insertionsort[255]", rngset(a, n * 4, rand64, -1),
+  EZBENCH2("insertionsort[255]", rngset(a, n * 4, _rand64, -1),
            insertionsort(a, n));
-  EZBENCH2("djbsort[255]", rngset(a, n * 4, rand64, -1), djbsort(a, n));
-  EZBENCH2("_intsort[255]", rngset(a, n * 4, rand64, -1), _intsort(a, n));
-  EZBENCH2("qsort[255]", rngset(a, n * 4, rand64, -1),
+  EZBENCH2("djbsort[255]", rngset(a, n * 4, _rand64, -1), djbsort(a, n));
+  EZBENCH2("_intsort[255]", rngset(a, n * 4, _rand64, -1), _intsort(a, n));
+  EZBENCH2("qsort[255]", rngset(a, n * 4, _rand64, -1),
            qsort(a, n, sizeof(int), CompareInt));
 }

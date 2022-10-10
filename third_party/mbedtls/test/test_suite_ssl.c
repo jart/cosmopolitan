@@ -3709,7 +3709,7 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
      * hundreds of milliseconds of latency, which we can't have in our pure
      * testing infrastructure.
      */
-    for( i = block_size; i < buflen; i += max( 1, rand64() & 31 ) )
+    for( i = block_size; i < buflen; i += max( 1, _rand64() & 31 ) )
     {
         mbedtls_test_set_step( i );
         /* Restore correct pre-encryption record */
@@ -3747,7 +3747,7 @@ void test_ssl_decrypt_non_etm_cbc( int cipher_type, int hash_id, int trunc_hmac,
      * hundreds of milliseconds of latency, which we can't have in our pure
      * testing infrastructure.
      */
-    for( i = padlen; i <= pad_max_len; i += max( 1, rand64() & 31 ) )
+    for( i = padlen; i <= pad_max_len; i += max( 1, _rand64() & 31 ) )
     {
         mbedtls_test_set_step( i );
         /* Restore correct pre-encryption record */

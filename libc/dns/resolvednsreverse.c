@@ -24,17 +24,17 @@
 │ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR        │
 │ OTHER DEALINGS IN THE SOFTWARE.                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/dns/consts.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/dnsheader.h"
 #include "libc/dns/dnsquestion.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/intrin/bits.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/ipproto.h"
@@ -65,7 +65,7 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   if (!resolvconf->nameservers.i) return 0;
   bzero(&h, sizeof(h));
   rc = ebadmsg();
-  h.id = rand64();
+  h.id = _rand64();
   h.bf1 = 1; /* recursion desired */
   h.qdcount = 1;
   q.qname = name;

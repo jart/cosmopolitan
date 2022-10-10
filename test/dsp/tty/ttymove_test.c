@@ -27,7 +27,7 @@ char p[16];
 struct TtyCursor c;
 
 void SetUp(void) {
-  rngset(p, sizeof(p), rand64, -1);
+  rngset(p, sizeof(p), _rand64, -1);
 }
 
 TEST(ttymove, sameCoord_doesNothing) {

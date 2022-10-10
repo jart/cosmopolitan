@@ -180,7 +180,7 @@ uint64_t Rand64LowByte(void) {
   uint64_t x;
   for (x = i = 0; i < 8; ++i) {
     x <<= 8;
-    x |= rand64() & 255;
+    x |= _rand64() & 255;
   }
   return x;
 }
@@ -203,7 +203,7 @@ static const struct RandomFunction {
     {"SixthEditionLowByte", SixthEditionLowByte, false},      //
     {"SeventhEditionLowByte", SeventhEditionLowByte, false},  //
     {"KnuthLcg", KnuthLcg, false},                            //
-    {"rand64", rand64, true},                                 //
+    {"rand64", _rand64, true},                                //
     {"Rand64LowByte", Rand64LowByte, true},                   //
     {"GetRandom", GetRandom, true},                           //
 };

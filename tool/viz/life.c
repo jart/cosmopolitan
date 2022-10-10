@@ -414,8 +414,8 @@ static void OnMouseLeftDrag(long y, long x) {
   save_x = x;
   y = top + (y << (zoom + !!zoom));
   x = left + (x << zoom);
-  y += rand64() & ((1ul << (zoom + !!zoom)) - 1);
-  x += rand64() & ((1ul << zoom) - 1);
+  y += _rand64() & ((1ul << (zoom + !!zoom)) - 1);
+  x += _rand64() & ((1ul << zoom) - 1);
   if (y < 0 || y >= byn) return;
   if (x < 0 || x >= bxn) return;
   if (erase) {
@@ -819,7 +819,7 @@ static void Rando1(void) {
   long i, n;
   n = (byn * bxn) >> 6;
   for (i = 0; i < n; ++i) {
-    board[i] = rand64();
+    board[i] = _rand64();
   }
 }
 

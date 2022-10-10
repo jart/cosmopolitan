@@ -46,7 +46,7 @@ static struct {
  * @threadsafe
  * @vforksafe
  */
-uint64_t rand64(void) {
+uint64_t _rand64(void) {
   void *p;
   uint128_t s;
   if (__threaded) pthread_spin_lock(&g_rand64.lock);

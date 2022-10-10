@@ -29,7 +29,7 @@
  * tracked by a global variable which is updated at fork(). The only
  * exception is when the process is vfork()'d in which case a system
  * call shall be issued. This optimization helps make functions like
- * rand64() fork-safe, however it could lead to race conditions in
+ * _rand64() fork-safe, however it could lead to race conditions in
  * programs that mix fork() with threads. In that case, apps should
  * consider using `sys_getpid().ax` instead to force a system call.
  *

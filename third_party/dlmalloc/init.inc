@@ -83,7 +83,7 @@ static int init_mparams(void) {
       }
       else
 #endif /* USE_DEV_RANDOM */
-      magic = (size_t)(rand64() ^ (size_t)0x55555555U);
+      magic = (size_t)(_rand64() ^ (size_t)0x55555555U);
       magic |= (size_t)8U;    /* ensure nonzero */
       magic &= ~(size_t)7U;   /* improve chances of fault for bad values */
       /* Until memory modes commonly available, use volatile-write */

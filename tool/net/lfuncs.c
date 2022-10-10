@@ -150,7 +150,7 @@ int LuaLemur64(lua_State *L) {
 }
 
 int LuaRand64(lua_State *L) {
-  return LuaRand(L, rand64);
+  return LuaRand(L, _rand64);
 }
 
 int LuaRdrand(lua_State *L) {

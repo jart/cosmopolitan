@@ -102,7 +102,7 @@ uint64_t rngset64(void) {
   static unsigned i;
   static uint64_t s;
   if (!i) {
-    s = rand64();
+    s = _rand64();
     i = (s + 1) & (511);
   }
   return MarsagliaXorshift64(&s);
@@ -215,7 +215,7 @@ const struct Function {
     {"moby", moby},              //
     {"mt19937", _mt19937},       //
     {"python", pythonx2},        //
-    {"rand64", rand64},          //
+    {"rand64", _rand64},         //
     {"rdrand", rdrand},          //
     {"rdrnd", rdrand},           //
     {"rdseed", rdseed},          //

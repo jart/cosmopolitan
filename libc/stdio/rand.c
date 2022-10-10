@@ -35,7 +35,7 @@
  *
  * @note this function does well on bigcrush and practrand
  * @note this function is not intended for cryptography
- * @see lemur64(), rand64(), rdrand()
+ * @see lemur64(), _rand64(), rdrand()
  */
 int rand(void) {
   return KnuthLinearCongruentialGenerator(&g_rando) >> 33;

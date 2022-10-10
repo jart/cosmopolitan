@@ -92,9 +92,9 @@ void *Worker(void *arg) {
   for (int j = 0; j < 50; ++j) {
     ASSERT_EQ(SQLITE_OK, DbExec(db, "BEGIN TRANSACTION"));
     for (int i = 0; i < 4; ++i) {
-      ASSERT_EQ(SQLITE_OK, sqlite3_bind_int64(stmt[0], 1, rand64()));
+      ASSERT_EQ(SQLITE_OK, sqlite3_bind_int64(stmt[0], 1, _rand64()));
       ASSERT_EQ(SQLITE_OK, sqlite3_bind_text(
-                               stmt[0], 2, kNames[rand64() % ARRAYLEN(kNames)],
+                               stmt[0], 2, kNames[_rand64() % ARRAYLEN(kNames)],
                                -1, SQLITE_TRANSIENT));
       ASSERT_EQ(SQLITE_DONE, DbStep(stmt[0]));
       ASSERT_EQ(SQLITE_OK, sqlite3_reset(stmt[0]));

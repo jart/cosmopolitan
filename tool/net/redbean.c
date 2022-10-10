@@ -2611,7 +2611,7 @@ static char *ServeAssetCompressed(struct Asset *a) {
   dg.i = 0;
   dg.c = 0;
   if (usingssl) {
-    dg.z = 512 + (rand64() & 1023);
+    dg.z = 512 + (_rand64() & 1023);
   } else {
     dg.z = 65536;
   }
