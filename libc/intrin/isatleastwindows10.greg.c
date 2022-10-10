@@ -26,6 +26,6 @@
  * This function may only be called if IsWindows() is true.
  */
 privileged bool(IsAtLeastWindows10)(void) {
-  assert(IsWindows());
+  _unassert(IsWindows());
   return IsAtLeastWindows10();
 }

@@ -38,7 +38,7 @@ static int rmrfdir(const char *dirpath) {
   while ((e = readdir(d))) {
     if (!strcmp(e->d_name, ".")) continue;
     if (!strcmp(e->d_name, "..")) continue;
-    assert(!strchr(e->d_name, '/'));
+    _npassert(!strchr(e->d_name, '/'));
     path = xjoinpaths(dirpath, e->d_name);
     if (e->d_type == DT_DIR) {
       rc = rmrfdir(path);

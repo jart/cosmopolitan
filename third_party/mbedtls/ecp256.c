@@ -16,10 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/log/check.h"
 #include "libc/nexgen32e/x86feature.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "third_party/mbedtls/bignum_internal.h"
@@ -261,7 +258,7 @@ mbedtls_p256_add( uint64_t X[5],
     ADC( X[3], A[3], B[3], c, X[4] );
 #endif
     mbedtls_p256_rum( X );
-    DCHECK_EQ( 0, X[4] );
+    MBEDTLS_ASSERT( 0 == X[4] );
 }
 
 static void
@@ -298,7 +295,7 @@ mbedtls_p256_sub( uint64_t X[5],
 #endif
     while( (int64_t)X[4] < 0 )
         mbedtls_p256_gro( X );
-    DCHECK_EQ( 0, X[4] );
+    MBEDTLS_ASSERT( 0 == X[4] );
 }
 
 static void
@@ -322,7 +319,7 @@ mbedtls_p256_hub( uint64_t A[5],
         : "rax", "rcx", "memory", "cc");
     while( (int64_t)A[4] < 0 )
         mbedtls_p256_gro( A );
-    DCHECK_EQ( 0, A[4] );
+    MBEDTLS_ASSERT( 0 == A[4] );
 #else
     mbedtls_p256_sub( A, A, B );
 #endif
@@ -368,9 +365,9 @@ int mbedtls_p256_double_jac( const mbedtls_ecp_group *G,
     s.Xn = mbedtls_mpi_limbs( &P->X );
     s.Yn = mbedtls_mpi_limbs( &P->Y );
     s.Zn = mbedtls_mpi_limbs( &P->Z );
-    CHECK_LE( s.Xn, 4 );
-    CHECK_LE( s.Yn, 4 );
-    CHECK_LE( s.Zn, 4 );
+    MBEDTLS_ASSERT( s.Xn <= 4 );
+    MBEDTLS_ASSERT( s.Yn <= 4 );
+    MBEDTLS_ASSERT( s.Zn <= 4 );
     memcpy( s.X, P->X.p, s.Xn * 8 );
     memcpy( s.Y, P->Y.p, s.Yn * 8 );
     memcpy( s.Z, P->Z.p, s.Zn * 8 );
@@ -424,11 +421,11 @@ int mbedtls_p256_add_mixed( const mbedtls_ecp_group *G,
     s.Zn  = mbedtls_mpi_limbs( &P->Z );
     s.QXn = mbedtls_mpi_limbs( &Q->X );
     s.QYn = mbedtls_mpi_limbs( &Q->Y );
-    CHECK_LE( s.Xn,  4 );
-    CHECK_LE( s.Yn,  4 );
-    CHECK_LE( s.Zn,  4 );
-    CHECK_LE( s.QXn, 4 );
-    CHECK_LE( s.QYn, 4 );
+    MBEDTLS_ASSERT( s.Xn  <= 4 );
+    MBEDTLS_ASSERT( s.Yn  <= 4 );
+    MBEDTLS_ASSERT( s.Zn  <= 4 );
+    MBEDTLS_ASSERT( s.QXn <= 4 );
+    MBEDTLS_ASSERT( s.QYn <= 4 );
     memcpy( s.X, P->X.p, s.Xn * 8 );
     memcpy( s.Y, P->Y.p, s.Yn * 8 );
     memcpy( s.Z, P->Z.p, s.Zn * 8 );

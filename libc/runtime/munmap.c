@@ -95,9 +95,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
       beg = MAX(_mmi.p[i].x, l);
       end = _mmi.p[i].y;
     } else {
-      // shouldn't be possible
-      assert(!"binary search panic");
-      continue;
+      unreachable;
     }
     // openbsd even requires that if we mapped, for instance a 5 byte
     // file, that we be sure to call munmap(file, 5). let's abstract!
@@ -107,8 +105,7 @@ static noasan void MunmapImpl(char *p, size_t n) {
     q = (char *)a;
     m = MIN(b, c) - a;
     if (!IsWindows()) {
-      rc = sys_munmap(q, m);
-      assert(!rc);
+      _npassert(!sys_munmap(q, m));
     } else {
       // Handled by UntrackMemoryIntervals() on Windows
     }
@@ -122,7 +119,7 @@ static noasan int Munmap(char *p, size_t n) {
   unsigned i;
   char poison;
   intptr_t a, b, x, y;
-  assert(!__vforked);
+  _unassert(!__vforked);
   if (UNLIKELY(!n)) {
     STRACE("n=0");
     return einval();

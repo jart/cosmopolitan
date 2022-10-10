@@ -26,7 +26,10 @@
  *
  * This calls functions registered by atexit() before terminating
  * the current process, and any associated threads. It also calls
- * all the legacy linker registered destructors in reeverse order
+ * all the legacy linker registered destructors in reversed order
+ *
+ * This implementation allows exit() to be called recursively via
+ * atexit() handlers.
  *
  * @param exitcode is masked with 255
  * @see _Exit()

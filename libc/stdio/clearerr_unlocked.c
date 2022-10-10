@@ -18,6 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/stdio.h"
 
+/**
+ * Clears eof and error state indicators on stream.
+ *
+ * @param f is file object stream pointer
+ * @see	clearerr()
+ * @threadsafe
+ */
 void clearerr_unlocked(FILE *f) {
   f->state = 0;
 }

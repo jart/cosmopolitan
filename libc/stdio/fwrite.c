@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 
@@ -31,6 +33,8 @@ size_t fwrite(const void *data, size_t stride, size_t count, FILE *f) {
   size_t rc;
   flockfile(f);
   rc = fwrite_unlocked(data, stride, count, f);
+  STDIOTRACE("fwrite(%p, %'zu, %'zu, %p) → %'zu %s", data, stride, count, f, rc,
+             DescribeStdioState(f->state));
   funlockfile(f);
   return rc;
 }

@@ -28,16 +28,19 @@
 #define USE_LOCKS 2
 #define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
+#define ABORT_ON_ASSERT_FAILURE 0
 
 #if IsTiny()
 #define INSECURE 1
 #define PROCEED_ON_ERROR 1
-#define ABORT_ON_ASSERT_FAILURE 0
 #endif
 
 #if IsModeDbg()
 #define DEBUG 1
 #endif
+
+#undef assert
+#define assert(x) _npassert(x)
 
 #include "third_party/dlmalloc/platform.inc"
 #include "third_party/dlmalloc/locks.inc"

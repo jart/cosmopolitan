@@ -62,18 +62,13 @@ static wontreturn void __arena_die(void) {
   _exit(83);
 }
 
-static wontreturn void __arena_not_implemented(void) {
-  assert(!"not implemented");
-  __arena_die();
-}
-
 forceinline void __arena_check(void) {
-  assert(__arena.depth);
+  _unassert(__arena.depth);
 }
 
 forceinline void __arena_check_pointer(void *p) {
-  assert(BASE + __arena.offset[__arena.depth - 1] <= (uintptr_t)p &&
-         (uintptr_t)p < BASE + __arena.offset[__arena.depth]);
+  _unassert(BASE + __arena.offset[__arena.depth - 1] <= (uintptr_t)p &&
+            (uintptr_t)p < BASE + __arena.offset[__arena.depth]);
 }
 
 forceinline bool __arena_is_arena_pointer(void *p) {
@@ -326,7 +321,7 @@ void __arena_push(void) {
   if (!__arena.depth) {
     __arena_install();
   } else {
-    assert(__arena.depth < ARRAYLEN(__arena.offset) - 1);
+    _unassert(__arena.depth < ARRAYLEN(__arena.offset) - 1);
   }
   __arena.offset[__arena.depth + 1] = __arena.offset[__arena.depth];
   ++__arena.depth;

@@ -47,6 +47,7 @@ int fseeko_unlocked(FILE *f, int64_t offset, int whence) {
     if (lseek(f->fd, offset, whence) != -1) {
       f->beg = 0;
       f->end = 0;
+      f->state = 0;
       res = 0;
     } else {
       f->state = errno == ESPIPE ? EBADF : errno;
@@ -69,6 +70,7 @@ int fseeko_unlocked(FILE *f, int64_t offset, int whence) {
     }
     if (0 <= pos && pos <= f->end) {
       f->beg = pos;
+      f->state = 0;
       res = 0;
     } else {
       f->state = errno = EINVAL;

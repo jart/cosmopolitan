@@ -70,6 +70,6 @@ char *strchr(const char *s, int c) {
   } else {
     r = strchr_pure(s, c);
   }
-  assert(!r || *r || !(c & 255));
+  _unassert(!r || *r || !(c & 255));
   return (char *)r;
 }

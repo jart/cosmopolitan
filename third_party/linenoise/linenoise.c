@@ -588,7 +588,7 @@ static size_t GetMonospaceWidth(const char *p, size_t n, char *out_haswides) {
         }
         break;
       default:
-        assert(0);
+        unreachable;
     }
   }
   if (out_haswides) {
@@ -1558,7 +1558,7 @@ static void linenoiseEditTranspose(struct linenoiseState *l) {
   p = q = malloc(c - a);
   p = mempcpy(p, l->buf + b, c - b);
   p = mempcpy(p, l->buf + a, b - a);
-  assert(p - q == c - a);
+  _unassert(p - q == c - a);
   memcpy(l->buf + a, q, p - q);
   l->pos = c;
   free(q);
@@ -1579,7 +1579,7 @@ static void linenoiseEditTransposeWords(struct linenoiseState *l) {
   p = mempcpy(p, l->buf + yi, yj - yi);
   p = mempcpy(p, l->buf + xj, yi - xj);
   p = mempcpy(p, l->buf + xi, xj - xi);
-  assert(p - q == yj - xi);
+  _unassert(p - q == yj - xi);
   memcpy(l->buf + xi, q, p - q);
   l->pos = yj;
   free(q);

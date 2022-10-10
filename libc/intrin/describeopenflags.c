@@ -34,10 +34,7 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
   struct DescribeFlags d[N];
   // TODO(jart): unify DescribeFlags and MagnumStr data structures
   for (n = 0; kOpenFlags[n].x != MAGNUM_TERMINATOR; ++n) {
-    if (n == N) {
-      assert(!"too many open flags");
-      break;
-    }
+    if (n == N) notpossible;
   }
   for (i = 0; i < n; ++i) {
     d[i].flag = MAGNUM_NUMBER(kOpenFlags, i);

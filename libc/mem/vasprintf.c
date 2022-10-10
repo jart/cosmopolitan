@@ -43,7 +43,7 @@ int(vasprintf)(char **strp, const char *fmt, va_list va) {
       if ((p2 = realloc(p, size))) {
         p = p2;
         wrote = (vsnprintf)(p, size, fmt, vb);
-        assert(wrote == size - 1);
+        _unassert(wrote == size - 1);
         rc = wrote;
       }
     }

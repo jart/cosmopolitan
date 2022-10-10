@@ -56,6 +56,6 @@ noasan size_t strnlen_s(const char *s, size_t n) {
   for (;; ++i) {
     if (i == n || !s[i]) break;
   }
-  assert(i == n || (i < n && !s[i]));
+  _unassert(i == n || (i < n && !s[i]));
   return i;
 }

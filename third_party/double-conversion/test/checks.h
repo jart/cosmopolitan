@@ -26,7 +26,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef V8_CHECKS_H_
 #define V8_CHECKS_H_
-#include "libc/isystem/string.h"
 #include "third_party/double-conversion/test/flags.h"
 // clang-format off
 

@@ -44,6 +44,9 @@ size_t fwrite_unlocked(const void *data, size_t stride, size_t count, FILE *f) {
   size_t n, m;
   const char *p;
   struct iovec iov[2];
+  if (f->state) {
+    return 0;
+  }
   if ((f->iomode & O_ACCMODE) == O_RDONLY) {
     f->state = errno = EBADF;
     return 0;

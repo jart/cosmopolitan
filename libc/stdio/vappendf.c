@@ -44,9 +44,9 @@ ssize_t(vappendf)(char **b, const char *f, va_list v) {
       z.n = ROUNDUP(z.n, W);
       if ((p = realloc(p, z.n))) {
         z.n = malloc_usable_size(p);
-        assert(!(z.n & (W - 1)));
+        _unassert(!(z.n & (W - 1)));
         s = (vsnprintf)(p + z.i, z.n - W - z.i, f, w);
-        assert(s == r);
+        _unassert(s == r);
         *b = p;
       } else {
         va_end(w);

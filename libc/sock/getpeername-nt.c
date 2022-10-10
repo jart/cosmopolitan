@@ -26,7 +26,7 @@
 
 textwindows int sys_getpeername_nt(struct Fd *fd, void *out_addr,
                                    uint32_t *out_addrsize) {
-  assert(fd->kind == kFdSocket);
+  _npassert(fd->kind == kFdSocket);
   if (__sys_getpeername_nt(fd->handle, out_addr, out_addrsize) != -1) {
     return 0;
   } else {

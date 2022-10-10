@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -52,7 +51,6 @@ ssize_t readlinkat(int dirfd, const char *path, char *buf, size_t bufsiz) {
              (bytes = __zipos_notat(dirfd, path)) == -1) {
     STRACE("TODO: zipos support for readlinkat");
   } else if (!IsWindows()) {
-    assert(bufsiz);
     bytes = sys_readlinkat(dirfd, path, buf, bufsiz);
   } else {
     bytes = sys_readlinkat_nt(dirfd, path, buf, bufsiz);

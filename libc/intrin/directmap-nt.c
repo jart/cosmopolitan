@@ -74,7 +74,7 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
       }
     }
   } else {
-    assert(flags & MAP_ANONYMOUS);
+    _unassert(flags & MAP_ANONYMOUS);
     fl = (struct ProtectNt){kNtPageExecuteReadwrite,
                             kNtFileMapWrite | kNtFileMapExecute};
   }

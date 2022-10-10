@@ -24,8 +24,6 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#include "libc/isystem/stdlib.h"
-#include "libc/isystem/string.h"
 #include "third_party/double-conversion/bignum.h"
 #include "third_party/double-conversion/test/cctest.h"
 #include "third_party/double-conversion/utils.h"

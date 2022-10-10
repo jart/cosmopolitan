@@ -31,7 +31,6 @@ int pclose(FILE *f) {
   int ws, pid;
   pid = f->pid;
   fclose(f);
-  assert(pid);
   if (!pid) return 0;
 TryAgain:
   if (wait4(pid, &ws, 0, 0) != -1) {

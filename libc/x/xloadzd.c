@@ -47,7 +47,7 @@ void *xloadzd(bool *o, void **t, const void *p, size_t n, size_t m, size_t c,
   z_stream zs;
   char *q, *b;
   int64_t x, y;
-  assert(z == 2 || z == 4);
+  _unassert(z == 2 || z == 4);
   b = q = malloc(m);
   __inflate(q, m, p, n);
   r = memalign(z, c * z);
@@ -61,7 +61,7 @@ void *xloadzd(bool *o, void **t, const void *p, size_t n, size_t m, size_t c,
     }
   }
   free(q);
-  assert(crc32_z(0, r, c * z) == s);
+  _npassert(crc32_z(0, r, c * z) == s);
   if (_lockcmpxchg(t, 0, r)) {
     __cxa_atexit(free, r, 0);
   } else {

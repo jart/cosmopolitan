@@ -336,7 +336,8 @@ static struct dirent *readdir_impl(DIR *dir) {
     ent = 0;
     zip = _weaken(__zipos_get)();
     while (!ent && dir->tell < dir->zip.records) {
-      assert(ZIP_CFILE_MAGIC(zip->map + dir->zip.offset) == kZipCfileHdrMagic);
+      _npassert(ZIP_CFILE_MAGIC(zip->map + dir->zip.offset) ==
+                kZipCfileHdrMagic);
       s = ZIP_CFILE_NAME(zip->map + dir->zip.offset);
       n = ZIP_CFILE_NAMESIZE(zip->map + dir->zip.offset);
       if (dir->zip.prefixlen < n &&

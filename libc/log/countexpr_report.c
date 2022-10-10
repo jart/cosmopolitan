@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
 #include "libc/log/countexpr.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/alg.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
@@ -50,7 +50,7 @@ static void PrintHistogram(const long *h, size_t n, long t) {
   unsigned long logos;
   for (i = 0; i < n; ++i) {
     p = (h[i] * 10000 + (t >> 1)) / t;
-    assert(0 <= p && p <= 10000);
+    _unassert(0 <= p && p <= 10000);
     if (p) {
       for (j = 0; j < p / 100; ++j) s[j] = '#';
       s[j] = 0;

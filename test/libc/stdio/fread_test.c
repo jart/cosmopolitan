@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,45 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/lock.internal.h"
+#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
+#include "libc/testlib/testlib.h"
 
-/**
- * Clears eof and error state indicators on stream.
- *
- * @param f is file object stream pointer
- * @see	clearerr_unlocked()
- * @threadsafe
- */
-void clearerr(FILE *f) {
-  flockfile(f);
-  clearerr_unlocked(f);
-  funlockfile(f);
+char testlib_enable_tmp_setup_teardown;
+
+TEST(fread, eofIsSticky) {
+  FILE *fo, *fi;
+  char b[10] = "hello";
+  ASSERT_NE(NULL, (fo = fopen("foo", "w")));
+  ASSERT_NE(NULL, (fi = fopen("foo", "r")));
+  ASSERT_EQ(0, fread(b, 1, 8, fi));
+  ASSERT_TRUE(feof(fi));
+  ASSERT_EQ(8, fwrite(b, 1, 8, fo));
+  ASSERT_EQ(0, fflush(fo));
+  ASSERT_EQ(0, fread(b, 1, 8, fi));
+  ASSERT_TRUE(feof(fi));
+  clearerr(fi);
+  ASSERT_EQ(8, fread(b, 1, 10, fi));
+  ASSERT_TRUE(feof(fi));
+  ASSERT_EQ(0, fseek(fi, 0, SEEK_SET));
+  ASSERT_FALSE(feof(fi));
+  ASSERT_EQ(0, fclose(fi));
+  ASSERT_EQ(0, fclose(fo));
+}
+
+TEST(fread, seekWithBuffer) {
+  FILE *f;
+  char b[8] = "hellosup";
+  char c[8] = {0};
+  char d[8] = {0};
+  ASSERT_NE(NULL, (f = fopen("foo", "w")));
+  ASSERT_EQ(8, fwrite(b, 1, 8, f));
+  ASSERT_EQ(0, fclose(f));
+  ASSERT_NE(NULL, (f = fopen("foo", "r")));
+  ASSERT_EQ(5, fread(c, 1, 5, f));
+  ASSERT_STREQ("hello", c);
+  ASSERT_EQ(0, fseek(f, 1, SEEK_SET));
+  ASSERT_EQ(5, fread(d, 1, 5, f));
+  ASSERT_STREQ("ellos", d);
+  ASSERT_EQ(0, fclose(f));
 }

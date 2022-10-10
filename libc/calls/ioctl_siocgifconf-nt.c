@@ -253,7 +253,7 @@ static int createHostInfo(struct NtIpAdapterAddresses *firstAdapter) {
   int count, i;
 
   /* __hostInfo must be empty */
-  assert(__hostInfo == NULL);
+  _unassert(__hostInfo == NULL);
 
   for (aa = firstAdapter; aa; aa = aa->Next) {
     /* Skip all the interfaces with no address and the ones that are not AF_INET

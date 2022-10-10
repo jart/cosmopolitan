@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/str/str.h"
 
 static noasan size_t strnlen_x64(const char *s, size_t n, size_t i) {
@@ -52,7 +52,7 @@ noasan size_t strnlen(const char *s, size_t n) {
   for (;; ++i) {
     if (i == n || !s[i]) break;
   }
-  assert(i == n || (i < n && !s[i]));
+  _unassert(i == n || (i < n && !s[i]));
   if (IsAsan()) __asan_verify(s, i);
   return i;
 }

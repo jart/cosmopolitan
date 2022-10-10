@@ -181,7 +181,7 @@ skip_readlink:
 			continue;
 		}
 		k = rc;
-		assert(k <= p);
+		_npassert(k <= p);
 		if (k==p)
 			goto toolong;
 		if (!k) {

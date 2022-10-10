@@ -51,7 +51,7 @@ COSMOPOLITAN_C_START_
 #define MBEDTLS_ASSERT(EXPR) \
   ((void)((EXPR) || (__assert_fail(#EXPR, __FILE__, __LINE__), 0)))
 #else
-#define MBEDTLS_ASSERT(EXPR) (void)0
+#define MBEDTLS_ASSERT(EXPR) _unassert(EXPR)
 #endif
 
 typedef struct mbedtls_platform_context {

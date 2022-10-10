@@ -42,6 +42,9 @@ size_t fread_unlocked(void *buf, size_t stride, size_t count, FILE *f) {
   ssize_t rc;
   size_t n, m;
   struct iovec iov[2];
+  if (f->state) {
+    return 0;
+  }
   if ((f->iomode & O_ACCMODE) == O_WRONLY) {
     f->state = errno = EBADF;
     return 0;

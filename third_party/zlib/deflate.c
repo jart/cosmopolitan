@@ -5,7 +5,6 @@
  * Copyright (C) 1995-2022 Jean-loup Gailly and Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
-#include "libc/assert.h"
 #include "third_party/zlib/deflate.internal.h"
 #include "third_party/zlib/insert_string.internal.h"
 #include "third_party/zlib/internal.h"

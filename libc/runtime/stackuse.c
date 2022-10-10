@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/promises.internal.h"
@@ -48,30 +49,33 @@ size_t GetStackUsage(char *s, size_t n) {
 }
 
 static textexit void LogStackUse(void) {
-  int i, fd;
   bool quote;
   char *p, *q;
+  int i, e, fd;
   size_t n, usage;
   if (!PLEDGED(STDIO) || !PLEDGED(WPATH) || !PLEDGED(CPATH)) return;
   usage = GetStackUsage((char *)GetStackAddr(), GetStackSize());
-  fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644);
-  p = FormatUint64(stacklog, usage);
-  for (i = 0; i < __argc; ++i) {
-    n = strlen(__argv[i]);
-    if ((q = memchr(__argv[i], '\n', n))) n = q - __argv[i];
-    if (p - stacklog + 1 + 1 + n + 1 + 1 < sizeof(stacklog)) {
-      quote = !!memchr(__argv[i], ' ', n);
-      *p++ = ' ';
-      if (quote) *p++ = '\'';
-      p = mempcpy(p, __argv[i], n);
-      if (quote) *p++ = '\'';
-    } else {
-      break;
+  e = errno;
+  if ((fd = open(stacklog, O_APPEND | O_CREAT | O_WRONLY, 0644)) != -1) {
+    p = FormatUint64(stacklog, usage);
+    for (i = 0; i < __argc; ++i) {
+      n = strlen(__argv[i]);
+      if ((q = memchr(__argv[i], '\n', n))) n = q - __argv[i];
+      if (p - stacklog + 1 + 1 + n + 1 + 1 < sizeof(stacklog)) {
+        quote = !!memchr(__argv[i], ' ', n);
+        *p++ = ' ';
+        if (quote) *p++ = '\'';
+        p = mempcpy(p, __argv[i], n);
+        if (quote) *p++ = '\'';
+      } else {
+        break;
+      }
     }
+    *p++ = '\n';
+    write(fd, stacklog, p - stacklog);
+    close(fd);
   }
-  *p++ = '\n';
-  write(fd, stacklog, p - stacklog);
-  close(fd);
+  errno = e;
 }
 
 static textstartup void LogStackUseInit(void) {

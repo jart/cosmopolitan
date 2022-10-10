@@ -25,6 +25,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/bsr.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -62,6 +63,10 @@
 #define ADDR(x)    ((int64_t)((uint64_t)(x) << 32) >> 16)
 #define SHADE(x)   (((intptr_t)(x) >> 3) + 0x7fff8000)
 #define FRAME(x)   ((int)((intptr_t)(x) >> 16))
+
+static unsigned long RoundDownTwoPow(unsigned long x) {
+  return x ? 1ul << _bsrl(x) : 0;
+}
 
 static wontreturn void OnUnrecoverableMmapError(const char *s) {
   if (_weaken(__die)) _weaken(__die)();
@@ -322,7 +327,7 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     return VIP(einval());
   }
 
-  a = max(1, _rounddown2pow(size) >> 16);
+  a = max(1, RoundDownTwoPow(size) >> 16);
 
   f = (flags & ~MAP_FIXED_NOREPLACE) | MAP_FIXED;
   if (flags & MAP_FIXED) {

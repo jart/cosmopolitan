@@ -47,7 +47,6 @@ errno_t pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched) {
       attr->__inheritsched = inheritsched;
       return 0;
     default:
-      assert(!"badval");
       return EINVAL;
   }
 }

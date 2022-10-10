@@ -15,14 +15,10 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/bswap.h"
-#include "libc/log/backtrace.internal.h"
-#include "libc/log/check.h"
-#include "libc/log/log.h"
-#include "libc/macros.internal.h"
 #include "libc/intrin/bsf.h"
+#include "libc/intrin/bswap.h"
+#include "libc/macros.internal.h"
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"

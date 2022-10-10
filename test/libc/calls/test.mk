@@ -120,6 +120,9 @@ o/$(MODE)/test/libc/calls/lock_test.com.runs:				\
 o/$(MODE)/test/libc/calls/openbsd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unveil
 
+o/$(MODE)/test/libc/calls/read_test.com.runs:				\
+		private .UNVEIL += /dev/zero
+
 # TODO(jart): Update nointernet() to allow AF_INET6
 o/$(MODE)/test/libc/calls/pledge_test.com.runs:				\
 		private .INTERNET = 1

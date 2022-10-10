@@ -5,7 +5,6 @@
  * Copyright (C) 1995-2017 Jean-loup Gailly
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
-#include "libc/assert.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
@@ -319,8 +318,11 @@ voidpf ZLIB_INTERNAL zcalloc (opaque, items, size)
     unsigned size;
 {
     (void)opaque;
-    _npassert(_weaken(malloc));
-    return _weaken(malloc)(items * size);
+    if (_weaken(malloc)) {
+        return _weaken(malloc)(items * size);
+    } else {
+        return 0;
+    }
 }
 
 void ZLIB_INTERNAL zcfree (opaque, ptr)
@@ -328,8 +330,9 @@ void ZLIB_INTERNAL zcfree (opaque, ptr)
     voidpf ptr;
 {
     (void)opaque;
-    _npassert(_weaken(free));
-    _weaken(free)(ptr);
+    if (_weaken(free)) {
+        _weaken(free)(ptr);
+    }
 }
 
 #endif /* MY_ZCALLOC */

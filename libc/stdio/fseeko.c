@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/stdio/lock.internal.h"
 #include "libc/stdio/stdio.h"
 
@@ -37,6 +39,8 @@ int fseeko(FILE *f, int64_t offset, int whence) {
   int rc;
   flockfile(f);
   rc = fseeko_unlocked(f, offset, whence);
+  STDIOTRACE("fseeko(%p, %'ld, %s) → %d %s", f, offset, DescribeWhence(whence),
+             rc, DescribeStdioState(f->state));
   funlockfile(f);
   return rc;
 }

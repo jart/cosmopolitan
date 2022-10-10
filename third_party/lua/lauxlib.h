@@ -1,5 +1,6 @@
 #ifndef lauxlib_h
 #define lauxlib_h
+#include "libc/assert.h"
 #include "libc/stdio/stdio.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
@@ -156,10 +157,9 @@ LUALIB_API void (luaL_requiref) (lua_State *L, const char *modname,
 #if !defined(lua_assert)
 
 #if defined LUAI_ASSERT
-  #include <assert.h>
   #define lua_assert(c)		assert(c)
 #else
-  #define lua_assert(c)		((void)0)
+  #define lua_assert(c)		_unassert(c)
 #endif
 
 #endif

@@ -91,7 +91,7 @@ void *mremap(void *p, size_t n, size_t m, int f, ... /* void *q */) {
   size_t i, j, k;
   struct DirectMap dm;
   int a, b, prot, flags;
-  assert(!__vforked);
+  _unassert(!__vforked);
   if (UNLIKELY(!m)) {
     STRACE("m=0");
     return VIP(einval());

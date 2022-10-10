@@ -27,6 +27,22 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
+char testlib_enable_tmp_setup_teardown;
+
+TEST(read, eof) {
+  char b[8] = "hello";
+  ASSERT_SYS(0, 3, creat("foo", 0644));
+  ASSERT_SYS(0, 4, open("foo", O_RDONLY));
+  ASSERT_SYS(0, 0, read(4, b, 8));
+  ASSERT_SYS(0, 8, write(3, b, 8));
+  ASSERT_SYS(0, 8, read(4, b, 8));
+  ASSERT_SYS(0, 0, read(4, b, 8));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static long Read(long fd, void *buf, unsigned long size) {
   long ax, di, si, dx;
   asm volatile("syscall"

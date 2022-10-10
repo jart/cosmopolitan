@@ -56,14 +56,14 @@ errno_t pthread_once(pthread_once_t *once, void init(void)) {
                                                   memory_order_acquire,
                                                   memory_order_relaxed)) {
         init();
-        atomic_store(&once->_lock, FINISHED);
+        atomic_store_explicit(&once->_lock, FINISHED, memory_order_release);
         return 0;
       }
       // fallthrough
     case CALLING:
       do {
         pthread_yield();
-      } while (atomic_load_explicit(&once->_lock, memory_order_relaxed) ==
+      } while (atomic_load_explicit(&once->_lock, memory_order_acquire) ==
                CALLING);
       return 0;
     case FINISHED:

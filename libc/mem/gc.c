@@ -25,9 +25,9 @@
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
 
-static inline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
-                                                     struct StackFrame *parent,
-                                                     void *ptr) {
+forceinline bool PointerNotOwnedByParentStackFrame(struct StackFrame *frame,
+                                                   struct StackFrame *parent,
+                                                   void *ptr) {
   return !(((intptr_t)ptr > (intptr_t)frame) &&
            ((intptr_t)ptr < (intptr_t)parent));
 }
@@ -93,8 +93,8 @@ static void DeferFunction(struct StackFrame *frame, void *fn, void *arg) {
 void __defer(void *rbp, void *fn, void *arg) {
   struct StackFrame *f, *frame = rbp;
   f = __builtin_frame_address(0);
-  assert(f->next == frame);
-  assert(PointerNotOwnedByParentStackFrame(f, frame, arg));
+  _unassert(f->next == frame);
+  _unassert(PointerNotOwnedByParentStackFrame(f, frame, arg));
   DeferFunction(frame, fn, arg);
 }
 

@@ -16,11 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 
 int swprintf(wchar_t* ws, size_t n, const wchar_t* format, ...) {
-  assert(!"not implemented");
-  abort();
+  kprintf("error: swprintf() not supported yet by cosmo libc sorry!\n");
+  _Exit(1);
 }

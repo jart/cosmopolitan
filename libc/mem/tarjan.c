@@ -52,9 +52,9 @@ struct Tarjan {
 
 static bool TarjanPush(struct Tarjan *t, int v) {
   int *q;
-  assert(t->S.i >= 0);
-  assert(t->S.n >= 0);
-  assert(0 <= v && v < t->Vn);
+  _unassert(t->S.i >= 0);
+  _unassert(t->S.n >= 0);
+  _unassert(0 <= v && v < t->Vn);
   if (t->S.i == t->S.n) {
     if ((q = realloc(t->S.p, (t->S.n + (t->S.n >> 1) + 8) * sizeof(*t->S.p)))) {
       t->S.p = q;
@@ -67,13 +67,13 @@ static bool TarjanPush(struct Tarjan *t, int v) {
 }
 
 static int TarjanPop(struct Tarjan *t) {
-  assert(t->S.i > 0);
+  _unassert(t->S.i > 0);
   return t->S.p[--t->S.i];
 }
 
 static bool TarjanConnect(struct Tarjan *t, int v) {
   int fs, w, e;
-  assert(0 <= v && v < t->Vn);
+  _unassert(0 <= v && v < t->Vn);
   t->V[v].index = t->index;
   t->V[v].lowlink = t->index;
   t->V[v].onstack = true;
@@ -135,12 +135,12 @@ int _tarjan(int vertex_count, const int (*edges)[2], int edge_count,
             int *out_opt_componentcount) {
   int i, rc, v, e;
   struct Tarjan *t;
-  assert(0 <= edge_count && edge_count <= INT_MAX);
-  assert(0 <= vertex_count && vertex_count <= INT_MAX);
+  _unassert(0 <= edge_count && edge_count <= INT_MAX);
+  _unassert(0 <= vertex_count && vertex_count <= INT_MAX);
   for (i = 0; i < edge_count; ++i) {
-    if (i) assert(edges[i - 1][0] <= edges[i][0]);
-    assert(edges[i][0] < vertex_count);
-    assert(edges[i][1] < vertex_count);
+    if (i) _unassert(edges[i - 1][0] <= edges[i][0]);
+    _unassert(edges[i][0] < vertex_count);
+    _unassert(edges[i][1] < vertex_count);
   }
   if (!(t = calloc(1, (sizeof(struct Tarjan) +
                        sizeof(struct Vertex) * vertex_count)))) {
@@ -175,7 +175,7 @@ int _tarjan(int vertex_count, const int (*edges)[2], int edge_count,
   if (out_opt_components) {
     *out_opt_componentcount = t->Ci;
   }
-  assert(t->Ri == vertex_count);
+  _unassert(t->Ri == vertex_count);
   free(t->S.p);
   free(t);
   return rc;

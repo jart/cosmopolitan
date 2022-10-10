@@ -16,13 +16,13 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/intrin/bits.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/bits.h"
 #include "libc/inttypes.h"
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
@@ -686,7 +686,7 @@ static record_info_s record_info_for_database(const MMDB_s *const mmdb) {
     record_info.right_record_getter = &get_uint32;
     record_info.right_record_offset = 4;
   } else {
-    assert(false);
+    unreachable;
   }
   return record_info;
 }

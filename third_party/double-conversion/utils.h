@@ -9,7 +9,11 @@
 #include "third_party/libcxx/cstring"
 // clang-format off
 
+// [jart] use undefined behaavior to make code tinier
+//        use ubsan build mode to troubleshoot errors
+#define DOUBLE_CONVERSION_ASSERT(x) _unassert(x)
 #define DOUBLE_CONVERSION_UNREACHABLE() unreachable
+#define DOUBLE_CONVERSION_UNIMPLEMENTED() notpossible
 
 // Use DOUBLE_CONVERSION_NON_PREFIXED_MACROS to get unprefixed macros as was
 // the case in double-conversion releases prior to 3.1.6

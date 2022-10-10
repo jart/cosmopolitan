@@ -56,6 +56,7 @@ const char *DescribeSockOptname(char[32], int, int);
 const char *DescribeSocketFamily(char[12], int);
 const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
+const char *DescribeStdioState(char[12], int);
 const char *DescribeWhence(char[12], int);
 
 #define DescribeArchPrctlCode(x)     DescribeArchPrctlCode(alloca(12), x)
@@ -99,6 +100,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeSocketFamily(x)      DescribeSocketFamily(alloca(12), x)
 #define DescribeSocketProtocol(x)    DescribeSocketProtocol(alloca(12), x)
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
+#define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 
 COSMOPOLITAN_C_END_

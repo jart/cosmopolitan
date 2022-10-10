@@ -13,8 +13,8 @@
   ({                            \
     typeof((a) + (b)) a_ = (a); \
     typeof(a_) b_ = (b);        \
-    assert(a_ >= 0);            \
-    assert(b_ >= 0);            \
+    _unassert(a_ >= 0);         \
+    _unassert(b_ >= 0);         \
     asm("add\t%1,%0\n\t"        \
         "rcr\t%0"               \
         : "+r"(a_)              \

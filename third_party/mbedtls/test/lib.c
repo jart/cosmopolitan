@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
@@ -77,14 +76,6 @@ jmp_buf jmp_tmp;
 int option_verbose = 1;
 mbedtls_test_info_t mbedtls_test_info;
 
-static uint64_t Rando(void) {
-  static uint64_t x = 0x18abac12f3191aed;
-  uint64_t z = (x += 0x9e3779b97f4a7c15);
-  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
-  z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
-  return z ^ (z >> 31);
-}
-
 int mbedtls_test_platform_setup(void) {
   char *p;
   int ret = 0;
@@ -128,7 +119,7 @@ int mbedtls_hardware_poll(void *wut, unsigned char *p, size_t n, size_t *olen) {
   size_t i, j;
   unsigned char b[8];
   for (i = 0; i < n; ++i) {
-    x = Rando();
+    x = lemur64();
     WRITE64LE(b, x);
     for (j = 0; j < 8 && i + j < n; ++j) {
       p[i + j] = b[j];

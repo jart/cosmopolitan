@@ -274,6 +274,11 @@ static int WaitForTrace(int main) {
 
 /**
  * Disables internet access.
+ *
+ * Warning: This function uses ptrace to react to seccomp filter events.
+ * This approach is effective, but it's not bulletproof, since a highly
+ * motivated attacker could theoretically use threads to modify sockaddr
+ * in the short time between it being monitored and the actual syscall.
  */
 int nointernet(void) {
   int ws, act, main;
@@ -317,7 +322,7 @@ int nointernet(void) {
     sigprocmask(SIG_SETMASK, &old, 0);
     return eperm();
   }
-  assert(WIFSTOPPED(ws));
+  _npassert(WIFSTOPPED(ws));
 
   // parent process becomes monitor of subprocess tree. all signals
   // continue to be blocked since we assume they'll also be sent to

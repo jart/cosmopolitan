@@ -61,7 +61,7 @@ noasan int __cxa_atexit(void *fp, void *arg, void *pred) {
     }
   }
   i = _bsr(~b->mask);
-  assert(i < ARRAYLEN(b->p));
+  _unassert(i < ARRAYLEN(b->p));
   b->mask |= 1u << i;
   b->p[i].fp = fp;
   b->p[i].arg = arg;

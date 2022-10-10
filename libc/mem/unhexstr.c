@@ -22,6 +22,6 @@
 #include "libc/str/str.h"
 
 dontdiscard void *unhexstr(const char *hexdigs) {
-  assert(strlen(hexdigs) % 2 == 0);
+  _unassert(strlen(hexdigs) % 2 == 0);
   return unhexbuf(malloc(strlen(hexdigs) / 2), strlen(hexdigs) / 2, hexdigs);
 }

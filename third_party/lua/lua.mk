@@ -250,7 +250,7 @@ o/$(MODE)/third_party/lua/lua.com.dbg:					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
-o/$(MODE)/third_party/lua/lua.com:					\
+o/$(MODE)/third_party/lua/lua2.com:					\
 		o/$(MODE)/third_party/lua/lua.com.dbg			\
 		o/$(MODE)/third_party/zip/zip.com			\
 		o/$(MODE)/tool/build/symtab.com

@@ -23,10 +23,10 @@
 void *unhexbuf(void *buf, size_t size, const char *hexdigs) {
   size_t i;
   unsigned char *p;
-  assert(size * 2 == strlen(hexdigs));
+  _npassert(size * 2 == strlen(hexdigs));
   p = buf;
   for (i = 0; i < size; ++i) {
-    assert(isxdigit(hexdigs[i / 2 + 0]) && isxdigit(hexdigs[i / 2 + 1]));
+    _npassert(isxdigit(hexdigs[i / 2 + 0]) && isxdigit(hexdigs[i / 2 + 1]));
   }
   for (i = 0; i < size; ++i) {
     p[i] = hextoint(hexdigs[i * 2 + 0]) * 16 + hextoint(hexdigs[i * 2 + 1]);

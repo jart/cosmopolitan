@@ -18,11 +18,11 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/lcg.internal.h"
 #include "libc/stdio/rand.h"
-#include "libc/runtime/runtime.h"
 #include "libc/stdio/temp.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -38,7 +38,7 @@ int mkostempsmi(char *tpl, int slen, unsigned flags, uint64_t *rando, int mode,
   size_t wildlen = strlen(WILDCARD);
   if (len < wildlen || slen > len - wildlen) return einval();
   char *ss = tpl + len - wildlen - slen;
-  assert(memcmp(ss, WILDCARD, wildlen) == 0);
+  _npassert(memcmp(ss, WILDCARD, wildlen) == 0);
   flags = (flags & ~(flags & O_ACCMODE)) | O_RDWR | O_CREAT | O_EXCL;
   unsigned attempts = ATTEMPTS;
   do {

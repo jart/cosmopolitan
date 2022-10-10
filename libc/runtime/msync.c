@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/msync.h"
 
@@ -37,7 +37,7 @@
  */
 int msync(void *addr, size_t size, int flags) {
   int rc;
-  assert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
+  _unassert(((flags & MS_SYNC) ^ (flags & MS_ASYNC)) || !(MS_SYNC && MS_ASYNC));
   if (!IsWindows()) {
     rc = sys_msync(addr, size, flags);
   } else {

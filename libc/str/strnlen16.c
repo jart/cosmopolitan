@@ -32,6 +32,6 @@ noasan size_t strnlen16(const char16_t *s, size_t n) {
   for (i = 0;; ++i) {
     if (i == n || !s[i]) break;
   }
-  assert(i == n || (i < n && !s[i]));
+  _unassert(i == n || (i < n && !s[i]));
   return i;
 }

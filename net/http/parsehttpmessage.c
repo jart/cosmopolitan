@@ -35,7 +35,7 @@
  * Initializes HTTP message parser.
  */
 void InitHttpMessage(struct HttpMessage *r, int type) {
-  assert(type == kHttpRequest || type == kHttpResponse);
+  _unassert(type == kHttpRequest || type == kHttpResponse);
   bzero(r, sizeof(*r));
   r->type = type;
 }

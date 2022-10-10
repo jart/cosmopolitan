@@ -42,6 +42,6 @@
  * @note if dest is NULL, count has to be zero
  */
 size_t strxfrm(char *dest, const char *src, size_t count) {
-  assert(dest == NULL ? count == 0 : 1);
+  _unassert(dest == NULL ? count == 0 : 1);
   return strlcpy(dest, src, count);
 }

@@ -28,6 +28,8 @@ THIRD_PARTY_DOUBLECONVERSION_TEST_BINS =					\
 	$(THIRD_PARTY_DOUBLECONVERSION_TEST_COMS)				\
 	$(THIRD_PARTY_DOUBLECONVERSION_TEST_COMS:%=%.dbg)
 
+THIRD_PARTY_DOUBLECONVERSION_ARTIFACTS += THIRD_PARTY_DOUBLECONVERSION_TEST_A
+
 THIRD_PARTY_DOUBLECONVERSION_TEST_A_SRCS_CC =					\
 	third_party/double-conversion/test/cctest.cc				\
 	third_party/double-conversion/test/gay-fixed.cc				\
@@ -51,6 +53,10 @@ THIRD_PARTY_DOUBLECONVERSION_TEST_A_HDRS =					\
 	third_party/double-conversion/test/gay-precision.h			\
 	third_party/double-conversion/test/gay-shortest.h			\
 	third_party/double-conversion/test/gay-shortest-single.h
+
+THIRD_PARTY_DOUBLECONVERSION_TEST_A_SRCS =					\
+	$(THIRD_PARTY_DOUBLECONVERSION_TEST_A_SRCS_C)				\
+	$(THIRD_PARTY_DOUBLECONVERSION_TEST_A_SRCS_CC)
 
 THIRD_PARTY_DOUBLECONVERSION_A_OBJS =						\
 	$(THIRD_PARTY_DOUBLECONVERSION_A_SRCS_C:%.c=o/$(MODE)/%.o)		\

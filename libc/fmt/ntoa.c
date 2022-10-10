@@ -16,13 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/reverse.internal.h"
 #include "libc/assert.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/divmod10.internal.h"
 #include "libc/fmt/fmt.internal.h"
 #include "libc/fmt/internal.h"
 #include "libc/limits.h"
+#include "libc/mem/reverse.internal.h"
 
 #define BUFFER_SIZE 144
 
@@ -121,7 +121,7 @@ int __fmt_ntoa2(int out(const char *, void *, size_t), void *arg,
       }
       buf[len++] = alphabet[digit];
     } while (value);
-    assert(count <= BUFFER_SIZE);
+    _npassert(count <= BUFFER_SIZE);
   }
   return __fmt_ntoa_format(out, arg, buf, len, neg, log2base, prec, width,
                            flags);

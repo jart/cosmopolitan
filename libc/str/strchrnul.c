@@ -68,6 +68,6 @@ char *strchrnul(const char *s, int c) {
   } else {
     r = strchrnul_pure(s, c);
   }
-  assert((*r & 255) == (c & 255) || !*r);
+  _unassert((*r & 255) == (c & 255) || !*r);
   return (char *)r;
 }
