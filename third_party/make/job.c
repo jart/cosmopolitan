@@ -1908,7 +1908,9 @@ child_execute_job (struct childbase *child,
                          (STRING_SIZE_TUPLE (".INTERNET"),
                           c ? c->file : 0, "0"));
 
-  unsandboxed = parse_bool (get_target_variable
+  unsandboxed = !get_target_variable(STRING_SIZE_TUPLE (".STRICT"),
+                                     c->file, 0) ||
+                parse_bool (get_target_variable
                             (STRING_SIZE_TUPLE (".UNSANDBOXED"),
                              c ? c->file : 0, "0"));
 
