@@ -7,6 +7,7 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef long jmp_buf[8];
+typedef long sigjmp_buf[12];
 
 extern char **environ;                      /* CRT */
 extern int __argc;                          /* CRT */
@@ -49,6 +50,7 @@ extern size_t __virtualmax;
 extern bool __isworker;
 
 void mcount(void);
+int daemon(int, int);
 int _freestack(void *);
 void _bt(const char *, ...);
 unsigned long getauxval(unsigned long);
@@ -60,6 +62,8 @@ void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 axdx_t setlongerjmp(jmp_buf) libcesque returnstwice paramsnonnull();
 void longerjmp(jmp_buf, intptr_t) libcesque wontreturn paramsnonnull();
 int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+int sigsetjmp(sigjmp_buf, int) libcesque returnstwice paramsnonnull();
+void siglongjmp(sigjmp_buf, int) libcesque wontreturn paramsnonnull();
 void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
 void exit(int) wontreturn;
 void _exit(int) libcesque wontreturn;

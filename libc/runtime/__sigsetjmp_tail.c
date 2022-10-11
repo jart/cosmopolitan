@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,43 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/assert.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sig.h"
 
-//	Returns largest integral not greater than 𝑥.
-//
-//	@param	𝑥 is double scalar in low half of %xmm0
-//	@return	double scalar in low half of %xmm0
-floor:	.leafprologue
-	.profilable
-	movsd	4f(%rip),%xmm3
-	movsd	2f(%rip),%xmm4
-	movapd	%xmm0,%xmm2
-	movapd	%xmm0,%xmm1
-	andpd	%xmm3,%xmm2
-	ucomisd	%xmm2,%xmm4
-	jbe	1f
-	cvttsd2siq %xmm0,%rax
-	pxor	%xmm2,%xmm2
-	movsd	3f(%rip),%xmm4
-	andnpd	%xmm1,%xmm3
-	cvtsi2sdq %rax,%xmm2
-	movapd	%xmm2,%xmm5
-	cmpnlesd %xmm0,%xmm5
-	movapd	%xmm5,%xmm0
-	andpd	%xmm4,%xmm0
-	subsd	%xmm0,%xmm2
-	movapd	%xmm2,%xmm0
-	orpd	%xmm3,%xmm0
-1:	.leafepilogue
-	.endfn	floor,globl
-
-	.rodata.cst8
-2:	.long	0x00000000
-	.long	0x43300000
-3:	.long	0x00000000
-	.long	0x3ff00000
-	.rodata.cst16
-4:	.long	0xffffffff
-	.long	0x7fffffff
-	.long	0x00000000
-	.long	0x00000000
+// kudos rich felker for the brilliant design
+hidden int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
+  _Static_assert(
+      sizeof(sigjmp_buf) == sizeof(jmp_buf) + 8 + 8 + sizeof(sigset_t),
+      "please recompute sigjmp_buf w.r.t. sigset_t");
+  void *p = (char *)jb + sizeof(jmp_buf) + 8 + 8;
+  _npassert(!sigprocmask(SIG_SETMASK, rc ? p : 0, rc ? 0 : p));
+  return rc;
+}

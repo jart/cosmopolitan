@@ -19,6 +19,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/strtol.internal.h"
+#include "libc/limits.h"
 #include "libc/str/str.h"
 #include "libc/str/tab.internal.h"
 
@@ -34,6 +35,7 @@
  *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
  *     decimal (base 10) by default
  * @return decoded integer mod 2⁶⁴ negated if leading `-`
+ * @raise ERANGE on overflow
  */
 unsigned long strtoul(const char *s, char **endptr, int base) {
   char t = 0;
@@ -45,8 +47,12 @@ unsigned long strtoul(const char *s, char **endptr, int base) {
   if ((c = kBase36[c & 255]) && --c < base) {
     t |= 1;
     do {
-      x *= base;
-      x += c;
+      if (__builtin_mul_overflow(x, base, &x) ||
+          __builtin_add_overflow(x, c, &x)) {
+        if (endptr) *endptr = s + 1;
+        errno = ERANGE;
+        return ULONG_MAX;
+      }
     } while ((c = kBase36[*++s & 255]) && --c < base);
   }
   if (t && endptr) *endptr = s;

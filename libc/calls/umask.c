@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Sets file mode creation mask.
@@ -27,7 +27,7 @@
  * @return previous mask
  * @note always succeeds
  */
-int umask(int newmask) {
+unsigned umask(unsigned newmask) {
   int oldmask;
   if (!IsWindows()) {
     oldmask = sys_umask(newmask);

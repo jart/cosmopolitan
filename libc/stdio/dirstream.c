@@ -440,6 +440,39 @@ struct dirent *readdir(DIR *dir) {
 }
 
 /**
+ * Reads directory entry reentrantly.
+ *
+ * @param dir is the object opendir() or fdopendir() returned
+ * @param output is where directory entry is copied if not eof
+ * @param result will receive `output` pointer, or null on eof
+ * @return 0 on success, or errno on error
+ * @returnserrno
+ * @threadsafe
+ */
+errno_t readdir_r(DIR *dir, struct dirent *output, struct dirent **result) {
+  int err, olderr;
+  struct dirent *entry;
+  _lockdir(dir);
+  olderr = errno;
+  errno = 0;
+  entry = readdir_impl(dir);
+  err = errno;
+  errno = olderr;
+  if (err) {
+    _unlockdir(dir);
+    return err;
+  }
+  if (entry) {
+    memcpy(output, entry, entry->d_reclen);
+  } else {
+    output = 0;
+  }
+  _unlockdir(dir);
+  *result = output;
+  return 0;
+}
+
+/**
  * Closes directory object returned by opendir().
  * @return 0 on success or -1 w/ errno
  */
@@ -464,6 +497,7 @@ int closedir(DIR *dir) {
 
 /**
  * Returns offset into directory data.
+ * @threadsafe
  */
 long telldir(DIR *dir) {
   long rc;
@@ -475,6 +509,7 @@ long telldir(DIR *dir) {
 
 /**
  * Returns file descriptor associated with DIR object.
+ * @threadsafe
  */
 int dirfd(DIR *dir) {
   int rc;
@@ -492,6 +527,7 @@ int dirfd(DIR *dir) {
 
 /**
  * Seeks to beginning of directory stream.
+ * @threadsafe
  */
 void rewinddir(DIR *dir) {
   _lockdir(dir);
@@ -517,6 +553,7 @@ void rewinddir(DIR *dir) {
 
 /**
  * Seeks in directory stream.
+ * @threadsafe
  */
 void seekdir(DIR *dir, long off) {
   long i;

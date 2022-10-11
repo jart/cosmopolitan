@@ -74,7 +74,7 @@
  * @threadsafe
  * @vforksafe
  */
-int64_t lseek(int fd, int64_t offset, unsigned whence) {
+int64_t lseek(int fd, int64_t offset, int whence) {
   int64_t rc;
   if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
     rc = _weaken(__zipos_lseek)(

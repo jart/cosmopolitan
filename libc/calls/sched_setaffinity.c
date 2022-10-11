@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/struct/cpuset.h"
@@ -32,7 +33,7 @@ static dontinline textwindows int sys_sched_setaffinity_nt(
   int rc;
   int64_t h, closeme = -1;
 
-  if (!pid /* || pid == getpid() */) {
+  if (!pid || pid == getpid()) {
     h = GetCurrentProcess();
   } else if (__isfdkind(pid, kFdProcess)) {
     h = g_fds.p[pid].handle;

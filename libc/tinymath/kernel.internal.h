@@ -3,8 +3,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern int __signgam;
-
 double __cos(double, double) hidden;
 double __sin(double, double, int) hidden;
 double __tan(double, double, int) hidden;

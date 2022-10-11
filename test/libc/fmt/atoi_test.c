@@ -172,13 +172,6 @@ TEST(strtoul, weirdComma) {
   EXPECT_EQ(0, e - p);
 }
 
-TEST(strtoul, outsideLimit_doesModulus) {
-  EXPECT_EQ(/* python -c 'print(((2**123-1)/123)%(2**64))' */
-            9298358801382050408ull,
-            strtoul(/* python -c 'print((2**123-1)/123)' */
-                    "86453853384384772221385825058884200", 0, 10));
-}
-
 TEST(strtol, testHex) {
   EXPECT_EQ(0, strtol("", 0, 16));
   EXPECT_EQ(0, strtol("0", 0, 16));
@@ -554,6 +547,15 @@ TEST(wcstoumax, testIBM) {
   ASSERT_STREQ(L"-", e);
   ASSERT_EQ(0, wcstoumax(L"0f", &e, 10));
   ASSERT_STREQ(L"f", e);
+}
+
+TEST(strtoul, testoverflow) {
+  errno = 0;
+  char *e = 0;
+  unsigned long x = strtoul("18446744073709551616", &e, 0);
+  ASSERT_EQ(ULONG_MAX, x);
+  ASSERT_EQ(ERANGE, errno);
+  ASSERT_STREQ("", e);
 }
 
 BENCH(atoi, bench) {

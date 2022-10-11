@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -40,7 +41,7 @@
  * @error ENETDOWN, EPFNOSUPPORT, etc.
  * @asyncsignalsafe
  */
-int bind(int fd, const void *addr, uint32_t addrsize) {
+int bind(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   int rc;
   if (!addr || (IsAsan() && !__asan_is_valid(addr, addrsize))) {
     rc = efault();

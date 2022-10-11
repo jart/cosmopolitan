@@ -47,8 +47,9 @@ void SetUpOnce(void) {
 TEST(nointernet, testLocalhost_isAllowed) {
   struct sockaddr_in addr = {AF_INET, 0, {htonl(0x7f000001)}};
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(ECONNREFUSED, -1, connect(3, &addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(ECONNREFUSED, -1,
+             connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, close(3));
 }
 
@@ -56,8 +57,8 @@ TEST(nointernet, testPublicInternet_isDenied) {
   struct sockaddr_in addr = {AF_INET, 0, {htonl(0x06060600)}};
   ASSERT_SYS(EPERM, -1, socket(AF_BLUETOOTH, SOCK_STREAM, IPPROTO_TCP));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(ENOSYS, -1, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(ENOSYS, -1, connect(3, &addr, sizeof(addr)));
+  ASSERT_SYS(ENOSYS, -1, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(ENOSYS, -1, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, close(3));
 }
 

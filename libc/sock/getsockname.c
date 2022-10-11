@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -31,7 +32,7 @@
  * @return 0 on success or -1 w/ errno
  * @see getpeername()
  */
-int getsockname(int fd, void *out_addr, uint32_t *out_addrsize) {
+int getsockname(int fd, struct sockaddr *out_addr, uint32_t *out_addrsize) {
   int rc;
   if (!out_addrsize || !out_addrsize ||
       (IsAsan() && (!__asan_is_valid(out_addrsize, 4) ||

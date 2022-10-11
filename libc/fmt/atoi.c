@@ -36,6 +36,7 @@
  *
  * @param s is a non-null nul-terminated string
  * @return the decoded signed saturated integer
+ * @raise ERANGE on overflow
  */
 int atoi(const char *s) {
   int x, c, d;

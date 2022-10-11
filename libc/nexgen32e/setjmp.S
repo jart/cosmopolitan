@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
 
-//	Saves caller CPU state to cacheline.
+//	Saves cpu state.
 //
 //	@param	rdi points to jmp_buf
 //	@return	rax 0 when set and !0 when longjmp'd

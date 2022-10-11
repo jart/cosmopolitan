@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,32 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/str/locale.h"
+#include "libc/str/str.h"
 
-rintf:	.leafprologue
-	.profilable
-	movaps	%xmm0,%xmm1
-	movss	.LC8(%rip),%xmm2
-	andps	%xmm2,%xmm1
-	movss	.LC7(%rip),%xmm3
-	comiss	%xmm1,%xmm3
-	jbe	1f
-	addss	%xmm3,%xmm1
-	andnps	%xmm0,%xmm2
-	movaps	%xmm2,%xmm0
-	subss	%xmm3,%xmm1
-	orps	%xmm1,%xmm0
-1:	.leafepilogue
-	.endfn	rintf,globl
-
-	.rodata.cst4
-.LC7:	.long	1258291200
-
-	.rodata.cst16
-.LC8:	.long	2147483647
-	.long	0
-	.long	0
-	.long	0
-
-//	TODO(jart):
-//	vroundss	$4,%xmm0,%xmm0,%xmm0
+int strncasecmp_l(const char *a, const char *b, size_t n, locale_t l) {
+  return strncasecmp(a, b, n);
+}

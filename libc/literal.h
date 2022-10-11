@@ -22,6 +22,14 @@
 #define UINT64_C(c) c##UL
 #endif
 
+#if UINTPTR_MAX == UINT64_MAX
+#define INTMAX_C(c)  c##L
+#define UINTMAX_C(c) c##UL
+#else
+#define INTMAX_C(c)  c##LL
+#define UINTMAX_C(c) c##ULL
+#endif
+
 #if __SIZEOF_INTMAX__ == 16
 #define INT128_C(c)  ((intmax_t)(c))
 #define UINT128_C(c) ((uintmax_t)(c))

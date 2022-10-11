@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,13 +17,40 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/fmt/conv.h"
-#include "libc/sysv/consts/prio.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
 
-textwindows int sys_getsetpriority_nt(int which, unsigned who, int value,
-                                      int (*impl)(int)) {
-  if (which != PRIO_PROCESS && which != PRIO_PGRP) return einval();
-  if (who && who != getpid() && who != gettid()) return esrch();
-  return impl(value);
+sigjmp_buf jb;
+volatile int sigs;
+volatile int jumps;
+
+void OnSignal(int sig, siginfo_t *si, void *ctx) {
+  ++sigs;
+}
+
+TEST(sigsetjmp, test) {
+  if (IsWindows()) return;  // no sigusr1 support
+  sigset_t ss;
+  int i, n = 1000;
+  struct sigaction sa = {.sa_sigaction = OnSignal};
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, 0));
+  for (i = 0; i < n; ++i) {
+    if (!sigsetjmp(jb, 1)) {
+      sigemptyset(&ss);
+      sigaddset(&ss, SIGUSR1);
+      ASSERT_SYS(0, 0, sigprocmask(SIG_BLOCK, &ss, 0));
+      ASSERT_SYS(0, 0, raise(SIGUSR1));
+      siglongjmp(jb, 1);
+    } else {
+      ++jumps;
+    }
+  }
+  ASSERT_EQ(1000, jumps);
+  ASSERT_EQ(1000, sigs);
 }

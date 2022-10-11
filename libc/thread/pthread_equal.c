@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/thread.h"
-#include "libc/thread/posixthread.internal.h"
 
 /**
  * Compares thread ids;
@@ -25,7 +24,5 @@
  * @return nonzero if equal, otherwise zero
  */
 int pthread_equal(pthread_t t1, pthread_t t2) {
-  struct PosixThread *a = (struct PosixThread *)t1;
-  struct PosixThread *b = (struct PosixThread *)t2;
-  return a->tid == b->tid;
+  return t1 == t2;
 }

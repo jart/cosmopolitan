@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Sets user id of current process.
@@ -30,7 +30,7 @@
  * @raise EAGAIN change would cause `RLIMIT_NPROC` to be exceeded
  * @raise EPERM if lack privileges
  */
-int setuid(int uid) {
+int setuid(unsigned uid) {
   int rc;
   if (IsWindows() && uid == getuid()) {
     rc = 0;

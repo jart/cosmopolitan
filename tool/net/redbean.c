@@ -6492,8 +6492,8 @@ static void MonitorMemory(void) {
 static int HandleConnection(size_t i) {
   int pid, rc = 0;
   clientaddrsize = sizeof(clientaddr);
-  if ((client = accept4(servers.p[i].fd, &clientaddr, &clientaddrsize,
-                        SOCK_CLOEXEC)) != -1) {
+  if ((client = accept4(servers.p[i].fd, (struct sockaddr *)&clientaddr,
+                        &clientaddrsize, SOCK_CLOEXEC)) != -1) {
     startconnection = _timespec_real();
     if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {
       EnterMeltdownMode();
@@ -6776,7 +6776,7 @@ static void Listen(void) {
         continue;
       }
 
-      if (bind(servers.p[n].fd, &servers.p[n].addr,
+      if (bind(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
                sizeof(servers.p[n].addr)) == -1) {
         DIEF("(srvr) bind error: %m: %hhu.%hhu.%hhu.%hhu:%hu", ips.p[i] >> 24,
              ips.p[i] >> 16, ips.p[i] >> 8, ips.p[i], ports.p[j]);
@@ -6785,7 +6785,8 @@ static void Listen(void) {
         DIEF("(srvr) listen error: %m");
       }
       addrsize = sizeof(servers.p[n].addr);
-      if (getsockname(servers.p[n].fd, &servers.p[n].addr, &addrsize) == -1) {
+      if (getsockname(servers.p[n].fd, (struct sockaddr *)&servers.p[n].addr,
+                      &addrsize) == -1) {
         DIEF("(srvr) getsockname error: %m");
       }
       port = ntohs(servers.p[n].addr.sin_port);

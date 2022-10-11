@@ -44,7 +44,7 @@ int sys_fadvise_netbsd(int, int, int64_t, int64_t, int) asm("sys_fadvise");
  * @returnserrno
  * @threadsafe
  */
-errno_t posix_fadvise(int fd, uint64_t offset, uint64_t len, int advice) {
+errno_t posix_fadvise(int fd, int64_t offset, int64_t len, int advice) {
   int rc, e = errno;
   if (IsLinux()) {
     rc = sys_fadvise(fd, offset, len, advice);

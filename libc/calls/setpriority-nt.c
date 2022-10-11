@@ -16,37 +16,60 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/calls/kntprioritycombos.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/nt/enum/processaccess.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/errfuns.h"
 
-static textwindows struct NtPriorityCombo findntprio(int nice) {
-  size_t l, r, m;
-  l = 0;
-  r = kNtPriorityCombosLen;
-  while (l < r) {
-    m = (l + r) >> 1;
-    if (kNtPriorityCombos[m].nice > nice) {
-      r = m;
-    } else {
-      l = m + 1;
-    }
-  }
-  return kNtPriorityCombos[max(0, l - 1)];
-}
-
-textwindows int sys_setpriority_nt(int nice) {
+textwindows int sys_setpriority_nt(int which, unsigned pid, int nice) {
+  int rc;
   uint32_t tier;
-  struct NtPriorityCombo p;
-  p = findntprio(nice);
-  tier = 1 << (p.lg2tier - 1);
-  if (SetPriorityClass(GetCurrentProcess(), tier) &&
-      SetThreadPriority(GetCurrentThread(), p.wut)) {
-    return p.nice;
-  } else {
-    return __winerr();
+  int64_t h, closeme = -1;
+
+  if (which != PRIO_PROCESS) {
+    return einval();
   }
+
+  if (!pid || pid == getpid()) {
+    h = GetCurrentProcess();
+  } else if (__isfdkind(pid, kFdProcess)) {
+    h = g_fds.p[pid].handle;
+  } else {
+    h = OpenProcess(kNtProcessSetInformation | kNtProcessQueryInformation,
+                    false, pid);
+    if (!h) return __winerr();
+    closeme = h;
+  }
+
+  if (nice <= -15) {
+    tier = kNtRealtimePriorityClass;
+  } else if (nice <= -9) {
+    tier = kNtHighPriorityClass;
+  } else if (nice <= -3) {
+    tier = kNtAboveNormalPriorityClass;
+  } else if (nice <= 3) {
+    tier = kNtNormalPriorityClass;
+  } else if (nice <= 12) {
+    tier = kNtBelowNormalPriorityClass;
+  } else {
+    tier = kNtIdlePriorityClass;
+  }
+
+  if (SetPriorityClass(h, tier)) {
+    rc = 0;
+  } else {
+    rc = __winerr();
+  }
+
+  if (closeme != -1) {
+    CloseHandle(closeme);
+  }
+
+  return rc;
 }

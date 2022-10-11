@@ -18,14 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -52,7 +53,7 @@
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
-               const void *opt_addr, uint32_t addrsize) {
+               const struct sockaddr *opt_addr, uint32_t addrsize) {
   ssize_t rc;
   uint32_t bsdaddrsize;
   union sockaddr_storage_bsd bsd;

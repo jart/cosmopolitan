@@ -5,6 +5,7 @@
 /* IEEE Std 1003.1-2017 (Revision of IEEE Std 1003.1-2008)  */
 
 #define _POSIX_AIO_LISTIO_MAX               2
+#define _POSIX_CLOCKRES_MIN                 20000000
 #define _POSIX_AIO_MAX                      1
 #define _POSIX_ARG_MAX                      4096
 #define _POSIX_CHILD_MAX                    25

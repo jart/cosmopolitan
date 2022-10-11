@@ -34,6 +34,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
@@ -75,7 +76,7 @@ int ResolveDnsReverse(const struct ResolvConf *resolvconf, int af,
   SerializeDnsHeader(msg, &h);
   if ((n = SerializeDnsQuestion(msg + 12, 500, &q)) == -1) return -1;
   if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) return -1;
-  if (sendto(fd, msg, 12 + n, 0, resolvconf->nameservers.p,
+  if (sendto(fd, msg, 12 + n, 0, (struct sockaddr *)resolvconf->nameservers.p,
              sizeof(*resolvconf->nameservers.p)) == 12 + n &&
       (n = read(fd, msg, 512)) >= 12) {
     DeserializeDnsHeader(&h2, msg);

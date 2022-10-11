@@ -1,10 +1,10 @@
 #ifndef LIBC_ISYSTEM_TGMATH_H_
 #define LIBC_ISYSTEM_TGMATH_H_
 #include "libc/complex.h"
+#include "libc/imag.h"
 #include "libc/math.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if __STDC_VERSION__ + 0 >= 201112
-COSMOPOLITAN_C_START_
 
 /* from https://en.cppreference.com/w/c/numeric/tgmath */
 
@@ -268,8 +268,11 @@ COSMOPOLITAN_C_START_
            : remainder, long double \
            : remainderl)(x, y)
 
-#define remquo(x, y) \
-  _Generic((x), float : remquof, default : remquo, long double : remquol)(x, y)
+#define remquo(x, y, z)          \
+  _Generic((x), float            \
+           : remquof, default    \
+           : remquo, long double \
+           : remquol)(x, y, z)
 
 #define rint(x) \
   _Generic((x), float : rintf, default : rint, long double : rintl)(x)
@@ -294,37 +297,35 @@ COSMOPOLITAN_C_START_
 
 #define carg(x)                        \
   _Generic((x), complex float          \
-           : cargf, complex default    \
+           : cargf, default            \
            : carg, complex long double \
            : cargl)(x)
 
 #define conj(x)                        \
   _Generic((x), complex float          \
-           : conjf, complex default    \
+           : conjf, default            \
            : conj, complex long double \
            : conjl)(x)
 
 #undef creal
 #define creal(x)                        \
   _Generic((x), complex float           \
-           : crealf, complex default    \
+           : crealf, default            \
            : creal, complex long double \
            : creall)(x)
 
 #undef cimag
 #define cimag(x)                        \
   _Generic((x), complex float           \
-           : cimagf, complex default    \
+           : cimagf, default            \
            : cimag, complex long double \
            : cimagl)(x)
 
 #define cproj(x)                        \
   _Generic((x), complex float           \
-           : cprojf, complex default    \
+           : cprojf, default            \
            : cproj, complex long double \
            : cprojl)(x)
-
-COSMOPOLITAN_C_END_
 
 #endif /* C11 */
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

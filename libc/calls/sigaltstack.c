@@ -16,7 +16,6 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/metasigaltstack.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/struct/sigaltstack.internal.h"
@@ -24,6 +23,8 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 
 static void sigaltstack2bsd(struct sigaltstack_bsd *bsd,
@@ -76,6 +77,8 @@ static void sigaltstack2linux(struct sigaltstack *linux,
  * @param neu if non-null will install new signal alt stack
  * @param old if non-null will receive current signal alt stack
  * @return 0 on success, or -1 w/ errno
+ * @raise EFAULT if bad memory was supplied
+ * @raise ENOMEM if `neu->ss_size` is less than `MINSIGSTKSZ`
  */
 int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
   int rc;
@@ -86,6 +89,8 @@ int sigaltstack(const struct sigaltstack *neu, struct sigaltstack *old) {
                    (neu && (__asan_check(neu, sizeof(*neu)).kind ||
                             __asan_check(neu->ss_sp, neu->ss_size).kind)))) {
     rc = efault();
+  } else if (neu && neu->ss_size < MINSIGSTKSZ) {
+    rc = enomem();
   } else if (IsLinux() || IsBsd()) {
     if (IsLinux()) {
       a = neu;

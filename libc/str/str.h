@@ -21,6 +21,7 @@ int isgraph(int);
 int tolower(int);
 int ispunct(int);
 int toupper(int);
+int toascii(int);
 int hextoint(int);
 int _cescapec(int);
 

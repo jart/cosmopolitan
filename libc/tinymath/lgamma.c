@@ -23,5 +23,5 @@
  * Returns natural logarithm of absolute value of gamma function.
  */
 double lgamma(double x) {
-  return lgamma_r(x, &__signgam);
+  return lgamma_r(x, &signgam);
 }

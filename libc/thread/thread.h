@@ -23,6 +23,14 @@
 #define PTHREAD_INHERIT_SCHED  0
 #define PTHREAD_EXPLICIT_SCHED 1
 
+#define PTHREAD_CANCELED ((void *)-1)
+
+#define PTHREAD_CANCEL_ENABLE  0
+#define PTHREAD_CANCEL_DISABLE 1
+
+#define PTHREAD_CANCEL_DEFERRED     0
+#define PTHREAD_CANCEL_ASYNCHRONOUS 1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -122,7 +130,11 @@ int pthread_attr_setstack(pthread_attr_t *, void *, size_t);
 int pthread_attr_getstacksize(const pthread_attr_t *, size_t *);
 int pthread_attr_setstacksize(pthread_attr_t *, size_t);
 int pthread_detach(pthread_t);
+int pthread_kill(pthread_t, int);
 int pthread_cancel(pthread_t);
+int pthread_setcanceltype(int, int *);
+int pthread_setcancelstate(int, int *);
+int pthread_setschedprio(pthread_t, int);
 int pthread_join(pthread_t, void **);
 int pthread_equal(pthread_t, pthread_t);
 int pthread_once(pthread_once_t *, void (*)(void));
@@ -165,7 +177,7 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t *);
 int pthread_rwlock_unlock(pthread_rwlock_t *);
 int pthread_key_create(pthread_key_t *, pthread_key_dtor);
 int pthread_key_delete(pthread_key_t);
-int pthread_setspecific(pthread_key_t, void *);
+int pthread_setspecific(pthread_key_t, const void *);
 void *pthread_getspecific(pthread_key_t);
 int pthread_barrierattr_init(pthread_barrierattr_t *);
 int pthread_barrierattr_destroy(pthread_barrierattr_t *);

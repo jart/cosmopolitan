@@ -34,6 +34,7 @@
 #include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/nrlinux.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 #include "third_party/xed/x86.h"
 
@@ -57,6 +58,7 @@ typedef char xmm_t __attribute__((__vector_size__(16), __aligned__(1)));
 
 __msabi extern typeof(TlsAlloc) *const __imp_TlsAlloc;
 
+struct PosixThread _pthread_main;
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
 _Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
@@ -127,6 +129,7 @@ privileged void __enable_tls(void) {
   tib->tib_self = tib;
   tib->tib_self2 = tib;
   tib->tib_errno = __errno;
+  tib->tib_pthread = (pthread_t)&_pthread_main;
   if (IsLinux()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
@@ -134,6 +137,9 @@ privileged void __enable_tls(void) {
   } else {
     tib->tib_tid = sys_gettid();
   }
+  _pthread_main.tib = tib;
+  _pthread_main.tid = tib->tib_tid;
+  _pthread_main.flags = PT_MAINTHREAD;
   __repmovsb(tls, _tdata_start, _TLDZ);
 
   // ask the operating system to change the x86 segment register

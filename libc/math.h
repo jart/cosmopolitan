@@ -64,8 +64,8 @@
 #define FP_ZERO      2
 #define FP_SUBNORMAL 3
 #define FP_NORMAL    4
-#define FP_ILOGB0    (-2147483647-1)
-#define FP_ILOGBNAN  (-2147483647-1)
+#define FP_ILOGB0    (-2147483647 - 1)
+#define FP_ILOGBNAN  (-2147483647 - 1)
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -98,6 +98,8 @@ typedef double double_t;
 
 #define fpclassify(x) \
   __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL, FP_ZERO, x)
+
+extern int signgam;
 
 double acos(double);
 double acosh(double);
@@ -306,6 +308,20 @@ void sincosl(long double, long double *, long double *);
 
 float fsumf(const float *, size_t);
 double fsum(const double *, size_t);
+
+double j0(double);
+double j1(double);
+double jn(int, double);
+float j0f(float);
+float j1f(float);
+float jnf(int, float);
+
+double y0(double);
+double y1(double);
+double yn(int, double);
+float y0f(float);
+float y1f(float);
+float ynf(int, float);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

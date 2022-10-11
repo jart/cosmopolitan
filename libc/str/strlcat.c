@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:c;indent-tabs-mode:t;c-basic-offset:8;tab-width:8;coding:utf-8   -*-│
+│vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>                │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,25 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/safemacros.internal.h"
 #include "libc/str/str.h"
+// clang-format off
+// $OpenBSD: strlcat.c,v 1.19 2019/01/25 00:19:25 millert Exp $
+
+asm(".ident\t\"\\n\\n\
+strlcat (ISC)\\n\
+Copyright (c) 1998, 2015 Todd C. Miller <millert@openbsd.org>\"");
+asm(".include \"libc/disclaimer.inc\"");
 
 /**
- * Appends string SRC to DEST, the BSD way.
- *
- * @param dest is a buffer holding a NUL-terminated string
- * @param src is a NUL-terminated string
- * @param size is byte capacity of dest
- * @return strlen(dest) + strlen(src)
- * @note dest and src can't overlap
- * @see strncat()
+ * Appends string, the BSD way.
+ * 
+ * Appends `src` to string `dst` of size `dsize` (unlike strncat,
+ * `dsize` is the full size of `dst`, not space left). At most `dsize-1`
+ * characters will be copied. Always NUL terminates (unless `dsize <=
+ * strlen(dst)`). Returns `strlen(src) + MIN(dsize, strlen(initial
+ * dst))`. If `retval >= dsize`, truncation occurred.
  */
-size_t strlcat(char *dest, const char *src, size_t size) {
-  size_t destlen = strnlen(dest, size);
-  size_t srclen = strlen(src);
-  if (size) {
-    memcpy(&dest[destlen], src, min(srclen, size - destlen));
-    dest[min(destlen + srclen, size - 1)] = '\0';
-  }
-  return destlen + srclen;
+size_t
+strlcat(char *dst, const char *src, size_t dsize)
+{
+	const char *odst = dst;
+	const char *osrc = src;
+	size_t n = dsize;
+	size_t dlen;
+
+	/* Find the end of dst and adjust bytes left but don't go past end. */
+	while (n-- != 0 && *dst != '\0')
+		dst++;
+	dlen = dst - odst;
+	n = dsize - dlen;
+
+	if (n-- == 0)
+		return(dlen + strlen(src));
+	while (*src != '\0') {
+		if (n != 0) {
+			*dst++ = *src;
+			n--;
+		}
+		src++;
+	}
+	*dst = '\0';
+
+	return(dlen + (src - osrc));	/* count does not include NUL */
 }

@@ -8,7 +8,7 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 int rand(void);
-void srand(uint64_t);
+void srand(unsigned);
 double poz(double);
 double pochisq(double, int);
 void rt_init(int);

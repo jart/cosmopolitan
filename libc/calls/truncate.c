@@ -61,7 +61,7 @@
  * @see ftruncate()
  * @threadsafe
  */
-int truncate(const char *path, uint64_t length) {
+int truncate(const char *path, int64_t length) {
   int rc;
   struct ZiposUri zipname;
   if (IsMetal()) {

@@ -20,7 +20,7 @@
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-int cfsetospeed(struct termios *t, int speed) {
+int cfsetospeed(struct termios *t, unsigned speed) {
   if (CBAUD) {
     if (!(speed & ~CBAUD)) {
       t->c_cflag &= ~CBAUD;

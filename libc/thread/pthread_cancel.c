@@ -34,7 +34,7 @@
  *     void OnUsr1(int sig) { gotusr1 = true; }
  *     struct sigaction sa = {.sa_handler = OnUsr1};
  *     sigaction(SIGUSR1, &sa, 0);
- *     tkill(pthread_getunique_np(thread), SIGUSR1);
+ *     pthread_kill(thread, SIGUSR1);
  *
  * The above code should successfully cancel a thread's blocking io
  * operations in most cases, e.g.
@@ -61,7 +61,7 @@
  * @see https://sourceware.org/bugzilla/show_bug.cgi?id=12683
  */
 int pthread_cancel(pthread_t thread) {
-  kprintf("error: pthread_cancel() is unsupported, please read the "
-          "cosmopolitan libc documentation for further details\n");
+  kprintf("error: pthread_cancel() isn't supported, please see the"
+          " cosmopolitan libc documentation for further details\n");
   _Exit(1);
 }

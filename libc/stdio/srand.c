@@ -23,4 +23,6 @@ extern uint64_t g_rando;
 /**
  * Seeds random number generator that's used by rand().
  */
-void(srand)(uint64_t seed) { g_rando = seed; }
+void srand(unsigned seed) {
+  g_rando = seed;
+}

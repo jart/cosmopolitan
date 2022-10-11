@@ -42,7 +42,7 @@ int posix_spawnattr_setschedparam(posix_spawnattr_t *,
                                   const struct sched_param *);
 int posix_spawnattr_getsigmask(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigmask(posix_spawnattr_t *, const sigset_t *);
-int posix_spawnattr_getdefault(const posix_spawnattr_t *, sigset_t *);
+int posix_spawnattr_getsigdefault(const posix_spawnattr_t *, sigset_t *);
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *, const sigset_t *);
 
 COSMOPOLITAN_C_END_

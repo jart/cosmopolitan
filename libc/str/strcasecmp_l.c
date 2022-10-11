@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,53 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/intrin/smmintrin.internal.h"
-#include "libc/nexgen32e/x86feature.h"
+#include "libc/str/locale.h"
+#include "libc/str/str.h"
 
-//	Rounds to nearest integer, away from zero.
-//
-//	@param	𝑥 is double scalar in low half of %xmm0
-//	@return	double scalar in low half of %xmm0
-//	@define	round(𝑥) = copysign(trunc(fabs(𝑥)+.5),𝑥)
-//		round(𝑥) = trunc(𝑥+copysign(.5,𝑥))
-round:
-#if !X86_NEED(SSE4_2)
-	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	jz	round$k8
-	.text.antiquity
-round$k8:
-	.leafprologue
-	.profilable
-	movapd	%xmm0,%xmm1
-	movsd	D(%rip),%xmm2
-	movsd	C(%rip),%xmm3
-	andpd	%xmm2,%xmm1
-	ucomisd	%xmm1,%xmm3
-	jbe	2f
-	addsd	A(%rip),%xmm1
-	andnpd	%xmm0,%xmm2
-	movapd	%xmm2,%xmm0
-	cvttsd2siq %xmm1,%rax
-	pxor	%xmm1,%xmm1
-	cvtsi2sdq %rax,%xmm1
-	orpd	%xmm1,%xmm0
-2:	.leafepilogue
-	.endfn	round$k8,globl,hidden
-	.previous
-	.rodata.cst16
-C:	.quad	0x4330000000000000,0
-D:	.quad	0x7fffffffffffffff,0
-	.previous
-#endif
-	movapd	%xmm0,%xmm1
-	andpd	B(%rip),%xmm0
-	orpd	A(%rip),%xmm0
-	addsd	%xmm1,%xmm0
-	roundsd $_MM_FROUND_TO_ZERO,%xmm0,%xmm0
-	ret
-	.endfn	round,globl
-
-	.rodata.cst16
-A:	.quad	0x3fdfffffffffffff,0
-B:	.quad	0x8000000000000000,0
+int strcasecmp_l(const char *a, const char *b, locale_t l) {
+  return strcasecmp(a, b);
+}

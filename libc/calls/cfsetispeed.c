@@ -19,7 +19,7 @@
 #include "libc/calls/termios.h"
 #include "libc/sysv/errfuns.h"
 
-int cfsetispeed(struct termios *t, int speed) {
+int cfsetispeed(struct termios *t, unsigned speed) {
   if (speed) {
     if (CBAUD) {
       if (speed & ~CBAUD) return einval();

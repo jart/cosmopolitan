@@ -23,7 +23,7 @@
 /**
  * Sets value of TLS slot for current thread.
  */
-int pthread_setspecific(pthread_key_t key, void *val) {
+int pthread_setspecific(pthread_key_t key, const void *val) {
   if (0 <= key && key < PTHREAD_KEYS_MAX) {
     __get_tls()->tib_keys[key] = val;
     return 0;

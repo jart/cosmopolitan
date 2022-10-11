@@ -48,6 +48,10 @@ static textwindows int sys_tkill_nt(int tid, int sig) {
  * @param tid is thread id
  * @param sig does nothing on xnu
  * @return 0 on success, or -1 w/ errno
+ * @raise ESRCH if `tid` was valid but no such thread existed
+ * @raise EAGAIN if `RLIMIT_SIGPENDING` was exceeded
+ * @raise EINVAL if `tid` or `sig` was invalid
+ * @raise EPERM if permission was denied
  * @asyncsignalsafe
  */
 int tkill(int tid, int sig) {

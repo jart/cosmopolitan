@@ -38,7 +38,7 @@
 static int malloc_lock(atomic_int *lk) {
   if (!__threaded) return 0;
   while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
-    sched_yield();
+    donothing;
   }
   return 0;
 }

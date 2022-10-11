@@ -277,7 +277,9 @@ TEST(pledge, stdioTty_sendtoRestricted_requiresNullAddr) {
         mmap((void *)0x300000000000, FRAMESIZE, PROT_READ | PROT_WRITE,
              MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     sin->sin_family = AF_INET;
-    ASSERT_SYS(EPERM, -1, sendto(sv[0], "hello", 5, 0, sin, sizeof(*sin)));
+    ASSERT_SYS(
+        EPERM, -1,
+        sendto(sv[0], "hello", 5, 0, (struct sockaddr *)sin, sizeof(*sin)));
     _Exit(0);
   }
   close(sv[0]);
@@ -346,10 +348,11 @@ TEST(pledge, inet_forbidsOtherSockets) {
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_DGRAM, IPPROTO_RAW));
     ASSERT_SYS(EPERM, -1, setsockopt(3, SOL_SOCKET, SO_TIMESTAMP, &yes, 4));
     struct sockaddr_in sin = {AF_INET, 0, {htonl(0x7f000001)}};
-    ASSERT_SYS(0, 0, bind(4, &sin, sizeof(sin)));
+    ASSERT_SYS(0, 0, bind(4, (struct sockaddr *)&sin, sizeof(sin)));
     uint32_t az = sizeof(sin);
-    ASSERT_SYS(0, 0, getsockname(4, &sin, &az));
-    ASSERT_SYS(0, 5, sendto(3, "hello", 5, 0, &sin, sizeof(sin)));
+    ASSERT_SYS(0, 0, getsockname(4, (struct sockaddr *)&sin, &az));
+    ASSERT_SYS(0, 5,
+               sendto(3, "hello", 5, 0, (struct sockaddr *)&sin, sizeof(sin)));
     _Exit(0);
   }
   EXPECT_NE(-1, wait(&ws));

@@ -1300,7 +1300,6 @@ syscon	prio	PRIO_PGRP				1			1			1			1			1			1			# unix consensus / poly nt
 syscon	prio	PRIO_USER				2			2			2			2			2			2			# unix consensus / poly nt
 syscon	prio	PRIO_MIN				-20			-20			-20			-20			-20			-20			# unix consensus / poly nt
 syscon	prio	PRIO_MAX				20			20			20			20			20			20			# unix consensus / poly nt
-syscon	prio	NZERO					20			20			20			20			20			20			# unix consensus / polyfilled nt
 
 #	getrusage() who
 #

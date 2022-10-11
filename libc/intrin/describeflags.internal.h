@@ -60,6 +60,7 @@ const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
 const char *DescribeStdioState(char[12], int);
 const char *DescribeWhence(char[12], int);
+const char *DescribeWhichPrio(char[12], int);
 
 #define DescribeArchPrctlCode(x)     DescribeArchPrctlCode(alloca(12), x)
 #define DescribeCapability(x)        DescribeCapability(alloca(20), x)
@@ -106,6 +107,7 @@ const char *DescribeWhence(char[12], int);
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
 #define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
+#define DescribeWhichPrio(x)         DescribeWhichPrio(alloca(12), x)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -20,5 +20,5 @@
 #include "libc/tinymath/kernel.internal.h"
 
 float lgammaf(float x) {
-  return lgammaf_r(x, &__signgam);
+  return lgammaf_r(x, &signgam);
 }

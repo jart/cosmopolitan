@@ -36,8 +36,8 @@ TEST(ipv4, test) {
       .sin_addr.s_addr = htonl(0x7f000001),
   };
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(0, 0, getsockname(3, &addr, &addrsize));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) {
@@ -49,7 +49,7 @@ TEST(ipv4, test) {
   }
   EXPECT_SYS(0, 0, close(3));
   EXPECT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  EXPECT_SYS(0, 0, connect(3, &addr, sizeof(addr)));
+  EXPECT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   EXPECT_SYS(0, 5, read(3, buf, 16));
   EXPECT_STREQ("hello", buf);
   EXPECT_SYS(0, 0, close(3));
@@ -68,8 +68,8 @@ TEST(ipv6, test) {
       .sin6_addr.s6_addr[15] = 1,
   };
   ASSERT_SYS(0, 3, socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(0, 0, getsockname(3, &addr, &addrsize));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_EQ(AF_INET6, addr.sin6_family);
   ASSERT_NE(0, addr.sin6_port);
   ASSERT_SYS(0, 0, listen(3, SOMAXCONN));
@@ -83,7 +83,7 @@ TEST(ipv6, test) {
   }
   EXPECT_SYS(0, 0, close(3));
   EXPECT_SYS(0, 3, socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP));
-  EXPECT_SYS(0, 0, connect(3, &addr, sizeof(addr)));
+  EXPECT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   EXPECT_SYS(0, 5, read(3, buf, 16));
   EXPECT_STREQ("hello", buf);
   EXPECT_SYS(0, 0, close(3));

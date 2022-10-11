@@ -18,15 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cxaatexit.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -34,7 +37,10 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "libc/time/time.h"
 
 #define N 1024
 #define M 20
@@ -42,10 +48,6 @@
 void SetUp(void) {
   // TODO(jart): what is wrong?
   if (IsWindows()) exit(0);
-}
-
-void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 TEST(malloc, zeroMeansOne) {
@@ -145,4 +147,37 @@ BENCH(bulk_free, bench) {
   EZBENCH2("free() bulk", BulkFreeBenchSetup(), FreeBulk());
   EZBENCH2("bulk_free()", BulkFreeBenchSetup(),
            bulk_free(bulk, ARRAYLEN(bulk)));
+}
+
+#define ITERATIONS 10000
+
+void *Worker(void *arg) {
+  for (int i = 0; i < ITERATIONS; ++i) {
+    char *p;
+    ASSERT_NE(NULL, (p = malloc(lemur64() % 128)));
+    ASSERT_NE(NULL, (p = realloc(p, max(lemur64() % 128, 1))));
+    free(p);
+  }
+  return 0;
+}
+
+BENCH(malloc, torture) {
+  int i, n = GetCpuCount() * 2;
+  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  if (!n) return;
+  printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,
+         ITERATIONS);
+  SPAWN(fork);
+  struct timespec t1 = _timespec_real();
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  }
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_join(t[i], 0));
+  }
+  struct timespec t2 = _timespec_real();
+  printf("consumed %g wall and %g cpu seconds\n",
+         _timespec_tomicros(_timespec_sub(t2, t1)) * 1e-6,
+         (double)clock() / CLOCKS_PER_SEC);
+  EXITS(0);
 }

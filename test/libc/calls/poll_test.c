@@ -93,7 +93,7 @@ TEST(ppoll, weCanProveItChecksForSignals) {
 TEST(poll, testNegativeOneFd_isIgnored) {
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
   struct sockaddr_in addr = {AF_INET, 0, {htonl(INADDR_LOOPBACK)}};
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 0, listen(3, 10));
   struct pollfd fds[] = {{-1}, {3}};
   EXPECT_SYS(0, 0, poll(fds, ARRAYLEN(fds), 1));

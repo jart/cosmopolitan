@@ -216,12 +216,13 @@ void StartTcpServer(void) {
   setsockopt(g_servfd, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
 
   LOGIFNEG1(setsockopt(g_servfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)));
-  if (bind(g_servfd, &g_servaddr, sizeof(g_servaddr)) == -1) {
+  if (bind(g_servfd, (struct sockaddr *)&g_servaddr, sizeof(g_servaddr)) ==
+      -1) {
     FATALF("bind failed %m");
   }
   CHECK_NE(-1, listen(g_servfd, 10));
   asize = sizeof(g_servaddr);
-  CHECK_NE(-1, getsockname(g_servfd, &g_servaddr, &asize));
+  CHECK_NE(-1, getsockname(g_servfd, (struct sockaddr *)&g_servaddr, &asize));
   INFOF("%s:%s", "listening on tcp", _gc(DescribeAddress(&g_servaddr)));
   if (g_sendready) {
     printf("ready %hu\n", ntohs(g_servaddr.sin_port));
@@ -374,7 +375,8 @@ void HandleClient(void) {
   addrsize = sizeof(addr);
   INFOF("accept");
   do {
-    g_clifd = accept4(g_servfd, &addr, &addrsize, SOCK_CLOEXEC);
+    g_clifd =
+        accept4(g_servfd, (struct sockaddr *)&addr, &addrsize, SOCK_CLOEXEC);
   } while (g_clifd == -1 && errno == EAGAIN);
   CHECK_NE(-1, g_clifd);
   if (fork()) {

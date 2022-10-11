@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
+#include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/sysv/consts/prio.h"
 

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "libc/mem/gc.h"
 #include "libc/runtime/runtime.h"
@@ -24,8 +25,6 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/futex.internal.h"
-
-STATIC_YOINK("_pthread_main");
 
 /**
  * Terminates current POSIX thread.
@@ -86,7 +85,7 @@ wontreturn void pthread_exit(void *rc) {
     // this implementation so much simpler for example we want't to call
     // set_tid_address() upon every program startup which isn't possible
     // on non-linux platforms anyway.
-    __get_tls()->tib_tid = 0;
+    atomic_store_explicit(&__get_tls()->tib_tid, 0, memory_order_release);
     nsync_futex_wake_((int *)&__get_tls()->tib_tid, INT_MAX, !IsWindows());
     _Exit1(0);
   }

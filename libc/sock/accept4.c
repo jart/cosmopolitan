@@ -17,11 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -38,7 +39,8 @@
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-int accept4(int fd, void *out_addr, uint32_t *inout_addrsize, int flags) {
+int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
+            int flags) {
   int rc;
   char addrbuf[72];
   if (!out_addr || !inout_addrsize ||

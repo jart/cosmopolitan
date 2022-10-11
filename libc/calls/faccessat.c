@@ -48,7 +48,7 @@
  * @note on Linux `flags` is only supported on Linux 5.8+
  * @asyncsignalsafe
  */
-int faccessat(int dirfd, const char *path, int amode, uint32_t flags) {
+int faccessat(int dirfd, const char *path, int amode, int flags) {
   int e, rc;
   struct ZiposUri zipname;
   if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {

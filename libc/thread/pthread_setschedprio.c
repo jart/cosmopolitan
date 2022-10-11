@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,51 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-#include "libc/intrin/smmintrin.internal.h"
-#include "libc/nexgen32e/x86feature.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
-//	Rounds to nearest integer, away from zero.
-//
-//	@param	𝑥 is float scalar in low quarter of %xmm0
-//	@return	float scalar in low quarter of %xmm0
-roundf:
-#if !X86_NEED(SSE4_2)
-	testb	X86_HAVE(SSE4_2)+kCpuids(%rip)
-	jz	roundf$k8
-	.text.antiquity
-roundf$k8:
-	.leafprologue
-	.profilable
-	movaps	%xmm0,%xmm1
-	movss	D(%rip),%xmm2
-	movss	C(%rip),%xmm3
-	andps	%xmm2,%xmm1
-	ucomiss	%xmm1,%xmm3
-	jbe	2f
-	addss	A(%rip),%xmm1
-	cvttss2sil %xmm1,%eax
-	pxor	%xmm1,%xmm1
-	cvtsi2ssl %eax,%xmm1
-	andnps	%xmm0,%xmm2
-	movaps	%xmm2,%xmm0
-	orps	%xmm1,%xmm0
-2:	.leafepilogue
-	.endfn	roundf$k8,globl,hidden
-	.previous
-	.rodata.cst16
-C:	.long	0x4b000000,0,0,0
-D:	.long	0x7fffffff,0,0,0
-	.previous
-#endif
-	movaps	%xmm0,%xmm1
-	andps	B(%rip),%xmm0
-	orps	A(%rip),%xmm0
-	addss	%xmm1,%xmm0
-	roundss $_MM_FROUND_TO_ZERO,%xmm0,%xmm0
-	ret
-	.endfn	roundf,globl
-
-	.rodata.cst16
-A:	.long	0x3effffff,0,0,0
-B:	.long	0x80000000,0,0,0
+/**
+ * Sets scheduler parameter on thread.
+ */
+int pthread_setschedprio(pthread_t thread, int prio) {
+  struct PosixThread *pt = (struct PosixThread *)thread;
+  pt->attr.__schedparam = prio;
+  return _pthread_reschedule(pt);
+}

@@ -16,16 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-// it's only be possible for this memory to be accessed when the user
-// has linked either pthread_self() or pthread_exit() which yoink it.
-struct PosixThread _pthread_main;
-
-__attribute__((__constructor__)) static void pthread_self_init(void) {
-  _pthread_main.tid = gettid();
-  _pthread_main.tib = __get_tls();
-  _pthread_main.flags = PT_MAINTHREAD;
-  __get_tls()->tib_pthread = (pthread_t)&_pthread_main;
+/**
+ * Sets cancelability state.
+ *
+ * @param state may be one of:
+ *     - `PTHREAD_CANCEL_ENABLE` (default)
+ *     - `PTHREAD_CANCEL_DISABLE`
+ * @param oldstate optionally receives old value
+ * @return 0 on success, or errno on error
+ * @raise EINVAL if `state` has bad value
+ * @see pthread_cancel() for docs
+ */
+int pthread_setcancelstate(int state, int *oldstate) {
+  struct PosixThread *pt;
+  switch (state) {
+    case PTHREAD_CANCEL_ENABLE:
+    case PTHREAD_CANCEL_DISABLE:
+      pt = (struct PosixThread *)__get_tls()->tib_pthread;
+      if (oldstate) *oldstate = pt->canceldisable;
+      pt->canceldisable = state;
+      return 0;
+    default:
+      return EINVAL;
+  }
 }

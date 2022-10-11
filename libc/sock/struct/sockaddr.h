@@ -36,6 +36,14 @@ struct sockaddr_storage {
 int inet_aton(const char *, struct in_addr *);
 char *inet_ntoa(struct in_addr);
 int accept(int, struct sockaddr *, uint32_t *);
+int accept4(int, struct sockaddr *, uint32_t *, int);
+int bind(int, const struct sockaddr *, uint32_t);
+int connect(int, const struct sockaddr *, uint32_t);
+int getsockname(int, struct sockaddr *, uint32_t *);
+int getpeername(int, struct sockaddr *, uint32_t *);
+ssize_t recvfrom(int, void *, size_t, uint32_t, struct sockaddr *, uint32_t *);
+ssize_t sendto(int, const void *, size_t, uint32_t, const struct sockaddr *,
+               uint32_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

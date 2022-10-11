@@ -64,7 +64,9 @@ char *fgets_unlocked(char *s, int size, FILE *f) {
         if (c == '\n') break;
       }
     }
-    *p = '\0';
+    if (p > s || f->state != -1) {
+      *p = '\0';
+    }
   }
   return p > s ? s : NULL;
 }

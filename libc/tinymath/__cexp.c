@@ -35,7 +35,6 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 /* clang-format off */
 
-
 /* origin: FreeBSD /usr/src/lib/msun/src/k_exp.c */
 /*-
  * Copyright (c) 2011 David Schultz <das@FreeBSD.ORG>

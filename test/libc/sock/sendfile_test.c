@@ -65,8 +65,8 @@ TEST(sendfile, testSeeking) {
   ASSERT_SYS(0, 512, write(3, kHyperion, 512));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(0, 0, getsockname(3, &addr, &addrsize));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, 1));
   if (!fork()) {
     ASSERT_SYS(0, 4, accept(3, (struct sockaddr *)&addr, &addrsize));
@@ -89,7 +89,7 @@ TEST(sendfile, testSeeking) {
   }
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, connect(3, &addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 12, read(3, buf, 12));  // needed due to windows
   ASSERT_SYS(0, 500, read(3, buf + 12, 700));
   ASSERT_EQ(0, memcmp(buf, kHyperion, 512));
@@ -111,8 +111,8 @@ TEST(sendfile, testPositioning) {
   ASSERT_SYS(0, 512, write(3, kHyperion, 512));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, bind(3, &addr, sizeof(addr)));
-  ASSERT_SYS(0, 0, getsockname(3, &addr, &addrsize));
+  ASSERT_SYS(0, 0, bind(3, (struct sockaddr *)&addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, getsockname(3, (struct sockaddr *)&addr, &addrsize));
   ASSERT_SYS(0, 0, listen(3, 1));
   if (!fork()) {
     signal(SIGPIPE, SIG_IGN);
@@ -130,7 +130,7 @@ TEST(sendfile, testPositioning) {
   }
   ASSERT_SYS(0, 0, close(3));
   ASSERT_SYS(0, 3, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-  ASSERT_SYS(0, 0, connect(3, &addr, sizeof(addr)));
+  ASSERT_SYS(0, 0, connect(3, (struct sockaddr *)&addr, sizeof(addr)));
   ASSERT_SYS(0, 6, read(3, buf, 6));
   ASSERT_SYS(0, 6, read(3, buf + 6, 6));
   ASSERT_SYS(0, 0, read(3, buf, 12));

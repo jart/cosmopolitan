@@ -1,7 +1,7 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/str/str.h"
 
-//	Returns 𝑥 × 2ʸ.
-//
-//	@param	𝑥 is double passed in %xmm0
-//	@param	𝑦 is double passed in %xmm1, which is truncated
-//	@return	result in %xmm0
-//	@see	ldexp()
-scalb:	cvttsd2si %xmm1,%edi
-	jmp	ldexp
-	.endfn	scalb,globl
+int versionsort(const struct dirent **a, const struct dirent **b) {
+  return strverscmp((*a)->d_name, (*b)->d_name);
+}

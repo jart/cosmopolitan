@@ -61,14 +61,17 @@ enum PosixThreadStatus {
 struct PosixThread {
   _Atomic(enum PosixThreadStatus) status;
   void *(*start_routine)(void *);
-  void *arg;             // start_routine's parameter
-  void *rc;              // start_routine's return value
-  int flags;             // see PT_* constants
-  int tid;               // clone parent tid
-  char *altstack;        // thread sigaltstack
-  char *tls;             // bottom of tls allocation
-  struct CosmoTib *tib;  // middle of tls allocation
-  jmp_buf exiter;        // for pthread_exit
+  void *arg;               // start_routine's parameter
+  void *rc;                // start_routine's return value
+  int tid;                 // clone parent tid
+  int flags;               // see PT_* constants
+  _Atomic(int) cancelled;  // thread has bad beliefs
+  char cancelasync;        // PTHREAD_CANCEL_DEFERRED/ASYNCHRONOUS
+  char canceldisable;      // PTHREAD_CANCEL_ENABLE/DISABLE
+  char *altstack;          // thread sigaltstack
+  char *tls;               // bottom of tls allocation
+  struct CosmoTib *tib;    // middle of tls allocation
+  jmp_buf exiter;          // for pthread_exit
   pthread_attr_t attr;
   struct _pthread_cleanup_buffer *cleanup;
 };

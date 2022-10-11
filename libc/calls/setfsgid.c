@@ -17,15 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Sets user id of current process for file system ops.
  * @return previous filesystem gid
  */
-int setfsgid(int gid) {
+int setfsgid(unsigned gid) {
   int rc;
   if (IsLinux()) {
     rc = sys_setfsgid(gid);

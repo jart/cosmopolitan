@@ -137,7 +137,7 @@ void *Worker(void *id) {
   setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
   errno = 0;
 
-  if (bind(server, &addr, sizeof(addr)) == -1) {
+  if (bind(server, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     kprintf("%s() failed %m\n", "socket");
     goto CloseWorker;
   }

@@ -16,28 +16,67 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/kntprioritycombos.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/struct/fd.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/nexgen32e/ffs.h"
+#include "libc/nt/enum/processaccess.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/nt/process.h"
 #include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
-#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/errfuns.h"
 
-textwindows int sys_getpriority_nt(int ignored) {
-  size_t i;
-  uint32_t tier, lg2tier, wut;
-  if ((tier = GetPriorityClass(GetCurrentProcess())) != 0 &&
-      (wut = GetThreadPriority(GetCurrentThread())) != -1u) {
-    lg2tier = ffs(tier);
-    for (i = 0; i < kNtPriorityCombosLen; ++i) {
-      if (kNtPriorityCombos[i].lg2tier == lg2tier &&
-          kNtPriorityCombos[i].wut == wut) {
-        return kNtPriorityCombos[i].nice;
-      }
-    }
-    abort();
-  } else {
-    return __winerr();
+textwindows int sys_getpriority_nt(int which, unsigned pid) {
+  int rc;
+  uint32_t tier;
+  int64_t h, closeme = -1;
+
+  if (which != PRIO_PROCESS) {
+    return einval();
   }
+
+  if (!pid || pid == getpid()) {
+    h = GetCurrentProcess();
+  } else if (__isfdkind(pid, kFdProcess)) {
+    h = g_fds.p[pid].handle;
+  } else {
+    h = OpenProcess(kNtProcessQueryInformation, false, pid);
+    if (!h) return __winerr();
+    closeme = h;
+  }
+
+  if ((tier = GetPriorityClass(h))) {
+    switch (tier) {
+      case kNtRealtimePriorityClass:
+        rc = -16;
+        break;
+      case kNtHighPriorityClass:
+        rc = -10;
+        break;
+      case kNtAboveNormalPriorityClass:
+        rc = -5;
+        break;
+      case kNtNormalPriorityClass:
+        rc = 0;
+        break;
+      case kNtBelowNormalPriorityClass:
+        rc = 5;
+        break;
+      case kNtIdlePriorityClass:
+        rc = 15;
+        break;
+      default:
+        notpossible;
+    }
+  } else {
+    rc = __winerr();
+  }
+
+  if (closeme != -1) {
+    CloseHandle(closeme);
+  }
+
+  return rc;
 }

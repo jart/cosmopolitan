@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/macros.internal.h"
-.privileged
 
 //	Loads previously saved processor state.
 //
@@ -42,3 +41,4 @@ longjmp:
 	jmp	*56(%rdi)
 	.endfn	longjmp,globl
 	.alias	longjmp,_longjmp
+	.alias	longjmp,siglongjmp

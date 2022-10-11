@@ -278,6 +278,7 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  * @vforksafe
  */
 relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
+  kprintf("oncrash\n");
   intptr_t rip;
   int me, owner;
   int gdbpid, err;

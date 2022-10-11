@@ -113,13 +113,12 @@ int main(int argc, char *argv[]) {
         pDataOverrunCrash(10 + 1);
         exit(0);
       case 5:
-        exit((intptr_t)pStackOverrunCrash(10 + 1));
+        exit((intptr_t)pStackOverrunCrash(10 + 10000));
       case 6:
         exit((intptr_t)pMemoryLeakCrash());
       case 7:
         exit(pNpeCrash(0));
       case 8:
-        __cxa_finalize(0);
         exit(pNpeCrash(0));
       case 9:
         exit(pStackOverflow(pStackOverflow, 0));

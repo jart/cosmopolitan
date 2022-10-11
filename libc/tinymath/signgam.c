@@ -17,4 +17,4 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 
-int __signgam;
+int signgam;

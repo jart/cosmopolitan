@@ -54,21 +54,22 @@ void UdpServer(void) {
   struct sockaddr_in addr2;
   uint32_t addrsize2 = sizeof(struct sockaddr_in);
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
-  CHECK_NE(-1, bind(sock, &addr, addrsize));
-  CHECK_NE(-1, getsockname(sock, &addr2, &addrsize2));
+  CHECK_NE(-1, bind(sock, (struct sockaddr *)&addr, addrsize));
+  CHECK_NE(-1, getsockname(sock, (struct sockaddr *)&addr2, &addrsize2));
   ip = ntohl(addr2.sin_addr.s_addr);
   kprintf("udp server %hhu.%hhu.%hhu.%hhu %hu%n", ip >> 24, ip >> 16, ip >> 8,
           ip, ntohs(addr2.sin_port));
   for (;;) {
+    CHECK_NE(-1, (rc = recvfrom(sock, buf, sizeof(buf), 0,
+                                (struct sockaddr *)&addr2, &addrsize2)));
     CHECK_NE(-1,
-             (rc = recvfrom(sock, buf, sizeof(buf), 0, &addr2, &addrsize2)));
-    CHECK_NE(-1, sendto(sock, buf, rc, 0, &addr2, addrsize2));
+             sendto(sock, buf, rc, 0, (struct sockaddr *)&addr2, addrsize2));
   }
 }
 
 void UdpClient(void) {
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
-  CHECK_NE(-1, connect(sock, &addr, addrsize));
+  CHECK_NE(-1, connect(sock, (struct sockaddr *)&addr, addrsize));
   for (;;) {
     rngset(buf, sizeof(buf), _rand64, -1);
     CHECK_NE(-1, write(sock, &addr, addrsize));
@@ -81,9 +82,9 @@ void TcpServer(void) {
   struct sockaddr_in addr2;
   uint32_t addrsize2 = sizeof(struct sockaddr_in);
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-  CHECK_NE(-1, bind(sock, &addr, addrsize));
+  CHECK_NE(-1, bind(sock, (struct sockaddr *)&addr, addrsize));
   CHECK_NE(-1, listen(sock, 10));
-  CHECK_NE(-1, getsockname(sock, &addr2, &addrsize2));
+  CHECK_NE(-1, getsockname(sock, (struct sockaddr *)&addr2, &addrsize2));
   ip = ntohl(addr2.sin_addr.s_addr);
   kprintf("tcp server %hhu.%hhu.%hhu.%hhu %hu%n", ip >> 24, ip >> 16, ip >> 8,
           ip, ntohs(addr2.sin_port));
@@ -104,7 +105,7 @@ void TcpServer(void) {
 
 void TcpClient(void) {
   CHECK_NE(-1, (sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-  CHECK_NE(-1, connect(sock, &addr, addrsize));
+  CHECK_NE(-1, connect(sock, (struct sockaddr *)&addr, addrsize));
   for (;;) {
     rngset(buf, sizeof(buf), _rand64, -1);
     CHECK_NE(-1, write(sock, buf, sizeof(buf)));

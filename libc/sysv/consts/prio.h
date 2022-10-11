@@ -9,7 +9,6 @@ extern const int PRIO_MIN;
 extern const int PRIO_PGRP;
 extern const int PRIO_PROCESS;
 extern const int PRIO_USER;
-extern const int NZERO;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -19,6 +18,5 @@ COSMOPOLITAN_C_END_
 #define PRIO_USER    LITERALLY(2)
 #define PRIO_MIN     LITERALLY(-20)
 #define PRIO_MAX     LITERALLY(20)
-#define NZERO        LITERALLY(20)
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_PRIO_H_ */

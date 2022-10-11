@@ -38,7 +38,7 @@ TEST(setsockopt, SO_RCVTIMEO) {
   struct sockaddr_in sa = {AF_INET, 0, {htonl(0x7f000001)}};
   EXPECT_SYS(0, 3, socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
   EXPECT_SYS(0, 0, setsockopt(3, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)));
-  EXPECT_SYS(0, 0, bind(3, &sa, sizeof(struct sockaddr_in)));
+  EXPECT_SYS(0, 0, bind(3, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)));
   EXPECT_SYS(EAGAIN, -1, read(3, buf, sizeof(buf)));
   EXPECT_SYS(0, 0, close(3));
 }

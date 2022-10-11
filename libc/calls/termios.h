@@ -31,8 +31,8 @@ int tcflow(int, int);
 int tcflush(int, int);
 int tcsendbreak(int, int);
 void cfmakeraw(struct termios *);
-int cfsetospeed(struct termios *, int);
-int cfsetispeed(struct termios *, int);
+int cfsetospeed(struct termios *, unsigned);
+int cfsetispeed(struct termios *, unsigned);
 uint32_t cfgetospeed(const struct termios *);
 uint32_t cfgetispeed(const struct termios *);
 

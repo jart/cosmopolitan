@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/winsock.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/sock/syscall_fd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -47,7 +48,8 @@
  * @restartable (unless SO_RCVTIMEO)
  */
 ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
-                 void *opt_out_srcaddr, uint32_t *opt_inout_srcaddrsize) {
+                 struct sockaddr *opt_out_srcaddr,
+                 uint32_t *opt_inout_srcaddrsize) {
   ssize_t rc;
   uint32_t sz;
   union sockaddr_storage_bsd bsd;
@@ -65,7 +67,8 @@ ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
     } else {
       sz = sizeof(bsd);
       if ((rc = sys_recvfrom(fd, buf, size, flags, &bsd, &sz)) != -1) {
-        sockaddr2linux(&bsd, sz, opt_out_srcaddr, opt_inout_srcaddrsize);
+        sockaddr2linux(&bsd, sz, (void *)opt_out_srcaddr,
+                       opt_inout_srcaddrsize);
       }
     }
   } else if (__isfdopen(fd)) {

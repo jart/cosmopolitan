@@ -23,7 +23,7 @@
  * Frees addresses returned by getaddrinfo().
  * @threadsafe
  */
-int freeaddrinfo(struct addrinfo *ai) {
+void freeaddrinfo(struct addrinfo *ai) {
   struct addrinfo *next;
   while (ai) {
     /* we assume ai_addr and ai_canonname are shoehorned */
@@ -31,5 +31,4 @@ int freeaddrinfo(struct addrinfo *ai) {
     free(ai);
     ai = next;
   }
-  return 0;
 }

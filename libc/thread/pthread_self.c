@@ -16,14 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-
-STATIC_YOINK("_pthread_main");
 
 /**
  * Returns current POSIX thread.
  */
 pthread_t pthread_self(void) {
-  return __get_tls()->tib_pthread;
+  pthread_t t;
+  t = __get_tls()->tib_pthread;
+  _unassert(t);
+  return t;
 }

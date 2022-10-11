@@ -62,6 +62,7 @@
 #include "libc/sock/struct/ifconf.h"
 #include "libc/sock/struct/linger.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/sock/syslog.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
@@ -858,7 +859,8 @@ static int LuaUnixSetpgid(lua_State *L) {
                     setpgid(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2)));
 }
 
-static dontinline int LuaUnixSetid(lua_State *L, const char *call, int f(int)) {
+static dontinline int LuaUnixSetid(lua_State *L, const char *call,
+                                   int f(unsigned)) {
   int olderr = errno;
   return SysretBool(L, call, olderr, f(luaL_checkinteger(L, 1)));
 }
@@ -1373,8 +1375,9 @@ static int LuaUnixBind(lua_State *L) {
   struct sockaddr_storage ss;
   int olderr = errno;
   MakeSockaddr(L, 2, &ss, &salen);
-  return SysretBool(L, "bind", olderr,
-                    bind(luaL_checkinteger(L, 1), &ss, salen));
+  return SysretBool(
+      L, "bind", olderr,
+      bind(luaL_checkinteger(L, 1), (struct sockaddr *)&ss, salen));
 }
 
 // unix.connect(fd:int, ip:uint32, port:uint16)
@@ -1386,8 +1389,9 @@ static int LuaUnixConnect(lua_State *L) {
   struct sockaddr_storage ss;
   int olderr = errno;
   MakeSockaddr(L, 2, &ss, &salen);
-  return SysretBool(L, "connect", olderr,
-                    connect(luaL_checkinteger(L, 1), &ss, salen));
+  return SysretBool(
+      L, "connect", olderr,
+      connect(luaL_checkinteger(L, 1), (struct sockaddr *)&ss, salen));
 }
 
 // unix.listen(fd:int[, backlog:int])
@@ -1400,13 +1404,13 @@ static int LuaUnixListen(lua_State *L) {
 }
 
 static int LuaUnixGetname(lua_State *L, const char *name,
-                          int func(int, void *, uint32_t *)) {
+                          int func(int, struct sockaddr *, uint32_t *)) {
   int olderr;
   uint32_t addrsize;
   struct sockaddr_storage ss = {0};
   olderr = errno;
   addrsize = sizeof(ss) - 1;
-  if (!func(luaL_checkinteger(L, 1), &ss, &addrsize)) {
+  if (!func(luaL_checkinteger(L, 1), (struct sockaddr *)&ss, &addrsize)) {
     return PushSockaddr(L, &ss);
   } else {
     return LuaUnixSysretErrno(L, name, olderr);
@@ -1525,7 +1529,7 @@ static int LuaUnixAccept(lua_State *L) {
   addrsize = sizeof(ss);
   serverfd = luaL_checkinteger(L, 1);
   flags = luaL_optinteger(L, 2, 0);
-  clientfd = accept4(serverfd, &ss, &addrsize, flags);
+  clientfd = accept4(serverfd, (struct sockaddr *)&ss, &addrsize, flags);
   if (clientfd != -1) {
     lua_pushinteger(L, clientfd);
     return 1 + PushSockaddr(L, &ss);
@@ -1607,7 +1611,8 @@ static int LuaUnixRecvfrom(lua_State *L) {
   bufsiz = MIN(bufsiz, 0x7ffff000);
   flags = luaL_optinteger(L, 3, 0);
   buf = LuaAllocOrDie(L, bufsiz);
-  if ((rc = recvfrom(fd, buf, bufsiz, flags, &ss, &addrsize)) != -1) {
+  if ((rc = recvfrom(fd, buf, bufsiz, flags, (struct sockaddr *)&ss,
+                     &addrsize)) != -1) {
     got = rc;
     lua_pushlstring(L, buf, got);
     pushed = 1 + PushSockaddr(L, &ss);
@@ -1673,8 +1678,9 @@ static int LuaUnixSendto(lua_State *L) {
   data = luaL_checklstring(L, 2, &size);
   i = MakeSockaddr(L, 3, &ss, &salen);
   flags = luaL_optinteger(L, i, 0);
-  return SysretInteger(L, "sendto", olderr,
-                       sendto(fd, data, size, flags, &ss, salen));
+  return SysretInteger(
+      L, "sendto", olderr,
+      sendto(fd, data, size, flags, (struct sockaddr *)&ss, salen));
 }
 
 // unix.shutdown(fd:int, how:int)

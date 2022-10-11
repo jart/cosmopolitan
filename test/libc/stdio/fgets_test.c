@@ -16,9 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
@@ -31,6 +32,18 @@ TEST(fgets, test) {
   ASSERT_STREQ("am\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("John Keats\n", fgets(buf, sizeof(buf), f));
   fclose(f);
+}
+
+TEST(fgets, eof) {
+  FILE *f;
+  char s[10];
+  char buf[] = "test";
+  ASSERT_NE(NULL, (f = fmemopen(buf, sizeof buf, "r")));
+  ASSERT_EQ(s, fgets(s, sizeof s, f));
+  ASSERT_EQ(0, strcmp(s, buf));
+  ASSERT_EQ(0, fgets(s, sizeof s, f));
+  ASSERT_EQ('t', s[0]);
+  ASSERT_EQ(0, fclose(f));
 }
 
 void Benchmark(void) {

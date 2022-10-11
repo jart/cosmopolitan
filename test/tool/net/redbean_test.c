@@ -75,7 +75,7 @@ char *SendHttpRequest(const char *s) {
   ssize_t rc;
   struct sockaddr_in addr = {AF_INET, htons(port), {htonl(INADDR_LOOPBACK)}};
   EXPECT_NE(-1, (fd = Socket()));
-  EXPECT_NE(-1, connect(fd, &addr, sizeof(addr)));
+  EXPECT_NE(-1, connect(fd, (struct sockaddr *)&addr, sizeof(addr)));
   n = strlen(s);
   EXPECT_EQ(n, write(fd, s, n));
   shutdown(fd, SHUT_WR);

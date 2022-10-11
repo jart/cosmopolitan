@@ -730,7 +730,7 @@ void *ListenWorker(void *arg) {
   setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
   setsockopt(server, SOL_TCP, TCP_NODELAY, &yes, sizeof(yes));
-  CHECK_NE(-1, bind(server, &addr, sizeof(addr)));
+  CHECK_NE(-1, bind(server, (struct sockaddr *)&addr, sizeof(addr)));
   CHECK_NE(-1, listen(server, 1));
   while (!nsync_note_is_notified(g_shutdown[0])) {
     client.size = sizeof(client.addr);
@@ -766,7 +766,7 @@ void *HttpWorker(void *arg) {
   char *msgbuf = _gc(xmalloc(MSG_BUF));
   char *inbuf = NewSafeBuffer(INBUF_SIZE);
   char *outbuf = NewSafeBuffer(OUTBUF_SIZE);
-  struct HttpMessage *msg = _gc(xmalloc(sizeof(struct HttpMessage)));
+  struct HttpMessage *msg = _gc(xcalloc(1, sizeof(struct HttpMessage)));
 
   BlockSignals();
   DontRunOnFirstCpus(1);
@@ -800,6 +800,7 @@ void *HttpWorker(void *arg) {
       // wait for http message
       // this may be cancelled by sigusr1
       AllowSigusr1();
+      DestroyHttpMessage(msg);
       InitHttpMessage(msg, kHttpRequest);
       g_worker[id].startread = _timespec_real();
       if ((got = read(client.sock, inbuf, INBUF_SIZE)) <= 0) {
@@ -1014,6 +1015,7 @@ void *HttpWorker(void *arg) {
                                  "Vary: Accept\r\n"
                                  "Cache-Control: private\r\n"
                                  "Content-Type: image/gif\r\n"
+                                 "Connection: close\r\n"
                                  "Date: ");
               p = FormatDate(p);
               p = stpcpy(p, "\r\nContent-Length: ");
@@ -1031,6 +1033,7 @@ void *HttpWorker(void *arg) {
                                  "Vary: Accept\r\n"
                                  "Cache-Control: private\r\n"
                                  "Content-Type: text/plain\r\n"
+                                 "Connection: close\r\n"
                                  "Date: ");
               p = FormatDate(p);
               p = stpcpy(p, "\r\nContent-Length: ");
@@ -1056,6 +1059,7 @@ void *HttpWorker(void *arg) {
                                  "Vary: Accept\r\n"
                                  "Cache-Control: private\r\n"
                                  "Content-Type: text/html\r\n"
+                                 "Connection: close\r\n"
                                  "Date: ");
               p = FormatDate(p);
               p = stpcpy(p, "\r\nContent-Length: ");
@@ -1069,12 +1073,14 @@ void *HttpWorker(void *arg) {
                          "Vary: Accept\r\n"
                          "Cache-Control: private\r\n"
                          "Content-Length: 0\r\n"
+                         "Connection: close\r\n"
                          "Date: ");
               p = FormatDate(p);
               p = stpcpy(p, "\r\n\r\n");
             }
             outmsglen = p - outbuf;
             sent = write(client.sock, outbuf, p - outbuf);
+            break;
           } else {
             LOG("%s: 502 Claims Queue Full\n", ipbuf);
             Write(client.sock, "HTTP/1.1 502 Claims Queue Full\r\n"
@@ -1266,9 +1272,9 @@ void OnCtrlC(int sig) {
     // so if a user smashes that ctrl-c then we tkill the workers more
     LOG("Received %s again so sending another volley...\n", strsignal(sig));
     for (int i = 0; i < g_workers; ++i) {
-      tkill(pthread_getunique_np(g_listener), SIGUSR1);
+      pthread_kill(g_listener, SIGUSR1);
       if (!g_worker[i].shutdown) {
-        tkill(pthread_getunique_np(g_worker[i].th), SIGUSR1);
+        pthread_kill(g_worker[i].th, SIGUSR1);
       }
     }
   }
@@ -1672,7 +1678,7 @@ void Meltdown(void) {
         (g_worker[i].msgcount > PANIC_MSGS ||
          _timespec_gte(_timespec_sub(now, g_worker[i].startread),
                        _timespec_frommillis(MELTALIVE_MS)))) {
-      tkill(pthread_getunique_np(g_worker[i].th), SIGUSR1);
+      pthread_kill(g_worker[i].th, SIGUSR1);
       ++marks;
     }
   }
@@ -1804,7 +1810,7 @@ int main(int argc, char *argv[]) {
 
   // create lots of http workers to serve those assets
   LOG("Online\n");
-  g_worker = _gc(xcalloc(g_workers, sizeof(*g_worker)));
+  g_worker = xcalloc(g_workers, sizeof(*g_worker));
   for (intptr_t i = 0; i < g_workers; ++i) {
     CHECK_EQ(0, pthread_create(&g_worker[i].th, 0, HttpWorker, (void *)i));
   }
@@ -1815,13 +1821,13 @@ int main(int argc, char *argv[]) {
 
   // cancel listen() so we stop accepting new clients
   LOG("Interrupting listen...\n");
-  tkill(pthread_getunique_np(g_listener), SIGUSR1);
-  CHECK_EQ(0, pthread_join(g_listener, 0));
+  pthread_kill(g_listener, SIGUSR1);
+  pthread_join(g_listener, 0);
 
   // cancel read() so that keepalive clients finish faster
   LOG("Interrupting workers...\n");
   for (int i = 0; i < g_workers; ++i) {
-    tkill(pthread_getunique_np(g_worker[i].th), SIGUSR1);
+    pthread_kill(g_worker[i].th, SIGUSR1);
   }
 
   // wait for producers to finish
@@ -1865,6 +1871,7 @@ int main(int argc, char *argv[]) {
     nsync_note_free(g_shutdown[i]);
   }
   nsync_counter_free(g_ready);
+  free(g_worker);
 
   LOG("Goodbye\n");
   // CheckForMemoryLeaks();

@@ -40,13 +40,14 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/macros.internal.h"
+#include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/vendor.internal.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/select.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/af.h"
 #include "libc/sysv/consts/at.h"
@@ -485,7 +486,7 @@ static int OpAccept4(struct Machine *m, int fd, int64_t aa, int64_t asa,
 }
 
 static int OpConnectBind(struct Machine *m, int fd, int64_t aa, uint32_t as,
-                         int impl(int, const void *, uint32_t)) {
+                         int impl(int, const struct sockaddr *, uint32_t)) {
   struct sockaddr_in addr;
   struct sockaddr_in_bits gaddr;
   if (as != sizeof(gaddr)) return einval();
@@ -540,7 +541,7 @@ static int OpGetsockopt(struct Machine *m, int fd, int level, int optname,
 }
 
 static int OpSocketName(struct Machine *m, int fd, int64_t aa, int64_t asa,
-                        int SocketName(int, void *, socklen_t *)) {
+                        int SocketName(int, struct sockaddr *, socklen_t *)) {
   int rc;
   uint32_t addrsize;
   uint8_t gaddrsize[4];
