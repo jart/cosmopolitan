@@ -93,9 +93,9 @@ __excep0_isr:
 	ezlea	.excep_msg,di		# stack should be 16-byte aligned now
 	xor	%eax,%eax		# kprintf is variadic, remember to
 					# pass no. of vector regs. used (= 0)
-	.weak	kprintf			# weakly link kprintf() because this
-	ezlea	kprintf,bx		# module is a mandatory dependency
-	test	%ebx,%ebx		# and we want to keep life.com tiny
+	.weak	kprintf			# weakly link kprintf() because we
+	ezlea	kprintf,bx		# want to keep life.com tiny
+	test	%ebx,%ebx
 	jz	8f
 	call	*%rbx			# print error message
 8:	cli

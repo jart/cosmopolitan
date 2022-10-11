@@ -182,6 +182,14 @@
 
 //	Task State Segment Descriptor Entries.
 .macro	.tssdescstub name:req
+ .ifndef \name
+  .weak	\name
+  .set	\name,0
+ .endif
+ .ifndef \name\()_end
+  .weak	\name\()_end
+  .set	\name\()_end,0
+ .endif
  .stub	\name\()_desc_ent0,quad
  .stub	\name\()_desc_ent1,quad
 .endm

@@ -569,8 +569,6 @@ HIDDEN(v_ape_realsectors =
 HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
            (ROUNDUP(RVA(_edata), 512) / 512) - v_ape_realsectors);
-PROVIDE_HIDDEN(_tss = 0);
-PROVIDE_HIDDEN(_tss_end = 0);
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 
