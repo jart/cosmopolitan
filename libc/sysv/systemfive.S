@@ -219,7 +219,7 @@ systemfive_xnu:
 #if SupportsOpenbsd()
 	cmpq	$0,(%r15)			# OpenBSD has no auxv
 	jnz	0f
-	mov	$OPENBSD,%al
+	mov	$_HOSTOPENBSD,%al
 	jmp	_init_systemfive_detected
 0:
 #endif
@@ -227,14 +227,14 @@ systemfive_xnu:
 	xor	%ecx,%ecx
 0:	cmpq	$2014,(%r15,%rcx,8)		# NetBSD's AT_EXECFN
 	jne	1f
-	mov	$NETBSD,%al
+	mov	$_HOSTNETBSD,%al
 	jmp	_init_systemfive_detected
 1:	cmpq	$0,(%r15,%rcx,8)
 	lea	2(%ecx),%ecx
 	jnz	0b
 2:
 #endif
-	mov	$LINUX,%al
+	mov	$_HOSTLINUX,%al
 _init_systemfive_detected:
 	stosq	#→ __hostos
 	bsr	%eax,%eax
@@ -356,7 +356,7 @@ _init_systemfive_pid:
 	ezlea	__hostos,cx
 	mov	(%rcx),%al
 	mov	(%rdi),%eax
-	testb	$WINDOWS|METAL,(%rcx)
+	testb	$_HOSTWINDOWS|_HOSTMETAL,(%rcx)
 	jnz	1f
 	mov	__NR_getpid,%eax
 	syscall

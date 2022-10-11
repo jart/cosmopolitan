@@ -90,23 +90,23 @@ void __sigenter_openbsd(int, void *, void *) hidden;
 static void sigaction_cosmo2native(union metasigaction *sa) {
   if (!sa) return;
   switch (__hostos) {
-    case LINUX:
+    case _HOSTLINUX:
       SWITCHEROO(sa->cosmo, sa->linux, sa_handler, sa_flags, sa_restorer,
                  sa_mask);
       break;
-    case XNU:
+    case _HOSTXNU:
       SWITCHEROO(sa->cosmo, sa->xnu_in, sa_handler, sa_flags, sa_restorer,
                  sa_mask);
       break;
-    case FREEBSD:
+    case _HOSTFREEBSD:
       SWITCHEROO(sa->cosmo, sa->freebsd, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
-    case OPENBSD:
+    case _HOSTOPENBSD:
       SWITCHEROO(sa->cosmo, sa->openbsd, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
-    case NETBSD:
+    case _HOSTNETBSD:
       SWITCHEROO(sa->cosmo, sa->netbsd, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
@@ -118,23 +118,23 @@ static void sigaction_cosmo2native(union metasigaction *sa) {
 static void sigaction_native2cosmo(union metasigaction *sa) {
   if (!sa) return;
   switch (__hostos) {
-    case LINUX:
+    case _HOSTLINUX:
       SWITCHEROO(sa->linux, sa->cosmo, sa_handler, sa_flags, sa_restorer,
                  sa_mask);
       break;
-    case XNU:
+    case _HOSTXNU:
       SWITCHEROO(sa->xnu_out, sa->cosmo, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
-    case FREEBSD:
+    case _HOSTFREEBSD:
       SWITCHEROO(sa->freebsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
-    case OPENBSD:
+    case _HOSTOPENBSD:
       SWITCHEROO(sa->openbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;
-    case NETBSD:
+    case _HOSTNETBSD:
       SWITCHEROO(sa->netbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
                  sa_mask);
       break;

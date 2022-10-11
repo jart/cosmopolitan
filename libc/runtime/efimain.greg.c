@@ -74,7 +74,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   uint64_t p, pe, cr4, *m, *pd, *sp, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
   extern char __os asm("__hostos");
 
-  __os = METAL;
+  __os = _HOSTMETAL;
 
   /*
    * Allocates and clears PC-compatible memory and copies image.

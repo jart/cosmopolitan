@@ -6624,7 +6624,7 @@ static void MakeExecutableModifiable(void) {
   int ft;
   size_t n;
   extern char ape_rom_vaddr[] __attribute__((__weak__));
-  if (!(SUPPORT_VECTOR & (METAL | WINDOWS | XNU))) return;
+  if (!(SUPPORT_VECTOR & (_HOSTMETAL | _HOSTWINDOWS | _HOSTXNU))) return;
   if (IsWindows()) return;  // TODO
   if (IsOpenbsd()) return;  // TODO
   if (IsNetbsd()) return;   // TODO

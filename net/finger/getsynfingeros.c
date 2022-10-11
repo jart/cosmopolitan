@@ -25,15 +25,15 @@
 int GetSynFingerOs(uint32_t x) {
   switch (x) {
     case 0x7e7a6599:
-      return XNU;
+      return _HOSTXNU;
     case 0xbb724187:
-      return LINUX;
+      return _HOSTLINUX;
     case 0xb228b212:
-      return WINDOWS;
+      return _HOSTWINDOWS;
     case 0x77c30887:
-      return FREEBSD;
+      return _HOSTFREEBSD;
     case 0xc45d694b:
-      return OPENBSD;
+      return _HOSTOPENBSD;
     default:
       return 0;
   }
