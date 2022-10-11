@@ -229,9 +229,9 @@
 /* Define to 1 if you have the 'lockf' function and the F_LOCK macro. */
 /* #undef HAVE_LOCKF */
 
-#define HAVE_DEVICE_MACROS 1
-#define HAVE_MAKEDEV       1
-#define HAVE_MKDIRAT       1
+/* #define HAVE_DEVICE_MACROS 1 */
+#define HAVE_MAKEDEV 1
+#define HAVE_MKDIRAT 1
 
 #define HAVE_MBRTOWC 1
 #define HAVE_MEMMOVE 1
@@ -241,6 +241,11 @@
 /* #undef HAVE_SEM_OPEN */
 /* #undef HAVE_SEM_TIMEDWAIT */
 /* #undef HAVE_SEM_UNLINK */
+/* #define HAVE_MKNOD       1 */
+/* #define HAVE_MKNODAT     1 */
+/* #define HAVE_MKFIFO      1 */
+/* #define HAVE_MKFIFOAT    1 */
+/* #define HAVE_SETHOSTNAME 1 */
 
 #define HAVE_DIRENT_H         1
 #define HAVE_GETPPID          1
@@ -248,10 +253,6 @@
 #define HAVE_LINKAT           1
 #define HAVE_LSTAT            1
 #define HAVE_LUTIMES          1
-#define HAVE_MKFIFO           1
-#define HAVE_MKFIFOAT         1
-#define HAVE_MKNOD            1
-#define HAVE_MKNODAT          1
 #define HAVE_MKTIME           1
 #define HAVE_MMAP             1
 #define HAVE_NICE             1
@@ -275,7 +276,6 @@
 #define HAVE_SETEGID          1
 #define HAVE_SETEUID          1
 #define HAVE_SETGID           1
-#define HAVE_SETHOSTNAME      1
 #define HAVE_SETITIMER        1
 #define HAVE_SETLOCALE        1
 #define HAVE_SETPGID          1

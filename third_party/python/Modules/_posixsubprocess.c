@@ -206,6 +206,8 @@ _close_fds_by_brute_force(long start_fd, PyObject *py_fds_to_keep)
     }
 }
 
+int sys_getdents(unsigned, void *, unsigned, long *);
+
 /* Close all open file descriptors in the range from start_fd and higher
  * Do not close any in the sorted py_fds_to_keep list.
  *
@@ -228,7 +230,7 @@ _close_open_fds_safe(int start_fd, PyObject* py_fds_to_keep)
     struct dirent *entry;
     int fd, dir, bytes, offset;
     if ((dir = _Py_open_noraise(FD_DIR, O_RDONLY|O_DIRECTORY)) != -1) {
-        while ((bytes = getdents(dir, buffer, sizeof(buffer), 0)) > 0) {
+        while ((bytes = sys_getdents(dir, buffer, sizeof(buffer), 0)) > 0) {
             for (offset = 0; offset < bytes; offset += entry->d_reclen) {
                 entry = (struct dirent *)(buffer + offset);
                 if ((fd = _pos_int_from_ascii(entry->d_name)) < 0)

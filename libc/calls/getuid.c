@@ -50,15 +50,15 @@ static textwindows dontinline uint32_t GetUserNameHash(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-int getuid(void) {
-  int rc;
+uint32_t getuid(void) {
+  uint32_t rc;
   if (!IsWindows()) {
     rc = sys_getuid();
   } else {
     rc = GetUserNameHash();
   }
 
-  STRACE("%s() → %d% m", "getuid", rc);
+  STRACE("%s() → %u% m", "getuid", rc);
   return rc;
 }
 
@@ -71,13 +71,13 @@ int getuid(void) {
  * @asyncsignalsafe
  * @vforksafe
  */
-int getgid(void) {
-  int rc;
+uint32_t getgid(void) {
+  uint32_t rc;
   if (!IsWindows()) {
     rc = sys_getgid();
   } else {
     rc = GetUserNameHash();
   }
-  STRACE("%s() → %d% m", "getgid", rc);
+  STRACE("%s() → %u% m", "getgid", rc);
   return rc;
 }
