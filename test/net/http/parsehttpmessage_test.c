@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/log/check.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
@@ -243,6 +243,29 @@ Content-Type: text/plain\r\n\
   EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
   EXPECT_STREQ("text/plain", gc(slice(m, req->headers[kHttpContentType])));
   ASSERT_EQ(0, req->xheaders.n);
+}
+
+TEST(ParseHttpMessage, testCommaSeparatedOnMultipleLines_manyLines) {
+  static const char m[] = "\
+GET / HTTP/1.1\r\n\
+Accept: text/html\r\n\
+Accept: text/plain\r\n\
+Accept: text/csv\r\n\
+Accept: text/xml\r\n\
+Accept: text/css\r\n\
+\r\n";
+  InitHttpMessage(req, kHttpRequest);
+  EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
+  EXPECT_STREQ("text/html", gc(slice(m, req->headers[kHttpAccept])));
+  ASSERT_EQ(4, req->xheaders.n);
+  EXPECT_STREQ("Accept", gc(slice(m, req->xheaders.p[0].k)));
+  EXPECT_STREQ("text/plain", gc(slice(m, req->xheaders.p[0].v)));
+  EXPECT_STREQ("Accept", gc(slice(m, req->xheaders.p[1].k)));
+  EXPECT_STREQ("text/csv", gc(slice(m, req->xheaders.p[1].v)));
+  EXPECT_STREQ("Accept", gc(slice(m, req->xheaders.p[2].k)));
+  EXPECT_STREQ("text/xml", gc(slice(m, req->xheaders.p[2].v)));
+  EXPECT_STREQ("Accept", gc(slice(m, req->xheaders.p[3].k)));
+  EXPECT_STREQ("text/css", gc(slice(m, req->xheaders.p[3].v)));
 }
 
 TEST(ParseHttpMessage, testCommaSeparatedOnMultipleLines_becomesLinear) {
