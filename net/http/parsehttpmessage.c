@@ -236,8 +236,12 @@ int ParseHttpMessage(struct HttpMessage *r, const char *p, size_t n) {
                 unsigned c2;
                 struct HttpHeader *p1, *p2;
                 p1 = r->xheaders.p;
-                c2 = r->xheaders.c + 2;
-                c2 = c2 >> 1;
+                c2 = r->xheaders.c;
+                if (c2 == 0) {
+                  c2 = 1;
+                } else {
+                  c2 = c2 * 2;
+                }
                 if ((p2 = realloc(p1, c2 * sizeof(*p1)))) {
                   r->xheaders.p = p2;
                   r->xheaders.c = c2;
