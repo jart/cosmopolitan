@@ -59,8 +59,8 @@
   for decades thanks to a spark of brilliance from Ken Thompson.
 
     git://git.kernel.org/pub/scm/utils/dash/dash.git
-    fba95e9e4a5d0f1f1ac9f7d86557e47bc0e2656c
-    Tue Jun 19 11:27:37 2018 -0400
+    057cd650a4edd5856213d431a974ff35c6594489
+    Fri Sep 03 15:00:58 2021 +0800
 
   The UNBOURNE SHELL pays HOMAGE to the Stewards of House California:
 
@@ -68,7 +68,7 @@
     Derived from software contributed to Berkeley by Kenneth Almquist.
 
     Copyright 1991,1993 The Regents of the University of California
-    Copyright 1997-2018 Herbert Xu
+    Copyright 1997-2021 Herbert Xu
     Copyright 1997 Christos Zoulas
 
     Redistribution and use in source and binary forms, with or without
@@ -183,6 +183,7 @@
 /* exceptions */
 #define EXINT   0
 #define EXERROR 1
+#define EXEND   3
 #define EXEXIT  4
 
 /*
@@ -207,7 +208,6 @@
 #define CEOF      11
 #define CCTL      12
 #define CSPCL     13
-#define CIGN      14
 
 /* Syntax classes for is_ functions */
 #define ISDIGIT 01
@@ -216,12 +216,10 @@
 #define ISUNDER 010
 #define ISSPECL 020
 
-#define SYNBASE 130
-#define PEOF    -130
+#define SYNBASE 129
+#define PEOF    -129
 
 #define EOF_NLEFT -99
-
-#define PEOA -129
 
 #define BASESYNTAX (basesyntax + SYNBASE)
 #define DQSYNTAX   (dqsyntax + SYNBASE)
@@ -345,6 +343,7 @@
 #define VSTRIMLEFT     0x8
 #define VSTRIMLEFTMAX  0x9
 #define VSLENGTH       0xa
+/* VSLENGTH must come last. */
 
 /* values of checkkwd variable */
 #define CHKALIAS   0x1
@@ -484,9 +483,10 @@
 #define CUR_STOPPED 0
 
 /* mode flags for dowait */
-#define DOWAIT_NORMAL  0
-#define DOWAIT_BLOCK   1
-#define DOWAIT_WAITCMD 2
+#define DOWAIT_NONBLOCK    0
+#define DOWAIT_BLOCK       1
+#define DOWAIT_WAITCMD     2
+#define DOWAIT_WAITCMD_ALL 4
 
 /* _rmescape() flags */
 #define RMESCAPE_ALLOC 0x01
@@ -570,7 +570,6 @@
 #define CD_PHYSICAL 1
 #define CD_PRINT    2
 
-#define REALLY_CLOSED -3
 #define EMPTY         -2
 #define CLOSED        -1
 #define PIPESIZE      4096
@@ -711,10 +710,11 @@ struct strpush {
   struct strpush *prev; /* preceding string on stack */
   char *prevstring;
   int prevnleft;
-  struct alias *ap; /* if push was associated with an alias */
-  char *string;     /* remember the string since it may change */
-  int lastc[2];     /* Remember last two characters for pungetc. */
-  int unget;        /* Number of outstanding calls to pungetc. */
+  struct alias *ap;       /* if push was associated with an alias */
+  char *string;           /* remember the string since it may change */
+  struct strpush *spfree; /* Delay freeing so we can stop nested aliases. */
+  int lastc[2];           /* Remember last two characters for pungetc. */
+  int unget;              /* Number of outstanding calls to pungetc. */
 };
 
 /*
@@ -731,6 +731,7 @@ struct parsefile {
   char *buf;                  /* input buffer */
   struct strpush *strpush;    /* for pushing strings at this level */
   struct strpush basestrpush; /* so pushing one is fast */
+  struct strpush *spfree;     /* Delay freeing so we can stop nested aliases. */
   int lastc[2];               /* Remember last two characters for pungetc. */
   int unget;                  /* Number of outstanding calls to pungetc. */
 };
@@ -1055,8 +1056,8 @@ static int exitstatus;     /* exit status of last command */
 static int funcblocksize;  /* size of structures in function */
 static int funcline;       /* start line of function, or 0 if not in one */
 static int funcstringsize; /* size of strings in node */
-static int gotsigchld;     /* received SIGCHLD */
 static int initialpgrp;    /* pgrp of shell on invocation */
+static int inps4;          /* Prevent PS4 nesting. */
 static int job_warning;
 static int jobctl;
 static int last_token;
@@ -1083,6 +1084,7 @@ static struct heredoc *heredoclist; /* list of here documents to read */
 static struct ifsregion *ifslastp;  /* last struct in list */
 static struct ifsregion ifsfirst;   /* first struct in list of ifs regions */
 static struct jmploc *handler;
+static struct jmploc main_handler;
 static struct job *curjob; /* current job */
 static struct job *jobtab; /* array of jobs */
 static struct localvar_list *localvar_stack;
@@ -1099,8 +1101,10 @@ static struct tblentry *cmdtable[CMDTABLESIZE];
 static struct Var *vartab[VTABSIZE];
 static union node *redirnode;
 static union yystype yylval;
+static unsigned closed_redirs; /* Bit map of currently closed file descriptors. */
 static unsigned expdir_max;
 static unsigned njobs; /* size of array */
+static volatile sig_atomic_t gotsigchld;  /* received SIGCHLD */
 static volatile sig_atomic_t intpending;
 static volatile sig_atomic_t pending_sig; /* last pending signal */
 static struct alias *atab[ATABSIZE];
@@ -1217,117 +1221,135 @@ static const short nodesize[26] /* clang-format off */ = {
 
 /* syntax table used when not in quotes */
 static const char basesyntax[] /* clang-format off */ = {
-    CEOF,  CSPCL,   CWORD,   CCTL,    CCTL,  CCTL,  CCTL,  CCTL,    CCTL,
-    CCTL,  CCTL,    CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CSPCL, CNL,   CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CSPCL, CWORD,   CDQUOTE, CWORD,   CVAR,  CWORD, CSPCL, CSQUOTE, CSPCL,
-    CSPCL, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CSPCL, CSPCL,   CWORD,   CSPCL,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CBACK, CWORD,   CWORD,
-    CWORD, CBQUOTE, CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD,
-    CWORD, CWORD,   CSPCL,   CENDVAR, CWORD, CWORD
+    CEOF,    CWORD,   CCTL,    CCTL,  CCTL,  CCTL,  CCTL,    CCTL,  CCTL,
+    CCTL,    CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CSPCL, CNL,   CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CSPCL,
+    CWORD,   CDQUOTE, CWORD,   CVAR,  CWORD, CSPCL, CSQUOTE, CSPCL, CSPCL,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CSPCL,
+    CSPCL,   CWORD,   CSPCL,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CBACK, CWORD,   CWORD, CWORD,
+    CBQUOTE, CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CWORD,   CWORD,   CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD,
+    CWORD,   CSPCL,   CENDVAR, CWORD, CWORD
 } /* clang-format on */;
 
 /* syntax table used when in double quotes */
 static const char dqsyntax[] /* clang-format off */ = {
-    CEOF,  CIGN,    CWORD,     CCTL,    CCTL,  CCTL,  CCTL,  CCTL,  CCTL,
-    CCTL,  CCTL,    CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CNL,   CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CCTL,    CENDQUOTE, CWORD,   CVAR,  CWORD, CWORD, CWORD, CWORD,
-    CWORD, CCTL,    CWORD,     CWORD,   CCTL,  CWORD, CCTL,  CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CCTL,
-    CWORD, CWORD,   CCTL,      CWORD,   CCTL,  CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CCTL,  CBACK, CCTL,  CWORD,
-    CWORD, CBQUOTE, CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD,   CWORD,     CENDVAR, CCTL,  CWORD
+    CEOF,    CWORD,     CCTL,    CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CCTL,
+    CCTL,    CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CNL,   CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CCTL,    CENDQUOTE, CWORD,   CVAR,  CWORD, CWORD, CWORD, CWORD, CWORD,
+    CCTL,    CWORD,     CWORD,   CCTL,  CWORD, CCTL,  CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD,
+    CWORD,   CCTL,      CWORD,   CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CCTL,  CBACK, CCTL,  CWORD, CWORD,
+    CBQUOTE, CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD,     CENDVAR, CCTL,  CWORD
 } /* clang-format on */;
 
 /* syntax table used when in single quotes */
-static const char sqsyntax[] = {
-    CEOF,      CIGN,  CWORD, CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CNL,   CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD,
-    CENDQUOTE, CWORD, CWORD, CCTL,  CWORD, CWORD, CCTL,  CWORD, CCTL,  CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD, CWORD, CCTL,  CWORD, CCTL,  CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CCTL,      CCTL,  CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
-    CWORD,     CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CCTL,  CWORD,
-};
+static const char sqsyntax[] /* clang-format off */ = {
+    CEOF,  CWORD, CCTL,  CCTL,  CCTL,  CCTL,  CCTL,      CCTL,  CCTL,
+    CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CNL,   CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CCTL,  CWORD, CWORD, CWORD, CWORD, CWORD, CENDQUOTE, CWORD, CWORD,
+    CCTL,  CWORD, CWORD, CCTL,  CWORD, CCTL,  CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CCTL,  CWORD,
+    CWORD, CCTL,  CWORD, CCTL,  CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CCTL,  CCTL,  CCTL,      CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,     CWORD, CWORD,
+    CWORD, CWORD, CWORD, CCTL,  CWORD
+} /* clang-format on */;
 
 /* syntax table used when in arithmetic */
-static const char arisyntax[] = {
-    CEOF,  CIGN,  CWORD, CCTL,  CCTL,  CCTL,    CCTL,  CCTL,  CCTL,    CCTL,  CCTL,  CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CNL,   CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CVAR,  CWORD, CWORD,
-    CWORD, CLP,   CRP,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CBACK, CWORD, CWORD, CWORD, CBQUOTE, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD,
-    CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,   CWORD, CWORD, CENDVAR, CWORD, CWORD,
-};
+static const char arisyntax[] /* clang-format off */ = {
+    CEOF,    CWORD, CCTL,    CCTL,  CCTL,  CCTL,  CCTL,  CCTL,  CCTL,
+    CCTL,    CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CNL,   CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CVAR,  CWORD, CWORD, CWORD, CLP,   CRP,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CBACK, CWORD, CWORD, CWORD,
+    CBQUOTE, CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CWORD,   CWORD, CWORD, CWORD, CWORD, CWORD, CWORD,
+    CWORD,   CWORD, CENDVAR, CWORD, CWORD
+} /* clang-format on */;
 
 /* character classification table */
 static const char is_type[] /* clang-format off */ = {
@@ -1351,19 +1373,19 @@ static const char is_type[] /* clang-format off */ = {
     0,       0,       0,       0,       0,       0,       0,       0,
     0,       0,       0,       0,       0,       0,       0,       0,
     0,       0,       0,       0,       0,       0,       0,       0,
-    0,       0,       0,       ISSPECL, 0,       ISSPECL, ISSPECL, 0,
-    0,       0,       0,       0,       ISSPECL, 0,       0,       ISSPECL,
-    0,       0,       ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT,
-    ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, 0,       0,       0,       0,
-    0,       ISSPECL, ISSPECL, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER,
+    0,       0,       ISSPECL, 0,       ISSPECL, ISSPECL, 0,       0,
+    0,       0,       0,       ISSPECL, 0,       0,       ISSPECL, 0,
+    0,       ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT, ISDIGIT,
+    ISDIGIT, ISDIGIT, ISDIGIT, 0,       0,       0,       0,       0,
+    ISSPECL, ISSPECL, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER,
     ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER,
     ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER,
-    ISUPPER, ISUPPER, ISUPPER, ISUPPER, ISUPPER, 0,       0,       0,
-    0,       ISUNDER, 0,       ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER,
+    ISUPPER, ISUPPER, ISUPPER, ISUPPER, 0,       0,       0,       0,
+    ISUNDER, 0,       ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER,
     ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER,
     ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER,
-    ISLOWER, ISLOWER, ISLOWER, ISLOWER, ISLOWER, 0,       0,       0,
-    0,       0
+    ISLOWER, ISLOWER, ISLOWER, ISLOWER, 0,       0,       0,       0,
+    0
 } /* clang-format on */;
 
 static int aliascmd();
@@ -2141,9 +2163,7 @@ static int openredirect(union node *);
 static int options(int);
 static int padvance_magic(const char **, const char *, int);
 static int patmatch(char *, const char *);
-static int peektoken(void);
 static int pgetc(void);
-static int pgetc2(void);
 static int pgetc_eatbnl();
 static int pmatch(const char *, const char *);
 static int preadbuffer(void);
@@ -2155,6 +2175,7 @@ static int readtoken1(int, char const *, char *, int);
 static int redirectsafe(union node *, int);
 static int savefd(int, int);
 static int setinputfile(const char *, int);
+static int sh_open(const char *pathname, int flags, int mayfail);
 static int showvars(const char *, int, int);
 static int stoppedjobs(void);
 static int test_file_access(const char *, int);
@@ -2195,21 +2216,20 @@ static unsigned strtodest(const char *p, int flags);
 static void addcmdentry(char *, struct cmdentry *);
 static void addfname(char *);
 static void check_conversion(const char *, const char *);
-static void clear_traps(void);
 static void clearcmdentry(void);
-static void closescript(void);
 static void defun(union node *);
 static void delete_cmd_entry(void);
 static void dotrap(void);
 static void dupredirect(union node *, int);
 static void exitreset(void);
 static void expandarg(union node *arg, struct arglist *arglist, int flag);
-static void expandmeta(struct strlist *, int);
+static void expandmeta(struct strlist *);
 static void expbackq(union node *, int);
 static void expmeta(char *, unsigned, unsigned);
 static void expredir(union node *);
 static void find_command(char *, struct cmdentry *, int, const char *);
 static void fixredir(union node *, const char *, int);
+static void forkreset(void);
 static void freeparam(volatile struct shparam *);
 static void hashcd(void);
 static void ignoresig(int);
@@ -2222,7 +2242,7 @@ static void parsefname(void);
 static void parseheredoc(void);
 static void popallfiles(void);
 static void popfile(void);
-static void poplocalvars(int);
+static void poplocalvars(void);
 static void popredir(int);
 static void popstring(void);
 static void prehash(union node *);
@@ -3083,8 +3103,11 @@ static const struct builtincmd kBltin = {
 static int evaltree(union node *n, int flags) {
   int checkexit = 0;
   int (*evalfn)(union node *, int);
+  struct stackmark smark;
   unsigned isor;
   int status = 0;
+  setstackmark(&smark);
+  if (nflag) goto out;
   if (n == NULL) {
     TRACE(("evaltree(NULL) called\n"));
     goto out;
@@ -3108,7 +3131,7 @@ static int evaltree(union node *n, int flags) {
     case NCMD:
       evalfn = evalcommand;
     checkexit:
-      if (eflag && !(flags & EV_TESTED)) checkexit = ~0;
+      checkexit = ~flags & EV_TESTED;
       goto calleval;
     case NFOR:
       evalfn = evalfor;
@@ -3132,8 +3155,6 @@ static int evaltree(union node *n, int flags) {
     case NSEMI:
       isor = n->type - NAND;
       status = evaltree(n->nbinary.ch1, (flags | ((isor >> 1) - 1)) & EV_TESTED);
-      /* XXX: -Wlogical-not-parentheses:
-         if (!status == isor || evalskip) break; */
       if ((!status) == isor || evalskip) break;
       n = n->nbinary.ch2;
     evaln:
@@ -3160,12 +3181,13 @@ static int evaltree(union node *n, int flags) {
       break;
   }
 out:
-  if (checkexit & status) goto exexit;
   dotrap();
+  if (eflag && checkexit & status) goto exexit;
   if (flags & EV_EXIT) {
   exexit:
-    exraise(EXEXIT);
+    exraise(EXEND);
   }
+  popstackmark(&smark);
   return exitstatus;
 }
 
@@ -3261,11 +3283,9 @@ static int evalfor(union node *n, int flags) {
   struct arglist arglist;
   union node *argp;
   struct strlist *sp;
-  struct stackmark smark;
   int status;
   errlinno = lineno = n->nfor.linno;
   if (funcline) lineno -= funcline - 1;
-  setstackmark(&smark);
   arglist.lastp = &arglist.list;
   for (argp = n->nfor.args; argp; argp = argp->narg.next) {
     expandarg(argp, &arglist, EXP_FULL | EXP_TILDE);
@@ -3280,7 +3300,6 @@ static int evalfor(union node *n, int flags) {
     if (skiploop() & ~SKIPCONT) break;
   }
   loopnest--;
-  popstackmark(&smark);
   return status;
 }
 
@@ -3304,11 +3323,9 @@ static int evalcase(union node *n, int flags) {
   union node *cp;
   union node *patp;
   struct arglist arglist;
-  struct stackmark smark;
   int status = 0;
   errlinno = lineno = n->ncase.linno;
   if (funcline) lineno -= funcline - 1;
-  setstackmark(&smark);
   arglist.lastp = &arglist.list;
   expandarg(n->ncase.expr, &arglist, EXP_TILDE);
   for (cp = n->ncase.cases; cp && evalskip == 0; cp = cp->nclist.next) {
@@ -3326,7 +3343,6 @@ static int evalcase(union node *n, int flags) {
     }
   }
 out:
-  popstackmark(&smark);
   return status;
 }
 
@@ -3340,14 +3356,17 @@ static int evalsubshell(union node *n, int flags) {
   errlinno = lineno = n->nredir.linno;
   if (funcline) lineno -= funcline - 1;
   expredir(n->nredir.redirect);
-  if (!backgnd && flags & EV_EXIT && !have_traps()) goto nofork;
   INTOFF;
+  if (!backgnd && flags & EV_EXIT && !have_traps()) {
+    forkreset();
+    goto nofork;
+  }
   jp = makejob(n, 1);
   if (forkshell(jp, n, backgnd) == 0) {
-    INTON;
     flags |= EV_EXIT;
     if (backgnd) flags &= ~EV_TESTED;
   nofork:
+    INTON;
     redirect(n->nredir.redirect, 0);
     evaltreenr(n->nredir.n, flags);
     /* never returns */
@@ -3378,7 +3397,7 @@ static void expredir(union node *n) {
       case NFROMFD:
       case NTOFD:
         if (redir->ndup.vname) {
-          expandarg(redir->ndup.vname, &fn, EXP_FULL | EXP_TILDE);
+          expandarg(redir->ndup.vname, &fn, EXP_TILDE | EXP_REDIR);
           fixredir(redir, fn.list->text, 1);
         }
         break;
@@ -3527,7 +3546,6 @@ static int evalcommand(union node *cmd, int flags) {
   struct localvar_list *localvar_stop;
   struct parsefile *file_stop;
   struct redirtab *redir_stop;
-  struct stackmark smark;
   union node *argp;
   struct arglist arglist;
   struct arglist varlist;
@@ -3550,7 +3568,6 @@ static int evalcommand(union node *cmd, int flags) {
   if (funcline) lineno -= funcline - 1;
   /* First expand the arguments. */
   TRACE(("evalcommand(0x%lx, %d) called\n", (long)cmd, flags));
-  setstackmark(&smark);
   file_stop = parsefile;
   back_exitstatus = 0;
   cmdentry.cmdtype = CMDBUILTIN;
@@ -3624,11 +3641,13 @@ static int evalcommand(union node *cmd, int flags) {
       setvareq((*spp)->text, vflags);
   }
   /* Print the command if xflag is set. */
-  if (xflag) {
+  if (xflag && !inps4) {
     struct output *out;
     int sep;
     out = &preverrout;
+    inps4 = 1;
     outstr(expandstr(ps4val()), out);
+    inps4 = 0;
     sep = 0;
     sep = eprintlist(out, varlist.list, sep);
     eprintlist(out, osp, sep);
@@ -3679,7 +3698,6 @@ out:
      */
     setvar("_", lastarg, 0);
   }
-  popstackmark(&smark);
   return status;
 }
 
@@ -3702,6 +3720,7 @@ static int evalbltin(const struct builtincmd *cmd, int argc, char **argv, int fl
   else
     status = (*cmd->builtin)(argc, argv);
   flushall();
+  if (out1->flags) sh_warnx("%s: I/O error", commandname);
   status |= out1->flags;
   exitstatus = status;
 cmddone:
@@ -3893,7 +3912,7 @@ wontreturn static void shellexec(char **argv, const char *path, int idx) {
   exerrno = (e == ELOOP || e == ENAMETOOLONG || e == ENOENT || e == ENOTDIR) ? 127 : 126;
   exitstatus = exerrno;
   TRACE(("shellexec failed for %s, errno %d, suppressint %d\n", argv[0], e, suppressint));
-  exerror(EXEXIT, "%s: %s", argv[0], errmsg(e, E_EXEC));
+  exerror(EXEND, "%s: %s", argv[0], errmsg(e, E_EXEC));
 }
 
 static void tryexec(char *cmd, char **argv, char **envp) {
@@ -4498,7 +4517,7 @@ static void expandarg(union node *arg, struct arglist *arglist, int flag) {
     ifsbreakup(p, -1, &exparg);
     *exparg.lastp = NULL;
     exparg.lastp = &exparg.list;
-    expandmeta(exparg.list, flag);
+    expandmeta(exparg.list);
   } else {
     sp = (struct strlist *)stalloc(sizeof(struct strlist));
     sp->text = p;
@@ -4560,7 +4579,7 @@ start:
       q = stnputs(p, length, expdest);
       q[-1] &= end - 1;
       expdest = q - (flag & EXP_WORD ? end : 0);
-      newloc = expdest - (char *)stackblock() - end;
+      newloc = q - (char *)stackblock() - end;
       if (breakall && !inquotes && newloc > startloc) {
         recordregion(startloc, newloc, 0);
       }
@@ -4756,7 +4775,7 @@ static void expbackq(union node *cmd, int flag) {
   INTON;
   /* Eat all trailing newlines */
   dest = expdest;
-  for (; dest > (char *)stackblock() && dest[-1] == '\n';) {
+  for (; dest > ((char *)stackblock() + startloc) && dest[-1] == '\n';) {
     STUNPUTC(dest);
   }
   expdest = dest;
@@ -4889,6 +4908,7 @@ static char *evalvar(char *p, int flag) {
   int patloc;
   int startloc;
   long varlen;
+  int discard;
   int quoted;
   varflags = *p++;
   subtype = varflags & VSTYPE;
@@ -4899,31 +4919,32 @@ static char *evalvar(char *p, int flag) {
 again:
   varlen = varvalue(var_, varflags, flag, quoted);
   if (varflags & VSNUL) varlen--;
+  discard = varlen < 0 ? EXP_DISCARD : 0;
   switch (subtype) {
     case VSPLUS:
-      varlen = -1 - varlen;
+      discard ^= EXP_DISCARD;
       /* fall through */
     case 0:
     case VSMINUS:
-      p = argstr(p, flag | EXP_TILDE | EXP_WORD);
-      if (varlen < 0) return p;
+      p = argstr(p, flag | EXP_TILDE | EXP_WORD | (discard ^ EXP_DISCARD));
       goto record;
     case VSASSIGN:
     case VSQUESTION:
-      if (varlen >= 0) goto record;
-      p = subevalvar(p, var_, 0, startloc, varflags, flag & ~QUOTES_ESC);
-      if (flag & EXP_DISCARD) return p;
+      p = subevalvar(p, var_, 0, startloc, varflags, (flag & ~QUOTES_ESC) | (discard ^ EXP_DISCARD));
+      if ((flag | ~discard) & EXP_DISCARD) goto record;
       varflags &= ~VSNUL;
+      subtype = VSNORMAL;
       goto again;
   }
-  if (varlen < 0 && uflag) varunset(p, var_, 0, 0);
+  if ((discard & ~flag) && uflag) varunset(p, var_, 0, 0);
   if (subtype == VSLENGTH) {
+    p++;
     if (flag & EXP_DISCARD) return p;
     cvtnum(varlen > 0 ? varlen : 0, flag);
-    goto record;
+    goto really_record;
   }
   if (subtype == VSNORMAL) goto record;
-  flag |= varlen < 0 ? EXP_DISCARD : 0;
+  flag |= discard;
   if (!(flag & EXP_DISCARD)) {
     /*
      * Terminate the string and start recording the pattern
@@ -4934,7 +4955,8 @@ again:
   patloc = expdest - (char *)stackblock();
   p = subevalvar(p, NULL, patloc, startloc, varflags, flag);
 record:
-  if (flag & EXP_DISCARD) return p;
+  if ((flag | discard) & EXP_DISCARD) return p;
+really_record:
   if (quoted) {
     quoted = *var_ == '@' && shellparam.nparam;
     if (!quoted) return p;
@@ -5212,7 +5234,7 @@ add:
  * Expand shell metacharacters.  At this point, the only control characters
  * should be escapes.  The results are stored in the list exparg.
  */
-static void expandmeta(struct strlist *str, int flag) {
+static void expandmeta(struct strlist *str) {
   static const char metachars[] = {'*', '?', '[', 0};
   /* TODO - EXP_REDIR */
   while (str) {
@@ -5595,11 +5617,23 @@ static unsigned cvtnum(int64_t num, int flags) {
   return memtodest(buf, len, flags);
 }
 
-/*
- * Read a character from the script, returning PEOF on end of file.
- * Nul characters in the input are silently discarded.
- */
-static int pgetc(void) {
+static void freestrings(struct strpush *sp) {
+  INTOFF;
+  do {
+    struct strpush *psp;
+    if (sp->ap) {
+      sp->ap->flag &= ~ALIASINUSE;
+      if (sp->ap->flag & ALIASDEAD) unalias(sp->ap->name);
+    }
+    psp = sp;
+    sp = sp->spfree;
+    if (psp != &(parsefile->basestrpush)) ckfree(psp);
+  } while (sp);
+  parsefile->spfree = NULL;
+  INTON;
+}
+
+static int pgetc_nofree(void) {
   int c;
   if (parsefile->unget) return parsefile->lastc[--parsefile->unget];
   if (--parsefile->nleft >= 0)
@@ -5612,14 +5646,13 @@ static int pgetc(void) {
 }
 
 /*
- * Same as pgetc(), but ignores PEOA.
+ * Read a character from the script, returning PEOF on end of file.
+ * Nul characters in the input are silently discarded.
  */
-static int pgetc2() {
-  int c;
-  do {
-    c = pgetc();
-  } while (c == PEOA);
-  return c;
+int pgetc(void) {
+  struct strpush *sp = parsefile->spfree;
+  if (unlikely(sp)) freestrings(sp);
+  return pgetc_nofree();
 }
 
 static void AddUniqueCompletion(linenoiseCompletions *c, char *s) {
@@ -5774,12 +5807,8 @@ static int preadbuffer(void) {
   int more;
   char savec;
   if (unlikely(parsefile->strpush)) {
-    if (parsefile->nleft == -1 && parsefile->strpush->ap && parsefile->nextc[-1] != ' ' &&
-        parsefile->nextc[-1] != '\t') {
-      return PEOA;
-    }
     popstring();
-    return pgetc();
+    return pgetc_nofree();
   }
   if (unlikely(parsefile->nleft == EOF_NLEFT || parsefile->buf == NULL)) return PEOF;
   flushall();
@@ -5840,7 +5869,7 @@ static void pushstring(char *s, void *ap) {
   len = strlen(s);
   INTOFF;
   /*dprintf("*** calling pushstring: %s, %d\n", s, len);*/
-  if (parsefile->strpush) {
+  if ((unsigned long)parsefile->strpush | (unsigned long)parsefile->spfree) {
     sp = ckmalloc(sizeof(struct strpush));
     sp->prev = parsefile->strpush;
     parsefile->strpush = sp;
@@ -5849,6 +5878,7 @@ static void pushstring(char *s, void *ap) {
   sp->prevstring = parsefile->nextc;
   sp->prevnleft = parsefile->nleft;
   sp->unget = parsefile->unget;
+  sp->spfree = parsefile->spfree;
   memcpy(sp->lastc, parsefile->lastc, sizeof(sp->lastc));
   sp->ap = (struct alias *)ap;
   if (ap) {
@@ -5858,6 +5888,7 @@ static void pushstring(char *s, void *ap) {
   parsefile->nextc = s;
   parsefile->nleft = len;
   parsefile->unget = 0;
+  parsefile->spfree = NULL;
   INTON;
 }
 
@@ -5871,10 +5902,6 @@ static void popstring(void) {
     if (sp->string != sp->ap->val) {
       ckfree(sp->string);
     }
-    sp->ap->flag &= ~ALIASINUSE;
-    if (sp->ap->flag & ALIASDEAD) {
-      unalias(sp->ap->name);
-    }
   }
   parsefile->nextc = sp->prevstring;
   parsefile->nleft = sp->prevnleft;
@@ -5882,7 +5909,7 @@ static void popstring(void) {
   memcpy(parsefile->lastc, sp->lastc, sizeof(sp->lastc));
   /*dprintf("*** calling popstring: restoring to '%s'\n", parsenextc);*/
   parsefile->strpush = sp->prev;
-  if (sp != &(parsefile->basestrpush)) ckfree(sp);
+  parsefile->spfree = sp;
   INTON;
 }
 
@@ -5893,11 +5920,8 @@ static void popstring(void) {
 static int setinputfile(const char *fname, int flags) {
   int fd;
   INTOFF;
-  if ((fd = open(fname, O_RDONLY, 0)) < 0) {
-    if (flags & INPUT_NOFILE_OK) goto out;
-    exitstatus = 127;
-    exerror(EXERROR, "Can't open %s", fname);
-  }
+  fd = sh_open(fname, O_RDONLY, flags & INPUT_NOFILE_OK);
+  if (fd < 0) goto out;
   if (fd < 10) fd = savefd(fd, fd);
   setinputfd(fd, flags & INPUT_PUSH_FILE);
 out:
@@ -5943,6 +5967,7 @@ static void pushfile(void) {
   pf->prev = parsefile;
   pf->fd = -1;
   pf->strpush = NULL;
+  pf->spfree = NULL;
   pf->basestrpush.prev = NULL;
   pf->unget = 0;
   parsefile = pf;
@@ -5953,7 +5978,11 @@ static void popfile(void) {
   INTOFF;
   if (pf->fd >= 0) close(pf->fd);
   if (pf->buf) ckfree(pf->buf);
-  while (pf->strpush) popstring();
+  if (parsefile->spfree) freestrings(parsefile->spfree);
+  while (pf->strpush) {
+    popstring();
+    freestrings(parsefile->spfree);
+  }
   parsefile = pf->prev;
   ckfree(pf);
   INTON;
@@ -5968,18 +5997,6 @@ static void unwindfiles(struct parsefile *stop) {
  */
 static void popallfiles(void) {
   unwindfiles(&basepf);
-}
-
-/*
- * Close the file(s) that the shell is reading commands from.  Called
- * after a fork is done.
- */
-static void closescript(void) {
-  popallfiles();
-  if (parsefile->fd > 0) {
-    close(parsefile->fd);
-    parsefile->fd = 0;
-  }
 }
 
 static char *commandtext(union node *);
@@ -6052,7 +6069,7 @@ static void setjobctl(int on) {
   if (on == jobctl || rootshell == 0) return;
   if (on) {
     int ofd;
-    ofd = fd = open(_PATH_TTY, O_RDWR, 0);
+    ofd = fd = sh_open(_PATH_TTY, O_RDWR, 1);
     if (fd < 0) {
       fd += 3;
       while (!isatty(fd))
@@ -6322,8 +6339,8 @@ static int jobscmd(int argc, char **argv) {
 static void showjobs(struct output *out, int mode) {
   struct job *jp;
   TRACE(("showjobs(%x) called\n", mode));
-  /* If not even one one job changed, there is nothing to do */
-  dowait(DOWAIT_NORMAL, NULL);
+  /* If not even one job changed, there is nothing to do */
+  dowait(DOWAIT_NONBLOCK, NULL);
   for (jp = curjob; jp; jp = jp->prev_job) {
     if (!(mode & SHOW_CHANGED) || jp->changed) showjob(out, jp, mode);
   }
@@ -6365,7 +6382,7 @@ static int waitcmd(int argc, char **argv) {
         jp->waited = 1;
         jp = jp->prev_job;
       }
-      if (!dowait(DOWAIT_WAITCMD, 0)) goto sigout;
+      if (!dowait(DOWAIT_WAITCMD_ALL, 0)) goto sigout;
     }
   }
   retval = 127;
@@ -6546,8 +6563,7 @@ static void forkchild(struct job *jp, union node *n, int mode) {
   lvforked = vforked;
   if (!lvforked) {
     shlvl++;
-    closescript();
-    clear_traps();
+    forkreset();
     /* do job control only in root shell */
     jobctl = 0;
   }
@@ -6567,14 +6583,12 @@ static void forkchild(struct job *jp, union node *n, int mode) {
     ignoresig(SIGQUIT);
     if (jp->nprocs == 0) {
       close(0);
-      if (open(_PATH_DEVNULL, O_RDONLY, 0) != 0) sh_error("Can't open %s", _PATH_DEVNULL);
+      sh_open(_PATH_DEVNULL, O_RDONLY, 0);
     }
   }
   if (!oldlvl && iflag) {
-    if (mode != FORK_BG) {
-      setsignal(SIGINT);
-      setsignal(SIGQUIT);
-    }
+    setsignal(SIGINT);
+    setsignal(SIGQUIT);
     setsignal(SIGTERM);
   }
   if (lvforked) return;
@@ -6666,7 +6680,7 @@ static struct job *vforkexec(union node *n, char **argv, const char *path, int i
 static int waitforjob(struct job *jp) {
   int st;
   TRACE(("waitforjob(%%%d) called\n", jp ? jobno(jp) : 0));
-  dowait(jp ? DOWAIT_BLOCK : DOWAIT_NORMAL, jp);
+  dowait(jp ? DOWAIT_BLOCK : DOWAIT_NONBLOCK, jp);
   if (!jp) return exitstatus;
   st = getstatus(jp);
   if (jp->jobctl) {
@@ -6750,12 +6764,19 @@ out:
 }
 
 static int dowait(int block, struct job *jp) {
-  int pid = block == DOWAIT_NORMAL ? gotsigchld : 1;
-  while (jp ? jp->state == JOBRUNNING : pid > 0) {
-    if (!jp) gotsigchld = 0;
+  int gotchld = *(volatile int *)&gotsigchld;
+  int rpid;
+  int pid;
+  if (jp && jp->state != JOBRUNNING) block = DOWAIT_NONBLOCK;
+  if (block == DOWAIT_NONBLOCK && !gotchld) return 1;
+  rpid = 1;
+  do {
     pid = waitone(block, jp);
-  }
-  return pid;
+    rpid &= !!pid;
+    block &= ~DOWAIT_WAITCMD_ALL;
+    if (!pid || (jp && jp->state != JOBRUNNING)) block = DOWAIT_NONBLOCK;
+  } while (pid >= 0);
+  return rpid;
 }
 
 /*
@@ -6778,12 +6799,13 @@ static int waitproc(int block, int *status) {
   int err;
   if (jobctl) flags |= WUNTRACED;
   do {
-    err = wait3(status, flags, NULL);
+    gotsigchld = 0;
+    do err = wait3(status, flags, NULL);
+    while (err < 0 && errno == EINTR);
     if (err || (err = -!block)) break;
     sigblockall(&oldmask);
     while (!gotsigchld && !pending_sig) sigsuspend(&oldmask);
     sigclearmask();
-    err = 0;
   } while (gotsigchld);
   return err;
 }
@@ -7062,7 +7084,11 @@ static void showpipe(struct job *jp, struct output *out) {
 }
 
 static void xtcsetpgrp(int fd, int pgrp) {
-  if (tcsetpgrp(fd, pgrp)) sh_error("Cannot set tty process group (%s)", strerror(errno));
+  int err;
+  sigblockall(NULL);
+  err = tcsetpgrp(fd, pgrp);
+  sigclearmask();
+  if (err) sh_error("Cannot set tty process group (%s)", strerror(errno));
 }
 
 static int getstatus(struct job *job) {
@@ -7458,7 +7484,6 @@ static int procargs(int argc, char **argv) {
     setinputfile(*xargv, 0);
   setarg0:
     arg0 = *xargv++;
-    commandname = arg0;
   }
   shellparam.p = xargv;
   shellparam.optind = 1;
@@ -7803,22 +7828,27 @@ static union node *parsecmd(int interact) {
 }
 
 static union node *list(int nlflag) {
+  int chknl = nlflag & 1 ? 0 : CHKNL;
   union node *n1, *n2, *n3;
   int tok;
   n1 = NULL;
   for (;;) {
-    switch (peektoken()) {
+    checkkwd = chknl | CHKKWD | CHKALIAS;
+    tok = readtoken();
+    switch (tok) {
       case TNL:
-        if (!(nlflag & 1)) break;
         parseheredoc();
         return n1;
       case TEOF:
-        if (!n1 && (nlflag & 1)) n1 = NEOF;
+        if (!n1 && !chknl) n1 = NEOF;
+      out_eof:
         parseheredoc();
+        tokpushback++;
+        lasttoken = TEOF;
         return n1;
     }
-    checkkwd = CHKNL | CHKKWD | CHKALIAS;
-    if (nlflag == 2 && tokendlist[peektoken()]) return n1;
+    tokpushback++;
+    if (nlflag == 2 && tokendlist[tok]) return n1;
     nlflag |= 2;
     n2 = andor();
     tok = readtoken();
@@ -7845,15 +7875,16 @@ static union node *list(int nlflag) {
       n1 = n3;
     }
     switch (tok) {
-      case TNL:
       case TEOF:
+        goto out_eof;
+      case TNL:
         tokpushback++;
         /* fall through */
       case TBACKGND:
       case TSEMI:
         break;
       default:
-        if ((nlflag & 1)) synexpect(-1);
+        if (!chknl) synexpect(-1);
         tokpushback++;
         return n1;
     }
@@ -8248,13 +8279,6 @@ static void parseheredoc(void) {
   }
 }
 
-static int peektoken(void) {
-  int t;
-  t = readtoken();
-  tokpushback++;
-  return (t);
-}
-
 static int readtoken(void) {
   int t;
   int kwd = checkkwd;
@@ -8266,9 +8290,12 @@ top:
   if (kwd & CHKNL) {
     while (t == TNL) {
       parseheredoc();
+      checkkwd = 0;
       t = xxreadtoken();
     }
   }
+  kwd |= checkkwd;
+  checkkwd = 0;
   if (t != TWORD || quoteflag) {
     goto out;
   }
@@ -8284,7 +8311,7 @@ top:
       goto out;
     }
   }
-  if (checkkwd & CHKALIAS) {
+  if (kwd & CHKALIAS) {
     struct alias *ap;
     if ((ap = lookupalias(wordtext, 1)) != NULL) {
       if (*ap->val) {
@@ -8294,7 +8321,6 @@ top:
     }
   }
 out:
-  checkkwd = 0;
   return (t);
 }
 
@@ -8338,7 +8364,6 @@ static int xxreadtoken(void) {
     switch (c) {
       case ' ':
       case '\t':
-      case PEOA:
         continue;
       case '#':
         while ((c = pgetc()) != '\n' && c != PEOF)
@@ -8376,7 +8401,7 @@ static int xxreadtoken(void) {
 static int pgetc_eatbnl(void) {
   int c;
   while ((c = pgetc()) == '\\') {
-    if (pgetc2() != '\n') {
+    if (pgetc() != '\n') {
       pungetc();
       break;
     }
@@ -8481,7 +8506,7 @@ loop : {                   /* for each line, until end of word */
         break;
       /* backslash */
       case CBACK:
-        c = pgetc2();
+        c = pgetc();
         if (c == PEOF) {
           USTPUTC(CTLESC, out);
           USTPUTC('\\', out);
@@ -8568,13 +8593,9 @@ loop : {                   /* for each line, until end of word */
         break;
       case CEOF:
         goto endword; /* exit outer loop */
-      case CIGN:
-        break;
       default:
         if (synstack->varnest == 0) goto endword; /* exit outer loop */
-        if (c != PEOA) {
-          USTPUTC(c, out);
-        }
+        USTPUTC(c, out);
     }
     c = pgetc_top(synstack);
   }
@@ -8613,18 +8634,13 @@ checkend : {
   if (realeofmark(eofmark)) {
     int markloc;
     char *p;
-    if (c == PEOA) {
-      c = pgetc2();
-    }
     if (striptabs) {
-      while (c == '\t') {
-        c = pgetc2();
-      }
+      while (c == '\t') c = pgetc();
     }
     markloc = out - (char *)stackblock();
     for (p = eofmark; STPUTC(c, out), *p; p++) {
       if (c != *p) goto more_heredoc;
-      c = pgetc2();
+      c = pgetc();
     }
     if (c == '\n' || c == PEOF) {
       c = PEOF;
@@ -8717,8 +8733,7 @@ parsesub : {
   char *p;
   static const char types[] = "}-+?=";
   c = pgetc_eatbnl();
-  if ((checkkwd & CHKEOFMARK) || c <= PEOA ||
-      (c != '(' && c != '{' && !is_name(c) && !is_special(c))) {
+  if ((checkkwd & CHKEOFMARK) || (c != '(' && c != '{' && !is_name(c) && !is_special(c))) {
     USTPUTC('$', out);
     pungetc();
   } else if (c == '(') { /* $(command) or $((arith)) */
@@ -8748,7 +8763,7 @@ parsesub : {
       do {
         STPUTC(c, out);
         c = pgetc_eatbnl();
-      } while (is_digit(c));
+      } while ((subtype <= 0 || subtype >= VSLENGTH) && is_digit(c));
     } else if (c != '}') {
       int cc = c;
       c = pgetc_eatbnl();
@@ -8795,6 +8810,7 @@ parsesub : {
           break;
       }
     } else {
+      if (subtype == VSLENGTH && c != '}') subtype = 0;
     badsub:
       pungetc();
     }
@@ -8850,15 +8866,11 @@ parsebackq : {
         case '`':
           goto done;
         case '\\':
-          pc = pgetc_eatbnl();
+          pc = pgetc();
           if (pc != '\\' && pc != '`' && pc != '$' && (!synstack->dblquote || pc != '"'))
             STPUTC('\\', pout);
-          if (pc > PEOA) {
-            break;
-          }
-          /* fall through */
+          break;
         case PEOF:
-        case PEOA:
           synerror("EOF in backquote substitution");
         case '\n':
           nlnoprompt();
@@ -8892,8 +8904,8 @@ parsebackq : {
   else {
     if (readtoken() != TRP) synexpect(TRP);
     setinputstring(nullstr);
-    parseheredoc();
   }
+  parseheredoc();
   heredoclist = saveheredoclist;
   (*nlpp)->n = n;
   /* Start reading from old file again. */
@@ -8938,21 +8950,38 @@ static void setprompt(int which) {
 }
 
 static const char *expandstr(const char *ps) {
-  union node n;
+  struct parsefile *file_stop;
+  struct jmploc *volatile savehandler;
+  struct heredoc *saveheredoclist;
+  const char *result;
   int saveprompt;
-  /* XXX Fix (char *) cast. */
-  setinputstring((char *)ps);
+  struct jmploc jmploc;
+  union node n;
+  int err;
+  file_stop = parsefile;
+  setinputstring((char *)ps); /* XXX Fix (char *) cast. */
+  saveheredoclist = heredoclist;
+  heredoclist = NULL;
   saveprompt = doprompt;
   doprompt = 0;
+  result = ps;
+  savehandler = handler;
+  if (unlikely(err = setjmp(jmploc.loc))) goto out;
+  handler = &jmploc;
   readtoken1(pgetc_eatbnl(), DQSYNTAX, FAKEEOFMARK, 0);
-  doprompt = saveprompt;
-  popfile();
   n.narg.type = NARG;
   n.narg.next = NULL;
   n.narg.text = wordtext;
   n.narg.backquote = backquotelist;
   expandarg(&n, NULL, EXP_QUOTED);
-  return stackblock();
+  result = stackblock();
+out:
+  handler = savehandler;
+  if (err && exception != EXERROR) longjmp(handler->loc, 1);
+  doprompt = saveprompt;
+  unwindfiles(file_stop);
+  heredoclist = saveheredoclist;
+  return result;
 }
 
 /*
@@ -8979,6 +9008,16 @@ const char *const *findkwd(const char *s) {
   return findstring(s, parsekwd, sizeof(parsekwd) / sizeof(const char *));
 }
 
+static unsigned update_closed_redirs(int fd, int nfd) {
+  unsigned val = closed_redirs;
+  unsigned bit = 1 << fd;
+  if (nfd >= 0)
+    closed_redirs &= ~bit;
+  else
+    closed_redirs |= bit;
+  return val & bit;
+}
+
 /*
  * Process a list of redirection commands.  If the REDIR_PUSH flag is set,
  * old file descriptors are stashed away so that the redirection can be
@@ -9003,17 +9042,17 @@ static void redirect(union node *redir, int flags) {
     if (newfd < -1) continue;
     fd = n->nfile.fd;
     if (sv) {
+      int closed;
       p = &sv->renamed[fd];
       i = *p;
+      closed = update_closed_redirs(fd, newfd);
       if (likely(i == EMPTY)) {
         i = CLOSED;
-        if (fd != newfd) {
+        if (fd != newfd && !closed) {
           i = savefd(fd, fd);
           fd = -1;
         }
       }
-      if (i == newfd) /* Can only happen if i == newfd == CLOSED */
-        i = REALLY_CLOSED;
       *p = i;
     }
     if (fd == newfd) continue;
@@ -9023,47 +9062,66 @@ static void redirect(union node *redir, int flags) {
   if (flags & REDIR_SAVEFD2 && sv->renamed[2] >= 0) preverrout.fd = sv->renamed[2];
 }
 
+wontreturn static int sh_open_fail(const char *pathname, int flags, int e) {
+  const char *word;
+  int action;
+  word = "open";
+  action = E_OPEN;
+  if (flags & O_CREAT) {
+    word = "create";
+    action = E_CREAT;
+  }
+  sh_error("cannot %s %s: %s", word, pathname, errmsg(e, action));
+}
+
+static int sh_open(const char *pathname, int flags, int mayfail) {
+  int fd;
+  int e;
+  do {
+    fd = open(pathname, flags, 0666);
+    e = errno;
+  } while (fd < 0 && e == EINTR && !pending_sig);
+  if (mayfail || fd >= 0) return fd;
+  sh_open_fail(pathname, flags, e);
+}
+
 static int openredirect(union node *redir) {
   struct stat sb;
   char *fname;
+  int flags;
   int f;
   switch (redir->nfile.type) {
     case NFROM:
-      fname = redir->nfile.expfname;
-      if ((f = open(fname, O_RDONLY, 0)) < 0) goto eopen;
+      flags = O_RDONLY;
+    do_open:
+      f = sh_open(redir->nfile.expfname, flags, 0);
       break;
     case NFROMTO:
-      fname = redir->nfile.expfname;
-      if ((f = open(fname, O_RDWR | O_CREAT, 0666)) < 0) goto ecreate;
-      break;
+      flags = O_RDWR|O_CREAT;
+      goto do_open;
     case NTO:
       /* Take care of noclobber mode. */
       if (Cflag) {
         fname = redir->nfile.expfname;
         if (stat(fname, &sb) < 0) {
-          if ((f = open(fname, O_WRONLY | O_CREAT | O_EXCL, 0666)) < 0) goto ecreate;
-        } else if (!S_ISREG(sb.st_mode)) {
-          if ((f = open(fname, O_WRONLY, 0666)) < 0) goto ecreate;
-          if (!fstat(f, &sb) && S_ISREG(sb.st_mode)) {
-            close(f);
-            errno = EEXIST;
-            goto ecreate;
-          }
-        } else {
-          errno = EEXIST;
+          flags = O_WRONLY|O_CREAT|O_EXCL;
+          goto do_open;
+        }
+        if (S_ISREG(sb.st_mode)) goto ecreate;
+        f = sh_open(fname, O_WRONLY, 0);
+        if (!fstat(f, &sb) && S_ISREG(sb.st_mode)) {
+          close(f);
           goto ecreate;
         }
         break;
       }
       /* FALLTHROUGH */
     case NCLOBBER:
-      fname = redir->nfile.expfname;
-      if ((f = open(fname, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) goto ecreate;
-      break;
+      flags = O_WRONLY|O_CREAT|O_TRUNC;
+      goto do_open;
     case NAPPEND:
-      fname = redir->nfile.expfname;
-      if ((f = open(fname, O_WRONLY | O_CREAT | O_APPEND, 0666)) < 0) goto ecreate;
-      break;
+      flags = O_WRONLY|O_CREAT|O_APPEND;
+      goto do_open;
     case NTOFD:
     case NFROMFD:
       f = redir->ndup.dupfd;
@@ -9078,9 +9136,7 @@ static int openredirect(union node *redir) {
   }
   return f;
 ecreate:
-  sh_error("cannot create %s: %s", fname, errmsg(errno, E_CREAT));
-eopen:
-  sh_error("cannot open %s: %s", fname, errmsg(errno, E_OPEN));
+  sh_open_fail(fname, O_CREAT, EEXIST);
 }
 
 static void dupredirect(union node *redir, int f) {
@@ -9149,12 +9205,12 @@ static void popredir(int drop) {
   INTOFF;
   rp = redirlist;
   for (i = 0; i < 10; i++) {
+    int closed;
+    if (rp->renamed[i] == EMPTY) continue;
+    closed = drop ? 1 : update_closed_redirs(i, rp->renamed[i]);
     switch (rp->renamed[i]) {
       case CLOSED:
-        if (!drop) close(i);
-        break;
-      case EMPTY:
-      case REALLY_CLOSED:
+        if (!closed) close(i);
         break;
       default:
         if (!drop) dup2(rp->renamed[i], i);
@@ -9266,23 +9322,6 @@ static int trapcmd(int argc, char **argv) {
     ap++;
   }
   return 0;
-}
-
-/*
- * Clear traps on a fork.
- */
-static void clear_traps(void) {
-  char **tp;
-  INTOFF;
-  for (tp = trap; tp < &trap[NSIG]; tp++) {
-    if (*tp && **tp) { /* trap not NULL or SIG_IGN */
-      ckfree(*tp);
-      *tp = NULL;
-      if (tp != &trap[0]) setsignal(tp - trap);
-    }
-  }
-  trapcnt = 0;
-  INTON;
 }
 
 /*
@@ -9437,15 +9476,17 @@ wontreturn static void exitshell(void) {
     trap[0] = NULL;
     evalskip = 0;
     evalstring(p, 0);
+    evalskip = SKIPFUNCDEF;
   }
 out:
+  exitreset();
   /*
    * Disable job control so that whoever had the foreground before we
    * started can get it back.
    */
   if (likely(!setjmp(loc.loc))) setjobctl(0);
   flushall();
-  _exit(savestatus);
+  _exit(exitstatus);
 }
 
 static int decode_signal(const char *string, int minsig) {
@@ -10104,12 +10145,23 @@ static int test_file_access(const char *path, int mode) {
 static int timescmd() {
   struct tms buf;
   long int clk_tck = sysconf(_SC_CLK_TCK);
+  int mutime, mstime, mcutime, mcstime;
+  double utime, stime, cutime, cstime;
   times(&buf);
-  Printf("%dm%fs %dm%fs\n%dm%fs %dm%fs\n", (int)(buf.tms_utime / clk_tck / 60),
-         ((double)buf.tms_utime) / clk_tck, (int)(buf.tms_stime / clk_tck / 60),
-         ((double)buf.tms_stime) / clk_tck, (int)(buf.tms_cutime / clk_tck / 60),
-         ((double)buf.tms_cutime) / clk_tck, (int)(buf.tms_cstime / clk_tck / 60),
-         ((double)buf.tms_cstime) / clk_tck);
+  utime = (double)buf.tms_utime / clk_tck;
+  mutime = utime / 60;
+  utime -= mutime * 60.0;
+  stime = (double)buf.tms_stime / clk_tck;
+  mstime = stime / 60;
+  stime -= mstime * 60.0;
+  cutime = (double)buf.tms_cutime / clk_tck;
+  mcutime = cutime / 60;
+  cutime -= mcutime * 60.0;
+  cstime = (double)buf.tms_cstime / clk_tck;
+  mcstime = cstime / 60;
+  cstime -= mcstime * 60.0;
+  Printf("%dm%fs %dm%fs\n%dm%fs %dm%fs\n", mutime, utime, mstime, stime,
+         mcutime, cutime, mcstime, cstime);
   return 0;
 }
 
@@ -10402,7 +10454,7 @@ static void mklocal(char *name, int flags) {
  * Called after a function returns.
  * Interrupts must be off.
  */
-static void poplocalvars(int keep) {
+static void poplocalvars(void) {
   struct localvar_list *ll;
   struct localvar *lvp, *next;
   struct Var *vp;
@@ -10415,18 +10467,7 @@ static void poplocalvars(int keep) {
     next = lvp->next;
     vp = lvp->vp;
     TRACE(("poplocalvar %s\n", vp ? vp->text : "-"));
-    if (keep) {
-      int bits = VSTRFIXED;
-      if (lvp->flags != VUNSET) {
-        if (vp->text == lvp->text)
-          bits |= VTEXTFIXED;
-        else if (!(lvp->flags & (VTEXTFIXED | VSTACK)))
-          ckfree(lvp->text);
-      }
-      vp->flags &= ~bits;
-      vp->flags |= (lvp->flags & bits);
-      if ((vp->flags & (VEXPORT | VREADONLY | VSTRFIXED | VUNSET)) == VUNSET) unsetvar(vp->text);
-    } else if (vp == NULL) { /* $- saved */
+    if (vp == NULL) { /* $- saved */
       memcpy(optlist, lvp->text, sizeof(optlist));
       ckfree(lvp->text);
       optschanged();
@@ -10463,7 +10504,7 @@ out:
 }
 
 static void unwindlocalvars(struct localvar_list *stop) {
-  while (localvar_stack != stop) poplocalvars(0);
+  while (localvar_stack != stop) poplocalvars();
 }
 
 /*
@@ -10506,8 +10547,7 @@ static void init() {
     sigmode[SIGCHLD - 1] = S_DFL;
     setsignal(SIGCHLD);
   }
-  /* from output.c: */
-  {} /* from var.c: */
+  /* from var.c: */
   {
     char **envp;
     static char ppid[32] = "PPID=";
@@ -10543,12 +10583,13 @@ static void init() {
 static void exitreset() {
   /* from eval.c: */
   {
-    evalskip = 0;
-    loopnest = 0;
     if (savestatus >= 0) {
-      exitstatus = savestatus;
+      if (exception == EXEXIT || evalskip == SKIPFUNCDEF) exitstatus = savestatus;
       savestatus = -1;
     }
+    evalskip = 0;
+    loopnest = 0;
+    inps4 = 0;
   }
   /* from expand.c: */
   { ifsfree(); }
@@ -10562,6 +10603,42 @@ static void exitreset() {
 }
 
 /*
+ * This routine is called when we enter a subshell.
+ */
+static void forkreset() {
+  /* from input.c: */
+  {
+    popallfiles();
+    if (parsefile->fd > 0) {
+      close(parsefile->fd);
+      parsefile->fd = 0;
+    }
+  }
+  /* from main.c: */
+  {
+    handler = &main_handler;
+  }
+  /* from redir.c: */
+  {
+    redirlist = NULL;
+  }
+  /* from trap.c: */
+  {
+    char **tp;
+    INTOFF;
+    for (tp = trap ; tp < &trap[NSIG] ; tp++) {
+      if (*tp && **tp) {  /* trap not NULL or SIG_IGN */
+        ckfree(*tp);
+        *tp = NULL;
+        if (tp != &trap[0]) setsignal(tp - trap);
+      }
+    }
+    trapcnt = 0;
+    INTON;
+  }
+}
+
+/*
  * This routine is called when an error or an interrupt occurs in an
  * interactive shell and control is returned to the main command loop.
  */
@@ -10570,10 +10647,10 @@ static void reset() {
   {
     /* clear input buffer */
     basepf.lleft = basepf.nleft = 0;
+    basepf.unget = 0;
     popallfiles();
   }
-  /* from output.c: */
-  {} /* from var.c: */
+  /* from var.c: */
   {
     unwindlocalvars(0);
   }
@@ -10815,11 +10892,14 @@ static int cmdloop(int top) {
     if (n == NEOF) {
       if (!top || numeof >= 50) break;
       if (!stoppedjobs()) {
-        if (!Iflag) break;
+        if (!Iflag) {
+          if (iflag) outcslow('\n', out2);
+          break;
+        }
         outstr("\nUse \"exit\" to leave shell.\n", out2);
       }
       numeof++;
-    } else if (nflag == 0) {
+    } else {
       int i;
       job_warning = (job_warning == 2) ? 1 : 0;
       numeof = 0;
@@ -10899,17 +10979,16 @@ static int exitcmd(int argc, char **argv) {
 int main(int argc, char **argv) {
   char *shinit;
   volatile int state;
-  struct jmploc jmploc;
   struct stackmark smark;
   int login;
   state = 0;
-  if (unlikely(setjmp(jmploc.loc))) {
+  if (unlikely(setjmp(main_handler.loc))) {
     int e;
     int s;
     exitreset();
     e = exception;
     s = state;
-    if (e == EXEXIT || s == 0 || iflag == 0 || shlvl) exitshell();
+    if (e == EXEND || e == EXEXIT || s == 0 || iflag == 0 || shlvl) exitshell();
     reset();
     if (e == EXINT) {
       outcslow('\n', out2);
@@ -10926,7 +11005,7 @@ int main(int argc, char **argv) {
       goto state4;
     }
   }
-  handler = &jmploc;
+  handler = &main_handler;
   rootpid = getpid();
   init();
   setstackmark(&smark);
