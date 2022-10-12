@@ -71,7 +71,7 @@ noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
   for (h = 39;; h -= 9) {
     e = t + ((vaddr >> h) & 511);
     if (h == 12) return e;
-    if (!(*e & PAGE_V)) {
+    if (!(*e & (PAGE_V | PAGE_RSRV))) {
       if (!maketables) return NULL;
       if (!(p = __new_page(mm))) return NULL;
       __clear_page(BANE + p);
@@ -123,8 +123,8 @@ noasan textreal void __invert_memory_area(struct mman *mm, uint64_t *pml4t,
   pe = ROUNDUP(pe, 4096);
   for (p = ps; p != pe; p += 4096) {
     m = __get_virtual(mm, pml4t, BANE + p, true);
-    if (m && !(*m & PAGE_V)) {
-      *m = p | PAGE_V | pte_flags;
+    if (m && !(*m & (PAGE_V | PAGE_RSRV))) {
+      *m = p | PAGE_V | PAGE_RSRV | pte_flags;
     }
   }
 }
@@ -139,7 +139,7 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
     /* ape/ape.S has already mapped the first 2 MiB of physical memory. */
     if (ps < 0x200000 && ps + size <= 0x200000)
       continue;
-    __invert_memory_area(mm, pml4t, ps, size, PAGE_RW);
+    __invert_memory_area(mm, pml4t, ps, size, PAGE_RW | PAGE_XD);
   }
 }
 
@@ -187,8 +187,12 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b) {
   for (p = (struct Elf64_Phdr *)REAL(ape_phdrs), m = 0;
        p < (struct Elf64_Phdr *)REAL(ape_phdrs_end); ++p) {
     if (p->p_type == PT_LOAD || p->p_type == PT_GNU_STACK) {
-      f = PAGE_V | PAGE_U;
-      if (p->p_flags & PF_W) f |= PAGE_RW;
+      f = PAGE_RSRV | PAGE_U;
+      if (p->p_flags & PF_W)
+        f |= PAGE_V | PAGE_RW;
+      else if (p->p_flags & (PF_R | PF_X))
+        f |= PAGE_V;
+      if (!(p->p_flags & PF_X)) f |= PAGE_XD;
       for (i = 0; i < p->p_memsz; i += 4096) {
         if (i < p->p_filesz) {
           v = b + p->p_offset + i;

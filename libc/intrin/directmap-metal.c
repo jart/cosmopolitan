@@ -43,7 +43,7 @@ noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
       addr = 4096;
     for (i = 0; i < size; i += 4096) {
       pte = __get_virtual(mm, pml4t, addr + i, false);
-      if (pte && (*pte & PAGE_V)) {
+      if (pte && (*pte & (PAGE_V | PAGE_RSRV))) {
         addr = MAX(addr, sys_mmap_metal_break) + i + 4096;
         i = 0;
       }
@@ -55,7 +55,13 @@ noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
     pte = __get_virtual(mm, pml4t, addr + i, true);
     if (pte && page) {
       __clear_page(BANE + page);
-      *pte = page | ((prot & PROT_WRITE) ? PAGE_RW : 0) | PAGE_U | PAGE_V;
+      page |= PAGE_RSRV | PAGE_U;
+      if ((prot & PROT_WRITE))
+        page |= PAGE_V | PAGE_RW;
+      else if ((prot & (PROT_READ | PROT_EXEC)))
+        page |= PAGE_V;
+      if (!(prot & PROT_EXEC)) page |= PAGE_XD;
+      *pte = page;
     } else {
       addr = -1;
       break;
