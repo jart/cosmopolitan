@@ -9,7 +9,7 @@ bool32 GetVersionEx(struct NtOsVersionInfo *lpVersionInformation);
 
 #if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define IsAtLeastWindows10() (GetNtMajorVersion() >= 10)
-#define IsAtleastWindows8p1() \
+#define IsAtLeastWindows8p1() \
   (GetNtMajorVersion() > 6 || (GetNtMajorVersion() == 6 && GetNtMinorVersion() == 3))
 #define GetNtMajorVersion()    \
   ({                           \

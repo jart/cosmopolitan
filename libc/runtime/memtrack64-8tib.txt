@@ -1,0 +1,154 @@
+# -*- conf -*-
+# Cosmopolitan Libc Memory Plan for old windows(xp through 8.0) 8tib user space virtual memory
+# Based on regular 128tib version in memtrack64-128tib.txt with each entire region(i.e. asan, mmap and so on are handled as 1024/16384gib blocks not 64gib ones)
+# is modified using (address & 0xffffff) | ((address >> 28) << 24) and then the interior of region each is updated to match by hand.
+
+00000000-0000001f 2048kb null
+00000020-0000003f 2048kb loader
+00000040-00004ffb 1276mb image
+00005004-00007ffb 768mb  arena
+00007ffc-00007ffe 192kb  free
+
+# address sanitizer shadow memory
+00007fff-000fffff 62gb   asan
+00100000-001fffff 64gb   asan
+00200000-002fffff 64gb   asan
+00300000-003fffff 64gb   asan
+00400000-004fffff 64gb   asan
+00500000-005fffff 64gb   asan
+00600000-006fffff 64gb   asan
+00700000-007fffff 64gb   asan
+00800000-008fffff 64gb   asan
+00900000-009fffff 64gb   asan
+00a00000-00afffff 64gb   asan
+00b00000-00bfffff 64gb   asan
+00c00000-00cfffff 64gb   asan
+00d00000-00dfffff 64gb   asan
+00e00000-00efffff 64gb   asan
+00f00000-00ffffff 64gb   asan
+01000000-01007fff 2048mb asan
+
+# memory dedicated to mmap(NULL, ...) automation, e.g. malloc()
+01008004-010fffff 62gb   automap
+01100000-011fffff 64gb   automap
+01200000-012fffff 64gb   automap
+01300000-013fffff 64gb   automap
+01400000-014fffff 64gb   automap
+01500000-015fffff 64gb   automap
+01600000-016fffff 64gb   automap
+01700000-017fffff 64gb   automap
+01800000-018fffff 64gb   automap
+01900000-019fffff 64gb   automap
+01a00000-01afffff 64gb   automap
+01b00000-01bfffff 64gb   automap
+01c00000-01cfffff 64gb   automap
+01d00000-01dfffff 64gb   automap
+01e00000-01e7fffb 32gb   automap
+
+01e7fffc-01efffff 32gb   _mmi
+01f00000-01fffffb 64gb   _mmi
+01fffffc-02000003 256kb  free
+
+02000004-020fffff 64gb   free
+02100000-021fffff 64gb   free
+02200000-022fffff 64gb   free
+02300000-023fffff 64gb   free
+02400000-024fffff 64gb   free
+02500000-025fffff 64gb   free
+02600000-026fffff 64gb   free
+02700000-027fffff 64gb   free
+02800000-028fffff 64gb   free
+02900000-029fffff 64gb   free
+02a00000-02afffff 64gb   free
+02b00000-02bfffff 64gb   free
+02c00000-02cfffff 64gb   free
+02d00000-02dfffff 64gb   free
+02e00000-02efffff 64gb   free
+02f00000-03000003 64gb   free
+
+# memory recommended for application MAP_FIXED usage
+03000004-030fffff 64gb   fixedmap
+03100000-031fffff 64gb   fixedmap
+03200000-032fffff 64gb   fixedmap
+03300000-033fffff 64gb   fixedmap
+03400000-034fffff 64gb   fixedmap
+03500000-035fffff 64gb   fixedmap
+03600000-036fffff 64gb   fixedmap
+03700000-037fffff 64gb   fixedmap
+03800000-038fffff 64gb   fixedmap
+03900000-039fffff 64gb   fixedmap
+03a00000-03afffff 64gb   fixedmap
+03b00000-03bfffff 64gb   fixedmap
+03c00000-03cfffff 64gb   fixedmap
+03d00000-03dfffff 64gb   fixedmap
+03e00000-03efffff 64gb   fixedmap
+03f00000-04000003 64gb   fixedmap
+
+04000004-040fffff 64gb   free
+04100000-041fffff 64gb   free
+04200000-042fffff 64gb   free
+04300000-043fffff 64gb   free
+04400000-044fffff 64gb   free
+04500000-045fffff 64gb   free
+04600000-046fffff 64gb   free
+04700000-047fffff 64gb   free
+04800000-048fffff 64gb   free
+04900000-049fffff 64gb   free
+04a00000-04afffff 64gb   free
+04b00000-04bfffff 64gb   free
+04c00000-04cfffff 64gb   free
+04d00000-04dfffff 64gb   free
+04e00000-04efffff 64gb   free
+04f00000-04ffffff 64gb   free
+
+05000000-050fffff 64gb   free
+05100000-051fffff 64gb   free
+05200000-052fffff 64gb   free
+05300000-053fffff 64gb   free
+05400000-054fffff 64gb   free
+05500000-055fffff 64gb   free
+05600000-056fffff 64gb   free
+05700000-057fffff 64gb   free
+05800000-058fffff 64gb   free
+05900000-059fffff 64gb   free
+05a00000-05afffff 64gb   free
+05b00000-05bfffff 64gb   free
+05c00000-05cfffff 64gb   free
+05d00000-05dfffff 64gb   free
+05e00000-05efffff 64gb   free
+05f00000-05ffffff 64gb   free
+
+06000000-060fffff 64gb   free
+06100000-061fffff 64gb   free
+06200000-062fffff 64gb   free
+06300000-063fffff 64gb   free
+06400000-064fffff 64gb   free
+06500000-065fffff 64gb   free
+06600000-066fffff 64gb   free
+06700000-067fffff 64gb   free
+06800000-068fffff 64gb   free
+06900000-069fffff 64gb   free
+06a00000-06afffff 64gb   free
+06b00000-06bfffff 64gb   free
+06c00004-06cffffb 64gb   nsync
+06d00004-06dffffb 64gb   zipos
+06e00004-06effffb 64gb   g_fds
+06fffffe-06ffffff 128kb  winargs
+
+07000000-07000003 256kb  stack
+07000004-070fffff 64gb   free
+07100000-071fffff 64gb   free
+07200000-072fffff 64gb   free
+07300000-073fffff 64gb   free
+07400000-074fffff 64gb   free
+07500000-075fffff 64gb   free
+07600000-076fffff 64gb   free
+07700000-077fffff 64gb   free
+07800000-078fffff 64gb   free
+07900000-079fffff 64gb   free
+07a00000-07afffff 64gb   free
+07b00000-07bfffff 64gb   free
+07c00000-07cfffff 64gb   free
+07d00000-07dfffff 64gb   free
+07e00000-07efffff 64gb   free
+07f00000-07ffffff 64gb   free

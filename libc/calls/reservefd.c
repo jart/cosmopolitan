@@ -41,7 +41,8 @@ static volatile size_t mapsize;
 /**
  * Grows file descriptor array memory if needed.
  *
- * @see libc/runtime/memtrack64.txt
+ * @see libc/runtime/memtrack64-128tib.txt
+ * @see libc/runtime/memtrack64-8tib.txt
  * @see libc/runtime/memtrack32.txt
  * @asyncsignalsafe
  */

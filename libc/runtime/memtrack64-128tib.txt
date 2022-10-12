@@ -1,11 +1,11 @@
 # -*- conf -*-
-# Cosmopolitan Libc Memory Plan
+# Cosmopolitan Libc Memory Plan for modern windows(8.1 and up) and all other supported oses with 128tib user space virtual memory
 
 00000000-0000001f 2048kb null
 00000020-0000003f 2048kb loader
 00000040-00004ffb 1276mb image
 00005004-00007ffb 768mb  arena
-00007ffe-00007ffe 64kb   free
+00007ffc-00007ffe 192kb  free
 
 # address sanitizer shadow memory
 00007fff-000fffff 62gb   asan
@@ -264,7 +264,7 @@
 0fd00000-0fdfffff 64gb   asan
 0fe00000-0fefffff 64gb   asan
 0ff00000-0fffffff 64gb   asan
-10000000-10008003 2048mb asan
+10000000-10007fff 2048mb asan
 
 # memory dedicated to mmap(NULL, ...) automation, e.g. malloc()
 10008004-100fffff 62gb   automap
@@ -1811,11 +1811,10 @@
 6fc00004-6fcffffb 64gb   nsync
 6fd00004-6fdffffb 64gb   zipos
 6fe00004-6feffffb 64gb   g_fds
-6ff00004-70000003 64gb   free
+6ffffffe-6fffffff 128kb  winargs
 
-70000004-70000004 64kb   stack
-70000005-70000006 128kb  winargs
-70000005-700fffff 64gb   free
+70000000-70000003 256kb  stack
+70000004-700fffff 64gb   free
 70100000-701fffff 64gb   free
 70200000-702fffff 64gb   free
 70300000-703fffff 64gb   free
