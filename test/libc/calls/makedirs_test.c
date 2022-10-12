@@ -16,12 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+#include "libc/x/x.h"
+
+TEST(makedirs, empty) {
+  ASSERT_SYS(ENOENT, -1, makedirs("", 0755));
+}
+
+TEST(makedirs, isfile) {
+  ASSERT_SYS(0, 0, xbarf("f", "hi", -1));
+  ASSERT_SYS(EEXIST, -1, makedirs("f", 0755));
+}
+
+TEST(makedirs, isdir) {
+  ASSERT_SYS(0, 0, mkdir("d", 0755));
+  ASSERT_SYS(0, 0, makedirs("d", 0755));
+}
+
+TEST(makedirs, enotdir) {
+  ASSERT_SYS(0, 0, xbarf("f", "hi", -1));
+  ASSERT_SYS(ENOTDIR, -1, makedirs("f/d", 0755));
+}
+
+TEST(makedirs, basic) {
+  ASSERT_SYS(0, 0, makedirs("a/b/c", 0755));
+  ASSERT_TRUE(isdirectory("a/b/c"));
+  ASSERT_SYS(0, 0, makedirs("a/b/c/d/e/", 0755));
+  ASSERT_SYS(0, 0, makedirs("a/b/c/d/e/", 0755));
+  ASSERT_TRUE(isdirectory("a/b/c/d/e"));
+}
 
 #define DIR                                                                    \
   "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z/A/B/C/D/E/F/G/H/I/J/K/" \

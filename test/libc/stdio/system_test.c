@@ -17,12 +17,14 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "libc/x/x.h"
@@ -104,4 +106,13 @@ TEST(system, equals) {
 TEST(system, notequals) {
   ASSERT_EQ(1, WEXITSTATUS(system("test a != a")));
   ASSERT_EQ(0, WEXITSTATUS(system("test a != b")));
+}
+
+TEST(system, usleep) {
+  ASSERT_EQ(0, WEXITSTATUS(system("usleep & kill $!")));
+}
+
+TEST(system, kill) {
+  int ws = system("kill -TERM $$; usleep");
+  if (!IsWindows()) ASSERT_EQ(SIGTERM, WTERMSIG(ws));
 }

@@ -53,6 +53,7 @@ void mcount(void);
 int daemon(int, int);
 int _freestack(void *);
 void _bt(const char *, ...);
+int _cocmd(int, char **, char **);
 unsigned long getauxval(unsigned long);
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque;

@@ -21,7 +21,6 @@
 #include "libc/errno.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/cocmd.internal.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/f.h"
@@ -57,7 +56,7 @@ FILE *popen(const char *cmdline, const char *mode) {
         // we can't rely on cloexec because cocmd builtins don't execve
         if (pipefds[0] != !dir) _unassert(!close(pipefds[0]));
         if (pipefds[1] != !dir) _unassert(!close(pipefds[1]));
-        _Exit(cocmd(3, (char *[]){"popen", "-c", cmdline, 0}));
+        _Exit(_cocmd(3, (char *[]){"popen", "-c", cmdline, 0}, environ));
       default:
         f->pid = pid;
         _unassert(!close(pipefds[!dir]));

@@ -16,8 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/stdio/cocmd.internal.h"
+#include "libc/runtime/runtime.h"
 
-int main(int argc, char *argv[]) {
-  return cocmd(argc, argv);
+int main(int argc, char **argv, char **envp) {
+  return _cocmd(argc, argv, envp);
 }

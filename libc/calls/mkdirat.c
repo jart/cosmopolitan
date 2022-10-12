@@ -31,12 +31,23 @@
 /**
  * Creates directory a.k.a. folder.
  *
- * @param dirfd is normally AT_FDCWD but if it's an open directory and
+ * @param dirfd is normally `AT_FDCWD` but if it's an open directory and
  *     path is relative, then path becomes relative to dirfd
  * @param path is a UTF-8 string, preferably relative w/ forward slashes
- * @param mode can be, for example, 0755
- * @return 0 on success or -1 w/ errno
- * @error EEXIST, ENOTDIR, ENAMETOOLONG, EACCES, ENOENT
+ * @param mode is permissions bits, which is usually 0755
+ * @return 0 on success, or -1 w/ errno
+ * @raise EEXIST if named file already exists
+ * @raise EBADF if `path` is relative and `dirfd` isn't `AT_FDCWD` or valid
+ * @raise ENOTDIR if directory component in `path` existed as non-directory
+ * @raise ENAMETOOLONG if symlink-resolved `path` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `path` exists longer than `NAME_MAX`
+ * @raise EROFS if parent directory is on read-only filesystem
+ * @raise ENOSPC if file system or parent directory is full
+ * @raise EACCES if write permission was denied on parent directory
+ * @raise EACCES if search permission was denied on component in `path`
+ * @raise ENOENT if a component within `path` didn't exist
+ * @raise ENOENT if `path` is an empty string
+ * @raise ELOOP if loop was detected resolving components of `path`
  * @asyncsignalsafe
  * @see makedirs()
  */

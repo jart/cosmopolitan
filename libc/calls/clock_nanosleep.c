@@ -75,10 +75,10 @@
  * @return 0 on success, or errno on error
  * @raise EINTR when a signal got delivered while we were waiting
  * @raise ENOTSUP if `clock` is known but we can't use it here
+ * @raise EFAULT if `req` or null or bad memory was passed
  * @raise EINVAL if `clock` is unknown to current platform
  * @raise EINVAL if `flags` has an unrecognized value
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
- * @raise EFAULT if bad memory was passed
  * @raise ENOSYS on bare metal
  * @returnserrno
  * @norestart

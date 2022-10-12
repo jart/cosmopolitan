@@ -20,22 +20,19 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
-#include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/append.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
-#include "libc/x/x.h"
-#include "third_party/double-conversion/wrapper.h"
+#include "libc/sysv/consts/timer.h"
 
 /**
  * @fileoverview Cosmopolitan Command Interpreter
@@ -51,15 +48,25 @@
 #define STATE_QUOTED_VAR 4
 #define STATE_WHITESPACE 5
 
+#define READ24LE(s) READ32LE(s "\0")
+
+struct Env {
+  char *s;
+  int i;
+};
+
 static char *p;
 static char *q;
+static char *r;
+static int envi;
 static int vari;
 static size_t n;
 static char *cmd;
 static char var[32];
 static int lastchild;
 static int exitstatus;
-static char *args[8192];
+static char *envs[3000];
+static char *args[3000];
 static const char *prog;
 static char errbuf[512];
 static char argbuf[ARG_MAX];
@@ -94,13 +101,10 @@ static wontreturn void Wexit(int rc, const char *s, ...) {
 }
 
 static wontreturn void UnsupportedSyntax(unsigned char c) {
-  char cbuf[2];
-  char ibuf[13];
-  cbuf[0] = c;
-  cbuf[1] = 0;
+  char ibuf[13], cbuf[2] = {c};
   FormatOctal32(ibuf, c, true);
-  Wexit(4, prog, ": unsupported shell syntax '", cbuf, "' (", ibuf, "): ", cmd,
-        "\n", 0);
+  Wexit(4, prog, ": unsupported syntax '", cbuf, "' (", ibuf, "): ", cmd, "\n",
+        0);
 }
 
 static wontreturn void SysExit(int rc, const char *call, const char *thing) {
@@ -123,9 +127,9 @@ static void Open(const char *path, int fd, int flags) {
 }
 
 static wontreturn void Exec(void) {
-  _npassert(args[0][0]);
+  _unassert(args[0][0]);
   if (!n) Wexit(5, prog, ": error: too few args\n", 0);
-  execvp(args[0], args);
+  execvpe(args[0], args, envs);
   SysExit(127, "execve", args[0]);
 }
 
@@ -136,6 +140,42 @@ static int GetSignalByName(const char *s) {
     }
   }
   return 0;
+}
+
+static struct Env GetEnv(char **p, const char *k) {
+  int i, j;
+  for (i = 0; p[i]; ++i) {
+    for (j = 0;; ++j) {
+      if (!k[j] || k[j] == '=') {
+        if (p[i][j] == '=') {
+          return (struct Env){p[i] + j + 1, i};
+        }
+        break;
+      }
+      if (toupper(k[j] & 255) != toupper(p[i][j] & 255)) {
+        break;
+      }
+    }
+  }
+  return (struct Env){0, i};
+}
+
+static void PutEnv(char **p, const char *kv) {
+  struct Env e;
+  e = GetEnv(p, kv);
+  p[e.i] = kv;
+  if (!e.s) p[e.i + 1] = 0;
+}
+
+static void Append(int c) {
+  _npassert(q + 1 < argbuf + sizeof(argbuf));
+  *q++ = c;
+}
+
+static char *Finish(void) {
+  char *s = r;
+  Append(0);
+  return r = q, s;
 }
 
 static int True(void) {
@@ -194,31 +234,31 @@ static int Echo(void) {
 }
 
 static int Read(void) {
-  char *b = 0;
   unsigned char c;
-  int a = 1, rc = 1;
-  if (n >= 3 && !strcmp(args[1], "-p")) {
-    Write(1, args[2]);
-    a = 3;
-  }
-  appendr(&b, 0);
-  while (read(0, &c, 1) > 0) {
-    if (c == '\n') {
-      rc = 0;
-      break;
+  int i, j, rc = 1;
+  for (i = 1; i < n; ++i) {
+    if (args[i][0] != '-') break;
+    if (args[i][1] == 'p' && !args[i][2] && i + 1 < n) {
+      Write(1, args[++i]);
     }
-    appendw(&b, c);
   }
-  if (a < n) {
-    setenv(args[1], b, true);
+  if (i >= n) return 1;
+  for (j = 0; args[i][j]; ++j) {
+    Append(args[i][j]);
   }
-  free(b);
+  Append('=');
+  while (read(0, &c, 1) > 0) {
+    if (c == '\n') break;
+    Append(c);
+    rc = 0;
+  }
+  PutEnv(envs, Finish());
   return rc;
 }
 
 static int Cd(void) {
-  const char *s = n > 1 ? args[1] : getenv("HOME");
-  if (s) {
+  const char *s;
+  if ((s = n > 1 ? args[1] : GetEnv(envs, "HOME").s)) {
     if (!chdir(s)) {
       return 0;
     } else {
@@ -274,36 +314,37 @@ static int Toupper(void) {
 }
 
 static int Usleep(void) {
-  struct timespec t, *p = 0;
+  int f;
+  struct timespec t;
   if (n > 1) {
+    f = 0;
     t = _timespec_frommicros(atoi(args[1]));
-    p = &t;
+  } else {
+    f = TIMER_ABSTIME;
+    t = _timespec_max;
   }
-  return clock_nanosleep(0, 0, p, 0);
+  return clock_nanosleep(0, f, &t, 0);
 }
 
 static int Test(void) {
+  int w;
   struct stat st;
-  if (n && !strcmp(args[n - 1], "]")) --n;
-  if (n == 4 && !strcmp(args[2], "=")) {
-    return !!strcmp(args[1], args[3]);
-  } else if (n == 4 && !strcmp(args[2], "!=")) {
-    return !strcmp(args[1], args[3]);
-  } else if (n == 3 && !strcmp(args[1], "-n")) {
-    return !(strlen(args[2]) > 0);
-  } else if (n == 3 && !strcmp(args[1], "-z")) {
-    return !(strlen(args[2]) == 0);
-  } else if (n == 3 && !strcmp(args[1], "-e")) {
-    return !!stat(args[2], &st);
-  } else if (n == 3 && !strcmp(args[1], "-f")) {
-    return !stat(args[2], &st) && S_ISREG(st.st_mode);
-  } else if (n == 3 && !strcmp(args[1], "-d")) {
-    return !stat(args[2], &st) && S_ISDIR(st.st_mode);
-  } else if (n == 3 && !strcmp(args[1], "-h")) {
-    return !stat(args[2], &st) && S_ISLNK(st.st_mode);
-  } else {
-    return 1;
+  if (n && READ16LE(args[n - 1]) == READ16LE("]")) --n;
+  if (n == 4) {
+    w = READ32LE(args[2]) & 0x00ffffff;
+    if ((w & 65535) == READ16LE("=")) return !!strcmp(args[1], args[3]);
+    if (w == READ24LE("==")) return !!strcmp(args[1], args[3]);
+    if (w == READ24LE("!=")) return !strcmp(args[1], args[3]);
+  } else if (n == 3) {
+    w = READ32LE(args[1]) & 0x00ffffff;
+    if (w == READ24LE("-n")) return !(strlen(args[2]) > 0);
+    if (w == READ24LE("-z")) return !(strlen(args[2]) == 0);
+    if (w == READ24LE("-e")) return !!stat(args[2], &st);
+    if (w == READ24LE("-f")) return !stat(args[2], &st) && S_ISREG(st.st_mode);
+    if (w == READ24LE("-d")) return !stat(args[2], &st) && S_ISDIR(st.st_mode);
+    if (w == READ24LE("-h")) return !stat(args[2], &st) && S_ISLNK(st.st_mode);
   }
+  return 1;
 }
 
 static int TryBuiltin(void) {
@@ -370,7 +411,7 @@ static const char *IntToStr(int x) {
   return ibuf;
 }
 
-static const char *GetEnv(const char *key) {
+static const char *GetVar(const char *key) {
   if (key[0] == '$' && !key[1]) {
     return IntToStr(getpid());
   } else if (key[0] == '!' && !key[1]) {
@@ -378,7 +419,7 @@ static const char *GetEnv(const char *key) {
   } else if (key[0] == '?' && !key[1]) {
     return IntToStr(exitstatus);
   } else {
-    return getenv(key);
+    return GetEnv(envs, key).s;
   }
 }
 
@@ -387,16 +428,28 @@ static bool IsVarName(int c) {
          (!vari && (c == '?' || c == '!' || c == '$'));
 }
 
-static inline void Append(int c) {
-  _unassert(q + 1 < argbuf + sizeof(argbuf));
-  *q++ = c;
+static bool CopyVar(void) {
+  size_t j;
+  const char *s;
+  if (IsVarName(*p)) {
+    _npassert(vari + 1 < sizeof(var));
+    var[vari++] = *p;
+    var[vari] = 0;
+    return false;
+  }
+  if ((s = GetVar(var))) {
+    if ((j = strlen(s))) {
+      _npassert(q + j < argbuf + sizeof(argbuf));
+      q = mempcpy(q, s, j);
+    }
+  }
+  return true;
 }
 
 static char *Tokenize(void) {
-  char *r;
   const char *s;
   int c, t, j, k, rc;
-  for (r = q, t = STATE_WHITESPACE;; ++p) {
+  for (t = STATE_WHITESPACE;; ++p) {
     switch (t) {
 
       case STATE_WHITESPACE:
@@ -413,8 +466,7 @@ static char *Tokenize(void) {
           UnsupportedSyntax(*p);
         }
         if (!*p || *p == ' ' || *p == '\t') {
-          Append(0);
-          return r;
+          return Finish();
         } else if (*p == '"') {
           t = STATE_QUOTED;
         } else if (*p == '\'') {
@@ -427,8 +479,7 @@ static char *Tokenize(void) {
           Append(*++p);
         } else if (*p == '|') {
           if (q > r) {
-            Append(0);
-            return r;
+            return Finish();
           } else if (p[1] == '|') {
             rc = Run();
             if (!rc) {
@@ -443,16 +494,14 @@ static char *Tokenize(void) {
           }
         } else if (*p == ';') {
           if (q > r) {
-            Append(0);
-            return r;
+            return Finish();
           } else {
             Run();
             t = STATE_WHITESPACE;
           }
         } else if (*p == '&') {
           if (q > r) {
-            Append(0);
-            return r;
+            return Finish();
           } else if (p[1] == '&') {
             rc = Run();
             if (!rc) {
@@ -471,22 +520,9 @@ static char *Tokenize(void) {
         break;
 
       case STATE_VAR:
-        if (IsVarName(*p)) {
-          _unassert(vari + 1 < sizeof(var));
-          var[vari++] = *p;
-          var[vari] = 0;
-        } else {
-          // XXX: we need to find a simple elegant way to break up
-          //      unquoted variable expansions into multiple args.
-          if ((s = GetEnv(var))) {
-            if ((j = strlen(s))) {
-              _unassert(q + j < argbuf + sizeof(argbuf));
-              q = mempcpy(q, s, j);
-            }
-          }
-          --p;
-          t = STATE_CMD;
-        }
+        // XXX: we need to find a simple elegant way to break up
+        //      unquoted variable expansions into multiple args.
+        if (CopyVar()) t = STATE_CMD, --p;
         break;
 
       case STATE_SINGLE:
@@ -500,6 +536,11 @@ static char *Tokenize(void) {
 
       UnterminatedString:
         Wexit(6, "cmd: error: unterminated string\n", 0);
+
+      case STATE_QUOTED_VAR:
+        if (!*p) goto UnterminatedString;
+        if (CopyVar()) t = STATE_QUOTED, --p;
+        break;
 
       case STATE_QUOTED:
         if (!*p) goto UnterminatedString;
@@ -529,24 +570,6 @@ static char *Tokenize(void) {
         }
         break;
 
-      case STATE_QUOTED_VAR:
-        if (!*p) goto UnterminatedString;
-        if (IsVarName(*p)) {
-          _unassert(vari + 1 < sizeof(var));
-          var[vari++] = *p;
-          var[vari] = 0;
-        } else {
-          if ((s = GetEnv(var))) {
-            if ((j = strlen(s))) {
-              _unassert(q + j < argbuf + sizeof(argbuf));
-              q = mempcpy(q, s, j);
-            }
-          }
-          --p;
-          t = STATE_QUOTED;
-        }
-        break;
-
       default:
         unreachable;
     }
@@ -563,7 +586,7 @@ static const char *GetRedirectArg(const char *prog, const char *arg, int n) {
   }
 }
 
-int cocmd(int argc, char *argv[]) {
+int _cocmd(int argc, char **argv, char **envp) {
   char *arg;
   size_t i, j;
   prog = argc > 0 ? argv[0] : "cocmd.com";
@@ -596,8 +619,19 @@ int cocmd(int argc, char *argv[]) {
     Wexit(12, prog, ": error: cmd too long: ", cmd, "\n", 0);
   }
 
+  // copy environment variables
+  envi = 0;
+  if (envp) {
+    for (; envp[envi]; ++envi) {
+      _npassert(envi + 1 < ARRAYLEN(envs));
+      envs[envi] = envp[envi];
+    }
+  }
+  envs[envi] = 0;
+
+  // get command line arguments
   n = 0;
-  q = argbuf;
+  r = q = argbuf;
   while ((arg = Tokenize())) {
     if (n + 1 < ARRAYLEN(args)) {
       if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '&' &&

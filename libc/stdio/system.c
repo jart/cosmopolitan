@@ -24,8 +24,6 @@
 #include "libc/log/log.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/cocmd.internal.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sig.h"
@@ -57,7 +55,7 @@ int system(const char *cmdline) {
     sigaction(SIGINT, &saveint, 0);
     sigaction(SIGQUIT, &savequit, 0);
     sigprocmask(SIG_SETMASK, &savemask, 0);
-    _Exit(cocmd(3, (char *[]){"system", "-c", cmdline, 0}));
+    _Exit(_cocmd(3, (char *[]){"system", "-c", cmdline, 0}, environ));
   } else if (pid != -1) {
     while (wait4(pid, &wstatus, 0, 0) == -1) {
       if (errno != EINTR) {
