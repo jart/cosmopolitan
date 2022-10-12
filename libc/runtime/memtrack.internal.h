@@ -12,24 +12,26 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define kAutomapStart       0x100080040000
+#define kAutomapStart       _kMemVista(0x100080040000, 0x010080040000)
 #define kAutomapSize        (kMemtrackStart - kAutomapStart)
-#define kMemtrackStart      0x1fe7fffc0000
-#define kMemtrackSize       (0x1ffffffc0000 - kMemtrackStart)
-#define kFixedmapStart      0x300000040000
-#define kFixedmapSize       (0x400000040000 - kFixedmapStart)
-#define kMemtrackFdsStart   _kMemVista(0x6fe000040000, 0x5e000040000)
+#define kMemtrackStart      _kMemVista(0x1fe7fffc0000, 0x01e7fffc0000)
+#define kMemtrackSize       \
+  (_kMemVista(0x1ffffffc0000, 0x01fffffc0000) - kMemtrackStart)
+#define kFixedmapStart      _kMemVista(0x300000040000, 0x030000040000)
+#define kFixedmapSize       \
+  (_kMemVista(0x400000040000, 0x040000040000) - kFixedmapStart)
+#define kMemtrackFdsStart   _kMemVista(0x6fe000040000, 0x06e000040000)
 #define kMemtrackFdsSize    \
-  (_kMemVista(0x6feffffc0000, 0x5effffc0000) - kMemtrackFdsStart)
-#define kMemtrackZiposStart _kMemVista(0x6fd000040000, 0x5d000040000)
+  (_kMemVista(0x6feffffc0000, 0x06effffc0000) - kMemtrackFdsStart)
+#define kMemtrackZiposStart _kMemVista(0x6fd000040000, 0x06d000040000)
 #define kMemtrackZiposSize  \
-  (_kMemVista(0x6fdffffc0000, 0x5dffffc0000) - kMemtrackZiposStart)
-#define kMemtrackNsyncStart _kMemVista(0x6fc000040000, 0x5c000040000)
+  (_kMemVista(0x6fdffffc0000, 0x06dffffc0000) - kMemtrackZiposStart)
+#define kMemtrackNsyncStart _kMemVista(0x6fc000040000, 0x06c000040000)
 #define kMemtrackNsyncSize  \
-  (_kMemVista(0x6fcffffc0000, 0x5cffffc0000) - kMemtrackNsyncStart)
+  (_kMemVista(0x6fcffffc0000, 0x06cffffc0000) - kMemtrackNsyncStart)
 #define kMemtrackGran       (!IsAsan() ? FRAMESIZE : FRAMESIZE * 8)
 #define _kMemVista(NORMAL, WINVISTA) \
-  (!IsWindows() || IsAtleastWindows8p1() ? NORMAL : WINVISTA)
+  (!IsWindows() || IsAtLeastWindows8p1() ? NORMAL : WINVISTA)
 
 struct MemoryInterval {
   int x;
@@ -106,7 +108,7 @@ forceinline pureconst bool IsNsyncFrame(int x) {
 }
 
 forceinline pureconst bool IsShadowFrame(int x) {
-  return 0x7fff <= x && x < 0x10008000;
+  return 0x7fff <= x && x < _kMemVista(0x10008000, 0x01008000);
 }
 
 forceinline pureconst bool IsArenaFrame(int x) {
