@@ -13,8 +13,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-typedef char *posix_spawn_file_actions_t;
-typedef struct _posix_spawnattr posix_spawnattr_t;
+typedef struct _posix_spawna *posix_spawnattr_t;
+typedef struct _posix_faction *posix_spawn_file_actions_t;
 
 int posix_spawn(int *, const char *, const posix_spawn_file_actions_t *,
                 const posix_spawnattr_t *, char *const[], char *const[]);

@@ -16,94 +16,95 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/spawn.h"
-#include "libc/stdio/spawna.internal.h"
-#include "libc/str/str.h"
+#include "libc/stdio/posix_spawn.h"
+#include "libc/stdio/posix_spawn.internal.h"
+
+static int RunFileActions(struct _posix_faction *a) {
+  int t;
+  if (!a) return 0;
+  if (RunFileActions(a->next) == -1) return -1;
+  switch (a->action) {
+    case _POSIX_SPAWN_CLOSE:
+      return close(a->fildes);
+    case _POSIX_SPAWN_DUP2:
+      return dup2(a->fildes, a->newfildes);
+    case _POSIX_SPAWN_OPEN:
+      if ((t = open(a->path, a->oflag, a->mode)) == -1) return -1;
+      if (t != a->fildes) {
+        if (dup2(t, a->fildes) == -1) {
+          close(t);
+          return -1;
+        }
+        if (close(t) == -1) {
+          return -1;
+        }
+      }
+      return 0;
+    default:
+      unreachable;
+  }
+}
 
 /**
  * Spawns process the POSIX way.
  *
- * @param pid is non-NULL and will be set to child pid in parent
- * @param path of executable that is not PATH searched
+ * @param pid if non-null shall be set to child pid on success
+ * @param path is resolved path of program which is not `$PATH` searched
+ * @param file_actions specifies close(), dup2(), and open() operations
+ * @param attrp specifies signal masks, user ids, scheduling, etc.
+ * @param envp is environment variables, or `environ` if null
  * @return 0 on success or error number on failure
+ * @see posix_spawnp() for `$PATH` searching
  */
 int posix_spawn(int *pid, const char *path,
                 const posix_spawn_file_actions_t *file_actions,
                 const posix_spawnattr_t *attrp, char *const argv[],
                 char *const envp[]) {
-  unsigned mode;
+  int s, child;
   sigset_t allsigs;
   struct sigaction dfl;
-  char *p, *q, opath[PATH_MAX];
-  int s, fd, newfd, oflag, tempfd;
-  if (!(*pid = vfork())) {
-    if (attrp) {
-      if (attrp->posix_attr_flags & POSIX_SPAWN_SETPGROUP) {
-        if (setpgid(0, attrp->posix_attr_pgroup)) _Exit(127);
+  if (!(child = vfork())) {
+    if (attrp && *attrp) {
+      if ((*attrp)->flags & POSIX_SPAWN_SETPGROUP) {
+        if (setpgid(0, (*attrp)->pgroup)) _Exit(127);
       }
-      if (attrp->posix_attr_flags & POSIX_SPAWN_SETSIGMASK) {
-        sigprocmask(SIG_SETMASK, &attrp->posix_attr_sigmask, 0);
+      if ((*attrp)->flags & POSIX_SPAWN_SETSIGMASK) {
+        sigprocmask(SIG_SETMASK, &(*attrp)->sigmask, 0);
       }
-      if (attrp->posix_attr_flags & POSIX_SPAWN_RESETIDS) {
+      if ((*attrp)->flags & POSIX_SPAWN_RESETIDS) {
         setuid(getuid());
         setgid(getgid());
       }
-      if (attrp->posix_attr_flags & POSIX_SPAWN_SETSIGDEF) {
+      if ((*attrp)->flags & POSIX_SPAWN_SETSIGDEF) {
         dfl.sa_handler = SIG_DFL;
         dfl.sa_flags = 0;
         sigfillset(&allsigs);
         for (s = 0; sigismember(&allsigs, s); s++) {
-          if (sigismember(&attrp->posix_attr_sigdefault, s)) {
+          if (sigismember(&(*attrp)->sigdefault, s)) {
             if (sigaction(s, &dfl, 0) == -1) _Exit(127);
           }
         }
       }
     }
     if (file_actions) {
-      for (p = *file_actions; *p; p = strchr(p, ')') + 1) {
-        if (!strncmp(p, "close(", 6)) {
-          if (sscanf(p + 6, "%d)", &fd) != 1) _Exit(127);
-          if (close(fd) == -1) _Exit(127);
-        } else if (!strncmp(p, "dup2(", 5)) {
-          if (sscanf(p + 5, "%d,%d)", &fd, &newfd) != 2) _Exit(127);
-          if (dup2(fd, newfd) == -1) _Exit(127);
-        } else if (!strncmp(p, "open(", 5)) {
-          if (sscanf(p + 5, "%d,", &fd) != 1) _Exit(127);
-          p = strchr(p, ',') + 1;
-          q = strchr(p, '*');
-          if (!q || q - p >= PATH_MAX) _Exit(127);
-          strncpy(opath, p, q - p);
-          opath[q - p] = '\0';
-          if (sscanf(q + 1, "%o,%o)", &oflag, &mode) != 2) _Exit(127);
-          if (close(fd) == -1 && errno != EBADF) _Exit(127);
-          tempfd = open(opath, oflag, mode);
-          if (tempfd == -1) _Exit(127);
-          if (tempfd != fd) {
-            if (dup2(tempfd, fd) == -1) _Exit(127);
-            if (close(tempfd) == -1) _Exit(127);
-          }
-        } else {
-          _Exit(127);
-        }
+      if (RunFileActions(*file_actions) == -1) {
+        _Exit(127);
       }
     }
-    if (attrp) {
-      if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDULER) {
-        if (sched_setscheduler(0, attrp->posix_attr_schedpolicy,
-                               &attrp->posix_attr_schedparam) == -1) {
+    if (attrp && *attrp) {
+      if ((*attrp)->flags & POSIX_SPAWN_SETSCHEDULER) {
+        if (sched_setscheduler(0, (*attrp)->schedpolicy,
+                               &(*attrp)->schedparam) == -1) {
           if (errno != ENOSYS) _Exit(127);
         }
       }
-      if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDPARAM) {
-        if (sched_setparam(0, &attrp->posix_attr_schedparam) == -1) {
+      if ((*attrp)->flags & POSIX_SPAWN_SETSCHEDPARAM) {
+        if (sched_setparam(0, &(*attrp)->schedparam) == -1) {
           if (errno != ENOSYS) _Exit(127);
         }
       }
@@ -111,8 +112,10 @@ int posix_spawn(int *pid, const char *path,
     if (!envp) envp = environ;
     execve(path, argv, envp);
     _Exit(127);
-  } else {
-    if (*pid == -1) return errno;
+  } else if (child != -1) {
+    if (pid) *pid = child;
     return 0;
+  } else {
+    return errno;
   }
 }

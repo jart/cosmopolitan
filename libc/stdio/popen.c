@@ -54,7 +54,7 @@ FILE *popen(const char *cmdline, const char *mode) {
     switch ((pid = fork())) {
       case 0:
         _unassert(dup2(pipefds[!dir], !dir) == !dir);
-        // we can't rely on cloexec because cocmd builtins don't execev
+        // we can't rely on cloexec because cocmd builtins don't execve
         if (pipefds[0] != !dir) _unassert(!close(pipefds[0]));
         if (pipefds[1] != !dir) _unassert(!close(pipefds[1]));
         _Exit(cocmd(3, (char *[]){"popen", "-c", cmdline, 0}));

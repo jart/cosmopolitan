@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/stdio/spawn.h"
+#include "libc/stdio/posix_spawn.h"
 
 /**
  * Spawns process the POSIX way w/ PATH search.

@@ -43,6 +43,8 @@
  * @param set is the new mask content (optional)
  * @param oldset will receive the old mask (optional) and can't overlap
  * @return 0 on success, or -1 w/ errno
+ * @raise EFAULT if `set` or `oldset` is bad memory
+ * @raise EINVAL if `how` is invalid
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

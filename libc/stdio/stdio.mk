@@ -57,6 +57,8 @@ o//libc/stdio/appendw.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-Os
 
+o/$(MODE)/libc/stdio/posix_spawnattr.o			\
+o/$(MODE)/libc/stdio/posix_spawn_file_actions.o		\
 o/$(MODE)/libc/stdio/mt19937.o: private			\
 		OVERRIDE_CFLAGS +=			\
 			-ffunction-sections

@@ -23,7 +23,7 @@
 #include "libc/intrin/popcnt.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/spawn.h"
+#include "libc/stdio/posix_spawn.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
