@@ -1285,8 +1285,8 @@ lcheck:	pushf				# check for i8086 / i8088 / i80186
 	jl	10f
 	mov	%edi,%eax
 	cpuid
-	mov	$1<<29,%edi		# need nexgen32e long mode support
-	and	%edi,%edx
+	mov	$1<<29|1<<20,%edi	# need nexgen32e long mode support
+	and	%edi,%edx		# & nx support
 	cmp	%edi,%edx
 	jne	10f
 	xor	%ax,%ax
@@ -1415,7 +1415,7 @@ pinit:	push	%ds
 	movl	$0x79000+PAGE_V+PAGE_RW,0x7b000-SEG	# PD←PDT     (+)
 	movl	$0x79000+PAGE_V+PAGE_RW,0x7a000-SEG	# PD←PDT     (-)
 	mov	$512,%cx				# PD±2MB
-	mov	$PAGE_V+PAGE_RW,%eax
+	mov	$PAGE_V+PAGE_RSRV+PAGE_RW,%eax
 	xor	%di,%di
 0:	stosl
 	add	$0x1000,%eax
@@ -1438,7 +1438,7 @@ golong:	cli
 	mov	%eax,%cr4
 	movl	$EFER,%ecx
 	rdmsr
-	or	$EFER_LME|EFER_SCE,%eax
+	or	$EFER_LME|EFER_SCE|EFER_NXE,%eax
 	wrmsr
 	lgdt	REAL(_gdtrphy)
 	mov	%cr0,%eax

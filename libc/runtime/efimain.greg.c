@@ -126,7 +126,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   pdpt2 = (uint64_t *)0x7c000;
   pml4t = (uint64_t *)0x7e000;
   for (i = 0; i < 512; ++i) {
-    pd[i] = 0x1000 * i + PAGE_V + PAGE_RW;
+    pd[i] = 0x1000 * i + PAGE_V + PAGE_RSRV + PAGE_RW;
   }
   pdt1[0] = (intptr_t)pd + PAGE_V + PAGE_RW;
   pdt2[0] = (intptr_t)pd + PAGE_V + PAGE_RW;
