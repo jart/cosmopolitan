@@ -52,7 +52,7 @@
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-ssize_t sendto(int fd, const void *buf, size_t size, uint32_t flags,
+ssize_t sendto(int fd, const void *buf, size_t size, int flags,
                const struct sockaddr *opt_addr, uint32_t addrsize) {
   ssize_t rc;
   uint32_t bsdaddrsize;

@@ -35,7 +35,7 @@
 //	@return	pid of child process or 0 if forked process
 //	@returnstwice
 //	@vforksafe
-vfork:
+vfork:	xor	%edi,%edi		# dwCreationFlags
 #ifdef __SANITIZE_ADDRESS__
 	jmp	fork			# TODO: asan and vfork don't mix?
 	.endfn	vfork,globl

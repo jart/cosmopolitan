@@ -24,6 +24,7 @@ void cosmo2flock(uintptr_t) hidden;
 void flock2cosmo(uintptr_t) hidden;
 int _ptsname(int, char *, size_t) hidden;
 int _isptmaster(int) hidden;
+int _fork(uint32_t) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

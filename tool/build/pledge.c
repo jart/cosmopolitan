@@ -44,7 +44,6 @@
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/stdio/stdio.h"
@@ -162,9 +161,9 @@ static void GetOpts(int argc, char *argv[]) {
   g_fszquota = 256 * 1000 * 1000;
   if (!sysinfo(&si)) {
     g_memquota = si.totalram;
-    g_proquota = GetCpuCount() + si.procs;
+    g_proquota = _getcpucount() + si.procs;
   } else {
-    g_proquota = GetCpuCount() * 100;
+    g_proquota = _getcpucount() * 100;
     g_memquota = 4L * 1024 * 1024 * 1024;
   }
   while ((opt = getopt(argc, argv, "hnqkNVT:p:u:g:c:C:D:P:M:F:O:v:")) != -1) {

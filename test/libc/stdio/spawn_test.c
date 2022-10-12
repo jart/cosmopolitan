@@ -29,20 +29,18 @@
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 
-void SetUpOnce(void) {
-  __enable_threads();
-}
+char testlib_enable_tmp_setup_teardown;
 
 __attribute__((__constructor__)) static void init(void) {
-  if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) {
-    exit(42);
+  switch (atoi(nulltoempty(getenv("THE_DOGE")))) {
+    case 42:
+      exit(42);
+    default:
+      break;
   }
 }
 
 TEST(spawn, test) {
-  if (atoi(nulltoempty(getenv("THE_DOGE"))) == 42) {
-    exit(42);
-  }
   int rc, ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {program_invocation_name, NULL};
@@ -51,6 +49,25 @@ TEST(spawn, test) {
   EXPECT_NE(-1, waitpid(pid, &ws, 0));
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(42, WEXITSTATUS(ws));
+}
+
+TEST(spawn, pipe) {
+  char buf[10];
+  int p[2], pid, status;
+  const char *pn = "./echo.com";
+  posix_spawn_file_actions_t fa;
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  ASSERT_SYS(0, 0, pipe(p));
+  ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
+  ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, p[0]));
+  ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, p[1], 1));
+  ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, p[1]));
+  ASSERT_EQ(0, posix_spawnp(&pid, pn, &fa, 0, (char *[]){pn, "hello", 0}, 0));
+  ASSERT_SYS(0, 0, close(p[1]));
+  ASSERT_SYS(0, pid, waitpid(pid, &status, 0));
+  ASSERT_SYS(0, 6, read(p[0], buf, sizeof(buf)));
+  ASSERT_SYS(0, 0, close(p[0]));
+  ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
 }
 
 /*

@@ -60,6 +60,8 @@ static dontinline textwindows int sys_sched_setaffinity_nt(
 /**
  * Asks kernel to only schedule process on particular CPUs.
  *
+ * Affinity masks are inherited across fork() and execve() boundaries.
+ *
  * @param pid is the process or process id (or 0 for caller)
  * @param size is bytes in bitset, which should be `sizeof(cpuset_t)`
  * @return 0 on success, or -1 w/ errno

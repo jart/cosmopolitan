@@ -39,7 +39,6 @@
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -426,7 +425,7 @@ int main(int argc, char *argv[]) {
   ShowCrashReports();
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   GetOpts(argc, argv);
-  threads = 1;  // GetCpuCount();
+  threads = 1;  // _getcpucount();
   th = calloc(threads, sizeof(*th));
   bouts = calloc(threads, sizeof(*bouts));
   LoadRelationships(argc, argv);

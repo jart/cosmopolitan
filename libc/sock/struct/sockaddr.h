@@ -41,8 +41,8 @@ int bind(int, const struct sockaddr *, uint32_t);
 int connect(int, const struct sockaddr *, uint32_t);
 int getsockname(int, struct sockaddr *, uint32_t *);
 int getpeername(int, struct sockaddr *, uint32_t *);
-ssize_t recvfrom(int, void *, size_t, uint32_t, struct sockaddr *, uint32_t *);
-ssize_t sendto(int, const void *, size_t, uint32_t, const struct sockaddr *,
+ssize_t recvfrom(int, void *, size_t, int, struct sockaddr *, uint32_t *);
+ssize_t sendto(int, const void *, size_t, int, const struct sockaddr *,
                uint32_t);
 
 COSMOPOLITAN_C_END_

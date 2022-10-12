@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/process.h"
@@ -28,15 +29,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
 
-/**
- * Creates new process.
- *
- * @return 0 to child, child pid to parent, or -1 w/ errno
- * @raise EAGAIN if `RLIMIT_NPROC` was exceeded or system lacked resources
- * @raise ENOMEM if we require more vespene gas
- * @asyncsignalsafe
- */
-int fork(void) {
+int _fork(uint32_t dwCreationFlags) {
   axdx_t ad;
   sigset_t old, all;
   int ax, dx, parent;
@@ -52,7 +45,7 @@ int fork(void) {
       ax &= dx - 1;
     }
   } else {
-    ax = sys_fork_nt();
+    ax = sys_fork_nt(dwCreationFlags);
   }
   if (!ax) {
     if (!IsWindows()) {
@@ -72,4 +65,16 @@ int fork(void) {
     STRACE("fork() → %d% m", ax);
   }
   return ax;
+}
+
+/**
+ * Creates new process.
+ *
+ * @return 0 to child, child pid to parent, or -1 w/ errno
+ * @raise EAGAIN if `RLIMIT_NPROC` was exceeded or system lacked resources
+ * @raise ENOMEM if we require more vespene gas
+ * @asyncsignalsafe
+ */
+int fork(void) {
+  return _fork(0);
 }

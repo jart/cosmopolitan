@@ -16,39 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/nt/enum/processcreationflags.h"
 #include "libc/paths.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/o.h"
 
 /**
- * Daemonizes process.
+ * Runs process in background.
+ *
+ * On Unix this calls fork() and setsid(). On Windows this is
+ * implemented using CreateProcess(kNtDetachedProcess).
+ *
+ * @return 0 on success, or -1 w/ errno
  */
 int daemon(int nochdir, int noclose) {
   int fd;
 
-  switch (fork()) {
+  switch (_fork(kNtDetachedProcess)) {
     case -1:
-      return (-1);
+      return -1;
     case 0:
       break;
     default:
       _Exit(0);
   }
 
-  if (setsid() == -1) {
-    return -1;
+  if (!IsWindows()) {
+    if (setsid() == -1) {
+      return -1;
+    }
   }
 
   if (!nochdir) {
-    chdir("/");
+    _unassert(!chdir("/"));
   }
 
   if (!noclose && (fd = open(_PATH_DEVNULL, O_RDWR)) != -1) {
-    dup2(fd, 0);
-    dup2(fd, 1);
-    dup2(fd, 2);
+    _unassert(dup2(fd, 0) == 0);
+    _unassert(dup2(fd, 1) == 1);
+    _unassert(dup2(fd, 2) == 2);
     if (fd > 2) {
-      close(fd);
+      _unassert(!close(fd));
     }
   }
 

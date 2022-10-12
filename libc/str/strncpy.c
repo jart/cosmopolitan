@@ -60,6 +60,7 @@
  * @return dest
  * @see stpncpy(), memccpy()
  * @asyncsignalsafe
+ * @vforksafe
  */
 char *strncpy(char *dest, const char *src, size_t stride) {
   size_t i;

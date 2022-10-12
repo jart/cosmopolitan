@@ -34,7 +34,7 @@
 #define HW_NCPUONLINE_NETBSD  16
 #define ALL_PROCESSOR_GROUPS  0xffff
 
-static unsigned GetCpuCountLinux(void) {
+static unsigned _getcpucount_linux(void) {
   cpu_set_t s = {0};
   if (sys_sched_getaffinity(0, sizeof(s), &s) != -1) {
     return CPU_COUNT(&s);
@@ -43,7 +43,7 @@ static unsigned GetCpuCountLinux(void) {
   }
 }
 
-static unsigned GetCpuCountBsd(void) {
+static unsigned _getcpucount_bsd(void) {
   size_t n;
   int c, cmd[2];
   n = sizeof(c);
@@ -62,12 +62,12 @@ static unsigned GetCpuCountBsd(void) {
   }
 }
 
-static unsigned GetCpuCountImpl(void) {
+static unsigned _getcpucount_impl(void) {
   if (!IsWindows()) {
     if (!IsBsd()) {
-      return GetCpuCountLinux();
+      return _getcpucount_linux();
     } else {
-      return GetCpuCountBsd();
+      return _getcpucount_bsd();
     }
   } else {
     return GetMaximumProcessorCount(ALL_PROCESSOR_GROUPS);
@@ -77,18 +77,24 @@ static unsigned GetCpuCountImpl(void) {
 static int g_cpucount;
 
 // precompute because process affinity on linux may change later
-__attribute__((__constructor__)) static void init(void) {
-  g_cpucount = GetCpuCountImpl();
+__attribute__((__constructor__)) static void _getcpucount_init(void) {
+  g_cpucount = _getcpucount_impl();
 }
 
 /**
  * Returns number of CPUs in system.
+ *
+ * This is the same as the standard interface:
+ *
+ *     sysconf(_SC_NPROCESSORS_ONLN);
+ *
+ * Except this function isn't a bloated diamond dependency.
  *
  * On Intel systems with HyperThreading this will return the number of
  * cores multiplied by two.
  *
  * @return cpu count or 0 if it couldn't be determined
  */
-unsigned GetCpuCount(void) {
+unsigned _getcpucount(void) {
   return g_cpucount;
 }

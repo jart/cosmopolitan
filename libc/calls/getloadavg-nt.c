@@ -20,10 +20,10 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
-#include "libc/thread/thread.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/accounting.h"
-#include "libc/runtime/sysconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
 
 #define FT(x) (x.dwLowDateTime | (uint64_t)x.dwHighDateTime << 32)
 
@@ -60,7 +60,7 @@ static textstartup void sys_getloadavg_nt_init(void) {
   double a[3];
   if (IsWindows()) {
     load = 1;
-    cpus = GetCpuCount() / 2;
+    cpus = _getcpucount() / 2;
     cpus = MAX(1, cpus);
     GetSystemTimes(&idle1, &kern1, &user1);
   }

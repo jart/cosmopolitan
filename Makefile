@@ -121,6 +121,7 @@ include third_party/compiler_rt/compiler_rt.mk	# │
 include libc/str/str.mk				# │
 include third_party/xed/xed.mk			# │
 include third_party/zlib/zlib.mk		# │
+include third_party/double-conversion/dc.mk	# │
 include libc/elf/elf.mk				# │
 include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
@@ -168,7 +169,7 @@ include test/tool/args/test.mk
 include third_party/linenoise/linenoise.mk
 include third_party/maxmind/maxmind.mk
 include net/finger/finger.mk
-include third_party/double-conversion/double-conversion.mk
+include third_party/double-conversion/test/test.mk
 include third_party/lua/lua.mk
 include third_party/sed/sed.mk
 include third_party/awk/awk.mk

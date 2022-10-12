@@ -47,7 +47,7 @@
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */
-ssize_t recvfrom(int fd, void *buf, size_t size, uint32_t flags,
+ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
                  struct sockaddr *opt_out_srcaddr,
                  uint32_t *opt_inout_srcaddrsize) {
   ssize_t rc;

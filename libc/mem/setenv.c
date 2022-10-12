@@ -16,27 +16,32 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/mem/internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Copies variable to environment.
  *
  * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `name` is empty or contains `'='`
+ * @raise ENOMEM if we require more vespene gas
  * @see putenv(), getenv()
  */
 int setenv(const char *name, const char *value, int overwrite) {
   int rc;
   char *s;
   size_t namelen, valuelen;
+  if (isempty(name) || strchr(name, '=')) return einval();
   namelen = strlen(name);
   valuelen = strlen(value);
-  s = malloc(namelen + valuelen + 2);
+  if (!(s = malloc(namelen + valuelen + 2))) return -1;
   memcpy(mempcpy(mempcpy(s, name, namelen), "=", 1), value, valuelen + 1);
   rc = PutEnvImpl(s, overwrite);
-  STRACE("setenv(%#s, %#s, %d) → %d", name, value, overwrite, rc);
+  STRACE("setenv(%#s, %#s, %d) → %d% m", name, value, overwrite, rc);
   return rc;
 }

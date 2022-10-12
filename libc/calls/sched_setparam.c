@@ -29,6 +29,7 @@
  *
  * @return 0 on success, or -1 w/ errno
  * @raise ENOSYS on XNU, Windows, OpenBSD
+ * @vforksafe
  */
 int sched_setparam(int pid, const struct sched_param *param) {
   int rc, policy;

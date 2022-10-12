@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_FMT_STRTOL_H_
 #define COSMOPOLITAN_LIBC_FMT_STRTOL_H_
+#include "libc/errno.h"
 
 #define CONSUME_SPACES(s, c) \
   if (endptr) *endptr = s;   \
@@ -10,7 +11,7 @@
   if (c == '-' || c == '+') c = *++s
 
 #define GET_RADIX(s, c, r)                     \
-  if (!(2 <= r && r <= 36)) {                  \
+  if (!r) {                                    \
     if (c == '0') {                            \
       t |= 1;                                  \
       c = *++s;                                \
@@ -26,6 +27,9 @@
     } else {                                   \
       r = 10;                                  \
     }                                          \
+  } else if (!(2 <= r && r <= 36)) {           \
+    errno = EINVAL;                            \
+    return 0;                                  \
   } else if (c == '0') {                       \
     t |= 1;                                    \
     c = *++s;                                  \

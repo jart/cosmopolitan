@@ -29,27 +29,79 @@
 
 char testlib_enable_tmp_setup_teardown;
 
-TEST(system, testStdoutRedirect) {
-  int ws;
-  testlib_extract("/zip/echo.com", "echo.com", 0755);
+TEST(system, haveShell) {
   ASSERT_TRUE(system(0));
-  ws = system("./echo.com hello >hello.txt");
-  ASSERT_TRUE(WIFEXITED(ws));
-  ASSERT_EQ(0, WEXITSTATUS(ws));
+}
+
+TEST(system, echo) {
+  ASSERT_EQ(0, system("echo hello >\"hello there.txt\""));
+  EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
+}
+
+TEST(system, exit) {
+  ASSERT_EQ(123, WEXITSTATUS(system("exit 123")));
+}
+
+TEST(system, testStdoutRedirect) {
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  ASSERT_EQ(0, system("./echo.com hello >hello.txt"));
   EXPECT_STREQ("hello\n", _gc(xslurp("hello.txt", 0)));
 }
 
 TEST(system, testStdoutRedirect_withSpacesInFilename) {
-  int ws;
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  ASSERT_TRUE(system(0));
-  ws = system("./echo.com hello >\"hello there.txt\"");
-  ASSERT_TRUE(WIFEXITED(ws));
-  ASSERT_EQ(0, WEXITSTATUS(ws));
+  ASSERT_EQ(0, system("./echo.com hello >\"hello there.txt\""));
   EXPECT_STREQ("hello\n", _gc(xslurp("hello there.txt", 0)));
 }
 
 BENCH(system, bench) {
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  EZBENCH2("system", donothing, system("./echo.com hi >/dev/null"));
+  EZBENCH2("system cmd", donothing, system("./echo.com hi >/dev/null"));
+  EZBENCH2("cocmd echo", donothing, system("echo hi >/dev/null"));
+  EZBENCH2("cocmd exit", donothing, system("exit"));
+}
+
+TEST(system, and) {
+  ASSERT_EQ(1, WEXITSTATUS(system("false && false")));
+  ASSERT_EQ(1, WEXITSTATUS(system("true&& false")));
+  ASSERT_EQ(1, WEXITSTATUS(system("false &&true")));
+  ASSERT_EQ(0, WEXITSTATUS(system("true&&true")));
+}
+
+TEST(system, or) {
+  ASSERT_EQ(1, WEXITSTATUS(system("false || false")));
+  ASSERT_EQ(0, WEXITSTATUS(system("true|| false")));
+  ASSERT_EQ(0, WEXITSTATUS(system("false ||true")));
+  ASSERT_EQ(0, WEXITSTATUS(system("true||true")));
+}
+
+TEST(system, async1) {
+  ASSERT_EQ(123, WEXITSTATUS(system("exit 123 & "
+                                    "wait $!")));
+}
+
+TEST(system, async4) {
+  ASSERT_EQ(0, WEXITSTATUS(system("echo a >a & "
+                                  "echo b >b & "
+                                  "echo c >c & "
+                                  "echo d >d & "
+                                  "wait")));
+  ASSERT_TRUE(fileexists("a"));
+  ASSERT_TRUE(fileexists("b"));
+  ASSERT_TRUE(fileexists("c"));
+  ASSERT_TRUE(fileexists("d"));
+}
+
+TEST(system, equals) {
+  setenv("var", "wand", true);
+  ASSERT_EQ(0, WEXITSTATUS(system("test a = a")));
+  ASSERT_EQ(1, WEXITSTATUS(system("test a = b")));
+  ASSERT_EQ(0, WEXITSTATUS(system("test x$var = xwand")));
+  ASSERT_EQ(0, WEXITSTATUS(system("[ a = a ]")));
+  ASSERT_EQ(1, WEXITSTATUS(system("[ a = b ]")));
+}
+
+TEST(system, notequals) {
+  ASSERT_EQ(1, WEXITSTATUS(system("test a != a")));
+  ASSERT_EQ(0, WEXITSTATUS(system("test a != b")));
 }

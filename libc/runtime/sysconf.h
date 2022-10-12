@@ -147,7 +147,6 @@
 COSMOPOLITAN_C_START_
 
 long sysconf(int);
-unsigned GetCpuCount(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

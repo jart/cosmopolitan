@@ -52,7 +52,6 @@ void *xload(bool *, void **, const void *, size_t, size_t);
 void *xloadzd(bool *, void **, const void *, size_t, size_t, size_t, size_t,
               uint32_t);
 int rmrf(const char *);
-int makedirs(const char *, unsigned);
 char *xbasename(const char *) paramsnonnull()
     returnspointerwithnoaliases dontthrow nocallback dontdiscard returnsnonnull;
 char *xdirname(const char *) paramsnonnull()

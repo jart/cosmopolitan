@@ -19,9 +19,12 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/cpuset.h"
 #include "libc/dce.h"
+#include "libc/fmt/conv.h"
 #include "libc/intrin/popcnt.h"
+#include "libc/intrin/safemacros.internal.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
+#include "libc/stdio/spawn.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
@@ -44,7 +47,7 @@ TEST(sched_getaffinity, firstOnly) {
 }
 
 TEST(sched_getaffinity, secondOnly) {
-  if (GetCpuCount() < 2) return;
+  if (_getcpucount() < 2) return;
   cpu_set_t x, y;
   CPU_ZERO(&x);
   CPU_SET(1, &x);
@@ -53,6 +56,48 @@ TEST(sched_getaffinity, secondOnly) {
   EXPECT_EQ(1, CPU_COUNT(&y));
   EXPECT_FALSE(CPU_ISSET(0, &y));
   EXPECT_TRUE(CPU_ISSET(1, &y));
+}
+
+TEST(sched_setaffinity, isInheritedAcrossFork) {
+  cpu_set_t x, y;
+  CPU_ZERO(&x);
+  CPU_SET(0, &x);
+  ASSERT_SYS(0, 0, sched_setaffinity(0, sizeof(x), &x));
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, sched_getaffinity(0, sizeof(y), &y));
+  EXPECT_EQ(1, CPU_COUNT(&y));
+  EXPECT_TRUE(CPU_ISSET(0, &y));
+  EXPECT_FALSE(CPU_ISSET(1, &y));
+  EXITS(0);
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  cpu_set_t y;
+  switch (atoi(nulltoempty(getenv("THE_DOGE")))) {
+    case 42:
+      ASSERT_SYS(0, 0, sched_getaffinity(0, sizeof(y), &y));
+      EXPECT_EQ(1, CPU_COUNT(&y));
+      EXPECT_TRUE(CPU_ISSET(0, &y));
+      EXPECT_FALSE(CPU_ISSET(1, &y));
+      exit(42);
+    default:
+      break;
+  }
+}
+
+TEST(sched_setaffinity, isInheritedAcrossExecve) {
+  cpu_set_t x, y;
+  CPU_ZERO(&x);
+  CPU_SET(0, &x);
+  ASSERT_SYS(0, 0, sched_setaffinity(0, sizeof(x), &x));
+  int rc, ws, pid;
+  char *prog = GetProgramExecutableName();
+  char *args[] = {program_invocation_name, NULL};
+  char *envs[] = {"THE_DOGE=42", NULL};
+  EXPECT_EQ(0, posix_spawn(&pid, prog, NULL, NULL, args, envs));
+  EXPECT_NE(-1, waitpid(pid, &ws, 0));
+  EXPECT_TRUE(WIFEXITED(ws));
+  EXPECT_EQ(42, WEXITSTATUS(ws));
 }
 
 TEST(sched_getaffinity, getpid) {

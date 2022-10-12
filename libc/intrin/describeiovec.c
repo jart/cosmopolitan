@@ -16,51 +16,53 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/str/str.h"
-#include "libc/x/x.h"
+#include "libc/calls/struct/iovec.h"
+#include "libc/calls/struct/iovec.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/limits.h"
+#include "libc/macros.internal.h"
 
-static int MakeDirs(const char *path, unsigned mode, int e) {
-  int rc;
-  char *dir;
-  if (!mkdir(path, mode) || errno == EEXIST) {
-    errno = e;
-    return 0;
-  }
-  if (errno != ENOENT) {
-    return -1;
-  }
-  dir = xdirname(path);
-  if (strcmp(dir, path)) {
-    rc = MakeDirs(dir, mode, e);
-  } else {
-    rc = -1;
-  }
-  free(dir);
-  if (rc == -1) return -1;
-  errno = e;
-  if (!mkdir(path, mode) || errno == EEXIST) {
-    errno = e;
-    return 0;
-  } else {
-    return -1;
-  }
-}
+#define N 300
 
-/**
- * Recursively creates directory a.k.a. folder.
- *
- * This function won't fail if the directory already exists.
- *
- * @param path is a UTF-8 string, preferably relative w/ forward slashes
- * @param mode can be, for example, 0755
- * @return 0 on success or -1 w/ errno
- * @threadsafe
- */
-int makedirs(const char *path, unsigned mode) {
-  return MakeDirs(path, mode, errno);
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
+                            int iovlen) {
+  const char *d;
+  int i, j, o = 0;
+
+  if (!iov) return "NULL";
+  if (rc == -1) return "n/a";
+  if (rc == -2) rc = SSIZE_MAX;
+  if ((!IsAsan() && kisdangerous(iov)) ||
+      (IsAsan() && !__asan_is_valid(iov, sizeof(*iov) * iovlen))) {
+    ksnprintf(buf, N, "%p", iov);
+    return buf;
+  }
+
+  append("{");
+
+  for (i = 0; rc && i < iovlen; ++i) {
+    if (iov[i].iov_len < rc) {
+      j = iov[i].iov_len;
+      rc -= iov[i].iov_len;
+    } else {
+      j = rc;
+      rc = 0;
+    }
+    if (j > 40) {
+      j = 40;
+      d = "...";
+    } else {
+      d = "";
+    }
+    append("%s{%#.*hhs%s, %'zu}", i ? ", " : "", j, iov[i].iov_base, d,
+           iov[i].iov_len);
+  }
+
+  append("%s}", iovlen > 2 ? ", ..." : "");
+
+  return buf;
 }

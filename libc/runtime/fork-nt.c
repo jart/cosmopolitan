@@ -19,6 +19,7 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/ntspawn.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
@@ -260,7 +261,7 @@ textwindows void WinMainForked(void) {
   longjmp(jb, 1);
 }
 
-textwindows int sys_fork_nt(void) {
+textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   bool ok;
   jmp_buf jb;
   uint32_t oldprot;
@@ -302,7 +303,7 @@ textwindows int sys_fork_nt(void) {
       }
 #endif
       if (ntspawn(GetProgramExecutableName(), args, environ, forkvar, 0, 0,
-                  true, 0, 0, &startinfo, &procinfo) != -1) {
+                  true, dwCreationFlags, 0, &startinfo, &procinfo) != -1) {
         CloseHandle(procinfo.hThread);
         ok = WriteAll(writer, jb, sizeof(jb)) &&
              WriteAll(writer, &_mmi.i, sizeof(_mmi.i)) &&

@@ -73,17 +73,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     rc = einval();
   }
 
-#if defined(SYSDEBUG) && _DATATRACE
-  if (UNLIKELY(__strace > 0)) {
-    if (rc == -1 && errno == EFAULT) {
-      STRACE("readv(%d, %p, %d) → %'zd% m", fd, iov, iovlen, rc);
-    } else {
-      kprintf(STRACE_PROLOGUE "readv(%d, [", fd);
-      DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
-      kprintf("], %d) → %'ld% m\n", iovlen, rc);
-    }
-  }
-#endif
-
+  STRACE("readv(%d, [%s], %d) → %'ld% m", fd, DescribeIovec(rc, iov, iovlen),
+         iovlen, rc);
   return rc;
 }

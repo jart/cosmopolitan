@@ -49,7 +49,7 @@ long sysconf(int name) {
     case _SC_PAGESIZE:
       return FRAMESIZE;
     case _SC_NPROCESSORS_ONLN:
-      n = GetCpuCount();
+      n = _getcpucount();
       return n > 0 ? n : -1;
     default:
       return -1;

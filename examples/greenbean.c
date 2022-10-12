@@ -28,7 +28,6 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -299,7 +298,7 @@ int main(int argc, char *argv[]) {
             PORT);
   }
 
-  threads = argc > 1 ? atoi(argv[1]) : GetCpuCount();
+  threads = argc > 1 ? atoi(argv[1]) : _getcpucount();
   if (!(1 <= threads && threads <= 100000)) {
     kprintf("error: invalid number of threads: %d\n", threads);
     exit(1);

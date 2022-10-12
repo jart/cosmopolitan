@@ -13,7 +13,6 @@ ssize_t pwritev(int, const struct iovec *, int, int64_t);
 ssize_t readv(int, const struct iovec *, int);
 ssize_t vmsplice(int, const struct iovec *, int64_t, uint32_t);
 ssize_t writev(int, const struct iovec *, int);
-void DescribeIov(const struct iovec *, int, ssize_t);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

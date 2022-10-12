@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/paths.h"
@@ -31,14 +32,8 @@
 /**
  * Spawns subprocess and returns pipe stream.
  *
- * This embeds the cocmd.com shell interpreter which supports a limited
- * subset of the bourne shell that's significantly faster:
- *
- * - pipelines
- * - single quotes
- * - double quotes
- * - input redirection, e.g. `<path`
- * - output redirection, e.g. `>path`, `>>append`, `2>err.txt, `2>&1`
+ * This embeds the Cosmopolitan Command Interpreter which provides
+ * Bourne-like syntax on all platforms including Windows.
  *
  * @see pclose()
  */
@@ -54,28 +49,30 @@ FILE *popen(const char *cmdline, const char *mode) {
     einval();
     return NULL;
   }
-  if (pipe(pipefds) == -1) return NULL;
-  fcntl(pipefds[dir], F_SETFD, FD_CLOEXEC);
+  if (pipe2(pipefds, O_CLOEXEC) == -1) return NULL;
   if ((f = fdopen(pipefds[dir], mode))) {
     switch ((pid = fork())) {
       case 0:
-        dup2(pipefds[!dir], !dir);
+        _unassert(dup2(pipefds[!dir], !dir) == !dir);
+        // we can't rely on cloexec because cocmd builtins don't execev
+        if (pipefds[0] != !dir) _unassert(!close(pipefds[0]));
+        if (pipefds[1] != !dir) _unassert(!close(pipefds[1]));
         _Exit(cocmd(3, (char *[]){"popen", "-c", cmdline, 0}));
       default:
         f->pid = pid;
-        close(pipefds[!dir]);
+        _unassert(!close(pipefds[!dir]));
         return f;
       case -1:
         e = errno;
-        fclose(f);
-        close(pipefds[!dir]);
+        _unassert(!fclose(f));
+        _unassert(!close(pipefds[!dir]));
         errno = e;
         return NULL;
     }
   } else {
     e = errno;
-    close(pipefds[0]);
-    close(pipefds[1]);
+    _unassert(!close(pipefds[0]));
+    _unassert(!close(pipefds[1]));
     errno = e;
     return NULL;
   }

@@ -129,12 +129,7 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
 ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
   rc = Preadv(fd, iov, iovlen, off);
-#if defined(SYSDEBUG) && _DATATRACE
-  if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "preadv(%d, [", fd);
-    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
-    kprintf("], %d, %'ld) → %'ld% m\n", iovlen, off, rc);
-  }
-#endif
+  STRACE("preadv(%d, [%s], %d, %'ld) → %'ld% m", fd,
+         DescribeIovec(rc, iov, iovlen), iovlen, off, rc);
   return rc;
 }

@@ -91,6 +91,7 @@
  * @raise EINVAL if `param` is NULL
  * @raise EINVAL if `policy` is invalid
  * @raise EINVAL if `param` has value out of ranges defined by `policy`
+ * @vforksafe
  */
 int sched_setscheduler(int pid, int policy, const struct sched_param *param) {
   int rc, old;

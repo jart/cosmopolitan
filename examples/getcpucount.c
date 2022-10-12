@@ -8,8 +8,8 @@
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
 #include "libc/intrin/kprintf.h"
-#include "libc/runtime/sysconf.h"
+#include "libc/runtime/runtime.h"
 
 int main() {
-  kprintf("%d\n", GetCpuCount());
+  kprintf("%d\n", _getcpucount());
 }

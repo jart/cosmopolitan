@@ -39,7 +39,6 @@
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/rdtscp.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/str.h"
@@ -126,7 +125,7 @@ int LuaGetCpuCore(lua_State *L) {
 }
 
 int LuaGetCpuCount(lua_State *L) {
-  lua_pushinteger(L, GetCpuCount());
+  lua_pushinteger(L, _getcpucount());
   return 1;
 }
 

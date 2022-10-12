@@ -38,24 +38,41 @@ COSMOPOLITAN_C_START_
  *         _Exit(1);
  *       EXITS(1);
  *     }
+ *
+ * The above are shorthand for:
+ *
+ *     TEST(my, test) {
+ *       SPAWN(fork);
+ *       // communicate with parent
+ *       PARENT();
+ *       // communicate with child
+ *       WAIT(exit, 0)
+ *     }
+ *
+ * These macros cause a local variable named `child` with the child pid
+ * to be defined.
  */
 
-#define SPAWN(METHOD)                     \
-  {                                       \
-    int _pid, _failed = g_testlib_failed; \
-    ASSERT_NE(-1, (_pid = METHOD()));     \
-    if (!_pid) {
+#define SPAWN(METHOD)                      \
+  {                                        \
+    int child, _failed = g_testlib_failed; \
+    ASSERT_NE(-1, (child = METHOD()));     \
+    if (!child) {
 
-#define EXITS(rc)                                         \
-  _Exit(MAX(0, MIN(255, g_testlib_failed - _failed)));    \
-  }                                                       \
-  testlib_waitforexit(__FILE__, __LINE__, #rc, rc, _pid); \
+#define EXITS(CODE) \
+  PARENT()          \
+  WAIT(exit, CODE)
+
+#define TERMS(SIG) \
+  PARENT()         \
+  WAIT(term, SIG)
+
+#define PARENT()                                       \
+  _Exit(MAX(0, MIN(255, g_testlib_failed - _failed))); \
   }
 
-#define TERMS(sig)                                          \
-  _Exit(MAX(0, MIN(255, g_testlib_failed - _failed)));      \
-  }                                                         \
-  testlib_waitforterm(__FILE__, __LINE__, #sig, sig, _pid); \
+#define WAIT(KIND, CODE)                                         \
+  testlib_waitfor##KIND(__FILE__, __LINE__, #CODE, CODE, child); \
   }
 
 void testlib_waitforexit(const char *, int, const char *, int, int);

@@ -16,10 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pushpop.h"
 #include "libc/calls/ntspawn.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/pushpop.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -87,7 +88,8 @@ textwindows int ntspawn(
       mkntenvblock(block->envvars, envp, extravar, block->buf) != -1 &&
       CreateProcess(prog16, block->cmdline, opt_lpProcessAttributes,
                     opt_lpThreadAttributes, bInheritHandles,
-                    dwCreationFlags | kNtCreateUnicodeEnvironment,
+                    dwCreationFlags | kNtCreateUnicodeEnvironment |
+                        kNtInheritParentAffinity,
                     block->envvars, opt_lpCurrentDirectory, lpStartupInfo,
                     opt_out_lpProcessInformation)) {
     rc = 0;

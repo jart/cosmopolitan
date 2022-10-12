@@ -77,13 +77,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     rc = einval();
   }
 
-#if defined(SYSDEBUG) && _DATATRACE
-  if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "writev(%d, ", fd);
-    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
-    kprintf(", %d) → %'ld% m\n", iovlen, rc);
-  }
-#endif
-
+  STRACE("writev(%d, %s, %d) → %'ld% m", fd,
+         DescribeIovec(rc != -1 ? rc : -2, iov, iovlen), iovlen, rc);
   return rc;
 }

@@ -45,6 +45,8 @@
  *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
  *     decimal (base 10) by default
  * @return the decoded signed saturated number
+ * @raise EINVAL if `base` isn't 0 or 2..36
+ * @raise ERANGE on overflow
  */
 long strtol(const char *s, char **endptr, int base) {
   char t = 0;

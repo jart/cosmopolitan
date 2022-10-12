@@ -151,6 +151,7 @@ wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t) libcesque nosideeffect;
+ssize_t strfmon(char *, size_t, const char *, ...);
 long a64l(const char *);
 char *l64a(long);
 

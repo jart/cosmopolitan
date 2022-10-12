@@ -78,6 +78,7 @@ wint_t towlower_l(wint_t, locale_t);
 wint_t towupper_l(wint_t, locale_t);
 int strcasecmp_l(const char *, const char *, locale_t);
 int strncasecmp_l(const char *, const char *, size_t, locale_t);
+ssize_t strfmon_l(char *, size_t, locale_t, const char *, ...);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

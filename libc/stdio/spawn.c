@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sched_param.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/spawn.h"
 #include "libc/stdio/spawna.internal.h"
 #include "libc/str/str.h"
@@ -47,7 +50,7 @@ int posix_spawn(int *pid, const char *path,
         if (setpgid(0, attrp->posix_attr_pgroup)) _Exit(127);
       }
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSIGMASK) {
-        sigprocmask(SIG_SETMASK, &attrp->posix_attr_sigmask, NULL);
+        sigprocmask(SIG_SETMASK, &attrp->posix_attr_sigmask, 0);
       }
       if (attrp->posix_attr_flags & POSIX_SPAWN_RESETIDS) {
         setuid(getuid());
@@ -59,7 +62,7 @@ int posix_spawn(int *pid, const char *path,
         sigfillset(&allsigs);
         for (s = 0; sigismember(&allsigs, s); s++) {
           if (sigismember(&attrp->posix_attr_sigdefault, s)) {
-            if (sigaction(s, &dfl, NULL) == -1) _Exit(127);
+            if (sigaction(s, &dfl, 0) == -1) _Exit(127);
           }
         }
       }
@@ -96,15 +99,16 @@ int posix_spawn(int *pid, const char *path,
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDULER) {
         if (sched_setscheduler(0, attrp->posix_attr_schedpolicy,
                                &attrp->posix_attr_schedparam) == -1) {
-          _Exit(127);
+          if (errno != ENOSYS) _Exit(127);
         }
       }
       if (attrp->posix_attr_flags & POSIX_SPAWN_SETSCHEDPARAM) {
         if (sched_setparam(0, &attrp->posix_attr_schedparam) == -1) {
-          _Exit(127);
+          if (errno != ENOSYS) _Exit(127);
         }
       }
     }
+    if (!envp) envp = environ;
     execve(path, argv, envp);
     _Exit(127);
   } else {

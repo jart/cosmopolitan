@@ -2,6 +2,7 @@
 #define LIBC_ISYSTEM_SYS_SOCKET_H_
 #include "libc/calls/weirdtypes.h"
 #include "libc/sock/sock.h"
+#include "libc/sock/struct/cmsghdr.h"
 #include "libc/sock/struct/linger.h"
 #include "libc/sock/struct/msghdr.h"
 #include "libc/sock/struct/sockaddr.h"

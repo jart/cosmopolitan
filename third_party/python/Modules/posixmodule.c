@@ -10507,7 +10507,7 @@ os_cpu_count_impl(PyObject *module)
 /*[clinic end generated code: output=5fc29463c3936a9c input=e7c8f4ba6dbbadd3]*/
 {
     int ncpu;
-    ncpu = GetCpuCount();
+    ncpu = _getcpucount();
     if (ncpu >= 1)
         return PyLong_FromLong(ncpu);
     else

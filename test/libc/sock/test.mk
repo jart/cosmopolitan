@@ -69,9 +69,15 @@ o/$(MODE)/test/libc/sock/sendrecvmsg_test.com.runs		\
 o/$(MODE)/test/libc/sock/nointernet_test.com.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
 
-o/$(MODE)/test/libc/sock/socket_test.com.runs: .INTERNET = 1  # todo: ipv6 filtering
+o/$(MODE)/test/libc/sock/socket_test.com.runs:			\
+		private .INTERNET = 1  # todo: ipv6 filtering
 o/$(MODE)/test/libc/sock/socket_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet
+
+o/$(MODE)/test/libc/sock/recvmsg_test.com.runs:			\
+		private .INTERNET = 1  # need to bind to 0.0.0.0
+o/$(MODE)/test/libc/sock/recvmsg_test.com.runs:			\
+		private .PLEDGE = stdio rpath wpath cpath fattr proc inet recvfd sendfd
 
 o/$(MODE)/test/libc/sock/shutdown_test.com.runs:		\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet

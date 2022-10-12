@@ -33,14 +33,8 @@
 /**
  * Launches program with system command interpreter.
  *
- * This embeds the cocmd.com shell interpreter which supports a limited
- * subset of the bourne shell that's significantly faster:
- *
- * - pipelines
- * - single quotes
- * - double quotes
- * - input redirection, e.g. `<path`
- * - output redirection, e.g. `>path`, `>>append`, `2>err.txt, `2>&1`
+ * This embeds the Cosmopolitan Command Interpreter which provides
+ * Bourne-like syntax on all platforms including Windows.
  *
  * @param cmdline is an interpreted Turing-complete command
  * @return -1 if child process couldn't be created, otherwise a wait

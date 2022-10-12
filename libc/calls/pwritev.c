@@ -135,12 +135,7 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
 ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
   rc = Pwritev(fd, iov, iovlen, off);
-#if defined(SYSDEBUG) && _DATATRACE
-  if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "pwritev(%d, ", fd);
-    DescribeIov(iov, iovlen, rc != -1 ? rc : 0);
-    kprintf(", %d, %'ld) → %'ld% m\n", iovlen, off, rc);
-  }
-#endif
+  STRACE("pwritev(%d, %s, %d, %'ld) → %'ld% m", fd,
+         DescribeIovec(rc != -1 ? rc : -2, iov, iovlen), iovlen, off, rc);
   return rc;
 }

@@ -42,6 +42,7 @@
     "LLONG_MAX"
     "LONG_LONG_MAX"
     "SIZE_MAX"
+    "SSIZE_MAX"
     "INT8_MAX"
     "INT16_MAX"
     "INT32_MAX"

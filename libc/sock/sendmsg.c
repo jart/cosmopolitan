@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/msghdr.h"
@@ -91,9 +91,8 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
       if (msg->msg_controllen)
         kprintf(", .control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
       if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
-      kprintf(", .iov=", fd);
-      DescribeIov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
-      kprintf("}");
+      kprintf(", .iov=%s",
+              DescribeIovec(rc != -1 ? rc : -2, msg->msg_iov, msg->msg_iovlen));
     }
     kprintf(", %#x) → %'ld% m\n", flags, rc);
   }

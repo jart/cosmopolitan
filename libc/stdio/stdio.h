@@ -86,6 +86,7 @@ int setvbuf(FILE *, char *, int, size_t);
 int pclose(FILE *);
 char *ctermid(char *);
 void perror(const char *) relegated;
+int makedirs(const char *, unsigned);
 
 typedef uint64_t fpos_t;
 char *gets(char *) paramsnonnull();

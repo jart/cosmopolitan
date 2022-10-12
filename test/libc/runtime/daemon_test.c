@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,44 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/strtol.internal.h"
-#include "libc/limits.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/subprocess.h"
+#include "libc/testlib/testlib.h"
+#include "libc/time/time.h"
+#include "libc/x/x.h"
 
-/**
- * Decodes unsigned integer from wide string.
- *
- * @param s is a non-null nul-terminated string
- * @param endptr if non-null will always receive a pointer to the char
- *     following the last one this function processed, which is usually
- *     the NUL byte, or in the case of invalid strings, would point to
- *     the first invalid character
- * @param base can be anywhere between [2,36] or 0 to auto-detect based
- *     on the the prefixes 0 (octal), 0x (hexadecimal), 0b (binary), or
- *     decimal (base 10) by default
- * @return decoded integer mod 2⁶⁴ negated if leading `-`
- */
-unsigned long wcstoul(const wchar_t *s, wchar_t **endptr, int base) {
-  char t = 0;
-  int d, c = *s;
-  unsigned long x = 0;
-  CONSUME_SPACES(s, c);
-  GET_SIGN(s, c, d);
-  GET_RADIX(s, c, base);
-  if ((c = kBase36[c & 255]) && --c < base) {
-    t |= 1;
-    do {
-      if (__builtin_mul_overflow(x, base, &x) ||
-          __builtin_add_overflow(x, c, &x)) {
-        if (endptr) *endptr = s + 1;
-        errno = ERANGE;
-        return ULONG_MAX;
-      }
-    } while ((c = kBase36[*++s & 255]) && --c < base);
+char testlib_enable_tmp_setup_teardown;
+
+TEST(daemon, test) {
+  int dirfd;
+  char buf[512];
+  SPAWN(fork);
+  ASSERT_SYS(0, 3, open(".", O_RDONLY | O_DIRECTORY));
+  ASSERT_SYS(0, 0, daemon(false, false));
+  ASSERT_SYS(0, 4, openat(3, "ok", O_WRONLY | O_CREAT | O_TRUNC, 0644));
+  ASSERT_NE(NULL, getcwd(buf, sizeof(buf)));
+  ASSERT_SYS(0, 0, write(4, buf, strlen(buf)));
+  ASSERT_SYS(0, 0, close(4));
+  ASSERT_SYS(0, 0, close(3));
+  EXITS(0);
+  for (int i = 0; i < 13; ++i) {
+    bzero(buf, 512);
+    open("ok", O_RDONLY);
+    read(3, buf, 511);
+    close(3);
+    if (!strcmp(IsWindows() ? "/C/" : "/", buf)) {
+      return;
+    }
+    usleep(1000L << i);
   }
-  if (t && endptr) *endptr = s;
-  return d > 0 ? x : -x;
+  ASSERT_TRUE(false);
 }

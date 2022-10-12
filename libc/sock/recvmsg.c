@@ -32,6 +32,8 @@
 /**
  * Sends a message from a socket.
  *
+ * Note: Ancillary data currently isn't polyfilled across platforms.
+ *
  * @param fd is the file descriptor returned by socket()
  * @param msg is a pointer to a struct msghdr containing all the allocated
  *            buffers where to store incoming data.
@@ -46,6 +48,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   ssize_t rc, got;
   struct msghdr msg2;
   union sockaddr_storage_bsd bsd;
+
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (!IsWindows()) {
@@ -88,6 +91,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   } else {
     rc = ebadf();
   }
+
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0) {
     if (!msg || (rc == -1 && errno == EFAULT)) {
@@ -99,11 +103,11 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
       if (msg->msg_controllen)
         kprintf(".control=%#.*hhs, ", msg->msg_controllen, msg->msg_control);
       if (msg->msg_flags) kprintf(".flags=%#x, ", msg->msg_flags);
-      kprintf(".iov=", fd);
-      DescribeIov(msg->msg_iov, msg->msg_iovlen, rc != -1 ? rc : 0);
-      kprintf("}], %#x) → %'ld% m\n", flags, rc);
+      kprintf(".iov=%s", DescribeIovec(rc, msg->msg_iov, msg->msg_iovlen));
+      kprintf("], %#x) → %'ld% m\n", flags, rc);
     }
   }
 #endif
+
   return rc;
 }

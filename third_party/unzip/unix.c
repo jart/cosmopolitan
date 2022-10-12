@@ -973,7 +973,7 @@ int checkdir(__G__ pathcomp, flag)
 /* Function mkdir() */
 /********************/
 
-int mkdir(path, mode)
+int mkdir_(path, mode)
     ZCONST char *path;
     int mode;   /* ignored */
 /*

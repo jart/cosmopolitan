@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/mem/copyfd.internal.h"
 #include "libc/calls/copyfile.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/itimerval.h"
@@ -42,12 +41,12 @@
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/alg.h"
+#include "libc/mem/copyfd.internal.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/nexgen32e/kcpuids.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/sysconf.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
@@ -301,7 +300,7 @@ void PrintMakeCommand(void) {
   appends(&output, "make MODE=");
   appends(&output, mode);
   appends(&output, " -j");
-  appendd(&output, buf, FormatUint64(buf, GetCpuCount()) - buf);
+  appendd(&output, buf, FormatUint64(buf, _getcpucount()) - buf);
   appendw(&output, ' ');
   appends(&output, target);
 }

@@ -558,6 +558,20 @@ TEST(strtoul, testoverflow) {
   ASSERT_STREQ("", e);
 }
 
+TEST(strtol, invalidHex_consistentWithBsd) {
+  char *c = 0;
+  long x = strtol("0xz", &c, 16);
+  ASSERT_EQ(0, x);
+  ASSERT_STREQ("z", c);
+}
+
+TEST(strtol, invalidHex_consistentWithBsd2) {
+  char *c = 0;
+  long x = strtol("0xez", &c, 16);
+  ASSERT_EQ(0xe, x);
+  ASSERT_STREQ("z", c);
+}
+
 BENCH(atoi, bench) {
   EZBENCH2("atoi 10⁸", donothing, EXPROPRIATE(atoi(VEIL("r", "100000000"))));
   EZBENCH2("strtol 10⁸", donothing,

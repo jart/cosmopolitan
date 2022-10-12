@@ -8,9 +8,9 @@ struct msghdr {            /* Linux+NT ABI */
   void *msg_name;          /* optional address */
   uint32_t msg_namelen;    /* size of msg_name */
   struct iovec *msg_iov;   /* scatter/gather array */
-  int msg_iovlen;          /* iovec count */
-  void *msg_control;       /* credentials and stuff */
-  uint32_t msg_controllen; /* size of msg_control */
+  int msg_iovlen;          /* # elements in msg_iov */
+  void *msg_control;       /* ancillary data c. cmsghdr */
+  uint32_t msg_controllen; /* ancillary data buffer len */
   uint32_t __pad0;         /* reconcile abi */
   int msg_flags;           /* MSG_XXX */
 };
