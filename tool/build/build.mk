@@ -111,6 +111,8 @@ o/$(MODE)/tool/build/chmod.zip.o			\
 o/$(MODE)/tool/build/cp.zip.o				\
 o/$(MODE)/tool/build/mv.zip.o				\
 o/$(MODE)/tool/build/echo.zip.o				\
+o/$(MODE)/tool/build/echo.com.zip.o			\
+o/$(MODE)/tool/build/cocmd.com.zip.o			\
 o/$(MODE)/tool/build/gzip.zip.o				\
 o/$(MODE)/tool/build/printf.zip.o			\
 o/$(MODE)/tool/build/dd.zip.o: private			\

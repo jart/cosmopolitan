@@ -35,6 +35,10 @@
 /**
  * Replaces current process with program.
  *
+ * On Windows, `argv` and `envp` can't contain binary strings. They need
+ * to be valid UTF-8 in order to round-trip the WIN32 API, without being
+ * corrupted.
+ *
  * @param program will not be PATH searched, see commandv()
  * @param argv[0] is the name of the program to run
  * @param argv[1,n-2] optionally specify program arguments

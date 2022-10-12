@@ -56,9 +56,9 @@ static bool have_getrandom;
  *
  * The following flags may be specified:
  *
- * - GRND_RANDOM: Halt the entire system while I tap an entropy pool
+ * - `GRND_RANDOM`: Halt the entire system while I tap an entropy pool
  *   so small that it's hard to use statistics to test if it's random
- * - GRND_NONBLOCK: Do not wait for i/o events or me to jiggle my
+ * - `GRND_NONBLOCK`: Do not wait for i/o events or me to jiggle my
  *   mouse, and instead return immediately the moment data isn't
  *   available, even if the result needs to be -1 w/ EAGAIN
  *
@@ -68,6 +68,8 @@ static bool have_getrandom;
  * @note this function could block a nontrivial time on old computers
  * @note this function is indeed intended for cryptography
  * @note this function takes around 900 cycles
+ * @raise EINVAL if `f` is invalid
+ * @raise ENOSYS on bare metal
  * @asyncsignalsafe
  * @restartable
  * @vforksafe
@@ -81,8 +83,10 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
   const char *via;
   sigset_t neu, old;
   if (n > 256) n = 256;
-  if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) return einval();
-  if (IsWindows()) {
+  if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) {
+    rc = einval();
+    via = "n/a";
+  } else if (IsWindows()) {
     via = "RtlGenRandom";
     if (RtlGenRandom(p, n)) {
       rc = n;

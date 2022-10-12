@@ -63,9 +63,20 @@ o/$(MODE)/test/libc/stdio/%.com.dbg:			\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
 
+o/$(MODE)/test/libc/stdio/system_test.com.dbg:		\
+		$(TEST_LIBC_STDIO_DEPS)			\
+		o/$(MODE)/test/libc/stdio/system_test.o	\
+		o/$(MODE)/test/libc/stdio/stdio.pkg	\
+		o/$(MODE)/tool/build/echo.com.zip.o	\
+		o/$(MODE)/tool/build/cocmd.com.zip.o	\
+		$(LIBC_TESTMAIN)			\
+		$(CRT)					\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
 $(TEST_LIBC_STDIO_OBJS): private			\
-	DEFAULT_CCFLAGS +=				\
-		-fno-builtin
+		DEFAULT_CCFLAGS +=			\
+			-fno-builtin
 
 .PHONY: o/$(MODE)/test/libc/stdio
 o/$(MODE)/test/libc/stdio:				\

@@ -59,6 +59,7 @@ LIBC_TESTLIB_A_SRCS_C =						\
 	libc/testlib/comborunner.c				\
 	libc/testlib/contains.c					\
 	libc/testlib/endswith.c					\
+	libc/testlib/extract.c					\
 	libc/testlib/ezbenchcontrol.c				\
 	libc/testlib/ezbenchreport.c				\
 	libc/testlib/ezbenchwarn.c				\

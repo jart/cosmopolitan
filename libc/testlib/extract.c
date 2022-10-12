@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -17,66 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/errno.h"
-#include "libc/paths.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
+#include "libc/mem/io.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/testlib/testlib.h"
+
+STATIC_YOINK("zip_uri_support");
 
 /**
- * Spawns subprocess and returns pipe stream.
+ * Extracts zip asset to filesystem.
  *
- * This embeds the cocmd.com shell interpreter which supports a limited
- * subset of the bourne shell that's significantly faster:
- *
- * - pipelines
- * - single quotes
- * - double quotes
- * - input redirection, e.g. `<path`
- * - output redirection, e.g. `>path`, `>>append`, `2>err.txt, `2>&1`
- *
- * @see pclose()
+ * @param zip is name of asset in zip executable central directory
+ * @param to is local filesystem path to which it's extracted
+ * @param mode is file mode used for `to`
  */
-FILE *popen(const char *cmdline, const char *mode) {
-  FILE *f;
-  int e, pid, dir, flags, pipefds[2];
-  flags = fopenflags(mode);
-  if ((flags & O_ACCMODE) == O_RDONLY) {
-    dir = 0;
-  } else if ((flags & O_ACCMODE) == O_WRONLY) {
-    dir = 1;
-  } else {
-    errno = EINVAL;
-    return NULL;
-  }
-  if (pipe(pipefds) == -1) return NULL;
-  fcntl(pipefds[dir], F_SETFD, FD_CLOEXEC);
-  if ((f = fdopen(pipefds[dir], mode))) {
-    switch ((pid = fork())) {
-      case 0:
-        dup2(pipefds[!dir], !dir);
-        systemexec(cmdline);
-        _exit(127);
-      default:
-        f->pid = pid;
-        close(pipefds[!dir]);
-        return f;
-      case -1:
-        e = errno;
-        fclose(f);
-        close(pipefds[!dir]);
-        errno = e;
-        return NULL;
-    }
-  } else {
-    e = errno;
-    close(pipefds[0]);
-    close(pipefds[1]);
-    errno = e;
-    return NULL;
-  }
+void testlib_extract(const char *zip, const char *to, int mode) {
+  int fdin, fdout;
+  ASSERT_NE(-1, (fdin = open(zip, O_RDONLY)));
+  ASSERT_NE(-1, (fdout = creat(to, mode)));
+  ASSERT_NE(-1, _copyfd(fdin, fdout, -1));
+  ASSERT_NE(-1, close(fdout));
+  ASSERT_NE(-1, close(fdin));
 }
