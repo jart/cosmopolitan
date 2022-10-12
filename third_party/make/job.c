@@ -1904,32 +1904,30 @@ child_execute_job (struct childbase *child,
     c = 0;
   }
 
-  internet = !get_target_variable(STRING_SIZE_TUPLE (".STRICT"),
-                                     c->file, 0) ||
-             parse_bool (get_target_variable
-                         (STRING_SIZE_TUPLE (".INTERNET"),
-                          c ? c->file : 0, "0"));
-
-  unsandboxed = !get_target_variable(STRING_SIZE_TUPLE (".STRICT"),
-                                     c->file, 0) ||
-                parse_bool (get_target_variable
-                            (STRING_SIZE_TUPLE (".UNSANDBOXED"),
-                             c ? c->file : 0, "0"));
-
   if (c)
     {
-      sandboxed = !unsandboxed;
       strict = parse_bool (get_target_variable
                            (STRING_SIZE_TUPLE (".STRICT"),
                             c->file, "0"));
+      internet = !strict ||
+                 parse_bool (get_target_variable
+                             (STRING_SIZE_TUPLE (".INTERNET"),
+                              c->file, "0"));
+      unsandboxed = !strict ||
+                    parse_bool (get_target_variable
+                                (STRING_SIZE_TUPLE (".UNSANDBOXED"),
+                                 c->file, "0"));
     }
   else
     {
-      sandboxed = false;
       strict = false;
+      internet = true;
+      unsandboxed = true;
     }
 
-  if (!unsandboxed)
+  sandboxed = !unsandboxed;
+
+  if (sandboxed)
     {
       promises = emptytonull (get_target_variable
                               (STRING_SIZE_TUPLE (".PLEDGE"),
