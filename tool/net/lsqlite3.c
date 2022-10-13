@@ -1928,8 +1928,8 @@ static int db_changeset_conflict_callback(
         int eConflict,            /* DATA, MISSING, CONFLICT, CONSTRAINT */
         sqlite3_changeset_iter *p /* Handle describing change and conflict */
 ) {
-    // return REPLACE code if no conflict callback is provided
-    if (changeset_conflict_cb == LUA_NOREF) return SQLITE_CHANGESET_REPLACE;
+    // return default code if no conflict callback is provided
+    if (changeset_conflict_cb == LUA_NOREF) return SQLITE_CHANGESET_OMIT;
     sdb *db = (sdb*)user;
     lua_State *L = db->L;
     int top = lua_gettop(L);
