@@ -95,7 +95,6 @@ int fchownat(int, const char *, uint32_t, uint32_t, int);
 int fcntl(int, int, ...);
 int fdatasync(int);
 int flock(int, int);
-int lockf(int, int, int64_t);
 int fork(void);
 int fsync(int);
 int ftruncate(int, int64_t);

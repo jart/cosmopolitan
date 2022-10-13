@@ -26,6 +26,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
@@ -326,7 +327,8 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
             if (!__tls_enabled) {
               x = __pid;
             } else {
-              x = __get_tls_privileged()->tib_tid;
+              x = atomic_load_explicit(&__get_tls_privileged()->tib_tid,
+                                       memory_order_relaxed);
             }
             if (!__nocolor && p + 7 <= e) {
               *p++ = '\e';

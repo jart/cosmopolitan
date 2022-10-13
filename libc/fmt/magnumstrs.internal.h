@@ -19,6 +19,7 @@ struct MagnumStr {
 hidden extern const struct MagnumStr kClockNames[];
 hidden extern const struct MagnumStr kErrnoDocs[];
 hidden extern const struct MagnumStr kErrnoNames[];
+hidden extern const struct MagnumStr kFcntlCmds[];
 hidden extern const struct MagnumStr kIpOptnames[];
 hidden extern const struct MagnumStr kOpenFlags[];
 hidden extern const struct MagnumStr kRlimitNames[];

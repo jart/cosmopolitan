@@ -59,6 +59,7 @@
 #include "libc/sysv/consts/rusage.h"
 #include "libc/time/time.h"
 #include "libc/runtime/runtime.h"
+#include "libc/errno.h"
 #if SQLITE_USER_AUTHENTICATION
 #include "third_party/sqlite3/sqlite3userauth.inc"
 #endif
@@ -10573,6 +10574,7 @@ static void process_sqliterc(
   p->in = inSaved;
   p->lineno = savedLineno;
   sqlite3_free(zBuf);
+  errno = 0; /* [jart] clear error */
 }
 
 /*

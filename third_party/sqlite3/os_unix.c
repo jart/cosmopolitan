@@ -53,6 +53,8 @@
 #include "third_party/sqlite3/sqlite3.h"
 #include "third_party/sqlite3/mutex.internal.h"
 #include "third_party/sqlite3/mutex.internal.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/dce.h"
 #include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
 
@@ -3612,8 +3614,9 @@ static int full_fsync(int fd, int fullSync, int dataOnly){
     struct stat buf;
     rc = osFstat(fd, &buf);
   }
-#elif HAVE_FULLFSYNC
-  if( fullSync ){
+#elif HAVE_FULLFSYNC || defined(__COSMOPOLITAN__)
+  /* [jart] use runtime os detection */
+  if( fullSync && F_FULLFSYNC != -1 ){
     rc = osFcntl(fd, F_FULLFSYNC, 0);
   }else{
     rc = 1;
@@ -3626,7 +3629,13 @@ static int full_fsync(int fd, int fullSync, int dataOnly){
   ** It'd be better to detect fullfsync support once and avoid 
   ** the fcntl call every time sync is called.
   */
-  if( rc ) rc = fsync(fd);
+  if( rc ) {
+    if( IsXnu() ){
+      rc = fsync(fd);
+    }else{
+      rc = fdatasync(fd);
+    }
+  }
 
 #elif defined(__APPLE__)
   /* fdatasync() on HFS+ doesn't yet flush the file size if it changed correctly

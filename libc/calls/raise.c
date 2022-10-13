@@ -18,13 +18,13 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/thread/tls.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/tls.h"
 #include "libc/thread/xnu.internal.h"
 
 static textwindows inline bool HasWorkingConsole(void) {
@@ -59,7 +59,7 @@ static noubsan void RaiseSigFpe(void) {
  * @asyncsignalsafe
  */
 int raise(int sig) {
-  int rc, event;
+  int rc, tid, event;
   STRACE("raise(%G) → ...", sig);
   if (sig == SIGTRAP) {
     DebugBreak();
@@ -67,7 +67,7 @@ int raise(int sig) {
   } else if (sig == SIGFPE) {
     RaiseSigFpe();
     rc = 0;
-  } else if (!IsWindows()) {
+  } else if (!IsWindows() && !IsMetal()) {
     rc = sys_tkill(gettid(), sig, 0);
   } else {
     rc = __sig_raise(sig, SI_TKILL);

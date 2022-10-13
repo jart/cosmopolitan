@@ -62,6 +62,7 @@
 #include "libc/time/struct/utimbuf.h"
 #include "libc/time/time.h"
 #include "libc/x/x.h"
+#include "third_party/musl/lockf.h"
 #include "third_party/musl/passwd.h"
 #include "third_party/python/Include/abstract.h"
 #include "third_party/python/Include/boolobject.h"
@@ -11894,10 +11895,10 @@ all_ins(PyObject *m)
     if (PyModule_AddIntMacro(m, CLD_CONTINUED)) return -1;
 
     /* constants for lockf */
-    if (F_LOCK && PyModule_AddIntMacro(m, F_LOCK)) return -1;
-    if (F_TLOCK && PyModule_AddIntMacro(m, F_TLOCK)) return -1;
+    if (PyModule_AddIntMacro(m, F_LOCK)) return -1;
+    if (PyModule_AddIntMacro(m, F_TLOCK)) return -1;
     if (PyModule_AddIntMacro(m, F_ULOCK)) return -1;
-    if (F_TEST && PyModule_AddIntMacro(m, F_TEST)) return -1;
+    if (PyModule_AddIntMacro(m, F_TEST)) return -1;
 
 #ifdef HAVE_SPAWNV
     if (PyModule_AddIntConstant(m, "P_WAIT", _P_WAIT)) return -1;

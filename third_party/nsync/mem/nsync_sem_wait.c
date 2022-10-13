@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/runtime/runtime.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
@@ -81,5 +82,3 @@ int nsync_sem_wait_with_cancel_ (waiter *w, nsync_time abs_deadline,
 	}
 	return (sem_outcome);
 }
-
-

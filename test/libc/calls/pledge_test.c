@@ -250,7 +250,7 @@ TEST(pledge, stdio_fcntl_allowsSomeFirstArgs) {
     ASSERT_SYS(0, 3, fcntl(2, F_DUPFD_CLOEXEC, 3));
     ASSERT_SYS(0, 0, ioctl(0, FIOCLEX, 0));
     ASSERT_SYS(EPERM, 0, isatty(0));
-    ASSERT_SYS(EPERM, -1, fcntl(0, -1));
+    ASSERT_SYS(EPERM, -1, fcntl(0, 777));
     ASSERT_SYS(EPERM, -1, fcntl(0, F_GETLK, &lk));
     ASSERT_SYS(EPERM, -1, fcntl(0, F_NOTIFY));
     ASSERT_SYS(EPERM, -1, socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));

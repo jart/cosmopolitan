@@ -18,11 +18,15 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/flock.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -44,9 +48,49 @@
  * Please be warned that locks currently do nothing on Windows since
  * figuring out how to polyfill them correctly is a work in progress.
  *
- * @param cmd can be F_{GET,SET}{FD,FL}, etc.
+ * @param fd is the file descriptor
+ * @param cmd can be one of:
+ *     - `F_GETFD` gets `FD_CLOEXEC` status of `fd
+ *     - `F_SETFD` sets `FD_CLOEXEC` status of `arg` file descriptor
+ *     - `F_GETFL` returns file descriptor status flags
+ *     - `F_SETFL` sets file descriptor status flags
+ *     - `F_DUPFD` is like dup() but `arg` is a minimum result, e.g. 3
+ *     - `F_DUPFD_CLOEXEC` ditto but sets `O_CLOEXEC` on returned fd
+ *     - `F_SETLK` for record locking where `arg` is `struct flock`
+ *     - `F_SETLKW` ditto but waits (i.e. blocks) for lock
+ *     - `F_GETLK` to retrieve information about a record lock
+ *     - `F_OFD_SETLK` for better locks on Linux and XNU
+ *     - `F_OFD_SETLKW` for better locks on Linux and XNU
+ *     - `F_OFD_GETLK` for better locks on Linux and XNU
+ *     - `F_FULLFSYNC` on MacOS for fsync() with release barrier
+ *     - `F_BARRIERFSYNC` on MacOS for fsync() with even more barriers
+ *     - `F_SETNOSIGPIPE` on MacOS and NetBSD to control `SIGPIPE`
+ *     - `F_GETNOSIGPIPE` on MacOS and NetBSD to control `SIGPIPE`
+ *     - `F_GETPATH` on MacOS and NetBSD where arg is `char[PATH_MAX]`
+ *     - `F_MAXFD` on NetBSD to get max open file descriptor
+ *     - `F_NOCACHE` on MacOS to toggle data caching
+ *     - `F_GETPIPE_SZ` on Linux to get pipe size
+ *     - `F_SETPIPE_SZ` on Linux to set pipe size
+ *     - `F_NOTIFY` raise `SIGIO` upon `fd` events in `arg` on Linux
+ *       - `DN_ACCESS` for file access
+ *       - `DN_MODIFY` for file modifications
+ *       - `DN_CREATE` for file creations
+ *       - `DN_DELETE` for file deletions
+ *       - `DN_RENAME` for file renames
+ *       - `DN_ATTRIB` for file attribute changes
+ *       - `DN_MULTISHOT` bitwise or for realtime signals (non-coalesced)
  * @param arg can be FD_CLOEXEC, etc. depending
  * @return 0 on success, or -1 w/ errno
+ * @raise EBADF if `fd` isn't a valid open file descriptor
+ * @raise EINVAL if `cmd` is unknown or unsupported by os
+ * @raise EINVAL if `cmd` is invalid or unsupported by os
+ * @raise EPERM if pledge() is in play w/o `stdio` or `flock` promise
+ * @raise ENOLCK if `F_SETLKW` would have exceeded `RLIMIT_LOCKS`
+ * @raise EPERM if `cmd` is `F_SETOWN` and we weren't authorized
+ * @raise ESRCH if `cmd` is `F_SETOWN` and process group not found
+ * @raise EDEADLK if `cmd` was `F_SETLKW` and waiting would deadlock
+ * @raise EMFILE if `cmd` is `F_DUPFD` or `F_DUPFD_CLOEXEC` and
+ *     `RLIMIT_NOFILE` would be exceeded
  * @asyncsignalsafe
  * @restartable
  */
@@ -54,20 +98,58 @@ int fcntl(int fd, int cmd, ...) {
   int rc;
   va_list va;
   uintptr_t arg;
+
   va_start(va, cmd);
   arg = va_arg(va, uintptr_t);
   va_end(va);
+
   if (fd >= 0) {
-    if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
-      rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
-    } else if (!IsWindows()) {
-      rc = sys_fcntl(fd, cmd, arg);
+    if (cmd >= 0) {
+      if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
+        rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
+      } else if (!IsWindows()) {
+        rc = sys_fcntl(fd, cmd, arg);
+      } else {
+        rc = sys_fcntl_nt(fd, cmd, arg);
+      }
     } else {
-      rc = sys_fcntl_nt(fd, cmd, arg);
+      rc = einval();
     }
   } else {
-    rc = einval();
+    rc = ebadf();
   }
-  STRACE("fcntl(%d, %d, %p) → %#x% m", fd, cmd, arg, rc);
+
+#ifdef SYSDEBUG
+  if (cmd == F_GETFD ||         //
+      cmd == F_GETOWN ||        //
+      cmd == F_FULLFSYNC ||     //
+      cmd == F_BARRIERFSYNC ||  //
+      cmd == F_MAXFD) {
+    STRACE("fcntl(%d, %s) → %d% m", fd, DescribeFcntlCmd(cmd), rc);
+  } else if (cmd == F_GETFL) {
+    STRACE("fcntl(%d, %s) → %s% m", fd, DescribeFcntlCmd(cmd),
+           DescribeOpenFlags(rc));
+  } else if (cmd == F_SETLK ||                       //
+             cmd == F_SETLKW ||                      //
+             cmd == F_GETLK ||                       //
+             ((SupportsLinux() || SupportsXnu()) &&  //
+              cmd != -1 &&                           //
+              (cmd == F_OFD_SETLK ||                 //
+               cmd == F_OFD_SETLKW ||                //
+               cmd == F_OFD_GETLK))) {
+    STRACE("fcntl(%d, %s, %s) → %d% m", fd, DescribeFcntlCmd(cmd),
+           DescribeFlock(cmd, (struct flock *)arg), rc);
+  } else if ((SupportsNetbsd() || SupportsXnu()) && cmd != -1 &&
+             cmd == F_GETPATH) {
+    STRACE("fcntl(%d, %s, [%s]) → %d% m", fd, DescribeFcntlCmd(cmd),
+           !rc ? (const char *)arg : "n/a", rc);
+  } else if (SupportsLinux() && cmd != -1 && cmd == F_NOTIFY) {
+    STRACE("fcntl(%d, %s, %s) → %d% m", fd, DescribeFcntlCmd(cmd),
+           DescribeDnotifyFlags(arg), rc);
+  } else {
+    STRACE("fcntl(%d, %s, %ld) → %#x% m", fd, DescribeFcntlCmd(cmd), arg, rc);
+  }
+#endif
+
   return rc;
 }

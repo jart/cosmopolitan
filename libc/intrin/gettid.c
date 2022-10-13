@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/tls.h"
 
 /**
@@ -36,7 +37,7 @@
 int gettid(void) {
   int tid;
   if (__tls_enabled && !__vforked) {
-    tid = __get_tls()->tib_tid;
+    tid = atomic_load_explicit(&__get_tls()->tib_tid, memory_order_relaxed);
     if (tid > 0) {
       return tid;
     }

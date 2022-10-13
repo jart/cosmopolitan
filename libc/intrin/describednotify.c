@@ -16,33 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/macros.internal.h"
+#include "libc/nt/enum/processaccess.h"
+#include "libc/sysv/consts/dn.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
+static const struct DescribeFlags kDnotifyFlags[] = {
+    {DN_ACCESS, "ACCESS"},        //
+    {DN_MODIFY, "MODIFY"},        //
+    {DN_CREATE, "CREATE"},        //
+    {DN_DELETE, "DELETE"},        //
+    {DN_RENAME, "RENAME"},        //
+    {DN_ATTRIB, "ATTRIB"},        //
+    {DN_MULTISHOT, "MULTISHOT"},  //
+};
 
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
+const char *(DescribeDnotifyFlags)(char buf[80], int x) {
+  return DescribeFlags(buf, 80, kDnotifyFlags, ARRAYLEN(kDnotifyFlags), "DN_",
+                       x);
 }

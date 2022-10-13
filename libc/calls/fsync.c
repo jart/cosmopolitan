@@ -17,10 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
 
 /**
@@ -33,6 +34,7 @@
  */
 int fsync(int fd) {
   int rc;
+  struct stat st;
   if (__nosync != 0x5453455454534146) {
     if (!IsWindows()) {
       rc = sys_fsync(fd);
@@ -41,8 +43,8 @@ int fsync(int fd) {
     }
     STRACE("fysnc(%d) → %d% m", fd, rc);
   } else {
-    rc = 0;
-    STRACE("fsync(%d) → disabled% m", fd);
+    rc = fstat(fd, &st);
+    STRACE("fsync_fake(%d) → %d% m", fd, rc);
   }
   return rc;
 }

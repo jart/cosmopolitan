@@ -16,33 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/fmt/itoa.h"
+#include "libc/sysv/consts/f.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
-
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
+const char *(DescribeFlockType)(char buf[12], int x) {
+  if (x == F_RDLCK) return "F_RDLCK";
+  if (x == F_WRLCK) return "F_WRLCK";
+  if (x == F_UNLCK) return "F_UNLCK";
+  FormatInt32(buf, x);
+  return buf;
 }

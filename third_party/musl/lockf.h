@@ -1,0 +1,16 @@
+#ifndef COSMOPOLITAN_THIRD_PARTY_MUSL_LOCKF_H_
+#define COSMOPOLITAN_THIRD_PARTY_MUSL_LOCKF_H_
+
+#define F_ULOCK 0
+#define F_LOCK  1
+#define F_TLOCK 2
+#define F_TEST  3
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+int lockf(int, int, int64_t);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+#endif /* COSMOPOLITAN_THIRD_PARTY_MUSL_LOCKF_H_ */

@@ -48,7 +48,7 @@
 #define STATE_QUOTED_VAR 4
 #define STATE_WHITESPACE 5
 
-#define READ24LE(s) READ32LE(s "\0")
+#define READ24(s) READ32LE(s "\0")
 
 struct Env {
   char *s;
@@ -333,16 +333,16 @@ static int Test(void) {
   if (n == 4) {
     w = READ32LE(args[2]) & 0x00ffffff;
     if ((w & 65535) == READ16LE("=")) return !!strcmp(args[1], args[3]);
-    if (w == READ24LE("==")) return !!strcmp(args[1], args[3]);
-    if (w == READ24LE("!=")) return !strcmp(args[1], args[3]);
+    if (w == READ24("==")) return !!strcmp(args[1], args[3]);
+    if (w == READ24("!=")) return !strcmp(args[1], args[3]);
   } else if (n == 3) {
     w = READ32LE(args[1]) & 0x00ffffff;
-    if (w == READ24LE("-n")) return !(strlen(args[2]) > 0);
-    if (w == READ24LE("-z")) return !(strlen(args[2]) == 0);
-    if (w == READ24LE("-e")) return !!stat(args[2], &st);
-    if (w == READ24LE("-f")) return !stat(args[2], &st) && S_ISREG(st.st_mode);
-    if (w == READ24LE("-d")) return !stat(args[2], &st) && S_ISDIR(st.st_mode);
-    if (w == READ24LE("-h")) return !stat(args[2], &st) && S_ISLNK(st.st_mode);
+    if (w == READ24("-n")) return !(strlen(args[2]) > 0);
+    if (w == READ24("-z")) return !(strlen(args[2]) == 0);
+    if (w == READ24("-e")) return !!stat(args[2], &st);
+    if (w == READ24("-f")) return !(!stat(args[2], &st) && S_ISREG(st.st_mode));
+    if (w == READ24("-d")) return !(!stat(args[2], &st) && S_ISDIR(st.st_mode));
+    if (w == READ24("-h")) return !(!stat(args[2], &st) && S_ISLNK(st.st_mode));
   }
   return 1;
 }

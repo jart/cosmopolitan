@@ -21,10 +21,10 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/wait.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
@@ -65,5 +65,5 @@ void _check_sigchld(void) {
   __fds_lock();
   g_fds.p[pids[i]].zombie = true;
   __fds_unlock();
-  __sig_add(SIGCHLD, CLD_EXITED);
+  __sig_add(0, SIGCHLD, CLD_EXITED);
 }

@@ -20,6 +20,7 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/describentoverlapped.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nt/enum/filelockflags.h"
 #include "libc/nt/files.h"
 
 __msabi extern typeof(LockFileEx) *const __imp_LockFileEx;
@@ -35,16 +36,18 @@ bool32 LockFileEx(int64_t hFile, uint32_t dwFlags, uint32_t dwReserved,
                   uint32_t nNumberOfBytesToLockHigh,
                   struct NtOverlapped *lpOverlapped) {
   bool32 ok;
-  STRACE("LockFileEx(%ld, %s, %#x, %'zu, %s) → ...", hFile,
-         DescribeNtLockFileFlags(dwFlags), dwReserved,
-         (uint64_t)nNumberOfBytesToLockHigh << 32 | nNumberOfBytesToLockLow,
-         DescribeNtOverlapped(lpOverlapped));
+  if (~dwFlags & kNtLockfileFailImmediately) {
+    NTTRACE("LockFileEx(%ld, %s, %#x, %'zu, %s) → ...", hFile,
+            DescribeNtLockFileFlags(dwFlags), dwReserved,
+            (uint64_t)nNumberOfBytesToLockHigh << 32 | nNumberOfBytesToLockLow,
+            DescribeNtOverlapped(lpOverlapped));
+  }
   ok = __imp_LockFileEx(hFile, dwFlags, dwReserved, nNumberOfBytesToLockLow,
                         nNumberOfBytesToLockHigh, lpOverlapped);
   if (!ok) __winerr();
-  STRACE("LockFileEx(%ld, %s, %#x, %'zu, [%s]) → %hhhd% m", hFile,
-         DescribeNtLockFileFlags(dwFlags), dwReserved,
-         (uint64_t)nNumberOfBytesToLockHigh << 32 | nNumberOfBytesToLockLow,
-         DescribeNtOverlapped(lpOverlapped), ok);
+  NTTRACE("LockFileEx(%ld, %s, %#x, %'zu, [%s]) → %hhhd% m", hFile,
+          DescribeNtLockFileFlags(dwFlags), dwReserved,
+          (uint64_t)nNumberOfBytesToLockHigh << 32 | nNumberOfBytesToLockLow,
+          DescribeNtOverlapped(lpOverlapped), ok);
   return ok;
 }

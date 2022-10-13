@@ -21,7 +21,6 @@
 #include "libc/log/check.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
@@ -145,6 +144,14 @@ TEST(ParseHttpMessage, testHttp09) {
   EXPECT_EQ(kHttpGet, req->method);
   EXPECT_STREQ("/", gc(slice(m, req->uri)));
   EXPECT_EQ(9, req->version);
+}
+
+TEST(ParseHttpMessage, testTinyResponse) {
+  static const char m[] = "HTTP/1.1 429 \r\n\r\n";
+  InitHttpMessage(req, kHttpResponse);
+  EXPECT_EQ(strlen(m), ParseHttpMessage(req, m, strlen(m)));
+  EXPECT_EQ(429, req->status);
+  EXPECT_STREQ("", gc(slice(m, req->message)));
 }
 
 TEST(ParseHttpMessage, testLeadingLineFeeds_areIgnored) {

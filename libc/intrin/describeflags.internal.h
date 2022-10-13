@@ -16,8 +16,11 @@ const char *DescribeArchPrctlCode(char[12], int);
 const char *DescribeCapability(char[20], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
+const char *DescribeDnotifyFlags(char[80], int);
 const char *DescribeErrno(char[12], int);
 const char *DescribeErrnoResult(char[12], int);
+const char *DescribeFcntlCmd(char[20], int);
+const char *DescribeFlockType(char[12], int);
 const char *DescribeFrame(char[32], int);
 const char *DescribeFutexOp(char[64], int);
 const char *DescribeHow(char[12], int);
@@ -68,6 +71,8 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
 #define DescribeErrno(x)             DescribeErrno(alloca(12), x)
 #define DescribeErrnoResult(x)       DescribeErrnoResult(alloca(12), x)
+#define DescribeFcntlCmd(x)          DescribeFcntlCmd(alloca(20), x)
+#define DescribeFlockType(x)         DescribeFlockType(alloca(12), x)
 #define DescribeFrame(x)             DescribeFrame(alloca(32), x)
 #define DescribeFutexOp(x)           DescribeFutexOp(alloca(64), x)
 #define DescribeHow(x)               DescribeHow(alloca(12), x)
@@ -108,6 +113,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 #define DescribeWhichPrio(x)         DescribeWhichPrio(alloca(12), x)
+#define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -16,33 +16,39 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
+int fds[2];
+_Thread_local sig_atomic_t gotsig;
 
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
+void OnSig(int sig) {
+  gotsig = 1;
+}
+
+void *ReadWorker(void *arg) {
+  char buf[8];
+  ASSERT_SYS(EINTR, -1, read(fds[0], buf, 8));
+  ASSERT_TRUE(gotsig);
+  return 0;
+}
+
+TEST(pthread_kill, canCancelReadOperation) {
+  pthread_t t;
+  struct sigaction oldsa;
+  struct sigaction sa = {.sa_handler = OnSig};
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
+  ASSERT_SYS(0, 0, pipe(fds));
+  ASSERT_EQ(0, pthread_create(&t, 0, ReadWorker, 0));
+  ASSERT_SYS(0, 0, usleep(100000));  // potentially flaky
+  ASSERT_EQ(0, pthread_kill(t, SIGUSR1));
+  ASSERT_EQ(0, pthread_join(t, 0));
+  ASSERT_FALSE(gotsig);
+  ASSERT_SYS(0, 0, close(fds[0]));
+  ASSERT_SYS(0, 0, close(fds[1]));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
 }

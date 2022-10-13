@@ -35,27 +35,29 @@
  *     }
  *
  * @return 0 on success, or -1 w/ errno
- * @error EBADF if `first` is negative
- * @error EBADF on OpenBSD if `first` is greater than highest fd
- * @error EINVAL if flags are bad or first is greater than last
- * @error EMFILE if a weird race condition happens on Linux
- * @error ENOSYS if not Linux 5.9+, FreeBSD 8+, or OpenBSD
- * @error EINTR possibly on OpenBSD
- * @error ENOMEM on Linux maybe
+ * @raise EBADF if `first` is negative
+ * @raise ENOSYS if not Linux 5.9+, FreeBSD 8+, OpenBSD, or NetBSD
+ * @raise EBADF on OpenBSD if `first` is greater than highest fd
+ * @raise EINVAL if flags are bad or first is greater than last
+ * @raise EMFILE if a weird race condition happens on Linux
+ * @raise EINTR possibly on OpenBSD
+ * @raise ENOMEM on Linux maybe
  */
 int closefrom(int first) {
   int rc, err;
-  if (IsNetbsd() || IsWindows() || IsMetal()) {
-    rc = enosys();
-  } else if (first < 0) {
+  if (first < 0) {
     // consistent with openbsd
     // freebsd allows this but it's dangerous
     // necessary on linux due to type signature
     rc = ebadf();
+  } else if (IsFreebsd() || IsOpenbsd()) {
+    rc = sys_closefrom(first);
   } else if (IsLinux()) {
     rc = sys_close_range(first, 0xffffffffu, 0);
+  } else if (IsNetbsd()) {
+    rc = __sys_fcntl(first, 10 /*F_CLOSEM*/, first);
   } else {
-    rc = sys_closefrom(first);
+    rc = enosys();
   }
   STRACE("closefrom(%d) → %d% m", first, rc);
   return rc;

@@ -23,6 +23,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/internal.h"
@@ -56,7 +57,9 @@ int _fork(uint32_t dwCreationFlags) {
     parent = __pid;
     __pid = dx;
     if (__tls_enabled) {
-      __get_tls()->tib_tid = IsLinux() ? dx : sys_gettid();
+      atomic_store_explicit(&__get_tls()->tib_tid,
+                            IsLinux() ? dx : sys_gettid(),
+                            memory_order_relaxed);
     }
     if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → 0 (child of %d)", parent);

@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,33 +16,42 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/fmt/magnumstrs.internal.h"
+#include "libc/macros.internal.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
+	.macro	.e e s
+	.long	\e - kFcntlCmds
+	.long	.L\@ - kFcntlCmds
+	.rodata.str1.1
+.L\@:	.string	"\s"
+	.previous
+	.endm
 
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
-}
+	.section .rodata,"a",@progbits
+	.align 4
+	.underrun
+kFcntlCmds:
+	.e	F_GETFD,"GETFD"
+	.e	F_SETFD,"SETFD"
+	.e	F_GETFL,"GETFL"
+	.e	F_SETFL,"SETFL"
+	.e	F_DUPFD,"DUPFD"
+	.e	F_DUPFD_CLOEXEC,"DUPFD_CLOEXEC"
+	.e	F_GETLK,"GETLK"
+	.e	F_SETLK,"SETLK"
+	.e	F_SETLKW,"SETLKW"
+	.e	F_GETOWN,"GETOWN"
+	.e	F_SETOWN,"SETOWN"
+	.e	F_GETPATH,"GETPATH"
+	.e	F_NOCACHE,"NOCACHE"
+	.e	F_FULLFSYNC,"FULLFSYNC"
+	.e	F_OFD_GETLK,"OFD_GETLK"
+	.e	F_OFD_SETLK,"OFD_SETLK"
+	.e	F_OFD_SETLKW,"OFD_SETLKW"
+	.e	F_BARRIERFSYNC,"BARRIERFSYNC"
+	.e	F_SETNOSIGPIPE,"SETNOSIGPIPE"
+	.e	F_GETNOSIGPIPE,"GETNOSIGPIPE"
+	.e	F_MAXFD,"MAXFD"
+	.long	MAGNUM_TERMINATOR
+	.endobj	kFcntlCmds,globl,hidden
+	.overrun

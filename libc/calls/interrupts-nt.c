@@ -31,9 +31,8 @@
 
 textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
   bool res;
-  if (__threaded && __threaded != gettid()) return false;
   if (_weaken(_check_sigalrm)) _weaken(_check_sigalrm)();
-  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
+  if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     if (_weaken(_check_sigchld)) _weaken(_check_sigchld)();
     if (fd && _weaken(_check_sigwinch)) _weaken(_check_sigwinch)(fd);
   }

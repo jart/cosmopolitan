@@ -19,6 +19,7 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
+#include "libc/intrin/atomic.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -57,7 +58,8 @@ char *_mktls(struct CosmoTib **out_tib) {
   tib = (struct CosmoTib *)(tls + I(_tls_size));
   tib->tib_self = tib;
   tib->tib_self2 = tib;
-  tib->tib_tid = -1;
+  tib->tib_sigmask = __get_tls()->tib_sigmask;
+  atomic_store_explicit(&tib->tib_tid, -1, memory_order_relaxed);
 
   if (out_tib) {
     *out_tib = tib;

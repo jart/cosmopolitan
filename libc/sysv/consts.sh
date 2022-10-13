@@ -64,11 +64,11 @@ syscon	errno	ENAMETOOLONG				36			63			63			63			63			10063			# filename too lon
 syscon	errno	ENOLCK					37			77			77			77			77			158			# no locks available; kNtErrorNotLocked; bsd consensus; raised by fcntl(2), flock(2)
 syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 10066); raised by rmdir(2)
 syscon	errno	ELOOP					40			62			62			62			62			1921			# too many levels of symbolic links; bsd consensus; kNtErrorCantResolveFilename; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
-syscon	errno	ENOMSG					42			91			83			90			83			0			# raised by msgop(2)
+syscon	errno	ENOMSG					42			91			83			90			83			4306			# kNtErrorEmpty; raised by msgop(2)
 syscon	errno	EIDRM					43			90			82			89			82			0			# identifier removed; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
 syscon	errno	EPROTO					71			100			92			95			96			0			# raised by accept(2), connect(2), socket(2), socketpair(2)
-syscon	errno	EOVERFLOW				75			84			84			87			84			0			# raised by aio_read(2), copy_file_range(2), ctime(2), fanotify_init(2), lseek(2), mmap(2), open(2), open_by_handle_at(2), sem_post(2), sendfile(2), shmctl(2), stat(2), statfs(2), statvfs(2), time(2), timegm(2)
-syscon	errno	EILSEQ					84			92			86			84			85			0			# returned by fgetwc(3), fputwc(3), getwchar(3), putwchar(3), scanf(3), ungetwc(3)
+syscon	errno	EOVERFLOW				75			84			84			87			84			534			# kNtErrorArithmeticOverflow; raised by aio_read(2), copy_file_range(2), ctime(2), fanotify_init(2), lseek(2), mmap(2), open(2), open_by_handle_at(2), sem_post(2), sendfile(2), shmctl(2), stat(2), statfs(2), statvfs(2), time(2), timegm(2)
+syscon	errno	EILSEQ					84			92			86			84			85			582			# kNtErrorIllegalCharacter; returned by fgetwc(3), fputwc(3), getwchar(3), putwchar(3), scanf(3), ungetwc(3)
 syscon	errno	EUSERS					87			68			68			68			68			10068			# too many users; bsd consensus; WSAEUSERS; raised by acct(2)
 syscon	errno	ENOTSOCK				88			38			38			38			38			10038			# not a socket; bsd consensus; WSAENOTSOCK; raised by accept(2), bind(2), connect(2), getpeername(2), getsockname(2), getsockopt(2), listen(2), recv(2), send(2), shutdown(2)
 syscon	errno	EDESTADDRREQ				89			39			39			39			39			10039			# destination address required; bsd consensus; WSAEDESTADDRREQ; raised by send(2), write(2)
@@ -94,7 +94,7 @@ syscon	errno	ENOTCONN				107			57			57			57			57			10057			# socket is not conne
 syscon	errno	ESHUTDOWN				108			58			58			58			58			10058			# cannot send after transport endpoint shutdown; note that shutdown write is an EPIPE; bsd consensus; WSAESHUTDOWN
 syscon	errno	ETOOMANYREFS				109			59			59			59			59			10059			# too many references: cannot splice; bsd consensus; WSAETOOMANYREFS; raised by sendmsg(2), unix(7)
 syscon	errno	ETIMEDOUT				110			60			60			60			60			1460			# connection timed out; kNtErrorTimeout; bsd consensus; WSAETIMEDOUT; raised by connect(2), futex(2), keyctl(2), tcp(7)
-syscon	errno	ETIME					62			101			60			60			92			0			# timer expired (POSIX.1 XSI STREAMS)
+syscon	errno	ETIME					62			101			60			60			92			1460			# timer expired (POSIX.1 XSI STREAMS)
 syscon	errno	ECONNREFUSED				111			61			61			61			61			10061			# bsd consensus; WSAECONNREFUSED; raised by connect(2), listen(2), recv(2), unix(7), udp(7)system-imposed limit on the number of threads was encountered.
 syscon	errno	EHOSTDOWN				112			64			64			64			64			10064			# bsd consensus; WSAEHOSTDOWN; raised by accept(2)
 syscon	errno	EHOSTUNREACH				113			65			65			65			65			10065			# bsd consensus; WSAEHOSTUNREACH; raised by accept(2), ip(7)
@@ -120,8 +120,8 @@ syscon	errno	ESHLIBVERS				0			87			0			0			0			0			# shiver me timbers
 syscon	errno	EBADMACHO				0			88			0			0			0			0			#
 syscon	errno	ENOPOLICY				0			103			0			0			0			0			#
 syscon	errno	EBADMSG					74			94			89			92			88			0			# raised by ioctl_getfsmap(2)
-syscon	errno	ECANCELED				125			89			85			88			87			0			# raised by timerfd_create(2)
-syscon	errno	EOWNERDEAD				130			105			96			94			97			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
+syscon	errno	ECANCELED				125			89			85			88			87			1223			# kNtErrorCancelled; raised by timerfd_create(2)
+syscon	errno	EOWNERDEAD				130			105			96			94			97			105			# kNtErrorSemOwnerDied; raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENONET					64			0			0			0			0			0			# unilateral; raised by accept(2)
 syscon	errno	ERESTART				85			-1			-1			-1			-3			0			# should only be seen in ptrace()
@@ -356,15 +356,22 @@ syscon	fcntl2	F_GETFD					1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl2	F_SETFD					2			2			2			2			2			2			# unix consensus & faked nt
 syscon	fcntl2	F_GETFL					3			3			3			3			3			3			# unix consensus & faked nt
 syscon	fcntl2	F_SETFL					4			4			4			4			4			4			# unix consensus & faked nt
-syscon	fcntl2	F_SETOWN				8			6			6			6			6			0			# bsd consensus
-syscon	fcntl2	F_GETOWN				9			5			5			5			5			0			# bsd consensus
-syscon	fcntl2	F_FULLFSYNC				0			51			0			0			0			0			#
-syscon	fcntl2	F_NOCACHE				0			48			0			0			0			0			#
+syscon	fcntl2	F_SETOWN				8			6			6			6			6			-1			# bsd consensus
+syscon	fcntl2	F_GETOWN				9			5			5			5			5			-1			# bsd consensus
+syscon	fcntl2	F_FULLFSYNC				-1			51			-1			-1			-1			-1			#
+syscon	fcntl2	F_BARRIERFSYNC				-1			85			-1			-1			-1			-1			#
+syscon	fcntl2	F_NOCACHE				-1			48			-1			-1			-1			-1			#
+syscon	fcntl3	F_SETNOSIGPIPE				-1			73			-1			-1			14			-1			# 
+syscon	fcntl3	F_GETNOSIGPIPE				-1			74			-1			-1			13			-1			# 
+syscon	fcntl3	F_GETPATH				-1			50			-1			-1			15			-1			# geth path associated with fd into buffer with PATH_MAX (1024) bytes
 syscon	fcntl3	FD_CLOEXEC				1			1			1			1			1			1			# unix consensus & faked nt
 syscon	fcntl	F_DUPFD_CLOEXEC				0x0406			67			17			10			12			0x0406			# Linux 2.6.24+; faked nt
-syscon	fcntl	F_MAXFD					0			0			0			0			11			0			#
-syscon	fcntl	FREAD					0			1			1			1			1			0			#
-syscon	fcntl	FWRITE					0			2			2			2			2			0			#
+syscon	fcntl	F_MAXFD					-1			-1			-1			-1			11			-1			#
+syscon	fcntl	F_NOTIFY				0x0402			-1			-1			-1			-1			-1
+syscon	fcntl	F_SETPIPE_SZ				0x0407			-1			-1			-1			-1			-1
+syscon	fcntl	F_GETPIPE_SZ				0x0408			-1			-1			-1			-1			-1
+syscon	fcntl	FREAD					0			1			1			1			1			0			# wut is it
+syscon	fcntl	FWRITE					0			2			2			2			2			0			# wut is it
 
 #       fcntl3	O_NONBLOCK
 #       fcntl3	O_APPEND
@@ -376,31 +383,24 @@ syscon	fcntl	FWRITE					0			2			2			2			2			0			#
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
 syscon	fcntl	F_SETLK					6			8			12			8			8			6			# polyfilled nt
-syscon	compat	F_SETLK64				6			8			12			8			8			6			# polyfilled nt
-syscon	fcntl	F_SETLKW				7			9			13			9			9			7
-syscon	compat	F_SETLKW64				7			9			13			9			9			7
+syscon	fcntl	F_SETLKW				7			9			13			9			9			7			# polyfilled nt
 syscon	fcntl	F_GETLK					5			7			11			7			7			5			# polyfilled nt
-syscon	compat	F_GETLK64				5			7			11			7			7			5			# polyfilled nt
+syscon	fcntl	F_OFD_SETLK				37			90			-1			-1			-1			6
+syscon	fcntl	F_OFD_SETLKW				38			91			-1			-1			-1			7
+syscon	fcntl	F_OFD_GETLK				36			92			-1			-1			-1			5
 syscon	fcntl	F_RDLCK					0			1			1			1			1			0			# polyfilled nt; bsd consensus
 syscon	fcntl	F_WRLCK					1			3			3			3			3			1			# polyfilled nt; bsd consensus
 syscon	fcntl	F_UNLCK					2			2			2			2			2			2			# polyfilled nt; unix consensus
+syscon	compat	F_SETLK64				6			8			12			8			8			6			# polyfilled nt
+syscon	compat	F_SETLKW64				7			9			13			9			9			7
+syscon	compat	F_GETLK64				5			7			11			7			7			5			# polyfilled nt
 
-syscon	fcntl	F_ULOCK					0			0			0			0			0			0			# TODO: specified by posix but not kernels?
-syscon	fcntl	F_LOCK					1			1			1			1			1			0			# unix consensus
-syscon	fcntl	F_TLOCK					2			2			2			2			2			0			# unix consensus
-syscon	fcntl	F_TEST					3			3			3			3			3			0			# unix consensus
-syscon	fcntl	F_SETSIG				10			0			0			0			0			0
-syscon	fcntl	F_GETSIG				11			0			0			0			0			0
-syscon	fcntl	F_SETOWN_EX				15			0			0			0			0			0
-syscon	fcntl	F_GETOWN_EX				0x10			0			0			0			0			0
-syscon	fcntl	F_OFD_GETLK				36			0			0			0			0			0
-syscon	fcntl	F_OFD_SETLK				37			0			0			0			0			0
-syscon	fcntl	F_OFD_SETLKW				38			0			0			0			0			0
-syscon	fcntl	F_SETLEASE				0x0400			0			0			0			0			0
-syscon	fcntl	F_GETLEASE				0x0401			0			0			0			0			0
-syscon	fcntl	F_NOTIFY				0x0402			0			0			0			0			0
-syscon	fcntl	F_SETPIPE_SZ				0x0407			0			0			0			0			0
-syscon	fcntl	F_GETPIPE_SZ				0x0408			0			0			0			0			0
+syscon	fcntl	F_SETSIG				10			-1			-1			-1			-1			-1
+syscon	fcntl	F_GETSIG				11			-1			-1			-1			-1			-1
+syscon	fcntl	F_SETOWN_EX				15			-1			-1			-1			-1			-1
+syscon	fcntl	F_GETOWN_EX				0x10			-1			-1			-1			-1			-1
+syscon	fcntl	F_SETLEASE				0x0400			-1			-1			-1			-1			-1
+syscon	fcntl	F_GETLEASE				0x0401			-1			-1			-1			-1			-1
 
 syscon	ioctl	FIONBIO					0x5421			0x8004667e		0x8004667e		0x8004667e		0x8004667e		0x8004667e		# BSD-The New Technology consensus; FIONBIO is traditional O_NONBLOCK; see F_SETFL for re-imagined api
 syscon	ioctl	FIOASYNC				0x5452			0x8004667d		0x8004667d		0x8004667d		0x8004667d		0x8004667d		# BSD-The New Technology consensus
@@ -763,9 +763,9 @@ syscon	tcp	TCP_CORK				3			4			4			16			4			0			# nagle's algorithm strikes agai
 syscon	tcp	TCP_MAXSEG				2			2			2			2			2			0			# reduces tcp segment size; see also tcp offloading
 syscon	tcp	TCP_FASTOPEN				23			0			0x0401			0			0			15			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
 syscon	tcp	TCP_FASTOPEN_CONNECT			30			0			0			0			0			0			# reduces roundtrips; for listener; Linux 3.7+ (c. 2012) / or is windows it 0x22? /proc/sys/net/ipv4/tcp_fastopen TODO(jart): MSG_FASTOPEN; XNU sources say 261 but not sure if that's true
-syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			3			0			# keepalives
-syscon	tcp	TCP_KEEPINTVL				5			0x101			0x200			0			5			0			# keepalives
-syscon	tcp	TCP_KEEPCNT				6			0x102			0x400			0			6			0			# keepalives
+syscon	tcp	TCP_KEEPIDLE				4			0			0x100			0			3			0			# start keepalives after this period
+syscon	tcp	TCP_KEEPINTVL				5			0x101			0x200			0			5			0			# interval between keepalives
+syscon	tcp	TCP_KEEPCNT				6			0x102			0x400			0			6			0			# number of keepalives before death
 syscon	tcp	TCP_SYNCNT				7			0			0			0			0			0			# how hard to syn packet the enemy
 syscon	tcp	TCP_ULP					31			0			0			0			0			0			# setsockopt(sock, IPPROTO_TCP, TCP_ULP, "tls", 4)
 syscon	tcp	TCP_COOKIE_TRANSACTIONS			15			0			0			0			0			0			# defense against the syn packets
@@ -778,7 +778,7 @@ syscon	tcp	TCP_MD5SIG				14			0			0x10			4			16			0			# what is it (rfc2385)
 syscon	tcp	TCP_MD5SIG_MAXKEYLEN			80			0			0			0			0			0			# what is it
 syscon	tcp	TCP_TIMESTAMP				24			0			0			0			0			0			# what is it
 syscon	tcp	TCP_USER_TIMEOUT			18			0			0			0			0			0			# what is it
-syscon	tcp	TCP_QUICKACK				12			0			0			0			0			0			# what is it
+syscon	tcp	TCP_QUICKACK				12			0			0			0			0			0			# disables optimization that lets kernel merge response data into ack packets
 syscon	tcp	TCP_SAVE_SYN				27			0			0			0			0			0			# record syn packets
 syscon	tcp	TCP_SAVED_SYN				28			0			0			0			0			0			# get recorded syn packets
 syscon	tcp	TCP_THIN_DUPACK				17			0			0			0			0			0			# what is it

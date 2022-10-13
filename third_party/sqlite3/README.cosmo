@@ -10,3 +10,7 @@ ORIGIN
 LICENSE
 
     Public Domain or MIT
+
+LOCAL CHANGES
+
+  - Changed the fsync() code to be configured at runtime.

@@ -16,26 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
-#include "libc/intrin/cmpxchg.h"
-#include "libc/intrin/lockcmpxchg.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
-
-/**
- * @fileoverview UNIX signals for the New Technology, Part 2.
- * @threadsafe
- */
+#include "libc/thread/tls.h"
 
 /**
  * Allocates piece of memory for storing pending signal.
@@ -61,16 +57,30 @@ static textwindows void __sig_free(struct Signal *mem) {
   mem->used = false;
 }
 
+static inline textwindows int __sig_is_masked(int sig) {
+  if (__tls_enabled) {
+    return __get_tls()->tib_sigmask & (1ull << (sig - 1));
+  } else {
+    return __sig.sigmask & (1ull << (sig - 1));
+  }
+}
+
+textwindows int __sig_is_applicable(struct Signal *s) {
+  return (s->tid <= 0 || s->tid == gettid()) && !__sig_is_masked(s->sig);
+}
+
 /**
  * Dequeues signal that isn't masked.
  * @return signal or null if empty or none unmasked
  */
 static textwindows struct Signal *__sig_remove(void) {
+  int tid;
   struct Signal *prev, *res;
   if (__sig.queue) {
+    tid = gettid();
     __sig_lock();
     for (prev = 0, res = __sig.queue; res; prev = res, res = res->next) {
-      if (!sigismember(&__sig.mask, res->sig)) {
+      if (__sig_is_applicable(res)) {
         if (res == __sig.queue) {
           __sig.queue = res->next;
         } else if (prev) {
@@ -78,8 +88,6 @@ static textwindows struct Signal *__sig_remove(void) {
         }
         res->next = 0;
         break;
-      } else {
-        STRACE("%G is masked", res->sig);
       }
     }
     __sig_unlock();
@@ -117,7 +125,7 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
   // setup the somewhat expensive information args
   // only if they're requested by the user in sigaction()
   if (flags & SA_SIGINFO) {
-    __repstosb(&info, 0, sizeof(info));
+    bzero(&info, sizeof(info));
     info.si_signo = sig;
     info.si_code = si_code;
     infop = &info;
@@ -134,7 +142,11 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
     // since sigaction() is @asyncsignalsafe we only restore it if the
     // user didn't change it during the signal handler. we also don't
     // need to do anything if this was a oneshot signal or nodefer.
-    _lockcmpxchg(__sighandrvas + sig, (int32_t)(intptr_t)SIG_DFL, rva);
+    __sig_lock();
+    if (__sighandrvas[sig] == (int32_t)(intptr_t)SIG_DFL) {
+      __sighandrvas[sig] = rva;
+    }
+    __sig_unlock();
   }
 
   if (!restartable) {
@@ -150,7 +162,7 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
 /**
  * Returns true if signal default action is to end process.
  */
-static textwindows bool __sig_isfatal(int sig) {
+static textwindows bool __sig_is_fatal(int sig) {
   if (sig == SIGCHLD || sig == SIGURG || sig == SIGWINCH) {
     return false;
   } else {
@@ -168,7 +180,7 @@ bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
   bool delivered;
   switch (__sighandrvas[sig]) {
     case (intptr_t)SIG_DFL:
-      if (__sig_isfatal(sig)) {
+      if (__sig_is_fatal(sig)) {
         STRACE("terminating on %G", sig);
         _Exitr(128 + sig);
       }
@@ -194,20 +206,17 @@ bool __sig_handle(bool restartable, int sig, int si_code, ucontext_t *ctx) {
  * @threadsafe
  */
 textwindows int __sig_raise(int sig, int si_code) {
-  int rc;
-  int candeliver;
-  __sig_lock();
-  candeliver = !sigismember(&__sig.mask, sig);
-  __sig_unlock();
-  switch (candeliver) {
-    case 1:
+  if (1 <= sig && sig <= 64) {
+    if (!__sig_is_masked(sig)) {
+      ++__sig_count;
       __sig_handle(false, sig, si_code, 0);
       return 0;
-    case 0:
+    } else {
       STRACE("%G is masked", sig);
-      return __sig_add(sig, si_code);
-    default:
-      return -1;  // sigismember() validates `sig`
+      return __sig_add(gettid(), sig, si_code);
+    }
+  } else {
+    return einval();
   }
 }
 
@@ -216,10 +225,10 @@ textwindows int __sig_raise(int sig, int si_code) {
  * @return 0 on success, otherwise -1 w/ errno
  * @threadsafe
  */
-textwindows int __sig_add(int sig, int si_code) {
+textwindows int __sig_add(int tid, int sig, int si_code) {
   int rc;
   struct Signal *mem;
-  if (1 <= sig && sig <= NSIG) {
+  if (1 <= sig && sig <= 64) {
     __sig_lock();
     if (__sighandrvas[sig] == (unsigned)(intptr_t)SIG_IGN) {
       STRACE("ignoring %G", sig);
@@ -228,6 +237,7 @@ textwindows int __sig_add(int sig, int si_code) {
       STRACE("enqueuing %G", sig);
       ++__sig_count;
       if ((mem = __sig_alloc())) {
+        mem->tid = tid;
         mem->sig = sig;
         mem->si_code = si_code;
         mem->next = __sig.queue;
@@ -276,7 +286,7 @@ textwindows bool __sig_check(bool restartable) {
 textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
   struct Signal *cur, *prev, *next;
   if (rva != (unsigned)(intptr_t)SIG_IGN &&
-      (rva != (unsigned)(intptr_t)SIG_DFL || __sig_isfatal(sig))) {
+      (rva != (unsigned)(intptr_t)SIG_DFL || __sig_is_fatal(sig))) {
     return;
   }
   if (__sig.queue) {
@@ -293,28 +303,6 @@ textwindows void __sig_check_ignore(const int sig, const unsigned rva) {
         __sig_free(cur);
       } else {
         prev = cur;
-      }
-    }
-    __sig_unlock();
-  }
-}
-
-/**
- * Determines the pending signals on New Technology.
- *
- * @param pending is to hold the pending signals
- * @threadsafe
- */
-textwindows void __sig_pending(sigset_t *pending) {
-  struct Signal *cur;
-  sigemptyset(pending);
-  if (__sig.queue) {
-    __sig_lock();
-    for (cur = __sig.queue; cur; cur = cur->next) {
-      if (__sighandrvas[cur->sig] != (unsigned)(intptr_t)SIG_IGN) {
-        pending->__bits[(cur->sig - 1) >> 6] |= (1ull << ((cur->sig - 1) & 63));
-      } else {
-        STRACE("%G is ignored", cur->sig);
       }
     }
     __sig_unlock();

@@ -19,13 +19,13 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/itimerval.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
 #include "libc/nexgen32e/nexgen32e.h"
@@ -68,7 +68,7 @@ textwindows void _check_sigalrm(void) {
   now = nowl();
   elapsed = now - __lastalrm;
   if (elapsed > __interval) {
-    __sig_add(SIGALRM, SI_TIMER);
+    __sig_add(0, SIGALRM, SI_TIMER);
     if (__singleshot) {
       __hastimer = false;
     } else {

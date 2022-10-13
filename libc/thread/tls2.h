@@ -4,8 +4,8 @@
 #include "libc/thread/tls.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
+
 /**
  * Returns location of thread information block.
  *
@@ -24,8 +24,19 @@ static noasan inline struct CosmoTib *__get_tls_privileged(void) {
   }
   return (struct CosmoTib *)tib;
 }
-#endif /* GNU x86-64 */
 
+static noasan inline struct CosmoTib *__get_tls_win32(void) {
+  char *tib, *lin = (char *)0x30;
+  asm("mov\t%%gs:(%1),%0" : "=a"(tib) : "r"(lin) : "memory");
+  tib = *(char **)(tib + 0x1480 + __tls_index * 8);
+  return (struct CosmoTib *)tib;
+}
+
+static noasan inline void __set_tls_win32(void *tls) {
+  asm("mov\t%1,%%gs:%0" : "=m"(*((long *)0x1480 + __tls_index)) : "r"(tls));
+}
+
+#endif /* GNU x86-64 */
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_THREAD_TLS2_H_ */

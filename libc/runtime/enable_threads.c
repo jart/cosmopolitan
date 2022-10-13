@@ -19,17 +19,15 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/tls.h"
 
 extern int __threadcalls_end[];
 extern int __threadcalls_start[];
 #pragma weak __threadcalls_start
 #pragma weak __threadcalls_end
 
-privileged void __enable_threads(void) {
-  if (__threaded) return;
-  STRACE("__enable_threads()");
+static privileged dontinline void FixupLocks(void) {
   __morph_begin();
   /*
    * _NOPL("__threadcalls", func)
@@ -55,5 +53,11 @@ privileged void __enable_threads(void) {
     _base[*p + 2] = 0xe8;
   }
   __morph_end();
+}
+
+void __enable_threads(void) {
+  if (__threaded) return;
+  STRACE("__enable_threads()");
+  FixupLocks();
   __threaded = gettid();
 }

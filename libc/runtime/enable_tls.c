@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
@@ -99,6 +100,7 @@ _Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
  * and your `errno` variable also won't be thread safe anymore.
  */
 privileged void __enable_tls(void) {
+  int tid;
   size_t siz;
   struct CosmoTib *tib;
   char *mem, *tls;
@@ -133,12 +135,13 @@ privileged void __enable_tls(void) {
   if (IsLinux()) {
     // gnu/systemd guarantees pid==tid for the main thread so we can
     // avoid issuing a superfluous system call at startup in program
-    tib->tib_tid = __pid;
+    tid = __pid;
   } else {
-    tib->tib_tid = sys_gettid();
+    tid = sys_gettid();
   }
+  atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
   _pthread_main.tib = tib;
-  _pthread_main.tid = tib->tib_tid;
+  _pthread_main.tid = tid;
   _pthread_main.flags = PT_MAINTHREAD;
   __repmovsb(tls, _tdata_start, _TLDZ);
 

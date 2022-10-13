@@ -18,4 +18,4 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 
-long __sig_count;
+atomic_long __sig_count;

@@ -17,30 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/nt/enum/threadaccess.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/thread.h"
-#include "libc/sysv/errfuns.h"
-
-static textwindows int sys_tkill_nt(int tid, int sig) {
-  int rc;
-  int64_t hand;
-  if ((hand = OpenThread(kNtThreadTerminate, false, tid))) {
-    if (TerminateThread(hand, 128 + sig)) {
-      rc = 0;
-    } else {
-      rc = __winerr();
-    }
-    CloseHandle(hand);
-  } else {
-    rc = esrch();
-  }
-  return rc;
-}
+#include "libc/sysv/consts/sicode.h"
 
 /**
  * Kills thread.
@@ -56,10 +37,10 @@ static textwindows int sys_tkill_nt(int tid, int sig) {
  */
 int tkill(int tid, int sig) {
   int rc;
-  if (!IsWindows()) {
+  if (!IsWindows() && !IsMetal()) {
     rc = sys_tkill(tid, sig, 0);
   } else {
-    rc = sys_tkill_nt(tid, sig);
+    rc = __sig_add(tid, sig, SI_TKILL);
   }
   STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
   return rc;

@@ -227,7 +227,7 @@
 /* #undef HAVE_LINUX_CAN_RAW_FD_FRAMES */
 
 /* Define to 1 if you have the 'lockf' function and the F_LOCK macro. */
-/* #undef HAVE_LOCKF */
+#define HAVE_LOCKF 1
 
 /* #define HAVE_DEVICE_MACROS 1 */
 #define HAVE_MAKEDEV 1

@@ -37,8 +37,6 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-bool __force_sqlite_to_work_until_we_can_fix_it;
-
 static textwindows int sys_fcntl_nt_dupfd(int fd, int cmd, int start) {
   if (start < 0) return einval();
   return sys_dup_nt(fd, -1, (cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0), start);
@@ -110,11 +108,7 @@ static textwindows int sys_fcntl_nt_lock(struct Fd *f, int cmd, uintptr_t arg) {
         ok = true;
       }
     }
-    if (ok || __force_sqlite_to_work_until_we_can_fix_it) {
-      return 0;
-    } else {
-      return -1;
-    }
+    return ok ? 0 : -1;
   }
 
   if (l->l_type == F_UNLCK) {

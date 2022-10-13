@@ -20,61 +20,63 @@
 #include "net/http/tokenbucket.h"
 
 /**
- * Returns byte comparison mask w/ 0xff if equal otherwise 0x00.
- */
-static inline uint64_t CompareEq(uint64_t x, uint64_t y) {
-  uint64_t mask, zoro = x ^ y;
-  mask = ((((zoro >> 1) | 0x8080808080808080) - zoro) & 0x8080808080808080);
-  return (mask << 1) - (mask >> 7);
-}
-
-/**
  * Atomically increments all signed bytes in array without overflow.
  *
- * This function should be called periodically so buckets have tokens.
- * While many threads can consumes tokens, only a single thread can use
- * the replenish operation.
- *
- * This function implements a SWAR algorithm offering the best possible
- * performance under the constraint that operations happen atomically.
- * This function should take 2ms to add a token to 2**22 buckets which
- * need a 4mb array that has one bucket for every 1024 IPv4 addresses.
- * However that doesn't matter since no locks are held during that 2ms
- * therefore replenishing doesn't block threads that acquire tokens.
+ * Under the token bucket model, operations are denied by default unless
+ * tokens exist to allow them. This function must be called periodically
+ * from a single background thread to replenish the buckets with tokens.
+ * For example, this function may be called once per second which allows
+ * one operation per second on average with bursts up to 127 per second.
+ * This policy needn't be applied uniformly. For example, you might find
+ * out that a large corporation funnels all their traffic through one ip
+ * address, so you could replenish their tokens multiple times a second.
  *
  * @param w is word array that aliases byte token array
  * @param n is number of 64-bit words in `w` array
  */
 void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
   for (size_t i = 0; i < n; ++i) {
-    uint64_t x = atomic_load_explicit(w + i, memory_order_relaxed);
-    atomic_fetch_add_explicit(
-        w + i, 0x0101010101010101 & ~CompareEq(x, 0x7f7f7f7f7f7f7f7f),
-        memory_order_acq_rel);
+    uint64_t a = atomic_load_explicit(w + i, memory_order_relaxed);
+    if (a == 0x7f7f7f7f7f7f7f7f) continue;
+    uint64_t b = 0x8080808080808080;
+    uint64_t c = a ^ 0x7f7f7f7f7f7f7f7f;
+    uint64_t d = ((c >> 1 | b) - c & b ^ b) >> 7;
+    atomic_fetch_add_explicit(w + i, d, memory_order_relaxed);
   }
 }
 
 /**
  * Atomically decrements signed byte index if it's positive.
  *
- * This function should be called to take a token from the right bucket
- * whenever a client wants to use some type of resource. This routine
- * discriminates based on `c` which is the netmask bit count. There must
- * exist `1 << c` signed bytes (or buckets) in the `b` array.
+ * Multiple threads may call this method to determine if sufficient
+ * tokens exist to perform an operation. Return values greater than zero
+ * mean a token was atomically acquired. Values less than or equal zero
+ * means the bucket is empty. There must exist `1 << c` signed bytes (or
+ * buckets) in the `b` array.
  *
- * Tokens are considered available if the bucket corresponding `x` has a
- * positive number. This function returns true of a token was atomically
- * acquired using a lockeless spinless algorithm. Buckets are allowed to
- * drift into a slightly negative state, but overflow is impractical.
+ * Since this design uses signed bytes, the returned number may be used
+ * to control how much burstiness is allowed. For example:
+ *
+ *     int t = AcquireToken(tok.b, ip, 22);
+ *     if (t < 64) {
+ *       if (t > 8) write(client, "HTTP/1.1 429 \r\n\r\n", 17);
+ *       close(client);
+ *       return;
+ *     }
+ *
+ * May be used to send a rejection to clients who've exceeded their
+ * tokens whereas clients who've grossly exceeded their tokens will
+ * simply be dropped.
  *
  * @param w is array of token buckets
  * @param n is ipv4 address
  * @param c is cidr
  */
-bool AcquireToken(atomic_schar *b, uint32_t x, int c) {
+int AcquireToken(atomic_schar *b, uint32_t x, int c) {
   uint32_t i = x >> (32 - c);
-  return atomic_load_explicit(b + i, memory_order_relaxed) > 0 &&
-         atomic_fetch_add_explicit(b + i, -1, memory_order_acq_rel) > 0;
+  int t = atomic_load_explicit(b + i, memory_order_relaxed);
+  if (t <= 0) return t;
+  return atomic_fetch_add_explicit(b + i, -1, memory_order_relaxed);
 }
 
 /**

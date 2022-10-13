@@ -1256,16 +1256,18 @@ static privileged void AllowIoctlTty(struct Filter *f) {
 //   - TCP_FASTOPEN         (0x17)
 //   - TCP_FASTOPEN_CONNECT (0x1e)
 //   - IPV6_V6ONLY          (0x1a)
+//   - TCP_QUICKACK         (0x0c)
 //
 static privileged void AllowSetsockoptRestrict(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 24),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_setsockopt, 0, 25),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 41, 3, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0, 2, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 1, 1, 0),
-      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 18),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 0, 19),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[2])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0c, 16, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x1a, 15, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 14, 0),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x0f, 13, 0),

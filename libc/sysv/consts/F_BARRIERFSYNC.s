@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon fcntl,F_LOCK,1,1,1,1,1,0
+.syscon fcntl2,F_BARRIERFSYNC,-1,85,-1,-1,-1,-1

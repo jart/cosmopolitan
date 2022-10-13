@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon fcntl,F_TLOCK,2,2,2,2,2,0
+.syscon fcntl3,F_GETNOSIGPIPE,-1,74,-1,-1,13,-1

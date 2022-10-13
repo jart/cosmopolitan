@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/utsname.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
@@ -229,7 +230,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
     ShowFunctionCalls(ctx);
   }
   kprintf("\n");
-  __print_maps();
+  if (!IsWindows()) __print_maps();
   /* PrintSystemMappings(2); */
   if (__argv) {
     for (i = 0; i < __argc; ++i) {

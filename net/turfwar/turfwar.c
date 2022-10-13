@@ -729,7 +729,9 @@ void ServeStatusz(int client, char *outbuf) {
 
 void *ListenWorker(void *arg) {
   int server;
+  int no = 0;
   int yes = 1;
+  int fastopen = 5;
   struct Client client;
   struct timeval timeo = {g_keepalive / 1000, g_keepalive % 1000};
   struct sockaddr_in addr = {.sin_family = AF_INET, .sin_port = htons(g_port)};
@@ -740,10 +742,11 @@ void *ListenWorker(void *arg) {
   setsockopt(server, SOL_SOCKET, SO_RCVTIMEO, &timeo, sizeof(timeo));
   setsockopt(server, SOL_SOCKET, SO_SNDTIMEO, &timeo, sizeof(timeo));
   setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-  setsockopt(server, SOL_TCP, TCP_FASTOPEN, &yes, sizeof(yes));
-  setsockopt(server, SOL_TCP, TCP_QUICKACK, &yes, sizeof(yes));
+  setsockopt(server, SOL_TCP, TCP_FASTOPEN, &fastopen, sizeof(fastopen));
+  setsockopt(server, SOL_TCP, TCP_QUICKACK, &no, sizeof(no));
+  setsockopt(server, SOL_TCP, TCP_CORK, &no, sizeof(no));
   setsockopt(server, SOL_TCP, TCP_NODELAY, &yes, sizeof(yes));
-  CHECK_NE(-1, bind(server, (struct sockaddr *)&addr, sizeof(addr)));
+  bind(server, (struct sockaddr *)&addr, sizeof(addr));
   CHECK_NE(-1, listen(server, 1));
   while (!nsync_note_is_notified(g_shutdown[0])) {
     client.size = sizeof(client.addr);
@@ -791,7 +794,7 @@ void *HttpWorker(void *arg) {
     struct Url url;
     ssize_t got, sent;
     uint32_t ip, clientip;
-    int inmsglen, outmsglen;
+    int tok, inmsglen, outmsglen;
     char ipbuf[32], *p, *q, cashbuf[64];
 
     clientip = ntohl(client.addr.sin_addr.s_addr);
@@ -861,6 +864,19 @@ void *HttpWorker(void *arg) {
       ksnprintf(ipbuf, sizeof(ipbuf), "%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16,
                 ip >> 8, ip);
 
+      if ((tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 64) {
+        if (tok > 8) {
+          LOG("%s rate limiting client\n", ipbuf, msg->version);
+          Write(client.sock, "HTTP/1.1 429 Too Many Requests\r\n"
+                             "Content-Type: text/plain\r\n"
+                             "Connection: close\r\n"
+                             "\r\n"
+                             "429 Too Many Requests\n");
+        }
+        ++g_ratelimits;
+        break;
+      }
+
       // we don't support http/1.0 and http/0.9 right now
       if (msg->version != 11) {
         LOG("%s used unsupported http/%d version\n", ipbuf, msg->version);
@@ -873,19 +889,8 @@ void *HttpWorker(void *arg) {
         break;
       }
 
-      if (!AcquireToken(g_tok.b, ip, TB_CIDR)) {
-        LOG("%s rate limiting client\n", ipbuf, msg->version);
-        Write(client.sock, "HTTP/1.1 429 Too Many Requests\r\n"
-                           "Content-Type: text/plain\r\n"
-                           "Connection: close\r\n"
-                           "\r\n"
-                           "429 Too Many Requests\n");
-        ++g_ratelimits;
-        break;
-      }
-
       // access log
-      LOG("%16s %.*s %.*s %.*s %.*s %#.*s\n", ipbuf,
+      LOG("%6P %16s %.*s %.*s %.*s %.*s %#.*s\n", ipbuf,
           msg->xmethod.b - msg->xmethod.a, inbuf + msg->xmethod.a,
           msg->uri.b - msg->uri.a, inbuf + msg->uri.a,
           HeaderLength(kHttpCfIpcountry), HeaderData(kHttpCfIpcountry),
@@ -1765,7 +1770,12 @@ OnError:
 }
 
 int main(int argc, char *argv[]) {
-  // ShowCrashReports();
+  ShowCrashReports();
+
+  if (IsLinux()) {
+    Write(2, "Enabling TCP_FASTOPEN for server sockets...\n");
+    system("sudo sh -c 'echo 2 >/proc/sys/net/ipv4/tcp_fastopen'");
+  }
 
   // we don't have proper futexes on these platforms
   // we'll be somewhat less aggressive about workers

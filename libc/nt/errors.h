@@ -80,7 +80,7 @@
 #define kNtErrorSemIsSet 102
 #define kNtErrorTooManySemRequests 103
 #define kNtErrorInvalidAtInterruptTime 104
-#define kNtErrorSemOwnerDied 105
+#define kNtErrorSemOwnerDied 105 /* EOWNERDEAD */
 #define kNtErrorSemUserLimit 106
 #define kNtErrorDiskChange 107
 #define kNtErrorDriveLocked 108
@@ -336,7 +336,7 @@
 #define kNtErrorVrfCfgEnabled 1183
 #define kNtErrorPartitionTerminating 1184
 #define kNtErrorUserProfileLoad 500
-#define kNtErrorArithmeticOverflow 534
+#define kNtErrorArithmeticOverflow 534 /* EOVERFLOW */
 #define kNtErrorPipeConnected 535
 #define kNtErrorPipeListening 536
 #define kNtErrorVerifierStop 537
@@ -383,7 +383,7 @@
 #define kNtErrorIllegalFloatContext 579
 #define kNtErrorNoEventPair 580
 #define kNtErrorDomainCtrlrConfigError 581
-#define kNtErrorIllegalCharacter 582
+#define kNtErrorIllegalCharacter 582 /* EILSEQ */
 #define kNtErrorUndefinedCharacter 583
 #define kNtErrorFloppyVolume 584
 #define kNtErrorBiosFailedToConnectInterrupt 585
@@ -761,7 +761,7 @@
 #define kNtErrorRemoteSessionLimitExceeded 1220
 #define kNtErrorDupDomainname 1221
 #define kNtErrorNoNetwork 1222
-#define kNtErrorCancelled 1223
+#define kNtErrorCancelled 1223 /* ECANCELED */
 #define kNtErrorUserMappedFile 1224
 #define kNtErrorConnectionRefused 1225
 #define kNtErrorGracefulDisconnect 1226
@@ -1217,7 +1217,7 @@
 #define kNtErrorDriveMediaMismatch 4303
 #define kNtErrorMediaOffline 4304
 #define kNtErrorLibraryOffline 4305
-#define kNtErrorEmpty 4306
+#define kNtErrorEmpty 4306 /* ENOMSG */
 #define kNtErrorNotEmpty 4307
 #define kNtErrorMediaUnavailable 4308
 #define kNtErrorResourceDisabled 4309

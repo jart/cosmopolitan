@@ -33,7 +33,7 @@
 #include "libc/sysv/errfuns.h"
 
 textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
-  int64_t me, nsignals;
+  int64_t me;
   struct NtIoCounters iocount;
   struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime ftExit, ftUser, ftKernel, ftCreation;
@@ -48,9 +48,6 @@ textwindows int sys_getrusage_nt(int who, struct rusage *usage) {
       !GetProcessIoCounters(me, &iocount)) {
     return __winerr();
   }
-  __sig_lock();
-  nsignals = __sig_count;
-  __sig_unlock();
   *usage = (struct rusage){
       .ru_utime = WindowsDurationToTimeVal(ReadFileTime(ftUser)),
       .ru_stime = WindowsDurationToTimeVal(ReadFileTime(ftKernel)),

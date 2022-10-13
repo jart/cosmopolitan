@@ -24,6 +24,7 @@
 #include "libc/limits.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/http.h"
@@ -47,27 +48,52 @@ void TearDown(void) {
 }
 
 TEST(tokenbucket, test) {
-  ASSERT_FALSE(AcquireToken(tok.b, 0x7f000001, TB_CIDR));
-  ASSERT_FALSE(AcquireToken(tok.b, 0x7f000002, TB_CIDR));
+  ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
+  ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000002, TB_CIDR));
   ReplenishTokens(tok.w, TB_WORDS);
   ReplenishTokens(tok.w, TB_WORDS);
-  ASSERT_TRUE(AcquireToken(tok.b, 0x7f000001, TB_CIDR));
-  ASSERT_TRUE(AcquireToken(tok.b, 0x7f000002, TB_CIDR));
-  ASSERT_FALSE(AcquireToken(tok.b, 0x7f000001, TB_CIDR));
-  ASSERT_TRUE(AcquireToken(tok.b, 0x08080808, TB_CIDR));
+  ASSERT_EQ(2, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
+  ASSERT_EQ(1, AcquireToken(tok.b, 0x7f000002, TB_CIDR));
+  ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
+  ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
+  ASSERT_EQ(2, AcquireToken(tok.b, 0x08080808, TB_CIDR));
   ReplenishTokens(tok.w, TB_WORDS);
+  ASSERT_EQ(1, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
   ReplenishTokens(tok.w, TB_WORDS);
-  ASSERT_TRUE(AcquireToken(tok.b, 0x7f000001, TB_CIDR));
-  ASSERT_TRUE(AcquireToken(tok.b, 0x7f000001, TB_CIDR));
-  ASSERT_FALSE(AcquireToken(tok.b, 0x7f000002, TB_CIDR));
-  ASSERT_TRUE(AcquireToken(tok.b, 0x08080808, TB_CIDR));
+  ASSERT_EQ(1, AcquireToken(tok.b, 0x7f000001, TB_CIDR));
+  ASSERT_EQ(0, AcquireToken(tok.b, 0x7f000002, TB_CIDR));
+  ASSERT_EQ(3, AcquireToken(tok.b, 0x08080808, TB_CIDR));
+  for (int i = 0; i < 130; ++i) ReplenishTokens(tok.w, TB_WORDS);
+  ASSERT_EQ(127, AcquireToken(tok.b, 0x08080808, TB_CIDR));
+}
+
+void NaiveReplenishTokens(atomic_schar *b, size_t n) {
+  for (size_t i = 0; i < n; ++i) {
+    int x = atomic_load_explicit(b + i, memory_order_relaxed);
+    if (x == 127) continue;
+    atomic_fetch_add_explicit(b + i, 1, memory_order_acq_rel);
+  }
 }
 
 BENCH(tokenbucket, bench) {
   struct timespec t1, t2;
+
+  clock_gettime(0, &t1);
+  NaiveReplenishTokens(tok.b, TB_BYTES);
+  clock_gettime(0, &t2);
+  kprintf("NaiveReplenishTokens took %'ld us\n",
+          _timespec_tomicros(_timespec_sub(t2, t1)));
+
   clock_gettime(0, &t1);
   ReplenishTokens(tok.w, TB_WORDS);
   clock_gettime(0, &t2);
-  kprintf("token bucket replenish took %'ld us\n",
+  kprintf("ReplenishTokens empty took %'ld us\n",
+          _timespec_tomicros(_timespec_sub(t2, t1)));
+
+  memset(tok.b, 127, TB_BYTES);
+  clock_gettime(0, &t1);
+  ReplenishTokens(tok.w, TB_WORDS);
+  clock_gettime(0, &t2);
+  kprintf("ReplenishTokens full took %'ld us\n",
           _timespec_tomicros(_timespec_sub(t2, t1)));
 }

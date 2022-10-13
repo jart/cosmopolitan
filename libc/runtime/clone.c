@@ -43,6 +43,7 @@
 #include "libc/thread/openbsd.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "libc/thread/tls2.h"
 #include "libc/thread/xnu.internal.h"
 
 #define __NR_thr_new                      455
@@ -97,11 +98,7 @@ WinThreadEntry(int rdi,                                 // rcx
                int rdx,                                 // r8
                struct CloneArgs *wt) {                  // r9
   int rc;
-  if (wt->tls) {
-    asm("mov\t%1,%%gs:%0"
-        : "=m"(*((long *)0x1480 + __tls_index))
-        : "r"(wt->tls));
-  }
+  if (wt->tls) __set_tls_win32(wt->tls);
   *wt->ptid = wt->tid;
   *wt->ctid = wt->tid;
   rc = WinThreadLaunch(wt->arg, wt->tid, wt->func, (intptr_t)wt & -16);

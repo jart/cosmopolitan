@@ -26,7 +26,7 @@ struct CosmoTib {
   int32_t tib_errno;             /* 0x3c */
   void *tib_nsync;
   uint64_t tib_flags;
-  void *tib_reserved2;
+  uint64_t tib_sigmask;
   void *tib_reserved3;
   void *tib_reserved4;
   void *tib_reserved5;

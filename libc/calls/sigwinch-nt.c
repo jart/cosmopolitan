@@ -19,17 +19,18 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/winsize.h"
 #include "libc/calls/struct/winsize.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/struct/consolescreenbufferinfoex.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/tls.h"
 
 static struct winsize __ws;
 
@@ -38,6 +39,7 @@ textwindows void _check_sigwinch(struct Fd *fd) {
   siginfo_t si;
   struct winsize ws, old;
   struct NtConsoleScreenBufferInfoEx sbinfo;
+  if (__tls_enabled && __threaded != gettid()) return;
   old = __ws;
   e = errno;
   if (old.ws_row != 0xffff) {
@@ -45,7 +47,7 @@ textwindows void _check_sigwinch(struct Fd *fd) {
       if (old.ws_col != ws.ws_col || old.ws_row != ws.ws_row) {
         __ws = ws;
         if (old.ws_col | old.ws_row) {
-          __sig_add(SIGWINCH, SI_KERNEL);
+          __sig_add(0, SIGWINCH, SI_KERNEL);
         }
       }
     } else {

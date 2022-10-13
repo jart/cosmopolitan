@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,33 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/flock.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/sysv/consts/f.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
+#define N 300
 
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
+  int o = 0;
+
+  if (!l) return "NULL";
+  if ((!IsAsan() && kisdangerous(l)) ||
+      (IsAsan() && !__asan_is_valid(l, sizeof(*l)))) {
+    ksnprintf(buf, N, "%p", l);
+    return buf;
+  }
+
+  append("{.l_type=%s", DescribeFlockType(l->l_type));
+
+  if (l->l_whence) {
+    append(", .l_whence=%s", DescribeWhence(l->l_whence));
+  }
+
+  if (l->l_start) {
+    append(", .l_start=%#lx", l->l_start);
+  }
+
+  if (l->l_len) {
+    append(", .l_len=%'ld", l->l_len);
+  }
+
+  if (l->l_pid && (cmd == F_GETLK || cmd == F_OFD_GETLK)) {
+    append(", .l_pid=%d", l->l_pid);
+  }
+
+  if (l->l_sysid) {
+    append(", .l_sysid=%d", l->l_sysid);
+  }
+
+  append("}");
+
+  return buf;
 }

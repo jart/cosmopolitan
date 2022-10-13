@@ -16,33 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/errno.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/describentoverlapped.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/files.h"
-#include "libc/str/str.h"
+#include "libc/calls/sig.internal.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
-__msabi extern typeof(UnlockFileEx) *const __imp_UnlockFileEx;
+#define GetSigBit(x) (1ull << (((x)-1) & 63))
 
-/**
- * Unlocks file on the New Technology.
- *
- * @return handle, or -1 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
- */
-bool32 UnlockFileEx(int64_t hFile, uint32_t dwReserved,
-                    uint32_t nNumberOfBytesToUnlockLow,
-                    uint32_t nNumberOfBytesToUnlockHigh,
-                    struct NtOverlapped *lpOverlapped) {
-  bool32 ok;
-  ok = __imp_UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow,
-                          nNumberOfBytesToUnlockHigh, lpOverlapped);
-  if (!ok) __winerr();
-  NTTRACE(
-      "UnlockFileEx(%ld, %#x, %'zu, [%s]) → %hhhd% m", hFile, dwReserved,
-      (uint64_t)nNumberOfBytesToUnlockHigh << 32 | nNumberOfBytesToUnlockLow,
-      DescribeNtOverlapped(lpOverlapped), ok);
-  return ok;
+textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
+  uint64_t x, y, *mask;
+  if (how == SIG_BLOCK || how == SIG_UNBLOCK || how == SIG_SETMASK) {
+    if (__tls_enabled) {
+      mask = &__get_tls()->tib_sigmask;
+    } else {
+      mask = &__sig.sigmask;
+    }
+    if (old) {
+      old->__bits[0] = *mask;
+      old->__bits[1] = 0;
+    }
+    if (neu) {
+      x = *mask;
+      y = neu->__bits[0];
+      if (how == SIG_BLOCK) {
+        x |= y;
+      } else if (how == SIG_UNBLOCK) {
+        x &= ~y;
+      } else {
+        x = y;
+      }
+      x &= ~(GetSigBit(SIGKILL) | GetSigBit(SIGSTOP) | GetSigBit(SIGABRT));
+      *mask = x;
+    }
+    return 0;
+  } else {
+    return einval();
+  }
 }

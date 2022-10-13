@@ -32,6 +32,7 @@ const char *(DescribeOpenFlags)(char buf[128], int x) {
   char *s;
   int i, n;
   struct DescribeFlags d[N];
+  if (x == -1) return "-1";
   // TODO(jart): unify DescribeFlags and MagnumStr data structures
   for (n = 0; kOpenFlags[n].x != MAGNUM_TERMINATOR; ++n) {
     if (n == N) notpossible;

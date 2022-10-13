@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -166,15 +167,19 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 			if (pshare) {
 				goto Polyfill;
 			}
-			if (timeout) {
-				ms = _timespec_tomillis (*timeout);
+			if (_check_interrupts (false, 0)) {
+				rc = -EINTR;
 			} else {
-				ms = -1;
-			}
-			if (WaitOnAddress (p, &expect, sizeof(int), ms)) {
-				rc = 0;
-			} else {
-				rc = -GetLastError ();
+				if (timeout) {
+					ms = _timespec_tomillis (*timeout);
+				} else {
+					ms = -1;
+				}
+				if (WaitOnAddress (p, &expect, sizeof(int), ms)) {
+					rc = 0;
+				} else {
+					rc = -GetLastError ();
+				}
 			}
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (
@@ -193,7 +198,7 @@ int nsync_futex_wait_ (int *p, int expect, char pshare, struct timespec *timeout
 		__get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
 	}
 
-	STRACE ("futex(%t, %s, %d, %s) → %s",
+	STRACE ("futex(%t, %s, %#x, %s) → %s",
 		p, DescribeFutexOp (op), expect,
 		DescribeTimespec (0, timeout),
 		DescribeErrnoResult (rc));

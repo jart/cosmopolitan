@@ -16,50 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/calls/struct/sigset.h"
 
 /**
- * @fileoverview UNIX signals for the New Technology, Part 1.
+ * Determines the pending signals on New Technology.
+ *
+ * @param pending is to hold the pending signals
  * @threadsafe
  */
-
-struct Signals __sig;  // TODO(jart): Need TLS
-
-#define GetSigBit(XXSIG) (1ull << (((XXSIG)-1) & 63))
-
-/**
- * Changes signal mask for main thread.
- * @return 0 on success, or -1 w/ errno
- */
-textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
-  int i;
-  uint64_t a, b;
-  if (how == SIG_BLOCK || how == SIG_UNBLOCK || how == SIG_SETMASK) {
+textwindows void __sig_pending(sigset_t *pending) {
+  struct Signal *s;
+  sigemptyset(pending);
+  if (__sig.queue) {
     __sig_lock();
-    if (old) {
-      *old = __sig.mask;
-    }
-    if (neu) {
-      for (i = 0; i < ARRAYLEN(__sig.mask.__bits); ++i) {
-        if (how == SIG_BLOCK) {
-          __sig.mask.__bits[i] |= neu->__bits[i];
-        } else if (how == SIG_UNBLOCK) {
-          __sig.mask.__bits[i] &= ~neu->__bits[i];
-        } else {
-          __sig.mask.__bits[i] = neu->__bits[i];
-        }
+    for (s = __sig.queue; s; s = s->next) {
+      if (__sig_is_applicable(s) &&
+          __sighandrvas[s->sig] != (unsigned)(intptr_t)SIG_IGN) {
+        sigaddset(pending, s->sig);
       }
-      __sig.mask.__bits[0] &= ~(GetSigBit(SIGKILL) | GetSigBit(SIGSTOP));
     }
     __sig_unlock();
-    return 0;
-  } else {
-    return einval();
   }
 }
-
-#undef GetSigBit
