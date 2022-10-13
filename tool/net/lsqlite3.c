@@ -1864,6 +1864,24 @@ static int lsession_isempty(lua_State *L) {
     return 1;
 }
 
+static int lsession_bool(lua_State *L,
+  int (*session_func)(sqlite3_session *ses, int val)
+) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    int val = lua_isboolean(L, 2) ? lua_toboolean(L, 2)
+        : luaL_optinteger(L, 2, -1);
+    lua_pushboolean(L, (*session_func)(lses->ses, val));
+    return 1;
+}
+
+static int lsession_indirect(lua_State *L) {
+    return lsession_bool(L, sqlite3session_indirect);
+}
+
+static int lsession_enable(lua_State *L) {
+    return lsession_bool(L, sqlite3session_enable);
+}
+
 static int lsession_changeset(lua_State *L) {
     lsession *lses = lsqlite_checksession(L, 1);
     int rc;
@@ -2335,22 +2353,24 @@ static const luaL_Reg ctxlib[] = {
 };
 
 static const luaL_Reg seslib[] = {
-    {"attach",                  lsession_attach                 },
-    {"changeset",               lsession_changeset              },
-    {"isempty",                 lsession_isempty                },
-    {"delete",                  lsession_delete                 },
+    {"attach",          lsession_attach         },
+    {"changeset",       lsession_changeset      },
+    {"isempty",         lsession_isempty        },
+    {"indirect",        lsession_indirect       },
+    {"enable",          lsession_enable         },
+    {"delete",          lsession_delete         },
 
-    {"__tostring",              lsession_tostring               },
-    {"__gc",                    lsession_gc                     },
+    {"__tostring",      lsession_tostring       },
+    {"__gc",            lsession_gc             },
     {NULL, NULL}
 };
 
 static const luaL_Reg reblib[] = {
-    {"rebase",                  lrebaser_rebase                 },
-    {"delete",                  lrebaser_delete                 },
+    {"rebase",          lrebaser_rebase         },
+    {"delete",          lrebaser_delete         },
 
-    {"__tostring",              lrebaser_tostring               },
-    {"__gc",                    lrebaser_gc                     },
+    {"__tostring",      lrebaser_tostring       },
+    {"__gc",            lrebaser_gc             },
     {NULL, NULL}
 };
 
