@@ -1981,6 +1981,24 @@ static int db_changeset_filter_callback(
     return result;
 }
 
+static int db_invert_changeset(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    const char *cset = luaL_checkstring(L, 2);
+    int nset = lua_rawlen(L, 2);
+    int rc;
+    int size;
+    void *buf;
+
+    if ((rc = sqlite3changeset_invert(nset, cset, &size, &buf)) != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, rc);
+        return 2;
+    }
+    lua_pushlstring(L, buf, size);
+    sqlite3_free(buf);
+    return 1;
+}
+
 static int db_apply_changeset(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     const char *cset = luaL_checkstring(L, 2);
@@ -2241,6 +2259,7 @@ static const luaL_Reg dblib[] = {
     {"create_session",      db_create_session       },
     {"create_rebaser",      db_create_rebaser       },
     {"apply_changeset",     db_apply_changeset      },
+    {"invert_changeset",    db_invert_changeset     },
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
