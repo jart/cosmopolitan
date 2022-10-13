@@ -66,7 +66,7 @@ static inline textwindows int __sig_is_masked(int sig) {
 }
 
 textwindows int __sig_is_applicable(struct Signal *s) {
-  return (s->tid <= 0 || s->tid == gettid()) && !__sig_is_masked(s->sig);
+  return s->tid <= 0 || s->tid == gettid();
 }
 
 /**
@@ -74,13 +74,11 @@ textwindows int __sig_is_applicable(struct Signal *s) {
  * @return signal or null if empty or none unmasked
  */
 static textwindows struct Signal *__sig_remove(void) {
-  int tid;
   struct Signal *prev, *res;
   if (__sig.queue) {
-    tid = gettid();
     __sig_lock();
     for (prev = 0, res = __sig.queue; res; prev = res, res = res->next) {
-      if (__sig_is_applicable(res)) {
+      if (__sig_is_applicable(res) && !__sig_is_masked(res->sig)) {
         if (res == __sig.queue) {
           __sig.queue = res->next;
         } else if (prev) {

@@ -1315,6 +1315,13 @@ int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
   }
 }
 
+#if USE_LOCKS
+void dlmalloc_atfork(void) {
+  bzero(&gm->mutex, sizeof(gm->mutex));
+  bzero(&malloc_global_mutex, sizeof(malloc_global_mutex));
+}
+#endif
+
 void* dlvalloc(size_t bytes) {
   size_t pagesz;
   ensure_initialization();

@@ -11,6 +11,7 @@ hidden extern bool __time_critical;
 hidden extern unsigned __sighandrvas[NSIG];
 hidden extern unsigned __sighandflags[NSIG];
 hidden extern pthread_mutex_t __fds_lock_obj;
+hidden extern pthread_mutex_t __sig_lock_obj;
 hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_lock(void);

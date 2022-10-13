@@ -19,7 +19,6 @@
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
-#include "libc/thread/thread.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/arraylist.internal.h"
@@ -29,8 +28,7 @@
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/o.h"
-
-static pthread_mutex_t __fflush_lock_obj;
+#include "libc/thread/thread.h"
 
 void(__fflush_lock)(void) {
   pthread_mutex_lock(&__fflush_lock_obj);

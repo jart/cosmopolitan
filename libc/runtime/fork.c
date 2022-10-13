@@ -21,19 +21,23 @@
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
-#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/process.h"
 #include "libc/runtime/internal.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/tls.h"
 
 int _fork(uint32_t dwCreationFlags) {
   axdx_t ad;
   sigset_t old, all;
-  int ax, dx, parent;
+  int ax, dx, parent, parent_tid = 0;
+  if (_weaken(_pthread_atfork)) {
+    parent_tid = gettid();
+  }
   if (!IsWindows()) {
     sigfillset(&all);
     sys_sigprocmask(SIG_BLOCK, &all, &old);
@@ -60,6 +64,9 @@ int _fork(uint32_t dwCreationFlags) {
       atomic_store_explicit(&__get_tls()->tib_tid,
                             IsLinux() ? dx : sys_gettid(),
                             memory_order_relaxed);
+    }
+    if (_weaken(_pthread_atfork)) {
+      _weaken(_pthread_atfork)(parent_tid);
     }
     if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → 0 (child of %d)", parent);

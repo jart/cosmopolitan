@@ -18,6 +18,7 @@ struct StdioFlush {
 };
 
 hidden extern struct StdioFlush __fflush;
+hidden extern pthread_mutex_t __fflush_lock_obj;
 
 void __fflush_lock(void);
 void __fflush_unlock(void);

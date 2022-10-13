@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaltstack.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -35,6 +36,8 @@
 #include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/stdio/fflush.internal.h"
+#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
@@ -45,6 +48,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
+#include "third_party/dlmalloc/dlmalloc.h"
 
 STATIC_YOINK("nsync_mu_lock");
 STATIC_YOINK("nsync_mu_unlock");
@@ -70,6 +74,30 @@ void _pthread_free(struct PosixThread *pt) {
     free(pt->altstack);
   }
   free(pt);
+}
+
+void _pthread_funlock(pthread_mutex_t *mu, int parent_tid) {
+  if (mu->_type == PTHREAD_MUTEX_NORMAL ||
+      (atomic_load_explicit(&mu->_lock, memory_order_relaxed) &&
+       mu->_owner != parent_tid)) {
+    atomic_store_explicit(&mu->_lock, 0, memory_order_relaxed);
+    mu->_nsync = 0;
+    mu->_depth = 0;
+    mu->_owner = 0;
+  }
+}
+
+void _pthread_atfork(int parent_tid) {
+  FILE *f;
+  if (_weaken(dlmalloc_atfork)) _weaken(dlmalloc_atfork)();
+  _pthread_funlock(&__fds_lock_obj, parent_tid);
+  _pthread_funlock(&__sig_lock_obj, parent_tid);
+  _pthread_funlock(&__fflush_lock_obj, parent_tid);
+  for (int i = 0; i < __fflush.handles.i; ++i) {
+    if ((f = __fflush.handles.p[i])) {
+      _pthread_funlock((pthread_mutex_t *)f->lock, parent_tid);
+    }
+  }
 }
 
 static int PosixThread(void *arg, int tid) {
@@ -281,10 +309,12 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   // set initial status
   switch (pt->attr.__detachstate) {
     case PTHREAD_CREATE_JOINABLE:
-      pt->status = kPosixThreadJoinable;
+      atomic_store_explicit(&pt->status, kPosixThreadJoinable,
+                            memory_order_relaxed);
       break;
     case PTHREAD_CREATE_DETACHED:
-      pt->status = kPosixThreadDetached;
+      atomic_store_explicit(&pt->status, kPosixThreadDetached,
+                            memory_order_relaxed);
       _pthread_zombies_add(pt);
       break;
     default:

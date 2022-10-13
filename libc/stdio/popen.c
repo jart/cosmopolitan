@@ -35,6 +35,7 @@
  * Bourne-like syntax on all platforms including Windows.
  *
  * @see pclose()
+ * @threadsafe
  */
 FILE *popen(const char *cmdline, const char *mode) {
   FILE *f;

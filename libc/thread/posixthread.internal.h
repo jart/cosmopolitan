@@ -82,6 +82,8 @@ hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
 hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
 hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
 
+void _pthread_atfork(int) hidden;
+void _pthread_funlock(pthread_mutex_t *, int) hidden;
 int _pthread_reschedule(struct PosixThread *) hidden;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
 void _pthread_free(struct PosixThread *) hidden;

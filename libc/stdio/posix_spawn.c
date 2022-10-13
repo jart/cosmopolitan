@@ -20,9 +20,12 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 static int RunFileActions(struct _posix_faction *a) {
   int t;
@@ -68,7 +71,7 @@ int posix_spawn(int *pid, const char *path,
   int s, child;
   sigset_t allsigs;
   struct sigaction dfl;
-  if (!(child = vfork())) {
+  if (!(child = _weaken(pthread_create) ? fork() : vfork())) {
     if (attrp && *attrp) {
       if ((*attrp)->flags & POSIX_SPAWN_SETPGROUP) {
         if (setpgid(0, (*attrp)->pgroup)) _Exit(127);

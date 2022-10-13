@@ -1770,11 +1770,11 @@ OnError:
 }
 
 int main(int argc, char *argv[]) {
-  ShowCrashReports();
+  // ShowCrashReports();
 
   if (IsLinux()) {
     Write(2, "Enabling TCP_FASTOPEN for server sockets...\n");
-    system("sudo sh -c 'echo 2 >/proc/sys/net/ipv4/tcp_fastopen'");
+    system("sudo sh -c 'echo 3 >/proc/sys/net/ipv4/tcp_fastopen'");
   }
 
   // we don't have proper futexes on these platforms

@@ -37,6 +37,7 @@
  * @param cmdline is an interpreted Turing-complete command
  * @return -1 if child process couldn't be created, otherwise a wait
  *     status that can be accessed using macros like WEXITSTATUS(s)
+ * @threadsafe
  */
 int system(const char *cmdline) {
   int pid, wstatus;

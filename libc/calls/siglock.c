@@ -19,8 +19,6 @@
 #include "libc/calls/state.internal.h"
 #include "libc/thread/thread.h"
 
-static pthread_mutex_t __sig_lock_obj;
-
 void(__sig_lock)(void) {
   pthread_mutex_lock(&__sig_lock_obj);
 }

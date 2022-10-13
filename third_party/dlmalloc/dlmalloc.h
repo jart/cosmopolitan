@@ -505,7 +505,8 @@ void mspace_inspect_all(mspace msp,
                         void (*handler)(void*, void*, size_t, void*),
                         void* arg);
 
-void dlmalloc_abort(void);
+void dlmalloc_atfork(void) hidden;
+void dlmalloc_abort(void) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
