@@ -2017,6 +2017,35 @@ static int db_invert_changeset(lua_State *L) {
     return 1;
 }
 
+static int db_concat_changeset(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    int size, nset;
+    void *buf, *cset;
+    sqlite3_changegroup *pGrp;
+
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int n = luaL_len(L, 2);
+    int rc = sqlite3changegroup_new(&pGrp);
+    for (int i = 1; rc == SQLITE_OK && i <= n; i++) {
+        lua_rawgeti(L, 2, i);
+        cset = lua_tostring(L, -1);
+        nset = lua_rawlen(L, -1);
+        rc = sqlite3changegroup_add(pGrp, nset, cset);
+        lua_pop(L, 1);  // pop the string
+    }
+    if (rc == SQLITE_OK) rc = sqlite3changegroup_output(pGrp, &size, &buf);
+    sqlite3changegroup_delete(pGrp);
+
+    if (rc != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, rc);
+        return 2;
+    }
+    lua_pushlstring(L, buf, size);
+    sqlite3_free(buf);
+    return 1;
+}
+
 static int db_apply_changeset(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     const char *cset = luaL_checkstring(L, 2);
@@ -2278,6 +2307,7 @@ static const luaL_Reg dblib[] = {
     {"create_rebaser",      db_create_rebaser       },
     {"apply_changeset",     db_apply_changeset      },
     {"invert_changeset",    db_invert_changeset     },
+    {"concat_changeset",    db_concat_changeset     },
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
