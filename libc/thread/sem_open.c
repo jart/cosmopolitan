@@ -66,7 +66,12 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   }
 
   sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (sem != MAP_FAILED) sem->sem_pshared = true;
+  if (sem != MAP_FAILED) {
+    sem->sem_pshared = true;
+  } else {
+    sem = SEM_FAILED;
+  }
+
   _npassert(!close(fd));
   return sem;
 }

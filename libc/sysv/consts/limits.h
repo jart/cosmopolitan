@@ -11,6 +11,9 @@ extern const int _ARG_MAX;
 extern const int _NAME_MAX;
 extern const int _NSIG;
 extern const int _PATH_MAX;
+extern const int LINK_MAX;
+extern const int MAX_CANON;
+extern const int MAX_INPUT;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -22,5 +25,8 @@ COSMOPOLITAN_C_END_
 #define _NAME_MAX   SYMBOLIC(_NAME_MAX)
 #define _NSIG       SYMBOLIC(_NSIG)
 #define _PATH_MAX   SYMBOLIC(_PATH_MAX)
+#define LINK_MAX    SYMBOLIC(LINK_MAX)
+#define MAX_CANON   SYMBOLIC(MAX_CANON)
+#define MAX_INPUT   SYMBOLIC(MAX_INPUT)
 
 #endif /* COSMOPOLITAN_LIBC_SYSV_CONSTS_LIMITS_H_ */

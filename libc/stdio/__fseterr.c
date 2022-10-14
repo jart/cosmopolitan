@@ -16,22 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/kprintf.h"
-#include "libc/runtime/runtime.h"
-#include "libc/str/path.h"
-#include "libc/str/str.h"
-#include "libc/thread/semaphore.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/errno.h"
+#include "libc/stdio/stdio_ext.h"
 
-const char *__sem_name(const char *name, char path[hasatleast PATH_MAX]) {
-  const char *res;
-  if (_isabspath(name)) {
-    res = name;
-  } else {
-    strlcpy(path, kTmpPath, PATH_MAX);
-    strlcat(path, ".sem-", PATH_MAX);
-    strlcat(path, name, PATH_MAX);
-    res = path;
-  }
-  return res;
+void __fseterr(FILE *f) {
+  f->state |= EIO;
 }

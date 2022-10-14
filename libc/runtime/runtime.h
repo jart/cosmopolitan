@@ -25,27 +25,6 @@ extern uint64_t kStartTsc;                  /* RII */
 extern char kTmpPath[];                     /* RII */
 extern const char kNtSystemDirectory[];     /* RII */
 extern const char kNtWindowsDirectory[];    /* RII */
-extern unsigned char _base[];               /* αpε */
-extern unsigned char _ehead[];              /* αpε */
-extern unsigned char _etext[];              /* αpε */
-extern unsigned char _edata[];              /* αpε */
-extern unsigned char _ezip[];               /* αpε */
-extern unsigned char _end[];                /* αpε */
-extern unsigned char _ereal[];              /* αpε */
-extern unsigned char __privileged_start[];  /* αpε */
-extern unsigned char __privileged_addr[];   /* αpε */
-extern unsigned char __privileged_size[];   /* αpε */
-extern unsigned char __privileged_end[];    /* αpε */
-extern unsigned char __test_start[];        /* αpε */
-extern unsigned char __ro[];                /* αpε */
-extern unsigned char *__relo_start[];       /* αpε */
-extern unsigned char *__relo_end[];         /* αpε */
-extern uint8_t __zip_start[];               /* αpε */
-extern uint8_t __zip_end[];                 /* αpε */
-extern uint8_t __data_start[];              /* αpε */
-extern uint8_t __data_end[];                /* αpε */
-extern uint8_t __bss_start[];               /* αpε */
-extern uint8_t __bss_end[];                 /* αpε */
 extern size_t __virtualmax;
 extern bool __isworker;
 

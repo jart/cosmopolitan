@@ -7,6 +7,7 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
+#include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"

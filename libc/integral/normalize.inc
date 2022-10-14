@@ -83,7 +83,7 @@
 #define CHAR_BIT    8       /* b/c von neumann */
 #define ARG_MAX     0xfffe  /* for argv and envp; see CreateProcess (32767*2) */
 #define PATH_MAX    1024    /* b/c _XOPEN_PATH_MAX */
-#define NAME_MAX    63      /* b/c dns */
+#define NAME_MAX    255     /* 511 on netbsd */
 #define CHILD_MAX   16      /* only if malloc isn't linked */
 #define OPEN_MAX    16      /* only if malloc isn't linked */
 #define ATEXIT_MAX  32      /* only if malloc isn't linked */

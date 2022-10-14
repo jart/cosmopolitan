@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
+#include "ape/sections.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"

@@ -1,5 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
 #define COSMOPOLITAN_LIBC_RUNTIME_MEMTRACK_H_
+#include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/nopl.internal.h"
 #include "libc/macros.internal.h"

@@ -1,0 +1,4 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_MNTENT_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_MNTENT_H_
+#include "third_party/musl/mntent.h"
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_MNTENT_H_ */

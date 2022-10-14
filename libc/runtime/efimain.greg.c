@@ -16,8 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "ape/sections.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/efi.h"
 #include "libc/nt/thunk/msabi.h"

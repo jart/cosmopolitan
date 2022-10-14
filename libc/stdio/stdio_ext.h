@@ -19,6 +19,7 @@ int __fwriting(FILE *);
 int __fsetlocking(FILE *, int);
 void _flushlbf(void);
 void __fpurge(FILE *);
+void __fseterr(FILE *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

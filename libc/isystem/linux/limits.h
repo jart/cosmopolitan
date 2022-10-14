@@ -1,0 +1,11 @@
+#ifndef COSMOPOLITAN_LIBC_ISYSTEM_LINUX_LIMITS_H_
+#define COSMOPOLITAN_LIBC_ISYSTEM_LINUX_LIMITS_H_
+#include "libc/sysv/consts/limits.h"
+
+#define NR_OPEN        1024
+#define XATTR_NAME_MAX 255
+#define XATTR_SIZE_MAX 65536
+#define XATTR_LIST_MAX 65536
+#define RTSIG_MAX      32
+
+#endif /* COSMOPOLITAN_LIBC_ISYSTEM_LINUX_LIMITS_H_ */
