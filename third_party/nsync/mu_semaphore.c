@@ -57,9 +57,10 @@ void nsync_mu_semaphore_p (nsync_semaphore *s) {
 	do {
 		i = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
 		if (i == 0) {
-			int futex_result = nsync_futex_wait_ (&f->i, i, PTHREAD_PROCESS_PRIVATE, NULL);
+			int futex_result = nsync_futex_wait_ ((atomic_int *)&f->i, i, PTHREAD_PROCESS_PRIVATE, NULL);
 			ASSERT (futex_result == 0 ||
 				futex_result == -EINTR ||
+				futex_result == -EAGAIN ||
 				futex_result == -EWOULDBLOCK);
 		}
 	} while (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i-1));
@@ -98,9 +99,10 @@ int nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadl
 				}
 				ts = &ts_buf;
 			}
-			futex_result = nsync_futex_wait_ (&f->i, i, PTHREAD_PROCESS_PRIVATE, ts);
+			futex_result = nsync_futex_wait_ ((atomic_int *)&f->i, i, PTHREAD_PROCESS_PRIVATE, ts);
 			ASSERT (futex_result == 0 ||
 				futex_result == -EINTR ||
+				futex_result == -EAGAIN ||
 				futex_result == -ETIMEDOUT ||
 				futex_result == -EWOULDBLOCK);
 			/* Some systems don't wait as long as they are told. */ 
@@ -120,5 +122,5 @@ void nsync_mu_semaphore_v (nsync_semaphore *s) {
         do {    
                 old_value = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
         } while (!ATM_CAS_REL ((nsync_atomic_uint32_ *) &f->i, old_value, old_value+1));
-	ASSERT (nsync_futex_wake_ (&f->i, 1, PTHREAD_PROCESS_PRIVATE) >= 0);
+	ASSERT (nsync_futex_wake_ ((atomic_int *)&f->i, 1, PTHREAD_PROCESS_PRIVATE) >= 0);
 }

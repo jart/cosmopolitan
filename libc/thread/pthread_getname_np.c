@@ -45,7 +45,7 @@
  * @raise ENOSYS on MacOS, Windows, FreeBSD, and OpenBSD
  */
 errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
-  int e, fd, rc, tid, len;
+  int fd, rc, tid, len, e = errno;
 
   if (!size) return 0;
   bzero(name, size);
@@ -55,7 +55,6 @@ errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
     // TASK_COMM_LEN is 16 on Linux so we're just being paranoid.
     char buf[256] = {0};
     if (tid == gettid()) {
-      e = errno;
       if (prctl(PR_GET_NAME, buf) == -1) {
         rc = errno;
         errno = e;
@@ -66,7 +65,6 @@ errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
       p = stpcpy(p, "/proc/self/task/");
       p = FormatUint32(p, tid);
       p = stpcpy(p, "/comm");
-      e = errno;
       if ((fd = sys_open(path, O_RDONLY | O_CLOEXEC, 0)) == -1) {
         rc = errno;
         errno = e;

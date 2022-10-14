@@ -200,8 +200,6 @@ void _pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *),
   _pthread_cleanup_pop(&_buffer, (execute)); \
   }
 
-#define pthread_spin_init(pSpin, multiprocess) ((pSpin)->_lock = 0, 0)
-#define pthread_spin_destroy(pSpin)            ((pSpin)->_lock = -1, 0)
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
     !defined(__STRICT_ANSI__)
 extern const errno_t EBUSY;
@@ -222,6 +220,10 @@ extern const errno_t EBUSY;
     pthread_spinlock_t *_s = pSpin;                                  \
     __atomic_test_and_set(&_s->_lock, __ATOMIC_ACQUIRE) ? EBUSY : 0; \
   })
+#define pthread_spin_init(pSpin, multiprocess) \
+  (__atomic_store_n(&(pSpin)->_lock, 0, __ATOMIC_RELAXED), 0)
+#define pthread_spin_destroy(pSpin) \
+  (__atomic_store_n(&(pSpin)->_lock, -1, __ATOMIC_RELAXED), 0)
 #endif /* GCC 4.7+ */
 
 COSMOPOLITAN_C_END_

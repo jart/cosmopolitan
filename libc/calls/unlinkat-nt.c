@@ -24,6 +24,7 @@
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/nt/enum/io.h"
+#include "libc/nt/enum/movefileexflags.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"

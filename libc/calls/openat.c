@@ -133,7 +133,8 @@
  * @raise ENOENT if `file` doesn't exist when `O_CREAT` isn't in `flags`
  * @raise ENOENT if `file` points to a string that's empty
  * @raise ENOMEM if insufficient memory was available
- * @raise EMFILE if `RLIMIT_NOFILE` has been reached
+ * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
+ * @raise ENFILE if system-wide file limit has been reached
  * @raise EOPNOTSUPP if `file` names a named socket
  * @raise EFAULT if `file` points to invalid memory
  * @raise ETXTBSY if writing is requested on `file` that's being executed

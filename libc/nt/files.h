@@ -64,7 +64,8 @@ bool32 CopyFile(const char16_t *lpExistingFileName,
 bool32 MoveFile(const char16_t *lpExistingFileName,
                 const char16_t *lpNewFileName) paramsnonnull();
 bool32 MoveFileEx(const char16_t *lpExistingFileName,
-                  const char16_t *lpNewFileName, int dwFlags) paramsnonnull();
+                  const char16_t *opt_lpNewFileName, int dwFlags)
+    paramsnonnull((1));
 
 bool32 SetCurrentDirectory(const char16_t *lpPathName);
 uint32_t GetCurrentDirectory(uint32_t nBufferLength, char16_t *out_lpBuffer);

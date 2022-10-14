@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/limits.h"
@@ -29,6 +30,7 @@
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
@@ -135,5 +137,8 @@ TEST(popen, torture) {
   }
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_join(t[i], 0));
+  }
+  for (i = 3; i < 16; ++i) {
+    ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFL));
   }
 }

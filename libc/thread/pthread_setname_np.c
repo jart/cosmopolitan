@@ -53,14 +53,13 @@
  */
 errno_t pthread_setname_np(pthread_t thread, const char *name) {
   char path[128], *p;
-  int e, fd, rc, tid, len;
+  int fd, rc, tid, len, e = errno;
 
   tid = ((struct PosixThread *)thread)->tid;
   len = strlen(name);
 
   if (IsLinux()) {
     if (tid == gettid()) {
-      e = errno;
       if (prctl(PR_SET_NAME, name) == -1) {
         rc = errno;
         errno = e;
@@ -71,7 +70,6 @@ errno_t pthread_setname_np(pthread_t thread, const char *name) {
       p = stpcpy(p, "/proc/self/task/");
       p = FormatUint32(p, tid);
       p = stpcpy(p, "/comm");
-      e = errno;
       if ((fd = sys_open(path, O_WRONLY | O_CLOEXEC, 0)) == -1) {
         rc = errno;
         errno = e;

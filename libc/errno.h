@@ -8,7 +8,16 @@ COSMOPOLITAN_C_START_
  * @see libc/sysv/consts.sh for numbers
  */
 
+#if defined(__GNUC__) && defined(__MNO_RED_ZONE__) && !defined(__STRICT_ANSI__)
+#define errno                                                           \
+  (*({                                                                  \
+    errno_t *_ep;                                                       \
+    asm("call\t__errno_location" : "=a"(_ep) : /* no inputs */ : "cc"); \
+    _ep;                                                                \
+  }))
+#else
 #define errno (*__errno_location())
+#endif
 
 /**
  * System call unavailable.
@@ -687,7 +696,6 @@ extern const errno_t EXFULL;
 #define EXFULL          EXFULL
 
 extern errno_t __errno;
-
 errno_t *__errno_location(void);
 
 COSMOPOLITAN_C_END_

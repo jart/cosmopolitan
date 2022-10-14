@@ -16,29 +16,20 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/thread/freebsd.internal.h"
+#include "libc/calls/calls.h"
+#include "libc/thread/semaphore.h"
+#include "libc/thread/semaphore.internal.h"
 
-int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
-                            const struct timespec *abstime) {
-  int op;
-  size_t size;
-  struct _umtx_time *tm_p, timo;
-  if (!abstime) {
-    tm_p = 0;
-    size = 0;
-  } else {
-    timo._clockid = CLOCK_REALTIME;
-    timo._flags = UMTX_ABSTIME;
-    timo._timeout = *abstime;
-    tm_p = &timo;
-    size = sizeof(timo);
-  }
-  if (pshare) {
-    op = UMTX_OP_WAIT_UINT;
-  } else {
-    op = UMTX_OP_WAIT_UINT_PRIVATE;
-  }
-  return sys_umtx_op(p, op, expect, (void *)size, tm_p);
+/**
+ * Removes named semaphore.
+ *
+ * @param name can be absolute path or should be component w/o slashes
+ * @return 0 on success, or -1 w/ errno
+ * @raise EPERM if pledge() is in play w/o `cpath` promise
+ * @raise ENOENT if named semaphore doesn't exist
+ * @raise EACCES if permission is denied
+ */
+int sem_unlink(const char *name) {
+  char path[PATH_MAX];
+  return unlink(__sem_name(name, path));
 }

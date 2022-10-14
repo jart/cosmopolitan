@@ -16,29 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/thread/freebsd.internal.h"
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/semaphore.h"
 
-int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
-                            const struct timespec *abstime) {
-  int op;
-  size_t size;
-  struct _umtx_time *tm_p, timo;
-  if (!abstime) {
-    tm_p = 0;
-    size = 0;
-  } else {
-    timo._clockid = CLOCK_REALTIME;
-    timo._flags = UMTX_ABSTIME;
-    timo._timeout = *abstime;
-    tm_p = &timo;
-    size = sizeof(timo);
-  }
-  if (pshare) {
-    op = UMTX_OP_WAIT_UINT;
-  } else {
-    op = UMTX_OP_WAIT_UINT_PRIVATE;
-  }
-  return sys_umtx_op(p, op, expect, (void *)size, tm_p);
+/**
+ * Locks semaphore only if it's currently not locked.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EAGAIN if semaphore is locked
+ * @raise EDEADLK if deadlock was detected
+ * @raise EINVAL if `sem` is invalid
+ */
+int sem_trywait(sem_t *sem) {
+  int v;
+  v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
+  do {
+    if (!v) return eagain();
+    if (v < 0) return einval();
+  } while (!atomic_compare_exchange_weak_explicit(
+      &sem->sem_value, &v, v - 1, memory_order_acquire, memory_order_relaxed));
+  return 0;
 }

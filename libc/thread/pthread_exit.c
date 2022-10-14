@@ -86,7 +86,7 @@ wontreturn void pthread_exit(void *rc) {
     // set_tid_address() upon every program startup which isn't possible
     // on non-linux platforms anyway.
     atomic_store_explicit(&__get_tls()->tib_tid, 0, memory_order_release);
-    nsync_futex_wake_((int *)&__get_tls()->tib_tid, INT_MAX, !IsWindows());
+    nsync_futex_wake_(&__get_tls()->tib_tid, INT_MAX, !IsWindows());
     _Exit1(0);
   }
 }

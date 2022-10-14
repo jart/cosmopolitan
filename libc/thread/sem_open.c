@@ -18,66 +18,55 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/dce.h"
-#include "libc/intrin/asan.internal.h"
-#include "libc/intrin/asancodes.h"
-#include "libc/macros.internal.h"
-#include "libc/runtime/directmap.internal.h"
-#include "libc/runtime/memtrack.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
-
-#define G FRAMESIZE
-
-static void _mapframe(void *p, int f) {
-  int prot, flags;
-  struct DirectMap dm;
-  prot = PROT_READ | PROT_WRITE;
-  flags = f | MAP_ANONYMOUS | MAP_FIXED;
-  _npassert((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p);
-  __mmi_lock();
-  _npassert(!TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
-                                 dm.maphandle, prot, flags, false, false, 0,
-                                 G));
-  __mmi_unlock();
-}
+#include "libc/thread/semaphore.h"
+#include "libc/thread/semaphore.internal.h"
 
 /**
- * Extends static allocation.
+ * Initializes and opens named semaphore.
  *
- * This simple fixed allocator has unusual invariants
- *
- *     !(p & 0xffff) && !(((p >> 3) + 0x7fff8000) & 0xffff)
- *
- * which must be the case when selecting a starting address. We also
- * make the assumption that allocations can only grow monotonically.
- * Furthermore allocations shall never be removed or relocated.
- *
- * @param p points to start of memory region
- * @param n specifies how many bytes are needed
- * @param e points to end of memory that's allocated
- * @param h is highest address to which `e` may grow
- * @param f should be `MAP_PRIVATE` or `MAP_SHARED`
- * @return new value for `e`
+ * @param name can be absolute path or should be component w/o slashes
+ * @param oflga can have `O_CREAT` and/or `O_EXCL`
+ * @return semaphore object which needs sem_close(), or SEM_FAILED w/ errno
+ * @raise ENOTDIR if a directory component in `name` exists as non-directory
+ * @raise ENAMETOOLONG if symlink-resolved `name` length exceeds `PATH_MAX`
+ * @raise ENAMETOOLONG if component in `name` exists longer than `NAME_MAX`
+ * @raise ELOOP if `flags` had `O_NOFOLLOW` and `name` is a symbolic link
+ * @raise ENOSPC if file system is full when `name` would be `O_CREAT`ed
+ * @raise ELOOP if a loop was detected resolving components of `name`
+ * @raise EEXIST if `O_CREAT|O_EXCL` is used and semaphore exists
+ * @raise EACCES if we didn't have permission to create semaphore
+ * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
+ * @raise ENFILE if system-wide file limit has been reached
+ * @raise EINTR if signal was delivered instead
  */
-noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
-  char *q;
-  _unassert(!((uintptr_t)SHADOW(p) & (G - 1)));
-  _unassert((uintptr_t)p + (G << kAsanScale) <= h);
-  for (q = e; q < ((char *)p + n); q += 8) {
-    if (!((uintptr_t)q & (G - 1))) {
-      _unassert(q + G <= (char *)h);
-      _mapframe(q, f);
-      if (IsAsan()) {
-        if (!((uintptr_t)SHADOW(q) & (G - 1))) {
-          _mapframe(SHADOW(q), f);
-          __asan_poison(q, G << kAsanScale, kAsanProtected);
-        }
-      }
-    }
-    if (IsAsan()) {
-      *SHADOW(q) = 0;
-    }
+sem_t *sem_open(const char *name, int oflag, ...) {
+  int fd;
+  sem_t *sem;
+  va_list va;
+  unsigned mode;
+  char path[PATH_MAX];
+
+  va_start(va, oflag);
+  mode = va_arg(va, unsigned);
+  va_end(va);
+
+  oflag |= O_RDWR | O_CLOEXEC;
+  if ((fd = openat(AT_FDCWD, __sem_name(name, path), oflag, mode)) == -1) {
+    return SEM_FAILED;
   }
-  return q;
+
+  if (ftruncate(fd, sizeof(sem_t)) == -1) {
+    _npassert(!close(fd));
+    return SEM_FAILED;
+  }
+
+  sem = mmap(0, sizeof(sem_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (sem != MAP_FAILED) sem->sem_pshared = true;
+  _npassert(!close(fd));
+  return sem;
 }

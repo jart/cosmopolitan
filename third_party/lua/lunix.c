@@ -2856,8 +2856,8 @@ static int LuaUnixMemoryWait(lua_State *L) {
     }
     deadline = &ts;
   }
-  rc = nsync_futex_wait_((int *)GetWord(L), expect, PTHREAD_PROCESS_SHARED,
-                         deadline);
+  rc = nsync_futex_wait_((atomic_int *)GetWord(L), expect,
+                         PTHREAD_PROCESS_SHARED, deadline);
   if (rc < 0) errno = -rc, rc = -1;
   return SysretInteger(L, "futex_wait", olderr, rc);
 }
@@ -2867,7 +2867,8 @@ static int LuaUnixMemoryWait(lua_State *L) {
 static int LuaUnixMemoryWake(lua_State *L) {
   int count, woken;
   count = luaL_optinteger(L, 3, INT_MAX);
-  woken = nsync_futex_wake_((int *)GetWord(L), count, PTHREAD_PROCESS_SHARED);
+  woken = nsync_futex_wake_((atomic_int *)GetWord(L), count,
+                            PTHREAD_PROCESS_SHARED);
   _npassert(woken >= 0);
   return ReturnInteger(L, woken);
 }

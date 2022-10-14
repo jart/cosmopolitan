@@ -16,29 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
+#include "libc/dce.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/temp.h"
 #include "libc/sysv/consts/clock.h"
-#include "libc/thread/freebsd.internal.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/semaphore.h"
+#include "libc/thread/thread.h"
 
-int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
-                            const struct timespec *abstime) {
-  int op;
-  size_t size;
-  struct _umtx_time *tm_p, timo;
-  if (!abstime) {
-    tm_p = 0;
-    size = 0;
-  } else {
-    timo._clockid = CLOCK_REALTIME;
-    timo._flags = UMTX_ABSTIME;
-    timo._timeout = *abstime;
-    tm_p = &timo;
-    size = sizeof(timo);
+pthread_barrier_t barrier;
+char testlib_enable_tmp_setup_teardown;
+
+void *Worker(void *arg) {
+  sem_t *s[2];
+  struct timespec ts;
+  ASSERT_NE(SEM_FAILED, (s[0] = sem_open("fooz", O_CREAT, 0644)));
+  ASSERT_NE(SEM_FAILED, (s[1] = sem_open("barz", O_CREAT, 0644)));
+  if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+    if (!IsWindows()) {  // :'(
+      ASSERT_SYS(0, 0, sem_unlink("fooz"));
+      ASSERT_SYS(0, 0, sem_unlink("barz"));
+    }
   }
-  if (pshare) {
-    op = UMTX_OP_WAIT_UINT;
-  } else {
-    op = UMTX_OP_WAIT_UINT_PRIVATE;
-  }
-  return sys_umtx_op(p, op, expect, (void *)size, tm_p);
+  ASSERT_SYS(0, 0, clock_gettime(CLOCK_REALTIME, &ts));
+  ts.tv_sec += 1;
+  ASSERT_SYS(0, 0, sem_post(s[0]));
+  ASSERT_SYS(0, 0, sem_timedwait(s[1], &ts));
+  ASSERT_SYS(0, 0, sem_close(s[1]));
+  ASSERT_SYS(0, 0, sem_close(s[0]));
+  return 0;
+}
+
+TEST(sem_open, test) {
+  if (IsWindows()) return;  // TODO(jart): fix me
+  sem_t *s[2];
+  int i, r, n = 4;
+  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  ASSERT_EQ(0, pthread_barrier_init(&barrier, 0, n));
+  ASSERT_NE(SEM_FAILED, (s[0] = sem_open("fooz", O_CREAT, 0644)));
+  ASSERT_NE(SEM_FAILED, (s[1] = sem_open("barz", O_CREAT, 0644)));
+  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_wait(s[0]));
+  ASSERT_SYS(0, 0, sem_getvalue(s[0], &r));
+  ASSERT_EQ(0, r);
+  for (i = 0; i < n; ++i) ASSERT_SYS(0, 0, sem_post(s[1]));
+  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
+  ASSERT_SYS(0, 0, sem_getvalue(s[1], &r));
+  ASSERT_EQ(0, r);
+  ASSERT_SYS(0, 0, sem_close(s[1]));
+  ASSERT_SYS(0, 0, sem_close(s[0]));
+  ASSERT_EQ(0, pthread_barrier_destroy(&barrier));
 }

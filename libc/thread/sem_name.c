@@ -16,29 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/atomic.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/thread/freebsd.internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/path.h"
+#include "libc/str/str.h"
+#include "libc/thread/semaphore.internal.h"
+#include "libc/thread/thread.h"
 
-int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
-                            const struct timespec *abstime) {
-  int op;
-  size_t size;
-  struct _umtx_time *tm_p, timo;
-  if (!abstime) {
-    tm_p = 0;
-    size = 0;
+const char *__sem_name(const char *name, char path[hasatleast PATH_MAX]) {
+  if (_isabspath(name)) {
+    return name;
   } else {
-    timo._clockid = CLOCK_REALTIME;
-    timo._flags = UMTX_ABSTIME;
-    timo._timeout = *abstime;
-    tm_p = &timo;
-    size = sizeof(timo);
+    strlcpy(path, kTmpPath, PATH_MAX);
+    strlcat(path, ".sem-", PATH_MAX);
+    strlcat(path, name, PATH_MAX);
+    return path;
   }
-  if (pshare) {
-    op = UMTX_OP_WAIT_UINT;
-  } else {
-    op = UMTX_OP_WAIT_UINT_PRIVATE;
-  }
-  return sys_umtx_op(p, op, expect, (void *)size, tm_p);
 }

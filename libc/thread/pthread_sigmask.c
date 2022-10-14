@@ -17,10 +17,20 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/errno.h"
 
 /**
  * Examines and/or changes blocked signals on current thread.
+ *
+ * @return 0 on success, or errno on error
  */
 int pthread_sigmask(int how, const sigset_t *set, sigset_t *old) {
-  return sigprocmask(how, set, old);
+  int rc, e = errno;
+  if (!sigprocmask(how, set, old)) {
+    rc = 0;
+  } else {
+    rc = errno;
+    errno = e;
+  }
+  return rc;
 }
