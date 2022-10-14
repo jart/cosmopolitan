@@ -119,11 +119,13 @@ static const char *const sqlite_meta      = ":sqlite3";
 static const char *const sqlite_vm_meta   = ":sqlite3:vm";
 static const char *const sqlite_bu_meta   = ":sqlite3:bu";
 static const char *const sqlite_ctx_meta  = ":sqlite3:ctx";
+static int sqlite_ctx_meta_ref;
+#ifdef SQLITE_ENABLE_SESSION
 static const char *const sqlite_ses_meta  = ":sqlite3:ses";
 static const char *const sqlite_reb_meta  = ":sqlite3:reb";
-static int sqlite_ctx_meta_ref;
 static int sqlite_ses_meta_ref;
 static int sqlite_reb_meta_ref;
+#endif
 
 /*
 ** =======================================================
@@ -1732,6 +1734,8 @@ static int db_deserialize(lua_State *L) {
     return 0;
 }
 
+#ifdef SQLITE_ENABLE_SESSION
+
 /*
 ** =======================================================
 ** Rebaser functions (for session support)
@@ -2118,6 +2122,8 @@ static int db_apply_changeset(lua_State *L) {
     return 1;
 }
 
+#endif
+
 /*
 ** =======================================================
 ** General library functions
@@ -2249,6 +2255,7 @@ static const struct {
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
 
+#ifdef SQLITE_ENABLE_SESSION
     /* session constants */
     SC(CHANGESETSTART_INVERT)
     SC(CHANGESETAPPLY_NOSAVEPOINT)
@@ -2261,6 +2268,7 @@ static const struct {
     SC(CHANGESET_OMIT)
     SC(CHANGESET_REPLACE)
     SC(CHANGESET_ABORT)
+#endif
 
     /* terminator */
     { NULL, 0 }
@@ -2303,11 +2311,13 @@ static const luaL_Reg dblib[] = {
     {"serialize",           db_serialize            },
     {"deserialize",         db_deserialize          },
 
+#ifdef SQLITE_ENABLE_SESSION
     {"create_session",      db_create_session       },
     {"create_rebaser",      db_create_rebaser       },
     {"apply_changeset",     db_apply_changeset      },
     {"invert_changeset",    db_invert_changeset     },
     {"concat_changeset",    db_concat_changeset     },
+#endif
 
     {"__tostring",          db_tostring             },
     {"__gc",                db_gc                   },
@@ -2382,6 +2392,8 @@ static const luaL_Reg ctxlib[] = {
     {NULL, NULL}
 };
 
+#ifdef SQLITE_ENABLE_SESSION
+
 static const luaL_Reg seslib[] = {
     {"attach",          lsession_attach         },
     {"changeset",       lsession_changeset      },
@@ -2403,6 +2415,8 @@ static const luaL_Reg reblib[] = {
     {"__gc",            lrebaser_gc             },
     {NULL, NULL}
 };
+
+#endif
 
 static const luaL_Reg sqlitelib[] = {
     {"lversion",        lsqlite_lversion        },
@@ -2433,17 +2447,20 @@ LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     create_meta(L, sqlite_meta, dblib);
     create_meta(L, sqlite_vm_meta, vmlib);
     create_meta(L, sqlite_ctx_meta, ctxlib);
-    create_meta(L, sqlite_ses_meta, seslib);
-    create_meta(L, sqlite_reb_meta, reblib);
 
     luaL_getmetatable(L, sqlite_ctx_meta);
     sqlite_ctx_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+#ifdef SQLITE_ENABLE_SESSION
+    create_meta(L, sqlite_ses_meta, seslib);
+    create_meta(L, sqlite_reb_meta, reblib);
 
     luaL_getmetatable(L, sqlite_ses_meta);
     sqlite_ses_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     luaL_getmetatable(L, sqlite_reb_meta);
     sqlite_reb_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+#endif
 
     /* register (local) sqlite metatable */
     luaL_register(L, "sqlite3", sqlitelib);
