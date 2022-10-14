@@ -11,11 +11,10 @@
 #define st_mtime_nsec st_mtim.tv_nsec
 #define st_ctime_nsec st_ctim.tv_nsec
 
-#define st_atimensec     st_atim.tv_nsec
-#define st_mtimensec     st_mtim.tv_nsec
-#define st_ctimensec     st_ctim.tv_nsec
-#define st_birthtime     st_birthtim.tv_sec
-#define st_birthtimensec st_birthtim.tv_nsec
+#define st_atimensec st_atim.tv_nsec
+#define st_mtimensec st_mtim.tv_nsec
+#define st_ctimensec st_ctim.tv_nsec
+#define st_birthtime st_birthtim.tv_sec
 
 #define st_file_attributes st_flags
 
