@@ -28,10 +28,10 @@
 #define DEBUG
 #include "libc/fmt/conv.h"
 #include "libc/fmt/fmt.h"
+#include "libc/math.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/awk/awk.h"
-#include "third_party/libcxx/math.h"
 // clang-format off
 
 #define	FULLTAB	2	/* rehash when table gets this x full */

@@ -49,12 +49,12 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_LOG								\
 	LIBC_MEM								\
 	LIBC_NEXGEN32E								\
+	LIBC_NT_ADVAPI32							\
 	LIBC_NT_IPHLPAPI							\
 	LIBC_NT_KERNEL32							\
 	LIBC_NT_NTDLL								\
 	LIBC_NT_USER32								\
 	LIBC_NT_WS2_32								\
-	LIBC_NT_ADVAPI32							\
 	LIBC_RUNTIME								\
 	LIBC_SOCK								\
 	LIBC_STDIO								\
@@ -71,6 +71,7 @@ EXAMPLES_DIRECTDEPS =								\
 	LIBC_ZIPOS								\
 	NET_HTTP								\
 	NET_HTTPS								\
+	THIRD_PARTY_AWK								\
 	THIRD_PARTY_COMPILER_RT							\
 	THIRD_PARTY_DLMALLOC							\
 	THIRD_PARTY_DOUBLECONVERSION						\
@@ -84,7 +85,9 @@ EXAMPLES_DIRECTDEPS =								\
 	THIRD_PARTY_NSYNC							\
 	THIRD_PARTY_NSYNC_MEM							\
 	THIRD_PARTY_QUICKJS							\
+	THIRD_PARTY_SED								\
 	THIRD_PARTY_STB								\
+	THIRD_PARTY_TR								\
 	THIRD_PARTY_XED								\
 	THIRD_PARTY_ZLIB							\
 	TOOL_BUILD_LIB								\

@@ -165,7 +165,7 @@ compile(void)
 	uselabel();
 	if (appendnum > 0)
 		appends = xmalloc(sizeof(struct s_appends) * appendnum);
-	match = xmalloc((maxnsub + 1) * sizeof(regmatch_t));
+	g_match = xmalloc((maxnsub + 1) * sizeof(regmatch_t));
 }
 
 #define EATSPACE() do {							\

@@ -1,6 +1,4 @@
-// clang-format off
 /*	$NetBSD: main.c,v 1.36 2020/05/15 22:39:54 christos Exp $	*/
-
 /*-
  * Copyright (c) 2013 Johann 'Myrkraverk' Oskarsson.
  * Copyright (c) 1992 Diomidis Spinellis.
@@ -34,85 +32,20 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#include "libc/calls/makedev.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/intrin/newbie.h"
-#include "libc/calls/typedef/u.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sock/select.h"
-#include "libc/sysv/consts/endian.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/runtime/runtime.h"
-#include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/mlock.h"
-#include "libc/sysv/consts/msync.h"
-#include "libc/sysv/consts/posix.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/madv.h"
-#include "libc/sysv/consts/mfd.h"
-#include "libc/sysv/consts/mremap.h"
-#include "libc/intrin/newbie.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/rlimit.h"
-#include "libc/calls/struct/rusage.h"
-#include "libc/calls/sysparam.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/limits.h"
-#include "libc/sysv/consts/endian.h"
-#include "libc/sysv/consts/prio.h"
-#include "libc/sysv/consts/rlim.h"
-#include "libc/sysv/consts/rlimit.h"
-#include "libc/sysv/consts/rusage.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/sysv/consts/utime.h"
-#include "libc/calls/calls.h"
-#include "libc/runtime/runtime.h"
-#include "libc/time/time.h"
-
-#include "libc/log/bsd.h"
-#include "libc/errno.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/at.h"
-#include "libc/sysv/consts/f.h"
-#include "libc/sysv/consts/fd.h"
-#include "libc/sysv/consts/o.h"
-// MISSING #include <libgen.h>
-#include "libc/limits.h"
-#include "libc/sysv/consts/_posix.h"
-#include "libc/str/locale.h"
-#include "third_party/regex/regex.h"
-
-#define _WITH_GETLINE
-#include "libc/calls/calls.h"
 #include "libc/fmt/fmt.h"
-#include "libc/stdio/lock.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/mem/alg.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
+#include "libc/log/bsd.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/temp.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/gdtoa/gdtoa.h"
-#include "libc/mem/alg.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/locale.h"
 #include "libc/str/str.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/fileno.h"
-#include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/s.h"
 #include "third_party/getopt/getopt.h"
-
+#include "third_party/sed/cmd.h"
 #include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"
+// clang-format off
 
 /*
  * Linked list of units (strings and files) to be compiled
@@ -169,7 +102,7 @@ static void add_file(char *);
 static void usage(void) wontreturn;
 
 int
-main(int argc, char *argv[])
+_sed(int argc, char *argv[])
 {
 	int c, fflag;
 	char *temp_arg;
@@ -260,7 +193,7 @@ main(int argc, char *argv[])
 static void
 usage(void)
 {
-	(void)fprintf(stderr,
+	(void)(fprintf)(stderr,
 	    "Usage:  %s [-aElnru] command [file ...]\n"
 	    "\t%s [-aElnru] [-e command] [-f command_file] [-I[extension]]\n"
 	    "\t    [-i[extension]] [file ...]\n", program_invocation_name,

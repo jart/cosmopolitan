@@ -31,8 +31,8 @@
  * $FreeBSD: src/lib/libc/stdlib/getopt.c,v 1.8 2007/01/09 00:28:10 imp Exp $
  * $DragonFly: src/lib/libc/stdlib/getopt.c,v 1.7 2005/11/20 12:37:48 swildner
  */
+#include "libc/calls/calls.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 asm(".ident\t\"\\n\
@@ -79,14 +79,19 @@ hidden char *getopt_place;
 char kGetoptEmsg[1] hidden;
 
 static void getopt_print_badch(const char *s) {
+  char b1[512];
+  char b2[8] = " -- ";
+  b1[0] = 0;
   if (program_invocation_name) {
-    fputs(program_invocation_name, stderr);
-    fputs(": ", stderr);
+    strlcat(b1, program_invocation_name, sizeof(b1));
+    strlcat(b1, ": ", sizeof(b1));
   }
-  fputs(s, stderr);
-  fputs(" -- ", stderr);
-  fputc(optopt, stderr);
-  fputc('\n', stderr);
+  strlcat(b1, s, sizeof(b1));
+  b2[4] = optopt;
+  b2[5] = '\n';
+  b2[5] = 0;
+  strlcat(b1, b2, sizeof(b1));
+  write(2, b1, strlen(b1));
 }
 
 /**

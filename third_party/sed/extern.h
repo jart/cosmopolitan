@@ -10,7 +10,7 @@ COSMOPOLITAN_C_START_
 
 extern struct s_command *prog;
 extern struct s_appends *appends;
-extern regmatch_t *match;
+extern regmatch_t *g_match;
 extern size_t maxnsub;
 extern u_long linenum;
 extern size_t appendnum;

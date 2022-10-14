@@ -26,6 +26,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -33,6 +34,9 @@
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/timer.h"
+#include "third_party/awk/cmd.h"
+#include "third_party/sed/cmd.h"
+#include "third_party/tr/cmd.h"
 
 /**
  * @fileoverview Cosmopolitan Command Interpreter
@@ -48,6 +52,7 @@
 #define STATE_QUOTED_VAR 4
 #define STATE_WHITESPACE 5
 
+#define TOMBSTONE ((char *)-1)
 #define READ24(s) READ32LE(s "\0")
 
 struct Env {
@@ -62,6 +67,7 @@ static int envi;
 static int vari;
 static size_t n;
 static char *cmd;
+static char *assign;
 static char var[32];
 static int lastchild;
 static int exitstatus;
@@ -175,7 +181,14 @@ static void Append(int c) {
 static char *Finish(void) {
   char *s = r;
   Append(0);
-  return r = q, s;
+  r = q;
+  if (!assign) {
+    return s;
+  } else {
+    PutEnv(envs, s);
+    assign = 0;
+    return TOMBSTONE;
+  }
 }
 
 static int True(void) {
@@ -347,6 +360,19 @@ static int Test(void) {
   return 1;
 }
 
+static int Fake(int main(int, char **)) {
+  int exitstatus, ws, pid;
+  if ((pid = fork()) == -1) SysExit(21, "vfork", prog);
+  if (!pid) {
+    // TODO(jart): Maybe nuke stdio state somehow?
+    environ = envs;
+    exit(main(n, args));
+  }
+  if (waitpid(pid, &ws, 0) == -1) SysExit(22, "waitpid", prog);
+  exitstatus = WIFEXITED(ws) ? WEXITSTATUS(ws) : 128 + WTERMSIG(ws);
+  return n = 0, exitstatus;
+}
+
 static int TryBuiltin(void) {
   if (!n) return 0;
   if (!strcmp(args[0], "exit")) Exit();
@@ -362,6 +388,9 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "false")) return False();
   if (!strcmp(args[0], "usleep")) return Usleep();
   if (!strcmp(args[0], "toupper")) return Toupper();
+  if (_weaken(_tr) && !strcmp(args[0], "tr")) return Fake(_weaken(_tr));
+  if (_weaken(_sed) && !strcmp(args[0], "sed")) return Fake(_weaken(_sed));
+  if (_weaken(_awk) && !strcmp(args[0], "awk")) return Fake(_weaken(_awk));
   return -1;
 }
 
@@ -477,6 +506,9 @@ static char *Tokenize(void) {
         } else if (*p == '\\') {
           if (!p[1]) UnsupportedSyntax(*p);
           Append(*++p);
+        } else if (*p == '=') {
+          if (!n && q > r) assign = r;
+          Append(*p);
         } else if (*p == '|') {
           if (q > r) {
             return Finish();
@@ -492,7 +524,7 @@ static char *Tokenize(void) {
             Pipe();
             t = STATE_WHITESPACE;
           }
-        } else if (*p == ';') {
+        } else if (*p == ';' || *p == '\n') {
           if (q > r) {
             return Finish();
           } else {
@@ -595,6 +627,7 @@ int _cocmd(int argc, char **argv, char **envp) {
     unsupported[i] = true;
   }
   unsupported['\t'] = false;
+  unsupported['\n'] = false;
   unsupported[0177] = true;
   unsupported['~'] = true;
   unsupported['`'] = true;
@@ -633,6 +666,7 @@ int _cocmd(int argc, char **argv, char **envp) {
   n = 0;
   r = q = argbuf;
   while ((arg = Tokenize())) {
+    if (arg == TOMBSTONE) continue;
     if (n + 1 < ARRAYLEN(args)) {
       if (isdigit(arg[0]) && arg[1] == '>' && arg[2] == '&' &&
           isdigit(arg[3])) {

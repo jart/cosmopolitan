@@ -1,13 +1,5 @@
 // clang-format off
-#include "libc/mem/alg.h"
-#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/temp.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/gdtoa/gdtoa.h"
-#include "libc/mem/alg.h"
 #include "libc/str/str.h"
 #define YYBYACC 1
 #define YYMAJOR 1
@@ -19,13 +11,6 @@
 #define YYRECOVERING() (yyerrflag!=0)
 #define YYPREFIX "yy"
 #line 26 "awkgram.y"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/stdio/lock.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/mem/alg.h"
-#include "libc/str/str.h"
 #include "third_party/awk/awk.h"
 
 void checkdup(Node *list, Cell *item);

@@ -94,12 +94,12 @@ verrc(int eval, int code, const char *fmt, va_list ap)
 {
 	if (err_file == NULL)
 		err_set_file(NULL);
-	fprintf(err_file, "%s: ", program_invocation_name);
+	(fprintf)(err_file, "%s: ", program_invocation_name);
 	if (fmt != NULL) {
-		vfprintf(err_file, fmt, ap);
-		fprintf(err_file, ": ");
+		(vfprintf)(err_file, fmt, ap);
+		(fprintf)(err_file, ": ");
 	}
-	fprintf(err_file, "%s\n", _strerdoc(code));
+	(fprintf)(err_file, "%s\n", _strerdoc(code));
 	if (err_exit)
 		err_exit(eval);
 	exit(eval);
@@ -119,10 +119,10 @@ verrx(int eval, const char *fmt, va_list ap)
 {
 	if (err_file == NULL)
 		err_set_file(NULL);
-	fprintf(err_file, "%s: ", program_invocation_name);
+	(fprintf)(err_file, "%s: ", program_invocation_name);
 	if (fmt != NULL)
-		vfprintf(err_file, fmt, ap);
-	fprintf(err_file, "\n");
+		(vfprintf)(err_file, fmt, ap);
+	(fprintf)(err_file, "\n");
 	if (err_exit)
 		err_exit(eval);
 	exit(eval);
@@ -160,12 +160,12 @@ vwarnc(int code, const char *fmt, va_list ap)
 	saved_errno = errno;
 	if (err_file == NULL)
 		err_set_file(NULL);
-	fprintf(err_file, "%s: ", program_invocation_name);
+	(fprintf)(err_file, "%s: ", program_invocation_name);
 	if (fmt != NULL) {
-		vfprintf(err_file, fmt, ap);
-		fprintf(err_file, ": ");
+		(vfprintf)(err_file, fmt, ap);
+		(fprintf)(err_file, ": ");
 	}
-	fprintf(err_file, "%s\n", strerror(code));
+	(fprintf)(err_file, "%s\n", strerror(code));
 	errno = saved_errno;
 }
 
@@ -186,9 +186,9 @@ vwarnx(const char *fmt, va_list ap)
 	saved_errno = errno;
 	if (err_file == NULL)
 		err_set_file(NULL);
-	fprintf(err_file, "%s: ", program_invocation_name);
+	(fprintf)(err_file, "%s: ", program_invocation_name);
 	if (fmt != NULL)
-		vfprintf(err_file, fmt, ap);
-	fprintf(err_file, "\n");
+		(vfprintf)(err_file, fmt, ap);
+	(fprintf)(err_file, "\n");
 	errno = saved_errno;
 }

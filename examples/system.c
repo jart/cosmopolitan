@@ -7,13 +7,20 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/dce.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 
+/**
+ * @fileoverview Cosmopolitan Command Interpreter Demo
+ * Yes this works on Windows.
+ */
+
+STATIC_YOINK("_tr");
+STATIC_YOINK("_sed");
+
 int main(int argc, char *argv[]) {
-  if (IsWindows()) {
-    system("notepad");
-  } else {
-    system("ls | tr a-z A-Z");
-  }
+  system("x=world\n"
+         "echo hello $x |\n"
+         "  tr a-z A-Z |\n"
+         "  sed 's/\\(.\\)/\\1 /g'");
 }

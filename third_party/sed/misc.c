@@ -1,6 +1,4 @@
-// clang-format off
 /*	$NetBSD: misc.c,v 1.15 2014/06/26 02:14:32 christos Exp $	*/
-
 /*-
  * Copyright (c) 1992 Diomidis Spinellis.
  * Copyright (c) 1992, 1993
@@ -33,37 +31,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-#include "libc/calls/makedev.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/intrin/newbie.h"
-#include "libc/calls/typedef/u.h"
-#include "libc/calls/weirdtypes.h"
-#include "libc/sock/select.h"
-#include "libc/sysv/consts/endian.h"
-
 #include "libc/log/bsd.h"
-#include "libc/limits.h"
-#include "libc/sysv/consts/_posix.h"
-#include "third_party/regex/regex.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/stdio/lock.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/mem/alg.h"
-#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/rand.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/temp.h"
-#include "libc/sysv/consts/exit.h"
-#include "third_party/gdtoa/gdtoa.h"
-#include "libc/mem/alg.h"
-#include "libc/str/str.h"
-
-#include "third_party/sed/defs.h"
 #include "third_party/sed/extern.h"
+// clang-format off
 
 /*
  * malloc with result test
@@ -104,6 +75,7 @@ xcalloc(size_t c, size_t n)
 		err(1, "calloc(%zu, %zu)", c, n);
 	return p;
 }
+
 /*
  * Return a string for a regular expression error passed.  This is overkill,
  * because of the silly semantics of regerror (we can never know the size of

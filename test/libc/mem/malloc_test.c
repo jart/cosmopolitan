@@ -27,6 +27,7 @@
 #include "libc/mem/gc.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/sysconf.h"
@@ -143,10 +144,12 @@ void MallocFree(void) {
 }
 
 BENCH(bulk_free, bench) {
-  EZBENCH2("free(malloc(16))", donothing, MallocFree());
   EZBENCH2("free() bulk", BulkFreeBenchSetup(), FreeBulk());
   EZBENCH2("bulk_free()", BulkFreeBenchSetup(),
            bulk_free(bulk, ARRAYLEN(bulk)));
+  EZBENCH2("free(malloc(16)) ST", donothing, MallocFree());
+  __enable_threads();
+  EZBENCH2("free(malloc(16)) MT", donothing, MallocFree());
 }
 
 #define ITERATIONS 10000

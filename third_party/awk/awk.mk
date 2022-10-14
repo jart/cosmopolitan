@@ -3,20 +3,14 @@
 
 PKGS += THIRD_PARTY_AWK
 
-THIRD_PARTY_AWK_SRCS = $(THIRD_PARTY_AWK_A_SRCS)
-THIRD_PARTY_AWK_HDRS = $(THIRD_PARTY_AWK_A_HDRS)
-THIRD_PARTY_AWK_INCS = $(THIRD_PARTY_AWK_A_INCS)
-THIRD_PARTY_AWK_BINS = $(THIRD_PARTY_AWK_COMS) $(THIRD_PARTY_AWK_COMS:%=%.dbg)
-THIRD_PARTY_AWK_COMS = o/$(MODE)/third_party/awk/awk.com
-
 THIRD_PARTY_AWK_ARTIFACTS += THIRD_PARTY_AWK_A
 THIRD_PARTY_AWK = $(THIRD_PARTY_AWK_A_DEPS) $(THIRD_PARTY_AWK_A)
 THIRD_PARTY_AWK_A = o/$(MODE)/third_party/awk/awk.a
-THIRD_PARTY_AWK_A_FILES := $(wildcard third_party/awk/*)
-THIRD_PARTY_AWK_A_HDRS = $(filter %.h,$(THIRD_PARTY_AWK_A_FILES))
-THIRD_PARTY_AWK_A_INCS = $(filter %.inc,$(THIRD_PARTY_AWK_A_FILES))
-THIRD_PARTY_AWK_A_SRCS = $(filter %.c,$(THIRD_PARTY_AWK_A_FILES))
-THIRD_PARTY_AWK_A_OBJS = $(THIRD_PARTY_AWK_A_SRCS:%.c=o/$(MODE)/%.o)
+THIRD_PARTY_AWK_FILES := $(wildcard third_party/awk/*)
+THIRD_PARTY_AWK_HDRS = $(filter %.h,$(THIRD_PARTY_AWK_FILES))
+THIRD_PARTY_AWK_INCS = $(filter %.inc,$(THIRD_PARTY_AWK_FILES))
+THIRD_PARTY_AWK_SRCS = $(filter %.c,$(THIRD_PARTY_AWK_FILES))
+THIRD_PARTY_AWK_OBJS = $(THIRD_PARTY_AWK_SRCS:%.c=o/$(MODE)/%.o)
 
 THIRD_PARTY_AWK_A_DIRECTDEPS =				\
 	LIBC_FMT					\
@@ -36,22 +30,22 @@ THIRD_PARTY_AWK_A_DIRECTDEPS =				\
 THIRD_PARTY_AWK_A_DEPS :=				\
 	$(call uniq,$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x))))
 
-THIRD_PARTY_AWK_A_CHECKS =				\
+THIRD_PARTY_AWK_CHECKS =				\
 	$(THIRD_PARTY_AWK_A).pkg			\
-	$(THIRD_PARTY_AWK_A_HDRS:%=o/$(MODE)/%.ok)
+	$(THIRD_PARTY_AWK_HDRS:%=o/$(MODE)/%.ok)
 
 $(THIRD_PARTY_AWK_A):					\
 		third_party/awk/			\
 		$(THIRD_PARTY_AWK_A).pkg		\
-		$(THIRD_PARTY_AWK_A_OBJS)
+		$(THIRD_PARTY_AWK_OBJS)
 
 $(THIRD_PARTY_AWK_A).pkg:				\
-		$(THIRD_PARTY_AWK_A_OBJS)		\
+		$(THIRD_PARTY_AWK_OBJS)		\
 		$(foreach x,$(THIRD_PARTY_AWK_A_DIRECTDEPS),$($(x)_A).pkg)
 
 o/$(MODE)/third_party/awk/awk.com.dbg:			\
 		$(THIRD_PARTY_AWK)			\
-		o/$(MODE)/third_party/awk/main.o	\
+		o/$(MODE)/third_party/awk/cmd.o		\
 		o/$(MODE)/third_party/awk/README.zip.o	\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
@@ -61,10 +55,9 @@ o/$(MODE)/third_party/awk/README.zip.o:			\
 		ZIPOBJ_FLAGS =				\
 			-B
 
-THIRD_PARTY_AWK_LIBS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)))
-THIRD_PARTY_AWK_SRCS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)_SRCS))
-THIRD_PARTY_AWK_CHECKS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)_CHECKS))
-THIRD_PARTY_AWK_OBJS = $(foreach x,$(THIRD_PARTY_AWK_ARTIFACTS),$($(x)_OBJS))
+THIRD_PARTY_AWK_BINS = $(THIRD_PARTY_AWK_COMS) $(THIRD_PARTY_AWK_COMS:%=%.dbg)
+THIRD_PARTY_AWK_COMS = o/$(MODE)/third_party/awk/awk.com
+THIRD_PARTY_AWK_LIBS = $(THIRD_PARTY_AWK_A)
 $(THIRD_PARTY_AWK_OBJS): $(BUILD_FILES) third_party/awk/awk.mk
 
 .PHONY: o/$(MODE)/third_party/awk

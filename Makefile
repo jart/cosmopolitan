@@ -127,6 +127,7 @@ include ape/ape.mk				# │
 include libc/fmt/fmt.mk				# │
 include libc/vga/vga.mk				#─┘
 include libc/calls/calls.mk			#─┐
+include third_party/getopt/getopt.mk		# │
 include libc/runtime/runtime.mk			# ├──SYSTEMS RUNTIME
 include libc/crt/crt.mk				# │  You can issue system calls
 include third_party/nsync/nsync.mk		# │
@@ -150,7 +151,6 @@ include dsp/mpeg/mpeg.mk			# │
 include dsp/dsp.mk				# │
 include third_party/zlib/gz/gz.mk		# │
 include third_party/musl/musl.mk		# │
-include third_party/getopt/getopt.mk		# │
 include libc/libc.mk				#─┘
 include libc/sock/sock.mk			#─┐
 include dsp/tty/tty.mk				# ├──ONLINE RUNTIME
@@ -171,6 +171,7 @@ include third_party/maxmind/maxmind.mk
 include net/finger/finger.mk
 include third_party/double-conversion/test/test.mk
 include third_party/lua/lua.mk
+include third_party/tr/tr.mk
 include third_party/sed/sed.mk
 include third_party/awk/awk.mk
 include third_party/make/make.mk

@@ -29,17 +29,14 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
-#include "libc/calls/ucontext.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/sock/struct/sockaddr.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/str/locale.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "third_party/awk/awk.h"
-#include "tool/args/args.h"
 // clang-format off
 
 asm(".ident\t\"\\n\\n\
@@ -128,13 +125,11 @@ getarg(int *argc, char ***argv, const char *msg)
 	}
 }
 
-int main(int argc, char *argv[])
+int _awk(int argc, char *argv[])
 {
 	const char *fs = NULL;
 	struct sigaction sa;
 	char *fn, *vn;
-
-	LoadZipArgs(&argc, &argv);
 
 	setlocale(LC_CTYPE, "");
 	setlocale(LC_NUMERIC, "C"); /* for parsing cmdline & prog */
