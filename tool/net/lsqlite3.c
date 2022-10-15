@@ -1868,8 +1868,9 @@ static int lsession_isempty(lua_State *L) {
     return 1;
 }
 
-static int lsession_bool(lua_State *L,
-  int (*session_func)(sqlite3_session *ses, int val)
+static int lsession_bool(
+        lua_State *L,
+        int (*session_func)(sqlite3_session *ses, int val)
 ) {
     lsession *lses = lsqlite_checksession(L, 1);
     int val = lua_isboolean(L, 2) ? lua_toboolean(L, 2)
@@ -1886,13 +1887,16 @@ static int lsession_enable(lua_State *L) {
     return lsession_bool(L, sqlite3session_enable);
 }
 
-static int lsession_changeset(lua_State *L) {
+static int lsession_getset(
+        lua_State *L,
+        int (*session_setfunc)(sqlite3_session *ses, int *size, void **buf)
+) {
     lsession *lses = lsqlite_checksession(L, 1);
     int rc;
     int size;
     void *buf;
 
-    if ((rc = sqlite3session_changeset(lses->ses, &size, &buf)) != SQLITE_OK) {
+    if ((rc = (*session_setfunc)(lses->ses, &size, &buf)) != SQLITE_OK) {
         lua_pushnil(L);
         lua_pushinteger(L, rc);
         return 2;
@@ -1900,6 +1904,14 @@ static int lsession_changeset(lua_State *L) {
     lua_pushlstring(L, buf, size);
     sqlite3_free(buf);
     return 1;
+}
+
+static int lsession_changeset(lua_State *L) {
+    return lsession_getset(L, sqlite3session_changeset);
+}
+
+static int lsession_patchset(lua_State *L) {
+    return lsession_getset(L, sqlite3session_patchset);
 }
 
 static int lsession_delete(lua_State *L) {
@@ -2397,6 +2409,7 @@ static const luaL_Reg ctxlib[] = {
 static const luaL_Reg seslib[] = {
     {"attach",          lsession_attach         },
     {"changeset",       lsession_changeset      },
+    {"patchset",        lsession_patchset       },
     {"isempty",         lsession_isempty        },
     {"indirect",        lsession_indirect       },
     {"enable",          lsession_enable         },
