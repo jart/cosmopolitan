@@ -105,6 +105,9 @@ struct sdb {
     int busy_cb;        /* busy callback */
     int busy_udata;
 
+    int wal_hook_cb; /* wal_hook callback */
+    int wal_hook_udata;
+
     int update_hook_cb; /* update_hook callback */
     int update_hook_udata;
 
@@ -600,6 +603,8 @@ static sdb *newdb (lua_State *L) {
 
     db->busy_cb =
     db->busy_udata =
+    db->wal_hook_cb =
+    db->wal_hook_udata =
     db->update_hook_cb =
     db->update_hook_udata =
     db->commit_hook_cb =
@@ -650,6 +655,8 @@ static int cleanupdb(lua_State *L, sdb *db) {
     /* 'free' all references */
     luaL_unref(L, LUA_REGISTRYINDEX, db->busy_cb);
     luaL_unref(L, LUA_REGISTRYINDEX, db->busy_udata);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_cb);
+    luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_udata);
     luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_cb);
     luaL_unref(L, LUA_REGISTRYINDEX, db->update_hook_udata);
     luaL_unref(L, LUA_REGISTRYINDEX, db->commit_hook_cb);
@@ -1169,6 +1176,62 @@ static int db_create_collation(lua_State *L) {
         (void *)co,
         (int(*)(void*,int,const void*,int,const void*))collfunc,
         (void(*)(void*))collfree);
+    return 0;
+}
+
+/*
+** wal_hook callback:
+** Params: database, callback function, userdata
+**
+** callback function:
+** Params: userdata, db handle, database name, number of wal file pages
+*/
+static int db_wal_hook_callback(void *user, sqlite3 *dbh, char const *dbname, int pnum) {
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+
+    /* setup lua callback call */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->wal_hook_cb);    /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, db->wal_hook_udata); /* get callback user data */
+    lua_pushstring(L, dbname); /* hook database name */
+    lua_pushinteger(L, pnum);
+
+    if (lua_pcall(L, 3, 0, 0) != SQLITE_OK) return lua_error(L);
+
+    lua_settop(L, top);
+    return SQLITE_OK;
+}
+
+static int db_wal_hook(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+
+    if (lua_gettop(L) < 2 || lua_isnil(L, 2)) {
+        luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_udata);
+
+        db->wal_hook_cb =
+        db->wal_hook_udata = LUA_NOREF;
+
+        /* clear hook handler */
+        sqlite3_wal_hook(db->db, NULL, NULL);
+    }
+    else {
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+
+        /* make sure we have an userdata field (even if nil) */
+        lua_settop(L, 3);
+
+        luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_cb);
+        luaL_unref(L, LUA_REGISTRYINDEX, db->wal_hook_udata);
+
+        db->wal_hook_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        db->wal_hook_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        /* set hook handler */
+        sqlite3_wal_hook(db->db, db_wal_hook_callback, db);
+    }
+
     return 0;
 }
 
@@ -2316,6 +2379,7 @@ static const luaL_Reg dblib[] = {
 
     {"busy_timeout",        db_busy_timeout         },
     {"busy_handler",        db_busy_handler         },
+    {"wal_hook",            db_wal_hook             },
     {"update_hook",         db_update_hook          },
     {"commit_hook",         db_commit_hook          },
     {"rollback_hook",       db_rollback_hook        },
