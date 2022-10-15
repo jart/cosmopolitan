@@ -1755,6 +1755,28 @@ syscon	misc	FALLOC_FL_ZERO_RANGE			0x10			-1			-1			-1			-1			0x000980C8		# bsd 
 syscon	misc	FALLOC_FL_INSERT_RANGE			0x20			-1			-1			-1			-1			-1			# bsd consensus
 syscon	misc	FALLOC_FL_UNSHARE_RANGE			0x40			-1			-1			-1			-1			-1			# bsd consensus
 
+#	Video Output Control Ioctls (mostly platform-specific)
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	vid	FBIOGET_VSCREENINFO			0x4600			0			0			0			0			0
+syscon	vid	FBIOPUT_VSCREENINFO			0x4601			0			0			0			0			0
+syscon	vid	FBIOGET_FSCREENINFO			0x4602			0			0			0			0			0
+syscon	vid	FBIOGETCMAP				0x4604			0			0			0			0			0
+syscon	vid	FBIOPUTCMAP				0x4605			0			0			0			0			0
+syscon	vid	FBIOPAN_DISPLAY				0x4606			0			0			0			0			0
+syscon	vid	FBIO_WAITFORVSYNC			0x40044620		0			0			0			0			0
+#syscon	vid	FBIO_CACHE_SYNC				0x4630			0			0			0			0			0			# does any Linux kernel driver actually implement this ioctl? only Chinese sources mention it
+syscon	vid	GIO_FONT				0x4b60			0			0			0			0			0
+syscon	vid	PIO_FONT				0x4b61			0			0			0			0			0
+syscon	vid	GIO_FONTX				0x4b6b			0			0			0			0			0
+syscon	vid	PIO_FONTX				0x4b6c			0			0			0			0			0
+syscon	vid	PIO_FONT8x8				0			0			0x88006340		0			0			0
+syscon	vid	PIO_FONT8x14				0			0			0x8e006342		0			0			0
+syscon	vid	PIO_FONT8x16				0			0			0x90006344		0			0			0
+syscon	vid	PIO_VFONT				0			0			0x84086346		0			0			0
+syscon	vid	PIO_FONTRESET				0x4b6d			0			0x20006348		0			0			0			# PIO_VFONT_DEFAULT on FreeBSD, absent on OpenBSD
+syscon	vid	KDFONTOP				0x4b72			0			0			0			0			0
+
 #	System Call Numbers.
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology
