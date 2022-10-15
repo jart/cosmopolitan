@@ -1968,12 +1968,22 @@ static int db_changeset_conflict_callback(
     lua_State *L = db->L;
     int top = lua_gettop(L);
     int result, isint;
+    const char *zTab;
+    int nCol, Op, bIndirect;
+
+    if (sqlite3changeset_op(p, &zTab, &nCol, &Op, &bIndirect) != LUA_OK) {
+        lua_pushliteral(L, "invalid return from changeset iterator");
+        return lua_error(L);
+    }
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb);    /* get callback */
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
     lua_pushinteger(L, eConflict);
+    lua_pushstring(L, zTab);
+    lua_pushinteger(L, Op);
+    lua_pushboolean(L, bIndirect);
 
-    if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
+    if (lua_pcall(L, 5, 1, 0) != LUA_OK) return lua_error(L);
 
     result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
     if (!isint) {
