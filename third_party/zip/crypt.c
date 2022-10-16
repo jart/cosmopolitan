@@ -1,9 +1,4 @@
-/* clang-format off */
-#define ZCRYPT_INTERNAL
-#include "third_party/zip/zip.h"
-#include "third_party/zip/crypt.h"
-#include "third_party/zip/ttyio.h"
-#include "libc/stdio/rand.h"
+// clang-format off
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 
@@ -34,6 +29,11 @@
   file (appnote.txt) is distributed with the PKZIP program (even in the
   version without encryption capabilities).
  */
+
+#define ZCRYPT_INTERNAL
+#include "third_party/zip/zip.h"
+#include "third_party/zip/crypt.h"
+#include "third_party/zip/ttyio.h"
 
 #if CRYPT
 
@@ -75,7 +75,14 @@
       as a fallback to allow successful compilation in "beta state"
       environments.
     */
-#include "libc/time/time.h"    /* time() function supplies first part of crypt seed */
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"     /* time() function supplies first part of crypt seed */
    /* "last resort" source for second part of crypt seed pattern */
 #  ifndef ZCR_SEED2
 #    define ZCR_SEED2 (unsigned)3141592654L     /* use PI as default pattern */

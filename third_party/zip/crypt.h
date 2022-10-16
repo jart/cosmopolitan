@@ -1,8 +1,58 @@
-#ifndef __crypt_h /* don't include more than once */
-#define __crypt_h
-/* clang-format off */
+// clang-format off
+/*
+  Copyright (c) 1990-2007 Info-ZIP.  All rights reserved.
 
-#define CRYPT  1  /* full version for zip and main unzip */
+  See the accompanying file LICENSE, version 2007-Mar-4 or later
+  (the contents of which are also included in zip.h) for terms of use.
+  If, for some reason, all these files are missing, the Info-ZIP license
+  also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
+*/
+/*
+  crypt.h (full version) by Info-ZIP.   Last revised:  [see CR_VERSION_DATE]
+
+  The main encryption/decryption source code for Info-Zip software was
+  originally written in Europe.  To the best of our knowledge, it can
+  be freely distributed in both source and object forms from any country,
+  including the USA under License Exception TSU of the U.S. Export
+  Administration Regulations (section 740.13(e)) of 6 June 2002.
+
+  NOTE on copyright history:
+  Previous versions of this source package (up to version 2.8) were
+  not copyrighted and put in the public domain.  If you cannot comply
+  with the Info-Zip LICENSE, you may want to look for one of those
+  public domain versions.
+ */
+
+#ifndef __crypt_h   /* don't include more than once */
+#define __crypt_h
+
+#ifdef CRYPT
+#  undef CRYPT
+#endif
+/*
+   Logic of selecting "full crypt" code:
+   a) default behaviour:
+      - dummy crypt code when compiling UnZipSFX stub, to minimize size
+      - full crypt code when used to compile Zip, UnZip and fUnZip
+   b) USE_CRYPT defined:
+      - always full crypt code
+   c) NO_CRYPT defined:
+      - never full crypt code
+   NO_CRYPT takes precedence over USE_CRYPT
+ */
+#if defined(NO_CRYPT)
+#  define CRYPT  0  /* dummy version */
+#else
+#if defined(USE_CRYPT)
+#  define CRYPT  1  /* full version */
+#else
+#if !defined(SFX)
+#  define CRYPT  1  /* full version for zip and main unzip */
+#else
+#  define CRYPT  0  /* dummy version for unzip sfx */
+#endif
+#endif /* ?USE_CRYPT */
+#endif /* ?NO_CRYPT */
 
 #if CRYPT
 /* full version */
@@ -80,22 +130,23 @@
 /* decode byte c in place */
 #define zdecode(c)   update_keys(__G__ c ^= decrypt_byte(__G))
 
-int  decrypt_byte (__GPRO);
-int  update_keys (__GPRO__ int c);
-void init_keys (__GPRO__ ZCONST char *passwd);
+int  decrypt_byte OF((__GPRO));
+int  update_keys OF((__GPRO__ int c));
+void init_keys OF((__GPRO__ ZCONST char *passwd));
 
 #ifdef ZIP
-   void crypthead (ZCONST char *, ulg);
+   void crypthead OF((ZCONST char *, ulg));
 #  ifdef UTIL
-     int zipcloak (struct zlist far *, ZCONST char *);
-     int zipbare (struct zlist far *, ZCONST char *);
+     int zipcloak OF((struct zlist far *, ZCONST char *));
+     int zipbare OF((struct zlist far *, ZCONST char *));
 #  else
-     unsigned zfwrite (zvoid *, extent, extent);
+     unsigned zfwrite OF((zvoid *, extent, extent));
+     extern char *key;
 #  endif
 #endif /* ZIP */
 
 #if (defined(UNZIP) && !defined(FUNZIP))
-   int  decrypt (__GPRO__ ZCONST char *passwrd);
+   int  decrypt OF((__GPRO__ ZCONST char *passwrd));
 #endif
 
 #ifdef FUNZIP

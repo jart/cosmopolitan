@@ -1,15 +1,4 @@
-/* clang-format off */
-#include "libc/calls/struct/dirent.h"
-#include "libc/calls/calls.h"
-#include "libc/sysv/consts/s.h"
-#include "third_party/zip/zip.h"
-#include "libc/time/time.h"
-#include "libc/calls/struct/stat.macros.h"
-#include "libc/calls/calls.h"
-#include "third_party/zip/osdep.h"
-#include "libc/time/struct/utimbuf.h"
-#include "libc/sysv/consts/dt.h"
-
+// clang-format off
 /*
   unix/unix.c - Zip 3
 
@@ -20,13 +9,63 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
+#include "third_party/zip/osdep.h"
+#include "third_party/zip/zip.h"
 
 #ifndef UTIL    /* the companion #endif is a bit of ways down ... */
+
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+
+#if defined(MINIX) || defined(__mpexl)
+#  ifdef S_IWRITE
+#    undef S_IWRITE
+#  endif /* S_IWRITE */
+#  define S_IWRITE S_IWUSR
+#endif /* MINIX */
+
+#if (!defined(S_IWRITE) && defined(S_IWUSR))
+#  define S_IWRITE S_IWUSR
+#endif
+
+#if defined(HAVE_DIRENT_H) || defined(_POSIX_VERSION)
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/dt.h"
+#else /* !HAVE_DIRENT_H */
+#  ifdef HAVE_NDIR_H
+// MISSING #include <ndir.h>
+#  endif /* HAVE_NDIR_H */
+#  ifdef HAVE_SYS_NDIR_H
+// MISSING #include <sys/ndir.h>
+#  endif /* HAVE_SYS_NDIR_H */
+#  ifdef HAVE_SYS_DIR_H
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/dt.h"
+#  endif /* HAVE_SYS_DIR_H */
+#  ifndef dirent
+#    define dirent direct
+#  endif
+#endif /* HAVE_DIRENT_H || _POSIX_VERSION */
 
 #define PAD 0
 #define PATH_END '/'
 
 /* Library functions not in (most) header files */
+
+#ifdef _POSIX_VERSION
+#include "libc/time/struct/utimbuf.h"
+#include "libc/time/time.h"
+#else
+   int utime OF((char *, time_t *));
+#endif
 
 extern char *label;
 local ulg label_time = 0;
@@ -663,9 +702,21 @@ char *d;                /* directory to delete */
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__386BSD__) || \
     defined(__OpenBSD__) || defined(__bsdi__)
+#include "libc/intrin/newbie.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/sysparam.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/limits.h"
+#include "libc/sysv/consts/endian.h"
+#include "libc/sysv/consts/prio.h"
+#include "libc/sysv/consts/rlim.h"
+#include "libc/sysv/consts/rlimit.h"
+#include "libc/sysv/consts/rusage.h" /* for the BSD define */
 /* if we have something newer than NET/2 we'll use uname(3) */
 #if (BSD > 199103)
-#include "libc/calls/calls.h"
+#include "libc/calls/struct/utsname.h"
 #endif /* BSD > 199103 */
 #endif /* __{Net,Free,Open,386}BSD__ || __bsdi__ */
 
@@ -972,3 +1023,4 @@ void version_local()
            COMPILER_NAME, OS_NAME, COMPILE_DATE);
 
 } /* end function version_local() */
+

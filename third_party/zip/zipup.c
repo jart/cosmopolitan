@@ -1,5 +1,4 @@
-// -*- mode:c;indent-tabs-mode:nil;c-basic-offset:4;tab-width:8;coding:utf-8 -*-
-/* clang-format off */
+// clang-format off
 /*
   zipup.c - Zip 3
 
@@ -21,26 +20,134 @@
    different sizes and needless to say leads to segmentation faults.  Putting
    zip.h first seems to fix this.  8/14/04 EG */
 #include "third_party/zip/zip.h"
-#include "libc/errno.h"
 #include "libc/str/str.h"
-#include "libc/log/log.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/fmt/fmt.h"
-#include "libc/stdio/stdio.h"
+#include "third_party/zip/zipup.h"
+#include "third_party/bzip2/bzlib.h"
+#include "libc/calls/typedef/u.h"
+#include "third_party/zlib/zconf.h"
 #include "libc/runtime/sysconf.h"
-#include "libc/runtime/sysconf.h"
-#include "libc/runtime/runtime.h"
+#include "libc/errno.h"
 
 #ifndef UTIL            /* This module contains no code for Zip Utilities */
 
 #include "third_party/zip/revision.h"
 #include "third_party/zip/crc32.h"
 #include "third_party/zip/crypt.h"
-#include "third_party/bzip2/bzlib.h"
+#ifdef USE_ZLIB
+// MISSING #include "zlib.h"
+#endif
+#ifdef BZIP2_SUPPORT
+#  ifdef BZIP2_USEBZIP2DIR
+// MISSING #include "bzip2/bzlib.h"
+#  else
+// MISSING #include "bzlib.h"
+#  endif
+#endif
+
+#ifdef OS2
+// MISSING #include "os2/os2zip.h"
+#endif
+
+#if defined(MMAP)
 #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mlock.h"
+#include "libc/sysv/consts/msync.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/madv.h"
+#include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/mremap.h"
+#  ifndef PAGESIZE   /* used to be SYSV, what about pagesize on SVR3 ? */
+#    define PAGESIZE getpagesize()
+#  endif
+#  if defined(NO_VALLOC) && !defined(valloc)
+#    define valloc malloc
+#  endif
+#endif
+
+/* Use the raw functions for MSDOS and Unix to save on buffer space.
+   They're not used for VMS since it doesn't work (raw is weird on VMS).
+ */
+
+#ifdef AMIGA
+// MISSING #include "amiga/zipup.h"
+#endif /* AMIGA */
+
+#ifdef AOSVS
+// MISSING #include "aosvs/zipup.h"
+#endif /* AOSVS */
+
+#ifdef ATARI
+// MISSING #include "atari/zipup.h"
+#endif
+
+#ifdef __BEOS__
+// MISSING #include "beos/zipup.h"
+#endif
+
+#ifdef __ATHEOS__
+// MISSING #include "atheos/zipup.h"
+#endif /* __ATHEOS__ */
+
+#ifdef __human68k__
+// MISSING #include "human68k/zipup.h"
+#endif /* __human68k__ */
+
+#ifdef MACOS
+// MISSING #include "macos/zipup.h"
+#endif
+
+#ifdef DOS
+// MISSING #include "msdos/zipup.h"
+#endif /* DOS */
+
+#ifdef NLM
+// MISSING #include "novell/zipup.h"
+// MISSING #include <nwfattr.h>
+#endif
+
+#ifdef OS2
+// MISSING #include "os2/zipup.h"
+#endif /* OS2 */
+
+#ifdef RISCOS
+// MISSING #include "acorn/zipup.h"
+#endif
+
+#ifdef TOPS20
+// MISSING #include "tops20/zipup.h"
+#endif
+
+#ifdef UNIX
+// MISSING #include "unix/zipup.h"
+#endif
+
+#ifdef CMS_MVS
 #include "third_party/zip/zipup.h"
+#endif /* CMS_MVS */
+
+#ifdef TANDEM
+#include "third_party/zip/zipup.h"
+#endif /* TANDEM */
+
+#ifdef VMS
+// MISSING #include "vms/zipup.h"
+#endif /* VMS */
+
+#ifdef QDOS
+// MISSING #include "qdos/zipup.h"
+#endif /* QDOS */
+
+#ifdef WIN32
+// MISSING #include "win32/zipup.h"
+#endif
+
+#ifdef THEOS
+// MISSING #include "theos/zipup.h"
+#endif
 
 /* Local functions */
 #ifndef RISCOS
@@ -539,17 +646,17 @@ struct zlist far *z;    /* zip entry to compress */
       if (window != NULL)
         free(window);  /* window can't be a mapped file here */
       window_size = (ulg)q + MIN_LOOKAHEAD;
-      remain = window_size & (sysconf(_SC_PAGESIZE)-1);
+      remain = window_size & (PAGESIZE-1);
       /* If we can't touch the page beyond the end of file, we must
        * allocate an extra page.
        */
       if (remain > MIN_LOOKAHEAD) {
         window = (uch*)mmap(0, window_size, PROT_READ, MAP_PRIVATE, ifile, 0);
       } else {
-        window = (uch*)pvalloc(window_size - remain + sysconf(_SC_PAGESIZE));
+        window = (uch*)valloc(window_size - remain + PAGESIZE);
         if (window != NULL) {
           window = (uch*)mmap((char*)window, window_size - remain, PROT_READ,
-                              MAP_PRIVATE | MAP_FIXED, ifile, 0);
+                        MAP_PRIVATE | MAP_FIXED, ifile, 0);
         } else {
           window = (uch*)(-1);
         }
@@ -837,7 +944,7 @@ struct zlist far *z;    /* zip entry to compress */
     zclose(ifile);
 #ifdef MMAP
   if (remain != (ulg)-1L) {
-    munmap((void*) window, window_size);
+    munmap((caddr_t) window, window_size);
     window = NULL;
   }
 #endif /*MMAP */
@@ -1446,8 +1553,8 @@ local zoff_t filecompress(z_entry, cmpr_method)
     do {
         err = deflate(&zstrm, Z_FINISH);
         if (maybe_stored) {
-            if (err == Z_STREAM_END && zstrm.total_out >= zstrm.total_in/*  && */
-                /* fseekable(y) */) {
+            if (err == Z_STREAM_END && zstrm.total_out >= zstrm.total_in &&
+                fseekable(zipfile)) {
                 /* deflation does not reduce size, switch to STORE method */
                 unsigned len_out = (unsigned)zstrm.total_in;
                 if (zfwrite(f_ibuf, 1, len_out) != len_out) {
@@ -1677,16 +1784,16 @@ int *cmpr_method;
     } else
 #endif /* MMAP || BIG_MEM */
     {
-        bstrm.next_in = f_ibuf;
+        bstrm.next_in = (char *)f_ibuf;
     }
-    bstrm.avail_in = file_read((char *)bstrm.next_in, ibuf_sz);
+    bstrm.avail_in = file_read(bstrm.next_in, ibuf_sz);
     if (file_binary_final == 0) {
       /* check for binary as library does not */
-      if (!is_text_buf((char *)bstrm.next_in, ibuf_sz))
+      if (!is_text_buf(bstrm.next_in, ibuf_sz))
         file_binary_final = 1;
     }
     if (bstrm.avail_in < ibuf_sz) {
-        unsigned more = file_read((char *)(bstrm.next_in + bstrm.avail_in),
+        unsigned more = file_read(bstrm.next_in + bstrm.avail_in,
                                   (ibuf_sz - bstrm.avail_in));
         if (more == (unsigned) EOF || more == 0) {
             maybe_stored = TRUE;
@@ -1694,7 +1801,7 @@ int *cmpr_method;
             bstrm.avail_in += more;
         }
     }
-    bstrm.next_out = (void *)f_obuf;
+    bstrm.next_out = (char *)f_obuf;
     bstrm.avail_out = OBUF_SZ;
 
     if (!maybe_stored) {
@@ -1708,7 +1815,7 @@ int *cmpr_method;
             if (zfwrite(f_obuf, 1, OBUF_SZ) != OBUF_SZ) {
                 ziperr(ZE_TEMP, "error writing to zipfile");
             }
-            bstrm.next_out = f_obuf;
+            bstrm.next_out = (char *)f_obuf;
             bstrm.avail_out = OBUF_SZ;
         }
         /* $TODO what about high 32-bits of total-in??? */
@@ -1750,14 +1857,14 @@ int *cmpr_method;
                 }
 #if defined(MMAP) || defined(BIG_MEM)
             if (remain == (ulg)-1L)
-                bstrm.next_in = f_ibuf;
+                bstrm.next_in = (char *)f_ibuf;
 #else
             bstrm.next_in = (char *)f_ibuf;
 #endif
-            bstrm.avail_in = file_read((char *)bstrm.next_in, ibuf_sz);
+            bstrm.avail_in = file_read(bstrm.next_in, ibuf_sz);
             if (file_binary_final == 0) {
               /* check for binary as library does not */
-              if (!is_text_buf((char *)bstrm.next_in, ibuf_sz))
+              if (!is_text_buf(bstrm.next_in, ibuf_sz))
                 file_binary_final = 1;
             }
         }
@@ -1802,7 +1909,7 @@ int *cmpr_method;
             if (zfwrite(f_obuf, 1, len_out) != len_out) {
                 ziperr(ZE_TEMP, "error writing to zipfile");
             }
-            bstrm.next_out = f_obuf;
+            bstrm.next_out = (char *)f_obuf;
             bstrm.avail_out = OBUF_SZ;
         }
     } while (err == BZ_FINISH_OK);

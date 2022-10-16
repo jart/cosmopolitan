@@ -1,11 +1,59 @@
+// clang-format off
+/*
+  api.h - Zip 3
+
+  Copyright (c) 1990-2007 Info-ZIP.  All rights reserved.
+
+  See the accompanying file LICENSE, version 2007-Mar-4 or later
+  (the contents of which are also included in zip.h) for terms of use.
+  If, for some reason, all these files are missing, the Info-ZIP license
+  also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
+*/
+/* Only the Windows DLL is currently supported */
 #ifndef _ZIPAPI_H
 #define _ZIPAPI_H
-#include "third_party/zip/zip.h"
-/* clang-format off */
 
-#define MAXPATH 1024
+#include "third_party/zip/zip.h"
+
+#ifdef WIN32
+#   ifndef PATH_MAX
+#      define PATH_MAX 260
+#   endif
+#else
+#   ifndef PATH_MAX
+#      define PATH_MAX 128
+#   endif
+#endif
 
 #if defined(WINDLL) || defined(API)
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
+/* Porting definations between Win 3.1x and Win32 */
+#ifdef WIN32
+#  define far
+#  define _far
+#  define __far
+#  define near
+#  define _near
+#  define __near
+#endif
 
 /*---------------------------------------------------------------------------
     Prototypes for public Zip API (DLL) functions.

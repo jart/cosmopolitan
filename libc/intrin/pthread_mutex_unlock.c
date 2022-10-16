@@ -59,7 +59,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   t = gettid();
 
   // we allow unlocking an initialized lock that wasn't locked, but we
-  // don't allow unlocking a lock held by another thread, on unlocking
+  // don't allow unlocking a lock held by another thread, or unlocking
   // recursive locks from a forked child, since it should be re-init'd
   if (mutex->_owner && (mutex->_owner != t || mutex->_pid != __pid)) {
     return EPERM;

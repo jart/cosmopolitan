@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   fileio.c - Zip 3
 
@@ -15,15 +15,24 @@
 #define __FILEIO_C
 
 #include "third_party/zip/zip.h"
-#include "libc/calls/struct/stat.macros.h"
 #include "third_party/zip/crc32.h"
-#include "libc/fmt/fmt.h"
-#include "libc/mem/alg.h"
-#include "libc/stdio/temp.h"
-#include "libc/time/time.h"
+
+#ifdef MACOS
+// MISSING #include "helpers.h"
+#endif
+
+#ifdef VMS
+// MISSING #include "vms/vms.h"
+#endif /* def VMS */
+
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
 #include "libc/time/struct/tm.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/limits.h"
+#include "libc/time/time.h"
 
 #ifdef NO_MKTIME
 time_t mktime OF((struct tm *));
@@ -1175,6 +1184,7 @@ ulg dostime;            /* DOS time to convert */
 #endif /* ZP_NEED_GEN_D2U_TIME */
 
 
+#ifndef MACOS
 int destroy(f)
   char *f;             /* file to delete */
 /* Delete the file *f, returning non-zero on failure. */
@@ -1191,31 +1201,68 @@ char *d, *s;            /* destination and source file names */
  */
 {
   z_stat t;         /* results of stat() */
+#if defined(CMS_MVS)
+  /* cmsmvs.h defines FOPW_TEMP as memory(hiperspace).  Since memory is
+   * lost at end of run, always do copy instead of rename.
+   */
+  int copy = 1;
+#else
   int copy = 0;
+#endif
   int d_exists;
 
+#if defined(VMS) || defined(CMS_MVS)
+  /* stat() is broken on VMS remote files (accessed through Decnet).
+   * This patch allows creation of remote zip files, but is not sufficient
+   * to update them or compress remote files */
+  unlink(d);
+#else /* !(VMS || CMS_MVS) */
   d_exists = (LSTAT(d, &t) == 0);
   if (d_exists)
   {
     /*
      * respect existing soft and hard links!
      */
-    if (t.st_nlink > 1 || (t.st_mode & S_IFMT) == S_IFLNK)
+    if (t.st_nlink > 1
+# ifdef S_IFLNK
+        || (t.st_mode & S_IFMT) == S_IFLNK
+# endif
+        )
        copy = 1;
     else if (unlink(d))
        return ZE_CREAT;                 /* Can't erase zip file--give up */
   }
+#endif /* ?(VMS || CMS_MVS) */
+#ifndef CMS_MVS
   if (!copy) {
       if (rename(s, d)) {               /* Just move s on top of d */
           copy = 1;                     /* failed ? */
-          if (errno != EXDEV)
-            return ZE_CREAT;
+#if !defined(VMS) && !defined(ATARI) && !defined(AZTEC_C)
+#if !defined(CMS_MVS) && !defined(RISCOS) && !defined(QDOS)
+    /* For VMS, ATARI, AMIGA Aztec, VM_CMS, MVS, RISCOS,
+       always assume that failure is EXDEV */
+          if (errno != EXDEV
+#  ifdef THEOS
+           && errno != EEXIST
+#  else
+#    ifdef ENOTSAM
+           && errno != ENOTSAM /* Used at least on Turbo C */
+#    endif
+#  endif
+              ) return ZE_CREAT;
+#endif /* !CMS_MVS && !RISCOS */
+#endif /* !VMS && !ATARI && !AZTEC_C */
       }
   }
+#endif /* !CMS_MVS */
 
   if (copy) {
     FILE *f, *g;        /* source and destination files */
     int r;              /* temporary variable */
+
+#ifdef RISCOS
+    if (SWI_OS_FSControl_26(s,d,0xA1)!=NULL) {
+#endif
 
     /* Use zfopen for almost all opens where fopen is used.  For
        most OS that support large files we use the 64-bit file
@@ -1239,9 +1286,13 @@ char *d, *s;            /* destination and source file names */
       return r ? (r == ZE_TEMP ? ZE_WRITE : r) : ZE_WRITE;
     }
     unlink(s);
+#ifdef RISCOS
+    }
+#endif
   }
   return ZE_OK;
 }
+#endif /* !MACOS */
 
 
 int getfileattr(f)
@@ -1882,6 +1933,87 @@ int bfcopy(n)
   free((zvoid *)b);
   return ZE_OK;
 }
+
+
+
+#ifdef NO_RENAME
+int rename(from, to)
+ZCONST char *from;
+ZCONST char *to;
+{
+    unlink(to);
+    if (link(from, to) == -1)
+        return -1;
+    if (unlink(from) == -1)
+        return -1;
+    return 0;
+}
+
+#endif /* NO_RENAME */
+
+
+#ifdef ZMEM
+
+/************************/
+/*  Function memset()   */
+/************************/
+
+/*
+ * memset - for systems without it
+ *  bill davidsen - March 1990
+ */
+
+char *
+memset(buf, init, len)
+register char *buf;     /* buffer loc */
+register int init;      /* initializer */
+register unsigned int len;   /* length of the buffer */
+{
+    char *start;
+
+    start = buf;
+    while (len--) *(buf++) = init;
+    return(start);
+}
+
+
+/************************/
+/*  Function memcpy()   */
+/************************/
+
+char *
+memcpy(dst,src,len)             /* v2.0f */
+register char *dst, *src;
+register unsigned int len;
+{
+    char *start;
+
+    start = dst;
+    while (len--)
+        *dst++ = *src++;
+    return(start);
+}
+
+
+/************************/
+/*  Function memcmp()   */
+/************************/
+
+int
+memcmp(b1,b2,len)                     /* jpd@usl.edu -- 11/16/90 */
+register char *b1, *b2;
+register unsigned int len;
+{
+
+    if (len) do {       /* examine each byte (if any) */
+      if (*b1++ != *b2++)
+        return (*((uch *)b1-1) - *((uch *)b2-1));  /* exit when miscompare */
+    } while (--len);
+
+    return(0);          /* no miscompares, yield 0 result */
+}
+
+#endif  /* ZMEM */
 
 
 /*------------------------------------------------------------------

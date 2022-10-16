@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   Copyright (c) 1990-2008 Info-ZIP.  All rights reserved.
 
@@ -30,9 +30,19 @@
 
 #define __ZBZ2ERR_C     /* identifies this source module */
 
-#include "libc/fmt/fmt.h"
 #include "third_party/zip/zip.h"
-#include "third_party/bzip2/bzlib.h"
+
+#ifdef BZIP2_SUPPORT
+# ifdef BZIP2_USEBZIP2DIR
+// MISSING #include "bzip2/bzlib.h"
+# else
+    /* If IZ_BZIP2 is defined as the location of the bzip2 files then
+       assume the location has been added to include path.  For Unix
+       this is done by the configure script. */
+    /* Also do not need path for bzip2 include if OS includes support
+       for bzip2 library. */
+// MISSING #include "bzlib.h"
+# endif
 
 /**********************************/
 /*  Function bz_internal_error()  */
@@ -48,3 +58,5 @@ void bz_internal_error(errcode)
     sprintf(errbuf, "fatal error (code %d) in bzip2 library", errcode);
     ziperr(ZE_LOGIC, errbuf);
 } /* end function bz_internal_error() */
+
+#endif /* def BZIP2_SUPPORT */

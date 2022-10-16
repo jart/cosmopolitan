@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   zipcloak.c - Zip 3
 
@@ -29,12 +29,29 @@
 #include "third_party/zip/crypt.h"
 #include "third_party/zip/ttyio.h"
 #include "libc/calls/calls.h"
-#include "libc/log/log.h"
+#include "libc/calls/sigtimedwait.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/stdio/temp.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/ss.h"
 #ifndef NO_STDLIB_H
+#include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
 #endif
 
 #if CRYPT       /* defined (as TRUE or FALSE) in crypt.h */
@@ -388,10 +405,10 @@ int main(argc, argv)
     /* Informational messages are written to stdout. */
     mesg = stdout;
 
-#ifndef USE_ZLIB
+    init_upper();               /* build case map table */
+
     crc_32_tab = get_crc_table();
                                 /* initialize crc table for crypt */
-#endif
 
     /* Go through args */
     zipfile = tempzip = NULL;

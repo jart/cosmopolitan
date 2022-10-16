@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   zipfile.c - Zip 3
 
@@ -17,21 +17,60 @@
 #include "third_party/zip/zip.h"
 #include "third_party/zip/revision.h"
 #ifdef UNICODE_SUPPORT
-#include "libc/stdio/lock.internal.h"
+#include "libc/assert.h"
 #include "third_party/zip/crc32.h"
 #endif
 
 /* for realloc 2/6/2005 EG */
-#include "libc/mem/mem.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
 #include "libc/mem/alg.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
+
 #include "libc/errno.h"
 
 /* for toupper() */
 #include "libc/str/str.h"
-#include "libc/fmt/fmt.h"
 
-#if defined(__GNUC__) && !defined(__llvm__)
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#ifdef VMS
+// MISSING #include "vms/vms.h"
+// MISSING #include "vms/vmsmunch.h"
+// MISSING #include "vms/vmsdefs.h"
+#endif
+
+#ifdef WIN32
+#  define WIN32_LEAN_AND_MEAN
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
 #endif
 
 /*
@@ -3210,7 +3249,7 @@ local int scanzipf_fixnew()
 
   int r = 0;                  /* zipcopy return */
   uzoff_t s;                  /* size of data, start of central */
-  struct zlist far * far *x;  /* pointer last entry's link */
+  struct zlist far * far *x=0;  /* pointer last entry's link */
   struct zlist far *z;        /* current zip entry structure */
   int plen;
   char *in_path_ext;
@@ -3631,6 +3670,7 @@ local int scanzipf_fixnew()
             /* first link */
             x = &zfiles;
           /* Link into list */
+          assert(x != NULL);
           *x = z;
           z->nxt = NULL;
           x = &z->nxt;
@@ -4042,7 +4082,7 @@ local int scanzipf_regnew()
   int skipped_disk = 0;       /* 1 if skipped start disk and start offset is useless */
 
   uzoff_t s;                  /* size of data, start of central */
-  struct zlist far * far *x;  /* pointer last entry's link */
+  struct zlist far * far *x=0;  /* pointer last entry's link */
   struct zlist far *z;        /* current zip entry structure */
 
 
@@ -4070,7 +4110,6 @@ local int scanzipf_regnew()
      bytes (=65557 bytes) from the end of the file.
      We back up 128k, to allow some junk being appended to a Zip file.
    */
-  int e = errno;
   if ((zfseeko(in_file, -0x20000L, SEEK_END) != 0) ||
       /* Some fseek() implementations (e.g. MSC 8.0 16-bit) fail to signal
          an error when seeking before the beginning of the file.
@@ -4078,7 +4117,6 @@ local int scanzipf_regnew()
          for the error value -1.
        */
       (zftello(in_file) == (zoff_t)-1L)) {
-    errno = e;
     /* file is less than 128 KB so back up to beginning */
     if (zfseeko(in_file, 0L, SEEK_SET) != 0) {
       fclose(in_file);
@@ -5052,6 +5090,7 @@ local int scanzipf_regnew()
 #endif
 
       /* Link into list */
+      assert(x != NULL);
       *x = z;
       z->nxt = NULL;
       x = &z->nxt;
@@ -5122,12 +5161,28 @@ int readzipfile()
   zipfile_exists = 0;
 
   /* If zip file exists, read headers and check structure */
+#ifdef VMS
+  if (zipfile == NULL || !(*zipfile) || !strcmp(zipfile, "-"))
+    return ZE_OK;
+  {
+    int rtype;
+
+    if ((VMSmunch(zipfile, GET_RTYPE, (char *)&rtype) == RMS$_NORMAL) &&
+        (rtype == FAT$C_VARIABLE)) {
+      fprintf(mesg,
+     "\n     Error:  zipfile is in variable-length record format.  Please\n\
+     run \"bilf b %s\" to convert the zipfile to fixed-length\n\
+     record format.\n\n", zipfile);
+      return ZE_FORM;
+    }
+  }
+  readable = ((f = zfopen(zipfile, FOPR)) != NULL);
+#else /* !VMS */
   readable = (zipfile != NULL && *zipfile && strcmp(zipfile, "-"));
   if (readable) {
-    int e = errno;
     readable = ((f = zfopen(zipfile, FOPR)) != NULL);
-    errno = e;
   }
+#endif /* ?VMS */
 
   /* skip check if streaming */
   if (!readable) {
@@ -5142,8 +5197,62 @@ int readzipfile()
     zipfile_exists = 1;
   }
 
+#ifdef MVS
+  /* Very nasty special case for MVS.  Just because the zipfile has been
+   * opened for reading does not mean that we can actually read the data.
+   * Typical JCL to create a zipfile is
+   *
+   * //ZIPFILE  DD  DISP=(NEW,CATLG),DSN=prefix.ZIP,
+   * //             SPACE=(CYL,(10,10))
+   *
+   * That creates a VTOC entry with an end of file marker (DS1LSTAR) of zero.
+   * Alas the VTOC end of file marker is only used when the file is opened in
+   * append mode.  When a file is opened in read mode, the "other" end of file
+   * marker is used, a zero length data block signals end of file when reading.
+   * With a brand new file which has not been written to yet, it is undefined
+   * what you read off the disk.  In fact you read whatever data was in the same
+   * disk tracks before the zipfile was allocated.  You would be amazed at the
+   * number of application programmers who still do not understand this.  Makes
+   * for interesting and semi-random errors, GIGO.
+   *
+   * Newer versions of SMS will automatically write a zero length block when a
+   * file is allocated.  However not all sites run SMS or they run older levels
+   * so we cannot rely on that.  The only safe thing to do is close the file,
+   * open in append mode (we already know that the file exists), close it again,
+   * reopen in read mode and try to read a data block.  Opening and closing in
+   * append mode will write a zero length block where DS1LSTAR points, making
+   * sure that the VTOC and internal end of file markers are in sync.  Then it
+   * is safe to read data.  If we cannot read one byte of data after all that,
+   * it is a brand new zipfile and must not be read.
+   */
+  if (readable)
+  {
+    char c;
+    fclose(f);
+    /* append mode */
+    if ((f = zfopen(zipfile, "ab")) == NULL) {
+      ZIPERR(ZE_OPEN, zipfile);
+    }
+    fclose(f);
+    /* read mode again */
+    if ((f = zfopen(zipfile, FOPR)) == NULL) {
+      ZIPERR(ZE_OPEN, zipfile);
+    }
+    if (fread(&c, 1, 1, f) != 1) {
+      /* no actual data */
+      readable = 0;
+      fclose(f);
+    }
+    else{
+      fseek(f, 0, SEEK_SET);  /* at least one byte in zipfile, back to the start */
+    }
+  }
+#endif /* MVS */
+
   /* ------------------------ */
   /* new file read */
+
+
 
 #ifndef UTIL
   if (fix == 2) {

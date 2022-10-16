@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   tailor.h - Zip 3
 
@@ -9,6 +9,9 @@
   If, for some reason, all these files are missing, the Info-ZIP license
   also may be found at:  ftp://ftp.info-zip.org/pub/infozip/license.html
 */
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/stat.macros.h"
+#include "libc/calls/weirdtypes.h"
 
 /* Some compiler distributions for Win32/i386 systems try to emulate
  * a Unix (POSIX-compatible) environment.
@@ -36,10 +39,83 @@
 # endif
 #endif
 
-#include "libc/str/str.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/runtime/runtime.h"
-#include "third_party/zip/osdep.h"
+
+#ifdef AMIGA
+// MISSING #include "amiga/osdep.h"
+#endif
+
+#ifdef AOSVS
+// MISSING #include "aosvs/osdep.h"
+#endif
+
+#ifdef ATARI
+// MISSING #include "atari/osdep.h"
+#endif
+
+#ifdef __ATHEOS__
+// MISSING #include "atheos/osdep.h"
+#endif
+
+#ifdef __BEOS__
+// MISSING #include "beos/osdep.h"
+#endif
+
+#ifdef DOS
+// MISSING #include "msdos/osdep.h"
+#endif
+
+#ifdef __human68k__
+// MISSING #include "human68k/osdep.h"
+#endif
+
+#if ((defined(__MWERKS__) && defined(macintosh)) || defined(MACOS))
+// MISSING #include "macos/osdep.h"
+#endif
+
+#ifdef NLM
+// MISSING #include "novell/osdep.h"
+#endif
+
+#ifdef OS2
+// MISSING #include "os2/osdep.h"
+#endif
+
+#ifdef __riscos
+// MISSING #include "acorn/osdep.h"
+#endif
+
+#ifdef QDOS
+// MISSING #include "qdos/osdep.h"
+#endif
+
+#ifdef __TANDEM
+// MISSING #include "tandem.h"
+// MISSING #include "tanzip.h"
+#endif
+
+#ifdef UNIX
+// MISSING #include "unix/osdep.h"
+#endif
+
+#if defined(__COMPILER_KCC__) || defined(TOPS20)
+// MISSING #include "tops20/osdep.h"
+#endif
+
+#if defined(VMS) || defined(__VMS)
+// MISSING #include "vms/osdep.h"
+#endif
+
+#if defined(__VM__) || defined(VM_CMS) || defined(MVS)
+// MISSING #include "cmsmvs.h"
+#endif
+
+#ifdef WIN32
+// MISSING #include "win32/osdep.h"
+#endif
+
+#ifdef THEOS
+// MISSING #include "theos/osdep.h"
+#endif
 
 
 /* generic LARGE_FILE_SUPPORT defines
@@ -136,38 +212,82 @@
  * to_up is used to force upper case even on Unix (for dosify option).
  */
 #ifdef USE_CASE_MAP
-#  define case_map(c) kToUpper[(c) & 0xff]
-#  define to_up(c)    kToLower[(c) & 0xff]
+#  define case_map(c) upper[(c) & 0xff]
+#  define to_up(c)    upper[(c) & 0xff]
 #else
 #  define case_map(c) (c)
 #  define to_up(c)    ((c) >= 'a' && (c) <= 'z' ? (c)-'a'+'A' : (c))
 #endif /* USE_CASE_MAP */
 
 /* Define void, zvoid, and extent (size_t) */
+#include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/fmt.h"
 #include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
 
 #ifndef NO_STDDEF_H
-// #  include <stddef.h>
+
 #endif /* !NO_STDDEF_H */
 
 #ifndef NO_STDLIB_H
+#include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
+#include "libc/calls/termios.h"
+#include "libc/fmt/conv.h"
+#include "libc/limits.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/temp.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/exit.h"
+#include "third_party/gdtoa/gdtoa.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/rand48.h"
 #endif /* !NO_STDLIB_H */
 
 #ifndef NO_UNISTD_H
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"
+#include "libc/runtime/pathconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/sysv/consts/f.h"
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/time/time.h"
+#include "third_party/getopt/getopt.h"
+#include "third_party/musl/crypt.h"
+#include "third_party/musl/lockf.h" /* usually defines _POSIX_VERSION */
 #endif /* !NO_UNISTD_H */
 
 #ifndef NO_FCNTL_H
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/s.h"
 #endif /* !NO_FNCTL_H */
 
+#ifndef NO_STRING_H
+#include "libc/mem/alg.h"
 #include "libc/str/str.h"
+#else
+#include "libc/str/locale.h"
+#include "libc/str/str.h"
+#include "libc/nexgen32e/ffs.h"
+#endif /* NO_STRING_H */
 
 #ifdef NO_VOID
 #  define void int
@@ -261,12 +381,21 @@ IZ_IMP char *mktemp();
 #ifdef UNICODE_SUPPORT
 # if defined( UNIX) || defined( VMS)
 #include "libc/str/locale.h"
+#include "libc/str/unicode.h"
 # endif /* defined( UNIX) || defined( VMS) */
+#include "libc/fmt/conv.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/str/unicode.h"
+#include "libc/time/time.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/conv.h"
 #include "libc/str/str.h"
 #endif /* def UNICODE_SUPPORT */
 
 #ifdef _MBCS
-#   include <locale.h>
+#include "libc/str/locale.h"
+#include "libc/str/unicode.h"
 
     /* Multi Byte Character Set */
     extern char *___tmp_ptr;

@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   zipnote.c - Zip 3
 
@@ -21,13 +21,12 @@
 #define DEFCPYRT        /* main module: enable copyright string defines! */
 #include "third_party/zip/revision.h"
 #include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/fmt/conv.h"
-#include "libc/mem/alg.h"
-#include "libc/log/log.h"
+#include "libc/calls/sigtimedwait.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/stdio/temp.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/ss.h"
 
 /* Calculate size of static line buffer used in write (-w) mode. */
 #define WRBUFSIZ 2047
@@ -71,6 +70,10 @@ struct option_struct far options[] = {
 
 void zipnoteerr(int c, ZCONST char *h);
 void zipnotewarn(ZCONST char *a, ZCONST char *b);
+#endif
+
+#ifdef QDOS
+#define exit(p1) QDOSexit()
 #endif
 
 int set_filetype(out_path)
@@ -453,6 +456,8 @@ char **argv;            /* command line tokens */
 
   /* Direct info messages to stderr; stdout is used for data output. */
   mesg = stderr;
+
+  init_upper();           /* build case map table */
 
   /* Go through args */
   zipfile = tempzip = NULL;

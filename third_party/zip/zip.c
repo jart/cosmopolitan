@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   zip.c - Zip 3
 
@@ -15,29 +15,101 @@
 #define __ZIP_C
 
 #include "third_party/zip/zip.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/sched.h"
+#include "libc/sysv/consts/timer.h"
+#include "libc/time/struct/tm.h"
 #include "libc/time/time.h"       /* for tzset() declaration */
+#if defined(WIN32) || defined(WINDLL)
+#  define WIN32_LEAN_AND_MEAN
+#include "libc/nt/accounting.h"
+#include "libc/nt/automation.h"
+#include "libc/nt/console.h"
+#include "libc/nt/debug.h"
+#include "libc/nt/dll.h"
+#include "libc/nt/enum/keyaccess.h"
+#include "libc/nt/enum/regtype.h"
+#include "libc/nt/errors.h"
+#include "libc/nt/events.h"
+#include "libc/nt/files.h"
+#include "libc/nt/ipc.h"
+#include "libc/nt/memory.h"
+#include "libc/nt/paint.h"
+#include "libc/nt/process.h"
+#include "libc/nt/registry.h"
+#include "libc/nt/synchronization.h"
+#include "libc/nt/thread.h"
+#include "libc/nt/windows.h"
+#include "libc/nt/winsock.h"
+#endif
+#ifdef WINDLL
+#include "libc/runtime/runtime.h"
+// MISSING #include "windll/windll.h"
+#endif
 #define DEFCPYRT        /* main module: enable copyright string defines! */
 #include "third_party/zip/revision.h"
 #include "third_party/zip/crc32.h"
 #include "third_party/zip/crypt.h"
 #include "third_party/zip/ttyio.h"
 #include "libc/str/str.h"
-#include "libc/log/log.h"
-#include "libc/dce.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/calls.h"
 #include "libc/errno.h"
-#include "libc/calls/calls.h"
-#include "libc/fmt/fmt.h"
-#include "libc/log/log.h"
-#include "libc/stdio/stdio.h"
-#include "libc/stdio/temp.h"
-#include "libc/runtime/runtime.h"
 #include "third_party/bzip2/bzlib.h"
 
+#ifdef VMS
+// MISSING #include <stsdef.h>
+// MISSING #include "vms/vmsmunch.h"
+// MISSING #include "vms/vms.h"
+#endif
+
+#ifdef MACOS
+// MISSING #include "macglob.h"
+   extern MacZipGlobals MacZip;
+   extern int error_level;
+#endif
+
+#if (defined(MSDOS) && !defined(__GO32__)) || defined(__human68k__)
+// MISSING #include <process.h>
+#  if (!defined(P_WAIT) && defined(_P_WAIT))
+#    define P_WAIT _P_WAIT
+#  endif
+#endif
+
+#include "libc/calls/calls.h"
+#include "libc/calls/sigtimedwait.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sicode.h"
+#include "libc/sysv/consts/ss.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/dprintf.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/fmt/fmt.h"
+#include "libc/mem/fmt.h"
+#include "libc/stdio/stdio.h"
+#include "libc/stdio/temp.h"
+#include "third_party/musl/tempnam.h"
+
+#ifdef UNICODE_TEST
+# ifdef WIN32
+// MISSING #include <direct.h>
+# endif
+#endif
+
+#ifdef BZIP2_SUPPORT
+  /* If IZ_BZIP2 is defined as the location of the bzip2 files then
+     assume the location has been added to include path.  For Unix
+     this is done by the configure script. */
+  /* Also do not need path for bzip2 include if OS includes support
+     for bzip2 library. */
+// MISSING #include "bzlib.h"
+#endif
+
 #define MAXCOM 256      /* Maximum one-line comment size */
+
 
 /* Local option flags */
 #ifndef DELETE
@@ -413,14 +485,24 @@ void error(h)
   ziperr(ZE_LOGIC, h);
 }
 
+#if (!defined(MACOS) && !defined(WINDLL))
 local void handler(s)
 int s;                  /* signal number (ignored) */
 /* Upon getting a user interrupt, turn echo back on for tty and abort
    cleanly using ziperr(). */
 {
+#if defined(AMIGA) && defined(__SASC)
+   _abort();
+#else
+#if !defined(MSDOS) && !defined(__human68k__) && !defined(RISCOS)
+  echon();
+  putc('\n', mesg);
+#endif /* !MSDOS */
+#endif /* AMIGA && __SASC */
   ziperr(ZE_ABORT, "aborting");
   s++;                                  /* keep some compilers happy */
 }
+#endif /* !MACOS && !WINDLL */
 
 void zipmessage_nl(a, nl)
 ZCONST char *a;     /* message string to output */
@@ -654,331 +736,345 @@ local void help_extended()
 #endif
 /* Print extended help to stdout. */
 {
-  __paginate(1, "\n\
-Extended Help for Zip\n\
-\n\
-See the Zip Manual for more detailed help\n\
-\n\
-\n\
-Zip stores files in zip archives.  The default action is to add or replace\n\
-zipfile entries.\n\
-\n\
-Basic command line:\n\
-  zip options archive_name file file ...\n\
-\n\
-Some examples:\n\
-  Add file.txt to z.zip (create z if needed):      zip z file.txt\n\
-  Zip all files in current dir:                    zip z *\n\
-  Zip files in current dir and subdirs also:       zip -r z .\n\
-\n\
-Basic modes:\n\
- External modes (selects files from file system):\n\
-        add      - add new files/update existing files in archive (default)\n\
-  -u    update   - add new files/update existing files only if later date\n\
-  -f    freshen  - update existing files only (no files added)\n\
-  -FS   filesync - update if date or size changed, delete if no OS match\n\
- Internal modes (selects entries in archive):\n\
-  -d    delete   - delete files from archive (see below)\n\
-  -U    copy     - select files in archive to copy (use with --out)\n\
-\n\
-Basic options:\n\
-  -r        recurse into directories (see Recursion below)\n\
-  -m        after archive created, delete original files (move into archive)\n\
-  -j        junk directory names (store just file names)\n\
-  -q        quiet operation\n\
-  -v        verbose operation (just \"zip -v\" shows version information)\n\
-  -c        prompt for one-line comment for each entry\n\
-  -z        prompt for comment for archive (end with just \".\" line or EOF)\n\
-  -@        read names to zip from stdin (one path per line)\n\
-  -o        make zipfile as old as latest entry\n\
-\n\
-\n\
-Syntax:\n\
-  The full command line syntax is:\n\
-\n\
-    zip [-shortopts ...] [--longopt ...] [zipfile [path path ...]] [-xi list]\n\
-\n\
-  Any number of short option and long option arguments are allowed\n\
-  (within limits) as well as any number of path arguments for files\n\
-  to zip up.  If zipfile exists, the archive is read in.  If zipfile\n\
-  is \"-\", stream to stdout.  If any path is \"-\", zip stdin.\n\
-\n\
-Options and Values:\n\
-  For short options that take values, use -ovalue or -o value or -o=value\n\
-  For long option values, use either --longoption=value or --longoption value\n\
-  For example:\n\
-    zip -ds 10 --temp-dir=path zipfile path1 path2 --exclude pattern pattern\n\
-  Avoid -ovalue (no space between) to avoid confusion\n\
-  In particular, be aware of 2-character options.  For example:\n\
-    -d -s is (delete, split size) while -ds is (dot size)\n\
-  Usually better to break short options across multiple arguments by function\n\
-    zip -r -dbdcds 10m -lilalf logfile archive input_directory -ll\n\
-\n\
-  All args after just \"--\" arg are read verbatim as paths and not options.\n\
-    zip zipfile path path ... -- verbatimpath verbatimpath ...\n\
-  Use -nw to also disable wildcards, so paths are read literally:\n\
-    zip zipfile -nw -- \"-leadingdashpath\" \"a[path].c\" \"path*withwildcard\"\n\
-  You may still have to escape or quote arguments to avoid shell expansion\n\
-\n\
-Wildcards:\n\
-  Internally zip supports the following wildcards:\n\
-    ?       (or %% or #, depending on OS) matches any single character\n\
-    *       matches any number of characters, including zero\n\
-    [list]  matches char in list (regex), can do range [ac-f], all but [!bf]\n\
-  If port supports [], must escape [ as [[] or use -nw to turn off wildcards\n\
-  For shells that expand wildcards, escape (\\* or \"*\") so zip can recurse\n\
-    zip zipfile -r . -i \"*.h\"\n\
-\n\
-  Normally * crosses dir bounds in path, e.g. 'a*b' can match 'ac/db'.  If\n\
-   -ws option used, * does not cross dir bounds but ** does\n\
-\n\
-  For DOS and Windows, [list] is now disabled unless the new option\n\
-  -RE       enable [list] (regular expression) matching\n\
-  is used to avoid problems with file paths containing \"[\" and \"]\":\n\
-    zip files_ending_with_number -RE foo[0-9].c\n\
-\n\
-Include and Exclude:\n\
-  -i pattern pattern ...   include files that match a pattern\n\
-  -x pattern pattern ...   exclude files that match a pattern\n\
-  Patterns are paths with optional wildcards and match paths as stored in\n\
-  archive.  Exclude and include lists end at next option, @, or end of line.\n\
-    zip -x pattern pattern @ zipfile path path ...\n\
-\n\
-Case matching:\n\
-  On most OS the case of patterns must match the case in the archive, unless\n\
-  the -ic option is used.\n\
-  -ic       ignore case of archive entries\n\
-  This option not available on case-sensitive file systems.  On others, case\n\
-  ignored when matching files on file system but matching against archive\n\
-  entries remains case sensitive for modes -f (freshen), -U (archive copy),\n\
-  and -d (delete) because archive paths are always case sensitive.  With\n\
-  -ic, all matching ignores case, but it's then possible multiple archive\n\
-  entries that differ only in case will match.\n\
-\n\
-End Of Line Translation (text files only):\n\
-  -l        change CR or LF (depending on OS) line end to CR LF (Unix->Win)\n\
-  -ll       change CR LF to CR or LF (depending on OS) line end (Win->Unix)\n\
-  If first buffer read from file contains binary the translation is skipped\n\
-\n\
-Recursion:\n\
-  -r        recurse paths, include files in subdirs:  zip -r a path path ...\n\
-  -R        recurse current dir and match patterns:   zip -R a ptn ptn ...\n\
-  Use -i and -x with either to include or exclude paths\n\
-  Path root in archive starts at current dir, so if /a/b/c/file and\n\
-   current dir is /a/b, 'zip -r archive .' puts c/file in archive\n\
-\n\
-Date filtering:\n\
-  -t date   exclude before (include files modified on this date and later)\n\
-  -tt date  include before (include files modified before date)\n\
-  Can use both at same time to set a date range\n\
-  Dates are mmddyyyy or yyyy-mm-dd\n\
-\n\
-Deletion, File Sync:\n\
-  -d        delete files\n\
-  Delete archive entries matching internal archive paths in list\n\
-    zip archive -d pattern pattern ...\n\
-  Can use -t and -tt to select files in archive, but NOT -x or -i, so\n\
-    zip archive -d \"*\" -t 2005-12-27\n\
-  deletes all files from archive.zip with date of 27 Dec 2005 and later\n\
-  Note the * (escape as \"*\" on Unix) to select all files in archive\n\
-\n\
-  -FS       file sync\n\
-  Similar to update, but files updated if date or size of entry does not\n\
-  match file on OS.  Also deletes entry from archive if no matching file\n\
-  on OS.\n\
-    zip archive_to_update -FS -r dir_used_before\n\
-  Result generally same as creating new archive, but unchanged entries\n\
-  are copied instead of being read and compressed so can be faster.\n\
-      WARNING:  -FS deletes entries so make backup copy of archive first\n\
-\n\
-Compression:\n\
-  -0        store files (no compression)\n\
-  -1 to -9  compress fastest to compress best (default is 6)\n\
-  -Z cm     set compression method to cm:\n\
-              store   - store without compression, same as option -0\n\
-              deflate - original zip deflate, same as -1 to -9 (default)\n\
-              bzip2 - use bzip2 compression (need modern unzip)\n\
-\n\
-Encryption:\n\
-  -e        use standard (weak) PKZip 2.0 encryption, prompt for password\n\
-  -P pswd   use standard encryption, password is pswd\n\
-\n\
-Splits (archives created as a set of split files):\n\
-  -s ssize  create split archive with splits of size ssize, where ssize nm\n\
-              n number and m multiplier (kmgt, default m), 100k -> 100 kB\n\
-  -sp       pause after each split closed to allow changing disks\n\
-      WARNING:  Archives created with -sp use data descriptors and should\n\
-                work with most unzips but may not work with some\n\
-  -sb       ring bell when pause\n\
-  -sv       be verbose about creating splits\n\
-      Split archives CANNOT be updated, but see --out and Copy Mode below\n\
-\n\
-Using --out (output to new archive):\n\
-  --out oa  output to new archive oa\n\
-  Instead of updating input archive, create new output archive oa.\n\
-  Result is same as without --out but in new archive.  Input archive\n\
-  unchanged.\n\
-      WARNING:  --out ALWAYS overwrites any existing output file\n\
-  For example, to create new_archive like old_archive but add newfile1\n\
-  and newfile2:\n\
-    zip old_archive newfile1 newfile2 --out new_archive\n\
-  Cannot update split archive, so use --out to out new archive:\n\
-    zip in_split_archive newfile1 newfile2 --out out_split_archive\n\
-  If input is split, output will default to same split size\n\
-  Use -s=0 or -s- to turn off splitting to convert split to single file:\n\
-    zip in_split_archive -s 0 --out out_single_file_archive\n\
-      WARNING:  If overwriting old split archive but need less splits,\n\
-                old splits not overwritten are not needed but remain\n\
-\n\
-Copy Mode (copying from archive to archive):\n\
-  -U        (also --copy) select entries in archive to copy (reverse delete)\n\
-  Copy Mode copies entries from old to new archive with --out and is used by\n\
-  zip when either no input files on command line or -U (--copy) used.\n\
-    zip inarchive --copy pattern pattern ... --out outarchive\n\
-  To copy only files matching *.c into new archive, excluding foo.c:\n\
-    zip old_archive --copy \"*.c\" --out new_archive -x foo.c\n\
-  If no input files and --out, copy all entries in old archive:\n\
-    zip old_archive --out new_archive\n\
-\n\
-Streaming and FIFOs:\n\
-  prog1 | zip -ll z -      zip output of prog1 to zipfile z, converting CR LF\n\
-  zip - -R \"*.c\" | prog2   zip *.c files in current dir and stream to prog2 \n\
-  prog1 | zip | prog2      zip in pipe with no in or out acts like zip - -\n\
-  If Zip is Zip64 enabled, streaming stdin creates Zip64 archives by default\n\
-   that need PKZip 4.5 unzipper like UnZip 6.0\n\
-  WARNING:  Some archives created with streaming use data descriptors and\n\
-            should work with most unzips but may not work with some\n\
-  Can use -fz- to turn off Zip64 if input not large (< 4 GB):\n\
-    prog_with_small_output | zip archive -fz-\n\
-\n\
-  Zip now can read Unix FIFO (named pipes).  Off by default to prevent zip\n\
-  from stopping unexpectedly on unfed pipe, use -FI to enable:\n\
-    zip -FI archive fifo\n\
-\n\
-Dots, counts:\n\
-  -db       display running count of bytes processed and bytes to go\n\
-              (uncompressed size, except delete and copy show stored size)\n\
-  -dc       display running count of entries done and entries to go\n\
-  -dd       display dots every 10 MB (or dot size) while processing files\n\
-  -dg       display dots globally for archive instead of for each file\n\
-    zip -qdgds 10m   will turn off most output except dots every 10 MB\n\
-  -ds siz   each dot is siz processed where siz is nm as splits (0 no dots)\n\
-  -du       display original uncompressed size for each entry as added\n\
-  -dv       display volume (disk) number in format in_disk>out_disk\n\
-  Dot size is approximate, especially for dot sizes less than 1 MB\n\
-  Dot options don't apply to Scanning files dots (dot/2sec) (-q turns off)\n\
-\n\
-Logging:\n\
-  -lf path  open file at path as logfile (overwrite existing file)\n\
-  -la       append to existing logfile\n\
-  -li       include info messages (default just warnings and errors)\n\
-\n\
-Testing archives:\n\
-  -T        test completed temp archive with unzip before updating archive\n\
-  -TT cmd   use command cmd instead of 'unzip -tqq' to test archive\n\
-             On Unix, to use unzip in current directory, could use:\n\
-               zip archive file1 file2 -T -TT \"./unzip -tqq\"\n\
-             In cmd, {} replaced by temp archive path, else temp appended.\n\
-             The return code is checked for success (0 on Unix)\n\
-\n\
-Fixing archives:\n\
-  -F        attempt to fix a mostly intact archive (try this first)\n\
-  -FF       try to salvage what can (may get more but less reliable)\n\
-  Fix options copy entries from potentially bad archive to new archive.\n\
-  -F tries to read archive normally and copy only intact entries, while\n\
-  -FF tries to salvage what can and may result in incomplete entries.\n\
-  Must use --out option to specify output archive:\n\
-    zip -F bad.zip --out fixed.zip\n\
-  Use -v (verbose) with -FF to see details:\n\
-    zip reallybad.zip -FF -v --out fixed.zip\n\
-  Currently neither option fixes bad entries, as from text mode ftp get.\n\
-\n\
-Difference mode:\n\
-  -DF       (also --dif) only include files that have changed or are\n\
-             new as compared to the input archive\n\
-  Difference mode can be used to create incremental backups.  For example:\n\
-    zip --dif full_backup.zip -r somedir --out diff.zip\n\
-  will store all new files, as well as any files in full_backup.zip where\n\
-  either file time or size have changed from that in full_backup.zip,\n\
-  in new diff.zip.  Output archive not excluded automatically if exists,\n\
-  so either use -x to exclude it or put outside what is being zipped.\n\
-\n\
-DOS Archive bit (Windows only):\n\
-  -AS       include only files with the DOS Archive bit set\n\
-  -AC       after archive created, clear archive bit of included files\n\
-      WARNING: Once the archive bits are cleared they are cleared\n\
-               Use -T to test the archive before the bits are cleared\n\
-               Can also use -sf to save file list before zipping files\n\
-\n\
-Show files:\n\
-  -sf       show files to operate on and exit (-sf- logfile only)\n\
-  -su       as -sf but show escaped UTF-8 Unicode names also if exist\n\
-  -sU       as -sf but show escaped UTF-8 Unicode names instead\n\
-  Any character not in the current locale is escaped as #Uxxxx, where x\n\
-  is hex digit, if 16-bit code is sufficient, or #Lxxxxxx if 24-bits\n\
-  are needed.  If add -UN=e, Zip escapes all non-ASCII characters.\n\
-\n\
-Unicode:\n\
-  If compiled with Unicode support, Zip stores UTF-8 path of entries.\n\
-  This is backward compatible.  Unicode paths allow better conversion\n\
-  of entry names between different character sets.\n\
-\n\
-  New Unicode extra field includes checksum to verify Unicode path\n\
-  goes with standard path for that entry (as utilities like ZipNote\n\
-  can rename entries).  If these do not match, use below options to\n\
-  set what Zip does:\n\
-      -UN=Quit     - if mismatch, exit with error\n\
-      -UN=Warn     - if mismatch, warn, ignore UTF-8 (default)\n\
-      -UN=Ignore   - if mismatch, quietly ignore UTF-8\n\
-      -UN=No       - ignore any UTF-8 paths, use standard paths for all\n\
-  An exception to -UN=N are entries with new UTF-8 bit set (instead\n\
-  of using extra fields).  These are always handled as Unicode.\n\
-\n\
-  Normally Zip escapes all chars outside current char set, but leaves\n\
-  as is supported chars, which may not be OK in path names.  -UN=Escape\n\
-  escapes any character not ASCII:\n\
-    zip -sU -UN=e archive\n\
-  Can use either normal path or escaped Unicode path on command line\n\
-  to match files in archive.\n\
-\n\
-  Zip now stores UTF-8 in entry path and comment fields on systems\n\
-  where UTF-8 char set is default, such as most modern Unix, and\n\
-  and on other systems in new extra fields with escaped versions in\n\
-  entry path and comment fields for backward compatibility.\n\
-  Option -UN=UTF8 will force storing UTF-8 in entry path and comment\n\
-  fields:\n\
-      -UN=UTF8     - store UTF-8 in entry path and comment fields\n\
-  This option can be useful for multi-byte char sets on Windows where\n\
-  escaped paths and comments can be too long to be valid as the UTF-8\n\
-  versions tend to be shorter.\n\
-\n\
-  Only UTF-8 comments on UTF-8 native systems supported.  UTF-8 comments\n\
-  for other systems planned in next release.\n\
-\n\
-Self extractor:\n\
-  -A        Adjust offsets - a self extractor is created by prepending\n\
-             the extractor executable to archive, but internal offsets\n\
-             are then off.  Use -A to fix offsets.\n\
-  -J        Junk sfx - removes prepended extractor executable from\n\
-             self extractor, leaving a plain zip archive.\n\
-\n\
-More option highlights (see manual for additional options and details):\n\
-  -b dir    when creating or updating archive, create the temp archive in\n\
-             dir, which allows using seekable temp file when writing to a\n\
-             write once CD, such archives compatible with more unzips\n\
-             (could require additional file copy if on another device)\n\
-  -MM       input patterns must match at least one file and matched files\n\
-             must be readable or exit with OPEN error and abort archive\n\
-             (without -MM, both are warnings only, and if unreadable files\n\
-             are skipped OPEN error (18) returned after archive created)\n\
-  -nw       no wildcards (wildcards are like any other character)\n\
-  -sc       show command line arguments as processed and exit\n\
-  -sd       show debugging as Zip does each step\n\
-  -so       show all available options on this system\n\
-  -X        default=strip old extra fields, -X- keep old, -X strip most\n\
-  -ws       wildcards don't span directory boundaries in paths\n\
-");
-  exit(0);
+  extent i;             /* counter for help array */
+
+  /* help array */
+  static ZCONST char *text[] = {
+"",
+"Extended Help for Zip",
+"",
+"See the Zip Manual for more detailed help",
+"",
+"",
+"Zip stores files in zip archives.  The default action is to add or replace",
+"zipfile entries.",
+"",
+"Basic command line:",
+"  zip options archive_name file file ...",
+"",
+"Some examples:",
+"  Add file.txt to z.zip (create z if needed):      zip z file.txt",
+"  Zip all files in current dir:                    zip z *",
+"  Zip files in current dir and subdirs also:       zip -r z .",
+"",
+"Basic modes:",
+" External modes (selects files from file system):",
+"        add      - add new files/update existing files in archive (default)",
+"  -u    update   - add new files/update existing files only if later date",
+"  -f    freshen  - update existing files only (no files added)",
+"  -FS   filesync - update if date or size changed, delete if no OS match",
+" Internal modes (selects entries in archive):",
+"  -d    delete   - delete files from archive (see below)",
+"  -U    copy     - select files in archive to copy (use with --out)",
+"",
+"Basic options:",
+"  -r        recurse into directories (see Recursion below)",
+"  -m        after archive created, delete original files (move into archive)",
+"  -j        junk directory names (store just file names)",
+"  -q        quiet operation",
+"  -v        verbose operation (just \"zip -v\" shows version information)",
+"  -c        prompt for one-line comment for each entry",
+"  -z        prompt for comment for archive (end with just \".\" line or EOF)",
+"  -@        read names to zip from stdin (one path per line)",
+"  -o        make zipfile as old as latest entry",
+"",
+"",
+"Syntax:",
+"  The full command line syntax is:",
+"",
+"    zip [-shortopts ...] [--longopt ...] [zipfile [path path ...]] [-xi list]",
+"",
+"  Any number of short option and long option arguments are allowed",
+"  (within limits) as well as any number of path arguments for files",
+"  to zip up.  If zipfile exists, the archive is read in.  If zipfile",
+"  is \"-\", stream to stdout.  If any path is \"-\", zip stdin.",
+"",
+"Options and Values:",
+"  For short options that take values, use -ovalue or -o value or -o=value",
+"  For long option values, use either --longoption=value or --longoption value",
+"  For example:",
+"    zip -ds 10 --temp-dir=path zipfile path1 path2 --exclude pattern pattern",
+"  Avoid -ovalue (no space between) to avoid confusion",
+"  In particular, be aware of 2-character options.  For example:",
+"    -d -s is (delete, split size) while -ds is (dot size)",
+"  Usually better to break short options across multiple arguments by function",
+"    zip -r -dbdcds 10m -lilalf logfile archive input_directory -ll",
+"",
+"  All args after just \"--\" arg are read verbatim as paths and not options.",
+"    zip zipfile path path ... -- verbatimpath verbatimpath ...",
+"  Use -nw to also disable wildcards, so paths are read literally:",
+"    zip zipfile -nw -- \"-leadingdashpath\" \"a[path].c\" \"path*withwildcard\"",
+"  You may still have to escape or quote arguments to avoid shell expansion",
+"",
+"Wildcards:",
+"  Internally zip supports the following wildcards:",
+"    ?       (or %% or #, depending on OS) matches any single character",
+"    *       matches any number of characters, including zero",
+"    [list]  matches char in list (regex), can do range [ac-f], all but [!bf]",
+"  If port supports [], must escape [ as [[] or use -nw to turn off wildcards",
+"  For shells that expand wildcards, escape (\\* or \"*\") so zip can recurse",
+"    zip zipfile -r . -i \"*.h\"",
+"",
+"  Normally * crosses dir bounds in path, e.g. 'a*b' can match 'ac/db'.  If",
+"   -ws option used, * does not cross dir bounds but ** does",
+"",
+"  For DOS and Windows, [list] is now disabled unless the new option",
+"  -RE       enable [list] (regular expression) matching",
+"  is used to avoid problems with file paths containing \"[\" and \"]\":",
+"    zip files_ending_with_number -RE foo[0-9].c",
+"",
+"Include and Exclude:",
+"  -i pattern pattern ...   include files that match a pattern",
+"  -x pattern pattern ...   exclude files that match a pattern",
+"  Patterns are paths with optional wildcards and match paths as stored in",
+"  archive.  Exclude and include lists end at next option, @, or end of line.",
+"    zip -x pattern pattern @ zipfile path path ...",
+"",
+"Case matching:",
+"  On most OS the case of patterns must match the case in the archive, unless",
+"  the -ic option is used.",
+"  -ic       ignore case of archive entries",
+"  This option not available on case-sensitive file systems.  On others, case",
+"  ignored when matching files on file system but matching against archive",
+"  entries remains case sensitive for modes -f (freshen), -U (archive copy),",
+"  and -d (delete) because archive paths are always case sensitive.  With",
+"  -ic, all matching ignores case, but it's then possible multiple archive",
+"  entries that differ only in case will match.",
+"",
+"End Of Line Translation (text files only):",
+"  -l        change CR or LF (depending on OS) line end to CR LF (Unix->Win)",
+"  -ll       change CR LF to CR or LF (depending on OS) line end (Win->Unix)",
+"  If first buffer read from file contains binary the translation is skipped",
+"",
+"Recursion:",
+"  -r        recurse paths, include files in subdirs:  zip -r a path path ...",
+"  -R        recurse current dir and match patterns:   zip -R a ptn ptn ...",
+"  Use -i and -x with either to include or exclude paths",
+"  Path root in archive starts at current dir, so if /a/b/c/file and",
+"   current dir is /a/b, 'zip -r archive .' puts c/file in archive",
+"",
+"Date filtering:",
+"  -t date   exclude before (include files modified on this date and later)",
+"  -tt date  include before (include files modified before date)",
+"  Can use both at same time to set a date range",
+"  Dates are mmddyyyy or yyyy-mm-dd",
+"",
+"Deletion, File Sync:",
+"  -d        delete files",
+"  Delete archive entries matching internal archive paths in list",
+"    zip archive -d pattern pattern ...",
+"  Can use -t and -tt to select files in archive, but NOT -x or -i, so",
+"    zip archive -d \"*\" -t 2005-12-27",
+"  deletes all files from archive.zip with date of 27 Dec 2005 and later",
+"  Note the * (escape as \"*\" on Unix) to select all files in archive",
+"",
+"  -FS       file sync",
+"  Similar to update, but files updated if date or size of entry does not",
+"  match file on OS.  Also deletes entry from archive if no matching file",
+"  on OS.",
+"    zip archive_to_update -FS -r dir_used_before",
+"  Result generally same as creating new archive, but unchanged entries",
+"  are copied instead of being read and compressed so can be faster.",
+"      WARNING:  -FS deletes entries so make backup copy of archive first",
+"",
+"Compression:",
+"  -0        store files (no compression)",
+"  -1 to -9  compress fastest to compress best (default is 6)",
+"  -Z cm     set compression method to cm:",
+"              store   - store without compression, same as option -0",
+"              deflate - original zip deflate, same as -1 to -9 (default)",
+"            if bzip2 is enabled:",
+"              bzip2 - use bzip2 compression (need modern unzip)",
+"",
+"Encryption:",
+"  -e        use standard (weak) PKZip 2.0 encryption, prompt for password",
+"  -P pswd   use standard encryption, password is pswd",
+"",
+"Splits (archives created as a set of split files):",
+"  -s ssize  create split archive with splits of size ssize, where ssize nm",
+"              n number and m multiplier (kmgt, default m), 100k -> 100 kB",
+"  -sp       pause after each split closed to allow changing disks",
+"      WARNING:  Archives created with -sp use data descriptors and should",
+"                work with most unzips but may not work with some",
+"  -sb       ring bell when pause",
+"  -sv       be verbose about creating splits",
+"      Split archives CANNOT be updated, but see --out and Copy Mode below",
+"",
+"Using --out (output to new archive):",
+"  --out oa  output to new archive oa",
+"  Instead of updating input archive, create new output archive oa.",
+"  Result is same as without --out but in new archive.  Input archive",
+"  unchanged.",
+"      WARNING:  --out ALWAYS overwrites any existing output file",
+"  For example, to create new_archive like old_archive but add newfile1",
+"  and newfile2:",
+"    zip old_archive newfile1 newfile2 --out new_archive",
+"  Cannot update split archive, so use --out to out new archive:",
+"    zip in_split_archive newfile1 newfile2 --out out_split_archive",
+"  If input is split, output will default to same split size",
+"  Use -s=0 or -s- to turn off splitting to convert split to single file:",
+"    zip in_split_archive -s 0 --out out_single_file_archive",
+"      WARNING:  If overwriting old split archive but need less splits,",
+"                old splits not overwritten are not needed but remain",
+"",
+"Copy Mode (copying from archive to archive):",
+"  -U        (also --copy) select entries in archive to copy (reverse delete)",
+"  Copy Mode copies entries from old to new archive with --out and is used by",
+"  zip when either no input files on command line or -U (--copy) used.",
+"    zip inarchive --copy pattern pattern ... --out outarchive",
+"  To copy only files matching *.c into new archive, excluding foo.c:",
+"    zip old_archive --copy \"*.c\" --out new_archive -x foo.c",
+"  If no input files and --out, copy all entries in old archive:",
+"    zip old_archive --out new_archive",
+"",
+"Streaming and FIFOs:",
+"  prog1 | zip -ll z -      zip output of prog1 to zipfile z, converting CR LF",
+"  zip - -R \"*.c\" | prog2   zip *.c files in current dir and stream to prog2 ",
+"  prog1 | zip | prog2      zip in pipe with no in or out acts like zip - -",
+"  If Zip is Zip64 enabled, streaming stdin creates Zip64 archives by default",
+"   that need PKZip 4.5 unzipper like UnZip 6.0",
+"  WARNING:  Some archives created with streaming use data descriptors and",
+"            should work with most unzips but may not work with some",
+"  Can use -fz- to turn off Zip64 if input not large (< 4 GB):",
+"    prog_with_small_output | zip archive -fz-",
+"",
+"  Zip now can read Unix FIFO (named pipes).  Off by default to prevent zip",
+"  from stopping unexpectedly on unfed pipe, use -FI to enable:",
+"    zip -FI archive fifo",
+"",
+"Dots, counts:",
+"  -db       display running count of bytes processed and bytes to go",
+"              (uncompressed size, except delete and copy show stored size)",
+"  -dc       display running count of entries done and entries to go",
+"  -dd       display dots every 10 MB (or dot size) while processing files",
+"  -dg       display dots globally for archive instead of for each file",
+"    zip -qdgds 10m   will turn off most output except dots every 10 MB",
+"  -ds siz   each dot is siz processed where siz is nm as splits (0 no dots)",
+"  -du       display original uncompressed size for each entry as added",
+"  -dv       display volume (disk) number in format in_disk>out_disk",
+"  Dot size is approximate, especially for dot sizes less than 1 MB",
+"  Dot options don't apply to Scanning files dots (dot/2sec) (-q turns off)",
+"",
+"Logging:",
+"  -lf path  open file at path as logfile (overwrite existing file)",
+"  -la       append to existing logfile",
+"  -li       include info messages (default just warnings and errors)",
+"",
+"Testing archives:",
+"  -T        test completed temp archive with unzip before updating archive",
+"  -TT cmd   use command cmd instead of 'unzip -tqq' to test archive",
+"             On Unix, to use unzip in current directory, could use:",
+"               zip archive file1 file2 -T -TT \"./unzip -tqq\"",
+"             In cmd, {} replaced by temp archive path, else temp appended.",
+"             The return code is checked for success (0 on Unix)",
+"",
+"Fixing archives:",
+"  -F        attempt to fix a mostly intact archive (try this first)",
+"  -FF       try to salvage what can (may get more but less reliable)",
+"  Fix options copy entries from potentially bad archive to new archive.",
+"  -F tries to read archive normally and copy only intact entries, while",
+"  -FF tries to salvage what can and may result in incomplete entries.",
+"  Must use --out option to specify output archive:",
+"    zip -F bad.zip --out fixed.zip",
+"  Use -v (verbose) with -FF to see details:",
+"    zip reallybad.zip -FF -v --out fixed.zip",
+"  Currently neither option fixes bad entries, as from text mode ftp get.",
+"",
+"Difference mode:",
+"  -DF       (also --dif) only include files that have changed or are",
+"             new as compared to the input archive",
+"  Difference mode can be used to create incremental backups.  For example:",
+"    zip --dif full_backup.zip -r somedir --out diff.zip",
+"  will store all new files, as well as any files in full_backup.zip where",
+"  either file time or size have changed from that in full_backup.zip,",
+"  in new diff.zip.  Output archive not excluded automatically if exists,",
+"  so either use -x to exclude it or put outside what is being zipped.",
+"",
+"DOS Archive bit (Windows only):",
+"  -AS       include only files with the DOS Archive bit set",
+"  -AC       after archive created, clear archive bit of included files",
+"      WARNING: Once the archive bits are cleared they are cleared",
+"               Use -T to test the archive before the bits are cleared",
+"               Can also use -sf to save file list before zipping files",
+"",
+"Show files:",
+"  -sf       show files to operate on and exit (-sf- logfile only)",
+"  -su       as -sf but show escaped UTF-8 Unicode names also if exist",
+"  -sU       as -sf but show escaped UTF-8 Unicode names instead",
+"  Any character not in the current locale is escaped as #Uxxxx, where x",
+"  is hex digit, if 16-bit code is sufficient, or #Lxxxxxx if 24-bits",
+"  are needed.  If add -UN=e, Zip escapes all non-ASCII characters.",
+"",
+"Unicode:",
+"  If compiled with Unicode support, Zip stores UTF-8 path of entries.",
+"  This is backward compatible.  Unicode paths allow better conversion",
+"  of entry names between different character sets.",
+"",
+"  New Unicode extra field includes checksum to verify Unicode path",
+"  goes with standard path for that entry (as utilities like ZipNote",
+"  can rename entries).  If these do not match, use below options to",
+"  set what Zip does:",
+"      -UN=Quit     - if mismatch, exit with error",
+"      -UN=Warn     - if mismatch, warn, ignore UTF-8 (default)",
+"      -UN=Ignore   - if mismatch, quietly ignore UTF-8",
+"      -UN=No       - ignore any UTF-8 paths, use standard paths for all",
+"  An exception to -UN=N are entries with new UTF-8 bit set (instead",
+"  of using extra fields).  These are always handled as Unicode.",
+"",
+"  Normally Zip escapes all chars outside current char set, but leaves",
+"  as is supported chars, which may not be OK in path names.  -UN=Escape",
+"  escapes any character not ASCII:",
+"    zip -sU -UN=e archive",
+"  Can use either normal path or escaped Unicode path on command line",
+"  to match files in archive.",
+"",
+"  Zip now stores UTF-8 in entry path and comment fields on systems",
+"  where UTF-8 char set is default, such as most modern Unix, and",
+"  and on other systems in new extra fields with escaped versions in",
+"  entry path and comment fields for backward compatibility.",
+"  Option -UN=UTF8 will force storing UTF-8 in entry path and comment",
+"  fields:",
+"      -UN=UTF8     - store UTF-8 in entry path and comment fields",
+"  This option can be useful for multi-byte char sets on Windows where",
+"  escaped paths and comments can be too long to be valid as the UTF-8",
+"  versions tend to be shorter.",
+"",
+"  Only UTF-8 comments on UTF-8 native systems supported.  UTF-8 comments",
+"  for other systems planned in next release.",
+"",
+"Self extractor:",
+"  -A        Adjust offsets - a self extractor is created by prepending",
+"             the extractor executable to archive, but internal offsets",
+"             are then off.  Use -A to fix offsets.",
+"  -J        Junk sfx - removes prepended extractor executable from",
+"             self extractor, leaving a plain zip archive.",
+"",
+"More option highlights (see manual for additional options and details):",
+"  -b dir    when creating or updating archive, create the temp archive in",
+"             dir, which allows using seekable temp file when writing to a",
+"             write once CD, such archives compatible with more unzips",
+"             (could require additional file copy if on another device)",
+"  -MM       input patterns must match at least one file and matched files",
+"             must be readable or exit with OPEN error and abort archive",
+"             (without -MM, both are warnings only, and if unreadable files",
+"             are skipped OPEN error (18) returned after archive created)",
+"  -nw       no wildcards (wildcards are like any other character)",
+"  -sc       show command line arguments as processed and exit",
+"  -sd       show debugging as Zip does each step",
+"  -so       show all available options on this system",
+"  -X        default=strip old extra fields, -X- keep old, -X strip most",
+"  -ws       wildcards don't span directory boundaries in paths",
+""
+  };
+
+  for (i = 0; i < sizeof(text)/sizeof(char *); i++)
+  {
+    printf(text[i]);
+    putchar('\n');
+  }
+#ifdef DOS
+  check_for_windows("Zip");
+#endif
 }
 
 /*
@@ -1372,7 +1468,7 @@ local void check_zipfile(zipname, zippath)
   int result;
 
   /* Tell picky compilers to shut up about unused variables */
-  (void)zippath;
+  zippath = zippath;
 
   if (unzip_path) {
     /* user gave us a path to some unzip (may not be UnZip) */
@@ -1737,7 +1833,7 @@ ZCONST char *zfn;
     char *prompt;
 
     /* Tell picky compilers to shut up about unused variables */
-    (void)zfn;
+    zfn = zfn;
 
     prompt = (modeflag == ZP_PW_VERIFY) ?
               "Verify password: " : "Enter password: ";
@@ -1756,7 +1852,7 @@ int size;
 ZCONST char *zfn;
 {
     /* Tell picky compilers to shut up about unused variables */
-    (void)modeflag; (void)pwbuf; (void)size; (void)zfn;
+    modeflag = modeflag; pwbuf = pwbuf; size = size; zfn = zfn;
 
     return ZE_LOGIC;    /* This function should never be called! */
 }
@@ -2132,6 +2228,7 @@ char **argv;            /* command line tokens */
 
   char **args = NULL;  /* could be wide argv */
 
+
 #ifdef THEOS
   /* the argument expansion from the standard library is full of bugs */
   /* use mine instead */
@@ -2195,6 +2292,15 @@ char **argv;            /* command line tokens */
     extern void NLMexit(void);
     atexit(NLMexit);
   }
+#endif
+
+#ifdef RISCOS
+  set_prefix();
+#endif
+
+#ifdef __human68k__
+  fflush(stderr);
+  setbuf(stderr, NULL);
 #endif
 
 /* Re-initialize global variables to make the zip dll re-entrant. It is
@@ -2415,6 +2521,8 @@ char **argv;            /* command line tokens */
   mesg = (FILE *) stdout; /* cannot be made at link time for VMS */
   comment_stream = (FILE *)stdin;
 
+  init_upper();           /* build case map table */
+
 #ifdef LARGE_FILE_SUPPORT
   /* test if we can support large files - 9/29/04 */
   if (sizeof(zoff_t) < 8) {
@@ -2533,8 +2641,6 @@ char **argv;            /* command line tokens */
   NLMsignals();
 #endif
 
-  if (!IsTiny()) ShowCrashReports();
-
 
 #if defined(UNICODE_SUPPORT) && defined(WIN32)
   /* check if this Win32 OS has support for wide character calls */
@@ -2575,6 +2681,25 @@ char **argv;            /* command line tokens */
   {
     switch (option)
     {
+#ifdef EBCDIC
+      case 'a':
+        aflag = ASCII;
+        printf("Translating to ASCII...\n");
+        break;
+#endif /* EBCDIC */
+#ifdef CMS_MVS
+        case 'B':
+          bflag = 1;
+          printf("Using binary mode...\n");
+          break;
+#endif /* CMS_MVS */
+#ifdef TANDEM
+        case 'B':
+          nskformatopt(value);
+          free(value);
+          break;
+#endif
+
         case '0':
           method = STORE; level = 0; break;
         case '1':  case '2':  case '3':  case '4':
@@ -2610,6 +2735,11 @@ char **argv;            /* command line tokens */
           }
           action = DELETE;
           break;
+#ifdef MACOS
+        case o_df:
+          MacZip.DataForkOnly = true;
+          break;
+#endif /* MACOS */
         case o_db:
           if (negated)
             display_bytes = 0;
@@ -3565,6 +3695,14 @@ char **argv;            /* command line tokens */
   if (pcount && patterns == NULL) {
     filterlist_to_patterns();
   }
+
+#if (defined(MSDOS) || defined(OS2)) && !defined(WIN32)
+  if ((kk == 3 || kk == 4) && volume_label == 1) {
+    /* read volume label */
+    PROCNAME(NULL);
+    kk = 4;
+  }
+#endif
 
   if (have_out && kk == 3) {
     copy_only = 1;
@@ -4646,9 +4784,7 @@ char **argv;            /* command line tokens */
 #if CRYPT
   /* Initialize the crc_32_tab pointer, when encryption was requested. */
   if (key != NULL) {
-#ifndef USE_ZLIB
     crc_32_tab = get_crc_table();
-#endif
 #ifdef EBCDIC
     /* convert encryption key to ASCII (ISO variant for 8-bit ASCII chars) */
     strtoasc(key, key);

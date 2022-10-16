@@ -1,4 +1,4 @@
-/* clang-format off */
+// clang-format off
 /*
   ttyio.c - Zip 3
 
@@ -108,17 +108,33 @@
 #  endif
 #endif
 
+#if (defined(UNZIP) && !defined(FUNZIP) && defined(UNIX) && defined(MORE))
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/modem.h"
+#include "libc/sysv/consts/pty.h"
+#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/consts/termios.h"
+#  define GOT_IOCTL_H
+   /* int ioctl OF((int, int, zvoid *));   GRR: may need for some systems */
+#endif
+
 #ifndef HAVE_WORKING_GETCH
    /* include system support for switching of console echo */
 #  ifdef VMS
-#    include <descrip.h>
-#    include <iodef.h>
-#    include <ttdef.h>
-#    include <starlet.h>
-#    include <ssdef.h>
+// MISSING #include <descrip.h>
+// MISSING #include <iodef.h>
+// MISSING #include <ttdef.h>
+// MISSING #include <starlet.h>
+// MISSING #include <ssdef.h>
 #  else /* !VMS */
 #    ifdef HAVE_TERMIOS_H
 #include "libc/calls/termios.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/sysv/consts/baud.h"
 #include "libc/sysv/consts/termios.h"
 #      define sgttyb termios
 #      define sg_flags c_lflag
@@ -127,14 +143,14 @@
 #    else /* !HAVE_TERMIOS_H */
 #      ifdef USE_SYSV_TERMIO           /* Amdahl, Cray, all SysV? */
 #        ifdef HAVE_TERMIO_H
-#          include <termio.h>
+// MISSING #include <termio.h>
 #        endif
 #        ifdef HAVE_SYS_TERMIO_H
-#          include <sys/termio.h>
+// MISSING #include <sys/termio.h>
 #        endif
 #        ifdef NEED_PTEM
-#          include <sys/stream.h>
-#          include <sys/ptem.h>
+// MISSING #include <sys/stream.h>
+// MISSING #include <sys/ptem.h>
 #        endif
 #        define sgttyb termio
 #        define sg_flags c_lflag
@@ -143,9 +159,17 @@
 #      else /* !USE_SYSV_TERMIO */
 #        ifndef CMS_MVS
 #          if (!defined(MINIX) && !defined(GOT_IOCTL_H))
-#            include <sys/ioctl.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/fio.h"
+#include "libc/sysv/consts/modem.h"
+#include "libc/sysv/consts/pty.h"
+#include "libc/sysv/consts/sio.h"
+#include "libc/sysv/consts/termios.h"
 #          endif
-#          include <sgtty.h>
+// MISSING #include <sgtty.h>
 #          define GTTY gtty
 #          define STTY stty
 #          ifdef UNZIP
@@ -164,8 +188,14 @@
 #    ifndef NO_FCNTL_H
 #      ifndef UNZIP
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/weirdtypes.h"
 #include "libc/sysv/consts/at.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/posix.h"
+#include "libc/sysv/consts/s.h"
 #      endif
 #    else
        char *ttyname OF((int));
