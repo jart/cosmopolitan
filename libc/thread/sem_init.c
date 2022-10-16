@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/calls.h"
+#include "libc/dce.h"
 #include "libc/intrin/atomic.h"
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
@@ -25,15 +27,25 @@
 /**
  * Initializes unnamed semaphore.
  *
+ * Calling sem_init() on an already initialized semaphore is undefined.
+ *
  * @param sem should make its way to sem_destroy() if this succeeds
- * @param pshared if semaphore may be shared between processes
+ * @param pshared if semaphore may be shared between processes, provided
+ *     `sem` is backed by `mmap(MAP_ANONYMOUS | MAP_SHARED)` memory
  * @param value is initial count of semaphore
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `value` exceeds `SEM_VALUE_MAX`
+ * @raise EPERM on OpenBSD if `pshared` is true
  */
 int sem_init(sem_t *sem, int pshared, unsigned value) {
   if (value > SEM_VALUE_MAX) return einval();
+  // OpenBSD MAP_ANONYMOUS|MAP_SHARED memory is kind of busted.
+  // The OpenBSD implementation of sem_init() also EPERMs here.
+  if (IsOpenbsd() && pshared) return eperm();
+  sem->sem_magic = SEM_MAGIC_UNNAMED;
   atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
-  sem->sem_pshared = pshared;
+  sem->sem_pshared = !!pshared;
+  sem->sem_pid = getpid();
+  sem->sem_waiters = 0;
   return 0;
 }

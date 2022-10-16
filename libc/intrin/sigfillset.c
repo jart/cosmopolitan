@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
 /**
  * Adds all signals to set.
@@ -28,5 +29,7 @@
  */
 int sigfillset(sigset_t *set) {
   memset(set->__bits, -1, sizeof(set->__bits));
+  sigdelset(set, SIGKILL);
+  sigdelset(set, SIGSTOP);
   return 0;
 }

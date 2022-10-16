@@ -27,6 +27,7 @@
     "__STDC_NO_COMPLEX__"
     "__STDC_NO_THREADS__"
     "__STDC_NO_VLA__"
+    "__FLT_EVAL_METHOD__"
     "__STDC_WANT_LIB_EXT1__"))
 
 (defconst cosmo-c-constants-limits

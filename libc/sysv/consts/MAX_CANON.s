@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon ex,EX__MAX,78,78,78,78,78,78
+.syscon limits,MAX_CANON,255,1024,255,255,255,255

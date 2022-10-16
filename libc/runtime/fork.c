@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -33,14 +34,15 @@
 
 int _fork(uint32_t dwCreationFlags) {
   axdx_t ad;
+  bool threaded;
   sigset_t old, all;
-  int ax, dx, parent, parent_tid = 0;
-  if (_weaken(_pthread_atfork)) {
-    parent_tid = gettid();
+  int ax, dx, parent;
+  sigfillset(&all);
+  _unassert(!sigprocmask(SIG_BLOCK, &all, &old));
+  if (__threaded && _weaken(_pthread_onfork_prepare)) {
+    _weaken(_pthread_onfork_prepare)();
   }
   if (!IsWindows()) {
-    sigfillset(&all);
-    sys_sigprocmask(SIG_BLOCK, &all, &old);
     ad = sys_fork();
     ax = ad.ax;
     dx = ad.dx;
@@ -50,7 +52,11 @@ int _fork(uint32_t dwCreationFlags) {
       ax &= dx - 1;
     }
   } else {
+    threaded = __threaded;
     ax = sys_fork_nt(dwCreationFlags);
+    if (threaded && !__threaded && _weaken(__enable_threads)) {
+      _weaken(__enable_threads)();
+    }
   }
   if (!ax) {
     if (!IsWindows()) {
@@ -65,15 +71,17 @@ int _fork(uint32_t dwCreationFlags) {
                             IsLinux() ? dx : sys_gettid(),
                             memory_order_relaxed);
     }
-    if (_weaken(_pthread_atfork)) {
-      _weaken(_pthread_atfork)(parent_tid);
+    if (__threaded && _weaken(_pthread_onfork_child)) {
+      _weaken(_pthread_onfork_child)();
     }
-    if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
     STRACE("fork() → 0 (child of %d)", parent);
   } else {
-    if (!IsWindows()) sys_sigprocmask(SIG_SETMASK, &old, 0);
+    if (__threaded && _weaken(_pthread_onfork_parent)) {
+      _weaken(_pthread_onfork_parent)();
+    }
     STRACE("fork() → %d% m", ax);
   }
+  _unassert(!sigprocmask(SIG_SETMASK, &old, 0));
   return ax;
 }
 

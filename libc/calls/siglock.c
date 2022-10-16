@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/state.internal.h"
+#include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
 void(__sig_lock)(void) {
@@ -27,6 +28,11 @@ void(__sig_unlock)(void) {
   pthread_mutex_unlock(&__sig_lock_obj);
 }
 
-__attribute__((__constructor__)) static void init(void) {
+void __sig_funlock(void) {
+  bzero(&__sig_lock_obj, sizeof(__sig_lock_obj));
   __sig_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+}
+
+__attribute__((__constructor__)) static void __sig_init(void) {
+  pthread_atfork(__sig_lock, __sig_unlock, __sig_funlock);
 }

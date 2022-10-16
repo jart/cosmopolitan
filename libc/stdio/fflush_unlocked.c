@@ -38,6 +38,43 @@ void(__fflush_unlock)(void) {
   pthread_mutex_unlock(&__fflush_lock_obj);
 }
 
+static void __stdio_fork_prepare(void) {
+  FILE *f;
+  __fflush_lock();
+  for (int i = 0; i < __fflush.handles.i; ++i) {
+    if ((f = __fflush.handles.p[i])) {
+      pthread_mutex_lock((pthread_mutex_t *)f->lock);
+    }
+  }
+}
+
+static void __stdio_fork_parent(void) {
+  FILE *f;
+  for (int i = __fflush.handles.i; i--;) {
+    if ((f = __fflush.handles.p[i])) {
+      pthread_mutex_unlock((pthread_mutex_t *)f->lock);
+    }
+  }
+  __fflush_unlock();
+}
+
+static void __stdio_fork_child(void) {
+  FILE *f;
+  pthread_mutex_t *m;
+  for (int i = __fflush.handles.i; i--;) {
+    if ((f = __fflush.handles.p[i])) {
+      m = (pthread_mutex_t *)f->lock;
+      bzero(m, sizeof(*m));
+      m->_type = PTHREAD_MUTEX_RECURSIVE;
+    }
+  }
+  pthread_mutex_init(&__fflush_lock_obj, 0);
+}
+
+__attribute__((__constructor__)) static void __stdio_init(void) {
+  pthread_atfork(__stdio_fork_prepare, __stdio_fork_parent, __stdio_fork_child);
+}
+
 /**
  * Blocks until data from stream buffer is written out.
  *

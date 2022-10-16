@@ -203,7 +203,6 @@ int main(int argc, char *argv[]) {
   ASSERT_EQ(0, pthread_mutex_lock(&mu));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&mu));
   ASSERT_EQ(0, pthread_mutex_unlock(&mu));
-  ASSERT_EQ(EPERM, pthread_mutex_unlock(&mu));
   ASSERT_EQ(0, pthread_mutex_destroy(&mu));
 
   ASSERT_EQ(1, __tls_enabled);

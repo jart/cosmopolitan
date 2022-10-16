@@ -25,10 +25,118 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/semaphore.h"
 #include "libc/thread/thread.h"
+
+void IgnoreStderr(void) {
+  close(2);
+  open("/dev/null", O_WRONLY);
+}
+
+TEST(sem_init, einval) {
+  sem_t sem;
+  ASSERT_SYS(EINVAL, -1, sem_init(&sem, 0, -1));
+}
+
+TEST(sem_post, accessInChildProcessWhenNotPshared_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  SPAWN(fork);
+  IgnoreStderr();
+  sem_post(&sem);
+  EXITS(77);
+}
+
+TEST(sem_getvalue, accessInChildProcessWhenNotPshared_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  ASSERT_SYS(0, 0, sem_getvalue(&sem, &val));
+  SPAWN(fork);
+  IgnoreStderr();
+  sem_getvalue(&sem, &val);
+  EXITS(77);
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+}
+
+TEST(sem_timedwait, accessInChildProcessWhenNotPshared_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  SPAWN(fork);
+  IgnoreStderr();
+  sem_timedwait(&sem, 0);
+  EXITS(77);
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+}
+
+TEST(sem_trywait, accessInChildProcessWhenNotPshared_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  SPAWN(fork);
+  IgnoreStderr();
+  sem_trywait(&sem);
+  EXITS(77);
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+}
+
+TEST(sem_post, afterDestroyed_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+  IgnoreStderr();
+  sem_post(&sem);
+  EXITS(77);
+}
+
+TEST(sem_trywait, afterDestroyed_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+  IgnoreStderr();
+  sem_trywait(&sem);
+  EXITS(77);
+}
+
+TEST(sem_wait, afterDestroyed_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+  IgnoreStderr();
+  sem_wait(&sem);
+  EXITS(77);
+}
+
+TEST(sem_timedwait, afterDestroyed_isUndefinedBehavior) {
+  if (!IsModeDbg()) return;
+  int val;
+  sem_t sem;
+  SPAWN(fork);
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
+  ASSERT_SYS(0, 0, sem_destroy(&sem));
+  IgnoreStderr();
+  sem_timedwait(&sem, 0);
+  EXITS(77);
+}
 
 void *Worker(void *arg) {
   int rc;
@@ -60,9 +168,14 @@ TEST(sem_timedwait, threads) {
 }
 
 TEST(sem_timedwait, processes) {
-  if (IsOpenbsd()) return;  // TODO(jart): fix me
   int i, r, rc, n = 4, pshared = 1;
   sem_t *sm = _mapshared(FRAMESIZE), *s[2] = {sm, sm + 1};
+  if (IsOpenbsd()) {
+    // TODO(jart): why?
+    ASSERT_SYS(EPERM, -1, sem_init(s[0], pshared, 0));
+    ASSERT_SYS(0, 0, munmap(sm, FRAMESIZE));
+    return;
+  }
   ASSERT_SYS(0, 0, sem_init(s[0], pshared, 0));
   ASSERT_SYS(0, 0, sem_init(s[1], pshared, 0));
   for (i = 0; i < n; ++i) {

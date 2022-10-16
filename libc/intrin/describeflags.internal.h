@@ -62,6 +62,7 @@ const char *DescribeSocketFamily(char[12], int);
 const char *DescribeSocketProtocol(char[12], int);
 const char *DescribeSocketType(char[64], int);
 const char *DescribeStdioState(char[12], int);
+const char *DescribeStringList(char[300], char *const[]);
 const char *DescribeWhence(char[12], int);
 const char *DescribeWhichPrio(char[12], int);
 
@@ -69,6 +70,7 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeCapability(x)        DescribeCapability(alloca(20), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
+#define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)
 #define DescribeErrno(x)             DescribeErrno(alloca(12), x)
 #define DescribeErrnoResult(x)       DescribeErrnoResult(alloca(12), x)
 #define DescribeFcntlCmd(x)          DescribeFcntlCmd(alloca(20), x)
@@ -111,9 +113,9 @@ const char *DescribeWhichPrio(char[12], int);
 #define DescribeSocketProtocol(x)    DescribeSocketProtocol(alloca(12), x)
 #define DescribeSocketType(x)        DescribeSocketType(alloca(64), x)
 #define DescribeStdioState(x)        DescribeStdioState(alloca(12), x)
+#define DescribeStringList(x)        DescribeStringList(alloca(300), x)
 #define DescribeWhence(x)            DescribeWhence(alloca(12), x)
 #define DescribeWhichPrio(x)         DescribeWhichPrio(alloca(12), x)
-#define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

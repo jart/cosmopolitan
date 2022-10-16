@@ -3,9 +3,9 @@
 /* ---------------------------- setting mparams -------------------------- */
 
 #if LOCK_AT_FORK
-static void pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
-static void post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
-static void post_fork_child(void)  { INITIAL_LOCK(&(gm)->mutex); }
+static void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
+static void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
+static void dlmalloc_post_fork_child(void)  { INITIAL_LOCK(&(gm)->mutex); }
 #endif /* LOCK_AT_FORK */
 
 /* Initialize mparams */
@@ -67,8 +67,11 @@ static int init_mparams(void) {
     gm->mflags = mparams.default_mflags;
     (void)INITIAL_LOCK(&gm->mutex);
 #endif
+
 #if LOCK_AT_FORK
-    pthread_atfork(&pre_fork, &post_fork_parent, &post_fork_child);
+    pthread_atfork(&dlmalloc_pre_fork,
+                   &dlmalloc_post_fork_parent,
+                   &dlmalloc_post_fork_child);
 #endif
 
     {
@@ -92,6 +95,7 @@ static int init_mparams(void) {
   }
 
   RELEASE_MALLOC_GLOBAL_LOCK();
+
   return 1;
 }
 

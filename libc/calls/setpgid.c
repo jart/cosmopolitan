@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/console.h"
 #include "libc/sysv/errfuns.h"
 
@@ -34,7 +34,7 @@ int setpgid(int pid, int pgid) {
     rc = sys_setpgid(pid, pgid);
   } else {
     me = getpid();
-    if (pid == me && pgid == me) {
+    if ((!pid || pid == me) && (!pgid || pgid == me)) {
       /*
        * "When a process is created with CREATE_NEW_PROCESS_GROUP
        *  specified, an implicit call to SetConsoleCtrlHandler(NULL,TRUE)

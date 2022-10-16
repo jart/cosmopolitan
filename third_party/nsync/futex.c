@@ -43,8 +43,6 @@
 #include "third_party/nsync/time.h"
 // clang-format off
 
-/* futex() polyfill w/ sched_yield() fallback */
-
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
 
 int _futex (atomic_int *, int, int, const struct timespec *, int *, int);
@@ -161,6 +159,11 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		op |= FUTEX_PRIVATE_FLAG_;
 	}
 
+	LOCKTRACE ("futex(%t [%d], %s, %#x, %s) → ...",
+		   w, atomic_load_explicit (w, memory_order_relaxed),
+		   DescribeFutexOp (op), expect,
+		   DescribeTimespec (0, timeout));
+
 	if (FUTEX_IS_SUPPORTED) {
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
@@ -199,7 +202,8 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 	}
 
 	STRACE ("futex(%t [%d], %s, %#x, %s) → %s",
-		w, *w, DescribeFutexOp (op), expect,
+		w, atomic_load_explicit (w, memory_order_relaxed),
+		DescribeFutexOp (op), expect,
 		DescribeTimespec (0, timeout),
 		DescribeErrnoResult (rc));
 
@@ -208,7 +212,7 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 
 int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 	int e, rc, op, fop;
-	int wake (void *, int, int) asm ("_futex");
+	int wake (atomic_int *, int, int) asm ("_futex");
 
 	ASSERT (count == 1 || count == INT_MAX);
 
@@ -245,8 +249,8 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 	}
 
 	STRACE ("futex(%t [%d], %s, %d) → %s",
-		w, *w, DescribeFutexOp(op),
-		count, DescribeErrnoResult(rc));
+		w, atomic_load_explicit (w, memory_order_relaxed),
+		DescribeFutexOp(op), count, DescribeErrnoResult(rc));
 
 	return rc;
 }

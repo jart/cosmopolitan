@@ -117,6 +117,8 @@ struct dirent_netbsd {
   char d_name[512];
 };
 
+// TODO(jart): wipe these locks when forking
+
 void _lockdir(DIR *dir) {
   pthread_mutex_lock(&dir->lock);
 }

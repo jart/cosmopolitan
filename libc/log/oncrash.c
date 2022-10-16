@@ -284,7 +284,6 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   int gdbpid, err;
   static int sync;
   static bool _notpossible;
-  __tls_enabled = false;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   --__ftrace;
   --__strace;

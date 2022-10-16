@@ -17,8 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
 
@@ -32,8 +34,10 @@
  */
 int sem_trywait(sem_t *sem) {
   int v;
+  _unassert(sem->sem_pshared || sem->sem_pid == getpid());
   v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed);
   do {
+    _unassert(v > INT_MIN);
     if (!v) return eagain();
     if (v < 0) return einval();
   } while (!atomic_compare_exchange_weak_explicit(

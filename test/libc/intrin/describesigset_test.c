@@ -22,6 +22,12 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
 
+TEST(DescribeSigset, full) {
+  sigset_t ss;
+  sigfillset(&ss);
+  EXPECT_STREQ("~{}", DescribeSigset(0, &ss));
+}
+
 TEST(DescribeSigset, present) {
   sigset_t ss;
   sigemptyset(&ss);

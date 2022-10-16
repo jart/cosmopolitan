@@ -23,6 +23,7 @@
 #include "libc/intrin/weaken.h"
 #include "libc/nt/runtime.h"
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/thread/thread.h"
@@ -43,6 +44,8 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
 textstartup void InitializeFileDescriptors(void) {
   struct Fds *fds;
   __fds_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+  pthread_atfork(_weaken(__fds_lock), _weaken(__fds_unlock),
+                 _weaken(__fds_funlock));
   fds = VEIL("r", &g_fds);
   fds->p = fds->e = (void *)kMemtrackFdsStart;
   fds->n = 4;

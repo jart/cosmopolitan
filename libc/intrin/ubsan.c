@@ -228,8 +228,8 @@ static void __ubsan_warning(const struct UbsanSourceLocation *loc,
 
 dontdiscard __ubsan_die_f *__ubsan_abort(const struct UbsanSourceLocation *loc,
                                          const char *description) {
-  kprintf("\n%s:%d: %subsan error%s: %s\n", loc->file, loc->line, RED2, RESET,
-          description);
+  kprintf("\n%s:%d: %subsan error%s: %s (tid %d)\n", loc->file, loc->line, RED2,
+          RESET, description, gettid());
   return __ubsan_die();
 }
 

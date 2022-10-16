@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
@@ -27,11 +30,18 @@
 /**
  * Releases mutex.
  *
+ * This function does nothing in vfork() children.
+ *
  * @return 0 on success or error number on failure
  * @raises EPERM if in error check mode and not owned by caller
+ * @vforksafe
  */
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   int c, t;
+
+  if (__vforked) return 0;
+
+  LOCKTRACE("pthread_mutex_unlock(%t)", mutex);
 
   if (__tls_enabled &&                               //
       mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
@@ -47,7 +57,11 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
   }
 
   t = gettid();
-  if (mutex->_owner != t) {
+
+  // we allow unlocking an initialized lock that wasn't locked, but we
+  // don't allow unlocking a lock held by another thread, on unlocking
+  // recursive locks from a forked child, since it should be re-init'd
+  if (mutex->_owner && (mutex->_owner != t || mutex->_pid != __pid)) {
     return EPERM;
   }
 

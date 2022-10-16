@@ -24,10 +24,10 @@
 
 #define N 300
 
-#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
 const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
-  int i = 0;
+  int o = 0;
 
   if (rc == -1) return "n/a";
   if (!st) return "NULL";
@@ -57,6 +57,10 @@ const char *(DescribeStat)(char buf[N], int rc, const struct stat *st) {
 
   if (st->st_gid) {
     append(", .st_%s=%lu", "gid", st->st_gid);
+  }
+
+  if (st->st_dev) {
+    append(", .st_%s=%lu", "dev", st->st_dev);
   }
 
   if (st->st_ino) {

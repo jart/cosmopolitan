@@ -166,6 +166,10 @@ int BLAKE2B256_Final(struct Blake2b *b2b,
  *     blake2b256 n=256                     1 ns/byte            662 mb/s
  *     blake2b256 n=22851                   1 ns/byte            683 mb/s
  *
+ * @param data is binary memory to hash
+ * @param len is bytes in `data`
+ * @param out receives 32 byte binary digest
+ * @return 0 on success (always successful)
  */
 int BLAKE2B256(const void *data, size_t len,
                uint8_t out[BLAKE2B256_DIGEST_LENGTH]) {

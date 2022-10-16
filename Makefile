@@ -92,6 +92,7 @@ o/$(MODE):			\
 .UNVEIL =			\
 	libc/integral		\
 	libc/disclaimer.inc	\
+	rwc:/dev/shm		\
 	rx:build/bootstrap	\
 	rx:o/third_party/gcc	\
 	/proc/stat		\

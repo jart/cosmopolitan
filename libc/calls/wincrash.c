@@ -18,21 +18,46 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
+#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/exceptionhandleractions.h"
 #include "libc/nt/enum/signal.h"
+#include "libc/nt/runtime.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sicode.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/tls.h"
+#include "libc/thread/tls2.h"
 
 privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   int64_t rip;
   int sig, code;
   ucontext_t ctx;
+  struct CosmoTib *tib;
+  static bool noreentry;
+
+  if ((tib = __tls_enabled ? __get_tls_privileged() : 0)) {
+    if (~tib->tib_flags & TIB_FLAG_WINCRASHING) {
+      tib->tib_flags |= TIB_FLAG_WINCRASHING;
+    } else {
+    WincrashPanic:
+      STRACE("panic: wincrash reentry: rip %x bt %s", ep->ContextRecord->Rip,
+             DescribeBacktrace((struct StackFrame *)ep->ContextRecord->Rbp));
+      ExitProcess(89);
+    }
+  } else {
+    if (!noreentry) {
+      noreentry = true;
+    } else {
+      goto WincrashPanic;
+    }
+  }
+
   STRACE("__wincrash");
 
   switch (ep->ExceptionRecord->ExceptionCode) {
@@ -113,6 +138,11 @@ privileged unsigned __wincrash(struct NtExceptionPointers *ep) {
   // RIP to prevent the same INT3 from being trapped forevermore.
   if (sig == SIGTRAP && rip == ep->ContextRecord->Rip) {
     ep->ContextRecord->Rip++;
+  }
+
+  noreentry = false;
+  if (tib) {
+    tib->tib_flags &= ~TIB_FLAG_WINCRASHING;
   }
 
   return kNtExceptionContinueExecution;

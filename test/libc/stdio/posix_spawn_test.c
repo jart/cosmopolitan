@@ -16,19 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/fmt/conv.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/auxv.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
 char testlib_enable_tmp_setup_teardown;
 
@@ -41,7 +48,7 @@ __attribute__((__constructor__)) static void init(void) {
   }
 }
 
-TEST(spawn, test) {
+TEST(posix_spawn, test) {
   int rc, ws, pid;
   char *prog = GetProgramExecutableName();
   char *args[] = {program_invocation_name, NULL};
@@ -52,7 +59,7 @@ TEST(spawn, test) {
   EXPECT_EQ(42, WEXITSTATUS(ws));
 }
 
-TEST(spawn, pipe) {
+TEST(posix_spawn, pipe) {
   char buf[10];
   int p[2], pid, status;
   const char *pn = "./echo.com";
@@ -69,6 +76,76 @@ TEST(spawn, pipe) {
   ASSERT_SYS(0, 6, read(p[0], buf, sizeof(buf)));
   ASSERT_SYS(0, 0, close(p[0]));
   ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
+}
+
+_Thread_local atomic_int gotsome;
+
+void OhMyGoth(int sig) {
+  ++gotsome;
+}
+
+// time for a vfork() clone() signal bloodbath
+TEST(posix_spawn, torture) {
+  int n = 10;
+  int ws, pid;
+  short flags;
+  sigset_t allsig;
+  posix_spawnattr_t attr;
+  posix_spawn_file_actions_t fa;
+  signal(SIGUSR2, OhMyGoth);
+  sigfillset(&allsig);
+  if (!fileexists("echo.com")) {
+    testlib_extract("/zip/echo.com", "echo.com", 0755);
+  }
+  // XXX: NetBSD doesn't seem to let us set the scheduler to itself ;_;
+  ASSERT_EQ(0, posix_spawnattr_init(&attr));
+  ASSERT_EQ(0, posix_spawnattr_setflags(
+                   &attr, POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETSIGDEF |
+                              POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETPGROUP |
+                              POSIX_SPAWN_SETSIGMASK |
+                              (IsNetbsd() ? 0 : POSIX_SPAWN_SETSCHEDULER)));
+  ASSERT_EQ(0, posix_spawnattr_setsigmask(&attr, &allsig));
+  ASSERT_EQ(0, posix_spawnattr_setsigdefault(&attr, &allsig));
+  ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
+  ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, 0));
+  ASSERT_EQ(
+      0, posix_spawn_file_actions_addopen(&fa, 1, "/dev/null", O_WRONLY, 0644));
+  ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, 1, 0));
+  for (int i = 0; i < n; ++i) {
+    char *volatile zzz = malloc(13);
+    volatile int fd = open("/dev/null", O_WRONLY);
+    char *args[] = {"./echo.com", NULL};
+    char *envs[] = {NULL};
+    raise(SIGUSR2);
+    ASSERT_EQ(0, posix_spawn(&pid, "./echo.com", &fa, &attr, args, envs));
+    ASSERT_FALSE(__vforked);
+    ASSERT_NE(-1, waitpid(pid, &ws, 0));
+    ASSERT_TRUE(WIFEXITED(ws));
+    ASSERT_EQ(0, WEXITSTATUS(ws));
+    close(fd);
+    free(zzz);
+  }
+  // TODO(jart): Why does it deliver 2x the signals sometimes?
+  ASSERT_NE(0, gotsome);
+  ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
+  ASSERT_EQ(0, posix_spawnattr_destroy(&attr));
+}
+
+void *Torturer(void *arg) {
+  posix_spawn_torture();
+  return 0;
+}
+
+TEST(posix_spawn, agony) {
+  int i, n = 3;
+  pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_create(t + i, 0, Torturer, 0));
+  }
+  for (i = 0; i < n; ++i) {
+    ASSERT_EQ(0, pthread_join(t[i], 0));
+  }
 }
 
 /*

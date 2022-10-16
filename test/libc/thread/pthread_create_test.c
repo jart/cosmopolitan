@@ -86,20 +86,6 @@ TEST(pthread_create, testCreateExitJoin) {
   ASSERT_EQ((void *)3, rc);
 }
 
-TEST(pthread_detach, testCreateReturn) {
-  pthread_t id;
-  ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
-  ASSERT_EQ(0, pthread_detach(id));
-}
-
-TEST(pthread_detach, testDetachUponCreation) {
-  pthread_attr_t attr;
-  ASSERT_EQ(0, pthread_attr_init(&attr));
-  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
-  ASSERT_EQ(0, pthread_attr_destroy(&attr));
-}
-
 static void *CheckSchedule(void *arg) {
   int rc, policy;
   struct sched_param prio;
@@ -114,7 +100,7 @@ static void *CheckSchedule(void *arg) {
   return 0;
 }
 
-TEST(pthread_detach, scheduling) {
+TEST(pthread_create, scheduling) {
   pthread_t id;
   pthread_attr_t attr;
   struct sched_param pri = {sched_get_priority_min(SCHED_OTHER)};
@@ -134,7 +120,7 @@ static void *CheckStack(void *arg) {
   return 0;
 }
 
-TEST(pthread_detach, testBigStack) {
+TEST(pthread_create, testBigStack) {
   pthread_t id;
   pthread_attr_t attr;
   ASSERT_EQ(0, pthread_attr_init(&attr));
@@ -151,7 +137,7 @@ static void *CheckStack2(void *arg) {
   return 0;
 }
 
-TEST(pthread_detach, testBiggerGuardSize) {
+TEST(pthread_create, testBiggerGuardSize) {
   pthread_t id;
   pthread_attr_t attr;
   ASSERT_EQ(0, pthread_attr_init(&attr));
@@ -162,7 +148,7 @@ TEST(pthread_detach, testBiggerGuardSize) {
   ASSERT_EQ(0, pthread_join(id, 0));
 }
 
-TEST(pthread_detach, testCustomStack_withReallySmallSize) {
+TEST(pthread_create, testCustomStack_withReallySmallSize) {
   char *stk;
   size_t siz;
   pthread_t id;

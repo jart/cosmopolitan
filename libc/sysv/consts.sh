@@ -1107,32 +1107,6 @@ syscon	pf	PF_VSOCK				40			0			0			0			0			0
 syscon	pf	PF_WANPIPE				25			0			0			0			0			0
 syscon	pf	PF_X25					9			0			0			0			0			0
 
-#	Eric Allman's exit() codes
-#
-#	- Broadly supported style guideline;
-#	- Dating back to 1980 in 4.0BSD;
-#	- That won't be standardized.
-#
-#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
-syscon	ex	EX_OK					0			0			0			0			0			0			# consensus
-syscon	ex	EX_USAGE				64			64			64			64			64			64			# unix consensus & force NT
-syscon	ex	EX_DATAERR				65			65			65			65			65			65			# unix consensus & force NT
-syscon	ex	EX_NOINPUT				66			66			66			66			66			66			# unix consensus & force NT
-syscon	ex	EX_NOUSER				67			67			67			67			67			67			# unix consensus & force NT
-syscon	ex	EX_NOHOST				68			68			68			68			68			68			# unix consensus & force NT
-syscon	ex	EX_UNAVAILABLE				69			69			69			69			69			69			# unix consensus & force NT
-syscon	ex	EX_SOFTWARE				70			70			70			70			70			70			# unix consensus & force NT
-syscon	ex	EX_OSERR				71			71			71			71			71			71			# unix consensus & force NT
-syscon	ex	EX_OSFILE				72			72			72			72			72			72			# unix consensus & force NT
-syscon	ex	EX_CANTCREAT				73			73			73			73			73			73			# unix consensus & force NT
-syscon	ex	EX_IOERR				74			74			74			74			74			74			# unix consensus & force NT
-syscon	ex	EX_TEMPFAIL				75			75			75			75			75			75			# unix consensus & force NT
-syscon	ex	EX_PROTOCOL				76			76			76			76			76			76			# unix consensus & force NT
-syscon	ex	EX_NOPERM				77			77			77			77			77			77			# unix consensus & force NT
-syscon	ex	EX_CONFIG				78			78			78			78			78			78			# unix consensus & force NT
-syscon	ex	EX__BASE				64			64			64			64			64			64			# unix consensus & force NT
-syscon	ex	EX__MAX					78			78			78			78			78			78			# unix consensus & force NT
-
 #	getdents() constants
 #
 #	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary

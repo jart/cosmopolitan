@@ -87,21 +87,26 @@ static unsigned char *brk_unlocked(unsigned char *p) {
   }
 }
 
-int brk_lock(void) {
+void brk_lock(void) {
   pthread_mutex_lock(&__brk.m);
-  return 0;
 }
 
 void brk_unlock(void) {
   pthread_mutex_unlock(&__brk.m);
 }
 
+void brk_funlock(void) {
+  pthread_mutex_init(&__brk.m, 0);
+}
+
+__attribute__((__constructor__)) static void brk_init(void) {
+  brk_funlock();
+  pthread_atfork(brk_lock, brk_unlock, brk_funlock);
+}
+
 #ifdef _NOPL0
 #define brk_lock()   _NOPL0("__threadcalls", brk_lock)
 #define brk_unlock() _NOPL0("__threadcalls", brk_unlock)
-#else
-#define brk_lock()   (__threaded ? brk_lock() : 0)
-#define brk_unlock() (__threaded ? brk_unlock() : 0)
 #endif
 
 /**

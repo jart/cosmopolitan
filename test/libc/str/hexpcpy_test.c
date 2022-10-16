@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,47 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/struct/sigset.h"
+#include "libc/macros.internal.h"
+#include "libc/stdio/rand.h"
 #include "libc/str/str.h"
 #include "libc/testlib/testlib.h"
 
-sigset_t ss;
-
-TEST(sigemptyset, test) {
-  EXPECT_EQ(0, sigemptyset(&ss));
-  EXPECT_BINEQ(u"        ", &ss);
+TEST(hexpcpy, test) {
+  char buf[] = {0x00, 0x02, 0x20, 0x80, 0xf5, 0xff};
+  char str[ARRAYLEN(buf) * 2 + 1];
+  rngset(str, sizeof(str), _rand64, -1);
+  EXPECT_EQ(str + ARRAYLEN(buf) * 2, hexpcpy(str, buf, ARRAYLEN(buf)));
+  EXPECT_STREQ("00022080f5ff", str);
 }
 
-TEST(sigfillset, test) {
-  EXPECT_EQ(0, sigfillset(&ss));
-  EXPECT_BINEQ(u"λλλλλλλλ", &ss);
-}
-
-TEST(sigaddset, test) {
-  sigemptyset(&ss);
-  EXPECT_EQ(0, sigaddset(&ss, 1));
-  EXPECT_BINEQ(u"☺       ", &ss);
-  EXPECT_EQ(0, sigaddset(&ss, 64));
-  EXPECT_BINEQ(u"☺      Ç", &ss);
-}
-
-TEST(sigdelset, test) {
-  sigfillset(&ss);
-  EXPECT_EQ(0, sigdelset(&ss, 1));
-  EXPECT_BINEQ(u"■λλλλλλλ", &ss);
-  EXPECT_EQ(0, sigdelset(&ss, 64));
-  EXPECT_BINEQ(u"■λλλλλλ⌂", &ss);
-}
-
-TEST(sigismember, test) {
-  sigfillset(&ss);
-  EXPECT_TRUE(sigismember(&ss, 1));
-  sigdelset(&ss, 1);
-  EXPECT_FALSE(sigismember(&ss, 1));
-  EXPECT_TRUE(sigismember(&ss, 64));
-  sigdelset(&ss, 64);
-  EXPECT_FALSE(sigismember(&ss, 64));
+TEST(hexpcpy, emptyBuf_writesNulTerminator) {
+  char buf[1];
+  char str[1];
+  rngset(str, sizeof(str), _rand64, -1);
+  EXPECT_EQ(str, hexpcpy(str, buf, 0));
+  EXPECT_STREQ("", str);
 }

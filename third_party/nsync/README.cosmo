@@ -1,0 +1,19 @@
+DESCRIPTION
+
+  *NSYNC is a synchronization primitives library.
+
+LICENSE
+
+  Apache 2.0
+
+ORIGIN
+
+  git@github.com:google/nsync
+  commit ac5489682760393fe21bd2a8e038b528442412a7
+  Author: Mike Burrows <m3b@google.com>
+  Date:   Wed Jun 1 16:47:52 2022 -0700
+
+LOCAL CHANGES
+
+  - nsync_malloc_() is implemented as kmalloc()
+  - nsync_mu_semaphore uses Cosmopolitan Futexes

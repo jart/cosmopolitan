@@ -17,9 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
 #include "third_party/nsync/futex.internal.h"
@@ -31,14 +32,17 @@
  * @raise EINVAL if `sem` isn't valid
  */
 int sem_post(sem_t *sem) {
-  int rc;
-  int old = atomic_fetch_add_explicit(&sem->sem_value, 1, memory_order_relaxed);
+  int rc, old, wakeups;
+  _unassert(sem->sem_pshared || sem->sem_pid == getpid());
+  old = atomic_fetch_add_explicit(&sem->sem_value, 1, memory_order_relaxed);
+  _unassert(old > INT_MIN);
   if (old >= 0) {
-    _npassert(nsync_futex_wake_(&sem->sem_value, 1, sem->sem_pshared) >= 0);
+    wakeups = nsync_futex_wake_(&sem->sem_value, 1, sem->sem_pshared);
+    _npassert(wakeups >= 0);
     rc = 0;
   } else {
+    wakeups = 0;
     rc = einval();
   }
-  STRACE("sem_post(%p) → %d% m", sem, rc);
   return rc;
 }

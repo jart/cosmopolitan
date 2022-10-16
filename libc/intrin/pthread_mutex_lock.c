@@ -17,9 +17,12 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/runtime/internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/mu.h"
@@ -55,11 +58,18 @@
  *     pthread_mutex_unlock(&lock);
  *     pthread_mutex_destroy(&lock);
  *
+ * This function does nothing in vfork() children.
+ *
  * @return 0 on success, or error number on failure
  * @see pthread_spin_lock()
+ * @vforksafe
  */
 int pthread_mutex_lock(pthread_mutex_t *mutex) {
   int c, d, t;
+
+  if (__vforked) return 0;
+
+  LOCKTRACE("pthread_mutex_lock(%t)", mutex);
 
   if (__tls_enabled &&                               //
       mutex->_type == PTHREAD_MUTEX_NORMAL &&        //
@@ -96,6 +106,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 
   mutex->_depth = 0;
   mutex->_owner = t;
+  mutex->_pid = __pid;
 
   return 0;
 }

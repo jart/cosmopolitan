@@ -64,7 +64,7 @@ static inline int malloc_unlock(atomic_int *lk) {
 #define ACQUIRE_LOCK(lk)      malloc_lock(lk)
 #define RELEASE_LOCK(lk)      malloc_unlock(lk)
 #define TRY_LOCK(lk)          malloc_trylock(lk)
-#define INITIAL_LOCK(lk)      (*lk = 0, 0)
+#define INITIAL_LOCK(lk)      (atomic_store_explicit(lk, 0, memory_order_relaxed), 0)
 #define DESTROY_LOCK(lk)
 #define ACQUIRE_MALLOC_GLOBAL_LOCK()  ACQUIRE_LOCK(&malloc_global_mutex);
 #define RELEASE_MALLOC_GLOBAL_LOCK()  RELEASE_LOCK(&malloc_global_mutex);

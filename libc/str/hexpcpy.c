@@ -16,17 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/semaphore.h"
+#include "libc/str/str.h"
 
 /**
- * Closes named semaphore.
+ * Turns data into lowercase hex.
  *
- * @param sem was created with sem_open()
- * @return 0 on success, or -1 w/ errno
+ * This routine always writes a nul terminator, even if `n` is zero.
+ * There's no failure condition for this function.
+ *
+ * @param s must have `n*2+1` bytes
+ * @param p must have `n` bytes
+ * @param n is byte length of p
+ * @return pointer to nul byte in `s`
  */
-int sem_close(sem_t *sem) {
-  _npassert(!munmap(sem, FRAMESIZE));
-  return 0;
+char *hexpcpy(char *restrict s, const void *restrict p, size_t n) {
+  const char *d, *e;
+  for (d = p, e = d + n; d < e; ++d) {
+    *s++ = "0123456789abcdef"[(*d >> 4) & 15];
+    *s++ = "0123456789abcdef"[(*d >> 0) & 15];
+  }
+  *s = 0;
+  return s;
 }

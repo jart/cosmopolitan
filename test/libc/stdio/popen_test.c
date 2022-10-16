@@ -132,13 +132,7 @@ TEST(popen, torture) {
   int i, n = 8;
   pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo.com", "echo.com", 0755);
-  for (i = 0; i < n; ++i) {
-    ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
-  }
-  for (i = 0; i < n; ++i) {
-    ASSERT_EQ(0, pthread_join(t[i], 0));
-  }
-  for (i = 3; i < 16; ++i) {
-    ASSERT_SYS(EBADF, -1, fcntl(3, F_GETFL));
-  }
+  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
+  for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
+  for (i = 3; i < 16; ++i) ASSERT_SYS(EBADF, -1, fcntl(i, F_GETFL));
 }

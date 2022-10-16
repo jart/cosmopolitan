@@ -28,3 +28,12 @@ void(__zipos_lock)(void) {
 void(__zipos_unlock)(void) {
   pthread_mutex_unlock(&__zipos_lock_obj);
 }
+
+void __zipos_funlock(void) {
+  pthread_mutex_init(&__zipos_lock_obj, 0);
+}
+
+__attribute__((__constructor__)) static void __zipos_init(void) {
+  __zipos_funlock();
+  pthread_atfork(__zipos_lock, __zipos_unlock, __zipos_funlock);
+}

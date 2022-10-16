@@ -16,50 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/sections.internal.h"
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/tls.h"
+#include "libc/intrin/describebacktrace.internal.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/nexgen32e/stackframe.h"
 
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-#pragma weak __threadcalls_start
-#pragma weak __threadcalls_end
+#define N 64
 
-static privileged dontinline void FixupLockNops(void) {
-  __morph_begin();
-  /*
-   * _NOPL("__threadcalls", func)
-   *
-   * The big ugly macro above is used by Cosmopolitan Libc to unser
-   * locking primitive (e.g. flockfile, funlockfile) have zero impact on
-   * performance and binary size when threads aren't actually in play.
-   *
-   * we have this
-   *
-   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
-   *
-   * we're going to turn it into this
-   *
-   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
-   *
-   * This is cheap and fast because the big ugly macro stored in the
-   * binary the offsets of all the instructions we need to change.
-   */
-  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
+
+const char *(DescribeBacktrace)(char buf[N], struct StackFrame *fr) {
+  int o = 0;
+  bool gotsome = false;
+  while (fr) {
+    if (gotsome) {
+      append(" ");
+    } else {
+      gotsome = true;
+    }
+    append("%x", fr->addr);
+    fr = fr->next;
   }
-  __morph_end();
-}
-
-void __enable_threads(void) {
-  if (__threaded) return;
-  STRACE("__enable_threads()");
-  FixupLockNops();
-  __threaded = sys_gettid();
+  return buf;
 }

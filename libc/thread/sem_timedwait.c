@@ -21,10 +21,9 @@
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
-#include "libc/thread/semaphore.internal.h"
 #include "third_party/nsync/futex.internal.h"
 
 static void sem_delay(int n) {
@@ -79,6 +78,9 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
     }
   }
 
+  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
+                                      memory_order_acquire) >= 0);
+
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
       rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared,
@@ -101,13 +103,15 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
     } else if (v > 0) {
       rc = 0;
     } else {
+      _unassert(v > INT_MIN);
       rc = einval();
     }
   } while (!rc && (!v || !atomic_compare_exchange_weak_explicit(
                              &sem->sem_value, &v, v - 1, memory_order_acquire,
                              memory_order_relaxed)));
 
-  STRACE("sem_timedwait(%p, %s) → %d% m", sem, DescribeTimespec(0, abstime),
-         rc);
+  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
+                                      memory_order_release) > 0);
+
   return rc;
 }

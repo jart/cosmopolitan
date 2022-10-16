@@ -63,7 +63,7 @@ typedef struct pthread_mutex_s {
   unsigned _pshared : 1;
   unsigned _depth : 8;
   unsigned _owner : 21;
-  void *_nsync;
+  long _pid;
 } pthread_mutex_t;
 
 typedef struct pthread_mutexattr_s {
@@ -149,6 +149,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t *, int *);
 int pthread_mutexattr_settype(pthread_mutexattr_t *, int);
 int pthread_mutexattr_setpshared(pthread_mutexattr_t *, int);
 int pthread_mutexattr_getpshared(const pthread_mutexattr_t *, int *);
+int pthread_atfork(void (*)(void), void (*)(void), void (*)(void));
 int pthread_mutex_init(pthread_mutex_t *, const pthread_mutexattr_t *);
 int pthread_mutex_lock(pthread_mutex_t *);
 int pthread_mutex_unlock(pthread_mutex_t *);

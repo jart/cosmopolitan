@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/runtime/memtrack.internal.h"
+#include "libc/str/str.h"
 #include "libc/thread/thread.h"
 
 // this lock currently needs to be (1) recursive and (2) not nsync
@@ -29,4 +30,13 @@ void(__mmi_lock)(void) {
 
 void(__mmi_unlock)(void) {
   pthread_mutex_unlock(&__mmi_lock_obj);
+}
+
+void(__mmi_funlock)(void) {
+  bzero(&__mmi_lock_obj, sizeof(__mmi_lock_obj));
+  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
+}
+
+__attribute__((__constructor__)) static void init(void) {
+  pthread_atfork(__mmi_lock, __mmi_unlock, __mmi_funlock);
 }

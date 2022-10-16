@@ -51,7 +51,6 @@ struct mallinfo {
 
 struct mallinfo mallinfo(void);
 
-void malloc_stats(void);
 size_t malloc_footprint(void);
 size_t malloc_max_footprint(void);
 size_t malloc_footprint_limit(void);

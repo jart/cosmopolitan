@@ -28,7 +28,7 @@
  */
 int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
   int i, j, rc = EAGAIN;
-  pthread_spin_lock(&_pthread_keys_lock);
+  _pthread_key_lock();
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
     if (~_pthread_key_usage[i]) {
       j = _bsrl(~_pthread_key_usage[i]);
@@ -39,8 +39,20 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
       break;
     }
   }
-  pthread_spin_unlock(&_pthread_keys_lock);
+  _pthread_key_unlock();
   return rc;
+}
+
+void _pthread_key_lock(void) {
+  pthread_spin_lock(&_pthread_keys_lock);
+}
+
+void _pthread_key_unlock(void) {
+  pthread_spin_unlock(&_pthread_keys_lock);
+}
+
+static void _pthread_key_funlock(void) {
+  pthread_spin_init(&_pthread_keys_lock, 0);
 }
 
 static textexit void _pthread_key_atexit(void) {
@@ -49,4 +61,7 @@ static textexit void _pthread_key_atexit(void) {
 
 __attribute__((__constructor__)) static textstartup void _pthread_key_init() {
   atexit(_pthread_key_atexit);
+  pthread_atfork(_pthread_key_lock,    //
+                 _pthread_key_unlock,  //
+                 _pthread_key_funlock);
 }

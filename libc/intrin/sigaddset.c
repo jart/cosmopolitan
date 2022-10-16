@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -29,7 +30,9 @@
 int sigaddset(sigset_t *set, int sig) {
   _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
   if (1 <= sig && sig <= NSIG) {
-    set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
+    if (!sigisprecious(sig)) {
+      set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
+    }
     return 0;
   } else {
     return einval();

@@ -17,7 +17,7 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
 #endif
 
 #ifdef __GNUC__
-#ifndef TINY
+#if !defined(TINY) && !defined(MODE_DBG)
 /**
  * Specifies expression can't possibly be false.
  *
@@ -36,7 +36,7 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
  * In `MODE=tiny` these assertions are redefined as undefined behavior.
  */
 #define _npassert(x)                 \
-  ({                                 \
+  __extension__({                    \
     if (__builtin_expect(!(x), 0)) { \
       notpossible;                   \
     }                                \
@@ -63,7 +63,7 @@ void __assert_fail(const char *, const char *, int) hidden relegated;
  * that's capable of debugging this macro.
  */
 #define _unassert(x)                 \
-  ({                                 \
+  __extension__({                    \
     if (__builtin_expect(!(x), 0)) { \
       unreachable;                   \
     }                                \

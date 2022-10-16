@@ -15,6 +15,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/thread/thread.h"
 #include "third_party/dlmalloc/dlmalloc.h"
 #include "third_party/dlmalloc/vespene.internal.h"
 // clang-format off
@@ -29,6 +30,8 @@
 #define MORECORE_CONTIGUOUS 0
 #define MALLOC_INSPECT_ALL 1
 #define ABORT_ON_ASSERT_FAILURE 0
+#define LOCK_AT_FORK 1
+#define NO_MALLOC_STATS 1
 
 #if IsTiny()
 #define INSECURE 1

@@ -63,7 +63,7 @@ void testlib_finish(void) {
 void testlib_error_enter(const char *file, const char *func) {
   atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed);
   atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed);
-  if (!__vforked) pthread_mutex_lock(&testlib_error_lock);
+  pthread_mutex_lock(&testlib_error_lock);
   if (!IsWindows()) sys_getpid(); /* make strace easier to read */
   if (!IsWindows()) sys_getpid();
   if (g_testlib_shoulddebugbreak) {

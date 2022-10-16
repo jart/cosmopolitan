@@ -56,7 +56,7 @@ static long double GetTimeSample(void) {
 static long double MeasureNanosPerCycle(void) {
   int i, n;
   long double avg, samp;
-  __get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
+  if (__tls_enabled) __get_tls()->tib_flags |= TIB_FLAG_TIME_CRITICAL;
   if (IsWindows()) {
     n = 10;
   } else {
@@ -66,7 +66,7 @@ static long double MeasureNanosPerCycle(void) {
     samp = GetTimeSample();
     avg += (samp - avg) / i;
   }
-  __get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
+  if (__tls_enabled) __get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
   STRACE("MeasureNanosPerCycle cpn*1000=%d", (long)(avg * 1000));
   return avg;
 }

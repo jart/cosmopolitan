@@ -301,7 +301,7 @@ static int Kill(void) {
   int sig, rc = 0, i = 1;
   if (i < n && args[i][0] == '-') {
     sig = GetSignalByName(args[i++] + 1);
-    if (!sig) return 1;
+    if (!sig) return -1;  // fallback to system kill command
   } else {
     sig = SIGTERM;
   }
@@ -340,15 +340,15 @@ static int Usleep(void) {
 }
 
 static int Test(void) {
-  int w;
+  int w, m = n;
   struct stat st;
-  if (n && READ16LE(args[n - 1]) == READ16LE("]")) --n;
-  if (n == 4) {
+  if (m && READ16LE(args[m - 1]) == READ16LE("]")) --m;
+  if (m == 4) {
     w = READ32LE(args[2]) & 0x00ffffff;
     if ((w & 65535) == READ16LE("=")) return !!strcmp(args[1], args[3]);
     if (w == READ24("==")) return !!strcmp(args[1], args[3]);
     if (w == READ24("!=")) return !strcmp(args[1], args[3]);
-  } else if (n == 3) {
+  } else if (m == 3) {
     w = READ32LE(args[1]) & 0x00ffffff;
     if (w == READ24("-n")) return !(strlen(args[2]) > 0);
     if (w == READ24("-z")) return !(strlen(args[2]) == 0);
@@ -357,7 +357,52 @@ static int Test(void) {
     if (w == READ24("-d")) return !(!stat(args[2], &st) && S_ISDIR(st.st_mode));
     if (w == READ24("-h")) return !(!stat(args[2], &st) && S_ISLNK(st.st_mode));
   }
-  return 1;
+  return -1;  // fall back to system test command
+}
+
+static int Rm(void) {
+  int i;
+  if (n > 1 && args[1][0] != '-') {
+    for (i = 1; i < n; ++i) {
+      if (unlink(args[i])) {
+        Log("rm: ", args[i], ": ", _strerdoc(errno), 0);
+        return 1;
+      }
+    }
+    return 0;
+  } else {
+    return -1;  // fall back to system rm command
+  }
+}
+
+static int Rmdir(void) {
+  int i;
+  if (n > 1 && args[1][0] != '-') {
+    for (i = 1; i < n; ++i) {
+      if (rmdir(args[i])) {
+        Log("rmdir: ", args[i], ": ", _strerdoc(errno), 0);
+        return 1;
+      }
+    }
+    return 0;
+  } else {
+    return -1;  // fall back to system rmdir command
+  }
+}
+
+static int Touch(void) {
+  int i;
+  if (n > 1 && args[1][0] != '-') {
+    for (i = 1; i < n; ++i) {
+      if (touch(args[i], 0644)) {
+        Log("touch: ", args[i], ": ", _strerdoc(errno), 0);
+        return 1;
+      }
+    }
+    return 0;
+  } else {
+    return -1;  // fall back to system rmdir command
+  }
 }
 
 static int Fake(int main(int, char **)) {
@@ -377,6 +422,7 @@ static int TryBuiltin(void) {
   if (!n) return 0;
   if (!strcmp(args[0], "exit")) Exit();
   if (!strcmp(args[0], "cd")) return Cd();
+  if (!strcmp(args[0], "rm")) return Rm();
   if (!strcmp(args[0], "[")) return Test();
   if (!strcmp(args[0], "wait")) return Wait();
   if (!strcmp(args[0], "echo")) return Echo();
@@ -384,6 +430,8 @@ static int TryBuiltin(void) {
   if (!strcmp(args[0], "true")) return True();
   if (!strcmp(args[0], "test")) return Test();
   if (!strcmp(args[0], "kill")) return Kill();
+  if (!strcmp(args[0], "touch")) return Touch();
+  if (!strcmp(args[0], "rmdir")) return Rmdir();
   if (!strcmp(args[0], "mkdir")) return Mkdir();
   if (!strcmp(args[0], "false")) return False();
   if (!strcmp(args[0], "usleep")) return Usleep();

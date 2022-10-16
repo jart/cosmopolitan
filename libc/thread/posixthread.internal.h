@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_POSIXTHREAD_INTERNAL_H_
 #include "libc/calls/struct/sched_param.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -14,6 +15,8 @@ COSMOPOLITAN_C_START_
 /**
  * @fileoverview Cosmopolitan POSIX Thread Internals
  */
+
+typedef void (*atfork_f)(void);
 
 // LEGAL TRANSITIONS             ┌──> TERMINATED
 // pthread_create ─┬─> JOINABLE ─┴┬─> DETACHED ──> ZOMBIE
@@ -73,6 +76,7 @@ struct PosixThread {
   struct CosmoTib *tib;    // middle of tls allocation
   jmp_buf exiter;          // for pthread_exit
   pthread_attr_t attr;
+  sigset_t sigmask;
   struct _pthread_cleanup_buffer *cleanup;
 };
 
@@ -82,8 +86,7 @@ hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
 hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
 hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
 
-void _pthread_atfork(int) hidden;
-void _pthread_funlock(pthread_mutex_t *, int) hidden;
+int _pthread_atfork(atfork_f, atfork_f, atfork_f) hidden;
 int _pthread_reschedule(struct PosixThread *) hidden;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
 void _pthread_free(struct PosixThread *) hidden;
@@ -91,9 +94,15 @@ void _pthread_cleanup(struct PosixThread *) hidden;
 void _pthread_ungarbage(void) hidden;
 void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;
+void _pthread_zombies_purge(void) hidden;
 void _pthread_zombies_decimate(void) hidden;
 void _pthread_zombies_harvest(void) hidden;
 void _pthread_key_destruct(void *[PTHREAD_KEYS_MAX]) hidden;
+void _pthread_key_lock(void) hidden;
+void _pthread_key_unlock(void) hidden;
+void _pthread_onfork_prepare(void) hidden;
+void _pthread_onfork_parent(void) hidden;
+void _pthread_onfork_child(void) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

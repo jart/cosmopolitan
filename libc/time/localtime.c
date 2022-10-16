@@ -5,12 +5,12 @@
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/nopl.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/mem/mem.h"
-#include "libc/thread/tls.h"
 #include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/time/tz.internal.h"
@@ -47,21 +47,28 @@ STATIC_YOINK("usr/share/zoneinfo/UTC");
 
 static pthread_mutex_t locallock;
 
-int localtime_lock(void) {
+void localtime_lock(void) {
 	pthread_mutex_lock(&locallock);
-	return 0;
 }
 
 void localtime_unlock(void) {
 	pthread_mutex_unlock(&locallock);
 }
 
+void localtime_funlock(void) {
+	pthread_mutex_init(&locallock, 0);
+}
+
+__attribute__((__constructor__)) static void localtime_init(void) {
+	localtime_funlock();
+	pthread_atfork(localtime_lock,
+		       localtime_unlock,
+		       localtime_funlock);
+}
+
 #ifdef _NOPL0
 #define localtime_lock()   _NOPL0("__threadcalls", localtime_lock)
 #define localtime_unlock() _NOPL0("__threadcalls", localtime_unlock)
-#else
-#define localtime_lock()   (__threaded ? localtime_lock() : 0)
-#define localtime_unlock() (__threaded ? localtime_unlock() : 0)
 #endif
 
 #ifndef TZ_ABBR_MAX_LEN

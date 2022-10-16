@@ -16,68 +16,69 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
+#include "libc/intrin/weaken.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
 
-// TODO(jart): track all threads, not just zombies
-
-static struct Zombie {
-  struct Zombie *next;
-  struct PosixThread *pt;
-} * _pthread_zombies;
-
-void _pthread_zombies_add(struct PosixThread *pt) {
-  struct Zombie *z;
-  if ((z = malloc(sizeof(struct Zombie)))) {
-    z->pt = pt;
-    z->next = atomic_load(&_pthread_zombies);
-    for (;;) {
-      if (atomic_compare_exchange_weak(&_pthread_zombies, &z->next, z)) {
-        break;
-      }
-    }
+/**
+ * Registers fork() handlers.
+ *
+ * Parent and child functions are called in the same order they're
+ * registered. Prepare functions are called in reverse order.
+ *
+ * Here's an example of how pthread_atfork() can be used:
+ *
+ *     static struct {
+ *       pthread_once_t once;
+ *       pthread_mutex_t lock;
+ *       // data structures...
+ *     } g_lib;
+ *
+ *     static void lib_lock(void) {
+ *       pthread_mutex_lock(&g_lib.lock);
+ *     }
+ *
+ *     static void lib_unlock(void) {
+ *       pthread_mutex_unlock(&g_lib.lock);
+ *     }
+ *
+ *     static void lib_funlock(void) {
+ *       pthread_mutex_init(&g_lib.lock, 0);
+ *     }
+ *
+ *     static void lib_setup(void) {
+ *       lib_funlock();
+ *       pthread_atfork(lib_lock, lib_unlock, lib_funlock);
+ *     }
+ *
+ *     static void lib_init(void) {
+ *       pthread_once(&g_lib.once, lib_setup);
+ *     }
+ *
+ *     void lib(void) {
+ *       lib_init();
+ *       lib_lock();
+ *       // do stuff...
+ *       lib_unlock();
+ *     }
+ *
+ * This won't actually aspect fork() until pthread_create() is called,
+ * since we don't want normal non-threaded programs to have to acquire
+ * exclusive locks on every resource in the entire app just to fork().
+ *
+ * The vfork() function is *never* aspected. What happens instead is a
+ * global variable named `__vforked` is set to true in the child which
+ * causes lock functions to do nothing. So far, it works like a charm.
+ *
+ * @param prepare is run by fork() before forking happens
+ * @param parent is run by fork() after forking happens in parent process
+ * @param child is run by fork() after forking happens in childe process
+ * @return 0 on success, or errno on error
+ */
+int pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
+  if (_weaken(_pthread_atfork)) {
+    return _weaken(_pthread_atfork)(prepare, parent, child);
+  } else {
+    return 0;
   }
-}
-
-static void _pthread_zombies_collect(struct Zombie *z) {
-  _pthread_wait(z->pt);
-  _pthread_free(z->pt);
-  free(z);
-}
-
-void _pthread_zombies_decimate(void) {
-  struct Zombie *z;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed)) &&
-         atomic_load(&z->pt->status) == kPosixThreadZombie) {
-    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
-      _pthread_zombies_collect(z);
-    }
-  }
-}
-
-void _pthread_zombies_harvest(void) {
-  struct Zombie *z;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed))) {
-    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
-      _pthread_zombies_collect(z);
-    }
-  }
-}
-
-void _pthread_zombies_purge(void) {
-  struct Zombie *z, *n;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed))) {
-    _pthread_free(z->pt);
-    n = z->next;
-    free(z);
-    atomic_store_explicit(&_pthread_zombies, n, memory_order_relaxed);
-  }
-}
-
-__attribute__((__constructor__)) static void init(void) {
-  atexit(_pthread_zombies_harvest);
 }

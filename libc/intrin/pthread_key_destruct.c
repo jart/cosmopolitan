@@ -21,13 +21,14 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
+// TODO(jart): why does this even need a lock?
 void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
   int i, j;
   uint64_t x;
   void *value;
   pthread_key_dtor dtor;
   if (!__tls_enabled) return;
-  pthread_spin_lock(&_pthread_keys_lock);
+  _pthread_key_lock();
   if (!key) key = __get_tls()->tib_keys;
 StartOver:
   for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
@@ -36,13 +37,13 @@ StartOver:
       j = _bsrl(x);
       if ((value = key[i * 64 + j]) && (dtor = _pthread_key_dtor[i * 64 + j])) {
         key[i * 64 + j] = 0;
-        pthread_spin_unlock(&_pthread_keys_lock);
+        _pthread_key_unlock();
         dtor(value);
-        pthread_spin_lock(&_pthread_keys_lock);
+        _pthread_key_lock();
         goto StartOver;
       }
       x &= ~(1ul << j);
     }
   }
-  pthread_spin_unlock(&_pthread_keys_lock);
+  _pthread_key_unlock();
 }

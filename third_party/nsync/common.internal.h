@@ -13,7 +13,9 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#ifndef NSYNC_DEBUG
+#ifdef MODE_DBG
+#define NSYNC_DEBUG 1
+#else
 #define NSYNC_DEBUG 0
 #endif
 

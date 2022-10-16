@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/kmalloc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
@@ -23,7 +24,6 @@
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/dll.h"
-#include "third_party/nsync/malloc.internal.h"
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/races.internal.h"
 #include "third_party/nsync/wait_s.internal.h"
@@ -188,7 +188,7 @@ waiter *nsync_waiter_new_ (void) {
 		}
 		ATM_STORE_REL (&free_waiters_mu, 0); /* release store */
 		if (w == NULL) { /* If free list was empty, allocate an item. */
-			w = (waiter *) nsync_malloc_ (sizeof (*w));
+			w = (waiter *) kmalloc (sizeof (*w));
 			w->tag = WAITER_TAG;
 			w->nw.tag = NSYNC_WAITER_TAG;
 			nsync_mu_semaphore_init (&w->sem);

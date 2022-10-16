@@ -16,50 +16,64 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/sections.internal.h"
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/intrin/kmalloc.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-#pragma weak __threadcalls_start
-#pragma weak __threadcalls_end
+static struct AtForks {
+  pthread_mutex_t lock;
+  struct AtFork {
+    struct AtFork *p[2];
+    atfork_f f[3];
+  } * list;
+} _atforks;
 
-static privileged dontinline void FixupLockNops(void) {
-  __morph_begin();
-  /*
-   * _NOPL("__threadcalls", func)
-   *
-   * The big ugly macro above is used by Cosmopolitan Libc to unser
-   * locking primitive (e.g. flockfile, funlockfile) have zero impact on
-   * performance and binary size when threads aren't actually in play.
-   *
-   * we have this
-   *
-   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
-   *
-   * we're going to turn it into this
-   *
-   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
-   *
-   * This is cheap and fast because the big ugly macro stored in the
-   * binary the offsets of all the instructions we need to change.
-   */
-  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
+static void _pthread_onfork(int i) {
+  struct AtFork *a;
+  struct PosixThread *pt;
+  _unassert(0 <= i && i <= 2);
+  if (!i) pthread_mutex_lock(&_atforks.lock);
+  for (a = _atforks.list; a; a = a->p[!i]) {
+    if (a->f[i]) a->f[i]();
+    _atforks.list = a;
   }
-  __morph_end();
+  if (i) pthread_mutex_unlock(&_atforks.lock);
+  if (i == 2) {
+    _pthread_zombies_purge();
+    if (__tls_enabled) {
+      pt = (struct PosixThread *)__get_tls()->tib_pthread;
+      pt->flags |= PT_MAINTHREAD;
+    }
+  }
 }
 
-void __enable_threads(void) {
-  if (__threaded) return;
-  STRACE("__enable_threads()");
-  FixupLockNops();
-  __threaded = sys_gettid();
+void _pthread_onfork_prepare(void) {
+  _pthread_onfork(0);
+}
+
+void _pthread_onfork_parent(void) {
+  _pthread_onfork(1);
+}
+
+void _pthread_onfork_child(void) {
+  _pthread_onfork(2);
+}
+
+int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
+  int rc;
+  struct AtFork *a;
+  a = kmalloc(sizeof(struct AtFork));
+  a->f[0] = prepare;
+  a->f[1] = parent;
+  a->f[2] = child;
+  pthread_mutex_lock(&_atforks.lock);
+  a->p[0] = 0;
+  a->p[1] = _atforks.list;
+  if (_atforks.list) _atforks.list->p[0] = a;
+  _atforks.list = a;
+  pthread_mutex_unlock(&_atforks.lock);
+  rc = 0;
+  return rc;
 }

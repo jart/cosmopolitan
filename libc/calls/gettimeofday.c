@@ -63,7 +63,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz) {
     rc = __gettimeofday(tv, tz, 0).ax;
   }
 #if SYSDEBUG
-  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
+  if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("gettimeofday([%s], %p) → %d% m", DescribeTimeval(rc, tv), tz, rc);
   }
 #endif

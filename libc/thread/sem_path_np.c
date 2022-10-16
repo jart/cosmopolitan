@@ -16,20 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
-#include "libc/thread/semaphore.h"
-#include "libc/thread/semaphore.internal.h"
+#include "libc/dce.h"
+#include "libc/str/blake2.h"
+#include "libc/str/path.h"
+#include "libc/str/str.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 /**
- * Removes named semaphore.
+ * Returns filesystem pathname of named semaphore.
  *
- * @param name can be absolute path or should be component w/o slashes
- * @return 0 on success, or -1 w/ errno
- * @raise EPERM if pledge() is in play w/o `cpath` promise
- * @raise ENOENT if named semaphore doesn't exist
- * @raise EACCES if permission is denied
+ * @param name is `name` of semaphore which should begin with slash
+ * @param buf is temporary storage with at least `size` bytes
+ * @param size is size of `buf` in bytes
+ * @return pointer to file system path
+ * @raise ENAMETOOLONG if constructed path would exceed `size`
  */
-int sem_unlink(const char *name) {
-  char path[PATH_MAX];
-  return unlink(__sem_name(name, path));
+const char *sem_path_np(const char *name, char *buf, size_t size) {
+  char *p;
+  unsigned n;
+  const char *path, *a;
+  uint8_t digest[BLAKE2B256_DIGEST_LENGTH];
+  a = "/tmp/", n = 5;
+  if (IsLinux()) a = "/dev/shm/", n = 9;
+  if (n + BLAKE2B256_DIGEST_LENGTH * 2 + 4 < size) {
+    BLAKE2B256(name, strlen(name), digest);
+    p = mempcpy(buf, a, n);
+    p = hexpcpy(p, digest, BLAKE2B256_DIGEST_LENGTH);
+    p = mempcpy(p, ".sem", 5);
+    path = buf;
+  } else {
+    enametoolong();
+    path = 0;
+  }
+  return path;
 }

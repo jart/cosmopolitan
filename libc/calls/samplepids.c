@@ -19,9 +19,9 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
+#include "libc/stdio/rand.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
-#include "libc/stdio/lcg.internal.h"
 
 /**
  * Returns handles of windows pids being tracked.
@@ -35,12 +35,8 @@
 textwindows int __sample_pids(int pids[hasatleast 64],
                               int64_t handles[hasatleast 64],
                               bool exploratory) {
-  static uint64_t rando = 1;
-  static pthread_spinlock_t lock;
   uint32_t i, j, base, count;
-  if (__threaded) pthread_spin_lock(&lock);
-  base = KnuthLinearCongruentialGenerator(&rando) >> 32;
-  pthread_spin_unlock(&lock);
+  base = _rand64() >> 32;
   for (count = i = 0; i < g_fds.n; ++i) {
     j = (base + i) % g_fds.n;
     if (g_fds.p[j].kind == kFdProcess && (!exploratory || !g_fds.p[j].zombie)) {

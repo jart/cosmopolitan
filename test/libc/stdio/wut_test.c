@@ -16,50 +16,49 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "ape/sections.internal.h"
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/syscall-sysv.internal.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/runtime/runtime.h"
-#include "libc/thread/tls.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/posix_spawn.h"
+#include "libc/stdio/stdio.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/testlib/testlib.h"
 
-extern int __threadcalls_end[];
-extern int __threadcalls_start[];
-#pragma weak __threadcalls_start
-#pragma weak __threadcalls_end
+char testlib_enable_tmp_setup_teardown;
 
-static privileged dontinline void FixupLockNops(void) {
-  __morph_begin();
-  /*
-   * _NOPL("__threadcalls", func)
-   *
-   * The big ugly macro above is used by Cosmopolitan Libc to unser
-   * locking primitive (e.g. flockfile, funlockfile) have zero impact on
-   * performance and binary size when threads aren't actually in play.
-   *
-   * we have this
-   *
-   *     0f 1f 05 b1 19 00 00  nopl func(%rip)
-   *
-   * we're going to turn it into this
-   *
-   *     67 67 e8 b1 19 00 00  addr32 addr32 call func
-   *
-   * This is cheap and fast because the big ugly macro stored in the
-   * binary the offsets of all the instructions we need to change.
-   */
-  for (int *p = __threadcalls_start; p < __threadcalls_end; ++p) {
-    _base[*p + 0] = 0x67;
-    _base[*p + 1] = 0x67;
-    _base[*p + 2] = 0xe8;
+TEST(posix_spawn, torture) {
+  int ws, pid;
+  short flags;
+  sigset_t allsig;
+  posix_spawnattr_t attr;
+  posix_spawn_file_actions_t fa;
+  sigfillset(&allsig);
+  testlib_extract("/zip/echo.com", "echo.com", 0755);
+  // XXX: NetBSD doesn't seem to let us set the scheduler to itself ;_;
+  ASSERT_EQ(0, posix_spawnattr_init(&attr));
+  ASSERT_EQ(0, posix_spawnattr_setflags(
+                   &attr, POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETSIGDEF |
+                              POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETPGROUP |
+                              POSIX_SPAWN_SETSIGMASK |
+                              (IsNetbsd() ? 0 : POSIX_SPAWN_SETSCHEDULER)));
+  ASSERT_EQ(0, posix_spawnattr_setsigmask(&attr, &allsig));
+  ASSERT_EQ(0, posix_spawnattr_setsigdefault(&attr, &allsig));
+  ASSERT_EQ(0, posix_spawn_file_actions_init(&fa));
+  ASSERT_EQ(0, posix_spawn_file_actions_addclose(&fa, 0));
+  ASSERT_EQ(
+      0, posix_spawn_file_actions_addopen(&fa, 1, "/dev/null", O_WRONLY, 0644));
+  ASSERT_EQ(0, posix_spawn_file_actions_adddup2(&fa, 1, 0));
+  for (int i = 0; i < 15; ++i) {
+    char *volatile zzz = malloc(13);
+    char *args[] = {"./echo.com", NULL};
+    char *envs[] = {NULL};
+    ASSERT_EQ(0, posix_spawn(&pid, "./echo.com", &fa, &attr, args, envs));
+    ASSERT_NE(-1, waitpid(pid, &ws, 0));
+    ASSERT_TRUE(WIFEXITED(ws));
+    ASSERT_EQ(0, WEXITSTATUS(ws));
+    free(zzz);
   }
-  __morph_end();
-}
-
-void __enable_threads(void) {
-  if (__threaded) return;
-  STRACE("__enable_threads()");
-  FixupLockNops();
-  __threaded = sys_gettid();
+  ASSERT_EQ(0, posix_spawn_file_actions_destroy(&fa));
+  ASSERT_EQ(0, posix_spawnattr_destroy(&attr));
 }

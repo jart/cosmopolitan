@@ -57,6 +57,14 @@ void SetUpOnce(void) {
   ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
+TEST(pthread_mutex_lock, initializer) {
+  struct sqlite3_mutex {
+    pthread_mutex_t mutex;
+  } mu[] = {{
+      PTHREAD_MUTEX_INITIALIZER,
+  }};
+}
+
 TEST(pthread_mutex_lock, normal) {
   pthread_mutex_t lock;
   pthread_mutexattr_t attr;
@@ -100,12 +108,10 @@ TEST(pthread_mutex_lock, errorcheck) {
   ASSERT_EQ(0, pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK));
   ASSERT_EQ(0, pthread_mutex_init(&lock, &attr));
   ASSERT_EQ(0, pthread_mutexattr_destroy(&attr));
-  ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_lock(&lock));
   ASSERT_EQ(EDEADLK, pthread_mutex_lock(&lock));
   ASSERT_EQ(EBUSY, pthread_mutex_trylock(&lock));
   ASSERT_EQ(0, pthread_mutex_unlock(&lock));
-  ASSERT_EQ(EPERM, pthread_mutex_unlock(&lock));
   ASSERT_EQ(0, pthread_mutex_destroy(&lock));
 }
 

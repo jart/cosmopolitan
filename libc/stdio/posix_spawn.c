@@ -24,7 +24,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
-#include "libc/thread/thread.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
 
 static int RunFileActions(struct _posix_faction *a) {
@@ -54,7 +54,11 @@ static int RunFileActions(struct _posix_faction *a) {
 }
 
 /**
- * Spawns process the POSIX way.
+ * Spawns process, the POSIX way.
+ *
+ * This function provides an API for vfork() that's intended to be less
+ * terrifying to the uninitiated, since it only lets you define actions
+ * that are @vforksafe. This function requires TLS not be disabled.
  *
  * @param pid if non-null shall be set to child pid on success
  * @param path is resolved path of program which is not `$PATH` searched
@@ -63,33 +67,40 @@ static int RunFileActions(struct _posix_faction *a) {
  * @param envp is environment variables, or `environ` if null
  * @return 0 on success or error number on failure
  * @see posix_spawnp() for `$PATH` searching
+ * @tlsrequired
+ * @threadsafe
  */
 int posix_spawn(int *pid, const char *path,
                 const posix_spawn_file_actions_t *file_actions,
                 const posix_spawnattr_t *attrp, char *const argv[],
                 char *const envp[]) {
-  int s, child;
-  sigset_t allsigs;
-  struct sigaction dfl;
-  if (!(child = _weaken(pthread_create) ? fork() : vfork())) {
+  short flags = 0;
+  sigset_t sigmask;
+  int s, child, policy;
+  struct sched_param param;
+  struct sigaction dfl = {0};
+  if (!(child = vfork())) {
     if (attrp && *attrp) {
-      if ((*attrp)->flags & POSIX_SPAWN_SETPGROUP) {
-        if (setpgid(0, (*attrp)->pgroup)) _Exit(127);
+      posix_spawnattr_getflags(attrp, &flags);
+      if (flags & POSIX_SPAWN_SETPGROUP) {
+        if (setpgid(0, (*attrp)->pgroup)) {
+          _Exit(127);
+        }
       }
-      if ((*attrp)->flags & POSIX_SPAWN_SETSIGMASK) {
-        sigprocmask(SIG_SETMASK, &(*attrp)->sigmask, 0);
+      if (flags & POSIX_SPAWN_SETSIGMASK) {
+        posix_spawnattr_getsigmask(attrp, &sigmask);
+        sigprocmask(SIG_SETMASK, &sigmask, 0);
       }
-      if ((*attrp)->flags & POSIX_SPAWN_RESETIDS) {
+      if (flags & POSIX_SPAWN_RESETIDS) {
         setuid(getuid());
         setgid(getgid());
       }
-      if ((*attrp)->flags & POSIX_SPAWN_SETSIGDEF) {
-        dfl.sa_handler = SIG_DFL;
-        dfl.sa_flags = 0;
-        sigfillset(&allsigs);
-        for (s = 0; sigismember(&allsigs, s); s++) {
+      if (flags & POSIX_SPAWN_SETSIGDEF) {
+        for (s = 1; s < 32; s++) {
           if (sigismember(&(*attrp)->sigdefault, s)) {
-            if (sigaction(s, &dfl, 0) == -1) _Exit(127);
+            if (sigaction(s, &dfl, 0) == -1) {
+              _Exit(127);
+            }
           }
         }
       }
@@ -100,15 +111,17 @@ int posix_spawn(int *pid, const char *path,
       }
     }
     if (attrp && *attrp) {
-      if ((*attrp)->flags & POSIX_SPAWN_SETSCHEDULER) {
-        if (sched_setscheduler(0, (*attrp)->schedpolicy,
-                               &(*attrp)->schedparam) == -1) {
-          if (errno != ENOSYS) _Exit(127);
+      if (flags & POSIX_SPAWN_SETSCHEDULER) {
+        posix_spawnattr_getschedpolicy(attrp, &policy);
+        posix_spawnattr_getschedparam(attrp, &param);
+        if (sched_setscheduler(0, policy, &param) == -1) {
+          _Exit(127);
         }
       }
-      if ((*attrp)->flags & POSIX_SPAWN_SETSCHEDPARAM) {
-        if (sched_setparam(0, &(*attrp)->schedparam) == -1) {
-          if (errno != ENOSYS) _Exit(127);
+      if (flags & POSIX_SPAWN_SETSCHEDPARAM) {
+        posix_spawnattr_getschedparam(attrp, &param);
+        if (sched_setparam(0, &param) == -1) {
+          _Exit(127);
         }
       }
     }

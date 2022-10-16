@@ -16,8 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/posix_spawn.h"
@@ -32,19 +34,15 @@
  * @raise ENOMEM if we require more vespene gas
  */
 int posix_spawnattr_init(posix_spawnattr_t *attr) {
-  int e, rc;
+  int rc, e = errno;
   struct _posix_spawna *a;
-  e = errno;
-  errno = 0;
-  if ((a = calloc(1, sizeof(*a)))) {
-    a->flags = 0;
-    a->pgroup = 0;
-    sigemptyset(&a->sigdefault);
-    a->schedpolicy = sched_getscheduler(0);
-    sched_getparam(0, &a->schedparam);
+  if ((a = calloc(1, sizeof(struct _posix_spawna)))) {
+    *attr = a;
+    rc = 0;
+  } else {
+    rc = errno;
+    errno = e;
   }
-  rc = errno;
-  errno = e;
   return rc;
 }
 
@@ -79,7 +77,9 @@ int posix_spawnattr_getflags(const posix_spawnattr_t *attr, short *flags) {
  * Sets posix_spawn() flags.
  *
  * Setting these flags is needed in order for the other setters in this
- * function to take effect.
+ * function to take effect. If a flag is known but unsupported by the
+ * host platform, it'll be silently removed from the flags. You can
+ * check for this by calling the getter afterwards.
  *
  * @param attr was initialized by posix_spawnattr_init()
  * @param flags may have any of the following
@@ -93,6 +93,9 @@ int posix_spawnattr_getflags(const posix_spawnattr_t *attr, short *flags) {
  * @raise EINVAL if `flags` has invalid bits
  */
 int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
+  if (!(IsLinux() || IsFreebsd() || IsNetbsd())) {
+    flags &= ~(POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER);
+  }
   if (flags & ~(POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP |
                 POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK |
                 POSIX_SPAWN_SETSCHEDPARAM | POSIX_SPAWN_SETSCHEDULER)) {
@@ -121,14 +124,23 @@ int posix_spawnattr_setpgroup(posix_spawnattr_t *attr, int pgroup) {
  * @param attr was initialized by posix_spawnattr_init()
  * @param schedpolicy receives the result
  * @return 0 on success, or errno on error
+ * @raise ENOSYS if platform support isn't available
  */
 int posix_spawnattr_getschedpolicy(const posix_spawnattr_t *attr,
                                    int *schedpolicy) {
-  if (!(*attr)->schedpolicy_isset) {
-    (*attr)->schedpolicy = sched_getscheduler(0);
-    (*attr)->schedpolicy_isset = true;
+  int rc, e = errno;
+  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
+  if (!a->schedpolicy_isset) {
+    rc = sched_getscheduler(0);
+    if (rc == -1) {
+      rc = errno;
+      errno = e;
+      return rc;
+    }
+    a->schedpolicy = rc;
+    a->schedpolicy_isset = true;
   }
-  *schedpolicy = (*attr)->schedpolicy;
+  *schedpolicy = a->schedpolicy;
   return 0;
 }
 
@@ -156,14 +168,22 @@ int posix_spawnattr_setschedpolicy(posix_spawnattr_t *attr, int schedpolicy) {
  * @param attr was initialized by posix_spawnattr_init()
  * @param schedparam receives the result
  * @return 0 on success, or errno on error
+ * @raise ENOSYS if platform support isn't available
  */
 int posix_spawnattr_getschedparam(const posix_spawnattr_t *attr,
                                   struct sched_param *schedparam) {
-  if (!(*attr)->schedparam_isset) {
-    sched_getparam(0, &(*attr)->schedparam);
-    (*attr)->schedparam_isset = true;
+  int rc, e = errno;
+  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
+  if (!a->schedparam_isset) {
+    rc = sched_getparam(0, &a->schedparam);
+    if (rc == -1) {
+      rc = errno;
+      errno = e;
+      return rc;
+    }
+    a->schedparam_isset = true;
   }
-  *schedparam = (*attr)->schedparam;
+  *schedparam = a->schedparam;
   return 0;
 }
 
@@ -183,16 +203,32 @@ int posix_spawnattr_setschedparam(posix_spawnattr_t *attr,
   return 0;
 }
 
+/**
+ * Gets signal mask for sigprocmask() in child process.
+ *
+ * If the setter wasn't called then this function will return the
+ * scheduling parameter of the current process.
+ *
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_getsigmask(const posix_spawnattr_t *attr,
                                sigset_t *sigmask) {
-  if (!(*attr)->sigmask_isset) {
-    sigprocmask(SIG_SETMASK, 0, &(*attr)->sigmask);
-    (*attr)->sigmask_isset = true;
+  struct _posix_spawna *a = *(/*unconst*/ posix_spawnattr_t *)attr;
+  if (!a->sigmask_isset) {
+    _npassert(!sigprocmask(SIG_SETMASK, 0, &a->sigmask));
+    a->sigmask_isset = true;
   }
-  *sigmask = (*attr)->sigmask;
+  *sigmask = a->sigmask;
   return 0;
 }
 
+/**
+ * Specifies signal mask for sigprocmask() in child process.
+ *
+ * Signal masks are inherited by default. Use this to change it.
+ *
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_setsigmask(posix_spawnattr_t *attr,
                                const sigset_t *sigmask) {
   (*attr)->sigmask = *sigmask;
@@ -200,12 +236,22 @@ int posix_spawnattr_setsigmask(posix_spawnattr_t *attr,
   return 0;
 }
 
+/**
+ * Retrieves which signals will be restored to `SIG_DFL`.
+ *
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_getsigdefault(const posix_spawnattr_t *attr,
                                   sigset_t *sigdefault) {
   *sigdefault = (*attr)->sigdefault;
   return 0;
 }
 
+/**
+ * Specifies which signals should be restored to `SIG_DFL`.
+ *
+ * @return 0 on success, or errno on error
+ */
 int posix_spawnattr_setsigdefault(posix_spawnattr_t *attr,
                                   const sigset_t *sigdefault) {
   (*attr)->sigdefault = *sigdefault;

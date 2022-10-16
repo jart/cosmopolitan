@@ -23,14 +23,15 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/sig.h"
 
 #define N 128
 
-#define append(...) i += ksnprintf(buf + i, N - i, __VA_ARGS__)
+#define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
 const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
-  int i, sig;
   bool gotsome;
+  int sig, o = 0;
   sigset_t sigset;
 
   if (rc == -1) return "n/a";
@@ -41,17 +42,22 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
     return buf;
   }
 
-  i = 0;
-  sigset = *ss;
-  gotsome = false;
-  if (popcnt(sigset.__bits[0] & 0xffffffff) > 16) {
+  if (sigcountset(ss) > 16) {
     append("~");
-    sigset.__bits[0] = ~sigset.__bits[0];
-    sigset.__bits[1] = ~sigset.__bits[1];
+    sigemptyset(&sigset);
+    for (sig = 1; sig <= NSIG; ++sig) {
+      if (!sigismember(ss, sig)) {
+        sigaddset(&sigset, sig);
+      }
+    }
+  } else {
+    sigset = *ss;
   }
+
   append("{");
-  for (sig = 1; sig < 32; ++sig) {
-    if (sigismember(&sigset, sig)) {
+  gotsome = false;
+  for (sig = 1; sig <= NSIG; ++sig) {
+    if (sigismember(&sigset, sig) > 0) {
       if (gotsome) {
         append(",");
       } else {

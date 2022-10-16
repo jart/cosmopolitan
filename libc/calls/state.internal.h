@@ -16,8 +16,10 @@ hidden extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_lock(void);
 void __fds_unlock(void);
+void __fds_funlock(void);
 void __sig_lock(void);
 void __sig_unlock(void);
+void __sig_funlock(void);
 
 #ifdef _NOPL0
 #define __fds_lock()   _NOPL0("__threadcalls", __fds_lock)
@@ -34,6 +36,8 @@ void __sig_unlock(void);
 #define __sig_lock()   (__threaded ? __sig_lock() : 0)
 #define __sig_unlock() (__threaded ? __sig_unlock() : 0)
 #endif
+
+#define __vforked (__tls_enabled && (__get_tls()->tib_flags & TIB_FLAG_VFORKED))
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

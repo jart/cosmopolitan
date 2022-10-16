@@ -25,7 +25,7 @@
  */
 int pthread_key_delete(pthread_key_t key) {
   int rc;
-  pthread_spin_lock(&_pthread_keys_lock);
+  _pthread_key_lock();
   if (key < PTHREAD_KEYS_MAX) {
     _pthread_key_usage[key / 64] &= ~(1ul << (key % 64));
     _pthread_key_dtor[key] = 0;
@@ -33,6 +33,6 @@ int pthread_key_delete(pthread_key_t key) {
   } else {
     rc = EINVAL;
   }
-  pthread_spin_unlock(&_pthread_keys_lock);
+  _pthread_key_unlock();
   return rc;
 }

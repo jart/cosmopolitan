@@ -273,7 +273,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtProcessInformation procinfo;
   if (!setjmp(jb)) {
-    pid = untrackpid = __reservefd(-1);
+    pid = untrackpid = __reservefd_unlocked(-1);
     reader = CreateNamedPipe(CreatePipeName(pipename),
                              kNtPipeAccessInbound | kNtFileFlagOverlapped,
                              kNtPipeTypeMessage | kNtPipeReadmodeMessage, 1,
@@ -347,7 +347,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     rc = 0;
   }
   if (untrackpid != -1) {
-    __releasefd(untrackpid);
+    __releasefd_unlocked(untrackpid);
   }
   return rc;
 }

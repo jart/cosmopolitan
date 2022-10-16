@@ -21,6 +21,7 @@
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaltstack.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -41,6 +42,7 @@
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
@@ -52,6 +54,7 @@
 
 STATIC_YOINK("nsync_mu_lock");
 STATIC_YOINK("nsync_mu_unlock");
+STATIC_YOINK("_pthread_atfork");
 
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
@@ -76,30 +79,6 @@ void _pthread_free(struct PosixThread *pt) {
   free(pt);
 }
 
-void _pthread_funlock(pthread_mutex_t *mu, int parent_tid) {
-  if (mu->_type == PTHREAD_MUTEX_NORMAL ||
-      (atomic_load_explicit(&mu->_lock, memory_order_relaxed) &&
-       mu->_owner != parent_tid)) {
-    atomic_store_explicit(&mu->_lock, 0, memory_order_relaxed);
-    mu->_nsync = 0;
-    mu->_depth = 0;
-    mu->_owner = 0;
-  }
-}
-
-void _pthread_atfork(int parent_tid) {
-  FILE *f;
-  if (_weaken(dlmalloc_atfork)) _weaken(dlmalloc_atfork)();
-  _pthread_funlock(&__fds_lock_obj, parent_tid);
-  _pthread_funlock(&__sig_lock_obj, parent_tid);
-  _pthread_funlock(&__fflush_lock_obj, parent_tid);
-  for (int i = 0; i < __fflush.handles.i; ++i) {
-    if ((f = __fflush.handles.p[i])) {
-      _pthread_funlock((pthread_mutex_t *)f->lock, parent_tid);
-    }
-  }
-}
-
 static int PosixThread(void *arg, int tid) {
   struct PosixThread *pt = arg;
   enum PosixThreadStatus status;
@@ -118,6 +97,7 @@ static int PosixThread(void *arg, int tid) {
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
+    sigprocmask(SIG_SETMASK, &pt->sigmask, 0);
     pt->rc = pt->start_routine(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     _npassert(!pt->cleanup);
@@ -158,62 +138,12 @@ static int FixupCustomStackOnOpenbsd(pthread_attr_t *attr) {
   }
 }
 
-/**
- * Creates thread, e.g.
- *
- *     void *worker(void *arg) {
- *       fputs(arg, stdout);
- *       return "there\n";
- *     }
- *
- *     int main() {
- *       void *result;
- *       pthread_t id;
- *       pthread_create(&id, 0, worker, "hi ");
- *       pthread_join(id, &result);
- *       fputs(result, stdout);
- *     }
- *
- * Here's the OSI model of threads in Cosmopolitan:
- *
- *              ┌──────────────────┐
- *              │ pthread_create() │       - Standard
- *              └─────────┬────────┘         Abstraction
- *              ┌─────────┴────────┐
- *              │     clone()      │       - Polyfill
- *              └─────────┬────────┘
- *            ┌────────┬──┴┬─┬─┬─────────┐ - Kernel
- *      ┌─────┴─────┐  │   │ │┌┴──────┐  │   Interfaces
- *      │ sys_clone │  │   │ ││ tfork │ ┌┴─────────────┐
- *      └───────────┘  │   │ │└───────┘ │ CreateThread │
- *     ┌───────────────┴──┐│┌┴────────┐ └──────────────┘
- *     │ bsdthread_create │││ thr_new │
- *     └──────────────────┘│└─────────┘
- *                 ┌───────┴──────┐
- *                 │ _lwp_create  │
- *                 └──────────────┘
- *
- * @param thread if non-null is used to output the thread id
- *     upon successful completion
- * @param attr points to launch configuration, or may be null
- *     to use sensible defaults; it must be initialized using
- *     pthread_attr_init()
- * @param start_routine is your thread's callback function
- * @param arg is an arbitrary value passed to `start_routine`
- * @return 0 on success, or errno on error
- * @raise EAGAIN if resources to create thread weren't available
- * @raise EINVAL if `attr` was supplied and had unnaceptable data
- * @raise EPERM if scheduling policy was requested and user account
- *     isn't authorized to use it
- * @returnserrno
- * @threadsafe
- */
-errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-                       void *(*start_routine)(void *), void *arg) {
+static errno_t pthread_create_impl(pthread_t *thread,
+                                   const pthread_attr_t *attr,
+                                   void *(*start_routine)(void *), void *arg,
+                                   sigset_t oldsigs) {
   int rc, e = errno;
   struct PosixThread *pt;
-  __require_tls();
-  _pthread_zombies_decimate();
 
   // create posix thread object
   if (!(pt = calloc(1, sizeof(struct PosixThread)))) {
@@ -323,6 +253,7 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
   }
 
   // launch PosixThread(pt) in new thread
+  pt->sigmask = oldsigs;
   if (clone(PosixThread, pt->attr.__stackaddr,
             pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
@@ -339,4 +270,67 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     *thread = (pthread_t)pt;
   }
   return 0;
+}
+
+/**
+ * Creates thread, e.g.
+ *
+ *     void *worker(void *arg) {
+ *       fputs(arg, stdout);
+ *       return "there\n";
+ *     }
+ *
+ *     int main() {
+ *       void *result;
+ *       pthread_t id;
+ *       pthread_create(&id, 0, worker, "hi ");
+ *       pthread_join(id, &result);
+ *       fputs(result, stdout);
+ *     }
+ *
+ * Here's the OSI model of threads in Cosmopolitan:
+ *
+ *              ┌──────────────────┐
+ *              │ pthread_create() │       - Standard
+ *              └─────────┬────────┘         Abstraction
+ *              ┌─────────┴────────┐
+ *              │     clone()      │       - Polyfill
+ *              └─────────┬────────┘
+ *            ┌────────┬──┴┬─┬─┬─────────┐ - Kernel
+ *      ┌─────┴─────┐  │   │ │┌┴──────┐  │   Interfaces
+ *      │ sys_clone │  │   │ ││ tfork │ ┌┴─────────────┐
+ *      └───────────┘  │   │ │└───────┘ │ CreateThread │
+ *     ┌───────────────┴──┐│┌┴────────┐ └──────────────┘
+ *     │ bsdthread_create │││ thr_new │
+ *     └──────────────────┘│└─────────┘
+ *                 ┌───────┴──────┐
+ *                 │ _lwp_create  │
+ *                 └──────────────┘
+ *
+ * @param thread if non-null is used to output the thread id
+ *     upon successful completion
+ * @param attr points to launch configuration, or may be null
+ *     to use sensible defaults; it must be initialized using
+ *     pthread_attr_init()
+ * @param start_routine is your thread's callback function
+ * @param arg is an arbitrary value passed to `start_routine`
+ * @return 0 on success, or errno on error
+ * @raise EAGAIN if resources to create thread weren't available
+ * @raise EINVAL if `attr` was supplied and had unnaceptable data
+ * @raise EPERM if scheduling policy was requested and user account
+ *     isn't authorized to use it
+ * @returnserrno
+ * @threadsafe
+ */
+errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                       void *(*start_routine)(void *), void *arg) {
+  errno_t rc;
+  sigset_t blocksigs, oldsigs;
+  __require_tls();
+  _pthread_zombies_decimate();
+  sigfillset(&blocksigs);
+  _npassert(!sigprocmask(SIG_SETMASK, &blocksigs, &oldsigs));
+  rc = pthread_create_impl(thread, attr, start_routine, arg, oldsigs);
+  _npassert(!sigprocmask(SIG_SETMASK, &oldsigs, 0));
+  return rc;
 }

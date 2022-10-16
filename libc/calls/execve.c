@@ -23,6 +23,7 @@
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/promises.internal.h"
@@ -58,21 +59,8 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
         !__asan_is_valid_strlist(envp)))) {
     rc = efault();
   } else {
-#ifdef SYSDEBUG
-    if (UNLIKELY(__strace > 0)) {
-      kprintf(STRACE_PROLOGUE "execve(%#s, {", prog);
-      for (i = 0; argv[i]; ++i) {
-        if (i) kprintf(", ");
-        kprintf("%#s", argv[i]);
-      }
-      kprintf("}, {");
-      for (i = 0; envp[i]; ++i) {
-        if (i) kprintf(", ");
-        kprintf("%#s", envp[i]);
-      }
-      kprintf("})\n");
-    }
-#endif
+    STRACE("execve(%#s, %s, %s) → ...", prog, DescribeStringList(argv),
+           DescribeStringList(envp));
     if (!IsWindows()) {
       rc = 0;
       if (IsLinux() && __execpromises && _weaken(sys_pledge_linux)) {

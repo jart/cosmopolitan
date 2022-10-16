@@ -84,7 +84,7 @@ int clock_gettime(int clock, struct timespec *ts) {
     rc = __clock_gettime(clock, ts);
   }
 #if SYSDEBUG
-  if (!(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
+  if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("clock_gettime(%s, [%s]) → %d% m", DescribeClockName(clock),
            DescribeTimespec(rc, ts), rc);
   }

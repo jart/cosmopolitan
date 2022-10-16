@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon ex,EX_OSERR,71,71,71,71,71,71
+.syscon limits,MAX_INPUT,255,1024,255,255,255,255

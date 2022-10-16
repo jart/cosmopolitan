@@ -206,6 +206,7 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
   const char *abet;
   signed char type;
   const char *s, *f;
+  struct CosmoTib *tib;
   unsigned long long x;
   unsigned i, j, m, rem, sign, hash, cols, prec;
   char c, *p, *e, pdot, zero, flip, dang, base, quot, uppr, ansi, z[128];
@@ -323,12 +324,12 @@ privileged static size_t kformat(char *b, size_t n, const char *fmt,
           goto FormatUnsigned;
 
         case 'P':
-          if (!__vforked) {
-            if (!__tls_enabled) {
-              x = __pid;
+          tib = __tls_enabled ? __get_tls_privileged() : 0;
+          if (!(tib && (tib->tib_flags & TIB_FLAG_VFORKED))) {
+            if (tib) {
+              x = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
             } else {
-              x = atomic_load_explicit(&__get_tls_privileged()->tib_tid,
-                                       memory_order_relaxed);
+              x = sys_gettid();
             }
             if (!__nocolor && p + 7 <= e) {
               *p++ = '\e';
