@@ -140,7 +140,7 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       // O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
       // O_DIRECT | O_RANDOM | O_SEQUENTIAL | O_NDELAY possible but
       // not worth it.
-      return einval();
+      return enosys();
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {
         return FD_CLOEXEC;
