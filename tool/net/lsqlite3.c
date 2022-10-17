@@ -1883,6 +1883,98 @@ static int db_create_rebaser(lua_State *L) {
     return 1;
 }
 
+/* session/changeset callbacks */
+
+static int changeset_conflict_cb = LUA_NOREF;
+static int changeset_filter_cb = LUA_NOREF;
+static int changeset_cb_udata = LUA_NOREF;
+static int session_filter_cb = LUA_NOREF;
+static int session_cb_udata = LUA_NOREF;
+
+static int db_changeset_conflict_callback(
+        void *user,               /* Copy of sixth arg to _apply_v2() */
+        int eConflict,            /* DATA, MISSING, CONFLICT, CONSTRAINT */
+        sqlite3_changeset_iter *p /* Handle describing change and conflict */
+) {
+    // return default code if no callback is provided
+    if (changeset_conflict_cb == LUA_NOREF) return SQLITE_CHANGESET_OMIT;
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    int result, isint;
+    const char *zTab;
+    int nCol, Op, bIndirect;
+
+    if (sqlite3changeset_op(p, &zTab, &nCol, &Op, &bIndirect) != LUA_OK) {
+        lua_pushliteral(L, "invalid return from changeset iterator");
+        return lua_error(L);
+    }
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb); /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
+    lua_pushinteger(L, eConflict);
+    lua_pushstring(L, zTab);
+    lua_pushinteger(L, Op);
+    lua_pushboolean(L, bIndirect);
+
+    if (lua_pcall(L, 5, 1, 0) != LUA_OK) return lua_error(L);
+
+    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
+    if (!isint) {
+        lua_pushliteral(L, "non-integer returned from conflict callback");
+        return lua_error(L);
+    }
+
+    lua_settop(L, top);
+    return result;
+}
+
+static int db_filter_callback(
+        void *user,       /* Context */
+        const char *zTab, /* Table name */
+        int filter_cb,
+        int filter_udata
+) {
+    // allow the table if no filter callback is provided
+    if (filter_cb == LUA_NOREF || filter_cb == LUA_REFNIL) return 1;
+    sdb *db = (sdb*)user;
+    lua_State *L = db->L;
+    int top = lua_gettop(L);
+    int result, isint;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, filter_cb); /* get callback */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, filter_udata); /* get callback user data */
+    lua_pushstring(L, zTab);
+
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
+
+    // allow 0/1 and false/true to be returned
+    // returning 0/false skips the table
+    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
+    if (!isint && !lua_isboolean(L, -1)) {
+        lua_pushliteral(L, "non-integer and non-boolean returned from filter callback");
+        return lua_error(L);
+    }
+    if (!isint) result = lua_toboolean(L, -1);
+
+    lua_settop(L, top);
+    return result;
+}
+
+static int db_changeset_filter_callback(
+        void *user,      /* Copy of sixth arg to _apply_v2() */
+        const char *zTab /* Table name */
+) {
+    return db_filter_callback(user, zTab, changeset_filter_cb, changeset_cb_udata);
+}
+
+static int db_session_filter_callback(
+        void *user,      /* Copy of third arg to session_attach() */
+        const char *zTab /* Table name */
+) {
+    return db_filter_callback(user, zTab, session_filter_cb, session_cb_udata);
+}
+
 /*
 ** =======================================================
 ** Session functions
@@ -1891,13 +1983,15 @@ static int db_create_rebaser(lua_State *L) {
 
 typedef struct {
     sqlite3_session *ses;
+    sdb *db; // keep track of the DB this session is for
 } lsession;
 
-static lsession *lsqlite_makesession(lua_State *L, sqlite3_session *ses) {
+static lsession *lsqlite_makesession(lua_State *L, sqlite3_session *ses, sdb *db) {
     lsession *lses = (lsession*)lua_newuserdata(L, sizeof(lsession));
     lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_ses_meta_ref);
     lua_setmetatable(L, -2);
     lses->ses = ses;
+    lses->db = db;
     return lses;
 }
 
@@ -1913,13 +2007,31 @@ static lsession *lsqlite_checksession(lua_State *L, int index) {
 
 static int lsession_attach(lua_State *L) {
     lsession *lses = lsqlite_checksession(L, 1);
-    const char *zTab = luaL_optstring(L, 2, NULL);
     int rc;
-
+    // allow either a table or a callback function to filter tables
+    const char *zTab = lua_type(L, 2) == LUA_TFUNCTION
+        ? NULL
+        : luaL_optstring(L, 2, NULL);
     if ((rc = sqlite3session_attach(lses->ses, zTab)) != SQLITE_OK) {
         lua_pushnil(L);
         lua_pushinteger(L, rc);
         return 2;
+    }
+    // allow to pass a filter callback,
+    // but only one shared for all sessions where this callback is used
+    if (lua_type(L, 2) == LUA_TFUNCTION) {
+        // TBD: does this *also* need to be done in cleanupvm?
+        if (session_cb_udata != LUA_NOREF) {
+            luaL_unref(L, LUA_REGISTRYINDEX, session_filter_cb);
+            luaL_unref(L, LUA_REGISTRYINDEX, session_cb_udata);
+            session_filter_cb =
+            session_cb_udata = LUA_NOREF;
+        }
+        lua_settop(L, 3);  // add udata even if it's not provided
+        session_cb_udata = luaL_ref(L, LUA_REGISTRYINDEX);
+        session_filter_cb = luaL_ref(L, LUA_REGISTRYINDEX);
+        sqlite3session_table_filter(lses->ses,
+            db_session_filter_callback, lses->db);
     }
     lua_pushboolean(L, 1);
     return 1;
@@ -1936,7 +2048,8 @@ static int lsession_bool(
         int (*session_func)(sqlite3_session *ses, int val)
 ) {
     lsession *lses = lsqlite_checksession(L, 1);
-    int val = lua_isboolean(L, 2) ? lua_toboolean(L, 2)
+    int val = lua_isboolean(L, 2)
+        ? lua_toboolean(L, 2)
         : luaL_optinteger(L, 2, -1);
     lua_pushboolean(L, (*session_func)(lses->ses, val));
     return 1;
@@ -2012,80 +2125,8 @@ static int db_create_session(lua_State *L) {
         return 2;
     }
 
-    (void)lsqlite_makesession(L, ses);
+    (void)lsqlite_makesession(L, ses, db);
     return 1;
-}
-
-static int changeset_conflict_cb = LUA_NOREF;
-static int changeset_filter_cb = LUA_NOREF;
-static int changeset_cb_udata = LUA_NOREF;
-
-static int db_changeset_conflict_callback(
-        void *user,               /* Copy of sixth arg to _apply_v2() */
-        int eConflict,            /* DATA, MISSING, CONFLICT, CONSTRAINT */
-        sqlite3_changeset_iter *p /* Handle describing change and conflict */
-) {
-    // return default code if no conflict callback is provided
-    if (changeset_conflict_cb == LUA_NOREF) return SQLITE_CHANGESET_OMIT;
-    sdb *db = (sdb*)user;
-    lua_State *L = db->L;
-    int top = lua_gettop(L);
-    int result, isint;
-    const char *zTab;
-    int nCol, Op, bIndirect;
-
-    if (sqlite3changeset_op(p, &zTab, &nCol, &Op, &bIndirect) != LUA_OK) {
-        lua_pushliteral(L, "invalid return from changeset iterator");
-        return lua_error(L);
-    }
-
-    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb);    /* get callback */
-    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
-    lua_pushinteger(L, eConflict);
-    lua_pushstring(L, zTab);
-    lua_pushinteger(L, Op);
-    lua_pushboolean(L, bIndirect);
-
-    if (lua_pcall(L, 5, 1, 0) != LUA_OK) return lua_error(L);
-
-    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
-    if (!isint) {
-        lua_pushliteral(L, "non-integer returned from conflict callback");
-        return lua_error(L);
-    }
-
-    lua_settop(L, top);
-    return result;
-}
-
-static int db_changeset_filter_callback(
-        void *user,      /* Copy of sixth arg to _apply_v2() */
-        const char *zTab /* Table name */
-) {
-    // allow the table if no conflict callback is provided
-    if (changeset_filter_cb == LUA_NOREF || changeset_filter_cb == LUA_REFNIL) return 1;
-    sdb *db = (sdb*)user;
-    lua_State *L = db->L;
-    int top = lua_gettop(L);
-    int result, isint;
-
-    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_filter_cb); /* get callback */
-    lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
-    lua_pushstring(L, zTab);
-
-    if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
-
-    // allow 0/1 and false/true to be returned
-    // returning 0/false skips the table
-    result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
-    if (!isint && !lua_isboolean(L, -1)) {
-        lua_pushliteral(L, "non-integer and non-boolean returned from filter callback");
-        return lua_error(L);
-    }
-    if (!isint) result = lua_toboolean(L, -1);
-
-    lua_settop(L, top);
-    return result;
 }
 
 static int db_invert_changeset(lua_State *L) {
