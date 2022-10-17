@@ -20,18 +20,34 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/at.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
 int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
-  if (strcmp(file, "ape.com")) return enoent();
-  if (!_weaken(calloc)) return enomem();
+  if (dirfd != AT_FDCWD || strcmp(file, APE_COM_NAME)) return enoent();
+  if (flags != O_RDONLY) return eacces();
   if ((fd = __reservefd(-1)) == -1) return -1;
-  state = _weaken(calloc)(1, sizeof(struct MetalFile));
+  if (!_weaken(calloc) || !_weaken(free)) {
+    struct DirectMap dm;
+    dm = sys_mmap_metal(NULL, ROUNDUP(sizeof(struct MetalFile), 4096),
+                        PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
+                        -1, 0);
+    state = dm.addr;
+    if (state == (void *)-1) return -1;
+  } else {
+    state = _weaken(calloc)(1, sizeof(struct MetalFile));
+    if (!state) return -1;
+  }
   state->base = (char *)_base;
   state->size = _end - _base;
   g_fds.p[fd].kind = kFdFile;

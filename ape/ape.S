@@ -35,6 +35,7 @@
 #include "ape/macros.internal.h"
 #include "ape/notice.inc"
 #include "ape/relocations.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/macho.internal.h"
@@ -1565,19 +1566,19 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 #endif
 	push	$_HOSTMETAL			# sets __hostos in crt.S
 	pop	%rcx
-	push	$0
+	pushq	.Lenv0(%rip)			# envp[0][0]
 	mov	%rsp,%rbp
-	mov	.Lenv0(%rip),%rax
-	mov	%rax,(%rbp)			# envp[0][0]
-	push	$0				# argv[0][0]
+	pushq	.Largv0+8(%rip)			# argv[0][8]
+	pushq	.Largv0(%rip)			# argv[0][0]
+	mov	%rsp,%rax
 	push	$0				# auxv[1][1]
 	push	$0				# auxv[1][0]
-	push	%rbp				# auxv[0][1]
+	push	%rax				# auxv[0][1]
 	push	$31				# auxv[0][0] AT_EXECFN
 	push	$0				# envp[1]
-	push	$.Lenv0				# envp[0]
+	push	%rbp				# envp[0]
 	push	$0				# argv[1]
-	push	%rbp				# argv[0]
+	push	%rax				# argv[0]
 	push	$1				# argc
 	xor	%ebp,%ebp
 	xor	%eax,%eax
@@ -1593,6 +1594,9 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 
 	.rodata
 .Lenv0:	.asciz	"METAL=1"
+.Largv0:
+	.asciz	APE_COM_NAME
+	.org	.Largv0+16
 	.previous
 
 #endif /* SupportsMetal() */

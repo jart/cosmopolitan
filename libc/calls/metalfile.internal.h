@@ -11,4 +11,7 @@ struct MetalFile {
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define APE_COM_NAME "/ape.com"
+
 #endif /* COSMOPOLITAN_LIBC_CALLS_METALFILE_INTERNAL_H_ */
