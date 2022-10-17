@@ -150,11 +150,10 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
     } else if (cmd == F_SETFD) {
       if (arg & FD_CLOEXEC) {
         g_fds.p[fd].flags |= O_CLOEXEC;
-        return FD_CLOEXEC;
       } else {
         g_fds.p[fd].flags &= ~O_CLOEXEC;
-        return 0;
       }
+      return 0;
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
       return sys_fcntl_nt_lock(g_fds.p + fd, cmd, arg);
     } else if (cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC) {
