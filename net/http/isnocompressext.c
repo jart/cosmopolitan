@@ -16,13 +16,58 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/internal.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/bswap.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
+#include "net/http/http.h"
 
-void __releasefd_unlocked(int fd) {
-  if (0 <= fd && fd < g_fds.n) {
-    bzero(g_fds.p + fd, sizeof(*g_fds.p));
-    g_fds.f = MIN(fd, g_fds.f);
+static const char kNoCompressExts[][8] = {
+    "bz2",   //
+    "gif",   //
+    "gz",    //
+    "jpg",   //
+    "lz4",   //
+    "mp4",   //
+    "mpeg",  //
+    "mpg",   //
+    "png",   //
+    "webp",  //
+    "xz",    //
+    "zip",   //
+};
+
+static bool BisectNoCompressExts(uint64_t ext) {
+  int c, m, l, r;
+  l = 0;
+  r = ARRAYLEN(kNoCompressExts) - 1;
+  while (l <= r) {
+    m = (l + r) >> 1;
+    if (READ64BE(kNoCompressExts[m]) < ext) {
+      l = m + 1;
+    } else if (READ64BE(kNoCompressExts[m]) > ext) {
+      r = m - 1;
+    } else {
+      return true;
+    }
   }
+  return false;
+}
+
+bool IsNoCompressExt(const char *p, size_t n) {
+  int c, i;
+  uint64_t w;
+  if (n == -1) n = p ? strlen(p) : 0;
+  if (n) {
+    for (i = w = 0; n--;) {
+      c = p[n] & 255;
+      if (c == '.') break;
+      if (++i > 8) return false;
+      w <<= 8;
+      w |= kToLower[c];
+    }
+    return BisectNoCompressExts(bswap_64(w));
+  }
+  return false;
 }

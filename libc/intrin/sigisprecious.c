@@ -23,6 +23,8 @@
  * Returns true if you're not authorized to block this signal.
  */
 int sigisprecious(int sig) {
-  return sig == SIGKILL ||  //
-         sig == SIGSTOP;
+  return 0
+#define M(x) || sig == x
+#include "libc/intrin/sigisprecious.inc"
+      ;
 }

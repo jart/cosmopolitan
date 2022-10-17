@@ -27,12 +27,9 @@
 /**
  * Closes extra file descriptors, e.g.
  *
- *     // close all non-stdio file descriptors
- *     if (closefrom(3) == -1) {
- *       for (int i = 3; i < 256; ++i) {
+ *     if (closefrom(3))
+ *       for (int i = 3; i < 256; ++i)
  *         close(i);
- *       }
- *     }
  *
  * @return 0 on success, or -1 w/ errno
  * @raise EBADF if `first` is negative

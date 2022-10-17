@@ -57,6 +57,8 @@ o/$(MODE)/net/http/istestnetip.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-Os
 
+# we need -O3 because:
+#   we're dividing by constants
 o/$(MODE)/net/http/formathttpdatetime.o: private\
 		OVERRIDE_CFLAGS +=		\
 			-O3

@@ -16,12 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
@@ -31,16 +28,13 @@
 #include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/zipos/zipos.internal.h"
 
 static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   int e, i;
   size_t got;
-  bool masked;
   ssize_t rc, toto;
-  sigset_t mask, oldmask;
 
   if (fd < 0) {
     return ebadf();
@@ -94,26 +88,17 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
     if (rc == -1) {
       if (!toto) {
         toto = -1;
+      } else if (errno != EINTR) {
+        notpossible;
       }
       break;
     }
-
     got = rc;
     toto += got;
     off += got;
     if (got != iov[i].iov_len) {
       break;
     }
-
-    if (!masked) {
-      sigfillset(&mask);
-      _npassert(!sys_sigprocmask(SIG_SETMASK, &mask, &oldmask));
-      masked = true;
-    }
-  }
-
-  if (masked) {
-    _npassert(!sys_sigprocmask(SIG_SETMASK, &oldmask, 0));
   }
 
   return toto;

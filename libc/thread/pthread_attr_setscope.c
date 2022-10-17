@@ -16,9 +16,34 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/thread/thread.h"
 
-int pthread_attr_setscope(pthread_attr_t *a, int x) {
-  a->__scope = x;
-  return 0;
+/**
+ * Sets contention scope attribute.
+ *
+ * @param contentionscope may be one of:
+ *     - `PTHREAD_SCOPE_SYSTEM` to fight the system for resources
+ *     - `PTHREAD_SCOPE_PROCESS` to fight familiar threads for resources
+ * @return 0 on success, or errno on error
+ * @raise ENOTSUP if `contentionscope` isn't supported on host OS
+ * @raise EINVAL if `contentionscope` was invalid
+ */
+int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope) {
+  switch (contentionscope) {
+    case PTHREAD_SCOPE_SYSTEM:
+      attr->__contentionscope = contentionscope;
+      return 0;
+    case PTHREAD_SCOPE_PROCESS:
+      // Linux almost certainly doesn't support thread scoping
+      // FreeBSD has THR_SYSTEM_SCOPE but it's not implemented
+      // OpenBSD pthreads claims support but really ignores it
+      // NetBSD pthreads claims support, but really ignores it
+      // XNU sources appear to make no mention of thread scope
+      // WIN32 documentation says nothing about thread scoping
+      return ENOTSUP;
+    default:
+      return EINVAL;
+  }
 }

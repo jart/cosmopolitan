@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/sched-sysv.internal.h"
 #include "libc/calls/state.internal.h"
@@ -97,7 +98,7 @@ static int PosixThread(void *arg, int tid) {
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
-    sigprocmask(SIG_SETMASK, &pt->sigmask, 0);
+    _sigsetmask(pt->sigmask);
     pt->rc = pt->start_routine(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     _npassert(!pt->cleanup);
@@ -325,12 +326,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
 errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
   errno_t rc;
-  sigset_t blocksigs, oldsigs;
   __require_tls();
   _pthread_zombies_decimate();
-  sigfillset(&blocksigs);
-  _npassert(!sigprocmask(SIG_SETMASK, &blocksigs, &oldsigs));
-  rc = pthread_create_impl(thread, attr, start_routine, arg, oldsigs);
-  _npassert(!sigprocmask(SIG_SETMASK, &oldsigs, 0));
+  BLOCK_SIGNALS;
+  rc = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
+  ALLOW_SIGNALS;
   return rc;
 }

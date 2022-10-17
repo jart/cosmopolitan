@@ -224,9 +224,6 @@ textwindows void WinMainForked(void) {
     AbortFork("CloseHandle");
   }
 
-  // turn tls back on
-  __enable_tls();
-
   // rewrap the stdin named pipe hack
   // since the handles closed on fork
   struct Fds *fds = VEIL("r", &g_fds);
@@ -267,11 +264,14 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
   uint32_t oldprot;
   char **args, **args2;
   char16_t pipename[64];
+  bool needtls, threaded;
   int64_t reader, writer;
   struct NtStartupInfo startinfo;
   int i, n, pid, untrackpid, rc = -1;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtProcessInformation procinfo;
+  threaded = __threaded;
+  needtls = __tls_enabled;
   if (!setjmp(jb)) {
     pid = untrackpid = __reservefd_unlocked(-1);
     reader = CreateNamedPipe(CreatePipeName(pipename),
@@ -345,9 +345,15 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     }
   } else {
     rc = 0;
+    if (needtls) {
+      __enable_tls();
+    }
+    if (threaded && !__threaded && _weaken(__enable_threads)) {
+      _weaken(__enable_threads)();
+    }
   }
   if (untrackpid != -1) {
-    __releasefd_unlocked(untrackpid);
+    __releasefd(untrackpid);
   }
   return rc;
 }

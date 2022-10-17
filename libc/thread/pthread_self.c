@@ -22,6 +22,7 @@
 
 /**
  * Returns current POSIX thread.
+ * @asyncsignalsafe
  */
 pthread_t pthread_self(void) {
   pthread_t t;

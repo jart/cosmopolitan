@@ -16,8 +16,41 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/nt/files.h"
+#include "libc/sysv/errfuns.h"
 
+static textwindows int sys_tcdrain_nt(int fd) {
+  if (!__isfdopen(fd)) return ebadf();
+  if (!FlushFileBuffers(g_fds.p[fd].handle)) return __winerr();
+  return 0;
+}
+
+/**
+ * Waits until all written output is transmitted.
+ *
+ * @param fd is file descriptor of tty
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise ENOTTY if `fd` is open but not a teletypewriter
+ * @raise EIO if process group of writer is orphoned, calling thread is
+ *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
+ * @raise ENOSYS on bare metal
+ * @asyncsignalsafe
+ */
 int tcdrain(int fd) {
-  return ioctl(fd, TCSBRK, (void *)(intptr_t)1);
+  int rc;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (!IsWindows()) {
+    rc = sys_ioctl(fd, TCSBRK, (void *)(intptr_t)1);
+  } else {
+    rc = sys_tcdrain_nt(fd);
+  }
+  STRACE("tcdrain(%d) → %d% m", fd, rc);
+  return rc;
 }

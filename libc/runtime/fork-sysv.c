@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,62 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/intrin/strace.internal.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/log/libfatal.internal.h"
-#include "libc/runtime/runtime.h"
 
-forceinline int Identity(int c) {
-  return c;
-}
-
-forceinline int ToUpper(int c) {
-  return 'a' <= c && c <= 'z' ? c - ('a' - 'A') : c;
-}
-
-forceinline char *GetEnv(const char *s, int xlat(int)) {
-  char **p;
-  size_t i, j;
-  if ((p = environ)) {
-    for (i = 0; p[i]; ++i) {
-      for (j = 0;; ++j) {
-        if (!s[j]) {
-          if (p[i][j] == '=') {
-            return p[i] + j + 1;
-          }
-          break;
-        }
-        if (xlat(s[j]) != xlat(p[i][j])) {
-          break;
-        }
-      }
-    }
+int sys_fork(void) {
+  axdx_t ad;
+  int ax, dx;
+  ad = __sys_fork();
+  ax = ad.ax;
+  dx = ad.dx;
+  if (IsXnu() && ax != -1) {
+    // eax always returned with childs pid
+    // edx is 0 for parent and 1 for child
+    ax &= dx - 1;
   }
-  return 0;
-}
-
-/**
- * Returns value of environment variable, or NULL if not found.
- *
- * Environment variables can store empty string on Unix but not Windows.
- *
- * @note should not be used after __cxa_finalize() is called
- */
-char *getenv(const char *s) {
-  char *r;
-  if (!s) return 0;
-  if (!IsWindows()) {
-    r = GetEnv(s, Identity);
-  } else {
-    r = GetEnv(s, ToUpper);
-  }
-#if SYSDEBUG
-  if (!(s[0] == 'T' && s[1] == 'Z' && !s[2])) {
-    // TODO(jart): memoize TZ or something
-    STRACE("getenv(%#s) → %#s", s, r);
-  }
-#endif
-  return r;
+  return ax;
 }

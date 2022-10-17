@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Gavin Arthur Hayes                                            │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,55 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/mem.h"
+#include "libc/calls/calls.h"
+#include "libc/errno.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
-#include "libc/testlib/testlib.h"
+#include "libc/sock/sock.h"
+#include "libc/sock/struct/sockaddr.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/ex.h"
+#include "libc/sysv/consts/sock.h"
+#include "net/http/http.h"
 
-TEST(putenv, test) {
-  EXPECT_EQ(0, clearenv());
-  EXPECT_EQ(0, putenv("hi=there"));
-  EXPECT_STREQ("there", getenv("hi"));
-  EXPECT_EQ(0, clearenv());
-  EXPECT_EQ(0, putenv("hi=theretwo"));
-  EXPECT_STREQ("theretwo", getenv("hi"));
-  EXPECT_EQ(0, clearenv());
-  EXPECT_EQ(0, setenv("hi", "therethree", 0));
-  EXPECT_STREQ("therethree", getenv("hi"));
+int main(int argc, char *argv[]) {
+
+  if (argc < 2) {
+    kprintf("usage: blackhole IP...\n");
+    return EX_USAGE;
+  }
+
+  int fd;
+  struct sockaddr_un addr = {
+      AF_UNIX,
+      "/var/run/blackhole.sock",
+  };
+  if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+    kprintf("error: socket(AF_UNIX) failed: %s\n", strerror(errno));
+    return 3;
+  }
+  if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    kprintf("error: connect(%#s) failed: %s\n", addr.sun_path, strerror(errno));
+    return 4;
+  }
+
+  int rc = 0;
+  for (int i = 1; i < argc; ++i) {
+    int64_t ip;
+    char buf[4];
+    if ((ip = ParseIp(argv[i], -1)) != -1) {
+      WRITE32BE(buf, ip);
+      if (write(fd, buf, 4) == -1) {
+        kprintf("error: write() failed: %s\n", strerror(errno));
+        rc |= 2;
+      }
+    } else {
+      kprintf("error: bad ipv4 address: %s\n", argv[i]);
+      rc |= 1;
+    }
+  }
+
+  return rc;
 }

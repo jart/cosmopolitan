@@ -20,7 +20,8 @@ LIBC_ZIPOS_A_SRCS =					\
 
 LIBC_ZIPOS_A_OBJS =					\
 	$(LIBC_ZIPOS_A_SRCS_S:%.S=o/$(MODE)/%.o)	\
-	$(LIBC_ZIPOS_A_SRCS_C:%.c=o/$(MODE)/%.o)
+	$(LIBC_ZIPOS_A_SRCS_C:%.c=o/$(MODE)/%.o)	\
+	o/$(MODE)/libc/zipos/.cosmo.zip.o
 
 LIBC_ZIPOS_A_CHECKS =					\
 	$(LIBC_ZIPOS_A).pkg				\
@@ -50,6 +51,10 @@ $(LIBC_ZIPOS_A):libc/zipos/				\
 $(LIBC_ZIPOS_A).pkg:					\
 		$(LIBC_ZIPOS_A_OBJS)			\
 		$(foreach zipos,$(LIBC_ZIPOS_A_DIRECTDEPS),$($(zipos)_A).pkg)
+
+o/$(MODE)/libc/zipos/.cosmo.zip.o: private		\
+		ZIPOBJ_FLAGS +=				\
+			-B
 
 LIBC_ZIPOS_LIBS = $(foreach zipos,$(LIBC_ZIPOS_ARTIFACTS),$($(zipos)))
 LIBC_ZIPOS_SRCS = $(foreach zipos,$(LIBC_ZIPOS_ARTIFACTS),$($(zipos)_SRCS))

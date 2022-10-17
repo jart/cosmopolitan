@@ -26,8 +26,8 @@ static int LuaFetch(lua_State *L) {
   char *key, *val, *hdr;
   size_t keylen, vallen;
   size_t urlarglen, requestlen, paylen, bodylen;
-  size_t g, i, n, hdrsize;
-  int numredirects = 0, maxredirects = 5;
+  size_t g, n, hdrsize;
+  int imethod, numredirects = 0, maxredirects = 5;
   bool followredirect = true;
   struct addrinfo hints = {.ai_family = AF_INET,
                            .ai_socktype = SOCK_STREAM,
@@ -44,7 +44,12 @@ static int LuaFetch(lua_State *L) {
     body = luaL_optlstring(L, -1, "", &bodylen);
     lua_getfield(L, 2, "method");
     // use GET by default if no method is provided
-    method = strtoupper(luaL_optstring(L, -1, kHttpMethod[kHttpGet]));
+    method = luaL_optstring(L, -1, kHttpMethod[kHttpGet]);
+    if ((imethod = GetHttpMethod(method, -1))) {
+      method = kHttpMethod[imethod];
+    } else {
+      return LuaNilError(L, "bad method");
+    }
     lua_getfield(L, 2, "followredirect");
     if (lua_isboolean(L, -1)) followredirect = lua_toboolean(L, -1);
     lua_getfield(L, 2, "maxredirects");

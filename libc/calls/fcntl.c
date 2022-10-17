@@ -31,7 +31,7 @@
 #include "libc/zipos/zipos.internal.h"
 
 /**
- * Does things with file descriptor, via re-imagined hourglass api, e.g.
+ * Does things with file descriptor, e.g.
  *
  *     CHECK_NE(-1, fcntl(fd, F_SETFD, FD_CLOEXEC));
  *
@@ -41,12 +41,14 @@
  *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD,         3)), 3);
  *     CHECK_GE((newfd = fcntl(oldfd, F_DUPFD_CLOEXEC, 3)), 3);
  *
- * This function implements POSIX Advisory Locks, which let independent
- * processes (and on Windows, threads too!) read/write lock byte ranges
- * of files. See `test/libc/calls/lock_test.c` for an example.
+ * This function implements file record locking, which lets independent
+ * processes (and on Linux 3.15+, threads too!) lock arbitrary ranges
+ * associated with a file. See `test/libc/calls/lock_test.c` and other
+ * locking related tests in that folder.
  *
- * Please be warned that locks currently do nothing on Windows since
- * figuring out how to polyfill them correctly is a work in progress.
+ * On Windows, the Cosmopolitan Libc polyfill for POSIX advisory locks
+ * only implements enough of its nuances to support SQLite's needs. Some
+ * possibilities, e.g. punching holes in lock, will raise `ENOTSUP`.
  *
  * @param fd is the file descriptor
  * @param cmd can be one of:
@@ -56,12 +58,12 @@
  *     - `F_SETFL` sets file descriptor status flags
  *     - `F_DUPFD` is like dup() but `arg` is a minimum result, e.g. 3
  *     - `F_DUPFD_CLOEXEC` ditto but sets `O_CLOEXEC` on returned fd
- *     - `F_SETLK` for record locking where `arg` is `struct flock`
- *     - `F_SETLKW` ditto but waits (i.e. blocks) for lock
+ *     - `F_SETLK` for record locking where `arg` is `struct flock *`
+ *     - `F_SETLKW` ditto but waits for lock (SQLite avoids this)
  *     - `F_GETLK` to retrieve information about a record lock
- *     - `F_OFD_SETLK` for better locks on Linux and XNU
- *     - `F_OFD_SETLKW` for better locks on Linux and XNU
- *     - `F_OFD_GETLK` for better locks on Linux and XNU
+ *     - `F_OFD_SETLK` for better non-blocking lock (Linux 3.15+ only)
+ *     - `F_OFD_SETLKW` for better blocking lock (Linux 3.15+ only)
+ *     - `F_OFD_GETLK` for better lock querying (Linux 3.15+ only)
  *     - `F_FULLFSYNC` on MacOS for fsync() with release barrier
  *     - `F_BARRIERFSYNC` on MacOS for fsync() with even more barriers
  *     - `F_SETNOSIGPIPE` on MacOS and NetBSD to control `SIGPIPE`
@@ -71,7 +73,7 @@
  *     - `F_NOCACHE` on MacOS to toggle data caching
  *     - `F_GETPIPE_SZ` on Linux to get pipe size
  *     - `F_SETPIPE_SZ` on Linux to set pipe size
- *     - `F_NOTIFY` raise `SIGIO` upon `fd` events in `arg` on Linux
+ *     - `F_NOTIFY` raise `SIGIO` upon `fd` events in `arg` (Linux only)
  *       - `DN_ACCESS` for file access
  *       - `DN_MODIFY` for file modifications
  *       - `DN_CREATE` for file creations
@@ -88,6 +90,7 @@
  * @raise ENOLCK if `F_SETLKW` would have exceeded `RLIMIT_LOCKS`
  * @raise EPERM if `cmd` is `F_SETOWN` and we weren't authorized
  * @raise ESRCH if `cmd` is `F_SETOWN` and process group not found
+ * @raise ENOTSUP on Windows if locking operation isn't supported yet
  * @raise EDEADLK if `cmd` was `F_SETLKW` and waiting would deadlock
  * @raise EMFILE if `cmd` is `F_DUPFD` or `F_DUPFD_CLOEXEC` and
  *     `RLIMIT_NOFILE` would be exceeded

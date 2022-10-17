@@ -22,6 +22,8 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/thread2.h"
 
+// TODO(jart): Can we make this test go faster on NetBSD?
+
 int pos;
 int count;
 int limit;
@@ -77,7 +79,7 @@ long Get(struct timespec *abs_deadline) {
   return v;
 }
 
-#define N 10000
+#define N 1000
 
 void *Producer(void *arg) {
   for (int i = 0; i < N; i++) {

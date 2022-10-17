@@ -1,6 +1,9 @@
 mymodule = require "mymodule"
 sqlite3 = require "lsqlite3"
 
+-- ddos protection
+ProgramTokenBucket()
+
 -- /.init.lua is loaded at startup in redbean's main process
 HidePath('/usr/share/zoneinfo/')
 HidePath('/usr/share/ssl/')

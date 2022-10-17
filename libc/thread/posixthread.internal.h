@@ -16,8 +16,6 @@ COSMOPOLITAN_C_START_
  * @fileoverview Cosmopolitan POSIX Thread Internals
  */
 
-typedef void (*atfork_f)(void);
-
 // LEGAL TRANSITIONS             ┌──> TERMINATED
 // pthread_create ─┬─> JOINABLE ─┴┬─> DETACHED ──> ZOMBIE
 //                 └──────────────┘
@@ -79,6 +77,8 @@ struct PosixThread {
   sigset_t sigmask;
   struct _pthread_cleanup_buffer *cleanup;
 };
+
+typedef void (*atfork_f)(void);
 
 extern struct PosixThread _pthread_main;
 hidden extern pthread_spinlock_t _pthread_keys_lock;

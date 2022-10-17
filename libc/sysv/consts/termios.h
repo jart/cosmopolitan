@@ -111,7 +111,6 @@ extern const uint64_t TIOCCBRK;
 extern const uint64_t TIOCCDTR;
 extern const uint64_t TIOCCHKVERAUTH;
 extern const uint64_t TIOCCONS;
-extern const uint64_t TIOCDRAIN;
 extern const uint64_t TIOCEXT;
 extern const uint64_t TIOCFLAG_CLOCAL;
 extern const uint64_t TIOCFLAG_MDMBUF;
@@ -300,7 +299,6 @@ COSMOPOLITAN_C_END_
 #define TIOCCDTR         SYMBOLIC(TIOCCDTR)
 #define TIOCCHKVERAUTH   SYMBOLIC(TIOCCHKVERAUTH)
 #define TIOCCONS         SYMBOLIC(TIOCCONS)
-#define TIOCDRAIN        SYMBOLIC(TIOCDRAIN)
 #define TIOCEXT          SYMBOLIC(TIOCEXT)
 #define TIOCFLAG_CLOCAL  SYMBOLIC(TIOCFLAG_CLOCAL)
 #define TIOCFLAG_MDMBUF  SYMBOLIC(TIOCFLAG_MDMBUF)

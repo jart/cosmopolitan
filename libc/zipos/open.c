@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
@@ -188,13 +189,14 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
  * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
  *
  * @param uri is obtained via __zipos_parseuri()
- * @asyncsignalsafe (todo)
+ * @asyncsignalsafe
  * @threadsafe
  */
 int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   int rc;
   ssize_t cf;
   struct Zipos *zipos;
+  BLOCK_SIGNALS;
   if ((flags & O_ACCMODE) == O_RDONLY) {
     if ((zipos = __zipos_get())) {
       if ((cf = __zipos_find(zipos, name)) != -1) {
@@ -208,5 +210,6 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   } else {
     rc = einval();
   }
+  ALLOW_SIGNALS;
   return rc;
 }

@@ -18,7 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/dprintf.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -27,6 +26,7 @@
 #include "libc/fmt/fmt.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/safemacros.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
 #include "libc/math.h"
@@ -131,7 +131,9 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     __start_fatal(file, line);
     strcpy(buf32, "unknown");
     gethostname(buf32, sizeof(buf32));
-    (dprintf)(STDERR_FILENO, "fatality %s pid %d\n", buf32, getpid());
+    (dprintf)(STDERR_FILENO,
+              "exiting due to aforementioned error (host %s pid %d tid %d)\n",
+              buf32, getpid(), gettid());
     __die();
     unreachable;
   }

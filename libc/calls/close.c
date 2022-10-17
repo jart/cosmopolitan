@@ -16,10 +16,10 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -81,7 +81,7 @@ int close(int fd) {
         } else if (__isfdkind(fd, kFdFile) ||     //
                    __isfdkind(fd, kFdConsole) ||  //
                    __isfdkind(fd, kFdProcess)) {  //
-          rc = sys_close_nt(g_fds.p + fd);
+          rc = sys_close_nt(g_fds.p + fd, fd);
         } else {
           rc = eio();
         }

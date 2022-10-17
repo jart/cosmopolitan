@@ -27,6 +27,7 @@
  * @asyncsignalsafe
  */
 int sigdelset(sigset_t *set, int sig) {
+  _Static_assert(NSIG == sizeof(set->__bits) * CHAR_BIT, "");
   _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
   if (1 <= sig && sig <= NSIG) {
     set->__bits[(sig - 1) >> 6] &= ~(1ull << ((sig - 1) & 63));

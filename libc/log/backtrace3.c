@@ -83,7 +83,7 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
     } else {
       addend = 0;
     }
-    kprintf("%012lx %012lx %s%+d\n", frame, addr, __get_symbol_name(st, symbol),
+    kprintf("%012lx %lx %s%+d\n", frame, addr, __get_symbol_name(st, symbol),
             addend);
   }
   return 0;

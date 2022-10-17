@@ -22,6 +22,7 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -35,6 +36,8 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+
+// TODO(jart): make more of this code lockless
 
 static volatile size_t mapsize;
 
@@ -71,9 +74,10 @@ int __ensurefds(int fd) {
  * @asyncsignalsafe
  */
 int __reservefd_unlocked(int start) {
-  int fd;
+  int fd, f1, f2;
   for (;;) {
-    for (fd = MAX(start, g_fds.f); fd < g_fds.n; ++fd) {
+    f1 = atomic_load_explicit(&g_fds.f, memory_order_acquire);
+    for (fd = MAX(start, f1); fd < g_fds.n; ++fd) {
       if (!g_fds.p[fd].kind) {
         break;
       }
@@ -81,7 +85,11 @@ int __reservefd_unlocked(int start) {
     fd = __ensurefds_unlocked(fd);
     bzero(g_fds.p + fd, sizeof(*g_fds.p));
     if (_cmpxchg(&g_fds.p[fd].kind, kFdEmpty, kFdReserved)) {
-      _cmpxchg(&g_fds.f, fd, fd + 1);
+      // g_fds.f isn't guarded by our mutex
+      do {
+        f2 = MAX(fd + 1, f1);
+      } while (!atomic_compare_exchange_weak_explicit(
+          &g_fds.f, &f1, f2, memory_order_release, memory_order_relaxed));
       return fd;
     }
   }

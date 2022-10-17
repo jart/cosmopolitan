@@ -11,6 +11,9 @@
  *     maximum legal range is PID_MAX + 2 (100001) through INT_MAX
  */
 
+#define THR_SUSPENDED    1
+#define THR_SYSTEM_SCOPE 2
+
 #define UMTX_OP_WAIT              2
 #define UMTX_OP_WAIT_UINT         11
 #define UMTX_OP_WAIT_UINT_PRIVATE 15

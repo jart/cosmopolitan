@@ -17,18 +17,53 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/nt/comms.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
-int tcsendbreak(int fd, int len) {
-  if (!IsBsd()) {
-    return sys_ioctl(fd, TCSBRK, 0);
+static int sys_tcsendbreak_bsd(int fd) {
+  if (sys_ioctl(fd, TIOCSBRK, 0) == -1) return -1;
+  usleep(400000);
+  if (sys_ioctl(fd, TIOCCBRK, 0) == -1) return -1;
+  return 0;
+}
+
+static textwindows int sys_tcsendbreak_nt(int fd) {
+  if (!__isfdopen(fd)) return ebadf();
+  if (!TransmitCommChar(g_fds.p[fd].handle, '\0')) return __winerr();
+  return 0;
+}
+
+/**
+ * Sends break.
+ *
+ * @param fd is file descriptor of tty
+ * @param duration of 0 sends a break for 0.25-0.5 seconds, and other
+ *     durations are treated the same by this implementation
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise ENOTTY if `fd` is open but not a teletypewriter
+ * @raise EIO if process group of writer is orphoned, calling thread is
+ *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
+ * @raise ENOSYS on bare metal
+ * @asyncsignalsafe
+ */
+int tcsendbreak(int fd, int duration) {
+  int rc;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (IsBsd()) {
+    rc = sys_tcsendbreak_bsd(fd);
+  } else if (!IsWindows()) {
+    rc = sys_ioctl(fd, TCSBRK, 0);
   } else {
-    if (sys_ioctl(fd, TIOCSBRK, 0) == -1) return -1;
-    usleep(400000);
-    if (sys_ioctl(fd, TIOCCBRK, 0) == -1) return -1;
-    return 0;
+    rc = sys_tcsendbreak_nt(fd);
   }
+  STRACE("tcsendbreak(%d, %u) → %d% m", fd, duration, rc);
+  return rc;
 }

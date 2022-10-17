@@ -18,7 +18,12 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/thread/thread.h"
 
-int pthread_attr_getscope(const pthread_attr_t *a, int *x) {
-  *x = a->__scope;
+/**
+ * Gets contention scope attribute.
+ *
+ * @return 0 on success, or errno on error
+ */
+int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope) {
+  *contentionscope = attr->__contentionscope;
   return 0;
 }

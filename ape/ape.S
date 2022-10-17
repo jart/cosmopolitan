@@ -112,7 +112,15 @@ cstr:	.endobj	cstr,globl,hidden		# ←for gdb readability
 //
 //	@param	dl is drive number
 //	@noreturn
-ape_mz:	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
+ape_mz:
+#if SupportsWindows() || SupportsMetal()
+	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
+#else
+//	Avoid virus scanner reputation damage when targeting System Five.
+//	WARNING: This prefix is experimental; it may be removed sometime.
+//	TODO(jart): Find another prefix that will work with BIOS loading.
+	.asciz	"JTqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
+#endif
 	.short	0x1000			# MZ: lowers upper bound load / 16
 	.short	0xf800			# MZ: roll greed on bss
 	.short	0			# MZ: lower bound on stack segment

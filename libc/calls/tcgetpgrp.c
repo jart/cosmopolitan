@@ -16,16 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns which process group controls terminal.
+ *
+ * @return process group id on success, or -1 w/ errno
+ * @raise ENOTTY if `fd` is isn't controlling teletypewriter
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise ENOSYS on Windows and Bare Metal
  * @asyncsignalsafe
  */
-int32_t tcgetpgrp(int fd) {
-  int pgrp;
-  if (ioctl(fd, TIOCGPGRP, &pgrp) < 0) return -1;
-  return pgrp;
+int tcgetpgrp(int fd) {
+  int rc, pgrp;
+  if (IsWindows() || IsMetal()) {
+    rc = enosys();
+  } else {
+    rc = sys_ioctl(fd, TIOCGPGRP, &pgrp);
+  }
+  STRACE("tcgetpgrp(%d) → %d% m", fd, rc == -1 ? rc : pgrp);
+  return rc == -1 ? rc : pgrp;
 }

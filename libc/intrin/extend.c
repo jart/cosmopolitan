@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asancodes.h"
 #include "libc/macros.internal.h"
@@ -29,17 +30,26 @@
 
 #define G FRAMESIZE
 
-static void _mapframe(void *p, int f) {
-  int prot, flags;
+static void *_mapframe(void *p, int f) {
+  int rc, prot, flags;
   struct DirectMap dm;
   prot = PROT_READ | PROT_WRITE;
   flags = f | MAP_ANONYMOUS | MAP_FIXED;
-  _npassert((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p);
-  __mmi_lock();
-  _npassert(!TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
-                                 dm.maphandle, prot, flags, false, false, 0,
-                                 G));
-  __mmi_unlock();
+  if ((dm = sys_mmap(p, G, prot, flags, -1, 0)).addr == p) {
+    __mmi_lock();
+    rc = TrackMemoryInterval(&_mmi, (uintptr_t)p >> 16, (uintptr_t)p >> 16,
+                             dm.maphandle, prot, flags, false, false, 0, G);
+    __mmi_unlock();
+    if (!rc) {
+      return p;
+    } else {
+      _unassert(errno == ENOMEM);
+      return 0;
+    }
+  } else {
+    _unassert(errno == ENOMEM);
+    return 0;
+  }
 }
 
 /**
@@ -58,7 +68,8 @@ static void _mapframe(void *p, int f) {
  * @param e points to end of memory that's allocated
  * @param h is highest address to which `e` may grow
  * @param f should be `MAP_PRIVATE` or `MAP_SHARED`
- * @return new value for `e`
+ * @return new value for `e` or null w/ errno
+ * @raise ENOMEM if we require more vespene gas
  */
 noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
@@ -67,10 +78,10 @@ noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
       _unassert(q + G <= (char *)h);
-      _mapframe(q, f);
+      if (!_mapframe(q, f)) return 0;
       if (IsAsan()) {
         if (!((uintptr_t)SHADOW(q) & (G - 1))) {
-          _mapframe(SHADOW(q), f);
+          if (!_mapframe(SHADOW(q), f)) return 0;
           __asan_poison(q, G << kAsanScale, kAsanProtected);
         }
       }

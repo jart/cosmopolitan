@@ -19,10 +19,11 @@
 #include "libc/assert.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
 void _pthread_cleanup_pop(struct _pthread_cleanup_buffer *cb, int execute) {
-  struct PosixThread *pt = (struct PosixThread *)pthread_self();
-  _npassert(cb == pt->cleanup);
+  struct PosixThread *pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  _unassert(cb == pt->cleanup);
   pt->cleanup = cb->__prev;
   if (execute) {
     cb->__routine(cb->__arg);

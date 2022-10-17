@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -30,7 +31,11 @@
 int sigismember(const sigset_t *set, int sig) {
   _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
   if (1 <= sig && sig <= NSIG) {
-    return !!(set->__bits[(sig - 1) >> 6] & (1ull << ((sig - 1) & 63)));
+    if (1 <= sig && sig <= _NSIG) {
+      return !!(set->__bits[(sig - 1) >> 6] & (1ull << ((sig - 1) & 63)));
+    } else {
+      return 0;
+    }
   } else {
     return einval();
   }

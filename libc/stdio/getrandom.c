@@ -129,8 +129,9 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
 
 static textstartup void getrandom_init(void) {
   int e, rc;
-  e = errno;
   struct sigaction sa, oldsa;
+  if (IsWindows()) return;
+  e = errno;
   if (IsBsd()) {
     sa.sa_flags = 0;
     sa.sa_handler = SIG_IGN;

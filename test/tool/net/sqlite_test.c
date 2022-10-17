@@ -31,7 +31,6 @@
 char testlib_enable_tmp_setup_teardown;
 
 void SetUpOnce(void) {
-  if (IsWindows()) exit(0);
   sqlite3_initialize();
 }
 

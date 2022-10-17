@@ -23,6 +23,7 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sig.h"
 
 #define N 128
@@ -31,6 +32,7 @@
 
 const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
   bool gotsome;
+  const char *s;
   int sig, o = 0;
   sigset_t sigset;
 
@@ -45,9 +47,9 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
   if (sigcountset(ss) > 16) {
     append("~");
     sigemptyset(&sigset);
-    for (sig = 1; sig <= NSIG; ++sig) {
+    for (sig = 1; sig <= _NSIG; ++sig) {
       if (!sigismember(ss, sig)) {
-        sigaddset(&sigset, sig);
+        sigset.__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
       }
     }
   } else {
@@ -56,14 +58,18 @@ const char *(DescribeSigset)(char buf[N], int rc, const sigset_t *ss) {
 
   append("{");
   gotsome = false;
-  for (sig = 1; sig <= NSIG; ++sig) {
+  for (sig = 1; sig <= _NSIG; ++sig) {
     if (sigismember(&sigset, sig) > 0) {
       if (gotsome) {
         append(",");
       } else {
         gotsome = true;
       }
-      append("%s", strsignal(sig) + 3);
+      s = strsignal(sig);
+      if (s[0] == 'S' && s[1] == 'I' && s[2] == 'G') {
+        s += 3;
+      }
+      append("%s", s);
     }
   }
   append("}");

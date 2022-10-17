@@ -7,12 +7,12 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/intrin/bits.h"
 #include "libc/dce.h"
+#include "libc/intrin/bits.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/log/log.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 
 /**
@@ -59,9 +59,15 @@
 
 int main(int argc, char *argv[]) {
   if (!IsAsan()) {
-    printf("this example is intended for MODE=asan or MODE=dbg\n");
+    kprintf("this example is intended for MODE=asan or MODE=dbg\n");
     exit(1);
   }
+
+  kprintf("----------------\n");
+  kprintf(" THIS IS A TEST \n");
+  kprintf("SIMULATING CRASH\n");
+  kprintf("----------------\n");
+
   char *buffer;
   ShowCrashReports(); /* not needed but yoinks appropriate symbols */
   buffer = malloc(13);

@@ -17,11 +17,18 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
-#include "libc/calls/state.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/macros.internal.h"
+#include "libc/str/str.h"
 
+// really want to avoid locking here so close() needn't block signals
 void __releasefd(int fd) {
-  __fds_lock();
-  __releasefd_unlocked(fd);
-  __fds_unlock();
+  int f1, f2;
+  if (!(0 <= fd && fd < g_fds.n)) return;
+  bzero(g_fds.p + fd, sizeof(*g_fds.p));
+  f1 = atomic_load_explicit(&g_fds.f, memory_order_relaxed);
+  do {
+    f2 = MIN(fd, f1);
+  } while (!atomic_compare_exchange_weak_explicit(
+      &g_fds.f, &f1, f2, memory_order_release, memory_order_relaxed));
 }

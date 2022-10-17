@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
@@ -29,6 +30,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
@@ -474,9 +476,11 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
+    BLOCK_SIGNALS;
     __sig_lock();
     rc = __sigaction(sig, act, oldact);
     __sig_unlock();
+    ALLOW_SIGNALS;
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
          DescribeSigaction(rc, oldact), rc);

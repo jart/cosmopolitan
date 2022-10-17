@@ -23,9 +23,8 @@
 //	@param	rdi points to the jmp_buf
 //	@param	esi is returned by setjmp() invocation (coerced nonzero)
 //	@noreturn
-//	@assume	system five nexgen32e abi conformant
-//	@note	code built w/ microsoft abi compiler can't call this
-//	@see	_gclongjmp() unwinds _gc() destructors
+//	@see	_gclongjmp()
+//	@see	siglongjmp()
 longjmp:
 	mov	%esi,%eax
 	test	%eax,%eax
@@ -41,4 +40,3 @@ longjmp:
 	jmp	*56(%rdi)
 	.endfn	longjmp,globl
 	.alias	longjmp,_longjmp
-	.alias	longjmp,siglongjmp

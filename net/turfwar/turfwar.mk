@@ -9,7 +9,8 @@ NET_TURFWAR_OBJS =					\
 	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%.o)
 
 NET_TURFWAR_COMS =					\
-	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%.com)
+	$(NET_TURFWAR_SRCS:%.c=o/$(MODE)/%.com)		\
+	o/$(MODE)/net/turfwar/turfbean.com
 
 NET_TURFWAR_BINS =					\
 	$(NET_TURFWAR_COMS)				\
@@ -33,6 +34,7 @@ NET_TURFWAR_DIRECTDEPS =				\
 	LIBC_X						\
 	NET_HTTP					\
 	THIRD_PARTY_GETOPT				\
+	THIRD_PARTY_MUSL				\
 	THIRD_PARTY_NSYNC				\
 	THIRD_PARTY_NSYNC_MEM				\
 	THIRD_PARTY_SQLITE3				\
@@ -52,6 +54,30 @@ o/$(MODE)/net/turfwar/%.com.dbg:			\
 		$(CRT)					\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/net/turfwar/turfbean.com.dbg:			\
+		$(TOOL_NET_DEPS)			\
+		o/$(MODE)/tool/net/redbean.o		\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)		\
+		o/$(MODE)/tool/net/net.pkg		\
+		o/$(MODE)/net/turfwar/.init.lua.zip.o	\
+		o/$(MODE)/tool/net/redbean.png.zip.o	\
+		o/$(MODE)/tool/net/favicon.ico.zip.o	\
+		$(CRT)					\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/net/turfwar/turfbean.com:			\
+		o/$(MODE)/net/turfwar/turfbean.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com	\
+		o/$(MODE)/tool/build/symtab.com
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+
+o/$(MODE)/net/turfwar/.init.lua.zip.o: private		\
+		ZIPOBJ_FLAGS +=				\
+			-B
 
 $(NET_TURFWAR_OBJS):					\
 		$(BUILD_FILES)				\

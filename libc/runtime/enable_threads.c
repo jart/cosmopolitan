@@ -19,8 +19,10 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/runtime/morph.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/tls.h"
 
@@ -30,7 +32,8 @@ extern int __threadcalls_start[];
 #pragma weak __threadcalls_end
 
 static privileged dontinline void FixupLockNops(void) {
-  __morph_begin();
+  sigset_t mask;
+  __morph_begin(&mask);
   /*
    * _NOPL("__threadcalls", func)
    *
@@ -54,7 +57,7 @@ static privileged dontinline void FixupLockNops(void) {
     _base[*p + 1] = 0x67;
     _base[*p + 2] = 0xe8;
   }
-  __morph_end();
+  __morph_end(&mask);
 }
 
 void __enable_threads(void) {

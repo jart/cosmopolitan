@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,18 +16,78 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/termios.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/assert.h"
+#include "libc/dce.h"
+#include "libc/intrin/midpoint.h"
+#include "libc/mem/mem.h"
+#include "libc/mem/sortedints.internal.h"
+#include "libc/str/str.h"
 
-int cfsetispeed(struct termios *t, unsigned speed) {
-  if (speed) {
-    if (CBAUD) {
-      if (speed & ~CBAUD) return einval();
-      t->c_cflag &= ~CBAUD;
-      t->c_cflag |= speed;
+bool ContainsInt(const struct SortedInts *t, int k) {
+  int l, m, r;
+  l = 0;
+  r = t->n - 1;
+  while (l <= r) {
+    m = _midpoint(l, r);
+    if (t->p[m] < k) {
+      l = m + 1;
+    } else if (t->p[m] > k) {
+      r = m - 1;
     } else {
-      t->c_ispeed = speed;
+      return true;
     }
   }
-  return 0;
+  return false;
+}
+
+int LeftmostInt(const struct SortedInts *t, int k) {
+  int l, m, r;
+  l = 0;
+  r = t->n;
+  while (l < r) {
+    m = _midpoint(l, r);
+    if (t->p[m] < k) {
+      l = m + 1;
+    } else {
+      r = m;
+    }
+  }
+  _unassert(l == 0 || k >= t->p[l - 1]);
+  _unassert(l == t->n || k <= t->p[l]);
+  return l;
+}
+
+int CountInt(const struct SortedInts *t, int k) {
+  int i, c;
+  for (c = 0, i = LeftmostInt(t, k); i < t->n; ++i) {
+    if (t->p[i] == k) {
+      ++c;
+    } else {
+      break;
+    }
+  }
+  return c;
+}
+
+bool InsertInt(struct SortedInts *t, int k, bool u) {
+  int l;
+  _unassert(t->n >= 0);
+  _unassert(t->n <= t->c);
+  if (t->n == t->c) {
+    ++t->c;
+    if (!IsModeDbg()) {
+      t->c += t->c >> 1;
+    }
+    t->p = realloc(t->p, t->c * sizeof(*t->p));
+  }
+  l = LeftmostInt(t, k);
+  if (l < t->n) {
+    if (u && t->p[l] == k) {
+      return false;
+    }
+    memmove(t->p + l + 1, t->p + l, (t->n - l) * sizeof(*t->p));
+  }
+  t->p[l] = k;
+  t->n++;
+  return true;
 }

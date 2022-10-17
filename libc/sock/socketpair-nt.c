@@ -95,8 +95,8 @@ textwindows int sys_socketpair_nt(int family, int type, int proto, int sv[2]) {
     rc = 0;
   } else {
     CloseHandle(hpipe);
-    __releasefd_unlocked(writer);
-    __releasefd_unlocked(reader);
+    __releasefd(writer);
+    __releasefd(reader);
     rc = -1;
   }
 

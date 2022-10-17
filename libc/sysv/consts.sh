@@ -385,9 +385,9 @@ syscon	fcntl	FWRITE					0			2			2			2			2			0			# wut is it
 syscon	fcntl	F_SETLK					6			8			12			8			8			6			# polyfilled nt
 syscon	fcntl	F_SETLKW				7			9			13			9			9			7			# polyfilled nt
 syscon	fcntl	F_GETLK					5			7			11			7			7			5			# polyfilled nt
-syscon	fcntl	F_OFD_SETLK				37			90			-1			-1			-1			6
-syscon	fcntl	F_OFD_SETLKW				38			91			-1			-1			-1			7
-syscon	fcntl	F_OFD_GETLK				36			92			-1			-1			-1			5
+syscon	fcntl	F_OFD_SETLK				37			-1			-1			-1			-1			-1			# listed in xnu source code but marked private
+syscon	fcntl	F_OFD_SETLKW				38			-1			-1			-1			-1			-1			# listed in xnu source code but marked private
+syscon	fcntl	F_OFD_GETLK				36			-1			-1			-1			-1			-1			# listed in xnu source code but marked private
 syscon	fcntl	F_RDLCK					0			1			1			1			1			0			# polyfilled nt; bsd consensus
 syscon	fcntl	F_WRLCK					1			3			3			3			3			1			# polyfilled nt; bsd consensus
 syscon	fcntl	F_UNLCK					2			2			2			2			2			2			# polyfilled nt; unix consensus
@@ -1340,8 +1340,8 @@ syscon	compat	TIOCSETAF				0x5404			0x80487416		0x802c7416		0x802c7416		0x802c74
 syscon	termios	TIOCGWINSZ				0x5413			1074295912		1074295912		1074295912		1074295912		0x5413			# ioctl(tty, TIOCGWINSZ, struct winsize *argp); polyfilled NT
 syscon	termios	TIOCSWINSZ				0x5414			0x80087467		0x80087467		0x80087467		0x80087467		0x5414			# ioctl(tty, TIOCSWINSZ, const struct winsize *argp) (faked NT)
 syscon	termios	TIOCOUTQ				0x5411			0x40047473		0x40047473		0x40047473		0x40047473		0			# get # bytes queued in TTY's output buffer ioctl(tty, TIOCSWINSZ, const struct winsize *argp)
-syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# get pgrp of tty
-syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# set pgrp of tty
+syscon	termios	TIOCGPGRP				0x540f			0x40047477		0x40047477		0x40047477		0x40047477		0			# tcgetpgrp(): get pgrp of tty
+syscon	termios	TIOCSPGRP				0x5410			0x80047476		0x80047476		0x80047476		0x80047476		0			# tcsetpgrp(): set pgrp of tty
 syscon	termios	TIOCSBRK				0x5427			0x2000747b		0x2000747b		0x2000747b		0x2000747b		0			# set break bit
 syscon	termios	TIOCCBRK				0x5428			0x2000747a		0x2000747a		0x2000747a		0x2000747a		0			# boop
 syscon	termios	TIOCCONS				0x541d			0x80047462		0x80047462		0x80047462		0x80047462		0			# boop
@@ -1356,8 +1356,7 @@ syscon	termios	TIOCGSID				0x5429			0x40047463		0x40047463		0x40047463		0x400474
 syscon	termios	TABLDISC				0			0x3			0			0x3			0x3			0			# boop
 syscon	termios	SLIPDISC				0			0x4			0x4			0x4			0x4			0			# boop
 syscon	termios	PPPDISC					0			0x5			0x5			0x5			0x5			0			# boop
-syscon	termios	TCSBRK					0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TIOCDRAIN on BSD
-syscon	termios	TIOCDRAIN				0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TCSBRK on Linux
+syscon	termios	TCSBRK					0x5409			0x2000745e		0x2000745e		0x2000745e		0x2000745e		0			# TIOCDRAIN on BSD; TIOCDRAIN on BSD
 syscon	termios	TIOCSTAT				0			0x20007465		0x20007465		0x20007465		0x20007465		0			# boop
 syscon	termios	TIOCSTART				0			0x2000746e		0x2000746e		0x2000746e		0x2000746e		0			# boop
 syscon	termios	TIOCCDTR				0			0x20007478		0x20007478		0x20007478		0x20007478		0			# clear data terminal ready
@@ -2308,35 +2307,38 @@ syscon	misc	AIO_ALLDONE				2			1			3			0			0			0
 syscon	misc	AIO_NOTCANCELED				1			4			2			0			0			0
 syscon	misc	AIO_CANCELED				0			2			1			0			0			0
 
-syscon	baud	B0					0			0			0			0			0			0			# consensus
-syscon	baud	B50					1			50			50			50			50			0			# bsd consensus
-syscon	baud	B75					2			75			75			75			75			0			# bsd consensus
-syscon	baud	B110					3			110			110			110			110			0			# bsd consensus
-syscon	baud	B134					4			134			134			134			134			0			# bsd consensus
-syscon	baud	B150					5			150			150			150			150			0			# bsd consensus
-syscon	baud	B200					6			200			200			200			200			0			# bsd consensus
-syscon	baud	B300					7			300			300			300			300			0			# bsd consensus
-syscon	baud	B600					8			600			600			600			600			0			# bsd consensus
-syscon	baud	B1200					9			0x04b0			0x04b0			0x04b0			0x04b0			0			# bsd consensus
-syscon	baud	B1800					10			0x0708			0x0708			0x0708			0x0708			0			# bsd consensus
-syscon	baud	B2400					11			0x0960			0x0960			0x0960			0x0960			0			# bsd consensus
-syscon	baud	B4800					12			0x12c0			0x12c0			0x12c0			0x12c0			0			# bsd consensus
-syscon	baud	B9600					13			0x2580			0x2580			0x2580			0x2580			0			# bsd consensus
-syscon	baud	B19200					14			0x4b00			0x4b00			0x4b00			0x4b00			0			# bsd consensus
-syscon	baud	B38400					15			0x9600			0x9600			0x9600			0x9600			0			# bsd consensus
-syscon	baud	B57600					0x1001			0xe100			0xe100			0xe100			0xe100			0			# bsd consensus
-syscon	baud	B115200					0x1002			0x01c200		0x01c200		0x01c200		0x01c200		0			# bsd consensus
-syscon	baud	B230400					0x1003			0x038400		0x038400		0x038400		0x038400		0			# bsd consensus
-syscon	baud	B500000					0x1005			0			0			0			0			0
-syscon	baud	B576000					0x1006			0			0			0			0			0
-syscon	baud	B1000000				0x1008			0			0			0			0			0
-syscon	baud	B1152000				0x1009			0			0			0			0			0
-syscon	baud	B1500000				0x100a			0			0			0			0			0
-syscon	baud	B2000000				0x100b			0			0			0			0			0
-syscon	baud	B2500000				0x100c			0			0			0			0			0
-syscon	baud	B3000000				0x100d			0			0			0			0			0
-syscon	baud	B3500000				0x100e			0			0			0			0			0
-syscon	baud	B4000000				0x100f			0			0			0			0			0
+#	baud rates
+#
+#	group	name					GNU/Systemd		XNU's Not UNIX!		FreeBSD			OpenBSD			NetBSD			The New Technology	Commentary
+syscon	baud	B0					0			0			0			0			0			0
+syscon	baud	B50					1			50			50			50			50			50
+syscon	baud	B75					2			75			75			75			75			75
+syscon	baud	B110					3			110			110			110			110			110
+syscon	baud	B134					4			134			134			134			134			134
+syscon	baud	B150					5			150			150			150			150			150
+syscon	baud	B200					6			200			200			200			200			200
+syscon	baud	B300					7			300			300			300			300			300
+syscon	baud	B600					8			600			600			600			600			600
+syscon	baud	B1200					9			1200			1200			1200			1200			1200
+syscon	baud	B1800					10			1800			1800			1800			1800			1800
+syscon	baud	B2400					11			2400			2400			2400			2400			2400
+syscon	baud	B4800					12			4800			4800			4800			4800			4800
+syscon	baud	B9600					13			9600			9600			9600			9600			9600
+syscon	baud	B19200					14			19200			19200			19200			19200			19200
+syscon	baud	B38400					15			38400			38400			38400			38400			38400
+syscon	baud	B57600					0x1001			57600			57600			57600			57600			57600
+syscon	baud	B115200					0x1002			115200			115200			115200			115200			115200
+syscon	baud	B230400					0x1003			230400			230400			230400			230400			230400
+syscon	baud	B500000					0x1005			500000			500000			500000			500000			500000
+syscon	baud	B576000					0x1006			576000			576000			576000			576000			576000
+syscon	baud	B1000000				0x1008			1000000			1000000			1000000			1000000			1000000
+syscon	baud	B1152000				0x1009			1152000			1152000			1152000			1152000			1152000
+syscon	baud	B1500000				0x100a			1500000			1500000			1500000			1500000			1500000
+syscon	baud	B2000000				0x100b			2000000			2000000			2000000			2000000			2000000
+syscon	baud	B2500000				0x100c			2500000			2500000			2500000			2500000			2500000
+syscon	baud	B3000000				0x100d			3000000			3000000			3000000			3000000			3000000
+syscon	baud	B3500000				0x100e			3500000			3500000			3500000			3500000			3500000
+syscon	baud	B4000000				0x100f			4000000			4000000			4000000			4000000			4000000
 
 syscon	misc	WEOF					0xffffffff		-1			-1			-1			-1			-1			# bsd consensus (win fake)
 syscon	misc	_LINUX_QUOTA_VERSION			2			0			0			0			0			0

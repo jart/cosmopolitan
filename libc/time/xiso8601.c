@@ -27,9 +27,7 @@
 #include "libc/time/time.h"
 #include "libc/x/x.h"
 
-/**
- * @fileoverview Timestamps in One True Format w/o toil.
- */
+// TODO(jart): DELETE
 
 static char *xiso8601_impl(struct timespec *opt_ts, int sswidth) {
   char *p;

@@ -88,7 +88,7 @@ textwindows int sys_open_nt(int dirfd, const char *file, uint32_t flags,
       rc = sys_open_nt_file(dirfd, file, flags, mode, fd);
     }
     if (rc == -1) {
-      __releasefd_unlocked(fd);
+      __releasefd(fd);
     }
     __fds_unlock();
   }

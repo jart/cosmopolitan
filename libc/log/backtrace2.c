@@ -125,7 +125,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   if (sys_pipe2(pipefds, O_CLOEXEC) == -1) {
     return -1;
   }
-  if ((pid = fork()) == -1) {
+  if ((pid = __sys_fork().ax) == -1) {
     sys_close(pipefds[0]);
     sys_close(pipefds[1]);
     return -1;
@@ -149,19 +149,12 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     }
     p1 = buf;
     p3 = p1 + got;
-    /*
-     * remove racist output from gnu tooling, that can't be disabled
-     * otherwise, since it breaks other tools like emacs that aren't
-     * equipped to ignore it, and what's most problematic is that
-     * addr2line somehow manages to put the racism onto the one line
-     * in the backtrace we actually care about.
-     */
     for (got = p3 - buf, p1 = buf; got;) {
       if ((p2 = memmem(p1, got, " (discriminator ",
                        strlen(" (discriminator ") - 1)) &&
           (p3 = memchr(p2, '\n', got - (p2 - p1)))) {
         if (p3 > p2 && p3[-1] == '\r') --p3;
-        write(2, p1, p2 - p1);
+        sys_write(2, p1, p2 - p1);
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
@@ -183,11 +176,13 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
 }
 
 static int PrintBacktrace(int fd, const struct StackFrame *bp) {
+#if !defined(DWARFLESS)
   if (!IsTiny() && !__isworker) {
     if (PrintBacktraceUsingAddr2line(fd, bp) != -1) {
       return 0;
     }
   }
+#endif
   return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 

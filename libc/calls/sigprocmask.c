@@ -26,7 +26,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/log/log.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"

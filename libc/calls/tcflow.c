@@ -16,31 +16,91 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
 #include "libc/calls/struct/termios.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
 #include "libc/dce.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/mem/alloca.h"
+#include "libc/nt/comms.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
+
+#define kNtPurgeTxabort 1
+#define kNtPurgeRxabort 2
+
+static const char *DescribeFlow(char buf[12], int action) {
+  if (action == TCOOFF) return "TCOOFF";
+  if (action == TCOON) return "TCOON";
+  if (action == TCIOFF) return "TCIOFF";
+  if (action == TCION) return "TCION";
+  FormatInt32(buf, action);
+  return buf;
+}
+
+static int sys_tcflow_bsd(int fd, int action) {
+  int rc;
+  uint8_t c;
+  struct termios t;
+  if (action == TCOOFF) return sys_ioctl(fd, TIOCSTOP, 0);
+  if (action == TCOON) return sys_ioctl(fd, TIOCSTART, 0);
+  if (action != TCIOFF && action != TCION) return einval();
+  if (sys_ioctl(fd, TCGETS, &t) == -1) return -1;
+  c = t.c_cc[action == TCIOFF ? VSTOP : VSTART];
+  if (c == 255) return 0;  // code is disabled
+  if (sys_write(fd, &c, 1) == -1) return -1;
+  return 0;
+}
+
+static dontinline textwindows int sys_tcflow_nt(int fd, int action) {
+  bool32 ok;
+  int64_t h;
+  if (!__isfdopen(fd)) return ebadf();
+  h = g_fds.p[fd].handle;
+  if (action == TCOOFF) {
+    ok = PurgeComm(h, kNtPurgeTxabort);
+  } else if (action == TCIOFF) {
+    ok = PurgeComm(h, kNtPurgeRxabort);
+  } else if (action == TCOON || action == TCION) {
+    ok = ClearCommBreak(h);
+  } else {
+    return einval();
+  }
+  return ok ? 0 : __winerr();
+}
 
 /**
  * Changes flow of teletypewriter data.
  *
- * - `TCOOFF` suspends output
- * - `TCOON` resumes output
- * - `TCIOFF` transmits a STOP character
- * - `TCION` transmits a START character
+ * @param fd is file descriptor of tty
+ * @param action may be one of:
+ *     - `TCOOFF` to suspend output
+ *     - `TCOON` to resume output
+ *     - `TCIOFF` to transmit a `STOP` character
+ *     - `TCION` to transmit a `START` character
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `action` is invalid
+ * @raise ENOSYS on Windows and Bare Metal
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise ENOTTY if `fd` is open but not a teletypewriter
+ * @raise EIO if process group of writer is orphoned, calling thread is
+ *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
+ * @asyncsignalsafe
  */
 int tcflow(int fd, int action) {
-  uint8_t c;
-  struct termios t;
-  if (!IsBsd()) return sys_ioctl(fd, TCXONC, action);
-  if (action == TCOOFF) return sys_ioctl(fd, TIOCSTOP, 0);
-  if (action == TCOON) return sys_ioctl(fd, TIOCSTART, 0);
-  if (action != TCIOFF && action != TCION) return einval();
-  if (tcgetattr(fd, &t) == -1) return -1;
-  if ((c = t.c_cc[action == TCIOFF ? VSTOP : VSTART]) != 255) {
-    if (sys_write(fd, &c, 1) == -1) return -1;
+  int rc;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (IsBsd()) {
+    rc = sys_ioctl(fd, TCXONC, action);
+  } else if (!IsWindows()) {
+    rc = sys_ioctl(fd, TCXONC, action);
+  } else {
+    rc = sys_tcflow_nt(fd, action);
   }
-  return 0;
+  STRACE("tcflow(%d, %s) → %d% m", fd, DescribeFlow(alloca(12), action), rc);
+  return rc;
 }

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,14 +16,36 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/testlib/ezbench.h"
+#include "libc/testlib/testlib.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
 
-/**
- * Removes all environment variables.
- */
-int clearenv(void) {
-  STRACE("clearenv() → 0");
-  environ = NULL;
-  return 0;
+TEST(iso8601, test) {
+  char p[20];
+  struct tm tm;
+  int64_t t = 0x62820bcd;
+  gmtime_r(&t, &tm);
+  EXPECT_EQ(p + 19, iso8601(p, &tm));
+  EXPECT_STREQ("2022-05-16T08:31:09", p);
+}
+
+TEST(iso8601us, test) {
+  char p[27];
+  struct tm tm;
+  int64_t t = 0x62820bcd;
+  gmtime_r(&t, &tm);
+  EXPECT_EQ(p + 26, iso8601us(p, &tm, 1234000));
+  EXPECT_STREQ("2022-05-16T08:31:09.001234", p);
+}
+
+BENCH(iso8601, bench) {
+  char p[27];
+  struct tm tm;
+  int64_t t = 0x62820bcd;
+  gmtime_r(&t, &tm);
+  EZBENCH2("iso8601", donothing, iso8601(p, &tm));
+  EZBENCH2("iso8601us", donothing, iso8601us(p, &tm, 123456));
+  EZBENCH2("strftime", donothing,
+           strftime(p, sizeof(p), "%Y-%m-%dT%H:%M:%S", &tm));
 }

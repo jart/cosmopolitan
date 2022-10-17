@@ -17,14 +17,33 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
 
 /**
- * Puts process group in control of terminal.
+ * Sets foreground process group id.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `pgrp` is invalid
+ * @raise ENOSYS on Windows and Bare Metal
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise EPERM if `pgrp` didn't match process in our group
+ * @raise ENOTTY if `fd` is isn't controlling teletypewriter
+ * @raise EIO if process group of writer is orphoned, calling thread is
+ *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
  * @asyncsignalsafe
  */
-int tcsetpgrp(int fd, int32_t pgrp) {
-  int pgrp_int = pgrp;
-  return ioctl(fd, TIOCSPGRP, &pgrp_int);
+int tcsetpgrp(int fd, int pgrp) {
+  int rc;
+  if (IsWindows() || IsMetal()) {
+    rc = enosys();
+  } else {
+    rc = sys_ioctl(fd, TIOCSPGRP, &pgrp);
+  }
+  STRACE("tcsetpgrp(%d, %d) → %d% m", fd, pgrp, rc);
+  return rc;
 }
