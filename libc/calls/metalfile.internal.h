@@ -9,9 +9,14 @@ struct MetalFile {
   size_t pos;
 };
 
+extern void *__ape_com_base;
+extern size_t __ape_com_size;
+
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-#define APE_COM_NAME "/ape.com"
+#define APE_COM_NAME     "/ape.com"
+#define APE_COM_ALT_NAME "/proc/self/exe"
+#define APE_COM_URI      "file:/proc/self/exe"
 
 #endif /* COSMOPOLITAN_LIBC_CALLS_METALFILE_INTERNAL_H_ */

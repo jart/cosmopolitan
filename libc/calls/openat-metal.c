@@ -16,13 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/relocations.h"
 #include "ape/sections.internal.h"
+#include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/metalfile.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/directmap.internal.h"
+#include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/at.h"
@@ -30,12 +33,16 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/zipos/zipos.internal.h"
 
 int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
-  if (dirfd != AT_FDCWD || strcmp(file, APE_COM_NAME)) return enoent();
+  if (dirfd != AT_FDCWD || (strcmp(file, APE_COM_NAME) &&
+                            strcmp(file, APE_COM_ALT_NAME))) return enoent();
   if (flags != O_RDONLY) return eacces();
+  if (!_weaken(__ape_com_base) || !_weaken(__ape_com_size))
+    return eopnotsupp();
   if ((fd = __reservefd(-1)) == -1) return -1;
   if (!_weaken(calloc) || !_weaken(free)) {
     struct DirectMap dm;
@@ -48,8 +55,8 @@ int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
     state = _weaken(calloc)(1, sizeof(struct MetalFile));
     if (!state) return -1;
   }
-  state->base = (char *)_base;
-  state->size = _end - _base;
+  state->base = (char *)__ape_com_base;
+  state->size = __ape_com_size;
   g_fds.p[fd].kind = kFdFile;
   g_fds.p[fd].flags = flags;
   g_fds.p[fd].mode = mode;
