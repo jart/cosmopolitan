@@ -18,28 +18,56 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/intrin/directmap.internal.h"
+#include "libc/calls/internal.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/errfuns.h"
 
+#define MAP_ANONYMOUS_linux 0x00000020
+#define MAP_FIXED_linux     0x00000010
+
 static uint64_t sys_mmap_metal_break;
 
-noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
+noasan static struct DirectMap bad_mmap(void) {
+  struct DirectMap res;
+  res.addr = (void *)-1;
+  res.maphandle = -1;
+  return res;
+}
+
+noasan struct DirectMap sys_mmap_metal(void *vaddr, size_t size, int prot,
                                        int flags, int fd, int64_t off) {
   /* asan runtime depends on this function */
   size_t i;
   struct mman *mm;
   struct DirectMap res;
-  uint64_t addr, page, *pte, *pml4t;
+  uint64_t addr, faddr = 0, page, *pte, *fdpte, *pml4t;
   mm = (struct mman *)(BANE + 0x0500);
   pml4t = __get_pml4t();
   size = ROUNDUP(size, 4096);
-  addr = (uint64_t)paddr;
-  if (!(flags & MAP_FIXED)) {
-    if (!addr) addr = 4096;
+  addr = (uint64_t)vaddr;
+  if (!(flags & MAP_ANONYMOUS_linux)) {
+    struct Fd *sfd;
+    struct MetalFile *file;
+    if (off < 0 || fd < 0 || fd >= g_fds.n) return bad_mmap();
+    sfd = &g_fds.p[fd];
+    if (sfd->kind != kFdFile) return bad_mmap();
+    file = (struct MetalFile *)sfd->handle;
+    /* TODO: allow mapping partial page at end of file, if file size not
+     * multiple of page size */
+    if (off > file->size || size > file->size - off) return bad_mmap();
+    faddr = (uint64_t)file->base + off;
+    if (faddr % 4096 != 0) return bad_mmap();
+  }
+  if (!(flags & MAP_FIXED_linux)) {
+    if (!addr) {
+      addr = 4096;
+    } else {
+      addr = ROUNDUP(addr, 4096);
+    }
     for (i = 0; i < size; i += 4096) {
       pte = __get_virtual(mm, pml4t, addr + i, false);
       if (pte && (*pte & (PAGE_V | PAGE_RSRV))) {
@@ -52,15 +80,26 @@ noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
   for (i = 0; i < size; i += 4096) {
     page = __new_page(mm);
     pte = __get_virtual(mm, pml4t, addr + i, true);
-    if (pte && page) {
-      __clear_page(BANE + page);
-      page |= PAGE_RSRV | PAGE_U;
-      if ((prot & PROT_WRITE))
-        page |= PAGE_V | PAGE_RW;
-      else if ((prot & (PROT_READ | PROT_EXEC)))
-        page |= PAGE_V;
-      if (!(prot & PROT_EXEC)) page |= PAGE_XD;
+    if (pte) {
+      if ((flags & MAP_ANONYMOUS_linux)) {
+        page = __new_page(mm);
+        if (!page) return bad_mmap();
+        __clear_page(BANE + page);
+        page |= PAGE_RSRV | PAGE_U;
+        if ((prot & PROT_WRITE))
+          page |= PAGE_V | PAGE_RW;
+        else if ((prot & (PROT_READ | PROT_EXEC)))
+          page |= PAGE_V;
+        if (!(prot & PROT_EXEC)) page |= PAGE_XD;
+      } else {
+        fdpte = __get_virtual(mm, pml4t, faddr + i, false);
+        page = *fdpte;
+        page |= PAGE_RSRV | PAGE_U;
+        if (!(prot & PROT_WRITE)) page &= ~PAGE_RW;
+        if (!(prot & PROT_EXEC)) page |= PAGE_XD;
+      }
       *pte = page;
+      invlpg(addr + i);
     } else {
       addr = -1;
       break;
