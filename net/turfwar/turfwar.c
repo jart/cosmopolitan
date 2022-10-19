@@ -1029,8 +1029,6 @@ void *HttpWorker(void *arg) {
                              "Cache-Control: max-age=3600, private\r\n"
                              "Date: ");
           p = FormatDate(p);
-          p = stpcpy(p, "\r\nX-Token-Count: ");
-          p = FormatInt32(p, CountTokens(g_tok.b, ip, TB_CIDR));
           p = stpcpy(p, "\r\nContent-Length: ");
           p = FormatInt32(p, strlen(ipbuf));
           p = stpcpy(p, "\r\n\r\n");

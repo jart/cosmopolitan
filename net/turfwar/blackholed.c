@@ -46,6 +46,7 @@
 #include "libc/sysv/consts/timer.h"
 #include "libc/time/struct/tm.h"
 #include "net/http/http.h"
+#include "net/http/ip.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/musl/passwd.h"
 
@@ -355,7 +356,7 @@ void WritePid(void) {
 bool IsMyIp(uint32_t ip) {
   uint32_t *p;
   for (p = g_myips; *p; ++p) {
-    if (ip == *p) {
+    if (ip == *p && !IsTestnetIp(ip)) {
       return true;
     }
   }

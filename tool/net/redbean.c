@@ -897,7 +897,8 @@ static bool IsTrustedIp(uint32_t ip) {
   uint32_t *p;
   if (interfaces) {
     for (p = interfaces; *p; ++p) {
-      if (ip == *p) {
+      if (ip == *p && !IsTestnetIp(ip)) {
+        DEBUGF("(token) ip is trusted because it's %s", "a local interface");
         return true;
       }
     }
@@ -905,12 +906,19 @@ static bool IsTrustedIp(uint32_t ip) {
   if (trustedips.n) {
     for (i = 0; i < trustedips.n; ++i) {
       if ((ip & trustedips.p[i].mask) == trustedips.p[i].ip) {
+        DEBUGF("(token) ip is trusted because it's %s", "whitelisted");
         return true;
       }
     }
     return false;
+  } else if (IsPrivateIp(ip) && !IsTestnetIp(ip)) {
+    DEBUGF("(token) ip is trusted because it's %s", "private");
+    return true;
+  } else if (IsLoopbackIp(ip)) {
+    DEBUGF("(token) ip is trusted because it's %s", "loopback");
+    return true;
   } else {
-    return IsPrivateIp(ip) || IsLoopbackIp(ip);
+    return false;
   }
 }
 
@@ -4752,20 +4760,34 @@ static int LuaIsAssetCompressed(lua_State *L) {
   return 1;
 }
 
-static void Blackhole(uint32_t ip) {
+static bool Blackhole(uint32_t ip) {
   char buf[4];
-  if (blackhole.fd > 0) return;
+  if (blackhole.fd <= 0) return false;
   WRITE32BE(buf, ip);
   if (sendto(blackhole.fd, &buf, 4, 0, (struct sockaddr *)&blackhole.addr,
-             sizeof(blackhole.addr)) == -1) {
-    VERBOSEF("error: sendto(%s) failed: %m\n", blackhole.addr.sun_path);
+             sizeof(blackhole.addr)) != -1) {
+    return true;
+  } else {
+    VERBOSEF("(token) sendto(%s) failed: %m", blackhole.addr.sun_path);
     errno = 0;
+    return false;
   }
+}
+
+static int LuaBlackhole(lua_State *L) {
+  lua_Integer ip;
+  ip = luaL_checkinteger(L, 1);
+  if (!(0 <= ip && ip <= 0xffffffff)) {
+    luaL_argerror(L, 1, "ip out of range");
+    unreachable;
+  }
+  lua_pushboolean(L, Blackhole(ip));
+  return 1;
 }
 
 wontreturn static void Replenisher(void) {
   struct timespec ts;
-  VERBOSEF("token replenish worker started");
+  VERBOSEF("(token) replenish worker started");
   signal(SIGINT, OnTerm);
   signal(SIGHUP, OnTerm);
   signal(SIGTERM, OnTerm);
@@ -4779,8 +4801,9 @@ wontreturn static void Replenisher(void) {
     }
     ReplenishTokens(tokenbucket.w, (1ul << tokenbucket.cidr) / 8);
     ts = _timespec_add(ts, tokenbucket.replenish);
+    DEBUGF("(token) replenished tokens");
   }
-  VERBOSEF("token replenish worker exiting");
+  VERBOSEF("(token) replenish worker exiting");
   _Exit(0);
 }
 
@@ -4846,7 +4869,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
     luaL_argerror(L, 5, "require ban <= ignore");
     unreachable;
   }
-  INFOF("deploying %,ld buckets "
+  INFOF("(token) deploying %,ld buckets "
         "(one for every %ld ips) "
         "each holding 127 tokens which "
         "replenish %g times per second, "
@@ -4867,14 +4890,14 @@ static int LuaProgramTokenBucket(lua_State *L) {
     strlcpy(blackhole.addr.sun_path, "/var/run/blackhole.sock",
             sizeof(blackhole.addr.sun_path));
     if ((blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
-      WARNF("error: socket(AF_UNIX) failed: %m");
+      WARNF("(token) socket(AF_UNIX) failed: %m");
       ban = -1;
     } else if (sendto(blackhole.fd, &testip, 4, 0,
                       (struct sockaddr *)&blackhole.addr,
                       sizeof(blackhole.addr)) == -1) {
-      WARNF("error: sendto(%`'s) failed: %m", blackhole.addr.sun_path);
-      WARNF("redbean isn't able to protect your kernel from level 4 ddos");
-      WARNF("please run the blackholed program, see https://justine.lol/");
+      WARNF("(token) error: sendto(%`'s) failed: %m", blackhole.addr.sun_path);
+      WARNF("(token) redbean isn't able to protect your kernel from ddos");
+      WARNF("(token) please run the blackholed program; see our website!");
     }
   }
   tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, FRAMESIZE));
@@ -5212,6 +5235,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"oct", LuaOct},                                            //
 #ifndef UNSECURE
     {"AcquireToken", LuaAcquireToken},                          //
+    {"Blackhole", LuaBlackhole},                                // undocumented
     {"CountTokens", LuaCountTokens},                            //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
@@ -6122,7 +6146,6 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       } else {
         return ServeError(500, "Internal Server Error");
       }
-#if 0  // TODO(jart): re-enable me
     } else if (!IsTiny() && cpm.msg.method != kHttpHead && !IsSslCompressed() &&
                ClientAcceptsGzip() &&
                !(a->file &&
@@ -6132,7 +6155,6 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
                  MeasureEntropy(cpm.content, 1000) < 7))) {
       WARNF("serving compressed asset");
       p = ServeAssetCompressed(a);
-#endif
     } else {
       p = ServeAssetIdentity(a, ct);
     }
@@ -6700,32 +6722,38 @@ static int HandleConnection(size_t i) {
     LockInc(&shared->c.accepts);
     GetClientAddr(&ip, 0);
     if (tokenbucket.cidr && tokenbucket.reject >= 0) {
-      if (!IsLoopbackIp(ip) && !IsTrustedIp(ip)) {
+      if (!IsTrustedIp(ip)) {
         tok = AcquireToken(tokenbucket.b, ip, tokenbucket.cidr);
         if (tok <= tokenbucket.ban && tokenbucket.ban >= 0) {
-          WARNF("(srvr) banning %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+          WARNF("(token) banning %hhu.%hhu.%hhu.%hhu who only has %d tokens",
                 ip >> 24, ip >> 16, ip >> 8, ip, tok);
           LockInc(&shared->c.bans);
           Blackhole(ip);
           close(client);
           return 0;
         } else if (tok <= tokenbucket.ignore && tokenbucket.ignore >= 0) {
+          DEBUGF("(token) ignoring %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+                 ip >> 24, ip >> 16, ip >> 8, ip, tok);
           LockInc(&shared->c.ignores);
           close(client);
           return 0;
         } else if (tok < tokenbucket.reject) {
-          WARNF("(srvr) rejecting %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+          WARNF("(token) rejecting %hhu.%hhu.%hhu.%hhu who only has %d tokens",
                 ip >> 24, ip >> 16, ip >> 8, ip, tok);
           LockInc(&shared->c.rejects);
           SendTooManyRequests();
           close(client);
           return 0;
+        } else {
+          DEBUGF("(token) %hhu.%hhu.%hhu.%hhu has %d tokens", ip >> 24,
+                 ip >> 16, ip >> 8, ip, tok - 1);
         }
       } else {
-        DEBUGF(
-            "(srvr) won't acquire token for whitelisted ip %hhu.%hhu.%hhu.%hhu",
-            ip >> 24, ip >> 16, ip >> 8, ip);
+        DEBUGF("(token) won't acquire token for trusted ip %hhu.%hhu.%hhu.%hhu",
+               ip >> 24, ip >> 16, ip >> 8, ip);
       }
+    } else {
+      DEBUGF("(token) can't acquire accept() token for client");
     }
     startconnection = _timespec_real();
     if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {

@@ -2038,6 +2038,25 @@ FUNCTIONS
     `ip` should be an IPv4 address and this defaults to GetClientAddr(),
     although other interpretations of its meaning are possible.
 
+  Blackhole(ip:uint32)
+      └─→ bool
+
+    Sends IP address to blackholed service.
+
+    ProgramTokenBucket() needs to be called beforehand. The default
+    settings will blackhole automatically, during the accept() loop
+    based on the banned threshold. However if your Lua code calls
+    AcquireToken() manually, then you'll need this function to take
+    action on the returned values.
+
+    This function returns true if a datagram could be sent sucessfully.
+    Otherwise false is returned, which can happen if blackholed isn't
+    running, or if a lot of processes are sending messages to it and the
+    operation would have blocked.
+
+    It's assumed that the blackholed service is running locally in the
+    background.
+
 
 ────────────────────────────────────────────────────────────────────────────────
 CONSTANTS

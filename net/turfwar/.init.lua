@@ -18,7 +18,6 @@ RELAY_HEADERS_TO_CLIENT = {
     'Content-Type',
     'Last-Modified',
     'Referrer-Policy',
-    'Vary',
 }
 
 function OnServerStart()
@@ -30,10 +29,27 @@ function OnWorkerStart()
     assert(unix.setrlimit(unix.RLIMIT_RSS, 2*1024*1024))
     assert(unix.setrlimit(unix.RLIMIT_CPU, 2))
     assert(unix.unveil(nil, nil))
-    assert(unix.pledge("stdio inet", nil, unix.PLEDGE_PENALTY_RETURN_EPERM))
+    assert(unix.pledge("stdio inet unix", nil, unix.PLEDGE_PENALTY_RETURN_EPERM))
 end
 
 function OnHttpRequest()
+    local ip = GetClientAddr()
+    if not IsTrustedIp(ip) then
+        local tok = AcquireToken(ip)
+        if tok < 2 then
+            if Blackhole(ip) then
+                Log(kLogWarn, "banned %s" % {FormatIp(ip)})
+            else
+                Log(kLogWarn, "failed to ban %s" % {FormatIp(ip)})
+            end
+        end
+        if tok < 30 then
+            ServeError(429)
+            SetHeader('Connection', 'close')
+            Log(kLogWarn, "warned %s who has %d tokens" % {FormatIp(ip), tok})
+            return
+        end
+    end
     local url = 'http://127.0.0.1' .. EscapePath(GetPath())
     local name = GetParam('name')
     if name then
@@ -49,7 +65,7 @@ function OnHttpRequest()
                    ['Referer'] = GetHeader('Referer'),
                    ['Sec-CH-UA-Platform'] = GetHeader('Sec-CH-UA-Platform'),
                    ['User-Agent'] = GetHeader('User-Agent'),
-                   ['X-Forwarded-For'] = FormatIp(GetClientAddr())}})
+                   ['X-Forwarded-For'] = FormatIp(ip)}})
     if status then
         SetStatus(status)
         for k,v in pairs(RELAY_HEADERS_TO_CLIENT) do
