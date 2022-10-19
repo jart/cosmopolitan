@@ -45,6 +45,7 @@
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/timer.h"
 #include "libc/time/struct/tm.h"
+#include "net/http/http.h"
 #include "third_party/getopt/getopt.h"
 #include "third_party/musl/passwd.h"
 
@@ -55,12 +56,13 @@
 #define DEFAULT_LOGNAME  "/var/log/blackhole.log"
 #define DEFAULT_PIDNAME  "/var/run/blackhole.pid"
 #define DEFAULT_SOCKNAME "/var/run/blackhole.sock"
-#define GETOPTS          "L:S:P:M:G:dh"
+#define GETOPTS          "L:S:P:M:G:W:dh"
 #define USAGE \
   "\
-Usage: blackholed [-hdLPSMG]\n\
+Usage: blackholed [-hdLPSMGW]\n\
   -h            help\n\
   -d            daemonize\n\
+  -W IP         whitelist ip address\n\
   -L PATH       log file name (default: " DEFAULT_LOGNAME ")\n\
   -P PATH       pid file name (default: " DEFAULT_PIDNAME ")\n\
   -S PATH       socket file name (default: " DEFAULT_SOCKNAME ")\n\
@@ -131,6 +133,7 @@ const char *g_sockname;
 const char *g_iptables;
 sig_atomic_t g_shutdown;
 struct SortedInts g_blocked;
+struct SortedInts g_whitelisted;
 
 static wontreturn void ShowUsage(int fd, int rc) {
   write(fd, USAGE, sizeof(USAGE) - 1);
@@ -139,8 +142,23 @@ static wontreturn void ShowUsage(int fd, int rc) {
   _Exit(rc);
 }
 
-static void GetOpts(int argc, char *argv[]) {
+char *GetTimestamp(void) {
+  struct timespec ts;
+  static struct tm tm;
+  static int64_t last;
+  static char str[27];
+  clock_gettime(0, &ts);
+  if (ts.tv_sec != last) {
+    localtime_r(&ts.tv_sec, &tm);
+    last = ts.tv_sec;
+  }
+  iso8601us(str, &tm, ts.tv_nsec);
+  return str;
+}
+
+void GetOpts(int argc, char *argv[]) {
   int opt;
+  int64_t ip;
   g_sockmode = 0777;
   g_pidname = DEFAULT_PIDNAME;
   g_logname = DEFAULT_LOGNAME;
@@ -165,26 +183,22 @@ static void GetOpts(int argc, char *argv[]) {
       case 'M':
         g_sockmode = strtol(optarg, 0, 8) & 0777;
         break;
+      case 'W':
+        if ((ip = ParseIp(optarg, -1)) != -1) {
+          if (InsertInt(&g_whitelisted, ip, true)) {
+            LOG("whitelisted %s", optarg);
+          }
+        } else {
+          kprintf("error: could not parse -W %#s IP address\n", optarg);
+          _Exit(1);
+        }
+        break;
       case 'h':
         ShowUsage(1, 0);
       default:
         ShowUsage(2, 64);
     }
   }
-}
-
-char *GetTimestamp(void) {
-  struct timespec ts;
-  static struct tm tm;
-  static int64_t last;
-  static char str[27];
-  clock_gettime(0, &ts);
-  if (ts.tv_sec != last) {
-    localtime_r(&ts.tv_sec, &tm);
-    last = ts.tv_sec;
-  }
-  iso8601us(str, &tm, ts.tv_nsec);
-  return str;
 }
 
 void OnTerm(int sig) {
@@ -278,9 +292,11 @@ void Daemonize(void) {
 }
 
 void UseLog(void) {
-  _npassert(dup2(g_logfd, 2) == 2);
-  if (g_logfd != 2) {
-    _npassert(!close(g_logfd));
+  if (g_logfd > 0) {
+    _npassert(dup2(g_logfd, 2) == 2);
+    if (g_logfd != 2) {
+      _npassert(!close(g_logfd));
+    }
   }
 }
 
@@ -426,6 +442,7 @@ int main(int argc, char *argv[]) {
 
     if ((ip = READ32BE(msg))) {
       if (IsMyIp(ip) ||                       // nics
+          ContainsInt(&g_whitelisted, ip) ||  // protected
           (ip & 0xff000000) == 0x00000000 ||  // 0.0.0.0/8
           (ip & 0xff000000) == 0x7f000000) {  // 127.0.0.0/8
         LOG("won't block %s", FormatIp(ip));

@@ -37,17 +37,10 @@ int main(int argc, char *argv[]) {
   }
 
   int fd;
-  struct sockaddr_un addr = {
-      AF_UNIX,
-      "/var/run/blackhole.sock",
-  };
+  struct sockaddr_un addr = {AF_UNIX, "/var/run/blackhole.sock"};
   if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
     kprintf("error: socket(AF_UNIX) failed: %s\n", strerror(errno));
     return 3;
-  }
-  if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-    kprintf("error: connect(%#s) failed: %s\n", addr.sun_path, strerror(errno));
-    return 4;
   }
 
   int rc = 0;
@@ -56,8 +49,9 @@ int main(int argc, char *argv[]) {
     char buf[4];
     if ((ip = ParseIp(argv[i], -1)) != -1) {
       WRITE32BE(buf, ip);
-      if (write(fd, buf, 4) == -1) {
-        kprintf("error: write() failed: %s\n", strerror(errno));
+      if (sendto(fd, buf, 4, 0, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        kprintf("error: sendto(%#s) failed: %s\n", addr.sun_path,
+                strerror(errno));
         rc |= 2;
       }
     } else {

@@ -39,6 +39,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/mem/sortedints.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/paths.h"
 #include "libc/runtime/internal.h"
@@ -118,13 +119,14 @@
 #define TB_BYTES (1u << TB_CIDR)
 #define TB_WORDS (TB_BYTES / 8)
 
-#define GETOPTS "idvp:w:k:"
+#define GETOPTS "idvp:w:k:W:"
 #define USAGE \
   "\
 Usage: turfwar.com [-dv] ARGS...\n\
   -i          integrity check and vacuum at startup\n\
   -d          daemonize\n\
   -v          verbosity\n\
+  -W IP       whitelist\n\
   -p INT      port\n\
   -w INT      workers\n\
   -k INT      keepalive\n\
@@ -247,6 +249,7 @@ bool g_daemonize;
 int g_port = PORT;
 int g_workers = WORKERS;
 int g_keepalive = KEEPALIVE_MS;
+struct SortedInts g_whitelisted;
 
 // lifecycle vars
 pthread_t g_listener;
@@ -417,7 +420,7 @@ bool Blackhole(uint32_t ip) {
              sizeof(g_blackhole.addr)) == 4) {
     return true;
   } else {
-    kprintf("error: sendto(/var/run/blackhole.sock) failed: %s\n",
+    kprintf("error: sendto(%#s) failed: %s\n", g_blackhole.addr.sun_path,
             strerror(errno));
     return false;
   }
@@ -891,7 +894,8 @@ void *HttpWorker(void *arg) {
       ksnprintf(ipbuf, sizeof(ipbuf), "%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16,
                 ip >> 8, ip);
 
-      if (!ipv6 && (tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 32) {
+      if (!ipv6 && !ContainsInt(&g_whitelisted, ip) &&
+          (tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 32) {
         if (tok > 4) {
           LOG("%s rate limiting client\n", ipbuf, msg->version);
           Write(client.sock, "HTTP/1.1 429 Too Many Requests\r\n"
@@ -1342,8 +1346,9 @@ void OnCtrlC(int sig) {
 }
 
 // parses cli arguments
-static void GetOpts(int argc, char *argv[]) {
+void GetOpts(int argc, char *argv[]) {
   int opt;
+  int64_t ip;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       case 'i':
@@ -1363,6 +1368,16 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'v':
         ++__log_level;
+        break;
+      case 'W':
+        if ((ip = ParseIp(optarg, -1)) != -1) {
+          if (InsertInt(&g_whitelisted, ip, true)) {
+            LOG("whitelisted %s", optarg);
+          }
+        } else {
+          kprintf("error: could not parse -w %#s IP address\n", optarg);
+          _Exit(1);
+        }
         break;
       case '?':
         write(1, USAGE, sizeof(USAGE) - 1);

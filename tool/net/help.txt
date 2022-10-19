@@ -1935,6 +1935,12 @@ FUNCTIONS
     If the client ignores this warning and keeps sending requests, until
     there's no tokens left, then the banhammer finally comes down.
 
+        function OnServerStart()
+            ProgramTokenBucket()
+            ProgramTrustedIp(ParseIp('x.x.x.x'), 32)
+            assert(unix.setrlimit(unix.RLIMIT_NPROC, 1000, 1000))
+        end
+
     This model of network rate limiting generously lets people "burst" a
     tiny bit. For example someone might get a strong craving for content
     and smash the reload button in Chrome 64 times in a fow seconds. But

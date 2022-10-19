@@ -2171,7 +2171,12 @@ static bool OpenZip(bool force) {
       }
     }
   } else {
-    WARNF("(zip) stat() error: %m");
+    // avoid noise if we setuid to user who can't see executable
+    if (errno == EACCES) {
+      VERBOSEF("(zip) stat(%`'s) error: %m", zpath);
+    } else {
+      WARNF("(zip) stat(%`'s) error: %m", zpath);
+    }
   }
   return false;
 }
@@ -4749,10 +4754,12 @@ static int LuaIsAssetCompressed(lua_State *L) {
 
 static void Blackhole(uint32_t ip) {
   char buf[4];
-  if (blackhole.fd <= 0) return;
+  if (blackhole.fd > 0) return;
   WRITE32BE(buf, ip);
-  if (write(blackhole.fd, buf, 4) == -1) {
-    WARNF("error: write(%s) failed: %m\n", blackhole.addr.sun_path);
+  if (sendto(blackhole.fd, &buf, 4, 0, (struct sockaddr *)&blackhole.addr,
+             sizeof(blackhole.addr)) == -1) {
+    VERBOSEF("error: sendto(%s) failed: %m\n", blackhole.addr.sun_path);
+    errno = 0;
   }
 }
 
@@ -4855,22 +4862,19 @@ static int LuaProgramTokenBucket(lua_State *L) {
   if (ignore == -1) ignore = -128;
   if (ban == -1) ban = -128;
   if (ban >= 0 && (IsLinux() || IsBsd())) {
-    struct Blackhole bh;
-    bh.addr.sun_family = AF_UNIX;
-    strlcpy(bh.addr.sun_path, "/var/run/blackhole.sock",
-            sizeof(bh.addr.sun_path));
-    if ((bh.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
+    uint32_t testip = 0;
+    blackhole.addr.sun_family = AF_UNIX;
+    strlcpy(blackhole.addr.sun_path, "/var/run/blackhole.sock",
+            sizeof(blackhole.addr.sun_path));
+    if ((blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
       WARNF("error: socket(AF_UNIX) failed: %m");
       ban = -1;
-    } else if (connect(bh.fd, (struct sockaddr *)&bh.addr, sizeof(bh.addr)) ==
-               -1) {
-      WARNF("error: connect(%`'s) failed: %m", bh.addr.sun_path);
+    } else if (sendto(blackhole.fd, &testip, 4, 0,
+                      (struct sockaddr *)&blackhole.addr,
+                      sizeof(blackhole.addr)) == -1) {
+      WARNF("error: sendto(%`'s) failed: %m", blackhole.addr.sun_path);
       WARNF("redbean isn't able to protect your kernel from level 4 ddos");
       WARNF("please run the blackholed program, see https://justine.lol/");
-      close(bh.fd);
-      ban = -1;
-    } else {
-      blackhole = bh;
     }
   }
   tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, FRAMESIZE));
