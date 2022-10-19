@@ -900,6 +900,21 @@ static int db_db_filename(lua_State *L) {
     return 1;
 }
 
+static int db_wal_checkpoint(lua_State *L) {
+    sdb *db = lsqlite_checkdb(L, 1);
+    int eMode = luaL_optinteger(L, 2, SQLITE_CHECKPOINT_PASSIVE);
+    const char *db_name = luaL_optstring(L, 3, NULL);
+    int nLog, nCkpt;
+    if (sqlite3_wal_checkpoint_v2(db->db, db_name, eMode, &nLog, &nCkpt) != SQLITE_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, sqlite3_errcode(db->db));
+    } else {
+        lua_pushinteger(L, nLog);
+        lua_pushinteger(L, nCkpt);
+    }
+    return 2;
+}
+
 /*
 ** Registering SQL functions:
 */
@@ -2381,6 +2396,12 @@ static const struct {
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
 
+    /* checkpoint flags */
+    SC(CHECKPOINT_PASSIVE)
+    SC(CHECKPOINT_FULL)
+    SC(CHECKPOINT_RESTART)
+    SC(CHECKPOINT_TRUNCATE)
+
 #ifdef SQLITE_ENABLE_SESSION
     /* session constants */
     SC(CHANGESETSTART_INVERT)
@@ -2413,6 +2434,7 @@ static const luaL_Reg dblib[] = {
     {"error_message",       db_errmsg               },
     {"interrupt",           db_interrupt            },
     {"db_filename",         db_db_filename          },
+    {"wal_checkpoint",      db_wal_checkpoint       },
 
     {"create_function",     db_create_function      },
     {"create_aggregate",    db_create_aggregate     },
