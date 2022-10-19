@@ -54,7 +54,12 @@ textstartup void InitializeMetalFile(void) {
   if (IsMetal()) {
     /*
      * Copy out a pristine image of the program — before the program might
-     * decide to modify its own .data section.  Do this only if needed.
+     * decide to modify its own .data section.
+     *
+     * This code is included if a symbol "file:/proc/self/exe" is defined
+     * (see libc/calls/metalfile.internal.h & libc/calls/metalfile_init.S). 
+     * The zipos code will automatically arrange to do this.  Alternatively,
+     * user code can STATIC_YOINK this symbol.
      */
     size_t size = ROUNDUP(_tdata_end - _base, 4096);
     void *copied_base;
