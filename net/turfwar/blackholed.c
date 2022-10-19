@@ -87,15 +87,20 @@ Protocol:\n\
 Linux Requirements:\n\
   sudo modprobe ip_tables\n\
   sudo echo ip_tables >>/etc/modules\n\
+  sudo iptables -t raw -N blackholed\n\
+  sudo iptables -t raw -A blackholed -j RETURN\n\
+  sudo iptables -t raw -I PREROUTING -j blackholed\n\
 \n\
 Administration Notes:\n\
-  This program inserts IP bans into iptables raw prerouting, so\n\
-  the kernel won't track the TCP connections of threat actors.\n\
+  This program inserts IP bans into its own chain in the iptables raw table,\n\
+  so that the kernel won't track the TCP connections of threat actors.\n\
+  Note that the 3 iptables commands have to be run on every system startup.\n\
   If you restart this program, then you should run\n\
-    sudo iptables -t raw -F\n\
+    sudo iptables -t raw -F blackholed\n\
+    sudo iptables -t raw -A blackholed -j RETURN\n\
   to clear the IP blocks. It's a good idea to have a cron job\n\
   restart this daemon and clear the raw table daily. Use the\n\
-    sudo iptables -t raw -L -vn\n\
+    sudo iptables -t raw -L blackholed -vn\n\
   command to list the IP addresses that have been blocked.\n\
 \n"
 
@@ -221,7 +226,7 @@ void BlockIp(uint32_t ip) {
              (char *const[]){
                  "iptables",          //
                  "-t", "raw",         //
-                 "-I", "PREROUTING",  //
+                 "-I", "blackholed",  //
                  "-s", FormatIp(ip),  //
                  "-j", "DROP",        //
                  0,                   //
