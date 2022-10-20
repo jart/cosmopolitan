@@ -26,8 +26,8 @@ noasan int sys_munmap_metal(void *addr, size_t size) {
   mm = (struct mman *)(BANE + 0x0500);
   for (i = 0; i < size; i += 4096) {
     e = __get_virtual(mm, __get_pml4t(), (uint64_t)addr + i, false);
-    if (e) *e = ~PAGE_V;
-    invlpg(e);
+    if (e) *e = ~(PAGE_V | PAGE_RSRV);
+    invlpg((uint64_t)addr + i);
   }
   return 0;
 }

@@ -40,7 +40,7 @@ struct mman {
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
-/* Values for mman::pc_video_type.  TODO: implement graphics modes. */
+/* Values for mman::pc_video_type. */
 #define PC_VIDEO_TEXT     0
 #define PC_VIDEO_BGR565   1
 #define PC_VIDEO_BGR555   2

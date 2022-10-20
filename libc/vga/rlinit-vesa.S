@@ -582,7 +582,6 @@ _rlinit_vesa:
 	mov	$'\n',%al
 	jmp	.putc
 	.endfn	.putnl
-	.previous
 
 str.inform:
 #define SHGLYPH	"\x7f"
@@ -629,3 +628,5 @@ str.mode_list_start:
 	.byte	PC_VIDEO_RGBX8888,32, 8, 0, 8, 8, 8,16
 	.byte	PC_VIDEO_BGRX8888,32, 8,16, 8, 8, 8, 0
 .type_list_end:
+
+	.previous

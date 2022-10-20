@@ -145,15 +145,15 @@
      │        (If this maps 2MB/1GB page and CR4.PGE) Global┐││││││││
      │      (If IsPage 2MB/1GB, see Intel V3A § 11.12) PAT  │││││││││
      │                                                  │   │││││││││
-     │             ┌────────────────────────────────────┤   │││││││││
-     │   Must Be 0┐│ Next Page Table Address (!IsPage)  │   │││││││││
-     │            │├────────────────────────────────────┤   │││││││││
-     │            ││ Physical Address 4KB               │   │││││││││
-     │┌───┐┌─────┐│├───────────────────────────┐        │ign│││││││││
-     ││PKE││ ign │││ Physical Address 2MB      │        │┌┴┐│││││││││
-     ││   ││     ││├──────────────────┐        │        ││ ││││││││││
-     ││   ││     │││ Phys. Addr. 1GB  │        │        ││ ││││││││││
-     ││   ││     │││                  │        │        ││ ││││││││││
+     │            ┌─────────────────────────────────────┤   │││││││││
+     │  Must Be 0┐│ Next Page Table Address (!IsPage)   │   │││││││││
+     │           │├─────────────────────────────────────┤   │││││││││
+     │           ││ Physical Address 4KB                │   │││││││││
+     │┌──┐┌─────┐│├────────────────────────────┐        │ign│││││││││
+     ││PK││ ign │││ Physical Address 2MB       │        │┌┴┐│││││││││
+     ││  ││     ││├───────────────────┐        │        ││ ││││││││││
+     ││  ││     │││ Phys. Addr. 1GB   │        │        ││ ││││││││││
+     ││  ││     │││                   │        │        ││ ││││││││││
      6666555555555544444444443333333333222222222211111111110000000000
      3210987654321098765432109876543210987654321098765432109876543210*/
 #define PAGE_V    /*                                */ 0b000000000001
@@ -163,7 +163,7 @@
 #define PAGE_2MB  /*                                */ 0b000110000000
 #define PAGE_1GB  /*                                */ 0b000110000000
 #define PAGE_IGN1 /*                                */ 0b111000000000
-#define PAGE_RSRV /* blinkenlights reservation      */ 0b001000000000
+#define PAGE_RSRV /* blinkenlights/libc reservation */ 0b001000000000
 #define PAGE_GROD /* blinkenlights MAP_GROWSDOWN    */ 0b010000000000
 #define PAGE_TA   0x00007ffffffff000
 #define PAGE_PA2  0x00007fffffe00000
