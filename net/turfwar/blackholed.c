@@ -54,15 +54,17 @@
   kprintf("%s %s:%d] " FMT "\n", GetTimestamp(), __FILE__, __LINE__, \
           ##__VA_ARGS__)
 
+#define DEFAULT_CHAIN    "PREROUTING"
 #define DEFAULT_LOGNAME  "/var/log/blackhole.log"
 #define DEFAULT_PIDNAME  "/var/run/blackhole.pid"
 #define DEFAULT_SOCKNAME "/var/run/blackhole.sock"
-#define GETOPTS          "L:S:P:M:G:W:dh"
+#define GETOPTS          "C:L:S:P:M:G:W:dh"
 #define USAGE \
   "\
 Usage: blackholed [-hdLPSMGW]\n\
   -h            help\n\
   -d            daemonize\n\
+  -C CHAIN      change iptables chain to insert rules into\n\
   -W IP         whitelist ip address\n\
   -L PATH       log file name (default: " DEFAULT_LOGNAME ")\n\
   -P PATH       pid file name (default: " DEFAULT_PIDNAME ")\n\
@@ -90,14 +92,19 @@ Linux Requirements:\n\
   sudo echo ip_tables >>/etc/modules\n\
 \n\
 Administration Notes:\n\
-  This program inserts IP bans into iptables raw prerouting, so\n\
-  the kernel won't track the TCP connections of threat actors.\n\
+  This program inserts IP bans into the prerouting chain in iptables raw\n\
+  so that the kernel won't track the TCP connections of threat actors.\n\
   If you restart this program, then you should run\n\
-    sudo iptables -t raw -F\n\
+    sudo iptables -t raw -F \n\
   to clear the IP blocks. It's a good idea to have a cron job\n\
   restart this daemon and clear the raw table daily. Use the\n\
     sudo iptables -t raw -L -vn\n\
   command to list the IP addresses that have been blocked.\n\
+  If -C is specified, a chain needs to be created on every system startup\n\
+  with the following commands:\n\
+    sudo iptables -t raw -N blackholed\n\
+    sudo iptables -t raw -A blackholed -j RETURN\n\
+    sudo iptables -t raw -I PREROUTING -j blackholed\n\
 \n"
 
 #define BSD_DOCS \
@@ -126,6 +133,7 @@ int g_logfd;
 int g_sockmode;
 bool g_daemonize;
 uint32_t *g_myips;
+const char *g_chain;
 const char *g_group;
 const char *g_pfctl;
 const char *g_logname;
@@ -161,6 +169,7 @@ void GetOpts(int argc, char *argv[]) {
   int opt;
   int64_t ip;
   g_sockmode = 0777;
+  g_chain = DEFAULT_CHAIN;
   g_pidname = DEFAULT_PIDNAME;
   g_logname = DEFAULT_LOGNAME;
   g_sockname = DEFAULT_SOCKNAME;
@@ -168,6 +177,9 @@ void GetOpts(int argc, char *argv[]) {
     switch (opt) {
       case 'd':
         g_daemonize = true;
+        break;
+      case 'C':
+        g_chain = optarg;
         break;
       case 'S':
         g_sockname = optarg;
@@ -222,7 +234,7 @@ void BlockIp(uint32_t ip) {
              (char *const[]){
                  "iptables",          //
                  "-t", "raw",         //
-                 "-I", "PREROUTING",  //
+                 "-I", g_chain,       //
                  "-s", FormatIp(ip),  //
                  "-j", "DROP",        //
                  0,                   //
