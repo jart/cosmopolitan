@@ -16,17 +16,70 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/internal.h"
+#include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/calls/termios.h"
+#include "libc/dce.h"
+#include "libc/fmt/itoa.h"
+#include "libc/intrin/strace.internal.h"
+#include "libc/mem/alloca.h"
+#include "libc/nt/comms.h"
+#include "libc/sysv/consts/termios.h"
+#include "libc/sysv/errfuns.h"
+
+#define kNtPurgeTxclear 4
+#define kNtPurgeRxclear 8
+
+static const char *DescribeFlush(char buf[12], int action) {
+  if (action == TCIFLUSH) return "TCIFLUSH";
+  if (action == TCOFLUSH) return "TCOFLUSH";
+  if (action == TCIOFLUSH) return "TCIOFLUSH";
+  FormatInt32(buf, action);
+  return buf;
+}
+
+static dontinline textwindows int sys_tcflush_nt(int fd, int queue) {
+  bool32 ok;
+  int64_t h;
+  if (!__isfdopen(fd)) return ebadf();
+  ok = true;
+  h = g_fds.p[fd].handle;
+  if (queue == TCIFLUSH || queue == TCIOFLUSH) {
+    ok &= !!PurgeComm(h, kNtPurgeRxclear);
+  }
+  if (queue == TCOFLUSH || queue == TCIOFLUSH) {
+    ok &= !!PurgeComm(h, kNtPurgeTxclear);
+  }
+  return ok ? 0 : __winerr();
+}
 
 /**
- * Flushes teletypewriter data.
+ * Discards queued data on teletypewriter.
  *
- * - `TCIFLUSH` flushes data received but not read
- * - `TCOFLUSH` flushes data written but not transmitted
- * - `TCIOFLUSH` does both `TCOFLUSH` and `TCIFLUSH`
+ * @param queue may be one of:
+ *     - `TCIFLUSH` flushes data received but not read
+ *     - `TCOFLUSH` flushes data written but not transmitted
+ *     - `TCIOFLUSH` does both `TCOFLUSH` and `TCIFLUSH`
+ * @return 0 on success, or -1 w/ errno
+ * @raise EINVAL if `action` is invalid
+ * @raise EBADF if `fd` isn't an open file descriptor
+ * @raise ENOTTY if `fd` is open but not a teletypewriter
+ * @raise EIO if process group of writer is orphoned, calling thread is
+ *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
+ * @raise ENOSYS on bare metal
+ * @asyncsignalsafe
  */
 int tcflush(int fd, int queue) {
-  /* TODO(jart): Windows? */
-  return sys_ioctl(fd, TCFLSH, queue);
+  int rc;
+  if (IsMetal()) {
+    rc = enosys();
+  } else if (!IsWindows()) {
+    rc = sys_ioctl(fd, TCFLSH, queue);
+  } else {
+    rc = sys_tcflush_nt(fd, queue);
+  }
+  STRACE("tcflush(%d, %s) → %d% m", fd, DescribeFlush(alloca(12), queue), rc);
+  return rc;
 }

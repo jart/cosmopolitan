@@ -33,7 +33,7 @@
  */
 
 #define PROCESSES  8
-#define THREADS    (IsWindows() ? 8 : 0)
+#define THREADS    0  // <-- consider F_OFD_* locks
 #define RATIO      3
 #define ITERATIONS 10
 

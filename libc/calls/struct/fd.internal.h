@@ -25,7 +25,7 @@ struct Fd {
 };
 
 struct Fds {
-  int f; /* lowest free slot */
+  _Atomic(int) f; /* lowest free slot */
   size_t n;
   struct Fd *p, *e;
 };

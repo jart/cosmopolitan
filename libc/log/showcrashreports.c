@@ -32,6 +32,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 
+STATIC_YOINK("zipos");                       // for symtab
 STATIC_YOINK("__die");                       // for backtracing
 STATIC_YOINK("ShowBacktrace");               // for backtracing
 STATIC_YOINK("GetSymbolTable");              // for backtracing

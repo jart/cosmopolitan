@@ -33,6 +33,7 @@
  * @param buf may be used to store output having at least 15 bytes
  * @return pointer to .rodata string, or to `buf` after mutating
  * @see sigaction()
+ * @asyncsignalsafe
  * @threadsafe
  */
 char *strsignal_r(int sig, char buf[hasatleast 15]) {

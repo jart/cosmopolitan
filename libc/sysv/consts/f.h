@@ -76,7 +76,7 @@ COSMOPOLITAN_C_END_
 #define F_UNLCK         SYMBOLIC(F_UNLCK)
 #define F_WRLCK         SYMBOLIC(F_WRLCK)
 
-/* avoid leading #ifdef astray */
+/* avoid leading #ifdef configurations astray */
 /* #define F_FULLFSYNC SYMBOLIC(F_FULLFSYNC) */
 /* #define F_BARRIERFSYNC SYMBOLIC(F_BARRIERFSYNC) */
 /* #define F_OFD_GETLK     SYMBOLIC(F_OFD_GETLK) */

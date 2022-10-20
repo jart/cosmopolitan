@@ -9,7 +9,7 @@ struct flock {      /* cosmopolitan abi */
   int64_t l_start;  /* starting offset */
   int64_t l_len;    /* no. bytes (0 means to end of file) */
   int32_t l_pid;    /* lock owner */
-  int32_t l_sysid;  /* remote system id or zero for local */
+  int32_t l_sysid;  /* remote system id or zero for local (freebsd) */
 };
 
 COSMOPOLITAN_C_END_

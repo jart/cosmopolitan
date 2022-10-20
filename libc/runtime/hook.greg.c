@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/runtime/morph.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
@@ -45,13 +46,13 @@ privileged noinstrument noasan int __hook(void *ifunc,
   size_t i;
   char *p, *pe;
   intptr_t addr;
+  sigset_t mask;
   uint64_t code, mcode;
-  sigset_t mask, oldmask;
   intptr_t kMcount = (intptr_t)&mcount;
   intptr_t kProgramCodeStart = (intptr_t)_ereal;
   intptr_t kPrivilegedStart = (intptr_t)__privileged_addr;
   if (!symbols) return -1;
-  __morph_begin();
+  __morph_begin(&mask);
   for (i = 0; i < symbols->count; ++i) {
     if (symbols->addr_base + symbols->symbols[i].x < kProgramCodeStart) {
       continue;
@@ -112,6 +113,6 @@ privileged noinstrument noasan int __hook(void *ifunc,
       }
     }
   }
-  __morph_end();
+  __morph_end(&mask);
   return 0;
 }

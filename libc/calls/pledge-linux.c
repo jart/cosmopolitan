@@ -1606,19 +1606,26 @@ static privileged void AllowFcntlStdio(struct Filter *f) {
 
 // The second argument of fcntl() must be one of:
 //
-//   - F_GETLK (5)
-//   - F_SETLK (6)
-//   - F_SETLKW (7)
+//   - F_GETLK (0x05)
+//   - F_SETLK (0x06)
+//   - F_SETLKW (0x07)
+//   - F_OFD_GETLK (0x24)
+//   - F_OFD_SETLK (0x25)
+//   - F_OFD_SETLKW (0x26)
 //
 static privileged void AllowFcntlLock(struct Filter *f) {
   static const struct sock_filter fragment[] = {
-      /*L0*/ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 6 - 1),
-      /*L1*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
-      /*L2*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, 5, 0, 5 - 3),
-      /*L3*/ BPF_JUMP(BPF_JMP | BPF_JGE | BPF_K, 8, 5 - 4, 0),
-      /*L4*/ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
-      /*L5*/ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
-      /*L6*/ /* next filter */
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_linux_fcntl, 0, 9),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(args[1])),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x05, 5, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x06, 4, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x07, 3, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x24, 2, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x25, 1, 0),
+      BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x26, 0, 1),
+      BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+      BPF_STMT(BPF_LD | BPF_W | BPF_ABS, OFF(nr)),
+      /* next filter */
   };
   AppendFilter(f, PLEDGE(fragment));
 }

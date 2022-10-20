@@ -45,27 +45,18 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   }
 
   // allocate a new file descriptor
-  for (;;) {
-    if (newfd == -1) {
-      if ((newfd = __reservefd_unlocked(start)) == -1) {
-        __fds_unlock();
-        return -1;
-      }
-      break;
-    } else {
-      if (__ensurefds_unlocked(newfd) == -1) {
-        __fds_unlock();
-        return -1;
-      }
-      if (g_fds.p[newfd].kind) {
-        __fds_unlock();
-        close(newfd);
-        __fds_lock();
-      }
-      if (!g_fds.p[newfd].kind) {
-        g_fds.p[newfd].kind = kFdReserved;
-        break;
-      }
+  if (newfd == -1) {
+    if ((newfd = __reservefd_unlocked(start)) == -1) {
+      __fds_unlock();
+      return -1;
+    }
+  } else {
+    if (__ensurefds_unlocked(newfd) == -1) {
+      __fds_unlock();
+      return -1;
+    }
+    if (g_fds.p[newfd].kind) {
+      sys_close_nt(g_fds.p + newfd, newfd);
     }
   }
 
@@ -86,7 +77,7 @@ textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
     }
     rc = newfd;
   } else {
-    __releasefd_unlocked(newfd);
+    __releasefd(newfd);
     rc = __winerr();
   }
 

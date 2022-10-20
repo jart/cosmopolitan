@@ -47,7 +47,7 @@
 #include "third_party/libcxx/vector"
 #include "tool/viz/lib/knobs.h"
 
-STATIC_YOINK("zip_uri_support");
+STATIC_YOINK("zipos");
 
 #define USAGE \
   " [ROM] [FMV]\n\

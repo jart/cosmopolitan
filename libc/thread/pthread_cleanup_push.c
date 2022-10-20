@@ -21,7 +21,7 @@
 
 void _pthread_cleanup_push(struct _pthread_cleanup_buffer *cb,
                            void (*routine)(void *), void *arg) {
-  struct PosixThread *pt = (struct PosixThread *)pthread_self();
+  struct PosixThread *pt = (struct PosixThread *)__get_tls()->tib_pthread;
   cb->__routine = routine;
   cb->__arg = arg;
   cb->__prev = pt->cleanup;

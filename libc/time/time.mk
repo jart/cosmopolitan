@@ -62,7 +62,10 @@ o/$(MODE)/libc/time/localtime.o: private	\
 			-fdata-sections		\
 			-ffunction-sections
 
-o/$(MODE)/libc/time/now.o: private		\
+# we need -O3 because:
+#   we're dividing by constants
+o/$(MODE)/libc/time/iso8601.o			\
+o/$(MODE)/libc/time/iso8601us.o: private	\
 		OVERRIDE_CFLAGS +=		\
 			-O3
 

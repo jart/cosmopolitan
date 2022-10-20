@@ -54,9 +54,9 @@ int execve(const char *prog, char *const argv[], char *const envp[]) {
   int rc;
   size_t i;
   if (!prog || !argv || !envp ||
-      (IsAsan() &&
-       (!__asan_is_valid(prog, 1) || !__asan_is_valid_strlist(argv) ||
-        !__asan_is_valid_strlist(envp)))) {
+      (IsAsan() && (!__asan_is_valid(prog, 1) ||       //
+                    !__asan_is_valid_strlist(argv) ||  //
+                    !__asan_is_valid_strlist(envp)))) {
     rc = efault();
   } else {
     STRACE("execve(%#s, %s, %s) → ...", prog, DescribeStringList(argv),

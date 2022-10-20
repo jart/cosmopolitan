@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
@@ -25,8 +26,10 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/termios.h"
+#include "libc/calls/struct/timespec.h"
 #include "libc/dce.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/hoststxt.h"
@@ -35,8 +38,8 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/bits.h"
 #include "libc/intrin/bsr.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
@@ -62,13 +65,16 @@
 #include "libc/sock/goodsocket.internal.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
+#include "libc/sock/struct/sockaddr.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/hex.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/slice.h"
+#include "libc/str/str.h"
 #include "libc/str/strwidth.h"
 #include "libc/sysv/consts/af.h"
+#include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/dt.h"
 #include "libc/sysv/consts/ex.h"
@@ -88,6 +94,7 @@
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/sock.h"
 #include "libc/sysv/consts/termios.h"
+#include "libc/sysv/consts/timer.h"
 #include "libc/sysv/consts/w.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/spawn.h"
@@ -99,6 +106,7 @@
 #include "net/http/escape.h"
 #include "net/http/http.h"
 #include "net/http/ip.h"
+#include "net/http/tokenbucket.h"
 #include "net/http/url.h"
 #include "net/https/https.h"
 #include "third_party/getopt/getopt.h"
@@ -334,13 +342,30 @@ static struct Assets {
   } * p;
 } assets;
 
-static struct ProxyIps {
+static struct TrustedIps {
   size_t n;
-  struct ProxyIp {
+  struct TrustedIp {
     uint32_t ip;
     uint32_t mask;
   } * p;
-} proxyips;
+} trustedips;
+
+struct TokenBucket {
+  signed char cidr;
+  signed char reject;
+  signed char ignore;
+  signed char ban;
+  struct timespec replenish;
+  union {
+    atomic_schar *b;
+    atomic_uint_fast64_t *w;
+  };
+} tokenbucket;
+
+struct Blackhole {
+  struct sockaddr_un addr;
+  int fd;
+} blackhole;
 
 static struct Shared {
   int workers;
@@ -467,6 +492,7 @@ static char gzip_footer[8];
 static long maxpayloadsize;
 static const char *pidpath;
 static const char *logpath;
+static uint32_t *interfaces;
 static const char *histpath;
 static struct pollfd *polls;
 static size_t payloadlength;
@@ -858,25 +884,41 @@ static void ProgramRedirectArg(int code, const char *s) {
   ProgramRedirect(code, s, p - s, p + 1, n - (p - s + 1));
 }
 
-static void TrustProxy(uint32_t ip, int cidr) {
+static void ProgramTrustedIp(uint32_t ip, int cidr) {
   uint32_t mask;
   mask = 0xffffffffu << (32 - cidr);
-  proxyips.p = xrealloc(proxyips.p, ++proxyips.n * sizeof(*proxyips.p));
-  proxyips.p[proxyips.n - 1].ip = ip;
-  proxyips.p[proxyips.n - 1].mask = mask;
+  trustedips.p = xrealloc(trustedips.p, ++trustedips.n * sizeof(*trustedips.p));
+  trustedips.p[trustedips.n - 1].ip = ip;
+  trustedips.p[trustedips.n - 1].mask = mask;
 }
 
-static bool IsTrustedProxy(uint32_t ip) {
+static bool IsTrustedIp(uint32_t ip) {
   int i;
-  if (proxyips.n) {
-    for (i = 0; i < proxyips.n; ++i) {
-      if ((ip & proxyips.p[i].mask) == proxyips.p[i].ip) {
+  uint32_t *p;
+  if (interfaces) {
+    for (p = interfaces; *p; ++p) {
+      if (ip == *p && !IsTestnetIp(ip)) {
+        DEBUGF("(token) ip is trusted because it's %s", "a local interface");
+        return true;
+      }
+    }
+  }
+  if (trustedips.n) {
+    for (i = 0; i < trustedips.n; ++i) {
+      if ((ip & trustedips.p[i].mask) == trustedips.p[i].ip) {
+        DEBUGF("(token) ip is trusted because it's %s", "whitelisted");
         return true;
       }
     }
     return false;
+  } else if (IsPrivateIp(ip) && !IsTestnetIp(ip)) {
+    DEBUGF("(token) ip is trusted because it's %s", "private");
+    return true;
+  } else if (IsLoopbackIp(ip)) {
+    DEBUGF("(token) ip is trusted because it's %s", "loopback");
+    return true;
   } else {
-    return IsPrivateIp(ip) || IsLoopbackIp(ip);
+    return false;
   }
 }
 
@@ -909,7 +951,7 @@ static inline int GetRemoteAddr(uint32_t *ip, uint16_t *port) {
   char str[40];
   GetClientAddr(ip, port);
   if (HasHeader(kHttpXForwardedFor)) {
-    if (IsTrustedProxy(*ip)) {
+    if (IsTrustedIp(*ip)) {
       if (ParseForwarded(HeaderData(kHttpXForwardedFor),
                          HeaderLength(kHttpXForwardedFor), ip, port) == -1) {
         VERBOSEF("could not parse x-forwarded-for %`'.*s len=%ld",
@@ -934,7 +976,7 @@ static char *DescribeClient(void) {
   uint32_t client;
   static char description[128];
   GetClientAddr(&client, &port);
-  if (HasHeader(kHttpXForwardedFor) && IsTrustedProxy(client)) {
+  if (HasHeader(kHttpXForwardedFor) && IsTrustedIp(client)) {
     DescribeAddress(str, client, port);
     snprintf(description, sizeof(description), "%'.*s via %s",
              HeaderLength(kHttpXForwardedFor), HeaderData(kHttpXForwardedFor),
@@ -1065,9 +1107,17 @@ static void ProgramHeader(const char *s) {
 }
 
 static void ProgramLogPath(const char *s) {
+  int fd;
   logpath = strdup(s);
-  close(2);
-  open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
+  fd = open(logpath, O_APPEND | O_WRONLY | O_CREAT, 0640);
+  if (fd == -1) {
+    WARNF("(srvr) open(%`'s) failed: %m", logpath);
+    return;
+  }
+  if (fd != 2) {
+    dup2(fd, 2);
+    close(fd);
+  }
 }
 
 static void ProgramPidPath(const char *s) {
@@ -2129,7 +2179,12 @@ static bool OpenZip(bool force) {
       }
     }
   } else {
-    WARNF("(zip) stat() error: %m");
+    // avoid noise if we setuid to user who can't see executable
+    if (errno == EACCES) {
+      VERBOSEF("(zip) stat(%`'s) error: %m", zpath);
+    } else {
+      WARNF("(zip) stat(%`'s) error: %m", zpath);
+    }
   }
   return false;
 }
@@ -3394,7 +3449,7 @@ static int LuaRoute(lua_State *L) {
   return 1;
 }
 
-static int LuaTrustProxy(lua_State *L) {
+static int LuaProgramTrustedIp(lua_State *L) {
   lua_Integer ip, cidr;
   uint32_t ip32, imask;
   ip = luaL_checkinteger(L, 1);
@@ -3415,18 +3470,18 @@ static int LuaTrustProxy(lua_State *L) {
                   "it has bits masked by the cidr");
     unreachable;
   }
-  TrustProxy(ip, cidr);
+  ProgramTrustedIp(ip, cidr);
   return 0;
 }
 
-static int LuaIsTrustedProxy(lua_State *L) {
+static int LuaIsTrusted(lua_State *L) {
   lua_Integer ip;
   ip = luaL_checkinteger(L, 1);
   if (!(0 <= ip && ip <= 0xffffffff)) {
     luaL_argerror(L, 1, "ip out of range");
     unreachable;
   }
-  lua_pushboolean(L, IsTrustedProxy(ip));
+  lua_pushboolean(L, IsTrustedIp(ip));
   return 1;
 }
 
@@ -4141,7 +4196,8 @@ static int LuaSetHeader(lua_State *L) {
   size_t i, keylen, vallen, evallen;
   OnlyCallDuringRequest(L, "SetHeader");
   key = luaL_checklstring(L, 1, &keylen);
-  val = luaL_checklstring(L, 2, &vallen);
+  val = luaL_optlstring(L, 2, 0, &vallen);
+  if (!val) return 0;
   if ((h = GetHttpHeader(key, keylen)) == -1) {
     if (!IsValidHttpToken(key, keylen)) {
       luaL_argerror(L, 1, "invalid");
@@ -4161,11 +4217,7 @@ static int LuaSetHeader(lua_State *L) {
   }
   switch (h) {
     case kHttpConnection:
-      if (!SlicesEqualCase(eval, evallen, "close", 5)) {
-        luaL_argerror(L, 2, "unsupported");
-        unreachable;
-      }
-      connectionclose = true;
+      connectionclose = SlicesEqualCase(eval, evallen, "close", 5);
       break;
     case kHttpContentType:
       p = AppendContentType(p, eval);
@@ -4708,6 +4760,159 @@ static int LuaIsAssetCompressed(lua_State *L) {
   return 1;
 }
 
+static bool Blackhole(uint32_t ip) {
+  char buf[4];
+  if (blackhole.fd <= 0) return false;
+  WRITE32BE(buf, ip);
+  if (sendto(blackhole.fd, &buf, 4, 0, (struct sockaddr *)&blackhole.addr,
+             sizeof(blackhole.addr)) != -1) {
+    return true;
+  } else {
+    VERBOSEF("(token) sendto(%s) failed: %m", blackhole.addr.sun_path);
+    errno = 0;
+    return false;
+  }
+}
+
+static int LuaBlackhole(lua_State *L) {
+  lua_Integer ip;
+  ip = luaL_checkinteger(L, 1);
+  if (!(0 <= ip && ip <= 0xffffffff)) {
+    luaL_argerror(L, 1, "ip out of range");
+    unreachable;
+  }
+  lua_pushboolean(L, Blackhole(ip));
+  return 1;
+}
+
+wontreturn static void Replenisher(void) {
+  struct timespec ts;
+  VERBOSEF("(token) replenish worker started");
+  signal(SIGINT, OnTerm);
+  signal(SIGHUP, OnTerm);
+  signal(SIGTERM, OnTerm);
+  signal(SIGUSR1, SIG_IGN);  // make sure reload won't kill this
+  signal(SIGUSR2, SIG_IGN);  // make sure meltdown won't kill this
+  ts = _timespec_real();
+  while (!terminated) {
+    if (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0)) {
+      errno = 0;
+      continue;
+    }
+    ReplenishTokens(tokenbucket.w, (1ul << tokenbucket.cidr) / 8);
+    ts = _timespec_add(ts, tokenbucket.replenish);
+    DEBUGF("(token) replenished tokens");
+  }
+  VERBOSEF("(token) replenish worker exiting");
+  _Exit(0);
+}
+
+static int LuaAcquireToken(lua_State *L) {
+  uint32_t ip;
+  if (!tokenbucket.cidr) {
+    luaL_error(L, "ProgramTokenBucket() needs to be called first");
+    unreachable;
+  }
+  GetClientAddr(&ip, 0);
+  lua_pushinteger(L, AcquireToken(tokenbucket.b, luaL_optinteger(L, 1, ip),
+                                  tokenbucket.cidr));
+  return 1;
+}
+
+static int LuaCountTokens(lua_State *L) {
+  uint32_t ip;
+  if (!tokenbucket.cidr) {
+    luaL_error(L, "ProgramTokenBucket() needs to be called first");
+    unreachable;
+  }
+  GetClientAddr(&ip, 0);
+  lua_pushinteger(L, CountTokens(tokenbucket.b, luaL_optinteger(L, 1, ip),
+                                 tokenbucket.cidr));
+  return 1;
+}
+
+static int LuaProgramTokenBucket(lua_State *L) {
+  if (tokenbucket.cidr) {
+    luaL_error(L, "ProgramTokenBucket() can only be called once");
+    unreachable;
+  }
+  lua_Number replenish = luaL_optnumber(L, 1, 1);  // per second
+  lua_Integer cidr = luaL_optinteger(L, 2, 24);
+  lua_Integer reject = luaL_optinteger(L, 3, 30);
+  lua_Integer ignore = luaL_optinteger(L, 4, MIN(reject / 2, 15));
+  lua_Integer ban = luaL_optinteger(L, 5, MIN(ignore / 10, 1));
+  if (!(1 / 3600. <= replenish && replenish <= 1e6)) {
+    luaL_argerror(L, 1, "require 1/3600 <= replenish <= 1e6");
+    unreachable;
+  }
+  if (!(8 <= cidr && cidr <= 32)) {
+    luaL_argerror(L, 2, "require 8 <= cidr <= 32");
+    unreachable;
+  }
+  if (!(-1 <= reject && reject <= 126)) {
+    luaL_argerror(L, 3, "require -1 <= reject <= 126");
+    unreachable;
+  }
+  if (!(-1 <= ignore && ignore <= 126)) {
+    luaL_argerror(L, 4, "require -1 <= ignore <= 126");
+    unreachable;
+  }
+  if (!(-1 <= ban && ban <= 126)) {
+    luaL_argerror(L, 5, "require -1 <= ban <= 126");
+    unreachable;
+  }
+  if (!(ignore <= reject)) {
+    luaL_argerror(L, 4, "require ignore <= reject");
+    unreachable;
+  }
+  if (!(ban <= ignore)) {
+    luaL_argerror(L, 5, "require ban <= ignore");
+    unreachable;
+  }
+  INFOF("(token) deploying %,ld buckets "
+        "(one for every %ld ips) "
+        "each holding 127 tokens which "
+        "replenish %g times per second, "
+        "reject at %d tokens, "
+        "ignore at %d tokens, and "
+        "ban at %d tokens",
+        1L << cidr,                 //
+        4294967296 / (1L << cidr),  //
+        replenish,                  //
+        reject,                     //
+        ignore,                     //
+        ban);
+  if (ignore == -1) ignore = -128;
+  if (ban == -1) ban = -128;
+  if (ban >= 0 && (IsLinux() || IsBsd())) {
+    uint32_t testip = 0;
+    blackhole.addr.sun_family = AF_UNIX;
+    strlcpy(blackhole.addr.sun_path, "/var/run/blackhole.sock",
+            sizeof(blackhole.addr.sun_path));
+    if ((blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
+      WARNF("(token) socket(AF_UNIX) failed: %m");
+      ban = -1;
+    } else if (sendto(blackhole.fd, &testip, 4, 0,
+                      (struct sockaddr *)&blackhole.addr,
+                      sizeof(blackhole.addr)) == -1) {
+      WARNF("(token) error: sendto(%`'s) failed: %m", blackhole.addr.sun_path);
+      WARNF("(token) redbean isn't able to protect your kernel from ddos");
+      WARNF("(token) please run the blackholed program; see our website!");
+    }
+  }
+  tokenbucket.b = _mapshared(ROUNDUP(1ul << cidr, FRAMESIZE));
+  memset(tokenbucket.b, 127, 1ul << cidr);
+  tokenbucket.cidr = cidr;
+  tokenbucket.reject = reject;
+  tokenbucket.ignore = ignore;
+  tokenbucket.ban = ban;
+  tokenbucket.replenish = _timespec_fromnanos(1 / replenish * 1e9);
+  int pid = fork();
+  _npassert(pid != -1);
+  if (!pid) Replenisher();
+  return 0;
+}
+
 static const char *GetContentTypeExt(const char *path, size_t n) {
   char *r, *e;
   int top;
@@ -4961,7 +5166,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"IsPrivateIp", LuaIsPrivateIp},                            //
     {"IsPublicIp", LuaIsPublicIp},                              //
     {"IsReasonablePath", LuaIsReasonablePath},                  //
-    {"IsTrustedProxy", LuaIsTrustedProxy},                      // undocumented
+    {"IsTrustedIp", LuaIsTrusted},                              // undocumented
     {"IsValidHttpToken", LuaIsValidHttpToken},                  //
     {"LaunchBrowser", LuaLaunchBrowser},                        //
     {"Lemur64", LuaLemur64},                                    //
@@ -4992,6 +5197,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramPort", LuaProgramPort},                            //
     {"ProgramRedirect", LuaProgramRedirect},                    //
     {"ProgramTimeout", LuaProgramTimeout},                      //
+    {"ProgramTrustedIp", LuaProgramTrustedIp},                  // undocumented
     {"ProgramUid", LuaProgramUid},                              //
     {"ProgramUniprocess", LuaProgramUniprocess},                //
     {"Rand64", LuaRand64},                                      //
@@ -5020,7 +5226,6 @@ static const luaL_Reg kLuaFuncs[] = {
     {"Sleep", LuaSleep},                                        //
     {"Slurp", LuaSlurp},                                        //
     {"StoreAsset", LuaStoreAsset},                              //
-    {"TrustProxy", LuaTrustProxy},                              // undocumented
     {"Uncompress", LuaUncompress},                              //
     {"Underlong", LuaUnderlong},                                //
     {"VisualizeControlCodes", LuaVisualizeControlCodes},        //
@@ -5029,6 +5234,9 @@ static const luaL_Reg kLuaFuncs[] = {
     {"hex", LuaHex},                                            //
     {"oct", LuaOct},                                            //
 #ifndef UNSECURE
+    {"AcquireToken", LuaAcquireToken},                          //
+    {"Blackhole", LuaBlackhole},                                // undocumented
+    {"CountTokens", LuaCountTokens},                            //
     {"EvadeDragnetSurveillance", LuaEvadeDragnetSurveillance},  //
     {"GetSslIdentity", LuaGetSslIdentity},                      //
     {"ProgramCertificate", LuaProgramCertificate},              //
@@ -5040,6 +5248,7 @@ static const luaL_Reg kLuaFuncs[] = {
     {"ProgramSslPresharedKey", LuaProgramSslPresharedKey},      //
     {"ProgramSslRequired", LuaProgramSslRequired},              //
     {"ProgramSslTicketLifetime", LuaProgramSslTicketLifetime},  //
+    {"ProgramTokenBucket", LuaProgramTokenBucket},              //
 #endif
     // deprecated
     {"GetPayload", LuaGetBody},                            //
@@ -5267,6 +5476,8 @@ static void MemDestroy(void) {
   FreeStrings(&hidepaths);
   Free(&launchbrowser);
   Free(&serverheader);
+  Free(&trustedips.p);
+  Free(&interfaces);
   Free(&extrahdrs);
   Free(&pidpath);
   Free(&logpath);
@@ -5366,6 +5577,16 @@ HTTP/1.1 503 Service Unavailable\r\n\
 Connection: close\r\n\
 Content-Length: 0\r\n\
 \r\n");
+}
+
+static ssize_t SendTooManyRequests(void) {
+  return SendString("\
+HTTP/1.1 429 Too Many Requests\r\n\
+Connection: close\r\n\
+Content-Type: text/plain\r\n\
+Content-Length: 22\r\n\
+\r\n\
+429 Too Many Requests\n");
 }
 
 static void EnterMeltdownMode(void) {
@@ -5669,7 +5890,7 @@ static void ParseRequestParameters(void) {
                      &url, kUrlPlus | kUrlLatin1));
   if (!url.host.p) {
     if (HasHeader(kHttpXForwardedHost) &&  //
-        !GetRemoteAddr(&ip, 0) && IsTrustedProxy(ip)) {
+        !GetRemoteAddr(&ip, 0) && IsTrustedIp(ip)) {
       FreeLater(ParseHost(HeaderData(kHttpXForwardedHost),
                           HeaderLength(kHttpXForwardedHost), &url));
     } else if (HasHeader(kHttpHost)) {
@@ -5927,9 +6148,12 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
       }
     } else if (!IsTiny() && cpm.msg.method != kHttpHead && !IsSslCompressed() &&
                ClientAcceptsGzip() &&
+               !(a->file &&
+                 IsNoCompressExt(a->file->path.s, a->file->path.n)) &&
                ((cpm.contentlength >= 100 && _startswithi(ct, "text/")) ||
                 (cpm.contentlength >= 1000 &&
                  MeasureEntropy(cpm.content, 1000) < 7))) {
+      WARNF("serving compressed asset");
       p = ServeAssetCompressed(a);
     } else {
       p = ServeAssetIdentity(a, ct);
@@ -6490,10 +6714,47 @@ static void MonitorMemory(void) {
 }
 
 static int HandleConnection(size_t i) {
-  int pid, rc = 0;
+  uint32_t ip;
+  int pid, tok, rc = 0;
   clientaddrsize = sizeof(clientaddr);
   if ((client = accept4(servers.p[i].fd, (struct sockaddr *)&clientaddr,
                         &clientaddrsize, SOCK_CLOEXEC)) != -1) {
+    LockInc(&shared->c.accepts);
+    GetClientAddr(&ip, 0);
+    if (tokenbucket.cidr && tokenbucket.reject >= 0) {
+      if (!IsTrustedIp(ip)) {
+        tok = AcquireToken(tokenbucket.b, ip, tokenbucket.cidr);
+        if (tok <= tokenbucket.ban && tokenbucket.ban >= 0) {
+          WARNF("(token) banning %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+                ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          LockInc(&shared->c.bans);
+          Blackhole(ip);
+          close(client);
+          return 0;
+        } else if (tok <= tokenbucket.ignore && tokenbucket.ignore >= 0) {
+          DEBUGF("(token) ignoring %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+                 ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          LockInc(&shared->c.ignores);
+          close(client);
+          return 0;
+        } else if (tok < tokenbucket.reject) {
+          WARNF("(token) rejecting %hhu.%hhu.%hhu.%hhu who only has %d tokens",
+                ip >> 24, ip >> 16, ip >> 8, ip, tok);
+          LockInc(&shared->c.rejects);
+          SendTooManyRequests();
+          close(client);
+          return 0;
+        } else {
+          DEBUGF("(token) %hhu.%hhu.%hhu.%hhu has %d tokens", ip >> 24,
+                 ip >> 16, ip >> 8, ip, tok - 1);
+        }
+      } else {
+        DEBUGF("(token) won't acquire token for trusted ip %hhu.%hhu.%hhu.%hhu",
+               ip >> 24, ip >> 16, ip >> 8, ip);
+      }
+    } else {
+      DEBUGF("(token) can't acquire accept() token for client");
+    }
     startconnection = _timespec_real();
     if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {
       EnterMeltdownMode();
@@ -6741,14 +7002,14 @@ static int HandlePoll(int ms) {
 static void Listen(void) {
   char ipbuf[16];
   size_t i, j, n;
-  uint32_t ip, port, addrsize, *ifs, *ifp;
+  uint32_t ip, port, addrsize, *ifp;
   bool hasonserverlisten = IsHookDefined("OnServerListen");
   if (!ports.n) {
     ProgramPort(8080);
   }
   if (!ips.n) {
-    if ((ifs = GetHostIps()) && *ifs) {
-      for (ifp = ifs; *ifp; ++ifp) {
+    if (interfaces && *interfaces) {
+      for (ifp = interfaces; *ifp; ++ifp) {
         sprintf(ipbuf, "%hhu.%hhu.%hhu.%hhu", *ifp >> 24, *ifp >> 16, *ifp >> 8,
                 *ifp);
         ProgramAddr(ipbuf);
@@ -6756,7 +7017,6 @@ static void Listen(void) {
     } else {
       ProgramAddr("0.0.0.0");
     }
-    free(ifs);
   }
   servers.p = malloc(ips.n * ports.n * sizeof(*servers.p));
   for (n = i = 0; i < ips.n; ++i) {
@@ -7108,6 +7368,10 @@ void RedBean(int argc, char *argv[]) {
   SetDefaults();
   LuaStart();
   GetOpts(argc, argv);
+  // this can fail with EPERM if we're running under pledge()
+  if (!interpretermode && !(interfaces = GetHostIps())) {
+    WARNF("(srvr) failed to query system network interface addresses: %m");
+  }
 #ifndef STATIC
   if (selfmodifiable) {
     MakeExecutableModifiable();

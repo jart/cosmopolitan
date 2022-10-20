@@ -29,7 +29,7 @@ endif
 #
 ifeq ($(MODE),fastbuild)
 CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O
-CONFIG_CPPFLAGS += -DSYSDEBUG
+CONFIG_CPPFLAGS += -DSYSDEBUG -DDWARFLESS
 CONFIG_OFLAGS += -g0
 CONFIG_LDFLAGS += -S
 TARGET_ARCH ?= -msse3
@@ -125,6 +125,22 @@ TARGET_ARCH ?= -msse3
 OVERRIDE_CCFLAGS += -fno-pie
 endif
 
+# System Five Mode
+#
+#   - `make MODE=sysv`
+#   - Optimized
+#   - Backtraces
+#   - Debuggable
+#   - Syscall tracing
+#   - Function tracing
+#   - No Windows bloat!
+#
+ifeq ($(MODE), sysv)
+CONFIG_CCFLAGS += $(BACKTRACES) $(FTRACE) -O2
+CONFIG_CPPFLAGS += -DSYSDEBUG -DSUPPORT_VECTOR=121
+TARGET_ARCH ?= -msse3
+endif
+
 # Tiny Mode
 #
 #   - `make MODE=tiny`
@@ -151,7 +167,8 @@ CONFIG_CCFLAGS +=			\
 	-fschedule-insns2		\
 	-fomit-frame-pointer		\
 	-momit-leaf-frame-pointer	\
-	-foptimize-sibling-calls
+	-foptimize-sibling-calls	\
+	-DDWARFLESS
 CONFIG_OFLAGS +=			\
 	-g0
 CONFIG_LDFLAGS +=			\
@@ -181,7 +198,8 @@ CONFIG_CPPFLAGS +=			\
 	-DTINY				\
 	-DNDEBUG			\
 	-DTRUSTWORTHY			\
-	-DSUPPORT_VECTOR=1
+	-DSUPPORT_VECTOR=1		\
+	-DDWARFLESS
 DEFAULT_COPTS +=			\
 	-mred-zone
 CONFIG_OFLAGS +=			\
@@ -217,7 +235,8 @@ CONFIG_CPPFLAGS +=		\
 	-DTINY			\
 	-DNDEBUG		\
 	-DTRUSTWORTHY		\
-	-DSUPPORT_VECTOR=113
+	-DSUPPORT_VECTOR=113	\
+	-DDWARFLESS
 DEFAULT_COPTS +=		\
 	-mred-zone
 CONFIG_OFLAGS +=		\
@@ -252,7 +271,8 @@ CONFIG_CPPFLAGS +=		\
 	-DTINY			\
 	-DNDEBUG		\
 	-DTRUSTWORTHY		\
-	-DSUPPORT_VECTOR=121
+	-DSUPPORT_VECTOR=121	\
+	-DDWARFLESS
 DEFAULT_COPTS +=		\
 	-mred-zone
 CONFIG_CCFLAGS +=		\
@@ -287,7 +307,8 @@ CONFIG_CPPFLAGS +=		\
 	-DTINY			\
 	-DNDEBUG		\
 	-DTRUSTWORTHY		\
-	-DSUPPORT_VECTOR=251
+	-DSUPPORT_VECTOR=251	\
+	-DDWARFLESS
 CONFIG_CCFLAGS +=		\
 	-Os			\
 	-fno-align-functions	\

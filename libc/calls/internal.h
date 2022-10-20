@@ -18,7 +18,6 @@ hidden extern const struct Fd kEmptyFd;
 int __reservefd(int) hidden;
 int __reservefd_unlocked(int) hidden;
 void __releasefd(int) hidden;
-void __releasefd_unlocked(int) hidden;
 int __ensurefds(int) hidden;
 int __ensurefds_unlocked(int) hidden;
 void __printfds(void) hidden;
@@ -43,7 +42,7 @@ forceinline size_t _clampio(size_t size) {
   }
 }
 
-int sys_close_nt(struct Fd *) hidden;
+int sys_close_nt(struct Fd *, int) hidden;
 bool _check_interrupts(bool, struct Fd *) hidden;
 int sys_openat_metal(int, const char *, int, unsigned);
 

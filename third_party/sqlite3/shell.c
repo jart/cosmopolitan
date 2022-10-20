@@ -60,6 +60,9 @@
 #include "libc/time/time.h"
 #include "libc/runtime/runtime.h"
 #include "libc/errno.h"
+#include "libc/log/log.h"
+#include "libc/runtime/symbols.internal.h"
+
 #if SQLITE_USER_AUTHENTICATION
 #include "third_party/sqlite3/sqlite3userauth.inc"
 #endif
@@ -10728,6 +10731,8 @@ static char *cmdline_option_value(int argc, char **argv, int i){
 #  endif
 #endif
 
+STATIC_YOINK("zipos"); // for symtab
+
 int SQLITE_CDECL main(int argc, char **argv){
   char *zErrMsg = 0;
   ShellState data;
@@ -10740,7 +10745,16 @@ int SQLITE_CDECL main(int argc, char **argv){
   char **azCmd = 0;
   const char *zVfs = 0;           /* Value of -vfs command-line option */
 
+  // [jart] ensure %t symbols in strace log are symbolic
+  if (__strace > 0) {
+    GetSymbolTable();
+  }
+
+  // ShowCrashReports();
+
+  // [jart] support /zip/.args file for white labeling
   LoadZipArgs(&argc, &argv);
+
   setBinaryMode(stdin, 0);
   setvbuf(stderr, 0, _IONBF, 0); /* Make sure stderr is unbuffered */
   setvbuf(stdin, (char *)NULL, _IONBF, BUFSIZ);

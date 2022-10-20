@@ -3,6 +3,9 @@
 
 #define INVALID_CODEPOINT 0xfffd
 
+#define _tolower(u) (0040 | (u))
+#define _toupper(u) (0137 & (u))
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 

@@ -10,8 +10,8 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § syscalls » system five » structless synthetic jump slots  ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
+axdx_t __sys_fork(void) hidden;
 axdx_t __sys_pipe(i32[hasatleast 2], i32) hidden;
-axdx_t sys_fork(void) hidden;
 axdx_t sys_getpid(void) hidden;
 char *sys_getcwd(char *, u64) hidden;
 char *sys_getcwd_xnu(char *, u64) hidden;
@@ -46,6 +46,7 @@ i32 sys_fchownat(i32, const char *, u32, u32, u32) hidden;
 i32 sys_fcntl(i32, i32, u64) hidden;
 i32 sys_fdatasync(i32) hidden;
 i32 sys_flock(i32, i32) hidden;
+i32 sys_fork(void) hidden;
 i32 sys_fsync(i32) hidden;
 i32 sys_ftruncate(i32, i64, i64) hidden;
 i32 sys_getcontext(void *) hidden;

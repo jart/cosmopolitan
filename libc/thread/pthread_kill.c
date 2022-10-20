@@ -29,6 +29,7 @@
  * @raise EAGAIN if `RLIMIT_SIGPENDING` was exceeded
  * @raise EINVAL if `tid` or `sig` was invalid
  * @raise EPERM if permission was denied
+ * @asyncsignalsafe
  */
 int pthread_kill(pthread_t thread, int sig) {
   int rc, e = errno;

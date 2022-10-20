@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon baud,B1200,9,0x04b0,0x04b0,0x04b0,0x04b0,0
+.syscon baud,B1200,9,1200,1200,1200,1200,1200

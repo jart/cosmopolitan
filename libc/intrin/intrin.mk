@@ -7,6 +7,7 @@ LIBC_INTRIN_ARTIFACTS += LIBC_INTRIN_A
 LIBC_INTRIN = $(LIBC_INTRIN_A_DEPS) $(LIBC_INTRIN_A)
 LIBC_INTRIN_A = o/$(MODE)/libc/intrin/intrin.a
 LIBC_INTRIN_A_HDRS = $(filter %.h,$(LIBC_INTRIN_A_FILES))
+LIBC_INTRIN_A_INCS = $(filter %.inc,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_SRCS_S = $(filter %.S,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_SRCS_C = $(filter %.c,$(LIBC_INTRIN_A_FILES))
 LIBC_INTRIN_A_SRCS = $(LIBC_INTRIN_A_SRCS_S) $(LIBC_INTRIN_A_SRCS_C)
@@ -121,7 +122,6 @@ o/$(MODE)/libc/intrin/describeprotflags.o: private	\
 			-fno-sanitize=address
 
 o/$(MODE)/libc/intrin/exit1.greg.o			\
-o/$(MODE)/libc/intrin/getenv.greg.o			\
 o/$(MODE)/libc/intrin/wsarecv.o				\
 o/$(MODE)/libc/intrin/wsarecvfrom.o			\
 o/$(MODE)/libc/intrin/createfile.o			\
@@ -182,6 +182,7 @@ o/$(MODE)/libc/intrin/memmove.o: private		\
 
 LIBC_INTRIN_LIBS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)))
 LIBC_INTRIN_HDRS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_HDRS))
+LIBC_INTRIN_INCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_INCS))
 LIBC_INTRIN_SRCS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_SRCS))
 LIBC_INTRIN_CHECKS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_CHECKS))
 LIBC_INTRIN_OBJS = $(foreach x,$(LIBC_INTRIN_ARTIFACTS),$($(x)_OBJS))

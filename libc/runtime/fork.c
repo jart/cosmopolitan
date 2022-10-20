@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -33,30 +34,15 @@
 #include "libc/thread/tls.h"
 
 int _fork(uint32_t dwCreationFlags) {
-  axdx_t ad;
-  bool threaded;
-  sigset_t old, all;
   int ax, dx, parent;
-  sigfillset(&all);
-  _unassert(!sigprocmask(SIG_BLOCK, &all, &old));
+  BLOCK_SIGNALS;
   if (__threaded && _weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();
   }
   if (!IsWindows()) {
-    ad = sys_fork();
-    ax = ad.ax;
-    dx = ad.dx;
-    if (IsXnu() && ax != -1) {
-      // eax always returned with childs pid
-      // edx is 0 for parent and 1 for child
-      ax &= dx - 1;
-    }
+    ax = sys_fork();
   } else {
-    threaded = __threaded;
     ax = sys_fork_nt(dwCreationFlags);
-    if (threaded && !__threaded && _weaken(__enable_threads)) {
-      _weaken(__enable_threads)();
-    }
   }
   if (!ax) {
     if (!IsWindows()) {
@@ -81,7 +67,7 @@ int _fork(uint32_t dwCreationFlags) {
     }
     STRACE("fork() → %d% m", ax);
   }
-  _unassert(!sigprocmask(SIG_SETMASK, &old, 0));
+  ALLOW_SIGNALS;
   return ax;
 }
 
@@ -92,6 +78,7 @@ int _fork(uint32_t dwCreationFlags) {
  * @raise EAGAIN if `RLIMIT_NPROC` was exceeded or system lacked resources
  * @raise ENOMEM if we require more vespene gas
  * @asyncsignalsafe
+ * @threadsafe
  */
 int fork(void) {
   return _fork(0);

@@ -14,7 +14,7 @@ TEST_TOOL_NET_COMS = $(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%.com)
 
 TEST_TOOL_NET_OBJS =						\
 	$(TEST_TOOL_NET_SRCS:%.c=o/$(MODE)/%.o)			\
-	o/$(MODE)/tool/net/redbean.com.zip.o
+	o/$(MODE)/test/tool/net/redbean-tester.com.zip.o
 
 TEST_TOOL_NET_BINS =						\
 	$(TEST_TOOL_NET_COMS)					\
@@ -70,6 +70,26 @@ o/$(MODE)/test/tool/net/%.com.dbg:				\
 		$(CRT)						\
 		$(APE_NO_MODIFY_SELF)
 	@$(APELINK)
+
+o/$(MODE)/test/tool/net/redbean-tester.com.dbg:			\
+		$(TOOL_NET_DEPS)				\
+		o/$(MODE)/tool/net/redbean.o			\
+		$(TOOL_NET_REDBEAN_LUA_MODULES)			\
+		o/$(MODE)/tool/net/demo/seekable.txt.zip.o	\
+		o/$(MODE)/tool/net/net.pkg			\
+		$(CRT)						\
+		$(APE_NO_MODIFY_SELF)
+	@$(APELINK)
+
+o/$(MODE)/test/tool/net/redbean-tester.com:			\
+		o/$(MODE)/test/tool/net/redbean-tester.com.dbg	\
+		o/$(MODE)/third_party/zip/zip.com		\
+		o/$(MODE)/tool/build/symtab.com			\
+		$(TOOL_NET_REDBEAN_STANDARD_ASSETS)
+	@$(MAKE_OBJCOPY)
+	@$(MAKE_SYMTAB_CREATE)
+	@$(MAKE_SYMTAB_ZIP)
+	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
 o/$(MODE)/test/tool/net/redbean_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc inet

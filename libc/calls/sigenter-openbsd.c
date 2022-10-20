@@ -49,8 +49,8 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
       __repstosb(&g.uc, 0, sizeof(g.uc));
       __siginfo2cosmo(&g.si, (void *)openbsdinfo);
       g.uc.uc_mcontext.fpregs = &g.uc.__fpustate;
-      __repmovsb(&g.uc.uc_sigmask, &ctx->sc_mask,
-                 MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->sc_mask)));
+      g.uc.uc_sigmask.__bits[0] = ctx->sc_mask;
+      g.uc.uc_sigmask.__bits[1] = 0;
       g.uc.uc_mcontext.rdi = ctx->sc_rdi;
       g.uc.uc_mcontext.rsi = ctx->sc_rsi;
       g.uc.uc_mcontext.rdx = ctx->sc_rdx;

@@ -41,7 +41,7 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
     return -1;
   }
   if ((writer = __reservefd_unlocked(-1)) == -1) {
-    __releasefd_unlocked(reader);
+    __releasefd(reader);
     __fds_unlock();
     return -1;
   }
@@ -73,8 +73,8 @@ textwindows int sys_pipe_nt(int pipefd[2], unsigned flags) {
       CloseHandle(hin);
     }
   }
-  __releasefd_unlocked(writer);
-  __releasefd_unlocked(reader);
+  __releasefd(writer);
+  __releasefd(reader);
   __fds_unlock();
   return -1;
 }

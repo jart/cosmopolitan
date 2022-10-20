@@ -20,6 +20,7 @@ struct tm {
 char *asctime(const struct tm *);
 char *asctime_r(const struct tm *, char[hasatleast 26]);
 char *iso8601(char[hasatleast 20], struct tm *);
+char *iso8601us(char[hasatleast 27], struct tm *, long);
 char *strptime(const char *, const char *, struct tm *);
 int64_t mktime(struct tm *);
 int64_t timegm(struct tm *);

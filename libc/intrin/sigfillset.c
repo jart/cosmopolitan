@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sig.h"
 
 /**
@@ -29,7 +30,17 @@
  */
 int sigfillset(sigset_t *set) {
   memset(set->__bits, -1, sizeof(set->__bits));
-  sigdelset(set, SIGKILL);
-  sigdelset(set, SIGSTOP);
+#define M(x) set->__bits[(x - 1) >> 6] &= ~(1ull << ((x - 1) & 63));
+#include "libc/intrin/sigisprecious.inc"
+  switch (_NSIG) {
+    case 32:
+      set->__bits[0] &= 0xffffffff;
+      break;
+    case 64:
+      set->__bits[1] = 0;
+      break;
+    default:
+      break;
+  }
   return 0;
 }

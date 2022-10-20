@@ -29,7 +29,7 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define KMALLOC_ALIGN __BIGGEST_ALIGNMENT__
+#define KMALLOC_ALIGN sizeof(intptr_t)
 
 static struct {
   char *endptr;
@@ -55,21 +55,37 @@ __attribute__((__constructor__)) static void kmalloc_init(void) {
  * The code malloc() depends upon uses this function to allocate memory.
  * The returned memory can't be freed, and leak detection is impossible.
  * This function panics when memory isn't available.
+ *
+ * Memory returned by this function is aligned on the word size, and as
+ * such, kmalloc() shouldn't be used for vector operations.
+ *
+ * @return zero-initialized memory on success, or null w/ errno
+ * @raise ENOMEM if we require more vespene gas
  */
 void *kmalloc(size_t size) {
-  char *start;
-  size_t i, n;
+  char *p, *e;
+  size_t i, n, t;
   n = ROUNDUP(size + (IsAsan() * 8), KMALLOC_ALIGN);
   kmalloc_lock();
-  i = g_kmalloc.total;
-  g_kmalloc.total += n;
-  start = (char *)kMemtrackKmallocStart;
-  if (!g_kmalloc.endptr) g_kmalloc.endptr = start;
-  g_kmalloc.endptr =
-      _extend(start, g_kmalloc.total, g_kmalloc.endptr, MAP_PRIVATE,
-              kMemtrackKmallocStart + kMemtrackKmallocSize);
+  t = g_kmalloc.total;
+  e = g_kmalloc.endptr;
+  i = t;
+  t += n;
+  p = (char *)kMemtrackKmallocStart;
+  if (!e) e = p;
+  if ((e = _extend(p, t, e, MAP_PRIVATE,
+                   kMemtrackKmallocStart + kMemtrackKmallocSize))) {
+    g_kmalloc.endptr = e;
+    g_kmalloc.total = t;
+  } else {
+    p = 0;
+  }
   kmalloc_unlock();
-  _unassert(!((intptr_t)(start + i) & (KMALLOC_ALIGN - 1)));
-  if (IsAsan()) __asan_poison(start + i + size, n - size, kAsanHeapOverrun);
-  return start + i;
+  if (p) {
+    _unassert(!((intptr_t)(p + i) & (KMALLOC_ALIGN - 1)));
+    if (IsAsan()) __asan_poison(p + i + size, n - size, kAsanHeapOverrun);
+    return p + i;
+  } else {
+    return 0;
+  }
 }

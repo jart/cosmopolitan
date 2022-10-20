@@ -18,14 +18,21 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nt/enum/filetype.h"
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/sysv/consts/o.h"
 
-textwindows int sys_close_nt(struct Fd *fd) {
+void sys_fcntl_nt_lock_cleanup(int) hidden;
+
+textwindows int sys_close_nt(struct Fd *fd, int fildes) {
   int e;
   bool ok = true;
+
+  if (_weaken(sys_fcntl_nt_lock_cleanup)) {
+    _weaken(sys_fcntl_nt_lock_cleanup)(fildes);
+  }
 
   if (fd->kind == kFdFile && ((fd->flags & O_ACCMODE) != O_RDONLY &&
                               GetFileType(fd->handle) == kNtFileTypeDisk)) {

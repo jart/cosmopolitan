@@ -10,7 +10,6 @@ struct CritbitNode {
 };
 
 int PutEnvImpl(char *, bool) hidden;
-void __freeenv(void *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

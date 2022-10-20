@@ -25,6 +25,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/fmt/itoa.h"
 #include "libc/fmt/magnumstrs.internal.h"
+#include "libc/intrin/_getenv.internal.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
@@ -55,11 +56,6 @@
 #define TOMBSTONE ((char *)-1)
 #define READ24(s) READ32LE(s "\0")
 
-struct Env {
-  char *s;
-  int i;
-};
-
 static char *p;
 static char *q;
 static char *r;
@@ -71,7 +67,7 @@ static char *assign;
 static char var[32];
 static int lastchild;
 static int exitstatus;
-static char *envs[3000];
+static char *envs[500];
 static char *args[3000];
 static const char *prog;
 static char errbuf[512];
@@ -148,27 +144,9 @@ static int GetSignalByName(const char *s) {
   return 0;
 }
 
-static struct Env GetEnv(char **p, const char *k) {
-  int i, j;
-  for (i = 0; p[i]; ++i) {
-    for (j = 0;; ++j) {
-      if (!k[j] || k[j] == '=') {
-        if (p[i][j] == '=') {
-          return (struct Env){p[i] + j + 1, i};
-        }
-        break;
-      }
-      if (toupper(k[j] & 255) != toupper(p[i][j] & 255)) {
-        break;
-      }
-    }
-  }
-  return (struct Env){0, i};
-}
-
 static void PutEnv(char **p, const char *kv) {
   struct Env e;
-  e = GetEnv(p, kv);
+  e = _getenv(p, kv);
   p[e.i] = kv;
   if (!e.s) p[e.i + 1] = 0;
 }
@@ -271,7 +249,7 @@ static int Read(void) {
 
 static int Cd(void) {
   const char *s;
-  if ((s = n > 1 ? args[1] : GetEnv(envs, "HOME").s)) {
+  if ((s = n > 1 ? args[1] : _getenv(envs, "HOME").s)) {
     if (!chdir(s)) {
       return 0;
     } else {
@@ -489,14 +467,27 @@ static const char *IntToStr(int x) {
 }
 
 static const char *GetVar(const char *key) {
+  static char vbuf[PATH_MAX];
   if (key[0] == '$' && !key[1]) {
     return IntToStr(getpid());
   } else if (key[0] == '!' && !key[1]) {
     return IntToStr(lastchild);
   } else if (key[0] == '?' && !key[1]) {
     return IntToStr(exitstatus);
+  } else if (!strcmp(key, "PWD")) {
+    _npassert(getcwd(vbuf, sizeof(vbuf)));
+    return vbuf;
+  } else if (!strcmp(key, "UID")) {
+    FormatInt32(vbuf, getuid());
+    return vbuf;
+  } else if (!strcmp(key, "GID")) {
+    FormatInt32(vbuf, getgid());
+    return vbuf;
+  } else if (!strcmp(key, "EUID")) {
+    FormatInt32(vbuf, geteuid());
+    return vbuf;
   } else {
-    return GetEnv(envs, key).s;
+    return _getenv(envs, key).s;
   }
 }
 

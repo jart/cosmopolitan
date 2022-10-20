@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 
 /**
@@ -38,6 +38,10 @@
  *      >0 can be SIGINT, SIGTERM, SIGKILL, SIGUSR1, etc.
  *      =0 checks both if pid exists and we can signal it
  * @return 0 if something was accomplished, or -1 w/ errno
+ * @raise ESRCH if `pid` couldn't be found
+ * @raise EPERM if lacked permission to signal process
+ * @raise EPERM if pledge() is in play without `proc` promised
+ * @raise EINVAL if the provided `sig` is invalid or unsupported
  * @asyncsignalsafe
  */
 int kill(int pid, int sig) {

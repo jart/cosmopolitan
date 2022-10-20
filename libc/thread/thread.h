@@ -31,6 +31,9 @@
 #define PTHREAD_CANCEL_DEFERRED     0
 #define PTHREAD_CANCEL_ASYNCHRONOUS 1
 
+#define PTHREAD_SCOPE_SYSTEM  0
+#define PTHREAD_SCOPE_PROCESS 1
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -89,7 +92,7 @@ typedef struct pthread_attr_s {
   char __inheritsched;
   int __schedparam;
   int __schedpolicy;
-  int __scope;
+  int __contentionscope;
   unsigned __guardsize;
   unsigned __stacksize;
   char *__stackaddr;

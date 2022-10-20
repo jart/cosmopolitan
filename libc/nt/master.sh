@@ -112,7 +112,7 @@ imp	'CheckNameLegalDOS8Dot3'				CheckNameLegalDOS8Dot3W					kernel32	128
 imp	'CheckRemoteDebuggerPresent'				CheckRemoteDebuggerPresent				kernel32	0	2
 imp	'CheckTokenCapability'					CheckTokenCapability					kernel32	0
 imp	'CheckTokenMembershipEx'				CheckTokenMembershipEx					kernel32	0
-imp	'ClearCommBreak'					ClearCommBreak						kernel32	0
+imp	'ClearCommBreak'					ClearCommBreak						kernel32	0	1
 imp	'ClearCommError'					ClearCommError						kernel32	0
 imp	'CloseConsoleHandle'					CloseConsoleHandle					kernel32	134
 imp	'ClosePackageInfo'					ClosePackageInfo					kernel32	0
@@ -764,7 +764,7 @@ imp	'PssWalkMarkerSetPosition'				PssWalkMarkerSetPosition				kernel32	0
 imp	'PssWalkMarkerTell'					PssWalkMarkerTell					kernel32	1080
 imp	'PssWalkSnapshot'					PssWalkSnapshot						kernel32	0
 imp	'PulseEvent'						PulseEvent						kernel32	0	1
-imp	'PurgeComm'						PurgeComm						kernel32	0
+imp	'PurgeComm'						PurgeComm						kernel32	0	2
 imp	'QueryActCtx'						QueryActCtxW						kernel32	0
 imp	'QueryActCtxSettings'					QueryActCtxSettingsW					kernel32	0
 imp	'QueryActCtxSettingsWWorker'				QueryActCtxSettingsWWorker				kernel32	1085
@@ -1011,7 +1011,7 @@ imp	'TlsGetValue'						TlsGetValue						kernel32	0	1
 imp	'TlsSetValue'						TlsSetValue						kernel32	0	2
 imp	'Toolhelp32ReadProcessMemory'				Toolhelp32ReadProcessMemory				kernel32	1449
 imp	'TransactNamedPipe'					TransactNamedPipe					kernel32	0	7
-imp	'TransmitCommChar'					TransmitCommChar					kernel32	0
+imp	'TransmitCommChar'					TransmitCommChar					kernel32	0	2
 imp	'TryAcquireSRWLockExclusive'				TryAcquireSRWLockExclusive				kernel32	0	1
 imp	'TryAcquireSRWLockShared'				TryAcquireSRWLockShared					kernel32	0	1
 imp	'TryEnterCriticalSection'				TryEnterCriticalSection					kernel32	0	1

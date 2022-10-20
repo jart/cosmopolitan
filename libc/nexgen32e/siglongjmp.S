@@ -1,7 +1,7 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,13 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/termios.h"
-#include "libc/sysv/consts/termios.h"
+#include "libc/macros.internal.h"
 
-uint32_t cfgetospeed(const struct termios *t) {
-  if (CBAUD) {
-    return t->c_cflag & CBAUD;
-  } else {
-    return t->c_ospeed;
-  }
-}
+//	Loads previously saved processor state.
+//
+//	@param	rdi points to the jmp_buf
+//	@param	esi is returned by setjmp() invocation (coerced nonzero)
+//	@noreturn
+//	@asyncsignalsafe
+siglongjmp:
+	jmp	longjmp
+	.endfn	siglongjmp,globl

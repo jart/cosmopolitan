@@ -3,7 +3,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void *kmalloc(size_t) attributeallocsize((1)) mallocesque returnsnonnull;
+void *kmalloc(size_t) mallocesque attributeallocsize((1)) returnsaligned((8));
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

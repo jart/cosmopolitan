@@ -56,7 +56,7 @@ const char *(DescribeFlock)(char buf[N], int cmd, const struct flock *l) {
     append(", .l_pid=%d", l->l_pid);
   }
 
-  if (l->l_sysid) {
+  if (IsFreebsd() && l->l_sysid) {
     append(", .l_sysid=%d", l->l_sysid);
   }
 

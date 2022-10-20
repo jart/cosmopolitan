@@ -19,6 +19,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
+#include "libc/sysv/consts/limits.h"
 
 /**
  * Returns population count of signal set.
@@ -27,9 +28,22 @@
  * @asyncsignalsafe
  */
 int sigcountset(const sigset_t *set) {
-  int r, i;
-  for (r = i = 0; i < ARRAYLEN(set->__bits); ++i) {
-    r += popcnt(set->__bits[i]);
+  int r, i, x, y;
+  switch (_NSIG) {
+    case 32:
+      x = (uint32_t)set->__bits[0];
+      y = 0;
+      break;
+    case 64:
+      x = set->__bits[0];
+      y = 0;
+      break;
+    case 128:
+      x = set->__bits[0];
+      y = set->__bits[1];
+      break;
+    default:
+      notpossible;
   }
-  return r;
+  return popcnt(x) + popcnt(y);
 }

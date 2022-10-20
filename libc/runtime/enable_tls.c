@@ -19,6 +19,7 @@
 #include "ape/sections.internal.h"
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -32,6 +33,7 @@
 #include "libc/nexgen32e/msr.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/internal.h"
+#include "libc/runtime/morph.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdalign.internal.h"
 #include "libc/str/str.h"
@@ -196,9 +198,10 @@ privileged void __enable_tls(void) {
   if ((intptr_t)_tls_content && (IsWindows() || IsXnu())) {
     int n;
     uint64_t w;
+    sigset_t mask;
     unsigned m, dis;
     unsigned char *p;
-    __morph_begin();
+    __morph_begin(&mask);
 
     if (IsXnu()) {
       // Apple is quite straightforward to patch. We basically
@@ -262,7 +265,7 @@ privileged void __enable_tls(void) {
       }
     }
 
-    __morph_end();
+    __morph_end(&mask);
   }
 
   // we are now allowed to use tls

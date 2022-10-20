@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,41 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/dce.h"
-#include "libc/intrin/weaken.h"
-#include "libc/mem/internal.h"
-#include "libc/runtime/runtime.h"
-
-#define ToUpper(c) \
-  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
+#include "libc/calls/struct/sigset.h"
 
 /**
- * Removes environment variable.
+ * Blocks all signals without strace logging.
+ *
+ * @param neu is new signal mask for process
+ * @return old signal mask
  */
-int unsetenv(const char *s) {
-  char **p;
-  size_t i, j, k;
-  if (s && (p = environ)) {
-    for (i = 0; p[i]; ++i) {
-      for (j = 0;; ++j) {
-        if (!s[j]) {
-          if (p[i][j] == '=') {
-            if (_weaken(__freeenv)) {
-              _weaken(__freeenv)(p[i]);
-            }
-            k = i + 1;
-            do {
-              p[k - 1] = p[k];
-            } while (p[k++]);
-            return 0;
-          }
-          break;
-        }
-        if (ToUpper(s[j]) != ToUpper(p[i][j])) {
-          break;
-        }
-      }
-    }
-  }
-  return 0;
+sigset_t _sigblockall(void) {
+  sigset_t ss;
+  sigfillset(&ss);
+  return _sigsetmask(ss);
 }

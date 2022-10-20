@@ -39,6 +39,7 @@
 #include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
+#include "libc/mem/sortedints.internal.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/paths.h"
 #include "libc/runtime/internal.h"
@@ -90,7 +91,7 @@
 
 #define PORT               8080   // default server listening port
 #define CPUS               64     // number of cpus to actually use
-#define WORKERS            100    // size of http client thread pool
+#define WORKERS            500    // size of http client thread pool
 #define SUPERVISE_MS       1000   // how often to stat() asset files
 #define KEEPALIVE_MS       60000  // max time to keep idle conn open
 #define MELTALIVE_MS       2000   // panic keepalive under heavy load
@@ -108,7 +109,7 @@
 #define BATCH_MAX          64     // max claims to insert per transaction
 #define NICK_MAX           40     // max length of user nickname string
 #define TB_INTERVAL        1000   // millis between token replenishes
-#define TB_CIDR            22     // token bucket cidr specificity
+#define TB_CIDR            24     // token bucket cidr specificity
 #define SOCK_MAX           100    // max length of socket queue
 #define MSG_BUF            512    // small response lookaside
 
@@ -118,13 +119,14 @@
 #define TB_BYTES (1u << TB_CIDR)
 #define TB_WORDS (TB_BYTES / 8)
 
-#define GETOPTS "idvp:w:k:"
+#define GETOPTS "idvp:w:k:W:"
 #define USAGE \
   "\
 Usage: turfwar.com [-dv] ARGS...\n\
   -i          integrity check and vacuum at startup\n\
   -d          daemonize\n\
   -v          verbosity\n\
+  -W IP       whitelist\n\
   -p INT      port\n\
   -w INT      workers\n\
   -k INT      keepalive\n\
@@ -233,12 +235,21 @@ struct Asset {
   char lastmodified[32];
 };
 
+struct Blackhole {
+  struct sockaddr_un addr;
+  int fd;
+} g_blackhole = {{
+    AF_UNIX,
+    "/var/run/blackhole.sock",
+}};
+
 // cli flags
 bool g_integrity;
 bool g_daemonize;
 int g_port = PORT;
 int g_workers = WORKERS;
 int g_keepalive = KEEPALIVE_MS;
+struct SortedInts g_whitelisted;
 
 // lifecycle vars
 pthread_t g_listener;
@@ -248,6 +259,7 @@ atomic_int g_connections;
 nsync_note g_shutdown[3];
 
 // whitebox metrics
+atomic_long g_banned;
 atomic_long g_accepts;
 atomic_long g_dbfails;
 atomic_long g_proxied;
@@ -399,6 +411,19 @@ int DbOpen(const char *path, sqlite3 **db) {
 // why not make the statement prepare api a little less hairy too
 int DbPrepare(sqlite3 *db, sqlite3_stmt **stmt, const char *sql) {
   return sqlite3_prepare_v2(db, sql, -1, stmt, 0);
+}
+
+bool Blackhole(uint32_t ip) {
+  char buf[4];
+  WRITE32BE(buf, ip);
+  if (sendto(g_blackhole.fd, buf, 4, 0, (struct sockaddr *)&g_blackhole.addr,
+             sizeof(g_blackhole.addr)) == 4) {
+    return true;
+  } else {
+    kprintf("error: sendto(%#s) failed: %s\n", g_blackhole.addr.sun_path,
+            strerror(errno));
+    return false;
+  }
 }
 
 // validates name registration validity
@@ -674,10 +699,11 @@ void ServeStatusz(int client, char *outbuf) {
               g_messages / MAX(1, _timespec_sub(now, g_started).tv_sec));
   p = Statusz(p, "started", g_started.tv_sec);
   p = Statusz(p, "now", now.tv_sec);
+  p = Statusz(p, "messages", g_messages);
   p = Statusz(p, "connections", g_connections);
+  p = Statusz(p, "banned", g_banned);
   p = Statusz(p, "workers", g_workers);
   p = Statusz(p, "accepts", g_accepts);
-  p = Statusz(p, "messages", g_messages);
   p = Statusz(p, "dbfails", g_dbfails);
   p = Statusz(p, "proxied", g_proxied);
   p = Statusz(p, "memfails", g_memfails);
@@ -759,8 +785,8 @@ void *ListenWorker(void *arg) {
     }
     if (!AddClient(&g_clients, &client, WaitFor(ACCEPT_DEADLINE_MS))) {
       ++g_rejected;
-      LOG("502 Accept Queue Full\n");
-      Write(client.sock, "HTTP/1.1 502 Accept Queue Full\r\n"
+      LOG("503 Accept Queue Full\n");
+      Write(client.sock, "HTTP/1.1 503 Accept Queue Full\r\n"
                          "Content-Type: text/plain\r\n"
                          "Connection: close\r\n"
                          "\r\n"
@@ -834,6 +860,9 @@ void *HttpWorker(void *arg) {
       ++g_messages;
       ++g_worker[id].msgcount;
 
+      ipv6 = false;
+      ip = clientip;
+
       // get client address from frontend
       if (HasHeader(kHttpXForwardedFor)) {
         if (!IsLoopbackIp(clientip) &&  //
@@ -861,17 +890,22 @@ void *HttpWorker(void *arg) {
         ip = clientip;
         ++g_unproxied;
       }
+
       ksnprintf(ipbuf, sizeof(ipbuf), "%hhu.%hhu.%hhu.%hhu", ip >> 24, ip >> 16,
                 ip >> 8, ip);
 
-      if ((tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 64) {
-        if (tok > 8) {
+      if (!ipv6 && !ContainsInt(&g_whitelisted, ip) &&
+          (tok = AcquireToken(g_tok.b, ip, TB_CIDR)) < 32) {
+        if (tok > 4) {
           LOG("%s rate limiting client\n", ipbuf, msg->version);
           Write(client.sock, "HTTP/1.1 429 Too Many Requests\r\n"
                              "Content-Type: text/plain\r\n"
                              "Connection: close\r\n"
                              "\r\n"
                              "429 Too Many Requests\n");
+        } else {
+          Blackhole(ip);
+          ++g_banned;
         }
         ++g_ratelimits;
         break;
@@ -995,8 +1029,6 @@ void *HttpWorker(void *arg) {
                              "Cache-Control: max-age=3600, private\r\n"
                              "Date: ");
           p = FormatDate(p);
-          p = stpcpy(p, "\r\nX-Token-Count: ");
-          p = FormatInt32(p, CountTokens(g_tok.b, ip, TB_CIDR));
           p = stpcpy(p, "\r\nContent-Length: ");
           p = FormatInt32(p, strlen(ipbuf));
           p = stpcpy(p, "\r\n\r\n");
@@ -1113,8 +1145,8 @@ void *HttpWorker(void *arg) {
             sent = write(client.sock, outbuf, p - outbuf);
             break;
           } else {
-            LOG("%s: 502 Claims Queue Full\n", ipbuf);
-            Write(client.sock, "HTTP/1.1 502 Claims Queue Full\r\n"
+            LOG("%s: 503 Claims Queue Full\n", ipbuf);
+            Write(client.sock, "HTTP/1.1 503 Claims Queue Full\r\n"
                                "Content-Type: text/plain\r\n"
                                "Connection: close\r\n"
                                "\r\n"
@@ -1312,8 +1344,9 @@ void OnCtrlC(int sig) {
 }
 
 // parses cli arguments
-static void GetOpts(int argc, char *argv[]) {
+void GetOpts(int argc, char *argv[]) {
   int opt;
+  int64_t ip;
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       case 'i':
@@ -1333,6 +1366,16 @@ static void GetOpts(int argc, char *argv[]) {
         break;
       case 'v':
         ++__log_level;
+        break;
+      case 'W':
+        if ((ip = ParseIp(optarg, -1)) != -1) {
+          if (InsertInt(&g_whitelisted, ip, true)) {
+            LOG("whitelisted %s", optarg);
+          }
+        } else {
+          kprintf("error: could not parse -w %#s IP address\n", optarg);
+          _Exit(1);
+        }
         break;
       case '?':
         write(1, USAGE, sizeof(USAGE) - 1);
@@ -1792,6 +1835,15 @@ int main(int argc, char *argv[]) {
 \\__|\\__,_|_|   _|   \\_/\\_/ \\__,_|_|\n");
   CHECK_EQ(0, chdir("/opt/turfwar"));
   putenv("TMPDIR=/opt/turfwar/tmp");
+
+  if ((g_blackhole.fd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1) {
+    kprintf("error: socket(AF_UNIX) failed: %s\n", strerror(errno));
+    _Exit(3);
+  }
+  if (!Blackhole(0)) {
+    kprintf("redbean isn't able to protect your kernel from level 4 ddos\n");
+    kprintf("please run the blackholed program, see https://justine.lol/\n");
+  }
 
   // the power to serve
   if (g_daemonize) {

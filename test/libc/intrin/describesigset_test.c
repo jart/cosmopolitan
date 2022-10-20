@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
+#include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
@@ -25,7 +26,7 @@
 TEST(DescribeSigset, full) {
   sigset_t ss;
   sigfillset(&ss);
-  EXPECT_STREQ("~{}", DescribeSigset(0, &ss));
+  EXPECT_STREQ("~{ABRT,KILL,STOP}", DescribeSigset(0, &ss));
 }
 
 TEST(DescribeSigset, present) {
@@ -41,5 +42,9 @@ TEST(DescribeSigset, absent) {
   sigfillset(&ss);
   sigdelset(&ss, SIGINT);
   sigdelset(&ss, SIGUSR1);
-  EXPECT_STREQ("~{INT,USR1}", DescribeSigset(0, &ss));
+  if (IsBsd()) {
+    EXPECT_STREQ("~{INT,ABRT,KILL,STOP,USR1}", DescribeSigset(0, &ss));
+  } else {
+    EXPECT_STREQ("~{INT,ABRT,KILL,USR1,STOP}", DescribeSigset(0, &ss));
+  }
 }

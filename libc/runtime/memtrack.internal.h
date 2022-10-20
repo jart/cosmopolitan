@@ -135,39 +135,39 @@ forceinline pureconst bool IsFixedFrame(int x) {
 }
 
 forceinline pureconst bool OverlapsImageSpace(const void *p, size_t n) {
-  const unsigned char *start, *ender;
+  const unsigned char *BegA, *EndA, *BegB, *EndB;
   if (n) {
-    start = p;
-    ender = start + (n - 1);
-    return ((_base <= start && start < _end) ||
-            (_base <= ender && ender < _end) ||
-            (start < _base && _end <= ender));
+    BegA = p;
+    EndA = BegA + (n - 1);
+    BegB = _base;
+    EndB = _end - 1;
+    return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;
   }
 }
 
 forceinline pureconst bool OverlapsArenaSpace(const void *p, size_t n) {
-  intptr_t x, y;
+  intptr_t BegA, EndA, BegB, EndB;
   if (n) {
-    x = (intptr_t)p;
-    y = x + (n - 1);
-    return ((0x50000000 <= x && x <= 0x7ffdffff) ||
-            (0x50000000 <= y && y <= 0x7ffdffff) ||
-            (x < 0x50000000 && 0x7ffdffff < y));
+    BegA = (intptr_t)p;
+    EndA = BegA + (n - 1);
+    BegB = 0x50000000;
+    EndB = 0x7ffdffff;
+    return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;
   }
 }
 
 forceinline pureconst bool OverlapsShadowSpace(const void *p, size_t n) {
-  intptr_t x, y;
+  intptr_t BegA, EndA, BegB, EndB;
   if (n) {
-    x = (intptr_t)p;
-    y = x + (n - 1);
-    return ((0x7fff0000 <= x && x <= 0x10007fffffff) ||
-            (0x7fff0000 <= y && y <= 0x10007fffffff) ||
-            (x < 0x7fff0000 && 0x10007fffffff < y));
+    BegA = (intptr_t)p;
+    EndA = BegA + (n - 1);
+    BegB = 0x7fff0000;
+    EndB = 0x10007fffffff;
+    return MAX(BegA, BegB) < MIN(EndA, EndB);
   } else {
     return 0;
   }

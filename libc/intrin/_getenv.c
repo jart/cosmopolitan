@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,57 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
-#include "libc/intrin/bswap.h"
-#include "libc/macros.internal.h"
-#include "libc/str/str.h"
-#include "libc/str/tab.internal.h"
-#include "tool/build/lib/isnocompressext.h"
+#include "libc/dce.h"
+#include "libc/intrin/_getenv.internal.h"
 
-static const char kNoCompressExts[][8] = {
-    "bz2",   //
-    "gif",   //
-    "gz",    //
-    "jpg",   //
-    "lz4",   //
-    "mp4",   //
-    "mpeg",  //
-    "mpg",   //
-    "png",   //
-    "webp",  //
-    "xz",    //
-    "zip",   //
-};
+#define ToUpper(c) \
+  (IsWindows() && (c) >= 'a' && (c) <= 'z' ? (c) - 'a' + 'A' : (c))
 
-static bool BisectNoCompressExts(uint64_t ext) {
-  int c, m, l, r;
-  l = 0;
-  r = ARRAYLEN(kNoCompressExts) - 1;
-  while (l <= r) {
-    m = (l + r) >> 1;
-    if (READ64BE(kNoCompressExts[m]) < ext) {
-      l = m + 1;
-    } else if (READ64BE(kNoCompressExts[m]) > ext) {
-      r = m - 1;
-    } else {
-      return true;
+struct Env _getenv(char **p, const char *k) {
+  char *t;
+  int i, j;
+  for (i = 0; (t = p[i]); ++i) {
+    for (j = 0;; ++j) {
+      if (!k[j] || k[j] == '=') {
+        if (!t[j]) return (struct Env){t + j, i};
+        if (t[j] == '=') return (struct Env){t + j + 1, i};
+        break;
+      }
+      if (ToUpper(k[j] & 255) != ToUpper(t[j] & 255)) {
+        break;
+      }
     }
   }
-  return false;
-}
-
-bool IsNoCompressExt(const char *p, size_t n) {
-  int c;
-  uint64_t w;
-  if (n == -1) n = p ? strlen(p) : 0;
-  if (n) {
-    for (w = 0; n--;) {
-      c = p[n] & 255;
-      if (c == '.') break;
-      w <<= 8;
-      w |= kToLower[c];
-    }
-    return BisectNoCompressExts(bswap_64(w));
-  }
-  return false;
+  return (struct Env){0, i};
 }

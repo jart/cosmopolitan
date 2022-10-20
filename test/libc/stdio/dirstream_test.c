@@ -61,12 +61,16 @@ TEST(opendir, enotdir) {
 TEST(opendir, zipTest_fake) {
   ASSERT_NE(NULL, (dir = opendir("/zip")));
   EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".cosmo", ent->d_name);
+  EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("usr", ent->d_name);
   EXPECT_EQ(NULL, (ent = readdir(dir)));
   EXPECT_EQ(0, closedir(dir));
   ASSERT_NE(NULL, (dir = opendir("/zip/")));
+  EXPECT_NE(NULL, (ent = readdir(dir)));
+  EXPECT_STREQ(".cosmo", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));
   EXPECT_STREQ("echo", ent->d_name);
   EXPECT_NE(NULL, (ent = readdir(dir)));

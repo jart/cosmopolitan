@@ -20,6 +20,7 @@
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -174,4 +175,28 @@ TEST(sigaction, ignoringSignalDiscardsSignal) {
   ASSERT_EQ(0, sigaction(SIGUSR1, &sa, NULL));
   ASSERT_EQ(0, sigprocmask(SIG_UNBLOCK, &blocked, NULL));
   EXPECT_EQ(0, OnSignalCnt);
+}
+
+TEST(sigaction, autoZombieSlayer) {
+  if (IsWindows()) return;
+  int pid;
+  struct sigaction sa;
+  // make sure we're starting in expected state
+  ASSERT_SYS(0, 0, sigaction(SIGCHLD, 0, &sa));
+  ASSERT_EQ(SIG_DFL, sa.sa_handler);
+  // verify child becomes zombie
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) _Exit(0);
+  ASSERT_SYS(0, pid, wait(0));
+  // enable automatic zombie slayer
+  sa.sa_handler = SIG_IGN;
+  sa.sa_flags = SA_NOCLDWAIT;  // seems to be optional
+  sigemptyset(&sa.sa_mask);
+  ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, &sa));
+  // verify it works
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) _Exit(0);
+  ASSERT_SYS(ECHILD, -1, wait(0));
+  // clean up
+  ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));
 }

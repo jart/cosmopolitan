@@ -13,4 +13,8 @@ LICENSE
 
 LOCAL CHANGES
 
-  - Changed the fsync() code to be configured at runtime.
+  - Added `/zip/.args` file support to SQLite shell
+  - Added `--strace` system call tracing flag to SQLite shell
+  - Added `--strace` function call logging flag to SQLite shell
+  - Configured fsync() using runtime magnums rather than ifdefs
+  - Save and restore errno in some places to avoid log pollution

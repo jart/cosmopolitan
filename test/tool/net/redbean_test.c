@@ -41,7 +41,7 @@
 #include "third_party/regex/regex.h"
 
 STATIC_YOINK("zip_uri_support");
-STATIC_YOINK("o/" MODE "/tool/net/redbean.com");
+STATIC_YOINK("o/" MODE "/test/tool/net/redbean-tester.com");
 
 char testlib_enable_tmp_setup_teardown_once;
 int port;
@@ -52,9 +52,9 @@ void SetUpOnce(void) {
   char buf[1024];
   int fdin, fdout;
   ASSERT_NE(-1, mkdir("bin", 0755));
-  ASSERT_NE(-1,
-            (fdin = open("/zip/o/" MODE "/tool/net/redbean.com", O_RDONLY)));
-  ASSERT_NE(-1, (fdout = creat("bin/redbean.com", 0755)));
+  ASSERT_NE(-1, (fdin = open("/zip/o/" MODE "/test/tool/net/redbean-tester.com",
+                             O_RDONLY)));
+  ASSERT_NE(-1, (fdout = creat("bin/redbean-tester.com", 0755)));
   for (;;) {
     ASSERT_NE(-1, (n = read(fdin, buf, sizeof(buf))));
     if (!n) break;
@@ -93,6 +93,7 @@ char *SendHttpRequest(const char *s) {
 bool Matches(const char *regex, const char *str) {
   bool r;
   regex_t re;
+  printf("%s\n", str);
   EXPECT_EQ(REG_OK, regcomp(&re, regex, 0));
   r = regexec(&re, str, 0, 0, 0) == REG_OK;
   regfree(&re);
@@ -113,14 +114,12 @@ TEST(redbean, testOptions) {
     close(0);
     open("/dev/null", O_RDWR);
     close(1);
-    dup(0);
-    close(2);
-    open("log", O_CREAT | O_TRUNC | O_WRONLY | O_APPEND, 0644);
     close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    execv("bin/redbean.com",
-          (char *const[]){"bin/redbean.com", "-vvszp0", "-l127.0.0.1", 0});
+    execv("bin/redbean-tester.com",
+          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+                          __strace > 0 ? "--strace" : 0, 0});
     _exit(127);
   }
   EXPECT_NE(-1, close(pipefds[1]));
@@ -139,7 +138,6 @@ TEST(redbean, testOptions) {
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
-  if (g_testlib_failed) fputs(gc(xslurp("log", 0)), stderr);
 }
 
 TEST(redbean, testPipeline) {
@@ -155,13 +153,12 @@ TEST(redbean, testPipeline) {
     setpgrp();
     close(0);
     open("/dev/null", O_RDWR);
-    close(2);
-    open("log", O_CREAT | O_TRUNC | O_WRONLY | O_APPEND, 0644);
     close(pipefds[0]);
     dup2(pipefds[1], 1);
     sigprocmask(SIG_SETMASK, &savemask, NULL);
-    execv("bin/redbean.com",
-          (char *const[]){"bin/redbean.com", "-vvszp0", "-l127.0.0.1", 0});
+    execv("bin/redbean-tester.com",
+          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+                          __strace > 0 ? "--strace" : 0, 0});
     _exit(127);
   }
   EXPECT_NE(-1, close(pipefds[1]));
@@ -189,5 +186,85 @@ TEST(redbean, testPipeline) {
   EXPECT_NE(-1, kill(pid, SIGTERM));
   EXPECT_NE(-1, wait(0));
   EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
-  if (g_testlib_failed) fputs(gc(xslurp("log", 0)), stderr);
+}
+
+TEST(redbean, testContentRange) {
+  if (IsWindows()) return;
+  char portbuf[16];
+  int pid, pipefds[2];
+  sigset_t chldmask, savemask;
+  sigaddset(&chldmask, SIGCHLD);
+  EXPECT_NE(-1, sigprocmask(SIG_BLOCK, &chldmask, &savemask));
+  ASSERT_NE(-1, pipe(pipefds));
+  ASSERT_NE(-1, (pid = fork()));
+  if (!pid) {
+    setpgrp();
+    close(0);
+    open("/dev/null", O_RDWR);
+    close(pipefds[0]);
+    dup2(pipefds[1], 1);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
+    execv("bin/redbean-tester.com",
+          (char *const[]){"bin/redbean-tester.com", "-vvszXp0", "-l127.0.0.1",
+                          __strace > 0 ? "--strace" : 0, 0});
+    _exit(127);
+  }
+  EXPECT_NE(-1, close(pipefds[1]));
+  EXPECT_NE(-1, read(pipefds[0], portbuf, sizeof(portbuf)));
+  port = atoi(portbuf);
+
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 206 Partial Content\r\n\
+Content-Range: bytes 18-21/52\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+Accept-Ranges: bytes\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 4\r\n\
+\r\n\
+J\n\
+K\n",
+                      gc(SendHttpRequest("GET /seekable.txt HTTP/1.1\r\n"
+                                         "Range: bytes=18-21\r\n"
+                                         "\r\n"))));
+
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 416 Range Not Satisfiable\r\n\
+Content-Range: bytes \\*/52\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+Accept-Ranges: bytes\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 0\r\n\
+\r\n",
+                      gc(SendHttpRequest("GET /seekable.txt HTTP/1.1\r\n"
+                                         "Range: bytes=-18-21\r\n"
+                                         "\r\n"))));
+
+  EXPECT_TRUE(Matches("\
+HTTP/1.1 416 Range Not Satisfiable\r\n\
+Content-Range: bytes \\*/52\r\n\
+Content-Type: text/plain; charset=utf-8\r\n\
+Vary: Accept-Encoding\r\n\
+Last-Modified: .*\r\n\
+Accept-Ranges: bytes\r\n\
+X-Content-Type-Options: nosniff\r\n\
+Date: .*\r\n\
+Server: redbean/.*\r\n\
+Content-Length: 0\r\n\
+\r\n",
+                      gc(SendHttpRequest("GET /seekable.txt HTTP/1.1\r\n"
+                                         "Range: bytes=18-60\r\n"
+                                         "\r\n"))));
+
+  EXPECT_EQ(0, close(pipefds[0]));
+  EXPECT_NE(-1, kill(pid, SIGTERM));
+  EXPECT_NE(-1, wait(0));
+  EXPECT_NE(-1, sigprocmask(SIG_SETMASK, &savemask, 0));
 }
