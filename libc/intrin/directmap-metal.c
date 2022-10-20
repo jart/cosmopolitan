@@ -62,6 +62,7 @@ noasan struct DirectMap sys_mmap_metal(void *paddr, size_t size, int prot,
         page |= PAGE_V;
       if (!(prot & PROT_EXEC)) page |= PAGE_XD;
       *pte = page;
+      invlpg(addr + i);
     } else {
       addr = -1;
       break;
