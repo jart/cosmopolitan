@@ -574,18 +574,18 @@ HOOKS
           *). See functions like Route which asks redbean to do its default
           thing from the handler.
 
-  OnClientConnection(ip:int,port:int,serverip:int,serverport:int) → bool
+  OnClientConnection(ip:int, port:int, serverip:int, serverport:int) → bool
           If this function is defined it'll be called from the main process
           each time redbean accepts a new client connection. If it returns
           `true`, redbean will close the connection without calling fork.
 
-  OnLogLatency(reqtimeus:int,contimeus:int)
+  OnLogLatency(reqtimeus:int, contimeus:int)
           If this function is defined it'll be called from the main process
           each time redbean completes handling of a request, but before the
           response is sent. The handler received the time (in µs) since the
           request handling and connection handling started.
 
-  OnProcessCreate(pid:int,ip:int,port:int,serverip:int,serverport:int)
+  OnProcessCreate(pid:int, ip:int, port:int, serverip:int, serverport:int)
           If this function is defined it'll be called from the main process
           each time redbean forks a connection handler worker process. The
           ip/port of the remote client is provided, along with the ip/port
@@ -636,7 +636,7 @@ FUNCTIONS
           Appends data to HTTP response payload buffer. This is buffered
           independently of headers.
 
-  SetStatus(code:int[,reason:str])
+  SetStatus(code:int[, reason:str])
           Starts an HTTP response, specifying the parameters on its first
           line. reason is optional since redbean can fill in the appropriate
           text for well-known magic numbers, e.g. 200, 404, etc. This method
@@ -644,7 +644,7 @@ FUNCTIONS
           ServeAsset and other Serve* functions. If this function isn't
           called, then the default behavior is to send 200 OK.
 
-  SetHeader(name:str,value:str)
+  SetHeader(name:str, value:str)
           Appends HTTP header to response header buffer. name is
           case-insensitive and restricted to non-space ASCII. value is a
           UTF-8 string that must be encodable as ISO-8859-1. Leading and
@@ -660,7 +660,7 @@ FUNCTIONS
           Date, which are abstracted by the transport layer. In such cases,
           consider calling ServeAsset.
 
-  SetCookie(name:str,value:str[,options:table])
+  SetCookie(name:str, value:str[, options:table])
           Appends Set-Cookie HTTP header to the response header buffer.
           Several Set-Cookie headers can be added to the same response.
           __Host- and __Secure- prefixes are supported and may set or
@@ -967,7 +967,7 @@ FUNCTIONS
           The only failure return condition currently implemented is
           when C runs out of heap memory.
 
-  EncodeLatin1(utf-8:str[,flags:int]) → iso-8859-1:str
+  EncodeLatin1(utf-8:str[, flags:int]) → iso-8859-1:str
           Turns UTF-8 into ISO-8859-1 string.
 
   EscapeFragment(str) → str
@@ -1301,7 +1301,7 @@ FUNCTIONS
           DEFLATE compression.
           Also available as IsCompressed (deprecated).
 
-  IndentLines(str[,int]) → str
+  IndentLines(str[, int]) → str
           Adds spaces to beginnings of multiline string. If the int
           parameter is not supplied then 1 space will be added.
 
@@ -1437,7 +1437,7 @@ FUNCTIONS
   ProgramContentType(ext:str[, contenttype:str]) → str
           Sets or returns content type associated with a file extension.
 
-  ProgramHeader(name:str,value:str)
+  ProgramHeader(name:str, value:str)
           Appends HTTP header to the header buffer for all responses (whereas
           SetHeader only appends a header to the current response buffer).
           name is case-insensitive and restricted to non-space ASCII. value
@@ -1491,7 +1491,7 @@ FUNCTIONS
           ProgramPrivateKey(Slurp("/etc/letsencrypt/privkey.pem")) for
           local file system only.
 
-  ProgramRedirect(code:int,src:str,location:str)
+  ProgramRedirect(code:int, src:str, location:str)
           Configures fallback routing for paths which would otherwise return
           404 Not Found. If code is 0 then the path is rewritten internally
           as an accelerated redirect. If code is 301, 302, 307, or 308 then
@@ -1504,7 +1504,7 @@ FUNCTIONS
           handshake performance 10x and eliminates a network round trip.
           This function is not available in unsecure mode.
 
-  ProgramSslPresharedKey(key:str,identity:str)
+  ProgramSslPresharedKey(key:str, identity:str)
           This function can be used to enable the PSK ciphersuites which
           simplify SSL and enhance its performance in controlled
           environments. `key` may contain 1..32 bytes of random binary
@@ -1636,7 +1636,7 @@ FUNCTIONS
           Sleeps the specified number of seconds (can be fractional). The
           smallest interval is a microsecond.
 
-  Route([host:str,[path:str]])
+  Route([host:str[, path:str]])
           Instructs redbean to follow the normal HTTP serving path. This
           function is useful when writing an OnHttpRequest handler, since
           that overrides the serving path entirely. So if the handler
@@ -1647,7 +1647,7 @@ FUNCTIONS
           generate a 404 Not Found response if redbean couldn't find an
           appropriate endpoint.
 
-  RouteHost([host:str,[path:str]]) → bool
+  RouteHost([host:str[, path:str]]) → bool
           This is the same as Route, except it only implements the subset of
           request routing needed for serving virtual-hosted assets, where
           redbean tries to prefix the path with the hostname when looking up
@@ -1672,13 +1672,13 @@ FUNCTIONS
           filesystem if -D is used. This function is mutually exclusive with
           SetStatus and other Serve* functions.
 
-  ServeError(code:int[,reason:str])
+  ServeError(code:int[, reason:str])
           Instructs redbean to serve a boilerplate error page. This takes
           care of logging the error, setting the reason phrase, and adding a
           payload. This function is mutually exclusive with SetStatus and
           other Serve* functions.
 
-  ServeRedirect(code:int,location:str)
+  ServeRedirect(code:int, location:str)
           Instructs redbean to return the specified redirect code along with
           the Location header set. This function is mutually exclusive with
           SetStatus and other Serve* functions.
@@ -1698,10 +1698,10 @@ FUNCTIONS
   Underlong(str) → str
           Canonicalizes overlong encodings.
 
-  Crc32(initial:int,data:str) → int
+  Crc32(initial:int, data:str) → int
           Computes 32-bit CRC-32 used by zip/zlib/gzip/etc.
 
-  Crc32c(initial:int,data:str) → int
+  Crc32c(initial:int, data:str) → int
           Computes 32-bit Castagnoli Cyclic Redundancy Check.
 
   Md5(str) → str
@@ -2524,7 +2524,7 @@ ARGON2 MODULE
   uses Argon2 can just as easily become a denial of service vector. For
   example, you may want to consider throttling your login endpoint.
 
-  argon2.hash_encoded(pass:str, salt:int[, config:table])
+  argon2.hash_encoded(pass:str, salt:str[, config:table])
       ├─→ ascii:str
       └─→ nil, error:str
 
