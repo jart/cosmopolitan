@@ -1804,7 +1804,6 @@ static int db_deserialize(lua_State *L) {
     if (db->db == NULL) /* ignore closed databases */
         return 0;
 
-
     const char *buffer = luaL_checklstring(L, 2, &size);
     if (buffer == NULL || size == 0) /* ignore empty database content */
         return 0;
@@ -1826,11 +1825,11 @@ typedef struct {
     sqlite3_changeset_iter *itr;
 } liter;
 
-static liter *lsqlite_makeiter(lua_State *L, sqlite3_changeset_iter *iter) {
+static liter *lsqlite_makeiter(lua_State *L, sqlite3_changeset_iter *piter) {
     liter *litr = (liter*)lua_newuserdata(L, sizeof(liter));
     lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_itr_meta_ref);
     lua_setmetatable(L, -2);
-    litr->itr = iter;
+    litr->itr = piter;
     return litr;
 }
 
@@ -1853,6 +1852,46 @@ static int liter_tostring(lua_State *L) {
         sprintf(buff, "%p", litr->itr);
     lua_pushfstring(L, "sqlite iterator (%s)", buff);
     return 1;
+}
+
+static int liter_table(
+        lua_State *L,
+        int (*iter_func)(sqlite3_changeset_iter *pIter, int val, sqlite3_value **ppValue)
+) {
+    const char *zTab;
+    int n, rc, nCol, Op, bIndirect;
+    sqlite3_value *pVal;
+    liter *litr = lsqlite_checkiter(L, 1);
+    sqlite3changeset_op(litr->itr, &zTab, &nCol, &Op, &bIndirect);
+    lua_createtable(L, nCol, 0);
+    for (n = 0; n < nCol; n++) {
+        if ((rc = (*iter_func)(litr->itr, n, &pVal)) != LUA_OK) {
+            lua_pushnil(L);
+            lua_pushinteger(L, rc);
+            return 2;
+        }
+        if (pVal) {
+            db_push_value(L, pVal);
+        } else {
+            // push `false` to indicate that the value wasn't changed
+            // and not included in the record and to keep table valid
+            lua_pushboolean(L, 0);
+        }
+        lua_rawseti(L, -2, n+1);
+    }
+    return 1;
+}
+
+static int liter_new(lua_State *L) {
+    return liter_table(L, sqlite3changeset_new);
+}
+
+static int liter_old(lua_State *L) {
+    return liter_table(L, sqlite3changeset_old);
+}
+
+static int liter_conflict(lua_State *L) {
+    return liter_table(L, sqlite3changeset_conflict);
 }
 
 /*
@@ -1969,11 +2008,12 @@ static int db_changeset_conflict_callback(
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb); /* get callback */
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
     lua_pushinteger(L, eConflict);
+    (void)lsqlite_makeiter(L, p);
     lua_pushstring(L, zTab);
     lua_pushinteger(L, Op);
     lua_pushboolean(L, bIndirect);
 
-    if (lua_pcall(L, 5, 1, 0) != LUA_OK) return lua_error(L);
+    if (lua_pcall(L, 6, 1, 0) != LUA_OK) return lua_error(L);
 
     result = lua_tointegerx(L, -1, &isint); /* use result if there was no error */
     if (!isint) {
@@ -2608,6 +2648,10 @@ static const luaL_Reg reblib[] = {
 };
 
 static const luaL_Reg itrlib[] = {
+    {"new",             liter_new               },
+    {"old",             liter_old               },
+    {"conflict",        liter_conflict          },
+
     {"__tostring",      liter_tostring          },
     {NULL, NULL}
 };
