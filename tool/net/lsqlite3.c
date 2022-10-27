@@ -126,8 +126,10 @@ static int sqlite_ctx_meta_ref;
 #ifdef SQLITE_ENABLE_SESSION
 static const char *const sqlite_ses_meta  = ":sqlite3:ses";
 static const char *const sqlite_reb_meta  = ":sqlite3:reb";
+static const char *const sqlite_itr_meta  = ":sqlite3:itr";
 static int sqlite_ses_meta_ref;
 static int sqlite_reb_meta_ref;
+static int sqlite_itr_meta_ref;
 #endif
 
 /*
@@ -1816,6 +1818,45 @@ static int db_deserialize(lua_State *L) {
 
 /*
 ** =======================================================
+** Iterator functions (for session support)
+** =======================================================
+*/
+
+typedef struct {
+    sqlite3_changeset_iter *itr;
+} liter;
+
+static liter *lsqlite_makeiter(lua_State *L, sqlite3_changeset_iter *iter) {
+    liter *litr = (liter*)lua_newuserdata(L, sizeof(liter));
+    lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_itr_meta_ref);
+    lua_setmetatable(L, -2);
+    litr->itr = iter;
+    return litr;
+}
+
+static liter *lsqlite_getiter(lua_State *L, int index) {
+    return (liter *)luaL_checkudata(L, index, sqlite_itr_meta);
+}
+
+static liter *lsqlite_checkiter(lua_State *L, int index) {
+    liter *litr = lsqlite_getiter(L, index);
+    if (litr->itr == NULL) luaL_argerror(L, index, "invalid sqlite iterator");
+    return litr;
+}
+
+static int liter_tostring(lua_State *L) {
+    char buff[32];
+    liter *litr = lsqlite_getiter(L, 1);
+    if (litr->itr == NULL)
+        strcpy(buff, "closed");
+    else
+        sprintf(buff, "%p", litr->itr);
+    lua_pushfstring(L, "sqlite iterator (%s)", buff);
+    return 1;
+}
+
+/*
+** =======================================================
 ** Rebaser functions (for session support)
 ** =======================================================
 */
@@ -1958,8 +1999,8 @@ static int db_filter_callback(
     int result, isint;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, filter_cb); /* get callback */
-    lua_rawgeti(L, LUA_REGISTRYINDEX, filter_udata); /* get callback user data */
     lua_pushstring(L, zTab);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, filter_udata); /* get callback user data */
 
     if (lua_pcall(L, 2, 1, 0) != LUA_OK) return lua_error(L);
 
@@ -2566,6 +2607,11 @@ static const luaL_Reg reblib[] = {
     {NULL, NULL}
 };
 
+static const luaL_Reg itrlib[] = {
+    {"__tostring",      liter_tostring          },
+    {NULL, NULL}
+};
+
 #endif
 
 static const luaL_Reg sqlitelib[] = {
@@ -2604,12 +2650,16 @@ LUALIB_API int luaopen_lsqlite3(lua_State *L) {
 #ifdef SQLITE_ENABLE_SESSION
     create_meta(L, sqlite_ses_meta, seslib);
     create_meta(L, sqlite_reb_meta, reblib);
+    create_meta(L, sqlite_itr_meta, itrlib);
 
     luaL_getmetatable(L, sqlite_ses_meta);
     sqlite_ses_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     luaL_getmetatable(L, sqlite_reb_meta);
     sqlite_reb_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    luaL_getmetatable(L, sqlite_itr_meta);
+    sqlite_itr_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 #endif
 
     /* register (local) sqlite metatable */
