@@ -902,18 +902,22 @@ static int db_db_filename(lua_State *L) {
     return 1;
 }
 
+static int pusherr(lua_State *L, int rc) {
+    lua_pushnil(L);
+    lua_pushinteger(L, rc);
+    return 2;
+}
+
 static int db_wal_checkpoint(lua_State *L) {
     sdb *db = lsqlite_checkdb(L, 1);
     int eMode = luaL_optinteger(L, 2, SQLITE_CHECKPOINT_PASSIVE);
     const char *db_name = luaL_optstring(L, 3, NULL);
     int nLog, nCkpt;
     if (sqlite3_wal_checkpoint_v2(db->db, db_name, eMode, &nLog, &nCkpt) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, sqlite3_errcode(db->db));
-    } else {
-        lua_pushinteger(L, nLog);
-        lua_pushinteger(L, nCkpt);
+        return pusherr(L, sqlite3_errcode(db->db));
     }
+    lua_pushinteger(L, nLog);
+    lua_pushinteger(L, nCkpt);
     return 2;
 }
 
@@ -1866,9 +1870,7 @@ static int liter_table(
     lua_createtable(L, nCol, 0);
     for (n = 0; n < nCol; n++) {
         if ((rc = (*iter_func)(litr->itr, n, &pVal)) != LUA_OK) {
-            lua_pushnil(L);
-            lua_pushinteger(L, rc);
-            return 2;
+            return pusherr(L, rc);
         }
         if (pVal) {
             db_push_value(L, pVal);
@@ -1955,9 +1957,7 @@ static int lrebaser_rebase(lua_State *L) {
     void *buf;
 
     if ((rc = sqlite3rebaser_rebase(lreb->reb, nset, cset, &size, &buf)) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
     lua_pushlstring(L, buf, size);
     sqlite3_free(buf);
@@ -1969,11 +1969,8 @@ static int db_create_rebaser(lua_State *L) {
     int rc;
 
     if ((rc = sqlite3rebaser_create(&reb)) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
-
     (void)lsqlite_makerebaser(L, reb);
     return 1;
 }
@@ -2109,9 +2106,7 @@ static int lsession_attach(lua_State *L) {
         ? NULL
         : luaL_optstring(L, 2, NULL);
     if ((rc = sqlite3session_attach(lses->ses, zTab)) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
     // allow to pass a filter callback,
     // but only one shared for all sessions where this callback is used
@@ -2169,9 +2164,7 @@ static int lsession_getset(
     void *buf;
 
     if ((rc = (*session_setfunc)(lses->ses, &size, &buf)) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
     lua_pushlstring(L, buf, size);
     sqlite3_free(buf);
@@ -2216,11 +2209,8 @@ static int db_create_session(lua_State *L) {
     sqlite3_session *ses;
 
     if (sqlite3session_create(db->db, zDb, &ses) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, sqlite3_errcode(db->db));
-        return 2;
+        return pusherr(L, sqlite3_errcode(db->db));
     }
-
     (void)lsqlite_makesession(L, ses, db);
     return 1;
 }
@@ -2234,9 +2224,7 @@ static int db_invert_changeset(lua_State *L) {
     void *buf;
 
     if ((rc = sqlite3changeset_invert(nset, cset, &size, &buf)) != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
     lua_pushlstring(L, buf, size);
     sqlite3_free(buf);
@@ -2262,11 +2250,7 @@ static int db_concat_changeset(lua_State *L) {
     if (rc == SQLITE_OK) rc = sqlite3changegroup_output(pGrp, &size, &buf);
     sqlite3changegroup_delete(pGrp);
 
-    if (rc != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
-    }
+    if (rc != SQLITE_OK) return pusherr(L, rc);
     lua_pushlstring(L, buf, size);
     sqlite3_free(buf);
     return 1;
@@ -2324,20 +2308,14 @@ static int db_apply_changeset(lua_State *L) {
                                    lreb ? &nRebase : 0,
                                    flags);
 
-    if (rc != SQLITE_OK) {
-        lua_pushnil(L);
-        lua_pushinteger(L, sqlite3_errcode(db->db));
-        return 2;
-    }
+    if (rc != SQLITE_OK) return pusherr(L, sqlite3_errcode(db->db));
 
     if (lreb) { // if rebaser is present
         rc = sqlite3rebaser_configure(lreb->reb, nRebase, pRebase);
         if (rc == SQLITE_OK) lua_pushstring(L, pRebase);
         sqlite3_free(pRebase);
         if (rc == SQLITE_OK) return 1;
-        lua_pushnil(L);
-        lua_pushinteger(L, rc);
-        return 2;
+        return pusherr(L, rc);
     }
 
     lua_pushboolean(L, 1);
