@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 
 #define IsPeek(request) (IsLinux() && (request)-1u < 3)
 
@@ -46,7 +46,7 @@ int sys_ptrace(int op, ...) {
   va_end(va);
   rc = __sys_ptrace(op, pid, addr, data);
 #ifdef SYSDEBUG
-  if (UNLIKELY(__strace > 0)) {
+  if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     if (rc != -1 && IsPeek(op) && data) {
       STRACE("sys_ptrace(%s, %d, %p, [%p]) → %p% m", DescribePtrace(op), pid,
              addr, *data, rc);

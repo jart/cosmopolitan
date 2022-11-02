@@ -16,11 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
 #include "libc/log/libfatal.internal.h"
@@ -40,10 +42,12 @@ STATIC_YOINK("_idt");
 relegated wontreturn void __die(void) {
   /* asan runtime depends on this function */
   int me, owner;
-  static int sync;
+  static atomic_int once;
   owner = 0;
   me = sys_gettid();
-  if (_lockcmpxchgp(&sync, &owner, me)) {
+  if (__vforked ||
+      atomic_compare_exchange_strong_explicit(
+          &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
     __restore_tty();
     if (IsDebuggerPresent(false)) {
       DebugBreak();

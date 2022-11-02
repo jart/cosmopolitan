@@ -51,7 +51,7 @@
 int faccessat(int dirfd, const char *path, int amode, int flags) {
   int e, rc;
   struct ZiposUri zipname;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
   } else if (__isfdkind(dirfd, kFdZip)) {
     rc = enotsup();

@@ -23,6 +23,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/thunk/msabi.h"
 #include "libc/nt/winsock.h"
+#include "libc/runtime/runtime.h"
 
 __msabi extern typeof(WSARecvFrom) *const __imp_WSARecvFrom;
 
@@ -54,7 +55,7 @@ textwindows int WSARecvFrom(
   if (rc == -1) {
     __winerr();
   }
-  if (UNLIKELY(__strace > 0)) {
+  if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecvFrom(%lu, [", s);
     DescribeIovNt(inout_lpBuffers, dwBufferCount,
                   rc != -1 ? NumberOfBytesRecvd : 0);

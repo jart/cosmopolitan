@@ -263,7 +263,7 @@ DIR *opendir(const char *name) {
   struct stat st;
   struct Zipos *zip;
   struct ZiposUri zipname;
-  if (!name || (IsAsan() && !__asan_is_valid(name, 1))) {
+  if (!name || (IsAsan() && !__asan_is_valid_str(name))) {
     efault();
     res = 0;
   } else if (_weaken(__zipos_get) &&

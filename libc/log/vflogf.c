@@ -95,7 +95,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (!f) f = __log_file;
   if (!f) return;
   flockfile(f);
-  --__strace;
+  strace_enabled(-1);
 
   // We display TIMESTAMP.MICROS normally. However, when we log multiple
   // times in the same second, we display TIMESTAMP+DELTAMICROS instead.
@@ -138,6 +138,6 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     unreachable;
   }
 
-  ++__strace;
+  strace_enabled(+1);
   funlockfile(f);
 }

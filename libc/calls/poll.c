@@ -16,17 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
 #include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/likely.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/macros.internal.h"
-#include "libc/sock/internal.h"
-#include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/errfuns.h"
@@ -68,8 +60,8 @@
  * @norestart
  */
 int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
+  int rc;
   size_t n;
-  int i, rc;
   uint64_t millis;
 
   if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
@@ -86,24 +78,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     rc = sys_poll_nt(fds, nfds, &millis, 0);
   }
 
-#if defined(SYSDEBUG) && _POLLTRACE
-  if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "poll(");
-    if ((!IsAsan() && kisdangerous(fds)) ||
-        (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd)))) {
-      kprintf("%p", fds);
-    } else {
-      kprintf("[{");
-      for (i = 0; i < MIN(5, nfds); ++i) {
-        kprintf("%s{%d, %s, %s}", i ? ", " : "", fds[i].fd,
-                DescribePollFlags(fds[i].events),
-                DescribePollFlags(fds[i].revents));
-      }
-      kprintf("%s}]", i == 5 ? "..." : "");
-    }
-    kprintf(", %'zu, %'d) → %d% lm\n", nfds, timeout_ms, rc);
-  }
-#endif
-
+  STRACE("poll(%s, %'zu, %'d) → %d% lm\n", DescribePollFds(rc, fds, nfds), nfds,
+         timeout_ms, rc);
   return rc;
 }

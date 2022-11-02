@@ -17,22 +17,23 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
  * Deletes TLS slot.
+ *
+ * @param key was created by pthread_key_create()
+ * @return 0 on success, or errno on error
+ * @raise EINVAL if `key` isn't valid
  */
 int pthread_key_delete(pthread_key_t key) {
-  int rc;
-  _pthread_key_lock();
+  uint64_t mask;
   if (key < PTHREAD_KEYS_MAX) {
-    _pthread_key_usage[key / 64] &= ~(1ul << (key % 64));
-    _pthread_key_dtor[key] = 0;
-    rc = 0;
+    atomic_store_explicit(_pthread_key_dtor + key, 0, memory_order_relaxed);
+    return 0;
   } else {
-    rc = EINVAL;
+    return EINVAL;
   }
-  _pthread_key_unlock();
-  return rc;
 }

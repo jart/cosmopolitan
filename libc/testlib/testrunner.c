@@ -61,8 +61,8 @@ void testlib_finish(void) {
 }
 
 void testlib_error_enter(const char *file, const char *func) {
-  atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed);
-  atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed);
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   pthread_mutex_lock(&testlib_error_lock);
   if (!IsWindows()) sys_getpid(); /* make strace easier to read */
   if (!IsWindows()) sys_getpid();
@@ -74,8 +74,8 @@ void testlib_error_enter(const char *file, const char *func) {
 }
 
 void testlib_error_leave(void) {
-  atomic_fetch_add_explicit(&__ftrace, 1, memory_order_relaxed);
-  atomic_fetch_add_explicit(&__strace, 1, memory_order_relaxed);
+  strace_enabled(+1);
+  ftrace_enabled(+1);
   pthread_mutex_unlock(&testlib_error_lock);
 }
 

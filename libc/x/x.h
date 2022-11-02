@@ -48,8 +48,8 @@ char *utf32to8(const wchar_t *, size_t, size_t *) dontdiscard;
 char *xhomedir(void) dontdiscard;
 char *xstripext(const char *) dontdiscard;
 char *xstripexts(const char *) dontdiscard;
-void *xload(bool *, void **, const void *, size_t, size_t);
-void *xloadzd(bool *, void **, const void *, size_t, size_t, size_t, size_t,
+void *xload(_Atomic(void *) *, const void *, size_t, size_t);
+void *xloadzd(_Atomic(void *) *, const void *, size_t, size_t, size_t, size_t,
               uint32_t);
 int rmrf(const char *);
 char *xbasename(const char *) paramsnonnull()

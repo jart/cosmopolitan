@@ -80,7 +80,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   }
 
 #if defined(SYSDEBUG) && _DATATRACE
-  if (__strace > 0) {
+  if (__strace > 0 && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "sendmsg(");
     if ((!IsAsan() && kisdangerous(msg)) ||
         (IsAsan() && !__asan_is_valid(msg, sizeof(*msg)))) {

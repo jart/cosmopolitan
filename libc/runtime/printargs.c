@@ -176,8 +176,8 @@ textstartup void __printargs(const char *prologue) {
 
   if (!PLEDGED(STDIO)) return;
 
-  --__ftrace;
-  --__strace;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   e = errno;
 
   PRINT("");
@@ -618,7 +618,7 @@ textstartup void __printargs(const char *prologue) {
   }
 
   PRINT("");
-  ++__strace;
-  ++__ftrace;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
   errno = e;
 }

@@ -480,7 +480,7 @@ static void PtyWriteTab(struct Pty *pty) {
   }
 }
 
-int PtyAtoi(const char *s, const char **e) {
+static int PtyAtoi(const char *s, const char **e) {
   int i;
   for (i = 0; isdigit(*s); ++s) i *= 10, i += *s - '0';
   if (e) *e = s;
@@ -1102,7 +1102,8 @@ ssize_t PtyWrite(struct Pty *pty, const void *data, size_t n) {
           if (--pty->n8) break;
         }
         wc = pty->u8;
-        if ((0x00 <= wc && wc <= 0x1F) || (0x7F <= wc && wc <= 0x9F)) {
+        if ((0x00 <= wc && wc <= 0x1F) ||  //
+            (0x7F <= wc && wc <= 0x9F)) {
           PtyCntrl(pty, wc);
         } else {
           PtyWriteGlyph(pty, wc, wcwidth(wc));

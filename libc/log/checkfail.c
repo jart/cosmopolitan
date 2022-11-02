@@ -45,8 +45,8 @@ relegated void __check_fail(const char *suffix, const char *opstr,
   size_t i;
   va_list va;
   char hostname[32];
-  --__strace;
-  --__ftrace;
+  strace_enabled(-1);
+  ftrace_enabled(-1);
   e = errno;
   __start_fatal(file, line);
   __stpcpy(hostname, "unknown");

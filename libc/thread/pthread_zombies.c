@@ -78,6 +78,6 @@ void _pthread_zombies_purge(void) {
   }
 }
 
-__attribute__((__constructor__)) static void init(void) {
+__attribute__((__constructor__)) static void _pthread_zombies_init(void) {
   atexit(_pthread_zombies_harvest);
 }

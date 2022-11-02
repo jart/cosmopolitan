@@ -19,10 +19,4 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
-pthread_spinlock_t _pthread_keys_lock;
-
-// bitset of tls key registrations
-uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
-
-// pthread tls key destructors
-pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
+_Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX];

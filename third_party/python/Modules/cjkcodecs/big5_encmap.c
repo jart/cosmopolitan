@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool big5_encmap_once;
-static void *big5_encmap_ptr;
+static _Atomic(void *) big5_encmap_ptr;
 static const unsigned char big5_encmap_rodata[] = {
   0xed, 0xcf, 0x3b, 0x4c, 0x53, 0x71, 0x14, 0xc7, 0xf1, 0xdf, 0xe9, 0xed, 0x45,
   0x4a, 0x6f, 0x1f, 0x80, 0x4f, 0x40, 0xe4, 0xfd, 0x10, 0x51, 0x1e, 0x0a, 0x2a,
@@ -37,9 +36,7 @@ static const unsigned char big5_encmap_rodata[] = {
 };
 
 optimizesize void *big5_encmap(void) {
-  if (big5_encmap_once) return big5_encmap_ptr;
-  return xload(&big5_encmap_once,
-               &big5_encmap_ptr,
+  return xload(&big5_encmap_ptr,
                big5_encmap_rodata,
                384, 1024); /* 37.5% profit */
 }

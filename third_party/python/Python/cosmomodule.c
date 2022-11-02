@@ -18,10 +18,10 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define PY_SSIZE_T_CLEAN
 #include "dsp/scale/cdecimate2xuint8x8.h"
-#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/mem.h"
@@ -271,13 +271,13 @@ static int FtracerObject_init(PyObject* self, PyObject *args, PyObject *kwargs)
 
 static PyObject* FtracerObject_enter(PyObject *self, PyObject *Py_UNUSED(ignored))
 {
-    ++__ftrace;
+    ftrace_enabled(+1);
     return self;
 }
 
 static PyObject* FtracerObject_exit(PyObject *self, PyObject *args)
 {
-    --__ftrace;
+    ftrace_enabled(-1);
     return self;
 }
 

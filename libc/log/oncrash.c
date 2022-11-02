@@ -16,6 +16,8 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
@@ -25,9 +27,9 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/kmalloc.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchg.h"
-#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
@@ -118,14 +120,12 @@ static char *HexCpy(char p[hasatleast 17], uint64_t x, uint8_t k) {
   return p;
 }
 
-relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
+relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
   int64_t x;
   const char *s;
   size_t i, j, k;
   long double st;
-  char *p, buf[128];
-  p = buf;
-  kprintf("\n");
+  *p++ = '\n';
   for (i = 0, j = 0, k = 0; i < ARRAYLEN(kGregNames); ++i) {
     if (j > 0) *p++ = ' ';
     if (!(s = kGregNames[(unsigned)kGregOrder[i]])[2]) *p++ = ' ';
@@ -145,25 +145,25 @@ relegated static void ShowGeneralRegisters(ucontext_t *ctx) {
       if (x < 0) x = -x, *p++ = '-';
       p = FormatUint64(p, x / 1000), *p++ = '.';
       p = FormatUint64(p, x % 1000);
-      *p = 0;
-      kprintf("%s\n", buf);
-      p = buf;
+      *p++ = '\n';
     }
   }
   DescribeCpuFlags(
       p, ctx->uc_mcontext.eflags,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->swd : 0,
       ctx->uc_mcontext.fpregs ? ctx->uc_mcontext.fpregs->mxcsr : 0);
-  kprintf("%s\n", buf);
+  *p++ = '\n';
+  return p;
 }
 
-relegated static void ShowSseRegisters(ucontext_t *ctx) {
+relegated static char *ShowSseRegisters(char *p, ucontext_t *ctx) {
   size_t i;
-  char *p, buf[128];
   if (ctx->uc_mcontext.fpregs) {
-    kprintf("\n");
+    *p++ = '\n';
     for (i = 0; i < 8; ++i) {
-      p = buf;
+      *p++ = 'X';
+      *p++ = 'M';
+      *p++ = 'M';
       if (i >= 10) {
         *p++ = i / 10 + '0';
         *p++ = i % 10 + '0';
@@ -185,10 +185,10 @@ relegated static void ShowSseRegisters(ucontext_t *ctx) {
       *p++ = ' ';
       p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[1], 64);
       p = HexCpy(p, ctx->uc_mcontext.fpregs->xmm[i + 8].u64[0], 64);
-      *p = 0;
-      kprintf("XMM%s\n", buf);
+      *p++ = '\n';
     }
   }
+  return p;
 }
 
 void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
@@ -196,10 +196,10 @@ void ShowCrashReportHook(int, int, int, struct siginfo *, ucontext_t *);
 relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
                                ucontext_t *ctx) {
   int i;
-  char *p;
+  size_t n;
   char host[64];
+  char *p, *buf;
   struct utsname names;
-  static char buf[4096];
   if (_weaken(ShowCrashReportHook)) {
     ShowCrashReportHook(2, err, sig, si, ctx);
   }
@@ -210,24 +210,31 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   stpcpy(host, "unknown");
   gethostname(host, sizeof(host));
   uname(&names);
-  p = buf;
   errno = err;
-  kprintf("\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
-          "  %s\n"
-          "  %m\n"
-          "  %s %s %s %s\n",
-          !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
-          (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-                   ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
-              ? "Stack Overflow"
-              : GetSiCodeName(sig, si->si_code),
-          host, getpid(), gettid(), program_invocation_name, names.sysname,
-          names.version, names.nodename, names.release);
+  // TODO(jart): Buffer the WHOLE crash report with backtrace for atomic write.
+  _npassert((p = buf = kmalloc((n = 1024 * 1024))));
+  p += ksnprintf(
+      p, n,
+      "\n%serror%s: Uncaught %G (%s) on %s pid %d tid %d\n"
+      "  %s\n"
+      "  %m\n"
+      "  %s %s %s %s\n",
+      !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
+      (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
+               ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
+          ? "Stack Overflow"
+          : GetSiCodeName(sig, si->si_code),
+      host, getpid(), gettid(), program_invocation_name, names.sysname,
+      names.version, names.nodename, names.release);
   if (ctx) {
-    ShowGeneralRegisters(ctx);
-    ShowSseRegisters(ctx);
-    kprintf("\n");
+    p = ShowGeneralRegisters(p, ctx);
+    p = ShowSseRegisters(p, ctx);
+    *p++ = '\n';
+    write(2, buf, p - buf);
     ShowFunctionCalls(ctx);
+  } else {
+    *p++ = '\n';
+    write(2, buf, p - buf);
   }
   kprintf("\n");
   if (!IsWindows()) __print_maps();
@@ -235,7 +242,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
   if (__argv) {
     for (i = 0; i < __argc; ++i) {
       if (!__argv[i]) continue;
-      if (IsAsan() && !__asan_is_valid(__argv[i], 1)) continue;
+      if (IsAsan() && !__asan_is_valid_str(__argv[i])) continue;
       kprintf("%s ", __argv[i]);
     }
   }
@@ -279,17 +286,19 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  * @vforksafe
  */
 relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
+  bool bZero;
   intptr_t rip;
   int me, owner;
   int gdbpid, err;
-  static int sync;
-  static bool _notpossible;
+  static atomic_int once;
+  static atomic_bool once2;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
-  --__ftrace;
-  --__strace;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   owner = 0;
   me = sys_gettid();
-  if (__vforked || _lockcmpxchgp(&sync, &owner, me)) {
+  if (atomic_compare_exchange_strong_explicit(
+          &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
     if (!__vforked) {
       rip = ctx ? ctx->uc_mcontext.rip : 0;
       err = errno;
@@ -310,9 +319,9 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
         ShowCrashReport(err, sig, si, ctx);
         _Exitr(128 + sig);
       }
-      sync = 0;
+      atomic_store_explicit(&once, 0, memory_order_relaxed);
     } else {
-      sync = 0;
+      atomic_store_explicit(&once, 0, memory_order_relaxed);
       __minicrash(sig, si, ctx, "WHILE VFORKED");
     }
   } else if (sig == SIGTRAP) {
@@ -320,7 +329,9 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
     goto ItsATrap;
   } else if (owner == me) {
     // we crashed while generating a crash report
-    if (_lockcmpxchg(&_notpossible, false, true)) {
+    bZero = false;
+    if (atomic_compare_exchange_strong_explicit(
+            &once2, &bZero, true, memory_order_relaxed, memory_order_relaxed)) {
       __minicrash(sig, si, ctx, "WHILE CRASHING");
     } else {
       // somehow __minicrash() crashed not possible
@@ -335,6 +346,6 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
     _Exit1(8);
   }
 ItsATrap:
-  ++__strace;
-  ++__ftrace;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
 }

@@ -31,7 +31,7 @@ textstartup int __strace_init(int argc, char **argv, char **envp, long *auxv) {
   /* asan isn't initialized yet at runlevel 300 */
   if (__intercept_flag(&argc, argv, "--strace") ||
       __atoul(nulltoempty(__getenv(envp, "STRACE")))) {
-    atomic_store_explicit(&__strace, 1, memory_order_relaxed);
+    strace_enabled(+1);
   }
   return (__argc = argc);
 }

@@ -16,11 +16,11 @@
 COSMOPOLITAN_C_START_
 
 #ifdef SYSDEBUG
-#define STRACE(FMT, ...)                                  \
-  do {                                                    \
-    if (UNLIKELY(__strace > 0)) {                         \
-      __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__); \
-    }                                                     \
+#define STRACE(FMT, ...)                                   \
+  do {                                                     \
+    if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) { \
+      __stracef(STRACE_PROLOGUE FMT "\n", ##__VA_ARGS__);  \
+    }                                                      \
   } while (0)
 #else
 #define STRACE(FMT, ...) (void)0

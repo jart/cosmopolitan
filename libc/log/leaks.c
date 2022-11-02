@@ -19,8 +19,8 @@
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/internal.h"
@@ -82,7 +82,7 @@ static noasan bool HasLeaks(void) {
 noasan void CheckForMemoryLeaks(void) {
   struct mallinfo mi;
   if (!IsAsan()) return;  // we need traces to exclude leaky
-  if (!_lockcmpxchg(&once, false, true)) {
+  if (!_cmpxchg(&once, false, true)) {
     kprintf("CheckForMemoryLeaks() may only be called once\n");
     exit(1);
   }

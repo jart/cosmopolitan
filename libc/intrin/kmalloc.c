@@ -22,7 +22,6 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/macros.internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/sysv/consts/map.h"
@@ -37,17 +36,18 @@ static struct {
   pthread_spinlock_t lock;
 } g_kmalloc;
 
-static void kmalloc_lock(void) {
-  if (__threaded) pthread_spin_lock(&g_kmalloc.lock);
+void __kmalloc_lock(void) {
+  pthread_spin_lock(&g_kmalloc.lock);
 }
 
-static void kmalloc_unlock(void) {
+void __kmalloc_unlock(void) {
   pthread_spin_unlock(&g_kmalloc.lock);
 }
 
-__attribute__((__constructor__)) static void kmalloc_init(void) {
-  pthread_atfork(kmalloc_lock, kmalloc_unlock, kmalloc_unlock);
-}
+#ifdef _NOPL0
+#define __kmalloc_lock()   _NOPL0("__threadcalls", __kmalloc_lock)
+#define __kmalloc_unlock() _NOPL0("__threadcalls", __kmalloc_unlock)
+#endif
 
 /**
  * Allocates permanent memory.
@@ -66,7 +66,7 @@ void *kmalloc(size_t size) {
   char *p, *e;
   size_t i, n, t;
   n = ROUNDUP(size + (IsAsan() * 8), KMALLOC_ALIGN);
-  kmalloc_lock();
+  __kmalloc_lock();
   t = g_kmalloc.total;
   e = g_kmalloc.endptr;
   i = t;
@@ -80,7 +80,7 @@ void *kmalloc(size_t size) {
   } else {
     p = 0;
   }
-  kmalloc_unlock();
+  __kmalloc_unlock();
   if (p) {
     _unassert(!((intptr_t)(p + i) & (KMALLOC_ALIGN - 1)));
     if (IsAsan()) __asan_poison(p + i + size, n - size, kAsanHeapOverrun);

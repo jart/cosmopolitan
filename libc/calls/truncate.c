@@ -66,7 +66,7 @@ int truncate(const char *path, int64_t length) {
   struct ZiposUri zipname;
   if (IsMetal()) {
     rc = enosys();
-  } else if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+  } else if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
   } else if (_weaken(__zipos_parseuri) &&
              _weaken(__zipos_parseuri)(path, &zipname) != -1) {

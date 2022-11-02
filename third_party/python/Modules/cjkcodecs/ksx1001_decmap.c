@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool ksx1001_decmap_once;
-static void *ksx1001_decmap_ptr;
+static _Atomic(void *) ksx1001_decmap_ptr;
 static const unsigned char ksx1001_decmap_rodata[] = {
   0xed, 0xd0, 0xb1, 0x2b, 0xc4, 0x71, 0x18, 0xc7, 0xf1, 0xdf, 0xd7, 0xef, 0x38,
   0xe7, 0x1c, 0x0e, 0xe7, 0x70, 0xce, 0xf5, 0x19, 0x64, 0x30, 0xc8, 0x20, 0x83,
@@ -28,9 +27,7 @@ static const unsigned char ksx1001_decmap_rodata[] = {
 };
 
 optimizesize void *ksx1001_decmap(void) {
-  if (ksx1001_decmap_once) return ksx1001_decmap_ptr;
-  return xload(&ksx1001_decmap_once,
-               &ksx1001_decmap_ptr,
+  return xload(&ksx1001_decmap_ptr,
                ksx1001_decmap_rodata,
                270, 1024); /* 26.3672% profit */
 }

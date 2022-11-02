@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool gbcommon_encmap_once;
-static void *gbcommon_encmap_ptr;
+static _Atomic(void *) gbcommon_encmap_ptr;
 static const unsigned char gbcommon_encmap_rodata[] = {
   0xed, 0xce, 0xbb, 0x32, 0x03, 0x61, 0x18, 0x87, 0xf1, 0xef, 0xcb, 0x66, 0x57,
   0xb0, 0x88, 0x65, 0x11, 0xc7, 0x84, 0x04, 0x4b, 0x10, 0x11, 0x71, 0x88, 0x63,
@@ -28,9 +27,7 @@ static const unsigned char gbcommon_encmap_rodata[] = {
 };
 
 optimizesize void *gbcommon_encmap(void) {
-  if (gbcommon_encmap_once) return gbcommon_encmap_ptr;
-  return xload(&gbcommon_encmap_once,
-               &gbcommon_encmap_ptr,
+  return xload(&gbcommon_encmap_ptr,
                gbcommon_encmap_rodata,
                263, 1024); /* 25.6836% profit */
 }

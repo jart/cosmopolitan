@@ -212,7 +212,7 @@ scall	sys_modify_ldt		0xfffffffffffff09a	globl # no wrapper
 scall	sys_pivot_root		0xfffffffffffff09b	globl hidden
 #scall	prctl			0xfffffffffffff09d	globl # wrapped manually
 scall	sys_arch_prctl		0x0a50a50a5ffff09e	globl hidden # sysarch() on bsd
-scall	sys_enable_tls		0x13d1490a5300309e	globl hidden # arch_prctl on linux, sysarch on freebsd, _lwp_setprivate on netbsd, __set_tcb on openbsd, _lwp_setprivate on netbsd, thread_fast_set_cthread_self on xnu
+scall	sys_set_tls		0x13d1490a5300309e	globl hidden # arch_prctl on linux, sysarch on freebsd, _lwp_setprivate on netbsd, __set_tcb on openbsd, _lwp_setprivate on netbsd, thread_fast_set_cthread_self on xnu
 scall	sys_adjtimex		0xfffffffffffff09f	globl # no wrapper
 scall	sys_swapon		0xffffff05520550a7	globl # no wrapper
 scall	sys_swapoff		0xffffff1a8ffff0a8	globl # no wrapper

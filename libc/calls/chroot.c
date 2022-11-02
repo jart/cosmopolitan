@@ -49,7 +49,7 @@
  */
 int chroot(const char *path) {
   int rc;
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
   } else {
     rc = sys_chroot(path);

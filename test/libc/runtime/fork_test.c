@@ -30,7 +30,9 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
+#include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/tls.h"
 
 TEST(fork, testPipes) {
   int a, b;
@@ -129,6 +131,14 @@ TEST(fork, childToChild) {
   EXPECT_TRUE(WIFEXITED(ws));
   EXPECT_EQ(0, WEXITSTATUS(ws));
   sigprocmask(SIG_SETMASK, &oldmask, 0);
+}
+
+TEST(fork, preservesTlsMemory) {
+  int pid;
+  __get_tls()->tib_errno = 31337;
+  SPAWN(fork);
+  ASSERT_EQ(31337, __get_tls()->tib_errno);
+  EXITS(0);
 }
 
 void ForkInSerial(void) {

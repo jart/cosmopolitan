@@ -38,7 +38,7 @@ int __utimens(int fd, const char *path, const struct timespec ts[2],
   struct ZiposUri zipname;
   if (IsMetal()) {
     rc = enosys();
-  } else if (IsAsan() && ((fd == AT_FDCWD && !__asan_is_valid(path, 1)) ||
+  } else if (IsAsan() && ((fd == AT_FDCWD && !__asan_is_valid_str(path)) ||
                           (ts && (!__asan_is_valid_timespec(ts + 0) ||
                                   !__asan_is_valid_timespec(ts + 1))))) {
     rc = efault();  // bad memory

@@ -47,7 +47,10 @@ textwindows int __sig_mask(int how, const sigset_t *neu, sigset_t *old) {
       } else {
         x = y;
       }
-      x &= ~(GetSigBit(SIGKILL) | GetSigBit(SIGSTOP) | GetSigBit(SIGABRT));
+      x &= ~(0
+#define M(x) | GetSigBit(x)
+#include "libc/intrin/sigisprecious.inc"
+      );
       *mask = x;
     }
     return 0;

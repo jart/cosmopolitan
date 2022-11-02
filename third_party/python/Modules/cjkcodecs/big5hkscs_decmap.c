@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool big5hkscs_decmap_once;
-static void *big5hkscs_decmap_ptr;
+static _Atomic(void *) big5hkscs_decmap_ptr;
 static const unsigned char big5hkscs_decmap_rodata[] = {
   0xed, 0xcf, 0x3d, 0x0e, 0x01, 0x51, 0x00, 0x45, 0xe1, 0x37, 0x18, 0xff, 0x66,
   0x18, 0x63, 0x24, 0x1a, 0x8d, 0x5d, 0x68, 0xce, 0x0e, 0x48, 0x14, 0x0a, 0x8d,
@@ -19,9 +18,7 @@ static const unsigned char big5hkscs_decmap_rodata[] = {
 };
 
 optimizesize void *big5hkscs_decmap(void) {
-  if (big5hkscs_decmap_once) return big5hkscs_decmap_ptr;
-  return xload(&big5hkscs_decmap_once,
-               &big5hkscs_decmap_ptr,
+  return xload(&big5hkscs_decmap_ptr,
                big5hkscs_decmap_rodata,
                150, 1024); /* 14.6484% profit */
 }

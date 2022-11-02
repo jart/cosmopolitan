@@ -21,8 +21,7 @@
 #include "libc/dce.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/likely.h"
+#include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
@@ -48,21 +47,8 @@ int fexecve(int fd, char *const argv[], char *const envp[]) {
        (!__asan_is_valid_strlist(argv) || !__asan_is_valid_strlist(envp)))) {
     rc = efault();
   } else {
-#ifdef SYSDEBUG
-    if (UNLIKELY(__strace > 0)) {
-      kprintf(STRACE_PROLOGUE "fexecve(%d, {", fd);
-      for (i = 0; argv[i]; ++i) {
-        if (i) kprintf(", ");
-        kprintf("%#s", argv[i]);
-      }
-      kprintf("}, {");
-      for (i = 0; envp[i]; ++i) {
-        if (i) kprintf(", ");
-        kprintf("%#s", envp[i]);
-      }
-      kprintf("})\n");
-    }
-#endif
+    STRACE("fexecve(%d, %s, %s) → ...", fd, DescribeStringList(argv),
+           DescribeStringList(envp));
     if (IsLinux()) {
       char path[14 + 12];
       FormatInt32(stpcpy(path, "/proc/self/fd/"), fd);

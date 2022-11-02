@@ -20,7 +20,7 @@
 #include "net/http/tokenbucket.h"
 
 /**
- * Atomically increments all signed bytes in array without overflow.
+ * Atomically increments all signed bytes in array, without overflowing.
  *
  * Under the token bucket model, operations are denied by default unless
  * tokens exist to allow them. This function must be called periodically
@@ -39,7 +39,7 @@ void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
     uint64_t a = atomic_load_explicit(w + i, memory_order_relaxed);
     if (a == 0x7f7f7f7f7f7f7f7f) continue;
     uint64_t b = 0x8080808080808080;
-    uint64_t c = a ^ 0x7f7f7f7f7f7f7f7f;
+    uint64_t c = 0x7f7f7f7f7f7f7f7f ^ a;
     uint64_t d = ((c >> 1 | b) - c & b ^ b) >> 7;
     atomic_fetch_add_explicit(w + i, d, memory_order_relaxed);
   }
@@ -48,13 +48,13 @@ void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
 /**
  * Atomically decrements signed byte index if it's positive.
  *
- * Multiple threads may call this method to determine if sufficient
+ * Multiple threads are able to call this method, to determine if enough
  * tokens exist to perform an operation. Return values greater than zero
- * mean a token was atomically acquired. Values less than or equal zero
+ * mean a token was atomically acquired. Values less than, or equal zero
  * means the bucket is empty. There must exist `1 << c` signed bytes (or
  * buckets) in the `b` array.
  *
- * Since this design uses signed bytes, the returned number may be used
+ * Since this design uses signed bytes, your returned number may be used
  * to control how much burstiness is allowed. For example:
  *
  *     int t = AcquireToken(tok.b, ip, 22);
@@ -64,12 +64,12 @@ void ReplenishTokens(atomic_uint_fast64_t *w, size_t n) {
  *       return;
  *     }
  *
- * May be used to send a rejection to clients who've exceeded their
- * tokens whereas clients who've grossly exceeded their tokens will
- * simply be dropped.
+ * Could be used to send rejections to clients that exceed their tokens,
+ * whereas clients who've grossly exceeded their tokens, could simply be
+ * dropped.
  *
- * @param w is array of token buckets
- * @param n is ipv4 address
+ * @param b is array of token buckets
+ * @param x is ipv4 address
  * @param c is cidr
  */
 int AcquireToken(atomic_schar *b, uint32_t x, int c) {
@@ -82,8 +82,8 @@ int AcquireToken(atomic_schar *b, uint32_t x, int c) {
 /**
  * Returns current number of tokens in bucket.
  *
- * @param w is array of token buckets
- * @param n is ipv4 address
+ * @param b is array of token buckets
+ * @param x is ipv4 address
  * @param c is cidr
  */
 int CountTokens(atomic_schar *b, uint32_t x, int c) {

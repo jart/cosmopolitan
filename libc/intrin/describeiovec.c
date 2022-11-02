@@ -62,7 +62,7 @@ const char *(DescribeIovec)(char buf[N], ssize_t rc, const struct iovec *iov,
            iov[i].iov_len);
   }
 
-  append("%s}", iovlen > 2 ? ", ..." : "");
+  append("}");
 
   return buf;
 }

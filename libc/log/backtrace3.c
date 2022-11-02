@@ -58,6 +58,10 @@ noinstrument noasan int PrintBacktraceUsingSymbols(int fd,
   garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (i = 0, frame = bp; frame; frame = frame->next) {
+    if (kisdangerous(frame)) {
+      kprintf("<dangerous frame>\n");
+      break;
+    }
     if (++i == LIMIT) {
       kprintf("<truncated backtrace>\n");
       break;

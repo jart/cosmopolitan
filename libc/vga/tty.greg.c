@@ -19,8 +19,8 @@
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/str/str.h"
 #include "libc/str/thompike.h"
@@ -40,12 +40,11 @@
  * @see tool/build/lib/pty.c
  */
 
-#define DEFAULT_FG ((TtyCanvasColor) \
-                    {.bgr.r = 0xaa, .bgr.g = 0xaa, .bgr.b = 0xaa, \
-                     .bgr.x = 0xff})
-#define DEFAULT_BG ((TtyCanvasColor) \
-                    {.bgr.r = 0, .bgr.g = 0, .bgr.b = 0, .bgr.x = 0xff})
-#define CRTPORT    0x3d4
+#define DEFAULT_FG \
+  ((TtyCanvasColor){.bgr.r = 0xaa, .bgr.g = 0xaa, .bgr.b = 0xaa, .bgr.x = 0xff})
+#define DEFAULT_BG \
+  ((TtyCanvasColor){.bgr.r = 0, .bgr.g = 0, .bgr.b = 0, .bgr.x = 0xff})
+#define CRTPORT 0x3d4
 
 static void SetYn(struct Tty *tty, unsigned short yn) {
   tty->yn = yn;
@@ -70,11 +69,10 @@ static void SetXsFb(struct Tty *tty, unsigned short xsfb) {
 static bool SetWcs(struct Tty *tty, unsigned init_flags) {
 #ifdef VGA_USE_WCS
   struct DirectMap dm;
-  if (!(init_flags & kTtyAllocWcs))
-    return false;
+  if (!(init_flags & kTtyAllocWcs)) return false;
   dm = sys_mmap_metal(NULL, Yn(tty) * Xn(tty) * sizeof(wchar_t),
-                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
-                      -1, 0);
+                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,
+                      0);
   if (dm.addr == (void *)-1) {
     tty->wcs = NULL;
     return false;
@@ -160,11 +158,10 @@ static void TtySetType(struct Tty *tty, unsigned char type,
   }
 }
 
-void _StartTty(struct Tty *tty, unsigned char type,
-               unsigned short yp, unsigned short xp, unsigned short xsfb,
-               unsigned short starty, unsigned short startx,
-               unsigned char yc, unsigned char xc, void *fb,
-               unsigned init_flags) {
+void _StartTty(struct Tty *tty, unsigned char type, unsigned short yp,
+               unsigned short xp, unsigned short xsfb, unsigned short starty,
+               unsigned short startx, unsigned char yc, unsigned char xc,
+               void *fb, unsigned init_flags) {
   unsigned short yn, xn, xs = xp * sizeof(TtyCanvasColor);
   struct DirectMap dm;
   memset(tty, 0, sizeof(struct Tty));
@@ -390,8 +387,7 @@ static void TtyTextEraseLineCells(struct Tty *tty, size_t dsty, size_t dstx,
   uint8_t attr = TtyGetTextAttr(tty);
   struct VgaTextCharCell *ccs = (struct VgaTextCharCell *)tty->canvas;
   size_t dst = dsty * Xn(tty) + dstx, i;
-  for (i = 0; i < n; ++i)
-    ccs[dst + i] = (struct VgaTextCharCell){' ', attr};
+  for (i = 0; i < n; ++i) ccs[dst + i] = (struct VgaTextCharCell){' ', attr};
 }
 
 void _TtyEraseLineCells(struct Tty *tty, size_t dsty, size_t dstx, size_t n) {
@@ -419,8 +415,8 @@ static void TtyTextMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx,
   memmove(ccs + dst, ccs + src, n * sizeof(struct VgaTextCharCell));
 }
 
-void _TtyMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx,
-                       size_t srcy, size_t srcx, size_t n) {
+void _TtyMoveLineCells(struct Tty *tty, size_t dsty, size_t dstx, size_t srcy,
+                       size_t srcx, size_t n) {
   size_t xn = Xn(tty);
   size_t dst = dsty * xn + dstx, src = srcy * xn + srcx;
   tty->movelinecells(tty, dsty, dstx, srcy, srcx, n);
@@ -436,8 +432,7 @@ void _TtyMoveLines(struct Tty *tty, size_t dsty, size_t srcy, size_t n) {
       ++srcy;
     }
   } else if (dsty > srcy) {
-    while (n-- != 0)
-      _TtyMoveLineCells(tty, dsty + n, 0, srcy + n, 0, xn);
+    while (n-- != 0) _TtyMoveLineCells(tty, dsty + n, 0, srcy + n, 0, xn);
   }
 }
 
@@ -827,8 +822,7 @@ static TtyCanvasColor TtyMapXtermColor(uint8_t color) {
 }
 
 /** Map the given ECMA-48 / VT100 SGR color code to a direct color. */
-static TtyCanvasColor TtyMapEcma48Color(uint8_t color)
-{
+static TtyCanvasColor TtyMapEcma48Color(uint8_t color) {
   return TtyMapXtermColor(color % 16);
 }
 

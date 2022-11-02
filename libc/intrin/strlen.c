@@ -34,10 +34,9 @@ noasan size_t strlen(const char *s) {
   xmm_t z = {0};
   unsigned m, k = (uintptr_t)s & 15;
   const xmm_t *p = (const xmm_t *)((uintptr_t)s & -16);
-  if (IsAsan()) __asan_verify(s, 1);
+  if (IsAsan()) __asan_verify_str(s);
   m = __builtin_ia32_pmovmskb128(*p == z) >> k << k;
   while (!m) m = __builtin_ia32_pmovmskb128(*++p == z);
   n = (const char *)p + __builtin_ctzl(m) - s;
-  if (IsAsan()) __asan_verify(s, n);
   return n;
 }

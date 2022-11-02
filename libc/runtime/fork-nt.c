@@ -24,6 +24,7 @@
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
@@ -46,7 +47,6 @@
 #include "libc/nt/runtime.h"
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/runtime/runtime.h"
@@ -61,6 +61,7 @@ STATIC_YOINK("_check_sigchld");
 
 extern int64_t __wincrashearly;
 bool32 __onntconsoleevent_nt(uint32_t);
+void kmalloc_unlock(void);
 
 static textwindows wontreturn void AbortFork(const char *func) {
   STRACE("fork() %s() failed %d", func, GetLastError());
@@ -259,19 +260,19 @@ textwindows void WinMainForked(void) {
 }
 
 textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
-  bool ok;
   jmp_buf jb;
   uint32_t oldprot;
+  char ok, threaded;
   char **args, **args2;
+  struct CosmoTib *tib;
   char16_t pipename[64];
-  bool needtls, threaded;
   int64_t reader, writer;
   struct NtStartupInfo startinfo;
   int i, n, pid, untrackpid, rc = -1;
   char *p, forkvar[6 + 21 + 1 + 21 + 1];
   struct NtProcessInformation procinfo;
   threaded = __threaded;
-  needtls = __tls_enabled;
+  tib = __tls_enabled ? __get_tls() : 0;
   if (!setjmp(jb)) {
     pid = untrackpid = __reservefd_unlocked(-1);
     reader = CreateNamedPipe(CreatePipeName(pipename),
@@ -293,7 +294,7 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
 #ifdef SYSDEBUG
       // If --strace was passed to this program, then propagate it the
       // forked process since the flag was removed by __intercept_flag
-      if (__strace > 0) {
+      if (strace_enabled(0) > 0) {
         for (n = 0; args[n];) ++n;
         args2 = alloca((n + 2) * sizeof(char *));
         for (i = 0; i < n; ++i) args2[i] = args[i];
@@ -345,8 +346,10 @@ textwindows int sys_fork_nt(uint32_t dwCreationFlags) {
     }
   } else {
     rc = 0;
-    if (needtls) {
-      __enable_tls();
+    if (tib && _weaken(__set_tls) && _weaken(__morph_tls)) {
+      _weaken(__set_tls)(tib);
+      _weaken(__morph_tls)();
+      __tls_enabled = true;
     }
     if (threaded && !__threaded && _weaken(__enable_threads)) {
       _weaken(__enable_threads)();

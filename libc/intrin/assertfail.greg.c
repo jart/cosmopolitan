@@ -17,31 +17,29 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
+#include "libc/atomic.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kprintf.h"
-#include "libc/intrin/lockcmpxchgp.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/internal.h"
-#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
 
-/**
- * Handles failure of assert() macro.
- */
 relegated void __assert_fail(const char *expr, const char *file, int line) {
   int me, owner;
-  static int sync;
+  static atomic_int once;
   if (!__assert_disable) {
-    --__strace;
-    --__ftrace;
+    strace_enabled(-1);
+    ftrace_enabled(-1);
     owner = 0;
     me = sys_gettid();
     kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
-    if (__vforked || _lockcmpxchgp(&sync, &owner, me)) {
+    if (__vforked ||
+        atomic_compare_exchange_strong_explicit(
+            &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
       __restore_tty();
       if (_weaken(ShowBacktrace)) {
         _weaken(ShowBacktrace)(2, __builtin_frame_address(0));

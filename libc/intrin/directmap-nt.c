@@ -19,26 +19,24 @@
 #include "libc/assert.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/processmemorycounters.h"
 #include "libc/nt/struct/securityattributes.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 
 textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
                                          int flags, int fd, int64_t off) {
-  size_t i;
-  bool iscow;
+  int iscow;
   int64_t handle;
   uint32_t oldprot;
   struct DirectMap dm;
   struct ProtectNt fl;
   const struct NtSecurityAttributes *sec;
-  struct NtProcessMemoryCountersEx memcount;
 
   if (fd != -1) {
     handle = g_fds.p[fd].handle;
@@ -85,10 +83,8 @@ textwindows struct DirectMap sys_mmap_nt(void *addr, size_t size, int prot,
                                    size, addr))) {
       if (VirtualProtect(addr, size, __prot2nt(prot, iscow), &oldprot)) {
         return dm;
-      } else {
-        return dm;
-        UnmapViewOfFile(dm.addr);
       }
+      UnmapViewOfFile(dm.addr);
     }
     CloseHandle(dm.maphandle);
   }

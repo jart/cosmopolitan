@@ -81,10 +81,7 @@ struct PosixThread {
 typedef void (*atfork_f)(void);
 
 extern struct PosixThread _pthread_main;
-hidden extern pthread_spinlock_t _pthread_keys_lock;
-hidden extern uint64_t _pthread_key_usage[(PTHREAD_KEYS_MAX + 63) / 64];
-hidden extern pthread_key_dtor _pthread_key_dtor[PTHREAD_KEYS_MAX];
-hidden extern _Thread_local void *_pthread_keys[PTHREAD_KEYS_MAX];
+extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] hidden;
 
 int _pthread_atfork(atfork_f, atfork_f, atfork_f) hidden;
 int _pthread_reschedule(struct PosixThread *) hidden;
@@ -97,9 +94,7 @@ void _pthread_zombies_add(struct PosixThread *) hidden;
 void _pthread_zombies_purge(void) hidden;
 void _pthread_zombies_decimate(void) hidden;
 void _pthread_zombies_harvest(void) hidden;
-void _pthread_key_destruct(void *[PTHREAD_KEYS_MAX]) hidden;
-void _pthread_key_lock(void) hidden;
-void _pthread_key_unlock(void) hidden;
+void _pthread_key_destruct(void) hidden;
 void _pthread_onfork_prepare(void) hidden;
 void _pthread_onfork_parent(void) hidden;
 void _pthread_onfork_child(void) hidden;

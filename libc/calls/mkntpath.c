@@ -21,9 +21,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/systeminfo.h"
-#include "libc/str/oldutf16.internal.h"
 #include "libc/str/str.h"
-#include "libc/str/tpdecode.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
@@ -61,9 +59,13 @@ textwindows int __mkntpath(const char *path,
 /**
  * Copies path for Windows NT.
  *
- * This entails (1) UTF-8 to UTF-16 conversion; (2) replacing
- * forward-slashes with backslashes; and (3) remapping several
- * well-known paths (e.g. /dev/null → NUL) for convenience.
+ * This function does the following chores:
+ *
+ * 1. Converting UTF-8 to UTF-16
+ * 2. Replacing forward-slashes with backslashes
+ * 3. Fixing drive letter paths, e.g. `/c/` → `c:\`
+ * 4. Add `\\?\` prefix for paths exceeding 260 chars
+ * 5. Remapping well-known paths, e.g. `/dev/null` → `NUL`
  *
  * @param flags is used by open()
  * @param path16 is shortened so caller can prefix, e.g. \\.\pipe\, and

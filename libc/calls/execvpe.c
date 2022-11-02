@@ -37,7 +37,7 @@
 int execvpe(const char *prog, char *const argv[], char *const *envp) {
   char *exe;
   char pathbuf[PATH_MAX];
-  if (IsAsan() && !__asan_is_valid(prog, 1)) return efault();
+  if (IsAsan() && !__asan_is_valid_str(prog)) return efault();
   if (!(exe = commandv(prog, pathbuf, sizeof(pathbuf)))) return -1;
   return execve(exe, argv, envp);
 }

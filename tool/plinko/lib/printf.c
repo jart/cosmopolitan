@@ -80,8 +80,8 @@ int Vfnprintf(const char *f, va_list va, int fd, int n) {
   int b, c, i, x, y, si, prec, cols, sign;
   gotr = false;
   t = rdtsc();
-  --__ftrace;
-  --__strace;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   ++recursive;
   for (ansi = 0;;) {
     for (;;) {
@@ -290,8 +290,8 @@ int Vfnprintf(const char *f, va_list va, int fd, int n) {
     }
   }
   --recursive;
-  ++__ftrace;
-  ++__strace;
+  ftrace_enabled(+1);
+  strace_enabled(+1);
   if (!recursive) {
     u = rdtsc();
     if (gotr) {

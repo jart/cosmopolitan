@@ -154,7 +154,7 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
-  if (file && (!IsAsan() || __asan_is_valid(file, 1))) {
+  if (file && (!IsAsan() || __asan_is_valid_str(file))) {
     if (!__isfdkind(dirfd, kFdZip)) {
       if (_weaken(__zipos_open) &&
           _weaken(__zipos_parseuri)(file, &zipname) != -1) {

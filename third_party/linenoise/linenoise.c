@@ -775,17 +775,17 @@ static ssize_t linenoiseRead(int fd, char *buf, size_t size,
     }
     if (gotcont && rawmode != -1) {
       rawmode = -1;
-      --__strace;
+      strace_enabled(-1);
       linenoiseEnableRawMode(0);
-      ++__strace;
+      strace_enabled(+1);
       if (l) refreshme = 1;
     }
     if (l && gotwinch) refreshme = 1;
     if (refreshme) linenoiseRefreshLine(l);
     if (!block && linenoisePoll(l, fd) == -1) return -1;
-    --__strace;
+    strace_enabled(-1);
     rc = readansi(fd, buf, size);
-    ++__strace;
+    strace_enabled(+1);
     if (rc == -1 && errno == EINTR) {
       if (!block) break;
     } else {
@@ -1286,15 +1286,15 @@ StartOver:
 }
 
 void linenoiseRefreshLine(struct linenoiseState *l) {
-  --__strace;
+  strace_enabled(-1);
   linenoiseRefreshLineImpl(l, 0, 0);
-  ++__strace;
+  strace_enabled(+1);
 }
 
 static void linenoiseRefreshLineForce(struct linenoiseState *l) {
-  --__strace;
+  strace_enabled(-1);
   linenoiseRefreshLineImpl(l, 1, 0);
-  ++__strace;
+  strace_enabled(+1);
 }
 
 static void linenoiseEditInsert(struct linenoiseState *l, const char *p,
@@ -1336,11 +1336,11 @@ static void linenoiseEditEof(struct linenoiseState *l) {
 }
 
 static void linenoiseEditRefresh(struct linenoiseState *l) {
-  --__strace;
+  strace_enabled(-1);
   linenoiseRefreshLineImpl(l, 1,
                            "\e[H"     // move cursor to top left corner
                            "\e[2J");  // erase display
-  ++__strace;
+  strace_enabled(+1);
 }
 
 static size_t ForwardWord(struct linenoiseState *l, size_t pos) {

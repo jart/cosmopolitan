@@ -17,13 +17,16 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/errno.h"
 #include "libc/intrin/kmalloc.h"
+#include "libc/runtime/memtrack.internal.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 static struct AtForks {
-  pthread_mutex_t lock;
+  pthread_spinlock_t lock;
   struct AtFork {
     struct AtFork *p[2];
     atfork_f f[3];
@@ -34,12 +37,12 @@ static void _pthread_onfork(int i) {
   struct AtFork *a;
   struct PosixThread *pt;
   _unassert(0 <= i && i <= 2);
-  if (!i) pthread_mutex_lock(&_atforks.lock);
+  if (!i) pthread_spin_lock(&_atforks.lock);
   for (a = _atforks.list; a; a = a->p[!i]) {
     if (a->f[i]) a->f[i]();
     _atforks.list = a;
   }
-  if (i) pthread_mutex_unlock(&_atforks.lock);
+  if (i) pthread_spin_unlock(&_atforks.lock);
   if (i == 2) {
     _pthread_zombies_purge();
     if (__tls_enabled) {
@@ -51,29 +54,36 @@ static void _pthread_onfork(int i) {
 
 void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
+  __kmalloc_lock();
+  __mmi_lock();
 }
 
 void _pthread_onfork_parent(void) {
+  __mmi_unlock();
+  __kmalloc_unlock();
   _pthread_onfork(1);
 }
 
 void _pthread_onfork_child(void) {
+  extern pthread_mutex_t __mmi_lock_obj;
+  bzero(&__mmi_lock_obj, sizeof(__mmi_lock_obj));
+  __kmalloc_unlock();
   _pthread_onfork(2);
 }
 
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   int rc;
   struct AtFork *a;
-  a = kmalloc(sizeof(struct AtFork));
+  if (!(a = kmalloc(sizeof(struct AtFork)))) return ENOMEM;
   a->f[0] = prepare;
   a->f[1] = parent;
   a->f[2] = child;
-  pthread_mutex_lock(&_atforks.lock);
+  pthread_spin_lock(&_atforks.lock);
   a->p[0] = 0;
   a->p[1] = _atforks.list;
   if (_atforks.list) _atforks.list->p[0] = a;
   _atforks.list = a;
-  pthread_mutex_unlock(&_atforks.lock);
+  pthread_spin_unlock(&_atforks.lock);
   rc = 0;
   return rc;
 }

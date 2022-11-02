@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/check.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
@@ -280,10 +280,10 @@ static int Read1(int fd) {
 
 int Read(int fd) {
   int r;
-  --__ftrace;
-  --__strace;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   r = Read1(fd);
-  ++__ftrace;
-  ++__strace;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
   return r;
 }

@@ -19,27 +19,15 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
-#include "libc/elf/pf2prot.internal.h"
-#include "libc/errno.h"
-#include "libc/fmt/fmt.h"
-#include "libc/intrin/bits.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/nomultics.internal.h"
-#include "libc/intrin/pushpop.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nt/console.h"
 #include "libc/nt/enum/consolemodeflags.h"
 #include "libc/nt/enum/filemapflags.h"
-#include "libc/nt/enum/filetype.h"
-#include "libc/nt/enum/loadlibrarysearch.h"
 #include "libc/nt/enum/pageflags.h"
-#include "libc/nt/enum/version.h"
-#include "libc/nt/files.h"
 #include "libc/nt/memory.h"
 #include "libc/nt/pedef.internal.h"
 #include "libc/nt/process.h"
@@ -47,16 +35,11 @@
 #include "libc/nt/signals.h"
 #include "libc/nt/struct/ntexceptionpointers.h"
 #include "libc/nt/struct/teb.h"
-#include "libc/nt/synchronization.h"
-#include "libc/nt/thunk/msabi.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
+#include "libc/runtime/stack.h"
 #include "libc/runtime/winargs.internal.h"
 #include "libc/sock/internal.h"
-#include "libc/str/str.h"
-#include "libc/str/utf16.h"
 
 #if IsTiny()
 __msabi extern typeof(CreateFileMapping) *const __imp_CreateFileMappingW;
@@ -79,7 +62,6 @@ __msabi extern typeof(VirtualProtect) *const __imp_VirtualProtect;
  * TODO: How can we ensure we never overlap with KERNEL32.DLL?
  */
 
-extern uint32_t __winmainpid;
 extern int64_t __wincrashearly;
 extern const char kConsoleHandles[3];
 
@@ -169,7 +151,6 @@ __msabi static textwindows wontreturn void WinMainNew(const char16_t *cmdline) {
   version = NtGetPeb()->OSMajorVersion;
   __oldstack = (intptr_t)__builtin_frame_address(0);
   if ((intptr_t)v_ntsubsystem == kNtImageSubsystemWindowsCui && version >= 10) {
-    __winmainpid = __pid;
     rc = SetConsoleCP(kNtCpUtf8);
     NTTRACE("SetConsoleCP(kNtCpUtf8) → %hhhd", rc);
     rc = SetConsoleOutputCP(kNtCpUtf8);

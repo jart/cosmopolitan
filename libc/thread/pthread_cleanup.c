@@ -25,7 +25,7 @@
 void _pthread_cleanup(struct PosixThread *pt) {
   _pthread_ungarbage();
   if (_weaken(_pthread_key_destruct)) {
-    _weaken(_pthread_key_destruct)(0);
+    _weaken(_pthread_key_destruct)();
   }
   if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
       kPosixThreadDetached) {

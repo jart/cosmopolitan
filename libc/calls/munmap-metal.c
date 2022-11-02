@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/directmap.internal.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/runtime/pc.internal.h"
 
 noasan int sys_munmap_metal(void *addr, size_t size) {

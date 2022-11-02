@@ -31,9 +31,9 @@
  * short time period should say:
  *
  *     void foo() {
- *       --__strace;
+ *       strace_enabled(-1);
  *       bar();
- *       ++__strace;
+ *       strace_enabled(+1);
  *     }
  *
  * This way you still have some flexibility to force syscall tracing, by
@@ -41,4 +41,4 @@
  * under normal circumstances, `__strace` should only be either zero or
  * one.
  */
-atomic_int __strace;
+int __strace;

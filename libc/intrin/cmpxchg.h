@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && defined(__x86__)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__) && !defined(__x86__)
 #define _cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME)                       \
   ({                                                                          \
     bool DidIt;                                                               \
@@ -17,7 +17,10 @@ COSMOPOLITAN_C_START_
                  : "cc");                                                     \
     DidIt;                                                                    \
   })
-#endif /* GNUC && !ANSI && x86 */
+#else
+#define _cmpxchg(IFTHING, ISEQUALTOME, REPLACEITWITHME) \
+  (*(IFTHING) == (ISEQUALTOME) ? (*(IFTHING) = (REPLACEITWITHME), 1) : 0)
+#endif
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

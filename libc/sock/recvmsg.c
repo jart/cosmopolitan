@@ -93,7 +93,7 @@ ssize_t recvmsg(int fd, struct msghdr *msg, int flags) {
   }
 
 #if defined(SYSDEBUG) && _DATATRACE
-  if (__strace > 0) {
+  if (__strace > 0 && strace_enabled(0) > 0) {
     if (!msg || (rc == -1 && errno == EFAULT)) {
       DATATRACE("recvmsg(%d, %p, %#x) → %'ld% m", fd, msg, flags, rc);
     } else {

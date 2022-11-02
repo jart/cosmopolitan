@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool gb18030ext_decmap_once;
-static void *gb18030ext_decmap_ptr;
+static _Atomic(void *) gb18030ext_decmap_ptr;
 static const unsigned char gb18030ext_decmap_rodata[] = {
   0x63, 0x60, 0x18, 0x05, 0xa3, 0x60, 0x60, 0x01, 0x23, 0x83, 0xc3, 0x82, 0x24,
   0x06, 0x87, 0x7f, 0x8a, 0x8c, 0x0e, 0x0b, 0x9a, 0x18, 0x1d, 0xfe, 0x39, 0x32,
@@ -15,9 +14,7 @@ static const unsigned char gb18030ext_decmap_rodata[] = {
 };
 
 optimizesize void *gb18030ext_decmap(void) {
-  if (gb18030ext_decmap_once) return gb18030ext_decmap_ptr;
-  return xload(&gb18030ext_decmap_once,
-               &gb18030ext_decmap_ptr,
+  return xload(&gb18030ext_decmap_ptr,
                gb18030ext_decmap_rodata,
                100, 1024); /* 9.76562% profit */
 }

@@ -72,10 +72,13 @@ static privileged inline int GetNestingLevel(struct CosmoFtrace *ft,
  */
 privileged void ftracer(void) {
   long stackuse;
-  struct CosmoFtrace *ft;
+  struct CosmoTib *tib;
   struct StackFrame *sf;
+  struct CosmoFtrace *ft;
   if (__tls_enabled) {
-    ft = &__get_tls_privileged()->tib_ftrace;
+    tib = __get_tls_privileged();
+    if (tib->tib_ftrace <= 0) return;
+    ft = &tib->tib_ftracer;
   } else {
     ft = &g_ftrace;
   }

@@ -31,7 +31,7 @@ int32_t sys_fstatat(int32_t dirfd, const char *path, struct stat *st,
   int rc;
   void *p;
   union metastat ms;
-  if (IsAsan() && !__asan_is_valid(path, 1)) return efault();
+  if (IsAsan() && !__asan_is_valid_str(path)) return efault();
   if (IsLinux()) {
     _Static_assert(sizeof(*st) == sizeof(ms.linux), "assumption broken");
     if (IsAsan() && (st && !__asan_is_valid(st, sizeof(*st)))) return efault();

@@ -16,26 +16,16 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigset.h"
-#include "libc/dce.h"
+#include "libc/calls/struct/fd.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/extend.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/memtrack.internal.h"
-#include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
-#include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/sysv/errfuns.h"
 
 // TODO(jart): make more of this code lockless
 

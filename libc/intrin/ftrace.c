@@ -30,9 +30,9 @@
  * short time period should say:
  *
  *     void foo() {
- *       --__ftrace;
+ *       ftrace_enabled(-1);
  *       bar();
- *       ++__ftrace;
+ *       ftrace_enabled(+1);
  *     }
  *
  * This way you still have some flexibility to force function tracing,
@@ -40,4 +40,4 @@
  * though under normal circumstances, `__ftrace` should only be either
  * zero or one.
  */
-atomic_int __ftrace;
+int __ftrace;

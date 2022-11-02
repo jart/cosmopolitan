@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool __gbkext_decmap_once;
-static void *__gbkext_decmap_ptr;
+static _Atomic(void *) __gbkext_decmap_ptr;
 static const unsigned char __gbkext_decmap_rodata[3936] = {
   0xbd, 0x5b, 0xdb, 0x73, 0x56, 0xd5, 0x15, 0x97, 0xbd, 0x7f, 0x67, 0x65, 0xbb,
   0xe7, 0x78, 0xe6, 0x9b, 0x4c, 0x26, 0xc3, 0x30, 0x3c, 0x38, 0x3e, 0x74, 0x3a,
@@ -310,9 +309,7 @@ static const unsigned char __gbkext_decmap_rodata[3936] = {
 };
 
 optimizesize void *__gbkext_decmap(void) {
-  if (__gbkext_decmap_once) return __gbkext_decmap_ptr;
-  return xloadzd(&__gbkext_decmap_once,
-                 &__gbkext_decmap_ptr,
+  return xloadzd(&__gbkext_decmap_ptr,
                  __gbkext_decmap_rodata,
                  3936, 15071, 14531, 2, 0xe6585743u); /* 13.5435% profit */
 }

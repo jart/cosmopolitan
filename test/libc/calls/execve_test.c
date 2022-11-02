@@ -24,7 +24,7 @@
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
 
-#define N 127
+#define N 16
 
 char *GenBuf(char buf[8], int x) {
   int i;

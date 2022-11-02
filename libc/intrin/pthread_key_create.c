@@ -17,51 +17,40 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/bsr.h"
+#include "libc/intrin/atomic.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 
 /**
  * Allocates TLS slot.
+ *
+ * If `dtor` is non-null, then it'll be called upon thread exit when the
+ * key's value is nonzero. The key's value is set to zero before it gets
+ * called. The ordering for multiple destructor calls is unspecified.
+ *
+ * @param key is set to the allocated key on success
+ * @param dtor specifies an optional destructor callback
+ * @return 0 on success, or errno on error
+ * @raise EAGAIN if `PTHREAD_KEYS_MAX` keys exist
  */
 int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
-  int i, j, rc = EAGAIN;
-  _pthread_key_lock();
-  for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
-    if (~_pthread_key_usage[i]) {
-      j = _bsrl(~_pthread_key_usage[i]);
-      _pthread_key_usage[i] |= 1ul << j;
-      _pthread_key_dtor[i * 64 + j] = dtor;
-      *key = i * 64 + j;
-      rc = 0;
-      break;
+  int i;
+  pthread_key_dtor expect;
+  if (!dtor) dtor = (pthread_key_dtor)-1;
+  for (i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+    if (!(expect = atomic_load_explicit(_pthread_key_dtor + i,
+                                        memory_order_relaxed)) &&
+        atomic_compare_exchange_strong_explicit(_pthread_key_dtor + i, &expect,
+                                                dtor, memory_order_relaxed,
+                                                memory_order_relaxed)) {
+      *key = i;
+      return 0;
     }
   }
-  _pthread_key_unlock();
-  return rc;
-}
-
-void _pthread_key_lock(void) {
-  pthread_spin_lock(&_pthread_keys_lock);
-}
-
-void _pthread_key_unlock(void) {
-  pthread_spin_unlock(&_pthread_keys_lock);
-}
-
-static void _pthread_key_funlock(void) {
-  pthread_spin_init(&_pthread_keys_lock, 0);
-}
-
-static textexit void _pthread_key_atexit(void) {
-  _pthread_key_destruct(0);
+  return EAGAIN;
 }
 
 __attribute__((__constructor__)) static textstartup void _pthread_key_init() {
-  atexit(_pthread_key_atexit);
-  pthread_atfork(_pthread_key_lock,    //
-                 _pthread_key_unlock,  //
-                 _pthread_key_funlock);
+  atexit(_pthread_key_destruct);
 }

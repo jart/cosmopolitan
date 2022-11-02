@@ -19,10 +19,13 @@
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/tls.h"
 
 privileged void __stracef(const char *fmt, ...) {
   va_list v;
-  if (__strace <= 0) return;
+  if (__strace <= 0 || (__tls_enabled && __get_tls()->tib_strace <= 0)) {
+    return;
+  }
   va_start(v, fmt);
   kvprintf(fmt, v);
   va_end(v);

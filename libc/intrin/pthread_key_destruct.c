@@ -16,34 +16,30 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bsr.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-// TODO(jart): why does this even need a lock?
-void _pthread_key_destruct(void *key[PTHREAD_KEYS_MAX]) {
-  int i, j;
-  uint64_t x;
-  void *value;
+void _pthread_key_destruct(void) {
+  int i, j, gotsome;
+  void *val, **keys;
   pthread_key_dtor dtor;
   if (!__tls_enabled) return;
-  _pthread_key_lock();
-  if (!key) key = __get_tls()->tib_keys;
-StartOver:
-  for (i = 0; i < (PTHREAD_KEYS_MAX + 63) / 64; ++i) {
-    x = _pthread_key_usage[i];
-    while (x) {
-      j = _bsrl(x);
-      if ((value = key[i * 64 + j]) && (dtor = _pthread_key_dtor[i * 64 + j])) {
-        key[i * 64 + j] = 0;
-        _pthread_key_unlock();
-        dtor(value);
-        _pthread_key_lock();
-        goto StartOver;
+  keys = __get_tls()->tib_keys;
+  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
+    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
+      if ((val = keys[i]) &&
+          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
+                                       memory_order_relaxed)) &&
+          dtor != (pthread_key_dtor)-1) {
+        gotsome = 1;
+        keys[i] = 0;
+        dtor(val);
       }
-      x &= ~(1ul << j);
+    }
+    if (!gotsome) {
+      break;
     }
   }
-  _pthread_key_unlock();
 }

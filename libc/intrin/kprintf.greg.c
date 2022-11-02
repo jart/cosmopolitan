@@ -31,7 +31,6 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/likely.h"
-#include "libc/intrin/lockcmpxchg.h"
 #include "libc/intrin/nomultics.internal.h"
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/intrin/weaken.h"

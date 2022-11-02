@@ -17,38 +17,25 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/calls/internal.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/fmt/conv.h"
-#include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/promises.internal.h"
-#include "libc/intrin/safemacros.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/log/backtrace.internal.h"
 #include "libc/log/color.internal.h"
 #include "libc/log/log.h"
-#include "libc/mem/alg.h"
-#include "libc/mem/bisectcarleft.internal.h"
-#include "libc/mem/gc.internal.h"
 #include "libc/nexgen32e/gc.internal.h"
+#include "libc/nexgen32e/stackframe.h"
 #include "libc/runtime/runtime.h"
-#include "libc/runtime/stack.h"
 #include "libc/runtime/symbols.internal.h"
-#include "libc/stdio/append.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/thread/tls.h"
-#include "libc/x/x.h"
 
 #define kBacktraceMaxFrames 128
 #define kBacktraceBufSize   ((kBacktraceMaxFrames - 1) * (18 + 1))
@@ -58,7 +45,6 @@ static void ShowHint(const char *s) {
 }
 
 static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
-  bool ok;
   ssize_t got;
   intptr_t addr;
   size_t i, j, gi;
@@ -110,6 +96,9 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   garbage = __tls_enabled ? __get_tls()->tib_garbages : 0;
   gi = garbage ? garbage->i : 0;
   for (frame = bp; frame && i < kBacktraceMaxFrames - 1; frame = frame->next) {
+    if (kisdangerous(frame)) {
+      return -1;
+    }
     addr = frame->addr;
     if (addr == _weakaddr("__gc")) {
       do {
@@ -158,7 +147,7 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
         got -= p3 - p1;
         p1 += p3 - p1;
       } else {
-        write(2, p1, got);
+        sys_write(2, p1, got);
         break;
       }
     }
@@ -189,12 +178,12 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
-  --__ftrace;
-  --__strace;
+  ftrace_enabled(-1);
+  strace_enabled(-1);
   if (!bp) bp = __builtin_frame_address(0);
   PrintBacktrace(fd, bp);
-  ++__strace;
-  ++__ftrace;
+  strace_enabled(+1);
+  ftrace_enabled(+1);
 #else
   (fprintf)(stderr, "ShowBacktrace() needs these flags to show C backtrace:\n"
                     "\t-D__FNO_OMIT_FRAME_POINTER__\n"

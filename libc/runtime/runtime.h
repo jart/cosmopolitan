@@ -16,8 +16,8 @@ extern char **__envp;                       /* CRT */
 extern unsigned long *__auxv;               /* CRT */
 extern intptr_t __oldstack;                 /* CRT */
 extern uint64_t __nosync;                   /* SYS */
-extern _Atomic(int) __ftrace;               /* SYS */
-extern _Atomic(int) __strace;               /* SYS */
+extern int __strace;                        /* SYS */
+extern int __ftrace;                        /* SYS */
 extern char *program_invocation_name;       /* RII */
 extern char *program_invocation_short_name; /* RII */
 extern uint64_t __syscount;                 /* RII */
@@ -93,6 +93,8 @@ void _weakfree(void *);
 void free_s(void *) paramsnonnull() libcesque;
 int OpenExecutable(void);
 int ftrace_install(void);
+int ftrace_enabled(int);
+int strace_enabled(int);
 long GetResourceLimit(int);
 long GetMaxFd(void);
 char *GetProgramExecutableName(void);

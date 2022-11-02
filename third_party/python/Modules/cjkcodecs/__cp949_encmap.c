@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool __cp949_encmap_once;
-static void *__cp949_encmap_ptr;
+static _Atomic(void *) __cp949_encmap_ptr;
 static const unsigned char __cp949_encmap_rodata[29600] = {
   0xb4, 0xbc, 0x0d, 0x54, 0x5b, 0x67, 0x9a, 0x26, 0xc8, 0xc5, 0xcf, 0xab, 0xb8,
   0xcb, 0xee, 0x76, 0xaa, 0x9d, 0x99, 0xa4, 0x3b, 0xe9, 0x49, 0xce, 0x26, 0xdd,
@@ -2284,9 +2283,7 @@ static const unsigned char __cp949_encmap_rodata[29600] = {
 };
 
 optimizesize void *__cp949_encmap(void) {
-  if (__cp949_encmap_once) return __cp949_encmap_ptr;
-  return xloadzd(&__cp949_encmap_once,
-                 &__cp949_encmap_ptr,
+  return xloadzd(&__cp949_encmap_ptr,
                  __cp949_encmap_rodata,
                  29600, 54513, 33133, 2, 0x97300f27u); /* 44.6685% profit */
 }

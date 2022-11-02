@@ -19,6 +19,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/thread/tls.h"
 
 /**
  * Enables plaintext function tracing if `--ftrace` flag is passed.
@@ -35,7 +36,7 @@
 textstartup int ftrace_init(void) {
   if (__intercept_flag(&__argc, __argv, "--ftrace")) {
     ftrace_install();
-    ++__ftrace;
+    ftrace_enabled(+1);
   }
   return __argc;
 }

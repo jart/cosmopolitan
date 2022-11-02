@@ -31,12 +31,3 @@ void(__mmi_lock)(void) {
 void(__mmi_unlock)(void) {
   pthread_mutex_unlock(&__mmi_lock_obj);
 }
-
-void(__mmi_funlock)(void) {
-  bzero(&__mmi_lock_obj, sizeof(__mmi_lock_obj));
-  __mmi_lock_obj._type = PTHREAD_MUTEX_RECURSIVE;
-}
-
-__attribute__((__constructor__)) static void init(void) {
-  pthread_atfork(__mmi_lock, __mmi_unlock, __mmi_funlock);
-}

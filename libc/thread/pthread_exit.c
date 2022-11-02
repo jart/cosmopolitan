@@ -70,6 +70,8 @@ wontreturn void pthread_exit(void *rc) {
     pt->cleanup = cb->__prev;
     cb->__routine(cb->__arg);
   }
+  // TODO(jart): An orphaned thread should become the main thread.
+  // TODO(jart): This should call __cxa_finalize() for the orphan.
   if (~pt->flags & PT_MAINTHREAD) {
     // this thread was created by pthread_create()
     // garbage collector memory exists on a shadow stack. we don't need

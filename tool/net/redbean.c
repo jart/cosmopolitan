@@ -179,28 +179,28 @@ STATIC_YOINK("ShowCrashReportsEarly");
 #define HeaderEqualCase(H, S) \
   SlicesEqualCase(S, strlen(S), HeaderData(H), HeaderLength(H))
 
-#define TRACE_BEGIN                                                    \
-  do {                                                                 \
-    if (!IsTiny()) {                                                   \
-      if (funtrace) {                                                  \
-        atomic_fetch_add_explicit(&__ftrace, 1, memory_order_relaxed); \
-      }                                                                \
-      if (systrace) {                                                  \
-        atomic_fetch_add_explicit(&__strace, 1, memory_order_relaxed); \
-      }                                                                \
-    }                                                                  \
+#define TRACE_BEGIN         \
+  do {                      \
+    if (!IsTiny()) {        \
+      if (funtrace) {       \
+        ftrace_enabled(+1); \
+      }                     \
+      if (systrace) {       \
+        strace_enabled(+1); \
+      }                     \
+    }                       \
   } while (0)
 
-#define TRACE_END                                                      \
-  do {                                                                 \
-    if (!IsTiny()) {                                                   \
-      if (funtrace) {                                                  \
-        atomic_fetch_sub_explicit(&__ftrace, 1, memory_order_relaxed); \
-      }                                                                \
-      if (systrace) {                                                  \
-        atomic_fetch_sub_explicit(&__strace, 1, memory_order_relaxed); \
-      }                                                                \
-    }                                                                  \
+#define TRACE_END           \
+  do {                      \
+    if (!IsTiny()) {        \
+      if (funtrace) {       \
+        ftrace_enabled(-1); \
+      }                     \
+      if (systrace) {       \
+        strace_enabled(-1); \
+      }                     \
+    }                       \
   } while (0)
 
 // letters not used: INOQYnoqwxy
@@ -5385,16 +5385,16 @@ static void LuaPrint(lua_State *L) {
 
 static void EnableRawMode(void) {
   if (lua_repl_isterminal) {
-    --__strace;
+    strace_enabled(-1);
     linenoiseEnableRawMode(0);
-    ++__strace;
+    strace_enabled(+1);
   }
 }
 
 static void DisableRawMode(void) {
-  --__strace;
+  strace_enabled(-1);
   linenoiseDisableRawMode();
-  ++__strace;
+  strace_enabled(+1);
 }
 
 static int LuaInterpreter(lua_State *L) {
@@ -6893,14 +6893,14 @@ static void MakeExecutableModifiable(void) {
   if (IsNetbsd()) return;   // TODO
   if (_endswith(zpath, ".com.dbg")) return;
   close(zfd);
-  ft = __ftrace;
+  ft = ftrace_enabled(0);
   if ((zfd = OpenExecutable()) == -1) {
     WARNF("(srvr) can't open executable for modification: %m");
   }
   if (ft > 0) {
     __ftrace = 0;
     ftrace_install();
-    __ftrace = ft;
+    ftrace_enabled(ft);
   }
 }
 
@@ -6980,9 +6980,9 @@ static int HandlePoll(int ms) {
         rc = HandleReadline();
         if (rc < 0) return rc;
       } else {
-        --__strace;
+        strace_enabled(-1);
         linenoiseRefreshLine(lua_repl_linenoise);
-        ++__strace;
+        strace_enabled(+1);
       }
 #endif
     }

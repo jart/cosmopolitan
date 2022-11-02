@@ -137,8 +137,7 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
   for (i = 0; i < mm->e820n; ++i) {
     uint64_t ps = mm->e820[i].addr, size = mm->e820[i].size;
     /* ape/ape.S has already mapped the first 2 MiB of physical memory. */
-    if (ps < 0x200000 && ps + size <= 0x200000)
-      continue;
+    if (ps < 0x200000 && ps + size <= 0x200000) continue;
     __invert_memory_area(mm, pml4t, ps, size, PAGE_RW | PAGE_XD);
   }
 }
@@ -148,13 +147,13 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
  * so that assembly language routines can use it.  This macro can be invoked
  * from inside a function whose code is known to be emitted.
  */
-#define export_offsetof(type, member)                       \
-    do {                                                    \
-      asm volatile(".globl \"" #type "::" #member "\"\n\t"  \
-                   ".set \"" #type "::" #member "\",%c0"    \
-                   : /* no outputs */                       \
-                   : "i" (offsetof(type, member)));         \
-    } while (0)
+#define export_offsetof(type, member)                    \
+  do {                                                   \
+    asm volatile(".globl \"" #type "::" #member "\"\n\t" \
+                 ".set \"" #type "::" #member "\",%c0"   \
+                 : /* no outputs */                      \
+                 : "i"(offsetof(type, member)));         \
+  } while (0)
 
 noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, pc_drive_base_table);

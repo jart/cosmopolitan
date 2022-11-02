@@ -22,24 +22,24 @@
 #include "libc/nt/runtime.h"
 #include "libc/runtime/internal.h"
 
-uint32_t __winmainpid;
+__msabi extern typeof(GetCurrentProcessId) *const __imp_GetCurrentProcessId;
+__msabi extern typeof(SetConsoleMode) *const __imp_SetConsoleMode;
+__msabi extern typeof(GetStdHandle) *const __imp_GetStdHandle;
 
-const char kConsoleHandles[3] = {
+extern uint32_t __pid_exec;
+
+const unsigned char kConsoleHandles[3] = {
     kNtStdInputHandle,
     kNtStdOutputHandle,
     kNtStdErrorHandle,
 };
 
-/**
- * Puts cmd.exe gui back the way it was.
- */
-noinstrument void _restorewintty(void) {
-  int i;
+// Puts cmd.exe gui back the way it was.
+privileged noinstrument void _restorewintty(void) {
   if (!IsWindows()) return;
-  if (GetCurrentProcessId() == __winmainpid) {
-    for (i = 0; i < 3; ++i) {
-      SetConsoleMode(GetStdHandle(kConsoleHandles[i]), __ntconsolemode[i]);
-    }
-    __winmainpid = 0;
+  if (__imp_GetCurrentProcessId() != __pid_exec) return;
+  for (int i = 0; i < 3; ++i) {
+    __imp_SetConsoleMode(__imp_GetStdHandle(kConsoleHandles[i]),
+                         __ntconsolemode[i]);
   }
 }

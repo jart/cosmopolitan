@@ -43,7 +43,7 @@
 int fchownat(int dirfd, const char *path, uint32_t uid, uint32_t gid,
              int flags) {
   int rc;
-  if (IsAsan() && !__asan_is_valid(path, 1)) {
+  if (IsAsan() && !__asan_is_valid_str(path)) {
     rc = efault();
   } else if (_weaken(__zipos_notat) &&
              (rc = __zipos_notat(dirfd, path)) == -1) {

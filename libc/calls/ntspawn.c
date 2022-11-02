@@ -18,9 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntspawn.h"
 #include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/pushpop.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/filemapflags.h"
 #include "libc/nt/enum/pageflags.h"
@@ -80,6 +78,8 @@ textwindows int ntspawn(
   rc = -1;
   block = NULL;
   if (__mkntpath(prog, prog16) == -1) return -1;
+  // we can't call malloc() because we're higher in the topological order
+  // we can't call kmalloc() because fork() calls this when kmalloc is locked
   if ((handle = CreateFileMapping(-1, 0, pushpop(kNtPageReadwrite), 0,
                                   sizeof(*block), 0)) &&
       (block = MapViewOfFileEx(handle, kNtFileMapRead | kNtFileMapWrite, 0, 0,

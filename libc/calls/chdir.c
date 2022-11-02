@@ -36,7 +36,7 @@
 int chdir(const char *path) {
   int rc;
   GetProgramExecutableName();  // XXX: ugly workaround
-  if (!path || (IsAsan() && !__asan_is_valid(path, 1))) {
+  if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
     rc = efault();
   } else if (!IsWindows()) {
     rc = sys_chdir(path);

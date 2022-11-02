@@ -17,7 +17,6 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -25,6 +24,7 @@
 #include "libc/intrin/asmflag.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nexgen32e/msr.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/pc.internal.h"
@@ -47,7 +47,7 @@
                    "d"((uint32_t)(val_ >> 32)));  \
   } while (0)
 
-int sys_enable_tls();
+int sys_set_tls();
 
 static int arch_prctl_msr(int code, int64_t addr) {
   switch (code) {
@@ -96,7 +96,7 @@ static int arch_prctl_netbsd(int code, int64_t addr) {
       // we use _lwp_setprivate() instead of sysarch(X86_SET_FSBASE)
       // because the latter has a bug where signal handlers cause it
       // to be clobbered. please note, this doesn't apply to %gs :-)
-      return sys_enable_tls(addr);
+      return sys_set_tls(addr);
     case ARCH_GET_GS:
       // sysarch(X86_GET_GSBASE)
       return sys_arch_prctl(14, addr);
@@ -114,7 +114,7 @@ static int arch_prctl_xnu(int code, int64_t addr) {
     case ARCH_SET_GS:
       // thread_fast_set_cthread_self has a weird ABI
       e = errno;
-      sys_enable_tls(addr);
+      sys_set_tls(addr);
       errno = e;
       return 0;
     case ARCH_GET_FS:

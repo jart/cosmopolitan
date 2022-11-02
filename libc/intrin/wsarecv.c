@@ -52,7 +52,7 @@ textwindows int WSARecv(
   if (rc == -1) {
     __winerr();
   }
-  if (UNLIKELY(__strace > 0)) {
+  if (UNLIKELY(__strace > 0) && strace_enabled(0) > 0) {
     kprintf(STRACE_PROLOGUE "WSARecv(%lu, [", s);
     DescribeIovNt(inout_lpBuffers, dwBufferCount,
                   rc != -1 ? NumberOfBytesRecvd : 0);

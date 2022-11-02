@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/errno.h"
 #include "libc/intrin/likely.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/log/countbranch.h"
 #include "libc/log/countexpr.h"
 #include "libc/log/log.h"
@@ -673,9 +673,9 @@ struct T DispatchTrace(dword ea, dword tm, dword r, dword p1, dword p2,
 struct T DispatchFtrace(dword ea, dword tm, dword r, dword p1, dword p2,
                         dword d) {
   ftrace_install();
-  ++__ftrace;
+  ftrace_enabled(+1);
   ea = MAKE(recurse(MAKE(Cadr(LO(ea)), HI(ea)), p1, p2), 0);
-  --__ftrace;
+  ftrace_enabled(-1);
   return Ret(ea, tm, r);
 }
 

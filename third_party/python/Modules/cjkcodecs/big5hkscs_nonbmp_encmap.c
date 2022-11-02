@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool big5hkscs_nonbmp_encmap_once;
-static void *big5hkscs_nonbmp_encmap_ptr;
+static _Atomic(void *) big5hkscs_nonbmp_encmap_ptr;
 static const unsigned char big5hkscs_nonbmp_encmap_rodata[] = {
   0x63, 0x64, 0x50, 0x7c, 0x77, 0x9e, 0x81, 0xe7, 0xd3, 0x36, 0x46, 0x96, 0xa7,
   0x33, 0x98, 0xb8, 0xfe, 0x74, 0x33, 0x0b, 0xff, 0x2b, 0x67, 0x71, 0x7f, 0x2d,
@@ -62,9 +61,7 @@ static const unsigned char big5hkscs_nonbmp_encmap_rodata[] = {
 };
 
 optimizesize void *big5hkscs_nonbmp_encmap(void) {
-  if (big5hkscs_nonbmp_encmap_once) return big5hkscs_nonbmp_encmap_ptr;
-  return xload(&big5hkscs_nonbmp_encmap_once,
-               &big5hkscs_nonbmp_encmap_ptr,
+  return xload(&big5hkscs_nonbmp_encmap_ptr,
                big5hkscs_nonbmp_encmap_rodata,
                705, 1024); /* 68.8477% profit */
 }

@@ -51,7 +51,7 @@ bool fileexists(const char *path) {
   struct ZiposUri zipname;
   uint16_t path16[PATH_MAX];
   e = errno;
-  if (IsAsan() && !__asan_is_valid(path, 1)) {
+  if (IsAsan() && !__asan_is_valid_str(path)) {
     efault();
     res = false;
   } else if (_weaken(__zipos_open) &&

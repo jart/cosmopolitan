@@ -68,7 +68,7 @@ relegated void RestoreDefaultCrashSignalHandlers(void) {
   int e;
   size_t i;
   sigset_t ss;
-  --__strace;
+  strace_enabled(-1);
   sigemptyset(&ss);
   sigprocmask(SIG_SETMASK, &ss, NULL);
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
@@ -78,7 +78,7 @@ relegated void RestoreDefaultCrashSignalHandlers(void) {
       errno = e;
     }
   }
-  ++__strace;
+  strace_enabled(+1);
 }
 
 static void FreeSigAltStack(void *p) {

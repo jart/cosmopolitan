@@ -47,7 +47,7 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
              const char *newpath) {
   int rc;
   if (IsAsan() &&
-      (!__asan_is_valid(oldpath, 1) || !__asan_is_valid(newpath, 1))) {
+      (!__asan_is_valid_str(oldpath) || !__asan_is_valid_str(newpath))) {
     rc = efault();
   } else if (_weaken(__zipos_notat) &&
              ((rc = __zipos_notat(olddirfd, oldpath)) == -1 ||

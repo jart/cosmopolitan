@@ -74,6 +74,7 @@
  * @param parent is run by fork() after forking happens in parent process
  * @param child is run by fork() after forking happens in childe process
  * @return 0 on success, or errno on error
+ * @raise ENOMEM if we require more vespene gas
  */
 int pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {
   if (_weaken(_pthread_atfork)) {

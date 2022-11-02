@@ -19,18 +19,13 @@
 #include "dsp/core/core.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rlimit.h"
-#include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
+#include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/safemacros.internal.h"
-#include "libc/log/check.h"
-#include "libc/math.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/directmap.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/rand.h"
-#include "libc/str/str.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/prot.h"
@@ -47,13 +42,13 @@ static char tmpname[PATH_MAX];
 
 void OnSigxcpu(int sig) {
   ASSERT_EQ(SIGXCPU, sig);
-  _exit(0);
+  _Exit(0);
 }
 
 void OnSigxfsz(int sig) {
   unlink(tmpname);
   ASSERT_EQ(SIGXFSZ, sig);
-  _exit(0);
+  _Exit(0);
 }
 
 TEST(setrlimit, testCpuLimit) {
@@ -66,7 +61,7 @@ TEST(setrlimit, testCpuLimit) {
   if (IsOpenbsd()) return; /* TODO(jart): fix flake */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
-    CHECK_EQ(0, xsigaction(SIGXCPU, OnSigxcpu, 0, 0, 0));
+    ASSERT_EQ(0, xsigaction(SIGXCPU, OnSigxcpu, 0, 0, 0));
     ASSERT_EQ(0, getrlimit(RLIMIT_CPU, &rlim));
     rlim.rlim_cur = 1; /* set soft limit to one second */
     ASSERT_EQ(0, setrlimit(RLIMIT_CPU, &rlim));
@@ -77,7 +72,7 @@ TEST(setrlimit, testCpuLimit) {
       matmul3(matrices[0], matrices[1], matrices[2]);
       matmul3(matrices[0], matrices[1], matrices[2]);
     } while ((nowl() - start) < 5);
-    _exit(1);
+    _Exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
   EXPECT_FALSE(WIFSIGNALED(wstatus));
@@ -93,7 +88,7 @@ TEST(setrlimit, testFileSizeLimit) {
   if (IsWindows()) return; /* of course it doesn't work on windows */
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
-    CHECK_EQ(0, xsigaction(SIGXFSZ, OnSigxfsz, 0, 0, 0));
+    ASSERT_EQ(0, xsigaction(SIGXFSZ, OnSigxfsz, 0, 0, 0));
     ASSERT_EQ(0, getrlimit(RLIMIT_FSIZE, &rlim));
     rlim.rlim_cur = 1024 * 1024; /* set soft limit to one megabyte */
     ASSERT_EQ(0, setrlimit(RLIMIT_FSIZE, &rlim));
@@ -107,7 +102,7 @@ TEST(setrlimit, testFileSizeLimit) {
     }
     close(fd);
     unlink(tmpname);
-    _exit(1);
+    _Exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
   EXPECT_FALSE(WIFSIGNALED(wstatus));
@@ -141,11 +136,11 @@ TEST(setrlimit, testMemoryLimit) {
           ASSERT_TRUE(gotsome);
         }
         ASSERT_EQ(ENOMEM, errno);
-        _exit(0);
+        _Exit(0);
       }
       rngset(p, PAGESIZE, _rand64, -1);
     }
-    _exit(1);
+    _Exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
   EXPECT_FALSE(WIFSIGNALED(wstatus));
@@ -169,11 +164,11 @@ TEST(setrlimit, testVirtualMemoryLimit) {
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
-        _exit(0);
+        _Exit(0);
       }
       rngset(p, PAGESIZE, _rand64, -1);
     }
-    _exit(1);
+    _Exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
   EXPECT_FALSE(WIFSIGNALED(wstatus));
@@ -199,11 +194,11 @@ TEST(setrlimit, testDataMemoryLimit) {
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
-        _exit(0);
+        _Exit(0);
       }
       rngset(p, PAGESIZE, _rand64, -1);
     }
-    _exit(1);
+    _Exit(1);
   }
   EXPECT_TRUE(WIFEXITED(wstatus));
   EXPECT_FALSE(WIFSIGNALED(wstatus));
@@ -225,7 +220,7 @@ wontreturn void OnVfork(void *ctx) {
   rlim = ctx;
   rlim->rlim_cur -= 1;
   ASSERT_EQ(0, getrlimit(RLIMIT_CPU, rlim));
-  _exit(0);
+  _Exit(0);
 }
 
 TEST(setrlimit, isVforkSafe) {

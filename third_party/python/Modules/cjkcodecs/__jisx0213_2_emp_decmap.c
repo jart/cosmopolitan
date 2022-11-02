@@ -1,8 +1,7 @@
 #include "libc/x/x.h"
 /* clang-format off */
 
-static bool __jisx0213_2_emp_decmap_once;
-static void *__jisx0213_2_emp_decmap_ptr;
+static _Atomic(void *) __jisx0213_2_emp_decmap_ptr;
 static const unsigned char __jisx0213_2_emp_decmap_rodata[] = {
   0xeb, 0x64, 0xf8, 0xf7, 0x1f, 0x1d, 0x2e, 0x02, 0x8b, 0x2d, 0x41, 0x93, 0x59,
   0xc4, 0x88, 0xa9, 0x12, 0x19, 0x0a, 0x33, 0xe1, 0x97, 0x27, 0x07, 0x6a, 0x33,
@@ -80,9 +79,7 @@ static const unsigned char __jisx0213_2_emp_decmap_rodata[] = {
 };
 
 optimizesize void *__jisx0213_2_emp_decmap(void) {
-  if (__jisx0213_2_emp_decmap_once) return __jisx0213_2_emp_decmap_ptr;
-  return xload(&__jisx0213_2_emp_decmap_once,
-               &__jisx0213_2_emp_decmap_ptr,
+  return xload(&__jisx0213_2_emp_decmap_ptr,
                __jisx0213_2_emp_decmap_rodata,
                942, 4106); /* 22.942% profit */
 }

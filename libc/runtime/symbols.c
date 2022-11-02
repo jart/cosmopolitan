@@ -24,7 +24,7 @@
 #include "libc/runtime/symbols.internal.h"
 
 void __init_symbols(void) {
-  if (__strace || (IsAsan() && _weaken(__die))) {
+  if (__strace > 0 || (IsAsan() && _weaken(__die))) {
     GetSymbolTable();
   }
 }

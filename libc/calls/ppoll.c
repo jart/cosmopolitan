@@ -16,15 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timespec.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
-#include "libc/macros.internal.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/pollfd.internal.h"
 #include "libc/sysv/consts/sig.h"
@@ -58,7 +57,7 @@
 int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
           const sigset_t *sigmask) {
   size_t n;
-  int e, i, rc;
+  int e, rc;
   uint64_t millis;
   sigset_t oldmask;
   struct timespec ts, *tsp;
@@ -96,25 +95,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     rc = sys_poll_nt(fds, nfds, &millis, sigmask);
   }
 
-#if defined(SYSDEBUG) && _POLLTRACE
-  if (UNLIKELY(__strace > 0)) {
-    kprintf(STRACE_PROLOGUE "ppoll(");
-    if ((!IsAsan() && kisdangerous(fds)) ||
-        (IsAsan() && !__asan_is_valid(fds, nfds * sizeof(struct pollfd)))) {
-      kprintf("%p", fds);
-    } else {
-      kprintf("[{");
-      for (i = 0; i < MIN(5, nfds); ++i) {
-        kprintf("%s{%d, %s, %s}", i ? ", " : "", fds[i].fd,
-                DescribePollFlags(fds[i].events),
-                DescribePollFlags(fds[i].revents));
-      }
-      kprintf("%s}]", i == 5 ? "..." : "");
-    }
-    kprintf(", %'zu, %s, %s) → %d% lm\n", nfds, DescribeTimeval(0, timeout),
-            DescribeSigset(0, sigmask), rc);
-  }
-#endif
-
+  STRACE("ppoll(%s, %'zu, %s, %s) → %d% lm\n", DescribePollFds(rc, fds, nfds),
+         nfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask), rc);
   return rc;
 }

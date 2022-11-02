@@ -20,5 +20,5 @@
 #include "libc/runtime/runtime.h"
 
 noinstrument void _log_untrace(void) {
-  --__ftrace;
+  ftrace_enabled(-1);
 }

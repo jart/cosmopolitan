@@ -45,6 +45,12 @@ $(LIBC_INTRIN_A).pkg:					\
 		$(foreach x,$(LIBC_INTRIN_A_DIRECTDEPS),$($(x)_A).pkg)
 
 # we can't use asan because:
+#   __strace_init() calls this before asan is initialized
+o/$(MODE)/libc/intrin/strace_enabled.o: private		\
+		OVERRIDE_COPTS +=			\
+			-fno-sanitize=address
+
+# we can't use asan because:
 #   asan guard pages haven't been allocated yet
 o/$(MODE)/libc/intrin/directmap.o			\
 o/$(MODE)/libc/intrin/directmap-nt.o: private		\

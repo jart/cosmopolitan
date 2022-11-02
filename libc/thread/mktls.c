@@ -38,7 +38,8 @@ void Bzero(void *, size_t) asm("bzero");  // gcc bug
  */
 char *_mktls(struct CosmoTib **out_tib) {
   char *tls;
-  struct CosmoTib *tib;
+  struct CosmoTib *neu, *old;
+  __require_tls();
 
   // allocate memory for tdata, tbss, and tib
   tls = memalign(TLS_ALIGNMENT, I(_tls_size) + sizeof(struct CosmoTib));
@@ -55,14 +56,17 @@ char *_mktls(struct CosmoTib **out_tib) {
   Bzero(tls + I(_tbss_offset), I(_tbss_size) + sizeof(struct CosmoTib));
 
   // set up thread information block
-  tib = (struct CosmoTib *)(tls + I(_tls_size));
-  tib->tib_self = tib;
-  tib->tib_self2 = tib;
-  tib->tib_sigmask = __get_tls()->tib_sigmask;
-  atomic_store_explicit(&tib->tib_tid, -1, memory_order_relaxed);
+  old = __get_tls();
+  neu = (struct CosmoTib *)(tls + I(_tls_size));
+  neu->tib_self = neu;
+  neu->tib_self2 = neu;
+  neu->tib_ftrace = old->tib_ftrace;
+  neu->tib_strace = old->tib_strace;
+  neu->tib_sigmask = old->tib_sigmask;
+  atomic_store_explicit(&neu->tib_tid, -1, memory_order_relaxed);
 
   if (out_tib) {
-    *out_tib = tib;
+    *out_tib = neu;
   }
   return tls;
 }
