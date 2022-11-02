@@ -78,7 +78,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     rc = sys_poll_nt(fds, nfds, &millis, 0);
   }
 
-  STRACE("poll(%s, %'zu, %'d) → %d% lm\n", DescribePollFds(rc, fds, nfds), nfds,
+  STRACE("poll(%s, %'zu, %'d) → %d% lm", DescribePollFds(rc, fds, nfds), nfds,
          timeout_ms, rc);
   return rc;
 }

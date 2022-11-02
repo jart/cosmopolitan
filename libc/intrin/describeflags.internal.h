@@ -13,7 +13,7 @@ const char *DescribeFlags(char *, size_t, struct DescribeFlags *, size_t,
                           const char *, unsigned);
 
 const char *DescribeArchPrctlCode(char[12], int);
-const char *DescribeCapability(char[20], int);
+const char *DescribeCapability(char[32], int);
 const char *DescribeClockName(char[32], int);
 const char *DescribeDirfd(char[12], int);
 const char *DescribeDnotifyFlags(char[80], int);
@@ -67,7 +67,7 @@ const char *DescribeWhence(char[12], int);
 const char *DescribeWhichPrio(char[12], int);
 
 #define DescribeArchPrctlCode(x)     DescribeArchPrctlCode(alloca(12), x)
-#define DescribeCapability(x)        DescribeCapability(alloca(20), x)
+#define DescribeCapability(x)        DescribeCapability(alloca(32), x)
 #define DescribeClockName(x)         DescribeClockName(alloca(32), x)
 #define DescribeDirfd(x)             DescribeDirfd(alloca(12), x)
 #define DescribeDnotifyFlags(x)      DescribeDnotifyFlags(alloca(80), x)

@@ -364,7 +364,7 @@ static int LuaFetch(lua_State *L) {
         break;
       case kHttpClientStateBody:
         if (!g) {
-          paylen = inbuf.n;
+          paylen = inbuf.n - hdrsize;
           goto Finished;
         }
         break;

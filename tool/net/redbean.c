@@ -6153,7 +6153,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
                ((cpm.contentlength >= 100 && _startswithi(ct, "text/")) ||
                 (cpm.contentlength >= 1000 &&
                  MeasureEntropy(cpm.content, 1000) < 7))) {
-      WARNF("serving compressed asset");
+      VERBOSEF("serving compressed asset");
       p = ServeAssetCompressed(a);
     } else {
       p = ServeAssetIdentity(a, ct);

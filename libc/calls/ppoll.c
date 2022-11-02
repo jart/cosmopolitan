@@ -95,7 +95,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     rc = sys_poll_nt(fds, nfds, &millis, sigmask);
   }
 
-  STRACE("ppoll(%s, %'zu, %s, %s) → %d% lm\n", DescribePollFds(rc, fds, nfds),
+  STRACE("ppoll(%s, %'zu, %s, %s) → %d% lm", DescribePollFds(rc, fds, nfds),
          nfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask), rc);
   return rc;
 }
