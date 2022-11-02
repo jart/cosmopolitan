@@ -30,7 +30,7 @@
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
-STATIC_YOINK(APE_COM_URI);
+STATIC_YOINK(APE_COM_NAME);
 
 static uint64_t __zipos_get_min_offset(const uint8_t *base,
                                        const uint8_t *cdir) {

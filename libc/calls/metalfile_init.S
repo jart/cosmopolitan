@@ -34,5 +34,5 @@
 	pop	%rsi
 	pop	%rdi
 	.init.end 101,_init_metalfile
-APE_COM_URI:
-	.endobj	APE_COM_URI,globl,hidden
+APE_COM_NAME:
+	.endobj	APE_COM_NAME,globl,hidden

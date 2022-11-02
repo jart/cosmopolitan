@@ -38,8 +38,7 @@
 int sys_openat_metal(int dirfd, const char *file, int flags, unsigned mode) {
   int fd;
   struct MetalFile *state;
-  if (dirfd != AT_FDCWD || (strcmp(file, APE_COM_NAME) &&
-                            strcmp(file, APE_COM_ALT_NAME))) return enoent();
+  if (dirfd != AT_FDCWD || strcmp(file, APE_COM_NAME)) return enoent();
   if (flags != O_RDONLY) return eacces();
   if (!_weaken(__ape_com_base) || !_weaken(__ape_com_size))
     return eopnotsupp();
