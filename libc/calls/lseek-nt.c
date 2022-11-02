@@ -34,6 +34,8 @@ textwindows int64_t sys_lseek_nt(int fd, int64_t offset, int whence) {
     } else {
       return espipe();
     }
+  } else if (__isfdkind(fd, kFdSocket)) {
+    return espipe();
   } else {
     return ebadf();
   }

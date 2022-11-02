@@ -320,7 +320,7 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
       // O_DSYNC / O_RSYNC / O_SYNC maybe if we fsync() everything
       // O_DIRECT | O_RANDOM | O_SEQUENTIAL | O_NDELAY possible but
       // not worth it.
-      rc = einval();
+      rc = enosys();
     } else if (cmd == F_GETFD) {
       if (g_fds.p[fd].flags & O_CLOEXEC) {
         rc = FD_CLOEXEC;
@@ -330,11 +330,10 @@ textwindows int sys_fcntl_nt(int fd, int cmd, uintptr_t arg) {
     } else if (cmd == F_SETFD) {
       if (arg & FD_CLOEXEC) {
         g_fds.p[fd].flags |= O_CLOEXEC;
-        rc = FD_CLOEXEC;
       } else {
         g_fds.p[fd].flags &= ~O_CLOEXEC;
-        rc = 0;
       }
+      rc = 0;
     } else if (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK) {
       pthread_mutex_lock(&g_locks.mu);
       rc = sys_fcntl_nt_lock(g_fds.p + fd, fd, cmd, arg);
