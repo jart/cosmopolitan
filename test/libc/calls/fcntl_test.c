@@ -87,6 +87,10 @@ TEST(fcntl, getfd) {
   ASSERT_SYS(0, 0, fcntl(3, F_GETFD));
   ASSERT_SYS(0, 4, open("/dev/null", O_RDWR | O_CLOEXEC));
   ASSERT_SYS(0, FD_CLOEXEC, fcntl(4, F_GETFD));
+  ASSERT_SYS(0, 0, fcntl(4, F_SETFD, FD_CLOEXEC));
+  ASSERT_SYS(0, FD_CLOEXEC, fcntl(4, F_GETFD));
+  ASSERT_SYS(0, 0, fcntl(4, F_SETFD, 0));
+  ASSERT_SYS(0, 0, fcntl(4, F_GETFD));
   ASSERT_SYS(0, 0, close(4));
   ASSERT_SYS(0, 0, close(3));
 }

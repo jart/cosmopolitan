@@ -29,6 +29,7 @@ extern unsigned char _tls_size[];
 extern unsigned char _tls_content[];
 
 void _init(void) hidden;
+bool __is_wsl(void);
 void __morph_tls(void);
 void __enable_tls(void);
 void __enable_threads(void) hidden;

@@ -24,6 +24,7 @@
 #include "libc/limits.h"
 #include "libc/mem/gc.internal.h"
 #include "libc/mem/mem.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -125,7 +126,10 @@ TEST(sendfile, testPositioning) {
     ASSERT_EQ(-1, sendfile(4, 5, 0, 6));
     ASSERT_TRUE(errno == EINVAL || errno == EPIPE);
     errno = 0;
-    ASSERT_EQ(12, GetFileOffset(5));
+    // XXX: WSL clobbers file offset on failure!
+    if (!__is_wsl()) {
+      ASSERT_EQ(12, GetFileOffset(5));
+    }
     _Exit(0);
   }
   ASSERT_SYS(0, 0, close(3));
