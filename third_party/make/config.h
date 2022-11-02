@@ -2,7 +2,7 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 #include "libc/calls/calls.h"
 
-#define LANDLOCKMAKE_VERSION "1.4"
+#define LANDLOCKMAKE_VERSION "1.5"
 
 /* Define to the number of bits in type 'ptrdiff_t'. */
 #define BITSIZEOF_PTRDIFF_T 64
