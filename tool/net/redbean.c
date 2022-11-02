@@ -6180,7 +6180,9 @@ static char *SetStatus(unsigned code, const char *reason) {
   }
   cpm.statuscode = code;
   cpm.hascontenttype = false;
-  cpm.istext = false;  // reset, as the headers are reset
+  // reset, as the headers are reset
+  // istext is -1 by default to interpret as true when not set
+  cpm.istext = -1;
   cpm.gotxcontenttypeoptions = 0;
   cpm.gotcachecontrol = 0;
   cpm.referrerpolicy = 0;
