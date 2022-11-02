@@ -23,7 +23,6 @@
 
 privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
-  ctx->uc_flags = cr->EFlags;
   ctx->uc_mcontext.eflags = cr->EFlags;
   ctx->uc_mcontext.rax = cr->Rax;
   ctx->uc_mcontext.rbx = cr->Rbx;
@@ -51,7 +50,6 @@ privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
 
 privileged void _ntlinux2context(struct NtContext *cr, const ucontext_t *ctx) {
   if (!cr) return;
-  cr->EFlags = ctx->uc_flags;
   cr->EFlags = ctx->uc_mcontext.eflags;
   cr->Rax = ctx->uc_mcontext.rax;
   cr->Rbx = ctx->uc_mcontext.rbx;

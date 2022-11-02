@@ -60,7 +60,7 @@
 #   build/config.mk
 
 SHELL      = build/bootstrap/cocmd.com
-HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 win10 xnu
+HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10 win10:31338
 MAKEFLAGS += -j --no-builtin-rules
 
 .SUFFIXES:

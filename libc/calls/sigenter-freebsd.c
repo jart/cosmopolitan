@@ -51,7 +51,6 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       g.uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
-      g.uc.uc_flags = ctx->uc_flags;
       __repmovsb(&g.uc.uc_sigmask, &ctx->uc_sigmask,
                  MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
       g.uc.uc_mcontext.r8 = ctx->uc_mcontext.mc_r8;

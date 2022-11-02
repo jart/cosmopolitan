@@ -25,9 +25,11 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nexgen32e/nexgen32e.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/sysv/consts/uc.h"
 #include "libc/testlib/testlib.h"
 #include "third_party/xed/x86.h"
 
@@ -196,6 +198,8 @@ TEST(sigaction, autoZombieSlayer) {
   // verify it works
   ASSERT_NE(-1, (pid = fork()));
   if (!pid) _Exit(0);
+  // XXX: WSL does the wrong thing here.
+  if (__is_wsl()) usleep(10);
   ASSERT_SYS(ECHILD, -1, wait(0));
   // clean up
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));

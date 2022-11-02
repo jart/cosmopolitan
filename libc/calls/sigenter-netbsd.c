@@ -47,7 +47,6 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       __repstosb(&uc, 0, sizeof(uc));
       __siginfo2cosmo(&si2, (void *)si);
       uc.uc_mcontext.fpregs = &uc.__fpustate;
-      uc.uc_flags = ctx->uc_flags;
       uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;

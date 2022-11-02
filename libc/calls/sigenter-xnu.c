@@ -471,7 +471,6 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
     } else {
       __repstosb(&g, 0, sizeof(g));
       if (xnuctx) {
-        g.uc.uc_flags = xnuctx->uc_onstack ? SA_ONSTACK : 0;
         g.uc.uc_sigmask.__bits[0] = xnuctx->uc_sigmask;
         g.uc.uc_sigmask.__bits[1] = 0;
         g.uc.uc_stack.ss_sp = xnuctx->uc_stack.ss_sp;

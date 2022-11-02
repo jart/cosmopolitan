@@ -72,7 +72,7 @@ struct MachineContext {
 typedef struct MachineContext mcontext_t;
 
 struct ucontext {
-  uint64_t uc_flags;
+  uint64_t uc_flags; /* don't use this */
   struct ucontext *uc_link;
   stack_t uc_stack;
   mcontext_t uc_mcontext; /* use this */
