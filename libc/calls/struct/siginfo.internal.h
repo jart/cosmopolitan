@@ -8,8 +8,6 @@
 COSMOPOLITAN_C_START_
 
 int sys_sigqueueinfo(int, const siginfo_t *) hidden;
-void __sigenter_xnu(void *, int, int, struct siginfo_xnu *,
-                    struct __darwin_ucontext *) hidden;
 
 const char *DescribeSiginfo(char[300], int, const siginfo_t *);
 #define DescribeSiginfo(x, y) DescribeSiginfo(alloca(300), x, y)

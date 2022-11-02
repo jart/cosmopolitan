@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon errno,EBADARCH,0,86,0,0,0,0
+.syscon errno,EBADARCH,313,86,313,313,313,216

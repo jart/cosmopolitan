@@ -85,9 +85,11 @@ union metasigaction {
   struct sigaction_xnu_out xnu_out;
 };
 
-void __sigenter_netbsd(int, void *, void *) hidden;
-void __sigenter_freebsd(int, void *, void *) hidden;
-void __sigenter_openbsd(int, void *, void *) hidden;
+void __sigenter_xnu(int, struct siginfo *, void *) hidden;
+void __sigenter_linux(int, struct siginfo *, void *) hidden;
+void __sigenter_netbsd(int, struct siginfo *, void *) hidden;
+void __sigenter_freebsd(int, struct siginfo *, void *) hidden;
+void __sigenter_openbsd(int, struct siginfo *, void *) hidden;
 
 static void sigaction_cosmo2native(union metasigaction *sa) {
   if (!sa) return;
@@ -156,6 +158,7 @@ static int __sigaction(int sig, const struct sigaction *act,
                  "sigaction cosmo abi needs tuning");
   int64_t arg4, arg5;
   int rc, rva, oldrva;
+  sigaction_f sigenter;
   struct sigaction *ap, copy;
   if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
   if (!(0 < sig && sig < NSIG)) return einval();
@@ -183,11 +186,7 @@ static int __sigaction(int sig, const struct sigaction *act,
       ap = &copy;
       if (IsXnu()) {
         ap->sa_restorer = (void *)&__sigenter_xnu;
-        if (rva < kSigactionMinRva) {
-          ap->sa_sigaction = (void *)(intptr_t)rva;
-        } else {
-          ap->sa_sigaction = (void *)&__sigenter_xnu;
-        }
+        sigenter = __sigenter_xnu;
         // mitigate Rosetta signal handling strangeness
         // https://github.com/jart/cosmopolitan/issues/455
         ap->sa_flags |= SA_SIGINFO;
@@ -196,26 +195,20 @@ static int __sigaction(int sig, const struct sigaction *act,
           ap->sa_flags |= SA_RESTORER;
           ap->sa_restorer = &__restore_rt;
         }
+        sigenter = __sigenter_linux;
       } else if (IsNetbsd()) {
-        if (rva < kSigactionMinRva) {
-          ap->sa_sigaction = (void *)(intptr_t)rva;
-        } else {
-          ap->sa_sigaction = (sigaction_f)__sigenter_netbsd;
-        }
+        sigenter = __sigenter_netbsd;
       } else if (IsFreebsd()) {
-        if (rva < kSigactionMinRva) {
-          ap->sa_sigaction = (void *)(intptr_t)rva;
-        } else {
-          ap->sa_sigaction = (sigaction_f)__sigenter_freebsd;
-        }
+        sigenter = __sigenter_freebsd;
       } else if (IsOpenbsd()) {
-        if (rva < kSigactionMinRva) {
-          ap->sa_sigaction = (void *)(intptr_t)rva;
-        } else {
-          ap->sa_sigaction = (sigaction_f)__sigenter_openbsd;
-        }
+        sigenter = __sigenter_openbsd;
       } else {
         return enosys();
+      }
+      if (rva < kSigactionMinRva) {
+        ap->sa_sigaction = (void *)(intptr_t)rva;
+      } else {
+        ap->sa_sigaction = sigenter;
       }
       sigaction_cosmo2native((union metasigaction *)ap);
     } else {
@@ -468,7 +461,6 @@ static int __sigaction(int sig, const struct sigaction *act,
  * @return 0 on success or -1 w/ errno
  * @see xsigaction() for a much better api
  * @asyncsignalsafe
- * @threadsafe
  * @vforksafe
  */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
@@ -476,11 +468,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oldact) {
   if (sig == SIGKILL || sig == SIGSTOP) {
     rc = einval();
   } else {
-    BLOCK_SIGNALS;
-    __sig_lock();
     rc = __sigaction(sig, act, oldact);
-    __sig_unlock();
-    ALLOW_SIGNALS;
   }
   STRACE("sigaction(%G, %s, [%s]) → %d% m", sig, DescribeSigaction(0, act),
          DescribeSigaction(rc, oldact), rc);

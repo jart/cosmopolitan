@@ -41,8 +41,10 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/thread/tls.h"
+#include "third_party/libcxx/math.h"
 
 /**
  * @fileoverview Abnormal termination handling & GUI debugging.
@@ -135,16 +137,24 @@ relegated static char *ShowGeneralRegisters(char *p, ucontext_t *ctx) {
       j = 0;
       if (ctx->uc_mcontext.fpregs) {
         memcpy(&st, (char *)&ctx->uc_mcontext.fpregs->st[k], sizeof(st));
-      } else {
-        bzero(&st, sizeof(st));
+        p = stpcpy(p, " ST(");
+        p = FormatUint64(p, k++);
+        p = stpcpy(p, ") ");
+        if (signbit(st)) {
+          st = -st;
+          *p++ = '-';
+        }
+        if (isnan(st)) {
+          p = stpcpy(p, "nan");
+        } else if (isinf(st)) {
+          p = stpcpy(p, "inf");
+        } else {
+          if (st > 999.999) st = 999.999;
+          x = st * 1000;
+          p = FormatUint64(p, x / 1000), *p++ = '.';
+          p = FormatUint64(p, x % 1000);
+        }
       }
-      p = stpcpy(p, " ST(");
-      p = FormatUint64(p, k++);
-      p = stpcpy(p, ") ");
-      x = st * 1000;
-      if (x < 0) x = -x, *p++ = '-';
-      p = FormatUint64(p, x / 1000), *p++ = '.';
-      p = FormatUint64(p, x % 1000);
       *p++ = '\n';
     }
   }

@@ -326,7 +326,7 @@ TEST(ShowCrashReports, testDivideByZero) {
       __die();
     }
     // XXX: WSL doesn't save and restore x87 registers to ucontext_t
-    if (!__is_wsl()) {
+    if (!IsWsl1()) {
       if (!strstr(output, "3.141")) {
         fprintf(stderr, "ERROR: crash report didn't have fpu register\n%s\n",
                 _gc(IndentLines(output, -1, 0, 4)));

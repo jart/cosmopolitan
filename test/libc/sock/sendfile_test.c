@@ -126,8 +126,8 @@ TEST(sendfile, testPositioning) {
     ASSERT_EQ(-1, sendfile(4, 5, 0, 6));
     ASSERT_TRUE(errno == EINVAL || errno == EPIPE);
     errno = 0;
-    // XXX: WSL clobbers file offset on failure!
-    if (!__is_wsl()) {
+    // XXX: WSL1 clobbers file offset on failure!
+    if (!IsWsl1()) {
       ASSERT_EQ(12, GetFileOffset(5));
     }
     _Exit(0);

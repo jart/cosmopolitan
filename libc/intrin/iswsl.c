@@ -16,34 +16,31 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
-#include "libc/runtime/internal.h"
+#include "libc/intrin/likely.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-#define MAP_GROWSDOWN_linux 0x00000100
-#define MAP_ANONYMOUS_linux 0x00000020
+#define GROWSDOWN 0x00000100
+#define ANONYMOUS 0x00000020
 
 /**
- * Returns true if host platform is WSL.
+ * Returns true if host platform is WSL 1.0.
  */
-bool __is_wsl(void) {
-  int e;
-  void *p;
-  bool res;
-  if (!IsLinux()) return false;
-  e = errno;
-  p = __sys_mmap(0, 4096, PROT_READ | PROT_WRITE,
-                 MAP_PRIVATE | MAP_ANONYMOUS_linux | MAP_GROWSDOWN_linux, -1, 0,
-                 0);
-  if (p != MAP_FAILED) {
-    __sys_munmap(p, 4096);
-    return false;
-  }
-  res = errno == ENOTSUP;
+bool IsWsl1(void) {
+  static char res;
+  if (res) return res & 1;
+  if (!IsLinux()) return res = 2, false;
+  int e = errno;
+  _unassert(__sys_mmap((void *)1, 4096, PROT_READ | PROT_WRITE,
+                       MAP_FIXED | MAP_PRIVATE | ANONYMOUS | GROWSDOWN, -1, 0,
+                       0) == MAP_FAILED);
+  bool tmp = errno == ENOTSUP;
   errno = e;
-  return res;
+  res = 2 | tmp;
+  return tmp;
 }

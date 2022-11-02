@@ -22,6 +22,7 @@
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/version.h"
+#include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -165,7 +166,8 @@ TEST(unix, serverGoesDown_usingSendTo_unlink) {  // much easier
   ASSERT_SYS(0, 5, sendto(4, "hello", 5, 0, (void *)&addr, len));
   ASSERT_SYS(0, 5, read(3, buf, 8));
   ASSERT_SYS(0, 0, close(3));
-  ASSERT_SYS(ECONNREFUSED, -1, sendto(4, "hello", 5, 0, (void *)&addr, len));
+  ASSERT_SYS(IsWsl1() ? ENOTCONN : ECONNREFUSED, -1,
+             sendto(4, "hello", 5, 0, (void *)&addr, len));
   ASSERT_SYS(0, 0, unlink(addr.sun_path));
   ASSERT_SYS(ENOENT, -1, sendto(4, "hello", 5, 0, (void *)&addr, len));
   ASSERT_SYS(0, 3, socket(AF_UNIX, SOCK_DGRAM, 0));

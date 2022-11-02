@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon errno,ENEEDAUTH,0,81,81,81,81,0
+.syscon errno,ENEEDAUTH,307,81,81,81,81,224

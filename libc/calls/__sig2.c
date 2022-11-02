@@ -108,7 +108,6 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
   STRACE("delivering %G", sig);
 
   // enter the signal
-  __sig_lock();
   rva = __sighandrvas[sig];
   flags = __sighandflags[sig];
   if ((~flags & SA_NODEFER) || (flags & SA_RESETHAND)) {
@@ -119,7 +118,6 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
     // signal handler. in that case you must use SA_NODEFER.
     __sighandrvas[sig] = (int32_t)(intptr_t)SIG_DFL;
   }
-  __sig_unlock();
 
   // setup the somewhat expensive information args
   // only if they're requested by the user in sigaction()
@@ -141,11 +139,9 @@ static bool __sig_deliver(bool restartable, int sig, int si_code,
     // since sigaction() is @asyncsignalsafe we only restore it if the
     // user didn't change it during the signal handler. we also don't
     // need to do anything if this was a oneshot signal or nodefer.
-    __sig_lock();
     if (__sighandrvas[sig] == (int32_t)(intptr_t)SIG_DFL) {
       __sighandrvas[sig] = rva;
     }
-    __sig_unlock();
   }
 
   if (!restartable) {
@@ -228,12 +224,12 @@ textwindows int __sig_add(int tid, int sig, int si_code) {
   int rc;
   struct Signal *mem;
   if (1 <= sig && sig <= 64) {
-    __sig_lock();
     if (__sighandrvas[sig] == (unsigned)(intptr_t)SIG_IGN) {
       STRACE("ignoring %G", sig);
       rc = 0;
     } else {
       STRACE("enqueuing %G", sig);
+      __sig_lock();
       ++__sig_count;
       if ((mem = __sig_alloc())) {
         mem->tid = tid;
@@ -245,8 +241,8 @@ textwindows int __sig_add(int tid, int sig, int si_code) {
       } else {
         rc = enomem();
       }
+      __sig_unlock();
     }
-    __sig_unlock();
   } else {
     rc = einval();
   }

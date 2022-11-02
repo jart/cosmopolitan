@@ -90,7 +90,7 @@
 #define kNtErrorDiskFull 112 /* ENOSPC */
 #define kNtErrorNoMoreSearchHandles 113
 #define kNtErrorInvalidTargetHandle 114 /* EBADF */
-#define kNtErrorInvalidCategory 117
+#define kNtErrorInvalidCategory 117 /* ENOATTR */
 #define kNtErrorInvalidVerifySwitch 118
 #define kNtErrorBadDriverLevel 119
 #define kNtErrorCallNotImplemented 120
@@ -151,7 +151,7 @@
 #define kNtErrorInvalidStackseg 189
 #define kNtErrorInvalidModuletype 190
 #define kNtErrorInvalidExeSignature 191
-#define kNtErrorExeMarkedInvalid 192
+#define kNtErrorExeMarkedInvalid 192 /* EBADEXEC */
 #define kNtErrorBadExeFormat 193 /* ENOEXEC */
 #define kNtErrorIteratedDataExceeds_64k 194
 #define kNtErrorInvalidMinallocsize 195
@@ -172,14 +172,14 @@
 #define kNtErrorLocked 212
 #define kNtErrorTooManyModules 214
 #define kNtErrorNestingNotAllowed 215
-#define kNtErrorExeMachineTypeMismatch 216
+#define kNtErrorExeMachineTypeMismatch 216 /* EBADARCH */
 #define kNtErrorExeCannotModifySignedBinary 217
 #define kNtErrorExeCannotModifyStrongSignedBinary 218
 #define kNtErrorFileCheckedOut 220
 #define kNtErrorCheckoutRequired 221
-#define kNtErrorBadFileType 222
+#define kNtErrorBadFileType 222 /* EFTYPE */
 #define kNtErrorFileTooLarge 223 /* EFBIG */
-#define kNtErrorFormsAuthRequired 224
+#define kNtErrorFormsAuthRequired 224 /* ENEEDAUTH */
 #define kNtErrorVirusInfected 225
 #define kNtErrorVirusDeleted 226
 #define kNtErrorPipeLocal 229
@@ -231,7 +231,7 @@
 #define kNtErrorFileLevelTrimNotSupported 326
 #define kNtErrorOffsetAlignmentViolation 327
 #define kNtErrorInvalidFieldInParameterList 328
-#define kNtErrorOperationInProgress 329
+#define kNtErrorOperationInProgress 329 /* EPROGUNAVAIL */
 #define kNtErrorBadDevicePath 330
 #define kNtErrorTooManyDescriptors 331 /* ENFILE */
 #define kNtErrorScrubDataDisabled 332
@@ -331,7 +331,7 @@
 #define kNtErrorPnpQueryRemoveDeviceTimeout 480
 #define kNtErrorPnpQueryRemoveRelatedDeviceTimeout 481
 #define kNtErrorPnpQueryRemoveUnrelatedDeviceTimeout 482
-#define kNtErrorDeviceHardwareError 483
+#define kNtErrorDeviceHardwareError 483 /* EDEVERR */
 #define kNtErrorInvalidAddress 487 /* EFAULT */
 #define kNtErrorVrfCfgEnabled 1183
 #define kNtErrorPartitionTerminating 1184
@@ -396,7 +396,7 @@
 #define kNtErrorDataNotAccepted 592
 #define kNtErrorVdmHardError 593
 #define kNtErrorDriverCancelTimeout 594
-#define kNtErrorReplyMessageMismatch 595
+#define kNtErrorReplyMessageMismatch 595 /* EPROGMISMATCH */
 #define kNtErrorLostWritebehindData 596
 #define kNtErrorClientServerParametersInvalid 597
 #define kNtErrorNotTinyStream 598
@@ -440,7 +440,7 @@
 #define kNtErrorPnpRestartEnumeration 636
 #define kNtErrorSystemImageBadSignature 637
 #define kNtErrorPnpRebootRequired 638
-#define kNtErrorInsufficientPower 639
+#define kNtErrorInsufficientPower 639 /* EPWROFF */
 #define kNtErrorMultipleFaultViolation 640
 #define kNtErrorSystemShutdown 641
 #define kNtErrorPortNotSet 642
@@ -771,7 +771,7 @@
 #define kNtErrorConnectionActive 1230
 #define kNtErrorNetworkUnreachable 1231
 #define kNtErrorHostUnreachable 1232
-#define kNtErrorProtocolUnreachable 1233
+#define kNtErrorProtocolUnreachable 1233 /* multimapped to ENETUNREACH */
 #define kNtErrorPortUnreachable 1234
 #define kNtErrorRequestAborted 1235
 #define kNtErrorConnectionAborted 1236
@@ -782,7 +782,7 @@
 #define kNtErrorIncorrectAddress 1241
 #define kNtErrorAlreadyRegistered 1242
 #define kNtErrorServiceNotFound 1243
-#define kNtErrorNotAuthenticated 1244
+#define kNtErrorNotAuthenticated 1244 /* EAUTH */
 #define kNtErrorNotLoggedOn 1245
 #define kNtErrorContinue 1246
 #define kNtErrorAlreadyInitialized 1247
@@ -820,7 +820,7 @@
 #define kNtErrorDebuggerInactive 1284
 #define kNtErrorDelayLoadFailed 1285
 #define kNtErrorVdmDisallowed 1286
-#define kNtErrorUnidentifiedError 1287
+#define kNtErrorUnidentifiedError 1287 /* EIDRM */
 #define kNtErrorInvalidCruntimeParameter 1288
 #define kNtErrorBeyondVdl 1289
 #define kNtErrorIncompatibleServiceSidType 1290
@@ -1038,8 +1038,8 @@
 #define kNtErrorInstallLanguageUnsupported 1623
 #define kNtErrorInstallTransformFailure 1624
 #define kNtErrorInstallPackageRejected 1625
-#define kNtErrorFunctionNotCalled 1626
-#define kNtErrorFunctionFailed 1627
+#define kNtErrorFunctionNotCalled 1626 /* EBADRPC */
+#define kNtErrorFunctionFailed 1627 /* ERPCMISMATCH */
 #define kNtErrorInvalidTable 1628
 #define kNtErrorDatatypeMismatch 1629
 #define kNtErrorUnsupportedType 1630
@@ -1707,7 +1707,7 @@
 #define kNtErrorCtxSessionInUse 7062
 #define kNtErrorCtxNoForceLogoff 7063
 #define kNtErrorCtxAccountRestriction 7064
-#define kNtErrorRdpProtocolError 7065
+#define kNtErrorRdpProtocolError 7065 /* EPROTO */
 #define kNtErrorCtxCdmConnect 7066
 #define kNtErrorCtxCdmDisconnect 7067
 #define kNtErrorCtxSecurityLayerError 7068
@@ -2566,7 +2566,7 @@
 #define kNtErrorStateSettingValueSizeLimitExceeded 15816
 #define kNtErrorStateSettingNameSizeLimitExceeded 15817
 #define kNtErrorStateContainerNameSizeLimitExceeded 15818
-#define kNtErrorApiUnavailable 15841
+#define kNtErrorApiUnavailable 15841 /* EPROCUNAVAIL */
 
 #define kNtWaitIoCompletion 0xc0
 

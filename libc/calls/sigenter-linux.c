@@ -16,54 +16,33 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
+#include "ape/sections.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
-#include "libc/calls/syscall_support-nt.internal.h"
-#include "libc/dce.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/nt/enum/wait.h"
-#include "libc/nt/runtime.h"
-#include "libc/nt/synchronization.h"
+#include "libc/calls/ucontext.h"
+#include "libc/intrin/likely.h"
+#include "libc/math.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sicode.h"
-#include "libc/sysv/consts/sig.h"
 
-/**
- * Checks to see if SIGCHLD should be raised on Windows.
- * @return true if a signal was raised
- * @note yoinked by fork-nt.c
- */
-void _check_sigchld(void) {
-  siginfo_t si;
-  int pids[64];
-  uint32_t i, n;
-  int64_t handles[64];
-  __fds_lock();
-  n = __sample_pids(pids, handles, true);
-  __fds_unlock();
-  if (!n) return;
-  i = WaitForMultipleObjects(n, handles, false, 0);
-  if (i == kNtWaitTimeout) return;
-  if (i == kNtWaitFailed) {
-    NTTRACE("%s failed %u", "WaitForMultipleObjects", GetLastError());
-    return;
+privileged void __sigenter_linux(int sig, struct siginfo *info,
+                                 ucontext_t *ctx) {
+  int i, rva, flags;
+  rva = __sighandrvas[sig & (NSIG - 1)];
+  if (rva >= kSigactionMinRva) {
+    flags = __sighandflags[sig & (NSIG - 1)];
+    // WSL1 doesn't set the fpregs field.
+    // https://github.com/microsoft/WSL/issues/2555
+    if ((flags & SA_SIGINFO) && UNLIKELY(!ctx->uc_mcontext.fpregs)) {
+      ctx->uc_mcontext.fpregs = &ctx->__fpustate;
+      for (i = 0; i < 8; ++i) {
+        long double nan = NAN;
+        memcpy(ctx->__fpustate.st + i, &nan, 16);
+      }
+    }
+    ((sigaction_f)(_base + rva))(sig, info, ctx);
   }
-  if (__sighandrvas[SIGCHLD] == (intptr_t)SIG_IGN ||
-      __sighandrvas[SIGCHLD] == (intptr_t)SIG_DFL) {
-    NTTRACE("new zombie fd=%d handle=%ld", pids[i], handles[i]);
-    return;
-  }
-  if (__sighandflags[SIGCHLD] & SA_NOCLDWAIT) {
-    NTTRACE("SIGCHILD SA_NOCLDWAIT fd=%d handle=%ld", pids[i], handles[i]);
-    CloseHandle(handles[i]);
-    __releasefd(pids[i]);
-  }
-  __fds_lock();
-  g_fds.p[pids[i]].zombie = true;
-  __fds_unlock();
-  __sig_add(0, SIGCHLD, CLD_EXITED);
 }

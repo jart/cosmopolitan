@@ -246,11 +246,15 @@ gdb foo.com -ex 'add-symbol-file foo.com.dbg 0x401000'
 | AMD             | K8 Venus    | 2005  |
 | Intel           | Core        | 2006  |
 | Linux           | 2.6.18      | 2007  |
-| Windows         | 8           | 2012  |
+| Windows         | 8 [1]       | 2012  |
 | Mac OS X        | 15.6        | 2018  |
 | OpenBSD         | 6.4         | 2018  |
 | FreeBSD         | 13          | 2020  |
 | NetBSD          | 9.2         | 2021  |
+
+[1] See our [vista branch](https://github.com/jart/cosmopolitan/tree/vista)
+    for a community supported version of Cosmopolitan that works on Windows
+    Vista and Windows 7.
 
 ## Special Thanks
 

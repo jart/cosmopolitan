@@ -51,6 +51,6 @@ int connect(int fd, const struct sockaddr *addr, uint32_t addrsize) {
   } else {
     rc = efault();
   }
-  STRACE("connect(%d, %s) -> %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
+  STRACE("connect(%d, %s) → %d% lm", fd, DescribeSockaddr(addr, addrsize), rc);
   return rc;
 }

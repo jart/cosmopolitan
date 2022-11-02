@@ -65,8 +65,8 @@ syscon	errno	ENOLCK					37			77			77			77			77			158			# no locks available; kNt
 syscon	errno	ENOTEMPTY				39			66			66			66			66			145			# directory not empty; bsd consensus; kNtErrorDirNotEmpty (TODO: What is WSAENOTEMPTY? 10066); raised by rmdir(2)
 syscon	errno	ELOOP					40			62			62			62			62			1921			# too many levels of symbolic links; bsd consensus; kNtErrorCantResolveFilename; raised by access(2), acct(2), bind(2), chdir(2), chmod(2), chown(2), chroot(2), epoll_ctl(2), execve(2), execveat(2), keyctl(2), link(2), mkdir(2), mknod(2), mount(2), open(2), open_by_handle_at(2), openat2(2), readlink(2), rename(2), rmdir(2), spu_create(2), stat(2), statfs(2), statx(2), symlink(2), truncate(2), unlink(2), utimensat(2)
 syscon	errno	ENOMSG					42			91			83			90			83			4306			# kNtErrorEmpty; raised by msgop(2)
-syscon	errno	EIDRM					43			90			82			89			82			0			# identifier removed; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
-syscon	errno	EPROTO					71			100			92			95			96			0			# raised by accept(2), connect(2), socket(2), socketpair(2)
+syscon	errno	EIDRM					43			90			82			89			82			1287			# identifier removed; kNtErrorUnidentifiedError; raised by msgctl(2), msgget(2), msgop(2), semctl(2), semop(2), shmctl(2), shmget(2), shmop(2)
+syscon	errno	EPROTO					71			100			92			95			96			7065			# Protocol error; kNtErrorRdpProtocolError; raised by accept(2), connect(2), socket(2), socketpair(2)
 syscon	errno	EOVERFLOW				75			84			84			87			84			534			# kNtErrorArithmeticOverflow; raised by aio_read(2), copy_file_range(2), ctime(2), fanotify_init(2), lseek(2), mmap(2), open(2), open_by_handle_at(2), sem_post(2), sendfile(2), shmctl(2), stat(2), statfs(2), statvfs(2), time(2), timegm(2)
 syscon	errno	EILSEQ					84			92			86			84			85			582			# kNtErrorIllegalCharacter; returned by fgetwc(3), fputwc(3), getwchar(3), putwchar(3), scanf(3), ungetwc(3)
 syscon	errno	EUSERS					87			68			68			68			68			10068			# too many users; bsd consensus; WSAEUSERS; raised by acct(2)
@@ -102,28 +102,28 @@ syscon	errno	EALREADY				114			37			37			37			37			10037			# connection already 
 syscon	errno	EINPROGRESS				115			36			36			36			36			10036			# bsd consensus; WSAEINPROGRESS; raised by connect(2) w/ O_NONBLOCK
 syscon	errno	ESTALE					116			70			70			70			70			10070			# bsd consensus; WSAESTALE; raised by open_by_handle_at(2)
 syscon	errno	EREMOTE					66			71			71			71			71			10071			# bsd consensus
-syscon	errno	EBADRPC					0			72			72			72			72			0			# bsd consensus
-syscon	errno	ERPCMISMATCH				0			73			73			73			73			0			# bsd consensus
-syscon	errno	EPROGUNAVAIL				0			74			74			74			74			0			# bsd consensus
-syscon	errno	EPROGMISMATCH				0			75			75			75			75			0			# bsd consensus
-syscon	errno	EPROCUNAVAIL				0			76			76			76			76			0			# bsd consensus
-syscon	errno	EFTYPE					0			79			79			79			79			0			# bsd consensus
-syscon	errno	EAUTH					0			80			80			80			80			0			# bsd consensus
-syscon	errno	ENEEDAUTH				0			81			81			81			81			0			# bsd consensus
-syscon	errno	EPROCLIM				0			67			67			67			67			10067			# bsd consensus
-syscon	errno	ENOATTR					0			93			87			83			93			0			#
-syscon	errno	EPWROFF					0			82			0			0			0			0			#
-syscon	errno	EDEVERR					0			83			0			0			0			0			#
-syscon	errno	EBADEXEC				0			85			0			0			0			0			#
-syscon	errno	EBADARCH				0			86			0			0			0			0			#
-syscon	errno	ESHLIBVERS				0			87			0			0			0			0			# shiver me timbers
-syscon	errno	EBADMACHO				0			88			0			0			0			0			#
-syscon	errno	ENOPOLICY				0			103			0			0			0			0			#
+syscon	errno	EBADRPC					300			72			72			72			72			1626			# kNtErrorFunctionNotCalled; bsd consensus; made up on linux
+syscon	errno	ERPCMISMATCH				301			73			73			73			73			1627			# kNtErrorFunctionFailed; bsd consensus; made up on linux
+syscon	errno	EPROGUNAVAIL				302			74			74			74			74			329			# kNtErrorOperationInProgress; bsd consensus; made up on linux
+syscon	errno	EPROGMISMATCH				303			75			75			75			75			595			# kNtErrorReplyMessageMismatch; bsd consensus; made up on linux
+syscon	errno	EPROCUNAVAIL				304			76			76			76			76			15841			# kNtErrorApiUnavailable; bsd consensus; made up on linux
+syscon	errno	EFTYPE					305			79			79			79			79			222			# Inappropriate file type or format; kNtErrorBadFileType; bsd consensus; made up on linux
+syscon	errno	EAUTH					306			80			80			80			80			1244			# Authentication error; kNtErrorNotAuthenticated; bsd consensus; made up on linux
+syscon	errno	ENEEDAUTH				307			81			81			81			81			224			# Need authenticator; kNtErrorFormsAuthRequired; bsd consensus; made up on linux
+syscon	errno	EPROCLIM				308			67			67			67			67			10067			# bsd consensus; made up on linux
+syscon	errno	ENOATTR					309			93			87			83			93			117			# Attribute not found; kNtErrorInvalidCategory; made up on linux
+syscon	errno	EPWROFF					310			82			310			310			310			639			# Intelligent device errors. Device power is off; kNtErrorInsufficientPower; made up on non-xnu
+syscon	errno	EDEVERR					311			83			311			311			311			483			# kNtErrorDeviceHardwareError; made up on non-xnu
+syscon	errno	EBADEXEC				312			85			312			312			312			192			# kNtErrorExeMarkedInvalid; made up on non-xnu
+syscon	errno	EBADARCH				313			86			313			313			313			216			# kNtErrorExeMachineTypeMismatch; made up on non-xnu
+syscon	errno	ESHLIBVERS				314			87			314			314			314			0			# shiver me timbers; made up on non-xnu
+syscon	errno	EBADMACHO				315			88			315			315			315			0			# made up on non-xnu
+syscon	errno	ENOPOLICY				316			103			316			316			316			0			# made up on non-xnu
 syscon	errno	EBADMSG					74			94			89			92			88			0			# raised by ioctl_getfsmap(2)
 syscon	errno	ECANCELED				125			89			85			88			87			1223			# kNtErrorCancelled; raised by timerfd_create(2)
 syscon	errno	EOWNERDEAD				130			105			96			94			97			105			# kNtErrorSemOwnerDied; raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
 syscon	errno	ENOTRECOVERABLE				131			104			95			93			98			0			# raised by pthread_cond_timedwait(3), pthread_mutex_consistent(3), pthread_mutex_getprioceiling(3), pthread_mutex_lock(3), pthread_mutex_timedlock(3), pthread_mutexattr_getrobust(3), pthread_mutexattr_setrobust(3)
-syscon	errno	ENONET					64			0			0			0			0			0			# unilateral; raised by accept(2)
+syscon	errno	ENONET					64			317			317			317			317			0			# made up on BSDs; raised by accept(2)
 syscon	errno	ERESTART				85			-1			-1			-1			-3			0			# should only be seen in ptrace()
 syscon	errno	ENODATA					61			96			0			0			89			232			# no message is available in xsi stream or named pipe is being closed; no data available; barely in posix; returned by ioctl; very close in spirit to EPIPE?
 syscon	errno	ENOSR					63			98			0			90			90			0			# out of streams resources; something like EAGAIN; it's in POSIX; maybe some commercial UNIX returns it with openat, putmsg, putpmsg, posix_openpt, ioctl, open

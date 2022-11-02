@@ -53,7 +53,8 @@ TEST(sbrk, underflowsEnd_returnsEinval) {
 }
 
 TEST(sbrk, giantDelta_returnsEnomem) {
-  if (IsXnu()) return;  // mmap polyfills this but brk doesn't right now
+  if (IsXnu()) return;   // mmap polyfills this but brk doesn't right now
+  if (IsWsl1()) return;  // WSL1 setrlimit() is busted
   SPAWN(fork);
   struct rlimit rl = {1024 * 1024, 1024 * 1024};
   ASSERT_SYS(0, 0, setrlimit(RLIMIT_AS, &rl));

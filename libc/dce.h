@@ -75,9 +75,11 @@
 #define SupportsFreebsd() ((SUPPORT_VECTOR & _HOSTFREEBSD) == _HOSTFREEBSD)
 #define SupportsOpenbsd() ((SUPPORT_VECTOR & _HOSTOPENBSD) == _HOSTOPENBSD)
 #define SupportsNetbsd()  ((SUPPORT_VECTOR & _HOSTNETBSD) == _HOSTNETBSD)
-#define SupportsBsd()     (!!(SUPPORT_VECTOR & (_HOSTXNU | _HOSTFREEBSD | _HOSTOPENBSD | _HOSTNETBSD)))
+#define SupportsBsd() \
+  (!!(SUPPORT_VECTOR & (_HOSTXNU | _HOSTFREEBSD | _HOSTOPENBSD | _HOSTNETBSD)))
 #define SupportsSystemv() \
-  (!!(SUPPORT_VECTOR & (_HOSTLINUX | _HOSTXNU | _HOSTOPENBSD | _HOSTFREEBSD | _HOSTNETBSD)))
+  (!!(SUPPORT_VECTOR &    \
+      (_HOSTLINUX | _HOSTXNU | _HOSTOPENBSD | _HOSTFREEBSD | _HOSTNETBSD)))
 
 #ifndef __ASSEMBLER__
 #define IsLinux()   (SupportsLinux() && (__hostos & _HOSTLINUX))
@@ -105,6 +107,8 @@
 COSMOPOLITAN_C_START_
 
 extern const int __hostos;
+
+bool IsWsl1(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

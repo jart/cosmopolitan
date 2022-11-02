@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon errno,ENOPOLICY,0,103,0,0,0,0
+.syscon errno,ENOPOLICY,316,103,316,316,316,0
