@@ -61,11 +61,11 @@ ssize_t getfiledescriptorsize(int fd) {
       rc = -1;
     }
   } else if (IsMetal()) {
-    if (fd < 0 || fd >= g_fds.n)
+    if (fd < 0 || fd >= g_fds.n) {
       rc = ebadf();
-    else if (g_fds.p[fd].kind != kFdFile)
+    } else if (g_fds.p[fd].kind != kFdFile) {
       rc = eacces();
-    else {
+    } else {
       struct MetalFile *state = (struct MetalFile *)g_fds.p[fd].handle;
       rc = state->size;
     }
