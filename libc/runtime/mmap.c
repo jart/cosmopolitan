@@ -380,16 +380,20 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
       // with 4kb guards like a sane multithreaded production system.
       // however this 1mb behavior oddly enough is smart enough to not
       // apply if the mapping is a manually-created guard page.
+      int e = errno;
       if ((dm = sys_mmap(p + size - PAGESIZE, PAGESIZE, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
-              .addr == MAP_FAILED) {
-        return MAP_FAILED;
+              .addr != MAP_FAILED) {
+        _npassert(sys_mmap(p, PAGESIZE, PROT_NONE,
+                           MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+                      .addr == p);
+        dm.addr = p;
+        return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
+      } else if (errno == ENOTSUP) {
+        // WSL doesn't support MAP_GROWSDOWN
+        needguard = true;
+        errno = e;
       }
-      _npassert(sys_mmap(p, PAGESIZE, PROT_NONE,
-                         MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
-                    .addr == p);
-      dm.addr = p;
-      return FinishMemory(p, size, prot, flags, fd, off, f, x, n, dm);
     } else {
       if (IsFreebsd()) {
         f |= MAP_STACK_freebsd;

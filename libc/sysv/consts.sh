@@ -77,7 +77,7 @@ syscon	errno	EPROTOTYPE				91			41			41			41			41			10041			# protocol wrong typ
 syscon	errno	ENOPROTOOPT				92			42			42			42			42			10042			# protocol not available; bsd consensus; WSAENOPROTOOPT; raised by getsockopt(2), accept(2), ip(7)
 syscon	errno	EPROTONOSUPPORT				93			43			43			43			43			10043			# protocol not supported; bsd consensus; WSAEPROTONOSUPPORT; raised by socket(2), socketpair(2), unix(7)
 syscon	errno	ESOCKTNOSUPPORT				94			44			44			44			44			10044			# socket type not supported; bsd consensus; WSAESOCKTNOSUPPORT; raised by unix(7), ip(7)
-syscon	errno	ENOTSUP					95			45			45			91			86			10045			# operation not supported; raised by chmod(2), clock_getres(2), clock_nanosleep(2), getxattr(2), listxattr(2), removexattr(2), setxattr(2), timer_create(2)
+syscon	errno	ENOTSUP					95			45			45			91			86			10045			# operation not supported; raised by chmod(2), clock_getres(2), clock_nanosleep(2), getxattr(2), listxattr(2), removexattr(2), setxattr(2), timer_create(2), mmap(2)
 syscon	errno	EOPNOTSUPP				95			102			45			45			45			10045			# socket operation not supported; raised by accept(2), fallocate(2), fanotify_mark(2), ioctl_ficlonerange(2), ioctl_fideduperange(2), ioctl_getfsmap(2), keyctl(2), listen(2), mmap(2), open_by_handle_at(2), pciconfig_read(2), perf_event_open(2), prctl(2), readv(2), s390_guarded_storage(2), s390_runtime_instr(2), s390_sthyi(2), send(2), socketpair(2), unix(7), ip(7)
 syscon	errno	EPFNOSUPPORT				96			46			46			46			46			10046			# protocol family not supported; bsd consensus; WSAEPFNOSUPPORT
 syscon	errno	EAFNOSUPPORT				97			47			47			47			47			10047			# address family not supported; bsd consensus; WSAEAFNOSUPPORT; raised by connect(2), socket(2), socketpair(2), tcp(7)

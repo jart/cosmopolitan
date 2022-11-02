@@ -76,6 +76,10 @@
 
 #define kIncludePrefix "include \""
 
+#define THREADS 1       // _getcpucount()
+#define LOCK    (void)  // if (__threaded) pthread_spin_lock
+#define UNLOCK  (void)  // pthread_spin_unlock
+
 const char kSourceExts[][5] = {".s", ".S", ".c", ".cc", ".cpp"};
 
 const char *const kIgnorePrefixes[] = {
@@ -118,20 +122,19 @@ struct Edges {
 };
 
 char *out;
-int threads;
 char **bouts;
+pthread_t *th;
 unsigned counter;
-struct spawn *th;
 struct GetArgs ga;
 struct Edges edges;
 struct Sauce *sauces;
 struct Strings strings;
 struct Sources sources;
 const char *buildroot;
-pthread_mutex_t galock;
-pthread_mutex_t readlock;
-pthread_mutex_t writelock;
-pthread_mutex_t reportlock;
+pthread_spinlock_t galock;
+pthread_spinlock_t readlock;
+pthread_spinlock_t writelock;
+pthread_spinlock_t reportlock;
 
 unsigned Hash(const void *s, size_t l) {
   return max(1, crc32c(0, s, l));
@@ -243,7 +246,7 @@ wontreturn void OnMissingFile(const char *list, const char *src) {
   exit(1);
 }
 
-int LoadRelationshipsWorker(void *arg, int tid) {
+void *LoadRelationshipsWorker(void *arg) {
   int fd;
   ssize_t rc;
   bool skipme;
@@ -255,18 +258,18 @@ int LoadRelationshipsWorker(void *arg, int tid) {
   const char *p, *pe, *src, *path, *pathend;
   inclen = strlen(kIncludePrefix);
   for (;;) {
-    pthread_mutex_lock(&galock);
+    LOCK(&galock);
     if ((src = getargs_next(&ga))) strcpy(srcbuf, src);
-    pthread_mutex_unlock(&galock);
+    UNLOCK(&galock);
     if (!src) break;
     src = srcbuf;
     if (ShouldSkipSource(src)) continue;
     n = strlen(src);
-    pthread_mutex_lock(&readlock);
+    LOCK(&readlock);
     srcid = GetSourceId(src, n);
-    pthread_mutex_unlock(&readlock);
+    UNLOCK(&readlock);
     if ((fd = open(src, O_RDONLY)) == -1) {
-      pthread_mutex_lock(&reportlock);
+      LOCK(&reportlock);
       OnMissingFile(ga.path, src);
     }
     CHECK_NE(-1, fstat(fd, &st));
@@ -279,14 +282,14 @@ int LoadRelationshipsWorker(void *arg, int tid) {
         if (pathend &&                          //
             (p[-1] == '#' || p[-1] == '.') &&   //
             (p - buf == 1 || p[-2] == '\n')) {  //
-          pthread_mutex_lock(&readlock);
+          LOCK(&readlock);
           dependency = GetSourceId(path, pathend - path);
-          pthread_mutex_unlock(&readlock);
+          UNLOCK(&readlock);
           edge.from = srcid;
           edge.to = dependency;
-          pthread_mutex_lock(&writelock);
+          LOCK(&writelock);
           append(&edges, &edge);
-          pthread_mutex_unlock(&writelock);
+          UNLOCK(&writelock);
           p = pathend;
         }
       }
@@ -300,15 +303,20 @@ int LoadRelationshipsWorker(void *arg, int tid) {
 void LoadRelationships(int argc, char *argv[]) {
   int i;
   getargs_init(&ga, argv + optind);
-  for (i = 0; i < threads; ++i) {
-    if (_spawn(LoadRelationshipsWorker, (void *)(intptr_t)i, th + i) == -1) {
-      pthread_mutex_lock(&reportlock);
-      kprintf("error: _spawn(%d) failed %m\n", i);
-      exit(1);
+  if (THREADS == 1) {
+    LoadRelationshipsWorker((void *)(intptr_t)0);
+  } else {
+    for (i = 0; i < THREADS; ++i) {
+      if (pthread_create(th + i, 0, LoadRelationshipsWorker,
+                         (void *)(intptr_t)i)) {
+        LOCK(&reportlock);
+        kprintf("error: _spawn(%d) failed %m\n", i);
+        exit(1);
+      }
     }
-  }
-  for (i = 0; i < threads; ++i) {
-    _join(th + i);
+    for (i = 0; i < THREADS; ++i) {
+      pthread_join(th[i], 0);
+    }
   }
   getargs_destroy(&ga);
 }
@@ -375,7 +383,7 @@ void Dive(char **bout, uint32_t *visited, unsigned id) {
   }
 }
 
-int Diver(void *arg, int tid) {
+void *Diver(void *arg) {
   char *bout = 0;
   const char *path;
   uint32_t *visited;
@@ -385,7 +393,7 @@ int Diver(void *arg, int tid) {
   visilen = (sources.i + sizeof(*visited) * CHAR_BIT - 1) /
             (sizeof(*visited) * CHAR_BIT);
   visited = malloc(visilen * sizeof(*visited));
-  for (i = x; i < sources.i; i += threads) {
+  for (i = x; i < sources.i; i += THREADS) {
     path = strings.p + sauces[i].name;
     if (!IsObjectSource(path)) continue;
     appendw(&bout, '\n');
@@ -408,15 +416,19 @@ int Diver(void *arg, int tid) {
 
 void Explore(void) {
   int i;
-  for (i = 0; i < threads; ++i) {
-    if (_spawn(Diver, (void *)(intptr_t)i, th + i) == -1) {
-      pthread_mutex_lock(&reportlock);
-      kprintf("error: _spawn(%d) failed %m\n", i);
-      exit(1);
+  if (THREADS == 1) {
+    Diver((void *)(intptr_t)0);
+  } else {
+    for (i = 0; i < THREADS; ++i) {
+      if (pthread_create(th + i, 0, Diver, (void *)(intptr_t)i)) {
+        LOCK(&reportlock);
+        kprintf("error: _spawn(%d) failed %m\n", i);
+        exit(1);
+      }
     }
-  }
-  for (i = 0; i < threads; ++i) {
-    _join(th + i);
+    for (i = 0; i < THREADS; ++i) {
+      pthread_join(th[i], 0);
+    }
   }
 }
 
@@ -425,19 +437,18 @@ int main(int argc, char *argv[]) {
   ShowCrashReports();
   if (argc == 2 && !strcmp(argv[1], "-n")) exit(0);
   GetOpts(argc, argv);
-  threads = 1;  // _getcpucount();
-  th = calloc(threads, sizeof(*th));
-  bouts = calloc(threads, sizeof(*bouts));
+  th = calloc(THREADS, sizeof(*th));
+  bouts = calloc(THREADS, sizeof(*bouts));
   LoadRelationships(argc, argv);
   Crunch();
   Explore();
   CHECK_NE(-1, (fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644)),
            "open(%#s)", out);
-  for (i = 0; i < threads; ++i) {
+  for (i = 0; i < THREADS; ++i) {
     CHECK_NE(-1, xwrite(fd, bouts[i], appendz(bouts[i]).i));
   }
   CHECK_NE(-1, close(fd));
-  for (i = 0; i < threads; ++i) {
+  for (i = 0; i < THREADS; ++i) {
     free(bouts[i]);
   }
   free(strings.p);
