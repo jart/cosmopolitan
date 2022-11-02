@@ -76,24 +76,6 @@ static const short kConsoleModes[3] = {
         kNtEnableVirtualTerminalProcessing,
 };
 
-forceinline void MakeLongDoubleLongAgain(void) {
-  /* 8087 FPU Control Word
-      IM: Invalid Operation ───────────────┐
-      DM: Denormal Operand ───────────────┐│
-      ZM: Zero Divide ───────────────────┐││
-      OM: Overflow ─────────────────────┐│││
-      UM: Underflow ───────────────────┐││││
-      PM: Precision ──────────────────┐│││││
-     PC: Precision Control ────────┐  ││││││
-      {float,∅,double,long double} │  ││││││
-     RC: Rounding Control ───────┐ │  ││││││
-      {even, →-∞, →+∞, →0}       │┌┤  ││││││
-                                ┌┤││  ││││││
-                               d││││rr││││││*/
-  int x87cw = 0b0000000000000000001101111111;
-  asm volatile("fldcw\t%0" : /* no outputs */ : "m"(x87cw));
-}
-
 // https://nullprogram.com/blog/2022/02/18/
 static inline char16_t *MyCommandLine(void) {
   void *cmd;
@@ -259,7 +241,6 @@ __msabi textwindows int64_t WinMain(int64_t hInstance, int64_t hPrevInstance,
   if (__strstr16(cmdline, u"--strace")) ++__strace;
 #endif
   NTTRACE("WinMain()");
-  MakeLongDoubleLongAgain();
   if (_weaken(WinSockInit)) _weaken(WinSockInit)();
   if (_weaken(WinMainForked)) _weaken(WinMainForked)();
   WinMainNew(cmdline);

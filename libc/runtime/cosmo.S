@@ -44,6 +44,32 @@ cosmo:	push	%rbp
 	mov	%eax,%r12d
 #endif /* SYSDEBUG */
 
+//	Windows always initializes FPU to douuble precision.
+//	WSL breaks Linux ABI by initializing FPU to double precision.
+//	This code makes long double long again.
+//
+//	@see System V Application Binary Interface NexGen32e Architecture
+//	     Processor Supplement, Version 1.0, December 5th, 2018
+//	     Section 3.4.1: Initial Stack and Register State
+	fldcw	1f(%rip)
+	.rodata
+	.align	2
+//	8087 FPU Control Word
+//	 IM: Invalid Operation ───────────────┐
+//	 DM: Denormal Operand ───────────────┐│
+//	 ZM: Zero Divide ───────────────────┐││
+//	 OM: Overflow ─────────────────────┐│││
+//	 UM: Underflow ───────────────────┐││││
+//	 PM: Precision ──────────────────┐│││││
+//	 PC: Precision Control ───────┐  ││││││
+//	  {float,∅,double,long double}│  ││││││
+//	 RC: Rounding Control ──────┐ │  ││││││
+//	  {even, →-∞, →+∞, →0}      │┌┤  ││││││
+//	                           ┌┤││  ││││││
+//	                          d││││rr││││││
+1:	.short	0b00000000000000000001101111111
+	.previous
+
 #ifdef __FAST_MATH__
 	push	%rax
 	stmxcsr	(%rsp)
