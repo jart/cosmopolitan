@@ -2161,60 +2161,35 @@ child_execute_job (struct childbase *child,
       errno = 0;
       if (sandboxed)
         {
-          if (!strict && argv[0][0] == '/' && IsDynamicExecutable (argv[0]))
+          /*
+           * permit launching actually portable executables
+           *
+           * we assume launching make.com already did the expensive
+           * work of extracting the ape loader program, via /bin/sh
+           * and we won't need to do that again, since sys_execve()
+           * will pass ape binaries directly to the ape loader, but
+           * only if the ape loader exists on a well-known path.
+           */
+          e = errno;
+          DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
+                        "/usr/bin/ape", "rx"));
+          if (unveil ("/usr/bin/ape", "rx") == -1)
+          {
+            char *s, *t;
+            errno = e;
+            if ((s = getenv ("TMPDIR")))
             {
-              /*
-               * weaken sandbox if user is using dynamic shared lolbjects
-               */
-              RETURN_ON_ERROR (Unveil ("/bin", "rx"));
-              RETURN_ON_ERROR (Unveil ("/lib", "rx"));
-              RETURN_ON_ERROR (Unveil ("/lib64", "rx"));
-              RETURN_ON_ERROR (Unveil ("/usr/bin", "rx"));
-              RETURN_ON_ERROR (Unveil ("/usr/lib", "rx"));
-              RETURN_ON_ERROR (Unveil ("/usr/lib64", "rx"));
-              RETURN_ON_ERROR (Unveil ("/usr/local/lib", "rx"));
-              RETURN_ON_ERROR (Unveil ("/usr/local/lib64", "rx"));
-              RETURN_ON_ERROR (Unveil ("/etc/ld-musl-x86_64.path", "r"));
-              RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf", "r"));
-              RETURN_ON_ERROR (Unveil ("/etc/ld.so.cache", "r"));
-              RETURN_ON_ERROR (Unveil ("/etc/ld.so.conf.d", "r"));
-              RETURN_ON_ERROR (Unveil ("/etc/ld.so.preload", "r"));
-              RETURN_ON_ERROR (Unveil ("/usr/include", "r"));
-              RETURN_ON_ERROR (Unveil ("/usr/share/locale", "r"));
-              RETURN_ON_ERROR (Unveil ("/usr/share/locale-langpack", "r"));
+              t = xjoinpaths (s, ".ape");
+              RETURN_ON_ERROR (Unveil (t, "rx"));
+              free (t);
             }
-          else
+            if ((s = getenv ("HOME")))
             {
-              /*
-               * permit launching actually portable executables
-               *
-               * we assume launching make.com already did the expensive
-               * work of extracting the ape loader program, via /bin/sh
-               * and we won't need to do that again, since sys_execve()
-               * will pass ape binaries directly to the ape loader, but
-               * only if the ape loader exists on a well-known path.
-               */
-              e = errno;
-              DB (DB_JOBS, (_("Unveiling %s with permissions %s\n"),
-                            "/usr/bin/ape", "rx"));
-              if (unveil ("/usr/bin/ape", "rx") == -1)
-                {
-                  char *s, *t;
-                  errno = e;
-                  if ((s = getenv ("TMPDIR")))
-                    {
-                      t = xjoinpaths (s, ".ape");
-                      RETURN_ON_ERROR (Unveil (t, "rx"));
-                      free (t);
-                    }
-                  if ((s = getenv ("HOME")))
-                    {
-                      t = xjoinpaths (s, ".ape");
-                      RETURN_ON_ERROR (Unveil (t, "rx"));
-                      free (t);
-                    }
-                }
+              t = xjoinpaths (s, ".ape");
+              RETURN_ON_ERROR (Unveil (t, "rx"));
+              free (t);
             }
+          }
 
           /* Unveil executable.  */
           RETURN_ON_ERROR (Unveil (argv[0], "rx"));
@@ -2222,23 +2197,6 @@ child_execute_job (struct childbase *child,
           /* Unveil temporary directory.  */
           if (c->tmpdir)
             RETURN_ON_ERROR (Unveil (c->tmpdir, "rwcx"));
-
-          /* Unveil lazy mode files.  */
-          if (!strict)
-            {
-              RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
-              RETURN_ON_ERROR (Unveil ("/dev/zero", "r"));
-              RETURN_ON_ERROR (Unveil ("/dev/null", "rw"));
-              RETURN_ON_ERROR (Unveil ("/dev/full", "rw"));
-              RETURN_ON_ERROR (Unveil ("/dev/stdin", "rw"));
-              RETURN_ON_ERROR (Unveil ("/dev/stdout", "rw"));
-              RETURN_ON_ERROR (Unveil ("/dev/stderr", "rw"));
-              RETURN_ON_ERROR (Unveil ("/etc/hosts", "r"));
-            }
-
-          /* Unveil .PLEDGE = tmppath.  */
-          if (!strict && promises && (~ipromises & (1ul << PROMISE_TMPPATH)))
-            RETURN_ON_ERROR (Unveil ("/tmp", "rwc"));
 
           /* Unveil .PLEDGE = vminfo.  */
           if (promises && (~ipromises & (1ul << PROMISE_VMINFO)))
