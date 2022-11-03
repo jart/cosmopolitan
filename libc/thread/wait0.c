@@ -32,7 +32,7 @@
  */
 void _wait0(const atomic_int *ctid) {
   int x;
-  while ((x = atomic_load_explicit(ctid, memory_order_relaxed))) {
+  while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
     nsync_futex_wait_(ctid, x, !IsWindows(), 0);
   }
 }

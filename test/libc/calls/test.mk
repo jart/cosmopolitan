@@ -126,6 +126,9 @@ o/$(MODE)/test/libc/calls/lock_ofd_test.com.runs:			\
 o/$(MODE)/test/libc/calls/openbsd_test.com.runs:			\
 		private .PLEDGE = stdio rpath wpath cpath fattr proc unveil
 
+o/$(MODE)/test/libc/calls/fexecve_test.com.runs:			\
+		private .UNSANDBOXED = 1  # for memfd_create()
+
 o/$(MODE)/test/libc/calls/read_test.com.runs:				\
 		private .UNVEIL += /dev/zero
 

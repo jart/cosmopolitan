@@ -18,7 +18,6 @@
 ╚────────────────────────────────────────────────────────────────'>/dev/null #*/
 dir=libc/sysv/calls
 . libc/sysv/gen.sh
-#include "libc/calls/syscall-sysv.internal.h"
 
 #       The Fifth Bell System Interface, Community Edition     ┌─────────────────────────┐
 #	» so many numbers                                      │ legend                  │

@@ -18,11 +18,14 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/mfd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/testlib/subprocess.h"
 #include "libc/testlib/testlib.h"
+// clang-format off
 
 int fds[2];
 char buf[8];
@@ -63,4 +66,23 @@ TEST(fexecve, elfIsUnreadable_mayBeExecuted) {
   ASSERT_SYS(0, 3, read(3, buf, 7));
   ASSERT_SYS(0, 0, close(3));
   ASSERT_STREQ("hi\n", buf);
+}
+
+TEST(fexecve, memfd_create) {
+  if (!IsLinux()) return;
+  SPAWN(vfork);
+#define TINY_ELF_PROGRAM "\
+\177\105\114\106\002\001\001\000\000\000\000\000\000\000\000\000\
+\002\000\076\000\001\000\000\000\170\000\100\000\000\000\000\000\
+\100\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\
+\000\000\000\000\100\000\070\000\001\000\000\000\000\000\000\000\
+\001\000\000\000\005\000\000\000\000\000\000\000\000\000\000\000\
+\000\000\100\000\000\000\000\000\000\000\100\000\000\000\000\000\
+\200\000\000\000\000\000\000\000\200\000\000\000\000\000\000\000\
+\000\020\000\000\000\000\000\000\152\052\137\152\074\130\017\005"
+  int fd = memfd_create("foo", MFD_CLOEXEC);
+  if (fd == -1 && errno == ENOSYS) _Exit(42);
+  write(fd, TINY_ELF_PROGRAM, sizeof(TINY_ELF_PROGRAM) - 1);
+  fexecve(fd, (char *const[]){0}, (char *const[]){0});
+  EXITS(42);
 }
