@@ -54,6 +54,7 @@
 #include "libc/nexgen32e/crc32.h"
 #include "libc/nexgen32e/nt2sysv.h"
 #include "libc/nexgen32e/rdtsc.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/nt/enum/fileflagandattributes.h"
 #include "libc/nt/thread.h"
@@ -7259,6 +7260,8 @@ static void TlsDestroy(void) {
 static void GetOpts(int argc, char *argv[]) {
   int opt;
   bool storeasset = false;
+  // only generate ecp cert under blinkenlights (rsa is slow)
+  norsagen = IsGenuineCosmo();
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       CASE('S', ++sandboxed);

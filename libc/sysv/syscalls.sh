@@ -372,7 +372,7 @@ scall	sys_io_uring_register	0xfffffffffffff1ab	globl
 #────────────────────────RHEL CLOUD────────────────────────── # ←──────┬─ red hat terminates community release of enterprise linux circa 2020
 scall	sys_pledge		0xfff06cffffffffff	globl hidden # └─ online linux services ban the president of united states of america
 scall	sys_msyscall		0xfff025ffffffffff	globl # no wrapper
-scall	sys_bogus		0x5005005002500500	globl
+scall	sys_bogus		0x00b5005002500500	globl
 scall	sys_open_tree		0xfffffffffffff1ac	globl # no wrapper
 scall	sys_move_mount		0xfffffffffffff1ad	globl # no wrapper
 scall	sys_fsopen		0xfffffffffffff1ae	globl # no wrapper

@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -203,4 +204,10 @@ TEST(sigaction, autoZombieSlayer) {
   ASSERT_SYS(ECHILD, -1, wait(0));
   // clean up
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, 0));
+}
+
+TEST(sigaction, enosys_returnsErrnoRatherThanSigsysByDefault) {
+  if (IsTiny()) return;     // systemfive.S disables the fix w/ tiny
+  if (IsOpenbsd()) return;  // TODO: Why does OpenBSD raise SIGABRT?
+  ASSERT_SYS(ENOSYS, -1, sys_bogus());
 }

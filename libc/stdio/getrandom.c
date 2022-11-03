@@ -127,25 +127,14 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
   return rc;
 }
 
-static textstartup void getrandom_init(void) {
+__attribute__((__constructor__)) static textstartup void getrandom_init(void) {
   int e, rc;
-  struct sigaction sa, oldsa;
   if (IsWindows()) return;
   e = errno;
-  if (IsBsd()) {
-    sa.sa_flags = 0;
-    sa.sa_handler = SIG_IGN;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGSYS, &sa, &oldsa);
-  }
   if (!(rc = sys_getrandom(0, 0, 0))) {
     have_getrandom = true;
+  } else {
+    errno = e;
   }
   STRACE("sys_getrandom(0,0,0) → %d% m", rc);
-  if (IsBsd()) {
-    sigaction(SIGSYS, &oldsa, 0);
-  }
-  errno = e;
 }
-
-const void *const g_getrandom_init[] initarray = {getrandom_init};

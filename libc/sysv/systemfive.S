@@ -20,7 +20,10 @@
 #include "libc/dce.h"
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/macros.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/nr.h"
+
+#define SIG_IGN 1
 
 /*                                           ▄▄▄
                        ▄▄▄                    ▀▓▓▒▄
@@ -362,6 +365,31 @@ _init_systemfive_pid:
 	syscall
 1:	stosq
 	.endfn	_init_systemfive_pid
+#endif
+#if SupportsBsd() && !defined(TINY)
+_init_systemfive_sigsys:
+	testb	IsBsd()					# BSDs will trap SIGSYS!
+	jz	1f					# We want ENOSYS instead
+	push	%rdi					# XNU removed some calls
+	push	%rsi					# in past, so this makes
+	xor	%eax,%eax				# troubleshooting easier
+	push	%rax					# but it's non-essential
+	push	%rax
+	push	%rax
+	push	%rax
+	push	%rax
+	push	$SIG_IGN				# sigaction_meta size 48
+	mov	__NR_sigaction,%eax			# mag
+	mov	SIGSYS,%edi				# sig
+	mov	%rsp,%rsi				# new
+	xor	%edx,%edx				# old
+	mov	$8,%r10d				# for linux
+	xor	%r8d,%r8d				# for netbsd
+	syscall
+	add	$6*8,%rsp
+	pop	%rsi
+	pop	%rdi
+1:	.endfn	_init_systemfive_sigsys
 #endif
 #if SupportsSystemv() && !defined(TINY)
 _init_systemfive_syscall:
