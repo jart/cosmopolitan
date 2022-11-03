@@ -15,19 +15,21 @@ COSMOPOLITAN_C_START_
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 typedef struct FILE {
-  uint8_t bufmode; /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
-  bool noclose;    /* 0x01 for fake dup() todo delete! */
-  uint32_t iomode; /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
-  int32_t state;   /* 0x08 0=OK, -1=EOF, >0=errno */
-  int fd;          /* 0x0c ≥0=fd, -1=closed|buffer */
-  uint32_t beg;    /* 0x10 */
-  uint32_t end;    /* 0x14 */
-  char *buf;       /* 0x18 */
-  uint32_t size;   /* 0x20 */
-  uint32_t nofree; /* 0x24 */
-  int pid;         /* 0x28 */
-  char *getln;     /* 0x30 */
-  char lock[16];   /* 0x38 */
+  uint8_t bufmode;             /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
+  bool noclose;                /* 0x01 for fake dup() todo delete! */
+  uint32_t iomode;             /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
+  int32_t state;               /* 0x08 0=OK, -1=EOF, >0=errno */
+  int fd;                      /* 0x0c ≥0=fd, -1=closed|buffer */
+  uint32_t beg;                /* 0x10 */
+  uint32_t end;                /* 0x14 */
+  char *buf;                   /* 0x18 */
+  uint32_t size;               /* 0x20 */
+  uint32_t nofree;             /* 0x24 */
+  int pid;                     /* 0x28 */
+  char *getln;                 /* 0x30 */
+  char lock[16];               /* 0x38 */
+  _Atomic(struct FILE *) next; /* 0x48 */
+  char mem[BUFSIZ];            /* 0x50 */
 } FILE;
 
 extern FILE *stdin;

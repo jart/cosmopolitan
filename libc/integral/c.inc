@@ -52,8 +52,11 @@
 #endif
 #endif
 
-#if defined(__STRICT_ANSI__) || \
-    (!defined(__GNUC__) && !__has_builtin(unreachable))
+#ifdef _MSC_VER
+#define __builtin_unreachable() __assume(0)
+#elif defined(__STRICT_ANSI__) ||                           \
+    !((__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 405 || \
+      defined(__clang__) || defined(__INTEL_COMPILER))
 #define __builtin_unreachable() \
   for (;;) {                    \
   }
@@ -234,7 +237,9 @@ typedef struct {
 #endif
 
 #ifndef dontinline
-#if !defined(__STRICT_ANSI__) &&      \
+#ifdef _MSC_VER
+#define dontinline __declspec(noinline)
+#elif !defined(__STRICT_ANSI__) &&    \
     (__has_attribute(__noinline__) || \
      (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 301)
 #define dontinline __attribute__((__noinline__))

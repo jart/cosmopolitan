@@ -163,8 +163,15 @@
    "__MRECORD_MCOUNT__"
    "__FNO_OMIT_FRAME_POINTER__"))
 
+(defconst cosmo-cpp-constants-clang
+  '("__llvm__"
+    "__clang__"
+    "_MSC_VER"
+    "__INTEL_COMPILER"))
+
 (defconst cosmo-cpp-constants
   (append cosmo-cpp-constants-c11
+          cosmo-cpp-constants-clang
           cosmo-cpp-constants-gcc-92
           cosmo-cpp-constants-gcc-412
           cosmo-cpp-constants-chibicc

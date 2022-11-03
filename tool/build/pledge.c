@@ -116,6 +116,7 @@ usage: pledge.com [-hnN] PROG ARGS...\n\
 \n\
 pledge.com v1.8\n\
 copyright 2022 justine alexandra roberts tunney\n\
+notice licenses are embedded in the binary\n\
 https://twitter.com/justinetunney\n\
 https://linkedin.com/in/jtunney\n\
 https://justine.lol/pledge/\n\

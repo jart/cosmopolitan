@@ -16,36 +16,48 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
+#include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/thread.h"
 
+// TODO(jart): POSIX says buffer needs to grow in write modes?
+
 /**
  * Opens buffer as stream.
  *
  * @param buf becomes owned by this function, and is allocated if NULL
  * @return new stream or NULL w/ errno
+ * @raise ENOMEM if `buf` is NULL and we failed to allocate it
+ * @raise ENOMEM if `buf` is NULL and malloc() wasn't linked
+ * @raise EINVAL if `buf` is NULL when `+` isn't in `mode`
  */
 FILE *fmemopen(void *buf, size_t size, const char *mode) {
   FILE *f;
   char *p;
+  int iomode;
   unsigned flags;
-  if (size && size > 0x7ffff000) {
+  iomode = fopenflags(mode);
+  if ((size && size > 0x7ffff000) ||  //
+      (!buf && (iomode & O_ACCMODE) != O_RDWR)) {
     einval();
     return NULL;
   }
-  if (!(f = calloc(1, sizeof(FILE)))) {
+  if (!(f = __stdio_alloc())) {
     return NULL;
   }
   if (buf) {
     f->nofree = true;
   } else {
     if (!size) size = BUFSIZ;
-    if (!(buf = calloc(1, size))) {
-      free(f);
+    // TODO(jart): Why do we need calloc()?
+    if (!_weaken(calloc) || !(buf = _weaken(calloc)(1, size))) {
+      __stdio_free(f);
+      enomem();
       return NULL;
     }
   }
@@ -53,9 +65,8 @@ FILE *fmemopen(void *buf, size_t size, const char *mode) {
   f->buf = buf;
   f->end = size;
   f->size = size;
-  f->iomode = fopenflags(mode);
-  ((pthread_mutex_t *)f->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
-  if (f->iomode & O_APPEND) {
+  f->iomode = iomode;
+  if (iomode & O_APPEND) {
     if ((p = memchr(buf, '\0', size))) {
       f->beg = p - (char *)buf;
     } else {

@@ -83,9 +83,9 @@ static void Log(const char *s, ...) {
   va_start(va, s);
   errbuf[0] = 0;
   do {
-    strlcat(errbuf, s, sizeof(argbuf));
+    strlcat(errbuf, s, sizeof(errbuf));
   } while ((s = va_arg(va, const char *)));
-  strlcat(errbuf, "\n", sizeof(argbuf));
+  strlcat(errbuf, "\n", sizeof(errbuf));
   Write(2, errbuf);
   va_end(va);
 }
@@ -95,7 +95,7 @@ static wontreturn void Wexit(int rc, const char *s, ...) {
   va_start(va, s);
   errbuf[0] = 0;
   do {
-    strlcat(errbuf, s, sizeof(argbuf));
+    strlcat(errbuf, s, sizeof(errbuf));
   } while ((s = va_arg(va, const char *)));
   Write(2, errbuf);
   va_end(va);

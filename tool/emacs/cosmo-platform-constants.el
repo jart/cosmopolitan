@@ -71,9 +71,6 @@
            "__NO_MATH_ERRNO__"
            "__gnu__"))
 
-        (clang
-         '("__llvm__"))
-
         (cosmo
          '("__COSMOPOLITAN__"
            "__ANDROID__"
@@ -81,7 +78,7 @@
 
         )
     (concat "\\_<"
-            (regexp-opt (append clang cpp92 gcc412 cosmo))
+            (regexp-opt (append cpp92 gcc412 cosmo))
             "\\_>")))
 
 (provide 'cosmo-platform-constants)

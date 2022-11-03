@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -27,21 +28,21 @@
 /**
  * Closes standard i/o stream and its underlying thing.
  *
- * @param f is the file object, which is always free if it's heap,
- *     otherwise its resources are released and fields updated
+ * @param f is the file object
  * @return 0 on success or -1 on error, which can be a trick for
  *     differentiating between EOF and real errors during previous
  *     i/o calls, without needing to call ferror()
- * @see fclose_s()
  */
 int fclose(FILE *f) {
   int rc;
   if (!f) return 0;
   __fflush_unregister(f);
   fflush(f);
-  free_s(&f->getln);
-  if (!f->nofree) {
-    free_s(&f->buf);
+  if (_weaken(free)) {
+    _weaken(free)(f->getln);
+    if (!f->nofree && f->buf != f->mem) {
+      _weaken(free)(f->buf);
+    }
   }
   f->state = EOF;
   if (f->noclose) {
@@ -55,6 +56,6 @@ int fclose(FILE *f) {
     errno = f->state;
     rc = EOF;
   }
-  free_s(&f);
+  __stdio_free(f);
   return rc;
 }

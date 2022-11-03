@@ -38,7 +38,6 @@
 #include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/stdio/fflush.internal.h"
 #include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"

@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2020 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,38 +16,47 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/weaken.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
-#include "libc/stdio/lock.internal.h"
-#include "libc/stdio/stdio.h"
-#include "libc/sysv/errfuns.h"
+#include "libc/assert.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/kmalloc.h"
+#include "libc/stdio/internal.h"
+#include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
-/**
- * Tunes buffering settings for an stdio stream.
- *
- * @param mode may be _IOFBF, _IOLBF, or _IONBF
- * @param buf may optionally be non-NULL to set the stream's underlying
- *     buffer which the caller still owns and won't free, otherwise the
- *     existing buffer is used
- * @param size is ignored if buf is NULL
- * @return 0 on success or -1 on error
- */
-int setvbuf(FILE *f, char *buf, int mode, size_t size) {
-  flockfile(f);
-  if (buf) {
-    if (!size) size = BUFSIZ;
-    if (!f->nofree &&        //
-        f->buf != buf &&     //
-        f->buf != f->mem &&  //
-        _weaken(free)) {
-      _weaken(free)(f->buf);
+static _Atomic(FILE *) __stdio_freelist;
+
+FILE *__stdio_alloc(void) {
+  FILE *f;
+  f = atomic_load_explicit(&__stdio_freelist, memory_order_relaxed);
+  while (f) {
+    if (atomic_compare_exchange_weak_explicit(
+            &__stdio_freelist, &f,
+            atomic_load_explicit(&f->next, memory_order_relaxed),
+            memory_order_relaxed, memory_order_relaxed)) {
+      atomic_store_explicit(&f->next, 0, memory_order_relaxed);
+      break;
     }
-    f->buf = buf;
-    f->size = size;
-    f->nofree = true;
   }
-  f->bufmode = mode;
-  funlockfile(f);
-  return 0;
+  if (!f) {
+    f = kmalloc(sizeof(FILE));
+  }
+  if (f) {
+    ((pthread_mutex_t *)f->lock)->_type = PTHREAD_MUTEX_RECURSIVE;
+  }
+  return f;
+}
+
+void __stdio_free(FILE *f) {
+  FILE *g;
+  _unassert(!atomic_load_explicit(&f->next, memory_order_relaxed));
+  bzero(f, sizeof(*f));
+  g = atomic_load_explicit(&__stdio_freelist, memory_order_relaxed);
+  for (;;) {
+    atomic_store_explicit(&f->next, g, memory_order_relaxed);
+    if (atomic_compare_exchange_weak_explicit(&__stdio_freelist, &g, f,
+                                              memory_order_relaxed,
+                                              memory_order_relaxed)) {
+      break;
+    }
+  }
 }

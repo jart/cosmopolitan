@@ -19,14 +19,8 @@
 #include "libc/intrin/lockxchg.h"
 #include "libc/stdio/stdio.h"
 
-/**
- * Closes standard i/o stream and its underlying thing.
- *
- * @param f is the heap file object pointer, to close+free+clear
- * @return 0 on success or -1 on error, which can be a trick for
- *     differentiating between EOF and real errors during previous
- *     i/o calls, without needing to call ferror()
- */
+// TODO(jart): delete
+
 int fclose_s(FILE **fp) {
   FILE *f = NULL;
   return fclose(lockxchg(fp, &f));

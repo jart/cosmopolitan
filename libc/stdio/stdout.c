@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/pushpop.h"
 #include "libc/calls/calls.h"
 #include "libc/dce.h"
+#include "libc/intrin/pushpop.h"
 #include "libc/stdio/internal.h"
 #include "libc/stdio/stdio.h"
 
@@ -30,7 +30,6 @@ STATIC_YOINK("_init_stdout");
 FILE *stdout;
 
 hidden FILE __stdout;
-hidden unsigned char __stdout_buf[BUFSIZ];
 
 static textstartup void __stdout_init() {
   struct FILE *sf;

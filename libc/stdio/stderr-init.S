@@ -31,7 +31,7 @@
 	pop	12(%rax)
 	mov	O_WRONLY,%edx
 	mov	%edx,4(%rax)				#→ f.iomode
-	ezlea	__stderr_buf,cx
+	lea	0x50(%rax),%rcx				#← f.mem
 	mov	%rcx,0x18(%rax)				#→ f.buf
 	movl	$BUFSIZ,0x20(%rax)			#→ f.size
 	movb	$PTHREAD_MUTEX_RECURSIVE,0x38+4(%rax)	#→ f.lock._type
