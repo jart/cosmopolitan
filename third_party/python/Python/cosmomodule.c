@@ -19,6 +19,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "dsp/scale/cdecimate2xuint8x8.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/pledge.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/popcnt.h"
@@ -207,6 +208,7 @@ cosmo_pledge(PyObject *self, PyObject *args)
     int e = errno;
     const char *x, *y;
     if (!PyArg_ParseTuple(args, "sz:pledge", &x, &y)) return 0;
+    __pledge_mode = PLEDGE_PENALTY_RETURN_EPERM;
     if (!pledge(x, y)) {
         Py_RETURN_NONE;
     } else {
