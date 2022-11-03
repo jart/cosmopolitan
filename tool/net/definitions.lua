@@ -7116,6 +7116,12 @@ kLogError = nil
 ---Logging anything at this level will result in a backtrace and process exit.
 kLogFatal = nil
 
+---@type integer turn `+` into space. See `ParseUrl`.
+kUrlPlus = nil
+
+---@type integer to transcode ISO-8859-1 input into UTF-8. See `ParseUrl`.
+kUrlLatin1 = nil
+
 --[[
 ────────────────────────────────────────────────────────────────────────────────
 LEGAL
