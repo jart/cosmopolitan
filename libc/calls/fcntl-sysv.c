@@ -26,7 +26,7 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_fcntl(int fd, int cmd, uintptr_t arg) {
+int sys_fcntl(int fd, int cmd, uintptr_t arg, int impl(int, int, ...)) {
   int e, rc;
   bool islock;
   if ((islock = cmd == F_GETLK ||  //
@@ -40,12 +40,12 @@ int sys_fcntl(int fd, int cmd, uintptr_t arg) {
     cosmo2flock(arg);
   }
   e = errno;
-  rc = __sys_fcntl(fd, cmd, arg);
+  rc = impl(fd, cmd, arg);
   if (islock) {
     flock2cosmo(arg);
   } else if (rc == -1 && cmd == F_DUPFD_CLOEXEC && errno == EINVAL) {
     errno = e;
-    rc = __fixupnewfd(__sys_fcntl(fd, F_DUPFD, arg), O_CLOEXEC);
+    rc = __fixupnewfd(impl(fd, F_DUPFD, arg), O_CLOEXEC);
   }
   return rc;
 }

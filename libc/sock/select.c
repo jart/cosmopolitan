@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
 #include "libc/sysv/errfuns.h"
@@ -31,6 +31,11 @@
  * This system call is supported on all platforms. However, on Windows,
  * this is polyfilled to translate into poll(). So it's recommended that
  * poll() be used instead.
+ *
+ * @cancellationpoint
+ * @asyncsignalsafe
+ * @threadsafe
+ * @norestart
  */
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
            struct timeval *timeout) {

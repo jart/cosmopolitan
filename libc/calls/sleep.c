@@ -29,6 +29,7 @@
  *     this function shall return the number of unslept seconds rounded
  *     using the ceiling function
  * @see clock_nanosleep()
+ * @cancellationpoint
  * @asyncsignalsafe
  * @norestart
  */

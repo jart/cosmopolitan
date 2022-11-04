@@ -29,6 +29,7 @@
  * @param file specifies filesystem path to open
  * @return file descriptor, or -1 w/ errno
  * @see openat() for further documentation
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @threadsafe

@@ -21,7 +21,6 @@
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaction.h"
-#include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
@@ -64,8 +63,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
   if (sigmask) {
     __sig_mask(SIG_SETMASK, sigmask, &oldmask);
   }
-  if (_check_interrupts(false, g_fds.p)) {
-    rc = eintr();
+  if ((rc = _check_interrupts(false, g_fds.p))) {
     goto ReturnPath;
   }
 
@@ -190,8 +188,7 @@ textwindows int sys_poll_nt(struct pollfd *fds, uint64_t nfds, uint64_t *ms,
     }
     // otherwise loop limitlessly for timeout to elapse while
     // checking for signal delivery interrupts, along the way
-    if (_check_interrupts(false, g_fds.p)) {
-      rc = eintr();
+    if ((rc = _check_interrupts(false, g_fds.p))) {
       goto ReturnPath;
     }
   }

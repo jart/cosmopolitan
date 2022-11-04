@@ -94,6 +94,7 @@
  * @raise EDEADLK if `cmd` was `F_SETLKW` and waiting would deadlock
  * @raise EMFILE if `cmd` is `F_DUPFD` or `F_DUPFD_CLOEXEC` and
  *     `RLIMIT_NOFILE` would be exceeded
+ * @cancellationpoint when `cmd` is `F_SETLKW`
  * @asyncsignalsafe
  * @restartable
  */
@@ -111,7 +112,11 @@ int fcntl(int fd, int cmd, ...) {
       if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
         rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
       } else if (!IsWindows()) {
-        rc = sys_fcntl(fd, cmd, arg);
+        if (cmd == F_SETLKW) {
+          rc = sys_fcntl(fd, cmd, arg, __sys_fcntl_cp);
+        } else {
+          rc = sys_fcntl(fd, cmd, arg, __sys_fcntl);
+        }
       } else {
         rc = sys_fcntl_nt(fd, cmd, arg);
       }

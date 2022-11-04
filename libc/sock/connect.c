@@ -35,6 +35,7 @@
  * also means getsockname() can be called to retrieve routing details.
  *
  * @return 0 on success or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */

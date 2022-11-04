@@ -28,6 +28,7 @@
 textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
                            uint32_t *flags, bool restartable,
                            uint32_t timeout) {
+  int rc;
   uint32_t i, got;
   if (WSAGetLastError() != kNtErrorIoPending) {
     NTTRACE("sock i/o failed %lm");
@@ -41,7 +42,7 @@ textwindows int __wsablock(int64_t handle, struct NtOverlapped *overlapped,
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
       if (_check_interrupts(restartable, g_fds.p)) {
-        return eintr();
+        return -1;
       }
       if (timeout) {
         if (timeout <= __SIG_POLLING_INTERVAL_MS) {

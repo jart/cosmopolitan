@@ -16,12 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 #include "libc/sock/select.h"
 #include "libc/sysv/errfuns.h"
@@ -44,6 +44,11 @@
  *
  * This system call is supported on all platforms. It's like select()
  * except that it atomically changes the sigprocmask() during the op.
+ *
+ * @cancellationpoint
+ * @asyncsignalsafe
+ * @threadsafe
+ * @norestart
  */
 int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
             const struct timespec *timeout, const sigset_t *sigmask) {

@@ -26,6 +26,7 @@
  * @param out_addr will receive the remote address
  * @param inout_addrsize provides and receives addr's byte length
  * @return client fd which needs close(), or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */

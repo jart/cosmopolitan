@@ -1499,6 +1499,7 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
  * @param maxevents is array length of events
  * @param timeoutms is milliseconds, 0 to not block, or -1 for forever
  * @return number of events stored, 0 on timeout, or -1 w/ errno
+ * @cancellationpoint
  * @norestart
  */
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,

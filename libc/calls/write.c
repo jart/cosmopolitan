@@ -57,6 +57,7 @@
  *     as a general possibility; whereas other system don't specify it
  * @raise ENXIO is specified only by POSIX and XNU when a request is
  *     made of a nonexistent device or outside device capabilities
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

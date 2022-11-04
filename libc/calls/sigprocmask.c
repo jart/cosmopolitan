@@ -26,6 +26,7 @@
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -59,7 +60,9 @@ int sigprocmask(int how, const sigset_t *opt_set, sigset_t *opt_out_oldset) {
     rc = efault();
   } else if (IsMetal() || IsWindows()) {
     rc = __sig_mask(how, opt_set, &old);
-    _check_interrupts(false, 0);
+    if (_weaken(__sig_check)) {
+      _weaken(__sig_check)(true);
+    }
   } else {
     rc = sys_sigprocmask(how, opt_set, opt_out_oldset ? &old : 0);
   }

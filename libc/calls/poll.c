@@ -55,6 +55,7 @@
  * @return fds[𝑖].revents is always zero initializaed and then will
  *     be populated with POLL{IN,OUT,PRI,HUP,ERR,NVAL} if something
  *     was determined about the file descriptor
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  * @norestart

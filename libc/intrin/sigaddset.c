@@ -33,12 +33,7 @@ int sigaddset(sigset_t *set, int sig) {
   _Static_assert(sizeof(set->__bits[0]) * CHAR_BIT == 64, "");
   if (1 <= sig && sig <= NSIG) {
     if (1 <= sig && sig <= _NSIG) {
-      if (
-#define M(x) sig != x &&
-#include "libc/intrin/sigisprecious.inc"
-          1) {
-        set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
-      }
+      set->__bits[(sig - 1) >> 6] |= 1ull << ((sig - 1) & 63);
     }
     return 0;
   } else {

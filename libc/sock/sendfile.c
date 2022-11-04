@@ -43,6 +43,7 @@
 // sendfile() isn't specified as raising eintr
 static textwindows int SendfileBlock(int64_t handle,
                                      struct NtOverlapped *overlapped) {
+  int rc;
   uint32_t i, got, flags = 0;
   if (WSAGetLastError() != kNtErrorIoPending &&
       WSAGetLastError() != WSAEINPROGRESS) {
@@ -56,7 +57,7 @@ static textwindows int SendfileBlock(int64_t handle,
       NTTRACE("WSAWaitForMultipleEvents failed %lm");
       return __winsockerr();
     } else if (i == kNtWaitTimeout || i == kNtWaitIoCompletion) {
-      _check_interrupts(true, g_fds.p);
+      if (_check_interrupts(true, g_fds.p)) return -1;
 #if _NTTRACE
       POLLTRACE("WSAWaitForMultipleEvents...");
 #endif

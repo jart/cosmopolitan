@@ -18,17 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/state.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/consts/at.h"
 
 /**
  * Returns information about filesystem.
  * @return 0 on success, or -1 w/ errno
+ * @cancellationpoint
  */
 int statfs(const char *path, struct statfs *sf) {
   int rc;

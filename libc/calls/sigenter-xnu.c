@@ -501,6 +501,7 @@ privileged void __sigenter_xnu(void *fn, int infostyle, int sig,
         xnuctx->uc_stack.ss_sp = g.uc.uc_stack.ss_sp;
         xnuctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
         xnuctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
+        xnuctx->uc_sigmask = g.uc.uc_sigmask.__bits[0];
         if (xnuctx->uc_mcontext) {
           if (xnuctx->uc_mcsize >=
               sizeof(struct __darwin_x86_exception_state64)) {

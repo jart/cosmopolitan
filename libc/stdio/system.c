@@ -21,12 +21,14 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/log/log.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/ok.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/thread.h"
 
 /**
  * Launches program with system command interpreter.
@@ -37,6 +39,7 @@
  * @param cmdline is an interpreted Turing-complete command
  * @return -1 if child process couldn't be created, otherwise a wait
  *     status that can be accessed using macros like WEXITSTATUS(s)
+ * @cancellationpoint
  * @threadsafe
  */
 int system(const char *cmdline) {
@@ -44,6 +47,9 @@ int system(const char *cmdline) {
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
   if (!cmdline) return 1;
+  if (_weaken(pthread_testcancel)) {
+    _weaken(pthread_testcancel)();
+  }
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   sigemptyset(&ignore.sa_mask);

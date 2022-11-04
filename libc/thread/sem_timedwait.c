@@ -60,6 +60,7 @@ static struct timespec *sem_timeout(struct timespec *memory,
  * @raise EDEADLK if deadlock was detected
  * @raise ETIMEDOUT if deadline expired
  * @raise EINVAL if `sem` is invalid
+ * @cancellationpoint
  */
 int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   int e, i, v, rc;

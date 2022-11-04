@@ -27,6 +27,7 @@
  * @raise EINTR if an asynchronous signal was delivered instead
  * @raise ENOSYS on OpenBSD, XNU, and Windows
  * @see sigtimedwait()
+ * @cancellationpoint
  */
 int sigwaitinfo(const sigset_t *mask, siginfo_t *si) {
   return sigtimedwait(mask, si, 0);

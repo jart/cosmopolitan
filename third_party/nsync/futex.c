@@ -152,7 +152,7 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ti
 
 int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
 	uint32_t ms;
-	int rc, op, fop;
+	int e, rc, op, fop;
 
 	op = FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE) {
@@ -170,8 +170,10 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 			if (pshare) {
 				goto Polyfill;
 			}
+			e = errno;
 			if (_check_interrupts (false, 0)) {
-				rc = -EINTR;
+				rc = -errno;
+				errno = e;
 			} else {
 				if (timeout) {
 					ms = _timespec_tomillis (*timeout);

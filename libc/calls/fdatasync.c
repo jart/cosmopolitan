@@ -30,6 +30,7 @@
  * @return 0 on success, or -1 w/ errno
  * @see sync(), fsync(), sync_file_range()
  * @see __nosync to secretly disable
+ * @cancellationpoint
  * @asyncsignalsafe
  */
 int fdatasync(int fd) {

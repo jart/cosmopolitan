@@ -21,6 +21,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/calls/struct/sigset.h"
+#include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/calls/ucontext.h"
 #include "libc/dce.h"
@@ -28,6 +29,7 @@
 #include "libc/nexgen32e/nexgen32e.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/uc.h"
@@ -210,4 +212,30 @@ TEST(sigaction, enosys_returnsErrnoRatherThanSigsysByDefault) {
   if (IsTiny()) return;     // systemfive.S disables the fix w/ tiny
   if (IsOpenbsd()) return;  // TODO: Why does OpenBSD raise SIGABRT?
   ASSERT_SYS(ENOSYS, -1, sys_bogus());
+}
+
+sig_atomic_t gotusr1;
+
+void OnSigMask(int sig, struct siginfo *si, void *ctx) {
+  ucontext_t *uc = ctx;
+  sigaddset(&uc->uc_sigmask, sig);
+  gotusr1 = true;
+}
+
+TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
+  if (IsWindows()) return;  // TODO(jart): uc_sigmask support on windows
+  sigset_t want, got;
+  struct sigaction oldsa;
+  struct sigaction sa = {.sa_sigaction = OnSigMask, .sa_flags = SA_SIGINFO};
+  sigemptyset(&want);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, 0));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
+  ASSERT_SYS(0, 0, raise(SIGUSR1));
+  ASSERT_TRUE(gotusr1);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, 0, &got));
+  sigaddset(&want, SIGUSR1);
+  ASSERT_STREQ(DescribeSigset(0, &want), DescribeSigset(0, &got));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));
+  sigdelset(&want, SIGUSR1);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, 0));
 }

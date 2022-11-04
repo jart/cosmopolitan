@@ -31,7 +31,7 @@ textwindows ssize_t sys_sendto_nt(int fd, const struct iovec *iov,
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
-  if (_check_interrupts(true, g_fds.p)) return eintr();
+  if (_check_interrupts(true, g_fds.p)) return -1;
   if (!WSASendTo(g_fds.p[fd].handle, iovnt, __iovec2nt(iovnt, iov, iovlen),
                  &sent, flags, opt_in_addr, in_addrsize, &overlapped, NULL)) {
     rc = sent;

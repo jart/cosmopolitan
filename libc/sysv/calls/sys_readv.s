@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_readv,0x0780780782078013,globl,hidden
+.scall sys_readv,0x8788788782878813,globl,hidden

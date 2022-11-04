@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/wait4.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/errfuns.h"
 
 /**
@@ -34,6 +34,7 @@
  * @param options can have WNOHANG, WUNTRACED, WCONTINUED, etc.
  * @param opt_out_rusage optionally returns accounting data
  * @return process id of terminated child or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  */

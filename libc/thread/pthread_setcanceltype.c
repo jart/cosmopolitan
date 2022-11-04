@@ -26,7 +26,7 @@
  *
  * @param type may be one of:
  *     - `PTHREAD_CANCEL_DEFERRED` (default)
- *     - `PTHREAD_CANCEL_ASYNCHRONOUS`
+ *     - `PTHREAD_CANCEL_ASYNCHRONOUS` (cray cray)
  * @param oldtype optionally receives old value
  * @return 0 on success, or errno on error
  * @raise EINVAL if `type` has bad value
@@ -38,8 +38,18 @@ int pthread_setcanceltype(int type, int *oldtype) {
     case PTHREAD_CANCEL_DEFERRED:
     case PTHREAD_CANCEL_ASYNCHRONOUS:
       pt = (struct PosixThread *)__get_tls()->tib_pthread;
-      if (oldtype) *oldtype = pt->cancelasync;
-      pt->cancelasync = type;
+      if (oldtype) {
+        if (pt->flags & PT_ASYNC) {
+          *oldtype = PTHREAD_CANCEL_ASYNCHRONOUS;
+        } else {
+          *oldtype = PTHREAD_CANCEL_DEFERRED;
+        }
+      }
+      if (type == PTHREAD_CANCEL_DEFERRED) {
+        pt->flags &= ~PT_ASYNC;
+      } else {
+        pt->flags |= PT_ASYNC;
+      }
       return 0;
     default:
       return EINVAL;

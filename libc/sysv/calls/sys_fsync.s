@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_fsync,0x05f05f05f205f04a,globl,hidden
+.scall sys_fsync,0x85f85f85f285f84a,globl,hidden

@@ -30,6 +30,7 @@
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/extend.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/nexgen32e/crc32.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/memtrack.internal.h"
@@ -40,6 +41,7 @@
 #include "libc/sysv/consts/prot.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
 
@@ -188,6 +190,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
  * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
  *
  * @param uri is obtained via __zipos_parseuri()
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  */
@@ -195,6 +198,11 @@ int __zipos_open(const struct ZiposUri *name, unsigned flags, int mode) {
   int rc;
   ssize_t cf;
   struct Zipos *zipos;
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return -1;
+  }
   BLOCK_SIGNALS;
   if ((flags & O_ACCMODE) == O_RDONLY) {
     if ((zipos = __zipos_get())) {

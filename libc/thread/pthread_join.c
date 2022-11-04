@@ -25,9 +25,12 @@
  * Waits for thread to terminate.
  *
  * @param value_ptr if non-null will receive pthread_exit() argument
+ *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
+ *     pthread_cancel() destroyed the thread instead
  * @return 0 on success, or errno with error
  * @raise EDEADLK if `thread` is the current thread
  * @raise EINVAL if `thread` is detached
+ * @cancellationpoint
  * @returnserrno
  * @threadsafe
  */

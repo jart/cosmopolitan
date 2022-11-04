@@ -168,9 +168,10 @@ syscon	sig	SIGPROF					27			27			27			27			27			27			# profiling timer expired; 
 syscon	sig	SIGWINCH				28			28			28			28			28			28			# terminal resized; unix consensus & faked on nt
 syscon	sig	SIGIO					29			23			23			23			23			29			# bsd consensus
 syscon	sig	SIGSYS					31			12			12			12			12			31			# wut; bsd consensus
+syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
 syscon	sig	SIGEMT					0			7			7			7			7			0			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
 syscon	sig	SIGPWR					30			30			30			30			32			30			# not implemented in most community editions of system five; consider doing this using SIGUSR1 or SIGUSR2 instead
-syscon	sig	SIGINFO					0			29			29			29			29			0			# bsd consensus
+syscon	sig	SIGCANCEL				32			7			65			7			33			32			# SIGRTMIN+0; faked as SIGEMT on XNU and OpenBSD
 syscon	sig	SIGRTMIN				32			0			65			0			33			32
 syscon	sig	SIGRTMAX				64			0			126			0			63			64
 syscon	compat	SIGPOLL					29			23			23			23			23			29			# same as SIGIO

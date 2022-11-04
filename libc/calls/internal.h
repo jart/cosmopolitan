@@ -43,7 +43,7 @@ forceinline size_t _clampio(size_t size) {
 }
 
 int sys_close_nt(struct Fd *, int) hidden;
-bool _check_interrupts(bool, struct Fd *) hidden;
+int _check_interrupts(bool, struct Fd *) hidden;
 int sys_openat_metal(int, const char *, int, unsigned);
 
 COSMOPOLITAN_C_END_

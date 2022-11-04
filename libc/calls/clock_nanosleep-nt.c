@@ -34,7 +34,7 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
     for (;;) {
       if (sys_clock_gettime_nt(clock, &now)) return -1;
       if (_timespec_gte(now, abs)) return 0;
-      if (_check_interrupts(false, g_fds.p)) return eintr();
+      if (_check_interrupts(false, g_fds.p)) return -1;
       SleepEx(MIN(__SIG_POLLING_INTERVAL_MS,
                   _timespec_tomillis(_timespec_sub(abs, now))),
               false);
@@ -47,7 +47,7 @@ textwindows int sys_clock_nanosleep_nt(int clock, int flags,
       if (_timespec_gte(now, abs)) return 0;
       if (_check_interrupts(false, g_fds.p)) {
         if (rem) *rem = _timespec_sub(abs, now);
-        return eintr();
+        return -1;
       }
       SleepEx(MIN(__SIG_POLLING_INTERVAL_MS,
                   _timespec_tomillis(_timespec_sub(abs, now))),

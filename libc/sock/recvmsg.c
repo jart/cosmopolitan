@@ -41,6 +41,7 @@
  * @return number of bytes received, or -1 w/ errno
  * @error EINTR, EHOSTUNREACH, ECONNRESET (UDP ICMP Port Unreachable),
  *     EPIPE (if MSG_NOSIGNAL), EMSGSIZE, ENOTSOCK, EFAULT, etc.
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */

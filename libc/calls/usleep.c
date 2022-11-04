@@ -27,6 +27,7 @@
  * @return 0 on success, or -1 w/ errno
  * @raise EINTR if a signal was delivered while sleeping
  * @see clock_nanosleep()
+ * @cancellationpoint
  * @norestart
  */
 int usleep(uint32_t micros) {

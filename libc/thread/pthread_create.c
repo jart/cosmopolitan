@@ -98,7 +98,7 @@ static int PosixThread(void *arg, int tid) {
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
     _sigsetmask(pt->sigmask);
-    pt->rc = pt->start_routine(pt->arg);
+    pt->rc = pt->start(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     _npassert(!pt->cleanup);
   }
@@ -150,7 +150,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     errno = e;
     return EAGAIN;
   }
-  pt->start_routine = start_routine;
+  pt->start = start_routine;
   pt->arg = arg;
 
   // create thread local storage memory

@@ -43,6 +43,7 @@
  * performance boost in the case of a single small iovec.
  *
  * @return number of bytes actually read, or -1 w/ errno
+ * @cancellationpoint
  * @restartable
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {

@@ -16,52 +16,184 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/kprintf.h"
+#include "libc/assert.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/siginfo.h"
+#include "libc/calls/struct/sigset.h"
+#include "libc/calls/ucontext.h"
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/sa.h"
+#include "libc/sysv/consts/sig.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
+
+extern const char systemfive_cancellable[] hidden;
+extern const char systemfive_cancellable_end[] hidden;
+
+int _pthread_cancel_sys(void) {
+  struct PosixThread *pt;
+  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  if (!(pt->flags & (PT_NOCANCEL | PT_MASKED)) || (pt->flags & PT_ASYNC)) {
+    pthread_exit(PTHREAD_CANCELED);
+  }
+  pt->flags |= PT_NOCANCEL;
+  return ecanceled();
+}
+
+static void OnSigCancel(int sig, siginfo_t *si, void *ctx) {
+  ucontext_t *uc = ctx;
+  struct CosmoTib *tib = __get_tls();
+  struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+  if (pt && !(pt->flags & PT_NOCANCEL) &&
+      atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
+    sigaddset(&uc->uc_sigmask, sig);
+    if ((pt->flags & PT_ASYNC) ||
+        (systemfive_cancellable <= (char *)uc->uc_mcontext.rip &&
+         (char *)uc->uc_mcontext.rip < systemfive_cancellable_end)) {
+      uc->uc_mcontext.rip = (intptr_t)_pthread_cancel_sys;
+    } else {
+      tkill(atomic_load_explicit(&tib->tib_tid, memory_order_relaxed), sig);
+    }
+  }
+}
+
+static void ListenForSigCancel(void) {
+  struct sigaction sa;
+  sa.sa_sigaction = OnSigCancel;
+  sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_ONSTACK;
+  memset(&sa.sa_mask, -1, sizeof(sa.sa_mask));
+  _npassert(!sigaction(SIGCANCEL, &sa, 0));
+}
 
 /**
  * Cancels thread.
  *
- * This function currently isn't supported. In order to support this
- * function we'd need to redesign the system call interface, and add
- * bloat and complexity to every function that can return EINTR. You
- * might want to consider using `nsync_note` instead, which provides
- * much better cancellations because posix cancellations is a broken
- * design. If you need to cancel i/o operations, try doing this:
+ * When a thread is cancelled, it'll interrupt blocking i/o calls,
+ * invoke any cleanup handlers that were pushed on the thread's stack
+ * as well as key destructors, and then the thread exits.
  *
- *     _Thread_local bool gotusr1;
- *     void OnUsr1(int sig) { gotusr1 = true; }
- *     struct sigaction sa = {.sa_handler = OnUsr1};
- *     sigaction(SIGUSR1, &sa, 0);
- *     pthread_kill(thread, SIGUSR1);
+ * By default, pthread_cancel() can only take effect when a thread is
+ * blocked on a @cancellationpoint, which is any system call that's
+ * specified as raising `EINTR`. For example, `openat`, `poll`, `ppoll`,
+ * `select`, `pselect`, `read`, `readv`, `pread`, `preadv`, `write`,
+ * `writev`, `pwrite`, `pwritev`, `accept`, `connect`, `recvmsg`,
+ * `sendmsg`, `recv`, `send`, `tcdrain`, `clock_nanosleep`, `fsync`,
+ * `fdatasync`, `fcntl(F_SETLKW)`, `epoll`, `sigsuspend`, `msync`,
+ * `wait4`, `getrandom`, `pthread_cond_timedwait` are most cancellation
+ * points, plus many userspace libraries that call the above functions,
+ * unless they're using pthread_setcancelstate() to temporarily disable
+ * the cancellation mechanism. Some userspace functions, e.g. system()
+ * and popen() will eagerly call pthread_testcancel_np() to help avoid
+ * the potential for resource leaks later on.
  *
- * The above code should successfully cancel a thread's blocking io
- * operations in most cases, e.g.
+ * It's possible to put a thread in asynchronous cancellation mode using
+ * pthread_setcanceltype(), thus allowing a cancellation to occur at any
+ * assembly opcode. Please be warned that doing so is risky since it can
+ * easily result in resource leaks. For example, a cancellation might be
+ * triggered between calling open() and pthread_cleanup_push(), in which
+ * case the application will leak a file descriptor.
  *
- *     void *MyThread(void *arg) {
- *       sigset_t ss;
- *       sigfillset(&ss);
- *       sigdelset(&ss, SIGUSR1);
- *       sigprocmask(SIG_SETMASK, &ss, 0);
- *       while (!gotusr1) {
- *         char buf[512];
- *         ssize_t rc = read(0, buf, sizeof(buf));
- *         if (rc == -1 && errno == EINTR) continue;
- *         write(1, buf, rc);
- *       }
- *       return 0;
- *     }
+ * If none of the above options seem savory to you, then a third way is
+ * offered for doing cancellations. Cosmopolitan Libc supports the Musl
+ * Libc `PTHREAD_CANCEL_MASKED` non-POSIX extension. Any thread may pass
+ * this setting to pthread_setcancelstate(), in which case threads won't
+ * be abruptly destroyed upon cancellation and have their stack unwound;
+ * instead, cancellation points will simply raise an `ECANCELED` error,
+ * which can be more safely and intuitively handled for many use cases.
  *
- * This has the same correctness issue as glibc, but it's usually
- * "good enough" if you only need cancellations to perform things
- * like server shutdown and socket options like `SO_RCVTIMEO` can
- * ensure it's even safer, since it can't possibly block forever.
- *
- * @see https://sourceware.org/bugzilla/show_bug.cgi?id=12683
+ * @return 0 on success, or errno on error
+ * @raise ESRCH if thread isn't alive
  */
 int pthread_cancel(pthread_t thread) {
-  kprintf("error: pthread_cancel() isn't supported, please see the"
-          " cosmopolitan libc documentation for further details\n");
-  _Exit(1);
+  int e, rc, tid;
+  static bool once;
+  struct PosixThread *pt;
+  __require_tls();
+  if (!once) ListenForSigCancel(), once = true;
+  pt = (struct PosixThread *)thread;
+  switch (atomic_load_explicit(&pt->status, memory_order_acquire)) {
+    case kPosixThreadZombie:
+    case kPosixThreadTerminated:
+      return ESRCH;
+    default:
+      break;
+  }
+  atomic_store_explicit(&pt->cancelled, 1, memory_order_release);
+  if (thread == __get_tls()->tib_pthread) {
+    if (!(pt->flags & PT_NOCANCEL) && (pt->flags & PT_ASYNC)) {
+      pthread_exit(PTHREAD_CANCELED);
+    }
+    return 0;
+  }
+  if (IsWindows()) return 0;  // TODO(jart): Should we do this?
+  tid = atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire);
+  if (tid <= 0) return 0;  // TODO(jart): Do we need this?
+  e = errno;
+  if (!tkill(tid, SIGCANCEL)) {
+    return 0;
+  } else {
+    rc = errno;
+    errno = e;
+    return rc;
+  }
+  return 0;
+}
+
+/**
+ * Creates cancellation point in calling thread.
+ *
+ * This function can be used to force `PTHREAD_CANCEL_DEFERRED` threads
+ * to cancel without needing to invoke an interruptible system call. If
+ * the calling thread is in the `PTHREAD_CANCEL_DISABLE` then this will
+ * do nothing. If the calling thread hasn't yet been cancelled, this'll
+ * do nothing. In `PTHREAD_CANCEL_MASKED` mode, this also does nothing.
+ *
+ * @see pthread_testcancel_np()
+ */
+void pthread_testcancel(void) {
+  struct PosixThread *pt;
+  if (!__tls_enabled) return;
+  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  if (pt->flags & PT_NOCANCEL) return;
+  if ((!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) &&
+      atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
+    pthread_exit(PTHREAD_CANCELED);
+  }
+}
+
+/**
+ * Creates cancellation point in calling thread.
+ *
+ * This function can be used to force `PTHREAD_CANCEL_DEFERRED` threads
+ * to cancel without needing to invoke an interruptible system call. If
+ * the calling thread is in the `PTHREAD_CANCEL_DISABLE` then this will
+ * do nothing. If the calling thread hasn't yet been cancelled, this'll
+ * do nothing. If the calling thread uses `PTHREAD_CANCEL_MASKED`, then
+ * this function returns `ECANCELED` if a cancellation occurred, rather
+ * than the normal behavior which is to destroy and cleanup the thread.
+ * Any `ECANCELED` result must not be ignored, because the thread shall
+ * have cancellations disabled once it occurs.
+ *
+ * @return 0 if not cancelled or cancellation is blocked or `ECANCELED`
+ *     in masked mode when the calling thread has been cancelled
+ */
+int pthread_testcancel_np(void) {
+  int rc;
+  struct PosixThread *pt;
+  if (!__tls_enabled) return 0;
+  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  if (pt->flags & PT_NOCANCEL) return 0;
+  if (!atomic_load_explicit(&pt->cancelled, memory_order_acquire)) return 0;
+  if (!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) {
+    pthread_exit(PTHREAD_CANCELED);
+  } else {
+    pt->flags |= PT_NOCANCEL;
+    return ECANCELED;
+  }
 }

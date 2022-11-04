@@ -34,6 +34,5 @@ TEST(strsignal, test) {
 
 TEST(strsignal, realtime) {
   if (!SIGRTMIN) return;
-  ASSERT_STREQ("SIGRTMIN", strsignal(SIGRTMIN));
   ASSERT_STREQ("SIGRTMIN+1", strsignal(SIGRTMIN + 1));
 }

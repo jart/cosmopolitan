@@ -40,6 +40,7 @@ static textwindows int sys_tcdrain_nt(int fd) {
  * @raise EIO if process group of writer is orphoned, calling thread is
  *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
  * @raise ENOSYS on bare metal
+ * @cancellationpoint
  * @asyncsignalsafe
  */
 int tcdrain(int fd) {
@@ -47,7 +48,7 @@ int tcdrain(int fd) {
   if (IsMetal()) {
     rc = enosys();
   } else if (!IsWindows()) {
-    rc = sys_ioctl(fd, TCSBRK, (void *)(intptr_t)1);
+    rc = sys_ioctl_cp(fd, TCSBRK, (void *)(intptr_t)1);
   } else {
     rc = sys_tcdrain_nt(fd);
   }

@@ -17,15 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/sigset.h"
+#include "libc/str/str.h"
 
-/**
- * Blocks all signals without strace logging.
- *
- * @param neu is new signal mask for process
- * @return old signal mask
- */
 sigset_t _sigblockall(void) {
   sigset_t ss;
-  sigfillset(&ss);
+  memset(&ss, -1, sizeof(ss));
   return _sigsetmask(ss);
 }

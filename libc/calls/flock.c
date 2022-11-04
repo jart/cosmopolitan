@@ -17,10 +17,10 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 
 /**
  * Acquires lock on file.
@@ -30,6 +30,7 @@
  * @param op can have LOCK_{SH,EX,NB,UN} for shared, exclusive,
  *     non-blocking, and unlocking
  * @return 0 on success, or -1 w/ errno
+ * @cancellationpoint
  * @restartable
  */
 int flock(int fd, int op) {

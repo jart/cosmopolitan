@@ -18,8 +18,9 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
+#include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/errors.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/errfuns.h"
@@ -31,7 +32,7 @@ textwindows int sys_pause_nt(void) {
   for (;;) {
 
     if (_check_interrupts(false, g_fds.p)) {
-      return eintr();
+      return -1;
     }
 
     if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {

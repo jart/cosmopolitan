@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_nanosleep,0x1ae05b0f0ffff023,globl,hidden
+.scall sys_nanosleep,0x9ae85b8f0ffff823,globl,hidden

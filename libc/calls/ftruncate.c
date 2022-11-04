@@ -56,7 +56,7 @@
  * @raise EINVAL if `fd` is a non-file, e.g. pipe, socket
  * @raise EINVAL if `fd` wasn't opened in a writeable mode
  * @raise ENOSYS on bare metal
- * @see truncate()
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  */

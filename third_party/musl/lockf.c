@@ -39,6 +39,11 @@ Copyright 2005-2014 Rich Felker, et. al.\"");
 asm(".include \"libc/disclaimer.inc\"");
 // clang-format off
 
+/**
+ * Locks file.
+ *
+ * @cancellationpoint when `op` is `F_LOCK`
+ */
 int lockf(int fd, int op, off_t size)
 {
 	struct flock l = {

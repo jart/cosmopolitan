@@ -141,6 +141,7 @@
  * @raise ELOOP if `flags` had `O_NOFOLLOW` and `file` is a symbolic link
  * @raise ELOOP if a loop was detected resolving components of `file`
  * @raise EISDIR if writing is requested and `file` names a directory
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @threadsafe

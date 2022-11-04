@@ -108,6 +108,7 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
  * Reads with maximum generality.
  *
  * @return number of bytes actually read, or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @vforksafe
  */

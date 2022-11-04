@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
+#include "libc/intrin/weaken.h"
 #include "libc/paths.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/internal.h"
@@ -27,6 +28,7 @@
 #include "libc/sysv/consts/fd.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 /**
  * Spawns subprocess and returns pipe stream.
@@ -35,11 +37,12 @@
  * Bourne-like syntax on all platforms including Windows.
  *
  * @see pclose()
+ * @cancellationpoint
  * @threadsafe
  */
 FILE *popen(const char *cmdline, const char *mode) {
   FILE *f;
-  int e, pid, dir, flags, pipefds[2];
+  int e, rc, pid, dir, flags, pipefds[2];
   flags = fopenflags(mode);
   if ((flags & O_ACCMODE) == O_RDONLY) {
     dir = 0;
@@ -48,6 +51,11 @@ FILE *popen(const char *cmdline, const char *mode) {
   } else {
     einval();
     return NULL;
+  }
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return 0;
   }
   if (pipe2(pipefds, O_CLOEXEC) == -1) return NULL;
   if ((f = fdopen(pipefds[dir], mode))) {

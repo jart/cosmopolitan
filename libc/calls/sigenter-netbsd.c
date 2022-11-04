@@ -75,6 +75,11 @@ privileged void __sigenter_netbsd(int sig, struct siginfo_netbsd *si,
       uc.uc_mcontext.rsp = ctx->uc_mcontext.rsp;
       *uc.uc_mcontext.fpregs = ctx->uc_mcontext.__fpregs;
       ((sigaction_f)(_base + rva))(sig, &si2, &uc);
+      ctx->uc_stack.ss_sp = uc.uc_stack.ss_sp;
+      ctx->uc_stack.ss_size = uc.uc_stack.ss_size;
+      ctx->uc_stack.ss_flags = uc.uc_stack.ss_flags;
+      __repmovsb(&ctx->uc_sigmask, &uc.uc_sigmask,
+                 MIN(sizeof(uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
       ctx->uc_mcontext.rdi = uc.uc_mcontext.rdi;
       ctx->uc_mcontext.rsi = uc.uc_mcontext.rsi;
       ctx->uc_mcontext.rdx = uc.uc_mcontext.rdx;

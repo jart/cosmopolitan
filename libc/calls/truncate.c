@@ -58,6 +58,7 @@
  * @raise ETXTBSY if `path` is an executable being executed
  * @raise EROFS if `path` is on a read-only filesystem
  * @raise ENOSYS on bare metal
+ * @cancellationpoint
  * @see ftruncate()
  * @threadsafe
  */

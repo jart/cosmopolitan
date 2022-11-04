@@ -56,6 +56,7 @@
  *     or `SO_RCVTIMEO` is in play and the time interval elapsed
  * @raise ENOBUFS is specified by POSIX
  * @raise ENXIO is specified by POSIX
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

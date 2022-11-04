@@ -47,6 +47,7 @@
  * call using write().
  *
  * @return number of bytes actually handed off, or -1 w/ errno
+ * @cancellationpoint
  * @restartable
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {

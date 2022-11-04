@@ -40,6 +40,7 @@
  * @raise EAGAIN if deadline expired
  * @raise ENOSYS on Windows, XNU, OpenBSD, Metal
  * @raise EFAULT if invalid memory was supplied
+ * @cancellationpoint
  */
 int sigtimedwait(const sigset_t *set, siginfo_t *info,
                  const struct timespec *timeout) {

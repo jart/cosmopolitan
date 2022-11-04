@@ -36,6 +36,7 @@
  * @param flags can have SOCK_{CLOEXEC,NONBLOCK}, which may apply to
  *     both the newly created socket and the server one
  * @return client fd which needs close(), or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable (unless SO_RCVTIMEO)
  */

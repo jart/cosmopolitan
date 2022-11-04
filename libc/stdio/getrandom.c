@@ -70,6 +70,7 @@ static bool have_getrandom;
  * @note this function takes around 900 cycles
  * @raise EINVAL if `f` is invalid
  * @raise ENOSYS on bare metal
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @vforksafe

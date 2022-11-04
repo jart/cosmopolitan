@@ -34,7 +34,7 @@ textwindows ssize_t sys_recv_nt(struct Fd *fd, const struct iovec *iov,
   struct SockFd *sockfd;
   struct NtIovec iovnt[16];
   struct NtOverlapped overlapped = {.hEvent = WSACreateEvent()};
-  if (_check_interrupts(true, g_fds.p)) return eintr();
+  if (_check_interrupts(true, g_fds.p)) return -1;
   err = errno;
   if (!WSARecv(fd->handle, iovnt, __iovec2nt(iovnt, iov, iovlen), &got, &flags,
                &overlapped, NULL)) {

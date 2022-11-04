@@ -8,13 +8,12 @@
 
 #define PT_OWNSTACK   1
 #define PT_MAINTHREAD 2
+#define PT_ASYNC      4
+#define PT_NOCANCEL   8
+#define PT_MASKED     16
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
-
-/**
- * @fileoverview Cosmopolitan POSIX Thread Internals
- */
 
 // LEGAL TRANSITIONS             ┌──> TERMINATED
 // pthread_create ─┬─> JOINABLE ─┴┬─> DETACHED ──> ZOMBIE
@@ -60,15 +59,13 @@ enum PosixThreadStatus {
 };
 
 struct PosixThread {
+  int flags;               // 0x00: see PT_* constants
+  _Atomic(int) cancelled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) status;
-  void *(*start_routine)(void *);
-  void *arg;               // start_routine's parameter
-  void *rc;                // start_routine's return value
   int tid;                 // clone parent tid
-  int flags;               // see PT_* constants
-  _Atomic(int) cancelled;  // thread has bad beliefs
-  char cancelasync;        // PTHREAD_CANCEL_DEFERRED/ASYNCHRONOUS
-  char canceldisable;      // PTHREAD_CANCEL_ENABLE/DISABLE
+  void *(*start)(void *);  // creation callback
+  void *arg;               // start's parameter
+  void *rc;                // start's return value
   char *altstack;          // thread sigaltstack
   char *tls;               // bottom of tls allocation
   struct CosmoTib *tib;    // middle of tls allocation
@@ -98,6 +95,7 @@ void _pthread_key_destruct(void) hidden;
 void _pthread_onfork_prepare(void) hidden;
 void _pthread_onfork_parent(void) hidden;
 void _pthread_onfork_child(void) hidden;
+int _pthread_cancel_sys(void) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

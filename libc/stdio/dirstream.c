@@ -255,14 +255,20 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
  *
  * @returns newly allocated DIR object, or NULL w/ errno
  * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
+ * @cancellationpoint
  * @see glob()
  */
 DIR *opendir(const char *name) {
-  int fd;
   DIR *res;
+  int fd, rc;
   struct stat st;
   struct Zipos *zip;
   struct ZiposUri zipname;
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return 0;
+  }
   if (!name || (IsAsan() && !__asan_is_valid_str(name))) {
     efault();
     res = 0;
@@ -271,20 +277,21 @@ DIR *opendir(const char *name) {
     if (_weaken(__zipos_stat)(&zipname, &st) != -1) {
       if (S_ISDIR(st.st_mode)) {
         zip = _weaken(__zipos_get)();
-        res = calloc(1, sizeof(DIR));
-        res->iszip = true;
-        res->fd = -1;
-        res->zip.offset = GetZipCdirOffset(zip->cdir);
-        res->zip.records = GetZipCdirRecords(zip->cdir);
-        res->zip.prefix = malloc(zipname.len + 2);
-        memcpy(res->zip.prefix, zipname.path, zipname.len);
-        if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
-          res->zip.prefix[zipname.len++] = '/';
+        if ((res = calloc(1, sizeof(DIR)))) {
+          res->iszip = true;
+          res->fd = -1;
+          res->zip.offset = GetZipCdirOffset(zip->cdir);
+          res->zip.records = GetZipCdirRecords(zip->cdir);
+          res->zip.prefix = malloc(zipname.len + 2);
+          memcpy(res->zip.prefix, zipname.path, zipname.len);
+          if (zipname.len && res->zip.prefix[zipname.len - 1] != '/') {
+            res->zip.prefix[zipname.len++] = '/';
+          }
+          res->zip.prefix[zipname.len] = '\0';
+          res->zip.prefixlen = zipname.len;
         }
-        res->zip.prefix[zipname.len] = '\0';
-        res->zip.prefixlen = zipname.len;
       } else {
-        errno = ENOTDIR;
+        enotdir();
         res = 0;
       }
     } else {

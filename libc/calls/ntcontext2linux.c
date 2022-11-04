@@ -21,6 +21,8 @@
 #include "libc/nt/struct/context.h"
 #include "libc/str/str.h"
 
+// TODO(jart): uc_sigmask support
+
 privileged void _ntcontext2linux(ucontext_t *ctx, const struct NtContext *cr) {
   if (!cr) return;
   ctx->uc_mcontext.eflags = cr->EFlags;

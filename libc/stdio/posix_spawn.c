@@ -25,6 +25,7 @@
 #include "libc/stdio/posix_spawn.h"
 #include "libc/stdio/posix_spawn.internal.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 static int RunFileActions(struct _posix_faction *a) {
@@ -67,6 +68,7 @@ static int RunFileActions(struct _posix_faction *a) {
  * @param envp is environment variables, or `environ` if null
  * @return 0 on success or error number on failure
  * @see posix_spawnp() for `$PATH` searching
+ * @cancellationpoint
  * @tlsrequired
  * @threadsafe
  */
@@ -79,6 +81,9 @@ int posix_spawn(int *pid, const char *path,
   int s, child, policy;
   struct sched_param param;
   struct sigaction dfl = {0};
+  if (_weaken(pthread_testcancel)) {
+    _weaken(pthread_testcancel)();
+  }
   if (!(child = vfork())) {
     if (attrp && *attrp) {
       posix_spawnattr_getflags(attrp, &flags);

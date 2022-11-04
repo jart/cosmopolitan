@@ -43,6 +43,7 @@
  * @raise EINVAL if `0 ≤ abstime->tv_nsec < 1000000000` wasn't the case
  * @see pthread_cond_broadcast
  * @see pthread_cond_signal
+ * @cancellationpoint
  */
 errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,
                                const struct timespec *abstime) {

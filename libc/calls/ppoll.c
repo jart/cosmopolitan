@@ -50,6 +50,7 @@
  *
  * @param timeout if null will block indefinitely
  * @param sigmask may be null in which case no mask change happens
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  * @norestart

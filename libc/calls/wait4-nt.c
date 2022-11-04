@@ -48,15 +48,15 @@
 static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
                                          int options,
                                          struct rusage *opt_out_rusage) {
-  int pids[64];
   int64_t handle;
+  int rc, pids[64];
   int64_t handles[64];
   uint32_t dwExitCode;
   bool shouldinterrupt;
   uint32_t i, j, base, count, timeout;
   struct NtProcessMemoryCountersEx memcount;
   struct NtFileTime createfiletime, exitfiletime, kernelfiletime, userfiletime;
-  if (_check_interrupts(true, g_fds.p)) return eintr();
+  if (_check_interrupts(true, g_fds.p)) return -1;
   __fds_lock();
   if (pid != -1 && pid != 0) {
     if (pid < 0) {
@@ -94,7 +94,7 @@ static textwindows int sys_wait4_nt_impl(int pid, int *opt_out_wstatus,
   }
   __fds_unlock();
   for (;;) {
-    if (_check_interrupts(true, 0)) return eintr();
+    if (_check_interrupts(true, 0)) return -1;
     dwExitCode = kNtStillActive;
     if (options & WNOHANG) {
       i = WaitForMultipleObjects(count, handles, false, 0);

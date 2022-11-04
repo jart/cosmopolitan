@@ -80,6 +80,7 @@
  * @raise EINVAL if `flags` has an unrecognized value
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
  * @raise ENOSYS on bare metal
+ * @cancellationpoint
  * @returnserrno
  * @norestart
  */

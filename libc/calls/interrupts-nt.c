@@ -18,24 +18,33 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/fd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/lockcmpxchgp.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
+#include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-textwindows bool _check_interrupts(bool restartable, struct Fd *fd) {
-  bool res;
+textwindows int _check_interrupts(bool restartable, struct Fd *fd) {
+  int rc;
+  if (_weaken(pthread_testcancel_np) &&
+      (rc = _weaken(pthread_testcancel_np)())) {
+    errno = rc;
+    return -1;
+  }
   if (_weaken(_check_sigalrm)) _weaken(_check_sigalrm)();
   if (!__tls_enabled || !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     if (_weaken(_check_sigchld)) _weaken(_check_sigchld)();
     if (fd && _weaken(_check_sigwinch)) _weaken(_check_sigwinch)(fd);
   }
-  res = _weaken(__sig_check) && _weaken(__sig_check)(restartable);
-  return res;
+  if (_weaken(__sig_check) && _weaken(__sig_check)(restartable)) return eintr();
+  return 0;
 }

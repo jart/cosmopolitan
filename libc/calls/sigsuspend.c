@@ -40,6 +40,7 @@
  * @param ignore is a bitset of signals to block temporarily, which if
  *     NULL is equivalent to passing an empty signal set
  * @return -1 w/ EINTR (or possibly EFAULT)
+ * @cancellationpoint
  * @asyncsignalsafe
  * @norestart
  */
@@ -72,8 +73,7 @@ int sigsuspend(const sigset_t *ignore) {
       ms = 0;
       totoms = 0;
       do {
-        if (_check_interrupts(false, g_fds.p)) {
-          rc = eintr();
+        if ((rc = _check_interrupts(false, g_fds.p))) {
           break;
         }
         if (SleepEx(__SIG_POLLING_INTERVAL_MS, true) == kNtWaitIoCompletion) {

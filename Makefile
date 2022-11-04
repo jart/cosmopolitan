@@ -61,7 +61,7 @@
 
 SHELL      = build/bootstrap/cocmd.com
 HOSTS     ?= freebsd openbsd netbsd rhel7 rhel5 xnu win10 win10:31336
-MAKEFLAGS += -j --no-builtin-rules
+MAKEFLAGS += --no-builtin-rules
 
 .SUFFIXES:
 .DELETE_ON_ERROR:

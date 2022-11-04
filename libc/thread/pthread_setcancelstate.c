@@ -24,22 +24,47 @@
 /**
  * Sets cancelability state.
  *
+ * This function may be used to temporarily disable cancellation for the
+ * calling thread, which is necessary in cases when a @cancellationpoint
+ * function is invoked from an @asyncsignalsafe function.
+ *
+ * Cosmopolitan Libc supports the Musl Libc `PTHREAD_CANCEL_MASKED`
+ * non-POSIX extension. Any thread may use this setting, in which case
+ * the thread won't be abruptly destroyed upon a cancellation and have
+ * its stack unwound; instead, the thread will encounter an `ECANCELED`
+ * errno the next time it calls a cancellation point.
+ *
  * @param state may be one of:
  *     - `PTHREAD_CANCEL_ENABLE` (default)
  *     - `PTHREAD_CANCEL_DISABLE`
+ *     - `PTHREAD_CANCEL_MASKED`
  * @param oldstate optionally receives old value
  * @return 0 on success, or errno on error
  * @raise EINVAL if `state` has bad value
- * @see pthread_cancel() for docs
+ * @asyncsignalsafe
  */
 int pthread_setcancelstate(int state, int *oldstate) {
   struct PosixThread *pt;
   switch (state) {
     case PTHREAD_CANCEL_ENABLE:
     case PTHREAD_CANCEL_DISABLE:
+    case PTHREAD_CANCEL_MASKED:
       pt = (struct PosixThread *)__get_tls()->tib_pthread;
-      if (oldstate) *oldstate = pt->canceldisable;
-      pt->canceldisable = state;
+      if (oldstate) {
+        if (pt->flags & PT_NOCANCEL) {
+          *oldstate = PTHREAD_CANCEL_DISABLE;
+        } else if (pt->flags & PT_MASKED) {
+          *oldstate = PTHREAD_CANCEL_MASKED;
+        } else {
+          *oldstate = PTHREAD_CANCEL_ENABLE;
+        }
+      }
+      pt->flags &= ~(PT_NOCANCEL | PT_MASKED);
+      if (state == PTHREAD_CANCEL_MASKED) {
+        pt->flags |= PT_MASKED;
+      } else if (state == PTHREAD_CANCEL_DISABLE) {
+        pt->flags |= PT_NOCANCEL;
+      }
       return 0;
     default:
       return EINVAL;

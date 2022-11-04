@@ -48,6 +48,7 @@
  * @raise EIO if a complicated i/o error happened
  * @raise EINTR if signal was delivered instead
  * @see pwrite(), write()
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe

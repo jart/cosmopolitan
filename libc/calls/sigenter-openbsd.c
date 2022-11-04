@@ -76,6 +76,7 @@ privileged void __sigenter_openbsd(int sig, struct siginfo_openbsd *openbsdinfo,
         *g.uc.uc_mcontext.fpregs = *ctx->sc_fpstate;
       }
       ((sigaction_f)(_base + rva))(sig, &g.si, &g.uc);
+      ctx->sc_mask = g.uc.uc_sigmask.__bits[0];
       ctx->sc_rdi = g.uc.uc_mcontext.rdi;
       ctx->sc_rsi = g.uc.uc_mcontext.rsi;
       ctx->sc_rdx = g.uc.uc_mcontext.rdx;

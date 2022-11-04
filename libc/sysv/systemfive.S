@@ -21,6 +21,7 @@
 #include "libc/macros.internal.h"
 #include "libc/nexgen32e/macros.h"
 #include "libc/sysv/consts/sig.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/sysv/consts/nr.h"
 
 #define SIG_IGN 1
@@ -107,19 +108,60 @@ __pid:	.quad	0
 	.endobj	__pid,globl,hidden
 	.previous
 
-	.privileged
+systemfive_cancellable:			# our pthread_cancel() miracle code
+	cmpb	$0,__tls_enabled(%rip)	# inspired by the musl libc design!
+	je	1f			# we handle linux and bsd together!
+	mov	%fs:0,%r10		# CosmoTib::tib_self
+	mov	0x28(%r10),%r10		# CosmoTib::tib_pthread
+	test	%r10,%r10		# is it a posix thread?
+	jz	1f			# it's spawn() probably
+	testb	$PT_NOCANCEL,0x00(%r10)	# PosixThread::flags
+	jnz	1f			# canceler no cancelling
+	cmp	$0,0x04(%r10)		# PosixThread::cancelled
+	jne	_pthread_cancel_sys	# tail call for masked mode
+	.weak	_pthread_cancel_sys	# must be linked if we're cancelled
+1:	mov	%rcx,%r10		# move the fourth argument
+	clc				# no cancellable system calls exist
+	syscall				# that have 7+ args on the bsd OSes
+systemfive_cancellable_end:		# i/o calls park here for long time
+	jc	systemfive_errno
+	jmp	0f
+	jc	3f			# we're now out of the limbo state!
+1:	cmp	$-4095,%rax		# but we still check again on eintr
+	jae	2f
+	ret				# done if the system call succeeded
+2:	neg	%eax			# now examine the nature of failure
+3:	cmp	EINTR(%rip),%eax	# did SIGCANCEL cancel our i/o call
+	jne	systemfive_errno	# werent interrupted by OnSigCancel
+	cmpb	$0,__tls_enabled(%rip)	# make sure it's safe to grab %fs:0
+	je	systemfive_errno	# tls is disabled we can't continue
+	mov	%fs:0,%rcx		# CosmoTib::tib_self
+	mov	0x28(%rcx),%rcx		# CosmoTib::tib_pthread
+	test	%rcx,%rcx		# is it a posix thread?
+	jz	systemfive_errno	# it's spawn() probably
+	testb	$PT_NOCANCEL,0x00(%rcx)	# PosixThread::flags
+	jnz	systemfive_errno	# cancellation is disabled
+	cmp	$0,0x04(%rcx)		# PosixThread::cancelled
+	je	systemfive_errno	# we aren't actually cancelled
+	jmp	_pthread_cancel_sys	# now we are in fact cancelled
+	.endfn	systemfive_cancellable,globl,hidden
+	.globl	systemfive_cancellable_end
+	.hidden	systemfive_cancellable_end
+
 .Lanchorpoint:
 #if SupportsLinux() || SupportsMetal()
 systemfive_linux:
-	and	$0xfff,%eax
-	cmp	$0xfff,%eax
+	and	$0xfff,%eax		# remove nonlinux bits from ordinal
+	cmp	$0xfff,%eax		# checks if unsupported by platform
 	je	systemfive_enosys	# never taken branches cost nothing
+	btr	$11,%eax		# 0x800 means a call is cancellable
+	jc	systemfive_cancellable	# it is handled by the holiest code
 	mov	%rcx,%r10		# syscall instruction clobbers %rcx
 	push	%rbp			# linux never reads args from stack
 	mov	%rsp,%rbp		# having frame will help backtraces
 	syscall				# this is known as a context switch
 	pop	%rbp			# next we check to see if it failed
-	cmp	$-4095,%rax		# system five nexgen32e abi § a.2.1
+0:	cmp	$-4095,%rax		# system five nexgen32e abi § a.2.1
 	jae	systemfive_error	# encodes errno as neg return value
 	ret
 	.endfn	systemfive_linux,globl,hidden
@@ -167,17 +209,10 @@ systemfive_bsdscrub:
 systemfive_bsd:
 	cmp	$0xfff,%ax
 	je	systemfive_enosys
+	btr	$11,%eax		# checks/reset the 800 cancellable bit
+	jc	systemfive_cancellable
 	mov	%rcx,%r10
-	push	%rbx
-	push	32(%rsp)
-	push	24(%rsp)
-	push	16(%rsp)
-	mov	%rax,%rbx		# save ordinal for SIGSYS crash report
 	syscall				# bsd will need arg on stack sometimes
-	pop	%rbx
-	pop	%rbx
-	pop	%rbx
-	pop	%rbx
 	jc	systemfive_errno	# bsd sets carry flag if %rax is errno
 	ret
 	.endfn	systemfive_bsd
@@ -391,22 +426,6 @@ _init_systemfive_sigsys:
 	pop	%rdi
 1:	.endfn	_init_systemfive_sigsys
 #endif
-#if SupportsSystemv() && !defined(TINY)
-_init_systemfive_syscall:
-	mov	__NR_msyscall,%eax			# syscall origin protect
-	cmp	$0xfff,%ax				# openbsd is pretty cool
-	jae	_init_systemfive_done
-	push	%rdi
-	push	%rsi
-	.weak	__privileged_addr
-	.weak	__privileged_size
-	mov	$__privileged_addr,%edi
-	mov	$__privileged_size,%esi
-	syscall
-	pop	%rsi
-	pop	%rdi
-//	𝑠𝑙𝑖𝑑𝑒
-#endif /* TINY */
 _init_systemfive_done:
 	nop
 	.init.end 300,_init_systemfive,globl,hidden

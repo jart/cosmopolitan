@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sock/internal.h"
 
 /**
@@ -37,6 +37,7 @@
  * However this has a tinier footprint and better logging.
  *
  * @return -1 w/ errno set to EINTR
+ * @cancellationpoint
  * @see sigsuspend()
  * @norestart
  */

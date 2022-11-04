@@ -34,6 +34,7 @@
  * @param addr needs to be 4096-byte page aligned
  * @param flags needs MS_ASYNC or MS_SYNC and can have MS_INVALIDATE
  * @return 0 on success or -1 w/ errno
+ * @cancellationpoint
  */
 int msync(void *addr, size_t size, int flags) {
   int rc;

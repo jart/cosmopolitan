@@ -1,2 +1,2 @@
 .include "o/libc/sysv/macros.internal.inc"
-.scall sys_select,0x1a104705d205d017,globl,hidden
+.scall sys_select,0x9a184785d285d817,globl,hidden

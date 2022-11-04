@@ -32,10 +32,10 @@
 textwindows int sys_accept_nt(struct Fd *fd, void *addr, uint32_t *addrsize,
                               int flags) {
   int64_t h;
-  int client, oflags;
+  int rc, client, oflags;
   struct SockFd *sockfd, *sockfd2;
   sockfd = (struct SockFd *)fd->extra;
-  if (_check_interrupts(true, g_fds.p)) return eintr();
+  if (_check_interrupts(true, g_fds.p)) return -1;
   for (;;) {
     if (!WSAPoll(&(struct sys_pollfd_nt){fd->handle, POLLIN}, 1,
                  __SIG_POLLING_INTERVAL_MS)) {

@@ -204,6 +204,7 @@ textwindows int __sig_raise(int sig, int si_code) {
   if (1 <= sig && sig <= 64) {
     if (!__sig_is_masked(sig)) {
       ++__sig_count;
+      // TODO(jart): ucontext_t support
       __sig_handle(false, sig, si_code, 0);
       return 0;
     } else {

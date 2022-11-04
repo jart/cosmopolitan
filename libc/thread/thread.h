@@ -27,6 +27,7 @@
 
 #define PTHREAD_CANCEL_ENABLE  0
 #define PTHREAD_CANCEL_DISABLE 1
+#define PTHREAD_CANCEL_MASKED  2
 
 #define PTHREAD_CANCEL_DEFERRED     0
 #define PTHREAD_CANCEL_ASYNCHRONOUS 1
@@ -109,6 +110,8 @@ int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);
 
 int pthread_yield(void);
+void pthread_testcancel(void);
+int pthread_testcancel_np(void);
 void pthread_exit(void *) wontreturn;
 pthread_t pthread_self(void) pureconst;
 pthread_id_np_t pthread_getthreadid_np(void);

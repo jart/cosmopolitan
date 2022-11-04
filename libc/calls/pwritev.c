@@ -114,6 +114,7 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
  * call using pwrite().
  *
  * @return number of bytes actually sent, or -1 w/ errno
+ * @cancellationpoint
  * @asyncsignalsafe
  * @vforksafe
  */

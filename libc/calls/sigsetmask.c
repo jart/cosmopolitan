@@ -23,12 +23,6 @@
 #include "libc/dce.h"
 #include "libc/sysv/consts/sig.h"
 
-/**
- * Sets signal mask without strace logging.
- *
- * @param neu is new signal mask for process
- * @return old signal mask
- */
 sigset_t _sigsetmask(sigset_t neu) {
   sigset_t res;
   if (IsMetal() || IsWindows()) {

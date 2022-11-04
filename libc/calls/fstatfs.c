@@ -18,16 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
 #include "libc/dce.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Returns information about filesystem.
  * @return 0 on success, or -1 w/ errno
+ * @cancellationpoint
  */
 int fstatfs(int fd, struct statfs *sf) {
   int rc;
