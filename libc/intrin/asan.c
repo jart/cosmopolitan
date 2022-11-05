@@ -948,9 +948,9 @@ static dontdiscard __asan_die_f *__asan_report_memory_fault(
 static void *__asan_morgue_add(void *p) {
   return atomic_exchange_explicit(
       __asan_morgue.p + (atomic_fetch_add_explicit(&__asan_morgue.i, 1,
-                                                   memory_order_acquire) &
+                                                   memory_order_acq_rel) &
                          (ARRAYLEN(__asan_morgue.p) - 1)),
-      p, memory_order_release);
+      p, memory_order_acq_rel);
 }
 
 static void __asan_morgue_flush(void) {

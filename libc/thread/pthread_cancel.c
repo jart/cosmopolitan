@@ -34,8 +34,10 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-extern const char systemfive_cancellable[] hidden;
-extern const char systemfive_cancellable_end[] hidden;
+int systemfive_cancel(void);
+
+extern const char systemfive_cancellable[];
+extern const char systemfive_cancellable_end[];
 
 int _pthread_cancel_sys(void) {
   struct PosixThread *pt;
@@ -57,7 +59,7 @@ static void OnSigCancel(int sig, siginfo_t *si, void *ctx) {
     if ((pt->flags & PT_ASYNC) ||
         (systemfive_cancellable <= (char *)uc->uc_mcontext.rip &&
          (char *)uc->uc_mcontext.rip < systemfive_cancellable_end)) {
-      uc->uc_mcontext.rip = (intptr_t)_pthread_cancel_sys;
+      uc->uc_mcontext.rip = (intptr_t)systemfive_cancel;
     } else {
       tkill(atomic_load_explicit(&tib->tib_tid, memory_order_relaxed), sig);
     }

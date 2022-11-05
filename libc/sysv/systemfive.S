@@ -108,6 +108,9 @@ __pid:	.quad	0
 	.endobj	__pid,globl,hidden
 	.previous
 
+systemfive_cp:
+	push	%rbp
+	mov	%rsp,%rbp
 systemfive_cancellable:			# our pthread_cancel() miracle code
 	cmpb	$0,__tls_enabled(%rip)	# inspired by the musl libc design!
 	je	1f			# we handle linux and bsd together!
@@ -118,12 +121,12 @@ systemfive_cancellable:			# our pthread_cancel() miracle code
 	testb	$PT_NOCANCEL,0x00(%r10)	# PosixThread::flags
 	jnz	1f			# canceler no cancelling
 	cmp	$0,0x04(%r10)		# PosixThread::cancelled
-	jne	_pthread_cancel_sys	# tail call for masked mode
-	.weak	_pthread_cancel_sys	# must be linked if we're cancelled
+	jne	systemfive_cancel	# tail call for masked mode
 1:	mov	%rcx,%r10		# move the fourth argument
 	clc				# no cancellable system calls exist
 	syscall				# that have 7+ args on the bsd OSes
 systemfive_cancellable_end:		# i/o calls park here for long time
+	pop	%rbp
 	jc	systemfive_errno
 	jmp	0f
 	jc	3f			# we're now out of the limbo state!
@@ -143,10 +146,15 @@ systemfive_cancellable_end:		# i/o calls park here for long time
 	jnz	systemfive_errno	# cancellation is disabled
 	cmp	$0,0x04(%rcx)		# PosixThread::cancelled
 	je	systemfive_errno	# we aren't actually cancelled
-	jmp	_pthread_cancel_sys	# now we are in fact cancelled
-	.endfn	systemfive_cancellable,globl,hidden
+	jmp	1f			# now we are in fact cancelled
+systemfive_cancel:
+	pop	%rbp
+1:	jmp	_pthread_cancel_sys	# must be linked if we're cancelled
+	.weak	_pthread_cancel_sys
 	.globl	systemfive_cancellable_end
-	.hidden	systemfive_cancellable_end
+	.globl	systemfive_cancellable
+	.globl	systemfive_cancel
+	.endfn	systemfive_cp
 
 .Lanchorpoint:
 #if SupportsLinux() || SupportsMetal()
@@ -155,7 +163,7 @@ systemfive_linux:
 	cmp	$0xfff,%eax		# checks if unsupported by platform
 	je	systemfive_enosys	# never taken branches cost nothing
 	btr	$11,%eax		# 0x800 means a call is cancellable
-	jc	systemfive_cancellable	# it is handled by the holiest code
+	jc	systemfive_cp		# it is handled by the holiest code
 	mov	%rcx,%r10		# syscall instruction clobbers %rcx
 	push	%rbp			# linux never reads args from stack
 	mov	%rsp,%rbp		# having frame will help backtraces
@@ -210,7 +218,7 @@ systemfive_bsd:
 	cmp	$0xfff,%ax
 	je	systemfive_enosys
 	btr	$11,%eax		# checks/reset the 800 cancellable bit
-	jc	systemfive_cancellable
+	jc	systemfive_cp
 	mov	%rcx,%r10
 	syscall				# bsd will need arg on stack sometimes
 	jc	systemfive_errno	# bsd sets carry flag if %rax is errno

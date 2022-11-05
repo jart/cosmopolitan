@@ -53,7 +53,6 @@ static ssize_t GetDevRandom(char *p, size_t n) {
   pthread_cleanup_push((void *)sys_close, (void *)(intptr_t)fd);
   rc = sys_read(fd, p, n);
   pthread_cleanup_pop(1);
-  close(fd);
   return rc;
 }
 
