@@ -41,8 +41,8 @@
  * @see sched_get_priority_max()
  * @see sched_setscheduler()
  */
-int pthread_setschedparam(pthread_t thread, int policy,
-                          const struct sched_param *param) {
+errno_t pthread_setschedparam(pthread_t thread, int policy,
+                              const struct sched_param *param) {
   struct PosixThread *pt = (struct PosixThread *)thread;
   if (!param) return EINVAL;
   pt->attr.__schedpolicy = policy;

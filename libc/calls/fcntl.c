@@ -112,7 +112,7 @@ int fcntl(int fd, int cmd, ...) {
       if (fd < g_fds.n && g_fds.p[fd].kind == kFdZip) {
         rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
       } else if (!IsWindows()) {
-        if (cmd == F_SETLKW) {
+        if (cmd == F_SETLKW || cmd == F_OFD_SETLKW) {
           rc = sys_fcntl(fd, cmd, arg, __sys_fcntl_cp);
         } else {
           rc = sys_fcntl(fd, cmd, arg, __sys_fcntl);

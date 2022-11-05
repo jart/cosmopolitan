@@ -17,6 +17,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/intrin/weaken.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/atomic.h"
@@ -51,25 +53,32 @@ void nsync_mu_semaphore_init (nsync_semaphore *s) {
 }
 
 /* Wait until the count of *s exceeds 0, and decrement it. */
-void nsync_mu_semaphore_p (nsync_semaphore *s) {
+errno_t nsync_mu_semaphore_p (nsync_semaphore *s) {
 	struct futex *f = (struct futex *) s;
 	int i;
+	int result = 0;
 	do {
 		i = ATM_LOAD ((nsync_atomic_uint32_ *) &f->i);
 		if (i == 0) {
-			int futex_result = nsync_futex_wait_ ((atomic_int *)&f->i, i, PTHREAD_PROCESS_PRIVATE, NULL);
+			int futex_result = nsync_futex_wait_ (
+				(atomic_int *)&f->i, i, PTHREAD_PROCESS_PRIVATE, NULL);
 			ASSERT (futex_result == 0 ||
 				futex_result == -EINTR ||
 				futex_result == -EAGAIN ||
+				futex_result == -ECANCELED ||
 				futex_result == -EWOULDBLOCK);
+			if (futex_result == -ECANCELED) {
+				result = ECANCELED;
+			}
 		}
-	} while (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i-1));
+	} while (result == 0 && (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i-1)));
+	return result;
 }
 
 /* Wait until one of:
    the count of *s is non-zero, in which case decrement *s and return 0;
    or abs_deadline expires, in which case return ETIMEDOUT. */
-int nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
+errno_t nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadline) {
 	struct futex *f = (struct futex *)s;
 	int i;
 	int result = 0;
@@ -103,12 +112,16 @@ int nsync_mu_semaphore_p_with_deadline (nsync_semaphore *s, nsync_time abs_deadl
 			ASSERT (futex_result == 0 ||
 				futex_result == -EINTR ||
 				futex_result == -EAGAIN ||
+				futex_result == -ECANCELED ||
 				futex_result == -ETIMEDOUT ||
 				futex_result == -EWOULDBLOCK);
 			/* Some systems don't wait as long as they are told. */ 
 			if (futex_result == -ETIMEDOUT &&
 			    nsync_time_cmp (abs_deadline, nsync_time_now ()) <= 0) {
 				result = ETIMEDOUT;
+			}
+			if (futex_result == -ECANCELED) {
+				result = ECANCELED;
 			}
 		}
 	} while (result == 0 && (i == 0 || !ATM_CAS_ACQ ((nsync_atomic_uint32_ *) &f->i, i, i - 1)));

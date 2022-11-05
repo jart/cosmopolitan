@@ -24,8 +24,8 @@
  * @param attr may be null
  * @return 0 on success, or error number on failure
  */
-int pthread_rwlock_init(pthread_rwlock_t *rwlock,
-                        const pthread_rwlockattr_t *attr) {
+errno_t pthread_rwlock_init(pthread_rwlock_t *rwlock,
+                            const pthread_rwlockattr_t *attr) {
   *rwlock = (pthread_rwlock_t){0};
   return 0;
 }

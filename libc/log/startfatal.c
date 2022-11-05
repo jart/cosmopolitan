@@ -20,6 +20,7 @@
 #include "libc/intrin/safemacros.internal.h"
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
 
 /**
  * Prints initial part of fatal message.
@@ -27,6 +28,7 @@
  * @note this is support code for __check_fail(), __assert_fail(), etc.
  */
 relegated void __start_fatal(const char *file, int line) {
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
   __restore_tty();
   kprintf("%r%serror%s:%s:%d:%s%s: ", !__nocolor ? "\e[J\e[30;101m" : "",
           !__nocolor ? "\e[94;49m" : "", file, line,

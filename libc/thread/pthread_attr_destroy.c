@@ -21,8 +21,10 @@
 
 /**
  * Destroys pthread attributes.
+ *
+ * @return 0 on success, or errno on error
  */
-int pthread_attr_destroy(pthread_attr_t *attr) {
+errno_t pthread_attr_destroy(pthread_attr_t *attr) {
   memset(attr, -1, sizeof(*attr));
   return 0;
 }

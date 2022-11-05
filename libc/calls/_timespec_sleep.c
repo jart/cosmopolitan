@@ -32,7 +32,7 @@ struct timespec _timespec_sleep(struct timespec delay) {
   if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
     return (struct timespec){0};
   } else {
-    _npassert(rc == EINTR);
+    _npassert(rc == EINTR || rc == ECANCELED);
     return remain;
   }
 }

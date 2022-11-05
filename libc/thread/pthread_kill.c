@@ -31,7 +31,7 @@
  * @raise EPERM if permission was denied
  * @asyncsignalsafe
  */
-int pthread_kill(pthread_t thread, int sig) {
+errno_t pthread_kill(pthread_t thread, int sig) {
   int rc, e = errno;
   struct PosixThread *pt = (struct PosixThread *)thread;
   if (!tkill(pt->tid, sig)) {

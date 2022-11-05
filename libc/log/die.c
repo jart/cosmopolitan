@@ -29,6 +29,7 @@
 #include "libc/log/log.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
+#include "libc/thread/thread.h"
 
 #if SupportsMetal()
 STATIC_YOINK("_idt");
@@ -45,6 +46,7 @@ relegated wontreturn void __die(void) {
   static atomic_int once;
   owner = 0;
   me = sys_gettid();
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
   if (__vforked ||
       atomic_compare_exchange_strong_explicit(
           &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {

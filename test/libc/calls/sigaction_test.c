@@ -194,7 +194,7 @@ TEST(sigaction, autoZombieSlayer) {
   if (!pid) _Exit(0);
   ASSERT_SYS(0, pid, wait(0));
   // enable automatic zombie slayer
-  sa.sa_handler = SIG_IGN;
+  sa.sa_handler = SIG_DFL;     // POSIX.1 says no SIG_IGN
   sa.sa_flags = SA_NOCLDWAIT;  // seems to be optional
   sigemptyset(&sa.sa_mask);
   ASSERT_SYS(0, 0, sigaction(SIGCHLD, &sa, &sa));

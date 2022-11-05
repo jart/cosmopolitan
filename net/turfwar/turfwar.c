@@ -24,6 +24,7 @@
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/sysinfo.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -358,6 +359,13 @@ struct Claims {
   } data[QUEUE_MAX];
 } g_claims;
 
+long GetTotalRam(void) {
+  struct sysinfo si;
+  si.totalram = 256 * 1024 * 1024;
+  sysinfo(&si);
+  return si.totalram;
+}
+
 // easy string sender
 ssize_t Write(int fd, const char *s) {
   return write(fd, s, strlen(s));
@@ -397,8 +405,14 @@ bool CheckDb(const char *file, int line, int rc, sqlite3 *db) {
 // we need to do is wait a little bit, and use exponential backoff
 int DbOpen(const char *path, sqlite3 **db) {
   int i, rc;
+  char sql[128];
   rc = sqlite3_open(path, db);
   if (rc != SQLITE_OK) return rc;
+  if (!IsWindows() && !IsOpenbsd()) {
+    ksnprintf(sql, sizeof(sql), "PRAGMA mmap_size=%ld", GetTotalRam());
+    rc = sqlite3_exec(*db, sql, 0, 0, 0);
+    if (rc != SQLITE_OK) return rc;
+  }
   for (i = 0; i < 7; ++i) {
     rc = sqlite3_exec(*db, "PRAGMA journal_mode=WAL", 0, 0, 0);
     if (rc == SQLITE_OK) break;
@@ -410,6 +424,7 @@ int DbOpen(const char *path, sqlite3 **db) {
 
 // why not make the statement prepare api a little less hairy too
 int DbPrepare(sqlite3 *db, sqlite3_stmt **stmt, const char *sql) {
+  kprintf("%s\n", sql);
   return sqlite3_prepare_v2(db, sql, -1, stmt, 0);
 }
 

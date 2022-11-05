@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/struct/metatermios.internal.h"
@@ -43,31 +44,12 @@ struct IoctlPtmGet {
   char sname[16];
 };
 
-/**
- * Opens new pseudo teletypewriter.
- *
- * @param mfd receives controlling tty rw fd on success
- * @param sfd receives subordinate tty rw fd on success
- * @param tio may be passed to tune a century of legacy behaviors
- * @param wsz may be passed to set terminal display dimensions
- * @params flags is usually O_RDWR|O_NOCTTY
- * @return 0 on success, or -1 w/ errno
- */
-int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
-            const struct winsize *wsz) {
+static int openpty_impl(int *mfd, int *sfd, char *name,
+                        const struct termios *tio,  //
+                        const struct winsize *wsz) {
   int m, s, p;
   union metatermios mt;
   struct IoctlPtmGet t;
-  if (IsWindows() || IsMetal()) {
-    return enosys();
-  }
-  if (IsAsan() && (!__asan_is_valid(mfd, sizeof(int)) ||
-                   !__asan_is_valid(sfd, sizeof(int)) ||
-                   (name && !__asan_is_valid(name, 16)) ||
-                   (tio && !__asan_is_valid(tio, sizeof(*tio))) ||
-                   (wsz && !__asan_is_valid(wsz, sizeof(*wsz))))) {
-    return efault();
-  }
   RETURN_ON_ERROR((m = posix_openpt(O_RDWR | O_NOCTTY)));
   if (!IsOpenbsd()) {
     RETURN_ON_ERROR(grantpt(m));
@@ -89,4 +71,34 @@ int openpty(int *mfd, int *sfd, char *name, const struct termios *tio,
 OnError:
   if (m != -1) sys_close(m);
   return -1;
+}
+
+/**
+ * Opens new pseudo teletypewriter.
+ *
+ * @param mfd receives controlling tty rw fd on success
+ * @param sfd receives subordinate tty rw fd on success
+ * @param tio may be passed to tune a century of legacy behaviors
+ * @param wsz may be passed to set terminal display dimensions
+ * @params flags is usually O_RDWR|O_NOCTTY
+ * @return 0 on success, or -1 w/ errno
+ */
+int openpty(int *mfd, int *sfd, char *name,  //
+            const struct termios *tio,       //
+            const struct winsize *wsz) {
+  int rc;
+  if (IsWindows() || IsMetal()) {
+    return enosys();
+  }
+  if (IsAsan() && (!__asan_is_valid(mfd, sizeof(int)) ||
+                   !__asan_is_valid(sfd, sizeof(int)) ||
+                   (name && !__asan_is_valid(name, 16)) ||
+                   (tio && !__asan_is_valid(tio, sizeof(*tio))) ||
+                   (wsz && !__asan_is_valid(wsz, sizeof(*wsz))))) {
+    return efault();
+  }
+  BLOCK_CANCELLATIONS;
+  rc = openpty(mfd, sfd, name, tio, wsz);
+  ALLOW_CANCELLATIONS;
+  return rc;
 }

@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/mem/mem.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/atomic.internal.h"
@@ -36,6 +37,7 @@ int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 		  int count, struct nsync_waitable_s *waitable[]) {
 	int ready;
 	IGNORE_RACES_START ();
+	BLOCK_CANCELLATIONS;  /* TODO(jart): Does this need pthread cancellations? */
 	for (ready = 0; ready != count &&
 			nsync_time_cmp ((*waitable[ready]->funcs->ready_time) (
 						waitable[ready]->v, NULL),
@@ -102,6 +104,7 @@ int nsync_wait_n (void *mu, void (*lock) (void *), void (*unlock) (void *),
 			(*lock) (mu);
 		}
 	}
+	ALLOW_CANCELLATIONS;
 	IGNORE_RACES_END ();
 	return (ready);
 }

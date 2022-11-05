@@ -20,6 +20,9 @@
 #include "libc/sysv/consts/clock.h"
 #include "libc/thread/freebsd.internal.h"
 
+int sys_umtx_timedwait_uint_cp(atomic_int *, int, int, size_t,
+                               struct _umtx_time *) asm("sys_futex_cp");
+
 int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
                             const struct timespec *abstime) {
   int op;
@@ -40,5 +43,5 @@ int sys_umtx_timedwait_uint(atomic_int *p, int expect, bool pshare,
   } else {
     op = UMTX_OP_WAIT_UINT_PRIVATE;
   }
-  return sys_umtx_op(p, op, expect, (void *)size, tm_p);
+  return sys_umtx_timedwait_uint_cp(p, op, expect, size, tm_p);
 }

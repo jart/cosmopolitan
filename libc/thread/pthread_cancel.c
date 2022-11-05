@@ -24,6 +24,7 @@
 #include "libc/calls/ucontext.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
@@ -85,12 +86,12 @@ static void ListenForSigCancel(void) {
  * `writev`, `pwrite`, `pwritev`, `accept`, `connect`, `recvmsg`,
  * `sendmsg`, `recv`, `send`, `tcdrain`, `clock_nanosleep`, `fsync`,
  * `fdatasync`, `fcntl(F_SETLKW)`, `epoll`, `sigsuspend`, `msync`,
- * `wait4`, `getrandom`, `pthread_cond_timedwait` are most cancellation
- * points, plus many userspace libraries that call the above functions,
- * unless they're using pthread_setcancelstate() to temporarily disable
- * the cancellation mechanism. Some userspace functions, e.g. system()
- * and popen() will eagerly call pthread_testcancel_np() to help avoid
- * the potential for resource leaks later on.
+ * `wait4`, `getrandom`, `pthread_cond_timedwait`, and `sem_timedwait`
+ * are most cancellation points, plus many userspace libraries that call
+ * the above functions, unless they're using pthread_setcancelstate() to
+ * temporarily disable the cancellation mechanism. Some userspace
+ * functions, e.g. system() will eagerly call pthread_testcancel_np() to
+ * help avoid the potential for resource leaks later on.
  *
  * It's possible to put a thread in asynchronous cancellation mode using
  * pthread_setcanceltype(), thus allowing a cancellation to occur at any
@@ -110,7 +111,7 @@ static void ListenForSigCancel(void) {
  * @return 0 on success, or errno on error
  * @raise ESRCH if thread isn't alive
  */
-int pthread_cancel(pthread_t thread) {
+errno_t pthread_cancel(pthread_t thread) {
   int e, rc, tid;
   static bool once;
   struct PosixThread *pt;
@@ -124,9 +125,9 @@ int pthread_cancel(pthread_t thread) {
     default:
       break;
   }
-  atomic_store_explicit(&pt->cancelled, 1, memory_order_release);
+  atomic_exchange_explicit(&pt->cancelled, 1, memory_order_release);
   if (thread == __get_tls()->tib_pthread) {
-    if (!(pt->flags & PT_NOCANCEL) && (pt->flags & PT_ASYNC)) {
+    if (!(pt->flags & (PT_NOCANCEL | PT_MASKED)) && (pt->flags & PT_ASYNC)) {
       pthread_exit(PTHREAD_CANCELED);
     }
     return 0;
@@ -183,7 +184,7 @@ void pthread_testcancel(void) {
  * @return 0 if not cancelled or cancellation is blocked or `ECANCELED`
  *     in masked mode when the calling thread has been cancelled
  */
-int pthread_testcancel_np(void) {
+errno_t pthread_testcancel_np(void) {
   int rc;
   struct PosixThread *pt;
   if (!__tls_enabled) return 0;

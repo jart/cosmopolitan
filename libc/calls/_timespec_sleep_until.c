@@ -27,9 +27,9 @@
  *
  * @return 0 on success, or EINTR if interrupted
  */
-int _timespec_sleep_until(struct timespec abs_deadline) {
+errno_t _timespec_sleep_until(struct timespec abs_deadline) {
   int rc;
   rc = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs_deadline, 0);
-  _npassert(!rc || rc == EINTR);
+  _npassert(!rc || rc == EINTR || rc == ECANCELED);
   return rc;
 }

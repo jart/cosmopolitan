@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 /**
  * Destroys condition attributes.
  *
  * @return 0 on success, or error on failure
  */
-int pthread_condattr_destroy(pthread_condattr_t *attr) {
+errno_t pthread_condattr_destroy(pthread_condattr_t *attr) {
   memset(attr, -1, sizeof(*attr));
   return 0;
 }

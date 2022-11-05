@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/dce.h"
@@ -195,6 +196,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   if (!(path = sem_path_np(name, pathbuf, sizeof(pathbuf)))) {
     return SEM_FAILED;
   }
+  BLOCK_CANCELLATIONS;
   sem_open_init();
   sem_open_lock();
   if ((s = sem_open_reopen(path))) {
@@ -233,6 +235,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
     sem = SEM_FAILED;
   }
   sem_open_unlock();
+  ALLOW_CANCELLATIONS;
   return sem;
 }
 

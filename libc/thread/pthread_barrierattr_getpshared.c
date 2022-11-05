@@ -26,8 +26,8 @@
  *     - `PTHREAD_PROCESS_SHARED` (unsupported)
  * @return 0 on success, or error on failure
  */
-int pthread_barrierattr_getpshared(const pthread_barrierattr_t *attr,
-                                   int *pshared) {
+errno_t pthread_barrierattr_getpshared(const pthread_barrierattr_t *attr,
+                                       int *pshared) {
   *pshared = *attr;
   return 0;
 }

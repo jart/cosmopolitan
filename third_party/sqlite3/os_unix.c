@@ -84,7 +84,7 @@
 #endif
 
 /* Use pread() and pwrite() if they are available */
-#if defined(__APPLE__) || defined(__COSMOPOLITAN__)
+#if defined(__APPLE__) || defined(__COSMOPOLITAN__) /* [jart] */
 # define HAVE_PREAD 1
 # define HAVE_PWRITE 1
 #endif

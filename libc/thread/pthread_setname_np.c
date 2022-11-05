@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -28,30 +29,7 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
 
-/**
- * Registers custom name of thread with system, e.g.
- *
- *     void *worker(void *arg) {
- *       pthread_setname_np(pthread_self(), "justine");
- *       pause();
- *       return 0;
- *     }
- *
- *     int main(int argc, char *argv[]) {
- *       pthread_t id;
- *       pthread_create(&id, 0, worker, 0);
- *       pthread_join(id, 0);
- *     }
- *
- * ProTip: The `htop` software is good at displaying thread names.
- *
- * @return 0 on success, or errno on error
- * @raise ERANGE if length of `name` exceeded system limit, in which
- *    case the name may have still been set with os using truncation
- * @raise ENOSYS on MacOS, Windows, and OpenBSD
- * @see pthread_getname_np()
- */
-errno_t pthread_setname_np(pthread_t thread, const char *name) {
+static errno_t pthread_setname_impl(pthread_t thread, const char *name) {
   char path[128], *p;
   int fd, rc, tid, len, e = errno;
 
@@ -112,4 +90,35 @@ errno_t pthread_setname_np(pthread_t thread, const char *name) {
   } else {
     return ENOSYS;
   }
+}
+
+/**
+ * Registers custom name of thread with system, e.g.
+ *
+ *     void *worker(void *arg) {
+ *       pthread_setname_np(pthread_self(), "justine");
+ *       pause();
+ *       return 0;
+ *     }
+ *
+ *     int main(int argc, char *argv[]) {
+ *       pthread_t id;
+ *       pthread_create(&id, 0, worker, 0);
+ *       pthread_join(id, 0);
+ *     }
+ *
+ * ProTip: The `htop` software is good at displaying thread names.
+ *
+ * @return 0 on success, or errno on error
+ * @raise ERANGE if length of `name` exceeded system limit, in which
+ *    case the name may have still been set with os using truncation
+ * @raise ENOSYS on MacOS, Windows, and OpenBSD
+ * @see pthread_getname_np()
+ */
+errno_t pthread_setname_np(pthread_t thread, const char *name) {
+  errno_t rc;
+  BLOCK_CANCELLATIONS;
+  rc = pthread_setname_impl(thread, name);
+  ALLOW_CANCELLATIONS;
+  return rc;
 }

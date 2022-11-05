@@ -21,8 +21,8 @@
 /**
  * Returns thread inherit schedule attribute.
  */
-int pthread_attr_getinheritsched(const pthread_attr_t *attr,
-                                 int *inheritsched) {
+errno_t pthread_attr_getinheritsched(const pthread_attr_t *attr,
+                                     int *inheritsched) {
   *inheritsched = attr->__inheritsched;
   return 0;
 }

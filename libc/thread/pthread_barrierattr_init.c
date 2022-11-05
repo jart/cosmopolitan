@@ -23,7 +23,7 @@
  *
  * @return 0 on success, or error on failure
  */
-int pthread_barrierattr_init(pthread_barrierattr_t *attr) {
+errno_t pthread_barrierattr_init(pthread_barrierattr_t *attr) {
   *attr = 0;
   return 0;
 }

@@ -15,8 +15,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-// LEGAL TRANSITIONS             ┌──> TERMINATED
-// pthread_create ─┬─> JOINABLE ─┴┬─> DETACHED ──> ZOMBIE
+// LEGAL TRANSITIONS             ┌──> TERMINATED ─┐
+// pthread_create ─┬─> JOINABLE ─┴┬─> DETACHED ───┴─> ZOMBIE
 //                 └──────────────┘
 enum PosixThreadStatus {
 
@@ -47,6 +47,8 @@ enum PosixThreadStatus {
   //
   // - kPosixThreadTerminated -> _pthread_free() will happen when
   //   pthread_join() is called by the user.
+  // - kPosixThreadTerminated -> kPosixThreadZombie will happen when
+  //   pthread_detach() is called by the user.
   kPosixThreadTerminated,
 
   // this is a detached thread that terminated.
@@ -83,10 +85,10 @@ extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] hidden;
 int _pthread_atfork(atfork_f, atfork_f, atfork_f) hidden;
 int _pthread_reschedule(struct PosixThread *) hidden;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
+int _pthread_wait(struct PosixThread *) hidden;
 void _pthread_free(struct PosixThread *) hidden;
 void _pthread_cleanup(struct PosixThread *) hidden;
 void _pthread_ungarbage(void) hidden;
-void _pthread_wait(struct PosixThread *) hidden;
 void _pthread_zombies_add(struct PosixThread *) hidden;
 void _pthread_zombies_purge(void) hidden;
 void _pthread_zombies_decimate(void) hidden;

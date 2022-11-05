@@ -26,7 +26,7 @@
  * @return 0 on success, or error on failure
  * @raise EINVAL if threads are still inside the barrier
  */
-int pthread_barrier_destroy(pthread_barrier_t *barrier) {
+errno_t pthread_barrier_destroy(pthread_barrier_t *barrier) {
   if (barrier->_nsync) {
     nsync_counter_free(barrier->_nsync);
     barrier->_nsync = 0;

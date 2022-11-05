@@ -26,8 +26,8 @@
  *     - `PTHREAD_PROCESS_SHARED` (unsupported)
  * @return 0 on success, or error on failure
  */
-int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *attr,
-                                  int *pshared) {
+errno_t pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *attr,
+                                      int *pshared) {
   *pshared = *attr;
   return 0;
 }

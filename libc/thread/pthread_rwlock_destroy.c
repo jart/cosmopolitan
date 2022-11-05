@@ -25,7 +25,7 @@
  * @return 0 on success, or error number on failure
  * @raise EINVAL if any threads still hold the lock
  */
-int pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
+errno_t pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
   memset(rwlock, -1, sizeof(*rwlock));
   return 0;
 }

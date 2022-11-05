@@ -21,7 +21,7 @@
 /**
  * Gets thread scheduler policy attribute
  */
-int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
+errno_t pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
   *policy = attr->__schedpolicy;
   return 0;
 }

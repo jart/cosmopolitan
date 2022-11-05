@@ -26,7 +26,8 @@
  *     - `PTHREAD_PROCESS_SHARED`
  * @return 0 on success, or error on failure
  */
-int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared) {
+errno_t pthread_condattr_getpshared(const pthread_condattr_t *attr,
+                                    int *pshared) {
   *pshared = *attr;
   return 0;
 }

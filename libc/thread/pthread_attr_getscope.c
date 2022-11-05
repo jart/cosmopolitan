@@ -23,7 +23,8 @@
  *
  * @return 0 on success, or errno on error
  */
-int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope) {
+errno_t pthread_attr_getscope(const pthread_attr_t *attr,
+                              int *contentionscope) {
   *contentionscope = attr->__contentionscope;
   return 0;
 }

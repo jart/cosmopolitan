@@ -43,6 +43,7 @@
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/libcxx/math.h"
 
@@ -307,6 +308,7 @@ relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
   strace_enabled(-1);
   owner = 0;
   me = sys_gettid();
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
   if (atomic_compare_exchange_strong_explicit(
           &once, &owner, me, memory_order_relaxed, memory_order_relaxed)) {
     if (!__vforked) {

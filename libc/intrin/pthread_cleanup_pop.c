@@ -16,14 +16,18 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-void _pthread_cleanup_push(struct _pthread_cleanup_buffer *cb,
-                           void (*routine)(void *), void *arg) {
-  struct PosixThread *pt = (struct PosixThread *)__get_tls()->tib_pthread;
-  cb->__routine = routine;
-  cb->__arg = arg;
-  cb->__prev = pt->cleanup;
-  pt->cleanup = cb;
+void _pthread_cleanup_pop(struct _pthread_cleanup_buffer *cb, int execute) {
+  struct PosixThread *pt;
+  if (__tls_enabled && (pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+    _unassert(cb == pt->cleanup);
+    pt->cleanup = cb->__prev;
+  }
+  if (execute) {
+    cb->__routine(cb->__arg);
+  }
 }

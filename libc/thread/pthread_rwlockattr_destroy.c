@@ -16,15 +16,15 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/thread/thread.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 
 /**
  * Destroys read-write lock attributes.
  *
  * @return 0 on success, or error on failure
  */
-int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
+errno_t pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
   memset(attr, -1, sizeof(*attr));
   return 0;
 }

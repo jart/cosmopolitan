@@ -23,7 +23,7 @@
  *
  * @return 0 on success, or error on failure
  */
-int pthread_condattr_init(pthread_condattr_t *attr) {
+errno_t pthread_condattr_init(pthread_condattr_t *attr) {
   *attr = 0;
   return 0;
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -28,23 +29,7 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/thread/posixthread.internal.h"
 
-/**
- * Gets name of thread registered with system, e.g.
- *
- *     char name[64];
- *     pthread_getname_np(thread, name, sizeof(name));
- *
- * If the thread doesn't have a name, then empty string is returned.
- * This implementation guarantees `buf` is always modified, even on
- * error, and will always be nul-terminated. If `size` is 0 then this
- * function returns 0. Your `buf` is also chomped to remove newlines.
- *
- * @return 0 on success, or errno on error
- * @raise ERANGE if `size` wasn't large enough, in which case your
- *     result will still be returned truncated if possible
- * @raise ENOSYS on MacOS, Windows, FreeBSD, and OpenBSD
- */
-errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
+static errno_t pthread_getname_impl(pthread_t thread, char *name, size_t size) {
   int fd, rc, tid, len, e = errno;
 
   if (!size) return 0;
@@ -112,4 +97,28 @@ errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
   } else {
     return ENOSYS;
   }
+}
+
+/**
+ * Gets name of thread registered with system, e.g.
+ *
+ *     char name[64];
+ *     pthread_getname_np(thread, name, sizeof(name));
+ *
+ * If the thread doesn't have a name, then empty string is returned.
+ * This implementation guarantees `buf` is always modified, even on
+ * error, and will always be nul-terminated. If `size` is 0 then this
+ * function returns 0. Your `buf` is also chomped to remove newlines.
+ *
+ * @return 0 on success, or errno on error
+ * @raise ERANGE if `size` wasn't large enough, in which case your
+ *     result will still be returned truncated if possible
+ * @raise ENOSYS on MacOS, Windows, FreeBSD, and OpenBSD
+ */
+errno_t pthread_getname_np(pthread_t thread, char *name, size_t size) {
+  errno_t rc;
+  BLOCK_CANCELLATIONS;
+  rc = pthread_getname_impl(thread, name, size);
+  ALLOW_CANCELLATIONS;
+  return rc;
 }

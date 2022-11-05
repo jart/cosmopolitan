@@ -41,7 +41,7 @@
  *       supported (Linux), otherwise it's treated as `SCHED_OTHER`
  * @see sched_setscheduler()
  */
-int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
+errno_t pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
   attr->__schedpolicy = policy;
   return 0;
 }

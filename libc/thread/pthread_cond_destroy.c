@@ -25,7 +25,7 @@
  * @return 0 on success, or error number on failure
  * @raise EINVAL if threads are still waiting on condition
  */
-int pthread_cond_destroy(pthread_cond_t *cond) {
+errno_t pthread_cond_destroy(pthread_cond_t *cond) {
   memset(cond, -1, sizeof(*cond));
   return 0;
 }

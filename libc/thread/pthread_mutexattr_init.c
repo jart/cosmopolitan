@@ -22,7 +22,7 @@
  * Initializes mutex attr.
  * @return 0 on success, or error number on failure
  */
-int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
+errno_t pthread_mutexattr_init(pthread_mutexattr_t *attr) {
   *attr = (pthread_mutexattr_t){0};
   return 0;
 }

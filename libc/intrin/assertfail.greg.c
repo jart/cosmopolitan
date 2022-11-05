@@ -27,6 +27,7 @@
 #include "libc/log/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/symbols.internal.h"
+#include "libc/thread/thread.h"
 
 relegated void __assert_fail(const char *expr, const char *file, int line) {
   int me, owner;
@@ -36,6 +37,7 @@ relegated void __assert_fail(const char *expr, const char *file, int line) {
     ftrace_enabled(-1);
     owner = 0;
     me = sys_gettid();
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
     kprintf("%s:%d: assert(%s) failed (tid %d)\n", file, line, expr, me);
     if (__vforked ||
         atomic_compare_exchange_strong_explicit(

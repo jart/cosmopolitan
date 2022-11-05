@@ -16,6 +16,7 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/str/str.h"
+#include "libc/thread/thread.h"
 #include "third_party/nsync/atomic.internal.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/cv.h"
@@ -202,6 +203,7 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 	waiter *w;
 	IGNORE_RACES_START ();
 	w = nsync_waiter_new_ ();
+	pthread_cleanup_push((void *)nsync_waiter_free_, w);
 	ATM_STORE (&w->nw.waiting, 1);
 	w->cond.f = NULL; /* Not using a conditional critical section. */
 	w->cond.v = NULL;
@@ -312,6 +314,7 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 			(*lock) (pmu);
 		}
 	}
+	pthread_cleanup_pop(0);
 	IGNORE_RACES_END ();
 	return (outcome);
 }

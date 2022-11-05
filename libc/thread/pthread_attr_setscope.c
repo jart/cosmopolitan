@@ -30,7 +30,7 @@
  * @raise ENOTSUP if `contentionscope` isn't supported on host OS
  * @raise EINVAL if `contentionscope` was invalid
  */
-int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope) {
+errno_t pthread_attr_setscope(pthread_attr_t *attr, int contentionscope) {
   switch (contentionscope) {
     case PTHREAD_SCOPE_SYSTEM:
       attr->__contentionscope = contentionscope;

@@ -16,13 +16,21 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/stdio/rand.h"
-#include "libc/sysv/consts/grnd.h"
+#include "libc/sysv/errfuns.h"
 
 /**
  * Returns random seeding bytes, the XNU/OpenBSD way.
+ *
+ * @return 0 on success, or -1 w/ errno
+ * @raise EIO if more than 256 bytes are requested
  * @see getrandom()
  */
 int getentropy(void *buf, size_t size) {
-  return getrandom(buf, size, GRND_RANDOM);
+  if (size > 256) return eio();
+  BLOCK_CANCELLATIONS;
+  if (getrandom(buf, size, 0) != size) notpossible;
+  ALLOW_CANCELLATIONS;
+  return 0;
 }

@@ -65,8 +65,11 @@ void _pthread_onfork_parent(void) {
 }
 
 void _pthread_onfork_child(void) {
+  pthread_mutexattr_t attr;
   extern pthread_mutex_t __mmi_lock_obj;
-  bzero(&__mmi_lock_obj, sizeof(__mmi_lock_obj));
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&__mmi_lock_obj, &attr);
   __kmalloc_unlock();
   _pthread_onfork(2);
 }

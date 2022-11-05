@@ -23,17 +23,20 @@
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
+#include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/intrin/weaken.h"
 #include "libc/limits.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/futex.h"
 #include "libc/sysv/consts/timer.h"
+#include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
@@ -45,7 +48,9 @@
 
 #define FUTEX_WAIT_BITS_ FUTEX_BITSET_MATCH_ANY
 
-int _futex (atomic_int *, int, int, const struct timespec *, int *, int);
+errno_t _futex (atomic_int *, int, int, const struct timespec *, int *, int);
+errno_t _futex_wake (atomic_int *, int, int) asm ("_futex");
+int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
 static int FUTEX_WAIT_;
 static int FUTEX_PRIVATE_FLAG_;
@@ -59,6 +64,7 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 
 	if (IsWindows ()) {
 		FUTEX_IS_SUPPORTED = true;
+		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 		return;
 	}
 
@@ -70,8 +76,6 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	}
 
         if (!(FUTEX_IS_SUPPORTED = IsLinux () || IsOpenbsd ())) {
-		// we're using sched_yield() so let's
-		// avoid needless clock_gettime calls
 		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 		return;
 	}
@@ -101,7 +105,7 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 	} else if (IsOpenbsd () ||
 		   (!IsTiny () && IsLinux () &&
-		    !_futex (&x, FUTEX_WAKE_PRIVATE, 1, 0, 0, 0))) {
+		    !_futex_wake (&x, FUTEX_WAKE_PRIVATE, 1))) {
 		FUTEX_WAIT_ = FUTEX_WAIT;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 	} else {
@@ -110,12 +114,9 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 }
 
 static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *timeout) {
+	int rc;
 	int64_t nanos, maxnanos;
 	struct timespec ts, deadline;
-
-	if (atomic_load_explicit (w, memory_order_relaxed) != expect) {
-		return -EAGAIN;
-	}
 
 	ts = nsync_time_now ();
 	if (!timeout) {
@@ -129,15 +130,15 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ti
 	nanos = 100;
 	maxnanos = __SIG_POLLING_INTERVAL_MS * 1000L * 1000;
 	while (nsync_time_cmp (deadline, ts) > 0) {
-		if (atomic_load_explicit (w, memory_order_relaxed) != expect) {
-			return 0;
-		}
 		ts = nsync_time_add (ts, _timespec_fromnanos (nanos));
 		if (nsync_time_cmp (ts, deadline) > 0) {
 			ts = deadline;
 		}
-		if (nsync_time_sleep_until (ts)) {
-			return -EINTR;
+		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
+			return 0;
+		}
+		if ((rc = nsync_time_sleep_until (ts))) {
+			return -rc;
 		}
 		if (nanos < maxnanos) {
 			nanos <<= 1;
@@ -150,9 +151,45 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ti
 	return -ETIMEDOUT;
 }
 
-int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
+static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
+	int rc;
 	uint32_t ms;
+	struct timespec deadline, interval, remain, wait, now;
+
+	if (timeout) {
+		deadline = *timeout;
+	} else {
+		deadline = nsync_time_no_deadline;
+	}
+
+	while (!(rc = _check_interrupts (false, 0))) {
+		now = nsync_time_now ();
+		if (nsync_time_cmp (now, deadline) > 0) {
+			rc = etimedout();
+			break;
+		}
+		remain = nsync_time_sub (deadline, now);
+		interval = _timespec_frommillis (__SIG_POLLING_INTERVAL_MS);
+		wait = nsync_time_cmp (remain, interval) > 0 ? interval : remain;
+		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
+			break;
+		}
+		if (WaitOnAddress (w, &expect, sizeof(int), _timespec_tomillis (wait))) {
+			break;
+		} else {
+			ASSERT (GetLastError () == ETIMEDOUT);
+		}
+	}
+
+	return rc;
+}
+
+int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
 	int e, rc, op, fop;
+
+	if (atomic_load_explicit (w, memory_order_acquire) != expect) {
+		return -EAGAIN;
+	}
 
 	op = FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE) {
@@ -165,36 +202,34 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		   DescribeTimespec (0, timeout));
 
 	if (FUTEX_IS_SUPPORTED) {
+		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
-			if (pshare) {
-				goto Polyfill;
-			}
-			e = errno;
-			if (_check_interrupts (false, 0)) {
-				rc = -errno;
-				errno = e;
-			} else {
-				if (timeout) {
-					ms = _timespec_tomillis (*timeout);
-				} else {
-					ms = -1;
-				}
-				if (WaitOnAddress (w, &expect, sizeof(int), ms)) {
-					rc = 0;
-				} else {
-					rc = -GetLastError ();
-				}
-			}
+			if (pshare) goto Polyfill;
+			rc = nsync_futex_wait_win32_ (w, expect, pshare, timeout);
 		} else if (IsFreebsd ()) {
-			rc = sys_umtx_timedwait_uint (
-				w, expect, pshare, timeout);
+			rc = sys_umtx_timedwait_uint (w, expect, pshare, timeout);
 		} else {
-			rc = _futex (w, op, expect, timeout, 0,
-				     FUTEX_WAIT_BITS_);
+			rc = sys_futex_cp (w, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
 			if (IsOpenbsd() && rc > 0) {
-				rc = -rc;
+				// OpenBSD futex() returns errors as
+				// positive numbers without setting the
+				// carry flag. It's an irregular miracle
+				// because OpenBSD returns ECANCELED if
+				// futex() is interrupted w/ SA_RESTART
+				// so we're able to tell it apart from
+				// PT_MASKED which causes the wrapper
+				// to put ECANCELED into errno.
+				if (rc == ECANCELED) {
+					rc = EINTR;
+				}
+				errno = rc;
+				rc = -1;
 			}
+		}
+		if (rc == -1) {
+			rc = -errno;
+			errno = e;
 		}
 	} else {
 	Polyfill:
@@ -214,7 +249,6 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 
 int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 	int e, rc, op, fop;
-	int wake (atomic_int *, int, int) asm ("_futex");
 
 	ASSERT (count == 1 || count == INT_MAX);
 
@@ -240,9 +274,9 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 			} else {
 				fop = UMTX_OP_WAKE_PRIVATE;
 			}
-			rc = sys_umtx_op (w, fop, count, 0, 0);
+			rc = _futex_wake (w, fop, count);
 		} else {
-			rc = wake (w, op, count);
+			rc = _futex_wake (w, op, count);
 		}
 	} else {
 	Polyfill:

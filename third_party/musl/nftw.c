@@ -32,6 +32,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/thread/thread.h"
 #include "third_party/musl/ftw.h"
 
 asm(".ident\t\"\\n\\n\
@@ -43,9 +44,6 @@ asm(".include \"libc/disclaimer.inc\"");
    small enough to fit in stack frame
    should be changed to use realloc */
 #define PATH_MAX2 2048
-
-/* no cosmo pthreads support atm */
-#define pthread_setcancelstate(...)
 
 /* clang-format off */
 

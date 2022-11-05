@@ -59,8 +59,8 @@ STATIC_YOINK("_pthread_atfork");
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
-void _pthread_wait(struct PosixThread *pt) {
-  _wait0(&pt->tib->tib_tid);
+errno_t _pthread_wait(struct PosixThread *pt) {
+  return _wait0(&pt->tib->tib_tid);
 }
 
 void _pthread_free(struct PosixThread *pt) {

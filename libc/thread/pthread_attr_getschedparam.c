@@ -21,8 +21,8 @@
 /**
  * Gets thread scheduler parameter attribute.
  */
-int pthread_attr_getschedparam(const pthread_attr_t *attr,
-                               struct sched_param *param) {
+errno_t pthread_attr_getschedparam(const pthread_attr_t *attr,
+                                   struct sched_param *param) {
   *param = (struct sched_param){attr->__schedparam};
   return 0;
 }

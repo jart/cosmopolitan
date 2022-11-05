@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
@@ -52,6 +53,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 	uint32_t wait_count;
 	uint32_t long_wait;
 	unsigned attempts = 0; /* attempt count; used for spinloop backoff */
+	BLOCK_CANCELLATIONS;
 	w->cv_mu = NULL;      /* not a cv wait */
 	w->cond.f = NULL; /* Not using a conditional critical section. */
 	w->cond.v = NULL;
@@ -72,7 +74,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 			if (ATM_CAS_ACQ (&mu->word, old_word,
 					 (old_word+l_type->add_to_acquire) &
 					  ~(clear|long_wait|l_type->clear_on_acquire))) {
-				return;
+				break;
 			}
 		} else if ((old_word&MU_SPINLOCK) == 0 &&
 			   ATM_CAS_ACQ (&mu->word, old_word,
@@ -126,6 +128,7 @@ void nsync_mu_lock_slow_ (nsync_mu *mu, waiter *w, uint32_t clear, lock_type *l_
 		}
 		attempts = nsync_spin_delay_ (attempts);
 	}
+	ALLOW_CANCELLATIONS;
 }
 
 /* Attempt to acquire *mu in writer mode without blocking, and return non-zero

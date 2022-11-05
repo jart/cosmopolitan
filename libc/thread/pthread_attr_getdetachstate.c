@@ -26,7 +26,8 @@
  *     - `PTHREAD_CREATE_DETACHED`
  * @return 0 on success, or error on failure
  */
-int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
+errno_t pthread_attr_getdetachstate(const pthread_attr_t *attr,
+                                    int *detachstate) {
   *detachstate = attr->__detachstate;
   return 0;
 }

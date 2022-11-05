@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
+#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/wait0.internal.h"
 #include "third_party/nsync/futex.internal.h"
@@ -29,10 +30,16 @@
  * order to know when it's safe to free a thread's stack. This function
  * uses futexes on Linux, FreeBSD, OpenBSD, and Windows. On other
  * platforms this uses polling with exponential backoff.
+ *
+ * @return 0 on success, or errno on error
+ * @raise ECANCELED if calling thread was cancelled in masked mode
  */
-void _wait0(const atomic_int *ctid) {
-  int x;
+errno_t _wait0(const atomic_int *ctid) {
+  int x, rc;
   while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-    nsync_futex_wait_(ctid, x, !IsWindows(), 0);
+    if (nsync_futex_wait_(ctid, x, !IsWindows(), 0) == -ECANCELED) {
+      return ECANCELED;
+    }
   }
+  return 0;
 }

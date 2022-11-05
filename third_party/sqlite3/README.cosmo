@@ -17,4 +17,5 @@ LOCAL CHANGES
   - Added `--strace` system call tracing flag to SQLite shell
   - Added `--strace` function call logging flag to SQLite shell
   - Configured fsync() using runtime magnums rather than ifdefs
+  - Modify preprocessor macro for enabling pread() and pwrite()
   - Save and restore errno in some places to avoid log pollution

@@ -26,8 +26,8 @@
  *     - `PTHREAD_PROCESS_SHARED`
  * @return 0 on success, or error on failure
  */
-int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
-                                 int *pshared) {
+errno_t pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
+                                     int *pshared) {
   *pshared = attr->_pshared;
   return 0;
 }

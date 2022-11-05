@@ -22,6 +22,7 @@
  * Locks semaphore.
  *
  * @return 0 on success, or -1 w/ errno
+ * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EINTR if signal was delivered instead
  * @raise EDEADLK if deadlock was detected
  * @raise EINVAL if `sem` is invalid

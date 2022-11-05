@@ -32,7 +32,7 @@
  * @raise EINVAL if `type` has bad value
  * @see pthread_cancel() for docs
  */
-int pthread_setcanceltype(int type, int *oldtype) {
+errno_t pthread_setcanceltype(int type, int *oldtype) {
   struct PosixThread *pt;
   switch (type) {
     case PTHREAD_CANCEL_DEFERRED:

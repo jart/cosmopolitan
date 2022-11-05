@@ -28,7 +28,7 @@
  * @return 0 on success, or error on failure
  * @raises EINVAL if `pshared` is invalid
  */
-int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
+errno_t pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
   switch (pshared) {
     case PTHREAD_PROCESS_SHARED:
     case PTHREAD_PROCESS_PRIVATE:

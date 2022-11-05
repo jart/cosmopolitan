@@ -24,6 +24,7 @@
 #include "libc/limits.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/semaphore.h"
+#include "libc/thread/thread.h"
 #include "third_party/nsync/futex.internal.h"
 
 static void sem_delay(int n) {
@@ -51,11 +52,18 @@ static struct timespec *sem_timeout(struct timespec *memory,
   }
 }
 
+static void sem_timedwait_cleanup(void *arg) {
+  sem_t *sem = arg;
+  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
+                                      memory_order_acq_rel) > 0);
+}
+
 /**
  * Locks semaphore w/ deadline.
  *
  * @param abstime is absolute deadline or null to wait forever
  * @return 0 on success, or -1 w/ errno
+ * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EINTR if signal was delivered instead
  * @raise EDEADLK if deadlock was detected
  * @raise ETIMEDOUT if deadline expired
@@ -80,14 +88,16 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
   }
 
   _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
-                                      memory_order_acquire) >= 0);
+                                      memory_order_acq_rel) >= 0);
+  pthread_cleanup_push(sem_timedwait_cleanup, sem);
 
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
       rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared,
                              sem_timeout(&ts, abstime));
-      if (rc == -EINTR) {
-        rc = eintr();
+      if (rc == -EINTR || rc == -ECANCELED) {
+        errno = -rc;
+        rc = -1;
       } else if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
         rc = 0;
       } else if (rc == -ETIMEDOUT) {
@@ -111,8 +121,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
                              &sem->sem_value, &v, v - 1, memory_order_acquire,
                              memory_order_relaxed)));
 
-  _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
-                                      memory_order_release) > 0);
+  pthread_cleanup_pop(1);
 
   return rc;
 }

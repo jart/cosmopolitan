@@ -1,5 +1,5 @@
-/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
-│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
+/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
+│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/macros.internal.h"
-.privileged
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 
-//	Calls FreeBSD's futex() API.
-//	Normalizes return value to Linux ABI -errno convention.
-sys_umtx_op:
-	mov	$0x1c6,%eax
-	mov	%rcx,%r10
-	syscall
-	jc	1f
-	ret
-1:	neg	%eax
-	ret
-	.endfn	sys_umtx_op,globl,hidden
+void _pthread_cleanup_push(struct _pthread_cleanup_buffer *cb,
+                           void (*routine)(void *), void *arg) {
+  struct PosixThread *pt;
+  cb->__routine = routine;
+  cb->__arg = arg;
+  if (__tls_enabled && (pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+    cb->__prev = pt->cleanup;
+    pt->cleanup = cb;
+  }
+}

@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "third_party/nsync/atomic.h"
 #include "third_party/nsync/common.internal.h"
 #include "third_party/nsync/dll.h"
@@ -153,6 +154,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 	/* Work out in which mode the lock is held. */
 	uint32_t old_word;
 	IGNORE_RACES_START ();
+	BLOCK_CANCELLATIONS; /* not supported yet */
 	old_word = ATM_LOAD (&mu->word);
 	if ((old_word & MU_ANY_LOCK) == 0) {
 		nsync_panic_ ("nsync_mu not held in some mode when calling "
@@ -265,6 +267,7 @@ int nsync_mu_wait_with_deadline (nsync_mu *mu,
 	if (condition_is_true) {
 		outcome = 0; /* condition is true trumps other outcomes. */
 	}
+	ALLOW_CANCELLATIONS;
 	IGNORE_RACES_END ();
 	return (outcome);
 }

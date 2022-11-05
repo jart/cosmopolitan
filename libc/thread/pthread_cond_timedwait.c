@@ -41,8 +41,9 @@
  * @raise EPERM if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the lock
  *     isn't owned by the current thread
  * @raise EINVAL if `0 ≤ abstime->tv_nsec < 1000000000` wasn't the case
- * @see pthread_cond_broadcast
- * @see pthread_cond_signal
+ * @raise ECANCELED if calling thread was cancelled in masked mode
+ * @see pthread_cond_broadcast()
+ * @see pthread_cond_signal()
  * @cancellationpoint
  */
 errno_t pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex,

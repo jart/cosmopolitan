@@ -34,7 +34,7 @@
  * @return 0 on success, or error on failure
  * @raises EINVAL if `detachstate` is invalid
  */
-int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
+errno_t pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
   switch (detachstate) {
     case PTHREAD_CREATE_JOINABLE:
     case PTHREAD_CREATE_DETACHED:

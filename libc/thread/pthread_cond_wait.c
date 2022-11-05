@@ -31,6 +31,7 @@
  *
  * @param mutex needs to be held by thread when calling this function
  * @return 0 on success, or errno on error
+ * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EPERM if `mutex` is `PTHREAD_MUTEX_ERRORCHECK` and the lock
  *     isn't owned by the current thread
  * @see pthread_cond_timedwait

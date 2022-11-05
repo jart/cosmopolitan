@@ -23,7 +23,7 @@
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 
-int _pthread_reschedule(struct PosixThread *pt) {
+errno_t _pthread_reschedule(struct PosixThread *pt) {
   int rc, e = errno;
   int policy = pt->attr.__schedpolicy;
   struct sched_param param = {pt->attr.__schedparam};

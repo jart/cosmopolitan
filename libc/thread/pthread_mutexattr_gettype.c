@@ -27,7 +27,7 @@
  *     - `PTHREAD_MUTEX_ERRORCHECK`
  * @return 0 on success, or error on failure
  */
-int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type) {
+errno_t pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *type) {
   *type = attr->_type;
   return 0;
 }

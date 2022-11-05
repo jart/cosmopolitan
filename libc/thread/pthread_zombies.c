@@ -44,6 +44,7 @@ void _pthread_zombies_add(struct PosixThread *pt) {
 }
 
 static void _pthread_zombies_collect(struct Zombie *z) {
+  // TODO(jart): We need a trywait() op here to avoid cancellation.
   _pthread_wait(z->pt);
   _pthread_free(z->pt);
   free(z);

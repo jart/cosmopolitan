@@ -25,7 +25,7 @@
  * @return 0 on success, or errno on error
  * @asyncsignalsafe
  */
-int pthread_sigmask(int how, const sigset_t *set, sigset_t *old) {
+errno_t pthread_sigmask(int how, const sigset_t *set, sigset_t *old) {
   int rc, e = errno;
   if (!sigprocmask(how, set, old)) {
     rc = 0;

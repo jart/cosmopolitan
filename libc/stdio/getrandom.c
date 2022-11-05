@@ -41,8 +41,43 @@
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 static bool have_getrandom;
+
+static ssize_t GetDevRandom(char *p, size_t n) {
+  int fd;
+  ssize_t rc;
+  fd = __sys_openat(AT_FDCWD, "/dev/urandom", O_RDONLY | O_CLOEXEC, 0);
+  if (fd == -1) return -1;
+  pthread_cleanup_push((void *)sys_close, (void *)(intptr_t)fd);
+  rc = sys_read(fd, p, n);
+  pthread_cleanup_pop(1);
+  close(fd);
+  return rc;
+}
+
+static ssize_t GetKernArnd(char *p, size_t n) {
+  size_t m, i = 0;
+  int cmd[2];
+  if (IsFreebsd()) {
+    cmd[0] = 1;  /* CTL_KERN */
+    cmd[1] = 37; /* KERN_ARND */
+  } else {
+    cmd[0] = 1;  /* CTL_KERN */
+    cmd[1] = 81; /* KERN_ARND */
+  }
+  for (;;) {
+    m = n - i;
+    if (sys_sysctl(cmd, 2, p + i, &m, 0, 0) != -1) {
+      if ((i += m) == n) {
+        return n;
+      }
+    } else {
+      return i ? i : -1;
+    }
+  }
+}
 
 /**
  * Returns cryptographic random data.
@@ -76,37 +111,17 @@ static bool have_getrandom;
  * @vforksafe
  */
 ssize_t getrandom(void *p, size_t n, unsigned f) {
-  char cf;
   ssize_t rc;
-  uint64_t x;
-  int fd, cmd[2];
-  size_t i, j, m;
   const char *via;
-  sigset_t neu, old;
-  if (n > 256) n = 256;
   if ((f & ~(GRND_RANDOM | GRND_NONBLOCK))) {
     rc = einval();
     via = "n/a";
   } else if (IsWindows()) {
     via = "RtlGenRandom";
-    if (RtlGenRandom(p, n)) {
-      rc = n;
-    } else {
-      rc = __winerr();
-    }
+    rc = RtlGenRandom(p, n) ? n : __winerr();
   } else if (IsFreebsd() || IsNetbsd()) {
     via = "KERN_ARND";
-    if (IsFreebsd()) {
-      cmd[0] = 1;  /* CTL_KERN */
-      cmd[1] = 37; /* KERN_ARND */
-    } else {
-      cmd[0] = 1;  /* CTL_KERN */
-      cmd[1] = 81; /* KERN_ARND */
-    }
-    m = n;
-    if ((rc = sys_sysctl(cmd, 2, p, &m, 0, 0)) != -1) {
-      rc = m;
-    }
+    rc = GetKernArnd(p, n);
   } else if (have_getrandom) {
     via = "getrandom";
     if ((rc = sys_getrandom(p, n, f & (GRND_RANDOM | GRND_NONBLOCK))) != -1) {
@@ -114,15 +129,9 @@ ssize_t getrandom(void *p, size_t n, unsigned f) {
         rc = n;
       }
     }
-  } else if ((fd = __sys_openat(
-                  AT_FDCWD,
-                  (via = (f & GRND_RANDOM) ? "/dev/random" : "/dev/urandom"),
-                  O_RDONLY | ((f & GRND_NONBLOCK) ? O_NONBLOCK : 0), 0)) !=
-             -1) {
-    rc = sys_read(fd, p, n);
-    sys_close(fd);
   } else {
-    rc = enosys();
+    via = "/dev/urandom";
+    rc = GetDevRandom(p, n);
   }
   STRACE("getrandom(%p, %'zu, %#x) via %s → %'ld% m", p, n, f, via, rc);
   return rc;

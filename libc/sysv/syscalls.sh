@@ -51,7 +51,7 @@ scall	__sys_munmap		0x049049049204900b	globl hidden
 scall	sys_sigaction		0x15402e1a0202e00d	globl hidden # rt_sigaction on Lunix; __sigaction_sigtramp() on NetBSD
 scall	__sys_sigprocmask	0x125030154214900e	globl hidden # a.k.a. rt_sigprocmask, openbsd:byvalue, a.k.a. pthread_sigmask
 scall	sys_ioctl		0x0360360362036010	globl hidden
-scall	sys_ioctl_cp		0x8368368362836810	globl hidden
+scall	sys_ioctl_cp		0x8368368362836810	globl hidden # intended for TCSBRK
 scall	sys_pread		0x8ad8ad9db2899811	globl hidden # a.k.a. pread64; netbsd+openbsd:pad
 scall	sys_pwrite		0x8ae8ae9dc289a812	globl hidden # a.k.a. pwrite64; netbsd+openbsd:pad
 scall	sys_readv		0x8788788782878813	globl hidden
@@ -101,7 +101,8 @@ scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0x092fff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
 scall	sys_tkill		0x13e0771b121480c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; __pthread_kill() on XNU
-scall	sys_futex		0x0a6053fffffff0ca	globl hidden # raises SIGSYS on NetBSD
+scall	sys_futex		0x0a60531c6ffff0ca	globl hidden # raises SIGSYS on NetBSD; _umtx_op() on FreeBSD
+scall	sys_futex_cp		0x8a68539c6ffff8ca	globl hidden # intended for futex wait ops
 scall	sys_set_robust_list	0x0a7ffffffffff111	globl # no wrapper
 scall	sys_get_robust_list	0x0a8ffffffffff112	globl # no wrapper
 scall	sys_uname		0x0a4fff0a4ffff03f	globl hidden
@@ -114,7 +115,7 @@ scall	sys_msgsnd		0x8e28e28e22904845	globl # no wrapper; won't polyfill for wind
 scall	sys_msgrcv		0x8e38e38e32905846	globl # no wrapper; won't polyfill for windows
 scall	sys_msgctl		0x1bc1291ff2102047	globl # no wrapper; won't polyfill for windows
 scall	__sys_fcntl		0x05c05c05c205c048	globl hidden
-scall	__sys_fcntl_cp		0x85c85c85c285c848	globl hidden
+scall	__sys_fcntl_cp		0x85c85c85c285c848	globl hidden # intended for F_SETLKW and F_OFD_SETLKW
 scall	sys_flock		0x8838838832883849	globl hidden
 scall	sys_fsync		0x85f85f85f285f84a	globl hidden
 scall	sys_fdatasync		0x8f185fa2628bb84b	globl hidden # fsync() on openbsd

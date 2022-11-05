@@ -25,7 +25,7 @@
  * @return 0 on success, or error number on failure
  * @raise EINVAL if mutex is locked in our implementation
  */
-int pthread_mutex_destroy(pthread_mutex_t *mutex) {
+errno_t pthread_mutex_destroy(pthread_mutex_t *mutex) {
   memset(mutex, -1, sizeof(*mutex));
   return 0;
 }

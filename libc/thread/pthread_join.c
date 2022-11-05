@@ -27,14 +27,16 @@
  * @param value_ptr if non-null will receive pthread_exit() argument
  *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
  *     pthread_cancel() destroyed the thread instead
- * @return 0 on success, or errno with error
+ * @return 0 on success, or errno on error
+ * @raise ECANCELED if calling thread was cancelled in masked mode
  * @raise EDEADLK if `thread` is the current thread
  * @raise EINVAL if `thread` is detached
  * @cancellationpoint
  * @returnserrno
  * @threadsafe
  */
-int pthread_join(pthread_t thread, void **value_ptr) {
+errno_t pthread_join(pthread_t thread, void **value_ptr) {
+  errno_t rc;
   struct PosixThread *pt;
   if (thread == __get_tls()->tib_pthread) {
     return EDEADLK;
@@ -44,7 +46,9 @@ int pthread_join(pthread_t thread, void **value_ptr) {
       pt->status == kPosixThreadDetached) {
     return EINVAL;
   }
-  _pthread_wait(pt);
+  if ((rc = _pthread_wait(pt))) {
+    return rc;
+  }
   if (value_ptr) {
     *value_ptr = pt->rc;
   }

@@ -43,30 +43,36 @@
  * @raise EINVAL if `state` has bad value
  * @asyncsignalsafe
  */
-int pthread_setcancelstate(int state, int *oldstate) {
+errno_t pthread_setcancelstate(int state, int *oldstate) {
   struct PosixThread *pt;
-  switch (state) {
-    case PTHREAD_CANCEL_ENABLE:
-    case PTHREAD_CANCEL_DISABLE:
-    case PTHREAD_CANCEL_MASKED:
-      pt = (struct PosixThread *)__get_tls()->tib_pthread;
-      if (oldstate) {
-        if (pt->flags & PT_NOCANCEL) {
-          *oldstate = PTHREAD_CANCEL_DISABLE;
-        } else if (pt->flags & PT_MASKED) {
-          *oldstate = PTHREAD_CANCEL_MASKED;
-        } else {
-          *oldstate = PTHREAD_CANCEL_ENABLE;
+  if (__tls_enabled && (pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+    switch (state) {
+      case PTHREAD_CANCEL_ENABLE:
+      case PTHREAD_CANCEL_DISABLE:
+      case PTHREAD_CANCEL_MASKED:
+        if (oldstate) {
+          if (pt->flags & PT_NOCANCEL) {
+            *oldstate = PTHREAD_CANCEL_DISABLE;
+          } else if (pt->flags & PT_MASKED) {
+            *oldstate = PTHREAD_CANCEL_MASKED;
+          } else {
+            *oldstate = PTHREAD_CANCEL_ENABLE;
+          }
         }
-      }
-      pt->flags &= ~(PT_NOCANCEL | PT_MASKED);
-      if (state == PTHREAD_CANCEL_MASKED) {
-        pt->flags |= PT_MASKED;
-      } else if (state == PTHREAD_CANCEL_DISABLE) {
-        pt->flags |= PT_NOCANCEL;
-      }
-      return 0;
-    default:
-      return EINVAL;
+        pt->flags &= ~(PT_NOCANCEL | PT_MASKED);
+        if (state == PTHREAD_CANCEL_MASKED) {
+          pt->flags |= PT_MASKED;
+        } else if (state == PTHREAD_CANCEL_DISABLE) {
+          pt->flags |= PT_NOCANCEL;
+        }
+        return 0;
+      default:
+        return EINVAL;
+    }
+  } else {
+    if (oldstate) {
+      *oldstate = 0;
+    }
+    return 0;
   }
 }
