@@ -108,6 +108,8 @@ KEYBOARD
   ALT->          END OF HISTORY
   ALT-F          FORWARD WORD
   ALT-B          BACKWARD WORD
+  CTRL-RIGHT     FORWARD WORD
+  CTRL-LEFT      BACKWARD WORD
   CTRL-K         KILL LINE FORWARDS
   CTRL-U         KILL LINE BACKWARDS
   ALT-H          KILL WORD BACKWARDS
@@ -7115,6 +7117,12 @@ kLogError = nil
 ---@type integer for fatal logging level, which is less than `kLogError`. See `Log`.
 ---Logging anything at this level will result in a backtrace and process exit.
 kLogFatal = nil
+
+---@type integer turn `+` into space. See `ParseUrl`.
+kUrlPlus = nil
+
+---@type integer to transcode ISO-8859-1 input into UTF-8. See `ParseUrl`.
+kUrlLatin1 = nil
 
 --[[
 ────────────────────────────────────────────────────────────────────────────────

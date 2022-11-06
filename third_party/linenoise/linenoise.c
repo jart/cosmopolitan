@@ -47,6 +47,8 @@
 │   ALT->          END OF HISTORY                                              │
 │   ALT-F          FORWARD WORD                                                │
 │   ALT-B          BACKWARD WORD                                               │
+│   CTRL-RIGHT     FORWARD WORD                                                │
+│   CTRL-LEFT      BACKWARD WORD                                               │
 │   CTRL-ALT-F     FORWARD EXPR                                                │
 │   CTRL-ALT-B     BACKWARD EXPR                                               │
 │   ALT-RIGHT      FORWARD EXPR                                                │
@@ -2170,6 +2172,14 @@ ssize_t linenoiseEdit(struct linenoiseState *l, const char *prompt, char **obuf,
                     CASE('1', linenoiseEditHome(l));    // \e[1~
                     CASE('3', linenoiseEditDelete(l));  // \e[3~
                     CASE('4', linenoiseEditEnd(l));     // \e[4~
+                    default:
+                      break;
+                  }
+                } else if (rc == 6 && seq[2] == '1' &&
+                           seq[3] == ';' && seq[4] == '5') {
+                  switch (seq[5]) {
+                    CASE('C', linenoiseEditRightWord(l)); // \e[1;5C ctrl-right
+                    CASE('D', linenoiseEditLeftWord(l));  // \e[1;5D ctrl-left
                     default:
                       break;
                   }
