@@ -50,14 +50,14 @@ STATIC_YOINK("_init_metalfile");
 void *__ape_com_base;
 size_t __ape_com_size = 0;
 
-textstartup void InitializeMetalFile(void) {
+textstartup noasan void InitializeMetalFile(void) {
   if (IsMetal()) {
     /*
      * Copy out a pristine image of the program — before the program might
      * decide to modify its own .data section.
      *
      * This code is included if a symbol "file:/proc/self/exe" is defined
-     * (see libc/calls/metalfile.internal.h & libc/calls/metalfile_init.S). 
+     * (see libc/calls/metalfile.internal.h & libc/calls/metalfile_init.S).
      * The zipos code will automatically arrange to do this.  Alternatively,
      * user code can STATIC_YOINK this symbol.
      */
