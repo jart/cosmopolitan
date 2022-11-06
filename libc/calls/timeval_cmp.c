@@ -19,10 +19,14 @@
 #include "libc/calls/struct/timeval.h"
 
 /**
- * Checks if 𝑥 ≥ 𝑦.
+ * Compares microsecond timestamps.
+ *
+ * @return 0 if equal, -1 if `a < b`, or +1 if `a > b`
  */
-bool _timeval_gte(struct timeval x, struct timeval y) {
-  if (x.tv_sec > y.tv_sec) return true;
-  if (x.tv_sec < y.tv_sec) return false;
-  return x.tv_usec >= y.tv_usec;
+int timeval_cmp(struct timeval a, struct timeval b) {
+  int cmp;
+  if (!(cmp = (a.tv_sec > b.tv_sec) - (a.tv_sec < b.tv_sec))) {
+    cmp = (a.tv_usec > b.tv_usec) - (a.tv_usec < b.tv_usec);
+  }
+  return cmp;
 }

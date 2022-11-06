@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/struct/flock.internal.h"
@@ -94,7 +95,7 @@
  * @raise EDEADLK if `cmd` was `F_SETLKW` and waiting would deadlock
  * @raise EMFILE if `cmd` is `F_DUPFD` or `F_DUPFD_CLOEXEC` and
  *     `RLIMIT_NOFILE` would be exceeded
- * @cancellationpoint when `cmd` is `F_SETLKW`
+ * @cancellationpoint when `cmd` is `F_SETLKW` or `F_OFD_SETLKW`
  * @asyncsignalsafe
  * @restartable
  */
@@ -113,7 +114,9 @@ int fcntl(int fd, int cmd, ...) {
         rc = _weaken(__zipos_fcntl)(fd, cmd, arg);
       } else if (!IsWindows()) {
         if (cmd == F_SETLKW || cmd == F_OFD_SETLKW) {
+          BEGIN_CANCELLATION_POINT;
           rc = sys_fcntl(fd, cmd, arg, __sys_fcntl_cp);
+          END_CANCELLATION_POINT;
         } else {
           rc = sys_fcntl(fd, cmd, arg, __sys_fcntl);
         }

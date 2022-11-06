@@ -8,7 +8,8 @@ COSMOPOLITAN_C_START_
  * @see libc/sysv/consts.sh for numbers
  */
 
-#if defined(__GNUC__) && defined(__MNO_RED_ZONE__) && !defined(__STRICT_ANSI__)
+#if defined(__GNUC__) && defined(__x86_64__) && defined(__MNO_RED_ZONE__) && \
+    !defined(__STRICT_ANSI__)
 #define errno                                                           \
   (*({                                                                  \
     errno_t *_ep;                                                       \

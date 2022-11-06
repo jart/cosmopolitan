@@ -148,7 +148,9 @@ cosmo:	push	%rbp
 	or	$-1,%r8
 	xor	%r9d,%r9d
 	push	%rsi
+	push	%rsi
 	call	mmap
+	pop	%r8
 	pop	%r8
 	pop	%rsi
 	pop	%rdi

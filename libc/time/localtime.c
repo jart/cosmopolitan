@@ -2,6 +2,7 @@
 │vi: set et ft=c ts=8 tw=8 fenc=utf-8                                       :vi│
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define LOCALTIME_IMPLEMENTATION
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/intrin/bits.h"
 #include "libc/intrin/nopl.internal.h"
@@ -365,8 +366,8 @@ union local_storage {
    format if DOEXTEND.  Use *LSP for temporary storage.  Return 0 on
    success, an errno value on failure.  */
 static int
-localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
-		     union local_storage *lsp)
+localtime_tzloadbody_(char const *name, struct state *sp, bool doextend,
+		      union local_storage *lsp)
 {
 	register int			i;
 	register int			fid;
@@ -740,6 +741,17 @@ localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
 	sp->defaulttype = i;
 
 	return 0;
+}
+
+static int /* [jart] pthread cancellation safe */
+localtime_tzloadbody(char const *name, struct state *sp, bool doextend,
+		     union local_storage *lsp)
+{
+	int rc;
+	BLOCK_CANCELLATIONS;
+	rc = localtime_tzloadbody_(name, sp, doextend, lsp);
+	ALLOW_CANCELLATIONS;
+	return rc;
 }
 
 /* Load tz data from the file named NAME into *SP.  Read extended

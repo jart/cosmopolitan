@@ -31,8 +31,8 @@ int sys_clock_nanosleep_openbsd(int clock, int flags,
       res = sys_nanosleep(req, rem);
     } else {
       sys_clock_gettime(clock, &now);
-      if (_timespec_gt(*req, now)) {
-        rel = _timespec_sub(*req, now);
+      if (timespec_cmp(*req, now) > 0) {
+        rel = timespec_sub(*req, now);
         res = sys_nanosleep(&rel, 0);
       } else {
         res = 0;

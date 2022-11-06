@@ -22,9 +22,9 @@
 /**
  * Accumulates resource statistics in `y` to `x`.
  */
-void _addrusage(struct rusage *x, const struct rusage *y) {
-  x->ru_utime = _timeval_add(x->ru_utime, y->ru_utime);
-  x->ru_stime = _timeval_add(x->ru_stime, y->ru_stime);
+void rusage_add(struct rusage *x, const struct rusage *y) {
+  x->ru_utime = timeval_add(x->ru_utime, y->ru_utime);
+  x->ru_stime = timeval_add(x->ru_stime, y->ru_stime);
   x->ru_maxrss = MAX(x->ru_maxrss, y->ru_maxrss);
   x->ru_ixrss += y->ru_ixrss;
   x->ru_idrss += y->ru_idrss;

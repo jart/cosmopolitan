@@ -16,15 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Compares nanosecond timestamps.
+ * Subtracts two nanosecond timestamps.
  */
-int _timespec_cmp(struct timespec a, struct timespec b) {
-  int cmp;
-  if (!(cmp = (a.tv_sec > b.tv_sec) - (a.tv_sec < b.tv_sec))) {
-    cmp = (a.tv_nsec > b.tv_nsec) - (a.tv_nsec < b.tv_nsec);
+struct timeval timeval_sub(struct timeval a, struct timeval b) {
+  a.tv_sec -= b.tv_sec;
+  if (a.tv_usec < b.tv_usec) {
+    a.tv_usec += 1000000;
+    a.tv_sec--;
   }
-  return cmp;
+  a.tv_usec -= b.tv_usec;
+  return a;
 }

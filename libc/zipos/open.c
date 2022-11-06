@@ -190,7 +190,6 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
  * Loads compressed file from αcτµαlly pδrταblε εxεcµταblε object store.
  *
  * @param uri is obtained via __zipos_parseuri()
- * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  */

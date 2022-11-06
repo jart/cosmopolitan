@@ -1334,7 +1334,7 @@ static void ReportWorkerResources(int pid, struct rusage *ru) {
 
 static void HandleWorkerExit(int pid, int ws, struct rusage *ru) {
   LockInc(&shared->c.connectionshandled);
-  _addrusage(&shared->children, ru);
+  rusage_add(&shared->children, ru);
   ReportWorkerExit(pid, ws);
   ReportWorkerResources(pid, ru);
   if (hasonprocessdestroy) {
@@ -1418,8 +1418,8 @@ static ssize_t ReadAll(int fd, char *p, size_t n) {
 }
 
 static bool IsTakingTooLong(void) {
-  return meltdown && _timespec_gte(_timespec_sub(_timespec_real(), startread),
-                                   (struct timespec){2});
+  return meltdown && timespec_cmp(timespec_sub(timespec_real(), startread),
+                                  (struct timespec){2}) >= 0;
 }
 
 static ssize_t WritevAll(int fd, struct iovec *iov, int iovlen) {
@@ -3032,7 +3032,7 @@ td { padding-right: 3em; }\r\n\
   }
   appends(&cpm.outbuf, "<td valign=\"top\">\r\n");
   and = "";
-  x = _timespec_sub(_timespec_real(), startserver).tv_sec;
+  x = timespec_sub(timespec_real(), startserver).tv_sec;
   y = ldiv(x, 24L * 60 * 60);
   if (y.quot) {
     appendf(&cpm.outbuf, "%,ld day%s ", y.quot, y.quot == 1 ? "" : "s");
@@ -3121,7 +3121,7 @@ static char *ServeStatusz(void) {
   }
   AppendLong1("pid", getpid());
   AppendLong1("ppid", getppid());
-  AppendLong1("now", _timespec_real().tv_sec);
+  AppendLong1("now", timespec_real().tv_sec);
   AppendLong1("nowish", shared->nowish.tv_sec);
   AppendLong1("gmtoff", gmtoff);
   AppendLong1("CLK_TCK", CLK_TCK);
@@ -3634,7 +3634,7 @@ static void StoreAsset(char *path, size_t pathlen, char *data, size_t datalen,
     return;
   }
   OpenZip(false);
-  now = _timespec_real();
+  now = timespec_real();
   a = GetAssetZip(path, pathlen);
   if (!mode) mode = a ? GetMode(a) : 0644;
   if (!(mode & S_IFMT)) mode |= S_IFREG;
@@ -4491,9 +4491,9 @@ static int LuaProgramHeartbeatInterval(lua_State *L) {
   if (!lua_isnoneornil(L, 1)) {
     millis = luaL_checkinteger(L, 1);
     millis = MAX(100, millis);
-    heartbeatinterval = _timespec_frommillis(millis);
+    heartbeatinterval = timespec_frommillis(millis);
   }
-  lua_pushinteger(L, _timespec_tomillis(heartbeatinterval));
+  lua_pushinteger(L, timespec_tomillis(heartbeatinterval));
   return 1;
 }
 
@@ -4794,14 +4794,14 @@ wontreturn static void Replenisher(void) {
   signal(SIGTERM, OnTerm);
   signal(SIGUSR1, SIG_IGN);  // make sure reload won't kill this
   signal(SIGUSR2, SIG_IGN);  // make sure meltdown won't kill this
-  ts = _timespec_real();
+  ts = timespec_real();
   while (!terminated) {
     if (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0)) {
       errno = 0;
       continue;
     }
     ReplenishTokens(tokenbucket.w, (1ul << tokenbucket.cidr) / 8);
-    ts = _timespec_add(ts, tokenbucket.replenish);
+    ts = timespec_add(ts, tokenbucket.replenish);
     DEBUGF("(token) replenished tokens");
   }
   VERBOSEF("(token) replenish worker exiting");
@@ -4907,7 +4907,7 @@ static int LuaProgramTokenBucket(lua_State *L) {
   tokenbucket.reject = reject;
   tokenbucket.ignore = ignore;
   tokenbucket.ban = ban;
-  tokenbucket.replenish = _timespec_fromnanos(1 / replenish * 1e9);
+  tokenbucket.replenish = timespec_fromnanos(1 / replenish * 1e9);
   int pid = fork();
   _npassert(pid != -1);
   if (!pid) Replenisher();
@@ -5591,13 +5591,13 @@ Content-Length: 22\r\n\
 }
 
 static void EnterMeltdownMode(void) {
-  if (shared->lastmeltdown.tv_sec &&
-      !_timespec_gte(_timespec_sub(_timespec_real(), shared->lastmeltdown),
-                     (struct timespec){1}))
+  if (timespec_cmp(timespec_sub(timespec_real(), shared->lastmeltdown),
+                   (struct timespec){1}) < 0) {
     return;
+  }
   WARNF("(srvr) server is melting down (%,d workers)", shared->workers);
   LOGIFNEG1(kill(0, SIGUSR2));
-  shared->lastmeltdown = _timespec_real();
+  shared->lastmeltdown = timespec_real();
   ++shared->c.meltdowns;
 }
 
@@ -5727,7 +5727,7 @@ static void HandleReload(void) {
 static void HandleHeartbeat(void) {
   size_t i;
   sigset_t mask;
-  UpdateCurrentDate(_timespec_real());
+  UpdateCurrentDate(timespec_real());
   Reindex();
   getrusage(RUSAGE_SELF, &shared->server);
 #ifndef STATIC
@@ -5822,8 +5822,8 @@ static char *ReadMore(void) {
   } else if (errno == EINTR) {
     LockInc(&shared->c.readinterrupts);
     if (killed || ((meltdown || terminated) &&
-                   _timespec_gte(_timespec_sub(_timespec_real(), startread),
-                                 (struct timespec){1}))) {
+                   timespec_cmp(timespec_sub(timespec_real(), startread),
+                                (struct timespec){1}) >= 0)) {
       return HandlePayloadDrop();
     }
   } else {
@@ -6350,9 +6350,9 @@ static bool HandleMessageActual(void) {
     p = stpcpy(p, "\r\n");
   }
   if (loglatency || LOGGABLE(kLogDebug) || hasonloglatency) {
-    now = _timespec_real();
-    reqtime = _timespec_tomicros(_timespec_sub(now, startrequest));
-    contime = _timespec_tomicros(_timespec_sub(now, startconnection));
+    now = timespec_real();
+    reqtime = timespec_tomicros(timespec_sub(now, startrequest));
+    contime = timespec_tomicros(timespec_sub(now, startconnection));
     if (hasonloglatency) LuaOnLogLatency(reqtime, contime);
     if (loglatency || LOGGABLE(kLogDebug))
       LOGF(kLogDebug, "(stat) %`'.*s latency r: %,ldµs c: %,ldµs",
@@ -6394,14 +6394,14 @@ static void HandleMessages(void) {
   size_t got;
   for (once = false;;) {
     InitRequest();
-    startread = _timespec_real();
+    startread = timespec_real();
     for (;;) {
       if (!cpm.msg.i && amtread) {
-        startrequest = _timespec_real();
+        startrequest = timespec_real();
         if (HandleMessage()) break;
       }
       if ((rc = reader(client, inbuf.p + amtread, inbuf.n - amtread)) != -1) {
-        startrequest = _timespec_real();
+        startrequest = timespec_real();
         got = rc;
         amtread += got;
         if (amtread) {
@@ -6460,9 +6460,8 @@ static void HandleMessages(void) {
       }
       if (killed || (terminated && !amtread) ||
           (meltdown &&
-           (!amtread ||
-            _timespec_gte(_timespec_sub(_timespec_real(), startread),
-                          (struct timespec){1})))) {
+           (!amtread || timespec_cmp(timespec_sub(timespec_real(), startread),
+                                     (struct timespec){1}) >= 0))) {
         if (amtread) {
           LockInc(&shared->c.dropped);
           SendServiceUnavailable();
@@ -6758,7 +6757,7 @@ static int HandleConnection(size_t i) {
     } else {
       DEBUGF("(token) can't acquire accept() token for client");
     }
-    startconnection = _timespec_real();
+    startconnection = timespec_real();
     if (UNLIKELY(maxworkers) && shared->workers >= maxworkers) {
       EnterMeltdownMode();
       SendServiceUnavailable();
@@ -6811,9 +6810,8 @@ static int HandleConnection(size_t i) {
       CloseServerFds();
     }
     HandleMessages();
-    DEBUGF(
-        "(stat) %s closing after %,ldµs", DescribeClient(),
-        _timespec_tomicros(_timespec_sub(_timespec_real(), startconnection)));
+    DEBUGF("(stat) %s closing after %,ldµs", DescribeClient(),
+           timespec_tomicros(timespec_sub(timespec_real(), startconnection)));
     if (!pid) {
       if (hasonworkerstop) {
         CallSimpleHook("OnWorkerStop");
@@ -7110,9 +7108,8 @@ int EventLoop(int ms) {
       EnterMeltdownMode();
       lua_repl_unlock();
       meltdown = false;
-    } else if (_timespec_gte(
-                   _timespec_sub((t = _timespec_real()), lastheartbeat),
-                   heartbeatinterval)) {
+    } else if (timespec_cmp(timespec_sub((t = timespec_real()), lastheartbeat),
+                            heartbeatinterval) >= 0) {
       lastheartbeat = t;
       HandleHeartbeat();
     } else if (HandlePoll(ms) == -1) {
@@ -7350,7 +7347,7 @@ void RedBean(int argc, char *argv[]) {
   }
   reader = read;
   writer = WritevAll;
-  gmtoff = GetGmtOffset((lastrefresh = startserver = _timespec_real()).tv_sec);
+  gmtoff = GetGmtOffset((lastrefresh = startserver = timespec_real()).tv_sec);
   mainpid = getpid();
   heartbeatinterval.tv_sec = 5;
   CHECK_GT(CLK_TCK, 0);
@@ -7406,7 +7403,7 @@ void RedBean(int argc, char *argv[]) {
     close(fd);
   }
   ChangeUser();
-  UpdateCurrentDate(_timespec_real());
+  UpdateCurrentDate(timespec_real());
   CollectGarbage();
   hdrbuf.n = 4 * 1024;
   hdrbuf.p = xmalloc(hdrbuf.n);
@@ -7424,12 +7421,12 @@ void RedBean(int argc, char *argv[]) {
     }
   }
 #ifdef STATIC
-  EventLoop(_timespec_tomillis(heartbeatinterval));
+  EventLoop(timespec_tomillis(heartbeatinterval));
 #else
   GetHostsTxt();    // for effect
   GetResolvConf();  // for effect
   if (daemonize || uniprocess || !linenoiseIsTerminal()) {
-    EventLoop(_timespec_tomillis(heartbeatinterval));
+    EventLoop(timespec_tomillis(heartbeatinterval));
   } else if (IsWindows()) {
     CHECK_NE(-1, _spawn(WindowsReplThread, 0, &replth));
     EventLoop(100);

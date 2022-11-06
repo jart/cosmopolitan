@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -34,7 +35,7 @@
 errno_t pthread_kill(pthread_t thread, int sig) {
   int rc, e = errno;
   struct PosixThread *pt = (struct PosixThread *)thread;
-  if (!tkill(pt->tid, sig)) {
+  if (!__tkill(pt->tid, sig, pt->tib)) {
     rc = 0;
   } else {
     rc = errno;

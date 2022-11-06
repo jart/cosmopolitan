@@ -309,10 +309,10 @@ static int Usleep(void) {
   struct timespec t;
   if (n > 1) {
     f = 0;
-    t = _timespec_frommicros(atoi(args[1]));
+    t = timespec_frommicros(atoi(args[1]));
   } else {
     f = TIMER_ABSTIME;
-    t = _timespec_max;
+    t = timespec_max;
   }
   return clock_nanosleep(0, f, &t, 0);
 }

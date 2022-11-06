@@ -7,35 +7,33 @@
 │   • http://creativecommons.org/publicdomain/zero/1.0/            │
 ╚─────────────────────────────────────────────────────────────────*/
 #endif
-#include "libc/calls/struct/timespec.h"
+#include "libc/calls/calls.h"
+#include "libc/runtime/runtime.h"
 #include "libc/stdio/stdio.h"
-#include "libc/time/time.h"
-
-/**
- * @fileoverview clock() function demo
- */
+#include "libc/str/str.h"
+#include "libc/sysv/consts/reboot.h"
 
 int main(int argc, char *argv[]) {
-  unsigned long i;
-  volatile unsigned long x;
-  struct timespec now, start, next, interval;
-  printf("hammering the cpu...\n");
-  next = start = timespec_mono();
-  interval = timespec_frommillis(500);
-  next = timespec_add(next, interval);
-  for (;;) {
-    for (i = 0;; ++i) {
-      x *= 7;
-      if (!(i % 256)) {
-        now = timespec_mono();
-        if (timespec_cmp(now, next) >= 0) {
-          break;
-        }
-      }
+  char line[8] = {0};
+  if (argc > 1 && !strcmp(argv[1], "-y")) {
+    line[0] = 'y';
+  } else {
+    printf("shutdown your computer? yes or no [no] ");
+    fflush(stdout);
+    fgets(line, sizeof(line), stdin);
+  }
+  if (line[0] == 'y' || line[0] == 'Y') {
+    if (reboot(RB_POWER_OFF)) {
+      printf("system is shutting down...\n");
+      exit(0);
+    } else {
+      perror("reboot");
+      exit(1);
     }
-    next = timespec_add(next, interval);
-    printf("consumed %10g seconds monotonic time and %10g seconds cpu time\n",
-           timespec_tonanos(timespec_sub(now, start)) / 1000000000.,
-           (double)clock() / CLOCKS_PER_SEC);
+  } else if (line[0] == 'n' || line[0] == 'N') {
+    exit(0);
+  } else {
+    printf("error: unrecognized response\n");
+    exit(2);
   }
 }

@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
@@ -39,6 +41,7 @@ static bool HasCopyFileRange(void) {
   bool ok;
   int e, rc;
   e = errno;
+  BLOCK_CANCELLATIONS;
   if (IsLinux()) {
     // We modernize our detection by a few years for simplicity.
     // This system call is chosen since it's listed by pledge().
@@ -49,6 +52,7 @@ static bool HasCopyFileRange(void) {
   } else {
     ok = false;
   }
+  ALLOW_CANCELLATIONS;
   errno = e;
   return ok;
 }
@@ -81,6 +85,7 @@ static void copy_file_range_init(void) {
  * @raise EBADF if `infd` or `outfd` aren't open files or append-only
  * @raise EPERM if `fdout` refers to an immutable file on Linux
  * @raise ENOTSUP if `infd` or `outfd` is a zip file descriptor
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if ranges overlap or `flags` is non-zero
  * @raise EFBIG if `setrlimit(RLIMIT_FSIZE)` is exceeded
  * @raise EFAULT if one of the pointers memory is bad
@@ -93,12 +98,15 @@ static void copy_file_range_init(void) {
  * @raise EIO if a low-level i/o error happens
  * @see sendfile() for seekable → socket
  * @see splice() for fd ↔ pipe
+ * @cancellationpoint
  */
 ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
                         int64_t *opt_in_out_outoffset, size_t uptobytes,
                         uint32_t flags) {
   ssize_t rc;
   pthread_once(&g_copy_file_range.once, copy_file_range_init);
+  BEGIN_CANCELLATION_POINT;
+
   if (!g_copy_file_range.ok) {
     rc = enosys();
   } else if (IsAsan() && ((opt_in_out_inoffset &&
@@ -112,6 +120,8 @@ ssize_t copy_file_range(int infd, int64_t *opt_in_out_inoffset, int outfd,
     rc = sys_copy_file_range(infd, opt_in_out_inoffset, outfd,
                              opt_in_out_outoffset, uptobytes, flags);
   }
+
+  END_CANCELLATION_POINT;
   STRACE("copy_file_range(%d, %s, %d, %s, %'zu, %#x) → %'ld% m", infd,
          DescribeInOutInt64(rc, opt_in_out_inoffset), outfd,
          DescribeInOutInt64(rc, opt_in_out_outoffset), uptobytes, flags);

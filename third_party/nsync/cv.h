@@ -114,8 +114,10 @@ void nsync_cv_broadcast(nsync_cv *cv);
    return. Equivalent to a call to nsync_mu_wait_with_deadline() with
    abs_deadline==nsync_time_no_deadline, and cancel_note==NULL. Callers
    should use nsync_cv_wait() in a loop, as with all standard Mesa-style
-   condition variables. See examples above. */
-void nsync_cv_wait(nsync_cv *cv, nsync_mu *mu);
+   condition variables. See examples above. Returns 0 normally, otherwise
+   ECANCELED may be returned if calling POSIX thread is cancelled only when
+   the PTHREAD_CANCEL_MASKED mode is in play. */
+int nsync_cv_wait(nsync_cv *cv, nsync_mu *mu);
 
 /* Atomically release "mu" (which must be held on entry) and block the
    calling thread on *cv. It then waits until awakened by a call to
@@ -124,9 +126,11 @@ void nsync_cv_wait(nsync_cv *cv, nsync_mu *mu);
    In all cases, it reacquires "mu", and returns the reason for the call
    returned (0, ETIMEDOUT, or ECANCELED). Use
    abs_deadline==nsync_time_no_deadline for no deadline, and
-   cancel_note==NULL for no cancellation. wait_with_deadline() should be
-   used in a loop, as with all Mesa-style condition variables. See
-   examples above.
+   cancel_note==NULL for no nsync cancellations (however POSIX thread
+   cancellations may still happen, and ECANCELED could still be returned
+   when the calling thread is cancelled only if PTHREAD_CANCEL_MASKED is
+   in play). wait_with_deadline() should be used in a loop, as with all
+   Mesa-style condition variables. See examples above.
 
    There are two reasons for using an absolute deadline, rather than a
    relative timeout---these are why pthread_cond_timedwait() also uses

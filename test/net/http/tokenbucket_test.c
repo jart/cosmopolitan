@@ -82,18 +82,18 @@ BENCH(tokenbucket, bench) {
   NaiveReplenishTokens(tok.b, TB_BYTES);
   clock_gettime(0, &t2);
   kprintf("NaiveReplenishTokens took %'ld us\n",
-          _timespec_tomicros(_timespec_sub(t2, t1)));
+          timespec_tomicros(timespec_sub(t2, t1)));
 
   clock_gettime(0, &t1);
   ReplenishTokens(tok.w, TB_WORDS);
   clock_gettime(0, &t2);
   kprintf("ReplenishTokens empty took %'ld us\n",
-          _timespec_tomicros(_timespec_sub(t2, t1)));
+          timespec_tomicros(timespec_sub(t2, t1)));
 
   memset(tok.b, 127, TB_BYTES);
   clock_gettime(0, &t1);
   ReplenishTokens(tok.w, TB_WORDS);
   clock_gettime(0, &t2);
   kprintf("ReplenishTokens full took %'ld us\n",
-          _timespec_tomicros(_timespec_sub(t2, t1)));
+          timespec_tomicros(timespec_sub(t2, t1)));
 }

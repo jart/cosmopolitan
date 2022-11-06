@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
@@ -27,6 +28,7 @@
 
 static textwindows int sys_tcdrain_nt(int fd) {
   if (!__isfdopen(fd)) return ebadf();
+  if (_check_interrupts(false, g_fds.p)) return -1;
   if (!FlushFileBuffers(g_fds.p[fd].handle)) return __winerr();
   return 0;
 }
@@ -39,12 +41,15 @@ static textwindows int sys_tcdrain_nt(int fd) {
  * @raise ENOTTY if `fd` is open but not a teletypewriter
  * @raise EIO if process group of writer is orphoned, calling thread is
  *     not blocking `SIGTTOU`, and process isn't ignoring `SIGTTOU`
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @raise ENOSYS on bare metal
  * @cancellationpoint
  * @asyncsignalsafe
  */
 int tcdrain(int fd) {
   int rc;
+  BEGIN_CANCELLATION_POINT;
   if (IsMetal()) {
     rc = enosys();
   } else if (!IsWindows()) {
@@ -52,6 +57,7 @@ int tcdrain(int fd) {
   } else {
     rc = sys_tcdrain_nt(fd);
   }
+  END_CANCELLATION_POINT;
   STRACE("tcdrain(%d) → %d% m", fd, rc);
   return rc;
 }

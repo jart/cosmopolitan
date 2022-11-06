@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -51,6 +52,7 @@
  * @raise ENOSPC if device containing `fd` is full
  * @raise EIO if low-level i/o error happened
  * @raise EINTR if signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EAGAIN if `O_NONBLOCK` is in play and write needs to block
  * @raise ENOBUFS if kernel lacked internal resources; which FreeBSD
  *     and XNU say could happen with sockets, and OpenBSD documents it
@@ -64,6 +66,8 @@
  */
 ssize_t write(int fd, const void *buf, size_t size) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
+
   if (fd >= 0) {
     if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
@@ -83,6 +87,8 @@ ssize_t write(int fd, const void *buf, size_t size) {
   } else {
     rc = ebadf();
   }
+
+  END_CANCELLATION_POINT;
   DATATRACE("write(%d, %#.*hhs%s, %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
             buf, rc > 40 ? "..." : "", size, rc);
   return rc;

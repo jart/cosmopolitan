@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -48,6 +49,7 @@
  */
 ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
 
   if (fd >= 0 && iovlen >= 0) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
@@ -74,6 +76,7 @@ ssize_t readv(int fd, const struct iovec *iov, int iovlen) {
     rc = einval();
   }
 
+  END_CANCELLATION_POINT;
   STRACE("readv(%d, [%s], %d) → %'ld% m", fd, DescribeIovec(rc, iov, iovlen),
          iovlen, rc);
   return rc;

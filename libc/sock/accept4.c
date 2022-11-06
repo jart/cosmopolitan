@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -44,6 +45,8 @@ int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
             int flags) {
   int rc;
   char addrbuf[72];
+  BEGIN_CANCELLATION_POINT;
+
   if (!out_addr || !inout_addrsize ||
       (IsAsan() && !__asan_is_valid(out_addr, *inout_addrsize))) {
     rc = efault();
@@ -54,6 +57,8 @@ int accept4(int fd, struct sockaddr *out_addr, uint32_t *inout_addrsize,
   } else {
     rc = ebadf();
   }
+
+  END_CANCELLATION_POINT;
   STRACE("accept4(%d, [%s]) -> %d% lm", fd,
          DescribeSockaddr(out_addr, inout_addrsize ? *inout_addrsize : 0), rc);
   return rc;

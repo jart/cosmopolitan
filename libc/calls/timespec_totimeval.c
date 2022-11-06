@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -19,14 +19,20 @@
 #include "libc/calls/struct/timeval.h"
 
 /**
- * Adds two microsecond timestamps.
+ * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
+ *
+ * This function uses ceiling rounding. For example, if `ts` is one
+ * nanosecond, then one microsecond will be returned. Ceil rounding
+ * is needed by many interfaces, e.g. setitimer(), because the zero
+ * timestamp has a special meaning.
+ *
+ * @return microseconds since epoch
+ * @see timespec_tomicros()
  */
-struct timeval _timeval_add(struct timeval x, struct timeval y) {
-  x.tv_sec += y.tv_sec;
-  x.tv_usec += y.tv_usec;
-  if (x.tv_usec >= 1000000) {
-    x.tv_usec -= 1000000;
-    x.tv_sec += 1;
+struct timeval timespec_totimeval(struct timespec ts) {
+  if (ts.tv_nsec < 1000000000 - 999) {
+    return (struct timeval){ts.tv_sec, (ts.tv_nsec + 999) / 1000};
+  } else {
+    return (struct timeval){ts.tv_sec + 1, 0};
   }
-  return x;
 }

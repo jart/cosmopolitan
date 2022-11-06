@@ -61,12 +61,12 @@ kSignalNames:
 	.e	SIGWINCH,"SIGWINCH"
 	.e	SIGIO,"SIGIO"
 	.e	SIGSYS,"SIGSYS"
-	.e	SIGINFO,"SIGINFO"
-	.e	SIGCANCEL,"SIGCANCEL"
+	.e	SIGPWR,"SIGPWR"
+	.e	SIGINFO,"SIGINFO"		# order matters
+	.e	SIGTHR,"SIGTHR"			# order matters
 	.e	SIGRTMAX,"SIGRTMAX"
 	.e	SIGRTMIN,"SIGRTMIN"
-	.e	SIGEMT,"SIGEMT"
-	.e	SIGPWR,"SIGPWR"
+	.e	SIGEMT,"SIGEMT"			# order matters
 	.long	MAGNUM_TERMINATOR
 	.endobj	kSignalNames,globl,hidden
 	.overrun

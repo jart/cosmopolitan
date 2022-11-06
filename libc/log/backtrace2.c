@@ -54,6 +54,13 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   char *debugbin, *p1, *p2, *p3, *addr2line;
   char buf[kBacktraceBufSize], *argv[kBacktraceMaxFrames];
 
+  // DWARF is a weak standard. Platforms that use LLVM or old GNU
+  // usually can't be counted upon to print backtraces correctly.
+  if (!IsLinux() && !IsWindows()) {
+    ShowHint("won't print addr2line backtrace because probably llvm");
+    return -1;
+  }
+
   if (!PLEDGED(STDIO) || !PLEDGED(EXEC) || !PLEDGED(EXEC)) {
     return -1;
   }
@@ -66,13 +73,6 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
     if (IsLinux()) {
       ShowHint("can't find addr2line on path or in ADDR2LINE");
     }
-    return -1;
-  }
-
-  // DWARF is a weak standard. Platforms that use LLVM or old GNU
-  // usually can't be counted upon to print backtraces correctly.
-  if (!IsLinux() && !IsWindows()) {
-    ShowHint("won't print addr2line backtrace because probably llvm");
     return -1;
   }
 

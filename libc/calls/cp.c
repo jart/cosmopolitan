@@ -16,14 +16,44 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
+#include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/cp.internal.h"
+#include "libc/runtime/internal.h"
+#include "libc/runtime/runtime.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/tls.h"
+#ifdef MODE_DBG
 
-/**
- * Converts timespec interval from nanoseconds.
- */
-struct timespec _timespec_fromnanos(int64_t x) {
-  struct timespec ts;
-  ts.tv_sec = x / 1000000000;
-  ts.tv_nsec = x % 1000000000;
-  return ts;
+int begin_cancellation_point(void) {
+  int state = 0;
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
+  if (__enable_tls) {
+    tib = __get_tls();
+    if ((pt = (struct PosixThread *)tib->tib_pthread)) {
+      state = pt->flags & PT_INCANCEL;
+      pt->flags |= PT_INCANCEL;
+    }
+  }
+  return state;
 }
+
+void end_cancellation_point(int state) {
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
+  if (__enable_tls) {
+    tib = __get_tls();
+    if ((pt = (struct PosixThread *)tib->tib_pthread)) {
+      pt->flags &= ~PT_INCANCEL;
+      pt->flags |= state;
+    }
+  }
+}
+
+void report_cancellation_point(void) {
+  BLOCK_CANCELLATIONS;
+  _bt("error: need BEGIN/END_CANCELLATION_POINT\n");
+  ALLOW_CANCELLATIONS;
+}
+
+#endif /* MODE_DBG */

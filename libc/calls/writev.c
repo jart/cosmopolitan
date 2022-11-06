@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -52,6 +53,7 @@
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
 
   if (fd >= 0 && iovlen >= 0) {
     if (IsAsan() && !__asan_is_valid_iov(iov, iovlen)) {
@@ -78,6 +80,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovlen) {
     rc = einval();
   }
 
+  END_CANCELLATION_POINT;
   STRACE("writev(%d, %s, %d) → %'ld% m", fd,
          DescribeIovec(rc != -1 ? rc : -2, iov, iovlen), iovlen, rc);
   return rc;

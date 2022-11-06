@@ -16,14 +16,11 @@ int gettimeofday(struct timeval *, struct timezone *);
 int lutimes(const char *, const struct timeval[2]);
 int utimes(const char *, const struct timeval[2]);
 
-int _timeval_cmp(struct timeval, struct timeval) pureconst;
-bool _timeval_eq(struct timeval, struct timeval) pureconst;
-bool _timeval_gt(struct timeval, struct timeval) pureconst;
-bool _timeval_gte(struct timeval, struct timeval) pureconst;
-struct timeval _timeval_add(struct timeval, struct timeval) pureconst;
-struct timeval _timeval_sub(struct timeval, struct timeval) pureconst;
-struct timeval _timespec_totimeval(struct timespec) pureconst;
-struct timespec _timeval_totimespec(struct timeval) pureconst;
+int timeval_cmp(struct timeval, struct timeval) pureconst;
+struct timeval timeval_add(struct timeval, struct timeval) pureconst;
+struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
+struct timeval timespec_totimeval(struct timespec) pureconst;
+struct timespec timeval_totimespec(struct timeval) pureconst;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

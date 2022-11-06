@@ -17,19 +17,49 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/sections.internal.h"
+#include "libc/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
+#include "libc/calls/struct/sigset.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/check.h"
 #include "libc/math.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/runtime/runtime.h"
 #include "libc/stdio/lcg.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/str/tab.internal.h"
 #include "libc/sysv/consts/grnd.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+
+TEST(getrandom, test) {
+  double e, w = 7.7;
+  int i, j, n = 999;
+  char *buf = _gc(calloc(1, n));
+  ASSERT_SYS(0, 0, getrandom(0, 0, 0));
+  ASSERT_SYS(0, n, getrandom(buf, n, 0));
+  ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
+  ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
+  if ((e = MeasureEntropy(buf, n)) < w) {
+    fprintf(stderr, "error: entropy is suspect! got %g but want >=%g\n", e, w);
+    for (i = 0; i < n;) {
+      if (!(i % 16)) fprintf(stderr, "%6x ", i);
+      fprintf(stderr, "%lc", kCp437[buf[i] & 255]);
+      if (!(++i % 16)) fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "\n");
+    exit(1);
+  }
+}
 
 /* JustReturnZero                   */
 /* entropy:            0            */

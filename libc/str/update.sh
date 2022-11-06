@@ -1,5 +1,5 @@
 #!/bin/sh
-[ -d libc/unicode ] || exit
+[ -d libc/str ] || exit
 [ -x o//examples/curl.com ] || make -j8 o//examples/curl.com || exit
 mkdir -p o/tmp/ || exit
 

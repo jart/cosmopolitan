@@ -26,12 +26,13 @@
  *
  * @return 0 on success, or -1 w/ errno
  * @raise EINTR if a signal was delivered while sleeping
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @see clock_nanosleep()
  * @cancellationpoint
  * @norestart
  */
 int usleep(uint32_t micros) {
-  struct timespec ts = _timespec_frommicros(micros);
+  struct timespec ts = timespec_frommicros(micros);
   if (clock_nanosleep(CLOCK_REALTIME, 0, &ts, 0)) return eintr();
   return 0;
 }

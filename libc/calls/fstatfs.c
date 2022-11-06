@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
@@ -33,7 +34,9 @@
 int fstatfs(int fd, struct statfs *sf) {
   int rc;
   union statfs_meta m;
+  BEGIN_CANCELLATION_POINT;
   CheckLargeStackAllocation(&m, sizeof(m));
+
   if (!IsWindows()) {
     if ((rc = sys_fstatfs(fd, &m)) != -1) {
       statfs2cosmo(sf, &m);
@@ -43,6 +46,8 @@ int fstatfs(int fd, struct statfs *sf) {
   } else {
     rc = ebadf();
   }
+
+  END_CANCELLATION_POINT;
   STRACE("fstatfs(%d, [%s]) → %d% m", fd, DescribeStatfs(rc, sf));
   return rc;
 }

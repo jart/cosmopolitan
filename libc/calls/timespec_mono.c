@@ -16,23 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/assert.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/sysv/consts/clock.h"
 
 /**
- * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
+ * Returns current monotonic time.
  *
- * This function uses ceiling rounding. For example, if `ts` is one
- * nanosecond, then one microsecond will be returned. Ceil rounding
- * is needed by many interfaces, e.g. setitimer(), because the zero
- * timestamp has a special meaning.
+ * This function uses a `CLOCK_MONOTONIC` clock and never fails.
  *
- * @return microseconds since epoch
- * @see _timespec_tomicros()
+ * @see timespec_real()
  */
-struct timeval _timespec_totimeval(struct timespec ts) {
-  if (ts.tv_nsec < 1000000000 - 999) {
-    return (struct timeval){ts.tv_sec, (ts.tv_nsec + 999) / 1000};
-  } else {
-    return (struct timeval){ts.tv_sec + 1, 0};
-  }
+struct timespec timespec_mono(void) {
+  struct timespec ts;
+  _npassert(!clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
+  return ts;
 }

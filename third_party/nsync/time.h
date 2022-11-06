@@ -17,39 +17,39 @@ COSMOPOLITAN_C_START_
 typedef struct timespec nsync_time;
 
 /* A deadline infinitely far in the future. */
-#define nsync_time_no_deadline _timespec_max
+#define nsync_time_no_deadline timespec_max
 
 /* The zero delay, or an expired deadline. */
-#define nsync_time_zero _timespec_zero
+#define nsync_time_zero timespec_zero
 
 /* Return the current time since the epoch.  */
-#define nsync_time_now() _timespec_real()
+#define nsync_time_now() timespec_real()
 
 /* Sleep for the specified delay. Returns the unslept time which may be
    non-zero if the call was interrupted. */
-#define nsync_time_sleep(a) _timespec_sleep(a)
+#define nsync_time_sleep(a) timespec_sleep(a)
 
 /* Sleep until the specified time.  Returns 0 on success, and EINTR
    if the call was interrupted. */
-#define nsync_time_sleep_until(a) _timespec_sleep_until(a)
+#define nsync_time_sleep_until(a) timespec_sleep_until(a)
 
 /* Return a+b */
-#define nsync_time_add(a, b) _timespec_add(a, b)
+#define nsync_time_add(a, b) timespec_add(a, b)
 
 /* Return a-b */
-#define nsync_time_sub(a, b) _timespec_sub(a, b)
+#define nsync_time_sub(a, b) timespec_sub(a, b)
 
 /* Return +ve, 0, or -ve according to whether a>b, a==b, or a<b. */
-#define nsync_time_cmp(a, b) _timespec_cmp(a, b)
+#define nsync_time_cmp(a, b) timespec_cmp(a, b)
 
 /* Return the specified number of milliseconds as a time. */
-#define nsync_time_ms(a) _timespec_frommillis(a)
+#define nsync_time_ms(a) timespec_frommillis(a)
 
 /* Return the specified number of microseconds as a time. */
-#define nsync_time_us(a) _timespec_frommicros(a)
+#define nsync_time_us(a) timespec_frommicros(a)
 
 /* Return the specified number of nanoseconds as a time. */
-#define nsync_time_ns(a) _timespec_fromnanos(a)
+#define nsync_time_ns(a) timespec_fromnanos(a)
 
 /* Return an nsync_time constructed from second and nanosecond
    components */

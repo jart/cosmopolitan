@@ -179,12 +179,12 @@ o//libc/calls/statfs2cosmo.o: private			\
 # we always want -O2 because:
 #   division is expensive if not optimized
 o/$(MODE)/libc/calls/clock.o				\
-o/$(MODE)/libc/calls/_timespec_tomillis.o		\
-o/$(MODE)/libc/calls/_timespec_tomicros.o		\
-o/$(MODE)/libc/calls/_timespec_totimeval.o		\
-o/$(MODE)/libc/calls/_timespec_fromnanos.o		\
-o/$(MODE)/libc/calls/_timespec_frommillis.o		\
-o/$(MODE)/libc/calls/_timespec_frommicros.o: private	\
+o/$(MODE)/libc/calls/timespec_tomillis.o		\
+o/$(MODE)/libc/calls/timespec_tomicros.o		\
+o/$(MODE)/libc/calls/timespec_totimeval.o		\
+o/$(MODE)/libc/calls/timespec_fromnanos.o		\
+o/$(MODE)/libc/calls/timespec_frommillis.o		\
+o/$(MODE)/libc/calls/timespec_frommicros.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-O2
 

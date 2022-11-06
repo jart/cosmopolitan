@@ -131,7 +131,7 @@ void TestContendedLock(const char *name, int kind) {
     _Exit(1);
   }
   while (!atomic_load(&ready)) donothing;
-  t1 = _timespec_real();
+  t1 = timespec_real();
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_mutex_lock(&mu));
     x = atomic_load_explicit(&counter, memory_order_relaxed);
@@ -139,13 +139,13 @@ void TestContendedLock(const char *name, int kind) {
     ASSERT_EQ(x - 1, atomic_load_explicit(&counter, memory_order_relaxed));
     ASSERT_EQ(0, pthread_mutex_unlock(&mu));
   }
-  t2 = _timespec_real();
+  t2 = timespec_real();
   while (tib.tib_tid) donothing;
   ASSERT_EQ(1, atomic_load(&success));
   ASSERT_EQ(0, atomic_load(&counter));
   _freestack(stk);
   ASSERT_EQ(0, pthread_mutex_destroy(&mu));
-  ns = time2dbl(_timespec_sub(t2, t1)) / n;
+  ns = time2dbl(timespec_sub(t2, t1)) / n;
   kprintf("%s contended took %s\n", name, time2str(ns));
 }
 
@@ -159,14 +159,14 @@ void TestUncontendedLock(const char *name, int kind) {
   pthread_mutexattr_settype(&attr, kind);
   pthread_mutex_init(&lock, &attr);
   pthread_mutexattr_destroy(&attr);
-  t1 = _timespec_real();
+  t1 = timespec_real();
   for (i = 0; i < n; ++i) {
     pthread_mutex_lock(&lock);
     pthread_mutex_unlock(&lock);
   }
-  t2 = _timespec_real();
+  t2 = timespec_real();
   pthread_mutex_destroy(&lock);
-  ns = time2dbl(_timespec_sub(t2, t1)) / n;
+  ns = time2dbl(timespec_sub(t2, t1)) / n;
   kprintf("%s took %s\n", name, time2str(ns));
 }
 

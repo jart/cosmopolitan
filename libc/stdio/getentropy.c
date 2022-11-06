@@ -17,20 +17,41 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/blockcancel.internal.h"
+#include "libc/calls/blocksigs.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
+#include "libc/dce.h"
+#include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/stdio/rand.h"
 #include "libc/sysv/errfuns.h"
+
+int sys_getentropy(void *, size_t) asm("sys_getrandom");
 
 /**
  * Returns random seeding bytes, the XNU/OpenBSD way.
  *
  * @return 0 on success, or -1 w/ errno
- * @raise EIO if more than 256 bytes are requested
+ * @raise EFAULT if the `n` bytes at `p` aren't valid memory
+ * @raise EIO is returned if more than 256 bytes are requested
  * @see getrandom()
  */
-int getentropy(void *buf, size_t size) {
-  if (size > 256) return eio();
-  BLOCK_CANCELLATIONS;
-  if (getrandom(buf, size, 0) != size) notpossible;
-  ALLOW_CANCELLATIONS;
-  return 0;
+int getentropy(void *p, size_t n) {
+  int rc;
+  if (n > 256) {
+    rc = eio();
+  } else if ((!p && n) || (IsAsan() && !__asan_is_valid(p, n))) {
+    rc = efault();
+  } else if (IsXnu() || IsOpenbsd()) {
+    if (sys_getentropy(p, n)) notpossible;
+    rc = 0;
+  } else {
+    BLOCK_SIGNALS;
+    BLOCK_CANCELLATIONS;
+    if (__getrandom(p, n, 0) != n) notpossible;
+    ALLOW_CANCELLATIONS;
+    ALLOW_SIGNALS;
+    rc = 0;
+  }
+  STRACE("getentropy(%p, %'zu) → %'ld% m", p, n, rc);
+  return rc;
 }

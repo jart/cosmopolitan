@@ -16,14 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/sysv/consts/timer.h"
 
 /**
- * Converts timespec interval from microseconds.
+ * Sleeps until the specified time.
+ *
+ * @return 0 on success, or EINTR if interrupted
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
+ * @cancellationpoint
  */
-struct timespec _timespec_frommicros(int64_t x) {
-  struct timespec ts;
-  ts.tv_sec = x / 1000000;
-  ts.tv_nsec = x % 1000000 * 1000;
-  return ts;
+errno_t timespec_sleep_until(struct timespec abs_deadline) {
+  errno_t rc;
+  rc = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs_deadline, 0);
+  _npassert(!rc || rc == EINTR || rc == ECANCELED);
+  return rc;
 }

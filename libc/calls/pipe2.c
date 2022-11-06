@@ -16,17 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/errfuns.h"
 
 /**
  * Creates file-less file descriptors for interprocess communication.
  *
+ * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
+ * @raise ENFILE if system-wide file limit has been reached
  * @param pipefd is used to return (reader, writer) file descriptors
  * @param flags can have O_CLOEXEC or O_DIRECT or O_NONBLOCK
  * @return 0 on success, or -1 w/ errno and pipefd isn't modified

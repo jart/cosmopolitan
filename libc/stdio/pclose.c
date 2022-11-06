@@ -25,19 +25,45 @@
 
 /**
  * Closes stream created by popen().
+ *
+ * This function may be interrupted or cancelled, however it won't
+ * actually return until the child process has terminated. Thus we
+ * always release the resource, and errors are purely advisory.
+ *
  * @return termination status of subprocess, or -1 w/ ECHILD
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise ECHILD if child pid didn't exist
+ * @raise EINTR if signal was delivered
+ * @cancellationpoint
  */
 int pclose(FILE *f) {
-  int ws, pid;
+  int e, rc, ws, pid;
+  bool iscancelled, wasinterrupted;
   pid = f->pid;
   fclose(f);
   if (!pid) return 0;
-TryAgain:
-  if (wait4(pid, &ws, 0, 0) != -1) {
-    return ws;
-  } else if (errno == EINTR) {
-    goto TryAgain;
+  iscancelled = false;
+  wasinterrupted = false;
+  for (e = errno;;) {
+    if (wait4(pid, &ws, 0, 0) != -1) {
+      rc = ws;
+      break;
+    } else if (errno == ECANCELED) {
+      iscancelled = true;
+      errno = e;
+    } else if (errno == EINTR) {
+      wasinterrupted = true;
+      errno = e;
+    } else {
+      rc = echild();
+      break;
+    }
+  }
+  if (iscancelled) {
+    return ecanceled();
+  } else if (wasinterrupted) {
+    return eintr();
   } else {
-    return echild();
+    return rc;
   }
 }

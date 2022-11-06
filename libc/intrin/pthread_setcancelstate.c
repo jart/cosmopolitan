@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -75,4 +76,14 @@ errno_t pthread_setcancelstate(int state, int *oldstate) {
     }
     return 0;
   }
+}
+
+int _pthread_block_cancellations(void) {
+  int oldstate;
+  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+  return oldstate;
+}
+
+void _pthread_allow_cancellations(int oldstate) {
+  pthread_setcancelstate(oldstate, 0);
 }

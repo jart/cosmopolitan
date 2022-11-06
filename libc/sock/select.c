@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
@@ -32,6 +33,8 @@
  * this is polyfilled to translate into poll(). So it's recommended that
  * poll() be used instead.
  *
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
@@ -42,6 +45,8 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   int rc;
   POLLTRACE("select(%d, %p, %p, %p, %s) → ...", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout));
+
+  BEGIN_CANCELLATION_POINT;
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -55,6 +60,8 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   } else {
     rc = sys_select_nt(nfds, readfds, writefds, exceptfds, timeout, 0);
   }
+  END_CANCELLATION_POINT;
+
   POLLTRACE("select(%d, %p, %p, %p, [%s]) → %d% m", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(rc, timeout), rc);
   return rc;

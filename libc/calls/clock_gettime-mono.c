@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/thread/thread.h"
 #include "libc/nexgen32e/rdtsc.h"
 #include "libc/nexgen32e/x86feature.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/thread.h"
 
 static struct {
   pthread_once_t once;
@@ -30,7 +30,7 @@ static struct {
 } g_mono;
 
 static void sys_clock_gettime_mono_init(void) {
-  g_mono.base_wall = _timespec_real();
+  g_mono.base_wall = timespec_real();
   g_mono.base_tick = rdtsc();
 }
 
@@ -42,7 +42,7 @@ int sys_clock_gettime_mono(struct timespec *time) {
     pthread_once(&g_mono.once, sys_clock_gettime_mono_init);
     cycles = rdtsc() - g_mono.base_tick;
     nanos = cycles / 3;
-    *time = _timespec_add(g_mono.base_wall, _timespec_fromnanos(nanos));
+    *time = timespec_add(g_mono.base_wall, timespec_fromnanos(nanos));
     return 0;
   } else {
     return einval();

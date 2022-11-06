@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -47,6 +48,7 @@
  * @raise EBADF if `fd` isn't an open file descriptor
  * @raise EIO if a complicated i/o error happened
  * @raise EINTR if signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @see pwrite(), write()
  * @cancellationpoint
  * @asyncsignalsafe
@@ -55,6 +57,8 @@
  */
 ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
+
   if (offset < 0) {
     rc = einval();
   } else if (fd < 0) {
@@ -73,6 +77,8 @@ ssize_t pread(int fd, void *buf, size_t size, int64_t offset) {
     rc = ebadf();
   }
   _npassert(rc == -1 || (size_t)rc <= size);
+
+  END_CANCELLATION_POINT;
   DATATRACE("pread(%d, [%#.*hhs%s], %'zu, %'zd) → %'zd% m", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;

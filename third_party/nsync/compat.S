@@ -19,33 +19,33 @@
 #include "libc/macros.internal.h"
 
 nsync_time_now:
-	jmp	_timespec_real
+	jmp	timespec_real
 	.endfn	nsync_time_now,globl
 
 nsync_time_add:
-	jmp	_timespec_add
+	jmp	timespec_add
 	.endfn	nsync_time_add,globl
 
 nsync_time_sub:
-	jmp	_timespec_sub
+	jmp	timespec_sub
 	.endfn	nsync_time_sub,globl
 
 nsync_time_cmp:
-	jmp	_timespec_cmp
+	jmp	timespec_cmp
 	.endfn	nsync_time_cmp,globl
 
 nsync_time_ms:
-	jmp	_timespec_frommillis
+	jmp	timespec_frommillis
 	.endfn	nsync_time_ms,globl
 
 nsync_time_us:
-	jmp	_timespec_frommicros
+	jmp	timespec_frommicros
 	.endfn	nsync_time_us,globl
 
 nsync_time_sleep:
-	jmp	_timespec_sleep
+	jmp	timespec_sleep
 	.endfn	nsync_time_us,globl
 
 nsync_time_sleep_until:
-	jmp	_timespec_sleep_until
+	jmp	timespec_sleep_until
 	.endfn	nsync_time_us,globl

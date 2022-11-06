@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
@@ -26,17 +27,22 @@
  *
  * @param type may be one of:
  *     - `PTHREAD_CANCEL_DEFERRED` (default)
- *     - `PTHREAD_CANCEL_ASYNCHRONOUS` (cray cray)
+ *     - `PTHREAD_CANCEL_ASYNCHRONOUS`
  * @param oldtype optionally receives old value
  * @return 0 on success, or errno on error
+ * @raise ENOTSUP on Windows if asynchronous
  * @raise EINVAL if `type` has bad value
  * @see pthread_cancel() for docs
  */
 errno_t pthread_setcanceltype(int type, int *oldtype) {
   struct PosixThread *pt;
   switch (type) {
-    case PTHREAD_CANCEL_DEFERRED:
     case PTHREAD_CANCEL_ASYNCHRONOUS:
+      if (IsWindows()) {
+        return ENOTSUP;
+      }
+      // fallthrough
+    case PTHREAD_CANCEL_DEFERRED:
       pt = (struct PosixThread *)__get_tls()->tib_pthread;
       if (oldtype) {
         if (pt->flags & PT_ASYNC) {

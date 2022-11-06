@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -35,11 +36,15 @@
  */
 int flock(int fd, int op) {
   int rc;
+  BEGIN_CANCELLATION_POINT;
+
   if (!IsWindows()) {
     rc = sys_flock(fd, op);
   } else {
     rc = sys_flock_nt(fd, op);
   }
+
+  END_CANCELLATION_POINT;
   STRACE("flock(%d, %d) → %d% m", fd, op, rc);
   return rc;
 }

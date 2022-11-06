@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -49,6 +50,7 @@
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `length` is negative
  * @raise EINTR if signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EIO if a low-level i/o error happened
  * @raise EFBIG or EINVAL if `length` is too huge
  * @raise ENOTSUP if `fd` is a zip file descriptor
@@ -62,6 +64,8 @@
  */
 int ftruncate(int fd, int64_t length) {
   int rc;
+  BEGIN_CANCELLATION_POINT;
+
   if (fd < 0) {
     rc = ebadf();
   } else if (__isfdkind(fd, kFdZip)) {
@@ -78,6 +82,8 @@ int ftruncate(int fd, int64_t length) {
   } else {
     rc = ebadf();
   }
+
+  END_CANCELLATION_POINT;
   STRACE("ftruncate(%d, %'ld) → %d% m", fd, length, rc);
   return rc;
 }

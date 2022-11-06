@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
@@ -44,6 +45,7 @@
 int pause(void) {
   int rc;
   STRACE("pause() → [...]");
+  BEGIN_CANCELLATION_POINT;
 
   if (!IsWindows()) {
     // We'll polyfill pause() using select() with a null timeout, which
@@ -64,6 +66,7 @@ int pause(void) {
     rc = sys_pause_nt();
   }
 
+  END_CANCELLATION_POINT;
   STRACE("[...] pause → %d% m", rc);
   return rc;
 }

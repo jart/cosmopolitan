@@ -6,11 +6,13 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-#define PT_OWNSTACK   1
-#define PT_MAINTHREAD 2
-#define PT_ASYNC      4
-#define PT_NOCANCEL   8
-#define PT_MASKED     16
+#define PT_OWNSTACK       1
+#define PT_MAINTHREAD     2
+#define PT_ASYNC          4
+#define PT_NOCANCEL       8
+#define PT_MASKED         16
+#define PT_INCANCEL       32
+#define PT_OPENBSD_KLUDGE 64
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_

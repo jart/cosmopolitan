@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/asan.internal.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/sigtimedwait.h"
 #include "libc/calls/sigtimedwait.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
@@ -36,6 +37,7 @@
  * @param timeout is relative deadline and null means wait forever
  * @return signal number on success, or -1 w/ errno
  * @raise EINTR if an asynchronous signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINVAL if nanoseconds parameter was out of range
  * @raise EAGAIN if deadline expired
  * @raise ENOSYS on Windows, XNU, OpenBSD, Metal
@@ -48,6 +50,7 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
   char strsig[15];
   struct timespec ts;
   union siginfo_meta si = {0};
+  BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() && (!__asan_is_valid(set, sizeof(*set)) ||
                    (info && !__asan_is_valid(info, sizeof(*info))) ||
@@ -69,6 +72,7 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
     rc = enosys();
   }
 
+  END_CANCELLATION_POINT;
   STRACE("sigtimedwait(%s, [%s], %s) → %s% m", DescribeSigset(0, set),
          DescribeSiginfo(rc, info), DescribeTimespec(0, timeout),
          strsignal_r(rc, strsig));

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -30,6 +31,8 @@
  * @return 0 on success, or -1 w/ errno
  * @see sync(), fsync(), sync_file_range()
  * @see __nosync to secretly disable
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
  */
@@ -37,11 +40,13 @@ int fdatasync(int fd) {
   int rc;
   struct stat st;
   if (__nosync != 0x5453455454534146) {
+    BEGIN_CANCELLATION_POINT;
     if (!IsWindows()) {
       rc = sys_fdatasync(fd);
     } else {
       rc = sys_fdatasync_nt(fd);
     }
+    END_CANCELLATION_POINT;
     STRACE("fdatasync(%d) → %d% m", fd, rc);
   } else {
     rc = fstat(fd, &st);

@@ -100,7 +100,8 @@ scall	__sys_wait4		0x9c180b807280783d	globl hidden
 scall	sys_kill		0x02507a025202503e	globl hidden # kill(pid, sig, 1) b/c xnu
 scall	sys_killpg		0x092fff092fffffff	globl hidden
 scall	sys_clone		0x11fffffffffff038	globl hidden
-scall	sys_tkill		0x13e0771b121480c8	globl hidden # thr_kill() on freebsd; _lwp_kill() on netbsd; thrkill() on openbsd where arg3 should be 0; __pthread_kill() on XNU
+scall	sys_tkill		0x13e0771b121480c8	globl hidden # thr_kill() on FreeBSD; _lwp_kill() on NetBSD; thrkill() on OpenBSD where arg3 should be 0 or tcb; __pthread_kill() on XNU
+scall	sys_tgkill		0xffffff1e1ffff0ea	globl hidden # thr_kill2() on FreeBSD
 scall	sys_futex		0x0a60531c6ffff0ca	globl hidden # raises SIGSYS on NetBSD; _umtx_op() on FreeBSD
 scall	sys_futex_cp		0x8a68539c6ffff8ca	globl hidden # intended for futex wait ops
 scall	sys_set_robust_list	0x0a7ffffffffff111	globl # no wrapper
@@ -265,7 +266,6 @@ scall	sys_ktimer_settime	0xffffff0edfffffff	globl # no wrapper
 scall	sys_clock_settime	0x1ac0580e9ffff0e3	globl # no wrapper
 scall	sys_clock_gettime	0x1ab0570e8ffff0e4	globl hidden # Linux 2.6+ (c. 2003); XNU uses magic address
 scall	sys_clock_getres	0x1ad0590eaffff0e5	globl hidden
-scall	sys_tgkill		0xfffffffffffff0ea	globl hidden
 scall	sys_mbind		0xfffffffffffff0ed	globl # no wrapper; numa numa yeah
 scall	set_mempolicy		0xfffffffffffff0ee	globl
 scall	get_mempolicy		0xfffffffffffff0ef	globl
@@ -286,6 +286,7 @@ scall	sys_inotify_init	0xfffffffffffff0fd	globl # wicked # no wrapper
 scall	sys_inotify_add_watch	0xfffffffffffff0fe	globl # no wrapper
 scall	sys_inotify_rm_watch	0xfffffffffffff0ff	globl # no wrapper
 scall	__sys_openat		0x9d49419f329cf901	globl hidden # Linux 2.6.16+ (c. 2007)
+scall	__sys_openat_nc		0x1d41411f321d0101	globl hidden # openat_nocancel() on xnu
 scall	sys_mkdirat		0x1cd13e1f021db102	globl hidden
 scall	sys_fchownat		0x1d013b1eb21d4104	globl hidden # @asyncsignalsafe
 scall	sys_utime		0xfffffffffffff084	globl hidden
@@ -350,7 +351,7 @@ scall	sys_sched_setattr	0xfffffffffffff13a	globl #  ├─ desktop replaced with
 scall	sys_sched_getattr	0xfffffffffffff13b	globl #  ├─ karen sandler requires systemd init and boot for tablet gui
 scall	sys_renameat2		0xfffffffffffff13c	globl #  └─ debian founder ian murdock found strangled with vacuum cord
 #scall	seccomp			0xfffffffffffff13d	globl # wrapped manually
-scall	sys_getrandom		0xfff807a3329f493e	globl hidden  # Linux 3.17+ and getentropy() on XNU/OpenBSD, coming to NetBSD in 9.2
+scall	sys_getrandom		0x85b007a3321f493e	globl hidden  # Linux 3.17+; FreeBSD 12+; NetBSD v9.2+; getentropy() on XNU/OpenBSD
 scall	sys_memfd_create	0xfffffffffffff13f	globl hidden
 scall	sys_kexec_file_load	0xfffffffffffff140	globl # no wrapper
 scall	sys_bpf			0xfffffffffffff141	globl # no wrapper
@@ -358,7 +359,7 @@ scall	sys_execveat		0xfffffffffffff142	globl # no wrapper
 scall	sys_userfaultfd		0xfffffffffffff143	globl # no wrapper; Linux 4.3+ (c. 2015)
 scall	sys_membarrier		0xfffffffffffff144	globl # no wrapper; Linux 4.3+ (c. 2015)
 scall	sys_mlock2		0xfffffffffffff145	globl # no wrapper; Linux 4.5+ (c. 2016)
-scall	sys_copy_file_range	0xffffff239ffff146	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
+scall	sys_copy_file_range	0xffffffa39ffff946	globl hidden # Linux 4.5+ (c. 2016), FreeBSD 13+
 scall	sys_preadv2		0xfffffffffffff147	globl # no wrapper
 scall	sys_pwritev2		0xfffffffffffff148	globl # no wrapper
 scall	sys_pkey_mprotect	0xfffffffffffff149	globl # no wrapper

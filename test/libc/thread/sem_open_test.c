@@ -103,7 +103,7 @@ TEST(sem_open, test) {
 TEST(sem_close, withUnnamedSemaphore_isUndefinedBehavior) {
   if (!IsModeDbg()) return;
   sem_t sem;
-  ASSERT_SYS(0, 0, sem_init(&sem, 1, 0));
+  ASSERT_SYS(0, 0, sem_init(&sem, 0, 0));
   SPAWN(fork);
   IgnoreStderr();
   sem_close(&sem);

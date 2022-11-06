@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
@@ -36,10 +37,10 @@
  * This embeds the Cosmopolitan Command Interpreter which provides
  * Bourne-like syntax on all platforms including Windows.
  *
- * @param cmdline is an interpreted Turing-complete command
+ * @param cmdline is a unix shell script
  * @return -1 if child process couldn't be created, otherwise a wait
- *     status that can be accessed using macros like WEXITSTATUS(s)
- * @cancellationpoint
+ *     status that can be accessed using macros like WEXITSTATUS(s),
+ *     WIFSIGNALED(s), WTERMSIG(s), etc.
  * @threadsafe
  */
 int system(const char *cmdline) {
@@ -47,9 +48,7 @@ int system(const char *cmdline) {
   sigset_t chldmask, savemask;
   struct sigaction ignore, saveint, savequit;
   if (!cmdline) return 1;
-  if (_weaken(pthread_testcancel)) {
-    _weaken(pthread_testcancel)();
-  }
+  BLOCK_CANCELLATIONS;
   ignore.sa_flags = 0;
   ignore.sa_handler = SIG_IGN;
   sigemptyset(&ignore.sa_mask);
@@ -76,5 +75,6 @@ int system(const char *cmdline) {
   sigaction(SIGINT, &saveint, 0);
   sigaction(SIGQUIT, &savequit, 0);
   sigprocmask(SIG_SETMASK, &savemask, 0);
+  ALLOW_CANCELLATIONS;
   return wstatus;
 }

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/dprintf.h"
 #include "libc/calls/struct/stat.h"
@@ -96,10 +97,11 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
   if (!f) return;
   flockfile(f);
   strace_enabled(-1);
+  BLOCK_CANCELLATIONS;
 
   // We display TIMESTAMP.MICROS normally. However, when we log multiple
   // times in the same second, we display TIMESTAMP+DELTAMICROS instead.
-  t2 = _timespec_real();
+  t2 = timespec_real();
   if (t2.tv_sec == vflogf_ts.tv_sec) {
     sign = "+";
     dots = t2.tv_nsec - vflogf_ts.tv_nsec;
@@ -138,6 +140,7 @@ void(vflogf)(unsigned level, const char *file, int line, FILE *f,
     unreachable;
   }
 
+  ALLOW_CANCELLATIONS;
   strace_enabled(+1);
   funlockfile(f);
 }

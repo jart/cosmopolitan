@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -114,7 +115,9 @@ static ssize_t Preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
  */
 ssize_t preadv(int fd, struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
   rc = Preadv(fd, iov, iovlen, off);
+  END_CANCELLATION_POINT;
   STRACE("preadv(%d, [%s], %d, %'ld) → %'ld% m", fd,
          DescribeIovec(rc, iov, iovlen), iovlen, off, rc);
   return rc;

@@ -42,7 +42,7 @@ char *sys_getcwd_xnu(char *res, size_t size) {
   int fd;
   union metastat st[2];
   char buf[XNU_MAXPATHLEN], *ret = NULL;
-  if ((fd = sys_openat(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
+  if ((fd = __sys_openat_nc(AT_FDCWD, ".", O_RDONLY | O_DIRECTORY, 0)) != -1) {
     if (__sys_fstat(fd, &st[0]) != -1) {
       if (st[0].xnu.st_dev && st[0].xnu.st_ino) {
         if (__sys_fcntl(fd, XNU_F_GETPATH, (uintptr_t)buf) != -1) {

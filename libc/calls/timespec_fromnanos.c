@@ -16,11 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timespec.h"
 
 /**
- * Checks if 𝑥 = 𝑦.
+ * Converts timespec interval from nanoseconds.
  */
-bool _timeval_eq(struct timeval x, struct timeval y) {
-  return x.tv_sec == y.tv_sec && x.tv_usec == y.tv_usec;
+struct timespec timespec_fromnanos(int64_t x) {
+  struct timespec ts;
+  ts.tv_sec = x / 1000000000;
+  ts.tv_nsec = x % 1000000000;
+  return ts;
 }

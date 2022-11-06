@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/sigset.h"
 #include "libc/calls/struct/sigset.internal.h"
 #include "libc/calls/struct/timespec.h"
@@ -50,6 +51,8 @@
  *
  * @param timeout if null will block indefinitely
  * @param sigmask may be null in which case no mask change happens
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
@@ -62,6 +65,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
   uint64_t millis;
   sigset_t oldmask;
   struct timespec ts, *tsp;
+  BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
                    !__asan_is_valid(fds, n) ||
@@ -96,6 +100,7 @@ int ppoll(struct pollfd *fds, size_t nfds, const struct timespec *timeout,
     rc = sys_poll_nt(fds, nfds, &millis, sigmask);
   }
 
+  END_CANCELLATION_POINT;
   STRACE("ppoll(%s, %'zu, %s, %s) → %d% lm", DescribePollFds(rc, fds, nfds),
          nfds, DescribeTimespec(0, timeout), DescribeSigset(0, sigmask), rc);
   return rc;

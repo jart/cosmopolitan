@@ -34,10 +34,10 @@ char *getenv(const char *s) {
   if (!(p = environ)) return 0;
   e = _getenv(p, s);
 #if SYSDEBUG
-  if (!(s[0] == 'T' && s[1] == 'Z' && !s[2])) {
-    // TODO(jart): memoize TZ or something
-    STRACE("getenv(%#s) → %#s", s, e.s);
-  }
+  // if (!(s[0] == 'T' && s[1] == 'Z' && !s[2])) {
+  // TODO(jart): memoize TZ or something
+  STRACE("getenv(%#s) → %#s", s, e.s);
+  //}
 #endif
   return e.s;
 }

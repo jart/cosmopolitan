@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/struct/sigset.h"
@@ -49,6 +50,8 @@ int sigsuspend(const sigset_t *ignore) {
   long ms, totoms;
   sigset_t save, *arg, mask = {0};
   STRACE("sigsuspend(%s) → ...", DescribeSigset(0, ignore));
+  BEGIN_CANCELLATION_POINT;
+
   if (IsAsan() && ignore && !__asan_is_valid(ignore, sizeof(*ignore))) {
     rc = efault();
   } else if (IsXnu() || IsOpenbsd()) {
@@ -94,6 +97,8 @@ int sigsuspend(const sigset_t *ignore) {
     // TODO(jart): sigsuspend metal support
     rc = enosys();
   }
+
+  END_CANCELLATION_POINT;
   STRACE("...sigsuspend → %d% m", rc);
   return rc;
 }

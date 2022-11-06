@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -50,6 +51,8 @@
 ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
   ssize_t rc;
   size_t wrote;
+  BEGIN_CANCELLATION_POINT;
+
   if (offset < 0) {
     rc = einval();
   } else if (fd == -1) {
@@ -71,6 +74,8 @@ ssize_t pwrite(int fd, const void *buf, size_t size, int64_t offset) {
       _npassert(wrote <= size);
     }
   }
+
+  END_CANCELLATION_POINT;
   DATATRACE("pwrite(%d, %#.*hhs%s, %'zu, %'zd) → %'zd% m", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, offset, rc);
   return rc;

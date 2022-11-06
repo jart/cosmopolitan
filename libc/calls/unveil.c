@@ -17,9 +17,9 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/landlock.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/bpf.h"
 #include "libc/calls/struct/filter.h"
 #include "libc/calls/struct/seccomp.h"
@@ -29,8 +29,8 @@
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/conv.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
-#include "libc/thread/tls.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -45,6 +45,7 @@
 #include "libc/sysv/consts/pr.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/sysv/errfuns.h"
+#include "libc/thread/tls.h"
 
 #define OFF(f) offsetof(struct seccomp_data, f)
 
@@ -234,7 +235,9 @@ int sys_unveil_linux(const char *path, const char *permissions) {
   }
 
   // now we can open the path
+  BLOCK_CANCELLATIONS;
   rc = sys_open(path, O_PATH | O_NOFOLLOW | O_CLOEXEC, 0);
+  ALLOW_CANCELLATIONS;
   if (rc == -1) return rc;
 
   pb.parent_fd = rc;

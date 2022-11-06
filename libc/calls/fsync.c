@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -28,6 +29,8 @@
  * Blocks until kernel flushes buffers for fd to disk.
  *
  * @return 0 on success, or -1 w/ errno
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @see fdatasync(), sync_file_range()
  * @see __nosync to secretly disable
  * @cancellationpoint
@@ -37,11 +40,13 @@ int fsync(int fd) {
   int rc;
   struct stat st;
   if (__nosync != 0x5453455454534146) {
+    BEGIN_CANCELLATION_POINT;
     if (!IsWindows()) {
       rc = sys_fsync(fd);
     } else {
       rc = sys_fdatasync_nt(fd);
     }
+    END_CANCELLATION_POINT;
     STRACE("fysnc(%d) → %d% m", fd, rc);
   } else {
     rc = fstat(fd, &st);

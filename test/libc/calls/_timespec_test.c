@@ -23,73 +23,65 @@
 #include "libc/testlib/testlib.h"
 #include "third_party/nsync/time.h"
 
-TEST(_timespec_gte, test) {
-  EXPECT_FALSE(_timespec_gte((struct timespec){1}, (struct timespec){2}));
-  EXPECT_TRUE(_timespec_gte((struct timespec){2}, (struct timespec){2}));
-  EXPECT_TRUE(_timespec_gte((struct timespec){2}, (struct timespec){1}));
-  EXPECT_FALSE(_timespec_gte((struct timespec){2}, (struct timespec){2, 1}));
-  EXPECT_TRUE(_timespec_gte((struct timespec){2, 1}, (struct timespec){2}));
-}
-
-TEST(_timespec_sub, test) {
+TEST(timespec_sub, test) {
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){-1},
-                   _timespec_sub((struct timespec){1}, (struct timespec){2})));
+      !timespec_cmp((struct timespec){-1},
+                    timespec_sub((struct timespec){1}, (struct timespec){2})));
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){1},
-                   _timespec_sub((struct timespec){2}, (struct timespec){1})));
-  EXPECT_TRUE(_timespec_eq(
+      !timespec_cmp((struct timespec){1},
+                    timespec_sub((struct timespec){2}, (struct timespec){1})));
+  EXPECT_TRUE(!timespec_cmp(
       (struct timespec){1, 1},
-      _timespec_sub((struct timespec){2, 2}, (struct timespec){1, 1})));
-  EXPECT_TRUE(_timespec_eq(
+      timespec_sub((struct timespec){2, 2}, (struct timespec){1, 1})));
+  EXPECT_TRUE(!timespec_cmp(
       (struct timespec){0, 999999999},
-      _timespec_sub((struct timespec){2, 1}, (struct timespec){1, 2})));
+      timespec_sub((struct timespec){2, 1}, (struct timespec){1, 2})));
 }
 
-TEST(_timespec_frommillis, test) {
+TEST(timespec_frommillis, test) {
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){0, 1000000}, _timespec_frommillis(1)));
+      !timespec_cmp((struct timespec){0, 1000000}, timespec_frommillis(1)));
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){0, 2000000}, _timespec_frommillis(2)));
-  EXPECT_TRUE(_timespec_eq((struct timespec){1}, _timespec_frommillis(1000)));
+      !timespec_cmp((struct timespec){0, 2000000}, timespec_frommillis(2)));
+  EXPECT_TRUE(!timespec_cmp((struct timespec){1}, timespec_frommillis(1000)));
 }
 
-TEST(_timespec_frommicros, test) {
+TEST(timespec_frommicros, test) {
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){0, 1000}, _timespec_frommicros(1)));
+      !timespec_cmp((struct timespec){0, 1000}, timespec_frommicros(1)));
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){0, 2000}, _timespec_frommicros(2)));
+      !timespec_cmp((struct timespec){0, 2000}, timespec_frommicros(2)));
   EXPECT_TRUE(
-      _timespec_eq((struct timespec){1}, _timespec_frommicros(1000000)));
-  EXPECT_TRUE(_timespec_eq((struct timespec){2, 123000},
-                           _timespec_frommicros(2000123)));
+      !timespec_cmp((struct timespec){1}, timespec_frommicros(1000000)));
+  EXPECT_TRUE(!timespec_cmp((struct timespec){2, 123000},
+                            timespec_frommicros(2000123)));
 }
 
-TEST(_timespec_tomillis, test) {
-  EXPECT_EQ(0, _timespec_tomillis((struct timespec){0, 0}));
-  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 1}));
-  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 999999}));
-  EXPECT_EQ(1, _timespec_tomillis((struct timespec){0, 1000000}));
-  EXPECT_EQ(1000, _timespec_tomillis((struct timespec){0, 999999999}));
-  EXPECT_EQ(2123, _timespec_tomillis((struct timespec){2, 123000000}));
-  EXPECT_EQ(INT64_MAX, _timespec_tomillis((struct timespec){INT64_MAX, 0}));
-  EXPECT_EQ(INT64_MIN, _timespec_tomillis((struct timespec){INT64_MIN, 0}));
-  EXPECT_EQ(INT64_MAX, _timespec_tomillis(
+TEST(timespec_tomillis, test) {
+  EXPECT_EQ(0, timespec_tomillis((struct timespec){0, 0}));
+  EXPECT_EQ(1, timespec_tomillis((struct timespec){0, 1}));
+  EXPECT_EQ(1, timespec_tomillis((struct timespec){0, 999999}));
+  EXPECT_EQ(1, timespec_tomillis((struct timespec){0, 1000000}));
+  EXPECT_EQ(1000, timespec_tomillis((struct timespec){0, 999999999}));
+  EXPECT_EQ(2123, timespec_tomillis((struct timespec){2, 123000000}));
+  EXPECT_EQ(INT64_MAX, timespec_tomillis((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, timespec_tomillis((struct timespec){INT64_MIN, 0}));
+  EXPECT_EQ(INT64_MAX, timespec_tomillis(
                            (struct timespec){0x7fffffffffffffff, 999999999}));
 }
 
-TEST(_timespec_tomicros, test) {
-  EXPECT_EQ(0, _timespec_tomicros((struct timespec){0, 0}));
-  EXPECT_EQ(1, _timespec_tomicros((struct timespec){0, 1}));
-  EXPECT_EQ(2000123, _timespec_tomicros((struct timespec){2, 123000}));
-  EXPECT_EQ(INT64_MAX, _timespec_tomicros((struct timespec){INT64_MAX, 0}));
-  EXPECT_EQ(INT64_MIN, _timespec_tomicros((struct timespec){INT64_MIN, 0}));
+TEST(timespec_tomicros, test) {
+  EXPECT_EQ(0, timespec_tomicros((struct timespec){0, 0}));
+  EXPECT_EQ(1, timespec_tomicros((struct timespec){0, 1}));
+  EXPECT_EQ(2000123, timespec_tomicros((struct timespec){2, 123000}));
+  EXPECT_EQ(INT64_MAX, timespec_tomicros((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, timespec_tomicros((struct timespec){INT64_MIN, 0}));
 }
 
-TEST(_timespec_tonanos, test) {
-  EXPECT_EQ(2000123000, _timespec_tonanos((struct timespec){2, 123000}));
-  EXPECT_EQ(INT64_MAX, _timespec_tonanos((struct timespec){INT64_MAX, 0}));
-  EXPECT_EQ(INT64_MIN, _timespec_tonanos((struct timespec){INT64_MIN, 0}));
+TEST(timespec_tonanos, test) {
+  EXPECT_EQ(2000123000, timespec_tonanos((struct timespec){2, 123000}));
+  EXPECT_EQ(INT64_MAX, timespec_tonanos((struct timespec){INT64_MAX, 0}));
+  EXPECT_EQ(INT64_MIN, timespec_tonanos((struct timespec){INT64_MIN, 0}));
 }
 
 static long mod(long x, long y) {
@@ -97,11 +89,11 @@ static long mod(long x, long y) {
   return x - y * (x / y - (x % y && (x ^ y) < 0));
 }
 
-TEST(_timespec_sub, math) {
+TEST(timespec_sub, math) {
   for (int i = 0; i < 1000; ++i) {
     struct timespec x = {mod(lemur64(), 10), mod(lemur64(), 10)};
     struct timespec y = {mod(lemur64(), 10), mod(lemur64(), 10)};
-    struct timespec z = _timespec_add(_timespec_sub(x, y), y);
-    EXPECT_TRUE(_timespec_eq(x, _timespec_add(_timespec_sub(x, y), y)));
+    struct timespec z = timespec_add(timespec_sub(x, y), y);
+    EXPECT_TRUE(!timespec_cmp(x, timespec_add(timespec_sub(x, y), y)));
   }
 }

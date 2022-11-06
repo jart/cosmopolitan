@@ -31,10 +31,10 @@ int sys_clock_nanosleep_xnu(int clock, int flags, const struct timespec *req,
   struct timeval now, abs, rel;
   if (clock == CLOCK_REALTIME) {
     if (flags & TIMER_ABSTIME) {
-      abs = _timespec_totimeval(*req);
+      abs = timespec_totimeval(*req);
       sys_gettimeofday_xnu(&now, 0, 0);
-      if (_timeval_gt(abs, now)) {
-        rel = _timeval_sub(abs, now);
+      if (timeval_cmp(abs, now) > 0) {
+        rel = timeval_sub(abs, now);
         res = sys_select(0, 0, 0, 0, &rel);
       } else {
         res = 0;

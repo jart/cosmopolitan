@@ -55,7 +55,7 @@ int64_t clock(void) {
   if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == -1) {
     errno = e;
     if (getrusage(RUSAGE_SELF, &ru) != -1) {
-      ts = _timeval_totimespec(_timeval_add(ru.ru_utime, ru.ru_stime));
+      ts = timeval_totimespec(timeval_add(ru.ru_utime, ru.ru_stime));
     } else {
       return -1;
     }

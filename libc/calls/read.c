@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -49,6 +50,7 @@
  * @raise EPERM if pledge() is in play without the stdio promise
  * @raise EIO if low-level i/o error happened
  * @raise EINTR if signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOTCONN if `fd` is a socket and it isn't connected
  * @raise ECONNRESET if socket peer forcibly closed connection
  * @raise ETIMEDOUT if socket transmission timeout occurred
@@ -63,6 +65,7 @@
  */
 ssize_t read(int fd, void *buf, size_t size) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
   if (fd >= 0) {
     if ((!buf && size) || (IsAsan() && !__asan_is_valid(buf, size))) {
       rc = efault();
@@ -82,6 +85,7 @@ ssize_t read(int fd, void *buf, size_t size) {
   } else {
     rc = ebadf();
   }
+  END_CANCELLATION_POINT;
   DATATRACE("read(%d, [%#.*hhs%s], %'zu) → %'zd% m", fd, MAX(0, MIN(40, rc)),
             buf, rc > 40 ? "..." : "", size, rc);
   return rc;

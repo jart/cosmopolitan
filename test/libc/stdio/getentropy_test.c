@@ -16,43 +16,80 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigset.h"
-#include "libc/calls/struct/sigset.internal.h"
 #include "libc/dce.h"
-#include "libc/intrin/describeflags.internal.h"
+#include "libc/errno.h"
+#include "libc/mem/gc.h"
+#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/tab.internal.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
 
-TEST(DescribeSigset, full) {
-  sigset_t ss;
-  sigfillset(&ss);
-  if (IsXnu()) {
-    EXPECT_STREQ("~{ABRT,THR,KILL,STOP}", DescribeSigset(0, &ss));
-  } else if (IsOpenbsd()) {
-    EXPECT_STREQ("~{ABRT,KILL,STOP,THR}", DescribeSigset(0, &ss));
-  } else {
-    EXPECT_STREQ("~{ABRT,KILL,STOP,THR}", DescribeSigset(0, &ss));
-  }
+// TODO(jart): Why can EINTR happen on Windows?
+
+atomic_int done;
+atomic_int ready;
+pthread_t parent;
+atomic_int gotsome;
+
+void OnSig(int sig) {
+  ++gotsome;
 }
 
-TEST(DescribeSigset, present) {
-  sigset_t ss;
-  sigemptyset(&ss);
-  sigaddset(&ss, SIGINT);
-  sigaddset(&ss, SIGUSR1);
-  EXPECT_STREQ("{INT,USR1}", DescribeSigset(0, &ss));
-}
-
-TEST(DescribeSigset, absent) {
+void *TortureWorker(void *arg) {
   sigset_t ss;
   sigfillset(&ss);
-  sigdelset(&ss, SIGINT);
-  sigdelset(&ss, SIGUSR1);
-  if (IsXnu()) {
-    EXPECT_STREQ("~{INT,ABRT,THR,KILL,STOP,USR1}", DescribeSigset(0, &ss));
-  } else if (IsBsd()) {
-    EXPECT_STREQ("~{INT,ABRT,KILL,STOP,USR1,THR}", DescribeSigset(0, &ss));
-  } else {
-    EXPECT_STREQ("~{INT,ABRT,KILL,USR1,STOP,THR}", DescribeSigset(0, &ss));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &ss, 0));
+  ready = true;
+  while (!done) {
+    if (!IsWindows()) pthread_kill(parent, SIGUSR1);
+    usleep(3);
+    if (!IsWindows()) pthread_kill(parent, SIGUSR2);
+    usleep(3);
   }
+  return 0;
+}
+
+TEST(getentropy, test) {
+  pthread_t child;
+  double e, w = 7.7;
+  struct sigaction sa;
+  int i, j, k, n = 999;
+  char *buf = _gc(calloc(1, n));
+  sa.sa_flags = 0;
+  sa.sa_handler = OnSig;
+  sigemptyset(&sa.sa_mask);
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, 0));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &sa, 0));
+  parent = pthread_self();
+  ASSERT_EQ(0, pthread_create(&child, 0, TortureWorker, 0));
+  while (!ready) pthread_yield();
+  for (k = 0; k < 200; ++k) {
+    ASSERT_SYS(0, 0, getrandom(0, 0, 0));
+    ASSERT_SYS(0, n, getrandom(buf, n, 0));
+    ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
+    ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
+    if ((e = MeasureEntropy(buf, n)) < w) {
+      fprintf(stderr, "error: entropy suspect! got %g but want >=%g\n", e, w);
+      for (i = 0; i < n;) {
+        if (!(i % 16)) fprintf(stderr, "%6x ", i);
+        fprintf(stderr, "%lc", kCp437[buf[i] & 255]);
+        if (!(++i % 16)) fprintf(stderr, "\n");
+      }
+      fprintf(stderr, "\n");
+      done = true;
+      pthread_join(child, 0);
+      exit(1);
+    }
+  }
+  done = true;
+  ASSERT_EQ(0, pthread_join(child, 0));
+  if (!IsWindows()) ASSERT_GT(gotsome, 0);
 }

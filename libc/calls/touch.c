@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/errno.h"
@@ -34,7 +35,10 @@ int touch(const char *file, uint32_t mode) {
   olderr = errno;
   if ((rc = utimes(file, 0)) == -1 && errno == ENOENT) {
     errno = olderr;
-    if ((fd = open(file, O_CREAT | O_WRONLY, mode)) == -1) return -1;
+    BLOCK_CANCELLATIONS;
+    fd = open(file, O_CREAT | O_WRONLY, mode);
+    ALLOW_CANCELLATIONS;
+    if (fd == -1) return -1;
     return close(fd);
   }
   return rc;

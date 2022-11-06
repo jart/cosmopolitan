@@ -17,8 +17,8 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/dce.h"
 #include "libc/elf/def.h"
 #include "libc/elf/scalar.h"
@@ -27,6 +27,7 @@
 #include "libc/elf/struct/sym.h"
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/log/libfatal.internal.h"
 #include "libc/macros.internal.h"
@@ -100,12 +101,7 @@ static void GetImageRange(Elf64_Ehdr *elf, intptr_t *x, intptr_t *y) {
   if (y) *y = end;
 }
 
-/**
- * Maps debuggable binary into memory and indexes symbol addresses.
- *
- * @return object freeable with CloseSymbolTable(), or NULL w/ errno
- */
-struct SymbolTable *OpenSymbolTable(const char *filename) {
+static struct SymbolTable *OpenSymbolTableImpl(const char *filename) {
   int fd;
   void *map;
   long *stp;
@@ -199,4 +195,17 @@ SystemError:
   }
   close(fd);
   return 0;
+}
+
+/**
+ * Maps debuggable binary into memory and indexes symbol addresses.
+ *
+ * @return object freeable with CloseSymbolTable(), or NULL w/ errno
+ */
+struct SymbolTable *OpenSymbolTable(const char *filename) {
+  struct SymbolTable *st;
+  BLOCK_CANCELLATIONS;
+  st = OpenSymbolTableImpl(filename);
+  ALLOW_CANCELLATIONS;
+  return st;
 }

@@ -28,6 +28,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -38,6 +39,7 @@
 #include "libc/sysv/consts/timer.h"
 #include "libc/sysv/errfuns.h"
 #include "libc/thread/freebsd.internal.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 #include "third_party/nsync/atomic.h"
@@ -118,26 +120,26 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ti
 	int64_t nanos, maxnanos;
 	struct timespec ts, deadline;
 
-	ts = nsync_time_now ();
+	ts = timespec_real ();
 	if (!timeout) {
-		deadline = nsync_time_no_deadline;
+		deadline = timespec_max;
 	} else if (FUTEX_TIMEOUT_IS_ABSOLUTE) {
 		deadline = *timeout;
 	} else {
-		deadline = nsync_time_add (ts, *timeout);
+		deadline = timespec_add (ts, *timeout);
 	}
 
 	nanos = 100;
 	maxnanos = __SIG_POLLING_INTERVAL_MS * 1000L * 1000;
-	while (nsync_time_cmp (deadline, ts) > 0) {
-		ts = nsync_time_add (ts, _timespec_fromnanos (nanos));
-		if (nsync_time_cmp (ts, deadline) > 0) {
+	while (timespec_cmp (deadline, ts) > 0) {
+		ts = timespec_add (ts, timespec_fromnanos (nanos));
+		if (timespec_cmp (ts, deadline) > 0) {
 			ts = deadline;
 		}
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
 		}
-		if ((rc = nsync_time_sleep_until (ts))) {
+		if ((rc = timespec_sleep_until (ts))) {
 			return -rc;
 		}
 		if (nanos < maxnanos) {
@@ -159,22 +161,22 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, stru
 	if (timeout) {
 		deadline = *timeout;
 	} else {
-		deadline = nsync_time_no_deadline;
+		deadline = timespec_max;
 	}
 
 	while (!(rc = _check_interrupts (false, 0))) {
-		now = nsync_time_now ();
-		if (nsync_time_cmp (now, deadline) > 0) {
+		now = timespec_real ();
+		if (timespec_cmp (now, deadline) > 0) {
 			rc = etimedout();
 			break;
 		}
-		remain = nsync_time_sub (deadline, now);
-		interval = _timespec_frommillis (__SIG_POLLING_INTERVAL_MS);
-		wait = nsync_time_cmp (remain, interval) > 0 ? interval : remain;
+		remain = timespec_sub (deadline, now);
+		interval = timespec_frommillis (__SIG_POLLING_INTERVAL_MS);
+		wait = timespec_cmp (remain, interval) > 0 ? interval : remain;
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			break;
 		}
-		if (WaitOnAddress (w, &expect, sizeof(int), _timespec_tomillis (wait))) {
+		if (WaitOnAddress (w, &expect, sizeof(int), timespec_tomillis (wait))) {
 			break;
 		} else {
 			ASSERT (GetLastError () == ETIMEDOUT);
@@ -186,6 +188,7 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, stru
 
 int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
 	int e, rc, op, fop;
+	struct PosixThread *pt = 0;
 
 	if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 		return -EAGAIN;
@@ -210,21 +213,31 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		} else if (IsFreebsd ()) {
 			rc = sys_umtx_timedwait_uint (w, expect, pshare, timeout);
 		} else {
-			rc = sys_futex_cp (w, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
-			if (IsOpenbsd() && rc > 0) {
-				// OpenBSD futex() returns errors as
-				// positive numbers without setting the
-				// carry flag. It's an irregular miracle
-				// because OpenBSD returns ECANCELED if
-				// futex() is interrupted w/ SA_RESTART
-				// so we're able to tell it apart from
-				// PT_MASKED which causes the wrapper
-				// to put ECANCELED into errno.
-				if (rc == ECANCELED) {
-					rc = EINTR;
+			if (IsOpenbsd()) {
+				// OpenBSD 6.8 futex() returns errors as
+				// positive numbers, without setting CF.
+				// This irregularity is fixed in 7.2 but
+				// unfortunately OpenBSD futex() defines
+				// its own ECANCELED condition, and that
+				// overlaps with our system call wrapper
+				if ((pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
+					pt->flags &= ~PT_OPENBSD_KLUDGE;
 				}
-				errno = rc;
-				rc = -1;
+			}
+			rc = sys_futex_cp (w, op, expect, timeout, 0, FUTEX_WAIT_BITS_);
+			if (IsOpenbsd()) {
+				// Handle the OpenBSD 6.x irregularity.
+				if (rc > 0) {
+					errno = rc;
+					rc = -1;
+				}
+				// Check if ECANCELED came from the kernel
+				// because a SA_RESTART signal handler was
+				// invoked, such as our SIGTHR callback.
+				if (rc == -1 && errno == ECANCELED &&
+				    pt && (~pt->flags & PT_OPENBSD_KLUDGE)) {
+					errno = EINTR;
+				}
 			}
 		}
 		if (rc == -1) {

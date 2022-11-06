@@ -26,7 +26,7 @@ struct rusage {
 int getrusage(int, struct rusage *);
 int wait3(int *, int, struct rusage *);
 int wait4(int, int *, int, struct rusage *);
-void _addrusage(struct rusage *, const struct rusage *);
+void rusage_add(struct rusage *, const struct rusage *);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

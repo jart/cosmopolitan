@@ -27,7 +27,7 @@
  * Waits for condition with optional time limit, e.g.
  *
  *     struct timespec ts;  // one second timeout
- *     ts = _timespec_add(_timespec_real(), _timespec_frommillis(1000));
+ *     ts = timespec_add(timespec_real(), timespec_frommillis(1000));
  *     if (pthread_cond_timedwait(cond, mutex, &ts) == ETIMEDOUT) {
  *       // handle timeout...
  *     }

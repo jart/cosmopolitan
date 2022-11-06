@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -52,6 +53,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   struct msghdr msg2;
   union sockaddr_storage_bsd bsd;
 
+  BEGIN_CANCELLATION_POINT;
   if (IsAsan() && !__asan_is_valid_msghdr(msg)) {
     rc = efault();
   } else if (!IsWindows()) {
@@ -79,6 +81,7 @@ ssize_t sendmsg(int fd, const struct msghdr *msg, int flags) {
   } else {
     rc = ebadf();
   }
+  END_CANCELLATION_POINT;
 
 #if defined(SYSDEBUG) && _DATATRACE
   if (__strace > 0 && strace_enabled(0) > 0) {

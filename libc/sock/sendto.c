@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -58,6 +59,8 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
   ssize_t rc;
   uint32_t bsdaddrsize;
   union sockaddr_storage_bsd bsd;
+  BEGIN_CANCELLATION_POINT;
+
   if (IsAsan() && (!__asan_is_valid(buf, size) ||
                    (opt_addr && !__asan_is_valid(opt_addr, addrsize)))) {
     rc = efault();
@@ -87,6 +90,8 @@ ssize_t sendto(int fd, const void *buf, size_t size, int flags,
       rc = ebadf();
     }
   }
+
+  END_CANCELLATION_POINT;
   DATATRACE("sendto(%d, %#.*hhs%s, %'zu, %#x, %p, %u) → %'ld% lm", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags,
             opt_addr, addrsize, rc);

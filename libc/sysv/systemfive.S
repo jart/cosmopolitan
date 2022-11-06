@@ -110,7 +110,7 @@ __pid:	.quad	0
 
 systemfive_cp:
 	push	%rbp
-	mov	%rsp,%rbp
+	mov	%rsp,%rbp		# so backtraces work
 systemfive_cancellable:			# our pthread_cancel() miracle code
 	cmpb	$0,__tls_enabled(%rip)	# inspired by the musl libc design!
 	je	1f			# we handle linux and bsd together!
@@ -120,21 +120,24 @@ systemfive_cancellable:			# our pthread_cancel() miracle code
 	jz	1f			# it's spawn() probably
 	testb	$PT_NOCANCEL,0x00(%r10)	# PosixThread::flags
 	jnz	1f			# canceler no cancelling
+#if IsModeDbg()
+	testb	$PT_INCANCEL,0x00(%r10)
+	jz	5f
+#endif
 	cmp	$0,0x04(%r10)		# PosixThread::cancelled
-	jne	systemfive_cancel	# tail call for masked mode
+	jne	systemfive_cancel	# we will tail call below
 1:	mov	%rcx,%r10		# move the fourth argument
 	clc				# no cancellable system calls exist
 	syscall				# that have 7+ args on the bsd OSes
 systemfive_cancellable_end:		# i/o calls park here for long time
 	pop	%rbp
-	jc	systemfive_errno
-	jmp	0f
-	jc	3f			# we're now out of the limbo state!
-1:	cmp	$-4095,%rax		# but we still check again on eintr
-	jae	2f
+	jnc	2f
+	neg	%rax			# turns bsd errno to system v errno
+2:	cmp	$-4095,%rax		# but we still check again on eintr
+	jae	3f			# branch because system call failed
 	ret				# done if the system call succeeded
-2:	neg	%eax			# now examine the nature of failure
-3:	cmp	EINTR(%rip),%eax	# did SIGCANCEL cancel our i/o call
+3:	neg	%eax			# now examine the nature of failure
+	cmp	EINTR(%rip),%eax	# did the SIGTHR cancel our IO call
 	jne	systemfive_errno	# werent interrupted by OnSigCancel
 	cmpb	$0,__tls_enabled(%rip)	# make sure it's safe to grab %fs:0
 	je	systemfive_errno	# tls is disabled we can't continue
@@ -146,11 +149,22 @@ systemfive_cancellable_end:		# i/o calls park here for long time
 	jnz	systemfive_errno	# cancellation is disabled
 	cmp	$0,0x04(%rcx)		# PosixThread::cancelled
 	je	systemfive_errno	# we aren't actually cancelled
-	jmp	1f			# now we are in fact cancelled
-systemfive_cancel:
+	jmp	4f			# now we are in fact cancelled
+systemfive_cancel:			# SIGTHR will jump here too
 	pop	%rbp
-1:	jmp	_pthread_cancel_sys	# must be linked if we're cancelled
-	.weak	_pthread_cancel_sys
+4:	jmp	_pthread_cancel_sys	# tail call
+	.weak	_pthread_cancel_sys	# must be linked if we're cancelled
+#if IsModeDbg()
+not_a_cancellation_point:		# need BEGIN/END_CANCELLATION_POINT
+	nop
+	.weak	report_cancellation_point
+5:	ezlea	report_cancellation_point,cx
+	test	%rcx,%rcx
+	jz	6f
+	call	*%rcx
+6:	ud2
+	nop
+#endif
 	.globl	systemfive_cancellable_end
 	.globl	systemfive_cancellable
 	.globl	systemfive_cancel
@@ -169,7 +183,7 @@ systemfive_linux:
 	mov	%rsp,%rbp		# having frame will help backtraces
 	syscall				# this is known as a context switch
 	pop	%rbp			# next we check to see if it failed
-0:	cmp	$-4095,%rax		# system five nexgen32e abi § a.2.1
+	cmp	$-4095,%rax		# system five nexgen32e abi § a.2.1
 	jae	systemfive_error	# encodes errno as neg return value
 	ret
 	.endfn	systemfive_linux,globl,hidden

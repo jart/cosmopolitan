@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/statfs-meta.internal.h"
 #include "libc/calls/struct/statfs.internal.h"
@@ -29,11 +30,15 @@
 /**
  * Returns information about filesystem.
  * @return 0 on success, or -1 w/ errno
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  */
 int statfs(const char *path, struct statfs *sf) {
   int rc;
   union statfs_meta m;
+  BEGIN_CANCELLATION_POINT;
+
   CheckLargeStackAllocation(&m, sizeof(m));
   if (!IsWindows()) {
     if ((rc = sys_statfs(path, &m)) != -1) {
@@ -42,6 +47,8 @@ int statfs(const char *path, struct statfs *sf) {
   } else {
     rc = sys_statfs_nt(path, sf);
   }
+
+  END_CANCELLATION_POINT;
   STRACE("statfs(%#s, [%s]) → %d% m", path, DescribeStatfs(rc, sf));
   return rc;
 }

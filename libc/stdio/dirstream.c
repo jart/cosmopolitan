@@ -255,6 +255,8 @@ static textwindows dontinline struct dirent *readdir_nt(DIR *dir) {
  *
  * @returns newly allocated DIR object, or NULL w/ errno
  * @errors ENOENT, ENOTDIR, EACCES, EMFILE, ENFILE, ENOMEM
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if we needed to block and a signal was delivered instead
  * @cancellationpoint
  * @see glob()
  */

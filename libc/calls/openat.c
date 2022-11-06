@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
@@ -130,6 +131,7 @@
  * @raise ENOTSUP if `file` is on zip file system and process is vfork()'d
  * @raise ENOSPC if file system is full when `file` would be `O_CREAT`ed
  * @raise EINTR if we needed to block and a signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOENT if `file` doesn't exist when `O_CREAT` isn't in `flags`
  * @raise ENOENT if `file` points to a string that's empty
  * @raise ENOMEM if insufficient memory was available
@@ -155,6 +157,8 @@ int openat(int dirfd, const char *file, int flags, ...) {
   va_start(va, flags);
   mode = va_arg(va, unsigned);
   va_end(va);
+  BEGIN_CANCELLATION_POINT;
+
   if (file && (!IsAsan() || __asan_is_valid_str(file))) {
     if (!__isfdkind(dirfd, kFdZip)) {
       if (_weaken(__zipos_open) &&
@@ -177,6 +181,8 @@ int openat(int dirfd, const char *file, int flags, ...) {
   } else {
     rc = efault();
   }
+
+  END_CANCELLATION_POINT;
   STRACE("openat(%s, %#s, %s, %#o) → %d% m", DescribeDirfd(dirfd), file,
          DescribeOpenFlags(flags), (flags & (O_CREAT | O_TMPFILE)) ? mode : 0,
          rc);

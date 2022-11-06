@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 extern const int SIGABRT;
 extern const int SIGALRM;
 extern const int SIGBUS;
-extern const int SIGCANCEL;
+extern const int SIGTHR;
 extern const int SIGCHLD;
 extern const int SIGCONT;
 extern const int SIGEMT;
@@ -73,7 +73,7 @@ COSMOPOLITAN_C_END_
 #define SIGXFSZ   LITERALLY(25)
 
 #define SIGBUS    SYMBOLIC(SIGBUS)
-#define SIGCANCEL SYMBOLIC(SIGCANCEL)
+#define SIGTHR    SYMBOLIC(SIGTHR)
 #define SIGCHLD   SYMBOLIC(SIGCHLD)
 #define SIGCONT   SYMBOLIC(SIGCONT)
 #define SIGEMT    SYMBOLIC(SIGEMT)

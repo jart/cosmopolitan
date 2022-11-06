@@ -314,8 +314,7 @@ void UseLog(void) {
 }
 
 void UninterruptibleSleep(int ms) {
-  struct timespec ts =
-      _timespec_add(_timespec_real(), _timespec_frommillis(ms));
+  struct timespec ts = timespec_add(timespec_real(), timespec_frommillis(ms));
   while (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, 0)) errno = 0;
 }
 

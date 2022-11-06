@@ -18,3 +18,4 @@ LOCAL CHANGES
   - nsync_malloc_() is implemented as kmalloc()
   - nsync_mu_semaphore uses Cosmopolitan Futexes
   - block pthread cancellations in nsync_mu_lock_slow_
+  - support posix thread cancellations in nsync_cv_wait

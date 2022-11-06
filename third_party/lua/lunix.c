@@ -19,6 +19,7 @@
 #include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/ioctl.h"
 #include "libc/calls/makedev.h"
 #include "libc/calls/pledge.h"
@@ -1549,7 +1550,7 @@ static int LuaUnixPoll(lua_State *L) {
   int i, fd, events, olderr = errno;
   luaL_checktype(L, 1, LUA_TTABLE);
   if (!lua_isnoneornil(L, 2)) {
-    ts = _timespec_frommillis(luaL_checkinteger(L, 2));
+    ts = timespec_frommillis(luaL_checkinteger(L, 2));
     tsp = &ts;
   } else {
     tsp = 0;
@@ -2847,17 +2848,19 @@ static int LuaUnixMemoryWait(lua_State *L) {
     ts.tv_sec = luaL_checkinteger(L, 4);
     ts.tv_nsec = luaL_optinteger(L, 5, 0);
     if (!FUTEX_TIMEOUT_IS_ABSOLUTE) {
-      now = _timespec_real();
-      if (_timespec_gt(now, ts)) {
+      now = timespec_real();
+      if (timespec_cmp(now, ts) > 0) {
         ts = (struct timespec){0};
       } else {
-        ts = _timespec_sub(ts, now);
+        ts = timespec_sub(ts, now);
       }
     }
     deadline = &ts;
   }
+  BEGIN_CANCELLATION_POINT;
   rc = nsync_futex_wait_((atomic_int *)GetWord(L), expect,
                          PTHREAD_PROCESS_SHARED, deadline);
+  END_CANCELLATION_POINT;
   if (rc < 0) errno = -rc, rc = -1;
   return SysretInteger(L, "futex_wait", olderr, rc);
 }

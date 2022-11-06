@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -120,7 +121,9 @@ static ssize_t Pwritev(int fd, const struct iovec *iov, int iovlen,
  */
 ssize_t pwritev(int fd, const struct iovec *iov, int iovlen, int64_t off) {
   ssize_t rc;
+  BEGIN_CANCELLATION_POINT;
   rc = Pwritev(fd, iov, iovlen, off);
+  END_CANCELLATION_POINT;
   STRACE("pwritev(%d, %s, %d, %'ld) → %'ld% m", fd,
          DescribeIovec(rc != -1 ? rc : -2, iov, iovlen), iovlen, off, rc);
   return rc;

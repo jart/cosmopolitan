@@ -42,16 +42,16 @@ int sys_utimensat_xnu(int dirfd, const char *path, const struct timespec ts[2],
     if (ts[0].tv_nsec == UTIME_NOW) {
       tv[0] = now;
     } else if (ts[0].tv_nsec == UTIME_OMIT) {
-      tv[0] = _timespec_totimeval(st.st_atim);
+      tv[0] = timespec_totimeval(st.st_atim);
     } else {
-      tv[0] = _timespec_totimeval(ts[0]);
+      tv[0] = timespec_totimeval(ts[0]);
     }
     if (ts[1].tv_nsec == UTIME_NOW) {
       tv[1] = now;
     } else if (ts[1].tv_nsec == UTIME_OMIT) {
-      tv[1] = _timespec_totimeval(st.st_mtim);
+      tv[1] = timespec_totimeval(st.st_mtim);
     } else {
-      tv[1] = _timespec_totimeval(ts[1]);
+      tv[1] = timespec_totimeval(ts[1]);
     }
   } else {
     tv[0] = now;

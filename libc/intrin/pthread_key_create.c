@@ -29,6 +29,8 @@
  * key's value is nonzero. The key's value is set to zero before it gets
  * called. The ordering for multiple destructor calls is unspecified.
  *
+ * The result should be passed to pthread_key_delete() later.
+ *
  * @param key is set to the allocated key on success
  * @param dtor specifies an optional destructor callback
  * @return 0 on success, or errno on error

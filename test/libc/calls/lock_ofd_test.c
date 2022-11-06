@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -50,7 +51,9 @@ bool SupportsOfdLocks(void) {
   // getrandom() was introduced in linux 3.17
   // testing for getrandom() should be a sure thing w/o creating an fd
   e = errno;
+  BLOCK_CANCELLATIONS;
   r = !sys_getrandom(0, 0, 0);
+  ALLOW_CANCELLATIONS;
   errno = e;
   return r;
 }

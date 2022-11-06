@@ -33,10 +33,22 @@
 /**
  * Spawns subprocess and returns pipe stream.
  *
+ * The returned resource needs to be passed to pclose().
+ *
  * This embeds the Cosmopolitan Command Interpreter which provides
  * Bourne-like syntax on all platforms including Windows.
  *
- * @see pclose()
+ * @param cmdline is a unix shell script
+ * @param mode can be:
+ *     - `"r"` for reading from subprocess standard output
+ *     - `"w"` for writing to subprocess standard input
+ * @raise EINVAL if `mode` is invalid or specifies read+write
+ * @raise EMFILE if process `RLIMIT_NOFILE` has been reached
+ * @raise ENFILE if system-wide file limit has been reached
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise ENOMEM if we require more vespene gas
+ * @raise EAGAIN if `RLIMIT_NPROC` was exceeded
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @threadsafe
  */

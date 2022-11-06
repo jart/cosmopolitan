@@ -31,6 +31,7 @@
  * @param mode is octal bits, e.g. 0644 usually
  * @return file descriptor, or -1 w/ errno
  * @see openat() for further documentation
+ * @cancellationpoint
  * @asyncsignalsafe
  * @restartable
  * @threadsafe

@@ -171,16 +171,16 @@ BENCH(malloc, torture) {
   printf("\nmalloc torture test w/ %d threads and %d iterations\n", n,
          ITERATIONS);
   SPAWN(fork);
-  struct timespec t1 = _timespec_real();
+  struct timespec t1 = timespec_real();
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
   }
   for (i = 0; i < n; ++i) {
     ASSERT_EQ(0, pthread_join(t[i], 0));
   }
-  struct timespec t2 = _timespec_real();
+  struct timespec t2 = timespec_real();
   printf("consumed %g wall and %g cpu seconds\n",
-         _timespec_tomicros(_timespec_sub(t2, t1)) * 1e-6,
+         timespec_tomicros(timespec_sub(t2, t1)) * 1e-6,
          (double)clock() / CLOCKS_PER_SEC);
   EXITS(0);
 }

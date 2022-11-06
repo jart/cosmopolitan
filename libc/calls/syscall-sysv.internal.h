@@ -24,6 +24,7 @@ i32 __sys_fstatat(i32, const char *, void *, i32) hidden;
 i32 __sys_gettid(i64 *) hidden;
 i32 __sys_munmap(void *, u64) hidden;
 i32 __sys_openat(i32, const char *, i32, u32) hidden;
+i32 __sys_openat_nc(i32, const char *, i32, u32) hidden;
 i32 __sys_pipe2(i32[hasatleast 2], u32) hidden;
 i32 sys_arch_prctl(i32, i64) hidden;
 i32 sys_chdir(const char *) hidden;

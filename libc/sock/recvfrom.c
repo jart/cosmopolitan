@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/iovec.internal.h"
@@ -54,6 +55,8 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   ssize_t rc;
   uint32_t sz;
   union sockaddr_storage_bsd bsd;
+  BEGIN_CANCELLATION_POINT;
+
   if (IsAsan() &&
       (!__asan_is_valid(buf, size) ||
        (opt_out_srcaddr &&
@@ -88,6 +91,8 @@ ssize_t recvfrom(int fd, void *buf, size_t size, int flags,
   } else {
     rc = ebadf();
   }
+
+  END_CANCELLATION_POINT;
   DATATRACE("recvfrom(%d, [%#.*hhs%s], %'zu, %#x) → %'ld% lm", fd,
             MAX(0, MIN(40, rc)), buf, rc > 40 ? "..." : "", size, flags, rc);
   return rc;

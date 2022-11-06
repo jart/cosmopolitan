@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/errno.h"
@@ -42,11 +43,11 @@ static struct timespec *sem_timeout(struct timespec *memory,
     *memory = *abstime;
     return memory;
   } else {
-    now = _timespec_real();
-    if (_timespec_cmp(now, *abstime) > 0) {
+    now = timespec_real();
+    if (timespec_cmp(now, *abstime) > 0) {
       *memory = (struct timespec){0};
     } else {
-      *memory = _timespec_sub(*abstime, now);
+      *memory = timespec_sub(*abstime, now);
     }
     return memory;
   }
@@ -87,6 +88,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
     }
   }
 
+  BEGIN_CANCELLATION_POINT;
   _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, +1,
                                       memory_order_acq_rel) >= 0);
   pthread_cleanup_push(sem_timedwait_cleanup, sem);
@@ -102,7 +104,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
         rc = 0;
       } else if (rc == -ETIMEDOUT) {
         _npassert(abstime);
-        if (_timespec_cmp(*abstime, _timespec_real()) <= 0) {
+        if (timespec_cmp(*abstime, timespec_real()) <= 0) {
           rc = etimedout();
         } else {
           rc = 0;
@@ -122,6 +124,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
                              memory_order_relaxed)));
 
   pthread_cleanup_pop(1);
+  END_CANCELLATION_POINT;
 
   return rc;
 }

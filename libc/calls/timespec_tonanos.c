@@ -17,12 +17,24 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
+#include "libc/limits.h"
 
 /**
- * Checks if 𝑥 ≥ 𝑦.
+ * Converts timespec to scalar.
+ *
+ * This function will detect overflow in which case `INT64_MAX` or
+ * `INT64_MIN` may be returned. The `errno` variable isn't changed.
+ *
+ * @return 64-bit integer holding nanoseconds since epoch
  */
-bool _timespec_gte(struct timespec x, struct timespec y) {
-  if (x.tv_sec > y.tv_sec) return true;
-  if (x.tv_sec < y.tv_sec) return false;
-  return x.tv_nsec >= y.tv_nsec;
+int64_t timespec_tonanos(struct timespec x) {
+  int64_t ns;
+  if (!__builtin_mul_overflow(x.tv_sec, 1000000000ul, &ns) &&
+      !__builtin_add_overflow(ns, x.tv_nsec, &ns)) {
+    return ns;
+  } else if (x.tv_sec < 0) {
+    return INT64_MIN;
+  } else {
+    return INT64_MAX;
+  }
 }

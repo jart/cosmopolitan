@@ -25,6 +25,7 @@
  * @param info if not null shall receive info about signal
  * @return signal number on success, or -1 w/ errno
  * @raise EINTR if an asynchronous signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOSYS on OpenBSD, XNU, and Windows
  * @see sigtimedwait()
  * @cancellationpoint

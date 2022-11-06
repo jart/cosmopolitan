@@ -67,7 +67,7 @@ void *Waiter(void *arg) {
 BENCH(lock, scalability) {
   int i;
   struct timespec t1, t2;
-  t1 = _timespec_real();
+  t1 = timespec_real();
   pthread_mutex_init(&lock, 0);
   pthread_barrier_init(&barrier, 0, WAITERS + 1);
   for (i = 0; i < WAITERS; ++i) {
@@ -79,8 +79,8 @@ BENCH(lock, scalability) {
   }
   pthread_barrier_destroy(&barrier);
   pthread_mutex_destroy(&lock);
-  t2 = _timespec_real();
+  t2 = timespec_real();
   printf("consumed %10g seconds real time and %10g seconds cpu time\n",
-         _timespec_tonanos(_timespec_sub(t2, t1)) / 1e9,
+         timespec_tonanos(timespec_sub(t2, t1)) / 1e9,
          (double)clock() / CLOCKS_PER_SEC);
 }

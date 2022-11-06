@@ -16,7 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/bits.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/elf/def.h"
@@ -24,6 +24,7 @@
 #include "libc/elf/struct/ehdr.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/errno.h"
+#include "libc/intrin/bits.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/o.h"
@@ -38,6 +39,7 @@ bool IsDynamicExecutable(const char *prog) {
   Elf64_Phdr *p;
   struct stat st;
   int i, fd, err;
+  BLOCK_CANCELLATIONS;
   fd = -1;
   err = errno;
   e = MAP_FAILED;
@@ -74,5 +76,6 @@ Finish:
   if (e != MAP_FAILED) munmap(e, st.st_size);
   if (fd != -1) close(fd);
   errno = err;
+  ALLOW_CANCELLATIONS;
   return res;
 }

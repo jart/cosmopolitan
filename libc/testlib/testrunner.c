@@ -225,8 +225,10 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
     if (!IsWindows()) sys_getpid();
     if (warmup) warmup();
     testlib_clearxmmregisters();
-    STRACE("running test %t", fn);
+    STRACE("");
+    STRACE("# running test %t", fn);
     (*fn)();
+    STRACE("");
     if (!IsWindows()) sys_getpid();
     if (_weaken(TearDown)) _weaken(TearDown)();
     if (_weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();

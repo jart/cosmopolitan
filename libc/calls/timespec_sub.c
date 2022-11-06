@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timespec.h"
 
 /**
  * Subtracts two nanosecond timestamps.
  */
-struct timeval _timeval_sub(struct timeval a, struct timeval b) {
+struct timespec timespec_sub(struct timespec a, struct timespec b) {
   a.tv_sec -= b.tv_sec;
-  if (a.tv_usec < b.tv_usec) {
-    a.tv_usec += 1000000;
+  if (a.tv_nsec < b.tv_nsec) {
+    a.tv_nsec += 1000000000;
     a.tv_sec--;
   }
-  a.tv_usec -= b.tv_usec;
+  a.tv_nsec -= b.tv_nsec;
   return a;
 }

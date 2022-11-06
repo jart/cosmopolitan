@@ -28,7 +28,7 @@ void show(int clock) {
   }
   shown[n++] = clock;
   if (clock_getres(clock, &ts) != -1) {
-    kprintf("%s %'ld ns\n", DescribeClockName(clock), _timespec_tonanos(ts));
+    kprintf("%s %'ld ns\n", DescribeClockName(clock), timespec_tonanos(ts));
   } else {
     kprintf("%s %s\n", DescribeClockName(clock), _strerrno(errno));
   }

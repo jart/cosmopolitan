@@ -16,9 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
+#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/log/internal.h"
 #include "libc/log/log.h"
@@ -40,17 +42,16 @@ STATIC_YOINK("PrintBacktraceUsingSymbols");  // for backtracing
 STATIC_YOINK("malloc_inspect_all");          // for asan memory origin
 STATIC_YOINK("GetSymbolByAddr");             // for asan memory origin
 
-extern const unsigned char __oncrash_thunks[8][11];
-static struct sigaltstack g_oldsigaltstack;
 static struct sigaction g_oldcrashacts[8];
+extern const unsigned char __oncrash_thunks[8][11];
 
 static void InstallCrashHandlers(int extraflags) {
   int e;
   size_t i;
   struct sigaction sa;
   bzero(&sa, sizeof(sa));
-  sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
   sigfillset(&sa.sa_mask);
+  sa.sa_flags = SA_SIGINFO | SA_NODEFER | extraflags;
   for (i = 0; i < ARRAYLEN(kCrashSigs); ++i) {
     sigdelset(&sa.sa_mask, kCrashSigs[i]);
   }
@@ -81,11 +82,6 @@ relegated void RestoreDefaultCrashSignalHandlers(void) {
   strace_enabled(+1);
 }
 
-static void FreeSigAltStack(void *p) {
-  sigaltstack(&g_oldsigaltstack, 0);
-  munmap(p, GetStackSize());
-}
-
 /**
  * Installs crash signal handlers.
  *
@@ -102,7 +98,6 @@ static void FreeSigAltStack(void *p) {
  * useful, for example, if a program is caught in an infinite loop.
  */
 void ShowCrashReports(void) {
-  char *sp;
   struct sigaltstack ss;
   _wantcrashreports = true;
   /* <SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
@@ -116,19 +111,12 @@ void ShowCrashReports(void) {
   kCrashSigs[7] = SIGURG;  /* placeholder */
   /* </SYNC-LIST>: showcrashreports.c, oncrashthunks.S, oncrash.c */
   if (!IsWindows()) {
-    bzero(&ss, sizeof(ss));
     ss.ss_flags = 0;
     ss.ss_size = GetStackSize();
     // FreeBSD sigaltstack() will EFAULT if we use MAP_STACK here
     // OpenBSD sigaltstack() auto-applies MAP_STACK to the memory
-    if ((sp = _mapanon(GetStackSize()))) {
-      ss.ss_sp = sp;
-      if (!sigaltstack(&ss, &g_oldsigaltstack)) {
-        __cxa_atexit(FreeSigAltStack, ss.ss_sp, 0);
-      } else {
-        munmap(ss.ss_sp, GetStackSize());
-      }
-    }
+    _npassert((ss.ss_sp = _mapanon(GetStackSize())));
+    _npassert(!sigaltstack(&ss, 0));
     InstallCrashHandlers(SA_ONSTACK);
   } else {
     InstallCrashHandlers(0);

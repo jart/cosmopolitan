@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -55,6 +56,8 @@
  * @return fds[𝑖].revents is always zero initializaed and then will
  *     be populated with POLL{IN,OUT,PRI,HUP,ERR,NVAL} if something
  *     was determined about the file descriptor
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
@@ -64,6 +67,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
   int rc;
   size_t n;
   uint64_t millis;
+  BEGIN_CANCELLATION_POINT;
 
   if (IsAsan() && (__builtin_mul_overflow(nfds, sizeof(struct pollfd), &n) ||
                    !__asan_is_valid(fds, n))) {
@@ -79,6 +83,7 @@ int poll(struct pollfd *fds, size_t nfds, int timeout_ms) {
     rc = sys_poll_nt(fds, nfds, &millis, 0);
   }
 
+  END_CANCELLATION_POINT;
   STRACE("poll(%s, %'zu, %'d) → %d% lm", DescribePollFds(rc, fds, nfds), nfds,
          timeout_ms, rc);
   return rc;

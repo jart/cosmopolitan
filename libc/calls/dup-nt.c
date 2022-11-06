@@ -31,13 +31,11 @@
 // Implements dup(), dup2(), dup3(), and F_DUPFD for Windows.
 textwindows int sys_dup_nt(int oldfd, int newfd, int flags, int start) {
   int64_t rc, proc, handle;
-  _unassert(oldfd >= 0);
-  _unassert(newfd >= -1);
   _unassert(!(flags & ~O_CLOEXEC));
 
   __fds_lock();
 
-  if (oldfd >= g_fds.n ||
+  if (!__isfdopen(oldfd) || newfd < -1 ||
       (g_fds.p[oldfd].kind != kFdFile && g_fds.p[oldfd].kind != kFdSocket &&
        g_fds.p[oldfd].kind != kFdConsole)) {
     __fds_unlock();

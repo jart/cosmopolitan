@@ -19,9 +19,22 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
+#include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/sicode.h"
+
+// OpenBSD has an optional `tib` parameter for extra safety
+int __tkill(int tid, int sig, void *tib) {
+  int rc;
+  if (!IsWindows() && !IsMetal()) {
+    rc = sys_tkill(tid, sig, tib);
+  } else {
+    rc = __sig_add(tid, sig, SI_TKILL);
+  }
+  STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
+  return rc;
+}
 
 /**
  * Kills thread.
@@ -29,19 +42,12 @@
  * @param tid is thread id
  * @param sig does nothing on xnu
  * @return 0 on success, or -1 w/ errno
- * @raise ESRCH if `tid` was valid but no such thread existed
  * @raise EAGAIN if `RLIMIT_SIGPENDING` was exceeded
- * @raise EINVAL if `tid` or `sig` was invalid
+ * @raise EINVAL if `tid` or `sig` were invalid
+ * @raise ESRCH if no such `tid` existed
  * @raise EPERM if permission was denied
  * @asyncsignalsafe
  */
 int tkill(int tid, int sig) {
-  int rc;
-  if (!IsWindows() && !IsMetal()) {
-    rc = sys_tkill(tid, sig, 0);
-  } else {
-    rc = __sig_add(tid, sig, SI_TKILL);
-  }
-  STRACE("tkill(%d, %G) → %d% m", tid, sig, rc);
-  return rc;
+  return __tkill(tid, sig, 0);
 }

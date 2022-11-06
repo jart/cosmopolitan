@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
@@ -33,13 +34,17 @@
  *
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
+ * @cancellationpoint
  */
 errno_t _wait0(const atomic_int *ctid) {
-  int x, rc;
+  int x, rc = 0;
+  BEGIN_CANCELLATION_POINT;
   while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
     if (nsync_futex_wait_(ctid, x, !IsWindows(), 0) == -ECANCELED) {
-      return ECANCELED;
+      rc = ECANCELED;
+      break;
     }
   }
-  return 0;
+  END_CANCELLATION_POINT;
+  return rc;
 }

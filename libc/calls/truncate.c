@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/syscall-nt.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
@@ -46,6 +47,7 @@
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `length` is negative
  * @raise EINTR if signal was delivered instead
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EFBIG or EINVAL if `length` is too huge
  * @raise EFAULT if `path` points to invalid memory
  * @raise ENOTSUP if `path` is a zip filesystem path
@@ -65,6 +67,8 @@
 int truncate(const char *path, int64_t length) {
   int rc;
   struct ZiposUri zipname;
+  BEGIN_CANCELLATION_POINT;
+
   if (IsMetal()) {
     rc = enosys();
   } else if (!path || (IsAsan() && !__asan_is_valid_str(path))) {
@@ -80,6 +84,8 @@ int truncate(const char *path, int64_t length) {
   } else {
     rc = sys_truncate_nt(path, length);
   }
+
+  END_CANCELLATION_POINT;
   STRACE("truncate(%#s, %'ld) → %d% m", path, length, rc);
   return rc;
 }

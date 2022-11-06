@@ -33,11 +33,13 @@
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/limits.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
@@ -1431,8 +1433,14 @@ err:
  * @return epoll file descriptor, or -1 on failure
  */
 int epoll_create(int size) {
-  if (size <= 0) return einval();
-  return epoll_create1(0);
+  int rc;
+  if (size <= 0) {
+    rc = einval();
+  } else {
+    rc = epoll_create1(0);
+  }
+  STRACE("epoll_create(%d) → %d% m", size, rc);
+  return rc;
 }
 
 /**
@@ -1443,13 +1451,16 @@ int epoll_create(int size) {
  * @return epoll file descriptor, or -1 on failure
  */
 int epoll_create1(int flags) {
-  int fd;
-  if (flags & ~O_CLOEXEC) return einval();
-  if (!IsWindows()) {
-    return __fixupnewfd(sys_epoll_create(1337), flags);
+  int rc;
+  if (flags & ~O_CLOEXEC) {
+    rc = einval();
+  } else if (!IsWindows()) {
+    rc = __fixupnewfd(sys_epoll_create(1337), flags);
   } else {
-    return sys_epoll_create1_nt(flags);
+    rc = sys_epoll_create1_nt(flags);
   }
+  STRACE("epoll_create1(%#x) → %d% m", flags, rc);
+  return rc;
 }
 
 /**
@@ -1466,30 +1477,33 @@ int epoll_create1(int flags) {
  * @param fd is file descriptor to monitor
  * @param ev is ignored if op is EPOLL_CTL_DEL
  * @param ev->events can have these flags:
- *     - EPOLLIN: trigger on fd readable
- *     - EPOLLOUT: trigger on fd writeable
- *     - EPOLLERR: trigger on fd error (superfluous: always reported)
- *     - EPOLLHUP: trigger on fd remote hangup (superfluous: always reported)
- *     - EPOLLPRI: trigger on fd exceptional conditions, e.g. oob
- *     - EPOLLONESHOT: report event(s) only once
- *     - EPOLLEXCLUSIVE: not supported on windows
- *     - EPOLLWAKEUP: not supported on windows
- *     - EPOLLET: edge triggered mode (not supported on windows)
- *     - EPOLLRDNORM
- *     - EPOLLRDBAND
- *     - EPOLLWRNORM
- *     - EPOLLWRBAND
- *     - EPOLLRDHUP
- *     - EPOLLMSG
+ *     - `EPOLLIN`: trigger on fd readable
+ *     - `EPOLLOUT`: trigger on fd writeable
+ *     - `EPOLLERR`: trigger on fd error (superfluous: always reported)
+ *     - `EPOLLHUP`: trigger on fd remote hangup (superfluous: always reported)
+ *     - `EPOLLPRI`: trigger on fd exceptional conditions, e.g. oob
+ *     - `EPOLLONESHOT`: report event(s) only once
+ *     - `EPOLLEXCLUSIVE`: not supported on windows
+ *     - `EPOLLWAKEUP`: not supported on windows
+ *     - `EPOLLET`: edge triggered mode (not supported on windows)
+ *     - `EPOLLRDNORM`
+ *     - `EPOLLRDBAND`
+ *     - `EPOLLWRNORM`
+ *     - `EPOLLWRBAND`
+ *     - `EPOLLRDHUP`
+ *     - `EPOLLMSG`
  * @error ENOTSOCK on Windows if fd isn't a socket :(
  * @return 0 on success, or -1 w/ errno
  */
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
+  int rc;
   if (!IsWindows()) {
-    return sys_epoll_ctl(epfd, op, fd, ev);
+    rc = sys_epoll_ctl(epfd, op, fd, ev);
   } else {
-    return sys_epoll_ctl_nt(epfd, op, fd, ev);
+    rc = sys_epoll_ctl_nt(epfd, op, fd, ev);
   }
+  STRACE("epoll_ctl(%d, %d, %d, %p) → %d% m", epfd, op, fd, ev, rc);
+  return rc;
 }
 
 /**
@@ -1504,9 +1518,15 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev) {
  */
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
                int timeoutms) {
+  int rc;
+  BEGIN_CANCELLATION_POINT;
   if (!IsWindows()) {
-    return sys_epoll_wait(epfd, events, maxevents, timeoutms);
+    rc = sys_epoll_wait(epfd, events, maxevents, timeoutms);
   } else {
-    return sys_epoll_wait_nt(epfd, events, maxevents, timeoutms);
+    rc = sys_epoll_wait_nt(epfd, events, maxevents, timeoutms);
   }
+  END_CANCELLATION_POINT;
+  STRACE("epoll_wait(%d, %p, %d, %d) → %d% m", epfd, events, maxevents,
+         timeoutms, rc);
+  return rc;
 }

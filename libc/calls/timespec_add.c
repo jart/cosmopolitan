@@ -16,26 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/runtime/fenv.h"
+#include "libc/calls/struct/timespec.h"
 
-/* TODO: implement these functions */
-
-int feclearexcept(int mask) {
-  return 0;
-}
-
-int fegetenv(fenv_t *envp) {
-  return 0;
-}
-
-int feraiseexcept(int mask) {
-  return 0;
-}
-
-int fetestexcept(int mask) {
-  return 0;
-}
-
-int fesetenv(const fenv_t *envp) {
-  return 0;
+/**
+ * Adds two nanosecond timestamps.
+ */
+struct timespec timespec_add(struct timespec x, struct timespec y) {
+  x.tv_sec += y.tv_sec;
+  x.tv_nsec += y.tv_nsec;
+  if (x.tv_nsec >= 1000000000) {
+    x.tv_nsec -= 1000000000;
+    x.tv_sec += 1;
+  }
+  return x;
 }

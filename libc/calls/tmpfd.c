@@ -62,7 +62,10 @@
  * other platforms.
  *
  * @return file descriptor on success, or -1 w/ errno
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @see tmpfile() for stdio version
+ * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
  * @vforksafe

@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/asan.internal.h"
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/state.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timespec.internal.h"
@@ -55,8 +56,8 @@
  *
  *     struct timespec rel, now, abs;
  *     clock_gettime(CLOCK_REALTIME, &now);
- *     rel = _timespec_frommillis(100);
- *     abs = _timespec_add(now, rel);
+ *     rel = timespec_frommillis(100);
+ *     abs = timespec_add(now, rel);
  *     while (clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &abs, 0));
  *
  * will accurately spin on `EINTR` errors. That way you're not impeding
@@ -74,6 +75,7 @@
  *     if flags is `TIMER_ABSTIME` then `rem` is ignored
  * @return 0 on success, or errno on error
  * @raise EINTR when a signal got delivered while we were waiting
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise ENOTSUP if `clock` is known but we can't use it here
  * @raise EFAULT if `req` or null or bad memory was passed
  * @raise EINVAL if `clock` is unknown to current platform
@@ -87,6 +89,7 @@
 errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
                         struct timespec *rem) {
   int rc, e = errno;
+  BEGIN_CANCELLATION_POINT;
 
   if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
                             (rem && !__asan_is_valid_timespec(rem))))) {
@@ -112,6 +115,8 @@ errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
     rc = errno;
     errno = e;
   }
+
+  END_CANCELLATION_POINT;
 
 #if SYSDEBUG
   if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
 #include "libc/dce.h"
@@ -45,6 +46,8 @@
  * This system call is supported on all platforms. It's like select()
  * except that it atomically changes the sigprocmask() during the op.
  *
+ * @raise ECANCELED if thread was cancelled in masked mode
+ * @raise EINTR if signal was delivered
  * @cancellationpoint
  * @asyncsignalsafe
  * @threadsafe
@@ -60,6 +63,8 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
     const sigset_t *s;
     size_t n;
   } ss;
+  BEGIN_CANCELLATION_POINT;
+
   if (nfds < 0) {
     rc = einval();
   } else if (IsAsan() &&
@@ -91,6 +96,8 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
     }
     rc = sys_select_nt(nfds, readfds, writefds, exceptfds, tvp, sigmask);
   }
+
+  END_CANCELLATION_POINT;
   POLLTRACE("pselect(%d, %p, %p, %p, %s, %s) → %d% m", nfds, readfds, writefds,
             exceptfds, DescribeTimeval(0, timeout), DescribeSigset(0, sigmask),
             rc);

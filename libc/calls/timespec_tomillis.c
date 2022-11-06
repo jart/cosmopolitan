@@ -16,23 +16,40 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/errno.h"
-#include "libc/sysv/consts/clock.h"
+#include "libc/limits.h"
 
 /**
- * Sleeps for specified delay.
+ * Reduces `ts` from 1e-9 to 1e-3 granularity w/ ceil rounding.
  *
- * @return unslept time which may be non-zero if the call was interrupted
+ * This function uses ceiling rounding. For example, if `ts` is one
+ * nanosecond, then one millisecond will be returned. Ceil rounding
+ * is needed by many interfaces, e.g. setitimer(), because the zero
+ * timestamp has a special meaning.
+ *
+ * This function also detects overflow in which case `INT64_MAX` or
+ * `INT64_MIN` may be returned. The `errno` variable isn't changed.
+ *
+ * @return 64-bit scalar milliseconds since epoch
  */
-struct timespec _timespec_sleep(struct timespec delay) {
-  int rc;
-  struct timespec remain;
-  if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
-    return (struct timespec){0};
+int64_t timespec_tomillis(struct timespec ts) {
+  int64_t ms;
+  // reduce precision from nanos to millis
+  if (ts.tv_nsec <= 999000000) {
+    ts.tv_nsec = (ts.tv_nsec + 999999) / 1000000;
   } else {
-    _npassert(rc == EINTR || rc == ECANCELED);
-    return remain;
+    ts.tv_nsec = 0;
+    if (ts.tv_sec < INT64_MAX) {
+      ts.tv_sec += 1;
+    }
+  }
+  // convert to scalar result
+  if (!__builtin_mul_overflow(ts.tv_sec, 1000ul, &ms) &&
+      !__builtin_add_overflow(ms, ts.tv_nsec, &ms)) {
+    return ms;
+  } else if (ts.tv_sec < 0) {
+    return INT64_MIN;
+  } else {
+    return INT64_MAX;
   }
 }

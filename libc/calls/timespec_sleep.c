@@ -16,19 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
+#include "libc/str/str.h"
+#include "libc/sysv/consts/clock.h"
 
 /**
- * Returns true if timespec `x` is greater than `y`.
+ * Sleeps for specified delay.
+ *
+ * @return unslept time which may be non-zero if the call was interrupted
  */
-bool _timespec_gt(struct timespec x, struct timespec y) {
-  if (x.tv_sec > y.tv_sec) {
-    return true;
+struct timespec timespec_sleep(struct timespec delay) {
+  errno_t rc;
+  struct timespec remain;
+  BLOCK_CANCELLATIONS;
+  bzero(&remain, sizeof(remain));
+  if ((rc = clock_nanosleep(CLOCK_REALTIME, 0, &delay, &remain))) {
+    _npassert(rc == EINTR);
   }
-  if (x.tv_sec == y.tv_sec) {
-    if (x.tv_nsec > y.tv_nsec) {
-      return true;
-    }
-  }
-  return false;
+  ALLOW_CANCELLATIONS;
+  return remain;
 }

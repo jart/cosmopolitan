@@ -373,7 +373,7 @@ ssize_t Write(int fd, const char *s) {
 
 // turns relative timeout into an absolute timeout
 struct timespec WaitFor(int millis) {
-  return _timespec_add(_timespec_real(), _timespec_frommillis(millis));
+  return timespec_add(timespec_real(), timespec_frommillis(millis));
 }
 
 // helper functions for check macro implementation
@@ -478,7 +478,7 @@ char *FormatUnixHttpDateTime(char *s, int64_t t) {
 void UpdateNow(void) {
   int64_t secs;
   struct tm tm;
-  g_nowish.ts = _timespec_real();
+  g_nowish.ts = timespec_real();
   secs = g_nowish.ts.tv_sec;
   gmtime_r(&secs, &tm);
   //!//!//!//!//!//!//!//!//!//!//!//!//!/
@@ -703,7 +703,7 @@ void ServeStatusz(int client, char *outbuf) {
   char *p;
   struct rusage ru;
   struct timespec now;
-  now = _timespec_real();
+  now = timespec_real();
   p = outbuf;
   p = stpcpy(outbuf, "HTTP/1.1 200 OK\r\n"
                      "Content-Type: text/plain\r\n"
@@ -711,7 +711,7 @@ void ServeStatusz(int client, char *outbuf) {
                      "Connection: close\r\n"
                      "\r\n");
   p = Statusz(p, "qps",
-              g_messages / MAX(1, _timespec_sub(now, g_started).tv_sec));
+              g_messages / MAX(1, timespec_sub(now, g_started).tv_sec));
   p = Statusz(p, "started", g_started.tv_sec);
   p = Statusz(p, "now", now.tv_sec);
   p = Statusz(p, "messages", g_messages);
@@ -859,7 +859,7 @@ void *HttpWorker(void *arg) {
       AllowSigusr1();
       DestroyHttpMessage(msg);
       InitHttpMessage(msg, kHttpRequest);
-      g_worker[id].startread = _timespec_real();
+      g_worker[id].startread = timespec_real();
       if ((got = read(client.sock, inbuf, INBUF_SIZE)) <= 0) {
         ++g_readfails;
         break;
@@ -1079,10 +1079,9 @@ void *HttpWorker(void *arg) {
         if (ipv6) goto Ipv6Warning;
         struct Claim v = {.ip = ip, .created = g_nowish.ts.tv_sec};
         if (GetNick(inbuf, msg, &v)) {
-          if (AddClaim(
-                  &g_claims, &v,
-                  _timespec_add(_timespec_real(),
-                                _timespec_frommillis(CLAIM_DEADLINE_MS)))) {
+          if (AddClaim(&g_claims, &v,
+                       timespec_add(timespec_real(),
+                                    timespec_frommillis(CLAIM_DEADLINE_MS)))) {
             ++g_claimsenqueued;
             DEBUG("%s claimed by %s\n", ipbuf, v.name);
             if (HasHeader(kHttpAccept) &&
@@ -1298,7 +1297,7 @@ bool ReloadAsset(struct Asset *a) {
   struct Data gzip = {0};
   CHECK_SYS((fd = open(a->path, O_RDONLY)));
   CHECK_SYS(fstat(fd, &st));
-  if (_timespec_gt(st.st_mtim, a->mtim)) {
+  if (timespec_cmp(st.st_mtim, a->mtim) > 0) {
     FormatUnixHttpDateTime(lastmodified, st.st_mtim.tv_sec);
     CHECK_MEM((data.p = malloc(st.st_size)));
     CHECK_SYS((rc = read(fd, data.p, st.st_size)));
@@ -1439,7 +1438,7 @@ bool GenerateScore(struct Asset *out, long secs, long cash) {
   DEBUG("GenerateScore %ld\n", secs);
   a.type = "application/json";
   a.cash = cash;
-  a.mtim = _timespec_real();
+  a.mtim = timespec_real();
   FormatUnixHttpDateTime(a.lastmodified, a.mtim.tv_sec);
   CHECK_SYS(appends(&a.data.p, "{\n"));
   CHECK_SYS(appendf(&a.data.p, "\"now\":[%ld,%ld],\n", a.mtim.tv_sec,
@@ -1610,7 +1609,7 @@ StartOver:
                      "LIMIT 50"));
   do {
     // regenerate json
-    t.mtim = _timespec_real();
+    t.mtim = timespec_real();
     FormatUnixHttpDateTime(t.lastmodified, t.mtim.tv_sec);
     CHECK_SYS(appends(&t.data.p, "{\n"));
     CHECK_SYS(appendf(&t.data.p, "\"now\":[%ld,%ld],\n", t.mtim.tv_sec,
@@ -1740,7 +1739,7 @@ void *NowWorker(void *arg) {
   UpdateNow();
   OnlyRunOnCpu(0);
   nsync_counter_add(g_ready, -1);  // #8
-  for (struct timespec ts = {_timespec_real().tv_sec};; ++ts.tv_sec) {
+  for (struct timespec ts = {timespec_real().tv_sec};; ++ts.tv_sec) {
     if (!nsync_note_wait(g_shutdown[1], ts)) {
       UpdateNow();
     } else {
@@ -1758,8 +1757,8 @@ void *ReplenishWorker(void *arg) {
   LOG("%P Replenisher started\n");
   UpdateNow();
   OnlyRunOnCpu(0);
-  for (struct timespec ts = _timespec_real();;
-       ts = _timespec_add(ts, _timespec_frommillis(TB_INTERVAL))) {
+  for (struct timespec ts = timespec_real();;
+       ts = timespec_add(ts, timespec_frommillis(TB_INTERVAL))) {
     if (!nsync_note_wait(g_shutdown[1], ts)) {
       ReplenishTokens(g_tok.w, TB_WORDS);
     } else {
@@ -1780,12 +1779,12 @@ void Meltdown(void) {
   ++g_meltdowns;
   LOG("Panicking because %d out of %d workers is connected\n", g_connections,
       g_workers);
-  now = _timespec_real();
+  now = timespec_real();
   for (marks = i = 0; i < g_workers; ++i) {
     if (g_worker[i].connected &&
         (g_worker[i].msgcount > PANIC_MSGS ||
-         _timespec_gte(_timespec_sub(now, g_worker[i].startread),
-                       _timespec_frommillis(MELTALIVE_MS)))) {
+         timespec_cmp(timespec_sub(now, g_worker[i].startread),
+                      timespec_frommillis(MELTALIVE_MS)) >= 0)) {
       pthread_kill(g_worker[i].th, SIGUSR1);
       ++marks;
     }
@@ -1884,7 +1883,7 @@ int main(int argc, char *argv[]) {
   memset(g_tok.b, 127, TB_BYTES);
 
   // server lifecycle locks
-  g_started = _timespec_real();
+  g_started = timespec_real();
   for (int i = 0; i < ARRAYLEN(g_shutdown); ++i) {
     g_shutdown[i] = nsync_note_new(0, nsync_time_no_deadline);
   }

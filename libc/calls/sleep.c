@@ -16,7 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
+#include "libc/errno.h"
 #include "libc/limits.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/time/time.h"
@@ -27,16 +29,20 @@
  * @return 0 if the full time elapsed, otherwise we assume an interrupt
  *     was delivered, in which case the errno condition is ignored, and
  *     this function shall return the number of unslept seconds rounded
- *     using the ceiling function
+ *     using the ceiling function, and finally `-1u` may be returned if
+ *     thread was cancelled with `PTHREAD_CANCEL_MASKED` in play
  * @see clock_nanosleep()
  * @cancellationpoint
  * @asyncsignalsafe
  * @norestart
  */
 unsigned sleep(unsigned seconds) {
+  errno_t rc;
   unsigned unslept;
   struct timespec tv = {seconds};
-  if (!clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv)) return 0;
+  if (!(rc = clock_nanosleep(CLOCK_REALTIME, 0, &tv, &tv))) return 0;
+  if (rc == ECANCELED) return -1u;
+  _npassert(rc == EINTR);
   unslept = tv.tv_sec;
   if (tv.tv_nsec && unslept < UINT_MAX) {
     ++unslept;

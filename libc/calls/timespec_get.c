@@ -17,24 +17,21 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/struct/timespec.h"
-#include "libc/limits.h"
+#include "libc/sysv/consts/clock.h"
+#include "libc/time/time.h"
 
 /**
- * Converts timespec to scalar.
+ * Returns high-precision timestamp, the C11 way.
  *
- * This function will detect overflow in which case `INT64_MAX` or
- * `INT64_MIN` may be returned. The `errno` variable isn't changed.
- *
- * @return 64-bit integer holding nanoseconds since epoch
+ * @param ts receives `CLOCK_REALTIME` timestamp
+ * @param base must be `TIME_UTC`
+ * @return `base` on success, or `0` on failure
+ * @see timespec_real()
  */
-int64_t _timespec_tonanos(struct timespec x) {
-  int64_t ns;
-  if (!__builtin_mul_overflow(x.tv_sec, 1000000000ul, &ns) &&
-      !__builtin_add_overflow(ns, x.tv_nsec, &ns)) {
-    return ns;
-  } else if (x.tv_sec < 0) {
-    return INT64_MIN;
+int timespec_get(struct timespec *ts, int base) {
+  if (base == TIME_UTC && !clock_gettime(CLOCK_REALTIME, ts)) {
+    return base;
   } else {
-    return INT64_MAX;
+    return 0;
   }
 }

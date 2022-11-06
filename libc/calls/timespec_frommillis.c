@@ -16,19 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timeval.h"
+#include "libc/calls/struct/timespec.h"
 
 /**
- * Returns true if timeval `x` is greater than `y`.
+ * Converts timespec interval from milliseconds.
  */
-bool _timeval_gt(struct timeval x, struct timeval y) {
-  if (x.tv_sec > y.tv_sec) {
-    return true;
-  }
-  if (x.tv_sec == y.tv_sec) {
-    if (x.tv_usec > y.tv_usec) {
-      return true;
-    }
-  }
-  return false;
+struct timespec timespec_frommillis(int64_t x) {
+  struct timespec ts;
+  ts.tv_sec = x / 1000;
+  ts.tv_nsec = x % 1000 * 1000000;
+  return ts;
 }

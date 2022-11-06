@@ -57,7 +57,7 @@ BENCH(clock_gettime, bench) {
   EZBENCH2("nowl", donothing, nowl());
   EZBENCH2("rdtsc", donothing, rdtsc());
   EZBENCH2("gettimeofday", donothing, gettimeofday(&tv, 0));
-  EZBENCH2("_timespec_real", donothing, _timespec_real());
+  EZBENCH2("timespec_real", donothing, timespec_real());
   EZBENCH2("clock_gettime 0", donothing,
            clock_gettime(CLOCK_REALTIME_FAST, &ts));
   EZBENCH2("clock_gettime 1", donothing,

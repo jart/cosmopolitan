@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/kmalloc.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
@@ -65,8 +66,14 @@ void _pthread_onfork_parent(void) {
 }
 
 void _pthread_onfork_child(void) {
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
   pthread_mutexattr_t attr;
   extern pthread_mutex_t __mmi_lock_obj;
+  tib = __get_tls();
+  pt = (struct PosixThread *)tib->tib_pthread;
+  atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
+  pt->tid = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);

@@ -16,41 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/limits.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Reduces `ts` from 1e-9 to 1e-6 granularity w/ ceil rounding.
- *
- * This function uses ceiling rounding. For example, if `ts` is one
- * nanosecond, then one microsecond will be returned. Ceil rounding
- * is needed by many interfaces, e.g. setitimer(), because the zero
- * timestamp has a special meaning.
- *
- * This function also detects overflow in which case `INT64_MAX` or
- * `INT64_MIN` may be returned. The `errno` variable isn't changed.
- *
- * @return 64-bit scalar holding microseconds since epoch
- * @see _timespec_totimeval()
+ * Coerces `tv` from 1e-6 to 1e-9 granularity.
  */
-int64_t _timespec_tomicros(struct timespec ts) {
-  int64_t us;
-  // reduce precision from nanos to micros
-  if (ts.tv_nsec <= 999999000) {
-    ts.tv_nsec = (ts.tv_nsec + 999) / 1000;
-  } else {
-    ts.tv_nsec = 0;
-    if (ts.tv_sec < INT64_MAX) {
-      ts.tv_sec += 1;
-    }
-  }
-  // convert to scalar result
-  if (!__builtin_mul_overflow(ts.tv_sec, 1000000ul, &us) &&
-      !__builtin_add_overflow(us, ts.tv_nsec, &us)) {
-    return us;
-  } else if (ts.tv_sec < 0) {
-    return INT64_MIN;
-  } else {
-    return INT64_MAX;
-  }
+struct timespec timeval_totimespec(struct timeval tv) {
+  return (struct timespec){tv.tv_sec, tv.tv_usec * 1000};
 }

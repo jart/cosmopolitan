@@ -16,19 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/sysv/consts/clock.h"
 
 /**
- * Returns current monotonic time.
+ * Compares nanosecond timestamps.
  *
- * This function uses a `CLOCK_MONOTONIC` clock and never fails.
- *
- * @see _timespec_real()
+ * @return 0 if equal, -1 if `a < b`, or +1 if `a > b`
  */
-struct timespec _timespec_mono(void) {
-  struct timespec ts;
-  _npassert(!clock_gettime(CLOCK_MONOTONIC_FAST, &ts));
-  return ts;
+int timespec_cmp(struct timespec a, struct timespec b) {
+  int cmp;
+  if (!(cmp = (a.tv_sec > b.tv_sec) - (a.tv_sec < b.tv_sec))) {
+    cmp = (a.tv_nsec > b.tv_nsec) - (a.tv_nsec < b.tv_nsec);
+  }
+  return cmp;
 }

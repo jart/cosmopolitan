@@ -28,6 +28,7 @@
  *     time when -1 w/ `EINTR` is returned otherwise `rem` is undefined
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `req->tv_nsec ∉ [0,1000000000)`
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR if a signal was delivered and `rem` is updated
  * @raise EFAULT if `req` is NULL or `req` / `rem` is a bad pointer
  * @raise ENOSYS on bare metal

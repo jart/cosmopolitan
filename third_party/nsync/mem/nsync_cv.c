@@ -15,6 +15,7 @@
 │ See the License for the specific language governing permissions and          │
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/cp.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/atomic.internal.h"
@@ -202,6 +203,7 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 	int outcome = 0;
 	waiter *w;
 	IGNORE_RACES_START ();
+	BEGIN_CANCELLATION_POINT;
 	w = nsync_waiter_new_ ();
 	pthread_cleanup_push((void *)nsync_waiter_free_, w);
 	ATM_STORE (&w->nw.waiting, 1);
@@ -315,6 +317,7 @@ int nsync_cv_wait_with_deadline_generic (nsync_cv *pcv, void *pmu,
 		}
 	}
 	pthread_cleanup_pop(0);
+	END_CANCELLATION_POINT;
 	IGNORE_RACES_END ();
 	return (outcome);
 }
@@ -444,9 +447,9 @@ void nsync_cv_broadcast (nsync_cv *pcv) {
 }
 
 /* Wait with deadline, using an nsync_mu. */
-int nsync_cv_wait_with_deadline (nsync_cv *pcv, nsync_mu *pmu,
-				 nsync_time abs_deadline,
-				 nsync_note cancel_note) {
+errno_t nsync_cv_wait_with_deadline (nsync_cv *pcv, nsync_mu *pmu,
+				     nsync_time abs_deadline,
+				     nsync_note cancel_note) {
 	return (nsync_cv_wait_with_deadline_generic (pcv, pmu, &void_mu_lock,
 						     &void_mu_unlock,
 						     abs_deadline, cancel_note));
@@ -457,9 +460,11 @@ int nsync_cv_wait_with_deadline (nsync_cv *pcv, nsync_mu *pmu,
    wakeup.  Then reacquires *pmu, and return.  The call is equivalent to a call
    to nsync_cv_wait_with_deadline() with abs_deadline==nsync_time_no_deadline, and a NULL
    cancel_note.  It should be used in a loop, as with all standard Mesa-style
-   condition variables.  See examples above.  */
-void nsync_cv_wait (nsync_cv *pcv, nsync_mu *pmu) {
-	nsync_cv_wait_with_deadline (pcv, pmu, nsync_time_no_deadline, NULL);
+   condition variables.  See examples above. Returns 0 normally, otherwise
+   ECANCELED may be returned if calling POSIX thread is cancelled only when
+   the PTHREAD_CANCEL_MASKED mode is in play. */
+errno_t nsync_cv_wait (nsync_cv *pcv, nsync_mu *pmu) {
+	return nsync_cv_wait_with_deadline (pcv, pmu, nsync_time_no_deadline, NULL);
 }
 
 static nsync_time cv_ready_time (void *v, struct nsync_waiter_s *nw) {

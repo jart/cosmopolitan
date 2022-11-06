@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,22 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/struct/timespec.h"
-#include "libc/sysv/consts/clock.h"
-#include "libc/time/time.h"
+#include "libc/calls/struct/timeval.h"
 
 /**
- * Returns high-precision timestamp, the C11 way.
- *
- * @param ts receives `CLOCK_REALTIME` timestamp
- * @param base must be `TIME_UTC`
- * @return `base` on success, or `0` on failure
- * @see _timespec_real()
+ * Adds two microsecond timestamps.
  */
-int timespec_get(struct timespec *ts, int base) {
-  if (base == TIME_UTC && !clock_gettime(CLOCK_REALTIME, ts)) {
-    return base;
-  } else {
-    return 0;
+struct timeval timeval_add(struct timeval x, struct timeval y) {
+  x.tv_sec += y.tv_sec;
+  x.tv_usec += y.tv_usec;
+  if (x.tv_usec >= 1000000) {
+    x.tv_usec -= 1000000;
+    x.tv_sec += 1;
   }
+  return x;
 }

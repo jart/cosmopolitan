@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #define ShouldUseMsabiAttribute() 1
+#include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/nt/errors.h"
@@ -34,6 +35,7 @@ privileged int64_t __winerr(void) {
   errno_t e;
   if (IsWindows()) {
     e = __dos2errno(__imp_GetLastError());
+    _npassert(e > 0);
   } else {
     e = ENOSYS;
   }

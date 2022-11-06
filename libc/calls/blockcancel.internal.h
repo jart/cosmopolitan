@@ -7,12 +7,15 @@ COSMOPOLITAN_C_START_
 #define BLOCK_CANCELLATIONS \
   do {                      \
     int _CancelState;       \
-  pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &_CancelState)
+  _CancelState = _pthread_block_cancellations()
 
-#define ALLOW_CANCELLATIONS                \
-  pthread_setcancelstate(_CancelState, 0); \
-  }                                        \
+#define ALLOW_CANCELLATIONS                   \
+  _pthread_allow_cancellations(_CancelState); \
+  }                                           \
   while (0)
+
+int _pthread_block_cancellations(void);
+void _pthread_allow_cancellations(int);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

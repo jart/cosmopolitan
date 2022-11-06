@@ -37,6 +37,7 @@
  * @raise EBADF on OpenBSD if `first` is greater than highest fd
  * @raise EINVAL if flags are bad or first is greater than last
  * @raise EMFILE if a weird race condition happens on Linux
+ * @raise ECANCELED if thread was cancelled in masked mode
  * @raise EINTR possibly on OpenBSD
  * @raise ENOMEM on Linux maybe
  */

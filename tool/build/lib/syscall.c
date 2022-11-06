@@ -259,6 +259,7 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
   void *tmp;
   ssize_t rc;
   uint64_t key;
+  bool recoverable;
   VERBOSEF("MMAP%s %012lx %,ld %#x %#x %d %#lx", GetSimulated(), virt, size,
            prot, flags, fd, offset);
   if (prot & PROT_READ) {
@@ -268,7 +269,10 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
     if (flags & 256 /* MAP_GROWSDOWN */) key |= PAGE_GROD;
     flags = XlatMapFlags(flags);
     if (fd != -1 && (fd = GetFd(m, fd)) == -1) return -1;
-    if (!(flags & MAP_FIXED)) {
+    if (flags & MAP_FIXED) {
+      recoverable = false;
+    } else {
+      recoverable = true;
       if (!virt) {
         if ((virt = FindVirtual(m, m->brk, size)) == -1) return -1;
         m->brk = virt + size;
@@ -278,7 +282,7 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
     }
     if (ReserveVirtual(m, virt, size, key) != -1) {
       if (fd != -1 && !(flags & MAP_ANONYMOUS)) {
-        /* TODO: lazy file mappings */
+        // TODO: lazy file mappings
         CHECK_NOTNULL((tmp = malloc(size)));
         for (e = errno;;) {
           rc = pread(fd, tmp, size, offset);
@@ -290,11 +294,13 @@ static int64_t OpMmap(struct Machine *m, int64_t virt, size_t size, int prot,
         VirtualRecvWrite(m, virt, tmp, size);
         free(tmp);
       }
-    } else {
+      return virt;
+    } else if (recoverable) {
       FreeVirtual(m, virt, size);
       return -1;
+    } else {
+      FATALF("unrecoverable oom with mmap(MAP_FIXED)");
     }
-    return virt;
   } else {
     return FreeVirtual(m, virt, size);
   }
@@ -1137,7 +1143,7 @@ static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
     if ((gfds = malloc(gfdssize))) {
       rc = 0;
       VirtualSendRead(m, gfds, fdsaddr, gfdssize);
-      ts1 = _timespec_mono();
+      ts1 = timespec_mono();
       for (;;) {
         for (i = 0; i < nfds; ++i) {
           fd = Read32(gfds[i].fd);
@@ -1183,8 +1189,8 @@ static int OpPoll(struct Machine *m, int64_t fdsaddr, uint64_t nfds,
             goto Finished;
           }
         } else {
-          ts2 = _timespec_mono();
-          elapsed = _timespec_tomicros(_timespec_sub(ts2, ts1));
+          ts2 = timespec_mono();
+          elapsed = timespec_tomicros(timespec_sub(ts2, ts1));
           if (elapsed >= timeout) {
             break;
           }
