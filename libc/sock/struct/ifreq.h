@@ -5,9 +5,7 @@
 COSMOPOLITAN_C_START_
 
 #define IF_NAMESIZE 16
-#ifndef IFNAMSIZ
 #define IFNAMSIZ    IF_NAMESIZE
-#endif
 
 struct ifreq {
   union {
