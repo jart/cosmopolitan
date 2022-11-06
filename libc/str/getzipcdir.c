@@ -41,6 +41,7 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
   size_t i, j;
   v8hi pk = {READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK"),
              READ16LE("PK"), READ16LE("PK"), READ16LE("PK"), READ16LE("PK")};
+  uint32_t magic;
   i = n - 4;
   asm("" : "+x"(pk));
   do {
@@ -54,11 +55,14 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
         continue;
       }
     }
-    if (READ32LE(p + i) == kZipCdir64LocatorMagic &&
+    while (magic = READ32LE(p + i),
+           magic != kZipCdir64LocatorMagic && magic != kZipCdirHdrMagic &&
+           i + 0x10000 + 0x1000 >= n) --i;
+    if (magic == kZipCdir64LocatorMagic &&
         i + kZipCdir64LocatorSize <= n &&
         IsZipCdir64(p, n, ZIP_LOCATE64_OFFSET(p + i))) {
       return p + ZIP_LOCATE64_OFFSET(p + i);
-    } else if (READ32LE(p + i) == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
+    } else if (magic == kZipCdirHdrMagic && IsZipCdir32(p, n, i)) {
       j = i;
       do {
         if (READ32LE(p + j) == kZipCdir64LocatorMagic &&
@@ -69,6 +73,6 @@ void *GetZipCdir(const uint8_t *p, size_t n) {
       } while (j-- && i - j < 128);
       return p + i;
     }
-  } while (i--);
+  } while (i-- + 0x10000 + 0x1000 >= n);
   return 0;
 }

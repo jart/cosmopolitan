@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/intrin/cmpxchg.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -28,6 +29,8 @@
 #include "libc/thread/thread.h"
 #include "libc/zip.h"
 #include "libc/zipos/zipos.internal.h"
+
+STATIC_YOINK(APE_COM_NAME);
 
 static uint64_t __zipos_get_min_offset(const uint8_t *base,
                                        const uint8_t *cdir) {

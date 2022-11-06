@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/calls/struct/metastat.internal.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -60,7 +61,14 @@ ssize_t getfiledescriptorsize(int fd) {
       rc = -1;
     }
   } else if (IsMetal()) {
-    rc = -1;
+    if (fd < 0 || fd >= g_fds.n) {
+      rc = ebadf();
+    } else if (g_fds.p[fd].kind != kFdFile) {
+      rc = eacces();
+    } else {
+      struct MetalFile *state = (struct MetalFile *)g_fds.p[fd].handle;
+      rc = state->size;
+    }
   } else if (!IsWindows()) {
     if (!__sys_fstat(fd, &st)) {
       rc = METASTAT(st, st_size);

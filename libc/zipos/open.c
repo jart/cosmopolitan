@@ -165,7 +165,7 @@ static int __zipos_load(struct Zipos *zipos, size_t cf, unsigned flags,
     minfd = 3;
     __fds_lock();
   TryAgain:
-    if (IsWindows()) {
+    if (IsWindows() || IsMetal()) {
       if ((fd = __reservefd_unlocked(-1)) != -1) {
         return __zipos_setfd(fd, h, flags, mode);
       }

@@ -629,3 +629,5 @@ str.mode_list_start:
 	.byte	PC_VIDEO_BGRX8888,32, 8,16, 8, 8, 8, 0
 	.endobj	.type_list
 .type_list_end:
+
+	.previous

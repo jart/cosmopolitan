@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/calls/metalfile.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
@@ -73,6 +74,11 @@ static inline void GetProgramExecutableNameImpl(char *p, char *e) {
       u.path16[2] = '/';
     }
     tprecode16to8(p, e - p, u.path16);
+    return;
+  }
+
+  if (IsMetal()) {
+    if (!memccpy(p, APE_COM_NAME, 0, e - p - 1)) e[-1] = 0;
     return;
   }
 
