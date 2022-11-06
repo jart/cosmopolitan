@@ -1896,6 +1896,32 @@ static int liter_conflict(lua_State *L) {
     return liter_table(L, sqlite3changeset_conflict);
 }
 
+static int liter_fk_conflicts(lua_State *L) {
+    int rc, nOut;
+    liter *litr = lsqlite_checkiter(L, 1);
+    if ((rc = sqlite3changeset_fk_conflicts(litr->itr, &nOut)) != LUA_OK) {
+        return pusherr(L, rc);
+    }
+    lua_pushinteger(L, nOut);
+    return 1;
+}
+
+static int liter_pk(lua_State *L) {
+    const char *zTab;
+    int n, rc, nCol;
+    unsigned char *abPK;
+    liter *litr = lsqlite_checkiter(L, 1);
+    if ((rc = sqlite3changeset_pk(litr->itr, &abPK, &nCol)) != LUA_OK) {
+        return pusherr(L, rc);
+    }
+    lua_createtable(L, nCol, 0);
+    for (n = 0; n < nCol; n++) {
+        lua_pushboolean(L, abPK[n]);
+        lua_rawseti(L, -2, n+1);
+    }
+    return 1;
+}
+
 /*
 ** =======================================================
 ** Rebaser functions (for session support)
@@ -2626,9 +2652,11 @@ static const luaL_Reg reblib[] = {
 };
 
 static const luaL_Reg itrlib[] = {
+    {"pk",              liter_pk                },
     {"new",             liter_new               },
     {"old",             liter_old               },
     {"conflict",        liter_conflict          },
+    {"fk_conflicts",    liter_fk_conflicts      },
 
     {"__tostring",      liter_tostring          },
     {NULL, NULL}
