@@ -135,7 +135,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   pdpt2[0] = (intptr_t)pdt2 + PAGE_V + PAGE_RW;
   pml4t[0] = (intptr_t)pdpt1 + PAGE_V + PAGE_RW;
   pml4t[256] = (intptr_t)pdpt2 + PAGE_V + PAGE_RW;
-  __map_phdrs(mm, pml4t, 1024 * 1024);
+  __map_phdrs(mm, pml4t, 1024 * 1024, 1024 * 1024 + (_end - _base));
 
   /*
    * Asks UEFI to handover control?

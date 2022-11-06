@@ -42,6 +42,8 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 
+#define INVERT(x) (BANE + PHYSICAL(x))
+
 /**
  * Allocates new page of physical memory.
  */
@@ -53,7 +55,7 @@ noasan texthead uint64_t __new_page(struct mman *mm) {
   }
   while (mm->pdp >= mm->e820[mm->pdpi].addr + mm->e820[mm->pdpi].size) {
     if (++mm->pdpi == mm->e820n) return 0;
-    mm->pdp = mm->e820[mm->pdpi].addr;
+    mm->pdp = MAX(mm->pdp, mm->e820[mm->pdpi].addr);
   }
   p = mm->pdp;
   mm->pdp += 4096;
@@ -84,7 +86,7 @@ noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
 /**
  * Sorts, rounds, and filters BIOS memory map.
  */
-static noasan textreal void __normalize_e820(struct mman *mm) {
+static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
   uint64_t a, b;
   uint64_t x, y;
   unsigned i, j, n;
@@ -107,7 +109,8 @@ static noasan textreal void __normalize_e820(struct mman *mm) {
     }
     mm->e820[j] = mm->e820[i];
   }
-  mm->pdp = MAX(0x80000, mm->e820[0].addr);
+  top = ROUNDUP(top, 4096);
+  mm->pdp = MAX(top, mm->e820[0].addr);
   mm->pdpi = 0;
   mm->e820n = n;
 }
@@ -155,7 +158,8 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
                  : "i"(offsetof(type, member)));         \
   } while (0)
 
-noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
+noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
+                                  uint64_t top) {
   export_offsetof(struct mman, pc_drive_base_table);
   export_offsetof(struct mman, pc_drive_last_sector);
   export_offsetof(struct mman, pc_drive_last_head);
@@ -170,21 +174,22 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, pc_video_framebuffer_size);
   export_offsetof(struct mman, pc_video_curs_info);
   export_offsetof(struct mman, pc_video_char_height);
-  __normalize_e820(mm);
+  __normalize_e820(mm, top);
   __invert_memory(mm, pml4t);
 }
 
 /**
  * Maps APE-defined ELF program headers into memory and clears BSS.
  */
-noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b) {
+noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
+                                 uint64_t top) {
   struct Elf64_Phdr *p;
   uint64_t i, f, v, m, *e;
   extern char ape_phdrs[] __attribute__((__weak__));
   extern char ape_phdrs_end[] __attribute__((__weak__));
-  __setup_mman(mm, pml4t);
-  for (p = (struct Elf64_Phdr *)REAL(ape_phdrs), m = 0;
-       p < (struct Elf64_Phdr *)REAL(ape_phdrs_end); ++p) {
+  __setup_mman(mm, pml4t, top);
+  for (p = (struct Elf64_Phdr *)INVERT(ape_phdrs), m = 0;
+       p < (struct Elf64_Phdr *)INVERT(ape_phdrs_end); ++p) {
     if (p->p_type == PT_LOAD || p->p_type == PT_GNU_STACK) {
       f = PAGE_RSRV | PAGE_U;
       if (p->p_flags & PF_W)

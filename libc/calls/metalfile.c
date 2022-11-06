@@ -68,7 +68,7 @@ textstartup noasan void InitializeMetalFile(void) {
                         MAP_SHARED_linux | MAP_ANONYMOUS_linux, -1, 0);
     copied_base = dm.addr;
     _npassert(copied_base != (void *)-1);
-    memcpy(copied_base, (void *)(BANE + IMAGE_BASE_REAL), size);
+    memcpy(copied_base, (void *)(BANE + IMAGE_BASE_PHYSICAL), size);
     __ape_com_base = copied_base;
     __ape_com_size = size;
   }

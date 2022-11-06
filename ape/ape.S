@@ -1147,10 +1147,10 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 
 //	Global Descriptor Table
 	.align	8
-_gdtrphy:
+_gdtrlo:
 	.short	2f-1f-1		# table byte length
-	.long	REAL(1f)	# table address (physical space)
-	.endobj	_gdtrphy,global,hidden
+	.long	REAL(1f)	# table address (base memory space)
+	.endobj	_gdtrlo,global,hidden
 _gdtr:
 	.short	2f-1f-1		# table byte length
 	.quad	1f		# table address (final virtual space)
@@ -1263,6 +1263,7 @@ longmodeloader:
 	call	lcheck
 	call	a20
 	call	e820
+	call	cpyhi
 	call	pinit
 	call	golong
 	.endfn	longmodeloader
@@ -1405,6 +1406,32 @@ a20:	cli
 5:	ret
 	.endfn	a20
 
+//	Copies program pages loaded into base memory, to extended memory.
+cpyhi:	push	%ds
+	push	%es
+	cli
+	lgdt	REAL(_gdtrlo)
+	mov	%cr0,%eax
+	or	$CR0_PE,%al
+	mov	%eax,%cr0
+	jmp	0f
+0:	pushpop	GDT_LEGACY_DATA,%ds
+	push	%ds
+	pop	%es
+	mov	$IMAGE_BASE_REAL,%esi
+	mov	$IMAGE_BASE_PHYSICAL,%edi
+	mov	$v_ape_realdwords,%ecx
+	cld
+	rep movsl %ds:(%esi),%es:(%edi)
+	and	$~CR0_PE,%al
+	mov	%eax,%cr0
+	jmp	1f
+1:	sti
+	pop	%es
+	pop	%ds
+	ret
+	.endfn	cpyhi
+
 //	Initializes long mode paging.
 pinit:	push	%ds
 	push	%es
@@ -1449,7 +1476,7 @@ golong:	cli
 	rdmsr
 	or	$EFER_LME|EFER_SCE|EFER_NXE,%eax
 	wrmsr
-	lgdt	REAL(_gdtrphy)
+	lgdt	REAL(_gdtrlo)
 	mov	%cr0,%eax
 	or	$CR0_PE|CR0_PG|CR0_MP,%eax
 	and	$~CR0_EM,%eax
@@ -1459,7 +1486,9 @@ golong:	cli
 
 //	Long mode is long.
 	.code64
-long:	xor	%eax,%eax
+long:	movabs	$BANE+PHYSICAL(0f),%rax
+	jmp	*%rax
+0:	xor	%eax,%eax
 	mov	$GDT_LONG_DATA,%al
 	mov	%eax,%ds
 	mov	%eax,%ss
@@ -1478,7 +1507,8 @@ long:	xor	%eax,%eax
 	push	%rbp
 	mov	$mm,%rdi
 	mov	%cr3,%rsi
-	mov	$IMAGE_BASE_REAL,%edx
+	mov	$IMAGE_BASE_PHYSICAL,%edx
+	lea	v_ape_realbytes(%rdx),%ecx
 	call	__map_phdrs
 	push	$0x037f
 	fldcw	(%rsp)
@@ -1609,6 +1639,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.ldsvar	_end
 	.ldsvar	_etext
 	.ldsvar	v_ape_realsectors
+	.ldsvar	v_ape_realbytes
 	.ldsvar	v_ape_highsectors
 	.ldsvar	ape_idata_ro
 	.ldsvar	ape_pad_rodata

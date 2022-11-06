@@ -566,7 +566,8 @@ SHSTUB2(ape_loader_dd_count,
 HIDDEN(v_ape_realsectors =
            MIN(0x70000 - IMAGE_BASE_REAL,
                ROUNDUP(RVA(_tdata_end), 512)) / 512);
-HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
+HIDDEN(v_ape_realbytes = v_ape_realsectors * 512);
+HIDDEN(v_ape_realdwords = v_ape_realsectors * (512 / 4));
 HIDDEN(v_ape_highsectors =
            (ROUNDUP(RVA(_tdata_end), 512) / 512) - v_ape_realsectors);
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
