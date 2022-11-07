@@ -1,2 +1,2 @@
 .include "o/libc/sysv/consts/syscon.internal.inc"
-.syscon junkerr,ELIBMAX,82,0,0,0,0,0
+.syscon junkerr,ELIBMAX,82,-1,-1,-1,-1,-1

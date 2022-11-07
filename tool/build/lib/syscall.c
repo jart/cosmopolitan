@@ -24,7 +24,6 @@
 #include "libc/calls/struct/iovec.h"
 #include "libc/calls/struct/rlimit.h"
 #include "libc/calls/struct/rusage.h"
-#include "libc/calls/struct/sigaction-linux.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.h"
 #include "libc/calls/struct/sysinfo.h"

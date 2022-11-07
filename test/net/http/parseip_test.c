@@ -17,7 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/testlib/testlib.h"
-#include "net/http/http.h"
+#include "net/http/ip.h"
 
 TEST(ParseIp, test) {
   EXPECT_EQ(-1, ParseIp("", -1));
@@ -30,6 +30,8 @@ TEST(ParseIp, test) {
   EXPECT_EQ(0x00000000, ParseIp("...", -1)); /* meh */
   EXPECT_EQ(0x80000304, ParseIp("128.0.3.4", -1));
   EXPECT_EQ(0x80000304, ParseIp("128..3.4", -1));
+  EXPECT_EQ(-1, ParseIp("4294967296", -1));
+  EXPECT_EQ(-1, ParseIp("255.255.255.256", -1));
   EXPECT_EQ(-1, ParseIp("256.255.255.255", -1));
   EXPECT_EQ(-1, ParseIp("hello", -1));
   EXPECT_EQ(-1, ParseIp("hello\177", -1));

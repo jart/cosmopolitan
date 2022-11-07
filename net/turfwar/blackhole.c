@@ -28,6 +28,7 @@
 #include "libc/sysv/consts/ex.h"
 #include "libc/sysv/consts/sock.h"
 #include "net/http/http.h"
+#include "net/http/ip.h"
 
 int main(int argc, char *argv[]) {
 

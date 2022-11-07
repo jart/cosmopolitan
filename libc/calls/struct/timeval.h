@@ -17,6 +17,8 @@ int lutimes(const char *, const struct timeval[2]);
 int utimes(const char *, const struct timeval[2]);
 
 int timeval_cmp(struct timeval, struct timeval) pureconst;
+struct timeval timeval_frommicros(int64_t) pureconst;
+struct timeval timeval_frommillis(int64_t) pureconst;
 struct timeval timeval_add(struct timeval, struct timeval) pureconst;
 struct timeval timeval_sub(struct timeval, struct timeval) pureconst;
 struct timeval timespec_totimeval(struct timespec) pureconst;

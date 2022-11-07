@@ -35,13 +35,9 @@
  * @param value is initial count of semaphore
  * @return 0 on success, or -1 w/ errno
  * @raise EINVAL if `value` exceeds `SEM_VALUE_MAX`
- * @raise EPERM on OpenBSD if `pshared` is true
  */
 int sem_init(sem_t *sem, int pshared, unsigned value) {
   if (value > SEM_VALUE_MAX) return einval();
-  // OpenBSD MAP_ANONYMOUS|MAP_SHARED memory is kind of busted.
-  // The OpenBSD implementation of sem_init() also EPERMs here.
-  if (IsOpenbsd() && pshared) return eperm();
   sem->sem_magic = SEM_MAGIC_UNNAMED;
   atomic_store_explicit(&sem->sem_value, value, memory_order_relaxed);
   sem->sem_pshared = !!pshared;

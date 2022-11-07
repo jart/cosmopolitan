@@ -25,6 +25,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+struct Cidr {
+  int64_t addr;
+  int cidr;
+};
+
+int64_t ParseIp(const char *, size_t);
+struct Cidr ParseCidr(const char *, size_t);
 bool IsDodIp(uint32_t);
 bool IsArinIp(uint32_t);
 bool IsRipeIp(uint32_t);

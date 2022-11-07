@@ -1,6 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_FREEBSD_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_UCONTEXT_FREEBSD_INTERNAL_H_
-#include "libc/calls/struct/sigaction-freebsd.internal.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
@@ -52,7 +51,7 @@ struct mcontext_freebsd {
 };
 
 struct ucontext_freebsd {
-  struct sigset_freebsd uc_sigmask;
+  uint32_t uc_sigmask[4];
   struct mcontext_freebsd uc_mcontext;
   struct ucontext_freebsd *uc_link;
   struct stack_freebsd uc_stack;

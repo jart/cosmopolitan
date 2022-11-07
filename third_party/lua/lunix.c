@@ -2847,14 +2847,6 @@ static int LuaUnixMemoryWait(lua_State *L) {
   } else {
     ts.tv_sec = luaL_checkinteger(L, 4);
     ts.tv_nsec = luaL_optinteger(L, 5, 0);
-    if (!FUTEX_TIMEOUT_IS_ABSOLUTE) {
-      now = timespec_real();
-      if (timespec_cmp(now, ts) > 0) {
-        ts = (struct timespec){0};
-      } else {
-        ts = timespec_sub(ts, now);
-      }
-    }
     deadline = &ts;
   }
   BEGIN_CANCELLATION_POINT;

@@ -22,7 +22,9 @@
 #include "libc/errno.h"
 #include "libc/fmt/fmt.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/limits.h"
+#include "libc/log/log.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -39,6 +41,23 @@ FILE *f;
 char buf[32];
 char testlib_enable_tmp_setup_teardown;
 
+void CheckForFdLeaks(void) {
+  int rc, i, l = 0, e = errno;
+  for (i = 3; i < 16; ++i) {
+    rc = fcntl(i, F_GETFL);
+    if (rc == -1) {
+      ASSERT_EQ(EBADF, errno);
+      errno = e;
+    } else {
+      kprintf("file descriptor %d leaked!\n", i);
+      ++l;
+    }
+  }
+  if (l) {
+    __die();
+  }
+}
+
 TEST(popen, command) {
   char foo[6];
   testlib_extract("/zip/echo.com", "echo.com", 0755);
@@ -46,6 +65,7 @@ TEST(popen, command) {
   ASSERT_NE(NULL, fgets(foo, sizeof(foo), f));
   ASSERT_STREQ("hello", foo);
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 TEST(popen, semicolon) {
@@ -53,6 +73,7 @@ TEST(popen, semicolon) {
   ASSERT_STREQ("hello\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("there\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 TEST(popen, singleQuotes) {
@@ -61,6 +82,7 @@ TEST(popen, singleQuotes) {
   ASSERT_STREQ("hello $there\n", fgets(buf, sizeof(buf), f));
   ASSERT_STREQ("yo\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 TEST(popen, doubleQuotes) {
@@ -68,6 +90,7 @@ TEST(popen, doubleQuotes) {
   ASSERT_NE(NULL, (f = popen("echo -l \"$hello there\"", "r")));
   ASSERT_STREQ("a b c there\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 TEST(popen, quoteless) {
@@ -77,6 +100,7 @@ TEST(popen, quoteless) {
   ASSERT_STREQ("aa b c\n", fgets(buf, sizeof(buf), f));  // mixed feelings
   ASSERT_STREQ("yo\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 TEST(popen, pipe) {
@@ -84,6 +108,7 @@ TEST(popen, pipe) {
   ASSERT_NE(NULL, (f = popen("echo hello | toupper", "r")));
   ASSERT_STREQ("HELLO\n", fgets(buf, sizeof(buf), f));
   ASSERT_EQ(0, pclose(f));
+  CheckForFdLeaks();
 }
 
 sig_atomic_t gotsig;
@@ -102,6 +127,7 @@ TEST(popen, complicated) {
   ASSERT_EQ(0, pclose(f));
   ASSERT_EQ(1, gotsig);
   signal(SIGUSR1, SIG_DFL);
+  CheckForFdLeaks();
 }
 
 void *Worker(void *arg) {
@@ -129,10 +155,10 @@ void *Worker(void *arg) {
 }
 
 TEST(popen, torture) {
-  int i, n = 8;
+  int i, n = 4;
   pthread_t *t = _gc(malloc(sizeof(pthread_t) * n));
   testlib_extract("/zip/echo.com", "echo.com", 0755);
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_create(t + i, 0, Worker, 0));
   for (i = 0; i < n; ++i) ASSERT_EQ(0, pthread_join(t[i], 0));
-  for (i = 3; i < 16; ++i) ASSERT_SYS(EBADF, -1, fcntl(i, F_GETFL));
+  CheckForFdLeaks();
 }

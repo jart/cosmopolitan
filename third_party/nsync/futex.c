@@ -28,7 +28,6 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
@@ -56,8 +55,8 @@ int sys_futex_cp (atomic_int *, int, int, const struct timespec *, int *, int);
 
 static int FUTEX_WAIT_;
 static int FUTEX_PRIVATE_FLAG_;
-static bool FUTEX_IS_SUPPORTED;
-bool FUTEX_TIMEOUT_IS_ABSOLUTE;
+static bool futex_is_supported;
+static bool futex_timeout_is_relative;
 
 __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	atomic_int x;
@@ -65,20 +64,17 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	FUTEX_WAIT_ = FUTEX_WAIT;
 
 	if (IsWindows ()) {
-		FUTEX_IS_SUPPORTED = true;
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+		futex_is_supported = true;
 		return;
 	}
 
 	if (IsFreebsd ()) {
-		FUTEX_IS_SUPPORTED = true;
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+		futex_is_supported = true;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
 		return;
 	}
 
-        if (!(FUTEX_IS_SUPPORTED = IsLinux () || IsOpenbsd ())) {
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
+        if (!(futex_is_supported = IsLinux () || IsOpenbsd ())) {
 		return;
 	}
 
@@ -98,20 +94,20 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 		    1, 0, 0, FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
 		FUTEX_WAIT_ = FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 	} else if (!IsTiny () && IsLinux () &&
 		   _futex (&x, FUTEX_WAIT_BITSET, 1, 0, 0,
 			   FUTEX_BITSET_MATCH_ANY) == -EAGAIN) {
 		FUTEX_WAIT_ = FUTEX_WAIT_BITSET;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
-		FUTEX_TIMEOUT_IS_ABSOLUTE = true;
 	} else if (IsOpenbsd () ||
 		   (!IsTiny () && IsLinux () &&
 		    !_futex_wake (&x, FUTEX_WAKE_PRIVATE, 1))) {
 		FUTEX_WAIT_ = FUTEX_WAIT;
 		FUTEX_PRIVATE_FLAG_ = FUTEX_PRIVATE_FLAG;
+		futex_timeout_is_relative = true;
 	} else {
 		FUTEX_WAIT_ = FUTEX_WAIT;
+		futex_timeout_is_relative = true;
 	}
 }
 
@@ -123,10 +119,8 @@ static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *ti
 	ts = timespec_real ();
 	if (!timeout) {
 		deadline = timespec_max;
-	} else if (FUTEX_TIMEOUT_IS_ABSOLUTE) {
-		deadline = *timeout;
 	} else {
-		deadline = timespec_add (ts, *timeout);
+		deadline = *timeout;
 	}
 
 	nanos = 100;
@@ -186,9 +180,29 @@ static int nsync_futex_wait_win32_ (atomic_int *w, int expect, char pshare, stru
 	return rc;
 }
 
-int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *timeout) {
+static struct timespec *nsync_futex_timeout_ (struct timespec *memory,
+					      const struct timespec *abstime) {
+	struct timespec now;
+	if (!abstime) {
+		return 0;
+	} else if (!futex_timeout_is_relative) {
+		*memory = *abstime;
+		return memory;
+	} else {
+		now = timespec_real ();
+		if (timespec_cmp (now, *abstime) > 0) {
+			*memory = (struct timespec){0};
+		} else {
+			*memory = timespec_sub (*abstime, now);
+		}
+		return memory;
+	}
+}
+
+int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *abstime) {
 	int e, rc, op, fop;
 	struct PosixThread *pt = 0;
+	struct timespec tsmem, *timeout;
 
 	if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 		return -EAGAIN;
@@ -199,12 +213,14 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		op |= FUTEX_PRIVATE_FLAG_;
 	}
 
+	timeout = nsync_futex_timeout_ (&tsmem, abstime);
+
 	LOCKTRACE ("futex(%t [%d], %s, %#x, %s) → ...",
 		   w, atomic_load_explicit (w, memory_order_relaxed),
 		   DescribeFutexOp (op), expect,
 		   DescribeTimespec (0, timeout));
 
-	if (FUTEX_IS_SUPPORTED) {
+	if (futex_is_supported) {
 		e = errno;
 		if (IsWindows ()) {
 			// Windows 8 futexes don't support multiple processes :(
@@ -270,7 +286,7 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 		op |= FUTEX_PRIVATE_FLAG_;
 	}
 
-	if (FUTEX_IS_SUPPORTED) {
+	if (futex_is_supported) {
 		if (IsWindows ()) {
 			if (pshare) {
 				goto Polyfill;

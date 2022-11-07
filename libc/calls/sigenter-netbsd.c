@@ -20,7 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo-meta.internal.h"
 #include "libc/calls/struct/siginfo-netbsd.internal.h"

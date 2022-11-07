@@ -29,6 +29,7 @@
 #include "libc/sysv/consts/ipproto.h"
 #include "libc/sysv/consts/sock.h"
 #include "net/http/http.h"
+#include "net/http/ip.h"
 
 /**
  * @fileoverview tcp/udp echo servers/clients

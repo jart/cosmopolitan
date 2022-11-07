@@ -33,26 +33,6 @@ static void sem_delay(int n) {
   for (i = 0; i != 1 << n; i++) donothing;
 }
 
-// TODO(jart): This should be abstracted by polyfill.
-static struct timespec *sem_timeout(struct timespec *memory,
-                                    const struct timespec *abstime) {
-  struct timespec now;
-  if (!abstime) {
-    return 0;
-  } else if (FUTEX_TIMEOUT_IS_ABSOLUTE) {
-    *memory = *abstime;
-    return memory;
-  } else {
-    now = timespec_real();
-    if (timespec_cmp(now, *abstime) > 0) {
-      *memory = (struct timespec){0};
-    } else {
-      *memory = timespec_sub(*abstime, now);
-    }
-    return memory;
-  }
-}
-
 static void sem_timedwait_cleanup(void *arg) {
   sem_t *sem = arg;
   _unassert(atomic_fetch_add_explicit(&sem->sem_waiters, -1,
@@ -95,8 +75,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime) {
 
   do {
     if (!(v = atomic_load_explicit(&sem->sem_value, memory_order_relaxed))) {
-      rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared,
-                             sem_timeout(&ts, abstime));
+      rc = nsync_futex_wait_(&sem->sem_value, v, sem->sem_pshared, abstime);
       if (rc == -EINTR || rc == -ECANCELED) {
         errno = -rc;
         rc = -1;

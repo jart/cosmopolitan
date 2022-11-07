@@ -16,7 +16,6 @@
 │ limitations under the License.                                               │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
-#include "libc/intrin/kprintf.h"
 #include "libc/str/str.h"
 #include "third_party/nsync/mu.h"
 #include "third_party/nsync/mu_wait.h"

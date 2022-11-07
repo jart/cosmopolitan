@@ -228,11 +228,13 @@ TEST(uc_sigmask, signalHandlerCanChangeSignalMaskOfTrappedThread) {
   struct sigaction oldsa;
   struct sigaction sa = {.sa_sigaction = OnSigMask, .sa_flags = SA_SIGINFO};
   sigemptyset(&want);
-  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, 0));
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &want, &got));
+  ASSERT_FALSE(sigismember(&got, SIGUSR1));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, &oldsa));
   ASSERT_SYS(0, 0, raise(SIGUSR1));
   ASSERT_TRUE(gotusr1);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, 0, &got));
+  ASSERT_TRUE(sigismember(&got, SIGUSR1));
   sigaddset(&want, SIGUSR1);
   ASSERT_STREQ(DescribeSigset(0, &want), DescribeSigset(0, &got));
   ASSERT_SYS(0, 0, sigaction(SIGUSR1, &oldsa, 0));

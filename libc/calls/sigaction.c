@@ -22,11 +22,6 @@
 #include "libc/calls/internal.h"
 #include "libc/calls/sig.internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigaction-freebsd.internal.h"
-#include "libc/calls/struct/sigaction-linux.internal.h"
-#include "libc/calls/struct/sigaction-netbsd.h"
-#include "libc/calls/struct/sigaction-openbsd.internal.h"
-#include "libc/calls/struct/sigaction-xnu.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaction.internal.h"
 #include "libc/calls/struct/siginfo.internal.h"
@@ -46,6 +41,7 @@
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
+#include "libc/sysv/consts/limits.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 #include "libc/sysv/errfuns.h"
@@ -58,110 +54,111 @@ STATIC_YOINK("strsignal");  // for kprintf()
 
 #define SA_RESTORER 0x04000000
 
-#ifndef SWITCHEROO
-#define SWITCHEROO(S1, S2, A, B, C, D)                     \
-  do {                                                     \
-    autotype((S2).A) a = (typeof((S2).A))(S1).A;           \
-    autotype((S2).B) b = (typeof((S2).B))(S1).B;           \
-    autotype((S2).C) c = (typeof((S2).C))(S1).C;           \
-    typeof((S2).D) d;                                      \
-    bzero(&d, sizeof(d));                                  \
-    memcpy(&d, &((S1).D), MIN(sizeof(d), sizeof((S1).D))); \
-    (S2).A = a;                                            \
-    (S2).B = b;                                            \
-    (S2).C = c;                                            \
-    bzero(&((S2).D), sizeof((S2).D));                      \
-    memcpy(&((S2).D), &d, MIN(sizeof(d), sizeof((S2).D))); \
-  } while (0);
-#endif
-
-union metasigaction {
-  struct sigaction cosmo;
-  struct sigaction_linux linux;
-  struct sigaction_freebsd freebsd;
-  struct sigaction_openbsd openbsd;
-  struct sigaction_netbsd netbsd;
-  struct sigaction_xnu_in xnu_in;
-  struct sigaction_xnu_out xnu_out;
-};
-
-void __sigenter_xnu(int, struct siginfo *, void *) hidden;
-void __sigenter_linux(int, struct siginfo *, void *) hidden;
-void __sigenter_netbsd(int, struct siginfo *, void *) hidden;
-void __sigenter_freebsd(int, struct siginfo *, void *) hidden;
-void __sigenter_openbsd(int, struct siginfo *, void *) hidden;
-
 static void sigaction_cosmo2native(union metasigaction *sa) {
+  void *handler;
+  uint64_t flags;
+  void *restorer;
+  uint32_t mask[4];
   if (!sa) return;
-  switch (__hostos) {
-    case _HOSTLINUX:
-      SWITCHEROO(sa->cosmo, sa->linux, sa_handler, sa_flags, sa_restorer,
-                 sa_mask);
-      break;
-    case _HOSTXNU:
-      SWITCHEROO(sa->cosmo, sa->xnu_in, sa_handler, sa_flags, sa_restorer,
-                 sa_mask);
-      break;
-    case _HOSTFREEBSD:
-      SWITCHEROO(sa->cosmo, sa->freebsd, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    case _HOSTOPENBSD:
-      SWITCHEROO(sa->cosmo, sa->openbsd, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    case _HOSTNETBSD:
-      SWITCHEROO(sa->cosmo, sa->netbsd, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    default:
-      break;
+  flags = sa->cosmo.sa_flags;
+  handler = sa->cosmo.sa_handler;
+  restorer = sa->cosmo.sa_restorer;
+  mask[0] = sa->cosmo.sa_mask.__bits[0];
+  mask[1] = sa->cosmo.sa_mask.__bits[0] >> 32;
+  mask[2] = sa->cosmo.sa_mask.__bits[1];
+  mask[3] = sa->cosmo.sa_mask.__bits[1] >> 32;
+  if (IsLinux()) {
+    sa->linux.sa_flags = flags;
+    sa->linux.sa_handler = handler;
+    sa->linux.sa_restorer = restorer;
+    sa->linux.sa_mask[0] = mask[0];
+    sa->linux.sa_mask[1] = mask[1];
+  } else if (IsXnu()) {
+    sa->xnu_in.sa_flags = flags;
+    sa->xnu_in.sa_handler = handler;
+    sa->xnu_in.sa_restorer = restorer;
+    sa->xnu_in.sa_mask[0] = mask[0];
+  } else if (IsFreebsd()) {
+    sa->freebsd.sa_flags = flags;
+    sa->freebsd.sa_handler = handler;
+    sa->freebsd.sa_mask[0] = mask[0];
+    sa->freebsd.sa_mask[1] = mask[1];
+    sa->freebsd.sa_mask[2] = mask[2];
+    sa->freebsd.sa_mask[3] = mask[3];
+  } else if (IsOpenbsd()) {
+    sa->openbsd.sa_flags = flags;
+    sa->openbsd.sa_handler = handler;
+    sa->openbsd.sa_mask[0] = mask[0];
+  } else if (IsNetbsd()) {
+    sa->netbsd.sa_flags = flags;
+    sa->netbsd.sa_handler = handler;
+    sa->netbsd.sa_mask[0] = mask[0];
+    sa->netbsd.sa_mask[1] = mask[1];
+    sa->netbsd.sa_mask[2] = mask[2];
+    sa->netbsd.sa_mask[3] = mask[3];
   }
 }
 
 static void sigaction_native2cosmo(union metasigaction *sa) {
+  void *handler;
+  uint64_t flags;
+  void *restorer = 0;
+  uint32_t mask[4] = {0};
   if (!sa) return;
-  switch (__hostos) {
-    case _HOSTLINUX:
-      SWITCHEROO(sa->linux, sa->cosmo, sa_handler, sa_flags, sa_restorer,
-                 sa_mask);
-      break;
-    case _HOSTXNU:
-      SWITCHEROO(sa->xnu_out, sa->cosmo, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    case _HOSTFREEBSD:
-      SWITCHEROO(sa->freebsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    case _HOSTOPENBSD:
-      SWITCHEROO(sa->openbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    case _HOSTNETBSD:
-      SWITCHEROO(sa->netbsd, sa->cosmo, sa_handler, sa_flags, sa_flags,
-                 sa_mask);
-      break;
-    default:
-      break;
+  if (IsLinux()) {
+    flags = sa->linux.sa_flags;
+    handler = sa->linux.sa_handler;
+    restorer = sa->linux.sa_restorer;
+    mask[0] = sa->linux.sa_mask[0];
+    mask[1] = sa->linux.sa_mask[1];
+  } else if (IsXnu()) {
+    flags = sa->xnu_out.sa_flags;
+    handler = sa->xnu_out.sa_handler;
+    mask[0] = sa->xnu_out.sa_mask[0];
+  } else if (IsFreebsd()) {
+    flags = sa->freebsd.sa_flags;
+    handler = sa->freebsd.sa_handler;
+    mask[0] = sa->freebsd.sa_mask[0];
+    mask[1] = sa->freebsd.sa_mask[1];
+    mask[2] = sa->freebsd.sa_mask[2];
+    mask[3] = sa->freebsd.sa_mask[3];
+  } else if (IsOpenbsd()) {
+    flags = sa->openbsd.sa_flags;
+    handler = sa->openbsd.sa_handler;
+    mask[0] = sa->openbsd.sa_mask[0];
+  } else if (IsNetbsd()) {
+    flags = sa->netbsd.sa_flags;
+    handler = sa->netbsd.sa_handler;
+    mask[0] = sa->netbsd.sa_mask[0];
+    mask[1] = sa->netbsd.sa_mask[1];
+    mask[2] = sa->netbsd.sa_mask[2];
+    mask[3] = sa->netbsd.sa_mask[3];
+  } else {
+    return;
   }
+  sa->cosmo.sa_flags = flags;
+  sa->cosmo.sa_handler = handler;
+  sa->cosmo.sa_restorer = restorer;
+  sa->cosmo.sa_mask.__bits[0] = mask[0] | (uint64_t)mask[1] << 32;
+  sa->cosmo.sa_mask.__bits[1] = mask[2] | (uint64_t)mask[3] << 32;
 }
 
 static int __sigaction(int sig, const struct sigaction *act,
                        struct sigaction *oldact) {
-  _Static_assert((sizeof(struct sigaction) > sizeof(struct sigaction_linux) &&
-                  sizeof(struct sigaction) > sizeof(struct sigaction_xnu_in) &&
-                  sizeof(struct sigaction) > sizeof(struct sigaction_xnu_out) &&
-                  sizeof(struct sigaction) > sizeof(struct sigaction_freebsd) &&
-                  sizeof(struct sigaction) > sizeof(struct sigaction_openbsd) &&
-                  sizeof(struct sigaction) > sizeof(struct sigaction_netbsd)),
-                 "sigaction cosmo abi needs tuning");
+  _Static_assert(
+      (sizeof(struct sigaction) >= sizeof(struct sigaction_linux) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_in) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_xnu_out) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_freebsd) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_openbsd) &&
+       sizeof(struct sigaction) >= sizeof(struct sigaction_netbsd)),
+      "sigaction cosmo abi needs tuning");
   int64_t arg4, arg5;
   int rc, rva, oldrva;
   sigaction_f sigenter;
   struct sigaction *ap, copy;
   if (IsMetal()) return enosys(); /* TODO: Signals on Metal */
-  if (!(0 < sig && sig < NSIG)) return einval();
+  if (!(1 <= sig && sig <= _NSIG)) return einval();
   if (sig == SIGKILL || sig == SIGSTOP) return einval();
   if (IsAsan() && ((act && !__asan_is_valid(act, sizeof(*act))) ||
                    (oldact && !__asan_is_valid(oldact, sizeof(*oldact))))) {
@@ -184,18 +181,23 @@ static int __sigaction(int sig, const struct sigaction *act,
     if (act) {
       memcpy(&copy, act, sizeof(copy));
       ap = &copy;
-      if (IsXnu()) {
+
+      if (IsLinux()) {
+        if (!(ap->sa_flags & SA_RESTORER)) {
+          ap->sa_flags |= SA_RESTORER;
+          ap->sa_restorer = &__restore_rt;
+        }
+        if (IsWsl1()) {
+          sigenter = __sigenter_wsl;
+        } else {
+          sigenter = ap->sa_sigaction;
+        }
+      } else if (IsXnu()) {
         ap->sa_restorer = (void *)&__sigenter_xnu;
         sigenter = __sigenter_xnu;
         // mitigate Rosetta signal handling strangeness
         // https://github.com/jart/cosmopolitan/issues/455
         ap->sa_flags |= SA_SIGINFO;
-      } else if (IsLinux()) {
-        if (!(ap->sa_flags & SA_RESTORER)) {
-          ap->sa_flags |= SA_RESTORER;
-          ap->sa_restorer = &__restore_rt;
-        }
-        sigenter = __sigenter_linux;
       } else if (IsNetbsd()) {
         sigenter = __sigenter_netbsd;
       } else if (IsFreebsd()) {

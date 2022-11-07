@@ -20,7 +20,6 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
-#include "libc/calls/struct/sigaction-freebsd.internal.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/siginfo-freebsd.internal.h"
 #include "libc/calls/struct/siginfo-meta.internal.h"
@@ -51,7 +50,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       g.uc.uc_stack.ss_sp = ctx->uc_stack.ss_sp;
       g.uc.uc_stack.ss_size = ctx->uc_stack.ss_size;
       g.uc.uc_stack.ss_flags = ctx->uc_stack.ss_flags;
-      __repmovsb(&g.uc.uc_sigmask, &ctx->uc_sigmask,
+      __repmovsb(&g.uc.uc_sigmask, ctx->uc_sigmask,
                  MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
       g.uc.uc_mcontext.r8 = ctx->uc_mcontext.mc_r8;
       g.uc.uc_mcontext.r9 = ctx->uc_mcontext.mc_r9;
@@ -82,7 +81,7 @@ privileged void __sigenter_freebsd(int sig, struct siginfo_freebsd *freebsdinfo,
       ctx->uc_stack.ss_size = g.uc.uc_stack.ss_size;
       ctx->uc_stack.ss_flags = g.uc.uc_stack.ss_flags;
       ctx->uc_flags = g.uc.uc_flags;
-      __repmovsb(&ctx->uc_sigmask, &g.uc.uc_sigmask,
+      __repmovsb(ctx->uc_sigmask, &g.uc.uc_sigmask,
                  MIN(sizeof(g.uc.uc_sigmask), sizeof(ctx->uc_sigmask)));
       ctx->uc_mcontext.mc_rdi = g.uc.uc_mcontext.rdi;
       ctx->uc_mcontext.mc_rsi = g.uc.uc_mcontext.rsi;

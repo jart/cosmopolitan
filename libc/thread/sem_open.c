@@ -209,7 +209,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
       sem = SEM_FAILED;
     } else if (~oflag & O_EXCL) {
       sem = s->sem;
-      atomic_fetch_add_explicit(&sem->sem_prefs, 1, memory_order_acquire);
+      atomic_fetch_add_explicit(&sem->sem_prefs, 1, memory_order_acq_rel);
       ++s->refs;
     } else {
       eexist();
@@ -218,7 +218,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   } else if ((s = calloc(1, sizeof(struct Semaphore)))) {
     if ((s->path = strdup(path))) {
       if ((sem = sem_open_impl(path, oflag, mode, value)) != SEM_FAILED) {
-        atomic_fetch_add_explicit(&sem->sem_prefs, 1, memory_order_relaxed);
+        atomic_fetch_add_explicit(&sem->sem_prefs, 1, memory_order_acq_rel);
         s->next = g_semaphores.list;
         s->sem = sem;
         s->refs = 1;
@@ -260,7 +260,7 @@ int sem_close(sem_t *sem) {
   sem_open_init();
   sem_open_lock();
   _npassert((s = sem_open_get(sem, &p)));
-  prefs = atomic_fetch_add_explicit(&sem->sem_prefs, -1, memory_order_release);
+  prefs = atomic_fetch_add_explicit(&sem->sem_prefs, -1, memory_order_acq_rel);
   _npassert(s->refs > 0);
   if ((unmap = !--s->refs)) {
     _npassert(prefs > 0);

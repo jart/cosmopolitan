@@ -20,7 +20,6 @@ struct sigaction { /* cosmo abi */
   uint64_t sa_flags;
   void (*sa_restorer)(void);
   struct sigset sa_mask;
-  int64_t __pad;
 };
 
 sighandler_t signal(int, sighandler_t);

@@ -209,7 +209,6 @@ bool IsAcceptablePath(const char *, size_t);
 bool IsAcceptableHost(const char *, size_t);
 bool IsAcceptablePort(const char *, size_t);
 bool IsReasonablePath(const char *, size_t);
-int64_t ParseIp(const char *, size_t);
 int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *);
 bool IsMimeType(const char *, size_t, const char *);
 ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *);

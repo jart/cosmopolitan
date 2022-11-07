@@ -5,8 +5,6 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern bool FUTEX_TIMEOUT_IS_ABSOLUTE;
-
 int nsync_futex_wake_(_Atomic(int) *, int, char);
 int nsync_futex_wait_(_Atomic(int) *, int, char, struct timespec *);
 

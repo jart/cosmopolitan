@@ -26,6 +26,7 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "net/http/http.h"
+#include "net/http/ip.h"
 #include "net/http/url.h"
 
 TEST(ParseUrl, testEmpty) {

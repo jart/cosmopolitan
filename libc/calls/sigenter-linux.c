@@ -28,8 +28,7 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sa.h"
 
-privileged void __sigenter_linux(int sig, struct siginfo *info,
-                                 ucontext_t *ctx) {
+privileged void __sigenter_wsl(int sig, struct siginfo *info, ucontext_t *ctx) {
   int i, rva, flags;
   rva = __sighandrvas[sig & (NSIG - 1)];
   if (rva >= kSigactionMinRva) {

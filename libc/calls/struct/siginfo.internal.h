@@ -1,7 +1,5 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGINFO_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGINFO_INTERNAL_H_
-#include "libc/calls/struct/sigaction-xnu.internal.h"
-#include "libc/calls/struct/siginfo-xnu.internal.h"
 #include "libc/calls/struct/siginfo.h"
 #include "libc/mem/alloca.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)

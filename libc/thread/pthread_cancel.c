@@ -51,10 +51,10 @@ int _pthread_cancel_sys(void) {
   return ecanceled();
 }
 
-static void OnSigCancel(int sig, siginfo_t *si, void *ctx) {
+static void OnSigThr(int sig, siginfo_t *si, void *ctx) {
   ucontext_t *uc = ctx;
-  struct CosmoTib *tib = __get_tls();
-  struct PosixThread *pt = (struct PosixThread *)tib->tib_pthread;
+  struct CosmoTib *t = __get_tls();
+  struct PosixThread *pt = (struct PosixThread *)t->tib_pthread;
   if (pt && !(pt->flags & PT_NOCANCEL) &&
       atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
     sigaddset(&uc->uc_sigmask, sig);
@@ -64,15 +64,14 @@ static void OnSigCancel(int sig, siginfo_t *si, void *ctx) {
     } else if (pt->flags & PT_ASYNC) {
       pthread_exit(PTHREAD_CANCELED);
     } else {
-      __tkill(atomic_load_explicit(&tib->tib_tid, memory_order_relaxed), sig,
-              tib);
+      __tkill(atomic_load_explicit(&t->tib_tid, memory_order_relaxed), sig, t);
     }
   }
 }
 
-static void ListenForSigCancel(void) {
+static void ListenForSigThr(void) {
   struct sigaction sa;
-  sa.sa_sigaction = OnSigCancel;
+  sa.sa_sigaction = OnSigThr;
   sa.sa_flags = SA_SIGINFO | SA_RESTART | SA_ONSTACK;
   memset(&sa.sa_mask, -1, sizeof(sa.sa_mask));
   _npassert(!sigaction(SIGTHR, &sa, 0));
@@ -262,7 +261,7 @@ errno_t pthread_cancel(pthread_t thread) {
   int e, rc, tid;
   static bool once;
   struct PosixThread *pt;
-  if (!once) ListenForSigCancel(), once = true;
+  if (!once) ListenForSigThr(), once = true;
   pt = (struct PosixThread *)thread;
   switch (atomic_load_explicit(&pt->status, memory_order_acquire)) {
     case kPosixThreadZombie:

@@ -428,6 +428,18 @@ scall	sys_issetugid		0xfff0fd0fd2147fff	globl hidden
 scall	sys_minherit		0x1110fa0fa20fafff	globl # no wrapper
 scall	sys_pathconf		0x0bf0bf0bf20bffff	globl # no wrapper
 scall	sys_sysctl		0x0ca0ca0ca20cafff	globl # no wrapper
+#──────────────────XNU & FREEBSD & NETBSD────────────────────
+scall	sys_sem_init		0x0f7fff194fffffff	globl
+scall	sys_sem_destroy		0x0fffff198fffffff	globl
+scall	sys_sem_open		0x0f8fff195210cfff	globl
+scall	sys_sem_close		0x0fafff190210dfff	globl
+scall	sys_sem_unlink		0x0f9fff196210efff	globl
+scall	sys_sem_post		0x0fbfff1912111fff	globl
+scall	sys_sem_wait		0x8fcfff992290ffff	globl
+scall	sys_sem_trywait		0x0fdfff1932110fff	globl
+scall	sys_sem_timedwait	0x900fff9b9fffffff	globl
+scall	sys_sem_wait_nocancel	0xfffffffff21a4fff	globl # no wrapper
+scall	sys_sem_getvalue	0x0fefff197fffffff	globl
 #───────────────────────XNU & FREEBSD────────────────────────
 scall	sys_ntp_adjtime		0x0b0fff0b0220ffff	globl # no wrapper
 scall	sys_ntp_gettime		0x1c0fff0f82210fff	globl # no wrapper
@@ -597,13 +609,6 @@ scall	sys_bsdthread_register	0xfffffffff216efff	globl hidden
 #scall	renameatx_np		0xfffffffff21e8fff	globl
 #scall	searchfs		0xfffffffff20e1fff	globl
 #scall	select_nocancel		0xfffffffff2197fff	globl
-#scall	sem_close		0xfffffffff210dfff	globl
-#scall	sem_open		0xfffffffff210cfff	globl
-#scall	sem_post		0xfffffffff2111fff	globl
-#scall	sem_trywait		0xfffffffff2110fff	globl
-#scall	sem_unlink		0xfffffffff210efff	globl
-#scall	sem_wait		0xfffffffff210ffff	globl
-#scall	sem_wait_nocancel	0xfffffffff21a4fff	globl
 #scall	sendmsg_nocancel	0xfffffffff2192fff	globl
 #scall	sendmsg_x		0xfffffffff21e1fff	globl
 #scall	sendto_nocancel		0xfffffffff219dfff	globl
@@ -711,16 +716,6 @@ scall	getpagesize_freebsd	0xffffff040fffffff	globl hidden
 #scall	kmq_timedreceive	0xffffff1cbfffffff	globl
 #scall	kmq_timedsend		0xffffff1ccfffffff	globl
 #scall	kmq_unlink		0xffffff1cefffffff	globl
-#scall	ksem_close		0xffffff190fffffff	globl
-#scall	ksem_destroy		0xffffff198fffffff	globl
-#scall	ksem_getvalue		0xffffff197fffffff	globl
-#scall	ksem_init		0xffffff194fffffff	globl
-#scall	ksem_open		0xffffff195fffffff	globl
-#scall	ksem_post		0xffffff191fffffff	globl
-#scall	ksem_timedwait		0xffffff1b9fffffff	globl
-#scall	ksem_trywait		0xffffff193fffffff	globl
-#scall	ksem_unlink		0xffffff196fffffff	globl
-#scall	ksem_wait		0xffffff192fffffff	globl
 #scall	lchflags		0x130fff187fffffff	globl
 #scall	lchmod			0x112fff112fffffff	globl
 #scall	lgetfh			0xffffff0a0fffffff	globl

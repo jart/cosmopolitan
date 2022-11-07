@@ -184,7 +184,10 @@ o/$(MODE)/libc/calls/timespec_tomicros.o		\
 o/$(MODE)/libc/calls/timespec_totimeval.o		\
 o/$(MODE)/libc/calls/timespec_fromnanos.o		\
 o/$(MODE)/libc/calls/timespec_frommillis.o		\
-o/$(MODE)/libc/calls/timespec_frommicros.o: private	\
+o/$(MODE)/libc/calls/timespec_frommicros.o		\
+o/$(MODE)/libc/calls/timeval_tomillis.o			\
+o/$(MODE)/libc/calls/timeval_frommillis.o		\
+o/$(MODE)/libc/calls/timeval_frommicros.o: private	\
 		OVERRIDE_CFLAGS +=			\
 			-O2
 
