@@ -33,6 +33,7 @@
 │ αcτµαlly pδrταblε εxεcµταblε § no-frills virtual memory management           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
+#include "libc/assert.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/macros.internal.h"
@@ -44,13 +45,25 @@
 
 #define INVERT(x) (BANE + PHYSICAL(x))
 
+struct ReclaimedPage {
+  uint64_t next;
+};
+
 /**
  * Allocates new page of physical memory.
  */
 noasan texthead uint64_t __new_page(struct mman *mm) {
-  uint64_t p;
+  uint64_t p = mm->frp;
+  if (p) {
+    uint64_t q;
+    struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
+    _unassert(p == (p & PAGE_TA));
+    q = rp->next;
+    _unassert(q == (q & PAGE_TA));
+    mm->frp = q;
+    return p;
+  }
   if (mm->pdpi == mm->e820n) {
-    /* TODO: reclaim free pages */
     return 0;
   }
   while (mm->pdp >= mm->e820[mm->pdpi].addr + mm->e820[mm->pdpi].size) {
@@ -113,6 +126,7 @@ static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
   mm->pdp = MAX(top, mm->e820[0].addr);
   mm->pdpi = 0;
   mm->e820n = n;
+  mm->frp = 0;
 }
 
 /**
@@ -209,4 +223,22 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
     }
   }
   mm->pdp = MAX(mm->pdp, m);
+}
+
+/**
+ * Reclaim memory pages which were used at boot time but which can now be
+ * made available for the application.
+ */
+noasan textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
+                                          uint64_t skip_end) {
+  uint64_t p = mm->frp, q = IMAGE_BASE_REAL, e;
+  e = mm->e820[0].addr + mm->e820[0].size;
+  while (q != e) {
+    struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + q);
+    rp->next = p;
+    p = q;
+    q += 4096;
+    if (q == skip_start) q = skip_end;
+  }
+  mm->frp = p;
 }

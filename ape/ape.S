@@ -1504,7 +1504,6 @@ long:	movabs	$BANE+PHYSICAL(0f),%rax
 	xor	%r15d,%r15d
 	xor	%ebx,%ebx
 	xor	%ebp,%ebp
-	push	%rbp
 	mov	$mm,%rdi
 	mov	%cr3,%rsi
 	mov	$IMAGE_BASE_PHYSICAL,%edx
@@ -1594,6 +1593,10 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
+	movabs	$BANE+mm,%rdi
+	mov	$0x79000,%esi
+	mov	$0x7f000,%edx
+	call	__reclaim_boot_pages
 	push	$_HOSTMETAL			# sets __hostos in crt.S
 	pop	%rcx
 	pushq	.Lenv0(%rip)			# envp[0][0]
