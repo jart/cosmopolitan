@@ -77,8 +77,11 @@ bool ParseHttpRange(const char *p, size_t n, long resourcelength,
   if (n) return false;
   if (start < 0) return false;
   if (length < 1) return false;
+  if (start > resourcelength) return false;
   if (__builtin_add_overflow(start, length, &ending)) return false;
-  if (ending > resourcelength) return false;
+  if (ending > resourcelength) {
+    length = resourcelength - start;
+  }
   *out_start = start;
   *out_length = length;
   return true;

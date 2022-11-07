@@ -46,7 +46,11 @@ TEST(ParseHttpRange, testEmptyRangeOfOneByteFile_itWorks) {
 
 TEST(ParseHttpRange, testEmptyRangeOfEmptyFile_outOfRange) {
   long start, length;
-  const char *s = "bytes=0-0";
+  const char *s = "bytes=0-0";  // requesting 1 byte, but have 0
+  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 0, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(0, length);
+  s = "bytes=1-1";  // but this can't be truncated
   EXPECT_FALSE(ParseHttpRange(s, strlen(s), 0, &start, &length));
   EXPECT_EQ(0, start);
   EXPECT_EQ(0, length);
@@ -94,10 +98,10 @@ TEST(ParseHttpRange, testFromEnd) {
 
 TEST(ParseHttpRange, testOutOfRange) {
   long start, length;
-  const char *s = "bytes=0-100";
-  EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
+  const char *s = "bytes=0-100";  // requesting 101 bytes, but have 100
+  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 100, &start, &length));
   EXPECT_EQ(0, start);
-  EXPECT_EQ(0, length);
+  EXPECT_EQ(100, length);
 }
 
 TEST(ParseHttpRange, testInvalidRange) {
@@ -130,4 +134,12 @@ TEST(ParseHttpRange, testMultipartRange_notImplemented) {
   EXPECT_FALSE(ParseHttpRange(s, strlen(s), 100, &start, &length));
   EXPECT_EQ(0, start);
   EXPECT_EQ(0, length);
+}
+
+TEST(ParseHttpRange, rangeTooLong_shortensToActualLength) {
+  long start, length;
+  const char *s = "bytes=0-134217727";
+  EXPECT_TRUE(ParseHttpRange(s, strlen(s), 1000, &start, &length));
+  EXPECT_EQ(0, start);
+  EXPECT_EQ(1000, length);
 }
