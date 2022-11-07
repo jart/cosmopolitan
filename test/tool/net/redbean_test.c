@@ -248,17 +248,34 @@ Content-Length: 0\r\n\
                                          "\r\n"))));
 
   EXPECT_TRUE(Matches("\
-HTTP/1.1 416 Range Not Satisfiable\r\n\
-Content-Range: bytes \\*/52\r\n\
+HTTP/1.1 206 Partial Content\r\n\
+Content-Range: bytes 18-51/52\r\n\
 Content-Type: text/plain; charset=utf-8\r\n\
 Vary: Accept-Encoding\r\n\
 Last-Modified: .*\r\n\
 Accept-Ranges: bytes\r\n\
 X-Content-Type-Options: nosniff\r\n\
 Date: .*\r\n\
-Server: redbean/.*\r\n\
-Content-Length: 0\r\n\
-\r\n",
+Server: redbean/2.2.0\r\n\
+Content-Length: 34\r\n\
+\r\n\
+J\n\
+K\n\
+L\n\
+M\n\
+N\n\
+O\n\
+P\n\
+Q\n\
+R\n\
+S\n\
+T\n\
+U\n\
+V\n\
+W\n\
+X\n\
+Y\n\
+Z\n",
                       gc(SendHttpRequest("GET /seekable.txt HTTP/1.1\r\n"
                                          "Range: bytes=18-60\r\n"
                                          "\r\n"))));
