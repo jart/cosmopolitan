@@ -19,7 +19,12 @@ struct mman {
   unsigned char pc_drives_attached;      /* 0x1d28 */
   unsigned char pc_drive_last_head;      /* 0x1d29 */
   unsigned char pc_drive;                /* 0x1d2a */
-  char bad_idt[6];                       /* 0x1d2b */
+  char bad_idt[2];                       /* 0x1d2b — IDTR value for an invalid
+                                                     IDT; really 6 bytes which
+                                                     overlap w/ fields below */
+  unsigned char pc_drive_next_sector;    /* 0x1d2d */
+  unsigned short pc_drive_next_cylinder; /* 0x1d2e */
+  unsigned char pc_drive_next_head;      /* 0x1d30 */
   unsigned char pc_video_type;           /* 0x1d31 */
   unsigned short pc_video_stride;        /* 0x1d32 — line width, including any
                                                      invisible "pixels" — in

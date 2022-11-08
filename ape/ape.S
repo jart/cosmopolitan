@@ -261,6 +261,9 @@ pc:	cld
 	xor	%dh,%dh				# current head
 	mov	$v_ape_realsectors,%di		# total sectors
 3:	call	pcread
+	mov	%es,%si				# addr += 512
+	add	$512>>4,%si
+	mov	%si,%es
 	dec	%di
 	jnz	3b
 6:	ljmp	$0,$REAL(realmodeloader)
@@ -349,6 +352,7 @@ dsknfo:	push	%bx
 	pop	%ds
 	xchg	%bx,%ax
 	stosw	#→ pc_drive_type, pc_drive_last_sector
+	scasb
 	xchg	%cx,%ax
 	stosw	#→ pc_drive_last_cylinder
 	xchg	%dx,%ax
@@ -387,9 +391,6 @@ pcread:	push	%ax
 	pop	%cx
 	pop	%ax
 	jc	9f
-	mov	%es,%si			# addr += 512
-	add	$512>>4,%si
-	mov	%si,%es
 	inc	%al			# ++sector
 	cmp	mm+"struct mman::pc_drive_last_sector",%al
 	jbe	2f
@@ -1196,12 +1197,32 @@ _gdt:
 	the default mode of operation on modern cpus */
 
 realmodeloader:
+	call	lhinit
 	call	rlinit
 	call	sinit4
 	.optfn	_start16
 	call	_start16
 	call	longmodeloader
 	.endfn	realmodeloader
+
+//	Prepares to later load parts of the program that are not loaded yet.
+//
+//	@param	al next sector number
+//	@param	cx next cylinder number
+//	@param	dh next head number
+//	@param	dl drive number
+//	@clob	ax, cx, es, di
+lhinit:	cmp	$0x40,%dl
+	je	9f
+	pushpop	0,%es
+	mov	$mm+"struct mman::pc_drive_next_sector",%di
+	cld
+	stosb	#→ pc_drive_next_sector
+	xchg	%ax,%cx
+	stosw	#→ pc_drive_next_cylinder
+	mov	%dh,%al
+	stosb	#→ pc_drive_next_head
+9:	ret
 
 	.section .sort.text.real.init.1,"ax",@progbits
 	.type	rlinit,@function
@@ -1264,6 +1285,7 @@ longmodeloader:
 	call	a20
 	call	e820
 	call	cpyhi
+	call	loadhi
 	call	pinit
 	call	golong
 	.endfn	longmodeloader
@@ -1407,7 +1429,27 @@ a20:	cli
 	.endfn	a20
 
 //	Copies program pages loaded into base memory, to extended memory.
-cpyhi:	push	%ds
+//
+//	@clob	esi, edi
+cpyhi:	push	%es
+	movpp	%ds,%es
+	call	unreal
+	mov	$IMAGE_BASE_REAL,%esi
+	mov	$IMAGE_BASE_PHYSICAL,%edi
+	mov	$v_ape_realdwords,%ecx
+	cld
+	rep movsl %ds:(%esi),%es:(%edi)
+	sti
+	pop	%es
+	ret
+	.endfn	cpyhi
+
+//	Disables interrupts and switches to "unreal mode".
+//
+//	@return	ds, es have same base addresses as before but can access
+//		4 GiB of memory
+//	@clob	eax
+unreal:	push	%ds
 	push	%es
 	cli
 	lgdt	REAL(_gdtrlo)
@@ -1416,26 +1458,58 @@ cpyhi:	push	%ds
 	mov	%eax,%cr0
 	jmp	0f
 0:	pushpop	GDT_LEGACY_DATA,%ds
-	push	%ds
-	pop	%es
-	mov	$IMAGE_BASE_REAL,%esi
-	mov	$IMAGE_BASE_PHYSICAL,%edi
-	mov	$v_ape_realdwords,%ecx
-	cld
-	rep movsl %ds:(%esi),%es:(%edi)
+	movpp	%ds,%es
 	and	$~CR0_PE,%al
 	mov	%eax,%cr0
 	jmp	1f
-1:	sti
-	pop	%es
+1:	pop	%es
 	pop	%ds
 	ret
-	.endfn	cpyhi
+
+//	Reads any remaining program pages into memory which have not yet
+//	been read by the boot sector.
+//
+//	@clob	eax, ecx, dx, esi, edi, bp
+loadhi:	mov	$v_ape_highsectors,%bp
+	test	%bp,%bp
+	jz	9f
+	mov	$mm+"struct mman::pc_drive",%si
+	cld
+	lodsb	#← pc_drive
+	xchg	%ax,%dx
+	lodsw
+	lodsb	#← pc_drive_next_sector
+	test	%al,%al
+	jz	9f
+	xchg	%ax,%cx
+	lodsw	#← pc_drive_next_cylinder
+	xchg	%ax,%cx
+	mov	(%si),%dh #← pc_drive_next_head
+	push	%es
+#define	SEG 0x79000
+	mov	$IMAGE_BASE_PHYSICAL+v_ape_realbytes-SEG,%edi
+	push	$SEG>>4
+	pop	%es
+0:	call	pcread
+	push	%ax
+	call	unreal
+	pop	%ax
+	push	%cx
+	xor	%esi,%esi
+	xor	%ecx,%ecx
+	mov	$512/4,%cl
+	cld
+	rep movsl %es:(%esi),%es:(%edi)
+	sti
+	pop	%cx
+	dec	%bp
+	jnz	0b
+	pop	%es
+9:	ret
 
 //	Initializes long mode paging.
 pinit:	push	%ds
 	push	%es
-#define	SEG 0x79000
 	mov	$SEG>>4,%ax
 	mov	%ax,%ds
 	mov	%ax,%es
@@ -1507,7 +1581,7 @@ long:	movabs	$BANE+PHYSICAL(0f),%rax
 	mov	$mm,%rdi
 	mov	%cr3,%rsi
 	mov	$IMAGE_BASE_PHYSICAL,%edx
-	lea	v_ape_realbytes(%rdx),%ecx
+	lea	v_ape_allbytes(%rdx),%ecx
 	call	__map_phdrs
 	push	$0x037f
 	fldcw	(%rsp)

@@ -568,8 +568,9 @@ HIDDEN(v_ape_realsectors =
                ROUNDUP(RVA(_tdata_end), 512)) / 512);
 HIDDEN(v_ape_realbytes = v_ape_realsectors * 512);
 HIDDEN(v_ape_realdwords = v_ape_realsectors * (512 / 4));
-HIDDEN(v_ape_highsectors =
-           (ROUNDUP(RVA(_tdata_end), 512) / 512) - v_ape_realsectors);
+HIDDEN(v_ape_allsectors = ROUNDUP(RVA(_tdata_end), 512) / 512);
+HIDDEN(v_ape_allbytes = v_ape_allsectors * 512);
+HIDDEN(v_ape_highsectors = v_ape_allsectors - v_ape_realsectors);
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 
@@ -652,7 +653,7 @@ CHURN(ADDR(.bss));
 CHURN(_start);
 CHURN(ape_phdrs);
 #if SupportsMetal()
-CHURN(v_ape_realsectors);
+CHURN(v_ape_allsectors);
 #endif
 #if SupportsXnu()
 CHURN(ape_macho);

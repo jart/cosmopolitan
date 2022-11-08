@@ -177,9 +177,13 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
   export_offsetof(struct mman, pc_drive_base_table);
   export_offsetof(struct mman, pc_drive_last_sector);
   export_offsetof(struct mman, pc_drive_last_head);
+  export_offsetof(struct mman, pc_drive);
   export_offsetof(struct mman, e820);
   export_offsetof(struct mman, e820_end);
   export_offsetof(struct mman, bad_idt);
+  export_offsetof(struct mman, pc_drive_next_sector);
+  export_offsetof(struct mman, pc_drive_next_cylinder);
+  export_offsetof(struct mman, pc_drive_next_head);
   export_offsetof(struct mman, pc_video_type);
   export_offsetof(struct mman, pc_video_stride);
   export_offsetof(struct mman, pc_video_width);
