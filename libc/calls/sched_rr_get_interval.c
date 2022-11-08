@@ -17,11 +17,11 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/timespec.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 
-int sys_sched_rr_get_interval(int, struct timespec *) hidden;
+int sys_sched_rr_get_interval(int, struct timespec *) _Hide;
 
 /**
  * Returns round-robin `SCHED_RR` quantum for `pid`.

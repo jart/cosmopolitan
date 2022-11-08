@@ -82,24 +82,24 @@ struct PosixThread {
 typedef void (*atfork_f)(void);
 
 extern struct PosixThread _pthread_main;
-extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] hidden;
+extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] _Hide;
 
-int _pthread_atfork(atfork_f, atfork_f, atfork_f) hidden;
-int _pthread_reschedule(struct PosixThread *) hidden;
-int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) hidden;
-int _pthread_wait(struct PosixThread *) hidden;
-void _pthread_free(struct PosixThread *) hidden;
-void _pthread_cleanup(struct PosixThread *) hidden;
-void _pthread_ungarbage(void) hidden;
-void _pthread_zombies_add(struct PosixThread *) hidden;
-void _pthread_zombies_purge(void) hidden;
-void _pthread_zombies_decimate(void) hidden;
-void _pthread_zombies_harvest(void) hidden;
-void _pthread_key_destruct(void) hidden;
-void _pthread_onfork_prepare(void) hidden;
-void _pthread_onfork_parent(void) hidden;
-void _pthread_onfork_child(void) hidden;
-int _pthread_cancel_sys(void) hidden;
+int _pthread_atfork(atfork_f, atfork_f, atfork_f) _Hide;
+int _pthread_reschedule(struct PosixThread *) _Hide;
+int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) _Hide;
+int _pthread_wait(struct PosixThread *) _Hide;
+void _pthread_free(struct PosixThread *) _Hide;
+void _pthread_cleanup(struct PosixThread *) _Hide;
+void _pthread_ungarbage(void) _Hide;
+void _pthread_zombies_add(struct PosixThread *) _Hide;
+void _pthread_zombies_purge(void) _Hide;
+void _pthread_zombies_decimate(void) _Hide;
+void _pthread_zombies_harvest(void) _Hide;
+void _pthread_key_destruct(void) _Hide;
+void _pthread_onfork_prepare(void) _Hide;
+void _pthread_onfork_parent(void) _Hide;
+void _pthread_onfork_child(void) _Hide;
+int _pthread_cancel_sys(void) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

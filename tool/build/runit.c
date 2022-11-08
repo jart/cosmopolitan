@@ -119,7 +119,7 @@ char g_hostname[128];
 uint16_t g_runitdport;
 volatile bool alarmed;
 
-int __sys_execve(const char *, char *const[], char *const[]) hidden;
+int __sys_execve(const char *, char *const[], char *const[]) _Hide;
 
 static void OnAlarm(int sig) {
   alarmed = true;

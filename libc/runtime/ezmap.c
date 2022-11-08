@@ -28,7 +28,7 @@
 
 // TODO(jart): DELETE
 
-hidden int MapFileRead(const char *filename, struct MappedFile *mf) {
+_Hide int MapFileRead(const char *filename, struct MappedFile *mf) {
   mf->addr = MAP_FAILED;
   if ((mf->fd = open(filename, O_RDONLY)) != -1 &&
       (mf->size = getfiledescriptorsize(mf->fd)) < INT_MAX &&
@@ -42,7 +42,7 @@ hidden int MapFileRead(const char *filename, struct MappedFile *mf) {
   }
 }
 
-hidden int UnmapFile(struct MappedFile *mf) {
+_Hide int UnmapFile(struct MappedFile *mf) {
   int rc;
   rc = 0;
   if (mf->addr && mf->addr != MAP_FAILED) {

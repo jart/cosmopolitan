@@ -7,11 +7,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern const char kWeekdayNameShort[7][4];
-hidden extern const char kWeekdayName[7][10];
-hidden extern const char kMonthNameShort[12][4];
-hidden extern const char kMonthName[12][10];
-hidden extern const unsigned short kMonthYearDay[2][12];
+_Hide extern const char kWeekdayNameShort[7][4];
+_Hide extern const char kWeekdayName[7][10];
+_Hide extern const char kMonthNameShort[12][4];
+_Hide extern const char kMonthName[12][10];
+_Hide extern const unsigned short kMonthYearDay[2][12];
 
 extern char *tzname[2];
 extern long timezone;

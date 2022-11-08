@@ -3,15 +3,15 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-double __cos(double, double) hidden;
-double __sin(double, double, int) hidden;
-double __tan(double, double, int) hidden;
-float __cosdf(double) hidden;
-float __sindf(double) hidden;
-float __tandf(double, int) hidden;
-int __rem_pio2(double, double *) hidden;
-int __rem_pio2_large(double *, double *, int, int, int) hidden;
-int __rem_pio2f(float, double *) hidden;
+double __cos(double, double) _Hide;
+double __sin(double, double, int) _Hide;
+double __tan(double, double, int) _Hide;
+float __cosdf(double) _Hide;
+float __sindf(double) _Hide;
+float __tandf(double, int) _Hide;
+int __rem_pio2(double, double *) _Hide;
+int __rem_pio2_large(double *, double *, int, int, int) _Hide;
+int __rem_pio2f(float, double *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

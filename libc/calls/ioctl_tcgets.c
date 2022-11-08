@@ -18,18 +18,18 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/ioctl.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/struct/metatermios.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/calls/termios.internal.h"
 #include "libc/calls/ttydefaults.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/termios.h"
 #include "libc/sysv/errfuns.h"
 
-int ioctl_tcgets_nt(int, struct termios *) hidden;
+int ioctl_tcgets_nt(int, struct termios *) _Hide;
 
 static int ioctl_tcgets_metal(int fd, struct termios *tio) {
   bzero(tio, sizeof(*tio));

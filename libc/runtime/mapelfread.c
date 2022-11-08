@@ -21,7 +21,7 @@
 #include "libc/runtime/ezmap.internal.h"
 #include "libc/runtime/internal.h"
 
-hidden Elf64_Ehdr *MapElfRead(const char *filename, struct MappedFile *mf) {
+_Hide Elf64_Ehdr *MapElfRead(const char *filename, struct MappedFile *mf) {
   if (MapFileRead(filename, mf) != -1 && IsElf64Binary(mf->addr, mf->size)) {
     return mf->addr;
   } else {

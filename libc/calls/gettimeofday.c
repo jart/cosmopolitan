@@ -97,7 +97,7 @@ gettimeofday_f *__gettimeofday_get(bool *opt_out_isfast) {
   return res;
 }
 
-hidden int __gettimeofday_init(struct timeval *tv, struct timezone *tz) {
+_Hide int __gettimeofday_init(struct timeval *tv, struct timezone *tz) {
   gettimeofday_f *gettime;
   __gettimeofday = gettime = __gettimeofday_get(0);
   return gettime(tv, tz, 0).ax;

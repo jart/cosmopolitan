@@ -6,13 +6,13 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-hidden extern int __vforked;
-hidden extern bool __time_critical;
-hidden extern unsigned __sighandrvas[NSIG];
-hidden extern unsigned __sighandflags[NSIG];
-hidden extern pthread_mutex_t __fds_lock_obj;
-hidden extern pthread_mutex_t __sig_lock_obj;
-hidden extern const struct NtSecurityAttributes kNtIsInheritable;
+_Hide extern int __vforked;
+_Hide extern bool __time_critical;
+_Hide extern unsigned __sighandrvas[NSIG];
+_Hide extern unsigned __sighandflags[NSIG];
+_Hide extern pthread_mutex_t __fds_lock_obj;
+_Hide extern pthread_mutex_t __sig_lock_obj;
+_Hide extern const struct NtSecurityAttributes kNtIsInheritable;
 
 void __fds_lock(void);
 void __fds_unlock(void);

@@ -6,10 +6,10 @@
 COSMOPOLITAN_C_START_
 
 int __sys_sigprocmask(int, const struct sigset *, struct sigset *,
-                      uint64_t) hidden;
-int sys_sigprocmask(int, const struct sigset *, struct sigset *) hidden;
-int sys_sigsuspend(const struct sigset *, uint64_t) hidden;
-int sys_sigpending(struct sigset *, size_t) hidden;
+                      uint64_t) _Hide;
+int sys_sigprocmask(int, const struct sigset *, struct sigset *) _Hide;
+int sys_sigsuspend(const struct sigset *, uint64_t) _Hide;
+int sys_sigpending(struct sigset *, size_t) _Hide;
 
 const char *DescribeSigset(char[128], int, const sigset_t *);
 #define DescribeSigset(rc, ss) DescribeSigset(alloca(128), rc, ss)

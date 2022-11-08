@@ -5,8 +5,8 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void _ntcontext2linux(struct ucontext *, const struct NtContext *) hidden;
-void _ntlinux2context(struct NtContext *, const ucontext_t *) hidden;
+void _ntcontext2linux(struct ucontext *, const struct NtContext *) _Hide;
+void _ntlinux2context(struct NtContext *, const ucontext_t *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

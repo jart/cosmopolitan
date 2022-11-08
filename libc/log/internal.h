@@ -5,12 +5,12 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern hidden bool __nocolor;
-extern hidden int kCrashSigs[8];
-extern hidden bool _wantcrashreports;
-extern hidden bool g_isrunningundermake;
+extern _Hide bool __nocolor;
+extern _Hide int kCrashSigs[8];
+extern _Hide bool _wantcrashreports;
+extern _Hide bool g_isrunningundermake;
 
-void __start_fatal(const char *, int) hidden;
+void __start_fatal(const char *, int) _Hide;
 void __oncrash(int, struct siginfo *, struct ucontext *) relegated;
 void __restore_tty(void);
 void RestoreDefaultCrashSignalHandlers(void);

@@ -188,12 +188,12 @@ typedef struct {
 #define strftimeesque(n)
 #endif
 
-#ifndef hidden
+#ifndef _Hide
 #if !defined(__STRICT_ANSI__) && \
     (__has_attribute(__visibility__) || defined(__GNUC__)) && !defined(_WIN32)
-#define hidden __attribute__((__visibility__("hidden")))
+#define _Hide __attribute__((__visibility__("hidden")))
 #else
-#define hidden
+#define _Hide
 #endif
 #endif
 

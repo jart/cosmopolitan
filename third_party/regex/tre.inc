@@ -56,8 +56,8 @@
 │  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.        │
 │                                                                              │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/alg.h"
 #include "libc/assert.h"
+#include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/str/str.h"
 #include "third_party/regex/notice.inc"
@@ -81,27 +81,27 @@ typedef wchar_t tre_char_t;
 typedef wint_t tre_cint_t;
 #define TRE_CHAR_MAX 0x10ffff
 
-#define tre_isalnum iswalnum
-#define tre_isalpha iswalpha
-#define tre_isblank iswblank
-#define tre_iscntrl iswcntrl
-#define tre_isdigit iswdigit
-#define tre_isgraph iswgraph
-#define tre_islower iswlower
-#define tre_isprint iswprint
-#define tre_ispunct iswpunct
-#define tre_isspace iswspace
-#define tre_isupper iswupper
+#define tre_isalnum  iswalnum
+#define tre_isalpha  iswalpha
+#define tre_isblank  iswblank
+#define tre_iscntrl  iswcntrl
+#define tre_isdigit  iswdigit
+#define tre_isgraph  iswgraph
+#define tre_islower  iswlower
+#define tre_isprint  iswprint
+#define tre_ispunct  iswpunct
+#define tre_isspace  iswspace
+#define tre_isupper  iswupper
 #define tre_isxdigit iswxdigit
 
 #define tre_tolower towlower
 #define tre_toupper towupper
-#define tre_strlen wcslen
+#define tre_strlen  wcslen
 
 /* Use system provided iswctype() and wctype(). */
 typedef wctype_t tre_ctype_t;
 #define tre_isctype iswctype
-#define tre_ctype wctype
+#define tre_ctype   wctype
 
 /* Returns number of bytes to add to (char *)ptr to make it
    properly aligned for the type. */
@@ -143,16 +143,16 @@ struct tnfa_transition {
 };
 
 /* Assertions. */
-#define ASSERT_AT_BOL 1         /* Beginning of line. */
-#define ASSERT_AT_EOL 2         /* End of line. */
-#define ASSERT_CHAR_CLASS 4     /* Character class in `class'. */
+#define ASSERT_AT_BOL         1 /* Beginning of line. */
+#define ASSERT_AT_EOL         2 /* End of line. */
+#define ASSERT_CHAR_CLASS     4 /* Character class in `class'. */
 #define ASSERT_CHAR_CLASS_NEG 8 /* Character classes in `neg_classes'. */
-#define ASSERT_AT_BOW 16        /* Beginning of word. */
-#define ASSERT_AT_EOW 32        /* End of word. */
-#define ASSERT_AT_WB 64         /* Word boundary. */
-#define ASSERT_AT_WB_NEG 128    /* Not a word boundary. */
-#define ASSERT_BACKREF 256      /* A back reference in `backref'. */
-#define ASSERT_LAST 256
+#define ASSERT_AT_BOW         16 /* Beginning of word. */
+#define ASSERT_AT_EOW         32 /* End of word. */
+#define ASSERT_AT_WB          64 /* Word boundary. */
+#define ASSERT_AT_WB_NEG      128 /* Not a word boundary. */
+#define ASSERT_BACKREF        256 /* A back reference in `backref'. */
+#define ASSERT_LAST           256
 
 /* Tag directions. */
 typedef enum { TRE_TAG_MINIMIZE = 0, TRE_TAG_MAXIMIZE = 1 } tre_tag_direction_t;
@@ -211,13 +211,13 @@ typedef struct tre_mem_struct {
   void **provided;
 } * tre_mem_t;
 
-#define tre_mem_new_impl __tre_mem_new_impl
+#define tre_mem_new_impl   __tre_mem_new_impl
 #define tre_mem_alloc_impl __tre_mem_alloc_impl
-#define tre_mem_destroy __tre_mem_destroy
+#define tre_mem_destroy    __tre_mem_destroy
 
-tre_mem_t tre_mem_new_impl(int provided, void *provided_block) hidden;
+tre_mem_t tre_mem_new_impl(int provided, void *provided_block) _Hide;
 void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
-                         int zero, size_t size) hidden;
+                         int zero, size_t size) _Hide;
 
 /* Returns a new memory allocator or NULL if out of memory. */
 #define tre_mem_new() tre_mem_new_impl(0, NULL)
@@ -245,4 +245,4 @@ void *tre_mem_alloc_impl(tre_mem_t mem, int provided, void *provided_block,
 #endif /* TRE_USE_ALLOCA */
 
 /* Frees the memory allocator and all memory allocated with it. */
-hidden void tre_mem_destroy(tre_mem_t mem);
+_Hide void tre_mem_destroy(tre_mem_t mem);

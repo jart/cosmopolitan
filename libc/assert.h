@@ -4,7 +4,7 @@
 COSMOPOLITAN_C_START_
 
 extern bool __assert_disable;
-void __assert_fail(const char *, const char *, int) hidden relegated;
+void __assert_fail(const char *, const char *, int) _Hide relegated;
 
 #ifdef NDEBUG
 #define assert(x) ((void)0)

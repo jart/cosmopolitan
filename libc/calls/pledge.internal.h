@@ -11,10 +11,10 @@ struct Pledges {
   const size_t len;
 };
 
-hidden extern const struct Pledges kPledge[PROMISE_LEN_];
+_Hide extern const struct Pledges kPledge[PROMISE_LEN_];
 
-int sys_pledge_linux(unsigned long, int) hidden;
-int ParsePromises(const char *, unsigned long *) hidden;
+int sys_pledge_linux(unsigned long, int) _Hide;
+int ParsePromises(const char *, unsigned long *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

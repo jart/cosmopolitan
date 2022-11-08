@@ -9,8 +9,8 @@ struct MappedFile {
   size_t size;
 };
 
-int MapFileRead(const char *, struct MappedFile *) hidden;
-int UnmapFile(struct MappedFile *) hidden;
+int MapFileRead(const char *, struct MappedFile *) _Hide;
+int UnmapFile(struct MappedFile *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -15,13 +15,13 @@ COSMOPOLITAN_C_START_
   } while (0)
 
 int __fmt_pad(int (*)(const char *, void *, size_t), void *,
-              unsigned long) hidden;
+              unsigned long) _Hide;
 int __fmt_stoa(int (*)(const char *, void *, size_t), void *, void *,
                unsigned long, unsigned long, unsigned long, unsigned char,
-               unsigned char) hidden;
+               unsigned char) _Hide;
 int __fmt_ntoa(int (*)(const char *, void *, size_t), void *, va_list,
                unsigned char, unsigned long, unsigned long, unsigned long,
-               unsigned char, const char *) hidden;
+               unsigned char, const char *) _Hide;
 int __fmt_dtoa(int (*)(const char *, void *, size_t), void *, int, int, int,
                int, int, bool, char, unsigned char, const char *, va_list);
 

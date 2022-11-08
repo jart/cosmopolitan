@@ -51,16 +51,16 @@ static inline float fp_barrierf(float x) {
   return y;
 }
 
-double __math_divzero(uint32_t) hidden;
-double __math_invalid(double) hidden;
-double __math_oflow(uint32_t) hidden;
-double __math_uflow(uint32_t) hidden;
-double __math_xflow(uint32_t, double) hidden;
-float __math_divzerof(uint32_t) hidden;
-float __math_invalidf(float) hidden;
-float __math_oflowf(uint32_t) hidden;
-float __math_uflowf(uint32_t) hidden;
-float __math_xflowf(uint32_t, float) hidden;
+double __math_divzero(uint32_t) _Hide;
+double __math_invalid(double) _Hide;
+double __math_oflow(uint32_t) _Hide;
+double __math_uflow(uint32_t) _Hide;
+double __math_xflow(uint32_t, double) _Hide;
+float __math_divzerof(uint32_t) _Hide;
+float __math_invalidf(float) _Hide;
+float __math_oflowf(uint32_t) _Hide;
+float __math_uflowf(uint32_t) _Hide;
+float __math_xflowf(uint32_t, float) _Hide;
 
 #define FORCE_EVAL(x)                         \
   do {                                        \

@@ -98,7 +98,7 @@ static textwindows bool EqualsFileLock(struct FileLock *fl, int64_t off,
   return fl->off == off && off + len == fl->off + fl->len;
 }
 
-hidden textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
+_Hide textwindows void sys_fcntl_nt_lock_cleanup(int fd) {
   struct FileLock *fl, *ft, **flp;
   pthread_mutex_lock(&g_locks.mu);
   for (flp = &g_locks.list, fl = *flp; fl;) {

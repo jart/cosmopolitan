@@ -26,7 +26,7 @@ STATIC_YOINK("_init_stdin");
  */
 FILE *stdin;
 
-hidden FILE __stdin;
+_Hide FILE __stdin;
 
 static textstartup void __stdin_init() {
   __fflush_register(stdin);

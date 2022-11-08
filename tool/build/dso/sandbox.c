@@ -27,8 +27,8 @@
  * strace -vff bash -c '_PLEDGE=4194303,0 LD_PRELOAD=$HOME/sandbox.so ls'
  */
 
-hidden uint8_t __privileged_start[1];
-hidden uint8_t __privileged_end[1];
+_Hide uint8_t __privileged_start[1];
+_Hide uint8_t __privileged_end[1];
 
 __attribute__((__constructor__)) void init(void) {
   int c, i, j;

@@ -28,21 +28,21 @@ extern unsigned char _tbss_offset[];
 extern unsigned char _tls_size[];
 extern unsigned char _tls_content[];
 
-void _init(void) hidden;
+void _init(void) _Hide;
 void __morph_tls(void);
 void __enable_tls(void);
-void __enable_threads(void) hidden;
-void *__cxa_finalize(void *) hidden;
-void cosmo(int, char **, char **, long (*)[2]) hidden wontreturn;
+void __enable_threads(void) _Hide;
+void *__cxa_finalize(void *) _Hide;
+void cosmo(int, char **, char **, long (*)[2]) _Hide wontreturn;
 void __stack_chk_fail(void) wontreturn relegated;
-void __stack_chk_fail_local(void) wontreturn relegated hidden;
-void _jmpstack(void *, void *, ...) hidden wontreturn;
-long _setstack(void *, void *, ...) hidden;
+void __stack_chk_fail_local(void) wontreturn relegated _Hide;
+void _jmpstack(void *, void *, ...) _Hide wontreturn;
+long _setstack(void *, void *, ...) _Hide;
 int GetDosArgv(const char16_t *, char *, size_t, char **, size_t);
-Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) hidden;
+Elf64_Ehdr *MapElfRead(const char *, struct MappedFile *) _Hide;
 int GetDosEnviron(const char16_t *, char *, size_t, char **, size_t);
 bool __intercept_flag(int *, char *[], const char *);
-int sys_mprotect_nt(void *, size_t, int) hidden;
+int sys_mprotect_nt(void *, size_t, int) _Hide;
 int __inflate(void *, size_t, const void *, size_t);
 
 COSMOPOLITAN_C_END_

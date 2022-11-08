@@ -22,7 +22,7 @@
 #include "libc/sysv/consts/sig.h"
 
 // kudos rich felker for the brilliant design
-hidden int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
+_Hide int __sigsetjmp_tail(sigjmp_buf jb, int rc) {
   _Static_assert(
       sizeof(sigjmp_buf) == sizeof(jmp_buf) + 8 + 8 + sizeof(sigset_t),
       "please recompute sigjmp_buf w.r.t. sigset_t");

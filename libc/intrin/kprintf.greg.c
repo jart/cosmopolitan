@@ -57,7 +57,7 @@
 #include "libc/thread/tls2.h"
 #include "libc/vga/vga.internal.h"
 
-extern hidden struct SymbolTable *__symtab;
+extern _Hide struct SymbolTable *__symtab;
 
 privileged static inline char *kadvance(char *p, char *e, long n) {
   intptr_t t = (intptr_t)p;

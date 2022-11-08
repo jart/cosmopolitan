@@ -18,7 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/ntmagicpaths.internal.h"
 
-hidden const struct NtMagicPaths kNtMagicPaths = {
+_Hide const struct NtMagicPaths kNtMagicPaths = {
 #define TAB(NAME, STRING) STRING,
 #include "libc/calls/ntmagicpaths.inc"
 #undef TAB

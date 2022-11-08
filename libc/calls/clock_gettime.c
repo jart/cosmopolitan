@@ -119,7 +119,7 @@ clock_gettime_f *__clock_gettime_get(bool *opt_out_isfast) {
   return res;
 }
 
-hidden int __clock_gettime_init(int clockid, struct timespec *ts) {
+_Hide int __clock_gettime_init(int clockid, struct timespec *ts) {
   clock_gettime_f *gettime;
   __clock_gettime = gettime = __clock_gettime_get(0);
   return gettime(clockid, ts);

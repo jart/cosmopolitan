@@ -5,7 +5,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) hidden;
+int ioctl_tiocgwinsz_nt(struct Fd *, struct winsize *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

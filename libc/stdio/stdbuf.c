@@ -18,5 +18,5 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/stdio/internal.h"
 
-char g_stdoutbuf[BUFSIZ] hidden;
-char g_stderrbuf[BUFSIZ] hidden;
+char g_stdoutbuf[BUFSIZ] _Hide;
+char g_stderrbuf[BUFSIZ] _Hide;

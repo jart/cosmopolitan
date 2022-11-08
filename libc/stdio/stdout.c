@@ -29,7 +29,7 @@ STATIC_YOINK("_init_stdout");
  */
 FILE *stdout;
 
-hidden FILE __stdout;
+_Hide FILE __stdout;
 
 static textstartup void __stdout_init() {
   struct FILE *sf;

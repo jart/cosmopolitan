@@ -8,7 +8,7 @@ struct Env {
   int i;
 };
 
-struct Env _getenv(char **, const char *) hidden;
+struct Env _getenv(char **, const char *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

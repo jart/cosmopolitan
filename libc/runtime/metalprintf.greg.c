@@ -34,7 +34,7 @@
  * This only supports %d and %s. It'll will work even if .rodata hasn't
  * been loaded into memory yet.
  */
-hidden textreal void(MetalPrintf)(const char *fmt, ...) {
+_Hide textreal void(MetalPrintf)(const char *fmt, ...) {
   int i;
   char c;
   unsigned u;

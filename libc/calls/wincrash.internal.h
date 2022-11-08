@@ -7,7 +7,7 @@ COSMOPOLITAN_C_START_
 
 unsigned __wincrash_nt(struct NtExceptionPointers *);
 struct NtOverlapped *_offset2overlap(int64_t, int64_t,
-                                     struct NtOverlapped *) hidden;
+                                     struct NtOverlapped *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

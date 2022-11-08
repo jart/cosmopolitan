@@ -17,8 +17,8 @@ struct StdioFlush {
   FILE *handles_initmem[8];
 };
 
-hidden extern struct StdioFlush __fflush;
-hidden extern pthread_mutex_t __fflush_lock_obj;
+_Hide extern struct StdioFlush __fflush;
+_Hide extern pthread_mutex_t __fflush_lock_obj;
 
 void __fflush_lock(void);
 void __fflush_unlock(void);

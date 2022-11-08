@@ -61,7 +61,7 @@
            "nullterminated"
            "unreachable"
            "notpossible"
-           "hidden"
+           "_Hide"
            "privileged"
            "hasatleast"
            "nodebuginfo"

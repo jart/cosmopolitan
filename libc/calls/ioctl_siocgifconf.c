@@ -43,11 +43,11 @@
  * The ifc_len is an input/output parameter: set it to the total size of
  * the ifcu_buf (ifcu_req) buffer on input.
  */
-int ioctl_siocgifconf_nt(int, struct ifconf *) hidden;
-int ioctl_siocgifaddr_nt(int, struct ifreq *) hidden;
-int ioctl_siocgifflags_nt(int, struct ifreq *) hidden;
-int ioctl_siocgifnetmask_nt(int, struct ifreq *) hidden;
-int ioctl_siocgifbrdaddr_nt(int, struct ifreq *) hidden;
+int ioctl_siocgifconf_nt(int, struct ifconf *) _Hide;
+int ioctl_siocgifaddr_nt(int, struct ifreq *) _Hide;
+int ioctl_siocgifflags_nt(int, struct ifreq *) _Hide;
+int ioctl_siocgifnetmask_nt(int, struct ifreq *) _Hide;
+int ioctl_siocgifbrdaddr_nt(int, struct ifreq *) _Hide;
 
 static int ioctl_siocgifconf_sysv(int fd, struct ifconf *ifc) {
   /*

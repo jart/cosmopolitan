@@ -13,11 +13,11 @@ struct RlDecode {
   uint8_t byte;
 };
 
-void rldecode(void *dest, const struct RlDecode *) hidden;
-void rldecode2(void *dest, const struct RlDecode *) hidden;
-const uint8_t *lz4check(const void *data) hidden;
-void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) hidden;
-void *lz4decode(void *dest, const void *src) hidden;
+void rldecode(void *dest, const struct RlDecode *) _Hide;
+void rldecode2(void *dest, const struct RlDecode *) _Hide;
+const uint8_t *lz4check(const void *data) _Hide;
+void *lz4cpy(void *dest, const void *blockdata, size_t blocksize) _Hide;
+void *lz4decode(void *dest, const void *src) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

@@ -33,7 +33,7 @@
 #include "third_party/zlib/puff.h"
 
 static pthread_spinlock_t g_lock;
-hidden struct SymbolTable *__symtab;  // for kprintf
+_Hide struct SymbolTable *__symtab;  // for kprintf
 
 /**
  * Looks for `.symtab` in zip central directory.

@@ -109,7 +109,7 @@ static int __fmt_atoi(const char **str) {
  * @asyncsignalsafe if floating point isn't used
  * @vforksafe if floating point isn't used
  */
-hidden int __fmt(void *fn, void *arg, const char *format, va_list va) {
+_Hide int __fmt(void *fn, void *arg, const char *format, va_list va) {
   long ld;
   void *p;
   unsigned u;

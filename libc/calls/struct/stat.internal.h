@@ -5,11 +5,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int sys_fstat(int, struct stat *) hidden;
-int sys_fstatat(int, const char *, struct stat *, int) hidden;
-int sys_fstat_nt(int64_t, struct stat *) hidden;
-int sys_fstatat_nt(int, const char *, struct stat *, int) hidden;
-int sys_lstat_nt(const char *, struct stat *) hidden;
+int sys_fstat(int, struct stat *) _Hide;
+int sys_fstatat(int, const char *, struct stat *, int) _Hide;
+int sys_fstat_nt(int64_t, struct stat *) _Hide;
+int sys_fstatat_nt(int, const char *, struct stat *, int) _Hide;
+int sys_lstat_nt(const char *, struct stat *) _Hide;
 int sys_fstat_metal(int, struct stat *);
 
 const char *DescribeStat(char[300], int, const struct stat *);

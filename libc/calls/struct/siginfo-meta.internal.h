@@ -16,7 +16,7 @@ union siginfo_meta {
   struct siginfo_netbsd netbsd;
 };
 
-void __siginfo2cosmo(struct siginfo *, const union siginfo_meta *) hidden;
+void __siginfo2cosmo(struct siginfo *, const union siginfo_meta *) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

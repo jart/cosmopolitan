@@ -9,7 +9,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern hidden const struct exp_data {
+extern _Hide const struct exp_data {
   double invln2N;
   double shift;
   double negln2hiN;

@@ -12,15 +12,15 @@ COSMOPOLITAN_C_START_
 
 #define kIoMotion ((const int8_t[3]){1, 0, 0})
 
-hidden extern struct Fds g_fds;
-hidden extern const struct Fd kEmptyFd;
+_Hide extern struct Fds g_fds;
+_Hide extern const struct Fd kEmptyFd;
 
-int __reservefd(int) hidden;
-int __reservefd_unlocked(int) hidden;
-void __releasefd(int) hidden;
-int __ensurefds(int) hidden;
-int __ensurefds_unlocked(int) hidden;
-void __printfds(void) hidden;
+int __reservefd(int) _Hide;
+int __reservefd_unlocked(int) _Hide;
+void __releasefd(int) _Hide;
+int __ensurefds(int) _Hide;
+int __ensurefds_unlocked(int) _Hide;
+void __printfds(void) _Hide;
 
 forceinline int64_t __getfdhandleactual(int fd) {
   return g_fds.p[fd].handle;
@@ -42,8 +42,8 @@ forceinline size_t _clampio(size_t size) {
   }
 }
 
-int sys_close_nt(struct Fd *, int) hidden;
-int _check_interrupts(bool, struct Fd *) hidden;
+int sys_close_nt(struct Fd *, int) _Hide;
+int _check_interrupts(bool, struct Fd *) _Hide;
 int sys_openat_metal(int, const char *, int, unsigned);
 
 COSMOPOLITAN_C_END_

@@ -7,11 +7,11 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-int32_t sys_poll(struct pollfd *, uint64_t, signed) hidden;
+int32_t sys_poll(struct pollfd *, uint64_t, signed) _Hide;
 int sys_ppoll(struct pollfd *, size_t, const struct timespec *,
               const sigset_t *, size_t);
 int sys_poll_metal(struct pollfd *, size_t, unsigned);
-int sys_poll_nt(struct pollfd *, uint64_t, uint64_t *, const sigset_t *) hidden;
+int sys_poll_nt(struct pollfd *, uint64_t, uint64_t *, const sigset_t *) _Hide;
 
 const char *DescribePollFds(char[300], ssize_t, struct pollfd *, size_t);
 #define DescribePollFds(x, y, z) DescribePollFds(alloca(300), x, y, z)

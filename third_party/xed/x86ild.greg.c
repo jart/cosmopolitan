@@ -102,12 +102,12 @@ asm(".include \"libc/disclaimer.inc\"");
 #define XED_LF_UIMMv_IMM_WIDTH_OSZ_NONTERM_IMMUNE_REXW_EOSZ_l2(X) \
   xed_set_uimmv_imm_width_eosz(X, kXed.OSZ_NONTERM_IMMUNE_REXW_EOSZ)
 
-extern const uint32_t xed_prefix_table_bit[8] hidden;
-extern const uint8_t xed_imm_bits_2d[2][256] hidden;
-extern const uint8_t xed_has_modrm_2d[XED_ILD_MAP2][256] hidden;
-extern const uint8_t xed_has_sib_table[3][4][8] hidden;
-extern const uint8_t xed_has_disp_regular[3][4][8] hidden;
-extern const uint8_t xed_disp_bits_2d[XED_ILD_MAP2][256] hidden;
+extern const uint32_t xed_prefix_table_bit[8] _Hide;
+extern const uint8_t xed_imm_bits_2d[2][256] _Hide;
+extern const uint8_t xed_has_modrm_2d[XED_ILD_MAP2][256] _Hide;
+extern const uint8_t xed_has_sib_table[3][4][8] _Hide;
+extern const uint8_t xed_has_disp_regular[3][4][8] _Hide;
+extern const uint8_t xed_disp_bits_2d[XED_ILD_MAP2][256] _Hide;
 
 static const struct XedDenseMagnums {
   unsigned vex_prefix_recoding[4];

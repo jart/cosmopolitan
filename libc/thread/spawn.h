@@ -11,9 +11,9 @@ struct spawn {
   struct CosmoTib *tib;
 };
 
-int _spawn(int (*)(void *, int), void *, struct spawn *) hidden;
-int _join(struct spawn *) hidden;
-char *_mktls(struct CosmoTib **) hidden;
+int _spawn(int (*)(void *, int), void *, struct spawn *) _Hide;
+int _join(struct spawn *) _Hide;
+char *_mktls(struct CosmoTib **) _Hide;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
