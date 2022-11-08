@@ -75,8 +75,8 @@ int optreset;
  */
 char *optarg;
 
-hidden char *getopt_place;
-char kGetoptEmsg[1] hidden;
+_Hide char *getopt_place;
+_Hide char kGetoptEmsg[1];
 
 static void getopt_print_badch(const char *s) {
   char b1[512];
