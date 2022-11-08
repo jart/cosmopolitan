@@ -49,9 +49,6 @@ static errno_t sys_clock_nanosleep(int clock, int flags,
   int e, rc;
   BEGIN_CANCELLATION_POINT;
   e = errno;
-  STRACE("clock_nanosleep(%s, %s, %s, %s) → ...", DescribeClockName(clock),
-         DescribeSleepFlags(flags), DescribeTimespec(0, req),
-         DescribeTimespec(0, rem));
   if (IsLinux() || IsFreebsd() || IsNetbsd()) {
     rc = __sys_clock_nanosleep(clock, flags, req, rem);
   } else if (IsXnu()) {
