@@ -16,9 +16,9 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/strace.internal.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/nt/struct/securityattributes.h"
 #include "libc/nt/thread.h"
 
@@ -29,7 +29,7 @@ __msabi extern typeof(CreateThread) *const __imp_CreateThread;
  *
  * @param dwStackSize may be 0 for default per executable
  * @return thread handle, or 0 on failure
- * @note this wrapper takes care of ABI, STRACE(), and __winerr()
+ * @note this wrapper takes care of ABI, STRACE()
  */
 textwindows int64_t CreateThread(
     struct NtSecurityAttributes *lpThreadAttributes, size_t dwStackSize,
@@ -38,7 +38,6 @@ textwindows int64_t CreateThread(
   int64_t hHandle;
   hHandle = __imp_CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
                                lpParameter, dwCreationFlags, opt_lpThreadId);
-  if (hHandle == -1) __winerr();
   NTTRACE("CreateThread(%s, %'zu, %p, %p, %s, %p) → %ld% m",
           DescribeNtSecurityAttributes(lpThreadAttributes), dwStackSize,
           lpStartAddress, lpParameter, dwCreationFlags, opt_lpThreadId,

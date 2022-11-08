@@ -19,38 +19,27 @@
 #include "libc/assert.h"
 #include "libc/calls/blocksigs.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/sched-sysv.internal.h"
-#include "libc/calls/state.internal.h"
 #include "libc/calls/struct/sigaltstack.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/calls/syscall-sysv.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/bits.h"
-#include "libc/intrin/kprintf.h"
-#include "libc/intrin/weaken.h"
 #include "libc/log/internal.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
-#include "libc/nexgen32e/gc.internal.h"
 #include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
-#include "libc/stdio/stdio.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
-#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
-#include "libc/sysv/errfuns.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
-#include "third_party/dlmalloc/dlmalloc.h"
 
 STATIC_YOINK("nsync_mu_lock");
 STATIC_YOINK("nsync_mu_unlock");
@@ -254,15 +243,13 @@ static errno_t pthread_create_impl(pthread_t *thread,
 
   // launch PosixThread(pt) in new thread
   pt->sigmask = oldsigs;
-  if (clone(PosixThread, pt->attr.__stackaddr,
-            pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
-            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
-                CLONE_CHILD_CLEARTID,
-            pt, &pt->tid, pt->tib, &pt->tib->tib_tid) == -1) {
-    rc = errno;
+  if ((rc = clone(PosixThread, pt->attr.__stackaddr,
+                  pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
+                  CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
+                      CLONE_SIGHAND | CLONE_SETTLS | CLONE_PARENT_SETTID |
+                      CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
+                  pt, &pt->ptid, pt->tib, &pt->tib->tib_tid))) {
     _pthread_free(pt);
-    errno = e;
     return rc;
   }
 

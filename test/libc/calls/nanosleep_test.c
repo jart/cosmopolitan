@@ -22,6 +22,7 @@
 #include "libc/calls/struct/timespec.h"
 #include "libc/errno.h"
 #include "libc/intrin/describeflags.internal.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/sysv/consts/clock.h"
 #include "libc/sysv/consts/itimer.h"
 #include "libc/sysv/consts/sa.h"
@@ -31,6 +32,7 @@
 
 void OnAlrm(int sig) {
   // do nothing
+  STRACE("OnAlrm()");
 }
 
 TEST(nanosleep, testFault) {
@@ -54,7 +56,7 @@ TEST(nanosleep, testInterrupt_remIsUpdated) {
       .sa_flags = SA_RESETHAND,
   };
   ASSERT_SYS(0, 0, sigaction(SIGALRM, &sa, 0));
-  struct itimerval it = {{0, 0}, {0, 10000}};  // 10ms singleshot
+  struct itimerval it = {{0, 0}, {0, 100000}};  // 100ms singleshot
   ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, 0));
   struct timespec ts = {500, 0};
   ASSERT_SYS(EINTR, -1, nanosleep(&ts, &ts));
@@ -75,7 +77,7 @@ TEST(clock_nanosleep, testInterrupt_remIsUpdated) {
       .sa_flags = SA_RESETHAND,
   };
   ASSERT_SYS(0, 0, sigaction(SIGALRM, &sa, 0));
-  struct itimerval it = {{0, 0}, {0, 10000}};  // 10ms singleshot
+  struct itimerval it = {{0, 0}, {0, 100000}};  // 100ms singleshot
   ASSERT_SYS(0, 0, setitimer(ITIMER_REAL, &it, 0));
   struct timespec ts = {500, 0};
   ASSERT_EQ(EINTR, clock_nanosleep(CLOCK_REALTIME, 0, &ts, &ts));

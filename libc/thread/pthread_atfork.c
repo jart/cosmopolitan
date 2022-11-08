@@ -73,7 +73,6 @@ void _pthread_onfork_child(void) {
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
   atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
-  pt->tid = atomic_load_explicit(&tib->tib_tid, memory_order_relaxed);
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);

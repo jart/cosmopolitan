@@ -87,7 +87,7 @@ static void ListenForSigThr(void) {
  *
  * By default, pthread_cancel() can only take effect when a thread
  * reaches a cancellation point. Such functions are documented with
- * @cancellationpoint. They check the cancellation state before the
+ * `@cancellationpoint`. They check the cancellation state before the
  * underlying system call is issued. If the system call is issued and
  * blocks, then pthread_cancel() will interrupt the operation in which
  * case the syscall wrapper will check the cancelled state a second
@@ -277,18 +277,20 @@ errno_t pthread_cancel(pthread_t thread) {
     }
     return 0;
   }
-  if (IsWindows()) return 0;  // no true cancellations on Windows yet
-  tid = atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire);
-  if (tid <= 0) return 0;  // -1 means still starting, 0 means exited
-  e = errno;
-  if (!__tkill(tid, SIGTHR, pt->tib)) {
-    return 0;
-  } else {
-    rc = errno;
-    errno = e;
-    return rc;
+  if (!(rc = pthread_getunique_np(thread, &tid))) {
+    if (!IsWindows()) {
+      e = errno;
+      if (!__tkill(tid, SIGTHR, pt->tib)) {
+        rc = 0;
+      } else {
+        rc = errno;
+        errno = e;
+      }
+    } else {
+      rc = 0;
+    }
   }
-  return 0;
+  return rc;
 }
 
 /**

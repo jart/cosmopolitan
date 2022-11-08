@@ -16,12 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 
 /**
- * Returns thread id of POSIX thread.
+ * Returns system thread id of POSIX thread.
+ *
+ * @return 0 on success, or errno on error
  */
-int64_t pthread_getunique_np(pthread_t thread) {
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  return pt->tid;
+errno_t pthread_getunique_np(pthread_t thread, pthread_id_np_t *out_tid) {
+  int tid;
+  struct PosixThread *pt;
+  for (pt = (struct PosixThread *)thread;;) {
+    tid = atomic_load_explicit(&pt->ptid, memory_order_acquire);
+    if (!tid) {
+      pthread_yield();
+    } else {
+      *out_tid = tid;
+      return 0;
+    }
+  }
 }

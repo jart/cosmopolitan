@@ -34,7 +34,9 @@
 #include "libc/thread/tls.h"
 
 int _fork(uint32_t dwCreationFlags) {
-  int ax, dx, parent;
+  struct CosmoTib *tib;
+  struct PosixThread *pt;
+  int ax, dx, tid, parent;
   BLOCK_SIGNALS;
   if (__threaded && _weaken(_pthread_onfork_prepare)) {
     _weaken(_pthread_onfork_prepare)();
@@ -53,9 +55,12 @@ int _fork(uint32_t dwCreationFlags) {
     parent = __pid;
     __pid = dx;
     if (__tls_enabled) {
-      atomic_store_explicit(&__get_tls()->tib_tid,
-                            IsLinux() ? dx : sys_gettid(),
-                            memory_order_relaxed);
+      tib = __get_tls();
+      tid = IsLinux() ? dx : sys_gettid();
+      atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
+      if ((pt = (struct PosixThread *)tib->tib_pthread)) {
+        atomic_store_explicit(&pt->ptid, tid, memory_order_relaxed);
+      }
     }
     if (__threaded && _weaken(_pthread_onfork_child)) {
       _weaken(_pthread_onfork_child)();

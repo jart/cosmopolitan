@@ -28,7 +28,7 @@
 //	@param	r8 is tls
 //	@param	r9 is func(void*,int)→int
 //	@param	8(rsp) is arg
-//	@return	tid of child on success, or -1 w/ errno
+//	@return	tid of child on success, or -errno on error
 sys_clone_linux:
 	push	%rbp
 	mov	%rsp,%rbp
@@ -39,13 +39,9 @@ sys_clone_linux:
 	syscall
 	test	%rax,%rax
 	jz	2f
-	cmp	$-4095,%rax
-	jae	1f
 0:	pop	%rbx
 	pop	%rbp
 	ret
-1:	call	systemfive_error
-	jmp	0b
 2:	xor	%ebp,%ebp		# child thread
 	mov	%rbx,%rdi		# arg
 	mov	(%r10),%esi		# tid

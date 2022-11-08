@@ -20,6 +20,7 @@
 #include "libc/calls/struct/cpuset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/str/str.h"
@@ -33,37 +34,40 @@
  * @return 0 on success, or errno on error
  * @raise EINVAL if `size` or `bitset` is invalid
  * @raise ENOSYS if not Linux, FreeBSD, or NetBSD
+ * @raise ESRCH if thread isn't alive
  */
 errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
                                cpu_set_t *bitset) {
-  int tid, rc, e = errno;
-  tid = ((struct PosixThread *)thread)->tid;
+  int e, rc, tid;
 
-  if (size != sizeof(cpu_set_t)) {
-    rc = einval();
-  } else if (IsWindows() || IsMetal() || IsOpenbsd()) {
-    rc = enosys();
-  } else if (IsFreebsd()) {
-    if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
-                                       bitset)) {
-      rc = 32;
+  if (!(rc = pthread_getunique_np(thread, &tid))) {
+    e = errno;
+    if (size != sizeof(cpu_set_t)) {
+      rc = einval();
+    } else if (IsWindows() || IsMetal() || IsOpenbsd()) {
+      rc = enosys();
+    } else if (IsFreebsd()) {
+      if (!sys_sched_getaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid,
+                                         32, bitset)) {
+        rc = 32;
+      } else {
+        rc = -1;
+      }
+    } else if (IsNetbsd()) {
+      if (!sys_sched_getaffinity_netbsd(tid, 0, 32, bitset)) {
+        rc = 32;
+      } else {
+        rc = -1;
+      }
     } else {
-      rc = -1;
+      rc = sys_sched_getaffinity(tid, size, bitset);
     }
-  } else if (IsNetbsd()) {
-    if (!sys_sched_getaffinity_netbsd(tid, 0, 32, bitset)) {
-      rc = 32;
-    } else {
-      rc = -1;
+    if (rc > 0) {
+      if (rc < size) {
+        bzero((char *)bitset + rc, size - rc);
+      }
+      rc = 0;
     }
-  } else {
-    rc = sys_sched_getaffinity(tid, size, bitset);
-  }
-  if (rc > 0) {
-    if (rc < size) {
-      bzero((char *)bitset + rc, size - rc);
-    }
-    rc = 0;
   }
 
   STRACE("pthread_getaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,

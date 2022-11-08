@@ -24,6 +24,7 @@
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/asmflag.h"
+#include "libc/intrin/atomic.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/pr.h"
@@ -31,12 +32,13 @@
 
 static errno_t pthread_setname_impl(pthread_t thread, const char *name) {
   char path[128], *p;
-  int fd, rc, tid, len, e = errno;
+  int e, fd, rc, tid, len;
 
-  tid = ((struct PosixThread *)thread)->tid;
+  if ((rc = pthread_getunique_np(thread, &tid))) return rc;
   len = strlen(name);
 
   if (IsLinux()) {
+    e = errno;
     if (tid == gettid()) {
       if (prctl(PR_SET_NAME, name) == -1) {
         rc = errno;

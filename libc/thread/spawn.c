@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/errno.h"
 #include "libc/macros.internal.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/clone.internal.h"
@@ -92,6 +93,7 @@ static int Spawner(void *arg, int tid) {
  * @return 0 on success, or -1 w/ errno
  */
 int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
+  errno_t rc;
   struct spawn *th, ths;
   struct spawner *spawner;
   __require_tls();
@@ -122,11 +124,13 @@ int _spawn(int fun(void *, int), void *arg, struct spawn *opt_out_thread) {
   spawner = malloc(sizeof(struct spawner));
   spawner->fun = fun;
   spawner->arg = arg;
-  if (clone(Spawner, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
-            CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
-                CLONE_CHILD_CLEARTID,
-            spawner, &th->ptid, th->tib, &th->tib->tib_tid) == -1) {
+  rc = clone(Spawner, th->stk, GetStackSize() - 16 /* openbsd:stackbound */,
+             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                 CLONE_SETTLS | CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
+                 CLONE_CHILD_CLEARTID,
+             spawner, &th->ptid, th->tib, &th->tib->tib_tid);
+  if (rc) {
+    errno = rc;
     _freestack(th->stk);
     free(th->tls);
     return -1;

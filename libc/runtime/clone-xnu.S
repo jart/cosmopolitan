@@ -1,5 +1,5 @@
-/*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+/*-*- mode:unix-assembly; indent-tabs-mode:t; tab-width:8; coding:utf-8     -*-│
+│vi: set et ft=asm ts=8 tw=8 fenc=utf-8                                     :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,33 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/calls/sched-sysv.internal.h"
-#include "libc/calls/struct/sched_param.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/sysv/errfuns.h"
-#include "libc/thread/posixthread.internal.h"
+#include "libc/macros.internal.h"
 
-errno_t _pthread_reschedule(struct PosixThread *pt) {
-  int e, rc, tid;
-  int policy = pt->attr.__schedpolicy;
-  struct sched_param param = {pt->attr.__schedparam};
-  if (!(rc = pthread_getunique_np((pthread_t)pt, &tid))) {
-    e = errno;
-    if (IsNetbsd()) {
-      rc = sys_sched_setparam_netbsd(0, tid, policy, &param);
-    } else if (IsLinux()) {
-      rc = sys_sched_setscheduler(tid, policy, &param);
-    } else if (IsFreebsd()) {
-      rc = _pthread_setschedparam_freebsd(tid, policy, &param);
-    } else {
-      rc = enosys();
-    }
-    if (rc == -1) {
-      rc = errno;
-      errno = e;
-    }
-  }
-  return rc;
-}
+sys_clone_xnu:
+	mov	$0x02000168,%eax		# bsdthread_create
+	mov	%rcx,%r10
+	syscall
+	ret
+	.endfn	sys_clone_xnu,globl,hidden

@@ -21,6 +21,7 @@
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/nt/enum/threadaccess.h"
@@ -52,23 +53,25 @@ static dontinline textwindows int sys_pthread_setaffinity_nt(
  */
 errno_t pthread_setaffinity_np(pthread_t thread, size_t size,
                                const cpu_set_t *bitset) {
-  int tid, rc, e = errno;
-  tid = ((struct PosixThread *)thread)->tid;
-  if (size != sizeof(cpu_set_t)) {
-    rc = einval();
-  } else if (IsWindows()) {
-    rc = sys_pthread_setaffinity_nt(tid, size, bitset);
-  } else if (IsFreebsd()) {
-    rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid, 32,
-                                       bitset);
-  } else if (IsNetbsd()) {
-    rc = sys_sched_setaffinity_netbsd(tid, 0, 32, bitset);
-  } else {
-    rc = sys_sched_setaffinity(tid, size, bitset);
-  }
-  if (rc == -1) {
-    rc = errno;
-    errno = e;
+  int e, rc, tid;
+  if (!(rc = pthread_getunique_np(thread, &tid))) {
+    e = errno;
+    if (size != sizeof(cpu_set_t)) {
+      rc = einval();
+    } else if (IsWindows()) {
+      rc = sys_pthread_setaffinity_nt(tid, size, bitset);
+    } else if (IsFreebsd()) {
+      rc = sys_sched_setaffinity_freebsd(CPU_LEVEL_WHICH, CPU_WHICH_TID, tid,
+                                         32, bitset);
+    } else if (IsNetbsd()) {
+      rc = sys_sched_setaffinity_netbsd(tid, 0, 32, bitset);
+    } else {
+      rc = sys_sched_setaffinity(tid, size, bitset);
+    }
+    if (rc == -1) {
+      rc = errno;
+      errno = e;
+    }
   }
   STRACE("pthread_setaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,
          DescribeErrnoResult(rc));

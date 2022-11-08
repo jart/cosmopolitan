@@ -117,8 +117,8 @@ void __enable_tls(void) {
     tid = sys_gettid();
   }
   atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
+  _pthread_main.ptid = tid;
   _pthread_main.tib = tib;
-  _pthread_main.tid = tid;
   _pthread_main.flags = PT_MAINTHREAD;
   __repmovsb(tls, _tdata_start, _TLDZ);
 

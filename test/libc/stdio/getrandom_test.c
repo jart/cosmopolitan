@@ -24,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/bits.h"
 #include "libc/log/check.h"
+#include "libc/macros.internal.h"
 #include "libc/math.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
@@ -40,6 +41,29 @@
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
+
+atomic_int done;
+atomic_int ready;
+pthread_t parent;
+atomic_int gotsome;
+
+void OnSig(int sig) {
+  ++gotsome;
+}
+
+void *TortureWorker(void *arg) {
+  sigset_t ss;
+  sigfillset(&ss);
+  ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &ss, 0));
+  ready = true;
+  while (!done) {
+    if (!IsWindows()) pthread_kill(parent, SIGUSR1);
+    usleep(1);
+    if (!IsWindows()) pthread_kill(parent, SIGUSR2);
+    usleep(1);
+  }
+  return 0;
+}
 
 TEST(getrandom, test) {
   double e, w = 7.7;
@@ -59,6 +83,45 @@ TEST(getrandom, test) {
     fprintf(stderr, "\n");
     exit(1);
   }
+}
+
+TEST(getrandom, test2) {
+  pthread_t child;
+  double e, w = 7.7;
+  struct sigaction sa;
+  int i, j, k, m, n = 999;
+  char *buf = _gc(calloc(1, n));
+  sa.sa_flags = 0;
+  sa.sa_handler = OnSig;
+  sigemptyset(&sa.sa_mask);
+  ASSERT_SYS(0, 0, sigaction(SIGUSR1, &sa, 0));
+  ASSERT_SYS(0, 0, sigaction(SIGUSR2, &sa, 0));
+  parent = pthread_self();
+  ASSERT_EQ(0, pthread_create(&child, 0, TortureWorker, 0));
+  while (!ready) pthread_yield();
+  for (k = 0; k < 10; ++k) {
+    ASSERT_SYS(0, 0, getrandom(0, 0, 0));
+    for (i = 0; i < n; i += m) {
+      ASSERT_NE(-1, (m = getrandom(buf + i, n - i, 0)));
+    }
+    ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
+    ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
+    if ((e = MeasureEntropy(buf, n)) < w) {
+      fprintf(stderr, "error: entropy suspect! got %g but want >=%g\n", e, w);
+      for (i = 0; i < n;) {
+        if (!(i % 16)) fprintf(stderr, "%6x ", i);
+        fprintf(stderr, "%lc", kCp437[buf[i] & 255]);
+        if (!(++i % 16)) fprintf(stderr, "\n");
+      }
+      fprintf(stderr, "\n");
+      done = true;
+      pthread_join(child, 0);
+      exit(1);
+    }
+  }
+  done = true;
+  ASSERT_EQ(0, pthread_join(child, 0));
+  if (!IsWindows()) ASSERT_GT(gotsome, 0);
 }
 
 /* JustReturnZero                   */

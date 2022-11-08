@@ -66,7 +66,7 @@ struct PosixThread {
   int flags;               // 0x00: see PT_* constants
   _Atomic(int) cancelled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) status;
-  int tid;                 // clone parent tid
+  _Atomic(int) ptid;       // transitions 0 → tid
   void *(*start)(void *);  // creation callback
   void *arg;               // start's parameter
   void *rc;                // start's return value

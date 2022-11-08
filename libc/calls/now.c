@@ -45,10 +45,10 @@ static long double GetTimeSample(void) {
   uint64_t tick1, tick2;
   long double time1, time2;
   sched_yield();
-  time1 = dtime(CLOCK_REALTIME_FAST);
+  time1 = dtime(CLOCK_REALTIME_PRECISE);
   tick1 = rdtsc();
   nanosleep(&(struct timespec){0, 1000000}, NULL);
-  time2 = dtime(CLOCK_REALTIME_FAST);
+  time2 = dtime(CLOCK_REALTIME_PRECISE);
   tick2 = rdtsc();
   return (time2 - time1) * 1e9 / MAX(1, tick2 - tick1);
 }
@@ -74,13 +74,13 @@ static long double MeasureNanosPerCycle(void) {
 void RefreshTime(void) {
   struct Now now;
   now.cpn = MeasureNanosPerCycle();
-  now.r0 = dtime(CLOCK_REALTIME_FAST);
+  now.r0 = dtime(CLOCK_REALTIME_PRECISE);
   now.k0 = rdtsc();
   memcpy(&g_now, &now, sizeof(now));
 }
 
 static long double nowl_sys(void) {
-  return dtime(CLOCK_REALTIME_FAST);
+  return dtime(CLOCK_REALTIME_PRECISE);
 }
 
 static long double nowl_art(void) {
@@ -92,7 +92,7 @@ static long double nowl_vdso(void) {
   long double secs;
   struct timespec tv;
   _unassert(__gettime);
-  __gettime(CLOCK_REALTIME_FAST, &tv);
+  __gettime(CLOCK_REALTIME_PRECISE, &tv);
   secs = tv.tv_nsec;
   secs *= 1 / 1e9L;
   secs += tv.tv_sec;

@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/atomic.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/internal.h"
@@ -111,29 +112,36 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	}
 }
 
-static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *timeout) {
+static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *abstime) {
 	int rc;
 	int64_t nanos, maxnanos;
-	struct timespec ts, deadline;
+	struct timespec now, wait, remain, deadline;
 
-	ts = timespec_real ();
-	if (!timeout) {
+	if (!abstime) {
 		deadline = timespec_max;
 	} else {
-		deadline = *timeout;
+		deadline = *abstime;
 	}
 
 	nanos = 100;
 	maxnanos = __SIG_POLLING_INTERVAL_MS * 1000L * 1000;
-	while (timespec_cmp (deadline, ts) > 0) {
-		ts = timespec_add (ts, timespec_fromnanos (nanos));
-		if (timespec_cmp (ts, deadline) > 0) {
-			ts = deadline;
-		}
+	for (;;) {
 		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
 			return 0;
 		}
-		if ((rc = timespec_sleep_until (ts))) {
+		now = timespec_real ();
+		if (atomic_load_explicit (w, memory_order_acquire) != expect) {
+			return 0;
+		}
+		if (timespec_cmp (now, deadline) >= 0) {
+			break;
+		}
+		wait = timespec_fromnanos (nanos);
+		remain = timespec_sub (deadline, now);
+		if (timespec_cmp(wait, remain) > 0) {
+			wait = remain;
+		}
+		if ((rc = clock_nanosleep (CLOCK_REALTIME, 0, &wait, 0))) {
 			return -rc;
 		}
 		if (nanos < maxnanos) {

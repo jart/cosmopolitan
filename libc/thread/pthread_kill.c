@@ -19,6 +19,7 @@
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-sysv.internal.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
@@ -33,13 +34,17 @@
  * @asyncsignalsafe
  */
 errno_t pthread_kill(pthread_t thread, int sig) {
-  int rc, e = errno;
-  struct PosixThread *pt = (struct PosixThread *)thread;
-  if (!__tkill(pt->tid, sig, pt->tib)) {
-    rc = 0;
-  } else {
-    rc = errno;
-    errno = e;
+  int e, rc, tid;
+  struct PosixThread *p;
+  if (!(rc = pthread_getunique_np(thread, &tid))) {
+    e = errno;
+    p = (struct PosixThread *)thread;
+    if (!__tkill(tid, sig, p->tib)) {
+      rc = 0;
+    } else {
+      rc = errno;
+      errno = e;
+    }
   }
   return rc;
 }

@@ -39,8 +39,8 @@ void *Worker(void *arg) {
 
 TEST(tkill, test) {
   if (IsWindows()) return;  // TODO(jart): fix me
-  int i;
   void *res;
+  int i, tid;
   pthread_t t;
   sigset_t ss, oldss;
   sighandler_t oldsig;
@@ -49,7 +49,8 @@ TEST(tkill, test) {
   oldsig = signal(SIGUSR1, OnSig);
   ASSERT_SYS(0, 0, sigprocmask(SIG_BLOCK, &ss, &oldss));
   ASSERT_EQ(0, pthread_create(&t, 0, Worker, 0));
-  ASSERT_SYS(0, 0, tkill(pthread_getunique_np(t), SIGUSR1));
+  ASSERT_EQ(0, pthread_getunique_np(t, &tid));
+  ASSERT_SYS(0, 0, tkill(tid, SIGUSR1));
   ASSERT_EQ(0, pthread_join(t, &res));
   ASSERT_EQ(SIGUSR1, (intptr_t)res);
   ASSERT_SYS(0, 0, sigprocmask(SIG_SETMASK, &oldss, 0));

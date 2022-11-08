@@ -8,8 +8,8 @@ COSMOPOLITAN_C_START_
  * See darwin-libpthread/kern/kern_support.c
  */
 
-int sys_bsdthread_create(void *func, void *func_arg, void *stack, void *pthread,
-                         uint32_t flags);
+errno_t sys_clone_xnu(void *func, void *func_arg, void *stack, void *pthread,
+                      uint32_t flags);
 int sys_bsdthread_register(
     void (*threadstart)(void *pthread, int machport, void *(*func)(void *),
                         void *arg, intptr_t *, unsigned),

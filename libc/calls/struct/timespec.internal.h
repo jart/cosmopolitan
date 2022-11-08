@@ -6,13 +6,13 @@
 COSMOPOLITAN_C_START_
 /* clang-format off */
 
+int __sys_clock_nanosleep(int, int, const struct timespec *, struct timespec *) hidden;
 int __sys_utimensat(int, const char *, const struct timespec[2], int) hidden;
 int __utimens(int, const char *, const struct timespec[2], int) hidden;
 int sys_clock_getres(int, struct timespec *) hidden;
 int sys_clock_gettime(int, struct timespec *) hidden;
 int sys_clock_gettime_nt(int, struct timespec *) hidden;
 int sys_clock_gettime_xnu(int, struct timespec *) hidden;
-int sys_clock_nanosleep(int, int, const struct timespec *, struct timespec *) hidden;
 int sys_clock_nanosleep_nt(int, int, const struct timespec *, struct timespec *) hidden;
 int sys_clock_nanosleep_openbsd(int, int, const struct timespec *, struct timespec *) hidden;
 int sys_clock_nanosleep_xnu(int, int, const struct timespec *, struct timespec *) hidden;

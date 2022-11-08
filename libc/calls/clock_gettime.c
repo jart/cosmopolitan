@@ -50,20 +50,23 @@
  *     sys_clock_gettime   l:       220𝑐        71𝑛𝑠
  *
  * @param clock can be one of:
- *     - `CLOCK_REALTIME`: universally supported
- *     - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
- *     - `CLOCK_MONOTONIC`: universally supported
- *     - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
- *     - `CLOCK_MONOTONIC_RAW`: nearly universally supported
- *     - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
- *     - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
- *     - `CLOCK_REALTIME_COARSE`: : linux and openbsd
- *     - `CLOCK_MONOTONIC_COARSE`: linux
- *     - `CLOCK_PROF`: linux and netbsd
- *     - `CLOCK_BOOTTIME`: linux and openbsd
- *     - `CLOCK_REALTIME_ALARM`: linux-only
- *     - `CLOCK_BOOTTIME_ALARM`: linux-only
- *     - `CLOCK_TAI`: linux-only
+ *    - `CLOCK_REALTIME`: universally supported
+ *    - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
+ *    - `CLOCK_REALTIME_PRECISE`: ditto but better on freebsd
+ *    - `CLOCK_REALTIME_COARSE`: : like `CLOCK_REALTIME_FAST` w/ Linux 2.6.32+
+ *    - `CLOCK_MONOTONIC`: universally supported
+ *    - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
+ *    - `CLOCK_MONOTONIC_PRECISE`: ditto but better on freebsd
+ *    - `CLOCK_MONOTONIC_COARSE`: : like `CLOCK_MONOTONIC_FAST` w/ Linux 2.6.32+
+ *    - `CLOCK_MONOTONIC_RAW`: is actually monotonic but needs Linux 2.6.28+
+ *    - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
+ *    - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
+ *    - `CLOCK_MONOTONIC_COARSE`: linux, freebsd
+ *    - `CLOCK_PROF`: linux and netbsd
+ *    - `CLOCK_BOOTTIME`: linux and openbsd
+ *    - `CLOCK_REALTIME_ALARM`: linux-only
+ *    - `CLOCK_BOOTTIME_ALARM`: linux-only
+ *    - `CLOCK_TAI`: linux-only
  * @param ts is where the result is stored
  * @return 0 on success, or -1 w/ errno
  * @error EPERM if pledge() is in play without stdio promise

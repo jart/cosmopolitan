@@ -115,7 +115,7 @@ int pthread_testcancel_np(void);
 void pthread_exit(void *) wontreturn;
 pthread_t pthread_self(void) pureconst;
 pthread_id_np_t pthread_getthreadid_np(void);
-int64_t pthread_getunique_np(pthread_t);
+int pthread_getunique_np(pthread_t, pthread_id_np_t *);
 int pthread_setname_np(pthread_t, const char *);
 int pthread_getname_np(pthread_t, char *, size_t);
 int pthread_getattr_np(pthread_t, pthread_attr_t *);

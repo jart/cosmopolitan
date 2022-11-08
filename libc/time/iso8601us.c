@@ -65,7 +65,6 @@
  * @threadsafe
  */
 char *iso8601us(char p[hasatleast 27], struct tm *tm, long ns) {
-  int x;
   p = iso8601(p, tm);
   _unassert(0 <= ns && ns < 1000000000);
   *p++ = '.';

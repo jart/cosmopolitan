@@ -103,7 +103,8 @@
     "DBL_MIN"
     "DBL_MAX"
     "FLT_MIN"
-    "FLT_MAX"))
+    "FLT_MAX"
+    "PIPE_BUF"))
 
 (defconst cosmo-c-constants-math
   '("NAN"

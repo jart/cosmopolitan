@@ -22,6 +22,7 @@
 #include "libc/calls/struct/sigset.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/macros.internal.h"
 #include "libc/mem/gc.h"
 #include "libc/mem/mem.h"
 #include "libc/runtime/runtime.h"
@@ -50,9 +51,9 @@ void *TortureWorker(void *arg) {
   ready = true;
   while (!done) {
     if (!IsWindows()) pthread_kill(parent, SIGUSR1);
-    usleep(3);
+    usleep(1);
     if (!IsWindows()) pthread_kill(parent, SIGUSR2);
-    usleep(3);
+    usleep(1);
   }
   return 0;
 }
@@ -61,7 +62,7 @@ TEST(getentropy, test) {
   pthread_t child;
   double e, w = 7.7;
   struct sigaction sa;
-  int i, j, k, n = 999;
+  int i, j, k, m, n = 999;
   char *buf = _gc(calloc(1, n));
   sa.sa_flags = 0;
   sa.sa_handler = OnSig;
@@ -71,11 +72,13 @@ TEST(getentropy, test) {
   parent = pthread_self();
   ASSERT_EQ(0, pthread_create(&child, 0, TortureWorker, 0));
   while (!ready) pthread_yield();
-  for (k = 0; k < 200; ++k) {
-    ASSERT_SYS(0, 0, getrandom(0, 0, 0));
-    ASSERT_SYS(0, n, getrandom(buf, n, 0));
-    ASSERT_SYS(EFAULT, -1, getrandom(0, n, 0));
-    ASSERT_SYS(EINVAL, -1, getrandom(buf, n, -1));
+  for (k = 0; k < 10; ++k) {
+    ASSERT_SYS(0, 0, getentropy(0, 0));
+    for (i = 0; i < n; i += m) {
+      m = MIN(n - i, 256);
+      ASSERT_SYS(0, 0, getentropy(buf + i, m));
+      ASSERT_SYS(EFAULT, -1, getentropy(0, m));
+    }
     if ((e = MeasureEntropy(buf, n)) < w) {
       fprintf(stderr, "error: entropy suspect! got %g but want >=%g\n", e, w);
       for (i = 0; i < n;) {

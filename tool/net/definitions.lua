@@ -3322,6 +3322,8 @@ unix = {
     --- @type integer
     CLOCK_MONOTONIC_COARSE = nil,
     --- @type integer
+    CLOCK_MONOTONIC_PRECISE = nil,
+    --- @type integer
     CLOCK_MONOTONIC_FAST = nil,
     --- @type integer
     CLOCK_MONOTONIC_RAW = nil,
@@ -3331,6 +3333,8 @@ unix = {
     CLOCK_PROF = nil,
     --- @type integer
     CLOCK_REALTIME = nil,
+    --- @type integer
+    CLOCK_REALTIME_PRECISE = nil,
     --- @type integer
     CLOCK_REALTIME_ALARM = nil,
     --- @type integer
@@ -5247,13 +5251,16 @@ function unix.syslog(priority, msg) end
 ---
 --- - `CLOCK_REALTIME`: universally supported
 --- - `CLOCK_REALTIME_FAST`: ditto but faster on freebsd
+--- - `CLOCK_REALTIME_PRECISE`: ditto but better on freebsd
+--- - `CLOCK_REALTIME_COARSE`: : like `CLOCK_REALTIME_FAST` but needs Linux 2.6.32+
 --- - `CLOCK_MONOTONIC`: universally supported
 --- - `CLOCK_MONOTONIC_FAST`: ditto but faster on freebsd
---- - `CLOCK_MONOTONIC_RAW`: nearly universally supported
+--- - `CLOCK_MONOTONIC_PRECISE`: ditto but better on freebsd
+--- - `CLOCK_MONOTONIC_COARSE`: : like `CLOCK_MONOTONIC_FAST` but needs Linux 2.6.32+
+--- - `CLOCK_MONOTONIC_RAW`: is actually monotonic but needs Linux 2.6.28+
 --- - `CLOCK_PROCESS_CPUTIME_ID`: linux and bsd
 --- - `CLOCK_THREAD_CPUTIME_ID`: linux and bsd
---- - `CLOCK_REALTIME_COARSE`: : linux and openbsd
---- - `CLOCK_MONOTONIC_COARSE`: linux
+--- - `CLOCK_MONOTONIC_COARSE`: linux, freebsd
 --- - `CLOCK_PROF`: linux and netbsd
 --- - `CLOCK_BOOTTIME`: linux and openbsd
 --- - `CLOCK_REALTIME_ALARM`: linux-only

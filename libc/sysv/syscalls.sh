@@ -71,7 +71,7 @@ scall	sys_dup			0x0290290292029020	globl hidden
 scall	sys_dup2		0x05a05a05a205a021	globl hidden
 scall	sys_pause		0xfffffffffffff022	globl hidden
 scall	sys_nanosleep		0x9ae85b8f0ffff823	globl hidden
-scall	sys_clock_nanosleep	0x9ddfff8f4ffff8e6	globl hidden
+scall	__sys_clock_nanosleep	0x9ddfff8f4ffff8e6	globl hidden
 scall	sys_getitimer		0x1aa0460562056024	globl hidden
 scall	sys_setitimer		0x1a90450532053026	globl hidden
 scall	sys_alarm		0xfffffffffffff025	globl hidden
@@ -492,7 +492,7 @@ scall	sys_closefrom		0xfff11f1fdfffffff	globl hidden
 #scall	audit_session_join	0xfffffffff21adfff	globl
 #scall	audit_session_port	0xfffffffff21b0fff	globl
 #scall	audit_session_self	0xfffffffff21acfff	globl
-scall	sys_bsdthread_create	0xfffffffff2168fff	globl hidden
+#scall	sys_bsdthread_create	0xfffffffff2168fff	globl
 #scall	bsdthread_ctl		0xfffffffff21defff	globl
 scall	sys_bsdthread_register	0xfffffffff216efff	globl hidden
 #scall	bsdthread_terminate	0xfffffffff2169fff	globl

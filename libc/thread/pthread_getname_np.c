@@ -23,6 +23,7 @@
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/asmflag.h"
+#include "libc/intrin/atomic.h"
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/o.h"
@@ -30,11 +31,12 @@
 #include "libc/thread/posixthread.internal.h"
 
 static errno_t pthread_getname_impl(pthread_t thread, char *name, size_t size) {
-  int fd, rc, tid, len, e = errno;
+  int e, fd, rc, tid, len;
 
+  if ((rc = pthread_getunique_np(thread, &tid))) return rc;
   if (!size) return 0;
   bzero(name, size);
-  tid = ((struct PosixThread *)thread)->tid;
+  e = errno;
 
   if (IsLinux()) {
     // TASK_COMM_LEN is 16 on Linux so we're just being paranoid.
