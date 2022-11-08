@@ -128,6 +128,10 @@ o/$(MODE)/tool/net/redbean.com:							\
 	@$(MAKE_SYMTAB_ZIP)
 	@$(TOOL_NET_REDBEAN_STANDARD_ASSETS_ZIP)
 
+o/$(MODE)/tool/net/lsqlite3.o: private						\
+		OVERRIDE_CFLAGS +=						\
+			-DSQLITE_ENABLE_SESSION
+
 # REDBEAN-DEMO.COM
 #
 # This redbean-demo.com program is the same as redbean.com except it
