@@ -109,8 +109,7 @@ __excep0_isr:
 isr_init:
 	testb	IsMetal()
 	jz	9f
-	ezlea	_tss+0x24,di		# fill up TSS, we already loaded
-					# task register in ape/ape.S
+	ezlea	_tss+0x24,di		# fill up TSS
 	ezlea	_isr_stk_1+ISR_STK_SZ,ax
 	and	$-ISR_STK_ALIGN,%al	# be paranoid & enforce correct
 	stosq				# alignment of stack pointers
@@ -142,6 +141,8 @@ isr_init:
 	stosq
 	add	$__excep1_isr-__excep0_isr,%rdx
 	loop	1b
+	mov	$GDT_LONG_TSS,%cl	# load task register (cx = 0 here)
+	ltr	%cx
 9:	ret
 
 //	String constants.

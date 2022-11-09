@@ -1091,6 +1091,42 @@ ape_idata_idt:
 ape_idata_idtend:
 	.previous
 
+	.section .piro.data.sort.metal_gdt,"aw",@progbits
+	.align	8
+_gdt:
+//	          ┌G:granularity (1 → limit *= 0x1000)
+//	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
+//	          ││┌L:long mode
+//	          │││┌AVL:this bit is thine (1<<52)
+//	          ││││    ┌P:present
+//	          ││││    │┌DPL:privilege
+//	          ││││    ││ ┌─────────data/code(1)
+//	          ││││    ││ │┌────data(0)──────code(1)
+//	          ││││    ││ ││┌───conforming───expand-down
+//	          ││││    ││ │││┌──writeable────readable
+//	          ││││    ││ ││││┌─accessed─────accessed
+//	          ││││    ││ │││││
+//	          ││││ ┌──││─│││││───────────────────────────────┐
+//	      ┌───││││─│──││─│││││───────────┐                   │
+//	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
+//	  │      ││││││  ││││││││││          base address││ segment limit│
+//	  │      ││││││  ││││││││││               32 bits││       20 bits│
+//	  │      ││││││  ││││││││││                      ││              │
+//	  6666555555555544444444443333333333222222222211111111110000000000
+//	  3210987654321098765432109876543210987654321098765432109876543210
+//	  │      ││││││  ││││││││││                      ││              │
+.quad	0b0000000000000000000000000000000000000000000000000000000000000000 # 0
+.quad	0b0000000000001111100110100000000000000000000000001111111111111111 # 8
+.quad	0b0000000000001111100100100000000000000000000000001111111111111111 #16
+.quad	0b0000000011001111100110100000000000000000000000001111111111111111 #24
+.quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
+.quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
+.quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
+.tssdescstub _tss							#56,64
+_gdt_end:
+	.endobj	_gdt,global,hidden
+	.previous
+
 	.section .piro.data.sort.iat.1,"aw",@progbits
 	.type	ape_idata_iatend,@object
 	.type	ape_idata_iat,@object
@@ -1149,47 +1185,20 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 //	Global Descriptor Table
 	.align	8
 _gdtrlo:
-	.short	2f-1f-1		# table byte length
-	.long	REAL(1f)	# table address (base memory space)
+	.short	2f-_gdtlo-1	# table byte length
+	.long	REAL(_gdtlo)	# table address (base memory space)
 	.endobj	_gdtrlo,global,hidden
 _gdtr:
-	.short	2f-1f-1		# table byte length
-	.quad	1f		# table address (final virtual space)
+	.short	_gdt_end-_gdt-1	# table byte length
+	.quad	_gdt		# table address (final virtual space)
 	.endobj	_gdtr,global,hidden
 	.align	8
-_gdt:
-1:
-//	          ┌G:granularity (1 → limit *= 0x1000)
-//	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
-//	          ││┌L:long mode
-//	          │││┌AVL:this bit is thine (1<<52)
-//	          ││││    ┌P:present
-//	          ││││    │┌DPL:privilege
-//	          ││││    ││ ┌─────────data/code(1)
-//	          ││││    ││ │┌────data(0)──────code(1)
-//	          ││││    ││ ││┌───conforming───expand-down
-//	          ││││    ││ │││┌──writeable────readable
-//	          ││││    ││ ││││┌─accessed─────accessed
-//	          ││││    ││ │││││
-//	          ││││ ┌──││─│││││───────────────────────────────┐
-//	      ┌───││││─│──││─│││││───────────┐                   │
-//	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
-//	  │      ││││││  ││││││││││          base address││ segment limit│
-//	  │      ││││││  ││││││││││               32 bits││       20 bits│
-//	  │      ││││││  ││││││││││                      ││              │
-//	  6666555555555544444444443333333333222222222211111111110000000000
-//	  3210987654321098765432109876543210987654321098765432109876543210
-//	  │      ││││││  ││││││││││                      ││              │
-.quad	0b0000000000000000000000000000000000000000000000000000000000000000 # 0
-.quad	0b0000000000001111100110100000000000000000000000001111111111111111 # 8
-.quad	0b0000000000001111100100100000000000000000000000001111111111111111 #16
-.quad	0b0000000011001111100110100000000000000000000000001111111111111111 #24
+//	Partial GDT with descriptors for switching to unreal mode or long mode.
+_gdtlo	= .-GDT_LEGACY_DATA
 .quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
 .quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
 .quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
-.tssdescstub _tss							#56,64
 2:
-	.endobj	_gdt,global,hidden
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
@@ -1570,8 +1579,6 @@ long:	movabs	$BANE+PHYSICAL(0f),%rax
 	mov	%eax,%fs
 	mov	%eax,%gs
 	mov	$0x80000,%esp
-	mov	$GDT_LONG_TSS,%al
-	ltr	%ax
 	xor	%r12d,%r12d
 	xor	%r13d,%r13d
 	xor	%r14d,%r14d
