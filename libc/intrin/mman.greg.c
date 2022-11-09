@@ -44,6 +44,7 @@
 #include "libc/runtime/runtime.h"
 
 #define INVERT(x) (BANE + PHYSICAL(x))
+#define NOPAGE ((uint64_t)-1)
 
 struct ReclaimedPage {
   uint64_t next;
@@ -54,7 +55,7 @@ struct ReclaimedPage {
  */
 noasan texthead uint64_t __new_page(struct mman *mm) {
   uint64_t p = mm->frp;
-  if (p) {
+  if (p != NOPAGE) {
     uint64_t q;
     struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
     _unassert(p == (p & PAGE_TA));
@@ -126,7 +127,7 @@ static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
   mm->pdp = MAX(top, mm->e820[0].addr);
   mm->pdpi = 0;
   mm->e820n = n;
-  mm->frp = 0;
+  mm->frp = NOPAGE;
 }
 
 /**

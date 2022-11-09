@@ -24,6 +24,7 @@
 
 STATIC_YOINK("vga_console");
 STATIC_YOINK("_idt");
+STATIC_YOINK("EfiMain");
 
 int main(int argc, char *argv[]) {
   volatile int x = 1;

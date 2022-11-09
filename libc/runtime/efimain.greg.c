@@ -62,27 +62,36 @@ static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
  *
  * @see libc/dce.h
  */
-__msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
-                                  EFI_SYSTEM_TABLE *SystemTable) {
-  int type, x87cw;
+__msabi noasan __attribute__((__naked__))
+EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+  asm volatile("mov\t$0f,%esp\n\t"
+               "and\t$-16,%esp\n\t"
+               "jmp\t_DoEfiMain\n\t"
+               ".bss\n\t"
+               ".space\t8192\n"
+               "0:\n\t"
+               ".previous");
+}
+
+__msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
+                                     EFI_SYSTEM_TABLE *SystemTable) {
+  int type, x87cw = 0x037f;
   struct mman *mm;
   uint32_t DescVersion;
   uintptr_t i, j, MapSize;
   struct EfiArgs *ArgBlock;
   EFI_LOADED_IMAGE *ImgInfo;
-  EFI_MEMORY_DESCRIPTOR *Map;
+  EFI_MEMORY_DESCRIPTOR *Map, *Desc;
+  uint64_t NewBase = 1024 * 1024;
   uintptr_t Args, MapKey, DescSize;
   uint64_t p, pe, cr4, *m, *pd, *sp, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
-  extern char __os asm("__hostos");
-
-  __os = _HOSTMETAL;
 
   /*
    * Allocates and clears PC-compatible memory and copies image.
    */
   SystemTable->BootServices->AllocatePages(
       AllocateAddress, EfiConventionalMemory,
-      MAX(2 * 1024 * 1024, 1024 * 1024 + (_end - _base)) / 4096, 0);
+      MAX(2 * 1024 * 1024, 1024 * 1024 + (_end - _base)) / 4096, &NewBase);
   SystemTable->BootServices->SetMem(0, 0x80000, 0);
   SystemTable->BootServices->CopyMem((void *)(1024 * 1024), _base,
                                      _end - _base);
@@ -104,16 +113,19 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   MapSize = 0;
   SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescSize,
                                           &DescVersion);
-  SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, Map);
+  SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, &Map);
+  MapSize *= 2;
   SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescSize,
                                           &DescVersion);
-  asm("xor\t%0,%0" : "=r"(mm)); /* gcc assumes null isn't mapped */
-  for (j = i = 0; i < MapSize / sizeof(EFI_MEMORY_DESCRIPTOR); ++i) {
-    if (Map[i].Type != EfiConventionalMemory) continue;
-    mm->e820[j].addr = Map[i].PhysicalStart;
-    mm->e820[j].size = Map[i].NumberOfPages * 4096;
-    mm->e820[j].type = kMemoryUsable;
-    ++j;
+  mm = (struct mman *)0x0500;
+  for (j = i = 0, Desc = Map; i < MapSize / DescSize; ++i) {
+    if (Desc->Type == EfiConventionalMemory) {
+      mm->e820[j].addr = Desc->PhysicalStart;
+      mm->e820[j].size = Desc->NumberOfPages * 4096;
+      mm->e820[j].type = kMemoryUsable;
+      ++j;
+    }
+    Desc = (EFI_MEMORY_DESCRIPTOR *)((char *)Desc + DescSize);
   }
   SystemTable->BootServices->FreePool(Map);
 
@@ -135,8 +147,6 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   pdpt2[0] = (intptr_t)pdt2 + PAGE_V + PAGE_RW;
   pml4t[0] = (intptr_t)pdpt1 + PAGE_V + PAGE_RW;
   pml4t[256] = (intptr_t)pdpt2 + PAGE_V + PAGE_RW;
-  __map_phdrs(mm, pml4t, 1024 * 1024, 1024 * 1024 + (_end - _base));
-  __reclaim_boot_pages(mm, 0x79000, 0x7f000);
 
   /*
    * Asks UEFI to handover control?
@@ -144,10 +154,39 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
   SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 
   /*
+   * Switches to copied image.
+   */
+  asm volatile("cli\n\t"
+               "add\t%1,%%rsp\n\t"
+               "lea\t0f(%1),%0\n\t"
+               "jmp\t*%0\n"
+               "0:\n\t"
+               "mov\t%2,%%cr3\n\t"
+               "add\t%3,%%rsp\n\t"
+               "lea\t1f(%1),%0\n\t"
+               "add\t%3,%0\n\t"
+               "jmp\t*%0\n"
+               "1:"
+               : "=&r"(p)
+               : "r"(1024 * 1024 - (uint64_t)_base), "r"(pml4t), "r"(BANE));
+
+  /*
+   * Sets up virtual memory mapping.
+   */
+  __map_phdrs(mm, pml4t, 1024 * 1024, 1024 * 1024 + (_end - _base));
+  __reclaim_boot_pages(mm, 0x79000, 0x7f000);
+
+  /*
    * Launches program.
    */
   asm volatile("fldcw\t%3\n\t"
-               "mov\t%4,%%cr3\n\t"
+               ".weak\t_gdtr\n\t"
+               "lgdt\t_gdtr\n\t"
+               "mov\t%w6,%%ds\n\t"
+               "mov\t%w6,%%ss\n\t"
+               "mov\t%w6,%%es\n\t"
+               "mov\t%w6,%%fs\n\t"
+               "mov\t%w6,%%gs\n\t"
                ".weak\tape_stack_vaddr\n\t"
                ".weak\tape_stack_memsz\n\t"
                "movabs\t$ape_stack_vaddr,%%rsp\n\t"
@@ -164,7 +203,7 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                "xor\t%%edi,%%edi\n\t"
                "xor\t%%eax,%%eax\n\t"
                "xor\t%%ebx,%%ebx\n\t"
-               "xor\t%%ecx,%%ecx\n\t"
+               "mov\t%4,%%ecx\n\t"
                "xor\t%%edx,%%edx\n\t"
                "xor\t%%edi,%%edi\n\t"
                "xor\t%%esi,%%esi\n\t"
@@ -178,10 +217,13 @@ __msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
                "xor\t%%r14d,%%r14d\n\t"
                "xor\t%%r15d,%%r15d\n\t"
                ".weak\t_start\n\t"
-               "jmp\t_start"
+               "push\t%5\n\t"
+               "push\t$_start\n\t"
+               "lretq"
                : /* no outputs */
                : "a"(Args), "S"(ArgBlock->Args), "c"((Args + 1) * 8),
-                 "m"(x87cw), "r"(pml4t)
+                 "m"(x87cw), "i"(_HOSTMETAL), "i"(GDT_LONG_CODE),
+                 "r"(GDT_LONG_DATA)
                : "memory");
 
   unreachable;
