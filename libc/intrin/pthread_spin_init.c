@@ -16,14 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
+#ifdef pthread_spin_init
+#undef pthread_spin_init
+#endif
+
 /**
- * Releases spin lock.
+ * Initializes spin lock.
  *
+ * @param pshared is ignored, since this implementation always permits
+ *     multiple processes to operate on the same spin locks
  * @return 0 on success, or errno on error
+ * @see pthread_spin_destroy
  * @see pthread_spin_lock
  */
-errno_t(pthread_spin_unlock)(pthread_spinlock_t *spin) {
-  return pthread_spin_unlock(spin);
+errno_t pthread_spin_init(pthread_spinlock_t *spin, int pshared) {
+  atomic_store_explicit(&spin->_lock, 0, memory_order_relaxed);
+  return 0;
 }

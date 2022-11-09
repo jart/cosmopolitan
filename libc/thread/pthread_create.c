@@ -39,7 +39,9 @@
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+#include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
+#include "third_party/nsync/dll.h"
 
 STATIC_YOINK("nsync_mu_lock");
 STATIC_YOINK("nsync_mu_unlock");
@@ -48,19 +50,13 @@ STATIC_YOINK("_pthread_atfork");
 #define MAP_ANON_OPENBSD  0x1000
 #define MAP_STACK_OPENBSD 0x4000
 
-errno_t _pthread_wait(struct PosixThread *pt) {
-  return _wait0(&pt->tib->tib_tid);
-}
-
 void _pthread_free(struct PosixThread *pt) {
-  if (pt->flags & PT_MAINTHREAD) return;
+  if (pt->flags & PT_STATIC) return;
   free(pt->tls);
   if ((pt->flags & PT_OWNSTACK) &&  //
       pt->attr.__stackaddr &&       //
       pt->attr.__stackaddr != MAP_FAILED) {
-    if (munmap(pt->attr.__stackaddr, pt->attr.__stacksize)) {
-      notpossible;
-    }
+    _npassert(!munmap(pt->attr.__stackaddr, pt->attr.__stacksize));
   }
   if (pt->altstack) {
     free(pt->altstack);
@@ -69,9 +65,11 @@ void _pthread_free(struct PosixThread *pt) {
 }
 
 static int PosixThread(void *arg, int tid) {
+  void *rc;
+  struct sigaltstack ss;
   struct PosixThread *pt = arg;
   enum PosixThreadStatus status;
-  struct sigaltstack ss;
+  _unassert(__get_tls()->tib_tid > 0);
   if (pt->altstack) {
     ss.ss_flags = 0;
     ss.ss_size = SIGSTKSZ;
@@ -87,12 +85,12 @@ static int PosixThread(void *arg, int tid) {
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
     _sigsetmask(pt->sigmask);
-    pt->rc = pt->start(pt->arg);
+    rc = pt->start(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     _npassert(!pt->cleanup);
+    // calling pthread_exit() will either jump back here, or call exit
+    pthread_exit(rc);
   }
-  // run garbage collector, call key destructors, and set change state
-  _pthread_cleanup(pt);
   // return to clone polyfill which clears tid, wakes futex, and exits
   return 0;
 }
@@ -234,12 +232,18 @@ static errno_t pthread_create_impl(pthread_t *thread,
     case PTHREAD_CREATE_DETACHED:
       atomic_store_explicit(&pt->status, kPosixThreadDetached,
                             memory_order_relaxed);
-      _pthread_zombies_add(pt);
       break;
     default:
       _pthread_free(pt);
       return EINVAL;
   }
+
+  // add thread to global list
+  // we add it to the end since zombies go at the beginning
+  nsync_dll_init_(&pt->list, pt);
+  pthread_spin_lock(&_pthread_lock);
+  _pthread_list = nsync_dll_make_last_in_list_(_pthread_list, &pt->list);
+  pthread_spin_unlock(&_pthread_lock);
 
   // launch PosixThread(pt) in new thread
   pt->sigmask = oldsigs;
@@ -249,6 +253,9 @@ static errno_t pthread_create_impl(pthread_t *thread,
                       CLONE_SIGHAND | CLONE_SETTLS | CLONE_PARENT_SETTID |
                       CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,
                   pt, &pt->ptid, pt->tib, &pt->tib->tib_tid))) {
+    pthread_spin_lock(&_pthread_lock);
+    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+    pthread_spin_unlock(&_pthread_lock);
     _pthread_free(pt);
     return rc;
   }
@@ -313,7 +320,7 @@ errno_t pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                        void *(*start_routine)(void *), void *arg) {
   errno_t rc;
   __require_tls();
-  _pthread_zombies_decimate();
+  pthread_decimate_np();
   BLOCK_SIGNALS;
   rc = pthread_create_impl(thread, attr, start_routine, arg, _SigMask);
   ALLOW_SIGNALS;

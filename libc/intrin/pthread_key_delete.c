@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
@@ -24,16 +25,18 @@
 /**
  * Deletes TLS slot.
  *
+ * This function should only be called if all threads have finished
+ * using the key registration. If a key is used after being deleted
+ * then the behavior is undefined. If `k` was not registered by the
+ * pthread_key_create() function then the behavior is undefined.
+ *
  * @param key was created by pthread_key_create()
  * @return 0 on success, or errno on error
- * @raise EINVAL if `key` isn't valid
  */
-int pthread_key_delete(pthread_key_t key) {
+int pthread_key_delete(pthread_key_t k) {
   uint64_t mask;
-  if (key < PTHREAD_KEYS_MAX) {
-    atomic_store_explicit(_pthread_key_dtor + key, 0, memory_order_relaxed);
-    return 0;
-  } else {
-    return EINVAL;
-  }
+  _unassert(0 <= k && k < PTHREAD_KEYS_MAX);
+  _unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
+  atomic_store_explicit(_pthread_key_dtor + k, 0, memory_order_release);
+  return 0;
 }

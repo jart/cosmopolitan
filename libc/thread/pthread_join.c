@@ -16,21 +16,29 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "libc/thread/wait0.internal.h"
 
 /**
  * Waits for thread to terminate.
+ *
+ * Multiple threads joining the same thread is undefined behavior. If a
+ * deferred or masked cancellation happens to the calling thread either
+ * before or during the waiting process then the target thread will not
+ * be joined. Calling pthread_join() on a non-joinable thread, e.g. one
+ * that's been detached, is undefined behavior. If a thread attempts to
+ * join itself, then the behavior is undefined.
  *
  * @param value_ptr if non-null will receive pthread_exit() argument
  *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
  *     pthread_cancel() destroyed the thread instead
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
- * @raise EDEADLK if `thread` is the current thread
- * @raise EINVAL if `thread` is detached
  * @cancellationpoint
  * @returnserrno
  * @threadsafe
@@ -38,20 +46,22 @@
 errno_t pthread_join(pthread_t thread, void **value_ptr) {
   errno_t rc;
   struct PosixThread *pt;
-  if (thread == __get_tls()->tib_pthread) {
-    return EDEADLK;
+  enum PosixThreadStatus status;
+  pt = (struct PosixThread *)thread;
+  status = atomic_load_explicit(&pt->status, memory_order_acquire);
+  // "The behavior is undefined if the value specified by the thread
+  //  argument to pthread_join() does not refer to a joinable thread."
+  //                                  ──Quoth POSIX.1-2017
+  _unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
+  if (!(rc = _wait0(&pt->tib->tib_tid))) {
+    pthread_spin_lock(&_pthread_lock);
+    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+    pthread_spin_unlock(&_pthread_lock);
+    if (value_ptr) {
+      *value_ptr = pt->rc;
+    }
+    _pthread_free(pt);
+    pthread_decimate_np();
   }
-  if (!(pt = (struct PosixThread *)thread) ||  //
-      pt->status == kPosixThreadZombie ||      //
-      pt->status == kPosixThreadDetached) {
-    return EINVAL;
-  }
-  if ((rc = _pthread_wait(pt))) {
-    return rc;
-  }
-  if (value_ptr) {
-    *value_ptr = pt->rc;
-  }
-  _pthread_free(pt);
   return 0;
 }

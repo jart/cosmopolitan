@@ -116,7 +116,9 @@ static int __zipos_mkfd(int minfd) {
 
 static int __zipos_setfd(int fd, struct ZiposHandle *h, unsigned flags,
                          int mode) {
-  _cmpxchg(&g_fds.f, fd, fd + 1);
+  int want = fd;
+  atomic_compare_exchange_strong_explicit(
+      &g_fds.f, &want, fd + 1, memory_order_release, memory_order_relaxed);
   g_fds.p[fd].kind = kFdZip;
   g_fds.p[fd].handle = (intptr_t)h;
   g_fds.p[fd].flags = flags | O_CLOEXEC;

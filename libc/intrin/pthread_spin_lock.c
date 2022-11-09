@@ -16,17 +16,38 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
+#ifdef pthread_spin_lock
+#undef pthread_spin_lock
+#endif
+
 /**
- * Initializes spin lock.
+ * Acquires spin lock, e.g.
  *
- * @param pshared is ignored, since this implementation always permits
- *     multiple processes to operate on the same spin locks
+ *     pthread_spinlock_t lock;
+ *     pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
+ *     pthread_spin_lock(&lock);
+ *     // do work...
+ *     pthread_spin_unlock(&lock);
+ *     pthread_spin_destroy(&lock);
+ *
+ * This function has undefined behavior when `spin` wasn't intialized,
+ * was destroyed, or if the lock's already held by the calling thread.
+ *
  * @return 0 on success, or errno on error
- * @see pthread_spin_destroy
- * @see pthread_spin_lock
+ * @see pthread_spin_trylock
+ * @see pthread_spin_unlock
+ * @see pthread_spin_init
  */
-errno_t(pthread_spin_init)(pthread_spinlock_t *spin, int pshared) {
-  return pthread_spin_init(spin, pshared);
+errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
+  int x;
+  for (;;) {
+    x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
+    if (!x) break;
+    _unassert(x == 1);
+  }
+  return 0;
 }

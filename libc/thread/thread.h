@@ -110,10 +110,13 @@ int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *),
                    void *);
 
 int pthread_yield(void);
+bool pthread_orphan_np(void);
 void pthread_testcancel(void);
+void pthread_decimate_np(void);
 int pthread_testcancel_np(void);
 void pthread_exit(void *) wontreturn;
 pthread_t pthread_self(void) pureconst;
+int pthread_print_np(int, const char *, ...);
 pthread_id_np_t pthread_getthreadid_np(void);
 int pthread_getunique_np(pthread_t, pthread_id_np_t *);
 int pthread_setname_np(pthread_t, const char *);
@@ -208,7 +211,7 @@ void _pthread_cleanup_push(struct _pthread_cleanup_buffer *, void (*)(void *),
   }
 
 #if (__GNUC__ + 0) * 100 + (__GNUC_MINOR__ + 0) >= 407 && \
-    !defined(__STRICT_ANSI__)
+    !defined(__STRICT_ANSI__) && !defined(MODE_DBG)
 extern const errno_t EBUSY;
 #define pthread_spin_lock(pSpin)                                           \
   ({                                                                       \

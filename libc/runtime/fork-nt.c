@@ -24,6 +24,7 @@
 #include "libc/calls/wincrash.internal.h"
 #include "libc/errno.h"
 #include "libc/fmt/itoa.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/directmap.internal.h"
 #include "libc/intrin/kprintf.h"
 #include "libc/intrin/strace.internal.h"
@@ -237,7 +238,7 @@ textwindows void WinMainForked(void) {
   for (i = 0; i < fds->n; ++i) {
     if (fds->p[i].kind == kFdProcess) {
       fds->p[i].kind = 0;
-      fds->f = MIN(i, fds->f);
+      atomic_store_explicit(&fds->f, MIN(i, fds->f), memory_order_relaxed);
     }
   }
 

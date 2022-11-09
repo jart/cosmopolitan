@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/rusage.internal.h"
 #include "libc/calls/syscall-sysv.internal.h"
@@ -62,10 +63,12 @@ static int PrintBacktraceUsingAddr2line(int fd, const struct StackFrame *bp) {
   }
 
   if (!PLEDGED(STDIO) || !PLEDGED(EXEC) || !PLEDGED(EXEC)) {
+    ShowHint("won't print addr2line backtrace because pledge");
     return -1;
   }
 
   if (!(debugbin = FindDebugBinary())) {
+    ShowHint("won't print addr2line backtrace because no debug binary");
     return -1;
   }
 
@@ -171,11 +174,14 @@ static int PrintBacktrace(int fd, const struct StackFrame *bp) {
       return 0;
     }
   }
+#else
+  ShowHint("won't print addr2line backtrace because no dwarf");
 #endif
   return PrintBacktraceUsingSymbols(fd, bp, GetSymbolTable());
 }
 
 void ShowBacktrace(int fd, const struct StackFrame *bp) {
+  BLOCK_CANCELLATIONS;
 #ifdef __FNO_OMIT_FRAME_POINTER__
   /* asan runtime depends on this function */
   ftrace_enabled(-1);
@@ -189,4 +195,5 @@ void ShowBacktrace(int fd, const struct StackFrame *bp) {
                     "\t-D__FNO_OMIT_FRAME_POINTER__\n"
                     "\t-fno-omit-frame-pointer\n");
 #endif
+  ALLOW_CANCELLATIONS;
 }

@@ -45,18 +45,17 @@ extern unsigned __tls_index;
 void __require_tls(void);
 void __set_tls(struct CosmoTib *);
 
-#if defined(__GNUC__) && defined(__x86_64__) && !defined(__STRICT_ANSI__)
 /**
  * Returns location of thread information block.
  *
  * This can't be used in privileged functions.
  */
-static inline struct CosmoTib *__get_tls(void) {
-  struct CosmoTib *_tib;
-  asm("mov\t%%fs:0,%0" : "=r"(_tib) : /* no inputs */ : "memory");
-  return _tib;
-}
-#endif /* GNU x86-64 */
+#define __get_tls()                                                \
+  ({                                                               \
+    struct CosmoTib *_t;                                           \
+    asm("mov\t%%fs:0,%0" : "=r"(_t) : /* no inputs */ : "memory"); \
+    _t;                                                            \
+  })
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */

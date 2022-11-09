@@ -108,7 +108,7 @@ WinThreadEntry(int rdi,                                 // rcx
   *wt->ztid = 0;
   __imp_WakeByAddressAll(wt->ztid);
   // since we didn't indirect this function through NT2SYSV() it's not
-  // safe to simply return, and as such, we just call ExitThread().
+  // safe to simply return, and as such, we need ExitThread().
   __imp_ExitThread(rc);
   notpossible;
 }

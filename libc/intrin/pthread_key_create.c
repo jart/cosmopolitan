@@ -18,18 +18,24 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
  * Allocates TLS slot.
  *
- * If `dtor` is non-null, then it'll be called upon thread exit when the
- * key's value is nonzero. The key's value is set to zero before it gets
- * called. The ordering for multiple destructor calls is unspecified.
+ * This function creates a thread-local storage registration, that will
+ * apply to all threads. The new identifier is written to `key`, and it
+ * can be passed to the pthread_setspecific() and pthread_getspecific()
+ * functions to set and get its associated value. Each thread will have
+ * its key value initialized to zero upon creation. It is also possible
+ * to use pthread_key_delete() to unregister a key.
  *
- * The result should be passed to pthread_key_delete() later.
+ * If `dtor` is non-null, then it'll be called upon pthread_exit() when
+ * the key's value is nonzero. The key's value is set to zero before it
+ * is called. The ordering of multiple destructor calls is unspecified.
+ * The same key can be destroyed `PTHREAD_DESTRUCTOR_ITERATIONS` times,
+ * in cases where it gets set again by a destructor.
  *
  * @param key is set to the allocated key on success
  * @param dtor specifies an optional destructor callback
@@ -42,17 +48,13 @@ int pthread_key_create(pthread_key_t *key, pthread_key_dtor dtor) {
   if (!dtor) dtor = (pthread_key_dtor)-1;
   for (i = 0; i < PTHREAD_KEYS_MAX; ++i) {
     if (!(expect = atomic_load_explicit(_pthread_key_dtor + i,
-                                        memory_order_relaxed)) &&
+                                        memory_order_acquire)) &&
         atomic_compare_exchange_strong_explicit(_pthread_key_dtor + i, &expect,
-                                                dtor, memory_order_relaxed,
+                                                dtor, memory_order_release,
                                                 memory_order_relaxed)) {
       *key = i;
       return 0;
     }
   }
   return EAGAIN;
-}
-
-__attribute__((__constructor__)) static textstartup void _pthread_key_init() {
-  atexit(_pthread_key_destruct);
 }

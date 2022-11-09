@@ -16,54 +16,76 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/calls/blockcancel.internal.h"
 #include "libc/calls/calls.h"
-#include "libc/calls/struct/sigaction.h"
-#include "libc/errno.h"
-#include "libc/intrin/strace.internal.h"
-#include "libc/sysv/consts/sa.h"
-#include "libc/sysv/consts/sig.h"
-#include "libc/testlib/testlib.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "third_party/nsync/dll.h"
 
-void OnUsr1(int sig, struct siginfo *si, void *vctx) {
-  struct ucontext *ctx = vctx;
-}
+#define N 2048
+#define M 15
 
-void SetUp(void) {
-  struct sigaction sig = {.sa_sigaction = OnUsr1, .sa_flags = SA_SIGINFO};
-  sigaction(SIGUSR1, &sig, 0);
-}
+#define append(f, ...) o += f(buf + o, N - o, __VA_ARGS__)
 
-void TriggerSignal(void) {
-  sched_yield();
-  raise(SIGUSR1);
-  sched_yield();
-}
-
-static void *Increment(void *arg) {
-  ASSERT_EQ(gettid(), pthread_getthreadid_np());
-  TriggerSignal();
-  return (void *)((uintptr_t)arg + 1);
-}
-
-TEST(pthread_detach, testCreateReturn) {
-  pthread_t id;
-  ASSERT_EQ(0, pthread_create(&id, 0, Increment, 0));
-  ASSERT_EQ(0, pthread_detach(id));
-  while (!pthread_orphan_np()) {
-    pthread_decimate_np();
+static const char *DescribeStatus(enum PosixThreadStatus status) {
+  switch (status) {
+    case kPosixThreadJoinable:
+      return "JOINAB";
+    case kPosixThreadDetached:
+      return "DETACH";
+    case kPosixThreadTerminated:
+      return "TERMIN";
+    case kPosixThreadZombie:
+      return "ZOMBIE";
+    default:
+      unreachable;
   }
 }
 
-TEST(pthread_detach, testDetachUponCreation) {
-  pthread_attr_t attr;
-  ASSERT_EQ(0, pthread_attr_init(&attr));
-  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
-  ASSERT_EQ(0, pthread_attr_destroy(&attr));
-  while (!pthread_orphan_np()) {
-    pthread_decimate_np();
+static const char *DescribeFlags(char buf[M], struct PosixThread *pt) {
+  char *p = buf;
+  if (pt->cancelled) *p++ = '*';
+  if (pt->flags & PT_EXITING) *p++ = 'X';
+  if (pt->flags & PT_STATIC) *p++ = 'S';
+  if (pt->flags & PT_OWNSTACK) *p++ = 'O';
+  if (pt->flags & PT_ASYNC) *p++ = 'A';
+  if (pt->flags & PT_MASKED) *p++ = 'M';
+  if (pt->flags & PT_OPENBSD_KLUDGE) *p++ = 'K';
+  if (pt->flags & PT_INCANCEL) *p++ = '?';
+  if (pt->flags & PT_NOCANCEL) *p++ = '!';
+  *p = 0;
+  return buf;
+}
+
+int pthread_print_np(int fd, const char *fmt, ...) {
+  va_list va;
+  int rc, o = 0;
+  nsync_dll_element_ *e;
+  struct PosixThread *pt;
+  char buf[N], flagbuf[M];
+  pthread_spin_lock(&_pthread_lock);
+  if (fmt) {
+    va_start(va, fmt);
+    append(kvsnprintf, fmt, va);
+    va_end(va);
+    append(ksnprintf, "\n");
   }
+  append(ksnprintf, "%6s %6s %6s %6s %s\n", "ptid", "tid", "status", "flags",
+         "start");
+  for (e = nsync_dll_first_(_pthread_list); e;
+       e = nsync_dll_next_(_pthread_list, e)) {
+    pt = (struct PosixThread *)e->container;
+    append(ksnprintf, "%-6d %-6d %6s %6s %t\n", pt->ptid, pt->tib->tib_tid,
+           DescribeStatus(pt->status), DescribeFlags(flagbuf, pt), pt->start);
+  }
+  pthread_spin_unlock(&_pthread_lock);
+  BLOCK_CANCELLATIONS;
+  strace_enabled(-1);
+  rc = write(fd, buf, strlen(buf));
+  strace_enabled(+1);
+  ALLOW_CANCELLATIONS;
+  return rc;
 }

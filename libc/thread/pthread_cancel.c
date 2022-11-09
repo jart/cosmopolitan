@@ -307,7 +307,7 @@ errno_t pthread_cancel(pthread_t thread) {
 void pthread_testcancel(void) {
   struct PosixThread *pt;
   if (!__tls_enabled) return;
-  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  if (!(pt = (struct PosixThread *)__get_tls()->tib_pthread)) return;
   if (pt->flags & PT_NOCANCEL) return;
   if ((!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) &&
       atomic_load_explicit(&pt->cancelled, memory_order_acquire)) {
@@ -335,7 +335,7 @@ errno_t pthread_testcancel_np(void) {
   int rc;
   struct PosixThread *pt;
   if (!__tls_enabled) return 0;
-  pt = (struct PosixThread *)__get_tls()->tib_pthread;
+  if (!(pt = (struct PosixThread *)__get_tls()->tib_pthread)) return 0;
   if (pt->flags & PT_NOCANCEL) return 0;
   if (!atomic_load_explicit(&pt->cancelled, memory_order_acquire)) return 0;
   if (!(pt->flags & PT_MASKED) || (pt->flags & PT_ASYNC)) {

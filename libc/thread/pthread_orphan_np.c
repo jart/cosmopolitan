@@ -16,17 +16,17 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
 /**
- * Acquires spin lock if available.
- *
- * Unlike pthread_spin_lock() this function won't block, and instead
- * returns an error immediately if the spinlock couldn't be acquired
- *
- * @return 0 on success, or errno on error
- * @raise EBUSY if lock is already held
+ * Returns true if calling thread is the only thread.
  */
-errno_t(pthread_spin_trylock)(pthread_spinlock_t *spin) {
-  return pthread_spin_trylock(spin);
+bool pthread_orphan_np(void) {
+  bool res;
+  pthread_spin_lock(&_pthread_lock);
+  res = _pthread_list == _pthread_list->prev &&
+        _pthread_list == _pthread_list->next;
+  pthread_spin_unlock(&_pthread_lock);
+  return res;
 }

@@ -17,29 +17,33 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/nsync/dll.h"
 
-void _pthread_key_destruct(void) {
-  int i, j, gotsome;
-  void *val, **keys;
-  pthread_key_dtor dtor;
-  if (!__tls_enabled) return;
-  keys = __get_tls()->tib_keys;
-  for (j = 0; j < PTHREAD_DESTRUCTOR_ITERATIONS; ++j) {
-    for (gotsome = i = 0; i < PTHREAD_KEYS_MAX; ++i) {
-      if ((val = keys[i]) &&
-          (dtor = atomic_load_explicit(_pthread_key_dtor + i,
-                                       memory_order_relaxed)) &&
-          dtor != (pthread_key_dtor)-1) {
-        gotsome = 1;
-        keys[i] = 0;
-        dtor(val);
-      }
-    }
-    if (!gotsome) {
-      break;
+/**
+ * Releases memory of detached threads that have terminated.
+ */
+void pthread_decimate_np(void) {
+  nsync_dll_element_ *e;
+  struct PosixThread *pt;
+  enum PosixThreadStatus status;
+StartOver:
+  pthread_spin_lock(&_pthread_lock);
+  for (e = nsync_dll_first_(_pthread_list); e;
+       e = nsync_dll_next_(_pthread_list, e)) {
+    pt = (struct PosixThread *)e->container;
+    if (pt->tib == __get_tls()) continue;
+    status = atomic_load_explicit(&pt->status, memory_order_acquire);
+    if (status != kPosixThreadZombie) break;
+    if (!atomic_load_explicit(&pt->tib->tib_tid, memory_order_acquire)) {
+      _pthread_list = nsync_dll_remove_(_pthread_list, e);
+      pthread_spin_unlock(&_pthread_lock);
+      _pthread_free(pt);
+      goto StartOver;
     }
   }
+  pthread_spin_unlock(&_pthread_lock);
 }

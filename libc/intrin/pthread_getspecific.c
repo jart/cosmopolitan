@@ -16,16 +16,26 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/intrin/atomic.h"
+#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 /**
  * Gets value of TLS slot for current thread.
+ *
+ * If `k` wasn't created by pthread_key_create() then the behavior is
+ * undefined. If `k` was unregistered earlier by pthread_key_delete()
+ * then the behavior is undefined.
  */
-void *pthread_getspecific(pthread_key_t key) {
-  if (0 <= key && key < PTHREAD_KEYS_MAX) {
-    return __get_tls()->tib_keys[key];
-  } else {
-    return 0;
-  }
+void *pthread_getspecific(pthread_key_t k) {
+  // "The effect of calling pthread_getspecific() or
+  //  pthread_setspecific() with a key value not obtained from
+  //  pthread_key_create() or after key has been deleted with
+  //  pthread_key_delete() is undefined."
+  //                                  ──Quoth POSIX.1-2017
+  _unassert(0 <= k && k < PTHREAD_KEYS_MAX);
+  _unassert(atomic_load_explicit(_pthread_key_dtor + k, memory_order_acquire));
+  return __get_tls()->tib_keys[k];
 }

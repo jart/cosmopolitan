@@ -18,8 +18,6 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/dce.h"
 #include "libc/intrin/asmflag.h"
-#include "libc/intrin/promises.internal.h"
-#include "libc/intrin/strace.internal.h"
 #include "libc/nt/thread.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/nr.h"
@@ -47,7 +45,6 @@ __msabi extern typeof(ExitThread) *const __imp_ExitThread;
 privileged wontreturn void _Exit1(int rc) {
   char cf;
   int ax, dx, di, si;
-  STRACE("_Exit1(%d)", rc);
   if (!IsWindows() && !IsMetal()) {
     // exit() on Linux
     // thr_exit() on FreeBSD

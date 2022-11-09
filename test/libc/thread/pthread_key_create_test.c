@@ -16,23 +16,56 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/atomic.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
+#include "libc/nexgen32e/nexgen32e.h"
 #include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-TEST(pthread_key_create, testRunsDtors_becauseNoLeakReport) {
-  void *x;
-  pthread_key_t key;
-  x = malloc(123);
-  EXPECT_EQ(0, pthread_key_create(&key, free));
-  EXPECT_EQ(0, pthread_setspecific(key, x));
-  EXPECT_EQ(x, pthread_getspecific(key));
-  x = malloc(123);
-  EXPECT_EQ(0, pthread_key_create(&key, free));
-  EXPECT_EQ(0, pthread_setspecific(key, x));
-  EXPECT_EQ(x, pthread_getspecific(key));
-  x = malloc(123);
-  EXPECT_EQ(0, pthread_key_create(&key, free));
-  EXPECT_EQ(0, pthread_setspecific(key, x));
-  EXPECT_EQ(x, pthread_getspecific(key));
+pthread_key_t mykey;
+int destructor_calls;
+
+void KeyDestructor(void *arg) {
+  EXPECT_EQ(0, pthread_getspecific(mykey));
+  ASSERT_EQ(31337, (intptr_t)arg);
+  ++destructor_calls;
+}
+
+void *Worker(void *arg) {
+  ASSERT_EQ(0, pthread_getspecific(mykey));
+  ASSERT_EQ(0, pthread_setspecific(mykey, (void *)31337));
+  ASSERT_EQ((void *)31337, pthread_getspecific(mykey));
+  return 0;
+}
+
+TEST(pthread_key_create, test) {
+  pthread_t th;
+  destructor_calls = 0;
+  ASSERT_EQ(0, pthread_key_create(&mykey, KeyDestructor));
+  ASSERT_EQ(0, pthread_setspecific(mykey, (void *)666));
+  ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
+  ASSERT_EQ(0, pthread_join(th, 0));
+  ASSERT_EQ(1, destructor_calls);
+  ASSERT_EQ((void *)666, pthread_getspecific(mykey));
+  ASSERT_EQ(0, pthread_key_delete(mykey));
+}
+
+void KeyDestructorCraze(void *arg) {
+  EXPECT_EQ(0, pthread_getspecific(mykey));
+  ASSERT_EQ(31337, (intptr_t)arg);
+  EXPECT_EQ(0, pthread_setspecific(mykey, (void *)31337));
+  ++destructor_calls;
+}
+
+TEST(pthread_key_create, destructorKeepsSettingKey_willHalt) {
+  pthread_t th;
+  destructor_calls = 0;
+  ASSERT_EQ(0, pthread_key_create(&mykey, KeyDestructorCraze));
+  ASSERT_EQ(0, pthread_setspecific(mykey, (void *)666));
+  ASSERT_EQ(0, pthread_create(&th, 0, Worker, 0));
+  ASSERT_EQ(0, pthread_join(th, 0));
+  ASSERT_EQ(PTHREAD_DESTRUCTOR_ITERATIONS, destructor_calls);
+  ASSERT_EQ((void *)666, pthread_getspecific(mykey));
+  ASSERT_EQ(0, pthread_key_delete(mykey));
 }

@@ -16,13 +16,51 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/runtime/runtime.h"
+#include "libc/testlib/subprocess.h"
+#include "libc/testlib/testlib.h"
 #include "libc/thread/thread.h"
 
-/**
- * Destroys spin lock.
- *
- * @return 0 on success, or errno on error
- */
-errno_t(pthread_spin_destroy)(pthread_spinlock_t *spin) {
-  return pthread_spin_destroy(spin);
+#define MAIN  150
+#define CHILD 170
+
+pthread_t main_thread;
+_Thread_local static int exit_code;
+
+void OnExit(void) {
+  _Exit(exit_code);
+}
+
+void *Worker(void *arg) {
+  ASSERT_EQ(0, pthread_join(main_thread, 0));
+  exit_code = CHILD;
+  pthread_exit(0);
+}
+
+TEST(pthread_exit, joinableOrphanedChild_runsAtexitHandlers) {
+  pthread_attr_t attr;
+  SPAWN(fork);
+  atexit(OnExit);
+  exit_code = MAIN;
+  main_thread = pthread_self();
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE));
+  ASSERT_EQ(0, pthread_create(0, &attr, Worker, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  pthread_exit(0);
+  EXITS(CHILD);
+}
+
+TEST(pthread_exit, detachedOrphanedChild_runsAtexitHandlers) {
+  pthread_attr_t attr;
+  SPAWN(fork);
+  atexit(OnExit);
+  exit_code = MAIN;
+  main_thread = pthread_self();
+  ASSERT_EQ(0, pthread_attr_init(&attr));
+  ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
+  ASSERT_EQ(0, pthread_create(0, &attr, Worker, 0));
+  ASSERT_EQ(0, pthread_attr_destroy(&attr));
+  pthread_exit(0);
+  EXITS(CHILD);
 }

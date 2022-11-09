@@ -218,6 +218,8 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
   }
   if (_weaken(SetUpOnce)) _weaken(SetUpOnce)();
   for (x = 0, fn = start; fn != end; ++fn) {
+    STRACE("");
+    STRACE("# setting up %t", fn);
     if (_weaken(testlib_enable_tmp_setup_teardown)) SetupTmpDir();
     if (_weaken(SetUp)) _weaken(SetUp)();
     errno = 0;
@@ -229,6 +231,7 @@ void testlib_runtestcases(testfn_t *start, testfn_t *end, testfn_t warmup) {
     STRACE("# running test %t", fn);
     (*fn)();
     STRACE("");
+    STRACE("# tearing down %t", fn);
     if (!IsWindows()) sys_getpid();
     if (_weaken(TearDown)) _weaken(TearDown)();
     if (_weaken(testlib_enable_tmp_setup_teardown)) TearDownTmpDir();

@@ -5,14 +5,16 @@
 #include "libc/runtime/runtime.h"
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
+#include "third_party/nsync/dll.h"
 
 #define PT_OWNSTACK       1
-#define PT_MAINTHREAD     2
+#define PT_STATIC         2
 #define PT_ASYNC          4
 #define PT_NOCANCEL       8
 #define PT_MASKED         16
 #define PT_INCANCEL       32
 #define PT_OPENBSD_KLUDGE 64
+#define PT_EXITING        128
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -66,14 +68,15 @@ struct PosixThread {
   int flags;               // 0x00: see PT_* constants
   _Atomic(int) cancelled;  // 0x04: thread has bad beliefs
   _Atomic(enum PosixThreadStatus) status;
-  _Atomic(int) ptid;       // transitions 0 → tid
-  void *(*start)(void *);  // creation callback
-  void *arg;               // start's parameter
-  void *rc;                // start's return value
-  char *altstack;          // thread sigaltstack
-  char *tls;               // bottom of tls allocation
-  struct CosmoTib *tib;    // middle of tls allocation
-  jmp_buf exiter;          // for pthread_exit
+  _Atomic(int) ptid;        // transitions 0 → tid
+  void *(*start)(void *);   // creation callback
+  void *arg;                // start's parameter
+  void *rc;                 // start's return value
+  char *altstack;           // thread sigaltstack
+  char *tls;                // bottom of tls allocation
+  struct CosmoTib *tib;     // middle of tls allocation
+  nsync_dll_element_ list;  // list of threads
+  jmp_buf exiter;           // for pthread_exit
   pthread_attr_t attr;
   sigset_t sigmask;
   struct _pthread_cleanup_buffer *cleanup;
@@ -81,24 +84,19 @@ struct PosixThread {
 
 typedef void (*atfork_f)(void);
 
-extern struct PosixThread _pthread_main;
+extern nsync_dll_list_ _pthread_list;
+extern pthread_spinlock_t _pthread_lock;
 extern _Atomic(pthread_key_dtor) _pthread_key_dtor[PTHREAD_KEYS_MAX] _Hide;
 
 int _pthread_atfork(atfork_f, atfork_f, atfork_f) _Hide;
 int _pthread_reschedule(struct PosixThread *) _Hide;
 int _pthread_setschedparam_freebsd(int, int, const struct sched_param *) _Hide;
-int _pthread_wait(struct PosixThread *) _Hide;
+void _pthread_zombify(struct PosixThread *) _Hide;
 void _pthread_free(struct PosixThread *) _Hide;
-void _pthread_cleanup(struct PosixThread *) _Hide;
-void _pthread_ungarbage(void) _Hide;
-void _pthread_zombies_add(struct PosixThread *) _Hide;
-void _pthread_zombies_purge(void) _Hide;
-void _pthread_zombies_decimate(void) _Hide;
-void _pthread_zombies_harvest(void) _Hide;
-void _pthread_key_destruct(void) _Hide;
 void _pthread_onfork_prepare(void) _Hide;
 void _pthread_onfork_parent(void) _Hide;
 void _pthread_onfork_child(void) _Hide;
+void _pthread_ungarbage(void) _Hide;
 int _pthread_cancel_sys(void) _Hide;
 
 COSMOPOLITAN_C_END_

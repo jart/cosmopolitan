@@ -20,6 +20,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/intrin/kmalloc.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/memtrack.internal.h"
 #include "libc/str/str.h"
 #include "libc/thread/posixthread.internal.h"
@@ -34,6 +35,14 @@ static struct AtForks {
   } * list;
 } _atforks;
 
+static void _pthread_purge(void) {
+  nsync_dll_element_ *e;
+  while ((e = nsync_dll_first_(_pthread_list))) {
+    _pthread_list = nsync_dll_remove_(_pthread_list, e);
+    _pthread_free(e->container);
+  }
+}
+
 static void _pthread_onfork(int i) {
   struct AtFork *a;
   struct PosixThread *pt;
@@ -44,17 +53,11 @@ static void _pthread_onfork(int i) {
     _atforks.list = a;
   }
   if (i) pthread_spin_unlock(&_atforks.lock);
-  if (i == 2) {
-    _pthread_zombies_purge();
-    if (__tls_enabled) {
-      pt = (struct PosixThread *)__get_tls()->tib_pthread;
-      pt->flags |= PT_MAINTHREAD;
-    }
-  }
 }
 
 void _pthread_onfork_prepare(void) {
   _pthread_onfork(0);
+  pthread_spin_lock(&_pthread_lock);
   __kmalloc_lock();
   __mmi_lock();
 }
@@ -62,6 +65,7 @@ void _pthread_onfork_prepare(void) {
 void _pthread_onfork_parent(void) {
   __mmi_unlock();
   __kmalloc_unlock();
+  pthread_spin_unlock(&_pthread_lock);
   _pthread_onfork(1);
 }
 
@@ -72,12 +76,26 @@ void _pthread_onfork_child(void) {
   extern pthread_mutex_t __mmi_lock_obj;
   tib = __get_tls();
   pt = (struct PosixThread *)tib->tib_pthread;
+
+  // let's choose to let the new process live.
+  // even though it's unclear what to do with this kind of race.
   atomic_store_explicit(&pt->cancelled, false, memory_order_relaxed);
+
+  // wipe core runtime locks
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&__mmi_lock_obj, &attr);
+  pthread_spin_init(&_pthread_lock, 0);
   __kmalloc_unlock();
+
+  // call user-supplied forked child callbacks
   _pthread_onfork(2);
+
+  // delete other threads that existed before forking
+  // this must come after onfork, since it calls free
+  _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+  _pthread_purge();
+  _pthread_list = nsync_dll_make_first_in_list_(_pthread_list, &pt->list);
 }
 
 int _pthread_atfork(atfork_f prepare, atfork_f parent, atfork_f child) {

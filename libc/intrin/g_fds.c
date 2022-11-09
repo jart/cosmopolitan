@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/internal.h"
 #include "libc/calls/state.internal.h"
+#include "libc/intrin/atomic.h"
 #include "libc/intrin/extend.internal.h"
 #include "libc/intrin/pushpop.h"
 #include "libc/intrin/weaken.h"
@@ -38,7 +39,7 @@ static textwindows dontinline void SetupWinStd(struct Fds *fds, int i, int x) {
   if (!h || h == -1) return;
   fds->p[i].kind = pushpop(kFdFile);
   fds->p[i].handle = h;
-  fds->f = i + 1;
+  atomic_store_explicit(&fds->f, i + 1, memory_order_relaxed);
 }
 
 textstartup void InitializeFileDescriptors(void) {
@@ -49,7 +50,7 @@ textstartup void InitializeFileDescriptors(void) {
   fds = VEIL("r", &g_fds);
   fds->p = fds->e = (void *)kMemtrackFdsStart;
   fds->n = 4;
-  fds->f = 3;
+  atomic_store_explicit(&fds->f, 3, memory_order_relaxed);
   fds->e = _extend(fds->p, fds->n * sizeof(*fds->p), fds->e, MAP_PRIVATE,
                    kMemtrackFdsStart + kMemtrackFdsSize);
   if (IsMetal()) {

@@ -23,9 +23,12 @@
 void _pthread_ungarbage(void) {
   int i;
   struct Garbages *g;
-  if ((g = __get_tls()->tib_garbages)) {
-    for (i = g->i; i--;) {
-      ((void (*)(intptr_t))g->p[i].fn)(g->p[i].arg);
+  struct CosmoTib *tib;
+  tib = __get_tls();
+  while ((g = tib->tib_garbages)) {
+    tib->tib_garbages = 0;
+    while (g->i--) {
+      ((void (*)(intptr_t))g->p[g->i].fn)(g->p[g->i].arg);
     }
     free(g->p);
     free(g);

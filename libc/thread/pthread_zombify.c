@@ -16,69 +16,13 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/atomic.h"
-#include "libc/mem/mem.h"
-#include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
-#include "libc/thread/spawn.h"
 #include "libc/thread/thread.h"
+#include "third_party/nsync/dll.h"
 
-// TODO(jart): track all threads, not just zombies
-
-static struct Zombie {
-  struct Zombie *next;
-  struct PosixThread *pt;
-} * _pthread_zombies;
-
-void _pthread_zombies_add(struct PosixThread *pt) {
-  struct Zombie *z;
-  if ((z = malloc(sizeof(struct Zombie)))) {
-    z->pt = pt;
-    z->next = atomic_load(&_pthread_zombies);
-    for (;;) {
-      if (atomic_compare_exchange_weak(&_pthread_zombies, &z->next, z)) {
-        break;
-      }
-    }
-  }
-}
-
-static void _pthread_zombies_collect(struct Zombie *z) {
-  // TODO(jart): We need a trywait() op here to avoid cancellation.
-  _pthread_wait(z->pt);
-  _pthread_free(z->pt);
-  free(z);
-}
-
-void _pthread_zombies_decimate(void) {
-  struct Zombie *z;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed)) &&
-         atomic_load(&z->pt->status) == kPosixThreadZombie) {
-    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
-      _pthread_zombies_collect(z);
-    }
-  }
-}
-
-void _pthread_zombies_harvest(void) {
-  struct Zombie *z;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed))) {
-    if (atomic_compare_exchange_weak(&_pthread_zombies, &z, z->next)) {
-      _pthread_zombies_collect(z);
-    }
-  }
-}
-
-void _pthread_zombies_purge(void) {
-  struct Zombie *z, *n;
-  while ((z = atomic_load_explicit(&_pthread_zombies, memory_order_relaxed))) {
-    _pthread_free(z->pt);
-    n = z->next;
-    free(z);
-    atomic_store_explicit(&_pthread_zombies, n, memory_order_relaxed);
-  }
-}
-
-__attribute__((__constructor__)) static void _pthread_zombies_init(void) {
-  atexit(_pthread_zombies_harvest);
+void _pthread_zombify(struct PosixThread *pt) {
+  pthread_spin_lock(&_pthread_lock);
+  _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+  _pthread_list = nsync_dll_make_first_in_list_(_pthread_list, &pt->list);
+  pthread_spin_unlock(&_pthread_lock);
 }

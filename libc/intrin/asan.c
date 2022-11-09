@@ -953,7 +953,7 @@ static void *__asan_morgue_add(void *p) {
       p, memory_order_acq_rel);
 }
 
-static void __asan_morgue_flush(void) {
+__attribute__((__destructor__)) static void __asan_morgue_flush(void) {
   unsigned i;
   for (i = 0; i < ARRAYLEN(__asan_morgue.p); ++i) {
     if (atomic_load_explicit(__asan_morgue.p + i, memory_order_acquire)) {
@@ -1461,8 +1461,8 @@ static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_poison((void *)GetStackAddr(), PAGESIZE, kAsanStackOverflow);
 }
 
-textstartup void __asan_init(int argc, char **argv, char **envp,
-                             intptr_t *auxv) {
+__attribute__((__constructor__)) void __asan_init(int argc, char **argv,
+                                                  char **envp, intptr_t *auxv) {
   static bool once;
   if (!_cmpxchg(&once, false, true)) return;
   if (IsWindows() && NtGetVersion() < kNtVersionWindows10) {
@@ -1497,13 +1497,3 @@ textstartup void __asan_init(int argc, char **argv, char **envp,
   STRACE("/_/   \\_\\____/_/   \\_\\_| \\_|");
   STRACE("cosmopolitan memory safety module initialized");
 }
-
-static textstartup void __asan_ctor(void) {
-  if (_weaken(__cxa_atexit)) {
-    _weaken(__cxa_atexit)(__asan_morgue_flush, NULL, NULL);
-  }
-}
-
-const void *const g_asan_ctor[] initarray = {
-    __asan_ctor,
-};

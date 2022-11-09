@@ -28,15 +28,19 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
 #define _TLSZ ((intptr_t)_tls_size)
 #define _TLDZ ((intptr_t)_tdata_size)
 #define _TIBZ sizeof(struct CosmoTib)
 
-struct PosixThread _pthread_main;
 extern unsigned char __tls_mov_nt_rax[];
 extern unsigned char __tls_add_nt_rax[];
+
+nsync_dll_list_ _pthread_list;
+pthread_spinlock_t _pthread_lock;
+static struct PosixThread _pthread_main;
 _Alignas(TLS_ALIGNMENT) static char __static_tls[5008];
 
 /**
@@ -79,6 +83,7 @@ void __enable_tls(void) {
   size_t siz;
   struct CosmoTib *tib;
   char *mem, *tls;
+
   siz = ROUNDUP(_TLSZ + _TIBZ, _Alignof(__static_tls));
   if (siz <= sizeof(__static_tls)) {
     // if tls requirement is small then use the static tls block
@@ -95,12 +100,15 @@ void __enable_tls(void) {
     mem = _weaken(_mapanon)(siz);
     _npassert(mem);
   }
+
   if (IsAsan()) {
     // poison the space between .tdata and .tbss
     __asan_poison(mem + (intptr_t)_tdata_size,
                   (intptr_t)_tbss_offset - (intptr_t)_tdata_size,
                   kAsanProtected);
   }
+
+  // initialize main thread tls memory
   tib = (struct CosmoTib *)(mem + siz - _TIBZ);
   tls = mem + siz - _TIBZ - _TLSZ;
   tib->tib_self = tib;
@@ -117,9 +125,16 @@ void __enable_tls(void) {
     tid = sys_gettid();
   }
   atomic_store_explicit(&tib->tib_tid, tid, memory_order_relaxed);
-  _pthread_main.ptid = tid;
+
+  // initialize posix threads
   _pthread_main.tib = tib;
-  _pthread_main.flags = PT_MAINTHREAD;
+  _pthread_main.flags = PT_STATIC;
+  _pthread_main.list.prev = _pthread_main.list.next =  //
+      _pthread_list = VEIL("r", &_pthread_main.list);
+  _pthread_main.list.container = &_pthread_main;
+  atomic_store_explicit(&_pthread_main.ptid, tid, memory_order_relaxed);
+
+  // copy in initialized data section
   __repmovsb(tls, _tdata_start, _TLDZ);
 
   // ask the operating system to change the x86 segment register

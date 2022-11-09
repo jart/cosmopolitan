@@ -16,46 +16,19 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/cp.internal.h"
-#include "libc/dce.h"
-#include "libc/errno.h"
 #include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
-#include "third_party/nsync/futex.internal.h"
+
+#ifdef pthread_spin_destroy
+#undef pthread_spin_destroy
+#endif
 
 /**
- * Blocks until memory location becomes zero.
- *
- * This is intended to be used on the child thread id, which is updated
- * by the clone() system call when a thread terminates. We need this in
- * order to know when it's safe to free a thread's stack. This function
- * uses futexes on Linux, FreeBSD, OpenBSD, and Windows. On other
- * platforms this uses polling with exponential backoff.
+ * Destroys spin lock.
  *
  * @return 0 on success, or errno on error
- * @raise ECANCELED if calling thread was cancelled in masked mode
- * @cancellationpoint
  */
-errno_t _wait0(const atomic_int *ctid) {
-  int x, rc = 0;
-  // "The behavior is undefined if the value specified by the thread
-  //  argument to pthread_join() refers to the calling thread."
-  //                                  ──Quoth POSIX.1-2017
-  _unassert(ctid != &__get_tls()->tib_tid);
-  // "If the thread calling pthread_join() is canceled, then the target
-  //  thread shall not be detached."  ──Quoth POSIX.1-2017
-  if (!(rc = pthread_testcancel_np())) {
-    BEGIN_CANCELLATION_POINT;
-    while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-      if (nsync_futex_wait_(ctid, x, !IsWindows(), 0) == -ECANCELED) {
-        rc = ECANCELED;
-        break;
-      }
-    }
-    END_CANCELLATION_POINT;
-  }
-  return rc;
+errno_t pthread_spin_destroy(pthread_spinlock_t *spin) {
+  atomic_store_explicit(&spin->_lock, -1, memory_order_relaxed);
+  return 0;
 }

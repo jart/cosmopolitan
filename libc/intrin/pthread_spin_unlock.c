@@ -16,23 +16,23 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
 #include "libc/intrin/atomic.h"
-#include "libc/intrin/weaken.h"
-#include "libc/thread/posixthread.internal.h"
 #include "libc/thread/thread.h"
 
-void _pthread_cleanup(struct PosixThread *pt) {
-  _pthread_ungarbage();
-  if (_weaken(_pthread_key_destruct)) {
-    _weaken(_pthread_key_destruct)();
-  }
-  if (atomic_load_explicit(&pt->status, memory_order_acquire) ==
-      kPosixThreadDetached) {
-    atomic_store_explicit(&pt->status, kPosixThreadZombie,
-                          memory_order_release);
-  } else {
-    atomic_store_explicit(&pt->status, kPosixThreadTerminated,
-                          memory_order_release);
-  }
+#ifdef pthread_spin_unlock
+#undef pthread_spin_unlock
+#endif
+
+/**
+ * Releases spin lock.
+ *
+ * Calling this function when the lock isn't held by the calling thread
+ * has undefined behavior.
+ *
+ * @return 0 on success, or errno on error
+ * @see pthread_spin_lock
+ */
+errno_t pthread_spin_unlock(pthread_spinlock_t *spin) {
+  atomic_store_explicit(&spin->_lock, 0, memory_order_release);
+  return 0;
 }

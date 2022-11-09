@@ -16,40 +16,28 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/intrin/atomic.h"
 #include "libc/thread/thread.h"
 
+#ifdef pthread_spin_trylock
+#undef pthread_spin_trylock
+#endif
+
 /**
- * Acquires spin lock.
+ * Acquires spin lock if available.
  *
- * If the lock is already held, this function will wait for it to become
- * available. No genuine error conditions are currently defined. This is
- * similar to pthread_mutex_lock() except spin locks are much simpler so
- * this API is able to offer a performance advantage in situations where
- * scalable contention handling isn't necessary. Spinlocks are also very
- * small especially in MODE=tiny where a lock needs 16 bytes of code and
- * unlocking needs just 5 bytes. The lock object also only takes 1 byte.
- *
- * The posixly correct way to use this API is as follows:
- *
- *     pthread_spinlock_t lock;
- *     pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE);
- *     pthread_spin_lock(&lock);
- *     // do work...
- *     pthread_spin_unlock(&lock);
- *     pthread_spin_destroy(&lock);
- *
- * Cosmopolitan permits succinct notation for spin locks:
- *
- *     pthread_spinlock_t lock = {0};
- *     pthread_spin_lock(&lock);
- *     // do work...
- *     pthread_spin_unlock(&lock);
+ * This function has undefined behavior when `spin` wasn't intialized,
+ * was destroyed, or if the lock's already held by the calling thread.
  *
  * @return 0 on success, or errno on error
- * @see pthread_spin_trylock
- * @see pthread_spin_unlock
- * @see pthread_spin_init
+ * @raise EBUSY if lock is already held
  */
-errno_t(pthread_spin_lock)(pthread_spinlock_t *spin) {
-  return pthread_spin_lock(spin);
+errno_t pthread_spin_trylock(pthread_spinlock_t *spin) {
+  int x;
+  x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
+  if (!x) return 0;
+  _unassert(x == 1);
+  return EBUSY;
 }
