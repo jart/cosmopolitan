@@ -176,6 +176,7 @@ include third_party/tr/tr.mk
 include third_party/sed/sed.mk
 include third_party/awk/awk.mk
 include third_party/make/make.mk
+include third_party/ctags/ctags.mk
 include third_party/finger/finger.mk
 include third_party/argon2/argon2.mk
 include third_party/smallz4/smallz4.mk
@@ -278,14 +279,14 @@ o/$(MODE)/hdrs-old.txt: o/$(MODE)/.x $(MAKEFILES) $(call uniq,$(foreach x,$(HDRS
 	$(file >$@) $(foreach x,$(HDRS) $(INCS),$(file >>$@,$(x)))
 
 TAGS: private .UNSANDBOXED = 1
-TAGS:	o/$(MODE)/srcs-old.txt $(SRCS)
+TAGS:	o/$(MODE)/srcs-old.txt $(SRCS) o/$(MODE)/third_party/ctags/ctags.com
 	@$(RM) $@
-	@$(TAGS) $(TAGSFLAGS) -L $< -o $@
+	@o/$(MODE)/third_party/ctags/ctags.com $(TAGSFLAGS) -L $< -o $@
 
 HTAGS: private .UNSANDBOXED = 1
-HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS)
+HTAGS:	o/$(MODE)/hdrs-old.txt $(HDRS) o/$(MODE)/third_party/ctags/ctags.com
 	@$(RM) $@
-	@build/htags -L $< -o $@
+	@build/htags o/$(MODE)/third_party/ctags/ctags.com -L $< -o $@
 
 loc: private .UNSANDBOXED = 1
 loc: o/$(MODE)/tool/build/summy.com
@@ -438,9 +439,9 @@ $(SRCS):
 $(HDRS):
 $(INCS):
 .DEFAULT:
-	@$(ECHO) >&2
-	@$(ECHO) NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@ >&2
-	@$(ECHO) >&2
+	@$(ECHO)
+	@$(ECHO) NOTE: deleting o/$(MODE)/depend because of an unspecified prerequisite: $@
+	@$(ECHO)
 	$(RM) o/$(MODE)/depend
 
 -include o/$(MODE)/depend

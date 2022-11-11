@@ -43,6 +43,9 @@
 #     '(progn
 #        (add-hook 'c-mode-common-hook 'jart-c-mode-common-hook)))
 
+TAGS="$1"
+shift
+
 # ctags doesn't understand atomics, e.g.
 #   extern char **environ;
 set -- --regex-c='/_Atomic(\([^)]*\))/\1/b' "$@"
@@ -63,7 +66,7 @@ set -- --regex-c='/^extern [^(]*(\*const \([^)]*\))(/\1/b' "$@"
 #   struct WorstSoftwareEver;
 set -- --regex-c='/^struct.*;$/uehocruehcroue/b' "$@"
 
-exec ${TAGS:-ctags}                                               \
+exec $TAGS                                                        \
      -e                                                           \
      --langmap=c:.c.h                                             \
      --exclude=libc/nt/struct/imagefileheader.internal.h          \

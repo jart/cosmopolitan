@@ -45,7 +45,6 @@
 LC_ALL = C
 SOURCE_DATE_EPOCH = 0
 
-TAGS ?= /usr/bin/ctags  # emacs source builds or something breaks it
 ARFLAGS = rcsD
 ZFLAGS ?=
 XARGS ?= xargs -P4 -rs8000

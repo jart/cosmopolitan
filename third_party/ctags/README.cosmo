@@ -1,0 +1,16 @@
+// clang-format off
+ORIGIN
+
+  Debian 11
+  Package: exuberant-ctags
+  Version: 1:5.9~svn20110310-14
+
+LICENSE
+
+  GNU GPL v2
+
+LOCAL CHANGES
+
+  - Rename __unused__ to __unused
+  - Use [[:alnum:]] rather than invalid strings
+  - Remove support for VAX, VMS, OS2, QDOS, Amiga, etc.

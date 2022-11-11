@@ -8,6 +8,7 @@ o/$(MODE)/third_party:				\
 	o/$(MODE)/third_party/bzip2		\
 	o/$(MODE)/third_party/chibicc		\
 	o/$(MODE)/third_party/compiler_rt	\
+	o/$(MODE)/third_party/ctags		\
 	o/$(MODE)/third_party/dlmalloc		\
 	o/$(MODE)/third_party/finger		\
 	o/$(MODE)/third_party/gdtoa		\
