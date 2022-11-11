@@ -116,11 +116,29 @@ cstr:	.endobj	cstr,globl,hidden		# ←for gdb readability
 ape_mz:
 #if SupportsWindows() || SupportsMetal()
 	.asciz	"MZqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
+//	# in real mode
+//	dec	%bp
+//	pop	%dx
+//	jno	0x4a
+//	jo	0x4a
+//
+//	# in legacy mode
+//	push	%ebp
+//	pop	%edx
+//	jno	0x4a
+//	jo	0x4a
+//
+//	# 64-bit mode
+//	rex.WRB
+//	pop	%r10
+//	jno	0x4a
+//	jo	0x4a
 #else
 //	Avoid virus scanner reputation damage when targeting System Five.
-//	WARNING: This prefix is experimental; it may be removed sometime.
-//	TODO(jart): Find another prefix that will work with BIOS loading.
-	.asciz	"JTqFpD='\n"		# Mark 'Zibo' Joseph Zbikowski
+	.asciz	"jartsr='\n"		# Justine Alexandra Roberts Tunney
+//	push	$0x61
+//	jb	0x78
+//	jae	0x78
 #endif
 	.short	0x1000			# MZ: lowers upper bound load / 16
 	.short	0xf800			# MZ: roll greed on bss
@@ -140,6 +158,9 @@ ape_mz:
 	.long	RVA(ape_pe)		# PE: the new technology
 #else
 	.long	0
+	.org	0x78
+	pop	%rax
+	jmp	_start
 #endif
 	.endfn	ape_mz,globl,hidden
 
