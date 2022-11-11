@@ -111,9 +111,10 @@ int Worker(void *arg) {
 void TestContendedLock(const char *name, int kind) {
   char *stk;
   double ns;
-  int tid, x, i, n = 10000;
+  errno_t rc;
   struct timespec t1, t2;
   pthread_mutexattr_t attr;
+  int tid, x, i, n = 10000;
   struct CosmoTib tib = {.tib_self = &tib, .tib_self2 = &tib, .tib_tid = -1};
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr, kind);
@@ -122,12 +123,13 @@ void TestContendedLock(const char *name, int kind) {
   atomic_store(&ready, 0);
   atomic_store(&success, 0);
   stk = _mapstack();
-  tid = clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
-              CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
-                  CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID | CLONE_SETTLS,
-              0, 0, &tib, &tib.tib_tid);
-  if (tid == -1) {
-    kprintf("clone failed: %s\n", strerror(errno));
+  rc = clone(Worker, stk, GetStackSize() - 16 /* openbsd:stackbound */,
+             CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
+                 CLONE_PARENT_SETTID | CLONE_CHILD_SETTID |
+                 CLONE_CHILD_CLEARTID | CLONE_SETTLS,
+             0, &tid, &tib, &tib.tib_tid);
+  if (rc) {
+    kprintf("clone failed: %s\n", strerror(rc));
     _Exit(1);
   }
   while (!atomic_load(&ready)) donothing;

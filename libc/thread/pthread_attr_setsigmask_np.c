@@ -16,13 +16,25 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
 #include "libc/str/str.h"
+#include "libc/thread/thread2.h"
 
-const char *(DescribeErrno)(char buf[12], int x) {
-  const char *s;
-  if ((s = _strerrno(x))) return s;
-  FormatInt32(buf, x);
-  return buf;
+/**
+ * Sets signal mask on thread attributes object.
+ *
+ * @param attr is the thread attributes object
+ * @param sigmask will be copied into attributes, or if it's null, then
+ *     the existing signal mask presence on the object will be cleared
+ * @return 0 on success, or errno on error
+ */
+errno_t pthread_attr_setsigmask_np(pthread_attr_t *attr,
+                                   const sigset_t *sigmask) {
+  _Static_assert(sizeof(attr->__sigmask) == sizeof(*sigmask), "");
+  if (sigmask) {
+    attr->__havesigmask = true;
+    memcpy(attr->__sigmask, sigmask, sizeof(*sigmask));
+  } else {
+    attr->__havesigmask = false;
+  }
+  return 0;
 }

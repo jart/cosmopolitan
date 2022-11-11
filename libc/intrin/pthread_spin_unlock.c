@@ -17,6 +17,7 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/thread/thread.h"
 
 #ifdef pthread_spin_unlock
@@ -33,6 +34,7 @@
  * @see pthread_spin_lock
  */
 errno_t pthread_spin_unlock(pthread_spinlock_t *spin) {
+  LOCKTRACE("pthread_spin_unlock(%t)", spin);
   atomic_store_explicit(&spin->_lock, 0, memory_order_release);
   return 0;
 }

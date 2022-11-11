@@ -21,7 +21,11 @@
 #include "libc/str/str.h"
 #include "libc/sysv/consts/sock.h"
 
-const char *(DescribeSocketType)(char buf[64], int type) {
+#ifdef DescribeSocketType
+#undef DescribeSocketType
+#endif
+
+const char *DescribeSocketType(char buf[64], int type) {
   int x;
   char *p;
   p = buf;

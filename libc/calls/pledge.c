@@ -24,6 +24,7 @@
 #include "libc/errno.h"
 #include "libc/intrin/promises.internal.h"
 #include "libc/intrin/strace.internal.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/sysv/errfuns.h"
 
@@ -238,8 +239,10 @@
 int pledge(const char *promises, const char *execpromises) {
   int e, rc;
   unsigned long ipromises, iexecpromises;
-  if (!ParsePromises(promises, &ipromises) &&
-      !ParsePromises(execpromises, &iexecpromises)) {
+  if (IsGenuineCosmo()) {
+    rc = 0;  // blink doesn't support seccomp
+  } else if (!ParsePromises(promises, &ipromises) &&
+             !ParsePromises(execpromises, &iexecpromises)) {
     if (IsLinux()) {
       // copy exec and execnative from promises to execpromises
       iexecpromises = ~(~iexecpromises | (~ipromises & (1ul << PROMISE_EXEC)));

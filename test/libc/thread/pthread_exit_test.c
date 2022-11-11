@@ -38,6 +38,7 @@ void *Worker(void *arg) {
 }
 
 TEST(pthread_exit, joinableOrphanedChild_runsAtexitHandlers) {
+  pthread_t th;
   pthread_attr_t attr;
   SPAWN(fork);
   atexit(OnExit);
@@ -45,13 +46,14 @@ TEST(pthread_exit, joinableOrphanedChild_runsAtexitHandlers) {
   main_thread = pthread_self();
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE));
-  ASSERT_EQ(0, pthread_create(0, &attr, Worker, 0));
+  ASSERT_EQ(0, pthread_create(&th, &attr, Worker, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   pthread_exit(0);
   EXITS(CHILD);
 }
 
 TEST(pthread_exit, detachedOrphanedChild_runsAtexitHandlers) {
+  pthread_t th;
   pthread_attr_t attr;
   SPAWN(fork);
   atexit(OnExit);
@@ -59,7 +61,7 @@ TEST(pthread_exit, detachedOrphanedChild_runsAtexitHandlers) {
   main_thread = pthread_self();
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-  ASSERT_EQ(0, pthread_create(0, &attr, Worker, 0));
+  ASSERT_EQ(0, pthread_create(&th, &attr, Worker, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   pthread_exit(0);
   EXITS(CHILD);

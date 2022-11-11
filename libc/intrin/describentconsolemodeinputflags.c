@@ -20,6 +20,10 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/consolemodeflags.h"
 
+#ifdef DescribeNtConsoleInFlags
+#undef DescribeNtConsoleInFlags
+#endif
+
 static const struct DescribeFlags kConsoleModeInputFlags[] = {
     {kNtEnableProcessedInput, "ProcessedInput"},              //
     {kNtEnableLineInput, "LineInput"},                        //
@@ -33,7 +37,7 @@ static const struct DescribeFlags kConsoleModeInputFlags[] = {
     {kNtEnableVirtualTerminalInput, "VirtualTerminalInput"},  //
 };
 
-const char *(DescribeNtConsoleInFlags)(char buf[256], uint32_t x) {
+const char *DescribeNtConsoleInFlags(char buf[256], uint32_t x) {
   return DescribeFlags(buf, 256, kConsoleModeInputFlags,
                        ARRAYLEN(kConsoleModeInputFlags), "kNtEnable", x);
 }

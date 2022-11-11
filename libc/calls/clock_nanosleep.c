@@ -240,6 +240,8 @@ static bool ShouldUseSpinNanosleep(int clock, int flags,
 errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
                         struct timespec *rem) {
   int rc;
+  LOCKTRACE("clock_nanosleep(%s, %s, %s) → ...", DescribeClockName(clock),
+            DescribeSleepFlags(flags), DescribeTimespec(0, req));
   if (IsMetal()) {
     rc = ENOSYS;
   } else if (!req || (IsAsan() && (!__asan_is_valid_timespec(req) ||
@@ -259,7 +261,7 @@ errno_t clock_nanosleep(int clock, int flags, const struct timespec *req,
   if (__tls_enabled && !(__get_tls()->tib_flags & TIB_FLAG_TIME_CRITICAL)) {
     STRACE("clock_nanosleep(%s, %s, %s, [%s]) → %s", DescribeClockName(clock),
            DescribeSleepFlags(flags), DescribeTimespec(0, req),
-           DescribeTimespec(rc, rem), DescribeErrnoResult(rc));
+           DescribeTimespec(rc, rem), DescribeErrno(rc));
   }
 #endif
   return rc;

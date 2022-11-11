@@ -92,9 +92,9 @@ int posix_spawn(int *pid, const char *path,
         posix_spawnattr_getsigmask(attrp, &sigmask);
         sigprocmask(SIG_SETMASK, &sigmask, 0);
       }
-      if (flags & POSIX_SPAWN_RESETIDS) {
-        setuid(getuid());
-        setgid(getgid());
+      if ((flags & POSIX_SPAWN_RESETIDS) &&
+          (setgid(getgid()) || setuid(getuid()))) {
+        _Exit(127);
       }
       if (flags & POSIX_SPAWN_SETSIGDEF) {
         for (s = 1; s < 32; s++) {

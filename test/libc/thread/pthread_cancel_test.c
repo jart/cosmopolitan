@@ -32,7 +32,7 @@
 int pfds[2];
 pthread_cond_t cv;
 pthread_mutex_t mu;
-atomic_bool gotcleanup;
+atomic_int gotcleanup;
 char testlib_enable_tmp_setup_teardown;
 
 void SetUp(void) {
@@ -198,7 +198,7 @@ TEST(pthread_cancel, condDeferredWaitDelayed) {
 char *wouldleak;
 pthread_key_t key;
 bool key_destructor_was_run;
-atomic_bool is_in_infinite_loop;
+atomic_int is_in_infinite_loop;
 
 void KeyDestructor(void *arg) {
   CheckStackIsAligned();

@@ -22,7 +22,7 @@
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 unsigned P[] = {

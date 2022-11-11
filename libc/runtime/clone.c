@@ -608,7 +608,7 @@ errno_t clone(void *func, void *stk, size_t stksz, int flags, void *arg,
   }
 
   STRACE("clone(%t, %p, %'zu, %#x, %p, %p, %p, %p) → %s", func, stk, stksz,
-         flags, arg, ptid, tls, ctid, DescribeErrnoResult(rc));
+         flags, arg, ptid, tls, ctid, DescribeErrno(rc));
 
   return rc;
 }

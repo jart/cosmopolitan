@@ -16,21 +16,22 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/sysv/consts/ipproto.h"
+#include "libc/str/str.h"
+#include "libc/thread/thread2.h"
 
-#ifdef DescribeSocketProtocol
-#undef DescribeSocketProtocol
-#endif
-
-const char *DescribeSocketProtocol(char buf[12], int family) {
-  if (family == IPPROTO_IP) return "IPPROTO_IP";
-  if (family == IPPROTO_ICMP) return "IPPROTO_ICMP";
-  if (family == IPPROTO_TCP) return "IPPROTO_TCP";
-  if (family == IPPROTO_UDP) return "IPPROTO_UDP";
-  if (family == IPPROTO_RAW) return "IPPROTO_RAW";
-  if (family == IPPROTO_IPV6) return "IPPROTO_IPv6";
-  FormatInt32(buf, family);
-  return buf;
+/**
+ * Gets signal mask on thread attributes object.
+ *
+ * @param attr is the thread attributes object
+ * @param sigmask will receive the output signal mask on success, or
+ *     null if a simple presence check is desired
+ * @return 0 on success, errno on error, or `PTHREAD_ATTR_NO_SIGMASK_NP`
+ *     if there wasn't any signal mask present in `attr`
+ */
+errno_t pthread_attr_getsigmask_np(const pthread_attr_t *attr,
+                                   sigset_t *sigmask) {
+  _Static_assert(sizeof(attr->__sigmask) == sizeof(*sigmask), "");
+  if (!attr->__havesigmask) return PTHREAD_ATTR_NO_SIGMASK_NP;
+  if (sigmask) memcpy(sigmask, attr->__sigmask, sizeof(*sigmask));
+  return 0;
 }

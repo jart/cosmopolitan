@@ -71,6 +71,6 @@ errno_t pthread_getaffinity_np(pthread_t thread, size_t size,
   }
 
   STRACE("pthread_getaffinity_np(%d, %'zu, %p) → %s", tid, size, bitset,
-         DescribeErrnoResult(rc));
+         DescribeErrno(rc));
   return rc;
 }

@@ -20,12 +20,22 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/str/str.h"
 
-const char *(DescribeErrnoResult)(char buf[12], int ax) {
+#ifdef DescribeErrno
+#undef DescribeErrno
+#endif
+
+const char *DescribeErrno(char buf[20], int ax) {
+  char *p = buf;
   const char *s;
-  if (ax > -4095u && (s = _strerrno(-ax))) {
+  if (ax < 0) {
+    *p++ = '-';
+    ax = -ax;
+  }
+  if ((s = _strerrno(ax))) {
+    stpcpy(p, s);
     return s;
   } else {
-    FormatInt32(buf, ax);
+    FormatInt32(p, ax);
     return buf;
   }
 }

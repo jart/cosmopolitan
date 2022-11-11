@@ -4,7 +4,7 @@
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-void(psubw)(int16_t[8], const int16_t[8], const int16_t[8]);
+void psubw(int16_t[8], const int16_t[8], const int16_t[8]);
 
 #define psubw(A, B, C) \
   INTRIN_SSEVEX_X_X_X_(psubw, SSE2, "psubw", INTRIN_NONCOMMUTATIVE, A, B, C)

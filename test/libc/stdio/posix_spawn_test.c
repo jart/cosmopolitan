@@ -100,9 +100,8 @@ TEST(posix_spawn, torture) {
   // XXX: NetBSD doesn't seem to let us set the scheduler to itself ;_;
   ASSERT_EQ(0, posix_spawnattr_init(&attr));
   ASSERT_EQ(0, posix_spawnattr_setflags(
-                   &attr, POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETSIGDEF |
-                              POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETPGROUP |
-                              POSIX_SPAWN_SETSIGMASK |
+                   &attr, POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGDEF |
+                              POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGMASK |
                               (IsNetbsd() ? 0 : POSIX_SPAWN_SETSCHEDULER)));
   ASSERT_EQ(0, posix_spawnattr_setsigmask(&attr, &allsig));
   ASSERT_EQ(0, posix_spawnattr_setsigdefault(&attr, &allsig));

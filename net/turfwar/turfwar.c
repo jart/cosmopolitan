@@ -299,8 +299,8 @@ union TokenBucket {
 struct Worker {
   pthread_t th;
   atomic_int msgcount;
-  atomic_bool shutdown;
-  atomic_bool connected;
+  atomic_int shutdown;
+  atomic_int connected;
   struct timespec startread;
 } * g_worker;
 

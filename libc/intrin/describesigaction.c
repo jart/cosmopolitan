@@ -27,6 +27,10 @@
 #include "libc/mem/alloca.h"
 #include "libc/sysv/consts/sa.h"
 
+#ifdef DescribeSigaction
+#undef DescribeSigaction
+#endif
+
 static const char *DescribeSigHandler(char buf[64], void f(int)) {
   if (f == SIG_ERR) return "SIG_ERR";
   if (f == SIG_DFL) return "SIG_DFL";
@@ -54,8 +58,7 @@ static const char *DescribeSigFlags(char buf[64], int x) {
 
 #define append(...) o += ksnprintf(buf + o, N - o, __VA_ARGS__)
 
-const char *(DescribeSigaction)(char buf[N], int rc,
-                                const struct sigaction *sa) {
+const char *DescribeSigaction(char buf[N], int rc, const struct sigaction *sa) {
   int o = 0;
   char b64[64];
 

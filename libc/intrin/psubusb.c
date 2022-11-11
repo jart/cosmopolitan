@@ -21,6 +21,10 @@
 #include "libc/macros.internal.h"
 #include "libc/str/str.h"
 
+#ifdef psubusb
+#undef psubusb
+#endif
+
 /**
  * Subtracts unsigned 8-bit integers w/ saturation.
  *
@@ -29,7 +33,7 @@
  * @param 𝑐 [r/o] supplies second input vector
  * @mayalias
  */
-void(psubusb)(uint8_t a[16], const uint8_t b[16], const uint8_t c[16]) {
+void psubusb(uint8_t a[16], const uint8_t b[16], const uint8_t c[16]) {
   unsigned i;
   uint8_t r[16];
   for (i = 0; i < 16; ++i) {

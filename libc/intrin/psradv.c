@@ -18,13 +18,17 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/intrin/psrad.h"
 
+#ifdef psradv
+#undef psradv
+#endif
+
 /**
  * Divides shorts by two powers.
  *
  * @note arithmetic shift right will sign extend negatives
  * @mayalias
  */
-void(psradv)(int32_t a[4], const int32_t b[4], const uint64_t c[2]) {
+void psradv(int32_t a[4], const int32_t b[4], const uint64_t c[2]) {
   unsigned i;
   unsigned char k;
   k = c[0] > 31 ? 31 : c[0];

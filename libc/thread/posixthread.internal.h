@@ -78,7 +78,6 @@ struct PosixThread {
   nsync_dll_element_ list;  // list of threads
   jmp_buf exiter;           // for pthread_exit
   pthread_attr_t attr;
-  sigset_t sigmask;
   struct _pthread_cleanup_buffer *cleanup;
 };
 

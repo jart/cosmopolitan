@@ -297,12 +297,12 @@ static wontreturn relegated noinstrument void __minicrash(int sig,
  * @vforksafe
  */
 relegated void __oncrash(int sig, struct siginfo *si, ucontext_t *ctx) {
-  bool bZero;
+  int bZero;
   intptr_t rip;
   int me, owner;
   int gdbpid, err;
   static atomic_int once;
-  static atomic_bool once2;
+  static atomic_int once2;
   STRACE("__oncrash rip %x", ctx->uc_mcontext.rip);
   ftrace_enabled(-1);
   strace_enabled(-1);

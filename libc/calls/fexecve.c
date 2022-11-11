@@ -26,8 +26,6 @@
 #include "libc/str/str.h"
 #include "libc/sysv/errfuns.h"
 
-int sys_fexecve(int, char *const[], char *const[]);
-
 /**
  * Executes binary executable at file descriptor.
  *

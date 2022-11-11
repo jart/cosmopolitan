@@ -42,6 +42,7 @@ static const struct ContentTypeExtension {
     {"css", "text/css"},                       //
     {"csv", "text/csv"},                       //
     {"diff", "text/plain"},                    //
+    {"diff", "text/plain"},                    //
     {"doc", "application/msword"},             //
     {"epub", "application/epub+zip"},          //
     {"gif", "image/gif"},                      //
@@ -71,6 +72,7 @@ static const struct ContentTypeExtension {
     {"ogv", "video/ogg"},                      //
     {"ogx", "application/ogg"},                //
     {"otf", "font/otf"},                       //
+    {"patch", "text/plain"},                   //
     {"pdf", "application/pdf"},                //
     {"png", "image/png"},                      //
     {"rar", "application/vnd.rar"},            //

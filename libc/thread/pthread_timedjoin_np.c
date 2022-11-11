@@ -17,51 +17,56 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
-#include "libc/calls/cp.internal.h"
 #include "libc/calls/struct/timespec.h"
-#include "libc/dce.h"
 #include "libc/errno.h"
 #include "libc/intrin/atomic.h"
-#include "libc/thread/thread.h"
+#include "libc/thread/posixthread.internal.h"
+#include "libc/thread/thread2.h"
 #include "libc/thread/tls.h"
 #include "libc/thread/wait0.internal.h"
-#include "third_party/nsync/futex.internal.h"
 
 /**
- * Blocks until memory location becomes zero.
+ * Waits for thread to terminate.
  *
- * This is intended to be used on the child thread id, which is updated
- * by the clone() system call when a thread terminates. We need this in
- * order to know when it's safe to free a thread's stack. This function
- * uses futexes on Linux, FreeBSD, OpenBSD, and Windows. On other
- * platforms this uses polling with exponential backoff.
+ * Multiple threads joining the same thread is undefined behavior. If a
+ * deferred or masked cancellation happens to the calling thread either
+ * before or during the waiting process then the target thread will not
+ * be joined. Calling pthread_join() on a non-joinable thread, e.g. one
+ * that's been detached, is undefined behavior. If a thread attempts to
+ * join itself, then the behavior is undefined.
  *
+ * @param value_ptr if non-null will receive pthread_exit() argument
+ *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
+ *     pthread_cancel() destroyed the thread instead
+ * @param abstime specifies an absolute deadline or the timestamp of
+ *     when we'll stop waiting; if this is null we will wait forever
  * @return 0 on success, or errno on error
  * @raise ECANCELED if calling thread was cancelled in masked mode
- * @raise EBUSY if `abstime` was specified and deadline expired
+ * @raise EBUSY if `abstime` deadline elapsed
  * @cancellationpoint
+ * @returnserrno
+ * @threadsafe
  */
-errno_t _wait0(const atomic_int *ctid, struct timespec *abstime) {
-  int x, rc = 0;
+errno_t pthread_timedjoin_np(pthread_t thread, void **value_ptr,
+                             struct timespec *abstime) {
+  errno_t rc;
+  struct PosixThread *pt;
+  enum PosixThreadStatus status;
+  pt = (struct PosixThread *)thread;
+  status = atomic_load_explicit(&pt->status, memory_order_acquire);
   // "The behavior is undefined if the value specified by the thread
-  //  argument to pthread_join() refers to the calling thread."
+  //  argument to pthread_join() does not refer to a joinable thread."
   //                                  ──Quoth POSIX.1-2017
-  _unassert(ctid != &__get_tls()->tib_tid);
-  // "If the thread calling pthread_join() is canceled, then the target
-  //  thread shall not be detached."  ──Quoth POSIX.1-2017
-  if (!(rc = pthread_testcancel_np())) {
-    BEGIN_CANCELLATION_POINT;
-    while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-      rc = nsync_futex_wait_(ctid, x, !IsWindows(), abstime);
-      if (rc == -ECANCELED) {
-        rc = ECANCELED;
-        break;
-      } else if (rc == -ETIMEDOUT) {
-        rc = EBUSY;
-        break;
-      }
+  _unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
+  if (!(rc = _wait0(&pt->tib->tib_tid, abstime))) {
+    pthread_spin_lock(&_pthread_lock);
+    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
+    pthread_spin_unlock(&_pthread_lock);
+    if (value_ptr) {
+      *value_ptr = pt->rc;
     }
-    END_CANCELLATION_POINT;
+    _pthread_free(pt);
+    pthread_decimate_np();
   }
-  return rc;
+  return 0;
 }

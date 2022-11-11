@@ -16,21 +16,27 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/fmt/itoa.h"
-#include "libc/intrin/describeflags.internal.h"
-#include "libc/sysv/consts/ipproto.h"
+#include "libc/thread/thread2.h"
 
-#ifdef DescribeSocketProtocol
-#undef DescribeSocketProtocol
-#endif
-
-const char *DescribeSocketProtocol(char buf[12], int family) {
-  if (family == IPPROTO_IP) return "IPPROTO_IP";
-  if (family == IPPROTO_ICMP) return "IPPROTO_ICMP";
-  if (family == IPPROTO_TCP) return "IPPROTO_TCP";
-  if (family == IPPROTO_UDP) return "IPPROTO_UDP";
-  if (family == IPPROTO_RAW) return "IPPROTO_RAW";
-  if (family == IPPROTO_IPV6) return "IPPROTO_IPv6";
-  FormatInt32(buf, family);
-  return buf;
+/**
+ * Joins thread if it's already terminated.
+ *
+ * Multiple threads joining the same thread is undefined behavior. If a
+ * deferred or masked cancellation happens to the calling thread either
+ * before or during the waiting process then the target thread will not
+ * be joined. Calling pthread_join() on a non-joinable thread, e.g. one
+ * that's been detached, is undefined behavior. If a thread attempts to
+ * join itself, then the behavior is undefined.
+ *
+ * @param value_ptr if non-null will receive pthread_exit() argument
+ *     if the thread called pthread_exit(), or `PTHREAD_CANCELED` if
+ *     pthread_cancel() destroyed the thread instead
+ * @return 0 on success, or errno on error
+ * @raise ECANCELED if calling thread was cancelled in masked mode
+ * @cancellationpoint
+ * @returnserrno
+ * @threadsafe
+ */
+errno_t pthread_tryjoin_np(pthread_t thread, void **value_ptr) {
+  return pthread_timedjoin_np(thread, value_ptr, &timespec_zero);
 }

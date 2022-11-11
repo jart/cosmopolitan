@@ -16,10 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/calls/blockcancel.internal.h"
-#include "libc/calls/calls.h"
-#include "libc/calls/clock_gettime.internal.h"
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
-#include "libc/sysv/consts/clock.h"
+#include "libc/atomic.h"
+#include "libc/calls/struct/timespec.h"
+#include "libc/intrin/atomic.h"
+#include "libc/intrin/intrin.h"
+#include "libc/intrin/kprintf.h"
+#include "libc/testlib/testlib.h"
+#include "libc/thread/thread.h"
+#include "third_party/zip/zip.h"
+
+#define THREADS    8
+#define ITERATIONS 20000
+
+atomic_int number;
+pthread_t th[THREADS];
+pthread_spinlock_t lock;
+
+void *SpinWorker(void *arg) {
+  for (int i = 0; i < ITERATIONS; ++i) {
+    ASSERT_EQ(0, pthread_spin_lock(&lock));
+    atomic_store_explicit(
+        &number, atomic_load_explicit(&number, memory_order_relaxed) + 1,
+        memory_order_relaxed);
+    ASSERT_EQ(0, pthread_spin_unlock(&lock));
+  }
+  return 0;
+}
+
+TEST(pthread_spin_lock, torture) {
+  int i;
+  number = 0;
+  ASSERT_EQ(0, pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE));
+  for (i = 0; i < THREADS; ++i) {
+    ASSERT_EQ(0, pthread_create(th + i, 0, SpinWorker, 0));
+  }
+  for (i = 0; i < THREADS; ++i) {
+    ASSERT_EQ(0, pthread_join(th[i], 0));
+  }
+  ASSERT_EQ(0, pthread_spin_destroy(&lock));
+  ASSERT_EQ(THREADS * ITERATIONS, number);
+}
+
+TEST(pthread_spin_lock, macros) {
+  ASSERT_EQ(0, pthread_spin_init(&lock, PTHREAD_PROCESS_PRIVATE));
+  ASSERT_EQ(0, pthread_spin_lock(&lock));
+  ASSERT_EQ(0, pthread_spin_unlock(&lock));
+  ASSERT_EQ(0, pthread_spin_destroy(&lock));
+}
+
+TEST(pthread_spin_lock, linked) {
+  ASSERT_EQ(0, (pthread_spin_init)(&lock, PTHREAD_PROCESS_PRIVATE));
+  ASSERT_EQ(0, (pthread_spin_lock)(&lock));
+  ASSERT_EQ(0, (pthread_spin_unlock)(&lock));
+  ASSERT_EQ(0, (pthread_spin_destroy)(&lock));
+}

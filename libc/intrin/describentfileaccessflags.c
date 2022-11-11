@@ -21,6 +21,10 @@
 #include "libc/nt/enum/accessmask.h"
 #include "libc/nt/enum/filesharemode.h"
 
+#ifdef DescribeNtFileAccessFlags
+#undef DescribeNtFileAccessFlags
+#endif
+
 static const struct DescribeFlags kFileAccessflags[] = {
     {kNtFileAllAccess, "FileAllAccess"},                    // order matters
     {kNtFileGenericRead, "FileGenericRead"},                // order matters
@@ -63,7 +67,7 @@ static const struct DescribeFlags kFileAccessflags[] = {
     {kNtTokenAdjustSessionid, "TokenAdjustSessionid"},      //
 };
 
-const char *(DescribeNtFileAccessFlags)(char buf[512], uint32_t x) {
+const char *DescribeNtFileAccessFlags(char buf[512], uint32_t x) {
   return DescribeFlags(buf, 512, kFileAccessflags, ARRAYLEN(kFileAccessflags),
                        "kNt", x);
 }

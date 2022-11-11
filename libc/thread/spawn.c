@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "libc/assert.h"
 #include "libc/calls/calls.h"
 #include "libc/errno.h"
 #include "libc/macros.internal.h"
@@ -148,7 +149,7 @@ int _join(struct spawn *th) {
   int rc;
   if (th->tib) {
     // wait for ctid to become zero
-    _wait0(&th->tib->tib_tid);
+    _npassert(!_wait0(&th->tib->tib_tid, 0));
     // free thread memory
     free(th->tls);
     rc = munmap(th->stk, GetStackSize());

@@ -32,9 +32,11 @@
 #include "libc/runtime/clone.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/str/str.h"
 #include "libc/sysv/consts/clone.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
+#include "libc/sysv/consts/sig.h"
 #include "libc/sysv/consts/ss.h"
 #include "libc/thread/posixthread.internal.h"
 #include "libc/thread/spawn.h"
@@ -84,7 +86,7 @@ static int PosixThread(void *arg, int tid) {
   // set long jump handler so pthread_exit can bring control back here
   if (!setjmp(pt->exiter)) {
     __get_tls()->tib_pthread = (pthread_t)pt;
-    _sigsetmask(pt->sigmask);
+    _npassert(!sigprocmask(SIG_SETMASK, (sigset_t *)pt->attr.__sigmask, 0));
     rc = pt->start(pt->arg);
     // ensure pthread_cleanup_pop(), and pthread_exit() popped cleanup
     _npassert(!pt->cleanup);
@@ -224,6 +226,10 @@ static errno_t pthread_create_impl(pthread_t *thread,
   }
 
   // set initial status
+  if (!pt->attr.__havesigmask) {
+    pt->attr.__havesigmask = true;
+    memcpy(pt->attr.__sigmask, &oldsigs, sizeof(oldsigs));
+  }
   switch (pt->attr.__detachstate) {
     case PTHREAD_CREATE_JOINABLE:
       atomic_store_explicit(&pt->status, kPosixThreadJoinable,
@@ -246,7 +252,6 @@ static errno_t pthread_create_impl(pthread_t *thread,
   pthread_spin_unlock(&_pthread_lock);
 
   // launch PosixThread(pt) in new thread
-  pt->sigmask = oldsigs;
   if ((rc = clone(PosixThread, pt->attr.__stackaddr,
                   pt->attr.__stacksize - (IsOpenbsd() ? 16 : 0),
                   CLONE_VM | CLONE_THREAD | CLONE_FS | CLONE_FILES |
@@ -260,9 +265,7 @@ static errno_t pthread_create_impl(pthread_t *thread,
     return rc;
   }
 
-  if (thread) {
-    *thread = (pthread_t)pt;
-  }
+  *thread = (pthread_t)pt;
   return 0;
 }
 

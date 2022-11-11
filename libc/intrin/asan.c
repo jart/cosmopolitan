@@ -159,7 +159,7 @@ static struct AsanMorgue {
 
 static bool __asan_once(void) {
   bool want = false;
-  static _Atomic(bool) once;
+  static atomic_int once;
   return atomic_compare_exchange_strong_explicit(
       &once, &want, true, memory_order_relaxed, memory_order_relaxed);
 }

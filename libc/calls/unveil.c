@@ -31,6 +31,7 @@
 #include "libc/fmt/conv.h"
 #include "libc/intrin/strace.internal.h"
 #include "libc/macros.internal.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
@@ -353,7 +354,9 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 int unveil(const char *path, const char *permissions) {
   int e, rc;
   e = errno;
-  if (IsLinux()) {
+  if (IsGenuineCosmo()) {
+    rc = 0;  // blink doesn't support landlock
+  } else if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);
   } else {
     rc = sys_unveil(path, permissions);

@@ -22,7 +22,7 @@
 /**
  * Returns true if calling thread is the only thread.
  */
-bool pthread_orphan_np(void) {
+int pthread_orphan_np(void) {
   bool res;
   pthread_spin_lock(&_pthread_lock);
   res = _pthread_list == _pthread_list->prev &&

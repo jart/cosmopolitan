@@ -58,10 +58,11 @@ TEST(pthread_detach, testCreateReturn) {
 }
 
 TEST(pthread_detach, testDetachUponCreation) {
+  pthread_t th;
   pthread_attr_t attr;
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_create(&th, &attr, Increment, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
   while (!pthread_orphan_np()) {
     pthread_decimate_np();

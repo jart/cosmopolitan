@@ -21,7 +21,11 @@
 #include "libc/thread/thread.h"
 #include "libc/thread/tls.h"
 
-void _pthread_cleanup_pop(struct _pthread_cleanup_buffer *cb, int execute) {
+#ifdef pthread_cleanup_pop
+#undef pthread_cleanup_pop
+#endif
+
+void pthread_cleanup_pop(struct _pthread_cleanup_buffer *cb, int execute) {
   struct PosixThread *pt;
   if (__tls_enabled && (pt = (struct PosixThread *)__get_tls()->tib_pthread)) {
     _unassert(cb == pt->cleanup);

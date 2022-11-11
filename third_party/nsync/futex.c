@@ -32,6 +32,7 @@
 #include "libc/intrin/strace.internal.h"
 #include "libc/intrin/weaken.h"
 #include "libc/limits.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/synchronization.h"
 #include "libc/sysv/consts/clock.h"
@@ -60,9 +61,14 @@ static bool futex_is_supported;
 static bool futex_timeout_is_relative;
 
 __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
+	int e;
 	atomic_int x;
 
 	FUTEX_WAIT_ = FUTEX_WAIT;
+
+	if (IsGenuineCosmo ()) {
+		return;
+	}
 
 	if (IsWindows ()) {
 		futex_is_supported = true;
@@ -89,6 +95,7 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 	// configuring any time synchronization mechanism (like ntp) to
 	// adjust for leap seconds by adjusting the rate, rather than
 	// with a backwards step.
+	e = errno;
 	atomic_store_explicit (&x, 0, memory_order_relaxed);
 	if (IsLinux () &&
 	    _futex (&x, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME,
@@ -110,6 +117,7 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 		FUTEX_WAIT_ = FUTEX_WAIT;
 		futex_timeout_is_relative = true;
 	}
+	errno = e;
 }
 
 static int nsync_futex_polyfill_ (atomic_int *w, int expect, struct timespec *abstime) {
@@ -212,13 +220,19 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 	struct PosixThread *pt = 0;
 	struct timespec tsmem, *timeout;
 
-	if (atomic_load_explicit (w, memory_order_acquire) != expect) {
-		return -EAGAIN;
-	}
-
 	op = FUTEX_WAIT_;
 	if (pshare == PTHREAD_PROCESS_PRIVATE) {
 		op |= FUTEX_PRIVATE_FLAG_;
+	}
+
+	if (abstime && timespec_cmp (*abstime, timespec_zero) <= 0) {
+		rc = -ETIMEDOUT;
+		goto Finished;
+	}
+
+	if (atomic_load_explicit (w, memory_order_acquire) != expect) {
+		rc = -EAGAIN;
+		goto Finished;
 	}
 
 	timeout = nsync_futex_timeout_ (&tsmem, abstime);
@@ -275,11 +289,12 @@ int nsync_futex_wait_ (atomic_int *w, int expect, char pshare, struct timespec *
 		__get_tls()->tib_flags &= ~TIB_FLAG_TIME_CRITICAL;
 	}
 
+Finished:
 	STRACE ("futex(%t [%d], %s, %#x, %s) → %s",
 		w, atomic_load_explicit (w, memory_order_relaxed),
 		DescribeFutexOp (op), expect,
-		DescribeTimespec (0, timeout),
-		DescribeErrnoResult (rc));
+		DescribeTimespec (0, abstime),
+		DescribeErrno (rc));
 
 	return rc;
 }
@@ -323,7 +338,7 @@ int nsync_futex_wake_ (atomic_int *w, int count, char pshare) {
 
 	STRACE ("futex(%t [%d], %s, %d) → %s",
 		w, atomic_load_explicit (w, memory_order_relaxed),
-		DescribeFutexOp(op), count, DescribeErrnoResult(rc));
+		DescribeFutexOp (op), count, DescribeErrno (rc));
 
 	return rc;
 }

@@ -22,6 +22,10 @@
 #include "libc/nt/enum/filesharemode.h"
 #include "libc/sysv/consts/personality.h"
 
+#ifdef DescribePersonalityFlags
+#undef DescribePersonalityFlags
+#endif
+
 static const struct DescribeFlags kPersonalityFlags[] = {
     {ADDR_COMPAT_LAYOUT, "ADDR_COMPAT_LAYOUT"},  //
     {READ_IMPLIES_EXEC, "READ_IMPLIES_EXEC"},    //
@@ -36,7 +40,7 @@ static const struct DescribeFlags kPersonalityFlags[] = {
     {UNAME26, "UNAME26"},                        //
 };
 
-const char *(DescribePersonalityFlags)(char buf[128], int x) {
+const char *DescribePersonalityFlags(char buf[128], int x) {
   return DescribeFlags(buf, 128, kPersonalityFlags, ARRAYLEN(kPersonalityFlags),
                        "", x);
 }

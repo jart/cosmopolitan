@@ -20,6 +20,10 @@
 #include "libc/macros.internal.h"
 #include "libc/nt/enum/pageflags.h"
 
+#ifdef DescribeNtPageFlags
+#undef DescribeNtPageFlags
+#endif
+
 static const struct DescribeFlags kPageFlags[] = {
     {kNtPageNoaccess, "PageNoaccess"},                  //
     {kNtPageReadonly, "PageReadonly"},                  //
@@ -41,6 +45,6 @@ static const struct DescribeFlags kPageFlags[] = {
     {kNtSecWritecombine, "SecWritecombine"},            //
 };
 
-const char *(DescribeNtPageFlags)(char buf[64], uint32_t x) {
+const char *DescribeNtPageFlags(char buf[64], uint32_t x) {
   return DescribeFlags(buf, 64, kPageFlags, ARRAYLEN(kPageFlags), "kNt", x);
 }

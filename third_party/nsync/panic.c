@@ -17,14 +17,15 @@
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/calls/calls.h"
+#include "libc/str/str.h"
 #include "third_party/nsync/common.internal.h"
 // clang-format off
 
 /* Aborts after printing the nul-terminated string s[]. */
 void nsync_panic_ (const char *s) {
-	size_t n = 0;
-	while (s[n]) ++n;
-	write (2, "panic: ", 7);
-	write (2, s, n);
+	char b[256], *p = b;
+	p = stpcpy (p, "panic: ");
+	p = stpcpy (p, s);
+	write (2, b, p - b);
 	notpossible;
 }

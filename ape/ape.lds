@@ -715,7 +715,7 @@ ASSERT(IS2POW(ape_stack_memsz),
        "ape_stack_memsz must be a two power");
 
 ASSERT(ape_stack_vaddr % ape_stack_memsz == 0,
-       "ape_stack_vaddr must have ape_stack_memsz alignment; try using STATIC_STACK_ADDR(0x700000040000 - ape_stack_memsz);");
+       "ape_stack_vaddr must have ape_stack_memsz alignment; try using STATIC_STACK_ADDR(0x700000040000 & -ape_stack_memsz);");
 
 ASSERT(ALIGNOF(.tdata) <= TLS_ALIGNMENT && ALIGNOF(.tbss) <= TLS_ALIGNMENT,
        "_Thread_local _Alignof can't exceed TLS_ALIGNMENT");

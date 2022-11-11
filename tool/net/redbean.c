@@ -456,7 +456,6 @@ static bool hasonprocessdestroy;
 static bool loggednetworkorigin;
 static bool ishandlingconnection;
 static bool hasonclientconnection;
-static atomic_bool terminatemonitor;
 static bool evadedragnetsurveillance;
 
 static int zfd;
@@ -473,6 +472,7 @@ static int oldloglevel;
 static int messageshandled;
 static int sslticketlifetime;
 static uint32_t clientaddrsize;
+static atomic_int terminatemonitor;
 
 static size_t zsize;
 static lua_State *GL;

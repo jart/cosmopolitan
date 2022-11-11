@@ -16,13 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/assert.h"
-#include "libc/errno.h"
-#include "libc/intrin/atomic.h"
-#include "libc/thread/posixthread.internal.h"
-#include "libc/thread/thread.h"
-#include "libc/thread/tls.h"
-#include "libc/thread/wait0.internal.h"
+#include "libc/thread/thread2.h"
 
 /**
  * Waits for thread to terminate.
@@ -44,24 +38,5 @@
  * @threadsafe
  */
 errno_t pthread_join(pthread_t thread, void **value_ptr) {
-  errno_t rc;
-  struct PosixThread *pt;
-  enum PosixThreadStatus status;
-  pt = (struct PosixThread *)thread;
-  status = atomic_load_explicit(&pt->status, memory_order_acquire);
-  // "The behavior is undefined if the value specified by the thread
-  //  argument to pthread_join() does not refer to a joinable thread."
-  //                                  ──Quoth POSIX.1-2017
-  _unassert(status == kPosixThreadJoinable || status == kPosixThreadTerminated);
-  if (!(rc = _wait0(&pt->tib->tib_tid))) {
-    pthread_spin_lock(&_pthread_lock);
-    _pthread_list = nsync_dll_remove_(_pthread_list, &pt->list);
-    pthread_spin_unlock(&_pthread_lock);
-    if (value_ptr) {
-      *value_ptr = pt->rc;
-    }
-    _pthread_free(pt);
-    pthread_decimate_np();
-  }
-  return 0;
+  return pthread_timedjoin_np(thread, value_ptr, 0);
 }

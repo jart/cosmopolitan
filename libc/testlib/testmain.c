@@ -135,6 +135,7 @@ static void FixIrregularFds(void) {
   }
   if (IsGenuineCosmo()) {
     // TODO(jart): Fix Blinkenlights poll() / close()
+    free(pfds);
     return;
   }
   if (poll(pfds, maxfds, 0) != -1) {

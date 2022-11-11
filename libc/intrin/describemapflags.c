@@ -22,7 +22,11 @@
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/prot.h"
 
-const char *(DescribeMapFlags)(char buf[64], int x) {
+#ifdef DescribeMapFlags
+#undef DescribeMapFlags
+#endif
+
+const char *DescribeMapFlags(char buf[64], int x) {
   const struct DescribeFlags kMapFlags[] = {
       {MAP_STACK, "STACK"},                      // order matters
       {MAP_PRIVATE, "PRIVATE"},                  //

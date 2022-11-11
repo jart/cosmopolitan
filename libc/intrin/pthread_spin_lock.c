@@ -18,6 +18,7 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/assert.h"
 #include "libc/intrin/atomic.h"
+#include "libc/intrin/strace.internal.h"
 #include "libc/thread/thread.h"
 
 #ifdef pthread_spin_lock
@@ -44,10 +45,22 @@
  */
 errno_t pthread_spin_lock(pthread_spinlock_t *spin) {
   int x;
+#if defined(SYSDEBUG) && _LOCKTRACE
+  for (;;) {
+    x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
+    if (!x) {
+      LOCKTRACE("pthread_spin_lock(%t)", spin);
+      break;
+    }
+    _unassert(x == 1);
+    LOCKTRACE("pthread_spin_lock(%t) trying...", spin);
+  }
+#else
   for (;;) {
     x = atomic_exchange_explicit(&spin->_lock, 1, memory_order_acquire);
     if (!x) break;
     _unassert(x == 1);
   }
+#endif
   return 0;
 }

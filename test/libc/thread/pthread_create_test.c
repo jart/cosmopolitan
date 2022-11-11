@@ -201,11 +201,11 @@ TEST(pthread_exit, fromMainThread_whenNoThreadsWereCreated) {
   EXITS(0);
 }
 
-atomic_bool g_cleanup1;
-atomic_bool g_cleanup2;
+atomic_int g_cleanup1;
+atomic_int g_cleanup2;
 
 void OnCleanup(void *arg) {
-  *(atomic_bool *)arg = true;
+  *(atomic_int *)arg = true;
 }
 
 void *CleanupExit(void *arg) {
@@ -263,10 +263,11 @@ static void CreateDetach(void) {
 
 // this is really fast
 static void CreateDetached(void) {
+  pthread_t th;
   pthread_attr_t attr;
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED));
-  ASSERT_EQ(0, pthread_create(0, &attr, Increment, 0));
+  ASSERT_EQ(0, pthread_create(&th, &attr, Increment, 0));
   ASSERT_EQ(0, pthread_attr_destroy(&attr));
 }
 

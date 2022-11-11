@@ -22,8 +22,12 @@
 #include "libc/intrin/describeflags.internal.h"
 #include "libc/intrin/kprintf.h"
 
-const char *(DescribeSigaltstk)(char buf[128], int rc,
-                                const struct sigaltstack *ss) {
+#ifdef DescribeSigaltstk
+#undef DescribeSigaltstk
+#endif
+
+const char *DescribeSigaltstk(char buf[128], int rc,
+                              const struct sigaltstack *ss) {
   if (rc == -1) return "n/a";
   if (!ss) return "NULL";
   if ((!IsAsan() && kisdangerous(ss)) ||
