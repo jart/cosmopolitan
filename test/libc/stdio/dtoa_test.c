@@ -22,8 +22,9 @@
 #include "libc/fmt/fmt.h"
 #include "libc/macros.internal.h"
 #include "libc/math.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/internal.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/stdio.h"
@@ -136,6 +137,7 @@ static const struct {
 };
 
 TEST(printf, longdouble) {
+  if (IsGenuineCosmo()) return;  // TODO(jart): long double precision in blink
   int i;
   for (i = 0; i < ARRAYLEN(Vx); ++i) {
     ++g_testlib_ran;

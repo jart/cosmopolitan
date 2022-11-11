@@ -42,7 +42,7 @@
  * @cancellationpoint
  */
 errno_t _wait0(const atomic_int *ctid, struct timespec *abstime) {
-  int x, rc = 0;
+  int x, e, rc = 0;
   // "The behavior is undefined if the value specified by the thread
   //  argument to pthread_join() refers to the calling thread."
   //                                  ──Quoth POSIX.1-2017
@@ -52,11 +52,11 @@ errno_t _wait0(const atomic_int *ctid, struct timespec *abstime) {
   if (!(rc = pthread_testcancel_np())) {
     BEGIN_CANCELLATION_POINT;
     while ((x = atomic_load_explicit(ctid, memory_order_acquire))) {
-      rc = nsync_futex_wait_(ctid, x, !IsWindows(), abstime);
-      if (rc == -ECANCELED) {
+      e = nsync_futex_wait_(ctid, x, !IsWindows(), abstime);
+      if (e == -ECANCELED) {
         rc = ECANCELED;
         break;
-      } else if (rc == -ETIMEDOUT) {
+      } else if (e == -ETIMEDOUT) {
         rc = EBUSY;
         break;
       }
