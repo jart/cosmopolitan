@@ -21,13 +21,18 @@
 
 noasan int sys_munmap_metal(void *addr, size_t size) {
   size_t i;
-  uint64_t *e;
+  uint64_t *e, paddr;
   struct mman *mm;
+  uint64_t *pml4t = __get_pml4t();
   mm = (struct mman *)(BANE + 0x0500);
   for (i = 0; i < size; i += 4096) {
-    e = __get_virtual(mm, __get_pml4t(), (uint64_t)addr + i, false);
-    if (e) *e = ~(PAGE_V | PAGE_RSRV);
-    invlpg((uint64_t)addr + i);
+    e = __get_virtual(mm, pml4t, (uint64_t)addr + i, false);
+    if (e) {
+      paddr = *e & PAGE_TA;
+      *e &= ~(PAGE_V | PAGE_RSRV);
+      invlpg((uint64_t)addr + i);
+      __unref_page(mm, pml4t, paddr);
+    }
   }
   return 0;
 }

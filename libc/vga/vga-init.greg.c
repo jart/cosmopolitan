@@ -53,6 +53,7 @@ void _vga_reinit(struct Tty *tty, unsigned short starty, unsigned short startx,
   /* Make sure the video buffer is mapped into virtual memory. */
   __invert_memory_area(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz,
                        PAGE_RW | PAGE_XD);
+  __ref_pages(mm, __get_pml4t(), vid_buf_phy, vid_buf_sz);
   /*
    * Initialize our tty structure from the current screen geometry, screen
    * contents, cursor position, & character dimensions.

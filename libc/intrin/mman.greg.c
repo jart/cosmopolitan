@@ -133,16 +133,73 @@ static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
 /**
  * Identity maps an area of physical memory to its negative address.
  */
-noasan textreal void __invert_memory_area(struct mman *mm, uint64_t *pml4t,
-                                          uint64_t ps, uint64_t size,
-                                          uint64_t pte_flags) {
-  uint64_t pe = ps + size, p, *m;
+noasan textreal uint64_t *__invert_memory_area(struct mman *mm,
+                                               uint64_t *pml4t,
+                                               uint64_t ps, uint64_t size,
+                                               uint64_t pte_flags) {
+  uint64_t pe = ps + size, p, *m = NULL;
   ps = ROUNDDOWN(ps, 4096);
   pe = ROUNDUP(pe, 4096);
   for (p = ps; p != pe; p += 4096) {
     m = __get_virtual(mm, pml4t, BANE + p, true);
     if (m && !(*m & (PAGE_V | PAGE_RSRV))) {
       *m = p | PAGE_V | PAGE_RSRV | pte_flags;
+    }
+  }
+  return m;
+}
+
+/**
+ * Increments the reference count for a page of physical memory.
+ */
+noasan void __ref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+  uint64_t *m, e;
+  m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
+  if (m) {
+    e = *m;
+    if ((e & PAGE_REFC) != PAGE_REFC) {
+      e += PAGE_1REF;
+      *m = e;
+    }
+  }
+}
+
+/**
+ * Increments the reference counts for an area of physical memory.
+ */
+noasan void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps,
+                        uint64_t size) {
+  uint64_t p = ROUNDDOWN(ps, 4096), e = ROUNDUP(ps + size, 4096);
+  while (p != e) {
+    __ref_page(mm, pml4t, p);
+    p += 4096;
+  }
+}
+
+/**
+ * Reclaims a page of physical memory for later use.
+ */
+static noasan void __reclaim_page(struct mman *mm, uint64_t p) {
+  struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
+  _unassert(p == (p & PAGE_TA));
+  rp->next = mm->frp;
+  mm->frp = p;
+}
+
+/**
+ * Decrements the reference count for a page of physical memory.  Frees the
+ * page if there are no virtual addresses (excluding the negative space)
+ * referring to it.
+ */
+noasan void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+  uint64_t *m, e;
+  m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
+  if (m) {
+    e = *m;
+    if ((e & PAGE_REFC) != PAGE_REFC) {
+      e -= PAGE_1REF;
+      *m = e;
+      if ((e & PAGE_REFC) == 0) __reclaim_page(mm, p);
     }
   }
 }
@@ -224,6 +281,7 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
           v = __clear_page(BANE + __new_page(mm));
         }
         *__get_virtual(mm, pml4t, p->p_vaddr + i, true) = (v & PAGE_TA) | f;
+        __ref_page(mm, pml4t, v & PAGE_TA);
       }
     }
   }
@@ -231,7 +289,7 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
 }
 
 /**
- * Reclaim memory pages which were used at boot time but which can now be
+ * Reclaims memory pages which were used at boot time but which can now be
  * made available for the application.
  */
 noasan textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
