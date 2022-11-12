@@ -16,9 +16,12 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include "ape/relocations.h"
 #include "ape/sections.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/bits.h"
+#include "libc/intrin/newbie.h"
+#include "libc/intrin/weaken.h"
 #include "libc/macros.internal.h"
 #include "libc/nt/efi.h"
 #include "libc/nt/thunk/msabi.h"
@@ -37,6 +40,80 @@ struct EfiArgs {
 };
 
 static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
+static const EFI_GUID kEfiGraphicsOutputProtocol = GRAPHICS_OUTPUT_PROTOCOL;
+
+extern const char vga_console[];
+extern void _EfiPostboot(struct mman *, uint64_t *, uintptr_t, char **);
+
+static void EfiInitVga(struct mman *mm, EFI_SYSTEM_TABLE *SystemTable) {
+  EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphInfo;
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE *GraphMode;
+  EFI_PIXEL_BITMASK *PixelInfo;
+  unsigned vid_typ = PC_VIDEO_TEXT;
+  size_t bytes_per_pix = 0;
+
+  SystemTable->BootServices->LocateProtocol(&kEfiGraphicsOutputProtocol, NULL,
+                                            &GraphInfo);
+  GraphMode = GraphInfo->Mode;
+  switch (GraphMode->Info->PixelFormat) {
+    case PixelRedGreenBlueReserved8BitPerColor:
+      vid_typ = PC_VIDEO_RGBX8888;
+      bytes_per_pix = 4;
+      break;
+    case PixelBlueGreenRedReserved8BitPerColor:
+      vid_typ = PC_VIDEO_BGRX8888;
+      bytes_per_pix = 4;
+      break;
+    case PixelBitMask:
+      PixelInfo = &GraphMode->Info->PixelInformation;
+      switch (le32toh(PixelInfo->RedMask)) {
+        case 0x00FF0000U:
+          if (le32toh(PixelInfo->ReservedMask) >= 0x01000000U &&
+              le32toh(PixelInfo->GreenMask) == 0x0000FF00U &&
+              le32toh(PixelInfo->BlueMask)  == 0x000000FFU) {
+            vid_typ = PC_VIDEO_BGRX8888;
+            bytes_per_pix = 4;
+          }
+          break;
+        case 0x000000FFU:
+          if (le32toh(PixelInfo->ReservedMask) >= 0x01000000U &&
+              le32toh(PixelInfo->GreenMask) == 0x0000FF00U &&
+              le32toh(PixelInfo->BlueMask)  == 0x00FF0000U) {
+            vid_typ = PC_VIDEO_RGBX8888;
+            bytes_per_pix = 4;
+          }
+          break;
+        case 0x0000F800U:
+          if (le32toh(PixelInfo->ReservedMask) <= 0x0000FFFFU &&
+              le32toh(PixelInfo->GreenMask) == 0x000007E0U &&
+              le32toh(PixelInfo->BlueMask)  == 0x0000001FU) {
+            vid_typ = PC_VIDEO_BGR565;
+            bytes_per_pix = 2;
+          }
+          break;
+        case 0x00007C00U:
+          if (le32toh(PixelInfo->ReservedMask) <= 0x0000FFFFU &&
+              le32toh(PixelInfo->GreenMask) == 0x000003E0U &&
+              le32toh(PixelInfo->BlueMask)  == 0x0000001FU) {
+            vid_typ = PC_VIDEO_BGR555;
+            bytes_per_pix = 2;
+          }
+          break;
+      }
+    default:
+      notpossible;
+  }
+  if (!bytes_per_pix) notpossible;
+  mm->pc_video_type = vid_typ;
+  mm->pc_video_stride = GraphMode->Info->PixelsPerScanLine * bytes_per_pix;
+  mm->pc_video_width = GraphMode->Info->HorizontalResolution;
+  mm->pc_video_height = GraphMode->Info->VerticalResolution;
+  mm->pc_video_framebuffer = GraphMode->FrameBufferBase;
+  mm->pc_video_framebuffer_size = GraphMode->FrameBufferSize;
+  mm->pc_video_curs_info.y = mm->pc_video_curs_info.x = 0;
+  SystemTable->BootServices->SetMem((void *)GraphMode->FrameBufferBase,
+                                    GraphMode->FrameBufferSize, 0);
+}
 
 /**
  * EFI Application Entrypoint.
@@ -62,19 +139,8 @@ static const EFI_GUID kEfiLoadedImageProtocol = LOADED_IMAGE_PROTOCOL;
  *
  * @see libc/dce.h
  */
-__msabi noasan __attribute__((__naked__))
-EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-  asm volatile("mov\t$0f,%esp\n\t"
-               "and\t$-16,%esp\n\t"
-               "jmp\t_DoEfiMain\n\t"
-               ".bss\n\t"
-               ".space\t8192\n"
-               "0:\n\t"
-               ".previous");
-}
-
-__msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
-                                     EFI_SYSTEM_TABLE *SystemTable) {
+__msabi noasan EFI_STATUS EfiMain(EFI_HANDLE ImageHandle,
+                                  EFI_SYSTEM_TABLE *SystemTable) {
   int type, x87cw = 0x037f;
   struct mman *mm;
   uint32_t DescVersion;
@@ -82,18 +148,37 @@ __msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
   struct EfiArgs *ArgBlock;
   EFI_LOADED_IMAGE *ImgInfo;
   EFI_MEMORY_DESCRIPTOR *Map, *Desc;
-  uint64_t NewBase = 1024 * 1024;
+  uint64_t Address;
   uintptr_t Args, MapKey, DescSize;
   uint64_t p, pe, cr4, *m, *pd, *sp, *pml4t, *pdt1, *pdt2, *pdpt1, *pdpt2;
 
   /*
-   * Allocates and clears PC-compatible memory and copies image.
+   * Allocates and clears PC-compatible memory and copies image.  Marks the
+   * pages as EfiRuntimeServicesData, so that we can simply free up all
+   * EfiLoader... and EfiBootServices... pages later.  The first page at
+   * address 0 is normally already allocated as EfiBootServicesData, so
+   * handle it separately.
    */
+  Address = 0;
   SystemTable->BootServices->AllocatePages(
-      AllocateAddress, EfiConventionalMemory,
-      MAX(2 * 1024 * 1024, 1024 * 1024 + (_end - _base)) / 4096, &NewBase);
-  SystemTable->BootServices->SetMem(0, 0x80000, 0);
-  SystemTable->BootServices->CopyMem((void *)(1024 * 1024), _base,
+      AllocateAddress, EfiRuntimeServicesData, 4096 / 4096, &Address);
+  Address = 4096;
+  SystemTable->BootServices->AllocatePages(
+      AllocateAddress, EfiRuntimeServicesData, (IMAGE_BASE_REAL - 4096) / 4096,
+      &Address);
+  Address = 0x79000;
+  SystemTable->BootServices->AllocatePages(
+      AllocateAddress, EfiRuntimeServicesData,
+      (0x7e000 - 0x79000 + sizeof(struct EfiArgs) + 4095) / 4096, &Address);
+  Address = IMAGE_BASE_PHYSICAL;
+  SystemTable->BootServices->AllocatePages(
+      AllocateAddress, EfiRuntimeServicesData,
+      ((_end - _base) + 4095) / 4096, &Address);
+  mm = (struct mman *)0x0500;
+  SystemTable->BootServices->SetMem(mm, sizeof(*mm), 0);
+  SystemTable->BootServices->SetMem((void *)0x79000,
+      0x7e000 - 0x79000 + sizeof(struct EfiArgs), 0);
+  SystemTable->BootServices->CopyMem((void *)IMAGE_BASE_PHYSICAL, _base,
                                      _end - _base);
 
   /*
@@ -107,6 +192,13 @@ __msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
                     ARRAYLEN(ArgBlock->Args));
 
   /*
+   * Gets information about our current video mode.  Clears the screen.
+   * TODO: if needed, switch to a video mode that has a linear frame buffer
+   * type we support.
+   */
+  if (_weaken(vga_console)) EfiInitVga(mm, SystemTable);
+
+  /*
    * Asks UEFI which parts of our RAM we're allowed to use.
    */
   Map = NULL;
@@ -117,13 +209,20 @@ __msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
   MapSize *= 2;
   SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescSize,
                                           &DescVersion);
-  mm = (struct mman *)0x0500;
   for (j = i = 0, Desc = Map; i < MapSize / DescSize; ++i) {
-    if (Desc->Type == EfiConventionalMemory) {
-      mm->e820[j].addr = Desc->PhysicalStart;
-      mm->e820[j].size = Desc->NumberOfPages * 4096;
-      mm->e820[j].type = kMemoryUsable;
-      ++j;
+    switch (Desc->Type) {
+      case EfiLoaderCode:
+      case EfiLoaderData:
+      case EfiBootServicesCode:
+      case EfiBootServicesData:
+        if (Desc->PhysicalStart != 0)
+          break;
+        /* fallthrough */
+      case EfiConventionalMemory:
+        mm->e820[j].addr = Desc->PhysicalStart;
+        mm->e820[j].size = Desc->NumberOfPages * 4096;
+        mm->e820[j].type = kMemoryUsable;
+        ++j;
     }
     Desc = (EFI_MEMORY_DESCRIPTOR *)((char *)Desc + DescSize);
   }
@@ -154,77 +253,8 @@ __msabi noasan EFI_STATUS _DoEfiMain(EFI_HANDLE ImageHandle,
   SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
 
   /*
-   * Switches to copied image.
+   * Switches to copied image and launches program.
    */
-  asm volatile("cli\n\t"
-               "add\t%1,%%rsp\n\t"
-               "lea\t0f(%1),%0\n\t"
-               "jmp\t*%0\n"
-               "0:\n\t"
-               "mov\t%2,%%cr3\n\t"
-               "add\t%3,%%rsp\n\t"
-               "lea\t1f(%1),%0\n\t"
-               "add\t%3,%0\n\t"
-               "jmp\t*%0\n"
-               "1:"
-               : "=&r"(p)
-               : "r"(1024 * 1024 - (uint64_t)_base), "r"(pml4t), "r"(BANE));
-
-  /*
-   * Sets up virtual memory mapping.
-   */
-  __map_phdrs(mm, pml4t, 1024 * 1024, 1024 * 1024 + (_end - _base));
-  __reclaim_boot_pages(mm, 0x79000, 0x7f000);
-
-  /*
-   * Launches program.
-   */
-  asm volatile("fldcw\t%3\n\t"
-               ".weak\t_gdtr\n\t"
-               "lgdt\t_gdtr\n\t"
-               "mov\t%w6,%%ds\n\t"
-               "mov\t%w6,%%ss\n\t"
-               "mov\t%w6,%%es\n\t"
-               "mov\t%w6,%%fs\n\t"
-               "mov\t%w6,%%gs\n\t"
-               ".weak\tape_stack_vaddr\n\t"
-               ".weak\tape_stack_memsz\n\t"
-               "movabs\t$ape_stack_vaddr,%%rsp\n\t"
-               "add\t$ape_stack_memsz,%%rsp\n\t"
-               "push\t$0\n\t"   /* auxv[1][1] */
-               "push\t$0\n\t"   /* auxv[1][0] */
-               "push\t(%1)\n\t" /* auxv[0][1] */
-               "push\t$31\n\t"  /* auxv[0][0] AT_EXECFN */
-               "push\t$0\n\t"   /* envp[0] */
-               "sub\t%2,%%rsp\n\t"
-               "mov\t%%rsp,%%rdi\n\t"
-               "rep movsb\n\t" /* argv */
-               "push\t%0\n\t"  /* argc */
-               "xor\t%%edi,%%edi\n\t"
-               "xor\t%%eax,%%eax\n\t"
-               "xor\t%%ebx,%%ebx\n\t"
-               "mov\t%4,%%ecx\n\t"
-               "xor\t%%edx,%%edx\n\t"
-               "xor\t%%edi,%%edi\n\t"
-               "xor\t%%esi,%%esi\n\t"
-               "xor\t%%ebp,%%ebp\n\t"
-               "xor\t%%r8d,%%r8d\n\t"
-               "xor\t%%r9d,%%r9d\n\t"
-               "xor\t%%r10d,%%r10d\n\t"
-               "xor\t%%r11d,%%r11d\n\t"
-               "xor\t%%r12d,%%r12d\n\t"
-               "xor\t%%r13d,%%r13d\n\t"
-               "xor\t%%r14d,%%r14d\n\t"
-               "xor\t%%r15d,%%r15d\n\t"
-               ".weak\t_start\n\t"
-               "push\t%5\n\t"
-               "push\t$_start\n\t"
-               "lretq"
-               : /* no outputs */
-               : "a"(Args), "S"(ArgBlock->Args), "c"((Args + 1) * 8),
-                 "m"(x87cw), "i"(_HOSTMETAL), "i"(GDT_LONG_CODE),
-                 "r"(GDT_LONG_DATA)
-               : "memory");
-
+  _EfiPostboot(mm, pml4t, Args, ArgBlock->Args);
   unreachable;
 }

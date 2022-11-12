@@ -97,6 +97,12 @@
       0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B \
     }                                                \
   }
+#define GRAPHICS_OUTPUT_PROTOCOL                     \
+  {                                                  \
+    0x9042A9DE, 0x23DC, 0x4A38, {                    \
+      0x96, 0xFB, 0x7A, 0xDE, 0xD0, 0x80, 0x51, 0x6A \
+    }                                                \
+  }
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
@@ -113,6 +119,7 @@ COSMOPOLITAN_C_START_
 
 typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
 typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
+typedef struct _EFI_GRAPHICS_OUTPUT_PROTOCOL EFI_GRAPHICS_OUTPUT_PROTOCOL;
 
 typedef enum {
   EfiReservedMemoryType,
@@ -214,6 +221,54 @@ typedef struct {
   bool CursorVisible;
 } EFI_SIMPLE_TEXT_OUTPUT_MODE;
 
+typedef enum {
+  PixelRedGreenBlueReserved8BitPerColor,
+  PixelBlueGreenRedReserved8BitPerColor,
+  PixelBitMask,
+  PixelBltOnly,
+  PixelFormatMax
+} EFI_GRAPHICS_PIXEL_FORMAT;
+
+typedef struct {
+  uint32_t RedMask;
+  uint32_t GreenMask;
+  uint32_t BlueMask;
+  uint32_t ReservedMask;
+} EFI_PIXEL_BITMASK;
+
+typedef struct {
+  uint32_t Version;
+  uint32_t HorizontalResolution;
+  uint32_t VerticalResolution;
+  EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+  EFI_PIXEL_BITMASK PixelInformation;
+  uint32_t PixelsPerScanLine;
+} EFI_GRAPHICS_OUTPUT_MODE_INFORMATION;
+
+typedef struct {
+  uint8_t Blue;
+  uint8_t Green;
+  uint8_t Red;
+  uint8_t Reserved;
+} EFI_GRAPHICS_OUTPUT_BLT_PIXEL;
+
+typedef enum {
+  EfiBltVideoFill,
+  EfiBltVideoToBltBuffer,
+  EfiBltBufferToVideo,
+  EfiBltVideoToVideo,
+  EfiGraphicsOutputBltOperationMax
+} EFI_GRAPHICS_OUTPUT_BLT_OPERATION;
+
+typedef struct {
+  uint32_t MaxMode;
+  uint32_t Mode;
+  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+  uint32_t SizeOfInfo;
+  uint64_t FrameBufferBase;
+  uint32_t FrameBufferSize;
+} EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE;
+
 typedef struct {
   uint64_t Signature;
   uint32_t Revision;
@@ -300,6 +355,9 @@ typedef EFI_STATUS(EFIAPI *EFI_SET_WATCHDOG_TIMER)(uintptr_t Timeout,
                                                    uint64_t WatchdogCode,
                                                    uintptr_t DataSize,
                                                    char16_t *opt_WatchdogData);
+typedef EFI_STATUS(EFIAPI *EFI_LOCATE_PROTOCOL)(EFI_GUID *Protocol,
+                                                void *Registration,
+                                                void *Interface);
 
 typedef EFI_STATUS(EFIAPI *EFI_SET_TIME)(EFI_TIME *Time);
 typedef EFI_STATUS(EFIAPI *EFI_GET_TIME)(
@@ -342,6 +400,19 @@ typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_CURSOR_POSITION)(
     EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t Column, uint64_t Row);
 typedef EFI_STATUS(EFIAPI *EFI_TEXT_ENABLE_CURSOR)(
     EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool Visible);
+
+typedef EFI_STATUS(EFIAPI *EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE)(
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *This, uint32_t ModeNumber,
+    uint32_t *SizeOfInfo, EFI_GRAPHICS_OUTPUT_MODE_INFORMATION **Info);
+typedef EFI_STATUS(EFIAPI *EFI_GRAPHICS_OUTPUT_PROTOCOL_SET_MODE)(
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *This, uint32_t ModeNumber);
+typedef EFI_STATUS(EFIAPI *EFI_GRAPHICS_OUTPUT_PROTOCOL_BLT)(
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *This,
+    EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BltBuffer,
+    EFI_GRAPHICS_OUTPUT_BLT_OPERATION BltOperation,
+    uint32_t SourceX, uint32_t SourceY,
+    uint32_t DestinationX, uint32_t DestinationY,
+    uint32_t Width, uint32_t Height, uint32_t Delta);
 
 typedef EFI_STATUS(EFIAPI *EFI_HANDLE_PROTOCOL)(EFI_HANDLE Handle,
                                                 EFI_GUID *Protocol,
@@ -414,7 +485,7 @@ typedef struct {
   void *OpenProtocolInformation;
   void *ProtocolsPerHandle;
   void *LocateHandleBuffer;
-  void *LocateProtocol;
+  EFI_LOCATE_PROTOCOL LocateProtocol;
   void *InstallMultipleProtocolInterfaces;
   void *UninstallMultipleProtocolInterfaces;
   void *CalculateCrc32;
@@ -456,6 +527,13 @@ struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL {
   EFI_TEXT_SET_CURSOR_POSITION SetCursorPosition;
   EFI_TEXT_ENABLE_CURSOR EnableCursor;
   EFI_SIMPLE_TEXT_OUTPUT_MODE *Mode;
+};
+
+struct _EFI_GRAPHICS_OUTPUT_PROTOCOL {
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_QUERY_MODE QueryMode;
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_SET_MODE SetMode;
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_BLT Blt;
+  EFI_GRAPHICS_OUTPUT_PROTOCOL_MODE *Mode;
 };
 
 typedef struct {

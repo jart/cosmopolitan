@@ -236,14 +236,23 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
  */
 noasan textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
                                           uint64_t skip_end) {
-  uint64_t p = mm->frp, q = IMAGE_BASE_REAL, e;
-  e = mm->e820[0].addr + mm->e820[0].size;
-  while (q != e) {
-    struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + q);
-    rp->next = p;
-    p = q;
-    q += 4096;
-    if (q == skip_start) q = skip_end;
+  uint64_t p = mm->frp, q = IMAGE_BASE_REAL, i, n = mm->e820n, b, e;
+  for (i = 0; i < n; ++i) {
+    b = mm->e820[i].addr;
+    if (b >= IMAGE_BASE_PHYSICAL) break;
+    e = MIN(IMAGE_BASE_PHYSICAL, b + mm->e820[i].size);
+    q = MAX(IMAGE_BASE_REAL, b);
+    while (q < e) {
+      struct ReclaimedPage *rp;
+      if (q == skip_start) {
+        q = skip_end;
+        if (q >= e) break;
+      }
+      rp = (struct ReclaimedPage *)(BANE + q);
+      rp->next = p;
+      p = q;
+      q += 4096;
+    }
   }
   mm->frp = p;
 }
