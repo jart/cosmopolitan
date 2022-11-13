@@ -245,13 +245,16 @@ TEST(ksnprintf, fuzzTheUnbreakable) {
 
 TEST(kprintf, testFailure_wontClobberErrnoAndBypassesSystemCallSupport) {
   int n;
+  const char *s = 0;
   ASSERT_EQ(0, errno);
   EXPECT_SYS(0, 3, dup(2));
-  EXPECT_SYS(0, 0, close(2));
+  // <LIMBO>
+  if (close(2)) _Exit(200);
   n = __syscount;
-  EXPECT_EQ(n, __syscount);
-  EXPECT_EQ(0, errno);
-  EXPECT_SYS(0, 2, dup2(3, 2));
+  if (__syscount != n) _Exit(201);
+  if (errno != 0) _Exit(202);
+  if (dup2(3, 2) != 2) _Exit(203);
+  // </LIMBO>
   EXPECT_SYS(0, 0, close(3));
 }
 
