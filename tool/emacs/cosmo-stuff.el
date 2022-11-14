@@ -148,7 +148,7 @@
 ;;   M-4 C-c C-c   Compile w/ MODE=dbg
 ;;   M-5 C-c C-c   Compile w/ MODE=""
 ;;   M-7 C-c C-c   Compile w/ MODE=tinylinux
-;;   M-8 C-c C-c   Compile w/ llvm
+;;   M-8 C-c C-c   Compile w/ clang tsan
 ;;   M-9 C-c C-c   Compile w/ chibicc
 
 (defun cosmo-intest (&optional file-name)
@@ -166,7 +166,7 @@
         ((eq arg 5) "")
         ((eq arg 6) "optlinux")
         ((eq arg 7) "tinylinux")
-        ((eq arg 8) "llvm")
+        ((eq arg 8) "tsan")
         (default default)
         ((cosmo-intest) "dbg")
         (t "fastbuild")))
