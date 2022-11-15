@@ -29,6 +29,7 @@
 	_base = 0
 	ape_xlm = 0
 	_ehead = 0
+	_ezip = 0
 	_ereal = 0
 	__privileged_start = 0
 	__privileged_end = 0
@@ -68,6 +69,7 @@
 	.globl	_edata
 	.globl	_ehead
 	.globl	_end
+	.globl	_ezip
 	.globl	_ereal
 	.globl	_etext
 	.globl	_tdata_start
@@ -97,6 +99,7 @@
 	.weak	_edata
 	.weak	_ehead
 	.weak	_end
+	.weak	_ezip
 	.weak	_ereal
 	.weak	_etext
 	.weak	_tdata_start
