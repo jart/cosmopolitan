@@ -2205,6 +2205,16 @@ static int lsession_isempty(lua_State *L) {
     return 1;
 }
 
+static int lsession_diff(lua_State *L) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    const char *zFromDb = luaL_checkstring(L, 2);
+    const char *zTbl = luaL_checkstring(L, 3);
+    int rc = sqlite3session_diff(lses->ses, zFromDb, zTbl, NULL);
+    if (rc != SQLITE_OK) return pusherr(L, rc);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 static int lsession_bool(
         lua_State *L,
         int (*session_func)(sqlite3_session *ses, int val)
@@ -2696,6 +2706,7 @@ static const luaL_Reg seslib[] = {
     {"isempty",         lsession_isempty        },
     {"indirect",        lsession_indirect       },
     {"enable",          lsession_enable         },
+    {"diff",            lsession_diff           },
     {"delete",          lsession_delete         },
 
     {"__tostring",      lsession_tostring       },
