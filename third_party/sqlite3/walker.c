@@ -12,9 +12,8 @@
 ** This file contains routines used for walking the parser tree for
 ** an SQL statement.
 */
-#include "sqliteInt.h"
-#include <stdlib.h>
-#include <string.h>
+#include "third_party/sqlite3/sqliteInt.h"
+#include "libc/str/str.h"
 
 
 #if !defined(SQLITE_OMIT_WINDOWFUNC)

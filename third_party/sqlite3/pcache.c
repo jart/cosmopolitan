@@ -11,7 +11,7 @@
 *************************************************************************
 ** This file implements that page cache.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** A complete page cache is an instance of this structure.  Every

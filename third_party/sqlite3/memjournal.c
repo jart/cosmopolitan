@@ -23,7 +23,7 @@
 ** in the common case, they are usually small and no file I/O needs to
 ** occur.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* Forward references to internal structures */
 typedef struct MemJournal MemJournal;

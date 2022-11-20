@@ -12,8 +12,7 @@
 **
 ** Memory allocation functions used throughout sqlite.
 */
-#include "sqliteInt.h"
-#include <stdarg.h>
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Attempt to release up to n bytes of non-essential memory currently

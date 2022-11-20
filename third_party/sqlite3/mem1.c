@@ -41,7 +41,7 @@
 **                                be necessary when compiling for Delphi,
 **                                for example.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** This version of the memory allocator is the default.  It is

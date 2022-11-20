@@ -15,8 +15,8 @@
 ** individual tokens and sends those tokens one-by-one over to the
 ** parser for analysis.
 */
-#include "sqliteInt.h"
-#include <stdlib.h>
+#include "third_party/sqlite3/sqliteInt.h"
+#include "libc/mem/mem.h"
 
 /* Character classes for tokenizing
 **

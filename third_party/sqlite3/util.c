@@ -15,12 +15,8 @@
 ** strings, and stuff like that.
 **
 */
-#include "sqliteInt.h"
-#include <stdarg.h>
-#ifndef SQLITE_OMIT_FLOATING_POINT
-#include <math.h>
-#endif
-
+#include "third_party/sqlite3/sqliteInt.h"
+ 
 /*
 ** Calls to sqlite3FaultSim() are used to simulate a failure during testing,
 ** or to bypass normal error detection during testing in order to let 

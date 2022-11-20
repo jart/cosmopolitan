@@ -16,7 +16,8 @@
 ** This file is #include-ed onto the end of "rtree.c" so that it has
 ** access to all of the R-Tree internals.
 */
-#include <stdlib.h>
+#include "third_party/gdtoa/gdtoa.h"
+/* clang-format off */
 
 /* Enable -DGEOPOLY_ENABLE_DEBUG for debugging facilities */
 #ifdef GEOPOLY_ENABLE_DEBUG
@@ -35,7 +36,7 @@
 #  define safe_isxdigit(x) sqlite3Isxdigit(x)
 #else
    /* Use the standard library for separate compilation */
-#include <ctype.h>  /* amalgamator: keep */
+#include "libc/str/str.h" /* amalgamator: keep */
 #  define safe_isdigit(x)  isdigit((unsigned char)(x))
 #  define safe_isalnum(x)  isalnum((unsigned char)(x))
 #  define safe_isxdigit(x) isxdigit((unsigned char)(x))

@@ -9,7 +9,7 @@
 # undef NDEBUG
 #endif
 
-#line 1 "fts5.h"
+#line 1 "third_party/sqlite3/fts5.h"
 /*
 ** 2014 May 31
 **
@@ -33,7 +33,7 @@
 #ifndef _FTS5_H
 #define _FTS5_H
 
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -604,11 +604,11 @@ struct fts5_api {
 #define _FTS5INT_H
 
 /* #include "fts5.h" */
-#include "sqlite3ext.h"
+#include "third_party/sqlite3/sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
-#include <string.h>
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_AMALGAMATION
 
@@ -1820,9 +1820,9 @@ struct fts5yyParser {
 };
 typedef struct fts5yyParser fts5yyParser;
 
-#include <assert.h>
+#include "libc/assert.h"
 #ifndef NDEBUG
-#include <stdio.h>
+#include "libc/stdio/stdio.h"
 static FILE *fts5yyTraceFILE = 0;
 static char *fts5yyTracePrompt = 0;
 #endif /* NDEBUG */
@@ -3028,7 +3028,6 @@ static int sqlite3Fts5ParserFallback(int iToken){
 
 
 /* #include "fts5Int.h" */
-#include <math.h>                 /* amalgamator: keep */
 
 /*
 ** Object used to iterate through all "coalesced phrase instances" in 

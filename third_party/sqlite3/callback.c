@@ -14,7 +14,7 @@
 ** of user defined functions and collation sequences.
 */
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Invoke the 'collation needed' callback to request a collation sequence

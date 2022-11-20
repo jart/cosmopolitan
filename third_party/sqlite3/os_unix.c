@@ -43,7 +43,7 @@
 **   *  Definitions of sqlite3_vfs objects for all locking methods
 **      plus implementations of sqlite3_os_init() and sqlite3_os_end().
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #if SQLITE_OS_UNIX              /* This file is used on unix only */
 
 /*
@@ -87,22 +87,33 @@
 /*
 ** standard include files.
 */
-#include <sys/types.h>   /* amalgamator: keep */
-#include <sys/stat.h>    /* amalgamator: keep */
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <unistd.h>      /* amalgamator: keep */
-#include <time.h>
-#include <sys/time.h>    /* amalgamator: keep */
-#include <errno.h>
+#include "libc/calls/calls.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timeval.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/errno.h"
+#include "libc/runtime/sysconf.h"
+#include "libc/runtime/runtime.h"
+#include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/s.h"
+#include "libc/sysv/consts/map.h"
+#include "libc/sysv/consts/mremap.h"
+#include "libc/sysv/consts/o.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/sysv/consts/prot.h"
+#include "libc/time/struct/tm.h"
+#include "libc/time/time.h"
+#include "libc/mem/mem.h"
+
 #if !defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE>0
-# include <sys/mman.h>
+#include "libc/isystem/sys/mman.h"
 #endif
 
 #if SQLITE_ENABLE_LOCKING_STYLE
-# include <sys/ioctl.h>
-# include <sys/file.h>
-# include <sys/param.h>
+# include "libc/isystem/sys/ioctl.h"
+# include "libc/isystem/sys/file.h"
+# include "libc/isystem/sys/param.h"
 #endif /* SQLITE_ENABLE_LOCKING_STYLE */
 
 /*
@@ -136,7 +147,7 @@
 #if OS_VXWORKS
 # include <sys/ioctl.h>
 # include <semaphore.h>
-# include <limits.h>
+# include "libc/limits.h"
 #endif /* OS_VXWORKS */
 
 #if defined(__APPLE__) || SQLITE_ENABLE_LOCKING_STYLE
@@ -144,7 +155,7 @@
 #endif
 
 #ifdef HAVE_UTIME
-# include <utime.h>
+# include "libc/time/time.h"
 #endif
 
 /*
@@ -156,7 +167,7 @@
 ** If we are to be thread-safe, include the pthreads header.
 */
 #if SQLITE_THREADSAFE
-# include <pthread.h>
+#include "libc/thread/thread.h"
 #endif
 
 /*
@@ -865,23 +876,18 @@ static int sqliteErrorFromPosixError(int posixError, int sqliteIOErr) {
           (sqliteIOErr == SQLITE_IOERR_UNLOCK) || 
           (sqliteIOErr == SQLITE_IOERR_RDLOCK) ||
           (sqliteIOErr == SQLITE_IOERR_CHECKRESERVEDLOCK) );
-  switch (posixError) {
-  case EACCES: 
-  case EAGAIN:
-  case ETIMEDOUT:
-  case EBUSY:
-  case EINTR:
-  case ENOLCK:  
+  // changed switch to if-else
+  if (posixError == EACCES || posixError == EAGAIN || posixError == ETIMEDOUT ||
+      posixError == EBUSY || posixError == EINTR || posixError == ENOLCK)
     /* random NFS retry error, unless during file system support 
      * introspection, in which it actually means what it says */
     return SQLITE_BUSY;
     
-  case EPERM: 
+  else if (posixError == EPERM)
     return SQLITE_PERM;
     
-  default: 
+  else
     return sqliteIOErr;
-  }
 }
 
 
@@ -3382,17 +3388,17 @@ static int unixRead(
     ** prior to returning to the application by the sqlite3ApiExit()
     ** routine.
     */
-    switch( pFile->lastErrno ){
-      case ERANGE:
-      case EIO:
+    // changed switch to if-else
+    if (pFile->lastErrno == ERANGE || pFile->lastErrno == EIO
 #ifdef ENXIO
-      case ENXIO:
+        || pFile->lastErrno == ENXIO
 #endif
 #ifdef EDEVERR
-      case EDEVERR:
+        || pFile->lastErrno == EDEVERR
 #endif
-        return SQLITE_IOERR_CORRUPTFS;
-    }
+    )
+      return SQLITE_IOERR_CORRUPTFS;
+
     return SQLITE_IOERR_READ;
   }else{
     storeLastErrno(pFile, 0);   /* not a system error */

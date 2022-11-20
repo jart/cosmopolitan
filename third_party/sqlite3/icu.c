@@ -44,7 +44,7 @@
   #include "sqlite3ext.h"
   SQLITE_EXTENSION_INIT1
 #else
-  #include "sqlite3.h"
+  #include "third_party/sqlite3/sqlite3.h"
 #endif
 
 /*

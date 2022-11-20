@@ -12,7 +12,7 @@
 **
 ** This file contains code that is specific to Windows.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #if SQLITE_OS_WIN               /* This file is used for Windows only */
 
 /*

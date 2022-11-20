@@ -113,11 +113,12 @@ typedef unsigned short int u16;
 # define _POSIX_SOURCE
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include "sqlite3.h"
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+
+#include "third_party/sqlite3/sqlite3.h"
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
@@ -1437,9 +1438,9 @@ INT closedir(
 ** This extension is used to implement the --memtrace option of the
 ** command-line shell.
 */
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /* The original memory allocation routines */
 static sqlite3_mem_methods memtraceBase;
@@ -1555,9 +1556,9 @@ int sqlite3MemTraceDeactivate(void){
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <stdarg.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_AMALGAMATION
 /* typedef sqlite3_uint64 u64; */
@@ -2283,9 +2284,9 @@ int sqlite3_shathree_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /*
 ** Compare text in lexicographic order, except strings of digits
@@ -2365,10 +2366,9 @@ int sqlite3_uint_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
+#include "libc/assert.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /* Mark a function parameter as unused, to suppress nuisance compiler
 ** warnings. */
@@ -3074,8 +3074,8 @@ int sqlite3_decimal_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 /* Mark a function parameter as unused, to suppress nuisance compiler
 ** warnings. */
@@ -3353,8 +3353,8 @@ int sqlite3_ieee_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
+#include "libc/assert.h"
+#include "libc/str/str.h"
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 

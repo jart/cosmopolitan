@@ -12,7 +12,7 @@
 ** This file contains code used to help implement virtual tables.
 */
 #ifndef SQLITE_OMIT_VIRTUALTABLE
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Before a virtual table xCreate() or xConnect() method is invoked, the

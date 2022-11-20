@@ -11,11 +11,11 @@
 ******************************************************************************
 */
 
-#include "fts3Int.h"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
-#include <string.h>
-#include <assert.h>
+#include "libc/str/str.h"
+#include "libc/assert.h"
 
 #ifndef SQLITE_AMALGAMATION
 typedef sqlite3_int64 i64;

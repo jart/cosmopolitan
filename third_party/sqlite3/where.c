@@ -16,7 +16,7 @@
 ** so is applicable.  Because this module is responsible for selecting
 ** indices, you might also think of this module as the "query optimizer".
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #include "whereInt.h"
 
 /*

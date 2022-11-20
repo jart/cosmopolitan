@@ -13,7 +13,7 @@
 ** This file contains code used to implement incremental BLOB I/O.
 */
 
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #include "vdbeInt.h"
 
 #ifndef SQLITE_OMIT_INCRBLOB

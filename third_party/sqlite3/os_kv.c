@@ -14,7 +14,7 @@
 ** Key/Value storage engine where both keys and values must be pure
 ** text.
 */
-#include <sqliteInt.h>
+#include "third_party/sqlite3/sqliteInt.h"
 #if SQLITE_OS_KV || (SQLITE_OS_UNIX && defined(SQLITE_OS_KV_OPTIONAL))
 
 /*****************************************************************************
@@ -160,9 +160,8 @@ static sqlite3_io_methods kvvfs_jrnl_io_methods = {
 };
 
 /****** Storage subsystem **************************************************/
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "libc/isystem/sys/types.h"
+#include "libc/isystem/sys/stat.h"
 
 /* Forward declarations for the low-level storage engine
 */

@@ -56,12 +56,12 @@
 ** compiler warnings due to subsequent content in this file and other files
 ** that are included by this file.
 */
-#include "msvc.h"
+#include "third_party/sqlite3/msvc.h"
 
 /*
 ** Special setup for VxWorks
 */
-#include "vxworks.h"
+#include "third_party/sqlite3/vxworks.h"
 
 /*
 ** These #defines should enable >2GB file support on POSIX if the
@@ -196,7 +196,7 @@
 ** first in QNX.  Also, the _USE_32BIT_TIME_T macro must appear first for
 ** MinGW.
 */
-#include "sqlite3.h"
+#include "third_party/sqlite3/sqlite3.h"
 
 /*
 ** Reuse the STATIC_LRU for mutex access to sqlite3_temp_directory.
@@ -212,7 +212,7 @@
 #define SQLITECONFIG_H 1
 #endif
 
-#include "sqliteLimit.h"
+#include "third_party/sqlite3/sqliteLimit.h"
 
 /* Disable nuisance warnings on Borland compilers */
 #if defined(__BORLANDC__)
@@ -596,13 +596,12 @@
 #define likely(X)    (X)
 #define unlikely(X)  (X)
 
-#include "hash.h"
-#include "parse.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <stddef.h>
+#include "libc/assert.h"
+#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "third_party/sqlite3/hash.h"
+#include "third_party/sqlite3/parse.h"
 
 /*
 ** Use a macro to replace memcpy() if compiled with SQLITE_INLINE_MEMCPY.
@@ -1270,12 +1269,12 @@ typedef int VList;
 ** "BusyHandler" typedefs. vdbe.h also requires a few of the opaque
 ** pointer types (i.e. FuncDef) defined above.
 */
-#include "os.h"
-#include "pager.h"
-#include "btree.h"
-#include "vdbe.h"
-#include "pcache.h"
-#include "mutex.h"
+#include "third_party/sqlite3/os.h"
+#include "third_party/sqlite3/pager.h"
+#include "third_party/sqlite3/btree.h"
+#include "third_party/sqlite3/vdbe.h"
+#include "third_party/sqlite3/pcache.h"
+#include "third_party/sqlite3/mutex.h"
 
 /* The SQLITE_EXTRA_DURABLE compile-time option used to set the default
 ** synchronous setting to EXTRA.  It is no longer supported.

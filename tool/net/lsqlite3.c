@@ -33,7 +33,6 @@
 #include "third_party/lua/lauxlib.h"
 #include "third_party/lua/lua.h"
 #include "third_party/lua/luaconf.h"
-#include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3.h"
 // clang-format off
 

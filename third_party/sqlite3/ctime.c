@@ -42,7 +42,7 @@
 ** comma. e.g. (-DSQLITE_DEFAULT_LOOKASIDE="100,100") */
 #define CTIMEOPT_VAL2_(opt1,opt2) #opt1 "," #opt2
 #define CTIMEOPT_VAL2(opt) CTIMEOPT_VAL2_(opt)
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** An array of names of all compile-time options.  This array should 

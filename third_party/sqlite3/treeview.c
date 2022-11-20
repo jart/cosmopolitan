@@ -17,7 +17,7 @@
 ** The interfaces in this file is only available when compiling
 ** with SQLITE_DEBUG.
 */
-#include "sqliteInt.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #ifdef SQLITE_DEBUG
 
 /*
