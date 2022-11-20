@@ -11,13 +11,12 @@
 ******************************************************************************
 **
 ** This module contains code that implements a parser for fts3 query strings
-** (the right-hand argument to the MATCH operator). Because the supported
+** (the right-hand argument to the MATCH operator). Because the supported 
 ** syntax is relatively simple, the whole tokenizer/parser system is
-** hand-coded.
+** hand-coded. 
 */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
-/* clang-format off */
 
 /*
 ** By default, this module parses the legacy syntax that has been 
@@ -79,8 +78,8 @@ int sqlite3_fts3_enable_parentheses = 0;
 */
 #define SQLITE_FTS3_DEFAULT_NEAR_PARAM 10
 
-#include "libc/assert.h"
-#include "libc/str/str.h"
+#include <string.h>
+#include <assert.h>
 
 /*
 ** isNot:
@@ -123,7 +122,7 @@ static int fts3isspace(char c){
 ** zero the memory before returning a pointer to it. If unsuccessful, 
 ** return NULL.
 */
-static void *fts3MallocZero(sqlite3_int64 nByte){
+void *sqlite3Fts3MallocZero(sqlite3_int64 nByte){
   void *pRet = sqlite3_malloc64(nByte);
   if( pRet ) memset(pRet, 0, nByte);
   return pRet;
@@ -204,7 +203,7 @@ static int getNextToken(
     rc = pModule->xNext(pCursor, &zToken, &nToken, &iStart, &iEnd, &iPosition);
     if( rc==SQLITE_OK ){
       nByte = sizeof(Fts3Expr) + sizeof(Fts3Phrase) + nToken;
-      pRet = (Fts3Expr *)fts3MallocZero(nByte);
+      pRet = (Fts3Expr *)sqlite3Fts3MallocZero(nByte);
       if( !pRet ){
         rc = SQLITE_NOMEM;
       }else{
@@ -459,7 +458,7 @@ static int getNextNode(
       if( fts3isspace(cNext) 
        || cNext=='"' || cNext=='(' || cNext==')' || cNext==0
       ){
-        pRet = (Fts3Expr *)fts3MallocZero(sizeof(Fts3Expr));
+        pRet = (Fts3Expr *)sqlite3Fts3MallocZero(sizeof(Fts3Expr));
         if( !pRet ){
           return SQLITE_NOMEM;
         }
@@ -638,7 +637,7 @@ static int fts3ExprParse(
             && p->eType==FTSQUERY_PHRASE && pParse->isNot 
         ){
           /* Create an implicit NOT operator. */
-          Fts3Expr *pNot = fts3MallocZero(sizeof(Fts3Expr));
+          Fts3Expr *pNot = sqlite3Fts3MallocZero(sizeof(Fts3Expr));
           if( !pNot ){
             sqlite3Fts3ExprFree(p);
             rc = SQLITE_NOMEM;
@@ -672,7 +671,7 @@ static int fts3ExprParse(
             /* Insert an implicit AND operator. */
             Fts3Expr *pAnd;
             assert( pRet && pPrev );
-            pAnd = fts3MallocZero(sizeof(Fts3Expr));
+            pAnd = sqlite3Fts3MallocZero(sizeof(Fts3Expr));
             if( !pAnd ){
               sqlite3Fts3ExprFree(p);
               rc = SQLITE_NOMEM;
@@ -1108,7 +1107,7 @@ void sqlite3Fts3ExprFree(Fts3Expr *pDel){
 
 #ifdef SQLITE_TEST
 
-#include "libc/stdio/stdio.h"
+#include <stdio.h>
 
 /*
 ** Return a pointer to a buffer containing a text representation of the

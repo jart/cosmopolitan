@@ -13,10 +13,9 @@
 ** This file implements virtual-tables for examining the bytecode content
 ** of a prepared statement.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "sqliteInt.h"
 #if defined(SQLITE_ENABLE_BYTECODE_VTAB) && !defined(SQLITE_OMIT_VIRTUALTABLE)
-#include "third_party/sqlite3/vdbeInt.inc"
-/* clang-format off */
+#include "vdbeInt.h"
 
 /* An instance of the bytecode() table-valued function.
 */

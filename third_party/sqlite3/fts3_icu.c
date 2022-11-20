@@ -11,15 +11,18 @@
 *************************************************************************
 ** This file implements a tokenizer for fts3 based on the ICU library.
 */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 #ifdef SQLITE_ENABLE_ICU
-/* clang-format off */
 
-#include "libc/assert.h"
-#include "libc/str/str.h"
-#include "libc/str/unicode.h"
-#include "third_party/sqlite3/fts3_tokenizer.inc"
+#include <assert.h>
+#include <string.h>
+#include "fts3_tokenizer.h"
+
+#include <unicode/ubrk.h>
+#include <unicode/ucol.h>
+#include <unicode/ustring.h>
+#include <unicode/utf16.h>
 
 typedef struct IcuTokenizer IcuTokenizer;
 typedef struct IcuCursor IcuCursor;
