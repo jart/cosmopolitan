@@ -171,7 +171,7 @@ o//third_party/sqlite3/vdbe.o: private					\
 		OVERRIDE_CFLAGS +=					\
 			-Os
 
-o/$(MODE)/third_party/sqlite3/shell.shell.o: private			\
+o/$(MODE)/third_party/sqlite3/shell.o: private				\
 		OVERRIDE_CFLAGS +=					\
 			-DSTACK_FRAME_UNLIMITED
 

@@ -114,17 +114,23 @@ typedef unsigned short int u16;
 #endif
 
 #include "libc/assert.h"
+#include "libc/errno.h"
+#include "libc/fmt/fmt.h"
+#include "libc/fmt/conv.h"
 #include "libc/mem/mem.h"
-#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+#include "libc/stdio/stdio.h"
 #include "libc/calls/calls.h"
+#include "libc/calls/weirdtypes.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/dirent.h"
+#include "libc/calls/struct/rusage.h"
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/stat.macros.h"
-#include "tool/args/args.h"
-#include "libc/calls/struct/rusage.h"
 #include "libc/sysv/consts/rusage.h"
-#include "libc/calls/struct/stat.h"
 #include "libc/sysv/consts/s.h"
+#include "libc/runtime/runtime.h"
+#include "tool/args/args.h"
 #include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3expert.h"
 #include "third_party/zlib/zlib.h"
@@ -135,18 +141,12 @@ typedef unsigned char u8;
 #if SQLITE_USER_AUTHENTICATION
 # include "sqlite3userauth.h"
 #endif
-#include <ctype.h>
-#include <stdarg.h>
 
 #if !defined(_WIN32) && !defined(WIN32)
-# include <signal.h>
 # if !defined(__RTP__) && !defined(_WRS_KERNEL)
-#  include <pwd.h>
 # endif
 #endif
 #if (!defined(_WIN32) && !defined(WIN32)) || defined(__MINGW32__)
-# include <unistd.h>
-# include <dirent.h>
 # define GETPID getpid
 # if defined(__MINGW32__)
 #  define DIRENT dirent
@@ -157,8 +157,6 @@ typedef unsigned char u8;
 #else
 # define GETPID (int)GetCurrentProcessId
 #endif
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #if HAVE_READLINE
 # include <readline/readline.h>
@@ -179,11 +177,11 @@ typedef unsigned char u8;
 
 #elif HAVE_LINENOISE
 
-# include "linenoise.h"
+# include "third_party/linenoise/linenoise.h"
 # define shell_add_history(X) linenoiseHistoryAdd(X)
 # define shell_read_history(X) linenoiseHistoryLoad(X)
 # define shell_write_history(X) linenoiseHistorySave(X)
-# define shell_stifle_history(X) linenoiseHistorySetMaxLen(X)
+# define shell_stifle_history(X)
 # define shell_readline(X) linenoise(X)
 
 #else
@@ -309,8 +307,7 @@ static sqlite3_int64 timeOfDay(void){
 }
 
 #if !defined(_WIN32) && !defined(WIN32) && !defined(__minux)
-#include <sys/time.h>
-#include <sys/resource.h>
+#include "libc/time/time.h"
 
 /* VxWorks does not support getrusage() as far as we can determine */
 #if defined(_WRS_KERNEL) || defined(__RTP__)
@@ -3811,8 +3808,6 @@ int sqlite3_series_init(
 ** regular expression in the O(N*M) performance bound is computed after
 ** this expansion.
 */
-#include <string.h>
-#include <stdlib.h>
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
 
@@ -4719,36 +4714,6 @@ int sqlite3_regexp_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#if !defined(_WIN32) && !defined(WIN32)
-#  include <unistd.h>
-#  include <dirent.h>
-#  include <utime.h>
-#  include <sys/time.h>
-#else
-#  include "windows.h"
-#  include <io.h>
-#  include <direct.h>
-/* #  include "test_windirent.h" */
-#  define dirent DIRENT
-#  ifndef chmod
-#    define chmod _chmod
-#  endif
-#  ifndef stat
-#    define stat _stat
-#  endif
-#  define mkdir(path,mode) _mkdir(path)
-#  define lstat(path,buf) stat(path,buf)
-#endif
-#include <time.h>
-#include <errno.h>
-
 
 /*
 ** Structure of the fsdir() table-valued function
@@ -5707,9 +5672,6 @@ int sqlite3_fileio_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -6224,8 +6186,6 @@ int sqlite3_completion_init(
 **/
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <string.h>
-#include <assert.h>
 
 /* The append mark at the end of the database is:
 **
@@ -6879,11 +6839,6 @@ int sqlite3_appendvfs_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <zlib.h>
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -9084,8 +9039,6 @@ int sqlite3_zipfile_init(
 */
 /* #include "sqlite3ext.h" */
 SQLITE_EXTENSION_INIT1
-#include <zlib.h>
-#include <assert.h>
 
 /*
 ** Implementation of the "sqlar_compress(X)" SQL function.
@@ -9378,9 +9331,6 @@ void sqlite3_expert_destroy(sqlite3expert*);
 *************************************************************************
 */
 /* #include "sqlite3expert.h" */
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
 
 #if !defined(SQLITE_AMALGAMATION)
 #if defined(SQLITE_COVERAGE_TEST) || defined(SQLITE_MUTATION_TEST)
@@ -11505,8 +11455,6 @@ void sqlite3_expert_destroy(sqlite3expert *p){
 
 #endif
 SQLITE_EXTENSION_INIT1
-#include <string.h>
-#include <assert.h>
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -12636,8 +12584,6 @@ int sqlite3_recover_finish(sqlite3_recover*);
 
 
 /* #include "sqlite3recover.h" */
-#include <assert.h>
-#include <string.h>
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -25607,7 +25553,7 @@ static char *find_home_dir(int clearFlag){
   }
   if( home_dir ) return home_dir;
 
-#if !defined(_WIN32) && !defined(WIN32) && !defined(_WIN32_WCE) \
+#if 0 && !defined(_WIN32) && !defined(WIN32) && !defined(_WIN32_WCE) \
      && !defined(__RTP__) && !defined(_WRS_KERNEL)
   {
     struct passwd *pwent;
