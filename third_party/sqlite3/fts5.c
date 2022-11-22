@@ -608,6 +608,7 @@ struct fts5_api {
 SQLITE_EXTENSION_INIT1
 
 #include "libc/assert.h"
+#include "libc/math.h"
 #include "libc/str/str.h"
 
 #ifndef SQLITE_AMALGAMATION
@@ -21097,7 +21098,7 @@ static int sqlite3Fts5TokenizerInit(fts5_api *pApi){
 */
 
 
-#include <assert.h>
+#include "libc/assert.h"
 
 
 
