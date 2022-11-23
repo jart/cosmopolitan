@@ -11178,7 +11178,8 @@ static char *find_home_dir(int clearFlag){
   }
   if( home_dir ) return home_dir;
 
-#if 0 && !defined(_WIN32) && !defined(WIN32) && !defined(_WIN32_WCE) \
+#if 0
+#if !defined(_WIN32) && !defined(WIN32) && !defined(_WIN32_WCE) \
      && !defined(__RTP__) && !defined(_WRS_KERNEL)
   {
     struct passwd *pwent;
@@ -11188,6 +11189,7 @@ static char *find_home_dir(int clearFlag){
     }
   }
 #endif
+#endif
 
 #if defined(_WIN32_WCE)
   /* Windows CE (arm-wince-mingw32ce-gcc) does not provide getenv()
@@ -11195,18 +11197,15 @@ static char *find_home_dir(int clearFlag){
   home_dir = "/";
 #else
 
-#if defined(_WIN32) || defined(WIN32)
-  if (!home_dir) {
+  if (IsWindows() && !home_dir) {
     home_dir = getenv("USERPROFILE");
   }
-#endif
 
   if (!home_dir) {
     home_dir = getenv("HOME");
   }
 
-#if defined(_WIN32) || defined(WIN32)
-  if (!home_dir) {
+  if (IsWindows() && !home_dir) {
     char *zDrive, *zPath;
     int n;
     zDrive = getenv("HOMEDRIVE");
@@ -11220,7 +11219,6 @@ static char *find_home_dir(int clearFlag){
     }
     home_dir = "c:\\";
   }
-#endif
 
 #endif /* !_WIN32_WCE */
 
