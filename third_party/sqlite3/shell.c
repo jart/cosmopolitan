@@ -11462,6 +11462,7 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
   int argcToFree = 0;
 #endif
 
+  LoadZipArgs(&argc, &argv);
   setBinaryMode(stdin, 0);
   setvbuf(stderr, 0, _IONBF, 0); /* Make sure stderr is unbuffered */
 #ifdef SQLITE_SHELL_FIDDLE
