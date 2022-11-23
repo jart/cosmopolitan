@@ -15,6 +15,12 @@
 */
 #include "third_party/sqlite3/btreeInt.h"
 
+#if defined(__GNUC__) && !defined(__llvm__)
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+/* clang-format off */
+
 /*
 ** The header string that appears at the beginning of every
 ** SQLite database.

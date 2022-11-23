@@ -1,8 +1,13 @@
+/* clang-format off */
 
 #if defined(SQLITE_ENABLE_SESSION) && defined(SQLITE_ENABLE_PREUPDATE_HOOK)
 #include "third_party/sqlite3/sqlite3session.h"
 #include "libc/assert.h"
 #include "libc/str/str.h"
+
+#if defined(__GNUC__) && !defined(__llvm__)
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 
 #ifndef SQLITE_AMALGAMATION
 # include "third_party/sqlite3/sqliteInt.h"
