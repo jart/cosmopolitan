@@ -28,7 +28,7 @@
 ** lexicographical order to facility a binary search of the pragma name.
 ** Do not edit pragma.h directly.  Edit and rerun the script in at 
 ** ../tool/mkpragmatab.tcl. */
-#include "pragma.h"
+#include "third_party/sqlite3/pragma.h"
 
 /*
 ** Interpret the given string as a safety level.  Return 0 for OFF,

@@ -17,7 +17,7 @@
 ** indices, you might also think of this module as the "query optimizer".
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#include "whereInt.h"
+#include "third_party/sqlite3/whereInt.h"
 
 /*
 ** Extra information appended to the end of sqlite3_index_info but not

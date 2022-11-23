@@ -624,7 +624,7 @@ void sqlite3VdbeRegisterDump(Vdbe *v){
 ** hwtime.h contains inline assembler code for implementing 
 ** high-performance timing routines.
 */
-#include "hwtime.h"
+#include "third_party/sqlite3/hwtime.h"
 
 #endif
 
