@@ -26,9 +26,6 @@
 ** single-threaded if desired.
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#if SQLITE_OS_WIN
-#  include "os_win.h"
-#endif
 
 #if SQLITE_MAX_WORKER_THREADS>0
 
