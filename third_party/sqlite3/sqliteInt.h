@@ -1269,12 +1269,12 @@ typedef int VList;
 ** "BusyHandler" typedefs. vdbe.h also requires a few of the opaque
 ** pointer types (i.e. FuncDef) defined above.
 */
-#include "third_party/sqlite3/os.h"
-#include "third_party/sqlite3/pager.h"
-#include "third_party/sqlite3/btree.h"
-#include "third_party/sqlite3/vdbe.h"
-#include "third_party/sqlite3/pcache.h"
-#include "third_party/sqlite3/mutex.h"
+#include "third_party/sqlite3/os.inc"
+#include "third_party/sqlite3/pager.inc"
+#include "third_party/sqlite3/btree.inc"
+#include "third_party/sqlite3/vdbe.inc"
+#include "third_party/sqlite3/pcache.inc"
+#include "third_party/sqlite3/mutex.inc"
 
 /* The SQLITE_EXTRA_DURABLE compile-time option used to set the default
 ** synchronous setting to EXTRA.  It is no longer supported.

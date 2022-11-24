@@ -17,7 +17,7 @@
 ** indices, you might also think of this module as the "query optimizer".
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/whereInt.h"
+#include "third_party/sqlite3/whereInt.inc"
 
 #if __GNUC__ >= 11
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"

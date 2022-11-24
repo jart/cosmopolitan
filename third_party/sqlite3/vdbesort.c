@@ -136,7 +136,7 @@
 ** the main thread to read from.
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/vdbeInt.inc"
 
 /* 
 ** If SQLITE_DEBUG_SORTER_THREADS is defined, this module outputs various

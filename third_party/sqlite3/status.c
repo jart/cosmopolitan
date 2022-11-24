@@ -14,7 +14,7 @@
 ** functionality.
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/vdbeInt.h"
+#include "third_party/sqlite3/vdbeInt.inc"
 
 /*
 ** Variables in which to record status information.

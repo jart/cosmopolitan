@@ -145,7 +145,7 @@ const unsigned char ebcdicToAscii[] = {
 ** named keywordhash.h and then included into this source file by
 ** the #include below.
 */
-#include "third_party/sqlite3/keywordhash.h"
+#include "third_party/sqlite3/keywordhash.inc"
 
 /*
 ** If X is a character that can be used in an identifier then

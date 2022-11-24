@@ -18,7 +18,7 @@
 ** file retains the code that does query planning and analysis.
 */
 #include "third_party/sqlite3/sqliteInt.h"
-#include "third_party/sqlite3/whereInt.h"
+#include "third_party/sqlite3/whereInt.inc"
 
 #ifndef SQLITE_OMIT_EXPLAIN
 
