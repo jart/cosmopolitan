@@ -140,7 +140,7 @@ typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
 #if SQLITE_USER_AUTHENTICATION
-# include "sqlite3userauth.h"
+# include "third_party/sqlite3/sqlite3userauth.h"
 #endif
 
 #if !defined(_WIN32) && !defined(WIN32)
@@ -11265,6 +11265,7 @@ static void process_sqliterc(
   p->in = inSaved;
   p->lineno = savedLineno;
   sqlite3_free(zBuf);
+  errno = 0; /* [jart] clear error */
 }
 
 /*
