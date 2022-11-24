@@ -27,6 +27,10 @@
 # define GEODEBUG(X)
 #endif
 
+#if defined(__GNUC__) && !defined(__llvm__)
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 /* Character class routines */
 #ifdef sqlite3Isdigit
    /* Use the SQLite core versions if this routine is part of the
