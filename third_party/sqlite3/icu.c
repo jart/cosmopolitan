@@ -33,15 +33,11 @@
  || defined(SQLITE_ENABLE_ICU_COLLATIONS)
 
 /* Include ICU headers */
-#include <unicode/utypes.h>
-#include <unicode/uregex.h>
-#include <unicode/ustring.h>
-#include <unicode/ucol.h>
-
-#include <assert.h>
+#include "libc/assert.h"
+#include "libc/str/unicode.h"
 
 #ifndef SQLITE_CORE
-  #include "sqlite3ext.h"
+  #include "third_party/sqlite3/sqlite3ext.h"
   SQLITE_EXTENSION_INIT1
 #else
   #include "third_party/sqlite3/sqlite3.h"
