@@ -21,6 +21,7 @@
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
+#include "libc/fmt/conv.h"
 #include "libc/mem/alg.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
