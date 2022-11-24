@@ -131,11 +131,13 @@ typedef unsigned short int u16;
 #include "libc/sysv/consts/rusage.h"
 #include "libc/sysv/consts/s.h"
 #include "libc/runtime/runtime.h"
+#include "libc/runtime/symbols.internal.h"
 #include "tool/args/args.h"
 #include "third_party/sqlite3/extensions.h"
 #include "third_party/sqlite3/sqlite3expert.h"
 #include "third_party/zlib/zlib.h"
 #include "third_party/sqlite3/sqlite3.h"
+
 typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 typedef unsigned char u8;
@@ -11426,6 +11428,8 @@ static char *cmdline_option_value(int argc, char **argv, int i){
 #  define main fiddle_main
 #endif
 
+STATIC_YOINK("zipos"); // for symtab
+
 #if SQLITE_SHELL_IS_UTF8
 int SQLITE_CDECL main(int argc, char **argv){
 #else
@@ -11454,7 +11458,16 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
   int argcToFree = 0;
 #endif
 
+  // [jart] ensure %t symbols in strace log are symbolic
+  if (__strace > 0) {
+    GetSymbolTable();
+  }
+
+  // ShowCrashReports();
+
+  // [jart] support /zip/.args file for white labeling
   LoadZipArgs(&argc, &argv);
+
   setBinaryMode(stdin, 0);
   setvbuf(stderr, 0, _IONBF, 0); /* Make sure stderr is unbuffered */
 #ifdef SQLITE_SHELL_FIDDLE
