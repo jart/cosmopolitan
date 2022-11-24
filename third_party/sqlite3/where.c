@@ -19,6 +19,10 @@
 #include "third_party/sqlite3/sqliteInt.h"
 #include "third_party/sqlite3/whereInt.h"
 
+#if __GNUC__ >= 11
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+
 /*
 ** Extra information appended to the end of sqlite3_index_info but not
 ** visible to the xBestIndex function, at least not directly.  The
