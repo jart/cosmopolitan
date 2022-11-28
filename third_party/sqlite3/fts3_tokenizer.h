@@ -19,7 +19,6 @@
 */
 #ifndef _FTS3_TOKENIZER_H_
 #define _FTS3_TOKENIZER_H_
-/* clang-format off */
 
 /* TODO(shess) Only used for SQLITE_OK and SQLITE_DONE at this time.
 ** If tokenizers are to be allowed to call sqlite3_*() functions, then

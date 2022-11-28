@@ -15,9 +15,7 @@
 ** big and we want to break it down some.  This packaged seemed like
 ** a good breakout.
 */
-#include "third_party/sqlite3/btreeInt.inc"
-
-/* clang-format off */
+#include "third_party/sqlite3/btreeInt.h"
 #ifndef SQLITE_OMIT_SHARED_CACHE
 #if SQLITE_THREADSAFE
 
@@ -254,6 +252,7 @@ int sqlite3BtreeHoldsAllMutexes(sqlite3 *db){
 int sqlite3SchemaMutexHeld(sqlite3 *db, int iDb, Schema *pSchema){
   Btree *p;
   assert( db!=0 );
+  if( db->pVfs==0 && db->nDb==0 ) return 1;
   if( pSchema ) iDb = sqlite3SchemaToIndex(db, pSchema);
   assert( iDb>=0 && iDb<db->nDb );
   if( !sqlite3_mutex_held(db->mutex) ) return 0;

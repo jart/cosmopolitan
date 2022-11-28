@@ -17,8 +17,8 @@
 ** property.  Usually only a few pages are meet either condition.
 ** So the bitmap is usually sparse and has low cardinality.
 ** But sometimes (for example when during a DROP of a large table) most
-** or all of the pages in a database can get journalled.  In those cases,
-** the bitmap becomes dense with high cardinality.  The algorithm needs
+** or all of the pages in a database can get journalled.  In those cases, 
+** the bitmap becomes dense with high cardinality.  The algorithm needs 
 ** to handle both cases well.
 **
 ** The size of the bitmap is fixed when the object is created.
@@ -34,8 +34,7 @@
 ** start of a transaction, and is thus usually less than a few thousand,
 ** but can be as large as 2 billion for a really big database.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* Size of the Bitvec structure in bytes. */
 #define BITVEC_SZ        512
@@ -354,7 +353,7 @@ int sqlite3BitvecBuiltinTest(int sz, int *aOp){
   sqlite3BitvecClear(0, 1, pTmpSpace);
 
   /* Run the program */
-  pc = 0;
+  pc = i = 0;
   while( (op = aOp[pc])!=0 ){
     switch( op ){
       case 1:

@@ -9,10 +9,9 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-**
+** 
 ** This file defines various limits of what SQLite can process.
 */
-/* clang-format off */
 
 /*
 ** The maximum length of a TEXT or BLOB in bytes.   This also

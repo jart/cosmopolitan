@@ -11,7 +11,7 @@
 *************************************************************************
 **
 **
-** OVERVIEW
+** OVERVIEW 
 **
 **  The RBU extension requires that the RBU update be packaged as an
 **  SQLite database. The tables it expects to find are described in
@@ -19,34 +19,34 @@
 **  that the user wishes to write to, a corresponding data_xyz table is
 **  created in the RBU database and populated with one row for each row to
 **  update, insert or delete from the target table.
-**
+** 
 **  The update proceeds in three stages:
-**
+** 
 **  1) The database is updated. The modified database pages are written
 **     to a *-oal file. A *-oal file is just like a *-wal file, except
 **     that it is named "<database>-oal" instead of "<database>-wal".
 **     Because regular SQLite clients do not look for file named
 **     "<database>-oal", they go on using the original database in
 **     rollback mode while the *-oal file is being generated.
-**
+** 
 **     During this stage RBU does not update the database by writing
 **     directly to the target tables. Instead it creates "imposter"
 **     tables using the SQLITE_TESTCTRL_IMPOSTER interface that it uses
 **     to update each b-tree individually. All updates required by each
 **     b-tree are completed before moving on to the next, and all
 **     updates are done in sorted key order.
-**
+** 
 **  2) The "<database>-oal" file is moved to the equivalent "<database>-wal"
 **     location using a call to rename(2). Before doing this the RBU
 **     module takes an EXCLUSIVE lock on the database file, ensuring
 **     that there are no other active readers.
-**
+** 
 **     Once the EXCLUSIVE lock is released, any other database readers
 **     detect the new *-wal file and read the database in wal mode. At
 **     this point they see the new version of the database - including
 **     the updates made as part of the RBU update.
-**
-**  3) The new *-wal file is checkpointed. This proceeds in the same way
+** 
+**  3) The new *-wal file is checkpointed. This proceeds in the same way 
 **     as a regular database checkpoint, except that a single frame is
 **     checkpointed each time sqlite3rbu_step() is called. If the RBU
 **     handle is closed before the entire *-wal file is checkpointed,
@@ -55,7 +55,7 @@
 **     the future.
 **
 ** POTENTIAL PROBLEMS
-**
+** 
 **  The rename() call might not be portable. And RBU is not currently
 **  syncing the directory after renaming the file.
 **
@@ -77,18 +77,21 @@
 **  fields are collected.  This means we're probably writing a lot more
 **  data to disk when saving the state of an ongoing update to the RBU
 **  update database than is strictly necessary.
-**
+** 
 */
-/* clang-format off */
 
 #include "libc/assert.h"
-#include "libc/calls/calls.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
+
 #include "third_party/sqlite3/sqlite3.h"
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_RBU)
-#include "third_party/sqlite3/sqlite3rbu.inc"
+#include "third_party/sqlite3/sqlite3rbu.h"
+
+#if defined(_WIN32_WCE)
+#include "windows.h"
+#endif
 
 /* Maximum number of prepared UPDATE statements held by this module */
 #define SQLITE_RBU_UPDATE_CACHESIZE 16
@@ -106,6 +109,13 @@
 #if !defined(SQLITE_AMALGAMATION)
 # define SWAP(TYPE,A,B) {TYPE t=A; A=B; B=t;}
 #endif
+
+/*
+** Name of the URI option that causes RBU to take an exclusive lock as
+** part of the incremental checkpoint operation.
+*/
+#define RBU_EXCLUSIVE_CHECKPOINT "rbu_exclusive_checkpoint"
+
 
 /*
 ** The rbu_state table is used to save the state of a partially applied
@@ -383,6 +393,8 @@ struct sqlite3rbu {
   int nPagePerSector;             /* Pages per sector for pTargetFd */
   i64 iOalSz;
   i64 nPhaseOneStep;
+  void *pRenameArg;
+  int (*xRename)(void*, const char*, const char*);
 
   /* The following state variables are used as part of the incremental
   ** checkpoint stage (eStage==RBU_STAGE_CKPT). See comments surrounding
@@ -1191,7 +1203,9 @@ static void rbuTableType(
   assert( p->rc==SQLITE_OK );
   p->rc = prepareFreeAndCollectError(p->dbMain, &aStmt[0], &p->zErrmsg, 
     sqlite3_mprintf(
-          "SELECT (sql LIKE 'create virtual%%'), rootpage"
+          "SELECT "
+          " (sql COLLATE nocase BETWEEN 'CREATE VIRTUAL' AND 'CREATE VIRTUAM'),"
+          " rootpage"
           "  FROM sqlite_schema"
           " WHERE name=%Q", zTab
   ));
@@ -1551,7 +1565,7 @@ static char *rbuVacuumTableStart(
 ** the caller has to use an OFFSET clause to extract only the required 
 ** rows from the sourct table, just as it does for an RBU update operation.
 */
-char *rbuVacuumIndexStart(
+static char *rbuVacuumIndexStart(
   sqlite3rbu *p,                  /* RBU handle */
   RbuObjIter *pIter               /* RBU iterator object */
 ){
@@ -1617,7 +1631,9 @@ char *rbuVacuumIndexStart(
       zSep = "";
       for(iCol=0; iCol<pIter->nCol; iCol++){
         const char *zQuoted = (const char*)sqlite3_column_text(pSel, iCol);
-        if( zQuoted[0]=='N' ){
+        if( zQuoted==0 ){
+          p->rc = SQLITE_NOMEM;
+        }else if( zQuoted[0]=='N' ){
           bFailed = 1;
           break;
         }
@@ -2722,7 +2738,7 @@ static RbuState *rbuLoadState(sqlite3rbu *p){
         break;
 
       case RBU_STATE_OALSZ:
-        pRet->iOalSz = (u32)sqlite3_column_int64(pStmt, 1);
+        pRet->iOalSz = sqlite3_column_int64(pStmt, 1);
         break;
 
       case RBU_STATE_PHASEONESTEP:
@@ -2749,19 +2765,25 @@ static RbuState *rbuLoadState(sqlite3rbu *p){
 /*
 ** Open the database handle and attach the RBU database as "rbu". If an
 ** error occurs, leave an error code and message in the RBU handle.
+**
+** If argument dbMain is not NULL, then it is a database handle already
+** open on the target database. Use this handle instead of opening a new
+** one.
 */
-static void rbuOpenDatabase(sqlite3rbu *p, int *pbRetry){
+static void rbuOpenDatabase(sqlite3rbu *p, sqlite3 *dbMain, int *pbRetry){
   assert( p->rc || (p->dbMain==0 && p->dbRbu==0) );
   assert( p->rc || rbuIsVacuum(p) || p->zTarget!=0 );
+  assert( dbMain==0 || rbuIsVacuum(p)==0 );
 
   /* Open the RBU database */
   p->dbRbu = rbuOpenDbhandle(p, p->zRbu, 1);
+  p->dbMain = dbMain;
 
   if( p->rc==SQLITE_OK && rbuIsVacuum(p) ){
     sqlite3_file_control(p->dbRbu, "main", SQLITE_FCNTL_RBUCNT, (void*)p);
     if( p->zState==0 ){
       const char *zFile = sqlite3_db_filename(p->dbRbu, "main");
-      p->zState = rbuMPrintf(p, "file://%s-vacuum?modeof=%s", zFile, zFile);
+      p->zState = rbuMPrintf(p, "file:///%s-vacuum?modeof=%s", zFile, zFile);
     }
   }
 
@@ -3121,15 +3143,31 @@ static void rbuCheckpointFrame(sqlite3rbu *p, RbuFrame *pFrame){
 
 
 /*
-** Take an EXCLUSIVE lock on the database file.
+** Take an EXCLUSIVE lock on the database file. Return SQLITE_OK if
+** successful, or an SQLite error code otherwise.
 */
-static void rbuLockDatabase(sqlite3rbu *p){
-  sqlite3_file *pReal = p->pTargetFd->pReal;
-  assert( p->rc==SQLITE_OK );
-  p->rc = pReal->pMethods->xLock(pReal, SQLITE_LOCK_SHARED);
-  if( p->rc==SQLITE_OK ){
-    p->rc = pReal->pMethods->xLock(pReal, SQLITE_LOCK_EXCLUSIVE);
+static int rbuLockDatabase(sqlite3 *db){
+  int rc = SQLITE_OK;
+  sqlite3_file *fd = 0;
+  sqlite3_file_control(db, "main", SQLITE_FCNTL_FILE_POINTER, &fd);
+
+  if( fd->pMethods ){
+    rc = fd->pMethods->xLock(fd, SQLITE_LOCK_SHARED);
+    if( rc==SQLITE_OK ){
+      rc = fd->pMethods->xLock(fd, SQLITE_LOCK_EXCLUSIVE);
+    }
   }
+  return rc;
+}
+
+/*
+** Return true if the database handle passed as the only argument
+** was opened with the rbu_exclusive_checkpoint=1 URI parameter
+** specified. Or false otherwise.
+*/
+static int rbuExclusiveCheckpoint(sqlite3 *db){
+  const char *zUri = sqlite3_db_filename(db, 0);
+  return sqlite3_uri_boolean(zUri, RBU_EXCLUSIVE_CHECKPOINT, 0);
 }
 
 #if defined(_WIN32_WCE)
@@ -3187,49 +3225,38 @@ static void rbuMoveOalFile(sqlite3rbu *p){
     ** In order to ensure that there are no database readers, an EXCLUSIVE
     ** lock is obtained here before the *-oal is moved to *-wal.
     */
-    rbuLockDatabase(p);
+    sqlite3 *dbMain = 0;
+    rbuFileSuffix3(zBase, zWal);
+    rbuFileSuffix3(zBase, zOal);
+
+    /* Re-open the databases. */
+    rbuObjIterFinalize(&p->objiter);
+    sqlite3_close(p->dbRbu);
+    sqlite3_close(p->dbMain);
+    p->dbMain = 0;
+    p->dbRbu = 0;
+
+    dbMain = rbuOpenDbhandle(p, p->zTarget, 1);
+    if( dbMain ){
+      assert( p->rc==SQLITE_OK );
+      p->rc = rbuLockDatabase(dbMain);
+    }
+
     if( p->rc==SQLITE_OK ){
-      rbuFileSuffix3(zBase, zWal);
-      rbuFileSuffix3(zBase, zOal);
+      p->rc = p->xRename(p->pRenameArg, zOal, zWal);
+    }
 
-      /* Re-open the databases. */
-      rbuObjIterFinalize(&p->objiter);
-      sqlite3_close(p->dbRbu);
-      sqlite3_close(p->dbMain);
-      p->dbMain = 0;
-      p->dbRbu = 0;
+    if( p->rc!=SQLITE_OK 
+     || rbuIsVacuum(p) 
+     || rbuExclusiveCheckpoint(dbMain)==0 
+    ){
+      sqlite3_close(dbMain);
+      dbMain = 0;
+    }
 
-#if defined(_WIN32_WCE)
-      {
-        LPWSTR zWideOal;
-        LPWSTR zWideWal;
-
-        zWideOal = rbuWinUtf8ToUnicode(zOal);
-        if( zWideOal ){
-          zWideWal = rbuWinUtf8ToUnicode(zWal);
-          if( zWideWal ){
-            if( MoveFileW(zWideOal, zWideWal) ){
-              p->rc = SQLITE_OK;
-            }else{
-              p->rc = SQLITE_IOERR;
-            }
-            sqlite3_free(zWideWal);
-          }else{
-            p->rc = SQLITE_IOERR_NOMEM;
-          }
-          sqlite3_free(zWideOal);
-        }else{
-          p->rc = SQLITE_IOERR_NOMEM;
-        }
-      }
-#else
-      p->rc = rename(zOal, zWal) ? SQLITE_IOERR : SQLITE_OK;
-#endif
-
-      if( p->rc==SQLITE_OK ){
-        rbuOpenDatabase(p, 0);
-        rbuSetupCheckpoint(p, 0);
-      }
+    if( p->rc==SQLITE_OK ){
+      rbuOpenDatabase(p, dbMain, 0);
+      rbuSetupCheckpoint(p, 0);
     }
   }
 
@@ -3955,6 +3982,7 @@ static sqlite3rbu *openRbuHandle(
 
     /* Create the custom VFS. */
     memset(p, 0, sizeof(sqlite3rbu));
+    sqlite3rbu_rename_handler(p, 0, 0);
     rbuCreateVfs(p);
 
     /* Open the target, RBU and state databases */
@@ -3980,9 +4008,9 @@ static sqlite3rbu *openRbuHandle(
       ** If this is the case, it will have been checkpointed and deleted
       ** when the handle was closed and a second attempt to open the 
       ** database may succeed.  */
-      rbuOpenDatabase(p, &bRetry);
+      rbuOpenDatabase(p, 0, &bRetry);
       if( bRetry ){
-        rbuOpenDatabase(p, 0);
+        rbuOpenDatabase(p, 0, 0);
       }
     }
 
@@ -4077,6 +4105,14 @@ static sqlite3rbu *openRbuHandle(
       }else if( p->eStage==RBU_STAGE_MOVE ){
         /* no-op */
       }else if( p->eStage==RBU_STAGE_CKPT ){
+        if( !rbuIsVacuum(p) && rbuExclusiveCheckpoint(p->dbMain) ){
+          /* If the rbu_exclusive_checkpoint=1 URI parameter was specified
+          ** and an incremental checkpoint is being resumed, attempt an
+          ** exclusive lock on the db file. If this fails, so be it.  */
+          p->eStage = RBU_STAGE_DONE;
+          rbuLockDatabase(p->dbMain);
+          p->eStage = RBU_STAGE_CKPT;
+        }
         rbuSetupCheckpoint(p, pState);
       }else if( p->eStage==RBU_STAGE_DONE ){
         p->rc = SQLITE_DONE;
@@ -4114,7 +4150,6 @@ sqlite3rbu *sqlite3rbu_open(
   const char *zState
 ){
   if( zTarget==0 || zRbu==0 ){ return rbuMisuseError(); }
-  /* TODO: Check that zTarget and zRbu are non-NULL */
   return openRbuHandle(zTarget, zRbu, zState);
 }
 
@@ -4337,6 +4372,54 @@ int sqlite3rbu_savestate(sqlite3rbu *p){
 
   p->rc = rc;
   return rc;
+}
+
+/*
+** Default xRename callback for RBU.
+*/
+static int xDefaultRename(void *pArg, const char *zOld, const char *zNew){
+  int rc = SQLITE_OK;
+#if defined(_WIN32_WCE)
+  {
+    LPWSTR zWideOld;
+    LPWSTR zWideNew;
+
+    zWideOld = rbuWinUtf8ToUnicode(zOld);
+    if( zWideOld ){
+      zWideNew = rbuWinUtf8ToUnicode(zNew);
+      if( zWideNew ){
+        if( MoveFileW(zWideOld, zWideNew) ){
+          rc = SQLITE_OK;
+        }else{
+          rc = SQLITE_IOERR;
+        }
+        sqlite3_free(zWideNew);
+      }else{
+        rc = SQLITE_IOERR_NOMEM;
+      }
+      sqlite3_free(zWideOld);
+    }else{
+      rc = SQLITE_IOERR_NOMEM;
+    }
+  }
+#else
+  rc = rename(zOld, zNew) ? SQLITE_IOERR : SQLITE_OK;
+#endif
+  return rc;
+}
+
+void sqlite3rbu_rename_handler(
+  sqlite3rbu *pRbu, 
+  void *pArg,
+  int (*xRename)(void *pArg, const char *zOld, const char *zNew)
+){
+  if( xRename ){
+    pRbu->xRename = xRename;
+    pRbu->pRenameArg = pArg;
+  }else{
+    pRbu->xRename = xDefaultRename;
+    pRbu->pRenameArg = 0;
+  }
 }
 
 /**************************************************************************
@@ -4989,28 +5072,14 @@ static int rbuVfsOpen(
       rbu_file *pDb = rbuFindMaindb(pRbuVfs, zName, 0);
       if( pDb ){
         if( pDb->pRbu && pDb->pRbu->eStage==RBU_STAGE_OAL ){
-          /* This call is to open a *-wal file. Intead, open the *-oal. This
-          ** code ensures that the string passed to xOpen() is terminated by a
-          ** pair of '\0' bytes in case the VFS attempts to extract a URI 
-          ** parameter from it.  */
-          const char *zBase = zName;
-          size_t nCopy;
-          char *zCopy;
+          /* This call is to open a *-wal file. Intead, open the *-oal. */
+          size_t nOpen;
           if( rbuIsVacuum(pDb->pRbu) ){
-            zBase = sqlite3_db_filename(pDb->pRbu->dbRbu, "main");
-            zBase = sqlite3_filename_wal(zBase);
+            zOpen = sqlite3_db_filename(pDb->pRbu->dbRbu, "main");
+            zOpen = sqlite3_filename_wal(zOpen);
           }
-          nCopy = strlen(zBase);
-          zCopy = sqlite3_malloc64(nCopy+2);
-          if( zCopy ){
-            memcpy(zCopy, zBase, nCopy);
-            zCopy[nCopy-3] = 'o';
-            zCopy[nCopy] = '\0';
-            zCopy[nCopy+1] = '\0';
-            zOpen = (const char*)(pFd->zDel = zCopy);
-          }else{
-            rc = SQLITE_NOMEM;
-          }
+          nOpen = strlen(zOpen);
+          ((char*)zOpen)[nOpen-3] = 'o';
           pFd->pRbu = pDb->pRbu;
         }
         pDb->pWalFd = pFd;

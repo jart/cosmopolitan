@@ -13,7 +13,6 @@
 ** subsystem.  The page cache subsystem reads and writes a file a page
 ** at a time and provides a journal for rollback.
 */
-/* clang-format off */
 
 #ifndef SQLITE_PAGER_H
 #define SQLITE_PAGER_H
@@ -44,14 +43,15 @@ typedef struct Pager Pager;
 typedef struct PgHdr DbPage;
 
 /*
-** Page number PAGER_MJ_PGNO is never used in an SQLite database (it is
+** Page number PAGER_SJ_PGNO is never used in an SQLite database (it is
 ** reserved for working around a windows/posix incompatibility). It is
 ** used in the journal to signify that the remainder of the journal file 
 ** is devoted to storing a super-journal name - there are no more pages to
 ** roll back. See comments for function writeSuperJournal() in pager.c 
 ** for details.
 */
-#define PAGER_MJ_PGNO(x) ((Pgno)((PENDING_BYTE/((x)->pageSize))+1))
+#define PAGER_SJ_PGNO_COMPUTED(x) ((Pgno)((PENDING_BYTE/((x)->pageSize))+1))
+#define PAGER_SJ_PGNO(x)          ((x)->lckPgno)
 
 /*
 ** Allowed values for the flags parameter to sqlite3PagerOpen().

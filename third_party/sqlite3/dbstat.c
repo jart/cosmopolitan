@@ -20,12 +20,19 @@
 ** Additional information is available on the "dbstat.html" page of the
 ** official SQLite documentation.
 */
-#include "third_party/sqlite3/sqliteInt.inc" /* Requires access to internal data inc */
 
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"   /* Requires access to internal data structures */
+#if (defined(SQLITE_ENABLE_DBSTAT_VTAB) || defined(SQLITE_TEST)) \
+    && !defined(SQLITE_OMIT_VIRTUALTABLE)
 
-#if (defined(SQLITE_ENABLE_DBSTAT_VTAB) || defined(SQLITE_TEST)) && \
-    !defined(SQLITE_OMIT_VIRTUALTABLE)
+/*
+** The pager and btree modules arrange objects in memory so that there are
+** always approximately 200 bytes of addressable memory following each page
+** buffer. This way small buffer overreads caused by corrupt database pages
+** do not cause undefined behaviour. This module pads each page buffer
+** by the following number of bytes for the same purpose.
+*/
+#define DBSTAT_PAGE_PADDING_BYTES 256
 
 /*
 ** Page paths:
@@ -94,9 +101,8 @@ struct StatCell {
 /* Size information for a single btree page */
 struct StatPage {
   u32 iPgno;                      /* Page number */
-  DbPage *pPg;                    /* Page content */
+  u8 *aPg;                        /* Page buffer from sqlite3_malloc() */
   int iCell;                      /* Current cell */
-
   char *zPath;                    /* Path to this page */
 
   /* Variables populated by statDecodePage(): */
@@ -308,18 +314,25 @@ static void statClearCells(StatPage *p){
 }
 
 static void statClearPage(StatPage *p){
+  u8 *aPg = p->aPg;
   statClearCells(p);
-  sqlite3PagerUnref(p->pPg);
   sqlite3_free(p->zPath);
   memset(p, 0, sizeof(StatPage));
+  p->aPg = aPg;
 }
 
 static void statResetCsr(StatCursor *pCsr){
   int i;
-  sqlite3_reset(pCsr->pStmt);
+  /* In some circumstances, specifically if an OOM has occurred, the call
+  ** to sqlite3_reset() may cause the pager to be reset (emptied). It is
+  ** important that statClearPage() is called to free any page refs before
+  ** this happens. dbsqlfuzz 9ed3e4e3816219d3509d711636c38542bf3f40b1. */
   for(i=0; i<ArraySize(pCsr->aPage); i++){
     statClearPage(&pCsr->aPage[i]);
+    sqlite3_free(pCsr->aPage[i].aPg);
+    pCsr->aPage[i].aPg = 0;
   }
+  sqlite3_reset(pCsr->pStmt);
   pCsr->iPage = 0;
   sqlite3_free(pCsr->zPath);
   pCsr->zPath = 0;
@@ -384,7 +397,7 @@ static int statDecodePage(Btree *pBt, StatPage *p){
   int isLeaf;
   int szPage;
 
-  u8 *aData = sqlite3PagerGetData(p->pPg);
+  u8 *aData = p->aPg;
   u8 *aHdr = &aData[p->iPgno==1 ? 100 : 0];
 
   p->flags = aHdr[0];
@@ -455,7 +468,7 @@ static int statDecodePage(Btree *pBt, StatPage *p){
         if( nPayload>(u32)nLocal ){
           int j;
           int nOvfl = ((nPayload - nLocal) + nUsable-4 - 1) / (nUsable - 4);
-          if( iOff+nLocal>nUsable || nPayload>0x7fffffff ){
+          if( iOff+nLocal+4>nUsable || nPayload>0x7fffffff ){
             goto statPageIsCorrupt;
           }
           pCell->nLastOvfl = (nPayload-nLocal) - (nOvfl-1) * (nUsable-4);
@@ -515,6 +528,38 @@ static void statSizeAndOffset(StatCursor *pCsr){
 }
 
 /*
+** Load a copy of the page data for page iPg into the buffer belonging
+** to page object pPg. Allocate the buffer if necessary. Return SQLITE_OK
+** if successful, or an SQLite error code otherwise.
+*/
+static int statGetPage(
+  Btree *pBt,                     /* Load page from this b-tree */
+  u32 iPg,                        /* Page number to load */
+  StatPage *pPg                   /* Load page into this object */
+){
+  int pgsz = sqlite3BtreeGetPageSize(pBt);
+  DbPage *pDbPage = 0;
+  int rc;
+
+  if( pPg->aPg==0 ){
+    pPg->aPg = (u8*)sqlite3_malloc(pgsz + DBSTAT_PAGE_PADDING_BYTES);
+    if( pPg->aPg==0 ){
+      return SQLITE_NOMEM_BKPT;
+    }
+    memset(&pPg->aPg[pgsz], 0, DBSTAT_PAGE_PADDING_BYTES);
+  }
+
+  rc = sqlite3PagerGet(sqlite3BtreePager(pBt), iPg, &pDbPage, 0);
+  if( rc==SQLITE_OK ){
+    const u8 *a = sqlite3PagerGetData(pDbPage);
+    memcpy(pPg->aPg, a, pgsz);
+    sqlite3PagerUnref(pDbPage);
+  }
+
+  return rc;
+}
+
+/*
 ** Move a DBSTAT cursor to the next entry.  Normally, the next
 ** entry will be the next page, but in aggregated mode (pCsr->isAgg!=0),
 ** the next entry is the next btree.
@@ -532,7 +577,7 @@ static int statNext(sqlite3_vtab_cursor *pCursor){
   pCsr->zPath = 0;
 
 statNextRestart:
-  if( pCsr->aPage[0].pPg==0 ){
+  if( pCsr->iPage<0 ){
     /* Start measuring space on the next btree */
     statResetCounts(pCsr);
     rc = sqlite3_step(pCsr->pStmt);
@@ -544,7 +589,7 @@ statNextRestart:
         pCsr->isEof = 1;
         return sqlite3_reset(pCsr->pStmt);
       }
-      rc = sqlite3PagerGet(pPager, iRoot, &pCsr->aPage[0].pPg, 0);
+      rc = statGetPage(pBt, iRoot, &pCsr->aPage[0]);
       pCsr->aPage[0].iPgno = iRoot;
       pCsr->aPage[0].iCell = 0;
       if( !pCsr->isAgg ){
@@ -595,9 +640,8 @@ statNextRestart:
 
     if( !p->iRightChildPg || p->iCell>p->nCell ){
       statClearPage(p);
-      if( pCsr->iPage>0 ){
-        pCsr->iPage--;
-      }else if( pCsr->isAgg ){
+      pCsr->iPage--;
+      if( pCsr->isAgg && pCsr->iPage<0 ){
         /* label-statNext-done:  When computing aggregate space usage over
         ** an entire btree, this is the exit point from this function */
         return SQLITE_OK;
@@ -616,7 +660,7 @@ statNextRestart:
     }else{
       p[1].iPgno = p->aCell[p->iCell].iChildPg;
     }
-    rc = sqlite3PagerGet(pPager, p[1].iPgno, &p[1].pPg, 0);
+    rc = statGetPage(pBt, p[1].iPgno, &p[1]);
     pCsr->nPage++;
     p[1].iCell = 0;
     if( !pCsr->isAgg ){
@@ -746,6 +790,7 @@ static int statFilter(
   }
 
   if( rc==SQLITE_OK ){
+    pCsr->iPage = -1;
     rc = statNext(pCursor);
   }
   return rc;

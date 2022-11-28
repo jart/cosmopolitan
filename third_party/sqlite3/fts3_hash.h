@@ -16,7 +16,6 @@
 */
 #ifndef _FTS3_HASH_H_
 #define _FTS3_HASH_H_
-/* clang-format off */
 
 /* Forward declarations of structures. */
 typedef struct Fts3Hash Fts3Hash;

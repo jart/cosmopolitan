@@ -25,8 +25,8 @@
 **
 **   input = <string>
 **
-** The virtual table module tokenizes this <string>, using the FTS3
-** tokenizer specified by the arguments to the CREATE VIRTUAL TABLE
+** The virtual table module tokenizes this <string>, using the FTS3 
+** tokenizer specified by the arguments to the CREATE VIRTUAL TABLE 
 ** statement and returns one row for each token in the result. With
 ** fields set as follows:
 **
@@ -38,12 +38,11 @@
 **   pos:     Token offset of token within input.
 **
 */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
-/* clang-format off */
 
-#include "libc/assert.h"
 #include "libc/str/str.h"
+#include "libc/assert.h"
 
 typedef struct Fts3tokTable Fts3tokTable;
 typedef struct Fts3tokCursor Fts3tokCursor;
@@ -421,7 +420,7 @@ static int fts3tokRowidMethod(
 ** Register the fts3tok module with database connection db. Return SQLITE_OK
 ** if successful or an error code if sqlite3_create_module() fails.
 */
-int sqlite3Fts3InitTok(sqlite3 *db, Fts3Hash *pHash){
+int sqlite3Fts3InitTok(sqlite3 *db, Fts3Hash *pHash, void(*xDestroy)(void*)){
   static const sqlite3_module fts3tok_module = {
      0,                           /* iVersion      */
      fts3tokConnectMethod,        /* xCreate       */
@@ -450,7 +449,9 @@ int sqlite3Fts3InitTok(sqlite3 *db, Fts3Hash *pHash){
   };
   int rc;                         /* Return code */
 
-  rc = sqlite3_create_module(db, "fts3tokenize", &fts3tok_module, (void*)pHash);
+  rc = sqlite3_create_module_v2(
+      db, "fts3tokenize", &fts3tok_module, (void*)pHash, xDestroy
+  );
   return rc;
 }
 

@@ -19,7 +19,6 @@
 ** Source files should #include the sqliteInt.h file and let that file
 ** include this one indirectly.
 */
-/* clang-format off */
 
 
 /*

@@ -20,7 +20,6 @@
 ** additional information.
 */
 #ifdef SQLITE_USER_AUTHENTICATION
-/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

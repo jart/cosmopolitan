@@ -18,7 +18,6 @@
 #ifndef SQLITE_VDBE_H
 #define SQLITE_VDBE_H
 #include "libc/stdio/stdio.h"
-/* clang-format off */
 
 /*
 ** A single VDBE is an opaque structure named "Vdbe".  Only routines
@@ -64,7 +63,6 @@ struct VdbeOp {
 #ifdef SQLITE_ENABLE_CURSOR_HINTS
     Expr *pExpr;           /* Used when p4type is P4_EXPR */
 #endif
-    int (*xAdvance)(BtCursor *, int);
   } p4;
 #ifdef SQLITE_ENABLE_EXPLAIN_COMMENTS
   char *zComment;          /* Comment to improve readability */
@@ -115,21 +113,19 @@ typedef struct VdbeOpList VdbeOpList;
 #define P4_COLLSEQ    (-2)  /* P4 is a pointer to a CollSeq structure */
 #define P4_INT32      (-3)  /* P4 is a 32-bit signed integer */
 #define P4_SUBPROGRAM (-4)  /* P4 is a pointer to a SubProgram structure */
-#define P4_ADVANCE    (-5)  /* P4 is a pointer to BtreeNext() or BtreePrev() */
-#define P4_TABLE      (-6)  /* P4 is a pointer to a Table structure */
+#define P4_TABLE      (-5)  /* P4 is a pointer to a Table structure */
 /* Above do not own any resources.  Must free those below */
-#define P4_FREE_IF_LE (-7)
-#define P4_DYNAMIC    (-7)  /* Pointer to memory from sqliteMalloc() */
-#define P4_FUNCDEF    (-8)  /* P4 is a pointer to a FuncDef structure */
-#define P4_KEYINFO    (-9)  /* P4 is a pointer to a KeyInfo structure */
-#define P4_EXPR       (-10) /* P4 is a pointer to an Expr tree */
-#define P4_MEM        (-11) /* P4 is a pointer to a Mem*    structure */
-#define P4_VTAB       (-12) /* P4 is a pointer to an sqlite3_vtab structure */
-#define P4_REAL       (-13) /* P4 is a 64-bit floating point value */
-#define P4_INT64      (-14) /* P4 is a 64-bit signed integer */
-#define P4_INTARRAY   (-15) /* P4 is a vector of 32-bit integers */
-#define P4_FUNCCTX    (-16) /* P4 is a pointer to an sqlite3_context object */
-#define P4_DYNBLOB    (-17) /* Pointer to memory from sqliteMalloc() */
+#define P4_FREE_IF_LE (-6)
+#define P4_DYNAMIC    (-6)  /* Pointer to memory from sqliteMalloc() */
+#define P4_FUNCDEF    (-7)  /* P4 is a pointer to a FuncDef structure */
+#define P4_KEYINFO    (-8)  /* P4 is a pointer to a KeyInfo structure */
+#define P4_EXPR       (-9) /* P4 is a pointer to an Expr tree */
+#define P4_MEM        (-10) /* P4 is a pointer to a Mem*    structure */
+#define P4_VTAB       (-11) /* P4 is a pointer to an sqlite3_vtab structure */
+#define P4_REAL       (-12) /* P4 is a 64-bit floating point value */
+#define P4_INT64      (-13) /* P4 is a 64-bit signed integer */
+#define P4_INTARRAY   (-14) /* P4 is a vector of 32-bit integers */
+#define P4_FUNCCTX    (-15) /* P4 is a pointer to an sqlite3_context object */
 
 /* Error message codes for OP_Halt */
 #define P5_ConstraintNotNull 1
@@ -167,7 +163,7 @@ typedef struct VdbeOpList VdbeOpList;
 ** The makefile scans the vdbe.c source file and creates the "opcodes.h"
 ** header file that defines a number for each opcode used by the VDBE.
 */
-#include "third_party/sqlite3/opcodes.inc"
+#include "third_party/sqlite3/opcodes.h"
 
 /*
 ** Additional non-public SQLITE_PREPARE_* flags
@@ -202,8 +198,10 @@ void sqlite3VdbeEndCoroutine(Vdbe*,int);
 #endif
 #if defined(SQLITE_DEBUG)
   void sqlite3VdbeVerifyAbortable(Vdbe *p, int);
+  void sqlite3VdbeNoJumpsOutsideSubrtn(Vdbe*,int,int,int);
 #else
 # define sqlite3VdbeVerifyAbortable(A,B)
+# define sqlite3VdbeNoJumpsOutsideSubrtn(A,B,C,D)
 #endif
 VdbeOp *sqlite3VdbeAddOpList(Vdbe*, int nOp, VdbeOpList const *aOp,int iLineno);
 #ifndef SQLITE_OMIT_EXPLAIN
@@ -230,6 +228,7 @@ void sqlite3VdbeChangeP1(Vdbe*, int addr, int P1);
 void sqlite3VdbeChangeP2(Vdbe*, int addr, int P2);
 void sqlite3VdbeChangeP3(Vdbe*, int addr, int P3);
 void sqlite3VdbeChangeP5(Vdbe*, u16 P5);
+void sqlite3VdbeTypeofColumn(Vdbe*, int);
 void sqlite3VdbeJumpHere(Vdbe*, int addr);
 void sqlite3VdbeJumpHereOrPopInst(Vdbe*, int addr);
 int sqlite3VdbeChangeToNoop(Vdbe*, int addr);
@@ -244,11 +243,11 @@ void sqlite3VdbeAppendP4(Vdbe*, void *pP4, int p4type);
 void sqlite3VdbeSetP4KeyInfo(Parse*, Index*);
 void sqlite3VdbeUsesBtree(Vdbe*, int);
 VdbeOp *sqlite3VdbeGetOp(Vdbe*, int);
+VdbeOp *sqlite3VdbeGetLastOp(Vdbe*);
 int sqlite3VdbeMakeLabel(Parse*);
 void sqlite3VdbeRunOnlyOnce(Vdbe*);
 void sqlite3VdbeReusable(Vdbe*);
 void sqlite3VdbeDelete(Vdbe*);
-void sqlite3VdbeClearObject(sqlite3*,Vdbe*);
 void sqlite3VdbeMakeReady(Vdbe*,Parse*);
 int sqlite3VdbeFinalize(Vdbe*);
 void sqlite3VdbeResolveLabel(Vdbe*, int);

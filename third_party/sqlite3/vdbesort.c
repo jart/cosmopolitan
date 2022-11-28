@@ -55,7 +55,7 @@
 **                                  is like Close() followed by Init() only
 **                                  much faster.
 **
-** The interfaces above must be called in a particular order.  Write() can
+** The interfaces above must be called in a particular order.  Write() can 
 ** only occur in between Init()/Reset() and Rewind().  Next(), Rowkey(), and
 ** Compare() can only occur in between Rewind() and Close()/Reset(). i.e.
 **
@@ -63,16 +63,16 @@
 **   for each record: Write()
 **   Rewind()
 **     Rowkey()/Compare()
-**   Next()
+**   Next() 
 **   Close()
 **
 ** Algorithm:
 **
-** Records passed to the sorter via calls to Write() are initially held
+** Records passed to the sorter via calls to Write() are initially held 
 ** unsorted in main memory. Assuming the amount of memory used never exceeds
 ** a threshold, when Rewind() is called the set of records is sorted using
 ** an in-memory merge sort. In this case, no temporary files are required
-** and subsequent calls to Rowkey(), Next() and Compare() read records
+** and subsequent calls to Rowkey(), Next() and Compare() read records 
 ** directly from main memory.
 **
 ** If the amount of space used to store records in main memory exceeds the
@@ -82,10 +82,10 @@
 ** of PMAs may be created by merging existing PMAs together - for example
 ** merging two or more level-0 PMAs together creates a level-1 PMA.
 **
-** The threshold for the amount of main memory to use before flushing
+** The threshold for the amount of main memory to use before flushing 
 ** records to a PMA is roughly the same as the limit configured for the
-** page-cache of the main database. Specifically, the threshold is set to
-** the value returned by "PRAGMA main.page_size" multipled by
+** page-cache of the main database. Specifically, the threshold is set to 
+** the value returned by "PRAGMA main.page_size" multipled by 
 ** that returned by "PRAGMA main.cache_size", in bytes.
 **
 ** If the sorter is running in single-threaded mode, then all PMAs generated
@@ -102,7 +102,7 @@
 ** than zero, and (b) worker threads have been enabled at runtime by calling
 ** "PRAGMA threads=N" with some value of N greater than 0.
 **
-** When Rewind() is called, any data remaining in memory is flushed to a
+** When Rewind() is called, any data remaining in memory is flushed to a 
 ** final PMA. So at this point the data is stored in some number of sorted
 ** PMAs within temporary files on disk.
 **
@@ -114,16 +114,16 @@
 **
 ** Or, if running in multi-threaded mode, then a background thread is
 ** launched to merge the existing PMAs. Once the background thread has
-** merged T bytes of data into a single sorted PMA, the main thread
+** merged T bytes of data into a single sorted PMA, the main thread 
 ** begins reading keys from that PMA while the background thread proceeds
 ** with merging the next T bytes of data. And so on.
 **
-** Parameter T is set to half the value of the memory threshold used
+** Parameter T is set to half the value of the memory threshold used 
 ** by Write() above to determine when to create a new PMA.
 **
-** If there are more than SORTER_MAX_MERGE_COUNT PMAs in total when
-** Rewind() is called, then a hierarchy of incremental-merges is used.
-** First, T bytes of data from the first SORTER_MAX_MERGE_COUNT PMAs on
+** If there are more than SORTER_MAX_MERGE_COUNT PMAs in total when 
+** Rewind() is called, then a hierarchy of incremental-merges is used. 
+** First, T bytes of data from the first SORTER_MAX_MERGE_COUNT PMAs on 
 ** disk are merged together. Then T bytes of data from the second set, and
 ** so on, such that no operation ever merges more than SORTER_MAX_MERGE_COUNT
 ** PMAs at a time. This done is to improve locality.
@@ -135,9 +135,8 @@
 ** thread to merge the output of each of the others to a single PMA for
 ** the main thread to read from.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/sqliteInt.h"
 #include "third_party/sqlite3/vdbeInt.inc"
-/* clang-format off */
 
 /* 
 ** If SQLITE_DEBUG_SORTER_THREADS is defined, this module outputs various
@@ -961,7 +960,8 @@ int sqlite3VdbeSorterInit(
   }
 #endif
 
-  assert( pCsr->pKeyInfo && pCsr->pBtx==0 );
+  assert( pCsr->pKeyInfo );
+  assert( !pCsr->isEphemeral );
   assert( pCsr->eCurType==CURTYPE_SORTER );
   szKeyInfo = sizeof(KeyInfo) + (pCsr->pKeyInfo->nKeyField-1)*sizeof(CollSeq*);
   sz = sizeof(VdbeSorter) + nWorker * sizeof(SortSubtask);
@@ -1074,8 +1074,9 @@ static void vdbeSorterWorkDebug(SortSubtask *pTask, const char *zEvent){
   fprintf(stderr, "%lld:%d %s\n", t, iTask, zEvent);
 }
 static void vdbeSorterRewindDebug(const char *zEvent){
-  i64 t;
-  sqlite3OsCurrentTimeInt64(sqlite3_vfs_find(0), &t);
+  i64 t = 0;
+  sqlite3_vfs *pVfs = sqlite3_vfs_find(0);
+  if( ALWAYS(pVfs) ) sqlite3OsCurrentTimeInt64(pVfs, &t);
   fprintf(stderr, "%lld:X %s\n", t, zEvent);
 }
 static void vdbeSorterPopulateDebug(
@@ -1289,7 +1290,7 @@ static void vdbeSorterExtendFile(sqlite3 *db, sqlite3_file *pFd, i64 nByte){
     sqlite3OsFileControlHint(pFd, SQLITE_FCNTL_CHUNK_SIZE, &chunksize);
     sqlite3OsFileControlHint(pFd, SQLITE_FCNTL_SIZE_HINT, &nByte);
     sqlite3OsFetch(pFd, 0, (int)nByte, &p);
-    sqlite3OsUnfetch(pFd, 0, p);
+    if( p ) sqlite3OsUnfetch(pFd, 0, p);
   }
 }
 #else
@@ -2007,6 +2008,7 @@ static int vdbeIncrMergerNew(
     vdbeMergeEngineFree(pMerger);
     rc = SQLITE_NOMEM_BKPT;
   }
+  assert( *ppOut!=0 || rc!=SQLITE_OK );
   return rc;
 }
 

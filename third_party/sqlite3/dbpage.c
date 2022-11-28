@@ -13,7 +13,7 @@
 ** This file contains an implementation of the "sqlite_dbpage" virtual table.
 **
 ** The sqlite_dbpage virtual table is used to read or write whole raw
-** pages of the database file.  The pager interface is used so that
+** pages of the database file.  The pager interface is used so that 
 ** uncommitted changes and changes recorded in the WAL file are correctly
 ** retrieved.
 **
@@ -30,12 +30,10 @@
 ** value must be a BLOB which is the correct page size, otherwise the
 ** update fails.  Rows may not be deleted or inserted.
 */
-#include "third_party/sqlite3/sqliteInt.inc" /* Requires access to internal data inc */
 
-/* clang-format off */
-
-#if (defined(SQLITE_ENABLE_DBPAGE_VTAB) || defined(SQLITE_TEST)) && \
-    !defined(SQLITE_OMIT_VIRTUALTABLE)
+#include "third_party/sqlite3/sqliteInt.h"   /* Requires access to internal data structures */
+#if (defined(SQLITE_ENABLE_DBPAGE_VTAB) || defined(SQLITE_TEST)) \
+    && !defined(SQLITE_OMIT_VIRTUALTABLE)
 
 typedef struct DbpageTable DbpageTable;
 typedef struct DbpageCursor DbpageCursor;
@@ -158,6 +156,7 @@ static int dbpageBestIndex(sqlite3_vtab *tab, sqlite3_index_info *pIdxInfo){
   ){
     pIdxInfo->orderByConsumed = 1;
   }
+  sqlite3VtabUsesAllSchemas(pIdxInfo);
   return SQLITE_OK;
 }
 
@@ -275,12 +274,18 @@ static int dbpageColumn(
     }
     case 1: {           /* data */
       DbPage *pDbPage = 0;
-      rc = sqlite3PagerGet(pCsr->pPager, pCsr->pgno, (DbPage**)&pDbPage, 0);
-      if( rc==SQLITE_OK ){
-        sqlite3_result_blob(ctx, sqlite3PagerGetData(pDbPage), pCsr->szPage,
-                            SQLITE_TRANSIENT);
+      if( pCsr->pgno==((PENDING_BYTE/pCsr->szPage)+1) ){
+        /* The pending byte page. Assume it is zeroed out. Attempting to
+        ** request this page from the page is an SQLITE_CORRUPT error. */
+        sqlite3_result_zeroblob(ctx, pCsr->szPage);
+      }else{
+        rc = sqlite3PagerGet(pCsr->pPager, pCsr->pgno, (DbPage**)&pDbPage, 0);
+        if( rc==SQLITE_OK ){
+          sqlite3_result_blob(ctx, sqlite3PagerGetData(pDbPage), pCsr->szPage,
+              SQLITE_TRANSIENT);
+        }
+        sqlite3PagerUnref(pDbPage);
       }
-      sqlite3PagerUnref(pDbPage);
       break;
     }
     default: {          /* schema */
@@ -289,7 +294,7 @@ static int dbpageColumn(
       break;
     }
   }
-  return SQLITE_OK;
+  return rc;
 }
 
 static int dbpageRowid(sqlite3_vtab_cursor *pCursor, sqlite_int64 *pRowid){
@@ -335,7 +340,7 @@ static int dbpageUpdate(
     goto update_fail;
   }
   pBt = pTab->db->aDb[iDb].pBt;
-  if( pgno<1 || pBt==0 || pgno>(int)sqlite3BtreeLastPage(pBt) ){
+  if( pgno<1 || pBt==0 || pgno>sqlite3BtreeLastPage(pBt) ){
     zErr = "bad page number";
     goto update_fail;
   }
@@ -349,11 +354,12 @@ static int dbpageUpdate(
   pPager = sqlite3BtreePager(pBt);
   rc = sqlite3PagerGet(pPager, pgno, (DbPage**)&pDbPage, 0);
   if( rc==SQLITE_OK ){
-    rc = sqlite3PagerWrite(pDbPage);
-    if( rc==SQLITE_OK ){
-      memcpy(sqlite3PagerGetData(pDbPage),
-             sqlite3_value_blob(argv[3]),
-             szPage);
+    const void *pData = sqlite3_value_blob(argv[3]);
+    assert( pData!=0 || pTab->db->mallocFailed );
+    if( pData
+     && (rc = sqlite3PagerWrite(pDbPage))==SQLITE_OK
+    ){
+      memcpy(sqlite3PagerGetData(pDbPage), pData, szPage);
     }
   }
   sqlite3PagerUnref(pDbPage);
@@ -373,11 +379,12 @@ static int dbpageBegin(sqlite3_vtab *pVtab){
   DbpageTable *pTab = (DbpageTable *)pVtab;
   sqlite3 *db = pTab->db;
   int i;
-  for(i=0; i<db->nDb; i++){
+  int rc = SQLITE_OK;
+  for(i=0; rc==SQLITE_OK && i<db->nDb; i++){
     Btree *pBt = db->aDb[i].pBt;
-    if( pBt ) sqlite3BtreeBeginTrans(pBt, 1, 0);
+    if( pBt ) rc = sqlite3BtreeBeginTrans(pBt, 1, 0);
   }
-  return SQLITE_OK;
+  return rc;
 }
 
 

@@ -16,10 +16,7 @@
 ** separating it out, the code will be automatically omitted from
 ** static links that do not use it.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-
-/* clang-format off */
-
+#include "third_party/sqlite3/sqliteInt.h"
 #ifndef SQLITE_OMIT_COMPLETE
 
 /*

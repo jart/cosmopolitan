@@ -15,24 +15,48 @@
 ** Random numbers are used by some of the database backends in order
 ** to generate random integer keys for tables or random filenames.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 
 /* All threads share a single random number generator.
 ** This structure is the current state of the generator.
 */
 static SQLITE_WSD struct sqlite3PrngType {
-  unsigned char isInit;          /* True if initialized */
-  unsigned char i, j;            /* State variables */
-  unsigned char s[256];          /* State variables */
+  u32 s[16];                 /* 64 bytes of chacha20 state */
+  u8 out[64];                /* Output bytes */
+  u8 n;                      /* Output bytes remaining */
 } sqlite3Prng;
+
+
+/* The RFC-7539 ChaCha20 block function
+*/
+#define ROTL(a,b) (((a) << (b)) | ((a) >> (32 - (b))))
+#define QR(a, b, c, d) ( \
+    a += b, d ^= a, d = ROTL(d,16), \
+    c += d, b ^= c, b = ROTL(b,12), \
+    a += b, d ^= a, d = ROTL(d, 8), \
+    c += d, b ^= c, b = ROTL(b, 7))
+static void chacha_block(u32 *out, const u32 *in){
+  int i;
+  u32 x[16];
+  memcpy(x, in, 64);
+  for(i=0; i<10; i++){
+    QR(x[0], x[4], x[ 8], x[12]);
+    QR(x[1], x[5], x[ 9], x[13]);
+    QR(x[2], x[6], x[10], x[14]);
+    QR(x[3], x[7], x[11], x[15]);
+    QR(x[0], x[5], x[10], x[15]);
+    QR(x[1], x[6], x[11], x[12]);
+    QR(x[2], x[7], x[ 8], x[13]);
+    QR(x[3], x[4], x[ 9], x[14]);
+  }
+  for(i=0; i<16; i++) out[i] = x[i]+in[i];
+}
 
 /*
 ** Return N random bytes.
 */
 void sqlite3_randomness(int N, void *pBuf){
-  unsigned char t;
   unsigned char *zBuf = pBuf;
 
   /* The "wsdPrng" macro will resolve to the pseudo-random number generator
@@ -62,48 +86,46 @@ void sqlite3_randomness(int N, void *pBuf){
 
   sqlite3_mutex_enter(mutex);
   if( N<=0 || pBuf==0 ){
-    wsdPrng.isInit = 0;
+    wsdPrng.s[0] = 0;
     sqlite3_mutex_leave(mutex);
     return;
   }
 
   /* Initialize the state of the random number generator once,
-  ** the first time this routine is called.  The seed value does
-  ** not need to contain a lot of randomness since we are not
-  ** trying to do secure encryption or anything like that...
-  **
-  ** Nothing in this file or anywhere else in SQLite does any kind of
-  ** encryption.  The RC4 algorithm is being used as a PRNG (pseudo-random
-  ** number generator) not as an encryption device.
+  ** the first time this routine is called.
   */
-  if( !wsdPrng.isInit ){
-    int i;
-    char k[256];
-    wsdPrng.j = 0;
-    wsdPrng.i = 0;
-    sqlite3OsRandomness(sqlite3_vfs_find(0), 256, k);
-    for(i=0; i<256; i++){
-      wsdPrng.s[i] = (u8)i;
+  if( wsdPrng.s[0]==0 ){
+    sqlite3_vfs *pVfs = sqlite3_vfs_find(0);
+    static const u32 chacha20_init[] = {
+      0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+    };
+    memcpy(&wsdPrng.s[0], chacha20_init, 16);
+    if( NEVER(pVfs==0) ){
+      memset(&wsdPrng.s[4], 0, 44);
+    }else{
+      sqlite3OsRandomness(pVfs, 44, (char*)&wsdPrng.s[4]);
     }
-    for(i=0; i<256; i++){
-      wsdPrng.j += wsdPrng.s[i] + k[i];
-      t = wsdPrng.s[wsdPrng.j];
-      wsdPrng.s[wsdPrng.j] = wsdPrng.s[i];
-      wsdPrng.s[i] = t;
-    }
-    wsdPrng.isInit = 1;
+    wsdPrng.s[15] = wsdPrng.s[12];
+    wsdPrng.s[12] = 0;
+    wsdPrng.n = 0;
   }
 
   assert( N>0 );
-  do{
-    wsdPrng.i++;
-    t = wsdPrng.s[wsdPrng.i];
-    wsdPrng.j += t;
-    wsdPrng.s[wsdPrng.i] = wsdPrng.s[wsdPrng.j];
-    wsdPrng.s[wsdPrng.j] = t;
-    t += wsdPrng.s[wsdPrng.i];
-    *(zBuf++) = wsdPrng.s[t];
-  }while( --N );
+  while( 1 /* exit by break */ ){
+    if( N<=wsdPrng.n ){
+      memcpy(zBuf, &wsdPrng.out[wsdPrng.n-N], N);
+      wsdPrng.n -= N;
+      break;
+    }
+    if( wsdPrng.n>0 ){
+      memcpy(zBuf, wsdPrng.out, wsdPrng.n);
+      N -= wsdPrng.n;
+      zBuf += wsdPrng.n;
+    }
+    wsdPrng.s[12]++;
+    chacha_block((u32*)wsdPrng.out, wsdPrng.s);
+    wsdPrng.n = 64;
+  }
   sqlite3_mutex_leave(mutex);
 }
 

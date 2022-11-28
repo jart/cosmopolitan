@@ -15,7 +15,6 @@
 */
 #ifndef SQLITE_HWTIME_H
 #define SQLITE_HWTIME_H
-/* clang-format off */
 
 /*
 ** The following routine only works on pentium-class (or newer) processors.

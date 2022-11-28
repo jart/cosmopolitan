@@ -29,6 +29,7 @@
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/s.h"
+#include "third_party/sqlite3/sqlite3.h"
 #include "third_party/sqlite3/sqlite3ext.h"
 #include "third_party/zlib/zlib.h"
 // clang-format off

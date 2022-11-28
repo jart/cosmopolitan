@@ -25,9 +25,7 @@
 ** of multiple cores can do so, while also allowing applications to stay
 ** single-threaded if desired.
 */
-#include "libc/thread/thread.h"
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 #if SQLITE_MAX_WORKER_THREADS>0
 
@@ -35,6 +33,7 @@
 #if SQLITE_OS_UNIX && defined(SQLITE_MUTEX_PTHREADS) && SQLITE_THREADSAFE>0
 
 #define SQLITE_THREADS_IMPLEMENTED 1  /* Prevent the single-thread code below */
+#include "libc/thread/thread.h"
 
 /* A running thread */
 struct SQLiteThread {

@@ -12,7 +12,6 @@
 ** Implementation of the full-text-search tokenizer that implements
 ** a Porter stemmer.
 */
-/* clang-format off */
 
 /*
 ** The code in this file is only compiled if:
@@ -23,14 +22,15 @@
 **     * The FTS3 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS3 is defined).
 */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/fts3_tokenizer.inc"
+
+#include "third_party/sqlite3/fts3_tokenizer.h"
 
 /*
 ** Class derived from sqlite3_tokenizer
@@ -621,7 +621,7 @@ static int porterNext(
       if( n>c->nAllocated ){
         char *pNew;
         c->nAllocated = n+20;
-        pNew = sqlite3_realloc(c->zToken, c->nAllocated);
+        pNew = sqlite3_realloc64(c->zToken, c->nAllocated);
         if( !pNew ) return SQLITE_NOMEM;
         c->zToken = pNew;
       }

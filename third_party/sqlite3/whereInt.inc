@@ -16,7 +16,6 @@
 */
 #ifndef SQLITE_WHEREINT_H
 #define SQLITE_WHEREINT_H
-/* clang-format off */
 
 
 /* Forward references
@@ -33,6 +32,28 @@ typedef struct WhereLoopBuilder WhereLoopBuilder;
 typedef struct WhereScan WhereScan;
 typedef struct WhereOrCost WhereOrCost;
 typedef struct WhereOrSet WhereOrSet;
+typedef struct WhereMemBlock WhereMemBlock;
+typedef struct WhereRightJoin WhereRightJoin;
+
+/*
+** This object is a header on a block of allocated memory that will be
+** automatically freed when its WInfo oject is destructed.
+*/
+struct WhereMemBlock {
+  WhereMemBlock *pNext;      /* Next block in the chain */
+  u64 sz;                    /* Bytes of space */
+};
+
+/*
+** Extra information attached to a WhereLevel that is a RIGHT JOIN.
+*/
+struct WhereRightJoin {
+  int iMatch;          /* Cursor used to determine prior matched rows */
+  int regBloom;        /* Bloom filter for iRJMatch */
+  int regReturn;       /* Return register for the interior subroutine */
+  int addrSubrtn;      /* Starting address for the interior subroutine */
+  int endSubrtn;       /* The last opcode in the interior subroutine */
+};
 
 /*
 ** This object contains information needed to implement a single nested
@@ -65,6 +86,8 @@ struct WhereLevel {
   u32 iLikeRepCntr;     /* LIKE range processing counter register (times 2) */
   int addrLikeRep;      /* LIKE range processing address */
 #endif
+  int regFilter;        /* Bloom filter */
+  WhereRightJoin *pRJ;  /* Extra information for RIGHT JOIN */
   u8 iFrom;             /* Which entry in the FROM clause */
   u8 op, p3, p5;        /* Opcode, P3 & P5 of the opcode that ends the loop */
   int p1, p2;           /* Operands of the opcode used to end the loop */
@@ -79,7 +102,7 @@ struct WhereLevel {
         u8 eEndLoopOp;         /* IN Loop terminator. OP_Next or OP_Prev */
       } *aInLoop;           /* Information about each nested IN operator */
     } in;                 /* Used when pWLoop->wsFlags&WHERE_IN_ABLE */
-    Index *pCovidx;       /* Possible covering index for WHERE_MULTI_OR */
+    Index *pCoveringIdx;  /* Possible covering index for WHERE_MULTI_OR */
   } u;
   struct WhereLoop *pWLoop;  /* The selected WhereLoop object */
   Bitmask notReady;          /* FROM entries not usable at this level */
@@ -123,10 +146,12 @@ struct WhereLoop {
     } btree;
     struct {               /* Information for virtual tables */
       int idxNum;            /* Index number */
-      u8 needFree;           /* True if sqlite3_free(idxStr) is needed */
+      u32 needFree : 1;      /* True if sqlite3_free(idxStr) is needed */
+      u32 bOmitOffset : 1;   /* True to let virtual table handle offset */
       i8 isOrdered;          /* True if satisfies ORDER BY */
       u16 omitMask;          /* Terms that may be omitted */
       char *idxStr;          /* Index identifier string */
+      u32 mHandleIn;         /* Terms to handle as IN(...) instead of == */
     } vtab;
   } u;
   u32 wsFlags;          /* WHERE_* flags describing the plan */
@@ -270,7 +295,7 @@ struct WhereTerm {
 #define TERM_COPIED     0x0008 /* Has a child */
 #define TERM_ORINFO     0x0010 /* Need to free the WhereTerm.u.pOrInfo object */
 #define TERM_ANDINFO    0x0020 /* Need to free the WhereTerm.u.pAndInfo obj */
-#define TERM_OR_OK      0x0040 /* Used during OR-clause processing */
+#define TERM_OK         0x0040 /* Used during OR-clause processing */
 #define TERM_VNULL      0x0080 /* Manufactured x>NULL or x<=NULL term */
 #define TERM_LIKEOPT    0x0100 /* Virtual terms from the LIKE optimization */
 #define TERM_LIKECOND   0x0200 /* Conditionally this LIKE operator term */
@@ -283,6 +308,7 @@ struct WhereTerm {
 #else
 #  define TERM_HIGHTRUTH  0      /* Only used with STAT4 */
 #endif
+#define TERM_SLICE      0x8000 /* One slice of a row-value/vector comparison */
 
 /*
 ** An instance of the WhereScan object is used as an iterator for locating
@@ -293,11 +319,11 @@ struct WhereScan {
   WhereClause *pWC;          /* WhereClause currently being scanned */
   const char *zCollName;     /* Required collating sequence, if not NULL */
   Expr *pIdxExpr;            /* Search for this index expression */
-  char idxaff;               /* Must match this affinity, if zCollName!=NULL */
-  unsigned char nEquiv;      /* Number of entries in aEquiv[] */
-  unsigned char iEquiv;      /* Next unused slot in aEquiv[] */
-  u32 opMask;                /* Acceptable operators */
   int k;                     /* Resume scanning at this->pWC->a[this->k] */
+  u32 opMask;                /* Acceptable operators */
+  char idxaff;               /* Must match this affinity, if zCollName!=NULL */
+  unsigned char iEquiv;      /* Current slot in aiCur[] and aiColumn[] */
+  unsigned char nEquiv;      /* Number of entries in aiCur[] and aiColumn[] */
   int aiCur[11];             /* Cursors in the equivalence class */
   i16 aiColumn[11];          /* Corresponding column number in the eq-class */
 };
@@ -321,6 +347,7 @@ struct WhereClause {
   u8 hasOr;                /* True if any a[].eOperator is WO_OR */
   int nTerm;               /* Number of terms */
   int nSlot;               /* Number of entries in a[] */
+  int nBase;               /* Number of terms through the last non-Virtual */
   WhereTerm *a;            /* Each a[] describes a term of the WHERE cluase */
 #if defined(SQLITE_SMALL_STACK)
   WhereTerm aStatic[1];    /* Initial static space for a[] */
@@ -351,7 +378,7 @@ struct WhereAndInfo {
 ** between VDBE cursor numbers and bits of the bitmasks in WhereTerm.
 **
 ** The VDBE cursor numbers are small integers contained in 
-** SrcList_item.iCursor and Expr.iTable fields.  For any given WHERE 
+** SrcItem.iCursor and Expr.iTable fields.  For any given WHERE 
 ** clause, the cursor numbers might not begin with 0 and they might
 ** contain gaps in the numbering sequence.  But we want to make maximum
 ** use of the bits in our bitmasks.  This structure provides a mapping
@@ -379,18 +406,12 @@ struct WhereMaskSet {
 };
 
 /*
-** Initialize a WhereMaskSet object
-*/
-#define initMaskSet(P)  (P)->n=0
-
-/*
 ** This object is a convenience wrapper holding all information needed
 ** to construct WhereLoop objects for a particular query.
 */
 struct WhereLoopBuilder {
   WhereInfo *pWInfo;        /* Information about this WHERE */
   WhereClause *pWC;         /* WHERE clause terms */
-  ExprList *pOrderBy;       /* ORDER BY clause */
   WhereLoop *pNew;          /* Template WhereLoop */
   WhereOrSet *pOrSet;       /* Record best loops here, if not NULL */
 #ifdef SQLITE_ENABLE_STAT4
@@ -429,20 +450,6 @@ struct WhereLoopBuilder {
 #endif
 
 /*
-** Each instance of this object records a change to a single node
-** in an expression tree to cause that node to point to a column
-** of an index rather than an expression or a virtual column.  All
-** such transformations need to be undone at the end of WHERE clause
-** processing.
-*/
-typedef struct WhereExprMod WhereExprMod;
-struct WhereExprMod {
-  WhereExprMod *pNext;  /* Next translation on a list of them all */
-  Expr *pExpr;          /* The Expr node that was transformed */
-  Expr orig;            /* Original value of the Expr node */
-};
-
-/*
 ** The WHERE clause processing routine has two halves.  The
 ** first part does the start of the WHERE loop and the second
 ** half does the tail of the WHERE loop.  An instance of
@@ -457,7 +464,10 @@ struct WhereInfo {
   SrcList *pTabList;        /* List of tables in the join */
   ExprList *pOrderBy;       /* The ORDER BY clause or NULL */
   ExprList *pResultSet;     /* Result set of the query */
+#if WHERETRACE_ENABLED
   Expr *pWhere;             /* The complete WHERE clause */
+#endif
+  Select *pSelect;          /* The entire SELECT statement containing WHERE */
   int aiCurOnePass[2];      /* OP_OpenWrite cursors for the ONEPASS opt */
   int iContinue;            /* Jump here to continue with next record */
   int iBreak;               /* Jump here to break out of the loop */
@@ -476,7 +486,7 @@ struct WhereInfo {
   int iTop;                 /* The very beginning of the WHERE loop */
   int iEndWhere;            /* End of the WHERE clause itself */
   WhereLoop *pLoops;        /* List of all WhereLoop objects */
-  WhereExprMod *pExprMods;  /* Expression modifications */
+  WhereMemBlock *pMemToFree;/* Memory to free when this object destroyed */
   Bitmask revMask;          /* Mask of ORDER BY terms that need reversing */
   WhereClause sWC;          /* Decomposition of the WHERE clause */
   WhereMaskSet sMaskSet;    /* Map cursor numbers to bitmasks */
@@ -502,6 +512,8 @@ WhereTerm *sqlite3WhereFindTerm(
   u32 op,               /* Mask of WO_xx values describing operator */
   Index *pIdx           /* Must be compatible with this index, if not NULL */
 );
+void *sqlite3WhereMalloc(WhereInfo *pWInfo, u64 nByte);
+void *sqlite3WhereRealloc(WhereInfo *pWInfo, void *pOld, u64 nByte);
 
 /* wherecode.c: */
 #ifndef SQLITE_OMIT_EXPLAIN
@@ -511,8 +523,14 @@ int sqlite3WhereExplainOneScan(
   WhereLevel *pLevel,             /* Scan to write OP_Explain opcode for */
   u16 wctrlFlags                  /* Flags passed to sqlite3WhereBegin() */
 );
+int sqlite3WhereExplainBloomFilter(
+  const Parse *pParse,            /* Parse context */
+  const WhereInfo *pWInfo,        /* WHERE clause */
+  const WhereLevel *pLevel        /* Bloom filter on this level */
+);
 #else
 # define sqlite3WhereExplainOneScan(u,v,w,x) 0
+# define sqlite3WhereExplainBloomFilter(u,v,w) 0
 #endif /* SQLITE_OMIT_EXPLAIN */
 #ifdef SQLITE_ENABLE_STMT_SCANSTATUS
 void sqlite3WhereAddScanStatus(
@@ -532,11 +550,17 @@ Bitmask sqlite3WhereCodeOneLoopStart(
   WhereLevel *pLevel,  /* The current level pointer */
   Bitmask notReady     /* Which tables are currently available */
 );
+SQLITE_NOINLINE void sqlite3WhereRightJoinLoop(
+  WhereInfo *pWInfo,
+  int iLevel,
+  WhereLevel *pLevel
+);
 
 /* whereexpr.c: */
 void sqlite3WhereClauseInit(WhereClause*,WhereInfo*);
 void sqlite3WhereClauseClear(WhereClause*);
 void sqlite3WhereSplit(WhereClause*,Expr*,u8);
+void sqlite3WhereAddLimit(WhereClause*, Select*);
 Bitmask sqlite3WhereExprUsage(WhereMaskSet*, Expr*);
 Bitmask sqlite3WhereExprUsageNN(WhereMaskSet*, Expr*);
 Bitmask sqlite3WhereExprListUsage(WhereMaskSet*, ExprList*);
@@ -573,8 +597,9 @@ void sqlite3WhereTabFuncArgs(Parse*, SrcItem*, WhereClause*);
 #define WO_AND    0x0400       /* Two or more AND-connected terms */
 #define WO_EQUIV  0x0800       /* Of the form A==B, both columns */
 #define WO_NOOP   0x1000       /* This term does not restrict search space */
+#define WO_ROWVAL 0x2000       /* A row-value term */
 
-#define WO_ALL    0x1fff       /* Mask of all possible WO_* values */
+#define WO_ALL    0x3fff       /* Mask of all possible WO_* values */
 #define WO_SINGLE 0x01ff       /* Mask of all non-compound WO_* values */
 
 /*
@@ -604,5 +629,10 @@ void sqlite3WhereTabFuncArgs(Parse*, SrcItem*, WhereClause*);
 #define WHERE_IN_EARLYOUT  0x00040000  /* Perhaps quit IN loops early */
 #define WHERE_BIGNULL_SORT 0x00080000  /* Column nEq of index is BIGNULL */
 #define WHERE_IN_SEEKSCAN  0x00100000  /* Seek-scan optimization for IN */
+#define WHERE_TRANSCONS    0x00200000  /* Uses a transitive constraint */
+#define WHERE_BLOOMFILTER  0x00400000  /* Consider using a Bloom-filter */
+#define WHERE_SELFCULL     0x00800000  /* nOut reduced by extra WHERE terms */
+#define WHERE_OMIT_OFFSET  0x01000000  /* Set offset counter to zero */
+#define WHERE_VIEWSCAN     0x02000000  /* A full-scan of a VIEW or subquery */
 
 #endif /* !defined(SQLITE_WHEREINT_H) */

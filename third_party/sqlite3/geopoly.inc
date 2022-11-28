@@ -27,11 +27,11 @@
 # define GEODEBUG(X)
 #endif
 
-#ifndef JSON_NULL   /* The following stuff repeats things found in json1 */
-/*
-** Versions of isspace(), isalnum() and isdigit() to which it is safe
-** to pass signed char values.
-*/
+#if defined(__GNUC__) && !defined(__llvm__)
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
+/* Character class routines */
 #ifdef sqlite3Isdigit
    /* Use the SQLite core versions if this routine is part of the
    ** SQLite amalgamation */
@@ -39,13 +39,14 @@
 #  define safe_isalnum(x)  sqlite3Isalnum(x)
 #  define safe_isxdigit(x) sqlite3Isxdigit(x)
 #else
-/* Use the standard library for separate compilation */
+   /* Use the standard library for separate compilation */
 #include "libc/str/str.h" /* amalgamator: keep */
-#define safe_isdigit(x)  isdigit((unsigned char)(x))
-#define safe_isalnum(x)  isalnum((unsigned char)(x))
-#define safe_isxdigit(x) isxdigit((unsigned char)(x))
+#  define safe_isdigit(x)  isdigit((unsigned char)(x))
+#  define safe_isalnum(x)  isalnum((unsigned char)(x))
+#  define safe_isxdigit(x) isxdigit((unsigned char)(x))
 #endif
 
+#ifndef JSON_NULL   /* The following stuff repeats things found in json1 */
 /*
 ** Growing our own isspace() routine this way is twice as fast as
 ** the library isspace() function.
@@ -68,7 +69,7 @@ static const char geopolyIsSpace[] = {
   0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 0, 0, 0, 0, 0,
 };
-#define safe_isspace(x) (geopolyIsSpace[(unsigned char)x])
+#define fast_isspace(x) (geopolyIsSpace[(unsigned char)x])
 #endif /* JSON NULL - back to original code */
 
 /* Compiler and version */
@@ -157,7 +158,7 @@ static void geopolySwab32(unsigned char *a){
 
 /* Skip whitespace.  Return the next non-whitespace character. */
 static char geopolySkipSpace(GeoParse *p){
-  while( safe_isspace(p->z[0]) ) p->z++;
+  while( fast_isspace(p->z[0]) ) p->z++;
   return p->z[0];
 }
 
@@ -306,11 +307,16 @@ static GeoPoly *geopolyFuncParam(
 ){
   GeoPoly *p = 0;
   int nByte;
+  testcase( pCtx==0 );
   if( sqlite3_value_type(pVal)==SQLITE_BLOB
    && (nByte = sqlite3_value_bytes(pVal))>=(4+6*sizeof(GeoCoord))
   ){
     const unsigned char *a = sqlite3_value_blob(pVal);
     int nVertex;
+    if( a==0 ){
+      if( pCtx ) sqlite3_result_error_nomem(pCtx);
+      return 0;
+    }
     nVertex = (a[1]<<16) + (a[2]<<8) + a[3];
     if( (a[0]==0 || a[0]==1)
      && (nVertex*2*sizeof(GeoCoord) + 4)==(unsigned int)nByte
@@ -684,7 +690,7 @@ static GeoPoly *geopolyBBox(
       aCoord[2].f = mnY;
       aCoord[3].f = mxY;
     }
-  }else{
+  }else if( aCoord ){
     memset(aCoord, 0, sizeof(RtreeCoord)*4);
   }
   return pOut;
@@ -1135,11 +1141,11 @@ static int geopolyOverlap(GeoPoly *p1, GeoPoly *p2){
     }else{
       /* Remove a segment */
       if( pActive==pThisEvent->pSeg ){
-        pActive = pActive->pNext;
+        pActive = ALWAYS(pActive) ? pActive->pNext : 0;
       }else{
         for(pSeg=pActive; pSeg; pSeg=pSeg->pNext){
           if( pSeg->pNext==pThisEvent->pSeg ){
-            pSeg->pNext = pSeg->pNext->pNext;
+            pSeg->pNext = ALWAYS(pSeg->pNext) ? pSeg->pNext->pNext : 0;
             break;
           }
         }
@@ -1383,6 +1389,7 @@ static int geopolyFilter(
       RtreeCoord bbox[4];
       RtreeConstraint *p;
       assert( argc==1 );
+      assert( argv[0]!=0 );
       geopolyBBox(0, argv[0], bbox, &rc);
       if( rc ){
         goto geopoly_filter_end;
@@ -1610,6 +1617,7 @@ static int geopolyUpdate(
         || !sqlite3_value_nochange(aData[2])  /* UPDATE _shape */
         || oldRowid!=newRowid)                /* Rowid change */
   ){
+    assert( aData[2]!=0 );
     geopolyBBox(0, aData[2], cell.aCoord, &rc);
     if( rc ){
       if( rc==SQLITE_ERROR ){
@@ -1692,7 +1700,7 @@ static int geopolyUpdate(
       sqlite3_free(p);
       nChange = 1;
     }
-    for(jj=1; jj<pRtree->nAux; jj++){
+    for(jj=1; jj<nData-2; jj++){
       nChange++;
       sqlite3_bind_value(pUp, jj+2, aData[jj+2]);
     }

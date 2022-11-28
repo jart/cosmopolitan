@@ -10,22 +10,21 @@
 **
 *************************************************************************
 **
-** This file contains code to support the concept of "benign"
+** This file contains code to support the concept of "benign" 
 ** malloc failures (when the xMalloc() or xRealloc() method of the
 ** sqlite3_mem_methods structure fails to allocate a block of memory
-** and returns 0).
+** and returns 0). 
 **
 ** Most malloc failures are non-benign. After they occur, SQLite
 ** abandons the current operation and returns an error code (usually
 ** SQLITE_NOMEM) to the user. However, sometimes a fault is not necessarily
-** fatal. For example, if a malloc fails while resizing a hash table, this
-** is completely recoverable simply by not carrying out the resize. The
-** hash table will continue to function normally.  So a malloc failure
+** fatal. For example, if a malloc fails while resizing a hash table, this 
+** is completely recoverable simply by not carrying out the resize. The 
+** hash table will continue to function normally.  So a malloc failure 
 ** during a hash table resize is a benign fault.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
 
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_UNTESTABLE
 

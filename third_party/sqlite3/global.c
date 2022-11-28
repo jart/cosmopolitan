@@ -12,8 +12,7 @@
 **
 ** This file contains definitions of global variables and constants.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* An array to map all upper-case characters into their corresponding
 ** lower-case character. 
@@ -38,7 +37,7 @@ const unsigned char sqlite3UpperToLower[] = {
     198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,
     216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,
     234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,
-    252,253,254,255
+    252,253,254,255,
 #endif
 #ifdef SQLITE_EBCDIC
       0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, /* 0x */
@@ -58,7 +57,35 @@ const unsigned char sqlite3UpperToLower[] = {
     224,225,162,163,164,165,166,167,168,169,234,235,236,237,238,239, /* Ex */
     240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255, /* Fx */
 #endif
+/* All of the upper-to-lower conversion data is above.  The following
+** 18 integers are completely unrelated.  They are appended to the
+** sqlite3UpperToLower[] array to avoid UBSAN warnings.  Here's what is
+** going on:
+**
+** The SQL comparison operators (<>, =, >, <=, <, and >=) are implemented
+** by invoking sqlite3MemCompare(A,B) which compares values A and B and
+** returns negative, zero, or positive if A is less then, equal to, or
+** greater than B, respectively.  Then the true false results is found by
+** consulting sqlite3aLTb[opcode], sqlite3aEQb[opcode], or 
+** sqlite3aGTb[opcode] depending on whether the result of compare(A,B)
+** is negative, zero, or positive, where opcode is the specific opcode.
+** The only works because the comparison opcodes are consecutive and in
+** this order: NE EQ GT LE LT GE.  Various assert()s throughout the code
+** ensure that is the case.
+**
+** These elements must be appended to another array.  Otherwise the
+** index (here shown as [256-OP_Ne]) would be out-of-bounds and thus
+** be undefined behavior.  That's goofy, but the C-standards people thought
+** it was a good idea, so here we are.
+*/
+/* NE  EQ  GT  LE  LT  GE  */
+   1,  0,  0,  1,  1,  0,  /* aLTb[]: Use when compare(A,B) less than zero */
+   0,  1,  0,  1,  0,  1,  /* aEQb[]: Use when compare(A,B) equals zero */
+   1,  0,  1,  0,  0,  1   /* aGTb[]: Use when compare(A,B) greater than zero*/
 };
+const unsigned char *sqlite3aLTb = &sqlite3UpperToLower[256-OP_Ne];
+const unsigned char *sqlite3aEQb = &sqlite3UpperToLower[256+6-OP_Ne];
+const unsigned char *sqlite3aGTb = &sqlite3UpperToLower[256+12-OP_Ne];
 
 /*
 ** The following 256 byte lookup table is used to support SQLites built-in
@@ -252,16 +279,20 @@ SQLITE_WSD struct Sqlite3Config sqlite3Config = {
    0,                         /* xVdbeBranch */
    0,                         /* pVbeBranchArg */
 #endif
-#ifdef SQLITE_ENABLE_DESERIALIZE
+#ifndef SQLITE_OMIT_DESERIALIZE
    SQLITE_MEMDB_DEFAULT_MAXSIZE,   /* mxMemdbSize */
 #endif
 #ifndef SQLITE_UNTESTABLE
    0,                         /* xTestCallback */
 #endif
    0,                         /* bLocaltimeFault */
+   0,                         /* xAltLocaltime */
    0x7ffffffe,                /* iOnceResetThreshold */
    SQLITE_DEFAULT_SORTERREF_SIZE,   /* szSorterRef */
    0,                         /* iPrngSeed */
+#ifdef SQLITE_DEBUG
+   {0,0,0,0,0,0}              /* aTune */
+#endif
 };
 
 /*
@@ -270,6 +301,18 @@ SQLITE_WSD struct Sqlite3Config sqlite3Config = {
 ** read-only.
 */
 FuncDefHash sqlite3BuiltinFunctions;
+
+#if defined(SQLITE_COVERAGE_TEST) || defined(SQLITE_DEBUG)
+/*
+** Counter used for coverage testing.  Does not come into play for
+** release builds.
+**
+** Access to this global variable is not mutex protected.  This might
+** result in TSAN warnings.  But as the variable does not exist in
+** release builds, that should not be a concern.
+*/
+unsigned int sqlite3CoverageCounter;
+#endif /* SQLITE_COVERAGE_TEST || SQLITE_DEBUG */
 
 #ifdef VDBE_PROFILE
 /*
@@ -304,10 +347,10 @@ int sqlite3PendingByte = 0x40000000;
 /*
 ** Tracing flags set by SQLITE_TESTCTRL_TRACEFLAGS.
 */
-u32 sqlite3SelectTrace = 0;
+u32 sqlite3TreeTrace = 0;
 u32 sqlite3WhereTrace = 0;
 
-#include "third_party/sqlite3/opcodes.inc"
+#include "third_party/sqlite3/opcodes.h"
 /*
 ** Properties of opcodes.  The OPFLG_INITIALIZER macro is
 ** created by mkopcodeh.awk during compilation.  Data is obtained
@@ -320,3 +363,33 @@ const unsigned char sqlite3OpcodeProperty[] = OPFLG_INITIALIZER;
 ** Name of the default collating sequence
 */
 const char sqlite3StrBINARY[] = "BINARY";
+
+/*
+** Standard typenames.  These names must match the COLTYPE_* definitions.
+** Adjust the SQLITE_N_STDTYPE value if adding or removing entries.
+**
+**    sqlite3StdType[]            The actual names of the datatypes.
+**
+**    sqlite3StdTypeLen[]         The length (in bytes) of each entry
+**                                in sqlite3StdType[].
+**
+**    sqlite3StdTypeAffinity[]    The affinity associated with each entry
+**                                in sqlite3StdType[].
+*/
+const unsigned char sqlite3StdTypeLen[] = { 3, 4, 3, 7, 4, 4 };
+const char sqlite3StdTypeAffinity[] = {
+  SQLITE_AFF_NUMERIC,
+  SQLITE_AFF_BLOB,
+  SQLITE_AFF_INTEGER,
+  SQLITE_AFF_INTEGER,
+  SQLITE_AFF_REAL,
+  SQLITE_AFF_TEXT
+};
+const char *sqlite3StdType[] = {
+  "ANY",
+  "BLOB",
+  "INT",
+  "INTEGER",
+  "REAL",
+  "TEXT"
+};

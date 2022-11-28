@@ -9,12 +9,11 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** This file contains the implementation of the sqlite3_backup_XXX()
+** This file contains the implementation of the sqlite3_backup_XXX() 
 ** API functions and the related features.
 */
-#include "third_party/sqlite3/btreeInt.inc"
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
+#include "third_party/sqlite3/btreeInt.h"
 
 /*
 ** Structure allocated for each backup operation.
@@ -86,14 +85,13 @@ static Btree *findBtree(sqlite3 *pErrorDb, sqlite3 *pDb, const char *zDb){
   if( i==1 ){
     Parse sParse;
     int rc = 0;
-    memset(&sParse, 0, sizeof(sParse));
-    sParse.db = pDb;
+    sqlite3ParseObjectInit(&sParse,pDb);
     if( sqlite3OpenTempDatabase(&sParse) ){
       sqlite3ErrorWithMsg(pErrorDb, sParse.rc, "%s", sParse.zErrMsg);
       rc = SQLITE_ERROR;
     }
     sqlite3DbFree(pErrorDb, sParse.zErrMsg);
-    sqlite3ParserReset(&sParse);
+    sqlite3ParseObjectReset(&sParse);
     if( rc ){
       return 0;
     }

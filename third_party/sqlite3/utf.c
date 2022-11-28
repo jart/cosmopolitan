@@ -9,7 +9,7 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** This file contains routines used to translate between UTF-8,
+** This file contains routines used to translate between UTF-8, 
 ** UTF-16, UTF-16BE, and UTF-16LE.
 **
 ** Notes on UTF-8:
@@ -33,10 +33,9 @@
 **     0xfe 0xff   big-endian utf-16 follows
 **
 */
+#include "third_party/sqlite3/sqliteInt.h"
 #include "libc/assert.h"
-#include "third_party/sqlite3/sqliteInt.inc"
 #include "third_party/sqlite3/vdbeInt.inc"
-/* clang-format off */
 
 #if !defined(SQLITE_AMALGAMATION) && SQLITE_BYTEORDER==0
 /*

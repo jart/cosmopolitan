@@ -29,16 +29,16 @@
 ** on Ptr(N) and its subpages have values greater than Key(N-1).  And
 ** so forth.
 **
-** Finding a particular key requires reading O(log(M)) pages from the
+** Finding a particular key requires reading O(log(M)) pages from the 
 ** disk where M is the number of entries in the tree.
 **
-** In this implementation, a single file can hold one or more separate
+** In this implementation, a single file can hold one or more separate 
 ** BTrees.  Each BTree is identified by the index of its root page.  The
 ** key and data for any entry are combined to form the "payload".  A
 ** fixed amount of payload can be carried directly on the database
 ** page.  If the payload is larger than the preset amount then surplus
 ** bytes are stored on overflow pages.  The payload for an entry
-** and the preceding pointer are combined to form a "Cell".  Each
+** and the preceding pointer are combined to form a "Cell".  Each 
 ** page has a small header which contains the Ptr(N) pointer and other
 ** information such as the size of key and data.
 **
@@ -168,7 +168,7 @@
 ** contiguous or in order, but cell pointers are contiguous and in order.
 **
 ** Cell content makes use of variable length integers.  A variable
-** length integer is 1 to 9 bytes where the lower 7 bits of each
+** length integer is 1 to 9 bytes where the lower 7 bits of each 
 ** byte are used.  The integer consists of all bytes that have bit 8 set and
 ** the first byte with bit 8 clear.  The most significant byte of the integer
 ** appears first.  A variable-length integer may not be more than 9 bytes long.
@@ -213,9 +213,8 @@
 **      4     Number of leaf pointers on this page
 **      *     zero or more pages numbers of leaves
 */
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/sqliteInt.h"
 
-/* clang-format off */
 
 /* The following value is the maximum cell size assuming a maximum page
 ** size give above.
@@ -273,7 +272,6 @@ typedef struct CellInfo CellInfo;
 */
 struct MemPage {
   u8 isInit;           /* True if previously initialized. MUST BE FIRST! */
-  u8 bBusy;            /* Prevent endless loops on corrupt database files */
   u8 intKey;           /* True if table b-trees.  False for index b-trees */
   u8 intKeyLeaf;       /* True if the leaf of an intKey table */
   Pgno pgno;           /* Page number for this page */
@@ -295,7 +293,9 @@ struct MemPage {
   u8 *apOvfl[4];       /* Pointers to the body of overflow cells */
   BtShared *pBt;       /* Pointer to BtShared that this page is part of */
   u8 *aData;           /* Pointer to disk image of the page data */
-  u8 *aDataEnd;        /* One byte past the end of usable data */
+  u8 *aDataEnd;        /* One byte past the end of the entire page - not just
+                       ** the usable space, the entire page.  Used to prevent
+                       ** corruption-induced buffer overflow. */
   u8 *aCellIdx;        /* The cell index area */
   u8 *aDataOfst;       /* Same as aData for leaves.  aData+4 for interior */
   DbPage *pDbPage;     /* Pager page handle */
@@ -600,7 +600,7 @@ struct BtCursor {
 /* 
 ** The database page the PENDING_BYTE occupies. This page is never used.
 */
-# define PENDING_BYTE_PAGE(pBt) PAGER_MJ_PGNO(pBt)
+#define PENDING_BYTE_PAGE(pBt)  ((Pgno)((PENDING_BYTE/((pBt)->pageSize))+1))
 
 /*
 ** These macros define the location of the pointer-map entry for a 

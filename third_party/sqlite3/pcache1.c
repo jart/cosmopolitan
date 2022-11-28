@@ -39,12 +39,13 @@
 ** size can vary according to architecture, compile-time options, and
 ** SQLite library version number.
 **
-** If SQLITE_PCACHE_SEPARATE_HEADER is defined, then the extension is obtained
-** using a separate memory allocation from the database page content.  This
-** seeks to overcome the "clownshoe" problem (also called "internal
-** fragmentation" in academic literature) of allocating a few bytes more
-** than a power of two with the memory allocator rounding up to the next
-** power of two, and leaving the rounded-up space unused.
+** Historical note:  It used to be that if the SQLITE_PCACHE_SEPARATE_HEADER
+** was defined, then the page content would be held in a separate memory
+** allocation from the PgHdr1.  This was intended to avoid clownshoe memory
+** allocations.  However, the btree layer needs a small (16-byte) overrun
+** area after the page content buffer.  The header serves as that overrun
+** area.  Therefore SQLITE_PCACHE_SEPARATE_HEADER was discontinued to avoid
+** any possibility of a memory error.
 **
 ** This module tracks pointers to PgHdr1 objects.  Only pcache.c communicates
 ** with this module.  Information is passed back and forth as PgHdr1 pointers.
@@ -63,7 +64,7 @@
 **
 ** The third case is a chunk of heap memory (defaulting to 100 pages worth)
 ** that is allocated when the page cache is created.  The size of the local
-** bulk allocation can be adjusted using
+** bulk allocation can be adjusted using 
 **
 **     sqlite3_config(SQLITE_CONFIG_PAGECACHE, (void*)0, 0, N).
 **
@@ -82,7 +83,7 @@
 */
 #include "libc/assert.h"
 #include "third_party/sqlite3/sqlite3.h"
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/sqliteInt.h"
 /* clang-format off */
 
 typedef struct PCache1 PCache1;
@@ -92,30 +93,40 @@ typedef struct PGroup PGroup;
 
 /*
 ** Each cache entry is represented by an instance of the following 
-** structure. Unless SQLITE_PCACHE_SEPARATE_HEADER is defined, a buffer of
-** PgHdr1.pCache->szPage bytes is allocated directly before this structure 
-** in memory.
+** structure. A buffer of PgHdr1.pCache->szPage bytes is allocated
+** directly before this structure and is used to cache the page content.
 **
-** Note: Variables isBulkLocal and isAnchor were once type "u8". That works,
+** When reading a corrupt database file, it is possible that SQLite might
+** read a few bytes (no more than 16 bytes) past the end of the page buffer.
+** It will only read past the end of the page buffer, never write.  This
+** object is positioned immediately after the page buffer to serve as an
+** overrun area, so that overreads are harmless.
+**
+** Variables isBulkLocal and isAnchor were once type "u8". That works,
 ** but causes a 2-byte gap in the structure for most architectures (since 
 ** pointers must be either 4 or 8-byte aligned). As this structure is located
 ** in memory directly after the associated page data, if the database is
 ** corrupt, code at the b-tree layer may overread the page buffer and 
 ** read part of this structure before the corruption is detected. This
 ** can cause a valgrind error if the unitialized gap is accessed. Using u16
-** ensures there is no such gap, and therefore no bytes of unitialized memory
-** in the structure.
+** ensures there is no such gap, and therefore no bytes of uninitialized
+** memory in the structure.
+**
+** The pLruNext and pLruPrev pointers form a double-linked circular list
+** of all pages that are unpinned.  The PGroup.lru element (which should be
+** the only element on the list with PgHdr1.isAnchor set to 1) forms the
+** beginning and the end of the list.
 */
 struct PgHdr1 {
-  sqlite3_pcache_page page;      /* Base class. Must be first. pBuf & pExtra */
-  unsigned int iKey;             /* Key value (page number) */
-  u16 isBulkLocal;               /* This page from bulk local storage */
-  u16 isAnchor;                  /* This is the PGroup.lru element */
-  PgHdr1 *pNext;                 /* Next in hash table chain */
-  PCache1 *pCache;               /* Cache that currently owns this page */
-  PgHdr1 *pLruNext;              /* Next in LRU list of unpinned pages */
-  PgHdr1 *pLruPrev;              /* Previous in LRU list of unpinned pages */
-                                 /* NB: pLruPrev is only valid if pLruNext!=0 */
+  sqlite3_pcache_page page; /* Base class. Must be first. pBuf & pExtra */
+  unsigned int iKey;        /* Key value (page number) */
+  u16 isBulkLocal;          /* This page from bulk local storage */
+  u16 isAnchor;             /* This is the PGroup.lru element */
+  PgHdr1 *pNext;            /* Next in hash table chain */
+  PCache1 *pCache;          /* Cache that currently owns this page */
+  PgHdr1 *pLruNext;         /* Next in circular LRU list of unpinned pages */
+  PgHdr1 *pLruPrev;         /* Previous in LRU list of unpinned pages */
+                            /* NB: pLruPrev is only valid if pLruNext!=0 */
 };
 
 /*
@@ -441,25 +452,13 @@ static PgHdr1 *pcache1AllocPage(PCache1 *pCache, int benignMalloc){
     pcache1LeaveMutex(pCache->pGroup);
 #endif
     if( benignMalloc ){ sqlite3BeginBenignMalloc(); }
-#ifdef SQLITE_PCACHE_SEPARATE_HEADER
-    pPg = pcache1Alloc(pCache->szPage);
-    p = sqlite3Malloc(sizeof(PgHdr1) + pCache->szExtra);
-    if( !pPg || !p ){
-      pcache1Free(pPg);
-      sqlite3_free(p);
-      pPg = 0;
-    }
-#else
     pPg = pcache1Alloc(pCache->szAlloc);
-#endif
     if( benignMalloc ){ sqlite3EndBenignMalloc(); }
 #ifdef SQLITE_ENABLE_MEMORY_MANAGEMENT
     pcache1EnterMutex(pCache->pGroup);
 #endif
     if( pPg==0 ) return 0;
-#ifndef SQLITE_PCACHE_SEPARATE_HEADER
     p = (PgHdr1 *)&((u8 *)pPg)[pCache->szPage];
-#endif
     p->page.pBuf = pPg;
     p->page.pExtra = &p[1];
     p->isBulkLocal = 0;
@@ -483,9 +482,6 @@ static void pcache1FreePage(PgHdr1 *p){
     pCache->pFree = p;
   }else{
     pcache1Free(p->page.pBuf);
-#ifdef SQLITE_PCACHE_SEPARATE_HEADER
-    sqlite3_free(p);
-#endif
   }
   (*pCache->pnPurgeable)--;
 }
@@ -820,12 +816,18 @@ static sqlite3_pcache *pcache1Create(int szPage, int szExtra, int bPurgeable){
 */
 static void pcache1Cachesize(sqlite3_pcache *p, int nMax){
   PCache1 *pCache = (PCache1 *)p;
+  u32 n;
+  assert( nMax>=0 );
   if( pCache->bPurgeable ){
     PGroup *pGroup = pCache->pGroup;
     pcache1EnterMutex(pGroup);
-    pGroup->nMaxPage += (nMax - pCache->nMax);
+    n = (u32)nMax;
+    if( n > 0x7fff0000 - pGroup->nMaxPage + pCache->nMax ){
+      n = 0x7fff0000 - pGroup->nMaxPage + pCache->nMax;
+    }
+    pGroup->nMaxPage += (n - pCache->nMax);
     pGroup->mxPinned = pGroup->nMaxPage + 10 - pGroup->nMinPage;
-    pCache->nMax = nMax;
+    pCache->nMax = n;
     pCache->n90pct = pCache->nMax*9/10;
     pcache1EnforceMaxPage(pCache);
     pcache1LeaveMutex(pGroup);
@@ -841,7 +843,7 @@ static void pcache1Shrink(sqlite3_pcache *p){
   PCache1 *pCache = (PCache1*)p;
   if( pCache->bPurgeable ){
     PGroup *pGroup = pCache->pGroup;
-    int savedMaxPage;
+    unsigned int savedMaxPage;
     pcache1EnterMutex(pGroup);
     savedMaxPage = pGroup->nMaxPage;
     pGroup->nMaxPage = 0;
@@ -1120,23 +1122,26 @@ static void pcache1Rekey(
   PCache1 *pCache = (PCache1 *)p;
   PgHdr1 *pPage = (PgHdr1 *)pPg;
   PgHdr1 **pp;
-  unsigned int h; 
+  unsigned int hOld, hNew; 
   assert( pPage->iKey==iOld );
   assert( pPage->pCache==pCache );
+  assert( iOld!=iNew );               /* The page number really is changing */
 
   pcache1EnterMutex(pCache->pGroup);
 
-  h = iOld%pCache->nHash;
-  pp = &pCache->apHash[h];
+  assert( pcache1FetchNoMutex(p, iOld, 0)==pPage ); /* pPg really is iOld */
+  hOld = iOld%pCache->nHash;
+  pp = &pCache->apHash[hOld];
   while( (*pp)!=pPage ){
     pp = &(*pp)->pNext;
   }
   *pp = pPage->pNext;
 
-  h = iNew%pCache->nHash;
+  assert( pcache1FetchNoMutex(p, iNew, 0)==0 ); /* iNew not in cache */
+  hNew = iNew%pCache->nHash;
   pPage->iKey = iNew;
-  pPage->pNext = pCache->apHash[h];
-  pCache->apHash[h] = pPage;
+  pPage->pNext = pCache->apHash[hNew];
+  pCache->apHash[hNew] = pPage;
   if( iNew>pCache->iMaxKey ){
     pCache->iMaxKey = iNew;
   }
@@ -1243,9 +1248,6 @@ int sqlite3PcacheReleaseMemory(int nReq){
        &&  p->isAnchor==0
     ){
       nFree += pcache1MemSize(p->page.pBuf);
-#ifdef SQLITE_PCACHE_SEPARATE_HEADER
-      nFree += sqlite3MemSize(p);
-#endif
       assert( PAGE_IS_UNPINNED(p) );
       pcache1PinPage(p);
       pcache1RemoveFromHash(p, 1);

@@ -19,7 +19,6 @@
 */
 #ifndef _OS_COMMON_H_
 #define _OS_COMMON_H_
-/* clang-format off */
 
 /*
 ** At least two bugs have slipped in because we changed the MEMORY_DEBUG

@@ -12,9 +12,8 @@
 ** This is the implementation of generic hash-tables
 ** used in SQLite.
 */
+#include "third_party/sqlite3/sqliteInt.h"
 #include "libc/assert.h"
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
 
 /* Turn bulk memory into a hash table object by initializing the
 ** fields of the Hash structure.

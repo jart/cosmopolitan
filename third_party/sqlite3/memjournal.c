@@ -23,8 +23,7 @@
 ** in the common case, they are usually small and no file I/O needs to
 ** occur.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /* Forward references to internal structures */
 typedef struct MemJournal MemJournal;
@@ -179,6 +178,9 @@ static int memjrnlCreateFile(MemJournal *p){
 }
 
 
+/* Forward reference */
+static int memjrnlTruncate(sqlite3_file *pJfd, sqlite_int64 size);
+
 /*
 ** Write data to the file.
 */
@@ -208,23 +210,21 @@ static int memjrnlWrite(
     ** access writes are not required. The only exception to this is when
     ** the in-memory journal is being used by a connection using the
     ** atomic-write optimization. In this case the first 28 bytes of the
-    ** journal file may be written as part of committing the transaction. */ 
-    assert( iOfst==p->endpoint.iOffset || iOfst==0 );
-#if defined(SQLITE_ENABLE_ATOMIC_WRITE) \
- || defined(SQLITE_ENABLE_BATCH_ATOMIC_WRITE)
+    ** journal file may be written as part of committing the transaction. */
+    assert( iOfst<=p->endpoint.iOffset );
+    if( iOfst>0 && iOfst!=p->endpoint.iOffset ){
+      memjrnlTruncate(pJfd, iOfst);
+    }
     if( iOfst==0 && p->pFirst ){
       assert( p->nChunkSize>iAmt );
       memcpy((u8*)p->pFirst->zChunk, zBuf, iAmt);
-    }else
-#else
-    assert( iOfst>0 || p->pFirst==0 );
-#endif
-    {
+    }else{
       while( nWrite>0 ){
         FileChunk *pChunk = p->endpoint.pChunk;
         int iChunkOffset = (int)(p->endpoint.iOffset%p->nChunkSize);
         int iSpace = MIN(nWrite, p->nChunkSize - iChunkOffset);
 
+        assert( pChunk!=0 || iChunkOffset==0 );
         if( iChunkOffset==0 ){
           /* New chunk is required to extend the file. */
           FileChunk *pNew = sqlite3_malloc(fileChunkSize(p->nChunkSize));
@@ -239,10 +239,11 @@ static int memjrnlWrite(
             assert( !p->pFirst );
             p->pFirst = pNew;
           }
-          p->endpoint.pChunk = pNew;
+          pChunk = p->endpoint.pChunk = pNew;
         }
 
-        memcpy((u8*)p->endpoint.pChunk->zChunk + iChunkOffset, zWrite, iSpace);
+        assert( pChunk!=0 );
+        memcpy((u8*)pChunk->zChunk + iChunkOffset, zWrite, iSpace);
         zWrite += iSpace;
         nWrite -= iSpace;
         p->endpoint.iOffset += iSpace;
@@ -258,26 +259,28 @@ static int memjrnlWrite(
 */
 static int memjrnlTruncate(sqlite3_file *pJfd, sqlite_int64 size){
   MemJournal *p = (MemJournal *)pJfd;
-  FileChunk *pIter = 0;
+  assert( p->endpoint.pChunk==0 || p->endpoint.pChunk->pNext==0 );
+  if( size<p->endpoint.iOffset ){
+    FileChunk *pIter = 0;
+    if( size==0 ){
+      memjrnlFreeChunks(p->pFirst);
+      p->pFirst = 0;
+    }else{
+      i64 iOff = p->nChunkSize;
+      for(pIter=p->pFirst; ALWAYS(pIter) && iOff<size; pIter=pIter->pNext){
+        iOff += p->nChunkSize;
+      }
+      if( ALWAYS(pIter) ){
+        memjrnlFreeChunks(pIter->pNext);
+        pIter->pNext = 0;
+      }
+    }
 
-  if( size==0 ){
-    memjrnlFreeChunks(p->pFirst);
-    p->pFirst = 0;
-  }else{
-    i64 iOff = p->nChunkSize;
-    for(pIter=p->pFirst; ALWAYS(pIter) && iOff<=size; pIter=pIter->pNext){
-      iOff += p->nChunkSize;
-    }
-    if( ALWAYS(pIter) ){
-      memjrnlFreeChunks(pIter->pNext);
-      pIter->pNext = 0;
-    }
+    p->endpoint.pChunk = pIter;
+    p->endpoint.iOffset = size;
+    p->readpoint.pChunk = 0;
+    p->readpoint.iOffset = 0;
   }
-
-  p->endpoint.pChunk = pIter;
-  p->endpoint.iOffset = size;
-  p->readpoint.pChunk = 0;
-  p->readpoint.iOffset = 0;
   return SQLITE_OK;
 }
 
@@ -355,6 +358,8 @@ int sqlite3JournalOpen(
   int nSpill                 /* Bytes buffered before opening the file */
 ){
   MemJournal *p = (MemJournal*)pJfd;
+
+  assert( zName || nSpill<0 || (flags & SQLITE_OPEN_EXCLUSIVE) );
 
   /* Zero the file-handle object. If nSpill was passed zero, initialize
   ** it using the sqlite3OsOpen() function of the underlying VFS. In this

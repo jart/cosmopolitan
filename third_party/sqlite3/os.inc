@@ -19,19 +19,31 @@
 */
 #ifndef _SQLITE_OS_H_
 #define _SQLITE_OS_H_
-/* clang-format off */
 
 /*
 ** Attempt to automatically detect the operating system and setup the
 ** necessary pre-processor macros for it.
 */
-#include "third_party/sqlite3/os_setup.inc"
+#include "third_party/sqlite3/os_setup.h"
 
 /* If the SET_FULLSYNC macro is not defined above, then make it
 ** a no-op
 */
 #ifndef SET_FULLSYNC
 # define SET_FULLSYNC(x,y)
+#endif
+
+/* Maximum pathname length.  Note: FILENAME_MAX defined by stdio.h
+*/
+#ifndef SQLITE_MAX_PATHLEN
+# define SQLITE_MAX_PATHLEN FILENAME_MAX
+#endif
+
+/* Maximum number of symlinks that will be resolved while trying to
+** expand a filename in xFullPathname() in the VFS.
+*/
+#ifndef SQLITE_MAX_SYMLINK
+# define SQLITE_MAX_SYMLINK 200
 #endif
 
 /*

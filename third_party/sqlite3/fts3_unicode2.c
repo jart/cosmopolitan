@@ -10,7 +10,6 @@
 **
 ******************************************************************************
 */
-/* clang-format off */
 
 /*
 ** DO NOT EDIT THIS MACHINE GENERATED FILE.

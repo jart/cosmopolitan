@@ -10,7 +10,6 @@
 **
 *************************************************************************
 */
-/* clang-format off */
 
 #ifndef _SQLITE3RTREE_H_
 #define _SQLITE3RTREE_H_

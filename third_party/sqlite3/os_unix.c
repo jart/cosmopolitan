@@ -46,16 +46,9 @@
 */
 #include "libc/stdio/rand.h"
 #include "libc/sysv/consts/lock.h"
-#include "libc/calls/struct/stat.h"
-#include "libc/sysv/consts/s.h"
-#include "libc/runtime/runtime.h"
-#include "libc/calls/struct/timeval.h"
-#include "third_party/sqlite3/sqlite3.h"
-#include "third_party/sqlite3/mutex.internal.h"
-#include "third_party/sqlite3/mutex.internal.h"
+#include "third_party/sqlite3/sqliteInt.h"
 #include "libc/sysv/consts/f.h"
 #include "libc/dce.h"
-#include "third_party/sqlite3/sqliteInt.inc"
 #if SQLITE_OS_UNIX /* This file is used on unix only */
 
 /*
@@ -101,10 +94,14 @@
 */
 #include "libc/calls/calls.h"
 #include "libc/calls/struct/flock.h"
+#include "libc/calls/struct/stat.h"
+#include "libc/calls/struct/timeval.h"
 #include "libc/calls/weirdtypes.h"
 #include "libc/errno.h"
 #include "libc/runtime/sysconf.h"
+#include "libc/runtime/runtime.h"
 #include "libc/sysv/consts/f.h"
+#include "libc/sysv/consts/s.h"
 #include "libc/sysv/consts/map.h"
 #include "libc/sysv/consts/mremap.h"
 #include "libc/sysv/consts/o.h"
@@ -113,6 +110,16 @@
 #include "libc/time/struct/tm.h"
 #include "libc/time/time.h"
 #include "libc/mem/mem.h"
+
+#if !defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE>0
+#include "libc/isystem/sys/mman.h"
+#endif
+
+#if SQLITE_ENABLE_LOCKING_STYLE
+# include "libc/isystem/sys/ioctl.h"
+# include "libc/isystem/sys/file.h"
+# include "libc/isystem/sys/param.h"
+#endif /* SQLITE_ENABLE_LOCKING_STYLE */
 
 /*
 ** Try to determine if gethostuuid() is available based on standard
@@ -143,14 +150,13 @@
 
 
 #if OS_VXWORKS
-#include <semaphore.h>
-#include <sys/ioctl.h>
-
-#include "libc/limits.h"
+# include <sys/ioctl.h>
+# include <semaphore.h>
+# include "libc/limits.h"
 #endif /* OS_VXWORKS */
 
 #ifdef HAVE_UTIME
-#include "libc/time/time.h"
+# include "libc/time/time.h"
 #endif
 
 /*
@@ -296,7 +302,7 @@ static pid_t randomnessPid = 0;
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "third_party/sqlite3/os_common.inc"
+#include "os_common.h"
 
 /*
 ** Define various macros that are missing from some systems.
@@ -854,20 +860,20 @@ static int robust_ftruncate(int h, sqlite3_int64 sz){
 ** should handle ENOLCK, ENOTSUP, EOPNOTSUPP separately.
 */
 static int sqliteErrorFromPosixError(int posixError, int sqliteIOErr) {
-  assert((sqliteIOErr == SQLITE_IOERR_LOCK) ||
-         (sqliteIOErr == SQLITE_IOERR_UNLOCK) ||
-         (sqliteIOErr == SQLITE_IOERR_RDLOCK) ||
-         (sqliteIOErr == SQLITE_IOERR_CHECKRESERVEDLOCK));
+  assert( (sqliteIOErr == SQLITE_IOERR_LOCK) || 
+          (sqliteIOErr == SQLITE_IOERR_UNLOCK) || 
+          (sqliteIOErr == SQLITE_IOERR_RDLOCK) ||
+          (sqliteIOErr == SQLITE_IOERR_CHECKRESERVEDLOCK) );
   // changed switch to if-else
   if (posixError == EACCES || posixError == EAGAIN || posixError == ETIMEDOUT ||
       posixError == EBUSY || posixError == EINTR || posixError == ENOLCK)
-    /* random NFS retry error, unless during file system support
+    /* random NFS retry error, unless during file system support 
      * introspection, in which it actually means what it says */
     return SQLITE_BUSY;
-
+    
   else if (posixError == EPERM)
     return SQLITE_PERM;
-
+    
   else
     return sqliteIOErr;
 }
@@ -3542,6 +3548,16 @@ int sqlite3_fullsync_count = 0;
 #endif
 
 /*
+** We do not trust systems to provide a working fdatasync().  Some do.
+** Others do no.  To be safe, we will stick with the (slightly slower)
+** fsync(). If you know that your system does support fdatasync() correctly,
+** then simply compile with -Dfdatasync=fdatasync or -DHAVE_FDATASYNC
+*/
+#if !defined(fdatasync) && !HAVE_FDATASYNC
+# define fdatasync fsync
+#endif
+
+/*
 ** Define HAVE_FULLFSYNC to 0 or 1 depending on whether or not
 ** the F_FULLFSYNC macro is defined.  F_FULLFSYNC is currently
 ** only available on Mac OS X.  But that could change.
@@ -3936,6 +3952,9 @@ static void unixModeBit(unixFile *pFile, unsigned char mask, int *pArg){
 
 /* Forward declaration */
 static int unixGetTempname(int nBuf, char *zBuf);
+#ifndef SQLITE_OMIT_WAL
+ static int unixFcntlExternalReader(unixFile*, int*);
+#endif
 
 /*
 ** Information and control of an open file handle.
@@ -4052,6 +4071,15 @@ static int unixFileControl(sqlite3_file *id, int op, void *pArg){
       return proxyFileControl(id,op,pArg);
     }
 #endif /* SQLITE_ENABLE_LOCKING_STYLE && defined(__APPLE__) */
+
+    case SQLITE_FCNTL_EXTERNAL_READER: {
+#ifndef SQLITE_OMIT_WAL
+      return unixFcntlExternalReader((unixFile*)id, (int*)pArg);
+#else
+      *(int*)pArg = 0;
+      return SQLITE_OK;
+#endif
+    }
   }
   return SQLITE_NOTFOUND;
 }
@@ -4296,6 +4324,40 @@ struct unixShm {
 */
 #define UNIX_SHM_BASE   ((22+SQLITE_SHM_NLOCK)*4)         /* first lock byte */
 #define UNIX_SHM_DMS    (UNIX_SHM_BASE+SQLITE_SHM_NLOCK)  /* deadman switch */
+
+/*
+** Use F_GETLK to check whether or not there are any readers with open
+** wal-mode transactions in other processes on database file pFile. If
+** no error occurs, return SQLITE_OK and set (*piOut) to 1 if there are 
+** such transactions, or 0 otherwise. If an error occurs, return an
+** SQLite error code. The final value of *piOut is undefined in this
+** case.
+*/
+static int unixFcntlExternalReader(unixFile *pFile, int *piOut){
+  int rc = SQLITE_OK;
+  *piOut = 0;
+  if( pFile->pShm){
+    unixShmNode *pShmNode = pFile->pShm->pShmNode;
+    struct flock f;
+
+    memset(&f, 0, sizeof(f));
+    f.l_type = F_WRLCK;
+    f.l_whence = SEEK_SET;
+    f.l_start = UNIX_SHM_BASE + 3;
+    f.l_len = SQLITE_SHM_NLOCK - 3;
+
+    sqlite3_mutex_enter(pShmNode->pShmMutex);
+    if( osFcntl(pShmNode->hShm, F_GETLK, &f)<0 ){
+      rc = SQLITE_IOERR_LOCK;
+    }else{
+      *piOut = (f.l_type!=F_UNLCK);
+    }
+    sqlite3_mutex_leave(pShmNode->pShmMutex);
+  }
+
+  return rc;
+}
+
 
 /*
 ** Apply posix advisory locks for all bytes from ofst through ofst+n-1.
@@ -4849,11 +4911,17 @@ static int unixShmLock(
   int flags                  /* What to do with the lock */
 ){
   unixFile *pDbFd = (unixFile*)fd;      /* Connection holding shared memory */
-  unixShm *p = pDbFd->pShm;             /* The shared memory being locked */
-  unixShmNode *pShmNode = p->pShmNode;  /* The underlying file iNode */
+  unixShm *p;                           /* The shared memory being locked */
+  unixShmNode *pShmNode;                /* The underlying file iNode */
   int rc = SQLITE_OK;                   /* Result code */
   u16 mask;                             /* Mask of locks to take or release */
-  int *aLock = pShmNode->aLock;
+  int *aLock;
+
+  p = pDbFd->pShm;
+  if( p==0 ) return SQLITE_IOERR_SHMLOCK;
+  pShmNode = p->pShmNode;
+  if( NEVER(pShmNode==0) ) return SQLITE_IOERR_SHMLOCK;
+  aLock = pShmNode->aLock;
 
   assert( pShmNode==pDbFd->pInode->pShmNode );
   assert( pShmNode->pInode==pDbFd->pInode );
@@ -5738,24 +5806,34 @@ static int fillInUnixFile(
 }
 
 /*
+** Directories to consider for temp files.
+*/
+static const char *azTempDirs[] = {
+  0,
+  0,
+  "/var/tmp",
+  "/usr/tmp",
+  "/tmp",
+  "."
+};
+
+/*
+** Initialize first two members of azTempDirs[] array.
+*/
+static void unixTempFileInit(void){
+  azTempDirs[0] = getenv("SQLITE_TMPDIR");
+  azTempDirs[1] = getenv("TMPDIR");
+}
+
+/*
 ** Return the name of a directory in which to put temporary files.
 ** If no suitable temporary file directory can be found, return NULL.
 */
 static const char *unixTempFileDir(void){
-  static const char *azDirs[] = {
-     0,
-     0,
-     "/var/tmp",
-     "/usr/tmp",
-     "/tmp",
-     "."
-  };
   unsigned int i = 0;
   struct stat buf;
   const char *zDir = sqlite3_temp_directory;
 
-  if( !azDirs[0] ) azDirs[0] = getenv("SQLITE_TMPDIR");
-  if( !azDirs[1] ) azDirs[1] = getenv("TMPDIR");
   while(1){
     if( zDir!=0
      && osStat(zDir, &buf)==0
@@ -5764,8 +5842,8 @@ static const char *unixTempFileDir(void){
     ){
       return zDir;
     }
-    if( i>=sizeof(azDirs)/sizeof(azDirs[0]) ) break;
-    zDir = azDirs[i++];
+    if( i>=sizeof(azTempDirs)/sizeof(azTempDirs[0]) ) break;
+    zDir = azTempDirs[i++];
   }
   return 0;
 }
@@ -5778,6 +5856,7 @@ static const char *unixTempFileDir(void){
 static int unixGetTempname(int nBuf, char *zBuf){
   const char *zDir;
   int iLimit = 0;
+  int rc = SQLITE_OK;
   int e = errno; // [jart] don't pollute strace logs
 
   /* It's odd to simulate an io-error here, but really this is just
@@ -5787,19 +5866,27 @@ static int unixGetTempname(int nBuf, char *zBuf){
   zBuf[0] = 0;
   SimulateIOError( return SQLITE_IOERR );
 
+  sqlite3_mutex_enter(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_TEMPDIR));
   zDir = unixTempFileDir();
-  if( zDir==0 ) return SQLITE_IOERR_GETTEMPPATH;
-  do{
-    u64 r;
-    sqlite3_randomness(sizeof(r), &r);
-    assert( nBuf>2 );
-    zBuf[nBuf-2] = 0;
-    sqlite3_snprintf(nBuf, zBuf, "%s/"SQLITE_TEMP_FILE_PREFIX"%llx%c",
-                     zDir, r, 0);
-    if( zBuf[nBuf-2]!=0 || (iLimit++)>10 ) return SQLITE_ERROR;
-  }while( osAccess(zBuf,0)==0 );
+  if( zDir==0 ){
+    rc = SQLITE_IOERR_GETTEMPPATH;
+  }else{
+    do{
+      u64 r;
+      sqlite3_randomness(sizeof(r), &r);
+      assert( nBuf>2 );
+      zBuf[nBuf-2] = 0;
+      sqlite3_snprintf(nBuf, zBuf, "%s/"SQLITE_TEMP_FILE_PREFIX"%llx%c",
+                       zDir, r, 0);
+      if( zBuf[nBuf-2]!=0 || (iLimit++)>10 ){
+        rc = SQLITE_ERROR;
+        break;
+      }
+    }while( osAccess(zBuf,0)==0 );
+  }
+  sqlite3_mutex_leave(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_TEMPDIR));
   errno = e; // [jart] don't pollute strace logs
-  return SQLITE_OK;
+  return rc;
 }
 
 #if SQLITE_ENABLE_LOCKING_STYLE && defined(__APPLE__)
@@ -5942,20 +6029,23 @@ static int findCreateFileMode(
     **
     ** where NN is a decimal number. The NN naming schemes are 
     ** used by the test_multiplex.c module.
+    **
+    ** In normal operation, the journal file name will always contain
+    ** a '-' character.  However in 8+3 filename mode, or if a corrupt
+    ** rollback journal specifies a super-journal with a goofy name, then
+    ** the '-' might be missing or the '-' might be the first character in
+    ** the filename.  In that case, just return SQLITE_OK with *pMode==0.
     */
-    nDb = sqlite3Strlen30(zPath) - 1; 
-    while( zPath[nDb]!='-' ){
-      /* In normal operation, the journal file name will always contain
-      ** a '-' character.  However in 8+3 filename mode, or if a corrupt
-      ** rollback journal specifies a super-journal with a goofy name, then
-      ** the '-' might be missing. */
-      if( nDb==0 || zPath[nDb]=='.' ) return SQLITE_OK;
+    nDb = sqlite3Strlen30(zPath) - 1;
+    while( nDb>0 && zPath[nDb]!='.' ){
+      if( zPath[nDb]=='-' ){
+        memcpy(zDb, zPath, nDb);
+        zDb[nDb] = '\0';
+        rc = getFileMode(zDb, pMode, pUid, pGid);
+        break;
+      }
       nDb--;
     }
-    memcpy(zDb, zPath, nDb);
-    zDb[nDb] = '\0';
-
-    rc = getFileMode(zDb, pMode, pUid, pGid);
   }else if( flags & SQLITE_OPEN_DELETEONCLOSE ){
     *pMode = 0600;
   }else if( flags & SQLITE_OPEN_URI ){
@@ -6072,6 +6162,11 @@ static int unixOpen(
     sqlite3_randomness(0,0);
   }
   bzero(p, sizeof(unixFile));
+
+#ifdef SQLITE_ASSERT_NO_FILES
+  /* Applications that never read or write a persistent disk files */
+  assert( zName==0 );
+#endif
 
   if( eType==SQLITE_OPEN_MAIN_DB ){
     UnixUnusedFd *pUnused;
@@ -6342,86 +6437,99 @@ static int unixAccess(
 }
 
 /*
-** If the last component of the pathname in z[0]..z[j-1] is something
-** other than ".." then back it out and return true.  If the last
-** component is empty or if it is ".." then return false.
+** A pathname under construction
 */
-static int unixBackupDir(const char *z, int *pJ){
-  int j = *pJ;
-  int i;
-  if( j<=0 ) return 0;
-  for(i=j-1; i>0 && z[i-1]!='/'; i--){}
-  if( i==0 ) return 0;
-  if( z[i]=='.' && i==j-2 && z[i+1]=='.' ) return 0;
-  *pJ = i-1;
-  return 1;
+typedef struct DbPath DbPath;
+struct DbPath {
+  int rc;           /* Non-zero following any error */
+  int nSymlink;     /* Number of symlinks resolved */
+  char *zOut;       /* Write the pathname here */
+  int nOut;         /* Bytes of space available to zOut[] */
+  int nUsed;        /* Bytes of zOut[] currently being used */
+};
+
+/* Forward reference */
+static void appendAllPathElements(DbPath*,const char*);
+
+/*
+** Append a single path element to the DbPath under construction
+*/
+static void appendOnePathElement(
+  DbPath *pPath,       /* Path under construction, to which to append zName */
+  const char *zName,   /* Name to append to pPath.  Not zero-terminated */
+  int nName            /* Number of significant bytes in zName */
+){
+  assert( nName>0 );
+  assert( zName!=0 );
+  if( zName[0]=='.' ){
+    if( nName==1 ) return;
+    if( zName[1]=='.' && nName==2 ){
+      if( pPath->nUsed<=1 ){
+        pPath->rc = SQLITE_ERROR;
+        return;
+      }
+      assert( pPath->zOut[0]=='/' );
+      while( pPath->zOut[--pPath->nUsed]!='/' ){}
+      return;
+    }
+  }
+  if( pPath->nUsed + nName + 2 >= pPath->nOut ){
+    pPath->rc = SQLITE_ERROR;
+    return;
+  }
+  pPath->zOut[pPath->nUsed++] = '/';
+  memcpy(&pPath->zOut[pPath->nUsed], zName, nName);
+  pPath->nUsed += nName;
+#if defined(HAVE_READLINK) && defined(HAVE_LSTAT)
+  if( pPath->rc==SQLITE_OK ){
+    const char *zIn;
+    struct stat buf;
+    pPath->zOut[pPath->nUsed] = 0;
+    zIn = pPath->zOut;
+    if( osLstat(zIn, &buf)!=0 ){
+      if( errno!=ENOENT ){
+        pPath->rc = unixLogError(SQLITE_CANTOPEN_BKPT, "lstat", zIn);
+      }
+    }else if( S_ISLNK(buf.st_mode) ){
+      ssize_t got;
+      char zLnk[SQLITE_MAX_PATHLEN+2];
+      if( pPath->nSymlink++ > SQLITE_MAX_SYMLINK ){
+        pPath->rc = SQLITE_CANTOPEN_BKPT;
+        return;
+      }
+      got = osReadlink(zIn, zLnk, sizeof(zLnk)-2);
+      if( got<=0 || got>=(ssize_t)sizeof(zLnk)-2 ){
+        pPath->rc = unixLogError(SQLITE_CANTOPEN_BKPT, "readlink", zIn);
+        return;
+      }
+      zLnk[got] = 0;
+      if( zLnk[0]=='/' ){
+        pPath->nUsed = 0;
+      }else{
+        pPath->nUsed -= nName + 1;
+      }
+      appendAllPathElements(pPath, zLnk);
+    }
+  }
+#endif
 }
 
 /*
-** Convert a relative pathname into a full pathname.  Also
-** simplify the pathname as follows:
-**
-**    Remove all instances of /./
-**    Remove all isntances of /X/../ for any X
+** Append all path elements in zPath to the DbPath under construction.
 */
-static int mkFullPathname(
-  const char *zPath,              /* Input path */
-  char *zOut,                     /* Output buffer */
-  int nOut                        /* Allocated size of buffer zOut */
+static void appendAllPathElements(
+  DbPath *pPath,       /* Path under construction, to which to append zName */
+  const char *zPath    /* Path to append to pPath.  Is zero-terminated */
 ){
-  int nPath = sqlite3Strlen30(zPath);
-  int iOff = 0;
-  int i, j;
-  if( zPath[0]!='/' ){
-    if( osGetcwd(zOut, nOut-2)==0 ){
-      return unixLogError(SQLITE_CANTOPEN_BKPT, "getcwd", zPath);
+  int i = 0;
+  int j = 0;
+  do{
+    while( zPath[i] && zPath[i]!='/' ){ i++; }
+    if( i>j ){
+      appendOnePathElement(pPath, &zPath[j], i-j);
     }
-    iOff = sqlite3Strlen30(zOut);
-    zOut[iOff++] = '/';
-  }
-  if( (iOff+nPath+1)>nOut ){
-    /* SQLite assumes that xFullPathname() nul-terminates the output buffer
-    ** even if it returns an error.  */
-    zOut[iOff] = '\0';
-    return SQLITE_CANTOPEN_BKPT;
-  }
-  sqlite3_snprintf(nOut-iOff, &zOut[iOff], "%s", zPath);
-
-  /* Remove duplicate '/' characters.  Except, two // at the beginning
-  ** of a pathname is allowed since this is important on windows. */
-  for(i=j=1; zOut[i]; i++){
-    zOut[j++] = zOut[i];
-    while( zOut[i]=='/' && zOut[i+1]=='/' ) i++;
-  }
-  zOut[j] = 0;
-
-  assert( zOut[0]=='/' );
-  for(i=j=0; zOut[i]; i++){
-    if( zOut[i]=='/' ){
-      /* Skip over internal "/." directory components */
-      if( zOut[i+1]=='.' && zOut[i+2]=='/' ){
-        i += 1;
-        continue;
-      }
-
-      /* If this is a "/.." directory component then back out the
-      ** previous term of the directory if it is something other than "..".
-      */
-      if( zOut[i+1]=='.'
-       && zOut[i+2]=='.'
-       && zOut[i+3]=='/'
-       && unixBackupDir(zOut, &j)
-      ){
-        i += 2;
-        continue;
-      }
-    }
-    if( ALWAYS(j>=0) ) zOut[j] = zOut[i];
-    j++;
-  }
-  if( NEVER(j==0) ) zOut[j++] = '/';
-  zOut[j] = 0;
-  return SQLITE_OK;
+    j = i+1;
+  }while( zPath[i++] );
 }
 
 /*
@@ -6439,85 +6547,26 @@ static int unixFullPathname(
   int nOut,                     /* Size of output buffer in bytes */
   char *zOut                    /* Output buffer */
 ){
-#if !defined(HAVE_READLINK) || !defined(HAVE_LSTAT)
-  return mkFullPathname(zPath, zOut, nOut);
-#else
-  int rc = SQLITE_OK;
-  int nByte;
-  int nLink = 0;                /* Number of symbolic links followed so far */
-  const char *zIn = zPath;      /* Input path for each iteration of loop */
-  char *zDel = 0;
-
-  assert( pVfs->mxPathname==MAX_PATHNAME );
+  DbPath path;
   UNUSED_PARAMETER(pVfs);
-
-  /* It's odd to simulate an io-error here, but really this is just
-  ** using the io-error infrastructure to test that SQLite handles this
-  ** function failing. This function could fail if, for example, the
-  ** current working directory has been unlinked.
-  */
-  SimulateIOError( return SQLITE_ERROR );
-
-  do {
-
-    /* Call stat() on path zIn. Set bLink to true if the path is a symbolic
-    ** link, or false otherwise.  */
-    int bLink = 0;
-    struct stat buf;
-    if( osLstat(zIn, &buf)!=0 ){
-      if( errno!=ENOENT ){
-        rc = unixLogError(SQLITE_CANTOPEN_BKPT, "lstat", zIn);
-      }
-    }else{
-      bLink = S_ISLNK(buf.st_mode);
+  path.rc = 0;
+  path.nUsed = 0;
+  path.nSymlink = 0;
+  path.nOut = nOut;
+  path.zOut = zOut;
+  if( zPath[0]!='/' ){
+    char zPwd[SQLITE_MAX_PATHLEN+2];
+    if( osGetcwd(zPwd, sizeof(zPwd)-2)==0 ){
+      return unixLogError(SQLITE_CANTOPEN_BKPT, "getcwd", zPath);
     }
-
-    if( bLink ){
-      nLink++;
-      if( zDel==0 ){
-        zDel = sqlite3_malloc(nOut);
-        if( zDel==0 ) rc = SQLITE_NOMEM_BKPT;
-      }else if( nLink>=SQLITE_MAX_SYMLINKS ){
-        rc = SQLITE_CANTOPEN_BKPT;
-      }
-
-      if( rc==SQLITE_OK ){
-        nByte = osReadlink(zIn, zDel, nOut-1);
-        if( nByte<0 ){
-          rc = unixLogError(SQLITE_CANTOPEN_BKPT, "readlink", zIn);
-        }else{
-          if( zDel[0]!='/' ){
-            int n;
-            for(n = sqlite3Strlen30(zIn); n>0 && zIn[n-1]!='/'; n--);
-            if( nByte+n+1>nOut ){
-              rc = SQLITE_CANTOPEN_BKPT;
-            }else{
-              memmove(&zDel[n], zDel, nByte+1);
-              memcpy(zDel, zIn, n);
-              nByte += n;
-            }
-          }
-          zDel[nByte] = '\0';
-        }
-      }
-
-      zIn = zDel;
-    }
-
-    assert( rc!=SQLITE_OK || zIn!=zOut || zIn[0]=='/' );
-    if( rc==SQLITE_OK && zIn!=zOut ){
-      rc = mkFullPathname(zIn, zOut, nOut);
-    }
-    if( bLink==0 ) break;
-    zIn = zOut;
-  }while( rc==SQLITE_OK );
-
-  sqlite3_free(zDel);
-  if( rc==SQLITE_OK && nLink ) rc = SQLITE_OK_SYMLINK;
-  return rc;
-#endif   /* HAVE_READLINK && HAVE_LSTAT */
+    appendAllPathElements(&path, zPwd);
+  }
+  appendAllPathElements(&path, zPath);
+  zOut[path.nUsed] = 0;
+  if( path.rc || path.nUsed<2 ) return SQLITE_CANTOPEN_BKPT;
+  if( path.nSymlink ) return SQLITE_OK_SYMLINK;
+  return SQLITE_OK;
 }
-
 
 #ifndef SQLITE_OMIT_LOAD_EXTENSION
 /*
@@ -7983,9 +8032,39 @@ int sqlite3_os_init(void){
 
   /* Register all VFSes defined in the aVfs[] array */
   for(i=0; i<(sizeof(aVfs)/sizeof(sqlite3_vfs)); i++){
+#ifdef SQLITE_DEFAULT_UNIX_VFS
+    sqlite3_vfs_register(&aVfs[i],
+           0==strcmp(aVfs[i].zName,SQLITE_DEFAULT_UNIX_VFS));
+#else
     sqlite3_vfs_register(&aVfs[i], i==0);
+#endif
   }
+#ifdef SQLITE_OS_KV_OPTIONAL
+  sqlite3KvvfsInit();
+#endif
   unixBigLock = sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_VFS1);
+
+#ifndef SQLITE_OMIT_WAL
+  /* Validate lock assumptions */
+  assert( SQLITE_SHM_NLOCK==8 );  /* Number of available locks */
+  assert( UNIX_SHM_BASE==120  );  /* Start of locking area */
+  /* Locks:
+  **    WRITE       UNIX_SHM_BASE      120
+  **    CKPT        UNIX_SHM_BASE+1    121
+  **    RECOVER     UNIX_SHM_BASE+2    122
+  **    READ-0      UNIX_SHM_BASE+3    123
+  **    READ-1      UNIX_SHM_BASE+4    124
+  **    READ-2      UNIX_SHM_BASE+5    125
+  **    READ-3      UNIX_SHM_BASE+6    126
+  **    READ-4      UNIX_SHM_BASE+7    127
+  **    DMS         UNIX_SHM_BASE+8    128
+  */
+  assert( UNIX_SHM_DMS==128   );  /* Byte offset of the deadman-switch */
+#endif
+
+  /* Initialize temp file dir array. */
+  unixTempFileInit();
+
   return SQLITE_OK; 
 }
 

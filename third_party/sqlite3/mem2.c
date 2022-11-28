@@ -19,8 +19,7 @@
 ** This file contains implementations of the low-level memory allocation
 ** routines specified in the sqlite3_mem_methods object.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** This version of the memory allocator is used only if the
@@ -38,7 +37,7 @@
 # define backtrace(A,B) 1
 # define backtrace_symbols_fd(A,B,C)
 #endif
-#include "libc/stdio/stdio.h"
+#include <stdio.h>
 
 /*
 ** Each memory allocation looks like this:
@@ -150,7 +149,7 @@ static void adjustStats(int iSize, int increment){
 ** This routine checks the guards at either end of the allocation and
 ** if they are incorrect it asserts.
 */
-static struct MemBlockHdr *sqlite3MemsysGetHeader(void *pAllocation){
+static struct MemBlockHdr *sqlite3MemsysGetHeader(const void *pAllocation){
   struct MemBlockHdr *p;
   int *pInt;
   u8 *pU8;
@@ -397,7 +396,7 @@ void sqlite3MemdebugSetType(void *p, u8 eType){
 **
 **     assert( sqlite3MemdebugHasType(p, MEMTYPE_HEAP) );
 */
-int sqlite3MemdebugHasType(void *p, u8 eType){
+int sqlite3MemdebugHasType(const void *p, u8 eType){
   int rc = 1;
   if( p && sqlite3GlobalConfig.m.xFree==sqlite3MemFree ){
     struct MemBlockHdr *pHdr;
@@ -419,7 +418,7 @@ int sqlite3MemdebugHasType(void *p, u8 eType){
 **
 **     assert( sqlite3MemdebugNoType(p, MEMTYPE_LOOKASIDE) );
 */
-int sqlite3MemdebugNoType(void *p, u8 eType){
+int sqlite3MemdebugNoType(const void *p, u8 eType){
   int rc = 1;
   if( p && sqlite3GlobalConfig.m.xFree==sqlite3MemFree ){
     struct MemBlockHdr *pHdr;

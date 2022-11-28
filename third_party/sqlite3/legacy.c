@@ -14,9 +14,8 @@
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 */
-/* clang-format off */
 
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Execute SQL code.  Return one of the SQLITE_ success/failure

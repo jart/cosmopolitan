@@ -15,9 +15,8 @@
 ** individual tokens and sends those tokens one-by-one over to the
 ** parser for analysis.
 */
+#include "third_party/sqlite3/sqliteInt.h"
 #include "libc/mem/mem.h"
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
 
 /* Character classes for tokenizing
 **
@@ -57,6 +56,7 @@
 #define CC_ID        27    /* unicode characters usable in IDs */
 #define CC_ILLEGAL   28    /* Illegal character */
 #define CC_NUL       29    /* 0x00 */
+#define CC_BOM       30    /* First byte of UTF8 BOM:  0xEF 0xBB 0xBF */
 
 static const unsigned char aiClass[] = {
 #ifdef SQLITE_ASCII
@@ -69,14 +69,14 @@ static const unsigned char aiClass[] = {
 /* 5x */    1,  1,  1,  1,  1,  1,  1,  1,  0,  2,  2,  9, 28, 28, 28,  2,
 /* 6x */    8,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
 /* 7x */    1,  1,  1,  1,  1,  1,  1,  1,  0,  2,  2, 28, 10, 28, 25, 28,
-/* 8x */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* 9x */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Ax */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Bx */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Cx */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Dx */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Ex */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-/* Fx */    2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2
+/* 8x */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* 9x */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* Ax */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* Bx */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* Cx */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* Dx */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+/* Ex */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 30,
+/* Fx */   27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27
 #endif
 #ifdef SQLITE_EBCDIC
 /*         x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xa  xb  xc  xd  xe  xf */
@@ -146,7 +146,6 @@ const unsigned char ebcdicToAscii[] = {
 ** the #include below.
 */
 #include "third_party/sqlite3/keywordhash.inc"
-
 
 /*
 ** If X is a character that can be used in an identifier then
@@ -290,6 +289,9 @@ int sqlite3GetToken(const unsigned char *z, int *tokenType){
         for(i=2; (c=z[i])!=0 && c!='\n'; i++){}
         *tokenType = TK_SPACE;   /* IMP: R-22934-25134 */
         return i;
+      }else if( z[1]=='>' ){
+        *tokenType = TK_PTR;
+        return 2 + (z[2]=='>');
       }
       *tokenType = TK_MINUS;
       return 1;
@@ -536,6 +538,14 @@ int sqlite3GetToken(const unsigned char *z, int *tokenType){
       i = 1;
       break;
     }
+    case CC_BOM: {
+      if( z[1]==0xbb && z[2]==0xbf ){
+        *tokenType = TK_SPACE;
+        return 3;
+      }
+      i = 1;
+      break;
+    }
     case CC_NUL: {
       *tokenType = TK_ILLEGAL;
       return 0;
@@ -551,13 +561,9 @@ int sqlite3GetToken(const unsigned char *z, int *tokenType){
 }
 
 /*
-** Run the parser on the given SQL string.  The parser structure is
-** passed in.  An SQLITE_ status code is returned.  If an error occurs
-** then an and attempt is made to write an error message into 
-** memory obtained from sqlite3_malloc() and to make *pzErrMsg point to that
-** error message.
+** Run the parser on the given SQL string.
 */
-int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
+int sqlite3RunParser(Parse *pParse, const char *zSql){
   int nErr = 0;                   /* Number of errors encountered */
   void *pEngine;                  /* The LEMON-generated LALR(1) parser */
   int n = 0;                      /* Length of the next token token */
@@ -565,6 +571,7 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   int lastTokenParsed = -1;       /* type of the previous token */
   sqlite3 *db = pParse->db;       /* The database connection */
   int mxSqlLen;                   /* Max length of an SQL string */
+  Parse *pParentParse = 0;        /* Outer parse context, if any */
 #ifdef sqlite3Parser_ENGINEALWAYSONSTACK
   yyParser sEngine;    /* Space to hold the Lemon-generated Parser object */
 #endif
@@ -577,7 +584,6 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   }
   pParse->rc = SQLITE_OK;
   pParse->zTail = zSql;
-  assert( pzErrMsg!=0 );
 #ifdef SQLITE_DEBUG
   if( db->flags & SQLITE_ParserTrace ){
     printf("parser: [[[%s]]]\n", zSql);
@@ -600,13 +606,14 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   assert( pParse->pNewTrigger==0 );
   assert( pParse->nVar==0 );
   assert( pParse->pVList==0 );
-  pParse->pParentParse = db->pParse;
+  pParentParse = db->pParse;
   db->pParse = pParse;
   while( 1 ){
     n = sqlite3GetToken((u8*)zSql, &tokenType);
     mxSqlLen -= n;
     if( mxSqlLen<0 ){
       pParse->rc = SQLITE_TOOBIG;
+      pParse->nErr++;
       break;
     }
 #ifndef SQLITE_OMIT_WINDOWFUNC
@@ -620,6 +627,7 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
 #endif /* SQLITE_OMIT_WINDOWFUNC */
       if( AtomicLoad(&db->u1.isInterrupted) ){
         pParse->rc = SQLITE_INTERRUPT;
+        pParse->nErr++;
         break;
       }
       if( tokenType==TK_SPACE ){
@@ -649,7 +657,10 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
         tokenType = analyzeFilterKeyword((const u8*)&zSql[6], lastTokenParsed);
 #endif /* SQLITE_OMIT_WINDOWFUNC */
       }else{
-        sqlite3ErrorMsg(pParse, "unrecognized token: \"%.*s\"", n, zSql);
+        Token x;
+        x.z = zSql;
+        x.n = n;
+        sqlite3ErrorMsg(pParse, "unrecognized token: \"%T\"", &x);
         break;
       }
     }
@@ -677,46 +688,30 @@ int sqlite3RunParser(Parse *pParse, const char *zSql, char **pzErrMsg){
   if( db->mallocFailed ){
     pParse->rc = SQLITE_NOMEM_BKPT;
   }
-  if( pParse->rc!=SQLITE_OK && pParse->rc!=SQLITE_DONE && pParse->zErrMsg==0 ){
-    pParse->zErrMsg = sqlite3MPrintf(db, "%s", sqlite3ErrStr(pParse->rc));
-  }
-  assert( pzErrMsg!=0 );
-  if( pParse->zErrMsg ){
-    *pzErrMsg = pParse->zErrMsg;
-    sqlite3_log(pParse->rc, "%s in \"%s\"", 
-                *pzErrMsg, pParse->zTail);
-    pParse->zErrMsg = 0;
+  if( pParse->zErrMsg || (pParse->rc!=SQLITE_OK && pParse->rc!=SQLITE_DONE) ){
+    if( pParse->zErrMsg==0 ){
+      pParse->zErrMsg = sqlite3MPrintf(db, "%s", sqlite3ErrStr(pParse->rc));
+    }
+    sqlite3_log(pParse->rc, "%s in \"%s\"", pParse->zErrMsg, pParse->zTail);
     nErr++;
   }
   pParse->zTail = zSql;
-  if( pParse->pVdbe && pParse->nErr>0 && pParse->nested==0 ){
-    sqlite3VdbeDelete(pParse->pVdbe);
-    pParse->pVdbe = 0;
-  }
-#ifndef SQLITE_OMIT_SHARED_CACHE
-  if( pParse->nested==0 ){
-    sqlite3DbFree(db, pParse->aTableLock);
-    pParse->aTableLock = 0;
-    pParse->nTableLock = 0;
-  }
-#endif
 #ifndef SQLITE_OMIT_VIRTUALTABLE
   sqlite3_free(pParse->apVtabLock);
 #endif
 
-  if( !IN_SPECIAL_PARSE ){
+  if( pParse->pNewTable && !IN_SPECIAL_PARSE ){
     /* If the pParse->declareVtab flag is set, do not delete any table 
     ** structure built up in pParse->pNewTable. The calling code (see vtab.c)
     ** will take responsibility for freeing the Table structure.
     */
     sqlite3DeleteTable(db, pParse->pNewTable);
   }
-  if( !IN_RENAME_OBJECT ){
+  if( pParse->pNewTrigger && !IN_RENAME_OBJECT ){
     sqlite3DeleteTrigger(db, pParse->pNewTrigger);
   }
-  sqlite3DbFree(db, pParse->pVList);
-  db->pParse = pParse->pParentParse;
-  pParse->pParentParse = 0;
+  if( pParse->pVList ) sqlite3DbNNFreeNN(db, pParse->pVList);
+  db->pParse = pParentParse;
   assert( nErr==0 || pParse->rc!=SQLITE_OK );
   return nErr;
 }

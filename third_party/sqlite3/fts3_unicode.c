@@ -12,18 +12,18 @@
 **
 ** Implementation of the "unicode" full-text-search tokenizer.
 */
-/* clang-format off */
 
 #ifndef SQLITE_DISABLE_FTS3_UNICODE
 
-#include "third_party/sqlite3/fts3Int.inc"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
 #include "libc/mem/mem.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/fts3_tokenizer.inc"
+
+#include "third_party/sqlite3/fts3_tokenizer.h"
 
 /*
 ** The following two macros - READ_UTF8 and WRITE_UTF8 - have been copied

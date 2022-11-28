@@ -13,7 +13,6 @@
 ** We've modified it slightly to serve as a standalone hash table
 ** implementation for the full-text indexing module.
 */
-/* clang-format off */
 
 /*
 ** The code in this file is only compiled if:
@@ -24,13 +23,14 @@
 **     * The FTS3 module is being built into the core of
 **       SQLite (in which case SQLITE_ENABLE_FTS3 is defined).
 */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
-#include "libc/mem/mem.h"
+#include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
-#include "third_party/sqlite3/fts3_hash.inc"
+
+#include "third_party/sqlite3/fts3_hash.h"
 
 /*
 ** Malloc and Free functions

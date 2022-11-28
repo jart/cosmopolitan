@@ -25,8 +25,7 @@
 ** that does error checking on mutexes to make sure they are being
 ** called correctly.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_MUTEX_OMIT
 

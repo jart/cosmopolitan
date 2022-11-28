@@ -43,7 +43,7 @@ hash
 icu
 ieee754
 insert
-json1
+json
 legacy
 loadext
 main

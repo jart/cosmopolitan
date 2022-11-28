@@ -1,5 +1,5 @@
 /*
-** 2005 May 23
+** 2005 May 23 
 **
 ** The author disclaims copyright to this source code.  In place of
 ** a legal notice, here is a blessing:
@@ -13,9 +13,8 @@
 ** This file contains functions used to access the internal hash tables
 ** of user defined functions and collation sequences.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
 
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** Invoke the 'collation needed' callback to request a collation sequence
@@ -338,6 +337,7 @@ FuncDef *sqlite3FunctionSearch(
 ){
   FuncDef *p;
   for(p=sqlite3BuiltinFunctions.a[h]; p; p=p->u.pHash){
+    assert( p->funcFlags & SQLITE_FUNC_BUILTIN );
     if( sqlite3StrICmp(p->zName, zFunc)==0 ){
       return p;
     }
@@ -358,7 +358,7 @@ void sqlite3InsertBuiltinFuncs(
     const char *zName = aDef[i].zName;
     int nName = sqlite3Strlen30(zName);
     int h = SQLITE_FUNC_HASH(zName[0], nName);
-    assert( zName[0]>='a' && zName[0]<='z' );
+    assert( aDef[i].funcFlags & SQLITE_FUNC_BUILTIN );
     pOther = sqlite3FunctionSearch(h, zName);
     if( pOther ){
       assert( pOther!=&aDef[i] && pOther->pNext!=&aDef[i] );
@@ -490,19 +490,21 @@ void sqlite3SchemaClear(void *p){
   Hash temp2;
   HashElem *pElem;
   Schema *pSchema = (Schema *)p;
+  sqlite3 xdb;
 
+  memset(&xdb, 0, sizeof(xdb));
   temp1 = pSchema->tblHash;
   temp2 = pSchema->trigHash;
   sqlite3HashInit(&pSchema->trigHash);
   sqlite3HashClear(&pSchema->idxHash);
   for(pElem=sqliteHashFirst(&temp2); pElem; pElem=sqliteHashNext(pElem)){
-    sqlite3DeleteTrigger(0, (Trigger*)sqliteHashData(pElem));
+    sqlite3DeleteTrigger(&xdb, (Trigger*)sqliteHashData(pElem));
   }
   sqlite3HashClear(&temp2);
   sqlite3HashInit(&pSchema->tblHash);
   for(pElem=sqliteHashFirst(&temp1); pElem; pElem=sqliteHashNext(pElem)){
     Table *pTab = sqliteHashData(pElem);
-    sqlite3DeleteTable(0, pTab);
+    sqlite3DeleteTable(&xdb, pTab);
   }
   sqlite3HashClear(&temp1);
   sqlite3HashClear(&pSchema->fkeyHash);

@@ -14,8 +14,7 @@
 ** systems that do not need this facility may omit it by recompiling
 ** the library with -DSQLITE_OMIT_AUTHORIZATION=1
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** All of the code in this file may be omitted by defining a single
@@ -176,10 +175,10 @@ void sqlite3AuthRead(
 
   if( iCol>=0 ){
     assert( iCol<pTab->nCol );
-    zCol = pTab->aCol[iCol].zName;
+    zCol = pTab->aCol[iCol].zCnName;
   }else if( pTab->iPKey>=0 ){
     assert( pTab->iPKey<pTab->nCol );
-    zCol = pTab->aCol[pTab->iPKey].zName;
+    zCol = pTab->aCol[pTab->iPKey].zCnName;
   }else{
     zCol = "ROWID";
   }

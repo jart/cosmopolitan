@@ -14,7 +14,6 @@
 */
 #ifndef SQLITE_MSVC_H
 #define SQLITE_MSVC_H
-/* clang-format off */
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4054)

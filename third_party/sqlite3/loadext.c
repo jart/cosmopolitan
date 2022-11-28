@@ -12,13 +12,12 @@
 ** This file contains code used to dynamically load extensions into
 ** the SQLite library.
 */
-/* clang-format off */
 
 #ifndef SQLITE_CORE
   #define SQLITE_CORE 1  /* Disable the API redefinition in sqlite3ext.h */
 #endif
 #include "third_party/sqlite3/sqlite3ext.h"
-#include "third_party/sqlite3/sqliteInt.inc"
+#include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_OMIT_LOAD_EXTENSION
 /*
@@ -481,6 +480,37 @@ static const sqlite3_api_routines sqlite3Apis = {
   sqlite3_database_file_object,
   /* Version 3.34.0 and later */
   sqlite3_txn_state,
+  /* Version 3.36.1 and later */
+  sqlite3_changes64,
+  sqlite3_total_changes64,
+  /* Version 3.37.0 and later */
+  sqlite3_autovacuum_pages,
+  /* Version 3.38.0 and later */
+  sqlite3_error_offset,
+#ifndef SQLITE_OMIT_VIRTUALTABLE
+  sqlite3_vtab_rhs_value,
+  sqlite3_vtab_distinct,
+  sqlite3_vtab_in,
+  sqlite3_vtab_in_first,
+  sqlite3_vtab_in_next,
+#else
+  0,
+  0,
+  0,
+  0,
+  0,
+#endif
+  /* Version 3.39.0 and later */
+#ifndef SQLITE_OMIT_DESERIALIZE
+  sqlite3_deserialize,
+  sqlite3_serialize,
+#else
+  0,
+  0,
+#endif
+  sqlite3_db_name,
+  /* Version 3.40.0 and later */
+  sqlite3_value_type
 };
 
 /* True if x is the directory separator character
@@ -516,7 +546,7 @@ static int sqlite3LoadExtension(
   const char *zEntry;
   char *zAltEntry = 0;
   void **aHandle;
-  u64 nMsg = 300 + sqlite3Strlen30(zFile);
+  u64 nMsg = strlen(zFile);
   int ii;
   int rc;
 
@@ -550,6 +580,12 @@ static int sqlite3LoadExtension(
 
   zEntry = zProc ? zProc : "sqlite3_extension_init";
 
+  /* tag-20210611-1.  Some dlopen() implementations will segfault if given
+  ** an oversize filename.  Most filesystems have a pathname limit of 4K,
+  ** so limit the extension filename length to about twice that.
+  ** https://sqlite.org/forum/forumpost/08a0d6d9bf */
+  if( nMsg>SQLITE_MAX_PATHLEN ) goto extension_not_found;
+    
   handle = sqlite3OsDlOpen(pVfs, zFile);
 #if SQLITE_OS_UNIX || SQLITE_OS_WIN
   for(ii=0; ii<ArraySize(azEndings) && handle==0; ii++){
@@ -559,17 +595,7 @@ static int sqlite3LoadExtension(
     sqlite3_free(zAltFile);
   }
 #endif
-  if( handle==0 ){
-    if( pzErrMsg ){
-      *pzErrMsg = zErrmsg = sqlite3_malloc64(nMsg);
-      if( zErrmsg ){
-        sqlite3_snprintf(nMsg, zErrmsg, 
-            "unable to open shared library [%s]", zFile);
-        sqlite3OsDlError(pVfs, nMsg-1, zErrmsg);
-      }
-    }
-    return SQLITE_ERROR;
-  }
+  if( handle==0 ) goto extension_not_found;
   xInit = (sqlite3_loadext_entry)sqlite3OsDlSym(pVfs, handle, zEntry);
 
   /* If no entry point was specified and the default legacy
@@ -606,10 +632,11 @@ static int sqlite3LoadExtension(
   }
   if( xInit==0 ){
     if( pzErrMsg ){
-      nMsg += sqlite3Strlen30(zEntry);
+      nMsg += strlen(zEntry) + 300;
       *pzErrMsg = zErrmsg = sqlite3_malloc64(nMsg);
       if( zErrmsg ){
-        sqlite3_snprintf(nMsg, zErrmsg,
+        assert( nMsg<0x7fffffff );  /* zErrmsg would be NULL if not so */
+        sqlite3_snprintf((int)nMsg, zErrmsg,
             "no entry point [%s] in shared library [%s]", zEntry, zFile);
         sqlite3OsDlError(pVfs, nMsg-1, zErrmsg);
       }
@@ -643,6 +670,19 @@ static int sqlite3LoadExtension(
 
   db->aExtension[db->nExtension++] = handle;
   return SQLITE_OK;
+
+extension_not_found:
+  if( pzErrMsg ){
+    nMsg += 300;
+    *pzErrMsg = zErrmsg = sqlite3_malloc64(nMsg);
+    if( zErrmsg ){
+      assert( nMsg<0x7fffffff );  /* zErrmsg would be NULL if not so */
+      sqlite3_snprintf((int)nMsg, zErrmsg,
+          "unable to open shared library [%.*s]", SQLITE_MAX_PATHLEN, zFile);
+      sqlite3OsDlError(pVfs, nMsg-1, zErrmsg);
+    }
+  }
+  return SQLITE_ERROR;
 }
 int sqlite3_load_extension(
   sqlite3 *db,          /* Load the extension into this database connection */

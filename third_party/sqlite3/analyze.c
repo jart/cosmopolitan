@@ -30,7 +30,7 @@
 ** created and used by SQLite versions 3.7.9 through 3.29.0 when
 ** SQLITE_ENABLE_STAT3 defined.  The functionality of sqlite_stat3
 ** is a superset of sqlite_stat2 and is also now deprecated.  The
-** sqlite_stat4 is an enhanced version of sqlite_stat3 and is only
+** sqlite_stat4 is an enhanced version of sqlite_stat3 and is only 
 ** available when compiled with SQLITE_ENABLE_STAT4 and in SQLite
 ** versions 3.8.1 and later.  STAT4 is the only variant that is still
 ** supported.
@@ -49,7 +49,7 @@
 ** integer is the average number of rows in the index that have the same
 ** value in the first column of the index.  The third integer is the average
 ** number of rows in the index that have the same value for the first two
-** columns.  The N-th integer (for N>1) is the average number of rows in
+** columns.  The N-th integer (for N>1) is the average number of rows in 
 ** the index which have the same value for the first N-1 columns.  For
 ** a K-column index, there will be K+1 integers in the stat column.  If
 ** the index is unique, then the last integer will be 1.
@@ -59,7 +59,7 @@
 ** must be separated from the last integer by a single space.  If the
 ** "unordered" keyword is present, then the query planner assumes that
 ** the index is unordered and will not use the index for a range query.
-**
+** 
 ** If the sqlite_stat1.idx column is NULL, then the sqlite_stat1.stat
 ** column contains a single integer which is the (estimated) number of
 ** rows in the table identified by sqlite_stat1.tbl.
@@ -117,9 +117,9 @@
 ** number of entries that are strictly less than the sample.  The first
 ** integer in nLt contains the number of entries in the index where the
 ** left-most column is less than the left-most column of the sample.
-** The K-th integer in the nLt entry is the number of index entries
+** The K-th integer in the nLt entry is the number of index entries 
 ** where the first K columns are less than the first K columns of the
-** sample.  The nDLt column is like nLt except that it contains the
+** sample.  The nDLt column is like nLt except that it contains the 
 ** number of distinct entries in the index that are less than the
 ** sample.
 **
@@ -140,8 +140,7 @@
 ** integer in the equivalent columns in sqlite_stat4.
 */
 #ifndef SQLITE_OMIT_ANALYZE
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 #if defined(SQLITE_ENABLE_STAT4)
 # define IsStat4     1
@@ -434,7 +433,6 @@ static void statInit(
       + sizeof(tRowcnt)*3*nColUp*(nCol+mxSample);
   }
 #endif
-  db = sqlite3_context_db_handle(context);
   p = sqlite3DbMallocZero(db, n);
   if( p==0 ){
     sqlite3_result_error_nomem(context);
@@ -849,32 +847,29 @@ static void statGet(
     **   * "WHERE a=? AND b=?" matches 2 rows.
     **
     ** If D is the count of distinct values and K is the total number of 
-    ** rows, then each estimate is computed as:
+    ** rows, then each estimate is usually computed as:
     **
     **        I = (K+D-1)/D
+    **
+    ** In other words, I is K/D rounded up to the next whole integer.
+    ** However, if I is between 1.0 and 1.1 (in other words if I is
+    ** close to 1.0 but just a little larger) then do not round up but
+    ** instead keep the I value at 1.0.
     */
-    char *z;
-    int i;
+    sqlite3_str sStat;   /* Text of the constructed "stat" line */
+    int i;               /* Loop counter */
 
-    char *zRet = sqlite3MallocZero( (p->nKeyCol+1)*25 );
-    if( zRet==0 ){
-      sqlite3_result_error_nomem(context);
-      return;
-    }
-
-    sqlite3_snprintf(24, zRet, "%llu", 
+    sqlite3StrAccumInit(&sStat, 0, 0, 0, (p->nKeyCol+1)*100);
+    sqlite3_str_appendf(&sStat, "%llu", 
         p->nSkipAhead ? (u64)p->nEst : (u64)p->nRow);
-    z = zRet + sqlite3Strlen30(zRet);
     for(i=0; i<p->nKeyCol; i++){
       u64 nDistinct = p->current.anDLt[i] + 1;
       u64 iVal = (p->nRow + nDistinct - 1) / nDistinct;
-      sqlite3_snprintf(24, z, " %llu", iVal);
-      z += sqlite3Strlen30(z);
+      if( iVal==2 && p->nRow*10 <= nDistinct*11 ) iVal = 1;
+      sqlite3_str_appendf(&sStat, " %llu", iVal);
       assert( p->current.anEq[i] );
     }
-    assert( z[0]=='\0' && z>zRet );
-
-    sqlite3_result_text(context, zRet, -1, sqlite3_free);
+    sqlite3ResultStrAccum(context, &sStat);
   }
 #ifdef SQLITE_ENABLE_STAT4
   else if( eCall==STAT_GET_ROWID ){
@@ -893,6 +888,8 @@ static void statGet(
     }
   }else{
     tRowcnt *aCnt = 0;
+    sqlite3_str sStat;
+    int i;
 
     assert( p->iGet<p->nSample );
     switch( eCall ){
@@ -904,23 +901,12 @@ static void statGet(
         break;
       }
     }
-
-    {
-      char *zRet = sqlite3MallocZero(p->nCol * 25);
-      if( zRet==0 ){
-        sqlite3_result_error_nomem(context);
-      }else{
-        int i;
-        char *z = zRet;
-        for(i=0; i<p->nCol; i++){
-          sqlite3_snprintf(24, z, "%llu ", (u64)aCnt[i]);
-          z += sqlite3Strlen30(z);
-        }
-        assert( z[0]=='\0' && z>zRet );
-        z[-1] = '\0';
-        sqlite3_result_text(context, zRet, -1, sqlite3_free);
-      }
+    sqlite3StrAccumInit(&sStat, 0, 0, 0, p->nCol*100);
+    for(i=0; i<p->nCol; i++){
+      sqlite3_str_appendf(&sStat, "%llu ", (u64)aCnt[i]);
     }
+    if( sStat.nChar ) sStat.nChar--;
+    sqlite3ResultStrAccum(context, &sStat);
   }
 #endif /* SQLITE_ENABLE_STAT4 */
 #ifndef SQLITE_DEBUG
@@ -967,9 +953,10 @@ static void analyzeVdbeCommentIndexWithColumnName(
   if( NEVER(i==XN_ROWID) ){
     VdbeComment((v,"%s.rowid",pIdx->zName));
   }else if( i==XN_EXPR ){
+    assert( pIdx->bHasExpr );
     VdbeComment((v,"%s.expr(%d)",pIdx->zName, k));
   }else{
-    VdbeComment((v,"%s.%s", pIdx->zName, pIdx->pTable->aCol[i].zName));
+    VdbeComment((v,"%s.%s", pIdx->zName, pIdx->pTable->aCol[i].zCnName));
   }
 }
 #else
@@ -1016,7 +1003,7 @@ static void analyzeOneTable(
   if( v==0 || NEVER(pTab==0) ){
     return;
   }
-  if( pTab->tnum==0 ){
+  if( !IsOrdinaryTable(pTab) ){
     /* Do not gather statistics on views or virtual tables */
     return;
   }
@@ -1043,7 +1030,7 @@ static void analyzeOneTable(
     memcpy(pStat1->zName, "sqlite_stat1", 13);
     pStat1->nCol = 3;
     pStat1->iPKey = -1;
-    sqlite3VdbeAddOp4(pParse->pVdbe, OP_Noop, 0, 0, 0,(char*)pStat1,P4_DYNBLOB);
+    sqlite3VdbeAddOp4(pParse->pVdbe, OP_Noop, 0, 0, 0,(char*)pStat1,P4_DYNAMIC);
   }
 #endif
 
@@ -1841,9 +1828,12 @@ static int loadStatTbl(
 */
 static int loadStat4(sqlite3 *db, const char *zDb){
   int rc = SQLITE_OK;             /* Result codes from subroutines */
+  const Table *pStat4;
 
   assert( db->lookaside.bDisable );
-  if( sqlite3FindTable(db, "sqlite_stat4", zDb) ){
+  if( (pStat4 = sqlite3FindTable(db, "sqlite_stat4", zDb))!=0
+   && IsOrdinaryTable(pStat4)
+  ){
     rc = loadStatTbl(db,
       "SELECT idx,count(*) FROM %Q.sqlite_stat4 GROUP BY idx", 
       "SELECT idx,neq,nlt,ndlt,sample FROM %Q.sqlite_stat4",
@@ -1880,6 +1870,7 @@ int sqlite3AnalysisLoad(sqlite3 *db, int iDb){
   char *zSql;
   int rc = SQLITE_OK;
   Schema *pSchema = db->aDb[iDb].pSchema;
+  const Table *pStat1;
 
   assert( iDb>=0 && iDb<db->nDb );
   assert( db->aDb[iDb].pBt!=0 );
@@ -1902,7 +1893,9 @@ int sqlite3AnalysisLoad(sqlite3 *db, int iDb){
   /* Load new statistics out of the sqlite_stat1 table */
   sInfo.db = db;
   sInfo.zDatabase = db->aDb[iDb].zDbSName;
-  if( sqlite3FindTable(db, "sqlite_stat1", sInfo.zDatabase)!=0 ){
+  if( (pStat1 = sqlite3FindTable(db, "sqlite_stat1", sInfo.zDatabase))
+   && IsOrdinaryTable(pStat1)
+  ){
     zSql = sqlite3MPrintf(db, 
         "SELECT tbl,idx,stat FROM %Q.sqlite_stat1", sInfo.zDatabase);
     if( zSql==0 ){

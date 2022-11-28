@@ -11,8 +11,7 @@
 ******************************************************************************
 **
 */
-/* clang-format off */
-#include "third_party/sqlite3/fts3Int.inc"
+#include "third_party/sqlite3/fts3Int.h"
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
 
 #include "libc/assert.h"
@@ -298,6 +297,7 @@ static int fts3auxNextMethod(sqlite3_vtab_cursor *pCursor){
     if( fts3auxGrowStatArray(pCsr, 2) ) return SQLITE_NOMEM;
     memset(pCsr->aStat, 0, sizeof(struct Fts3auxColstats) * pCsr->nStat);
     iCol = 0;
+    rc = SQLITE_OK;
 
     while( i<nDoclist ){
       sqlite3_int64 v = 0;
@@ -341,6 +341,10 @@ static int fts3auxNextMethod(sqlite3_vtab_cursor *pCursor){
         /* State 3. The integer just read is a column number. */
         default: assert( eState==3 );
           iCol = (int)v;
+          if( iCol<1 ){
+            rc = SQLITE_CORRUPT_VTAB;
+            break;
+          }
           if( fts3auxGrowStatArray(pCsr, iCol+2) ) return SQLITE_NOMEM;
           pCsr->aStat[iCol+1].nDoc++;
           eState = 2;
@@ -349,7 +353,6 @@ static int fts3auxNextMethod(sqlite3_vtab_cursor *pCursor){
     }
 
     pCsr->iCol = 0;
-    rc = SQLITE_OK;
   }else{
     pCsr->isEof = 1;
   }
@@ -407,6 +410,7 @@ static int fts3auxFilterMethod(
   sqlite3Fts3SegReaderFinish(&pCsr->csr);
   sqlite3_free((void *)pCsr->filter.zTerm);
   sqlite3_free(pCsr->aStat);
+  sqlite3_free(pCsr->zStop);
   memset(&pCsr->csr, 0, ((u8*)&pCsr[1]) - (u8*)&pCsr->csr);
 
   pCsr->filter.flags = FTS3_SEGMENT_REQUIRE_POS|FTS3_SEGMENT_IGNORE_EMPTY;

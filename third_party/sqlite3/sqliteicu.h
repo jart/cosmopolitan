@@ -14,7 +14,6 @@
 ** ICU extension.  All it does is declare the sqlite3IcuInit() interface.
 */
 #include "third_party/sqlite3/sqlite3.h"
-/* clang-format off */
 
 #ifdef __cplusplus
 extern "C" {

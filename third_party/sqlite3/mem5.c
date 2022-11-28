@@ -10,12 +10,12 @@
 **
 *************************************************************************
 ** This file contains the C functions that implement a memory
-** allocation subsystem for use by SQLite.
+** allocation subsystem for use by SQLite. 
 **
 ** This version of the memory allocation subsystem omits all
 ** use of malloc(). The application gives SQLite a block of memory
 ** before calling sqlite3_initialize() from which allocations
-** are made and returned by the xMalloc() and xRealloc()
+** are made and returned by the xMalloc() and xRealloc() 
 ** implementations. Once sqlite3_initialize() has been called,
 ** the amount of memory available to SQLite is fixed and cannot
 ** be changed.
@@ -35,12 +35,12 @@
 ** This algorithm is described in: J. M. Robson. "Bounds for Some Functions
 ** Concerning Dynamic Storage Allocation". Journal of the Association for
 ** Computing Machinery, Volume 21, Number 8, July 1974, pages 491-499.
-**
+** 
 ** Let n be the size of the largest allocation divided by the minimum
 ** allocation size (after rounding all sizes up to a power of 2.)  Let M
 ** be the maximum amount of memory ever outstanding at one time.  Let
 ** N be the total amount of memory available for allocation.  Robson
-** proved that this memory allocator will never breakdown due to
+** proved that this memory allocator will never breakdown due to 
 ** fragmentation as long as the following constraint holds:
 **
 **      N >=  M*(1 + log2(n)/2) - n + 1
@@ -48,8 +48,7 @@
 ** The sqlite3_status() logic tracks the maximum values of n and M so
 ** that an application can, at any time, verify this constraint.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 /*
 ** This version of the memory allocator is used only when 
@@ -421,8 +420,13 @@ static void *memsys5Realloc(void *pPrior, int nBytes){
 */
 static int memsys5Roundup(int n){
   int iFullSz;
-  if( n > 0x40000000 ) return 0;
-  for(iFullSz=mem5.szAtom; iFullSz<n; iFullSz *= 2);
+  if( n<=mem5.szAtom*2 ){
+    if( n<=mem5.szAtom ) return mem5.szAtom;
+    return mem5.szAtom*2;
+  }
+  if( n>0x40000000 ) return 0;
+  for(iFullSz=mem5.szAtom*8; iFullSz<n; iFullSz *= 4);
+  if( (iFullSz/2)>=n ) return iFullSz/2;
   return iFullSz;
 }
 

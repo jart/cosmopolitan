@@ -12,8 +12,7 @@
 ** This file contains code to implement various aspects of UPSERT
 ** processing and handling of the Upsert object.
 */
-#include "third_party/sqlite3/sqliteInt.inc"
-/* clang-format off */
+#include "third_party/sqlite3/sqliteInt.h"
 
 #ifndef SQLITE_OMIT_UPSERT
 /*
@@ -167,6 +166,7 @@ int sqlite3UpsertAnalyzeTarget(
         if( pIdx->aiColumn[ii]==XN_EXPR ){
           assert( pIdx->aColExpr!=0 );
           assert( pIdx->aColExpr->nExpr>ii );
+          assert( pIdx->bHasExpr );
           pExpr = pIdx->aColExpr->a[ii].pExpr;
           if( pExpr->op!=TK_COLLATE ){
             sCol[0].pLeft = pExpr;
@@ -288,7 +288,7 @@ void sqlite3UpsertDoUpdate(
         k = sqlite3TableColumnToIndex(pIdx, pPk->aiColumn[i]);
         sqlite3VdbeAddOp3(v, OP_Column, iCur, k, iPk+i);
         VdbeComment((v, "%s.%s", pIdx->zName,
-                    pTab->aCol[pPk->aiColumn[i]].zName));
+                    pTab->aCol[pPk->aiColumn[i]].zCnName));
       }
       sqlite3VdbeVerifyAbortable(v, OE_Abort);
       i = sqlite3VdbeAddOp4Int(v, OP_Found, iDataCur, 0, iPk, nPk);
