@@ -1812,8 +1812,9 @@ static int db_deserialize(lua_State *L) {
     if (buffer == NULL || size == 0) /* ignore empty database content */
         return 0;
 
-    sqlite3_deserialize(db->db, "main", buffer, size, size, 0);
-    free(buffer);
+    const char *sqlbuf = memcpy(sqlite3_malloc(size), buffer, size);
+    sqlite3_deserialize(db->db, "main", sqlbuf, size, size,
+        SQLITE_DESERIALIZE_FREEONCLOSE + SQLITE_DESERIALIZE_RESIZEABLE);
     return 0;
 }
 
