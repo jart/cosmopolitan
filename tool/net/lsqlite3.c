@@ -1828,13 +1828,15 @@ static int db_deserialize(lua_State *L) {
 
 typedef struct {
     sqlite3_changeset_iter *itr;
+    bool collectable;
 } liter;
 
-static liter *lsqlite_makeiter(lua_State *L, sqlite3_changeset_iter *piter) {
+static liter *lsqlite_makeiter(lua_State *L, sqlite3_changeset_iter *piter, bool collectable) {
     liter *litr = (liter*)lua_newuserdata(L, sizeof(liter));
     lua_rawgeti(L, LUA_REGISTRYINDEX, sqlite_itr_meta_ref);
     lua_setmetatable(L, -2);
     litr->itr = piter;
+    litr->collectable = collectable;
     return litr;
 }
 
@@ -1846,6 +1848,26 @@ static liter *lsqlite_checkiter(lua_State *L, int index) {
     liter *litr = lsqlite_getiter(L, index);
     if (litr->itr == NULL) luaL_argerror(L, index, "invalid sqlite iterator");
     return litr;
+}
+
+static int liter_finalize(lua_State *L) {
+    liter *litr = lsqlite_getiter(L, 1);
+    int rc;
+    if (litr->itr) {
+        if (!litr->collectable) {
+            return pusherr(L, SQLITE_CORRUPT);
+        }
+        if ((rc = sqlite3changeset_finalize(litr->itr)) != SQLITE_OK) {
+            return pusherr(L, rc);
+        }
+        litr->itr = NULL;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+static int liter_gc(lua_State *L) {
+    return liter_finalize(L);
 }
 
 static int liter_tostring(lua_State *L) {
@@ -1897,6 +1919,20 @@ static int liter_conflict(lua_State *L) {
     return liter_table(L, sqlite3changeset_conflict);
 }
 
+static int liter_op(lua_State *L) {
+    const char *zTab;
+    int rc, nCol, Op, bIndirect;
+    liter *litr = lsqlite_checkiter(L, 1);
+
+    if ((rc = sqlite3changeset_op(litr->itr, &zTab, &nCol, &Op, &bIndirect)) != LUA_OK) {
+        return pusherr(L, rc);
+    }
+    lua_pushstring(L, zTab);
+    lua_pushinteger(L, Op);
+    lua_pushboolean(L, bIndirect);
+    return 3;
+}
+
 static int liter_fk_conflicts(lua_State *L) {
     int rc, nOut;
     liter *litr = lsqlite_checkiter(L, 1);
@@ -1904,6 +1940,15 @@ static int liter_fk_conflicts(lua_State *L) {
         return pusherr(L, rc);
     }
     lua_pushinteger(L, nOut);
+    return 1;
+}
+
+static int liter_next(lua_State *L) {
+    liter *litr = lsqlite_checkiter(L, 1);
+    if (!litr->collectable) {
+        return pusherr(L, SQLITE_CORRUPT);
+    }
+    lua_pushinteger(L, sqlite3changeset_next(litr->itr));
     return 1;
 }
 
@@ -2032,7 +2077,7 @@ static int db_changeset_conflict_callback(
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_conflict_cb); /* get callback */
     lua_rawgeti(L, LUA_REGISTRYINDEX, changeset_cb_udata); /* get callback user data */
     lua_pushinteger(L, eConflict);
-    (void)lsqlite_makeiter(L, p);
+    (void)lsqlite_makeiter(L, p, 0);
     lua_pushstring(L, zTab);
     lua_pushinteger(L, Op);
     lua_pushboolean(L, bIndirect);
@@ -2161,6 +2206,16 @@ static int lsession_isempty(lua_State *L) {
     return 1;
 }
 
+static int lsession_diff(lua_State *L) {
+    lsession *lses = lsqlite_checksession(L, 1);
+    const char *zFromDb = luaL_checkstring(L, 2);
+    const char *zTbl = luaL_checkstring(L, 3);
+    int rc = sqlite3session_diff(lses->ses, zFromDb, zTbl, NULL);
+    if (rc != SQLITE_OK) return pusherr(L, rc);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 static int lsession_bool(
         lua_State *L,
         int (*session_func)(sqlite3_session *ses, int val)
@@ -2239,6 +2294,21 @@ static int db_create_session(lua_State *L) {
         return pusherr(L, sqlite3_errcode(db->db));
     }
     (void)lsqlite_makesession(L, ses, db);
+    return 1;
+}
+
+static int db_iterate_changeset(lua_State *L) {
+    sqlite3_changeset_iter *p;
+    sdb *db = lsqlite_checkdb(L, 1);
+    const char *cset = luaL_checkstring(L, 2);
+    int nset = lua_rawlen(L, 2);
+    int flags = luaL_optinteger(L, 3, 0);
+    int rc;
+
+    if ((rc = sqlite3changeset_start_v2(&p, nset, cset, flags)) != SQLITE_OK) {
+        return pusherr(L, rc);
+    }
+    (void)lsqlite_makeiter(L, p, 1);
     return 1;
 }
 
@@ -2550,6 +2620,7 @@ static const luaL_Reg dblib[] = {
     {"apply_changeset",     db_apply_changeset      },
     {"invert_changeset",    db_invert_changeset     },
     {"concat_changeset",    db_concat_changeset     },
+    {"iterate_changeset",   db_iterate_changeset    },
 #endif
 
     {"__tostring",          db_tostring             },
@@ -2634,6 +2705,7 @@ static const luaL_Reg seslib[] = {
     {"isempty",         lsession_isempty        },
     {"indirect",        lsession_indirect       },
     {"enable",          lsession_enable         },
+    {"diff",            lsession_diff           },
     {"delete",          lsession_delete         },
 
     {"__tostring",      lsession_tostring       },
@@ -2651,13 +2723,17 @@ static const luaL_Reg reblib[] = {
 };
 
 static const luaL_Reg itrlib[] = {
+    {"op",              liter_op                },
     {"pk",              liter_pk                },
     {"new",             liter_new               },
     {"old",             liter_old               },
+    {"next",            liter_next              },
     {"conflict",        liter_conflict          },
+    {"finalize",        liter_finalize          },
     {"fk_conflicts",    liter_fk_conflicts      },
 
     {"__tostring",      liter_tostring          },
+    {"__gc",            liter_gc                },
     {NULL, NULL}
 };
 
