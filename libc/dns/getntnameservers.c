@@ -16,11 +16,11 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/mem/arraylist.internal.h"
 #include "libc/calls/calls.h"
 #include "libc/calls/syscall_support-nt.internal.h"
 #include "libc/dns/dns.h"
 #include "libc/dns/resolvconf.h"
+#include "libc/mem/arraylist.internal.h"
 #include "libc/nt/enum/keyaccess.h"
 #include "libc/nt/enum/reggetvalueflags.h"
 #include "libc/nt/registry.h"
@@ -42,6 +42,7 @@ textwindows int GetNtNameServers(struct ResolvConf *resolv) {
   int rc;
   char value8[128];
   int64_t hkInterfaces;
+  char *state, *addr, *tmp;
   struct sockaddr_in nameserver;
   char16_t value[128], uuid[64];
   uint32_t i, keycount, valuebytes, uuidlen;
@@ -75,8 +76,12 @@ textwindows int GetNtNameServers(struct ResolvConf *resolv) {
                          ((valuebytes = sizeof(value)), &valuebytes)) &&
             valuebytes > 2 * sizeof(char16_t)))) {
         tprecode16to8(value8, sizeof(value8), value);
-        if (inet_pton(AF_INET, value8, &nameserver.sin_addr.s_addr) == 1) {
-          if (append(&resolv->nameservers, &nameserver) != -1) ++rc;
+        tmp = value8;
+        while ((addr = strtok_r(tmp, ", ", &state))) {
+          if (inet_pton(AF_INET, addr, &nameserver.sin_addr.s_addr) == 1) {
+            if (append(&resolv->nameservers, &nameserver) != -1) ++rc;
+          }
+          tmp = NULL;
         }
       }
     }
