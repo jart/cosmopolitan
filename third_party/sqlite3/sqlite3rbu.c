@@ -1,3 +1,4 @@
+// clang-format off
 /*
 ** 2014 August 30
 **
@@ -90,7 +91,7 @@
 #include "third_party/sqlite3/sqlite3rbu.h"
 
 #if defined(_WIN32_WCE)
-#include "windows.h"
+// #include "third_party/sqlite3/windows.h"
 #endif
 
 /* Maximum number of prepared UPDATE statements held by this module */

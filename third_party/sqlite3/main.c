@@ -1,3 +1,4 @@
+// clang-format off
 /*
 ** 2001 September 15
 **
@@ -17,13 +18,13 @@
 #include "third_party/sqlite3/sqliteInt.h"
 
 #ifdef SQLITE_ENABLE_FTS3
-# include "third_party/sqlite3/fts3.h"
+#include "third_party/sqlite3/fts3.h"
 #endif
 #ifdef SQLITE_ENABLE_RTREE
-# include "third_party/sqlite3/rtree.h"
+#include "third_party/sqlite3/rtree.h"
 #endif
 #if defined(SQLITE_ENABLE_ICU) || defined(SQLITE_ENABLE_ICU_COLLATIONS)
-# include "third_party/sqlite3/sqliteicu.h"
+#include "third_party/sqlite3/sqliteicu.h"
 #endif
 
 /*

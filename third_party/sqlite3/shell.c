@@ -180,7 +180,7 @@ typedef unsigned char u8;
 
 #elif HAVE_LINENOISE
 
-# include "third_party/linenoise/linenoise.h"
+#include "third_party/linenoise/linenoise.h"
 # define shell_add_history(X) linenoiseHistoryAdd(X)
 # define shell_read_history(X) linenoiseHistoryLoad(X)
 # define shell_write_history(X) linenoiseHistorySave(X)

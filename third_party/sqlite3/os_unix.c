@@ -112,13 +112,23 @@
 #include "libc/mem/mem.h"
 
 #if !defined(SQLITE_OMIT_WAL) || SQLITE_MAX_MMAP_SIZE>0
-#include "libc/isystem/sys/mman.h"
+#include "libc/calls/calls.h"
+#include "libc/sysv/consts/map.h"
 #endif
 
 #if SQLITE_ENABLE_LOCKING_STYLE
-# include "libc/isystem/sys/ioctl.h"
-# include "libc/isystem/sys/file.h"
-# include "libc/isystem/sys/param.h"
+#include "libc/calls/ioctl.h"
+#include "libc/calls/struct/winsize.h"
+#include "libc/sysv/consts/fd.h"
+#include "libc/sysv/consts/fio.h"
+#include "libc/calls/struct/flock.h"
+#include "libc/sysv/consts/l.h"
+#include "libc/sysv/consts/lock.h"
+#include "libc/sysv/consts/ok.h"
+#include "libc/calls/struct/rlimit.h"
+#include "libc/calls/struct/rusage.h"
+#include "libc/calls/sysparam.h"
+#include "libc/limits.h"
 #endif /* SQLITE_ENABLE_LOCKING_STYLE */
 
 /*
@@ -302,7 +312,7 @@ static pid_t randomnessPid = 0;
 /*
 ** Include code that is common to all os_*.c files
 */
-#include "os_common.h"
+#include "third_party/sqlite3/os_common.h"
 
 /*
 ** Define various macros that are missing from some systems.

@@ -1,3 +1,4 @@
+// clang-format off
 /*
 ** 2001 September 15
 **
@@ -208,7 +209,7 @@
 ** autoconf-based build
 */
 #if defined(_HAVE_SQLITE_CONFIG_H) && !defined(SQLITECONFIG_H)
-#include "sqlite_cfg.h"
+// #include "third_party/sqlite3/sqlite_cfg.h"
 #define SQLITECONFIG_H 1
 #endif
 
