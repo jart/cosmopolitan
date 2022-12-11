@@ -57,6 +57,7 @@
            "__SSP_EXPLICIT__"
            "__SANITIZE_ADDRESS__"
            "__SANITIZE_THREAD__"
+           "__SANITIZE_MEMORY__"
            "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_1"
            "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_2"
            "__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4"

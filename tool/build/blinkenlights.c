@@ -2328,7 +2328,7 @@ static void OnKeyboardServiceReadKeyPress(void) {
   static char buf[32];
   static size_t pending;
   pty->conf |= kPtyBlinkcursor;
-  if (!pending && !(pending = ReadAnsi(0, buf, sizeof(buf)))) {
+  if (!pending && !(pending = ReadAnsi(ttyin, buf, sizeof(buf)))) {
     exitcode = 0;
     action |= EXIT;
     return;

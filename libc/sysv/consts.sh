@@ -214,7 +214,7 @@ syscon	open	O_VERIFY				0			0			0x00200000		0			0			0			#
 syscon	open	O_SHLOCK				0			0x00000010		0x00000010		0x00000010		0x00000010		0			#
 syscon	open	O_EXLOCK				0			0x00000020		0x00000020		0x00000020		0x00000020		0			#
 syscon	open	O_TTY_INIT				0			0			0x00080000		0			0			0			#
-syscon	compat	O_LARGEFILE				0100000			0			0			0			0			0			#
+syscon	compat	O_LARGEFILE				0x00008000		0			0			0			0			0			#
 
 #	mmap() flags
 #	the revolutionary praxis of malloc()

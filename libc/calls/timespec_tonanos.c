@@ -22,7 +22,7 @@
 /**
  * Converts timespec to scalar.
  *
-. * This returns the absolute number of nanoseconds in a timespec. If
+ * This returns the absolute number of nanoseconds in a timespec. If
  * overflow happens, then `INT64_MAX` or `INT64_MIN` is returned. The
  * `errno` variable isn't changed.
  *

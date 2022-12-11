@@ -64,6 +64,7 @@
         (gcc-builtin-functions
          '("__has_attribute"
            "__has_builtin"
+           "__has_feature"
            "__has_cpp_attribute"
            "__builtin_va_arg"
            "__builtin_va_copy"

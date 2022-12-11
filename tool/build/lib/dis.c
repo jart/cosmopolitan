@@ -19,6 +19,7 @@
 #include "libc/fmt/bing.internal.h"
 #include "libc/fmt/itoa.h"
 #include "libc/intrin/tpenc.h"
+#include "libc/limits.h"
 #include "libc/log/check.h"
 #include "libc/mem/arraylist2.internal.h"
 #include "libc/mem/mem.h"
@@ -90,7 +91,7 @@ static char *DisAddr(struct Dis *d, char *p) {
   int64_t x = d->addr;
   if (0 <= x && x < 0x10fff0) {
     return p + uint64toarray_fixed16(x, p, 24);
-  } else if (-2147483648 <= x && x <= 2147483647) {
+  } else if (INT_MIN <= x && x <= INT_MAX) {
     return p + uint64toarray_fixed16(x, p, 32);
   } else {
     return p + uint64toarray_fixed16(x, p, 48);

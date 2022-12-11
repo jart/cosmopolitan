@@ -1,7 +1,7 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
 │vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
 ╞══════════════════════════════════════════════════════════════════════════════╡
-│ Copyright 2021 Justine Alexandra Roberts Tunney                              │
+│ Copyright 2022 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
 │ Permission to use, copy, modify, and/or distribute this software for         │
 │ any purpose with or without fee is hereby granted, provided that the         │
@@ -16,45 +16,57 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/errno.h"
-#include "libc/macros.internal.h"
-#include "libc/mem/mem.h"
+#include "libc/runtime/runtime.h"
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
 
 /**
- * Allocates aligned memory, the POSIX way.
+ * @fileoverview scalable diff tool
  *
- * Allocates a chunk of n bytes, aligned in accord with the alignment
- * argument. Differs from memalign() only in that it:
- *
- * 1. Assigns the allocated memory to *pp rather than returning it
- * 2. Fails and returns EINVAL if the alignment is not a power of two
- * 3. Fails and returns ENOMEM if memory cannot be allocated
- *
- * @param pp receives pointer, only on success
- * @param alignment must be 2-power multiple of sizeof(void *)
- * @param bytes is number of bytes to allocate
- * @return return 0 or EINVAL or ENOMEM w/o setting errno
- * @see memalign()
- * @returnserrno
- * @threadsafe
+ * The normal `diff` command can take hours to diff text files that are
+ * hundreds of megabytes in size. This tool is a useful replacement for
+ * use cases like comparing a log of CPU registers.
  */
-errno_t posix_memalign(void **pp, size_t alignment, size_t bytes) {
-  int e;
-  void *m;
-  size_t q, r;
-  q = alignment / sizeof(void *);
-  r = alignment % sizeof(void *);
-  if (!r && q && IS2POW(q)) {
-    e = errno;
-    m = memalign(alignment, bytes);
-    if (m) {
-      *pp = m;
-      return 0;
-    } else {
-      errno = e;
-      return ENOMEM;
+
+char line1[4096];
+char line2[4096];
+
+int main(int argc, char *argv[]) {
+  int line;
+  char *l1, *l2;
+  FILE *f1, *f2;
+  int differences;
+  if (argc < 3) {
+    fprintf(stderr, "usage: %s FILE1 FILE2\n", argv[0]);
+    exit(1);
+  }
+  if (!(f1 = fopen(argv[1], "r"))) {
+    perror(argv[1]);
+    exit(1);
+  }
+  if (!(f2 = fopen(argv[2], "r"))) {
+    perror(argv[2]);
+    exit(1);
+  }
+  for (differences = 0, line = 1;; ++line) {
+    l1 = fgets(line1, sizeof(line1), f1);
+    l2 = fgets(line2, sizeof(line2), f2);
+    if (!l1 && !l2) {
+      exit(0);
     }
-  } else {
-    return EINVAL;
+    if (l1) _chomp(l1);
+    if (l2) _chomp(l2);
+    if (!l1 || !l2) {
+      printf("> %s\n", l1 ? l1 : "EOF");
+      printf("< %s\n", l2 ? l2 : "EOF");
+      exit(0);
+    }
+    if (!strcmp(l1, l2)) {
+      printf("%s\n", l1);
+    } else {
+      printf("# line %d differed!\n", line);
+      printf("> %s\n", l1);
+      printf("< %s\n", l2);
+    }
   }
 }

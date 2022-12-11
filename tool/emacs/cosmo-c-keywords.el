@@ -11,11 +11,15 @@
 
         (c11
          '("_Atomic"
+           "alignas"
            "_Alignas"
+           "alignof"
            "_Alignof"
            "_Noreturn"
            "_Generic"
+           "thread_local"
            "_Thread_local"
+           "static_assert"
            "_Static_assert"
            "_Complex_I"
            "_Imaginary_I"))
@@ -30,8 +34,9 @@
            "textexit"
            "externinline"
            "dontinline"
-           "noclone"
+           "dontclone"
            "donothing"
+           "notsan"
            "printfesque"
            "flattenout"
            "mallocesque"
@@ -68,7 +73,9 @@
            "frownedupon"
            "wontreturn"
            "noasan"
+           "nomsan"
            "noubsan"
+           "smashmystack"
            "initarray"
            "mayalias"
            "noinstrument"
@@ -171,6 +178,7 @@
            "__no_sanitize_address__"
            "__no_address_safety_analysis__"
            "__no_sanitize_thread__"
+           "__no_stack_protector__"
            "__leaf__"
            "__no_sanitize_undefined__"
            "__no_split_stack__"
@@ -203,7 +211,9 @@
 
         (clang
          '("__optnone__"
-           "__nodebug__"))
+           "__nodebug__"
+           "musttail"
+           "__musttail__"))
 
         )
     (concat "\\_<"

@@ -469,7 +469,7 @@ int64_t Ror32(uint64_t x64, uint64_t y, uint32_t *f) {
   uint32_t x = x64;
   if ((y &= 31)) {
     x = x >> y | x << (32 - y);
-    return RotateFlags(x, x >> 31, f, (x >> 31) ^ (x >> 30) & 1);
+    return RotateFlags(x, x >> 31, f, ((x >> 31) ^ (x >> 30)) & 1);
   } else {
     return x;
   }
@@ -478,7 +478,7 @@ int64_t Ror32(uint64_t x64, uint64_t y, uint32_t *f) {
 int64_t Ror64(uint64_t x, uint64_t y, uint32_t *f) {
   if ((y &= 63)) {
     x = x >> y | x << (64 - y);
-    return RotateFlags(x, x >> 63, f, (x >> 63) ^ (x >> 62) & 1);
+    return RotateFlags(x, x >> 63, f, ((x >> 63) ^ (x >> 62)) & 1);
   } else {
     return x;
   }
@@ -498,7 +498,7 @@ int64_t Ror8(uint64_t x64, uint64_t y, uint32_t *f) {
   uint8_t x = x64;
   if (y & 31) {
     if ((y &= 7)) x = x >> y | x << (8 - y);
-    return RotateFlags(x, x >> 7, f, (x >> 7) ^ (x >> 6) & 1);
+    return RotateFlags(x, x >> 7, f, ((x >> 7) ^ (x >> 6)) & 1);
   } else {
     return x;
   }
@@ -756,7 +756,7 @@ int64_t Ror16(uint64_t x64, uint64_t y, uint32_t *f) {
   uint16_t x = x64;
   if (y & 31) {
     if ((y &= 15)) x = x >> y | x << (16 - y);
-    return RotateFlags(x, x >> 15, f, (x >> 15) ^ (x >> 14) & 1);
+    return RotateFlags(x, x >> 15, f, ((x >> 15) ^ (x >> 14)) & 1);
   } else {
     return x;
   }

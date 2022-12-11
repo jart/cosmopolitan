@@ -164,7 +164,7 @@
         ((eq arg 3) "rel")
         ((eq arg 4) "dbg")
         ((eq arg 5) "")
-        ((eq arg 6) "optlinux")
+        ((eq arg 6) "llvm")
         ((eq arg 7) "tinylinux")
         ((eq arg 8) "tsan")
         (default default)
