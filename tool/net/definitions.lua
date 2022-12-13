@@ -1431,13 +1431,13 @@ function ParseHttpDateTime(rfc1123) end
 --- it's the most non-deterministically defined field of them all.
 --- 
 --- Please note this is a URL parser, not a URI parser. Which
---- means we support everything everything the URI spec says we
---- should do except for the things we won't do, like tokenizing
---- path segments into an array and then nesting another array
---- beneath each of those for storing semicolon parameters. So
---- this parser won't make SIP easy. What it can do is parse HTTP
---- URLs and most URIs like data:opaque, better in fact than most
---- things which claim to be URI parsers.
+--- means we support everything the URI spec says we should do
+--- except for the things we won't do, like tokenizing path
+--- segments into an array and then nesting another array beneath
+--- each of those for storing semicolon parameters. So this parser
+--- won't make SIP easy. What it can do is parse HTTP URLs and most
+--- URIs like data:opaque, better in fact than most things which
+--- claim to be URI parsers.
 ---
 ---@nodiscard
 function ParseUrl(url, flags) end
