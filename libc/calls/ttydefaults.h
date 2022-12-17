@@ -1,6 +1,6 @@
 #ifndef COSMOPOLITAN_LIBC_CALLS_TTYDEFAULTS_H_
 #define COSMOPOLITAN_LIBC_CALLS_TTYDEFAULTS_H_
-#include "libc/sysv/consts/baud.h"
+#include "libc/sysv/consts/baud.internal.h"
 #include "libc/sysv/consts/termios.h"
 
 #define TTYDEF_IFLAG (BRKINT | ISTRIP | ICRNL | IMAXBEL | IXON | IXANY)

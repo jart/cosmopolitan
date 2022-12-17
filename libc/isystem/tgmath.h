@@ -1,7 +1,7 @@
 #ifndef LIBC_ISYSTEM_TGMATH_H_
 #define LIBC_ISYSTEM_TGMATH_H_
 #include "libc/complex.h"
-#include "libc/imag.h"
+#include "libc/imag.internal.h"
 #include "libc/math.h"
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #if __STDC_VERSION__ + 0 >= 201112

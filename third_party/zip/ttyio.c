@@ -134,7 +134,7 @@
 #    ifdef HAVE_TERMIOS_H
 #include "libc/calls/termios.h"
 #include "libc/calls/weirdtypes.h"
-#include "libc/sysv/consts/baud.h"
+#include "libc/sysv/consts/baud.internal.h"
 #include "libc/sysv/consts/termios.h"
 #      define sgttyb termios
 #      define sg_flags c_lflag
