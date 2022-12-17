@@ -150,7 +150,7 @@ static int GetAfd(struct Machine *m, int fd) {
 }
 
 static const char *GetSimulated(void) {
-  if (IsGenuineCosmo()) {
+  if (IsGenuineCosmo() || IsGenuineBlink()) {
     return " SIMULATED";
   } else {
     return "";

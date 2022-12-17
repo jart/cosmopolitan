@@ -43,6 +43,7 @@ int IsDebuggerPresent(bool force) {
   int e, fd, res;
   char *p, buf[1024];
   if (!force && IsGenuineCosmo()) return 0;
+  if (!force && IsGenuineBlink()) return 0;
   if (!force && __getenv(environ, "HEISENDEBUG")) return 0;
   if (IsWindows()) return IsBeingDebugged();
   if (__isworker) return false;

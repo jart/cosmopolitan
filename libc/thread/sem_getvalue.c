@@ -22,7 +22,7 @@
 #include "libc/thread/semaphore.h"
 
 /**
- * Destroys unnamed semaphore.
+ * Returns semaphore value.
  *
  * @param sem was created by sem_init()
  * @param sval receives output value

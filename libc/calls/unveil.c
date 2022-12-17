@@ -354,7 +354,7 @@ int sys_unveil_linux(const char *path, const char *permissions) {
 int unveil(const char *path, const char *permissions) {
   int e, rc;
   e = errno;
-  if (IsGenuineCosmo()) {
+  if (IsGenuineCosmo() || IsGenuineBlink()) {
     rc = 0;  // blink doesn't support landlock
   } else if (IsLinux()) {
     rc = sys_unveil_linux(path, permissions);

@@ -66,10 +66,6 @@ __attribute__((__constructor__)) static void nsync_futex_init_ (void) {
 
 	FUTEX_WAIT_ = FUTEX_WAIT;
 
-	if (IsGenuineCosmo ()) {
-		return;
-	}
-
 	if (IsWindows ()) {
 		futex_is_supported = true;
 		return;

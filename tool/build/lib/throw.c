@@ -18,8 +18,8 @@
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "libc/log/check.h"
 #include "libc/log/log.h"
-#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/nexgen32e/vendor.internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/str/str.h"
 #include "tool/build/lib/address.h"
@@ -47,7 +47,8 @@ void ThrowSegmentationFault(struct Machine *m, int64_t va) {
   WARNF("%s%s ADDR %012lx IP %012lx AX %lx CX %lx DX %lx BX %lx SP %lx "
         "BP %lx SI %lx DI %lx R8 %lx R9 %lx R10 %lx R11 %lx R12 %lx R13 %lx "
         "R14 %lx R15 %lx",
-        "SEGMENTATION FAULT", IsGenuineCosmo() ? " SIMULATED" : "", va, m->ip,
+        "SEGMENTATION FAULT",
+        IsGenuineCosmo() || IsGenuineBlink() ? " SIMULATED" : "", va, m->ip,
         Read64(m->ax), Read64(m->cx), Read64(m->dx), Read64(m->bx),
         Read64(m->sp), Read64(m->bp), Read64(m->si), Read64(m->di),
         Read64(m->r8), Read64(m->r9), Read64(m->r10), Read64(m->r11),

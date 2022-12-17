@@ -137,7 +137,9 @@ static const struct {
 };
 
 TEST(printf, longdouble) {
-  if (IsGenuineCosmo()) return;  // TODO(jart): long double precision in blink
+  if (IsGenuineCosmo() || IsGenuineBlink()) {
+    return;  // TODO(jart): long double precision in blink
+  }
   int i;
   for (i = 0; i < ARRAYLEN(Vx); ++i) {
     ++g_testlib_ran;

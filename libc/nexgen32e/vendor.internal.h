@@ -18,5 +18,10 @@
    kCpuids[KCPUIDS_0H][KCPUIDS_EDX] == 0x43656e69 /* ineC */ && \
    kCpuids[KCPUIDS_0H][KCPUIDS_ECX] == 0x6f6d736f /* osmo */)
 
+#define IsGenuineBlink()                                        \
+  (kCpuids[KCPUIDS_0H][KCPUIDS_EBX] == 0x756e6547 /* Genu */ && \
+   kCpuids[KCPUIDS_0H][KCPUIDS_EDX] == 0x42656e69 /* ineB */ && \
+   kCpuids[KCPUIDS_0H][KCPUIDS_ECX] == 0x6b6e696c /* link */)
+
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 #endif /* COSMOPOLITAN_LIBC_NEXGEN32E_VENDOR_H_ */

@@ -7258,7 +7258,7 @@ static void GetOpts(int argc, char *argv[]) {
   int opt;
   bool storeasset = false;
   // only generate ecp cert under blinkenlights (rsa is slow)
-  norsagen = IsGenuineCosmo();
+  norsagen = IsGenuineCosmo() || IsGenuineBlink();
   while ((opt = getopt(argc, argv, GETOPTS)) != -1) {
     switch (opt) {
       CASE('S', ++sandboxed);

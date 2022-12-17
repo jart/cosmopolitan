@@ -99,7 +99,6 @@ static void *CheckSchedule(void *arg) {
 TEST(pthread_create, scheduling) {
   pthread_t id;
   pthread_attr_t attr;
-  if (IsGenuineCosmo()) return;  // TODO(jart): blink
   struct sched_param pri = {sched_get_priority_min(SCHED_OTHER)};
   ASSERT_EQ(0, pthread_attr_init(&attr));
   ASSERT_EQ(0, pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED));
