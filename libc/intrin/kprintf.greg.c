@@ -177,6 +177,7 @@ privileged static void klog(const char *b, size_t n) {
     __imp_WriteFile(__imp_GetStdHandle(kNtStdErrorHandle), b, n, &wrote, 0);
     __imp_SetLastError(e);
   } else if (IsMetal()) {
+    if (_weaken(_klog_vga)) _weaken(_klog_vga)(b, n);
     for (i = 0; i < n; ++i) {
       for (;;) {
         dx = 0x3F8 + UART_LSR;
@@ -189,7 +190,6 @@ privileged static void klog(const char *b, size_t n) {
                    : /* no inputs */
                    : "a"(b[i]), "dN"(dx));
     }
-    if (_weaken(_klog_vga)) _weaken(_klog_vga)(b, n);
   } else {
     asm volatile("syscall"
                  : "=a"(rax), "=D"(rdi), "=S"(rsi), "=d"(rdx)

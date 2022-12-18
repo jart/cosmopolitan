@@ -24,10 +24,16 @@
 
 STATIC_YOINK("vga_console");
 STATIC_YOINK("_idt");
+STATIC_YOINK("EfiMain");
 
 int main(int argc, char *argv[]) {
+  int i;
   volatile int x = 1;
   volatile int y = 2;
+  printf("argc = %d\n", argc);
+  for (i = 0; i < argc; ++i) {
+    printf("argv[%d] = \"%s\"\n", i, argv[i]);
+  }
   printf("\e[92;44mHello World!\e[0m %d\n", 1 / (x + y - 3));
   for (;;);
 }

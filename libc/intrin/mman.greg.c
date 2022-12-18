@@ -33,6 +33,7 @@
 │ αcτµαlly pδrταblε εxεcµταblε § no-frills virtual memory management           │
 ╚─────────────────────────────────────────────────────────────────────────────*/
 #include "ape/relocations.h"
+#include "libc/assert.h"
 #include "libc/elf/def.h"
 #include "libc/elf/struct/phdr.h"
 #include "libc/macros.internal.h"
@@ -42,18 +43,33 @@
 #include "libc/runtime/pc.internal.h"
 #include "libc/runtime/runtime.h"
 
+#define INVERT(x) (BANE + PHYSICAL(x))
+#define NOPAGE ((uint64_t)-1)
+
+struct ReclaimedPage {
+  uint64_t next;
+};
+
 /**
  * Allocates new page of physical memory.
  */
 noasan texthead uint64_t __new_page(struct mman *mm) {
-  uint64_t p;
+  uint64_t p = mm->frp;
+  if (p != NOPAGE) {
+    uint64_t q;
+    struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
+    _unassert(p == (p & PAGE_TA));
+    q = rp->next;
+    _unassert(q == (q & PAGE_TA));
+    mm->frp = q;
+    return p;
+  }
   if (mm->pdpi == mm->e820n) {
-    /* TODO: reclaim free pages */
     return 0;
   }
   while (mm->pdp >= mm->e820[mm->pdpi].addr + mm->e820[mm->pdpi].size) {
     if (++mm->pdpi == mm->e820n) return 0;
-    mm->pdp = mm->e820[mm->pdpi].addr;
+    mm->pdp = MAX(mm->pdp, mm->e820[mm->pdpi].addr);
   }
   p = mm->pdp;
   mm->pdp += 4096;
@@ -84,7 +100,7 @@ noasan textreal uint64_t *__get_virtual(struct mman *mm, uint64_t *t,
 /**
  * Sorts, rounds, and filters BIOS memory map.
  */
-static noasan textreal void __normalize_e820(struct mman *mm) {
+static noasan textreal void __normalize_e820(struct mman *mm, uint64_t top) {
   uint64_t a, b;
   uint64_t x, y;
   unsigned i, j, n;
@@ -107,24 +123,83 @@ static noasan textreal void __normalize_e820(struct mman *mm) {
     }
     mm->e820[j] = mm->e820[i];
   }
-  mm->pdp = MAX(0x80000, mm->e820[0].addr);
+  top = ROUNDUP(top, 4096);
+  mm->pdp = MAX(top, mm->e820[0].addr);
   mm->pdpi = 0;
   mm->e820n = n;
+  mm->frp = NOPAGE;
 }
 
 /**
  * Identity maps an area of physical memory to its negative address.
  */
-noasan textreal void __invert_memory_area(struct mman *mm, uint64_t *pml4t,
-                                          uint64_t ps, uint64_t size,
-                                          uint64_t pte_flags) {
-  uint64_t pe = ps + size, p, *m;
+noasan textreal uint64_t *__invert_memory_area(struct mman *mm,
+                                               uint64_t *pml4t,
+                                               uint64_t ps, uint64_t size,
+                                               uint64_t pte_flags) {
+  uint64_t pe = ps + size, p, *m = NULL;
   ps = ROUNDDOWN(ps, 4096);
   pe = ROUNDUP(pe, 4096);
   for (p = ps; p != pe; p += 4096) {
     m = __get_virtual(mm, pml4t, BANE + p, true);
     if (m && !(*m & (PAGE_V | PAGE_RSRV))) {
       *m = p | PAGE_V | PAGE_RSRV | pte_flags;
+    }
+  }
+  return m;
+}
+
+/**
+ * Increments the reference count for a page of physical memory.
+ */
+noasan void __ref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+  uint64_t *m, e;
+  m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
+  if (m) {
+    e = *m;
+    if ((e & PAGE_REFC) != PAGE_REFC) {
+      e += PAGE_1REF;
+      *m = e;
+    }
+  }
+}
+
+/**
+ * Increments the reference counts for an area of physical memory.
+ */
+noasan void __ref_pages(struct mman *mm, uint64_t *pml4t, uint64_t ps,
+                        uint64_t size) {
+  uint64_t p = ROUNDDOWN(ps, 4096), e = ROUNDUP(ps + size, 4096);
+  while (p != e) {
+    __ref_page(mm, pml4t, p);
+    p += 4096;
+  }
+}
+
+/**
+ * Reclaims a page of physical memory for later use.
+ */
+static noasan void __reclaim_page(struct mman *mm, uint64_t p) {
+  struct ReclaimedPage *rp = (struct ReclaimedPage *)(BANE + p);
+  _unassert(p == (p & PAGE_TA));
+  rp->next = mm->frp;
+  mm->frp = p;
+}
+
+/**
+ * Decrements the reference count for a page of physical memory.  Frees the
+ * page if there are no virtual addresses (excluding the negative space)
+ * referring to it.
+ */
+noasan void __unref_page(struct mman *mm, uint64_t *pml4t, uint64_t p) {
+  uint64_t *m, e;
+  m = __invert_memory_area(mm, pml4t, p, 4096, PAGE_RW | PAGE_XD);
+  if (m) {
+    e = *m;
+    if ((e & PAGE_REFC) != PAGE_REFC) {
+      e -= PAGE_1REF;
+      *m = e;
+      if ((e & PAGE_REFC) == 0) __reclaim_page(mm, p);
     }
   }
 }
@@ -155,13 +230,18 @@ static noasan textreal void __invert_memory(struct mman *mm, uint64_t *pml4t) {
                  : "i"(offsetof(type, member)));         \
   } while (0)
 
-noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
+noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t,
+                                  uint64_t top) {
   export_offsetof(struct mman, pc_drive_base_table);
   export_offsetof(struct mman, pc_drive_last_sector);
   export_offsetof(struct mman, pc_drive_last_head);
+  export_offsetof(struct mman, pc_drive);
   export_offsetof(struct mman, e820);
   export_offsetof(struct mman, e820_end);
   export_offsetof(struct mman, bad_idt);
+  export_offsetof(struct mman, pc_drive_next_sector);
+  export_offsetof(struct mman, pc_drive_next_cylinder);
+  export_offsetof(struct mman, pc_drive_next_head);
   export_offsetof(struct mman, pc_video_type);
   export_offsetof(struct mman, pc_video_stride);
   export_offsetof(struct mman, pc_video_width);
@@ -170,21 +250,22 @@ noasan textreal void __setup_mman(struct mman *mm, uint64_t *pml4t) {
   export_offsetof(struct mman, pc_video_framebuffer_size);
   export_offsetof(struct mman, pc_video_curs_info);
   export_offsetof(struct mman, pc_video_char_height);
-  __normalize_e820(mm);
+  __normalize_e820(mm, top);
   __invert_memory(mm, pml4t);
 }
 
 /**
  * Maps APE-defined ELF program headers into memory and clears BSS.
  */
-noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b) {
+noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b,
+                                 uint64_t top) {
   struct Elf64_Phdr *p;
   uint64_t i, f, v, m, *e;
   extern char ape_phdrs[] __attribute__((__weak__));
   extern char ape_phdrs_end[] __attribute__((__weak__));
-  __setup_mman(mm, pml4t);
-  for (p = (struct Elf64_Phdr *)REAL(ape_phdrs), m = 0;
-       p < (struct Elf64_Phdr *)REAL(ape_phdrs_end); ++p) {
+  __setup_mman(mm, pml4t, top);
+  for (p = (struct Elf64_Phdr *)INVERT(ape_phdrs), m = 0;
+       p < (struct Elf64_Phdr *)INVERT(ape_phdrs_end); ++p) {
     if (p->p_type == PT_LOAD || p->p_type == PT_GNU_STACK) {
       f = PAGE_RSRV | PAGE_U;
       if (p->p_flags & PF_W)
@@ -200,8 +281,36 @@ noasan textreal void __map_phdrs(struct mman *mm, uint64_t *pml4t, uint64_t b) {
           v = __clear_page(BANE + __new_page(mm));
         }
         *__get_virtual(mm, pml4t, p->p_vaddr + i, true) = (v & PAGE_TA) | f;
+        __ref_page(mm, pml4t, v & PAGE_TA);
       }
     }
   }
   mm->pdp = MAX(mm->pdp, m);
+}
+
+/**
+ * Reclaims memory pages which were used at boot time but which can now be
+ * made available for the application.
+ */
+noasan textreal void __reclaim_boot_pages(struct mman *mm, uint64_t skip_start,
+                                          uint64_t skip_end) {
+  uint64_t p = mm->frp, q = IMAGE_BASE_REAL, i, n = mm->e820n, b, e;
+  for (i = 0; i < n; ++i) {
+    b = mm->e820[i].addr;
+    if (b >= IMAGE_BASE_PHYSICAL) break;
+    e = MIN(IMAGE_BASE_PHYSICAL, b + mm->e820[i].size);
+    q = MAX(IMAGE_BASE_REAL, b);
+    while (q < e) {
+      struct ReclaimedPage *rp;
+      if (q == skip_start) {
+        q = skip_end;
+        if (q >= e) break;
+      }
+      rp = (struct ReclaimedPage *)(BANE + q);
+      rp->next = p;
+      p = q;
+      q += 4096;
+    }
+  }
+  mm->frp = p;
 }

@@ -282,6 +282,9 @@ pc:	cld
 	xor	%dh,%dh				# current head
 	mov	$v_ape_realsectors,%di		# total sectors
 3:	call	pcread
+	mov	%es,%si				# addr += 512
+	add	$512>>4,%si
+	mov	%si,%es
 	dec	%di
 	jnz	3b
 6:	ljmp	$0,$REAL(realmodeloader)
@@ -370,6 +373,7 @@ dsknfo:	push	%bx
 	pop	%ds
 	xchg	%bx,%ax
 	stosw	#→ pc_drive_type, pc_drive_last_sector
+	scasb
 	xchg	%cx,%ax
 	stosw	#→ pc_drive_last_cylinder
 	xchg	%dx,%ax
@@ -408,9 +412,6 @@ pcread:	push	%ax
 	pop	%cx
 	pop	%ax
 	jc	9f
-	mov	%es,%si			# addr += 512
-	add	$512>>4,%si
-	mov	%si,%es
 	inc	%al			# ++sector
 	cmp	mm+"struct mman::pc_drive_last_sector",%al
 	jbe	2f
@@ -1111,6 +1112,42 @@ ape_idata_idt:
 ape_idata_idtend:
 	.previous
 
+	.section .piro.data.sort.metal_gdt,"aw",@progbits
+	.align	8
+_gdt:
+//	          ┌G:granularity (1 → limit *= 0x1000)
+//	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
+//	          ││┌L:long mode
+//	          │││┌AVL:this bit is thine (1<<52)
+//	          ││││    ┌P:present
+//	          ││││    │┌DPL:privilege
+//	          ││││    ││ ┌─────────data/code(1)
+//	          ││││    ││ │┌────data(0)──────code(1)
+//	          ││││    ││ ││┌───conforming───expand-down
+//	          ││││    ││ │││┌──writeable────readable
+//	          ││││    ││ ││││┌─accessed─────accessed
+//	          ││││    ││ │││││
+//	          ││││ ┌──││─│││││───────────────────────────────┐
+//	      ┌───││││─│──││─│││││───────────┐                   │
+//	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
+//	  │      ││││││  ││││││││││          base address││ segment limit│
+//	  │      ││││││  ││││││││││               32 bits││       20 bits│
+//	  │      ││││││  ││││││││││                      ││              │
+//	  6666555555555544444444443333333333222222222211111111110000000000
+//	  3210987654321098765432109876543210987654321098765432109876543210
+//	  │      ││││││  ││││││││││                      ││              │
+.quad	0b0000000000000000000000000000000000000000000000000000000000000000 # 0
+.quad	0b0000000000001111100110100000000000000000000000001111111111111111 # 8
+.quad	0b0000000000001111100100100000000000000000000000001111111111111111 #16
+.quad	0b0000000011001111100110100000000000000000000000001111111111111111 #24
+.quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
+.quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
+.quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
+.tssdescstub _tss							#56,64
+_gdt_end:
+	.endobj	_gdt,global,hidden
+	.previous
+
 	.section .piro.data.sort.iat.1,"aw",@progbits
 	.type	ape_idata_iatend,@object
 	.type	ape_idata_iat,@object
@@ -1168,48 +1205,21 @@ sconf:	.short	1843200/*hz*/ / 16/*wut*/ / 9600/*baud*/
 
 //	Global Descriptor Table
 	.align	8
-_gdtrphy:
-	.short	2f-1f-1		# table byte length
-	.long	REAL(1f)	# table address (physical space)
-	.endobj	_gdtrphy,global,hidden
+_gdtrlo:
+	.short	2f-_gdtlo-1	# table byte length
+	.long	REAL(_gdtlo)	# table address (base memory space)
+	.endobj	_gdtrlo,global,hidden
 _gdtr:
-	.short	2f-1f-1		# table byte length
-	.quad	1f		# table address (final virtual space)
+	.short	_gdt_end-_gdt-1	# table byte length
+	.quad	_gdt		# table address (final virtual space)
 	.endobj	_gdtr,global,hidden
 	.align	8
-_gdt:
-1:
-//	          ┌G:granularity (1 → limit *= 0x1000)
-//	          │┌D/B:default operation size (0 = 16|64bit, 1 = 32-bit)
-//	          ││┌L:long mode
-//	          │││┌AVL:this bit is thine (1<<52)
-//	          ││││    ┌P:present
-//	          ││││    │┌DPL:privilege
-//	          ││││    ││ ┌─────────data/code(1)
-//	          ││││    ││ │┌────data(0)──────code(1)
-//	          ││││    ││ ││┌───conforming───expand-down
-//	          ││││    ││ │││┌──writeable────readable
-//	          ││││    ││ ││││┌─accessed─────accessed
-//	          ││││    ││ │││││
-//	          ││││ ┌──││─│││││───────────────────────────────┐
-//	      ┌───││││─│──││─│││││───────────┐                   │
-//	  ┌───┴──┐││││┌┴─┐│├┐│││││┌──────────┴───────────┐┌──────┴───────┐
-//	  │      ││││││  ││││││││││          base address││ segment limit│
-//	  │      ││││││  ││││││││││               32 bits││       20 bits│
-//	  │      ││││││  ││││││││││                      ││              │
-//	  6666555555555544444444443333333333222222222211111111110000000000
-//	  3210987654321098765432109876543210987654321098765432109876543210
-//	  │      ││││││  ││││││││││                      ││              │
-.quad	0b0000000000000000000000000000000000000000000000000000000000000000 # 0
-.quad	0b0000000000001111100110100000000000000000000000001111111111111111 # 8
-.quad	0b0000000000001111100100100000000000000000000000001111111111111111 #16
-.quad	0b0000000011001111100110100000000000000000000000001111111111111111 #24
+//	Partial GDT with descriptors for switching to unreal mode or long mode.
+_gdtlo	= .-GDT_LEGACY_DATA
 .quad	0b0000000011001111100100100000000000000000000000001111111111111111 #32
 .quad	0b0000000010101111100110110000000000000000000000001111111111111111 #40
 .quad	0b0000000010101111100100110000000000000000000000001111111111111111 #48
-.tssdescstub _tss							#56,64
 2:
-	.endobj	_gdt,global,hidden
 
 /*─────────────────────────────────────────────────────────────────────────────╗
 │ αcτµαlly pδrταblε εxεcµταblε § real mode                                     │
@@ -1217,12 +1227,32 @@ _gdt:
 	the default mode of operation on modern cpus */
 
 realmodeloader:
+	call	lhinit
 	call	rlinit
 	call	sinit4
 	.optfn	_start16
 	call	_start16
 	call	longmodeloader
 	.endfn	realmodeloader
+
+//	Prepares to later load parts of the program that are not loaded yet.
+//
+//	@param	al next sector number
+//	@param	cx next cylinder number
+//	@param	dh next head number
+//	@param	dl drive number
+//	@clob	ax, cx, es, di
+lhinit:	cmp	$0x40,%dl
+	je	9f
+	pushpop	0,%es
+	mov	$mm+"struct mman::pc_drive_next_sector",%di
+	cld
+	stosb	#→ pc_drive_next_sector
+	xchg	%ax,%cx
+	stosw	#→ pc_drive_next_cylinder
+	mov	%dh,%al
+	stosb	#→ pc_drive_next_head
+9:	ret
 
 	.section .sort.text.real.init.1,"ax",@progbits
 	.type	rlinit,@function
@@ -1284,6 +1314,8 @@ longmodeloader:
 	call	lcheck
 	call	a20
 	call	e820
+	call	cpyhi
+	call	loadhi
 	call	pinit
 	call	golong
 	.endfn	longmodeloader
@@ -1426,10 +1458,88 @@ a20:	cli
 5:	ret
 	.endfn	a20
 
+//	Copies program pages loaded into base memory, to extended memory.
+//
+//	@clob	esi, edi
+cpyhi:	push	%es
+	movpp	%ds,%es
+	call	unreal
+	mov	$IMAGE_BASE_REAL,%esi
+	mov	$IMAGE_BASE_PHYSICAL,%edi
+	mov	$v_ape_realdwords,%ecx
+	cld
+	rep movsl %ds:(%esi),%es:(%edi)
+	sti
+	pop	%es
+	ret
+	.endfn	cpyhi
+
+//	Disables interrupts and switches to "unreal mode".
+//
+//	@return	ds, es have same base addresses as before but can access
+//		4 GiB of memory
+//	@clob	eax
+unreal:	push	%ds
+	push	%es
+	cli
+	lgdt	REAL(_gdtrlo)
+	mov	%cr0,%eax
+	or	$CR0_PE,%al
+	mov	%eax,%cr0
+	jmp	0f
+0:	pushpop	GDT_LEGACY_DATA,%ds
+	movpp	%ds,%es
+	and	$~CR0_PE,%al
+	mov	%eax,%cr0
+	jmp	1f
+1:	pop	%es
+	pop	%ds
+	ret
+
+//	Reads any remaining program pages into memory which have not yet
+//	been read by the boot sector.
+//
+//	@clob	eax, ecx, dx, esi, edi, bp
+loadhi:	mov	$v_ape_highsectors,%bp
+	test	%bp,%bp
+	jz	9f
+	mov	$mm+"struct mman::pc_drive",%si
+	cld
+	lodsb	#← pc_drive
+	xchg	%ax,%dx
+	lodsw
+	lodsb	#← pc_drive_next_sector
+	test	%al,%al
+	jz	9f
+	xchg	%ax,%cx
+	lodsw	#← pc_drive_next_cylinder
+	xchg	%ax,%cx
+	mov	(%si),%dh #← pc_drive_next_head
+	push	%es
+#define	SEG 0x79000
+	mov	$IMAGE_BASE_PHYSICAL+v_ape_realbytes-SEG,%edi
+	push	$SEG>>4
+	pop	%es
+0:	call	pcread
+	push	%ax
+	call	unreal
+	pop	%ax
+	push	%cx
+	xor	%esi,%esi
+	xor	%ecx,%ecx
+	mov	$512/4,%cl
+	cld
+	rep movsl %es:(%esi),%es:(%edi)
+	sti
+	pop	%cx
+	dec	%bp
+	jnz	0b
+	pop	%es
+9:	ret
+
 //	Initializes long mode paging.
 pinit:	push	%ds
 	push	%es
-#define	SEG 0x79000
 	mov	$SEG>>4,%ax
 	mov	%ax,%ds
 	mov	%ax,%es
@@ -1470,7 +1580,7 @@ golong:	cli
 	rdmsr
 	or	$EFER_LME|EFER_SCE|EFER_NXE,%eax
 	wrmsr
-	lgdt	REAL(_gdtrphy)
+	lgdt	REAL(_gdtrlo)
 	mov	%cr0,%eax
 	or	$CR0_PE|CR0_PG|CR0_MP,%eax
 	and	$~CR0_EM,%eax
@@ -1480,7 +1590,9 @@ golong:	cli
 
 //	Long mode is long.
 	.code64
-long:	xor	%eax,%eax
+long:	movabs	$BANE+PHYSICAL(0f),%rax
+	jmp	*%rax
+0:	xor	%eax,%eax
 	mov	$GDT_LONG_DATA,%al
 	mov	%eax,%ds
 	mov	%eax,%ss
@@ -1488,18 +1600,16 @@ long:	xor	%eax,%eax
 	mov	%eax,%fs
 	mov	%eax,%gs
 	mov	$0x80000,%esp
-	mov	$GDT_LONG_TSS,%al
-	ltr	%ax
 	xor	%r12d,%r12d
 	xor	%r13d,%r13d
 	xor	%r14d,%r14d
 	xor	%r15d,%r15d
 	xor	%ebx,%ebx
 	xor	%ebp,%ebp
-	push	%rbp
 	mov	$mm,%rdi
 	mov	%cr3,%rsi
-	mov	$IMAGE_BASE_REAL,%edx
+	mov	$IMAGE_BASE_PHYSICAL,%edx
+	lea	v_ape_allbytes(%rdx),%ecx
 	call	__map_phdrs
 	push	$0x037f
 	fldcw	(%rsp)
@@ -1585,6 +1695,10 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.byte	0x0f,0x1f,0207			# nop rdi binbase
 	.long	(IMAGE_BASE_VIRTUAL-IMAGE_BASE_REAL)/512
 #endif
+	movabs	$BANE+mm,%rdi
+	mov	$0x79000,%esi
+	mov	$0x7f000,%edx
+	call	__reclaim_boot_pages
 	push	$_HOSTMETAL			# sets __hostos in crt.S
 	pop	%rcx
 	pushq	.Lenv0(%rip)			# envp[0][0]
@@ -1630,6 +1744,7 @@ kernel:	movabs	$ape_stack_vaddr,%rsp
 	.ldsvar	_end
 	.ldsvar	_etext
 	.ldsvar	v_ape_realsectors
+	.ldsvar	v_ape_realbytes
 	.ldsvar	v_ape_highsectors
 	.ldsvar	ape_idata_ro
 	.ldsvar	ape_pad_rodata

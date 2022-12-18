@@ -349,8 +349,29 @@ SECTIONS {
     HIDDEN(_etext = .);
     PROVIDE_HIDDEN(etext = .);
 /*END: Read Only Data (only needed for initialization) */
-/*END: Read Only Data */
   } :Rom
+
+/* initialization image for thread-local storage, this is copied */
+/* out to actual TLS areas at runtime, so just make it read-only */
+  .tdata . : {
+    _tdata_start = .;
+    *(SORT_BY_ALIGNMENT(.tdata))
+    *(SORT_BY_ALIGNMENT(.tdata.*))
+    _tdata_end = .;
+    . = ALIGN(PAGESIZE);
+  } :Tls :Rom
+/*END: Read Only Data */
+
+/* this only tells the linker about the layout of uninitialized */
+/* TLS data, and does not advance the linker's location counter */
+  .tbss . : {
+    _tbss_start = .;
+    *(SORT_BY_ALIGNMENT(.tbss))
+    *(SORT_BY_ALIGNMENT(.tbss.*))
+    . = ALIGN(TLS_ALIGNMENT);
+    /* the %fs register is based on this location */
+    _tbss_end = .;
+  } :Tls
 
   .data ALIGN(PAGESIZE) : {
 /*BEGIN: Read/Write Data */
@@ -385,26 +406,7 @@ SECTIONS {
     . = ALIGN(PAGESIZE);
   } :Ram
 
-  .tdata . : {
-    _tdata_start = .;
-    *(SORT_BY_ALIGNMENT(.tdata))
-    *(SORT_BY_ALIGNMENT(.tdata.*))
-    _tdata_end = .;
-    . = ALIGN(PAGESIZE);
-  } :Tls :Ram
-
 /*END:   file content that's loaded by o/s */
-/*BEGIN: bss memory void */
-
-  .tbss . : {
-    _tbss_start = .;
-    *(SORT_BY_ALIGNMENT(.tbss))
-    *(SORT_BY_ALIGNMENT(.tbss.*))
-    . = ALIGN(TLS_ALIGNMENT);
-    /* the %fs register is based on this location */
-    _tbss_end = .;
-  } :Tls
-
 /*END:   file content */
 /*BEGIN: bss memory that's addressable */
 
@@ -509,7 +511,7 @@ HIDDEN(ape_rom_rva = RVA(ape_rom_vaddr));
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
 HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = SIZEOF(.data) + SIZEOF(.tdata));
+HIDDEN(ape_ram_filesz = SIZEOF(.data));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = PAGESIZE);
 HIDDEN(ape_ram_rva = RVA(ape_ram_vaddr));
@@ -533,16 +535,16 @@ HIDDEN(ape_note_align = __SIZEOF_POINTER__);
 HIDDEN(ape_text_offset = ape_rom_offset + LOADADDR(.text) - ape_rom_paddr);
 HIDDEN(ape_text_paddr = LOADADDR(.text));
 HIDDEN(ape_text_vaddr = ADDR(.text));
-HIDDEN(ape_text_filesz = SIZEOF(.text));
-HIDDEN(ape_text_memsz = SIZEOF(.text));
+HIDDEN(ape_text_filesz = SIZEOF(.text) + SIZEOF(.tdata));
+HIDDEN(ape_text_memsz = SIZEOF(.text) + SIZEOF(.tdata));
 HIDDEN(ape_text_align = PAGESIZE);
 HIDDEN(ape_text_rva = RVA(ape_text_vaddr));
 
 HIDDEN(ape_data_offset = ape_ram_offset + LOADADDR(.data) - ape_ram_paddr);
 HIDDEN(ape_data_paddr = LOADADDR(.data));
 HIDDEN(ape_data_vaddr = ADDR(.data));
-HIDDEN(ape_data_filesz = SIZEOF(.data) + SIZEOF(.tdata));
-HIDDEN(ape_data_memsz = SIZEOF(.data) + SIZEOF(.tdata));
+HIDDEN(ape_data_filesz = SIZEOF(.data));
+HIDDEN(ape_data_memsz = SIZEOF(.data));
 HIDDEN(ape_data_align = PAGESIZE);
 HIDDEN(ape_data_rva = RVA(ape_data_vaddr));
 
@@ -564,11 +566,12 @@ SHSTUB2(ape_loader_dd_count,
 
 #if SupportsMetal()
 HIDDEN(v_ape_realsectors =
-           MIN(0x70000 - IMAGE_BASE_REAL,
-               ROUNDUP(RVA(_tdata_end), 512)) / 512);
-HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
-HIDDEN(v_ape_highsectors =
-           (ROUNDUP(RVA(_tdata_end), 512) / 512) - v_ape_realsectors);
+           MIN(0x70000 - IMAGE_BASE_REAL, ROUNDUP(RVA(_ezip), 512)) / 512);
+HIDDEN(v_ape_realbytes = v_ape_realsectors * 512);
+HIDDEN(v_ape_realdwords = v_ape_realsectors * (512 / 4));
+HIDDEN(v_ape_allsectors = ROUNDUP(RVA(_ezip), 512) / 512);
+HIDDEN(v_ape_allbytes = v_ape_allsectors * 512);
+HIDDEN(v_ape_highsectors = v_ape_allsectors - v_ape_realsectors);
 TSSDESCSTUB2(_tss, _tss, _tss_end ? _tss_end - _tss - 1 : 0);
 #endif
 
@@ -651,7 +654,7 @@ CHURN(ADDR(.bss));
 CHURN(_start);
 CHURN(ape_phdrs);
 #if SupportsMetal()
-CHURN(v_ape_realsectors);
+CHURN(v_ape_allsectors);
 #endif
 #if SupportsXnu()
 CHURN(ape_macho);
