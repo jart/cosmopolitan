@@ -636,6 +636,10 @@ static void DropOutput(void) {
   cpm.outbuf = 0;
 }
 
+static bool ShouldAvoidGzip(void) {
+  return IsGenuineCosmo() || (IsGenuineBlink() && !X86_HAVE(JIT));
+}
+
 static char *MergePaths(const char *p, size_t n, const char *q, size_t m,
                         size_t *z) {
   char *r;
@@ -2438,7 +2442,10 @@ static char *CommitOutput(char *p) {
       if (!IsTiny() && !IsSslCompressed()) {
         p = stpcpy(p, "Vary: Accept-Encoding\r\n");
       }
-      if (!IsTiny() && !IsSslCompressed() && ClientAcceptsGzip()) {
+      if (!IsTiny() &&            //
+          !IsSslCompressed() &&   //
+          ClientAcceptsGzip() &&  //
+          !ShouldAvoidGzip()) {
         cpm.gzipped = outbuflen;
         crc = crc32_z(0, cpm.outbuf, outbuflen);
         WRITE32LE(gzip_footer + 0, crc);
@@ -6148,7 +6155,7 @@ static char *ServeAsset(struct Asset *a, const char *path, size_t pathlen) {
         return ServeError(500, "Internal Server Error");
       }
     } else if (!IsTiny() && cpm.msg.method != kHttpHead && !IsSslCompressed() &&
-               ClientAcceptsGzip() &&
+               ClientAcceptsGzip() && !ShouldAvoidGzip() &&
                !(a->file &&
                  IsNoCompressExt(a->file->path.s, a->file->path.n)) &&
                ((cpm.contentlength >= 100 && _startswithi(ct, "text/")) ||

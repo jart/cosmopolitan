@@ -140,6 +140,7 @@
 #define X86_XSAVE                1H,        ECX, 26, _X86_CC_XSAVE,       _     /* sandybridge c. 2012 */
 #define X86_XTPR                 1H,        ECX, 14, 0,                   _
 #define X86_ZERO_FCS_FDS         7H,        EBX, 13, 0,                   _
+#define X86_JIT                  80000001H, ECX, 31, 0,                   _     /* IsGenuineBlink() */
 /* clang-format on */
 
 /* AMD specific features */
