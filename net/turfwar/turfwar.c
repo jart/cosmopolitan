@@ -90,29 +90,29 @@
  * @fileoverview production webserver for turfwar online game
  */
 
-#define PORT               8080   // default server listening port
-#define CPUS               64     // number of cpus to actually use
-#define WORKERS            500    // size of http client thread pool
-#define SUPERVISE_MS       1000   // how often to stat() asset files
-#define KEEPALIVE_MS       60000  // max time to keep idle conn open
-#define MELTALIVE_MS       2000   // panic keepalive under heavy load
-#define SCORE_UPDATE_MS    90000  // how often to regenerate /score
-#define SCORE_H_UPDATE_MS  10000  // how often to regenerate /score/hour
-#define SCORE_D_UPDATE_MS  15000  // how often to regenerate /score/day
-#define SCORE_W_UPDATE_MS  30000  // how often to regenerate /score/week
-#define SCORE_M_UPDATE_MS  60000  // how often to regenerate /score/month
-#define ACCEPT_DEADLINE_MS 100    // how long accept() can take to find worker
-#define CLAIM_DEADLINE_MS  100    // how long /claim may block if queue is full
-#define CONCERN_LOAD       .75    // avoid keepalive, upon this connection load
-#define PANIC_LOAD         .85    // meltdown if this percent of pool connected
-#define PANIC_MSGS         10     // msgs per conn can't exceed it in meltdown
-#define QUEUE_MAX          800    // maximum pending claim items in queue
-#define BATCH_MAX          64     // max claims to insert per transaction
-#define NICK_MAX           40     // max length of user nickname string
-#define TB_INTERVAL        1000   // millis between token replenishes
-#define TB_CIDR            24     // token bucket cidr specificity
-#define SOCK_MAX           100    // max length of socket queue
-#define MSG_BUF            512    // small response lookaside
+#define PORT               8080    // default server listening port
+#define CPUS               64      // number of cpus to actually use
+#define WORKERS            500     // size of http client thread pool
+#define SUPERVISE_MS       1000    // how often to stat() asset files
+#define KEEPALIVE_MS       60000   // max time to keep idle conn open
+#define MELTALIVE_MS       2000    // panic keepalive under heavy load
+#define SCORE_H_UPDATE_MS  10000   // how often to regenerate /score/hour
+#define SCORE_D_UPDATE_MS  30000   // how often to regenerate /score/day
+#define SCORE_W_UPDATE_MS  70000   // how often to regenerate /score/week
+#define SCORE_M_UPDATE_MS  100000  // how often to regenerate /score/month
+#define SCORE_UPDATE_MS    200000  // how often to regenerate /score
+#define ACCEPT_DEADLINE_MS 100     // how long accept() can take to find worker
+#define CLAIM_DEADLINE_MS  100     // how long /claim may block if queue is full
+#define CONCERN_LOAD       .75     // avoid keepalive, upon this connection load
+#define PANIC_LOAD         .85     // meltdown if this percent of pool connected
+#define PANIC_MSGS         10      // msgs per conn can't exceed it in meltdown
+#define QUEUE_MAX          800     // maximum pending claim items in queue
+#define BATCH_MAX          64      // max claims to insert per transaction
+#define NICK_MAX           40      // max length of user nickname string
+#define TB_INTERVAL        1000    // millis between token replenishes
+#define TB_CIDR            24      // token bucket cidr specificity
+#define SOCK_MAX           100     // max length of socket queue
+#define MSG_BUF            512     // small response lookaside
 
 #define INBUF_SIZE  PAGESIZE
 #define OUTBUF_SIZE 8192
@@ -424,7 +424,6 @@ int DbOpen(const char *path, sqlite3 **db) {
 
 // why not make the statement prepare api a little less hairy too
 int DbPrepare(sqlite3 *db, sqlite3_stmt **stmt, const char *sql) {
-  kprintf("%s\n", sql);
   return sqlite3_prepare_v2(db, sql, -1, stmt, 0);
 }
 
