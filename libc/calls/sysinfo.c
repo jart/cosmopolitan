@@ -21,7 +21,6 @@
 #include "libc/calls/struct/sysinfo.internal.h"
 #include "libc/calls/struct/timespec.h"
 #include "libc/calls/struct/timeval.h"
-#include "libc/calls/struct/vmmeter-meta.internal.h"
 #include "libc/dce.h"
 #include "libc/intrin/asan.internal.h"
 #include "libc/intrin/strace.internal.h"
@@ -32,7 +31,7 @@
 #define CTL_KERN      1
 #define CTL_HW        6
 #define KERN_BOOTTIME 21
-#define HW_PHYSMEM    5
+#define HW_PHYSMEM    (IsXnu() ? 24 : 5)
 
 static int64_t GetUptime(void) {
   if (IsNetbsd()) return 0;  // TODO(jart): Why?
@@ -44,7 +43,7 @@ static int64_t GetUptime(void) {
 }
 
 static int64_t GetPhysmem(void) {
-  uint64_t x;
+  uint64_t x = 0;
   size_t n = sizeof(x);
   int mib[] = {CTL_HW, HW_PHYSMEM};
   if (sys_sysctl(mib, ARRAYLEN(mib), &x, &n, 0, 0) == -1) return 0;

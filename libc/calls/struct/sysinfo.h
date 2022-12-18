@@ -13,7 +13,8 @@ struct sysinfo {
   uint64_t totalswap; /* size of emergency memory */
   uint64_t freeswap;  /* hopefully equal to totalswap */
   int16_t procs;      /* number of processes */
-  int16_t __ignore;   /* padding */
+  int16_t __ignore1;  /* padding */
+  int32_t __ignore2;  /* padding */
   uint64_t totalhigh; /* wut */
   uint64_t freehigh;  /* wut */
   uint32_t mem_unit;  /* ram stuff above is multiples of this */
