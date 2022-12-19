@@ -446,6 +446,7 @@ static int CloneLinux(int (*func)(void *arg, int rc), char *stk, size_t stksz,
     sp -= sizeof(int);
     sp = sp & -alignof(int);
     ctid = (int *)sp;
+    sp -= 8;  // experiment
   }
   sp = sp & -16;  // align the stack
   if ((rc = sys_clone_linux(flags, sp, ptid, ctid, tls, func, arg)) >= 0) {

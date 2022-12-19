@@ -28,6 +28,7 @@
 #include "libc/nt/files.h"
 #include "libc/nt/runtime.h"
 #include "libc/nt/struct/reparsedatabuffer.h"
+#include "libc/runtime/stack.h"
 #include "libc/str/str.h"
 #include "libc/str/utf16.h"
 #include "libc/sysv/errfuns.h"
@@ -45,7 +46,7 @@ textwindows ssize_t sys_readlinkat_nt(int dirfd, const char *path, char *buf,
   if (__mkntpathat(dirfd, path, 0, path16) == -1) return -1;
   mem = 16384;
   memory = alloca(mem);
-  for (i = 0; i < mem; i += PAGESIZE) memory[i] = 0;
+  CheckLargeStackAllocation(memory, mem);
   rdb = (struct NtReparseDataBuffer *)memory;
   if ((h = CreateFile(path16, 0, 0, 0, kNtOpenExisting,
                       kNtFileFlagOpenReparsePoint | kNtFileFlagBackupSemantics,

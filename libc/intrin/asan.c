@@ -1458,7 +1458,7 @@ static textstartup void __asan_shadow_mapping(struct MemoryIntervals *m,
 static textstartup void __asan_shadow_existing_mappings(void) {
   __asan_shadow_mapping(&_mmi, 0);
   __asan_map_shadow(GetStackAddr(), GetStackSize());
-  __asan_poison((void *)GetStackAddr(), PAGESIZE, kAsanStackOverflow);
+  __asan_poison((void *)GetStackAddr(), GUARDSIZE, kAsanStackOverflow);
 }
 
 __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
@@ -1482,7 +1482,7 @@ __attribute__((__constructor__)) void __asan_init(int argc, char **argv,
   __asan_shadow_existing_mappings();
   __asan_map_shadow((uintptr_t)_base, _end - _base);
   __asan_map_shadow(0, 4096);
-  __asan_poison(0, PAGESIZE, kAsanNullPage);
+  __asan_poison(0, GUARDSIZE, kAsanNullPage);
   if (!IsWindows()) {
     __sysv_mprotect((void *)0x7fff8000, 0x10000, PROT_READ);
   }

@@ -46,6 +46,7 @@
 #include "libc/runtime/internal.h"
 #include "libc/runtime/runtime.h"
 #include "libc/runtime/stack.h"
+#include "libc/runtime/sysconf.h"
 #include "libc/sock/sock.h"
 #include "libc/sock/struct/pollfd.h"
 #include "libc/sock/struct/sockaddr.h"
@@ -114,7 +115,7 @@
 #define SOCK_MAX           100     // max length of socket queue
 #define MSG_BUF            512     // small response lookaside
 
-#define INBUF_SIZE  PAGESIZE
+#define INBUF_SIZE  FRAMESIZE
 #define OUTBUF_SIZE 8192
 
 #define TB_BYTES (1u << TB_CIDR)
@@ -632,16 +633,18 @@ static bool GetNick(char *inbuf, struct HttpMessage *msg, struct Claim *v) {
 // so if it gets hacked it'll at least crash instead of get compromised
 void *NewSafeBuffer(size_t n) {
   char *p;
-  size_t m = ROUNDUP(n, PAGESIZE);
-  _npassert((p = valloc(m + PAGESIZE)));
-  _npassert(!mprotect(p + m, PAGESIZE, PROT_NONE));
+  long pagesize = sysconf(_SC_PAGESIZE);
+  size_t m = ROUNDUP(n, pagesize);
+  _npassert((p = valloc(m + pagesize)));
+  _npassert(!mprotect(p + m, pagesize, PROT_NONE));
   return p;
 }
 
 // frees memory with hardware-accelerated buffer overflow detection
 void FreeSafeBuffer(void *p) {
+  long pagesize = sysconf(_SC_PAGESIZE);
   size_t n = malloc_usable_size(p);
-  size_t m = ROUNDDOWN(n, PAGESIZE);
+  size_t m = ROUNDDOWN(n, pagesize);
   _npassert(!mprotect(p, m, PROT_READ | PROT_WRITE));
   free(p);
 }

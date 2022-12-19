@@ -153,6 +153,7 @@
 (defconst cosmo-cpp-constants-cosmopolitan
  '("__SAUCE__"
    "PAGESIZE"
+   "GUARDSIZE"
    "FRAMESIZE"
    "BIGPAGESIZE"
    "STACKSIZE"

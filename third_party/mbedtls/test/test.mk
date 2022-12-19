@@ -134,10 +134,6 @@ o/$(MODE)/third_party/mbedtls/test/%.com.dbg:									\
 o/$(MODE)/third_party/mbedtls/test/%.com.runs: o/$(MODE)/third_party/mbedtls/test/%.com
 	@$(COMPILE) -ACHECK -wtT$@ $< $(TESTARGS)
 
-$(THIRD_PARTY_MBEDTLS_TEST_OBJS): private									\
-		OVERRIDE_CFLAGS +=										\
-			-DSTACK_FRAME_UNLIMITED
-
 o/$(MODE)/third_party/mbedtls/test/lib.o: private								\
 			OVERRIDE_CFLAGS +=									\
 				-fdata-sections									\

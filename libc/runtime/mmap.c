@@ -381,10 +381,10 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
       // however this 1mb behavior oddly enough is smart enough to not
       // apply if the mapping is a manually-created guard page.
       int e = errno;
-      if ((dm = sys_mmap(p + size - PAGESIZE, PAGESIZE, prot,
+      if ((dm = sys_mmap(p + size - GUARDSIZE, GUARDSIZE, prot,
                          f | MAP_GROWSDOWN_linux, fd, off))
               .addr != MAP_FAILED) {
-        _npassert(sys_mmap(p, PAGESIZE, PROT_NONE,
+        _npassert(sys_mmap(p, GUARDSIZE, PROT_NONE,
                            MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
                       .addr == p);
         dm.addr = p;
@@ -412,11 +412,11 @@ static noasan inline void *Mmap(void *addr, size_t size, int prot, int flags,
     if (needguard) {
       if (!IsWindows()) {
         // make windows fork() code simpler
-        mprotect(p, PAGESIZE, PROT_NONE);
+        mprotect(p, GUARDSIZE, PROT_NONE);
       }
       if (IsAsan()) {
         __repstosb((void *)(((intptr_t)p >> 3) + 0x7fff8000),
-                   kAsanStackOverflow, PAGESIZE / 8);
+                   kAsanStackOverflow, GUARDSIZE / 8);
       }
     }
   }

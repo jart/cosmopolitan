@@ -162,13 +162,6 @@ o/$(MODE)/third_party/zip/zipup.o: private	\
 		-DZIP64_SUPPORT			\
 		-DBZIP2_SUPPORT
 
-o/$(MODE)/third_party/zip/zip.o			\
-o/$(MODE)/third_party/zip/zipsplit.o		\
-o/$(MODE)/third_party/zip/fileio.o		\
-o/$(MODE)/third_party/zip/fileio_.o: private	\
-	OVERRIDE_CPPFLAGS +=			\
-		-DSTACK_FRAME_UNLIMITED
-
 .PHONY: o/$(MODE)/third_party/zip
 o/$(MODE)/third_party/zip:			\
 		$(THIRD_PARTY_ZIP_BINS)		\

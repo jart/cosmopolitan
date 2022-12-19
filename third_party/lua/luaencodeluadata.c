@@ -353,7 +353,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   int rc;
   bool multi;
   intptr_t rsp, bot;
-  if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
+  if (UNLIKELY(!HaveStackMemory(GUARDSIZE))) {
     z->reason = "out of stack";
     return -1;
   }

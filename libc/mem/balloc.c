@@ -21,7 +21,7 @@
 
 /* TODO(jart): delete */
 
-#define kGuard PAGESIZE
+#define kGuard GUARDSIZE
 #define kGrain FRAMESIZE
 
 /**

@@ -121,18 +121,9 @@ o/$(MODE)/libc/calls/execlp.o				\
 o/$(MODE)/libc/calls/statfs.o				\
 o/$(MODE)/libc/calls/fstatfs.o				\
 o/$(MODE)/libc/calls/execve-sysv.o			\
+o/$(MODE)/libc/calls/readlinkat-nt.o			\
 o/$(MODE)/libc/calls/execve-nt.greg.o			\
 o/$(MODE)/libc/calls/mkntenvblock.o: private		\
-		OVERRIDE_CPPFLAGS +=			\
-			-DSTACK_FRAME_UNLIMITED
-
-# we must disable static stack safety because:
-#   PATH_MAX*sizeof(char16_t)*2 exceeds 4096 byte frame limit
-o/$(MODE)/libc/calls/copyfile.o				\
-o/$(MODE)/libc/calls/symlinkat-nt.o			\
-o/$(MODE)/libc/calls/readlinkat-nt.o			\
-o/$(MODE)/libc/calls/linkat-nt.o			\
-o/$(MODE)/libc/calls/renameat-nt.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 

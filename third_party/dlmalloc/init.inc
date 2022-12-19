@@ -24,8 +24,8 @@ int init_mparams(void) {
     size_t gsize;
 
 #if defined(__COSMOPOLITAN__)
-    psize = 4096;
-    gsize = 65536;
+    psize = FRAMESIZE;
+    gsize = FRAMESIZE;
 #elif !defined(WIN32)
     psize = malloc_getpagesize;
     gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);

@@ -60,7 +60,7 @@ $(THIRD_PARTY_STB_A_OBJS): private			\
 			-ffunction-sections		\
 			-fdata-sections
 
-$(THIRD_PARTY_STB_A_OBJS): private			\
+o/$(MODE)/third_party/stb/stb_vorbis.o: private		\
 		OVERRIDE_CPPFLAGS +=			\
 			-DSTACK_FRAME_UNLIMITED
 

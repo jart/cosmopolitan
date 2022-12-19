@@ -171,8 +171,8 @@ o/$(MODE)/third_party/make/hash.o: private		\
 $(THIRD_PARTY_MAKE_OBJS): private			\
 		OVERRIDE_CFLAGS +=			\
 			-DNO_ARCHIVES			\
-			-DSTACK_FRAME_UNLIMITED		\
 			-DHAVE_CONFIG_H			\
+			-DSTACK_FRAME_UNLIMITED		\
 			-DINCLUDEDIR=\".\"		\
 			-DLIBDIR=\".\"			\
 			-DLOCALEDIR=\".\"

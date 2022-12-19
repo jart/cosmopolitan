@@ -44,9 +44,14 @@ sys_clone_linux:
 	ret
 2:	xor	%ebp,%ebp		# child thread
 	mov	%rbx,%rdi		# arg
+	mov	%r10,%r15		# experiment
 	mov	(%r10),%esi		# tid
 	call	*%r9			# func(arg,tid)
 	xchg	%eax,%edi		# func(arg,tid) → exitcode
+	mov	(%r15),%eax		# experiment
+	test	%eax,%eax		# experiment
+	jz	1f			# experiment
 	mov	$60,%eax		# __NR_exit(exitcode)
 	syscall
+1:	hlt				# ctid was corrupted by program!
 	.endfn	sys_clone_linux,globl,hidden

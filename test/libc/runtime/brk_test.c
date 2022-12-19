@@ -49,7 +49,7 @@ TEST(brk, underflowsEnd_returnsEinval) {
 }
 
 TEST(sbrk, underflowsEnd_returnsEinval) {
-  ASSERT_SYS(EINVAL, MAP_FAILED, sbrk(-PAGESIZE));
+  ASSERT_SYS(EINVAL, MAP_FAILED, sbrk(-GUARDSIZE));
 }
 
 TEST(sbrk, giantDelta_returnsEnomem) {
@@ -73,11 +73,11 @@ TEST(sbrk, overlapsExistingMapping_failsWithEexist) {
 TEST(sbrk, testGrowAndShrink) {
   SPAWN(fork);
   ASSERT_FALSE(testlib_memoryexists(_end));
-  ASSERT_SYS(0, _end, sbrk(PAGESIZE));
-  ASSERT_SYS(0, _end + PAGESIZE, sbrk(0));
+  ASSERT_SYS(0, _end, sbrk(GUARDSIZE));
+  ASSERT_SYS(0, _end + GUARDSIZE, sbrk(0));
   ASSERT_TRUE(testlib_memoryexists(_end));
-  ASSERT_FALSE(testlib_memoryexists(_end + PAGESIZE));
-  ASSERT_SYS(0, _end + PAGESIZE, sbrk(-PAGESIZE));
+  ASSERT_FALSE(testlib_memoryexists(_end + GUARDSIZE));
+  ASSERT_SYS(0, _end + GUARDSIZE, sbrk(-GUARDSIZE));
   ASSERT_FALSE(testlib_memoryexists(_end));
   EXITS(0);
 }
@@ -85,9 +85,9 @@ TEST(sbrk, testGrowAndShrink) {
 TEST(brk, testGrowAndShrink) {
   SPAWN(fork);
   ASSERT_FALSE(testlib_memoryexists(_end));
-  ASSERT_EQ(0, brk(_end + PAGESIZE));
+  ASSERT_EQ(0, brk(_end + GUARDSIZE));
   ASSERT_TRUE(testlib_memoryexists(_end));
-  ASSERT_FALSE(testlib_memoryexists(_end + PAGESIZE));
+  ASSERT_FALSE(testlib_memoryexists(_end + GUARDSIZE));
   ASSERT_EQ(0, brk(_end));
   EXITS(0);
 }

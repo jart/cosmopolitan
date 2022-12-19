@@ -481,17 +481,17 @@ static void *NewBoard(size_t *out_size) {
   char *p;
   size_t s, n, k;
   s = (byn * bxn) >> 3;
-  k = PAGESIZE + ROUNDUP(s, PAGESIZE);
-  n = ROUNDUP(k + PAGESIZE, FRAMESIZE);
+  k = GUARDSIZE + ROUNDUP(s, GUARDSIZE);
+  n = ROUNDUP(k + GUARDSIZE, FRAMESIZE);
   p = _mapanon(n);
-  mprotect(p, PAGESIZE, 0);
+  mprotect(p, GUARDSIZE, 0);
   mprotect(p + k, n - k, 0);
   if (out_size) *out_size = n;
-  return p + PAGESIZE;
+  return p + GUARDSIZE;
 }
 
 static void FreeBoard(void *p, size_t n) {
-  munmap((char *)p - PAGESIZE, n);
+  munmap((char *)p - GUARDSIZE, n);
 }
 
 static void AllocateBoardsWithHardwareAcceleratedMemorySafety(void) {

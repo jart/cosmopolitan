@@ -75,6 +75,7 @@ noasan void *_extend(void *p, size_t n, void *e, int f, intptr_t h) {
   char *q;
   _unassert(!((uintptr_t)SHADOW(p) & (G - 1)));
   _unassert((uintptr_t)p + (G << kAsanScale) <= h);
+  // TODO(jart): Make this spin less in non-ASAN mode.
   for (q = e; q < ((char *)p + n); q += 8) {
     if (!((uintptr_t)q & (G - 1))) {
       _unassert(q + G <= (char *)h);

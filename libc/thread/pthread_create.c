@@ -174,12 +174,12 @@ static errno_t pthread_create_impl(pthread_t *thread,
     pt->flags = PT_OWNSTACK;
     pt->attr.__stacksize = MAX(pt->attr.__stacksize, GetStackSize());
     pt->attr.__stacksize = _roundup2pow(pt->attr.__stacksize);
-    pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, PAGESIZE);
-    if (pt->attr.__guardsize + PAGESIZE >= pt->attr.__stacksize) {
+    pt->attr.__guardsize = ROUNDUP(pt->attr.__guardsize, GUARDSIZE);
+    if (pt->attr.__guardsize + GUARDSIZE >= pt->attr.__stacksize) {
       _pthread_free(pt);
       return EINVAL;
     }
-    if (pt->attr.__guardsize == PAGESIZE) {
+    if (pt->attr.__guardsize == GUARDSIZE) {
       // user is wisely using smaller stacks with default guard size
       pt->attr.__stackaddr =
           mmap(0, pt->attr.__stacksize, PROT_READ | PROT_WRITE,

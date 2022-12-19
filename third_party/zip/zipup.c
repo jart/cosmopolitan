@@ -48,6 +48,9 @@
 // MISSING #include "os2/os2zip.h"
 #endif
 
+#undef PAGESIZE
+#define PAGESIZE FRAMESIZE
+
 #if defined(MMAP)
 #include "libc/calls/calls.h"
 #include "libc/calls/weirdtypes.h"

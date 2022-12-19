@@ -125,8 +125,8 @@ TEST(setrlimit, testMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, SetKernelEnforcedMemoryLimit(MEM));
-    for (gotsome = i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
-      p = mmap(0, PAGESIZE, PROT_READ | PROT_WRITE,
+    for (gotsome = i = 0; i < (MEM * 2) / GUARDSIZE; ++i) {
+      p = mmap(0, GUARDSIZE, PROT_READ | PROT_WRITE,
                MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0);
       if (p != MAP_FAILED) {
         gotsome = true;
@@ -138,7 +138,7 @@ TEST(setrlimit, testMemoryLimit) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, PAGESIZE, _rand64, -1);
+      rngset(p, GUARDSIZE, _rand64, -1);
     }
     _Exit(1);
   }
@@ -158,15 +158,15 @@ TEST(setrlimit, testVirtualMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_AS, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
-      p = sys_mmap(0, PAGESIZE, PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / GUARDSIZE; ++i) {
+      p = sys_mmap(0, GUARDSIZE, PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, PAGESIZE, _rand64, -1);
+      rngset(p, GUARDSIZE, _rand64, -1);
     }
     _Exit(1);
   }
@@ -188,15 +188,15 @@ TEST(setrlimit, testDataMemoryLimit) {
   ASSERT_NE(-1, (wstatus = xspawn(0)));
   if (wstatus == -2) {
     ASSERT_EQ(0, setrlimit(RLIMIT_DATA, &(struct rlimit){MEM, MEM}));
-    for (i = 0; i < (MEM * 2) / PAGESIZE; ++i) {
-      p = sys_mmap(0, PAGESIZE, PROT_READ | PROT_WRITE,
+    for (i = 0; i < (MEM * 2) / GUARDSIZE; ++i) {
+      p = sys_mmap(0, GUARDSIZE, PROT_READ | PROT_WRITE,
                    MAP_ANONYMOUS | MAP_PRIVATE | MAP_POPULATE, -1, 0)
               .addr;
       if (p == MAP_FAILED) {
         ASSERT_EQ(ENOMEM, errno);
         _Exit(0);
       }
-      rngset(p, PAGESIZE, _rand64, -1);
+      rngset(p, GUARDSIZE, _rand64, -1);
     }
     _Exit(1);
   }

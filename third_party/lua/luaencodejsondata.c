@@ -22,8 +22,8 @@
 #include "libc/intrin/likely.h"
 #include "libc/log/log.h"
 #include "libc/log/rop.h"
-#include "libc/mem/mem.h"
 #include "libc/mem/gc.internal.h"
+#include "libc/mem/mem.h"
 #include "libc/runtime/stack.h"
 #include "libc/stdio/append.h"
 #include "libc/stdio/strlist.internal.h"
@@ -169,7 +169,7 @@ static int SerializeTable(lua_State *L, char **buf, int idx,
   bool multi;
   bool isarray;
   lua_Unsigned n;
-  if (UNLIKELY(!HaveStackMemory(PAGESIZE))) {
+  if (UNLIKELY(!HaveStackMemory(GUARDSIZE))) {
     z->reason = "out of stack";
     return -1;
   }

@@ -16,14 +16,14 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
-#include "libc/intrin/popcnt.h"
 #include "libc/calls/calls.h"
+#include "libc/intrin/popcnt.h"
 #include "libc/testlib/ezbench.h"
 #include "libc/testlib/hyperion.h"
 #include "libc/testlib/testlib.h"
 
 void SetUpOnce(void) {
-  ASSERT_SYS(0, 0, pledge("stdio", 0));
+  ASSERT_SYS(0, 0, pledge("stdio rpath", 0));
 }
 
 TEST(popcnt, test) {

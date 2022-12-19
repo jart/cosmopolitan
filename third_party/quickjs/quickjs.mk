@@ -199,10 +199,6 @@ o/tiny/third_party/quickjs/call.o: private					\
 		OVERRIDE_CFLAGS +=						\
 			-O2
 
-o/$(MODE)/third_party/quickjs/unicode_gen.o: private				\
-		OVERRIDE_CPPFLAGS +=						\
-			-DSTACK_FRAME_UNLIMITED
-
 # TODO(jart): Replace alloca() calls with malloc().
 o/$(MODE)/third_party/quickjs/libregexp.o					\
 o/$(MODE)/third_party/quickjs/quickjs.o: private				\

@@ -232,7 +232,7 @@ relegated void ShowCrashReport(int err, int sig, struct siginfo *si,
       "  %s %s %s %s\n",
       !__nocolor ? "\e[30;101m" : "", !__nocolor ? "\e[0m" : "", sig,
       (ctx && (ctx->uc_mcontext.rsp >= GetStaticStackAddr(0) &&
-               ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + PAGESIZE))
+               ctx->uc_mcontext.rsp <= GetStaticStackAddr(0) + GUARDSIZE))
           ? "Stack Overflow"
           : GetSiCodeName(sig, si->si_code),
       host, getpid(), gettid(), program_invocation_name, names.sysname,

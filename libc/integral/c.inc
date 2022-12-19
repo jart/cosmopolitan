@@ -151,7 +151,7 @@ typedef struct {
 #define memcpyesque libcesque
 #define strlenesque libcesque nosideeffect paramsnonnull()
 #define vallocesque \
-  libcesque dontdiscard returnsaligned((PAGESIZE)) returnspointerwithnoaliases
+  libcesque dontdiscard returnsaligned((GUARDSIZE)) returnspointerwithnoaliases
 #define reallocesque libcesque returnsaligned((16))
 #define mallocesque  reallocesque returnspointerwithnoaliases
 #define interruptfn  nocallersavedregisters forcealignargpointer
@@ -273,9 +273,9 @@ typedef struct {
   static __inline __attribute__((__always_inline__, __gnu_inline__, \
                                  __no_instrument_function__, __unused__))
 #else
-#define forceinline              \
-  static __inline __attribute__( \
-      (__always_inline__, __no_instrument_function__, __unused__))
+#define forceinline                                 \
+  static __inline __attribute__((__always_inline__, \
+                                 __no_instrument_function__, __unused__))
 #endif /* __GNUC_STDC_INLINE__ */
 #endif /* GCC >= 4.3 */
 #elif defined(_MSC_VER)
@@ -677,19 +677,19 @@ typedef struct {
 #if defined(__GNUC__) || defined(__llvm__)
 #pragma GCC diagnostic ignored \
     "-Wundef" /* complaints about __ASSEMBLER__/__LINKER__  */
-#pragma GCC diagnostic ignored "-Wsign-compare" /* lint needs to change  */
-#pragma GCC diagnostic ignored "-Wtype-limits" /* makes macros unsafe  */
-#pragma GCC diagnostic ignored "-Woverflow" /* also breaks macros  */
-#pragma GCC diagnostic ignored "-Wformat" /* forces only gnu pf */
+#pragma GCC diagnostic ignored "-Wsign-compare"     /* lint needs to change  */
+#pragma GCC diagnostic ignored "-Wtype-limits"      /* makes macros unsafe  */
+#pragma GCC diagnostic ignored "-Woverflow"         /* also breaks macros  */
+#pragma GCC diagnostic ignored "-Wformat"           /* forces only gnu pf */
 #pragma GCC diagnostic ignored "-Wunused-parameter" /* extreme prejudice */
-#pragma GCC diagnostic ignored "-Wunused-function" /* contradicts dce! */
-#pragma GCC diagnostic ignored "-Wunused-const-variable" /* let me dce */
-#pragma GCC diagnostic ignored "-Wunused-variable" /* belongs in tidy */
-#pragma GCC diagnostic ignored "-Wformat-extra-args" /* is also broken */
-#pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */
-#pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
-#pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
-#pragma GCC diagnostic ignored "-Wunused-value" /* breaks macros */
+#pragma GCC diagnostic ignored "-Wunused-function"  /* contradicts dce! */
+#pragma GCC diagnostic ignored "-Wunused-const-variable"   /* let me dce */
+#pragma GCC diagnostic ignored "-Wunused-variable"         /* belongs in tidy */
+#pragma GCC diagnostic ignored "-Wformat-extra-args"       /* is also broken */
+#pragma GCC diagnostic ignored "-Wparentheses"             /* annoying tidy */
+#pragma GCC diagnostic ignored "-Wdangling-else"           /* come on tidy */
+#pragma GCC diagnostic ignored "-Wformat-security"         /* come on tidy */
+#pragma GCC diagnostic ignored "-Wunused-value"            /* breaks macros */
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations" /* libcxx */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
@@ -709,7 +709,7 @@ typedef struct {
 #if __GNUC__ >= 8
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #pragma GCC diagnostic ignored "-Wstringop-overflow" /* breaks strndup */
-#endif /* GCC8+ */
+#endif                                               /* GCC8+ */
 #if __GNUC__ + 0 >= 9
 #pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
 #endif /* GCC9+ */
@@ -720,8 +720,8 @@ typedef struct {
     "-Wincompatible-pointer-types-discards-qualifiers"
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored "-Wparentheses-equality" /*-save-temps*/
-#pragma clang diagnostic ignored "-Wunused-value" /*({-save-temps})*/
-#pragma clang diagnostic ignored "-Wstring-plus-int" /* special ed */
+#pragma clang diagnostic ignored "-Wunused-value"         /*({-save-temps})*/
+#pragma clang diagnostic ignored "-Wstring-plus-int"      /* special ed */
 #pragma clang diagnostic ignored "-Wunused-value" /* extreme prejudice */
 #pragma clang diagnostic ignored "-Wbuiltin-requires-header"
 #pragma clang diagnostic ignored \
@@ -756,7 +756,7 @@ typedef struct {
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
 #if defined(COSMO) && !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)
-#pragma GCC diagnostic error "-Wframe-larger-than=4096"
+#pragma GCC diagnostic error "-Wframe-larger-than=16384"
 #if __GNUC__ >= 9
 #pragma GCC diagnostic error "-Walloca-larger-than=1024"
 #pragma GCC diagnostic error "-Wvla-larger-than=1024"
