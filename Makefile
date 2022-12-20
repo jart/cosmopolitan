@@ -193,6 +193,7 @@ include third_party/python/python.mk
 include tool/build/emucrt/emucrt.mk
 include tool/build/emubin/emubin.mk
 include tool/build/build.mk
+include tool/curl/curl.mk
 include examples/examples.mk
 include examples/pyapp/pyapp.mk
 include examples/pylife/pylife.mk

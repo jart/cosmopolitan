@@ -38,7 +38,7 @@
 #include "third_party/awk/cmd.h"
 #include "third_party/sed/cmd.h"
 #include "third_party/tr/cmd.h"
-#include "tool/net/curl.h"
+#include "tool/curl/cmd.h"
 
 /**
  * @fileoverview Cosmopolitan Command Interpreter

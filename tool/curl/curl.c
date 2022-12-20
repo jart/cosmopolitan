@@ -52,7 +52,7 @@
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_ticket.h"
-#include "tool/net/curl.h"
+#include "tool/curl/cmd.h"
 
 /**
  * @fileoverview Downloads HTTP URL to stdout.
