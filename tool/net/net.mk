@@ -15,7 +15,6 @@ TOOL_NET_BINS =									\
 	$(TOOL_NET_COMS:%=%.dbg)
 
 TOOL_NET_COMS =									\
-	o/$(MODE)/tool/net/curl.com						\
 	o/$(MODE)/tool/net/dig.com						\
 	o/$(MODE)/tool/net/redbean.com						\
 	o/$(MODE)/tool/net/redbean-demo.com					\

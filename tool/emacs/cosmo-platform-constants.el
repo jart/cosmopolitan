@@ -73,9 +73,7 @@
            "__gnu__"))
 
         (cosmo
-         '("__COSMOPOLITAN__"
-           "__ANDROID__"
-           "__LINKER__"))
+         '("__LINKER__"))
 
         )
     (concat "\\_<"
