@@ -38,6 +38,7 @@
 #include "third_party/awk/cmd.h"
 #include "third_party/sed/cmd.h"
 #include "third_party/tr/cmd.h"
+#include "tool/curl/cmd.h"
 
 /**
  * @fileoverview Cosmopolitan Command Interpreter
@@ -417,6 +418,7 @@ static int TryBuiltin(void) {
   if (_weaken(_tr) && !strcmp(args[0], "tr")) return Fake(_weaken(_tr));
   if (_weaken(_sed) && !strcmp(args[0], "sed")) return Fake(_weaken(_sed));
   if (_weaken(_awk) && !strcmp(args[0], "awk")) return Fake(_weaken(_awk));
+  if (_weaken(_curl) && !strcmp(args[0], "curl")) return Fake(_weaken(_curl));
   return -1;
 }
 

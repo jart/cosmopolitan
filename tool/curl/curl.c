@@ -52,12 +52,10 @@
 #include "third_party/mbedtls/pk.h"
 #include "third_party/mbedtls/ssl.h"
 #include "third_party/mbedtls/ssl_ticket.h"
+#include "tool/curl/cmd.h"
 
 /**
  * @fileoverview Downloads HTTP URL to stdout.
- *
- *     make -j8 o//examples/curl.com
- *     o//examples/curl.com http://justine.lol/ape.html
  */
 
 #define HasHeader(H)    (!!msg.headers[H].a)
@@ -121,7 +119,7 @@ static wontreturn void PrintUsage(FILE *f, int rc) {
   exit(rc);
 }
 
-int main(int argc, char *argv[]) {
+int _curl(int argc, char *argv[]) {
   if (!NoDebug()) ShowCrashReports();
 
   /*
