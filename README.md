@@ -57,9 +57,13 @@ sudo sh -c 'echo -1 >/proc/sys/fs/binfmt_misc/status'
 
 Since we used the `ape-no-modify-self.o` bootloader (rather than
 `ape.o`) your executable will not modify itself when it's run. What
-it'll instead do, is extract a 4kb program to `${TMPDIR:-${HOME:-.}}`
-that maps your program into memory without needing to copy it. It's
-possible to install the APE loader systemwide as follows.
+it'll instead do, is extract a 4kb program (the [APE loader](https://justine.lol/apeloader/))
+to `${TMPDIR:-${HOME:-.}}` that maps your program into memory without
+needing to copy it. The APE loader must be in an executable location
+(e.g. not stored on a `noexec` mount) for it to run. See below for
+alternatives:
+
+It's possible to install the APE loader systemwide as follows.
 
 ```sh
 # System-Wide APE Install
