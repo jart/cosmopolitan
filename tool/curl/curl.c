@@ -115,7 +115,7 @@ static int TlsRecv(void *c, unsigned char *p, size_t n, uint32_t o) {
 }
 
 static wontreturn void PrintUsage(FILE *f, int rc) {
-  fprintf(f, "usage: %s [-ksvV] URL\n", program_invocation_name);
+  fprintf(f, "usage: %s [-iksvV] URL\n", program_invocation_name);
   exit(rc);
 }
 
@@ -130,17 +130,22 @@ int _curl(int argc, char *argv[]) {
     size_t n;
     char **p;
   } headers = {0};
-  int method = kHttpGet;
+  int method = 0;
   bool authmode = MBEDTLS_SSL_VERIFY_REQUIRED;
+  bool includeheaders = false;
+  const char *postdata = NULL;
   const char *agent = "hurl/1.o (https://github.com/jart/cosmopolitan)";
   __log_level = kLogWarn;
-  while ((opt = getopt(argc, argv, "qksvVIX:H:A:")) != -1) {
+  while ((opt = getopt(argc, argv, "qiksvVIX:H:A:d:")) != -1) {
     switch (opt) {
       case 's':
       case 'q':
         break;
       case 'v':
         ++__log_level;
+        break;
+      case 'i':
+        includeheaders = true;
         break;
       case 'I':
         method = kHttpHead;
@@ -151,6 +156,9 @@ int _curl(int argc, char *argv[]) {
       case 'H':
         headers.p = realloc(headers.p, ++headers.n * sizeof(*headers.p));
         headers.p[headers.n - 1] = optarg;
+        break;
+      case 'd':
+        postdata = optarg;
         break;
       case 'X':
         CHECK((method = GetHttpMethod(optarg, strlen(optarg))));
@@ -222,17 +230,29 @@ int _curl(int argc, char *argv[]) {
   /*
    * Create HTTP message.
    */
+  if (!method) method = postdata ? kHttpPost : kHttpGet;
+
   char *request = 0;
   appendf(&request,
           "%s %s HTTP/1.1\r\n"
-          "Host: %s:%s\r\n"
           "Connection: close\r\n"
           "User-Agent: %s\r\n",
-          kHttpMethod[method], _gc(EncodeUrl(&url, 0)), host, port, agent);
+          kHttpMethod[method], _gc(EncodeUrl(&url, 0)), agent);
+
+  bool senthost = false, sentcontenttype = false, sentcontentlength = false;
   for (int i = 0; i < headers.n; ++i) {
     appendf(&request, "%s\r\n", headers.p[i]);
+    if (!strncasecmp("Host:", headers.p[i], 5)) senthost = true;
+    else if (!strncasecmp("Content-Type:", headers.p[i], 13)) sentcontenttype = true;
+    else if (!strncasecmp("Content-Length:", headers.p[i], 15)) sentcontentlength = true;
+  }
+  if (!senthost) appendf(&request, "Host: %s:%s\r\n", host, port);
+  if (postdata) {
+    if (!sentcontenttype) appends(&request, "Content-Type: application/x-www-form-urlencoded\r\n");
+    if (!sentcontentlength) appendf(&request, "Content-Length: %d\r\n", strlen(postdata));
   }
   appendf(&request, "\r\n");
+  if (postdata) appends(&request, postdata);
 
   /*
    * Setup crypto.
@@ -260,7 +280,7 @@ int _curl(int argc, char *argv[]) {
    * Perform DNS lookup.
    */
   struct addrinfo *addr;
-  struct addrinfo hints = {.ai_family = AF_INET,
+  struct addrinfo hints = {.ai_family = AF_UNSPEC,
                            .ai_socktype = SOCK_STREAM,
                            .ai_protocol = IPPROTO_TCP,
                            .ai_flags = AI_NUMERICSERV};
@@ -342,10 +362,10 @@ int _curl(int argc, char *argv[]) {
             i -= hdrlen;
             break;
           }
-          if (method == kHttpHead) {
+          if (method == kHttpHead || includeheaders) {
             Write(p, hdrlen);
-            goto Finished;
-          } else if (msg.status == 204 || msg.status == 304) {
+          }
+          if (method == kHttpHead || msg.status == 204 || msg.status == 304) {
             goto Finished;
           }
           if (HasHeader(kHttpTransferEncoding) &&
